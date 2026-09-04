@@ -1324,7 +1324,7 @@ describe('migrate orchestrator (dark launch)', () => {
   // the way a session would: through the reconcile command in its bootstrap.
   // Started by the per-step runner instead, it writes the step's handoff.
   // With FAKE_AGENT_KILL_PARENT it starts the first step detached, waits for
-  // the step's commit request to reach the parent, and kills the parent.
+  // the step's request to reach the parent, and kills the parent.
   const FAKE_AGENT_SCRIPT = `#!/usr/bin/env node
 const { execSync, spawn } = require('child_process');
 const fs = require('fs');
@@ -1391,7 +1391,7 @@ if (process.env.FAKE_AGENT_KILL_PARENT) {
   const deadline = Date.now() + 60000;
   while (!(fs.existsSync(brokerDir) && fs.readdirSync(brokerDir).some((f) => f.endsWith('.request.json')))) {
     if (Date.now() > deadline) {
-      throw new Error('No commit request from the step:\\n' + fs.readFileSync(path.join(process.cwd(), 'killed-step-output'), 'utf8'));
+      throw new Error('No request from the step:\\n' + fs.readFileSync(path.join(process.cwd(), 'killed-step-output'), 'utf8'));
     }
     execSync('sleep 0.2');
   }
@@ -1621,6 +1621,50 @@ setTimeout(() => {}, 120000);
       expect(listFiles(`.nx/migrate-runs/${runId}/broker`)).toEqual([]);
     }, 600000);
 
+    it('should install through the parent before handing validation to the agent, then commit at the fold', async () => {
+      writePlan([depsMig, promptMig]);
+      const { binDir, logFile } = installFakeAgent();
+
+      const { exitCode, output } = await runMigrateInTerminal(
+        {
+          PATH: `${binDir}:${process.env.PATH}`,
+          FAKE_AGENT_LOG: logFile,
+          NX_MIGRATE_ORCHESTRATOR: 'true',
+        },
+        '--create-commits --skip-install'
+      );
+
+      expect(exitCode).toBe(0);
+      expect(output).toContain('is complete');
+      expect(output).not.toContain(SKIPPED_INSTALL_WARNING);
+      const log = readFakeAgentLog(logFile);
+      const runId = log.find((entry) => entry.complete).complete;
+      const state = readRunStateFile(runId);
+      expect(state.status).toBe('completed');
+      const depsStep = state.steps.find(
+        (s) => s.migrationId === `${PKG}:deps-mig`
+      );
+      // The step parked for validation after its install, so the warning is
+      // the step command's, and the fold's commit landed after the handoff.
+      expect(depsStep.status).toBe('succeeded');
+      expect(depsStep.validationOwed).toBe(true);
+      expect(
+        existsSync(join(tmpProjPath(), `applied-${depsStep.id}.txt`))
+      ).toBe(true);
+      expect(log.find((entry) => entry.step === depsStep.id).stdout).toContain(
+        SKIPPED_INSTALL_WARNING
+      );
+      expect(state.commits.filter((c) => c.kind === 'landed')).toHaveLength(2);
+      expect(commitCountFor('deps-mig')).toBe(1);
+      expect(commitCountFor('prompt-mig')).toBe(1);
+      expect(
+        runCommand(
+          'git status --porcelain -- . :!fake-agent.log :!migrate-exit-code'
+        ).trim()
+      ).toBe('');
+      expect(listFiles(`.nx/migrate-runs/${runId}/broker`)).toEqual([]);
+    }, 600000);
+
     it('should release a step waiting on a killed parent and land it through the next session', async () => {
       writePlan([depsMig, promptMig]);
       const { binDir, logFile } = installFakeAgent();
@@ -1646,9 +1690,7 @@ setTimeout(() => {}, 120000);
         ms: 250,
       });
       const workerOutput = readFile('killed-step-output');
-      expect(workerOutput).toContain(
-        'ended before its commit request was answered'
-      );
+      expect(workerOutput).toContain('ended before its request was answered');
       const runId = runDirs()[0];
       const failed = readRunStateFile(runId);
       expect(failed.status).toBe('active');

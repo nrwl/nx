@@ -14,7 +14,9 @@ import {
   BrokerStaleRequestError,
   BrokerUnavailableError,
   commitStepTree,
+  installStepTree,
   type BrokeredCommit,
+  type BrokerRequestKind,
 } from './broker';
 import {
   getGitRepositoryStatus,
@@ -788,11 +790,18 @@ export async function runOrchestratorReconcile(
                 root,
                 dir,
                 state,
-                target
+                target,
+                'action-install'
               ),
             }
         : stepAction === 'skip'
-          ? await retainedTreeSideEffects(root, dir, state, target)
+          ? await retainedTreeSideEffects(
+              root,
+              dir,
+              state,
+              target,
+              'action-install'
+            )
           : { entry: null, installFailed: false };
     // A rearm starts a fresh attempt; drop the stale handoff before the rearm
     // is persisted so a crash in between can't refold the old outcome into the
@@ -1139,10 +1148,16 @@ async function foldLedgerEntry(
     }
     return {
       entry: null,
-      installFailed: await installFailedForStep(root, dir, state, step),
+      installFailed: await installFailedForStep(
+        root,
+        dir,
+        state,
+        step,
+        'fold-install'
+      ),
     };
   }
-  return retainedTreeSideEffects(root, dir, state, step);
+  return retainedTreeSideEffects(root, dir, state, step, 'fold-install');
 }
 
 // Shared by prompts that did not complete and by skipped failed or died steps:
@@ -1153,9 +1168,16 @@ async function retainedTreeSideEffects(
   root: string,
   dir: string,
   state: MigrateRunState,
-  step: MigrateStep
+  step: MigrateStep,
+  seam: Exclude<BrokerRequestKind, 'commit'>
 ): Promise<StepSideEffects> {
-  const installFailed = await installFailedForStep(root, dir, state, step);
+  const installFailed = await installFailedForStep(
+    root,
+    dir,
+    state,
+    step,
+    seam
+  );
   const entry =
     state.createCommits && getWorkingTreeStatus(root) !== 'clean'
       ? { kind: 'failed' as const, stepIds: [step.id] }
@@ -1167,23 +1189,34 @@ async function retainedTreeSideEffects(
 // will do it (the fold of a prompt outcome that lands no commit, or a
 // non-commit adopt), returning whether the install failed. A failure is
 // recorded rather than thrown: reconcile still owes the agent a dispense, and
-// a warning alone dies with this process.
+// a warning alone dies with this process. The session broker's own errors do
+// throw, as from commitForStep: the next reconcile redoes this action.
 async function installFailedForStep(
   root: string,
   dir: string,
   state: MigrateRunState,
-  step: MigrateStep
+  step: MigrateStep,
+  seam: Exclude<BrokerRequestKind, 'commit'>
 ): Promise<boolean> {
+  const skipInstall = state.skipInstall === true;
   try {
-    await installDepsChangedSinceDispense(
-      root,
-      dir,
-      step,
-      state.skipInstall === true,
-      reconcileCommand(root, state.runId)
+    await installStepTree(dir, step, skipInstall, seam, () =>
+      installDepsChangedSinceDispense(
+        root,
+        dir,
+        step,
+        skipInstall,
+        reconcileCommand(root, state.runId)
+      )
     );
     return false;
   } catch (e) {
+    if (
+      e instanceof BrokerStaleRequestError ||
+      e instanceof BrokerUnavailableError
+    ) {
+      throw e;
+    }
     warnToAgent({
       title: `The dependencies changed by ${step.migrationId} could not be installed (${summarizeError(
         e

@@ -86,6 +86,7 @@ import {
 import {
   BrokerStaleRequestError,
   commitStepTree,
+  installStepTree,
   type BrokeredCommit,
 } from './broker';
 import { singleLine } from '../text';
@@ -601,13 +602,15 @@ async function runRecorded(
   // Called before a retry hands the step's work back: the prompt or validation
   // may need the dependencies the earlier attempt's generator added.
   const reinstallFromBaseline = () =>
-    recordingInstallFailure(dir, step.id, () =>
-      installDepsChangedSinceDispense(
-        root,
-        dir,
-        startedStep,
-        effectiveSkipInstall,
-        `${formatSingleMigrationRerunCommand(migrationId)} --run-id=${runId}`
+    installStepTree(dir, startedStep, effectiveSkipInstall, 'install', () =>
+      recordingInstallFailure(dir, step.id, () =>
+        installDepsChangedSinceDispense(
+          root,
+          dir,
+          startedStep,
+          effectiveSkipInstall,
+          `${formatSingleMigrationRerunCommand(migrationId)} --run-id=${runId}`
+        )
       )
     );
 
@@ -781,7 +784,13 @@ async function runRecorded(
           effectiveSkipInstall
         );
       } else {
-        await install();
+        await installStepTree(
+          dir,
+          step,
+          effectiveSkipInstall,
+          'install',
+          install
+        );
       }
 
       if (installer.skippedInstall) {
@@ -911,7 +920,7 @@ async function finishCompletedGenerator(
   // commit: absent means an older nx wrote the marker without recording the
   // answer, and the commit is kept as that version's retries did.
   if (!state.createCommits || step.generatorMadeChanges === false) {
-    await installDeps();
+    await installStepTree(dir, step, skipInstall, 'install', installDeps);
     return state;
   }
   return commitStepChanges(
