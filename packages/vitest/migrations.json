@@ -34,6 +34,15 @@
       "description": "Replace `__dirname` with `import.meta.dirname` in `vite.config.mts`/`vitest.config.mts` files so they work with Vite's `configLoader: 'native'`.",
       "implementation": "./dist/src/migrations/update-23-2-0/use-import-meta-dirname",
       "documentation": "./dist/src/migrations/update-23-2-0/use-import-meta-dirname.md"
+    },
+    "update-analog-v3": {
+      "version": "23.2.0-beta.8",
+      "requires": {
+        "@analogjs/vitest-angular": ">=3.0.0-0"
+      },
+      "description": "Update AnalogJS packages to v3 and replace deprecated import paths.",
+      "implementation": "./dist/src/migrations/update-analog-v3/update-analog-v3",
+      "documentation": "./dist/src/migrations/update-analog-v3/update-analog-v3.md"
     }
   },
   "packageJsonUpdates": {
@@ -137,6 +146,22 @@
         },
         "@analogjs/vitest-angular": {
           "version": "~2.6.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.2.0-analog-v3": {
+      "version": "23.2.0-beta.8",
+      "requires": {
+        "@analogjs/vitest-angular": ">=3.0.0-0"
+      },
+      "packages": {
+        "@analogjs/vite-plugin-angular": {
+          "version": "3.0.0-alpha.70",
+          "alwaysAddToPackageJson": false
+        },
+        "@analogjs/vitest-angular": {
+          "version": "3.0.0-alpha.70",
           "alwaysAddToPackageJson": false
         }
       }

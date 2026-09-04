@@ -2741,7 +2741,7 @@ describe('project-configuration-utils', () => {
         expect(error.errors).toMatchInlineSnapshot(`
           [
             [MultipleProjectsWithSameNameError: The following projects are defined in multiple locations:
-          - same-name: 
+          - same-name:
             - libs/a
             - libs/b
             - libs/c
