@@ -49,9 +49,12 @@ export async function runMasterSession(
     runbookPath,
     reconcileCommand,
   });
-  if (session.kind === 'spawn-failed') {
+  if (session.kind !== 'exited') {
     output.error({
-      title: `Could not start ${agent.displayName}: ${session.error.message}`,
+      title:
+        session.kind === 'spawn-failed'
+          ? `Could not start ${agent.displayName}: ${session.error.message}`
+          : `Closed the ${agent.displayName} session: a step's commit request could not be answered (${session.error.message}).`,
       bodyLines: [`Migrate run ${runId} is still active. ${resumeHint}`],
     });
     reportMigrateRunError({ code: 'agentic', error: session.error });
