@@ -8,7 +8,10 @@ use std::time::{Duration, SystemTime};
 
 use tracing::trace;
 
-const NX_FILES_ARCHIVE: &str = "nx_files.nxt";
+// v2 carries `gathered_at`. The filename is the format key: rkyv's layout check
+// does reject a v1 buffer, but relying on that makes the break implicit and
+// leaves "what if it validated anyway?" to be argued rather than answered.
+const NX_FILES_ARCHIVE: &str = "nx_files_v2.nxt";
 
 #[derive(Archive, Serialize, Deserialize, PartialEq, Debug)]
 #[archive(check_bytes)]
@@ -244,6 +247,13 @@ pub fn write_files_archive<P: AsRef<Path>>(cache_dir: P, files: &NxFileHashes) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rkyv::Archive as RkyvArchive;
+
+    /// The shape `NxFileHashes` had before it carried `gathered_at`.
+    #[derive(RkyvArchive, Serialize)]
+    #[archive(check_bytes)]
+    struct LegacyNxFileHashes(HashMap<String, NxFileHashed>);
+
     use assert_fs::TempDir;
     use assert_fs::prelude::*;
 
@@ -265,7 +275,7 @@ mod tests {
     #[test]
     fn a_write_sweeps_orphaned_staging_files_and_keeps_live_ones() {
         let cache = TempDir::new().unwrap();
-        let orphan = cache.child("nx_files.nxt.1.deadbeef.tmp");
+        let orphan = cache.child("nx_files_v2.nxt.1.deadbeef.tmp");
         orphan.write_str("x").unwrap();
         std::fs::File::options()
             .write(true)
@@ -273,10 +283,10 @@ mod tests {
             .unwrap()
             .set_modified(SystemTime::now() - STAGING_ORPHAN_AGE * 2)
             .unwrap();
-        let live = cache.child("nx_files.nxt.2.cafebabe.tmp");
+        let live = cache.child("nx_files_v2.nxt.2.cafebabe.tmp");
         live.write_str("x").unwrap();
         // Old neighbours that are not staging files stay, whatever their age.
-        for name in ["other.tmp", "nx_files.nxt.bak"] {
+        for name in ["other.tmp", "nx_files_v2.nxt.bak"] {
             let neighbour = cache.child(name);
             neighbour.write_str("x").unwrap();
             std::fs::File::options()
@@ -292,9 +302,9 @@ mod tests {
         assert_eq!(
             names_in(cache.path()),
             vec![
-                "nx_files.nxt",
-                "nx_files.nxt.2.cafebabe.tmp",
-                "nx_files.nxt.bak",
+                "nx_files_v2.nxt",
+                "nx_files_v2.nxt.2.cafebabe.tmp",
+                "nx_files_v2.nxt.bak",
                 "other.tmp"
             ]
         );
@@ -311,20 +321,20 @@ mod tests {
         .into_iter()
         .collect();
         write_files_archive(cache.path(), &two_files);
-        assert_eq!(names_in(cache.path()), vec!["nx_files.nxt"]);
+        assert_eq!(names_in(cache.path()), vec!["nx_files_v2.nxt"]);
         assert_eq!(read_files_archive(cache.path()).unwrap().len(), 2);
     }
 
     #[test]
     fn staging_paths_differ_between_writes_of_one_process() {
-        let archive = Path::new("/cache/nx_files.nxt");
+        let archive = Path::new("/cache/nx_files_v2.nxt");
         let first = staging_path(archive);
         let second = staging_path(archive);
         assert_ne!(first, second);
         for path in [&first, &second] {
             let name = path.file_name().unwrap().to_string_lossy();
             assert!(
-                name.starts_with("nx_files.nxt.") && name.ends_with(".tmp"),
+                name.starts_with("nx_files_v2.nxt.") && name.ends_with(".tmp"),
                 "{name}"
             );
             assert_eq!(path.parent(), archive.parent());
@@ -335,7 +345,7 @@ mod tests {
     fn a_write_refuses_a_staging_path_something_already_occupies() {
         let cache = TempDir::new().unwrap();
         let archive = archive_path(cache.path());
-        let planted = cache.child("nx_files.nxt.7.0000000000000001.tmp");
+        let planted = cache.child("nx_files_v2.nxt.7.0000000000000001.tmp");
         planted.write_str("planted").unwrap();
 
         let err = write_files_archive_at(&archive, planted.path(), &one_file()).unwrap_err();
@@ -346,5 +356,43 @@ mod tests {
         );
         assert_eq!(std::fs::read_to_string(planted.path()).unwrap(), "planted");
         assert!(!archive.exists());
+    }
+
+    #[test]
+    fn an_archive_in_the_pre_gathered_at_format_is_rejected_not_misread() {
+        // Adding `gathered_at` changed the archived layout. If a stale archive
+        // could be read as the new shape, every hash in it would be trusted
+        // against a garbage timestamp — silently wrong hashes for the whole
+        // workspace. It must fail the check and force a full re-hash instead.
+        let dir = tempfile::tempdir().expect("tempdir");
+        let mut legacy = HashMap::with_hasher(Default::default());
+        legacy.insert(
+            String::from("a.ts"),
+            NxFileHashed(String::from("hash-a"), 1234),
+        );
+        let bytes = rkyv::to_bytes::<_, 2048>(&LegacyNxFileHashes(legacy)).expect("serialize");
+        std::fs::write(dir.path().join(NX_FILES_ARCHIVE), &bytes).expect("write legacy archive");
+
+        assert!(
+            read_files_archive(dir.path()).is_none(),
+            "a pre-gathered_at archive must be rejected, not deserialized as the new shape"
+        );
+    }
+
+    #[test]
+    fn a_current_format_archive_round_trips_with_its_stamp() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let hashes: NxFileHashes = vec![(
+            String::from("a.ts"),
+            NxFileHashed(String::from("hash-a"), 1234),
+        )]
+        .into_iter()
+        .collect::<NxFileHashes>()
+        .with_gathered_at(9999);
+
+        write_files_archive(dir.path(), &hashes);
+        let read = read_files_archive(dir.path()).expect("current-format archive should read back");
+        assert_eq!(read.gathered_at(), 9999);
+        assert_eq!(read.get("a.ts").expect("entry").0, "hash-a");
     }
 }

@@ -31,12 +31,21 @@ pub fn get_mod_time(metadata: &Metadata) -> i64 {
 /// platform. Stamped into the files archive so a later selective hash can tell
 /// which entries were read while the workspace could still be changing under it.
 ///
-/// Windows returns `i64::MAX`: `last_write_time` is a 100ns FILETIME tick, so a
-/// rewrite can never land on the same value as the read that preceded it, and
-/// every archived entry stays reusable.
+/// FILETIME ticks, matching `last_write_time`. 100ns is FILETIME's
+/// representation, not its resolution: Windows stamps last-write from the
+/// system clock, whose granularity is the timer interval (~15.6ms, 1ms if a
+/// process raised it), and exFAT/SMB volumes are coarser still at 2s. Two
+/// writes inside one tick therefore do share a timestamp, so the guard is
+/// needed here exactly as it is elsewhere.
 #[cfg(target_os = "windows")]
 pub fn gather_stamp() -> i64 {
-    i64::MAX
+    use std::time::{SystemTime, UNIX_EPOCH};
+    /// 100ns ticks between the FILETIME epoch (1601-01-01) and the Unix epoch.
+    const FILETIME_TICKS_AT_UNIX_EPOCH: i64 = 116_444_736_000_000_000;
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| (d.as_nanos() / 100) as i64 + FILETIME_TICKS_AT_UNIX_EPOCH)
+        .unwrap_or(0)
 }
 
 /// Whole seconds, matching `st_mtime`/`mtime()`. Falls back to 0 — which makes
