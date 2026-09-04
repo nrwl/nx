@@ -54,7 +54,7 @@ export async function runMasterSession(
       title:
         session.kind === 'spawn-failed'
           ? `Could not start ${agent.displayName}: ${session.error.message}`
-          : `Closed the ${agent.displayName} session: a step's commit request could not be answered (${session.error.message}).`,
+          : `Closed the ${agent.displayName} session: a step's request could not be answered (${session.error.message}).`,
       bodyLines: [`Migrate run ${runId} is still active. ${resumeHint}`],
     });
     reportMigrateRunError({ code: 'agentic', error: session.error });
