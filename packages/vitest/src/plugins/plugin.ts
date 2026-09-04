@@ -34,6 +34,11 @@ import {
   loadViteDynamicImport,
   loadVitestConfigDynamicImport,
 } from '../utils/executor-utils';
+import {
+  collectSetupFileInputs,
+  readSetupFileEntries,
+  type SetupFileEntries,
+} from './setup-file-inputs';
 
 export interface VitestPluginOptions {
   testTargetName?: string;
@@ -74,7 +79,15 @@ export interface VitestPluginOptions {
   discoverTestFiles?: 'glob' | 'vitest';
 }
 
-type VitestTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
+type VitestTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'> & {
+  /**
+   * Raw setup entries, resolved to inputs after the cache is read rather
+   * than baked into `targets`. Nothing the resolution depends on - the setup
+   * files, or a tsconfig appearing beside one - is part of the cache key, so
+   * a cached entry would otherwise keep serving a stale set of inputs.
+   */
+  setupFileEntries?: SetupFileEntries;
+};
 
 /**
  * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
@@ -164,11 +177,15 @@ export const createNodes: CreateNodes<VitestPluginOptions> = [
           if (!cached) {
             return { projects: {} };
           }
-          const { metadata, targets } = cached;
+          const { metadata } = cached;
 
           const project: ProjectConfiguration = {
             root: projectRoot,
-            targets,
+            targets: withSetupFileInputs(
+              cached,
+              projectRoot,
+              context.workspaceRoot
+            ),
             metadata,
           };
 
@@ -189,6 +206,78 @@ export const createNodes: CreateNodes<VitestPluginOptions> = [
 ];
 
 export const createNodesV2 = createNodes;
+
+/**
+ * Adds the setup-file inputs to every target that carries the test target's
+ * inputs. Runs on each graph build rather than being cached with the targets:
+ * the cache key covers `{projectRoot}/**\/*`, the lockfile and the project's
+ * own tsconfig chain, none of which move when a setup file outside the project
+ * gains or loses a tsconfig - so a cached target would keep declaring a stale
+ * set. Resolution is `existsSync` plus a cached tsconfig walk, the same cost
+ * `collectTsconfigInputsByProjectRoot` already pays uncached.
+ *
+ * The cached `targets` are never mutated: the atomized and `nx:noop` CI targets
+ * share the test target's `inputs` array by reference, so each distinct array is
+ * rewritten once and the sharing preserved.
+ */
+function withSetupFileInputs(
+  cached: VitestTargets,
+  projectRoot: string,
+  workspaceRoot: string
+): Record<string, TargetConfiguration> {
+  const { targets, setupFileEntries } = cached;
+  if (!setupFileEntries?.entries.length) return targets;
+
+  const { files, tsconfigs } = collectSetupFileInputs(
+    setupFileEntries,
+    projectRoot,
+    workspaceRoot
+  );
+  if (!files.length && !tsconfigs.length) return targets;
+
+  const rewritten = new Map<unknown, unknown[]>();
+  const result: Record<string, TargetConfiguration> = {};
+
+  for (const [name, target] of Object.entries(targets)) {
+    if (!target.inputs) {
+      result[name] = target;
+      continue;
+    }
+    let inputs = rewritten.get(target.inputs);
+    if (!inputs) {
+      // Skip anything the target already declares; a setup file's tsconfig
+      // chain can share an ancestor with the project's own.
+      const declared = new Set(
+        target.inputs.flatMap((input) =>
+          typeof input === 'string'
+            ? [input]
+            : typeof input === 'object' && input && 'json' in input
+              ? [(input as { json: string }).json]
+              : []
+        )
+      );
+      inputs = [
+        ...target.inputs,
+        ...tsconfigs
+          .map((f) => `{workspaceRoot}/${f}`)
+          .filter((json) => !declared.has(json))
+          .map((json) => ({ json, fields: ['compilerOptions'] })),
+        // Whole-file, not just `compilerOptions`: these are sources Vitest
+        // executes, so any change to them changes the run.
+        ...files
+          .map((f) => `{workspaceRoot}/${f}`)
+          .filter((fileset) => !declared.has(fileset)),
+      ];
+      rewritten.set(target.inputs, inputs);
+    }
+    result[name] = {
+      ...target,
+      inputs: inputs as TargetConfiguration['inputs'],
+    };
+  }
+
+  return result;
+}
 
 async function buildVitestTargets(
   configFilePath: string,
@@ -258,6 +347,7 @@ async function buildVitestTargets(
   }
 
   let metadata: ProjectConfiguration['metadata'] = {};
+  let setupFileEntries: SetupFileEntries | undefined;
 
   const { testOutputs, hasTest } = getOutputs(
     viteBuildConfig,
@@ -272,6 +362,7 @@ async function buildVitestTargets(
   // if file is vitest.config or vite.config has definition for test, create targets for test and/or atomized tests
   if (configFilePath.includes('vitest.config') || hasTest) {
     const isTypecheckEnabled = !!viteBuildConfig.test?.typecheck?.enabled;
+    setupFileEntries = readSetupFileEntries(viteBuildConfig);
     targets[options.testTargetName] = await testTarget(
       namedInputs,
       testOutputs,
@@ -483,7 +574,7 @@ async function buildVitestTargets(
     }
   }
 
-  return { targets, metadata };
+  return { targets, metadata, setupFileEntries };
 }
 
 async function testTarget(
