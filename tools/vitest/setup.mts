@@ -1,6 +1,9 @@
 /**
  * Vitest port of `scripts/unit-test-setup.js` for packages whose unit tests
- * have moved off jest. Loaded through each package's
+ * have moved off jest. Lives in a project (not at the workspace root) so vite
+ * resolves it against this directory's leaf tsconfig instead of the root
+ * solution file, whose `references` would pull in every project's tsconfig.
+ * Loaded through each package's
  * `vitest.config.mts#test.setupFiles`; the guards it installs are the ones the
  * jest preset gave every project for free.
  *
@@ -15,7 +18,7 @@ import { vi } from 'vitest';
 import * as path from 'path';
 import * as fs from 'fs';
 import { createRequire } from 'module';
-import { resolveNxSourceSpecifier } from './vitest-nx-source-resolver.mts';
+import { resolveNxSourceSpecifier } from './nx-source-resolver.mts';
 
 const require = createRequire(import.meta.url);
 
@@ -27,7 +30,9 @@ const require = createRequire(import.meta.url);
  */
 const clackPromptsStub = path.join(
   import.meta.dirname,
-  'jest-mocks/clack-prompts.js'
+  '..',
+  '..',
+  'scripts/jest-mocks/clack-prompts.js'
 );
 
 /**
@@ -71,7 +76,7 @@ vi.doMock('@clack/prompts', () => {
   Error.prepareStackTrace = originalPrepareStackTrace;
 }
 
-const realWorkspaceRoot = path.resolve(import.meta.dirname, '..');
+const realWorkspaceRoot = path.resolve(import.meta.dirname, '..', '..');
 
 /**
  * Absolute paths to the physical source files inside `packages/nx`. Mocking
