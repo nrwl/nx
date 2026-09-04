@@ -3,13 +3,13 @@
 // A master session's agent runs the dispensed `nx migrate` commands inside
 // its own sandbox, where a dependency install has no network and a commit
 // cannot write `.git`. The parent nx that spawned the session advertises
-// itself through NX_MIGRATE_BROKER, and a step then hands its install and
-// commit over a request/result file pair under <runDir>/broker/ instead of
-// running them itself. Nothing here authorizes: every file the parent could
-// consult lives in the workspace the sandboxed side can write, and installs
-// and commits always ran unsandboxed from the process the user started. The
-// parent's checks only keep a stale attempt or a duplicate request from
-// landing twice.
+// itself through NX_MIGRATE_BROKER, and a step then hands its install, and
+// its commit when one is due, over a request/result file pair under
+// <runDir>/broker/ instead of running them itself. Nothing here authorizes:
+// every file the parent could consult lives in the workspace the sandboxed
+// side can write, and installs and commits always ran unsandboxed from the
+// process the user started. The parent's checks only keep a stale attempt or
+// a duplicate request from landing twice.
 
 import { randomBytes } from 'crypto';
 import { existsSync, mkdirSync, readdirSync, rmSync } from 'fs';
@@ -44,7 +44,22 @@ export const BROKER_ENV_VAR = 'NX_MIGRATE_BROKER';
 const BROKER_DIR_NAME = 'broker';
 const CHILD_POLL_INTERVAL_MS = 250;
 
+// The seam a request comes from. A seam runs once per attempt, so the seam
+// names the request: a repeat of the same operation (a refold after a crash,
+// the adopt of a worker that died mid-commit) reads the first answer instead
+// of landing twice. Commits share one seam: a worker's, the fold's and the
+// adopt's are the same operation on the same tree.
+export type BrokerRequestKind =
+  | 'commit'
+  // A worker's install: after its generator, or a retry's from the baseline.
+  | 'install'
+  // The fold's install when it commits nothing, a retained tree included.
+  | 'fold-install'
+  // The install a skip or a non-commit adopt owes for the tree it keeps.
+  | 'action-install';
+
 export interface BrokerRequest {
+  kind: BrokerRequestKind;
   stepId: string;
   attempt: number;
   // The caller's effective value: the run's policy and this invocation's flag.
@@ -58,8 +73,11 @@ export type BrokerResult =
       absorbedStepIds: string[];
       output: DeferredOutputRecord[];
     }
+  | { kind: 'installed'; output: DeferredOutputRecord[] }
   | { kind: 'install-failed'; message: string; output: DeferredOutputRecord[] }
   | { kind: 'stale' };
+
+type BrokerAnswer = Extract<BrokerResult, { kind: 'commit' | 'installed' }>;
 
 export interface BrokeredCommit {
   result: CommitResult;
@@ -76,22 +94,26 @@ export class BrokerStaleRequestError extends Error {}
  */
 export class BrokerUnavailableError extends Error {}
 
-// The statuses a step has at the seams that commit: a worker mid-run, a fold
-// of a handed-back prompt, an adopted death.
-const COMMIT_SEAM_STATUSES: ReadonlySet<MigrateStepStatus> = new Set([
-  'running',
-  'awaiting-prompt-outcome',
-  'died',
-]);
+// The statuses a step has at each seam: a worker mid-run, a fold of a
+// handed-back prompt, a skipped failure or an adopted death.
+const SEAM_STATUSES: Record<
+  BrokerRequestKind,
+  ReadonlySet<MigrateStepStatus>
+> = {
+  commit: new Set(['running', 'awaiting-prompt-outcome', 'died']),
+  install: new Set(['running']),
+  'fold-install': new Set(['awaiting-prompt-outcome']),
+  'action-install': new Set(['failed', 'died']),
+};
 
-function isAtCommitSeam(
+function isAtSeam(
   step: MigrateStep | undefined,
   request: BrokerRequest
 ): boolean {
   return (
     step !== undefined &&
     step.attempt === request.attempt &&
-    COMMIT_SEAM_STATUSES.has(step.status)
+    SEAM_STATUSES[request.kind].has(step.status)
   );
 }
 
@@ -129,28 +151,59 @@ export async function commitStepTree(
   if (!nonce) {
     return { result: await commitInProcess(), absorbedStepIds };
   }
-  return requestBrokeredCommit(dir, nonce, step, skipInstall);
-}
-
-async function requestBrokeredCommit(
-  dir: string,
-  nonce: string,
-  step: MigrateStep,
-  skipInstall: boolean
-): Promise<BrokeredCommit> {
-  const id = `${nonce}-${step.id}-${step.attempt}`;
-  const request: BrokerRequest = {
+  const answer = await ask(dir, nonce, {
+    kind: 'commit',
     stepId: step.id,
     attempt: step.attempt,
     skipInstall,
-  };
+  });
+  if (answer.kind !== 'commit') {
+    throw new Error(`Unexpected '${answer.kind}' answer to a commit request.`);
+  }
+  return { result: answer.result, absorbedStepIds: answer.absorbedStepIds };
+}
+
+/**
+ * The same for a step that owes only its install: no commit is due, or the
+ * commit waits for a fold.
+ */
+export async function installStepTree(
+  dir: string,
+  step: MigrateStep,
+  skipInstall: boolean,
+  seam: Exclude<BrokerRequestKind, 'commit'>,
+  installInProcess: () => Promise<void>
+): Promise<void> {
+  const nonce = process.env[BROKER_ENV_VAR];
+  if (!nonce) {
+    return installInProcess();
+  }
+  const answer = await ask(dir, nonce, {
+    kind: seam,
+    stepId: step.id,
+    attempt: step.attempt,
+    skipInstall,
+  });
+  if (answer.kind !== 'installed') {
+    throw new Error(
+      `Unexpected '${answer.kind}' answer to an install request.`
+    );
+  }
+}
+
+async function ask(
+  dir: string,
+  nonce: string,
+  request: BrokerRequest
+): Promise<BrokerAnswer> {
+  const id = `${nonce}-${request.stepId}-${request.attempt}-${request.kind}`;
   try {
     publishFileAtomically(requestPath(dir, id), (tmpPath) =>
       writeJsonFile(tmpPath, request)
     );
   } catch (e) {
     throw new BrokerUnavailableError(
-      `The nx migrate session that started this step is not accepting its commit request (${
+      `The nx migrate session that started this step is not accepting its request (${
         e instanceof Error ? e.message : String(e)
       }).`
     );
@@ -171,7 +224,7 @@ async function requestBrokeredCommit(
     }
     if (lock && lockIsFree(lock)) {
       throw new BrokerUnavailableError(
-        `The nx migrate session that started this step ended before its commit request was answered.`
+        `The nx migrate session that started this step ended before its request was answered.`
       );
     }
     await new Promise((resolve) => setTimeout(resolve, CHILD_POLL_INTERVAL_MS));
@@ -187,20 +240,18 @@ function lockIsFree(lock: FileLock): boolean {
   }
 }
 
-function settle(result: BrokerResult): BrokeredCommit {
+function settle(result: BrokerResult): BrokerAnswer {
   switch (result.kind) {
     case 'commit':
+    case 'installed':
       replayDeferredOutput(result.output);
-      return {
-        result: result.result,
-        absorbedStepIds: result.absorbedStepIds,
-      };
+      return result;
     case 'install-failed':
       replayDeferredOutput(result.output);
       throw new Error(result.message);
     case 'stale':
       throw new BrokerStaleRequestError(
-        `The commit request for this step no longer matches its attempt; nothing was installed or committed.`
+        `The request for this step no longer matches its attempt; nothing was installed or committed.`
       );
     default: {
       const exhaustive: never = result;
@@ -252,28 +303,37 @@ export class MigrateCommitBroker {
   private async answer(request: BrokerRequest): Promise<BrokerResult> {
     const state = readRunState(this.dir);
     const step = state.steps.find((s) => s.id === request.stepId);
-    if (!state.createCommits || !isAtCommitSeam(step, request)) {
+    if (
+      !Object.hasOwn(SEAM_STATUSES, request.kind) ||
+      !isAtSeam(step, request) ||
+      (request.kind === 'commit' && !state.createCommits)
+    ) {
       return { kind: 'stale' };
     }
-    const absorbedStepIds = uncoveredFailedStepIds(state).filter(
-      (id) => id !== step.id
-    );
     const output = new DeferredOutputCollector();
+    const install = () =>
+      installDepsChangedSinceDispense(
+        this.root,
+        this.dir,
+        step,
+        request.skipInstall,
+        this.reconcileCommand,
+        output
+      );
     try {
+      if (request.kind !== 'commit') {
+        await install();
+        return { kind: 'installed', output: output.render() };
+      }
+      const absorbedStepIds = uncoveredFailedStepIds(state).filter(
+        (id) => id !== step.id
+      );
       const result = await commitMigrationIfRequested(
         this.root,
         { name: splitMigrationId(step.migrationId).name },
         true,
         state.commitPrefix,
-        () =>
-          installDepsChangedSinceDispense(
-            this.root,
-            this.dir,
-            step,
-            request.skipInstall,
-            this.reconcileCommand,
-            output
-          ),
+        install,
         stepsToPendingMigrations(state, absorbedStepIds),
         undefined,
         output
@@ -290,7 +350,7 @@ export class MigrateCommitBroker {
       // here, where the install ran, on the attempt it ran for: a reconcile
       // may have rearmed the step meanwhile, and that attempt owes nothing.
       updateRunState(this.dir, (fresh) =>
-        isAtCommitSeam(
+        isAtSeam(
           fresh.steps.find((s) => s.id === step.id),
           request
         )
