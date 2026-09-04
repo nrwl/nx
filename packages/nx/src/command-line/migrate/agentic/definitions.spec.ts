@@ -6,6 +6,7 @@ import {
   codexDefinition,
   opencodeDefinition,
 } from './definitions';
+import { buildSystemPrompt } from './prompts/system-prompt';
 import { InvocationContext } from './types';
 
 function makeContext(
@@ -206,36 +207,113 @@ describe('opencodeDefinition', () => {
     expect(opencodeDefinition.wellKnownPaths()).toEqual([]);
   });
 
-  // Round-trip guard: the system prompt reference is embedded as a
-  // JSON-stringified value under OPENCODE_CONFIG_CONTENT. JSON handles quoting
-  // / newlines / angle-brackets, so a hostile workspace path must come back out
-  // of a JSON.parse round-trip as the reference opencode will resolve. That is
-  // the path with separators rewritten to `/`, or the inlined prompt when the
-  // path carries a `}` (see below).
+  // opencode expands `{env:<name>}` over the raw config text, then
+  // `{file:<path>}`, and parses the JSON only afterwards (1.18.27,
+  // `packages/opencode/src/config/variable.ts`). The env pass splices its value
+  // in unescaped, so what nx builds has to survive it, which a `JSON.parse`
+  // round trip does not show. Only that pass is reproduced here, alongside the
+  // file token opencode would look up: these tests are about which file the
+  // config names, not what reading it would return.
+  function readEnvExpandedConfig(
+    configContent: string,
+    env: Record<string, string> = {}
+  ): { fileReference?: string; prompt: string } {
+    const expanded = configContent.replace(
+      /\{env:([^}]+)\}/g,
+      (_, name) => (env[name] ?? process.env[name]) || ''
+    );
+    const token = expanded.match(/\{file:[^}]+\}/)?.[0];
+    return {
+      fileReference: token?.slice('{file:'.length, -1),
+      prompt: JSON.parse(expanded).agent['nx-migrate'].prompt,
+    };
+  }
+
   it.each([
-    ['equals signs and braces', '/ws/{ key: "value" }/m.system.md'],
-    ['double quotes', '/ws/"quoted"/m.system.md'],
     ['angle brackets', '/ws/<script>/m.system.md'],
     ['ampersands', '/ws/a && b/m.system.md'],
     ['backticks and dollars', '/ws/`whoami` $HOME/m.system.md'],
-    ['windows-style path', 'C:\\Users\\me\\My Documents\\ws\\m.system.md'],
+    ['single quotes', "/ws/it's/m.system.md"],
   ])(
-    'round-trips a hostile system prompt path through OPENCODE_CONFIG_CONTENT (%s)',
+    'points opencode at the system prompt file for a hostile path (%s)',
     (_label, systemPromptFilePath) => {
+      Object.defineProperty(process, 'platform', { value: 'linux' });
       const spec = opencodeDefinition.buildInteractive(
         makeContext({ systemPromptFilePath })
       );
-      const parsed = JSON.parse(spec.env!.OPENCODE_CONFIG_CONTENT as string);
-      const prompt = parsed.agent['nx-migrate'].prompt;
-      // A `}` in the path would end opencode's `{file:...}` substitution early,
-      // so those paths inline the prompt instead of referencing it.
-      expect(prompt).toBe(
-        systemPromptFilePath.includes('}')
-          ? 'system text'
-          : `{file:${systemPromptFilePath.replace(/\\/g, '/')}}`
+      const { fileReference } = readEnvExpandedConfig(
+        spec.env!.OPENCODE_CONFIG_CONTENT as string
       );
+      expect(fileReference).toBe(systemPromptFilePath);
     }
   );
+
+  it.each([
+    ['a closing brace', '/ws/{ key: "value" }/m.system.md'],
+    ['an opening brace', '/ws/{env:HOME/m.system.md'],
+    ['a double quote', '/ws/"quoted"/m.system.md'],
+    ['a backslash', '/ws/back\\slash/m.system.md'],
+    ['a newline', '/ws/two\nlines/m.system.md'],
+  ])(
+    'inlines the system prompt when the path carries %s',
+    (_label, systemPromptFilePath) => {
+      Object.defineProperty(process, 'platform', { value: 'linux' });
+      const spec = opencodeDefinition.buildInteractive(
+        makeContext({ systemPromptFilePath })
+      );
+      const { fileReference, prompt } = readEnvExpandedConfig(
+        spec.env!.OPENCODE_CONFIG_CONTENT as string
+      );
+      expect(fileReference).toBeUndefined();
+      expect(prompt).toBe('system text');
+    }
+  );
+
+  // The inlined prompt quotes the workspace root and the handoff path, so a
+  // workspace directory named after a substitution pattern lands inside it.
+  // Expansion must not rewrite the prompt nx wrote, and must not break the
+  // document when the value it would splice in carries a quote of its own.
+  it.each([
+    ['a plain value', 'replaced'],
+    ['a value with a quote and a backslash', 'a"b\\c'],
+  ])('inlines a prompt no substitution can reach (%s)', (_label, envValue) => {
+    Object.defineProperty(process, 'platform', { value: 'linux' });
+    const workspaceRoot = '/ws/{env:NX_MIGRATE_TEST_ROOT}';
+    const systemPrompt = buildSystemPrompt({
+      workspaceRoot,
+      handoffFileAbsolutePath: `${workspaceRoot}/.nx/migrate-runs/23.0.0/handoffs/pkg/m.json`,
+      packageManager: 'npm',
+      nxInvocation: 'npx nx',
+      mode: 'author',
+    });
+    const spec = opencodeDefinition.buildInteractive(
+      makeContext({
+        workspaceRoot,
+        systemPrompt,
+        systemPromptFilePath: `${workspaceRoot}/.nx/migrate-runs/23.0.0/handoffs/pkg/m.system.md`,
+      })
+    );
+    const { prompt } = readEnvExpandedConfig(
+      spec.env!.OPENCODE_CONFIG_CONTENT as string,
+      { NX_MIGRATE_TEST_ROOT: envValue }
+    );
+    expect(prompt).toBe(systemPrompt);
+  });
+
+  // `\` is the separator on Windows and `/` is accepted in its place, so the
+  // ordinary Windows path keeps the file reference rather than falling back.
+  it('rewrites Windows separators instead of inlining', () => {
+    Object.defineProperty(process, 'platform', { value: 'win32' });
+    const spec = opencodeDefinition.buildInteractive(
+      makeContext({
+        systemPromptFilePath: 'C:\\Users\\me\\My Documents\\ws\\m.system.md',
+      })
+    );
+    expect(
+      readEnvExpandedConfig(spec.env!.OPENCODE_CONFIG_CONTENT as string)
+        .fileReference
+    ).toBe('C:/Users/me/My Documents/ws/m.system.md');
+  });
 
   it('references the system prompt file via OPENCODE_CONFIG_CONTENT under the transient agent name', () => {
     const spec = opencodeDefinition.buildInteractive(makeContext());
