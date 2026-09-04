@@ -44,7 +44,7 @@ describe('resolveFormatCommand', () => {
     writeFileSync(join(root, '.prettierrc'), '{}');
 
     expect(resolveFormatCommand(root, 'pnpm exec')).toBe(
-      'pnpm exec prettier --write --ignore-unknown <paths>'
+      'pnpm exec prettier --write --ignore-unknown -- <paths>'
     );
   });
 
@@ -52,7 +52,7 @@ describe('resolveFormatCommand', () => {
     writeFileSync(join(root, '.oxfmtrc.json'), '{}');
 
     expect(resolveFormatCommand(root, 'npx')).toBe(
-      'npx oxfmt --no-error-on-unmatched-pattern <paths>'
+      'npx oxfmt --no-error-on-unmatched-pattern -- <paths>'
     );
   });
 
@@ -63,7 +63,7 @@ describe('resolveFormatCommand', () => {
     );
 
     expect(resolveFormatCommand(root, 'npx')).toBe(
-      'npx prettier --write --ignore-unknown <paths>'
+      'npx prettier --write --ignore-unknown -- <paths>'
     );
   });
 

@@ -6,7 +6,8 @@ import {
 
 /**
  * The command the agent runs over the files it changed, with a `<paths>`
- * placeholder.
+ * placeholder. `--` keeps a path that starts with `-` from being read as an
+ * option.
  */
 export function formatCommandFor(
   formatter: FormatterType,
@@ -15,11 +16,11 @@ export function formatCommandFor(
   switch (formatter) {
     case 'prettier':
       // --ignore-unknown skips files prettier has no parser for.
-      return `${pmExec} prettier --write --ignore-unknown <paths>`;
+      return `${pmExec} prettier --write --ignore-unknown -- <paths>`;
     case 'oxfmt':
       // oxfmt exits 2 when every path was skipped; the flag makes that
       // success. Unlike prettier it skips unparseable files on its own.
-      return `${pmExec} oxfmt --no-error-on-unmatched-pattern <paths>`;
+      return `${pmExec} oxfmt --no-error-on-unmatched-pattern -- <paths>`;
     default: {
       const unhandled: never = formatter;
       throw new Error(`Unhandled formatter: ${unhandled}`);
