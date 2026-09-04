@@ -1118,6 +1118,42 @@ describe('show target info', () => {
       );
     });
 
+    it("tokenizes a root project's globs like any other project", async () => {
+      const graph = graphWithLintTarget();
+      graph.nodes['root-proj'] = {
+        name: 'root-proj',
+        type: 'lib',
+        data: { root: '.', targets: {} },
+      } as never;
+      setGraph(graph);
+      setMockIoSnapshotReport({
+        used: ['my-app:lint'],
+        tasksWithOutputs: [],
+        diagnostics: [],
+        resolution: { requestedCommit: 'ae6a03f912ab', digest: '049a9c2f7bcd' },
+      });
+      setMockInputGlobs({
+        'my-app:lint': [
+          {
+            project: 'root-proj',
+            globs: ['Cargo.toml'],
+            observed: ['Cargo.toml'],
+            declared: [],
+            includeIgnored: true,
+            fromSnapshot: true,
+          },
+        ],
+      });
+
+      (console.log as Mock).mockClear();
+      await showTargetInfoHandler({ target: 'my-app:lint', verbose: true });
+      const text = (console.log as Mock).mock.calls.map((c) => c[0]).join('\n');
+
+      // `{projectRoot}` is "." for this project, so the glob reads the same
+      // way every other group's does rather than as a bare path.
+      expect(text).toContain('{projectRoot}/Cargo.toml');
+    });
+
     it('summarises the single-project reads unless --verbose', async () => {
       setGraph(graphWithLintTarget());
       setMockIoSnapshotReport({

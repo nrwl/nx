@@ -378,13 +378,15 @@ function isFileInput(value: InputDefinition | string): boolean {
 /**
  * Rewrites a workspace-relative glob to `{projectRoot}`-relative when it sits
  * inside the owning project, matching how the declared inputs above are
- * written. Negations keep their leading `!`.
+ * written. A project rooted at "." owns every path, so its globs tokenize
+ * whole. Negations keep their leading `!`.
  */
 function tokenizeProjectRoot(glob: string, root: string | undefined): string {
   if (!root) return glob;
   const negated = glob.startsWith('!');
   const path = negated ? glob.slice(1) : glob;
-  const token = root === '.' ? path : tokenizeUnder(path, root);
+  const token =
+    root === '.' ? `{projectRoot}/${path}` : tokenizeUnder(path, root);
   return negated ? `!${token}` : token;
 }
 
