@@ -82,7 +82,7 @@ describe('application generator', () => {
             },
             "outputs": [
               "{workspaceRoot}/dist/my-node-app/package.json",
-              "{workspaceRoot}/dist/my-node-app/pnpm-lock.yaml",
+              "{workspaceRoot}/dist/my-node-app/package-lock.json",
             ],
           },
           "serve": {
@@ -379,9 +379,16 @@ describe('application generator', () => {
         useProjectJson: false,
       });
 
-      expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(
-        `[]`
-      );
+      expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
+        [
+          {
+            "path": "./myapp-e2e",
+          },
+          {
+            "path": "./myapp",
+          },
+        ]
+      `);
       expect(readJson(tree, 'myapp/package.json')).toMatchInlineSnapshot(`
         {
           "dependencies": {
@@ -397,7 +404,6 @@ describe('application generator', () => {
           },
           "name": "@proj/myapp",
           "nx": {
-            "name": "myapp",
             "targets": {
               "copy-workspace-modules": {
                 "cache": true,
@@ -409,7 +415,7 @@ describe('application generator', () => {
                   "buildTarget": "build",
                 },
                 "outputs": [
-                  "{workspaceRoot}/dist/myapp/workspace_modules",
+                  "{workspaceRoot}/myapp/dist/workspace_modules",
                 ],
               },
               "prune": {
@@ -429,17 +435,17 @@ describe('application generator', () => {
                   "buildTarget": "build",
                 },
                 "outputs": [
-                  "{workspaceRoot}/dist/myapp/package.json",
-                  "{workspaceRoot}/dist/myapp/pnpm-lock.yaml",
+                  "{workspaceRoot}/myapp/dist/package.json",
+                  "{workspaceRoot}/myapp/dist/package-lock.json",
                 ],
               },
               "serve": {
                 "configurations": {
                   "development": {
-                    "buildTarget": "myapp:build:development",
+                    "buildTarget": "@proj/myapp:build:development",
                   },
                   "production": {
-                    "buildTarget": "myapp:build:production",
+                    "buildTarget": "@proj/myapp:build:production",
                   },
                 },
                 "continuous": true,
@@ -449,7 +455,7 @@ describe('application generator', () => {
                 ],
                 "executor": "@nx/js:node",
                 "options": {
-                  "buildTarget": "myapp:build",
+                  "buildTarget": "@proj/myapp:build",
                   "runBuildTargetDependencies": false,
                 },
               },
@@ -466,9 +472,6 @@ describe('application generator', () => {
       `);
       expect(readJson(tree, 'myapp/tsconfig.json')).toMatchInlineSnapshot(`
         {
-          "compilerOptions": {
-            "esModuleInterop": true,
-          },
           "extends": "../tsconfig.base.json",
           "files": [],
           "include": [],
@@ -487,21 +490,28 @@ describe('application generator', () => {
           "compilerOptions": {
             "emitDecoratorMetadata": true,
             "experimentalDecorators": true,
-            "module": "commonjs",
-            "moduleResolution": "bundler",
-            "outDir": "../dist/out-tsc",
+            "module": "nodenext",
+            "moduleResolution": "nodenext",
+            "outDir": "dist",
+            "rootDir": "src",
             "target": "es2021",
+            "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
             "types": [
               "node",
             ],
           },
           "exclude": [
+            "out-tsc",
+            "dist",
             "jest.config.ts",
             "jest.config.cts",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",
+            "eslint.config.js",
+            "eslint.config.cjs",
+            "eslint.config.mjs",
           ],
-          "extends": "./tsconfig.json",
+          "extends": "../tsconfig.base.json",
           "include": [
             "src/**/*.ts",
           ],
@@ -510,21 +520,28 @@ describe('application generator', () => {
       expect(readJson(tree, 'myapp/tsconfig.spec.json')).toMatchInlineSnapshot(`
         {
           "compilerOptions": {
-            "module": "commonjs",
-            "moduleResolution": "bundler",
-            "outDir": "../dist/out-tsc",
+            "emitDecoratorMetadata": true,
+            "experimentalDecorators": true,
+            "module": "nodenext",
+            "moduleResolution": "nodenext",
+            "outDir": "./out-tsc/jest",
             "types": [
               "jest",
               "node",
             ],
           },
-          "extends": "./tsconfig.json",
+          "extends": "../tsconfig.base.json",
           "include": [
             "jest.config.ts",
             "jest.config.cts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.d.ts",
+          ],
+          "references": [
+            {
+              "path": "./tsconfig.app.json",
+            },
           ],
         }
       `);
@@ -567,10 +584,11 @@ describe('application generator', () => {
       });
 
       expect(tree.exists('myapp/project.json')).toBeTruthy();
-      expect(readProjectConfiguration(tree, 'myapp')).toMatchInlineSnapshot(`
+      expect(readProjectConfiguration(tree, '@proj/myapp'))
+        .toMatchInlineSnapshot(`
         {
           "$schema": "../node_modules/nx/schemas/project-schema.json",
-          "name": "myapp",
+          "name": "@proj/myapp",
           "projectType": "application",
           "root": "myapp",
           "sourceRoot": "myapp/src",
@@ -586,7 +604,7 @@ describe('application generator', () => {
                 "buildTarget": "build",
               },
               "outputs": [
-                "{workspaceRoot}/dist/myapp/workspace_modules",
+                "{workspaceRoot}/myapp/dist/workspace_modules",
               ],
             },
             "prune": {
@@ -606,17 +624,17 @@ describe('application generator', () => {
                 "buildTarget": "build",
               },
               "outputs": [
-                "{workspaceRoot}/dist/myapp/package.json",
-                "{workspaceRoot}/dist/myapp/pnpm-lock.yaml",
+                "{workspaceRoot}/myapp/dist/package.json",
+                "{workspaceRoot}/myapp/dist/package-lock.json",
               ],
             },
             "serve": {
               "configurations": {
                 "development": {
-                  "buildTarget": "myapp:build:development",
+                  "buildTarget": "@proj/myapp:build:development",
                 },
                 "production": {
-                  "buildTarget": "myapp:build:production",
+                  "buildTarget": "@proj/myapp:build:production",
                 },
               },
               "continuous": true,
@@ -626,7 +644,7 @@ describe('application generator', () => {
               ],
               "executor": "@nx/js:node",
               "options": {
-                "buildTarget": "myapp:build",
+                "buildTarget": "@proj/myapp:build",
                 "runBuildTargetDependencies": false,
               },
             },
@@ -638,22 +656,23 @@ describe('application generator', () => {
           },
         }
       `);
+      expect(readJson(tree, 'myapp/package.json').nx).toBeUndefined();
       expect(tree.exists('myapp-e2e/project.json')).toBeTruthy();
-      expect(readProjectConfiguration(tree, 'myapp-e2e'))
+      expect(readProjectConfiguration(tree, '@proj/myapp-e2e'))
         .toMatchInlineSnapshot(`
         {
           "$schema": "../node_modules/nx/schemas/project-schema.json",
           "implicitDependencies": [
-            "myapp",
+            "@proj/myapp",
           ],
-          "name": "myapp-e2e",
+          "name": "@proj/myapp-e2e",
           "projectType": "application",
           "root": "myapp-e2e",
           "targets": {
             "e2e": {
               "dependsOn": [
-                "myapp:build",
-                "myapp:serve",
+                "@proj/myapp:build",
+                "@proj/myapp:serve",
               ],
               "executor": "@nx/jest:jest",
               "options": {
@@ -667,8 +686,7 @@ describe('application generator', () => {
           },
         }
       `);
-      expect(tree.exists('myapp/package.json')).toBeFalsy();
-      expect(tree.exists('myapp-e2e/package.json')).toBeFalsy();
+      expect(readJson(tree, 'myapp-e2e/package.json').nx).toBeUndefined();
     });
   });
 });
