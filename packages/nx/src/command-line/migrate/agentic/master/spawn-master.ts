@@ -1,9 +1,9 @@
 import { ChildProcess, spawn, SpawnOptions } from 'child_process';
-import { randomBytes } from 'crypto';
 import { existsSync, mkdirSync, rmSync } from 'fs';
 import { dirname, extname, join, relative, sep } from 'path';
 import { logger } from '../../../../utils/logger';
 import { resetSgrAfterAgent } from '../../migrate-output';
+import { BROKER_ENV_VAR, MigrateCommitBroker } from '../../run/broker';
 import { runDir, runHandoffsDir } from '../../run/run-state';
 import {
   AGENT_GRACEFUL_EXIT_MS,
@@ -32,7 +32,9 @@ export interface SpawnMasterSessionInput {
 
 export type SpawnMasterSessionResult =
   | { kind: 'exited' }
-  | { kind: 'spawn-failed'; error: Error };
+  | { kind: 'spawn-failed'; error: Error }
+  // The session was closed because a request it made could not be answered.
+  | { kind: 'broker-failed'; error: Error };
 
 // The wrapper's local re-exec sets the first two for its own hop and the user
 // sets the third to reach this path; inherited, they would change install or
@@ -45,21 +47,26 @@ const STRIPPED_ENV_VARS = [
 
 // Lives under handoffs/ because claude's run-scoped Edit rule already admits
 // the write and the orchestrator reads handoffs by step id, never by listing.
-// The nonce keeps a sentinel from an earlier session of the same run, stale
-// or still being written, from closing this one.
-function sessionCompleteSentinel(runRoot: string, runId: string): string {
+// The session nonce keeps a sentinel from an earlier session of the same run,
+// stale or still being written, from closing this one.
+function sessionCompleteSentinel(
+  runRoot: string,
+  runId: string,
+  nonce: string
+): string {
   return join(
     runHandoffsDir(runDir(runRoot, runId)),
-    `session-complete-${randomBytes(4).toString('hex')}`
+    `session-complete-${nonce}`
   );
 }
 
 /**
  * Spawns the agent once, with the run's pinned invariant and bootstrap prompt,
  * and waits for the session to end, closing it once the agent writes the
- * session-complete sentinel. Every failure before the process starts is
- * returned as `spawn-failed`; what the session did is read from run state by
- * the caller, never from the exit code.
+ * session-complete sentinel. Meanwhile it answers the install and commit
+ * requests the steps the agent runs hand out of its sandbox. Every failure
+ * before the process starts is returned as `spawn-failed`; what the session
+ * did is read from run state by the caller, never from the exit code.
  */
 export async function spawnMasterSession(
   input: SpawnMasterSessionInput
@@ -76,8 +83,16 @@ export async function spawnMasterSession(
   } = input;
   let sentinelPath: string;
   let child: ChildProcess;
+  let broker: MigrateCommitBroker | undefined;
   try {
-    sentinelPath = sessionCompleteSentinel(runRoot, runId);
+    // Locked before the agent exists: a step must never find the lock free
+    // while its parent is alive.
+    broker = new MigrateCommitBroker(
+      runRoot,
+      runDir(runRoot, runId),
+      reconcileCommand
+    );
+    sentinelPath = sessionCompleteSentinel(runRoot, runId, broker.nonce);
     const spec = buildMasterInvocation(agent.id, {
       runId,
       reconcileCommand,
@@ -88,6 +103,7 @@ export async function spawnMasterSession(
     for (const name of STRIPPED_ENV_VARS) {
       delete env[name];
     }
+    env[BROKER_ENV_VAR] = broker.nonce;
     const adapted = adaptMasterSpawnForWindowsShim(agent.binary, spec.args, {
       stdio: 'inherit',
       cwd: runRoot,
@@ -117,6 +133,7 @@ export async function spawnMasterSession(
     const spawnOptions = adapted.options;
     child = spawn(adapted.binary, adapted.args, spawnOptions);
   } catch (error) {
+    broker?.close();
     return { kind: 'spawn-failed', error: toError(error) };
   }
 
@@ -124,6 +141,17 @@ export async function spawnMasterSession(
   const swallowSigint = () => {};
   process.on('SIGINT', swallowSigint);
   const sentinelWatch = new AbortController();
+  let brokerFailure: Error | undefined;
+  // Settles once the poll is aborted and the request in flight, if any, is
+  // answered; earlier only when a request could not be answered, which is
+  // where it must not sit unanswered while this process lives on.
+  const brokerDone = serviceBrokerUntilAborted(
+    broker,
+    sentinelPollIntervalMs,
+    sentinelWatch.signal
+  ).catch((error) => {
+    brokerFailure = toError(error);
+  });
   let started = false;
   try {
     const exitPromise = waitForExit(child);
@@ -149,8 +177,9 @@ export async function spawnMasterSession(
         sentinelPollIntervalMs,
         sentinelWatch.signal
       ).then(() => 'sentinel' as const),
+      brokerDone.then(() => 'broker-failed' as const),
     ]);
-    if (winner === 'sentinel') {
+    if (winner !== 'exit') {
       await closeAgentSession(
         child,
         exitPromise,
@@ -160,6 +189,8 @@ export async function spawnMasterSession(
       // The close can return on `exitCode` while `waitForExit` is still in
       // its merge window; bounded so a stuck child cannot hold the run.
       await raceWithTimeout(exitPromise, forceKillWaitMs);
+    }
+    if (winner === 'sentinel') {
       // Hygiene only; run state decides the outcome, not this removal.
       try {
         rmSync(sentinelPath, { force: true });
@@ -176,13 +207,48 @@ export async function spawnMasterSession(
     );
   } finally {
     sentinelWatch.abort();
+    // A step killed with the session still gets its commit landed; the lock
+    // is released only once nothing can be waiting on an answer.
+    await brokerDone;
+    broker.close();
     process.removeListener('SIGINT', swallowSigint);
     if (started) {
       restoreTermiosAfterAgent();
       resetSgrAfterAgent();
     }
   }
-  return { kind: 'exited' };
+  return brokerFailure
+    ? { kind: 'broker-failed', error: brokerFailure }
+    : { kind: 'exited' };
+}
+
+async function serviceBrokerUntilAborted(
+  broker: MigrateCommitBroker,
+  intervalMs: number,
+  signal: AbortSignal
+): Promise<void> {
+  while (!signal.aborted) {
+    await broker.service();
+    await delayUnlessAborted(intervalMs, signal);
+  }
+}
+
+function delayUnlessAborted(ms: number, signal: AbortSignal): Promise<void> {
+  return new Promise((resolve) => {
+    if (signal.aborted) {
+      resolve();
+      return;
+    }
+    const onAbort = () => {
+      clearTimeout(timer);
+      resolve();
+    };
+    const timer = setTimeout(() => {
+      signal.removeEventListener('abort', onAbort);
+      resolve();
+    }, ms);
+    signal.addEventListener('abort', onAbort, { once: true });
+  });
 }
 
 function toError(error: unknown): Error {

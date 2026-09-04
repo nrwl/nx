@@ -88,7 +88,8 @@ function codexWellKnownPaths(): string[] {
 }
 
 // No handoff permission flag: codex's default sandbox already allows writes
-// inside the cwd tree, and a user-hardened read-only config is theirs to keep.
+// inside the cwd tree (`.git` excepted), and a user-hardened read-only config
+// is theirs to keep.
 //
 // `-c model_instructions_file` replaces codex's built-in instructions rather
 // than adding this context to them, so the context stays on the command line,
