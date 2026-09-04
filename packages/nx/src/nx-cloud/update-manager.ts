@@ -5,6 +5,7 @@ import {
   mkdirSync,
   readdirSync,
   readFileSync,
+  renameSync,
   rmSync,
   statSync,
   writeFileSync,
@@ -17,7 +18,8 @@ import { debugLog } from './debug-logger';
 import type { CloudTaskRunnerOptions } from './nx-cloud-tasks-runner-shell';
 import * as tar from 'tar-stream';
 import { cacheDir } from '../utils/cache-directory';
-import { createHash } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
+import { FileLock, IS_WASM } from '../native';
 import { TasksRunner } from '../tasks-runner/tasks-runner';
 import { RemoteCacheV2 } from '../tasks-runner/default-tasks-runner';
 import { workspaceRoot } from '../utils/workspace-root';
@@ -127,21 +129,20 @@ export async function verifyOrUpdateNxCloudClient(options?: {
       throw new NxCloudEnterpriseOutdatedError(apiUrl);
     }
 
-    const fullPath = await downloadAndExtractClientBundle(
+    const installedBundle = await downloadAndExtractClientBundle(
       axios,
-      runnerBundleInstallDirectory,
       version,
       url
     );
 
-    debugLog('Done: ', fullPath);
+    debugLog('Done: ', installedBundle.fullPath);
 
-    const nxCloudClient = require(fullPath);
+    const nxCloudClient = require(installedBundle.fullPath);
 
     if (nxCloudClient.commands === undefined) {
       throw new NxCloudEnterpriseOutdatedError(apiUrl);
     }
-    return { version, nxCloudClient };
+    return { version: installedBundle.version, nxCloudClient };
   }
 
   if (currentBundle === null) {
@@ -188,6 +189,31 @@ export function getBundleInstallDefaultLocation() {
 
 const runnerBundleInstallDirectory = getBundleInstallDefaultLocation();
 
+// Control files live in their own subdirectory so that no bundle can ever
+// collide with one. A version has to start alphanumeric (see
+// VALID_BUNDLE_VERSION), so it can never name '.state', and installing a
+// bundle rewrites <installDir>/<version> with rmSync + renameSync - which,
+// with the control files alongside it, would replace one with a directory and
+// brick the workspace with no in-band recovery.
+const stateDirectory = join(runnerBundleInstallDirectory, '.state');
+
+function ensureStateDirectory(): void {
+  mkdirSync(stateDirectory, { recursive: true });
+}
+
+const downloadLockFilePath = join(stateDirectory, 'download.lock');
+
+// The record lives beside the lockfile rather than inside it. Windows
+// byte-range locks are mandatory and handle-scoped, so writing to a file this
+// process holds an exclusive lock on fails with ERROR_LOCK_VIOLATION. It also
+// matches the convention elsewhere in nx: project-graph.lock and run.json.lock
+// are never written to.
+const downloadRecordFilePath = join(stateDirectory, 'download.record');
+
+// A version names a directory that is created and later deleted, so a value
+// from the server must not be able to escape the install directory.
+const VALID_BUNDLE_VERSION = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
+
 function getLatestInstalledRunnerBundle(): CloudBundleInstall | null {
   if (!existsSync(runnerBundleInstallDirectory)) {
     mkdirSync(runnerBundleInstallDirectory, { recursive: true });
@@ -198,9 +224,13 @@ function getLatestInstalledRunnerBundle(): CloudBundleInstall | null {
       runnerBundleInstallDirectory
     )
       .filter((potentialDirectory) => {
-        return statSync(
-          join(runnerBundleInstallDirectory, potentialDirectory)
-        ).isDirectory();
+        // '.tmp-*' directories are in-progress or crashed downloads
+        return (
+          !potentialDirectory.startsWith('.') &&
+          statSync(
+            join(runnerBundleInstallDirectory, potentialDirectory)
+          ).isDirectory()
+        );
       })
       .map((fileOrDirectory) => ({
         version: fileOrDirectory,
@@ -212,7 +242,10 @@ function getLatestInstalledRunnerBundle(): CloudBundleInstall | null {
       return null;
     }
 
-    return installedBundles[0];
+    // A contended install can leave several bundles on disk. The record names
+    // the one an install last completed, which is the one to run; fall back to
+    // directory order for a bundle installed before records existed.
+    return recordedBundle() ?? installedBundles[0];
   } catch (e: any) {
     console.log('Could not read runner bundle path:', e.message);
     return null;
@@ -263,7 +296,7 @@ async function verifyCurrentBundle(
 }
 
 function getLatestBundleVerificationTimestamp(): number | null {
-  const lockfilePath = join(runnerBundleInstallDirectory, 'verify.lock');
+  const lockfilePath = join(stateDirectory, 'verify.lock');
 
   if (existsSync(lockfilePath)) {
     const timestampAsString = readFileSync(lockfilePath, 'utf-8');
@@ -280,8 +313,9 @@ function getLatestBundleVerificationTimestamp(): number | null {
 }
 
 function writeBundleVerificationLock() {
-  const lockfilePath = join(runnerBundleInstallDirectory, 'verify.lock');
+  const lockfilePath = join(stateDirectory, 'verify.lock');
 
+  ensureStateDirectory();
   writeFileSync(lockfilePath, new Date().getTime().toString(), 'utf-8');
 }
 
@@ -316,12 +350,132 @@ function hashDirectory(dir: string): string {
   return createHash('sha256').update(combinedHashes).digest('hex');
 }
 
-async function downloadAndExtractClientBundle(
+export async function downloadAndExtractClientBundle(
   axios: AxiosInstance,
-  runnerBundleInstallDirectory: string,
   version: string,
   url: string
+): Promise<CloudBundleInstall> {
+  // Parallel nx processes race to install bundles, possibly at different
+  // versions. The first to take the lock downloads; the rest wait and adopt
+  // its bundle when the server asked them for that same version. Otherwise
+  // they download their own as a contended install, which leaves the holder's
+  // bundle on disk for the process running from it. The flock is released by
+  // the kernel if the holder dies, so no stale-lock cleanup is needed. Under
+  // WASM the lock is unavailable and downloads run unserialized.
+  if (!VALID_BUNDLE_VERSION.test(version)) {
+    throw new Error(`Invalid Nx Cloud client bundle version: ${version}`);
+  }
+
+  const recordBeforeContending = readDownloadRecord();
+  const lock = !IS_WASM ? new FileLock(downloadLockFilePath) : null;
+  let locked = lock?.locked;
+  let contended = false;
+  while (locked) {
+    debugLog(
+      'Another process is downloading the client bundle, waiting for it to complete'
+    );
+    await lock.wait();
+    const installedBundle = bundleInstalledSince(recordBeforeContending);
+    if (installedBundle) {
+      if (installedBundle.version === version) {
+        debugLog(
+          'Using client bundle downloaded by another process: ',
+          installedBundle.version
+        );
+        return installedBundle;
+      }
+      // A different version means that process is running from a bundle this
+      // one must not delete.
+      contended = true;
+      debugLog(
+        'Another process installed a different bundle: ',
+        installedBundle.version
+      );
+    }
+    // The other process failed or installed an older version, so this process
+    // still needs to download.
+    locked = lock.check();
+  }
+  lock?.lock();
+  try {
+    // A process that acquired the lock between the check above and lock() may
+    // have completed an install already.
+    const installedBundle = bundleInstalledSince(recordBeforeContending);
+    if (installedBundle) {
+      if (installedBundle.version === version) {
+        debugLog(
+          'Using client bundle downloaded by another process: ',
+          installedBundle.version
+        );
+        return installedBundle;
+      }
+      // A different version means that process is running from a bundle this
+      // one must not delete.
+      contended = true;
+      debugLog(
+        'Another process installed a different bundle: ',
+        installedBundle.version
+      );
+    }
+
+    const fullPath = await downloadAndExtractBundle(
+      axios,
+      version,
+      url,
+      contended
+    );
+    return { version, fullPath };
+  } finally {
+    lock?.unlock();
+  }
+}
+
+// Records "<version> <nonce>", written only once an install has COMPLETED.
+// The nonce makes every install distinct, so a waiter can tell "an install
+// finished while I waited" from "this record is left over from a past run" by
+// comparing the record it read before contending. Timestamps cannot answer
+// that: filesystem mtime granularity is coarser than the race window.
+function readDownloadRecord(): string {
+  try {
+    return readFileSync(downloadRecordFilePath, 'utf-8').trim();
+  } catch {
+    return '';
+  }
+}
+
+function writeDownloadRecord(version: string): void {
+  ensureStateDirectory();
+  writeFileSync(downloadRecordFilePath, `${version} ${randomUUID()}`, 'utf-8');
+}
+
+/** The bundle the record names, if it is still on disk. */
+function recordedBundle(): CloudBundleInstall | null {
+  const version = readDownloadRecord().split(' ')[0];
+  if (!version || !VALID_BUNDLE_VERSION.test(version)) {
+    return null;
+  }
+  const fullPath = join(runnerBundleInstallDirectory, version);
+  return existsSync(fullPath) ? { version, fullPath } : null;
+}
+
+/**
+ * The bundle an install completed during this call, or null. Requires the
+ * record to have changed since `recordBefore` was read: a directory existing
+ * proves only that some earlier run left one there, and an install
+ * interrupted on a released nx leaves exactly that.
+ */
+function bundleInstalledSince(recordBefore: string): CloudBundleInstall | null {
+  return readDownloadRecord() === recordBefore ? null : recordedBundle();
+}
+
+async function downloadAndExtractBundle(
+  axios: AxiosInstance,
+  version: string,
+  url: string,
+  contended: boolean
 ): Promise<string> {
+  const bundleExtractLocation = join(runnerBundleInstallDirectory, version);
+
   let resp;
   try {
     resp = await axios.get(url, {
@@ -332,58 +486,117 @@ async function downloadAndExtractClientBundle(
     throw e;
   }
 
-  const bundleExtractLocation = join(runnerBundleInstallDirectory, version);
+  // Extract into a temp directory and rename into place afterwards, so a
+  // failed or interrupted download never leaves a partial bundle at the
+  // path other processes require it from.
+  const tempExtractLocation = join(
+    runnerBundleInstallDirectory,
+    `.tmp-${version}-${process.pid}`
+  );
+  mkdirSync(tempExtractLocation, { recursive: true });
 
-  if (!existsSync(bundleExtractLocation)) {
-    mkdirSync(bundleExtractLocation);
-  }
-  return new Promise((res, rej) => {
-    const extract = tar.extract();
-    extract.on('entry', function (headers, stream, next) {
-      if (headers.type === 'directory') {
-        const directoryPath = join(bundleExtractLocation, headers.name);
-        if (!existsSync(directoryPath)) {
-          mkdirSync(directoryPath, { recursive: true });
-        }
-        next();
-
-        stream.resume();
-      } else if (headers.type === 'file') {
-        const outputFilePath = join(bundleExtractLocation, headers.name);
-        const writeStream = createWriteStream(outputFilePath);
-        stream.pipe(writeStream);
-
-        // Continue the tar stream after the write stream closes
-        writeStream.on('close', () => {
+  try {
+    await new Promise<void>((res, rej) => {
+      const extract = tar.extract();
+      extract.on('entry', function (headers, stream, next) {
+        if (headers.type === 'directory') {
+          const directoryPath = join(tempExtractLocation, headers.name);
+          if (!existsSync(directoryPath)) {
+            mkdirSync(directoryPath, { recursive: true });
+          }
           next();
-        });
 
-        stream.resume();
-      }
+          stream.resume();
+        } else if (headers.type === 'file') {
+          const outputFilePath = join(tempExtractLocation, headers.name);
+          const writeStream = createWriteStream(outputFilePath);
+          stream.pipe(writeStream);
+
+          // Continue the tar stream after the write stream closes
+          writeStream.on('close', () => {
+            next();
+          });
+          writeStream.on('error', rej);
+
+          stream.resume();
+        } else {
+          // Any other entry type still has to advance the stream. Calling
+          // neither next() nor resume() stalls tar-stream, and this process is
+          // holding the download lock while it stalls.
+          stream.resume();
+          next();
+        }
+      });
+
+      extract.on('error', (e) => {
+        rej(e);
+      });
+
+      extract.on('finish', function () {
+        res();
+      });
+
+      // A failure on the response or gunzip stream is not forwarded to
+      // `extract`, so without these the promise never settles: the download
+      // lock stays held and every other nx process waits on it forever.
+      const gunzip = createGunzip();
+      resp.data.on('error', rej);
+      gunzip.on('error', rej);
+      resp.data.pipe(gunzip).pipe(extract);
     });
 
-    extract.on('error', (e) => {
-      rej(e);
-    });
+    rmSync(bundleExtractLocation, { recursive: true, force: true });
+    renameSync(tempExtractLocation, bundleExtractLocation);
+    // Recorded only now: the record is the signal that a bundle at this
+    // version was installed by this process, which is what lets a waiter
+    // adopt it instead of downloading again.
+    writeDownloadRecord(version);
+  } catch (e) {
+    rmSync(tempExtractLocation, { recursive: true, force: true });
+    throw e;
+  }
 
-    extract.on('finish', function () {
-      removeOldClientBundles(version);
-      writeBundleVerificationLock();
-      res(bundleExtractLocation);
-    });
-
-    resp.data.pipe(createGunzip()).pipe(extract);
-  });
+  // On a contended install another process just installed — and is running
+  // from — an older bundle; leave it on disk and let a later uncontended
+  // install clean it up.
+  if (!contended) {
+    removeOldClientBundles(version);
+  }
+  writeBundleVerificationLock();
+  return bundleExtractLocation;
 }
 
 function removeOldClientBundles(currentInstallVersion: string) {
   const filesAndFolders = readdirSync(runnerBundleInstallDirectory);
 
   for (let fileOrFolder of filesAndFolders) {
+    // '.state' holds the control files. A '.tmp-*' left by a crashed extract
+    // is reclaimed here, which is safe only because this runs after our own
+    // was renamed away and the download lock means no other process is
+    // extracting. Under WASM there is no lock, so a concurrent extract may
+    // still own that directory: leaving it costs disk, deleting it would
+    // fail that process's install.
+    if (
+      fileOrFolder === currentInstallVersion ||
+      fileOrFolder === '.state' ||
+      (IS_WASM && fileOrFolder.startsWith('.tmp-'))
+    ) {
+      continue;
+    }
     const fileOrFolderPath = join(runnerBundleInstallDirectory, fileOrFolder);
 
-    if (fileOrFolder !== currentInstallVersion) {
-      rmSync(fileOrFolderPath, { recursive: true });
+    // Another process's cleanup can remove an entry between the readdir above
+    // and these calls, so both tolerate it already being gone.
+    let isBundle: boolean;
+    try {
+      // Only directories are bundles. The lock files must survive: a lock on
+      // a deleted file no longer excludes processes that reopen the path.
+      isBundle = statSync(fileOrFolderPath).isDirectory();
+    } catch {
+      continue;
+    }
+    if (isBundle) {
+      rmSync(fileOrFolderPath, { recursive: true, force: true });
     }
   }
 }
