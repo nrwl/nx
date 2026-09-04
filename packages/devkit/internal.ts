@@ -262,6 +262,8 @@ export {
   normalizeDependencyConfigDefinition,
   normalizeDependencyConfigProjects,
   normalizeTargetDependencyWithStringProjects,
+  nxFileMap,
+  nxProjectGraph,
   nxVersion,
   orange,
   parseExecutor,
