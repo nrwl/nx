@@ -24,6 +24,10 @@ vi.mock('./resolve-plugin', () => ({
 vi.mock('../../plugins/js/utils/register', () => ({
   refreshSourceGraphResolvers: vi.fn(),
 }));
+vi.mock('../../plugins/js/utils/typescript', async () => ({
+  ...(await vi.importActual('../../plugins/js/utils/typescript')),
+  getRootTsConfigCustomConditions: vi.fn(() => []),
+}));
 
 describe('reasonToError', () => {
   it('should return the same Error instance when given a real Error', () => {
@@ -201,6 +205,31 @@ describe('getPluginsSeparated', () => {
 
     expect(refreshSourceGraphResolvers).toHaveBeenCalledTimes(1);
     expect(refreshSourceGraphResolvers).toHaveBeenCalledWith('/workspace');
+  });
+
+  it('tears down and reloads the plugin set when the root customConditions change', async () => {
+    const { getRootTsConfigCustomConditions } =
+      await import('../../plugins/js/utils/typescript');
+    const cleanup = vi.fn();
+    loadNxPlugin.mockImplementation((plugin: unknown) => [
+      Promise.resolve({
+        name: typeof plugin === 'string' ? plugin : (plugin as any).plugin,
+      }),
+      cleanup,
+    ]);
+    const loadsOf = (name: string) =>
+      loadNxPlugin.mock.calls.filter(([plugin]) => plugin === name).length;
+    (getRootTsConfigCustomConditions as Mock).mockReturnValue(['@proj/source']);
+    await getPluginsSeparated({ plugins: ['test-a'] }, '/workspace');
+    expect(loadsOf('test-a')).toBe(1);
+
+    (getRootTsConfigCustomConditions as Mock).mockReturnValue(['@proj/src']);
+    await getPluginsSeparated({ plugins: ['test-a'] }, '/workspace');
+
+    // A source worker takes the conditions as process flags at spawn, so the
+    // old set is torn down rather than refreshed in place.
+    expect(cleanup).toHaveBeenCalled();
+    expect(loadsOf('test-a')).toBe(2);
   });
 
   it('does not rebuild the local-plugin resolution snapshot on a cache hit', async () => {
