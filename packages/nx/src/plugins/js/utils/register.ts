@@ -402,8 +402,8 @@ function isPnpConditionsOnlyRejection(err: unknown): boolean {
   if ((err as { code?: unknown })?.code !== 'UNSUPPORTED') {
     return false;
   }
-  const match = PNP_UNSUPPORTED_OPTIONS_RE.exec(
-    String((err as { message?: unknown }).message)
+  const match = String((err as { message?: unknown }).message).match(
+    PNP_UNSUPPORTED_OPTIONS_RE
   );
   return match?.[1] === 'conditions';
 }
