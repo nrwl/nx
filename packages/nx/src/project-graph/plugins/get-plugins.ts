@@ -6,11 +6,12 @@ import {
   PluginConfiguration,
   readNxJson,
 } from '../../config/nx-json';
-import { hashObject } from '../../hasher/file-hasher';
 import { refreshSourceGraphResolvers } from '../../plugins/js/utils/register';
+import { getRootTsConfigCustomConditions } from '../../plugins/js/utils/typescript';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { loadNxPlugin } from './in-process-loader';
 import { loadIsolatedNxPlugin } from './isolation';
+import { hashPluginState } from './plugin-state';
 import { resetResolvePluginCache } from './resolve-plugin';
 
 import { isIsolationEnabled } from './isolation/enabled';
@@ -31,7 +32,7 @@ import {
 /**
  * Stuff for specified NX Plugins.
  */
-let currentPluginsConfigurationHash: string;
+let currentPluginStateHash: string;
 let loadedPlugins: LoadedNxPlugin[];
 let cachedSeparatedPlugins: SeparatedPlugins;
 let pendingPluginsPromise: Promise<LoadedNxPlugin[]> | undefined;
@@ -181,13 +182,13 @@ export async function getPluginsSeparated(
   root = workspaceRoot
 ): Promise<SeparatedPlugins> {
   const pluginsConfiguration = nxJson.plugins ?? [];
-  const pluginsConfigurationHash = hashObject(pluginsConfiguration);
+  const pluginStateHash = hashPluginState(
+    pluginsConfiguration,
+    getRootTsConfigCustomConditions(root)
+  );
 
-  // If the plugins configuration has not changed, reuse the current plugins
-  if (
-    cachedSeparatedPlugins &&
-    pluginsConfigurationHash === currentPluginsConfigurationHash
-  ) {
+  // If the plugin state has not changed, reuse the current plugins
+  if (cachedSeparatedPlugins && pluginStateHash === currentPluginStateHash) {
     refreshSourceGraphResolvers(root);
     return cachedSeparatedPlugins;
   }
@@ -197,12 +198,13 @@ export async function getPluginsSeparated(
   // A concurrent call is already loading this exact plugin set — share its
   // load rather than starting a second one that would race the module-level
   // cache state below.
-  if (pendingSeparatedPlugins?.hash === pluginsConfigurationHash) {
+  if (pendingSeparatedPlugins?.hash === pluginStateHash) {
     return pendingSeparatedPlugins.promise;
   }
 
-  // Plugins config changed (e.g. `nx add @nx/maven` updated nx.json). The
-  // cached SeparatedPlugins is invalidated by the early-return above, but
+  // Plugin state changed (e.g. `nx add @nx/maven` updated nx.json, or the
+  // root `customConditions` were edited). The cached SeparatedPlugins is
+  // invalidated by the early-return above, but
   // pendingPluginsPromise — the in-flight load — would otherwise be reused
   // by the `??=` below and serve the previous plugin set forever. Tear
   // down the old workers and force a fresh load.
@@ -244,7 +246,7 @@ export async function getPluginsSeparated(
     // cached set are always written together and describe the same plugins.
     if (pendingSeparatedPlugins?.promise === loadPromise) {
       cachedSeparatedPlugins = separatedPlugins;
-      currentPluginsConfigurationHash = pluginsConfigurationHash;
+      currentPluginStateHash = pluginStateHash;
       loadedPlugins = specifiedPlugins.concat(defaultPlugins);
     }
 
@@ -252,7 +254,7 @@ export async function getPluginsSeparated(
   })();
 
   pendingSeparatedPlugins = {
-    hash: pluginsConfigurationHash,
+    hash: pluginStateHash,
     promise: loadPromise,
   };
 
