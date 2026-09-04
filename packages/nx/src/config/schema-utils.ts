@@ -130,9 +130,8 @@ export function resolveImplementation(
 }
 
 /**
- * Resolves an implementation and, when it comes from source, registers its
- * source graph before the caller loads the path, so the entry's workspace
- * imports resolve with the tsconfig conditions.
+ * Resolves an implementation and registers its source graph before returning
+ * a source path, so its workspace imports use the tsconfig conditions.
  */
 export function resolveImplementationWithSourceGraph(
   implementationModulePath: string,

@@ -118,6 +118,8 @@ async function tryGetModule(
       packageJson['schematics'] ??
       packageJson['builders']
     ) {
+      // The module stays cached, so its source graph stays registered for the
+      // workspace imports it may still make.
       const [pluginPromise] = loadNxPlugin(packageJson.name, workspaceRoot);
       return await pluginPromise;
     } else {

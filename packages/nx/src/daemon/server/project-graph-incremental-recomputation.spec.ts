@@ -178,9 +178,8 @@ describe('plugin state freshness', () => {
     fs.cleanup();
   });
 
-  // The root customConditions are part of the plugin state a compute snapshots
-  // at kickoff: a source-loaded worker takes them as process flags, so a graph
-  // computed under the old set must chain to a successor rather than commit.
+  // Source workers take the root customConditions as process flags at spawn,
+  // so a running compute must restart when they change.
   it('chains an in-flight compute to a successor when the root customConditions change', async () => {
     const tsconfig = (conditions: string[]) =>
       JSON.stringify({ compilerOptions: { customConditions: conditions } });
@@ -195,8 +194,8 @@ describe('plugin state freshness', () => {
     const { setWorkspaceRoot } = await import('../../utils/workspace-root');
     setWorkspaceRoot(fs.tempDir);
 
-    // Park the first compute inside its config retrieval, after it snapshotted
-    // the plugin state. The mock controls timing, not logic.
+    // Delay the first retrieval after the plugin-state snapshot without
+    // replacing it.
     let releaseFirstRetrieve: () => void;
     const firstRetrieveGate = new Promise<void>((resolve) => {
       releaseFirstRetrieve = resolve;
@@ -238,8 +237,7 @@ describe('plugin state freshness', () => {
     const result = await first;
     expect(result.error).toBeNull();
     expect(result.projectGraph).toBeDefined();
-    // The successor's retrieval, proving the parked compute discarded its
-    // own result and chained instead of committing.
+    // A second retrieval proves the stale result chained to a successor.
     expect(retrieveCallCount).toBeGreaterThanOrEqual(2);
   });
 });
