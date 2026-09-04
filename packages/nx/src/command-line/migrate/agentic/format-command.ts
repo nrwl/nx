@@ -29,12 +29,10 @@ export function formatCommandFor(
 }
 
 /**
- * Resolved against the workspace as it is now, so it goes stale once a
- * migration changes the formatter; callers re-resolve per dispense, and the
- * scope rules name the replacement commands for the step that made the change.
- * `null` when no formatter is configured, or the configured one is not
- * installed: under npm the command would otherwise make `npx` download and run
- * it, where `nx format` refuses.
+ * Resolved per dispense so a migration's formatter change takes effect; the
+ * scope rules name the replacement commands for the step that made it. `null`
+ * when no formatter is configured or its binary cannot be resolved: under npm
+ * the command would otherwise make `npx` download it.
  */
 export function resolveFormatCommand(
   root: string,
