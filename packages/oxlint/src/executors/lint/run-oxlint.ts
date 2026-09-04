@@ -36,9 +36,9 @@ export type OxlintRun =
   | { ok: false; output: string };
 
 /**
- * One `oxlint --format=json` invocation from the workspace root. A run that
- * produces no JSON (config parse error, missing binary) comes back as its raw
- * output instead, because that text is the only explanation Oxlint gives.
+ * One `oxlint --format=json` invocation from the workspace root. If Oxlint
+ * produces no JSON, its raw output is returned because that text is the only
+ * explanation Oxlint gives.
  */
 export function runOxlint(args: string[], workspaceRoot: string): OxlintRun {
   const bin = resolveOxlintBin(workspaceRoot);
