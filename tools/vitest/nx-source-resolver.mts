@@ -12,7 +12,7 @@ import type { Plugin } from 'vite';
  * manifest under `packages/` names the source entry.
  */
 
-const repoRoot = resolve(import.meta.dirname, '..');
+const repoRoot = resolve(import.meta.dirname, '..', '..');
 const packagesDir = join(repoRoot, 'packages');
 const SOURCE_CONDITION = '@nx/nx-source';
 const EXTENSIONS = ['.ts', '.tsx', '.js', '.json'];

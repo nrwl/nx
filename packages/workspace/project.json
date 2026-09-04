@@ -26,10 +26,8 @@
     "test": {
       "inputs": [
         "...",
-        "{workspaceRoot}/scripts/vitest-setup.mts",
-        "{workspaceRoot}/scripts/vitest-nx-source-resolver.mts",
+        "{workspaceRoot}/tools/vitest/**/*",
         "{workspaceRoot}/scripts/jest-mocks/clack-prompts.js",
-        "{workspaceRoot}/**/tsconfig.json",
         "{workspaceRoot}/.editorconfig"
       ]
     }
