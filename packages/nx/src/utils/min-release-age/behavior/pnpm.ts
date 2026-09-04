@@ -32,7 +32,7 @@ interface PnpmBehaviorRow {
   // Inclusive lower bound; the first row whose bound is <= the version wins
   // when iterating newest-bound-first.
   minVersion: string;
-  major: 10 | 11;
+  major: 10 | 11 | 12;
   // v10 is hardcoded strict; v11 defaults loose with optional auto-strict.
   strictMode: 'always' | 'default-loose';
   // >=11.0.4: window explicitly set on any surface auto-enables strict.
@@ -43,6 +43,14 @@ interface PnpmBehaviorRow {
 
 // Ordered newest-bound-first so the first matching row applies.
 const PNPM_BEHAVIOR_ROWS: PnpmBehaviorRow[] = [
+  {
+    minVersion: '12.0.0',
+    major: 12,
+    strictMode: 'default-loose',
+    strictAutoOnWhenExplicit: true,
+    excludeGrammar: 'v2-globs-unions',
+    writesExcludes: true,
+  },
   {
     minVersion: '11.1.3',
     major: 11,
@@ -198,7 +206,7 @@ export async function readPnpmPolicy(
 ): Promise<MinReleaseAgePolicyReadResult> {
   // A pnpm major newer than the table knows can behave differently; defer to a
   // real install rather than guessing.
-  if (gte(pmVersion, '12.0.0')) {
+  if (gte(pmVersion, '13.0.0')) {
     return {
       outcome: 'ambiguous',
       reason: `pnpm ${pmVersion} is newer than the known cooldown behavior table.`,
@@ -227,14 +235,14 @@ export async function readPnpmPolicy(
   } = parseCooldownConfig(config);
 
   // An explicitly configured window (from whatever surface pnpm honors) wins;
-  // otherwise v11 falls back to its built-in 1440-minute (1 day) default, while
-  // v10 has no default (no cooldown).
+  // otherwise v11 and v12 fall back to the built-in 1440-minute (1 day) default,
+  // while v10 has no default (no cooldown).
   let windowMinutes: number;
   let windowExplicit: boolean;
   if (explicitWindow !== undefined) {
     windowMinutes = explicitWindow;
     windowExplicit = true;
-  } else if (row.major === 11) {
+  } else if (row.major >= 11) {
     windowMinutes = 1440;
     windowExplicit = false;
   } else {
@@ -251,15 +259,15 @@ export async function readPnpmPolicy(
   const sourceDescription = `pnpm minimumReleaseAge (${windowMinutes} min)`;
 
   const strict = resolveStrict(row, strictExplicit, windowExplicit);
-  // v10 always errors on missing time; v11 defaults to skip unless a surface
-  // explicitly disabled it.
+  // v10 always errors on missing time; v11 and above default to skip unless a
+  // surface explicitly disabled it.
   const ignoreMissingTime =
-    row.major === 11 ? (ignoreMissingTimeExplicit ?? true) : false;
+    row.major >= 11 ? (ignoreMissingTimeExplicit ?? true) : false;
   const behavior: PmMinReleaseAgeBehavior = {
     packageManager: 'pnpm',
     strict,
-    // Loose fallback only exists on v11 when strict is off.
-    looseFallback: row.major === 11 && !strict,
+    // Loose fallback only exists from v11 onwards when strict is off.
+    looseFallback: row.major >= 11 && !strict,
     writesExcludes: row.writesExcludes,
     missingTimeMap:
       row.major === 10 ? 'error' : ignoreMissingTime ? 'skip' : 'error',
