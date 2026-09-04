@@ -16,7 +16,7 @@ import { createApiAxiosInstance } from './utilities/axios';
 import { debugLog } from './debug-logger';
 import type { CloudTaskRunnerOptions } from './nx-cloud-tasks-runner-shell';
 import * as tar from 'tar-stream';
-import { cacheDir } from '../utils/cache-directory';
+import { cacheDirectoryForWorkspace } from '../utils/cache-directory';
 import { createHash } from 'crypto';
 import { TasksRunner } from '../tasks-runner/tasks-runner';
 import { RemoteCacheV2 } from '../tasks-runner/default-tasks-runner';
@@ -181,9 +181,12 @@ export function getBundleInstallDefaultLocation() {
   // make sure to reuse it so that we don't `require` different the client bundles
   if (existsSync(legacyPath)) {
     return legacyPath;
-  } else {
-    return join(cacheDir, 'cloud');
   }
+
+  // The bundle `require`s a bare `nx` specifier, which resolves only by walking
+  // up into the workspace's node_modules, so it follows this checkout's own
+  // cache directory rather than the shared per-user one (NXC-4944).
+  return join(cacheDirectoryForWorkspace(workspaceRoot), 'cloud');
 }
 
 const runnerBundleInstallDirectory = getBundleInstallDefaultLocation();
