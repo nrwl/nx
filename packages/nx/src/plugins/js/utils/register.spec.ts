@@ -23,7 +23,7 @@ import * as typescriptUtils from './typescript';
 import { createRequire, Module } from 'node:module';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { join } from 'node:path';
+import { join, sep } from 'node:path';
 import { mkdirSync, realpathSync, symlinkSync } from 'node:fs';
 import {
   mockCjsModule,
@@ -1293,4 +1293,148 @@ describe('registerSourceGraphResolver CJS runtime condition union', () => {
     },
     120_000
   );
+});
+
+describe('registerSourceGraphResolver under Yarn PnP', () => {
+  let tempFs: InstanceType<typeof TempFs>;
+  let root: string;
+  let nodeModule: typeof import('node:module') & {
+    findPnpApi?: (path: string) => unknown;
+  };
+  const fileUrl = (relativePath: string) =>
+    pathToFileURL(join(root, relativePath)).href;
+  const context = (parentURL: string) => ({
+    conditions: ['node', 'import'],
+    importAttributes: {},
+    parentURL,
+  });
+
+  beforeAll(() => {
+    tempFs = new TempFs('source-graph-pnp', false);
+    root = tempFs.tempDir;
+    const packageJson = JSON.stringify({
+      name: '@proj/utils',
+      exports: {
+        '.': { source: './src/index.ts', default: './dist/index.js' },
+      },
+    });
+    // No node_modules: PnP keeps workspace packages only in its own map.
+    tempFs.createFilesSync({
+      'packages/utils/package.json': packageJson,
+      'packages/utils/src/index.ts': '',
+      'packages/utils/dist/index.js': '',
+      '.yarn/__virtual__/@proj-utils-virtual-1/1/packages/utils/package.json':
+        packageJson,
+      '.yarn/__virtual__/@proj-utils-virtual-1/1/packages/utils/src/index.ts':
+        '',
+      '.yarn/cache/utils.zip/node_modules/@proj/utils/package.json':
+        packageJson,
+      '.yarn/cache/utils.zip/node_modules/@proj/utils/src/index.ts': '',
+    });
+  });
+
+  afterAll(() => {
+    tempFs.cleanup();
+  });
+
+  beforeEach(() => {
+    nodeModule = require('node:module');
+    Object.defineProperty(process.versions, 'pnp', {
+      value: '3',
+      configurable: true,
+      enumerable: true,
+    });
+    vi.spyOn(
+      typescriptUtils,
+      'getRootTsConfigResolveExportsConditions'
+    ).mockReturnValue(['source']);
+  });
+
+  afterEach(() => {
+    delete (process.versions as { pnp?: string }).pnp;
+    delete nodeModule.findPnpApi;
+    vi.restoreAllMocks();
+  });
+
+  function withPnpApi(resolveToUnqualified: (request: string) => string) {
+    const api = { resolveToUnqualified: vi.fn(resolveToUnqualified) };
+    nodeModule.findPnpApi = vi.fn(() => api);
+    return api;
+  }
+
+  function resolveFromGraphEntry() {
+    let resolveHook: Function;
+    vi.spyOn(nodeModule, 'registerHooks').mockImplementation(({ resolve }) => {
+      resolveHook = resolve;
+      return { deregister: vi.fn() } as any;
+    });
+    const cleanup = registerSourceGraphResolver(join(root, 'plugin.ts'), root, [
+      '@proj/utils',
+    ]);
+    const nextResolve = vi.fn(() => ({ url: fileUrl('dist-resolved.js') }));
+    const result = resolveHook(
+      '@proj/utils',
+      context(fileUrl('plugin.ts')),
+      nextResolve
+    );
+    cleanup();
+    return { result, nextResolve };
+  }
+
+  it('locates workspace packages through the PnP API instead of node_modules', () => {
+    const api = withPnpApi(() => join(root, 'packages/utils/package.json'));
+
+    const { result } = resolveFromGraphEntry();
+
+    expect(result).toEqual({
+      url: fileUrl('packages/utils/src/index.ts'),
+      shortCircuit: true,
+    });
+    expect(nodeModule.findPnpApi).toHaveBeenCalledWith(join(root, sep));
+    expect(api.resolveToUnqualified).toHaveBeenCalledWith(
+      '@proj/utils/package.json',
+      join(root, sep),
+      { considerBuiltins: false }
+    );
+  });
+
+  it('accepts the virtual alias PnP creates for workspace packages with peer dependencies', () => {
+    withPnpApi(() =>
+      join(
+        root,
+        '.yarn/__virtual__/@proj-utils-virtual-1/1/packages/utils/package.json'
+      )
+    );
+
+    const { result } = resolveFromGraphEntry();
+
+    expect(result).toEqual({
+      url: fileUrl(
+        '.yarn/__virtual__/@proj-utils-virtual-1/1/packages/utils/src/index.ts'
+      ),
+      shortCircuit: true,
+    });
+  });
+
+  it('keeps Node resolution for a same-named package served from the PnP cache', () => {
+    withPnpApi(() =>
+      join(root, '.yarn/cache/utils.zip/node_modules/@proj/utils/package.json')
+    );
+
+    const { result, nextResolve } = resolveFromGraphEntry();
+
+    expect(nextResolve).toHaveBeenCalledTimes(1);
+    expect(result).toEqual({ url: fileUrl('dist-resolved.js') });
+  });
+
+  it('keeps Node resolution when PnP rejects the request as undeclared', () => {
+    withPnpApi(() => {
+      throw new Error('Your application tried to access @proj/utils');
+    });
+
+    const { result, nextResolve } = resolveFromGraphEntry();
+
+    expect(nextResolve).toHaveBeenCalledTimes(1);
+    expect(result).toEqual({ url: fileUrl('dist-resolved.js') });
+  });
 });
