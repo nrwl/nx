@@ -11,6 +11,12 @@ import { join } from 'path';
 import { readJsonFile, writeJsonFile } from '../../../utils/fileutils';
 import { publishFileAtomically } from './atomic-write';
 import {
+  BrokerStaleRequestError,
+  BrokerUnavailableError,
+  commitStepTree,
+  type BrokeredCommit,
+} from './broker';
+import {
   getGitRepositoryStatus,
   getLatestCommitSha,
   getPathCommitExposure,
@@ -1343,42 +1349,58 @@ async function commitForStep(
   const absorbedStepIds = uncoveredFailedStepIds(state).filter(
     (id) => id !== step.id
   );
-  let result: Awaited<ReturnType<typeof commitMigrationIfRequested>>;
+  const skipInstall = state.skipInstall === true;
+  let commit: BrokeredCommit;
   try {
-    result = await commitMigrationIfRequested(
-      root,
-      { name },
-      true,
-      state.commitPrefix,
-      () =>
-        installDepsChangedSinceDispense(
-          root,
-          dir,
-          step,
-          state.skipInstall === true,
-          reconcileCommand(root, state.runId)
-        ),
-      stepsToPendingMigrations(state, absorbedStepIds)
+    commit = await commitStepTree(dir, step, skipInstall, absorbedStepIds, () =>
+      commitMigrationIfRequested(
+        root,
+        { name },
+        true,
+        state.commitPrefix,
+        () =>
+          installDepsChangedSinceDispense(
+            root,
+            dir,
+            step,
+            skipInstall,
+            reconcileCommand(root, state.runId)
+          ),
+        stepsToPendingMigrations(state, absorbedStepIds)
+      )
     );
   } catch (e) {
-    // The dependency install is the only thing that throws here: the commit
-    // attempt itself reports through result.status, and the install's own
-    // bookkeeping never throws. Both consequences are recorded, and neither
-    // aborts reconcile so the next dispense still fires. The debt cannot stand
-    // in for the install failure: a later step's commit absorbs this diff and
-    // lands an entry naming this step, which clears the debt while the
-    // dependencies are still missing.
+    // No result to record: another attempt owns the step, or the session's
+    // parent could not answer and the next session's reconcile redoes this
+    // fold or adopt against whatever it did land.
+    if (
+      e instanceof BrokerStaleRequestError ||
+      e instanceof BrokerUnavailableError
+    ) {
+      throw e;
+    }
+    // The dependency install is the only other thing that throws here: the
+    // commit attempt itself reports through result.status, and the install's
+    // own bookkeeping never throws. Both consequences are recorded, and
+    // neither aborts reconcile so the next dispense still fires. The debt
+    // cannot stand in for the install failure: a later step's commit absorbs
+    // this diff and lands an entry naming this step, which clears the debt
+    // while the dependencies are still missing.
     warnCommitFailed(name, e);
     return {
       entry: { kind: 'failed', stepIds: [step.id] },
       installFailed: true,
     };
   }
-  if (result.status === 'failed') {
+  if (commit.result.status === 'failed') {
     warnCommitFailed(name);
   }
   return {
-    entry: commitResultToLedgerEntry(result, step.id, absorbedStepIds),
+    entry: commitResultToLedgerEntry(
+      commit.result,
+      step.id,
+      commit.absorbedStepIds
+    ),
     installFailed: false,
   };
 }

@@ -88,8 +88,8 @@ function codexWellKnownPaths(): string[] {
 }
 
 // No handoff permission flag: codex's default sandbox already allows writes
-// inside the cwd tree without prompting, and a user-hardened read-only config
-// is a deliberate choice we don't override.
+// inside the cwd tree (`.git` excepted) without prompting, and a
+// user-hardened read-only config is a deliberate choice we don't override.
 function codexBuildInteractive(ctx: InvocationContext): InvocationSpec {
   return {
     args: ['-c', `developer_instructions=${ctx.systemContext}`, ctx.userPrompt],

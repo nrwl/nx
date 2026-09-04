@@ -83,6 +83,11 @@ import {
   summarizeError,
   warnCommitFailed,
 } from './util';
+import {
+  BrokerStaleRequestError,
+  commitStepTree,
+  type BrokeredCommit,
+} from './broker';
 import { singleLine } from '../text';
 import { emitPromptBlock, logToAgent, warnToAgent } from './agent-output';
 import {
@@ -772,7 +777,8 @@ async function runRecorded(
           state,
           step,
           migration,
-          install
+          install,
+          effectiveSkipInstall
         );
       } else {
         await install();
@@ -810,6 +816,8 @@ async function runRecorded(
       }
     }
   } catch (e) {
+    // Another attempt owns the step, and `fail` is not attempt-bound.
+    if (e instanceof BrokerStaleRequestError) throw e;
     // The failed-step dispense surfaces this so the agent can decide
     // retry-vs-skip; carry the error's first line, not a full stack.
     transition(dir, {
@@ -906,7 +914,15 @@ async function finishCompletedGenerator(
     await installDeps();
     return state;
   }
-  return commitStepChanges(dir, root, state, step, migration, installDeps);
+  return commitStepChanges(
+    dir,
+    root,
+    state,
+    step,
+    migration,
+    installDeps,
+    skipInstall
+  );
 }
 
 // Installs what the step changed, commits it, and records the result in the
@@ -919,31 +935,40 @@ async function commitStepChanges(
   state: MigrateRunState,
   step: MigrateStep,
   migration: PlannedMigration,
-  installDeps: () => Promise<void>
+  installDeps: () => Promise<void>,
+  skipInstall: boolean
 ): Promise<MigrateRunState> {
   const absorbedStepIds = uncoveredFailedStepIds(state).filter(
     (id) => id !== step.id
   );
-  let result: CommitResult;
+  let commit: BrokeredCommit;
   try {
-    result = await commitMigrationIfRequested(
-      root,
-      migration,
-      true,
-      state.commitPrefix,
-      installDeps,
-      stepsToPendingMigrations(state, absorbedStepIds)
+    commit = await commitStepTree(dir, step, skipInstall, absorbedStepIds, () =>
+      commitMigrationIfRequested(
+        root,
+        migration,
+        true,
+        state.commitPrefix,
+        installDeps,
+        stepsToPendingMigrations(state, absorbedStepIds)
+      )
     );
   } catch (commitError) {
+    // Nothing ran for a stale request, so there is no debt to record.
+    if (commitError instanceof BrokerStaleRequestError) throw commitError;
     // A post-migration install failure leaves the diff uncommitted; record the
     // debt so only a landed entry can cover it.
     appendCommit(dir, { kind: 'failed', stepIds: [step.id] });
     throw commitError;
   }
-  if (result.status === 'failed') {
+  if (commit.result.status === 'failed') {
     warnCommitFailed(migration.name);
   }
-  const entry = commitResultToLedgerEntry(result, step.id, absorbedStepIds);
+  const entry = commitResultToLedgerEntry(
+    commit.result,
+    step.id,
+    commit.absorbedStepIds
+  );
   return entry ? appendCommit(dir, entry) : state;
 }
 

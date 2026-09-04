@@ -18,6 +18,25 @@ vi.mock('child_process', () => ({
   execFile: vi.fn(),
 }));
 
+const mockBrokerCtor = vi.fn();
+const mockBrokerService = vi.fn();
+const mockBrokerClose = vi.fn();
+vi.mock('../../run/broker', () => ({
+  BROKER_ENV_VAR: 'NX_MIGRATE_BROKER',
+  MigrateCommitBroker: class {
+    nonce = 'abcd1234';
+    constructor(...args: unknown[]) {
+      mockBrokerCtor(...args);
+    }
+    service(): Promise<void> {
+      return mockBrokerService();
+    }
+    close(): void {
+      mockBrokerClose();
+    }
+  },
+}));
+
 import { spawn } from 'child_process';
 import { DetectedInstalledAgent } from '../types';
 import {
@@ -113,6 +132,9 @@ describe('spawnMasterSession', () => {
 
   beforeEach(() => {
     mockSpawn.mockReset();
+    mockBrokerCtor.mockReset();
+    mockBrokerService.mockReset().mockResolvedValue(undefined);
+    mockBrokerClose.mockReset();
     vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
     sigintListeners = process.listeners('SIGINT').length;
   });
@@ -231,6 +253,74 @@ describe('spawnMasterSession', () => {
     expect(await spawnMasterSession(input())).toEqual({
       kind: 'spawn-failed',
       error,
+    });
+  });
+
+  describe('commit broker', () => {
+    it('opens the broker before the agent starts and advertises it in the env', async () => {
+      mockSpawn.mockImplementation(() => fakeChild());
+
+      await spawnMasterSession(input());
+
+      expect(mockBrokerCtor).toHaveBeenCalledWith(
+        runRoot,
+        join(runRoot, '.nx', 'migrate-runs', runId),
+        `npx nx migrate --run-id=${runId}`
+      );
+      expect(mockBrokerCtor.mock.invocationCallOrder[0]).toBeLessThan(
+        mockSpawn.mock.invocationCallOrder[0]
+      );
+      const [, args, options] = mockSpawn.mock.calls[0];
+      expect(options.env.NX_MIGRATE_BROKER).toBe('abcd1234');
+      expect(args[3]).toContain('session-complete-abcd1234');
+    });
+
+    it('answers requests while the session runs and closes the broker only after the one in flight is answered', async () => {
+      const child = fakeChild({ exitAfterSpawn: false });
+      mockSpawn.mockImplementation(() => child);
+      let finishInFlight: () => void;
+      const inFlight = new Promise<void>((resolve) => {
+        finishInFlight = resolve;
+      });
+
+      const pending = spawnMasterSession(input());
+      await pollsElapsed(4);
+      const polledWhileRunning = mockBrokerService.mock.calls.length;
+      mockBrokerService.mockReturnValue(inFlight);
+      await pollsElapsed(2);
+      child.emit('exit', 0, null);
+      await pollsElapsed(2);
+      const closedBeforeAnswer = mockBrokerClose.mock.calls.length;
+      finishInFlight();
+
+      expect(await pending).toEqual({ kind: 'exited' });
+      expect(polledWhileRunning).toBeGreaterThan(1);
+      expect(closedBeforeAnswer).toBe(0);
+      expect(mockBrokerClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('closes the session and reports the failure when a request cannot be answered', async () => {
+      const child = fakeChild({ exitAfterSpawn: false });
+      mockSpawn.mockImplementation(() => child);
+      const error = new Error('EACCES: permission denied, rename');
+
+      const pending = spawnMasterSession(input());
+      await pollsElapsed(2);
+      mockBrokerService.mockRejectedValue(error);
+
+      expect(await pending).toEqual({ kind: 'broker-failed', error });
+      expect(child.kill).toHaveBeenCalledWith('SIGINT');
+      expect(mockBrokerClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('closes the broker when the agent cannot be started', async () => {
+      mockSpawn.mockImplementation(() => {
+        throw new Error('EACCES');
+      });
+
+      await spawnMasterSession(input());
+
+      expect(mockBrokerClose).toHaveBeenCalledTimes(1);
     });
   });
 

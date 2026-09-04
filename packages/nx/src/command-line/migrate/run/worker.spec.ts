@@ -186,6 +186,7 @@ import {
   type MigrateStepStatus,
 } from './run-state';
 import { depsHash } from './util';
+import { BrokerStaleRequestError, BrokerUnavailableError } from './broker';
 
 const RUN_NEXT_FIRST =
   'Run the dispensed "next" command first: its response restates this work and names the handoff file to write.';
@@ -2397,6 +2398,117 @@ describe('runSingleMigrationWorker', () => {
       await runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'));
 
       expect(mockLogSkippedInstall).toHaveBeenCalledWith(root);
+    });
+  });
+
+  describe('recorded execution through the session broker', () => {
+    const nonce = 'deadbeef';
+    const committed = {
+      status: 'committed' as const,
+      sha: 'face0003face0003face0003face0003face0003',
+    };
+
+    beforeEach(() => {
+      process.env.NX_MIGRATE_BROKER = nonce;
+      mockRunMigration.mockResolvedValue({
+        changes: changeList(),
+        nextSteps: [],
+        agentContext: [],
+        logs: '',
+        madeChanges: true,
+      });
+    });
+
+    afterEach(() => {
+      delete process.env.NX_MIGRATE_BROKER;
+    });
+
+    function committingRun(): string {
+      return setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'dispensed')],
+        migrations: [genMig('@nx/js', 'gen')],
+        createCommits: true,
+      });
+    }
+
+    // What the parent session would have published for the step's attempt.
+    function publishResult(dir: string, result: object): void {
+      mkdirSync(join(dir, 'broker'), { recursive: true });
+      writeFileSync(
+        join(dir, 'broker', `${nonce}-step-1-1.result.json`),
+        JSON.stringify(result)
+      );
+    }
+
+    it('records the commit the session landed, naming the steps it absorbed', async () => {
+      const dir = committingRun();
+      publishResult(dir, {
+        kind: 'commit',
+        result: committed,
+        absorbedStepIds: ['step-0'],
+        output: [],
+      });
+
+      await runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'));
+
+      expect(mockCommit).not.toHaveBeenCalled();
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('succeeded');
+      expect(state.commits).toEqual([
+        { kind: 'landed', sha: committed.sha, stepIds: ['step-1', 'step-0'] },
+      ]);
+      expect(
+        JSON.parse(
+          readFileSync(
+            join(dir, 'broker', `${nonce}-step-1-1.request.json`),
+            'utf8'
+          )
+        )
+      ).toEqual({ stepId: 'step-1', attempt: 1, skipInstall: true });
+    });
+
+    it('fails the step with debt when the session reported its install failed', async () => {
+      const dir = committingRun();
+      publishResult(dir, {
+        kind: 'install-failed',
+        message: 'registry unreachable',
+        output: [],
+      });
+
+      await expect(
+        runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'))
+      ).rejects.toThrow('registry unreachable');
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('failed');
+      expect(state.steps[0].outcome.summary).toBe('registry unreachable');
+      expect(state.commits).toEqual([{ kind: 'failed', stepIds: ['step-1'] }]);
+    });
+
+    it('leaves the step untouched when the session answered stale', async () => {
+      const dir = committingRun();
+      publishResult(dir, { kind: 'stale' });
+
+      await expect(
+        runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'))
+      ).rejects.toBeInstanceOf(BrokerStaleRequestError);
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('running');
+      expect(state.commits).toEqual([]);
+    });
+
+    it('fails the step with debt when the session is gone before answering', async () => {
+      const dir = committingRun();
+
+      await expect(
+        runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'))
+      ).rejects.toBeInstanceOf(BrokerUnavailableError);
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('failed');
+      expect(state.steps[0].outcome.summary).toContain('ended before');
+      expect(state.commits).toEqual([{ kind: 'failed', stepIds: ['step-1'] }]);
     });
   });
 

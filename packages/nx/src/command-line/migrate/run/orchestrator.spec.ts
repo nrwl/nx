@@ -83,6 +83,7 @@ import { output } from '../../../utils/output';
 import { nxVersion } from '../../../utils/versions';
 import { runStepHandoffPath } from '../agentic/handoff';
 import { runOrchestratorInit, runOrchestratorReconcile } from './orchestrator';
+import { BrokerStaleRequestError, BrokerUnavailableError } from './broker';
 import { computePlanHash } from './run-id';
 import {
   findActiveRun,
@@ -5412,6 +5413,84 @@ describe('orchestrator', () => {
       // 'no-changes' records nothing; the ledger just misses the landed entry.
       expect(state.commits).toEqual([]);
       expect(mockCommit).toHaveBeenCalledTimes(2);
+    });
+  });
+  describe('reconcile: commits through the session broker', () => {
+    const nonce = 'deadbeef';
+
+    beforeEach(() => {
+      process.env.NX_MIGRATE_BROKER = nonce;
+    });
+
+    afterEach(() => {
+      delete process.env.NX_MIGRATE_BROKER;
+    });
+
+    function publishResult(dir: string, result: object): void {
+      mkdirSync(join(dir, 'broker'), { recursive: true });
+      writeFileSync(
+        join(dir, 'broker', `${nonce}-step-1-1.result.json`),
+        JSON.stringify(result)
+      );
+    }
+
+    it('folds a completed prompt with the commit the session landed', async () => {
+      const dir = await parkedPromptStep({ createCommits: true });
+      writeHandoff(dir, '@nx/js', 'p', { status: 'success', summary: 'done' });
+      publishResult(dir, {
+        kind: 'commit',
+        result: {
+          status: 'committed',
+          sha: 'face0004face0004face0004face0004face0004',
+        },
+        absorbedStepIds: ['step-0'],
+        output: [],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(mockCommit).not.toHaveBeenCalled();
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('succeeded');
+      expect(state.commits).toEqual([
+        {
+          kind: 'landed',
+          sha: 'face0004face0004face0004face0004face0004',
+          stepIds: ['step-1', 'step-0'],
+        },
+      ]);
+    });
+
+    it('leaves a fold for the next reconcile when the session answered stale', async () => {
+      const dir = await parkedPromptStep({ createCommits: true });
+      writeHandoff(dir, '@nx/js', 'p', { status: 'success', summary: 'done' });
+      publishResult(dir, { kind: 'stale' });
+
+      await expect(
+        runOrchestratorReconcile({ root, runId: 'run-1' })
+      ).rejects.toBeInstanceOf(BrokerStaleRequestError);
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('awaiting-prompt-outcome');
+      expect(state.commits).toEqual([]);
+      expect(existsSync(handoffPathIn(dir, '@nx/js', 'p'))).toBe(true);
+    });
+
+    it('leaves an adopt for the next reconcile when the session is gone', async () => {
+      vi.spyOn(process, 'kill').mockReturnValue(true as never);
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'died')],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await expect(
+        runOrchestratorReconcile({ root, runId: 'run-1', stepAction: 'adopt' })
+      ).rejects.toBeInstanceOf(BrokerUnavailableError);
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('died');
+      expect(state.commits).toEqual([]);
     });
   });
 });
