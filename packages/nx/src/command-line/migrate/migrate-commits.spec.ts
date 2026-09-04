@@ -271,6 +271,89 @@ describe('commitMigrationIfRequested', () => {
   });
 });
 
+describe('commitMigrationIfRequested with an output sink', () => {
+  const sink = () => {
+    const lines: unknown[][] = [];
+    return {
+      lines,
+      notice: vi.fn(),
+      line: (...args: unknown[]) => lines.push(args),
+      raw: vi.fn(),
+    };
+  };
+
+  it('sends the no-changes message to the sink instead of the logger', async () => {
+    mockHas.mockReturnValue(false);
+    const out = sink();
+
+    await commitMigrationIfRequested(
+      ROOT,
+      { name: 'm1' },
+      true,
+      PREFIX,
+      installDeps,
+      [],
+      undefined,
+      out
+    );
+
+    expect(out.lines).toEqual([['dim', '- No changes to commit for m1.']]);
+    expect(mockInfo).not.toHaveBeenCalled();
+  });
+
+  it('sends the degraded-sha message to the sink', async () => {
+    mockHas.mockReturnValue(true);
+    mockTry.mockReturnValue(null);
+    const out = sink();
+
+    const result = await commitMigrationIfRequested(
+      ROOT,
+      { name: 'm1' },
+      true,
+      PREFIX,
+      installDeps,
+      [],
+      undefined,
+      out
+    );
+
+    expect(result).toEqual({ status: 'committed', sha: null });
+    expect(out.lines).toEqual([
+      ['yellow', expect.stringContaining('its sha could not be resolved')],
+    ]);
+    expect(mockInfo).not.toHaveBeenCalled();
+  });
+
+  it('sends the failure message with the guidance to the sink', async () => {
+    mockHas.mockReturnValue(true);
+    mockTry.mockImplementation(() => {
+      throw new Error('error: gpg failed to sign the data');
+    });
+    const out = sink();
+
+    await commitMigrationIfRequested(
+      ROOT,
+      { name: 'm1' },
+      true,
+      PREFIX,
+      installDeps,
+      [],
+      'Commit or revert the changes manually.',
+      out
+    );
+
+    expect(out.lines).toEqual([
+      [
+        'red',
+        expect.stringContaining(
+          "gpg failed to sign the data\nThe migration's diff remains in the working tree; inspect with `git status` / `git diff` to review. Commit or revert the changes manually."
+        ),
+      ],
+    ]);
+    expect(mockInfo).not.toHaveBeenCalled();
+  });
+});
+
 describe('commitCheckpointBeforeMigrations', () => {
   it('does nothing when the working tree is clean outside the excluded scratch dir', () => {
     mockHas.mockReturnValue(false);
