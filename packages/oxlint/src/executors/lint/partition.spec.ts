@@ -71,6 +71,14 @@ describe('partitionDiagnostics', () => {
     expect(byTask.get('tool:lint')).toHaveLength(1);
   });
 
+  it('should assign diagnostics for a glob at the workspace root', () => {
+    const byTask = partitionDiagnostics(
+      [diagnostic('root.ts')],
+      [{ taskId: 'root:lint', paths: ['*.ts'] }]
+    );
+    expect(byTask.get('root:lint')).toHaveLength(1);
+  });
+
   it('should drop a diagnostic no task owns', () => {
     const byTask = partitionDiagnostics(
       [diagnostic('tools/x.ts')],

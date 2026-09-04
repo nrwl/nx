@@ -117,5 +117,6 @@ function staticPrefix(pattern: string): string {
   if (globStart === -1) {
     return normalized;
   }
-  return normalized.slice(0, normalized.lastIndexOf('/', globStart));
+  const prefixEnd = normalized.lastIndexOf('/', globStart);
+  return prefixEnd === -1 ? '' : normalized.slice(0, prefixEnd);
 }
