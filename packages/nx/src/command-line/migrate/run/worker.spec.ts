@@ -1596,7 +1596,8 @@ describe('runSingleMigrationWorker', () => {
       expect(mockRunInstall).toHaveBeenCalledWith(
         root,
         'post-migration',
-        expect.stringContaining('--run-id=run-1')
+        expect.stringContaining('--run-id=run-1'),
+        undefined
       );
     });
 
@@ -1632,7 +1633,7 @@ describe('runSingleMigrationWorker', () => {
       });
 
       expect(mockRunInstall).not.toHaveBeenCalled();
-      expect(mockLogSkippedInstall).toHaveBeenCalledWith(root);
+      expect(mockLogSkippedInstall).toHaveBeenCalledWith(root, undefined);
     });
 
     it('passes the run install policy to the installer on a first attempt', async () => {
@@ -1790,7 +1791,8 @@ describe('runSingleMigrationWorker', () => {
       expect(mockRunInstall).toHaveBeenCalledWith(
         root,
         'post-migration',
-        expect.stringContaining('--run-id=run-1')
+        expect.stringContaining('--run-id=run-1'),
+        undefined
       );
       expect(stdout).toContain('<nx_migrate_prompt migration="@nx/js:h">');
     });
@@ -1986,7 +1988,8 @@ describe('runSingleMigrationWorker', () => {
       expect(mockRunInstall).toHaveBeenCalledWith(
         root,
         'post-migration',
-        expect.stringContaining('--run-id=run-1')
+        expect.stringContaining('--run-id=run-1'),
+        undefined
       );
       expect(mockCommit).not.toHaveBeenCalled();
       const step = readRunState(dir).steps[0];
