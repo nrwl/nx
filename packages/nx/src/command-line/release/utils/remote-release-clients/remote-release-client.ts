@@ -83,6 +83,14 @@ export abstract class RemoteReleaseClient<
       token.replace(/[\r\n]/g, ''),
       inspect(token).slice(1, -1),
     ]);
+    // inspect() renders a long string carrying a line break as concatenated
+    // per-line chunks, which no whole-token needle spans. Redact the lines too,
+    // skipping fragments short enough to collide with ordinary dump text.
+    for (const line of token.split(/[\r\n]+/)) {
+      if (line.length >= 8) {
+        needles.add(line);
+      }
+    }
     return [...needles].reduce(
       (text, needle) => text.split(needle).join('<redacted>'),
       inspected

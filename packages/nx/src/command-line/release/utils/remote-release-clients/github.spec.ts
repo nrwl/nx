@@ -1,3 +1,4 @@
+import { inspect } from 'node:util';
 import type { Mock } from 'vitest';
 import { output } from '../../../../utils/output';
 import { GithubRemoteReleaseClient } from './github';
@@ -295,6 +296,7 @@ describe('GithubRemoteReleaseClient', () => {
         process.exitCode = originalExitCode;
       }
 
+      expect(typeof logSpy.mock.calls[0][0]).toBe('string');
       const logged = logSpy.mock.calls.map((args) => args.join(' ')).join('\n');
       expect(logged).not.toContain(token);
       expect(logged).toContain('<redacted>');
@@ -336,6 +338,42 @@ describe('GithubRemoteReleaseClient', () => {
       expect(logged).toContain('<redacted>');
       logSpy.mockRestore();
       consoleErrorSpy.mockRestore();
+    });
+
+    it('should leave the dump untouched when the token is blank', async () => {
+      const clientWithToken = new GithubRemoteReleaseClient(repoData, false, {
+        // a single space: the previous guard tested tokenData, not the token,
+        // so this split the dump on every space
+        token: ' ',
+        headerName: 'Authorization',
+      });
+
+      const inspected = (clientWithToken as any).inspectWithRedactedToken({
+        message: 'Network Error',
+      });
+
+      expect(inspected).toBe(inspect({ message: 'Network Error' }));
+      expect(inspected).not.toContain('<redacted>');
+    });
+
+    it('should redact a long token that inspect splits across lines', async () => {
+      // A wrapped paste: inspect() renders the header value as concatenated
+      // per-line chunks, which no whole-token needle spans.
+      const token = `ghp_secret_${'a'.repeat(60)}`;
+      const wrapped = `${token.slice(0, 40)}
+${token.slice(40)}`;
+      const clientWithToken = new GithubRemoteReleaseClient(repoData, false, {
+        token: wrapped,
+        headerName: 'Authorization',
+      });
+
+      const inspected = (clientWithToken as any).inspectWithRedactedToken({
+        config: { headers: { Authorization: `Bearer ${wrapped}` } },
+        request: { _header: `Authorization: Bearer ${wrapped}` },
+      });
+
+      expect(inspected).not.toContain(token.slice(40));
+      expect(inspected).toContain('<redacted>');
     });
   });
 });
