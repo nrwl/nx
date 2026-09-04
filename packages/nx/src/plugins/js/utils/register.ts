@@ -357,6 +357,57 @@ function isTsTranspilerPreloaded(): boolean {
 
 let cjsResolverPatched = false;
 
+type ResolveFilename = (
+  this: unknown,
+  request: string,
+  parent: { filename?: string } | undefined,
+  ...rest: unknown[]
+) => string;
+
+const PNP_UNSUPPORTED_OPTIONS_RE = /aren't supported by PnP yet \(([^)]*)\)/;
+
+/**
+ * Yarn PnP below 4.11 rejects the `conditions` option Node adds to every CJS
+ * resolution once a sync resolve hook is registered. Retrying without it
+ * makes PnP apply its default set, as it did before the hook.
+ * Exported for unit tests.
+ */
+export function callResolveFilename(
+  original: ResolveFilename,
+  thisArg: unknown,
+  request: string,
+  parent: { filename?: string } | undefined,
+  rest: unknown[]
+): string {
+  try {
+    return original.call(thisArg, request, parent, ...rest);
+  } catch (err: any) {
+    const options = rest[1];
+    if (
+      !isPnpConditionsOnlyRejection(err) ||
+      typeof options !== 'object' ||
+      options === null ||
+      !('conditions' in options)
+    ) {
+      throw err;
+    }
+    const { conditions: _, ...withoutConditions } = options as {
+      conditions: unknown;
+    };
+    return original.call(thisArg, request, parent, rest[0], withoutConditions);
+  }
+}
+
+function isPnpConditionsOnlyRejection(err: unknown): boolean {
+  if ((err as { code?: unknown })?.code !== 'UNSUPPORTED') {
+    return false;
+  }
+  const match = PNP_UNSUPPORTED_OPTIONS_RE.exec(
+    String((err as { message?: unknown }).message)
+  );
+  return match?.[1] === 'conditions';
+}
+
 /**
  * Patches Node's CJS resolver to fall back from `.js`/`.mjs`/`.cjs` to the
  * corresponding TypeScript source extension (`.ts`/`.tsx`, `.mts`, `.cts`)
@@ -398,7 +449,7 @@ export function ensureCjsResolverPatched(): void {
     ...rest: unknown[]
   ): string {
     try {
-      return original.call(this, request, parent, ...rest);
+      return callResolveFilename(original, this, request, parent, rest);
     } catch (err: any) {
       if (err?.code !== 'MODULE_NOT_FOUND') throw err;
       if (!parent?.filename || !TS_PARENT_RE.test(parent.filename)) throw err;
@@ -411,7 +462,7 @@ export function ensureCjsResolverPatched(): void {
       const base = request.slice(0, -match[1].length);
       for (const ext of fallbacks) {
         try {
-          return original.call(this, base + ext, parent, ...rest);
+          return callResolveFilename(original, this, base + ext, parent, rest);
         } catch {
           // try the next fallback
         }
@@ -672,11 +723,12 @@ function patchCjsResolveFilename(): () => void {
         return resolvedPath;
       }
     }
-    const resolved = originalResolveFilename.call(
+    const resolved = callResolveFilename(
+      originalResolveFilename,
       this,
       request,
       parent,
-      ...rest
+      rest
     );
     if (!deactivated && parent?.filename && isAbsolute(resolved)) {
       const graph = sourceGraphModulePaths.get(parent.filename);
