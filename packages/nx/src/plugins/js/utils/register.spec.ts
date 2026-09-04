@@ -1070,7 +1070,6 @@ describe('registerSourceGraphResolver', () => {
     try {
       cleanup();
       expect(nodeModule._load).toBe(wrapper);
-      // The neutralized patch still passes loads through.
       expect(nodeModule._load('node:path', undefined, false)).toBe(
         require('node:path')
       );
@@ -1080,8 +1079,7 @@ describe('registerSourceGraphResolver', () => {
   });
 });
 
-// Real require() calls cover the CJS caches that mocked nextResolve calls
-// bypass.
+// Real require() exercises the CJS caches that a mocked nextResolve bypasses.
 describe('registerSourceGraphResolver CJS path cache isolation', () => {
   const registerHooksAvailable =
     typeof (require('node:module') as { registerHooks?: unknown })

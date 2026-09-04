@@ -367,9 +367,8 @@ type ResolveFilename = (
 const PNP_UNSUPPORTED_OPTIONS_RE = /aren't supported by PnP yet \(([^)]*)\)/;
 
 /**
- * Yarn PnP below 4.11 rejects the `conditions` option Node adds to every CJS
- * resolution once a sync resolve hook is registered. Retrying without it
- * makes PnP apply its default set, as it did before the hook.
+ * Yarn PnP below 4.11 rejects the `conditions` option Node adds to CJS
+ * resolution once a sync resolve hook exists, so retry without it.
  * Exported for unit tests.
  */
 export function callResolveFilename(
@@ -1023,7 +1022,7 @@ function findPnpPackageJson(
       considerBuiltins: false,
     });
   } catch {
-    // Missing or undeclared dependency: PnP reports it on Node's own path.
+    // Any PnP lookup failure falls back to Node's normal resolution path.
     return null;
   }
 }
