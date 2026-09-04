@@ -2372,10 +2372,10 @@ function readStepHandoff(dir: string, stepId: string): HandoffReadResult {
   );
 }
 
-// Never removes through a replaced handoffs dir: the agent could otherwise
-// point it at a directory holding a file of the step's fixed name and have
-// the orchestrator delete it. A probe failure is treated the same way; the
-// next read reports it.
+// Probe-time guard: a handoffs dir the agent swapped for a symlink into a
+// directory holding a file of the step's fixed name would otherwise have the
+// orchestrator delete that file. A swap between the probe and the rm is not
+// caught. A probe failure skips the rm too; the next read reports it.
 function removeHandoff(dir: string, stepId: string): void {
   let state: ReturnType<typeof handoffsDirState>;
   try {

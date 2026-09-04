@@ -149,6 +149,11 @@ describe('buildGenericValidationUserPrompt', () => {
       expect(out).toContain(
         '`nx affected --files=<comma-separated changed paths> -t <target>`'
       );
+      // `--files` splits on every comma (parseCSV), so a comma-bearing path
+      // needs the newline-delimited stdin form.
+      expect(out).toContain(
+        "`printf '%s\\n' <paths> | nx affected --stdin -t <target>`"
+      );
       expect(out).not.toContain('`nx affected -t <target>`');
     }
   });

@@ -47,6 +47,29 @@ describe('shared-options', () => {
       );
     });
 
+    it('should split a --files value on every comma, while stdin keeps a comma-bearing path whole', async () => {
+      // yargs runs `coerce` only on an instance's first parse, so each case
+      // needs an instance of its own to see production's ordering.
+      const split = await withAffectedOptions(yargs.default([])).parseAsync([
+        'affected',
+        '--files',
+        'libs/a,b/src/index.ts',
+      ]);
+      expect(split.files).toEqual(['libs/a', 'b/src/index.ts']);
+
+      const stdinMock = new stream.PassThrough();
+      vi.spyOn(process, 'stdin', 'get').mockReturnValue(stdinMock as any);
+      stdinMock.push('libs/a,b/src/index.ts\n');
+      stdinMock.push(null);
+
+      const piped = await withAffectedOptions(yargs.default([])).parseAsync([
+        'affected',
+        '--stdin',
+      ]);
+      expect(piped.files).toEqual(['libs/a,b/src/index.ts']);
+      stdinMock.end();
+    });
+
     it('should parse newline-delimited files from stdin', async () => {
       const stdinMock = new stream.PassThrough();
       vi.spyOn(process, 'stdin', 'get').mockReturnValue(stdinMock as any);
