@@ -121,9 +121,9 @@ describe('codexDefinition', () => {
     });
   });
 
-  // codex parses `-c key=value` as TOML and, on a parse failure, silently
-  // falls back to the raw text with quotes trimmed, so an encoding that does
-  // not survive a real TOML parse would ship a mangled system context.
+  // codex parses `-c key=value` as TOML and, on a parse failure, falls back to
+  // the raw text as a literal, so an encoding that does not survive a real TOML
+  // parse would ship a mangled system context.
   it.each([
     ['embedded newlines', 'line1\nline2\n\nline4'],
     ['carriage returns', 'line1\r\nline2'],
@@ -207,13 +207,10 @@ describe('opencodeDefinition', () => {
     expect(opencodeDefinition.wellKnownPaths()).toEqual([]);
   });
 
-  // opencode expands `{env:<name>}` over the raw config text, then
-  // `{file:<path>}`, and parses the JSON only afterwards (1.18.27,
-  // `packages/opencode/src/config/variable.ts`). The env pass splices its value
-  // in unescaped, so what nx builds has to survive it, which a `JSON.parse`
-  // round trip does not show. Only that pass is reproduced here, alongside the
-  // file token opencode would look up: these tests are about which file the
-  // config names, not what reading it would return.
+  // opencode expands `{env:<name>}` then `{file:<path>}` over the raw config
+  // text and parses the JSON afterwards (1.18.27, `config/variable.ts`). The
+  // env pass splices unescaped, which a `JSON.parse` oracle would not show, so
+  // only that pass is reproduced here; the file token is reported, not read.
   function readEnvExpandedConfig(
     configContent: string,
     env: Record<string, string> = {}
@@ -269,10 +266,9 @@ describe('opencodeDefinition', () => {
     }
   );
 
-  // The inlined prompt quotes the workspace root and the handoff path, so a
-  // workspace directory named after a substitution pattern lands inside it.
-  // Expansion must not rewrite the prompt nx wrote, and must not break the
-  // document when the value it would splice in carries a quote of its own.
+  // The inlined prompt quotes the workspace root, so a directory named like a
+  // substitution pattern lands inside it. Expansion must neither rewrite the
+  // prompt nor break the JSON with a quote of its own.
   it.each([
     ['a plain value', 'replaced'],
     ['a value with a quote and a backslash', 'a"b\\c'],

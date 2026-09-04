@@ -13,10 +13,10 @@ export const MIGRATE_RUNS_RELATIVE_DIR = '.nx/migrate-runs';
 
 /**
  * The one subtree of a run directory the agent's pre-authorized write scope
- * reaches: its handoff files, and the prompt files Nx writes for each step.
- * Everything beside it is state Nx owns and reads back. Handoff names derive
- * from step ids or package and migration names, so flattening them into the
- * run dir would leave Nx no name it could safely add.
+ * reaches: handoff files and the per-step prompt files. Everything beside it
+ * is state Nx owns. Handoff names derive from step ids or package and
+ * migration names, so flattening them into the run dir would leave Nx no name
+ * it could safely add.
  */
 export const HANDOFFS_DIR_NAME = 'handoffs';
 
@@ -68,23 +68,13 @@ export interface DetectedInstalledAgent {
 export interface InvocationContext {
   /** Absolute path of the file holding the step's system prompt. */
   systemPromptFilePath: string;
-  /**
-   * The step's system prompt, verbatim. Last resort for an agent whose
-   * file-loading path is unavailable for this particular step; anything else
-   * must use `systemPromptFilePath`.
-   */
+  /** Verbatim system prompt, only for a step with no file-loading path. */
   systemPrompt: string;
   /** Single-line command-line text pointing the agent at its instructions. */
   instructionsPointer: string;
-  /**
-   * System context for agents that carry it on the command line, holding the
-   * handoff contract plus a pointer at `systemPromptFilePath`.
-   */
+  /** Handoff contract plus a pointer at `systemPromptFilePath`, carried inline. */
   inlineSystemContext: string;
-  /**
-   * Shorter `inlineSystemContext`, swapped in by the runner when the command
-   * line would otherwise overflow the Windows limit.
-   */
+  /** Shorter `inlineSystemContext`, swapped in when the command line would overflow. */
   inlineSystemContextFallback: string;
   workspaceRoot: string;
   /**

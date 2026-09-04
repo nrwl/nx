@@ -131,7 +131,6 @@ export function runStepHandoffPath(runDir: string, stepId: string): string {
   return join(runDir, HANDOFFS_DIR_NAME, `${sanitizeSegment(stepId)}.json`);
 }
 
-/** Absolute path of the handoff file for a migration step within a run. */
 export function stepHandoffPath(
   runDir: string,
   migration: { package: string; name: string }
