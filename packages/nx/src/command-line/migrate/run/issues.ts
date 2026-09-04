@@ -17,6 +17,7 @@ import {
   type MigrateRunIssue,
   type MigrateRunState,
   type MigrateStep,
+  type MigrateStepStatus,
 } from './run-state';
 
 export { issueFingerprint };
@@ -582,7 +583,7 @@ function applyDuplicateReport(
           // Revive only on newly ADDED routing that can still claim it: deferred entries
           // stay digest-visible, so a repeat with no new scope may just be echoing one,
           // and testing `merged` instead would let a route to finished work reopen it.
-          return hasClaimableStep(addedStepIds, state)
+          return hasClaimableStep(addedStepIds, stepStatusIndex(state))
             ? transition('recorded')
             : refine();
         default:
@@ -676,7 +677,7 @@ export function reopenResolutionsForStep(
       } = issue;
       const disposition: MigrateIssueDisposition = hasClaimableStep(
         issue.applicableStepIds,
-        state
+        stepStatusIndex(state)
       )
         ? 'recorded'
         : 'deferred-final';
@@ -707,7 +708,7 @@ function resolveDisposition(
     report.disposition ??
     (applicableStepIds === 'unknown' ? 'deferred-final' : 'recorded');
   if (disposition !== 'recorded') return disposition;
-  return hasClaimableStep(applicableStepIds, state)
+  return hasClaimableStep(applicableStepIds, stepStatusIndex(state))
     ? 'recorded'
     : 'deferred-final';
 }
@@ -733,13 +734,21 @@ function mergedApplicableStepIds(
 // re-armed, and its retry's dispense claims recorded issues.
 function hasClaimableStep(
   applicableStepIds: string[] | 'unknown',
-  state: MigrateRunState
+  stepStatus: StepStatusIndex
 ): boolean {
   if (applicableStepIds === 'unknown') return false;
   return applicableStepIds.some((id) => {
-    const status = state.steps.find((s) => s.id === id)?.status;
+    const status = stepStatus.get(id);
     return status !== undefined && !TERMINAL_STEP_STATUSES.has(status);
   });
+}
+
+type StepStatusIndex = ReadonlyMap<string, MigrateStepStatus>;
+
+// Built once per pass: a bare package can route every issue to every
+// same-package step, so a per-lookup scan of `state.steps` goes cubic.
+function stepStatusIndex(state: MigrateRunState): StepStatusIndex {
+  return new Map(state.steps.map((s) => [s.id, s.status]));
 }
 
 function mapApplicableSteps(
@@ -820,10 +829,11 @@ export function settleUnclaimableIssues(
 ): MigrateRunState {
   const issues = state.issues;
   if (!issues) return state;
+  const stepStatus = stepStatusIndex(state);
   let changed = false;
   const next = issues.map((issue) => {
     if (issue.disposition !== 'recorded') return issue;
-    if (!hasClaimableStep(issue.applicableStepIds, state)) {
+    if (!hasClaimableStep(issue.applicableStepIds, stepStatus)) {
       changed = true;
       // The claim goes with the demotion: a deferred issue is assigned
       // nowhere, and the state reader rejects a claim on a non-recorded issue.
@@ -832,11 +842,14 @@ export function settleUnclaimableIssues(
     }
     // A terminal assignee can never hand back another handoff, so its claim
     // blocks nothing and would read as active ownership.
-    const claimant =
+    const claimantStatus =
       issue.claimedByStepId !== undefined
-        ? state.steps.find((s) => s.id === issue.claimedByStepId)
+        ? stepStatus.get(issue.claimedByStepId)
         : undefined;
-    if (claimant !== undefined && TERMINAL_STEP_STATUSES.has(claimant.status)) {
+    if (
+      claimantStatus !== undefined &&
+      TERMINAL_STEP_STATUSES.has(claimantStatus)
+    ) {
       changed = true;
       const { claimedByStepId: _released, ...rest } = issue;
       return rest;
