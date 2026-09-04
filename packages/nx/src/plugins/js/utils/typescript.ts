@@ -176,14 +176,6 @@ export function getPluginResolveConditionNodeArgs(
   ]);
 }
 
-/**
- * Keeps plugin conditions out of daemon argv because built generators share
- * the process. Source-loaded entries use `registerSourceGraphResolver` instead.
- */
-export function getDaemonResolveConditionNodeArgs(): string[] {
-  return [];
-}
-
 export function findNodes(
   node: Node,
   kind: SyntaxKind | SyntaxKind[],

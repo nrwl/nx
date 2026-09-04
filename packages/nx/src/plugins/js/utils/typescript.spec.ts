@@ -1,6 +1,5 @@
 import {
   clearRootTsConfigCustomConditionsCache,
-  getDaemonResolveConditionNodeArgs,
   getPluginResolveConditionNodeArgs,
   getRootTsConfigCustomConditions,
   readTsConfigOptions,
@@ -90,20 +89,6 @@ describe('getPluginResolveConditionNodeArgs', () => {
       '--conditions',
       'source',
     ]);
-    fs.cleanup();
-  });
-});
-
-describe('getDaemonResolveConditionNodeArgs', () => {
-  it('does not pass plugin conditions to the daemon', async () => {
-    const fs = new TempFs('daemon-conditions');
-    await fs.createFiles({
-      'tsconfig.json': JSON.stringify({
-        compilerOptions: { customConditions: ['source'] },
-      }),
-    });
-
-    expect(getDaemonResolveConditionNodeArgs()).toEqual([]);
     fs.cleanup();
   });
 });
