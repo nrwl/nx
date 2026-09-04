@@ -186,11 +186,6 @@ function opencodeWellKnownPaths(): string[] {
 // spreads `env` over `process.env`, so naming OPENCODE_CONFIG here would
 // silently overwrite one the user had set.
 function opencodeBuildInteractive(ctx: InvocationContext): InvocationSpec {
-  const config = {
-    agent: {
-      [OPENCODE_TRANSIENT_AGENT_NAME]: { prompt: opencodeSystemPrompt(ctx) },
-    },
-  };
   return {
     args: [
       '--agent',
@@ -198,28 +193,54 @@ function opencodeBuildInteractive(ctx: InvocationContext): InvocationSpec {
       '--prompt',
       ctx.instructionsPointer,
     ],
-    env: { OPENCODE_CONFIG_CONTENT: JSON.stringify(config) },
+    env: { OPENCODE_CONFIG_CONTENT: opencodeConfigContent(ctx) },
     cwd: ctx.workspaceRoot,
   };
 }
 
 /**
- * opencode substitutes `{file:<path>}` with the file's contents before parsing
- * the config, which keeps the system prompt out of the environment block.
- * cmd.exe drops any inherited variable longer than 8191 characters.
+ * opencode expands `{env:<name>}` and then `{file:<path>}` over the raw config
+ * text and parses the JSON afterwards, so the text is a substitution template
+ * rather than a document. Nx builds it accordingly: the file reference keeps
+ * the system prompt out of the environment block, which matters because
+ * cmd.exe drops any inherited variable longer than 8191 characters, and the
+ * prompt it falls back to inlining carries no pattern opencode can expand.
  *
- * The substitution ends at the first `}`, so a path containing one would name
- * a file that does not exist. That case inlines the prompt instead, which is
- * what shipped before. Only the system prompt is ever inlined, never the
- * instructions, so the value is bounded by the prompt's own size rather than by
- * the generator's output; `windows-command-line.spec.ts` holds it against the
- * 8191-character limit, which the runner's own budget check cannot see.
+ * Only the system prompt is ever inlined, never the instructions, so that
+ * value is bounded by the prompt's own size rather than by the generator's
+ * output; `windows-command-line.spec.ts` holds it against the 8191-character
+ * limit, which the runner's own budget check cannot see.
  */
-function opencodeSystemPrompt(ctx: InvocationContext): string {
-  // Forward slashes so the value opencode substitutes on carries no
-  // backslash-escaping question of its own.
-  const filePath = ctx.systemPromptFilePath.replace(/\\/g, '/');
-  return filePath.includes('}') ? ctx.systemPrompt : `{file:${filePath}}`;
+function opencodeConfigContent(ctx: InvocationContext): string {
+  // Windows separators become `/`, which its APIs accept just as well.
+  // Elsewhere a `\` belongs to the file name.
+  const filePath =
+    process.platform === 'win32'
+      ? ctx.systemPromptFilePath.replace(/\\/g, '/')
+      : ctx.systemPromptFilePath;
+  const prompt = isSubstitutionSafePath(filePath)
+    ? JSON.stringify(`{file:${filePath}}`)
+    : // `\u007b` starts no pattern and JSON decodes it back to `{`, so the
+      // prompt survives expansion whatever the workspace path put in it.
+      JSON.stringify(ctx.systemPrompt).replace(/\{/g, '\\u007b');
+  // Assembled rather than serialized whole so that escaping reaches the prompt
+  // and leaves the structural braces alone.
+  return `{"agent":{${JSON.stringify(
+    OPENCODE_TRANSIENT_AGENT_NAME
+  )}:{"prompt":${prompt}}}}`;
+}
+
+/**
+ * Whether opencode would read back the path nx wrote. A `}` closes the
+ * reference early and a character JSON escapes arrives escaped. Braces are
+ * rejected wholesale rather than matched against `{env:` and `{file:`, the two
+ * patterns that open a substitution: one opening inside the path would swallow
+ * the reference's own closing brace.
+ */
+function isSubstitutionSafePath(filePath: string): boolean {
+  return (
+    !/[{}]/.test(filePath) && JSON.stringify(filePath).slice(1, -1) === filePath
+  );
 }
 
 export const opencodeDefinition: AgentDefinition = {
