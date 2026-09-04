@@ -1911,8 +1911,11 @@ describe('orchestrator', () => {
       await runOrchestratorReconcile({ root, runId: 'run-1' });
 
       expect(readRunState(dir).steps[0].status).toBe('awaiting-prompt-outcome');
-      expect(lastBlock().payload.instructions).toContain('could not be read (');
-      expect(lastBlock().payload.instructions).toContain('is not a directory');
+      const instructions = lastBlock().payload.instructions;
+      expect(instructions).toContain(
+        `${dirname(handoffPath)} is not a directory, so no handoff can be read from it. Replace it with a directory, then write the handoff file and run the "next" command.`
+      );
+      expect(instructions).not.toContain('Rewrite the handoff file');
     });
 
     it('leaves the target behind a symlinked handoffs dir in place on retry', async () => {
@@ -2211,7 +2214,7 @@ describe('orchestrator', () => {
         });
         await runOrchestratorReconcile({ root, runId: 'run-1' });
         expect(lastBlock().payload.instructions).toContain(
-          'Format command: npx prettier --write --ignore-unknown <paths>'
+          'Format command: npx prettier --write --ignore-unknown -- <paths>'
         );
 
         rmSync(join(root, '.prettierrc'));
@@ -2219,7 +2222,7 @@ describe('orchestrator', () => {
         await runOrchestratorReconcile({ root, runId: 'run-1' });
 
         expect(lastBlock().payload.instructions).toContain(
-          'Format command: npx oxfmt --no-error-on-unmatched-pattern <paths>'
+          'Format command: npx oxfmt --no-error-on-unmatched-pattern -- <paths>'
         );
       });
 
@@ -2237,7 +2240,7 @@ describe('orchestrator', () => {
         await runOrchestratorReconcile({ root, runId: 'run-1' });
 
         expect(lastBlock().payload.instructions).toContain(
-          'Format command: npx prettier --write --ignore-unknown <paths>'
+          'Format command: npx prettier --write --ignore-unknown -- <paths>'
         );
       });
 

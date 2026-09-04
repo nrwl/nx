@@ -1914,9 +1914,10 @@ function emitAwaitPrompt(
   const filePath = runStepHandoffPath(dir, step.id);
   // Recreated if the agent removed it, so the handed-over path always has its
   // parent (an agent that has to `mkdir -p` pays a permission prompt).
-  // Anything else standing in its place is left for the read to reject.
-  if (handoffsDirState(runHandoffsDir(dir)) === 'missing') {
-    mkdirSync(runHandoffsDir(dir), { recursive: true });
+  const handoffsDir = runHandoffsDir(dir);
+  const handoffsDirIs = handoffsDirState(handoffsDir);
+  if (handoffsDirIs === 'missing') {
+    mkdirSync(handoffsDir, { recursive: true });
   }
   // Claim only while fresh state still awaits this handoff. Steps that never
   // park cannot report updates; serial dispensing fixes order, and stale
@@ -1998,7 +1999,14 @@ function emitAwaitPrompt(
   // A handoff that exists but can't be read/parsed/validated is a rejection,
   // not a still-awaited outcome. Naming why stops the run from re-emitting the
   // same await forever while the agent leaves the bad file in place.
-  const rejection = describeRejectedHandoff(dir, claimed, step);
+  // A non-directory in the handoffs dir's place is never read through, so a
+  // rewritten handoff cannot cure it: name the replacement instead.
+  const rejection =
+    handoffsDirIs === 'other'
+      ? [
+          `${handoffsDir} is not a directory, so no handoff can be read from it. Replace it with a directory, then write the handoff file and run the "next" command.`,
+        ]
+      : describeRejectedHandoff(dir, claimed, step);
   if (rejection.length > 0) {
     lines.push('', ...rejection);
   }
