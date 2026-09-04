@@ -232,7 +232,7 @@ describe('runMasterSession', () => {
 
     expect(errorSpy).toHaveBeenCalledWith({
       title:
-        "Closed the Claude Code session: a step's commit request could not be answered (EACCES: permission denied, rename).",
+        "Closed the Claude Code session: a step's request could not be answered (EACCES: permission denied, rename).",
       bodyLines: [
         `Migrate run ${runId} is still active. Run nx migrate --run-migrations --agentic=claude-code again to resume it.`,
       ],
