@@ -2678,7 +2678,8 @@ describe('orchestrator', () => {
       expect(mockRunInstall).toHaveBeenCalledWith(
         root,
         'post-migration',
-        expect.stringContaining('--run-id=run-1')
+        expect.stringContaining('--run-id=run-1'),
+        undefined
       );
     });
 
@@ -2841,7 +2842,7 @@ describe('orchestrator', () => {
       await runOrchestratorReconcile({ root, runId: 'run-1' });
 
       expect(mockRunInstall).not.toHaveBeenCalled();
-      expect(mockLogSkippedInstall).toHaveBeenCalledWith(root);
+      expect(mockLogSkippedInstall).toHaveBeenCalledWith(root, undefined);
     });
 
     it('names the parse error when a corrupt handoff blocks the fold so the run cannot livelock', async () => {
@@ -3599,7 +3600,8 @@ describe('orchestrator', () => {
         expect(mockRunInstall).toHaveBeenCalledWith(
           root,
           'post-migration',
-          expect.stringContaining('--run-id=run-1')
+          expect.stringContaining('--run-id=run-1'),
+          undefined
         );
         expect(mockCommit).not.toHaveBeenCalled();
         expect(state.commits).toEqual([
@@ -3628,7 +3630,7 @@ describe('orchestrator', () => {
 
       expect(readRunState(dir).steps[0].status).toBe('skipped');
       expect(mockRunInstall).not.toHaveBeenCalled();
-      expect(mockLogSkippedInstall).toHaveBeenCalledWith(root);
+      expect(mockLogSkippedInstall).toHaveBeenCalledWith(root, undefined);
     });
 
     it('records the install failure when a skipped step left dependency edits that could not be installed', async () => {
@@ -4733,7 +4735,8 @@ describe('orchestrator', () => {
       expect(mockRunInstall).toHaveBeenCalledWith(
         root,
         'post-migration',
-        expect.stringContaining('--run-id=run-1')
+        expect.stringContaining('--run-id=run-1'),
+        undefined
       );
       expect(mockCommit).not.toHaveBeenCalled();
     });
