@@ -59,7 +59,7 @@ describe('runLintTasks', () => {
   });
   afterEach(() => stdout.mockRestore());
 
-  it('should spawn once for every task and report per task', () => {
+  it('should spawn once for all tasks and report per task', () => {
     mockRunOxlint.mockReturnValue({
       ok: true,
       report: report([{ filename: 'libs/b/x.ts' }]),
