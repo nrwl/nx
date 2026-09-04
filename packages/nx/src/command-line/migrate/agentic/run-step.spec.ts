@@ -27,6 +27,10 @@ import { stepHandoffPath } from './handoff';
 import { runAgentic } from './runner';
 import { getAgentDefinition } from './definitions';
 import { writeStepInstructionFiles } from './instruction-files';
+import {
+  buildInlineSystemContext,
+  buildMinimalSystemContext,
+} from './prompts/system-prompt';
 import { runAgenticPromptStep } from './run-step';
 import {
   DetectedInstalledAgent,
@@ -42,6 +46,10 @@ const SYSTEM_PROMPT_FILE =
   '/ws/.nx/migrate-runs/20.0.0/handoffs/@nx/test/m1.system.md';
 const INSTRUCTIONS_POINTER =
   'Your instructions for this migration step are in the file .nx/migrate-runs/20.0.0/handoffs/@nx/test/m1.instructions.md';
+const HANDOFF_FILE = stepHandoffPath(
+  '/ws/.nx/migrate-runs/20.0.0',
+  makeMigration()
+);
 
 function makeAgentic(): EnabledResolvedAgentic {
   const detected: DetectedInstalledAgent = {
@@ -124,20 +132,17 @@ describe('runAgenticPromptStep', () => {
     expect(invocationContext.systemPromptFilePath).toBe(SYSTEM_PROMPT_FILE);
     expect(invocationContext.instructionsPointer).toBe(INSTRUCTIONS_POINTER);
     expect(invocationContext.systemPrompt).toBe(written.systemPrompt);
-    // The inline forms both point at the file; only the full one repeats the
-    // handoff contract the agent has to satisfy.
-    expect(invocationContext.inlineSystemContext).toContain(SYSTEM_PROMPT_FILE);
-    expect(invocationContext.inlineSystemContext).toContain(
-      '<handoff_contract>'
+    // Verbatim rather than by fragment: the Windows command-line budget is
+    // measured on exactly what these two builders return, so it only bounds
+    // the real invocation while this passes their output through untouched.
+    expect(invocationContext.inlineSystemContext).toBe(
+      buildInlineSystemContext({
+        handoffFileAbsolutePath: HANDOFF_FILE,
+        systemPromptFilePath: SYSTEM_PROMPT_FILE,
+      })
     );
-    expect(invocationContext.inlineSystemContextFallback).toContain(
-      SYSTEM_PROMPT_FILE
-    );
-    expect(invocationContext.inlineSystemContextFallback).not.toContain(
-      '<handoff_contract>'
-    );
-    expect(invocationContext.inlineSystemContextFallback.length).toBeLessThan(
-      invocationContext.inlineSystemContext.length
+    expect(invocationContext.inlineSystemContextFallback).toBe(
+      buildMinimalSystemContext(SYSTEM_PROMPT_FILE)
     );
   });
 
@@ -171,25 +176,21 @@ describe('runAgenticPromptStep', () => {
       installDepsIfChanged: installDeps,
     });
 
-    const expected = stepHandoffPath(
-      '/ws/.nx/migrate-runs/20.0.0',
-      makeMigration()
-    );
-    expect(expected).toMatch(
+    expect(HANDOFF_FILE).toMatch(
       /[\\/]handoffs[\\/]@nx\+test\+m1-[0-9a-f]{64}\.json$/
     );
     const { mkdirSafely } = (await import('./handoff')) as {
       mkdirSafely: Mock;
     };
     expect(mkdirSafely).toHaveBeenCalledWith(
-      dirname(expected),
+      dirname(HANDOFF_FILE),
       expect.any(String)
     );
     const call = mockRunAgentic.mock.calls[0][0];
-    expect(call.handoffFilePath).toBe(expected);
-    expect(call.handoffsDir).toBe(dirname(expected));
-    expect(call.invocationContext.systemPrompt).toContain(expected);
-    expect(call.invocationContext.inlineSystemContext).toContain(expected);
+    expect(call.handoffFilePath).toBe(HANDOFF_FILE);
+    expect(call.handoffsDir).toBe(dirname(HANDOFF_FILE));
+    expect(call.invocationContext.systemPrompt).toContain(HANDOFF_FILE);
+    expect(call.invocationContext.inlineSystemContext).toContain(HANDOFF_FILE);
   });
 
   it('returns ambiguous=true with a placeholder summary on ambiguous-continue, and still installs deps', async () => {
