@@ -14,9 +14,9 @@ import {
 
 /**
  * Both the agentic runner and the orchestrator write per-run scratch under
- * `.nx/migrate-runs/<run-id>/`: handoff files in both cases, plus the durable
- * run state and its plan snapshots for the orchestrator. The v23 migration
- * `23-0-0-add-migrate-runs-to-git-ignore` adds `.nx/migrate-runs` to
+ * `.nx/migrate-runs/<run-id>/`: handoff and prompt files in both cases, plus
+ * the durable run state and its plan snapshots for the orchestrator. The v23
+ * migration `23-0-0-add-migrate-runs-to-git-ignore` adds `.nx/migrate-runs` to
  * `.gitignore`; in its declared slot (typically late) earlier per-migration
  * commits would absorb the scratch into the user-visible diff.
  *

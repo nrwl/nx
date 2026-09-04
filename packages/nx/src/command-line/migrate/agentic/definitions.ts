@@ -57,8 +57,7 @@ function claudeCodeHandoffAllowedTools(runDirName: string): string | null {
 
 // `--system-prompt-file` rather than `--system-prompt`: the prompt is several
 // kilobytes of multi-line text and would not survive the `cmd.exe` shim on
-// Windows. Claude Code has accepted the flag since 1.0.55 (2025-07-17) and
-// errors out loudly on an older build rather than silently dropping it.
+// Windows.
 function claudeCodeBuildInteractive(ctx: InvocationContext): InvocationSpec {
   const allowedTools = claudeCodeHandoffAllowedTools(ctx.runDirName);
   return {
