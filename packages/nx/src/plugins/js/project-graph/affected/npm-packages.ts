@@ -51,6 +51,11 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
           npmPackage = nodes.find((n) => n.name === c.path[1]);
         }
         if (!npmPackage) {
+          // A global package affects all projects whether or not the graph
+          // has a node for it, so check it here rather than only below
+          if (globalPackages.has(c.path[1])) {
+            return Object.keys(projectGraph.nodes);
+          }
           missingTouchedNpmPackages.push(c.path[1]);
           continue;
         }
