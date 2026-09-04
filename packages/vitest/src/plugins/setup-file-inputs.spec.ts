@@ -1,7 +1,10 @@
 import { join } from 'node:path';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import type { ResolvedConfig } from 'vite';
-import { collectSetupFileInputs } from './setup-file-inputs';
+import {
+  collectSetupFileInputs,
+  readSetupFileEntries,
+} from './setup-file-inputs';
 
 describe('collectSetupFileInputs', () => {
   let tempFs: TempFs;
@@ -16,16 +19,24 @@ describe('collectSetupFileInputs', () => {
     tempFs.cleanup();
   });
 
+  // `root` is deliberately the Vite default (process.cwd()), not the project
+  // directory: that is what `resolveConfig` returns for a config that omits
+  // `root`, and the collector must not depend on it.
   const config = (test: Record<string, unknown>) =>
     ({
-      root: join(workspaceRoot, 'packages/lib'),
+      root: process.cwd(),
       test,
     }) as unknown as ResolvedConfig;
 
   const collect = (
     test: Record<string, unknown>,
     projectRoot = 'packages/lib'
-  ) => collectSetupFileInputs(config(test), projectRoot, workspaceRoot);
+  ) =>
+    collectSetupFileInputs(
+      readSetupFileEntries(config(test)),
+      projectRoot,
+      workspaceRoot
+    );
 
   it('should declare a setup file that lives outside the project root', async () => {
     await tempFs.createFiles({ 'tools/vitest/setup.mts': '' });
@@ -117,5 +128,51 @@ describe('collectSetupFileInputs', () => {
 
   it('should declare nothing when the config has no setup entries', () => {
     expect(collect({})).toEqual({ files: [], tsconfigs: [] });
+  });
+
+  it('should ignore the Vite-resolved root, which defaults to process.cwd()', async () => {
+    await tempFs.createFiles({ 'tools/vitest/setup.mts': '' });
+
+    // A config that omits `root` resolves to process.cwd(); resolving the entry
+    // against it lands outside the workspace and declares nothing.
+    expect(
+      collectSetupFileInputs(
+        readSetupFileEntries({
+          root: process.cwd(),
+          test: { setupFiles: ['../../tools/vitest/setup.mts'] },
+        } as unknown as ResolvedConfig),
+        'packages/lib',
+        workspaceRoot
+      ).files
+    ).toEqual(['tools/vitest/setup.mts']);
+  });
+
+  it('should resolve a relative test.root against the project root', async () => {
+    await tempFs.createFiles({ 'tools/vitest/setup.mts': '' });
+
+    expect(
+      collect({
+        root: 'src',
+        setupFiles: ['../../../tools/vitest/setup.mts'],
+      }).files
+    ).toEqual(['tools/vitest/setup.mts']);
+  });
+
+  it('should honour an absolute test.root', async () => {
+    await tempFs.createFiles({ 'tools/vitest/setup.mts': '' });
+
+    expect(
+      collect({
+        root: join(workspaceRoot, 'packages/lib/src'),
+        setupFiles: ['../../../tools/vitest/setup.mts'],
+      }).files
+    ).toEqual(['tools/vitest/setup.mts']);
+  });
+
+  it('should skip a non-string entry', async () => {
+    expect(collect({ setupFiles: [42, null] })).toEqual({
+      files: [],
+      tsconfigs: [],
+    });
   });
 });

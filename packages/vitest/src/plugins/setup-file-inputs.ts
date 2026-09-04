@@ -6,6 +6,35 @@ import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import type { ResolvedConfig } from 'vite';
 
 /**
+ * The setup entries read off a Vite config, in the raw form the user wrote
+ * them. Resolving them touches the filesystem, so it is kept separate from
+ * reading them: the entries are cached with the target definitions, while the
+ * resolution re-runs on every graph build (see `collectSetupFileInputs`).
+ */
+export interface SetupFileEntries {
+  entries: string[];
+  /** `test.root`, unresolved - Vite does not normalize the `test` block. */
+  testRoot?: string;
+}
+
+/** Reads `setupFiles` and `globalSetup` off a resolved Vite config. */
+export function readSetupFileEntries(
+  viteConfig: ResolvedConfig
+): SetupFileEntries {
+  const entries = [
+    viteConfig.test?.setupFiles,
+    viteConfig.test?.globalSetup,
+  ].flatMap((value) =>
+    typeof value === 'string' ? [value] : Array.isArray(value) ? value : []
+  );
+  const testRoot = viteConfig.test?.root;
+  return {
+    entries: entries.filter((e): e is string => typeof e === 'string'),
+    testRoot: typeof testRoot === 'string' ? testRoot : undefined,
+  };
+}
+
+/**
  * Collects the files Vitest loads from outside the project root - `setupFiles`
  * and `globalSetup` - together with the tsconfigs Vite reads to transform them.
  *
@@ -14,30 +43,33 @@ import type { ResolvedConfig } from 'vite';
  * undeclared, editing it does not invalidate the task and the suite replays a
  * stale cache hit.
  *
- * Solution-style tsconfigs are deliberately not followed. When the nearest
- * tsconfig of a setup file is a solution file, Vite walks its `references` and
- * reads every project's tsconfig; declaring those would attach one input per
- * project in the workspace. Keep the setup file inside a project (or beside a
- * leaf tsconfig) instead.
+ * Stops at the nearest tsconfig and its `extends` chain. Vite reads more than
+ * that for a solution-style tsconfig - it walks `references` and reads every
+ * referenced project's tsconfig - but declaring those would attach one input
+ * per project in the workspace. Keep the setup file inside a project (or beside
+ * a leaf tsconfig) instead.
  */
 export function collectSetupFileInputs(
-  viteConfig: ResolvedConfig,
+  { entries, testRoot }: SetupFileEntries,
   projectRoot: string,
   workspaceRoot: string
 ): { files: string[]; tsconfigs: string[] } {
   // At the workspace root everything is already covered by `default`.
   if (projectRoot === '.') return { files: [], tsconfigs: [] };
-
-  const entries = [
-    viteConfig.test?.setupFiles,
-    viteConfig.test?.globalSetup,
-  ].flatMap((value) =>
-    typeof value === 'string' ? [value] : Array.isArray(value) ? value : []
-  );
   if (entries.length === 0) return { files: [], tsconfigs: [] };
 
-  // Vitest resolves both options against the config's root.
-  const configRoot = viteConfig.test?.root ?? viteConfig.root ?? workspaceRoot;
+  // Vitest resolves both options against its own root, which is the config's
+  // directory - the project root, since a project is registered per config -
+  // unless `test.root` overrides it. The Vite-resolved `root` cannot stand in:
+  // it defaults to `process.cwd()` when the config omits `root`, which would
+  // resolve every entry against wherever nx happened to be invoked.
+  const fullProjectRoot = resolve(workspaceRoot, projectRoot);
+  const configRoot = !testRoot
+    ? fullProjectRoot
+    : isAbsolute(testRoot)
+      ? testRoot
+      : resolve(fullProjectRoot, testRoot);
+
   const jsonCache: RawTsconfigJsonCache = new Map();
   const rootTsConfigName = getRootTsConfigFileName();
   const projectPrefix = `${projectRoot}/`;
