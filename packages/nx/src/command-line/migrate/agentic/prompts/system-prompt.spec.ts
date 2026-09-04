@@ -174,8 +174,6 @@ describe('buildSystemPrompt', () => {
   });
 });
 
-// Command-line-only agents (codex) get one of these instead of the full
-// system prompt, which cannot fit in a Windows command line.
 describe('inline system contexts', () => {
   const systemPromptFilePath =
     '/abs/workspace/.nx/migrate-runs/23.0.0/step-1.system.md';
@@ -217,8 +215,8 @@ describe('inline system contexts', () => {
       expect(contract).toContain(handoffFileAbsolutePath);
     });
 
-    // The scope rules themselves live in the file; this keeps the outer bound
-    // in front of the agent either way.
+    // Repeats the boundary inline in case the agent acts before reading the
+    // file.
     it('restates the workspace-root boundary', () => {
       expect(context).toContain(
         'Do not modify files outside the workspace root.'

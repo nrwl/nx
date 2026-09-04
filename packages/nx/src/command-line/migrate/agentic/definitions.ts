@@ -55,16 +55,14 @@ function claudeCodeHandoffAllowedTools(runDirName: string): string | null {
   return `Edit(${MIGRATE_RUNS_RELATIVE_DIR}/${runDirName}/${HANDOFFS_DIR_NAME}/**)`;
 }
 
-// `--system-prompt-file` rather than `--system-prompt`: the prompt is several
-// kilobytes of multi-line text and would not survive the `cmd.exe` shim on
-// Windows.
+// The prompt is kilobytes of multi-line text, which a `cmd.exe` shim cannot
+// carry as an argument.
 function claudeCodeBuildInteractive(ctx: InvocationContext): InvocationSpec {
   const allowedTools = claudeCodeHandoffAllowedTools(ctx.runDirName);
   return {
-    // `--allowedTools` is variadic (space/comma separated): a positional
-    // placed right after its value gets swallowed as another rule. The rules
-    // must stay in one comma-joined element with a non-variadic flag
-    // (`--system-prompt-file`) between them and the instructions pointer.
+    // `--allowedTools` is variadic, so a positional right after it is read as
+    // another rule: keep the rules in one comma-joined element and a flag
+    // between them and the instructions pointer.
     args: [
       ...(allowedTools ? ['--allowedTools', allowedTools] : []),
       '--system-prompt-file',
@@ -90,13 +88,11 @@ function codexWellKnownPaths(): string[] {
 }
 
 // No handoff permission flag: codex's default sandbox already allows writes
-// inside the cwd tree without prompting, and a user-hardened read-only config
-// is a deliberate choice we don't override.
+// inside the cwd tree, and a user-hardened read-only config is theirs to keep.
 //
-// codex has no flag for loading instructions from a file (`-c
-// model_instructions_file` replaces its base instructions and its own docs
-// discourage it), so its system context is the one that stays on the command
-// line, hence the reduced `inlineSystemContext` rather than the full prompt.
+// `-c model_instructions_file` replaces codex's built-in instructions rather
+// than adding this context to them, so the context stays on the command line,
+// reduced rather than the full prompt.
 function codexBuildInteractive(ctx: InvocationContext): InvocationSpec {
   return {
     args: [
@@ -111,19 +107,12 @@ function codexBuildInteractive(ctx: InvocationContext): InvocationSpec {
 /**
  * Encodes a value for a codex `-c key=value` override as a TOML basic string.
  *
- * codex parses the value as TOML and, when the parse fails, silently falls
- * back to the raw text with surrounding quotes trimmed, so a bad encoding
- * would ship a mangled system context with no error anywhere. Round-tripping
- * through a real TOML parser turns that into a thrown error instead.
- *
- * `JSON.stringify` produces the encoding: every escape it emits (`\"`, `\\`,
- * `\n`, `\r`, `\t`, `\b`, `\f`, `\uXXXX`) is also a TOML basic-string escape,
- * and the one JSON escape TOML lacks (`\/`) is never emitted. That covers what
- * JSON escapes, not what it leaves raw, and the characters it leaves raw
- * include control characters TOML rejects in a basic string. Catching those is
- * what the round-trip is for. Its single-line output matters too: a TOML
- * multi-line string would put raw newlines back on the command line, which a
- * `.cmd` shim cannot carry.
+ * codex falls back to the raw text as a literal when the value does not parse
+ * as TOML, so a bad encoding ships a mangled system context with no error. The
+ * escapes `JSON.stringify` emits are all TOML basic-string escapes, but the
+ * characters it leaves raw include control characters TOML rejects, which is
+ * what the round-trip catches. Single-line output is required too: a TOML
+ * multi-line string would put raw newlines back on the command line.
  */
 function encodeTomlString(value: string): string {
   const encoded = JSON.stringify(value);
@@ -178,13 +167,13 @@ function opencodeWellKnownPaths(): string[] {
 }
 
 // No handoff permission config: opencode's `edit` permission defaults to
-// allow, and injecting one would clobber (not merge with) a user's own
-// permission patterns.
+// allow, and injecting one would clobber a user's own patterns rather than
+// merge with them.
 //
-// The config keeps travelling through OPENCODE_CONFIG_CONTENT rather than
-// OPENCODE_CONFIG: both are merged with the user's own config, but the runner
-// spreads `env` over `process.env`, so naming OPENCODE_CONFIG here would
-// silently overwrite one the user had set.
+// The config travels through OPENCODE_CONFIG_CONTENT rather than
+// OPENCODE_CONFIG. Both merge with the user's own config, but the runner
+// spreads `env` over `process.env`, so the latter would overwrite a value the
+// user had set.
 function opencodeBuildInteractive(ctx: InvocationContext): InvocationSpec {
   return {
     args: [
@@ -200,16 +189,14 @@ function opencodeBuildInteractive(ctx: InvocationContext): InvocationSpec {
 
 /**
  * opencode expands `{env:<name>}` and then `{file:<path>}` over the raw config
- * text and parses the JSON afterwards, so the text is a substitution template
- * rather than a document. Nx builds it accordingly: the file reference keeps
- * the system prompt out of the environment block, which matters because
- * cmd.exe drops any inherited variable longer than 8191 characters, and the
+ * text and parses the JSON afterwards, so this is a substitution template, not
+ * a document. The file reference keeps the prompt out of the environment,
+ * where cmd.exe drops any inherited variable over 8191 characters, and the
  * prompt it falls back to inlining carries no pattern opencode can expand.
  *
- * Only the system prompt is ever inlined, never the instructions, so that
- * value is bounded by the prompt's own size rather than by the generator's
- * output; `windows-command-line.spec.ts` holds it against the 8191-character
- * limit, which the runner's own budget check cannot see.
+ * The instructions are never inlined, so the value is bounded by the prompt
+ * rather than the generator's output, and `windows-command-line.spec.ts` holds
+ * it against 8191 where the runner's own budget check cannot see it.
  */
 function opencodeConfigContent(ctx: InvocationContext): string {
   // Windows separators become `/`, which its APIs accept just as well.
@@ -223,8 +210,8 @@ function opencodeConfigContent(ctx: InvocationContext): string {
     : // `\u007b` starts no pattern and JSON decodes it back to `{`, so the
       // prompt survives expansion whatever the workspace path put in it.
       JSON.stringify(ctx.systemPrompt).replace(/\{/g, '\\u007b');
-  // Assembled rather than serialized whole so that escaping reaches the prompt
-  // and leaves the structural braces alone.
+  // Assembled rather than serialized whole: `JSON.stringify` over the object
+  // would re-escape the backslashes the `\u007b` encoding introduced.
   return `{"agent":{${JSON.stringify(
     OPENCODE_TRANSIENT_AGENT_NAME
   )}:{"prompt":${prompt}}}}`;
@@ -232,10 +219,9 @@ function opencodeConfigContent(ctx: InvocationContext): string {
 
 /**
  * Whether opencode would read back the path nx wrote. A `}` closes the
- * reference early and a character JSON escapes arrives escaped. Braces are
- * rejected wholesale rather than matched against `{env:` and `{file:`, the two
- * patterns that open a substitution: one opening inside the path would swallow
- * the reference's own closing brace.
+ * reference early, and a character JSON escapes arrives escaped. Braces are
+ * rejected wholesale rather than matched against `{env:` and `{file:`, since a
+ * pattern opening inside the path swallows the reference's closing brace.
  */
 function isSubstitutionSafePath(filePath: string): boolean {
   return (

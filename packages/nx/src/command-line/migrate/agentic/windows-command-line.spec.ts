@@ -34,15 +34,13 @@ import { AgentDefinition, InvocationContext } from './types';
 
 /**
  * cmd.exe runs a command line of at most 8191 characters, and nx reaches
- * npm-installed agents on Windows through a `.cmd` shim, which means going
- * through cmd.exe. This suite drives the real prompt builders, the real
- * `buildInteractive` of each agent and the real Windows adapter, so that any
- * change putting prompt-sized content back on the command line fails here
- * rather than on a user's machine. nx has no Windows CI for this flow.
+ * npm-installed agents on Windows through a `.cmd` shim. This suite drives the
+ * real prompt builders, the real `buildInteractive` of each agent and the real
+ * Windows adapter, so any change putting prompt-sized content back on the
+ * command line fails here.
  *
  * The workspace root is a real (POSIX) temporary directory because the files
- * are actually written; it is padded to Windows' 260-character MAX_PATH, which
- * is what the measurements are about.
+ * are written; it is padded to Windows' 260-character MAX_PATH.
  */
 describe('windows command line', () => {
   const originalPlatform = process.platform;
@@ -50,9 +48,7 @@ describe('windows command line', () => {
   let workspaceRoot: string;
   let braceWorkspaceRoot: string;
 
-  // Long enough that its own contribution to every path is visible: the run
-  // directory embeds the package as directories and the migration as the file
-  // name.
+  // Long enough that its own contribution to every path is visible.
   const migration = {
     package: `@nx/${'a'.repeat(60)}`,
     name: `update-23-1-0-${'b'.repeat(80)}`,
@@ -128,9 +124,7 @@ describe('windows command line', () => {
     });
   });
 
-  // `impl` is nullable because `run-step.ts` is: it picks the prompt-migration
-  // builder over the hybrid one exactly when a migration has no generator
-  // output to report on.
+  // A null `impl` selects the prompt-only builder, non-null the hybrid one.
   function buildSpawn(
     definition: AgentDefinition,
     shimBinary: string,
@@ -222,10 +216,8 @@ describe('windows command line', () => {
         );
       });
 
-      // The failure this suite exists for: prompt-sized content reaching the
-      // command line. It shows up as the length tracking the generator's
-      // output, so hold the two against each other rather than against a
-      // number a short workspace path would satisfy on its own.
+      // The two are held against each other rather than against a number a
+      // short workspace path would satisfy on its own.
       it('costs the same on the command line whatever the generator produced', () => {
         const empty = buildSpawn(definition, shimBinary, mode, emptyImpl);
         const large = buildSpawn(definition, shimBinary, mode, largeImpl);
@@ -252,9 +244,8 @@ describe('windows command line', () => {
       });
     });
 
-    // The matrix above only ever reaches the hybrid builder in author mode. A
-    // migration with no generator to report on takes the third prompt shape,
-    // which is the one an agent gets for a prompt-only migration.
+    // The matrix above only reaches the hybrid builder; a migration with no
+    // generator output takes the third prompt shape.
     it('stays within the budget in author mode with no generator context', () => {
       const { spec, adapted } = buildSpawn(
         definition,
@@ -272,12 +263,10 @@ describe('windows command line', () => {
     });
   });
 
-  // opencode reaches its system prompt through a `{file:<path>}` substitution
-  // that ends at the first `}`, so a workspace root containing one sends the
-  // prompt through the environment instead. That value is not on the command
-  // line and so is not covered by the budget the runner enforces; the bound it
-  // has to respect is cmd.exe's own 8191-character limit per inherited
-  // variable.
+  // A `}` in the root defeats the `{file:<path>}` substitution and sends the
+  // prompt through the environment, which the runner's command-line budget does
+  // not measure; the bound there is cmd.exe's 8191-character limit per
+  // inherited variable.
   it('keeps opencode under the environment variable limit when the workspace path defeats the file substitution', () => {
     const { spec } = buildSpawn(
       opencodeDefinition,
@@ -292,8 +281,6 @@ describe('windows command line', () => {
     expect(`OPENCODE_CONFIG_CONTENT=${value}`.length).toBeLessThanOrEqual(8191);
   });
 
-  // What keeps the value above bounded: only the system prompt is inlined, and
-  // it does not grow with the generator's output the way the instructions do.
   it('does not grow the opencode environment value with the generator context', () => {
     const empty = buildSpawn(
       opencodeDefinition,
@@ -315,10 +302,8 @@ describe('windows command line', () => {
     );
   });
 
-  // codex is the one agent that cannot load its system context from a file, so
-  // it carries a reduced form on the command line. The runner falls back to a
-  // shorter one when this overflows; asserting on the full form here keeps that
-  // fallback from quietly absorbing growth in the system prompt.
+  // Asserting on the full form keeps the runner's fallback from quietly
+  // absorbing growth in the system prompt.
   it('fits codex' + "'s full inline system context on the command line", () => {
     const { spec, adapted } = buildSpawn(
       codexDefinition,

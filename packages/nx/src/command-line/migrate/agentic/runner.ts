@@ -34,7 +34,7 @@ interface AmbiguousCause {
 // How long to wait for the agent to exit gracefully after sending SIGINT once
 // a valid handoff has been written. Long enough for an interactive agent to
 // finish its current render and clean up; short enough that a frozen child
-// still gets escalated to SIGTERM in a sensible time.
+// still gets escalated to SIGKILL in a sensible time.
 const AGENT_GRACEFUL_EXIT_MS = 5_000;
 
 export interface RunAgenticArgs {
@@ -44,7 +44,7 @@ export interface RunAgenticArgs {
   handoffFilePath: string;
   /** Override the handoff-file poll interval (test seam). */
   handoffPollIntervalMs?: number;
-  /** Override the SIGINT-to-SIGTERM grace period (test seam). */
+  /** Override the SIGINT-to-SIGKILL grace period (test seam). */
   gracefulExitMs?: number;
   /** Override the post-force-kill safety bound (test seam). */
   forceKillWaitMs?: number;
@@ -149,23 +149,16 @@ export async function runAgentic(
 // 8191 characters".
 // https://learn.microsoft.com/troubleshoot/windows-client/shell-experience/command-line-string-limitation
 const WINDOWS_COMMAND_LINE_LIMIT = 8191;
-// Absorbs what cannot be measured from here: cmd.exe's own accounting of the
-// string it receives, and headroom for the prompts to grow.
+// Deliberate headroom below the documented limit for argument growth.
 const WINDOWS_COMMAND_LINE_RESERVE = 1000;
 export const WINDOWS_COMMAND_LINE_BUDGET =
   WINDOWS_COMMAND_LINE_LIMIT - WINDOWS_COMMAND_LINE_RESERVE;
 
 /**
  * Builds the spawn arguments, keeping them within what Windows will execute.
- *
- * The prompts themselves already travel as files, so what is left is paths,
- * built from the workspace root and from the migration's package and name.
- * Each appears in several of them, and the last two come from the migration
- * author rather than from the workspace, so a long migration id pushes the
- * total up faster than a long workspace path does. When it does not fit, the
- * agents that carry a system context on the command line fall back to the
- * shorter form; there is nothing left to trade after that, so an argument list
- * still over the limit aborts the step rather than dispatching the agent on a
+ * An agent carrying a system context on the command line falls back to the
+ * shorter form when it does not fit; with nothing left to trade, an argument
+ * list still over the limit aborts the step rather than dispatching a
  * truncated one.
  */
 function adaptWithinCommandLineBudget(
@@ -266,23 +259,14 @@ function restoreTermiosAfterAgent(): void {
 const FORCE_KILL_WAIT_MS = 500;
 
 /**
- * Stops the agent process after a successful handoff. Platform-branched:
+ * Stops the agent process after a successful handoff.
  *
- * - POSIX: SIGINT (graceful, equivalent to user Ctrl+C) → wait
- *   `gracefulExitMs` for the child to exit → SIGKILL → wait
- *   `FORCE_KILL_WAIT_MS` (bounded) → return. SIGTERM is intentionally
- *   skipped: a process that ignores SIGINT for 5s will hit the same
- *   handler on SIGTERM, the extra step only delays the inevitable.
+ * POSIX: SIGINT, then SIGKILL after a bounded wait. SIGTERM is skipped so a
+ * child that ignored the first graceful signal does not get a second one.
  *
- * - Windows: skip SIGINT entirely. `child.kill('*')` on Windows is a
- *   `TerminateProcess` call regardless of the signal name (Windows has
- *   no POSIX signals), and on the `cmd.exe` shim path it
- *   would terminate cmd.exe while leaving the agent orphaned (parent
- *   death doesn't cascade to children on Windows). `taskkill /T /F`
- *   walks the process tree and kills cmd.exe AND the agent atomically;
- *   that's the only reliable shutdown path here. `taskkill` failures
- *   (binary missing, race with already-dead pid) are swallowed; the
- *   safety bound returns regardless.
+ * Windows: `taskkill /T /F`. `child.kill` is a `TerminateProcess` call whatever
+ * the signal name, which on the `cmd.exe` shim path would kill the shim and
+ * orphan the agent. `taskkill` failures are swallowed.
  */
 async function closeAgentSession(
   child: ChildProcess,
@@ -441,17 +425,16 @@ async function resolveFromHandoffOrPrompt(
     // cascade surfaces the abort outcome.
     //
     // Forward the underlying cause as pre-rendered summary lines so the
-    // caller can log it before "Aborted by user" — a Ctrl+C that masked
-    // a SEPARATE crash still needs to show the user what crashed. Scrub
-    // fields that are just the Ctrl+C itself reverberating: exit code
-    // 130 (SIGINT) / 143 (SIGTERM from our escalation) and signals
-    // SIGINT / SIGTERM reflect the user's own keystroke (and our
-    // graceful-exit handling of it); surfacing them as "agent crashed"
-    // would be noise. Anything else — code 1, code 137 (OOM), an
-    // unrelated signal — is a separate diagnostic worth keeping. Note
-    // that `spawnError` is structurally impossible here: the spawn-throw
-    // path returns directly without registering the SIGINT listener, so
-    // `userInterrupted` can never be true on that branch.
+    // caller can log it before "Aborted by user". A Ctrl+C that masked a
+    // SEPARATE crash still needs to show the user what crashed. In this
+    // user-interrupted branch, exit codes 130 and 143 and signals SIGINT
+    // and SIGTERM are stop requests rather than agent crashes, so
+    // surfacing them as "agent crashed" would be noise. Anything else
+    // (code 1, code 137 for OOM, an unrelated signal) is a separate
+    // diagnostic worth keeping. Note that `spawnError` is structurally
+    // impossible here: the spawn-throw path returns directly without
+    // registering the SIGINT listener, so `userInterrupted` can never be
+    // true on that branch.
     const exitWasCtrlC =
       cause.exitCode === 130 ||
       cause.exitCode === 143 ||
@@ -480,9 +463,8 @@ export interface AdaptedSpawn {
   args: string[];
   options: SpawnOptions;
   /**
-   * Length of the command line Windows will receive. Only set when the
-   * `cmd.exe` wrapper was applied, since that is the only path with a limit
-   * worth checking against.
+   * Length of the command line Windows will receive. Set only on the `cmd.exe`
+   * wrapper path.
    */
   commandLineLength?: number;
 }
@@ -513,14 +495,10 @@ export function adaptSpawnForWindowsShim(
     ' '
   );
   const comspec = process.env.comspec || 'cmd.exe';
-  // Both expansion modes are set rather than inherited, because a machine-wide
-  // registry setting can flip either one. `/e:on` keeps command extensions on,
-  // which the `%cd:~,%` substring in `neutralizePercent` needs to parse.
-  // `/v:off` keeps delayed expansion off, so a `!` in an argument stays a
-  // literal instead of opening a `!VAR!` reference. Same pair Rust's standard
-  // library uses to run a batch file (`library/std/src/sys/args/windows.rs`).
-  // Outer pair of quotes is required so cmd.exe /c does not strip the inner
-  // quotes around the binary path.
+  // Both modes are set rather than inherited, since a machine-wide registry
+  // setting can flip either: `/e:on` for the `%cd:~,%` substring, `/v:off` so a
+  // `!` stays literal. The outer quotes stop `cmd.exe /c` stripping the inner
+  // ones around the binary path.
   const cmdArgs = ['/e:on', '/v:off', '/d', '/s', '/c', `"${cmdLine}"`];
   return {
     binary: comspec,
@@ -535,11 +513,9 @@ export function adaptSpawnForWindowsShim(
 /**
  * A `.cmd` shim invocation cannot carry `\r` or `\n` in an argument: no
  * escaping reproduces them on the other side, and cmd.exe truncates the
- * argument list at the break. Rust's standard library refuses them for the
- * same reason (`library/std/src/sys/args/windows.rs`), and CVE-2024-24576 came
- * out of trying to escape rather than refuse. Refusing here means a caller
- * that grows a multi-line argument fails loudly instead of dispatching an
- * agent on truncated instructions.
+ * argument list at the break. Refusing means a caller that grows a multi-line
+ * argument fails loudly instead of dispatching an agent on truncated
+ * instructions.
  */
 function assertNoLineBreaks(binary: string, args: readonly string[]): void {
   const offending = [binary, ...args].find((value) => /[\r\n]/.test(value));
@@ -576,14 +552,11 @@ function caretEscape(quoted: string): string {
 }
 
 /**
- * Stops cmd.exe expanding `%VAR%` inside an argument. A caret does not escape
- * `%`, because variable expansion runs before caret processing, so each `%`
- * is turned into `%%cd:~,%`: `%cd:~,%` is a zero-length substring of the built-in
- * `cd` variable, i.e. it expands to nothing and leaves the leading `%` behind.
- * Same substitution the Rust standard library applies to batch-file arguments.
- *
- * Runs after the caret passes so the `,` it introduces stays uncareted; cmd
- * would not recognize the substring syntax otherwise.
+ * Stops cmd.exe expanding `%VAR%` inside an argument. A caret cannot escape
+ * `%`, since expansion runs before caret processing, so each `%` becomes
+ * `%%cd:~,%`: `%cd:~,%` is a zero-length substring of a built-in and expands to
+ * nothing, leaving the leading `%`. Runs after the caret passes so the `,` it
+ * introduces stays uncareted, which the substring syntax requires.
  */
 function neutralizePercent(escaped: string): string {
   return escaped.replace(/%/g, '%%cd:~,%');

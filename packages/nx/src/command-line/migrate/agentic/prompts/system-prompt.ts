@@ -110,12 +110,10 @@ export interface InlineSystemContext {
 
 /**
  * System context for agents that can only receive it as a command-line value
- * (codex). cmd.exe caps a command line at 8191 characters and nx resolves
- * npm-installed agents to `.cmd` shims on Windows, so everything except the
- * handoff contract is delivered through the file this points at. The contract
+ * (codex). Everything except the handoff contract is delivered through the file
+ * this points at, to stay inside the Windows command-line limit. The contract
  * stays inline because `nx migrate` blocks on the agent honoring it, and the
- * scope-rules anchor is repeated here so the boundary holds even if the agent
- * defers reading the file.
+ * workspace boundary is repeated so it holds if the agent defers reading.
  */
 export function buildInlineSystemContext(ctx: InlineSystemContext): string {
   return [
@@ -129,9 +127,8 @@ export function buildInlineSystemContext(ctx: InlineSystemContext): string {
 }
 
 /**
- * Shortest system context that still gets the agent to its instructions, used
- * when {@link buildInlineSystemContext} would overflow the Windows command
- * line. Trades the inline handoff contract for length.
+ * Overflow fallback for {@link buildInlineSystemContext}: keeps the pointer at
+ * the full prompt, drops the inline handoff contract.
  */
 export function buildMinimalSystemContext(
   systemPromptFilePath: string

@@ -16,7 +16,6 @@ export interface StepInstructionFiles {
 
 export interface WriteStepInstructionFilesArgs {
   workspaceRoot: string;
-  /** Run directory, as produced by `initRunDir`. */
   runDir: string;
   migration: { package: string; name: string };
   systemPrompt: string;
@@ -25,17 +24,14 @@ export interface WriteStepInstructionFilesArgs {
 
 /**
  * Writes a step's prompts next to its handoff file and returns how to reach
- * them.
+ * them. The prompts travel as files rather than as command-line arguments
+ * because on Windows npm-installed agents resolve to `.cmd` shims invoked
+ * through `cmd.exe /c`, which caps the command line at 8191 characters and
+ * cannot carry a newline, and the prompts are kilobytes of multi-line text.
+ * Delivery is by file on every platform so that there is one path to keep
+ * working.
  *
- * Prompts travel as files rather than as command-line arguments because on
- * Windows nx resolves npm-installed agents to `.cmd` shims, which
- * `adaptSpawnForWindowsShim` has to invoke through `cmd.exe /c`: that caps the
- * whole command line at 8191 characters and cannot carry a newline at all. The
- * prompts are several kilobytes of multi-line text, so neither fits. Delivery
- * is by file on every platform so there is a single path to keep working.
- *
- * The parent directory is created by the caller ahead of the handoff path,
- * which lives in the same directory.
+ * The caller creates the parent directory, ahead of the handoff path.
  */
 export function writeStepInstructionFiles(
   args: WriteStepInstructionFilesArgs
@@ -50,10 +46,9 @@ export function writeStepInstructionFiles(
   writeStepFile(systemPromptFilePath, systemPrompt, 'system prompt');
   writeStepFile(instructionsAbsolutePath, instructions, 'instructions');
 
-  // Workspace-relative: the agent resolves this one itself, and its cwd is
-  // pinned to the workspace root. It is also the form `<instructions_file>`
-  // already uses in the prompt-migration user prompt. Forward slashes because
-  // it is read as prose out of the agent's prompt, where a `\` is an escape.
+  // Workspace-relative: the agent resolves this one itself with its cwd pinned
+  // to the workspace root. Forward slashes because it is read as prose out of
+  // the agent's prompt, where a `\` is an escape.
   const instructionsFilePath = relative(
     workspaceRoot,
     instructionsAbsolutePath

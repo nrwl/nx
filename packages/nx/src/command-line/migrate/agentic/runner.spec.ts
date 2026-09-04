@@ -411,8 +411,8 @@ describe('runAgentic', () => {
 
     expect(child.kill).toHaveBeenCalledWith('SIGINT');
     expect(child.kill).toHaveBeenCalledWith('SIGKILL');
-    // SIGTERM is intentionally skipped — a process that ignores SIGINT
-    // hits the same handler on SIGTERM.
+    // SIGTERM is skipped so a child that ignored SIGINT does not get a
+    // second graceful signal before SIGKILL.
     expect(child.kill).not.toHaveBeenCalledWith('SIGTERM');
     expect(outcome).toEqual({ kind: 'success', summary: 'done' });
   });
@@ -742,8 +742,6 @@ describe('runAgentic', () => {
   });
 
   describe('Windows command line budget', () => {
-    // Echoes whichever inline system context it is handed, so the test can see
-    // which one the runner settled on.
     function echoingDefinition(): AgentDefinition {
       return {
         ...makeDefinition(),
@@ -810,9 +808,8 @@ describe('runAgentic', () => {
           expect(reported.title).toContain('OpenAI Codex');
           expect(reported.bodyLines.join('\n')).toContain('8191');
           expect(reported.bodyLines.join('\n')).toContain('--agentic=false');
-          // The workspace root is one contributor among three, and for
-          // opencode it contributes nothing at all, so the message must not
-          // pin the overflow on it and send the user to move the workspace.
+          // The workspace root is one contributor of three and none at all
+          // for opencode, so the message must not pin the overflow on it.
           expect(reported.bodyLines.join('\n')).toContain(
             `migration's package and name`
           );
@@ -915,9 +912,7 @@ describe('adaptSpawnForWindowsShim', () => {
     expect(cmdLine).toContain('^"plain^"');
   });
 
-  // A caret does not escape `%`: cmd expands variables before it processes
-  // carets. `%cd:~,%` is a zero-length substring of a built-in variable, so
-  // `%%cd:~,%` leaves a literal `%` behind and nothing expands.
+  // A caret does not escape `%`; see `neutralizePercent`.
   it('neutralizes % so cmd.exe cannot expand an environment variable', () => {
     setPlatform('win32');
     const out = adaptSpawnForWindowsShim(
@@ -938,8 +933,7 @@ describe('adaptSpawnForWindowsShim', () => {
     expect(out.args[5]).toContain('100%%cd:~,%');
   });
 
-  // No escaping reproduces a line break through a .cmd shim; cmd.exe truncates
-  // the command line at one. Refusing is what the Rust standard library does.
+  // No escaping reproduces a line break through a `.cmd` shim.
   it.each([
     ['a newline', 'line1\nline2'],
     ['a carriage return', 'line1\rline2'],
@@ -973,9 +967,7 @@ describe('adaptSpawnForWindowsShim', () => {
     process.env.comspec = 'C:\\Windows\\System32\\cmd.exe';
     const out = adaptSpawnForWindowsShim('C:\\bin\\claude.cmd', ['a', 'b'], {});
     // Spelled out rather than recomputed from `out`, which would pass for any
-    // formula the adapter used. `windowsVerbatimArguments` makes the command
-    // line argv joined by single spaces, and Node prepends the binary to argv,
-    // so the count starts at the comspec path.
+    // formula the adapter used.
     const expected =
       'C:\\Windows\\System32\\cmd.exe /e:on /v:off /d /s /c ' +
       '"^^^"C:\\bin\\claude.cmd^^^" ^"a^" ^"b^""';

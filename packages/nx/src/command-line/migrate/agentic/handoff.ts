@@ -78,13 +78,11 @@ function sanitizeSegment(value: string): string {
 }
 
 /**
- * Absolute path of one of a migration step's scratch files within a run, under
- * the run directory's `handoffs/` subtree: the pre-authorized write scope
- * stops there, so a handoff placed anywhere else costs an approval prompt.
- * The package's scope (if any) becomes a real subdirectory so the package name
- * stays readable; two packages can ship a migration with the same name without
- * colliding because they land in different package subdirectories. Each
- * segment is sanitized so the path is always writable on every platform.
+ * Absolute path of a migration step's scratch file, under the run directory's
+ * `handoffs/` subtree: the agent's pre-authorized write scope stops there, so
+ * anything outside it costs an approval prompt. A package scope becomes a real
+ * subdirectory, which also keeps two packages' same-named migrations apart.
+ * Segments are sanitized so the path is writable on every platform.
  */
 export function stepFilePath(
   runDir: string,
@@ -99,7 +97,6 @@ export function stepFilePath(
   );
 }
 
-/** Absolute path of the handoff file for a migration step within a run. */
 export function stepHandoffPath(
   runDir: string,
   migration: { package: string; name: string }

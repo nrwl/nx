@@ -61,13 +61,11 @@ describe('writeStepInstructionFiles', () => {
     expect(files.instructionsPointer).not.toMatch(/[\r\n]/);
   });
 
-  // Only `relative()` can put a backslash in the pointer, and only on Windows,
-  // where it emits them as separators. It cannot come from the migration:
+  // A POSIX `relative()` cannot produce the separators this normalizes, and
   // `sanitizeSegment` rewrites a backslash in the package or name to `_` before
-  // the path is assembled, so on POSIX the normalization has nothing to do and
-  // deleting it would leave every other test in this file green. Hence the
-  // re-import under a win32 `relative`: a spy on the `path` namespace does not
-  // reach the module's own import binding.
+  // the path is assembled, so a win32 `relative` is the only way in. It arrives
+  // by re-import: a spy on the `path` namespace does not reach the module's own
+  // import binding.
   it('rewrites Windows separators in the pointer to forward slashes', async () => {
     vi.resetModules();
     vi.doMock('path', async () => {
@@ -93,8 +91,7 @@ describe('writeStepInstructionFiles', () => {
     }
   });
 
-  // Windows cannot open a file whose name carries a reserved character, and a
-  // `..` segment would put the write outside the run directory entirely.
+  // A `..` segment would put the write outside the run directory entirely.
   it('sanitizes migration identifiers into the file names', () => {
     mkdirSync(join(runDir, 'handoffs', '@scope', 'pkg'), { recursive: true });
     const files = writeStepInstructionFiles({
