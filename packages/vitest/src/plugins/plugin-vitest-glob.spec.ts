@@ -122,6 +122,89 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
     jest.clearAllMocks();
   });
 
+  describe('setup file inputs', () => {
+    it('should declare a setup file outside the project root, and its tsconfig', async () => {
+      await temp.createFiles({
+        'libs/lib1/vitest.config.ts': '',
+        'libs/lib1/package.json': '{"name":"lib1"}',
+        'libs/lib1/src/a.spec.ts': '',
+        'tools/vitest/setup.mts': '',
+        'tools/vitest/tsconfig.json': '{"compilerOptions":{}}',
+      });
+      // What `root: import.meta.dirname` produces.
+      mockResolvedTestConfig(
+        { setupFiles: ['../../tools/vitest/setup.mts'] },
+        join(temp.tempDir, 'libs/lib1')
+      );
+
+      const targets = await getProjectTargets('libs/lib1/vitest.config.ts');
+
+      expect(targets['test'].inputs).toContainEqual(
+        '{workspaceRoot}/tools/vitest/setup.mts'
+      );
+      expect(targets['test'].inputs).toContainEqual({
+        json: '{workspaceRoot}/tools/vitest/tsconfig.json',
+        fields: ['compilerOptions'],
+      });
+    });
+
+    it('should declare it for a config that authors no root', async () => {
+      await temp.createFiles({
+        'libs/lib1/vitest.config.ts': '',
+        'libs/lib1/package.json': '{"name":"lib1"}',
+        'libs/lib1/src/a.spec.ts': '',
+        'tools/vitest/setup.mts': '',
+      });
+      // No `rawRoot`: vite would report its own cwd, but the task runs from
+      // the project root.
+      mockResolvedTestConfig({ setupFiles: ['../../tools/vitest/setup.mts'] });
+
+      const targets = await getProjectTargets('libs/lib1/vitest.config.ts');
+
+      expect(targets['test'].inputs).toContainEqual(
+        '{workspaceRoot}/tools/vitest/setup.mts'
+      );
+    });
+
+    it('should resolve entries against an authored root outside the project', async () => {
+      await temp.createFiles({
+        'libs/lib1/vitest.config.ts': '',
+        'libs/lib1/package.json': '{"name":"lib1"}',
+        'libs/lib1/src/a.spec.ts': '',
+        'libs/shared/setup.mts': '',
+      });
+      // A root that is NOT the project directory: if the authored root were
+      // dropped and the project root used instead, this entry would resolve to
+      // a file that does not exist and nothing would be declared.
+      mockResolvedTestConfig(
+        { setupFiles: ['./shared/setup.mts'] },
+        join(temp.tempDir, 'libs')
+      );
+
+      const targets = await getProjectTargets('libs/lib1/vitest.config.ts');
+
+      expect(targets['test'].inputs).toContainEqual(
+        '{workspaceRoot}/libs/shared/setup.mts'
+      );
+    });
+
+    it('should carry the setup file input into the atomized targets', async () => {
+      await temp.createFiles({
+        'libs/lib1/vitest.config.ts': '',
+        'libs/lib1/package.json': '{"name":"lib1"}',
+        'libs/lib1/src/a.spec.ts': '',
+        'tools/vitest/setup.mts': '',
+      });
+      mockResolvedTestConfig({ setupFiles: ['../../tools/vitest/setup.mts'] });
+
+      const targets = await getProjectTargets('libs/lib1/vitest.config.ts');
+
+      expect(targets['test-ci--src/a.spec.ts'].inputs).toContainEqual(
+        '{workspaceRoot}/tools/vitest/setup.mts'
+      );
+    });
+  });
+
   it('should discover spec files matching the Vitest extglob default include', async () => {
     await temp.createFiles({
       'libs/lib1/vitest.config.ts': '',
