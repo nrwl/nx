@@ -136,7 +136,8 @@ const server = createServer((socket) => {
               );
 
               // Keep the source graph for the worker lifetime because plugins
-              // never unload.
+              // never unload. The package set is a load-time snapshot; a
+              // conditions change reloads the plugin set, worker included.
               if (isSourcePlugin) {
                 (
                   require('../../../plugins/js/utils/register') as typeof import('../../../plugins/js/utils/register')

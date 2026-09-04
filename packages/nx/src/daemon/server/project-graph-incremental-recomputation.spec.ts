@@ -167,6 +167,83 @@ describe('invalidateGraphCache', () => {
   });
 });
 
+describe('plugin state freshness', () => {
+  let fs: TempFs;
+
+  beforeEach(() => {
+    fs = new TempFs('pgir-plugin-state');
+  });
+
+  afterEach(() => {
+    fs.cleanup();
+  });
+
+  // The root customConditions are part of the plugin state a compute snapshots
+  // at kickoff: a source-loaded worker takes them as process flags, so a graph
+  // computed under the old set must chain to a successor rather than commit.
+  it('chains an in-flight compute to a successor when the root customConditions change', async () => {
+    const tsconfig = (conditions: string[]) =>
+      JSON.stringify({ compilerOptions: { customConditions: conditions } });
+    fs.createFilesSync({
+      'nx.json': JSON.stringify({}),
+      'package.json': JSON.stringify({ name: 'root' }),
+      'tsconfig.base.json': tsconfig(['@proj/source']),
+    });
+
+    vi.resetModules();
+    vi.doUnmock('../../project-graph/plugins/get-plugins');
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
+
+    // Park the first compute inside its config retrieval, after it snapshotted
+    // the plugin state. The mock controls timing, not logic.
+    let releaseFirstRetrieve: () => void;
+    const firstRetrieveGate = new Promise<void>((resolve) => {
+      releaseFirstRetrieve = resolve;
+    });
+    let retrieveCallCount = 0;
+    vi.doMock(
+      '../../project-graph/utils/retrieve-workspace-files',
+      async () => {
+        const actual = (await vi.importActual(
+          '../../project-graph/utils/retrieve-workspace-files'
+        )) as any;
+        return {
+          ...actual,
+          retrieveProjectConfigurations: async (...args: unknown[]) => {
+            retrieveCallCount++;
+            if (retrieveCallCount === 1) {
+              await firstRetrieveGate;
+            }
+            return actual.retrieveProjectConfigurations(...args);
+          },
+        };
+      }
+    );
+
+    const { getCachedSerializedProjectGraphPromise } =
+      await import('./project-graph-incremental-recomputation');
+
+    const first = getCachedSerializedProjectGraphPromise();
+    while (retrieveCallCount === 0) {
+      await new Promise((r) => setImmediate(r));
+    }
+
+    writeFileSync(
+      join(fs.tempDir, 'tsconfig.base.json'),
+      tsconfig(['@proj/src'])
+    );
+    releaseFirstRetrieve!();
+
+    const result = await first;
+    expect(result.error).toBeNull();
+    expect(result.projectGraph).toBeDefined();
+    // The successor's retrieval, proving the parked compute discarded its
+    // own result and chained instead of committing.
+    expect(retrieveCallCount).toBeGreaterThanOrEqual(2);
+  });
+});
+
 describe('pending dotenv replay before serving a graph', () => {
   let fs: TempFs;
 
