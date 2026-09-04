@@ -1,3 +1,4 @@
+import { inspect } from 'node:util';
 import type { AxiosRequestConfig } from 'axios';
 import axios from 'axios';
 import type { PostGitTask } from '../../changelog';
@@ -65,6 +66,45 @@ export abstract class RemoteReleaseClient<
 
   getRemoteRepoData<T extends RemoteRepoData>(): T | null {
     return this.remoteRepoData as T | null;
+  }
+
+  protected inspectWithRedactedToken(error: unknown): string {
+    const inspected = inspect(error);
+    // The dump can hold a different string than the raw token: axios trims
+    // header values, node strips CR/LF from them, and inspect() escapes the
+    // result while leaving the token bare in message/stack. Redact every
+    // rendering; the Set collapses them for an ordinary token.
+    const token = this.tokenData?.token?.trim();
+    if (!token) {
+      return inspected;
+    }
+    const needles = new Set([
+      token,
+      token.replace(/[\r\n]/g, ''),
+      inspect(token).slice(1, -1),
+    ]);
+    // inspect() renders a long string carrying a line break as concatenated
+    // per-line chunks, which no whole-token needle spans. Redact the lines too,
+    // skipping fragments short enough to collide with ordinary dump text.
+    for (const line of token.split(/[\r\n]+/)) {
+      if (line.length >= 8) {
+        needles.add(line);
+      }
+    }
+    return [...needles].reduce(
+      (text, needle) => text.split(needle).join('<redacted>'),
+      inspected
+    );
+  }
+
+  protected getRedactedTokenHeader(): string {
+    if (!this.tokenData) {
+      return 'none';
+    }
+    const { headerName } = this.tokenData;
+    return headerName === 'Authorization'
+      ? `${headerName}: Bearer <redacted>`
+      : `${headerName}: <redacted>`;
   }
 
   /**
