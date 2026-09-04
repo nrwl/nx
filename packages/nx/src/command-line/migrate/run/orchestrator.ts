@@ -2167,6 +2167,47 @@ function emitError(root: string, runId: string, reason: string): void {
   reportMigrateOrchestratorDispense({ action: 'error', attempt: 0 });
 }
 
+/**
+ * What a completed run leaves behind for whoever reads its summary, one line
+ * group per warning: commit debt, uninstalled dependency changes, unresolved
+ * issues. Empty when nothing is left.
+ */
+export function completionWarnings(
+  root: string,
+  runId: string,
+  state: MigrateRunState
+): string[][] {
+  // The crash-refold window can strand a failed ledger entry whose diff was in
+  // fact absorbed; suppress the warning only on a verified-clean tree. A dirty
+  // tree can still be unrelated edits, so the warning only claims the changes
+  // "may remain".
+  const commitDebt =
+    hasPendingCommitDebt(state) && getWorkingTreeStatus(root) !== 'clean';
+  const uninstalled = state.steps.filter((s) => s.installFailed);
+  const issueLines = renderUnresolvedIssueLines(state, runId);
+  return [
+    ...(commitDebt
+      ? [
+          [
+            'Some migration changes could not be committed and may remain in the working tree; review and commit them manually.',
+          ],
+        ]
+      : []),
+    ...(uninstalled.length > 0
+      ? [
+          [
+            `The dependency changes made by ${uninstalled
+              .map((s) => s.migrationId)
+              .join(', ')} were not installed; run \`${pmInstallCommand(
+              root
+            )}\` before using the workspace.`,
+          ],
+        ]
+      : []),
+    ...(issueLines.length > 0 ? [issueLines] : []),
+  ];
+}
+
 function completeRun(
   root: string,
   dir: string,
@@ -2179,12 +2220,6 @@ function completeRun(
   ).length;
   const skipped = current.steps.filter((s) => s.status === 'skipped').length;
   const dispenseCount = current.steps.reduce((n, s) => n + s.dispenseCount, 0);
-  // The crash-refold window can strand a failed ledger entry whose diff was in
-  // fact absorbed; suppress the warning only on a verified-clean tree. A dirty
-  // tree can still be unrelated edits, so the warning only claims the changes
-  // "may remain".
-  const commitDebt =
-    hasPendingCommitDebt(current) && getWorkingTreeStatus(root) !== 'clean';
 
   // Persist the terminal status and claim the watermark in one fresh-state
   // write before emitting: a crash between the write and the output can't
@@ -2212,34 +2247,15 @@ function completeRun(
     });
   }
 
-  const debtLine =
-    'Some migration changes could not be committed and may remain in the working tree; review and commit them manually.';
-  if (commitDebt) {
-    warnToAgent({ title: debtLine });
-  }
-  const uninstalled = current.steps.filter((s) => s.installFailed);
-  const installLine =
-    uninstalled.length > 0
-      ? `The dependency changes made by ${uninstalled
-          .map((s) => s.migrationId)
-          .join(', ')} were not installed; run \`${pmInstallCommand(
-          root
-        )}\` before using the workspace.`
-      : null;
-  if (installLine) {
-    warnToAgent({ title: installLine });
-  }
-  const issueLines = renderUnresolvedIssueLines(current, runId);
-  if (issueLines.length > 0) {
-    warnToAgent({ title: issueLines[0], bodyLines: issueLines.slice(1) });
+  const warnings = completionWarnings(root, runId, current);
+  for (const lines of warnings) {
+    warnToAgent({ title: lines[0], bodyLines: lines.slice(1) });
   }
   const instructionLines = [
     `Migrate run ${runId} is complete.`,
     `  applied: ${completed}`,
     `  skipped: ${skipped}`,
-    ...(commitDebt ? [debtLine] : []),
-    ...(installLine ? [installLine] : []),
-    ...issueLines,
+    ...warnings.flat(),
   ];
   logToAgent({ title: 'nx migrate: complete', bodyLines: instructionLines });
   emitStepBlock(runId, '-', 'complete', {

@@ -4,6 +4,7 @@ import {
   reportMigrateRunError,
 } from '../../migrate-analytics';
 import {
+  completionWarnings,
   runOrchestratorInit,
   RunOrchestratorInitInput,
 } from '../../run/orchestrator';
@@ -36,7 +37,7 @@ export async function runMasterSession(
     return;
   }
   const { runId, runRoot, runbookPath, reconcileCommand } = ready;
-  const resumeHint = `Run nx migrate --run-migrations again to resume it.`;
+  const resumeHint = `Run nx migrate --run-migrations --agentic=${agent.id} again to resume it.`;
 
   output.log({
     title: `Starting ${agent.displayName} to drive migrate run ${runId}.`,
@@ -84,6 +85,9 @@ export async function runMasterSession(
         title: `Migrate run ${runId} is complete.`,
         bodyLines: [`  applied: ${applied}`, `  skipped: ${skipped}`],
       });
+      for (const lines of completionWarnings(runRoot, runId, state)) {
+        output.warn({ title: lines[0], bodyLines: lines.slice(1) });
+      }
       reportMigrateRunComplete({
         agenticOutcome: 'enabled',
         agentUsed: agent.id,

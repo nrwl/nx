@@ -1,8 +1,10 @@
 import type { Mock } from 'vitest';
 
 const mockInit = vi.fn();
+const mockCompletionWarnings = vi.fn();
 vi.mock('../../run/orchestrator', () => ({
   runOrchestratorInit: (...args: unknown[]) => mockInit(...args),
+  completionWarnings: (...args: unknown[]) => mockCompletionWarnings(...args),
 }));
 const mockReadRunState = vi.fn();
 vi.mock('../../run/run-state', async () => ({
@@ -72,6 +74,7 @@ describe('runMasterSession', () => {
 
   beforeEach(() => {
     mockInit.mockReset().mockResolvedValue(ready);
+    mockCompletionWarnings.mockReset().mockReturnValue([]);
     mockReadRunState.mockReset();
     mockSpawnMaster.mockReset().mockResolvedValue({ kind: 'exited' });
     mockRunComplete.mockReset();
@@ -144,6 +147,38 @@ describe('runMasterSession', () => {
       migrationCount: 3,
       appliedCount: 2,
     });
+    expect(warnSpy).not.toHaveBeenCalled();
+  });
+
+  it('warns with what the completed run left behind', async () => {
+    const completed = state('completed', ['succeeded', 'failed']);
+    mockReadRunState.mockReturnValue(completed);
+    mockCompletionWarnings.mockReturnValue([
+      [
+        'Some migration changes could not be committed and may remain in the working tree; review and commit them manually.',
+      ],
+      ['1 issue remains unresolved:', '  - a: needs a decision'],
+    ]);
+
+    expect(await runMasterSession(input())).toBeUndefined();
+
+    expect(mockCompletionWarnings).toHaveBeenCalledWith(root, runId, completed);
+    expect(warnSpy.mock.calls).toEqual([
+      [
+        {
+          title:
+            'Some migration changes could not be committed and may remain in the working tree; review and commit them manually.',
+          bodyLines: [],
+        },
+      ],
+      [
+        {
+          title: '1 issue remains unresolved:',
+          bodyLines: ['  - a: needs a decision'],
+        },
+      ],
+    ]);
+    expect(mockRunComplete).toHaveBeenCalled();
   });
 
   it('exits 1 with the resume hint and no completion event when the run is still active', async () => {
@@ -152,7 +187,7 @@ describe('runMasterSession', () => {
     expect(await runMasterSession(input())).toBe(1);
 
     expect(warnSpy).toHaveBeenCalledWith({
-      title: `Migrate run ${runId} is still active. Run nx migrate --run-migrations again to resume it.`,
+      title: `Migrate run ${runId} is still active. Run nx migrate --run-migrations --agentic=claude-code again to resume it.`,
     });
     expect(mockRunComplete).not.toHaveBeenCalled();
     expect(mockRunError).not.toHaveBeenCalled();
@@ -182,7 +217,7 @@ describe('runMasterSession', () => {
     expect(errorSpy).toHaveBeenCalledWith({
       title: 'Could not start Claude Code: spawn claude ENOENT',
       bodyLines: [
-        `Migrate run ${runId} is still active. Run nx migrate --run-migrations again to resume it.`,
+        `Migrate run ${runId} is still active. Run nx migrate --run-migrations --agentic=claude-code again to resume it.`,
       ],
     });
     expect(mockRunError).toHaveBeenCalledWith({ code: 'agentic', error });
