@@ -130,6 +130,10 @@
           "args": []
         }
       }
+    },
+    "get-cache-dir": {
+      "command": "node ./tools/scripts/log-cache-dir.js",
+      "cache": true
     }
   }
 }

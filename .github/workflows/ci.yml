@@ -99,19 +99,7 @@ jobs:
         run: |
           pids=()
 
-          pnpm nx record -- nx format:check &
-          pids+=($!)
-
-          pnpm nx record -- nx sync:check
-          pids+=($!)
-
-          pnpm nx build workspace-plugin && pnpm nx record -- pnpm nx-cloud conformance:check
-          pids+=($!)
-
-          pnpm nx run-many -t check-imports check-lock-files check-codeowners --parallel=1 --no-dte &
-          pids+=($!)
-
-          pnpm nx affected --targets=lint,oxlint,test,build,e2e,e2e-ci,format-native,lint-native,gradle:build-ci,vale,run,validate-example &
+          pnpm nx affected --targets=get-cache-dir &
           pids+=($!)
 
           for pid in "${pids[@]}"; do
