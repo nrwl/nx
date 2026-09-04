@@ -129,6 +129,24 @@ vi.mock('../../../tasks-runner/utils', async () => {
   };
 });
 
+// The show path warms the bundle before reading it; keep that off the network.
+export let fetchedForHead = 0;
+
+export function resetFetchCount() {
+  fetchedForHead = 0;
+}
+
+vi.mock('../../../io-snapshots/fetch', async () => {
+  const actual = await vi.importActual('../../../io-snapshots/fetch');
+  return {
+    ...actual,
+    fetchIoSnapshotsForRun: vi.fn().mockImplementation(async () => {
+      fetchedForHead += 1;
+      return null;
+    }),
+  };
+});
+
 vi.mock('../../../io-snapshots/overrides', async () => {
   const actual = await vi.importActual('../../../io-snapshots/overrides');
   return {
@@ -180,6 +198,7 @@ export function setupBeforeEach() {
   mockNxJson = {};
   mockObservedOutputs = {};
   mockInputGlobs = {};
+  fetchedForHead = 0;
   mockIoSnapshotReport = null;
   mockHashInputs = {};
   mockExpandedOutputs = null;

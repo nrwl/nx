@@ -6,6 +6,7 @@ import {
   setGraph,
   setMockSourceMaps,
   setMockHasCustomHasher,
+  fetchedForHead,
   setMockInputGlobs,
   setMockIoSnapshotReport,
 } from './test-utils';
@@ -1057,6 +1058,17 @@ describe('show target info', () => {
         text.indexOf('exclusions recorded')
       );
       expect(readsBlock).not.toContain('!{projectRoot}/package.json');
+    });
+
+    it('resolves the bundle for HEAD before reading it', async () => {
+      setGraph(graphWithLintTarget());
+      setMockIoSnapshotReport(null);
+
+      await showTargetInfoHandler({ target: 'my-app:lint' });
+
+      // `nx show target` reports what a run would hash, so it resolves the
+      // bundle a run would rather than only reading what one left behind.
+      expect(fetchedForHead).toBeGreaterThan(0);
     });
 
     it('summarises the single-project reads unless --verbose', async () => {

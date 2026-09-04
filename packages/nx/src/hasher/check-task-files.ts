@@ -13,6 +13,10 @@ import type {
 import { expandOutputs, matchGlobPaths, matchOutputPaths } from '../native';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { createTaskGraph } from '../tasks-runner/create-task-graph';
+import {
+  fetchIoSnapshotsForRun,
+  ioSnapshotOptionsFromNxJson,
+} from '../io-snapshots/fetch';
 import { loadIoSnapshotsForHead } from '../io-snapshots/overrides';
 import { observedIoSnapshotOutputs } from '../io-snapshots/outputs';
 import {
@@ -62,6 +66,11 @@ function getContext(seed?: TaskFileCheckSeed): Promise<LoadedContext> {
 async function loadContext(seed?: TaskFileCheckSeed): Promise<LoadedContext> {
   const projectGraph = seed?.projectGraph ?? (await createProjectGraphAsync());
   const nxJson = seed?.nxJson ?? readNxJson(defaultWorkspaceRoot) ?? {};
+
+  // These commands report what a run would hash, so they resolve the bundle a
+  // run would resolve. The fetch is cached per HEAD and never throws, so the
+  // reads below see it without any of them reaching the network.
+  await fetchIoSnapshotsForRun(nxJson, ioSnapshotOptionsFromNxJson(nxJson));
 
   let inspector: Promise<HashPlanInspector> | null = null;
   const getInspector = () =>

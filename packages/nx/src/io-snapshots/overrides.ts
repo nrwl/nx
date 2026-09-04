@@ -31,9 +31,10 @@ export function ioSnapshotBundleDirForHead(): string | null {
 }
 
 /**
- * The bundle already fetched for HEAD, read from the cache only — never
- * fetched. `null` when snapshots are off for this workspace, so `nx show` and
- * `nx graph` resolve exactly what a run would.
+ * The bundle fetched for HEAD, read from the cache only. Callers that must
+ * resolve what a run would hash fetch first (see `fetchIoSnapshotsForRun`);
+ * this never reaches the network itself. `null` when snapshots are off for
+ * this workspace.
  */
 export function loadIoSnapshotsForHead(
   nxJson: NxJsonConfiguration

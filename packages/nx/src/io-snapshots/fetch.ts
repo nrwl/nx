@@ -48,6 +48,22 @@ const WARNED_REASONS = new Set([
 ]);
 
 /**
+ * The Cloud options a run would resolve, for callers that have nx.json but not
+ * a task runner. Mirrors `getRunnerOptions`' precedence for these fields:
+ * the default runner's own options first, then the top-level nx.json keys.
+ */
+export function ioSnapshotOptionsFromNxJson(
+  nxJson: NxJsonConfiguration
+): IoSnapshotCloudOptions {
+  const runner = nxJson.tasksRunnerOptions?.default?.options ?? {};
+  return {
+    accessToken: runner.accessToken ?? nxJson.nxCloudAccessToken,
+    nxCloudId: runner.nxCloudId ?? nxJson.nxCloudId,
+    url: runner.url ?? nxJson.nxCloudUrl,
+  };
+}
+
+/**
  * Resolves the I/O snapshot bundle for HEAD once per run. Returns `null` when
  * snapshot fetching is not enabled for this workspace; never throws.
  */
