@@ -403,10 +403,16 @@ function tokenizeUnder(path: string, root: string): string {
  * replace.
  */
 /** Shared globs listed before the tail is summarised, without --verbose. */
-const SHARED_GLOB_PREVIEW = 10;
+const SHARED_GLOB_PREVIEW = 5;
 
-/** Projects named beside a shared glob before the rest become a count. */
-const OWNER_PREVIEW = 12;
+/**
+ * Above this many projects, only the count is printed. A long name list is
+ * half the output of a wide target and says little the count does not.
+ */
+const OWNER_NAME_LIMIT = 4;
+
+/** Direct dependencies listed before the rest become a count. */
+const DEPENDS_ON_PREVIEW = 10;
 
 /** Maps each glob to the projects whose group carries it. */
 function indexByGlob(
@@ -452,12 +458,12 @@ function renderGlobLines(
     console.log(
       `    - ${glob} ${c.dim(`(${scopeLabel(owners, projectCount)})`)}${hint}`
     );
-    if (args.verbose && owners.length < projectCount) {
-      const named = owners.slice(0, OWNER_PREVIEW);
-      const rest = owners.length - named.length;
-      console.log(
-        `      ${c.dim(named.join(', ') + (rest > 0 ? `, +${rest} more` : ''))}`
-      );
+    if (
+      args.verbose &&
+      owners.length < projectCount &&
+      owners.length <= OWNER_NAME_LIMIT
+    ) {
+      console.log(`      ${c.dim(owners.join(', '))}`);
     }
   }
   const hidden = entries.length - shown.length;
@@ -848,13 +854,22 @@ function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
 
   if (data.dependsOn && data.dependsOn.length > 0) {
     console.log(`${c.bold('Depends On')}:`);
-    for (let i = 0; i < data.dependsOn.length; i++) {
+    // A wide target depends on hundreds of tasks, which buries everything
+    // below it. The count is the useful part at a glance.
+    const shown = args.verbose
+      ? data.dependsOn.length
+      : Math.min(DEPENDS_ON_PREVIEW, data.dependsOn.length);
+    for (let i = 0; i < shown; i++) {
       const srcIdx = data._depSources?.[i];
       const hint =
         srcIdx !== undefined && srcIdx >= 0
           ? sourceHint(`dependsOn.${srcIdx}`, 'dependsOn')
           : sourceHint('dependsOn');
       console.log(`  ${data.dependsOn[i]}${hint}`);
+    }
+    const hiddenDeps = data.dependsOn.length - shown;
+    if (hiddenDeps > 0) {
+      console.log(`  ${c.dim(`... ${hiddenDeps} more (--verbose)`)}`);
     }
     if (data.transitiveTasks && data.transitiveTasks.length > 0) {
       console.log(`  ${c.dim(formatTransitiveSummary(data.transitiveTasks))}`);

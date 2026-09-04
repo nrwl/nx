@@ -1154,6 +1154,34 @@ describe('show target info', () => {
       expect(text).toContain('{projectRoot}/Cargo.toml');
     });
 
+    it('caps the dependency list unless --verbose', async () => {
+      const graph = graphWithLintTarget();
+      const deps: Record<string, unknown> = {};
+      for (let i = 0; i < 30; i++) {
+        deps[`dep-${i}`] = {
+          name: `dep-${i}`,
+          type: 'lib',
+          data: { root: `libs/dep-${i}`, targets: { lint: {} } },
+        };
+      }
+      Object.assign(graph.nodes, deps);
+      graph.nodes['my-app'].data.targets.lint.dependsOn = ['^lint'];
+      graph.dependencies['my-app'] = Object.keys(deps).map((target) => ({
+        source: 'my-app',
+        target,
+        type: 'static',
+      }));
+      setGraph(graph);
+
+      (console.log as Mock).mockClear();
+      await showTargetInfoHandler({ target: 'my-app:lint' });
+      const text = (console.log as Mock).mock.calls.map((c) => c[0]).join('\n');
+
+      // A wide target lists hundreds of tasks, which buries every section
+      // under it; the count carries the useful part.
+      expect(text).toMatch(/\.\.\. \d+ more \(--verbose\)/);
+    });
+
     it('summarises the single-project reads unless --verbose', async () => {
       setGraph(graphWithLintTarget());
       setMockIoSnapshotReport({
