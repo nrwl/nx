@@ -39,6 +39,7 @@ import {
   BrokerUnavailableError,
   brokerDir,
   commitStepTree,
+  installStepTree,
   MigrateCommitBroker,
   type BrokerResult,
 } from './broker';
@@ -123,10 +124,39 @@ describe('migrate commit broker', () => {
     return existsSync(brokerDir(dir)) ? readdirSync(brokerDir(dir)).sort() : [];
   }
 
-  function publishResult(nonce: string, result: BrokerResult): void {
-    mkdirSync(brokerDir(dir), { recursive: true });
+  // Finds the pending request rather than naming it: the id carries the seam.
+  async function pendingRequestName(nonce: string): Promise<string> {
+    for (let i = 0; i < 200; i++) {
+      const name = brokerFiles().find(
+        (f) =>
+          f.startsWith(`${nonce}-`) &&
+          f.endsWith('.request.json') &&
+          !existsSync(
+            join(brokerDir(dir), f.replace('.request.json', '.result.json'))
+          )
+      );
+      if (name) return name;
+      await sleep(10);
+    }
+    throw new Error('No request was published');
+  }
+
+  async function readRequest(nonce: string): Promise<object> {
+    return JSON.parse(
+      readFileSync(
+        join(brokerDir(dir), await pendingRequestName(nonce)),
+        'utf8'
+      )
+    );
+  }
+
+  async function answerRequest(
+    nonce: string,
+    result: BrokerResult
+  ): Promise<void> {
+    const name = await pendingRequestName(nonce);
     writeFileSync(
-      join(brokerDir(dir), `${nonce}-step-1-1.result.json`),
+      join(brokerDir(dir), name.replace('.request.json', '.result.json')),
       JSON.stringify(result)
     );
   }
@@ -236,18 +266,13 @@ describe('migrate commit broker', () => {
       process.env.NX_MIGRATE_BROKER = broker.nonce;
 
       const pending = commitStepTree(dir, step(), false, [], vi.fn());
-      await sleep(20);
+      const request = await readRequest(broker.nonce);
       await broker.service();
       await pending;
-      const request = JSON.parse(
-        readFileSync(
-          join(brokerDir(dir), `${broker.nonce}-step-1-1.request.json`),
-          'utf8'
-        )
-      );
       broker.close();
 
       expect(request).toEqual({
+        kind: 'commit',
         stepId: 'step-1',
         attempt: 1,
         skipInstall: false,
@@ -296,7 +321,7 @@ describe('migrate commit broker', () => {
       );
       await sleep(600);
       const settledWithoutProbe = settled;
-      publishResult('deadbeef', {
+      await answerRequest('deadbeef', {
         kind: 'commit',
         result: committed,
         absorbedStepIds: [],
@@ -354,18 +379,23 @@ describe('migrate commit broker', () => {
     });
 
     it('takes a published answer over a free lock', async () => {
+      // The parent answered and then died before the next poll: the poll
+      // finds both the result and a free lock.
       process.env.NX_MIGRATE_BROKER = 'deadbeef';
-      publishResult('deadbeef', {
+      mkdirSync(brokerDir(dir), { recursive: true });
+      const parentLock = new FileLock(join(brokerDir(dir), 'deadbeef.lock'));
+      parentLock.lock();
+
+      const pending = commitStepTree(dir, step(), false, [], vi.fn());
+      await answerRequest('deadbeef', {
         kind: 'commit',
         result: committed,
         absorbedStepIds: [],
         output: [],
       });
+      parentLock.unlock();
 
-      expect(await commitStepTree(dir, step(), false, [], vi.fn())).toEqual({
-        result: committed,
-        absorbedStepIds: [],
-      });
+      expect(await pending).toEqual({ result: committed, absorbedStepIds: [] });
     });
 
     it('keeps waiting when the lock cannot be probed', async () => {
@@ -382,7 +412,7 @@ describe('migrate commit broker', () => {
       );
       await sleep(600);
       const settledWithoutProbe = settled;
-      publishResult('deadbeef', {
+      await answerRequest('deadbeef', {
         kind: 'commit',
         result: committed,
         absorbedStepIds: [],
@@ -394,10 +424,177 @@ describe('migrate commit broker', () => {
     });
   });
 
+  describe('installStepTree', () => {
+    it('runs in process when no session advertised a broker', async () => {
+      delete process.env.NX_MIGRATE_BROKER;
+      const inProcess = vi.fn().mockResolvedValue(undefined);
+
+      await installStepTree(dir, step(), false, 'install', inProcess);
+
+      expect(inProcess).toHaveBeenCalledTimes(1);
+      expect(existsSync(brokerDir(dir))).toBe(false);
+    });
+
+    it('hands the install to the advertised session, which moves the baseline it recorded', async () => {
+      parentCommits();
+      const broker = new MigrateCommitBroker(root, dir, 'npx nx migrate');
+      process.env.NX_MIGRATE_BROKER = broker.nonce;
+      const inProcess = vi.fn();
+
+      const pending = installStepTree(dir, step(), false, 'install', inProcess);
+      const request = await readRequest(broker.nonce);
+      await broker.service();
+      await pending;
+      broker.close();
+
+      expect(request).toEqual({
+        kind: 'install',
+        stepId: 'step-1',
+        attempt: 1,
+        skipInstall: false,
+      });
+      expect(inProcess).not.toHaveBeenCalled();
+      expect(mockCommit).not.toHaveBeenCalled();
+      expect(mockRunInstall).toHaveBeenCalledWith(
+        root,
+        'post-migration',
+        'npx nx migrate',
+        expect.anything()
+      );
+      expect(stdout).toBe('added 1 package\n');
+      expect(readRunState(dir).steps[0].depsHashAtDispense).not.toBe(
+        'baseline'
+      );
+      expect(brokerFiles()).toEqual([]);
+    });
+
+    it('fails the step with the install error the session reported', async () => {
+      mockRunInstall.mockImplementation(
+        async (_root, _phase, _rerun, sink: MigrateOutputSink) => {
+          sink.raw('npm error E404\n');
+          throw new Error('registry unreachable');
+        }
+      );
+      const broker = new MigrateCommitBroker(root, dir, 'npx nx migrate');
+      process.env.NX_MIGRATE_BROKER = broker.nonce;
+
+      const pending = installStepTree(dir, step(), false, 'install', vi.fn());
+      await sleep(20);
+      await broker.service();
+      await expect(pending).rejects.toThrow('registry unreachable');
+      broker.close();
+
+      expect(stdout).toBe('npm error E404\n');
+      expect(readRunState(dir).steps[0].installFailed).toBe(true);
+    });
+
+    it('throws the stale error when the session no longer owns the attempt', async () => {
+      const broker = new MigrateCommitBroker(root, dir, 'npx nx migrate');
+      process.env.NX_MIGRATE_BROKER = broker.nonce;
+
+      const pending = installStepTree(
+        dir,
+        step({ attempt: 2 }),
+        false,
+        'install',
+        vi.fn()
+      );
+      await sleep(20);
+      await broker.service();
+      await expect(pending).rejects.toBeInstanceOf(BrokerStaleRequestError);
+      broker.close();
+
+      expect(mockRunInstall).not.toHaveBeenCalled();
+    });
+
+    it("answers an attempt's install and its later commit as two requests", async () => {
+      parentCommits();
+      const broker = new MigrateCommitBroker(root, dir, 'npx nx migrate');
+      process.env.NX_MIGRATE_BROKER = broker.nonce;
+
+      const install = installStepTree(dir, step(), false, 'install', vi.fn());
+      await sleep(20);
+      await broker.service();
+      await install;
+      const commit = commitStepTree(dir, step(), false, [], vi.fn());
+      await sleep(20);
+      await broker.service();
+      const landed = await commit;
+      broker.close();
+
+      expect(landed).toEqual({ result: committed, absorbedStepIds: [] });
+      expect(mockCommit).toHaveBeenCalledTimes(1);
+      // The first install moved the baseline, so the commit's own found
+      // nothing to install.
+      expect(mockRunInstall).toHaveBeenCalledTimes(1);
+    });
+
+    it('installs again at the fold when the dependencies changed after the worker installed', async () => {
+      const broker = new MigrateCommitBroker(root, dir, 'npx nx migrate');
+      process.env.NX_MIGRATE_BROKER = broker.nonce;
+
+      const worker = installStepTree(dir, step(), false, 'install', vi.fn());
+      await sleep(20);
+      await broker.service();
+      await worker;
+      writeRunState(
+        dir,
+        runState({
+          steps: [step({ status: 'awaiting-prompt-outcome' })],
+        })
+      );
+      mockReadPackageJsonDeps.mockReturnValue('{"deps":3}');
+      const fold = installStepTree(
+        dir,
+        step({ status: 'awaiting-prompt-outcome' }),
+        false,
+        'fold-install',
+        vi.fn()
+      );
+      await sleep(20);
+      await broker.service();
+      await fold;
+      broker.close();
+
+      expect(mockRunInstall).toHaveBeenCalledTimes(2);
+    });
+
+    it('answers a repeated operation of one attempt with its first answer', async () => {
+      // A worker that died after asking, then adopted: one commit, both
+      // callers see it.
+      parentCommits();
+      const broker = new MigrateCommitBroker(root, dir, 'npx nx migrate');
+      process.env.NX_MIGRATE_BROKER = broker.nonce;
+
+      const first = commitStepTree(dir, step(), false, [], vi.fn());
+      await sleep(20);
+      await broker.service();
+      const landed = await first;
+      writeRunState(dir, runState({ steps: [step({ status: 'died' })] }));
+      const adopted = await commitStepTree(
+        dir,
+        step({ status: 'died' }),
+        false,
+        [],
+        vi.fn()
+      );
+      broker.close();
+
+      expect(landed).toEqual({ result: committed, absorbedStepIds: [] });
+      expect(adopted).toEqual(landed);
+      expect(mockCommit).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('MigrateCommitBroker', () => {
     function writeRequest(
       nonce: string,
-      request = { stepId: 'step-1', attempt: 1, skipInstall: true }
+      request: object = {
+        kind: 'commit',
+        stepId: 'step-1',
+        attempt: 1,
+        skipInstall: true,
+      }
     ): string {
       mkdirSync(brokerDir(dir), { recursive: true });
       writeFileSync(
@@ -441,6 +638,7 @@ describe('migrate commit broker', () => {
     it.each<[string, Partial<MigrateRunState>]>([
       ['the attempt moved on', { steps: [step({ attempt: 2 })] }],
       ['the step is settled', { steps: [step({ status: 'succeeded' })] }],
+      ['the step failed', { steps: [step({ status: 'failed' })] }],
       ['the step is unknown', { steps: [step({ id: 'step-9' })] }],
       ['the run does not commit', { createCommits: false }],
     ])(
@@ -449,6 +647,7 @@ describe('migrate commit broker', () => {
         writeRunState(dir, runState(overrides));
         const broker = new MigrateCommitBroker(root, dir, 'npx nx migrate');
         const resultPath = writeRequest(broker.nonce, {
+          kind: 'commit',
           stepId: 'step-1',
           attempt: 1,
           skipInstall: false,
@@ -464,6 +663,28 @@ describe('migrate commit broker', () => {
       }
     );
 
+    it('installs for a skipped failed step on a run that does not commit', async () => {
+      writeRunState(
+        dir,
+        runState({ createCommits: false, steps: [step({ status: 'failed' })] })
+      );
+      const broker = new MigrateCommitBroker(root, dir, 'npx nx migrate');
+      const resultPath = writeRequest(broker.nonce, {
+        kind: 'action-install',
+        stepId: 'step-1',
+        attempt: 1,
+        skipInstall: false,
+      });
+
+      await broker.service();
+      const installed = JSON.parse(readFileSync(resultPath, 'utf8'));
+      broker.close();
+
+      expect(installed).toEqual({ kind: 'installed', output: [] });
+      expect(mockRunInstall).toHaveBeenCalledTimes(1);
+      expect(mockCommit).not.toHaveBeenCalled();
+    });
+
     it('does not mark an install failure on an attempt that replaced the one it ran for', async () => {
       mockRunInstall.mockImplementation(async () => {
         // A concurrent reconcile rearmed the step while the install ran.
@@ -478,6 +699,7 @@ describe('migrate commit broker', () => {
       });
       const broker = new MigrateCommitBroker(root, dir, 'npx nx migrate');
       const resultPath = writeRequest(broker.nonce, {
+        kind: 'commit',
         stepId: 'step-1',
         attempt: 1,
         skipInstall: false,
@@ -490,6 +712,50 @@ describe('migrate commit broker', () => {
       expect(result.kind).toBe('install-failed');
       expect(readRunState(dir).steps[0].installFailed).toBeUndefined();
     });
+
+    it.each<[string, object, Partial<MigrateRunState>]>([
+      ['unknown', { kind: 'bogus' }, { steps: [step({ status: 'failed' })] }],
+      [
+        'inherited-name',
+        { kind: 'toString' },
+        { steps: [step({ status: 'failed' })] },
+      ],
+      [
+        'a worker install for a parked step',
+        { kind: 'install' },
+        { steps: [step({ status: 'awaiting-prompt-outcome' })] },
+      ],
+      [
+        'a fold install for a running step',
+        { kind: 'fold-install' },
+        { steps: [step()] },
+      ],
+      [
+        'an action install for a running step',
+        { kind: 'action-install' },
+        { steps: [step()] },
+      ],
+    ])(
+      'answers stale to a request of %s kind without installing or committing',
+      async (_case, request, overrides) => {
+        writeRunState(dir, runState({ createCommits: false, ...overrides }));
+        const broker = new MigrateCommitBroker(root, dir, 'npx nx migrate');
+        const resultPath = writeRequest(broker.nonce, {
+          stepId: 'step-1',
+          attempt: 1,
+          skipInstall: false,
+          ...request,
+        });
+
+        await broker.service();
+        const result = JSON.parse(readFileSync(resultPath, 'utf8'));
+        broker.close();
+
+        expect(result).toEqual({ kind: 'stale' });
+        expect(mockRunInstall).not.toHaveBeenCalled();
+        expect(mockCommit).not.toHaveBeenCalled();
+      }
+    );
 
     it("leaves another session's requests alone", async () => {
       const broker = new MigrateCommitBroker(root, dir, 'npx nx migrate');
