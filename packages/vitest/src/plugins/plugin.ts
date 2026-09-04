@@ -34,6 +34,7 @@ import {
   loadViteDynamicImport,
   loadVitestConfigDynamicImport,
 } from '../utils/executor-utils';
+import { collectSetupFileInputs } from './setup-file-inputs';
 
 export interface VitestPluginOptions {
   testTargetName?: string;
@@ -272,6 +273,11 @@ async function buildVitestTargets(
   // if file is vitest.config or vite.config has definition for test, create targets for test and/or atomized tests
   if (configFilePath.includes('vitest.config') || hasTest) {
     const isTypecheckEnabled = !!viteBuildConfig.test?.typecheck?.enabled;
+    const setupFileInputs = collectSetupFileInputs(
+      viteBuildConfig,
+      projectRoot,
+      context.workspaceRoot
+    );
     targets[options.testTargetName] = await testTarget(
       namedInputs,
       testOutputs,
@@ -279,7 +285,8 @@ async function buildVitestTargets(
       options.testMode,
       pmc,
       isTypecheckEnabled,
-      tsconfigInputs
+      [...tsconfigInputs, ...setupFileInputs.tsconfigs],
+      setupFileInputs.files
     );
 
     if (options.ciTargetName) {
@@ -495,7 +502,8 @@ async function testTarget(
   testMode: 'watch' | 'run' = 'watch',
   pmc: ReturnType<typeof getPackageManagerCommand>,
   isTypecheckEnabled: boolean,
-  tsconfigInputs: string[]
+  tsconfigInputs: string[],
+  setupFileInputs: string[] = []
 ) {
   const command = testMode === 'run' ? 'vitest run' : 'vitest';
   const depOutputsGlob = isTypecheckEnabled ? '**/*.{js,d.ts}' : '**/*.js';
@@ -529,6 +537,9 @@ async function testTarget(
         json: `{workspaceRoot}/${f}`,
         fields: ['compilerOptions'],
       })),
+      // Whole-file, not just `compilerOptions`: these are sources Vitest
+      // executes, so any change to them changes the run.
+      ...setupFileInputs.map((f) => `{workspaceRoot}/${f}`),
       {
         externalDependencies: ['vitest'],
       },
