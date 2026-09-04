@@ -13,6 +13,7 @@ import {
   nodeNextEsmResolveHook,
   refreshSourceGraphResolvers,
   registerSourceGraphResolver,
+  callResolveFilename,
   resolveTsNodeEsmCompilerOptions,
 } from './register';
 import * as typescriptUtils from './typescript';
@@ -1436,5 +1437,121 @@ describe('registerSourceGraphResolver under Yarn PnP', () => {
 
     expect(nextResolve).toHaveBeenCalledTimes(1);
     expect(result).toEqual({ url: fileUrl('dist-resolved.js') });
+  });
+});
+
+describe('CJS resolution under Yarn PnP below 4.11', () => {
+  const unsupported = (options = 'conditions') =>
+    Object.assign(
+      new Error(
+        `Some options passed to require() aren't supported by PnP yet (${options})`
+      ),
+      { code: 'UNSUPPORTED' }
+    );
+  const pnpStyleResolve = () =>
+    vi.fn(function (
+      request: string,
+      _parent: unknown,
+      _isMain: unknown,
+      options?: { conditions?: unknown; paths?: string[] }
+    ) {
+      if (options?.conditions) throw unsupported();
+      return `resolved:${request}`;
+    });
+
+  it('retries without the conditions option when PnP rejects it', () => {
+    const original = pnpStyleResolve();
+    const parent = { filename: '/ws/a.js' };
+    const options = { conditions: new Set(['node']), paths: ['/ws'] };
+
+    expect(
+      callResolveFilename(original as any, null, 'pkg', parent, [
+        false,
+        options,
+      ])
+    ).toBe('resolved:pkg');
+    expect(original).toHaveBeenCalledTimes(2);
+    expect(original).toHaveBeenLastCalledWith('pkg', parent, false, {
+      paths: ['/ws'],
+    });
+  });
+
+  it('rethrows an UNSUPPORTED error that is not about conditions', () => {
+    const original = vi.fn(() => {
+      throw unsupported();
+    });
+
+    expect(() =>
+      callResolveFilename(original as any, null, 'pkg', undefined, [
+        false,
+        { paths: ['/ws'] },
+      ])
+    ).toThrow(/aren't supported/);
+    expect(original).toHaveBeenCalledTimes(1);
+  });
+
+  it('rethrows a PnP rejection that names another option as well', () => {
+    const original = vi.fn(() => {
+      throw unsupported('conditions, arbitrary');
+    });
+
+    expect(() =>
+      callResolveFilename(original as any, null, 'pkg', undefined, [
+        false,
+        { conditions: new Set(), arbitrary: true },
+      ])
+    ).toThrow(/\(conditions, arbitrary\)/);
+    expect(original).toHaveBeenCalledTimes(1);
+  });
+
+  it('rethrows a non-PnP UNSUPPORTED error even with conditions present', () => {
+    const original = vi.fn(() => {
+      throw Object.assign(new Error('something else'), { code: 'UNSUPPORTED' });
+    });
+
+    expect(() =>
+      callResolveFilename(original as any, null, 'pkg', undefined, [
+        false,
+        { conditions: new Set() },
+      ])
+    ).toThrow('something else');
+    expect(original).toHaveBeenCalledTimes(1);
+  });
+
+  it('rethrows other resolution errors untouched', () => {
+    const original = vi.fn(() => {
+      throw Object.assign(new Error('nope'), { code: 'MODULE_NOT_FOUND' });
+    });
+
+    expect(() =>
+      callResolveFilename(original as any, null, 'pkg', undefined, [
+        false,
+        { conditions: new Set() },
+      ])
+    ).toThrow('nope');
+    expect(original).toHaveBeenCalledTimes(1);
+  });
+
+  it('applies the retry inside the source graph resolver patch', () => {
+    const nodeModule = require('node:module') as any;
+    const realResolveFilename = nodeModule._resolveFilename;
+    const original = pnpStyleResolve();
+    nodeModule._resolveFilename = original;
+    vi.spyOn(nodeModule, 'registerHooks').mockImplementation(
+      () => ({ deregister: vi.fn() }) as any
+    );
+    const cleanup = registerSourceGraphResolver('/ws/plugin.ts', '/ws', []);
+    try {
+      expect(
+        nodeModule._resolveFilename('pkg', { filename: '/ws/a.js' }, false, {
+          conditions: new Set(['node']),
+        })
+      ).toBe('resolved:pkg');
+      expect(original).toHaveBeenCalledTimes(2);
+    } finally {
+      cleanup();
+      nodeModule._resolveFilename = realResolveFilename;
+      vi.restoreAllMocks();
+    }
   });
 });
