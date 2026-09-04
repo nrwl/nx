@@ -16,7 +16,10 @@ import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
 // Importing @angular-devkit/architect here will cause issues importing this file without @angular-devkit/architect installed
 
 import type { Architect, Target } from '@angular-devkit/architect';
-import type { NodeModulesBuilderInfo } from '@angular-devkit/architect/node/node-modules-architect-host';
+import type {
+  NodeModulesBuilderInfo,
+  WorkspaceNodeModulesArchitectHost,
+} from '@angular-devkit/architect/node/node-modules-architect-host';
 
 import * as pc from 'picocolors';
 import { Stats } from 'fs';
@@ -73,7 +76,7 @@ import {
 import { readPluginPackageJson } from '../project-graph/plugins';
 import {
   getImplementationFactory,
-  resolveImplementation,
+  resolveImplementationWithSourceGraph,
   resolveSchema,
 } from '../config/schema-utils';
 import { handleImport } from '../utils/handle-import';
@@ -1389,14 +1392,17 @@ function saveProjectsConfigurationsInWrappedSchematic(
   }
 }
 
-async function getWrappedWorkspaceNodeModulesArchitectHost(
+/** Exported for tests. */
+export async function getWrappedWorkspaceNodeModulesArchitectHost(
   workspace: workspaces.WorkspaceDefinition,
   root: string,
   projects: Record<string, ProjectConfiguration>
-) {
+): Promise<WorkspaceNodeModulesArchitectHost> {
   const {
     WorkspaceNodeModulesArchitectHost: AngularWorkspaceNodeModulesArchitectHost,
-  } = await handleImport('@angular-devkit/architect/node/index.js');
+  } = await handleImport<
+    typeof import('@angular-devkit/architect/node/node-modules-architect-host')
+  >('@angular-devkit/architect/node/index.js');
 
   class WrappedWorkspaceNodeModulesArchitectHost extends AngularWorkspaceNodeModulesArchitectHost {
     constructor(
@@ -1415,18 +1421,21 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
         builderName
       );
       const builderInfo = this.readExecutor(packageName, builderName);
+      // Architect requires this path itself, so a source builder's graph has
+      // to exist before it does.
+      const { path: builderPath } = resolveImplementationWithSourceGraph(
+        executorConfig.implementation,
+        dirname(executorsFilePath),
+        packageName,
+        this.projects
+      );
 
       return {
         name: builderStr,
         builderName,
         description: executorConfig.description,
         optionSchema: builderInfo.schema,
-        import: resolveImplementation(
-          executorConfig.implementation,
-          dirname(executorsFilePath),
-          packageName,
-          this.projects
-        ),
+        import: builderPath,
       };
     }
 
