@@ -941,23 +941,23 @@ describe('show target info', () => {
       const text = (console.log as Mock).mock.calls.map((c) => c[0]).join('\n');
 
       // The observed reads, grouped by the project that owns them.
-      expect(text).toContain('observed reads (2 unique)');
+      expect(text).toContain('reads:');
       expect(text).toContain('the observed reads are listed above');
       // The pointer to the files sits with the section it describes, not 30
       // lines below it.
-      expect(text).toContain('hashed from the I/O snapshot at ae6a03f9');
+      expect(text).toContain(
+        'file inputs come from the I/O snapshot at ae6a03f9'
+      );
       expect(text).toContain('nx show target inputs my-app:lint');
       // Globs inside the owning project read as {projectRoot}, like the
       // declared inputs; the header carries the real root.
-      expect(text).toContain('(1 project)');
+      expect(text).toContain('my-app (apps/my-app):');
       expect(text).toContain('{projectRoot}/src/main.ts');
       // A project absent from the graph keeps its workspace-relative glob.
       expect(text).toContain('libs/ui/src/index.ts');
       // An exclusion carried over from a declared input is named apart from
       // the reads, since it is why a read can still be excluded.
-      expect(text).toContain(
-        'declared exclusions still applied (1 unique of 1)'
-      );
+      expect(text).toContain('excluded by a declared input:');
       expect(text).toContain('!{projectRoot}/**/*.spec.ts');
       // The declared filesets they replace are gone, not merely tagged.
       expect(text).not.toContain('{projectRoot}/**/*.ts');
@@ -966,7 +966,7 @@ describe('show target info', () => {
       expect(text).toContain('"env"');
     });
 
-    it('lists a glob shared by several projects once, with its scope', async () => {
+    it("lists each project's globs under that project when verbose", async () => {
       setGraph(graphWithLintTarget());
       setMockIoSnapshotReport({
         used: ['my-app:lint'],
@@ -1001,13 +1001,13 @@ describe('show target info', () => {
       const lines = (console.log as Mock).mock.calls.map((call) => call[0]);
       const text = lines.join('\n');
 
-      // 3 entries collapse to 2 unique globs.
-      expect(text).toContain('observed reads (2 unique)');
-      // The shared glob appears exactly once, scoped to every project.
-      expect(lines.filter((l: string) => l.includes(shared))).toHaveLength(1);
-      expect(text).toContain(`${shared} (all 2 projects)`);
-      // The glob only one project reads stays under that project.
-      expect(text).toContain('(1 project)');
+      // Every project gets its own block, so a glob two projects read is
+      // listed under each rather than collapsed into one scoped line.
+      expect(text).toContain('my-app (apps/my-app):');
+      expect(text).toContain('ui:');
+      expect(lines.filter((l: string) => l.includes(shared))).toHaveLength(2);
+      // A glob only one project reads stays under that project.
+      expect(text).toContain('{projectRoot}/src/only-mine.ts');
       expect(text).toContain('{projectRoot}/src/only-mine.ts');
     });
 
@@ -1044,13 +1044,9 @@ describe('show target info', () => {
 
       // Each of the three kinds is counted under its own heading, so no glob
       // is left looking unexplained.
-      expect(text).toContain('observed reads (1 unique)');
-      expect(text).toContain(
-        'exclusions recorded with the snapshot (1 unique)'
-      );
-      expect(text).toContain(
-        'declared exclusions still applied (1 unique of 1)'
-      );
+      expect(text).toContain('reads:');
+      expect(text).toContain('excluded by the snapshot:');
+      expect(text).toContain('excluded by a declared input:');
       // The snapshot's own negation is not counted among the reads.
       const readsBlock = text.slice(
         text.indexOf('observed reads'),
@@ -1112,7 +1108,7 @@ describe('show target info', () => {
       // Named through the definition it is written in, not the reference that
       // reached it, and not any one project that merely carries it.
       expect(text).toContain(
-        '!{projectRoot}/src/test/**/* (all 1 projects) (from nx.json#namedInputs.productionBase via ^production)'
+        '!{projectRoot}/src/test/**/* (from nx.json#namedInputs.productionBase via ^production)'
       );
     });
 

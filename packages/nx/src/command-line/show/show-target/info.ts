@@ -397,212 +397,124 @@ function tokenizeUnder(path: string, root: string): string {
     : path;
 }
 
-/**
- * The globs a snapshot-backed task actually hashes, grouped by the project
- * that owns them. Printed in place of the declared filesets those reads
- * replace.
- */
-/** Shared globs listed before the tail is summarised, without --verbose. */
-const SHARED_GLOB_PREVIEW = 5;
-
-/**
- * Above this many projects, only the count is printed. A long name list is
- * half the output of a wide target and says little the count does not.
- */
-const OWNER_NAME_LIMIT = 4;
-
 /** Direct dependencies listed before the rest become a count. */
 const DEPENDS_ON_PREVIEW = 10;
 
 /** Projects summarised before the rest become a count. */
 const PROJECT_PREVIEW = 10;
 
-/** Maps each glob to the projects whose group carries it. */
-function indexByGlob(
-  groups: readonly { project?: string }[],
-  pick: (group: any) => readonly string[]
-): Map<string, string[]> {
-  const byGlob = new Map<string, string[]>();
-  for (const group of groups) {
-    const owner = group.project ?? '{workspaceRoot}';
-    for (const glob of pick(group)) {
-      const owners = byGlob.get(glob);
-      if (owners) owners.push(owner);
-      else byGlob.set(glob, [owner]);
-    }
-  }
-  return byGlob;
-}
-
-function scopeLabel(owners: readonly string[], projectCount: number): string {
-  return owners.length === projectCount
-    ? `all ${owners.length} projects`
-    : `${owners.length} project${owners.length === 1 ? '' : 's'}`;
-}
-
-/** Most-shared first, so the globs covering the workspace lead. */
-function byShareThenName(
-  [aGlob, a]: [string, string[]],
-  [bGlob, b]: [string, string[]]
-): number {
-  return b.length - a.length || aGlob.localeCompare(bGlob);
-}
-
-function renderGlobLines(
-  entries: [string, string[]][],
-  projectCount: number,
-  c: ReturnType<typeof pc>,
-  args: ShowTargetBaseOptions,
-  hintFor?: (glob: string) => string
-): void {
-  const shown = args.verbose ? entries : entries.slice(0, SHARED_GLOB_PREVIEW);
-  for (const [glob, owners] of shown) {
-    const hint = hintFor?.(glob) ?? '';
-    console.log(
-      `    - ${glob} ${c.dim(`(${scopeLabel(owners, projectCount)})`)}${hint}`
-    );
-    if (
-      args.verbose &&
-      owners.length < projectCount &&
-      owners.length <= OWNER_NAME_LIMIT
-    ) {
-      console.log(`      ${c.dim(owners.join(', '))}`);
-    }
-  }
-  const hidden = entries.length - shown.length;
-  if (hidden > 0) {
-    console.log(`    ${c.dim(`... ${hidden} more (--verbose)`)}`);
-  }
-}
+/** A group once the renderer has resolved the owning project's root. */
+type ResolvedInputGroup = EffectiveInputGroup & { projectRoot?: string };
 
 /**
- * The globs a snapshot-backed task hashes. By default they are summarised per
- * project, which answers what the task reads from; `--verbose` breaks every
- * glob out by where it came from.
+ * The globs a snapshot-backed task hashes, grouped by the project they belong
+ * to. The default names the projects; `--verbose` lists each project's globs,
+ * split by whether the trace read them, the trace excluded them, or a declared
+ * input excluded them.
  */
 function renderEffectiveInputs(
   data: TargetInfoData,
   c: ReturnType<typeof pc>,
-  args: ShowTargetBaseOptions,
-  sourceHint: (key: string, fallbackKey?: string) => string
+  args: ShowTargetBaseOptions
 ): void {
   const groups = data.effectiveInputs;
   if (!groups?.length) return;
-  const projectCount = groups.length;
 
   const isRead = (glob: string) => !glob.startsWith('!');
-  const readTotal = groups.reduce(
-    (n, g) => n + g.observed.filter(isRead).length,
-    0
-  );
+  const readsOf = (group: ResolvedInputGroup) => group.observed.filter(isRead);
+  const tracedOf = (group: ResolvedInputGroup) =>
+    group.observed.filter((glob) => !isRead(glob));
+  const readTotal = groups.reduce((n, g) => n + readsOf(g).length, 0);
   const excludeTotal = groups.reduce(
-    (n, g) =>
-      n + g.observed.filter((glob) => !isRead(glob)).length + g.declared.length,
+    (n, g) => n + tracedOf(g).length + g.declared.length,
     0
   );
 
-  // The globs below are a sample of a long list, so the reader needs the two
-  // things that orient them -- which snapshot, and where the files are --
-  // before the sample rather than under it.
+  // The replaced filesets are not printed at all, so this has to say what the
+  // snapshot stands in for. Anything still listed above it -- env, runtime,
+  // externalDependencies -- a snapshot never replaces.
   const commit = data.snapshot.commit?.slice(0, 8);
   console.log(
     `  ${c.dim(
-      `hashed from the I/O snapshot${commit ? ` at ${commit}` : ''}, not the inputs above` +
+      `file inputs come from the I/O snapshot${commit ? ` at ${commit}` : ''},` +
+        ` in place of this target's declared filesets` +
         ` — \`nx show target inputs ${data.project}:${data.target}\` lists the files`
     )}`
   );
   console.log(
     `  ${c.dim(
-      `considers files from ${projectCount} project${projectCount === 1 ? '' : 's'}` +
+      `considers files from ${groups.length} project${groups.length === 1 ? '' : 's'}` +
         ` (${readTotal} reads, ${excludeTotal} exclusions):`
     )}`
   );
 
   if (!args.verbose) {
     // Heaviest first: the projects a change is most likely to invalidate.
-    const summarised = [...groups]
-      .map((group) => ({
-        name: group.project ?? '{workspaceRoot}',
-        root: group.projectRoot,
-        reads: group.observed.filter(isRead).length,
-        excludes:
-          group.observed.filter((glob) => !isRead(glob)).length +
-          group.declared.length,
-      }))
-      .sort((a, b) => b.reads - a.reads || a.name.localeCompare(b.name));
-    for (const project of summarised.slice(0, PROJECT_PREVIEW)) {
-      const where = project.root ? c.dim(` (${project.root})`) : '';
-      console.log(`    - ${project.name}${where}`);
+    const ranked = [...groups].sort(
+      (a, b) =>
+        readsOf(b).length - readsOf(a).length ||
+        (a.project ?? '').localeCompare(b.project ?? '')
+    );
+    for (const group of ranked.slice(0, PROJECT_PREVIEW)) {
+      console.log(`    - ${projectLabel(group, c)}`);
     }
-    const hidden =
-      summarised.length - Math.min(PROJECT_PREVIEW, summarised.length);
+    const hidden = ranked.length - Math.min(PROJECT_PREVIEW, ranked.length);
     if (hidden > 0) {
       console.log(`    ${c.dim(`... ${hidden} more projects (--verbose)`)}`);
     }
     return;
   }
 
-  const reads = indexByGlob(groups, (g) => g.observed.filter(isRead));
-  console.log(`  ${c.dim(`observed reads (${reads.size} unique):`)}`);
-  renderGlobLines([...reads].sort(byShareThenName), projectCount, c, args);
-
-  // The trace records what the task did NOT read as well, so these arrive with
-  // the snapshot rather than from any declared input.
-  const traced = indexByGlob(groups, (g) =>
-    g.observed.filter((glob: string) => !isRead(glob))
-  );
-  if (traced.size > 0) {
-    console.log(
-      `  ${c.dim(`exclusions recorded with the snapshot (${traced.size} unique):`)}`
-    );
-    renderGlobLines([...traced].sort(byShareThenName), projectCount, c, args);
-  }
-
-  renderDeclaredExclusions(data, groups, c, args, sourceHint);
-}
-
-/**
- * Exclusions the planner carried over from declared inputs. They apply on top
- * of the trace, so they are named apart from anything the snapshot recorded.
- */
-function renderDeclaredExclusions(
-  data: TargetInfoData,
-  groups: NonNullable<TargetInfoData['effectiveInputs']>,
-  c: ReturnType<typeof pc>,
-  args: ShowTargetBaseOptions,
-  sourceHint: (key: string, fallbackKey?: string) => string
-): void {
-  const byGlob = indexByGlob(groups, (g) => g.declared);
-  if (byGlob.size === 0) return;
-  const total = groups.reduce((n, g) => n + g.declared.length, 0);
-  console.log(
-    `  ${c.dim(
-      `declared exclusions still applied (${byGlob.size} unique of ${total}):`
-    )}`
-  );
-
-  // Resolved against whichever project authored the exclusion, so one
-  // inherited through `^` still names its file.
+  // Alphabetical here: a reader in this mode is looking for one project.
   const sources = data._declaredSources ?? {};
   const via = data._declaredVia ?? {};
-  renderGlobLines(
-    [...byGlob].sort(byShareThenName),
-    groups.length,
-    c,
-    args,
-    (glob) => {
-      if (!args.verbose) return '';
-      // The named-input definition is where the exclusion is actually written,
-      // so it wins over the per-project config that merely references it.
-      if (via[glob]) return ` ${c.dim(`(from ${via[glob]})`)}`;
-      const entry = sources[glob];
-      if (!entry) return '';
-      const [file, plugin] = entry;
-      if (file && plugin) return ` ${c.dim(`(from ${file} by ${plugin})`)}`;
-      if (file) return ` ${c.dim(`(from ${file})`)}`;
-      return plugin ? ` ${c.dim(`(by ${plugin})`)}` : '';
-    }
+  const declaredHint = (glob: string): string => {
+    if (via[glob]) return ` ${c.dim(`(from ${via[glob]})`)}`;
+    const entry = sources[glob];
+    if (!entry) return '';
+    const [file, plugin] = entry;
+    if (file && plugin) return ` ${c.dim(`(from ${file} by ${plugin})`)}`;
+    if (file) return ` ${c.dim(`(from ${file})`)}`;
+    return plugin ? ` ${c.dim(`(by ${plugin})`)}` : '';
+  };
+
+  const sorted = [...groups].sort((a, b) =>
+    (a.project ?? '').localeCompare(b.project ?? '')
   );
+  for (const group of sorted) {
+    console.log(`    ${projectLabel(group, c)}:`);
+    renderGlobList('reads', readsOf(group), c);
+    renderGlobList('excluded by the snapshot', tracedOf(group), c);
+    renderGlobList(
+      'excluded by a declared input',
+      group.declared,
+      c,
+      declaredHint
+    );
+  }
+}
+
+function projectLabel(
+  group: ResolvedInputGroup,
+  c: ReturnType<typeof pc>
+): string {
+  const name = group.project ?? '{workspaceRoot}';
+  return group.projectRoot
+    ? `${name}${c.dim(` (${group.projectRoot})`)}`
+    : name;
+}
+
+function renderGlobList(
+  label: string,
+  globs: readonly string[],
+  c: ReturnType<typeof pc>,
+  hintFor?: (glob: string) => string
+): void {
+  if (globs.length === 0) return;
+  console.log(`      ${c.dim(`${label}:`)}`);
+  for (const glob of globs) {
+    console.log(`        - ${glob}${hintFor?.(glob) ?? ''}`);
+  }
 }
 
 function renderSnapshotSection(
@@ -930,7 +842,7 @@ function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
           : '';
       console.log(`  - ${display}${hint}${replaced}`);
     }
-    renderEffectiveInputs(data, c, args, sourceHint);
+    renderEffectiveInputs(data, c, args);
   }
 
   if (data.outputs && data.outputs.length > 0) {
