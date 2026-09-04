@@ -942,7 +942,7 @@ describe('show target info', () => {
 
       // The observed reads, grouped by the project that owns them.
       expect(text).toContain(
-        'observed reads (2 unique of 2 globs, 2 projects)'
+        'observed reads from the I/O snapshot at ae6a03f9 (2 unique of 2 globs, 2 projects)'
       );
       expect(text).toContain('the observed reads are listed above');
       // Globs inside the owning project read as {projectRoot}, like the
@@ -1001,7 +1001,7 @@ describe('show target info', () => {
 
       // 3 entries collapse to 2 unique globs.
       expect(text).toContain(
-        'observed reads (2 unique of 3 globs, 2 projects)'
+        'observed reads from the I/O snapshot at ae6a03f9 (2 unique of 3 globs, 2 projects)'
       );
       // The shared glob appears exactly once, scoped to every project.
       expect(lines.filter((l: string) => l.includes(shared))).toHaveLength(1);
@@ -1045,7 +1045,7 @@ describe('show target info', () => {
       // Each of the three kinds is counted under its own heading, so no glob
       // is left looking unexplained.
       expect(text).toContain(
-        'observed reads (1 unique of 1 globs, 1 projects)'
+        'observed reads from the I/O snapshot at ae6a03f9 (1 unique of 1 globs, 1 projects)'
       );
       expect(text).toContain(
         'exclusions recorded with the snapshot (1 unique of 1)'

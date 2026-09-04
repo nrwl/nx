@@ -487,9 +487,13 @@ function renderEffectiveInputs(
     (n, g) => n + g.observed.filter((glob) => !glob.startsWith('!')).length,
     0
   );
+  // Every section says where its globs came from; the reads are the only ones
+  // that would otherwise read as something this target declared.
+  const commit = data.snapshot.commit?.slice(0, 8);
+  const from = commit ? ` from the I/O snapshot at ${commit}` : '';
   console.log(
     `  ${c.dim(
-      `observed reads (${reads.size} unique of ${readTotal} globs, ${projectCount} projects):`
+      `observed reads${from} (${reads.size} unique of ${readTotal} globs, ${projectCount} projects):`
     )}`
   );
 
