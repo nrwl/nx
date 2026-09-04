@@ -19,7 +19,7 @@
  * relink it, so a copied tree only has to be good enough for that reinstall.
  */
 import { execSync } from 'node:child_process';
-import { cpSync, mkdtempSync, rmSync } from 'node:fs';
+import { cpSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -44,12 +44,14 @@ const outputRoot = resolve(process.cwd(), 'dist/local-registry/proj-backup');
 
 await waitForRegistry();
 
+// Must resolve to exactly what the specs will install. getPublishedVersion() in
+// e2e/utils/get-env-info.ts reads the built nx package; asking the registry for
+// `nx@latest` instead returns npmjs' latest, because verdaccio merges upstream
+// metadata into the proxied packument. That builds the template on one major and
+// leaves the specs adding another on top of it, which strands @nx/js's link to
+// @nx/devkit and fails every generator with "Cannot find module '@nx/devkit'".
 const version =
-  process.env.PUBLISHED_VERSION ||
-  execSync('npm view nx@latest version', {
-    encoding: 'utf-8',
-    env: registryEnv(mkdtempSync(join(tmpdir(), 'nx-e2e-base-probe-'))),
-  }).trim();
+  process.env.PUBLISHED_VERSION || readBuiltNxVersion() || 'latest';
 
 console.log(
   `Building e2e base workspaces with create-nx-workspace@${version} -> ${outputRoot}`
@@ -165,6 +167,20 @@ async function buildTemplate({ pm, preset }) {
   } finally {
     rmSync(work, { recursive: true, force: true });
     rmSync(cacheRoot, { recursive: true, force: true });
+  }
+}
+
+/** Mirrors getPublishedVersion() in e2e/utils/get-env-info.ts. */
+function readBuiltNxVersion() {
+  try {
+    return JSON.parse(
+      readFileSync(
+        resolve(process.cwd(), 'dist/packages/nx/package.json'),
+        'utf-8'
+      )
+    ).version;
+  } catch {
+    return undefined;
   }
 }
 
