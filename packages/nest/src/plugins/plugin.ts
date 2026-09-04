@@ -14,10 +14,10 @@ import {
   getNamedInputs,
   PluginCache,
 } from '@nx/devkit/internal';
-import { getLockFileName } from '@nx/js';
+import { getLockFileName, readTsConfig } from '@nx/js';
 import { TS_SOLUTION_SETUP_TSCONFIG_INPUT } from '@nx/js/internal';
 import { existsSync, readdirSync } from 'node:fs';
-import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 import { hashObject } from 'nx/src/devkit-internals';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 
@@ -32,7 +32,8 @@ export interface NestPluginOptions {
 
 type NestCliConfig = {
   compilerOptions?: {
-    outputPath?: string;
+    tsConfigPath?: string;
+    builder?: string | { type?: string; options?: { configPath?: string } };
   };
 };
 
@@ -122,7 +123,7 @@ function buildNestTargets(
 ): Record<string, TargetConfiguration> {
   const namedInputs = getNamedInputs(projectRoot, context);
   const buildOutputs = normalizeOutputPath(
-    nestCliConfig.compilerOptions?.outputPath,
+    readOutDir(nestCliConfig, projectRoot, context.workspaceRoot),
     projectRoot,
     context.workspaceRoot
   );
@@ -174,27 +175,71 @@ function getProjectRootFromConfigFilePath(configFilePath: string): string {
   return normalizePath(dirname(configFilePath));
 }
 
-function normalizeOutputPath(
-  outputPath: string | undefined,
+// The Nest CLI takes the first tsconfig it finds among an explicit
+// `tsConfigPath`, a `tsc` builder's `configPath`, and `tsconfig.build.json`
+// falling back to `tsconfig.json`. See @nestjs/cli getTscConfigPath.
+function resolveTsConfigPath(
+  nestCliConfig: NestCliConfig,
   projectRoot: string,
   workspaceRoot: string
 ): string {
-  if (!outputPath) {
+  const { tsConfigPath, builder } = nestCliConfig.compilerOptions ?? {};
+  if (tsConfigPath) {
+    return tsConfigPath;
+  }
+
+  const builderConfigPath =
+    typeof builder === 'object' && builder?.type === 'tsc'
+      ? builder.options?.configPath
+      : undefined;
+  if (builderConfigPath) {
+    return builderConfigPath;
+  }
+
+  return existsSync(join(workspaceRoot, projectRoot, 'tsconfig.build.json'))
+    ? 'tsconfig.build.json'
+    : 'tsconfig.json';
+}
+
+function readOutDir(
+  nestCliConfig: NestCliConfig,
+  projectRoot: string,
+  workspaceRoot: string
+): string | undefined {
+  const tsConfigPath = join(
+    workspaceRoot,
+    projectRoot,
+    resolveTsConfigPath(nestCliConfig, projectRoot, workspaceRoot)
+  );
+  if (!existsSync(tsConfigPath)) {
+    return undefined;
+  }
+
+  try {
+    // Resolves `extends`, matching how the Nest CLI reads the same file.
+    return readTsConfig(tsConfigPath).options.outDir;
+  } catch {
+    return undefined;
+  }
+}
+
+// `readTsConfig` always resolves `outDir` to an absolute path, so the output
+// is expressed against whichever of the two roots actually contains it.
+function normalizeOutputPath(
+  outDir: string | undefined,
+  projectRoot: string,
+  workspaceRoot: string
+): string {
+  if (!outDir) {
     return joinPathFragments('{projectRoot}', 'dist');
   }
 
-  if (isAbsolute(outputPath)) {
-    return joinPathFragments(
-      '{workspaceRoot}',
-      relative(workspaceRoot, resolve(workspaceRoot, outputPath))
-    );
+  const fromProjectRoot = relative(join(workspaceRoot, projectRoot), outDir);
+  if (fromProjectRoot && !fromProjectRoot.startsWith('..')) {
+    return joinPathFragments('{projectRoot}', fromProjectRoot);
   }
 
-  if (outputPath.startsWith('..')) {
-    return joinPathFragments('{workspaceRoot}', projectRoot, outputPath);
-  }
-
-  return joinPathFragments('{projectRoot}', outputPath);
+  return joinPathFragments('{workspaceRoot}', relative(workspaceRoot, outDir));
 }
 
 function normalizeOptions(options: NestPluginOptions): NestPluginOptions {

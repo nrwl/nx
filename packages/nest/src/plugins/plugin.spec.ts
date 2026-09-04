@@ -1,4 +1,5 @@
 import * as childProcess from 'node:child_process';
+import { join } from 'node:path';
 import * as devkitModule from '@nx/devkit';
 import type { CreateNodesContext } from '@nx/devkit';
 import { TS_SOLUTION_SETUP_TSCONFIG_INPUT } from '@nx/js/internal';
@@ -196,18 +197,126 @@ describe('@nx/nest/plugin', () => {
     );
   });
 
-  it('build target has conservative outputs', async () => {
+  it('build target falls back to dist when no tsconfig sets outDir', async () => {
+    await tempFs.createFiles(createNestProjectFiles('apps/api'));
+
+    const project = await createProject('apps/api/nest-cli.json');
+
+    expect(project.targets.build.outputs).toEqual(['{projectRoot}/dist']);
+  });
+
+  it('build target follows the outDir of the resolved tsconfig', async () => {
     await tempFs.createFiles(
-      createNestProjectFiles('apps/api', {
-        compilerOptions: {
-          outputPath: 'build',
-        },
-      })
+      createNestProjectFiles(
+        'apps/api',
+        {},
+        { 'tsconfig.build.json': { compilerOptions: { outDir: 'build' } } }
+      )
     );
 
     const project = await createProject('apps/api/nest-cli.json');
 
     expect(project.targets.build.outputs).toEqual(['{projectRoot}/build']);
+  });
+
+  it('build target follows an explicit tsConfigPath', async () => {
+    await tempFs.createFiles(
+      createNestProjectFiles(
+        'apps/api',
+        { compilerOptions: { tsConfigPath: 'tsconfig.app.json' } },
+        {
+          'tsconfig.app.json': { compilerOptions: { outDir: 'out-app' } },
+          'tsconfig.build.json': { compilerOptions: { outDir: 'ignored' } },
+        }
+      )
+    );
+
+    const project = await createProject('apps/api/nest-cli.json');
+
+    expect(project.targets.build.outputs).toEqual(['{projectRoot}/out-app']);
+  });
+
+  it('build target follows a tsc builder configPath', async () => {
+    await tempFs.createFiles(
+      createNestProjectFiles(
+        'apps/api',
+        {
+          compilerOptions: {
+            builder: {
+              type: 'tsc',
+              options: { configPath: 'tsconfig.ci.json' },
+            },
+          },
+        },
+        {
+          'tsconfig.ci.json': { compilerOptions: { outDir: 'out-ci' } },
+          'tsconfig.build.json': { compilerOptions: { outDir: 'ignored' } },
+        }
+      )
+    );
+
+    const project = await createProject('apps/api/nest-cli.json');
+
+    expect(project.targets.build.outputs).toEqual(['{projectRoot}/out-ci']);
+  });
+
+  it('build target follows an outDir inherited through extends', async () => {
+    await tempFs.createFiles(
+      createNestProjectFiles(
+        'apps/api',
+        {},
+        {
+          'tsconfig.json': { compilerOptions: { outDir: 'from-base' } },
+          'tsconfig.build.json': { extends: './tsconfig.json' },
+        }
+      )
+    );
+
+    const project = await createProject('apps/api/nest-cli.json');
+
+    expect(project.targets.build.outputs).toEqual(['{projectRoot}/from-base']);
+  });
+
+  it('build target escapes the project root when outDir does', async () => {
+    await tempFs.createFiles(
+      createNestProjectFiles(
+        'apps/api',
+        {},
+        {
+          'tsconfig.build.json': {
+            compilerOptions: { outDir: '../../dist/apps/api' },
+          },
+        }
+      )
+    );
+
+    const project = await createProject('apps/api/nest-cli.json');
+
+    expect(project.targets.build.outputs).toEqual([
+      '{workspaceRoot}/dist/apps/api',
+    ]);
+  });
+
+  it('build target handles an absolute outDir', async () => {
+    await tempFs.createFiles(
+      createNestProjectFiles(
+        'apps/api',
+        {},
+        {
+          'tsconfig.build.json': {
+            compilerOptions: {
+              outDir: join(tempFs.tempDir, 'dist', 'absolute-api'),
+            },
+          },
+        }
+      )
+    );
+
+    const project = await createProject('apps/api/nest-cli.json');
+
+    expect(project.targets.build.outputs).toEqual([
+      '{workspaceRoot}/dist/absolute-api',
+    ]);
   });
 
   it('custom buildTargetName works', async () => {
@@ -335,9 +444,16 @@ describe('@nx/nest/plugin', () => {
 
 function createNestProjectFiles(
   projectRoot: string,
-  nestCliConfig: Record<string, unknown> = {}
+  nestCliConfig: Record<string, unknown> = {},
+  tsConfigs: Record<string, unknown> = {}
 ): Record<string, string> {
   const root = projectRoot === '.' ? '' : `${projectRoot}/`;
+  const extraTsConfigs = Object.fromEntries(
+    Object.entries(tsConfigs).map(([name, contents]) => [
+      `${root}${name}`,
+      JSON.stringify(contents, null, 2),
+    ])
+  );
 
   return {
     [`${root}nest-cli.json`]: JSON.stringify(
@@ -358,5 +474,6 @@ function createNestProjectFiles(
     [`${root}src/main.ts`]: 'console.log("nest");\n',
     [`${root}tsconfig.json`]: '{}\n',
     [`${root}tsconfig.build.json`]: '{}\n',
+    ...extraTsConfigs,
   };
 }
