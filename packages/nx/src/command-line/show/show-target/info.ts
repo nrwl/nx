@@ -414,6 +414,9 @@ const OWNER_NAME_LIMIT = 4;
 /** Direct dependencies listed before the rest become a count. */
 const DEPENDS_ON_PREVIEW = 10;
 
+/** Projects summarised before the rest become a count. */
+const PROJECT_PREVIEW = 10;
+
 /** Maps each glob to the projects whose group carries it. */
 function indexByGlob(
   groups: readonly { project?: string }[],
@@ -473,10 +476,9 @@ function renderGlobLines(
 }
 
 /**
- * The globs a snapshot-backed task hashes, split by where each came from: the
- * trace's reads, the trace's own exclusions, and the exclusions carried over
- * from declared inputs. Every line belongs to exactly one of the three, so no
- * glob is left looking unexplained.
+ * The globs a snapshot-backed task hashes. By default they are summarised per
+ * project, which answers what the task reads from; `--verbose` breaks every
+ * glob out by where it came from.
  */
 function renderEffectiveInputs(
   data: TargetInfoData,
@@ -488,74 +490,70 @@ function renderEffectiveInputs(
   if (!groups?.length) return;
   const projectCount = groups.length;
 
-  const reads = indexByGlob(groups, (g) =>
-    g.observed.filter((glob: string) => !glob.startsWith('!'))
-  );
+  const isRead = (glob: string) => !glob.startsWith('!');
   const readTotal = groups.reduce(
-    (n, g) => n + g.observed.filter((glob) => !glob.startsWith('!')).length,
+    (n, g) => n + g.observed.filter(isRead).length,
     0
   );
-  // Every section says where its globs came from; the reads are the only ones
-  // that would otherwise read as something this target declared.
+  const excludeTotal = groups.reduce(
+    (n, g) =>
+      n + g.observed.filter((glob) => !isRead(glob)).length + g.declared.length,
+    0
+  );
+
+  // The globs below are a sample of a long list, so the reader needs the two
+  // things that orient them -- which snapshot, and where the files are --
+  // before the sample rather than under it.
   const commit = data.snapshot.commit?.slice(0, 8);
-  const from = commit ? ` from the I/O snapshot at ${commit}` : '';
   console.log(
     `  ${c.dim(
-      `observed reads${from} (${reads.size} unique of ${readTotal} globs, ${projectCount} projects):`
+      `hashed from the I/O snapshot${commit ? ` at ${commit}` : ''}, not the inputs above` +
+        ` — \`nx show target inputs ${data.project}:${data.target}\` lists the files`
+    )}`
+  );
+  console.log(
+    `  ${c.dim(
+      `considers files from ${projectCount} project${projectCount === 1 ? '' : 's'}` +
+        ` (${readTotal} reads, ${excludeTotal} exclusions):`
     )}`
   );
 
-  const shared = [...reads].filter(([, owners]) => owners.length > 1);
-  shared.sort(byShareThenName);
-  renderGlobLines(shared, projectCount, c, args);
+  if (!args.verbose) {
+    // Heaviest first: the projects a change is most likely to invalidate.
+    const summarised = [...groups]
+      .map((group) => ({
+        name: group.project ?? '{workspaceRoot}',
+        root: group.projectRoot,
+        reads: group.observed.filter(isRead).length,
+        excludes:
+          group.observed.filter((glob) => !isRead(glob)).length +
+          group.declared.length,
+      }))
+      .sort((a, b) => b.reads - a.reads || a.name.localeCompare(b.name));
+    for (const project of summarised.slice(0, PROJECT_PREVIEW)) {
+      const where = project.root ? c.dim(` (${project.root})`) : '';
+      console.log(`    - ${project.name}${where}`);
+    }
+    const hidden =
+      summarised.length - Math.min(PROJECT_PREVIEW, summarised.length);
+    if (hidden > 0) {
+      console.log(`    ${c.dim(`... ${hidden} more projects (--verbose)`)}`);
+    }
+    return;
+  }
 
-  // Whatever is unique to one project is mostly that project's own declaration
-  // output, which is noise at a glance -- summarise it unless asked.
-  const own = new Map<string, string[]>();
-  for (const [glob, owners] of reads) {
-    if (owners.length === 1) {
-      const list = own.get(owners[0]);
-      if (list) list.push(glob);
-      else own.set(owners[0], [glob]);
-    }
-  }
-  if (own.size > 0) {
-    if (args.verbose) {
-      const roots = new Map(
-        groups.map((g) => [g.project ?? '{workspaceRoot}', g.projectRoot])
-      );
-      for (const owner of [...own.keys()].sort()) {
-        const root = roots.get(owner);
-        const header = root
-          ? `${c.bold(owner)}${c.dim(` (${root})`)}`
-          : c.bold(owner);
-        console.log(`    ${header}:`);
-        for (const glob of own.get(owner)!) console.log(`      - ${glob}`);
-      }
-    } else {
-      const count = [...own.values()].reduce((n, globs) => n + globs.length, 0);
-      console.log(
-        `    ${c.dim(
-          `... ${count} reads specific to a single project, across ${own.size} projects (--verbose)`
-        )}`
-      );
-    }
-  }
+  const reads = indexByGlob(groups, (g) => g.observed.filter(isRead));
+  console.log(`  ${c.dim(`observed reads (${reads.size} unique):`)}`);
+  renderGlobLines([...reads].sort(byShareThenName), projectCount, c, args);
 
   // The trace records what the task did NOT read as well, so these arrive with
   // the snapshot rather than from any declared input.
   const traced = indexByGlob(groups, (g) =>
-    g.observed.filter((glob: string) => glob.startsWith('!'))
+    g.observed.filter((glob: string) => !isRead(glob))
   );
   if (traced.size > 0) {
-    const total = groups.reduce(
-      (n, g) => n + g.observed.filter((glob) => glob.startsWith('!')).length,
-      0
-    );
     console.log(
-      `  ${c.dim(
-        `exclusions recorded with the snapshot (${traced.size} unique of ${total}):`
-      )}`
+      `  ${c.dim(`exclusions recorded with the snapshot (${traced.size} unique):`)}`
     );
     renderGlobLines([...traced].sort(byShareThenName), projectCount, c, args);
   }
@@ -620,7 +618,7 @@ function renderSnapshotSection(
     // The Inputs section already lists the observed reads when they resolved;
     // only point elsewhere when it is still showing the declared filesets.
     const note = data.effectiveInputs?.length
-      ? `(the observed reads are listed above; see \`nx show target inputs ${data.project}:${data.target}\` for the files they match)`
+      ? '(the observed reads are listed above)'
       : `(the file inputs above are replaced by the observed reads; see \`nx show target inputs ${data.project}:${data.target}\`)`;
     console.log(
       `${label}: ${c.green('used')} — commit ${commit}, digest ${digest} ${c.dim(note)}`

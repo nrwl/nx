@@ -941,13 +941,15 @@ describe('show target info', () => {
       const text = (console.log as Mock).mock.calls.map((c) => c[0]).join('\n');
 
       // The observed reads, grouped by the project that owns them.
-      expect(text).toContain(
-        'observed reads from the I/O snapshot at ae6a03f9 (2 unique of 2 globs, 2 projects)'
-      );
+      expect(text).toContain('observed reads (2 unique)');
       expect(text).toContain('the observed reads are listed above');
+      // The pointer to the files sits with the section it describes, not 30
+      // lines below it.
+      expect(text).toContain('hashed from the I/O snapshot at ae6a03f9');
+      expect(text).toContain('nx show target inputs my-app:lint');
       // Globs inside the owning project read as {projectRoot}, like the
       // declared inputs; the header carries the real root.
-      expect(text).toContain('my-app (apps/my-app)');
+      expect(text).toContain('(1 project)');
       expect(text).toContain('{projectRoot}/src/main.ts');
       // A project absent from the graph keeps its workspace-relative glob.
       expect(text).toContain('libs/ui/src/index.ts');
@@ -1000,14 +1002,12 @@ describe('show target info', () => {
       const text = lines.join('\n');
 
       // 3 entries collapse to 2 unique globs.
-      expect(text).toContain(
-        'observed reads from the I/O snapshot at ae6a03f9 (2 unique of 3 globs, 2 projects)'
-      );
+      expect(text).toContain('observed reads (2 unique)');
       // The shared glob appears exactly once, scoped to every project.
       expect(lines.filter((l: string) => l.includes(shared))).toHaveLength(1);
       expect(text).toContain(`${shared} (all 2 projects)`);
       // The glob only one project reads stays under that project.
-      expect(text).toContain('my-app (apps/my-app)');
+      expect(text).toContain('(1 project)');
       expect(text).toContain('{projectRoot}/src/only-mine.ts');
     });
 
@@ -1044,11 +1044,9 @@ describe('show target info', () => {
 
       // Each of the three kinds is counted under its own heading, so no glob
       // is left looking unexplained.
+      expect(text).toContain('observed reads (1 unique)');
       expect(text).toContain(
-        'observed reads from the I/O snapshot at ae6a03f9 (1 unique of 1 globs, 1 projects)'
-      );
-      expect(text).toContain(
-        'exclusions recorded with the snapshot (1 unique of 1)'
+        'exclusions recorded with the snapshot (1 unique)'
       );
       expect(text).toContain(
         'declared exclusions still applied (1 unique of 1)'
@@ -1182,7 +1180,7 @@ describe('show target info', () => {
       expect(text).toMatch(/\.\.\. \d+ more \(--verbose\)/);
     });
 
-    it('summarises the single-project reads unless --verbose', async () => {
+    it('summarises by project unless --verbose', async () => {
       setGraph(graphWithLintTarget());
       setMockIoSnapshotReport({
         used: ['my-app:lint'],
@@ -1216,14 +1214,13 @@ describe('show target info', () => {
       await showTargetInfoHandler({ target: 'my-app:lint' });
       const text = (console.log as Mock).mock.calls.map((c) => c[0]).join('\n');
 
-      // Shared globs still list; the per-project tail collapses to a count so
-      // a 196-project task does not print hundreds of lines by default.
-      expect(text).toContain(shared);
-      expect(text).toContain(
-        '2 reads specific to a single project, across 2 projects (--verbose)'
-      );
+      // The default answers which projects the task considers, not which
+      // globs; a 196-project task would otherwise print hundreds of lines.
+      expect(text).toContain('considers files from 2 projects');
+      expect(text).toContain('my-app (apps/my-app)');
+      expect(text).toContain('ui');
+      expect(text).not.toContain(shared);
       expect(text).not.toContain('only-mine.ts');
-      expect(text).not.toContain('my-app (apps/my-app)');
     });
 
     it('keeps the declared filesets tagged when no observed reads resolved', async () => {
