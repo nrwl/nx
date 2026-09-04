@@ -1363,6 +1363,69 @@ describe('app', () => {
       expect(appTree.read('app2/src/server.ts', 'utf-8')).toMatchSnapshot();
     });
 
+    it('should not leave the server builder tsconfig setup behind when --bundler=rspack and ssr', async () => {
+      await generateApp(appTree, 'app1', {
+        bundler: 'rspack',
+        ssr: true,
+        standalone: true,
+      });
+
+      expect(appTree.exists('app1/tsconfig.server.json')).toBe(false);
+      expect(
+        readJson(appTree, 'app1/tsconfig.json').references
+      ).not.toContainEqual({ path: './tsconfig.server.json' });
+      const tsConfigApp = readJson(appTree, 'app1/tsconfig.app.json');
+      expect(tsConfigApp.exclude).not.toContain('src/main.server.ts');
+      expect(tsConfigApp.exclude).not.toContain('src/server.ts');
+      expect(tsConfigApp.exclude).not.toContain('src/app/app.config.server.ts');
+      expect(tsConfigApp.compilerOptions.types).toContain('node');
+    });
+
+    it('should not add the server builder dependencies when --bundler=rspack and ssr', async () => {
+      await generateApp(appTree, 'app1', { bundler: 'rspack', ssr: true });
+
+      const { devDependencies } = readJson(appTree, 'package.json');
+      expect(devDependencies['browser-sync']).toBeUndefined();
+      expect(devDependencies['@nx/webpack']).toBeUndefined();
+    });
+
+    it('should scaffold the application engine when --bundler=rspack and ssr', async () => {
+      await generateApp(appTree, 'app1', {
+        bundler: 'rspack',
+        ssr: true,
+        standalone: true,
+      });
+
+      const server = appTree.read('app1/src/server.ts', 'utf-8');
+      expect(server).toContain('new AngularNodeAppEngine()');
+      expect(server).not.toContain('CommonEngine');
+      expect(appTree.exists('app1/src/app/app.routes.server.ts')).toBe(true);
+      expect(
+        appTree.read('app1/src/app/app.config.server.ts', 'utf-8')
+      ).toContain('provideServerRendering(withRoutes(serverRoutes))');
+    });
+
+    it('should configure the allowed hosts when --bundler=rspack and ssr', async () => {
+      await generateApp(appTree, 'app1', { bundler: 'rspack', ssr: true });
+
+      expect(appTree.read('app1/rspack.config.ts', 'utf-8')).toContain(
+        '"allowedHosts": []'
+      );
+    });
+
+    it('should not configure the allowed hosts when "@angular/ssr" does not support them', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { ...json.dependencies, '@angular/ssr': '21.1.4' },
+      }));
+
+      await generateApp(appTree, 'app1', { bundler: 'rspack', ssr: true });
+
+      expect(appTree.read('app1/rspack.config.ts', 'utf-8')).not.toContain(
+        'allowedHosts'
+      );
+    });
+
     it('should generate use crystal jest when --bundler=rspack', async () => {
       await generateApp(appTree, 'app1', {
         bundler: 'rspack',
