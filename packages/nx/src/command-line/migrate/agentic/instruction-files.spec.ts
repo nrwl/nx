@@ -121,4 +121,14 @@ describe('writeStepInstructionFiles', () => {
       })
     ).toThrow(/Could not write the migration step's system prompt to .*ENOENT/);
   });
+
+  // A directory in the way fails the second write and only the second, which
+  // is what it takes to see whether the diagnostic names the right file.
+  it('names the instructions file when that is the write that failed', () => {
+    mkdirSync(stepFilePath(runDir, migration, '.instructions.md'));
+
+    expect(() => write()).toThrow(
+      /Could not write the migration step's instructions to .*update-23-1-0\.instructions\.md/
+    );
+  });
 });
