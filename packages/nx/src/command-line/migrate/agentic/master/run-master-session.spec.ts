@@ -224,4 +224,21 @@ describe('runMasterSession', () => {
     expect(mockReadRunState).not.toHaveBeenCalled();
     expect(mockRunComplete).not.toHaveBeenCalled();
   });
+  it('exits 1 with the error, the error event and the resume hint when the session had to be closed on an unanswered request', async () => {
+    const error = new Error('EACCES: permission denied, rename');
+    mockSpawnMaster.mockResolvedValue({ kind: 'broker-failed', error });
+
+    expect(await runMasterSession(input())).toBe(1);
+
+    expect(errorSpy).toHaveBeenCalledWith({
+      title:
+        "Closed the Claude Code session: a step's commit request could not be answered (EACCES: permission denied, rename).",
+      bodyLines: [
+        `Migrate run ${runId} is still active. Run nx migrate --run-migrations --agentic=claude-code again to resume it.`,
+      ],
+    });
+    expect(mockRunError).toHaveBeenCalledWith({ code: 'agentic', error });
+    expect(mockReadRunState).not.toHaveBeenCalled();
+    expect(mockRunComplete).not.toHaveBeenCalled();
+  });
 });
