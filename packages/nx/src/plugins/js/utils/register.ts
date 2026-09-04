@@ -902,32 +902,77 @@ function resolveFromWorkspacePackageExports(
 }
 
 /**
- * Nearest `node_modules` entry for the name, accepted only when it links into
- * the workspace: a same-named external package nested closer to the parent
- * must keep Node's own resolution.
+ * The package's `package.json` as the package manager links it for `fromDir`,
+ * accepted only when it links into the workspace: a same-named external
+ * package must keep Node's own resolution.
  */
 function findWorkspacePackageJson(
   packageName: string,
   fromDir: string,
   root: string
 ): string | null {
+  const candidate = process.versions.pnp
+    ? findPnpPackageJson(packageName, fromDir)
+    : findNodeModulesPackageJson(packageName, fromDir);
+  if (!candidate) {
+    return null;
+  }
   const { pathToFileURL } = require('node:url') as typeof import('node:url');
+  return isWorkspaceModuleUrl(pathToFileURL(realpathSync(candidate)).href, root)
+    ? candidate
+    : null;
+}
+
+function findNodeModulesPackageJson(
+  packageName: string,
+  fromDir: string
+): string | null {
   let dir = fromDir;
   while (true) {
     const candidate = join(dir, 'node_modules', packageName, 'package.json');
     if (existsSync(candidate)) {
-      return isWorkspaceModuleUrl(
-        pathToFileURL(realpathSync(candidate)).href,
-        root
-      )
-        ? candidate
-        : null;
+      return candidate;
     }
     const parent = dirname(dir);
     if (parent === dir) {
       return null;
     }
     dir = parent;
+  }
+}
+
+/**
+ * Yarn PnP has no `node_modules`; its API locates the package (a workspace
+ * directory, or a `.yarn/__virtual__` alias of one for packages with peer
+ * dependencies) without applying the exports map, so the workspace
+ * conditions are still applied by the caller.
+ */
+function findPnpPackageJson(
+  packageName: string,
+  fromDir: string
+): string | null {
+  const { findPnpApi } = require('node:module') as {
+    findPnpApi?: (path: string) => {
+      resolveToUnqualified(
+        request: string,
+        issuer: string,
+        opts?: { considerBuiltins?: boolean }
+      ): string | null;
+    } | null;
+  };
+  // A trailing separator marks the issuer as a directory for PnP.
+  const issuer = join(fromDir, sep);
+  const api = findPnpApi?.(issuer);
+  if (!api) {
+    return null;
+  }
+  try {
+    return api.resolveToUnqualified(`${packageName}/package.json`, issuer, {
+      considerBuiltins: false,
+    });
+  } catch {
+    // Missing or undeclared dependency: PnP reports it on Node's own path.
+    return null;
   }
 }
 
