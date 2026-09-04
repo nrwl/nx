@@ -36,8 +36,6 @@ describe('getWrappedWorkspaceNodeModulesArchitectHost', () => {
     fs?.cleanup();
   });
 
-  // Architect requires the resolved path itself, so the registration has to
-  // happen inside resolveBuilder(), before the path is handed back.
   it('registers the source graph of a source-selected builder before handing its path to Architect', async () => {
     fs = new TempFs('ngcli-adapter-builders');
     fs.createFilesSync({

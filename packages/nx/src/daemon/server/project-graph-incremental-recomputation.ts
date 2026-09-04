@@ -127,13 +127,8 @@ let servedGraphCandidate: typeof servedGraphState = null;
 let cacheHasBeenPersisted = false;
 
 /**
- * Freshness-gated recompute. Each IIFE snapshots the plugin state hash
- * (nx.json `plugins` plus the root `customConditions`) at kickoff and
- * re-reads at commit; if it changed mid-flight, bail and kick a successor
- * instead of clobbering the winner. Without this,
- * `cachedSerializedProjectGraphPromise` is last-kickoff-wins and can
- * return a graph built against a stale plugin set
- * (see spread.test.ts "middle plugin" flake).
+ * Snapshot the plugin state at kickoff and recheck it before commit. A change
+ * must chain to a successor instead of returning a graph built with stale state.
  */
 function kickOffRecompute() {
   // The cached pointer is about to hold an unsettled promise, so whatever the
@@ -148,11 +143,8 @@ function kickOffRecompute() {
     // a rejected myPromise crashes the daemon (unhandled rejection). A throwing
     // prologue (e.g. plugin load fails) becomes an errorResult the next requester surfaces.
     try {
-      // Single read shared with getPluginsSeparated below. This collapses
-      // what would otherwise be two independent nx.json reads (our snap +
-      // the plugin loader's) into one, so the snap hash and the plugin
-      // set the compute uses always reflect the same disk state. The
-      // conditions cache was cleared at kickoff, so it reads fresh here too.
+      // Share one nx.json read with getPluginsSeparated so the state hash and
+      // the loaded plugins come from the same disk snapshot.
       const nxJson = readNxJson(workspaceRoot);
       const myPluginStateHash = hashPluginState(
         nxJson.plugins,

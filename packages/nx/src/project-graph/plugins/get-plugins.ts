@@ -187,7 +187,6 @@ export async function getPluginsSeparated(
     getRootTsConfigCustomConditions(root)
   );
 
-  // If the plugin state has not changed, reuse the current plugins
   if (cachedSeparatedPlugins && pluginStateHash === currentPluginStateHash) {
     refreshSourceGraphResolvers(root);
     return cachedSeparatedPlugins;
@@ -202,12 +201,8 @@ export async function getPluginsSeparated(
     return pendingSeparatedPlugins.promise;
   }
 
-  // Plugin state changed (e.g. `nx add @nx/maven` updated nx.json, or the
-  // root `customConditions` were edited). The cached SeparatedPlugins is
-  // invalidated by the early-return above, but
-  // pendingPluginsPromise — the in-flight load — would otherwise be reused
-  // by the `??=` below and serve the previous plugin set forever. Tear
-  // down the old workers and force a fresh load.
+  // A state change invalidates cached and in-flight plugin loads. Tear down
+  // the old plugins and clear pendingPluginsPromise before reloading.
   cleanupSpecifiedPlugins?.();
   pendingPluginsPromise = undefined;
 
