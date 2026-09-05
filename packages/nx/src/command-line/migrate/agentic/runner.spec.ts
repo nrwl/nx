@@ -208,6 +208,7 @@ describe('runAgentic', () => {
       definition,
       invocationContext: defaultInvocation('/workspace'),
       handoffFilePath,
+      handoffsDir: workspace,
     });
 
     const [binary, args, options] = mockSpawn.mock.calls[0];
@@ -229,6 +230,7 @@ describe('runAgentic', () => {
       definition,
       invocationContext: defaultInvocation('/ws'),
       handoffFilePath,
+      handoffsDir: workspace,
     });
 
     expect(mockSpawn.mock.calls[0][2].cwd).toBe('/ws');
@@ -264,6 +266,7 @@ describe('runAgentic', () => {
         definition: makeDefinition(),
         invocationContext: defaultInvocation(),
         handoffFilePath,
+        handoffsDir: workspace,
       });
 
       expect(outcome).toEqual(expected);
@@ -288,6 +291,7 @@ describe('runAgentic', () => {
         definition: makeDefinition(),
         invocationContext: defaultInvocation(),
         handoffFilePath,
+        handoffsDir: workspace,
       });
 
       expect(mockPrompt).toHaveBeenCalledTimes(1);
@@ -323,6 +327,7 @@ describe('runAgentic', () => {
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
     });
 
     expect(outcome.kind).toBe('ambiguous-abort');
@@ -341,6 +346,7 @@ describe('runAgentic', () => {
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
       handoffPollIntervalMs: 5,
     });
 
@@ -366,6 +372,7 @@ describe('runAgentic', () => {
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
       handoffPollIntervalMs: 5,
     });
 
@@ -398,6 +405,7 @@ describe('runAgentic', () => {
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
       handoffPollIntervalMs: 5,
       gracefulExitMs: 20,
     });
@@ -432,6 +440,7 @@ describe('runAgentic', () => {
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
       handoffPollIntervalMs: 5,
       gracefulExitMs: 20,
       forceKillWaitMs: 20,
@@ -472,6 +481,7 @@ describe('runAgentic', () => {
         definition: makeDefinition(),
         invocationContext: defaultInvocation(),
         handoffFilePath,
+        handoffsDir: workspace,
         handoffPollIntervalMs: 5,
       });
 
@@ -512,6 +522,7 @@ describe('runAgentic', () => {
         definition: makeDefinition(),
         invocationContext: defaultInvocation(),
         handoffFilePath,
+        handoffsDir: workspace,
         handoffPollIntervalMs: 5,
         forceKillWaitMs: 20,
       });
@@ -548,6 +559,7 @@ describe('runAgentic', () => {
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
     });
 
     // Verify the spy captured exactly the runner-registered listener.
@@ -569,6 +581,7 @@ describe('runAgentic', () => {
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
     });
 
     const lines = ambiguousCauseLines();
@@ -595,6 +608,7 @@ describe('runAgentic', () => {
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
     });
 
     expect(ambiguousCauseLines().join('\n')).toContain(
@@ -619,6 +633,7 @@ describe('runAgentic', () => {
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
     });
 
     const text = ambiguousCauseLines().join('\n');
@@ -643,6 +658,7 @@ describe('runAgentic', () => {
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
     });
 
     expect(localCapture.handlers).toHaveLength(1);
@@ -676,6 +692,7 @@ describe('runAgentic', () => {
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
     });
 
     expect(localCapture.handlers).toHaveLength(1);
@@ -706,6 +723,7 @@ describe('runAgentic', () => {
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
     });
 
     expect(ambiguousCauseLines().join('\n')).toContain('invalid JSON');
@@ -724,6 +742,7 @@ describe('runAgentic', () => {
         definition: makeDefinition(),
         invocationContext: defaultInvocation('C:\\workspace'),
         handoffFilePath,
+        handoffsDir: workspace,
       });
 
       // Adapter behavior is covered in detail by the adaptSpawnForWindowsShim

@@ -1,4 +1,4 @@
-import { basename, dirname } from 'path';
+import { basename, dirname, join } from 'path';
 import * as pc from 'picocolors';
 import { getRunNxBaseCommand } from '../../../utils/child-process';
 import { FileChange } from '../../../generators/tree';
@@ -8,6 +8,7 @@ import {
   getPackageManagerCommand,
 } from '../../../utils/package-manager';
 import { resetSgrAfterAgent } from '../migrate-output';
+import { resolveFormatCommand } from './format-command';
 import { mkdirSafely, stepHandoffPath } from './handoff';
 import { buildGenericValidationUserPrompt } from './prompts/generic-validation';
 import { buildHybridPromptUserPrompt } from './prompts/hybrid-prompt-migration';
@@ -15,7 +16,11 @@ import { buildPromptMigrationUserPrompt } from './prompts/prompt-migration';
 import { AgenticPromptMode, buildSystemPrompt } from './prompts/system-prompt';
 import { getAgentDefinition } from './definitions';
 import { runAgentic } from './runner';
-import { EnabledResolvedAgentic, HandoffOutcome } from './types';
+import {
+  EnabledResolvedAgentic,
+  HANDOFFS_DIR_NAME,
+  HandoffOutcome,
+} from './types';
 
 /**
  * Context describing the deterministic (generator) half of a migration, used
@@ -108,12 +113,20 @@ export async function runAgenticPromptStep(
     `handoff directory for ${migration.name}`
   );
   const pm = detectPackageManager(root);
+  const pmCommand = getPackageManagerCommand(pm, root);
   const systemContext = buildSystemPrompt({
     workspaceRoot: root,
     handoffFileAbsolutePath: handoffFilePath,
     packageManager: pm,
-    nxInvocation: getRunNxBaseCommand(getPackageManagerCommand(pm, root), root),
+    nxInvocation: getRunNxBaseCommand(pmCommand, root),
     mode,
+    pmExec: pmCommand.exec,
+    // Validation prompts carry no format rule, so don't probe the workspace
+    // (detectFormatter can warn) for a command the prompt would discard.
+    formatCommand:
+      mode === 'generic-validation'
+        ? null
+        : resolveFormatCommand(root, pmCommand.exec),
   });
 
   let userPrompt: string;
@@ -167,6 +180,7 @@ export async function runAgenticPromptStep(
       runDirName: basename(runDir),
     },
     handoffFilePath,
+    handoffsDir: join(runDir, HANDOFFS_DIR_NAME),
   });
 
   // Some agent TUIs leave cursor/SGR state behind on exit. Reset before our

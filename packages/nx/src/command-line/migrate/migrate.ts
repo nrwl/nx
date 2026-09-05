@@ -138,6 +138,7 @@ import {
   commitCheckpointBeforeMigrations,
   commitMigrationIfRequested,
   confirmMigrationCommitsOnDefaultBranch,
+  currentBranchIfDefault,
   resolveCreateCommits,
 } from './migrate-commits';
 import {
@@ -3284,17 +3285,24 @@ async function runMigrations(
     if (createCommitsWarning) {
       output.warn({ title: createCommitsWarning });
     }
-    // The run commits on the user's behalf across many invocations, so the
-    // default-branch confirmation belongs here, once, before any of them.
-    if (
-      effectiveCreateCommits &&
-      canPrompt(opts.interactive) &&
-      !(await confirmMigrationCommitsOnDefaultBranch(
-        root,
-        'running migrations'
-      ))
-    ) {
-      return;
+    // The run commits on the user's behalf across many invocations and the
+    // agent driving it cannot answer a terminal prompt, so a commit policy the
+    // user never asked for stops the run on the default branch before any of
+    // them. `--create-commits` or nx.json `migrate.createCommits` is that ask.
+    if (effectiveCreateCommits && shouldCreateCommits === undefined) {
+      const defaultBranch = currentBranchIfDefault(root);
+      if (defaultBranch) {
+        output.log({
+          title: `Not starting the run: you are on the default branch '${defaultBranch}' and nx migrate would create a commit for each migration on it.`,
+          bodyLines: [
+            'Ask the user how to proceed, then either:',
+            '- re-run with --create-commits to commit on this branch for this run,',
+            '- set "migrate": { "createCommits": true } in nx.json to always allow it, then re-run,',
+            '- or switch to another branch and re-run.',
+          ],
+        });
+        return;
+      }
     }
     const { packageJson: orchestratorNxPackageJson } = readModulePackageJson(
       'nx',
@@ -3311,6 +3319,7 @@ async function runMigrations(
       // what the user asked for.
       skipInstall: shouldSkipInstall,
       installedNxVersion: orchestratorNxPackageJson.version,
+      validate: opts.validate,
     });
   }
 
