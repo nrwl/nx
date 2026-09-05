@@ -1,0 +1,74 @@
+<%_ if (rspackPluginOptions) { _%>
+const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+<%_ if (isNest) { _%>
+const rspack = require('@rspack/core');
+<%_ } _%>
+const { join } = require('path');
+
+module.exports = {
+  output: {
+    path: join(__dirname, '<%= rspackPluginOptions.outputPath %>'),
+    clean: true,
+  },
+<%_ if (isNest) { _%>
+  optimization: {
+    minimizer: [
+      // Nest resolves providers by class name, so minification must not rename
+      // classes or functions.
+      new rspack.SwcJsMinimizerRspackPlugin({
+        minimizerOptions: {
+          compress: { keep_classnames: true, keep_fnames: true },
+          mangle: { keep_classnames: true, keep_fnames: true },
+        },
+      }),
+    ],
+  },
+<%_ } _%>
+  plugins: [
+    new NxAppRspackPlugin({
+      target: 'node',
+      main: '<%= rspackPluginOptions.main %>',
+      tsConfig: '<%= rspackPluginOptions.tsConfig %>',
+      assets: <%- JSON.stringify(rspackPluginOptions.assets) %>,
+      optimization: false,
+      outputHashing: 'none',
+      generatePackageJson: <%= rspackPluginOptions.generatePackageJson %>,
+      sourceMap: true,
+    })
+  ],
+};
+<%_ } else { _%>
+const { composePlugins, withNx } = require('@nx/rspack');
+<%_ if (isNest) { _%>
+const rspack = require('@rspack/core');
+<%_ } _%>
+
+// Nx plugins for rspack.
+module.exports = composePlugins(
+  withNx({
+    target: 'node',
+  }),
+  (config) => {
+    config.output = { ...config.output, clean: true };
+    config.devtool = 'source-map';
+<%_ if (isNest) { _%>
+    // Nest resolves providers by class name, so minification must not rename
+    // classes or functions.
+    config.optimization = {
+      ...config.optimization,
+      minimizer: [
+        new rspack.SwcJsMinimizerRspackPlugin({
+          minimizerOptions: {
+            compress: { keep_classnames: true, keep_fnames: true },
+            mangle: { keep_classnames: true, keep_fnames: true },
+          },
+        }),
+      ],
+    };
+<%_ } _%>
+    // Update the rspack config as needed here.
+    // e.g. `config.plugins.push(new MyPlugin())`
+    return config;
+  }
+);
+<%_ } _%>

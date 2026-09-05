@@ -31,6 +31,7 @@ export async function normalizeOptions(
     addPlugin,
     ...options,
     strict: options.strict ?? false,
+    bundler: options.bundler ?? 'webpack',
     appProjectName,
     appProjectRoot,
     linter: await normalizeLinterOption(tree, options.linter),
@@ -56,7 +57,7 @@ export function toNodeApplicationGeneratorOptions(
     e2eTestRunner: options.e2eTestRunner,
     enableTypedLinting: isTypedLintingEnabled(options),
     rootProject: options.rootProject,
-    bundler: 'webpack', // Some features require webpack plugins such as TS transformers
+    bundler: options.bundler,
     isNest: true,
     addPlugin: options.addPlugin,
     useProjectJson: options.useProjectJson,
