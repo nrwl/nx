@@ -30,6 +30,10 @@ describe('release-publish executor', () => {
   const mockDetectPackageManager = detectPackageManager as jest.MockedFunction<
     typeof detectPackageManager
   >;
+  const mockIsPnpmV11Plus =
+    npmConfigModule.isPnpmV11Plus as jest.MockedFunction<
+      typeof npmConfigModule.isPnpmV11Plus
+    >;
   const mockParseRegistryOptions =
     npmConfigModule.parseRegistryOptions as jest.MockedFunction<
       typeof npmConfigModule.parseRegistryOptions
@@ -41,6 +45,7 @@ describe('release-publish executor', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockDetectPackageManager.mockReturnValue('npm');
+    mockIsPnpmV11Plus.mockReturnValue(false);
     jest.spyOn(console, 'log').mockImplementation();
     jest.spyOn(console, 'warn').mockImplementation();
     jest.spyOn(console, 'error').mockImplementation();
@@ -107,6 +112,51 @@ describe('release-publish executor', () => {
         throw error;
       });
     }
+
+    it('should publish a new package when pnpm v11 reports ERR_PNPM_FETCH_404', async () => {
+      mockDetectPackageManager.mockReturnValue('pnpm');
+      mockIsPnpmV11Plus.mockReturnValue(true);
+      mockExecSync.mockReset();
+
+      mockExecSync
+        .mockImplementationOnce(() => {
+          const error: any = new Error('pnpm view failed');
+          error.stdout = Buffer.from(
+            JSON.stringify({
+              error: { code: 'ERR_PNPM_FETCH_404' },
+            })
+          );
+          error.stderr = Buffer.from('');
+          throw error;
+        })
+        .mockReturnValueOnce(Buffer.from('{}') as any);
+
+      jest.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue({
+        beforeJsonData: '',
+        jsonData: {
+          id: '@scope/test-package@1.0.0',
+          name: '@scope/test-package',
+          version: '1.0.0',
+          size: 100,
+          unpackedSize: 200,
+          shasum: 'abc123',
+          integrity: 'sha512-abc',
+          filename: 'test-package-1.0.0.tgz',
+          files: [],
+          entryCount: 1,
+          bundled: [],
+        },
+        afterJsonData: '',
+      } as any);
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(true);
+      expect(mockExecSync).toHaveBeenCalledWith(
+        expect.stringMatching(/^pnpm publish/),
+        expect.anything()
+      );
+    });
 
     it('should skip publishing when pnpm reports that the version was previously published', async () => {
       mockDetectPackageManager.mockReturnValue('pnpm');
@@ -511,8 +561,8 @@ describe('release-publish executor', () => {
       );
     });
 
-    it('should return failure when pm is not bun and npm is not installed', async () => {
-      mockDetectPackageManager.mockReturnValue('pnpm');
+    it('should return failure when pm requires npm (npm/yarn) and npm is not installed', async () => {
+      mockDetectPackageManager.mockReturnValue('yarn');
       mockExecSync.mockReset();
 
       // npm --version throws (npm not installed)
@@ -527,8 +577,118 @@ describe('release-publish executor', () => {
         expect.stringContaining('npm was not found in the current environment')
       );
       expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining('"pnpm"')
+        expect.stringContaining('`yarn`')
       );
+    });
+
+    it('should return failure for pnpm < v11 without npm (pnpm 10 and below still need npm)', async () => {
+      mockDetectPackageManager.mockReturnValue('pnpm');
+      mockIsPnpmV11Plus.mockReturnValue(false);
+      mockExecSync.mockReset();
+
+      // npm --version throws (npm not installed)
+      mockExecSync.mockImplementationOnce(() => {
+        throw new Error('Command not found: npm');
+      });
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(false);
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining('npm was not found in the current environment')
+      );
+    });
+
+    it('should publish via pnpm v11+ without npm on PATH (pnpm provides its own view/dist-tag)', async () => {
+      mockDetectPackageManager.mockReturnValue('pnpm');
+      mockIsPnpmV11Plus.mockReturnValue(true);
+      mockExecSync.mockReset();
+
+      mockExecSync
+        // pnpm view call (no npm --version probe at all for pnpm v11+)
+        .mockReturnValueOnce(
+          Buffer.from(
+            JSON.stringify({
+              versions: ['0.9.0'],
+              'dist-tags': { latest: '0.9.0' },
+            })
+          )
+        )
+        // pnpm publish call
+        .mockReturnValueOnce(Buffer.from('{}') as any);
+
+      jest.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue({
+        beforeJsonData: '',
+        jsonData: {
+          id: '@scope/test-package@1.0.0',
+          name: '@scope/test-package',
+          version: '1.0.0',
+          size: 100,
+          unpackedSize: 200,
+          shasum: 'abc123',
+          integrity: 'sha512-abc',
+          filename: 'test-package-1.0.0.tgz',
+          files: [],
+          entryCount: 1,
+          bundled: [],
+        },
+        afterJsonData: '',
+      } as any);
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(true);
+      // npm is never invoked for pnpm v11+ — not even the availability probe
+      expect(mockExecSync).not.toHaveBeenCalledWith(
+        'npm --version',
+        expect.anything()
+      );
+      // view used pnpm, not npm (anchor to avoid "pnpm view" matching "npm view")
+      expect(mockExecSync).toHaveBeenCalledWith(
+        expect.stringMatching(/^pnpm view/),
+        expect.anything()
+      );
+      expect(mockExecSync).not.toHaveBeenCalledWith(
+        expect.stringMatching(/^npm view/),
+        expect.anything()
+      );
+      // publish used pnpm
+      expect(mockExecSync).toHaveBeenCalledWith(
+        expect.stringContaining('pnpm publish'),
+        expect.anything()
+      );
+      // did not hard-error about missing npm
+      expect(console.error).not.toHaveBeenCalledWith(
+        expect.stringContaining('npm was not found in the current environment')
+      );
+    });
+
+    it('should never invoke npm for pnpm v11+ even when npm is installed', async () => {
+      mockDetectPackageManager.mockReturnValue('pnpm');
+      mockIsPnpmV11Plus.mockReturnValue(true);
+      mockExecSync.mockReset();
+
+      mockExecSync
+        // pnpm view: latest dist-tag already points at the current version
+        .mockReturnValueOnce(
+          Buffer.from(
+            JSON.stringify({
+              versions: ['1.0.0'],
+              'dist-tags': { latest: '1.0.0' },
+            })
+          )
+        );
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(true);
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining('already exists')
+      );
+      // no npm invocation whatsoever: no probe, no view, no dist-tag, no publish
+      const invokedCommands = mockExecSync.mock.calls.map((c) => c[0]);
+      expect(invokedCommands).toHaveLength(1);
+      expect(invokedCommands[0]).toMatch(/^pnpm view/);
     });
   });
 });
