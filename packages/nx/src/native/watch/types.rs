@@ -1,39 +1,61 @@
+use std::cell::OnceCell;
 use std::fs::{self, Metadata};
 use std::io;
 use std::path::{Path, PathBuf};
 
-use notify::event::{CreateKind, ModifyKind, RenameMode};
+use notify::event::{CreateKind, ModifyKind, RemoveKind, RenameMode};
 use notify::{Event, EventKind};
 use tracing::trace;
 
 use crate::native::watch::utils::canonicalize_event_paths;
 
-/// A notify event enriched with a per-path metadata stat. The metadata is
-/// computed once when the event arrives and reused everywhere downstream
-/// (filter, new-directory detection, transform) instead of re-statting.
+/// A notify event with a per-path stat computed on demand. A stat is a
+/// syscall (on Windows a `CreateFileW` + `GetFileInformationByHandle`), and
+/// most events never need it: the event kind already says file-vs-directory,
+/// and filtered events are discarded before any consumer looks. So the stat
+/// is deferred to first access and skipped whenever the kind answers first.
 pub(super) struct RawWatchEvent {
     pub event: Event,
-    /// Parallel to `event.paths` — one stat result per path.
-    pub metadata: Vec<io::Result<Metadata>>,
+    /// Parallel to `event.paths` — a lazily-populated stat per path.
+    metadata: Vec<OnceCell<io::Result<Metadata>>>,
 }
 
 impl RawWatchEvent {
     pub fn new(event: Event) -> Self {
         let event = canonicalize_event_paths(&event);
-        let metadata = event.paths.iter().map(fs::metadata).collect();
+        let metadata = event.paths.iter().map(|_| OnceCell::new()).collect();
         Self { event, metadata }
     }
 
-    pub fn paths(&self) -> impl Iterator<Item = (&Path, &io::Result<Metadata>)> {
-        self.event
-            .paths
-            .iter()
-            .zip(self.metadata.iter())
-            .map(|(p, m)| (p.as_path(), m))
+    fn metadata_at(&self, index: usize) -> &io::Result<Metadata> {
+        self.metadata[index].get_or_init(|| fs::metadata(&self.event.paths[index]))
     }
 
-    pub fn first(&self) -> Option<(&Path, &io::Result<Metadata>)> {
-        self.paths().next()
+    /// Whether the path at `index` is a directory, answered from the event
+    /// kind when notify reports it definitively and only otherwise by a stat.
+    pub(super) fn is_dir_at(&self, index: usize) -> bool {
+        match is_dir_from_kind(&self.event.kind) {
+            Some(is_dir) => is_dir,
+            None => meta_is_dir(self.metadata_at(index)),
+        }
+    }
+
+    /// Whether the path at `index` exists. Always a stat — the kind cannot
+    /// confirm a removal against the atomic-rename race, which is its one use.
+    pub(super) fn exists_at(&self, index: usize) -> bool {
+        meta_exists(self.metadata_at(index))
+    }
+
+    /// Iterate `(path, stat)`, forcing the lazy stat for each path. Used by
+    /// consumers that genuinely need metadata (macOS classification, the
+    /// trace log). Kind-answerable questions should use `is_dir_at` instead.
+    pub fn paths(&self) -> impl Iterator<Item = (&Path, &io::Result<Metadata>)> + '_ {
+        (0..self.event.paths.len())
+            .map(move |i| (self.event.paths[i].as_path(), self.metadata_at(i)))
+    }
+
+    pub fn first_path(&self) -> Option<&Path> {
+        self.event.paths.first().map(PathBuf::as_path)
     }
 
     pub fn kind(&self) -> &EventKind {
@@ -49,6 +71,21 @@ pub(super) fn meta_exists(metadata: &io::Result<Metadata>) -> bool {
     metadata.is_ok()
 }
 
+/// `Some` only when notify states file-vs-directory definitively. `None` for
+/// ambiguous kinds (`Any`, renames), which must fall back to a stat — a wrong
+/// guess would send a directory path to JS or skip a real file.
+pub(super) fn is_dir_from_kind(kind: &EventKind) -> Option<bool> {
+    match kind {
+        EventKind::Create(CreateKind::File) => Some(false),
+        EventKind::Create(CreateKind::Folder) => Some(true),
+        EventKind::Remove(RemoveKind::File) => Some(false),
+        EventKind::Remove(RemoveKind::Folder) => Some(true),
+        // Directories carry no data stream, so a data change is always a file.
+        EventKind::Modify(ModifyKind::Data(_)) => Some(false),
+        _ => None,
+    }
+}
+
 #[napi(string_enum)]
 #[derive(Debug, Clone, Copy)]
 pub enum EventType {
@@ -58,6 +95,10 @@ pub enum EventType {
     update,
     #[allow(non_camel_case_types)]
     create,
+    /// The kernel dropped events (e.g. an inotify queue overflow); per-path
+    /// events cannot be trusted complete and consumers must re-walk.
+    #[allow(non_camel_case_types)]
+    rescan,
 }
 
 #[derive(Debug, Clone)]
@@ -93,7 +134,7 @@ pub(super) fn transform_event_to_watch_events(
     value: &RawWatchEvent,
     origin: &str,
 ) -> anyhow::Result<Vec<WatchEventInternal>> {
-    let Some((path_ref, metadata)) = value.first() else {
+    let Some(path_ref) = value.first_path() else {
         let error_msg = "unable to get path from the event";
         trace!(event = ?value.event, error_msg);
         anyhow::bail!(error_msg)
@@ -107,9 +148,9 @@ pub(super) fn transform_event_to_watch_events(
     // otherwise misclassify a Modify/Create event as Delete — which then
     // makes updateFilesInContext remove the still-existing file from the
     // workspace context, silently dropping projects from the project
-    // graph. For non-Remove kinds, fall through to the platform-specific
-    // handling which derives the type from event_kind without re-statting.
-    if !meta_exists(metadata) && matches!(event_kind, EventKind::Remove(_)) {
+    // graph. The kind check is first so the confirming stat runs only on
+    // Remove events, never on a create/write storm.
+    if matches!(event_kind, EventKind::Remove(_)) && !value.exists_at(0) {
         return Ok(vec![WatchEventInternal {
             path: relative_to_origin(path_ref, origin),
             r#type: EventType::delete,
@@ -119,6 +160,10 @@ pub(super) fn transform_event_to_watch_events(
     #[cfg(target_os = "macos")]
     {
         use std::time::Duration;
+
+        // FSEvents kinds are unreliable, so macOS classifies from the stat:
+        // this is the one branch that genuinely needs metadata per event.
+        let metadata = value.metadata_at(0);
 
         // Skip directory events
         if meta_is_dir(metadata) {
@@ -165,8 +210,9 @@ pub(super) fn transform_event_to_watch_events(
 
     #[cfg(target_os = "windows")]
     {
-        // Skip directory events
-        if meta_is_dir(metadata) {
+        // Skip directory events. is_dir_at answers from the kind first, so a
+        // precise Create(File)/Modify(Data) never stats here.
+        if value.is_dir_at(0) {
             return Ok(vec![]);
         }
         Ok(create_watch_event_internal(origin, event_kind, path_ref))

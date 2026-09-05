@@ -264,6 +264,13 @@ export declare class WorkspaceContext {
   incrementalUpdate(updatedFiles: Array<string>, deletedFiles: Array<string>): Record<string, string>
   updateProjectFiles(projectRootMappings: Record<string, string>, projectFiles: ExternalObject<Record<string, Array<FileData>>>, globalFiles: ExternalObject<Array<FileData>>, updatedFiles: Record<string, string>, deletedFiles: Array<string>): UpdatedWorkspaceFiles
   allFileData(): Array<FileData>
+  /**
+   * Recover from dropped watch events: re-walk, and report what changed
+   * against the map this context was holding. The fresh map is adopted, so
+   * the caller only has to feed the returned changes through its normal
+   * recomputation path.
+   */
+  rescanAndDiff(): RescanDiff
   getFilesInDirectory(directory: string): Array<string>
 }
 
@@ -357,7 +364,12 @@ export interface EventDimensions {
 export declare const enum EventType {
   delete = 'delete',
   update = 'update',
-  create = 'create'
+  create = 'create',
+  /**
+   * The kernel dropped events (e.g. an inotify queue overflow); per-path
+   * events cannot be trusted complete and consumers must re-walk.
+   */
+  rescan = 'rescan'
 }
 
 export declare function expandOutputs(directory: string, entries: Array<string>): Array<string>
@@ -681,6 +693,13 @@ export interface ProjectGraph {
 }
 
 export declare function remove(src: string): void
+
+/** What a rescan re-walk found had changed while the watcher was not being told. */
+export interface RescanDiff {
+  createdFiles: Array<FileData>
+  updatedFiles: Array<FileData>
+  deletedFiles: Array<string>
+}
 
 export declare function restoreTerminal(): void
 

@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use tracing::trace;
 
 use crate::native::watch::git_utils::get_gitignore_files;
-use crate::native::watch::types::{RawWatchEvent, meta_is_dir};
+use crate::native::watch::types::RawWatchEvent;
 use crate::native::watch::utils::get_nx_ignore;
 
 #[derive(Debug)]
@@ -98,15 +98,17 @@ impl WatchFilterer {
             }
         }
 
-        // Check each path against ignore rules.
-        for (path, metadata) in event.paths() {
+        // Check each path against ignore rules. is_dir_at answers from the
+        // event kind when it can, so a filtered event with a precise kind is
+        // rejected without ever statting it.
+        for (index, path) in event.event.paths.iter().enumerate() {
             // Reject paths ending with ~ (editor backup files)
             if path.display().to_string().ends_with('~') {
                 trace!(?path, "path ends with ~ - rejected");
                 return false;
             }
 
-            if !self.filter_path(path, meta_is_dir(metadata)) {
+            if !self.filter_path(path, event.is_dir_at(index)) {
                 return false;
             }
         }

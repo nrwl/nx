@@ -146,6 +146,19 @@ export async function getAllFileDataInContext(workspaceRoot: string) {
   return daemonClient.getWorkspaceContextFileData();
 }
 
+/**
+ * Re-walk the workspace and report what changed against the map the context is
+ * holding, adopting the fresh map. Used to recover after the kernel dropped
+ * watch events, so the per-path stream cannot be trusted complete.
+ *
+ * Daemon-only: it mutates the context in place, which is safe only where the
+ * context is the single source of truth for watched state.
+ */
+export function rescanAndDiffInContext(workspaceRoot: string) {
+  ensureContextAvailable(workspaceRoot);
+  return workspaceContext.rescanAndDiff();
+}
+
 export async function getFilesInDirectoryUsingContext(
   workspaceRoot: string,
   dir: string

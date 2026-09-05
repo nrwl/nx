@@ -8,7 +8,7 @@ use crate::native::glob::glob_files::glob_files;
 use crate::native::hasher::hash;
 use crate::native::project_graph::utils::{ProjectRootMappings, find_project_for_path};
 use crate::native::types::FileData;
-use crate::native::utils::{Normalize, NxCondvar, NxMutex, path::get_child_files};
+use crate::native::utils::{Normalize, NxCondvar, NxMutex, gather_stamp, path::get_child_files};
 use crate::native::workspace::files_archive::{read_files_archive, write_files_archive};
 use crate::native::workspace::files_hashing::{full_files_hash, selective_files_hash};
 use crate::native::workspace::types::{
@@ -24,16 +24,62 @@ use xxhash_rust::xxh3;
 pub struct WorkspaceContext {
     pub workspace_root: String,
     workspace_root_path: PathBuf,
+    /// Retained so `rescan_and_diff` can re-gather through the same files
+    /// archive the initial gather used, keeping the walk incremental.
+    cache_dir: String,
     files_worker: FilesWorker,
 }
 
 type Files = Vec<(PathBuf, String)>;
+
+/// What a rescan re-walk found had changed while the watcher was not being told.
+#[napi(object)]
+#[derive(Default)]
+pub struct RescanDiff {
+    pub created_files: Vec<FileData>,
+    pub updated_files: Vec<FileData>,
+    pub deleted_files: Vec<String>,
+}
+
+fn diff_files(before: &Files, after: &Files) -> RescanDiff {
+    // Keyed lookup with `remove`, so "absent" and "present with an odd value"
+    // stay distinguishable — a map keyed on the hash could not tell them apart,
+    // and a path mistaken for absent would be reported created AND deleted.
+    let mut previous: HashMap<&PathBuf, &String> =
+        before.iter().map(|(path, hash)| (path, hash)).collect();
+    let mut created_files = Vec::new();
+    let mut updated_files = Vec::new();
+
+    for (path, hash) in after {
+        let file = FileData {
+            file: path.to_normalized_string(),
+            hash: hash.clone(),
+        };
+        match previous.remove(path) {
+            None => created_files.push(file),
+            Some(previous_hash) if previous_hash != hash => updated_files.push(file),
+            Some(_) => {}
+        }
+    }
+
+    RescanDiff {
+        // Whatever the walk did not find is gone. Ground truth, not inference
+        // from a prior event stream that is by definition incomplete here.
+        deleted_files: previous.keys().map(|p| p.to_normalized_string()).collect(),
+        created_files,
+        updated_files,
+    }
+}
 
 fn gather_and_hash_files(workspace_root: &Path, cache_dir: String) -> Vec<(PathBuf, String)> {
     let archived_files = read_files_archive(&cache_dir);
 
     trace!("Gathering files in {}", workspace_root.display());
     let now = std::time::Instant::now();
+    // Taken before the walk, not after: an entry read at any point from here on
+    // may be rewritten within its own mtime tick, so the next gather has to
+    // re-hash it rather than trust the timestamp. See `selective_files_hash`.
+    let gathered_at = gather_stamp();
     let file_hashes = if let Some(archived_files) = archived_files {
         selective_files_hash(workspace_root, archived_files)
     } else {
@@ -47,7 +93,7 @@ fn gather_and_hash_files(workspace_root: &Path, cache_dir: String) -> Vec<(PathB
     files.par_sort();
     trace!("hashed and sorted files in {:?}", now.elapsed());
 
-    write_files_archive(&cache_dir, file_hashes);
+    write_files_archive(&cache_dir, file_hashes.with_gathered_at(gathered_at));
 
     files
 }
@@ -142,6 +188,33 @@ impl FilesWorker {
         }
     }
 
+    /// Re-walk the workspace, diff it against the map we are holding, then adopt
+    /// the fresh map. Used to recover after the kernel dropped watch events, so
+    /// the per-path stream cannot be trusted complete.
+    fn rescan_and_diff(&self, workspace_root: &Path, cache_dir: String) -> RescanDiff {
+        let Some(files_sync) = &self.0 else {
+            return RescanDiff::default();
+        };
+
+        // Walk before locking. The walk is the slow part and readers should not
+        // block on it. Nothing can interleave in practice — `rescanAndDiff` is a
+        // synchronous napi call on the daemon's single JS thread, so no
+        // `incremental_update` runs during it. Note the downstream asymmetry if
+        // that ever changes: an over-reported create/update is collapsed by
+        // re-hashing, but an over-reported delete is taken at face value.
+        let fresh = gather_and_hash_files(workspace_root, cache_dir);
+
+        let (files_lock, cvar) = files_sync.deref();
+        let files = files_lock.lock().expect("Should be able to lock files");
+        let mut files = cvar
+            .wait(files, |guard| guard.len() == 0)
+            .expect("Should be able to wait for files");
+
+        let diff = diff_files(&files, &fresh);
+        *files = fresh;
+        diff
+    }
+
     pub fn update_files(
         &self,
         workspace_root_path: &Path,
@@ -219,6 +292,7 @@ impl WorkspaceContext {
             files_worker: FilesWorker::gather_files(&workspace_root_path, cache_dir.clone()),
             workspace_root,
             workspace_root_path,
+            cache_dir,
         }
     }
 
@@ -425,6 +499,16 @@ impl WorkspaceContext {
         self.files_worker.get_files()
     }
 
+    /// Recover from dropped watch events: re-walk, and report what changed
+    /// against the map this context was holding. The fresh map is adopted, so
+    /// the caller only has to feed the returned changes through its normal
+    /// recomputation path.
+    #[napi]
+    pub fn rescan_and_diff(&self) -> RescanDiff {
+        self.files_worker
+            .rescan_and_diff(&self.workspace_root_path, self.cache_dir.clone())
+    }
+
     #[napi]
     pub fn get_files_in_directory(&self, directory: String) -> Vec<String> {
         get_child_files(directory, self.files_worker.get_files())
@@ -440,6 +524,43 @@ impl Drop for WorkspaceContext {
 
 #[cfg(test)]
 mod tests {
+
+    #[test]
+    fn diff_files_classifies_created_updated_unchanged_and_deleted() {
+        use super::diff_files;
+        use std::path::PathBuf;
+
+        let before = vec![
+            (PathBuf::from("a.ts"), String::from("1")),
+            (PathBuf::from("b.ts"), String::from("2")),
+            (PathBuf::from("c.ts"), String::from("3")),
+        ];
+        let after = vec![
+            (PathBuf::from("b.ts"), String::from("2")),
+            (PathBuf::from("c.ts"), String::from("changed")),
+            (PathBuf::from("d.ts"), String::from("4")),
+        ];
+
+        let diff = diff_files(&before, &after);
+
+        // Created carries its hash: the collector records one for every file.
+        assert_eq!(
+            diff.created_files
+                .iter()
+                .map(|f| (f.file.as_str(), f.hash.as_str()))
+                .collect::<Vec<_>>(),
+            vec![("d.ts", "4")]
+        );
+        // b.ts is unchanged and must not appear anywhere.
+        assert_eq!(
+            diff.updated_files
+                .iter()
+                .map(|f| (f.file.as_str(), f.hash.as_str()))
+                .collect::<Vec<_>>(),
+            vec![("c.ts", "changed")]
+        );
+        assert_eq!(diff.deleted_files, vec![String::from("a.ts")]);
+    }
     use super::*;
     use assert_fs::TempDir;
     use assert_fs::prelude::*;

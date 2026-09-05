@@ -134,6 +134,13 @@ vi.doMock(workspaceContextPath, async () => {
     getAllFileDataInContext: guarded('getAllFileDataInContext', () =>
       Promise.resolve([])
     ),
+    // Guarded like its siblings: a rescan against the real workspace root would
+    // re-walk this repo. Specs that exercise it point at a TempFs root.
+    rescanAndDiffInContext: guarded('rescanAndDiffInContext', () => ({
+      createdFiles: [],
+      updatedFiles: [],
+      deletedFiles: [],
+    })),
     getFilesInDirectoryUsingContext: guarded(
       'getFilesInDirectoryUsingContext',
       () => Promise.resolve([])
