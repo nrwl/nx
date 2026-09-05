@@ -1,4 +1,4 @@
-import { getCatalogManager } from '@nx/devkit/internal';
+import { getCatalogManager, safeSpawn } from '@nx/devkit/internal';
 import {
   detectPackageManager,
   PackageManager,
@@ -8,7 +8,6 @@ import {
   Tree,
   workspaceRoot,
 } from '@nx/devkit';
-import { exec } from 'node:child_process';
 import { join } from 'node:path';
 import { applyEdits, FormattingOptions, modify } from 'jsonc-parser';
 import { validRange } from 'semver';
@@ -120,29 +119,47 @@ export default class JsVersionActions extends VersionActions {
     try {
       // Must be non-blocking async to allow spinner to render
       currentVersion = await new Promise<string>((resolve, reject) => {
-        exec(
-          `npm view ${packageName} version --"${registryConfigKey}=${registry}" --tag=${tag}`,
-          {
-            windowsHide: true,
-          },
-          (error, stdout, stderr) => {
-            if (error) {
-              return reject(error);
-            }
-            // Only reject on stderr if it contains actual errors, not just npm warnings
-            // npm 11+ writes "npm warn" messages to stderr even on successful commands
-            if (
-              stderr &&
-              !stderr
-                .trim()
-                .split('\n')
-                .every((line) => line.startsWith('npm warn'))
-            ) {
-              return reject(stderr);
-            }
-            return resolve(stdout.trim());
-          }
+        // registry and tag come from the workspace .npmrc, so they reach npm as
+        // arguments rather than through a shell.
+        const child = safeSpawn(
+          'npm',
+          [
+            'view',
+            packageName,
+            'version',
+            `--${registryConfigKey}=${registry}`,
+            `--tag=${tag}`,
+          ],
+          { stdio: ['ignore', 'pipe', 'pipe'] }
         );
+        let stdout = '';
+        let stderr = '';
+        child.stdout
+          .setEncoding('utf-8')
+          .on('data', (chunk) => (stdout += chunk));
+        child.stderr
+          .setEncoding('utf-8')
+          .on('data', (chunk) => (stderr += chunk));
+        child.on('error', reject);
+        child.on('close', (code) => {
+          if (code !== 0) {
+            return reject(
+              new Error(`npm view ${packageName} exited with code ${code}`)
+            );
+          }
+          // Only reject on stderr if it contains actual errors, not just npm warnings
+          // npm 11+ writes "npm warn" messages to stderr even on successful commands
+          if (
+            stderr &&
+            !stderr
+              .trim()
+              .split('\n')
+              .every((line) => line.startsWith('npm warn'))
+          ) {
+            return reject(stderr);
+          }
+          return resolve(stdout.trim());
+        });
       });
     } catch {}
 
