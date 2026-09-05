@@ -206,9 +206,11 @@ export function handleProjectGraphError(opts: { exitOnError: boolean }, e) {
     if (e instanceof ProjectGraphError) {
       let title = e.message;
 
+      // Mirrors handleErrors' ProjectGraphError branch (utils/handle-errors.ts):
+      // non-verbose output shows the nested messages, not the stack.
       const bodyLines = isVerbose
         ? [e.stack]
-        : ['Pass --verbose to see the stacktraces.'];
+        : e.getErrors().map((error) => error.message);
 
       output.error({
         title,

@@ -1,6 +1,6 @@
 import { isBuiltin } from 'node:module';
 import { dirname, join, posix, relative, isAbsolute } from 'node:path';
-import { clean, satisfies } from 'semver';
+import { clean } from 'semver';
 import type {
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
@@ -14,6 +14,7 @@ import { getPackageNameFromImportPath } from '../../../../utils/get-package-name
 import type { PackageJson } from '../../../../utils/package-json';
 import { normalizePath } from '../../../../utils/path';
 import { workspaceRoot } from '../../../../utils/workspace-root';
+import { matchDependencyToWorkspacePackage } from '../../utils/dependency-specifiers';
 import {
   getWorkspacePackagesMetadata,
   matchImportToWildcardEntryPointsToProjectMap,
@@ -360,46 +361,33 @@ export class TargetProjectLocator {
   ): string | null {
     this.packagesMetadata ??= getWorkspacePackagesMetadata(this.nodes);
 
-    const maybeDep = this.packagesMetadata.packageToProjectMap[dep];
-
-    const maybeDepMetadata = maybeDep?.data.metadata.js;
-
-    if (!maybeDepMetadata) {
-      return null;
-    }
-
-    const workspaceRegex = /^workspace:/;
-    const hasWorkspaceProtocol = workspaceRegex.test(packageVersion);
-    const normalizedRange = packageVersion.replace(workspaceRegex, '');
-
-    /**
-     * Regex is needed to test for workspace: protocol because following options are all valid:
-     *  - workspace:*
-     *  - workspace:^
-     *  - workspace:~
-     *  - workspace:foo@*
-     */
-    if (hasWorkspaceProtocol || normalizedRange === '*') {
-      return maybeDep?.name;
-    }
-
-    if (normalizedRange.startsWith('file:')) {
-      const targetPath = maybeDep?.data.root;
-
-      const normalizedPath = normalizedRange.replace('file:', '');
-      const resolvedPath = posix.join(dirname(packageJsonPath), normalizedPath);
-
-      if (targetPath === resolvedPath) {
-        return maybeDep?.name;
+    const match = matchDependencyToWorkspacePackage(
+      dep,
+      packageVersion,
+      (packageName) => {
+        const metadata =
+          this.packagesMetadata.packageToProjectMap[packageName]?.data.metadata
+            ?.js;
+        return metadata ? (metadata.packageVersion ?? null) : undefined;
       }
+    );
+    if (match) {
+      return this.packagesMetadata.packageToProjectMap[
+        match.requestedPackageName
+      ].name;
     }
 
-    if (
-      satisfies(maybeDepMetadata.packageVersion, normalizedRange, {
-        includePrerelease: true,
-      })
-    ) {
-      return maybeDep?.name;
+    // file: dependencies resolve by path against the source manifest directory
+    if (packageVersion.startsWith('file:')) {
+      const maybeDep = this.packagesMetadata.packageToProjectMap[dep];
+      if (!maybeDep?.data.metadata?.js) {
+        return null;
+      }
+      const normalizedPath = packageVersion.replace('file:', '');
+      const resolvedPath = posix.join(dirname(packageJsonPath), normalizedPath);
+      if (maybeDep.data.root === resolvedPath) {
+        return maybeDep.name;
+      }
     }
 
     return null;
