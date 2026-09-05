@@ -1,0 +1,87 @@
+# Fans the e2e suite out into three identical runs of the same commit, each
+# with its own NX_E2E_CI_CACHE_KEY (so no leg reads another's cached results)
+# and NX_CI_EXECUTION_ENV (so Nx Cloud records them as distinct executions).
+# Manual-only: flake rates are only worth measuring when someone is chasing one.
+name: test-e2e-stability
+
+on:
+  workflow_dispatch:
+
+env:
+  NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+  PNPM_HOME: ~/.pnpm
+  CARGO_INCREMENTAL: '0'
+  COREPACK_DEFAULT_TO_LATEST: '0'
+
+jobs:
+  e2e-stability:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        instance: [1, 2, 3]
+    env:
+      NX_BATCH_MODE: 'true'
+      NX_E2E_CI_CACHE_KEY: e2e-stability-${{ matrix.instance }}
+      NX_DAEMON: 'true'
+      NX_PERF_LOGGING: 'false'
+      NX_VERBOSE_LOGGING: 'false'
+      NX_NATIVE_LOGGING: 'false'
+      NX_E2E_RUN_E2E: 'true'
+      NX_CI_EXECUTION_ENV: linux-stability-${{ matrix.instance }}
+      NX_CLOUD_NO_TIMEOUTS: 'true'
+      NX_ALLOW_NON_CACHEABLE_DTE: 'true'
+      NX_CLOUD_EXPERIMENTAL_POLLING: 'true'
+      NX_CLOUD_CONTINUOUS_ASSIGNMENT: 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+          filter: tree:0
+
+      - name: Fetch Master
+        run: git fetch origin master:master
+        if: ${{ github.ref != 'refs/heads/master' }}
+
+      - name: Set SHAs
+        uses: nrwl/nx-set-shas@310288c04d90696f9f1bc27c5e3caea6642b53d4 # v5.0.0
+        with:
+          main-branch-name: 'master'
+
+      - name: Start CI Run
+        run: npx nx-cloud@next start-ci-run --distribute-on="./.nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
+
+      - name: Setup dev tools with mise
+        uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
+
+      - name: Enable corepack and install pnpm
+        run: |
+          corepack enable
+          corepack prepare --activate
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@48b5f213c81028ace310571dc5ec0fbbca0b2947 # v4.4.3
+
+      - name: Install project dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Restore .NET analyzer projects
+        run: dotnet restore nx.sln
+
+      - name: Run e2e
+        run: pnpm nx affected --targets=e2e,e2e-ci
+        timeout-minutes: 100
