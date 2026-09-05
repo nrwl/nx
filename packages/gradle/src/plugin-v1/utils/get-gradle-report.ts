@@ -433,7 +433,7 @@ export function processGradleDependencies(depsFile: string): Set<string> {
             .split(' ')?.[0];
         } else if (dep.includes('-> project')) {
           const [_, projectName] = dep.split('-> project');
-          targetProjectName = projectName.trim().split(' ')?.[0];
+          targetProjectName = projectName.trim().split(' ')?.[0].replace(/^'|'$/g, '');
         }
         if (targetProjectName) {
           dependedProjects.add(targetProjectName);
