@@ -78,11 +78,13 @@ import {
 } from 'fs';
 import { createHash } from 'crypto';
 import { tmpdir } from 'os';
+import { FileLock } from '../../../native';
 import { basename, dirname, join } from 'path';
 import { output } from '../../../utils/output';
 import { nxVersion } from '../../../utils/versions';
 import { runStepHandoffPath } from '../agentic/handoff';
 import { runOrchestratorInit, runOrchestratorReconcile } from './orchestrator';
+import { BrokerStaleRequestError, BrokerUnavailableError } from './broker';
 import { computePlanHash } from './run-id';
 import {
   findActiveRun,
@@ -1258,6 +1260,75 @@ describe('orchestrator', () => {
       expect(block.payload.instructions).toContain('abandon the run');
       expect(existsSync(join(dir, 'RUNBOOK.md'))).toBe(false);
       expect(readRunState(dir).steps[0].status).toBe('pending');
+    });
+
+    it('answers ready with the run identity, its root, the runbook path and the reconcile command', async () => {
+      const result = await runOrchestratorInit(
+        initInput({ migrations: [genMig('@nx/js', 'a')] })
+      );
+
+      const { runId } = findActiveRun(root).active;
+      expect(result).toEqual({
+        kind: 'ready',
+        runId,
+        runRoot: root,
+        runbookPath: join(runDir(root, runId), 'RUNBOOK.md'),
+        reconcileCommand: `npx nx migrate --run-id=${runId}`,
+      });
+      expect(result).toMatchObject({
+        reconcileCommand: lastBlock().payload.next,
+      });
+    });
+
+    it('answers refused when the runbook is missing and a different nx wrote the run', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+        planHash: computePlanHash(migrationsJson),
+        plan: migrationsJson.migrations,
+        nxVersion: '1.0.0',
+        runbook: false,
+      });
+
+      expect(await runOrchestratorInit(initInput(migrationsJson))).toEqual({
+        kind: 'refused',
+      });
+    });
+
+    it('creates the run and claims the analytics watermark without emitting anything when agent instructions are off', async () => {
+      const result = await runOrchestratorInit({
+        ...initInput({ migrations: [genMig('@nx/js', 'a')] }),
+        emitAgentInstructions: false,
+      });
+
+      expect(result).toMatchObject({ kind: 'ready', runRoot: root });
+      const { runId, state } = findActiveRun(root).active;
+      expect(existsSync(join(runDir(root, runId), 'RUNBOOK.md'))).toBe(true);
+      expect(state.analytics.startEmitted).toBe(true);
+      expect(mockInit).toHaveBeenCalledTimes(1);
+      expect(stdout).toBe('');
+      expect(logged).toEqual([]);
+    });
+
+    it('resumes the active run without emitting agent instructions when they are off', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+        planHash: computePlanHash(migrationsJson),
+        plan: migrationsJson.migrations,
+      });
+
+      const result = await runOrchestratorInit({
+        ...initInput(migrationsJson),
+        emitAgentInstructions: false,
+      });
+
+      expect(result).toMatchObject({ kind: 'ready', runId: 'run-1' });
+      expect(parseRunbookBlocks()).toHaveLength(0);
+      expect(parseBlocks()).toHaveLength(0);
+      expect(logged.map((l) => l.title)).toEqual([
+        'nx migrate: resuming run run-1',
+      ]);
     });
 
     it('replaces a non-regular entry at the runbook path with the re-rendered runbook', async () => {
@@ -2578,7 +2649,8 @@ describe('orchestrator', () => {
       expect(mockRunInstall).toHaveBeenCalledWith(
         root,
         'post-migration',
-        expect.stringContaining('--run-id=run-1')
+        expect.stringContaining('--run-id=run-1'),
+        undefined
       );
     });
 
@@ -2741,7 +2813,7 @@ describe('orchestrator', () => {
       await runOrchestratorReconcile({ root, runId: 'run-1' });
 
       expect(mockRunInstall).not.toHaveBeenCalled();
-      expect(mockLogSkippedInstall).toHaveBeenCalledWith(root);
+      expect(mockLogSkippedInstall).toHaveBeenCalledWith(root, undefined);
     });
 
     it('names the parse error when a corrupt handoff blocks the fold so the run cannot livelock', async () => {
@@ -3499,7 +3571,8 @@ describe('orchestrator', () => {
         expect(mockRunInstall).toHaveBeenCalledWith(
           root,
           'post-migration',
-          expect.stringContaining('--run-id=run-1')
+          expect.stringContaining('--run-id=run-1'),
+          undefined
         );
         expect(mockCommit).not.toHaveBeenCalled();
         expect(state.commits).toEqual([
@@ -3528,7 +3601,7 @@ describe('orchestrator', () => {
 
       expect(readRunState(dir).steps[0].status).toBe('skipped');
       expect(mockRunInstall).not.toHaveBeenCalled();
-      expect(mockLogSkippedInstall).toHaveBeenCalledWith(root);
+      expect(mockLogSkippedInstall).toHaveBeenCalledWith(root, undefined);
     });
 
     it('records the install failure when a skipped step left dependency edits that could not be installed', async () => {
@@ -4633,7 +4706,8 @@ describe('orchestrator', () => {
       expect(mockRunInstall).toHaveBeenCalledWith(
         root,
         'post-migration',
-        expect.stringContaining('--run-id=run-1')
+        expect.stringContaining('--run-id=run-1'),
+        undefined
       );
       expect(mockCommit).not.toHaveBeenCalled();
     });
@@ -5340,6 +5414,168 @@ describe('orchestrator', () => {
       // 'no-changes' records nothing; the ledger just misses the landed entry.
       expect(state.commits).toEqual([]);
       expect(mockCommit).toHaveBeenCalledTimes(2);
+    });
+  });
+  describe('reconcile: commits through the session broker', () => {
+    const nonce = 'deadbeef';
+
+    beforeEach(() => {
+      process.env.NX_MIGRATE_BROKER = nonce;
+    });
+
+    afterEach(() => {
+      delete process.env.NX_MIGRATE_BROKER;
+    });
+
+    // Holds the session lock as a live parent would, answers whichever request
+    // the run under test publishes, then settles with it.
+    async function answered<T>(
+      dir: string,
+      result: object,
+      start: () => Promise<T>
+    ): Promise<T> {
+      const brokerDir = join(dir, 'broker');
+      mkdirSync(brokerDir, { recursive: true });
+      const lock = new FileLock(join(brokerDir, `${nonce}.lock`));
+      lock.lock();
+      const pending = start();
+      let settled = false;
+      const watched = pending.then(
+        () => (settled = true),
+        () => (settled = true)
+      );
+      try {
+        for (let i = 0; i < 500 && !settled; i++) {
+          const request = readdirSync(brokerDir).find((f) =>
+            f.endsWith('.request.json')
+          );
+          if (request) {
+            writeFileSync(
+              join(brokerDir, request.replace('.request.json', '.result.json')),
+              JSON.stringify(result)
+            );
+            break;
+          }
+          await new Promise((resolve) => setTimeout(resolve, 10));
+        }
+      } finally {
+        lock.unlock();
+      }
+      await watched;
+      return pending;
+    }
+
+    function readRequest(dir: string): object {
+      const brokerDir = join(dir, 'broker');
+      const request = readdirSync(brokerDir).find((f) =>
+        f.endsWith('.request.json')
+      );
+      return JSON.parse(readFileSync(join(brokerDir, request), 'utf8'));
+    }
+
+    it('folds a completed prompt with the commit the session landed', async () => {
+      const dir = await parkedPromptStep({ createCommits: true });
+      writeHandoff(dir, '@nx/js', 'p', { status: 'success', summary: 'done' });
+
+      await answered(
+        dir,
+        {
+          kind: 'commit',
+          result: {
+            status: 'committed',
+            sha: 'face0004face0004face0004face0004face0004',
+          },
+          absorbedStepIds: ['step-0'],
+          output: [],
+        },
+        () => runOrchestratorReconcile({ root, runId: 'run-1' })
+      );
+
+      expect(mockCommit).not.toHaveBeenCalled();
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('succeeded');
+      expect(state.commits).toEqual([
+        {
+          kind: 'landed',
+          sha: 'face0004face0004face0004face0004face0004',
+          stepIds: ['step-1', 'step-0'],
+        },
+      ]);
+    });
+
+    it('leaves a fold for the next reconcile when the session answered stale', async () => {
+      const dir = await parkedPromptStep({ createCommits: true });
+      writeHandoff(dir, '@nx/js', 'p', { status: 'success', summary: 'done' });
+
+      await expect(
+        answered(dir, { kind: 'stale' }, () =>
+          runOrchestratorReconcile({ root, runId: 'run-1' })
+        )
+      ).rejects.toBeInstanceOf(BrokerStaleRequestError);
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('awaiting-prompt-outcome');
+      expect(state.commits).toEqual([]);
+      expect(existsSync(handoffPathIn(dir, '@nx/js', 'p'))).toBe(true);
+    });
+
+    it('installs what a skipped step left through the session', async () => {
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'failed', {
+            depsHashAtDispense: 'baseline-from-an-earlier-dispense',
+          }),
+        ],
+        createCommits: false,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await answered(dir, { kind: 'installed', output: [] }, () =>
+        runOrchestratorReconcile({ root, runId: 'run-1', stepAction: 'skip' })
+      );
+
+      expect(mockRunInstall).not.toHaveBeenCalled();
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('skipped');
+      expect(state.steps[0].installFailed).toBeUndefined();
+      expect(readRequest(dir)).toEqual({
+        kind: 'action-install',
+        stepId: 'step-1',
+        attempt: 1,
+        skipInstall: false,
+      });
+    });
+
+    it('leaves a fold that only installs for the next reconcile when the session is gone', async () => {
+      const dir = await parkedPromptStep({ createCommits: false });
+      mockStringifiedDeps.mockReturnValue('{"deps":"changed-by-the-prompt"}');
+      writeHandoff(dir, '@nx/js', 'p', { status: 'success', summary: 'done' });
+
+      await expect(
+        runOrchestratorReconcile({ root, runId: 'run-1' })
+      ).rejects.toBeInstanceOf(BrokerUnavailableError);
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('awaiting-prompt-outcome');
+      expect(state.steps[0].installFailed).toBeUndefined();
+      expect(existsSync(handoffPathIn(dir, '@nx/js', 'p'))).toBe(true);
+    });
+
+    it('leaves an adopt for the next reconcile when the session is gone', async () => {
+      vi.spyOn(process, 'kill').mockReturnValue(true as never);
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'died')],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await expect(
+        runOrchestratorReconcile({ root, runId: 'run-1', stepAction: 'adopt' })
+      ).rejects.toBeInstanceOf(BrokerUnavailableError);
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('died');
+      expect(state.commits).toEqual([]);
     });
   });
 });

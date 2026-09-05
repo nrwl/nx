@@ -11,6 +11,14 @@ import { join } from 'path';
 import { readJsonFile, writeJsonFile } from '../../../utils/fileutils';
 import { publishFileAtomically } from './atomic-write';
 import {
+  BrokerStaleRequestError,
+  BrokerUnavailableError,
+  commitStepTree,
+  installStepTree,
+  type BrokeredCommit,
+  type BrokerRequestKind,
+} from './broker';
+import {
   getGitRepositoryStatus,
   getLatestCommitSha,
   getPathCommitExposure,
@@ -155,7 +163,21 @@ export interface RunOrchestratorInitInput {
   // Workspace-local nx version; the v23 cutoff for the .gitignore fallback.
   installedNxVersion: string;
   validate: boolean | undefined;
+  // Off when a parent process hands the run to an agent it spawns: the runbook
+  // reaches that agent as a file and this stdout belongs to the user.
+  emitAgentInstructions?: boolean;
 }
+
+export type OrchestratorInitResult =
+  | {
+      kind: 'ready';
+      runId: string;
+      runRoot: string;
+      runbookPath: string;
+      reconcileCommand: string;
+    }
+  // The exit-0 refusal: the runbook is missing and another nx wrote the run.
+  | { kind: 'refused' };
 
 export interface RunOrchestratorReconcileInput {
   root: string;
@@ -216,7 +238,7 @@ function refuseUnsafeScratchExposure(
 
 export async function runOrchestratorInit(
   input: RunOrchestratorInitInput
-): Promise<void> {
+): Promise<OrchestratorInitResult> {
   const {
     root,
     migrationsJson,
@@ -225,6 +247,7 @@ export async function runOrchestratorInit(
     skipInstall,
     installedNxVersion,
     validate,
+    emitAgentInstructions = true,
   } = input;
   const planHash = computePlanHash(migrationsJson);
 
@@ -252,8 +275,7 @@ export async function runOrchestratorInit(
   }
 
   if (active) {
-    resumeRun(root, active.runId, active.state);
-    return;
+    return resumeRun(root, active.runId, active.state, emitAgentInstructions);
   }
 
   const runId = createRunId();
@@ -358,11 +380,10 @@ export async function runOrchestratorInit(
     return null;
   });
   if (winner) {
-    resumeRun(root, winner.runId, winner.state);
-    return;
+    return resumeRun(root, winner.runId, winner.state, emitAgentInstructions);
   }
 
-  finishInit(root, dir, runId, state, 'created');
+  return finishInit(root, dir, runId, state, 'created', emitAgentInstructions);
 }
 
 // Reads the newest active run, refusing one whose plan differs from the
@@ -413,7 +434,12 @@ function findActiveRunForPlan(
 
 // Shared resume tail for an active run found before or under the creation
 // lock, so the two discovery points cannot drift apart.
-function resumeRun(root: string, runId: string, state: MigrateRunState): void {
+function resumeRun(
+  root: string,
+  runId: string,
+  state: MigrateRunState,
+  emitAgentInstructions: boolean
+): OrchestratorInitResult {
   const dir = runDir(root, runId);
   // Ignore/index state can change while a durable run is paused (a checkout,
   // a .gitignore edit, a forced add). Probe before the checkpoint retry:
@@ -427,13 +453,21 @@ function resumeRun(root: string, runId: string, state: MigrateRunState): void {
   // contract must not first change git history or durable run state.
   const runbook = ensureRunbook(root, dir, runId, state);
   if (runbook === null) {
-    return;
+    return { kind: 'refused' };
   }
   // A run flagged checkpointFailed gets one more chance to capture the
   // pre-existing tree state before its first migration commit absorbs it.
   const resumed = ensureCheckpoint(root, dir, state);
   announceResume(runId, resumed);
-  finishInit(root, dir, runId, resumed, 'resumed', runbook);
+  return finishInit(
+    root,
+    dir,
+    runId,
+    resumed,
+    'resumed',
+    emitAgentInstructions,
+    runbook
+  );
 }
 
 function announceResume(runId: string, state: MigrateRunState): void {
@@ -524,10 +558,11 @@ function finishInit(
   runId: string,
   state: MigrateRunState,
   origin: 'created' | 'resumed',
+  emitAgentInstructions: boolean,
   // The runbook bytes when the caller already ensured them (the resume path,
   // which must fail before its git and state side effects).
   runbook?: string
-): void {
+): OrchestratorInitResult {
   let current = state;
   if (!current.analytics.startEmitted) {
     // Claim the watermark on the fresh state first: of two concurrent inits
@@ -550,7 +585,17 @@ function finishInit(
   }
   const content = runbook ?? ensureRunbook(root, dir, runId, current);
   if (content === null) {
-    return;
+    return { kind: 'refused' };
+  }
+  const ready: OrchestratorInitResult = {
+    kind: 'ready',
+    runId,
+    runRoot: root,
+    runbookPath: join(dir, current.runbookPath ?? RUNBOOK_FILE_NAME),
+    reconcileCommand: reconcileCommand(root, runId),
+  };
+  if (!emitAgentInstructions) {
+    return ready;
   }
   emitRunbookBlock(runId, content);
   const instructionLines = [
@@ -561,9 +606,10 @@ function finishInit(
   const lines = safeLines(instructionLines);
   logToAgent({ title: `nx migrate: run ${origin}`, bodyLines: lines });
   emitStepBlock(runId, '-', 'initialized', {
-    next: reconcileCommand(root, runId),
+    next: ready.reconcileCommand,
     instructions: lines.join('\n'),
   });
+  return ready;
 }
 
 // A missing runbook is re-rendered only by the nx version that created the
@@ -744,11 +790,18 @@ export async function runOrchestratorReconcile(
                 root,
                 dir,
                 state,
-                target
+                target,
+                'action-install'
               ),
             }
         : stepAction === 'skip'
-          ? await retainedTreeSideEffects(root, dir, state, target)
+          ? await retainedTreeSideEffects(
+              root,
+              dir,
+              state,
+              target,
+              'action-install'
+            )
           : { entry: null, installFailed: false };
     // A rearm starts a fresh attempt; drop the stale handoff before the rearm
     // is persisted so a crash in between can't refold the old outcome into the
@@ -1095,10 +1148,16 @@ async function foldLedgerEntry(
     }
     return {
       entry: null,
-      installFailed: await installFailedForStep(root, dir, state, step),
+      installFailed: await installFailedForStep(
+        root,
+        dir,
+        state,
+        step,
+        'fold-install'
+      ),
     };
   }
-  return retainedTreeSideEffects(root, dir, state, step);
+  return retainedTreeSideEffects(root, dir, state, step, 'fold-install');
 }
 
 // Shared by prompts that did not complete and by skipped failed or died steps:
@@ -1109,9 +1168,16 @@ async function retainedTreeSideEffects(
   root: string,
   dir: string,
   state: MigrateRunState,
-  step: MigrateStep
+  step: MigrateStep,
+  seam: Exclude<BrokerRequestKind, 'commit'>
 ): Promise<StepSideEffects> {
-  const installFailed = await installFailedForStep(root, dir, state, step);
+  const installFailed = await installFailedForStep(
+    root,
+    dir,
+    state,
+    step,
+    seam
+  );
   const entry =
     state.createCommits && getWorkingTreeStatus(root) !== 'clean'
       ? { kind: 'failed' as const, stepIds: [step.id] }
@@ -1123,23 +1189,34 @@ async function retainedTreeSideEffects(
 // will do it (the fold of a prompt outcome that lands no commit, or a
 // non-commit adopt), returning whether the install failed. A failure is
 // recorded rather than thrown: reconcile still owes the agent a dispense, and
-// a warning alone dies with this process.
+// a warning alone dies with this process. The session broker's own errors do
+// throw, as from commitForStep: the next reconcile redoes this action.
 async function installFailedForStep(
   root: string,
   dir: string,
   state: MigrateRunState,
-  step: MigrateStep
+  step: MigrateStep,
+  seam: Exclude<BrokerRequestKind, 'commit'>
 ): Promise<boolean> {
+  const skipInstall = state.skipInstall === true;
   try {
-    await installDepsChangedSinceDispense(
-      root,
-      dir,
-      step,
-      state.skipInstall === true,
-      reconcileCommand(root, state.runId)
+    await installStepTree(dir, step, skipInstall, seam, () =>
+      installDepsChangedSinceDispense(
+        root,
+        dir,
+        step,
+        skipInstall,
+        reconcileCommand(root, state.runId)
+      )
     );
     return false;
   } catch (e) {
+    if (
+      e instanceof BrokerStaleRequestError ||
+      e instanceof BrokerUnavailableError
+    ) {
+      throw e;
+    }
     warnToAgent({
       title: `The dependencies changed by ${step.migrationId} could not be installed (${summarizeError(
         e
@@ -1305,42 +1382,58 @@ async function commitForStep(
   const absorbedStepIds = uncoveredFailedStepIds(state).filter(
     (id) => id !== step.id
   );
-  let result: Awaited<ReturnType<typeof commitMigrationIfRequested>>;
+  const skipInstall = state.skipInstall === true;
+  let commit: BrokeredCommit;
   try {
-    result = await commitMigrationIfRequested(
-      root,
-      { name },
-      true,
-      state.commitPrefix,
-      () =>
-        installDepsChangedSinceDispense(
-          root,
-          dir,
-          step,
-          state.skipInstall === true,
-          reconcileCommand(root, state.runId)
-        ),
-      stepsToPendingMigrations(state, absorbedStepIds)
+    commit = await commitStepTree(dir, step, skipInstall, absorbedStepIds, () =>
+      commitMigrationIfRequested(
+        root,
+        { name },
+        true,
+        state.commitPrefix,
+        () =>
+          installDepsChangedSinceDispense(
+            root,
+            dir,
+            step,
+            skipInstall,
+            reconcileCommand(root, state.runId)
+          ),
+        stepsToPendingMigrations(state, absorbedStepIds)
+      )
     );
   } catch (e) {
-    // The dependency install is the only thing that throws here: the commit
-    // attempt itself reports through result.status, and the install's own
-    // bookkeeping never throws. Both consequences are recorded, and neither
-    // aborts reconcile so the next dispense still fires. The debt cannot stand
-    // in for the install failure: a later step's commit absorbs this diff and
-    // lands an entry naming this step, which clears the debt while the
-    // dependencies are still missing.
+    // No result to record: another attempt owns the step, or the session's
+    // parent could not answer and the next session's reconcile redoes this
+    // fold or adopt against whatever it did land.
+    if (
+      e instanceof BrokerStaleRequestError ||
+      e instanceof BrokerUnavailableError
+    ) {
+      throw e;
+    }
+    // The dependency install is the only other thing that throws here: the
+    // commit attempt itself reports through result.status, and the install's
+    // own bookkeeping never throws. Both consequences are recorded, and
+    // neither aborts reconcile so the next dispense still fires. The debt
+    // cannot stand in for the install failure: a later step's commit absorbs
+    // this diff and lands an entry naming this step, which clears the debt
+    // while the dependencies are still missing.
     warnCommitFailed(name, e);
     return {
       entry: { kind: 'failed', stepIds: [step.id] },
       installFailed: true,
     };
   }
-  if (result.status === 'failed') {
+  if (commit.result.status === 'failed') {
     warnCommitFailed(name);
   }
   return {
-    entry: commitResultToLedgerEntry(result, step.id, absorbedStepIds),
+    entry: commitResultToLedgerEntry(
+      commit.result,
+      step.id,
+      commit.absorbedStepIds
+    ),
     installFailed: false,
   };
 }
@@ -2129,6 +2222,47 @@ function emitError(root: string, runId: string, reason: string): void {
   reportMigrateOrchestratorDispense({ action: 'error', attempt: 0 });
 }
 
+/**
+ * What a completed run leaves behind for whoever reads its summary, one line
+ * group per warning: commit debt, uninstalled dependency changes, unresolved
+ * issues. Empty when nothing is left.
+ */
+export function completionWarnings(
+  root: string,
+  runId: string,
+  state: MigrateRunState
+): string[][] {
+  // The crash-refold window can strand a failed ledger entry whose diff was in
+  // fact absorbed; suppress the warning only on a verified-clean tree. A dirty
+  // tree can still be unrelated edits, so the warning only claims the changes
+  // "may remain".
+  const commitDebt =
+    hasPendingCommitDebt(state) && getWorkingTreeStatus(root) !== 'clean';
+  const uninstalled = state.steps.filter((s) => s.installFailed);
+  const issueLines = renderUnresolvedIssueLines(state, runId);
+  return [
+    ...(commitDebt
+      ? [
+          [
+            'Some migration changes could not be committed and may remain in the working tree; review and commit them manually.',
+          ],
+        ]
+      : []),
+    ...(uninstalled.length > 0
+      ? [
+          [
+            `The dependency changes made by ${uninstalled
+              .map((s) => s.migrationId)
+              .join(', ')} were not installed; run \`${pmInstallCommand(
+              root
+            )}\` before using the workspace.`,
+          ],
+        ]
+      : []),
+    ...(issueLines.length > 0 ? [issueLines] : []),
+  ];
+}
+
 function completeRun(
   root: string,
   dir: string,
@@ -2141,12 +2275,6 @@ function completeRun(
   ).length;
   const skipped = current.steps.filter((s) => s.status === 'skipped').length;
   const dispenseCount = current.steps.reduce((n, s) => n + s.dispenseCount, 0);
-  // The crash-refold window can strand a failed ledger entry whose diff was in
-  // fact absorbed; suppress the warning only on a verified-clean tree. A dirty
-  // tree can still be unrelated edits, so the warning only claims the changes
-  // "may remain".
-  const commitDebt =
-    hasPendingCommitDebt(current) && getWorkingTreeStatus(root) !== 'clean';
 
   // Persist the terminal status and claim the watermark in one fresh-state
   // write before emitting: a crash between the write and the output can't
@@ -2174,34 +2302,15 @@ function completeRun(
     });
   }
 
-  const debtLine =
-    'Some migration changes could not be committed and may remain in the working tree; review and commit them manually.';
-  if (commitDebt) {
-    warnToAgent({ title: debtLine });
-  }
-  const uninstalled = current.steps.filter((s) => s.installFailed);
-  const installLine =
-    uninstalled.length > 0
-      ? `The dependency changes made by ${uninstalled
-          .map((s) => s.migrationId)
-          .join(', ')} were not installed; run \`${pmInstallCommand(
-          root
-        )}\` before using the workspace.`
-      : null;
-  if (installLine) {
-    warnToAgent({ title: installLine });
-  }
-  const issueLines = renderUnresolvedIssueLines(current, runId);
-  if (issueLines.length > 0) {
-    warnToAgent({ title: issueLines[0], bodyLines: issueLines.slice(1) });
+  const warnings = completionWarnings(root, runId, current);
+  for (const lines of warnings) {
+    warnToAgent({ title: lines[0], bodyLines: lines.slice(1) });
   }
   const instructionLines = [
     `Migrate run ${runId} is complete.`,
     `  applied: ${completed}`,
     `  skipped: ${skipped}`,
-    ...(commitDebt ? [debtLine] : []),
-    ...(installLine ? [installLine] : []),
-    ...issueLines,
+    ...warnings.flat(),
   ];
   logToAgent({ title: 'nx migrate: complete', bodyLines: instructionLines });
   emitStepBlock(runId, '-', 'complete', {

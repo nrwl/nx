@@ -230,7 +230,8 @@ export function renderRunbook(ctx: RunbookContext): string {
     `Keep the user briefly informed as steps complete: which migration ran and`,
     `its outcome. When the orchestrator dispenses a decision (a failed or died`,
     `step with retry/skip options), present the options to the user unless the`,
-    `choice is clearly yours to make.`,
+    `choice is clearly yours to make. When the run is reported complete,`,
+    `summarize the outcome for the user.`,
     ``
   );
   return lines.join('\n');
