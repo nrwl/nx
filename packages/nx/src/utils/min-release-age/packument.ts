@@ -1,4 +1,4 @@
-import { packageRegistryView } from '../package-manager';
+import { packageRegistryView, parseRegistryViewJson } from '../package-manager';
 
 export interface RegistryMetadata {
   name: string;
@@ -26,12 +26,12 @@ export async function fetchRegistryMetadata(
   pkg: string
 ): Promise<RegistryMetadata> {
   const raw = await packageRegistryView(pkg, '', ['--json']);
-  const parsed = JSON.parse(raw) as {
+  const parsed = parseRegistryViewJson<{
     name?: string;
     versions?: string | string[];
     time?: Record<string, string>;
     'dist-tags'?: Record<string, string>;
-  };
+  }>(raw);
 
   const time = parsed.time ?? null;
   if (time) {
