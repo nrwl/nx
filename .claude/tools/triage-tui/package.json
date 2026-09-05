@@ -1,0 +1,11 @@
+{
+  "name": "@nx-tools/triage-tui",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@opentui/core": "0.5.9",
+    "@opentui/react": "^0.5.9",
+    "react": "^19.2.0",
+    "ws": "^8.18.0"
+  }
+}
