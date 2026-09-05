@@ -216,14 +216,37 @@ export declare class TaskHasher {
   hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, perTaskEnvs: Record<string, Record<string, string>>, cwd: string, collectTaskInputs?: boolean | undefined | null): Record<string, HashDetails>
 }
 
+/**
+ * Tracks which tasks each Nx process in a nested process tree is running, so
+ * that a task which re-invokes itself can be reported instead of looping
+ * forever.
+ *
+ * Every process in the tree shares a `root_pid`, but sharing a root does not
+ * imply a parent/child relationship: sibling Nx processes are common and
+ * legitimate (N atomized e2e specs each spawning the same `serve-static` web
+ * server, or two parallel tasks that each shell out to `nx run lib:build`).
+ * Only an invocation belonging to an actual *ancestor* of this process is a
+ * loop, so the check is scoped to `ancestor_pids` rather than to the whole
+ * tree.
+ */
 export declare class TaskInvocationTracker {
-  constructor(db: ExternalObject<NxDbConnection>, rootPid: number)
-  /** Register a task as invoked. Throws if the task was already registered (loop detected). */
-  registerTask(parentPid: number, taskId: string): void
-  /** Remove a task invocation record after task completes. */
-  unregisterTask(taskId: string): void
-  /** Get all invocations for this root_pid, ordered by creation time. */
-  getInvocationChain(): Array<InvocationRecord>
+  constructor(db: ExternalObject<NxDbConnection>, rootPid: number, ancestorPids: Array<number>)
+  /**
+   * Register a task as invoked by the process identified by `pid`.
+   *
+   * Returns `Some(chain)` when an ancestor process is already running this
+   * task — a genuine loop — where `chain` is every task invoked along the
+   * ancestry path, outermost first. Returns `None` when the task was
+   * registered successfully, including when a *sibling* process is already
+   * running it.
+   */
+  registerTask(pid: number, taskId: string): Array<InvocationRecord> | null
+  /**
+   * Remove a task invocation record after the task completes. Scoped to the
+   * registering process so that a sibling finishing the same task does not
+   * drop this process's record.
+   */
+  unregisterTask(pid: number, taskId: string): void
   /** Clean up stale invocations older than 1 day (handles PID recycling). */
   cleanupStale(): void
 }
@@ -522,7 +545,7 @@ export declare function installNxConsole(): Promise<boolean>
 export declare function installNxConsoleForEditor(editor: SupportedEditor): Promise<boolean>
 
 export interface InvocationRecord {
-  parentPid: number
+  pid: number
   taskId: string
 }
 

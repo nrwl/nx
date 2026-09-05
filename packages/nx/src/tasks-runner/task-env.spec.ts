@@ -6,18 +6,21 @@ import { Task } from '../config/task-graph';
 import { setWorkspaceRoot, workspaceRoot } from '../utils/workspace-root';
 import {
   getEnvFilesForTask,
+  getEnvVariablesForBatchProcess,
   getEnvVariablesForTask,
   getForceColorForChild,
   getGraphTimeDotEnvForTask,
+  getInvocationAncestorPids,
+  getInvocationRootPid,
   loadAndExpandDotEnvFile,
 } from './task-env';
 
-describe('NX_INVOCATION_ROOT_PID', () => {
+describe('invocation tracking env vars', () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
     process.env = { ...originalEnv };
-    delete process.env.NX_INVOCATION_ROOT_PID;
+    delete process.env.NX_INVOCATION_ANCESTOR_PIDS;
   });
 
   afterAll(() => {
@@ -42,25 +45,43 @@ describe('NX_INVOCATION_ROOT_PID', () => {
     } as any as Task;
   }
 
-  it('should set NX_INVOCATION_ROOT_PID to current process PID when no existing root PID', () => {
+  it('should append the current PID to NX_INVOCATION_ANCESTOR_PIDS', () => {
     const task = makeTask('workspace', 'dev');
-    const env = getEnvVariablesForTask(
-      task,
-      {},
-      'true',
-      false,
-      false,
-      '',
-      false
-    );
-    expect(env.NX_INVOCATION_ROOT_PID).toBe(String(process.pid));
+
+    expect(
+      getEnvVariablesForTask(task, {}, 'true', false, false, '', false)
+        .NX_INVOCATION_ANCESTOR_PIDS
+    ).toBe(String(process.pid));
+
+    process.env.NX_INVOCATION_ANCESTOR_PIDS = '123';
+    expect(
+      getEnvVariablesForTask(task, {}, 'true', false, false, '', false)
+        .NX_INVOCATION_ANCESTOR_PIDS
+    ).toBe(`123,${process.pid}`);
   });
 
-  it('should preserve NX_INVOCATION_ROOT_PID from parent Nx process', () => {
-    process.env.NX_INVOCATION_ROOT_PID = '12345';
-    const task = makeTask('workspace', 'dev');
-    const env = getEnvVariablesForTask(
-      task,
+  it('should append the current PID for batch processes too', () => {
+    expect(getEnvVariablesForBatchProcess(false, false)).toMatchObject({
+      NX_INVOCATION_ANCESTOR_PIDS: String(process.pid),
+    });
+
+    process.env.NX_INVOCATION_ANCESTOR_PIDS = '12345';
+    expect(getEnvVariablesForBatchProcess(false, false)).toMatchObject({
+      NX_INVOCATION_ANCESTOR_PIDS: `12345,${process.pid}`,
+    });
+  });
+
+  it('should read the root pid off the front of the ancestor chain', () => {
+    expect(getInvocationRootPid()).toBe(process.pid);
+
+    process.env.NX_INVOCATION_ANCESTOR_PIDS = `12345,${process.pid}`;
+    expect(getInvocationRootPid()).toBe(12345);
+  });
+
+  it('should read back the ancestor chain it writes', () => {
+    process.env.NX_INVOCATION_ANCESTOR_PIDS = '123';
+    const child = getEnvVariablesForTask(
+      makeTask('workspace', 'dev'),
       {},
       'true',
       false,
@@ -68,7 +89,9 @@ describe('NX_INVOCATION_ROOT_PID', () => {
       '',
       false
     );
-    expect(env.NX_INVOCATION_ROOT_PID).toBe('12345');
+
+    process.env.NX_INVOCATION_ANCESTOR_PIDS = child.NX_INVOCATION_ANCESTOR_PIDS;
+    expect(getInvocationAncestorPids()).toEqual([123, process.pid]);
   });
 });
 
