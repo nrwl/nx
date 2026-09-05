@@ -8,7 +8,7 @@ filter: 'type:References'
 ---
 
 [Oxlint](https://oxc.rs/docs/guide/usage/linter/) is a linter written in Rust.
-The `@nx/oxlint` plugin runs it as a cacheable Nx task, so a change re-lints only the projects it affects.
+The `@nx/oxlint` plugin runs it as a cacheable Nx task, so a change re-lints only the projects it affects, and lints every project in a run with a single Oxlint process.
 
 {% aside type="caution" title="Experimental" %}
 `@nx/oxlint` is experimental. The module boundaries bridge depends on the Oxlint JavaScript plugin API, which Oxlint excludes from its semantic versioning policy and can change in any release.
@@ -48,6 +48,23 @@ View the inferred task with:
 ```shell
 nx show project my-project --web
 ```
+
+### How linting runs
+
+The inferred task uses the `@nx/oxlint:lint` executor, which runs in batch mode by default.
+When a command lints several projects, such as `nx run-many -t lint` or `nx affected -t lint`, Nx starts one Oxlint process for all of them instead of one per project.
+Oxlint is fast enough that starting it dominates the time to lint a project, so this brings `nx run-many -t lint` close to running `oxlint` once at the workspace root.
+
+Each project keeps its own result.
+Nx splits the Oxlint report by project, so a violation fails only the project that contains it, every project has its own cache entry, and `nx affected` still picks projects individually.
+A nested project owns its own files: the project that contains it never lints them.
+
+To lint each project in its own process instead, pass `--batch=false`.
+
+Options on the task and flags on the command line are forwarded to Oxlint, so `nx run-many -t lint --config a.json` runs Oxlint with `--config a.json`, once for the whole run.
+The exceptions are the options Nx interprets itself: `--max-warnings` and `--deny-warnings` decide each project's result from that project's diagnostics, `--silent` empties the output, and `--format` is rendered by Nx from Oxlint's JSON report.
+Supported formats are `default`, `agent`, `github`, and `json`.
+`default` matches Oxlint's terminal output, and switches to one line per diagnostic in CI or under an AI agent, as Oxlint does.
 
 ### Task inputs
 
@@ -94,14 +111,15 @@ A workspace with no other linter gets `lint`. A workspace where ESLint already o
 
 ## Customizing the task
 
-To change how one project is linted, add arguments to the inferred target in its `project.json`. Use `args` rather than `command`: replacing the command drops the inferred `cache` and `inputs` with it, so the task stops being cached.
+To change how one project is linted, add options to the inferred target in its `project.json`. Any option the executor does not define becomes an Oxlint flag, so `typeAware` runs Oxlint with `--type-aware`. Set `lintFilePatterns` to lint part of a project.
 
 ```json
 {
   "targets": {
     "lint": {
       "options": {
-        "args": ["--type-aware"]
+        "typeAware": true,
+        "lintFilePatterns": ["{projectRoot}/src"]
       }
     }
   }
@@ -121,13 +139,13 @@ The plugin itself takes one option, `targetName`. `nx add @nx/oxlint` already wr
 }
 ```
 
-Which files Oxlint lints is not an Nx setting. Oxlint selects those itself. Narrow them with `ignorePatterns` in `.oxlintrc.json`, or scope individual rules with `overrides`.
+Which files Oxlint lints within those paths is not an Nx setting. Oxlint selects those itself. Narrow them with `ignorePatterns` in `.oxlintrc.json`, or scope individual rules with `overrides`.
 
 ## Type-aware linting
 
 The Oxlint type-aware rules need the `oxlint-tsgolint` package, which bundles its own TypeScript compiler. Your workspace's TypeScript version doesn't matter.
 
-Turn them on for a single run with `nx lint my-app --type-aware`, which Nx forwards to the underlying command. To make it permanent, override the target as shown in [Customizing the task](#customizing-the-task).
+Turn them on for a single run with `nx lint my-app --type-aware`, which Nx forwards to Oxlint. To make it permanent, set `typeAware` on the target as shown in [Customizing the task](#customizing-the-task).
 
 ## Module boundaries
 
