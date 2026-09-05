@@ -1,3 +1,6 @@
+import { getPnpmLockfileNodes } from '../../lock-file/pnpm-parser';
+import { parseAndNormalizePnpmLockfile } from '../../lock-file/utils/pnpm-normalizer';
+import { sortObjectByKeys } from '../../../../utils/object-sort';
 import { TouchedProjectLocator } from '../../../../project-graph/affected/affected-project-graph-models';
 import {
   FileChange,
@@ -134,21 +137,15 @@ function getChangedPackageNames(
     // the iteration keeps the contract open in case multiple ranges are ever
     // emitted for the same file.
     for (const change of changes) {
-      const baseFingerprints = collectPackageFingerprints(
-        getLockFileNodesForName(
-          file,
-          change.baseContent,
-          hashArray([change.baseContent]),
-          packageJson
-        ).nodes
+      const baseFingerprints = getPackageFingerprints(
+        file,
+        change.baseContent,
+        packageJson
       );
-      const headFingerprints = collectPackageFingerprints(
-        getLockFileNodesForName(
-          file,
-          change.headContent,
-          hashArray([change.headContent]),
-          packageJson
-        ).nodes
+      const headFingerprints = getPackageFingerprints(
+        file,
+        change.headContent,
+        packageJson
       );
 
       for (const [name, fingerprints] of headFingerprints) {
@@ -171,6 +168,43 @@ function getChangedPackageNames(
     });
     return null;
   }
+}
+
+/**
+ * pnpm's external node hashes describe package contents, not which dependency
+ * versions each snapshot resolves to. Include those edges in affected detection
+ * without changing the external node hashes used elsewhere in Nx.
+ */
+function getPackageFingerprints(
+  file: string,
+  content: string,
+  packageJson: PackageJson | undefined
+): Map<string, Set<string>> {
+  const hash = hashArray([content]);
+  if (file !== 'pnpm-lock.yaml' && file !== 'pnpm-lock.yml') {
+    return collectPackageFingerprints(
+      getLockFileNodesForName(file, content, hash, packageJson).nodes
+    );
+  }
+
+  const { nodes, keyMap } = getPnpmLockfileNodes(content, hash);
+  const fingerprints = collectPackageFingerprints(nodes);
+  // The normalizer folds v9 snapshots into packages and also supports older
+  // pnpm lockfiles. The parser's keyMap handles aliases and peer contexts.
+  const lockfile = parseAndNormalizePnpmLockfile(content);
+  for (const [key, snapshot] of Object.entries(lockfile.packages ?? {})) {
+    const fingerprint = JSON.stringify({
+      snapshot: key,
+      dependencies: sortObjectByKeys(snapshot.dependencies ?? {}),
+      optionalDependencies: sortObjectByKeys(
+        snapshot.optionalDependencies ?? {}
+      ),
+    });
+    for (const node of keyMap.get(key) ?? []) {
+      fingerprints.get(node.data.packageName)?.add(fingerprint);
+    }
+  }
+  return fingerprints;
 }
 
 /**
