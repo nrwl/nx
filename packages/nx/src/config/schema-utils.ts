@@ -1,12 +1,17 @@
 import { existsSync } from 'fs';
-import { join, relative } from 'path';
+import { extname, join, relative } from 'path';
 import { resolve as resolveExports } from 'resolve.exports';
 import {
   loadTsFile,
+  registerSourceGraphResolver,
   requireWithTsconfigFallback,
 } from '../plugins/js/utils/register';
 import { getWorkspacePackagesMetadata } from '../plugins/js/utils/packages';
 import { getRootTsConfigResolveExportsConditions } from '../plugins/js/utils/typescript';
+import {
+  isWorkspaceLocalResolution,
+  withBuiltEntryResolutionHint,
+} from '../project-graph/plugins/built-entry-resolution-hint';
 import {
   createProjectRootMappingsFromProjectConfigurations,
   findProjectForPath,
@@ -71,7 +76,7 @@ export function getImplementationFactory<T>(
   const [implementationModulePath, implementationExportName] =
     implementation.split('#');
   return () => {
-    const modulePath = resolveImplementation(
+    const { path: modulePath, isSource } = resolveImplementationWithSourceGraph(
       implementationModulePath,
       directory,
       packageName,
@@ -82,9 +87,22 @@ export function getImplementationFactory<T>(
     // set and bubbles errors like extensionless `./schema` imports (strict
     // ESM resolution failures) straight to the CLI. JS entrypoints use
     // requireWithTsconfigFallback so workspace-alias imports still resolve.
-    const module = /\.[cm]?ts$/.test(modulePath)
-      ? loadTsFile(modulePath)
-      : requireWithTsconfigFallback(modulePath);
+    let module: any;
+    try {
+      module = /\.[cm]?ts$/.test(modulePath)
+        ? loadTsFile(modulePath)
+        : requireWithTsconfigFallback(modulePath);
+    } catch (e) {
+      throw isSource
+        ? e
+        : withBuiltEntryResolutionHint(
+            e,
+            modulePath,
+            workspaceRoot,
+            getWorkspacePackagesMetadata(projects)
+              .packageManagerWorkspacePackageNames
+          );
+    }
     return implementationExportName
       ? module[implementationExportName]
       : (module.default ?? module);
@@ -103,6 +121,48 @@ export function resolveImplementation(
   packageName: string,
   projects: Record<string, ProjectConfiguration>
 ): string {
+  return resolveImplementationWithMetadata(
+    implementationModulePath,
+    directory,
+    packageName,
+    projects
+  ).path;
+}
+
+/**
+ * Resolves an implementation and registers its source graph before returning
+ * a source path, so its workspace imports use the tsconfig conditions.
+ */
+export function resolveImplementationWithSourceGraph(
+  implementationModulePath: string,
+  directory: string,
+  packageName: string,
+  projects: Record<string, ProjectConfiguration>
+): { path: string; isSource: boolean } {
+  const resolved = resolveImplementationWithMetadata(
+    implementationModulePath,
+    directory,
+    packageName,
+    projects
+  );
+  if (resolved.isSource) {
+    // Loaded entries have no unload lifecycle, so the per-entry resolver
+    // stays for the process lifetime.
+    registerSourceGraphResolver(
+      resolved.path,
+      workspaceRoot,
+      getWorkspacePackagesMetadata(projects).packageManagerWorkspacePackageNames
+    );
+  }
+  return resolved;
+}
+
+function resolveImplementationWithMetadata(
+  implementationModulePath: string,
+  directory: string,
+  packageName: string,
+  projects: Record<string, ProjectConfiguration>
+): { path: string; isSource: boolean } {
   const validImplementations = ['', '.js', '.ts'].map(
     (x) => implementationModulePath + x
   );
@@ -119,7 +179,7 @@ export function resolveImplementation(
         projects
       );
       if (maybeImplementationFromSource) {
-        return maybeImplementationFromSource;
+        return { path: maybeImplementationFromSource, isSource: true };
       }
     }
   }
@@ -127,17 +187,31 @@ export function resolveImplementation(
   for (const maybeImplementation of validImplementations) {
     const maybeImplementationPath = join(directory, maybeImplementation);
     if (existsSync(maybeImplementationPath)) {
-      return maybeImplementationPath;
+      return {
+        path: maybeImplementationPath,
+        isSource: isWorkspaceLocalTsImplementation(maybeImplementationPath),
+      };
     }
 
     try {
-      return require.resolve(maybeImplementation, {
+      const resolvedPath = require.resolve(maybeImplementation, {
         paths: [directory],
       });
+      return {
+        path: resolvedPath,
+        isSource: isWorkspaceLocalTsImplementation(resolvedPath),
+      };
     } catch {}
   }
 
   throw new ImplementationResolutionError(implementationModulePath, directory);
+}
+
+function isWorkspaceLocalTsImplementation(modulePath: string): boolean {
+  return (
+    /\.(?:[cm]?ts|tsx)$/.test(extname(modulePath)) &&
+    isWorkspaceLocalResolution(modulePath, workspaceRoot)
+  );
 }
 
 export function resolveSchema(

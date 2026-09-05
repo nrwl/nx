@@ -1,4 +1,9 @@
-import { readTsConfigOptions } from './typescript';
+import {
+  clearRootTsConfigCustomConditionsCache,
+  getPluginResolveConditionNodeArgs,
+  getRootTsConfigCustomConditions,
+  readTsConfigOptions,
+} from './typescript';
 import { join } from 'path';
 import { TempFs } from '../../../internal-testing-utils/temp-fs';
 
@@ -36,5 +41,54 @@ describe('readTsConfigOptions', () => {
       configFilePath: undefined,
       strict: true,
     });
+  });
+});
+
+describe('getRootTsConfigCustomConditions', () => {
+  let fs: TempFs;
+  beforeEach(() => {
+    fs = new TempFs('custom-conditions');
+    clearRootTsConfigCustomConditionsCache();
+  });
+  afterEach(() => {
+    fs.cleanup();
+    clearRootTsConfigCustomConditionsCache();
+  });
+
+  it('caches conditions per root until explicitly cleared', async () => {
+    await fs.createFiles({
+      'tsconfig.json': JSON.stringify({
+        compilerOptions: { customConditions: ['source'] },
+      }),
+    });
+
+    expect(getRootTsConfigCustomConditions(fs.tempDir)).toEqual(['source']);
+
+    fs.writeFile(
+      'tsconfig.json',
+      JSON.stringify({ compilerOptions: { customConditions: ['updated'] } })
+    );
+
+    expect(getRootTsConfigCustomConditions(fs.tempDir)).toEqual(['source']);
+
+    clearRootTsConfigCustomConditionsCache();
+    expect(getRootTsConfigCustomConditions(fs.tempDir)).toEqual(['updated']);
+  });
+});
+
+describe('getPluginResolveConditionNodeArgs', () => {
+  it('passes only the tsconfig customConditions, not the development fallback', async () => {
+    const fs = new TempFs('plugin-conditions');
+    await fs.createFiles({
+      'tsconfig.json': JSON.stringify({
+        compilerOptions: { customConditions: ['source'] },
+      }),
+    });
+
+    expect(getPluginResolveConditionNodeArgs(fs.tempDir)).toEqual([
+      '--conditions',
+      'source',
+    ]);
+    fs.cleanup();
   });
 });

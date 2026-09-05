@@ -14,11 +14,13 @@ import type { LoadedNxPlugin } from './loaded-nx-plugin';
 import { LoadPluginError } from '../error-types';
 import path = require('node:path/posix');
 import { resolveLocalNxPlugin, resolveNxPlugin } from './resolve-plugin';
+import { withBuiltEntryResolutionHint } from './built-entry-resolution-hint';
 import {
   pluginTranspilerIsRegistered,
   registerPluginTSTranspiler,
 } from './transpiler';
 import { handleImport } from '../../utils/handle-import';
+import { registerSourceGraphResolver } from '../../plugins/js/utils/register';
 
 export function readPluginPackageJson(
   pluginName: string,
@@ -60,9 +62,16 @@ export function loadNxPlugin(
   root: string,
   index?: number
 ) {
+  let cleanupSourceGraphResolver = () => {};
   return [
-    loadNxPluginAsync(plugin, getNxRequirePaths(root), root, index),
-    () => {},
+    loadNxPluginAsync(
+      plugin,
+      getNxRequirePaths(root),
+      root,
+      index,
+      (cleanup) => (cleanupSourceGraphResolver = cleanup)
+    ),
+    () => cleanupSourceGraphResolver(),
   ] as const;
 }
 
@@ -70,15 +79,39 @@ export async function loadNxPluginAsync(
   pluginConfiguration: PluginConfiguration,
   paths: string[],
   root: string,
-  index?: number
+  index?: number,
+  setCleanupSourceGraphResolver?: (cleanup: () => void) => void
 ): Promise<LoadedNxPlugin> {
   const moduleName =
     typeof pluginConfiguration === 'string'
       ? pluginConfiguration
       : pluginConfiguration.plugin;
+
+  let resolvedPlugin: Awaited<ReturnType<typeof resolveNxPlugin>>;
   try {
-    const { pluginPath, name, shouldRegisterTSTranspiler } =
-      await resolveNxPlugin(moduleName, root, paths);
+    resolvedPlugin = await resolveNxPlugin(moduleName, root, paths);
+  } catch (e) {
+    throw new LoadPluginError(moduleName, e);
+  }
+
+  const {
+    pluginPath,
+    name,
+    shouldRegisterTSTranspiler,
+    isSourcePlugin,
+    workspacePackageNames,
+  } = resolvedPlugin;
+  let cleanupSourceGraphResolver = () => {};
+
+  try {
+    if (isSourcePlugin) {
+      cleanupSourceGraphResolver = registerSourceGraphResolver(
+        pluginPath,
+        root,
+        workspacePackageNames
+      );
+      setCleanupSourceGraphResolver?.(cleanupSourceGraphResolver);
+    }
 
     if (shouldRegisterTSTranspiler) {
       registerPluginTSTranspiler();
@@ -86,13 +119,22 @@ export async function loadNxPluginAsync(
     const { loadResolvedNxPluginAsync } = await handleImport(
       require.resolve('./load-resolved-plugin')
     );
-    return loadResolvedNxPluginAsync(
+    return await loadResolvedNxPluginAsync(
       pluginConfiguration,
       pluginPath,
       name,
       index
     );
   } catch (e) {
-    throw new LoadPluginError(moduleName, e);
+    cleanupSourceGraphResolver();
+    setCleanupSourceGraphResolver?.(() => {});
+    throw isSourcePlugin
+      ? e
+      : withBuiltEntryResolutionHint(
+          e,
+          pluginPath,
+          root,
+          workspacePackageNames
+        );
   }
 }

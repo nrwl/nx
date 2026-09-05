@@ -8,7 +8,7 @@ import {
   ProjectGraphExternalNode,
 } from '../../config/project-graph';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
-import { hashArray, hashObject } from '../../hasher/file-hasher';
+import { hashArray } from '../../hasher/file-hasher';
 import { NxWorkspaceFilesExternals } from '../../native';
 import { buildProjectGraphUsingProjectFileMap as buildProjectGraphUsingFileMap } from '../../project-graph/build-project-graph';
 import {
@@ -29,6 +29,7 @@ import {
   getPluginsSeparated,
   SeparatedPlugins,
 } from '../../project-graph/plugins/get-plugins';
+import { hashPluginState } from '../../project-graph/plugins/plugin-state';
 import type { LoadedNxPlugin } from '../../project-graph/plugins/loaded-nx-plugin';
 import { ConfigurationResult } from '../../project-graph/utils/project-configuration-utils';
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration/source-maps';
@@ -36,6 +37,13 @@ import {
   retrieveProjectConfigurations,
   retrieveWorkspaceFiles,
 } from '../../project-graph/utils/retrieve-workspace-files';
+import { getWorkspacePackagesMetadata } from '../../plugins/js/utils/packages';
+import { refreshSourceGraphResolvers } from '../../plugins/js/utils/register';
+import {
+  clearRootTsConfigCustomConditionsCache,
+  getRootTsConfigCustomConditions,
+  readRootTsConfigCustomConditions,
+} from '../../plugins/js/utils/typescript';
 import { fileExists } from '../../utils/fileutils';
 import {
   resetWorkspaceContext,
@@ -119,40 +127,40 @@ let servedGraphCandidate: typeof servedGraphState = null;
 let cacheHasBeenPersisted = false;
 
 /**
- * Freshness-gated recompute. Each IIFE snapshots the nx.json `plugins`
- * hash at kickoff and re-reads at commit; if it changed mid-flight, bail
- * and kick a successor instead of clobbering the winner. Without this,
- * `cachedSerializedProjectGraphPromise` is last-kickoff-wins and can
- * return a graph built against a stale plugin set
- * (see spread.test.ts "middle plugin" flake).
+ * Snapshot the plugin state at kickoff and recheck it before commit. A change
+ * must chain to a successor instead of returning a graph built with stale state.
  */
 function kickOffRecompute() {
   // The cached pointer is about to hold an unsettled promise, so whatever the
   // previous state described is no longer what the cache serves.
   servedGraphState = null;
+  // Clear at kickoff: a failed or superseded recomputation must not retain
+  // stale tsconfig conditions.
+  clearRootTsConfigCustomConditionsCache();
   let myPromise: Promise<SerializedProjectGraph>;
   myPromise = (async () => {
     // Must resolve, never reject: kickOffRecompute() runs fire-and-forget, so
     // a rejected myPromise crashes the daemon (unhandled rejection). A throwing
     // prologue (e.g. plugin load fails) becomes an errorResult the next requester surfaces.
     try {
-      // Single read shared with getPluginsSeparated below. This collapses
-      // what would otherwise be two independent nx.json reads (our snap +
-      // the plugin loader's) into one, so the snap hash and the plugin
-      // set the compute uses always reflect the same disk state.
+      // Share one nx.json read with getPluginsSeparated so the state hash and
+      // the loaded plugins come from the same disk snapshot.
       const nxJson = readNxJson(workspaceRoot);
-      const myPluginsHash = hashObject(nxJson.plugins ?? []);
+      const myPluginStateHash = hashPluginState(
+        nxJson.plugins,
+        getRootTsConfigCustomConditions(workspaceRoot)
+      );
 
       const plugins = await getPluginsSeparated(nxJson, workspaceRoot);
 
       // Plugin set we just loaded may already be stale vs disk.
-      if (isStale(myPluginsHash)) return chainToSuccessor(myPromise);
+      if (isStale(myPluginStateHash)) return chainToSuccessor(myPromise);
 
       const result =
         await processFilesAndCreateAndSerializeProjectGraph(plugins);
 
       // Compute may have run against plugins that are now stale.
-      if (isStale(myPluginsHash)) return chainToSuccessor(myPromise);
+      if (isStale(myPluginStateHash)) return chainToSuccessor(myPromise);
 
       if (
         cachedSerializedProjectGraphPromise === myPromise &&
@@ -164,6 +172,13 @@ function kickOffRecompute() {
         if (servedGraphCandidate?.graph === result.projectGraph) {
           servedGraphState = servedGraphCandidate;
         }
+        const { nodes } = result.projectGraph;
+        refreshSourceGraphResolvers(
+          workspaceRoot,
+          () =>
+            getWorkspacePackagesMetadata(nodes)
+              .packageManagerWorkspacePackageNames
+        );
         notifyProjectGraphRecomputationListeners(
           result.projectGraph,
           result.sourceMaps,
@@ -180,7 +195,7 @@ function kickOffRecompute() {
 }
 
 function isStale(expectedHash: string): boolean {
-  return readNxJsonPluginsHash() !== expectedHash;
+  return readPluginStateHash() !== expectedHash;
 }
 
 /**
@@ -193,14 +208,17 @@ function chainToSuccessor(
   myPromise: Promise<SerializedProjectGraph>
 ): Promise<SerializedProjectGraph> {
   serverLogger.log(
-    'Discarding stale recompute result (nx.json plugins changed mid-compute).'
+    'Discarding stale recompute result (nx.json plugins or root customConditions changed mid-compute).'
   );
   if (cachedSerializedProjectGraphPromise === myPromise) kickOffRecompute();
   return cachedSerializedProjectGraphPromise;
 }
 
-function readNxJsonPluginsHash(): string {
-  return hashObject(readNxJson(workspaceRoot).plugins ?? []);
+function readPluginStateHash(): string {
+  return hashPluginState(
+    readNxJson(workspaceRoot).plugins,
+    readRootTsConfigCustomConditions(workspaceRoot)
+  );
 }
 
 export async function getCachedSerializedProjectGraphPromise(

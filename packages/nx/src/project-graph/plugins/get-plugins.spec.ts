@@ -21,6 +21,13 @@ vi.mock('./in-process-loader', () => ({
 vi.mock('./resolve-plugin', () => ({
   resetResolvePluginCache: vi.fn(),
 }));
+vi.mock('../../plugins/js/utils/register', () => ({
+  refreshSourceGraphResolvers: vi.fn(),
+}));
+vi.mock('../../plugins/js/utils/typescript', async () => ({
+  ...(await vi.importActual('../../plugins/js/utils/typescript')),
+  getRootTsConfigCustomConditions: vi.fn(() => []),
+}));
 
 describe('reasonToError', () => {
   it('should return the same Error instance when given a real Error', () => {
@@ -73,9 +80,11 @@ describe('getPluginsSeparated', () => {
     // Unlike jest, resetModules does not re-run vi.mock factories, so the
     // mock fns persist across tests — clear their recorded calls.
     loadNxPlugin.mockClear();
-    (
-      (await import('./resolve-plugin')).resetResolvePluginCache as Mock
-    ).mockClear();
+    const { resetResolvePluginCache } = await import('./resolve-plugin');
+    (resetResolvePluginCache as Mock).mockClear();
+    const { refreshSourceGraphResolvers } =
+      await import('../../plugins/js/utils/register');
+    (refreshSourceGraphResolvers as Mock).mockClear();
     loadNxPlugin.mockImplementation((plugin: unknown) => {
       const name = typeof plugin === 'string' ? plugin : (plugin as any).plugin;
       // Default plugins load from absolute paths — resolve them immediately.
@@ -182,5 +191,58 @@ describe('getPluginsSeparated', () => {
       const plugins = await getPluginsIfLoadedOrLoading();
       expect(plugins.map((p) => p.name)).toContain('test-a');
     });
+  });
+
+  it('refreshes source graph conditions when returning cached plugins', async () => {
+    const { refreshSourceGraphResolvers } =
+      await import('../../plugins/js/utils/register');
+    const load = getPluginsSeparated({ plugins: ['test-a'] }, '/workspace');
+    finishLoading('test-a');
+    await load;
+
+    (refreshSourceGraphResolvers as Mock).mockClear();
+    await getPluginsSeparated({ plugins: ['test-a'] }, '/workspace');
+
+    expect(refreshSourceGraphResolvers).toHaveBeenCalledTimes(1);
+    expect(refreshSourceGraphResolvers).toHaveBeenCalledWith('/workspace');
+  });
+
+  it('tears down and reloads the plugin set when the root customConditions change', async () => {
+    const { getRootTsConfigCustomConditions } =
+      await import('../../plugins/js/utils/typescript');
+    const cleanup = vi.fn();
+    loadNxPlugin.mockImplementation((plugin: unknown) => [
+      Promise.resolve({
+        name: typeof plugin === 'string' ? plugin : (plugin as any).plugin,
+      }),
+      cleanup,
+    ]);
+    const loadsOf = (name: string) =>
+      loadNxPlugin.mock.calls.filter(([plugin]) => plugin === name).length;
+    (getRootTsConfigCustomConditions as Mock).mockReturnValue(['@proj/source']);
+    await getPluginsSeparated({ plugins: ['test-a'] }, '/workspace');
+    expect(loadsOf('test-a')).toBe(1);
+
+    (getRootTsConfigCustomConditions as Mock).mockReturnValue(['@proj/src']);
+    await getPluginsSeparated({ plugins: ['test-a'] }, '/workspace');
+
+    // A source worker takes the conditions as process flags at spawn, so the
+    // old set is torn down rather than refreshed in place.
+    expect(cleanup).toHaveBeenCalled();
+    expect(loadsOf('test-a')).toBe(2);
+  });
+
+  it('does not rebuild the local-plugin resolution snapshot on a cache hit', async () => {
+    const { resetResolvePluginCache } = await import('./resolve-plugin');
+    const load = getPluginsSeparated({ plugins: ['test-a'] });
+    finishLoading('test-a');
+    await load;
+
+    (resetResolvePluginCache as Mock).mockClear();
+    await getPluginsSeparated({ plugins: ['test-a'] });
+
+    // Cache hits must not re-scan local plugins; recompute sites refresh
+    // source-graph package names.
+    expect(resetResolvePluginCache).not.toHaveBeenCalled();
   });
 });

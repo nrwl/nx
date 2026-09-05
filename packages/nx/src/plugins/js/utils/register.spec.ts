@@ -11,17 +11,37 @@ import {
   isTsEsmSyntaxError,
   NODENEXT_ESM_RESOLVER_SOURCE,
   nodeNextEsmResolveHook,
+  refreshSourceGraphResolvers,
+  registerSourceGraphResolver,
+  callResolveFilename,
   resolveTsNodeEsmCompilerOptions,
 } from './register';
+import * as typescriptUtils from './typescript';
 
 // Avoid a real swc registration side effect when exercising getTranspiler.
 // The source loads this with a bare require (CJS channel), so stub the
 // require cache rather than vi.mock.
 import { createRequire, Module } from 'node:module';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { join, sep } from 'node:path';
+import { mkdirSync, realpathSync, symlinkSync } from 'node:fs';
 import {
   mockCjsModule,
   resetCjsMocks,
 } from '../../../internal-testing-utils/cjs-mock';
+import { TempFs } from '../../../internal-testing-utils/temp-fs';
+
+function linkWorkspacePackages(base: string, dirs: string[]) {
+  mkdirSync(join(base, 'node_modules/@proj'), { recursive: true });
+  for (const dir of dirs) {
+    symlinkSync(
+      join(base, 'packages', dir),
+      join(base, 'node_modules/@proj', dir),
+      'dir'
+    );
+  }
+}
 {
   const req = createRequire(import.meta.url);
   const modPath = req.resolve('@swc-node/register/register');
@@ -687,4 +707,899 @@ new Function('s', 'return import(s)')(process.argv[3]).then(
 
     expect(result).toEqual({ ok: true, url: configUrl, kind: 1 });
   }, 60_000);
+});
+
+describe('registerSourceGraphResolver', () => {
+  let tempFs: InstanceType<typeof TempFs>;
+  let root: string;
+  const fileUrl = (relativePath: string) =>
+    pathToFileURL(join(root, relativePath)).href;
+
+  beforeAll(() => {
+    tempFs = new TempFs('source-graph-resolver', false);
+    root = tempFs.tempDir;
+    tempFs.createFilesSync({
+      'packages/utils/package.json': JSON.stringify({
+        name: '@proj/utils',
+        exports: {
+          '.': {
+            source: {
+              require: './src/index.cts',
+              default: './src/index.ts',
+            },
+            default: './dist/index.js',
+          },
+          './sub': { source: './src/sub.ts', default: './dist/sub.js' },
+        },
+      }),
+      'packages/utils/src/index.ts': '',
+      'packages/utils/src/index.cts': '',
+      'packages/utils/src/sub.ts': '',
+      'packages/utils/dist/index.js': '',
+      'packages/utils/dist/sub.js': '',
+      'packages/next/package.json': JSON.stringify({
+        name: '@proj/next',
+        exports: {
+          '.': { flipped: './src/flipped.js', default: './dist/index.js' },
+        },
+      }),
+      'packages/next/src/flipped.js': '',
+      'packages/next/dist/index.js': '',
+      // The `source` target is missing on purpose.
+      'packages/gone/package.json': JSON.stringify({
+        name: '@proj/gone',
+        exports: {
+          '.': { source: './src/index.ts', default: './dist/index.js' },
+        },
+      }),
+      'packages/gone/dist/index.js': "module.exports = 'dist';\n",
+      'gone-entry.cjs': "module.exports = require('@proj/gone');\n",
+    });
+    linkWorkspacePackages(root, ['utils', 'next', 'gone']);
+  });
+
+  afterAll(() => {
+    tempFs.cleanup();
+  });
+
+  afterEach(() => vi.restoreAllMocks());
+
+  function captureResolveHook() {
+    const nodeModule = require('node:module') as typeof import('node:module');
+    const deregister = vi.fn();
+    let resolveHook: Function;
+    const registerHooks = vi
+      .spyOn(nodeModule, 'registerHooks')
+      .mockImplementation(({ resolve }) => {
+        resolveHook = resolve;
+        return { deregister } as any;
+      });
+    return {
+      resolve: (specifier: string, context: unknown, nextResolve: Function) =>
+        resolveHook(specifier, context, nextResolve),
+      deregister,
+      registerHooks,
+    };
+  }
+
+  const context = (
+    parentURL: string,
+    conditions: Iterable<string> = ['node', 'import']
+  ) => ({ conditions, importAttributes: {}, parentURL });
+
+  it('resolves workspace package imports from a graph member through the exports map', () => {
+    const hooks = captureResolveHook();
+    vi.spyOn(
+      typescriptUtils,
+      'getRootTsConfigResolveExportsConditions'
+    ).mockReturnValue(['source']);
+
+    const cleanup = registerSourceGraphResolver(join(root, 'plugin.ts'), root, [
+      '@proj/utils',
+    ]);
+    const nextResolve = vi.fn((specifier: string) => ({
+      url: fileUrl('dist-resolved.js'),
+    }));
+
+    expect(
+      hooks.resolve('@proj/utils', context(fileUrl('plugin.ts')), nextResolve)
+    ).toEqual({
+      url: fileUrl('packages/utils/src/index.ts'),
+      shortCircuit: true,
+    });
+    expect(
+      hooks.resolve(
+        '@proj/utils/sub',
+        context(fileUrl('plugin.ts')),
+        nextResolve
+      )
+    ).toEqual({
+      url: fileUrl('packages/utils/src/sub.ts'),
+      shortCircuit: true,
+    });
+    expect(nextResolve).not.toHaveBeenCalled();
+
+    const outsideContext = context(fileUrl('built-generator.js'));
+    hooks.resolve('@proj/utils', outsideContext, nextResolve);
+    expect(nextResolve).toHaveBeenCalledWith('@proj/utils', outsideContext);
+
+    cleanup();
+    expect(hooks.deregister).toHaveBeenCalled();
+  });
+
+  it('honors the require condition when resolving through the exports map', () => {
+    const hooks = captureResolveHook();
+    vi.spyOn(
+      typescriptUtils,
+      'getRootTsConfigResolveExportsConditions'
+    ).mockReturnValue(['source']);
+
+    const cleanup = registerSourceGraphResolver(
+      join(root, 'plugin.cjs'),
+      root,
+      ['@proj/utils']
+    );
+    const nextResolve = vi.fn();
+
+    // CJS resolve hooks may hand conditions over as a Set.
+    expect(
+      hooks.resolve(
+        '@proj/utils',
+        context(fileUrl('plugin.cjs'), new Set(['require', 'node'])),
+        nextResolve
+      )
+    ).toEqual({
+      url: fileUrl('packages/utils/src/index.cts'),
+      shortCircuit: true,
+    });
+    expect(
+      hooks.resolve(
+        '@proj/utils',
+        context(fileUrl('plugin.cjs'), ['import', 'node']),
+        nextResolve
+      )
+    ).toEqual({
+      url: fileUrl('packages/utils/src/index.ts'),
+      shortCircuit: true,
+    });
+    expect(nextResolve).not.toHaveBeenCalled();
+
+    cleanup();
+  });
+
+  it('falls back to the default resolution with untouched conditions when the exports map cannot resolve', () => {
+    const hooks = captureResolveHook();
+    vi.spyOn(
+      typescriptUtils,
+      'getRootTsConfigResolveExportsConditions'
+    ).mockReturnValue(['source']);
+
+    const cleanup = registerSourceGraphResolver(join(root, 'plugin.ts'), root, [
+      '@proj/unlinked',
+    ]);
+    const memberContext = context(fileUrl('plugin.ts'), ['node']);
+    const nextResolve = vi.fn(() => ({ url: fileUrl('dist-resolved.js') }));
+
+    const result = hooks.resolve('@proj/unlinked', memberContext, nextResolve);
+
+    expect(result).toEqual({ url: fileUrl('dist-resolved.js') });
+    expect(nextResolve).toHaveBeenCalledTimes(1);
+    expect(nextResolve.mock.calls[0][1]).toBe(memberContext);
+
+    cleanup();
+  });
+
+  // TypeScript moves on to the next matching condition when a target does not
+  // resolve, so a graph member falls through to the default resolution where
+  // Node's own `--conditions` would fail with a missing file.
+  it('falls through to the default resolution when the selected source target is missing (ESM)', () => {
+    const hooks = captureResolveHook();
+    vi.spyOn(
+      typescriptUtils,
+      'getRootTsConfigResolveExportsConditions'
+    ).mockReturnValue(['source']);
+
+    const cleanup = registerSourceGraphResolver(join(root, 'plugin.ts'), root, [
+      '@proj/gone',
+    ]);
+    const memberContext = context(fileUrl('plugin.ts'));
+    const nextResolve = vi.fn(() => ({
+      url: fileUrl('packages/gone/dist/index.js'),
+    }));
+
+    expect(hooks.resolve('@proj/gone', memberContext, nextResolve)).toEqual({
+      url: fileUrl('packages/gone/dist/index.js'),
+    });
+    expect(nextResolve).toHaveBeenCalledWith('@proj/gone', memberContext);
+
+    cleanup();
+  });
+
+  it('falls through to the default resolution when the selected source target is missing (CJS)', () => {
+    captureResolveHook();
+    vi.spyOn(
+      typescriptUtils,
+      'getRootTsConfigResolveExportsConditions'
+    ).mockReturnValue(['source']);
+
+    const entry = join(root, 'gone-entry.cjs');
+    const cleanup = registerSourceGraphResolver(entry, root, ['@proj/gone']);
+
+    expect(createRequire(import.meta.url)(entry)).toBe('dist');
+
+    cleanup();
+  });
+
+  it('tracks relative source imports so lazy graph members resolve workspace packages', () => {
+    const hooks = captureResolveHook();
+    vi.spyOn(
+      typescriptUtils,
+      'getRootTsConfigResolveExportsConditions'
+    ).mockReturnValue(['source']);
+
+    const cleanup = registerSourceGraphResolver(join(root, 'plugin.ts'), root, [
+      '@proj/utils',
+    ]);
+    const nextResolve = vi.fn(() => ({ url: fileUrl('lazy.ts') }));
+
+    hooks.resolve('./lazy.js', context(fileUrl('plugin.ts')), nextResolve);
+    expect(nextResolve).toHaveBeenCalledTimes(1);
+
+    expect(
+      hooks.resolve('@proj/utils', context(fileUrl('lazy.ts')), nextResolve)
+    ).toEqual({
+      url: fileUrl('packages/utils/src/index.ts'),
+      shortCircuit: true,
+    });
+    expect(nextResolve).toHaveBeenCalledTimes(1);
+
+    cleanup();
+  });
+
+  it('refreshes conditions and package names for a cached source graph', () => {
+    const hooks = captureResolveHook();
+    const conditions = vi
+      .spyOn(typescriptUtils, 'getRootTsConfigResolveExportsConditions')
+      .mockReturnValue(['source']);
+
+    const cleanup = registerSourceGraphResolver(join(root, 'plugin.ts'), root, [
+      '@proj/utils',
+    ]);
+    conditions.mockReturnValue(['flipped']);
+    refreshSourceGraphResolvers(root, () => ['@proj/next']);
+
+    const nextResolve = vi.fn(() => ({ url: fileUrl('dist-resolved.js') }));
+    expect(
+      hooks.resolve('@proj/next', context(fileUrl('plugin.ts')), nextResolve)
+    ).toEqual({
+      url: fileUrl('packages/next/src/flipped.js'),
+      shortCircuit: true,
+    });
+    hooks.resolve('@proj/utils', context(fileUrl('plugin.ts')), nextResolve);
+    expect(nextResolve).toHaveBeenCalledTimes(1);
+    expect(nextResolve).toHaveBeenCalledWith(
+      '@proj/utils',
+      expect.objectContaining({ conditions: ['node', 'import'] })
+    );
+
+    cleanup();
+  });
+
+  it('reference counts registrations of the same entry', () => {
+    const hooks = captureResolveHook();
+    vi.spyOn(
+      typescriptUtils,
+      'getRootTsConfigResolveExportsConditions'
+    ).mockReturnValue(['source']);
+
+    const cleanupFirst = registerSourceGraphResolver(
+      join(root, 'plugin.ts'),
+      root,
+      ['@proj/utils']
+    );
+    const cleanupSecond = registerSourceGraphResolver(
+      join(root, 'plugin.ts'),
+      root,
+      ['@proj/utils']
+    );
+    expect(hooks.registerHooks).toHaveBeenCalledTimes(1);
+
+    const nextResolve = vi.fn(() => ({ url: fileUrl('dist-resolved.js') }));
+    // Releasing one registration, even twice, keeps the shared graph alive.
+    cleanupFirst();
+    cleanupFirst();
+    expect(hooks.deregister).not.toHaveBeenCalled();
+    expect(
+      hooks.resolve('@proj/utils', context(fileUrl('plugin.ts')), nextResolve)
+    ).toEqual({
+      url: fileUrl('packages/utils/src/index.ts'),
+      shortCircuit: true,
+    });
+    expect(nextResolve).not.toHaveBeenCalled();
+
+    cleanupSecond();
+    expect(hooks.deregister).toHaveBeenCalled();
+    const memberContext = context(fileUrl('plugin.ts'));
+    hooks.resolve('@proj/utils', memberContext, nextResolve);
+    expect(nextResolve).toHaveBeenCalledWith('@proj/utils', memberContext);
+  });
+
+  it('skips the package-names thunk when no source graphs exist', () => {
+    const getWorkspacePackageNames = vi.fn(() => ['@proj/utils']);
+
+    refreshSourceGraphResolvers('/workspace', getWorkspacePackageNames);
+
+    expect(getWorkspacePackageNames).not.toHaveBeenCalled();
+  });
+
+  it('identity-restores Module._load on the last cleanup when nothing else patched it', () => {
+    captureResolveHook();
+    vi.spyOn(
+      typescriptUtils,
+      'getRootTsConfigResolveExportsConditions'
+    ).mockReturnValue(['source']);
+    const nodeModule = require('node:module') as any;
+    const originalLoad = nodeModule._load;
+
+    const cleanup = registerSourceGraphResolver(join(root, 'plugin.ts'), root, [
+      '@proj/utils',
+    ]);
+    expect(nodeModule._load).not.toBe(originalLoad);
+
+    cleanup();
+    expect(nodeModule._load).toBe(originalLoad);
+  });
+
+  it('leaves a later Module._load patch in place and neutralizes its own', () => {
+    captureResolveHook();
+    vi.spyOn(
+      typescriptUtils,
+      'getRootTsConfigResolveExportsConditions'
+    ).mockReturnValue(['source']);
+    const nodeModule = require('node:module') as any;
+    const originalLoad = nodeModule._load;
+
+    const cleanup = registerSourceGraphResolver(join(root, 'plugin.ts'), root, [
+      '@proj/utils',
+    ]);
+    const ourPatched = nodeModule._load;
+    const wrapper = function (this: unknown, ...args: unknown[]) {
+      return ourPatched.apply(this, args);
+    };
+    nodeModule._load = wrapper;
+    try {
+      cleanup();
+      expect(nodeModule._load).toBe(wrapper);
+      expect(nodeModule._load('node:path', undefined, false)).toBe(
+        require('node:path')
+      );
+    } finally {
+      nodeModule._load = originalLoad;
+    }
+  });
+});
+
+// Real require() exercises the CJS caches that a mocked nextResolve bypasses.
+describe('registerSourceGraphResolver CJS path cache isolation', () => {
+  const registerHooksAvailable =
+    typeof (require('node:module') as { registerHooks?: unknown })
+      .registerHooks === 'function';
+
+  let tempFs: InstanceType<typeof TempFs>;
+  let workspaceDir: string;
+  let runScript: string;
+
+  beforeAll(() => {
+    const req = createRequire(import.meta.url);
+    const swcRegisterPath = req.resolve('@swc-node/register/register');
+    const registerTsPath = fileURLToPath(
+      new URL('./register.ts', import.meta.url)
+    );
+
+    tempFs = new TempFs('source-graph-cjs-cache', false);
+    workspaceDir = join(tempFs.tempDir, 'workspace');
+    const aliasDir = join(tempFs.tempDir, 'alias');
+    runScript = join(tempFs.tempDir, 'run.cjs');
+
+    tempFs.createFilesSync({
+      // The relative hop verifies lazy graph-member tracking.
+      'workspace/graph-entry.cjs':
+        "module.exports = { ...require('./inner.cjs'), nested: require('./nested/member.cjs') };\n",
+      'workspace/inner.cjs':
+        "module.exports = { value: require('@proj/pkg'), resolved: require.resolve('@proj/pkg') };\n",
+      // The nearer same-named external package must retain Node's resolution.
+      'workspace/nested/member.cjs': "module.exports = require('@proj/pkg');\n",
+      'workspace/nested/node_modules/@proj/pkg/package.json': JSON.stringify({
+        name: '@proj/pkg',
+        exports: {
+          '.': {
+            development: './src/index.js',
+            default: './dist/index.js',
+          },
+        },
+      }),
+      'workspace/nested/node_modules/@proj/pkg/src/index.js':
+        "module.exports = 'ext-source';\n",
+      'workspace/nested/node_modules/@proj/pkg/dist/index.js':
+        "module.exports = 'ext-dist';\n",
+      'workspace/sibling.cjs': "module.exports = require('@proj/pkg');\n",
+      'workspace/packages/pkg/package.json': JSON.stringify({
+        name: '@proj/pkg',
+        exports: {
+          '.': {
+            development: './src/index.js',
+            default: './dist/index.js',
+          },
+        },
+      }),
+      'workspace/packages/pkg/src/index.js': "module.exports = 'source';\n",
+      'workspace/packages/pkg/dist/index.js': "module.exports = 'dist';\n",
+      'run.cjs': [
+        `require(${JSON.stringify(swcRegisterPath)}).register({ esModuleInterop: true });`,
+        `if (process.argv[3] === 'no-hooks') {`,
+        `  require('node:module').registerHooks = undefined;`,
+        `}`,
+        `const { registerSourceGraphResolver } = require(${JSON.stringify(registerTsPath)});`,
+        `const base = process.argv[4] === 'alias-root' ? ${JSON.stringify(aliasDir)} : ${JSON.stringify(workspaceDir)};`,
+        `const entry = base + '/graph-entry.cjs';`,
+        `const sibling = base + '/sibling.cjs';`,
+        // Register the real path first to cover alias registration after an
+        // existing graph.
+        `const cleanupReal = process.argv[4] === 'alias-root' ? registerSourceGraphResolver(${JSON.stringify(join(workspaceDir, 'graph-entry.cjs'))}, ${JSON.stringify(workspaceDir)}, ['@proj/pkg']) : () => {};`,
+        `const cleanup = registerSourceGraphResolver(entry, base, ['@proj/pkg']);`,
+        `const results = {};`,
+        `if (process.argv[2] === 'sibling-first') {`,
+        `  results.sibling = require(sibling);`,
+        `  results.entry = require(entry);`,
+        `} else {`,
+        `  results.entry = require(entry);`,
+        `  results.sibling = require(sibling);`,
+        `}`,
+        `cleanupReal();`,
+        `cleanup();`,
+        `delete require.cache[sibling];`,
+        `results.siblingAfterCleanup = require(sibling);`,
+        `console.log(JSON.stringify(results));`,
+      ].join('\n'),
+    });
+    linkWorkspacePackages(workspaceDir, ['pkg']);
+    symlinkSync(workspaceDir, aliasDir, 'dir');
+  });
+
+  afterAll(() => {
+    tempFs.cleanup();
+  });
+
+  function runOrdering(
+    order: 'graph-first' | 'sibling-first',
+    hooks: 'hooks' | 'no-hooks' = 'hooks',
+    root: 'real-root' | 'alias-root' = 'real-root',
+    execArgv: string[] = []
+  ) {
+    const stdout = execFileSync(
+      process.execPath,
+      [...execArgv, runScript, order, hooks, root],
+      {
+        cwd: workspaceDir,
+        env: { ...process.env, NX_WORKSPACE_ROOT_PATH: workspaceDir },
+        encoding: 'utf8',
+      }
+    );
+    return JSON.parse(stdout.trim().split('\n').pop()!);
+  }
+
+  const expectScoped = () => ({
+    entry: {
+      value: 'source',
+      resolved: realpathSync(
+        join(workspaceDir, 'node_modules/@proj/pkg/src/index.js')
+      ),
+      nested: 'ext-dist',
+    },
+    sibling: 'dist',
+    siblingAfterCleanup: 'dist',
+  });
+
+  it.runIf(registerHooksAvailable)(
+    'keeps the source export scoped to the graph entry when it resolves first',
+    () => {
+      expect(runOrdering('graph-first')).toEqual(expectScoped());
+    },
+    120_000
+  );
+
+  it.runIf(registerHooksAvailable)(
+    'still applies the source export to the graph entry when the sibling resolves first',
+    () => {
+      expect(runOrdering('sibling-first')).toEqual(expectScoped());
+    },
+    120_000
+  );
+
+  it.each(['graph-first', 'sibling-first'] as const)(
+    'scopes the source export without module.registerHooks (%s)',
+    (order) => {
+      expect(runOrdering(order, 'no-hooks')).toEqual(expectScoped());
+    },
+    120_000
+  );
+
+  it.each(['hooks', 'no-hooks'] as const)(
+    'scopes the graph when the configured root is an alias of the real path (%s)',
+    (hooks) => {
+      expect(runOrdering('graph-first', hooks, 'alias-root')).toEqual(
+        expectScoped()
+      );
+    },
+    120_000
+  );
+
+  it.each(['hooks', 'no-hooks'] as const)(
+    'scopes the graph under --preserve-symlinks with an alias root (%s)',
+    (hooks) => {
+      const results = runOrdering('graph-first', hooks, 'alias-root', [
+        '--preserve-symlinks',
+      ]);
+      // Node keeps the alias spelling here, so only compare the markers.
+      expect(results.entry.value).toBe('source');
+      expect(results.entry.nested).toBe('ext-dist');
+      expect(results.sibling).toBe('dist');
+      expect(results.siblingAfterCleanup).toBe('dist');
+    },
+    120_000
+  );
+});
+
+// Graph conditions must union with runtime conditions so all consumers select
+// the same package instance.
+describe('registerSourceGraphResolver CJS runtime condition union', () => {
+  const registerHooksAvailable =
+    typeof (require('node:module') as { registerHooks?: unknown })
+      .registerHooks === 'function';
+
+  let tempFs: InstanceType<typeof TempFs>;
+  let workspaceDir: string;
+  let runScript: string;
+
+  beforeAll(() => {
+    const req = createRequire(import.meta.url);
+    const swcRegisterPath = req.resolve('@swc-node/register/register');
+    const registerTsPath = fileURLToPath(
+      new URL('./register.ts', import.meta.url)
+    );
+
+    tempFs = new TempFs('source-graph-cjs-conditions', false);
+    workspaceDir = join(tempFs.tempDir, 'workspace');
+    runScript = join(tempFs.tempDir, 'run.cjs');
+    const graphEntry = join(workspaceDir, 'graph-entry.cjs');
+    const sibling = join(workspaceDir, 'sibling.cjs');
+
+    tempFs.createFilesSync({
+      'workspace/graph-entry.cjs':
+        "module.exports = { user: require('@proj/user-pkg'), dual: require('@proj/dual') };\n",
+      'workspace/sibling.cjs':
+        "module.exports = { user: require('@proj/user-pkg'), dual: require('@proj/dual') };\n",
+      'workspace/packages/user-pkg/package.json': JSON.stringify({
+        name: '@proj/user-pkg',
+        exports: {
+          '.': {
+            userA: './user/index.js',
+            development: './src/index.js',
+            default: './dist/index.js',
+          },
+        },
+      }),
+      'workspace/packages/user-pkg/user/index.js': "module.exports = 'user';\n",
+      'workspace/packages/user-pkg/src/index.js':
+        "module.exports = 'source';\n",
+      'workspace/packages/user-pkg/dist/index.js': "module.exports = 'dist';\n",
+      'workspace/packages/dual/package.json': JSON.stringify({
+        name: '@proj/dual',
+        exports: {
+          '.': {
+            'module-sync': './esm/index.js',
+            require: './cjs/index.js',
+            default: './esm/index.js',
+          },
+        },
+      }),
+      'workspace/packages/dual/esm/index.js': "module.exports = 'esm';\n",
+      'workspace/packages/dual/cjs/index.js': "module.exports = 'cjs';\n",
+      'run.cjs': [
+        `require(${JSON.stringify(swcRegisterPath)}).register({ esModuleInterop: true });`,
+        `const { registerSourceGraphResolver } = require(${JSON.stringify(registerTsPath)});`,
+        `const entry = ${JSON.stringify(graphEntry)};`,
+        `const sibling = ${JSON.stringify(sibling)};`,
+        `const cleanup = registerSourceGraphResolver(entry, ${JSON.stringify(workspaceDir)}, ['@proj/user-pkg', '@proj/dual']);`,
+        `const results = { entry: require(entry), sibling: require(sibling) };`,
+        `cleanup();`,
+        `console.log(JSON.stringify(results));`,
+      ].join('\n'),
+    });
+    linkWorkspacePackages(workspaceDir, ['user-pkg', 'dual']);
+  });
+
+  afterAll(() => {
+    tempFs.cleanup();
+  });
+
+  it.runIf(registerHooksAvailable)(
+    'applies user --conditions and module-sync to graph members like any other consumer',
+    () => {
+      const stdout = execFileSync(
+        process.execPath,
+        ['--conditions=userA', runScript],
+        {
+          cwd: workspaceDir,
+          env: { ...process.env, NX_WORKSPACE_ROOT_PATH: workspaceDir },
+          encoding: 'utf8',
+        }
+      );
+      const results = JSON.parse(stdout.trim().split('\n').pop()!);
+      expect(results.sibling).toEqual({ user: 'user', dual: 'esm' });
+      expect(results.entry.user).toBe('user');
+      expect(results.entry.dual).toBe(results.sibling.dual);
+    },
+    120_000
+  );
+});
+
+describe('registerSourceGraphResolver under Yarn PnP', () => {
+  let tempFs: InstanceType<typeof TempFs>;
+  let root: string;
+  let nodeModule: typeof import('node:module') & {
+    findPnpApi?: (path: string) => unknown;
+  };
+  const fileUrl = (relativePath: string) =>
+    pathToFileURL(join(root, relativePath)).href;
+  const context = (parentURL: string) => ({
+    conditions: ['node', 'import'],
+    importAttributes: {},
+    parentURL,
+  });
+
+  beforeAll(() => {
+    tempFs = new TempFs('source-graph-pnp', false);
+    root = tempFs.tempDir;
+    const packageJson = JSON.stringify({
+      name: '@proj/utils',
+      exports: {
+        '.': { source: './src/index.ts', default: './dist/index.js' },
+      },
+    });
+    // No node_modules: PnP keeps workspace packages only in its own map.
+    tempFs.createFilesSync({
+      'packages/utils/package.json': packageJson,
+      'packages/utils/src/index.ts': '',
+      'packages/utils/dist/index.js': '',
+      '.yarn/__virtual__/@proj-utils-virtual-1/1/packages/utils/package.json':
+        packageJson,
+      '.yarn/__virtual__/@proj-utils-virtual-1/1/packages/utils/src/index.ts':
+        '',
+      '.yarn/cache/utils.zip/node_modules/@proj/utils/package.json':
+        packageJson,
+      '.yarn/cache/utils.zip/node_modules/@proj/utils/src/index.ts': '',
+    });
+  });
+
+  afterAll(() => {
+    tempFs.cleanup();
+  });
+
+  beforeEach(() => {
+    nodeModule = require('node:module');
+    Object.defineProperty(process.versions, 'pnp', {
+      value: '3',
+      configurable: true,
+      enumerable: true,
+    });
+    vi.spyOn(
+      typescriptUtils,
+      'getRootTsConfigResolveExportsConditions'
+    ).mockReturnValue(['source']);
+  });
+
+  afterEach(() => {
+    delete (process.versions as { pnp?: string }).pnp;
+    delete nodeModule.findPnpApi;
+    vi.restoreAllMocks();
+  });
+
+  function withPnpApi(resolveToUnqualified: (request: string) => string) {
+    const api = { resolveToUnqualified: vi.fn(resolveToUnqualified) };
+    nodeModule.findPnpApi = vi.fn(() => api);
+    return api;
+  }
+
+  function resolveFromGraphEntry() {
+    let resolveHook: Function;
+    vi.spyOn(nodeModule, 'registerHooks').mockImplementation(({ resolve }) => {
+      resolveHook = resolve;
+      return { deregister: vi.fn() } as any;
+    });
+    const cleanup = registerSourceGraphResolver(join(root, 'plugin.ts'), root, [
+      '@proj/utils',
+    ]);
+    const nextResolve = vi.fn(() => ({ url: fileUrl('dist-resolved.js') }));
+    const result = resolveHook(
+      '@proj/utils',
+      context(fileUrl('plugin.ts')),
+      nextResolve
+    );
+    cleanup();
+    return { result, nextResolve };
+  }
+
+  it('locates workspace packages through the PnP API instead of node_modules', () => {
+    const api = withPnpApi(() => join(root, 'packages/utils/package.json'));
+
+    const { result } = resolveFromGraphEntry();
+
+    expect(result).toEqual({
+      url: fileUrl('packages/utils/src/index.ts'),
+      shortCircuit: true,
+    });
+    expect(nodeModule.findPnpApi).toHaveBeenCalledWith(join(root, sep));
+    expect(api.resolveToUnqualified).toHaveBeenCalledWith(
+      '@proj/utils/package.json',
+      join(root, sep),
+      { considerBuiltins: false }
+    );
+  });
+
+  it('accepts the virtual alias PnP creates for workspace packages with peer dependencies', () => {
+    withPnpApi(() =>
+      join(
+        root,
+        '.yarn/__virtual__/@proj-utils-virtual-1/1/packages/utils/package.json'
+      )
+    );
+
+    const { result } = resolveFromGraphEntry();
+
+    expect(result).toEqual({
+      url: fileUrl(
+        '.yarn/__virtual__/@proj-utils-virtual-1/1/packages/utils/src/index.ts'
+      ),
+      shortCircuit: true,
+    });
+  });
+
+  it('keeps Node resolution for a same-named package served from the PnP cache', () => {
+    withPnpApi(() =>
+      join(root, '.yarn/cache/utils.zip/node_modules/@proj/utils/package.json')
+    );
+
+    const { result, nextResolve } = resolveFromGraphEntry();
+
+    expect(nextResolve).toHaveBeenCalledTimes(1);
+    expect(result).toEqual({ url: fileUrl('dist-resolved.js') });
+  });
+
+  it('keeps Node resolution when PnP rejects the request as undeclared', () => {
+    withPnpApi(() => {
+      throw new Error('Your application tried to access @proj/utils');
+    });
+
+    const { result, nextResolve } = resolveFromGraphEntry();
+
+    expect(nextResolve).toHaveBeenCalledTimes(1);
+    expect(result).toEqual({ url: fileUrl('dist-resolved.js') });
+  });
+});
+
+describe('CJS resolution under Yarn PnP below 4.11', () => {
+  const unsupported = (options = 'conditions') =>
+    Object.assign(
+      new Error(
+        `Some options passed to require() aren't supported by PnP yet (${options})`
+      ),
+      { code: 'UNSUPPORTED' }
+    );
+  const pnpStyleResolve = () =>
+    vi.fn(function (
+      request: string,
+      _parent: unknown,
+      _isMain: unknown,
+      options?: { conditions?: unknown; paths?: string[] }
+    ) {
+      if (options?.conditions) throw unsupported();
+      return `resolved:${request}`;
+    });
+
+  it('retries without the conditions option when PnP rejects it', () => {
+    const original = pnpStyleResolve();
+    const parent = { filename: '/ws/a.js' };
+    const options = { conditions: new Set(['node']), paths: ['/ws'] };
+
+    expect(
+      callResolveFilename(original as any, null, 'pkg', parent, [
+        false,
+        options,
+      ])
+    ).toBe('resolved:pkg');
+    expect(original).toHaveBeenCalledTimes(2);
+    expect(original).toHaveBeenLastCalledWith('pkg', parent, false, {
+      paths: ['/ws'],
+    });
+  });
+
+  it('rethrows an UNSUPPORTED error that is not about conditions', () => {
+    const original = vi.fn(() => {
+      throw unsupported();
+    });
+
+    expect(() =>
+      callResolveFilename(original as any, null, 'pkg', undefined, [
+        false,
+        { paths: ['/ws'] },
+      ])
+    ).toThrow(/aren't supported/);
+    expect(original).toHaveBeenCalledTimes(1);
+  });
+
+  it('rethrows a PnP rejection that names another option as well', () => {
+    const original = vi.fn(() => {
+      throw unsupported('conditions, arbitrary');
+    });
+
+    expect(() =>
+      callResolveFilename(original as any, null, 'pkg', undefined, [
+        false,
+        { conditions: new Set(), arbitrary: true },
+      ])
+    ).toThrow(/\(conditions, arbitrary\)/);
+    expect(original).toHaveBeenCalledTimes(1);
+  });
+
+  it('rethrows a non-PnP UNSUPPORTED error even with conditions present', () => {
+    const original = vi.fn(() => {
+      throw Object.assign(new Error('something else'), { code: 'UNSUPPORTED' });
+    });
+
+    expect(() =>
+      callResolveFilename(original as any, null, 'pkg', undefined, [
+        false,
+        { conditions: new Set() },
+      ])
+    ).toThrow('something else');
+    expect(original).toHaveBeenCalledTimes(1);
+  });
+
+  it('rethrows other resolution errors untouched', () => {
+    const original = vi.fn(() => {
+      throw Object.assign(new Error('nope'), { code: 'MODULE_NOT_FOUND' });
+    });
+
+    expect(() =>
+      callResolveFilename(original as any, null, 'pkg', undefined, [
+        false,
+        { conditions: new Set() },
+      ])
+    ).toThrow('nope');
+    expect(original).toHaveBeenCalledTimes(1);
+  });
+
+  it('applies the retry inside the source graph resolver patch', () => {
+    const nodeModule = require('node:module') as any;
+    const realResolveFilename = nodeModule._resolveFilename;
+    const original = pnpStyleResolve();
+    nodeModule._resolveFilename = original;
+    vi.spyOn(nodeModule, 'registerHooks').mockImplementation(
+      () => ({ deregister: vi.fn() }) as any
+    );
+    const cleanup = registerSourceGraphResolver('/ws/plugin.ts', '/ws', []);
+    try {
+      expect(
+        nodeModule._resolveFilename('pkg', { filename: '/ws/a.js' }, false, {
+          conditions: new Set(['node']),
+        })
+      ).toBe('resolved:pkg');
+      expect(original).toHaveBeenCalledTimes(2);
+    } finally {
+      cleanup();
+      nodeModule._resolveFilename = realResolveFilename;
+      vi.restoreAllMocks();
+    }
+  });
 });

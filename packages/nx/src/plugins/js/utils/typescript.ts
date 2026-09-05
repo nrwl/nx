@@ -119,7 +119,15 @@ export function getRootTsConfigCustomConditions(
   if (customConditionsCache.has(root)) {
     return customConditionsCache.get(root)!;
   }
+  const conditions = readRootTsConfigCustomConditions(root);
+  customConditionsCache.set(root, conditions);
+  return conditions;
+}
 
+/** Uncached read, for freshness checks against the cached value. */
+export function readRootTsConfigCustomConditions(
+  root: string = workspaceRoot
+): string[] {
   // Resolve via the TypeScript API rather than a raw JSON read so that
   // `customConditions` inherited through `extends` chains are honored —
   // matches what TypeScript itself sees when resolving package exports.
@@ -139,9 +147,11 @@ export function getRootTsConfigCustomConditions(
     } catch {}
     break;
   }
-
-  customConditionsCache.set(root, conditions);
   return conditions;
+}
+
+export function clearRootTsConfigCustomConditionsCache(): void {
+  customConditionsCache.clear();
 }
 
 /**
@@ -159,17 +169,14 @@ export function getRootTsConfigResolveExportsConditions(
 }
 
 /**
- * Node `--conditions <name>` CLI args for spawning a plugin worker or the daemon
- * with the plugin-resolution conditions active at startup. Mirrors the set Nx
- * uses to resolve the plugin entry (`getRootTsConfigResolveExportsConditions`)
- * so the entry and the plugin's transitive workspace imports resolve the same
- * way; Node's own resolver otherwise ignores TypeScript `customConditions` and a
- * source-loaded plugin's imports land on their unbuilt `dist`.
+ * Returns Node `--conditions` arguments for a source-loaded isolated worker.
+ * Excludes the `development` fallback because it could select third-party
+ * development builds.
  */
 export function getPluginResolveConditionNodeArgs(
   root: string = workspaceRoot
 ): string[] {
-  return getRootTsConfigResolveExportsConditions(root).flatMap((c) => [
+  return getRootTsConfigCustomConditions(root).flatMap((c) => [
     '--conditions',
     c,
   ]);

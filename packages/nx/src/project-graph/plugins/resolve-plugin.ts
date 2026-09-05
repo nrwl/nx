@@ -6,6 +6,7 @@ import {
   getWorkspacePackagesMetadata,
   matchImportToWildcardEntryPointsToProjectMap,
 } from '../../plugins/js/utils/packages';
+import { refreshSourceGraphResolvers } from '../../plugins/js/utils/register';
 import { getRootTsConfigResolveExportsConditions } from '../../plugins/js/utils/typescript';
 import { readJsonFile } from '../../utils/fileutils';
 import { logger } from '../../utils/logger';
@@ -19,6 +20,7 @@ import {
   clearProjectsWithoutPluginInferenceCache,
   retrieveProjectConfigurationsWithoutPluginInference,
 } from '../utils/retrieve-workspace-files';
+import { isWorkspaceLocalResolution } from './built-entry-resolution-hint';
 
 import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
@@ -32,12 +34,35 @@ type LocalPluginMatch = {
   resolvedFile?: string;
 };
 
+type LocalPluginResolution = {
+  isSource: boolean;
+  path: string;
+};
+
 const TS_SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.cts', '.mts']);
 
 let projectsWithoutInference: Record<string, ProjectConfiguration>;
 let projectsWithoutInferencePromise: Promise<
   typeof projectsWithoutInference
 > | null = null;
+
+async function getProjectsWithoutInference(root: string) {
+  projectsWithoutInferencePromise ??=
+    retrieveProjectConfigurationsWithoutPluginInference(root).then(
+      (projects) => {
+        // Refresh registered source graphs from the rebuilt snapshot so they
+        // do not keep stale package names.
+        refreshSourceGraphResolvers(
+          root,
+          () =>
+            getCachedWorkspacePackagesMetadata(projects)
+              .packageManagerWorkspacePackageNames
+        );
+        return projects;
+      }
+    );
+  return (projectsWithoutInference ??= await projectsWithoutInferencePromise);
+}
 
 export async function resolveNxPlugin(
   moduleName: string,
@@ -62,37 +87,24 @@ export async function resolveNxPlugin(
       !resolvedFromNode ||
       isWorkspaceLocalResolution(resolvedFromNode, root)
     ) {
-      projectsWithoutInferencePromise ??=
-        retrieveProjectConfigurationsWithoutPluginInference(root);
-      projectsWithoutInference ??= await projectsWithoutInferencePromise;
+      projectsWithoutInference = await getProjectsWithoutInference(root);
     }
   }
 
-  const { pluginPath, name, shouldRegisterTSTranspiler } = getPluginPathAndName(
+  const result = getPluginPathAndName(
     moduleName,
     paths,
     projectsWithoutInference,
     root
   );
-  return { pluginPath, name, shouldRegisterTSTranspiler };
-}
-
-/**
- * Distinguishes a symlinked workspace package (where `require.resolve`
- * follows the package-manager symlink into the workspace source tree) from
- * a truly-installed dependency under `node_modules/`. The former needs the
- * source-first lookup to bypass the dist that Node would otherwise return.
- */
-function isWorkspaceLocalResolution(
-  resolvedPath: string,
-  root: string
-): boolean {
-  const normalizedRoot = path.normalize(root);
-  const normalizedPath = path.normalize(resolvedPath);
-  return (
-    normalizedPath.startsWith(normalizedRoot + path.sep) &&
-    !normalizedPath.includes(path.sep + 'node_modules' + path.sep)
-  );
+  const workspacePackageNames = projectsWithoutInference
+    ? getCachedWorkspacePackagesMetadata(projectsWithoutInference)
+        .packageManagerWorkspacePackageNames
+    : undefined;
+  return {
+    ...result,
+    workspacePackageNames: workspacePackageNames ?? [],
+  };
 }
 
 function isPackageResolutionError(e: unknown): boolean {
@@ -136,6 +148,7 @@ export function getPluginPathAndName(
   root: string
 ) {
   let pluginPath: string | undefined;
+  let isSourcePlugin = false;
 
   // Resolve local workspace plugins from source first so the workspace's
   // `customConditions`/`development` exports condition wins over the built
@@ -147,7 +160,13 @@ export function getPluginPathAndName(
     ? resolveLocalNxPlugin(moduleName, projects, root)
     : null;
   if (localPlugin) {
-    pluginPath = tryResolveLocalPluginFromSource(moduleName, localPlugin, root);
+    const resolution = tryResolveLocalPluginFromSource(
+      moduleName,
+      localPlugin,
+      root
+    );
+    pluginPath = resolution?.path;
+    isSourcePlugin = resolution?.isSource ?? false;
     if (!pluginPath && getSubpathOfLocalPackage(moduleName, localPlugin)) {
       throwUnresolvableLocalPluginError(moduleName, localPlugin, root);
     }
@@ -172,6 +191,9 @@ export function getPluginPathAndName(
   }
 
   const ext = path.extname(pluginPath);
+  isSourcePlugin ||=
+    TS_SOURCE_EXTENSIONS.has(ext) &&
+    isWorkspaceLocalResolution(pluginPath, root);
   // Directory paths fall through to Node's `package.json` `main` resolution
   // which may land on a TS file; only opt out of TS transpiler registration
   // when the resolved path is unambiguously JS.
@@ -184,7 +206,7 @@ export function getPluginPathAndName(
     existsSync(packageJsonPath) // plugin has a package.json
       ? readJsonFile(packageJsonPath) // read name from package.json
       : { name: moduleName };
-  return { pluginPath, name, shouldRegisterTSTranspiler };
+  return { pluginPath, name, shouldRegisterTSTranspiler, isSourcePlugin };
 }
 
 function getSubpathOfLocalPackage(
@@ -202,9 +224,9 @@ function tryResolveLocalPluginFromSource(
   moduleName: string,
   plugin: LocalPluginMatch,
   root: string
-): string | null {
+): LocalPluginResolution | null {
   if (plugin.resolvedFile) {
-    return plugin.resolvedFile;
+    return { path: plugin.resolvedFile, isSource: true };
   }
 
   const subpath = getSubpathOfLocalPackage(moduleName, plugin);
@@ -218,7 +240,22 @@ function tryResolveLocalPluginFromSource(
   }
 
   const main = readPluginMainFromProjectConfiguration(plugin.projectConfig);
-  return main ? path.join(root, main) : null;
+  if (main) {
+    return { path: path.join(root, main), isSource: true };
+  }
+
+  // Without a configured build `main`, a bare package name selects source or
+  // dist through the root `exports` entry.
+  if (moduleName === plugin.projectConfig.metadata?.js?.packageName) {
+    return resolveSubpathFromExports(
+      plugin.projectConfig,
+      plugin.path,
+      '.',
+      root
+    );
+  }
+
+  return null;
 }
 
 function throwUnresolvableLocalPluginError(
@@ -251,7 +288,7 @@ function resolveSubpathFromExports(
   projectPath: string,
   subpath: string,
   root: string
-): string | null {
+): LocalPluginResolution | null {
   const packageExports = projectConfig.metadata?.js?.packageExports;
   if (!packageExports) {
     return null;
@@ -263,17 +300,33 @@ function resolveSubpathFromExports(
   };
 
   try {
-    const matches = resolveExports(pkg, subpath, {
-      conditions: getRootTsConfigResolveExportsConditions(root),
-    });
+    const matches = resolveExportsForLoader(
+      pkg,
+      subpath,
+      getRootTsConfigResolveExportsConditions(root)
+    );
     if (!matches || !matches.length) {
       return null;
     }
 
+    let defaultMatches: string[] | void;
+    try {
+      defaultMatches = resolveExportsForLoader(pkg, subpath, []);
+    } catch {}
+    // Source when the default resolution would not have landed on the same
+    // file: an array target may fall through to the built file.
+    const defaultMatch = (defaultMatches || []).find((m) =>
+      existsSync(path.join(projectPath, m))
+    );
     for (const match of matches) {
       const candidate = path.join(projectPath, match);
       if (existsSync(candidate)) {
-        return candidate;
+        return {
+          path: candidate,
+          isSource:
+            defaultMatch !== match ||
+            TS_SOURCE_EXTENSIONS.has(path.extname(candidate)),
+        };
       }
     }
   } catch (e) {
@@ -284,6 +337,27 @@ function resolveSubpathFromExports(
   }
 
   return null;
+}
+
+/**
+ * Prefers the `require` export because the loader tries `require()` before
+ * `import()`; the `import` export is used only for import-only entries.
+ */
+function resolveExportsForLoader(
+  pkg: { name: string; exports: unknown },
+  subpath: string,
+  conditions: string[]
+): string[] | void {
+  try {
+    const matches = resolveExports(pkg, subpath, {
+      conditions,
+      require: true,
+    });
+    if (matches && matches.length) {
+      return matches;
+    }
+  } catch {}
+  return resolveExports(pkg, subpath, { conditions });
 }
 
 function lookupLocalPlugin(
@@ -311,8 +385,15 @@ function lookupLocalPlugin(
   };
 }
 
-let packageEntryPointsToProjectMap: Record<string, ProjectConfiguration>;
-let wildcardEntryPointsToProjectMap: Record<string, ProjectConfiguration>;
+let workspacePackagesMetadata:
+  | ReturnType<typeof getWorkspacePackagesMetadata<ProjectConfiguration>>
+  | undefined;
+function getCachedWorkspacePackagesMetadata(
+  projects: Record<string, ProjectConfiguration>
+) {
+  return (workspacePackagesMetadata ??= getWorkspacePackagesMetadata(projects));
+}
+
 function findNxProjectForImportPath(
   importPath: string,
   projects: Record<string, ProjectConfiguration>,
@@ -343,14 +424,10 @@ function findNxProjectForImportPath(
     }
   }
 
-  if (!packageEntryPointsToProjectMap && !wildcardEntryPointsToProjectMap) {
-    ({
-      entryPointsToProjectMap: packageEntryPointsToProjectMap,
-      wildcardEntryPointsToProjectMap,
-    } = getWorkspacePackagesMetadata(projects));
-  }
-  if (packageEntryPointsToProjectMap[importPath]) {
-    return { projectConfig: packageEntryPointsToProjectMap[importPath] };
+  const { entryPointsToProjectMap, wildcardEntryPointsToProjectMap } =
+    getCachedWorkspacePackagesMetadata(projects);
+  if (entryPointsToProjectMap[importPath]) {
+    return { projectConfig: entryPointsToProjectMap[importPath] };
   }
 
   const project = matchImportToWildcardEntryPointsToProjectMap(
@@ -400,8 +477,7 @@ function readTsConfigPaths(root: string = workspaceRoot) {
 export function resetResolvePluginCache(): void {
   projectsWithoutInference = undefined;
   projectsWithoutInferencePromise = null;
-  packageEntryPointsToProjectMap = undefined;
-  wildcardEntryPointsToProjectMap = undefined;
+  workspacePackagesMetadata = undefined;
   tsconfigPaths = undefined;
   clearProjectsWithoutPluginInferenceCache();
 }

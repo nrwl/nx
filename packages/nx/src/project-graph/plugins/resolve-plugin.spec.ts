@@ -23,8 +23,13 @@ vi.mock('../../plugins/js/utils/packages', () => ({
   getWorkspacePackagesMetadata: vi.fn(() => ({
     entryPointsToProjectMap: entryPointsToProjectMapMock,
     wildcardEntryPointsToProjectMap: {},
+    packageManagerWorkspacePackageNames: ['@proj/from-snapshot'],
   })),
   matchImportToWildcardEntryPointsToProjectMap: vi.fn(() => null),
+}));
+
+vi.mock('../../plugins/js/utils/register', () => ({
+  refreshSourceGraphResolvers: vi.fn(),
 }));
 
 vi.mock('../../utils/workspace-root', () => ({
@@ -54,8 +59,10 @@ vi.mock('../../project-graph/utils/find-project-for-path', () => ({
 import {
   getPluginPathAndName,
   resetResolvePluginCache,
+  resolveNxPlugin,
 } from './resolve-plugin';
 import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
+import { join, resolve } from 'node:path';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -220,6 +227,144 @@ describe('resolveSubpathFromExports (via getPluginPathAndName)', () => {
     expect(pluginPath).toBe(distFile);
   });
 
+  it('resolves the bare package name through the exports root entry when there is no build main', () => {
+    const sourceFile = `${projectPath}/src/index.ts`;
+    onlyFilesExist(`${root}/tsconfig.base.json`, sourceFile);
+
+    const projects = setupProject({
+      '.': {
+        development: './src/index.ts',
+        default: './dist/index.js',
+      },
+    });
+
+    const result = getPluginPathAndName(
+      '@scope/my-plugin',
+      [`${root}/node_modules`],
+      projects,
+      root
+    );
+
+    expect(result.pluginPath).toBe(sourceFile);
+    expect(result.isSourcePlugin).toBe(true);
+  });
+
+  it('resolves the bare package name to the built entry when the exports root entry only points at dist', () => {
+    const distFile = `${projectPath}/dist/index.js`;
+    onlyFilesExist(`${root}/tsconfig.base.json`, distFile);
+
+    const projects = setupProject({
+      '.': { default: './dist/index.js' },
+    });
+
+    const result = getPluginPathAndName(
+      '@scope/my-plugin',
+      [`${root}/node_modules`],
+      projects,
+      root
+    );
+
+    expect(result.pluginPath).toBe(distFile);
+    expect(result.isSourcePlugin).toBe(false);
+  });
+
+  it('resolves a dual package bare name to the require target, as the loader requires first', () => {
+    const cjsFile = `${projectPath}/dist/index.cjs`;
+    onlyFilesExist(
+      `${root}/tsconfig.base.json`,
+      cjsFile,
+      `${projectPath}/dist/index.mjs`
+    );
+
+    const projects = setupProject({
+      '.': { import: './dist/index.mjs', require: './dist/index.cjs' },
+    });
+
+    const result = getPluginPathAndName(
+      '@scope/my-plugin',
+      [`${root}/node_modules`],
+      projects,
+      root
+    );
+
+    expect(result.pluginPath).toBe(cjsFile);
+    expect(result.isSourcePlugin).toBe(false);
+  });
+
+  it('resolves an import-only subpath entry, which the loader reaches through import()', () => {
+    const esmFile = `${projectPath}/src/plugin.mjs`;
+    onlyFilesExist(`${root}/tsconfig.base.json`, esmFile);
+
+    const projects = setupProject(
+      { './plugin': { import: './src/plugin.mjs' } },
+      ['@scope/my-plugin/plugin']
+    );
+
+    const { pluginPath } = getPluginPathAndName(
+      '@scope/my-plugin/plugin',
+      [`${root}/node_modules`],
+      projects,
+      root
+    );
+
+    expect(pluginPath).toBe(esmFile);
+  });
+
+  it('resolves a dual package subpath to the require target', () => {
+    const cjsFile = `${projectPath}/dist/plugin.cjs`;
+    onlyFilesExist(
+      `${root}/tsconfig.base.json`,
+      cjsFile,
+      `${projectPath}/dist/plugin.mjs`
+    );
+
+    const projects = setupProject(
+      {
+        './plugin': {
+          import: './dist/plugin.mjs',
+          require: './dist/plugin.cjs',
+        },
+      },
+      ['@scope/my-plugin/plugin']
+    );
+
+    const { pluginPath } = getPluginPathAndName(
+      '@scope/my-plugin/plugin',
+      [`${root}/node_modules`],
+      projects,
+      root
+    );
+
+    expect(pluginPath).toBe(cjsFile);
+  });
+
+  it('does not mark a built file as source when the conditioned array target falls through to it', () => {
+    const distFile = `${projectPath}/dist/index.js`;
+    onlyFilesExist(`${root}/tsconfig.base.json`, distFile);
+
+    for (const defaultTarget of [
+      './dist/index.js',
+      ['./dist/missing.js', './dist/index.js'],
+    ]) {
+      const projects = setupProject({
+        '.': {
+          development: ['./src/missing.ts', './dist/index.js'],
+          default: defaultTarget,
+        },
+      });
+
+      const result = getPluginPathAndName(
+        '@scope/my-plugin',
+        [`${root}/node_modules`],
+        projects,
+        root
+      );
+
+      expect(result.pluginPath).toBe(distFile);
+      expect(result.isSourcePlugin).toBe(false);
+    }
+  });
+
   it('throws an informative error when the subpath has no exports entry', () => {
     const projects = setupProject(
       {
@@ -237,5 +382,81 @@ describe('resolveSubpathFromExports (via getPluginPathAndName)', () => {
         root
       )
     ).toThrow(/Unable to resolve local plugin/);
+  });
+});
+
+describe('getPluginPathAndName', () => {
+  beforeEach(() => {
+    resetResolvePluginCache();
+    existsSyncMock.mockImplementation(() => false);
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('marks a relative workspace TypeScript plugin as source', () => {
+    const workspace = resolve(__dirname, '../../..');
+
+    const result = getPluginPathAndName(
+      './resolve-plugin.ts',
+      [__dirname],
+      {},
+      workspace
+    );
+
+    expect(result.pluginPath).toBe(join(__dirname, 'resolve-plugin.ts'));
+    expect(result.isSourcePlugin).toBe(true);
+  });
+});
+
+describe('resolveNxPlugin', () => {
+  beforeEach(() => {
+    resetResolvePluginCache();
+    existsSyncMock.mockImplementation(() => false);
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('pushes package names to source graph resolvers only when the workspace snapshot is rebuilt', async () => {
+    const { refreshSourceGraphResolvers } =
+      await import('../../plugins/js/utils/register');
+
+    await expect(
+      resolveNxPlugin('@scope/missing-plugin', root, [])
+    ).rejects.toThrow();
+
+    expect(refreshSourceGraphResolvers).toHaveBeenCalledTimes(1);
+    const [refreshedRoot, getPackageNames] = vi.mocked(
+      refreshSourceGraphResolvers
+    ).mock.calls[0];
+    expect(refreshedRoot).toBe(root);
+    expect(getPackageNames?.()).toEqual(['@proj/from-snapshot']);
+
+    await expect(
+      resolveNxPlugin('@scope/missing-plugin', root, [])
+    ).rejects.toThrow();
+    expect(refreshSourceGraphResolvers).toHaveBeenCalledTimes(1);
+  });
+
+  it('extracts workspace package metadata once per resolution snapshot', async () => {
+    const { getWorkspacePackagesMetadata } =
+      await import('../../plugins/js/utils/packages');
+
+    await expect(
+      resolveNxPlugin('@scope/missing-plugin', root, [])
+    ).rejects.toThrow();
+    for (let i = 0; i < 3; i++) {
+      await resolveNxPlugin('./resolve-plugin.ts', root, [__dirname]);
+    }
+    expect(getWorkspacePackagesMetadata).toHaveBeenCalledTimes(1);
+
+    resetResolvePluginCache();
+    await expect(
+      resolveNxPlugin('@scope/missing-plugin', root, [])
+    ).rejects.toThrow();
+    expect(getWorkspacePackagesMetadata).toHaveBeenCalledTimes(2);
   });
 });

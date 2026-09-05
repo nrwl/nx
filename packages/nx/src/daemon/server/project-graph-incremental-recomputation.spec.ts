@@ -167,6 +167,81 @@ describe('invalidateGraphCache', () => {
   });
 });
 
+describe('plugin state freshness', () => {
+  let fs: TempFs;
+
+  beforeEach(() => {
+    fs = new TempFs('pgir-plugin-state');
+  });
+
+  afterEach(() => {
+    fs.cleanup();
+  });
+
+  // Source workers take the root customConditions as process flags at spawn,
+  // so a running compute must restart when they change.
+  it('chains an in-flight compute to a successor when the root customConditions change', async () => {
+    const tsconfig = (conditions: string[]) =>
+      JSON.stringify({ compilerOptions: { customConditions: conditions } });
+    fs.createFilesSync({
+      'nx.json': JSON.stringify({}),
+      'package.json': JSON.stringify({ name: 'root' }),
+      'tsconfig.base.json': tsconfig(['@proj/source']),
+    });
+
+    vi.resetModules();
+    vi.doUnmock('../../project-graph/plugins/get-plugins');
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
+
+    // Delay the first retrieval after the plugin-state snapshot without
+    // replacing it.
+    let releaseFirstRetrieve: () => void;
+    const firstRetrieveGate = new Promise<void>((resolve) => {
+      releaseFirstRetrieve = resolve;
+    });
+    let retrieveCallCount = 0;
+    vi.doMock(
+      '../../project-graph/utils/retrieve-workspace-files',
+      async () => {
+        const actual = (await vi.importActual(
+          '../../project-graph/utils/retrieve-workspace-files'
+        )) as any;
+        return {
+          ...actual,
+          retrieveProjectConfigurations: async (...args: unknown[]) => {
+            retrieveCallCount++;
+            if (retrieveCallCount === 1) {
+              await firstRetrieveGate;
+            }
+            return actual.retrieveProjectConfigurations(...args);
+          },
+        };
+      }
+    );
+
+    const { getCachedSerializedProjectGraphPromise } =
+      await import('./project-graph-incremental-recomputation');
+
+    const first = getCachedSerializedProjectGraphPromise();
+    while (retrieveCallCount === 0) {
+      await new Promise((r) => setImmediate(r));
+    }
+
+    writeFileSync(
+      join(fs.tempDir, 'tsconfig.base.json'),
+      tsconfig(['@proj/src'])
+    );
+    releaseFirstRetrieve!();
+
+    const result = await first;
+    expect(result.error).toBeNull();
+    expect(result.projectGraph).toBeDefined();
+    // A second retrieval proves the stale result chained to a successor.
+    expect(retrieveCallCount).toBeGreaterThanOrEqual(2);
+  });
+});
+
 describe('pending dotenv replay before serving a graph', () => {
   let fs: TempFs;
 
