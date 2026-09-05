@@ -1065,7 +1065,9 @@ async function generateChangelogForWorkspace({
         );
       } else {
         // No existing version, simply prepend the new release to the top of the file
-        rootChangelogContents = `${contents}\n\n${rootChangelogContents}`;
+        rootChangelogContents = contents
+          ? `${contents}\n\n${rootChangelogContents}`
+          : rootChangelogContents;
       }
     } else {
       // No existing changelog contents, or replaceExistingContents is true, simply use the generated contents directly
@@ -1232,7 +1234,9 @@ async function generateChangelogForProjects({
           );
         } else {
           // No existing version, simply prepend the new release to the top of the file
-          changelogContents = `${contents}\n\n${changelogContents}`;
+          changelogContents = contents
+            ? `${contents}\n\n${changelogContents}`
+            : changelogContents;
         }
       } else {
         // No existing changelog contents, simply create a new one using the generated contents
