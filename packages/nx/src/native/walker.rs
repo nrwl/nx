@@ -4,7 +4,6 @@ use std::path::{Path, PathBuf};
 
 use crate::native::glob::build_glob_set;
 
-#[cfg(not(target_arch = "wasm32"))]
 use crate::native::utils::{Normalize, get_mod_time, git::parent_gitignore_files};
 use walkdir::WalkDir;
 
