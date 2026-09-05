@@ -241,6 +241,27 @@ class DependingOnNonParallelContinuousTaskError extends Error {
   }
 }
 
+/** Ids of `rootTaskId`'s dependencies — direct only, or the whole subtree. */
+export function collectUpstreamTaskIds(
+  taskGraph: TaskGraph,
+  rootTaskId: string,
+  transitive: boolean
+): string[] {
+  const direct = taskGraph.dependencies[rootTaskId] ?? [];
+  if (!transitive) return [...direct];
+
+  const collected = new Set<string>();
+  const walk = (id: string): void => {
+    for (const dep of taskGraph.dependencies[id] ?? []) {
+      if (collected.has(dep)) continue;
+      collected.add(dep);
+      walk(dep);
+    }
+  };
+  walk(rootTaskId);
+  return [...collected];
+}
+
 export function getLeafTasks(taskGraph: TaskGraph): Set<string> {
   const reversed = reverseTaskGraph(taskGraph);
   const leafTasks = new Set<string>();

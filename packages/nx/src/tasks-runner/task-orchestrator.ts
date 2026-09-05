@@ -11,7 +11,10 @@ import { DaemonClient } from '../daemon/client/client';
 import { runCommands } from '../executors/run-commands/run-commands.impl';
 import { getTaskDetails, hashTask, hashTasks } from '../hasher/hash-task';
 import { walkTaskGraph } from './task-graph-utils';
-import { getInputs, TaskHasher } from '../hasher/task-hasher';
+import {
+  getDependenciesWithOutputsToHash,
+  TaskHasher,
+} from '../hasher/task-hasher';
 import {
   BatchStatus,
   IS_WASM,
@@ -316,9 +319,12 @@ export class TaskOrchestrator {
           .filter(
             (t) =>
               !t.hash &&
-              this.taskGraph.dependencies[t.id].every((depId) =>
-                this.completedTasks.has(depId)
-              )
+              getDependenciesWithOutputsToHash(
+                t,
+                this.taskGraph,
+                this.projectGraph,
+                this.nxJson
+              ).every((depId) => this.completedTasks.has(depId))
           );
         if (unhashed.length > 0) {
           const perTaskEnvs: Record<string, NodeJS.ProcessEnv> = {};
@@ -643,9 +649,9 @@ export class TaskOrchestrator {
    * Hash all batch tasks and resolve cache hits topologically.
    *
    * Walks the task graph level by level. Every task gets a preliminary hash
-   * (so startTasks always has a valid hash for Cloud). Tasks with depsOutputs
-   * whose deps weren't cached are ineligible for cache lookup but still
-   * receive a preliminary hash — they'll be re-hashed after execution.
+   * (so startTasks always has a valid hash for Cloud). Tasks whose hash reads
+   * outputs of a dep that wasn't cached are ineligible for cache lookup but
+   * still receive a preliminary hash — they'll be re-hashed after execution.
    */
   private async applyBatchCachedResults(
     batch: Batch,
@@ -674,13 +680,14 @@ export class TaskOrchestrator {
 
       const eligible: Task[] = [];
       for (const task of rootTasks) {
-        const depIds = batch.taskGraph.dependencies[task.id];
-        const hasNonCachedDep = depIds.some((id) => nonCachedTaskIds.has(id));
+        const hasNonCachedOutputDep = getDependenciesWithOutputsToHash(
+          task,
+          batch.taskGraph,
+          this.projectGraph,
+          this.nxJson
+        ).some((id) => nonCachedTaskIds.has(id));
 
-        if (
-          hasNonCachedDep &&
-          getInputs(task, this.projectGraph, this.nxJson).depsOutputs.length > 0
-        ) {
+        if (hasNonCachedOutputDep) {
           nonCachedTaskIds.add(task.id);
           needsRehashAfterExecution.add(task.id);
         } else {

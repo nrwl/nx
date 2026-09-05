@@ -4,6 +4,7 @@ import {
   expandNamedInput,
   expandSingleProjectInputs,
   filterUsingGlobPatterns,
+  getDependenciesWithOutputsToHash,
   splitInputsIntoSelfAndDependencies,
 } from './task-hasher';
 
@@ -186,6 +187,110 @@ describe('TaskHasher', () => {
         { fileset: '{projectRoot}/**/*.json', dependencies: true },
       ]);
       expect(result.depsInputs).toEqual([]);
+    });
+  });
+
+  describe('getDependenciesWithOutputsToHash', () => {
+    const task = (id: string, outputs: string[]) => {
+      const [project, target] = id.split(':');
+      return { id, target: { project, target }, outputs } as any;
+    };
+    const graph = (
+      tasks: any[],
+      dependencies: Record<string, string[]>
+    ): any => ({
+      roots: [],
+      tasks: Object.fromEntries(tasks.map((t) => [t.id, t])),
+      dependencies,
+      continuousDependencies: {},
+    });
+    const projectGraph = (inputs: any[] | undefined): any => ({
+      nodes: {
+        app: {
+          name: 'app',
+          type: 'app',
+          data: {
+            root: 'app',
+            targets: { build: { ...(inputs ? { inputs } : {}) } },
+          },
+        },
+      },
+      dependencies: {},
+    });
+    const nxJson: any = { namedInputs: {} };
+    const app = task('app:build', ['dist/app']);
+    const depsOutputs = (transitive?: boolean) =>
+      projectGraph([{ dependentTasksOutputFiles: '**/*.d.ts', transitive }]);
+
+    it('returns nothing when the task has no dependentTasksOutputFiles input', () => {
+      const tg = graph([app, task('lib:build', ['dist/lib'])], {
+        'app:build': ['lib:build'],
+        'lib:build': [],
+      });
+      expect(
+        getDependenciesWithOutputsToHash(
+          app,
+          tg,
+          projectGraph([{ fileset: '{projectRoot}/**/*' }]),
+          nxJson
+        )
+      ).toEqual([]);
+    });
+
+    it('skips dependencies that declare no outputs', () => {
+      const tg = graph(
+        [app, task('tool:install', []), task('lib:build', ['dist/lib'])],
+        {
+          'app:build': ['tool:install', 'lib:build'],
+          'tool:install': [],
+          'lib:build': [],
+        }
+      );
+      expect(
+        getDependenciesWithOutputsToHash(app, tg, depsOutputs(), nxJson)
+      ).toEqual(['lib:build']);
+    });
+
+    it('only walks direct dependencies unless transitive', () => {
+      const tg = graph(
+        [app, task('mid:build', []), task('leaf:build', ['dist/leaf'])],
+        {
+          'app:build': ['mid:build'],
+          'mid:build': ['leaf:build'],
+          'leaf:build': [],
+        }
+      );
+      expect(
+        getDependenciesWithOutputsToHash(app, tg, depsOutputs(false), nxJson)
+      ).toEqual([]);
+      expect(
+        getDependenciesWithOutputsToHash(app, tg, depsOutputs(true), nxJson)
+      ).toEqual(['leaf:build']);
+    });
+
+    it('visits diamond dependencies once', () => {
+      const tg = graph(
+        [
+          app,
+          task('a:build', ['dist/a']),
+          task('b:build', ['dist/b']),
+          task('shared:build', ['dist/shared']),
+        ],
+        {
+          'app:build': ['a:build', 'b:build'],
+          'a:build': ['shared:build'],
+          'b:build': ['shared:build'],
+          'shared:build': [],
+        }
+      );
+      expect(
+        getDependenciesWithOutputsToHash(
+          app,
+          tg,
+          depsOutputs(true),
+          nxJson
+        ).sort()
+      ).toEqual(['a:build', 'b:build', 'shared:build']);
     });
   });
 

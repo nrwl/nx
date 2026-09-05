@@ -176,6 +176,29 @@ describe('TaskOrchestrator', () => {
       expect(hasher.hashTasks).toHaveBeenCalledTimes(2);
       expect(consumer.hash).toBe('consumer:build|call-2');
     });
+
+    it('should not re-hash when the only non-cached dep has no outputs', async () => {
+      // dep runs (cache miss) but declares no outputs, so it contributes
+      // nothing to the consumer's dependentTasksOutputFiles hash.
+      const dep = { ...createTask('dep:build'), outputs: [] };
+      const consumer = createTask('consumer:build');
+      const taskGraph: TaskGraph = {
+        roots: ['dep:build'],
+        tasks: { 'dep:build': dep, 'consumer:build': consumer },
+        dependencies: { 'dep:build': [], 'consumer:build': ['dep:build'] },
+        continuousDependencies: { 'dep:build': [], 'consumer:build': [] },
+      };
+      const { orchestrator, hasher } = createOrchestrator(taskGraph);
+
+      await orchestrator.applyFromCacheOrRunBatch(
+        true,
+        { id: 'batch-1', executorName: 'my-plugin:batch', taskGraph },
+        0
+      );
+
+      expect(hasher.hashTasks).toHaveBeenCalledTimes(2);
+      expect(consumer.hash).toBe('consumer:build|call-2');
+    });
   });
 
   describe('cached failures (NX_CACHE_FAILURES)', () => {
