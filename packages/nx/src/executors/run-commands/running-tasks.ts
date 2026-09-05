@@ -1,6 +1,6 @@
 import * as pc from 'picocolors';
 import { ChildProcess, spawn, Serializable } from 'child_process';
-import { env as appendLocalEnv } from 'npm-run-path';
+import npmRunPath from 'npm-run-path';
 import { isAbsolute, join } from 'path';
 import { ExecutorContext } from '../../config/misc-interfaces';
 import { killProcessTree, killProcessTreeGraceful } from '../../native';
@@ -722,11 +722,16 @@ function processEnv(
   envOptionFromExecutor: Record<string, string>,
   envFile?: string
 ) {
-  let localEnv = appendLocalEnv({ cwd: cwd ?? process.cwd() });
-  localEnv = {
-    ...process.env,
-    ...localEnv,
-  };
+  const localEnv: NodeJS.ProcessEnv = { ...process.env };
+  // npm-run-path's `env()` spreads the whole env it is given, which doubled
+  // the process.env copy per task; ask it for the PATH alone and write it back
+  // under whichever key the platform uses.
+  const pathKey =
+    Object.keys(localEnv).find((key) => key.toUpperCase() === 'PATH') ?? 'PATH';
+  localEnv[pathKey] = npmRunPath({
+    cwd: cwd ?? process.cwd(),
+    path: localEnv[pathKey],
+  });
 
   if (process.env.NX_LOAD_DOT_ENV_FILES !== 'false' && envFile) {
     loadEnvVarsFile(envFile, localEnv);

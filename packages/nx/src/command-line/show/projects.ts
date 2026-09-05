@@ -27,9 +27,11 @@ export async function showProjectsHandler(
   performance.measure('code-loading', 'init-local', 'code-loading:end');
   let graph = await createProjectGraphAsync();
   const nxJson = readNxJson();
+  // The affected mode resolves --base to a merge-base, which spawns git; only
+  // pay for that when the projects are actually being filtered by it.
   const { nxArgs } = splitArgsIntoNxArgsAndOverrides(
     args,
-    'affected',
+    args.affected ? 'affected' : 'run-one',
     {
       printWarnings: false,
     },

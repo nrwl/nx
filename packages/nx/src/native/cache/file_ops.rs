@@ -43,10 +43,8 @@ pub fn _copy_impl(src: &Path, dest: &Path, boundary: Option<&Path>) -> anyhow::R
             remove_path(&dest)?;
         }
         None => {
-            if !dest_parent.exists() {
-                trace!("Creating parent directory: {:?}", dest_parent);
-                fs::create_dir_all(dest_parent)?;
-            }
+            trace!("Ensuring parent directory: {:?}", dest_parent);
+            fs::create_dir_all(dest_parent)?;
         }
     }
 
