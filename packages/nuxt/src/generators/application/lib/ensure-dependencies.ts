@@ -1,4 +1,9 @@
-import { addDependenciesToPackageJson, type Tree } from '@nx/devkit';
+import {
+  addDependenciesToPackageJson,
+  detectPackageManager,
+  type Tree,
+} from '@nx/devkit';
+import { acknowledgeBuildScripts } from '@nx/devkit/internal';
 import {
   sassVersion,
   vueRouterVersion,
@@ -29,6 +34,11 @@ export async function ensureDependencies(
   };
 
   if (options.style === 'scss') {
+    // sass pulls in @parcel/watcher, whose install script only builds from
+    // source when npm_config_build_from_source is set.
+    acknowledgeBuildScripts(host, detectPackageManager(host.root), {
+      '@parcel/watcher': false,
+    });
     devDependencies['sass'] = sassVersion;
   }
 

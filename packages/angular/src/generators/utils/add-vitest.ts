@@ -22,6 +22,7 @@ import {
 } from '@nx/devkit/internal';
 import { intersects, satisfies, valid, validRange } from 'semver';
 import { nxVersion, oxcProjectRuntimeVersion } from '../../utils/versions';
+import { acknowledgeAngularBuildScripts } from './acknowledge-build-scripts';
 import {
   getInstalledAngularDevkitVersion,
   getInstalledAngularVersionInfo,
@@ -84,6 +85,7 @@ export async function addVitestAngular(
   const angularDevkitVersion =
     getInstalledAngularDevkitVersion(tree) ?? pkgVersions.angularDevkitVersion;
 
+  acknowledgeAngularBuildScripts(tree);
   return addDependenciesToPackageJson(
     tree,
     {},
@@ -133,6 +135,7 @@ export async function addVitestAnalog(
       devDependencies['jsdom'] = pkgVersions.jsdomVersion;
     }
 
+    acknowledgeAngularBuildScripts(tree);
     tasks.push(
       addDependenciesToPackageJson(tree, {}, devDependencies, undefined, true)
     );

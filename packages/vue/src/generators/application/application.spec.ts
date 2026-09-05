@@ -16,6 +16,7 @@ import * as devkitExports from '@nx/devkit';
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
 import { PackageManagerCommands } from '@nx/devkit/internal';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 
 describe('application generator', () => {
   let tree: Tree;
@@ -37,6 +38,26 @@ describe('application generator', () => {
     } else {
       process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
     }
+  });
+
+  it('should deny the @parcel/watcher build script pulled in by sass', async () => {
+    await withPnpm(tree, '11.2.2', () =>
+      applicationGenerator(tree, { ...options, style: 'scss' })
+    );
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+      /['"]@parcel\/watcher['"]: false/
+    );
+  });
+
+  it('should not record a @parcel/watcher decision without scss', async () => {
+    await withPnpm(tree, '11.2.2', () =>
+      applicationGenerator(tree, { ...options, style: 'css' })
+    );
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8') ?? '').not.toContain(
+      '@parcel/watcher'
+    );
   });
 
   it('should run successfully', async () => {

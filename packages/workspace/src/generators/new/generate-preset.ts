@@ -16,8 +16,14 @@ import yargsParser from 'yargs-parser';
 import { fork, ForkOptions } from 'child_process';
 import { getNxRequirePaths } from '@nx/devkit/internal';
 
-export function addPresetDependencies(host: Tree, options: NormalizedSchema) {
-  const { dependencies, dev } = getPresetDependencies(options);
+export type PresetDependencies = ReturnType<typeof getPresetDependencies>;
+
+export function addPresetDependencies(
+  host: Tree,
+  options: NormalizedSchema,
+  presetDependencies: PresetDependencies
+) {
+  const { dependencies, dev } = presetDependencies;
   return addDependenciesToPackageJson(
     host,
     dependencies,
@@ -25,6 +31,57 @@ export function addPresetDependencies(host: Tree, options: NormalizedSchema) {
     join(options.directory, 'package.json'),
     true
   );
+}
+
+// Install scripts each preset dependency pulls in transitively. `nx new`
+// installs the preset dependencies before the preset generator runs, so the
+// generators that would otherwise record these decisions come too late.
+const presetDependencyBuildScripts: Record<string, Record<string, boolean>> = {
+  '@nx/angular-rspack': {
+    // Its @nx/angular-rspack-compiler dependency patches `@angular/build`
+    // versions below 20.2.0, so that one has to run. The rest come from the
+    // compiler's `@angular/build` and `@rsbuild/core` peers.
+    '@nx/angular-rspack-compiler': true,
+    'core-js': false,
+    esbuild: false,
+    lmdb: false,
+    'msgpackr-extract': false,
+    '@parcel/watcher': false,
+  },
+  // @nx/express and @nx/nest depend on @nx/node, which depends on @nx/jest,
+  // which pulls in jest 30 -> unrs-resolver.
+  '@nx/express': { 'unrs-resolver': false },
+  '@nx/jest': { 'unrs-resolver': false },
+  '@nx/nest': { 'unrs-resolver': false },
+  '@nx/node': { 'unrs-resolver': false },
+  // Both optionally depend on @nx/detox, which depends on @nx/jest. pnpm
+  // installs optionalDependencies by default.
+  '@nx/expo': { 'unrs-resolver': false },
+  '@nx/react-native': { 'unrs-resolver': false },
+  // Both depend on sass, which pulls in @parcel/watcher.
+  '@nx/rspack': { '@parcel/watcher': false },
+  '@nx/webpack': { '@parcel/watcher': false },
+};
+
+export function getPresetBuildScripts({
+  dependencies,
+  dev,
+}: PresetDependencies): Record<string, boolean> {
+  // The conditional entries are keyed unconditionally and left `undefined` when
+  // they don't apply, so the version is what says a package gets installed.
+  const declared: Record<string, string | undefined> = {
+    ...dependencies,
+    ...dev,
+  };
+
+  const buildScripts: Record<string, boolean> = {};
+  for (const pkg of Object.keys(declared)) {
+    if (declared[pkg]) {
+      Object.assign(buildScripts, presetDependencyBuildScripts[pkg]);
+    }
+  }
+
+  return buildScripts;
 }
 
 export function generatePreset(host: Tree, opts: NormalizedSchema) {
@@ -117,7 +174,7 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
 // `typescript` is pinned here rather than left to `@nx/js:init` so it lands in
 // package.json before the first install. Otherwise npm resolves tsquery's
 // `typescript: >3.0.0` peer to 7.x, whose entry point dropped the compiler API.
-function getPresetDependencies({
+export function getPresetDependencies({
   preset,
   presetVersion,
   bundler,

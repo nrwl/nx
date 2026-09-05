@@ -6,6 +6,7 @@ import {
   readJson,
 } from '@nx/devkit';
 import {
+  acknowledgeSwcBuildScripts,
   swcCliVersion,
   swcCoreVersion,
   swcNodeVersion,
@@ -44,6 +45,7 @@ export function configureForSwc(
 }
 
 function addSwcDependencies(tree: Tree) {
+  acknowledgeSwcBuildScripts(tree);
   return addDependenciesToPackageJson(
     tree,
     {

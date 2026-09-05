@@ -13,11 +13,17 @@ import {
   createNxCloudOnboardingURL,
   setupAiAgentsGenerator,
 } from '@nx/devkit/internal';
+import { dump } from '@zkochan/js-yaml';
 import { join } from 'path';
 import { gte } from 'semver';
 import { deduceDefaultBase } from '../../utilities/default-base';
 import { nxVersion } from '../../utils/versions';
 import { Preset } from '../utils/presets';
+import {
+  getPresetBuildScripts,
+  getPresetDependencies,
+  type PresetDependencies,
+} from './generate-preset';
 import type { NormalizedSchema } from './new';
 
 type PresetInfo = {
@@ -197,10 +203,14 @@ export async function generateWorkspaceFiles(
     });
   }
 
+  // Resolving a custom preset's version costs a registry round trip, so this
+  // is computed once and handed back for `addPresetDependencies` to reuse.
+  const presetDependencies = getPresetDependencies(options);
+
   const [packageMajor] = packageManagerVersion.split('.');
   if (options.packageManager === 'pnpm' && +packageMajor >= 7) {
     if (gte(packageManagerVersion, '10.6.0')) {
-      addPnpmSettings(tree, options, packageManagerVersion);
+      addPnpmSettings(tree, options, packageManagerVersion, presetDependencies);
     } else {
       createNpmrc(tree, options);
     }
@@ -215,7 +225,7 @@ export async function generateWorkspaceFiles(
   addNpmScripts(tree, options);
   setUpWorkspacesInPackageJson(tree, options);
 
-  return { token, aiAgentsCallback };
+  return { token, aiAgentsCallback, presetDependencies };
 }
 
 function setPresetProperty(tree: Tree, options: NormalizedSchema) {
@@ -342,15 +352,26 @@ async function createReadme(
 function addPnpmSettings(
   tree: Tree,
   options: NormalizedSchema,
-  packageManagerVersion: string
+  packageManagerVersion: string,
+  presetDependencies: PresetDependencies
 ) {
+  const buildScripts = {
+    nx: true,
+    ...getPresetBuildScripts(presetDependencies),
+  };
+  // pnpm 10 only understands the allow-list form, so a denied package is simply
+  // left out. pnpm 11 needs an explicit decision for every scripted package.
   const buildAllowlist = gte(packageManagerVersion, '11.0.0')
-    ? `allowBuilds:\n  nx: true`
-    : `onlyBuiltDependencies:\n  - nx`;
+    ? { allowBuilds: buildScripts }
+    : {
+        onlyBuiltDependencies: Object.keys(buildScripts).filter(
+          (pkg) => buildScripts[pkg]
+        ),
+      };
 
   tree.write(
     join(options.directory, 'pnpm-workspace.yaml'),
-    `autoInstallPeers: true\n${buildAllowlist}\n`
+    dump({ autoInstallPeers: true, ...buildAllowlist })
   );
 }
 

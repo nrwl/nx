@@ -1,6 +1,7 @@
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
+  detectPackageManager,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -9,6 +10,7 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
+import { acknowledgeBuildScripts } from '@nx/devkit/internal';
 import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 import { typescriptVersion } from '@nx/js/src/utils/versions';
 import {
@@ -173,6 +175,13 @@ export async function consumerGenerator(
   // Write deps into the workspace root package.json so bare bundler bins
   // resolve when nx invokes the generated run-commands serve target.
   const deps = getConsumerDeps(opts.bundler);
+  if (opts.bundler === 'rsbuild') {
+    // @rsbuild/core v1 depends on core-js, whose install script only prints a
+    // funding message.
+    acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+      'core-js': false,
+    });
+  }
   tasks.push(
     addDependenciesToPackageJson(
       tree,

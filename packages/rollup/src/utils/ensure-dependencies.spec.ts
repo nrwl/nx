@@ -49,6 +49,20 @@ describe('ensureDependencies', () => {
     );
   });
 
+  it('should deny the core-js build script when using babel with pnpm', () => {
+    (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
+    updateJson(tree, 'package.json', (json) => {
+      json.packageManager = 'pnpm@11.2.2';
+      return json;
+    });
+
+    ensureDependencies(tree, { compiler: 'babel' });
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toContain(
+      'allowBuilds:\n  core-js: false'
+    );
+  });
+
   it('should not write pnpm-workspace.yaml when not using the swc compiler', () => {
     (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
     updateJson(tree, 'package.json', (json) => {

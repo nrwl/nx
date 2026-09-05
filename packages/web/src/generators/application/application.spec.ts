@@ -11,6 +11,7 @@ import {
   getProjects,
   readJson,
 } from '@nx/devkit';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import * as devkitExports from '@nx/devkit';
 
@@ -635,6 +636,22 @@ describe('app', () => {
 
       const tsconfig = readJson(tree, 'my-app/tsconfig.json');
       expect(tsconfig.compilerOptions.strict).toBeTruthy();
+    });
+
+    it('should deny the @swc/core build script for the swc compiler', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        applicationGenerator(tree, {
+          directory: 'my-app',
+          compiler: 'swc',
+          bundler: 'none',
+          unitTestRunner: 'none',
+          addPlugin: true,
+        } as Schema)
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+        /['"]@swc\/core['"]: false/
+      );
     });
   });
 

@@ -1,5 +1,6 @@
 import {
   addDependenciesToPackageJson,
+  detectPackageManager,
   formatFiles,
   GeneratorCallback,
   logger,
@@ -8,6 +9,8 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
+import { acknowledgeBuildScripts } from '@nx/devkit/internal';
+import { gte, minVersion } from 'semver';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import { StorybookConfigureSchema } from './schema';
@@ -47,7 +50,7 @@ import {
 } from '../../utils/versions';
 import { ensureDependencies } from './lib/ensure-dependencies';
 import { editRootTsConfig } from './lib/edit-root-tsconfig';
-import { getProjectType } from '@nx/js/internal';
+import { acknowledgeSwcBuildScripts, getProjectType } from '@nx/js/internal';
 
 export function configurationGenerator(
   tree: Tree,
@@ -198,7 +201,18 @@ export async function configurationGeneratorInternal(
   }
 
   if (schema.interactionTests) {
-    devDeps['@storybook/test-runner'] = versions(tree).testRunnerVersion;
+    const testRunnerVersion = versions(tree).testRunnerVersion;
+    // @storybook/test-runner depends on @swc/core.
+    acknowledgeSwcBuildScripts(tree);
+    if (gte(minVersion(testRunnerVersion), '0.24.0')) {
+      // Only the 0.24 line runs on jest 30, which reaches unrs-resolver
+      // through jest-resolve. The lines Storybook 8 and 9 select are on
+      // jest 29, which resolves without it.
+      acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+        'unrs-resolver': false,
+      });
+    }
+    devDeps['@storybook/test-runner'] = testRunnerVersion;
   }
 
   if (schema.tsConfiguration) {
@@ -217,6 +231,10 @@ export async function configurationGeneratorInternal(
     projectType !== 'application' &&
     schema.uiFramework === '@storybook/react-webpack5'
   ) {
+    // core-js' install script only prints a funding message.
+    acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+      'core-js': false,
+    });
     devDeps['core-js'] = coreJsVersion;
   }
 
