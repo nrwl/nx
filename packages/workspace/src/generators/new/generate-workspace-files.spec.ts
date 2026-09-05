@@ -13,19 +13,19 @@ import { generateWorkspaceFiles } from './generate-workspace-files';
 
 const nxSchema = readJsonFile(require.resolve('nx/schemas/nx-schema.json'));
 
-jest.mock(
+vi.mock(
   'nx/src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud',
-  () => ({
-    ...jest.requireActual(
+  async () => ({
+    ...(await vi.importActual<any>(
       'nx/src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud'
-    ),
+    )),
     connectToNxCloud: async () => {
       return 'TEST_NX_CLOUD_TOKEN';
     },
   })
 );
-jest.mock('nx/src/nx-cloud/utilities/url-shorten', () => ({
-  ...jest.requireActual('nx/src/nx-cloud/utilities/url-shorten'),
+vi.mock('nx/src/nx-cloud/utilities/url-shorten', async () => ({
+  ...(await vi.importActual<any>('nx/src/nx-cloud/utilities/url-shorten')),
   createNxCloudOnboardingURL: async (source, token, meta, forceManual) => {
     return `https://test.nx.app/connect?source=${source}&token=${token}`;
   },
@@ -36,10 +36,10 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
 
   beforeEach(() => {
     tree = createTree();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Mock getPackageManagerVersion to avoid needing tree.root = process.cwd()
     // which would cause prettier to load plugins from the real .prettierrc
-    jest.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('10.0.0');
+    vi.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('10.0.0');
   });
 
   it('should create files', async () => {
@@ -321,7 +321,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
 
   it('should configure the pnpm settings in pnpm-workspace.yaml and not create an .npmrc file for pnpm <7', async () => {
     tree.write('proj/package.json', JSON.stringify({}));
-    jest.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('6.1.0');
+    vi.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('6.1.0');
 
     await generateWorkspaceFiles(tree, {
       name: 'proj',
@@ -345,7 +345,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
 
   it('should configure the pnpm settings in pnpm-workspace.yaml and .npmrc for pnpm >7 <10.6.0', async () => {
     tree.write('proj/package.json', JSON.stringify({}));
-    jest.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('9.1.0');
+    vi.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('9.1.0');
 
     await generateWorkspaceFiles(tree, {
       name: 'proj',
@@ -374,7 +374,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
 
   it('should configure the pnpm settings in pnpm-workspace.yaml and not create an .npmrc file for pnpm 10.6.0+', async () => {
     tree.write('proj/package.json', JSON.stringify({}));
-    jest.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('10.6.0');
+    vi.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('10.6.0');
 
     await generateWorkspaceFiles(tree, {
       name: 'proj',
@@ -402,7 +402,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
 
   it('should configure the pnpm settings in pnpm-workspace.yaml with allowBuilds for pnpm 11+', async () => {
     tree.write('proj/package.json', JSON.stringify({}));
-    jest.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('11.0.0');
+    vi.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('11.0.0');
 
     await generateWorkspaceFiles(tree, {
       name: 'proj',

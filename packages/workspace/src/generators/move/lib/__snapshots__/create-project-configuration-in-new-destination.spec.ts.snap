@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`moveProjectConfiguration should rename the project 1`] = `
+exports[`moveProjectConfiguration > should rename the project 1`] = `
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
@@ -96,7 +96,7 @@ exports[`moveProjectConfiguration should rename the project 1`] = `
 }
 `;
 
-exports[`moveProjectConfiguration should rename the project correctly except for build targets 1`] = `
+exports[`moveProjectConfiguration > should rename the project correctly except for build targets 1`] = `
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [],

@@ -132,7 +132,7 @@ describe('updateBuildTargets', () => {
 
   it('should NOT attempt to update unrelated projects', async () => {
     addProjectConfiguration(tree, 'unrelated', { root: 'libs/unrelated' });
-    const spy = jest.spyOn(nxDevkit, 'updateProjectConfiguration');
+    const spy = vi.spyOn(nxDevkit, 'updateProjectConfiguration');
     schema.projectName = 'storybook';
     updateBuildTargets(tree, schema);
     expect(spy.mock.calls.map((x) => x[1])).not.toContain('unrelated');
