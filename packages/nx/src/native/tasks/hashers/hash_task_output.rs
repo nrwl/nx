@@ -103,3 +103,43 @@ pub fn hash_task_output(
         files,
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use assert_fs::TempDir;
+    use assert_fs::prelude::*;
+
+    #[test]
+    fn should_hash_scoped_output_files() {
+        let temp = TempDir::new().unwrap();
+        let declaration = temp.child("packages/@acme/producer/dist/index.d.ts");
+        declaration
+            .write_str("export declare const value: 1;\n")
+            .unwrap();
+        let outputs = vec!["packages/@acme/producer/dist/**/*.d.ts".to_string()];
+
+        let first = hash_task_output(
+            temp.path().to_str().unwrap(),
+            "**/*.d.ts",
+            &outputs,
+            &DashMap::new(),
+        )
+        .unwrap();
+
+        declaration
+            .write_str("export declare const value: 2;\n")
+            .unwrap();
+        let second = hash_task_output(
+            temp.path().to_str().unwrap(),
+            "**/*.d.ts",
+            &outputs,
+            &DashMap::new(),
+        )
+        .unwrap();
+
+        assert_eq!(first.files, ["packages/@acme/producer/dist/index.d.ts"]);
+        assert_eq!(first.files, second.files);
+        assert_ne!(first.hash, second.hash);
+    }
+}
