@@ -7,6 +7,7 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { output } from '../utils/output';
 import { stripIndents } from '../utils/strip-indents';
 import { BatchMessageType } from './batch/batch-messages';
+import { childStdinMode } from './child-stdin-mode';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { getProcessMetricsService } from './process-metrics-service';
 import {
@@ -69,7 +70,12 @@ export class ForkedProcessTaskRunner {
     }
 
     const p = fork(workerPath, {
-      stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
+      stdio: [
+        childStdinMode({ tuiEnabled: this.tuiEnabled }),
+        'pipe',
+        'pipe',
+        'ipc',
+      ],
       env: {
         ...env,
         NX_FORKED_TASK_EXECUTOR: 'true',
@@ -285,7 +291,12 @@ export class ForkedProcessTaskRunner {
       }
 
       const p = fork(this.cliPath, {
-        stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
+        stdio: [
+          childStdinMode({ tuiEnabled: this.tuiEnabled }),
+          'pipe',
+          'pipe',
+          'ipc',
+        ],
         env: {
           ...env,
           NX_FORKED_TASK_EXECUTOR: 'true',
@@ -351,7 +362,12 @@ export class ForkedProcessTaskRunner {
         output.logCommand(args.join(' '));
       }
       const p = fork(this.cliPath, {
-        stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
+        stdio: [
+          childStdinMode({ tuiEnabled: this.tuiEnabled }),
+          'inherit',
+          'inherit',
+          'ipc',
+        ],
         env: {
           ...env,
           NX_FORKED_TASK_EXECUTOR: 'true',
