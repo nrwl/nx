@@ -248,9 +248,7 @@ export async function createRemoteReleaseClient(
     // GitHub and GitHub Enterprise Server
     case typeof createReleaseConfig === 'object' &&
       (createReleaseConfig.provider === 'github-enterprise-server' ||
-        createReleaseConfig.provider === 'github'):
-    // If remote releases are disabled, assume GitHub repo data resolution (but don't attempt to resolve a token) to match existing behavior
-    case createReleaseConfig === false: {
+        createReleaseConfig.provider === 'github'): {
       const { GithubRemoteReleaseClient } = await handleImport(
         './github.js',
         __dirname
@@ -259,15 +257,23 @@ export async function createRemoteReleaseClient(
         createReleaseConfig,
         remoteName
       );
-      const token =
-        createReleaseConfig && repoData
-          ? await GithubRemoteReleaseClient.resolveTokenData(repoData.hostname)
-          : null;
+      const token = repoData
+        ? await GithubRemoteReleaseClient.resolveTokenData(repoData.hostname)
+        : null;
       return new GithubRemoteReleaseClient(
         repoData,
         createReleaseConfig,
         token
       );
+    }
+    // If remote releases are disabled, repoData is not needed — skip resolveRepoData to avoid
+    // failing on non-GitHub remote URLs (e.g. self-hosted GitLab)
+    case createReleaseConfig === false: {
+      const { GithubRemoteReleaseClient } = await handleImport(
+        './github.js',
+        __dirname
+      );
+      return new GithubRemoteReleaseClient(null, false, null);
     }
     // GitLab
     case typeof createReleaseConfig === 'object' &&
