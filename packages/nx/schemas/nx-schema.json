@@ -920,6 +920,9 @@
         "cache": {
           "$ref": "#/definitions/targetDefaultsConfig/properties/cache"
         },
+        "sandbox": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/sandbox"
+        },
         "syncGenerators": {
           "$ref": "#/definitions/targetDefaultsConfig/properties/syncGenerators"
         }
@@ -1045,6 +1048,37 @@
         "cache": {
           "type": "boolean",
           "description": "Specifies if the given target should be cacheable"
+        },
+        "sandbox": {
+          "type": "object",
+          "description": "Configures observed-IO sandboxing for tasks of this target",
+          "properties": {
+            "...": {
+              "type": "boolean",
+              "const": true,
+              "description": "Merges with the inherited sandbox configuration instead of replacing it. Keys before this token defer to the inherited value; keys after it win."
+            },
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "description": "Whether tasks for this target are tracked by the sandbox"
+            },
+            "ignoredReads": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Workspace-relative glob patterns for reads excluded from sandboxing reports. The first path segment cannot contain '*', and '?', '!', '[', ']' and extglobs are not supported; anchor the pattern to a directory instead of leading with '**'."
+            },
+            "ignoredWrites": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Workspace-relative glob patterns for writes excluded from sandboxing reports. The first path segment cannot contain '*', and '?', '!', '[', ']' and extglobs are not supported; anchor the pattern to a directory instead of leading with '**'."
+            }
+          },
+          "additionalProperties": false
         },
         "syncGenerators": {
           "type": "array",

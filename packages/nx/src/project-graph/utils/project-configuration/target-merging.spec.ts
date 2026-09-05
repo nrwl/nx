@@ -441,6 +441,186 @@ describe('target merging', () => {
       expect(result.cache).not.toBeDefined();
     });
   });
+
+  describe('sandbox', () => {
+    it('should take the base sandbox when the target does not define one', () => {
+      const result = mergeTargetConfigurations(
+        { executor: 'nx:run-commands' },
+        {
+          executor: 'nx:run-commands',
+          sandbox: { enabled: false, ignoredReads: ['tmp/**'] },
+        }
+      );
+      expect(result.sandbox).toEqual({
+        enabled: false,
+        ignoredReads: ['tmp/**'],
+      });
+    });
+
+    it('should replace the base sandbox wholesale when the target defines one', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          sandbox: { ignoredWrites: ['scratch/**'] },
+        },
+        {
+          executor: 'nx:run-commands',
+          sandbox: { enabled: false, ignoredReads: ['tmp/**'] },
+        }
+      );
+      expect(result.sandbox).toEqual({ ignoredWrites: ['scratch/**'] });
+    });
+
+    it('should shallow-merge with the base sandbox via the spread token', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          sandbox: {
+            '...': true,
+            ignoredWrites: ['scratch/**'],
+          },
+        },
+        {
+          executor: 'nx:run-commands',
+          sandbox: { enabled: false, ignoredReads: ['tmp/**'] },
+        }
+      );
+      expect(result.sandbox).toEqual({
+        enabled: false,
+        ignoredReads: ['tmp/**'],
+        ignoredWrites: ['scratch/**'],
+      });
+    });
+
+    it('should not be merged for incompatible targets', () => {
+      const result = mergeTargetConfigurations(
+        { executor: 'foo' },
+        { executor: 'bar', sandbox: { enabled: false } }
+      );
+      expect(result.sandbox).not.toBeDefined();
+    });
+
+    it('should resolve the spread token inside ignoredReads', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          sandbox: { ignoredReads: ['...', 'tmp/**'] },
+        },
+        {
+          executor: 'nx:run-commands',
+          sandbox: { ignoredReads: ['dist/**'] },
+        }
+      );
+      expect(result.sandbox).toEqual({
+        ignoredReads: ['dist/**', 'tmp/**'],
+      });
+    });
+
+    it('should resolve the spread token inside ignoredWrites under an object spread', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          sandbox: {
+            '...': true,
+            ignoredWrites: ['...', 'scratch/**'],
+          },
+        },
+        {
+          executor: 'nx:run-commands',
+          sandbox: { enabled: false, ignoredWrites: ['dist/**'] },
+        }
+      );
+      expect(result.sandbox).toEqual({
+        enabled: false,
+        ignoredWrites: ['dist/**', 'scratch/**'],
+      });
+    });
+
+    it('should keep a falsy sandbox so validation can reject it', () => {
+      const result = mergeTargetConfigurations(
+        { executor: 'nx:run-commands', sandbox: false as any },
+        { executor: 'nx:run-commands' }
+      );
+      expect('sandbox' in result).toBe(true);
+      expect(result.sandbox).toBe(false);
+    });
+
+    it('should not turn an array sandbox into an empty object', () => {
+      const result = mergeTargetConfigurations(
+        { executor: 'nx:run-commands', sandbox: [] as any },
+        { executor: 'nx:run-commands' }
+      );
+      expect(result.sandbox).toEqual([]);
+    });
+
+    it('should let the base win for a glob array authored before the spread', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          sandbox: { ignoredReads: ['tmp/**'], '...': true },
+        },
+        {
+          executor: 'nx:run-commands',
+          sandbox: { ignoredReads: ['dist/**'], enabled: false },
+        }
+      );
+      expect(result.sandbox).toEqual({
+        ignoredReads: ['dist/**'],
+        enabled: false,
+      });
+    });
+
+    it('should let the target win for a glob array authored after the spread', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          sandbox: { '...': true, ignoredReads: ['tmp/**'] },
+        },
+        {
+          executor: 'nx:run-commands',
+          sandbox: { ignoredReads: ['dist/**'], enabled: false },
+        }
+      );
+      expect(result.sandbox).toEqual({
+        ignoredReads: ['tmp/**'],
+        enabled: false,
+      });
+    });
+
+    it('should not mutate the target it was given', () => {
+      const target = {
+        executor: 'nx:run-commands',
+        sandbox: { ignoredReads: ['...', 'tmp/**'] },
+      };
+      const before = JSON.stringify(target);
+
+      mergeTargetConfigurations(target, {
+        executor: 'nx:run-commands',
+        sandbox: { ignoredReads: ['dist/**'] },
+      });
+
+      expect(JSON.stringify(target)).toEqual(before);
+    });
+
+    it('should never leave a literal spread token on the merged globs', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          sandbox: { ignoredReads: ['...'], ignoredWrites: ['...'] },
+        },
+        {
+          executor: 'nx:run-commands',
+          sandbox: { ignoredReads: ['dist/**'], ignoredWrites: ['out/**'] },
+        }
+      );
+      expect(result.sandbox.ignoredReads).not.toContain('...');
+      expect(result.sandbox.ignoredWrites).not.toContain('...');
+      expect(result.sandbox).toEqual({
+        ignoredReads: ['dist/**'],
+        ignoredWrites: ['out/**'],
+      });
+    });
+  });
 });
 
 describe('spread syntax in mergeTargetConfigurations', () => {

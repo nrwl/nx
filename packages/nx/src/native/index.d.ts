@@ -743,6 +743,8 @@ export interface Task {
   parallelism?: boolean
   /** This denotes if the task runs continuously */
   continuous?: boolean
+  /** The target's observed-IO sandbox configuration, if declared */
+  sandbox?: TaskSandboxConfiguration
 }
 
 /** Graph of Tasks to be executed */
@@ -787,6 +789,30 @@ export interface TaskRun {
   code: number
   start: number
   end: number
+}
+
+/** Observed-IO sandbox configuration of a task's target */
+export interface TaskSandboxConfiguration {
+  /**
+   * Whether tasks for this target are tracked by the sandbox.
+   * Defaults to true. When false, no IO tracing is reported for the
+   * task, so no sandbox report is produced.
+   */
+  enabled?: boolean
+  /**
+   * Workspace-relative glob patterns for reads that should be excluded
+   * from sandboxing reports. The first path segment cannot contain `*`,
+   * and `?`, `!`, `[`, `]` and extglobs are not supported; anchor the
+   * pattern to a directory instead of leading with `**`.
+   */
+  ignoredReads?: Array<string>
+  /**
+   * Workspace-relative glob patterns for writes that should be excluded
+   * from sandboxing reports. The first path segment cannot contain `*`,
+   * and `?`, `!`, `[`, `]` and extglobs are not supported; anchor the
+   * pattern to a directory instead of leading with `**`.
+   */
+  ignoredWrites?: Array<string>
 }
 
 export declare const enum TaskStatus {

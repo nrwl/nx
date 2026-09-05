@@ -28,6 +28,7 @@ import {
   resolveCommandSyntacticSugar,
   resolveNxTokensInOptions,
 } from './target-merging';
+import { isObject } from './utils';
 
 import type { ConfigurationSourceMaps } from './source-maps';
 
@@ -254,6 +255,88 @@ function warnAboutLegacyCachedTargets(
   });
 }
 
+export class InvalidTargetSandboxError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'InvalidTargetSandboxError';
+  }
+}
+
+function describeSandboxValue(value: unknown): string {
+  if (Array.isArray(value)) return 'an array';
+  if (value === null) return 'null';
+  return `a ${typeof value}`;
+}
+
+/**
+ * Rejects a `sandbox` whose shape the schema forbids.
+ *
+ * The schema is editor-only, and everything downstream — the Rust task hasher,
+ * the cloud runner's Go and Kotlin deserializers — is strict. A bad value that
+ * gets this far is reported far from its source, or silently drops the task's
+ * tracking, so it is worth failing here where the project, target and file are
+ * all still in hand.
+ */
+function validateTargetSandbox(
+  sandbox: unknown,
+  projectName: string,
+  projectRoot: string,
+  targetName: string,
+  sourceMaps: ConfigurationSourceMaps
+): void {
+  if (sandbox === undefined) {
+    return;
+  }
+
+  const targetSourceMaps = sourceMaps?.[projectRoot];
+  const [file, plugin] =
+    targetSourceMaps?.[`targets.${targetName}.sandbox`] ??
+    targetSourceMaps?.[`targets.${targetName}`] ??
+    [];
+  const origin = file
+    ? ` (defined in ${file})`
+    : plugin
+      ? ` (defined by ${plugin})`
+      : '';
+  const where = `"${targetName}" in project "${projectName}"${origin}`;
+
+  if (!isObject(sandbox)) {
+    throw new InvalidTargetSandboxError(
+      `The "sandbox" configuration for target ${where} must be an object, but it is ${describeSandboxValue(
+        sandbox
+      )}.`
+    );
+  }
+
+  if (sandbox.enabled !== undefined && typeof sandbox.enabled !== 'boolean') {
+    throw new InvalidTargetSandboxError(
+      `"sandbox.enabled" for target ${where} must be a boolean, but it is ${describeSandboxValue(
+        sandbox.enabled
+      )}. Use \`false\` to opt the target out of observed-IO tracking.`
+    );
+  }
+
+  for (const key of ['ignoredReads', 'ignoredWrites'] as const) {
+    const value = sandbox[key];
+    if (value === undefined) continue;
+    if (!Array.isArray(value)) {
+      throw new InvalidTargetSandboxError(
+        `"sandbox.${key}" for target ${where} must be an array of glob patterns, but it is ${describeSandboxValue(
+          value
+        )}.`
+      );
+    }
+    const badIndex = value.findIndex((glob) => typeof glob !== 'string');
+    if (badIndex !== -1) {
+      throw new InvalidTargetSandboxError(
+        `"sandbox.${key}[${badIndex}]" for target ${where} must be a glob pattern string, but it is ${describeSandboxValue(
+          value[badIndex]
+        )}.`
+      );
+    }
+  }
+}
+
 function normalizeTargets(
   project: ProjectConfiguration,
   sourceMaps: ConfigurationSourceMaps,
@@ -281,6 +364,14 @@ function normalizeTargets(
     );
 
     const target = project.targets[targetName];
+
+    validateTargetSandbox(
+      target.sandbox,
+      project.name ?? project.root,
+      project.root,
+      targetName,
+      sourceMaps
+    );
 
     const targetDefaults = nxJsonConfiguration.targetDefaults;
     if (isLegacyCachedTarget(targetName, targetDefaults, target)) {
