@@ -54,8 +54,8 @@ export const httpProxyMiddlewareVersion = '^3.0.5';
 export const isbotVersion = '^3.6.5';
 export const corsVersion = '~2.8.5';
 export const typesCorsVersion = '~2.8.12';
-export const moduleFederationNodeVersion = '^2.7.21';
-export const moduleFederationEnhancedVersion = '^2.1.0';
+export const moduleFederationNodeVersion = '^2.7.50';
+export const moduleFederationEnhancedVersion = '^2.9.0';
 
 // style preprocessors
 export const sassVersion = '^1.97.2';
