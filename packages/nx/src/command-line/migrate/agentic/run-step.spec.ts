@@ -5,6 +5,9 @@ vi.mock('./handoff', async () => ({
   ...(await vi.importActual('./handoff')),
   mkdirSafely: vi.fn(),
 }));
+vi.mock('./instruction-files', () => ({
+  writeStepInstructionFiles: vi.fn(),
+}));
 vi.mock('../migrate-output', () => ({
   resetSgrAfterAgent: vi.fn(),
 }));
@@ -22,6 +25,11 @@ vi.mock('../../../utils/child-process', () => ({
 import { dirname, join } from 'path';
 import { runAgentic } from './runner';
 import { getAgentDefinition } from './definitions';
+import { writeStepInstructionFiles } from './instruction-files';
+import {
+  buildInlineSystemContext,
+  buildMinimalSystemContext,
+} from './prompts/system-prompt';
 import { runAgenticPromptStep } from './run-step';
 import {
   DetectedInstalledAgent,
@@ -31,6 +39,19 @@ import {
 
 const mockRunAgentic = runAgentic as Mock;
 const mockGetDefinition = getAgentDefinition as Mock;
+const mockWriteInstructionFiles = writeStepInstructionFiles as Mock;
+
+const SYSTEM_PROMPT_FILE =
+  '/ws/.nx/migrate-runs/20.0.0/handoffs/@nx/test/m1.system.md';
+const INSTRUCTIONS_POINTER =
+  'Your instructions for this migration step are in the file .nx/migrate-runs/20.0.0/handoffs/@nx/test/m1.instructions.md';
+const HANDOFF_FILE = join(
+  '/ws/.nx/migrate-runs/20.0.0',
+  'handoffs',
+  '@nx',
+  'test',
+  'm1.json'
+);
 
 function makeAgentic(): EnabledResolvedAgentic {
   const detected: DetectedInstalledAgent = {
@@ -80,7 +101,51 @@ describe('runAgenticPromptStep', () => {
       mkdirSafely: Mock;
     };
     mkdirSafely.mockClear();
+    mockWriteInstructionFiles.mockReset();
+    mockWriteInstructionFiles.mockReturnValue({
+      systemPromptFilePath: SYSTEM_PROMPT_FILE,
+      instructionsPointer: INSTRUCTIONS_POINTER,
+    });
     installDeps = vi.fn().mockResolvedValue(undefined);
+  });
+
+  it('writes both prompts to the run directory and invokes the agent with pointers at them', async () => {
+    configureRun({ kind: 'success', summary: 'applied changes' });
+
+    await runAgenticPromptStep({
+      root: '/ws',
+      migration: makeMigration(),
+      agentic: makeAgentic(),
+      runDir: '/ws/.nx/migrate-runs/20.0.0',
+      installDepsIfChanged: installDeps,
+    });
+
+    const written = mockWriteInstructionFiles.mock.calls[0][0];
+    expect(written.workspaceRoot).toBe('/ws');
+    expect(written.runDir).toBe('/ws/.nx/migrate-runs/20.0.0');
+    expect(written.migration).toMatchObject({
+      package: '@nx/test',
+      name: 'm1',
+    });
+    expect(written.systemPrompt).toContain('<handoff_contract>');
+    expect(written.instructions).toContain('prompts/m1.md');
+
+    const { invocationContext } = mockRunAgentic.mock.calls[0][0];
+    expect(invocationContext.systemPromptFilePath).toBe(SYSTEM_PROMPT_FILE);
+    expect(invocationContext.instructionsPointer).toBe(INSTRUCTIONS_POINTER);
+    expect(invocationContext.systemPrompt).toBe(written.systemPrompt);
+    // Verbatim rather than by fragment: the Windows command-line budget is
+    // measured on exactly what these two builders return, so it only bounds
+    // the real invocation while this passes their output through untouched.
+    expect(invocationContext.inlineSystemContext).toBe(
+      buildInlineSystemContext({
+        handoffFileAbsolutePath: HANDOFF_FILE,
+        systemPromptFilePath: SYSTEM_PROMPT_FILE,
+      })
+    );
+    expect(invocationContext.inlineSystemContextFallback).toBe(
+      buildMinimalSystemContext(SYSTEM_PROMPT_FILE)
+    );
   });
 
   it('returns the agent summary and calls installDeps on success', async () => {
@@ -113,23 +178,17 @@ describe('runAgenticPromptStep', () => {
       installDepsIfChanged: installDeps,
     });
 
-    const expected = join(
-      '/ws/.nx/migrate-runs/20.0.0',
-      'handoffs',
-      '@nx',
-      'test',
-      'm1.json'
-    );
     const { mkdirSafely } = (await import('./handoff')) as {
       mkdirSafely: Mock;
     };
     expect(mkdirSafely).toHaveBeenCalledWith(
-      dirname(expected),
+      dirname(HANDOFF_FILE),
       expect.any(String)
     );
     const call = mockRunAgentic.mock.calls[0][0];
-    expect(call.handoffFilePath).toBe(expected);
-    expect(call.invocationContext.systemContext).toContain(expected);
+    expect(call.handoffFilePath).toBe(HANDOFF_FILE);
+    expect(call.invocationContext.systemPrompt).toContain(HANDOFF_FILE);
+    expect(call.invocationContext.inlineSystemContext).toContain(HANDOFF_FILE);
   });
 
   it('returns ambiguous=true with a placeholder summary on ambiguous-continue, and still installs deps', async () => {

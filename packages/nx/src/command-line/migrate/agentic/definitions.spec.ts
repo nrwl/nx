@@ -1,10 +1,30 @@
 import { homedir } from 'os';
 import { join } from 'path';
+import { parse as parseToml } from 'smol-toml';
 import {
   claudeCodeDefinition,
   codexDefinition,
   opencodeDefinition,
 } from './definitions';
+import { buildSystemPrompt } from './prompts/system-prompt';
+import { InvocationContext } from './types';
+
+function makeContext(
+  overrides: Partial<InvocationContext> = {}
+): InvocationContext {
+  return {
+    systemPrompt: 'system text',
+    systemPromptFilePath:
+      '/workspace/.nx/migrate-runs/23.0.0/handoffs/pkg/m.system.md',
+    instructionsPointer:
+      'read .nx/migrate-runs/23.0.0/handoffs/pkg/m.instructions.md',
+    inlineSystemContext: 'inline system text',
+    inlineSystemContextFallback: 'short system text',
+    workspaceRoot: '/workspace',
+    runDirName: '23.0.0',
+    ...overrides,
+  };
+}
 
 describe('claudeCodeDefinition', () => {
   const originalPlatform = process.platform;
@@ -40,20 +60,15 @@ describe('claudeCodeDefinition', () => {
     expect(claudeCodeDefinition.wellKnownPaths()).toEqual([]);
   });
 
-  it('builds the interactive spec with pre-authorized handoff writes, --system-prompt, and the user prompt', () => {
-    const spec = claudeCodeDefinition.buildInteractive({
-      systemContext: 'system text',
-      userPrompt: 'user text',
-      workspaceRoot: '/workspace',
-      runDirName: '23.0.0',
-    });
+  it('builds the interactive spec with pre-authorized handoff writes, --system-prompt-file, and the instructions pointer', () => {
+    const spec = claudeCodeDefinition.buildInteractive(makeContext());
     expect(spec).toEqual({
       args: [
         '--allowedTools',
         'Edit(.nx/migrate-runs/23.0.0/handoffs/**)',
-        '--system-prompt',
-        'system text',
-        'user text',
+        '--system-prompt-file',
+        '/workspace/.nx/migrate-runs/23.0.0/handoffs/pkg/m.system.md',
+        'read .nx/migrate-runs/23.0.0/handoffs/pkg/m.instructions.md',
       ],
       cwd: '/workspace',
     });
@@ -64,12 +79,7 @@ describe('claudeCodeDefinition', () => {
   // how its steps settle. Both are reachable from the session cwd, so only the
   // rule keeps this invocation out of them.
   it('names one run directory rather than a pattern spanning several', () => {
-    const [, rule] = claudeCodeDefinition.buildInteractive({
-      systemContext: '',
-      userPrompt: '',
-      workspaceRoot: '/workspace',
-      runDirName: '23.0.0',
-    }).args;
+    const [, rule] = claudeCodeDefinition.buildInteractive(makeContext()).args;
 
     expect(rule).toBe('Edit(.nx/migrate-runs/23.0.0/handoffs/**)');
     expect(rule).not.toContain('*/handoffs');
@@ -85,34 +95,65 @@ describe('claudeCodeDefinition', () => {
   ])(
     'hands over no rule at all when the run directory name carries %s',
     (_label, runDirName) => {
-      const spec = claudeCodeDefinition.buildInteractive({
-        systemContext: 'system text',
-        userPrompt: 'user text',
-        workspaceRoot: '/workspace',
-        runDirName,
-      });
+      const spec = claudeCodeDefinition.buildInteractive(
+        makeContext({ runDirName })
+      );
 
       expect(spec.args).toEqual([
-        '--system-prompt',
-        'system text',
-        'user text',
+        '--system-prompt-file',
+        '/workspace/.nx/migrate-runs/23.0.0/handoffs/pkg/m.system.md',
+        'read .nx/migrate-runs/23.0.0/handoffs/pkg/m.instructions.md',
       ]);
     }
   );
 });
 
 describe('codexDefinition', () => {
-  it('injects the system context via developer_instructions and appends the user prompt', () => {
-    const spec = codexDefinition.buildInteractive({
-      systemContext: 'system text',
-      userPrompt: 'user text',
-      workspaceRoot: '/workspace',
-      runDirName: '23.0.0',
-    });
+  it('injects the inline system context via developer_instructions and appends the instructions pointer', () => {
+    const spec = codexDefinition.buildInteractive(makeContext());
     expect(spec).toEqual({
-      args: ['-c', 'developer_instructions=system text', 'user text'],
+      args: [
+        '-c',
+        'developer_instructions="inline system text"',
+        'read .nx/migrate-runs/23.0.0/handoffs/pkg/m.instructions.md',
+      ],
       cwd: '/workspace',
     });
+  });
+
+  // codex parses `-c key=value` as TOML and, on a parse failure, falls back to
+  // the raw text as a literal, so an encoding that does not survive a real TOML
+  // parse would ship a mangled system context.
+  it.each([
+    ['embedded newlines', 'line1\nline2\n\nline4'],
+    ['carriage returns', 'line1\r\nline2'],
+    ['double quotes', 'workspace at "/Users/me/work"'],
+    ['backslashes', 'C:\\Users\\me\\My Documents\\ws'],
+    ['tabs', 'a\tb'],
+    ['equals signs and braces', '{ key = "value" }'],
+    ['percent signs', '100% of %PATH%'],
+    ['unicode', 'ends with an em dash — and an ellipsis …'],
+  ])(
+    'round-trips the inline system context through a TOML parse (%s)',
+    (_label, inlineSystemContext) => {
+      const spec = codexDefinition.buildInteractive(
+        makeContext({ inlineSystemContext })
+      );
+      const encoded = spec.args[1].replace('developer_instructions=', '');
+      expect(encoded).not.toMatch(/[\r\n]/);
+      expect((parseToml(`value = ${encoded}`) as { value: string }).value).toBe(
+        inlineSystemContext
+      );
+    }
+  );
+
+  it('refuses a system context that cannot be encoded as TOML', () => {
+    expect(() =>
+      // A raw DEL is legal in a JSON string but not in a TOML basic string.
+      codexDefinition.buildInteractive(
+        makeContext({ inlineSystemContext: 'before\x7fafter' })
+      )
+    ).toThrow('Could not encode the agent');
   });
 });
 
@@ -166,50 +207,138 @@ describe('opencodeDefinition', () => {
     expect(opencodeDefinition.wellKnownPaths()).toEqual([]);
   });
 
-  // Round-trip guard: the system context is embedded as a JSON-stringified
-  // value under OPENCODE_CONFIG_CONTENT. JSON handles quoting / newlines /
-  // angle-brackets, so hostile workspace paths in the prompt must come back
-  // out unchanged after a JSON.parse round-trip.
+  // opencode expands `{env:<name>}` then `{file:<path>}` over the raw config
+  // text and parses the JSON afterwards (1.18.27, `config/variable.ts`). The
+  // env pass splices unescaped, which a `JSON.parse` oracle would not show, so
+  // only that pass is reproduced here; the file token is reported, not read.
+  function readEnvExpandedConfig(
+    configContent: string,
+    env: Record<string, string> = {}
+  ): { fileReference?: string; prompt: string } {
+    const expanded = configContent.replace(
+      /\{env:([^}]+)\}/g,
+      (_, name) => (env[name] ?? process.env[name]) || ''
+    );
+    const token = expanded.match(/\{file:[^}]+\}/)?.[0];
+    return {
+      fileReference: token?.slice('{file:'.length, -1),
+      prompt: JSON.parse(expanded).agent['nx-migrate'].prompt,
+    };
+  }
+
   it.each([
-    ['embedded newlines', 'line1\nline2'],
-    ['equals signs and braces', '{ key: "value" }'],
-    ['double quotes', 'workspace at "/Users/me/work"'],
-    ['angle brackets', 'before <script>after'],
-    ['ampersands', 'a && b'],
-    ['backticks and dollars', '`whoami` $HOME'],
-    ['windows-style path', 'C:\\Users\\me\\My Documents\\ws'],
+    ['angle brackets', '/ws/<script>/m.system.md'],
+    ['ampersands', '/ws/a && b/m.system.md'],
+    ['backticks and dollars', '/ws/`whoami` $HOME/m.system.md'],
+    ['single quotes', "/ws/it's/m.system.md"],
   ])(
-    'round-trips hostile system context through OPENCODE_CONFIG_CONTENT (%s)',
-    (_label, hostile) => {
-      const spec = opencodeDefinition.buildInteractive({
-        systemContext: hostile,
-        userPrompt: 'user',
-        workspaceRoot: '/ws',
-        runDirName: '23.0.0',
-      });
-      const parsed = JSON.parse(spec.env!.OPENCODE_CONFIG_CONTENT as string);
-      expect(parsed.agent['nx-migrate'].prompt).toBe(hostile);
+    'points opencode at the system prompt file for a hostile path (%s)',
+    (_label, systemPromptFilePath) => {
+      Object.defineProperty(process, 'platform', { value: 'linux' });
+      const spec = opencodeDefinition.buildInteractive(
+        makeContext({ systemPromptFilePath })
+      );
+      const { fileReference } = readEnvExpandedConfig(
+        spec.env!.OPENCODE_CONFIG_CONTENT as string
+      );
+      expect(fileReference).toBe(systemPromptFilePath);
     }
   );
 
-  it('injects the system context via OPENCODE_CONFIG_CONTENT under the transient agent name', () => {
-    const spec = opencodeDefinition.buildInteractive({
-      systemContext: 'system text',
-      userPrompt: 'user text',
-      workspaceRoot: '/workspace',
-      runDirName: '23.0.0',
+  it.each([
+    ['a closing brace', '/ws/{ key: "value" }/m.system.md'],
+    ['an opening brace', '/ws/{env:HOME/m.system.md'],
+    ['a double quote', '/ws/"quoted"/m.system.md'],
+    ['a backslash', '/ws/back\\slash/m.system.md'],
+    ['a newline', '/ws/two\nlines/m.system.md'],
+  ])(
+    'inlines the system prompt when the path carries %s',
+    (_label, systemPromptFilePath) => {
+      Object.defineProperty(process, 'platform', { value: 'linux' });
+      const spec = opencodeDefinition.buildInteractive(
+        makeContext({ systemPromptFilePath })
+      );
+      const { fileReference, prompt } = readEnvExpandedConfig(
+        spec.env!.OPENCODE_CONFIG_CONTENT as string
+      );
+      expect(fileReference).toBeUndefined();
+      expect(prompt).toBe('system text');
+    }
+  );
+
+  // The inlined prompt quotes the workspace root, so a directory named like a
+  // substitution pattern lands inside it. Expansion must neither rewrite the
+  // prompt nor break the JSON with a quote of its own.
+  it.each([
+    ['a plain value', 'replaced'],
+    ['a value with a quote and a backslash', 'a"b\\c'],
+  ])('inlines a prompt no substitution can reach (%s)', (_label, envValue) => {
+    Object.defineProperty(process, 'platform', { value: 'linux' });
+    const workspaceRoot = '/ws/{env:NX_MIGRATE_TEST_ROOT}';
+    const systemPrompt = buildSystemPrompt({
+      workspaceRoot,
+      handoffFileAbsolutePath: `${workspaceRoot}/.nx/migrate-runs/23.0.0/handoffs/pkg/m.json`,
+      packageManager: 'npm',
+      nxInvocation: 'npx nx',
+      mode: 'author',
     });
+    const spec = opencodeDefinition.buildInteractive(
+      makeContext({
+        workspaceRoot,
+        systemPrompt,
+        systemPromptFilePath: `${workspaceRoot}/.nx/migrate-runs/23.0.0/handoffs/pkg/m.system.md`,
+      })
+    );
+    const { prompt } = readEnvExpandedConfig(
+      spec.env!.OPENCODE_CONFIG_CONTENT as string,
+      { NX_MIGRATE_TEST_ROOT: envValue }
+    );
+    expect(prompt).toBe(systemPrompt);
+  });
+
+  // `\` is the separator on Windows and `/` is accepted in its place, so the
+  // ordinary Windows path keeps the file reference rather than falling back.
+  it('rewrites Windows separators instead of inlining', () => {
+    Object.defineProperty(process, 'platform', { value: 'win32' });
+    const spec = opencodeDefinition.buildInteractive(
+      makeContext({
+        systemPromptFilePath: 'C:\\Users\\me\\My Documents\\ws\\m.system.md',
+      })
+    );
+    expect(
+      readEnvExpandedConfig(spec.env!.OPENCODE_CONFIG_CONTENT as string)
+        .fileReference
+    ).toBe('C:/Users/me/My Documents/ws/m.system.md');
+  });
+
+  it('references the system prompt file via OPENCODE_CONFIG_CONTENT under the transient agent name', () => {
+    const spec = opencodeDefinition.buildInteractive(makeContext());
     expect(spec.args).toEqual([
       '--agent',
       'nx-migrate',
       '--prompt',
-      'user text',
+      'read .nx/migrate-runs/23.0.0/handoffs/pkg/m.instructions.md',
     ]);
     expect(spec.cwd).toBe('/workspace');
-    expect(spec.env?.OPENCODE_CONFIG_CONTENT).toBeDefined();
     const parsed = JSON.parse(spec.env!.OPENCODE_CONFIG_CONTENT as string);
     expect(parsed).toEqual({
-      agent: { 'nx-migrate': { prompt: 'system text' } },
+      agent: {
+        'nx-migrate': {
+          prompt:
+            '{file:/workspace/.nx/migrate-runs/23.0.0/handoffs/pkg/m.system.md}',
+        },
+      },
     });
+  });
+
+  // cmd.exe drops any inherited environment variable over 8191 characters, so
+  // the reference has to stay short even when the prompt behind it does not.
+  it('keeps the environment value small regardless of system prompt size', () => {
+    const spec = opencodeDefinition.buildInteractive(
+      makeContext({ systemPrompt: 'x'.repeat(20_000) })
+    );
+    expect(
+      `OPENCODE_CONFIG_CONTENT=${spec.env!.OPENCODE_CONFIG_CONTENT}`.length
+    ).toBeLessThan(500);
   });
 });

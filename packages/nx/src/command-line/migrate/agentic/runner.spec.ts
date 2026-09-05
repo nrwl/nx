@@ -19,7 +19,11 @@ vi.mock('@clack/prompts', () => ({
 import { execSync, spawn } from 'child_process';
 import { autocomplete } from '@clack/prompts';
 import { output } from '../../../utils/output';
-import { adaptSpawnForWindowsShim, runAgentic } from './runner';
+import {
+  adaptSpawnForWindowsShim,
+  runAgentic,
+  WINDOWS_COMMAND_LINE_BUDGET,
+} from './runner';
 import { AgentDefinition, DetectedInstalledAgent } from './types';
 
 const mockSpawn = spawn as unknown as Mock;
@@ -166,8 +170,11 @@ describe('runAgentic', () => {
 
   function defaultInvocation(workspaceRoot = workspace) {
     return {
-      systemContext: 'sys',
-      userPrompt: 'user',
+      systemPrompt: 'sys',
+      systemPromptFilePath: `${workspaceRoot}/.nx/migrate-runs/1.0.0/m.system.md`,
+      instructionsPointer: 'read m.instructions.md',
+      inlineSystemContext: 'inline sys',
+      inlineSystemContextFallback: 'short sys',
       workspaceRoot,
       runDirName: '23.0.0',
     } as const;
@@ -404,8 +411,8 @@ describe('runAgentic', () => {
 
     expect(child.kill).toHaveBeenCalledWith('SIGINT');
     expect(child.kill).toHaveBeenCalledWith('SIGKILL');
-    // SIGTERM is intentionally skipped — a process that ignores SIGINT
-    // hits the same handler on SIGTERM.
+    // SIGTERM is skipped so a child that ignored SIGINT does not get a
+    // second graceful signal before SIGKILL.
     expect(child.kill).not.toHaveBeenCalledWith('SIGTERM');
     expect(outcome).toEqual({ kind: 'success', summary: 'done' });
   });
@@ -730,7 +737,102 @@ describe('runAgentic', () => {
       // suite below; here we only verify runAgentic actually routes through it.
       const [binary, args] = mockSpawn.mock.calls[0];
       expect(binary).toMatch(/cmd\.exe$/i);
-      expect(args.slice(0, 3)).toEqual(['/d', '/s', '/c']);
+      expect(args.slice(0, 5)).toEqual(['/e:on', '/v:off', '/d', '/s', '/c']);
+    });
+  });
+
+  describe('Windows command line budget', () => {
+    function echoingDefinition(): AgentDefinition {
+      return {
+        ...makeDefinition(),
+        buildInteractive: vi.fn((ctx) => ({
+          args: ['-c', `developer_instructions=${ctx.inlineSystemContext}`],
+          cwd: ctx.workspaceRoot,
+        })),
+      };
+    }
+
+    function shimAgent(): DetectedInstalledAgent {
+      return {
+        ...makeDetected(),
+        displayName: 'OpenAI Codex',
+        binary: 'C:\\Users\\u\\AppData\\Roaming\\npm\\codex.cmd',
+      };
+    }
+
+    it('falls back to the shorter system context when the full one overflows', async () => {
+      await withPlatform('win32', async () => {
+        spawnWithHandoff({ status: 'success', summary: 'ok' });
+        const definition = echoingDefinition();
+
+        await runAgentic({
+          detected: shimAgent(),
+          definition,
+          invocationContext: {
+            ...defaultInvocation('C:\\workspace'),
+            inlineSystemContext: 'x'.repeat(WINDOWS_COMMAND_LINE_BUDGET),
+            inlineSystemContextFallback: 'short',
+          },
+          handoffFilePath,
+        });
+
+        const cmdLine = mockSpawn.mock.calls[0][1][5];
+        expect(cmdLine).toContain('short');
+        expect(cmdLine.length).toBeLessThanOrEqual(WINDOWS_COMMAND_LINE_BUDGET);
+      });
+    });
+
+    it('refuses to spawn when even the shorter system context overflows', async () => {
+      await withPlatform('win32', async () => {
+        const errorSpy = vi.spyOn(output, 'error').mockImplementation(() => {});
+        try {
+          await expect(
+            runAgentic({
+              detected: shimAgent(),
+              definition: echoingDefinition(),
+              invocationContext: {
+                ...defaultInvocation('C:\\workspace'),
+                inlineSystemContext: 'x'.repeat(WINDOWS_COMMAND_LINE_BUDGET),
+                inlineSystemContextFallback: 'y'.repeat(
+                  WINDOWS_COMMAND_LINE_BUDGET
+                ),
+              },
+              handoffFilePath,
+            })
+          ).rejects.toThrow('exceeds the Windows limit');
+          expect(mockSpawn).not.toHaveBeenCalled();
+          const reported = errorSpy.mock.calls[0][0] as {
+            title: string;
+            bodyLines: string[];
+          };
+          expect(reported.title).toContain('OpenAI Codex');
+          expect(reported.bodyLines.join('\n')).toContain('8191');
+          expect(reported.bodyLines.join('\n')).toContain('--agentic=false');
+          // The workspace root is one contributor of three and none at all
+          // for opencode, so the message must not pin the overflow on it.
+          expect(reported.bodyLines.join('\n')).toContain(
+            `migration's package and name`
+          );
+        } finally {
+          errorSpy.mockRestore();
+        }
+      });
+    });
+
+    it('does not measure a command line off the Windows shim path', async () => {
+      spawnWithHandoff({ status: 'success', summary: 'ok' });
+
+      await runAgentic({
+        detected: makeDetected(),
+        definition: echoingDefinition(),
+        invocationContext: {
+          ...defaultInvocation(),
+          inlineSystemContext: 'x'.repeat(WINDOWS_COMMAND_LINE_BUDGET * 2),
+        },
+        handoffFilePath,
+      });
+
+      expect(mockSpawn.mock.calls[0][1][1]).toContain('x'.repeat(100));
     });
   });
 });
@@ -770,7 +872,7 @@ describe('adaptSpawnForWindowsShim', () => {
     ['.bat', 'C:\\tools\\agent.bat'],
     ['uppercase .CMD', 'C:\\bin\\AGENT.CMD'],
   ])(
-    'wraps %s in cmd.exe /d /s /c with windowsVerbatimArguments',
+    'wraps %s in cmd.exe /e:on /v:off /d /s /c with windowsVerbatimArguments',
     (_label, binary) => {
       setPlatform('win32');
       process.env.comspec = 'C:\\Windows\\System32\\cmd.exe';
@@ -779,8 +881,14 @@ describe('adaptSpawnForWindowsShim', () => {
         windowsHide: true,
       });
       expect(out.binary).toBe('C:\\Windows\\System32\\cmd.exe');
-      expect(out.args.slice(0, 3)).toEqual(['/d', '/s', '/c']);
-      expect(out.args[3]).toMatch(/^".*"$/);
+      expect(out.args.slice(0, 5)).toEqual([
+        '/e:on',
+        '/v:off',
+        '/d',
+        '/s',
+        '/c',
+      ]);
+      expect(out.args[5]).toMatch(/^".*"$/);
       expect(out.options.windowsVerbatimArguments).toBe(true);
       // Pre-existing options are preserved.
       expect(out.options.stdio).toBe('inherit');
@@ -798,10 +906,73 @@ describe('adaptSpawnForWindowsShim', () => {
     // Each arg is double-quoted, then cmd.exe metacharacters (including the
     // quotes and the embedded spaces) are caret-escaped — cmd strips the
     // carets in its first parsing pass, leaving the original argument intact.
-    const cmdLine = out.args[3];
+    const cmdLine = out.args[5];
     expect(cmdLine).toContain('^"arg^ with^ spaces^"');
     expect(cmdLine).toContain('^"arg^&with^&amp^"');
     expect(cmdLine).toContain('^"plain^"');
+  });
+
+  // A caret does not escape `%`; see `neutralizePercent`.
+  it('neutralizes % so cmd.exe cannot expand an environment variable', () => {
+    setPlatform('win32');
+    const out = adaptSpawnForWindowsShim(
+      'C:\\bin\\claude.cmd',
+      ['%PATH% is 100% set'],
+      {}
+    );
+    const cmdLine = out.args[5];
+    expect(cmdLine).toContain('^"%%cd:~,%PATH%%cd:~,%^ is^ 100%%cd:~,%^ set^"');
+    expect(cmdLine).not.toContain('^%');
+    // The substring syntax only parses uncareted.
+    expect(cmdLine).not.toContain('%cd:~^,%');
+  });
+
+  it('neutralizes % in the binary path too', () => {
+    setPlatform('win32');
+    const out = adaptSpawnForWindowsShim('C:\\100%\\claude.cmd', [], {});
+    expect(out.args[5]).toContain('100%%cd:~,%');
+  });
+
+  // No escaping reproduces a line break through a `.cmd` shim.
+  it.each([
+    ['a newline', 'line1\nline2'],
+    ['a carriage return', 'line1\rline2'],
+  ])('refuses an argument containing %s', (_label, arg) => {
+    setPlatform('win32');
+    expect(() =>
+      adaptSpawnForWindowsShim('C:\\bin\\claude.cmd', ['--flag', arg], {})
+    ).toThrow('Cannot pass a multi-line argument');
+  });
+
+  it('refuses a binary path containing a line break', () => {
+    setPlatform('win32');
+    expect(() =>
+      adaptSpawnForWindowsShim('C:\\bin\\cla\nude.cmd', [], {})
+    ).toThrow('Cannot pass a multi-line argument');
+  });
+
+  it('passes multi-line arguments through untouched off the shim path', () => {
+    setPlatform('win32');
+    const out = adaptSpawnForWindowsShim(
+      'C:\\bin\\claude.exe',
+      ['line1\nline2'],
+      {}
+    );
+    expect(out.args).toEqual(['line1\nline2']);
+    expect(out.commandLineLength).toBeUndefined();
+  });
+
+  it('reports the command line length cmd.exe will receive', () => {
+    setPlatform('win32');
+    process.env.comspec = 'C:\\Windows\\System32\\cmd.exe';
+    const out = adaptSpawnForWindowsShim('C:\\bin\\claude.cmd', ['a', 'b'], {});
+    // Spelled out rather than recomputed from `out`, which would pass for any
+    // formula the adapter used.
+    const expected =
+      'C:\\Windows\\System32\\cmd.exe /e:on /v:off /d /s /c ' +
+      '"^^^"C:\\bin\\claude.cmd^^^" ^"a^" ^"b^""';
+    expect(out.commandLineLength).toBe(expected.length);
+    expect([out.binary, ...out.args].join(' ')).toBe(expected);
   });
 
   it('falls back to "cmd.exe" when comspec is unset', () => {

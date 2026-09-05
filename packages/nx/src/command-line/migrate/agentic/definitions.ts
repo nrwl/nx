@@ -1,5 +1,6 @@
 import { homedir } from 'os';
 import { join } from 'path';
+import { parse as parseToml } from 'smol-toml';
 import {
   AgentDefinition,
   AgentId,
@@ -54,18 +55,19 @@ function claudeCodeHandoffAllowedTools(runDirName: string): string | null {
   return `Edit(${MIGRATE_RUNS_RELATIVE_DIR}/${runDirName}/${HANDOFFS_DIR_NAME}/**)`;
 }
 
+// The prompt is kilobytes of multi-line text, which a `cmd.exe` shim cannot
+// carry as an argument.
 function claudeCodeBuildInteractive(ctx: InvocationContext): InvocationSpec {
   const allowedTools = claudeCodeHandoffAllowedTools(ctx.runDirName);
   return {
-    // `--allowedTools` is variadic (space/comma separated): a positional
-    // placed right after its value gets swallowed as another rule. The rules
-    // must stay in one comma-joined element with a non-variadic flag
-    // (`--system-prompt`) between them and the user prompt.
+    // `--allowedTools` is variadic, so a positional right after it is read as
+    // another rule: keep the rules in one comma-joined element and a flag
+    // between them and the instructions pointer.
     args: [
       ...(allowedTools ? ['--allowedTools', allowedTools] : []),
-      '--system-prompt',
-      ctx.systemContext,
-      ctx.userPrompt,
+      '--system-prompt-file',
+      ctx.systemPromptFilePath,
+      ctx.instructionsPointer,
     ],
     cwd: ctx.workspaceRoot,
   };
@@ -86,13 +88,51 @@ function codexWellKnownPaths(): string[] {
 }
 
 // No handoff permission flag: codex's default sandbox already allows writes
-// inside the cwd tree without prompting, and a user-hardened read-only config
-// is a deliberate choice we don't override.
+// inside the cwd tree, and a user-hardened read-only config is theirs to keep.
+//
+// `-c model_instructions_file` replaces codex's built-in instructions rather
+// than adding this context to them, so the context stays on the command line,
+// reduced rather than the full prompt.
 function codexBuildInteractive(ctx: InvocationContext): InvocationSpec {
   return {
-    args: ['-c', `developer_instructions=${ctx.systemContext}`, ctx.userPrompt],
+    args: [
+      '-c',
+      `developer_instructions=${encodeTomlString(ctx.inlineSystemContext)}`,
+      ctx.instructionsPointer,
+    ],
     cwd: ctx.workspaceRoot,
   };
+}
+
+/**
+ * Encodes a value for a codex `-c key=value` override as a TOML basic string.
+ *
+ * codex falls back to the raw text as a literal when the value does not parse
+ * as TOML, so a bad encoding ships a mangled system context with no error. The
+ * escapes `JSON.stringify` emits are all TOML basic-string escapes, but the
+ * characters it leaves raw include control characters TOML rejects, which is
+ * what the round-trip catches. Single-line output is required too: a TOML
+ * multi-line string would put raw newlines back on the command line.
+ */
+function encodeTomlString(value: string): string {
+  const encoded = JSON.stringify(value);
+  let decoded: unknown;
+  try {
+    decoded = (parseToml(`value = ${encoded}`) as { value: unknown }).value;
+  } catch (err) {
+    throw new Error(
+      `Could not encode the agent's system context as TOML for OpenAI Codex: ${
+        err instanceof Error ? err.message : String(err)
+      }`,
+      { cause: err }
+    );
+  }
+  if (decoded !== value) {
+    throw new Error(
+      `Encoding the agent's system context as TOML for OpenAI Codex did not round-trip; refusing to run the agent on altered instructions.`
+    );
+  }
+  return encoded;
 }
 
 export const codexDefinition: AgentDefinition = {
@@ -127,24 +167,66 @@ function opencodeWellKnownPaths(): string[] {
 }
 
 // No handoff permission config: opencode's `edit` permission defaults to
-// allow, and injecting one would clobber (not merge with) a user's own
-// permission patterns.
+// allow, and injecting one would clobber a user's own patterns rather than
+// merge with them.
+//
+// The config travels through OPENCODE_CONFIG_CONTENT rather than
+// OPENCODE_CONFIG. Both merge with the user's own config, but the runner
+// spreads `env` over `process.env`, so the latter would overwrite a value the
+// user had set.
 function opencodeBuildInteractive(ctx: InvocationContext): InvocationSpec {
-  const config = {
-    agent: {
-      [OPENCODE_TRANSIENT_AGENT_NAME]: { prompt: ctx.systemContext },
-    },
-  };
   return {
     args: [
       '--agent',
       OPENCODE_TRANSIENT_AGENT_NAME,
       '--prompt',
-      ctx.userPrompt,
+      ctx.instructionsPointer,
     ],
-    env: { OPENCODE_CONFIG_CONTENT: JSON.stringify(config) },
+    env: { OPENCODE_CONFIG_CONTENT: opencodeConfigContent(ctx) },
     cwd: ctx.workspaceRoot,
   };
+}
+
+/**
+ * opencode expands `{env:<name>}` and then `{file:<path>}` over the raw config
+ * text and parses the JSON afterwards, so this is a substitution template, not
+ * a document. The file reference keeps the prompt out of the environment,
+ * where cmd.exe drops any inherited variable over 8191 characters, and the
+ * prompt it falls back to inlining carries no pattern opencode can expand.
+ *
+ * The instructions are never inlined, so the value is bounded by the prompt
+ * rather than the generator's output, and `windows-command-line.spec.ts` holds
+ * it against 8191 where the runner's own budget check cannot see it.
+ */
+function opencodeConfigContent(ctx: InvocationContext): string {
+  // Windows separators become `/`, which its APIs accept just as well.
+  // Elsewhere a `\` belongs to the file name.
+  const filePath =
+    process.platform === 'win32'
+      ? ctx.systemPromptFilePath.replace(/\\/g, '/')
+      : ctx.systemPromptFilePath;
+  const prompt = isSubstitutionSafePath(filePath)
+    ? JSON.stringify(`{file:${filePath}}`)
+    : // `\u007b` starts no pattern and JSON decodes it back to `{`, so the
+      // prompt survives expansion whatever the workspace path put in it.
+      JSON.stringify(ctx.systemPrompt).replace(/\{/g, '\\u007b');
+  // Assembled rather than serialized whole: `JSON.stringify` over the object
+  // would re-escape the backslashes the `\u007b` encoding introduced.
+  return `{"agent":{${JSON.stringify(
+    OPENCODE_TRANSIENT_AGENT_NAME
+  )}:{"prompt":${prompt}}}}`;
+}
+
+/**
+ * Whether opencode would read back the path nx wrote. A `}` closes the
+ * reference early, and a character JSON escapes arrives escaped. Braces are
+ * rejected wholesale rather than matched against `{env:` and `{file:`, since a
+ * pattern opening inside the path swallows the reference's closing brace.
+ */
+function isSubstitutionSafePath(filePath: string): boolean {
+  return (
+    !/[{}]/.test(filePath) && JSON.stringify(filePath).slice(1, -1) === filePath
+  );
 }
 
 export const opencodeDefinition: AgentDefinition = {
