@@ -2,6 +2,8 @@ import { table } from 'markdown-factory';
 import { ReportData, ScopeData, ScopeTrend, TrendData } from './model';
 import { getSinceDate } from './scrape-issues';
 
+const SLACK_SECTION_TEXT_LIMIT = 3000;
+const TABLE_HEADER_LINES = 2;
 const NPM_HEALTH_URL = 'https://npm-burst.com/package/nx/health/';
 
 export interface Link {
@@ -152,7 +154,15 @@ type SlackBlock =
       column_settings: { align: Align; is_wrapped: boolean }[];
     };
 
-export function toSlackBlocks(report: FormattedReport): SlackBlock[] {
+export interface SlackOptions {
+  /** Fall back to fixed-width markdown in a code fence if table blocks ever stop working. */
+  fencedTables?: boolean;
+}
+
+export function toSlackBlocks(
+  report: FormattedReport,
+  { fencedTables = false }: SlackOptions = {}
+): SlackBlock[] {
   const slackLink = (l: Link) => `<${l.url}|${l.label}>`;
   const section = (text: string): SlackBlock => ({
     type: 'section',
@@ -169,7 +179,9 @@ export function toSlackBlocks(report: FormattedReport): SlackBlock[] {
     ...report.tables.flatMap((t) => [
       { type: 'divider' } as SlackBlock,
       section(`*${t.title}*`),
-      toTableBlock(t),
+      ...(fencedTables
+        ? splitIntoBlocks(toMarkdownTable(t), TABLE_HEADER_LINES).map(section)
+        : [toTableBlock(t)]),
     ]),
     context(slackLink(report.footer)),
   ];
@@ -186,8 +198,31 @@ export function toMarkdown(report: FormattedReport): string {
   ].join('\n\n');
 }
 
-export function getSlackMessageJson(report: FormattedReport) {
-  return { text: report.title, blocks: toSlackBlocks(report) };
+export function getSlackMessageJson(
+  report: FormattedReport,
+  options?: SlackOptions
+) {
+  return { text: report.title, blocks: toSlackBlocks(report, options) };
+}
+
+export function splitIntoBlocks(text: string, headerLines = 0): string[] {
+  const lines = text.split('\n');
+  const header = lines.slice(0, headerLines);
+  const fence = (body: string[]) => `\`\`\`\n${body.join('\n')}\n\`\`\``;
+  const blocks: string[] = [];
+  let current = [...header];
+  for (const line of lines.slice(headerLines)) {
+    if (
+      current.length > header.length &&
+      fence([...current, line]).length > SLACK_SECTION_TEXT_LIMIT
+    ) {
+      blocks.push(fence(current));
+      current = [...header];
+    }
+    current.push(line);
+  }
+  blocks.push(fence(current));
+  return blocks;
 }
 
 const scope: Column = {

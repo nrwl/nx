@@ -13,6 +13,10 @@ on:
         description: Leave the cached report data untouched, so the next scheduled run still diffs against the last real report.
         type: boolean
         default: true
+      fenced_tables:
+        description: Post the tables as fixed-width markdown in a code fence instead of Block Kit table blocks.
+        type: boolean
+        default: false
 
 permissions:
   issues: read
@@ -55,6 +59,7 @@ jobs:
         run: npx tsx ./scripts/issues-scraper/index.ts
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          SLACK_FENCED_TABLES: ${{ inputs.fenced_tables || vars.SLACK_FENCED_TABLES }}
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: ${{ !inputs.skip_cache_upload }}

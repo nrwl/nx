@@ -26,7 +26,12 @@ async function main() {
   });
   const markdown = toMarkdown(report);
   if (process.env.GITHUB_ACTIONS) {
-    setOutput('SLACK_MESSAGE', getSlackMessageJson(report));
+    setOutput(
+      'SLACK_MESSAGE',
+      getSlackMessageJson(report, {
+        fencedTables: process.env.SLACK_FENCED_TABLES === 'true',
+      })
+    );
   }
   if (process.env.GITHUB_STEP_SUMMARY) {
     await summary.addRaw(markdown).write();

@@ -3,6 +3,7 @@ import { describe, it } from 'node:test';
 import {
   formatGhReport,
   getSlackMessageJson,
+  splitIntoBlocks,
   toMarkdown,
   toSlackBlocks,
 } from './format-slack-message';
@@ -273,6 +274,71 @@ describe('toSlackBlocks', () => {
   });
 });
 
+describe('toSlackBlocks with fencedTables', () => {
+  const report = formatGhReport(current, trends, previous, links);
+  const blocks = toSlackBlocks(report, { fencedTables: true });
+
+  it('swaps every table block for fenced markdown sections', () => {
+    assert.deepEqual(
+      blocks.map((b) => b.type),
+      [
+        'header',
+        'context',
+        'section',
+        'section',
+        'divider',
+        'section',
+        'section',
+        'divider',
+        'section',
+        'section',
+        'context',
+      ]
+    );
+    for (const block of [blocks[6], blocks[9]]) {
+      const text = (block as { text: { text: string } }).text.text;
+      assert.ok(text.startsWith('```\n| Scope'));
+      assert.ok(text.endsWith('\n```'));
+    }
+  });
+});
+
+describe('splitIntoBlocks', () => {
+  it('leaves short text as a single fenced block', () => {
+    assert.deepEqual(splitIntoBlocks('a\nb'), ['```\na\nb\n```']);
+  });
+
+  it('repeats the table header at the top of every continuation block', () => {
+    const header = ['| Scope | N |', '| ----- | - |'];
+    const rows = Array.from(
+      { length: 200 },
+      (_, i) => `| row ${i} | ${'x'.repeat(60)} |`
+    );
+    const blocks = splitIntoBlocks([...header, ...rows].join('\n'), 2);
+    assert.ok(blocks.length > 1);
+    for (const block of blocks) {
+      assert.deepEqual(block.split('\n').slice(1, 3), header);
+    }
+    const rejoined = blocks.flatMap((b) => b.split('\n').slice(3, -1));
+    assert.deepEqual(rejoined, rows);
+  });
+
+  it('splits on line boundaries so each fenced block fits in a Slack section', () => {
+    const lines = Array.from(
+      { length: 200 },
+      (_, i) => `row ${i} ${'x'.repeat(60)}`
+    );
+    const blocks = splitIntoBlocks(lines.join('\n'));
+    assert.ok(blocks.length > 1);
+    for (const block of blocks) {
+      assert.ok(block.length <= 3000, `block of ${block.length} chars`);
+      assert.ok(block.startsWith('```\n') && block.endsWith('\n```'));
+    }
+    const rejoined = blocks.map((b) => b.slice(4, -4)).join('\n');
+    assert.equal(rejoined, lines.join('\n'));
+  });
+});
+
 describe('toMarkdown', () => {
   const markdown = toMarkdown(formatGhReport(current, trends, previous, links));
 
@@ -319,5 +385,14 @@ describe('getSlackMessageJson', () => {
     const json = getSlackMessageJson(report);
     assert.equal(json.text, 'Issue & PR Report for Aug 30 2026');
     assert.deepEqual(json.blocks, toSlackBlocks(report));
+  });
+
+  it('passes the fenced-table fallback through to the blocks', () => {
+    const report = formatGhReport(current, trends, previous, links);
+    const json = getSlackMessageJson(report, { fencedTables: true });
+    assert.deepEqual(
+      json.blocks,
+      toSlackBlocks(report, { fencedTables: true })
+    );
   });
 });
