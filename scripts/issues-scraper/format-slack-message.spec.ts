@@ -176,14 +176,16 @@ describe('toSlackBlocks', () => {
       'context',
       'section',
       'section',
-      'divider',
       'section',
       'table',
-      'divider',
       'section',
       'table',
       'context',
     ]);
+  });
+
+  it('leaves out the dividers, since a table block draws its own border', () => {
+    assert.ok(!types.includes('divider'));
   });
 
   it('puts the title in a plain_text header and the notes in a context block', () => {
@@ -217,7 +219,7 @@ describe('toSlackBlocks', () => {
         text: '<https://example.com/prs|view unlabeled PRs>',
       },
     });
-    assert.deepEqual(blocks[10], {
+    assert.deepEqual(blocks[8], {
       type: 'context',
       elements: [
         {
@@ -228,19 +230,19 @@ describe('toSlackBlocks', () => {
     });
   });
 
-  it('labels each table in bold', () => {
-    assert.deepEqual(blocks[5], {
+  it('labels each table in bold, directly above it', () => {
+    assert.deepEqual(blocks[4], {
       type: 'section',
       text: { type: 'mrkdwn', text: '*Issues*' },
     });
-    assert.deepEqual(blocks[8], {
+    assert.deepEqual(blocks[6], {
       type: 'section',
       text: { type: 'mrkdwn', text: '*Pull requests*' },
     });
   });
 
   it('sends the column labels as the first row and every cell as postable raw_text', () => {
-    for (const [idx, block] of [blocks[6], blocks[9]].entries()) {
+    for (const [idx, block] of [blocks[5], blocks[7]].entries()) {
       assert.equal(block.type, 'table');
       const t = block as Extract<(typeof blocks)[number], { type: 'table' }>;
       const source = report.tables[idx];
@@ -263,7 +265,7 @@ describe('toSlackBlocks', () => {
   });
 
   it('stays within the table block limits Slack enforces', () => {
-    for (const block of [blocks[6], blocks[9]]) {
+    for (const block of [blocks[5], blocks[7]]) {
       const t = block as Extract<(typeof blocks)[number], { type: 'table' }>;
       assert.ok(t.rows.length <= 100, `${t.rows.length} rows`);
       assert.ok(t.rows[0].length <= 20, `${t.rows[0].length} columns`);
@@ -278,7 +280,7 @@ describe('toSlackBlocks with fencedTables', () => {
   const report = formatGhReport(current, trends, previous, links);
   const blocks = toSlackBlocks(report, { fencedTables: true });
 
-  it('swaps every table block for fenced markdown sections', () => {
+  it('swaps every table block for divider-separated fenced markdown sections', () => {
     assert.deepEqual(
       blocks.map((b) => b.type),
       [

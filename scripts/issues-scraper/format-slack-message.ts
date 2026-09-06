@@ -176,13 +176,17 @@ export function toSlackBlocks(
     { type: 'header', text: { type: 'plain_text', text: report.title } },
     context(report.notes.join('\n')),
     ...report.links.map((l) => section(slackLink(l))),
-    ...report.tables.flatMap((t) => [
-      { type: 'divider' } as SlackBlock,
-      section(`*${t.title}*`),
-      ...(fencedTables
-        ? splitIntoBlocks(toMarkdownTable(t), TABLE_HEADER_LINES).map(section)
-        : [toTableBlock(t)]),
-    ]),
+    ...report.tables.flatMap((t) =>
+      fencedTables
+        ? [
+            { type: 'divider' } as SlackBlock,
+            section(`*${t.title}*`),
+            ...splitIntoBlocks(toMarkdownTable(t), TABLE_HEADER_LINES).map(
+              section
+            ),
+          ]
+        : [section(`*${t.title}*`), toTableBlock(t)]
+    ),
     context(slackLink(report.footer)),
   ];
 }
