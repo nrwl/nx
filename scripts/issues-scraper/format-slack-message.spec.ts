@@ -3,7 +3,6 @@ import { describe, it } from 'node:test';
 import {
   formatGhReport,
   getSlackMessageJson,
-  splitIntoBlocks,
   toMarkdown,
   toSlackBlocks,
 } from './format-slack-message';
@@ -50,13 +49,9 @@ const links = {
   unlabeledPrsUrl: 'https://example.com/prs',
 };
 
-const squash = (s: string) => s.replace(/ +/g, ' ');
-const rowLabels = (table: string) =>
-  table
-    .split('\n')
-    .filter((l) => l.startsWith('|'))
-    .slice(2)
-    .map((l) => l.split('|')[1].trim());
+const labels = (columns: { label: string }[]) => columns.map((c) => c.label);
+const row = (rows: string[][], label: string) =>
+  rows.find((r) => r[0] === label);
 
 describe('formatGhReport', () => {
   const report = formatGhReport(current, trends, previous, links);
@@ -86,51 +81,95 @@ describe('formatGhReport', () => {
     assert.doesNotMatch(first.notes[0], /Previous/);
   });
 
+  it('labels the scope column left aligned and every stat column right aligned', () => {
+    for (const t of report.tables) {
+      assert.equal(t.columns[0].align, 'left');
+      assert.deepEqual(
+        t.columns.slice(1).map((c) => c.align),
+        t.columns.slice(1).map(() => 'right')
+      );
+    }
+    assert.deepEqual(labels(issues.columns), [
+      'Scope',
+      'Issues',
+      'Bugs',
+      'Closed',
+      'Avg Age',
+      'P95 Age',
+    ]);
+    assert.deepEqual(labels(prs.columns), [
+      'Scope',
+      'Open',
+      'Created',
+      'Merged',
+      'Closed',
+      'Avg Age',
+      'P95 Age',
+    ]);
+  });
+
   it('lists Everything, then Unscoped, then scopes by descending open count', () => {
     const expected = ['Everything', 'Unscoped', 'scope: big', 'scope: small'];
-    assert.deepEqual(rowLabels(issues.markdown), [...expected, 'scope: none']);
-    assert.deepEqual(rowLabels(prs.markdown), expected);
+    assert.deepEqual(
+      issues.rows.map((r) => r[0]),
+      [...expected, 'scope: none']
+    );
+    assert.deepEqual(
+      prs.rows.map((r) => r[0]),
+      expected
+    );
   });
 
   it('renders counts with deltas and ages in days', () => {
-    assert.match(issues.markdown, /Issues.*Bugs.*Closed.*Avg Age.*P95 Age/);
-    assert.match(
-      prs.markdown,
-      /Open.*Created.*Merged.*Closed.*Avg Age.*P95 Age/
-    );
-    assert.match(
-      squash(issues.markdown),
-      /\| Everything \| 9 \(\+1\) \| 9 \(\+1\) \| 9 \(\+1\) \| 90d \(\+1\) \| 180d \(\+1\) \|/
-    );
-    assert.match(
-      squash(issues.markdown),
-      /\| Unscoped \| 2 \(-1\) \| 2 \(-1\) \| 2 \(-1\) \| 20d \(-1\) \| 40d \(-1\) \|/
-    );
-    assert.match(
-      squash(prs.markdown),
-      /\| scope: small \| 1 \| 1 \| 1 \| 1 \| 3d \| 4d \|/
-    );
+    assert.deepEqual(row(issues.rows, 'Everything'), [
+      'Everything',
+      '9 (+1)',
+      '9 (+1)',
+      '9 (+1)',
+      '90d (+1)',
+      '180d (+1)',
+    ]);
+    assert.deepEqual(row(issues.rows, 'Unscoped'), [
+      'Unscoped',
+      '2 (-1)',
+      '2 (-1)',
+      '2 (-1)',
+      '20d (-1)',
+      '40d (-1)',
+    ]);
+    assert.deepEqual(row(prs.rows, 'scope: small'), [
+      'scope: small',
+      '1',
+      '1',
+      '1',
+      '1',
+      '3d',
+      '4d',
+    ]);
   });
 
   it('shows a dash for ages when nothing is open', () => {
-    assert.match(
-      squash(issues.markdown),
-      /\| scope: none \| 0 \| 0 \| 1 \| - \| - \|/
-    );
+    assert.deepEqual(row(issues.rows, 'scope: none'), [
+      'scope: none',
+      '0',
+      '0',
+      '1',
+      '-',
+      '-',
+    ]);
   });
 
   it('omits scope rows with no activity at all from a table', () => {
-    assert.doesNotMatch(prs.markdown, /scope: none/);
+    assert.equal(row(prs.rows, 'scope: none'), undefined);
   });
 });
 
 describe('toSlackBlocks', () => {
-  const blocks = toSlackBlocks(
-    formatGhReport(current, trends, previous, links)
-  );
+  const report = formatGhReport(current, trends, previous, links);
+  const blocks = toSlackBlocks(report);
   const types = blocks.map((b) => b.type);
 
-  it('lays out header, context notes, links, then a labelled fenced table per section, then a context footer', () => {
+  it('lays out header, context notes, links, then a labelled table block per section, then a context footer', () => {
     assert.deepEqual(types, [
       'header',
       'context',
@@ -138,10 +177,10 @@ describe('toSlackBlocks', () => {
       'section',
       'divider',
       'section',
-      'section',
+      'table',
       'divider',
       'section',
-      'section',
+      'table',
       'context',
     ]);
   });
@@ -188,7 +227,7 @@ describe('toSlackBlocks', () => {
     });
   });
 
-  it('labels each table in bold and fences its chunks', () => {
+  it('labels each table in bold', () => {
     assert.deepEqual(blocks[5], {
       type: 'section',
       text: { type: 'mrkdwn', text: '*Issues*' },
@@ -197,11 +236,39 @@ describe('toSlackBlocks', () => {
       type: 'section',
       text: { type: 'mrkdwn', text: '*Pull requests*' },
     });
+  });
+
+  it('sends the column labels as the first row and every cell as postable raw_text', () => {
+    for (const [idx, block] of [blocks[6], blocks[9]].entries()) {
+      assert.equal(block.type, 'table');
+      const t = block as Extract<(typeof blocks)[number], { type: 'table' }>;
+      const source = report.tables[idx];
+      assert.deepEqual(
+        t.rows[0].map((c) => c.text),
+        labels(source.columns)
+      );
+      assert.deepEqual(
+        t.rows.slice(1).map((r) => r.map((c) => c.text)),
+        source.rows
+      );
+      for (const cell of t.rows.flat()) {
+        assert.equal(cell.type, 'raw_text');
+      }
+      assert.deepEqual(
+        t.column_settings,
+        source.columns.map((c) => ({ align: c.align, is_wrapped: true }))
+      );
+    }
+  });
+
+  it('stays within the table block limits Slack enforces', () => {
     for (const block of [blocks[6], blocks[9]]) {
-      assert.equal(block.type, 'section');
-      const text = (block as { text: { text: string } }).text.text;
-      assert.ok(text.startsWith('```\n| Scope'));
-      assert.ok(text.endsWith('\n```'));
+      const t = block as Extract<(typeof blocks)[number], { type: 'table' }>;
+      assert.ok(t.rows.length <= 100, `${t.rows.length} rows`);
+      assert.ok(t.rows[0].length <= 20, `${t.rows[0].length} columns`);
+      for (const r of t.rows) {
+        assert.equal(r.length, t.column_settings.length);
+      }
     }
   });
 });
@@ -228,41 +295,21 @@ describe('toMarkdown', () => {
     assert.doesNotMatch(markdown, /```/);
     assert.doesNotMatch(markdown, /<https/);
   });
-});
 
-describe('splitIntoBlocks', () => {
-  it('leaves short text as a single fenced block', () => {
-    assert.deepEqual(splitIntoBlocks('a\nb'), ['```\na\nb\n```']);
-  });
-
-  it('repeats the table header at the top of every continuation block', () => {
-    const header = ['| Scope | N |', '| ----- | - |'];
-    const rows = Array.from(
-      { length: 200 },
-      (_, i) => `| row ${i} | ${'x'.repeat(60)} |`
-    );
-    const blocks = splitIntoBlocks([...header, ...rows].join('\n'), 2);
-    assert.ok(blocks.length > 1);
-    for (const block of blocks) {
-      assert.deepEqual(block.split('\n').slice(1, 3), header);
+  it('pads every row of a table to the same width, so it lines up in a fixed-width font', () => {
+    const tables = markdown
+      .split(/\n## .*\n/)
+      .slice(1)
+      .map((section) => section.split('\n').filter((l) => l.startsWith('|')));
+    assert.equal(tables.length, 2);
+    for (const rows of tables) {
+      assert.ok(rows.length > 2);
+      assert.deepEqual(
+        [...new Set(rows.map((r) => r.length))].length,
+        1,
+        rows.join('\n')
+      );
     }
-    const rejoined = blocks.flatMap((b) => b.split('\n').slice(3, -1));
-    assert.deepEqual(rejoined, rows);
-  });
-
-  it('splits on line boundaries so each fenced block fits in a Slack section', () => {
-    const lines = Array.from(
-      { length: 200 },
-      (_, i) => `row ${i} ${'x'.repeat(60)}`
-    );
-    const blocks = splitIntoBlocks(lines.join('\n'));
-    assert.ok(blocks.length > 1);
-    for (const block of blocks) {
-      assert.ok(block.length <= 3000, `block of ${block.length} chars`);
-      assert.ok(block.startsWith('```\n') && block.endsWith('\n```'));
-    }
-    const rejoined = blocks.map((b) => b.slice(4, -4)).join('\n');
-    assert.equal(rejoined, lines.join('\n'));
   });
 });
 

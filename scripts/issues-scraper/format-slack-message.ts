@@ -2,8 +2,6 @@ import { table } from 'markdown-factory';
 import { ReportData, ScopeData, ScopeTrend, TrendData } from './model';
 import { getSinceDate } from './scrape-issues';
 
-const SLACK_SECTION_TEXT_LIMIT = 3000;
-const TABLE_HEADER_LINES = 2;
 const NPM_HEALTH_URL = 'https://npm-burst.com/package/nx/health/';
 
 export interface Link {
@@ -11,11 +9,19 @@ export interface Link {
   url: string;
 }
 
+export type Align = 'left' | 'right';
+
+export interface ReportTable {
+  title: string;
+  columns: { label: string; align: Align }[];
+  rows: string[][];
+}
+
 export interface FormattedReport {
   title: string;
   links: Link[];
   notes: string[];
-  tables: { title: string; markdown: string }[];
+  tables: ReportTable[];
   footer: Link;
 }
 
@@ -28,6 +34,12 @@ type Row = {
   label: string;
   data: ScopeData;
   trend: ScopeTrend;
+};
+
+type Column = {
+  label: string;
+  align: Align;
+  value: (r: Row) => string;
 };
 
 export function formatGhReport(
@@ -61,13 +73,14 @@ export function formatGhReport(
       })),
   ];
 
-  const issueTable = table<Row>(
+  const issueTable = buildTable(
+    'Issues',
     rows(
       (d) => d.issues.count,
       (d) => [d.issues.count, d.issues.bugCount, d.issues.closed]
     ),
     [
-      { label: 'Scope', field: 'label' },
+      scope,
       count('Issues', (r) => [r.data.issues.count, r.trend.issues.count]),
       count('Bugs', (r) => [r.data.issues.bugCount, r.trend.issues.bugCount]),
       count('Closed', (r) => [r.data.issues.closed, r.trend.issues.closed]),
@@ -84,13 +97,14 @@ export function formatGhReport(
     ]
   );
 
-  const prTable = table<Row>(
+  const prTable = buildTable(
+    'Pull requests',
     rows(
       (d) => d.prs.open,
       (d) => [d.prs.open, d.prs.created, d.prs.merged, d.prs.closed]
     ),
     [
-      { label: 'Scope', field: 'label' },
+      scope,
       count('Open', (r) => [r.data.prs.open, r.trend.prs.open]),
       count('Created', (r) => [r.data.prs.created, r.trend.prs.created]),
       count('Merged', (r) => [r.data.prs.merged, r.trend.prs.merged]),
@@ -120,19 +134,23 @@ export function formatGhReport(
         : []),
       `Closed, created and merged counts are since ${sinceDate}. Ages are for open items, in days.`,
     ],
-    tables: [
-      { title: 'Issues', markdown: issueTable },
-      { title: 'Pull requests', markdown: prTable },
-    ],
+    tables: [issueTable, prTable],
     footer: { label: 'nx package health on npm-burst', url: NPM_HEALTH_URL },
   };
 }
+
+type TableCell = { type: 'raw_text'; text: string };
 
 type SlackBlock =
   | { type: 'header'; text: { type: 'plain_text'; text: string } }
   | { type: 'section'; text: { type: 'mrkdwn'; text: string } }
   | { type: 'context'; elements: { type: 'mrkdwn'; text: string }[] }
-  | { type: 'divider' };
+  | { type: 'divider' }
+  | {
+      type: 'table';
+      rows: TableCell[][];
+      column_settings: { align: Align; is_wrapped: boolean }[];
+    };
 
 export function toSlackBlocks(report: FormattedReport): SlackBlock[] {
   const slackLink = (l: Link) => `<${l.url}|${l.label}>`;
@@ -151,7 +169,7 @@ export function toSlackBlocks(report: FormattedReport): SlackBlock[] {
     ...report.tables.flatMap((t) => [
       { type: 'divider' } as SlackBlock,
       section(`*${t.title}*`),
-      ...splitIntoBlocks(t.markdown, TABLE_HEADER_LINES).map(section),
+      toTableBlock(t),
     ]),
     context(slackLink(report.footer)),
   ];
@@ -163,7 +181,7 @@ export function toMarkdown(report: FormattedReport): string {
     `# ${report.title}`,
     report.notes.join('  \n'),
     report.links.map(mdLink).join(' · '),
-    ...report.tables.flatMap((t) => [`## ${t.title}`, t.markdown]),
+    ...report.tables.flatMap((t) => [`## ${t.title}`, toMarkdownTable(t)]),
     mdLink(report.footer),
   ].join('\n\n');
 }
@@ -172,20 +190,34 @@ export function getSlackMessageJson(report: FormattedReport) {
   return { text: report.title, blocks: toSlackBlocks(report) };
 }
 
-function count(label: string, pick: (r: Row) => [number, number | null]) {
+const scope: Column = {
+  label: 'Scope',
+  align: 'left',
+  value: (r) => r.label,
+};
+
+function count(
+  label: string,
+  pick: (r: Row) => [number, number | null]
+): Column {
   return {
     label,
-    mapFn: (r: Row) => {
+    align: 'right',
+    value: (r) => {
       const [value, delta] = pick(r);
       return `${value} ${formatDelta(delta)}`.trim();
     },
   };
 }
 
-function age(label: string, pick: (r: Row) => [number, number, number | null]) {
+function age(
+  label: string,
+  pick: (r: Row) => [number, number, number | null]
+): Column {
   return {
     label,
-    mapFn: (r: Row) => {
+    align: 'right',
+    value: (r) => {
       const [openCount, value, delta] = pick(r);
       if (openCount === 0) {
         return '-';
@@ -195,24 +227,38 @@ function age(label: string, pick: (r: Row) => [number, number, number | null]) {
   };
 }
 
-export function splitIntoBlocks(text: string, headerLines = 0): string[] {
-  const lines = text.split('\n');
-  const header = lines.slice(0, headerLines);
-  const fence = (body: string[]) => `\`\`\`\n${body.join('\n')}\n\`\`\``;
-  const blocks: string[] = [];
-  let current = [...header];
-  for (const line of lines.slice(headerLines)) {
-    if (
-      current.length > header.length &&
-      fence([...current, line]).length > SLACK_SECTION_TEXT_LIMIT
-    ) {
-      blocks.push(fence(current));
-      current = [...header];
-    }
-    current.push(line);
-  }
-  blocks.push(fence(current));
-  return blocks;
+function buildTable(
+  title: string,
+  rows: Row[],
+  columns: Column[]
+): ReportTable {
+  return {
+    title,
+    columns: columns.map(({ label, align }) => ({ label, align })),
+    rows: rows.map((row) => columns.map((c) => c.value(row))),
+  };
+}
+
+function toTableBlock(t: ReportTable): SlackBlock {
+  const cell = (text: string): TableCell => ({ type: 'raw_text', text });
+  return {
+    type: 'table',
+    column_settings: t.columns.map((c) => ({
+      align: c.align,
+      is_wrapped: true,
+    })),
+    rows: [
+      t.columns.map((c) => cell(c.label)),
+      ...t.rows.map((row) => row.map(cell)),
+    ],
+  };
+}
+
+function toMarkdownTable(t: ReportTable): string {
+  return table(
+    t.rows.map((cells) => ({ cells })),
+    t.columns.map((c, idx) => ({ label: c.label, mapFn: (r) => r.cells[idx] }))
+  );
 }
 
 function formatDate(date: Date): string {
