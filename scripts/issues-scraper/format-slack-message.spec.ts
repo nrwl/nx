@@ -45,25 +45,25 @@ const trends: TrendData = {
   },
 };
 const previous: Partial<ReportData> = { collectedDate: 'Aug 23 2026' };
-const links = {
-  unlabeledIssuesUrl: 'https://example.com/issues',
-  unlabeledPrsUrl: 'https://example.com/prs',
-};
+const scopeLabels = ['scope: small', 'scope: big', 'scope: none'];
 
 const labels = (columns: { label: string }[]) => columns.map((c) => c.label);
-const row = (rows: string[][], label: string) =>
-  rows.find((r) => r[0] === label);
+const texts = (cells: { text: string }[]) => cells.map((c) => c.text);
+const row = (rows: { text: string }[][], label: string) => {
+  const found = rows.find((r) => r[0].text === label);
+  return found && texts(found);
+};
+const cellsOf = (rows: { text: string; url: string }[][], label: string) =>
+  rows.find((r) => r[0].text === label);
+const query = (url: string) =>
+  decodeURIComponent(new URL(url).searchParams.get('q'));
 
 describe('formatGhReport', () => {
-  const report = formatGhReport(current, trends, previous, links);
+  const report = formatGhReport(current, trends, previous, scopeLabels);
   const [issues, prs] = report.tables;
 
-  it('describes the report with a title, links, notes, two titled tables and a footer link', () => {
+  it('describes the report with a title, notes, two titled tables and a footer link', () => {
     assert.equal(report.title, 'Issue & PR Report for Aug 30 2026');
-    assert.deepEqual(report.links, [
-      { label: 'view unlabeled issues', url: 'https://example.com/issues' },
-      { label: 'view unlabeled PRs', url: 'https://example.com/prs' },
-    ]);
     assert.deepEqual(report.notes, [
       'Previous Report: Aug 23 2026',
       'Closed, created and merged counts are since Aug 23 2026. Ages are for open items, in days.',
@@ -77,7 +77,7 @@ describe('formatGhReport', () => {
   });
 
   it('omits the previous-report note on a first run', () => {
-    const first = formatGhReport(current, trends, {}, links);
+    const first = formatGhReport(current, trends, {}, scopeLabels);
     assert.equal(first.notes.length, 1);
     assert.doesNotMatch(first.notes[0], /Previous/);
   });
@@ -112,11 +112,11 @@ describe('formatGhReport', () => {
   it('lists Everything, then Unscoped, then scopes by descending open count', () => {
     const expected = ['Everything', 'Unscoped', 'scope: big', 'scope: small'];
     assert.deepEqual(
-      issues.rows.map((r) => r[0]),
+      issues.rows.map((r) => r[0].text),
       [...expected, 'scope: none']
     );
     assert.deepEqual(
-      prs.rows.map((r) => r[0]),
+      prs.rows.map((r) => r[0].text),
       expected
     );
   });
@@ -165,17 +165,94 @@ describe('formatGhReport', () => {
   });
 });
 
+describe('search links', () => {
+  const report = formatGhReport(current, trends, previous, scopeLabels);
+  const [issues, prs] = report.tables;
+  const cell = (t: typeof issues, rowLabel: string, column: string) => {
+    const idx = t.columns.findIndex((c) => c.label === column);
+    return cellsOf(t.rows, rowLabel)[idx];
+  };
+  const q = (t: typeof issues, rowLabel: string, column: string) =>
+    query(cell(t, rowLabel, column).url);
+
+  it('points the issue table at /issues and the PR table at /pulls', () => {
+    for (const row of issues.rows) {
+      for (const c of row) {
+        assert.ok(c.url.startsWith('https://github.com/nrwl/nx/issues?q='));
+      }
+    }
+    for (const row of prs.rows) {
+      for (const c of row) {
+        assert.ok(c.url.startsWith('https://github.com/nrwl/nx/pulls?q='));
+      }
+    }
+  });
+
+  it('narrows a scope row by its label and leaves Everything unfiltered', () => {
+    assert.equal(q(issues, 'Everything', 'Issues'), 'is:issue is:open');
+    assert.equal(
+      q(issues, 'scope: big', 'Issues'),
+      'is:issue is:open label:"scope: big"'
+    );
+  });
+
+  it('narrows the Unscoped row by negating every scope label', () => {
+    assert.equal(
+      q(issues, 'Unscoped', 'Issues'),
+      'is:issue is:open -label:"scope: small" -label:"scope: big" -label:"scope: none"'
+    );
+  });
+
+  it('matches each column to the query the number was counted from', () => {
+    assert.equal(
+      q(issues, 'scope: big', 'Bugs'),
+      'is:issue is:open label:"type: bug" label:"scope: big"'
+    );
+    assert.match(
+      q(issues, 'scope: big', 'Closed'),
+      /^is:issue is:closed closed:>=\d{4}-\d{2}-\d{2} label:"scope: big"$/
+    );
+    assert.equal(
+      q(prs, 'scope: big', 'Open'),
+      'is:pr is:open label:"scope: big"'
+    );
+    assert.match(
+      q(prs, 'scope: big', 'Created'),
+      /^is:pr created:>=\d{4}-\d{2}-\d{2} label:"scope: big"$/
+    );
+    assert.match(
+      q(prs, 'scope: big', 'Merged'),
+      /^is:pr is:merged merged:>=\d{4}-\d{2}-\d{2} label:"scope: big"$/
+    );
+    assert.match(
+      q(prs, 'scope: big', 'Closed'),
+      /^is:pr is:closed is:unmerged closed:>=\d{4}-\d{2}-\d{2} label:"scope: big"$/
+    );
+  });
+
+  it('sorts the age columns oldest first, since the ages come from open items', () => {
+    for (const column of ['Avg Age', 'P95 Age']) {
+      assert.equal(
+        q(issues, 'scope: big', column),
+        'is:issue is:open sort:created-asc label:"scope: big"'
+      );
+      assert.equal(
+        q(prs, 'scope: big', column),
+        'is:pr is:open sort:created-asc label:"scope: big"'
+      );
+    }
+  });
+});
+
 describe('toSlackBlocks', () => {
-  const report = formatGhReport(current, trends, previous, links);
+  const report = formatGhReport(current, trends, previous, scopeLabels);
   const blocks = toSlackBlocks(report);
   const types = blocks.map((b) => b.type);
 
-  it('lays out header, context notes, links, then a labelled table block per section, then a context footer', () => {
+  it('lays out header, context notes, then a labelled table block per section, then a context footer', () => {
     assert.deepEqual(types, [
       'header',
       'context',
-      'section',
-      'section',
       'section',
       'table',
       'section',
@@ -204,22 +281,8 @@ describe('toSlackBlocks', () => {
     });
   });
 
-  it('renders each link as its own mrkdwn section and the footer as a context link', () => {
-    assert.deepEqual(blocks[2], {
-      type: 'section',
-      text: {
-        type: 'mrkdwn',
-        text: '<https://example.com/issues|view unlabeled issues>',
-      },
-    });
-    assert.deepEqual(blocks[3], {
-      type: 'section',
-      text: {
-        type: 'mrkdwn',
-        text: '<https://example.com/prs|view unlabeled PRs>',
-      },
-    });
-    assert.deepEqual(blocks[8], {
+  it('renders the footer as a context link', () => {
+    assert.deepEqual(blocks[6], {
       type: 'context',
       elements: [
         {
@@ -231,31 +294,39 @@ describe('toSlackBlocks', () => {
   });
 
   it('labels each table in bold, directly above it', () => {
-    assert.deepEqual(blocks[4], {
+    assert.deepEqual(blocks[2], {
       type: 'section',
       text: { type: 'mrkdwn', text: '*Issues*' },
     });
-    assert.deepEqual(blocks[6], {
+    assert.deepEqual(blocks[4], {
       type: 'section',
       text: { type: 'mrkdwn', text: '*Pull requests*' },
     });
   });
 
-  it('sends the column labels as the first row and every cell as postable raw_text', () => {
-    for (const [idx, block] of [blocks[5], blocks[7]].entries()) {
+  it('links the scope cell and sends every other cell as plain text', () => {
+    for (const [idx, block] of [blocks[3], blocks[5]].entries()) {
       assert.equal(block.type, 'table');
       const t = block as Extract<(typeof blocks)[number], { type: 'table' }>;
       const source = report.tables[idx];
       assert.deepEqual(
-        t.rows[0].map((c) => c.text),
+        t.rows[0].map((c) => (c as { text: string }).text),
         labels(source.columns)
       );
-      assert.deepEqual(
-        t.rows.slice(1).map((r) => r.map((c) => c.text)),
-        source.rows
-      );
-      for (const cell of t.rows.flat()) {
-        assert.equal(cell.type, 'raw_text');
+      for (const [r, row] of t.rows.slice(1).entries()) {
+        for (const [c, cell] of row.entries()) {
+          const want = source.rows[r][c];
+          if (c === 0) {
+            assert.equal(cell.type, 'rich_text');
+            assert.deepEqual(
+              (cell as { elements: { elements: unknown[] }[] }).elements[0]
+                .elements,
+              [{ type: 'link', url: want.url, text: want.text }]
+            );
+          } else {
+            assert.deepEqual(cell, { type: 'raw_text', text: want.text });
+          }
+        }
       }
       assert.deepEqual(
         t.column_settings,
@@ -264,8 +335,41 @@ describe('toSlackBlocks', () => {
     }
   });
 
+  it('only ever posts raw_text and rich_text cells, the two Slack accepts', () => {
+    for (const block of [blocks[3], blocks[5]]) {
+      const t = block as Extract<(typeof blocks)[number], { type: 'table' }>;
+      for (const cell of t.rows.flat()) {
+        assert.ok(['raw_text', 'rich_text'].includes(cell.type), cell.type);
+      }
+    }
+  });
+
+  it('keeps the blocks payload inside the budget Slack enforces', () => {
+    const big = formatGhReport(
+      {
+        all: stats(9),
+        unscoped: stats(2),
+        scopes: Object.fromEntries(
+          Array.from({ length: 40 }, (_, i) => [`scope: s${i}`, stats(i + 1)])
+        ),
+        collectedDate: 'Aug 30 2026',
+      },
+      {
+        all: trend(1),
+        unscoped: trend(-1),
+        scopes: Object.fromEntries(
+          Array.from({ length: 40 }, (_, i) => [`scope: s${i}`, trend(1)])
+        ),
+      },
+      previous,
+      Array.from({ length: 40 }, (_, i) => `scope: s${i}`)
+    );
+    const size = JSON.stringify(toSlackBlocks(big)).length;
+    assert.ok(size < 40_000, `blocks payload of ${size} chars`);
+  });
+
   it('stays within the table block limits Slack enforces', () => {
-    for (const block of [blocks[5], blocks[7]]) {
+    for (const block of [blocks[3], blocks[5]]) {
       const t = block as Extract<(typeof blocks)[number], { type: 'table' }>;
       assert.ok(t.rows.length <= 100, `${t.rows.length} rows`);
       assert.ok(t.rows[0].length <= 20, `${t.rows[0].length} columns`);
@@ -277,7 +381,7 @@ describe('toSlackBlocks', () => {
 });
 
 describe('toSlackBlocks with fencedTables', () => {
-  const report = formatGhReport(current, trends, previous, links);
+  const report = formatGhReport(current, trends, previous, scopeLabels);
   const blocks = toSlackBlocks(report, { fencedTables: true });
 
   it('swaps every table block for divider-separated fenced markdown sections', () => {
@@ -286,8 +390,6 @@ describe('toSlackBlocks with fencedTables', () => {
       [
         'header',
         'context',
-        'section',
-        'section',
         'divider',
         'section',
         'section',
@@ -297,7 +399,7 @@ describe('toSlackBlocks with fencedTables', () => {
         'context',
       ]
     );
-    for (const block of [blocks[6], blocks[9]]) {
+    for (const block of [blocks[4], blocks[7]]) {
       const text = (block as { text: { text: string } }).text.text;
       assert.ok(text.startsWith('```\n| Scope'));
       assert.ok(text.endsWith('\n```'));
@@ -342,18 +444,12 @@ describe('splitIntoBlocks', () => {
 });
 
 describe('toMarkdown', () => {
-  const markdown = toMarkdown(formatGhReport(current, trends, previous, links));
+  const markdown = toMarkdown(
+    formatGhReport(current, trends, previous, scopeLabels)
+  );
 
-  it('renders headings, plain links and unfenced tables for GitHub', () => {
+  it('renders headings and unfenced tables for GitHub', () => {
     assert.match(markdown, /^# Issue & PR Report for Aug 30 2026\n/);
-    assert.match(
-      markdown,
-      /\[view unlabeled issues\]\(https:\/\/example.com\/issues\)/
-    );
-    assert.match(
-      markdown,
-      /\[view unlabeled PRs\]\(https:\/\/example.com\/prs\)/
-    );
     assert.match(markdown, /\n## Issues\n\n\| Scope/);
     assert.match(markdown, /\n## Pull requests\n\n\| Scope/);
     assert.match(
@@ -364,33 +460,32 @@ describe('toMarkdown', () => {
     assert.doesNotMatch(markdown, /<https/);
   });
 
-  it('pads every row of a table to the same width, so it lines up in a fixed-width font', () => {
-    const tables = markdown
-      .split(/\n## .*\n/)
-      .slice(1)
-      .map((section) => section.split('\n').filter((l) => l.startsWith('|')));
-    assert.equal(tables.length, 2);
-    for (const rows of tables) {
-      assert.ok(rows.length > 2);
-      assert.deepEqual(
-        [...new Set(rows.map((r) => r.length))].length,
-        1,
-        rows.join('\n')
-      );
+  it('links every cell, which markdown has the room for and Slack does not', () => {
+    assert.match(
+      markdown,
+      /\| \[Everything\]\(https:\/\/github\.com\/nrwl\/nx\/issues\?q=is:issue\+is:open\) \| \[9 \(\+1\)\]\(/
+    );
+    const cells = markdown
+      .split('\n')
+      .filter((l) => l.startsWith('| ['))
+      .flatMap((l) => l.split(' | '));
+    assert.ok(cells.length > 0);
+    for (const cell of cells) {
+      assert.match(cell, /\[[^\]]+\]\(https:\/\/github\.com\/nrwl\/nx\//);
     }
   });
 });
 
 describe('getSlackMessageJson', () => {
   it('uses the title as the notification fallback and the rendered blocks', () => {
-    const report = formatGhReport(current, trends, previous, links);
+    const report = formatGhReport(current, trends, previous, scopeLabels);
     const json = getSlackMessageJson(report);
     assert.equal(json.text, 'Issue & PR Report for Aug 30 2026');
     assert.deepEqual(json.blocks, toSlackBlocks(report));
   });
 
   it('passes the fenced-table fallback through to the blocks', () => {
-    const report = formatGhReport(current, trends, previous, links);
+    const report = formatGhReport(current, trends, previous, scopeLabels);
     const json = getSlackMessageJson(report, { fencedTables: true });
     assert.deepEqual(
       json.blocks,

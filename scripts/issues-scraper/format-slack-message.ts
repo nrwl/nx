@@ -1,4 +1,5 @@
 import { table } from 'markdown-factory';
+import { SearchPath, searchUrl, toSearchDate } from './github-search';
 import { ReportData, ScopeData, ScopeTrend, TrendData } from './model';
 import { getSinceDate } from './scrape-issues';
 
@@ -13,27 +14,28 @@ export interface Link {
 
 export type Align = 'left' | 'right';
 
+export interface Cell {
+  text: string;
+  url: string;
+}
+
 export interface ReportTable {
   title: string;
-  columns: { label: string; align: Align }[];
-  rows: string[][];
+  columns: { label: string; align: Align; linked: boolean }[];
+  rows: Cell[][];
 }
 
 export interface FormattedReport {
   title: string;
-  links: Link[];
   notes: string[];
   tables: ReportTable[];
   footer: Link;
 }
 
-export interface ReportLinks {
-  unlabeledIssuesUrl: string;
-  unlabeledPrsUrl: string;
-}
-
 type Row = {
   label: string;
+  /** Search qualifiers that narrow a query to this row's scope. */
+  filter: string[];
   data: ScopeData;
   trend: ScopeTrend;
 };
@@ -41,27 +43,39 @@ type Row = {
 type Column = {
   label: string;
   align: Align;
+  /**
+   * Slack caps a message's blocks at ~40k characters and a linked cell costs
+   * ~190 of them, so only this column is a link there. Markdown links them all.
+   */
+  linked: boolean;
   value: (r: Row) => string;
+  query: (since: string) => string[];
 };
 
 export function formatGhReport(
   currentData: ReportData,
   trendData: TrendData,
   prevData: Partial<ReportData>,
-  links: ReportLinks
+  scopeLabels: string[]
 ): FormattedReport {
   const prevDate = prevData.collectedDate
     ? new Date(prevData.collectedDate)
     : undefined;
-  const sinceDate = formatDate(getSinceDate(prevDate));
+  const since = getSinceDate(prevDate);
 
   const rows = (
     sortBy: (d: ScopeData) => number,
     activity: (d: ScopeData) => number[]
   ): Row[] => [
-    { label: 'Everything', data: currentData.all, trend: trendData.all },
+    {
+      label: 'Everything',
+      filter: [],
+      data: currentData.all,
+      trend: trendData.all,
+    },
     {
       label: 'Unscoped',
+      filter: scopeLabels.map((l) => `-label:"${l}"`),
       data: currentData.unscoped,
       trend: trendData.unscoped,
     },
@@ -70,6 +84,7 @@ export function formatGhReport(
       .sort(([, a], [, b]) => sortBy(b) - sortBy(a))
       .map(([scope, data]) => ({
         label: scope,
+        filter: [`label:"${scope}"`],
         data,
         trend: trendData.scopes[scope],
       })),
@@ -77,21 +92,34 @@ export function formatGhReport(
 
   const issueTable = buildTable(
     'Issues',
+    'issues',
+    since,
     rows(
       (d) => d.issues.count,
       (d) => [d.issues.count, d.issues.bugCount, d.issues.closed]
     ),
     [
-      scope,
-      count('Issues', (r) => [r.data.issues.count, r.trend.issues.count]),
-      count('Bugs', (r) => [r.data.issues.bugCount, r.trend.issues.bugCount]),
-      count('Closed', (r) => [r.data.issues.closed, r.trend.issues.closed]),
-      age('Avg Age', (r) => [
+      scope(OPEN_ISSUES),
+      count('Issues', OPEN_ISSUES, (r) => [
+        r.data.issues.count,
+        r.trend.issues.count,
+      ]),
+      count(
+        'Bugs',
+        () => [...OPEN_ISSUES(), 'label:"type: bug"'],
+        (r) => [r.data.issues.bugCount, r.trend.issues.bugCount]
+      ),
+      count(
+        'Closed',
+        (since) => ['is:issue', 'is:closed', `closed:>=${since}`],
+        (r) => [r.data.issues.closed, r.trend.issues.closed]
+      ),
+      age('Avg Age', OLDEST_OPEN_ISSUES, (r) => [
         r.data.issues.count,
         r.data.issues.avgAge,
         r.trend.issues.avgAge,
       ]),
-      age('P95 Age', (r) => [
+      age('P95 Age', OLDEST_OPEN_ISSUES, (r) => [
         r.data.issues.count,
         r.data.issues.p95Age,
         r.trend.issues.p95Age,
@@ -101,22 +129,36 @@ export function formatGhReport(
 
   const prTable = buildTable(
     'Pull requests',
+    'pulls',
+    since,
     rows(
       (d) => d.prs.open,
       (d) => [d.prs.open, d.prs.created, d.prs.merged, d.prs.closed]
     ),
     [
-      scope,
-      count('Open', (r) => [r.data.prs.open, r.trend.prs.open]),
-      count('Created', (r) => [r.data.prs.created, r.trend.prs.created]),
-      count('Merged', (r) => [r.data.prs.merged, r.trend.prs.merged]),
-      count('Closed', (r) => [r.data.prs.closed, r.trend.prs.closed]),
-      age('Avg Age', (r) => [
+      scope(OPEN_PRS),
+      count('Open', OPEN_PRS, (r) => [r.data.prs.open, r.trend.prs.open]),
+      count(
+        'Created',
+        (since) => ['is:pr', `created:>=${since}`],
+        (r) => [r.data.prs.created, r.trend.prs.created]
+      ),
+      count(
+        'Merged',
+        (since) => ['is:pr', 'is:merged', `merged:>=${since}`],
+        (r) => [r.data.prs.merged, r.trend.prs.merged]
+      ),
+      count(
+        'Closed',
+        (since) => ['is:pr', 'is:closed', 'is:unmerged', `closed:>=${since}`],
+        (r) => [r.data.prs.closed, r.trend.prs.closed]
+      ),
+      age('Avg Age', OLDEST_OPEN_PRS, (r) => [
         r.data.prs.open,
         r.data.prs.avgAge,
         r.trend.prs.avgAge,
       ]),
-      age('P95 Age', (r) => [
+      age('P95 Age', OLDEST_OPEN_PRS, (r) => [
         r.data.prs.open,
         r.data.prs.p95Age,
         r.trend.prs.p95Age,
@@ -126,22 +168,28 @@ export function formatGhReport(
 
   return {
     title: `Issue & PR Report for ${currentData.collectedDate}`,
-    links: [
-      { label: 'view unlabeled issues', url: links.unlabeledIssuesUrl },
-      { label: 'view unlabeled PRs', url: links.unlabeledPrsUrl },
-    ],
     notes: [
       ...(prevData.collectedDate
         ? [`Previous Report: ${prevData.collectedDate}`]
         : []),
-      `Closed, created and merged counts are since ${sinceDate}. Ages are for open items, in days.`,
+      `Closed, created and merged counts are since ${formatDate(
+        since
+      )}. Ages are for open items, in days.`,
     ],
     tables: [issueTable, prTable],
     footer: { label: 'nx package health on npm-burst', url: NPM_HEALTH_URL },
   };
 }
 
-type TableCell = { type: 'raw_text'; text: string };
+type TableCell =
+  | { type: 'raw_text'; text: string }
+  | {
+      type: 'rich_text';
+      elements: {
+        type: 'rich_text_section';
+        elements: { type: 'link'; url: string; text: string }[];
+      }[];
+    };
 
 type SlackBlock =
   | { type: 'header'; text: { type: 'plain_text'; text: string } }
@@ -175,13 +223,12 @@ export function toSlackBlocks(
   return [
     { type: 'header', text: { type: 'plain_text', text: report.title } },
     context(report.notes.join('\n')),
-    ...report.links.map((l) => section(slackLink(l))),
     ...report.tables.flatMap((t) =>
       fencedTables
         ? [
             { type: 'divider' } as SlackBlock,
             section(`*${t.title}*`),
-            ...splitIntoBlocks(toMarkdownTable(t), TABLE_HEADER_LINES).map(
+            ...splitIntoBlocks(toFencedTable(t), TABLE_HEADER_LINES).map(
               section
             ),
           ]
@@ -196,8 +243,7 @@ export function toMarkdown(report: FormattedReport): string {
   return [
     `# ${report.title}`,
     report.notes.join('  \n'),
-    report.links.map(mdLink).join(' · '),
-    ...report.tables.flatMap((t) => [`## ${t.title}`, toMarkdownTable(t)]),
+    ...report.tables.flatMap((t) => [`## ${t.title}`, toLinkedTable(t)]),
     mdLink(report.footer),
   ].join('\n\n');
 }
@@ -229,19 +275,31 @@ export function splitIntoBlocks(text: string, headerLines = 0): string[] {
   return blocks;
 }
 
-const scope: Column = {
-  label: 'Scope',
-  align: 'left',
-  value: (r) => r.label,
-};
+const OPEN_ISSUES = () => ['is:issue', 'is:open'];
+const OPEN_PRS = () => ['is:pr', 'is:open'];
+const OLDEST_OPEN_ISSUES = () => [...OPEN_ISSUES(), 'sort:created-asc'];
+const OLDEST_OPEN_PRS = () => [...OPEN_PRS(), 'sort:created-asc'];
+
+function scope(query: Column['query']): Column {
+  return {
+    label: 'Scope',
+    align: 'left',
+    linked: true,
+    value: (r) => r.label,
+    query,
+  };
+}
 
 function count(
   label: string,
+  query: Column['query'],
   pick: (r: Row) => [number, number | null]
 ): Column {
   return {
     label,
     align: 'right',
+    linked: false,
+    query,
     value: (r) => {
       const [value, delta] = pick(r);
       return `${value} ${formatDelta(delta)}`.trim();
@@ -251,11 +309,14 @@ function count(
 
 function age(
   label: string,
+  query: Column['query'],
   pick: (r: Row) => [number, number, number | null]
 ): Column {
   return {
     label,
     align: 'right',
+    linked: false,
+    query,
     value: (r) => {
       const [openCount, value, delta] = pick(r);
       if (openCount === 0) {
@@ -268,18 +329,29 @@ function age(
 
 function buildTable(
   title: string,
+  path: SearchPath,
+  since: Date,
   rows: Row[],
   columns: Column[]
 ): ReportTable {
+  const searchDate = toSearchDate(since);
   return {
     title,
-    columns: columns.map(({ label, align }) => ({ label, align })),
-    rows: rows.map((row) => columns.map((c) => c.value(row))),
+    columns: columns.map(({ label, align, linked }) => ({
+      label,
+      align,
+      linked,
+    })),
+    rows: rows.map((row) =>
+      columns.map((c) => ({
+        text: c.value(row),
+        url: searchUrl(path, [...c.query(searchDate), ...row.filter]),
+      }))
+    ),
   };
 }
 
 function toTableBlock(t: ReportTable): SlackBlock {
-  const cell = (text: string): TableCell => ({ type: 'raw_text', text });
   return {
     type: 'table',
     column_settings: t.columns.map((c) => ({
@@ -287,16 +359,46 @@ function toTableBlock(t: ReportTable): SlackBlock {
       is_wrapped: true,
     })),
     rows: [
-      t.columns.map((c) => cell(c.label)),
-      ...t.rows.map((row) => row.map(cell)),
+      t.columns.map((c): TableCell => ({ type: 'raw_text', text: c.label })),
+      ...t.rows.map((row) =>
+        row.map((cell, idx): TableCell =>
+          t.columns[idx].linked
+            ? {
+                type: 'rich_text',
+                elements: [
+                  {
+                    type: 'rich_text_section',
+                    elements: [
+                      { type: 'link', url: cell.url, text: cell.text },
+                    ],
+                  },
+                ],
+              }
+            : { type: 'raw_text', text: cell.text }
+        )
+      ),
     ],
   };
 }
 
-function toMarkdownTable(t: ReportTable): string {
+// Only the fenced fallback needs fixed-width padding; padding a table of link
+// markup just makes the job summary's source unreadable.
+function toLinkedTable(t: ReportTable): string {
+  const line = (cells: string[]) => `| ${cells.join(' | ')} |`;
+  return [
+    line(t.columns.map((c) => c.label)),
+    line(t.columns.map(() => '---')),
+    ...t.rows.map((r) => line(r.map((c) => `[${c.text}](${c.url})`))),
+  ].join('\n');
+}
+
+function toFencedTable(t: ReportTable): string {
   return table(
     t.rows.map((cells) => ({ cells })),
-    t.columns.map((c, idx) => ({ label: c.label, mapFn: (r) => r.cells[idx] }))
+    t.columns.map((c, idx) => ({
+      label: c.label,
+      mapFn: (r: { cells: Cell[] }) => r.cells[idx].text,
+    }))
   );
 }
 
