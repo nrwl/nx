@@ -366,20 +366,21 @@ function toTableBlock(t: ReportTable): SlackBlock {
     rows: [
       t.columns.map((c): TableCell => ({ type: 'raw_text', text: c.label })),
       ...t.rows.map((row) =>
-        row.map((cell, idx): TableCell =>
-          t.columns[idx].linked
-            ? {
-                type: 'rich_text',
-                elements: [
-                  {
-                    type: 'rich_text_section',
-                    elements: [
-                      { type: 'link', url: cell.url, text: cell.text },
-                    ],
-                  },
-                ],
-              }
-            : { type: 'raw_text', text: cell.text }
+        row.map(
+          (cell, idx): TableCell =>
+            t.columns[idx].linked
+              ? {
+                  type: 'rich_text',
+                  elements: [
+                    {
+                      type: 'rich_text_section',
+                      elements: [
+                        { type: 'link', url: cell.url, text: cell.text },
+                      ],
+                    },
+                  ],
+                }
+              : { type: 'raw_text', text: cell.text }
         )
       ),
     ],
