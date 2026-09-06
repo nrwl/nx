@@ -61,7 +61,12 @@ export function formatGhReport(
   const prevDate = prevData.collectedDate
     ? new Date(prevData.collectedDate)
     : undefined;
-  const since = getSinceDate(prevDate);
+  // The window is relative to the run that produced this data, not to whenever
+  // the report happens to be rendered.
+  const since = getSinceDate(
+    prevDate,
+    currentData.collectedDate ? new Date(currentData.collectedDate) : undefined
+  );
 
   const rows = (
     sortBy: (d: ScopeData) => number,

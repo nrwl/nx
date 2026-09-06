@@ -82,6 +82,30 @@ describe('formatGhReport', () => {
     assert.doesNotMatch(first.notes[0], /Previous/);
   });
 
+  it('takes the since window from the collected date, not from the wall clock', () => {
+    const stale = formatGhReport(
+      { ...current, collectedDate: 'Mar 04 2021' },
+      trends,
+      { collectedDate: 'Feb 25 2021' },
+      scopeLabels
+    );
+    assert.match(stale.notes[1], /since Feb 25 2021\./);
+    assert.equal(
+      query(stale.tables[0].rows[0][3].url),
+      'is:issue is:closed closed:>=2021-02-25'
+    );
+  });
+
+  it('falls back to the previous month when the last report predates it', () => {
+    const cold = formatGhReport(
+      { ...current, collectedDate: 'Mar 04 2021' },
+      trends,
+      { collectedDate: 'Nov 02 2020' },
+      scopeLabels
+    );
+    assert.match(cold.notes[1], /since Feb 01 2021\./);
+  });
+
   it('labels the scope column left aligned and every stat column right aligned', () => {
     for (const t of report.tables) {
       assert.equal(t.columns[0].align, 'left');
@@ -208,25 +232,25 @@ describe('search links', () => {
       q(issues, 'scope: big', 'Bugs'),
       'is:issue is:open label:"type: bug" label:"scope: big"'
     );
-    assert.match(
+    assert.equal(
       q(issues, 'scope: big', 'Closed'),
-      /^is:issue is:closed closed:>=\d{4}-\d{2}-\d{2} label:"scope: big"$/
+      'is:issue is:closed closed:>=2026-08-23 label:"scope: big"'
     );
     assert.equal(
       q(prs, 'scope: big', 'Open'),
       'is:pr is:open label:"scope: big"'
     );
-    assert.match(
+    assert.equal(
       q(prs, 'scope: big', 'Created'),
-      /^is:pr created:>=\d{4}-\d{2}-\d{2} label:"scope: big"$/
+      'is:pr created:>=2026-08-23 label:"scope: big"'
     );
-    assert.match(
+    assert.equal(
       q(prs, 'scope: big', 'Merged'),
-      /^is:pr is:merged merged:>=\d{4}-\d{2}-\d{2} label:"scope: big"$/
+      'is:pr is:merged merged:>=2026-08-23 label:"scope: big"'
     );
-    assert.match(
+    assert.equal(
       q(prs, 'scope: big', 'Closed'),
-      /^is:pr is:closed is:unmerged closed:>=\d{4}-\d{2}-\d{2} label:"scope: big"$/
+      'is:pr is:closed is:unmerged closed:>=2026-08-23 label:"scope: big"'
     );
   });
 
