@@ -105,11 +105,11 @@ describe('npm-config', () => {
   });
 
   describe('pnpm v11+ config resolution', () => {
-    it('should resolve scoped registry via pnpm for pnpm v11+', async () => {
+    it('should resolve scoped registry via pnpm for pnpm v11+, stripping the trailing slash pnpm appends', async () => {
       mockDetectPackageManager.mockReturnValue('pnpm');
       mockGetPackageManagerVersion.mockReturnValue('11.2.1');
       const registry = await getNpmRegistry(tempFs.tempDir, '@scope');
-      expect(registry).toEqual('https://pnpm-scoped-registry.com/');
+      expect(registry).toEqual('https://pnpm-scoped-registry.com');
     });
 
     it('should resolve tag via pnpm for pnpm v11+', async () => {

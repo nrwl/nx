@@ -85,7 +85,9 @@ export async function getNpmRegistry(
     registry = await getNpmConfigValue('registry', cwd);
   }
 
-  return registry;
+  // `pnpm config get registry` normalizes the URL with a trailing slash while npm
+  // returns the raw value; strip it so pnpm v11+ workspaces match npm's output.
+  return registry?.replace(/\/$/, '');
 }
 
 /**
