@@ -1,4 +1,4 @@
-import { fork, Serializable } from 'child_process';
+import { fork, ForkOptions, Serializable, SpawnOptions } from 'child_process';
 import { join } from 'path';
 import { PseudoIPCClient } from './pseudo-ipc';
 import { signalToCode } from '../utils/exit-codes';
@@ -14,11 +14,13 @@ if (process.env['NX_PSEUDO_TERMINAL_EXEC_ARGV']) {
   delete process.env['NX_PSEUDO_TERMINAL_EXEC_ARGV'];
 }
 
-const childProcess = fork(script, {
+const forkOptions: ForkOptions & Pick<SpawnOptions, 'windowsHide'> = {
+  windowsHide: true,
   stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
   env: process.env,
   execArgv,
-});
+};
+const childProcess = fork(script, forkOptions);
 
 const pseudoIPC = new PseudoIPCClient(pseudoIPCPath);
 
