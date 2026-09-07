@@ -12,7 +12,7 @@ import {
 /**
  * Reads and combines options for a given target.
  *
- * Works as if you invoked the target yourself without passing any command lint overrides.
+ * Works as if you invoked the target yourself without passing any command line overrides.
  */
 export function readTargetOptions<T = any>(
   { project, target, configuration }: Target,

@@ -6,7 +6,7 @@
     "add-linting": {
       "factory": "./dist/src/generators/add-linting/add-linting",
       "schema": "./dist/src/generators/add-linting/schema.json",
-      "description": "Adds linting configuration to an Angular project.",
+      "description": "Adds linting configuration to an Angular project, using the linter the workspace already uses. Adds nothing when the workspace has no linter and none is selected.",
       "hidden": true
     },
     "application": {

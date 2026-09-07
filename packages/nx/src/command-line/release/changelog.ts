@@ -1,5 +1,5 @@
 import * as pc from 'picocolors';
-import { prompt } from 'enquirer';
+import { confirmationPrompt } from '../../utils/prompt-helpers';
 import { readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { prerelease } from 'semver';
 import { dirSync } from 'tmp';
@@ -206,7 +206,12 @@ export function createAPI(
       output.note(releaseGraph.filterLog);
     }
 
+    // Programmatic API consumers can force changelog generation to run even when the resolved
+    // configuration is considered effectively disabled (e.g. when they have disabled changelog
+    // file writing and remote release creation because they consume the returned changelog
+    // contents in memory instead)
     const changelogGenerationEnabled =
+      args.forceChangelogGeneration ||
       isChangelogEffectivelyEnabled(
         nxReleaseConfig.changelog.workspaceChangelog
       ) ||
@@ -496,6 +501,14 @@ export function createAPI(
 
       if (releaseGroup.projectsRelationship === 'independent') {
         for (const project of projectNodes) {
+          if (
+            !projectsVersionData[project.name] ||
+            (projectsVersionData[project.name].newVersion === null &&
+              !projectsVersionData[project.name].dockerVersion)
+          ) {
+            continue;
+          }
+
           let changes: ChangelogChange[] | null = null;
 
           if (releaseGroup.resolvedVersionPlans) {
@@ -603,7 +616,9 @@ export function createAPI(
           const fromSHA = await getCachedFromSHA(
             groupCacheKey,
             releaseGroup.releaseTag.pattern,
-            {},
+            {
+              releaseGroupName: releaseGroup.name,
+            },
             workspacePreid ?? projectsPreid?.[Object.keys(projectsPreid)[0]],
             releaseGroup.releaseTag.checkAllBranchesWhen,
             releaseGroup.releaseTag.requireSemver,
@@ -1296,23 +1311,13 @@ async function filterProjectCommits({
 }
 
 async function promptForRemoteRelease(): Promise<boolean> {
-  try {
-    const result = await prompt<{ confirmation: boolean }>([
-      {
-        name: 'confirmation',
-        message: `Do you want to create a ${
-          remoteReleaseProviderName ?? 'remote'
-        } release anyway?`,
-        type: 'confirm',
-      },
-    ]);
-    return result.confirmation;
-  } catch {
-    // Ensure the cursor is always restored
-    process.stdout.write('\u001b[?25h');
-    // Handle the case where the user exits the prompt with ctrl+c
-    return false;
-  }
+  return confirmationPrompt({
+    message: `Do you want to create a ${
+      remoteReleaseProviderName ?? 'remote'
+    } release anyway?`,
+    // Cancelling declines the release rather than failing the run.
+    onCancel: () => false,
+  });
 }
 
 async function resolveWorkspaceChangelogChanges({

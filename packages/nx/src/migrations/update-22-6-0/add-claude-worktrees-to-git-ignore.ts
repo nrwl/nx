@@ -1,4 +1,4 @@
-import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import { formatChangedFiles } from '../../generators/internal-utils/format-changed-files';
 import { Tree } from '../../generators/tree';
 import { addEntryToGitIgnore } from '../../utils/ignore';
 
@@ -12,5 +12,5 @@ export default async function addClaudeWorktreesToGitIgnore(tree: Tree) {
   }
   addEntryToGitIgnore(tree, '.gitignore', '.claude/worktrees');
 
-  await formatChangedFilesWithPrettierIfAvailable(tree);
+  await formatChangedFiles(tree);
 }

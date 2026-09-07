@@ -11,18 +11,6 @@ export default [
     },
   },
   {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          paths: ['rxjs'],
-          patterns: ['rxjs/*'],
-        },
-      ],
-    },
-  },
-  {
     ignores: ['src/assets/generated-*'],
   },
 ];

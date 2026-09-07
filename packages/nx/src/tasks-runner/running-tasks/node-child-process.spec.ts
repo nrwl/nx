@@ -18,7 +18,7 @@ describe('NodeChildProcessWithNonDirectOutput', () => {
       prefix: 'test',
     });
 
-    const exitSpy = jest.fn();
+    const exitSpy = vi.fn();
     wrapped.onExit(exitSpy);
 
     // Simulate the race reported in #35302: 'exit' fires synchronously,

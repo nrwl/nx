@@ -140,8 +140,15 @@ export {
   ensurePlaywrightBrowsersInstallation,
 } from './ensure-browser-installation';
 
-export function getStrippedEnvironmentVariables() {
-  return Object.fromEntries(
+// webpack-dev-server's `port: 'auto'` probes from a fixed base (8080), so
+// concurrent e2e-ci tasks on one agent race to bind it (EADDRINUSE in Cypress
+// CT). Give each jest process its own base so probes start in disjoint ranges.
+process.env.WEBPACK_DEV_SERVER_BASE_PORT ??= String(
+  8080 + (process.pid % 5000) * 10
+);
+
+export function getStrippedEnvironmentVariables(cwd: string = tmpProjPath()) {
+  const stripped = Object.fromEntries(
     Object.entries(process.env).filter(([key]) => {
       if (key.startsWith('NX_E2E_')) {
         return true;
@@ -170,6 +177,14 @@ export function getStrippedEnvironmentVariables() {
         return false;
       }
 
+      // Remove GITHUB_STEP_SUMMARY so e2e subprocesses don't append to the real CI job
+      // summary. The stripper drops NX_TASK_TARGET_PROJECT, so a child nx looks top-level
+      // and would otherwise write its performance report (once per nx command) into the
+      // runner's summary. GITHUB_ACTIONS is kept so log grouping still gets exercised.
+      if (key === 'GITHUB_STEP_SUMMARY') {
+        return false;
+      }
+
       // Remove AI agent detection env vars to prevent the test runner's
       // environment (e.g., running inside Claude Code) from leaking into
       // e2e test subprocesses. Tests that need these pass them explicitly.
@@ -189,4 +204,21 @@ export function getStrippedEnvironmentVariables() {
       return true;
     })
   );
+
+  return {
+    // Nx defaults the cache to the shared per-user `~/.nx/<id>/cache`, which is
+    // outside the test project. Several suites assert on `.nx/cache`, and the
+    // eviction ones count entries there, so pin it back inside the project. It
+    // also stops concurrent e2e projects evicting each other through one shared
+    // directory.
+    //
+    // Keyed on the directory the command actually runs in, not on the current
+    // project: the runners that accept `opts.cwd` can be pointed at another
+    // workspace, and defaulting to `tmpProjPath()` there would aim the cache at
+    // a project the command never touched. The filter above strips `NX_*`, so
+    // this cannot be overridden from the parent env -- a test that needs a
+    // different value passes `opts.env`.
+    NX_CACHE_DIRECTORY: join(cwd, '.nx', 'cache'),
+    ...stripped,
+  };
 }

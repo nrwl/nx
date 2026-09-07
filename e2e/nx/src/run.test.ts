@@ -534,7 +534,7 @@ describe('Nx Running Tests', () => {
 
         updateJson('nx.json', (nxJson) => {
           nxJson.targetDefaults ??= {};
-          nxJson.targetDefaults[`nx:run-commands`] = {
+          nxJson.targetDefaults['nx:run-commands'] = {
             options: {
               command: `echo Hello from ${target}`,
             },
@@ -557,6 +557,210 @@ describe('Nx Running Tests', () => {
         expect(runCLI(`${target} ${lib} --verbose`)).toContain(
           `Hello from ${target}`
         );
+      });
+    });
+
+    describe('target defaults filtering by projects and plugin', () => {
+      it('scopes a target-default to a single project name via the `projects` filter', () => {
+        const target = uniq('target');
+        const libA = uniq('liba');
+        const libB = uniq('libb');
+
+        updateJson('nx.json', (nxJson) => {
+          nxJson.targetDefaults ??= {};
+          nxJson.targetDefaults[target] = [
+            {
+              filter: { projects: [libA] },
+              executor: 'nx:run-commands',
+              options: { command: `echo SCOPED-TO-${libA}` },
+            },
+          ];
+          return nxJson;
+        });
+
+        updateFile(
+          `libs/${libA}/project.json`,
+          JSON.stringify({ name: libA, targets: { [target]: {} } })
+        );
+        updateFile(
+          `libs/${libB}/project.json`,
+          JSON.stringify({ name: libB, targets: { [target]: {} } })
+        );
+
+        // libA matches the `projects` filter — the executor and options inject.
+        expect(runCLI(`${target} ${libA} --verbose`)).toContain(
+          `SCOPED-TO-${libA}`
+        );
+
+        // libB doesn't match — no other default applies, so the bare target has
+        // no executor and the run fails. We only assert the SCOPED text isn't
+        // there; the exact "no executor" wording is engine-version-sensitive.
+        const result = runCLI(`${target} ${libB} --verbose`, {
+          silenceError: true,
+        });
+        expect(result).not.toContain(`SCOPED-TO-${libA}`);
+      });
+
+      it('scopes a target-default by tag via the `projects` filter', () => {
+        const target = uniq('target');
+        const tag = uniq('tag').toLowerCase();
+        const libTagged = uniq('libtagged');
+        const libUntagged = uniq('libuntagged');
+
+        updateJson('nx.json', (nxJson) => {
+          nxJson.targetDefaults ??= {};
+          nxJson.targetDefaults[target] = [
+            {
+              filter: { projects: [`tag:${tag}`] },
+              executor: 'nx:run-commands',
+              options: { command: `echo TAGGED-${tag}` },
+            },
+          ];
+          return nxJson;
+        });
+
+        updateFile(
+          `libs/${libTagged}/project.json`,
+          JSON.stringify({
+            name: libTagged,
+            tags: [tag],
+            targets: { [target]: {} },
+          })
+        );
+        updateFile(
+          `libs/${libUntagged}/project.json`,
+          JSON.stringify({ name: libUntagged, targets: { [target]: {} } })
+        );
+
+        expect(runCLI(`${target} ${libTagged} --verbose`)).toContain(
+          `TAGGED-${tag}`
+        );
+
+        const result = runCLI(`${target} ${libUntagged} --verbose`, {
+          silenceError: true,
+        });
+        expect(result).not.toContain(`TAGGED-${tag}`);
+      });
+
+      it('falls back to a less-specific target-default when the more-specific `projects` filter does not match', () => {
+        const target = uniq('target');
+        const libA = uniq('liba');
+        const libB = uniq('libb');
+
+        updateJson('nx.json', (nxJson) => {
+          nxJson.targetDefaults ??= {};
+          // Entries apply in document order, last match winning. The catch-all
+          // baseline comes first; the filtered entry overrides it for libA.
+          nxJson.targetDefaults[target] = [
+            // No-filter catch-all — covers everyone else.
+            {
+              executor: 'nx:run-commands',
+              options: { command: `echo GENERIC-${target}` },
+            },
+            // Filtered entry — overrides for libA (applied after the catch-all).
+            {
+              filter: { projects: [libA] },
+              executor: 'nx:run-commands',
+              options: { command: `echo SPECIFIC-${libA}` },
+            },
+          ];
+          return nxJson;
+        });
+
+        updateFile(
+          `libs/${libA}/project.json`,
+          JSON.stringify({ name: libA, targets: { [target]: {} } })
+        );
+        updateFile(
+          `libs/${libB}/project.json`,
+          JSON.stringify({ name: libB, targets: { [target]: {} } })
+        );
+
+        // libA matches the filtered entry, which applies after the catch-all
+        // and overrides it.
+        const aOut = runCLI(`${target} ${libA} --verbose`);
+        expect(aOut).toContain(`SPECIFIC-${libA}`);
+        expect(aOut).not.toContain(`GENERIC-${target}`);
+
+        // libB doesn't match the filter, so only the catch-all default applies.
+        const bOut = runCLI(`${target} ${libB} --verbose`);
+        expect(bOut).toContain(`GENERIC-${target}`);
+        expect(bOut).not.toContain(`SPECIFIC-${libA}`);
+      });
+
+      it('scopes a target-default by `source` to plugin-inferred targets only', () => {
+        const target = uniq('target');
+        const inferredLib = uniq('inferred');
+        const manualLib = uniq('manual');
+        const pluginPath = './tools/echo-source-plugin.cjs';
+
+        // Inline plugin: infers `<target>` for any project containing
+        // `marker.json`. Targets it creates carry source attribution
+        // pointing at this plugin's path.
+        updateFile(
+          'tools/echo-source-plugin.cjs',
+          `
+            const { dirname, basename } = require('path');
+            module.exports = {
+              createNodes: ['**/marker.json', (files) => {
+                return files.map((file) => {
+                  const root = dirname(file);
+                  return [file, {
+                    projects: {
+                      [root]: {
+                        name: basename(root),
+                        targets: {
+                          '${target}': { command: 'echo INFERRED-COMMAND' },
+                        },
+                      },
+                    },
+                  }];
+                });
+              }],
+            };
+          `
+        );
+
+        updateJson('nx.json', (nxJson) => {
+          nxJson.plugins = [...(nxJson.plugins ?? []), pluginPath];
+          nxJson.targetDefaults ??= {};
+          nxJson.targetDefaults[target] = [
+            {
+              filter: { plugin: pluginPath },
+              outputs: ['{workspaceRoot}/source-filter-marker'],
+            },
+          ];
+          return nxJson;
+        });
+
+        // Inferred via the plugin (has marker.json).
+        updateFile(`libs/${inferredLib}/marker.json`, '{}');
+
+        // Manually defined — same target name, but its source attribution is
+        // project.json (not the plugin path).
+        updateFile(
+          `libs/${manualLib}/project.json`,
+          JSON.stringify({
+            name: manualLib,
+            targets: {
+              [target]: { command: 'echo MANUAL-COMMAND' },
+            },
+          })
+        );
+
+        const inferredCfg = JSON.parse(
+          runCLI(`show target ${inferredLib}:${target} --json`)
+        );
+        const manualCfg = JSON.parse(
+          runCLI(`show target ${manualLib}:${target} --json`)
+        );
+
+        // The default's `outputs` only attaches to the inferred target —
+        // its source matches the plugin path the filter names.
+        expect(inferredCfg.outputs).toEqual([
+          '{workspaceRoot}/source-filter-marker',
+        ]);
+        expect(manualCfg.outputs).toBeUndefined();
       });
     });
 

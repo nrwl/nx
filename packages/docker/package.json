@@ -86,7 +86,6 @@
   "generators": "./generators.json",
   "dependencies": {
     "@nx/devkit": "workspace:*",
-    "enquirer": "catalog:",
     "tslib": "catalog:typescript"
   },
   "devDependencies": {

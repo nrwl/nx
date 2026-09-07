@@ -10,12 +10,12 @@ export const NX_CLOUD_URL = 'https://nx.dev/nx-cloud';
 /**
  * Clickable Nx Cloud marketing link for cloud prompt footers. The visible text
  * stays the clean `NX_CLOUD_URL` while clicks carry UTM attribution; terminals
- * without OSC 8 support just render the bare URL (CLOUD-4642). The medium is
- * per-command because `nx init` and `nx migrate` share a footer but report
- * different mediums.
+ * without OSC 8 support just render the bare URL (CLOUD-4642). The content tag
+ * is per-command because `nx init` and `nx migrate` share a footer but report
+ * different commands.
  */
-export function nxCloudHyperlink(utmMedium: string): string {
-  const tracked = `${NX_CLOUD_URL}?utm_source=nx-cli&utm_medium=${utmMedium}`;
+export function nxCloudHyperlink(utmContent: string): string {
+  const tracked = `${NX_CLOUD_URL}?utm_source=nx-cli&utm_medium=cli&utm_campaign=nx-cloud-connect&utm_content=${utmContent}`;
   return terminalLink(NX_CLOUD_URL, tracked);
 }
 

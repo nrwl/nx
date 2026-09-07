@@ -3,7 +3,7 @@
 import { createWorkspace } from 'create-nx-workspace';
 
 async function main() {
-  const name = process.argv[2]; // TODO: use libraries like yargs or enquirer to set your workspace name
+  const name = process.argv[2]; // TODO: use libraries like yargs, <%= unitTestRunner === 'jest' ? 'enquirer' : '@clack/prompts' %>, or another prompting library to set your workspace name
   if (!name) {
     throw new Error('Please provide a name for the workspace');
   }

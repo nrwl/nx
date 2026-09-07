@@ -95,8 +95,7 @@ export interface AssetGlobPattern {
   output: string;
 }
 
-export interface NormalizedRollupWithNxPluginOptions
-  extends RollupWithNxPluginOptions {
+export interface NormalizedRollupWithNxPluginOptions extends RollupWithNxPluginOptions {
   assets: AssetGlobPattern[];
   compiler: 'babel' | 'tsc' | 'swc';
   format: ('cjs' | 'esm')[];

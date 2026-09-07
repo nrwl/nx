@@ -31,8 +31,10 @@ export interface EsBuildExecutorOptions {
   watch?: boolean;
 }
 
-export interface NormalizedEsBuildExecutorOptions
-  extends Omit<EsBuildExecutorOptions, 'esbuildOptions' | 'esbuildConfig'> {
+export interface NormalizedEsBuildExecutorOptions extends Omit<
+  EsBuildExecutorOptions,
+  'esbuildOptions' | 'esbuildConfig'
+> {
   assets: (AssetGlob | string)[];
   singleEntry: boolean;
   external: string[];

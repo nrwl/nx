@@ -1,6 +1,6 @@
 ---
-title: Playwright Plugin for Nx
-description: The Nx Plugin for Playwright contains executors and generators that support e2e testing with Playwright, including setup and configuration for your Nx workspace.
+title: Nx with Playwright
+description: Run Playwright through Nx for caching, affected test runs, and faster CI across your monorepo.
 sidebar:
   label: Introduction
 weight: 2
@@ -30,7 +30,7 @@ The `@nx/playwright` plugin supports the following package versions.
 ### Installation
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/playwright` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
+Make sure to install the `@nx/playwright` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/kb/keep-nx-versions-in-sync).
 {% /aside %}
 
 In any Nx workspace, you can install `@nx/playwright` by running the following command:
@@ -52,9 +52,11 @@ The `@nx/playwright` plugin will create a task for any project that has a Playwr
 - `playwright.config.cjs`
 - `playwright.config.cts`
 
+The configuration directory must also contain a `package.json` or `project.json`.
+
 ### View inferred tasks
 
-To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+To view inferred tasks for a project, open the [project details view](/docs/concepts/mental-model#inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
 
 ### @nx/playwright configuration
 
@@ -77,11 +79,37 @@ The `@nx/playwright/plugin` is configured in the `plugins` array in `nx.json`.
 
 The `targetName` and `ciTargetName` options control the name of the inferred Playwright tasks. The default names are `e2e` and `e2e-ci`.
 
+When your Playwright config declares a `webServer` that sets `reuseExistingServer` to `true` and
+whose `command` runs an Nx task, Nx runs that task as a dependency of the Playwright tasks.
+The command must be `nx run <project>:<target>` or `nx <target> <project>`, optionally prefixed
+by a package manager runner such as `npx` or `pnpm exec`, with no extra arguments.
+
+The Playwright docs suggest setting `reuseExistingServer` to `!process.env.CI`.
+Set it to `true` instead, since Nx already runs the web server as a task dependency.
+With `false`, Nx skips that task and Playwright starts its own server inside each Playwright task.
+
+If that `webServer` also sets a `port` or `url`, Nx infers an extra task, named
+`<targetName>--wait-for-webserver` (`e2e--wait-for-webserver` by default), that waits for the
+server to be ready.
+The atomized CI tasks share that task when it would wait for the same servers, depend on the
+same serve tasks, and load the same env files.
+Otherwise they get their own `<ciTargetName>--wait-for-webserver` task.
+Playwright then finds the server already running and reuses it.
+
+The `webServerTimeout` option sets how long, in milliseconds, that task waits before failing.
+Set the `waitForWebServer` option to `false` to opt out of that task.
+For the `webServer` shapes Nx leaves to Playwright and for how Nx caches and re-infers the server
+address, see [Playwright web server readiness](/docs/kb/playwright-web-server-readiness).
+
 ### Splitting E2E tests
 
-`@nx/playwright/plugin` uses Nx Atomizer to automatically split your e2e tests into smaller tasks for more efficient distribution in CI. Read more about the [Atomizer feature](/docs/features/ci-features/split-e2e-tasks).
+The `targetName` task runs the complete Playwright suite and caches the configured test and reporter
+outputs.
+The `ciTargetName` task uses the [Atomizer](/docs/features/ci-features/split-e2e-tasks).
 
-If you would like to disable Atomizer for Playwright tasks, set `ciTargetName` to `false`.
+Both options accept task names as strings. To run the non-atomized suite in CI, invoke the `targetName` task (the default is `e2e`) instead of the `ciTargetName` task.
+
+Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/playwright/plugin`.
 
 ## E2E testing
 
@@ -99,10 +127,12 @@ To generate an E2E project for an existing project, run the following generator
 nx g @nx/playwright:configuration --project=your-app-name
 ```
 
-Optionally, you can use the `--webServerCommand` and `--webServerAddress` option, to auto setup the [web server option](https://playwright.dev/docs/test-webserver) in the playwright config
+The generator prompts for the [web server option](https://playwright.dev/docs/test-webserver) to add
+to the Playwright config.
+Pass `--webServerCommand` and `--webServerAddress` to skip the prompts.
 
 ```shell
-nx g @nx/playwright:configuration --project=your-app-name --webServerCommand="npx serve your-project-name" --webServerAddress="http://localhost:4200"
+nx g @nx/playwright:configuration --project=your-app-name --webServerCommand="npx nx serve your-project-name" --webServerAddress="http://localhost:4200"
 ```
 
 ### Testing applications
@@ -125,7 +155,7 @@ nx e2e frontend-e2e --grepInvert="feat-a"
 {% /aside %}
 
 By default, Playwright will run in headless mode. You will have the result of all the tests and errors (if any) in your
-terminal. Test output such as reports, screenshots and videos, will be accessible in `dist/.playwright/apps/<your-app-name>/`. This can be configured with the `outputDir` configuration options.
+terminal. Test output such as reports, screenshots, and videos will be accessible in `dist/.playwright/apps/<your-app-name>/`. This can be configured with the `outputDir` configuration options.
 
 {% aside type="note" title="Output Caching" %}
 If changing the output directory or report output, make sure to update the [target outputs](/docs/concepts/how-caching-works#what-is-cached) so the artifacts are correctly cached
@@ -195,9 +225,9 @@ export default defineConfig({
 
   // Run your local dev server before starting the tests
   webServer: {
-    command: 'npx serve <your-app-name>',
+    command: 'npx nx serve <your-app-name>',
     url: 'http://localhost:4200',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true,
   },
   use: {
     baseURL: 'http://localhost:4200', // url playwright visits with `await page.goto('/')`;
@@ -205,30 +235,29 @@ export default defineConfig({
 });
 ```
 
-In order to set different `baseURL` values for different environments you can pass them via the [environment variables and nx configurations](/docs/guides/tips-n-tricks/define-environment-variables) or optionally via setting them per the environment they are needed in such as `CI`
+In order to set different `baseURL` values for different environments you can pass them via [environment variables and Nx configurations](/docs/reference/environment-variables#loading-environment-variables) or optionally via setting them per the environment they are needed in such as `CI`
 
 ```ts frame="none"
 import { defineConfig } from '@playwright/test';
 
 const baseUrl =
-  (process.env.BASE_URL ?? process.env.CI)
+  process.env.BASE_URL ??
+  (process.env.CI
     ? 'https://some-staging-url.example.com'
-    : 'http://localhost:4200';
+    : 'http://localhost:4200');
 
 export default defineConfig({
   // Rest of your config...
 
-  // Run your local dev server before starting the tests
-  webServer: {
-    command: 'npx serve <your-app-name>',
-    url: baseUrl,
-    reuseExistingServer: !process.env.CI,
-  },
   use: {
     baseURL: baseUrl, // url playwright visits with `await page.goto('/')`;
   },
 });
 ```
+
+Leave `webServer` out when the tests run against a deployed environment.
+There's no local server for Playwright to start, and pointing `webServer.url` at a URL that already
+answers makes Playwright fail unless `reuseExistingServer` is `true`.
 
 By default Nx, provides a `nxE2EPreset` with predefined configuration for Playwright.
 
@@ -261,7 +290,7 @@ export default defineConfig({
   webServer: {
     command: 'npx nx serve <your-app-name>',
     url: baseURL,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true,
     cwd: workspaceRoot,
   },
 });
@@ -296,3 +325,9 @@ export default defineConfig({
 ```
 
 See the [Playwright configuration docs](https://playwright.dev/docs/test-configuration) for more options for Playwright.
+
+## Set up CI
+
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
+
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).

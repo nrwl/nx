@@ -7,14 +7,14 @@ use tokio::sync::mpsc::UnboundedSender;
 
 use crate::native::ide::nx_console::messaging::NxConsoleMessageConnection;
 use crate::native::{
-    pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc},
+    pseudo_terminal::pseudo_terminal::PtyHandles,
     tasks::types::{Task, TaskResult},
 };
 
 use super::action::Action;
 use super::components::task_selection_manager::SelectionEntry;
 use super::components::tasks_list::TaskStatus;
-use super::lifecycle::{BatchInfo, BatchStatus, TuiMode};
+use super::lifecycle::{BatchInfo, BatchStatus, PerformanceSummaryPayload, TuiMode};
 use super::pty::PtyInstance;
 use super::tui;
 use super::tui_core::TuiCore;
@@ -238,24 +238,23 @@ pub trait TuiApp: Send {
         // Default: no-op
     }
 
-    /// Register a running interactive task with its PTY parser and writer
+    /// Register a running interactive task with its PTY handles
     ///
     /// Default implementation creates a PTY, registers it, and calls the hook.
-    /// Interactive PTYs are NOT resized because they handle dimensions through
-    /// the parser/writer. Override if mode-specific resizing is needed.
+    /// The PTY inherits the dimensions it was opened with; it is resized to the
+    /// pane it is displayed in once the pane is laid out. Override if
+    /// mode-specific resizing is needed at registration time.
     ///
     /// # Arguments
     ///
     /// * `task_id` - The task identifier
-    /// * `parser_and_writer` - Reference to PTY parser and writer
-    fn register_running_interactive_task(
-        &mut self,
-        task_id: String,
-        parser_and_writer: &(ParserArc, WriterArc),
-    ) {
-        // Interactive PTYs don't need dimension calculation - they use parser/writer dimensions
-        let pty =
-            PtyInstance::interactive(parser_and_writer.0.clone(), parser_and_writer.1.clone());
+    /// * `pty_handles` - Reference to the PTY parser, writer and master
+    fn register_running_interactive_task(&mut self, task_id: String, pty_handles: &PtyHandles) {
+        let pty = PtyInstance::interactive(
+            pty_handles.0.clone(),
+            pty_handles.1.clone(),
+            pty_handles.2.clone(),
+        );
 
         let pty = Arc::new(pty);
         self.state()
@@ -391,6 +390,21 @@ pub trait TuiApp: Send {
             .get_cloud_message()
             .map(|s| s.to_string())
     }
+
+    /// Set a structured Nx Cloud link (display label + href URL) to display.
+    ///
+    /// Default implementation stores the link directly in TuiState.
+    /// Mode-specific implementations override this to also dispatch a UI action
+    /// so the rendered TasksList picks the link up.
+    fn set_cloud_link(&mut self, label: String, url: String) {
+        self.state().lock().set_cloud_link(Some((label, url)));
+    }
+
+    /// Set the run report shown in the exit-countdown popup.
+    ///
+    /// Default implementation is a no-op; mode-specific implementations forward
+    /// it to their countdown popup so it renders above the exit hints.
+    fn set_exit_summary(&mut self, _summary: PerformanceSummaryPayload) {}
 
     /// Set the console messenger for IDE integration
     ///

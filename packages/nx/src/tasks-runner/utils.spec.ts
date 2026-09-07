@@ -815,11 +815,11 @@ describe('utils', () => {
     it('throws an error if the output is a glob pattern from the workspace root', () => {
       expect(() => validateOutputs(['{workspaceRoot}/**/dist/*.js']))
         .toThrowErrorMatchingInlineSnapshot(`
-        "The following outputs are defined by a glob pattern from the workspace root: 
-         - {workspaceRoot}/**/dist/*.js
+          [Error: The following outputs are defined by a glob pattern from the workspace root: 
+           - {workspaceRoot}/**/dist/*.js
 
-        These can be slow, replace them with a more specific pattern."
-      `);
+          These can be slow, replace them with a more specific pattern.]
+        `);
     });
 
     it("shouldn't throw an error if the output is a glob pattern from the project root", () => {
@@ -835,25 +835,25 @@ describe('utils', () => {
     it("throws an error if the output doesn't start with a prefix", () => {
       expect(() => validateOutputs(['dist']))
         .toThrowErrorMatchingInlineSnapshot(`
-        "The following outputs are invalid: 
-         - dist
-           ** Reason: Outputs must start with either "{workspaceRoot}/" or "{projectRoot}/".
+          [Error: The following outputs are invalid: 
+           - dist
+             ** Reason: Outputs must start with either "{workspaceRoot}/" or "{projectRoot}/".
 
-        Run \`nx repair\` to fix this."
-      `);
+          Run \`nx repair\` to fix this.]
+        `);
     });
 
     test('multiple errors formatted correctly', () => {
       expect(() => validateOutputs(['foo', 'bar']))
         .toThrowErrorMatchingInlineSnapshot(`
-        "The following outputs are invalid: 
-         - foo
-           ** Reason: Outputs must start with either "{workspaceRoot}/" or "{projectRoot}/".
-         - bar
-           ** Reason: Outputs must start with either "{workspaceRoot}/" or "{projectRoot}/".
+          [Error: The following outputs are invalid: 
+           - foo
+             ** Reason: Outputs must start with either "{workspaceRoot}/" or "{projectRoot}/".
+           - bar
+             ** Reason: Outputs must start with either "{workspaceRoot}/" or "{projectRoot}/".
 
-        Run \`nx repair\` to fix this."
-      `);
+          Run \`nx repair\` to fix this.]
+        `);
     });
   });
 });
@@ -1033,6 +1033,23 @@ describe('expandInitiatingTasksThroughNoop', () => {
       projectGraph
     );
     expect([...result].sort()).toEqual(['app:serve', 'app:test']);
+  });
+
+  it('throws a descriptive error when a task references a project missing from the graph', () => {
+    // e.g. a DTE agent whose local graph diverged from the coordinator's
+    const projectGraph = mkProjectGraph({
+      app: { build: { executor: 'nx:run-commands' } },
+    });
+    const taskGraph = mkTaskGraph(['other:build']);
+    expect(() =>
+      expandInitiatingTasksThroughNoop(
+        [taskGraph.tasks['other:build']],
+        taskGraph,
+        projectGraph
+      )
+    ).toThrow(
+      'Task "other:build" references project "other", which does not exist in the project graph.'
+    );
   });
 });
 

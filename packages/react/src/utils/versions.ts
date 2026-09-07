@@ -39,7 +39,7 @@ export const reactReduxVersion = '^9.2.0';
 
 export const eslintPluginImportVersion = '2.31.0';
 export const eslintPluginJsxA11yVersion = '6.10.1';
-export const eslintPluginReactVersion = '7.35.0';
+export const eslintPluginReactVersion = '^7.35.0';
 export const eslintPluginReactHooksVersion = '5.0.0';
 
 export const tsLibVersion = '^2.3.0';
@@ -50,6 +50,7 @@ export const autoprefixerVersion = '10.4.13';
 // SSR and Module Federation
 export const expressVersion = '^4.21.2';
 export const typesExpressVersion = '^4.17.21';
+export const httpProxyMiddlewareVersion = '^3.0.5';
 export const isbotVersion = '^3.6.5';
 export const corsVersion = '~2.8.5';
 export const typesCorsVersion = '~2.8.12';
@@ -62,3 +63,4 @@ export const sassVersion = '^1.97.2';
 // rollup plugins (if needed)
 export const rollupPluginUrlVersion = '^8.0.2';
 export const svgrRollupVersion = '^8.1.0';
+export const svgrWebpackVersion = '^8.0.1';

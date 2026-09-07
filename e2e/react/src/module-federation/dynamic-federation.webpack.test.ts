@@ -98,7 +98,7 @@ describe('Dynamic Module Federation', () => {
     expect(buildOutput).toContain('Successfully ran target build');
     expect(remoteOutput).toContain('Successfully ran target build');
 
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       // Serve Remote since it is dynamic and won't be started with the host
       console.log(
         `[dynamic-federation.webpack] Starting serve-static for ${remote} on port ${remotePort}`

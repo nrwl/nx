@@ -1,0 +1,90 @@
+{
+  "name": "@nx/oxlint",
+  "description": "Experimental. The Oxlint plugin for Nx contains generators and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.",
+  "version": "0.0.1",
+  "type": "module",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "migrations.json",
+    "generators.json"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/oxlint"
+  },
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "keywords": [
+    "Monorepo",
+    "Web",
+    "Lint",
+    "Oxlint",
+    "CLI"
+  ],
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "homepage": "https://nx.dev",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "generators": [
+        "dist/generators.d.ts"
+      ],
+      "boundaries-plugin": [
+        "dist/src/boundaries-plugin/index.d.ts"
+      ]
+    }
+  },
+  "exports": {
+    ".": {
+      "@nx/nx-source": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./generators": {
+      "@nx/nx-source": "./generators.ts",
+      "types": "./dist/generators.d.ts",
+      "default": "./dist/generators.js"
+    },
+    "./boundaries-plugin": {
+      "@nx/nx-source": "./src/boundaries-plugin/index.ts",
+      "types": "./dist/src/boundaries-plugin/index.d.ts",
+      "default": "./dist/src/boundaries-plugin/index.js"
+    }
+  },
+  "nx-migrations": {
+    "migrations": "./migrations.json",
+    "supportsOptionalMigrations": true
+  },
+  "generators": "./generators.json",
+  "dependencies": {
+    "@nx/devkit": "workspace:*",
+    "@nx/eslint-plugin": "workspace:*",
+    "@nx/js": "workspace:*",
+    "tslib": "catalog:typescript"
+  },
+  "peerDependencies": {
+    "oxlint": "^1.43.0"
+  },
+  "peerDependenciesMeta": {
+    "oxlint": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
+  "devDependencies": {
+    "nx": "workspace:*"
+  }
+}

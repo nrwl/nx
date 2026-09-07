@@ -73,6 +73,10 @@ export type {
   NxJsonConfiguration,
   PluginConfiguration,
   TargetDefaults,
+  TargetDefaultEntry,
+  TargetDefaultValue,
+  TargetDefaultArrayEntry,
+  TargetDefaultFilter,
 } from './config/nx-json';
 
 /**

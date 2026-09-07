@@ -1,0 +1,93 @@
+---
+title: 'Micro Frontends with React'
+description: 'Build React micro frontends with Module Federation and Nx: generate consumers and providers, share dependencies safely, and scale CI as apps multiply.'
+filter: 'type:Guides'
+sidebar:
+  label: Micro Frontends with React
+topics:
+  - 'Module Federation'
+---
+
+A React micro frontend architecture splits a React application into smaller applications that
+separate teams build, test, and deploy independently, composed in the browser at runtime.
+The standard way to implement it in React is [Module
+Federation](/docs/technologies/module-federation/introduction): one application loads components
+that another exposes, while shared dependencies such as `react` and `react-dom` load once as
+singletons.
+
+Micro frontends solve a team-coordination problem, not a performance problem.
+Before adopting the architecture, check the tradeoffs in
+[What is Micro Frontend Architecture?](/docs/kb/micro-frontend-architecture), and if faster builds
+are the actual goal, see
+[faster builds with Module Federation](/docs/kb/faster-builds-with-module-federation).
+
+## Start from the React Module Federation template
+
+The fastest way to a working React micro frontend setup is the template, which creates a shell
+consumer and two providers federated over Vite:
+
+```shell
+npx create-nx-workspace@latest my-workspace --template nrwl/react-mfe-template
+```
+
+See the [template details](/docs/templates/react-mfe) for what's inside.
+
+## Add micro frontends to an existing workspace
+
+Nx v23 models React Module Federation with two roles: a **consumer** loads federated components
+and a **provider** exposes them. Generate them with the `@nx/react` generators:
+
+```shell
+nx g @nx/react:consumer apps/shell --bundler=vite --providerNames=shop,cart
+nx g @nx/react:provider apps/about --bundler=vite --consumer=shell
+```
+
+The generators emit plain bundler configs using the official Module Federation plugins, with
+Vite, Rsbuild, or Rspack chosen at generation time.
+The consumer registers providers at runtime through the `PROVIDERS` list in its `src/mf.ts`, so
+adding a provider is an edit to that list, not a rebuild of every app.
+For the generated file tree, the dynamic federation runtime, and migration from the deprecated
+`host` and `remote` generators, see [consumer and provider](/docs/kb/consumer-and-provider).
+
+If you prefer wiring the `@module-federation/vite` plugin yourself instead of using generators,
+follow [Vite Module Federation](/docs/kb/vite-module-federation).
+
+## Develop one provider at a time
+
+Each provider's `serve` target depends on the consumer's, so `nx serve shop` brings the shell up
+alongside the provider you're working on.
+Missing providers don't crash the consumer: the generated error boundary renders a fallback while
+the rest of the application keeps working.
+
+## Share as few libraries as possible
+
+Mismatched shared dependency versions are the leading failure mode of micro frontends, because
+deployments are not atomic.
+Share only the libraries that must be singletons, typically `react`, `react-dom`, and any
+cross-app communication layer, and let everything else stay bundled per application.
+Start with a small set and expand it when bundle duplication becomes measurable.
+
+## Why build React micro frontends in a monorepo?
+
+Independent deployment doesn't require independent repositories, and a monorepo removes the two
+biggest micro frontend pains:
+
+- **No shared dependency drift** - every application builds against the same library versions at
+  the same commit, and [module boundaries](/docs/features/enforce-module-boundaries) keep each
+  team's slice private.
+- **Integration is tested before deploy** - [affected](/docs/features/ci-features/affected) runs
+  test only the applications a change touches, and
+  [Nx Agents](/docs/features/ci-features/distribute-task-execution) keep CI time flat as providers
+  multiply.
+
+## SSR
+
+Server-side rendering is not first-classed in the Nx generators.
+If you need SSR with federation, see the upstream
+[Module Federation documentation](https://module-federation.io/) and build on top of the generated
+consumer skeleton.
+
+## Reference
+
+A worked reference workspace covering Vite, Rsbuild, Rspack, and dynamic federation lives in the
+[mf-examples repository](https://github.com/nrwl/mf-examples).

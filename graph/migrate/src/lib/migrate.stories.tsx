@@ -347,6 +347,16 @@ export const PromptBearing: Story = {
         prompt: 'tools/ai-migrations/@nx/react/19.0.0/import-cleanup.md',
       },
       {
+        id: 'hybrid-waived',
+        name: 'update-config-defaults',
+        description:
+          'Updates config defaults, prompting only when a custom setup needs it.',
+        version: '19.0.0',
+        package: '@nx/react',
+        implementation: './src/migrations/update-config-defaults.ts',
+        prompt: 'tools/ai-migrations/@nx/react/19.0.0/config-defaults.md',
+      },
+      {
         id: 'prompt-only-completed',
         name: 'adopt-new-router',
         description: 'Adopt the new router API across the workspace.',
@@ -395,6 +405,17 @@ export const PromptBearing: Story = {
           ref: 'def',
           nextSteps: [],
           acknowledgedPrompt: true,
+        },
+        // The generator waived its own prompt phase, so the runtime records
+        // both the ack (which gates completion) and the reason.
+        'hybrid-waived': {
+          name: 'update-config-defaults',
+          type: 'successful',
+          changedFiles: [{ path: 'nx.json', type: 'UPDATE' }],
+          ref: 'jkl',
+          nextSteps: [],
+          acknowledgedPrompt: true,
+          skipAgentic: true,
         },
         'prompt-only-completed': {
           name: 'adopt-new-router',

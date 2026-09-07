@@ -25,6 +25,17 @@ export interface CypressBaseSetupSchema {
   directory?: string;
   js?: boolean;
   jsx?: boolean;
+  /**
+   * When set, the generated `cypress.config` includes the e2e preset inline so
+   * a fresh config is complete on first write - no post-hoc AST merge or
+   * overwrite. Omit for a bare `defineConfig({})` (e.g. component testing,
+   * which merges in its own `component` block afterwards).
+   */
+  e2ePreset?: {
+    /** Pre-formatted (indented) JSON of NxCypressE2EPresetOptions. */
+    presetOptions: string;
+    baseUrl?: string;
+  };
 }
 
 export function addBaseCypressSetup(
@@ -63,6 +74,12 @@ export function addBaseCypressSetup(
     linter: isEslintInstalled(tree) ? 'eslint' : 'none',
     ext: '',
     moduleResolution: getTsConfigModuleResolution(tree),
+    // The config-*-* templates use `import.meta.url` (ESM) / `__filename`
+    // (CJS) - the shape base-setup already selects below - so the e2e preset is
+    // rendered correctly for the module system without any AST parsing.
+    e2ePreset: !!options.e2ePreset,
+    presetOptions: options.e2ePreset?.presetOptions ?? '',
+    baseUrl: options.e2ePreset?.baseUrl ?? '',
   };
 
   generateFiles(

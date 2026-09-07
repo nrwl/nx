@@ -17,14 +17,14 @@ export const NX_CLOUD_URL = 'https://nx.dev/nx-cloud';
 
 /**
  * Clickable Nx Cloud marketing link for cloud prompt footers. Every
- * create-nx-workspace prompt reports the same medium, so the link is a single
- * baked constant embedded directly in the footers. Visible text stays the clean
- * `NX_CLOUD_URL` while clicks carry UTM attribution; terminals without OSC 8
- * support just render the bare URL (CLOUD-4642).
+ * create-nx-workspace prompt reports the same content tag, so the link is a
+ * single baked constant embedded directly in the footers. Visible text stays
+ * the clean `NX_CLOUD_URL` while clicks carry UTM attribution; terminals
+ * without OSC 8 support just render the bare URL (CLOUD-4642).
  */
 export const NX_CLOUD_HYPERLINK = terminalLink(
   NX_CLOUD_URL,
-  `${NX_CLOUD_URL}?utm_source=nx-cli&utm_medium=create-nx-workspace`
+  `${NX_CLOUD_URL}?utm_source=nx-cli&utm_medium=cli&utm_campaign=nx-cloud-connect&utm_content=create-nx-workspace`
 );
 
 // Flow variant controls both tracking and banner display (CLOUD-4235)
@@ -191,8 +191,10 @@ const messageOptions: Record<string, MessageData[]> = {
         { value: 'gitlab', name: 'Gitlab' },
         { value: 'azure', name: 'Azure DevOps' },
         { value: 'bitbucket-pipelines', name: 'BitBucket Pipelines' },
-        { value: 'circleci', name: 'Circle CI' },
-        { value: 'skip', name: '\nDo it later' },
+        // Trailing newline puts a blank line before "Do it later". A leading
+        // one would split that choice from its own radio marker.
+        { value: 'circleci', name: 'Circle CI\n' },
+        { value: 'skip', name: 'Do it later' },
       ],
       footer: `\nSelf-healing CI, remote caching, and task distribution are provided by Nx Cloud: ${NX_CLOUD_HYPERLINK}`,
       fallback: { value: 'skip', key: 'setupNxCloud' },
@@ -244,7 +246,6 @@ interface MessageData {
   initial: number;
   choices: Array<{ value: string; name: string }>;
   footer: string;
-  hint?: string;
   fallback?: { value: string; key: MessageKey };
   completionMessage: CompletionMessageKey;
 }

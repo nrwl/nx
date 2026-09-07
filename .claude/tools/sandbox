@@ -1,0 +1,1788 @@
+#!/usr/bin/env node
+'use strict';
+
+/**
+ * sandbox — uniform read/exec access to a code checkout, whether it lives in an
+ * isolated container or on the host.
+ *
+ * The point of the `--local` backend is that callers (skills, agents) use the
+ * SAME commands in both modes. An agent is never told that reading source off
+ * the host filesystem is an option, so there is no fallback path to take when
+ * the checkout really is isolated.
+ *
+ * Isolation selection lives here and nowhere else. Nothing above this file ever
+ * types a runtime flag again — the failure mode of getting that wrong is "no
+ * isolation, reported as success", which is invisible at every layer above.
+ */
+
+const { spawnSync } = require('child_process');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+
+// A reader that closes early is normal here, not a fault: `start | head -1` is
+// how every caller captures the id, and `list`/`grep`/`find | head` is how a
+// human reads long output. Without this the next write raises an unhandled
+// EPIPE and the verb dies with a stack trace over output it already produced.
+process.stdout.on('error', (e) => {
+  if (e.code === 'EPIPE') process.exit(0);
+  throw e;
+});
+
+const STATE_DIR = path.join(os.homedir(), '.nx-sandboxes');
+const STATE_FILE = path.join(STATE_DIR, 'sandboxes.json');
+const LOCK_DIR = path.join(STATE_DIR, 'registry.lock');
+const LOCK_TIMEOUT_MS = 30_000;
+const LOCK_STALE_MS = 120_000;
+// Every review lives under its own subtree of one shared container, and every
+// checkout is a worktree of one shared repo. Both exist because the cost of a
+// review is dominated by things that are identical between reviews:
+//
+//   - The pnpm store is baked into a LOWER image layer, so the first `link()`
+//     out of it copies the file up into the writable layer. Measured on nx:
+//     ~2.3 GB and minutes for the first install in a container, 0.39 GB and
+//     12 s for the second. Per-review containers paid that 2.3 GB every time.
+//   - A shallow fetch of nx is ~59 MB of objects that the next PR almost
+//     entirely shares.
+//
+// Nothing here weakens the boundary: it is still one container per host, with
+// the same runtime, dropped caps and absent mounts. What it gives up is
+// isolation BETWEEN reviews, which this tool has never claimed — the threat
+// model is untrusted PR code vs. the host, not PR A vs. PR B.
+const WORK_ROOT = '/work';
+const HOST_REPO = '/work/.repo';
+const reviewRoot = (id) => `${WORK_ROOT}/${id}`;
+
+// Which session owns a container. `prune` refuses to kill anything it does not
+// own, so an unset id means "claim nothing" rather than "claim everything".
+const SESSION_ID = process.env.CLAUDE_CODE_SESSION_ID || '';
+const OWNER_LABEL = 'nx-sandbox.session';
+// Marks the shared host. `prune`'s orphan sweep skips it: it outlives every row
+// by design, so "no row references it" is its steady state, not a leak.
+const HOST_LABEL = 'nx-sandbox.host';
+// A container younger than this may belong to a `start` that has not written
+// its row yet, so `prune` leaves it alone regardless of ownership. The same
+// grace covers a `/work/<id>` subtree whose row is not written yet.
+const ORPHAN_GRACE_MS = 120_000;
+
+// ---------------------------------------------------------------- state
+
+function readState() {
+  try {
+    return JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
+  } catch {
+    return { version: 1, sandboxes: {} };
+  }
+}
+
+function writeState(state) {
+  fs.mkdirSync(STATE_DIR, { recursive: true });
+  // Write-then-rename: a reader must never observe a half-written registry.
+  // Several `/review-pr` panes read this file constantly, and a torn read
+  // parses as "no sandboxes", which reads exactly like a clean cleanup.
+  const tmp = `${STATE_FILE}.tmp.${process.pid}`;
+  fs.writeFileSync(tmp, JSON.stringify(state, null, 2) + '\n');
+  fs.renameSync(tmp, STATE_FILE);
+}
+
+/**
+ * Hold an exclusive lock across processes for the duration of `fn`.
+ *
+ * `mkdir` is the primitive: it is atomic create-if-not-exists on every POSIX
+ * filesystem, unlike an `existsSync` + `writeFile` pair, which has the same
+ * check-then-act race this lock exists to remove.
+ */
+function withStateLock(fn) {
+  fs.mkdirSync(STATE_DIR, { recursive: true });
+  const deadline = Date.now() + LOCK_TIMEOUT_MS;
+  for (;;) {
+    try {
+      fs.mkdirSync(LOCK_DIR);
+      break;
+    } catch (e) {
+      if (e.code !== 'EEXIST') throw e;
+      // A crashed holder would otherwise wedge every future invocation, so an
+      // old lock is broken rather than waited on. The window is generous: the
+      // longest legitimate hold is a `pnpm install`, and that no longer runs
+      // under the lock at all.
+      let age = Infinity;
+      try {
+        age = Date.now() - fs.statSync(LOCK_DIR).mtimeMs;
+      } catch {
+        continue; // holder released it between the mkdir and the stat
+      }
+      if (age > LOCK_STALE_MS) {
+        try {
+          fs.rmSync(LOCK_DIR, { recursive: true, force: true });
+        } catch {}
+        continue;
+      }
+      if (Date.now() > deadline)
+        die(
+          `timed out after ${LOCK_TIMEOUT_MS / 1000}s waiting for the registry lock (${LOCK_DIR}).\n` +
+            `If no other sandbox command is running, remove that directory.`
+        );
+      // Coarse spin. Every critical section here is a few filesystem ops, so
+      // contention resolves in milliseconds; sleeping longer would cost more
+      // than it saves.
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 25);
+    }
+  }
+  try {
+    return fn();
+  } finally {
+    try {
+      fs.rmSync(LOCK_DIR, { recursive: true, force: true });
+    } catch {}
+  }
+}
+
+/**
+ * Read-modify-write the registry atomically.
+ *
+ * Every mutation must go through this. The bug it removes: `readState()`,
+ * then slow work, then `writeState()` writes back a snapshot taken before
+ * other sessions made their changes, silently deleting their rows. Observed
+ * with parallel `/review-pr` panes — a sandbox "vanished" from `list` while
+ * its container was still running, and rows deleted by one pane were
+ * resurrected by another. Never hold this across a container operation.
+ */
+function updateState(mutator) {
+  return withStateLock(() => {
+    const state = readState();
+    const out = mutator(state);
+    writeState(state);
+    return out;
+  });
+}
+
+function getSandbox(id) {
+  const sb = readState().sandboxes[id];
+  if (!sb)
+    die(`unknown sandbox '${id}'. Run \`sandbox list\` to see live ones.`);
+  return sb;
+}
+
+// ---------------------------------------------------------------- util
+
+function die(msg, code = 1) {
+  process.stderr.write(`sandbox: ${msg}\n`);
+  process.exit(code);
+}
+
+function run(bin, args, opts = {}) {
+  return spawnSync(bin, args, { encoding: 'utf8', ...opts });
+}
+
+function has(bin) {
+  // Probe by spawning directly rather than `command -v` through a shell:
+  // spawnSync with shell:true concatenates argv without escaping (DEP0190).
+  return !spawnSync(bin, ['--version'], { stdio: 'ignore' }).error;
+}
+
+function newId() {
+  return 'sb_' + Math.random().toString(36).slice(2, 8);
+}
+
+/**
+ * Containment check. `sandbox read <id> ../../etc/passwd` must not escape the
+ * checkout — in container mode the path is interpreted inside the container, so
+ * validate with posix semantics either way.
+ */
+function resolveInRoot(root, p) {
+  const abs = path.posix.resolve(root, p);
+  if (abs !== root && !abs.startsWith(root + '/')) {
+    die(`path '${p}' escapes the sandbox root ${root}`);
+  }
+  return abs;
+}
+
+/** Same containment check, but returns the path relative to the root. */
+function relInRoot(root, p) {
+  return path.posix.relative(root, resolveInRoot(root, p)) || '.';
+}
+
+// ---------------------------------------------------------------- backends
+
+/**
+ * Probe what container backends exist and whether each can actually isolate.
+ *
+ * A stopped VM and an absent runtime look identical from `docker info` alone,
+ * and only the latter is a real setup failure — so macOS gets a wake attempt
+ * before anything is reported missing. Every wake command is a no-op when the
+ * backend is already running.
+ */
+function probeBackend(bin) {
+  if (!has(bin)) return { bin, present: false };
+  let up = run(bin, ['info']).status === 0;
+  if (!up && os.platform() === 'darwin') {
+    wakeDarwinVm();
+    up = run(bin, ['info']).status === 0;
+  }
+  if (!up) return { bin, present: true, up: false };
+
+  const runtimes =
+    run(bin, ['info', '--format', '{{range $k,$v := .Runtimes}}{{$k}} {{end}}'])
+      .stdout || '';
+  return {
+    bin,
+    present: true,
+    up: true,
+    runsc: /\brunsc\b/.test(runtimes),
+    rootless: /name=rootless/.test(run(bin, ['info']).stdout || ''),
+  };
+}
+
+function wakeDarwinVm() {
+  if (has('colima')) run('colima', ['start'], { stdio: 'ignore' });
+  else if (has('limactl')) {
+    run('limactl', ['start', 'docker', '-y'], { stdio: 'ignore' });
+    run('docker', ['context', 'use', 'lima-docker'], { stdio: 'ignore' });
+  } else if (fs.existsSync('/Applications/Docker.app')) {
+    run('open', ['-ga', 'Docker'], { stdio: 'ignore' });
+    run('sleep', ['15']);
+  }
+}
+
+function pickBackend() {
+  for (const bin of ['docker', 'podman']) {
+    const p = probeBackend(bin);
+    if (p.up) return p;
+  }
+  return null;
+}
+
+/**
+ * Decide what a sandbox may execute. Tiers are ordered 'none' < 'screened' <
+ * 'full'. Fail closed on isolation: on Linux without gVisor we refuse rather
+ * than silently degrading to runc.
+ */
+const EXEC_TIERS = ['none', 'screened', 'full'];
+
+function minTier(a, b) {
+  return EXEC_TIERS[Math.min(EXEC_TIERS.indexOf(a), EXEC_TIERS.indexOf(b))];
+}
+
+function isolationFor(backend) {
+  if (!backend)
+    return {
+      isolation: 'none',
+      exec: 'none',
+      why: 'no container backend is running',
+    };
+  if (os.platform() === 'linux') {
+    return backend.runsc
+      ? { isolation: 'runsc', exec: 'full', runtimeArgs: ['--runtime=runsc'] }
+      : {
+          isolation: 'none',
+          exec: 'none',
+          why: 'Linux without gVisor: `runsc` is not registered. Refusing to run untrusted code under plain runc. Run the setup-review-sandbox skill.',
+        };
+  }
+  // macOS/other: the VM is the boundary. Docker Desktop, Colima, Lima and
+  // OrbStack all present the same CLI and the same boundary — which one is in
+  // use is deliberately not something callers can observe.
+  return { isolation: 'vm', exec: 'full', runtimeArgs: [] };
+}
+
+// ------------------------------------------------------------- shared host
+
+/**
+ * The shared host's name is derived from the image's RESOLVED ID, not its tag.
+ * `build-image.sh` rebuilds `nx-review-sandbox:latest` in place, so a
+ * tag-derived name would hand every later review the host still running the
+ * old toolchain. Keying on the id starts a fresh host instead, and leaves the
+ * superseded one for `prune --host`.
+ *
+ * Falls back to the tag when the id will not resolve — the image is absent,
+ * and the `docker run` below is about to fail on its own terms.
+ */
+function hostNameFor(backend, image) {
+  const imageId = (
+    run(backend.bin, ['image', 'inspect', '-f', '{{.Id}}', image]).stdout || ''
+  ).trim();
+  let h = 0;
+  for (const c of imageId || image) h = (Math.imul(h, 31) + c.charCodeAt(0)) | 0;
+  return `nx-sandbox-host-${(h >>> 0).toString(36)}`;
+}
+
+/**
+ * Get the shared container for `image`, starting it if needed.
+ *
+ * The race this must survive is two review panes calling `start` at the same
+ * instant. `docker run --name` is the atomic primitive — exactly one of them
+ * creates the container and the loser gets a name conflict, which is a SUCCESS
+ * signal here, not an error. Checking `inspect` first and branching on it would
+ * be the same check-then-act race the registry lock exists to remove.
+ */
+function ensureHost(backend, iso, image) {
+  const name = hostNameFor(backend, image);
+
+  const state = () =>
+    (
+      run(backend.bin, [
+        'inspect',
+        '-f',
+        '{{.State.Running}}',
+        name,
+      ]).stdout || ''
+    ).trim();
+
+  const running = state();
+  if (running === 'true') return name;
+  if (running === 'false') {
+    // A stopped host still holds the warm store — restarting it is the whole
+    // point. Only replace it if it will not come back.
+    if (run(backend.bin, ['start', name], { stdio: 'ignore' }).status === 0)
+      return name;
+    run(backend.bin, ['rm', '-f', name], { stdio: 'ignore' });
+  }
+
+  const r = run(backend.bin, [
+    'run',
+    '-d',
+    '--name',
+    name,
+    '--label',
+    `${HOST_LABEL}=1`,
+    '--label',
+    `${OWNER_LABEL}=${SESSION_ID}`,
+    ...(iso.runtimeArgs || []),
+    '--cap-drop',
+    'ALL',
+    '--security-opt',
+    'no-new-privileges',
+    // One budget now covers every concurrent review rather than one each, so it
+    // is sized to the VM instead of to a single lane. The trade this makes is
+    // real and deliberate: a runaway test in one review can now starve its
+    // siblings, where before it could only kill itself.
+    '--memory',
+    '10g',
+    '--cpus',
+    '6',
+    '--pids-limit',
+    '8192',
+    image,
+    'sleep',
+    'infinity',
+  ]);
+  if (r.status === 0) return name;
+  // Lost the race: whoever won has a container by this name, which is what we
+  // wanted anyway. Anything else is a real failure.
+  if (state()) return name;
+  die(`failed to start the shared sandbox host:\n${r.stderr}`);
+}
+
+/** Names of every shared host container, running or stopped. */
+function listHosts(backend) {
+  const r = run(backend.bin, [
+    'ps',
+    '-a',
+    '--filter',
+    `label=${HOST_LABEL}=1`,
+    '--format',
+    '{{.Names}}',
+  ]);
+  return (r.stdout || '').split('\n').filter(Boolean);
+}
+
+/**
+ * Serialize a container-side critical section with `mkdir`, the same atomic
+ * create-if-not-exists the host registry lock uses.
+ *
+ * Git does NOT make concurrent shallow fetches into one repository safe. Ref
+ * updates are locked per ref, but `--depth 1` also rewrites the single
+ * `.git/shallow` file, so two reviews starting at once race on `shallow.lock`
+ * and one dies with "Another git process seems to be running in this
+ * repository" — a message that points at a crashed editor rather than at the
+ * concurrency that actually caused it. Observed immediately with three
+ * simultaneous starts, which is exactly what a 3-wide batch does.
+ *
+ * `git init --bare` needs the same protection for the more obvious reason: the
+ * loser would otherwise fetch into a half-initialized repo.
+ */
+function withHostRepoLock(sb, script) {
+  return execIn(
+    sb,
+    `set -e
+locked=
+for i in $(seq 1 600); do
+  if mkdir ${HOST_REPO}.lock 2>/dev/null; then
+    echo $$ > ${HOST_REPO}.lock/owner
+    locked=1
+    break
+  fi
+  # Break a lock a crashed holder left behind. Must stay well above the 120s
+  # this loop waits: equal to it, a waiter reaches the staleness test before
+  # its own timeout and evicts a holder that is merely on a slow fetch.
+  if [ -n "$(find ${HOST_REPO}.lock -maxdepth 0 -mmin +10 2>/dev/null)" ]; then
+    rm -rf ${HOST_REPO}.lock 2>/dev/null || true
+  fi
+  sleep 0.2
+done
+# Never fall through unlocked. Proceeding here would produce exactly the
+# corruption the lock exists to prevent, and would report success doing it.
+if [ -z "$locked" ]; then
+  echo "timed out waiting for ${HOST_REPO}.lock" >&2
+  exit 1
+fi
+# Release only a lock we still own: an evicted holder that removed the
+# directory unconditionally would take its successor's lock with it.
+trap 'if [ "$(cat ${HOST_REPO}.lock/owner 2>/dev/null)" = "$$" ]; then rm -rf ${HOST_REPO}.lock 2>/dev/null || true; fi' EXIT
+${script}`,
+    { dir: WORK_ROOT }
+  );
+}
+
+// ---------------------------------------------------------------- verbs
+
+function cmdStart(argv) {
+  const opts = parseFlags(argv, {
+    local: 'string',
+    image: 'string',
+    checkout: 'string',
+    ref: 'string',
+    base: 'string',
+    json: 'boolean',
+    'allow-exec': 'boolean',
+  });
+
+  const id = newId();
+  let sb;
+
+  if (opts.local) {
+    const root = path.resolve(opts.local);
+    if (!fs.existsSync(root)) die(`--local path does not exist: ${root}`);
+    // A local sandbox's base is just a rev in the same checkout — typically the
+    // merge-base a branch review diffs against.
+    sb = {
+      id,
+      mode: 'local',
+      root,
+      baseRef: opts.base || null,
+      isolation: 'none',
+      // A local sandbox holds the user's own trusted checkout, so exec is
+      // useful rather than dangerous. What must not happen is a review agent
+      // mutating the branch it was asked to review, which is what `screened`
+      // catches. `--allow-exec` is for a caller that deliberately wants the
+      // project's own build/test commands — no screen can contain those, since
+      // `node -e` is arbitrary code by construction.
+      exec: opts['allow-exec'] ? 'full' : 'screened',
+      createdAt: nowIso(),
+    };
+  } else {
+    if (!opts.image)
+      die('container mode needs --image (or use --local <path>)');
+    const backend = pickBackend();
+    const iso = isolationFor(backend);
+    if (!backend) die(iso.why + '\nRun `sandbox doctor` for details.');
+
+    const container = ensureHost(backend, iso, opts.image);
+    const work = reviewRoot(id);
+
+    sb = {
+      id,
+      mode: 'container',
+      backend: backend.bin,
+      container,
+      image: opts.image,
+      // What this sandbox is OF. Recorded because the id is deliberately
+      // opaque and the container name is now shared by every review, so
+      // without this the registry cannot answer "which PR is sb_ab12cd?" —
+      // and `list` degrades to a column of identical host names.
+      checkout: opts.checkout || null,
+      ref: opts.ref || null,
+      work,
+      root: `${work}/nx`,
+      base: opts.base ? `${work}/base` : null,
+      // Per-review refs, never `refs/remotes/origin/<base>`. In a shared repo
+      // that remote-tracking ref is one ref for every review, so the next
+      // review's fetch would fast-forward it out from under a review still
+      // running — silently widening its base..HEAD diff to include commits its
+      // PR never touched. A ref named for the review cannot move.
+      headRef: `refs/reviews/${id}/head`,
+      baseRef: opts.base ? `refs/reviews/${id}/base` : null,
+      isolation: iso.isolation,
+      exec: iso.exec,
+      session: SESSION_ID,
+      createdAt: nowIso(),
+    };
+
+    // Register BEFORE the checkout, not after it. The checkout shallow-fetches
+    // a whole repo, so registering afterwards left the subtree present on disk
+    // but absent from the registry for tens of seconds — long enough for a
+    // concurrent `prune` to read it as an orphan and delete a checkout another
+    // session was still setting up. Measured twice on one review, back when the
+    // unit being destroyed was the whole container. The row is removed again if
+    // the checkout fails.
+    updateState((state) => {
+      state.sandboxes[id] = sb;
+    });
+
+    if (opts.checkout) {
+      // The shared repo is an object store, not a checkout: it is bare, so
+      // nothing can accidentally commit into it, and every review's trees are
+      // worktrees hanging off it. A second PR's shallow fetch then costs only
+      // the objects it does not share with the first.
+      // No `origin` remote: every fetch names its URL explicitly. A remote would
+      // be one piece of shared, first-writer-wins state — a review of a fork
+      // would inherit whichever URL the first review happened to register and
+      // silently fetch the wrong repository.
+      const url = shq(opts.checkout);
+      const script = [
+        `if [ ! -d ${HOST_REPO} ]; then git init -q --bare ${HOST_REPO}; fi`,
+        `git -C ${HOST_REPO} fetch -q --depth 1 ${url} ` +
+          `${shq(opts.ref || 'HEAD')}:${sb.headRef}`,
+        `mkdir -p ${work}`,
+        `git -C ${HOST_REPO} worktree add -q --detach ${sb.root} ${sb.headRef}`,
+      ];
+      if (opts.base) {
+        script.push(
+          `git -C ${HOST_REPO} fetch -q --depth 1 ${url} ` +
+            `${shq(opts.base)}:${sb.baseRef}`,
+          `git -C ${HOST_REPO} worktree add -q --detach ${sb.base} ${sb.baseRef}`
+        );
+      }
+      // The whole checkout runs under the lock, not just the init: the fetches
+      // are the part that actually races (see withHostRepoLock). A shallow nx
+      // fetch is a few seconds, so serializing them costs a batch far less than
+      // one failed review.
+      const r2 = withHostRepoLock(sb, script.join('\n'));
+      if (r2.status !== 0) {
+        releaseReviewTree(sb);
+        updateState((state) => {
+          delete state.sandboxes[id];
+        });
+        die(`checkout failed:\n${r2.stderr || r2.stdout}`);
+      }
+    }
+  }
+
+  // Idempotent for container mode (registered above); this is what registers a
+  // local sandbox, which has no container and so no early-registration window.
+  updateState((state) => {
+    state.sandboxes[id] = sb;
+  });
+
+  if (opts.json) {
+    process.stdout.write(JSON.stringify(sb, null, 2) + '\n');
+    return;
+  }
+  process.stdout.write(
+    `${id}\n\n` +
+      `mode=${sb.mode} isolation=${sb.isolation} exec=${sb.exec}\n` +
+      `Read source ONLY through this CLI:\n` +
+      `  .claude/tools/sandbox read ${id} <path> [--range a,b] [--ref <sha>]\n` +
+      `  .claude/tools/sandbox grep ${id} <pattern> [subdir] [--ref <sha>]\n` +
+      `  .claude/tools/sandbox find ${id} <glob> [subdir] [--ref <sha>]\n` +
+      (sb.baseRef
+        ? `  .claude/tools/sandbox diff ${id} [--name-only] [-- <path>...]   # base..HEAD\n`
+        : '') +
+      (sb.exec !== 'none'
+        ? `  .claude/tools/sandbox exec ${id} -- <cmd>` +
+          (sb.exec === 'screened' ? '   (obvious writes are rejected)' : '') +
+          '\n'
+        : '') +
+      `  .claude/tools/sandbox view ${id}          # screened id for read-only agents\n` +
+      `  .claude/tools/sandbox stop ${id}\n`
+  );
+}
+
+function cmdRead(argv) {
+  const [id, file] = argv;
+  if (!id || !file)
+    die('usage: sandbox read <id> <path> [--range a,b] [--ref <sha>] [-n]');
+  const opts = parseFlags(argv.slice(2), {
+    range: 'string',
+    ref: 'string',
+    n: 'boolean',
+  });
+  const sb = getSandbox(id);
+  const target = resolveInRoot(sb.root, file);
+  const rel = path.posix.relative(sb.root, target);
+
+  let out;
+  if (opts.ref) {
+    // `--ref base` is an alias for whatever base the sandbox was started with,
+    // so callers never have to spell out refs/remotes/origin/<branch>.
+    const ref = opts.ref === 'base' ? sb.baseRef : opts.ref;
+    if (!ref) die('this sandbox was not started with a --base ref');
+    out = gitIn(sb, ['show', `${ref}:${rel}`]);
+  } else if (sb.mode === 'local') {
+    out = readOut(run('cat', [target]));
+  } else {
+    out = readOut(execRaw(sb, ['cat', target]));
+  }
+
+  // Split on the content, not on a trailing newline — otherwise the final `\n`
+  // becomes a phantom empty line, which --range slices and -n then numbers.
+  let lines = out.replace(/\n$/, '').split('\n');
+  let start = 1;
+  if (opts.range) {
+    const [a, b] = opts.range.split(',').map((x) => parseInt(x, 10));
+    if (!Number.isInteger(a) || !Number.isInteger(b))
+      die('--range must be a,b integers');
+    lines = lines.slice(a - 1, b);
+    start = a;
+  }
+  if (opts.n) {
+    lines = lines.map((l, i) => `${String(start + i).padStart(6)}\t${l}`);
+  }
+  process.stdout.write(lines.join('\n') + '\n');
+}
+
+/**
+ * Search verbs run WITH THE ROOT AS CWD and emit root-relative paths in both
+ * modes. If local mode leaked `/Users/...` while container mode emitted
+ * `/work/nx/...`, an agent could tell the transports apart from output shape
+ * alone — which is precisely the distinction this CLI exists to hide.
+ */
+function relOut(stdout) {
+  return (stdout || '')
+    .split('\n')
+    .map((l) => l.replace(/^\.\//, ''))
+    .join('\n');
+}
+
+/**
+ * Compare base..HEAD without the caller ever naming a ref.
+ *
+ * This exists for the same reason nothing above this file names a container
+ * runtime: the correct ref is not stable across modes. A container review's
+ * base is a per-review ref in a shared repo, a local review's is a rev in the
+ * user's own checkout, and the old spelling — `git diff origin/<base>..HEAD`
+ * through `exec` — happened to work only while every review had a repo to
+ * itself. Written out at the call site it would now silently compare against
+ * whatever the most recent review's fetch moved `origin/<base>` to.
+ *
+ * Read-only, so unlike `exec` it is available to `exec=none` views.
+ *
+ * **This is the two-dot tree difference, NOT the PR's own diff.** Both checkouts
+ * are `--depth 1`, so there is no merge base and the three-dot form that would
+ * give the PR's changes cannot be computed here at all. Two-dot additionally
+ * reports everything unrelated commits landed on the base branch after the fork
+ * point — on a 5-file PR that can look like a plausible 20-file change. Use this
+ * to ask "how do these two trees differ"; the authority on what the AUTHOR
+ * changed is `gh pr diff`, fetched host-side.
+ */
+function cmdDiff(argv) {
+  const id = argv[0];
+  if (!id) die('usage: sandbox diff <id> [--name-only|--stat] [-- <path>...]');
+  const sb = getSandbox(id);
+  if (!sb.baseRef)
+    die(`sandbox ${id} has no base ref (start it with --base <ref>)`);
+
+  const sep = argv.indexOf('--');
+  const flags = (sep === -1 ? argv.slice(1) : argv.slice(1, sep)).filter((f) =>
+    ['--name-only', '--stat', '--name-status', '--numstat'].includes(f)
+  );
+  const paths = sep === -1 ? [] : argv.slice(sep + 1);
+
+  // Container: `base..HEAD`, which is exactly the PR and cannot be widened by a
+  // stray write into the shared checkout. Local: `base` alone, comparing
+  // against the WORKING TREE — a local review's scope is merge-base..working
+  // tree, so staged and unstaged work are part of the change under review.
+  const range =
+    sb.mode === 'local' ? [sb.baseRef] : [`${sb.baseRef}..HEAD`];
+
+  const r = gitRawIn(sb, [
+    'diff',
+    ...flags,
+    ...range,
+    ...(paths.length ? ['--', ...paths] : []),
+  ]);
+  if (r.status !== 0) die((r.stderr || r.stdout || 'diff failed').trim());
+  process.stdout.write(r.stdout || '');
+}
+
+function cmdGrep(argv) {
+  const { positional, opts } = parseArgs(argv, { ref: 'string' });
+  const [id, pattern, subdir] = positional;
+  if (!id || !pattern)
+    die('usage: sandbox grep <id> <pattern> [subdir] [--ref <sha>]');
+  const sb = getSandbox(id);
+  const where = relInRoot(sb.root, subdir || '.');
+
+  const r = opts.ref
+    ? gitRawIn(sb, [
+        'grep',
+        '-n',
+        '-e',
+        pattern,
+        resolveRef(sb, opts.ref),
+        '--',
+        where,
+      ])
+    : execRaw(sb, ['grep', '-rn', '--', pattern, where], { cwd: sb.root });
+
+  // `git grep <ref>` prefixes every hit with `<ref>:`; strip it so a base search
+  // and a working-tree search are indistinguishable in shape.
+  const prefix = opts.ref ? `${resolveRef(sb, opts.ref)}:` : '';
+  const stdout = prefix
+    ? (r.stdout || '')
+        .split('\n')
+        .map((l) => (l.startsWith(prefix) ? l.slice(prefix.length) : l))
+        .join('\n')
+    : r.stdout;
+
+  process.stdout.write(relOut(stdout));
+  // grep exits 1 on "no matches", which is not an error for a search verb.
+  process.exit(r.status === 0 || r.status === 1 ? 0 : r.status);
+}
+
+function cmdFind(argv) {
+  const { positional, opts } = parseArgs(argv, { ref: 'string' });
+  const [id, glob, subdir] = positional;
+  if (!id || !glob)
+    die('usage: sandbox find <id> <glob> [subdir] [--ref <sha>]');
+  const sb = getSandbox(id);
+  const where = relInRoot(sb.root, subdir || '.');
+
+  if (opts.ref) {
+    // ls-tree lists the ref's tree; match the basename so the glob means what
+    // it means for `find -name`.
+    const r = gitRawIn(sb, [
+      'ls-tree',
+      '-r',
+      '--name-only',
+      resolveRef(sb, opts.ref),
+      '--',
+      where,
+    ]);
+    const re = globToRegExp(glob);
+    const hits = readOut(r)
+      .split('\n')
+      .filter((p) => p && re.test(path.posix.basename(p)));
+    process.stdout.write(hits.length ? hits.join('\n') + '\n' : '');
+    return;
+  }
+
+  const r = execRaw(sb, ['find', where, '-name', glob], { cwd: sb.root });
+  process.stdout.write(relOut(r.stdout));
+  process.exit(r.status || 0);
+}
+
+/** `find -name` glob semantics: `*` and `?` match within a single name component. */
+function globToRegExp(glob) {
+  const body = glob
+    .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+    .replace(/[*?]/g, (c) => (c === '*' ? '.*' : '.'));
+  return new RegExp(`^${body}$`);
+}
+
+// ---------------------------------------------------------------- exec screen
+
+/**
+ * The screen rejects commands that OBVIOUSLY write, and nothing else.
+ *
+ * It is a guardrail, not a security boundary — deliberately. `screened` is used
+ * where the code is trusted (your own checkout, or a PR you chose to review),
+ * so the hazard is not malicious code, it is a review agent mutating the thing
+ * it was asked to review: `git checkout`, a formatter, `pnpm install`. Anyone
+ * intent on writing can reach around this in a dozen ways and that is fine.
+ *
+ * Because the code is trusted, this denies rather than allowlists: an allowlist
+ * would reject every unanticipated-but-harmless command, and each rejection
+ * costs a round-trip. The rejection message therefore names the offending
+ * command and the read-only way to get the same answer, so the caller
+ * self-corrects instead of guessing.
+ */
+const GIT_WRITE = new Set([
+  'checkout',
+  'switch',
+  'restore',
+  'reset',
+  'revert',
+  'merge',
+  'rebase',
+  'cherry-pick',
+  'commit',
+  'add',
+  'rm',
+  'mv',
+  'stash',
+  'apply',
+  'am',
+  'clean',
+  'gc',
+  'push',
+  'pull',
+  'fetch',
+  'remote',
+  'update-ref',
+  'symbolic-ref',
+  'filter-branch',
+  'sparse-checkout',
+  'init',
+  'clone',
+  'worktree',
+  'submodule',
+  'repack',
+  'prune',
+  'notes',
+  'replace',
+]);
+
+const FS_WRITE = new Set([
+  'rm',
+  'rmdir',
+  'mv',
+  'cp',
+  'install',
+  'dd',
+  'truncate',
+  'tee',
+  'chmod',
+  'chown',
+  'chgrp',
+  'ln',
+  'mkdir',
+  'touch',
+  'shred',
+  'unlink',
+  'vim',
+  'vi',
+  'nano',
+  'ed',
+  'emacs',
+]);
+
+const PKG_MANAGERS = new Set([
+  'npm',
+  'pnpm',
+  'yarn',
+  'bun',
+  'cargo',
+  'pip',
+  'pip3',
+  'gem',
+]);
+const PKG_WRITE = new Set([
+  'install',
+  'i',
+  'add',
+  'remove',
+  'rm',
+  'uninstall',
+  'update',
+  'up',
+  'link',
+  'unlink',
+  'ci',
+  'dedupe',
+  'prune',
+]);
+
+/** git flags that swallow the following token, so it isn't the subcommand. */
+const GIT_FLAGS_WITH_VALUE = new Set([
+  '-c',
+  '-C',
+  '--git-dir',
+  '--work-tree',
+  '--exec-path',
+]);
+
+/** Split a shell script into the segments a command could hide in. */
+function shellSegments(script) {
+  return script.split(/\|\||&&|[;\n|]/);
+}
+
+function gitSubcommand(tokens) {
+  for (let i = 1; i < tokens.length; i++) {
+    const t = tokens[i];
+    if (GIT_FLAGS_WITH_VALUE.has(t)) {
+      i++;
+      continue;
+    }
+    if (t.startsWith('-')) continue;
+    return { sub: t, rest: tokens.slice(i + 1) };
+  }
+  return { sub: null, rest: [] };
+}
+
+/** Reject a dual-purpose git verb only when its arguments make it a write. */
+function screenDualGit(sub, rest) {
+  const flags = rest.filter((t) => t.startsWith('-'));
+  const positional = rest.filter((t) => !t.startsWith('-'));
+  if (sub === 'config') {
+    const reading = flags.some((f) =>
+      ['--get', '--get-all', '--get-regexp', '--list', '-l'].includes(f)
+    );
+    return reading ? null : '`git config` without --get/--list writes config';
+  }
+  // branch/tag: a positional name means create, and the delete/move/copy flags
+  // are writes however they are spelled.
+  const writeFlag = flags.some((f) =>
+    /^(-[dDmMcC]|--delete|--move|--copy|--force|-f)$/.test(f)
+  );
+  if (writeFlag) return `\`git ${sub}\` with ${flags.join(' ')} writes refs`;
+  if (positional.length) return `\`git ${sub} ${positional[0]}\` creates a ref`;
+  return null;
+}
+
+/**
+ * @returns {{cmd: string, why: string, hint?: string} | null}
+ */
+function screenSegment(seg) {
+  const raw = seg.trim();
+  if (!raw) return null;
+
+  // Fd duplications (`2>&1`, `>&2`) redirect, they don't create files.
+  if (/>>?/.test(raw.replace(/\d*>&\d*/g, ''))) {
+    return {
+      cmd: raw.split(/\s+/)[0],
+      why: 'output redirection (`>`/`>>`) writes a file',
+      hint: 'Let the command print to stdout — its output is returned to you.',
+    };
+  }
+
+  let tokens = raw.split(/\s+/).filter(Boolean);
+  // Drop `FOO=bar` env prefixes so the real head command is screened.
+  while (tokens.length && /^[A-Za-z_][A-Za-z0-9_]*=/.test(tokens[0]))
+    tokens.shift();
+  if (!tokens.length) return null;
+
+  const head = tokens[0].replace(/^.*\//, '');
+
+  if (head === 'git') {
+    const { sub, rest } = gitSubcommand(tokens);
+    if (!sub) return null;
+    if (GIT_WRITE.has(sub)) {
+      return {
+        cmd: `git ${sub}`,
+        why: 'it writes to the worktree, index or refs',
+        hint: 'To see a path at another revision: sandbox read <id> <path> --ref <sha>',
+      };
+    }
+    if (['branch', 'tag', 'config'].includes(sub)) {
+      const why = screenDualGit(sub, rest);
+      return why ? { cmd: `git ${sub}`, why } : null;
+    }
+    return null;
+  }
+
+  if (FS_WRITE.has(head)) {
+    return { cmd: head, why: 'it creates, moves, deletes or edits files' };
+  }
+
+  if (
+    (head === 'sed' || head === 'perl') &&
+    tokens.some((t) => /^-[a-zA-Z]*i/.test(t))
+  ) {
+    return { cmd: `${head} -i`, why: 'in-place editing rewrites the file' };
+  }
+
+  if (PKG_MANAGERS.has(head)) {
+    const sub = tokens.slice(1).find((t) => !t.startsWith('-'));
+    if (sub && PKG_WRITE.has(sub)) {
+      return {
+        cmd: `${head} ${sub}`,
+        why: 'it rewrites lockfiles and dependencies',
+        hint: 'If this review genuinely needs a real install, start the sandbox with --allow-exec.',
+      };
+    }
+  }
+
+  return null;
+}
+
+function screenScript(script) {
+  for (const seg of shellSegments(script)) {
+    const bad = screenSegment(seg);
+    if (bad) return bad;
+  }
+  return null;
+}
+
+function cmdExec(argv) {
+  const sep = argv.indexOf('--');
+  const id = argv[0];
+  if (!id || sep === -1) die('usage: sandbox exec <id> [--base] -- <cmd...>');
+  const sb = getSandbox(id);
+  const opts = parseFlags(argv.slice(1, sep), { base: 'boolean' });
+  const script = argv.slice(sep + 1).join(' ');
+
+  if (sb.exec === 'none') {
+    die(
+      `exec refused for ${id}: ${
+        sb.viewOf
+          ? `this is a read-only view of ${sb.viewOf}.`
+          : sb.mode === 'local'
+            ? 'this local sandbox was created without exec.'
+            : 'no usable isolation runtime.'
+      }`
+    );
+  }
+
+  if (sb.exec === 'screened') {
+    const bad = screenScript(script);
+    if (bad) {
+      die(
+        `exec refused for ${id} — \`${bad.cmd}\`: ${bad.why}.\n\n` +
+          `This sandbox is exec=screened: obvious writes are rejected so a review\n` +
+          `cannot mutate the code it is reviewing. It is a guardrail, not a\n` +
+          `security boundary. Anything that does not write is allowed.\n` +
+          (bad.hint ? `\n${bad.hint}\n` : '')
+      );
+    }
+  }
+  // `--base` runs against the base worktree instead of HEAD — the baseline half
+  // of a reproduction. Callers name the side they want rather than cd-ing to a
+  // container path, so nothing above this file learns the layout.
+  if (opts.base && !sb.base) {
+    die(`sandbox ${id} has no base worktree (start it with --base <ref>)`);
+  }
+  // Install the side being run, once, whichever side it is. Reads go through
+  // `read`/`grep`, so reaching for `exec` means running something. The asymmetric
+  // version of this — base self-healing while head silently ran without
+  // node_modules — turned a forgotten setup call into "command not found" from
+  // an agent, which reads as the change being broken.
+  ensureInstalled(
+    sb,
+    opts.base ? sb.base : sb.root,
+    opts.base ? 'base' : 'head'
+  );
+  const r = execIn(sb, script, {
+    stdio: 'inherit',
+    dir: opts.base ? sb.base : sb.root,
+  });
+  process.exit(r.status === null ? 1 : r.status);
+}
+
+/**
+ * Mint a second id onto the same checkout with a lower exec tier.
+ *
+ * This is what makes the read-only constraint structural instead of advisory.
+ * Agent frontmatter grants bare tool names (`Bash`), never per-verb patterns, so
+ * "this agent may read but not run things" cannot be expressed there. Handing an
+ * analyst a screened view and the reproduce-verifier the full id expresses it in
+ * the one place that can enforce it — and in container mode it genuinely binds,
+ * because the CLI is the analyst's only route to code that isn't on the host.
+ */
+function cmdView(argv) {
+  const id = argv[0];
+  if (!id) die('usage: sandbox view <id> [--exec screened|none] [--json]');
+  const opts = parseFlags(argv.slice(1), { exec: 'string', json: 'boolean' });
+  const parent = getSandbox(id);
+  const want = opts.exec || 'screened';
+  if (!EXEC_TIERS.includes(want))
+    die(`--exec must be one of ${EXEC_TIERS.join('|')}`);
+
+  const viewId = newId();
+  // A view can only ever narrow. Escalating through one would make the tier
+  // meaningless, since anyone holding a screened id can mint views from it.
+  const view = {
+    ...parent,
+    id: viewId,
+    viewOf: id,
+    exec: minTier(want, parent.exec),
+    createdAt: nowIso(),
+  };
+  updateState((state) => {
+    state.sandboxes[viewId] = view;
+  });
+
+  if (opts.json)
+    return process.stdout.write(JSON.stringify(view, null, 2) + '\n');
+  process.stdout.write(
+    `${viewId}\n\nview of ${id} · mode=${view.mode} exec=${view.exec}\n`
+  );
+}
+
+// ---------------------------------------------------------------- install
+
+/** The row that owns container-wide facts. Views and mutations borrow it. */
+function ownerRow(state, sb) {
+  return state.sandboxes[sb.viewOf || sb.derivedFrom || sb.id] || sb;
+}
+
+/**
+ * Install a worktree's dependencies, once. Marks live on the owning row, so a
+ * view triggering an install records it where the next caller looks.
+ */
+function ensureInstalled(sb, dir, label) {
+  const cached = ownerRow(readState(), sb).installed?.[label];
+  if (cached) return cached;
+
+  // --frozen-lockfile first: a fallback install rewrites the lockfile, silently
+  // changing what every other agent is reading. It still runs, because a lockfile
+  // out of sync with package.json is a review signal rather than a reason to abort.
+  // Namespaced by sandbox id: the container is shared, so a bare
+  // `/tmp/install-head.log` would be one file that every concurrent review
+  // appends to, and the `tail -20` on failure would quote another PR's error.
+  const log = `/tmp/install-${sb.viewOf || sb.derivedFrom || sb.id}-${label}.log`;
+  const r = execIn(
+    sb,
+    `mise install >/dev/null 2>&1\n` +
+      `if   pnpm install --frozen-lockfile >${log} 2>&1; then echo OK\n` +
+      `elif pnpm install                  >>${log} 2>&1; then echo OK_UNPINNED\n` +
+      `else echo FAILED; tail -20 ${log}\n` +
+      `fi`,
+    { dir }
+  );
+  const out = (r.stdout || '').toString().trim();
+  const result = out.startsWith('OK_UNPINNED')
+    ? 'OK_UNPINNED'
+    : out.startsWith('OK')
+      ? 'OK'
+      : 'FAILED';
+  // A failure is recorded too. Retrying it per agent turns one environment fault
+  // into N slow identical faults, and the review still needs to say it happened.
+  //
+  // Re-read under the lock rather than writing back the snapshot this function
+  // opened with: the install above takes minutes, and every row created by
+  // another session in that window would otherwise be erased. This was the
+  // single largest source of lost rows.
+  updateState((state) => {
+    const owner = ownerRow(state, sb);
+    owner.installed = owner.installed || {};
+    owner.installed[label] = result;
+  });
+  if (result === 'FAILED') process.stderr.write(out + '\n');
+  return result;
+}
+
+function cmdInstall(argv) {
+  const id = argv[0];
+  if (!id) die('usage: sandbox install <id> [--base]');
+  const sb = getSandbox(id);
+  const opts = parseFlags(argv.slice(1), { base: 'boolean' });
+  if (opts.base && !sb.base)
+    die(`sandbox ${id} has no base worktree (start it with --base <ref>)`);
+  const result = ensureInstalled(
+    sb,
+    opts.base ? sb.base : sb.root,
+    opts.base ? 'base' : 'head'
+  );
+  process.stdout.write(
+    {
+      OK: 'install OK\n',
+      OK_UNPINNED:
+        'install OK — but only WITHOUT --frozen-lockfile: the lockfile is out of sync with package.json (a review signal; note it)\n',
+      FAILED:
+        'install FAILED — this tree cannot run tests or the repo eslint\n',
+    }[result]
+  );
+  if (result === 'FAILED') process.exit(1);
+}
+
+/**
+ * Provision a private, installed worktree an agent may mutate — the reference
+ * checkout is read concurrently, so proving a test can fail belongs elsewhere.
+ *
+ * Local mode lands it OUTSIDE the repo, under the CLI's own state dir. A peer
+ * worktree never touches the user's files or branch; the only thing it writes
+ * into their repo is the registration under `.git/worktrees`, which `stop`
+ * removes.
+ */
+function cmdWorktree(argv) {
+  const [id, owner, side = 'head'] = argv;
+  if (!id || !owner) die('usage: sandbox worktree <id> <owner> [head|base]');
+  if (!/^[A-Za-z0-9._-]+$/.test(owner))
+    die(`owner '${owner}' must be a path-safe name`);
+  if (side !== 'head' && side !== 'base') die("side must be 'head' or 'base'");
+  const sb = getSandbox(id);
+
+  // A read-only view must not be able to mint a tree that executes.
+  if (sb.exec === 'none') {
+    die(
+      `worktree refused for ${id}: this id may not execute` +
+        (sb.viewOf ? `, being a read-only view of ${sb.viewOf}.` : '.')
+    );
+  }
+  if (side === 'base' && !sb.baseRef)
+    die(`sandbox ${id} has no base ref (start it with --base <ref>)`);
+
+  const mutId = newId();
+  const from = side === 'base' ? sb.baseRef : 'HEAD';
+  // Under the review's own subtree, not a container-wide `/work/mutations`.
+  // Shared containers make that path a collision: two concurrent reviews both
+  // dispatching `reproduce-verifier` would land on one directory and each would
+  // see the other's edits as its own.
+  const dir =
+    sb.mode === 'local'
+      ? path.join(STATE_DIR, 'worktrees', `${mutId.slice(3)}-${owner}`)
+      : `${sb.work}/mutations/${owner}`;
+
+  let script =
+    `set -e\n` +
+    `mkdir -p ${shq(path.posix.dirname(dir))}\n` +
+    `git -C ${shq(sb.root)} worktree add -q --detach ${shq(dir)} ${shq(from)}`;
+
+  // `worktree add HEAD` checks out the last COMMIT, but a local review's scope is
+  // merge-base..working-tree — staged and unstaged work included. Without this the
+  // agent would mutate code that is not the code under review and prove nothing
+  // about it. Untracked files stay out, matching what the diff itself covers.
+  if (sb.mode === 'local' && side === 'head') {
+    script +=
+      `\nif ! git -C ${shq(sb.root)} diff --quiet HEAD; then\n` +
+      `  git -C ${shq(sb.root)} diff HEAD | git -C ${shq(dir)} apply --index\n` +
+      `fi`;
+  }
+
+  const r =
+    sb.mode === 'local'
+      ? run('bash', ['-lc', script])
+      : execIn(sb, script, { dir: sb.root });
+  if (r.status !== 0) die(`worktree creation failed:\n${r.stderr || r.stdout}`);
+
+  const mutation = {
+    ...sb,
+    id: mutId,
+    derivedFrom: sb.viewOf || id,
+    root: dir,
+    base: null,
+    baseRef: sb.baseRef,
+    // Mutation is the point of this tree, so it is not screened. It is a
+    // throwaway peer, not the checkout anyone else is reading.
+    exec: 'full',
+    // What `stop` needs to unregister it from the repo it was cut from.
+    worktreeOf: sb.root,
+    createdAt: nowIso(),
+  };
+  updateState((state) => {
+    state.sandboxes[mutId] = mutation;
+  });
+
+  // Outside the lock: this installs, which takes minutes.
+  const install = ensureInstalled(mutation, dir, `mut-${owner}`);
+  process.stdout.write(
+    `${mutId}\n\nmutation worktree of ${id} (${side}) · exec=${mutation.exec} · install ${install}\n` +
+      (install === 'FAILED'
+        ? `The tree exists but has no node_modules: report the dynamic check as unavailable.\n`
+        : '')
+  );
+}
+
+/**
+ * Unregister a host-side mutation worktree. Deleting the directory alone would
+ * leave the entry under the user's `.git/worktrees`, so their next `git worktree
+ * list` shows a tree this tool created and never cleaned up.
+ */
+function removeHostWorktree(sb) {
+  if (!sb.worktreeOf || sb.mode !== 'local') return;
+  run('git', ['-C', sb.worktreeOf, 'worktree', 'remove', '--force', sb.root], {
+    stdio: 'ignore',
+  });
+  run('git', ['-C', sb.worktreeOf, 'worktree', 'prune'], { stdio: 'ignore' });
+}
+
+/**
+ * Reclaim one review's subtree inside the shared host: its worktrees (head,
+ * base, and every mutation tree under it), its refs, and the directory.
+ *
+ * Deleting the directory is what frees the disk — the checkouts and the
+ * ~0.39 GB of non-shareable `node_modules` content. It deliberately does NOT
+ * free the store files those trees hardlink to: the store is the cache that
+ * makes the next review cheap, and it still holds a link to every one of them.
+ * That is `prune --store`'s job, not `stop`'s.
+ *
+ * Takes the container id from the row rather than the live registry, so it is
+ * safe to call on a half-registered sandbox during a failed `start`.
+ */
+function releaseReviewTree(sb) {
+  if (sb.mode !== 'container' || !sb.work) return;
+  execIn(
+    sb,
+    `rm -rf ${sb.work}\n` +
+      // Order matters: prune first so git forgets the administrative files for
+      // the directories just deleted, then drop the refs those worktrees
+      // pinned. Refs dropped while a worktree still claims them leave git
+      // reporting a broken worktree on every later command.
+      `git -C ${HOST_REPO} worktree prune 2>/dev/null || true\n` +
+      `git -C ${HOST_REPO} for-each-ref --format='%(refname)' ` +
+      `refs/reviews/${sb.id}/ 2>/dev/null | ` +
+      `xargs -r -n1 git -C ${HOST_REPO} update-ref -d || true`,
+    { dir: WORK_ROOT, stdio: 'ignore' }
+  );
+}
+
+function cmdStop(argv) {
+  const id = argv[0];
+  if (!id) die('usage: sandbox stop <id>');
+  const snapshot = readState();
+  const sb = snapshot.sandboxes[id];
+  if (!sb) die(`unknown sandbox '${id}'`);
+  // Stopping a view or mutation drops the row only — the subtree on disk
+  // belongs to the checkout they were derived from, and goes when it goes.
+  const derived = sb.viewOf || sb.derivedFrom;
+  // A view or mutation outliving the checkout it points at would hand out a
+  // dangling id.
+  const children = derived
+    ? []
+    : Object.entries(snapshot.sandboxes)
+        .filter(([, v]) => v.viewOf === id || v.derivedFrom === id)
+        .map(([vid]) => vid);
+
+  // Container and git work happen OUTSIDE the lock: the reclaim walks a
+  // multi-GB tree, and holding the registry that long would stall every pane.
+  //
+  // The container itself SURVIVES. It is shared, so tearing it down here would
+  // destroy every other review running in it — and the warm store it carries is
+  // the whole reason the next review is cheap. `prune --host` is the deliberate
+  // way to take it down.
+  if (sb.mode === 'container' && !derived) {
+    releaseReviewTree(sb);
+  }
+  removeHostWorktree(sb);
+  for (const vid of children) removeHostWorktree(snapshot.sandboxes[vid]);
+
+  const dropped = updateState((state) => {
+    delete state.sandboxes[id];
+    let n = 0;
+    // Re-derive from fresh state: another pane may have added a view of this
+    // checkout while the container was being torn down.
+    for (const [vid, v] of Object.entries(state.sandboxes)) {
+      if (!derived && (v.viewOf === id || v.derivedFrom === id)) {
+        delete state.sandboxes[vid];
+        n++;
+      }
+    }
+    return n;
+  });
+  process.stdout.write(
+    `stopped ${id}${dropped ? ` (and ${dropped} derived id${dropped === 1 ? '' : 's'})` : ''}\n`
+  );
+}
+
+function cmdList() {
+  const { sandboxes } = readState();
+  const ids = Object.keys(sandboxes);
+  if (!ids.length) return process.stdout.write('no live sandboxes\n');
+  for (const id of ids) {
+    const s = sandboxes[id];
+    // Show what the sandbox is OF, not where it runs. Local mode's root already
+    // says that; container mode's `container` no longer does — every review
+    // shares one host, so printing it gave a column of identical names.
+    // A view/mutation inherits its owner's ref via the spread, but fall back
+    // through the owner anyway so a row written before this field existed
+    // still resolves to something.
+    const owner = sandboxes[s.viewOf || s.derivedFrom || s.id] || s;
+    const what = s.mode === 'local' ? s.root : s.ref || owner.ref || s.work;
+    process.stdout.write(
+      `${id}  ${s.mode.padEnd(9)} ${String(s.isolation).padEnd(6)} ` +
+        `exec=${String(s.exec).padEnd(8)} ` +
+        `${s.viewOf ? `view-of=${s.viewOf} ` : ''}` +
+        `${s.derivedFrom ? `mutation-of=${s.derivedFrom} ` : ''}` +
+        `${what}  ${s.createdAt}\n`
+    );
+  }
+}
+
+/**
+ * Drop registry entries whose container is gone, and any container WE leaked.
+ *
+ * "We" is load-bearing. This used to kill every `nx-sandbox-*` container absent
+ * from the registry, which meant one pane's cleanup could destroy a container
+ * another pane had just created and not yet registered. Two containers were
+ * killed that way during a single parallel review. A container is now only
+ * killed when it carries this session's owner label and is old enough that no
+ * in-flight `start` could still be setting it up. `--force` restores the old
+ * behaviour for a deliberate machine-wide sweep.
+ */
+function cmdPrune(argv = []) {
+  const opts = parseFlags(argv, {
+    force: 'boolean',
+    'dry-run': 'boolean',
+    host: 'boolean',
+    store: 'boolean',
+  });
+  const force = !!opts.force;
+  const dryRun = !!opts['dry-run'];
+
+  // Liveness is probed before taking the lock; `docker inspect` per row is far
+  // slower than the mutation itself.
+  const probe = readState();
+  const gone = [];
+  for (const [id, sb] of Object.entries(probe.sandboxes)) {
+    // A host worktree whose directory is already gone still holds a registration
+    // in the user's repo, so unregister before dropping the row either way.
+    if (sb.worktreeOf && sb.mode === 'local') {
+      if (!fs.existsSync(sb.root)) {
+        if (!dryRun) removeHostWorktree(sb);
+        gone.push(id);
+      }
+      continue;
+    }
+    if (sb.mode !== 'container') continue;
+    const alive =
+      run(sb.backend, ['inspect', sb.container], { stdio: 'ignore' }).status ===
+      0;
+    if (!alive) gone.push(id);
+  }
+
+  const dropped = dryRun
+    ? gone.length
+    : updateState((state) => {
+        let n = 0;
+        for (const id of gone) {
+          // Re-check under the lock: a row may have been recreated meanwhile.
+          if (state.sandboxes[id]) {
+            delete state.sandboxes[id];
+            n++;
+          }
+        }
+        return n;
+      });
+  const state = readState();
+
+  const backend = pickBackend();
+  let killed = 0;
+  let sweptTrees = 0;
+  const skipped = [];
+  const hosts = backend ? listHosts(backend) : [];
+
+  // Sweep review subtrees whose row is gone. This is the shared-container
+  // analogue of the orphaned-container sweep below: the unit that leaks when a
+  // review crashes between `start` and `stop` is now a directory, not a
+  // container, and nothing else would ever reclaim it.
+  for (const host of hosts) {
+    const hostSb = {
+      mode: 'container',
+      backend: backend.bin,
+      container: host,
+      root: WORK_ROOT,
+    };
+    const listing = execIn(
+      hostSb,
+      `for d in ${WORK_ROOT}/sb_*; do ` +
+        `[ -d "$d" ] && printf '%s %s\\n' "$(basename "$d")" "$(stat -c %Y "$d")"; ` +
+        `done`,
+      { dir: WORK_ROOT }
+    );
+    for (const line of (listing.stdout || '').split('\n').filter(Boolean)) {
+      const [treeId, mtime] = line.trim().split(' ');
+      if (!treeId || state.sandboxes[treeId]) continue;
+      // Same grace as a young container: a `start` that has fetched but not yet
+      // written its row must not have its checkout deleted underneath it.
+      if (!force && !(Date.now() - Number(mtime) * 1000 > ORPHAN_GRACE_MS)) {
+        skipped.push(`${treeId} (younger than the ${ORPHAN_GRACE_MS / 1000}s grace)`);
+        continue;
+      }
+      if (!dryRun)
+        releaseReviewTree({ ...hostSb, id: treeId, work: reviewRoot(treeId) });
+      sweptTrees++;
+    }
+  }
+
+  if (backend) {
+    const ps = run(backend.bin, ['ps', '-aq', '--filter', 'name=nx-sandbox-']);
+    // A failure here must not read as "no containers": that is how a broken
+    // daemon turns into a silent no-op that still reports success.
+    if (ps.status !== 0) {
+      process.stderr.write(
+        `sandbox: could not list containers, skipping the orphan sweep:\n${(ps.stderr || '').trim()}\n`
+      );
+    }
+    const live = new Set(
+      Object.values(state.sandboxes)
+        .filter((s) => s.container)
+        .map((s) => s.container)
+    );
+    for (const cid of (ps.stdout || '').split('\n').filter(Boolean)) {
+      const meta = run(backend.bin, [
+        'inspect',
+        '-f',
+        `{{.Name}}\t{{index .Config.Labels "${OWNER_LABEL}"}}\t{{.Created}}`,
+        cid,
+      ]);
+      const [rawName, owner, created] = (meta.stdout || '').trim().split('\t');
+      const name = (rawName || '').replace(/^\//, '');
+      if (!name || live.has(name)) continue;
+
+      // The shared host outlives every row on purpose, so "no row references
+      // it" is its normal resting state between reviews, not evidence of a
+      // leak. Sweeping it here would throw away the warm store — the one thing
+      // that makes the next review cheap — every time the queue drained. Even
+      // `--force` does not reach it; `--host` is the only way down.
+      if (hosts.includes(name)) {
+        skipped.push(`${name} (shared host; use --host to take it down)`);
+        continue;
+      }
+
+      if (!force) {
+        // Unlabelled containers predate this ownership scheme, or belong to a
+        // session that did not identify itself. Either way they are not ours
+        // to destroy.
+        if (!SESSION_ID || !owner || owner !== SESSION_ID) {
+          skipped.push(`${name} (owned by another session)`);
+          continue;
+        }
+        const age = Date.now() - Date.parse(created);
+        if (!(age > ORPHAN_GRACE_MS)) {
+          skipped.push(
+            `${name} (younger than the ${ORPHAN_GRACE_MS / 1000}s grace)`
+          );
+          continue;
+        }
+      }
+      if (!dryRun) run(backend.bin, ['rm', '-f', cid], { stdio: 'ignore' });
+      killed++;
+    }
+  }
+  // --store and --host both destroy state that live reviews are reading, so
+  // both refuse while any row exists. Neither is something a review runs; they
+  // are the deliberate "give the disk back" doors.
+  const liveRows = Object.keys(readState().sandboxes).length;
+  let hostNote = '';
+  if (opts.store || opts.host) {
+    if (liveRows && !force) {
+      hostNote =
+        `refused --${opts.host ? 'host' : 'store'}: ${liveRows} sandbox row(s) are still live ` +
+        `(stop them, or --force)\n`;
+    } else if (!dryRun) {
+      for (const host of hosts) {
+        const hostSb = {
+          mode: 'container',
+          backend: backend.bin,
+          container: host,
+          root: WORK_ROOT,
+        };
+        if (opts.host) {
+          run(backend.bin, ['rm', '-f', host], { stdio: 'ignore' });
+          hostNote += `removed shared host ${host} (next start rebuilds it cold)\n`;
+        } else {
+          // `pnpm store prune` drops content no lockfile references any more;
+          // `git gc` drops objects the deleted review refs were pinning. Both
+          // only pay off once the trees holding links to them are gone, which
+          // the row check above is what guarantees.
+          execIn(
+            hostSb,
+            `pnpm store prune 2>&1 | tail -2\n` +
+              `git -C ${HOST_REPO} gc --prune=now -q 2>&1 | tail -2`,
+            { dir: WORK_ROOT }
+          );
+          hostNote += `pruned the store and shared repo in ${host}\n`;
+        }
+      }
+    }
+  }
+
+  process.stdout.write(
+    `${dryRun ? '[dry-run] would prune' : 'pruned'} ${dropped} stale ` +
+      `entr${dropped === 1 ? 'y' : 'ies'}, ${sweptTrees} orphaned review tree(s), ` +
+      `${killed} orphaned container(s)\n` +
+      hostNote +
+      (skipped.length
+        ? `left ${skipped.length} unregistered item(s) alone: ${skipped.join(', ')}\n` +
+          `  (use --force to sweep items this session does not own)\n`
+        : '')
+  );
+}
+
+function cmdDoctor(argv = []) {
+  const opts = parseFlags(argv, { image: 'string' });
+  process.stdout.write(`platform: ${os.platform()}\n\n`);
+  for (const bin of ['docker', 'podman']) {
+    const p = probeBackend(bin);
+    if (!p.present) {
+      process.stdout.write(`${bin}: not installed\n`);
+      continue;
+    }
+    if (!p.up) {
+      process.stdout.write(`${bin}: installed but not responding\n`);
+      continue;
+    }
+    const iso = isolationFor(p);
+    process.stdout.write(
+      `${bin}: up · runsc=${p.runsc ? 'yes' : 'no'} · rootless=${p.rootless ? 'yes' : 'no'}\n` +
+        `  isolation=${iso.isolation} exec=${iso.exec}` +
+        (iso.why ? ` (${iso.why})` : '') +
+        '\n'
+    );
+  }
+  if (opts.image) {
+    const backend = pickBackend();
+    // Probe with `images -q` (empty ⇒ absent), never `image inspect`: on Docker
+    // Desktop with Resource Saver, `inspect` reports "No such image" for several
+    // seconds after the VM wakes while `images` and `run` both succeed — which
+    // would send a caller off to rebuild a ~5 GB image that is already there.
+    const present =
+      backend &&
+      (run(backend.bin, ['images', '-q', opts.image]).stdout || '').trim() !==
+        '';
+    process.stdout.write(
+      `\nimage ${opts.image}: ${present ? 'OK' : 'MISSING'}\n` +
+        (present ? '' : '  build it with the setup-review-sandbox skill\n')
+    );
+  }
+  if (os.platform() === 'darwin') {
+    process.stdout.write(
+      '\nmacOS notes:\n' +
+        '  A stopped VM and an absent runtime look identical from `info` alone;\n' +
+        '  this CLI wakes the VM before reporting anything missing.\n' +
+        '  Removed Docker Desktop leaves dangling /usr/local/bin/docker and a\n' +
+        '  "credsStore": "desktop" / "currentContext": "desktop-linux" in\n' +
+        '  ~/.docker/config.json, both naming deleted binaries. Delete those keys —\n' +
+        '  the errors they raise never mention the VM backend you actually use.\n' +
+        '  Homebrew docker-buildx needs cliPluginsExtraDirs or `docker build` fails\n' +
+        '  with "\'buildx\' is not a docker command".\n' +
+        '  Size the VM above the shared host caps (10g/6cpu) or they cannot be\n' +
+        '  honoured. Those caps now cover every concurrent review at once, not one\n' +
+        '  each, so a runaway test in one review can starve its siblings.\n'
+    );
+  }
+}
+
+// ---------------------------------------------------------------- exec plumbing
+
+/** Run argv inside the sandbox with NO shell on either side. */
+function execRaw(sb, argv, opts = {}) {
+  if (sb.mode === 'local') {
+    return run(argv[0], argv.slice(1), opts.cwd ? { cwd: opts.cwd } : {});
+  }
+  const wd = opts.cwd ? ['-w', opts.cwd] : [];
+  return run(sb.backend, ['exec', ...wd, sb.container, ...argv]);
+}
+
+/**
+ * Run a shell script inside the sandbox. The script is passed as a single argv
+ * element, so the HOST shell never parses it — only the sandbox's own shell
+ * does, which is the whole point of having a boundary.
+ */
+function execIn(sb, script, opts = {}) {
+  const dir = opts.dir || sb.root;
+  if (sb.mode === 'local') {
+    // No PATH surgery here: a local sandbox runs in the user's own shell
+    // environment, which is the one these commands are meant to run in.
+    return run('bash', ['-lc', `cd ${shq(dir)}\n${script}`], opts);
+  }
+  // Both the PATH export and the cd are required: a bare login shell lands in
+  // the image's default workdir with no mise shims, so `nx`/`pnpm` are not
+  // found and every run fails identically — which a caller would misread as the
+  // change being broken rather than the shell being wrong.
+  const mise =
+    'export PATH="/root/.local/bin:/root/.local/share/mise/shims:$PATH"';
+  return run(
+    sb.backend,
+    [
+      'exec',
+      ...(opts.stdio === 'inherit' ? ['-i'] : []),
+      sb.container,
+      'bash',
+      '-lc',
+      `${mise}\ncd ${dir} 2>/dev/null || true\n${script}`,
+    ],
+    opts
+  );
+}
+
+function gitIn(sb, args) {
+  const r =
+    sb.mode === 'local'
+      ? run('git', ['-C', sb.root, ...args])
+      : execRaw(sb, ['git', '-C', sb.root, ...args]);
+  return readOut(r);
+}
+
+function readOut(r) {
+  if (r.status !== 0)
+    die((r.stderr || '').trim() || `command failed (${r.status})`);
+  return r.stdout;
+}
+
+function shq(s) {
+  return `'${String(s).replace(/'/g, `'\\''`)}'`;
+}
+
+function nowIso() {
+  return new Date().toISOString();
+}
+
+/**
+ * Split argv into positionals and flags in one pass. The verbs that take an
+ * optional trailing positional need this: parsing flags separately let
+ * `grep <id> <pat> --ref base` bind `--ref` as the subdir and drop `base`,
+ * so the search silently ran against the working tree instead of the ref.
+ * An unknown flag is fatal for the same reason — a silently ignored `--ref`
+ * returns HEAD content under a base-shaped command.
+ */
+function parseArgs(argv, spec) {
+  const positional = [];
+  const opts = {};
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (!a.startsWith('-')) {
+      positional.push(a);
+      continue;
+    }
+    const key = a.replace(/^--?/, '');
+    if (!(key in spec)) die(`unknown flag '${a}'`);
+    opts[key] = spec[key] === 'boolean' ? true : argv[++i];
+  }
+  return { positional, opts };
+}
+
+function parseFlags(argv, spec) {
+  return parseArgs(argv, spec).opts;
+}
+
+/** `--ref base` is an alias for the base the sandbox was started with. */
+function resolveRef(sb, ref) {
+  const r = ref === 'base' ? sb.baseRef : ref;
+  if (!r) die('this sandbox was not started with a --base ref');
+  return r;
+}
+
+/** Like gitIn, but hands back the raw result so search verbs can tolerate "no matches". */
+function gitRawIn(sb, args) {
+  return sb.mode === 'local'
+    ? run('git', ['-C', sb.root, ...args])
+    : execRaw(sb, ['git', '-C', sb.root, ...args]);
+}
+
+// ---------------------------------------------------------------- main
+
+const USAGE = `sandbox — uniform access to a checkout, isolated or local
+
+  start  --local <path> [--allow-exec]         register a host dir; exec=screened unless --allow-exec
+  start  --image <img> [--checkout <url> --ref <r> [--base <r>]]
+  read   <id> <path> [--range a,b] [--ref <sha>] [-n]
+  grep   <id> <pattern> [subdir] [--ref <sha>]
+  find   <id> <glob> [subdir] [--ref <sha>]
+  diff   <id> [--name-only|--stat] [-- <path>...]   base..HEAD tree difference; never name a ref
+                                               yourself. NOT the PR's diff — see the source comment
+  exec   <id> [--base] -- <cmd...>             --base runs base-side (installs it on first use)
+  install <id> [--base]                        idempotent; head is the caller's to do up front
+  view   <id> [--exec screened|none]           second id onto the same checkout, narrowed
+  worktree <id> <owner> [head|base]            private installed tree an agent may mutate;
+                                               local mode cuts it under ~/.nx-sandboxes/worktrees
+  stop   <id> | list | doctor [--image <img>]
+  prune  [--dry-run] [--force]                 drops dead rows and orphaned review trees; only
+                                               removes containers this session owns
+  prune  --store | --host                      give the disk back: prune the shared pnpm store
+                                               and repo, or destroy the shared host outright.
+                                               Both refuse while any row is live.
+
+Reviews share one container per image and one repo inside it: each gets
+/work/<id>/{nx,base,mutations} as worktrees of /work/.repo. That is a disk and
+time optimisation, not a weakening — the boundary is still host vs. container,
+and isolation BETWEEN reviews was never claimed.
+
+exec tiers: none < screened < full. 'screened' rejects commands that obviously
+write (git checkout, rm, pnpm install, > redirects) so a review cannot mutate
+the code under review. It is a guardrail, not a security boundary.
+`;
+
+const [, , verb, ...rest] = process.argv;
+const verbs = {
+  start: cmdStart,
+  read: cmdRead,
+  grep: cmdGrep,
+  find: cmdFind,
+  diff: cmdDiff,
+  exec: cmdExec,
+  install: cmdInstall,
+  view: cmdView,
+  worktree: cmdWorktree,
+  stop: cmdStop,
+  list: cmdList,
+  prune: cmdPrune,
+  doctor: cmdDoctor,
+};
+if (!verb || verb === '--help' || verb === '-h') {
+  process.stdout.write(USAGE);
+  process.exit(verb ? 0 : 1);
+}
+if (!verbs[verb]) die(`unknown verb '${verb}'\n\n${USAGE}`);
+verbs[verb](rest);

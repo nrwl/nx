@@ -20,6 +20,7 @@ import {
 
 import { output, readJsonFile } from '@nx/devkit';
 import { angularDevkitVersion as defaultAngularCliVersion } from '@nx/angular/internal';
+import { typescriptVersion as defaultTypescriptVersion } from '@nx/js/src/utils/versions';
 import { dump } from '@zkochan/js-yaml';
 import { execSync, ExecSyncOptions } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -53,6 +54,7 @@ const nxPackages = [
   `@nx/next`,
   `@nx/node`,
   `@nx/nuxt`,
+  `@nx/oxlint`,
   `@nx/plugin`,
   `@nx/playwright`,
   `@nx/rollup`,
@@ -93,11 +95,14 @@ export function newProject({
   packageManager = getSelectedPackageManager(),
   packages,
   preset = 'apps',
+  typescriptVersion = defaultTypescriptVersion,
 }: {
   name?: string;
   packageManager?: 'npm' | 'yarn' | 'pnpm' | 'bun';
   readonly packages?: Array<NxPackage>;
   preset?: string;
+  /** Override for suites pinned to an older TypeScript, e.g. Remix needs 5.x. */
+  typescriptVersion?: string;
 } = {}): string {
   const newProjectStart = performance.mark('new-project:start');
   try {
@@ -124,11 +129,20 @@ export function newProject({
         createNxWorkspaceEnd.name
       );
 
+      // npm strips protected config keys like _authToken from the env it
+      // passes to child processes (npx nx ...), so npm publish needs the
+      // token in a config file; the workspace .npmrc keeps it scoped to the
+      // test project instead of mutating user-level config.
+      const registryPort = process.env.NX_LOCAL_REGISTRY_PORT ?? '4873';
+      const npmrcLines = [
+        `//localhost:${registryPort}/:_authToken=secretVerdaccioToken`,
+      ];
       // Workaround: pnpm defaults to frozen-lockfile in CI, but e2e tests
       // dynamically add packages after workspace creation
       if (isCI && packageManager === 'pnpm') {
-        updateFile('.npmrc', 'prefer-frozen-lockfile=false');
+        npmrcLines.unshift('prefer-frozen-lockfile=false');
       }
+      updateFile('.npmrc', npmrcLines.join('\n'));
 
       let packagesToInstall: Array<NxPackage> = [];
       if (!packages) {
@@ -143,6 +157,15 @@ export function newProject({
       if (packagesToInstall.length) {
         const packageInstallStart = performance.mark('packageInstall:start');
         packageInstall(packagesToInstall.join(` `), projScope);
+        // npm auto-installs @phenomnomnominal/tsquery's unbounded
+        // `typescript: >3.0.0` peer, landing TS 7 (which dropped the CJS
+        // `SyntaxKind` tsquery reads at load time) in the single hoisted slot.
+        // Installing typescript directly reclaims that slot. pnpm/yarn resolve
+        // peers per dependent, so they are unaffected.
+        // TODO: remove once tsquery bounds its peer or nx stops depending on it.
+        if (packageManager === 'npm') {
+          packageInstall('typescript', projScope, typescriptVersion);
+        }
         const packageInstallEnd = performance.mark('packageInstall:end');
         packageInstallMeasure = performance.measure(
           'packageInstall',
@@ -242,7 +265,10 @@ export function runCreateWorkspace(
     nextAppDir,
     nextSrcDir,
     linter = 'eslint',
-    formatter = 'prettier',
+    // Deliberately NOT `create-nx-workspace`'s default, which is prettier while
+    // oxfmt is pre-1.0: this exercises the oxfmt path across every suite rather
+    // than only the dedicated one. Suites that need prettier pass it explicitly.
+    formatter = 'oxfmt',
     unitTestRunner,
     e2eTestRunner,
     ssr,
@@ -273,7 +299,7 @@ export function runCreateWorkspace(
       | 'vitest-analog'
       | 'none';
     e2eTestRunner?: 'cypress' | 'playwright' | 'jest' | 'detox' | 'none';
-    formatter?: 'prettier' | 'none';
+    formatter?: 'prettier' | 'oxfmt' | 'none';
     ssr?: boolean;
     framework?: string;
     prefix?: string;
@@ -617,13 +643,15 @@ export function newLernaWorkspace({
         '@nx/devkit': nxVersion,
       };
       if (packageManager === 'pnpm') {
-        json.pnpm = {
-          ...json.pnpm,
-          overrides: {
-            ...json.pnpm?.overrides,
-            ...overrides,
-          },
-        };
+        // pnpm 11 no longer reads the "pnpm" field in package.json; overrides
+        // live in pnpm-workspace.yaml.
+        updateFile(
+          'pnpm-workspace.yaml',
+          dump({
+            packages: ['packages/*'],
+            overrides,
+          })
+        );
       } else if (packageManager === 'yarn') {
         json.resolutions = {
           ...json.resolutions,

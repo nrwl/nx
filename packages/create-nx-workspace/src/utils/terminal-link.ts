@@ -1,16 +1,14 @@
-// Keep in sync with packages/nx/src/utils/terminal-link.ts.
-// create-nx-workspace cannot depend on nx, so this generic OSC 8 helper is
-// intentionally duplicated (same reasoning as output.ts / package-manager.ts).
+// Keep in sync with packages/nx/src/utils/terminal-link.ts; duplicated because
+// create-nx-workspace cannot depend on nx (same as output.ts / package-manager.ts).
 
 const OSC = '\u001B]';
 const BEL = '\u0007';
 const SEP = ';';
 
 /**
- * Wrap `text` in an OSC 8 hyperlink that points at `url`. Supported terminals
- * render `text` as a clickable link to `url`; everywhere else `text` prints
- * unchanged. This lets us keep tracking querystrings out of the visible output
- * while still attaching them to the link target (CLOUD-4642).
+ * Wrap `text` in an OSC 8 hyperlink to `url`, keeping tracking querystrings out
+ * of visible output while attaching them to the link target (CLOUD-4642).
+ * Unsupported terminals print `text` unchanged.
  */
 export function terminalLink(text: string, url: string): string {
   if (!supportsHyperlinks()) {
@@ -20,9 +18,8 @@ export function terminalLink(text: string, url: string): string {
 }
 
 /**
- * Best-effort detection of OSC 8 hyperlink support, adapted from the
- * `supports-hyperlinks` package. Defaults to false when in doubt so we never
- * print raw escape sequences to a terminal that can't render them.
+ * OSC 8 support detection (adapted from `supports-hyperlinks`). Defaults to
+ * false when in doubt so we never emit raw escape sequences.
  */
 function supportsHyperlinks(): boolean {
   const env = process.env;
@@ -84,8 +81,8 @@ function supportsHyperlinks(): boolean {
 }
 
 /**
- * Exported for testing. VTE reports versions as a packed integer, e.g. "5402"
- * means 0.54.2; everything else is dot-separated.
+ * Exported for testing. VTE packs versions into an integer ("5402" = 0.54.2);
+ * everything else is dot-separated.
  */
 export function parseVersion(versionString = ''): {
   major: number;

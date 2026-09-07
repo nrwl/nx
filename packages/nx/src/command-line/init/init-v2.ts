@@ -1,14 +1,21 @@
 import { existsSync } from 'fs';
 import { basename } from 'path';
 
-import { prompt } from 'enquirer';
+import {
+  selectPrompt,
+  multiselectPrompt,
+  confirmationPrompt,
+} from '../../utils/prompt-helpers';
 import { prerelease } from 'semver';
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 import { readJsonFile, writeJsonFile } from '../../utils/fileutils';
 import { getPackageNameFromImportPath } from '../../utils/get-package-name-from-import-path';
 import { output } from '../../utils/output';
-import { PackageJson } from '../../utils/package-json';
-import { getPackageManagerCommand } from '../../utils/package-manager';
+import { installPackageToTmp, PackageJson } from '../../utils/package-json';
+import {
+  getPackageManagerCommand,
+  detectPackageManager,
+} from '../../utils/package-manager';
 import { nxVersion } from '../../utils/versions';
 import { globWithWorkspaceContextSync } from '../../utils/workspace-context';
 import { connectExistingRepoToNxCloudPrompt } from '../nx-cloud/connect/connect-to-nx-cloud';
@@ -16,6 +23,7 @@ import { configurePlugins, installPluginPackages } from './configure-plugins';
 import { determineAiAgents } from './ai-agent-prompts';
 import { setupAiAgentsGenerator } from '../../ai/set-up-ai-agents/set-up-ai-agents';
 import { FsTree, flushChanges } from '../../generators/tree';
+import { formatInitWrites, recordInitWrite } from './implementation/format';
 import { addNxToMonorepo } from './implementation/add-nx-to-monorepo';
 import { addNxToNpmRepo } from './implementation/add-nx-to-npm-repo';
 import { addNxToTurborepo } from './implementation/add-nx-to-turborepo';
@@ -33,15 +41,14 @@ import {
   updateGitIgnore,
 } from './implementation/utils';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
-import { installPackageToTmp } from '../../devkit-internals';
 import { handleImport } from '../../utils/handle-import';
 import { isAiAgent } from '../../native';
-import { Agent } from '../../ai/utils';
+import { Agent, agentConfigWriteBlockedLines } from '../../ai/utils';
+import { isPermissionDenied } from '../../utils/permission-errors';
 import { detectAiAgent } from '../../ai/detect-ai-agent';
 import { MessageOptionKey, recordStat } from '../../utils/ab-testing';
 import { ensureAnalyticsPreferenceSet } from '../../utils/analytics-prompt';
 import { isCI } from '../../utils/is-ci';
-import { detectPackageManager } from '../../utils/package-manager';
 import {
   logProgress,
   writeAiOutput,
@@ -52,6 +59,7 @@ import {
   determineErrorCode,
   DetectedPlugin,
 } from './utils/ai-output';
+import { isSandbox } from '../../utils/is-sandbox';
 
 export interface InitArgs {
   interactive: boolean;
@@ -171,8 +179,16 @@ async function runInit(
 
   // AI agent mode: apply defaults for non-interactive operation
   const aiMode = isAiAgent();
+  const isSandboxed = isSandbox();
   if (aiMode) {
     options.interactive = false; // Force non-interactive
+
+    if (isSandboxed) {
+      // During init, before configuring AI agents, the daemon and
+      // plugin socket connections are not available
+      process.env.NX_DAEMON = 'false';
+      process.env.NX_ISOLATE_PLUGINS = 'false';
+    }
 
     if (options.nxCloud === undefined) {
       options.nxCloud = false; // Default to skip Nx Cloud
@@ -208,6 +224,7 @@ async function runInit(
       integrated: !!options.integrated,
     });
 
+    await formatInitWrites(process.cwd());
     printFinalMessage({
       learnMoreLink: 'https://nx.dev/technologies/angular/migration/angular',
     });
@@ -224,21 +241,18 @@ async function runInit(
     !aiMode &&
     process.stdin.isTTY
   ) {
-    const setupMode = await prompt<{ setupMode: string }>([
-      {
-        type: 'select',
-        name: 'setupMode',
-        message: 'How would you like to set up Nx in this directory?',
-        choices: [
-          {
-            name: '.nx installation (recommended for non-JavaScript projects)',
-          },
-          {
-            name: 'package.json installation (recommended for JavaScript/TypeScript projects)',
-          },
-        ],
-      },
-    ]).then((r) => r.setupMode);
+    const setupMode = await selectPrompt({
+      message: 'How would you like to set up Nx in this directory?',
+      choices: [
+        {
+          value: '.nx installation (recommended for non-JavaScript projects)',
+        },
+        {
+          value:
+            'package.json installation (recommended for JavaScript/TypeScript projects)',
+        },
+      ],
+    });
 
     if (setupMode.startsWith('package.json')) {
       // Create a minimal package.json so the JS/TS workflow takes over
@@ -248,6 +262,7 @@ async function runInit(
         version: '0.0.0',
         private: true,
       });
+      recordInitWrite('package.json');
     } else {
       options.useDotNxInstallation = true;
     }
@@ -263,14 +278,10 @@ async function runInit(
   // AI mode defaults to minimum setup, humans can choose
   let guided = !aiMode; // Default to minimum (false) for AI, guided (true) for humans
   if (options.interactive && !(_isTurborepo || _isNonJs)) {
-    const setupType = await prompt<{ setupPreference: string }>([
-      {
-        type: 'select',
-        name: 'setupPreference',
-        message: 'Would you like a minimum or guided setup?',
-        choices: [{ name: 'Minimum' }, { name: 'Guided' }],
-      },
-    ]).then((r) => r.setupPreference);
+    const setupType = await selectPrompt({
+      message: 'Would you like a minimum or guided setup?',
+      choices: [{ value: 'Minimum' }, { value: 'Guided' }],
+    });
     guided = setupType === 'Guided';
   }
 
@@ -287,6 +298,7 @@ async function runInit(
     await addNxToTurborepo({
       interactive: options.interactive,
     });
+    await formatInitWrites(process.cwd());
     printFinalMessage({
       learnMoreLink: 'https://nx.dev/recipes/adopting-nx/from-turborepo',
     });
@@ -381,6 +393,9 @@ async function runInit(
           'detecting',
           `Detected ${detectedPluginNames.length} plugin(s): ${detectedPluginNames.join(', ')}`
         );
+        // This path exits without reaching the drain below, and `nx.json` has
+        // already been written by now.
+        await formatInitWrites(repoRoot);
         writeAiOutput(buildNeedsInputResult(detectedPlugins));
         process.exit(0);
       }
@@ -426,27 +441,43 @@ async function runInit(
     }
   }
 
+  // AI agent mode configures the detected agent automatically (aiAgents is
+  // pre-filled above); interactive humans are always prompted — even in the
+  // minimum setup — since agent configuration also writes the sandbox
+  // allowances the Nx daemon needs when driven by an agent later.
   const selectedAgents = await determineAiAgents(
     options.aiAgents,
-    options.interactive && guided
+    options.interactive
   );
 
   if (selectedAgents && selectedAgents.length > 0) {
-    const tree = new FsTree(repoRoot, false);
-    const aiAgentsCallback = await setupAiAgentsGenerator(tree, {
-      directory: '.',
-      writeNxCloudRules: options.nxCloud !== false,
-      packageVersion: 'latest',
-      agents: [...selectedAgents],
-    });
+    try {
+      const tree = new FsTree(repoRoot, false);
+      const aiAgentsCallback = await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        writeNxCloudRules: options.nxCloud !== false,
+        packageVersion: 'latest',
+        agents: [...selectedAgents],
+      });
 
-    const changes = tree.listChanges();
-    flushChanges(repoRoot, changes);
+      const changes = tree.listChanges();
+      flushChanges(repoRoot, changes);
 
-    if (aiAgentsCallback) {
-      const results = await aiAgentsCallback();
-      results.messages.forEach((m) => output.log(m));
-      results.errors.forEach((e) => output.error(e));
+      if (aiAgentsCallback) {
+        const results = await aiAgentsCallback();
+        results.messages.forEach((m) => output.log(m));
+        results.errors.forEach((e) => output.error(e));
+      }
+    } catch (e) {
+      if (!isPermissionDenied(e)) {
+        throw e;
+      }
+      // Don't fail the whole init over this — everything else succeeded.
+      // Warned rather than thrown so the rest of the init result still stands.
+      output.warn({
+        title: 'AI agent configuration could not be written from this process',
+        bodyLines: agentConfigWriteBlockedLines(e),
+      });
     }
   }
 
@@ -457,7 +488,7 @@ async function runInit(
     nxCloudChoice = 'skip';
   } else {
     nxCloudChoice = options.interactive
-      ? await connectExistingRepoToNxCloudPrompt()
+      ? await connectExistingRepoToNxCloudPrompt('init', 'setupNxCloud', false)
       : 'skip';
   }
   if (nxCloudChoice === 'yes') {
@@ -487,6 +518,11 @@ async function runInit(
       pluginsInstalled: pluginsToInstall.join(','),
     },
   });
+
+  // Before the AI record, not after: the formatters write to stdout
+  // (`--list-different`, oxfmt's summary), which would otherwise land after the
+  // NDJSON result and corrupt the tail an agent parses.
+  await formatInitWrites(repoRoot);
 
   // Output success result for AI agents
   if (aiMode) {
@@ -519,6 +555,7 @@ async function runInit(
 export function getPluginReason(plugin: string): string {
   const reasonMap: Record<string, string> = {
     '@nx/eslint': 'eslint detected in dependencies',
+    '@nx/oxlint': 'oxlint detected in dependencies',
     '@nx/storybook': 'storybook detected in dependencies',
     '@nx/vite': 'vite detected in dependencies',
     '@nx/vitest': 'vitest detected in dependencies',
@@ -570,6 +607,7 @@ function parsePluginsFlag(
 const npmPackageToPluginMap: Record<string, `@nx/${string}`> = {
   // Generic JS tools
   eslint: '@nx/eslint',
+  oxlint: '@nx/oxlint',
   storybook: '@nx/storybook',
   // Bundlers
   vite: '@nx/vite',
@@ -727,18 +765,10 @@ export async function detectPlugins(
     ],
   });
 
-  const pluginsToInstall = await prompt<{ plugins: string[] }>([
-    {
-      name: 'plugins',
-      type: 'multiselect',
-      message: `Which plugins would you like to add? Press <Space> to select and <Enter> to submit.`,
-      choices: plugins.map((p) => ({ name: p, value: p })),
-      /**
-       * limit is missing from the interface but it limits the amount of options shown
-       */
-      limit: process.stdout.rows - 4, // 4 leaves room for the header above, the prompt and some whitespace
-    } as any,
-  ]).then((r) => r.plugins);
+  const pluginsToInstall = await multiselectPrompt({
+    message: `Which plugins would you like to add? Press <Space> to select and <Enter> to submit.`,
+    choices: plugins,
+  });
 
   if (pluginsToInstall?.length === 0)
     return {
@@ -748,22 +778,9 @@ export async function detectPlugins(
 
   const updatePackageScripts =
     existsSync('package.json') &&
-    (await prompt<{ updatePackageScripts: string }>([
-      {
-        name: 'updatePackageScripts',
-        type: 'autocomplete',
-        message: `Do you want to start using Nx in your package.json scripts?`,
-        choices: [
-          {
-            name: 'Yes',
-          },
-          {
-            name: 'No',
-          },
-        ],
-        initial: 0,
-      },
-    ]).then((r) => r.updatePackageScripts === 'Yes'));
+    (await confirmationPrompt({
+      message: `Do you want to start using Nx in your package.json scripts?`,
+    }));
 
   return { plugins: pluginsToInstall, updatePackageScripts };
 }

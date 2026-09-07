@@ -421,8 +421,9 @@ export default defineMarkdocConfig({
       render: component('./src/components/markdoc/LlmCopyPrompt.astro'),
       attributes: {
         title: { type: 'String', required: true },
+        previewLines: { type: 'Number', required: false },
       },
-      children: ['paragraph', 'tag', 'list'],
+      children: ['paragraph', 'tag', 'list', 'heading'],
       transform(node, config) {
         const attributes = node.transformAttributes(config);
         function extractText(n, listContext) {
@@ -444,6 +445,15 @@ export default defineMarkdocConfig({
             return (
               (n.children || []).map((c) => extractText(c)).join('') + '\n'
             );
+          if (n.type === 'heading') {
+            const level = n.attributes?.level ?? 2;
+            return (
+              '#'.repeat(level) +
+              ' ' +
+              (n.children || []).map((c) => extractText(c)).join('') +
+              '\n'
+            );
+          }
           if (n.type === 'list') {
             const ordered = n.attributes?.ordered === true;
             return (

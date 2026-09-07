@@ -106,7 +106,30 @@ You can also use the object format with the `dependencies` property to achieve t
 By default, Nx will use all files in a project as well as all files in the project's dependencies when computing a hash for tasks belonging to the project.
 This may cause Nx to rerun some tasks even when files irrelevant to the task have changed but it ensures that by default, Nx always re-runs the task when it should.
 
-To get a better idea of how to use inputs, you can browse some [common input sets](/docs/guides/tasks--caching/configure-inputs#common-inputs).
+To get a better idea of how to use inputs, you can browse some [common input sets](/docs/kb/configure-inputs#common-inputs).
+
+### JSON files
+
+Configuration files such as `package.json` or `tsconfig.base.json` hold fields that are irrelevant to most tasks. Nx can hash a subset of a JSON file so that edits to the remaining fields do not invalidate the cache. JSON inputs are defined like this:
+
+```jsonc
+{
+  "inputs": [
+    { "json": "{projectRoot}/package.json" }, // The whole file
+    { "json": "{projectRoot}/package.json", "fields": ["dependencies"] }, // Only the listed fields
+    {
+      "json": "{workspaceRoot}/tsconfig.base.json",
+      "excludeFields": ["compilerOptions.paths"], // Everything except the listed fields
+    },
+  ],
+}
+```
+
+The `json` path must be prefixed with `{workspaceRoot}` or `{projectRoot}`, the same as a source file input, and it can be a glob pattern that matches several files.
+
+Both `fields` and `excludeFields` accept dot notation to reach nested values, such as `compilerOptions.target`. Fields that a file does not contain are skipped. When both properties are set, `fields` selects first and `excludeFields` then removes from that selection.
+
+A JSON input hashes the parsed contents of the file rather than its raw bytes, so reformatting the file or reordering its keys does not invalidate the cache. Files that parse as neither JSON nor JSONC fall back to hashing the raw contents, and the field filters do not apply to them.
 
 ### Environment variables
 
@@ -373,5 +396,5 @@ nx test myreactapp
 {% cardgrid %}
 {% linkcard title="nx.json reference"  description="namedInputs can be defined in nx.json" href="/docs/reference/nx-json#inputs-namedinputs" /%}
 {% linkcard title="Project configuration reference"  description="inputs and namedInputs can be defined in project configuration" href="/docs/reference/project-configuration#inputs-and-named-inputs" /%}
-{% linkcard title="Configure Inputs for Task Caching"  description="This recipes walks you through a few examples of how to configure inputs and namedInputs" href="/docs/guides/tasks--caching/configure-inputs" /%}
+{% linkcard title="Configure Inputs for Task Caching"  description="This recipes walks you through a few examples of how to configure inputs and namedInputs" href="/docs/kb/configure-inputs" /%}
 {% /cardgrid %}

@@ -25,7 +25,7 @@ describe('nxCloudHyperlink', () => {
     expect(link).toContain(`${BEL}${NX_CLOUD_URL}${OSC}`);
     // Tracked URL is the link target only.
     expect(link).toContain(
-      `${NX_CLOUD_URL}?utm_source=nx-cli&utm_medium=nx-init`
+      `${NX_CLOUD_URL}?utm_source=nx-cli&utm_medium=cli&utm_campaign=nx-cloud-connect&utm_content=nx-init`
     );
   });
 

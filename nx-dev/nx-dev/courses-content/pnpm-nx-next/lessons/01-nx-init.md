@@ -14,5 +14,5 @@ This process will analyze your repository and ask you a couple of questions to p
 
 ## Relevant Links
 
-- [Adopting Nx](/docs/guides/adopting-nx)
-- [Import an Existing Project into an Nx Workspace](/docs/guides/adopting-nx/import-project)
+- [Adopting Nx](/docs/kb/adoption)
+- [Import an Existing Project into an Nx Workspace](/docs/kb/import-project)

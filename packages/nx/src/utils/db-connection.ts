@@ -1,32 +1,24 @@
+import { closeDbConnection, connectToNxDb, ExternalObject } from '../native';
 import {
-  closeDbConnection,
-  connectToNxDb,
-  ExternalObject,
-  getMainWorktreeRoot,
-} from '../native';
-import { workspaceDataDirectoryForWorkspace } from './cache-directory';
+  sharedDataDirectory,
+  workspaceDataDirectoryForWorkspace,
+} from './cache-directory';
 import { workspaceRoot } from './workspace-root';
 
 const dbConnectionMap = new Map<string, ExternalObject<any>>();
 
 /**
- * Shared workspace-data directory, resolved once per process.
- * In a git worktree this points to the main repo's workspace-data dir
- * so all worktrees share the same DB.
+ * Where the shared DB lives, resolved once per process.
+ *
+ * The DB is the only thing that uses the shared `workspace-data` directory --
+ * daemon logs and the `disabled` marker stay in the checkout's own, because
+ * they describe that checkout. Sharing is not decided here: this DB indexes the
+ * cache directory's contents, so the two have to land in the same scope or a
+ * cache hit resolves to artifacts that were never written here.
  */
 let _sharedDir: string | undefined;
 function sharedWorkspaceDataDirectory(root: string): string {
-  if (_sharedDir) return _sharedDir;
-  try {
-    const mainRoot = getMainWorktreeRoot(root);
-    if (mainRoot) {
-      _sharedDir = workspaceDataDirectoryForWorkspace(mainRoot);
-      return _sharedDir;
-    }
-  } catch {
-    // Fall back to local workspace data if worktree detection fails
-  }
-  _sharedDir = workspaceDataDirectoryForWorkspace(root);
+  _sharedDir ??= sharedDataDirectory(root, 'workspace-data');
   return _sharedDir;
 }
 

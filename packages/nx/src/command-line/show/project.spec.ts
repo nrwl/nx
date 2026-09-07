@@ -13,46 +13,46 @@ let graph: ProjectGraph = {
 
 let mockCwd = '/workspace';
 
-jest.mock('../../project-graph/project-graph', () => ({
-  ...(jest.requireActual(
+vi.mock('../../project-graph/project-graph', async () => ({
+  ...((await vi.importActual(
     '../../project-graph/project-graph'
-  ) as typeof import('../../project-graph/project-graph')),
-  createProjectGraphAsync: jest
+  )) as typeof import('../../project-graph/project-graph')),
+  createProjectGraphAsync: vi
     .fn()
     .mockImplementation(() => Promise.resolve(graph)),
 }));
 
-jest.mock('../../utils/workspace-root', () => ({
+vi.mock('../../utils/workspace-root', () => ({
   workspaceRoot: '/workspace',
 }));
 
-jest.mock('../../utils/output', () => ({
+vi.mock('../../utils/output', () => ({
   output: {
-    error: jest.fn(),
-    drain: jest.fn().mockResolvedValue(undefined),
+    error: vi.fn(),
+    drain: vi.fn().mockResolvedValue(undefined),
   },
 }));
 
-jest.mock('../../config/configuration', () => ({
-  readNxJson: jest.fn().mockReturnValue({}),
+vi.mock('../../config/configuration', () => ({
+  readNxJson: vi.fn().mockReturnValue({}),
 }));
 
 const originalCwd = process.cwd;
 
-performance.mark = jest.fn();
-performance.measure = jest.fn();
+performance.mark = vi.fn();
+performance.measure = vi.fn();
 
 describe('show project', () => {
   beforeEach(() => {
-    jest.spyOn(console, 'log').mockImplementation(() => {});
-    jest.spyOn(process, 'exit').mockImplementation((() => {}) as any);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(process, 'exit').mockImplementation((() => {}) as any);
     performance.mark('init-local');
     mockCwd = '/workspace';
-    process.cwd = jest.fn().mockReturnValue(mockCwd);
+    process.cwd = vi.fn().mockReturnValue(mockCwd);
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     process.cwd = originalCwd;
   });
 
@@ -106,7 +106,7 @@ describe('show project', () => {
       .build();
 
     // Simulate being in the my-app directory
-    process.cwd = jest.fn().mockReturnValue('/workspace/apps/my-app');
+    process.cwd = vi.fn().mockReturnValue('/workspace/apps/my-app');
 
     await showProjectHandler({
       json: true,
@@ -132,7 +132,7 @@ describe('show project', () => {
       .build();
 
     // Simulate being in a subdirectory of my-app
-    process.cwd = jest.fn().mockReturnValue('/workspace/apps/my-app/src/lib');
+    process.cwd = vi.fn().mockReturnValue('/workspace/apps/my-app/src/lib');
 
     await showProjectHandler({
       json: true,
@@ -144,10 +144,10 @@ describe('show project', () => {
   });
 
   it('should show error when cwd is not within a project and no projectName provided', async () => {
-    const { output } = require('../../utils/output');
+    const { output } = await import('../../utils/output');
 
     // Make process.exit throw to stop execution
-    jest.spyOn(process, 'exit').mockImplementation((code) => {
+    vi.spyOn(process, 'exit').mockImplementation((code) => {
       throw new Error(`process.exit: ${code}`);
     });
 
@@ -162,7 +162,7 @@ describe('show project', () => {
       .build();
 
     // Simulate being at workspace root (not in any project)
-    process.cwd = jest.fn().mockReturnValue('/workspace');
+    process.cwd = vi.fn().mockReturnValue('/workspace');
 
     await expect(
       showProjectHandler({
@@ -193,7 +193,7 @@ describe('show project', () => {
       .build();
 
     // Simulate being at workspace root
-    process.cwd = jest.fn().mockReturnValue('/workspace');
+    process.cwd = vi.fn().mockReturnValue('/workspace');
 
     await showProjectHandler({
       json: true,

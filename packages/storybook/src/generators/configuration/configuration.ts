@@ -33,7 +33,6 @@ import {
   projectIsRootProjectInStandaloneWorkspace,
   updateLintConfig,
 } from './lib/util-functions';
-import type { LinterType } from '@nx/eslint';
 import {
   findStorybookAndBuildTargetsAndCompiler,
   getStorybookVersionToInstall,
@@ -44,6 +43,7 @@ import {
   nxVersion,
   tsLibVersion,
   tsNodeVersion,
+  versions,
 } from '../../utils/versions';
 import { ensureDependencies } from './lib/ensure-dependencies';
 import { editRootTsConfig } from './lib/edit-root-tsconfig';
@@ -171,9 +171,9 @@ export async function configurationGeneratorInternal(
   updateLintConfig(tree, schema);
 
   addBuildStorybookToCacheableOperations(tree);
-  addStorybookToNamedInputs(tree);
+  addStorybookToNamedInputs(tree, schema);
   if (!hasPlugin) {
-    addStorybookToTargetDefaults(tree);
+    addStorybookToTargetDefaults(tree, schema);
   }
 
   let devDeps = {};
@@ -195,6 +195,10 @@ export async function configurationGeneratorInternal(
     }
   } else {
     devDeps['storybook'] = getStorybookVersionToInstall(tree);
+  }
+
+  if (schema.interactionTests) {
+    devDeps['@storybook/test-runner'] = versions(tree).testRunnerVersion;
   }
 
   if (schema.tsConfiguration) {
@@ -244,7 +248,6 @@ function normalizeSchema(
 
   const defaults = {
     interactionTests: true,
-    linter: 'eslint' as LinterType,
     js: false,
     tsConfiguration: true,
     addPlugin,

@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 // mock so we can test multiple versions
 jest.mock('@nx/cypress/internal', () => ({
@@ -16,8 +16,10 @@ jest.mock('fs', () => {
 });
 
 import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
-import { formatFiles, ProjectConfiguration, Tree } from '@nx/devkit';
 import {
+  formatFiles,
+  ProjectConfiguration,
+  Tree,
   joinPathFragments,
   readJson,
   readProjectConfiguration,

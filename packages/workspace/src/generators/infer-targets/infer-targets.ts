@@ -1,4 +1,12 @@
-import { NoTargetsToMigrateError } from '@nx/devkit/internal';
+import {
+  NoTargetsToMigrateError,
+  GeneratorInformation,
+  getGeneratorInformation,
+  findInstalledPlugins,
+  finalizeBatchConversion,
+  openBatchConversionSession,
+  multiselectPrompt,
+} from '@nx/devkit/internal';
 import {
   createProjectGraphAsync,
   formatFiles,
@@ -9,12 +17,6 @@ import {
   Tree,
   workspaceRoot,
 } from '@nx/devkit';
-import { prompt } from 'enquirer';
-import {
-  GeneratorInformation,
-  getGeneratorInformation,
-} from 'nx/src/command-line/generate/generator-utils';
-import { findInstalledPlugins } from 'nx/src/utils/plugins/installed-plugins';
 
 interface Schema {
   project?: string;
@@ -45,21 +47,12 @@ export async function convertToInferredGenerator(tree: Tree, options: Schema) {
   } else {
     const allChoices = Array.from(generatorCollectionChoices.keys());
 
-    generatorsToRun = (
-      await prompt<{ generatorsToRun: string[] }>({
-        type: 'multiselect',
-        name: 'generatorsToRun',
-        message: 'Which inference plugin do you want to use?',
-        choices: allChoices,
-        initial: allChoices,
-        validate: (result: string[]) => {
-          if (result.length === 0) {
-            return 'Please select at least one plugin.';
-          }
-          return true;
-        },
-      } as any)
-    ).generatorsToRun;
+    generatorsToRun = await multiselectPrompt({
+      message: 'Which inference plugin do you want to use?',
+      choices: allChoices,
+      initialValues: allChoices,
+      required: true,
+    });
   }
 
   if (generatorsToRun.length === 0) {
@@ -70,35 +63,67 @@ export async function convertToInferredGenerator(tree: Tree, options: Schema) {
   }
 
   const tasks: GeneratorCallback[] = [];
-  for (const generatorCollection of generatorsToRun) {
-    try {
-      const generator = generatorCollectionChoices.get(generatorCollection);
-      if (generator) {
-        const generatorFactory = generator.implementationFactory();
-        const callback = await generatorFactory(tree, {
-          project: options.project,
-          skipFormat: options.skipFormat,
-        });
-        if (callback) {
-          const task = await callback();
-          if (typeof task === 'function') tasks.push(task);
+  // Each conversion checks nx.json's plugins array to decide whether it can
+  // centralize shared configuration, but every later conversion in this loop
+  // appends its own plugin registration afterwards. A batch session defers
+  // centralization to a single finalize pass that observes the finished array,
+  // so every conversion in the batch can centralize; a lone conversion already
+  // sees the finished array and takes the inline path.
+  const session =
+    generatorsToRun.length > 1 ? openBatchConversionSession(tree) : undefined;
+  try {
+    for (const generatorCollection of generatorsToRun) {
+      try {
+        const generator = generatorCollectionChoices.get(generatorCollection);
+        if (generator) {
+          const generatorFactory = generator.implementationFactory();
+          const runGenerator = () =>
+            generatorFactory(tree, {
+              project: options.project,
+              skipFormat: options.skipFormat,
+            });
+          const callback = session
+            ? await session.runChild(runGenerator)
+            : await runGenerator();
+          if (callback) {
+            tasks.push(async () => {
+              try {
+                const task: unknown = await callback();
+                if (typeof task === 'function') await task();
+              } catch (e) {
+                output.error({
+                  title: `${generatorCollection}:convert-to-inferred - Failed`,
+                });
+                throw e;
+              }
+            });
+          }
+          output.success({
+            title: `${generatorCollection}:convert-to-inferred - Success`,
+          });
         }
-        output.success({
-          title: `${generatorCollection}:convert-to-inferred - Success`,
-        });
-      }
-    } catch (e) {
-      if (e instanceof NoTargetsToMigrateError) {
-        output.note({
-          title: `${generatorCollection}:convert-to-inferred - Skipped (No targets to migrate)`,
-        });
-      } else {
-        output.error({
-          title: `${generatorCollection}:convert-to-inferred - Failed`,
-        });
-        throw e;
+      } catch (e) {
+        if (e instanceof NoTargetsToMigrateError) {
+          output.note({
+            title: `${generatorCollection}:convert-to-inferred - Skipped (No targets to migrate)`,
+          });
+        } else {
+          output.error({
+            title: `${generatorCollection}:convert-to-inferred - Failed`,
+          });
+          throw e;
+        }
       }
     }
+
+    if (session) {
+      // Never throws: a failed finalize downgrades to a warning and leaves the
+      // conservative per-project configuration, so the queued callbacks below
+      // still run.
+      await finalizeBatchConversion(tree, session);
+    }
+  } finally {
+    session?.close();
   }
 
   if (!options.skipFormat) {

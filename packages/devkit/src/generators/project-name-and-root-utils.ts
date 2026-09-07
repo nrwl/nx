@@ -1,5 +1,7 @@
-import { prompt } from 'enquirer';
+import { textPrompt } from 'nx/src/devkit-internals';
+import { isInteractive } from './prompt';
 import {
+  getProjects,
   joinPathFragments,
   normalizePath,
   type ProjectType,
@@ -101,6 +103,8 @@ export async function determineProjectNameAndRootOptions(
     );
   }
 
+  validateUniqueName(tree, name, projectRoot, options);
+
   const importPath =
     options.importPath ?? resolveImportPath(tree, name, projectRoot);
 
@@ -140,12 +144,11 @@ export async function ensureRootProjectName(
   projectType: 'application' | 'library'
 ): Promise<void> {
   if (!options.name && options.directory === '.' && getRelativeCwd() === '') {
-    const result = await prompt<{ name: string }>({
-      type: 'input',
-      name: 'name',
-      message: `What do you want to name the ${projectType}?`,
-    });
-    options.name = result.name;
+    options.name = isInteractive()
+      ? await textPrompt({
+          message: `What do you want to name the ${projectType}?`,
+        })
+      : undefined;
   }
 }
 
@@ -178,6 +181,27 @@ function validateOptions(
       `The derived name from the provided directory should match the pattern "${pattern}". The derived name "${derivedName}" from the provided value "${directory}" does not match.`
     );
   }
+}
+
+function validateUniqueName(
+  tree: Tree,
+  name: string,
+  projectRoot: string,
+  options: ProjectGenerationOptions
+): void {
+  const existingProject = getProjects(tree).get(name);
+  // A project at the resolved root is handled elsewhere with a more
+  // accurate error, so only error when the name is taken by a project
+  // located somewhere else.
+  if (!existingProject || existingProject.root === projectRoot) {
+    return;
+  }
+
+  throw new Error(
+    options.name
+      ? `The provided name "${name}" is already used by the project at "${existingProject.root}". Please provide a unique name for the new project.`
+      : `The name "${name}" was derived from the provided directory "${options.directory}", but it is already used by the project at "${existingProject.root}". Please provide a unique name for the new project with the "--name" option.`
+  );
 }
 
 function getImportPath(npmScope: string | undefined, name: string) {

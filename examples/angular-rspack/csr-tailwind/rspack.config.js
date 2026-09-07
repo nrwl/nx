@@ -1,40 +1,37 @@
 module.exports = () => {
-  if (global.NX_GRAPH_CREATION === undefined) {
-    const { createConfig } = require('@nx/angular-rspack');
-    const config = createConfig(
-      {
+  const { createConfig } = require('@nx/angular-rspack');
+  const config = createConfig(
+    {
+      options: {
+        root: __dirname,
+        outputPath: {
+          base: './dist',
+          browser: './browser',
+        },
+        index: './src/index.html',
+        browser: './src/main.ts',
+        tsConfig: './tsconfig.app.json',
+        polyfills: ['zone.js'],
+        assets: [{ glob: '**/*', input: 'public' }],
+        styles: ['./src/styles.css'],
+      },
+    },
+    {
+      development: {
         options: {
-          root: __dirname,
-          outputPath: {
-            base: './dist',
-            browser: './browser',
-          },
-          index: './src/index.html',
-          browser: './src/main.ts',
-          tsConfig: './tsconfig.app.json',
-          polyfills: ['zone.js'],
-          assets: [{ glob: '**/*', input: 'public' }],
-          styles: ['./src/styles.css'],
+          extractLicenses: false,
+          optimization: false,
+          outputHashing: 'none',
+          namedChunks: true,
+          vendorChunk: true,
         },
       },
-      {
-        development: {
-          options: {
-            extractLicenses: false,
-            optimization: false,
-            outputHashing: 'none',
-            namedChunks: true,
-            vendorChunk: true,
-          },
+      production: {
+        options: {
+          outputHashing: 'all',
         },
-        production: {
-          options: {
-            outputHashing: 'all',
-          },
-        },
-      }
-    );
-    return config;
-  }
-  return {};
+      },
+    }
+  );
+  return config;
 };

@@ -65,7 +65,7 @@ export default function CustomApp({
         id="skip-to-content-link"
         href="#main"
         tabIndex={0}
-        className="absolute left-8 top-3 -translate-y-24 rounded-md bg-green-400 px-4 py-2 text-white transition focus:translate-y-0"
+        className="absolute top-3 left-8 -translate-y-24 rounded-md bg-green-400 px-4 py-2 text-white transition focus:translate-y-0"
       >
         Skip to content
       </Link>

@@ -3,6 +3,7 @@ import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { CreateNodesFunction } from './plugins/public-api';
 import { ConfigurationResult } from './utils/project-configuration-utils';
 import type { ConfigurationSourceMaps } from './utils/project-configuration/source-maps';
+import type { WorktreeConflictAdvice } from '../utils/git-worktrees';
 
 export type ProjectGraphErrorTypes =
   | AggregateCreateNodesError
@@ -108,7 +109,12 @@ export class ProjectGraphError extends Error {
 export class MultipleProjectsWithSameNameError extends Error {
   constructor(
     public conflicts: Map<string, string[]>,
-    public projects: Record<string, ProjectConfiguration>
+    public projects: Record<string, ProjectConfiguration>,
+    /**
+     * Set when some of the duplicates come from git worktrees nested in the
+     * workspace, which is a different fix than renaming them.
+     */
+    public worktreeAdvice?: WorktreeConflictAdvice
   ) {
     super(
       [
@@ -117,12 +123,33 @@ export class MultipleProjectsWithSameNameError extends Error {
           [`- ${project}: `, ...roots.map((r) => `  - ${r}`)].join('\n')
         ),
         '',
-        "To fix this, set a unique name for each project in a project.json inside the project's root. If the project does not currently have a project.json, you can create one that contains only a name.",
+        ...(worktreeAdvice?.ignoreTargets.length
+          ? [
+              'Some of these are inside git worktrees nested in this workspace. A worktree is a full checkout, so every project in it collides with the one it was checked out from.',
+              '',
+              // Which `.gitignore` matters: a leading slash anchors to the
+              // directory holding the file, and these paths are relative to
+              // the workspace, which is not always the repository root.
+              'To fix those, add the following to the .gitignore in the workspace root:',
+              ...worktreeAdvice.ignoreTargets.map((target) => `  ${target}`),
+              // Ignoring the worktrees settles only the duplicates they
+              // explain; anything left is an ordinary name collision and still
+              // needs the ordinary answer.
+              ...(worktreeAdvice.explainsAllConflicts
+                ? []
+                : ['', `The rest are not from worktrees. ${RENAME_ADVICE}`]),
+            ]
+          : [
+              `To fix this, ${RENAME_ADVICE[0].toLowerCase()}${RENAME_ADVICE.slice(1)}`,
+            ]),
       ].join('\n')
     );
     this.name = this.constructor.name;
   }
 }
+
+const RENAME_ADVICE =
+  "Set a unique name for each project in a project.json inside the project's root. If the project does not currently have a project.json, you can create one that contains only a name.";
 
 export class ProjectWithExistingNameError extends Error {
   constructor(
@@ -310,7 +337,44 @@ export class AggregateCreateNodesError extends Error {
         'AggregateCreateNodesError must be constructed with an array of tuples where the first element is a filename or undefined and the second element is the underlying error.'
       );
     }
+    // Plugins pass through whatever value they caught, which is not
+    // guaranteed to be an Error. Coerce so formatting can rely on
+    // message and stack being present.
+    for (const errorTuple of errors) {
+      errorTuple[1] = coerceToError(errorTuple[1]);
+    }
   }
+}
+
+function coerceToError(value: unknown): Error {
+  if (value instanceof Error) {
+    return value;
+  }
+  let message: string;
+  let stack: string | undefined;
+  if (typeof value === 'object' && value !== null) {
+    const candidate = value as { message?: unknown; stack?: unknown };
+    if (typeof candidate.message === 'string') {
+      message = candidate.message;
+      if (typeof candidate.stack === 'string') {
+        stack = candidate.stack;
+      }
+    } else {
+      try {
+        message = JSON.stringify(value);
+      } catch {
+        // Circular structures cannot be stringified.
+        message = String(value);
+      }
+    }
+  } else {
+    message = String(value);
+  }
+  const error = new Error(message);
+  // A synthesized stack would point at this coercion site rather than
+  // the original failure, so prefer the original stack or just the message.
+  error.stack = stack ?? message;
+  return error;
 }
 
 export function formatAggregateCreateNodesError(
@@ -344,7 +408,8 @@ export function formatAggregateCreateNodesError(
     }
     for (const e of errors) {
       const messageLines = e.message.split('\n');
-      const stackLines = e.stack.split('\n');
+      // Errors deserialized from a plugin worker may arrive without a stack.
+      const stackLines = (e.stack ?? e.message).split('\n');
       if (file) {
         errorBodyLines.push(...messageLines.map((line) => `      ${line}`));
         errorStackLines.push(...stackLines.map((line) => `     ${line}`));

@@ -1,13 +1,13 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   Tree,
   addProjectConfiguration,
-  readProjectConfiguration,
-  readJson,
   getProjects,
-  writeJson,
+  readJson,
+  readProjectConfiguration,
   updateJson,
+  writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { e2eProjectGenerator } from './e2e';
@@ -65,6 +65,24 @@ describe('NxPlugin e2e-project Generator', () => {
 
     expect(tree.exists('my-plugin-e2e/tsconfig.json')).toBeTruthy();
     expect(tree.exists('my-plugin-e2e/src/my-plugin.spec.ts')).toBeTruthy();
+  });
+
+  it('should budget the setup hook for a cold package manager cache', async () => {
+    await e2eProjectGenerator(tree, {
+      pluginName: 'my-plugin',
+      pluginOutputPath: `dist/libs/my-plugin`,
+      npmPackageName: '@proj/my-plugin',
+      addPlugin: true,
+    });
+
+    // The hook shells out synchronously, which jest cannot interrupt but vitest
+    // fails after the fact, so an under-budgeted hook is an intermittent failure
+    // rather than a consistent one. It has to cover two installs.
+    const spec = tree.read('my-plugin-e2e/src/my-plugin.spec.ts', 'utf-8');
+    const budget = /\}, (\d[\d_]*)\);/.exec(spec);
+
+    expect(budget).not.toBeNull();
+    expect(Number(budget[1].replace(/_/g, ''))).toBeGreaterThanOrEqual(240_000);
   });
 
   it('should extend from root tsconfig.base.json', async () => {
@@ -219,8 +237,85 @@ describe('NxPlugin e2e-project Generator', () => {
     expect(tree.exists('my-plugin-e2e/.spec.swcrc')).toBeFalsy();
   });
 
+  it('should add vitest support', async () => {
+    await e2eProjectGenerator(tree, {
+      pluginName: 'my-plugin',
+      pluginOutputPath: `dist/libs/my-plugin`,
+      npmPackageName: '@proj/my-plugin',
+      testRunner: 'vitest',
+      addPlugin: false,
+    });
+
+    const project = readProjectConfiguration(tree, 'my-plugin-e2e');
+
+    expect(project.targets.e2e.executor).toBe('@nx/vitest:test');
+    // The suites share a tmp/test-project directory, so they must not run in
+    // parallel. These have to stay scalar: vitest 4 removed `poolOptions`, and
+    // the executor serializes nested options into a string vitest cannot read.
+    expect(project.targets.e2e).toMatchObject({
+      dependsOn: ['^build'],
+      options: expect.objectContaining({
+        maxWorkers: 1,
+        isolate: false,
+      }),
+    });
+
+    expect(tree.exists('my-plugin-e2e/tsconfig.spec.json')).toBeTruthy();
+    const vitestConfigExists =
+      tree.exists('my-plugin-e2e/vitest.config.ts') ||
+      tree.exists('my-plugin-e2e/vitest.config.mts');
+    expect(vitestConfigExists).toBeTruthy();
+
+    const vitestConfigPath = tree.exists('my-plugin-e2e/vitest.config.ts')
+      ? 'my-plugin-e2e/vitest.config.ts'
+      : 'my-plugin-e2e/vitest.config.mts';
+    const vitestConfig = tree.read(vitestConfigPath, 'utf-8');
+    expect(vitestConfig).toContain(
+      "globalSetup: '../tools/scripts/vitest-global-setup.ts'"
+    );
+    // vitest has no globalTeardown option; teardown is exported from the
+    // globalSetup file instead
+    expect(vitestConfig).not.toContain('globalTeardown');
+
+    const globalSetup = tree.read(
+      'tools/scripts/vitest-global-setup.ts',
+      'utf-8'
+    );
+    expect(globalSetup).toContain(
+      "export { default as setup } from './start-local-registry'"
+    );
+    expect(globalSetup).toContain(
+      "export { default as teardown } from './stop-local-registry'"
+    );
+  });
+
+  it('should add a vitest e2e target when the inferred plugin is registered', async () => {
+    await e2eProjectGenerator(tree, {
+      pluginName: 'my-plugin',
+      pluginOutputPath: `dist/libs/my-plugin`,
+      npmPackageName: '@proj/my-plugin',
+      testRunner: 'vitest',
+      addPlugin: true,
+    });
+
+    // `@nx/vitest` only infers `test`, so without an explicit target `nx e2e`
+    // does not exist and `^build` never runs before the local registry
+    // publishes the plugin.
+    const project = readProjectConfiguration(tree, 'my-plugin-e2e');
+
+    expect(project.targets.e2e).toMatchObject({
+      executor: '@nx/vitest:test',
+      dependsOn: ['^build'],
+      options: expect.objectContaining({
+        maxWorkers: 1,
+        isolate: false,
+      }),
+    });
+  });
+
   it('should setup the eslint builder', async () => {
     await e2eProjectGenerator(tree, {
+      linter: 'eslint',
       pluginName: 'my-plugin',
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
@@ -293,9 +388,7 @@ describe('NxPlugin e2e-project Generator', () => {
         const { readFileSync } = require('fs');
 
         // Reading the SWC compilation config for the spec files
-        const swcJestConfig = JSON.parse(
-          readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'),
-        );
+        const swcJestConfig = JSON.parse(readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8'));
 
         // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
         swcJestConfig.swcrc = false;

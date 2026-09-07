@@ -323,7 +323,8 @@ function compileTSWithWatch(
         logger.warn(
           `The project ${projectName} ` +
             `is using the deprecated "prepend" Typescript compiler option. ` +
-            `This option is not supported by the batch executor and it's ignored.`
+            `This option is not supported by the batch executor and it's ignored.`,
+          (project as any).project
         );
         continue;
       }

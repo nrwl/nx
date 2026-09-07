@@ -26,6 +26,68 @@ export default defineConfig({
     `);
   });
 
+  it('should disable justInTimeCompile for webpack on Cypress 14+', async () => {
+    const actual = await addDefaultCTConfig(
+      `import { defineConfig } from 'cypress';
+
+export default defineConfig({});
+`,
+      { bundler: 'webpack' },
+      '@nx/react/plugins/component-testing',
+      15
+    );
+    expect(actual).toContain('...nxComponentTestingPreset(import.meta.url)');
+    expect(actual).toContain('justInTimeCompile: false');
+  });
+
+  it('should not disable justInTimeCompile for the vite bundler', async () => {
+    const actual = await addDefaultCTConfig(
+      `import { defineConfig } from 'cypress';
+
+export default defineConfig({});
+`,
+      { bundler: 'vite' },
+      '@nx/react/plugins/component-testing',
+      15
+    );
+    expect(actual).not.toContain('justInTimeCompile');
+  });
+
+  it('should not disable justInTimeCompile on Cypress < 14', async () => {
+    const actual = await addDefaultCTConfig(
+      `import { defineConfig } from 'cypress';
+
+export default defineConfig({});
+`,
+      { bundler: 'webpack' },
+      '@nx/react/plugins/component-testing',
+      13
+    );
+    expect(actual).not.toContain('justInTimeCompile');
+  });
+
+  it('should not add the preset import again when re-run on an existing CT config', async () => {
+    const firstRun = await addDefaultCTConfig(
+      `import { defineConfig } from 'cypress';
+
+export default defineConfig({});
+`,
+      { bundler: 'webpack' },
+      '@nx/react/plugins/component-testing',
+      15
+    );
+    const secondRun = await addDefaultCTConfig(
+      firstRun,
+      { bundler: 'webpack' },
+      '@nx/react/plugins/component-testing',
+      15
+    );
+    expect(secondRun).toBe(firstRun);
+    expect(
+      secondRun.match(/import \{ nxComponentTestingPreset \}/g)
+    ).toHaveLength(1);
+  });
+
   it('should add e2e config to existing CT config', async () => {
     const actual = await addDefaultE2EConfig(
       `import { defineConfig } from 'cypress';

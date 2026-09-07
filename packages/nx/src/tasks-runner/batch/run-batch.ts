@@ -19,6 +19,10 @@ import {
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { ProjectGraph } from '../../config/project-graph';
 
+// Batch workers are inside an Nx run just like task workers (see
+// bin/run-executor.ts) — mark it so nested tooling can detect Nx.
+process.env.NX_CLI_SET = 'true';
+
 function getBatchExecutor(
   executorName: string,
   projects: Record<string, ProjectConfiguration>

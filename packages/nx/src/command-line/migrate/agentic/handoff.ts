@@ -1,17 +1,23 @@
 import { mkdirSync, readFileSync, rmSync } from 'fs';
 import { join } from 'path';
-import { HandoffFile } from './types';
-
-/**
- * Workspace-relative directory holding all migrate-run scratch (handoff
- * files). Shared with the agent permission rules in `definitions.ts` so the
- * pre-authorized write scope can't drift from the actual layout.
- */
-export const MIGRATE_RUNS_RELATIVE_DIR = '.nx/migrate-runs';
+import { rsort } from 'semver';
+import { normalizeVersion } from '../version-utils';
+import {
+  HANDOFFS_DIR_NAME,
+  HandoffFile,
+  MIGRATE_RUNS_RELATIVE_DIR,
+} from './types';
 
 /** Returns the run directory for a given workspace + run id (target version). */
 export function runDirPath(workspaceRoot: string, runId: string): string {
   return join(workspaceRoot, MIGRATE_RUNS_RELATIVE_DIR, runId);
+}
+
+/** The version-derived run id: the highest target version in the plan. */
+export function resolveAgenticRunId(
+  migrations: ReadonlyArray<{ version: string }>
+): string {
+  return rsort(migrations.map((m) => normalizeVersion(m.version)))[0]!;
 }
 
 /**
@@ -72,7 +78,9 @@ function sanitizeSegment(value: string): string {
 }
 
 /**
- * Absolute path of the handoff file for a migration step within a run.
+ * Absolute path of the handoff file for a migration step within a run, under
+ * the run directory's `handoffs/` subtree: the pre-authorized write scope
+ * stops there, so a handoff placed anywhere else costs an approval prompt.
  * The package's scope (if any) becomes a real subdirectory so the package name
  * stays readable; two packages can ship a migration with the same name without
  * colliding because they land in different package subdirectories. Each
@@ -84,6 +92,7 @@ export function stepHandoffPath(
 ): string {
   return join(
     runDir,
+    HANDOFFS_DIR_NAME,
     ...migration.package.split('/').map(sanitizeSegment),
     `${sanitizeSegment(migration.name)}.json`
   );

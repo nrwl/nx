@@ -1,6 +1,6 @@
 export interface InitSchema {
   addTsConfigBase?: boolean;
-  formatter?: 'none' | 'prettier';
+  formatter?: 'none' | 'prettier' | 'oxfmt';
   js?: boolean;
   keepExistingVersions?: boolean;
   skipFormat?: boolean;

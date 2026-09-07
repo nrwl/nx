@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-fs';
+import '@nx/devkit/internal-testing-utils/mock-fs';
 import { vol } from 'memfs';
 import { findNpmDependencies } from './find-npm-dependencies';
 

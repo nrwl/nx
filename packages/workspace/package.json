@@ -81,7 +81,6 @@
     "@nx/devkit": "workspace:*",
     "@zkochan/js-yaml": "catalog:",
     "chalk": "catalog:",
-    "enquirer": "catalog:",
     "picomatch": "catalog:",
     "semver": "catalog:",
     "tslib": "catalog:typescript",

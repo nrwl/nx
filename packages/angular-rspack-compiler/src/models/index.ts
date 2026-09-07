@@ -1,16 +1,16 @@
 import {
   JavaScriptTransformer,
-  SourceFileCache,
   AngularCompilation,
   createAngularCompilation,
 } from '@angular/build/private';
 
+export { JavaScriptTransformer, AngularCompilation, createAngularCompilation };
 export {
-  JavaScriptTransformer,
   SourceFileCache,
-  AngularCompilation,
-  createAngularCompilation,
-};
+  toTypeScriptFileCacheKey,
+  type BabelFileCacheEntry,
+  type TransformedSource,
+} from '../utils/source-file-cache';
 
 export * from './inline-style-language';
 export * from './file-replacement';

@@ -37,7 +37,7 @@ export function VideoLink({ text, link }: VideoLinkProps) {
         rel="noopener noreferrer"
         className="flex items-center space-x-2 border-transparent !text-inherit !no-underline dark:text-white"
       >
-        <div className="flex items-center justify-between space-x-2 rounded-md border border-zinc-200 py-1 pl-2 pl-3 pr-2 transition hover:border-zinc-500 dark:border-zinc-700/40 dark:hover:border-zinc-700">
+        <div className="flex items-center justify-between space-x-2 rounded-md border border-zinc-200 py-1 pr-2 pl-2 pl-3 transition hover:border-zinc-500 dark:border-zinc-700/40 dark:hover:border-zinc-700">
           {youtubeIcon}
           <span className="text-md font-semibold hover:text-zinc-900 dark:hover:text-blue-400">
             {text || 'Jump to section in video'}

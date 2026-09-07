@@ -104,7 +104,7 @@ describe('js:node executor', () => {
     });
 
     const output = runCLI(`run ${tscLib}:run-node`);
-    expect(output).toContain('Hello from my tsc library!');
+    expect(output.match(/Hello from my tsc library!/g)).toHaveLength(1);
   }, 240_000);
 
   it('should execute library compiled with swc', async () => {

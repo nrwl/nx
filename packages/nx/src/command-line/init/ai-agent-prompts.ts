@@ -1,42 +1,34 @@
-import { prompt } from 'enquirer';
+import { multiselectPrompt } from '../../utils/prompt-helpers';
 import { isCI } from '../../utils/is-ci';
 import { Agent, agentDisplayMap, supportedAgents } from '../../ai/utils';
 import { detectAiAgent } from '../../ai/detect-ai-agent';
 import * as pc from 'picocolors';
 
 export async function determineAiAgents(
-  aiAgents?: Agent[],
+  aiAgents?: (Agent | 'none')[],
   interactive?: boolean
 ): Promise<Agent[]> {
-  if (interactive === false || isCI()) {
-    if (aiAgents) {
-      return aiAgents;
+  if (aiAgents) {
+    const filtered = aiAgents.filter((a) => a !== 'none') as Agent[];
+    if (filtered.length > 0) {
+      return filtered;
     }
-    const detected = detectAiAgent();
-    return detected ? [detected] : [];
+    return [];
   }
 
-  if (aiAgents) {
-    return aiAgents;
+  if (interactive === false || isCI()) {
+    const detected = detectAiAgent();
+    return detected ? [detected] : [];
   }
   return await aiAgentsPrompt();
 }
 
 async function aiAgentsPrompt(): Promise<Agent[]> {
-  const promptConfig: Parameters<typeof prompt>[0] & {
-    footer: () => void;
-  } = {
-    name: 'agents',
+  return multiselectPrompt<Agent>({
     message: 'Which AI agents, if any, would you like to set up?',
-    type: 'multiselect',
     choices: supportedAgents.map((a) => ({
-      name: a,
-      message: agentDisplayMap[a],
+      value: a,
+      label: agentDisplayMap[a],
     })),
-    footer: () =>
-      pc.dim(
-        'Multiple selections possible. <Space> to select. <Enter> to confirm.'
-      ),
-  };
-  return (await prompt<{ agents: Agent[] }>([promptConfig])).agents;
+  });
 }

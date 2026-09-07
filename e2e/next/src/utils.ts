@@ -49,7 +49,7 @@ export async function checkApp(
     expect(packageJson.dependencies.next).toBeDefined();
   }
 
-  if (opts.checkE2E && runE2ETests()) {
+  if (opts.checkE2E && (await runE2ETests())) {
     const e2eResults = runCLI(
       `e2e ${appName}-e2e --no-watch --configuration=production`
     );

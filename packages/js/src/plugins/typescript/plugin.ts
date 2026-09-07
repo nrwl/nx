@@ -1,4 +1,11 @@
-import { getNamedInputs } from '@nx/devkit/internal';
+import {
+  getNamedInputs,
+  hashFile,
+  hashObject,
+  getLockFileName,
+  workspaceDataDirectory,
+  getNxRequirePaths,
+} from '@nx/devkit/internal';
 import {
   createNodesFromFiles,
   detectPackageManager,
@@ -13,6 +20,7 @@ import {
   type NxJsonConfiguration,
   type ProjectConfiguration,
   type TargetConfiguration,
+  hashArray,
 } from '@nx/devkit';
 import {
   existsSync,
@@ -30,12 +38,7 @@ import {
   relative,
   resolve,
 } from 'node:path';
-import { hashArray, hashFile, hashObject } from 'nx/src/hasher/file-hasher';
 import picomatch = require('picomatch');
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { getNxRequirePaths } from 'nx/src/utils/installation-directory';
 import type { Extension, ParsedCommandLine, System } from 'typescript';
 import {
   addBuildAndWatchDepsTargets,

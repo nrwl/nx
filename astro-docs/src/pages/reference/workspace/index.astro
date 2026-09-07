@@ -44,22 +44,10 @@ const doc = await getEntry('nx-reference-packages', 'workspace-overview')!;
     cacheable and your CI affected-aware.
   </p>
   <CardGrid>
-    <LinkCard
-      title="npm workspaces"
-      href="/docs/guides/tips-n-tricks/npm-workspaces"
-    />
-    <LinkCard
-      title="pnpm workspaces"
-      href="/docs/guides/tips-n-tricks/pnpm-workspaces"
-    />
-    <LinkCard
-      title="Yarn workspaces"
-      href="/docs/guides/tips-n-tricks/yarn-workspaces"
-    />
-    <LinkCard
-      title="Bun workspaces"
-      href="/docs/guides/tips-n-tricks/bun-workspaces"
-    />
+    <LinkCard title="npm workspaces" href="/docs/kb/npm-workspaces" />
+    <LinkCard title="pnpm workspaces" href="/docs/kb/pnpm-workspaces" />
+    <LinkCard title="Yarn workspaces" href="/docs/kb/yarn-workspaces" />
+    <LinkCard title="Bun workspaces" href="/docs/kb/bun-workspaces" />
   </CardGrid>
 
   <h2>Package reference</h2>
@@ -67,16 +55,18 @@ const doc = await getEntry('nx-reference-packages', 'workspace-overview')!;
     The <code>@nx/workspace</code> package contains generators and executors for
     creating and managing your workspace.
   </p>
-  {doc.data.features!.length === 0 ? (
-    <p class="mt-4">No features available.</p>
-  ) : (
-  <CardGrid>
-    {doc.data.features!.map((feature) => (
-      <LinkCard
-        href={`/docs/reference/${doc.data.packageType}/${feature}`}
-        title={feature}
-      />
-    ))}
-  </CardGrid>
-  )}
+  {
+    doc.data.features!.length === 0 ? (
+      <p class="mt-4">No features available.</p>
+    ) : (
+      <CardGrid>
+        {doc.data.features!.map((feature) => (
+          <LinkCard
+            href={`/docs/reference/${doc.data.packageType}/${feature}`}
+            title={feature}
+          />
+        ))}
+      </CardGrid>
+    )
+  }
 </StarlightPage>

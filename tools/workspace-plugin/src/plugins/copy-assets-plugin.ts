@@ -6,7 +6,7 @@ import {
 } from '@nx/js/src/utils/assets/copy-assets-handler';
 import { dirname, join, relative } from 'node:path';
 
-interface AssetEntry {
+export interface AssetEntry {
   glob: string;
   input?: string;
   output?: string;
@@ -14,9 +14,63 @@ interface AssetEntry {
   includeIgnoredFiles?: boolean;
 }
 
-interface AssetsJson {
+export interface AssetsJson {
   outDir: string;
   assets: (AssetEntry | string)[];
+}
+
+export type ExecutorAsset =
+  | {
+      input: string;
+      glob: string;
+      ignore?: string[];
+      output: string;
+      includeIgnoredFiles?: boolean;
+    }
+  | string;
+
+/**
+ * Expands an assets.json into the shape the copy-assets executor consumes.
+ * Shared with the migration-markdown-assets conformance rule so both derive the
+ * copied files from the same inputs.
+ */
+export function toExecutorAssets(
+  assetsJson: AssetsJson,
+  projectRoot: string
+): ExecutorAsset[] {
+  // Separate string assets (passed through as-is) from object assets
+  const objectAssets: AssetEntry[] = [];
+  const stringAssets: string[] = [];
+  for (const asset of assetsJson.assets) {
+    if (typeof asset === 'string') {
+      stringAssets.push(asset);
+    } else {
+      objectAssets.push(asset);
+    }
+  }
+
+  return [
+    ...objectAssets.map((asset) => {
+      const input = asset.input ?? projectRoot;
+      const output = asset.output ?? '/';
+      const ignore =
+        input === projectRoot
+          ? [
+              `${relative(projectRoot, assetsJson.outDir)}/**`,
+              'assets.json',
+              ...(asset.ignore ?? []),
+            ]
+          : asset.ignore;
+      return {
+        input,
+        glob: asset.glob,
+        ...(ignore?.length ? { ignore } : {}),
+        output,
+        ...(asset.includeIgnoredFiles ? { includeIgnoredFiles: true } : {}),
+      };
+    }),
+    ...stringAssets,
+  ];
 }
 
 export const createNodes: CreateNodes = [
@@ -29,51 +83,13 @@ export const createNodes: CreateNodes = [
           join(context.workspaceRoot, configFilePath)
         );
 
-        // Separate string assets (passed through as-is) from object assets
-        const objectAssets: AssetEntry[] = [];
-        const stringAssets: string[] = [];
-        for (const asset of assetsJson.assets) {
-          if (typeof asset === 'string') {
-            stringAssets.push(asset);
-          } else {
-            objectAssets.push(asset);
-          }
-        }
-
-        // Build executor assets
-        const executorAssets: (
-          | {
-              input: string;
-              glob: string;
-              ignore?: string[];
-              output: string;
-              includeIgnoredFiles?: boolean;
-            }
-          | string
-        )[] = [
-          ...objectAssets.map((asset) => {
-            const input = asset.input ?? projectRoot;
-            const output = asset.output ?? '/';
-            const ignore =
-              input === projectRoot
-                ? [
-                    `${relative(projectRoot, assetsJson.outDir)}/**`,
-                    'assets.json',
-                    ...(asset.ignore ?? []),
-                  ]
-                : asset.ignore;
-            return {
-              input,
-              glob: asset.glob,
-              ...(ignore?.length ? { ignore } : {}),
-              output,
-              ...(asset.includeIgnoredFiles
-                ? { includeIgnoredFiles: true }
-                : {}),
-            };
-          }),
-          ...stringAssets,
-        ];
+        const executorAssets = toExecutorAssets(assetsJson, projectRoot);
+        const objectAssets = assetsJson.assets.filter(
+          (asset): asset is AssetEntry => typeof asset !== 'string'
+        );
+        const stringAssets = assetsJson.assets.filter(
+          (asset): asset is string => typeof asset === 'string'
+        );
 
         // Normalize assets to derive outputs
         const projectDir = join(context.workspaceRoot, projectRoot);

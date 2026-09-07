@@ -1,11 +1,7 @@
-import { execSync } from 'child_process';
-import { getPackageManagerCommand } from '../../../../utils/package-manager';
+import { runNxSync } from '../../../../utils/child-process';
 
 export function setupIntegratedWorkspace(): void {
-  const pmc = getPackageManagerCommand();
-  execSync(`${pmc.exec} nx g @nx/angular:ng-add`, {
+  runNxSync(`g @nx/angular:ng-add`, {
     stdio: [0, 1, 2],
-
-    windowsHide: true,
   });
 }

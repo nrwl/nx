@@ -86,21 +86,26 @@ describe('collapseExpandedOutputs', () => {
     expect(res).toEqual(['dist/apps/app1']);
   });
 
-  it('should collapse long lists of files in nested directories', async () => {
-    const outputs = [];
-    // Create dist/apps/app1/n/m.js + dist/apps/app1/n/m.d.ts
-    for (let i = 0; i < 6000; i++) {
-      outputs.push(`dist/apps/app1/${i}.js`);
-      outputs.push(`dist/apps/app1/${i}.d.ts`);
-      for (let j = 0; j < 600; j++) {
-        outputs.push(`dist/apps/app1/${i}/${j}.js`);
-        outputs.push(`dist/apps/app1/${i}/${j}.d.ts`);
+  // ~7M paths, so give it headroom.
+  it(
+    'should collapse long lists of files in nested directories',
+    { timeout: 120_000 },
+    async () => {
+      const outputs = [];
+      // Create dist/apps/app1/n/m.js + dist/apps/app1/n/m.d.ts
+      for (let i = 0; i < 6000; i++) {
+        outputs.push(`dist/apps/app1/${i}.js`);
+        outputs.push(`dist/apps/app1/${i}.d.ts`);
+        for (let j = 0; j < 600; j++) {
+          outputs.push(`dist/apps/app1/${i}/${j}.js`);
+          outputs.push(`dist/apps/app1/${i}/${j}.d.ts`);
+        }
       }
-    }
-    const res = collapseExpandedOutputs(outputs);
+      const res = collapseExpandedOutputs(outputs);
 
-    expect(res).toEqual(['dist/apps/app1']);
-  });
+      expect(res).toEqual(['dist/apps/app1']);
+    }
+  );
 
   it('should preserve shallow paths when deep paths cause collapse', () => {
     const outputs = [

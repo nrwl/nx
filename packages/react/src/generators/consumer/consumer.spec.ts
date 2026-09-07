@@ -52,7 +52,7 @@ describe('@nx/react:consumer', () => {
     // tag and the browser throws #RUNTIME-001 (Cannot use import statement).
     expect(mf).toContain("({ ...remote, type: 'module' }))");
 
-    const viteConfig = tree.read('apps/shell/vite.config.ts', 'utf-8');
+    const viteConfig = tree.read('apps/shell/vite.config.mts', 'utf-8');
     // No build-time `remotes:` property on the federation() call.
     expect(viteConfig).not.toMatch(/^\s+remotes\s*:/m);
   });
@@ -88,8 +88,8 @@ describe('@nx/react:consumer', () => {
       providerNames: ['p1', 'p2'],
     });
 
-    expect(tree.exists('apps/p1/vite.config.ts')).toBe(true);
-    expect(tree.exists('apps/p2/vite.config.ts')).toBe(true);
+    expect(tree.exists('apps/p1/vite.config.mts')).toBe(true);
+    expect(tree.exists('apps/p2/vite.config.mts')).toBe(true);
 
     const mf = tree.read('apps/shell/src/mf.ts', 'utf-8') ?? '';
     expect(mf).toContain(`alias: 'p1'`);
@@ -129,7 +129,7 @@ describe('@nx/react:consumer', () => {
 
     // The generated provider emits the same federation name we registered.
     const providerConfig =
-      tree.read('apps/myCart/vite.config.ts', 'utf-8') ?? '';
+      tree.read('apps/myCart/vite.config.mts', 'utf-8') ?? '';
     expect(providerConfig).toContain(`name: 'my_cart'`);
   });
 

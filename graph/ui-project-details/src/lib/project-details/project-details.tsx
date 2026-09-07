@@ -109,7 +109,7 @@ export const ProjectDetails = ({
         <div className="flex flex-wrap justify-between py-2">
           <div className="min-w-0">
             {projectData.metadata?.description ? (
-              <p className="mb-2 text-sm capitalize text-gray-500 dark:text-slate-400">
+              <p className="mb-2 text-sm text-gray-500 capitalize dark:text-slate-400">
                 {projectData.metadata?.description}
               </p>
             ) : null}
@@ -183,7 +183,7 @@ export default ProjectDetails;
 function ViewInProjectGraphButton({ onClick }: { onClick: () => void }) {
   return (
     <button
-      className="inline-flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-base text-slate-600 ring-2 ring-inset ring-slate-400/40 hover:bg-slate-50 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-800/60"
+      className="inline-flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-base text-slate-600 ring-2 ring-slate-400/40 ring-inset hover:bg-slate-50 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-800/60"
       onClick={() => onClick()}
     >
       <EyeIcon className="h-5 w-5"></EyeIcon>

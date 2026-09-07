@@ -53,7 +53,7 @@ describe('Webpack Plugin (legacy)', () => {
     // TODO: figure out why this test hangs in CI (maybe down to sudo prompt?)
     // expect(() => runCLI(`build ${appName}`)).not.toThrow();
 
-    // if (runE2ETests()) {
+    // if (await runE2ETests()) {
     //   runCLI(`e2e ${appName}-e2e --watch=false --verbose`);
     // }
   }, 500_000);
@@ -119,7 +119,7 @@ describe('Webpack Plugin (legacy)', () => {
     }).toThrow();
   });
 
-  it('should support standard webpack config with executors', () => {
+  it('should support standard webpack config with executors', async () => {
     const appName = uniq('app');
     runCLI(
       `generate @nx/web:app ${appName} --bundler webpack --e2eTestRunner=playwright --unitTestRunner=jest --linter=eslint`
@@ -155,7 +155,7 @@ describe('Webpack Plugin (legacy)', () => {
       runCLI(`build ${appName} --outputHashing none`);
     }).not.toThrow();
 
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       expect(() => {
         runCLI(`e2e ${appName}-e2e`);
       }).not.toThrow();
@@ -163,7 +163,7 @@ describe('Webpack Plugin (legacy)', () => {
   });
 
   describe('ConvertConfigToWebpackPlugin,', () => {
-    it('should convert withNx webpack config to a standard config using NxWebpackPlugin', () => {
+    it('should convert withNx webpack config to a standard config using NxWebpackPlugin', async () => {
       const appName = 'app3224373'; // Needs to be reserved so that the snapshot projectName matches
       runCLI(
         `generate @nx/web:app ${appName} --bundler webpack --e2eTestRunner=playwright --unitTestRunner=vitest --linter=eslint`
@@ -195,7 +195,7 @@ describe('Webpack Plugin (legacy)', () => {
         runCLI(`build ${appName}`);
       }).not.toThrow();
 
-      if (runE2ETests()) {
+      if (await runE2ETests()) {
         expect(() => {
           runCLI(`e2e ${appName}-e2e`);
         }).not.toThrow();

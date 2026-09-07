@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-fs';
+import '@nx/devkit/internal-testing-utils/mock-fs';
 
 import {
   ProjectGraph,
@@ -312,15 +312,10 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
 
   it("should return empty array if any dependents don't have banned import", () => {
     expect(
-      hasBannedDependencies(
-        externalDependencies.slice(1),
-        graph,
-        {
-          sourceTag: 'a',
-          bannedExternalImports: ['angular'],
-        },
-        'react-native'
-      )
+      hasBannedDependencies(externalDependencies.slice(1), graph, {
+        sourceTag: 'a',
+        bannedExternalImports: ['angular'],
+      })
     ).toStrictEqual([]);
   });
 
@@ -331,12 +326,7 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
     };
 
     expect(
-      hasBannedDependencies(
-        externalDependencies.slice(1),
-        graph,
-        constraint,
-        'react-native'
-      )
+      hasBannedDependencies(externalDependencies.slice(1), graph, constraint)
     ).toStrictEqual([[bannedTarget, d, constraint]]);
   });
 
@@ -347,40 +337,11 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
     };
 
     expect(
-      hasBannedDependencies(
-        externalDependencies.slice(1),
-        graph,
-        constraint,
-        'react'
-      )
+      hasBannedDependencies(externalDependencies.slice(1), graph, constraint)
     ).toStrictEqual([
       [nonBannedTarget, target, constraint],
       [nonBannedTarget, c, constraint],
     ]);
-  });
-
-  it('should return undefined if no baneed external imports found', () => {
-    const constraint: DepConstraint = {
-      sourceTag: 'a',
-      bannedExternalImports: ['angular'],
-    };
-
-    expect(
-      hasBannedDependencies(
-        externalDependencies.slice(1),
-        graph,
-        constraint,
-        'react-native'
-      ).length
-    ).toBe(0);
-    expect(
-      hasBannedDependencies(
-        externalDependencies.slice(1),
-        graph,
-        constraint,
-        'react'
-      ).length
-    ).toBe(0);
   });
 });
 
@@ -402,7 +363,7 @@ describe('is terminal run', () => {
     // Mac: $run npx nx lint my-nx-project
     mockProcessArgv([
       '/Users/user/.nvm/versions/node/v16.13.0/bin/node',
-      '/Users/user/my-repo/node_modules/nx/bin/run-executor.js',
+      '/Users/user/my-repo/node_modules/nx/dist/bin/run-executor.js',
       '{"targetDescription":{"project":"my-nx-project","target":"lint"}',
     ]);
     expect(isTerminalRun()).toBe(true);
@@ -412,7 +373,7 @@ describe('is terminal run', () => {
     // Windows: $run npx nx lint my-nx-project
     mockProcessArgv([
       'C:\\Program Files\\nodejs\\node.exe',
-      'C:\\dev\\my-repo\\node_modules\\nx\\bin\\run-executor.js',
+      'C:\\dev\\my-repo\\node_modules\\nx\\dist\\bin\\run-executor.js',
       '{"targetDescription":{"project":"my-nx-project","target":"lint"}',
     ]);
     expect(isTerminalRun()).toBe(true);
@@ -436,6 +397,37 @@ describe('is terminal run', () => {
       'my-file.ts',
     ]);
     expect(isTerminalRun()).toBe(true);
+  });
+
+  it('is a terminal run when the command is started from the node module oxlint', () => {
+    // `@nx/oxlint`'s boundaries bridge. Without this the graph memo never takes
+    // and every linted file re-reads the whole project graph.
+    mockProcessArgv([
+      '/Users/user/.nvm/versions/node/v22.12.0/bin/node',
+      '/Users/user/my-repo/node_modules/oxlint/bin/oxlint',
+      '.',
+    ]);
+    expect(isTerminalRun()).toBe(true);
+  });
+
+  it('is not a terminal run when oxlint is serving as a language server', () => {
+    // `oxlint --lsp` is the same entry point as the CLI, so it can only be told
+    // apart by the flag — and it is the long-lived editor process this guard is
+    // meant to keep on a fresh graph.
+    mockProcessArgv([
+      '/Users/user/.nvm/versions/node/v22.12.0/bin/node',
+      '/Users/user/my-repo/node_modules/oxlint/bin/oxlint',
+      '--lsp',
+    ]);
+    expect(isTerminalRun()).toBe(false);
+  });
+
+  it('is not a terminal run under the standalone oxc language server', () => {
+    mockProcessArgv([
+      '/Users/user/.nvm/versions/node/v22.12.0/bin/node',
+      '/Users/user/my-repo/node_modules/.bin/oxc_language_server',
+    ]);
+    expect(isTerminalRun()).toBe(false);
   });
 
   it('is not a terminal run when the is started from the IDE', () => {

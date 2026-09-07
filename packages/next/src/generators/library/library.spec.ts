@@ -1,12 +1,14 @@
 import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import {
   readJson,
+  readJsonFile,
   readProjectConfiguration,
   Tree,
   updateJson,
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { dirname, join } from 'path';
 import libraryGenerator from './library';
 import { Schema } from './schema';
 
@@ -41,6 +43,24 @@ describe('next library', () => {
       .compilerOptions.types;
 
     expect(tsconfigTypes).toContain('@nx/next/typings/image.d.ts');
+  });
+
+  it('should not install Next.js ESLint packages the library does not use', async () => {
+    const appTree = createTreeWithEmptyWorkspace();
+
+    await libraryGenerator(appTree, {
+      directory: 'my-lib',
+      linter: 'eslint',
+      skipFormat: false,
+      skipTsConfig: false,
+      unitTestRunner: 'jest',
+      style: 'css',
+      component: true,
+    });
+
+    const { devDependencies } = readJson(appTree, 'package.json');
+    expect(devDependencies['eslint-config-next']).toBeUndefined();
+    expect(devDependencies['@next/eslint-plugin-next']).toBeUndefined();
   });
 
   it('should generate a buildable library', async () => {
@@ -135,6 +155,63 @@ describe('next library', () => {
     expect(
       readJson(appTree, 'package.json').devDependencies['cypress']
     ).toBeUndefined();
+  });
+
+  it('should install swc dependencies when compiler is swc', async () => {
+    const appTree = createTreeWithEmptyWorkspace();
+
+    await libraryGenerator(appTree, {
+      directory: 'my-lib',
+      linter: 'eslint',
+      skipFormat: false,
+      skipTsConfig: false,
+      unitTestRunner: 'jest',
+      style: 'css',
+      component: false,
+      buildable: true,
+      compiler: 'swc',
+    });
+
+    expect(
+      readJson(appTree, 'package.json').devDependencies['@swc/core']
+    ).toEqual(expect.any(String));
+  });
+
+  it('should generate in-source tests when inSourceTests is true', async () => {
+    const appTree = createTreeWithEmptyWorkspace();
+
+    await libraryGenerator(appTree, {
+      directory: 'my-lib',
+      linter: 'eslint',
+      skipFormat: false,
+      skipTsConfig: false,
+      unitTestRunner: 'vitest',
+      style: 'css',
+      component: true,
+      inSourceTests: true,
+    });
+
+    expect(appTree.exists('my-lib/src/lib/my-lib.spec.tsx')).toBeFalsy();
+    expect(appTree.read('my-lib/src/lib/my-lib.tsx', 'utf-8')).toContain(
+      'import.meta.vitest'
+    );
+  });
+
+  it('should keep its options aligned with @nx/react:library', () => {
+    const nextSchema = require('./schema.json');
+    const reactSchema = readJsonFile(
+      join(
+        dirname(require.resolve('@nx/react/package.json')),
+        'src/generators/library/schema.json'
+      )
+    );
+    // `minimal` is only declared in the React schema; nothing reads it.
+    const { minimal, ...reactProperties } = reactSchema.properties;
+    const { name, ...nextProperties } = nextSchema.properties;
+    const { name: reactName, ...expectedProperties } = reactProperties;
+
+    expect(nextProperties).toEqual(expectedProperties);
+    expect(name).toEqual({ ...reactName, pattern: expect.any(String) });
   });
 
   describe('TS solution setup', () => {
@@ -298,6 +375,36 @@ describe('next library', () => {
       });
 
       expect(appTree.exists('my-buildable-lib/vite.config.mts')).toBeTruthy();
+    });
+
+    it('should export the server entry from source for non-buildable libraries', async () => {
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        linter: 'none',
+        skipFormat: true,
+        skipTsConfig: false,
+        unitTestRunner: 'none',
+        style: 'css',
+        component: false,
+        useProjectJson: false,
+      });
+
+      expect(readJson(tree, 'mylib/package.json').exports)
+        .toMatchInlineSnapshot(`
+        {
+          ".": {
+            "default": "./src/index.ts",
+            "import": "./src/index.ts",
+            "types": "./src/index.ts",
+          },
+          "./package.json": "./package.json",
+          "./server": {
+            "default": "./src/server.ts",
+            "import": "./src/server.ts",
+            "types": "./src/server.ts",
+          },
+        }
+      `);
     });
 
     it('should create a correct package.json for buildable libraries', async () => {

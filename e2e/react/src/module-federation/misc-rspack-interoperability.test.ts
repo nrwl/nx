@@ -87,7 +87,7 @@ describe('React Rspack Module Federation Misc - Interoperability', () => {
 
     await killProcessAndPorts(serveResult.pid, readPort(shell));
 
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       const e2eResultsSwc = await runCommandUntil(
         `e2e ${shell}-e2e --verbose`,
         (output) => output.includes('All specs passed!'),
@@ -147,7 +147,7 @@ describe('React Rspack Module Federation Misc - Interoperability', () => {
       `
     );
 
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       const e2eResultsSwc = await runCommandUntil(
         `e2e ${shell}-e2e --verbose`,
         (output) => output.includes('Successfully ran target e2e'),

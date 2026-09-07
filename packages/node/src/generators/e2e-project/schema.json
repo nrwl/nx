@@ -9,7 +9,10 @@
     "project": {
       "type": "string",
       "description": "The name of the project.",
-      "$default": { "$source": "argv", "index": 0 },
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
       "x-dropdown": "project",
       "x-prompt": "What project is this for?"
     },
@@ -34,10 +37,9 @@
       "default": 3000
     },
     "linter": {
-      "description": "Linter to be used for the E2E project",
+      "description": "Linter to be used for the E2E project. Defaults to the linter the workspace already uses.",
       "type": "string",
-      "enum": ["eslint", "none"],
-      "default": "eslint"
+      "enum": ["eslint", "oxlint", "none"]
     },
     "isNest": {
       "description": "Is the E2E server project nest",

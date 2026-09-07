@@ -332,6 +332,75 @@ describe('convertEslintJsonToFlatConfig', () => {
       `);
     });
 
+    it('should hand the parser of an override that needs FlatCompat to compat.config', async () => {
+      // Repro for NXC-4675: an override with a parser plus a non-Nx plugin goes
+      // through the FlatCompat path, which used to drop the parser entirely.
+      // `env` is here on purpose: FlatCompat turns it into languageOptions.globals,
+      // so re-emitting the parser onto the mapped object would wipe those globals.
+      tree.write(
+        '.eslintrc.json',
+        JSON.stringify({
+          root: true,
+          overrides: [
+            {
+              files: ['*.ts'],
+              parser: '@typescript-eslint/parser',
+              parserOptions: { project: './tsconfig.json' },
+              env: { node: true },
+              plugins: ['@typescript-eslint'],
+              rules: { '@typescript-eslint/no-explicit-any': 'error' },
+            },
+          ],
+        })
+      );
+
+      const { content } = convertEslintJsonToFlatConfig(
+        tree,
+        '',
+        readJson(tree, '.eslintrc.json'),
+        [],
+        'mjs'
+      );
+
+      expect(content).toMatchInlineSnapshot(`
+        "import { FlatCompat } from "@eslint/eslintrc";
+        import { dirname } from "path";
+        import { fileURLToPath } from "url";
+        import js from "@eslint/js";
+
+        const compat = new FlatCompat({
+          baseDirectory: dirname(fileURLToPath(import.meta.url)),
+          recommendedConfig: js.configs.recommended,
+        });
+
+
+        export default [
+            ...compat.config({
+                parser: "@typescript-eslint/parser",
+                parserOptions: {
+                    project: "./tsconfig.json"
+                },
+                env: {
+                    node: true
+                },
+                plugins: [
+                    "@typescript-eslint"
+                ]
+            }).map(config => ({
+                ...config,
+                files: [
+                    "**/*.ts"
+                ],
+                rules: {
+                    ...config.rules,
+                    "@typescript-eslint/no-explicit-any": "error"
+                }
+            }))
+        ];
+        "
+      `);
+    });
+
     it('should preserve negated ignorePatterns paired with broader ignores', async () => {
       tree.write(
         '.eslintrc.json',
@@ -710,6 +779,70 @@ describe('convertEslintJsonToFlatConfig', () => {
                     "something/else"
                 ]
             }
+        ];
+        "
+      `);
+    });
+
+    it('should hand the parser of an override that needs FlatCompat to compat.config', async () => {
+      // Repro for NXC-4675 (cjs): an override with a parser plus a non-Nx plugin
+      // goes through the FlatCompat path, which used to drop the parser entirely.
+      tree.write(
+        '.eslintrc.json',
+        JSON.stringify({
+          root: true,
+          overrides: [
+            {
+              files: ['*.ts'],
+              parser: '@typescript-eslint/parser',
+              parserOptions: { project: './tsconfig.json' },
+              env: { node: true },
+              plugins: ['@typescript-eslint'],
+              rules: { '@typescript-eslint/no-explicit-any': 'error' },
+            },
+          ],
+        })
+      );
+
+      const { content } = convertEslintJsonToFlatConfig(
+        tree,
+        '',
+        readJson(tree, '.eslintrc.json'),
+        [],
+        'cjs'
+      );
+
+      expect(content).toMatchInlineSnapshot(`
+        "const { FlatCompat } = require("@eslint/eslintrc");
+        const js = require("@eslint/js");
+
+        const compat = new FlatCompat({
+          baseDirectory: __dirname,
+          recommendedConfig: js.configs.recommended,
+        });
+
+        module.exports = [
+            ...compat.config({
+                parser: "@typescript-eslint/parser",
+                parserOptions: {
+                    project: "./tsconfig.json"
+                },
+                env: {
+                    node: true
+                },
+                plugins: [
+                    "@typescript-eslint"
+                ]
+            }).map(config => ({
+                ...config,
+                files: [
+                    "**/*.ts"
+                ],
+                rules: {
+                    ...config.rules,
+                    "@typescript-eslint/no-explicit-any": "error"
+                }
+            }))
         ];
         "
       `);

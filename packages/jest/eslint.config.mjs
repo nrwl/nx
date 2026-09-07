@@ -7,20 +7,6 @@ export default [
     ignores: ['dist'],
   },
   {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        '@nx/workspace',
-        {
-          name: 'chalk',
-          message:
-            'Please use `picocolors` in place of `chalk` for rendering terminal colors',
-        },
-      ],
-    },
-  },
-  {
     files: [
       './package.json',
       './generators.json',

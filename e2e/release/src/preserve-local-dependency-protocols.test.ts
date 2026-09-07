@@ -1,5 +1,6 @@
 import { NxJsonConfiguration } from '@nx/devkit';
 import {
+  normalizePerformanceReport,
   cleanupProject,
   getPackageManagerCommand,
   newProject,
@@ -17,7 +18,7 @@ import { join } from 'node:path';
 expect.addSnapshotSerializer({
   serialize(str: string) {
     return (
-      str
+      normalizePerformanceReport(str)
         // Remove all output unique to specific projects to ensure deterministic snapshots
         .replaceAll(/my-pkg-\d+/g, '{project-name}')
         .replaceAll(
@@ -41,7 +42,7 @@ expect.addSnapshotSerializer({
         // We trim each line to reduce the chances of snapshot flakiness
 
         // Slightly different handling needed for bun (length can be 8)
-        .replaceAll(/[a-fA-F0-9]{7,8}/g, '{COMMIT_SHA}')
+        .replaceAll(/\b[a-fA-F0-9]{7,8}\b/g, '{COMMIT_SHA}')
         .replaceAll(/bun publish v\d+\.\d+\.\d+/g, 'bun publish vX.X.X')
         .replaceAll(
           /Integrity:\s*.*/g,
@@ -162,8 +163,6 @@ describe('nx release preserve local dependency protocols', () => {
       -     "@proj/{project-name}": "workspace:*"
       +     "@proj/{project-name}": "0.1.0"
       }
-      }
-      +
       NX   Updating PM lock file
       Would update pnpm-lock.yaml with the following command, but --dry-run was set:
       pnpm install --lockfile-only
@@ -171,6 +170,54 @@ describe('nx release preserve local dependency protocols', () => {
       Would stage files in git with the following command, but --dry-run was set:
       git add {project-name}/package.json {project-name}/package.json
     `);
+  });
+
+  it('should replace the workspace protocol with the current version when the dependency group is excluded from the release', async () => {
+    const {
+      workspacePath,
+      pkg1: releasedProject,
+      pkg2: excludedDependency,
+    } = await initializeProject('pnpm');
+
+    updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+      nxJson.release = {
+        groups: {
+          released: {
+            projects: [releasedProject],
+            projectsRelationship: 'independent',
+          },
+          excluded: {
+            projects: [excludedDependency],
+            projectsRelationship: 'independent',
+          },
+        },
+        version: {
+          currentVersionResolver: 'git-tag',
+          preserveLocalDependencyProtocols: false,
+          adjustSemverBumpsForZeroMajorVersion: false,
+        },
+      };
+      return nxJson;
+    });
+
+    await runCommandAsync(`git tag ${releasedProject}@1.0.0`);
+    await runCommandAsync(`git tag ${excludedDependency}@4.2.0`);
+
+    // Release only the dependent project. Its dependency remains outside the release set.
+    const output = runCLI(
+      `release version minor --projects ${releasedProject} --dry-run --verbose`,
+      { cwd: workspacePath }
+    );
+
+    expect(output).toContain(
+      `-     "@proj/${excludedDependency}": "workspace:*"`
+    );
+    expect(output).toContain(`+     "@proj/${excludedDependency}": "4.2.0"`);
+    expect(output).toContain(
+      `${excludedDependency} 🏷️  Resolved the current version as 4.2.0`
+    );
+    expect(output).not.toContain(`${excludedDependency} ❓ Applied`);
+    expect(output).not.toContain(`${excludedDependency} ✍️  New version`);
   });
 
   it('should preserve local dependency protocols when version.preserveLocalDependencyProtocols is not set to false', async () => {
@@ -205,8 +252,6 @@ describe('nx release preserve local dependency protocols', () => {
       -   "version": "0.0.0",
       +   "version": "0.1.0",
       "exports": {
-      }
-      +
       NX   Updating PM lock file
       Would update pnpm-lock.yaml with the following command, but --dry-run was set:
       pnpm install --lockfile-only
@@ -279,6 +324,10 @@ describe('nx release preserve local dependency protocols', () => {
         total files: X
         Published to ${e2eRegistryUrl} with tag "latest"
         NX   Successfully ran target nx-release-publish for 2 projects
+        Run duration: {DURATION}
+        Cache: 0/2 hit (0%)
+        Critical path: {DURATION} (2 tasks)
+        Recoverable time: {DURATION}
       `);
 
       // Ensure that the dependency on pkg2 specified on the registry was replaced with the actual version number during publishing
@@ -350,6 +399,10 @@ describe('nx release preserve local dependency protocols', () => {
         + @proj/{project-name}@0.0.0
         Published to ${e2eRegistryUrl} with tag "latest"
         NX   Successfully ran target nx-release-publish for 2 projects
+        Run duration: {DURATION}
+        Cache: 0/2 hit (0%)
+        Critical path: {DURATION} (2 tasks)
+        Recoverable time: {DURATION}
       `);
 
       // Ensure that the dependency on pkg2 specified on the registry was replaced with the actual version number during publishing

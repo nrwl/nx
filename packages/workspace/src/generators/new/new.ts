@@ -13,7 +13,7 @@ import { Linter, LinterType } from '../../utils/lint';
 import { generateWorkspaceFiles } from './generate-workspace-files';
 import { addPresetDependencies, generatePreset } from './generate-preset';
 import { execSync } from 'child_process';
-import { Agent } from 'nx/src/ai/utils';
+import { Agent } from '@nx/devkit/internal';
 
 interface Schema {
   directory: string;
@@ -42,11 +42,16 @@ interface Schema {
   useGitHub?: boolean;
   nxCloud?: 'yes' | 'skip' | 'circleci' | 'github';
   analytics?: boolean;
-  formatter?: string;
+  formatter?: 'none' | 'prettier' | 'oxfmt';
   workspaces?: boolean;
   workspaceGlobs?: string | string[];
   useProjectJson?: boolean;
   aiAgents?: Agent[] | Agent;
+  // Internal: set by create-nx-workspace when scaffolding into the current
+  // directory. Skips the generator's empty-directory guard so it can write into
+  // a non-empty cwd (existing files that collide with generated files are
+  // overwritten).
+  skipEmptyDirCheck?: boolean;
 }
 
 export interface NormalizedSchema extends Schema {
@@ -93,7 +98,19 @@ export async function newGenerator(tree: Tree, opts: Schema) {
       );
     }
     // TODO: move all of these into create-nx-workspace
-    if (options.preset !== Preset.NPM && !options.isCustomPreset) {
+    // The npm preset normally skips the preset generator entirely, which is why
+    // `--formatter` used to be dropped for it. Run it when there is a formatter
+    // to set up. `schema.json` defaults to `none`, so this fork is taken only
+    // when a formatter was actually asked for, which on this preset means an
+    // explicit `--formatter`.
+    const npmPresetNeedsFormatter =
+      options.preset === Preset.NPM &&
+      !!options.formatter &&
+      options.formatter !== 'none';
+    if (
+      (options.preset !== Preset.NPM || npmPresetNeedsFormatter) &&
+      !options.isCustomPreset
+    ) {
       await generatePreset(tree, options);
     }
     // if we move this into create-nx-workspace, we can also easily log things out like nx console install success
@@ -126,6 +143,7 @@ function validateOptions(options: Schema, host: Tree) {
   }
 
   if (
+    !options.skipEmptyDirCheck &&
     host.exists(options.name) &&
     !host.isFile(options.name) &&
     host.children(options.name).length > 0

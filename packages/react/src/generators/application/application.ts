@@ -1,6 +1,8 @@
 import {
   logShowProjectCommand,
-  promptWhenInteractive,
+  confirmationPrompt,
+  isInteractive,
+  upsertTargetDefault,
 } from '@nx/devkit/internal';
 import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 import {
@@ -9,6 +11,8 @@ import {
   joinPathFragments,
   readNxJson,
   runTasksInSerial,
+  type TargetConfiguration,
+  type TargetDefaults,
   Tree,
   updateJson,
   updateNxJson,
@@ -72,7 +76,6 @@ export async function applicationGeneratorInternal(
     tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
     skipFormat: true,
     addTsPlugin,
-    formatter: schema.formatter,
     platform: 'web',
   });
   tasks.push(jsInitTask);
@@ -82,30 +85,12 @@ export async function applicationGeneratorInternal(
   options.useReactRouter =
     options.routing && options.bundler === 'vite'
       ? (options.useReactRouter ??
-        (await promptWhenInteractive<{
-          response: 'Yes' | 'No';
-        }>(
-          {
-            name: 'response',
-            message:
-              'Would you like to use react-router for server-side rendering?',
-            type: 'autocomplete',
-            choices: [
-              {
-                name: 'Yes',
-                message:
-                  'I want to use react-router   [ https://reactrouter.com/start/framework/routing   ]',
-              },
-              {
-                name: 'No',
-                message:
-                  'I do not want to use react-router for server-side rendering',
-              },
-            ],
-            initial: 0,
-          },
-          { response: 'No' }
-        ).then((r) => r.response === 'Yes')))
+        (isInteractive()
+          ? await confirmationPrompt({
+              message:
+                'Would you like to use react-router for server-side rendering?',
+            })
+          : false))
       : false;
 
   const initTask = await reactInitGenerator(tree, {
@@ -116,17 +101,22 @@ export async function applicationGeneratorInternal(
   tasks.push(initTask);
 
   if (!options.addPlugin) {
-    const nxJson = readNxJson(tree);
-    nxJson.targetDefaults ??= {};
-    if (!Object.keys(nxJson.targetDefaults).includes('build')) {
-      nxJson.targetDefaults.build = {
+    const nxJson = readNxJson(tree) ?? {};
+    const existing = findBuildDefault(nxJson.targetDefaults);
+    if (!existing) {
+      upsertTargetDefault(tree, nxJson, {
+        target: 'build',
         cache: true,
         dependsOn: ['^build'],
-      };
-    } else if (!nxJson.targetDefaults.build.dependsOn) {
-      nxJson.targetDefaults.build.dependsOn = ['^build'];
+      });
+      updateNxJson(tree, nxJson);
+    } else if (!existing.dependsOn) {
+      upsertTargetDefault(tree, nxJson, {
+        target: 'build',
+        dependsOn: ['^build'],
+      });
+      updateNxJson(tree, nxJson);
     }
-    updateNxJson(tree, nxJson);
   }
 
   if (options.bundler === 'webpack') {
@@ -241,6 +231,21 @@ export async function applicationGeneratorInternal(
   });
 
   return runTasksInSerial(...tasks);
+}
+
+function findBuildDefault(
+  td: TargetDefaults | undefined
+): Partial<TargetConfiguration> | undefined {
+  if (!td) return undefined;
+  const value = td['build'];
+  if (value === undefined) return undefined;
+  if (Array.isArray(value)) {
+    const found = value.find((e) => e.filter === undefined);
+    if (!found) return undefined;
+    const { filter: _f, ...rest } = found;
+    return rest;
+  }
+  return value;
 }
 
 export default applicationGenerator;

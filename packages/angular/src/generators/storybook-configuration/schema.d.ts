@@ -1,9 +1,9 @@
-import type { Linter, LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 
 export interface StorybookConfigurationOptions {
   configureStaticServe?: boolean;
   generateStories: boolean;
-  linter: Linter | LinterType;
+  linter: LinterType;
   project: string;
   tsConfiguration?: boolean;
   skipFormat?: boolean;

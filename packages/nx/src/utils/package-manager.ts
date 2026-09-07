@@ -1,5 +1,17 @@
-import { exec, execFile, execSync } from 'child_process';
-import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'fs';
+import {
+  exec,
+  execFile,
+  execFileSync,
+  execSync,
+  type ExecSyncOptionsWithStringEncoding,
+} from 'child_process';
+import {
+  copyFileSync,
+  existsSync,
+  readFileSync,
+  statSync,
+  writeFileSync,
+} from 'fs';
 import { rm } from 'node:fs/promises';
 import { dirname, join, relative } from 'path';
 import { gte, lt, parse, satisfies } from 'semver';
@@ -24,10 +36,50 @@ import {
   writeJsonFile,
 } from './fileutils';
 import { getNxInstallationPath } from './installation-directory';
+import { logger } from './logger';
 import { PackageJson, readModulePackageJson } from './package-json';
+// Type-only so it stays erased: a value import would defeat the deferred
+// require in createRegistrySpawnContext.
+import type { NpmConfigEnv } from './registry-config';
+import { quoteShellArg } from './shell-quoting';
 import { workspaceRoot } from './workspace-root';
 
 const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
+
+/**
+ * Shell-less spawn for the registry-bridged fetches: `exec` goes through
+ * /bin/sh, which is dash on Debian-family systems, and dash drops environment
+ * names that are not valid shell identifiers, i.e. every `//...:_authToken`
+ * credential and `@scope:registry` entry the overlay carries. Windows stays on
+ * `exec`, with every argument quoted, because Node refuses to execFile the
+ * package manager's `.cmd` shim without a shell.
+ *
+ * That quoting is the whole defence on Windows, so it goes through
+ * quoteShellArg, which throws on the one argument it cannot make safe.
+ */
+function execPackageManagerAsync(
+  pm: string,
+  args: string[],
+  options: { cwd: string; windowsHide: boolean; env: NodeJS.ProcessEnv }
+): Promise<{ stdout: string; stderr: string }> {
+  if (process.platform === 'win32') {
+    return execAsync([pm, ...args].map(quoteShellArg).join(' '), options);
+  }
+  return execFileAsync(pm, args, options);
+}
+
+/** Same split, and the same quoting, for a blocking caller. */
+function execPackageManagerSync(
+  pm: string,
+  args: string[],
+  options: ExecSyncOptionsWithStringEncoding
+): string {
+  if (process.platform === 'win32') {
+    return execSync([pm, ...args].map(quoteShellArg).join(' '), options);
+  }
+  return execFileSync(pm, args, options);
+}
 
 export type PackageManager = 'yarn' | 'pnpm' | 'npm' | 'bun';
 
@@ -185,21 +237,25 @@ export function getPackageManagerCommand(
     pnpm: () => {
       let modernPnpm: boolean,
         includeDoubleDashBeforeArgs: boolean,
-        allowRegistryConfigKey: boolean;
+        configForm: boolean,
+        scopedForm: boolean;
       try {
         const pnpmVersion = getPackageManagerVersion('pnpm', root);
         modernPnpm = gte(pnpmVersion, '6.13.0');
         includeDoubleDashBeforeArgs = lt(pnpmVersion, '7.0.0');
-        // Support for --@scope:registry was added in pnpm v10.5.0 and backported to v9.15.7.
-        // Versions >=10.0.0 and <10.5.0 do NOT support this CLI option.
-        allowRegistryConfigKey = satisfies(
+        configForm = gte(pnpmVersion, '11.0.0');
+        // Support for --@scope:registry was added in pnpm v10.5.0 and
+        // backported to v9.15.7. Starting with pnpm 11, the equivalent
+        // option is --config.@scope:registry.
+        scopedForm = satisfies(
           pnpmVersion,
-          '>=9.15.7 <10.0.0 || >=10.5.0'
+          '>=9.15.7 <10.0.0 || >=10.5.0 <11.0.0'
         );
       } catch {
         modernPnpm = true;
         includeDoubleDashBeforeArgs = true;
-        allowRegistryConfigKey = false;
+        configForm = false;
+        scopedForm = false;
       }
 
       const isPnpmWorkspace = existsSync(join(root, 'pnpm-workspace.yaml'));
@@ -207,8 +263,12 @@ export function getPackageManagerCommand(
         install: 'pnpm install --no-frozen-lockfile', // explicitly disable in case of CI
         ciInstall: 'pnpm install --frozen-lockfile',
         updateLockFile: 'pnpm install --lockfile-only',
-        add: isPnpmWorkspace ? 'pnpm add -w' : 'pnpm add',
-        addDev: isPnpmWorkspace ? 'pnpm add -Dw' : 'pnpm add -D',
+        add: isPnpmWorkspace
+          ? 'pnpm add -w --config.frozen-lockfile=false'
+          : 'pnpm add --config.frozen-lockfile=false',
+        addDev: isPnpmWorkspace
+          ? 'pnpm add -Dw --config.frozen-lockfile=false'
+          : 'pnpm add -D --config.frozen-lockfile=false',
         rm: 'pnpm rm',
         exec: modernPnpm ? 'pnpm exec' : 'pnpx',
         dlx: modernPnpm ? 'pnpm dlx' : 'pnpx',
@@ -225,7 +285,11 @@ export function getPackageManagerCommand(
         getRegistryUrl: 'pnpm config get registry',
         publish: (packageRoot, registry, registryConfigKey, tag) =>
           `pnpm publish "${packageRoot}" --json --"${
-            allowRegistryConfigKey ? registryConfigKey : 'registry'
+            configForm
+              ? `config.${registryConfigKey}`
+              : scopedForm
+                ? registryConfigKey
+                : 'registry'
           }=${registry}" --tag=${tag} --no-git-checks`,
         ignoreScriptsFlag: '--ignore-scripts',
       };
@@ -296,7 +360,11 @@ export function getPackageManagerVersion(
   }
   if (!version) {
     try {
-      version = execSync(`${packageManager} --version`, {
+      const versionArgs =
+        packageManager === 'pnpm'
+          ? '--ignore-workspace --version'
+          : '--version';
+      version = execSync(`${packageManager} ${versionArgs}`, {
         cwd,
         encoding: 'utf-8',
         windowsHide: true,
@@ -424,6 +492,20 @@ export function modifyPnpmWorkspaceYamlToFitNewDirectory(
   doc.set('packages', ['.']);
   // Relative patch paths don't resolve in the temp dir.
   doc.delete('patchedDependencies');
+  // link:/file: overrides (e.g. written by `pnpm link`) point at paths that
+  // don't exist in the temp dir, and an override would hijack an exact-version
+  // add (`pnpm add pkg@x.y.z` would install the linked dir instead).
+  const overrides = doc.toJS()?.overrides;
+  if (overrides && typeof overrides === 'object') {
+    for (const [name, spec] of Object.entries(overrides)) {
+      if (typeof spec === 'string' && /^(link|file):/.test(spec)) {
+        doc.deleteIn(['overrides', name]);
+      }
+    }
+    if (Object.keys(doc.toJS()?.overrides ?? {}).length === 0) {
+      doc.delete('overrides');
+    }
+  }
   return doc.toString();
 }
 
@@ -479,6 +561,30 @@ export function copyPackageManagerConfigurationFiles(
 }
 
 /**
+ * A non-JS workspace has no root package.json and keeps its package manager
+ * files under the Nx installation directory instead.
+ */
+function getPackageManagerConfigRoot(): string {
+  if (existsSync(join(workspaceRoot, 'package.json'))) {
+    return workspaceRoot;
+  }
+  const installationPath = getNxInstallationPath(workspaceRoot);
+  // The installation directory can be missing or not a directory, and spawning
+  // with such a cwd fails outright (ENOENT/ENOTDIR).
+  try {
+    return statSync(installationPath).isDirectory()
+      ? installationPath
+      : workspaceRoot;
+  } catch (e) {
+    logger.verbose(
+      `Failed to stat the Nx installation directory at "${installationPath}".`,
+      e
+    );
+    return workspaceRoot;
+  }
+}
+
+/**
  * Creates a temporary directory where you can run package manager commands safely.
  *
  * For cases where you'd want to install packages that require an `.npmrc` set up,
@@ -495,11 +601,7 @@ export function createTempNpmDirectory(skipCopy = false) {
   // A package.json is needed for pnpm pack and for .npmrc to resolve
   writeJsonFile(`${dir}/package.json`, {});
   if (!skipCopy) {
-    const isNonJs = !existsSync(join(workspaceRoot, 'package.json'));
-    copyPackageManagerConfigurationFiles(
-      isNonJs ? getNxInstallationPath(workspaceRoot) : workspaceRoot,
-      dir
-    );
+    copyPackageManagerConfigurationFiles(getPackageManagerConfigRoot(), dir);
   }
 
   const cleanup = async () => {
@@ -527,11 +629,9 @@ export async function resolvePackageVersionUsingRegistry(
       version
     );
 
-    const result = await packageRegistryView(
-      packageName,
-      resolvedVersion,
-      'version'
-    );
+    const result = await packageRegistryView(packageName, resolvedVersion, [
+      'version',
+    ]);
 
     if (!result) {
       throw new Error(
@@ -558,9 +658,31 @@ export async function resolvePackageVersionUsingRegistry(
       .replace(/'/g, '');
 
     return finalResolvedVersion;
-  } catch {
-    throw new Error(`Unable to resolve version ${packageName}@${version}.`);
+  } catch (e) {
+    // npm masks a URL credential only in the password position, so a bare token
+    // in the registry URL survives into the error kept as the cause.
+    throw new Error(`Unable to resolve version ${packageName}@${version}.`, {
+      cause: redactErrorCause(e),
+    });
   }
+}
+
+// Masks the userinfo in a URL: `user`, `user:pass`, or a bare token.
+function redactUrlCredentials(text: string): string {
+  return text.replace(/([a-z][a-z0-9+.-]*:\/\/)[^/@\s]+@/gi, '$1***@');
+}
+
+function redactErrorCause(error: unknown): unknown {
+  if (error && typeof error === 'object') {
+    const e = error as Record<string, unknown>;
+    // An exec error carries the command and both output streams as fields.
+    for (const field of ['message', 'stack', 'stderr', 'stdout', 'cmd']) {
+      if (typeof e[field] === 'string') {
+        e[field] = redactUrlCredentials(e[field] as string);
+      }
+    }
+  }
+  return error;
 }
 
 /**
@@ -604,16 +726,122 @@ export async function resolvePackageVersionUsingInstallation(
   }
 }
 
-export async function packageRegistryView(
-  pkg: string,
-  version: string,
-  args: string,
-  // `forceNpm` runs the view through npm even in a pnpm workspace: npm projects
-  // a field across every matched version, whereas `pnpm view <pkg>@<range>`
-  // collapses to the single highest match (breaks per-version field queries).
+/**
+ * What every registry-bound npm spawn resolves the same way: where npm runs,
+ * and an environment reproducing the workspace package manager's own registry,
+ * auth and TLS resolution for `pkg`. `buildEnv` adds the caller's own entries.
+ */
+function createRegistrySpawnContext(pkg: string): {
+  workspacePm: PackageManager;
+  workspacePmVersion: string | null;
+  configRoot: string;
+  scope: string | null;
+  buildEnv: (extra: NpmConfigEnv) => NodeJS.ProcessEnv;
+} {
+  // Deferred so the registry resolvers load only for the commands that spawn
+  // npm, not with every package-manager.ts import.
+  const {
+    getNpmSpawnRegistryEnv,
+    getPackageScope,
+    ignoresNpmConfigEnv,
+    mergeNpmConfigEnv,
+  } = require('./registry-config') as typeof import('./registry-config');
+  const workspacePm = detectPackageManager();
+  const configRoot = getPackageManagerConfigRoot();
+  const workspacePmVersion = getPackageManagerVersionSafe(
+    workspacePm,
+    configRoot
+  );
+  return {
+    workspacePm,
+    workspacePmVersion,
+    configRoot,
+    scope: getPackageScope(pkg),
+    buildEnv: (extra) =>
+      mergeNpmConfigEnv(
+        process.env,
+        {
+          ...getNpmSpawnRegistryEnv(
+            pkg,
+            configRoot,
+            workspacePm,
+            workspacePmVersion
+          ),
+          ...extra,
+        },
+        ignoresNpmConfigEnv(workspacePm, workspacePmVersion)
+      ),
+  };
+}
+
+/**
+ * The registry the fetch for `pkg` went to, with its userinfo masked because a
+ * registry URL can carry a bare token. The lookup is spawned the way
+ * `packageRegistryView` spawns the fetch this describes (same manager, same
+ * environment), so a registry the package manager keeps outside the .npmrc
+ * chain and a scope resolved for itself both land on the value that fetch used.
+ * Null where the manager yields no usable registry URL; throws where it cannot be run.
+ */
+export function getWorkspaceRegistryUrlForDisplay(pkg: string): string | null {
+  const { workspacePm, workspacePmVersion, configRoot, scope, buildEnv } =
+    createRegistrySpawnContext(pkg);
+  const { pm, env, usesNativePnpm } = resolveRegistrySpawnTarget(
+    workspacePm,
+    workspacePmVersion,
+    buildEnv
+  );
+  // Ask for the package scope first. Native pnpm can keep the workspace
+  // `registries.default` separate from the flat `registry`, so it is queried
+  // in between.
+  const keys = scope ? [`${scope}:registry`] : [];
+  if (usesNativePnpm) {
+    keys.push('registries.default');
+  }
+  keys.push('registry');
+  for (const key of keys) {
+    const value = execPackageManagerSync(pm, ['config', 'get', key], {
+      cwd: configRoot,
+      timeout: 5000,
+      windowsHide: true,
+      encoding: 'utf-8',
+      // The downgraded pin warns on stderr, which is noise on a path that only
+      // decorates an error message.
+      stdio: ['ignore', 'pipe', 'ignore'],
+      env,
+    }).trim();
+    if (!value || value === 'undefined' || value === 'null') {
+      continue;
+    }
+    // A present but unusable answer (a `registries:` map with a non-string
+    // default serializes as JSON; a non-HTTP(S) scheme) also aborted the fetch
+    // this describes, so a key below it was never contacted either.
+    if (!URL.canParse(value)) {
+      return null;
+    }
+    const protocol = new URL(value).protocol;
+    if (protocol !== 'http:' && protocol !== 'https:') {
+      return null;
+    }
+    return redactUrlCredentials(value);
+  }
+  return null;
+}
+
+/**
+ * Which manager answers a registry read for this workspace, and the environment
+ * it reads under. pnpm 11 reimplemented `view` natively, resolving registry and
+ * credentials (tokenHelper included) itself, so it runs on the untouched
+ * environment; pnpm 10 passed `view` through to the npm CLI, which needs the
+ * overlay. Shared so a lookup describing a fetch cannot resolve against a
+ * different environment than the fetch used.
+ */
+function resolveRegistrySpawnTarget(
+  workspacePm: PackageManager,
+  workspacePmVersion: string | null,
+  buildEnv: (extra?: NodeJS.ProcessEnv) => NodeJS.ProcessEnv,
   options?: { forceNpm?: boolean }
-): Promise<string> {
-  let pm = detectPackageManager();
+): { pm: PackageManager; env: NodeJS.ProcessEnv; usesNativePnpm: boolean } {
+  let pm = workspacePm;
   if (options?.forceNpm || pm === 'yarn' || pm === 'bun') {
     /**
      * yarn has `yarn info` but it behaves differently than (p)npm,
@@ -627,38 +855,137 @@ export async function packageRegistryView(
      */
     pm = 'npm';
   }
-
-  // An empty version means we want the full packument; omit the trailing `@`.
-  // Quote the spec so range operators (e.g. `>=0.0.0`) are not parsed as shell
-  // redirections.
-  const spec = version ? `${pkg}@${version}` : pkg;
-  const { stdout } = await execAsync(`${pm} view "${spec}" ${args}`, {
-    windowsHide: true,
-  });
-  return stdout.toString().trim();
+  if (pm === 'pnpm' && (parse(workspacePmVersion)?.major ?? 0) >= 11) {
+    return { pm, env: process.env, usesNativePnpm: true };
+  }
+  // npm_config_force downgrades npm's `devEngines.packageManager` enforcement,
+  // which otherwise aborts even a read-only lookup when the pin sets
+  // `onFail: error`. Only set for npm so a pnpm spawn is untouched.
+  return {
+    pm,
+    env: buildEnv(pm === 'npm' ? { npm_config_force: 'true' } : {}),
+    usesNativePnpm: false,
+  };
 }
 
-export async function packageRegistryPack(
-  cwd: string,
+export async function packageRegistryView(
   pkg: string,
-  version: string
+  version: string,
+  args: string[],
+  // `forceNpm` runs the view through npm even in a pnpm workspace: npm projects
+  // a field across every matched version, whereas `pnpm view <pkg>@<range>`
+  // collapses to the single highest match (breaks per-version field queries).
+  options?: { forceNpm?: boolean }
+): Promise<string> {
+  const { workspacePm, workspacePmVersion, configRoot, buildEnv } =
+    createRegistrySpawnContext(pkg);
+  const { pm, env } = resolveRegistrySpawnTarget(
+    workspacePm,
+    workspacePmVersion,
+    buildEnv,
+    options
+  );
+
+  // An empty version means we want the full packument; omit the trailing `@`.
+  const spec = version ? `${pkg}@${version}` : pkg;
+  try {
+    const { stdout } = await execPackageManagerAsync(
+      pm,
+      ['view', spec, ...args],
+      {
+        windowsHide: true,
+        cwd: configRoot,
+        env,
+      }
+    );
+    return stdout.toString().trim();
+  } catch (e) {
+    throw redactErrorCause(e);
+  }
+}
+
+/**
+ * Only `npm pack` supports downloading a tarball of a specified remote
+ * package. `yarn` packs the active workspace, `pnpm pack` only packs
+ * the local project, and `bun` doesn't support pack.
+ *
+ * @param packDestination Directory passed to npm's `--pack-destination`, where
+ * the `.tgz` is written.
+ * @see https://github.com/nrwl/nx/pull/9667#discussion_r842553994
+ */
+export async function packageRegistryPack(
+  packDestination: string,
+  pkg: string,
+  version: string,
+  options?: {
+    // Only pass when `version` is exact, was already resolved through the
+    // workspace package manager's min-release-age policy, AND that package
+    // manager is not npm: npm's own gate is then foreign config (no
+    // exclusions) that would wrongly re-judge the vetted version. In an npm
+    // workspace the gate IS the workspace policy — leave it enforcing.
+    bypassMinReleaseAge?: boolean;
+  }
 ): Promise<{ tarballPath: string }> {
-  /**
-   * Only `npm pack` supports downloading a tarball of a specified remote
-   * package. `yarn` packs the active workspace, `pnpm pack` only packs
-   * the local project, and `bun` doesn't support pack.
-   *
-   * @see https://github.com/nrwl/nx/pull/9667#discussion_r842553994
-   */
   const pm = 'npm';
 
-  const { stdout } = await execAsync(`${pm} pack ${pkg}@${version}`, {
-    cwd,
-    windowsHide: true,
-  });
+  const { configRoot, buildEnv } = createRegistrySpawnContext(pkg);
+  // Run from the config root, not the temp dir, so npm reads the workspace
+  // .npmrc natively; --pack-destination still writes the tarball to the temp
+  // dir. npm prints the tarball basename to stdout.
+  try {
+    const { stdout } = await execPackageManagerAsync(
+      pm,
+      ['pack', `${pkg}@${version}`, '--pack-destination', packDestination],
+      {
+        cwd: configRoot,
+        windowsHide: true,
+        env: buildEnv({
+          // downgrade npm's devEngines.packageManager enforcement (onFail:
+          // error) to a warning so pack still runs in a non-npm workspace
+          npm_config_force: 'true',
+          ...(options?.bypassMinReleaseAge
+            ? { npm_config_min_release_age: '0' }
+            : {}),
+        }),
+      }
+    );
+    const tarballPath = stdout.trim();
+    return { tarballPath };
+  } catch (e) {
+    throw redactErrorCause(e);
+  }
+}
 
-  const tarballPath = stdout.trim();
-  return { tarballPath };
+// The version probe shells out when the packageManager field is absent, and
+// packageRegistryView/packageRegistryPack run in tight resolution loops.
+const packageManagerVersionCache = new Map<string, string | null>();
+/**
+ * A null version is tolerated per package manager: pnpm and yarn skip bridging,
+ * bun assumes a current version.
+ */
+function getPackageManagerVersionSafe(
+  packageManager: PackageManager,
+  root: string
+): string | null {
+  const key = `${packageManager}:${root}`;
+  if (!packageManagerVersionCache.has(key)) {
+    let version: string | null = null;
+    try {
+      version = getPackageManagerVersion(packageManager, root);
+    } catch (e) {
+      logger.verbose(
+        `Failed to determine the ${packageManager} version in "${root}".`,
+        e
+      );
+    }
+    packageManagerVersionCache.set(key, version);
+  }
+  return packageManagerVersionCache.get(key);
+}
+
+// Test-only: production never re-resolves a version mid-run.
+export function clearPackageManagerVersionCache(): void {
+  packageManagerVersionCache.clear();
 }
 
 /**

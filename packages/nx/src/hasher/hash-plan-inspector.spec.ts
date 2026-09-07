@@ -8,7 +8,7 @@ describe('HashPlanInspector', () => {
   let inspector: HashPlanInspector;
   let projectGraph: ProjectGraph;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     tempFs = new TempFs('hash-plan-inspector');
 
     // Create a minimal workspace structure
@@ -130,12 +130,12 @@ describe('HashPlanInspector', () => {
     inspector = new HashPlanInspector(projectGraph, tempFs.tempDir);
   });
 
-  afterEach(() => {
+  afterAll(() => {
     tempFs.reset();
   });
 
   describe('inspectHashPlan', () => {
-    beforeEach(async () => {
+    beforeAll(async () => {
       await inspector.init();
     });
 
@@ -311,7 +311,7 @@ describe('HashPlanInspector', () => {
   });
 
   describe('inspectTask', () => {
-    beforeEach(async () => {
+    beforeAll(async () => {
       await inspector.init();
     });
 
@@ -417,7 +417,7 @@ describe('HashPlanInspector', () => {
   });
 
   describe('integration scenarios', () => {
-    beforeEach(async () => {
+    beforeAll(async () => {
       await inspector.init();
     });
 

@@ -1,0 +1,338 @@
+---
+title: Migrate to Inferred Tasks
+description: Learn how to convert your Nx workspace from explicit executor configuration to using inferred tasks for reduced configuration and improved caching.
+filter: 'type:Guides'
+topics:
+  - 'Tasks & caching'
+---
+
+In this recipe, you'll learn how to migrate an existing Nx workspace from using executors in `project.json` to using [inferred tasks](/docs/concepts/mental-model#inferred-tasks).
+
+The main benefits of migrating to inferred tasks are
+
+- reducing the amount of configuration needed in `project.json`
+- inferring the correct cache settings based on the tool configuration files
+- [splitting tasks (Atomizer)](/docs/features/ci-features/split-e2e-tasks) for plugins that support it
+
+{% youtube
+src="https://youtu.be/wADNsVItnsM"
+title="Inferred Tasks"
+/%}
+
+For the best experience, we recommend that you [migrate](/docs/features/automate-updating-dependencies) to the latest Nx version before continuing.
+
+```shell
+npx nx migrate latest
+```
+
+## Enable inferred tasks for older workspaces
+
+If your workspace was upgraded from an Nx version that predates inferred tasks, a migration may have set `useInferencePlugins` to `false` in `nx.json`.
+When `useInferencePlugins` is `false`:
+
+1. A newly generated project will have all targets defined with executors, not with inferred tasks.
+2. Running `nx add @nx/some-plugin` will not register the plugin in `nx.json`, so that plugin will not infer tasks.
+
+Remove the property, or set it to `true`, before you migrate your projects.
+
+## Migrate all plugins
+
+You can use the `infer-targets` generator to quickly migrate all available plugins to use inferred tasks. See the sections below for more details on the individual plugins' migration processes.
+
+```shell
+npx nx g infer-targets
+```
+
+The generator will automatically detect all available `convert-to-inferred` generators and run the ones you choose. If you only want to try it on a single project, pass the `--project` option.
+
+## Migrate a single plugin
+
+Most of the official plugins come with a `convert-to-inferred` generator. This generator will
+
+- register the inference plugin in the `plugins` section of `nx.json`
+- migrate executor options into the tool's configuration files (where applicable)
+- centralize configuration that is shared across the migrated projects into `targetDefaults` in
+  `nx.json` (whole-workspace migrations only, see below)
+- clean up `project.json` to keep only the configuration that deviates from what is inferred or
+  centralized
+- remove `targetDefaults` entries keyed by a migrated executor once no target resolves through that
+  executor (whole-workspace migrations only)
+
+To get started, run `nx g convert-to-inferred`, and you'll be prompted to choose a plugin to migrate.
+
+```text {% title="npx nx g convert-to-inferred" frame="terminal" %}
+? Which generator would you like to use? …
+@nx/eslint:convert-to-inferred
+@nx/playwright:convert-to-inferred
+@nx/vite:convert-to-inferred
+
+None of the above
+```
+
+{% aside type="note" title="Third-party plugins" %}
+For third-party plugins that provide `convert-to-inferred` generators, you should pick the `None of the above` option and type in the name of the package manually. Alternatively, you can also provide the package explicitly with `nx g <plugin>:convert-to-inferred`.
+{% /aside %}
+
+We recommend that you check that the configurations are correct before continuing to the next plugin. If you only want to try it on a single project, pass the `--project` option.
+
+## Understand the migration process
+
+The `convert-to-inferred` generator removes uses of executors from the corresponding plugin. For example, if `@nx/vite` is migrated, then uses of [`@nx/vite:build`](/docs/technologies/build-tools/vite/executors#build), [`@nx/vite:dev-server`](/docs/technologies/build-tools/vite/executors#dev-server), [`@nx/vite:preview-server`](/docs/technologies/build-tools/vite/executors#preview-server), and [`@nx/vite:test`](/docs/technologies/build-tools/vite/executors#test) executors will be removed.
+
+Target and configuration names are maintained for each project in their `project.json` files.
+A target may be removed from `project.json` entirely when nothing is left to store there: either
+everything is inferred, or the remaining customized options and configurations were shared across
+the migrated projects and moved into `targetDefaults` in `nx.json` (whole-workspace migrations
+only).
+What stays in `project.json` is the per-project deviation.
+To get the full project details (including all inferred tasks), run:
+
+```shell
+npx nx show project <project-name>
+```
+
+For example, if we migrated the `@nx/vite` plugin for a single app (i.e. `nx g @nx/vite:convert-to-inferred --project demo`), then running `nx show project demo` will show a screen similar to the following.
+
+{% project_details title="Test" height="300px" %}
+
+```json
+{
+  "project": {
+    "name": "demo",
+    "data": {
+      "root": " apps/demo",
+      "projectType": "application",
+      "targets": {
+        "serve": {
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "vite dev",
+            "continuous": true
+          }
+        },
+        "build": {
+          "executor": "nx:run-commands",
+          "inputs": ["production", "^production"],
+          "outputs": ["{projectRoot}/dist"],
+          "options": {
+            "command": "vite build"
+          }
+        }
+      }
+    }
+  },
+  "sourceMap": {
+    "targets": ["apps/demo/vite.config.ts", "@nx/vite"],
+    "targets.serve": ["apps/demo/vite.config.ts", "@nx/vite"],
+    "targets.build": ["apps/demo/vite.config.ts", "@nx/vite"]
+  }
+}
+```
+
+{% /project_details %}
+
+You'll notice that the `serve` and `build` tasks are running the [Vite CLI](https://vite.dev/guide/cli.html) and there are no references to Nx executors. Since the targets directly invoke the Vite CLI, any options that may be passed to it can be passed via Nx commands. e.g. `nx serve demo --cors --port 8888` enables CORs and uses port `8888` using [Vite CLI options](https://vite.dev/guide/cli.html#options)
+The same CLI setup applies to other plugins as well.
+
+- `@nx/cypress` calls the [Cypress CLI](https://docs.cypress.io/guides/guides/command-line)
+- `@nx/playwright` calls the [Playwright CLI](https://playwright.dev/docs/test-cli)
+- `@nx/webpack` calls the [Webpack CLI](https://webpack.js.org/api/cli/)
+- etc.
+
+Read the recipe on [passing args to commands](/docs/kb/pass-args-to-commands) for more information.
+
+### When inference does not produce the expected target
+
+The migration reads each executor target, then asks the plugin to infer the equivalent task from
+the tool's configuration files.
+If the plugin finds your project but does not infer a task with the name the migration expects,
+the migration stops with an error like
+`The nx plugin found a project inside <root> but did not infer a "<target>" target for it`.
+See the [Troubleshooting](#troubleshooting) section below for how to resolve this error and the
+related `The nx plugin did not find a project inside ...` error.
+
+### Configuration file changes
+
+There may also be changes to the configuration files used by the underlying tool. The changes come with comments to explain them, and may also provide next steps for you to take. One common change is to add support for different configuration options. For example, if we have an existing Vite app with the following build target:
+
+```json
+// project.json
+"build": {
+  "executor": "@nx/vite:build",
+  "options": {
+    "mode": "development"
+  },
+  "defaultConfiguration": "production",
+  "configurations": {
+    "development": {},
+    "production": {},
+    "ci": {}
+  }
+}
+```
+
+Where we have `development`, `production`, and `ci` configurations. Then running `nx g @nx/vite:convert-to-inferred` will result in these lines added to `vite.config.ts`.
+
+```ts {% meta="{7-16}" %}
+// vite.config.ts
+/// <reference types='vitest' />
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+
+// These options were migrated by @nx/vite:convert-to-inferred from the project.json file.
+const configValues = { default: {}, development: {}, production: {}, ci: {} };
+
+// Determine the correct configValue to use based on the configuration
+const nxConfiguration = process.env.NX_TASK_TARGET_CONFIGURATION ?? 'default';
+
+const options = {
+  ...configValues.default,
+  ...(configValues[nxConfiguration] ?? {}),
+};
+
+export default defineConfig({
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/apps/demo',
+  // ...
+});
+```
+
+The configuration changes ensure that passing `--configuration` still work for the target. Differences in options can be added to the `configValues` object, and the right value is determined using the `NX_TASK_TARGET_CONFIGURATION` [environment variable](/docs/reference/environment-variables). Again, there may be other types of changes so read the comments to understand them.
+
+### Register the Plugin with Nx
+
+Lastly, you can inspect the `nx.json` file to see a new `plugins` entry. For `@nx/vite`, there should be an entry like this:
+
+```json
+// nx.json
+{
+  "plugin": "@nx/vite/plugin",
+  "options": {
+    "buildTargetName": "build",
+    "serveTargetName": "serve",
+    "previewTargetName": "preview",
+    "testTargetName": "test",
+    "serveStaticTargetName": "serve-static"
+  }
+}
+```
+
+You may change the target name options to change how Nx adds them to the project. For example, if you use `"serveTargetName": "dev"` then you would run `nx dev demo` rather than `nx serve demo` for your Vite project.
+
+### Centralize shared configuration in `targetDefaults`
+
+When you migrate the whole workspace (that is, without `--project`), the generator also looks for
+configuration that is identical across every migrated project for a target and lifts it into
+`targetDefaults` in `nx.json`, so it lives in one place instead of being repeated in each
+`project.json`.
+The entry is scoped to the plugin's targets with a `filter`, so it only applies to the targets
+this plugin infers:
+
+```json
+// nx.json
+{
+  "targetDefaults": {
+    "build": [
+      {
+        "filter": { "plugin": "@nx/vite/plugin" },
+        "options": {
+          "config": "./vite.config.ts"
+        }
+      }
+    ]
+  }
+}
+```
+
+Each project's `project.json` then keeps only the options that differ from this shared default.
+Configuration a project overrides in its own `project.json` still wins over the centralized
+default.
+
+Some projects are excluded from centralization: when a target's identity is authored outside the
+plugin (a `project.json` `executor` or `command`, or a `package.json` script or `nx.targets`
+entry), the centralized default does not resolve for that target.
+Those projects keep their full per-project configuration, and the generator prints a warning
+naming them.
+When a `package.json` script with the target's name, or an `nx.targets` entry next to a
+`project.json`, authors the identity, the generator also leaves the target unconverted, because
+removing its executor would let that entry take the target over.
+Rename or exclude the script, or remove that `nx.targets` entry, then rerun the generator to convert
+it.
+
+When multiple targets in one project map different target names to the same plugin option, for
+example two `@nx/jest:jest` targets in one project, a whole-workspace migration converts one of
+them, leaves the conflicting targets unchanged, and prints a warning naming them.
+Once the converted target is inferred, rerun the migration to convert the next one.
+A single-project migration (`--project`) stops with an error instead, because one plugin
+registration can hold only one value for that option.
+
+Centralization is also skipped when other plugins are registered after the migrated plugin in
+`nx.json`.
+A plugin registered later can take over a target's identity, and the shared default would then
+stop applying.
+The generator prints a warning and keeps the full per-project configuration in that case.
+
+Centralization is skipped for a target when adding the shared entry would change which existing
+`targetDefaults` apply to it.
+For example, an exact target-name entry takes precedence over a glob entry such as `build-*`, so
+adding one could stop the glob entry's configuration from applying to the migrated targets.
+The generator prints a warning and keeps the full per-project configuration for that target.
+
+When you convert several plugins in one run of the `infer-targets` generator, the generator
+defers centralization until every conversion has run and registered its plugin, then centralizes
+the shared configuration for the whole batch in a single pass.
+Because that pass sees the finished plugin list, registrations added by later conversions in the
+same run do not block earlier ones, and every conversion in the batch is eligible to centralize.
+Each conversion is still subject to the skip conditions above and to the verification step below,
+evaluated against the final state of `nx.json`.
+
+A plugin registered earlier than the migrated plugin can remain the source of a target when it
+infers the same target for the same project with the same executor.
+The generator cannot detect this case, and the centralized default does not apply to that target.
+Review the configuration when two inference plugins produce the same target name and executor for
+the same project.
+For `nx:run-commands` and `nx:run-script` targets, also compare the command or script.
+
+After centralizing, the generator verifies that every migrated target still resolves to the same
+configuration.
+If the centralized default would also reach a project the generator did not migrate, or the
+verification cannot confirm the result is equivalent, the generator restores full per-project
+configuration for the affected targets and prints a warning.
+
+This step is skipped for single-project (`--project`) migrations, since centralizing one
+project's configuration would leak it onto its siblings.
+
+## Verify the migration
+
+The migrations maintain the same targets and configurations for each project, thus to verify it you should run the affected targets.
+
+For example
+
+- for `@nx/vite` you should check the `build`, `serve`, and `test` targets
+- for `@nx/playwright` you should check the `e2e` targets
+- for `@nx/eslint` you should check the `lint` target
+- etc.
+
+Remember that the target names are defined in the plugin configuration in `nx.json`.
+
+Make sure that the tasks are all passing before migrating another plugin.
+
+## Enable atomizer (task splitting)
+
+These plugins come with the [Atomizer](/docs/features/ci-features/split-e2e-tasks) feature.
+
+- `@nx/cypress`
+- `@nx/jest`
+- `@nx/gradle`
+- `@nx/playwright`
+
+The Atomizer splits potentially slow tasks into separate tasks per file. This feature along with [task distribution](/docs/features/ci-features/distribute-task-execution) can speed up CI by distributing the split tasks among many agents.
+
+To enable Atomizer, make sure that you are [connected to Nx Cloud](/docs/kb/setup-ci), and that you have distribution enabled in CI. Some plugins require extra configuration to enable Atomizer, so check the [individual plugin documentation page](/docs/plugin-registry) for more details.
+
+{% call_to_action title="Connect to Nx Cloud" icon="nxcloud" description="Enable task distribution and Atomizer" url="/docs/kb/setup-ci" /%}
+
+## Troubleshooting
+
+If you run into any issues during the migration, refer to the [troubleshooting guide](/docs/kb/troubleshoot-convert-to-inferred).

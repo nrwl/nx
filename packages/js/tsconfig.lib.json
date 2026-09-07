@@ -21,6 +21,22 @@
     "jest.config.cts"
   ],
   "include": ["*.ts", "src/**/*.ts", "plugins/**/*.ts"],
+  "nx": {
+    "sync": {
+      // devDependencies only so pnpm links them for `ensurePackage` to resolve;
+      // nothing here imports them, and each already references `js`, so the
+      // reference sync would otherwise add is a cycle TypeScript rejects.
+      "ignoredDependencies": [
+        "@nx/oxlint",
+        "esbuild",
+        "eslint",
+        "jest",
+        "rollup",
+        "vite",
+        "vitest"
+      ]
+    }
+  },
   "references": [
     {
       "path": "../devkit/tsconfig.lib.json"

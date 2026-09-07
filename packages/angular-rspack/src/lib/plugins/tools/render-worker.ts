@@ -138,9 +138,8 @@ async function render({
   }
 
   if (inlineCriticalCss) {
-    const { InlineCriticalCssProcessor } = await import(
-      '@angular/build/private'
-    );
+    const { InlineCriticalCssProcessor } =
+      await import('@angular/build/private');
 
     const inlineCriticalCssProcessor = new InlineCriticalCssProcessor({
       deployUrl: deployUrl,

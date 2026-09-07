@@ -3,7 +3,8 @@
   "compilerOptions": {
     "emitDecoratorMetadata": true,
     "outDir": "",
-    "moduleResolution": "bundler"
+    "moduleResolution": "bundler",
+    "rootDir": "."
   },
   "files": [
     "../../node_modules/@nx/react/typings/styled-jsx.d.ts",

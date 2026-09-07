@@ -1,5 +1,5 @@
 import { Tree } from '../../generators/tree';
-import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import { formatChangedFiles } from '../../generators/internal-utils/format-changed-files';
 import { updateJson } from '../../generators/utils/json';
 
 export default async function (tree: Tree) {
@@ -13,5 +13,5 @@ export default async function (tree: Tree) {
     return json;
   });
 
-  await formatChangedFilesWithPrettierIfAvailable(tree);
+  await formatChangedFiles(tree);
 }

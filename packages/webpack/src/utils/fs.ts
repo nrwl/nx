@@ -1,6 +1,6 @@
 import * as path from 'path';
 import { existsSync, rmSync } from 'fs';
-import { directoryExists } from 'nx/src/utils/fileutils';
+import { directoryExists } from '@nx/devkit/internal';
 
 export function findUp(
   names: string | string[],

@@ -4,13 +4,13 @@ import type {
   NgPackagrBuilderOptions,
 } from '@angular/build';
 import type { ExecutorContext, Target } from '@nx/devkit';
-import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
+import { createBuilderContext } from '@nx/devkit/ngcli-adapter';
 import { targetFromTargetString } from '../../utils/targets';
 import type { ApplicationExecutorOptions } from '../application/schema';
 import type { BuildAngularLibraryExecutorOptions } from '../package/schema';
 import { lt } from 'semver';
 import { getInstalledAngularVersionInfo } from '../utilities/angular-version-utils';
-import { assertBuilderPackageIsInstalled } from '../utilities/builder-package';
+import { assertPackageIsInstalled } from '../utilities/builder-package';
 import {
   loadIndexHtmlTransformer,
   loadPlugins,
@@ -51,7 +51,7 @@ export default async function* unitTestExecutor(
   );
   patchBuilderContext(builderContext, buildTarget);
 
-  assertBuilderPackageIsInstalled('@angular/build');
+  assertPackageIsInstalled('@angular/build', '@nx/angular:unit-test');
   const { executeUnitTestBuilder } = await import('@angular/build');
   return yield* executeUnitTestBuilder(
     delegateExecutorOptions,

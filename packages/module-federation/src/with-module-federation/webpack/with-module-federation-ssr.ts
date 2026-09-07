@@ -69,9 +69,7 @@ export async function withModuleFederationForSSR(
             !options.disableNxRuntimeLibraryControlPlugin
               ? [
                   ...(configOverride?.runtimePlugins ?? []),
-                  require.resolve(
-                    '@nx/module-federation/runtime-library-control-plugin'
-                  ),
+                  require.resolve('@nx/module-federation/runtime-library-control-plugin'),
                 ]
               : [
                   ...(configOverride?.runtimePlugins ?? []),

@@ -1,11 +1,11 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { Tree, getProjects } from '@nx/devkit';
 import { Schema } from './schema';
 import { Schema as remoteSchma } from '../remote/schema';
 import { federateModuleGenerator } from './federate-module';
-import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 import remoteGeneratorInternal from '../remote/remote';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 describe('federate-module', () => {
   let tree: Tree;
@@ -103,6 +103,7 @@ describe('federate-module', () => {
 
       await federateModuleGenerator(tree, {
         ...schema,
+        remote: remoteSchema.name,
         remoteDirectory: remoteSchema.directory,
       });
 
@@ -116,7 +117,9 @@ describe('federate-module', () => {
 
       const tsconfig = JSON.parse(tree.read('tsconfig.base.json', 'utf-8'));
       expect(
-        tsconfig.compilerOptions.paths[`${schema.remote}/my-federated-module`]
+        tsconfig.compilerOptions.paths[
+          `${remoteSchema.name}/my-federated-module`
+        ]
       ).toEqual(['./myremote/src/my-federated-module.ts']);
     });
   });

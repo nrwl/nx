@@ -61,9 +61,8 @@ module.exports = function (api: any, options: NxReactBabelOptions) {
 
   if (options.reactCompiler) {
     try {
-      const reactCompilerPlugin = require.resolve(
-        'babel-plugin-react-compiler'
-      );
+      const reactCompilerPlugin =
+        require.resolve('babel-plugin-react-compiler');
       plugins.push([
         reactCompilerPlugin,
         typeof options.reactCompiler !== 'boolean' ? options.reactCompiler : {},

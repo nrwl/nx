@@ -1,7 +1,12 @@
 import { execSync } from 'child_process';
 import { join } from 'path';
+import { gte } from 'semver';
 
-import { NxJsonConfiguration } from '../../../config/nx-json';
+import {
+  NxJsonConfiguration,
+  TargetDefaultEntry,
+  TargetDefaults,
+} from '../../../config/nx-json';
 import {
   fileExists,
   readJsonFile,
@@ -10,16 +15,20 @@ import {
 import { output } from '../../../utils/output';
 import { PackageJson } from '../../../utils/package-json';
 import {
+  detectPackageManager,
   getPackageManagerCommand,
+  getPackageManagerVersion,
+  PackageManager,
   PackageManagerCommands,
 } from '../../../utils/package-manager';
+import { acknowledgeBuildScripts } from '../../../utils/acknowledge-build-scripts';
 import { joinPathFragments } from '../../../utils/path';
 import { nxVersion } from '../../../utils/versions';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { recordInitWrite } from './format';
 import { printSuccessMessage } from '../../../nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
 import { connectWorkspaceToCloud } from '../../nx-cloud/connect/connect-to-nx-cloud';
 import { deduceDefaultBase } from './deduce-default-base';
-import { getRunNxBaseCommand } from '../../../utils/child-process';
 
 export function createNxJsonFile(
   repoRoot: string,
@@ -34,29 +43,35 @@ export function createNxJsonFile(
   } catch {}
 
   nxJson.$schema = './node_modules/nx/schemas/nx-schema.json';
-  nxJson.targetDefaults ??= {};
+  const targetDefaults: TargetDefaults = { ...(nxJson.targetDefaults ?? {}) };
 
   if (topologicalTargets.length > 0) {
     for (const scriptName of topologicalTargets) {
-      nxJson.targetDefaults[scriptName] ??= {};
-      nxJson.targetDefaults[scriptName] = { dependsOn: [`^${scriptName}`] };
+      upsertTargetDefaultEntry(targetDefaults, scriptName, {
+        dependsOn: [`^${scriptName}`],
+      });
     }
   }
   for (const [scriptName, output] of Object.entries(scriptOutputs)) {
     if (!output) {
       continue;
     }
-    nxJson.targetDefaults[scriptName] ??= {};
-    nxJson.targetDefaults[scriptName].outputs = [`{projectRoot}/${output}`];
+    upsertTargetDefaultEntry(targetDefaults, scriptName, {
+      outputs: [`{projectRoot}/${output}`],
+    });
   }
 
   for (const target of cacheableOperations) {
-    nxJson.targetDefaults[target] ??= {};
-    nxJson.targetDefaults[target].cache ??= true;
+    const existing = readUnfilteredTargetDefault(targetDefaults, target);
+    if (existing.cache === undefined) {
+      upsertTargetDefaultEntry(targetDefaults, target, { cache: true });
+    }
   }
 
-  if (Object.keys(nxJson.targetDefaults).length === 0) {
+  if (Object.keys(targetDefaults).length === 0) {
     delete nxJson.targetDefaults;
+  } else {
+    nxJson.targetDefaults = targetDefaults;
   }
 
   const defaultBase = deduceDefaultBase();
@@ -65,6 +80,56 @@ export function createNxJsonFile(
     nxJson.defaultBase ??= defaultBase;
   }
   writeJsonFile(nxJsonPath, nxJson);
+  recordInitWrite(nxJsonPath);
+}
+
+/**
+ * Locate-by-target upsert against an in-memory `targetDefaults` map. Merges
+ * `patch`'s config into the unfiltered (catch-all) default for `target`,
+ * promoting through the array form when one already exists. Used by `nx init`
+ * code paths that operate on raw JSON before a Tree exists — generators
+ * should use `upsertTargetDefault` from devkit instead.
+ */
+export function upsertTargetDefaultEntry(
+  targetDefaults: TargetDefaults,
+  target: string,
+  patch: Partial<TargetDefaultEntry>
+): void {
+  // Drop locator fields — the key is `target` and `nx init` only writes
+  // unfiltered defaults.
+  const {
+    target: _t,
+    executor: _e,
+    projects: _p,
+    plugin: _pl,
+    ...config
+  } = patch;
+  const existing = targetDefaults[target];
+  if (Array.isArray(existing)) {
+    const idx = existing.findIndex((e) => e.filter === undefined);
+    if (idx >= 0) {
+      const { filter, ...rest } = existing[idx];
+      existing[idx] = { ...rest, ...config };
+    } else {
+      existing.push({ ...config });
+    }
+  } else {
+    targetDefaults[target] = { ...(existing ?? {}), ...config };
+  }
+}
+
+/**
+ * Read the unfiltered (catch-all) config for `target` from a `targetDefaults`
+ * map — the object value, or the filter-less entry of an array value.
+ */
+function readUnfilteredTargetDefault(
+  targetDefaults: TargetDefaults,
+  target: string
+): Partial<TargetDefaultEntry> {
+  const existing = targetDefaults[target];
+  if (existing === undefined) return {};
+  if (!Array.isArray(existing)) return existing;
+  return existing.find((e) => e.filter === undefined) ?? {};
 }
 
 export function createNxJsonFromTurboJson(
@@ -102,23 +167,23 @@ export function createNxJsonFromTurboJson(
 
   // Handle task configurations
   if (turboJson.tasks) {
-    nxJson.targetDefaults = {};
+    const targetDefaults: TargetDefaults = {};
 
     for (const [taskName, taskConfig] of Object.entries(turboJson.tasks)) {
       // Skip project-specific tasks (containing #)
       if (taskName.includes('#')) continue;
 
       const config = taskConfig as any;
-      nxJson.targetDefaults[taskName] = {};
+      const entry: TargetDefaultEntry = { target: taskName };
 
       // Handle dependsOn
       if (config.dependsOn?.length > 0) {
-        nxJson.targetDefaults[taskName].dependsOn = config.dependsOn;
+        entry.dependsOn = config.dependsOn;
       }
 
       // Handle inputs
       if (config.inputs?.length > 0) {
-        nxJson.targetDefaults[taskName].inputs = config.inputs
+        entry.inputs = config.inputs
           .map((input) => {
             if (input === '$TURBO_DEFAULT$') {
               return '{projectRoot}/**/*';
@@ -146,31 +211,29 @@ export function createNxJsonFromTurboJson(
 
       // Handle outputs
       if (config.outputs?.length > 0) {
-        nxJson.targetDefaults[taskName].outputs = config.outputs.map(
-          (output) => {
-            // Don't add projectRoot if it's already there
-            if (output.startsWith('{projectRoot}/')) return output;
-            // Handle negated patterns by adding projectRoot after the !
-            if (output.startsWith('!')) {
-              return `!{projectRoot}/${output.slice(1)}`;
-            }
-            return `{projectRoot}/${output}`;
+        entry.outputs = config.outputs.map((output) => {
+          // Don't add projectRoot if it's already there
+          if (output.startsWith('{projectRoot}/')) return output;
+          // Handle negated patterns by adding projectRoot after the !
+          if (output.startsWith('!')) {
+            return `!{projectRoot}/${output.slice(1)}`;
           }
-        );
+          return `{projectRoot}/${output}`;
+        });
       }
 
       // Handle cache setting - true by default in Turbo
-      nxJson.targetDefaults[taskName].cache = config.cache !== false;
-    }
-  }
+      entry.cache = config.cache !== false;
 
-  /**
-   * The fact that cacheDir was in use suggests the user had a reason for deviating from the default.
-   * We can't know what that reason was, nor if it would still be applicable in Nx, but we can at least
-   * improve discoverability of the relevant Nx option by explicitly including it with its default value.
-   */
-  if (turboJson.cacheDir) {
-    nxJson.cacheDirectory = '.nx/cache';
+      // Each turbo task maps to a unique key, written as the plain object
+      // (unfiltered) value form.
+      const { target, ...taskDefault } = entry;
+      targetDefaults[target] = taskDefault;
+    }
+
+    if (Object.keys(targetDefaults).length > 0) {
+      nxJson.targetDefaults = targetDefaults;
+    }
   }
 
   const defaultBase = deduceDefaultBase();
@@ -184,6 +247,7 @@ export function createNxJsonFromTurboJson(
 
 export function addDepsToPackageJson(
   repoRoot: string,
+  packageManager: PackageManager,
   additionalPackages?: string[]
 ) {
   const path = joinPathFragments(repoRoot, `package.json`);
@@ -196,6 +260,10 @@ export function addDepsToPackageJson(
     }
   }
   writeJsonFile(path, json);
+  recordInitWrite(path);
+  // nx has a postinstall script, which pnpm 11+ refuses to install
+  // unacknowledged.
+  acknowledgeBuildScripts(repoRoot, packageManager, { nx: true });
 }
 
 export function updateGitIgnore(root: string) {
@@ -232,10 +300,24 @@ export function updateGitIgnore(root: string) {
 
 export function runInstall(
   repoRoot: string,
-  pmc: PackageManagerCommands = getPackageManagerCommand()
+  packageManager: PackageManager = detectPackageManager(repoRoot),
+  pmc: PackageManagerCommands = getPackageManagerCommand(packageManager)
 ) {
+  let command = pmc.install;
+  // Plugins added during init can pull build-script deps whose allowBuilds
+  // entries are only recorded by their init generators after this install;
+  // warn and skip for this one install, like pnpm 10 did.
+  if (packageManager === 'pnpm') {
+    try {
+      if (gte(getPackageManagerVersion('pnpm', repoRoot), '11.0.0')) {
+        command += ' --config.strictDepBuilds=false';
+      }
+    } catch {
+      // The version cannot be probed; run the install unmodified.
+    }
+  }
   try {
-    execSync(pmc.install, {
+    execSync(command, {
       stdio: ['ignore', 'ignore', 'pipe'],
       encoding: 'utf8',
       cwd: repoRoot,
@@ -316,6 +398,7 @@ export function setNeverConnectToCloud(repoRoot: string): void {
   const nxJson = readJsonFile(nxJsonPath);
   nxJson.neverConnectToCloud = true;
   writeJsonFile(nxJsonPath, nxJson);
+  recordInitWrite(nxJsonPath);
 }
 
 export function addVsCodeRecommendedExtensions(
@@ -335,8 +418,10 @@ export function addVsCodeRecommendedExtensions(
     });
 
     writeJsonFile(vsCodeExtensionsPath, vsCodeExtensionsJson);
+    recordInitWrite(vsCodeExtensionsPath);
   } else {
     writeJsonFile(vsCodeExtensionsPath, { recommendations: extensions });
+    recordInitWrite(vsCodeExtensionsPath);
   }
 }
 
@@ -364,6 +449,7 @@ export function markRootPackageJsonAsNxProjectLegacy(
     }
   }
   writeJsonFile(`package.json`, json);
+  recordInitWrite('package.json');
 }
 
 export function markPackageJsonAsNxProject(packageJsonPath: string) {
@@ -374,6 +460,7 @@ export function markPackageJsonAsNxProject(packageJsonPath: string) {
 
   json.nx = {};
   writeJsonFile(packageJsonPath, json);
+  recordInitWrite(packageJsonPath);
 }
 
 export function printFinalMessage({

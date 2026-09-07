@@ -145,15 +145,30 @@
       "options": {},
       "cache": true
     },
-    "test": {
-      "dependsOn": ["test-native", "build-native", "^build-native"],
-      "options": {
-        "args": ["--passWithNoTests", "--detectOpenHandles", "--forceExit"],
-        "env": {
-          "NODE_OPTIONS": "--experimental-vm-modules"
+    "test": [
+      {
+        "dependsOn": ["test-native", "build-native", "^build-native"]
+      },
+      {
+        "filter": {
+          "plugin": "@nx/jest/plugin"
+        },
+        "options": {
+          "args": ["--passWithNoTests", "--detectOpenHandles", "--forceExit"],
+          "env": {
+            "NODE_OPTIONS": "--experimental-vm-modules"
+          }
+        }
+      },
+      {
+        "filter": {
+          "plugin": "@nx/vitest"
+        },
+        "options": {
+          "args": ["--passWithNoTests"]
         }
       }
-    },
+    ],
     "lint": {
       "dependsOn": ["build-native", "^build-native", "build"],
       "inputs": [
@@ -175,7 +190,7 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry"
+        "@nx/nx-source:local-registry-e2e"
       ]
     },
     "e2e-ci": {
@@ -186,7 +201,7 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry"
+        "@nx/nx-source:local-registry-e2e"
       ]
     },
     "e2e-macos-ci": {
@@ -196,7 +211,7 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry"
+        "@nx/nx-source:local-registry-e2e"
       ],
       "options": {
         "args": ["--forceExit"]
@@ -206,7 +221,7 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry"
+        "@nx/nx-source:local-registry-e2e"
       ]
     },
     "e2e-base": {
@@ -234,6 +249,7 @@
   },
   "plugins": [
     "./tools/workspace-plugin/src/plugins/copy-assets-plugin.ts",
+    "./tools/workspace-plugin/src/plugins/examples-plugin.ts",
     "@monodon/rust",
     {
       "plugin": "@nx/vite/plugin",
@@ -248,7 +264,7 @@
     },
     {
       "plugin": "@nx/js/typescript",
-      "exclude": ["examples/angular-rspack/**/*", "nx-dev/**/*", "e2e/**/*"],
+      "exclude": ["examples/**/*", "nx-dev/**/*", "e2e/**/*"],
       "options": {
         "typecheck": true,
         "build": {
@@ -268,6 +284,7 @@
     },
     {
       "plugin": "@nx/playwright/plugin",
+      "exclude": ["examples/**"],
       "options": {
         "targetName": "pw-e2e",
         "ciTargetName": "e2e-ci"
@@ -275,7 +292,7 @@
     },
     {
       "plugin": "@nx/eslint/plugin",
-      "exclude": ["packages/**/__fixtures__/**/*"],
+      "exclude": ["packages/**/__fixtures__/**/*", "examples/**/*"],
       "options": {
         "targetName": "lint"
       }
@@ -334,6 +351,7 @@
     },
     {
       "plugin": "@nx/dotnet",
+      "exclude": ["examples/**/*"],
       "options": {
         "build": {
           "targetName": "build:dotnet"
@@ -353,38 +371,24 @@
       }
     },
     {
-      "plugin": "@nx/rspack/plugin",
-      "include": ["examples/angular-rspack/**"],
-      "options": {
-        "buildTargetName": "build",
-        "serveTargetName": "serve",
-        "previewTargetName": "preview",
-        "buildDepsTargetName": "build-deps",
-        "watchDepsTargetName": "watch-deps"
-      }
-    },
-    {
       "plugin": "@nx/vitest",
       "options": {
         "testTargetName": "test"
       },
-      "include": [
-        "packages/angular-rspack-compiler/**",
-        "packages/angular-rspack/**"
-      ]
+      "include": ["packages/**/*"],
+      "exclude": ["**/out-tsc/**"]
     },
     {
-      "plugin": "@nx/vitest",
+      "plugin": "@nx/oxlint",
       "options": {
-        "testTargetName": "vite:test"
-      },
-      "include": ["astro-docs/**"]
+        "targetName": "oxlint"
+      }
     }
   ],
   "nxCloudId": "62d013ea0852fe0a2df74438",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
-  "bust": 3237,
+  "bust": 3238,
   "defaultBase": "master",
   "sync": {
     "applyChanges": true
@@ -478,6 +482,12 @@
         }
       },
       {
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/nx-package-group"
+      },
+      {
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/migration-markdown-assets"
+      },
+      {
         "rule": "./tools/workspace-plugin/dist/src/conformance-rules/no-ignored-tracked-files"
       },
       {
@@ -519,7 +529,29 @@
             "NX_PREFIX_OUTPUT",
             "NX_INFER_ALL_PACKAGE_JSONS",
             "NX_AI_FILES_USE_LOCAL",
-            "NX_WINDOWS_PTY_SUPPORT"
+            "NX_WINDOWS_PTY_SUPPORT",
+            "NX_ORIGINAL_FORCE_COLOR",
+            "NX_MIGRATE_ORCHESTRATOR",
+            "NX_CSS_MODULE_HASH_FUNCTION",
+            "NX_BUILDABLE_LIBRARIES_TASK_GRAPH",
+            "NX_BUILD_LIBS_FROM_SOURCE",
+            "NX_BUILD_TARGET",
+            "NX_CNW_FLOW_VARIANT",
+            "NX_CYPRESS_COMPONENT_TEST",
+            "NX_CYPRESS_TARGET_CONFIGURATION",
+            "NX_E2E_PRESET_VERSION",
+            "NX_FILE_TO_RUN",
+            "NX_GENERATED_TSCONFIG_PATH",
+            "NX_MAPPINGS",
+            "NX_MF_DEV_REMOTES",
+            "NX_MF_DEV_SERVER_STATIC_REMOTES",
+            "NX_NEXT_DIR",
+            "NX_NEXT_OUTPUT_PATH",
+            "NX_NEXT_PUBLIC_DIR",
+            "NX_REACT_NATIVE_DEBUG",
+            "NX_SERVE_STATIC_BUILD_RUNNING",
+            "NX_SKIP_GH_PUSH",
+            "NX_TSCONFIG_PATH"
           ]
         }
       }

@@ -5,7 +5,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import type { FileMapCache } from 'nx/src/project-graph/nx-deps-cache';
+import type { FileMapCache } from '@nx/devkit/internal';
 import migration from './change-data-persistence-operators-imports-to-ngrx-router-store-data-persistence';
 
 let projectGraph: ProjectGraph;
@@ -278,10 +278,7 @@ class UsersEffects {}
 
     expect(tree.read(file, 'utf-8')).toMatchInlineSnapshot(`
       "import { Actions, createEffect, ofType } from '@ngrx/effects';
-      import {
-        fetch as customFetch,
-        navigation,
-      } from '@ngrx/router-store/data-persistence';
+      import { fetch as customFetch, navigation } from '@ngrx/router-store/data-persistence';
 
       @Injectable()
       class UsersEffects {}
@@ -304,10 +301,7 @@ class UsersEffects {}
 
     expect(tree.read(file, 'utf-8')).toMatchInlineSnapshot(`
       "import { Actions, createEffect, ofType } from '@ngrx/effects';
-      import {
-        fetch as customFetch,
-        navigation,
-      } from '@ngrx/router-store/data-persistence';
+      import { fetch as customFetch, navigation } from '@ngrx/router-store/data-persistence';
       import { foo } from '@nx/angular';
 
       @Injectable()

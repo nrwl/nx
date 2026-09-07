@@ -1,5 +1,9 @@
 import type { Tree } from '../../generators/tree';
-import type { CatalogDefinitions, CatalogReference } from './types';
+import type {
+  CatalogDefinitions,
+  CatalogReference,
+  CatalogReferenceMatch,
+} from './types';
 
 export function formatCatalogError(
   error: string,
@@ -15,6 +19,46 @@ export function formatCatalogError(
   }
 
   return message;
+}
+
+/**
+ * Shared implementation of getCatalogReferencesForPackage: enumerates the
+ * default and named catalog references and keeps those the manager resolves,
+ * so per-manager default-catalog semantics apply without duplication.
+ */
+export function collectCatalogReferencesForPackage(
+  manager: CatalogManager,
+  treeOrRoot: Tree | string,
+  packageName: string
+): CatalogReferenceMatch[] {
+  // The overload pairs don't accept the Tree | string union directly.
+  const source = treeOrRoot as string;
+  const catalogDefs = manager.getCatalogDefinitions(source);
+  if (!catalogDefs) {
+    return [];
+  }
+
+  const catalogRefs = ['catalog:'];
+  for (const name of Object.keys(catalogDefs.catalogs ?? {})) {
+    // Skip names the manager treats as the default catalog (e.g. pnpm's
+    // "default") — already covered by the `catalog:` candidate.
+    if (!manager.parseCatalogReference(`catalog:${name}`)?.isDefaultCatalog) {
+      catalogRefs.push(`catalog:${name}`);
+    }
+  }
+
+  const matches: CatalogReferenceMatch[] = [];
+  for (const catalogRef of catalogRefs) {
+    const versionSpec = manager.resolveCatalogReference(
+      source,
+      packageName,
+      catalogRef
+    );
+    if (versionSpec) {
+      matches.push({ catalogRef, versionSpec });
+    }
+  }
+  return matches;
 }
 
 /**
@@ -48,6 +92,19 @@ export interface CatalogManager {
     packageName: string,
     version: string
   ): string | null;
+
+  /**
+   * Get every catalog reference that resolves to a version for a package,
+   * following the package manager's own default-catalog semantics.
+   */
+  getCatalogReferencesForPackage(
+    workspaceRoot: string,
+    packageName: string
+  ): CatalogReferenceMatch[];
+  getCatalogReferencesForPackage(
+    tree: Tree,
+    packageName: string
+  ): CatalogReferenceMatch[];
 
   /**
    * Check that a catalog reference is valid.

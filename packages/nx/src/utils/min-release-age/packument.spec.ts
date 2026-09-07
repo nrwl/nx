@@ -1,14 +1,15 @@
-jest.mock('../package-manager', () => ({
-  packageRegistryView: jest.fn(),
+import type { Mock } from 'vitest';
+vi.mock('../package-manager', () => ({
+  packageRegistryView: vi.fn(),
 }));
 
 import { packageRegistryView } from '../package-manager';
 import { fetchRegistryMetadata } from './packument';
 
-const viewMock = packageRegistryView as jest.Mock;
+const viewMock = packageRegistryView as Mock;
 
 describe('fetchRegistryMetadata', () => {
-  afterEach(() => jest.clearAllMocks());
+  afterEach(() => vi.clearAllMocks());
 
   it('normalizes a scalar versions field into an array', async () => {
     viewMock.mockResolvedValue(
@@ -70,6 +71,6 @@ describe('fetchRegistryMetadata', () => {
       JSON.stringify({ name: 'pkg-a', versions: ['1.0.0'] })
     );
     await fetchRegistryMetadata('pkg-a');
-    expect(viewMock).toHaveBeenCalledWith('pkg-a', '', '--json');
+    expect(viewMock).toHaveBeenCalledWith('pkg-a', '', ['--json']);
   });
 });

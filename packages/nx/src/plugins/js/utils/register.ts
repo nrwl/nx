@@ -51,13 +51,6 @@ function ensureEsmLoaderRegistered(opts: { required: boolean }): void {
     return;
   }
 
-  // ts-node reads compilerOptions from this env var. Setting nodenext
-  // module/resolution avoids surprises when ts-node is the chosen loader.
-  process.env.TS_NODE_COMPILER_OPTIONS ??= JSON.stringify({
-    moduleResolution: 'nodenext',
-    module: 'nodenext',
-  });
-
   // Prefer @swc-node/register/esm (faster) over ts-node/esm.
   const swcEsm = tryResolveLoader('@swc-node/register/esm');
   const tsNodeEsm = tryResolveLoader('ts-node/esm');
@@ -83,8 +76,59 @@ function ensureEsmLoaderRegistered(opts: { required: boolean }): void {
   }
 
   const url = require('node:url') as typeof import('node:url');
+  if (!swcEsm) {
+    // ts-node/esm reads TS_NODE_COMPILER_OPTIONS from its hooks thread, which
+    // snapshots process.env only when the first hook in the process registers,
+    // possibly long before this call. A registered setter module runs on the
+    // hooks thread itself, so the value lands there without mutating this
+    // process's env (which an existing hooks thread would never see, and
+    // child processes would inherit).
+    module.register(
+      'data:text/javascript,' +
+        encodeURIComponent(
+          `process.env.TS_NODE_COMPILER_OPTIONS = ${JSON.stringify(
+            resolveTsNodeEsmCompilerOptions(
+              process.env.TS_NODE_COMPILER_OPTIONS
+            )
+          )};`
+        )
+    );
+  }
   module.register(url.pathToFileURL(loaderPath));
   isTsEsmLoaderRegistered = true;
+}
+
+/**
+ * Effective `TS_NODE_COMPILER_OPTIONS` value for `ts-node/esm`. CommonJS emit
+ * can never work for the true-ESM loads the loader exists for (`import.meta`
+ * fails with TS1343), and CommonJS-format files are deferred to the `require`
+ * pipeline untouched, so `module`/`moduleResolution` are forced to `nodenext`
+ * over any inherited value. Values that are not a JSON object pass through
+ * unchanged for ts-node to handle.
+ *
+ * Exported so the merge semantics can be exercised directly in unit tests.
+ */
+export function resolveTsNodeEsmCompilerOptions(
+  raw: string | undefined
+): string {
+  if (raw === undefined) {
+    return JSON.stringify({ moduleResolution: 'nodenext', module: 'nodenext' });
+  }
+  try {
+    const parsed = JSON.parse(raw);
+    if (
+      typeof parsed === 'object' &&
+      parsed !== null &&
+      !Array.isArray(parsed)
+    ) {
+      return JSON.stringify({
+        ...parsed,
+        module: 'nodenext',
+        moduleResolution: 'nodenext',
+      });
+    }
+  } catch {}
+  return raw;
 }
 
 /**
@@ -415,6 +459,97 @@ const isInvokedByTsx: boolean = (() => {
     importArgs.some((a) => isTsxPath(a))
   );
 })();
+
+let resolveConditionsInjected = false;
+
+/**
+ * Make Node's module resolver honor the given export conditions for the rest of
+ * the process, via `module.registerHooks()`. Used when a local plugin is loaded
+ * from source in-process (no child process to pass `--conditions` to at spawn):
+ * the hook appends the conditions to every resolution so the plugin's transitive
+ * workspace imports resolve to source the same way the plugin entry did.
+ *
+ * No-op when:
+ *   - `conditions` is empty (nothing to inject);
+ *   - every target condition is already active at startup (a spawned plugin
+ *     worker or daemon was launched with the full `--conditions` set, so Node's
+ *     resolver already honors them and the per-resolve hook would be redundant);
+ *   - `module.registerHooks` is unavailable (Node < 22.15 / < 23.5). Those
+ *     runtimes keep the `NODE_OPTIONS=--conditions` escape hatch.
+ *
+ * Idempotent and best-effort.
+ */
+export function ensureResolveConditionsInjected(conditions: string[]): void {
+  if (resolveConditionsInjected) return;
+  resolveConditionsInjected = true;
+
+  if (!conditions.length) return;
+
+  // Skip only when Node already honors every target condition (e.g. a worker or
+  // daemon spawned with the full `--conditions` set); a partial overlap still
+  // needs the hook to add the missing ones.
+  const activeConditions = getConditionsActiveAtStartup();
+  if (conditions.every((condition) => activeConditions.has(condition))) return;
+
+  const module = require('node:module') as typeof import('node:module');
+  const registerHooks = (
+    module as typeof module & {
+      registerHooks?: (opts: {
+        resolve?: (
+          specifier: string,
+          context: { conditions?: string[] },
+          nextResolve: (specifier: string, context?: unknown) => unknown
+        ) => unknown;
+      }) => unknown;
+    }
+  ).registerHooks;
+  if (typeof registerHooks !== 'function') return;
+
+  try {
+    registerHooks.call(module, {
+      resolve(specifier, context, nextResolve) {
+        const merged = context.conditions
+          ? [...context.conditions, ...conditions]
+          : conditions;
+        return nextResolve(specifier, { ...context, conditions: merged });
+      },
+    });
+  } catch {
+    // Best-effort: leave Node's native resolution in place rather than failing.
+  }
+}
+
+/**
+ * Export conditions this process was started with, parsed from `--conditions`
+ * (or its `-C` alias) in `process.execArgv` and `NODE_OPTIONS`. Node's resolver
+ * already honors these, so the injected hook only needs to cover target
+ * conditions not present here.
+ */
+function getConditionsActiveAtStartup(): Set<string> {
+  const active = new Set<string>();
+  const collect = (tokens: string[]) => {
+    for (let i = 0; i < tokens.length; i++) {
+      const token = tokens[i];
+      if (token === '--conditions' || token === '-C') {
+        const value = tokens[i + 1];
+        if (value) {
+          active.add(value);
+          i++;
+        }
+      } else if (token.startsWith('--conditions=')) {
+        active.add(token.slice('--conditions='.length));
+      } else if (token.startsWith('-C=')) {
+        active.add(token.slice('-C='.length));
+      }
+    }
+  };
+
+  collect(process.execArgv ?? []);
+  const nodeOptions = process.env.NODE_OPTIONS;
+  if (nodeOptions) collect(nodeOptions.split(/\s+/).filter(Boolean));
+
+  return active;
+}
 
 /**
  * Whether the current Node.js runtime exposes native TypeScript type

@@ -1,7 +1,8 @@
 import type { Tree } from '@nx/devkit';
 import { dirname } from 'path';
-import type { CompilerOptions, System } from 'typescript';
+import type { CompilerOptions } from 'typescript';
 import { ensureTypescript } from './ensure-typescript';
+import { createTreeParseConfigHost } from './ts-config';
 
 type CompilerOptionsEnumProps = Pick<
   CompilerOptions,
@@ -40,14 +41,11 @@ export function getNeededCompilerOptionOverrides(
     ts = ensureTypescript();
   }
 
-  const tsSysFromTree: System = {
-    ...ts.sys,
-    readFile: (path) => tree.read(path, 'utf-8'),
-  };
+  const host = createTreeParseConfigHost(tree);
 
   const parsed = ts.parseJsonConfigFileContent(
-    ts.readConfigFile(tsConfigPath, tsSysFromTree.readFile).config,
-    tsSysFromTree,
+    ts.readConfigFile(tsConfigPath, host.readFile).config,
+    host,
     dirname(tsConfigPath)
   );
 

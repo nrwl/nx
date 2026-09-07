@@ -1,6 +1,6 @@
 import type { Tree } from '@nx/devkit';
-import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 import { addExcludeSpecPattern } from './add-exclude-spec-pattern';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 describe('addExcludeSpecPattern', () => {
   let tree: Tree;

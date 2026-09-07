@@ -2,7 +2,6 @@ import type { Tree } from '../../generators/tree';
 import { NxCloudOnBoardingStatus } from '../models/onboarding-status';
 import { isWorkspaceClaimed } from './is-workspace-claimed';
 import { createNxCloudOnboardingURL } from './url-shorten';
-import { getRunnerOptions } from '../../tasks-runner/run-command';
 import { readNxJson } from '../../generators/utils/nx-json';
 
 export async function createNxCloudOnboardingURLForWelcomeApp(
@@ -30,6 +29,12 @@ export async function getNxCloudAppOnBoardingUrl(token: string) {
 }
 
 export function readNxCloudToken(tree: Tree) {
+  // Required lazily: this module is re-exported from the @nx/devkit/internal
+  // barrel that plugin workers load, and run-command eagerly pulls in the whole
+  // task-execution subsystem.
+  const {
+    getRunnerOptions,
+  }: typeof import('../../tasks-runner/run-command') = require('../../tasks-runner/run-command');
   const nxJson = readNxJson(tree);
   const { accessToken, nxCloudId } = getRunnerOptions(
     'default',

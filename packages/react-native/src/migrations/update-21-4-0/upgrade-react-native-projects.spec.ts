@@ -8,6 +8,7 @@ import * as path from 'path';
 jest.mock('child_process', () => ({
   execSync: jest.fn(),
   exec: jest.fn(),
+  execFile: jest.fn(),
 }));
 
 describe('upgrade-react-native-projects', () => {

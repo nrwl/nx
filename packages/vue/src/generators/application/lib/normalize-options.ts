@@ -4,7 +4,7 @@ import {
   ensureRootProjectName,
 } from '@nx/devkit/internal';
 import { NormalizedSchema, Schema } from '../schema';
-import { isUsingTsSolutionSetup } from '@nx/js/internal';
+import { normalizeLinterOption, isUsingTsSolutionSetup } from '@nx/js/internal';
 
 export async function normalizeOptions(
   host: Tree,
@@ -34,7 +34,7 @@ export async function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const normalized = {
+  const normalized: NormalizedSchema = {
     ...options,
     projectName: appProjectName,
     appProjectRoot,
@@ -44,13 +44,15 @@ export async function normalizeOptions(
     parsedTags,
     isUsingTsSolutionConfig,
     useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
-  } as NormalizedSchema;
-
-  normalized.style = options.style ?? 'css';
-  normalized.routing = normalized.routing ?? false;
-  normalized.unitTestRunner ??= 'vitest';
-  normalized.e2eTestRunner = normalized.e2eTestRunner ?? 'playwright';
-  normalized.bundler = normalized.bundler ?? 'vite';
+    style: options.style ?? 'css',
+    routing: options.routing ?? false,
+    unitTestRunner: options.unitTestRunner ?? 'vitest',
+    e2eTestRunner: options.e2eTestRunner ?? 'playwright',
+    bundler: options.bundler ?? 'vite',
+    // Resolved here rather than at the `addLinting` call, so the `=== 'eslint'`
+    // check that builds the tsconfig excludes reads the same value.
+    linter: await normalizeLinterOption(host, options.linter),
+  };
 
   return normalized;
 }

@@ -5,19 +5,6 @@ export default [
   ...baseConfig,
   { ignores: ['**/__fixtures__/**', 'dist'] },
   {
-    files: ['**/*.ts'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        '@nx/workspace',
-        '@angular-devkit/core',
-        '@angular-devkit/architect',
-        '@angular-devkit/schematics',
-      ],
-    },
-    ignores: ['./src/migrations/**', './src/utils/**'],
-  },
-  {
     files: [
       './package.json',
       './generators.json',

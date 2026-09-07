@@ -9,7 +9,8 @@
     "skipLibCheck": true,
     "allowJs": true,
     "strict": false,
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "rootDir": "."
   },
   "files": [
     "../../node_modules/@nx/react/typings/cssmodule.d.ts",

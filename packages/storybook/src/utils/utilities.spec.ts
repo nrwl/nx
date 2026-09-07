@@ -213,7 +213,7 @@ describe('testing utilities', () => {
           })
         );
         const version = getStorybookVersionToInstall(tree);
-        expect(version).toBe('^10.1.0');
+        expect(version).toBe('^10.5.0');
       });
 
       it('should return the v8 install constant when v8 is installed', () => {
@@ -242,7 +242,7 @@ describe('testing utilities', () => {
         );
         const version = getStorybookVersionToInstall(tree);
         // v7 is below the floor; no version map entry — fall through to latest.
-        expect(version).toBe('^10.1.0');
+        expect(version).toBe('^10.5.0');
       });
 
       it('should return the v9 install constant when v9 is installed via dependencies', () => {
@@ -273,6 +273,13 @@ describe('testing utilities', () => {
           otherBuildTarget: undefined,
           compiler: undefined,
         });
+      });
+
+      it('should treat the modern angular application builder as the ng build target', () => {
+        const result = findStorybookAndBuildTargetsAndCompiler({
+          build: { executor: '@angular/build:application' },
+        });
+        expect(result.ngBuildTarget).toEqual('build');
       });
 
       it('should find correct targets and compiler for the provided web app config', () => {

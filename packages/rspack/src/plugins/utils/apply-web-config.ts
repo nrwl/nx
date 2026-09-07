@@ -17,6 +17,7 @@ import {
 } from './loaders/stylesheet-loaders';
 import { NormalizedNxAppRspackPluginOptions } from './models';
 import { normalizeExtraEntryPoints } from './normalize-entry';
+import { loadRspackCore } from '../../utils/load-rspack-core';
 
 export function applyWebConfig(
   options: NormalizedNxAppRspackPluginOptions,
@@ -37,9 +38,8 @@ export function applyWebConfig(
   // Prefer compiler.rspack when available; otherwise lazy-require
   // @rspack/core (works on Node 22.12+ via require(esm), and keeps the
   // file Jest-loadable since the require is inside the function body).
-  const rspackCore: typeof import('@rspack/core') = compiler
-    ? (compiler.rspack as unknown as typeof import('@rspack/core'))
-    : require('@rspack/core');
+  // See load-rspack-core.ts.
+  const rspackCore = loadRspackCore(compiler);
   const {
     CssExtractRspackPlugin,
     DefinePlugin,

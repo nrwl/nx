@@ -40,10 +40,9 @@
       "x-prompt": "What app framework should detox test?"
     },
     "linter": {
-      "description": "The tool to use for running lint checks.",
+      "description": "The tool to use for running lint checks. Defaults to the linter the workspace already uses.",
       "type": "string",
-      "enum": ["eslint", "none"],
-      "default": "eslint"
+      "enum": ["eslint", "oxlint", "none"]
     },
     "js": {
       "description": "Generate JavaScript files rather than TypeScript files.",
@@ -56,10 +55,16 @@
       "default": false,
       "x-priority": "internal"
     },
+    "enableTypedLinting": {
+      "type": "boolean",
+      "description": "Whether to enable typed linting. For flat configs, this configures the recommended `parserOptions.projectService` and `tsconfigRootDir`. For legacy `.eslintrc` configs, this configures `parserOptions.project`. We do not enable this by default for lint performance reasons.",
+      "default": false
+    },
     "setParserOptionsProject": {
       "type": "boolean",
-      "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
-      "default": false
+      "description": "Deprecated alias for `enableTypedLinting`.",
+      "default": false,
+      "x-deprecated": "Use `enableTypedLinting` instead. This option will be removed in Nx v24."
     },
     "useProjectJson": {
       "type": "boolean",

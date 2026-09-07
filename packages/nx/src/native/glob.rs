@@ -82,15 +82,54 @@ impl NxGlobSet {
     }
 }
 
+/// Splits a glob that is a single top-level brace group (`{a,b,c}`) into its
+/// alternatives, so each can be extglob-converted independently; returns
+/// anything else unchanged. A glob that starts with `{` and ends with `}` can
+/// still be several groups (`{a,b}/x.{c,d}`), which globset expands natively,
+/// so only a group whose opening brace closes at the final character is split.
+/// The common path returns a borrowing `Once` to stay allocation-free.
 fn potential_glob_split(
     glob: &str,
-) -> itertools::Either<std::str::Split<'_, char>, std::iter::Once<&str>> {
+) -> itertools::Either<std::vec::IntoIter<&str>, std::iter::Once<&str>> {
     use itertools::Either::*;
-    if glob.starts_with('{') && glob.ends_with('}') {
-        Left(glob.trim_matches('{').trim_end_matches('}').split(','))
-    } else {
-        Right(std::iter::once(glob))
+    let bytes = glob.as_bytes();
+    if bytes.first() != Some(&b'{') || bytes.last() != Some(&b'}') {
+        return Right(std::iter::once(glob));
     }
+
+    // Not a single group if the opening brace closes before the final char.
+    let mut depth = 0usize;
+    for (i, &b) in bytes.iter().enumerate() {
+        match b {
+            b'{' => depth += 1,
+            b'}' => {
+                depth -= 1;
+                if depth == 0 && i != bytes.len() - 1 {
+                    return Right(std::iter::once(glob));
+                }
+            }
+            _ => {}
+        }
+    }
+
+    // Split on commas at the outer depth, leaving any nested `{...}` intact.
+    let inner = &glob[1..bytes.len() - 1];
+    let mut parts = Vec::new();
+    let mut depth = 0usize;
+    let mut start = 0usize;
+    for (i, &b) in inner.as_bytes().iter().enumerate() {
+        match b {
+            b'{' => depth += 1,
+            b'}' => depth -= 1,
+            b',' if depth == 0 => {
+                parts.push(&inner[start..i]);
+                start = i + 1;
+            }
+            _ => {}
+        }
+    }
+    parts.push(&inner[start..]);
+    Left(parts.into_iter())
 }
 
 pub(crate) fn build_glob_set<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Result<Arc<NxGlobSet>> {
@@ -107,7 +146,18 @@ pub(crate) fn build_glob_set<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Resu
         .iter()
         .flat_map(|s| potential_glob_split(s.as_ref()))
         .map(|glob| {
-            if glob.contains('!') || glob.contains('|') || glob.contains('(') || glob.contains("{,")
+            // Decide on the pattern without its negation marker. A leading `!`
+            // marks the whole glob as an exclusion — it is not extglob syntax —
+            // and convert_glob strips bare `@`, `+` and `?` out of anything it
+            // touches (see special_char_with_no_group, which `+spec.ts`-style
+            // patterns rely on). Routing a plain exclusion through it purely
+            // because of that leading `!` silently rewrote `!dist/@scope/pkg`
+            // to `!dist/scope/pkg`, so the exclusion matched nothing.
+            let pattern = glob.strip_prefix('!').unwrap_or(glob);
+            if pattern.contains('!')
+                || pattern.contains('|')
+                || pattern.contains('(')
+                || pattern.contains("{,")
             {
                 convert_glob(glob)
             } else {
@@ -122,6 +172,15 @@ pub(crate) fn build_glob_set<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Resu
     let glob_set = Arc::new(NxGlobSetBuilder::new(&result)?.build()?);
     GLOB_CACHE.insert(cache_key, Arc::clone(&glob_set));
     Ok(glob_set)
+}
+
+#[napi]
+/// Checks which `paths` match the given `globs`, using the same glob engine
+/// as the task hasher (`build_glob_set`). Used to statically match
+/// `dependentTasksOutputFiles` globs against candidate paths.
+pub fn match_glob_paths(globs: Vec<String>, paths: Vec<String>) -> anyhow::Result<Vec<bool>> {
+    let glob_set = build_glob_set(&globs)?;
+    Ok(paths.iter().map(|path| glob_set.is_match(path)).collect())
 }
 
 pub(crate) fn contains_glob_pattern(value: &str) -> bool {
@@ -143,6 +202,38 @@ pub(crate) fn contains_glob_pattern(value: &str) -> bool {
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[test]
+    fn should_not_strip_literal_chars_from_plain_negated_globs() {
+        // A leading `!` is not extglob syntax. Routing a plain exclusion
+        // through convert_glob because of it used to eat the `@`/`+`, so the
+        // exclusion matched nothing at all.
+        let glob_set = build_glob_set(&["dist/**", "!dist/libs/@scope/pkg/.cache/**"]).unwrap();
+        assert!(glob_set.is_match("dist/libs/@scope/pkg/index.js"));
+        assert!(!glob_set.is_match("dist/libs/@scope/pkg/.cache/x"));
+
+        let glob_set = build_glob_set(&["dist/**", "!dist/libs/a+b/.cache/**"]).unwrap();
+        assert!(!glob_set.is_match("dist/libs/a+b/.cache/x"));
+
+        // Extglob exclusions still convert exactly as before — nx's own default
+        // inputs rely on `+spec.ts` collapsing to `spec.ts`.
+        let glob_set = build_glob_set(&["libs/**/*", "!libs/**/?(*.)+spec.ts?(.snap)"]).unwrap();
+        assert!(!glob_set.is_match("libs/a/b.spec.ts"));
+        assert!(glob_set.is_match("libs/a/b.ts"));
+    }
+
+    #[test]
+    fn should_match_glob_paths() {
+        let result = match_glob_paths(
+            vec!["**/*.d.ts".to_string()],
+            vec![
+                "dist/libs/dep/index.d.ts".to_string(),
+                "dist/libs/dep/index.js".to_string(),
+            ],
+        )
+        .unwrap();
+        assert_eq!(result, vec![true, false]);
+    }
 
     #[test]
     fn should_work_with_simple_globs() {
@@ -375,6 +466,38 @@ mod test {
         assert!(glob_set.is_match("packages/package-b/package.json"));
         assert!(glob_set.is_match("packages/package-c/package.json"));
         assert!(!glob_set.is_match("packages/package-a/package.json"));
+    }
+
+    #[test]
+    fn supports_multiple_brace_groups() {
+        // The vite/vitest generators write this include; for a workspace-root
+        // project it reaches the native glob unprefixed, so it starts with `{`,
+        // ends with `}`, and spans three groups.
+        let glob_set =
+            build_glob_set(&["{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"])
+                .unwrap();
+        assert!(glob_set.is_match("src/a.spec.ts"));
+        assert!(glob_set.is_match("tests/b.test.tsx"));
+        assert!(glob_set.is_match("src/deep/c.spec.mts"));
+        assert!(!glob_set.is_match("src/helper.ts"));
+        assert!(!glob_set.is_match("lib/a.spec.ts"));
+    }
+
+    #[test]
+    fn potential_glob_split_only_splits_a_single_enclosing_group() {
+        let split = |glob| potential_glob_split(glob).collect::<Vec<_>>();
+        // A single top-level group is split so each branch converts on its own.
+        assert_eq!(split("{a,b,c}"), vec!["a", "b", "c"]);
+        // Multiple groups spanning the string are left whole for globset.
+        assert_eq!(
+            split("{src,tests}/**/*.{test,spec}.{js,ts}"),
+            vec!["{src,tests}/**/*.{test,spec}.{js,ts}"]
+        );
+        // A comma nested inside a group is not a split point.
+        assert_eq!(split("{a,@(b|c).{d,e}}"), vec!["a", "@(b|c).{d,e}"]);
+        // Not a single enclosing group -> unchanged.
+        assert_eq!(split("{a,b}/*"), vec!["{a,b}/*"]);
+        assert_eq!(split("src/**/*.ts"), vec!["src/**/*.ts"]);
     }
 
     #[test]

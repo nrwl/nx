@@ -16,8 +16,8 @@
     "node_modules",
     "dist",
     "jest.config.cts",
-    "src/**/*.spec.ts",
-    "src/**/*.test.ts",
+    "**/*.spec.ts",
+    "**/*.test.ts",
     ".eslintrc.json"
   ],
   "references": [

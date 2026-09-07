@@ -1,4 +1,7 @@
-import { installPackageToTmpAsync } from '../../devkit-internals';
+// Import from the defining module, not the devkit-internals barrel: the barrel
+// eagerly pulls in the task-execution subsystem and instantiates a daemon
+// client, all of which would stay resident for the daemon server's lifetime.
+import { installPackageToTmpAsync } from '../../utils/package-json';
 import { detectPackageManager } from '../../utils/package-manager';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
 import { workspaceRoot } from '../../utils/workspace-root';

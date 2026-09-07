@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest';
 import type { CompilerOptions } from 'typescript';
 import { JsxEmit, ModuleKind, ScriptTarget } from 'typescript';
 import {
@@ -10,12 +11,25 @@ import {
   isTsEsmSyntaxError,
   NODENEXT_ESM_RESOLVER_SOURCE,
   nodeNextEsmResolveHook,
+  resolveTsNodeEsmCompilerOptions,
 } from './register';
 
 // Avoid a real swc registration side effect when exercising getTranspiler.
-jest.mock('@swc-node/register/register', () => ({
-  register: () => () => {},
-}));
+// The source loads this with a bare require (CJS channel), so stub the
+// require cache rather than vi.mock.
+import { createRequire, Module } from 'node:module';
+import {
+  mockCjsModule,
+  resetCjsMocks,
+} from '../../../internal-testing-utils/cjs-mock';
+{
+  const req = createRequire(import.meta.url);
+  const modPath = req.resolve('@swc-node/register/register');
+  const stub = new (Module as any)(modPath);
+  stub.exports = { register: () => () => {} };
+  stub.loaded = true;
+  req.cache[modPath] = stub;
+}
 
 describe('getTsNodeCompilerOptions', () => {
   it('should replace enum value with enum key for module', () => {
@@ -65,11 +79,10 @@ describe('isNativeStripPreferred', () => {
     });
   }
 
-  function loadIsNativeStripPreferred(): boolean {
+  async function loadIsNativeStripPreferred(): boolean {
     let result: boolean;
-    jest.isolateModules(() => {
-      result = require('./register').isNativeStripPreferred();
-    });
+    vi.resetModules();
+    result = (await import('./register')).isNativeStripPreferred();
     return result;
   }
 
@@ -82,65 +95,68 @@ describe('isNativeStripPreferred', () => {
     }
   });
 
-  it('prefers native strip when the runtime supports it', () => {
+  it('prefers native strip when the runtime supports it', async () => {
     setNativeTypescriptSupport('strip');
     delete process.env.NX_PREFER_TS_NODE;
     delete process.env.NX_PREFER_NODE_STRIP_TYPES;
-    expect(loadIsNativeStripPreferred()).toBe(true);
+    expect(await loadIsNativeStripPreferred()).toBe(true);
   });
 
-  it('does not prefer native strip when the runtime lacks support', () => {
+  it('does not prefer native strip when the runtime lacks support', async () => {
     setNativeTypescriptSupport(false);
     delete process.env.NX_PREFER_TS_NODE;
     delete process.env.NX_PREFER_NODE_STRIP_TYPES;
-    expect(loadIsNativeStripPreferred()).toBe(false);
+    expect(await loadIsNativeStripPreferred()).toBe(false);
   });
 
-  it('does not prefer native strip when NX_PREFER_NODE_STRIP_TYPES is false', () => {
+  it('does not prefer native strip when NX_PREFER_NODE_STRIP_TYPES is false', async () => {
     setNativeTypescriptSupport('strip');
     process.env.NX_PREFER_NODE_STRIP_TYPES = 'false';
-    expect(loadIsNativeStripPreferred()).toBe(false);
+    expect(await loadIsNativeStripPreferred()).toBe(false);
   });
 
-  it('does not prefer native strip when NX_PREFER_TS_NODE is true', () => {
+  it('does not prefer native strip when NX_PREFER_TS_NODE is true', async () => {
     setNativeTypescriptSupport('strip');
     process.env.NX_PREFER_TS_NODE = 'true';
     delete process.env.NX_PREFER_NODE_STRIP_TYPES;
-    expect(loadIsNativeStripPreferred()).toBe(false);
+    expect(await loadIsNativeStripPreferred()).toBe(false);
   });
 });
 
 describe('getTranspiler', () => {
+  // Each case swaps the lazily-required `typescript`; drop the swap afterwards
+  // so the doctored version does not leak into later tests in this file.
+  afterEach(() => {
+    resetCjsMocks();
+  });
+
   // TS6 requires the suppression flag to avoid hard-erroring on deprecated options.
-  it('sets ignoreDeprecations to "6.0" on TypeScript >= 6', () => {
-    jest.isolateModules(() => {
-      jest.doMock('typescript', () => ({
-        ...jest.requireActual('typescript'),
-        versionMajorMinor: '6.0',
-      }));
-      const { getTranspiler: fresh } =
-        require('./register') as typeof import('./register');
-      const opts: CompilerOptions = {};
-      fresh(opts);
-      expect(opts.ignoreDeprecations).toEqual('6.0');
+  it('sets ignoreDeprecations to "6.0" on TypeScript >= 6', async () => {
+    vi.resetModules();
+    // register.ts lazy-requires typescript (CJS channel); replace it there.
+    mockCjsModule(import.meta.url, 'typescript', {
+      ...require('typescript'),
+      versionMajorMinor: '6.0',
     });
-    jest.unmock('typescript');
+    const { getTranspiler: fresh } =
+      (await import('./register')) as typeof import('./register');
+    const opts: CompilerOptions = {};
+    fresh(opts);
+    expect(opts.ignoreDeprecations).toEqual('6.0');
   });
 
   // TS5 rejects the '6.0' value (TS5103) so the option must stay absent.
-  it('leaves ignoreDeprecations unset on TypeScript < 6', () => {
-    jest.isolateModules(() => {
-      jest.doMock('typescript', () => ({
-        ...jest.requireActual('typescript'),
-        versionMajorMinor: '5.9',
-      }));
-      const { getTranspiler: fresh } =
-        require('./register') as typeof import('./register');
-      const opts: CompilerOptions = {};
-      fresh(opts);
-      expect(opts.ignoreDeprecations).toBeUndefined();
+  it('leaves ignoreDeprecations unset on TypeScript < 6', async () => {
+    vi.resetModules();
+    mockCjsModule(import.meta.url, 'typescript', {
+      ...require('typescript'),
+      versionMajorMinor: '5.9',
     });
-    jest.unmock('typescript');
+    const { getTranspiler: fresh } =
+      (await import('./register')) as typeof import('./register');
+    const opts: CompilerOptions = {};
+    fresh(opts);
+    expect(opts.ignoreDeprecations).toBeUndefined();
   });
 });
 
@@ -318,19 +334,13 @@ describe('NodeNext ESM resolve hook (NODENEXT_ESM_RESOLVER_SOURCE)', () => {
 
   let resolve: ResolveHook;
 
-  beforeAll(() => {
-    // Exercise the exact shipped hook source. It's authored as an ESM module
-    // (registered as a `data:` module at runtime), so evaluate it as CommonJS
-    // here - Jest's VM can't honor a `data:` dynamic import without
-    // --experimental-vm-modules.
-    const cjs =
-      NODENEXT_ESM_RESOLVER_SOURCE.replace(
-        'export async function resolve',
-        'async function resolve'
-      ) + '\nmodule.exports = { resolve };';
-    const mod: { exports: { resolve?: ResolveHook } } = { exports: {} };
-    new Function('module', 'exports', cjs)(mod, mod.exports);
-    resolve = mod.exports.resolve!;
+  beforeAll(async () => {
+    // Load the shipped source through the same `data:` module `register()`
+    // builds, so the tests exercise what Node actually registers.
+    const mod = await import(
+      'data:text/javascript,' + encodeURIComponent(NODENEXT_ESM_RESOLVER_SOURCE)
+    );
+    resolve = mod.resolve;
   });
 
   const TS_PARENT = 'file:///ws/src/index.ts';
@@ -472,4 +482,209 @@ describe('NodeNext ESM resolve hook (nodeNextEsmResolveHook, sync)', () => {
       )
     ).toThrow(expect.objectContaining({ code: 'ERR_MODULE_NOT_FOUND' }));
   });
+});
+
+describe('resolveTsNodeEsmCompilerOptions', () => {
+  it('defaults to nodenext when no value is inherited', () => {
+    expect(JSON.parse(resolveTsNodeEsmCompilerOptions(undefined))).toEqual({
+      moduleResolution: 'nodenext',
+      module: 'nodenext',
+    });
+  });
+
+  it('forces nodenext while preserving other inherited options', () => {
+    const raw = JSON.stringify({
+      moduleResolution: 'node10',
+      module: 'commonjs',
+      customConditions: null,
+      paths: { '@lib': ['libs/lib'] },
+    });
+    expect(JSON.parse(resolveTsNodeEsmCompilerOptions(raw))).toEqual({
+      moduleResolution: 'nodenext',
+      module: 'nodenext',
+      customConditions: null,
+      paths: { '@lib': ['libs/lib'] },
+    });
+  });
+
+  it.each(['{oops', 'null', '7', 'true', '"hello"', '["commonjs"]'])(
+    'passes %s through unchanged for ts-node to handle',
+    (raw) => {
+      expect(resolveTsNodeEsmCompilerOptions(raw)).toBe(raw);
+    }
+  );
+});
+
+describe('forceRegisterEsmLoader', () => {
+  const originalEnv = { ...process.env };
+  let registerSpy: MockInstance;
+
+  beforeEach(() => {
+    registerSpy = vi
+      .spyOn(require('node:module'), 'register')
+      .mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    registerSpy.mockRestore();
+    process.env = { ...originalEnv };
+  });
+
+  async function loadForceRegisterEsmLoader(): Promise<() => void> {
+    vi.resetModules();
+    return (await import('./register')).forceRegisterEsmLoader;
+  }
+
+  function registeredSetterOptions(): unknown {
+    expect(String(registerSpy.mock.calls[0][0])).toMatch(
+      /^data:text\/javascript,/
+    );
+    const source = decodeURIComponent(
+      String(registerSpy.mock.calls[0][0]).replace('data:text/javascript,', '')
+    );
+    const rhs = source.match(
+      /^process\.env\.TS_NODE_COMPILER_OPTIONS = (.*);$/
+    )[1];
+    return JSON.parse(JSON.parse(rhs));
+  }
+
+  it('registers a compiler-options setter module before the ts-node/esm loader', async () => {
+    delete process.env.TS_NODE_COMPILER_OPTIONS;
+
+    (await loadForceRegisterEsmLoader())();
+
+    expect(registerSpy).toHaveBeenCalledTimes(2);
+    expect(String(registerSpy.mock.calls[1][0])).toMatch(/ts-node\/esm\.mjs$/);
+    expect(registeredSetterOptions()).toEqual({
+      moduleResolution: 'nodenext',
+      module: 'nodenext',
+    });
+  });
+
+  it('forces nodenext module and resolution over an inherited value', async () => {
+    process.env.TS_NODE_COMPILER_OPTIONS = JSON.stringify({
+      moduleResolution: 'node10',
+      module: 'commonjs',
+      customConditions: null,
+    });
+
+    (await loadForceRegisterEsmLoader())();
+
+    expect(registeredSetterOptions()).toEqual({
+      moduleResolution: 'nodenext',
+      module: 'nodenext',
+      customConditions: null,
+    });
+    // Child processes must keep seeing the inherited value.
+    expect(process.env.TS_NODE_COMPILER_OPTIONS).toBe(
+      JSON.stringify({
+        moduleResolution: 'node10',
+        module: 'commonjs',
+        customConditions: null,
+      })
+    );
+  });
+
+  it('passes a malformed inherited value through for ts-node to reject', async () => {
+    process.env.TS_NODE_COMPILER_OPTIONS = '{oops';
+
+    (await loadForceRegisterEsmLoader())();
+
+    const source = decodeURIComponent(
+      String(registerSpy.mock.calls[0][0]).replace('data:text/javascript,', '')
+    );
+    expect(source).toBe('process.env.TS_NODE_COMPILER_OPTIONS = "{oops";');
+  });
+
+  it('does not write a default value into the process env', async () => {
+    delete process.env.TS_NODE_COMPILER_OPTIONS;
+
+    (await loadForceRegisterEsmLoader())();
+
+    expect(process.env.TS_NODE_COMPILER_OPTIONS).toBeUndefined();
+  });
+});
+
+// A real `ts-node/esm` registration in a child process. `@swc-node/register`
+// loads the TypeScript source there and is hidden from the ESM loader pick so
+// `ts-node/esm` is the loader under test.
+describe('forceRegisterEsmLoader with ts-node/esm', () => {
+  const {
+    mkdtempSync,
+    realpathSync,
+    rmSync,
+    writeFileSync,
+  } = require('node:fs');
+  const { tmpdir } = require('node:os');
+  const { join } = require('node:path');
+  let dir: string;
+
+  beforeAll(() => {
+    // Real path: the loader reports the resolved url.
+    dir = realpathSync(mkdtempSync(join(tmpdir(), 'nx-ts-node-esm-')));
+    writeFileSync(
+      join(dir, 'config.mts'),
+      'export enum Kind { Esm = 1 }\nexport const url = import.meta.url;\n'
+    );
+    writeFileSync(
+      join(dir, 'entry.cjs'),
+      `
+const Module = require('node:module');
+const resolveFilename = Module._resolveFilename;
+Module._resolveFilename = function (request, ...rest) {
+  if (request === '@swc-node/register/esm') {
+    throw Object.assign(new Error('hidden'), { code: 'MODULE_NOT_FOUND' });
+  }
+  return resolveFilename.call(this, request, ...rest);
+};
+const { forceRegisterEsmLoader } = require(process.argv[2]);
+process.env.TS_NODE_COMPILER_OPTIONS = JSON.stringify({
+  module: 'commonjs',
+  moduleResolution: 'node10',
+});
+forceRegisterEsmLoader();
+// Kept out of the transpiled source: a CommonJS transform would turn it into
+// a require, and the file exists to exercise the ESM loader.
+new Function('s', 'return import(s)')(process.argv[3]).then(
+  (m) => process.send({ ok: true, url: m.url, kind: m.Kind.Esm }),
+  (e) => process.send({ ok: false, message: String(e.diagnosticText ?? e) })
+);
+`
+    );
+  });
+
+  afterAll(() => {
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('loads an ESM config despite an inherited CommonJS TS_NODE_COMPILER_OPTIONS', async () => {
+    const { fork } = require('node:child_process');
+    const { pathToFileURL } = require('node:url');
+    const configUrl = pathToFileURL(join(dir, 'config.mts')).href;
+    // The child sets the inherited value itself, after its own CommonJS loader
+    // has started, so that loader's options play no part.
+    const { TS_NODE_COMPILER_OPTIONS, NODE_OPTIONS, ...env } = process.env;
+    const child = fork(
+      join(dir, 'entry.cjs'),
+      [require.resolve('./register'), configUrl],
+      {
+        cwd: process.cwd(),
+        env,
+        execArgv: ['--require', '@swc-node/register'],
+        stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
+      }
+    );
+    let stderr = '';
+    child.stderr.on('data', (chunk) => (stderr += chunk));
+    const result = await new Promise<any>((resolve, reject) => {
+      child.once('message', resolve);
+      child.once('error', reject);
+      child.once('exit', (code) =>
+        reject(new Error(`exited with ${code} before replying:\n${stderr}`))
+      );
+    });
+    child.kill();
+
+    expect(result).toEqual({ ok: true, url: configUrl, kind: 1 });
+  }, 60_000);
 });

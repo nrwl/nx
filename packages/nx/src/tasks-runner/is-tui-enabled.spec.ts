@@ -2,9 +2,9 @@ import { withEnvironmentVariables } from '../internal-testing-utils/with-environ
 import { shouldUseTui } from './is-tui-enabled';
 import { logger } from '../utils/logger';
 
-jest.mock('../native', () => ({
-  ...jest.requireActual('../native'),
-  isAiAgent: jest.fn(() => false),
+vi.mock('../native', async () => ({
+  ...(await vi.importActual('../native')),
+  isAiAgent: vi.fn(() => false),
   IS_WASM: false,
 }));
 
@@ -86,20 +86,24 @@ describe('shouldUseTui', () => {
       }
     ));
 
-  it.each(['dynamic-legacy', 'static', 'stream', 'stream-without-prefixes'])(
-    'should be disabled if output-style=%s',
-    (outputStyle) =>
-      withEnvironmentVariables(
-        {
-          NX_TUI: null,
-          CI: 'false',
-        },
-        () => {
-          expect(
-            shouldUseTui({ tui: { enabled: true } }, { outputStyle }, true)
-          ).toBe(false);
-        }
-      )
+  it.each([
+    'dynamic-legacy',
+    'static',
+    'static-failures-only',
+    'stream',
+    'stream-without-prefixes',
+  ])('should be disabled if output-style=%s', (outputStyle) =>
+    withEnvironmentVariables(
+      {
+        NX_TUI: null,
+        CI: 'false',
+      },
+      () => {
+        expect(
+          shouldUseTui({ tui: { enabled: true } }, { outputStyle }, true)
+        ).toBe(false);
+      }
+    )
   );
 
   it.each(['dynamic', 'tui'])('should be enabled if output-style=%s', () =>
@@ -161,7 +165,7 @@ describe('shouldUseTui', () => {
   it('should warn if the env is not capable when tui flag is true', () => {
     const original = process.stderr.isTTY;
     process.stderr.isTTY = false;
-    const warnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {});
     withEnvironmentVariables(
       {
         NX_TUI: null,

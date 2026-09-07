@@ -1,12 +1,12 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { getProjects } from '@nx/devkit';
 import { Schema } from './schema';
 import { Schema as remoteSchma } from '../remote/schema';
 import { federateModuleGenerator } from './federate-module';
-import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 import remoteGenerator from '../remote/remote';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 describe('federate-module', () => {
   let schema: Schema = {

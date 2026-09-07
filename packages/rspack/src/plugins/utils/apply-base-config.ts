@@ -10,6 +10,7 @@ import type {
 } from '@rspack/core';
 import { getRootTsConfigPath } from '@nx/js';
 import { getRspackCoreMajorVersion } from '../../utils/version-utils';
+import { loadRspackCore } from '../../utils/load-rspack-core';
 
 import { StatsJsonPlugin } from './plugins/stats-json-plugin';
 import { GeneratePackageJsonPlugin } from './plugins/generate-package-json-plugin';
@@ -60,10 +61,8 @@ export function applyBaseConfig(
   options.outputHashing ??= 'all';
 
   // Lazy-require avoids loading @rspack/core (pure ESM in v2) at module
-  // parse time, so Jest can still load this file.
-  const rspackCore: typeof import('@rspack/core') = compiler
-    ? (compiler.rspack as unknown as typeof import('@rspack/core'))
-    : require('@rspack/core');
+  // parse time, so Jest can still load this file. See load-rspack-core.ts.
+  const rspackCore = loadRspackCore(compiler);
 
   applyNxIndependentConfig(options, config, rspackCore);
 
@@ -341,6 +340,13 @@ function applyNxDependentConfig(
     if (isUsingTsSolution) {
       pluginConfig.typescript.build = true;
       pluginConfig.typescript.mode = 'readonly';
+    } else {
+      // TS 6 defaults rootDir to the tsconfig dir, so from-source workspace
+      // libs (outside a narrow rootDir) trip TS6059. The checker runs read-only
+      // here, so widen rootDir to the workspace root to clear the false error.
+      pluginConfig.typescript.configOverwrite = {
+        compilerOptions: { rootDir: options.root },
+      };
     }
 
     plugins.push(new TsCheckerRspackPlugin(pluginConfig));
@@ -485,7 +491,15 @@ function applyNxDependentConfig(
   config.externals = externals;
 
   // Enabled for performance
-  config.cache = 'cache' in options ? options.cache : true;
+  const cache = 'cache' in options ? options.cache : true;
+  // compiler.options is already normalized when NxAppRspackPlugin runs, and
+  // @rspack/core >= 2.1 rejects the public `cache` shape after normalization.
+  config.cache = useNormalizedEntry
+    ? rspackCore.config.getNormalizedRspackOptions({
+        context: config.context,
+        cache,
+      }).cache
+    : cache;
   config.module = {
     ...config.module,
     rules: [

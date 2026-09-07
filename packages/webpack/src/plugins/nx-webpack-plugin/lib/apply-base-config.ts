@@ -1,10 +1,6 @@
 import * as path from 'path';
-import { ExecutorContext } from 'nx/src/config/misc-interfaces';
-import { LicenseWebpackPlugin } from 'license-webpack-plugin';
-import CopyWebpackPlugin from 'copy-webpack-plugin';
-import {
+import type {
   Configuration,
-  ProgressPlugin,
   WebpackOptionsNormalized,
   WebpackPluginInstance,
 } from 'webpack';
@@ -17,10 +13,9 @@ import { NxTsconfigPathsWebpackPlugin } from '../../nx-typescript-webpack-plugin
 import { getTerserEcmaVersion } from './get-terser-ecma-version';
 import { createLoaderFromCompiler } from './compiler-loaders';
 import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options';
-import TerserPlugin = require('terser-webpack-plugin');
-import nodeExternals = require('webpack-node-externals');
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { getNonBuildableLibs } from './utils';
+import { ExecutorContext } from '@nx/devkit';
 
 const IGNORED_WEBPACK_WARNINGS = [
   /The comment file/i,
@@ -35,6 +30,38 @@ const extensionAlias = {
 };
 const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
 const mainFields = ['module', 'main'];
+
+// webpack 5.110 widened `optimization.minimize` to accept an object it fills per
+// asset type. The types shipped with 5.x still declare a boolean, so the real
+// shape is spelled out once here instead of being cast at the assignment.
+type MinimizeOption = boolean | Record<string, never>;
+
+type OptimizationWithMinimize = Omit<
+  NonNullable<Configuration['optimization']>,
+  'minimize'
+> & { minimize?: MinimizeOption };
+
+/**
+ * `withNx` builds a raw config that webpack validates, and only the boolean is
+ * schema-valid before 5.110. `NxAppWebpackPlugin` instead mutates options that
+ * are already normalized, which 5.110 fills by setting `.javascript` on
+ * `minimize`, so a boolean throws there.
+ */
+function setMinimizeValue(
+  optimization: OptimizationWithMinimize,
+  shouldMinify: boolean,
+  configIsNormalized: boolean
+): void {
+  if (!shouldMinify) {
+    optimization.minimize = false;
+    return;
+  }
+  if (configIsNormalized) {
+    optimization.minimize = {};
+    return;
+  }
+  optimization.minimize = true;
+}
 
 export function applyBaseConfig(
   options: NormalizedNxAppWebpackPluginOptions,
@@ -55,7 +82,7 @@ export function applyBaseConfig(
   options.memoryLimit ??= 2048;
   options.transformers ??= [];
 
-  applyNxIndependentConfig(options, config);
+  applyNxIndependentConfig(options, config, !!useNormalizedEntry);
 
   // Some of the options only work during actual tasks, not when reading the webpack config during CreateNodes.
   if (global.NX_GRAPH_CREATION) return;
@@ -65,8 +92,12 @@ export function applyBaseConfig(
 
 function applyNxIndependentConfig(
   options: NormalizedNxAppWebpackPluginOptions,
-  config: Partial<WebpackOptionsNormalized | Configuration>
+  config: Partial<WebpackOptionsNormalized | Configuration>,
+  configIsNormalized: boolean
 ): void {
+  const TerserPlugin =
+    require('terser-webpack-plugin') as typeof import('terser-webpack-plugin');
+
   const hashFormat = getOutputHashFormat(options.outputHashing as string);
   config.context = path.join(options.root, options.projectRoot);
   config.target ??= options.target;
@@ -172,13 +203,14 @@ function applyNxIndependentConfig(
     ...(config.ignoreWarnings ?? []),
   ];
 
+  const shouldMinify =
+    typeof options.optimization === 'object'
+      ? !!options.optimization.scripts
+      : !!options.optimization;
+
   config.optimization = {
     ...config.optimization,
     sideEffects: true,
-    minimize:
-      typeof options.optimization === 'object'
-        ? !!options.optimization.scripts
-        : !!options.optimization,
     minimizer: [
       options.compiler !== 'swc'
         ? new TerserPlugin({
@@ -199,6 +231,10 @@ function applyNxIndependentConfig(
           })
         : new TerserPlugin({
             minify: TerserPlugin.swcMinify,
+            // terser-webpack-plugin 5.6+ forwards `extractComments` into swc's
+            // minify options, which rejects it as an unknown field. Disable it
+            // like the babel branch does above.
+            extractComments: false,
             // `terserOptions` options will be passed to `swc`
             terserOptions: {
               module: true,
@@ -209,6 +245,8 @@ function applyNxIndependentConfig(
     runtimeChunk: false,
     concatenateModules: true,
   };
+
+  setMinimizeValue(config.optimization, shouldMinify, configIsNormalized);
 
   config.stats = {
     hash: true,
@@ -251,6 +289,14 @@ function applyNxDependentConfig(
   config: Partial<WebpackOptionsNormalized | Configuration>,
   { useNormalizedEntry }: { useNormalizedEntry?: boolean } = {}
 ): void {
+  const { ProgressPlugin } = require('webpack') as typeof import('webpack');
+  const { LicenseWebpackPlugin } =
+    require('license-webpack-plugin') as typeof import('license-webpack-plugin');
+  const CopyWebpackPlugin =
+    require('copy-webpack-plugin') as typeof import('copy-webpack-plugin');
+  const nodeExternals =
+    require('webpack-node-externals') as typeof import('webpack-node-externals');
+
   const tsConfig = options.tsConfig ?? getRootTsConfigPath();
   const plugins: WebpackPluginInstance[] = [];
 

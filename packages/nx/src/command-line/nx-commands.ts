@@ -46,6 +46,7 @@ import { yargsLogoutCommand } from './nx-cloud/logout/command-object';
 import { yargsRecordCommand } from './nx-cloud/record/command-object';
 import { yargsStartAgentCommand } from './nx-cloud/start-agent/command-object';
 import { yargsStartCiRunCommand } from './nx-cloud/start-ci-run/command-object';
+import { yargsStartNxAgentsCommand } from './nx-cloud/start-nx-agents/command-object';
 import { yargsRegisterCommand } from './register/command-object';
 import { yargsReleaseCommand } from './release/command-object';
 import { yargsRepairCommand } from './repair/command-object';
@@ -116,6 +117,7 @@ export const commandsObject = yargs
   .command(yargsLogoutCommand)
   .command(yargsRecordCommand)
   .command(yargsStartCiRunCommand)
+  .command(yargsStartNxAgentsCommand)
   .command(yargsStartAgentCommand)
   .command(yargsStopAllAgentsCommand)
   .command(yargsFixCiCommand)

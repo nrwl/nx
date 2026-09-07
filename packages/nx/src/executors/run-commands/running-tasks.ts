@@ -16,10 +16,42 @@ import {
 } from '../../tasks-runner/task-env';
 import { registerTaskProcessStart } from '../../tasks-runner/task-io-service';
 import { signalToCode } from '../../utils/exit-codes';
+import { output as cliOutput } from '../../utils/output';
 import {
   NormalizedRunCommandsOptions,
   RunCommandsCommandOptions,
 } from './run-commands.impl';
+
+/**
+ * The one place this file puts task output on the terminal.
+ *
+ * Deliberately write-only: recording a chunk and printing it are separate steps
+ * whose ORDER matters at some call sites - the data handlers notify output
+ * listeners between the two - so a helper that bundled them would silently
+ * reorder the terminal write relative to those listeners. What is worth
+ * funnelling is the write itself, because it carries an invariant: anything
+ * reaching the terminal has to go through `cliOutput` or
+ * {@link CLIOutput.atLineStart} goes stale, and `addColorAndPrefix` splits on
+ * newlines without ever appending one, so these chunks routinely end mid-line.
+ */
+function streamChunk(
+  chunk: string,
+  streamOutput: boolean,
+  target: NodeJS.WriteStream = process.stdout
+) {
+  if (streamOutput) {
+    cliOutput.writeTaskOutputChunk(chunk, target);
+  }
+}
+
+/**
+ * The non-zero-exit warning, emitted from three call sites that each keep their
+ * output in a different accumulator. Deliberately has no trailing newline, so
+ * whatever prints next has to account for the cursor being mid-line.
+ */
+function commandExitedNonZeroWarning(command: string): string {
+  return `Warning: command "${command}" exited with non-zero status code`;
+}
 
 export class ParallelRunningTasks implements RunningTask {
   private readonly childProcesses: RunningNodeProcess[];
@@ -130,11 +162,9 @@ export class ParallelRunningTasks implements RunningTask {
       );
 
       if (code !== 0) {
-        const output = `Warning: command "${childProcess.command}" exited with non-zero status code`;
-        terminalOutput += output;
-        if (this.streamOutput) {
-          process.stderr.write(output);
-        }
+        const warning = commandExitedNonZeroWarning(childProcess.command);
+        terminalOutput += warning;
+        streamChunk(warning, this.streamOutput, process.stderr);
       }
 
       this.emitExit(code, terminalOutput);
@@ -177,11 +207,11 @@ export class ParallelRunningTasks implements RunningTask {
 
       if (hasFailure && failureDetails) {
         // Add failure message
-        const output = `Warning: command "${failureDetails.childProcess.command}" exited with non-zero status code`;
-        terminalOutput += output;
-        if (this.streamOutput) {
-          process.stderr.write(output);
-        }
+        const warning = commandExitedNonZeroWarning(
+          failureDetails.childProcess.command
+        );
+        terminalOutput += warning;
+        streamChunk(warning, this.streamOutput, process.stderr);
 
         this.emitExit(1, terminalOutput);
       } else {
@@ -312,11 +342,9 @@ export class SeriallyRunningTasks implements RunningTask {
       this.terminalOutputChunks.push(terminalOutput);
       this.code = code;
       if (code !== 0) {
-        const output = `Warning: command "${c.command}" exited with non-zero status code`;
-        if (options.streamOutput) {
-          process.stderr.write(output);
-        }
-        this.terminalOutputChunks.push(output);
+        const warning = commandExitedNonZeroWarning(c.command);
+        streamChunk(warning, options.streamOutput, process.stderr);
+        this.terminalOutputChunks.push(warning);
 
         // Stop running commands
         break;
@@ -381,6 +409,11 @@ export class SeriallyRunningTasks implements RunningTask {
 }
 
 class RunningNodeProcess implements RunningTask {
+  /** This class's writes, funnelled through {@link streamChunk}. */
+  private stream(chunk: string, target: NodeJS.WriteStream = process.stdout) {
+    streamChunk(chunk, this.streamOutput, target);
+  }
+
   private terminalOutputChunks: string[] = [];
   private childProcess: ChildProcess;
   private exitCallbacks: Array<(code: number, terminalOutput: string) => void> =
@@ -401,7 +434,7 @@ class RunningNodeProcess implements RunningTask {
     cwd: string,
     env: Record<string, string>,
     private readyWhenStatus: { stringToMatch: string; found: boolean }[],
-    streamOutput = true,
+    private readonly streamOutput = true,
     envFile: string,
     private taskId: string
   ) {
@@ -409,9 +442,7 @@ class RunningNodeProcess implements RunningTask {
     this.command = commandConfig.command;
     const header = pc.dim('> ') + commandConfig.command + '\r\n\r\n';
     this.terminalOutputChunks.push(header);
-    if (streamOutput) {
-      process.stdout.write(header);
-    }
+    this.stream(header);
     this.childProcess = spawn(commandConfig.command, [], {
       shell: true,
       detached: process.platform !== 'win32',
@@ -433,7 +464,7 @@ class RunningNodeProcess implements RunningTask {
       registerTaskProcessStart(taskId, this.childProcess.pid);
     }
 
-    this.addListeners(commandConfig, streamOutput);
+    this.addListeners(commandConfig);
   }
 
   getResults(): Promise<{ code: number; terminalOutput: string }> {
@@ -502,10 +533,7 @@ class RunningNodeProcess implements RunningTask {
     }
   }
 
-  private addListeners(
-    commandConfig: RunCommandsCommandOptions,
-    streamOutput: boolean
-  ) {
+  private addListeners(commandConfig: RunCommandsCommandOptions) {
     // Named handlers so they can be removed when the child exits.
     // Otherwise each RunningNodeProcess leaks process listeners; with
     // many run-commands tasks this triggers MaxListenersExceededWarning.
@@ -541,9 +569,8 @@ class RunningNodeProcess implements RunningTask {
       this.terminalOutputChunks.push(output);
       this.triggerOutputListeners(output);
 
-      if (streamOutput) {
-        process.stdout.write(output);
-      }
+      this.stream(output);
+
       if (this.readyWhenStatus.length && isReady(this.readyWhenStatus, data)) {
         for (const cb of this.exitCallbacks) {
           cb(0, this.terminalOutputChunks.join(''));
@@ -556,9 +583,8 @@ class RunningNodeProcess implements RunningTask {
       this.terminalOutputChunks.push(output);
       this.triggerOutputListeners(output);
 
-      if (streamOutput) {
-        process.stderr.write(output);
-      }
+      this.stream(output, process.stderr);
+
       if (this.readyWhenStatus.length && isReady(this.readyWhenStatus, err)) {
         for (const cb of this.exitCallbacks) {
           cb(1, this.terminalOutputChunks.join(''));
@@ -568,9 +594,7 @@ class RunningNodeProcess implements RunningTask {
     this.childProcess.on('error', (err) => {
       const output = addColorAndPrefix(err.toString(), commandConfig);
       this.terminalOutputChunks.push(output);
-      if (streamOutput) {
-        process.stderr.write(output);
-      }
+      this.stream(output, process.stderr);
       const terminalOutput = this.terminalOutputChunks.join('');
       this.terminalOutputChunks = [];
       removeProcessListeners();

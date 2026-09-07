@@ -1,10 +1,10 @@
-import type { Linter, LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 
 export interface NxRemixGeneratorSchema {
   directory: string;
   name?: string;
   tags?: string;
-  linter?: Linter | LinterType;
+  linter?: LinterType;
   unitTestRunner?: 'vitest' | 'jest' | 'none';
   e2eTestRunner?: 'cypress' | 'playwright' | 'none';
   skipFormat?: boolean;
@@ -13,6 +13,6 @@ export interface NxRemixGeneratorSchema {
   addPlugin?: boolean;
   nxCloudToken?: string;
   useTsSolution?: boolean;
-  formatter?: 'prettier' | 'none';
+  formatter?: 'prettier' | 'oxfmt' | 'none';
   useProjectJson?: boolean;
 }

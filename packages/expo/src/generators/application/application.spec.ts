@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   getProjects,
@@ -570,8 +570,8 @@ describe('app', () => {
           "version",
           "private",
           "scripts",
-          "nx",
           "dependencies",
+          "nx",
         ]
       `);
 

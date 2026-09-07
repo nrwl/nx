@@ -48,39 +48,10 @@ export const baseConfig = [
   {
     rules: {
       '@typescript-eslint/explicit-module-boundary-types': 'off',
-      'no-restricted-imports': [
-        'error',
-        {
-          paths: [
-            {
-              name: 'create-nx-workspace',
-              message: 'Please import utils from nx or @nx/devkit instead.',
-            },
-            {
-              name: 'node-fetch',
-              message:
-                "Please default to native fetch instead of 'node-fetch'.",
-            },
-          ],
-        },
-      ],
-      '@typescript-eslint/no-restricted-imports': [
-        'error',
-        {
-          patterns: [
-            {
-              group: ['nx/src/plugins/js*'],
-              message:
-                "Imports from 'nx/src/plugins/js' are not allowed. Use '@nx/js' instead",
-            },
-            {
-              group: ['**/native-bindings', '**/native-bindings.js', ''],
-              message:
-                'Direct imports from native-bindings.js are not allowed. Import from index.js instead.',
-            },
-          ],
-        },
-      ],
+      // no-restricted-imports (paths and patterns, including the nx →
+      // @nx/devkit boundary) moved to .oxlintrc.json. Projects that need
+      // different lists carry their own nested .oxlintrc.json (packages/nx
+      // and packages/devkit replace the nx boundary group there).
     },
   },
   {
@@ -96,13 +67,10 @@ export const baseConfig = [
     },
   },
   {
-    files: ['**/*.json'],
+    files: ['**/executors/**/schema.json', '**/generators/**/schema.json'],
     languageOptions: {
       parser: jsoncEslintParser,
     },
-  },
-  {
-    files: ['**/executors/**/schema.json', '**/generators/**/schema.json'],
     rules: {
       '@nx/workspace-valid-schema-description': 'error',
     },
@@ -110,32 +78,8 @@ export const baseConfig = [
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
-      '@nx/enforce-module-boundaries': [
-        'error',
-        {
-          enforceBuildableLibDependency: true,
-          checkDynamicDependenciesExceptions: ['.*'],
-          allow: [],
-          // These cycles are intentional: plugin packages declare graph
-          // edges to their lazy-loaded (ensurePackage) peers via
-          // `implicitDependencies` in project.json. The project graph is
-          // cyclic by design; the task graph is kept acyclic via explicit
-          // `dependsOn` overrides on the relevant build-base targets.
-          ignoredCircularDependencies: [
-            ['js', 'workspace'],
-            ['angular', 'workspace'],
-            ['express', 'node'],
-            ['nest', 'node'],
-            ['nuxt', 'vue'],
-          ],
-          depConstraints: [
-            {
-              sourceTag: '*',
-              onlyDependOnLibsWithTags: ['*'],
-            },
-          ],
-        },
-      ],
+      // @nx/enforce-module-boundaries moved to .oxlintrc.json (run by the
+      // oxlint targets via the @nx/oxlint/boundaries-plugin bridge).
       '@nx/workspace-valid-command-object': 'error',
       '@nx/workspace-require-windows-hide': 'error',
     },

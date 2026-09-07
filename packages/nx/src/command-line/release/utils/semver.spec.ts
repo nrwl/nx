@@ -59,12 +59,12 @@ describe('semver', () => {
       expect(() =>
         deriveNewSemverVersion('not-a-valid-semver-version', 'minor')
       ).toThrowErrorMatchingInlineSnapshot(
-        `"Invalid semver version "not-a-valid-semver-version" provided."`
+        `[Error: Invalid semver version "not-a-valid-semver-version" provided.]`
       );
       expect(() =>
         deriveNewSemverVersion('major', 'minor')
       ).toThrowErrorMatchingInlineSnapshot(
-        `"Invalid semver version "major" provided."`
+        `[Error: Invalid semver version "major" provided.]`
       );
     });
 
@@ -72,7 +72,7 @@ describe('semver', () => {
       expect(() =>
         deriveNewSemverVersion('1.0.0', 'foo')
       ).toThrowErrorMatchingInlineSnapshot(
-        `"Invalid semver version specifier "foo" provided. Please provide either a valid semver version or a valid semver version keyword."`
+        `[Error: Invalid semver version specifier "foo" provided. Please provide either a valid semver version or a valid semver version keyword.]`
       );
     });
 

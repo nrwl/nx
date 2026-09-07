@@ -21,6 +21,7 @@ export type CnwErrorCode =
   | 'INVALID_BUNDLER'
   | 'NETWORK_ERROR'
   | 'PACKAGE_INSTALL_ERROR'
+  | 'CANCELLED'
   | 'UNKNOWN';
 
 /**

@@ -5,32 +5,32 @@ import {
   listPluginCapabilities,
 } from './output';
 
-jest.mock('../workspace-root', () => ({
+vi.mock('../workspace-root', () => ({
   workspaceRoot: '/workspace',
 }));
 
-jest.mock('../output', () => ({
+vi.mock('../output', () => ({
   output: {
-    log: jest.fn(),
-    warn: jest.fn(),
-    note: jest.fn(),
+    log: vi.fn(),
+    warn: vi.fn(),
+    note: vi.fn(),
   },
 }));
 
-jest.mock('../package-manager', () => ({
-  getPackageManagerCommand: jest.fn().mockReturnValue({
+vi.mock('../package-manager', () => ({
+  getPackageManagerCommand: vi.fn().mockReturnValue({
     addDev: 'npm install -D',
     exec: 'npx',
   }),
 }));
 
-const mockGetPluginCapabilities = jest.fn();
-jest.mock('./plugin-capabilities', () => ({
+const mockGetPluginCapabilities = vi.fn();
+vi.mock('./plugin-capabilities', () => ({
   getPluginCapabilities: (...args: unknown[]) =>
     mockGetPluginCapabilities(...args),
 }));
 
-const { output } = require('../output');
+const { output } = await import('../output');
 
 describe('formatPluginCapabilitiesAsJson', () => {
   it('should format a plugin with generators and executors', () => {
@@ -178,11 +178,11 @@ describe('formatPluginCapabilitiesAsJson', () => {
 
 describe('listPluginCapabilities', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should output JSON when json flag is true', async () => {
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation();
 
     mockGetPluginCapabilities.mockResolvedValue({
       name: '@nx/test',
@@ -214,7 +214,7 @@ describe('listPluginCapabilities', () => {
   });
 
   it('should output JSON error when plugin is not installed and json flag is true', async () => {
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation();
 
     mockGetPluginCapabilities.mockResolvedValue(null);
 
@@ -228,7 +228,7 @@ describe('listPluginCapabilities', () => {
   });
 
   it('should output JSON for plugin with no capabilities when json flag is true', async () => {
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation();
 
     mockGetPluginCapabilities.mockResolvedValue({
       name: '@nx/empty',

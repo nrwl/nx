@@ -157,12 +157,12 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
           inputs: ['production', '^production'],
           cache: true,
         },
-        e2e: {
-          inputs: ['default', '^production'],
-          cache: true,
-        },
         test: {
           inputs: ['default', '^production', '{workspaceRoot}/karma.conf.js'],
+          cache: true,
+        },
+        e2e: {
+          inputs: ['default', '^production'],
           cache: true,
         },
       },

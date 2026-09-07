@@ -1,6 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import { getPackageManagerCommand } from '@nx/devkit';
-import { runNxSync } from 'nx/src/utils/child-process';
+import { runNxSync } from '@nx/devkit/internal';
 
 export function formatFilesTask(tree: Tree): void {
   if (

@@ -25,8 +25,10 @@ export function setupModuleFederationTest(): ModuleFederationTestSetup {
 }
 
 export function cleanupModuleFederationTest(
-  setup: ModuleFederationTestSetup
+  setup: ModuleFederationTestSetup | undefined
 ): void {
   cleanupProject();
-  process.env.NX_E2E_VERBOSE_LOGGING = setup.oldVerboseLoggingValue;
+  // setup is undefined when setupModuleFederationTest itself failed; don't
+  // let cleanup throw and shadow the real error.
+  process.env.NX_E2E_VERBOSE_LOGGING = setup?.oldVerboseLoggingValue;
 }

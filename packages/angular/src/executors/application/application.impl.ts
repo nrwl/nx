@@ -1,9 +1,8 @@
 import type { BuilderOutput } from '@angular-devkit/architect';
 import type { ExecutorContext } from '@nx/devkit';
 import type { DependentBuildableProjectNode } from '@nx/js/internal';
-import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
-import { assertBuilderPackageIsInstalled } from '../utilities/builder-package';
+import { assertPackageIsInstalled } from '../utilities/builder-package';
 import {
   loadIndexHtmlTransformer,
   loadPlugins,
@@ -11,6 +10,7 @@ import {
 import type { ApplicationExecutorOptions } from './schema';
 import { normalizeOptions } from './utils/normalize-options';
 import { validateOptions } from './utils/validate-options';
+import { createBuilderContext } from '@nx/devkit/ngcli-adapter';
 
 export default async function* applicationExecutor(
   options: ApplicationExecutorOptions,
@@ -51,7 +51,7 @@ export default async function* applicationExecutor(
     context
   );
 
-  assertBuilderPackageIsInstalled('@angular/build');
+  assertPackageIsInstalled('@angular/build', '@nx/angular:application');
   const { buildApplication } = await import('@angular/build');
   return yield* buildApplication(delegateExecutorOptions, builderContext, {
     codePlugins: plugins,

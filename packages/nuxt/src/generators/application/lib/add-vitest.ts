@@ -1,4 +1,5 @@
 import { ensurePackage, readNxJson, Tree, updateJson } from '@nx/devkit';
+import { useFlatConfig } from '@nx/eslint/internal';
 import { NormalizedSchema } from '../schema';
 import { addVitestTargetDefaults } from '../../init/lib/utils';
 import { nxVersion } from '../../../utils/versions';
@@ -44,10 +45,11 @@ export async function addVitest(tree: Tree, options: NormalizedSchema) {
       testEnvironment: 'jsdom',
       imports: [`import vue from '@vitejs/plugin-vue'`],
       plugins: ['vue()'],
-      // NOTE: Set to false to generate .ts instead of .mts because @nuxt/eslint-config
-      // does not handle .mts files in its parser configuration.
+      // Only the legacy @nuxt/eslint-config (~0.5.6) leaves .mts out of its
+      // parser configuration, so fall back to .ts just for it. A .ts config in
+      // a CommonJS package trips Vite's `configLoader: 'native'` warning.
       // See: https://github.com/nuxt/eslint/blob/v0.5.6/packages/eslint-config/src/legacy.ts#L6-L11
-      useEsmExtension: false,
+      useEsmExtension: options.linter !== 'eslint' || useFlatConfig(tree),
     },
     true,
     undefined,

@@ -1,6 +1,7 @@
 import { bold } from 'picocolors';
 
 import {
+  detectPackageManager,
   getPackageManagerCommand,
   PackageManagerCommands,
 } from '../../utils/package-manager';
@@ -21,6 +22,7 @@ import { readNxJson } from '../../config/configuration';
 import { nxVersion } from '../../utils/versions';
 import { runNxSync } from '../../utils/child-process';
 import { writeJsonFile } from '../../utils/fileutils';
+import { recordInitWrite } from './implementation/format';
 import { globalSpinner } from '../../utils/spinner';
 
 export function installPluginPackages(
@@ -32,15 +34,18 @@ export function installPluginPackages(
     return;
   }
   if (existsSync(join(repoRoot, 'package.json'))) {
-    addDepsToPackageJson(repoRoot, plugins);
-    runInstall(repoRoot, pmc);
+    const packageManager = detectPackageManager(repoRoot);
+    addDepsToPackageJson(repoRoot, packageManager, plugins);
+    runInstall(repoRoot, packageManager, pmc);
   } else {
     const nxJson = readNxJson(repoRoot);
     nxJson.installation.plugins ??= {};
     for (const plugin of plugins) {
       nxJson.installation.plugins[plugin] = nxVersion;
     }
-    writeJsonFile(join(repoRoot, 'nx.json'), nxJson);
+    const nxJsonPath = join(repoRoot, 'nx.json');
+    writeJsonFile(nxJsonPath, nxJson);
+    recordInitWrite(nxJsonPath);
     try {
       runNxSync('--version', { stdio: 'pipe' });
     } catch (e) {

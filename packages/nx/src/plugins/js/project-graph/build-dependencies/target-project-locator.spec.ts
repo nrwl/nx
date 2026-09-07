@@ -13,12 +13,12 @@ import {
 
 import { builtinModules } from 'node:module';
 
-jest.mock('nx/src/utils/workspace-root', () => ({
+vi.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
 
-jest.mock('nx/src/plugins/js/utils/resolve-relative-to-dir', () => ({
-  resolveRelativeToDir: jest.fn().mockImplementation((pathOrPackage) => {
+vi.mock('nx/src/plugins/js/utils/resolve-relative-to-dir', () => ({
+  resolveRelativeToDir: vi.fn().mockImplementation((pathOrPackage) => {
     // We intentionally don't want to find this package on disk to test fallback behavior
     if (pathOrPackage.startsWith('@nx/nx-win32-x64-msvc')) {
       return null;
@@ -78,6 +78,7 @@ describe('TargetProjectLocator', () => {
             '@proj/feature-*': ['libs/features/*'],
             '@proj/*/utils': ['libs/scope/*/utils'],
             '@proj/*-util': ['libs/utils/*'],
+            '@configdir/*': ['${configDir}/src/*'],
           },
         },
       };
@@ -320,6 +321,14 @@ describe('TargetProjectLocator', () => {
             packageName: 'lodash',
           },
         },
+        'npm:lodash@4.0.0': {
+          name: 'npm:lodash@4.0.0',
+          type: 'npm',
+          data: {
+            version: '4.0.0',
+            packageName: 'lodash',
+          },
+        },
         'npm:lodash-4': {
           name: 'npm:lodash-4',
           type: 'npm',
@@ -425,6 +434,29 @@ describe('TargetProjectLocator', () => {
       );
 
       expect(proj2deep).toEqual('proj2');
+    });
+
+    it('should resolve `${configDir}` path aliases relative to the importing project (as tsc does)', () => {
+      // importer in a nested project resolves to that project, not the root project
+      const fromNested = targetProjectLocator.findProjectFromImport(
+        '@configdir/foo',
+        'libs/proj/src/index.ts'
+      );
+      expect(fromNested).toEqual('proj');
+
+      // importer in a deeply nested project resolves to the nested project
+      const fromChild = targetProjectLocator.findProjectFromImport(
+        '@configdir/foo',
+        'libs/parent-path/child-path/src/index.ts'
+      );
+      expect(fromChild).toEqual('child-project');
+
+      // importer in the root project resolves to the root project
+      const fromRoot = targetProjectLocator.findProjectFromImport(
+        '@configdir/foo',
+        'index.ts'
+      );
+      expect(fromRoot).toEqual('rootProj');
     });
 
     it('should be able to resolve nested files using tsConfig paths that have similar names', () => {
@@ -564,7 +596,7 @@ describe('TargetProjectLocator', () => {
       expect(proj5).toEqual('proj5');
     });
 
-    it('should be able to resolve packages aliases', () => {
+    it('should prefer alias nodes when canonical package nodes also exist', () => {
       const lodash = targetProjectLocator.findProjectFromImport(
         'lodash',
         'libs/proj/index.ts'
@@ -591,9 +623,10 @@ describe('TargetProjectLocator', () => {
       expect(result).toEqual('child-pm-workspaces');
     });
 
-    it('should convert relative file paths to absolute paths before TypeScript module resolution', () => {
-      const typescriptModule = require('nx/src/plugins/js/utils/typescript');
-      const resolveModuleByImportSpy = jest
+    it('should convert relative file paths to absolute paths before TypeScript module resolution', async () => {
+      const typescriptModule =
+        await import('nx/src/plugins/js/utils/typescript');
+      const resolveModuleByImportSpy = vi
         .spyOn(typescriptModule, 'resolveModuleByImport')
         .mockReturnValue('/root/libs/proj/some-module.ts');
 
@@ -629,9 +662,10 @@ describe('TargetProjectLocator', () => {
       resolveModuleByImportSpy.mockRestore();
     });
 
-    it('should keep absolute file paths as-is for TypeScript module resolution', () => {
-      const typescriptModule = require('nx/src/plugins/js/utils/typescript');
-      const resolveModuleByImportSpy = jest
+    it('should keep absolute file paths as-is for TypeScript module resolution', async () => {
+      const typescriptModule =
+        await import('nx/src/plugins/js/utils/typescript');
+      const resolveModuleByImportSpy = vi
         .spyOn(typescriptModule, 'resolveModuleByImport')
         .mockReturnValue('/root/libs/proj/some-module.ts');
 
@@ -972,9 +1006,10 @@ describe('TargetProjectLocator', () => {
     });
 
     it('should be able to resolve local project', () => {
-      jest
-        .spyOn(targetProjectLocator as any, 'resolveImportWithRequire')
-        .mockReturnValue('libs/proj1/index.ts');
+      vi.spyOn(
+        targetProjectLocator as any,
+        'resolveImportWithRequire'
+      ).mockReturnValue('libs/proj1/index.ts');
 
       const result1 = targetProjectLocator.findProjectFromImport(
         '@org/proj1',
@@ -982,14 +1017,48 @@ describe('TargetProjectLocator', () => {
       );
       expect(result1).toEqual('@org/proj1');
 
-      jest
-        .spyOn(targetProjectLocator as any, 'resolveImportWithRequire')
-        .mockReturnValue('libs/proj1/some/nested/file.ts');
+      vi.spyOn(
+        targetProjectLocator as any,
+        'resolveImportWithRequire'
+      ).mockReturnValue('libs/proj1/some/nested/file.ts');
       const result2 = targetProjectLocator.findProjectFromImport(
         '@org/proj1/some/nested/path',
         'libs/proj1/index.ts'
       );
       expect(result2).toEqual('@org/proj1');
+    });
+
+    it('should not match Windows node_modules paths to the workspace root project', () => {
+      const targetProjectLocator = new TargetProjectLocator(
+        {
+          ...projects,
+          root: {
+            name: 'root',
+            type: 'app',
+            data: {
+              root: '.',
+            },
+          },
+        },
+        {}
+      );
+
+      vi.spyOn(
+        targetProjectLocator as any,
+        'resolveImportWithRequire'
+      ).mockReturnValue('node_modules\\external-package\\index.js');
+
+      const result = targetProjectLocator.findProjectFromImport(
+        'external-package',
+        'libs/proj1/index.ts'
+      );
+
+      expect(result).toBeUndefined();
+      expect(
+        (targetProjectLocator as any).findProjectOfResolvedModule(
+          '..\\..\\node_modules\\external-package\\index.js'
+        )
+      ).toBeUndefined();
     });
 
     it('should be able to npm dependencies', () => {

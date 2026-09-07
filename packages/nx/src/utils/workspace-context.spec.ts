@@ -1,24 +1,28 @@
-const mockGlob = jest.fn();
-const mockMultiGlob = jest.fn();
-const mockDaemonGlob = jest.fn();
-const mockDaemonMultiGlob = jest.fn();
-const mockEnabled = jest.fn();
-const mockIsOnDaemon = jest.fn();
+const mockGlob = vi.fn();
+const mockMultiGlob = vi.fn();
+const mockDaemonGlob = vi.fn();
+const mockDaemonMultiGlob = vi.fn();
+const mockEnabled = vi.fn();
+const mockIsOnDaemon = vi.fn();
 
-jest.mock('../native', () => ({
-  WorkspaceContext: jest.fn().mockImplementation(() => ({
+// The source lazy-requires ../native (CJS channel), which vi.mock cannot
+// intercept. Mutate the CJS instance directly; each test file runs in its own
+// forked process, so the mutation cannot leak to other files.
+const cjsNative = require('../native');
+cjsNative.WorkspaceContext = vi.fn().mockImplementation(function () {
+  return {
     glob: mockGlob,
     multiGlob: mockMultiGlob,
     workspaceRoot: '/virtual',
-  })),
-  getMainWorktreeRoot: jest.fn().mockReturnValue('/virtual'),
+  };
+});
+cjsNative.getMainWorktreeRoot = vi.fn().mockReturnValue('/virtual');
+
+vi.mock('./cache-directory', () => ({
+  workspaceDataDirectoryForWorkspace: vi.fn().mockReturnValue('/virtual/.nx'),
 }));
 
-jest.mock('./cache-directory', () => ({
-  workspaceDataDirectoryForWorkspace: jest.fn().mockReturnValue('/virtual/.nx'),
-}));
-
-jest.mock('../daemon/client/client', () => ({
+vi.mock('../daemon/client/client', () => ({
   daemonClient: {
     enabled: () => mockEnabled(),
     glob: (...args: unknown[]) => mockDaemonGlob(...args),
@@ -26,7 +30,7 @@ jest.mock('../daemon/client/client', () => ({
   },
 }));
 
-jest.mock('../daemon/is-on-daemon', () => ({
+vi.mock('../daemon/is-on-daemon', () => ({
   isOnDaemon: () => mockIsOnDaemon(),
 }));
 
@@ -38,7 +42,7 @@ import {
 
 describe('workspace-context /virtual short-circuit', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     resetWorkspaceContext();
     // Simulate the problematic case: daemon is enabled and we are NOT
     // running on the daemon (i.e. a generator test in a host process).

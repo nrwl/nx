@@ -1,4 +1,9 @@
-import { addBuildTargetDefaults } from '@nx/devkit/internal';
+import {
+  addBuildTargetDefaults,
+  readTargetDefaultsForTarget,
+  mergeTargetConfigurations,
+  PackageJson,
+} from '@nx/devkit/internal';
 import {
   formatFiles,
   joinPathFragments,
@@ -18,8 +23,6 @@ import {
   TS_SOLUTION_SETUP_TSCONFIG_INPUT,
 } from '@nx/js/internal';
 import { basename, dirname, join } from 'node:path/posix';
-import { mergeTargetConfigurations } from 'nx/src/devkit-internals';
-import { PackageJson } from 'nx/src/utils/package-json';
 import { getOutExtension } from '../../executors/esbuild/lib/build-esbuild-options';
 import { EsBuildExecutorOptions } from '../../executors/esbuild/schema';
 import { assertSupportedEsbuildVersion } from '../../utils/assert-supported-esbuild-version';
@@ -155,9 +158,11 @@ function updatePackageJson(
     const projectTarget = project.targets[options.buildTarget];
     const mergedTarget = mergeTargetConfigurations(
       projectTarget,
-      (projectTarget.executor
-        ? nxJson.targetDefaults?.[projectTarget.executor]
-        : undefined) ?? nxJson.targetDefaults?.[options.buildTarget]
+      readTargetDefaultsForTarget(
+        options.buildTarget,
+        nxJson.targetDefaults,
+        projectTarget.executor
+      )
     );
 
     const {

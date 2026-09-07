@@ -4,8 +4,6 @@ use std::path::{Path, PathBuf};
 
 use crate::native::glob::build_glob_set;
 
-#[cfg(not(target_arch = "wasm32"))]
-use crate::native::logger::enable_logger;
 use crate::native::utils::{Normalize, get_mod_time, git::parent_gitignore_files};
 use walkdir::WalkDir;
 
@@ -109,7 +107,6 @@ where
 
     use crossbeam_channel::unbounded;
     use tracing::trace;
-    enable_logger();
 
     let directory = directory.as_ref();
     let mut walker = create_walker(directory, use_ignores);
@@ -181,6 +178,20 @@ pub(crate) const HARDCODED_IGNORE_PATTERNS: &[&str] = &[
     "**/.nx/workspace-data",
     "**/.yarn/cache",
 ];
+
+/// The same list, for JavaScript callers that walk a tree rather than the
+/// filesystem - `visitNotIgnoredFiles` - so both sides apply one baseline
+/// instead of maintaining a second copy that drifts.
+///
+/// The patterns are gitignore-shaped, so they read the same to the `ignore`
+/// crate here and the `ignore` npm package there.
+#[napi]
+pub fn get_hardcoded_ignore_patterns() -> Vec<String> {
+    HARDCODED_IGNORE_PATTERNS
+        .iter()
+        .map(|pattern| pattern.to_string())
+        .collect()
+}
 
 pub(crate) fn create_walker<P>(directory: P, use_ignores: bool) -> WalkBuilder
 where

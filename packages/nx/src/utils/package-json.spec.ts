@@ -1,4 +1,4 @@
-jest.mock('child_process');
+vi.mock('child_process');
 
 import { join } from 'path';
 import * as childProcess from 'child_process';
@@ -34,28 +34,28 @@ describe('buildTargetFromScript', () => {
 
 describe('installPackageToTmp', () => {
   afterEach(() => {
-    jest.restoreAllMocks();
-    jest.clearAllMocks();
+    vi.restoreAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should always disable lifecycle scripts via environment variables', () => {
     const tempDir = mkdtempSync(join(tmpdir(), 'nx-install-test-'));
-    const cleanup = jest.fn(() =>
+    const cleanup = vi.fn(() =>
       rmSync(tempDir, { recursive: true, force: true })
     );
-    jest.spyOn(pacakgeManager, 'createTempNpmDirectory').mockReturnValue({
+    vi.spyOn(pacakgeManager, 'createTempNpmDirectory').mockReturnValue({
       dir: tempDir,
       cleanup,
     });
-    jest
-      .spyOn(pacakgeManager, 'getPackageManagerVersion')
-      .mockReturnValue('4.0.0');
-    jest.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
+    vi.spyOn(pacakgeManager, 'getPackageManagerVersion').mockReturnValue(
+      '4.0.0'
+    );
+    vi.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
       preInstall: 'yarn set version 4.0.0',
       addDev: 'yarn add -D',
       ignoreScriptsFlag: undefined,
     } as any);
-    const execSyncSpy = jest
+    const execSyncSpy = vi
       .spyOn(childProcess, 'execSync')
       .mockReturnValue('' as any);
 
@@ -77,21 +77,21 @@ describe('installPackageToTmp', () => {
 
   it('should use the workspace `addDev` verbatim for pnpm (preserves `-w` when pnpm-workspace.yaml is present)', () => {
     const tempDir = mkdtempSync(join(tmpdir(), 'nx-install-test-'));
-    const cleanup = jest.fn(() =>
+    const cleanup = vi.fn(() =>
       rmSync(tempDir, { recursive: true, force: true })
     );
-    jest.spyOn(pacakgeManager, 'createTempNpmDirectory').mockReturnValue({
+    vi.spyOn(pacakgeManager, 'createTempNpmDirectory').mockReturnValue({
       dir: tempDir,
       cleanup,
     });
-    jest
-      .spyOn(pacakgeManager, 'getPackageManagerVersion')
-      .mockReturnValue('9.0.0');
-    jest.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
-      addDev: 'pnpm add -Dw',
+    vi.spyOn(pacakgeManager, 'getPackageManagerVersion').mockReturnValue(
+      '9.0.0'
+    );
+    vi.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
+      addDev: 'pnpm add -Dw --config.frozen-lockfile=false',
       ignoreScriptsFlag: '--ignore-scripts',
     } as any);
-    const execSyncSpy = jest
+    const execSyncSpy = vi
       .spyOn(childProcess, 'execSync')
       .mockReturnValue('' as any);
 
@@ -99,8 +99,70 @@ describe('installPackageToTmp', () => {
 
     expect(execSyncSpy).toHaveBeenCalledTimes(1);
     expect(execSyncSpy.mock.calls[0][0]).toBe(
-      'pnpm add -Dw nx@latest --ignore-scripts'
+      'pnpm add -Dw --config.frozen-lockfile=false nx@latest --config.auto-install-peers=false --ignore-scripts'
     );
+
+    cleanup();
+  });
+
+  it('should omit peer dependencies so peers resolve from the workspace, not the temp dir', () => {
+    const tempDir = mkdtempSync(join(tmpdir(), 'nx-install-test-'));
+    const cleanup = vi.fn(() =>
+      rmSync(tempDir, { recursive: true, force: true })
+    );
+    vi.spyOn(pacakgeManager, 'createTempNpmDirectory').mockReturnValue({
+      dir: tempDir,
+      cleanup,
+    });
+    vi.spyOn(pacakgeManager, 'getPackageManagerVersion').mockReturnValue(
+      '10.0.0'
+    );
+    vi.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
+      addDev: 'npm install -D',
+      ignoreScriptsFlag: '--ignore-scripts',
+    } as any);
+    const execSyncSpy = vi
+      .spyOn(childProcess, 'execSync')
+      .mockReturnValue('' as any);
+
+    // npm: `--legacy-peer-deps`, not `--omit=peer`. npm marks a package as a peer
+    // if anything in the tree peer-depends on it, so `--omit=peer` also prunes
+    // packages that are real dependencies of the installed package.
+    installPackageToTmp('@nx/cypress', '1.0.0', 'npm');
+    expect(execSyncSpy.mock.calls[0][0]).toBe(
+      'npm install -D @nx/cypress@1.0.0 --legacy-peer-deps --ignore-scripts'
+    );
+
+    // bun: `--omit=peer` is safe here, bun does not over-prune the way npm does
+    execSyncSpy.mockClear();
+    vi.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
+      addDev: 'bun add -D',
+      ignoreScriptsFlag: undefined,
+    } as any);
+    installPackageToTmp('@nx/cypress', '1.0.0', 'bun');
+    expect(execSyncSpy.mock.calls[0][0]).toBe(
+      'bun add -D @nx/cypress@1.0.0 --omit=peer'
+    );
+
+    // pnpm: peers are omitted by disabling auto-install
+    execSyncSpy.mockClear();
+    vi.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
+      addDev: 'pnpm add -Dw --config.frozen-lockfile=false',
+      ignoreScriptsFlag: '--ignore-scripts',
+    } as any);
+    installPackageToTmp('@nx/cypress', '1.0.0', 'pnpm');
+    expect(execSyncSpy.mock.calls[0][0]).toBe(
+      'pnpm add -Dw --config.frozen-lockfile=false @nx/cypress@1.0.0 --config.auto-install-peers=false --ignore-scripts'
+    );
+
+    // yarn: Berry does not auto-install peers, so no flag is added
+    execSyncSpy.mockClear();
+    vi.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
+      addDev: 'yarn add -D',
+      ignoreScriptsFlag: undefined,
+    } as any);
+    installPackageToTmp('@nx/cypress', '1.0.0', 'yarn');
+    expect(execSyncSpy.mock.calls[0][0]).toBe('yarn add -D @nx/cypress@1.0.0');
 
     cleanup();
   });
@@ -180,6 +242,39 @@ describe('readTargetsFromPackageJson', () => {
         ],
         "executor": "totally-different-executor",
         "options": {},
+      }
+    `);
+
+    const nxJson3 = {
+      targetDefaults: {
+        'nx-release-publish': [
+          {
+            filter: { executor: '@nx/js:release-publish' },
+            dependsOn: ['build'],
+            options: {
+              dryRun: true,
+            },
+          },
+        ],
+      },
+    };
+    const result3 = readTargetsFromPackageJson(
+      packageJson,
+      nxJson3,
+      workspaceRoot,
+      '/root',
+      packageManagerCommand
+    );
+    expect(result3['nx-release-publish']).toMatchInlineSnapshot(`
+      {
+        "dependsOn": [
+          "^nx-release-publish",
+          "build",
+        ],
+        "executor": "@nx/js:release-publish",
+        "options": {
+          "dryRun": true,
+        },
       }
     `);
   });
@@ -323,6 +418,34 @@ describe('readTargetsFromPackageJson', () => {
         ],
       }
     `);
+  });
+
+  it('should preserve unresolved spread tokens when extending script based targets', () => {
+    // https://github.com/nrwl/nx/issues/36235 — the script-derived target has
+    // no `inputs`, so the `'...'` cannot resolve here. It must survive into
+    // the plugin result so the graph pipeline can expand it against
+    // targetDefaults / specified plugin values.
+    const result = readTargetsFromPackageJson(
+      {
+        name: 'my-other-app',
+        version: '',
+        scripts: {
+          build: 'echo 1',
+        },
+        nx: {
+          targets: {
+            build: {
+              inputs: ['...', '{projectRoot}/package.json'],
+            },
+          },
+        },
+      },
+      {},
+      workspaceRoot,
+      '/root',
+      packageManagerCommand
+    );
+    expect(result.build.inputs).toEqual(['...', '{projectRoot}/package.json']);
   });
 
   it('should override scripts if provided an executor', () => {
@@ -533,14 +656,6 @@ const dependencies = [
   ...Object.keys(rootPackageJson.devDependencies),
 ];
 
-const exclusions = new Set([
-  // @types/js-yaml doesn't define a main field, but does define exports.
-  // exports doesn't contain 'package.json', and main is an empty line.
-  // This means the function fails.
-  '@types/js-yaml',
-  '@webcontainer/api',
-]);
-
 // Skip packages this monorepo publishes — pnpm symlinks them into
 // `node_modules/<name>` from `packages/<name>`, so resolving them counts as
 // a cross-project read in CI's sandbox even though it would be a normal
@@ -550,11 +665,12 @@ const isPublishedHere = (name: string) =>
   name === 'nx' || name.startsWith('@nx/') || name.startsWith('create-nx-');
 
 describe('readModulePackageJson', () => {
-  it.each(
-    dependencies.filter((x) => !exclusions.has(x) && !isPublishedHere(x))
-  )(`should be able to find %s`, (s) => {
-    expect(() => readModulePackageJson(s)).not.toThrow();
-  });
+  it.each(dependencies.filter((x) => !isPublishedHere(x)))(
+    `should be able to find %s`,
+    (s) => {
+      expect(() => readModulePackageJson(s)).not.toThrow();
+    }
+  );
 });
 
 describe('getDependencyVersionFromPackageJson', () => {
@@ -766,9 +882,7 @@ describe('getDependencyVersionFromPackageJson', () => {
 
   describe('with catalog references', () => {
     beforeEach(() => {
-      jest
-        .spyOn(pacakgeManager, 'detectPackageManager')
-        .mockReturnValue('pnpm');
+      vi.spyOn(pacakgeManager, 'detectPackageManager').mockReturnValue('pnpm');
       tree.write(
         'pnpm-workspace.yaml',
         `
@@ -854,6 +968,30 @@ catalogs:
 });
 
 describe('readNxMigrateConfig', () => {
+  it.each([
+    '../../../../etc/profile',
+    '/etc/profile',
+    'migrations/../../../escape.json',
+  ])('should reject the escaping migrations path %s', (migrations) => {
+    expect(() =>
+      readNxMigrateConfig({
+        name: 'hostile',
+        version: '1.0.0',
+        'nx-migrations': { migrations },
+      })
+    ).toThrow(/Invalid migrations path .* in package "hostile@1.0.0"/);
+  });
+
+  it('should reject an escaping migrations path given in the string shorthand', () => {
+    expect(() =>
+      readNxMigrateConfig({
+        name: 'hostile',
+        version: '1.0.0',
+        'nx-migrations': '../../../../etc/profile',
+      } as any)
+    ).toThrow(/Invalid migrations path/);
+  });
+
   it('should carry supportsOptionalMigrations from the nx-migrations config', () => {
     const config = readNxMigrateConfig({
       'nx-migrations': {

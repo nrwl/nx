@@ -33,10 +33,7 @@ function findBreadcrumbPath(
       const groupHref = `/docs/${currentSlugs.join('/')}`;
       const result = findBreadcrumbPath(
         entry.entries,
-        [
-          ...path,
-          { label: entry.label, href: groupHref, current: false },
-        ],
+        [...path, { label: entry.label, href: groupHref, current: false }],
         currentSlugs
       );
       if (result) return result;
@@ -64,6 +61,7 @@ if (crumbs.length === 0) {
 
   function createNameFromSegment(segment: string): string {
     segment = segment.split('#')[0];
+    if (segment === 'kb') return 'Knowledge Base';
     return segment
       .split('-')
       .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
@@ -82,47 +80,52 @@ if (crumbs.length === 0) {
       if (index === 0 && import.meta.env.BASE_URL) return null;
       return {
         label,
-        href: `/${docPath}`,
+        href: doc ? `/${docPath}` : undefined,
         current: index === pathSegments.length - 1,
       };
     })
     .filter(Boolean) as Crumb[];
 }
 
-// Hide breadcrumbs on the Templates pages - they have their own title and a
-// "back to all templates" link, so a breadcrumb would be redundant.
+// Splash indexes render their own page title, so breadcrumbs are redundant.
 const path = Astro.url.pathname.replace(/\/$/, '');
 const hideBreadcrumbs =
-  path === '/docs/templates' || path.startsWith('/docs/templates/');
+  path === '/docs/kb' ||
+  path.startsWith('/docs/kb/') ||
+  path === '/docs/templates' ||
+  path.startsWith('/docs/templates/');
 ---
 
-{!hideBreadcrumbs && (
-<nav class="not-content flex mb-4" aria-label="Breadcrumb">
-  <ol role="list" class="flex m-0 p-0 flex-wrap items-center space-x-2 text-sm">
-    {
-      crumbs.map((crumb, index) => (
-        <li class="flex items-center">
-          {index > 0 && <Icon name="right-caret" class="w-5 h-5 ml-2 mr-2" />}
-          {crumb.href ? (
-            <a
-              href={crumb.href}
-              class={`no-underline text-sm${
-                crumb.current
-                  ? ' text-slate-900 dark:text-slate-100 font-semibold'
-                  : ' text-slate-500 dark:text-slate-400 font-medium hover:text-slate-700 dark:hover:text-slate-200'
-              } transition-colors`}
-              aria-current={crumb.current ? 'page' : undefined}
-            >
-              {crumb.label}
-            </a>
-          ) : (
-            <span class="text-sm text-slate-500 dark:text-slate-400 font-medium">
-              {crumb.label}
-            </span>
-          )}
-        </li>
-      ))
-    }
-  </ol>
-</nav>
-)}
+{
+  !hideBreadcrumbs && (
+    <nav class="not-content mb-4 flex" aria-label="Breadcrumb">
+      <ol
+        role="list"
+        class="m-0 flex flex-wrap items-center space-x-2 p-0 text-sm"
+      >
+        {crumbs.map((crumb, index) => (
+          <li class="flex items-center">
+            {index > 0 && <Icon name="right-caret" class="mr-2 ml-2 h-5 w-5" />}
+            {crumb.href ? (
+              <a
+                href={crumb.href}
+                class={`no-underline text-sm${
+                  crumb.current
+                    ? 'font-semibold text-slate-900 dark:text-slate-100'
+                    : 'font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
+                } transition-colors`}
+                aria-current={crumb.current ? 'page' : undefined}
+              >
+                {crumb.label}
+              </a>
+            ) : (
+              <span class="text-sm font-medium text-slate-500 dark:text-slate-400">
+                {crumb.label}
+              </span>
+            )}
+          </li>
+        ))}
+      </ol>
+    </nav>
+  )
+}

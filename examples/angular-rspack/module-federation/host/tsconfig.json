@@ -11,7 +11,8 @@
     "resolveJsonModule": true,
     "module": "preserve",
     "moduleResolution": "bundler",
-    "lib": ["dom", "es2022"]
+    "lib": ["dom", "es2022"],
+    "ignoreDeprecations": "6.0"
   },
   "files": [],
   "include": [],
@@ -23,7 +24,7 @@
       "path": "./tsconfig.app.json"
     }
   ],
-  "extends": "../../tsconfig.base.json",
+  "extends": "../tsconfig.base.json",
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
     "strictInjectionParameters": true,

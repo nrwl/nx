@@ -3,7 +3,8 @@
   "compilerOptions": {
     "outDir": "out-tsc/spec",
     "customConditions": ["@nx/nx-source"],
-    "types": ["jest", "node"]
+    "types": ["jest", "node"],
+    "rootDir": "."
   },
   "include": [
     "**/*.spec.ts",

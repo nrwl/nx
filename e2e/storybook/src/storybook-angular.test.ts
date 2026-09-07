@@ -29,7 +29,7 @@ describe('Storybook executors for Angular', () => {
     let storybookPort: number;
     afterAll(() => storybookPort && killPorts(storybookPort));
 
-    // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
+    // TODO(NXC-4690): re-enable when @storybook/angular peers resolve on Angular 22 + TS 6 workspaces
     it.skip('should serve an Angular based Storybook setup', async () => {
       storybookPort = await reservePort();
       const p = await runCommandUntil(

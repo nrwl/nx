@@ -17,7 +17,6 @@
       "default": false,
       "x-priority": "internal"
     },
-
     "unitTestRunner": {
       "type": "string",
       "enum": ["karma", "jest", "none"],
@@ -39,8 +38,7 @@
     "linter": {
       "description": "The tool to use for running lint checks. NOTE: only used if running the generator in an Nx workspace.",
       "type": "string",
-      "enum": ["eslint", "none"],
-      "default": "eslint"
+      "enum": ["eslint", "oxlint", "none"]
     },
     "style": {
       "description": "The file extension to be used for style files. NOTE: only used if running the generator in an Nx workspace.",

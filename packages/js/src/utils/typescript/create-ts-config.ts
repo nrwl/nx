@@ -1,6 +1,5 @@
-import { Tree } from 'nx/src/generators/tree';
-import { readJson, updateJson, writeJson } from 'nx/src/generators/utils/json';
 import { getTsConfigModuleResolution } from '../is-typescript-version-at-least';
+import { Tree, readJson, updateJson, writeJson } from '@nx/devkit';
 
 export const tsConfigBaseOptions = {
   rootDir: '.',

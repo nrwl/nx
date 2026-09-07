@@ -81,7 +81,8 @@
   },
   "devDependencies": {
     "nx": "workspace:*",
-    "@nx/webpack": "workspace:*"
+    "@nx/webpack": "workspace:*",
+    "@nx/vitest": "workspace:*"
   },
   "peerDependencies": {
     "express": ">=4.0.0 <6.0.0",

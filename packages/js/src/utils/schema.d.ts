@@ -47,8 +47,7 @@ export interface SwcCliOptions {
   stripLeadingPaths: boolean;
 }
 
-export interface NormalizedSwcExecutorOptions
-  extends NormalizedExecutorOptions {
+export interface NormalizedSwcExecutorOptions extends NormalizedExecutorOptions {
   originalProjectRoot: string;
   swcExclude: string[];
   skipTypeCheck: boolean;

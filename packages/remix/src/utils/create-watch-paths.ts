@@ -6,12 +6,12 @@ import {
   type ProjectGraph,
   type ProjectGraphProjectNode,
 } from '@nx/devkit';
+import { normalize, relative, sep } from 'path';
 import {
   createProjectRootMappings,
   findProjectForPath,
-} from 'nx/src/project-graph/utils/find-project-for-path';
-import { findAllProjectNodeDependencies } from 'nx/src/utils/project-graph-utils';
-import { normalize, relative, sep } from 'path';
+  findAllProjectNodeDependencies,
+} from '@nx/devkit/internal';
 
 /**
  * Generates an array of paths to watch based on the project dependencies.

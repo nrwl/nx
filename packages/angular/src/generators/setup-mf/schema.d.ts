@@ -17,6 +17,10 @@ export interface Schema {
   standalone?: boolean;
   skipE2E?: boolean;
   typescriptConfiguration?: boolean;
+  enableTypedLinting?: boolean;
+  /**
+   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
+   */
   setParserOptionsProject?: boolean;
 }
 

@@ -1,6 +1,6 @@
 import { readNxJson, Tree } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/internal';
-import type { LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 import {
   normalizeLinterOption,
   normalizeUnitTestRunnerOption,

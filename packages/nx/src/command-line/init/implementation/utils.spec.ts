@@ -1,16 +1,104 @@
-jest.mock('./deduce-default-base', () => ({
-  deduceDefaultBase: jest.fn(() => 'main'),
+vi.mock('./deduce-default-base', () => ({
+  deduceDefaultBase: vi.fn(() => 'main'),
 }));
 
-import { NxJsonConfiguration } from '../../../config/nx-json';
+import { mkdtempSync, rmSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
+import { NxJsonConfiguration, TargetDefaults } from '../../../config/nx-json';
+import { readJsonFile, writeJsonFile } from '../../../utils/fileutils';
 import {
+  createNxJsonFile,
   createNxJsonFromTurboJson,
   extractErrorName,
   readErrorStderr,
   toErrorString,
+  upsertTargetDefaultEntry,
 } from './utils';
 
 describe('utils', () => {
+  describe('createNxJsonFile', () => {
+    it('reuses the same unfiltered target entry across topological and cacheable passes', () => {
+      const repoRoot = mkdtempSync(join(tmpdir(), 'nx-init-utils-'));
+      try {
+        writeJsonFile(join(repoRoot, 'nx.json'), {
+          $schema: './node_modules/nx/schemas/nx-schema.json',
+          targetDefaults: {
+            build: [
+              { filter: { projects: ['tag:web'] }, dependsOn: ['^filtered'] },
+            ],
+          },
+        });
+
+        createNxJsonFile(repoRoot, ['build'], ['build'], {});
+
+        expect(
+          readJsonFile<NxJsonConfiguration>(join(repoRoot, 'nx.json'))
+        ).toMatchObject({
+          targetDefaults: {
+            build: [
+              { filter: { projects: ['tag:web'] }, dependsOn: ['^filtered'] },
+              { dependsOn: ['^build'], cache: true },
+            ],
+          },
+        });
+      } finally {
+        rmSync(repoRoot, { recursive: true, force: true });
+      }
+    });
+
+    it('preserves an explicit cache setting on an existing unfiltered target entry', () => {
+      const repoRoot = mkdtempSync(join(tmpdir(), 'nx-init-utils-'));
+      try {
+        writeJsonFile(join(repoRoot, 'nx.json'), {
+          $schema: './node_modules/nx/schemas/nx-schema.json',
+          targetDefaults: { build: { cache: false } },
+        });
+
+        createNxJsonFile(repoRoot, [], ['build'], {});
+
+        expect(
+          readJsonFile<NxJsonConfiguration>(join(repoRoot, 'nx.json'))
+        ).toMatchObject({
+          targetDefaults: { build: { cache: false } },
+        });
+      } finally {
+        rmSync(repoRoot, { recursive: true, force: true });
+      }
+    });
+  });
+
+  describe('upsertTargetDefaultEntry', () => {
+    it('merges into an existing unfiltered target entry', () => {
+      const targetDefaults: TargetDefaults = { build: { cache: true } };
+
+      upsertTargetDefaultEntry(targetDefaults, 'build', {
+        dependsOn: ['^build'],
+      });
+
+      expect(targetDefaults).toEqual({
+        build: { cache: true, dependsOn: ['^build'] },
+      });
+    });
+
+    it('appends a new unfiltered entry instead of merging into a filtered one', () => {
+      const targetDefaults: TargetDefaults = {
+        build: [{ filter: { projects: ['tag:web'] }, cache: true }],
+      };
+
+      upsertTargetDefaultEntry(targetDefaults, 'build', {
+        dependsOn: ['^build'],
+      });
+
+      expect(targetDefaults).toEqual({
+        build: [
+          { filter: { projects: ['tag:web'] }, cache: true },
+          { dependsOn: ['^build'] },
+        ],
+      });
+    });
+  });
+
   describe('createNxJsonFromTurboJson', () => {
     test.each<{
       description: string;
@@ -125,23 +213,18 @@ describe('utils', () => {
         nx: {
           $schema: './node_modules/nx/schemas/nx-schema.json',
           targetDefaults: {
-            build: {
-              cache: true,
-            },
-            dev: {
-              cache: false,
-            },
+            build: { cache: true },
+            dev: { cache: false },
           },
         },
       },
       {
-        description: 'cache directory configuration',
+        description: 'turbo cacheDir does not carry over to cacheDirectory',
         turbo: {
           cacheDir: './node_modules/.cache/turbo',
         },
         nx: {
           $schema: './node_modules/nx/schemas/nx-schema.json',
-          cacheDirectory: '.nx/cache',
         },
       },
       {
@@ -199,7 +282,6 @@ describe('utils', () => {
             ],
             default: ['{projectRoot}/**/*', 'sharedGlobals'],
           },
-          cacheDirectory: '.nx/cache',
           targetDefaults: {
             build: {
               dependsOn: ['^build'],
@@ -212,9 +294,7 @@ describe('utils', () => {
               outputs: ['{projectRoot}/coverage/**'],
               cache: true,
             },
-            dev: {
-              cache: false,
-            },
+            dev: { cache: false },
           },
         },
       },
@@ -261,9 +341,7 @@ describe('utils', () => {
               dependsOn: ['^check-types'],
               cache: true,
             },
-            dev: {
-              cache: false,
-            },
+            dev: { cache: false },
           },
         },
       },

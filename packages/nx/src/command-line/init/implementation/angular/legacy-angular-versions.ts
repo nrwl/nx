@@ -16,6 +16,7 @@ import { connectExistingRepoToNxCloudPrompt } from '../../../nx-cloud/connect/co
 import { initCloud, setNeverConnectToCloud } from '../utils';
 import { MessageOptionKey } from '../../../../utils/ab-testing';
 import type { Options } from './types';
+import { recordInitWrite } from '../format';
 
 // map of Angular major versions to Nx versions to use for legacy `nx init` migrations,
 // key is major Angular version and value is Nx version to use
@@ -132,6 +133,9 @@ export async function getLegacyMigrationFunctionIfApplicable(
     );
 
     output.log({ title: '📝 Setting up workspace' });
+    // Intentionally not runNxSync: legacyMigrationCommand is either the Angular
+    // CLI (`ng g ...:ng-add`) or a version-pinned `nx@<version> init`, neither
+    // of which is the local nx that runNxSync would resolve.
     execSync(`${pmc.exec} ${legacyMigrationCommand}`, {
       stdio: [0, 1, 2],
       windowsHide: true,
@@ -176,6 +180,7 @@ async function installDependencies(
     json.dependencies = sortObjectByKeys(json.dependencies);
   }
   writeJsonFile(`package.json`, json);
+  recordInitWrite('package.json');
 
   execSync(pmc.install, { stdio: [0, 1, 2], windowsHide: true });
 }

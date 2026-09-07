@@ -8,6 +8,7 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
+import { findTargetDefault, upsertTargetDefault } from '@nx/devkit/internal';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { JestPluginOptions } from '../../plugins/plugin';
@@ -135,14 +136,19 @@ export async function configurationGeneratorInternal(
 
     // in the TS solution setup, the test target depends on the build outputs
     // so we need to setup the task pipeline accordingly
-    const nxJson = readNxJson(tree);
-    nxJson.targetDefaults ??= {};
-    nxJson.targetDefaults[options.targetName] ??= {};
-    nxJson.targetDefaults[options.targetName].dependsOn ??= [];
-    nxJson.targetDefaults[options.targetName].dependsOn.push('^build');
-    nxJson.targetDefaults[options.targetName].dependsOn = Array.from(
-      new Set(nxJson.targetDefaults[options.targetName].dependsOn)
+    const nxJson = readNxJson(tree) ?? {};
+    // A bare `target` locator matches only the unfiltered generic entry, so we
+    // extend the workspace-wide baseline rather than a project-scoped one.
+    const existing = findTargetDefault(nxJson.targetDefaults, {
+      target: options.targetName,
+    });
+    const dependsOn = Array.from(
+      new Set([...(existing?.dependsOn ?? []), '^build'])
     );
+    upsertTargetDefault(tree, nxJson, {
+      target: options.targetName,
+      dependsOn,
+    });
     updateNxJson(tree, nxJson);
   }
 

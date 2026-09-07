@@ -1,9 +1,9 @@
-// Module-level mock container - initialized early so jest.mock factories can reference it
+// Module-level mock container - initialized early so vi.mock factories can reference it
 const mocks = {
-  deriveSpecifierFromConventionalCommits: jest.fn(),
-  deriveSpecifierFromVersionPlan: jest.fn(),
-  resolveVersionActionsForProject: jest.fn(),
-  resolveCurrentVersion: jest.fn(),
+  deriveSpecifierFromConventionalCommits: vi.fn(),
+  deriveSpecifierFromVersionPlan: vi.fn(),
+  resolveVersionActionsForProject: vi.fn(),
+  resolveCurrentVersion: vi.fn(),
 };
 
 // Aliases for test usage
@@ -14,13 +14,13 @@ const mockResolveVersionActionsForProject =
   mocks.resolveVersionActionsForProject;
 const mockResolveCurrentVersion = mocks.resolveCurrentVersion;
 
-jest.mock('./derive-specifier-from-conventional-commits', () => ({
+vi.mock('./derive-specifier-from-conventional-commits', () => ({
   deriveSpecifierFromConventionalCommits: (...args: any[]) =>
     mocks.deriveSpecifierFromConventionalCommits(...args),
 }));
 
-jest.mock('./version-actions', () => {
-  const actual = jest.requireActual('./version-actions');
+vi.mock('./version-actions', async () => {
+  const actual = await vi.importActual('./version-actions');
   return {
     ...actual,
     deriveSpecifierFromVersionPlan: (...args: any[]) =>
@@ -30,8 +30,8 @@ jest.mock('./version-actions', () => {
   };
 });
 
-jest.mock('./project-logger', () => {
-  const actual = jest.requireActual('./project-logger');
+vi.mock('./project-logger', async () => {
+  const actual = await vi.importActual('./project-logger');
   return {
     ...actual,
     // Don't slow down or add noise to unit tests output unnecessarily
@@ -42,7 +42,7 @@ jest.mock('./project-logger', () => {
   };
 });
 
-jest.mock('./resolve-current-version', () => ({
+vi.mock('./resolve-current-version', () => ({
   resolveCurrentVersion: (...args: any[]) =>
     mocks.resolveCurrentVersion(...args),
 }));
@@ -56,7 +56,7 @@ import {
   mockResolveVersionActionsForProjectImplementation,
 } from './test-utils';
 
-// Using the daemon in unit tests would cause jest to never exit
+// A daemon connection would keep the test process alive after the run
 process.env.NX_DAEMON = 'false';
 
 describe('ReleaseGroupProcessor', () => {
@@ -74,8 +74,8 @@ describe('ReleaseGroupProcessor', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
-    jest.resetAllMocks();
+    vi.restoreAllMocks();
+    vi.resetAllMocks();
   });
 
   it('should handle a single default group with fixed versioning, with no project dependency relationships', async () => {
@@ -1691,6 +1691,205 @@ describe('ReleaseGroupProcessor', () => {
           "version": "3.1.0",
         }
       `);
+    });
+  });
+
+  describe('resolveVersionForDependency', () => {
+    const graphDefinition = `
+      groupA ({ "projectsRelationship": "independent" }):
+        - projectA@1.0.0 [js]
+      groupB ({ "projectsRelationship": "independent" }):
+        - projectB@2.5.0 [js]
+    `;
+
+    it('returns the new version for a project that was bumped', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          graphDefinition,
+          {},
+          mockResolveCurrentVersion
+        );
+      const processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters,
+        { userGivenSpecifier: 'minor' }
+      );
+
+      await processor.processGroups();
+
+      await expect(
+        processor.resolveVersionForDependency('projectB')
+      ).resolves.toBe('2.6.0');
+    });
+
+    it('resolves the current version for a project outside the release set', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          graphDefinition,
+          {},
+          mockResolveCurrentVersion,
+          { projects: ['projectA'] }
+        );
+      const processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters,
+        { userGivenSpecifier: 'minor' }
+      );
+
+      await expect(
+        processor.resolveVersionForDependency('projectB')
+      ).resolves.toBe('2.5.0');
+    });
+
+    it('returns the current version after a project is finalized without a bump', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          graphDefinition,
+          { version: { conventionalCommits: true } },
+          mockResolveCurrentVersion
+        );
+      const processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters
+      );
+      mockDeriveSpecifierFromConventionalCommits.mockResolvedValue('none');
+
+      await processor.processGroups();
+
+      await expect(
+        processor.resolveVersionForDependency('projectB')
+      ).resolves.toBe('2.5.0');
+    });
+
+    it('does not use a stale version before the release group is finalized', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          graphDefinition,
+          {},
+          mockResolveCurrentVersion
+        );
+      const processor = await createTestReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        filters,
+        { userGivenSpecifier: 'minor' }
+      );
+
+      await expect(
+        processor.resolveVersionForDependency('projectB')
+      ).rejects.toThrow('has not finalized its version decisions');
+    });
+  });
+
+  it('defers manifest-only dependency updates until all release groups finalize', async () => {
+    const { nxReleaseConfig, projectGraph, filters } =
+      await createNxReleaseConfigAndPopulateWorkspace(
+        tree,
+        `
+          groupA ({ "projectsRelationship": "independent" }):
+            - projectA@1.0.0 [js]
+              -> release config overrides { "version": { "manifestRootsToUpdate": ["dist/projectA"], "preserveLocalDependencyProtocols": false } }
+          groupB ({ "projectsRelationship": "independent" }):
+            - projectB@2.5.0 [js]
+        `,
+        {},
+        mockResolveCurrentVersion
+      );
+
+    updateJson(tree, 'dist/projectA/package.json', (json) => {
+      json.dependencies = {
+        projectB: 'workspace:*',
+      };
+      return json;
+    });
+
+    const processor = await createTestReleaseGroupProcessor(
+      tree,
+      projectGraph,
+      nxReleaseConfig,
+      filters,
+      { userGivenSpecifier: 'minor' }
+    );
+
+    await expect(processor.processGroups()).resolves.toEqual([
+      'groupA',
+      'groupB',
+    ]);
+
+    expect(projectGraph.dependencies.projectA ?? []).toEqual([]);
+    expect(readJson(tree, 'dist/projectA/package.json')).toEqual({
+      name: 'projectA',
+      version: '1.1.0',
+      dependencies: {
+        projectB: '2.6.0',
+      },
+    });
+  });
+
+  it('defers dist manifest dependency updates until fixed group versions are finalized', async () => {
+    const { nxReleaseConfig, projectGraph, filters } =
+      await createNxReleaseConfigAndPopulateWorkspace(
+        tree,
+        `
+          dependencyGroup ({ "projectsRelationship": "independent" }):
+            - dependency@1.0.0 [js]
+          fixedGroup ({ "projectsRelationship": "fixed" }):
+            - projectA@1.0.0 [js]
+              -> depends on dependency
+            - projectB@1.0.0 [js]
+            - projectC@1.0.0 [js]
+              -> depends on projectA
+              -> depends on projectB
+              -> release config overrides { "version": { "manifestRootsToUpdate": ["dist/projectC"], "preserveLocalDependencyProtocols": false } }
+        `,
+        {
+          version: {
+            conventionalCommits: true,
+          },
+        },
+        mockResolveCurrentVersion
+      );
+
+    updateJson(tree, 'projectC/package.json', (json) => {
+      delete json.dependencies.projectB;
+      return json;
+    });
+    updateJson(tree, 'dist/projectC/package.json', (json) => {
+      json.dependencies.projectB = 'workspace:*';
+      return json;
+    });
+
+    const processor = await createTestReleaseGroupProcessor(
+      tree,
+      projectGraph,
+      nxReleaseConfig,
+      filters
+    );
+    mockDeriveSpecifierFromConventionalCommits.mockImplementation(
+      (_, __, ___, ____, { name: projectName }) =>
+        projectName === 'dependency' ? 'minor' : 'none'
+    );
+
+    await processor.processGroups();
+
+    expect(readJson(tree, 'dist/projectC/package.json')).toEqual({
+      name: 'projectC',
+      version: '1.0.1',
+      dependencies: {
+        projectA: '1.0.1',
+        projectB: '1.0.1',
+      },
     });
   });
 

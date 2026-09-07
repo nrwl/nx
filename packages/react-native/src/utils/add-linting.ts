@@ -1,4 +1,4 @@
-import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
+import { LinterType } from '@nx/js';
 import {
   addDependenciesToPackageJson,
   GeneratorCallback,
@@ -12,16 +12,23 @@ import {
   addOverrideToLintConfig,
   addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
+  isTypedLintingEnabled,
   updateOverrideInLintConfig,
   useFlatConfig,
 } from '@nx/eslint/internal';
+import { addLintingToProject } from '@nx/js/internal';
 
 interface NormalizedSchema {
-  linter?: Linter | LinterType;
+  linter?: LinterType;
   projectName: string;
   projectRoot: string;
+  enableTypedLinting?: boolean;
+  /**
+   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
+   */
   setParserOptionsProject?: boolean;
   tsConfigPaths: string[];
+  unitTestRunner?: string;
   skipPackageJson?: boolean;
   addPlugin?: boolean;
   buildable?: boolean;
@@ -29,23 +36,26 @@ interface NormalizedSchema {
 }
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
-  if (options.linter === 'none') {
-    return () => {};
-  }
   const tasks: GeneratorCallback[] = [];
+  tasks.push(
+    await addLintingToProject(host, {
+      oxlintPlugins: ['react', 'react-perf'],
+      linter: options.linter,
+      project: options.projectName,
+      tsConfigPaths: options.tsConfigPaths,
+      unitTestRunner: options.unitTestRunner,
+      skipPackageJson: options.skipPackageJson,
+      enableTypedLinting: isTypedLintingEnabled(options),
+      addPlugin: options.addPlugin,
+      addPackageJsonDependencyChecks: options.buildable,
+    })
+  );
 
-  const lintTask = await lintProjectGenerator(host, {
-    linter: options.linter,
-    project: options.projectName,
-    tsConfigPaths: options.tsConfigPaths,
-    skipFormat: true,
-    skipPackageJson: options.skipPackageJson,
-    setParserOptionsProject: options.setParserOptionsProject,
-    addPlugin: options.addPlugin,
-    addPackageJsonDependencyChecks: options.buildable,
-  });
-
-  tasks.push(lintTask);
+  // Everything below configures ESLint — predefined configs, `extends`, ignore
+  // entries — which have no equivalent in other linters.
+  if (options.linter && options.linter !== 'eslint') {
+    return runTasksInSerial(...tasks);
+  }
 
   // Add ignored dependencies and files to dependency-checks rule
   if (isEslintConfigSupported(host)) {

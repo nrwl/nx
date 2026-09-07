@@ -18,7 +18,13 @@ describe('Move Angular Project', () => {
 
   beforeAll(() => {
     proj = newProject({
-      packages: ['@nx/angular', '@nx/workspace', '@nx/jest', '@nx/playwright'],
+      packages: [
+        '@nx/angular',
+        '@nx/eslint',
+        '@nx/workspace',
+        '@nx/jest',
+        '@nx/playwright',
+      ],
     });
     app1 = uniq('app1');
     app2 = uniq('app2');

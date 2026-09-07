@@ -2,7 +2,7 @@ import { Task } from '../../config/task-graph';
 import { TaskStatus } from '../tasks-runner';
 import { StoreRunInformationLifeCycle } from './store-run-information-life-cycle';
 describe('StoreRunInformationLifeCycle', () => {
-  it.only('should handle startTime/endTime in TaskResults', () => {
+  it('should handle startTime/endTime in TaskResults', () => {
     let runDetails;
     const store = new StoreRunInformationLifeCycle(
       'nx run-many --target=test',
@@ -135,15 +135,15 @@ describe('StoreRunInformationLifeCycle', () => {
     store.endCommand();
 
     expect(runDetails).toMatchInlineSnapshot(`
-      Object {
-        "run": Object {
+      {
+        "run": {
           "command": "nx run-many --target=test",
           "endTime": "DATE",
           "inner": false,
           "startTime": "DATE",
         },
-        "tasks": Array [
-          Object {
+        "tasks": [
+          {
             "cacheStatus": "remote-cache-hit",
             "endTime": "DATE",
             "hash": "hash1",
@@ -154,7 +154,7 @@ describe('StoreRunInformationLifeCycle', () => {
             "target": "test",
             "taskId": "proj1:test",
           },
-          Object {
+          {
             "cacheStatus": "local-cache-hit",
             "endTime": "DATE",
             "hash": "hash2",
@@ -165,7 +165,7 @@ describe('StoreRunInformationLifeCycle', () => {
             "target": "test",
             "taskId": "proj2:test",
           },
-          Object {
+          {
             "cacheStatus": "local-cache-hit",
             "endTime": "DATE",
             "hash": "hash3",
@@ -176,7 +176,7 @@ describe('StoreRunInformationLifeCycle', () => {
             "target": "test",
             "taskId": "proj3:test",
           },
-          Object {
+          {
             "cacheStatus": "cache-miss",
             "endTime": "DATE",
             "hash": "hash4",

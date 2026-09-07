@@ -6,7 +6,8 @@
     "declaration": true,
     "composite": true,
     "types": ["node"],
-    "lib": ["DOM", "es2022"]
+    "lib": ["DOM", "es2022"],
+    "rootDir": "."
   },
   "files": [
     "../../node_modules/@nx/react/typings/cssmodule.d.ts",

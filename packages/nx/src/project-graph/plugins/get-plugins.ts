@@ -13,6 +13,14 @@ import { loadIsolatedNxPlugin } from './isolation';
 import { resetResolvePluginCache } from './resolve-plugin';
 
 import { isIsolationEnabled } from './isolation/enabled';
+import {
+  isPluginWorkerSocketRefusal,
+  isPluginWorkerStartupFailure,
+} from './isolation/isolated-plugin';
+import { sandboxSocketHint } from '../../daemon/sandbox-socket-hint';
+import { isSandbox } from '../../utils/is-sandbox';
+import { isAiAgent } from '../../native';
+import { output } from '../../utils/output';
 import type { LoadedNxPlugin } from './loaded-nx-plugin';
 import {
   cleanupPluginTSTranspiler,
@@ -42,14 +50,105 @@ export interface SeparatedPlugins {
   defaultPlugins: LoadedNxPlugin[];
 }
 
-const loadingMethod = (
+/**
+ * Set once a worker has been refused in this process, and read by every later
+ * plugin: nothing about a second attempt can succeed once the first has been
+ * refused for a reason that belongs to the sandbox.
+ *
+ * It does not stop the spawns of the plugins already in flight. Callers load
+ * plugins concurrently, so all of them are past the entry check before the
+ * first worker dies; what the latch guarantees is that the advice is printed
+ * once rather than once per plugin, and that anything loaded after the refusal
+ * skips the worker entirely.
+ *
+ * Process-scoped rather than persisted: the refusal describes the environment
+ * Nx is running in, so it must not follow the workspace into a plain terminal.
+ */
+let isolationRefusedInThisProcess = false;
+
+/** Exported for tests: the fallback latch is process-scoped by design. */
+export function resetIsolationFallbackForTesting() {
+  isolationRefusedInThisProcess = false;
+}
+
+/**
+ * Loads a plugin in a worker, falling back to this process when the worker's
+ * socket was refused.
+ *
+ * Isolation is preferred: it is what keeps two plugins with conflicting
+ * TypeScript versions or module-level state apart. But a sandbox that has not
+ * been told about the Nx socket root refuses the worker's socket, and failing
+ * the whole command over that is worse than running the plugins here. The
+ * fallback is narrow on purpose. It needs a failure to start or reach the
+ * worker, plus either a detectable sandbox or the worker's own EPERM/EACCES
+ * exit code under an AI agent — the second arm is what covers an agent whose
+ * sandbox sets no variable `isSandbox()` reads. A plugin that loaded and then
+ * threw is rethrown, because rerunning it in-process would bury its actual
+ * error.
+ */
+export const loadingMethod = async (
   plugin: PluginConfiguration,
   root: string,
   index?: number
-) =>
-  isIsolationEnabled()
-    ? loadIsolatedNxPlugin(plugin, root, index)
-    : loadNxPlugin(plugin, root, index);
+): Promise<readonly [Promise<LoadedNxPlugin>, () => void]> => {
+  if (!isIsolationEnabled() || isolationRefusedInThisProcess) {
+    return loadNxPlugin(plugin, root, index);
+  }
+
+  const [isolatedPlugin, cleanup] = await loadIsolatedNxPlugin(
+    plugin,
+    root,
+    index
+  );
+
+  // Awaited here rather than handed on, because the worker failure surfaces on
+  // this promise and the fallback has to happen before the caller sees it.
+  try {
+    return [Promise.resolve(await isolatedPlugin), cleanup] as const;
+  } catch (e) {
+    // Proof, kept separate from policy. The errno the worker saw is what makes
+    // the message certain; whether that errno is also grounds for degrading is a
+    // different question, and conflating them made the warning assert a sandbox
+    // for agents the hint itself declines to name.
+    const provenRefusal = isPluginWorkerSocketRefusal(e);
+    // An agent is required alongside the errno, so a refusal on an ordinary
+    // workstation still surfaces rather than silently losing isolation.
+    if (
+      !isPluginWorkerStartupFailure(e) ||
+      !((provenRefusal && isAiAgent()) || isSandbox())
+    ) {
+      throw e;
+    }
+
+    cleanup();
+
+    // Read and set in one synchronous step. Concurrently loaded plugins each
+    // arrive here with their own failure, so testing the latch after setting it
+    // is what keeps the advice to one copy.
+    const alreadyRefused = isolationRefusedInThisProcess;
+    isolationRefusedInThisProcess = true;
+    if (!alreadyRefused) {
+      output.warn({
+        // Names what Nx observed, not what it infers. `isAiAgent()` is broader
+        // than the agents `sandboxSpecificRemedy` will name a setting for, so a
+        // title asserting a sandbox could sit above a body that deliberately
+        // does not.
+        title: provenRefusal
+          ? 'Nx was denied permission to create a plugin worker socket. Running plugins in the main process instead.'
+          : 'Could not start a plugin worker. Running plugins in the main process instead.',
+        bodyLines: [
+          'Plugins that expect isolation may misbehave, and this is slower than a worker.',
+          // `certain` on the errno alone. Reaching here via `isSandbox()` proves
+          // only that a worker died before it connected, which denied permission
+          // explains but so does an OOM kill or a broken install.
+          ...sandboxSocketHint({ certain: provenRefusal }),
+        ],
+      });
+    }
+
+    return loadNxPlugin(plugin, root, index);
+  }
+};
 
 /**
  * Returns all plugins (specified + default) as a flat list.
@@ -200,6 +299,28 @@ export async function getOnlyDefaultPlugins(root = workspaceRoot) {
   loadedDefaultPlugins = result;
   loadedDefaultPluginsHash = hash;
   return result;
+}
+
+/**
+ * The plugins from an in-flight load (whose workers may already be forked) or
+ * the last committed one, without triggering a load. Undefined when neither
+ * exists or plugins were cleaned up. After a plugins-config change the
+ * committed set can be the previous, already-disposed one until the new load
+ * commits, so callers must tolerate a disposed worker.
+ */
+export function getPluginsIfLoadedOrLoading():
+  | Promise<LoadedNxPlugin[]>
+  | undefined {
+  const separated = pendingSeparatedPlugins
+    ? pendingSeparatedPlugins.promise
+    : cachedSeparatedPlugins;
+  if (!separated) {
+    return undefined;
+  }
+  return Promise.resolve(separated).then(
+    ({ specifiedPlugins, defaultPlugins }) =>
+      specifiedPlugins.concat(defaultPlugins)
+  );
 }
 
 export function cleanupPlugins() {

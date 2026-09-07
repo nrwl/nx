@@ -1,22 +1,23 @@
+import type { Mock } from 'vitest';
 import { createLogger, NX_PREFIX, NX_ERROR } from './logger';
 import * as pc from 'picocolors';
 
 describe('createLogger', () => {
   let mockDriver: {
-    warn: jest.Mock;
-    error: jest.Mock;
-    info: jest.Mock;
-    log: jest.Mock;
-    debug: jest.Mock;
+    warn: Mock;
+    error: Mock;
+    info: Mock;
+    log: Mock;
+    debug: Mock;
   };
 
   beforeEach(() => {
     mockDriver = {
-      warn: jest.fn(),
-      error: jest.fn(),
-      info: jest.fn(),
-      log: jest.fn(),
-      debug: jest.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      info: vi.fn(),
+      log: vi.fn(),
+      debug: vi.fn(),
     };
   });
 

@@ -2,8 +2,10 @@ use std::collections::HashMap;
 
 use crate::native::tasks::types::TaskGraph;
 use crate::native::tui::action::Action;
+use crate::native::tui::components::nx_paragraph::NxParagraph;
 use crate::native::tui::components::tasks_list::TaskStatus;
 use crate::native::tui::graph_utils::{get_dependency_chain_failures, is_task_continuous};
+use crate::native::tui::scroll_momentum::ScrollDirection;
 use crate::native::tui::status_icons;
 use crate::native::tui::theme::THEME;
 use ratatui::{
@@ -12,8 +14,8 @@ use ratatui::{
     style::{Modifier, Style},
     text::{Line, Span},
     widgets::{
-        Block, BorderType, Borders, Padding, Paragraph, Scrollbar, ScrollbarOrientation,
-        ScrollbarState, StatefulWidget, Widget,
+        Block, BorderType, Borders, Padding, Scrollbar, ScrollbarOrientation, ScrollbarState,
+        StatefulWidget, Widget,
     },
 };
 
@@ -27,6 +29,14 @@ pub struct DependencyViewState {
     pub scroll_offset: usize,
     pub scrollbar_state: ScrollbarState,
     pub pane_area: ratatui::layout::Rect,
+    /// Clickable dependency rows captured during the last render: screen `y` →
+    /// task name. Lets a mouse click navigate to the dependency under the cursor.
+    pub dep_row_hits: Vec<(u16, String)>,
+    /// Horizontal extent `[x0, x1)` of the dependency rows, for click hit-testing.
+    pub dep_row_x_range: (u16, u16),
+    /// Inner text region from the last render, used to bound a drag-based text
+    /// selection over the dependency view (mirrors the task list).
+    pub selection_area: Option<ratatui::layout::Rect>,
 }
 
 impl DependencyViewState {
@@ -65,7 +75,23 @@ impl DependencyViewState {
             scroll_offset: 0,
             scrollbar_state: ScrollbarState::default(),
             pane_area,
+            dep_row_hits: Vec::new(),
+            dep_row_x_range: (0, 0),
+            selection_area: None,
         }
+    }
+
+    /// Resolve a click at terminal cell `(col, row)` to the dependency task under
+    /// it, if any, using the row hit-map captured during the last render.
+    pub fn handle_click(&self, col: u16, row: u16) -> Option<String> {
+        let (x0, x1) = self.dep_row_x_range;
+        if col < x0 || col >= x1 {
+            return None;
+        }
+        self.dep_row_hits
+            .iter()
+            .find(|(y, _)| *y == row)
+            .map(|(_, task)| task.clone())
     }
 
     pub fn scroll_up(&mut self) {
@@ -77,6 +103,19 @@ impl DependencyViewState {
         let max_scroll = content_height.saturating_sub(viewport_height);
         if self.scroll_offset < max_scroll {
             self.scroll_offset += 1;
+        }
+    }
+
+    /// Scroll one row in `direction`, deriving the viewport from the stored pane
+    /// area. Used by the mouse wheel so it scrolls the dependency view itself
+    /// (mirroring the keyboard path) rather than the hidden terminal buffer.
+    pub fn scroll(&mut self, direction: ScrollDirection) {
+        match direction {
+            ScrollDirection::Up => self.scroll_up(),
+            ScrollDirection::Down => {
+                let viewport_height = Self::calculate_viewport_height(self.pane_area);
+                self.scroll_down(viewport_height);
+            }
         }
     }
 
@@ -274,10 +313,13 @@ impl<'a> DependencyView<'a> {
         };
 
         if Self::fits_in_buffer(&top_area, buf) {
-            Paragraph::new(padding_text.clone())
-                .alignment(Alignment::Right)
-                .style(style)
-                .render(top_area, buf);
+            Widget::render(
+                NxParagraph::new(padding_text.clone())
+                    .alignment(Alignment::Right)
+                    .style(style),
+                top_area,
+                buf,
+            );
         }
 
         // Render bottom padding
@@ -289,10 +331,13 @@ impl<'a> DependencyView<'a> {
         };
 
         if Self::fits_in_buffer(&bottom_area, buf) {
-            Paragraph::new(padding_text)
-                .alignment(Alignment::Right)
-                .style(style)
-                .render(bottom_area, buf);
+            Widget::render(
+                NxParagraph::new(padding_text)
+                    .alignment(Alignment::Right)
+                    .style(style),
+                bottom_area,
+                buf,
+            );
         }
     }
 
@@ -306,7 +351,7 @@ impl<'a> DependencyView<'a> {
             no_deps_style,
         )])];
 
-        let paragraph = Paragraph::new(no_deps_message)
+        let paragraph = NxParagraph::new(no_deps_message)
             .alignment(Alignment::Center)
             .style(Style::default());
 
@@ -387,6 +432,11 @@ impl<'a> DependencyView<'a> {
         outer_area: Rect,
         buf: &mut Buffer,
     ) {
+        // Rebuilt below for the rows actually drawn; clear up front so the
+        // early-return paths (no deps / invalid area) leave no stale click map.
+        state.dep_row_hits.clear();
+        state.dep_row_x_range = (0, 0);
+
         if state.dependencies.is_empty() {
             self.render_no_dependencies(state, inner_area, buf);
             return;
@@ -430,22 +480,6 @@ impl<'a> DependencyView<'a> {
             ScrollbarState::default()
         };
 
-        // Apply scroll offset to lines
-        let visible_lines: Vec<Line> =
-            if state.scroll_offset > 0 && content_height > viewport_height {
-                let start = state
-                    .scroll_offset
-                    .min(content_height.saturating_sub(viewport_height));
-                let end = (start + viewport_height).min(content_height);
-                lines[start..end].to_vec()
-            } else {
-                lines
-            };
-
-        let paragraph = Paragraph::new(visible_lines)
-            .alignment(Alignment::Left)
-            .style(Style::default());
-
         // Apply safety bounds to content area
         let content_area = Rect {
             x: inner_area.x,
@@ -462,6 +496,39 @@ impl<'a> DependencyView<'a> {
         if content_area.width == 0 || content_area.height == 0 {
             return; // Don't render if the area is invalid
         }
+
+        // First visible global line index after scrolling. Global indices 0 and 1
+        // are the header and the spacing line; dependencies begin at index 2.
+        let start = if state.scroll_offset > 0 && content_height > viewport_height {
+            state
+                .scroll_offset
+                .min(content_height.saturating_sub(viewport_height))
+        } else {
+            0
+        };
+        let end = (start + viewport_height).min(content_height);
+
+        // Capture the clickable dependency rows that are actually drawn so a mouse
+        // click can navigate to the task under the cursor.
+        let mut dep_row_hits = Vec::new();
+        for global in start..end {
+            let row_offset = (global - start) as u16;
+            if row_offset >= content_area.height {
+                break;
+            }
+            if let Some(dep_idx) = global.checked_sub(2)
+                && let Some(dep) = state.dependencies.get(dep_idx)
+            {
+                dep_row_hits.push((content_area.y + row_offset, dep.clone()));
+            }
+        }
+        state.dep_row_hits = dep_row_hits;
+        state.dep_row_x_range = (content_area.x, content_area.x + content_area.width);
+
+        let visible_lines: Vec<Line> = lines[start..end].to_vec();
+        let paragraph = NxParagraph::new(visible_lines)
+            .alignment(Alignment::Left)
+            .style(Style::default());
 
         Widget::render(paragraph, content_area, buf);
 
@@ -543,6 +610,9 @@ impl<'a> StatefulWidget for DependencyView<'a> {
             .padding(Padding::new(2, 2, 1, 1));
 
         let inner_area = block.inner(area);
+        // Record the inner text region so the App can bound a drag-based text
+        // selection over the dependency view.
+        state.selection_area = Some(inner_area);
         block.render(area, buf);
 
         // Show different content based on task status
@@ -565,7 +635,7 @@ impl<'a> StatefulWidget for DependencyView<'a> {
                 Style::default().fg(THEME.secondary_fg),
             )])];
 
-            let paragraph = Paragraph::new(message_line)
+            let paragraph = NxParagraph::new(message_line)
                 .alignment(Alignment::Center)
                 .style(Style::default());
 
@@ -577,7 +647,113 @@ impl<'a> StatefulWidget for DependencyView<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::native::tasks::types::TaskGraph;
     use ratatui::buffer::Buffer;
+    use std::collections::HashMap;
+
+    fn empty_task_graph() -> TaskGraph {
+        TaskGraph {
+            tasks: HashMap::new(),
+            dependencies: HashMap::new(),
+            continuous_dependencies: HashMap::new(),
+            roots: vec![],
+        }
+    }
+
+    #[test]
+    fn test_handle_click_maps_rows_to_dependencies() {
+        let task_graph = empty_task_graph();
+        let status_map: HashMap<String, TaskStatus> = HashMap::new();
+
+        let area = Rect {
+            x: 0,
+            y: 0,
+            width: 60,
+            height: 20,
+        };
+        let mut buf = Buffer::empty(area);
+
+        let mut state = DependencyViewState {
+            current_task: "app:build".to_string(),
+            task_status: TaskStatus::NotStarted,
+            dependencies: vec![
+                "lib-a:build".to_string(),
+                "lib-b:build".to_string(),
+                "lib-c:build".to_string(),
+            ],
+            dependency_levels: HashMap::new(),
+            is_focused: true,
+            throbber_counter: 0,
+            scroll_offset: 0,
+            scrollbar_state: ScrollbarState::default(),
+            pane_area: area,
+            dep_row_hits: Vec::new(),
+            dep_row_x_range: (0, 0),
+            selection_area: None,
+        };
+
+        let view = DependencyView::new(&status_map, &task_graph);
+        StatefulWidget::render(view, area, &mut buf, &mut state);
+
+        // Inner content begins at y=2 (border + top padding). Lines are laid out as
+        // header (y=2), spacing (y=3), then one dependency per row from y=4.
+        assert_eq!(state.handle_click(5, 4).as_deref(), Some("lib-a:build"));
+        assert_eq!(state.handle_click(5, 5).as_deref(), Some("lib-b:build"));
+        assert_eq!(state.handle_click(5, 6).as_deref(), Some("lib-c:build"));
+
+        // Header and spacing rows are not clickable.
+        assert_eq!(state.handle_click(5, 2), None);
+        assert_eq!(state.handle_click(5, 3), None);
+        // A row with no dependency under it is not clickable.
+        assert_eq!(state.handle_click(5, 7), None);
+        // Clicks outside the dependency rows' x-range miss.
+        assert_eq!(state.handle_click(200, 4), None);
+
+        // The inner text region is recorded for drag-based selection and spans
+        // the rendered dependency rows.
+        let sel = state.selection_area.expect("selection area recorded");
+        assert!(sel.y <= 4 && sel.y + sel.height > 6);
+    }
+
+    #[test]
+    fn test_handle_click_respects_scroll_offset() {
+        let task_graph = empty_task_graph();
+        let status_map: HashMap<String, TaskStatus> = HashMap::new();
+
+        // Short viewport so the list scrolls: header + spacing + 8 deps = 10 lines.
+        let area = Rect {
+            x: 0,
+            y: 0,
+            width: 60,
+            height: 8, // inner height 4 → only a few rows visible at once
+        };
+        let mut buf = Buffer::empty(area);
+
+        let deps: Vec<String> = (0..8).map(|i| format!("lib-{i}:build")).collect();
+        let mut state = DependencyViewState {
+            current_task: "app:build".to_string(),
+            task_status: TaskStatus::NotStarted,
+            dependencies: deps,
+            dependency_levels: HashMap::new(),
+            is_focused: true,
+            throbber_counter: 0,
+            scroll_offset: 3,
+            scrollbar_state: ScrollbarState::default(),
+            pane_area: area,
+            dep_row_hits: Vec::new(),
+            dep_row_x_range: (0, 0),
+            selection_area: None,
+        };
+
+        let view = DependencyView::new(&status_map, &task_graph);
+        StatefulWidget::render(view, area, &mut buf, &mut state);
+
+        // With scroll_offset 3, global line 3 (the first dependency, lib-0 is global
+        // index 2) is scrolled past, so the top visible row maps to lib-1.
+        let top = state.dep_row_hits.first().expect("a row should be visible");
+        assert_eq!(top.1, "lib-1:build");
+        assert_eq!(state.handle_click(5, top.0).as_deref(), Some("lib-1:build"));
+    }
 
     #[test]
     fn test_render_scrollbar_padding_normal_case() {

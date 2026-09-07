@@ -1,58 +1,66 @@
 ---
 title: Start a New Project
-description: Create a new Nx workspace with starter templates or via Nx Cloud in the browser.
+description: Create a new Nx workspace with create-nx-workspace and pick a starter template for your stack.
 sidebar:
   label: Start a New Project
   order: 3
 filter: 'type:Guides'
 ---
 
-Create a new Nx workspace using one of these options:
+{% llm_copy_prompt title="Let an AI agent set it up for you" %}
+Help me create a new Nx workspace.
 
-- **[Option 1: Create locally with templates](#option-1-create-locally-with-templates)** - Run a command to scaffold a new monorepo on your machine
-- **[Option 2: Create via Nx Cloud](#option-2-create-via-nx-cloud)** - Use the browser-based setup with CI/CD pre-configured
+1. Run `npx create-nx-workspace@latest` from the directory the workspace should live in, and walk me through the prompts (workspace name, starter template).
+2. If I already know the stack I want, skip the prompts with `--template=<name>`. The full list of templates is at [/docs/templates](/docs/templates), and each template page shows the exact command.
+3. `cd` into the new directory. Run `npx nx run-many -t build` to confirm the workspace works, then `npx nx graph` to show me the project graph.
 
-{% aside type="note" title="Adding Nx to an existing project?" %}
-If you already have a project and want to add Nx to it, see [Add to an Existing Project](/docs/getting-started/start-with-existing-project) instead.
-{% /aside %}
+Do not add plugins or projects I did not ask for. Summarize what was generated before moving on.
 
-## Option 1: create locally with templates
+Page: {pageUrl}
+{% /llm_copy_prompt %}
 
-Run the following command to create a new Nx workspace:
+Create a new Nx workspace with `create-nx-workspace`:
 
-```shell
-npx create-nx-workspace@latest
+```shell {% meta="prompt=true" %}
+$ npx create-nx-workspace@latest
+✓ generating workspace files
+✓ installing dependencies
+→ ready in 20s
 ```
 
-This interactive command guides you through the setup:
+The command prompts for a **workspace name**, which becomes the root directory, and a **starter template**, which decides what the workspace starts with.
 
-- **Workspace name** - The name of your root directory.
-- **Starter template** - Choose from [pre-built monorepo templates](/docs/templates) (React, Tanstack Start, Angular, Next.js, NestJS, Astro, etc.).
+## Pick a starter template
 
-For a minimal setup, use the empty template. This gives you a bare TypeScript monorepo that you can extend incrementally.
+Pick a starter from the prompt, or browse the [template gallery](/docs/templates) for the full set - TanStack Start, Next.js, NestJS, Express, Astro Starlight, React Module Federation, Remotion, and more.
+
+Every template is a working monorepo. Projects are wired together, caching is on, and the task pipeline is configured.
+
+Each template page shows the `create-nx-workspace` command that scaffolds it, so you can skip the prompt:
 
 ```shell
-npx create-nx-workspace@latest --template=empty
+npx create-nx-workspace@latest --template=nrwl/tanstack-start-template
 ```
-
-## Option 2: Create via Nx Cloud
-
-[![Nx Cloud onboarding](../../../assets/getting-started/nx-cloud-starting-screen.avif)](https://cloud.nx.app/get-started?utm_source=nx-docs&utm_medium=nx-cloud-onboarding&utm_campaign=start-new-project)
-
-[Create your workspace directly from Nx Cloud](https://cloud.nx.app/get-started?utm_source=nx-docs&utm_medium=nx-cloud-onboarding&utm_campaign=start-new-project) for a browser-based setup experience.
-
-This option gives you:
-
-- A working CI configuration out of the box
-- [Remote caching](/docs/features/ci-features/remote-cache) enabled from the start
-- [Self-healing CI](/docs/features/ci-features/self-healing-ci) that automatically fixes common failures
-
-[Get started with Nx Cloud →](https://cloud.nx.app/get-started?utm_source=nx-docs&utm_medium=nx-cloud-onboarding&utm_campaign=start-new-project)
 
 ## Next steps
 
-Once your workspace is set up:
+Once your workspace is set up, try these commands:
+
+```shell
+nx build <project-name>      # Run a task
+nx build <project-name>      # Run again - instant cache hit
+nx run-many -t build test    # Run tasks across all projects
+nx graph                     # Visualize project dependencies
+```
+
+From here you can:
+
+- [Configure task caching](/docs/features/cache-task-results) to speed up repeated builds
+- [Add Nx plugins](/docs/technologies) for your tech stack (React, Angular, Node, etc.)
+
+## Keep learning
 
 - **New to Nx?** → [Follow the tutorial series](/docs/getting-started/tutorials/crafting-your-workspace) to learn core concepts hands-on
-- **Set up your editor** → Install [Nx Console](/docs/getting-started/editor-setup) for VSCode or JetBrains
-- **Speed up CI** → Connect to [Nx Cloud](/docs/getting-started/nx-cloud) for remote caching and distributed tasks
+- **Working with AI?** → [Set up AI integrations](/docs/getting-started/ai-setup) so agents understand your workspace
+- **Ready for CI?** → [Set up CI](/docs/getting-started/setup-ci) with remote caching and affected commands
+- **Prefer video?** → [Learn with our video courses](https://nx.dev/courses)

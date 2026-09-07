@@ -1,4 +1,5 @@
 import {
+  checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
   createFile,
@@ -68,6 +69,28 @@ describe('Docker E2Es', () => {
       );
       expect(releaseResult.includes('Successfully ran target')).toBeTruthy();
     });
+
+    it(
+      'should not run shell metacharacters in a docker version',
+      () => {
+        const myapp = uniq('myapp');
+        createDockerApp(myapp);
+        addDockerReleaseConfiguration(myapp);
+        addDockerPluginIfNotExists();
+
+        runCLI(`reset`);
+        runCLI(`run ${myapp}:docker:build`);
+
+        // The ';' used to terminate the `docker tag` shell string, running the
+        // rest as a second command. Versioning now fails on the invalid ref.
+        runCLI(`release version --dockerVersion='1.0.0; touch injected.txt'`, {
+          silenceError: true,
+        });
+
+        checkFilesDoNotExist('injected.txt');
+      },
+      TEN_MINS_MS
+    );
 
     it(
       'should skip default tag when skipDefaultTag is true',

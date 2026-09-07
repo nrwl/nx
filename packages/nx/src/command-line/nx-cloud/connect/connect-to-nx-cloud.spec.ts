@@ -1,5 +1,20 @@
+import type { Mock } from 'vitest';
+vi.mock('@clack/prompts', () => ({
+  autocomplete: vi.fn(),
+  isCancel: () => false,
+}));
+
+vi.mock('../../../utils/ab-testing', async () => ({
+  ...(await vi.importActual('../../../utils/ab-testing')),
+  recordStat: vi.fn(),
+}));
+
+import { autocomplete } from '@clack/prompts';
 import { withEnvironmentVariables } from '../../../internal-testing-utils/with-environment';
-import { onlyDefaultRunnerIsUsed } from './connect-to-nx-cloud';
+import {
+  connectExistingRepoToNxCloudPrompt,
+  onlyDefaultRunnerIsUsed,
+} from './connect-to-nx-cloud';
 
 describe('connect-to-nx-cloud', () => {
   describe('onlyDefaultRunnerIsUsed', () => {
@@ -130,5 +145,55 @@ describe('connect-to-nx-cloud', () => {
         )
       ).toBeFalsy();
     });
+  });
+});
+
+describe('nxCloudPrompt option mapping', () => {
+  const mockAutocomplete = autocomplete as unknown as Mock;
+
+  beforeEach(() => {
+    mockAutocomplete.mockReset();
+  });
+
+  // The message choices are `{ value, name }` with `name` as the display text.
+  // Mapping `name` into clack's `value` made the prompt answer with the label,
+  // so every caller comparison against 'skip' / 'yes' silently missed.
+  it('offers the choice keys as values, not their labels', async () => {
+    mockAutocomplete.mockResolvedValueOnce('skip');
+
+    await connectExistingRepoToNxCloudPrompt('init', 'setupNxCloud', false);
+
+    const { options, initialValue } = mockAutocomplete.mock.calls[0][0];
+    expect(options.length).toBeGreaterThan(1);
+    // every value is a lowercase key, never the human-readable label
+    for (const option of options) {
+      expect(option.value).toMatch(/^[a-z][a-z-]*$/);
+      expect(option.value).not.toBe(option.label);
+    }
+    // the initial selection is a value too, not a label
+    expect(options.map((o: { value: string }) => o.value)).toContain(
+      initialValue
+    );
+  });
+
+  it('returns the selected key unchanged', async () => {
+    mockAutocomplete.mockImplementationOnce(
+      ({ options }: { options: { value: string }[] }) =>
+        options.find((o) => o.value === 'skip')?.value
+    );
+
+    await expect(
+      connectExistingRepoToNxCloudPrompt('init', 'setupNxCloud', false)
+    ).resolves.toBe('skip');
+  });
+
+  it('blocks a submit that matched no option', async () => {
+    mockAutocomplete.mockResolvedValueOnce('skip');
+
+    await connectExistingRepoToNxCloudPrompt('init', 'setupNxCloud', false);
+
+    const { validate } = mockAutocomplete.mock.calls[0][0];
+    expect(validate(undefined)).toEqual(expect.any(String));
+    expect(validate('skip')).toBeUndefined();
   });
 });

@@ -30,7 +30,7 @@
     },
     "coverageProvider": {
       "type": "string",
-      "enum": ["v8", "istanbul", "custom"],
+      "enum": ["v8", "istanbul", "custom", "none"],
       "default": "v8",
       "description": "Coverage provider to use."
     },
@@ -64,6 +64,12 @@
       "type": "boolean",
       "default": false,
       "description": "Do not add dependencies to `package.json`.",
+      "x-priority": "internal"
+    },
+    "passWithNoTests": {
+      "type": "boolean",
+      "default": false,
+      "description": "Exit with a zero status when the project has no test files.",
       "x-priority": "internal"
     },
     "zoneless": {

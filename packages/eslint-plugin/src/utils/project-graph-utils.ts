@@ -4,14 +4,14 @@ import {
   readCachedProjectGraph,
 } from '@nx/devkit';
 import { isTerminalRun } from './runtime-lint-utils';
-import chalk = require('chalk');
+import pc from 'picocolors';
+import { TargetProjectLocator } from '@nx/js/internal';
 import {
   createProjectRootMappings,
   ProjectRootMappings,
-} from 'nx/src/project-graph/utils/find-project-for-path';
-import { readNxJson } from 'nx/src/config/configuration';
-import { TargetProjectLocator } from '@nx/js/internal';
-import { readFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
+  readNxJsonFromDisk as readNxJson,
+  readFileMapCache,
+} from '@nx/devkit/internal';
 
 export function ensureGlobalProjectGraph(ruleName: string) {
   /**
@@ -43,8 +43,8 @@ export function ensureGlobalProjectGraph(ruleName: string) {
         projectGraph.externalNodes
       );
     } catch {
-      const WARNING_PREFIX = `${chalk.reset.keyword('orange')('warning')}`;
-      const RULE_NAME_SUFFIX = `${chalk.reset.dim(`@nx/${ruleName}`)}`;
+      const WARNING_PREFIX = `${pc.reset(pc.yellow('warning'))}`;
+      const RULE_NAME_SUFFIX = `${pc.reset(pc.dim(`@nx/${ruleName}`))}`;
       process.stdout
         .write(`${WARNING_PREFIX} No cached ProjectGraph is available. The rule will be skipped.
           If you encounter this error as part of running standard \`nx\` commands then please open an issue on https://github.com/nrwl/nx

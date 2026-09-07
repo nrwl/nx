@@ -14,7 +14,7 @@ jest.mock('../utilities/esbuild-extensions', () => ({
   loadIndexHtmlTransformer: jest.fn(),
 }));
 jest.mock('../utilities/builder-package', () => ({
-  assertBuilderPackageIsInstalled: jest.fn(),
+  assertPackageIsInstalled: jest.fn(),
 }));
 jest.mock('@angular/build', () => ({
   executeUnitTestBuilder: jest.fn(async function* () {

@@ -2,13 +2,13 @@
   "$schema": "https://json-schema.org/schema",
   "$id": "NxAngularAddLintingGenerator",
   "title": "Add linting to an Angular project.",
-  "description": "Adds linting configuration to an Angular project.",
+  "description": "Adds linting configuration to an Angular project, using the linter the workspace already uses. Adds nothing when the workspace has no linter and none is selected.",
   "cli": "nx",
   "type": "object",
   "examples": [
     {
       "command": "nx g @nx/angular:add-linting --prefix=cool --projectName=cool-lib --projectRoot=libs/cool-lib",
-      "description": "Adds ESLint with Angular-specific rules for an existing project named `cool-lib` with the [prefix](https://angular.dev/style-guide#style-02-07) `cool`"
+      "description": "Sets up linting for an existing project named `cool-lib` using the linter the workspace already uses. The Angular-specific rules and the [prefix](https://angular.dev/style-guide#style-02-07) `cool` apply to ESLint only"
     }
   ],
   "properties": {
@@ -28,10 +28,21 @@
       "description": "The path to the root of the selected project.",
       "x-priority": "important"
     },
+    "linter": {
+      "description": "The tool to use for running lint checks. Defaults to the linter the workspace already uses.",
+      "type": "string",
+      "enum": ["eslint", "oxlint", "none"]
+    },
+    "enableTypedLinting": {
+      "type": "boolean",
+      "description": "Whether to enable typed linting. For flat configs, this configures the recommended `parserOptions.projectService` and `tsconfigRootDir`. For legacy `.eslintrc` configs, this configures `parserOptions.project`. We do not enable this by default for lint performance reasons.",
+      "default": false
+    },
     "setParserOptionsProject": {
       "type": "boolean",
-      "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
-      "default": false
+      "description": "Deprecated alias for `enableTypedLinting`.",
+      "default": false,
+      "x-deprecated": "Use `enableTypedLinting` instead. This option will be removed in Nx v24."
     },
     "skipFormat": {
       "type": "boolean",

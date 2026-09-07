@@ -12,7 +12,7 @@ describe('generator output capture', () => {
   const originalDebug = console.debug;
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
     console.log = originalLog;
     console.warn = originalWarn;
     console.error = originalError;
@@ -22,15 +22,11 @@ describe('generator output capture', () => {
 
   describe('installGeneratorOutputCapture', () => {
     it('captures console.log/warn/error/info/debug while still writing to the original methods', () => {
-      const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-      const errorSpy = jest
-        .spyOn(console, 'error')
-        .mockImplementation(() => {});
-      const infoSpy = jest.spyOn(console, 'info').mockImplementation(() => {});
-      const debugSpy = jest
-        .spyOn(console, 'debug')
-        .mockImplementation(() => {});
+      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+      const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
 
       const capture = installGeneratorOutputCapture();
       console.log('a');
@@ -50,7 +46,7 @@ describe('generator output capture', () => {
     });
 
     it('formats multi-arg and non-string values like console would', () => {
-      jest.spyOn(console, 'log').mockImplementation(() => {});
+      vi.spyOn(console, 'log').mockImplementation(() => {});
 
       const capture = installGeneratorOutputCapture();
       console.log('count =', 3);
@@ -77,10 +73,10 @@ describe('generator output capture', () => {
     });
 
     it('refuses to layer a second install when the first was not restored, returning a noop handle', () => {
-      const verboseSpy = jest
+      const verboseSpy = vi
         .spyOn(logger, 'verbose')
         .mockImplementation(() => {});
-      const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
       const outer = installGeneratorOutputCapture();
       // Capture the wrapper we just installed; the inner install must NOT
@@ -112,7 +108,7 @@ describe('generator output capture', () => {
 
   describe('withGeneratorOutputCapture', () => {
     it('returns the function result and the captured logs', async () => {
-      jest.spyOn(console, 'log').mockImplementation(() => {});
+      vi.spyOn(console, 'log').mockImplementation(() => {});
 
       const { result, logs } = await withGeneratorOutputCapture(async () => {
         console.log('inside');
@@ -136,7 +132,7 @@ describe('generator output capture', () => {
     });
 
     it('attaches captured logs to the thrown error as `capturedLogs`', async () => {
-      jest.spyOn(console, 'log').mockImplementation(() => {});
+      vi.spyOn(console, 'log').mockImplementation(() => {});
 
       let captured: unknown;
       try {
@@ -155,7 +151,7 @@ describe('generator output capture', () => {
     });
 
     it('does not crash when a captured user arg has a throwing toString()', async () => {
-      jest.spyOn(console, 'log').mockImplementation(() => {});
+      vi.spyOn(console, 'log').mockImplementation(() => {});
       const hostile = {
         toString() {
           throw new Error('toString blew up');
@@ -173,7 +169,7 @@ describe('generator output capture', () => {
     });
 
     it('does not mask the original error when attaching capturedLogs would throw', async () => {
-      jest.spyOn(console, 'log').mockImplementation(() => {});
+      vi.spyOn(console, 'log').mockImplementation(() => {});
 
       const original = new Error('original failure');
       Object.freeze(original);

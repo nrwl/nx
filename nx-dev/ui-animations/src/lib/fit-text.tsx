@@ -56,7 +56,7 @@ export function FitText({
     >
       <motion.span
         className={cx(
-          'transform whitespace-nowrap text-center font-bold',
+          'transform text-center font-bold whitespace-nowrap',
           className
         )}
         ref={textRef}

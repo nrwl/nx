@@ -1,8 +1,8 @@
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { Tree } from '@nx/devkit';
-import { FsTree } from 'nx/src/generators/tree';
 import update from './change-plugin-version-0-1-4';
 import { gradleProjectGraphPluginName } from '../../utils/versions';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { FsTree } from '@nx/devkit/internal';
 
 describe('change-plugin-version-0-1-4 migration', () => {
   let tempFs: TempFs;

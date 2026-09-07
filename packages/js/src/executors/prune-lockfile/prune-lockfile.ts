@@ -9,17 +9,19 @@ import {
 } from '@nx/devkit';
 import { existsSync, lstatSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
-import { interpolate } from 'nx/src/tasks-runner/utils';
-import { type PackageJson } from 'nx/src/utils/package-json';
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import {
-  getLockFileName,
-  createLockFile,
-} from 'nx/src/plugins/js/lock-file/lock-file';
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { getWorkspacePackagesFromGraph } from 'nx/src/plugins/js/utils/get-workspace-packages-from-graph';
+  dropEmptyPeerDependencySections,
+  generatePrunedDeployOutput,
+  getCatalogManager,
+  getWorkspacePackagesFromGraph,
+  interpolate,
+  movePeerDependencyToDependencies,
+  type PackageJson,
+  type PackageJsonDependencySection,
+} from '@nx/devkit/internal';
 import { type PruneLockfileOptions } from './schema';
 import { stripGlobToBaseDir } from '../../utils/strip-glob-to-base-dir';
+import { WORKSPACE_MODULE_INSTALL_SECTIONS } from '../../utils/workspace-module-sections';
 
 export default async function pruneLockfileExecutor(
   schema: PruneLockfileOptions,
@@ -27,60 +29,123 @@ export default async function pruneLockfileExecutor(
 ) {
   logger.log('Pruning lockfile...');
   const outputDirectory = getOutputDir(schema, context);
-  const packageJson = getPackageJson(schema, context);
+  const packageJson = resolveCatalogReferences(getPackageJson(schema, context));
+  mergeAllowScripts(packageJson);
   const packageManager = detectPackageManager(workspaceRoot);
 
-  if (packageManager === 'bun') {
-    logger.warn(
-      'Bun lockfile generation is not supported. Only package.json will be generated. Run "bun install" in the output directory if needed.'
-    );
-    writeFileSync(
-      join(outputDirectory, 'package.json'),
-      JSON.stringify(packageJson, null, 2)
-    );
-  } else {
-    const { lockfileName, lockFile } = createPrunedLockfile(
-      packageJson,
-      context.projectGraph
-    );
-    const lockfileOutputPath = join(outputDirectory, lockfileName);
-    writeFileSync(lockfileOutputPath, lockFile);
-    writeFileSync(
-      join(outputDirectory, 'package.json'),
-      JSON.stringify(packageJson, null, 2)
-    );
-    logger.log(`Lockfile pruned: ${lockfileOutputPath}`);
-  }
+  const { project } = parseTargetString(schema.buildTarget, context);
+  const projectRoot = context.projectGraph.nodes[project].data.root;
+  generatePrunedDeployOutput(packageJson, context.projectGraph, projectRoot, {
+    outputDirectory,
+    packageManager,
+    workspaceRoot,
+  });
+  rewriteWorkspaceModuleSpecifiers(packageJson, context.projectGraph);
+  writeFileSync(
+    join(outputDirectory, 'package.json'),
+    JSON.stringify(packageJson, null, 2)
+  );
+  logger.log(`Pruned deploy output written to ${outputDirectory}`);
 
   return {
     success: true,
   };
 }
 
-function createPrunedLockfile(packageJson: PackageJson, graph: ProjectGraph) {
-  const packageManager = detectPackageManager(workspaceRoot);
-  const lockfileName = getLockFileName(packageManager);
-  const lockFile = createLockFile(packageJson, graph, packageManager);
-
+// Point every workspace-module dependency at its copied directory so the
+// standalone output installs them as pnpm `file:` directory dependencies.
+// pnpm rejects a `file:` spec under peerDependencies, so a peer-declared
+// workspace module is moved into dependencies instead (an optional peer
+// becomes required, which is moot since the module is always copied in). Gate
+// strictly on graph membership: a `file:`/`link:` spec to a non-workspace
+// local path (e.g. a vendored tarball) is left alone, since
+// copy-workspace-modules only ever copies actual workspace projects.
+function rewriteWorkspaceModuleSpecifiers(
+  packageJson: PackageJson,
+  graph: ProjectGraph
+) {
   const workspacePackages = getWorkspacePackagesFromGraph(graph);
 
-  for (const [pkgName, pkgVersion] of Object.entries(
-    packageJson.dependencies ?? {}
-  )) {
-    if (
-      pkgVersion.startsWith('workspace:') ||
-      pkgVersion.startsWith('file:') ||
-      pkgVersion.startsWith('link:') ||
-      workspacePackages.has(pkgName)
-    ) {
-      packageJson.dependencies[pkgName] = `file:./workspace_modules/${pkgName}`;
+  for (const section of WORKSPACE_MODULE_INSTALL_SECTIONS) {
+    const deps = packageJson[section];
+    if (!deps) {
+      continue;
+    }
+    for (const pkgName of Object.keys(deps)) {
+      if (!workspacePackages.has(pkgName)) {
+        continue;
+      }
+      const fileSpec = `file:./workspace_modules/${pkgName}`;
+      if (section === 'peerDependencies') {
+        movePeerDependencyToDependencies(packageJson, pkgName, fileSpec);
+      } else {
+        deps[pkgName] = fileSpec;
+      }
     }
   }
+  dropEmptyPeerDependencySections(packageJson);
+}
 
-  return {
-    lockfileName,
-    lockFile,
+/**
+ * npm reads the `allowScripts` install-script allowlist only from the install
+ * root, but `npm approve-scripts` writes it to the workspace root, so it never
+ * lives in the project package.json the prune output is built from. Carry the
+ * root allowlist over, with project-level entries preserved and winning on
+ * conflict. Mirrors the `pnpm.allowBuilds` handling in createPackageJson.
+ */
+function mergeAllowScripts(packageJson: PackageJson) {
+  const rootPackageJson: PackageJson = readJsonFile(
+    join(workspaceRoot, 'package.json')
+  );
+  if (!rootPackageJson.allowScripts) {
+    return;
+  }
+  packageJson.allowScripts = {
+    ...rootPackageJson.allowScripts,
+    ...packageJson.allowScripts,
   };
+}
+
+export function resolveCatalogReferences(
+  packageJson: PackageJson
+): PackageJson {
+  const manager = getCatalogManager(workspaceRoot);
+  if (!manager) {
+    return packageJson;
+  }
+
+  const sections: PackageJsonDependencySection[] = [
+    'dependencies',
+    'optionalDependencies',
+    'devDependencies',
+    'peerDependencies',
+  ];
+  const resolved: PackageJson = { ...packageJson };
+  for (const section of sections) {
+    const deps = packageJson[section];
+    if (!deps) {
+      continue;
+    }
+    const resolvedDeps: Record<string, string> = { ...deps };
+    for (const [packageName, version] of Object.entries(deps)) {
+      if (!manager.isCatalogReference(version)) {
+        continue;
+      }
+      const resolvedVersion = manager.resolveCatalogReference(
+        workspaceRoot,
+        packageName,
+        version
+      );
+      if (!resolvedVersion) {
+        throw new Error(
+          `Could not resolve catalog reference for package ${packageName}@${version}.`
+        );
+      }
+      resolvedDeps[packageName] = resolvedVersion;
+    }
+    resolved[section] = resolvedDeps;
+  }
+  return resolved;
 }
 
 function getPackageJson(

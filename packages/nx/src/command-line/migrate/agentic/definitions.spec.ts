@@ -45,11 +45,12 @@ describe('claudeCodeDefinition', () => {
       systemContext: 'system text',
       userPrompt: 'user text',
       workspaceRoot: '/workspace',
+      runDirName: '23.0.0',
     });
     expect(spec).toEqual({
       args: [
         '--allowedTools',
-        'Write(.nx/migrate-runs/**),Edit(.nx/migrate-runs/**)',
+        'Edit(.nx/migrate-runs/23.0.0/handoffs/**)',
         '--system-prompt',
         'system text',
         'user text',
@@ -57,6 +58,47 @@ describe('claudeCodeDefinition', () => {
       cwd: '/workspace',
     });
   });
+
+  // A run directory holds the state Nx wrote and reads back beside the
+  // handoffs, and a sibling directory is another run's, whose handoffs decide
+  // how its steps settle. Both are reachable from the session cwd, so only the
+  // rule keeps this invocation out of them.
+  it('names one run directory rather than a pattern spanning several', () => {
+    const [, rule] = claudeCodeDefinition.buildInteractive({
+      systemContext: '',
+      userPrompt: '',
+      workspaceRoot: '/workspace',
+      runDirName: '23.0.0',
+    }).args;
+
+    expect(rule).toBe('Edit(.nx/migrate-runs/23.0.0/handoffs/**)');
+    expect(rule).not.toContain('*/handoffs');
+    expect(rule).not.toContain('Write(');
+  });
+
+  it.each([
+    ['a comma, which starts another rule', '23.0.0,Edit(.env)'],
+    ['a space, which also starts another rule', '23.0.0 Edit(.env)'],
+    ['a paren, which closes the rule early', '23.0.0)'],
+    ['a gitignore wildcard', '23.*'],
+    ['a parent-directory reference', '..'],
+  ])(
+    'hands over no rule at all when the run directory name carries %s',
+    (_label, runDirName) => {
+      const spec = claudeCodeDefinition.buildInteractive({
+        systemContext: 'system text',
+        userPrompt: 'user text',
+        workspaceRoot: '/workspace',
+        runDirName,
+      });
+
+      expect(spec.args).toEqual([
+        '--system-prompt',
+        'system text',
+        'user text',
+      ]);
+    }
+  );
 });
 
 describe('codexDefinition', () => {
@@ -65,6 +107,7 @@ describe('codexDefinition', () => {
       systemContext: 'system text',
       userPrompt: 'user text',
       workspaceRoot: '/workspace',
+      runDirName: '23.0.0',
     });
     expect(spec).toEqual({
       args: ['-c', 'developer_instructions=system text', 'user text'],
@@ -142,6 +185,7 @@ describe('opencodeDefinition', () => {
         systemContext: hostile,
         userPrompt: 'user',
         workspaceRoot: '/ws',
+        runDirName: '23.0.0',
       });
       const parsed = JSON.parse(spec.env!.OPENCODE_CONFIG_CONTENT as string);
       expect(parsed.agent['nx-migrate'].prompt).toBe(hostile);
@@ -153,6 +197,7 @@ describe('opencodeDefinition', () => {
       systemContext: 'system text',
       userPrompt: 'user text',
       workspaceRoot: '/workspace',
+      runDirName: '23.0.0',
     });
     expect(spec.args).toEqual([
       '--agent',

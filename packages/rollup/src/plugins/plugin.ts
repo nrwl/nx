@@ -2,8 +2,9 @@ import {
   calculateHashesForCreateNodes,
   getNamedInputs,
   PluginCache,
+  workspaceDataDirectory,
+  hashObject,
 } from '@nx/devkit/internal';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { basename, dirname, join } from 'path';
 import { readdirSync } from 'fs';
 import {
@@ -20,7 +21,6 @@ import {
 } from '@nx/devkit';
 import { getLockFileName } from '@nx/js';
 import { type RollupOptions } from 'rollup';
-import { hashObject } from 'nx/src/hasher/file-hasher';
 import {
   isUsingTsSolutionSetup,
   TS_SOLUTION_SETUP_TSCONFIG_INPUT,

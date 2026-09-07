@@ -1,5 +1,6 @@
 import { addE2e as addE2eReact } from '@nx/react/internal';
 import { GeneratorCallback, Tree, ensurePackage, names } from '@nx/devkit';
+import { isTypedLintingEnabled } from '@nx/eslint/internal';
 
 import { nxVersion } from '../../../utils/versions';
 
@@ -40,7 +41,7 @@ export async function addE2e(
         appDisplayName: options.displayName,
         appName: options.name,
         framework: 'react-native',
-        setParserOptionsProject: options.setParserOptionsProject,
+        enableTypedLinting: isTypedLintingEnabled(options),
         skipFormat: true,
       });
     case 'none':

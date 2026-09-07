@@ -1,20 +1,21 @@
-import { existsSync } from 'fs';
+import { chmodSync, existsSync } from 'fs';
+import { isPermissionDenied } from '../../utils/permission-errors';
+import { SOCKET_REFUSED_EXIT_CODE } from '../../utils/socket-refused-exit-code';
 import { createServer, Server, Socket } from 'net';
 import { join } from 'path';
-import { deserialize, serialize } from 'v8';
 import { startAnalytics } from '../../analytics';
 import { hashArray } from '../../hasher/file-hasher';
 import { hashFile } from '../../native';
 import {
   consumeMessagesFromSocket,
+  describeMessage,
   isJsonMessage,
+  parseMessage,
 } from '../../utils/consume-messages-from-socket';
 import '../../utils/perf-logging';
 import { nxVersion } from '../../utils/versions';
 import { setupWorkspaceContext } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { readNxJson } from '../../config/nx-json';
-import { getPlugins } from '../../project-graph/plugins/get-plugins';
 import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache';
 import { isNxVersionMismatch } from '../is-nx-version-mismatch';
 import { getInstalledNxVersion } from '../../utils/installed-nx-version';
@@ -25,8 +26,10 @@ import {
   isHandleResetConfigureAiAgentsStatusMessage,
   RESET_CONFIGURE_AI_AGENTS_STATUS,
 } from '../message-types/configure-ai-agents';
-import { applyDaemonEnvFromClient } from '../client/daemon-environment';
-import { isDaemonMessage } from '../message-types/daemon-message';
+import {
+  assertNotForeignWorkspaceMessage,
+  isDaemonMessage,
+} from '../message-types/daemon-message';
 import {
   FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
   isHandleFlushSyncGeneratorChangesToDiskMessage,
@@ -92,11 +95,13 @@ import {
   getFullOsSocketPath,
   isWindows,
   killSocketOrPath,
+  serializeWithFallback,
 } from '../socket-utils';
 import { registerFileChangeListener } from './file-watching/file-change-events';
 import { routeWorkspaceChanges } from './file-watching/route-workspace-changes';
 import {
   hasRegisteredFileWatcherSockets,
+  notifyFileWatcherSocketsOfError,
   registeredFileWatcherSockets,
   removeRegisteredFileWatcherSocket,
 } from './file-watching/file-watcher-sockets';
@@ -107,6 +112,7 @@ import {
 import { handleContextFileData } from './handle-context-file-data';
 import { handleFlushSyncGeneratorChangesToDisk } from './handle-flush-sync-generator-changes-to-disk';
 import { handleForceShutdown } from './handle-force-shutdown';
+import { handleClientEnv } from './handle-client-env';
 import { handleGetFilesInDirectory } from './handle-get-files-in-directory';
 import { handleGetRegisteredSyncGenerators } from './handle-get-registered-sync-generators';
 import { handleGetSyncGeneratorChanges } from './handle-get-sync-generator-changes';
@@ -136,13 +142,12 @@ import {
 } from './handle-tasks-execution-hooks';
 import { handleUpdateWorkspaceContext } from './handle-update-workspace-context';
 import {
-  disableOutputsTracking,
-  processFileChangesInOutputs,
-} from './outputs-tracking';
+  getOutputsWatcherTerminalError,
+  handleOutputsChanges,
+} from './handle-outputs-changes';
 import {
   scheduleProjectGraphRecomputation,
   registerProjectGraphRecomputationListener,
-  invalidateGraphCache,
 } from './project-graph-incremental-recomputation';
 import {
   hasRegisteredProjectGraphListenerSockets,
@@ -156,6 +161,7 @@ import {
   handleServerProcessTerminationWithRestart,
   resetInactivityTimeout,
   respondToClient,
+  respondWithError,
   respondWithErrorAndExit,
   SERVER_INACTIVITY_TIMEOUT_MS,
   storeOutputWatcherInstance,
@@ -173,7 +179,6 @@ import {
 } from './watcher';
 
 let workspaceWatcherError: Error | undefined;
-let outputsWatcherError: Error | undefined;
 
 global.NX_DAEMON = true;
 process.env.NX_DAEMON_PROCESS = 'true';
@@ -197,9 +202,23 @@ const server = createServer(async (socket) => {
 
   socket.on(
     'data',
-    consumeMessagesFromSocket(async (message) => {
-      await handleMessage(socket, message);
-    })
+    consumeMessagesFromSocket(
+      async (message) => {
+        // A rejection here would otherwise be unhandled and take the daemon
+        // down with it, failing every other client's request too.
+        await handleMessage(socket, message).catch(async (e) => {
+          await respondWithError(socket, 'Error handling message', e);
+        });
+      },
+      (err) => {
+        serverLogger.log(`Framing error: ${err.message}`);
+        // The stream cannot resynchronize, so close it and let the client
+        // observe the disconnect instead of waiting on a reply.
+        respondWithError(socket, 'Malformed message', err).finally(() =>
+          socket.destroy()
+        );
+      }
+    )
   );
 
   socket.on('error', (e) => {
@@ -221,7 +240,7 @@ const server = createServer(async (socket) => {
 });
 registerProcessTerminationListeners();
 
-async function handleMessage(socket: Socket, data: string) {
+async function handleMessage(socket: Socket, data: Buffer) {
   if (workspaceWatcherError) {
     await respondWithErrorAndExit(
       socket,
@@ -229,44 +248,53 @@ async function handleMessage(socket: Socket, data: string) {
       workspaceWatcherError
     );
   }
+  const outputsWatcherTerminalError = getOutputsWatcherTerminalError();
+  if (outputsWatcherTerminalError) {
+    await respondWithErrorAndExit(
+      socket,
+      `File watcher error in the workspace '${workspaceRoot}'.`,
+      outputsWatcherTerminalError
+    );
+  }
 
   resetInactivityTimeout(handleInactivityTimeout);
 
   const unparsedPayload = data;
   let payload;
-  let mode: 'json' | 'v8' = 'json';
+  // Reply in the format the client used.
+  const mode: 'json' | 'v8' = isJsonMessage(unparsedPayload) ? 'json' : 'v8';
 
   serverLogger.log(`Received raw message of length ${unparsedPayload.length}`);
 
   try {
-    // JSON Message
-    if (isJsonMessage(unparsedPayload)) {
-      payload = JSON.parse(unparsedPayload);
-    } else {
-      // V8 Serialized Message
-      payload = deserialize(Buffer.from(unparsedPayload, 'binary'));
-      mode = 'v8';
-    }
+    payload = parseMessage<any>(unparsedPayload);
   } catch (e) {
     await respondWithErrorAndExit(
       socket,
       `Invalid payload from the client`,
-      new Error(`Unsupported payload sent to daemon server: ${unparsedPayload}`)
+      new Error(
+        `Unsupported payload sent to daemon server: ${describeMessage(
+          unparsedPayload,
+          { maxBytes: 200 }
+        )}`
+      )
     );
   }
   serverLogger.log(`Received ${mode} message of type ${payload.type}`);
 
-  if (isDaemonMessage(payload) && payload.env) {
-    const changedEnvKeys = applyDaemonEnvFromClient(payload.env);
-    if (changedEnvKeys.length > 0) {
-      serverLogger.log(
-        `Graph recompute necessary due to env variable refresh. Changed keys: ${changedEnvKeys.join(
-          ', '
-        )}`
-      );
-      forwardEnvToPluginWorkers(payload.env);
-      invalidateGraphCache();
+  // A mismatch means the client reached the wrong daemon (e.g. a shared
+  // NX_SOCKET_DIR). Respond, but stay alive for our own workspace.
+  if (isDaemonMessage(payload)) {
+    try {
+      assertNotForeignWorkspaceMessage(payload, workspaceRoot);
+    } catch (e) {
+      await respondWithError(socket, `Workspace root mismatch`, e);
+      return;
     }
+  }
+
+  if (isDaemonMessage(payload) && payload.env) {
+    await handleClientEnv(payload.env);
   }
 
   if (payload.type === 'PING') {
@@ -478,7 +506,12 @@ async function handleMessage(socket: Socket, data: string) {
     await respondWithErrorAndExit(
       socket,
       `Invalid payload from the client`,
-      new Error(`Unsupported payload sent to daemon server: ${unparsedPayload}`)
+      new Error(
+        `Unsupported payload sent to daemon server: ${describeMessage(
+          unparsedPayload,
+          { maxBytes: 200 }
+        )}`
+      )
     );
   }
 }
@@ -505,8 +538,8 @@ export async function handleResult(
     );
     const response =
       typeof hr.response === 'string'
-        ? hr.response
-        : serializeUnserializedResult(hr.response, mode);
+        ? Buffer.from(hr.response, 'utf8')
+        : serializeWithFallback(hr.response, mode);
     serverLogger.log(`Responding to ${type} message`);
     await respondToClient(socket, response, hr.description);
   }
@@ -624,6 +657,7 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
       );
       console.error(error);
       workspaceWatcherError = error;
+      notifyFileWatcherSocketsOfError(error);
       return;
     }
 
@@ -633,37 +667,21 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
     serverLogger.watcherLog(`Unexpected workspace error`, err.message);
     console.error(err);
     workspaceWatcherError = err;
-  }
-};
-
-const handleOutputsChanges: FileWatcherCallback = async (err, changeEvents) => {
-  try {
-    if (err || !changeEvents || !changeEvents.length) {
-      let error = typeof err === 'string' ? new Error(err) : err;
-      serverLogger.watcherLog(
-        'Unexpected outputs watcher error',
-        error.message
-      );
-      console.error(error);
-      outputsWatcherError = error;
-      disableOutputsTracking();
-      return;
-    }
-    if (outputsWatcherError) {
-      return;
-    }
-
-    serverLogger.watcherLog('Processing file changes in outputs');
-    processFileChangesInOutputs(changeEvents);
-  } catch (err) {
-    serverLogger.watcherLog(`Unexpected outputs watcher error`, err.message);
-    console.error(err);
-    outputsWatcherError = err;
-    disableOutputsTracking();
+    notifyFileWatcherSocketsOfError(err);
   }
 };
 
 export async function startServer(): Promise<Server> {
+  // Watch before scan: a file written during boot must be visible to the
+  // watcher or the scan below. Scan-first left a blind window where such
+  // files stayed invisible to both until an unrelated change arrived.
+  if (!getWatcherInstance()) {
+    storeWatcherInstance(await watchWorkspace(server, handleWorkspaceChanges));
+    serverLogger.watcherLog(
+      `Subscribed to changes within: ${workspaceRoot} (native)`
+    );
+  }
+
   setupWorkspaceContext(workspaceRoot);
 
   // Initialize analytics for daemon process
@@ -726,23 +744,34 @@ export async function startServer(): Promise<Server> {
   }, 20).unref();
 
   return new Promise(async (resolve, reject) => {
+    // `listen` reports a failed bind asynchronously on the server, which the
+    // try below cannot catch — without this an EACCES became an uncaught
+    // exception whose only trace was the daemon log the client never reads.
+    // The exit code is what carries the errno to the client, which otherwise
+    // sees only a missing socket and cannot tell a refusal from a cold start.
+    server.on('error', (error: NodeJS.ErrnoException) => {
+      serverLogger.log(`Failed to listen on: ${socketPath} (${error.message})`);
+      process.exit(isPermissionDenied(error) ? SOCKET_REFUSED_EXIT_CODE : 1);
+    });
+
     try {
       server.listen(socketPath, async () => {
         try {
           serverLogger.log(`Started listening on: ${socketPath}`);
 
+          // Linux gates connect() on write permission to the socket file; macOS/BSD gate
+          // on the directory, which is already 0700. Done after listen because
+          // net.Server.listen takes no mode and umask is process-global.
+          if (!isWindows) {
+            try {
+              chmodSync(socketPath, 0o600);
+            } catch {
+              // Best effort; the 0700 socket directory is the primary control.
+            }
+          }
+
           // this triggers the storage of the lock file hash
           daemonIsOutdated();
-
-          if (!getWatcherInstance()) {
-            storeWatcherInstance(
-              await watchWorkspace(server, handleWorkspaceChanges)
-            );
-
-            serverLogger.watcherLog(
-              `Subscribed to changes within: ${workspaceRoot} (native)`
-            );
-          }
 
           if (!getOutputWatcherInstance()) {
             storeOutputWatcherInstance(
@@ -778,30 +807,4 @@ export async function startServer(): Promise<Server> {
       reject(err);
     }
   });
-}
-function forwardEnvToPluginWorkers(env: Record<string, string>) {
-  getPlugins(readNxJson(workspaceRoot))
-    .then((plugins) => {
-      for (const plugin of plugins) {
-        plugin.setWorkerEnv?.(env)?.catch((e) => {
-          serverLogger.log(
-            `Failed to forward env to plugin worker "${plugin.name}": ${e.message}`
-          );
-        });
-      }
-    })
-    .catch(() => {
-      // Plugins may not be loaded yet — env will be picked up on next load
-    });
-}
-
-function serializeUnserializedResult(
-  response: boolean | object,
-  mode: 'json' | 'v8'
-) {
-  if (mode === 'json') {
-    return JSON.stringify(response);
-  } else {
-    return serialize(response).toString('binary');
-  }
 }

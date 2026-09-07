@@ -1,11 +1,11 @@
 [[headers]]
-  for = "/*"
-  [headers.values]
-    X-Frame-Options = "DENY"
-    Content-Security-Policy = "frame-ancestors 'none'"
+for = "/*"
+[headers.values]
+X-Frame-Options = "DENY"
+Content-Security-Policy = "frame-ancestors 'none'"
 
 [[plugins]]
-  package = "@netlify/plugin-nextjs"
+package = "@netlify/plugin-nextjs"
 
 [functions]
 # Exclude large native binaries from function bundles to stay under the 250MB limit.
@@ -25,43 +25,43 @@ included_files = [
 ]
 
 [[redirects]]
-  from = "https://16.nx.dev/*"
-  to = "https://nx.dev/:splat"
-  status = 308
-  force = true
+from = "https://16.nx.dev/*"
+to = "https://nx.dev/:splat"
+status = 308
+force = true
 
 [[redirects]]
-  from = "https://17.nx.dev/*"
-  to = "https://nx.dev/:splat"
-  status = 308
-  force = true
+from = "https://17.nx.dev/*"
+to = "https://nx.dev/:splat"
+status = 308
+force = true
 
 [[redirects]]
-  from = "https://18.nx.dev/*"
-  to = "https://nx.dev/:splat"
-  status = 308
-  force = true
+from = "https://18.nx.dev/*"
+to = "https://nx.dev/:splat"
+status = 308
+force = true
 
 [[redirects]]
-  from = "https://19.nx.dev/*"
-  to = "https://v19.nx.dev/:splat"
-  status = 308
-  force = true
+from = "https://19.nx.dev/*"
+to = "https://v19.nx.dev/:splat"
+status = 308
+force = true
 
 [[redirects]]
-  from = "https://20.nx.dev/*"
-  to = "https://v20.nx.dev/:splat"
-  status = 308
-  force = true
+from = "https://20.nx.dev/*"
+to = "https://v20.nx.dev/:splat"
+status = 308
+force = true
 
 [[redirects]]
-  from = "https://21.nx.dev/*"
-  to = "https://v21.nx.dev/:splat"
-  status = 308
-  force = true
+from = "https://21.nx.dev/*"
+to = "https://v21.nx.dev/:splat"
+status = 308
+force = true
 
 [[redirects]]
-  from = "https://22.nx.dev/*"
-  to = "https://v22.nx.dev/:splat"
-  status = 308
-  force = true
+from = "https://22.nx.dev/*"
+to = "https://v22.nx.dev/:splat"
+status = 308
+force = true

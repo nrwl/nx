@@ -1,9 +1,8 @@
 import { existsSync } from 'fs';
-import { execSync } from 'child_process';
 import { join } from 'path';
 import { logger } from '@nx/devkit';
+import { safeExecFileSync } from '@nx/devkit/internal';
 
-// Cache Maven version to avoid repeated execSync calls
 let cachedMavenVersion: string | null = null;
 
 /**
@@ -16,11 +15,8 @@ export function detectMavenVersion(workspaceRoot: string): string | null {
 
   const executable = detectMavenExecutable(workspaceRoot);
   try {
-    const output = execSync(`${executable} --version`, {
+    const output = safeExecFileSync(executable, ['--version'], {
       cwd: workspaceRoot,
-      stdio: 'pipe',
-      encoding: 'utf-8',
-      windowsHide: true,
     });
     // Parse version from output like "Apache Maven 4.0.0-rc-4" or "Apache Maven 3.9.9"
     const match = output.match(/Apache Maven (\d+\.\d+\.\d+[^\s]*)/);
@@ -49,7 +45,7 @@ export function isMaven4(workspaceRoot: string): boolean {
 export function detectMavenExecutable(workspaceRoot: string): string {
   // First priority: Check for Maven Daemon
   try {
-    execSync('mvnd --version', { stdio: 'pipe', windowsHide: true });
+    safeExecFileSync('mvnd', ['--version']);
     logger.verbose(`[Maven] Found Maven Daemon, using: mvnd`);
     return 'mvnd';
   } catch {

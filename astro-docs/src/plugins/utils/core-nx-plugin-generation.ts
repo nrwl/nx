@@ -74,7 +74,11 @@ export async function loadNxSpecialPackage(
   // Process generators
   const generators = parseGenerators(pluginPath);
   if (generators && generators.size > 0) {
-    const markdown = getGeneratorsMarkdown(packageName, generators);
+    const markdown = getGeneratorsMarkdown(
+      packageName,
+      generators,
+      `/docs/reference/${packageName}`
+    );
     entries.push({
       id: `${packageName}-generators`,
       body: markdown,
@@ -98,7 +102,11 @@ export async function loadNxSpecialPackage(
   // Process executors
   const executors = parseExecutors(pluginPath);
   if (executors && executors.size > 0) {
-    const markdown = getExecutorsMarkdown(packageName, executors);
+    const markdown = getExecutorsMarkdown(
+      packageName,
+      executors,
+      `/docs/reference/${packageName}`
+    );
     entries.push({
       id: `${packageName}-executors`,
       body: markdown,
@@ -122,7 +130,11 @@ export async function loadNxSpecialPackage(
   // Process migrations
   const migrations = parseMigrations(pluginPath);
   if (migrations && migrations.size > 0) {
-    const markdown = getMigrationsMarkdown(packageName, migrations);
+    const markdown = getMigrationsMarkdown(
+      packageName,
+      migrations,
+      `/docs/reference/${packageName}`
+    );
     entries.push({
       id: `${packageName}-migrations`,
       body: markdown,

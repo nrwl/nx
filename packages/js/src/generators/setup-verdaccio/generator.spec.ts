@@ -1,11 +1,11 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Tree, readJson, updateJson } from '@nx/devkit';
 
 import generator from './generator';
 import { SetupVerdaccioGeneratorSchema } from './schema';
-import { PackageJson } from 'nx/src/utils/package-json';
+import { PackageJson } from '@nx/devkit/internal';
 
 describe('setup-verdaccio generator', () => {
   let tree: Tree;

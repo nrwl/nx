@@ -1,0 +1,18 @@
+{
+  "name": "Nx Oxlint",
+  "version": "0.1",
+  "generators": {
+    "init": {
+      "factory": "./dist/src/generators/init/init#initGenerator",
+      "schema": "./dist/src/generators/init/schema.json",
+      "description": "Initialize the `@nx/oxlint` plugin.",
+      "aliases": ["ng-add"],
+      "hidden": true
+    },
+    "configuration": {
+      "factory": "./dist/src/generators/configuration/configuration#configurationGenerator",
+      "schema": "./dist/src/generators/configuration/schema.json",
+      "description": "Configure Oxlint for a project."
+    }
+  }
+}

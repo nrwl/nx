@@ -183,9 +183,15 @@ export async function generateAllPluginDocs(
 
     try {
       // Process generators
+      const introPath = `/docs/${getPluginSlug(pluginName, 'introduction')}`;
+
       const generators = parseGenerators(pluginPath);
       if (generators && generators.size > 0) {
-        const markdown = getGeneratorsMarkdown(pluginName, generators);
+        const markdown = getGeneratorsMarkdown(
+          pluginName,
+          generators,
+          introPath
+        );
         const slug = getPluginSlug(pluginName, 'generators');
         if (slug) {
           store.set({
@@ -215,7 +221,7 @@ export async function generateAllPluginDocs(
       // Process executors
       const executors = parseExecutors(pluginPath);
       if (executors && executors.size > 0) {
-        const markdown = getExecutorsMarkdown(pluginName, executors);
+        const markdown = getExecutorsMarkdown(pluginName, executors, introPath);
         const slug = getPluginSlug(pluginName, 'executors');
         if (slug) {
           store.set({
@@ -247,7 +253,11 @@ export async function generateAllPluginDocs(
       // if there are not migrations then getMigrationsMarkdown will render a custom message
       // to check previous Nx version docs
       if (migrations) {
-        const markdown = getMigrationsMarkdown(pluginName, migrations);
+        const markdown = getMigrationsMarkdown(
+          pluginName,
+          migrations,
+          introPath
+        );
         const slug = getPluginSlug(pluginName, 'migrations');
         if (slug) {
           store.set({

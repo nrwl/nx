@@ -7,52 +7,36 @@ import {
   tryCommitChanges,
 } from '../../../utils/git-utils';
 import { logger } from '../../../utils/logger';
+import {
+  isHandoffGitignoreMigration,
+  MIGRATE_RUNS_RELATIVE_DIR,
+} from './types';
 
 /**
- * Composite identity of the v23 migration that adds `.nx/migrate-runs` to
- * `.gitignore`. Hard-coded because the agentic preflight is a deliberate
- * one-off coupling: this exact migration owns the entry that keeps
- * `.nx/migrate-runs/<run-id>/...` scratch out of per-migration commits. If
- * the migration is ever renamed, this entry must move with it.
- */
-const HANDOFF_GITIGNORE_MIGRATION_PACKAGE = 'nx';
-const HANDOFF_GITIGNORE_MIGRATION_NAME =
-  '23-0-0-add-migrate-runs-to-git-ignore';
-
-export function isHandoffGitignoreMigration(m: {
-  package: string;
-  name: string;
-}): boolean {
-  return (
-    m.package === HANDOFF_GITIGNORE_MIGRATION_PACKAGE &&
-    m.name === HANDOFF_GITIGNORE_MIGRATION_NAME
-  );
-}
-
-/**
- * Under `--agentic`, the runner writes per-run scratch under
- * `.nx/migrate-runs/<run-id>/`. The v23 migration
+ * Both the agentic runner and the orchestrator write per-run scratch under
+ * `.nx/migrate-runs/<run-id>/`: handoff files in both cases, plus the durable
+ * run state and its plan snapshots for the orchestrator. The v23 migration
  * `23-0-0-add-migrate-runs-to-git-ignore` adds `.nx/migrate-runs` to
- * `.gitignore`; without intervention it would run in its declared slot
- * (typically late), so earlier per-migration commits would absorb the
- * scratch into the user-visible diff.
+ * `.gitignore`; in its declared slot (typically late) earlier per-migration
+ * commits would absorb the scratch into the user-visible diff.
  *
  * Two paths cover the leak, with no overlap:
  *
- *   1. HOIST — handled by the sort comparator in `executeMigrations`. When
- *      the v23 migration is in the queue, it sorts to position 0 and runs
- *      first via the normal migration runner (with its own log line and
- *      commit). Fully traceable in `git log`.
+ *   1. HOIST: `sortMigrations`, which `executeMigrations` applies, sorts the
+ *      v23 migration to position 0 when it is in the queue, so it runs first
+ *      through the normal runner with its own log line and commit. A
+ *      single-migration worker run needs no hoisting: the requested migration
+ *      is the entire queue.
  *
- *   2. INLINE FALLBACK — this function. When the migration is NOT in the
- *      queue AND the highest target version is < v23 (intra-pre-v23
- *      `--agentic` run), the migration won't run at all. Apply its body
- *      inline against an `FsTree` and commit it as a standalone preflight
- *      commit (or leave in the working tree under `--no-create-commits`).
+ *   2. INLINE FALLBACK, this function. When the migration is NOT in the queue
+ *      AND the highest target version is < v23 (intra-pre-v23 `--agentic`
+ *      run) it will never run, so apply its body inline against an `FsTree`
+ *      and commit it as a standalone preflight commit (or leave it in the
+ *      working tree under `--no-create-commits`).
  *
- * When the migration is not in the queue AND target >= v23, the user is
- * past v23 already. They had the entry historically; if it's gone, that's
- * a conscious removal we respect.
+ * Not in the queue AND target >= v23 means the user is already past v23. They
+ * had the entry historically; if it is gone, that is a conscious removal we
+ * respect.
  */
 export async function applyAgenticHandoffGitignoreFallback({
   migrations,
@@ -60,6 +44,8 @@ export async function applyAgenticHandoffGitignoreFallback({
   effectiveCreateCommits,
   commitPrefix,
   root,
+  applyWhenPlanned = false,
+  commitStandalone = true,
 }: {
   migrations: ReadonlyArray<{ package: string; name: string }>;
   /**
@@ -73,12 +59,32 @@ export async function applyAgenticHandoffGitignoreFallback({
   effectiveCreateCommits: boolean;
   commitPrefix: string;
   root: string;
+  /**
+   * Apply the entry even when the hoisted migration is in the plan. The
+   * classic loop can defer to that migration because its run scratch appears
+   * only after migration 1 has run; the orchestrator creates its run dir at
+   * init, before any migration, so it needs the entry immediately. A planned
+   * migration also means the missing entry is not a conscious removal, so the
+   * v23 cutoff does not apply.
+   */
+  applyWhenPlanned?: boolean;
+  /**
+   * Commit the applied entry as its own preflight commit (the default). The
+   * orchestrator suppresses this: it applies the fallback before its init
+   * checkpoint so the checkpoint's `git add -A` cannot sweep in older
+   * scratch, and in that ordering a standalone commit here would carry the
+   * user's pre-existing changes along with the entry. The checkpoint that
+   * follows captures both instead.
+   */
+  commitStandalone?: boolean;
 }): Promise<void> {
   if (migrations.some(isHandoffGitignoreMigration)) {
-    // The hoist path handles this via the sort comparator.
-    return;
-  }
-  if (major(installedNxVersion) >= 23) {
+    if (!applyWhenPlanned) {
+      // The queue runs it itself: hoisted to the front by the sort comparator
+      // in a full run, or as the single requested migration in a worker run.
+      return;
+    }
+  } else if (major(installedNxVersion) >= 23) {
     // User is past v23. Respect their `.gitignore` state — if the entry
     // is missing, that's a conscious removal.
     return;
@@ -95,17 +101,18 @@ export async function applyAgenticHandoffGitignoreFallback({
   flushChanges(root, changes);
   logger.info(
     pc.dim(
-      `- Added .nx/migrate-runs to .gitignore so this --agentic run's handoff scratch is ignored.`
+      `- Added ${MIGRATE_RUNS_RELATIVE_DIR} to .gitignore so this run's scratch state is ignored.`
     )
   );
 
-  if (!effectiveCreateCommits) return;
+  if (!effectiveCreateCommits || !commitStandalone) return;
   if (!hasUncommittedChanges(root)) return;
 
   try {
     const sha = tryCommitChanges(
-      `${commitPrefix}add .nx/migrate-runs to .gitignore`,
-      root
+      `${commitPrefix}add ${MIGRATE_RUNS_RELATIVE_DIR} to .gitignore`,
+      root,
+      [MIGRATE_RUNS_RELATIVE_DIR]
     );
     if (sha) {
       logger.info(pc.dim(`  Commit: ${sha}`));

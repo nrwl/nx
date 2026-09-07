@@ -106,6 +106,7 @@ export default defineConfig({
       expect(config).toContain("'**/vite.config.{mjs,js,ts,mts}'");
       expect(config).toContain("'**/vitest.config.{mjs,js,ts,mts}'");
       expect(config).toContain('projects:');
+      expect(config).toContain("'!vitest.config.ts'");
       expect(
         result?.agentContext?.some((s) => s.includes('vitest.workspace'))
       ).toBeFalsy();
@@ -138,6 +139,9 @@ export default defineConfig({
 
       expect(tree.exists('vitest.workspace.js')).toBe(false);
       expect(tree.read('vitest.config.mjs', 'utf-8')).toContain('projects:');
+      expect(tree.read('vitest.config.mjs', 'utf-8')).toContain(
+        "'!vitest.config.mjs'"
+      );
     });
 
     it('merges the projects into an existing root vitest.config.ts test block', async () => {
@@ -156,7 +160,9 @@ export default defineConfig({
 
       expect(tree.exists('vitest.workspace.ts')).toBe(false);
       const config = tree.read('vitest.config.ts', 'utf-8');
-      expect(config).toContain("projects: ['packages/*']");
+      // The merged config has no own `test.include`, so it gets the same root
+      // self-exclusion the create path applies.
+      expect(config).toContain("projects: ['packages/*', '!vitest.config.ts']");
       expect(config).toContain('globals: true');
     });
 
@@ -176,8 +182,32 @@ export default defineConfig({
 
       expect(tree.exists('vitest.workspace.ts')).toBe(false);
       const config = tree.read('vitest.config.ts', 'utf-8');
-      expect(config).toContain("projects: ['packages/*']");
+      expect(config).toContain("projects: ['packages/*', '!vitest.config.ts']");
       expect(config).toContain('cacheDir:');
+    });
+
+    it('skips the self-exclusion when the existing config has its own test.include', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'vitest.workspace.ts',
+        `export default ['**/vitest.config.{mjs,js,ts,mts}'];\n`
+      );
+      tree.write(
+        'vitest.config.ts',
+        `import { defineConfig } from 'vitest/config';
+export default defineConfig({
+  test: { include: ['src/**/*.spec.ts'] },
+});
+`
+      );
+
+      await migrateToVitest4(tree);
+
+      const config = tree.read('vitest.config.ts', 'utf-8');
+      expect(config).toContain("'**/vitest.config.{mjs,js,ts,mts}'");
+      // The glob matches this file, but its own `test.include` runs its tests;
+      // excluding it would drop them, so the guard is skipped.
+      expect(config).not.toContain("'!vitest.config");
     });
 
     it('defers when the existing root config already defines test.projects', async () => {
@@ -266,7 +296,9 @@ export default defineConfig({});
 
       await migrateToVitest4(tree);
 
-      expect(tree.read('vitest.config.ts', 'utf-8')).not.toContain("'!");
+      expect(tree.read('vitest.config.ts', 'utf-8')).not.toContain(
+        "'!packages/dual/vite.config.ts'"
+      );
     });
 
     it('excludes the vite config when its explicit test.name equals the other config default name', async () => {
@@ -312,7 +344,9 @@ export default defineConfig({});
 
       const result = await migrateToVitest4(tree);
 
-      expect(tree.read('vitest.config.ts', 'utf-8')).not.toContain("'!");
+      expect(tree.read('vitest.config.ts', 'utf-8')).not.toContain(
+        "'!packages/dual/vite.config.ts'"
+      );
       expect(
         result?.agentContext?.some(
           (s) =>
@@ -339,7 +373,9 @@ export default defineConfig({});
 
       const result = await migrateToVitest4(tree);
 
-      expect(tree.read('vitest.config.ts', 'utf-8')).not.toContain("'!");
+      expect(tree.read('vitest.config.ts', 'utf-8')).not.toContain(
+        "'!packages/dual/vite.config.ts'"
+      );
       expect(
         result?.agentContext?.some(
           (s) =>
@@ -382,7 +418,7 @@ export default defineConfig({});
 
       expect(tree.exists('apps/sub/vitest.workspace.ts')).toBe(false);
       expect(tree.read('apps/sub/vitest.config.ts', 'utf-8')).toContain(
-        "projects: ['**/vitest.config.{mjs,js,ts,mts}']"
+        "projects: ['**/vitest.config.{mjs,js,ts,mts}', '!vitest.config.ts']"
       );
       expect(tree.exists('vitest.config.ts')).toBe(false);
     });

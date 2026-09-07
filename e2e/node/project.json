@@ -9,13 +9,6 @@
       "options": {
         "max-warnings": 8
       }
-    },
-    "e2e-ci--src/webpack.test.ts": {
-      "dependsOn": [
-        "nx:build-native",
-        "@nx/nx-source:populate-local-registry-storage"
-      ],
-      "inputs": ["e2eInputs"]
     }
   }
 }

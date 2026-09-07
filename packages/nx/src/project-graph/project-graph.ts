@@ -1,7 +1,7 @@
 import { performance } from 'perf_hooks';
 
 import { join } from 'path';
-import { customDimensions } from '../analytics';
+import { customDimensions, PERF_SPAN_SAMPLE_RATE } from '../analytics';
 import { readNxJson } from '../config/nx-json';
 import { ProjectGraph } from '../config/project-graph';
 import {
@@ -10,12 +10,18 @@ import {
 } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
 import { isOnDaemon } from '../daemon/is-on-daemon';
-import { markDaemonAsDisabled, writeDaemonLogs } from '../daemon/tmp-dir';
+import { sandboxSocketHint } from '../daemon/sandbox-socket-hint';
+import {
+  disableDaemonForThisProcess,
+  markDaemonAsDisabled,
+  writeDaemonLogs,
+} from '../daemon/tmp-dir';
 import { FileLock, IS_WASM } from '../native';
 import { workspaceDataDirectory } from '../utils/cache-directory';
 import { getCallSites } from '../utils/call-sites';
 import { DelayedSpinner } from '../utils/delayed-spinner';
 import { fileExists } from '../utils/fileutils';
+import { isSandbox } from '../utils/is-sandbox';
 import { logger } from '../utils/logger';
 import { output } from '../utils/output';
 import { stripIndents } from '../utils/strip-indents';
@@ -313,6 +319,7 @@ export async function createProjectGraphAndSourceMapsAsync(
             [customDimensions.projectCount]: Object.keys(
               currentProjectGraph.nodes
             ).length,
+            [customDimensions.sampleRate]: PERF_SPAN_SAMPLE_RATE,
           }),
         },
       });
@@ -401,6 +408,7 @@ export async function createProjectGraphAndSourceMapsAsync(
           ...(customDimensions && {
             [customDimensions.projectCount]: Object.keys(res.projectGraph.nodes)
               .length,
+            [customDimensions.sampleRate]: PERF_SPAN_SAMPLE_RATE,
           }),
         },
       });
@@ -424,6 +432,7 @@ export async function createProjectGraphAndSourceMapsAsync(
             [customDimensions.projectCount]: Object.keys(
               projectGraphAndSourceMaps.projectGraph.nodes
             ).length,
+            [customDimensions.sampleRate]: PERF_SPAN_SAMPLE_RATE,
           }),
         },
       });
@@ -442,17 +451,60 @@ export async function createProjectGraphAndSourceMapsAsync(
         return buildProjectGraphAndSourceMapsWithoutDaemon();
       }
 
+      if (e.daemonPermissionError) {
+        // Deliberately not disabled: unlike the inotify limit above, a socket
+        // owned by someone else stops being there when it is removed or the
+        // machine reboots, and disabling until `nx reset` would outlive the
+        // cause and hide the fix from anyone who followed the advice.
+        // The first line carries the errno, and it is the one token that tells
+        // the two causes apart: EACCES is a socket owned by someone else (delete
+        // it), EPERM is a sandbox refusing the connect syscall (allow unix
+        // sockets under the Nx socket root). The message hedges between exactly
+        // those two because it cannot tell them apart, and this branch does not
+        // call writeDaemonLogs, so dropping the line loses the errno for good.
+        const [summary, ...details] = e.message.split('\n');
+        output.note({
+          title: `${summary} Continuing without the daemon.`,
+          // The blank line after the summary separates paragraphs when the
+          // message is printed as one blob; as bodyLines it is a leading gap.
+          bodyLines: details[0] === '' ? details.slice(1) : details,
+        });
+        return buildProjectGraphAndSourceMapsWithoutDaemon();
+      }
+
       if (e.internalDaemonError) {
         const errorLogFile = writeDaemonLogs(e.message);
+        const sandboxed = isSandbox();
         output.warn({
           title: `Nx Daemon was not able to compute the project graph.`,
           bodyLines: [
             `Log file with the error: ${errorLogFile}`,
+            // Inline rather than left to the log file, which an agent will
+            // not open. This branch covers every internal daemon error,
+            // including ones a sandbox cannot explain, so the issue link stays
+            // either way.
+            ...(sandboxed ? sandboxSocketHint() : []),
             `Please file an issue at https://github.com/nrwl/nx`,
-            'Nx Daemon is going to be disabled until you run "nx reset".',
+            sandboxed
+              ? 'Nx Daemon is disabled for this command.'
+              : 'Nx Daemon is going to be disabled until you run "nx reset".',
           ],
         });
-        markDaemonAsDisabled(e.message);
+        // A sandbox refusal describes the environment, not the workspace. The
+        // on-disk marker would follow the checkout into an ordinary terminal
+        // and survive the user fixing their allowlist, since only `nx reset`
+        // clears it.
+        if (sandboxed) {
+          disableDaemonForThisProcess(e.message);
+        } else {
+          markDaemonAsDisabled(e.message);
+        }
+        // Both writes are only read through `isDaemonDisabled()`, which
+        // `enabled()` consults once and then memoizes. Without clearing that,
+        // every later daemon consumer in this process — task hashing, workspace
+        // context, sync generators — starts the daemon again and waits out the
+        // full connect budget, under a warning saying it is off.
+        daemonClient.reset();
         return buildProjectGraphAndSourceMapsWithoutDaemon();
       }
 

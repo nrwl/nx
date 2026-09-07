@@ -8,6 +8,7 @@
     "@nx/nx-dev-data-access-courses": "workspace:*",
     "@nx/nx-dev-data-access-documents": "workspace:*",
     "@nx/nx-dev-feature-ai": "workspace:*",
+    "@nx/nx-dev-feature-analytics": "workspace:*",
     "@nx/nx-dev-ui-common": "workspace:*",
     "@nx/nx-dev-ui-courses": "workspace:*",
     "@nx/nx-dev-ui-primitives": "workspace:*",

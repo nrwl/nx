@@ -1,3 +1,5 @@
+import { hashObject } from '../../hasher/file-hasher';
+
 const DAEMON_ENV_REQUIRED_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
   NX_CACHE_PROJECTS_CONFIG: 'false',
@@ -27,7 +29,9 @@ const DAEMON_ENV_VARS_EXCLUSIONS = new Set([
   'NX_FORKED_TASK_EXECUTOR',
   'NX_SET_CLI',
   'NX_INVOKED_BY_RUNNER',
-  'NX_LOAD_DOT_ENV_FILES',
+  // NX_LOAD_DOT_ENV_FILES is intentionally NOT excluded: it must reach the
+  // daemon so graph-time dotenv resolution honors the user's opt-out. It is
+  // sent normalized rather than reflected — see normalizedLoadDotEnvFiles.
   'NX_SKIP_NX_CACHE',
   'NX_CACHE_FAILURES',
   'NX_REJECT_UNKNOWN_LOCAL_CACHE',
@@ -35,6 +39,17 @@ const DAEMON_ENV_VARS_EXCLUSIONS = new Set([
   'NX_BATCH_MODE',
   'NX_CI_EXECUTION_ID',
   'NX_DAEMON_PROCESS',
+  'NX_CLI_SET',
+  // Set by Nx Console on the extension host; always equals the daemon's own
+  // workspace root (foreign-workspace messages are rejected), and the daemon
+  // resolves its root at startup before any client env is applied. The spawn
+  // env keeps it so that startup resolution honors the pinned root.
+  'NX_WORKSPACE_ROOT_PATH',
+  // The message-size ceiling is read when a connection is accepted, before the
+  // client's env could apply, so reflecting it would hand one client's value
+  // to the next client's connection. Pinned at daemon spawn instead; see
+  // getDaemonSpawnEnv.
+  'NX_MAX_MESSAGE_SIZE',
 
   // Nx UI/logging vars (don't affect graph structure)
   'NX_TUI',
@@ -45,6 +60,7 @@ const DAEMON_ENV_VARS_EXCLUSIONS = new Set([
   'NX_NATIVE_LOGGING',
   'NX_PROFILE',
   'NX_DAEMON_VERBOSE_LOGGING',
+  'NX_ORIGINAL_FORCE_COLOR',
 
   // AI agent detection vars (the daemon itself is not an AI agent)
   'CLAUDECODE',
@@ -53,11 +69,24 @@ const DAEMON_ENV_VARS_EXCLUSIONS = new Set([
   'CURSOR_TRACE_ID',
   'COMPOSER_NO_INTERACTION',
   'OPENCODE',
+  'CODEX_THREAD_ID',
+  'SUPERSET_AGENT_ID',
   'GEMINI_CLI',
+  'COPILOT_CLI',
+  'AI_AGENT',
+
+  // Set per session or per release alongside the detection vars above, so they
+  // churn the daemon's environment across sessions of the same agent. Named
+  // rather than prefix-matched: COPILOT_HOME and COPILOT_GITHUB_TOKEN share the
+  // prefix and are kept on purpose, and CLAUDE_PID is not under CLAUDE_CODE_.
+  'COPILOT_AGENT_SESSION_ID',
+  'COPILOT_CLI_BINARY_VERSION',
+  'CLAUDE_PID',
 
   // Shell mechanics
   '_',
   'SHLVL',
+  'PWD',
   'OLDPWD',
   'SHELL_SESSION_ID',
   'TERM_SESSION_ID',
@@ -67,6 +96,62 @@ const DAEMON_ENV_VARS_EXCLUSIONS = new Set([
   'COLUMNS',
   'LINES',
   'TMPDIR',
+  'PROMPT',
+
+  // Package-manager per-invocation vars not covered by the npm_/pnpm_ prefixes
+  'INIT_CWD',
+  'COLOR',
+
+  // Per-shell-session state; these tools' other vars are stable or can be
+  // meaningful (e.g. fnm's FNM_DIR), so no prefix exclusion
+  'FNM_MULTISHELL_PATH',
+  'POSH_SESSION_ID',
+  'MISE_SHELL',
+
+  // Editor preference; graph computation is non-interactive
+  'EDITOR',
+  'VISUAL',
+
+  // Output presentation
+  'PAGER',
+  'FORCE_COLOR',
+  'NO_COLOR',
+  'NODE_DISABLE_COLORS',
+  'FORCE_HYPERLINK',
+
+  // Terminal identification/presentation; differs per terminal app, so it
+  // churns whenever clients from different terminals share the daemon
+  'TERM',
+  'TERM_PROGRAM',
+  'TERM_PROGRAM_VERSION',
+  'COLORTERM',
+  'COLORFGBG',
+  'VTE_VERSION',
+  'GNOME_TERMINAL_SCREEN',
+  'GNOME_TERMINAL_SERVICE',
+  'WT_SESSION',
+  'WT_PROFILE_ID',
+  'TERMINAL_EMULATOR',
+  'TERMINUS_SUBLIME',
+  'ConEmuTask',
+  'ZELLIJ_PANE_ID',
+  'LC_TERMINAL',
+  'LC_TERMINAL_VERSION',
+
+  // Injected by VS Code and its extensions into integrated terminals. Single
+  // entries rather than GIT_/CHROME_/COPILOT_ prefixes: GIT_DIR, CHROME_BIN,
+  // COPILOT_HOME and COPILOT_GITHUB_TOKEN are functional inputs.
+  'GIT_ASKPASS',
+  'GIT_EDITOR',
+  'GIT_PAGER',
+  'GIT_MERGE_AUTOEDIT',
+  'APPLICATION_INSIGHTS_NO_STATSBEAT',
+  // Override for the @microsoft/mxc-sdk sandbox binaries; the SDK falls back
+  // to its bundled binaries when unset
+  'MXC_BIN_DIR',
+  'CHROME_CRASHPAD_PIPE_NAME',
+  'COPILOT_OTEL_FILE_EXPORTER_PATH',
+  'COPILOT_DEBUG_NONCE',
 
   // Session / auth
   'SSH_AUTH_SOCK',
@@ -110,6 +195,18 @@ const DAEMON_ENV_PREFIX_EXCLUSIONS = [
   // Editors / IDEs
   'VSCODE_',
   'JETBRAINS_',
+  'ELECTRON_',
+
+  // AI agent harnesses (per-session ids; the bare CLAUDECODE/CLAUDE_CODE
+  // detection vars are excluded above)
+  'CLAUDE_CODE_',
+
+  // Shell prompts / integrations (per-command and per-session state)
+  'ATUIN_',
+  'STARSHIP_',
+  'MCFLY_',
+  'DIRENV_',
+  '__MISE_',
 
   // Terminal emulators
   'ITERM_',
@@ -117,10 +214,22 @@ const DAEMON_ENV_PREFIX_EXCLUSIONS = [
   'WEZTERM_',
   'ALACRITTY_',
   'KONSOLE_',
+  'GHOSTTY_',
   'TMUX',
 
   // Benchmarking / profiling tools
   'HYPERFINE_', // hyperfine sets HYPERFINE_RANDOMIZED_ENVIRONMENT_OFFSET for each iteration
+];
+
+/**
+ * Env var name patterns that should never be sent to the daemon. For vars
+ * whose NAME embeds a process id, so neither an exact entry nor a safe
+ * prefix can match them.
+ */
+const DAEMON_ENV_PATTERN_EXCLUSIONS = [
+  // Set by Windows 11 explorer.exe as EFC_<pid> (observed as EFC_<pid>_<hash>
+  // in Electron-spawned shells); regenerated on every login
+  /^EFC_\d+(_\d+)?$/,
 ];
 
 /**
@@ -136,13 +245,48 @@ const DAEMON_ENV_PREFIX_EXCLUSION_OVERRIDES = new Set([
 ]);
 
 function isExcludedEnvVar(key: string): boolean {
+  if (
+    DAEMON_ENV_VARS_EXCLUSIONS.has(key) ||
+    DAEMON_ENV_PATTERN_EXCLUSIONS.some((pattern) => pattern.test(key))
+  ) {
+    return true;
+  }
   if (DAEMON_ENV_PREFIX_EXCLUSION_OVERRIDES.has(key)) {
     return false;
   }
-  return (
-    DAEMON_ENV_VARS_EXCLUSIONS.has(key) ||
-    DAEMON_ENV_PREFIX_EXCLUSIONS.some((prefix) => key.startsWith(prefix))
-  );
+  return DAEMON_ENV_PREFIX_EXCLUSIONS.some((prefix) => key.startsWith(prefix));
+}
+
+/**
+ * Digest of the client-controlled portion of the daemon env: the vars
+ * `getDaemonEnv` would send, minus the required settings the daemon pins
+ * itself. Skipping those yields the same digest whether the process is a
+ * daemon plugin worker (which has them set) or a daemonless one (which
+ * typically does not).
+ */
+export function hashDaemonClientEnv(): string {
+  const env: Record<string, string> = {};
+  for (const key in process.env) {
+    if (
+      !isExcludedEnvVar(key) &&
+      !Object.hasOwn(DAEMON_ENV_REQUIRED_SETTINGS, key)
+    ) {
+      env[key] = process.env[key];
+    }
+  }
+  env.NX_LOAD_DOT_ENV_FILES = normalizedLoadDotEnvFiles();
+  return hashObject(env);
+}
+
+/**
+ * `NX_LOAD_DOT_ENV_FILES` as its meaning rather than its spelling. `run-command`
+ * stamps `'true'` once the graph exists, so a task child sends it where its
+ * parent sent nothing; every reader outside the task runner treats both alike
+ * (`!== 'false'`). Reflecting the spelling would flip the daemon env on each
+ * alternation and discard the graph cache both ways.
+ */
+function normalizedLoadDotEnvFiles(): 'true' | 'false' {
+  return process.env.NX_LOAD_DOT_ENV_FILES === 'false' ? 'false' : 'true';
 }
 
 export function getDaemonEnv() {
@@ -152,7 +296,68 @@ export function getDaemonEnv() {
       env[key] = process.env[key];
     }
   }
+  env.NX_LOAD_DOT_ENV_FILES = normalizedLoadDotEnvFiles();
   return Object.assign(env, DAEMON_ENV_REQUIRED_SETTINGS);
+}
+
+let clientEnvGeneration = 0;
+let clientEnvApplySequence = 0;
+let appliedClientEnv: NodeJS.ProcessEnv | undefined;
+
+/**
+ * Count of client env applications that changed at least one variable, in
+ * `process.env` or against the previously applied client env. Digest equality
+ * alone cannot guard a cache write: an env that changed and changed back
+ * mid-pass yields the pass-start digest again, while the count still moves.
+ */
+export function getDaemonClientEnvGeneration(): number {
+  return clientEnvGeneration;
+}
+
+/**
+ * Env for spawning the daemon process. On top of the reflected env, it must
+ * keep excluded vars the daemon needs to start correctly:
+ * - ELECTRON_RUN_AS_NODE (matched by the ELECTRON_ prefix exclusion): when
+ *   the spawning client runs inside an Electron host, process.execPath is
+ *   the Electron binary and only this var makes it run the daemon's Node
+ *   entry point.
+ * - NX_WORKSPACE_ROOT_PATH: the daemon resolves its workspace root at
+ *   startup by walking up from cwd looking for workspace markers; without
+ *   the pin, a root without markers under an ancestor that has them
+ *   resolves to the ancestor and the daemon publishes its socket under the
+ *   wrong workspace.
+ * - NX_MAX_MESSAGE_SIZE: excluded from reflection (see above), so the value
+ *   here holds for the daemon's whole lifetime. Changing it therefore needs a
+ *   daemon restart (`nx reset`).
+ */
+export function getDaemonSpawnEnv() {
+  const env = getDaemonEnv();
+  if (process.env.ELECTRON_RUN_AS_NODE !== undefined) {
+    env.ELECTRON_RUN_AS_NODE = process.env.ELECTRON_RUN_AS_NODE;
+  }
+  if (process.env.NX_WORKSPACE_ROOT_PATH !== undefined) {
+    env.NX_WORKSPACE_ROOT_PATH = process.env.NX_WORKSPACE_ROOT_PATH;
+  }
+  if (process.env.NX_MAX_MESSAGE_SIZE !== undefined) {
+    env.NX_MAX_MESSAGE_SIZE = process.env.NX_MAX_MESSAGE_SIZE;
+  }
+  return env;
+}
+
+/**
+ * A copy of the env the last `applyDaemonEnvFromClient` call applied, with a
+ * sequence that advances on every call, or `undefined` before the first. For a
+ * caller that let code it ran (a user config, say) write over `process.env`
+ * and has to put the client's env back: the generation cannot tell it an apply
+ * happened, since an apply whose values the config had already written changes
+ * nothing.
+ */
+export function getAppliedDaemonClientEnv():
+  | { sequence: number; env: NodeJS.ProcessEnv }
+  | undefined {
+  return appliedClientEnv
+    ? { sequence: clientEnvApplySequence, env: { ...appliedClientEnv } }
+    : undefined;
 }
 
 /**
@@ -161,9 +366,14 @@ export function getDaemonEnv() {
  * command) would persist in the daemon and leak into every subsequent
  * client's project-graph computation. Deletion skips excluded vars and
  * required settings, which the daemon owns and clients should not control.
+ *
+ * The returned keys are those `process.env` moved on plus those the client's
+ * env moved on since the last applied one: a value a config wrote mid-load can
+ * already match what the next client sends, and the graph computed under the
+ * previous client is stale all the same.
  */
 export function applyDaemonEnvFromClient(newEnv: NodeJS.ProcessEnv): string[] {
-  const changedKeys: string[] = [];
+  const changedKeys = new Set<string>();
   const allKeys = new Set([
     ...Object.keys(process.env),
     ...Object.keys(newEnv),
@@ -172,13 +382,84 @@ export function applyDaemonEnvFromClient(newEnv: NodeJS.ProcessEnv): string[] {
     if (key in newEnv) {
       if (process.env[key] !== newEnv[key]) {
         process.env[key] = newEnv[key];
-        changedKeys.push(key);
+        changedKeys.add(key);
       }
     } else if (
       !isExcludedEnvVar(key) &&
       !Object.hasOwn(DAEMON_ENV_REQUIRED_SETTINGS, key)
     ) {
       delete process.env[key];
+      changedKeys.add(key);
+    }
+  }
+  if (appliedClientEnv) {
+    for (const key of new Set([
+      ...Object.keys(appliedClientEnv),
+      ...Object.keys(newEnv),
+    ])) {
+      if (appliedClientEnv[key] !== newEnv[key]) {
+        changedKeys.add(key);
+      }
+    }
+  }
+  if (changedKeys.size > 0) {
+    clientEnvGeneration++;
+  }
+  clientEnvApplySequence++;
+  appliedClientEnv = { ...newEnv };
+  return [...changedKeys];
+}
+
+const BERRY_BIN_FOLDER_GRAPH_IDENTITY = '<YARN_BERRY_BIN_FOLDER>';
+
+/**
+ * Yarn Berry creates a fresh BERRY_BIN_FOLDER for every invocation and puts it
+ * first on PATH. The wrappers inside are runtime state the daemon and workers
+ * must receive, but the folder's random name is not project-graph identity:
+ * two invocations whose environments differ only by it would compute the same
+ * graph. Strips the folder from PATH and pins the var to a sentinel so such
+ * environments compare equal. Returns a copy; never mutates runtime env.
+ */
+export function normalizeDaemonEnvironmentForGraph(
+  env: NodeJS.ProcessEnv,
+  platform: NodeJS.Platform = process.platform
+): NodeJS.ProcessEnv {
+  const normalized = { ...env };
+  const berryBinFolder = normalized.BERRY_BIN_FOLDER;
+  if (!berryBinFolder) {
+    return normalized;
+  }
+
+  const pathKey = Object.keys(normalized).find(
+    (key) => key.toUpperCase() === 'PATH'
+  );
+  if (pathKey && normalized[pathKey]) {
+    const pathDelimiter = platform === 'win32' ? ';' : ':';
+    const canonicalize = (value: string) => {
+      const withPlatformSeparators =
+        platform === 'win32' ? value.replaceAll('/', '\\') : value;
+      return platform === 'win32'
+        ? withPlatformSeparators.toLowerCase()
+        : withPlatformSeparators;
+    };
+    const canonicalBerryBinFolder = canonicalize(berryBinFolder);
+    normalized[pathKey] = normalized[pathKey]
+      .split(pathDelimiter)
+      .filter((entry) => canonicalize(entry) !== canonicalBerryBinFolder)
+      .join(pathDelimiter);
+  }
+
+  normalized.BERRY_BIN_FOLDER = BERRY_BIN_FOLDER_GRAPH_IDENTITY;
+  return normalized;
+}
+
+export function getChangedEnvKeys(
+  before: NodeJS.ProcessEnv,
+  after: NodeJS.ProcessEnv
+): string[] {
+  const changedKeys: string[] = [];
+  for (const key of new Set([...Object.keys(before), ...Object.keys(after)])) {
+    if (before[key] !== after[key]) {
       changedKeys.push(key);
     }
   }

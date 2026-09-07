@@ -4,6 +4,7 @@ import {
   getPackageManagerCommand,
 } from '@nx/devkit';
 import {
+  normalizePerformanceReport,
   cleanupProject,
   createFile,
   exists,
@@ -16,6 +17,7 @@ import {
   runCommandUntil,
   tmpProjPath,
   uniq,
+  updateFile,
   updateJson,
 } from '@nx/e2e-utils';
 import { execSync } from 'node:child_process';
@@ -24,7 +26,7 @@ import type { NxReleaseVersionConfiguration } from 'nx/src/config/nx-json';
 expect.addSnapshotSerializer({
   serialize(str: string) {
     return (
-      str
+      normalizePerformanceReport(str)
         // Remove all output unique to specific projects to ensure deterministic snapshots
         .replaceAll(/my-pkg-\d+/g, '{project-name}')
         .replaceAll(
@@ -37,7 +39,7 @@ expect.addSnapshotSerializer({
         .replaceAll(/\d*B package\.json/g, 'XXXB package.json')
         .replaceAll(/size:\s*\d*\s?B/g, 'size: XXXB')
         .replaceAll(/\d*\.\d*\s?kB/g, 'XXX.XXX kb')
-        .replaceAll(/[a-fA-F0-9]{7}/g, '{COMMIT_SHA}')
+        .replaceAll(/\b[a-fA-F0-9]{7}\b/g, '{COMMIT_SHA}')
         .replaceAll(/Test @[\w\d]+/g, 'Test @{COMMIT_AUTHOR}')
         // Normalize the version title date.
         .replaceAll(/\(\d{4}-\d{2}-\d{2}\)/g, '(YYYY-MM-DD)')
@@ -269,6 +271,10 @@ describe('nx release', () => {
       NX   Successfully ran target nx-release-publish for 3 projects
 
 
+      Run duration: {DURATION}
+      Cache: 0/3 hit (0%)
+      Critical path: {DURATION} (2 tasks)
+      Recoverable time: {DURATION}
 
     `);
 
@@ -309,8 +315,18 @@ describe('nx release', () => {
     const verdaccioPort = 7190;
     const customRegistryUrl = `http://localhost:${verdaccioPort}`;
     const process = await runCommandUntil(
-      `local-registry @proj/source --port=${verdaccioPort}`,
+      // location=none so a killed process can't leak registry config into
+      // ~/.npmrc; every consumer passes --registry explicitly instead
+      `local-registry @proj/source --port=${verdaccioPort} --location none`,
       (output) => output.includes(`warn --- http address`)
+    );
+
+    // local-registry would normally record the auth token, but location=none
+    // excludes that; npm publish needs it in a config file
+    updateFile(
+      '.npmrc',
+      (contents) =>
+        `${contents}\n//localhost:${verdaccioPort}/:_authToken=secretVerdaccioToken`
     );
 
     const versionOutput2 = runCLI(
@@ -446,6 +462,10 @@ describe('nx release', () => {
       NX   Successfully ran target nx-release-publish for 3 projects
 
 
+      Run duration: {DURATION}
+      Cache: 0/3 hit (0%)
+      Critical path: {DURATION} (2 tasks)
+      Recoverable time: {DURATION}
 
   `);
 
@@ -550,6 +570,10 @@ describe('nx release', () => {
       NX   Successfully ran target nx-release-publish for 3 projects
 
 
+      Run duration: {DURATION}
+      Cache: 0/3 hit (0%)
+      Critical path: {DURATION} (2 tasks)
+      Recoverable time: {DURATION}
 
     `);
 
@@ -586,6 +610,10 @@ describe('nx release', () => {
       NX   Successfully ran target nx-release-publish for 3 projects
 
 
+      Run duration: {DURATION}
+      Cache: 0/3 hit (0%)
+      Critical path: {DURATION} (2 tasks)
+      Recoverable time: {DURATION}
 
     `);
 
@@ -627,6 +655,10 @@ describe('nx release', () => {
       NX   Successfully ran target nx-release-publish for 3 projects
 
 
+      Run duration: {DURATION}
+      Cache: 0/3 hit (0%)
+      Critical path: {DURATION} (2 tasks)
+      Recoverable time: {DURATION}
 
     `);
 

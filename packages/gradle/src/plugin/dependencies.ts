@@ -2,13 +2,14 @@ import {
   CreateDependencies,
   CreateDependenciesContext,
   DependencyType,
+  ImplicitDependency,
   logger,
   normalizePath,
   StaticDependency,
   validateDependency,
   workspaceRoot,
 } from '@nx/devkit';
-import { join, relative } from 'node:path';
+import { dirname, isAbsolute, join, relative } from 'node:path';
 
 import {
   getCurrentProjectGraphReport,
@@ -16,8 +17,8 @@ import {
 } from './utils/get-project-graph-from-gradle-plugin';
 import { GradlePluginOptions } from './utils/gradle-plugin-options';
 import { GRADLEW_FILES, splitConfigFiles } from '../utils/split-config-files';
-import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { existsSync } from 'node:fs';
+import { globWithWorkspaceContext } from '@nx/devkit/internal';
 
 export const createDependencies: CreateDependencies<
   GradlePluginOptions
@@ -38,36 +39,43 @@ export const createDependencies: CreateDependencies<
   const { dependencies: dependenciesFromReport } =
     getCurrentProjectGraphReport();
 
-  const dependencies: Array<StaticDependency> = [];
+  const dependencies: Array<StaticDependency | ImplicitDependency> = [];
   dependenciesFromReport.forEach((dependencyFromPlugin: StaticDependency) => {
     try {
-      const source =
-        relative(workspaceRoot, dependencyFromPlugin.source) || '.';
+      // Report paths are workspace-relative with `/` separators
+      const sourceProject = Object.values(context.projects).find(
+        (project) => dependencyFromPlugin.source === project.root
+      );
       const sourceProjectName =
-        Object.values(context.projects).find(
-          (project) => source === project.root
-        )?.name ?? dependencyFromPlugin.source;
-      const target =
-        relative(workspaceRoot, dependencyFromPlugin.target) || '.';
+        sourceProject?.name ?? dependencyFromPlugin.source;
       const targetProjectName =
         Object.values(context.projects).find(
-          (project) => target === project.root
+          (project) => dependencyFromPlugin.target === project.root
         )?.name ?? dependencyFromPlugin.target;
+      const sourceFile = dependencyFromPlugin.sourceFile;
       if (
         !sourceProjectName ||
         !targetProjectName ||
-        !existsSync(dependencyFromPlugin.sourceFile)
+        !existsSync(join(workspaceRoot, sourceFile))
       ) {
         return;
       }
-      const dependency: StaticDependency = {
-        source: sourceProjectName,
-        target: targetProjectName,
-        type: DependencyType.static,
-        sourceFile: normalizePath(
-          relative(workspaceRoot, dependencyFromPlugin.sourceFile)
-        ),
-      };
+      // An ancestor-configured project's build file lies outside it, and Nx rejects a foreign
+      // sourceFile — record implicit rather than drop.
+      const ownsSourceFile =
+        !!sourceProject && dirname(sourceFile) === sourceProject.root;
+      const dependency: StaticDependency | ImplicitDependency = ownsSourceFile
+        ? {
+            source: sourceProjectName,
+            target: targetProjectName,
+            type: DependencyType.static,
+            sourceFile,
+          }
+        : {
+            source: sourceProjectName,
+            target: targetProjectName,
+            type: DependencyType.implicit,
+          };
       validateDependency(dependency, context);
       dependencies.push(dependency);
     } catch {

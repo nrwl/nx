@@ -23,10 +23,16 @@ import {
 import { globalSpinner } from '../../utils/spinner';
 import { NxPackageJson } from '../../utils/package-json';
 import { reportNxAddCommand } from '../../analytics';
+import { daemonClient } from '../../daemon/client/client';
 
 export function addHandler(options: AddOptions): Promise<number> {
   return handleErrors(options.verbose, async () => {
     output.addNewline();
+
+    // Package managers write the lock file before node_modules is fully linked,
+    // so a live daemon restarts mid-install and caches a graph whose plugins,
+    // still being relinked, no longer resolve.
+    await daemonClient.stop();
 
     const [pkgName, version] = parsePackageSpecifier(options.packageSpecifier);
     reportNxAddCommand(pkgName, version);
@@ -54,10 +60,18 @@ async function installPackage(
     const pmc = getPackageManagerCommand(pm);
 
     // if we explicitly specify latest in yarn berry, it won't resolve the version
-    const command =
+    let command =
       pm === 'yarn' && gte(pmv, '2.0.0') && version === 'latest'
         ? `${pmc.addDev} ${pkgName}`
         : `${pmc.addDev} ${pkgName}@${version}`;
+
+    // pnpm 11+ fails the install when the plugin's own dependency tree
+    // carries unacknowledged build scripts, and the plugin's generators can
+    // only record allowBuilds decisions after this install. Warn and skip
+    // for this one install, like pnpm 10 did.
+    if (pm === 'pnpm' && gte(pmv, '11.0.0')) {
+      command += ' --config.strictDepBuilds=false';
+    }
     await new Promise<void>((resolve) =>
       exec(
         command,

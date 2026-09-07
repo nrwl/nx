@@ -22,7 +22,6 @@ import nodeResolve from '@rollup/plugin-node-resolve';
 import autoprefixer from 'autoprefixer';
 import { existsSync } from 'node:fs';
 import { dirname, join, parse } from 'node:path';
-import { PackageJson } from 'nx/src/utils/package-json';
 import * as rollup from 'rollup';
 import { analyze } from '../analyze';
 import { deleteOutput } from '../delete-output';
@@ -41,6 +40,7 @@ const json = require('@rollup/plugin-json');
 
 // Use our inlined postcss plugin instead of external rollup-plugin-postcss
 import { postcss } from '../postcss';
+import { PackageJson } from '@nx/devkit/internal';
 
 const fileExtensions = ['.js', '.jsx', '.ts', '.tsx'];
 

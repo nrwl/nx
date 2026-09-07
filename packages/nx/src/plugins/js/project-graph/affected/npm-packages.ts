@@ -28,6 +28,7 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
   const changes = packageJsonChange.getChanges();
 
   const npmPackages = Object.values(projectGraph.externalNodes);
+  let packagesByName: Map<string, ProjectGraphExternalNode[]> | undefined;
 
   const missingTouchedNpmPackages: string[] = [];
 
@@ -76,31 +77,31 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
         c.path[0] === 'resolutions' ||
         (c.path[0] === 'pnpm' && c.path[1] === 'overrides'))
     ) {
-      // Changes to overrides, resolutions, or pnpm.overrides
-      // Find which package was changed and mark projects that depend on it as affected
-      const packageName = c.path[0] === 'pnpm' ? c.path[2] : c.path[1];
+      const packageSelector = getPackageSelector(c);
+      if (!packageSelector) continue;
 
-      if (packageName) {
-        // Look for the npm package in external nodes
-        let npmPackage: ProjectGraphProjectNode | ProjectGraphExternalNode =
-          npmPackages.find((pkg) => pkg.data.packageName === packageName);
+      packagesByName ??= groupPackagesByName(npmPackages);
+      const matchingNpmPackages = findPackagesForSelector(
+        packageSelector,
+        packagesByName,
+        c.path[0] === 'pnpm'
+      );
 
-        if (npmPackage) {
-          touched.push(npmPackage.name);
-
-          // If it's a global package, all projects are affected
-          if (
-            'packageName' in npmPackage.data &&
-            globalPackages.has(npmPackage.data.packageName)
-          ) {
-            return Object.keys(projectGraph.nodes);
-          }
-        } else {
-          // If the package isn't found in external nodes, it might affect all projects
-          // since overrides can affect transitive dependencies
-          return Object.keys(projectGraph.nodes);
-        }
+      // An unresolved selector can still target a transitive dependency,
+      // so fall back to marking every project affected.
+      if (!matchingNpmPackages.length) {
+        return Object.keys(projectGraph.nodes);
       }
+
+      if (
+        matchingNpmPackages.some((pkg) =>
+          globalPackages.has(pkg.data.packageName)
+        )
+      ) {
+        return Object.keys(projectGraph.nodes);
+      }
+
+      touched.push(...matchingNpmPackages.map((pkg) => pkg.name));
     } else if (isWholeFileChange(c)) {
       // Whole file was touched, so all npm packages are touched.
       touched = npmPackages.map((pkg) => pkg.name);
@@ -115,8 +116,58 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
       )} were not found. Please open an issue in GitHub including the package.json file.`
     );
   }
-  return touched;
+  return [...new Set(touched)];
 };
+
+function getPackageSelector(change: JsonChange): string | undefined {
+  if (
+    typeof change.value.lhs !== 'string' &&
+    typeof change.value.rhs !== 'string'
+  ) {
+    return;
+  }
+
+  const selectorIndex = change.path[0] === 'pnpm' ? 2 : change.path.length - 1;
+  const selector = change.path[selectorIndex];
+  return selector === '.' ? change.path[selectorIndex - 1] : selector;
+}
+
+function groupPackagesByName(
+  npmPackages: ProjectGraphExternalNode[]
+): Map<string, ProjectGraphExternalNode[]> {
+  const packagesByName = new Map<string, ProjectGraphExternalNode[]>();
+  for (const pkg of npmPackages) {
+    const packageName = pkg.data.packageName;
+    if (!packageName) continue;
+    const packages = packagesByName.get(packageName);
+    if (packages) {
+      packages.push(pkg);
+    } else {
+      packagesByName.set(packageName, [pkg]);
+    }
+  }
+  return packagesByName;
+}
+
+function findPackagesForSelector(
+  selector: string,
+  packagesByName: Map<string, ProjectGraphExternalNode[]>,
+  isPnpmOverride: boolean
+): ProjectGraphExternalNode[] {
+  if (isPnpmOverride) {
+    // Pnpm does not treat `>` as a parent delimiter when it starts a range.
+    const parentDelimiterIndex = selector.search(/[^ |@]>/);
+    if (parentDelimiterIndex !== -1) {
+      selector = selector.slice(parentDelimiterIndex + 2);
+    }
+  }
+
+  const packageName = selector.match(
+    /(?:^|\/)(@[^/@>\s]+\/[^/@>\s]+|[^/@>\s]+)(?:@[^/]*)?$/
+  )?.[1];
+
+  return packageName ? (packagesByName.get(packageName) ?? []) : [];
+}
 
 function getGlobalPackages(plugins: NxJsonConfiguration['plugins']) {
   return (plugins ?? [])

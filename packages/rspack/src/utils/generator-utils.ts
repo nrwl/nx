@@ -1,3 +1,4 @@
+import { confirmationPrompt } from '@nx/devkit/internal';
 import {
   joinPathFragments,
   logger,
@@ -640,13 +641,9 @@ async function handleUnsupportedUserProvidedTargetsErrors(
     `
   );
 
-  const { Confirm } = require('enquirer');
-  const prompt = new Confirm({
-    name: 'question',
+  const shouldConvert = await confirmationPrompt({
     message: `Should we convert the ${validFoundTargetName} target to use the @nx/rspack:${executor} executor?`,
-    initial: true,
   });
-  const shouldConvert = await prompt.run();
   if (!shouldConvert) {
     throw new Error(
       `The ${target} target ${userProvidedTargetName} cannot be converted to use the @nx/rspack:${executor} executor.
@@ -675,13 +672,9 @@ export async function handleUnknownExecutors(projectName: string) {
       `
   );
 
-  const { Confirm } = require('enquirer');
-  const prompt = new Confirm({
-    name: 'question',
+  const shouldConvert = await confirmationPrompt({
     message: `Should Nx convert your project to use the @nx/rspack executors?`,
-    initial: true,
   });
-  const shouldConvert = await prompt.run();
   if (!shouldConvert) {
     throw new Error(`
       Nx could not verify that the executors you are using can be converted to the @nx/rspack executors.

@@ -1,27 +1,169 @@
 import { writeJson, readJson, Tree, updateJson, readNxJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import init from './init';
-import { typescriptVersion } from '../../utils/versions';
+import {
+  oxfmtVersion,
+  prettierVersion,
+  typescriptVersion,
+} from '../../utils/versions';
+
+// `ensurePackage` performs a real out-of-band install, so the only way to
+// assert *whether* it runs is to intercept it.
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual('@nx/devkit'),
+  ensurePackage: jest.fn(),
+}));
+const { ensurePackage } = jest.requireMock('@nx/devkit');
 
 describe('js init generator', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    // No formatter: this suite is about which one init picks and sets up, so a
+    // pre-seeded config would answer the question before the generator runs.
+    tree = createTreeWithEmptyWorkspace({ formatter: 'none' });
     // Remove files that should be part of the init generator
     tree.delete('tsconfig.base.json');
-    tree.delete('.prettierrc');
+    (ensurePackage as jest.Mock).mockClear();
+  });
+
+  describe('making the formatter resolvable before it formats', () => {
+    // The install task is queued, not run, so without this the formatter the
+    // generator just added is still missing when formatFiles tries to load it.
+
+    // The version is asserted exactly, not as `expect.any(String)`: pairing each
+    // formatter with its own version is the reason the setup table exists, and a
+    // swapped pair would only surface as a failed install for users.
+    it.each([
+      ['oxfmt', oxfmtVersion],
+      ['prettier', prettierVersion],
+    ] as const)(
+      'should ensure %s is installed before formatting',
+      async (formatter, version) => {
+        await init(tree, { formatter });
+
+        expect(ensurePackage).toHaveBeenCalledWith(formatter, version);
+      }
+    );
+
+    it('should ensure the formatter even when the caller formats later', async () => {
+      await init(tree, { formatter: 'prettier', skipFormat: true });
+
+      expect(ensurePackage).toHaveBeenCalledWith('prettier', prettierVersion);
+    });
+
+    it('should not install anything when skipPackageJson is set', async () => {
+      // That option asks this generator not to manage dependencies, and an
+      // out-of-band install is still an install.
+      await init(tree, { formatter: 'oxfmt', skipPackageJson: true });
+
+      expect(ensurePackage).not.toHaveBeenCalled();
+    });
+
+    it('should not install anything when there is no formatter', async () => {
+      await init(tree, { formatter: 'none' });
+
+      expect(ensurePackage).not.toHaveBeenCalled();
+    });
+
+    it('should not install anything when NX_SKIP_FORMAT is set', async () => {
+      // formatFiles returns immediately on this, so the install would be a
+      // network round trip whose result is never read. create-nx-workspace
+      // sets it for the whole run and formats once at the end.
+      const previous = process.env.NX_SKIP_FORMAT;
+      process.env.NX_SKIP_FORMAT = 'true';
+      try {
+        await init(tree, { formatter: 'oxfmt' });
+
+        expect(ensurePackage).not.toHaveBeenCalled();
+      } finally {
+        if (previous === undefined) {
+          delete process.env.NX_SKIP_FORMAT;
+        } else {
+          process.env.NX_SKIP_FORMAT = previous;
+        }
+      }
+    });
   });
 
   it('should install prettier package', async () => {
-    await init(tree, {});
+    await init(tree, { formatter: 'prettier' });
 
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson.devDependencies['prettier']).toBeDefined();
   });
 
+  it('should add oxfmt to devDependencies and create .oxfmtrc.json', async () => {
+    await init(tree, { formatter: 'oxfmt' });
+
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson.devDependencies['oxfmt']).toBeDefined();
+    expect(packageJson.devDependencies['prettier']).toBeUndefined();
+
+    const oxfmtrc = readJson(tree, '.oxfmtrc.json');
+    expect(oxfmtrc).toEqual({ singleQuote: true });
+  });
+
+  describe('default formatter', () => {
+    // The default resolves two ways - detection, then nothing - and both are
+    // user-visible, so neither may rely on a caller passing `formatter`.
+
+    it('should install nothing when the workspace has no formatter configured', async () => {
+      await init(tree, {});
+
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies?.['oxfmt']).toBeUndefined();
+      expect(packageJson.devDependencies?.['prettier']).toBeUndefined();
+      expect(tree.exists('.oxfmtrc.json')).toBe(false);
+      expect(tree.exists('.prettierrc')).toBe(false);
+    });
+
+    it('should keep prettier when the workspace already uses it', async () => {
+      writeJson(tree, '.prettierrc', { singleQuote: true });
+
+      await init(tree, {});
+
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies['prettier']).toBeDefined();
+      expect(packageJson.devDependencies['oxfmt']).toBeUndefined();
+      // A stray .oxfmtrc.json here would win detection over the .prettierrc
+      // and silently switch the workspace's formatter.
+      expect(tree.exists('.oxfmtrc.json')).toBe(false);
+    });
+
+    it('should keep oxfmt when the workspace already uses it', async () => {
+      writeJson(tree, '.oxfmtrc.json', { singleQuote: true });
+
+      await init(tree, {});
+
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies['oxfmt']).toBeDefined();
+      // Generating into an oxfmt workspace must not drag prettier back in.
+      expect(packageJson.devDependencies?.['prettier']).toBeUndefined();
+      expect(tree.exists('.prettierrc')).toBe(false);
+      expect(tree.exists('.prettierignore')).toBe(false);
+    });
+  });
+
+  it('should not overwrite existing .oxfmtrc.json', async () => {
+    writeJson(tree, '.oxfmtrc.json', { singleQuote: false });
+
+    await init(tree, { formatter: 'oxfmt' });
+
+    const oxfmtrc = readJson(tree, '.oxfmtrc.json');
+    expect(oxfmtrc).toEqual({ singleQuote: false });
+  });
+
+  it('should not create .oxfmtrc.json if another oxfmt config format exists', async () => {
+    tree.write('oxfmt.config.ts', 'export default {};');
+
+    await init(tree, { formatter: 'oxfmt' });
+
+    expect(tree.exists('.oxfmtrc.json')).toBeFalsy();
+  });
+
   it('should create .prettierrc and .prettierignore files', async () => {
-    await init(tree, {});
+    await init(tree, { formatter: 'prettier' });
 
     const prettierrc = readJson(tree, '.prettierrc');
     expect(prettierrc).toEqual({ singleQuote: true });
@@ -30,6 +172,12 @@ describe('js init generator', () => {
     expect(prettierignore).toMatch(/\n\/coverage/);
     expect(prettierignore).toMatch(/\n\/dist/);
     expect(prettierignore).toMatch(/\n\/\.nx\/cache/);
+    // Prettier formats json and yaml, so the package manager rewriting its
+    // lockfile would otherwise fail the workspace's own format:check. Matched
+    // as a set because the name depends on the detected package manager.
+    expect(prettierignore).toMatch(
+      /\n(package-lock\.json|yarn\.lock|pnpm-lock\.yaml|bun\.lockb?)/
+    );
   });
 
   it('should not overwrite existing .prettierrc and .prettierignore files', async () => {
@@ -45,12 +193,22 @@ describe('js init generator', () => {
     expect(prettierignore).toContain('# custom ignore file');
   });
 
+  it('should not write .prettierrc next to a prettier.config.ts', async () => {
+    // The setup list is shared with detection now; it previously omitted the
+    // .ts/.mts/.cts forms, so a workspace using one got a second config.
+    tree.write('prettier.config.ts', 'export default { singleQuote: true };');
+
+    await init(tree, { formatter: 'prettier' });
+
+    expect(tree.exists('.prettierrc')).toBe(false);
+  });
+
   it('should not overwrite prettier configuration specified in other formats', async () => {
     tree.delete('.prettierrc');
     tree.delete('.prettierignore');
     tree.write('.prettierrc.js', `module.exports = { singleQuote: true };`);
 
-    await init(tree, {});
+    await init(tree, { formatter: 'prettier' });
 
     expect(tree.exists('.prettierrc')).toBeFalsy();
     expect(tree.exists('.prettierignore')).toBeTruthy();
@@ -59,11 +217,29 @@ describe('js init generator', () => {
     );
   });
 
+  it('should add the oxc vscode extension if .vscode/extensions.json file exists', async () => {
+    // The oxc extension is what runs oxfmt in the editor, so an oxfmt
+    // workspace should recommend it the same way a prettier one does.
+    writeJson(tree, '.vscode/extensions.json', { recommendations: ['foo'] });
+
+    await init(tree, { formatter: 'oxfmt' });
+
+    expect(readJson(tree, '.vscode/extensions.json')).toEqual({
+      recommendations: ['foo', 'oxc.oxc-vscode'],
+    });
+  });
+
+  it('should not create .vscode/extensions.json for oxfmt when it does not exist', async () => {
+    await init(tree, { formatter: 'oxfmt' });
+
+    expect(tree.exists('.vscode/extensions.json')).toBeFalsy();
+  });
+
   it('should add prettier vscode extension if .vscode/extensions.json file exists', async () => {
     // No existing recommendations
     writeJson(tree, '.vscode/extensions.json', {});
 
-    await init(tree, {});
+    await init(tree, { formatter: 'prettier' });
 
     let json = readJson(tree, '.vscode/extensions.json');
     expect(json).toEqual({
@@ -73,7 +249,7 @@ describe('js init generator', () => {
     // Existing recommendations
     writeJson(tree, '.vscode/extensions.json', { recommendations: ['foo'] });
 
-    await init(tree, {});
+    await init(tree, { formatter: 'prettier' });
 
     json = readJson(tree, '.vscode/extensions.json');
     expect(json).toEqual({

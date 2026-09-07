@@ -1,3 +1,4 @@
+import type { TSESLint } from '@typescript-eslint/utils';
 import { workspaceRules } from './src/resolve-workspace-rules';
 import dependencyChecks, {
   RULE_NAME as dependencyChecksRuleName,
@@ -9,7 +10,11 @@ import nxPluginChecksRule, {
   RULE_NAME as nxPluginChecksRuleName,
 } from './src/rules/nx-plugin-checks';
 
-const plugin = {
+// Keep the annotation: the inferred type names RuleModule via a pnpm store path (TS2883).
+const plugin: {
+  configs: Record<string, unknown>;
+  rules: Record<string, TSESLint.RuleModule<string, unknown[]>>;
+} = {
   configs: {},
   rules: {
     [enforceModuleBoundariesRuleName]: enforceModuleBoundaries,

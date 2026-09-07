@@ -21,7 +21,7 @@ When working on Nx documentation, all documentation content lives in the `astro-
 - Development workflow and commands
 - Sidebar management
 
-**MANDATORY**: After editing any file in `astro-docs/src/content/`, run the `nx-docs-style-check` skill. No exceptions.
+**MANDATORY**: After editing any file in `astro-docs/src/content/`, run the `check-docs-style` skill. No exceptions.
 
 **MANDATORY**: All documentation content must follow `astro-docs/STYLE_GUIDE.md`. vale only enforces its mechanical rules, so check the structural and voice rules yourself.
 
@@ -73,11 +73,25 @@ In this mode:
 Files under `generated` directories are generated based on a different source file and should not be modified directly.
 Find the underlying source and modify that instead.
 
+## Code Comments
+
+A comment earns its place only by saying something the code cannot. The default is **no comment** — clearer names,
+smaller functions, and explicit types usually beat one. When warranted, it is a line or two in the terse style of the
+surrounding code. Past ~3 lines, it should have been cut down or moved into the commit message.
+
+Keep it true. A comment that contradicts the code is worse than no comment, so when you change code, update or delete
+the comments around it — a stale comment is a bug and review treats it as one.
+
+**MANDATORY**: the paragraph above is orientation, not the rule set. The full rules live in
+`.claude/agents/comment-analyzer.md` — read it before writing or editing a comment, before adding a `TODO` or
+`@deprecated` marker, and before changing what counts as a comment defect. That file is authoritative for writing
+comments as well as for reviewing them, and it is not loaded automatically, so you must open it.
+
 ## Essential Commands
 
 ### Code Formatting
 
-After code changes are made, please make sure to format the files with prettier via `npx prettier -- FILE_NAME`
+After code changes are made, please make sure to format the files with oxfmt via `npx oxfmt FILE_NAME`
 
 ### Pre-push Validation
 

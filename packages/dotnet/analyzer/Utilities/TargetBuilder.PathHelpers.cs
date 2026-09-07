@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using MsbuildAnalyzer.Models;
 
 namespace MsbuildAnalyzer.Utilities;
@@ -42,10 +43,11 @@ public static partial class TargetBuilder
             return null;
         }
 
+        // Relative paths are project-relative (MSBuild convention). Anchor them
+        // and fall through so `.` and `..` normalize like absolute paths.
         if (!Path.IsPathRooted(path))
         {
-            var normalized = path.Replace('\\', '/').TrimEnd('/');
-            return string.IsNullOrEmpty(normalized) ? "{projectRoot}" : $"{{projectRoot}}/{normalized}";
+            path = Path.Combine(projectDirectory, path.Replace('\\', '/'));
         }
 
         var normalizedPath = Path.GetFullPath(path);
@@ -151,18 +153,48 @@ public static partial class TargetBuilder
     }
 
     /// <summary>
+    /// Builds an artifacts-layout subdirectory from the names MSBuild evaluated,
+    /// rather than hard-coding them: every segment
+    /// (<c>ArtifactsPath</c>, the output name, <c>ArtifactsProjectName</c>) is
+    /// overridable, and <c>ArtifactsProjectName</c> defaults to
+    /// <c>MSBuildProjectName</c>, which is not the Nx project name.
+    /// The pivot segment is deliberately omitted so one output covers every
+    /// configuration. Returns <c>null</c> when the path escapes the workspace.
+    /// </summary>
+    private static string? GetArtifactsSubdirectory(
+        Dictionary<string, string> properties,
+        string workspaceRoot,
+        string outputNameProperty,
+        string defaultOutputName,
+        bool includeProjectName)
+    {
+        var artifactsPath = GetArtifactsRelativePath(properties, workspaceRoot);
+        if (artifactsPath is null)
+        {
+            return null;
+        }
+
+        var outputName = properties.GetValueOrDefault(outputNameProperty) ?? defaultOutputName;
+        var path = $"{{workspaceRoot}}/{artifactsPath}/{outputName}";
+
+        if (!includeProjectName)
+        {
+            return path;
+        }
+
+        var artifactsProjectName = properties.GetValueOrDefault("ArtifactsProjectName")
+            ?? properties.GetValueOrDefault("MSBuildProjectName");
+
+        return string.IsNullOrEmpty(artifactsProjectName) ? path : $"{path}/{artifactsProjectName}";
+    }
+
+    /// <summary>
     /// Gets the output directory path for build outputs, as a fully-qualified
     /// Nx-prefixed string. Handles both traditional and artifacts layouts.
     /// Returns <c>null</c> when the path lives outside the workspace.
     /// </summary>
-    private static string? GetOutputPath(Dictionary<string, string> properties, string projectName, string projectDirectory, string workspaceRoot)
+    private static string? GetOutputPath(Dictionary<string, string> properties, string projectDirectory, string workspaceRoot)
     {
-        if (UsesArtifactsOutput(properties))
-        {
-            var artifactsPath = GetArtifactsRelativePath(properties, workspaceRoot);
-            return artifactsPath is null ? null : $"{{workspaceRoot}}/{artifactsPath}/bin/{projectName}";
-        }
-
         var baseOutputPath = properties.GetValueOrDefault("BaseOutputPath");
         if (!string.IsNullOrEmpty(baseOutputPath))
         {
@@ -182,14 +214,8 @@ public static partial class TargetBuilder
     /// Nx-prefixed string. Returns <c>null</c> when the path lives outside the
     /// workspace.
     /// </summary>
-    private static string? GetIntermediateOutputPath(Dictionary<string, string> properties, string projectName, string projectDirectory, string workspaceRoot)
+    private static string? GetIntermediateOutputPath(Dictionary<string, string> properties, string projectDirectory, string workspaceRoot)
     {
-        if (UsesArtifactsOutput(properties))
-        {
-            var artifactsPath = GetArtifactsRelativePath(properties, workspaceRoot);
-            return artifactsPath is null ? null : $"{{workspaceRoot}}/{artifactsPath}/obj/{projectName}";
-        }
-
         var baseIntermediatePath = properties.GetValueOrDefault("BaseIntermediateOutputPath");
         if (!string.IsNullOrEmpty(baseIntermediatePath))
         {
@@ -206,12 +232,14 @@ public static partial class TargetBuilder
     /// Gets the publish output directory path, as a fully-qualified Nx-prefixed
     /// string. Returns <c>null</c> when the path lives outside the workspace.
     /// </summary>
-    private static string? GetPublishDir(Dictionary<string, string> properties, string projectName, string projectDirectory, string workspaceRoot)
+    private static string? GetPublishDir(Dictionary<string, string> properties, string? defaultConfiguration, string projectDirectory, string workspaceRoot)
     {
         if (UsesArtifactsOutput(properties))
         {
-            var artifactsPath = GetArtifactsRelativePath(properties, workspaceRoot);
-            return artifactsPath is null ? null : $"{{workspaceRoot}}/{artifactsPath}/publish/{projectName}";
+            // PublishDir carries the pivot (…/publish/<project>/debug), which is
+            // per-configuration. Declare its parent so one output covers every
+            // configuration, as the bin and obj outputs do.
+            return GetArtifactsSubdirectory(properties, workspaceRoot, "ArtifactsPublishOutputName", "publish", includeProjectName: true);
         }
 
         // PublishDir (e.g. "bin/Debug/publish") is evaluated by MSBuild at the
@@ -222,33 +250,38 @@ public static partial class TargetBuilder
         if (!string.IsNullOrEmpty(publishDir))
         {
             var resolved = ResolvePath(publishDir, projectDirectory, workspaceRoot);
-            return ApplyConfiguration(resolved, properties.GetValueOrDefault("Configuration"));
+            return ApplyConfiguration(resolved, defaultConfiguration, properties.GetValueOrDefault("Configuration"));
         }
 
-        var outputPath = GetOutputPath(properties, projectName, projectDirectory, workspaceRoot);
+        var outputPath = GetOutputPath(properties, projectDirectory, workspaceRoot);
         return outputPath is null ? null : $"{outputPath.TrimEnd('/')}/publish";
     }
 
     /// <summary>
-    /// Rewrites any <c>Debug</c>/<c>Release</c> path segment to the given
-    /// configuration. Used for paths (like PublishDir) that MSBuild evaluates at
-    /// the default configuration but a target consumes at another. A no-op when
-    /// the configuration is empty or the path contains no configuration segment.
+    /// Rewrites the segments MSBuild produced from <paramref name="defaultConfiguration"/>
+    /// to <paramref name="targetConfiguration"/>. Used for paths (like PublishDir) that
+    /// MSBuild evaluates at the project's default configuration but a target consumes at
+    /// another. Matching the evaluated default exactly, rather than any Debug/Release
+    /// segment, leaves a directory that merely happens to be named `release` alone.
+    /// A no-op when either configuration is unknown.
     /// </summary>
-    private static string? ApplyConfiguration(string? path, string? configuration)
+    private static string? ApplyConfiguration(string? path, string? defaultConfiguration, string? targetConfiguration)
     {
-        if (string.IsNullOrEmpty(path) || string.IsNullOrEmpty(configuration))
+        if (string.IsNullOrEmpty(path)
+            || string.IsNullOrEmpty(defaultConfiguration)
+            || string.IsNullOrEmpty(targetConfiguration))
         {
             return path;
         }
 
+        // Segment 0 is the {projectRoot}/{workspaceRoot} token every ResolvePath
+        // result carries, and a Configuration value could otherwise match it.
         var segments = path.Split('/');
-        for (var i = 0; i < segments.Length; i++)
+        for (var i = 1; i < segments.Length; i++)
         {
-            if (segments[i].Equals("Debug", StringComparison.OrdinalIgnoreCase) ||
-                segments[i].Equals("Release", StringComparison.OrdinalIgnoreCase))
+            if (segments[i].Equals(defaultConfiguration, StringComparison.Ordinal))
             {
-                segments[i] = configuration;
+                segments[i] = targetConfiguration;
             }
         }
 
@@ -259,21 +292,104 @@ public static partial class TargetBuilder
     /// Gets the package output directory path, as a fully-qualified Nx-prefixed
     /// string. Returns <c>null</c> when the path lives outside the workspace.
     /// </summary>
-    private static string? GetPackageOutputPath(Dictionary<string, string> properties, string projectName, string projectDirectory, string workspaceRoot)
+    private static string? GetPackageOutputPath(Dictionary<string, string> properties, string? defaultConfiguration, string projectDirectory, string workspaceRoot)
     {
         if (UsesArtifactsOutput(properties))
         {
-            var artifactsPath = GetArtifactsRelativePath(properties, workspaceRoot);
-            return artifactsPath is null ? null : $"{{workspaceRoot}}/{artifactsPath}/package";
+            // The package layout has no per-project segment.
+            return GetArtifactsSubdirectory(properties, workspaceRoot, "ArtifactsPackageOutputName", "package", includeProjectName: false);
         }
 
+        // PackageOutputPath is evaluated at the project's default Configuration,
+        // but pack runs at the Configuration in `properties` (Release). Rewrite
+        // the configuration segment so the declared output matches where the
+        // .nupkg lands, as GetPublishDir does for PublishDir.
         var packageOutputPath = properties.GetValueOrDefault("PackageOutputPath");
         if (!string.IsNullOrEmpty(packageOutputPath))
         {
-            return ResolvePath(packageOutputPath, projectDirectory, workspaceRoot);
+            var resolved = ResolvePath(packageOutputPath, projectDirectory, workspaceRoot);
+            return ApplyConfiguration(resolved, defaultConfiguration, properties.GetValueOrDefault("Configuration"));
         }
 
-        return GetOutputPath(properties, projectName, projectDirectory, workspaceRoot);
+        return GetOutputPath(properties, projectDirectory, workspaceRoot);
+    }
+
+    /// <summary>
+    /// Gets the directory Microsoft.Extensions.ApiDescription.Server writes the
+    /// generated OpenAPI documents to, as a fully-qualified Nx-prefixed string.
+    /// The property may point anywhere, so it resolves under the same rules as
+    /// the other outputs. Returns <c>null</c> when the property is unset or the
+    /// path lives outside the workspace.
+    /// </summary>
+    private static string? GetOpenApiDocumentsDirectory(Dictionary<string, string> properties, string projectDirectory, string workspaceRoot)
+    {
+        var openApiDocumentsDirectory = properties.GetValueOrDefault("OpenApiDocumentsDirectory");
+        return string.IsNullOrEmpty(openApiDocumentsDirectory)
+            ? null
+            : ResolvePath(openApiDocumentsDirectory, projectDirectory, workspaceRoot);
+    }
+
+    /// <summary>
+    /// Gets globs matching the OpenAPI documents dotnet-getdocument writes for
+    /// this project: <c>&lt;stem&gt;.json</c> for the default document and
+    /// <c>&lt;stem&gt;_&lt;document&gt;.json</c> for every other registered one, where
+    /// the stem comes from <see cref="GetOpenApiDocumentFileName"/>.
+    /// Globs rather than the directory: the directory may be the project root
+    /// (the value the ASP.NET Core docs recommend) or shared with other projects.
+    /// Two globs rather than <c>&lt;stem&gt;*.json</c>: the latter would also claim
+    /// siblings that merely share the prefix, and a declared output is removed
+    /// and rewritten on cache restore.
+    /// Returns an empty array when the directory is already covered by an output.
+    /// </summary>
+    private static string[] GetOpenApiDocumentsOutputs(
+        Dictionary<string, string> properties,
+        string fileName,
+        string projectDirectory,
+        string workspaceRoot,
+        params string?[] coveredDirectories)
+    {
+        var directory = GetOpenApiDocumentsDirectory(properties, projectDirectory, workspaceRoot);
+        if (directory is null || coveredDirectories.Contains(directory))
+        {
+            return [];
+        }
+
+        var stem = GetOpenApiDocumentFileName(properties, fileName);
+        return [$"{directory}/{stem}.json", $"{directory}/{stem}_*.json"];
+    }
+
+    /// <summary>
+    /// Matches the <c>--file-name</c> option inside
+    /// <c>$(OpenApiGenerateDocumentsOptions)</c>, which the package appends to the
+    /// dotnet-getdocument command verbatim. The tool accepts
+    /// <c>--file-name v</c>, <c>--file-name=v</c> and <c>--file-name:v</c>, and
+    /// rejects any value outside <c>[A-Za-z0-9_-]</c>, so the value never has
+    /// spaces to quote around.
+    /// </summary>
+    private static readonly Regex OpenApiFileNameOption = new(
+        @"--file-name[=:\s]\s*""?(?<name>[^\s""]+)""?",
+        RegexOptions.Compiled);
+
+    /// <summary>
+    /// Gets the file name stem dotnet-getdocument writes documents under:
+    /// <c>&lt;stem&gt;.json</c> for the default document and
+    /// <c>&lt;stem&gt;_&lt;document&gt;.json</c> for the rest. The stem is the project
+    /// name unless <c>$(OpenApiGenerateDocumentsOptions)</c> overrides it with
+    /// <c>--file-name</c>.
+    /// </summary>
+    private static string GetOpenApiDocumentFileName(Dictionary<string, string> properties, string fileName)
+    {
+        var options = properties.GetValueOrDefault("OpenApiGenerateDocumentsOptions");
+        if (!string.IsNullOrWhiteSpace(options))
+        {
+            var match = OpenApiFileNameOption.Match(options);
+            if (match.Success)
+            {
+                return match.Groups["name"].Value;
+            }
+        }
+
+        return Path.GetFileNameWithoutExtension(fileName);
     }
 
     /// <summary>

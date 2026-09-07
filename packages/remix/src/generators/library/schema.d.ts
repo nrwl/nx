@@ -1,3 +1,4 @@
+import type { LinterType } from '@nx/js';
 import { SupportedStyles } from '@nx/react';
 
 export interface NxRemixGeneratorSchema {
@@ -9,7 +10,7 @@ export interface NxRemixGeneratorSchema {
   /** @deprecated Use bundler instead. */
   buildable?: boolean;
   bundler?: 'none' | 'vite' | 'rollup';
-  linter?: 'none' | 'eslint';
+  linter?: LinterType;
   unitTestRunner?: 'jest' | 'vitest' | 'none';
   js?: boolean;
   skipFormat?: boolean;

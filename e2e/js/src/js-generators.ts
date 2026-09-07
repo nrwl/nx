@@ -121,6 +121,7 @@ describe('js e2e', () => {
     });
     const originalNxJson = readFile('nx.json');
     updateJson('nx.json', (json) => {
+      json.targetDefaults ??= {};
       json.targetDefaults.build = {
         ...json.targetDefaults.build,
         dependsOn: [

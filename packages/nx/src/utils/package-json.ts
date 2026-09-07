@@ -13,10 +13,12 @@ import {
 } from '../config/workspace-json-project-json';
 import type { Tree } from '../generators/tree';
 import { readJson } from '../generators/utils/json';
+import { readTargetDefaultsForTarget } from '../project-graph/utils/project-configuration-utils';
 import { mergeTargetConfigurations } from '../project-graph/utils/project-configuration/target-merging';
 import { getCatalogManager } from './catalog';
 import { readJsonFile } from './fileutils';
 import { hasNxJsPlugin } from './has-nx-js-plugin';
+import { isContainedRelativePath } from './path';
 import { getNxRequirePaths } from './installation-directory';
 import {
   createTempNpmDirectory,
@@ -28,8 +30,7 @@ import {
 } from './package-manager';
 import { workspaceRoot } from './workspace-root';
 
-export interface NxProjectPackageJsonConfiguration
-  extends Partial<ProjectConfiguration> {
+export interface NxProjectPackageJsonConfiguration extends Partial<ProjectConfiguration> {
   includedScripts?: string[];
 }
 
@@ -97,8 +98,13 @@ export interface PackageJson {
       libc?: string[];
     };
     ignoredOptionalDependencies?: string[];
+    packageExtensions?: Record<string, unknown>;
+    patchedDependencies?: Record<string, string>;
   };
   overrides?: PackageOverride;
+  // npm install-script allowlist (npm 11.16+). Keys are `name`, `name@version`,
+  // or git specs; `true` approves, `false` denies.
+  allowScripts?: Record<string, boolean>;
   bin?: Record<string, string> | string;
   workspaces?:
     | string[]
@@ -147,6 +153,19 @@ export function normalizePackageGroup(
 export function readNxMigrateConfig(
   json: Partial<PackageJson>
 ): NxMigrationsConfiguration & { packageGroup?: ArrayPackageGroup } {
+  // Registry fetching uses this value to build a temporary extraction path.
+  // Reject unsupported absolute paths and escaping parent traversal before extraction.
+  const assertContained = (migrations: string): string => {
+    if (!isContainedRelativePath(migrations)) {
+      throw new Error(
+        `Invalid migrations path "${migrations}" in package "${json.name ?? 'unknown'}@${
+          json.version ?? 'unknown'
+        }": migration paths must not be absolute or escape their base directory through parent traversal.`
+      );
+    }
+    return migrations;
+  };
+
   const parseNxMigrationsConfig = (
     fromJson?: string | NxMigrationsConfiguration
   ): NxMigrationsConfiguration & { packageGroup?: ArrayPackageGroup } => {
@@ -154,11 +173,13 @@ export function readNxMigrateConfig(
       return {};
     }
     if (typeof fromJson === 'string') {
-      return { migrations: fromJson, packageGroup: [] };
+      return { migrations: assertContained(fromJson), packageGroup: [] };
     }
 
     return {
-      ...(fromJson.migrations ? { migrations: fromJson.migrations } : {}),
+      ...(fromJson.migrations
+        ? { migrations: assertContained(fromJson.migrations) }
+        : {}),
       ...(fromJson.packageGroup
         ? { packageGroup: normalizePackageGroup(fromJson.packageGroup) }
         : {}),
@@ -281,8 +302,15 @@ export function readTargetsFromPackageJson(
     !res['nx-release-publish'] &&
     hasNxJsPlugin(projectRoot, workspaceRoot)
   ) {
+    // No project/plugin context here, so only catch-all entries of a
+    // `targetDefaults` value apply (the reader resolves both the object and
+    // array value forms).
     const nxReleasePublishTargetDefaults =
-      nxJson?.targetDefaults?.['nx-release-publish'] ?? {};
+      readTargetDefaultsForTarget(
+        'nx-release-publish',
+        nxJson?.targetDefaults,
+        '@nx/js:release-publish'
+      ) ?? {};
     res['nx-release-publish'] = {
       executor: '@nx/js:release-publish',
       ...nxReleasePublishTargetDefaults,
@@ -405,9 +433,28 @@ function preparePackageInstallation(
   // it into the temp dir, so the `-w` here resolves to the temp dir.
   const pmCommands = getPackageManagerCommand(packageManager);
   const preInstallCommand = pmCommands.preInstall;
-  const installCommand = `${pmCommands.addDev} ${pkg}@${requiredVersion} ${
-    pmCommands.ignoreScriptsFlag ?? ''
-  }`;
+
+  // Keep peer dependencies out of the temp install. `ensurePackage` puts the
+  // workspace's `node_modules` on `NODE_PATH`, so a loaded package resolves its
+  // peers from the workspace instead of pulling its own (possibly incompatible)
+  // copies into the temp dir.
+  //
+  // npm needs `--legacy-peer-deps` rather than `--omit=peer`: npm marks a package
+  // as a peer if anything in the tree peer-depends on it, so `--omit=peer` also
+  // prunes packages that are real dependencies. Bun's `--omit=peer` does not.
+  const skipPeerDependenciesFlags: Partial<Record<PackageManager, string>> = {
+    npm: '--legacy-peer-deps',
+    bun: '--omit=peer',
+    pnpm: '--config.auto-install-peers=false',
+  };
+  const installCommand = [
+    pmCommands.addDev,
+    `${pkg}@${requiredVersion}`,
+    skipPeerDependenciesFlags[packageManager],
+    pmCommands.ignoreScriptsFlag,
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   const execOptions = {
     cwd: tempDir,

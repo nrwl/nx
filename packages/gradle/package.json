@@ -77,7 +77,6 @@
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "toml-eslint-parser": "^0.10.0",
-    "tree-kill": "catalog:",
     "tslib": "catalog:typescript"
   },
   "devDependencies": {

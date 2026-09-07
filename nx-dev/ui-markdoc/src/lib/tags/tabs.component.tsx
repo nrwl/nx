@@ -64,7 +64,7 @@ export function Tabs({ labels, children }: TabsProps) {
             aria-selected={label === currentTab}
             onClick={() => handleTabClick(label)}
             className={cx(
-              'whitespace-nowrap border-b-2 p-2 text-sm font-medium',
+              'border-b-2 p-2 text-sm font-medium whitespace-nowrap',
               label === currentTab
                 ? 'border-blue-500 text-zinc-800 dark:border-blue-500 dark:text-zinc-300'
                 : 'border-transparent text-zinc-500 hover:border-blue-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:border-blue-500 dark:hover:text-zinc-300'
@@ -76,10 +76,10 @@ export function Tabs({ labels, children }: TabsProps) {
       </nav>
       <div
         className={cx(
-          'border border-zinc-200 pb-2 pl-4 pr-4 pt-2 dark:border-zinc-700',
+          'border border-zinc-200 pt-2 pr-4 pb-2 pl-4 dark:border-zinc-700',
           currentTab === labels[0]
-            ? 'rounded-b-md rounded-tr-md'
-            : 'rounded-b-md rounded-t-md'
+            ? 'rounded-tr-md rounded-b-md'
+            : 'rounded-t-md rounded-b-md'
         )}
       >
         {children}

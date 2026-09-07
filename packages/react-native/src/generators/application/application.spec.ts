@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   Tree,
@@ -97,9 +97,8 @@ describe('app', () => {
               configFile: __dirname + '/.babelrc.js',
             },
           ],
-          '^.+[.](bmp|gif|jpg|jpeg|mp4|png|psd|svg|webp)$': require.resolve(
-            'react-native/jest/assetFileTransformer.js',
-          ),
+          '^.+[.](bmp|gif|jpg|jpeg|mp4|png|psd|svg|webp)$':
+            require.resolve('react-native/jest/assetFileTransformer.js'),
         },
         transformIgnorePatterns: [
           'node_modules/(?!(.pnpm/.+/node_modules/)?(react-native|@react-native(-community)?)/)',
@@ -352,8 +351,8 @@ describe('app', () => {
           "name",
           "version",
           "private",
-          "nx",
           "dependencies",
+          "nx",
         ]
       `);
       expect(readJson(tree, 'my-app/tsconfig.json')).toMatchInlineSnapshot(`
@@ -485,8 +484,8 @@ describe('app', () => {
           "name",
           "version",
           "private",
-          "nx",
           "dependencies",
+          "nx",
         ]
       `);
     });

@@ -14,7 +14,7 @@ export function createFiles(tree: Tree, options: NormalizedOptions): void {
       root: options.appProjectRoot,
     }
   );
-  if (options.unitTestRunner === 'jest') {
+  if (options.unitTestRunner !== 'none') {
     generateFiles(
       tree,
       join(__dirname, '..', 'files', 'test'),

@@ -311,9 +311,6 @@ export class ProjectGraphBuilder {
     if (!this.graph.dependencies[source]) {
       this.graph.dependencies[source] = [];
     }
-    const isDuplicate = !!this.graph.dependencies[source].find(
-      (d) => d.target === target && d.type === type
-    );
 
     if (sourceFile) {
       let fileData = getProjectFileData(
@@ -340,14 +337,19 @@ export class ProjectGraphBuilder {
           : [source, target, type];
         fileData.deps.push(dep);
       }
-    } else if (!isDuplicate) {
+    } else {
       // only add to dependencies section if the source file is not specified
       // and not already added
-      this.graph.dependencies[source].push({
-        source: source,
-        target: target,
-        type,
-      });
+      const isDuplicate = !!this.graph.dependencies[source].find(
+        (d) => d.target === target && d.type === type
+      );
+      if (!isDuplicate) {
+        this.graph.dependencies[source].push({
+          source: source,
+          target: target,
+          type,
+        });
+      }
     }
   }
 
@@ -587,15 +589,32 @@ function validateStaticDependency(
   }
 }
 
+// Per-project file-name -> FileData index, keyed by the fileMap object so the
+// linear scan (once per source project's file list) is paid once instead of on
+// every addDependency/validateDependency call. Cached against the source's file
+// array reference: a fresh array (new build, or reuse with a swapped list)
+// rebuilds the index.
+const projectFileDataIndex = new WeakMap<
+  ProjectFileMap,
+  Map<string, { files: FileData[]; byFile: Map<string, FileData> }>
+>();
 function getProjectFileData(
   source: string,
   sourceFile: string,
   fileMap: ProjectFileMap
 ) {
-  let fileData = (fileMap[source] || []).find((f) => f.file === sourceFile);
-  if (fileData) {
-    return fileData;
+  let byProject = projectFileDataIndex.get(fileMap);
+  if (!byProject) {
+    byProject = new Map();
+    projectFileDataIndex.set(fileMap, byProject);
   }
+  const files = fileMap[source] || [];
+  let entry = byProject.get(source);
+  if (!entry || entry.files !== files) {
+    entry = { files, byFile: new Map(files.map((f) => [f.file, f])) };
+    byProject.set(source, entry);
+  }
+  return entry.byFile.get(sourceFile);
 }
 
 function getNonProjectFileData(sourceFile: string, files: FileData[]) {

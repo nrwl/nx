@@ -6,8 +6,7 @@ import {
   useLayoutEffect,
   useState,
 } from 'react';
-import { Schema } from '@markdoc/markdoc';
-import markdoc from '@markdoc/markdoc';
+import markdoc, { Schema } from '@markdoc/markdoc';
 import { Transition } from '@headlessui/react';
 import { Button } from '@nx/nx-dev-ui-common';
 import { XMarkIcon } from '@heroicons/react/24/outline';

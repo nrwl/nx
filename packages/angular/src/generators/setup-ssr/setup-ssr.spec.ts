@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   NxJsonConfiguration,
@@ -8,15 +8,17 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { PackageJson } from 'nx/src/utils/package-json';
 import {
   angularDevkitVersion,
   angularVersion,
   expressVersion,
+  nxVersion,
   typesExpressVersion,
+  webpackMergeVersion,
 } from '../../utils/versions';
 import { generateTestApplication } from '../utils/testing';
 import { setupSsr } from './setup-ssr';
+import { PackageJson } from '@nx/devkit/internal';
 
 describe('setupSSR', () => {
   describe('with application builder', () => {
@@ -96,11 +98,7 @@ describe('setupSSR', () => {
       expect(tree.read('app1/src/app/app-module.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
-        import {
-          BrowserModule,
-          provideClientHydration,
-          withEventReplay,
-        } from '@angular/platform-browser';
+        import { BrowserModule, provideClientHydration, withEventReplay } from '@angular/platform-browser';
         import { RouterModule } from '@angular/router';
         import { App } from './app';
         import { appRoutes } from './app.routes';
@@ -109,10 +107,7 @@ describe('setupSSR', () => {
         @NgModule({
           declarations: [App, NxWelcome],
           imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
-          providers: [
-            provideBrowserGlobalErrorListeners(),
-            provideClientHydration(withEventReplay()),
-          ],
+          providers: [provideBrowserGlobalErrorListeners(), provideClientHydration(withEventReplay())],
           bootstrap: [App],
         })
         export class AppModule {}
@@ -140,15 +135,11 @@ describe('setupSSR', () => {
       expect(tree.read('app1/src/server.ts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('app1/src/main.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import {
-          BootstrapContext,
-          bootstrapApplication,
-        } from '@angular/platform-browser';
+        "import { BootstrapContext, bootstrapApplication } from '@angular/platform-browser';
         import { App } from './app/app';
         import { config } from './app/app.config.server';
 
-        const bootstrap = (context: BootstrapContext) =>
-          bootstrapApplication(App, config, context);
+        const bootstrap = (context: BootstrapContext) => bootstrapApplication(App, config, context);
 
         export default bootstrap;
         "
@@ -525,6 +516,112 @@ describe('setupSSR', () => {
     expect(dependencies['@nguniversal/express-engine']).toBeUndefined();
     expect(devDependencies['@types/express']).toBe(typesExpressVersion);
     expect(devDependencies['@nguniversal/builders']).toBeUndefined();
+    expect(devDependencies['@nx/webpack']).toBeUndefined();
+    expect(devDependencies['webpack-merge']).toBeUndefined();
+  });
+
+  it('should install webpack dependencies when it creates a webpack server target', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    await generateTestApplication(tree, {
+      directory: 'app1',
+      skipFormat: true,
+    });
+    const project = readProjectConfiguration(tree, 'app1');
+    project.targets.build.executor = '@nx/angular:webpack-browser';
+    updateProjectConfiguration(tree, 'app1', project);
+
+    await setupSsr(tree, { project: 'app1', skipFormat: true });
+
+    const { devDependencies } = readJson<PackageJson>(tree, 'package.json');
+    expect(devDependencies['@nx/webpack']).toBe(nxVersion);
+    expect(devDependencies['webpack-merge']).toBe(webpackMergeVersion);
+  });
+
+  it('should not install webpack dependencies for a non-webpack build executor', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    await generateTestApplication(tree, {
+      directory: 'app1',
+      skipFormat: true,
+    });
+    const project = readProjectConfiguration(tree, 'app1');
+    project.targets.build.executor = '@example/custom:build';
+    updateProjectConfiguration(tree, 'app1', project);
+
+    await setupSsr(tree, { project: 'app1', skipFormat: true });
+
+    const { devDependencies } = readJson<PackageJson>(tree, 'package.json');
+    expect(devDependencies['@nx/webpack']).toBeUndefined();
+    expect(devDependencies['webpack-merge']).toBeUndefined();
+  });
+
+  it('should resolve a webpack build executor inherited from targetDefaults', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    await generateTestApplication(tree, {
+      directory: 'app1',
+      bundler: 'webpack',
+      skipFormat: true,
+    });
+    const project = readProjectConfiguration(tree, 'app1');
+    delete project.targets.build.executor;
+    updateProjectConfiguration(tree, 'app1', project);
+    updateJson(tree, 'nx.json', (json) => ({
+      ...json,
+      targetDefaults: {
+        ...json.targetDefaults,
+        build: {
+          ...json.targetDefaults?.build,
+          executor: '@nx/angular:webpack-browser',
+        },
+      },
+    }));
+
+    await setupSsr(tree, { project: 'app1', skipFormat: true });
+
+    expect(readProjectConfiguration(tree, 'app1').targets.server.executor).toBe(
+      '@nx/angular:webpack-server'
+    );
+  });
+
+  it('should resolve the application build executor inherited from targetDefaults', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    await generateTestApplication(tree, {
+      directory: 'app1',
+      skipFormat: true,
+    });
+    const project = readProjectConfiguration(tree, 'app1');
+    const buildExecutor = project.targets.build.executor;
+    delete project.targets.build.executor;
+    updateProjectConfiguration(tree, 'app1', project);
+    updateJson(tree, 'nx.json', (json) => ({
+      ...json,
+      targetDefaults: {
+        ...json.targetDefaults,
+        build: { ...json.targetDefaults?.build, executor: buildExecutor },
+      },
+    }));
+
+    await setupSsr(tree, { project: 'app1', skipFormat: true });
+
+    // application builder configures ssr on the build target rather than
+    // creating a separate server target
+    const build = readProjectConfiguration(tree, 'app1').targets.build;
+    expect(build.options.outputMode).toBe('server');
+    expect(build.options.ssr).toBeDefined();
+  });
+
+  it('should throw when the build target has no resolvable executor', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    await generateTestApplication(tree, {
+      directory: 'app1',
+      skipFormat: true,
+    });
+    const project = readProjectConfiguration(tree, 'app1');
+    delete project.targets.build.executor;
+    updateProjectConfiguration(tree, 'app1', project);
+
+    await expect(
+      setupSsr(tree, { project: 'app1', skipFormat: true })
+    ).rejects.toThrow(/does not specify an executor/);
   });
 
   it('should not touch the package.json when run with `--skipPackageJson`', async () => {

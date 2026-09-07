@@ -13,6 +13,7 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { relative } from 'path';
+import { assertCypressComponentTestingSupport } from '../../utils/assert-cypress-component-testing-support';
 import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import { isZonelessApp } from '../../utils/zoneless';
 import { nxVersion } from '../../utils/versions';
@@ -53,6 +54,7 @@ export async function cypressComponentConfiguration(
   const { componentConfigurationGenerator: baseCyCTConfig } = ensurePackage<
     typeof import('@nx/cypress')
   >('@nx/cypress', nxVersion);
+  assertCypressComponentTestingSupport(tree);
   const projectConfig = readProjectConfiguration(tree, options.project);
 
   let isZoneless: boolean;
@@ -234,9 +236,11 @@ async function configureCypressCT(
     ctConfigOptions.buildTarget = found.target;
   }
 
-  const { addDefaultCTConfig, getProjectCypressConfigPath } = <
-    typeof import('@nx/cypress/internal')
-  >require('@nx/cypress/internal');
+  const {
+    addDefaultCTConfig,
+    getProjectCypressConfigPath,
+    getInstalledCypressMajorVersion,
+  } = <typeof import('@nx/cypress/internal')>require('@nx/cypress/internal');
   const cypressConfigPath = getProjectCypressConfigPath(
     tree,
     projectConfig.root
@@ -244,7 +248,8 @@ async function configureCypressCT(
   const updatedCyConfig = await addDefaultCTConfig(
     tree.read(cypressConfigPath, 'utf-8'),
     ctConfigOptions,
-    '@nx/angular/plugins/component-testing'
+    '@nx/angular/plugins/component-testing',
+    getInstalledCypressMajorVersion(tree)
   );
   tree.write(cypressConfigPath, updatedCyConfig);
 }

@@ -103,14 +103,10 @@ where
 /// - `NX_NATIVE_LOGGING=[{project_name=project}]` - enable logs that contain the project in its span
 /// NX_NATIVE_FILE_LOGGING acts the same but logs to .nx/workspace-data/nx.log instead of stdout
 ///
-/// This function is idempotent - calling it multiple times is safe and won't create additional threads.
-pub(crate) fn enable_logger() {
-    use std::sync::Once;
-    static INIT: Once = Once::new();
-
-    INIT.call_once(|| {
-        initialize_logger();
-    });
+/// Runs once when the native module is loaded, so nothing else has to call it.
+#[module_init]
+fn enable_logger() {
+    initialize_logger();
 }
 
 fn initialize_logger() {

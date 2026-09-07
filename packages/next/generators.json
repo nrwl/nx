@@ -31,7 +31,7 @@
       "schema": "./dist/src/generators/library/schema.json",
       "aliases": ["lib"],
       "x-type": "library",
-      "description": "Create a library."
+      "description": "Create a Next.js library."
     },
     "custom-server": {
       "factory": "./dist/src/generators/custom-server/custom-server#customServerGenerator",

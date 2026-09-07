@@ -22,7 +22,7 @@ nx run mobile:run-ios
 
 ##### Build the Debug/Release app
 
-The `mode` option allows to specify the xcode configuartion schema, such as `Debug` or `Release`.
+The `mode` option allows to specify the xcode configuration schema, such as `Debug` or `Release`.
 
 ```json
     "run-ios": {

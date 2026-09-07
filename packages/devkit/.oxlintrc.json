@@ -1,0 +1,70 @@
+{
+  "$schema": "../../node_modules/oxlint/configuration_schema.json",
+  "extends": ["../../.oxlintrc.json"],
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "create-nx-workspace",
+            "message": "Please import utils from nx or @nx/devkit instead."
+          },
+          {
+            "name": "node-fetch",
+            "message": "Please default to native fetch instead of 'node-fetch'."
+          },
+          { "name": "@nx/workspace" },
+          { "name": "@angular-devkit/core" },
+          { "name": "@angular-devkit/architect" },
+          { "name": "@angular-devkit/schematics" }
+        ],
+        "patterns": [
+          {
+            // devkit is the one package allowed to reach into nx, but only
+            // through the two devkit barrels.
+            "group": [
+              "nx/bin/*",
+              "nx/bin/*/**",
+              "nx/src/*",
+              "nx/src/*/**",
+              "nx/plugins/*",
+              "nx/plugins/*/**",
+              "!nx/src/devkit-internals",
+              "!nx/src/devkit-exports"
+            ],
+            "allowTypeImports": true,
+            "message": "Only import from nx/src/devkit-internals or nx/src/devkit-exports"
+          },
+          {
+            "group": ["@nx/devkit/**/*"],
+            "message": "Use a relative import"
+          }
+        ]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      // Specs are exempt from the nx-barrel boundary but keep the base bans.
+      "files": ["**/*.spec.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "create-nx-workspace",
+                "message": "Please import utils from nx or @nx/devkit instead."
+              },
+              {
+                "name": "node-fetch",
+                "message": "Please default to native fetch instead of 'node-fetch'."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

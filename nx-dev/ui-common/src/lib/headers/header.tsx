@@ -279,7 +279,7 @@ export function Header({
               Nx Cloud
             </Link>
             <Link
-              href="/nx-cloud#plans"
+              href="/pricing"
               title="Nx Cloud Pricing"
               className="hidden gap-2 px-3 py-2 leading-tight font-medium hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
               prefetch={false}
@@ -631,7 +631,7 @@ export function Header({
                             Nx Cloud
                           </Link>
                           <Link
-                            href="/nx-cloud#plans"
+                            href="/pricing"
                             title="Nx Cloud Pricing"
                             className="hidden gap-2 px-3 py-2 leading-tight font-medium hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
                             prefetch={false}

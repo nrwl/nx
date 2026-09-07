@@ -7,18 +7,6 @@ export default [
     ignores: ['dist'],
   },
   {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          name: 'minimatch',
-          message: 'Please use `picomatch` instead.',
-        },
-      ],
-    },
-  },
-  {
     files: [
       './package.json',
       './generators.json',

@@ -10,6 +10,12 @@
       "schema": "./dist/src/executors/merge-reports/schema.json",
       "description": "Merge Playwright blob reports to produce unified reports for the configured reporters (excluding the `blob` reporter).",
       "hidden": true
+    },
+    "wait-for-webserver": {
+      "implementation": "./dist/src/executors/wait-for-webserver/wait-for-webserver.impl",
+      "schema": "./dist/src/executors/wait-for-webserver/schema.json",
+      "description": "Wait for the E2E web server(s) to be ready.",
+      "hidden": true
     }
   }
 }

@@ -32,6 +32,9 @@
       "nx": [
         "dist/nx.d.ts"
       ],
+      "internal": [
+        "dist/internal.d.ts"
+      ],
       "react": [
         "dist/react.d.ts"
       ],
@@ -68,6 +71,11 @@
       "types": "./dist/nx.d.ts",
       "default": "./dist/nx.js"
     },
+    "./internal": {
+      "@nx/nx-source": "./internal.ts",
+      "types": "./dist/internal.d.ts",
+      "default": "./dist/internal.js"
+    },
     "./react": {
       "@nx/nx-source": "./react.ts",
       "types": "./dist/react.d.ts",
@@ -97,10 +105,10 @@
     "@phenomnomnominal/tsquery": "catalog:typescript",
     "@typescript-eslint/type-utils": "catalog:eslint",
     "@typescript-eslint/utils": "catalog:eslint",
-    "chalk": "catalog:",
     "confusing-browser-globals": "^1.0.9",
     "globals": "^17.0.0",
     "jsonc-eslint-parser": "^2.1.0",
+    "picocolors": "catalog:",
     "semver": "catalog:",
     "tslib": "catalog:typescript"
   },

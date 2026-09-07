@@ -14,14 +14,13 @@ describe('Angular Cypress Component Tests - App', () => {
 
   afterAll(() => cleanupCypressComponentTests());
 
-  // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
-  it.skip('should test app', () => {
+  it('should test app', async () => {
     const { appName } = setup;
 
     runCLI(
       `generate @nx/angular:cypress-component-configuration --project=${appName} --generate-tests --no-interactive`
     );
-    if (runE2ETests('cypress')) {
+    if (await runE2ETests('cypress')) {
       expect(runCLI(`component-test ${appName}`)).toContain(
         'All specs passed!'
       );

@@ -5,7 +5,8 @@
     "types": ["node"],
     "lib": ["dom"],
     "composite": true,
-    "declaration": true
+    "declaration": true,
+    "rootDir": "."
   },
   "files": [],
   "exclude": [

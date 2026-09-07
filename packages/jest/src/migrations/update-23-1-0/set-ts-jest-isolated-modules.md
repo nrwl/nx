@@ -39,3 +39,13 @@ TypeScript 6 and above resolves `exports` under `bundler` with `commonjs`, so th
   }
 }
 ```
+
+#### Verifying the workspace
+
+After the migration runs, verify the workspace still typechecks and fix anything `isolatedModules` surfaced:
+
+```bash
+nx run-many -t typecheck
+```
+
+`isolatedModules` can fail typecheck (TS1205 - re-exporting a type needs `export type`; TS2748 - const enum access) or break a project's tests at runtime even when typecheck passes. The cause is a package that re-exports a value through both `module.exports` and an ESM `export` (for example napi bindings exposing a `const enum`); per-file transpilation cannot preserve it, and consumers of that const enum break too. To fix a broken project, remove `isolatedModules` from its `tsconfig.spec.json`; if that brings back the `TS2307: Cannot find module` error this migration was added to prevent, that project needs `isolatedModules`, so fix the source instead.

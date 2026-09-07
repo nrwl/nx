@@ -46,15 +46,18 @@ export function updateNxJson(tree: Tree, nxJson: NxJsonConfiguration): void {
 
 function readNxJsonExtends(tree: Tree, extendsPath: string) {
   try {
-    return readJson(
-      tree,
-      relative(
-        tree.root,
-        require.resolve(extendsPath, {
-          paths: [tree.root],
-        })
-      )
-    );
+    let resolvedExtendsPath: string;
+    try {
+      resolvedExtendsPath = require.resolve(extendsPath, {
+        paths: [tree.root],
+      });
+    } catch {
+      // Tree roots without a node_modules folder (e.g. the in-memory trees
+      // used in tests) can't anchor module resolution; fall back to
+      // resolving from the running nx package.
+      resolvedExtendsPath = require.resolve(extendsPath);
+    }
+    return readJson(tree, relative(tree.root, resolvedExtendsPath));
   } catch (e) {
     throw new Error(`Unable to resolve nx.json extends. Error: ${e.message}`);
   }
