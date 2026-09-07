@@ -82,6 +82,7 @@
   "devDependencies": {
     "nx": "workspace:*",
     "@nx/webpack": "workspace:*",
+    "@nx/rspack": "workspace:*",
     "@nx/vitest": "workspace:*"
   },
   "peerDependencies": {

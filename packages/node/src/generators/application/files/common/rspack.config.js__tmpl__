@@ -1,0 +1,54 @@
+<%_ if (rspackPluginOptions) { _%>
+const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+const { join } = require('path');
+
+module.exports = {
+  output: {
+    path: join(__dirname, '<%= rspackPluginOptions.outputPath %>'),
+    clean: true,
+    ...(process.env.NODE_ENV !== 'production' && {
+      devtoolModuleFilenameTemplate: '[absolute-resource-path]',
+    }),
+  },
+  plugins: [
+    new NxAppRspackPlugin({
+      target: 'node',
+      main: '<%= rspackPluginOptions.main %>',
+      tsConfig: '<%= rspackPluginOptions.tsConfig %>',
+      assets: <%- JSON.stringify(rspackPluginOptions.assets) %>,
+      optimization: false,
+      outputHashing: 'none',
+      generatePackageJson: <%= rspackPluginOptions.generatePackageJson %>,
+      sourceMap: true,
+    })
+  ],
+};
+<%_ } else { _%>
+const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+const { join } = require('path');
+
+module.exports = {
+  target: 'node',
+  output: {
+    path: join(__dirname, '<%= offset %>dist/<%= rootProject ? name : root %>'),
+    clean: true,
+    ...(process.env.NODE_ENV !== 'production' && {
+      devtoolModuleFilenameTemplate: '[absolute-resource-path]',
+    }),
+  },
+  devtool: 'source-map',
+  plugins: [
+    new NxAppRspackPlugin({
+      target: 'node',
+      main: './src/main<%= js ? ".js" : ".ts" %>',
+      tsConfig: './tsconfig.app.json',
+      assets: ['./src/assets'],
+      optimization: false,
+      outputHashing: 'none',
+      generatePackageJson: true,
+      sourceMap: true,
+    }),
+    // Add plugins here, e.g. `new MyPlugin()`.
+  ],
+};
+<%_ } _%>

@@ -6,6 +6,8 @@ import {
 import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import { isUsingTsSolutionSetup, normalizeLinterOption } from '@nx/js/internal';
 import type { Schema as NodeApplicationGeneratorOptions } from '@nx/node/internal';
+import { getDefaultBundler } from '../../../utils/default-bundler';
+import { getDefaultUnitTestRunner } from '../../../utils/default-unit-test-runner';
 import type { ApplicationGeneratorOptions, NormalizedOptions } from '../schema';
 
 export async function normalizeOptions(
@@ -34,8 +36,9 @@ export async function normalizeOptions(
     appProjectName,
     appProjectRoot,
     linter: await normalizeLinterOption(tree, options.linter),
-    unitTestRunner: options.unitTestRunner ?? 'jest',
+    unitTestRunner: options.unitTestRunner ?? getDefaultUnitTestRunner(tree),
     e2eTestRunner: options.e2eTestRunner ?? 'jest',
+    bundler: options.bundler ?? getDefaultBundler(tree),
     useProjectJson: options.useProjectJson ?? !isUsingTsSolutionSetup(tree),
   };
 }
@@ -56,7 +59,7 @@ export function toNodeApplicationGeneratorOptions(
     e2eTestRunner: options.e2eTestRunner,
     enableTypedLinting: isTypedLintingEnabled(options),
     rootProject: options.rootProject,
-    bundler: 'webpack', // Some features require webpack plugins such as TS transformers
+    bundler: options.bundler,
     isNest: true,
     addPlugin: options.addPlugin,
     useProjectJson: options.useProjectJson,

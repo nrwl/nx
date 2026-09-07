@@ -16,11 +16,13 @@ import {
   type MatchedTargetRef,
 } from '@nx/js/internal';
 import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
+import { hasRspackPlugin } from '../../../utils/has-rspack-plugin';
 import { NormalizedSchema } from './normalized-schema';
 import {
   getEsBuildConfig,
   getServeConfig,
   getWebpackBuildConfig,
+  getRspackBuildConfig,
   getPruneTargets,
 } from './create-targets';
 
@@ -57,6 +59,15 @@ export function addProject(
         ...pnpmDeployInputs,
       ]);
       project.targets.build = getWebpackBuildConfig(tree, project, options);
+      ensurePnpmDeployInputs(tree, options, project.targets.build);
+    }
+  } else if (options.bundler === 'rspack') {
+    if (!hasRspackPlugin(tree) && options.addPlugin === false) {
+      addBuildTargetDefaults(tree, `@nx/rspack:rspack`, 'build', [
+        TS_SOLUTION_SETUP_TSCONFIG_INPUT,
+        ...pnpmDeployInputs,
+      ]);
+      project.targets.build = getRspackBuildConfig(tree, project, options);
       ensurePnpmDeployInputs(tree, options, project.targets.build);
     }
   }

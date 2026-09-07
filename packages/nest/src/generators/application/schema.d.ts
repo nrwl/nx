@@ -18,6 +18,7 @@ export interface ApplicationGeneratorOptions {
   setParserOptionsProject?: boolean;
   rootProject?: boolean;
   strict?: boolean;
+  bundler?: 'rspack' | 'webpack';
   addPlugin?: boolean;
   useTsSolution?: boolean;
   useProjectJson?: boolean;
