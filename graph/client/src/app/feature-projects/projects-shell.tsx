@@ -15,12 +15,13 @@ import {
 import { useRankDir, useTheme } from '@nx/graph-internal-ui-render-config';
 import {
   Link,
+  useLocation,
   useNavigate,
   useParams,
   useRouteLoaderData,
   useSearchParams,
 } from 'react-router-dom';
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   NxGraphProjectGraphProvider,
   ProjectGraphHandleEventResult,
@@ -61,6 +62,7 @@ import { ErrorToast } from '@nx/graph-ui-common';
 import classNames from 'classnames';
 import { Tab, TabGroup, TabList } from '@headlessui/react';
 import { useCurrentPath } from '../hooks/use-current-path';
+import { restoreProjectGraphState } from './restore-project-graph-state';
 
 export function ProjectsShell() {
   const environmentConfig = useEnvironmentConfig();
@@ -100,7 +102,6 @@ function ProjectsShellInner() {
     send,
     orchestrator,
     sendRendererConfigEvent,
-    restoreGraphState,
     serializedGraphState,
     handleEventResult,
   } = graphContext;
@@ -118,6 +119,8 @@ function ProjectsShellInner() {
   const [lastHash, setLastHash] = useState(selectedWorkspaceLoaderData.hash);
   const [searchParams, setSearchParams] = useSearchParams();
   const graphState = searchParams.get('graph');
+  const { key: locationKey } = useLocation();
+  const syncedGraphState = useRef<string | null>(undefined);
 
   useRendererEvents(orchestrator, {
     compositeProjectNodeDoubleTap: ({ data }) => {
@@ -173,11 +176,14 @@ function ProjectsShellInner() {
   }, [rankDir]);
 
   useEffect(() => {
-    if (!graphState || !orchestrator || graphState === serializedGraphState) {
-      return;
-    }
+    if (!orchestrator) return;
 
-    const result = restoreGraphState(graphState);
+    // Skip only our own URL update, not another navigation to the same snapshot.
+    const isUrlSync = graphState === syncedGraphState.current;
+    syncedGraphState.current = undefined;
+    if (!graphState || isUrlSync) return;
+
+    const result = restoreProjectGraphState(graphState, graphContext);
     if (!result) return;
 
     if (result.rendererConfig.rankDir !== rankDir) {
@@ -190,26 +196,29 @@ function ProjectsShellInner() {
     ) {
       setTheme(result.rendererConfig.theme);
     }
-  }, [graphState, orchestrator]);
+  }, [graphState, orchestrator, locationKey]);
 
   useEffect(() => {
+    const currentGraphParams = searchParams.get('graph');
+    if (
+      serializedGraphState === null
+        ? !currentGraphParams
+        : !serializedGraphState || currentGraphParams === serializedGraphState
+    ) {
+      return;
+    }
+
+    syncedGraphState.current = serializedGraphState;
     setSearchParams(
       (params) => {
-        const currentGraphParams = params.get('graph');
-
+        const nextParams = new URLSearchParams(params);
         // this means serialization went wrong
-        if (serializedGraphState === null && currentGraphParams) {
-          params.delete('graph');
-          return params;
+        if (serializedGraphState === null) {
+          nextParams.delete('graph');
+        } else {
+          nextParams.set('graph', serializedGraphState);
         }
-
-        if (
-          serializedGraphState &&
-          currentGraphParams !== serializedGraphState
-        ) {
-          params.set('graph', serializedGraphState);
-        }
-        return params;
+        return nextParams;
       },
       { preventScrollReset: true }
     );
