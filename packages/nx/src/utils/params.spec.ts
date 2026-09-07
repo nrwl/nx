@@ -81,6 +81,20 @@ describe('params', () => {
       expect(options).toEqual({
         overriddenOpt: 'config value',
       });
+
+      expect(target.options).toEqual({
+        overriddenOpt: 'target value',
+      });
+      expect(
+        combineOptionsForExecutor(
+          {},
+          undefined,
+          target,
+          schema,
+          'proj',
+          process.cwd()
+        )
+      ).toEqual({ overriddenOpt: 'target value' });
     });
 
     it('should combine target, configuration, and passed options', () => {
