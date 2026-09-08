@@ -25,7 +25,7 @@ Nx offers two complementary approaches to enforce module boundaries:
 
 Both approaches use the same tag-based constraint system described below.
 
-In the example on this page, `client` and `admin` may depend on the shared `utils` library, but `utils` must not import from either of them. The lint rule and the conformance check both report the dependency that crosses that boundary.
+Say `client` and `admin` may depend on a shared `utils` library, but `utils` must not import from either of them. The lint rule and the conformance check both report the dependency that crosses that boundary.
 
 ![utils importing from client is reported as a violation](../../../assets/features/module-boundaries-violation.svg)
 
