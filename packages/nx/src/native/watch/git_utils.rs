@@ -5,21 +5,28 @@ use crate::native::utils::git::parent_gitignore_files;
 
 /// Collect .gitignore files using a simple approach that reuses walker logic
 fn collect_workspace_gitignores<P: AsRef<Path>>(root: P) -> Vec<PathBuf> {
+    collect_workspace_ignore_files(root, &[".gitignore"])
+}
+
+/// Collect ignore files with any of `names` anywhere in the workspace
+/// (node_modules pruned), returning absolute paths. `create_walker` honours
+/// `.ignore` and nested `.nxignore` in addition to `.gitignore`; the watch
+/// filterer discovers them the same way so the two agree on what is ignored.
+pub(in crate::native) fn collect_workspace_ignore_files<P: AsRef<Path>>(
+    root: P,
+    names: &[&str],
+) -> Vec<PathBuf> {
     use crate::native::walker::nx_walker_sync;
 
-    // Use our own walker to find .gitignore files, filtering out node_modules
-    let gitignore_filters = vec!["node_modules".to_string()];
-
+    let filters = vec!["node_modules".to_string()];
     let root_path = root.as_ref();
 
-    nx_walker_sync(&root, Some(&gitignore_filters))
+    nx_walker_sync(&root, Some(&filters))
         .filter_map(|relative_path| {
-            // Only process .gitignore files
-            if relative_path.file_name()?.to_str()? == ".gitignore" {
-                Some(root_path.join(&relative_path))
-            } else {
-                None
-            }
+            let name = relative_path.file_name()?.to_str()?;
+            names
+                .contains(&name)
+                .then(|| root_path.join(&relative_path))
         })
         .collect()
 }

@@ -1,12 +1,12 @@
 use ignore::Match;
-use ignore::gitignore::{Gitignore, GitignoreBuilder};
+use ignore::gitignore::{Gitignore, GitignoreBuilder, gitconfig_excludes_path};
 use notify::EventKind;
 use notify::event::{CreateKind, ModifyKind, RemoveKind};
 use std::path::PathBuf;
 use tracing::trace;
 
 use crate::native::walker::HARDCODED_IGNORE_PATTERNS;
-use crate::native::watch::git_utils::get_gitignore_files;
+use crate::native::watch::git_utils::{collect_workspace_ignore_files, get_gitignore_files};
 use crate::native::watch::types::RawWatchEvent;
 use crate::native::watch::utils::get_nx_ignore;
 
@@ -171,6 +171,54 @@ pub(super) fn create_filter(
                 .to_path_buf();
             git_ignores.push((dir, gitignore));
         }
+    }
+
+    // `.ignore` and nested `.nxignore` — create_walker honours both, so a
+    // directory they exclude must not reach the watcher (it would be inserted
+    // into the file map and then reported deleted on the next rescan, since the
+    // rescan walk drops it). The root `.nxignore` keeps its dedicated
+    // highest-precedence slot below, so it is skipped here.
+    if use_ignore {
+        let root_nxignore = PathBuf::from(origin).join(".nxignore");
+        for path in collect_workspace_ignore_files(origin, &[".ignore", ".nxignore"]) {
+            if path == root_nxignore {
+                continue;
+            }
+            let (gitignore, err) = Gitignore::new(&path);
+            if let Some(err) = err {
+                trace!(
+                    ?err,
+                    ?path,
+                    "error parsing ignore file, using partial result"
+                );
+            }
+            let dir = path.parent().unwrap_or(&path).to_path_buf();
+            git_ignores.push((dir, gitignore));
+        }
+
+        // `.git/info/exclude` and the global core.excludesFile: the canonical
+        // homes for local, uncommittable exclusions (scratch, secrets). Both
+        // are gitignore-format and apply workspace-wide, so they are rooted at
+        // origin (not at their own parent dir, which would break the prefix
+        // strip in matched_path_or_any_parents) and sit at the shallowest
+        // depth, below any per-directory rule.
+        let mut workspace_wide = GitignoreBuilder::new(origin);
+        let git_exclude = PathBuf::from(origin)
+            .join(".git")
+            .join("info")
+            .join("exclude");
+        if git_exclude.is_file()
+            && let Some(err) = workspace_wide.add(&git_exclude)
+        {
+            trace!(?err, ?git_exclude, "error parsing .git/info/exclude");
+        }
+        if let Some(global_excludes) = gitconfig_excludes_path()
+            && global_excludes.is_file()
+            && let Some(err) = workspace_wide.add(&global_excludes)
+        {
+            trace!(?err, ?global_excludes, "error parsing global gitignore");
+        }
+        git_ignores.push((PathBuf::from(origin), workspace_wide.build()?));
     }
 
     // Build additional globs as a synthetic gitignore rooted at origin

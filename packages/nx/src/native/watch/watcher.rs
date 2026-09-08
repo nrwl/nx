@@ -741,6 +741,40 @@ mod tests {
     }
 
     #[test]
+    fn git_info_exclude_is_honoured_like_the_walker() {
+        // `.git/info/exclude` is where local, uncommittable exclusions live
+        // (scratch dirs, secrets). create_walker honours it, so the filterer
+        // must too — otherwise those files reach the daemon, get hashed into
+        // the file map, and are broadcast to nx watch. The .gitignore control
+        // proves the exclude path is what does the filtering.
+        use notify::EventKind;
+        use notify::event::CreateKind;
+
+        let dir = tempdir().expect("tempdir");
+        let origin = dir.path().canonicalize().expect("canonicalize");
+        let origin_str = origin.to_str().expect("utf-8 path");
+        fs::create_dir_all(origin.join(".git/info")).expect("mkdir .git/info");
+        fs::write(origin.join(".git/info/exclude"), "secrets/\n").expect("write exclude");
+
+        let filterer = watch_filterer::create_filter(origin_str, &[], true).expect("filter");
+
+        let event = |rel: &str| {
+            RawWatchEvent::new(
+                notify::Event::new(EventKind::Create(CreateKind::File)).add_path(origin.join(rel)),
+            )
+        };
+
+        assert!(
+            !filterer.check_event(&event("secrets/deploy.key")),
+            "a path excluded via .git/info/exclude must be filtered, matching the walker"
+        );
+        assert!(
+            filterer.check_event(&event("src/index.ts")),
+            "an unexcluded path still passes"
+        );
+    }
+
+    #[test]
     fn hardcoded_ignores_veto_a_gitignore_negation() {
         // A Yarn Berry zero-install workspace ships `!.yarn/cache`, which as a
         // plain gitignore entry would un-ignore a hardcoded-ignored path. The
