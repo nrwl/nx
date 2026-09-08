@@ -32,12 +32,88 @@ import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 
 const require = createRequire(import.meta.url);
+/**
+ * The record store, injectable so this renderer serves more than one queue.
+ * `triage review` leaves TUI_STORE unset; `review review` points it at
+ * `.claude/tools/review`, which exports the same surface with PR-review records
+ * adapted to it. Duplicating 1400 lines of renderer to change where the rows come
+ * from would have been the alternative.
+ */
 // oxlint-disable-next-line @nx/enforce-module-boundaries -- the entry script is a plain file, not a project
-const triage = require('../triage');
+const triage = require(process.env.TUI_STORE || '../triage');
+
+/**
+ * Read-only mode. A store whose records are not approved from here (reviews are
+ * posted by /review-pending-pr-reviews, which needs the draft body) turns the
+ * mutating verbs off rather than letting a keypress write a status the apply path
+ * will never honour.
+ */
+/**
+ * A real glyph that prints as blank. An all-spaces line measures as EMPTY, and a
+ * marker slot that measures empty changes size the moment it gains text — which
+ * repainted the list one row lower for exactly the frame where an overflow marker
+ * appeared, then corrected itself. Reserving the row is not enough; the row has to
+ * contain something.
+ */
+
+/**
+ * Extra fixed-width list columns a store can ask for, rendered between the status
+ * and the kind marker. Triage exports none, so its rows are byte-identical to
+ * before; the review store asks for verdict and author.
+ */
+const COLUMNS: { key: string; width: number }[] = triage.COLUMNS ?? [];
+
+/** Statuses the store treats as done. Empty for triage, which keeps its own rule. */
+const TERMINAL_STATUSES: string[] = triage.TERMINAL_STATUSES ?? [];
+
+/**
+ * Store-declared key bindings. Each shells back to the store's own script with
+ * the selected record's number, so the decision the action makes stays testable
+ * on the CLI instead of living in a renderer. Triage declares none.
+ */
+const ACTIONS: { key: string; cmd: string; label: string }[] = triage.ACTIONS ?? [];
+const STORE_BIN = process.env.TUI_STORE || '';
+
+const READ_ONLY = process.env.TUI_READONLY === '1';
+const QUEUE_LABEL = process.env.TUI_TITLE || 'triage';
 
 /** One grey, so "secondary text" is a single decision rather than a prop that
  *  ink spelled `dimColor` and opentui spells as a colour. */
 const DIM = '#8a8a8a';
+
+/** Verdicts read at a glance or they are not worth a column. */
+const VERDICT_COLOR: Record<string, string> = {
+  lgtm: 'green',
+  'needs-changes': 'yellow',
+  blocked: 'red',
+  failed: 'red',
+  superseded: DIM,
+  unnecessary: DIM,
+};
+
+
+/** A link under the pointer. Bright enough to read as "this does something". */
+const HOVER = '#7dd3fc';
+
+/**
+ * A badge for who opened it, from GitHub's authorAssociation.
+ *
+ * Only two cases earn one. TEAM says "this needs no issue and can be merged by
+ * its author"; NEW says "this person has never contributed here before", which
+ * is the single fact most likely to change how a reply should be written. An
+ * ordinary CONTRIBUTOR gets nothing — a badge on almost every row stops being a
+ * signal.
+ */
+function authorBadge(assoc: string): { t: string; color: string } | null {
+  const a = String(assoc || '').toUpperCase();
+  if (a === 'OWNER' || a === 'MEMBER' || a === 'COLLABORATOR') {
+    return { t: 'TEAM', color: 'green' };
+  }
+  if (a === 'FIRST_TIME_CONTRIBUTOR' || a === 'FIRST_TIMER') {
+    return { t: 'NEW', color: 'magenta' };
+  }
+  return null;
+}
 
 /**
  * Enter submits; shift-enter makes a newline.
@@ -58,12 +134,19 @@ const NOTE_KEYS = [
 
 /** The one definition of what the list shows. Shared so a reload and the render
  *  can never disagree about which records are on screen. */
+/**
+ * "Unsettled" is the store's word, not this file's. Triage's is `pending` plus
+ * `failed`; the review store has eight live statuses and none of them is
+ * `pending`, so the hardcoded pair filtered its list down to nothing. A store
+ * that names its terminal statuses gets the complement instead.
+ */
 function visibleOf(records: Record_[], pendingOnly: boolean): Record_[] {
-  return pendingOnly
-    ? records.filter(
+  if (!pendingOnly) return records;
+  return TERMINAL_STATUSES.length
+    ? records.filter((r) => !TERMINAL_STATUSES.includes(String(r.front.status)))
+    : records.filter(
         (r) => r.front.status === 'pending' || r.front.status === 'failed'
-      )
-    : records;
+      );
 }
 
 const STATUS_COLOR: Record<string, string> = {
@@ -77,7 +160,15 @@ const STATUS_COLOR: Record<string, string> = {
 
 type Record_ = { front: any; body: string; file: string };
 
-type Seg = { t: string; color?: string; dim?: boolean; bold?: boolean };
+type Seg = {
+  t: string;
+  color?: string;
+  dim?: boolean;
+  bold?: boolean;
+  /** Clicking this segment opens the URL. Per SEGMENT, not per line: a header
+   *  is `#36393 <title>`, and only the number should be a link. */
+  open?: string;
+};
 type Line = { segs: Seg[]; action?: 'copy-comment' };
 
 const ln = (...segs: Seg[]): Line => ({ segs });
@@ -96,8 +187,12 @@ const HELP: Line[] = [
     { t: '  j / k', color: 'cyan' },
     { t: '   or arrow keys — move between issues' }
   ),
-  ln({ t: '  a', color: 'green' }, { t: '        approve' }),
-  ln({ t: '  x', color: 'red' }, { t: '        reject' }),
+  ...(process.env.TUI_READONLY === '1'
+    ? [ln({ t: '  (read-only', color: '#8a8a8a' }, { t: ' — this queue is applied elsewhere)' })]
+    : [
+        ln({ t: '  a', color: 'green' }, { t: '        approve' }),
+        ln({ t: '  x', color: 'red' }, { t: '        reject' }),
+      ]),
   ln({ t: '  u', color: 'cyan' }, { t: '        back to pending' }),
   ln(
     { t: '  c', color: 'magenta' },
@@ -238,6 +333,81 @@ function wrapText(text: string, width: number, indent = 0): string[] {
   return out;
 }
 
+/**
+ * A URL for another issue or PR in the same repo, derived from this record's own
+ * url rather than a hardcoded owner/name.
+ *
+ * `/issues/<n>` is used for both: GitHub redirects it to `/pull/<n>` when the
+ * number is a pull request, so the link is right without having to know which
+ * it is — and the linked reference frequently does not say.
+ */
+function siblingUrl(url: string, n: number | string): string {
+  const base = String(url || '').replace(/\/(issues|pull)\/\d+.*$/, '');
+  return base ? `${base}/issues/${n}` : '';
+}
+
+/**
+ * Split prose into segments, marking URLs and `#123` references as links.
+ *
+ * Runs BEFORE wrapping, not after. wrapText hard-splits a token longer than the
+ * pane, so linkifying wrapped lines would turn one URL into two fragments each
+ * pointing at half an address. Wrapping the SEGMENTS instead carries the whole
+ * URL onto both halves, so either one opens the right page.
+ */
+function linkify(text: string, selfUrl: string): Seg[] {
+  const out: Seg[] = [];
+  // Stop a URL at whitespace or a closing bracket — prose wraps them in
+  // parentheses often enough that swallowing the `)` produces a dead link.
+  const re = /(https?:\/\/[^\s)\]>]+)|(#\d+)/g;
+  let last = 0;
+  for (const m of text.matchAll(re)) {
+    const at = m.index ?? 0;
+    if (at > last) out.push({ t: text.slice(last, at) });
+    let token = m[0];
+    // Sentence punctuation is prose, not address.
+    const trail = token.match(/[.,;:!?]+$/);
+    const tail = trail ? trail[0] : '';
+    if (tail) token = token.slice(0, -tail.length);
+    const url = token.startsWith('#')
+      ? siblingUrl(selfUrl, token.slice(1))
+      : token;
+    out.push(url ? { t: token, color: 'cyan', open: url } : { t: token });
+    if (tail) out.push({ t: tail });
+    last = at + m[0].length;
+  }
+  if (last < text.length) out.push({ t: text.slice(last) });
+  return out.length ? out : [{ t: text }];
+}
+
+/**
+ * Wrapped prose with live links. Paragraph breaks are preserved: wrapSegs knows
+ * nothing about newlines, so each paragraph is wrapped on its own.
+ */
+function proseLines(
+  text: string,
+  width: number,
+  indent: number,
+  selfUrl: string,
+  base: Partial<Seg> = {}
+): Line[] {
+  const pad = ' '.repeat(indent);
+  const out: Line[] = [];
+  for (const para of String(text).split('\n')) {
+    if (!para.trim()) {
+      out.push(blank);
+      continue;
+    }
+    // `base` styles the prose — dim for the rationale, magenta for a note —
+    // while links keep their own colour. A link that inherited `dim` would be
+    // the least visible thing on the line.
+    const segs = linkify(para, selfUrl).map((sg) =>
+      sg.open ? sg : { ...base, ...sg }
+    );
+    out.push(...wrapSegs([{ ...base, t: pad }, ...segs], width, indent));
+  }
+  return out;
+}
+
 function detailLines(record: Record_, width: number): Line[] {
   const { front, body } = record;
 
@@ -252,6 +422,29 @@ function detailLines(record: Record_, width: number): Line[] {
   const rationale = triage.section(body, 'Rationale');
   const feedback = triage.section(body, 'Feedback');
 
+  // A store whose records carry none of the triage sections (PR reviews name
+  // theirs `## Review draft`) would otherwise render an empty pane. Show the
+  // record's own prose instead of nothing.
+  if (!comment && !rationale && !feedback) {
+    const draft =
+      triage.section(body, 'Review draft') || body.replace(/^#[^\n]*\n/, '').trim();
+    // The cap is load-bearing, not tidiness. Measured: at 400 lines the list above
+    // shifts by a row at some cursor positions, at 120 it still does, at 40 and 15
+    // it does not. The list's own arithmetic is identical across shifted and
+    // unshifted frames, so the coupling is inside the renderer rather than in this
+    // file. 40 keeps it stable and still fills the pane; the whole draft is one
+    // `review show <PR>` away, and this pane is for status.
+    const all = wrapText(draft || '(no body)', width);
+    const CAP = 40;
+    const shown = all.slice(0, CAP).map((t) => ln({ t }));
+    if (all.length > CAP)
+      shown.push(
+        ln({ t: '' }),
+        ln({ t: `  … ${all.length - CAP} more lines — review show ${record.front.issue}`, color: DIM })
+      );
+    return shown;
+  }
+
   const out: Line[] = [];
   // The title wraps rather than truncating: it is the one field where the tail
   // carries as much meaning as the head, and a hanging indent keeps the issue
@@ -260,7 +453,7 @@ function detailLines(record: Record_, width: number): Line[] {
   const titleLines = wrapText(String(front.title || ''), width, head.length);
   out.push(
     ln(
-      { t: head, bold: true },
+      { t: head, bold: true, open: front.url },
       { t: (titleLines[0] || '').slice(head.length), color: 'cyan' }
     )
   );
@@ -317,7 +510,15 @@ function detailLines(record: Record_, width: number): Line[] {
     out.push(
       ln(
         { t: 'PR ', dim: true },
-        { t: `#${front.linked_pr} already targets this`, color: 'yellow' }
+        {
+          t: `#${String(front.linked_pr).replace(/^#/, '')}`,
+          color: 'yellow',
+          open: siblingUrl(
+            front.url,
+            String(front.linked_pr).replace(/^#/, '')
+          ),
+        },
+        { t: ' already targets this', color: 'yellow' }
       )
     );
   }
@@ -326,20 +527,83 @@ function detailLines(record: Record_, width: number): Line[] {
       ln(
         { t: 'close ', dim: true },
         {
-          t: `CLOSES this issue as "${front.close_reason}"`,
+          t: `CLOSES this ${front.kind === 'pr' ? 'PR' : 'issue'} as "${front.close_reason}"`,
           color: 'red',
           bold: true,
         }
       )
     );
   }
-  if (front.repro) {
-    // Wrapped WITH the indent, like every other field: wrapping to the full
-    // width and then adding the label and a six-space hang made every line six
-    // columns too long, and the terminal hard-wrapped the tail to column 0.
-    const w = wrapText(front.repro, width, 6);
-    out.push(ln({ t: 'repro ', dim: true }, { t: (w[0] || '').slice(6) }));
-    for (const l of w.slice(1)) out.push(ln({ t: l }));
+  // PR-only rows. They come before `repro` because on a pull request they are
+  // the evidence the whole judgement rests on: whether CI is green decides the
+  // draft, and whether an issue is linked decides whether it should exist.
+  if (front.author) {
+    const badge = authorBadge(front.author_assoc);
+    out.push(
+      ln(
+        { t: 'from   ', dim: true },
+        { t: `@${front.author}` },
+        ...(badge
+          ? ([
+              { t: '  ' },
+              { t: badge.t, color: badge.color, bold: true },
+            ] as Seg[])
+          : []),
+        ...(front.author_assoc
+          ? ([
+              { t: `  ${front.author_assoc.toLowerCase()}`, dim: true },
+            ] as Seg[])
+          : [])
+      )
+    );
+  }
+
+  if (front.kind === 'pr') {
+    const ci = String(front.ci || 'unknown');
+    const bad = /FAIL|ERROR|RED/i.test(ci);
+    out.push(
+      ln(
+        { t: 'ci     ', dim: true },
+        {
+          t: ci,
+          color: bad ? 'red' : /SUCCESS|PASS/i.test(ci) ? 'green' : 'yellow',
+        }
+      )
+    );
+    const linked = String(front.linked || '');
+    out.push(
+      ln(
+        { t: 'linked ', dim: true },
+        linked && linked !== 'none'
+          ? {
+              t: linked,
+              color: 'cyan',
+              open: /^#?\d+$/.test(linked.trim())
+                ? siblingUrl(front.url, linked.trim().replace(/^#/, ''))
+                : undefined,
+            }
+          : { t: 'no linked issue', color: 'yellow' }
+      )
+    );
+    if (front.draft === 'true') {
+      out.push(
+        ln(
+          { t: 'draft  ', dim: true },
+          { t: 'CONVERTS this PR to a draft', color: 'yellow' }
+        )
+      );
+    }
+  }
+
+  // Reproduction reads like the comment does — its own heading and an indented
+  // body — because it is prose with paragraphs and commands in it, not a field.
+  // It used to be a frontmatter scalar rendered with a hanging indent, which
+  // flattened every paragraph break into one unbroken wall.
+  const repro = triage.section(body, 'Reproduction');
+  if (repro) {
+    out.push(blank);
+    out.push(ln({ t: 'reproduction', dim: true }));
+    out.push(...proseLines(repro, width, 2, front.url));
   }
 
   if (comment && comment !== '_none_') {
@@ -355,7 +619,7 @@ function detailLines(record: Record_, width: number): Line[] {
       ],
       action: 'copy-comment',
     });
-    for (const l of wrapText(comment, width, 2)) out.push(ln({ t: l }));
+    out.push(...proseLines(comment, width, 2, front.url));
   } else {
     out.push(blank);
     out.push(ln({ t: 'no comment', dim: true }));
@@ -364,15 +628,15 @@ function detailLines(record: Record_, width: number): Line[] {
   if (rationale && rationale !== '_none given_') {
     out.push(blank);
     out.push(ln({ t: 'why', dim: true }));
-    for (const l of wrapText(rationale, width, 2))
-      out.push(ln({ t: l, dim: true }));
+    out.push(...proseLines(rationale, width, 2, front.url, { dim: true }));
   }
 
   if (feedback) {
     out.push(blank);
     out.push(ln({ t: 'your note back to the agent', color: 'magenta' }));
-    for (const l of wrapText(feedback, width, 2))
-      out.push(ln({ t: l, color: 'magenta' }));
+    out.push(
+      ...proseLines(feedback, width, 2, front.url, { color: 'magenta' })
+    );
   }
 
   return out;
@@ -393,6 +657,34 @@ const renderer = await createCliRenderer({ exitOnCtrlC: false });
  * ctrl-c path.
  */
 const cleanups: Array<() => void> = [];
+
+/**
+ * Put the terminal back by hand, synchronously.
+ *
+ * `renderer.destroy()` schedules these writes, and an immediate `process.exit()`
+ * beats the flush. Measured: quitting with `q` leaves cleanly, but SIGTERM —
+ * which is what closing the pane sends — left ?1000, ?1002, ?1003 and ?1006 all
+ * still enabled, so the caller's shell kept receiving mouse reports as garbage
+ * input. Same shape as opentui #904 and #509.
+ *
+ * Idempotent, and safe to run after a clean teardown has already done it:
+ * turning off a mode that is already off is a no-op.
+ */
+let restored = false;
+function restoreTerminal(): void {
+  if (restored) return;
+  restored = true;
+  try {
+    process.stdout.write(
+      '\x1b[?1003l\x1b[?1002l\x1b[?1000l\x1b[?1006l' + // mouse reporting
+        '\x1b[?2004l' + // bracketed paste
+        '\x1b[?1049l' + // alternate screen
+        '\x1b[?25h' // cursor
+    );
+  } catch {
+    /* nothing useful to do if stdout is already gone */
+  }
+}
 
 /** Leave the screen, then print. Anything written while the renderer owns the
  *  terminal is destroyed along with the alternate buffer. */
@@ -437,11 +729,20 @@ function App() {
   // message twice still restarts the dismiss timer — without it, React sees an
   // unchanged string, the effect never re-runs, and the second message would
   // inherit whatever was left of the first one's countdown.
+  // Which link the pointer is over, keyed by URL. Without a hover state a link
+  // is indistinguishable from the text beside it until you click and something
+  // unexpected happens — the affordance has to be visible before the click.
+  const [hoverUrl, setHoverUrl] = useState<string | null>(null);
   const [flash, setFlashState] = useState<{ text: string; seq: number }>({
     text: '',
     seq: 0,
   });
-  const [pendingOnly, setPendingOnly] = useState(false);
+  // Defaults to the store's preference: a review list is mostly settled records
+  // (23 dismissed and 20 posted against 17 live at the time of writing), so
+  // opening on everything buries the work. Triage leaves it off as before.
+  const [pendingOnly, setPendingOnly] = useState(
+    triage.DEFAULT_PENDING_ONLY ?? false
+  );
   // One resize listener for the whole app: FullScreenBox sizes the frame from
   // the same hook, so a second subscription here could disagree with it for a
   // frame and budget the detail pane against a stale height.
@@ -619,6 +920,7 @@ function App() {
       front.status = status;
       const next = note
         ? triage.buildBody({
+            repro: triage.section(body, 'Reproduction'),
             comment: triage.section(body, 'Comment'),
             rationale: triage.section(body, 'Rationale'),
             feedback: note,
@@ -673,28 +975,34 @@ function App() {
     }
   }, [current, setFlash]);
 
+  const openUrl = useCallback(
+    (url: string, label?: string) => {
+      if (!url) {
+        setFlash('no url for that');
+        return;
+      }
+      // Detached and unref'd: the browser outlives the review session, and a
+      // blocking spawn would freeze the TUI behind whatever the opener does.
+      const [cmd, args] =
+        process.platform === 'darwin'
+          ? ['open', [url]]
+          : process.platform === 'win32'
+            ? ['cmd', ['/c', 'start', '', url]]
+            : ['xdg-open', [url]];
+      const child = spawn(cmd, args, { detached: true, stdio: 'ignore' });
+      // spawn reports a missing opener asynchronously, so a try/catch would
+      // miss it. Fall back to showing the URL, which is the useful thing anyway.
+      child.on('error', () => setFlash(url));
+      child.unref();
+      setFlash(`opened ${label || url}`);
+    },
+    [setFlash]
+  );
+
   const openInBrowser = useCallback(() => {
     if (!current) return;
-    const { url, issue } = current.front;
-    if (!url) {
-      setFlash('no url on this record');
-      return;
-    }
-    // Detached and unref'd: the browser outlives the review session, and a
-    // blocking spawn would freeze the TUI behind whatever the opener does.
-    const [cmd, args] =
-      process.platform === 'darwin'
-        ? ['open', [url]]
-        : process.platform === 'win32'
-          ? ['cmd', ['/c', 'start', '', url]]
-          : ['xdg-open', [url]];
-    const child = spawn(cmd, args, { detached: true, stdio: 'ignore' });
-    // spawn reports a missing opener asynchronously, so a try/catch would miss
-    // it. Fall back to showing the URL, which is the useful thing anyway.
-    child.on('error', () => setFlash(url));
-    child.unref();
-    setFlash(`opened #${issue}`);
-  }, [current]);
+    openUrl(current.front.url, `#${current.front.issue}`);
+  }, [current, openUrl]);
 
   // Commands arrive from the supervising agent while the reviewer is mid-queue.
   // The handler goes through a ref so the poll interval can be created ONCE:
@@ -803,10 +1111,22 @@ function App() {
     if (k.name === 'q' || (k.ctrl && k.name === 'c')) quit();
     else if (k.name === 'j' || k.name === 'down') moveBy(1);
     else if (k.name === 'k' || k.name === 'up') moveBy(-1);
-    else if (k.name === 'a') setStatus('approved');
-    else if (k.name === 'x') setStatus('rejected');
+    else if (ACTIONS.some((a) => a.key === k.sequence) && current) {
+      const act = ACTIONS.find((a) => a.key === k.sequence)!;
+      // Detached and ignored: the action opens or focuses a tab elsewhere, and
+      // this process owns the screen. Waiting on it would freeze the pane behind
+      // whatever it started.
+      spawn(STORE_BIN, [act.cmd, String(current.front.issue)], {
+        detached: true,
+        stdio: 'ignore',
+      }).unref();
+    }
+    else if (k.name === 'a') { if (!READ_ONLY) setStatus('approved'); }
+    else if (k.name === 'x') { if (!READ_ONLY) setStatus('rejected'); }
     else if (k.name === 'u') setStatus('pending');
-    else if (k.name === 'c') {
+    else if (k.name === 'c' && READ_ONLY) {
+      /* no changes-requested path when the queue is applied elsewhere */
+    } else if (k.name === 'c') {
       commentTargetRef.current = currentIssueRef.current;
       setMode('comment');
     } else if (k.name === 'e') openEditor();
@@ -830,7 +1150,7 @@ function App() {
     return (
       <box padding={1}>
         <text fg={DIM}>
-          Nothing staged. The agent writes records with `triage stage`.
+          Nothing staged. The agent writes records with `{QUEUE_LABEL} stage`.
         </text>
       </box>
     );
@@ -846,6 +1166,13 @@ function App() {
   // Solved in two passes because it is circular: whether a marker is needed
   // depends on how many issue rows fit, which depends on how many markers take
   // a line. Two passes settle it for any list length.
+  //
+  // `reserve` counts the markers that will ACTUALLY render, and `count` gives the
+  // rows back accordingly, so the block is LIST_H tall wherever the cursor sits.
+  // Reserving both slots unconditionally looks equivalent and is not: an empty
+  // slot renders zero lines here — `height={1}` does not hold a row open for text
+  // that measures empty — so the block came out a line short at each end and the
+  // detail pane moved as you scrolled past it.
   let count = Math.min(LIST_H, visible.length);
   let start = 0;
   for (let pass = 0; pass < 2; pass++) {
@@ -873,19 +1200,43 @@ function App() {
     <box flexDirection="column" width="100%" height="100%">
       <box paddingLeft={1}>
         <text>
-          <b>triage </b>
+          <b>{QUEUE_LABEL} </b>
           <span fg={DIM}>
-            {Object.entries(counts)
-              .map(([st, n]) => `${n} ${st}`)
-              .join(', ')}
-            {pendingOnly ? '  (showing unsettled only)' : ''}
+            {truncate(
+              Object.entries(counts)
+                .map(([st, n]) => `${n} ${st}`)
+                .join(', ') + (pendingOnly ? '  (showing unsettled only)' : ''),
+              // One line, whatever the store's status vocabulary is. Reviews have
+              // eight statuses to triage's six, and a wrapped header grows this box
+              // and pushes the list down a row.
+              Math.max(20, size.cols - QUEUE_LABEL.length - 3)
+            )}
           </span>
         </text>
       </box>
 
       {/* flexShrink on the CONTAINER too: its children no longer shrink, so a
           shrinking parent would just let them spill over the pane below it. */}
-      <box flexDirection="column" marginTop={1} flexShrink={0}>
+      <box
+        flexDirection="column"
+        marginTop={1}
+        flexShrink={0}
+        // The wheel moves the SELECTION, not a separate scroll offset. The
+        // window is derived from the selection, so a scroll that moved the view
+        // without moving the cursor would leave the highlighted row off screen —
+        // and the next `a` would act on something the reviewer cannot see.
+        onMouseScroll={(e: {
+          scroll?: {
+            direction: 'up' | 'down' | 'left' | 'right';
+            delta: number;
+          };
+        }) => {
+          const sc = e.scroll;
+          if (!sc || (sc.direction !== 'up' && sc.direction !== 'down')) return;
+          const step = Math.max(1, Math.min(3, sc.delta || 1));
+          moveBy(sc.direction === 'down' ? step : -step);
+        }}
+      >
         {hiddenAbove ? (
           // A row like any other, so it cannot land on top of one. Clicking it
           // pages the selection that way — the window follows the selection, so
@@ -901,7 +1252,10 @@ function App() {
         {rows.map((r) => {
           const selected = r === current;
           const head = `#${r.front.issue} `;
-          const title = truncate(r.front.title, r.front.close_reason ? 46 : 52);
+          // `?? ''` rather than trusting the store: truncate returns its input
+          // unchanged when falsy, so a record with no `title:` reached `.length`
+          // and took the whole renderer down on that row.
+          const title = truncate(r.front.title ?? '', r.front.close_reason ? 46 : 52);
           // Every row writes the FULL width. The renderer repaints the cells an
           // element covers, so a row that gets shorter than the one previously
           // drawn on that line leaves the tail of the old title behind. Padding
@@ -909,6 +1263,9 @@ function App() {
           const used =
             3 +
             18 +
+            COLUMNS.reduce((n, c) => n + c.width, 0) +
+            3 + // the kind marker column
+            5 + // the author badge column
             (r.front.close_reason ? 6 : 0) +
             head.length +
             title.length;
@@ -920,20 +1277,60 @@ function App() {
               key={r.front.issue}
               width="100%"
               flexShrink={0}
+              // Explicitly a row. It held one <text> before; now that the number
+              // is its own element for the link, the default column direction
+              // would stack the parts down the screen.
+              flexDirection="row"
               onMouseDown={() => setSelectedIssue(Number(r.front.issue))}
             >
-              <text>
+              <text flexShrink={0}>
                 <span fg="cyan">{selected ? ' > ' : '   '}</span>
                 <span fg={STATUS_COLOR[r.front.status] || 'white'}>
                   {String(r.front.status).padEnd(18)}
                 </span>
+                {COLUMNS.map((c) => (
+                  <span
+                    key={c.key}
+                    fg={c.key === 'verdict' ? VERDICT_COLOR[r.front[c.key]] || DIM : DIM}
+                  >
+                    {truncate(String(r.front[c.key] ?? ''), c.width - 1).padEnd(c.width)}
+                  </span>
+                ))}
+                {/* Fixed width, like the badge: an issue row and a PR row have
+                    to put their numbers in the same column. */}
+                <span fg="cyan">{r.front.kind === 'pr' ? 'PR ' : '   '}</span>
                 {r.front.close_reason ? <span fg="red">{'CLOSE '}</span> : null}
-                <span>
-                  {head}
-                  {title}
-                </span>
-                <span>{fill}</span>
+                {(() => {
+                  // Padded to a fixed width so the numbers stay in a column
+                  // whether or not a row has a badge — a ragged left edge on the
+                  // issue numbers costs more than the badge gains.
+                  const b = authorBadge(r.front.author_assoc);
+                  return b ? (
+                    <span fg={b.color}>{b.t.padEnd(5)}</span>
+                  ) : (
+                    <span>{'     '}</span>
+                  );
+                })()}
               </text>
+              {/*
+                The number is its own element so it can be a link while the rest
+                of the row stays a select target. Both fire on a click here, and
+                that is the intended behaviour: clicking an issue number selects
+                it AND opens it, which is what you wanted from the click anyway.
+              */}
+              <text
+                flexShrink={0}
+                fg={hoverUrl === r.front.url ? HOVER : undefined}
+                onMouseOver={() => setHoverUrl(r.front.url)}
+                onMouseOut={() =>
+                  setHoverUrl((h) => (h === r.front.url ? null : h))
+                }
+                onMouseDown={() => openUrl(r.front.url, `#${r.front.issue}`)}
+              >
+                {head}
+              </text>
+              <text flexShrink={0}>{title}</text>
+              <text flexShrink={0}>{fill}</text>
             </box>
           );
         })}
@@ -950,6 +1347,16 @@ function App() {
 
       <scrollbox
         flexGrow={1}
+        // Defensive, not the fix: a flex item's minimum size defaults to its
+        // content, and pinning it to 0 is correct regardless. It did NOT stop the
+        // list above from shifting — measured, with a 400-line detail it still
+        // moved. What stops it is capping the line COUNT below (see detailLines):
+        // past roughly 40 children this scrollbox perturbs its sibling's layout,
+        // and I did not find why. Nothing in the list's own arithmetic is
+        // involved — instrumenting it showed identical H/count/start/hidden
+        // values across a shifted and an unshifted frame.
+        minHeight={0}
+        flexShrink={1}
         marginTop={1}
         border
         borderColor={DIM}
@@ -1003,7 +1410,33 @@ function App() {
                     // long line clip at the pane edge, as it did when the whole
                     // line was a single <text>, instead of silently losing
                     // characters spread across the row.
-                    <text key={j} flexShrink={0} fg={sg.dim ? DIM : sg.color}>
+                    <text
+                      key={j}
+                      flexShrink={0}
+                      // Per-segment, so only the number is a link and the title
+                      // beside it is not. A whole-line target would open the
+                      // browser on any click in the pane.
+                      fg={
+                        sg.open && hoverUrl === sg.open
+                          ? HOVER
+                          : sg.dim
+                            ? DIM
+                            : sg.color
+                      }
+                      onMouseOver={
+                        sg.open ? () => setHoverUrl(sg.open!) : undefined
+                      }
+                      onMouseOut={
+                        sg.open
+                          ? () => setHoverUrl((h) => (h === sg.open ? null : h))
+                          : undefined
+                      }
+                      onMouseDown={
+                        sg.open
+                          ? () => openUrl(sg.open!, sg.t.trim())
+                          : undefined
+                      }
+                    >
                       {sg.t}
                     </text>
                   ))}
@@ -1062,8 +1495,18 @@ function App() {
               <span>esc closes</span>
             ) : (
               <span>
-                <span fg="green">a</span> approve · <span fg="red">x</span>{' '}
-                reject · <span fg="magenta">c</span> comment ·{' '}
+                {ACTIONS.map((a) => (
+                  <span key={a.key}>
+                    <span fg="cyan">{a.key}</span>
+                    {` ${a.label} · `}
+                  </span>
+                ))}
+                {!READ_ONLY && (
+                  <>
+                    <span fg="green">a</span> approve · <span fg="red">x</span>{' '}
+                    reject · <span fg="magenta">c</span> comment ·{' '}
+                  </>
+                )}
                 <span fg="cyan">?</span> keys
               </span>
             )}
@@ -1096,7 +1539,7 @@ function summarize() {
   process.stdout.write(`${total} staged: ${parts.join(', ')}\n`);
   if (counts.approved) {
     process.stdout.write(
-      'run `.claude/tools/triage apply` to apply the approved ones\n'
+      `run \`.claude/tools/${QUEUE_LABEL === 'triage' ? 'triage' : QUEUE_LABEL}\` apply to apply the approved ones\n`
     );
   }
   if (counts['changes-requested']) {
@@ -1108,6 +1551,10 @@ function summarize() {
 
 // The renderer owns the alternate screen, the mouse and the render loop; the
 // summary prints from quit(), after destroy() has handed the terminal back.
+// A final guarantee. Any exit that skips the paths above — an uncaught throw,
+// an explicit process.exit elsewhere — still gets the terminal back.
+process.on('exit', restoreTerminal);
+
 createRoot(renderer).render(<App />);
 
 // A pane killed from outside does not run exit handlers on its own, and would
@@ -1122,6 +1569,9 @@ for (const sig of ['SIGTERM', 'SIGHUP'] as const) {
       }
     }
     renderer.destroy();
+    // After destroy, because destroy is what enables them again on some paths,
+    // and before exit, because exit does not wait for destroy's own writes.
+    restoreTerminal();
     process.exit(130);
   });
 }
