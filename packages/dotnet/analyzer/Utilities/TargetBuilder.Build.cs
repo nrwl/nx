@@ -59,7 +59,6 @@ public static partial class TargetBuilder
             [
                 productionInput,
                 $"^{productionInput}",
-                "{workspaceRoot}/.editorconfig",
                 new { workingDirectory = "absolute" },
                 new { dependentTasksOutputFiles = "**/*" },
                 new { env = "NUGET_PACKAGES" },

@@ -76,6 +76,7 @@ public static class Analyzer
 
         var nodesByFile = new Dictionary<string, NxProjectGraphNode>();
         var referencesByRoot = new Dictionary<string, ReferencesInfo>();
+        var evaluationInputs = new SortedSet<string>(StringComparer.Ordinal);
 
         // Group nodes by project file path to handle multi-targeting projects.
         // Multi-targeting projects (using TargetFrameworks plural) create multiple nodes:
@@ -149,14 +150,31 @@ public static class Analyzer
                     var projectName = ProjectUtilities.GetProjectName(primaryNode.ProjectInstance);
                     var projectDirectory = Path.GetDirectoryName(projectPath)!;
 
-                    // The closest Directory.Build.* / Directory.Solution.* ancestors that exist
-                    // for this project — declared as inputs on every target that already has an
-                    // Inputs array, so Nx invalidates downstream caches when they change.
+                    // Everything outside the project directory that feeds the build — the nearest
+                    // Directory.* ancestors, every file MSBuild imported, and sources or analyzer
+                    // files linked in from elsewhere — declared as inputs on every target that
+                    // already has an Inputs array. Imports and items are unioned across inner
+                    // builds, since a conditional import can differ per target framework.
+                    var instances = nodes
+                        .Select(n => n.ProjectInstance)
+                        .Where(instance => instance is not null)
+                        .Select(instance => instance!)
+                        .ToList();
+                    var importPaths = instances.SelectMany(instance => instance.ImportPaths).ToList();
+                    var linkedFiles = instances
+                        .SelectMany(instance => LinkedItemTypes.SelectMany(instance.GetItems))
+                        .Select(item => item.GetMetadataValue("FullPath"));
                     var directoryBuildInputs = ProjectUtilities.GetDirectoryBuildInputs(
-                        projectPath,
-                        workspaceRoot,
-                        directoryFilesByDir
-                    );
+                            projectPath,
+                            workspaceRoot,
+                            directoryFilesByDir
+                        )
+                        .Concat(ProjectUtilities.GetSharedInputs(projectDirectory, workspaceRoot, importPaths.Concat(linkedFiles)))
+                        .Distinct()
+                        .ToList();
+
+                    evaluationInputs.Add(relativeProjectFile);
+                    evaluationInputs.UnionWith(ProjectUtilities.GetWorkspaceRelativePaths(workspaceRoot, importPaths));
 
                     var targets = TargetBuilder.BuildTargets(
                         projectName,
@@ -202,9 +220,16 @@ public static class Analyzer
         return new AnalysisResult
         {
             NodesByFile = nodesByFile,
-            ReferencesByRoot = referencesByRoot
+            ReferencesByRoot = referencesByRoot,
+            EvaluationInputs = evaluationInputs.ToList()
         };
     }
+
+    /// <summary>
+    /// Item types whose includes are build inputs. Only entries resolving outside the
+    /// project directory are declared; the rest are covered by the {projectRoot} input.
+    /// </summary>
+    private static readonly string[] LinkedItemTypes = { "Compile", "AdditionalFiles", "EmbeddedResource", "Content" };
 
     private static List<PackageReference> CollectPackageReferences(ProjectInstance project)
     {
