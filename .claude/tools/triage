@@ -106,16 +106,41 @@ const EVENTS_FILE = path.join(STATE_DIR, 'events.jsonl');
 const COMMANDS_FILE = path.join(STATE_DIR, 'commands.jsonl');
 
 /**
- * Best-effort, exactly like the journal: a bus that cannot be written must
- * never fail the record write it was reporting on.
+ * Append to a bus. Never fatal — a bus write that fails must not fail the record
+ * write it was reporting on — but never silent either.
+ *
+ * It used to swallow the error outright, which made the bus *invisibly* lossy:
+ * a full disk or a read-only state dir looked exactly like a quiet queue, and
+ * the one thing that lives ONLY here — a note — was gone with nothing said. The
+ * record files are still the source of truth for everything that has one, so
+ * degrading is correct; degrading in silence is not.
  */
+let busError = null;
+let busWarned = false;
 function appendJsonl(file, obj) {
   try {
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.appendFileSync(file, JSON.stringify({ ts: new Date().toISOString(), ...obj }) + '\n');
-  } catch {
-    /* the bus is a convenience, never a dependency */
+    return true;
+  } catch (e) {
+    busError = e.code || e.message;
+    // Once per process, and never from inside the TUI: a stderr write there
+    // lands on the alternate screen as garbage. The TUI reads busError()
+    // instead and puts it in the status line.
+    if (require.main === module && !busWarned) {
+      busWarned = true;
+      process.stderr.write(
+        `triage: events bus write failed (${busError}) at ${rel(file)} — ` +
+          `decisions may not reach the agent; records on disk are unaffected\n`
+      );
+    }
+    return false;
   }
+}
+
+/** The last bus failure, for a caller that can surface it better than stderr. */
+function lastBusError() {
+  return busError;
 }
 
 /**
@@ -128,6 +153,58 @@ function appendJsonl(file, obj) {
  */
 function notifyReload() {
   appendJsonl(COMMANDS_FILE, { type: 'reload' });
+}
+
+/**
+ * A message to the supervising agent ABOUT a record, changing nothing on it.
+ *
+ * `changes-requested` is the channel for "this record is wrong, restage it".
+ * This is the one for "and also do X" — file a Linear ticket, ping someone —
+ * which has nothing to do with the mutations the record has prepared and must
+ * not gate them. Putting it on the events bus rather than in the record keeps
+ * that separation literal: the note is addressed to the agent, it is never
+ * written to GitHub, and it outlives `apply` archiving the record it names.
+ */
+function appendNote(issue, note) {
+  const text = String(note || '').trim();
+  if (!text) return null;
+  // The title rides along so the watcher can name the issue without reopening
+  // the record — which by then may be archived, or gone. Resolved rather than
+  // read straight through readRecord: that one `fail`s, which is process.exit,
+  // so a try/catch around it would never run.
+  const file = resolveRecordPath(issue);
+  const title = file ? readRecord(issue).front.title || '' : '';
+  const entry = { type: 'note', issue: Number(issue), title, note: text };
+  appendJsonl(EVENTS_FILE, entry);
+  return entry;
+}
+
+/**
+ * Every note on the bus, oldest first.
+ *
+ * No read cursor, the same as `feedback`: the queue lives about as long as the
+ * session that staged it, and the agent holds in its own context which notes it
+ * has already acted on. A second state file to track that would be a second
+ * thing to get out of sync.
+ */
+function listNotes() {
+  let raw = '';
+  try {
+    raw = fs.readFileSync(EVENTS_FILE, 'utf8');
+  } catch {
+    return [];
+  }
+  const out = [];
+  for (const line of raw.split('\n')) {
+    if (!line.trim()) continue;
+    try {
+      const e = JSON.parse(line);
+      if (e.type === 'note' && e.note) out.push(e);
+    } catch {
+      /* a torn line is not worth losing the rest of the bus over */
+    }
+  }
+  return out;
 }
 
 const STATUSES = [
@@ -273,8 +350,23 @@ function writeRecord(front, body) {
   fs.writeFileSync(file, content);
   journal(front.issue, content);
 
+  emitRecordEvent(front, body, from);
+  // A rejection is final — nothing downstream ever acts on one — so it leaves
+  // the review list the moment it is made, the way `apply` retires a record it
+  // has written to GitHub. Here rather than at each call site because, unlike
+  // apply, there is no "did the gh call succeed" to branch on: `x` in the TUI
+  // and `triage set <N> rejected` are the same decision and must not diverge.
+  // After the event, so the bus still carries the transition into `rejected`.
+  if (front.status === 'rejected') {
+    archiveRecord(front.issue);
+    return path.join(ARCHIVE_DIR, `${front.issue}.md`);
+  }
+  return file;
+}
+
+function emitRecordEvent(front, body, from) {
   const note = (section(body, 'Feedback') || '').split('\n').find((l) => l.trim()) || '';
-  appendJsonl(EVENTS_FILE, {
+  return appendJsonl(EVENTS_FILE, {
     type: from === null ? 'staged' : from === front.status ? 'updated' : 'status',
     issue: front.issue,
     title: front.title || '',
@@ -283,7 +375,50 @@ function writeRecord(front, body) {
     close_reason: front.close_reason || '',
     note: note.trim().slice(0, 240),
   });
-  return file;
+}
+
+/**
+ * Report a record that changed on disk WITHOUT going through writeRecord.
+ *
+ * Two paths do that: `e` in the TUI hands the file straight to $EDITOR, and
+ * `recover` restores one from the journal. Both leave the bus silent, so an
+ * agent watching it slept through a decision the reviewer really made.
+ *
+ * `from` is the status the caller saw before the edit, which is the one thing
+ * the file can no longer tell us once it has been overwritten.
+ *
+ * Tolerant on purpose: $EDITOR can leave frontmatter that does not parse, and
+ * readRecord answers that with `fail`, which is process.exit — inside the TUI
+ * that would take the screen down while reporting an edit.
+ */
+/**
+ * Report a record leaving the live review list without a status change — `rm`
+ * and `prune`. The status is unchanged, so emitRecordEvent would call it an
+ * `updated` and say nothing about the one thing that happened.
+ */
+function emitRemoved(front) {
+  return appendJsonl(EVENTS_FILE, {
+    type: 'removed',
+    issue: front.issue,
+    title: front.title || '',
+    from: front.status,
+    to: front.status,
+  });
+}
+
+function emitEdit(issue, from) {
+  const file = resolveRecordPath(issue);
+  if (!file) return null;
+  try {
+    const text = fs.readFileSync(file, 'utf8');
+    const m = text.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
+    if (!m) return null;
+    const front = parseFrontmatter(m[1], rel(file));
+    emitRecordEvent(front, m[2], from ?? null);
+    return front.status;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -1011,6 +1146,207 @@ function cmdFeedback(args) {
   }
 }
 
+function cmdNote(args) {
+  const n = requireIssue(args);
+  // Strict about the record existing, unlike appendNote: at the CLI the number
+  // is typed, and a note filed against #3677 instead of #36775 is just lost.
+  if (!resolveRecordPath(n)) fail(`no record for #${n} to note against`);
+  const rest = args.slice();
+  rest.splice(rest.findIndex((a) => /^\d+$/.test(a)), 1);
+  const text = rest.join(' ').trim();
+  if (!text) fail('nothing to say. e.g. triage note 36775 "open a linear ticket too"');
+  appendNote(n, text);
+  console.log(`noted on #${n}`);
+}
+
+/**
+ * Notes the reviewer left for the agent.
+ *
+ * `--count` and `--since` exist for the watcher, which keeps its cursor as a
+ * plain integer so it never has to parse JSON in bash — note text is arbitrary
+ * prose and sed would eventually meet a quote it mangles.
+ */
+function cmdNotes(args) {
+  const notes = listNotes();
+  if (args.includes('--json')) {
+    console.log(JSON.stringify(notes, null, 2));
+    return;
+  }
+  if (args.includes('--count')) {
+    console.log(notes.length);
+    return;
+  }
+  const sinceArg = args.find((a) => a.startsWith('--since='));
+  if (sinceArg) {
+    const since = Number(sinceArg.split('=')[1] || 0);
+    for (const e of notes.slice(since)) {
+      console.log(`#${e.issue} NOTE — ${truncate(e.title || '', 70)}`);
+      console.log(indent(e.note));
+    }
+    return;
+  }
+  if (!notes.length) {
+    console.log('no notes');
+    return;
+  }
+  for (const e of notes) {
+    console.log(`#${e.issue}  ${e.title || ''}`.trimEnd());
+    console.log(indent(e.note));
+    console.log('');
+  }
+}
+
+/**
+ * Report each review decision as it lands, for the Monitor tool.
+ *
+ *   Monitor(command: ".claude/tools/triage monitor",
+ *           description: "triage review decisions", timeout_ms: 3600000)
+ *
+ * Arm it after staging and keep working: approvals, rejections, changes-requested
+ * notes and `n` notes arrive as notifications instead of anyone polling `list`.
+ * Exits once nothing is pending, which ends the watch.
+ *
+ * This reads the EVENTS BUS, not the record files. The bus carries the
+ * transition — `{from: 'pending', to: 'rejected'}` — so a record that archives
+ * itself on the way out has already been reported by the time it moves. The
+ * previous implementation diffed directory snapshots, which could only see
+ * records that still EXISTED at the end of the tick: a record going
+ * approved -> applied -> archived produced no line at all. Every path that
+ * changes the list now emits (writeRecord, emitEdit for $EDITOR and recover,
+ * emitRemoved for rm and prune), so there is nothing left for a snapshot to
+ * catch that the bus misses.
+ */
+async function cmdMonitor(args) {
+  const every =
+    Number((args.find((a) => a.startsWith('--interval=')) || '').split('=')[1] || 0) ||
+    Number(process.env.TRIAGE_POLL_SEC || 2);
+
+  if (!fs.existsSync(STATE_DIR)) {
+    console.log(`triage monitor: no records directory at ${rel(STATE_DIR)} — nothing staged yet`);
+    return;
+  }
+  const live = listRecords();
+  if (!live.length) {
+    console.log(`triage monitor: 0 records staged in ${rel(STATE_DIR)} — nothing to watch`);
+    return;
+  }
+
+  // Seeded once from disk, then kept by the bus. Absolute state is the one
+  // question events cannot answer on their own: reading from the current end is
+  // what stops a previous session's decisions replaying as this one's.
+  let pending = live.filter((r) => r.front.status === 'pending').length;
+  let offset = 0;
+  try {
+    offset = fs.statSync(EVENTS_FILE).size;
+  } catch {
+    offset = 0;
+  }
+  console.log(
+    `triage monitor armed: ${live.length} records, ${pending} pending — run 'pnpm triage-tui' to review`
+  );
+
+  // Statuses that archive themselves out of the list. The settle summary reads
+  // the others back off disk, but these are gone by then, so they are counted
+  // as they are reported.
+  const gone = { rejected: 0, applied: 0 };
+
+  for (;;) {
+    await new Promise((r) => setTimeout(r, every * 1000));
+
+    // The directory is gitignored and several agent sessions share this
+    // checkout, so it can be cleaned out from under a live review. That has to
+    // be an event: going quiet reads as "the user hasn't started yet".
+    if (!fs.existsSync(STATE_DIR)) {
+      console.log(
+        `triage monitor STOPPED: ${rel(STATE_DIR)} disappeared — staged records were deleted, restage before applying`
+      );
+      process.exitCode = 1;
+      return;
+    }
+
+    for (const e of readEventsSince()) {
+      if (e.type === 'note') {
+        console.log(`#${e.issue} NOTE — ${truncate(e.title || '', 70)}`);
+        console.log(indent(e.note));
+        continue;
+      }
+      // A same-status rewrite decides nothing and is not worth a line.
+      if (e.type === 'updated') continue;
+      if (e.from === 'pending') pending -= 1;
+      if (e.to === 'pending' && e.type !== 'removed') pending += 1;
+      const title = truncate(e.title || '', 70);
+      if (e.type === 'removed') {
+        console.log(`#${e.issue} removed from the queue`);
+        continue;
+      }
+      if (e.type === 'staged') {
+        console.log(`#${e.issue} staged (${e.to}) — ${title}`);
+        continue;
+      }
+      if (e.to in gone) gone[e.to] += 1;
+      switch (e.to) {
+        case 'changes-requested':
+          console.log(`#${e.issue} CHANGES REQUESTED — ${title}`);
+          if (e.note) console.log(`    note: ${e.note}`);
+          break;
+        case 'rejected': console.log(`#${e.issue} REJECTED — ${title}`); break;
+        case 'approved': console.log(`#${e.issue} approved — ${title}`); break;
+        case 'applied':  console.log(`#${e.issue} applied to GitHub — ${title}`); break;
+        case 'failed':   console.log(`#${e.issue} APPLY FAILED — ${title}`); break;
+        default:         console.log(`#${e.issue} -> ${e.to} — ${title}`);
+      }
+    }
+
+    if (pending <= 0) {
+      const rest = listRecords();
+      const n = (st) => rest.filter((r) => r.front.status === st).length;
+      const c = n('changes-requested');
+      const a = n('approved');
+      console.log(
+        `triage queue settled: ${a} approved, ${c} changes-requested, ` +
+          `${gone.rejected} rejected, ${gone.applied} applied, ${n('failed')} failed`
+      );
+      if (c) console.log('    next: .claude/tools/triage feedback');
+      if (a) console.log('    next: .claude/tools/triage apply');
+      const notes = listNotes().length;
+      if (notes) {
+        console.log(`    next: .claude/tools/triage notes  (${notes} left for you)`);
+      }
+      return;
+    }
+  }
+
+  /** New whole lines only: a read can land mid-append, and half a line is not an event. */
+  function readEventsSince() {
+    let end;
+    try {
+      end = fs.statSync(EVENTS_FILE).size;
+    } catch {
+      return [];
+    }
+    if (end < offset) offset = 0; // truncated or rotated under us
+    if (end === offset) return [];
+    const fd = fs.openSync(EVENTS_FILE, 'r');
+    const buf = Buffer.alloc(end - offset);
+    fs.readSync(fd, buf, 0, buf.length, offset);
+    fs.closeSync(fd);
+    const text = buf.toString('utf8');
+    const cut = text.lastIndexOf('\n');
+    if (cut === -1) return [];
+    offset += Buffer.byteLength(text.slice(0, cut + 1), 'utf8');
+    const out = [];
+    for (const line of text.slice(0, cut).split('\n')) {
+      if (!line.trim()) continue;
+      try {
+        out.push(JSON.parse(line));
+      } catch {
+        /* a torn line is not worth dropping the rest of the batch over */
+      }
+    }
+    return out;
+  }
+}
+
 /**
  * Apply approvals as they land, without a human or an agent in the loop.
  *
@@ -1519,6 +1855,9 @@ function cmdRecover(args) {
     // review list looking undecided.
     if (resolveRecordPath(e.issue)) continue;
     fs.writeFileSync(recordPath(e.issue), e.content);
+    // Writes the file directly rather than through writeRecord, so the bus
+    // needs telling by hand. `null` reads as "appeared", which is what it did.
+    emitEdit(e.issue, null);
     console.log(`restored #${e.issue} (as of ${e.ts.slice(0, 19)})`);
     restored += 1;
   }
@@ -1542,7 +1881,9 @@ function cmdRm(args) {
   const n = requireIssue(args);
   const file = resolveRecordPath(n);
   if (!file) fail(`no record for #${n}`);
-  const settled = ['applied', 'rejected', 'failed'].includes(readRecord(n).front.status);
+  const { front } = readRecord(n);
+  const settled = ['applied', 'rejected', 'failed'].includes(front.status);
+  emitRemoved(front);
   if (settled) {
     archiveRecord(n);
     console.log(`archived #${n}`);
@@ -1557,6 +1898,7 @@ function cmdPrune() {
   let n = 0;
   for (const { front, file } of listRecords()) {
     if (front.status === 'applied' || front.status === 'rejected') {
+      emitRemoved(front);
       archiveRecord(front.issue);
       n += 1;
     }
@@ -1624,9 +1966,12 @@ const HELP = `triage — stage issue mutations, review them, then apply.
   review             interactive approval TUI, also "pnpm triage-tui"
   set <N> <status>   set status by hand         [--note "..."]
   feedback           records where changes were requested, and why  [--json]
+  note <N> "text"    leave the agent a note about a record, changing nothing
+  notes              every note the reviewer left, oldest first        [--json]
   owner <scope>      next owner for a scope, round-robin      [--peek]
   apply [<N>...]     apply approved records via gh    [--dry-run]
   watch              apply approvals as they land, unattended  [--interval=20]
+  monitor            report each decision as it lands, for Monitor  [--interval=2]
   recover [--list]   restore records the state dir lost (journal is outside it)
   notify <action>    push to a live TUI: reload [N] | select <N> | message "..."
   rm <N> | prune     take one record, or all settled ones, out of the review list
@@ -1638,8 +1983,13 @@ can restore records if it is cleared. Set TRIAGE_DIR to point somewhere else —
 do that for tests rather than deleting the real one.
 Staged records start pending. The TUI moves them to approved, rejected, or
 changes-requested (with a note the agent reads back via "triage feedback").
+A rejection is final, so it archives the moment it is made and leaves the review
+list; "list --all" and "show <N>" still reach it.
+"note" is the separate channel for a request that is not about the staged
+mutations at all — it leaves the status alone and the agent reads it back via
+"triage notes".
 apply then writes applied or failed, and moves applied records into
-<state>/.archive so the review list only holds what still needs a decision.
+<state>/.archive too, so the review list only holds what still needs a decision.
 \`list --all\` and \`show <N>\` still reach them.
 `;
 
@@ -1652,6 +2002,8 @@ async function main() {
     review: cmdReview,
     set: cmdSet,
     feedback: cmdFeedback,
+    note: cmdNote,
+    notes: cmdNotes,
     owner: cmdOwner,
     recover: cmdRecover,
     apply: cmdApply,
@@ -1660,6 +2012,7 @@ async function main() {
     prune: cmdPrune,
     'ci-tasks': cmdCiTasks,
     watch: cmdWatch,
+    monitor: cmdMonitor,
   };
   if (!verb || verb === 'help' || verb === '--help') {
     console.log(HELP);
@@ -1682,6 +2035,13 @@ module.exports = {
   EVENTS_FILE,
   STATE_DIR,
   STATUSES,
+  // The TUI binds `n` only when a store exports these, the same way it takes
+  // COLUMNS and ACTIONS: the read-only review store has no events bus, so the
+  // key is simply absent there rather than bound to something that throws.
+  appendNote,
+  emitEdit,
+  lastBusError,
+  listNotes,
   buildBody,
   listRecords,
   readRecord,
