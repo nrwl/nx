@@ -13,6 +13,7 @@ import { NativeTaskHasherImpl } from './native-task-hasher-impl';
 import { workspaceRoot } from '../utils/workspace-root';
 import { HashInputs, NxWorkspaceFilesExternals } from '../native';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
+import { collectUpstreamTaskIds } from '../tasks-runner/task-graph-utils';
 
 // Re-export HashInputs from native module for public API
 export { HashInputs };
@@ -350,6 +351,30 @@ export function getInputs(
       namedInputs
     );
   return { selfInputs, depsInputs, depsOutputs, projectInputs, depsFilesets };
+}
+
+/**
+ * Ids of dependency tasks whose outputs feed `task`'s hash through a
+ * `dependentTasksOutputFiles` input. Mirrors `process_tasks_outputs` in
+ * native/tasks/dep_outputs.rs: a dependency with no `outputs` contributes
+ * nothing, so it does not need to finish before `task` can be hashed.
+ */
+export function getDependenciesWithOutputsToHash(
+  task: Task,
+  taskGraph: TaskGraph,
+  projectGraph: ProjectGraph,
+  nxJson: NxJsonConfiguration
+): string[] {
+  const { depsOutputs } = getInputs(task, projectGraph, nxJson);
+  if (depsOutputs.length === 0) {
+    return [];
+  }
+  // The transitive set is a superset of the direct one, so any transitive
+  // entry widens the walk for all of them.
+  const transitive = depsOutputs.some((d) => d.transitive);
+  return collectUpstreamTaskIds(taskGraph, task.id, transitive).filter(
+    (id) => taskGraph.tasks[id]?.outputs.length > 0
+  );
 }
 
 export function splitInputsIntoSelfAndDependencies(

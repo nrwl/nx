@@ -19,6 +19,7 @@ import { splitTarget } from '../utils/split-target';
 import { workspaceRoot as defaultWorkspaceRoot } from '../utils/workspace-root';
 import { HashPlanInspector } from './hash-plan-inspector';
 import { type ExpandedDepsOutput, getInputs } from './task-hasher';
+import { collectUpstreamTaskIds } from '../tasks-runner/task-graph-utils';
 
 // ── Module-level context (loaded once per process) ───────────────────────────
 
@@ -267,26 +268,6 @@ function getDepsOutputs(
 
   depsOutputsCache.set(taskId, result);
   return result;
-}
-
-function collectUpstreamTaskIds(
-  taskGraph: TaskGraph,
-  rootTaskId: string,
-  transitive: boolean
-): string[] {
-  const direct = taskGraph.dependencies[rootTaskId] ?? [];
-  if (!transitive) return [...direct];
-
-  const collected = new Set<string>();
-  const walk = (id: string): void => {
-    for (const dep of taskGraph.dependencies[id] ?? []) {
-      if (collected.has(dep)) continue;
-      collected.add(dep);
-      walk(dep);
-    }
-  };
-  walk(rootTaskId);
-  return [...collected];
 }
 
 /**
