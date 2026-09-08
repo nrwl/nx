@@ -1084,6 +1084,30 @@ describe('expandInitiatingTasksThroughNoop', () => {
         '!apps/proj/obj/*.nuget.g.props',
       ]);
     });
+
+    it('should keep the negation on a root project, where {projectRoot} interpolates to nothing', () => {
+      expect(
+        getOutputsForTargetAndConfiguration(
+          { project: 'root', target: 'build' },
+          {},
+          {
+            name: 'root',
+            type: 'lib' as const,
+            data: {
+              root: '.',
+              targets: {
+                build: {
+                  outputs: [
+                    '{projectRoot}/obj',
+                    '!{projectRoot}/obj/project.assets.json',
+                  ],
+                },
+              },
+            },
+          }
+        )
+      ).toEqual(['obj', '!obj/project.assets.json']);
+    });
   });
 });
 
