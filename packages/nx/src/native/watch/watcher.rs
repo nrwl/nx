@@ -789,6 +789,61 @@ mod tests {
     }
 
     #[test]
+    fn dot_ignore_beats_a_same_dir_gitignore_negation() {
+        // The ignore crate ranks .ignore above .gitignore. A pkg/.gitignore
+        // that un-ignores a path a pkg/.ignore excludes must stay excluded, or
+        // the watcher admits a file the walk drops and reports it deleted.
+        use notify::EventKind;
+        use notify::event::CreateKind;
+
+        let dir = tempdir().expect("tempdir");
+        let origin = dir.path().canonicalize().expect("canonicalize");
+        let pkg = origin.join("pkg");
+        fs::create_dir_all(&pkg).expect("mkdir pkg");
+        fs::write(pkg.join(".gitignore"), "!conflict.log\n").expect("write .gitignore");
+        fs::write(pkg.join(".ignore"), "conflict.log\n").expect("write .ignore");
+
+        let filterer = watch_filterer::create_filter(origin.to_str().expect("utf-8"), &[], true)
+            .expect("filter");
+
+        let event = RawWatchEvent::new(
+            notify::Event::new(EventKind::Create(CreateKind::File))
+                .add_path(pkg.join("conflict.log")),
+        );
+        assert!(
+            !filterer.check_event(&event),
+            ".ignore excludes conflict.log and outranks the .gitignore negation"
+        );
+    }
+
+    #[test]
+    fn a_path_outside_origin_does_not_panic_the_veto() {
+        // canonicalize_event_paths can resolve a symlink out of the workspace,
+        // and matched_path_or_any_parents panics on a path outside the matcher
+        // root. check_event must handle it, not crash the pipeline thread.
+        use notify::EventKind;
+        use notify::event::CreateKind;
+
+        let dir = tempdir().expect("tempdir");
+        let origin = dir.path().join("workspace");
+        fs::create_dir_all(&origin).expect("mkdir origin");
+        let origin = origin.canonicalize().expect("canonicalize");
+        let outside = dir
+            .path()
+            .join("elsewhere")
+            .join("node_modules")
+            .join("x.js");
+
+        let filterer = watch_filterer::create_filter(origin.to_str().expect("utf-8"), &[], true)
+            .expect("filter");
+        let event = RawWatchEvent::new(
+            notify::Event::new(EventKind::Create(CreateKind::File)).add_path(outside),
+        );
+        // Must not panic; an out-of-origin path is not subject to workspace rules.
+        assert!(filterer.check_event(&event));
+    }
+
+    #[test]
     fn git_info_exclude_is_honoured_like_the_walker() {
         // `.git/info/exclude` is where local, uncommittable exclusions live
         // (scratch dirs, secrets). create_walker honours it, so the filterer

@@ -14,9 +14,12 @@ use crate::native::watch::utils::get_nx_ignore;
 pub struct WatchFilterer {
     origin: PathBuf,
     nx_ignore: Option<Gitignore>,
-    /// Per-directory gitignore instances, sorted deepest-first (most path components first).
-    /// Each entry is (directory the .gitignore applies in, compiled Gitignore).
-    git_ignores: Vec<(PathBuf, Gitignore)>,
+    /// Per-directory ignore matchers, consulted first-match-wins. Each entry is
+    /// (directory the matcher applies in, class rank, compiled matcher), sorted
+    /// deepest-first then by rank so within a directory a more specific source
+    /// wins: nested .nxignore > .ignore > .gitignore > .git-exclude/global. Full
+    /// class-above-depth parity with the ignore crate is a tracked follow-up.
+    git_ignores: Vec<(PathBuf, u8, Gitignore)>,
     /// node_modules/.git/.nx/cache/.yarn/cache. A hard veto that no .gitignore
     /// or .nxignore negation can beat, mirroring `create_walker`'s filter_entry
     /// so the watcher and the walk agree on what is ignored.
@@ -33,11 +36,17 @@ impl WatchFilterer {
         // them. `create_walker` enforces the same set as an unbeatable
         // filter_entry; if the two disagreed, files the walker excludes but
         // the watcher admits would be reported deleted on every rescan.
+        //
+        // The origin guard matches the .nxignore/gitignore sites: the matcher
+        // is rooted at origin and matched_path_or_any_parents panics on a path
+        // outside its root, which a symlink resolved out of the workspace can
+        // produce on Linux.
         self.brought_in_allows(path, is_dir)
-            && !matches!(
-                self.hardcoded.matched_path_or_any_parents(path, is_dir),
-                Match::Ignore(_)
-            )
+            && !(path.starts_with(&self.origin)
+                && matches!(
+                    self.hardcoded.matched_path_or_any_parents(path, is_dir),
+                    Match::Ignore(_)
+                ))
     }
 
     fn brought_in_allows(&self, path: &std::path::Path, is_dir: bool) -> bool {
@@ -69,8 +78,8 @@ impl WatchFilterer {
         let git_match = self
             .git_ignores
             .iter()
-            .filter(|(dir, _)| path.starts_with(dir))
-            .map(|(_, ig)| ig.matched_path_or_any_parents(path, is_dir))
+            .filter(|(dir, _, _)| path.starts_with(dir))
+            .map(|(_, _, ig)| ig.matched_path_or_any_parents(path, is_dir))
             .find(|m| !matches!(m, Match::None));
 
         match git_match {
@@ -152,7 +161,7 @@ pub(super) fn create_filter(
         "Using these ignore files for the watcher"
     );
 
-    let mut git_ignores: Vec<(PathBuf, Gitignore)> = Vec::new();
+    let mut git_ignores: Vec<(PathBuf, u8, Gitignore)> = Vec::new();
 
     // Build per-directory Gitignore instances from .gitignore files
     if let Some(paths) = ignore_files {
@@ -169,7 +178,7 @@ pub(super) fn create_filter(
                 .parent()
                 .unwrap_or(&gitignore_path)
                 .to_path_buf();
-            git_ignores.push((dir, gitignore));
+            git_ignores.push((dir, 1, gitignore));
         }
     }
 
@@ -193,7 +202,12 @@ pub(super) fn create_filter(
                 );
             }
             let dir = path.parent().unwrap_or(&path).to_path_buf();
-            git_ignores.push((dir, gitignore));
+            let rank = if path.file_name().and_then(|n| n.to_str()) == Some(".nxignore") {
+                3
+            } else {
+                2
+            };
+            git_ignores.push((dir, rank, gitignore));
         }
 
         // `.git/info/exclude` and the global core.excludesFile: the canonical
@@ -218,7 +232,7 @@ pub(super) fn create_filter(
         {
             trace!(?err, ?global_excludes, "error parsing global gitignore");
         }
-        git_ignores.push((PathBuf::from(origin), workspace_wide.build()?));
+        git_ignores.push((PathBuf::from(origin), 0, workspace_wide.build()?));
     }
 
     // Build additional globs as a synthetic gitignore rooted at origin
@@ -228,14 +242,14 @@ pub(super) fn create_filter(
             builder.add_line(None, glob)?;
         }
         let gitignore = builder.build()?;
-        git_ignores.push((PathBuf::from(origin), gitignore));
+        git_ignores.push((PathBuf::from(origin), 0, gitignore));
     }
 
     // Sort deepest-first (most path components first) so deeper gitignores take priority
-    git_ignores.sort_by(|(a, _), (b, _)| {
+    git_ignores.sort_by(|(a, ra, _), (b, rb, _)| {
         let a_depth = a.components().count();
         let b_depth = b.components().count();
-        b_depth.cmp(&a_depth)
+        b_depth.cmp(&a_depth).then(rb.cmp(ra))
     });
 
     // Build .nxignore
