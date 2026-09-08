@@ -134,6 +134,11 @@ struct WatchPipeline {
     rescan_deadline: Option<Instant>,
     burst_start: Option<Instant>,
     flush_deadline: Option<Instant>,
+    /// When the last event arrived. A flush firing within `IDLE_WINDOW` of it
+    /// was forced by the MAX_WAIT cap during an ongoing storm, not by silence —
+    /// the notify channel is empty by construction when the idle arm runs, so
+    /// this is how the pipeline tells a storm from a settle.
+    last_event_at: Instant,
 }
 
 impl WatchPipeline {
@@ -179,6 +184,7 @@ impl WatchPipeline {
             rescan_deadline: None,
             burst_start: None,
             flush_deadline: None,
+            last_event_at: Instant::now(),
         })
     }
 
@@ -215,6 +221,13 @@ impl WatchPipeline {
             });
         }
         events
+    }
+
+    /// Whether events are still streaming, told by recency rather than the
+    /// notify channel (which the idle arm always finds empty). A flush within
+    /// `IDLE_WINDOW` of the last event was cap-forced mid-storm, not idle.
+    fn storm_ongoing(&self) -> bool {
+        self.last_event_at.elapsed() < IDLE_WINDOW
     }
 
     /// Whether a pending rescan should be emitted now rather than held. It is
@@ -315,6 +328,7 @@ impl WatchPipeline {
                 return Ok(());
             }
         };
+        self.last_event_at = Instant::now();
 
         if event.need_rescan() {
             // The backend can raise the flag hundreds of times before the
@@ -380,6 +394,35 @@ impl WatchPipeline {
         let bs = *self.burst_start.get_or_insert(now);
         self.flush_deadline = Some((now + IDLE_WINDOW).min(bs + MAX_WAIT));
         Ok(())
+    }
+
+    /// Build a pipeline whose notify channel is driven by the returned sender
+    /// instead of a real backend, so a test can inject a precise event sequence
+    /// through `run()`.
+    #[cfg(test)]
+    fn with_test_channel(origin: &str) -> (Self, Sender<NotifyResult>) {
+        let filterer = watch_filterer::create_filter(origin, &[], false).expect("test filter");
+        let (notify_tx, notify_rx) = unbounded::<NotifyResult>();
+        let watcher = notify::recommended_watcher(|_res| {}).expect("test watcher");
+        let mut origin_path = origin.to_string();
+        if !origin_path.ends_with(MAIN_SEPARATOR) {
+            origin_path.push(MAIN_SEPARATOR);
+        }
+        let pipeline = WatchPipeline {
+            filterer,
+            notify_rx,
+            watcher,
+            origin_path,
+            #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+            ignore_globs: build_ignore_glob_set(),
+            accumulator: HashMap::new(),
+            pending_rescan: false,
+            rescan_deadline: None,
+            burst_start: None,
+            flush_deadline: None,
+            last_event_at: Instant::now(),
+        };
+        (pipeline, notify_tx)
     }
 
     /// Drives the pipeline until force_flush_rx disconnects.
@@ -479,12 +522,11 @@ impl WatchPipeline {
                 },
                 default(idle_wait) => {
                     if self.has_pending() {
-                        // Hold a pending rescan while the storm is still
-                        // delivering (more events already queued), so a burst
-                        // that overflows across many flushes coalesces into one
-                        // re-walk instead of one per flush.
-                        let storm_ongoing = !self.notify_rx.is_empty();
-                        let rescan_due = self.rescan_due(storm_ongoing);
+                        // Hold a pending rescan while a storm is still
+                        // delivering, so a burst that overflows across many
+                        // flushes coalesces into one re-walk instead of one per
+                        // flush.
+                        let rescan_due = self.rescan_due(self.storm_ongoing());
                         let events = self.snapshot_events(rescan_due);
                         debug!(count = events.len(), "idle-window emitting events");
                         for e in &events {
@@ -921,6 +963,58 @@ mod tests {
         assert!(
             filterer.check_event(&event("kept.log")),
             "a non-hardcoded whitelist is still honoured — the veto is hardcoded-only"
+        );
+    }
+
+    #[test]
+    fn run_coalesces_a_sustained_storm_into_one_rescan() {
+        // Drives run() so it binds the storm-detection wiring, not just the
+        // rescan_due helper. A sustained overflow denser than IDLE_WINDOW and
+        // longer than MAX_WAIT forces several cap flushes; all but the settling
+        // one must hold the rescan, so the daemon re-walks once, not per flush.
+        use notify::event::Flag;
+
+        let dir = tempdir().expect("tempdir");
+        let canonical = dir.path().canonicalize().expect("canonicalize");
+        let (pipeline, tx) = WatchPipeline::with_test_channel(canonical.to_str().expect("utf-8"));
+
+        let (ff_tx, ff_rx) = bounded::<ForceFlushReply>(0);
+        let captured: Captured = Arc::new(Mutex::new(Vec::new()));
+        let cap = captured.clone();
+        let handle = std::thread::spawn(move || {
+            pipeline.run(
+                ff_rx,
+                Box::new(move |res| {
+                    if let Ok(events) = res {
+                        cap.lock().unwrap().extend(events);
+                    }
+                }),
+            );
+        });
+
+        let overflow = || notify::Event::new(notify::EventKind::Other).set_flag(Flag::Rescan);
+        // Sustained storm: > MAX_WAIT (so several cap flushes fire) with events
+        // < IDLE_WINDOW apart (so each cap flush sees an ongoing storm).
+        let storm_end = Instant::now() + Duration::from_millis(1200);
+        while Instant::now() < storm_end {
+            tx.send(Ok(overflow())).expect("send overflow");
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        // Settle so the held rescan is released exactly once.
+        std::thread::sleep(Duration::from_millis(400));
+        drop(tx);
+        drop(ff_tx);
+        handle.join().expect("join");
+
+        let rescans = captured
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|e| matches!(e.r#type, EventType::rescan))
+            .count();
+        assert_eq!(
+            rescans, 1,
+            "a sustained storm should coalesce into a single rescan; got {rescans}"
         );
     }
 
