@@ -112,8 +112,24 @@ export function formatAffectedExplanation(
   if (!names.length) {
     return `Nothing affected.`;
   }
+
+  // Something the change reached directly is what a reader is looking for; an
+  // entry pulled in through a dependency is a consequence of one of those, and
+  // in a large answer there are far more of the second kind.
+  const reachedThroughDependency = (name: string) => {
+    const forName = reasons[name] ?? [];
+    return (
+      forName.length > 0 &&
+      forName.every(
+        (r) => r.kind === 'dependency' || r.kind === 'dependent-output'
+      )
+    );
+  };
+  const direct = names.filter((n) => !reachedThroughDependency(n));
+  const indirect = names.filter(reachedThroughDependency);
+
   const lines = [`${heading} (${names.length}):`, ''];
-  for (const name of names) {
+  const render = (name: string) => {
     lines.push(`  ${name}`);
     const forName = reasons[name] ?? [];
     if (!forName.length) {
@@ -123,7 +139,12 @@ export function formatAffectedExplanation(
       lines.push(`    - ${formatAffectedReason(reason)}`);
     }
     lines.push('');
-  }
+  };
+
+  // No heading between the groups: each entry's reasons already name the
+  // dependency that pulled it in, so a label would only repeat them.
+  direct.forEach(render);
+  indirect.forEach(render);
 
   // Same shape as the run summary, which reports the tasks it ran and the ones
   // it ran only to get there.
