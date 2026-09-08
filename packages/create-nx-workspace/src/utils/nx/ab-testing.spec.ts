@@ -2,6 +2,7 @@ import {
   isEnterpriseCloudUrl,
   getBannerVariant,
   getFlowVariant,
+  NX_CLOUD_DEMO_HYPERLINK,
   NX_CLOUD_HYPERLINK,
   NX_CLOUD_URL,
   PromptMessages,
@@ -178,6 +179,17 @@ describe('NX_CLOUD_HYPERLINK', () => {
 
     expect(link).toBe(url);
   });
+
+  it('points the demo link at the demo with the same attribution', () => {
+    process.env.FORCE_HYPERLINK = '1';
+    const { NX_CLOUD_DEMO_HYPERLINK: link, NX_CLOUD_DEMO_URL: url } =
+      jest.requireActual('./ab-testing') as typeof import('./ab-testing');
+
+    expect(link).toContain(`${BEL}${url}${OSC}`);
+    expect(link).toContain(
+      `${url}?utm_source=nx-cli&utm_medium=cli&utm_campaign=nx-cloud-connect&utm_content=create-nx-workspace`
+    );
+  });
 });
 
 describe('cloud prompt footers', () => {
@@ -201,6 +213,7 @@ describe('cloud prompt footers', () => {
     (key) => {
       const { footer } = new PromptMessages().getPrompt(key);
       expect(footer).toContain(NX_CLOUD_HYPERLINK);
+      expect(footer).toContain(NX_CLOUD_DEMO_HYPERLINK);
     }
   );
 });
