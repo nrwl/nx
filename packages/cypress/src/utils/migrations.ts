@@ -25,20 +25,22 @@ export async function* cypressProjectConfigs(tree: Tree): AsyncGenerator<{
   const projects = getProjects(tree);
 
   for (const [projectName, projectConfig] of projects) {
-    const targetWithExecutor = Object.values(projectConfig.targets ?? {}).find(
-      (target) => target.executor === '@nx/cypress:cypress'
-    );
-    if (targetWithExecutor) {
-      for (const [, options] of allTargetOptions<CypressExecutorOptions>(
-        targetWithExecutor
-      )) {
-        if (options.cypressConfig) {
-          yield {
-            projectName,
-            projectConfig,
-            cypressConfigPath: options.cypressConfig,
-          };
+    const targetsWithExecutor = Object.values(
+      projectConfig.targets ?? {}
+    ).filter((target) => target.executor === '@nx/cypress:cypress');
+    if (targetsWithExecutor.length > 0) {
+      const cypressConfigPaths = new Set<string>();
+      for (const target of targetsWithExecutor) {
+        for (const [, options] of allTargetOptions<CypressExecutorOptions>(
+          target
+        )) {
+          if (options.cypressConfig) {
+            cypressConfigPaths.add(options.cypressConfig);
+          }
         }
+      }
+      for (const cypressConfigPath of cypressConfigPaths) {
+        yield { projectName, projectConfig, cypressConfigPath };
       }
     } else {
       // might be using the crystal plugin
