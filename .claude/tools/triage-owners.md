@@ -6,6 +6,12 @@ which prints a suggested handle on stdout and everything else on stderr for the 
 `CODEOWNERS` in this repo is a single catch-all rule and routes nothing, so this file is the
 substitute. It is a living document: edit it when the picture changes.
 
+The upstream source is the **Vertical Ownership** page in Notion,
+`https://app.notion.com/p/nxnrwl/Vertical-Ownership-2bd3664b50014710a9ef2f34ee7da3e2`. Read it as the
+intent behind this file rather than as current truth, because it lags: as of this writing it still
+lists Colum Ferry, who has left and whose areas went to Jason. Where the two disagree, a correction
+recorded here from someone on the team wins, and the Notion page should be updated to match.
+
 A suggestion is advisory. Weight is a likelihood, guidance is an instruction, and the issue in
 front of you outranks both - override the pick when something names a better owner, and say why.
 
@@ -22,10 +28,22 @@ theirs when they leave.
 | `leosvelperez`     | Leosvel Pérez Espinosa | Core internals, Angular, JS, TS solution setup                |
 | `jaysoo`           | Jack Hsu               | Docs and web surface, onboarding, React and framework plugins |
 | `AgentEnder`       | Craigory Coppola       | Core, devkit, plugins, dotnet, Windows                        |
-| `meeroslav`        | Miroslav Jonaš         | Hashing and cache inputs                                      |
+| `meeroslav`        | Miroslav Jonaš         | Release. NOT hashing - see note below                         |
 | `lourw`            | Louie Weng             | Java: gradle and maven                                        |
 | `barbados-clemens` | Caleb Ukle             | Docs                                                          |
 | `JamesHenry`       | James Henry            | Release internals, linting                                    |
+
+**The Area column is a description, not routing.** `triage owner` reads the Areas tables further
+down and nothing else, so a handle that appears only here can never be suggested by the tool - but it
+can still be picked up by a human or an agent reading this table and treating it as an assignment
+rule. That has gone wrong: meeroslav was listed as owning "hashing and cache inputs" and was assigned
+three PRs on that basis, when he has **zero commits** to `packages/nx/src/hasher`,
+`packages/nx/src/native/tasks` or `packages/nx/src/native/cache` in 14 months. His recent work is in
+release. Hashing and cache internals are FrozenPandaz (195 commits in `src/hasher`), then AgentEnder
+(86) and leosvelperez (73).
+
+Route from an Areas row or from measured history. If you find yourself justifying an assignee with a
+phrase from the Area column above, stop and measure instead.
 
 ## People
 
@@ -40,9 +58,12 @@ Deepest knowledge of nx release, but his bandwidth is currently spent outside th
 
 ### jaysoo
 
-weight: 2
+weight: 1
 
-Director of Engineering, not an IC on the CLI team, so he carries less than his commit counts imply - weight him down when splitting a batch. His surface is docs/web/onboarding plus React and the framework plugins (top packages/react author, 37 commits/14mo). His packages/nx footprint is thin (174), so do NOT route core daemon, tasks-runner or hashing internals to him.
+**Primarily a docs reviewer now, alongside barbados-clemens.** Director of Engineering rather than an
+IC on the CLI team, so his commit counts in packages/react, packages/next and packages/module-federation
+are history rather than current capacity. Weight him down everywhere outside docs, and do not route
+core daemon, tasks-runner or hashing internals to him at all.
 
 ### FrozenPandaz
 
@@ -90,25 +111,41 @@ ESLint and the boundaries rule are leosvelperez's. Jason has handled oxlint and 
 
 ### scope: bundlers
 
-Depth measured over 14 months: webpack Jason 34 / Leosvel 18 / jaysoo 18, rspack Jason 31 / Leosvel 21 / jaysoo 16, vite Jason 28 / Leosvel 27 / jaysoo 17. All three genuinely work here, so this row should not collapse onto one person. When the actual defect is TS solution setup or project references - inferred typecheck vs build targets, emitted .d.ts, tsconfig references - route to leosvelperez even though the symptom is a bundler failure.
+Measured on **reviews and merges**, not authorship - authorship reads as near-parity here and is
+misleading. Over 14 months Jason merges the majority of every bundler package's PRs (webpack 60/107,
+rspack 60/117, vite 64/127) and reviews more than anyone else on all three. Reviews in the last three
+months: Jason 25, Craigory 13, Leosvel 10, Jack 9.
 
-| Handle         | Weight | Note                                                           |
-| -------------- | ------ | -------------------------------------------------------------- |
-| `FrozenPandaz` | 2      |                                                                |
-| `leosvelperez` | 2      | Near-parity with Jason on vite (27 v 28) and strong on rspack. |
-| `jaysoo`       | 1      | 16-18 commits/14mo across webpack, rspack and vite.            |
+Colum Ferry has 88 reviews across these packages and would top a naive git-history fallback. He has
+left - last commit 2026-03-24, none since. Do not surface him.
+
+**Vite specifically is Craigory's**, along with vue and nuxt, so send a vite defect to him rather
+than taking the row's rotation. The rotation covers webpack and rspack.
+
+When the actual defect is TS solution setup or project references - inferred typecheck vs build
+targets, emitted .d.ts, tsconfig references - route to leosvelperez even though the symptom is a
+bundler failure.
+
+| Handle         | Weight | Note                                                            |
+| -------------- | ------ | --------------------------------------------------------------- |
+| `FrozenPandaz` | 3      | Merges over half of all bundler PRs and is the top reviewer.    |
+| `AgentEnder`   | 2      | Second most active bundler reviewer over the last three months. |
+| `leosvelperez` | 2      | Send TS-solution and project-reference defects here.            |
+| `jaysoo`       | 1      |                                                                 |
 
 ### scope: module federation
 
-MF reports frequently turn out to be upstream in module-federation/core rather than ours - confirm where the defect actually lives before routing. The person who owned this area longest has left, so there is no deep specialist on the bench; Jason has the most history here.
+**Jason owns this.** Colum Ferry held it longest and has left, and his areas were reassigned to
+Jason rather than redistributed. Do not read Colum's commit history as a live signal, and do not
+route MF to Jack on the strength of the React-side split that used to live here.
 
-Split the row by where the defect actually sits, not by the label. MF issues that land on the React side - Fast Refresh, the host/remote/consumer/provider generators, rspack templates - are Jack's, and he is weighted first for that reason (#36393 was reproduced to the React refresh boundary and routed to him). MF issues in the graph, watch or task-running path are not his; see his standing note about a thin packages/nx footprint.
+MF reports frequently turn out to be upstream in module-federation/core rather than ours, so confirm
+where the defect actually lives before routing.
 
-| Handle         | Weight | Note                                                                  |
-| -------------- | ------ | --------------------------------------------------------------------- |
-| `jaysoo`       | 2      | 8 commits/14mo in packages/module-federation.                         |
-| `FrozenPandaz` | 1      | Highest raw count (16) but see his standing note - prefer a co-owner. |
-| `leosvelperez` | 1      |                                                                       |
+| Handle         | Weight | Note                                      |
+| -------------- | ------ | ----------------------------------------- |
+| `FrozenPandaz` | 3      | Owns the area, including Colum's former surface. |
+| `leosvelperez` | 1      |                                           |
 
 ### scope: storybook
 
@@ -139,9 +176,13 @@ Covers packages/react-native and packages/expo. Jason leads both (29 / 28) but L
 
 ### scope: vue
 
+Craigory owns vue, and vite and nuxt with it. Nuxt has no label of its own, so it arrives here or
+under `scope: bundlers`; route it the same way.
+
 | Handle         | Weight | Note |
 | -------------- | ------ | ---- |
-| `FrozenPandaz` |        |      |
+| `AgentEnder`   | 3      |      |
+| `FrozenPandaz` | 1      |      |
 
 ### scope: nextjs
 
@@ -211,9 +252,13 @@ Near-parity on packages/nx over 14 months - FrozenPandaz 1162 files touched, leo
 
 ### scope: docs
 
+Caleb and Jack are the two docs reviewers. This is Jack's primary surface now, so weight him here and
+down everywhere else.
+
 | Handle             | Weight | Note |
 | ------------------ | ------ | ---- |
-| `barbados-clemens` |        |      |
+| `barbados-clemens` | 2      |      |
+| `jaysoo`           | 2      |      |
 
 ### scope: java
 
