@@ -217,6 +217,17 @@ public static class ProjectUtilities
             .ToList();
     }
 
+    /// <summary>
+    /// True when <paramref name="absolutePath"/> is <paramref name="directory"/> or lies
+    /// beneath it, comparing normalized full paths.
+    /// </summary>
+    public static bool IsUnderDirectory(string absolutePath, string directory)
+    {
+        var root = Path.GetFullPath(directory)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        return IsSameOrUnder(Path.GetFullPath(absolutePath), root);
+    }
+
     private static bool IsSameOrUnder(string path, string root)
     {
         if (string.Equals(path, root, StringComparison.OrdinalIgnoreCase))

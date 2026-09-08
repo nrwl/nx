@@ -109,12 +109,15 @@ public class AnalyzerSmokeTests : IDisposable
             .Select(i => i.GetString()!)];
 
     /// <summary>
-    /// The outputs a target captures, without the restore-only obj exclusions
-    /// that every obj-declaring target carries (covered in
+    /// The paths a target captures: the obj glob suffix dropped and the restore-only
+    /// exclusions that every obj-declaring target carries left out (covered in
     /// <see cref="TargetBuilderRestoreOutputsTests"/>).
     /// </summary>
     private static string[] Outputs(Dictionary<string, JsonElement> targets, string targetName) =>
-        [.. targets[targetName].GetProperty("outputs").EnumerateArray().Select(o => o.GetString()!).Where(o => !o.StartsWith('!'))];
+        [.. targets[targetName].GetProperty("outputs").EnumerateArray()
+            .Select(o => o.GetString()!)
+            .Where(o => !o.StartsWith('!'))
+            .Select(o => o.EndsWith("/**/*") ? o[..^5] : o)];
 
     [Fact]
     public void DefaultProject_DeclaresBinAndObj()
@@ -232,5 +235,26 @@ public class AnalyzerSmokeTests : IDisposable
         Assert.Contains("build/Common.Build.props", evaluationInputs);
         Assert.Contains("apps/MyLib/MyLib.csproj", evaluationInputs);
         Assert.DoesNotContain(evaluationInputs, i => i.Contains("Microsoft.Common", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void EvaluationInputs_ExcludeRestoreGeneratedImports()
+    {
+        // NuGet writes <obj>/<project>.nuget.g.props and MSBuild imports it when
+        // present. It embeds the absolute packages folder, so hashing it would
+        // make the analyzer cache machine-specific for nothing.
+        var projectFile = WriteProject("MyLib", "");
+        var obj = Path.Combine(Path.GetDirectoryName(projectFile)!, "obj");
+        Directory.CreateDirectory(obj);
+        File.WriteAllText(Path.Combine(obj, "MyLib.csproj.nuget.g.props"), "<Project />");
+
+        var result = AnalyzeWorkspace(projectFile);
+        var evaluationInputs = result.GetProperty("evaluationInputs").EnumerateArray().Select(e => e.GetString()!).ToArray();
+        var buildInputs = result.GetProperty("nodesByFile").GetProperty("apps/MyLib/MyLib.csproj").GetProperty("targets").GetProperty("build")
+            .GetProperty("inputs").EnumerateArray().Where(i => i.ValueKind == JsonValueKind.String).Select(i => i.GetString()!).ToArray();
+
+        Assert.Contains("apps/MyLib/MyLib.csproj", evaluationInputs);
+        Assert.DoesNotContain(evaluationInputs, i => i.Contains("nuget.g.props", StringComparison.Ordinal));
+        Assert.DoesNotContain(buildInputs, i => i.Contains("nuget.g.props", StringComparison.Ordinal));
     }
 }
