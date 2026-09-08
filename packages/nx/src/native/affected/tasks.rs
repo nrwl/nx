@@ -127,9 +127,9 @@ fn instruction_matches(
         HashInstruction::ProjectFileSet(project, file_sets, false) => {
             any_matching(file_sets, Some(project))
         }
-        // Disk-expanded globs. A changed file is tracked by definition, so a
-        // match here is the tracked case; untracked paths a `files` input covers
-        // never appear in a diff and are handled by propagation.
+        // Unscoped: the hasher's disk arm discards the project and expands
+        // workspace-wide. A changed file is tracked by definition, so a match is
+        // the tracked case; untracked paths are handled by propagation.
         HashInstruction::ProjectFileSet(_, globs, true) => any_matching(globs, None),
         HashInstruction::JsonFileSet(json) => match json.project_name.as_deref() {
             Some(project) => any_matching(std::slice::from_ref(&json.json_path), Some(project)),
@@ -222,7 +222,8 @@ mod tests {
     #[test]
     fn project_fileset_matches_only_inside_its_own_project() {
         let g = graph(&[("a", "libs/a"), ("b", "libs/b")]);
-        let instruction = HashInstruction::ProjectFileSet("a".into(), strings(&["libs/**/*.ts"]), false);
+        let instruction =
+            HashInstruction::ProjectFileSet("a".into(), strings(&["libs/**/*.ts"]), false);
         assert_eq!(
             affected_for(&g, vec![instruction.clone()], &["libs/a/src/x.ts"]),
             vec!["a:build"]
@@ -241,7 +242,9 @@ mod tests {
                 &g,
                 vec![HashInstruction::ProjectFileSet(
                     "a".into(),
-                    strings(&["libs/a/**/*.ts"]), false)],
+                    strings(&["libs/a/**/*.ts"]),
+                    false
+                )],
                 &["libs/a/src/deleted.ts"]
             ),
             vec!["a:build"]
@@ -312,10 +315,32 @@ mod tests {
         assert_eq!(
             affected_for(
                 &g,
-                vec![HashInstruction::ProjectFileSet("app".into(), strings(&[
-                    "libs/a/generated/**/*.ts"
-                ]), true)],
+                vec![HashInstruction::ProjectFileSet(
+                    "a".into(),
+                    strings(&["libs/a/generated/**/*.ts"]),
+                    true
+                )],
                 &["libs/a/generated/api.ts"]
+            ),
+            vec!["a:build"]
+        );
+    }
+
+    /// The hasher expands a disk-backed fileset workspace-wide and never reads
+    /// the project off it, so matching it inside that project would under-select
+    /// every read of another project's generated output.
+    #[test]
+    fn a_disk_backed_fileset_matches_outside_its_own_project() {
+        let g = graph(&[("a", "libs/a"), ("b", "libs/b")]);
+        assert_eq!(
+            affected_for(
+                &g,
+                vec![HashInstruction::ProjectFileSet(
+                    "a".into(),
+                    strings(&["libs/b/generated/**/*.ts"]),
+                    true
+                )],
+                &["libs/b/generated/api.ts"]
             ),
             vec!["a:build"]
         );
