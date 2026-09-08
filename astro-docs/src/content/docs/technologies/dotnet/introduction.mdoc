@@ -135,8 +135,9 @@ cache hit never replaces a machine's own restore.
 
 ### Test results
 
-`dotnet test` writes results to `TestResults` inside the project directory.
-To send them somewhere else and let Nx cache them, pass `results-directory` through target options.
+`dotnet test` writes nothing to disk on its own.
+Results appear only when a file logger or a coverage collector is configured, and they land in `TestResults` inside the project directory unless you say otherwise.
+To send them somewhere else and let Nx cache them, pass `results-directory` through target options together with the logger.
 The `test` target declares `{projectRoot}/{options.results-directory}` as an output.
 The value is relative to the project directory, the same way `dotnet test` reads the flag:
 
@@ -148,6 +149,7 @@ The value is relative to the project directory, the same way `dotnet test` reads
       {
         "filter": { "plugin": "@nx/dotnet" },
         "options": {
+          "args": ["...", "--logger", "trx"],
           "results-directory": "../../dist/test-reports/{projectRoot}"
         }
       }
