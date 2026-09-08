@@ -238,7 +238,14 @@ export function deriveIoSnapshotStatus(
   const taskLevel = result.diagnostics.find(
     (d) => d.taskId === canonicalTaskId
   );
-  return { status: 'fallback', reason: taskLevel?.reason ?? 'missing' };
+  // The bundle resolved; this task just is not in it. Naming it says which
+  // bundle was consulted, which is what tells a missing task from a stale one.
+  return {
+    status: 'fallback',
+    reason: taskLevel?.reason ?? 'missing',
+    commit: result.resolution?.requestedCommit,
+    digest: result.resolution?.digest,
+  };
 }
 
 function getOutputs(taskId: string, projectGraph: ProjectGraph): string[] {

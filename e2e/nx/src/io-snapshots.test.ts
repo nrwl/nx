@@ -214,6 +214,11 @@ describe('I/O snapshots', () => {
     expect(shown.snapshot).toEqual({
       status: 'fallback',
       reason: 'escapes-workspace',
+      // The bundle resolved, the task just is not hashed from it. Both name
+      // which bundle was consulted and vary per run, so only presence is
+      // asserted; matching loosely here would also admit a third field.
+      commit: expect.any(String),
+      digest: expect.any(String),
     });
     expect(shown.markers).toBeUndefined();
   });
@@ -278,7 +283,12 @@ describe('I/O snapshots', () => {
     const shown = JSON.parse(
       runCLI(`show target inputs ${lib}:echo --json`, { env: on })
     );
-    expect(shown.snapshot).toEqual({ status: 'fallback', reason: 'disabled' });
+    expect(shown.snapshot).toEqual({
+      status: 'fallback',
+      reason: 'disabled',
+      commit: expect.any(String),
+      digest: expect.any(String),
+    });
     expect(shown.markers).toBeUndefined();
     // Declared inputs again: the unread README is back in the hash.
     expect(runCLI(`echo ${lib}`, { env: on })).not.toContain(CACHE_HIT);

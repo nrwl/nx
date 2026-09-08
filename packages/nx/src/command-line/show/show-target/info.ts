@@ -585,19 +585,20 @@ function renderSnapshotSection(
   const label = c.bold('I/O snapshot');
   if (snap.status === 'used') {
     const commit = snap.commit?.slice(0, 8) ?? '?';
-    const digest = snap.digest?.slice(0, 8) ?? '?';
     // The Inputs section already lists the observed reads when they resolved;
     // only point elsewhere when it is still showing the declared filesets.
     const note = data.effectiveInputs?.length
       ? '(the observed reads are listed above)'
       : `(the file inputs above are replaced by the observed reads; see \`nx show target inputs ${data.project}:${data.target}\`)`;
     console.log(
-      `${label}: ${c.green('used')} — commit ${commit}, digest ${digest} ${c.dim(note)}`
+      `${label}: ${c.green('used')} — commit ${commit} ${c.dim(note)}`
     );
   } else if (snap.status === 'fallback') {
     const reason = snap.reason ? ` (${snap.reason})` : '';
+    const commit = snap.commit?.slice(0, 8);
+    const from = commit ? ` of the snapshot at ${commit}` : '';
     console.log(
-      `${label}: ${c.yellow('fallback')}${reason} — hashed from the declared inputs above`
+      `${label}: ${c.yellow('fallback')}${reason}${from} — hashed from the declared inputs above`
     );
   } else if (verbose) {
     // Every non-Cloud target would otherwise print this on each nx show target.

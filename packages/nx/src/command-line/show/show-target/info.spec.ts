@@ -1258,7 +1258,7 @@ describe('show target info', () => {
       expect(text).not.toContain('globs across');
     });
 
-    it('reports a used snapshot and its commit/digest in text and --json', async () => {
+    it('reports a used snapshot and its commit in text, with the digest in --json', async () => {
       setGraph(graphWithLintTarget());
       setMockIoSnapshotReport({
         used: ['my-app:lint'],
@@ -1272,9 +1272,7 @@ describe('show target info', () => {
 
       await showTargetInfoHandler({ target: 'my-app:lint', verbose: true });
       const text = (console.log as Mock).mock.calls.map((c) => c[0]).join('\n');
-      expect(text).toContain(
-        'I/O snapshot: used — commit ae6a03f9, digest 049a9c2f'
-      );
+      expect(text).toContain('I/O snapshot: used — commit ae6a03f9');
       expect(text).toContain('nx show target inputs my-app:lint');
       // file input tagged, env input not
       const fileLine = (console.log as Mock).mock.calls
@@ -1307,7 +1305,7 @@ describe('show target info', () => {
       await showTargetInfoHandler({ target: 'my-app:lint' });
       const text = (console.log as Mock).mock.calls.map((c) => c[0]).join('\n');
       expect(text).toContain(
-        'I/O snapshot: fallback (root-anchored-glob) — hashed from the declared inputs above'
+        'I/O snapshot: fallback (root-anchored-glob) of the snapshot at x — hashed from the declared inputs above'
       );
     });
 

@@ -1207,13 +1207,23 @@ describe('deriveIoSnapshotStatus', () => {
         diagnostics: [{ reason: 'disabled', taskId: 'a:build' }],
         resolution,
       })
-    ).toEqual({ status: 'fallback', reason: 'disabled' });
+    ).toEqual({
+      status: 'fallback',
+      reason: 'disabled',
+      commit: 'abc',
+      digest: 'd1',
+    });
     expect(
       deriveIoSnapshotStatus('a:build', {
         used: [],
         diagnostics: [],
         resolution,
       })
-    ).toEqual({ status: 'fallback', reason: 'missing' });
+    ).toEqual({
+      status: 'fallback',
+      reason: 'missing',
+      commit: 'abc',
+      digest: 'd1',
+    });
   });
 });
