@@ -15,7 +15,7 @@ nobody.
   <details>
   <summary>
 
-  #### Triage notes — automated triage, reviewed before posting.
+  #### Triage notes (automated triage, reviewed before posting)
 
   </summary>
 
