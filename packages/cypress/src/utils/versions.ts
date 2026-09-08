@@ -10,10 +10,10 @@ export const nxVersion = require(join('@nx/cypress', 'package.json')).version;
 export const minSupportedCypressVersion = '13.0.0';
 export const eslintPluginCypressVersion = '^3.5.0';
 export const typesNodeVersion = '^22.0.0';
-export const cypressViteDevServerVersion = '^7.3.1';
-export const cypressVersion = '^15.20.1';
-export const cypressWebpackVersion = '^5.4.1';
-export const viteVersion = '^6.0.0';
+export const cypressViteDevServerVersion = '^8.0.0';
+export const cypressVersion = '^16.0.0';
+export const cypressWebpackVersion = '^6.0.0';
+export const viteVersion = '^8.0.0';
 export const htmlWebpackPluginVersion = '^5.5.0';
 
 export type CypressVersions = Record<
@@ -39,7 +39,7 @@ const latestVersions: CypressVersions = {
   htmlWebpackPluginVersion,
 };
 
-type CompatVersions = 13 | 14;
+type CompatVersions = 13 | 14 | 15;
 const versionMap: Record<CompatVersions, CypressVersions> = {
   13: {
     eslintPluginCypressVersion: '^3.5.0',
@@ -56,6 +56,15 @@ const versionMap: Record<CompatVersions, CypressVersions> = {
     cypressViteDevServerVersion: '^6.0.3',
     cypressVersion: '^14.2.1',
     cypressWebpackVersion: '^4.0.2',
+    viteVersion: '^6.0.0',
+    htmlWebpackPluginVersion: '^5.5.0',
+  },
+  15: {
+    eslintPluginCypressVersion: '^3.5.0',
+    typesNodeVersion: '^22.0.0',
+    cypressViteDevServerVersion: '^7.3.1',
+    cypressVersion: '^15.20.1',
+    cypressWebpackVersion: '^5.4.1',
     viteVersion: '^6.0.0',
     htmlWebpackPluginVersion: '^5.5.0',
   },
