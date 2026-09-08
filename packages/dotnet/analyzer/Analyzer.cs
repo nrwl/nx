@@ -190,7 +190,19 @@ public static class Analyzer
                         .Where(instance => instance is not null)
                         .Select(instance => instance!)
                         .ToList();
-                    var importPaths = instances.SelectMany(instance => instance.ImportPaths).ToList();
+                    // Restore writes <project>.nuget.g.props/.targets into the project
+                    // extensions directory and MSBuild imports them when present. They
+                    // embed the absolute packages folder and change on every restore, so
+                    // they are neither a task input nor part of the evaluation key.
+                    var extensionsDirectory = Path.GetFullPath(Path.Combine(
+                        projectDirectory,
+                        properties.GetValueOrDefault("MSBuildProjectExtensionsPath")
+                            ?? properties.GetValueOrDefault("BaseIntermediateOutputPath")
+                            ?? "obj"));
+                    var importPaths = instances
+                        .SelectMany(instance => instance.ImportPaths)
+                        .Where(path => !ProjectUtilities.IsUnderDirectory(path, extensionsDirectory))
+                        .ToList();
                     var linkedFiles = instances
                         .SelectMany(instance => LinkedItemTypes.SelectMany(instance.GetItems))
                         .Select(item => item.GetMetadataValue("FullPath"));
