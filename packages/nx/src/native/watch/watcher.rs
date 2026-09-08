@@ -41,6 +41,10 @@ const IDLE_WINDOW: Duration = Duration::from_millis(100);
 /// Starvation cap from the start of a burst — flush even if events keep
 /// arriving faster than IDLE_WINDOW.
 const MAX_WAIT: Duration = Duration::from_millis(500);
+/// A rescan marker is held until the overflow burst settles so a storm that
+/// drops events across many flushes recovers with a single re-walk, not one
+/// per flush. This bounds that hold so an unending storm still recovers.
+const RESCAN_MAX_WAIT: Duration = Duration::from_secs(2);
 /// Grace for the kernel→notify hop before the first event arrives; short so an
 /// idle force-flush adds no latency. macOS FSEvents lags more than inotify.
 #[cfg(target_os = "macos")]
@@ -125,6 +129,9 @@ struct WatchPipeline {
     /// inotify queue overflow). Per-path events are incomplete from that
     /// moment, so the next flush emits a single rescan event instead.
     pending_rescan: bool,
+    /// Cap for holding a pending rescan across a sustained storm; `None` when
+    /// no rescan is pending.
+    rescan_deadline: Option<Instant>,
     burst_start: Option<Instant>,
     flush_deadline: Option<Instant>,
 }
@@ -169,6 +176,7 @@ impl WatchPipeline {
             ignore_globs: build_ignore_glob_set(),
             accumulator: HashMap::new(),
             pending_rescan: false,
+            rescan_deadline: None,
             burst_start: None,
             flush_deadline: None,
         })
@@ -194,19 +202,31 @@ impl WatchPipeline {
         }
     }
 
-    fn snapshot_events(&self) -> Vec<WatchEvent> {
+    fn snapshot_events(&self, include_rescan: bool) -> Vec<WatchEvent> {
         let mut events: Vec<WatchEvent> = self.accumulator.values().map(|e| e.into()).collect();
         // The rescan marker accompanies the accumulated batch rather than
         // replacing it: the daemon's ignore-file and server-process intercepts
         // read the raw events before per-path routing, so dropping them would
         // leave the native filterer's ignore rules stale after an overflow.
-        if self.pending_rescan {
+        if include_rescan && self.pending_rescan {
             events.push(WatchEvent {
                 path: String::new(),
                 r#type: EventType::rescan,
             });
         }
         events
+    }
+
+    /// Whether a pending rescan should be emitted now rather than held. It is
+    /// held while a storm is still delivering (`storm_ongoing`) so many dropped
+    /// flushes coalesce into one re-walk, and released once the storm settles
+    /// or `RESCAN_MAX_WAIT` elapses.
+    fn rescan_due(&self, storm_ongoing: bool) -> bool {
+        self.pending_rescan
+            && (!storm_ongoing
+                || self
+                    .rescan_deadline
+                    .is_some_and(|deadline| Instant::now() >= deadline))
     }
 
     fn has_pending(&self) -> bool {
@@ -216,6 +236,7 @@ impl WatchPipeline {
     fn reset_burst(&mut self) {
         self.accumulator.clear();
         self.pending_rescan = false;
+        self.rescan_deadline = None;
         self.burst_start = None;
         self.flush_deadline = None;
     }
@@ -305,6 +326,7 @@ impl WatchPipeline {
             }
             self.pending_rescan = true;
             let now = Instant::now();
+            self.rescan_deadline.get_or_insert(now + RESCAN_MAX_WAIT);
             let bs = *self.burst_start.get_or_insert(now);
             self.flush_deadline = Some((now + IDLE_WINDOW).min(bs + MAX_WAIT));
             return Ok(());
@@ -425,7 +447,10 @@ impl WatchPipeline {
                                 }
                             }
                         }
-                        let watch_events = self.snapshot_events();
+                        // A force-flush answers a graph request, so deliver the
+                        // rescan now rather than holding it — the caller needs
+                        // current state.
+                        let watch_events = self.snapshot_events(true);
                         debug!(
                             count = watch_events.len(),
                             replies = replies.len(),
@@ -454,14 +479,37 @@ impl WatchPipeline {
                 },
                 default(idle_wait) => {
                     if self.has_pending() {
-                        let events = self.snapshot_events();
+                        // Hold a pending rescan while the storm is still
+                        // delivering (more events already queued), so a burst
+                        // that overflows across many flushes coalesces into one
+                        // re-walk instead of one per flush.
+                        let storm_ongoing = !self.notify_rx.is_empty();
+                        let rescan_due = self.rescan_due(storm_ongoing);
+                        let events = self.snapshot_events(rescan_due);
                         debug!(count = events.len(), "idle-window emitting events");
                         for e in &events {
                             debug!("  [{:?}] {}", e.r#type, e.path);
                         }
-                        callback(Ok(events));
+                        if !events.is_empty() {
+                            callback(Ok(events));
+                        }
+
+                        // Clear the per-path burst either way. Keep the pending
+                        // rescan when it was held; the queued events drive the
+                        // next flush, and the cap releases it if the storm never
+                        // settles.
+                        self.accumulator.clear();
+                        self.burst_start = None;
+                        self.flush_deadline = None;
+                        if rescan_due || !self.pending_rescan {
+                            self.pending_rescan = false;
+                            self.rescan_deadline = None;
+                        } else {
+                            self.flush_deadline = self.rescan_deadline;
+                        }
+                    } else {
+                        self.reset_burst();
                     }
-                    self.reset_burst();
                 }
             }
         }
@@ -678,7 +726,7 @@ mod tests {
         // The rescan marker rides alongside the accumulated per-path event, not
         // in place of it, so the daemon's ignore-file/server-process intercepts
         // still see the path they key on.
-        let events = pipeline.snapshot_events();
+        let events = pipeline.snapshot_events(true);
         assert_eq!(events.len(), 2);
         let rescan = events
             .iter()
@@ -723,7 +771,7 @@ mod tests {
 
         // A second flag in the same burst coalesces: one marker, no re-log.
         pipeline.ingest_event(Ok(overflow())).expect("rescan 1b");
-        let events = pipeline.snapshot_events();
+        let events = pipeline.snapshot_events(true);
         assert_eq!(events.len(), 1, "coalesced to a single rescan marker");
         assert!(matches!(events[0].r#type, EventType::rescan));
 
@@ -735,7 +783,7 @@ mod tests {
         // again, so the later overflow is neither swallowed nor unrecovered.
         pipeline.ingest_event(Ok(overflow())).expect("rescan 2");
         assert!(pipeline.pending_rescan, "a new burst re-arms the flag");
-        let events = pipeline.snapshot_events();
+        let events = pipeline.snapshot_events(true);
         assert_eq!(events.len(), 1);
         assert!(matches!(events[0].r#type, EventType::rescan));
     }
@@ -818,6 +866,57 @@ mod tests {
         assert!(
             filterer.check_event(&event("kept.log")),
             "a non-hardcoded whitelist is still honoured — the veto is hardcoded-only"
+        );
+    }
+
+    #[test]
+    fn rescan_is_held_until_the_storm_settles() {
+        // A sustained overflow drops events across many flushes. The marker is
+        // held while the storm is still delivering so it coalesces into a single
+        // re-walk, and released when the storm settles or the cap fires.
+        use notify::event::Flag;
+
+        let dir = tempdir().expect("tempdir");
+        let canonical = dir.path().canonicalize().expect("canonicalize");
+        let mut pipeline = WatchPipeline::new(
+            canonical.to_str().expect("utf-8 path").to_string(),
+            &[],
+            false,
+        )
+        .expect("pipeline");
+        let overflow = || notify::Event::new(notify::EventKind::Other).set_flag(Flag::Rescan);
+
+        pipeline
+            .ingest_event(Ok(overflow()))
+            .expect("ingest rescan");
+        assert!(pipeline.pending_rescan);
+
+        // Held while the storm is still delivering: no marker emitted.
+        assert!(
+            !pipeline.rescan_due(true),
+            "held while the storm is ongoing"
+        );
+        assert!(
+            pipeline
+                .snapshot_events(pipeline.rescan_due(true))
+                .is_empty(),
+            "no marker while held"
+        );
+
+        // Released once the storm settles.
+        assert!(
+            pipeline.rescan_due(false),
+            "released when the storm settles"
+        );
+        let events = pipeline.snapshot_events(pipeline.rescan_due(false));
+        assert_eq!(events.len(), 1);
+        assert!(matches!(events[0].r#type, EventType::rescan));
+
+        // The cap releases a held rescan even if the storm never settles.
+        pipeline.rescan_deadline = Some(Instant::now() - Duration::from_secs(1));
+        assert!(
+            pipeline.rescan_due(true),
+            "cap releases a held rescan during an unending storm"
         );
     }
 
