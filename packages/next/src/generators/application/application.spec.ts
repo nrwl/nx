@@ -57,7 +57,11 @@ describe('app', () => {
 
     it('should deny the @parcel/watcher build script pulled in by sass', async () => {
       await withPnpm(tree, '11.2.2', () =>
-        applicationGenerator(tree, { directory: uniq(), style: 'scss' })
+        applicationGenerator(tree, {
+          directory: uniq(),
+          style: 'scss',
+          unitTestRunner: 'none',
+        })
       );
 
       expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
@@ -67,7 +71,11 @@ describe('app', () => {
 
     it('should not record a @parcel/watcher decision without scss', async () => {
       await withPnpm(tree, '11.2.2', () =>
-        applicationGenerator(tree, { directory: uniq(), style: 'css' })
+        applicationGenerator(tree, {
+          directory: uniq(),
+          style: 'css',
+          unitTestRunner: 'none',
+        })
       );
 
       expect(tree.read('pnpm-workspace.yaml', 'utf-8') ?? '').not.toContain(
