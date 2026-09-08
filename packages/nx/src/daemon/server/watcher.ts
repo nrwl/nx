@@ -32,6 +32,13 @@ function dispatchWorkspaceChanges(
   return workspaceChangesCallback(null, events);
 }
 
+// Mirrors the per-directory ignore files create_filter reads (watch_filterer.rs).
+// The other two sources it honours cannot trigger a restart from here:
+// .git/info/exclude lives under the hardcoded-ignored .git (never watched) and
+// the global core.excludesFile is outside the tree — a change to either only
+// takes effect on the next daemon start.
+const IGNORE_FILE_NAMES = ['.gitignore', '.ignore', '.nxignore'];
+
 /**
  * The native filterer's ignore rules are fixed when the watcher starts, so an
  * ignore-file edit needs a daemon restart to take effect. Exposed so the rescan
@@ -40,7 +47,8 @@ function dispatchWorkspaceChanges(
  */
 export function restartDaemonIfIgnoreFilesChanged(paths: string[]): boolean {
   for (const path of paths) {
-    if (path.endsWith('.gitignore') || path === '.nxignore') {
+    const basename = path.slice(path.lastIndexOf('/') + 1);
+    if (IGNORE_FILE_NAMES.includes(basename)) {
       handleServerProcessTermination({
         server: activeServer,
         reason: 'Stopping the daemon the set of ignored files changed (native)',

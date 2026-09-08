@@ -21,10 +21,11 @@ pub fn selective_files_hash(workspace_root: &Path, archived_files: &FilesArchive
     let mut not_archived = vec![];
     let now = std::time::Instant::now();
     // Entries read during the previous gather cannot be trusted on an mtime
-    // match alone: where mtime is whole-second (every platform but Windows), a
-    // rewrite landing in the same second as the read leaves the timestamp
-    // identical and the archived hash silently stale. Re-hash those; they are a
-    // handful of files touched during the gather window, not the workspace.
+    // match alone: mtime resolution is coarse (a whole second on unix, the
+    // system-clock tick on Windows), so a rewrite landing in the same tick as
+    // the read leaves the timestamp identical and the archived hash silently
+    // stale. Re-hash those; they are a handful of files touched during the
+    // gather window, not the workspace.
     let gathered_at = archived_files.gathered_at();
 
     for file in files {
