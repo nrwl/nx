@@ -3,6 +3,7 @@ export {
   NewerRunStateFormatError,
   migrateRunsDir,
   runDir,
+  runHandoffsDir,
   readRunState,
   writeRunState,
   findActiveRun,
@@ -38,8 +39,14 @@ export { createRunId, computePlanHash } from './run-id';
 export { runSingleMigrationWorker } from './worker';
 export type { RunSingleMigrationWorkerInput } from './worker';
 
-export { runOrchestratorInit, runOrchestratorReconcile } from './orchestrator';
+export {
+  completionWarnings,
+  runOrchestratorInit,
+  runOrchestratorReconcile,
+} from './orchestrator';
 export type {
   RunOrchestratorInitInput,
   RunOrchestratorReconcileInput,
 } from './orchestrator';
+
+export { BROKER_ENV_VAR, MigrateCommitBroker } from './broker';

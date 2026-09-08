@@ -5,10 +5,12 @@ import {
 } from '../../migrate-analytics';
 import {
   completionWarnings,
+  MigrateRunState,
+  readRunState,
+  runDir,
   runOrchestratorInit,
   RunOrchestratorInitInput,
-} from '../../run/orchestrator';
-import { MigrateRunState, readRunState, runDir } from '../../run/run-state';
+} from '../../run';
 import { DetectedInstalledAgent } from '../types';
 import { spawnMasterSession } from './spawn-master';
 

@@ -3,8 +3,12 @@ import { existsSync, mkdirSync, rmSync } from 'fs';
 import { dirname, extname, join, relative, sep } from 'path';
 import { logger } from '../../../../utils/logger';
 import { resetSgrAfterAgent } from '../../migrate-output';
-import { BROKER_ENV_VAR, MigrateCommitBroker } from '../../run/broker';
-import { runDir, runHandoffsDir } from '../../run/run-state';
+import {
+  BROKER_ENV_VAR,
+  MigrateCommitBroker,
+  runDir,
+  runHandoffsDir,
+} from '../../run';
 import {
   AGENT_GRACEFUL_EXIT_MS,
   closeAgentSession,
