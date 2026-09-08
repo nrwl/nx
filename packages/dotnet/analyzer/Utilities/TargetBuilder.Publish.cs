@@ -61,10 +61,12 @@ public static partial class TargetBuilder
                 "{workspaceRoot}/.editorconfig",
                 new { workingDirectory = "absolute" },
                 new { dependentTasksOutputFiles = "**/*" },
+                new { env = "NUGET_PACKAGES" },
                 .. directoryBuildInputs
             ],
             Outputs = new[] { publishDir, intermediatePath }
                 .Where(p => p is not null)
+                .Concat(GetRestoreOnlyExclusions(intermediatePath))
                 .ToArray()!,
             Metadata = new TargetMetadata
             {

@@ -50,6 +50,15 @@ public class TargetBuilderOutputPathsTests
             directoryBuildInputs: directoryBuildInputs ?? new List<string>());
 
     /// <summary>
+    /// The outputs a target captures. The restore-only obj exclusions are covered by
+    /// <see cref="TargetBuilderRestoreOutputsTests"/> and the option token by
+    /// <see cref="TargetBuilderTestResultsOutputTests"/>; here they would only pad
+    /// every expected array.
+    /// </summary>
+    private static string[] Declared(Target target) =>
+        target.Outputs!.Where(o => !o.StartsWith('!') && !o.Contains("{options.")).ToArray();
+
+    /// <summary>
     /// The properties MSBuild actually evaluates for a project under the
     /// artifacts layout, measured from `dotnet msbuild -getProperty:` on a real
     /// project. BaseOutputPath and BaseIntermediateOutputPath are always set,
@@ -92,7 +101,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin", "{projectRoot}/obj" },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     [Fact]
@@ -109,7 +118,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin", "{projectRoot}/obj" },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     [Fact]
@@ -158,7 +167,7 @@ public class TargetBuilderOutputPathsTests
                 "{workspaceRoot}/dist/foo/bin",
                 "{workspaceRoot}/dist/intermediates/foo/obj",
             },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     [Fact]
@@ -182,7 +191,7 @@ public class TargetBuilderOutputPathsTests
                 "{projectRoot}/bin",
                 "{workspaceRoot}/dist/intermediates/foo/obj",
             },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     // --- Sanity: SDK artifacts layout -------------------------------------
@@ -200,7 +209,7 @@ public class TargetBuilderOutputPathsTests
                 "{workspaceRoot}/artifacts/bin/foo",
                 "{workspaceRoot}/artifacts/obj/foo",
             },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     [Fact]
@@ -219,7 +228,7 @@ public class TargetBuilderOutputPathsTests
                 "{workspaceRoot}/build-output/bin/foo",
                 "{workspaceRoot}/build-output/obj/foo",
             },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     [Fact]
@@ -242,7 +251,7 @@ public class TargetBuilderOutputPathsTests
                 "{workspaceRoot}/artifacts/bin/Renamed",
                 "{workspaceRoot}/artifacts/obj/Renamed",
             },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     [Fact]
@@ -264,7 +273,7 @@ public class TargetBuilderOutputPathsTests
                 "{workspaceRoot}/artifacts/binaries/custom-name",
                 "{workspaceRoot}/artifacts/obj/Override",
             },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     [Fact]
@@ -278,7 +287,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{workspaceRoot}/artifacts/published/Foo", "{workspaceRoot}/artifacts/obj/Foo" },
-            targets["publish"].Outputs);
+            Declared(targets["publish"]));
     }
 
     // --- OpenApiDocumentsDirectory: the generated document is a build output --
@@ -297,7 +306,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin", "{projectRoot}/obj" },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     [Fact]
@@ -315,7 +324,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/openapi/foo.json", "{projectRoot}/openapi/foo_*.json" },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     [Fact]
@@ -336,7 +345,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/openapi/foo.json", "{projectRoot}/openapi/foo_*.json" },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     [Fact]
@@ -357,7 +366,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{workspaceRoot}/contracts/foo/foo.json", "{workspaceRoot}/contracts/foo/foo_*.json" },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     [Fact]
@@ -377,7 +386,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/foo.json", "{projectRoot}/foo_*.json" },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     [Fact]
@@ -395,7 +404,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/foo.json", "{projectRoot}/foo_*.json" },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     [Fact]
@@ -413,7 +422,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{workspaceRoot}/apps/contracts/foo.json", "{workspaceRoot}/apps/contracts/foo_*.json" },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     [Fact]
@@ -431,7 +440,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin", "{projectRoot}/obj" },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     [Fact]
@@ -452,7 +461,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin", "{projectRoot}/obj" },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     [Fact]
@@ -470,7 +479,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/openapi/foo.json", "{projectRoot}/openapi/foo_*.json" },
-            targets["build:release"].Outputs);
+            Declared(targets["build:release"]));
     }
 
     [Fact]
@@ -489,13 +498,13 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin/publish", "{projectRoot}/obj" },
-            exeTargets["publish"].Outputs);
+            Declared(exeTargets["publish"]));
         Assert.Equal(
             new[] { "{projectRoot}/bin/*.nupkg", "{projectRoot}/obj" },
-            libTargets["pack"].Outputs);
+            Declared(libTargets["pack"]));
         Assert.Equal(
             new[] { "{projectRoot}/TestResults" },
-            testTargets["test"].Outputs);
+            Declared(testTargets["test"]));
     }
 
     [Fact]
@@ -516,7 +525,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/openapi/foo.json", "{projectRoot}/openapi/foo_*.json" },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     [Fact]
@@ -537,7 +546,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin", "{projectRoot}/obj", "{projectRoot}/openapi/PublicApi.json", "{projectRoot}/openapi/PublicApi_*.json" },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     [Theory]
@@ -565,7 +574,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin", "{projectRoot}/obj", $"{{projectRoot}}/openapi/{expectedStem}.json", $"{{projectRoot}}/openapi/{expectedStem}_*.json" },
-            targets["build"].Outputs);
+            Declared(targets["build"]));
     }
 
     // --- Publish output: configuration is rewritten to match the target -----
@@ -588,7 +597,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin/Release/publish", "{projectRoot}/obj" },
-            targets["publish"].Outputs);
+            Declared(targets["publish"]));
     }
 
     [Fact]
@@ -607,7 +616,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/dist-publish", "{projectRoot}/obj" },
-            targets["publish"].Outputs);
+            Declared(targets["publish"]));
     }
 
     [Fact]
@@ -619,7 +628,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{workspaceRoot}/artifacts/publish/foo", "{workspaceRoot}/artifacts/obj/foo" },
-            targets["publish"].Outputs);
+            Declared(targets["publish"]));
     }
 
     // --- Pack output: nupkg glob plus the intermediate (obj) directory ------
@@ -635,7 +644,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin/*.nupkg", "{projectRoot}/obj" },
-            targets["pack"].Outputs);
+            Declared(targets["pack"]));
     }
 
     [Fact]
@@ -658,7 +667,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/bin/Release/*.nupkg", "{projectRoot}/obj" },
-            targets["pack"].Outputs);
+            Declared(targets["pack"]));
     }
 
     [Fact]
@@ -670,7 +679,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{workspaceRoot}/artifacts/package/*.nupkg", "{workspaceRoot}/artifacts/obj/foo" },
-            targets["pack"].Outputs);
+            Declared(targets["pack"]));
     }
 
     // --- Regressions: comparer preservation and configuration matching -------
@@ -693,7 +702,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/custompkg/*.nupkg", "{projectRoot}/obj" },
-            targets["pack"].Outputs);
+            Declared(targets["pack"]));
     }
 
     [Fact]
@@ -710,7 +719,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/custompub", "{projectRoot}/obj" },
-            targets["publish"].Outputs);
+            Declared(targets["publish"]));
     }
 
     [Fact]
@@ -731,7 +740,7 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/nupkgs/release/*.nupkg", "{projectRoot}/obj" },
-            targets["pack"].Outputs);
+            Declared(targets["pack"]));
     }
 
     [Fact]
@@ -748,6 +757,6 @@ public class TargetBuilderOutputPathsTests
 
         Assert.Equal(
             new[] { "{projectRoot}/out/release", "{projectRoot}/obj" },
-            targets["publish"].Outputs);
+            Declared(targets["publish"]));
     }
 }
