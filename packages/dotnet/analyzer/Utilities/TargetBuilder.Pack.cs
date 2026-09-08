@@ -62,10 +62,9 @@ public static partial class TargetBuilder
             Outputs = new[]
                 {
                     packageOutputPath is null ? null : $"{packageOutputPath.TrimEnd('/')}/*.nupkg",
-                    intermediatePath
                 }
                 .Where(p => p is not null)
-                .Concat(GetRestoreOnlyExclusions(intermediatePath))
+                .Concat(GetIntermediateOutputs(intermediatePath))
                 .ToArray()!,
             Metadata = new TargetMetadata
             {

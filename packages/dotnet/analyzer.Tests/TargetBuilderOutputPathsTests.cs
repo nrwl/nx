@@ -50,13 +50,16 @@ public class TargetBuilderOutputPathsTests
             directoryBuildInputs: directoryBuildInputs ?? new List<string>());
 
     /// <summary>
-    /// The outputs a target captures. The restore-only obj exclusions are covered by
-    /// <see cref="TargetBuilderRestoreOutputsTests"/> and the option token by
-    /// <see cref="TargetBuilderTestResultsOutputTests"/>; here they would only pad
-    /// every expected array.
+    /// The paths a target captures. The obj entry is emitted as a glob with the
+    /// restore-only exclusions, covered by <see cref="TargetBuilderRestoreOutputsTests"/>,
+    /// and the option token by <see cref="TargetBuilderTestResultsOutputTests"/>; here
+    /// the glob suffix is dropped and the rest would only pad every expected array.
     /// </summary>
     private static string[] Declared(Target target) =>
-        target.Outputs!.Where(o => !o.StartsWith('!') && !o.Contains("{options.")).ToArray();
+        target.Outputs!
+            .Where(o => !o.StartsWith('!') && !o.Contains("{options."))
+            .Select(o => o.EndsWith("/**/*") ? o[..^5] : o)
+            .ToArray();
 
     /// <summary>
     /// The properties MSBuild actually evaluates for a project under the
