@@ -21,6 +21,7 @@ import {
   coveringLandedEntries,
   discardGeneratorRun,
   hasPendingCommitDebt,
+  stepLabel,
 } from './state-machine';
 import { summarizeError } from './util';
 
@@ -94,7 +95,7 @@ function archiveReopenedResolutions(
   dir: string,
   state: MigrateRunState,
   updates: IssueArchiveUpdate[],
-  migrationId: string
+  label: string
 ): void {
   if (updates.length === 0) return;
   const reconstructedIds: string[] = [];
@@ -102,7 +103,7 @@ function archiveReopenedResolutions(
     archiveIssues(dir, { state, newIssues: [], updates }, reconstructedIds);
   } catch (e) {
     warnToAgent({
-      title: `The reverted issue resolutions for ${migrationId} could not be archived (${summarizeError(e)}).`,
+      title: `The reverted issue resolutions for ${label} could not be archived (${summarizeError(e)}).`,
       bodyLines: [
         `run.json stays authoritative for the dispositions; the archived files under the run's issues directory miss the revert records, so their last entries may still read resolved.`,
       ],
@@ -140,6 +141,6 @@ export function resetForCleanRetry(
     updates = reopened.updates;
     return reopened.state;
   });
-  archiveReopenedResolutions(dir, prepared, updates, step.migrationId);
+  archiveReopenedResolutions(dir, prepared, updates, stepLabel(step));
   resetWorkingTree(step.gitRefBefore, [MIGRATE_RUNS_RELATIVE_DIR], root);
 }

@@ -7,6 +7,8 @@ import type {
   MigrateRunState,
   MigrateStep,
   MigrateStepAwaitingKind,
+  MigrateStepBase,
+  MigrateStepKindFields,
   MigrateStepOutcome,
   MigrateStepPromptOutcome,
 } from './run-state';
@@ -316,10 +318,11 @@ function adoptedSummary(step: MigrateStep): string {
 // already contains the commit that landed them; re-running the generator there
 // would apply them twice. They do not when the reset discards them, and
 // keeping the marker then would skip the generator and record a success for a
-// migration that never ran. The step kind is a plan fact, not an attempt's,
-// and always survives. So does the dependency baseline: it tracks
-// the last dependencies that were installed, so dropping it here would leave
-// the retry with nothing to detect the previous attempt's package.json edits.
+// migration that never ran. The step kind and generator flag are plan facts,
+// not an attempt's, and always survive. So does the dependency baseline: it
+// tracks the last dependencies that were installed, so dropping it here would
+// leave the retry with nothing to detect the previous attempt's package.json
+// edits.
 function rearm(
   step: MigrateStep,
   keepGeneratorCompleted: boolean
@@ -327,7 +330,7 @@ function rearm(
   return {
     id: step.id,
     roundIndex: step.roundIndex,
-    migrationId: step.migrationId,
+    ...stepKindFields(step),
     status: 'pending',
     attempt: step.attempt + 1,
     dispenseCount: step.dispenseCount,
@@ -343,7 +346,7 @@ function rearm(
   };
 }
 
-function generatorRunFields(step: MigrateStep): Partial<MigrateStep> {
+function generatorRunFields(step: MigrateStep): Partial<MigrateStepBase> {
   if (!step.generatorCompleted) return {};
   return {
     generatorCompleted: true,
@@ -465,7 +468,7 @@ export function completionSummaryLines(state: MigrateRunState): string[] {
     `  skipped: ${tally.skipped}`,
     `  unresolved: ${tally.unresolved.length}`,
     ...tally.unresolved.map(
-      (step) => `    - ${step.migrationId}: ${unresolvedFailureDetail(step)}`
+      (step) => `    - ${stepLabel(step)}: ${unresolvedFailureDetail(step)}`
     ),
   ];
 }
@@ -473,7 +476,21 @@ export function completionSummaryLines(state: MigrateRunState): string[] {
 // Suffixed so history does not read the partial result as the migration
 // applied.
 export function unresolvedCommitName(step: MigrateStep): string {
-  return `${splitMigrationId(step.migrationId).name} (unresolved)`;
+  return `${commitNameForStep(step)} (unresolved)`;
+}
+
+// Takes the place after the commit prefix in a step's commits.
+export function commitNameForStep(step: MigrateStep): string {
+  switch (step.kind) {
+    case 'migration':
+      return splitMigrationId(step.migrationId).name;
+    case 'final-validation':
+      throw finalValidationUnsupported(step);
+    default: {
+      const exhaustive: never = step;
+      throw new Error(`Unhandled step kind '${exhaustive}'.`);
+    }
+  }
 }
 
 // A guarded transition whose observation was made against an earlier attempt
@@ -652,6 +669,41 @@ export function latestRound(
   );
 }
 
+function stepKindFields(step: MigrateStep): MigrateStepKindFields {
+  switch (step.kind) {
+    case 'migration':
+      return { kind: 'migration', migrationId: step.migrationId };
+    case 'final-validation':
+      return { kind: 'final-validation' };
+    default: {
+      const exhaustive: never = step;
+      return exhaustive;
+    }
+  }
+}
+
+// How messages to the agent name a step.
+export function stepLabel(step: MigrateStep): string {
+  switch (step.kind) {
+    case 'migration':
+      return step.migrationId;
+    case 'final-validation':
+      return 'the final-validation step';
+    default: {
+      const exhaustive: never = step;
+      return exhaustive;
+    }
+  }
+}
+
+// A run can only hold one through a hand-edited run.json; it fails closed
+// rather than being run as a migration.
+export function finalValidationUnsupported(step: MigrateStep): Error {
+  return new Error(
+    `Step '${step.id}' is a final-validation step, which this version of Nx cannot run.`
+  );
+}
+
 // '<package>:<name>' splits on the first ':', leaving names that contain a ':'
 // intact; a bare id has no package.
 export function splitMigrationId(id: string): {
@@ -665,17 +717,17 @@ export function splitMigrationId(id: string): {
 }
 
 // Maps absorbed step ids to `{package, name}` for the commit body; an id with
-// no matching step, or one whose migration id carries no package, can't be
-// attributed there.
+// no matching step, a step that ran no migration, or one whose migration id
+// carries no package, can't be attributed there.
 export function stepsToPendingMigrations(
   state: MigrateRunState,
   stepIds: string[]
 ): { package: string; name: string }[] {
   const pending: { package: string; name: string }[] = [];
   for (const id of stepIds) {
-    const migrationId = state.steps.find((s) => s.id === id)?.migrationId;
-    if (!migrationId) continue;
-    const { package: pkg, name } = splitMigrationId(migrationId);
+    const step = state.steps.find((s) => s.id === id);
+    if (step?.kind !== 'migration') continue;
+    const { package: pkg, name } = splitMigrationId(step.migrationId);
     if (!pkg) continue;
     pending.push({ package: pkg, name });
   }

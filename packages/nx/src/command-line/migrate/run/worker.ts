@@ -574,7 +574,10 @@ async function runRecorded(
   // step may match; a same-id step from an older round must not.
   const latest = latestRound(state);
   const step = state.steps.find(
-    (s) => s.migrationId === migrationId && s.roundIndex === latest?.index
+    (s) =>
+      s.kind === 'migration' &&
+      s.migrationId === migrationId &&
+      s.roundIndex === latest?.index
   );
   if (!step) {
     throw new Error(
