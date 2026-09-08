@@ -210,8 +210,11 @@ pub(super) fn transform_event_to_watch_events(
 
     #[cfg(target_os = "windows")]
     {
-        // Skip directory events. is_dir_at answers from the kind first, so a
-        // precise Create(File)/Modify(Data) never stats here.
+        // Skip directory events. is_dir_at reads the kind first, so a
+        // definitive Create(File) skips the stat; the ambiguous Modify(Any)
+        // that Windows delivers for a write still stats. notify's Windows
+        // backend already stat'd to classify the create, so the saved stat
+        // is a de-dup here — the clean elimination lands on Linux.
         if value.is_dir_at(0) {
             return Ok(vec![]);
         }
