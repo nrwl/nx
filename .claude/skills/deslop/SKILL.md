@@ -27,7 +27,7 @@ Exit code is the finding count, so CI can gate on it. A line containing `deslop-
 ## Workflow
 
 1. **Scan first.** The mechanical tells are not judgement calls and they are cheap to clear.
-2. **Fix by rewriting the clause, never by swapping the character.** `— ` to `, ` produces comma  <!-- deslop-ignore: quoting the banned character -->
+2. **Fix by rewriting the clause, never by swapping the character.** `— ` to `, ` produces comma <!-- deslop-ignore: quoting the banned character -->
    splices and sentences that visibly bend around the gap, and the bending reads as machine-written
    just as loudly as the dash did. A full stop and a new sentence is usually right. A colon is not a
    fix, and readers flag that swap too.
