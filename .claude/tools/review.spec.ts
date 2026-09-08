@@ -54,20 +54,35 @@ console.log('status derivation (records written before this tool existed)');
     '---\npr: 13\nverdict: lgtm\nattempt: 3\nposted_at:\nposted_url:\n---\n\nbody\n\n## Grill\n\n- answered\n'
   );
   const rows = JSON.parse(run(dir, ['list', '--json']).out);
-  check('a verdict with no ## Grill reads as drafted', rows[0].status, 'drafted');
+  check(
+    'a verdict with no ## Grill reads as drafted',
+    rows[0].status,
+    'drafted'
+  );
   check(
     'a verdict WITH a ## Grill reads as ready',
-    JSON.parse(run(dir, ['list', '--json']).out).find((r: any) => r.pr === 13).status,
+    JSON.parse(run(dir, ['list', '--json']).out).find((r: any) => r.pr === 13)
+      .status,
     'ready'
   );
   check('a filled posted_at reads as posted', rows[1].status, 'posted');
-  check('no verdict and no posted_at reads as queued', rows[2].status, 'queued');
+  check(
+    'no verdict and no posted_at reads as queued',
+    rows[2].status,
+    'queued'
+  );
   check(
     '--pending drops terminal records',
-    JSON.parse(run(dir, ['list', '--pending', '--json']).out).map((r: any) => r.pr),
+    JSON.parse(run(dir, ['list', '--pending', '--json']).out).map(
+      (r: any) => r.pr
+    ),
     [10, 12, 13]
   );
-  check('a dropped verb is rejected rather than silently ignored', run(dir, ['show', '10']).code, 1);
+  check(
+    'a dropped verb is rejected rather than silently ignored',
+    run(dir, ['show', '10']).code,
+    1
+  );
 }
 
 console.log('stage');
@@ -75,9 +90,16 @@ console.log('stage');
   const dir = tmp();
   run(dir, ['stage', '42', '--title', 'first']);
   const before = fs.readFileSync(path.join(dir, '42.md'), 'utf-8');
-  fs.writeFileSync(path.join(dir, '42.md'), before.replace('_No draft yet', 'REAL DRAFT BODY'));
+  fs.writeFileSync(
+    path.join(dir, '42.md'),
+    before.replace('_No draft yet', 'REAL DRAFT BODY')
+  );
   const r = run(dir, ['stage', '42', '--title', 'second']);
-  check('re-staging leaves an existing record alone', /left alone/.test(r.out), true);
+  check(
+    're-staging leaves an existing record alone',
+    /left alone/.test(r.out),
+    true
+  );
   check(
     'and does not touch the body',
     /REAL DRAFT BODY/.test(fs.readFileSync(path.join(dir, '42.md'), 'utf-8')),
@@ -91,14 +113,31 @@ console.log('set');
   run(dir, ['stage', '7']);
   fs.writeFileSync(
     path.join(dir, '7.md'),
-    fs.readFileSync(path.join(dir, '7.md'), 'utf-8').replace('_No draft yet — this review has not reached Step 8._', 'BODY SENTINEL')
+    fs
+      .readFileSync(path.join(dir, '7.md'), 'utf-8')
+      .replace(
+        '_No draft yet — this review has not reached Step 8._',
+        'BODY SENTINEL'
+      )
   );
   run(dir, ['set', '7', 'running']);
   const text = fs.readFileSync(path.join(dir, '7.md'), 'utf-8');
   check('status is updated in place', /^status: running$/m.test(text), true);
-  check('the body survives a frontmatter edit', /BODY SENTINEL/.test(text), true);
-  check('an unknown status is rejected', run(dir, ['set', '7', 'bogus']).code, 1);
-  check('setting a missing record fails loudly', run(dir, ['set', '999', 'running']).code, 1);
+  check(
+    'the body survives a frontmatter edit',
+    /BODY SENTINEL/.test(text),
+    true
+  );
+  check(
+    'an unknown status is rejected',
+    run(dir, ['set', '7', 'bogus']).code,
+    1
+  );
+  check(
+    'setting a missing record fails loudly',
+    run(dir, ['set', '999', 'running']).code,
+    1
+  );
 }
 
 console.log('watch');
@@ -115,7 +154,11 @@ console.log('watch');
     (replayed.out.match(/^FILED /gm) ?? []).length,
     2
   );
-  check('the snapshot line names the directory', /watching /.test(replayed.err), true);
+  check(
+    'the snapshot line names the directory',
+    /watching /.test(replayed.err),
+    true
+  );
 }
 
 console.log('resume');
@@ -129,9 +172,22 @@ console.log('resume');
     /no recorded session/.test(noSession.err),
     true
   );
-  run(dir, ['link', '88', '--pane', 'wT:pZZ', '--session', 'abc-123', '--pid', '999999']);
+  run(dir, [
+    'link',
+    '88',
+    '--pane',
+    'wT:pZZ',
+    '--session',
+    'abc-123',
+    '--pid',
+    '999999',
+  ]);
   const front = fs.readFileSync(path.join(dir, '88.md'), 'utf-8');
-  check('link writes the session', /^agent_session: abc-123$/m.test(front), true);
+  check(
+    'link writes the session',
+    /^agent_session: abc-123$/m.test(front),
+    true
+  );
   check('link writes the pane', /^agent_pane: wT:pZZ$/m.test(front), true);
   check('link preserves the body', /No draft yet/.test(front), true);
 }
@@ -141,7 +197,13 @@ console.log('undo');
   const dir = tmp();
   run(dir, ['stage', '77']);
   run(dir, ['set', '77', 'running']);
-  check('status moved', /^status: running$/m.test(fs.readFileSync(path.join(dir, '77.md'), 'utf-8')), true);
+  check(
+    'status moved',
+    /^status: running$/m.test(
+      fs.readFileSync(path.join(dir, '77.md'), 'utf-8')
+    ),
+    true
+  );
   run(dir, ['undo', '77']);
   check(
     'undo restores the prior value from the journal',
