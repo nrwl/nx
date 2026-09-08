@@ -1,7 +1,7 @@
 import { type Tree } from '@nx/devkit';
 import {
-  getDeclaredPackageVersion,
   getInstalledPackageVersion,
+  getResolvedPackageVersion,
 } from '@nx/devkit/internal';
 import { join } from 'path';
 import { major } from 'semver';
@@ -84,7 +84,7 @@ export function getInstalledCypressVersion(tree?: Tree): string | null {
   if (!tree) {
     return getInstalledPackageVersion('cypress');
   }
-  return getDeclaredPackageVersion(tree, 'cypress');
+  return getResolvedPackageVersion(tree, 'cypress');
 }
 
 export function getInstalledCypressMajorVersion(tree?: Tree): number | null {
