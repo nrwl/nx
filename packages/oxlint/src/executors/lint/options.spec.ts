@@ -15,6 +15,18 @@ describe('resolveLintOptions', () => {
     expect(resolved.flags).toEqual(['--type-aware', '--threads', '2']);
   });
 
+  it('should keep quoted values and short flags intact in string args', () => {
+    expect(
+      resolveLintOptions({ args: '--config "configs/team oxlint.json" --fix' })
+        .flags
+    ).toEqual(['--config', 'configs/team oxlint.json', '--fix']);
+    expect(resolveLintOptions({ args: '-c a.json src' }).flags).toEqual([
+      '-c',
+      'a.json',
+      'src',
+    ]);
+  });
+
   it('should append args after target options and before CLI overrides', () => {
     expect(
       resolveLintOptions({
