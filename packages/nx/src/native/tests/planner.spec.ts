@@ -270,6 +270,14 @@ describe('task planner', () => {
       return { planner, taskGraph, projectGraph };
     }
 
+    /** The task graph a continuous dependency produces, e.g. an e2e on a serve. */
+    function withContinuousDependency(taskGraph: any) {
+      return {
+        ...taskGraph,
+        continuousDependencies: { 'parent:build': ['child:build'] },
+      };
+    }
+
     let bundleCount = 0;
     /** Writes a bundle with the given entries and loads it as the run would. */
     function snapshotsFor(
@@ -338,6 +346,36 @@ describe('task planner', () => {
       expect(plain['parent:build']).not.toContainEqual(
         expect.stringMatching(/^io-snapshot:/)
       );
+    });
+
+    it('does not hash a task its continuous dependency serves', () => {
+      const { planner, taskGraph } = fixture();
+      const plan = planner.getPlans(
+        ['parent:build'],
+        withContinuousDependency(taskGraph),
+        snapshotsFor({ 'parent:build': { inputs: ['libs/parent/filea.ts'] } })
+      )['parent:build'];
+
+      // The trace saw only the task's own process, so the files its continuous
+      // dependency reads are missing; hashing from it would be a false key.
+      expect(plan).not.toContainEqual(expect.stringMatching(/^io-snapshot:/));
+      expect(plan).toContain(
+        'parent:libs/parent/**/*,!libs/parent/**/*.spec.ts'
+      );
+    });
+
+    it('hashes from the snapshot anyway when the task forces a fileset', () => {
+      const { planner, taskGraph } = fixture({ forced: true });
+      const plan = planner.getPlans(
+        ['parent:build'],
+        withContinuousDependency(taskGraph),
+        snapshotsFor({ 'parent:build': { inputs: ['libs/parent/filea.ts'] } })
+      )['parent:build'];
+
+      // `force` is the task taking the unseen reads on itself, so the guard
+      // stands down rather than overriding a deliberate choice.
+      expect(plan).toContainEqual(expect.stringMatching(/^io-snapshot:/));
+      expect(plan).toContain('parent:libs/parent/served/**/*');
     });
 
     it('keeps a forced fileset that the snapshot would otherwise replace', () => {

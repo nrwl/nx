@@ -431,9 +431,27 @@ impl HashPlanner {
                 inputs.opted_out.insert(task_id.clone());
             } else if self.declared_files_invalid(task) {
                 inputs.invalid_files_input.insert(task_id.clone());
+            } else if task_graph
+                .continuous_dependencies
+                .get(task_id)
+                .is_some_and(|deps| !deps.is_empty())
+                && !self.declares_forced_fileset(task)
+            {
+                inputs.continuous_dependency.insert(task_id.clone());
             }
         }
         inputs
+    }
+
+    /// Whether the task takes responsibility for reads a trace cannot see.
+    fn declares_forced_fileset(&self, task: &Task) -> bool {
+        let Ok(inputs) = get_inputs(task, &self.project_graph, &self.nx_json) else {
+            return false;
+        };
+        inputs
+            .self_inputs
+            .iter()
+            .any(|input| matches!(input, Input::FileSet { force: true, .. }))
     }
 
     /// A declared `{ files }` glob the hasher would reject is a native error;
