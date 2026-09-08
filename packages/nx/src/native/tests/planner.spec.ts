@@ -193,7 +193,9 @@ describe('task planner', () => {
   });
 
   describe('io snapshots', () => {
-    function fixture(opts: { cyclic?: boolean; forced?: boolean } = {}) {
+    function fixture(
+      opts: { cyclic?: boolean; forced?: boolean; continuous?: boolean } = {}
+    ) {
       const builder = new ProjectGraphBuilder(undefined, {
         parent: [
           { file: 'libs/parent/filea.ts', hash: 'a.hash' },
@@ -216,6 +218,9 @@ describe('task planner', () => {
                 { runtime: 'echo runtime123' },
                 { json: '{projectRoot}/package.json', fields: ['version'] },
                 { fileset: '{projectRoot}/generated', includeIgnored: true },
+                ...(opts.continuous
+                  ? [{ continuousDependenciesInputs: true }]
+                  : []),
                 ...(opts.forced
                   ? [
                       { fileset: '{projectRoot}/served/**/*', force: true },
@@ -346,6 +351,20 @@ describe('task planner', () => {
       expect(plain['parent:build']).not.toContainEqual(
         expect.stringMatching(/^io-snapshot:/)
       );
+    });
+
+    it("hashes a continuous dependency's inputs into the task it serves", () => {
+      const { planner, taskGraph } = fixture({ continuous: true });
+      const plan = planner.getPlans(
+        ['parent:build'],
+        withContinuousDependency(taskGraph),
+        snapshotsFor({ 'parent:build': { inputs: ['libs/parent/filea.ts'] } })
+      )['parent:build'];
+
+      // The task keeps its own snapshot precision and additionally hashes what
+      // the dependency serving it reads, which no trace of this task can see.
+      expect(plan).toContainEqual(expect.stringMatching(/^io-snapshot:/));
+      expect(plan).toContain('child:libs/child/**/*');
     });
 
     it('does not hash a task its continuous dependency serves', () => {

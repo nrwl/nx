@@ -285,6 +285,39 @@ impl HashPlanner {
                     ids.extend(own);
                 }
 
+                // A continuous dependency's reads happen in its own process and
+                // never reach this task's trace, so its inputs are spliced in
+                // whole. Hashed from its declared inputs: a task that never
+                // finishes is never traced.
+                if inputs
+                    .self_inputs
+                    .iter()
+                    .any(|i| matches!(i, Input::ContinuousDependenciesInputs))
+                {
+                    for dep_id in task_graph
+                        .continuous_dependencies
+                        .get(*id)
+                        .into_iter()
+                        .flatten()
+                    {
+                        let Some(dep_task) = task_graph.tasks.get(dep_id) else {
+                            continue;
+                        };
+                        let dep_inputs = get_inputs(dep_task, &self.project_graph, &self.nx_json)?;
+                        let mut dep_negations: Negations = Vec::new();
+                        ids.extend(self.self_and_deps_inputs(
+                            &dep_task.target.project,
+                            dep_task,
+                            &dep_inputs,
+                            &task_graph,
+                            external_deps_mapped,
+                            &mut VisitedTracker::new(dep_task.target.project.as_str()),
+                            None,
+                            &mut dep_negations,
+                        )?);
+                    }
+                }
+
                 ids.sort_unstable();
                 ids.dedup();
 
@@ -435,7 +468,7 @@ impl HashPlanner {
                 .continuous_dependencies
                 .get(task_id)
                 .is_some_and(|deps| !deps.is_empty())
-                && !self.declares_forced_fileset(task)
+                && !self.covers_unseen_reads(task)
             {
                 inputs.continuous_dependency.insert(task_id.clone());
             }
@@ -443,15 +476,18 @@ impl HashPlanner {
         inputs
     }
 
-    /// Whether the task takes responsibility for reads a trace cannot see.
-    fn declares_forced_fileset(&self, task: &Task) -> bool {
+    /// Whether the task accounts for reads its own trace cannot see, either by
+    /// forcing a fileset or by taking its continuous dependencies' inputs.
+    fn covers_unseen_reads(&self, task: &Task) -> bool {
         let Ok(inputs) = get_inputs(task, &self.project_graph, &self.nx_json) else {
             return false;
         };
-        inputs
-            .self_inputs
-            .iter()
-            .any(|input| matches!(input, Input::FileSet { force: true, .. }))
+        inputs.self_inputs.iter().any(|input| {
+            matches!(
+                input,
+                Input::FileSet { force: true, .. } | Input::ContinuousDependenciesInputs
+            )
+        })
     }
 
     /// A declared `{ files }` glob the hasher would reject is a native error;
