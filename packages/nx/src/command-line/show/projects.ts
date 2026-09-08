@@ -65,12 +65,17 @@ export async function showProjectsHandler(
         explain: isExplaining(nxArgs.explain),
       });
       if (isExplaining(nxArgs.explain)) {
+        // The closure the selected tasks drag in, which is what actually runs.
+        const dependencyCount =
+          affectedTasks.taskSelection.taskIds.length -
+          affectedTasks.affectedTaskIds.size;
         printAffectedExplanation(
           affectedTasks.reasons ?? {},
           'Affected tasks',
           // show projects declares its own --json, which has no executor to
           // pass through to.
-          args.json ? 'stdout' : nxArgs.explain
+          args.json ? 'stdout' : nxArgs.explain,
+          dependencyCount
         );
         await output.drain();
         return;

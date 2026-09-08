@@ -69,7 +69,13 @@ export function formatAffectedReason(reason: AffectedReason): string {
     case 'lockfile':
       return `lockfile ${reason.file} changed`;
     case 'npm-package':
-      return `depends on ${reason.package}, whose version changed`;
+      // The locator falls back to every project when it cannot say which
+      // packages moved, and those entries carry no package name.
+      return reason.package
+        ? `depends on ${reason.package}, whose version changed`
+        : `a dependency changed in ${
+            reason.file ?? 'package.json'
+          }, and could not be matched to a package`;
     case 'tsconfig':
       return `path mappings changed in ${reason.file}`;
     case 'dependency':
@@ -95,7 +101,12 @@ export function formatAffectedReason(reason: AffectedReason): string {
  */
 export function formatAffectedExplanation(
   reasons: Record<string, AffectedReason[]>,
-  heading: string
+  heading: string,
+  /**
+   * Tasks that will run only to satisfy the selected ones. Absent on the
+   * project path, which has no closure to report.
+   */
+  dependencies?: number
 ): string {
   const names = Object.keys(reasons).sort();
   if (!names.length) {
@@ -113,6 +124,18 @@ export function formatAffectedExplanation(
     }
     lines.push('');
   }
+
+  // Same shape as the run summary, which reports the tasks it ran and the ones
+  // it ran only to get there.
+  const noun = heading.toLowerCase().includes('task') ? 'task' : 'project';
+  const plural = names.length === 1 ? noun : `${noun}s`;
+  lines.push(
+    dependencies === undefined
+      ? `${names.length} affected ${plural}.`
+      : `${names.length} affected ${plural} and ${dependencies} ${
+          dependencies === 1 ? 'task' : 'tasks'
+        } they depend on.`
+  );
   return lines.join('\n');
 }
 

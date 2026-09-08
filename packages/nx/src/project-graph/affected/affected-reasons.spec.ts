@@ -55,9 +55,15 @@ describe('JS locator reasons', () => {
     expect(formatAffectedReason(reason)).toBe(
       'depends on npm:lodash@4.17.21, whose version changed'
     );
-    expect(formatAffectedReason({ kind: 'npm-package' })).toContain(
-      'undefined'
-    );
+    // The blanket fallback carries no package name; it must still read as a
+    // sentence. An earlier version of this test asserted the opposite and so
+    // pinned "depends on undefined, whose version changed" in place.
+    const noPackage = formatAffectedReason({
+      kind: 'npm-package',
+      file: 'package.json',
+    });
+    expect(noPackage).not.toContain('undefined');
+    expect(noPackage).toContain('package.json');
   });
 
   it('reports nothing when the root tsconfig is untouched', () => {

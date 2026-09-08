@@ -12,7 +12,9 @@ import { AffectedReason, formatAffectedExplanation } from './affected-reasons';
 export function printAffectedExplanation(
   reasons: Record<string, AffectedReason[]>,
   heading: string,
-  destination: string | boolean | undefined
+  destination: string | boolean | undefined,
+  /** Tasks that run only to satisfy the selected ones; omitted for projects. */
+  dependencies?: number
 ): void {
   if (destination === 'stdout') {
     console.log(JSON.stringify(reasons, null, 2));
@@ -24,7 +26,7 @@ export function printAffectedExplanation(
     return;
   }
 
-  const rendered = formatAffectedExplanation(reasons, heading);
+  const rendered = formatAffectedExplanation(reasons, heading, dependencies);
   if (!Object.keys(reasons).length) {
     output.log({ title: rendered });
     return;
