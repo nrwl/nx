@@ -61,6 +61,25 @@
       "description": "Set `justInTimeCompile: false` in webpack component testing Cypress configs on Cypress 14+, where it defaults to true and can intermittently run 0 tests in CI.",
       "implementation": "./dist/src/migrations/update-23-1-0/disable-webpack-ct-just-in-time-compile",
       "documentation": "./dist/src/migrations/update-23-1-0/disable-webpack-ct-just-in-time-compile.md"
+    },
+    "update-cypress-16-config-options": {
+      "version": "23.3.0-beta.1",
+      "requires": {
+        "cypress": ">=16.0.0"
+      },
+      "description": "Renames `experimentalMemoryManagement` to `manageBrowserMemory`, replaces `experimentalFastVisibility` with `visibilityStrategy`, and removes `experimentalSourceRewriting`, `allowCypressEnv` and `execTimeout` from `cypress.config.{ts,js,mjs,cjs}`, matching the Cypress 16 config changes.",
+      "implementation": "./dist/src/migrations/update-23-3-0/update-cypress-16-config-options",
+      "documentation": "./dist/src/migrations/update-23-3-0/update-cypress-16-config-options.md"
+    },
+    "update-cypress-16-query-command-overwrites": {
+      "version": "23.3.0-beta.1",
+      "requires": {
+        "cypress": ">=16.0.0"
+      },
+      "description": "Renames `Cypress.Commands.overwrite()` to `Cypress.Commands.overwriteQuery()` for `getCookie`, `getCookies`, `getAllCookies`, `getAllLocalStorage` and `getAllSessionStorage`, which are queries in Cypress 16; an AI prompt then adapts the callbacks to the query contract.",
+      "implementation": "./dist/src/migrations/update-23-3-0/update-cypress-16-query-command-overwrites",
+      "prompt": "./dist/src/migrations/update-23-3-0/adapt-query-command-overwrites.md",
+      "documentation": "./dist/src/migrations/update-23-3-0/update-cypress-16-query-command-overwrites.md"
     }
   },
   "packageJsonUpdates": {
