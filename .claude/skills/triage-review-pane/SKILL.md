@@ -5,7 +5,7 @@ description: >-
   reports each decision back. Use after staging records with `triage stage`, or whenever the user
   asks to review, approve or go through the triage queue. Requires herdr or tmux — say so plainly
   if neither is running rather than falling back to something worse.
-allowed-tools: Bash(herdr *), Bash(tmux *), Bash(.claude/tools/triage *), Bash(.claude/skills/triage-issues/scripts/watch-triage.sh), Monitor
+allowed-tools: Bash(herdr *), Bash(tmux *), Bash(.claude/tools/triage *), Monitor
 argument-hint: '(no args)'
 ---
 
@@ -34,10 +34,11 @@ pane needs a multiplexer to put it in, and the TUI needs a real TTY, so there is
 degrade to. Say that in one line and hand over the command:
 
 > The review TUI needs a side pane, which only works inside herdr or tmux — neither is running here.
-> Run `pnpm triage-tui` yourself and I'll pick the results up from `triage feedback`.
+> Run `pnpm triage-tui` yourself and I'll pick the results up from `triage feedback` and
+> `triage notes`.
 
-Then arm the watcher anyway (step 4). It polls the record files, so it works regardless of how the
-TUI was started, and the user still gets their decisions reported back.
+Then arm the watcher anyway (step 4). It reads the events bus, not the pane, so it works regardless
+of how the TUI was started — and the user still gets their decisions reported back.
 
 Do not substitute something else. A TUI launched in the foreground takes the session over, and one
 launched detached has no terminal and exits immediately.
@@ -79,16 +80,19 @@ on `q`, so reopening it is routine, and the watcher outlives the pane by design.
 reuse the running watcher.
 
 ```
-Monitor(command: ".claude/skills/triage-issues/scripts/watch-triage.sh",
+Monitor(command: ".claude/tools/triage monitor",
         description: "triage review decisions",
         timeout_ms: 3600000)
 ```
 
-One line per status change, including the note the reviewer typed on a `changes-requested`, then it
-exits once every record settles — which ends the watch on its own. It also emits, rather than going
-quiet, if the records directory disappears mid-review: `.nx-issue-triage` is gitignored and several
-agent sessions share this checkout, so a stray clean really can delete a queue out from under a live
-review.
+One line per decision as it lands: approvals, rejections, the note typed on a `changes-requested`,
+and a `NOTE` line each time they press `n`. It reads the events bus rather than diffing the records
+directory, so a record that archives itself on the way out — a rejection, an applied record — is
+still reported; the transition is on the bus before the file moves. It exits once nothing is pending,
+which ends the watch on its own. It also emits, rather than going quiet, if the records directory
+disappears mid-review:
+`.nx-issue-triage` is gitignored and several agent sessions share this checkout, so a stray clean
+really can delete a queue out from under a live review.
 
 Then **stop and let them work.** Do not poll `triage list`; the watcher is the point.
 
@@ -131,6 +135,14 @@ When a record comes back **changes-requested** instead, address the note and res
 
 ```bash
 .claude/tools/triage feedback     # what they asked you to change, and why
+```
+
+A **`NOTE`** line is not that. It is a side request about the issue — file a Linear ticket, ping
+someone — and it leaves the record's status alone on purpose. Do the work it asks for, and keep
+applying that record on its own schedule; do not wait on the note and do not restage for one.
+
+```bash
+.claude/tools/triage notes        # every note they left, oldest first
 ```
 
 The watcher's last line tells you when everything has settled — at which point there should be
