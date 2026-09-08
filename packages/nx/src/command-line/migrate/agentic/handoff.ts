@@ -17,6 +17,7 @@ import {
   HANDOFFS_DIR_NAME,
   HandoffFile,
   MIGRATE_RUNS_RELATIVE_DIR,
+  PROMPTS_DIR_NAME,
 } from './types';
 
 /** Returns the run directory for a given workspace + run id (target version). */
@@ -106,13 +107,12 @@ function truncateUtf8(value: string, maxBytes: number): string {
 
 /**
  * Sanitizing folds many characters to `_`, so distinct migrations can share a
- * prefix. The SHA-256 of the raw package and name is what keeps their paths
+ * prefix. The SHA-256 of the raw package and name is what keeps their handoffs
  * collision-resistant.
  */
-export function stepFilePath(
+export function stepHandoffPath(
   runDir: string,
-  migration: { package: string; name: string },
-  extension: string
+  migration: { package: string; name: string }
 ): string {
   const prefix = truncateUtf8(
     [...migration.package.split('/'), migration.name]
@@ -123,7 +123,7 @@ export function stepFilePath(
   const hash = createHash('sha256')
     .update(JSON.stringify([migration.package, migration.name]))
     .digest('hex');
-  return join(runDir, HANDOFFS_DIR_NAME, `${prefix}-${hash}${extension}`);
+  return join(runDir, HANDOFFS_DIR_NAME, `${prefix}-${hash}.json`);
 }
 
 /** Handoff path for a run step. No hash needed: step ids are unique within the run. */
@@ -131,11 +131,21 @@ export function runStepHandoffPath(runDir: string, stepId: string): string {
   return join(runDir, HANDOFFS_DIR_NAME, `${sanitizeSegment(stepId)}.json`);
 }
 
-export function stepHandoffPath(
+/**
+ * Directory holding a step's prompt files. The migration name is a directory
+ * rather than a filename prefix so the file names stay constant: a name near
+ * the 255-character filename limit would push a suffixed file over it.
+ */
+export function stepPromptsDir(
   runDir: string,
   migration: { package: string; name: string }
 ): string {
-  return stepFilePath(runDir, migration, '.json');
+  return join(
+    runDir,
+    PROMPTS_DIR_NAME,
+    ...migration.package.split('/').map(sanitizeSegment),
+    sanitizeSegment(migration.name)
+  );
 }
 
 export type HandoffReadFailureReason =

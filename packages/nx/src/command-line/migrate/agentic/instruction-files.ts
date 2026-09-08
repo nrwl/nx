@@ -1,6 +1,6 @@
 import { writeFileSync } from 'fs';
-import { relative } from 'path';
-import { stepFilePath } from './handoff';
+import { join, relative } from 'path';
+import { mkdirSafely, stepPromptsDir } from './handoff';
 
 export interface StepInstructionFiles {
   /**
@@ -23,26 +23,22 @@ export interface WriteStepInstructionFilesArgs {
 }
 
 /**
- * Writes a step's prompts next to its handoff file and returns how to reach
- * them. The prompts travel as files rather than as command-line arguments
- * because on Windows npm-installed agents resolve to `.cmd` shims invoked
- * through `cmd.exe /c`, which caps the command line at 8191 characters and
- * cannot carry a newline, and the prompts are kilobytes of multi-line text.
- * Delivery is by file on every platform so that there is one path to keep
- * working.
- *
- * The caller creates the parent directory, ahead of the handoff path.
+ * Writes a step's prompts to their own directory beside its handoff file and
+ * returns how to reach them. The prompts travel as files rather than as
+ * command-line arguments because on Windows npm-installed agents resolve to
+ * `.cmd` shims invoked through `cmd.exe /c`, which caps the command line at
+ * 8191 characters and cannot carry a newline, and the prompts are kilobytes
+ * of multi-line text. Delivery is by file on every platform so that there is
+ * one path to keep working.
  */
 export function writeStepInstructionFiles(
   args: WriteStepInstructionFilesArgs
 ): StepInstructionFiles {
   const { workspaceRoot, runDir, migration, systemPrompt, instructions } = args;
-  const systemPromptFilePath = stepFilePath(runDir, migration, '.system.md');
-  const instructionsAbsolutePath = stepFilePath(
-    runDir,
-    migration,
-    '.instructions.md'
-  );
+  const promptsDir = stepPromptsDir(runDir, migration);
+  mkdirSafely(promptsDir, `prompt directory for ${migration.name}`);
+  const systemPromptFilePath = join(promptsDir, 'system.md');
+  const instructionsAbsolutePath = join(promptsDir, 'instructions.md');
   writeStepFile(systemPromptFilePath, systemPrompt, 'system prompt');
   writeStepFile(instructionsAbsolutePath, instructions, 'instructions');
 

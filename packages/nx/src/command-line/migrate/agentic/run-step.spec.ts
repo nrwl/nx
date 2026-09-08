@@ -43,9 +43,9 @@ const mockGetDefinition = getAgentDefinition as Mock;
 const mockWriteInstructionFiles = writeStepInstructionFiles as Mock;
 
 const SYSTEM_PROMPT_FILE =
-  '/ws/.nx/migrate-runs/20.0.0/handoffs/@nx/test/m1.system.md';
+  '/ws/.nx/migrate-runs/20.0.0/prompts/@nx/test/m1/system.md';
 const INSTRUCTIONS_POINTER =
-  'Your instructions for this migration step are in the file .nx/migrate-runs/20.0.0/handoffs/@nx/test/m1.instructions.md';
+  'Your instructions for this migration step are in the file .nx/migrate-runs/20.0.0/prompts/@nx/test/m1/instructions.md';
 const HANDOFF_FILE = stepHandoffPath(
   '/ws/.nx/migrate-runs/20.0.0',
   makeMigration()

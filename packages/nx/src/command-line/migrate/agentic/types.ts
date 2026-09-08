@@ -12,13 +12,18 @@ export type { AgentId };
 export const MIGRATE_RUNS_RELATIVE_DIR = '.nx/migrate-runs';
 
 /**
- * The one subtree of a run directory the agent's pre-authorized write scope
- * reaches: handoff files and the per-step prompt files. Everything beside it
- * is state Nx owns. Handoff names derive from step ids or package and
- * migration names, so flattening them into the run dir would leave Nx no name
- * it could safely add.
+ * The one subtree of a run directory an agent writes; everything beside it is
+ * state Nx owns, so the pre-authorized write scope stops here. Handoff names
+ * derive from step ids or package and migration names, so flattening them into
+ * the run dir would leave Nx no name it could safely add.
  */
 export const HANDOFFS_DIR_NAME = 'handoffs';
+
+/**
+ * Sibling subtree holding the per-step prompt files Nx writes for the agent
+ * to read. They stay out of `handoffs/`, which is the agent's to write.
+ */
+export const PROMPTS_DIR_NAME = 'prompts';
 
 /**
  * Composite identity of the v23 migration that adds `.nx/migrate-runs` to
