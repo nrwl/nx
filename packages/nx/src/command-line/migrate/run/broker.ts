@@ -1,5 +1,3 @@
-// Internal to run/: deliberately not re-exported from ./index.
-//
 // A master session's agent runs the dispensed `nx migrate` commands inside
 // its own sandbox, where a dependency install has no network and a commit
 // cannot write `.git`. The parent nx that spawned the session advertises
