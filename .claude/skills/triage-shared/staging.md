@@ -59,7 +59,7 @@ two places this bites:
 
 - between paragraphs: the separator line is `>` on its own
 - around a fenced code block: the fences are `> ```` and the blank lines above and below them are
-  `>` too, so the whole fence sits inside the quote
+`>` too, so the whole fence sits inside the quote
 
 The two blank lines that must stay genuinely empty are the ones bracketing the blockquote itself —
 after `</summary>` and before `</details>`. Those are the HTML boundaries, and putting a `>` on them
@@ -183,7 +183,7 @@ or reviewed, the contributor is in a live conversation and a triage note interru
 everything a routine record would say is already known to both of them: who is looking at it, that it
 is assigned, that a review is coming.
 
-What survives is only what the record itself *does* and the thread does not already know. CI being
+What survives is only what the record itself _does_ and the thread does not already know. CI being
 approved and starting. A `blocked:` label going on and why. A duplicate or superseder nobody has
 mentioned. Drop the thanks, drop "assigned now", drop "someone will review as time allows". They know.
 
@@ -326,9 +326,20 @@ start reviewing while you keep working:
 
 > Staging as I go; 3 ready so far. The TUI refreshes as more arrive.
 
-`review` is a TUI: `a` approves, `x` rejects, `c` leaves a note back to you, `o` opens the issue on
-GitHub, `e` opens the record in `$EDITOR` so they can fix a label or rewrite a comment directly.
+`review` is a TUI: `a` approves, `x` rejects, `c` sends the record back to you for changes, `n` leaves
+you a note that decides nothing, `o` opens the issue on GitHub, `e` opens the record in `$EDITOR` so
+they can fix a label or rewrite a comment directly.
 **The user drives it** — but you can put it in front of them instead of making them type it.
+
+`c` and `n` are different channels and must not be collapsed. `c` means "this record is wrong" — the
+status becomes `changes-requested` and nothing applies until it is restaged and approved again. `n`
+means "and also do this" — a Linear ticket to file, a person to ping — and touches nothing about the
+staged mutations, so a record can be approved and carry a note at the same time.
+
+`x` is final: a rejection archives on the spot and drops out of the review list, the same way `apply`
+retires a record it has written to GitHub. It is still there under `triage list --all` and
+`triage show <N>` — the record is the only account of what was decided — but it will not come back
+round for a second look, so do not use `x` where `c` is meant.
 
 ### Hand it over, and stop polling
 
@@ -346,8 +357,13 @@ Decisions arrive one at a time, and you act on each as it lands rather than wait
 
 ```bash
 .claude/tools/triage feedback     # what they asked you to change, and why
+.claude/tools/triage notes        # side requests, which block nothing
 .claude/tools/triage apply        # applies only the records they approved
 ```
+
+A note is not a gate. Act on it as ordinary work in the main thread and apply the record on its own
+schedule — holding an approved record back until you have filed the Linear ticket the note asked for
+is exactly the coupling `n` exists to avoid.
 
 **Apply as approvals arrive — an approval is the go-ahead for that record.** `apply` only ever touches
 approved records, so calling it with two approvals in hand is as safe as calling it with forty. On a

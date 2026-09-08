@@ -71,8 +71,20 @@ const TERMINAL_STATUSES: string[] = triage.TERMINAL_STATUSES ?? [];
  * the selected record's number, so the decision the action makes stays testable
  * on the CLI instead of living in a renderer. Triage declares none.
  */
-const ACTIONS: { key: string; cmd: string; label: string }[] = triage.ACTIONS ?? [];
+const ACTIONS: { key: string; cmd: string; label: string }[] =
+  triage.ACTIONS ?? [];
 const STORE_BIN = process.env.TUI_STORE || '';
+
+/**
+ * Whether this store carries an agent-facing notes bus.
+ *
+ * A note is not a record mutation, so it is live even in READ_ONLY — but only a
+ * store that has somewhere to put it can offer the key. The review store has no
+ * events bus, so `n` is simply absent there rather than bound to a throw.
+ */
+const NOTES =
+  typeof triage.appendNote === 'function' &&
+  typeof triage.listNotes === 'function';
 
 const READ_ONLY = process.env.TUI_READONLY === '1';
 const QUEUE_LABEL = process.env.TUI_TITLE || 'triage';
@@ -90,7 +102,6 @@ const VERDICT_COLOR: Record<string, string> = {
   superseded: DIM,
   unnecessary: DIM,
 };
-
 
 /** A link under the pointer. Bright enough to read as "this does something". */
 const HOVER = '#7dd3fc';
@@ -172,6 +183,14 @@ type Seg = {
 type Line = { segs: Seg[]; action?: 'copy-comment' };
 
 const ln = (...segs: Seg[]): Line => ({ segs });
+/** 0 for a file that is not there, so "did it change?" needs no separate exists check. */
+const mtimeOf = (file: string): number => {
+  try {
+    return fs.statSync(file).mtimeMs;
+  } catch {
+    return 0;
+  }
+};
 const blank: Line = { segs: [{ t: '' }] };
 /**
  * The full key list, shown in the pane instead of crowding the footer.
@@ -188,7 +207,12 @@ const HELP: Line[] = [
     { t: '   or arrow keys — move between issues' }
   ),
   ...(process.env.TUI_READONLY === '1'
-    ? [ln({ t: '  (read-only', color: '#8a8a8a' }, { t: ' — this queue is applied elsewhere)' })]
+    ? [
+        ln(
+          { t: '  (read-only', color: '#8a8a8a' },
+          { t: ' — this queue is applied elsewhere)' }
+        ),
+      ]
     : [
         ln({ t: '  a', color: 'green' }, { t: '        approve' }),
         ln({ t: '  x', color: 'red' }, { t: '        reject' }),
@@ -196,8 +220,16 @@ const HELP: Line[] = [
   ln({ t: '  u', color: 'cyan' }, { t: '        back to pending' }),
   ln(
     { t: '  c', color: 'magenta' },
-    { t: '        write a note back to the agent' }
+    { t: '        request changes — sends the record back with a note' }
   ),
+  ...(NOTES
+    ? [
+        ln(
+          { t: '  n', color: 'blue' },
+          { t: '        note the agent something extra, deciding nothing' }
+        ),
+      ]
+    : []),
   blank,
   ln({ t: '  e', color: 'cyan' }, { t: '        open the record in $EDITOR' }),
   ln({ t: '  o', color: 'cyan' }, { t: '        open the issue on GitHub' }),
@@ -408,7 +440,7 @@ function proseLines(
   return out;
 }
 
-function detailLines(record: Record_, width: number): Line[] {
+function detailLines(record: Record_, width: number, notes: string[]): Line[] {
   const { front, body } = record;
 
   // current_* is captured at stage time and may be absent (offline, or an
@@ -427,7 +459,8 @@ function detailLines(record: Record_, width: number): Line[] {
   // record's own prose instead of nothing.
   if (!comment && !rationale && !feedback) {
     const draft =
-      triage.section(body, 'Review draft') || body.replace(/^#[^\n]*\n/, '').trim();
+      triage.section(body, 'Review draft') ||
+      body.replace(/^#[^\n]*\n/, '').trim();
     // The cap is load-bearing, not tidiness. Measured: at 400 lines the list above
     // shifts by a row at some cursor positions, at 120 it still does, at 40 and 15
     // it does not. The list's own arithmetic is identical across shifted and
@@ -440,7 +473,10 @@ function detailLines(record: Record_, width: number): Line[] {
     if (all.length > CAP)
       shown.push(
         ln({ t: '' }),
-        ln({ t: `  … ${all.length - CAP} more lines — review show ${record.front.issue}`, color: DIM })
+        ln({
+          t: `  … ${all.length - CAP} more lines — review show ${record.front.issue}`,
+          color: DIM,
+        })
       );
     return shown;
   }
@@ -633,10 +669,21 @@ function detailLines(record: Record_, width: number): Line[] {
 
   if (feedback) {
     out.push(blank);
-    out.push(ln({ t: 'your note back to the agent', color: 'magenta' }));
+    out.push(ln({ t: 'changes you asked for', color: 'magenta' }));
     out.push(
       ...proseLines(feedback, width, 2, front.url, { color: 'magenta' })
     );
+  }
+
+  // Shown back because a note is otherwise write-only: the flash that confirms
+  // it is gone in four seconds, and a reviewer who cannot see what they already
+  // asked for writes it twice.
+  if (notes.length) {
+    out.push(blank);
+    out.push(ln({ t: 'notes to the agent', color: 'blue' }));
+    for (const note of notes) {
+      out.push(...proseLines(note, width, 2, front.url, { color: 'blue' }));
+    }
   }
 
   return out;
@@ -712,6 +759,11 @@ function quit(): void {
 
 function App() {
   const [records, setRecords] = useState<Record_[]>(() => triage.listRecords());
+  // Notes live on the events bus, not in the records, so they reload on their
+  // own schedule rather than riding along with `listRecords`.
+  const [notes, setNotes] = useState<{ issue: number; note: string }[]>(() =>
+    NOTES ? triage.listNotes() : []
+  );
   // Selection is an ISSUE, never a row offset.
   //
   // Records sort by number and the list grows under the reviewer while the agent
@@ -724,7 +776,9 @@ function App() {
     const first = triage.listRecords()[0];
     return first ? Number(first.front.issue) : null;
   });
-  const [mode, setMode] = useState<'list' | 'comment' | 'help'>('list');
+  const [mode, setMode] = useState<'list' | 'comment' | 'note' | 'help'>(
+    'list'
+  );
   // The status line under the key hints. `seq` rides along so posting the same
   // message twice still restarts the dismiss timer — without it, React sees an
   // unchanged string, the effect never re-runs, and the second message would
@@ -800,8 +854,9 @@ function App() {
   const modeRef = useRef(mode);
   modeRef.current = mode;
   const reloadPendingRef = useRef(false);
-  // The issue a note is being written for, fixed when comment mode opens.
-  const commentTargetRef = useRef<number | null>(null);
+  // The issue the open text field is writing about, fixed when it opens. One
+  // ref for both fields: only one of them is ever open.
+  const fieldTargetRef = useRef<number | null>(null);
   // Reading the note back on submit: the buffer lives in the renderable, and
   // `plainText` is its accessor.
   const noteRef = useRef<{ plainText?: string } | null>(null);
@@ -845,6 +900,7 @@ function App() {
 
   const reload = useCallback(() => {
     applyRecords(triage.listRecords());
+    if (NOTES) setNotes(triage.listNotes());
   }, [applyRecords]);
 
   const jumpTo = useCallback((issue: number) => {
@@ -878,7 +934,7 @@ function App() {
         // Never redraw the list under someone who is typing. Reordering rows
         // mid-note moves the detail pane they are reading. The reload is not
         // dropped — it runs when they leave comment mode.
-        if (modeRef.current === 'comment') {
+        if (modeRef.current === 'comment' || modeRef.current === 'note') {
           reloadPendingRef.current = true;
           return;
         }
@@ -933,18 +989,52 @@ function App() {
     [current, reload]
   );
 
+  /**
+   * Leave the agent a note, touching nothing else.
+   *
+   * Deliberately not `setStatus`: the record keeps whatever the reviewer already
+   * decided about it, including `approved`, so a note never delays an apply. It
+   * is a message alongside the decision, not a decision.
+   */
+  const sendNote = useCallback(
+    (text: string, issue?: number | null) => {
+      const target = issue ?? (current ? Number(current.front.issue) : null);
+      if (target == null) return;
+      triage.appendNote(target, text);
+      setNotes(triage.listNotes());
+      // A note lives ONLY on the bus — unlike a status, it has no copy on disk
+      // to fall back on — so a bus that could not be written means the note is
+      // gone. Saying "noted" then would be a lie the reviewer acts on.
+      const busError = triage.lastBusError?.();
+      setFlash(
+        busError
+          ? `note NOT saved (${busError}) — the events bus is unwritable`
+          : `noted on #${target}`
+      );
+    },
+    [current, setFlash]
+  );
+
   const openEditor = useCallback(() => {
     if (!current) return;
     const editor = process.env.VISUAL || process.env.EDITOR || 'vi';
+    const issue = Number(current.front.issue);
+    const file = triage.recordPath(issue);
+    // Captured before the handoff: $EDITOR writes the file directly, so once it
+    // returns the record can no longer say what it used to be.
+    const before = String(current.front.status);
+    const mtimeBefore = mtimeOf(file);
     // suspend() hands the terminal back — leaves the alternate buffer, restores
     // the cooked mode and stops the render loop — so the editor gets a clean
     // screen rather than fighting the renderer for it.
     renderer.suspend();
-    spawnSync(editor, [triage.recordPath(current.front.issue)], {
-      stdio: 'inherit',
-    });
+    spawnSync(editor, [file], { stdio: 'inherit' });
     renderer.resume();
-    setFlash(`reloaded #${current.front.issue} from disk`);
+    // An edit that changed the file bypassed writeRecord, so nothing has told
+    // the agent's watch about it. Gated on mtime because opening $EDITOR and
+    // quitting without saving is common, and it decides nothing.
+    if (mtimeOf(file) !== mtimeBefore) triage.emitEdit?.(issue, before);
+    setFlash(`reloaded #${issue} from disk`);
     reload();
   }, [current, reload]);
 
@@ -1085,7 +1175,7 @@ function App() {
     // undo, wrapping, scrolling and PASTE all come from TextareaRenderable. Only
     // the two keys that leave the field are handled here, and the textarea has
     // focus so nothing else reaches this handler while a note is open.
-    if (mode === 'comment') {
+    if (mode === 'comment' || mode === 'note') {
       if (k.name === 'escape') {
         setMode('list');
         drainReload();
@@ -1120,15 +1210,19 @@ function App() {
         detached: true,
         stdio: 'ignore',
       }).unref();
-    }
-    else if (k.name === 'a') { if (!READ_ONLY) setStatus('approved'); }
-    else if (k.name === 'x') { if (!READ_ONLY) setStatus('rejected'); }
-    else if (k.name === 'u') setStatus('pending');
+    } else if (k.name === 'a') {
+      if (!READ_ONLY) setStatus('approved');
+    } else if (k.name === 'x') {
+      if (!READ_ONLY) setStatus('rejected');
+    } else if (k.name === 'u') setStatus('pending');
     else if (k.name === 'c' && READ_ONLY) {
       /* no changes-requested path when the queue is applied elsewhere */
     } else if (k.name === 'c') {
-      commentTargetRef.current = currentIssueRef.current;
+      fieldTargetRef.current = currentIssueRef.current;
       setMode('comment');
+    } else if (k.name === 'n' && NOTES && current) {
+      fieldTargetRef.current = currentIssueRef.current;
+      setMode('note');
     } else if (k.name === 'e') openEditor();
     else if (k.name === 'o') openInBrowser();
     else if (k.name === 'r') {
@@ -1193,7 +1287,13 @@ function App() {
   const hiddenAbove = start;
   const hiddenBelow = visible.length - (start + count);
   const lines = current
-    ? detailLines(current, Math.max(24, size.cols - 6))
+    ? detailLines(
+        current,
+        Math.max(24, size.cols - 6),
+        notes
+          .filter((n) => Number(n.issue) === Number(current.front.issue))
+          .map((n) => n.note)
+      )
     : [];
 
   return (
@@ -1255,7 +1355,10 @@ function App() {
           // `?? ''` rather than trusting the store: truncate returns its input
           // unchanged when falsy, so a record with no `title:` reached `.length`
           // and took the whole renderer down on that row.
-          const title = truncate(r.front.title ?? '', r.front.close_reason ? 46 : 52);
+          const title = truncate(
+            r.front.title ?? '',
+            r.front.close_reason ? 46 : 52
+          );
           // Every row writes the FULL width. The renderer repaints the cells an
           // element covers, so a row that gets shorter than the one previously
           // drawn on that line leaves the tail of the old title behind. Padding
@@ -1291,9 +1394,15 @@ function App() {
                 {COLUMNS.map((c) => (
                   <span
                     key={c.key}
-                    fg={c.key === 'verdict' ? VERDICT_COLOR[r.front[c.key]] || DIM : DIM}
+                    fg={
+                      c.key === 'verdict'
+                        ? VERDICT_COLOR[r.front[c.key]] || DIM
+                        : DIM
+                    }
                   >
-                    {truncate(String(r.front[c.key] ?? ''), c.width - 1).padEnd(c.width)}
+                    {truncate(String(r.front[c.key] ?? ''), c.width - 1).padEnd(
+                      c.width
+                    )}
                   </span>
                 ))}
                 {/* Fixed width, like the badge: an issue row and a PR row have
@@ -1448,13 +1557,20 @@ function App() {
         )}
       </scrollbox>
 
-      {mode === 'comment' ? (
+      {mode === 'comment' || mode === 'note' ? (
         <box flexDirection="column" paddingLeft={1} flexShrink={0}>
           <box width="100%" flexShrink={0}>
-            <text fg="magenta">
-              {'note to agent — enter saves, shift-enter newline, esc cancels'.padEnd(
-                size.cols - 1
-              )}
+            {/*
+              The two fields look the same and do different things, so the prompt
+              has to say which one is open — one sends the record back for rework,
+              the other decides nothing. A reviewer who reads the wrong one finds
+              out by the status changing under them.
+            */}
+            <text fg={mode === 'note' ? 'blue' : 'magenta'}>
+              {(mode === 'note'
+                ? 'note to agent, no decision — enter sends, shift-enter newline, esc cancels'
+                : 'request changes — enter sends it back, shift-enter newline, esc cancels'
+              ).padEnd(size.cols - 1)}
             </text>
           </box>
           {/*
@@ -1480,7 +1596,9 @@ function App() {
                 ''
               ).trim();
               if (text) {
-                setStatus('changes-requested', text, commentTargetRef.current);
+                if (mode === 'note') sendNote(text, fieldTargetRef.current);
+                else
+                  setStatus('changes-requested', text, fieldTargetRef.current);
               }
               setMode('list');
               drainReload();
@@ -1505,6 +1623,11 @@ function App() {
                   <>
                     <span fg="green">a</span> approve · <span fg="red">x</span>{' '}
                     reject · <span fg="magenta">c</span> comment ·{' '}
+                  </>
+                )}
+                {NOTES && (
+                  <>
+                    <span fg="blue">n</span> note ·{' '}
                   </>
                 )}
                 <span fg="cyan">?</span> keys
@@ -1545,6 +1668,12 @@ function summarize() {
   if (counts['changes-requested']) {
     process.stdout.write(
       '`.claude/tools/triage feedback` shows what you asked to change\n'
+    );
+  }
+  const noteCount = NOTES ? triage.listNotes().length : 0;
+  if (noteCount) {
+    process.stdout.write(
+      `\`.claude/tools/triage notes\` shows the ${noteCount} note${noteCount === 1 ? '' : 's'} you left\n`
     );
   }
 }
