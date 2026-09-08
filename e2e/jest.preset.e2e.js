@@ -6,7 +6,7 @@ delete preset.setupFiles;
 // Its mocks are unit-test doubles, so e2e drops them for the real modules. The
 // exception is an ESM-only package: that mock already hands back the real
 // module, and without it jest cannot load the package at all.
-const esmOnly = new Set(['^flat$']);
+const esmOnly = new Set(['^flat$', '^yargs-parser$']);
 preset.moduleNameMapper = Object.fromEntries(
   Object.entries(preset.moduleNameMapper).filter(([pattern]) =>
     esmOnly.has(pattern)
