@@ -580,5 +580,5 @@ Staging, the review pane, the feedback loop and the apply step are shared with P
 
 The short version, so this page stands alone: write the payload to `/tmp/triage-<N>.json` with the
 Write tool, `.claude/tools/triage stage < …` it **as soon as you have decided that issue**, tell the
-user early so they can review while you keep going, then `triage feedback` and `triage apply` once
-they have been through the queue. Nothing reaches GitHub without a human approving it.
+user early so they can review while you keep going, then `triage feedback`, `triage notes` and
+`triage apply` once they have been through the queue. Nothing reaches GitHub without a human approving it.
