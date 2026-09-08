@@ -1465,7 +1465,8 @@ Write `$TRIAGE_DIR/<NUMBER>.md`. **If the file already exists** (re-review):
 2. Move the existing `## Review draft` content into a new entry at the top of `## Prior reviews`, prefixed with a header like `### attempt <N-1> — head_sha=<PRIOR_SHA> — <PRIOR_DATE>`.
 3. Preserve the `## Author follow-ups (not for the PR)`, `## Posted` and `## Failures` sections verbatim.
 4. Replace `## Review draft` with the new `$REVIEW_BODY` (formatted in Step 6).
-5. Update frontmatter: `head_sha`, `last_reviewed_at`, `verdict`, increment `attempt`. Preserve `posted_at` / `posted_url` (the user fills those in).
+5. Update frontmatter: `head_sha`, `last_reviewed_at`, `verdict`, increment `attempt`, and set `status: awaiting-grill`. Preserve `posted_at` / `posted_url` (the user fills those in).
+   **`status:` must survive this write.** This step rewrites the whole file, and `.claude/tools/review` — which `review-many-prs` and any `review watch` read — keeps the review's lifecycle there. Dropping the key does not merely lose a field: a record with no `status:` is read as `awaiting-grill` only because a verdict is present, so an in-flight review would silently look finished.
 
 **No cap on history** — every prior review accumulates under `## Prior reviews`, oldest at the bottom, newest at the top. This file is the archive and stays uncapped; it is read only by you and by the human reviewer, never by the review agents. The trimming in Step 4 applies solely to the agents' `review-context.md`, which is a distilled carry-forward derived from this file — so keeping the archive complete is what makes trimming the derived copy safe.
 
@@ -1482,6 +1483,7 @@ last_reviewed_at: <ISO_8601>
 verdict: <lgtm|needs-changes|blocked|superseded|unnecessary|failed>
 attempt: <N>
 pipeline_version: <PIPELINE_VERSION>
+status: awaiting-grill
 posted_at:
 posted_url:
 ---
