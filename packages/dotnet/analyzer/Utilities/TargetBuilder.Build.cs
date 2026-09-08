@@ -64,9 +64,9 @@ public static partial class TargetBuilder
                 new { env = "NUGET_PACKAGES" },
                 .. directoryBuildInputs
             ],
-            Outputs = new[] { outputPath, intermediatePath }
+            Outputs = new[] { outputPath }
                 .Where(p => p is not null)
-                .Concat(GetRestoreOnlyExclusions(intermediatePath))
+                .Concat(GetIntermediateOutputs(intermediatePath))
                 .Concat(openApiDocumentsOutputs)
                 .ToArray()!,
             Metadata = new TargetMetadata

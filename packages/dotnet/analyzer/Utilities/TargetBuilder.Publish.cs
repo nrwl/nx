@@ -63,9 +63,9 @@ public static partial class TargetBuilder
                 new { env = "NUGET_PACKAGES" },
                 .. directoryBuildInputs
             ],
-            Outputs = new[] { publishDir, intermediatePath }
+            Outputs = new[] { publishDir }
                 .Where(p => p is not null)
-                .Concat(GetRestoreOnlyExclusions(intermediatePath))
+                .Concat(GetIntermediateOutputs(intermediatePath))
                 .ToArray()!,
             Metadata = new TargetMetadata
             {
