@@ -81,6 +81,7 @@ describe('app', () => {
           ...schema,
           bundler: 'vite',
           style: 'scss',
+          unitTestRunner: 'none',
           e2eTestRunner: 'none',
         })
       );
@@ -96,6 +97,7 @@ describe('app', () => {
           ...schema,
           bundler: 'vite',
           style: 'css',
+          unitTestRunner: 'none',
           e2eTestRunner: 'none',
         })
       );
