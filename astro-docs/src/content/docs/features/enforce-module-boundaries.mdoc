@@ -199,7 +199,7 @@ Read more about [ESLint rule options](/docs/kb/enforce-module-boundaries).
 {% /tabitem %}
 {% tabitem label="Oxlint" %}
 
-[`@nx/oxlint`](/docs/technologies/oxlint/introduction) runs the same rule with the same options, so your constraints carry over unchanged.
+For JavaScript/TypeScript projects, configure the `@nx/enforce-module-boundaries` rule from [`@nx/oxlint`](/docs/technologies/oxlint/introduction):
 
 {% aside type="caution" title="Experimental" %}
 Module boundaries on Oxlint depend on the Oxlint JavaScript plugin API. Oxlint excludes that API from its semantic versioning policy, so it can change in any release.
@@ -238,6 +238,8 @@ Register the plugin and configure the rule in `.oxlintrc.json`:
   }
 }
 ```
+
+Read more about [rule options](/docs/kb/enforce-module-boundaries).
 
 {% /tabitem %}
 {% tabitem label="Conformance" %}
