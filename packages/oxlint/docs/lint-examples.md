@@ -16,8 +16,7 @@ Options not listed in the schema are forwarded to Oxlint as CLI flags, so `nx ru
 }
 ```
 
-{% tabs %}
-{% tab label="Lint only the sources" %}
+## Lint only the sources
 
 Narrow what a project lints with `lintFilePatterns`. Paths are workspace-relative and `{projectRoot}` is interpolated.
 
@@ -34,8 +33,7 @@ Narrow what a project lints with `lintFilePatterns`. Paths are workspace-relativ
 }
 ```
 
-{% /tab %}
-{% tab label="Fix violations" %}
+## Fix violations
 
 Every Oxlint flag passes through, including the fixers.
 
@@ -43,14 +41,10 @@ Every Oxlint flag passes through, including the fixers.
 nx run-many -t lint --fix
 ```
 
-{% /tab %}
-{% tab label="GitHub Actions annotations" %}
+## GitHub Actions annotations
 
 `format` is rendered by Nx from Oxlint's JSON report, so the values are `default`, `agent`, `github`, and `json`. In CI and under an AI agent, `default` renders one line per diagnostic, as Oxlint itself does.
 
 ```shell
 nx run-many -t lint --format=github
 ```
-
-{% /tab %}
-{% /tabs %}
