@@ -101,6 +101,12 @@ const MIGRATE_STEP_AWAITING_KINDS = [
 export type MigrateStepAwaitingKind =
   (typeof MIGRATE_STEP_AWAITING_KINDS)[number];
 
+// What a step does when dispensed: 'migration' runs one planned migration,
+// 'final-validation' checks the whole workspace once every migration and the
+// post-migration install have run. Absent in run.json means 'migration':
+// every step written before the field existed ran one.
+const MIGRATE_STEP_KINDS = ['migration', 'final-validation'] as const;
+
 export interface MigrateStepOutcome {
   fileChanges?: string[];
   gitRefAfter?: string;
@@ -113,11 +119,19 @@ export interface MigrateStepPromptOutcome {
   summary?: string;
 }
 
-export interface MigrateStep {
+export type MigrateStepKindFields =
+  | {
+      kind: 'migration';
+      // `<package>:<name>`.
+      migrationId: string;
+    }
+  | { kind: 'final-validation' };
+
+export type MigrateStep = MigrateStepBase & MigrateStepKindFields;
+
+export interface MigrateStepBase {
   id: string;
   roundIndex: number;
-  // `<package>:<name>`.
-  migrationId: string;
   status: MigrateStepStatus;
   attempt: number;
   dispenseCount: number;
@@ -447,14 +461,31 @@ function isPromptOutcomeShape(value: unknown): boolean {
   );
 }
 
+function isStepKindShape(value: Record<string, unknown>): boolean {
+  const kind = value.kind === undefined ? 'migration' : value.kind;
+  if (!isOneOf(MIGRATE_STEP_KINDS, kind)) return false;
+  switch (kind) {
+    case 'migration':
+      return (
+        typeof value.migrationId === 'string' &&
+        SHELL_SAFE_VALUE.test(value.migrationId)
+      );
+    case 'final-validation':
+      return value.migrationId === undefined;
+    default: {
+      const exhaustive: never = kind;
+      return exhaustive;
+    }
+  }
+}
+
 function isStepShape(value: unknown): boolean {
   return (
     isPlainObject(value) &&
     typeof value.id === 'string' &&
     STEP_ID.test(value.id) &&
     typeof value.roundIndex === 'number' &&
-    typeof value.migrationId === 'string' &&
-    SHELL_SAFE_VALUE.test(value.migrationId) &&
+    isStepKindShape(value) &&
     isOneOf(MIGRATE_STEP_STATUSES, value.status) &&
     // The attempt is interpolated into the stored-payload file name and
     // range-compared against it (agent-work-payload.ts), so a fractional or
@@ -802,7 +833,12 @@ export function readRunState(runDirPath: string): MigrateRunState {
       )}.`
     );
   }
-  return parsed as unknown as MigrateRunState;
+  // Steps written before they had a kind each ran a migration; naming it here
+  // keeps every reader on one shape.
+  const steps = (parsed.steps as Record<string, unknown>[]).map((s) =>
+    s.kind === undefined ? { ...s, kind: 'migration' } : s
+  );
+  return { ...parsed, steps } as unknown as MigrateRunState;
 }
 
 /**

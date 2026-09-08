@@ -23,7 +23,11 @@ import {
 } from './run-state';
 
 export { issueFingerprint };
-import { splitMigrationId, unresolvedFailureDetail } from './state-machine';
+import {
+  finalValidationUnsupported,
+  splitMigrationId,
+  unresolvedFailureDetail,
+} from './state-machine';
 
 // Reserves summary space for the attempt count and the failure.
 const MAX_UNRESOLVED_ID_CHARS = 200;
@@ -322,14 +326,19 @@ function parseIssueUpdate(
 
 // A bare identifier matches the whole package name, scoped names included:
 // nothing splits on '/'. Step ids are unique, so the result needs no dedup.
+// Identifiers name migrations, so only migration steps can match.
 function mappedStepIds(identifier: string, state: MigrateRunState): string[] {
   if (identifier.includes(':')) {
     return state.steps
-      .filter((s) => s.migrationId === identifier)
+      .filter((s) => s.kind === 'migration' && s.migrationId === identifier)
       .map((s) => s.id);
   }
   return state.steps
-    .filter((s) => splitMigrationId(s.migrationId).package === identifier)
+    .filter(
+      (s) =>
+        s.kind === 'migration' &&
+        splitMigrationId(s.migrationId).package === identifier
+    )
     .map((s) => s.id);
 }
 
@@ -363,9 +372,19 @@ export function mintUnresolvedIssue(
   step: MigrateStep
 ): { application: IssueApplication; issueId: string } {
   const attempts = `${step.attempt} attempt${step.attempt === 1 ? '' : 's'}`;
-  const prefix = `Migration ${abbreviatedMigrationId(
-    step.migrationId
-  )} was left unresolved after ${attempts}: `;
+  let subject: string;
+  switch (step.kind) {
+    case 'migration':
+      subject = `Migration ${abbreviatedMigrationId(step.migrationId)}`;
+      break;
+    case 'final-validation':
+      throw finalValidationUnsupported(step);
+    default: {
+      const exhaustive: never = step;
+      throw new Error(`Unrecognized step: ${JSON.stringify(exhaustive)}`);
+    }
+  }
+  const prefix = `${subject} was left unresolved after ${attempts}: `;
   const room = MAX_SUMMARY_CHARS - prefix.length;
   const detail = unresolvedFailureDetail(step);
   const summary =
@@ -1390,10 +1409,10 @@ function reconstructedArchiveShell(
     summary: entry.summary,
     reportedByStepId: entry.reportedByStepId,
     applicableMigrations: Array.isArray(entry.applicableStepIds)
-      ? entry.applicableStepIds.map(
-          (stepId) =>
-            state.steps.find((s) => s.id === stepId)?.migrationId ?? stepId
-        )
+      ? entry.applicableStepIds.map((stepId) => {
+          const step = state.steps.find((s) => s.id === stepId);
+          return step?.kind === 'migration' ? step.migrationId : stepId;
+        })
       : 'unknown',
     reconstructed: true,
   };

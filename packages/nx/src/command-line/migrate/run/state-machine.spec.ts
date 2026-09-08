@@ -46,6 +46,8 @@ function stateWithStep(overrides: Partial<MigrateStep> = {}): MigrateRunState {
       {
         id: 'step-1',
         roundIndex: 0,
+        kind: 'migration',
+        migrationId: '@nx/js:a',
         status: 'pending',
         attempt: 1,
         dispenseCount: 0,
@@ -521,6 +523,8 @@ describe('applyStepEvent', () => {
           expect(result.state.steps[0]).toEqual({
             id: 'step-1',
             roundIndex: 0,
+            kind: 'migration',
+            migrationId: '@nx/js:a',
             status: 'pending',
             attempt: 2,
             dispenseCount: 3,
@@ -934,7 +938,7 @@ describe('applyStepEvent', () => {
       ['failed', 'retry-clean'],
       ['died', 'retry-clean'],
     ] as const)(
-      'keeps the step kind across a rearm (%s + %s)',
+      'keeps the generator flag across a rearm (%s + %s)',
       (status, action) => {
         const state = stateWithStep({ status, hasGenerator: false });
 
@@ -951,6 +955,34 @@ describe('applyStepEvent', () => {
         }
       }
     );
+
+    it.each([
+      [{ kind: 'migration', migrationId: '@nx/js:b' }],
+      [{ kind: 'final-validation' }],
+    ] as const)('keeps the step kind across a rearm (%o)', (kindFields) => {
+      // The fixture's migration id must not leak into a re-armed final-validation
+      // step: the kind fields are carried as a unit, not copied field by field.
+      const state = stateWithStep({ ...kindFields, status: 'failed' });
+
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        attempt: 1,
+        action: 'retry',
+      });
+
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        expect(result.state.steps[0]).toEqual({
+          id: 'step-1',
+          roundIndex: 0,
+          ...kindFields,
+          status: 'pending',
+          attempt: 2,
+          dispenseCount: 0,
+        });
+      }
+    });
 
     it.each([
       [true, 'its generator had run'],
@@ -1347,6 +1379,8 @@ describe('discardGeneratorRun', () => {
     expect(next.steps[0]).toEqual({
       id: 'step-1',
       roundIndex: 0,
+      kind: 'migration',
+      migrationId: '@nx/js:a',
       status: 'died',
       attempt: 1,
       dispenseCount: 0,
@@ -1425,6 +1459,7 @@ describe('stepsToPendingMigrations', () => {
       steps: steps.map((overrides, i) => ({
         id: `step-${i + 1}`,
         roundIndex: 0,
+        kind: 'migration' as const,
         migrationId: `@nx/js:m${i + 1}`,
         status: 'pending' as const,
         attempt: 1,
@@ -1446,11 +1481,12 @@ describe('stepsToPendingMigrations', () => {
     ]);
   });
 
-  it('drops unknown step ids and ids without an attributable package', () => {
+  it('drops unknown step ids, ids without an attributable package, and steps that ran no migration', () => {
     const state = stateWithSteps([
       { migrationId: 'bare-name' },
       { migrationId: ':empty-package' },
       { migrationId: '@nx/js:kept' },
+      { kind: 'final-validation' },
     ]);
 
     expect(
@@ -1458,6 +1494,7 @@ describe('stepsToPendingMigrations', () => {
         'step-1',
         'step-2',
         'step-3',
+        'step-4',
         'no-such-step',
       ])
     ).toEqual([{ package: '@nx/js', name: 'kept' }]);

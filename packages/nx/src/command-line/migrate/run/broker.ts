@@ -42,11 +42,11 @@ import { updateRunState } from './state-lock';
 import {
   appendCommit,
   clearCommitStarted,
+  commitNameForStep,
   commitResultToLedgerEntry,
   gitRan,
   markCommitStarted,
   markInstallFailed,
-  splitMigrationId,
   stepsToPendingMigrations,
   uncoveredFailedStepIds,
 } from './state-machine';
@@ -740,7 +740,7 @@ export class MigrateCommitBroker {
       );
       const result = await commitMigrationIfRequested(
         this.root,
-        { name: splitMigrationId(step.migrationId).name },
+        { name: commitNameForStep(step) },
         true,
         state.commitPrefix,
         install,

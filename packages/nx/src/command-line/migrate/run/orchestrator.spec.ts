@@ -256,6 +256,7 @@ describe('orchestrator', () => {
   ): MigrateStep => ({
     id,
     roundIndex: 0,
+    kind: 'migration',
     migrationId,
     status,
     attempt: 1,
@@ -397,12 +398,17 @@ describe('orchestrator', () => {
       const { runId, state } = active;
 
       expect(state.steps.map((s) => s.id)).toEqual(['step-1', 'step-2']);
-      expect(state.steps.map((s) => s.migrationId)).toEqual([
-        '@nx/js:a',
-        '@nx/js:b',
+      expect(
+        state.steps.map((s) => [
+          s.kind,
+          s.kind === 'migration' && s.migrationId,
+        ])
+      ).toEqual([
+        ['migration', '@nx/js:a'],
+        ['migration', '@nx/js:b'],
       ]);
-      // The step kind is recorded from the plan: it decides how a step whose
-      // generator marker is absent may be retried.
+      // The generator flag is recorded from the plan: it decides how a step
+      // whose generator marker is absent may be retried.
       expect(state.steps.map((s) => s.hasGenerator)).toEqual([true, false]);
       expect(state.steps.map((s) => s.status)).toEqual(['pending', 'pending']);
 
@@ -1437,7 +1443,7 @@ describe('orchestrator', () => {
           },
           unresolvedIssues: 1,
           liveWorkers: [
-            { pid: process.pid, stepId: 'step-3', migrationId: '@nx/js:c' },
+            { pid: process.pid, stepId: 'step-3', label: '@nx/js:c' },
           ],
           otherHolders: [],
           otherActiveRuns: ['run-2'],
