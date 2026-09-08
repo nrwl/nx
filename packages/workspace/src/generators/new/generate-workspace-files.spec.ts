@@ -496,8 +496,8 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
       "autoInstallPeers: true
       allowBuilds:
         nx: true
-        unrs-resolver: false
         '@parcel/watcher': false
+        unrs-resolver: false
       "
     `);
   });
@@ -521,6 +521,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
       "autoInstallPeers: true
       allowBuilds:
         nx: true
+        '@parcel/watcher': false
         unrs-resolver: false
       "
     `);
@@ -545,6 +546,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
       "autoInstallPeers: true
       allowBuilds:
         nx: true
+        '@parcel/watcher': false
         unrs-resolver: false
       "
     `);

@@ -35,7 +35,7 @@ describe('NxPlugin Plugin Generator', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
-  it('should deny the unrs-resolver build script pulled in by @nx/jest', async () => {
+  it('should deny the build scripts pulled in by @nx/jest', async () => {
     await withPnpm(tree, '11.2.2', () =>
       pluginGenerator(
         tree,
@@ -48,9 +48,9 @@ describe('NxPlugin Plugin Generator', () => {
       )
     );
 
-    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
-      /['"]?unrs-resolver['"]?: false/
-    );
+    const pnpmWorkspace = tree.read('pnpm-workspace.yaml', 'utf-8');
+    expect(pnpmWorkspace).toMatch(/['"]?@parcel\/watcher['"]?: false/);
+    expect(pnpmWorkspace).toMatch(/['"]?unrs-resolver['"]?: false/);
   });
 
   it('should update the project configuration', async () => {

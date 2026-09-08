@@ -13,9 +13,12 @@ import { Schema } from './schema';
 
 function updateDependencies(tree: Tree, options: Schema) {
   const tasks: GeneratorCallback[] = [];
-  // @nx/node depends on @nx/jest, so jest 30's unrs-resolver is installed even
-  // without a jest setup. Its postinstall only fetches a fallback binding.
+  // @nx/node depends on @nx/jest, so jest-resolve is installed even without a
+  // jest setup. It depends on unrs-resolver and, from jest 30.5.0, on a
+  // jest-haste-map that depends on @parcel/watcher. Neither build is needed:
+  // the binding has a fallback and the watcher ships prebuilt.
   acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+    '@parcel/watcher': false,
     'unrs-resolver': false,
   });
   tasks.push(removeDependenciesFromPackageJson(tree, ['@nx/node'], []));
