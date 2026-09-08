@@ -46,6 +46,7 @@
     "e2eInputs": [
       "default",
       "{workspaceRoot}/scripts/patched-jest-resolver.js",
+      "{workspaceRoot}/scripts/jest-mocks/**/*",
       "{workspaceRoot}/jest.preset.js",
       "{workspaceRoot}/e2e/jest.preset.e2e.js",
       "{workspaceRoot}/.verdaccio/config.yml",
@@ -153,6 +154,7 @@
         "filter": {
           "plugin": "@nx/jest/plugin"
         },
+        "inputs": ["...", "{workspaceRoot}/scripts/jest-mocks/**/*"],
         "options": {
           "args": ["--passWithNoTests", "--detectOpenHandles", "--forceExit"],
           "env": {
