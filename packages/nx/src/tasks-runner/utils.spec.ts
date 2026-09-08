@@ -1051,6 +1051,40 @@ describe('expandInitiatingTasksThroughNoop', () => {
       'Task "other:build" references project "other", which does not exist in the project graph.'
     );
   });
+  describe('negated outputs', () => {
+    const node = {
+      name: 'proj',
+      type: 'lib' as const,
+      data: {
+        root: 'apps/proj',
+        targets: {
+          build: {
+            outputs: [
+              '{workspaceRoot}/dist/obj/proj',
+              '!{workspaceRoot}/dist/obj/proj/project.assets.json',
+              '{projectRoot}/obj',
+              '!{projectRoot}/obj/*.nuget.g.props',
+            ],
+          },
+        },
+      },
+    };
+
+    it('should interpolate a negated {workspaceRoot} output instead of rejecting it', () => {
+      expect(
+        getOutputsForTargetAndConfiguration(
+          { project: 'proj', target: 'build' },
+          {},
+          node
+        )
+      ).toEqual([
+        'dist/obj/proj',
+        '!dist/obj/proj/project.assets.json',
+        'apps/proj/obj',
+        '!apps/proj/obj/*.nuget.g.props',
+      ]);
+    });
+  });
 });
 
 class GraphBuilder {
