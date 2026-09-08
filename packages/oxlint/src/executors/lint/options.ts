@@ -57,7 +57,7 @@ export function resolveLintOptions(
 
   const candidates = [
     ...createCliOptions(fromOptions),
-    ...(Array.isArray(args) ? args : args ? args.split(' ') : []),
+    ...(Array.isArray(args) ? args : splitArgsString(args)),
     ...unparsed,
   ];
   for (let i = 0; i < candidates.length; i++) {
@@ -98,6 +98,22 @@ function assertSupportedFormat(value: string): OxlintOutputFormat {
     );
   }
   return value as OxlintOutputFormat;
+}
+
+/**
+ * Quote-aware split for string-form `args`: whitespace separates arguments
+ * unless it sits inside single or double quotes, and the quotes themselves are
+ * stripped. Tokens are otherwise forwarded verbatim, so `--config "a b.json"`
+ * stays two arguments and the second keeps its space.
+ */
+function splitArgsString(args: string | undefined): string[] {
+  if (!args) {
+    return [];
+  }
+  const tokens = args.match(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g) ?? [];
+  return tokens.map((token) =>
+    token.replace(/"([^"]*)"/g, '$1').replace(/'([^']*)'/g, '$1')
+  );
 }
 
 function flagName(flag: string): string | null {
