@@ -1466,7 +1466,8 @@ Write `$TRIAGE_DIR/<NUMBER>.md`. **If the file already exists** (re-review):
 2. Move the existing `## Review draft` content into a new entry at the top of `## Prior reviews`, prefixed with a header like `### attempt <N-1> — head_sha=<PRIOR_SHA> — <PRIOR_DATE>`.
 3. Preserve the `## Author follow-ups (not for the PR)`, `## Posted` and `## Failures` sections verbatim, along with every other section the file already carries. The Codex `review-pr` skill writes its own private evidence into this same file, so rewriting it from the template below would drop that evidence. One exception: move `## Grill` into the demoted `### attempt <N-1>` entry from item 2, under a `**Grill (attempt <N-1>):**` line. Left at top level it tells `/review-pending-pr-reviews` that the new draft was already grilled, and `post all` then posts its findings unevaluated.
 4. Replace `## Review draft` with the new `$REVIEW_BODY` (formatted in Step 6).
-5. Update frontmatter: `head_sha`, `last_reviewed_at`, `verdict`, `pipeline_version` (the current constant, since this re-review ran under it), increment `attempt`. Remove `reviewer` if the file carries it: an absent key means this skill wrote the draft, and `/review-pending-pr-reviews` compares `pipeline_version` against the writer's own constant. Clear `posted_at` and `posted_url`. The new draft has not been posted, and `/review-pending-pr-reviews` treats a non-empty `posted_at` as already handled, so leaving them hides this draft from the outbox. The earlier posting stays recorded under `## Posted`.
+5. Update frontmatter: `head_sha`, `last_reviewed_at`, `verdict`, `pipeline_version` (the current constant, since this re-review ran under it), increment `attempt`, and set `status: awaiting-grill`. Remove `reviewer` if the file carries it: an absent key means this skill wrote the draft, and `/review-pending-pr-reviews` compares `pipeline_version` against the writer's own constant. Clear `posted_at` and `posted_url`. The new draft has not been posted, and `/review-pending-pr-reviews` treats a non-empty `posted_at` as already handled, so leaving them hides this draft from the outbox. The earlier posting stays recorded under `## Posted`.
+   **`status:` must survive this write.** This step rewrites the whole file, and `.claude/tools/review` — which `review-many-prs` and any `review watch` read — keeps the review's lifecycle there. Dropping the key does not merely lose a field: a record with no `status:` is read as `awaiting-grill` only because a verdict is present, so an in-flight review would silently look finished.
 
 **No cap on history** — every prior review accumulates under `## Prior reviews`, oldest at the bottom, newest at the top. This file is the archive and stays uncapped; it is read only by you and by the human reviewer, never by the review agents. The trimming in Step 4 applies solely to the agents' `review-context.md`, which is a distilled carry-forward derived from this file — so keeping the archive complete is what makes trimming the derived copy safe.
 
@@ -1483,6 +1484,7 @@ last_reviewed_at: <ISO_8601>
 verdict: <lgtm|needs-changes|blocked|superseded|unnecessary|failed>
 attempt: <N>
 pipeline_version: <PIPELINE_VERSION>
+status: awaiting-grill
 posted_at:
 posted_url:
 ---
