@@ -48,16 +48,17 @@ const presetDependencyBuildScripts: Record<string, Record<string, boolean>> = {
     'msgpackr-extract': false,
     '@parcel/watcher': false,
   },
-  // @nx/express and @nx/nest depend on @nx/node, which depends on @nx/jest,
-  // which pulls in jest 30 -> unrs-resolver.
-  '@nx/express': { 'unrs-resolver': false },
-  '@nx/jest': { 'unrs-resolver': false },
-  '@nx/nest': { 'unrs-resolver': false },
-  '@nx/node': { 'unrs-resolver': false },
+  // @nx/express and @nx/nest depend on @nx/node, which depends on @nx/jest.
+  // Its jest-resolve range floats, so it lands on jest 30.5 or later, which
+  // brings unrs-resolver and, through jest-haste-map, @parcel/watcher.
+  '@nx/express': { '@parcel/watcher': false, 'unrs-resolver': false },
+  '@nx/jest': { '@parcel/watcher': false, 'unrs-resolver': false },
+  '@nx/nest': { '@parcel/watcher': false, 'unrs-resolver': false },
+  '@nx/node': { '@parcel/watcher': false, 'unrs-resolver': false },
   // Both optionally depend on @nx/detox, which depends on @nx/jest. pnpm
   // installs optionalDependencies by default.
-  '@nx/expo': { 'unrs-resolver': false },
-  '@nx/react-native': { 'unrs-resolver': false },
+  '@nx/expo': { '@parcel/watcher': false, 'unrs-resolver': false },
+  '@nx/react-native': { '@parcel/watcher': false, 'unrs-resolver': false },
   // Both depend on sass, which pulls in @parcel/watcher.
   '@nx/rspack': { '@parcel/watcher': false },
   '@nx/webpack': { '@parcel/watcher': false },

@@ -17,12 +17,12 @@ describe('init', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
-  it('should deny the unrs-resolver build script pulled in by @nx/jest', async () => {
+  it('should deny the build scripts pulled in by @nx/jest', async () => {
     await withPnpm(tree, '11.2.2', () => initGenerator(tree, {}));
 
-    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
-      /['"]?unrs-resolver['"]?: false/
-    );
+    const pnpmWorkspace = tree.read('pnpm-workspace.yaml', 'utf-8');
+    expect(pnpmWorkspace).toMatch(/['"]?@parcel\/watcher['"]?: false/);
+    expect(pnpmWorkspace).toMatch(/['"]?unrs-resolver['"]?: false/);
   });
 
   it('should add dependencies', async () => {

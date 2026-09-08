@@ -205,10 +205,11 @@ export async function configurationGeneratorInternal(
     // @storybook/test-runner depends on @swc/core.
     acknowledgeSwcBuildScripts(tree);
     if (gte(minVersion(testRunnerVersion), '0.24.0')) {
-      // Only the 0.24 line runs on jest 30, which reaches unrs-resolver
-      // through jest-resolve. The lines Storybook 8 and 9 select are on
-      // jest 29, which resolves without it.
+      // Only the 0.24 line runs on jest 30, whose jest-resolve depends on
+      // unrs-resolver and, from 30.5.0, pins a jest-haste-map that depends on
+      // @parcel/watcher. Storybook 8 and 9 select jest 29, which needs neither.
       acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+        '@parcel/watcher': false,
         'unrs-resolver': false,
       });
     }
