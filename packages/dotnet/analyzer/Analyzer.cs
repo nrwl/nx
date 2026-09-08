@@ -1,4 +1,6 @@
+using Microsoft.Build.Definition;
 using Microsoft.Build.Evaluation;
+using Microsoft.Build.Evaluation.Context;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Graph;
 using MsbuildAnalyzer.Models;
@@ -71,7 +73,32 @@ public static class Analyzer
         ProjectGraph projectGraph;
         using (var graphPerf = PerfLogger.Start("analyze workspace > create project graph"))
         {
-            projectGraph = new ProjectGraph(absoluteProjectFiles);
+            // Evaluation only, so the SDK's default item globs are switched off the way
+            // the dotnet CLI does for restore: they walk every file under each project
+            // directory and nothing here reads the items they produce, while the linked
+            // items that are inputs are explicit and survive. The shared context caches
+            // SDK resolution and directory listings across the projects.
+            var globalProperties = new Dictionary<string, string>
+            {
+                ["EnableDefaultCompileItems"] = "false",
+                ["EnableDefaultEmbeddedResourceItems"] = "false",
+                ["EnableDefaultNoneItems"] = "false",
+                ["EnableDefaultContentItems"] = "false",
+            };
+            var evaluationContext = EvaluationContext.Create(EvaluationContext.SharingPolicy.Shared);
+            using var projectCollection = new ProjectCollection();
+            projectGraph = new ProjectGraph(
+                absoluteProjectFiles.Select(p => new ProjectGraphEntryPoint(p, globalProperties)),
+                projectCollection,
+                (path, properties, collection) => ProjectInstance.FromFile(
+                    path,
+                    new ProjectOptions
+                    {
+                        GlobalProperties = properties,
+                        ProjectCollection = collection,
+                        EvaluationContext = evaluationContext,
+                        LoadSettings = ProjectLoadSettings.DoNotEvaluateElementsWithFalseCondition,
+                    }));
         }
 
         var nodesByFile = new Dictionary<string, NxProjectGraphNode>();
