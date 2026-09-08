@@ -145,7 +145,7 @@ describe('runLintTasks', () => {
     ]);
   });
 
-  it('should merge flags and warn once on a conflicting value', () => {
+  it("should use the first task's flags and warn when another task differs", () => {
     mockRunOxlint.mockReturnValue({ ok: true, report: report([]) });
 
     runLintTasks(
@@ -158,14 +158,32 @@ describe('runLintTasks', () => {
     );
 
     expect(mockRunOxlint.mock.calls[0][0]).toEqual([
-      '--config=b.json',
+      '--config=a.json',
       '--type-aware',
       '--no-error-on-unmatched-pattern',
       'libs/a',
       'libs/b',
     ]);
     expect(mockLogger.warn).toHaveBeenCalledTimes(1);
-    expect(mockLogger.warn.mock.calls[0][0]).toContain('--config');
+    expect(mockLogger.warn.mock.calls[0][0]).toContain("libs/a's options");
+  });
+
+  it('should not warn when every task resolves the same flags', () => {
+    mockRunOxlint.mockReturnValue({ ok: true, report: report([]) });
+
+    runLintTasks(
+      [task('libs/a', { fix: true }), task('libs/b', { fix: true })],
+      '/ws',
+      graph(['libs/a', 'libs/b'])
+    );
+
+    expect(mockRunOxlint.mock.calls[0][0]).toEqual([
+      '--fix',
+      '--no-error-on-unmatched-pattern',
+      'libs/a',
+      'libs/b',
+    ]);
+    expect(mockLogger.warn).not.toHaveBeenCalled();
   });
 
   it('should interpolate lintFilePatterns and normalize reported filenames', () => {
