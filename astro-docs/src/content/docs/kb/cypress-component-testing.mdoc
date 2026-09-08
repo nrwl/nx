@@ -42,6 +42,15 @@ nx g @nx/angular:cypress-component-configuration --project=your-project --build-
 
 The build target option can be changed later via updating the `devServerTarget` option in the `component-test` target.
 
+{% aside type="note" title="Angular component testing on Cypress 16" %}
+Cypress 16 ships a single `cypress/angular` mount entry point that uses zoneless change detection
+and supports Angular 21 and later.
+Templates of zone-based applications no longer re-render after a plain property mutation in a
+component test, so state that tests assert on must be signal-based.
+The generator writes the `cypress/angular` import on Cypress 16 and `cypress/angular-zoneless` for
+zoneless projects on Cypress 15.8 to 15.x.
+{% /aside %}
+
 {% aside type="caution" title="Executor Options" %}
 When using component testing make sure to set `skipServe: true` in the component test target options, otherwise `@nx/cypress` will attempt to run the build first which can slow down your component tests. `skipServe: true` is automatically set when using the `cypress-component-configuration` generator.
 {% /aside %}
