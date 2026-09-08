@@ -142,10 +142,10 @@ route MF to Jack on the strength of the React-side split that used to live here.
 MF reports frequently turn out to be upstream in module-federation/core rather than ours, so confirm
 where the defect actually lives before routing.
 
-| Handle         | Weight | Note                                      |
-| -------------- | ------ | ----------------------------------------- |
+| Handle         | Weight | Note                                             |
+| -------------- | ------ | ------------------------------------------------ |
 | `FrozenPandaz` | 3      | Owns the area, including Colum's former surface. |
-| `leosvelperez` | 1      |                                           |
+| `leosvelperez` | 1      |                                                  |
 
 ### scope: storybook
 

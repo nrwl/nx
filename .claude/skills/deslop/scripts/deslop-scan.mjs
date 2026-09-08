@@ -38,14 +38,24 @@ function valeTokens(file) {
 }
 
 const PHRASES = [
-  ...valeTokens('BannedPhrases.yml').map((t) => ({ t, why: 'AI-sounding phrase' })),
-  ...valeTokens('MarketingLanguage.yml').map((t) => ({ t, why: 'marketing language' })),
+  ...valeTokens('BannedPhrases.yml').map((t) => ({
+    t,
+    why: 'AI-sounding phrase',
+  })),
+  ...valeTokens('MarketingLanguage.yml').map((t) => ({
+    t,
+    why: 'marketing language',
+  })),
 ];
 
 // STYLE_GUIDE.md "Punctuation". Vale does not express these, and they are the
 // loudest tells, so they are checked on every line and counted individually.
 const PUNCT = [
-  { re: /—/g, name: 'em dash', fix: 'Use a comma, a period, or parentheses. Not a colon, readers flag that swap too.' },
+  {
+    re: /—/g,
+    name: 'em dash',
+    fix: 'Use a comma, a period, or parentheses. Not a colon, readers flag that swap too.',
+  },
   { re: /–/g, name: 'en dash', fix: 'Use a comma, a period, or parentheses.' },
   { re: /;/g, name: 'semicolon', fix: 'Use two sentences.' },
 ];
@@ -69,17 +79,35 @@ function scan(file, text) {
     if (!line.trim() || line.includes('deslop-ignore')) return;
     for (const { re, name, fix } of PUNCT) {
       const hits = line.match(re);
-      if (hits) out.push({ file, line: i + 1, sev: 'error', name: `${name} (${hits.length})`, fix, text: line.trim() });
+      if (hits)
+        out.push({
+          file,
+          line: i + 1,
+          sev: 'error',
+          name: `${name} (${hits.length})`,
+          fix,
+          text: line.trim(),
+        });
     }
     const prose = line.replace(/`[^`]*`/g, ' ').toLowerCase(); // a phrase inside a code span is fine
     // "delve into" appears in BannedPhrases and "delve" in MarketingLanguage.
     // Report the longest match only, or one tell inflates the count and the density.
-    const hit = PHRASES.filter(({ t }) => prose.includes(t.toLowerCase())).sort((a, b) => b.t.length - a.t.length);
+    const hit = PHRASES.filter(({ t }) => prose.includes(t.toLowerCase())).sort(
+      (a, b) => b.t.length - a.t.length
+    );
     const kept = [];
     for (const h of hit) {
-      if (kept.some((k) => k.t.toLowerCase().includes(h.t.toLowerCase()))) continue;
+      if (kept.some((k) => k.t.toLowerCase().includes(h.t.toLowerCase())))
+        continue;
       kept.push(h);
-      out.push({ file, line: i + 1, sev: 'error', name: `${h.why}: "${h.t}"`, fix: 'Rewrite plainly.', text: line.trim() });
+      out.push({
+        file,
+        line: i + 1,
+        sev: 'error',
+        name: `${h.why}: "${h.t}"`,
+        fix: 'Rewrite plainly.',
+        text: line.trim(),
+      });
     }
   });
   return out;
@@ -88,14 +116,17 @@ function scan(file, text) {
 function walk(p, acc = []) {
   const s = statSync(p);
   if (s.isDirectory()) {
-    for (const e of readdirSync(p)) if (e !== 'node_modules' && !e.startsWith('.')) walk(join(p, e), acc);
+    for (const e of readdirSync(p))
+      if (e !== 'node_modules' && !e.startsWith('.')) walk(join(p, e), acc);
   } else if (TEXT.test(p)) acc.push(p);
   return acc;
 }
 
 const args = process.argv.slice(2);
 if (!args.length) {
-  console.error('usage: deslop-scan.mjs <path|dir>...   |   deslop-scan.mjs -   (stdin)');
+  console.error(
+    'usage: deslop-scan.mjs <path|dir>...   |   deslop-scan.mjs -   (stdin)'
+  );
   process.exit(2);
 }
 
@@ -123,6 +154,8 @@ console.log(
   `\n${findings.length} finding${findings.length === 1 ? '' : 's'} over ${words} words (${per1k}/1k).`
 );
 if (!findings.length) {
-  console.log('Mechanical tells are clean. The structural ones are in REFERENCE.md and need your eyes.');
+  console.log(
+    'Mechanical tells are clean. The structural ones are in REFERENCE.md and need your eyes.'
+  );
 }
 process.exit(Math.min(findings.length, 250));

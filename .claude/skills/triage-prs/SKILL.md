@@ -122,16 +122,16 @@ Two questions, in that order. A red PR is not ready for a reviewer's time, and a
 built is not ready either. It just looks readier.
 
 **Count the GitHub Actions check runs on the head commit. If it is zero, the rollup means nothing,
-whatever it says.** `statusCheckRollup` aggregates check *runs*, not check *suites*. An Actions suite
+whatever it says.** `statusCheckRollup` aggregates check _runs_, not check _suites_. An Actions suite
 that produced no check runs contributes nothing to it, so the rollup falls through to whatever
 third-party checks remain, which on a fork PR is usually a green `socket-security` or `netlify`. That
 one mechanism produces every false green below:
 
-| what happened | suite conclusion | Actions check runs | rollup says |
-| ------------- | ---------------- | ------------------ | ----------- |
-| never approved | `ACTION_REQUIRED` | 0 | `SUCCESS` |
-| no workflow ever ran | no suite at all | 0 | `SUCCESS` |
-| failed before emitting a run | `FAILURE` | 0 | `SUCCESS` |
+| what happened                | suite conclusion  | Actions check runs | rollup says |
+| ---------------------------- | ----------------- | ------------------ | ----------- |
+| never approved               | `ACTION_REQUIRED` | 0                  | `SUCCESS`   |
+| no workflow ever ran         | no suite at all   | 0                  | `SUCCESS`   |
+| failed before emitting a run | `FAILURE`         | 0                  | `SUCCESS`   |
 
 Measured on one sweep: **48 of 82 open PRs rolled up `SUCCESS` with zero Actions check runs, and only
 18 had genuinely passed.** Three were the last row, green in the rollup and failed underneath.
@@ -163,6 +163,7 @@ So query `checkSuites { conclusion checkRuns { totalCount } app { slug } }` and 
   **This is the argument for approving during triage rather than leaving it.** On that sweep 49 of 82
   unowned open PRs had never been built, and 30 of them were already past the point where anyone
   could approve them.
+
 - **`FAILURE`** → propose `"draft": true`, and name the failing **tasks**, not the checks.
 
   ```bash
@@ -186,6 +187,7 @@ So query `checkSuites { conclusion checkRuns { totalCount } app { slug } }` and 
   `nx login` is interactive, so ask rather than running it yourself. Without one the verb says so and
   exits non-zero, and the honest fallback is to name the workflow and say the task names were not
   retrievable.
+
 - **`PENDING`** → do not draft. A PR mid-run is not a red PR.
 - **`SUCCESS` with at least one Actions check run** → the only case where green means green.
 
@@ -215,7 +217,6 @@ is right when you genuinely do not know, and wrong when you do.
 Never draft a PR that is **already** `isDraft`. Check first, or the record applies a no-op while the
 comment claims something that did not happen.
 
-
 ### Can it merge?
 
 A conflicting PR is not reviewable. The reviewer cannot see what the change actually does against
@@ -227,7 +228,7 @@ current master, and the author has work to do that no review will tell them abou
 - **`mergeable: MERGEABLE`** → nothing to do.
 
 **`mergeable` is computed lazily, and the first query always lies.** GitHub returns `UNKNOWN` and
-only *schedules* the computation, so a single pass over a queue reports `UNKNOWN` for roughly half of
+only _schedules_ the computation, so a single pass over a queue reports `UNKNOWN` for roughly half of
 it and finds no conflicts at all. Query, then query the `UNKNOWN` ones again. On one sweep the first
 pass returned 40 `UNKNOWN` out of 82 and the retry resolved every one, taking the conflict count from
 16 to **35**. The tool refuses to stage `mergeable: UNKNOWN` for this reason, and refuses
@@ -236,7 +237,6 @@ pass returned 40 `UNKNOWN` out of 82 and the retry resolved every one, taking th
 Add `mergeable` and `mergeStateStatus` to the Step 2 fragment. `mergeStateStatus` is the finer
 signal: `DIRTY` is a real conflict, `BEHIND` only means the branch is out of date, and `BLOCKED`
 usually means a required check has not passed rather than anything wrong with the branch.
-
 
 ### Is there a linked issue?
 
