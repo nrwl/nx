@@ -73,14 +73,17 @@ public static class Analyzer
         ProjectGraph projectGraph;
         using (var graphPerf = PerfLogger.Start("analyze workspace > create project graph"))
         {
-            // Evaluation only, so the SDK's default item globs are switched off the way
-            // the dotnet CLI does for restore: they walk every file under each project
-            // directory and nothing here reads the items they produce, while the linked
-            // items that are inputs are explicit and survive. The shared context caches
-            // SDK resolution and directory listings across the projects.
+            // Evaluation only. The SDK's default EmbeddedResource, None and Content globs
+            // are switched off: they walk every file under each project directory to
+            // produce items that all sit inside it, and the only items read here are the
+            // explicit ones linked in from outside, which survive. Compile stays on
+            // because its evaluated items are the only faithful answer to "what does this
+            // project compile" (excludes, Remove/Update entries, hand-listed sources),
+            // which per-class test splitting needs; it costs a few milliseconds per
+            // project. The shared context caches SDK resolution and directory listings
+            // across the projects.
             var globalProperties = new Dictionary<string, string>
             {
-                ["EnableDefaultCompileItems"] = "false",
                 ["EnableDefaultEmbeddedResourceItems"] = "false",
                 ["EnableDefaultNoneItems"] = "false",
                 ["EnableDefaultContentItems"] = "false",
