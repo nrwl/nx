@@ -14,12 +14,13 @@
 //! path analysis, and no dependency walk: the instruction exists only because the
 //! producer was already a dependency.
 //!
-//! `Files(globs)` comes from an `includeIgnored` fileset. I/O tracing turns an
-//! observed read of a generated artifact into one of these, which can preclude
-//! the explicit input entirely, so a plan can read a dependency's output with no
-//! `TaskOutput` anywhere in it. It names no producer, so the read patterns are
-//! compared to declared outputs on their literal prefixes, over the consumer's
-//! dependency closure. That walk runs only for the tasks that carry such a read.
+//! A disk-backed `IgnoredFileSet(globs)` comes from an `includeIgnored`
+//! fileset. I/O tracing turns an observed read of a generated artifact into one
+//! of these, which can preclude the explicit input entirely, so a plan can read a
+//! dependency's output with no `TaskOutput` anywhere in it. Its project names the
+//! owner of the read paths rather than the task producing them, so the patterns
+//! are compared to declared outputs on their literal prefixes, over the
+//! consumer's dependency closure. That walk runs only for tasks carrying a read.
 
 use napi::bindgen_prelude::*;
 use rayon::prelude::*;
@@ -264,6 +265,12 @@ mod tests {
         HashInstruction::TaskOutput("**/*.js".into(), strings(outputs))
     }
 
+    /// A disk-backed fileset. Its project is inert here: the hasher expands
+    /// these workspace-wide, so only the globs are read.
+    fn include_ignored(globs: &[&str]) -> HashInstruction {
+        HashInstruction::IgnoredFileSet(strings(globs))
+    }
+
     /// The embedded vector is the producer's own `outputs`, so equality names it.
     #[test]
     fn resolves_the_producer_a_task_output_embeds() {
@@ -306,9 +313,7 @@ mod tests {
             &[("app:build", &["ui:build"])],
             &[(
                 "app:build",
-                vec![HashInstruction::IgnoredFileSet(strings(&[
-                    "dist/libs/ui/**/*.js",
-                ]))],
+                vec![include_ignored(&["dist/libs/ui/**/*.js"])],
             )],
         );
         assert_eq!(e["app:build"], strings(&["ui:build"]));
@@ -322,12 +327,7 @@ mod tests {
                 ("app:build", &["dist/app"]),
             ],
             &[("app:build", &["ui:build"])],
-            &[(
-                "app:build",
-                vec![HashInstruction::IgnoredFileSet(strings(&[
-                    "vendor/**/*.js",
-                ]))],
-            )],
+            &[("app:build", vec![include_ignored(&["vendor/**/*.js"])])],
         );
         assert!(e.is_empty());
     }
@@ -342,10 +342,7 @@ mod tests {
                 ("app:build", &["dist/app"]),
             ],
             &[("app:build", &["ui:build"])],
-            &[(
-                "app:build",
-                vec![HashInstruction::IgnoredFileSet(strings(&["dist/**/*.js"]))],
-            )],
+            &[("app:build", vec![include_ignored(&["dist/**/*.js"])])],
         );
         assert_eq!(e["app:build"], strings(&["ui:build"]));
     }
@@ -361,9 +358,7 @@ mod tests {
             &[("app:build", &["legacy:build"])],
             &[(
                 "app:build",
-                vec![HashInstruction::IgnoredFileSet(strings(&[
-                    "dist/libs/ui/**/*.js",
-                ]))],
+                vec![include_ignored(&["dist/libs/ui/**/*.js"])],
             )],
         );
         assert!(e.is_empty());
@@ -381,9 +376,7 @@ mod tests {
             &[],
             &[(
                 "app:build",
-                vec![HashInstruction::IgnoredFileSet(strings(&[
-                    "dist/libs/ui/**/*.js",
-                ]))],
+                vec![include_ignored(&["dist/libs/ui/**/*.js"])],
             )],
         );
         assert!(e.is_empty());
@@ -402,9 +395,7 @@ mod tests {
             &[("app:build", &["ui:build"]), ("ui:build", &["core:build"])],
             &[(
                 "app:build",
-                vec![HashInstruction::IgnoredFileSet(strings(&[
-                    "dist/libs/core/**/*.js",
-                ]))],
+                vec![include_ignored(&["dist/libs/core/**/*.js"])],
             )],
         );
         assert_eq!(e["app:build"], strings(&["core:build"]));
@@ -421,9 +412,7 @@ mod tests {
             &[("app:build", &["ui:build"])],
             &[(
                 "app:build",
-                vec![HashInstruction::IgnoredFileSet(strings(&[
-                    "!dist/libs/ui/**/*.js",
-                ]))],
+                vec![include_ignored(&["!dist/libs/ui/**/*.js"])],
             )],
         );
         assert!(e.is_empty());
@@ -437,10 +426,7 @@ mod tests {
         let e = edges(
             &[("a:build", &["dist/a"]), ("b:build", &["dist/b"])],
             &[("a:build", &["b:build"]), ("b:build", &["a:build"])],
-            &[(
-                "a:build",
-                vec![HashInstruction::IgnoredFileSet(strings(&["dist/**/*.js"]))],
-            )],
+            &[("a:build", vec![include_ignored(&["dist/**/*.js"])])],
         );
         assert_eq!(e["a:build"], strings(&["a:build", "b:build"]));
     }
