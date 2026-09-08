@@ -192,10 +192,11 @@ public class ProjectUtilitiesDirectoryBuildInputsTests
     }
 
     [Fact]
-    public void StopsWalkingOnceAllFileNamesFound()
+    public void ShadowedAncestorCopiesAreNotIncluded()
     {
-        // Every canonical filename exists at the project's own directory. The
-        // walker should NOT continue to ancestors and pick up shadowed copies.
+        // Every nearest-ancestor filename exists at the project's own directory.
+        // The walk still visits the ancestors (cascading names need them), but a
+        // name already found must not pick up a shadowed copy higher up.
         var index = IndexByDir(
             "apps/foo/Directory.Build.props",
             "apps/foo/Directory.Build.targets",
