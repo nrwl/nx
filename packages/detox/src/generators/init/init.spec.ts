@@ -20,6 +20,7 @@ describe('init', () => {
     const pnpmWorkspace = tree.read('pnpm-workspace.yaml', 'utf-8');
     expect(pnpmWorkspace).toMatch(/['"]?detox['"]?: true/);
     expect(pnpmWorkspace).toMatch(/['"]?dtrace-provider['"]?: false/);
+    expect(pnpmWorkspace).toMatch(/['"]?@parcel\/watcher['"]?: false/);
     expect(pnpmWorkspace).toMatch(/['"]?unrs-resolver['"]?: false/);
   });
 

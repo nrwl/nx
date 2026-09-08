@@ -87,6 +87,7 @@ describe('@nx/storybook:configuration', () => {
 
         const pnpmWorkspace = tree.read('pnpm-workspace.yaml', 'utf-8');
         expect(pnpmWorkspace).toMatch(/['"]@swc\/core['"]: false/);
+        expect(pnpmWorkspace).toMatch(/['"]?@parcel\/watcher['"]?: false/);
         expect(pnpmWorkspace).toMatch(/['"]?unrs-resolver['"]?: false/);
       });
 
@@ -1502,7 +1503,7 @@ describe('@nx/storybook:configuration', () => {
       });
 
       it.each(['~8.1.11', '^8.0.0', '9.1.15'])(
-        'should not deny unrs-resolver on storybook %s, whose test runner runs on jest 29',
+        'should not deny the jest 30 build scripts on storybook %s, whose test runner runs on jest 29',
         async (storybookRange) => {
           const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
           await libraryGenerator(tree, {
@@ -1528,6 +1529,7 @@ describe('@nx/storybook:configuration', () => {
 
           const pnpmWorkspace = tree.read('pnpm-workspace.yaml', 'utf-8');
           expect(pnpmWorkspace).toMatch(/['"]@swc\/core['"]: false/);
+          expect(pnpmWorkspace).not.toContain('@parcel/watcher');
           expect(pnpmWorkspace).not.toContain('unrs-resolver');
         }
       );
