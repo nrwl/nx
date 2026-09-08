@@ -62,10 +62,12 @@ public static partial class TargetBuilder
                 "{workspaceRoot}/.editorconfig",
                 new { workingDirectory = "absolute" },
                 new { dependentTasksOutputFiles = "**/*" },
+                new { env = "NUGET_PACKAGES" },
                 .. directoryBuildInputs
             ],
             Outputs = new[] { outputPath, intermediatePath }
                 .Where(p => p is not null)
+                .Concat(GetRestoreOnlyExclusions(intermediatePath))
                 .Concat(openApiDocumentsOutputs)
                 .ToArray()!,
             Metadata = new TargetMetadata

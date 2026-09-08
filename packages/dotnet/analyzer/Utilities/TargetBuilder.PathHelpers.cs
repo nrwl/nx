@@ -229,6 +229,31 @@ public static partial class TargetBuilder
     }
 
     /// <summary>
+    /// Negated outputs for the files only <c>dotnet restore</c> writes into the
+    /// intermediate directory. restore is not cached and runs outside the task
+    /// chain, so build, publish and pack must not capture them: a cache hit would
+    /// replay another machine's project.assets.json, absolute packages path and
+    /// all, over the local restore.
+    /// </summary>
+    private static string[] GetRestoreOnlyExclusions(string? intermediatePath)
+    {
+        if (intermediatePath is null)
+        {
+            return [];
+        }
+
+        var obj = intermediatePath.TrimEnd('/');
+        return
+        [
+            $"!{obj}/project.assets.json",
+            $"!{obj}/project.nuget.cache",
+            $"!{obj}/*.nuget.dgspec.json",
+            $"!{obj}/*.nuget.g.props",
+            $"!{obj}/*.nuget.g.targets",
+        ];
+    }
+
+    /// <summary>
     /// Gets the publish output directory path, as a fully-qualified Nx-prefixed
     /// string. Returns <c>null</c> when the path lives outside the workspace.
     /// </summary>

@@ -99,8 +99,13 @@ public class AnalyzerSmokeTests : IDisposable
             .ToDictionary(p => p.Name, p => p.Value);
     }
 
+    /// <summary>
+    /// The outputs a target captures, without the restore-only obj exclusions
+    /// that every obj-declaring target carries (covered in
+    /// <see cref="TargetBuilderRestoreOutputsTests"/>).
+    /// </summary>
     private static string[] Outputs(Dictionary<string, JsonElement> targets, string targetName) =>
-        [.. targets[targetName].GetProperty("outputs").EnumerateArray().Select(o => o.GetString()!)];
+        [.. targets[targetName].GetProperty("outputs").EnumerateArray().Select(o => o.GetString()!).Where(o => !o.StartsWith('!'))];
 
     [Fact]
     public void DefaultProject_DeclaresBinAndObj()
