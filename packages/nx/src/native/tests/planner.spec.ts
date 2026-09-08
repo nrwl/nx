@@ -193,7 +193,7 @@ describe('task planner', () => {
   });
 
   describe('io snapshots', () => {
-    function fixture(opts: { cyclic?: boolean } = {}) {
+    function fixture(opts: { cyclic?: boolean; forced?: boolean } = {}) {
       const builder = new ProjectGraphBuilder(undefined, {
         parent: [
           { file: 'libs/parent/filea.ts', hash: 'a.hash' },
@@ -216,6 +216,15 @@ describe('task planner', () => {
                 { runtime: 'echo runtime123' },
                 { json: '{projectRoot}/package.json', fields: ['version'] },
                 { fileset: '{projectRoot}/generated', includeIgnored: true },
+                ...(opts.forced
+                  ? [
+                      { fileset: '{projectRoot}/served/**/*', force: true },
+                      {
+                        fileset: '{workspaceRoot}/served.config.js',
+                        force: true,
+                      },
+                    ]
+                  : []),
               ],
               outputs: ['{workspaceRoot}/dist/libs/parent'],
             },
@@ -328,6 +337,25 @@ describe('task planner', () => {
       ).toEqual(plain['parent:build']);
       expect(plain['parent:build']).not.toContainEqual(
         expect.stringMatching(/^io-snapshot:/)
+      );
+    });
+
+    it('keeps a forced fileset that the snapshot would otherwise replace', () => {
+      const { planner, taskGraph } = fixture({ forced: true });
+      const plan = planner.getPlans(
+        ['parent:build'],
+        taskGraph,
+        snapshotsFor({ 'parent:build': { inputs: ['libs/parent/filea.ts'] } })
+      )['parent:build'];
+
+      // A trace cannot see a continuous dependency's reads, so a forced
+      // fileset has to survive the replacement that removes the rest.
+      expect(plan).toContainEqual(expect.stringMatching(/^io-snapshot:/));
+      expect(plan).toContain('parent:libs/parent/served/**/*');
+      expect(plan).toContain('workspace:[{workspaceRoot}/served.config.js]');
+      // The unforced declared filesets are still replaced.
+      expect(plan).not.toContain(
+        'parent:libs/parent/**/*,!libs/parent/**/*.spec.ts'
       );
     });
 

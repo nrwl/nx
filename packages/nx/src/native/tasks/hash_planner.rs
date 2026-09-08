@@ -1102,6 +1102,46 @@ impl HashPlanner {
             HashInstruction::ProjectConfiguration(project_name.to_string()),
             HashInstruction::TsConfiguration(project_name.to_string()),
         ];
+        // A forced fileset covers reads the trace cannot see -- a continuous
+        // dependency's, say -- so the snapshot does not replace it.
+        let (forced_project, forced_workspace): (Vec<&str>, Vec<&str>) = self_inputs
+            .iter()
+            .filter_map(|input| match input {
+                Input::FileSet {
+                    fileset,
+                    include_ignored: false,
+                    force: true,
+                    ..
+                } => Some(*fileset),
+                _ => None,
+            })
+            .partition(|file_set| {
+                file_set.starts_with("{projectRoot}/") || file_set.starts_with("!{projectRoot}/")
+            });
+        // Interned as forced here so the plan's replacement pass keeps them;
+        // the caller re-interns by value and gets the same id.
+        if !forced_project.is_empty() {
+            let instruction = HashInstruction::ProjectFileSet(
+                project_name.to_string(),
+                forced_project
+                    .iter()
+                    .map(|f| resolve_tokens(f, project_root, project_name))
+                    .collect(),
+                false,
+            );
+            self.instruction_pool.intern_forced(instruction.clone());
+            instructions.push(instruction);
+        }
+        if !forced_workspace.is_empty() {
+            let instruction = HashInstruction::WorkspaceFileSet(
+                forced_workspace
+                    .iter()
+                    .map(|f| resolve_tokens(f, project_root, project_name))
+                    .collect(),
+            );
+            self.instruction_pool.intern_forced(instruction.clone());
+            instructions.push(instruction);
+        }
         // `includeIgnored` filesets hash from disk regardless of the trace,
         // aggregated into one group so cross-entry negations still filter.
         let ignored: Vec<String> = self_inputs

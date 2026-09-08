@@ -490,6 +490,11 @@ export interface FileSetInput {
    * instead of the workspace file map. Self inputs only.
    */
   includeIgnored?: boolean
+  /**
+   * Keep hashing this fileset even when an I/O snapshot replaces the rest.
+   * For reads a trace cannot see, such as those of a continuous dependency.
+   */
+  force?: boolean
 }
 
 export declare function findImports(projectFileMap: Record<string, Array<string>>): Array<ImportResult>

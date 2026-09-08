@@ -228,8 +228,13 @@ export type InputDefinition =
   | { input: string; projects: string | string[] }
   | { input: string; dependencies: true }
   | { input: string }
-  | { fileset: string; includeIgnored?: boolean }
-  | { fileset: string; dependencies: true; includeIgnored?: boolean }
+  | { fileset: string; includeIgnored?: boolean; force?: boolean }
+  | {
+      fileset: string;
+      dependencies: true;
+      includeIgnored?: boolean;
+      force?: boolean;
+    }
   | { runtime: string }
   | { externalDependencies: string[] }
   | { dependentTasksOutputFiles: string; transitive?: boolean }

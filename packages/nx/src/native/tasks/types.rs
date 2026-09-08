@@ -220,6 +220,10 @@ pub struct InstructionPool {
     /// rather than observed reads. Kept beside the instruction, not inside it,
     /// so provenance never reaches the hash key.
     declared_tails: DashMap<u32, u32>,
+    /// Instructions a snapshot must not replace because the input declared
+    /// `force`. Interning is by value, so a fileset forced by any target is
+    /// kept for all of them -- over-hashing, never under-hashing.
+    forced: DashMap<u32, ()>,
     next_id: AtomicU32,
 }
 
@@ -266,6 +270,13 @@ impl InstructionPool {
         id
     }
 
+    /// Interns an instruction a snapshot must not replace.
+    pub fn intern_forced(&self, instruction: HashInstruction) -> u32 {
+        let id = self.intern(instruction);
+        self.forced.insert(id, ());
+        id
+    }
+
     /// Trailing globs of this instruction that came from a declared input; 0
     /// when it carries none, or is not a snapshot group at all.
     pub fn declared_tail(&self, id: u32) -> u32 {
@@ -294,6 +305,9 @@ impl InstructionPool {
     /// Whether an I/O snapshot replaces this instruction: every declared
     /// fileset, and TsConfiguration unless the root tsconfig was read.
     pub fn replaced_by_snapshot(&self, id: u32, keep_tsconfig: bool) -> bool {
+        if self.forced.contains_key(&id) {
+            return false;
+        }
         match self.kinds.read().get(id as usize).copied() {
             Some(InstructionKind::FileSet) => true,
             Some(InstructionKind::TsConfiguration) => !keep_tsconfig,
