@@ -187,7 +187,7 @@ describe('runMasterSession', () => {
     expect(await runMasterSession(input())).toBe(1);
 
     expect(warnSpy).toHaveBeenCalledWith({
-      title: `Migrate run ${runId} is still active. Run nx migrate --run-migrations --agentic=claude-code again to resume it.`,
+      title: `Migrate run ${runId} is still active. Run the same nx migrate command again to resume it.`,
     });
     expect(mockRunComplete).not.toHaveBeenCalled();
     expect(mockRunError).not.toHaveBeenCalled();
@@ -217,28 +217,75 @@ describe('runMasterSession', () => {
     expect(errorSpy).toHaveBeenCalledWith({
       title: 'Could not start Claude Code: spawn claude ENOENT',
       bodyLines: [
-        `Migrate run ${runId} is still active. Run nx migrate --run-migrations --agentic=claude-code again to resume it.`,
+        `Migrate run ${runId} is still active. Run the same nx migrate command again to resume it.`,
       ],
     });
     expect(mockRunError).toHaveBeenCalledWith({ code: 'agentic', error });
     expect(mockReadRunState).not.toHaveBeenCalled();
     expect(mockRunComplete).not.toHaveBeenCalled();
   });
-  it('exits 1 with the error, the error event and the resume hint when the session had to be closed on an unanswered request', async () => {
+  it('exits 1 with the error, the error event and the resume hint when the session had to be closed on an unanswered request and the run is still active', async () => {
     const error = new Error('EACCES: permission denied, rename');
     mockSpawnMaster.mockResolvedValue({ kind: 'broker-failed', error });
+    mockReadRunState.mockReturnValue(state('active', ['running']));
 
     expect(await runMasterSession(input())).toBe(1);
 
     expect(errorSpy).toHaveBeenCalledWith({
       title:
         "Closed the Claude Code session: a step's request could not be answered (EACCES: permission denied, rename).",
-      bodyLines: [
-        `Migrate run ${runId} is still active. Run nx migrate --run-migrations --agentic=claude-code again to resume it.`,
-      ],
+    });
+    expect(warnSpy).toHaveBeenCalledWith({
+      title: `Migrate run ${runId} is still active. Run the same nx migrate command again to resume it.`,
     });
     expect(mockRunError).toHaveBeenCalledWith({ code: 'agentic', error });
-    expect(mockReadRunState).not.toHaveBeenCalled();
+    expect(mockRunComplete).not.toHaveBeenCalled();
+  });
+
+  it('exits 0 with the tally and no resume hint when the session had to be closed on an unanswered request but the run completed', async () => {
+    const error = new Error('EACCES: permission denied, scandir');
+    mockSpawnMaster.mockResolvedValue({ kind: 'broker-failed', error });
+    mockReadRunState.mockReturnValue(state('completed', ['succeeded']));
+
+    expect(await runMasterSession(input())).toBeUndefined();
+
+    expect(errorSpy).toHaveBeenCalledWith({
+      title:
+        "Closed the Claude Code session: a step's request could not be answered (EACCES: permission denied, scandir).",
+    });
+    expect(mockRunError).toHaveBeenCalledWith({ code: 'agentic', error });
+    expect(logSpy).toHaveBeenCalledWith({
+      title: `Migrate run ${runId} is complete.`,
+      bodyLines: ['  applied: 1', '  skipped: 0'],
+    });
+    expect(everythingPrinted()).not.toContain('resume');
+    expect(mockRunComplete).toHaveBeenCalledWith({
+      agenticOutcome: 'enabled',
+      agentUsed: 'claude-code',
+      migrationCount: 1,
+      appliedCount: 1,
+    });
+  });
+
+  it('exits 1 without a resume hint when the session had to be closed on an unanswered request and run state cannot be read', async () => {
+    const error = new Error('ENOENT: no such file or directory, open run.json');
+    mockSpawnMaster.mockResolvedValue({ kind: 'broker-failed', error });
+    mockReadRunState.mockImplementation(() => {
+      throw error;
+    });
+
+    expect(await runMasterSession(input())).toBe(1);
+
+    expect(errorSpy).toHaveBeenCalledWith({
+      title:
+        "Closed the Claude Code session: a step's request could not be answered (ENOENT: no such file or directory, open run.json).",
+    });
+    expect(errorSpy).toHaveBeenCalledWith({
+      title: `Nx could not determine whether migrate run ${runId} completed.`,
+      bodyLines: ['ENOENT: no such file or directory, open run.json'],
+    });
+    expect(everythingPrinted()).not.toContain('resume');
+    expect(mockRunError).toHaveBeenCalledWith({ code: 'agentic', error });
     expect(mockRunComplete).not.toHaveBeenCalled();
   });
 });

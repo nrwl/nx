@@ -24,6 +24,15 @@ mockCjsModule(import.meta.url, './agentic/select', {
   resolveAgentic: (...args: unknown[]) => mockResolveAgentic(...args),
 });
 
+// Hoisted with the mock: the native module is read at import time.
+const wasm = vi.hoisted(() => ({ active: false }));
+vi.mock('../../native', async () => ({
+  ...(await vi.importActual('../../native')),
+  get IS_WASM() {
+    return wasm.active;
+  },
+}));
+
 const mockIsInsideAgent = vi.fn();
 vi.mock('./agentic/inception', async () => ({
   ...(await vi.importActual('./agentic/inception')),
@@ -127,6 +136,7 @@ describe('migrate() orchestrated init dispatch', () => {
     mockGetGitCurrentBranch.mockReset().mockReturnValue('feat/migrate');
     mockGetBaseRef.mockReset().mockReturnValue('main');
     mockReadNxJson.mockReset().mockReturnValue({});
+    wasm.active = false;
     vi.spyOn(output, 'log').mockImplementation(() => {});
     vi.spyOn(output, 'warn').mockImplementation(() => {});
     vi.spyOn(output, 'error').mockImplementation(() => {});
@@ -332,6 +342,23 @@ describe('migrate() orchestrated init dispatch', () => {
 
       // The classic loop runs real migration execution, which fails on this
       // fixture; only the dispatch itself is under test.
+      await migrate(root, runMigrationsArgs({ agentic: 'claude-code' }), [
+        '--run-migrations',
+        '--agentic=claude-code',
+      ]).catch(() => {});
+
+      expect(mockRunMasterSession).not.toHaveBeenCalled();
+      expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
+      expect(output.log).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.stringContaining('Running migrations from'),
+        })
+      );
+    });
+
+    it('runs the classic per-step loop under WASM, where the broker cannot tell a dead session from a slow one', async () => {
+      wasm.active = true;
+
       await migrate(root, runMigrationsArgs({ agentic: 'claude-code' }), [
         '--run-migrations',
         '--agentic=claude-code',
