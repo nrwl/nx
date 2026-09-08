@@ -748,6 +748,18 @@ async function runRecorded(
         forwardDroppedAgentContext(migration, agentContext, agenticKind);
       }
 
+      // Stored before the install: a failed install fails the attempt, and
+      // the retry re-hands this payload instead of a context-free one.
+      const impl = { logs, changes, agentContext };
+      const owed = validationOwed
+        ? validationPayload(root, migration, impl, resolvedCollection)
+        : promptOwed
+          ? promptPayload(root, migration, impl, resolvedCollection)
+          : undefined;
+      if (owed) {
+        persistAgentWorkPayload(payloadPath, owed);
+      }
+
       const install = () =>
         recordingInstallFailure(dir, step.id, () =>
           installer.installDepsIfChanged()
@@ -787,23 +799,10 @@ async function runRecorded(
       printNextSteps(migration, nextSteps);
 
       if (validationOwed) {
-        emitValidationBlock(
-          root,
-          migration,
-          { logs, changes, agentContext },
-          { resolvedCollection, persistPath: payloadPath }
-        );
+        emitValidationPayload(migrationId, owed);
         awaitingKind = 'generator-validation';
       } else if (promptOwed) {
-        emitOrPrintPrompt(root, migration, agenticKind, {
-          impl: {
-            logs,
-            changes,
-            agentContext,
-          },
-          resolvedCollection,
-          persistPath: payloadPath,
-        });
+        emitPromptForOuterAgent(migrationId, owed, true);
         awaitingKind = 'migration-prompt';
       } else {
         outcome = buildOutcome(changes, nextSteps, migration.description, root);
@@ -1110,8 +1109,14 @@ function printNextSteps(
   });
 }
 
+interface GeneratorImpl {
+  logs: string;
+  changes: FileChange[];
+  agentContext: string[];
+}
+
 interface EmitPromptOptions {
-  impl?: { logs: string; changes: FileChange[]; agentContext: string[] };
+  impl?: GeneratorImpl;
   resolvedCollection?: ResolvedMigrationCollection;
   // Set by recorded runs: the payload is stored here before the block is
   // emitted, so a later reconcile can re-emit it for the parked step.
@@ -1125,24 +1130,49 @@ function emitOrPrintPrompt(
   opts: EmitPromptOptions = {}
 ): void {
   const migrationId = `${migration.package}:${migration.name}`;
-  const promptPath = migration.prompt;
+  if (agenticKind === 'inside-agent') {
+    const payload = promptPayload(
+      root,
+      migration,
+      opts.impl,
+      opts.resolvedCollection
+    );
+    if (opts.persistPath) {
+      persistAgentWorkPayload(opts.persistPath, payload);
+    }
+    emitPromptForOuterAgent(
+      migrationId,
+      payload,
+      opts.persistPath !== undefined
+    );
+  } else {
+    printPromptForUser(
+      root,
+      migration,
+      migration.prompt,
+      resolveDocumentationPath(root, migration, opts.resolvedCollection)
+    );
+  }
+}
+
+function promptPayload(
+  root: string,
+  migration: PlannedMigration,
+  impl: GeneratorImpl | undefined,
+  resolvedCollection: ResolvedMigrationCollection | undefined
+): Record<string, unknown> {
+  const payload: Record<string, unknown> = {
+    migrationId: `${migration.package}:${migration.name}`,
+    prompt: migration.prompt,
+  };
   const documentationPath = resolveDocumentationPath(
     root,
     migration,
-    opts.resolvedCollection
+    resolvedCollection
   );
-
-  if (agenticKind === 'inside-agent') {
-    emitPromptForOuterAgent(
-      migrationId,
-      promptPath,
-      documentationPath,
-      opts.impl,
-      opts.persistPath
-    );
-  } else {
-    printPromptForUser(root, migration, promptPath, documentationPath);
-  }
+  if (documentationPath) payload.documentationPath = documentationPath;
+  if (impl) payload.impl = implPayload(impl);
+  return payload;
 }
 
 const PROMPT_NOT_APPLIED = `The following prompt-based migration was not applied automatically.`;
@@ -1152,34 +1182,18 @@ const CHANGES_AWAIT_VALIDATION = `The following migration's generator ran in an 
 
 function emitPromptForOuterAgent(
   migrationId: string,
-  promptPath: string | undefined,
-  documentationPath: string | undefined,
-  impl:
-    | { logs: string; changes: FileChange[]; agentContext: string[] }
-    | undefined,
-  persistPath: string | undefined
+  payload: Record<string, unknown>,
+  recorded: boolean
 ): void {
-  const payload: Record<string, unknown> = { migrationId, prompt: promptPath };
-  if (documentationPath) payload.documentationPath = documentationPath;
-  if (impl) {
-    payload.impl = implPayload(impl);
-  }
-  if (persistPath) {
-    persistAgentWorkPayload(persistPath, payload);
-  }
   logToAgent({
-    title: persistPath
+    title: recorded
       ? `${PROMPT_NOT_APPLIED} ${RUN_NEXT_FIRST}`
       : `${PROMPT_NOT_APPLIED} Apply it to this workspace, then continue.`,
   });
   emitPromptBlock(migrationId, payload);
 }
 
-function implPayload(impl: {
-  logs: string;
-  changes: FileChange[];
-  agentContext: string[];
-}): Record<string, unknown> {
+function implPayload(impl: GeneratorImpl): Record<string, unknown> {
   return {
     logs: impl.logs,
     changes: impl.changes.map((c) => ({ type: c.type, path: c.path })),
@@ -1251,42 +1265,59 @@ function printPromptForUser(
   });
 }
 
-// `impl` is absent on a retry, where the generator ran in an earlier attempt
-// and its captured output is gone; the emission then points at the tree.
+// `impl` is absent on a retry whose earlier attempt left no stored payload;
+// the emission then points at the tree.
 function emitValidationBlock(
   root: string,
   migration: PlannedMigration,
-  impl:
-    | { logs: string; changes: FileChange[]; agentContext: string[] }
-    | undefined,
+  impl: GeneratorImpl | undefined,
   opts: Omit<EmitPromptOptions, 'impl'> = {}
 ): void {
-  const migrationId = `${migration.package}:${migration.name}`;
-  const documentationPath = resolveDocumentationPath(
+  const payload = validationPayload(
     root,
     migration,
+    impl,
     opts.resolvedCollection
   );
-
-  // `kind` is what tells the block apart from an applied-prompt payload,
-  // which carries `prompt` instead.
-  const payload: Record<string, unknown> = {
-    migrationId,
-    kind: 'generator-validation',
-  };
-  if (documentationPath) payload.documentationPath = documentationPath;
-  if (impl) {
-    payload.impl = implPayload(impl);
-  }
   if (opts.persistPath) {
     persistAgentWorkPayload(opts.persistPath, payload);
   }
+  emitValidationPayload(`${migration.package}:${migration.name}`, payload);
+}
+
+function emitValidationPayload(
+  migrationId: string,
+  payload: Record<string, unknown>
+): void {
   logToAgent({
-    title: impl
-      ? `The following migration's generator ran without an AI-driven part. ${RUN_NEXT_FIRST}`
-      : `${CHANGES_AWAIT_VALIDATION} ${RUN_NEXT_FIRST} Inspect the changes with git.`,
+    title:
+      payload.impl !== undefined
+        ? `The following migration's generator ran without an AI-driven part. ${RUN_NEXT_FIRST}`
+        : `${CHANGES_AWAIT_VALIDATION} ${RUN_NEXT_FIRST} Inspect the changes with git.`,
   });
   emitPromptBlock(migrationId, payload);
+}
+
+function validationPayload(
+  root: string,
+  migration: PlannedMigration,
+  impl: GeneratorImpl | undefined,
+  resolvedCollection: ResolvedMigrationCollection | undefined
+): Record<string, unknown> {
+  // `kind` is what tells the block apart from an applied-prompt payload,
+  // which carries `prompt` instead.
+  const payload: Record<string, unknown> = {
+    migrationId: `${migration.package}:${migration.name}`,
+    kind: 'generator-validation',
+  };
+  const documentationPath = resolveDocumentationPath(
+    root,
+    migration,
+    resolvedCollection
+  );
+  if (documentationPath) payload.documentationPath = documentationPath;
+  if (impl) payload.impl = implPayload(impl);
+  return payload;
 }
 
 // Non-fatal: documentation is supplementary, so a failure warns and the

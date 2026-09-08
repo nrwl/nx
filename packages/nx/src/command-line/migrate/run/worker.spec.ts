@@ -185,6 +185,7 @@ import {
   type MigrateStep,
   type MigrateStepStatus,
 } from './run-state';
+import { applyStepEvent } from './state-machine';
 import { depsHash } from './util';
 
 const RUN_NEXT_FIRST =
@@ -1832,6 +1833,120 @@ describe('runSingleMigrationWorker', () => {
       expect(output.log).toHaveBeenCalledWith(
         expect.objectContaining({
           title: `The following migration's generator ran without an AI-driven part. ${RUN_NEXT_FIRST}`,
+        })
+      );
+    });
+
+    // Re-arms a failed step the way the orchestrator's retry action does and
+    // dispenses it again, so the next worker call is a real second attempt.
+    function rearmFailedStep(dir: string, stepId: string): void {
+      let state = readRunState(dir);
+      const attempt = state.steps.find((s) => s.id === stepId).attempt;
+      for (const event of [
+        {
+          type: 'stepAction' as const,
+          stepId,
+          action: 'retry' as const,
+          attempt,
+        },
+        { type: 'dispense' as const, stepId },
+      ]) {
+        const result = applyStepEvent(state, event);
+        if (result.kind !== 'ok') throw new Error(result.reason);
+        state = result.state;
+      }
+      writeRunState(dir, state);
+    }
+
+    it('stores the validation payload before the install, so a retry after a failed install re-hands it', async () => {
+      mockRunMigration.mockResolvedValue({
+        changes: changeList(),
+        nextSteps: [],
+        agentContext: ['generator hint'],
+        logs: 'gen output',
+        madeChanges: true,
+      });
+      mockInstallDepsIfChanged.mockRejectedValueOnce(
+        new Error('registry unreachable')
+      );
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'dispensed')],
+        migrations: [genMig('@nx/js', 'gen')],
+        createCommits: false,
+        validate: true,
+      });
+
+      await expect(
+        runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'))
+      ).rejects.toThrow('registry unreachable');
+
+      expect(readRunState(dir).steps[0].status).toBe('failed');
+      // Stored, but not handed out: the attempt never reached the park.
+      const stored = JSON.parse(
+        readFileSync(join(dir, 'agent-work', 'step-1-attempt-1.json'), 'utf-8')
+      );
+      expect(stored.kind).toBe('generator-validation');
+      expect(stored.impl.logs).toBe('gen output');
+      expect(stdout).not.toContain('<nx_migrate_prompt');
+
+      rearmFailedStep(dir, 'step-1');
+      stdout = '';
+      await runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'));
+
+      expect(mockRunMigration).toHaveBeenCalledTimes(1);
+      expect(readRunState(dir).steps[0].status).toBe('awaiting-prompt-outcome');
+      expect(stdout).toContain('"logs": "gen output"');
+      expect(stdout).toContain('"path": "a.ts"');
+      expect(stdout).toContain('"generator hint"');
+      // Re-stored under the new attempt, which is the file a reconcile reads.
+      expect(
+        readFileSync(join(dir, 'agent-work', 'step-1-attempt-2.json'), 'utf-8')
+      ).toContain('"logs": "gen output"');
+    });
+
+    it('stores the hybrid prompt payload before the install, so a retry after a failed install re-hands it', async () => {
+      mockRunMigration.mockResolvedValue({
+        changes: changeList(),
+        nextSteps: [],
+        agentContext: ['generator hint'],
+        logs: 'gen output',
+        madeChanges: true,
+      });
+      mockInstallDepsIfChanged.mockRejectedValueOnce(
+        new Error('registry unreachable')
+      );
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:h', 'dispensed')],
+        migrations: [hybridMig('@nx/js', 'h')],
+        createCommits: false,
+      });
+
+      await expect(
+        runSingleMigrationWorker(recordedInput('@nx/js:h', 'run-1'))
+      ).rejects.toThrow('registry unreachable');
+
+      expect(readRunState(dir).steps[0].status).toBe('failed');
+      const stored = JSON.parse(
+        readFileSync(join(dir, 'agent-work', 'step-1-attempt-1.json'), 'utf-8')
+      );
+      expect(stored.prompt).toBe('prompts/h.md');
+      expect(stored.impl.logs).toBe('gen output');
+      expect(stdout).not.toContain('<nx_migrate_prompt');
+
+      rearmFailedStep(dir, 'step-1');
+      stdout = '';
+      await runSingleMigrationWorker(recordedInput('@nx/js:h', 'run-1'));
+
+      expect(mockRunMigration).toHaveBeenCalledTimes(1);
+      expect(readRunState(dir).steps[0].status).toBe('awaiting-prompt-outcome');
+      expect(stdout).toContain('"logs": "gen output"');
+      expect(stdout).toContain('"generator hint"');
+      expect(
+        readFileSync(join(dir, 'agent-work', 'step-1-attempt-2.json'), 'utf-8')
+      ).toContain('"prompt": "prompts/h.md"');
+      expect(output.log).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: `The following prompt-based migration was not applied automatically. ${RUN_NEXT_FIRST}`,
         })
       );
     });

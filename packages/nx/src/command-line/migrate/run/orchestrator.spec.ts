@@ -1170,6 +1170,37 @@ describe('orchestrator', () => {
       );
     });
 
+    it('publishes the runbook before run.json makes the run discoverable', async () => {
+      // A crash between the two writes must not leave an active run without
+      // the runbook a resume re-emits from disk.
+      const realRename = fs.renameSync.bind(fs);
+      let runbookPresentAtPublish: boolean | undefined;
+      const spy = vi
+        .spyOn(fs, 'renameSync')
+        .mockImplementation((from: unknown, to: unknown) => {
+          if (
+            typeof to === 'string' &&
+            basename(to) === 'run.json' &&
+            runbookPresentAtPublish === undefined
+          ) {
+            runbookPresentAtPublish = existsSync(
+              join(dirname(to), 'RUNBOOK.md')
+            );
+          }
+          return realRename(from, to);
+        });
+      try {
+        await runOrchestratorInit(
+          initInput({ migrations: [genMig('@nx/js', 'a')] })
+        );
+      } finally {
+        spy.mockRestore();
+      }
+
+      // `undefined` here would mean run.json was never published this way.
+      expect(runbookPresentAtPublish).toBe(true);
+    });
+
     it('records --validate=false on the run and renders the runbook without the validation pass', async () => {
       await runOrchestratorInit({
         ...initInput({ migrations: [genMig('@nx/js', 'a')] }),

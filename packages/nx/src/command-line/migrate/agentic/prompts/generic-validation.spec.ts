@@ -150,9 +150,14 @@ describe('buildGenericValidationUserPrompt', () => {
         '`nx affected --files=<comma-separated changed paths> -t <target>`'
       );
       // `--files` splits on every comma (parseCSV), so a comma-bearing path
-      // needs the newline-delimited stdin form.
+      // needs the newline-delimited stdin form. The mechanism is stated
+      // shell-neutrally; the printf example is labeled POSIX since cmd.exe
+      // and PowerShell have no printf.
       expect(out).toContain(
-        "`printf '%s\\n' <paths> | nx affected --stdin -t <target>`"
+        'pipe the paths one per line into `nx affected --stdin -t <target>`'
+      );
+      expect(out).toContain(
+        "(POSIX shells: `printf '%s\\n' <paths> | nx affected --stdin -t <target>`)"
       );
       expect(out).not.toContain('`nx affected -t <target>`');
     }
