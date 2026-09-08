@@ -57,7 +57,10 @@ import {
 import { notifyFileChangeListeners } from './file-watching/file-change-events';
 import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
 import { notifyProjectGraphListenerSockets } from './project-graph-listener-sockets';
-import { flushPendingWorkspaceChanges } from './watcher';
+import {
+  flushPendingWorkspaceChanges,
+  restartDaemonIfIgnoreFilesChanged,
+} from './watcher';
 import { serverLogger } from '../logger';
 
 interface SerializedProjectGraph {
@@ -418,6 +421,23 @@ export async function handleWatcherRescan(): Promise<void> {
     'watcher-rescan-start',
     'watcher-rescan-end'
   );
+
+  // An overflow can drop an ignore-file edit outright, so dispatchWorkspaceChanges
+  // never sees it and the native filterer keeps stale ignore rules. The re-walk
+  // is where it resurfaces, so restart here too — the fresh daemon rebuilds the
+  // filterer from the current ignore files.
+  if (
+    restartDaemonIfIgnoreFilesChanged([
+      ...createdFiles.map(({ file }) => file),
+      ...updatedFiles.map(({ file }) => file),
+      ...deletedFiles,
+    ])
+  ) {
+    serverLogger.watcherLog(
+      'Rescan recovered an ignore-file change; restarting the daemon to reload ignore rules.'
+    );
+    return;
+  }
 
   if (
     createdFiles.length === 0 &&
