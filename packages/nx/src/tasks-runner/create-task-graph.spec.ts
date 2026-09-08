@@ -2931,6 +2931,50 @@ describe('createTaskGraph', () => {
     ]);
   });
 
+  function getApp1CompileDependencies() {
+    return createTaskGraph(projectGraph, {}, ['app1'], ['compile'], null, {})
+      .dependencies['app1:compile'];
+  }
+
+  it('should prefer an exact target name containing glob characters', () => {
+    const target = 'test-ci--src/app/projects/[id]/page.test.tsx';
+    const targets = projectGraph.nodes.app1.data.targets;
+    targets.compile.dependsOn = [target];
+    targets[target] = { executor: 'nx:noop' };
+
+    expect(getApp1CompileDependencies()).toEqual([`app1:${target}`]);
+  });
+
+  it('should ignore exact target names from unrelated projects when expanding globs', () => {
+    const targets = projectGraph.nodes.app1.data.targets;
+    targets.compile.dependsOn = ['test-*'];
+    targets['test-one'] = { executor: 'nx:noop' };
+    projectGraph.nodes.lib1.data.targets['test-*'] = { executor: 'nx:noop' };
+
+    expect(getApp1CompileDependencies()).toEqual(['app1:test-one']);
+  });
+
+  it('should prefer an exact target name in transitive dependencies', () => {
+    const target = 'test-[id]';
+    projectGraph.nodes.app1.data.targets.compile.dependsOn = [`^${target}`];
+    projectGraph.nodes.lib2 = {
+      name: 'lib2',
+      type: 'lib',
+      data: {
+        root: 'lib2-root',
+        targets: {
+          [target]: { executor: 'nx:noop' },
+        },
+      },
+    };
+    projectGraph.dependencies.lib1 = [
+      { source: 'lib1', target: 'lib2', type: 'static' },
+    ];
+    projectGraph.dependencies.lib2 = [];
+
+    expect(getApp1CompileDependencies()).toEqual([`lib2:${target}`]);
+  });
+
   it('should handle negative patterns in dependsOn', () => {
     const graph: ProjectGraph = {
       nodes: {

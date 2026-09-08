@@ -19,6 +19,7 @@ import {
 } from '../native';
 import { isRelativePath } from '../utils/fileutils';
 import { findMatchingProjects } from '../utils/find-matching-projects';
+import { findAllProjectNodeDependencies } from '../utils/project-graph-utils';
 import {
   LegacyDependsOnLocation,
   LegacyDependsOnViolation,
@@ -78,14 +79,36 @@ export function normalizeDependencyConfigDefinition(
   allTargetNames: string[],
   location?: DependsOnEntryLocation
 ): NormalizedTargetDependencyConfig[] {
-  return expandWildcardTargetConfiguration(
-    normalizeDependencyConfigProjects(
-      expandDependencyConfigSyntaxSugar(definition, graph, currentProject),
-      currentProject,
-      graph,
-      location
-    ),
-    allTargetNames
+  const dependencyConfig = normalizeDependencyConfigProjects(
+    expandDependencyConfigSyntaxSugar(definition, graph, currentProject),
+    currentProject,
+    graph,
+    location
+  );
+
+  if (
+    isGlobPattern(dependencyConfig.target) &&
+    allTargetNames.includes(dependencyConfig.target) &&
+    hasExactTargetInDependencyScope(dependencyConfig, currentProject, graph)
+  ) {
+    return [dependencyConfig];
+  }
+
+  return expandWildcardTargetConfiguration(dependencyConfig, allTargetNames);
+}
+
+function hasExactTargetInDependencyScope(
+  dependencyConfig: NormalizedTargetDependencyConfig,
+  currentProject: string,
+  graph: ProjectGraph
+): boolean {
+  const projectNames = dependencyConfig.dependencies
+    ? findAllProjectNodeDependencies(currentProject, graph)
+    : dependencyConfig.projects;
+
+  return projectNames.some(
+    (projectName) =>
+      dependencyConfig.target in (graph.nodes[projectName]?.data.targets ?? {})
   );
 }
 
