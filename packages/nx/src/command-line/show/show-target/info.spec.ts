@@ -9,6 +9,7 @@ import {
   fetchedForHead,
   setMockInputGlobs,
   setMockNxJson,
+  setMockObservedOutputs,
   setMockIoSnapshotReport,
 } from './test-utils';
 import { showTargetInfoHandler } from './info';
@@ -1174,6 +1175,27 @@ describe('show target info', () => {
       // A wide target lists hundreds of tasks, which buries every section
       // under it; the count carries the useful part.
       expect(text).toMatch(/\.\.\. \d+ more \(--verbose\)/);
+    });
+
+    it('lists the writes the snapshot observed alongside the declared ones', async () => {
+      setGraph(graphWithLintTarget());
+      setMockIoSnapshotReport({
+        used: ['my-app:lint'],
+        tasksWithOutputs: ['my-app:lint'],
+        diagnostics: [],
+        resolution: { requestedCommit: 'ae6a03f912ab', digest: '049a9c2f7bcd' },
+      });
+      setMockObservedOutputs({ 'my-app:lint': ['apps/my-app/generated/**'] });
+
+      (console.log as Mock).mockClear();
+      await showTargetInfoHandler({ target: 'my-app:lint' });
+      const text = (console.log as Mock).mock.calls.map((c) => c[0]).join('\n');
+
+      // The runner caches these too, so omitting them understated what the
+      // task produces.
+      expect(text).toContain(
+        '{projectRoot}/generated/** (observed by the I/O snapshot)'
+      );
     });
 
     it('summarises by project unless --verbose', async () => {

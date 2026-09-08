@@ -7,6 +7,7 @@ import { getNamedInputs } from '../../../hasher/task-hasher';
 import {
   getTaskEffectiveInputGroups,
   getTaskIoSnapshotStatus,
+  getTaskOutputs,
   getTaskRawInputs,
   type IoSnapshotStatus,
 } from '../../../hasher/check-task-files';
@@ -53,7 +54,24 @@ export async function showTargetInfoHandler(
           })
         )?.files ?? [])
       : [];
-  const data = resolveTargetInfoData(t, snapshot, effectiveGroups, hashed);
+  // A snapshot contributes the writes it observed on top of the declared
+  // outputs; without them the listing is only half of what the runner caches.
+  const observedOutputs =
+    snapshot.status === 'used'
+      ? await getTaskOutputs(taskId, {
+          projectGraph: t.graph,
+          nxJson: t.nxJson,
+        }).then((outputs) =>
+          outputs.resolved.filter((o) => outputs.sources[o] === 'snapshot')
+        )
+      : [];
+  const data = resolveTargetInfoData(
+    t,
+    snapshot,
+    effectiveGroups,
+    hashed,
+    observedOutputs
+  );
   renderTargetInfo(data, args);
 }
 
@@ -71,7 +89,8 @@ function resolveTargetInfoData(
   t: ResolvedTarget,
   snapshot: IoSnapshotStatus,
   effectiveGroups: EffectiveInputGroup[] = [],
-  hashedFiles: string[] = []
+  hashedFiles: string[] = [],
+  observedOutputs: string[] = []
 ) {
   const {
     projectName,
@@ -214,6 +233,14 @@ function resolveTargetInfoData(
       : {}),
     ...(targetConfig.outputs
       ? { outputs: targetConfig.outputs as string[] }
+      : {}),
+    ...(observedOutputs.length > 0
+      ? {
+          // Written against {projectRoot} like the declared outputs beside them.
+          observedOutputs: observedOutputs.map((output) =>
+            tokenizeProjectRoot(output, node.data.root)
+          ),
+        }
       : {}),
     options: {
       ...targetConfig.options,
@@ -903,11 +930,17 @@ function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
     renderEffectiveInputs(data, c, args);
   }
 
-  if (data.outputs && data.outputs.length > 0) {
+  const observed = data.observedOutputs ?? [];
+  if ((data.outputs && data.outputs.length > 0) || observed.length > 0) {
     console.log(`${c.bold('Outputs')}:`);
-    for (let i = 0; i < data.outputs.length; i++) {
+    for (let i = 0; i < (data.outputs?.length ?? 0); i++) {
       const hint = sourceHint(`outputs.${i}`, 'outputs');
-      console.log(`  - ${data.outputs[i]}${hint}`);
+      console.log(`  - ${data.outputs![i]}${hint}`);
+    }
+    // Writes the trace saw that no declared output covers. The runner caches
+    // these too, so leaving them out understates what the task produces.
+    for (const output of observed) {
+      console.log(`  - ${output} ${c.dim('(observed by the I/O snapshot)')}`);
     }
   }
 
