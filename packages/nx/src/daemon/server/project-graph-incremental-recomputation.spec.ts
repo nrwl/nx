@@ -3,6 +3,8 @@ import {
   mkdirSync,
   readFileSync,
   rmSync,
+  statSync,
+  utimesSync,
   writeFileSync,
 } from 'node:fs';
 import { join } from 'node:path';
@@ -1964,8 +1966,36 @@ describe('handleWatcherRescan', () => {
   });
 
   afterEach(() => {
+    vi.restoreAllMocks();
     fs.cleanup();
     delete (global as any).NX_DAEMON;
+  });
+
+  it('restarts the watcher when a dropped ignore-file edit is recovered', async () => {
+    fs.createFilesSync({
+      'nx.json': '{}',
+      'package.json': JSON.stringify({ name: 'root' }),
+      '.nxignore': '',
+    });
+    vi.resetModules();
+    (global as any).NX_DAEMON = true;
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
+    const { setupWorkspaceContext, getAllFileDataInContext } =
+      await import('../../utils/workspace-context');
+    setupWorkspaceContext(fs.tempDir);
+    await getAllFileDataInContext(fs.tempDir);
+    const shutdown = await import('./shutdown-utils');
+    const terminate = vi
+      .spyOn(shutdown, 'handleServerProcessTermination')
+      .mockResolvedValue(undefined);
+    const { handleWatcherRescan } =
+      await import('./project-graph-incremental-recomputation');
+    writeFileSync(join(fs.tempDir, '.nxignore'), 'ignored/\n');
+
+    await handleWatcherRescan();
+
+    expect(terminate).toHaveBeenCalledOnce();
   });
 
   it('recovers file changes the watcher never delivered', async () => {
@@ -2002,6 +2032,13 @@ describe('handleWatcherRescan', () => {
     expect(isKnownWorkspaceFile('libs/bar/project.json')).toBe(false);
 
     // Dropped events: the workspace moves on with no watcher batch at all.
+    const projectPath = join(fs.tempDir, 'libs/foo/project.json');
+    const projectStat = statSync(projectPath);
+    writeFileSync(
+      projectPath,
+      JSON.stringify({ name: 'foo', root: 'libs/foo', tags: ['recovered'] })
+    );
+    utimesSync(projectPath, projectStat.atime, projectStat.mtime);
     writeFileSync(join(fs.tempDir, 'libs/foo/src/index.ts'), 'changed');
     mkdirSync(join(fs.tempDir, 'libs/bar'), { recursive: true });
     writeFileSync(
@@ -2015,6 +2052,7 @@ describe('handleWatcherRescan', () => {
     const second = await getCachedSerializedProjectGraphPromise();
     expect(second.error).toBeNull();
     expect(second.projectGraph.nodes.bar).toBeDefined();
+    expect(second.projectGraph.nodes.foo.data.tags).toEqual(['recovered']);
     expect(isKnownWorkspaceFile('libs/bar/project.json')).toBe(true);
     expect(isKnownWorkspaceFile('libs/foo/src/stale.ts')).toBe(false);
   });

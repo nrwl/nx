@@ -264,6 +264,8 @@ export declare class WorkspaceContext {
   incrementalUpdate(updatedFiles: Array<string>, deletedFiles: Array<string>): Record<string, string>
   updateProjectFiles(projectRootMappings: Record<string, string>, projectFiles: ExternalObject<Record<string, Array<FileData>>>, globalFiles: ExternalObject<Array<FileData>>, updatedFiles: Record<string, string>, deletedFiles: Array<string>): UpdatedWorkspaceFiles
   allFileData(): Array<FileData>
+  /** After event loss, timestamps cannot establish that cached hashes are fresh. */
+  rescan(): Array<FileData>
   getFilesInDirectory(directory: string): Array<string>
 }
 

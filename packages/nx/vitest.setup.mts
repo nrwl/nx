@@ -134,6 +134,10 @@ vi.doMock(workspaceContextPath, async () => {
     getAllFileDataInContext: guarded('getAllFileDataInContext', () =>
       Promise.resolve([])
     ),
+    rescanWorkspaceContext: guarded('rescanWorkspaceContext', () => ({
+      before: [],
+      after: [],
+    })),
     getFilesInDirectoryUsingContext: guarded(
       'getFilesInDirectoryUsingContext',
       () => Promise.resolve([])

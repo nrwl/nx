@@ -25,6 +25,7 @@ use xxhash_rust::xxh3;
 pub struct WorkspaceContext {
     pub workspace_root: String,
     workspace_root_path: PathBuf,
+    cache_dir: String,
     files_worker: FilesWorker,
 }
 
@@ -54,7 +55,7 @@ fn gather_and_hash_files(workspace_root: &Path, cache_dir: String) -> Vec<(PathB
 }
 
 #[derive(Default)]
-struct FilesWorker(Option<Arc<(NxMutex<Files>, NxCondvar)>>);
+struct FilesWorker(Option<Arc<(NxMutex<Option<Files>>, NxCondvar)>>);
 impl FilesWorker {
     #[cfg(not(target_arch = "wasm32"))]
     fn gather_files(workspace_root: &Path, cache_dir: String) -> Self {
@@ -66,7 +67,7 @@ impl FilesWorker {
             return FilesWorker(None);
         }
 
-        let files_lock = Arc::new((NxMutex::new(Vec::new()), NxCondvar::new()));
+        let files_lock = Arc::new((NxMutex::new(None), NxCondvar::new()));
         let files_lock_clone = Arc::clone(&files_lock);
         let workspace_root = workspace_root.to_owned();
 
@@ -77,8 +78,8 @@ impl FilesWorker {
 
             let files = gather_and_hash_files(&workspace_root, cache_dir);
 
-            *workspace_files = files;
-            let files_len = workspace_files.len();
+            let files_len = files.len();
+            *workspace_files = Some(files);
             trace!(?files_len, "files retrieved");
 
             drop(workspace_files);
@@ -104,7 +105,7 @@ impl FilesWorker {
 
         trace!("{} files retrieved", files.len());
 
-        let files_lock = Arc::new((NxMutex::new(files), NxCondvar::new()));
+        let files_lock = Arc::new((NxMutex::new(Some(files)), NxCondvar::new()));
 
         FilesWorker(Some(files_lock))
     }
@@ -116,17 +117,13 @@ impl FilesWorker {
             trace!("waiting for files to be available");
             let files = files_lock.lock().expect("Should be able to lock files");
 
-            #[cfg(target_arch = "wasm32")]
             let files = cvar
-                .wait(files, |guard| guard.len() == 0)
-                .expect("Should be able to wait for files");
-
-            #[cfg(not(target_arch = "wasm32"))]
-            let files = cvar
-                .wait(files, |guard| guard.len() == 0)
+                .wait(files, |guard| guard.is_none())
                 .expect("Should be able to wait for files");
 
             let file_data = files
+                .as_ref()
+                .expect("Initial scan completed")
                 .iter()
                 .map(|(path, hash)| FileData {
                     file: path.to_normalized_string(),
@@ -154,10 +151,14 @@ impl FilesWorker {
             return HashMap::new();
         };
 
-        let (files_lock, _) = &files_sync.deref();
-        let mut files = files_lock
+        let (files_lock, cvar) = &files_sync.deref();
+        let files = files_lock
             .lock()
             .expect("Should always be able to update files");
+        let mut files = cvar
+            .wait(files, |guard| guard.is_none())
+            .expect("Initial scan completed");
+        let files = files.as_mut().expect("Initial scan completed");
         let mut map: HashMap<PathBuf, String> = files.drain(..).collect();
 
         for deleted_path in deleted_files_and_directories {
@@ -222,6 +223,7 @@ impl WorkspaceContext {
             files_worker: FilesWorker::gather_files(&workspace_root_path, cache_dir.clone()),
             workspace_root,
             workspace_root_path,
+            cache_dir,
         }
     }
 
@@ -428,6 +430,29 @@ impl WorkspaceContext {
         self.files_worker.get_files()
     }
 
+    /// After event loss, timestamps cannot establish that cached hashes are fresh.
+    #[napi]
+    pub fn rescan(&self) -> Vec<FileData> {
+        let Some(files_sync) = &self.files_worker.0 else {
+            return vec![];
+        };
+        let (files_lock, cvar) = files_sync.deref();
+        let files = files_lock.lock().expect("Should be able to rescan files");
+        let mut files = cvar
+            .wait(files, |guard| guard.is_none())
+            .expect("Initial scan completed");
+        let hashes = full_files_hash(&self.workspace_root_path);
+        let mut refreshed: Files = hashes
+            .iter()
+            .map(|(path, hashed)| (PathBuf::from(path), hashed.0.clone()))
+            .collect();
+        refreshed.par_sort();
+        write_files_archive(&self.cache_dir, hashes);
+        *files = Some(refreshed);
+        drop(files);
+        self.files_worker.get_files()
+    }
+
     #[napi]
     pub fn get_files_in_directory(&self, directory: String) -> Vec<String> {
         get_child_files(directory, self.files_worker.get_files())
@@ -446,6 +471,76 @@ mod tests {
     use super::*;
     use assert_fs::TempDir;
     use assert_fs::prelude::*;
+
+    #[test]
+    fn rescan_rehashes_same_timestamp_edits_and_recovers_creates_and_deletes() {
+        let temp = TempDir::new().unwrap();
+        let cache = TempDir::new().unwrap();
+        let source = temp.child("source.ts");
+        source.write_str("before").unwrap();
+        temp.child("deleted.ts").write_str("deleted").unwrap();
+        let modified = source.path().metadata().unwrap().modified().unwrap();
+        let ctx = WorkspaceContext::new(
+            temp.path().to_string_lossy().into_owned(),
+            cache.path().to_string_lossy().into_owned(),
+        );
+        let before = ctx.all_file_data();
+        let original_hash = &before.iter().find(|f| f.file == "source.ts").unwrap().hash;
+
+        source.write_str("after!").unwrap();
+        std::fs::File::options()
+            .write(true)
+            .open(source.path())
+            .unwrap()
+            .set_modified(modified)
+            .unwrap();
+        std::fs::remove_file(temp.child("deleted.ts").path()).unwrap();
+        temp.child("created.ts").write_str("created").unwrap();
+
+        let after = ctx.rescan();
+        assert_eq!(after.len(), 2);
+        let refreshed_hash = &after.iter().find(|f| f.file == "source.ts").unwrap().hash;
+        assert_ne!(original_hash, refreshed_hash);
+        assert_eq!(refreshed_hash, &hash(b"after!"));
+        assert!(after.iter().any(|f| f.file == "created.ts"));
+        assert!(!after.iter().any(|f| f.file == "deleted.ts"));
+        assert_eq!(ctx.all_file_data().len(), 2);
+
+        let restarted = WorkspaceContext::new(
+            temp.path().to_string_lossy().into_owned(),
+            cache.path().to_string_lossy().into_owned(),
+        );
+        assert_eq!(
+            restarted
+                .all_file_data()
+                .iter()
+                .find(|f| f.file == "source.ts")
+                .unwrap()
+                .hash,
+            *refreshed_hash,
+            "The recovered hash must survive a new workspace context"
+        );
+
+        std::fs::remove_file(source.path()).unwrap();
+        std::fs::remove_file(temp.child("created.ts").path()).unwrap();
+        assert!(ctx.rescan().is_empty());
+        assert!(ctx.all_file_data().is_empty());
+    }
+
+    #[test]
+    fn completed_empty_scan_is_ready() {
+        let worker = FilesWorker(Some(Arc::new((
+            NxMutex::new(Some(Vec::new())),
+            NxCondvar::new(),
+        ))));
+        let (tx, rx) = std::sync::mpsc::channel();
+        std::thread::spawn(move || tx.send(worker.get_files()).unwrap());
+        assert!(
+            rx.recv_timeout(std::time::Duration::from_secs(2))
+                .expect("A completed empty scan must not wait for another notification")
+                .is_empty()
+        );
+    }
 
     /// Plugin createNodes pipelines (and therefore atomized target name
     /// insertion order) depend on the JS-visible `WorkspaceContext.glob`

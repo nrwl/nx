@@ -38,9 +38,8 @@ import {
 } from '../../project-graph/utils/retrieve-workspace-files';
 import { fileExists } from '../../utils/fileutils';
 import {
-  getAllFileDataInContext,
   resetWorkspaceContext,
-  setupWorkspaceContext,
+  rescanWorkspaceContext,
   updateFilesInContext,
 } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
@@ -58,7 +57,10 @@ import {
 import { notifyFileChangeListeners } from './file-watching/file-change-events';
 import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
 import { notifyProjectGraphListenerSockets } from './project-graph-listener-sockets';
-import { flushPendingWorkspaceChanges } from './watcher';
+import {
+  flushPendingWorkspaceChanges,
+  restartDaemonIfIgnoreFilesChanged,
+} from './watcher';
 import { serverLogger } from '../logger';
 
 interface SerializedProjectGraph {
@@ -438,10 +440,7 @@ export function diffFileData(
  */
 export async function handleWatcherRescan(): Promise<void> {
   performance.mark('watcher-rescan-start');
-  const before = await getAllFileDataInContext(workspaceRoot);
-  resetWorkspaceContext();
-  setupWorkspaceContext(workspaceRoot);
-  const after = await getAllFileDataInContext(workspaceRoot);
+  const { before, after } = rescanWorkspaceContext(workspaceRoot);
   performance.mark('watcher-rescan-end');
   performance.measure(
     're-walk workspace after watcher rescan',
@@ -453,6 +452,14 @@ export async function handleWatcherRescan(): Promise<void> {
     before,
     after
   );
+  if (
+    restartDaemonIfIgnoreFilesChanged([
+      ...updatedFiles.map(({ file }) => file),
+      ...deletedFiles,
+    ])
+  ) {
+    return;
+  }
   if (updatedFiles.length === 0 && deletedFiles.length === 0) {
     serverLogger.watcherLog(
       'Rescan re-walk found no differences; keeping the cached graph.'

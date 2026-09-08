@@ -26,8 +26,15 @@ let workspaceChangesCallback!: FileWatcherCallback;
 function dispatchWorkspaceChanges(
   events: WatchEvent[]
 ): Promise<void> | undefined {
-  for (const event of events) {
-    if (event.path.endsWith('.gitignore') || event.path === '.nxignore') {
+  if (restartDaemonIfIgnoreFilesChanged(events.map((event) => event.path))) {
+    return;
+  }
+  return workspaceChangesCallback(null, events);
+}
+
+export function restartDaemonIfIgnoreFilesChanged(paths: string[]): boolean {
+  for (const path of paths) {
+    if (path.endsWith('.gitignore') || path === '.nxignore') {
       // If the ignore files themselves have changed we need to dynamically
       // update our cached ignoreGlobs
       handleServerProcessTermination({
@@ -35,9 +42,10 @@ function dispatchWorkspaceChanges(
         reason: 'Stopping the daemon the set of ignored files changed (native)',
         sockets: openSockets,
       });
+      return true;
     }
   }
-  return workspaceChangesCallback(null, events);
+  return false;
 }
 
 export async function watchWorkspace(server: Server, cb: FileWatcherCallback) {

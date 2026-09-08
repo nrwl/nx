@@ -181,3 +181,10 @@ function ensureContextAvailable(workspaceRoot: string) {
 export function resetWorkspaceContext() {
   workspaceContext = undefined;
 }
+
+export function rescanWorkspaceContext(workspaceRoot: string) {
+  ensureContextAvailable(workspaceRoot);
+  const before = workspaceContext.allFileData();
+  const after = workspaceContext.rescan();
+  return { before, after };
+}
