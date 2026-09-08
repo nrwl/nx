@@ -35,6 +35,7 @@ import { extractFileFromTarball } from '../../utils/tar';
 import { writeFormattedJsonFile } from '../../utils/write-formatted-json-file';
 import { quoteShellArg } from '../../utils/shell-quoting';
 import { logger } from '../../utils/logger';
+import { IS_WASM } from '../../native';
 import {
   getUncommittedChangesSnapshot,
   isGitRepository,
@@ -3370,10 +3371,12 @@ async function runMigrations(
   }
 
   // Dark: with the env var set, the agent drives the whole run through the
-  // orchestrator from one session instead of being spawned per step.
+  // orchestrator from one session instead of being spawned per step. Not
+  // under WASM, where the broker has no native lock to detect a dead parent.
   if (
     agentic.kind === 'enabled' &&
-    process.env.NX_MIGRATE_ORCHESTRATOR === 'true'
+    process.env.NX_MIGRATE_ORCHESTRATOR === 'true' &&
+    !IS_WASM
   ) {
     const { packageJson: nxPackageJson } = readModulePackageJson(
       'nx',
