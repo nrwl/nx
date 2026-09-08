@@ -42,6 +42,7 @@ describe('migrate run issues', () => {
   ): MigrateStep => ({
     id,
     roundIndex: 0,
+    kind: 'migration',
     migrationId,
     status,
     attempt: 1,
@@ -426,6 +427,31 @@ describe('migrate run issues', () => {
             applicableMigrations: ['plain:three', '@nx/js', 'plain'],
           },
         ],
+        []
+      );
+      expect(result.state.issues[0].applicableStepIds).toEqual([
+        'step-1',
+        'step-2',
+        'step-3',
+      ]);
+    });
+
+    it('never maps an identifier to a step that ran no migration', () => {
+      const steps = [
+        ...baseSteps(),
+        {
+          id: 'step-4',
+          roundIndex: 0,
+          kind: 'final-validation' as const,
+          status: 'pending' as const,
+          attempt: 1,
+          dispenseCount: 0,
+        },
+      ];
+      const result = applyReportedIssues(
+        stateWith(steps),
+        steps[0],
+        [{ summary: 'wide issue', applicableMigrations: ['@nx/js', 'plain'] }],
         []
       );
       expect(result.state.issues[0].applicableStepIds).toEqual([

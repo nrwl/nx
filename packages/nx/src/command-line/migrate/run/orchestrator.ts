@@ -99,6 +99,8 @@ import {
   hasPendingCommitDebt,
   latestRound,
   markInstallFailed,
+  finalValidationUnsupported,
+  stepLabel,
   stepsToPendingMigrations,
   tallySteps,
   uncoveredFailedStepIds,
@@ -693,7 +695,7 @@ function refuseUndeletableRun(
   if (live.length > 0) {
     throw new Error(
       `Not deleting migrate run '${runId}': ${live
-        .map((w) => `pid ${w.pid} is still running ${w.id} (${w.migrationId})`)
+        .map((w) => `pid ${w.pid} is still running ${w.id} (${stepLabel(w)})`)
         .join('; ')}. ` +
         `Wait for it to finish, then re-run the command. If that pid is not an nx migrate worker, stop it or remove ${MIGRATE_RUNS_RELATIVE_DIR}/${runId}, then re-run the command.`
     );
@@ -1216,7 +1218,7 @@ export async function runOrchestratorReconcile(
     }
     if (unresolvedArchiveError !== null) {
       warnToAgent({
-        title: `The issue recording that ${target.migrationId} was left unresolved could not be archived (${summarizeError(unresolvedArchiveError)}).`,
+        title: `The issue recording that ${stepLabel(target)} was left unresolved could not be archived (${summarizeError(unresolvedArchiveError)}).`,
         bodyLines: [
           `run.json stays authoritative: the step is unresolved and the issue is in its ledger; only the archived file under the run's issues directory is missing.`,
         ],
@@ -1238,7 +1240,7 @@ export async function runOrchestratorReconcile(
         archiveIssues(dir, revertApplication, revertReconstructedIds);
       } catch (e) {
         warnToAgent({
-          title: `The reverted issue resolutions for ${target.migrationId} could not be archived (${summarizeError(e)}).`,
+          title: `The reverted issue resolutions for ${stepLabel(target)} could not be archived (${summarizeError(e)}).`,
           bodyLines: [
             `run.json stays authoritative for the dispositions; the archived files under the run's issues directory miss the revert records, so their last entries may still read resolved.`,
           ],
@@ -1256,6 +1258,7 @@ function buildSteps(sortedMigrations: PlannedMigration[]): MigrateStep[] {
   return sortedMigrations.map((m, index) => ({
     id: `step-${index + 1}`,
     roundIndex: 0,
+    kind: 'migration',
     migrationId: `${m.package}:${m.name}`,
     status: 'pending',
     attempt: 1,
@@ -1340,9 +1343,7 @@ async function foldHandoffs(
     warnReconstructedArchives(reconstructedIssueIds);
     if (archiveError !== null) {
       warnToAgent({
-        title: `The issue details reported by ${
-          step.migrationId
-        } could not be archived (${summarizeError(archiveError)}).`,
+        title: `The issue details reported by ${stepLabel(step)} could not be archived (${summarizeError(archiveError)}).`,
         bodyLines: [
           `The step's outcome was not folded; fix the underlying problem, then run the reconcile again.`,
         ],
@@ -1426,9 +1427,7 @@ async function foldHandoffs(
     warnReconstructedArchives(refoldReconstructedIds);
     if (detailArchiveError !== null) {
       warnToAgent({
-        title: `The issue details reported by ${
-          step.migrationId
-        } could not be archived (${summarizeError(detailArchiveError)}).`,
+        title: `The issue details reported by ${stepLabel(step)} could not be archived (${summarizeError(detailArchiveError)}).`,
         bodyLines: [
           `The step's outcome was not folded; fix the underlying problem, then run the reconcile again.`,
         ],
@@ -1438,17 +1437,13 @@ async function foldHandoffs(
       warnToAgent(
         archivesDegraded
           ? {
-              title: `Some issue transition records for ${
-                step.migrationId
-              } could not be archived (${summarizeError(updateArchiveError)}).`,
+              title: `Some issue transition records for ${stepLabel(step)} could not be archived (${summarizeError(updateArchiveError)}).`,
               bodyLines: [
                 `run.json stays authoritative for the dispositions; the archived files under the run's issues directory are missing or incomplete for this fold's issues, and its landed commit takes precedence over retrying the archive.`,
               ],
             }
           : {
-              title: `Re-archiving the issue records for ${
-                step.migrationId
-              } failed (${summarizeError(updateArchiveError)}).`,
+              title: `Re-archiving the issue records for ${stepLabel(step)} failed (${summarizeError(updateArchiveError)}).`,
               bodyLines: [
                 `Nothing was lost: the fold's records were verified on disk and recorded in run.json. The failed write may point at a disk problem worth checking.`,
               ],
@@ -1566,7 +1561,7 @@ async function installFailedForStep(
       throw e;
     }
     warnToAgent({
-      title: `The dependencies changed by ${step.migrationId} could not be installed (${summarizeError(
+      title: `The dependencies changed by ${stepLabel(step)} could not be installed (${summarizeError(
         e
       )}).`,
       bodyLines: [`Run \`${pmInstallCommand(root)}\` before continuing.`],
@@ -1729,7 +1724,7 @@ function applyReconcileStepAction(
     }
     if (safety.kind === 'warned') {
       warnToAgent({
-        title: `Retrying ${step.migrationId} without verification`,
+        title: `Retrying ${stepLabel(step)} without verification`,
         bodyLines: [safety.warning],
       });
     }
@@ -2068,7 +2063,18 @@ function emitNextStep(
   step: MigrateStep,
   noProgress: MigrateRunNoProgress | null
 ): void {
-  const migrationId = step.migrationId;
+  let migrationId: string;
+  switch (step.kind) {
+    case 'migration':
+      migrationId = step.migrationId;
+      break;
+    case 'final-validation':
+      throw finalValidationUnsupported(step);
+    default: {
+      const exhaustive: never = step;
+      throw new Error(`Unrecognized step: ${JSON.stringify(exhaustive)}`);
+    }
+  }
   emit(
     root,
     runId,
@@ -2094,7 +2100,18 @@ function emitRetryFailed(
   step: MigrateStep,
   noProgress: MigrateRunNoProgress | null
 ): void {
-  const migrationId = step.migrationId;
+  let migrationId: string;
+  switch (step.kind) {
+    case 'migration':
+      migrationId = step.migrationId;
+      break;
+    case 'final-validation':
+      throw finalValidationUnsupported(step);
+    default: {
+      const exhaustive: never = step;
+      throw new Error(`Unrecognized step: ${JSON.stringify(exhaustive)}`);
+    }
+  }
   // A worker failure records its summary on the outcome; a prompt the agent
   // reported as failed carries the agent's own reason on the prompt outcome.
   const summary = step.outcome?.summary ?? step.promptOutcome?.summary;
@@ -2462,7 +2479,7 @@ function emitDied(
   step: MigrateStep,
   noProgress: MigrateRunNoProgress | null
 ): void {
-  const migrationId = step.migrationId;
+  const label = stepLabel(step);
   const ref = step.gitRefBefore;
   const head = getLatestCommitSha(root);
   const tree = dirtyTreeSummary(root);
@@ -2471,7 +2488,7 @@ function emitDied(
   const resume = !generatorPending(step);
   const capReached = rearmCapReached(step);
   const lines = [
-    `The worker for ${migrationId} died; its process is gone.`,
+    `The worker for ${label} died; its process is gone.`,
     `  started from: ${ref ?? '(unknown)'}`,
     `  current HEAD: ${head ?? '(unknown)'}`,
     `  working tree: ${tree === null ? '(unknown)' : tree ? `\n${tree}` : '(clean)'}`,
@@ -2559,10 +2576,9 @@ function emitStillRunning(
   step: MigrateStep,
   noProgress: MigrateRunNoProgress | null
 ): void {
-  const migrationId = step.migrationId;
   const ageMs = step.startedAt ? Date.now() - Date.parse(step.startedAt) : 0;
   const lines = [
-    `The worker for ${migrationId} (pid ${step.pid}) is still running. Wait for it to finish, then run the "next" command.`,
+    `The worker for ${stepLabel(step)} (pid ${step.pid}) is still running. Wait for it to finish, then run the "next" command.`,
   ];
   if (ageMs >= HANG_THRESHOLD_MS) {
     lines.push(
@@ -2592,7 +2608,18 @@ function emitAwaitPrompt(
   step: MigrateStep,
   noProgress: MigrateRunNoProgress | null
 ): void {
-  const migrationId = step.migrationId;
+  let migrationId: string;
+  switch (step.kind) {
+    case 'migration':
+      migrationId = step.migrationId;
+      break;
+    case 'final-validation':
+      throw finalValidationUnsupported(step);
+    default: {
+      const exhaustive: never = step;
+      throw new Error(`Unrecognized step: ${JSON.stringify(exhaustive)}`);
+    }
+  }
   const filePath = runStepHandoffPath(dir, step.id);
   // Recreated if the agent removed it, so the handed-over path always has its
   // parent (an agent that has to `mkdir -p` pays a permission prompt).
@@ -2842,7 +2869,7 @@ export function completionWarnings(
       ? [
           [
             `The dependency changes made by ${uninstalled
-              .map((s) => s.migrationId)
+              .map(stepLabel)
               .join(', ')} were not installed; run \`${pmInstallCommand(
               root
             )}\` before using the workspace.`,
@@ -2951,8 +2978,20 @@ function noProgressLines(
   step: MigrateStep,
   streak: MigrateRunNoProgress
 ): string[] {
+  let subject: string;
+  switch (step.kind) {
+    case 'migration':
+      subject = `migration ${step.migrationId}`;
+      break;
+    case 'final-validation':
+      throw finalValidationUnsupported(step);
+    default: {
+      const exhaustive: never = step;
+      throw new Error(`Unrecognized step: ${JSON.stringify(exhaustive)}`);
+    }
+  }
   return [
-    `No progress: this is response ${streak.consecutiveCount} in a row for migration ${step.migrationId} with no change in the run's recorded state since ${streak.firstSeenAt}.`,
+    `No progress: this is response ${streak.consecutiveCount} in a row for ${subject} with no change in the run's recorded state since ${streak.firstSeenAt}.`,
     `Re-running the reconcile command changes nothing on its own; act on the instructions below. If something is blocking you from acting on them, stop looping and report the blocker to the user.`,
     ``,
   ];
