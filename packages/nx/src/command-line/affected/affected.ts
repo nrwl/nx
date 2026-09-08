@@ -101,7 +101,15 @@ export async function affected(
     // --explain reports the selection rather than acting on it: someone asking
     // why a task is affected does not also want it to run.
     if (isExplaining(nxArgs.explain)) {
-      printAffectedExplanation(reasons ?? {}, 'Affected tasks', nxArgs.explain);
+      // The closure the selected tasks drag in, which is what actually runs.
+      const dependencyCount =
+        taskSelection.taskIds.length - Object.keys(reasons ?? {}).length;
+      printAffectedExplanation(
+        reasons ?? {},
+        'Affected tasks',
+        nxArgs.explain,
+        dependencyCount
+      );
       await output.drain();
       process.exit(0);
     }
