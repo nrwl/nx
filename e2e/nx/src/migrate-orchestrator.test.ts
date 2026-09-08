@@ -1462,7 +1462,9 @@ setTimeout(() => {}, 120000);
       },
       undefined,
       false,
-      true
+      // Raw mode needs the test's own terminal, absent in CI. The pty is a
+      // tty to nx either way.
+      false
     );
     child.onOutput((message: string) => {
       output += message;
