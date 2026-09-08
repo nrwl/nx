@@ -30,6 +30,12 @@ A draft is **pending** iff `posted_at:` is empty. Once posted or discarded, `pos
 the file is kept as the historical record — it feeds `/review-pr`'s re-review dedup, so never delete
 one.
 
+Set the record's `status:` to `posted` or `discarded` in the same edit. Both fields are written
+because they answer different questions: `posted_at` is the timestamp a human reads, `status` is what
+`.claude/tools/review` reports. Leave `status` behind and `review list --pending` — and any live
+`review watch` — keep listing the review as outstanding. That command is the quickest way to see what
+this skill still has to do.
+
 ## 1. Find pending drafts
 
 ```bash
@@ -228,7 +234,7 @@ Wait for the maintainer to choose an action for each draft.
   gh pr review PR_NUMBER --repo nrwl/nx --request-changes --body-file /tmp/gh-pr-review-PR_NUMBER.md
   ```
 
-  Then update frontmatter with Edit: `posted_at: <ISO-8601 local timestamp>`, `posted_url: <URL>`.
+  Then update frontmatter with Edit: `posted_at: <ISO-8601 local timestamp>`, `posted_url: <URL>`, `status: posted`.
   Append to `## Posted`: `- attempt N posted YYYY-MM-DD as <verdict> → <posted_url>`. Commit
   (see below). Never delete the file.
 
@@ -283,7 +289,7 @@ Wait for the maintainer to choose an action for each draft.
 
 - **skip** — Leave it pending. Move on. Right answer for stale drafts and old `pipeline_version`.
 
-- **discard** — Set `posted_at: <timestamp> (discarded)`. Append to `## Posted`:
+- **discard** — Set `posted_at: <timestamp> (discarded)` and `status: discarded`. Append to `## Posted`:
   `- attempt N discarded YYYY-MM-DD (<reason>)`. Never delete the file. Commit.
 
 - **open-file** — `open $TRIAGE_DIR/PR_NUMBER.md`, then re-prompt for an action.

@@ -1,0 +1,660 @@
+#!/usr/bin/env node
+'use strict';
+
+/**
+ * review — the pending-review record store.
+ *
+ * Drafts at $REVIEW_DIR/<PR>.md were already markdown-with-frontmatter; this gives
+ * them a status through the whole lifecycle and one place to read it from. Before
+ * it, every consumer re-derived state from `ls` + `grep '^verdict:'` + mtime, and
+ * each caller invented its own freshness window — which is what made a previous
+ * round's draft read as a new one.
+ *
+ * `watch` is the point: ONE long-lived process emits a line per transition, so a
+ * batch needs no watcher of its own.
+ */
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
+
+const STATE_DIR =
+  process.env.REVIEW_DIR || path.join(os.homedir(), '.nx-pr-reviews');
+// Outside STATE_DIR on purpose: clearing the drafts must not take the audit trail
+// with it, which is what makes `recover` able to say anything.
+const JOURNAL = path.join(os.homedir(), '.nx-review-journal.jsonl');
+
+/** Terminal states never re-emit; everything else is a live review. */
+const STATES = [
+  'queued',
+  'running',
+  'needs-input',
+  'throttled',
+  // The driver sets this while a child is parked at review-pr's Step 8.5 and
+  // someone actually owes it answers. It is NOT the resting state of an unposted
+  // draft — see statusOf, where a draft that already carries a `## Grill` section
+  // is `ready` and one that never had a grill is `drafted`. Collapsing all three
+  // into `awaiting-grill` claimed 39 reviews were waiting on a human when 36 of
+  // them were waiting on nothing.
+  'awaiting-grill',
+  'drafted',
+  'ready',
+  'failed',
+  'posted',
+  'discarded',
+];
+const TERMINAL = new Set(['posted', 'discarded']);
+
+function fail(msg) {
+  process.stderr.write(`review: ${msg}\n`);
+  process.exit(1);
+}
+
+function recordPath(pr) {
+  return path.join(STATE_DIR, `${pr}.md`);
+}
+
+function splitFrontmatter(text) {
+  if (!text.startsWith('---\n')) return { front: {}, body: text, raw: null };
+  const end = text.indexOf('\n---\n', 4);
+  if (end === -1) return { front: {}, body: text, raw: null };
+  const raw = text.slice(4, end + 1);
+  const front = {};
+  for (const line of raw.split('\n')) {
+    const m = /^([A-Za-z_][A-Za-z0-9_]*):\s*(.*)$/.exec(line);
+    if (m) front[m[1]] = m[2].trim().replace(/^["']|["']$/g, '');
+  }
+  return { front, body: text.slice(end + 5), raw };
+}
+
+function readRecord(pr) {
+  const p = recordPath(pr);
+  let text;
+  try {
+    text = fs.readFileSync(p, 'utf8');
+  } catch {
+    return null;
+  }
+  const { front, body } = splitFrontmatter(text);
+  return { pr: Number(pr), path: p, front, body, mtime: fs.statSync(p).mtimeMs };
+}
+
+/**
+ * A record with no `status:` predates this tool. Derive one rather than calling it
+ * malformed: a non-empty `posted_at` has always meant posted, and review-pr only
+ * ever writes the file once its draft exists.
+ */
+function statusOf(rec) {
+  if (rec.front.status) return rec.front.status;
+  if ((rec.front.posted_at || '').trim()) return 'posted';
+  if (!(rec.front.verdict || '').trim()) return 'queued';
+  // `## Grill` is the same discriminator /review-pending-pr-reviews uses to decide
+  // whether to re-grill, so a draft that has one is finished and merely unposted.
+  return /^## Grill\s*$/m.test(rec.body || '') ? 'ready' : 'drafted';
+}
+
+function listRecords() {
+  if (!fs.existsSync(STATE_DIR)) return [];
+  return fs
+    .readdirSync(STATE_DIR)
+    .filter((f) => /^\d+\.md$/.test(f))
+    .map((f) => readRecord(parseInt(f, 10)))
+    .filter(Boolean)
+    .sort((a, b) => a.pr - b.pr);
+}
+
+function journal(entry) {
+  try {
+    fs.appendFileSync(
+      JOURNAL,
+      JSON.stringify({ at: new Date().toISOString(), ...entry }) + '\n'
+    );
+  } catch {
+    /* the journal is a convenience; never fail a write over it */
+  }
+}
+
+/**
+ * Surgical frontmatter edit. The whole point is that this does NOT rewrite the
+ * body: review-pr owns the draft text and rewrites it wholesale at its Step 8, so
+ * anything here that touched the body would be lost on the next attempt.
+ */
+function setFront(pr, updates) {
+  const p = recordPath(pr);
+  let text;
+  try {
+    text = fs.readFileSync(p, 'utf8');
+  } catch {
+    fail(`no record for #${pr} (looked in ${STATE_DIR})`);
+  }
+  const { raw, front: prior } = splitFrontmatter(text);
+  if (raw === null) fail(`#${pr} has no frontmatter block`);
+  let lines = raw.split('\n');
+  for (const [k, v] of Object.entries(updates)) {
+    const i = lines.findIndex((l) => new RegExp(`^${k}:`).test(l));
+    if (i === -1) lines.splice(lines.length - 1, 0, `${k}: ${v}`);
+    else lines[i] = `${k}: ${v}`;
+  }
+  const rebuilt = '---\n' + lines.join('\n') + '---\n' + text.slice(text.indexOf('\n---\n', 4) + 5);
+  fs.writeFileSync(p, rebuilt);
+  // Record what each key WAS as well as what it became. Without the prior value a
+  // bulk operation is one-way — `dismiss-merged` retires 20-odd records in a go,
+  // and "undo that" should not mean hand-editing them back.
+  const before = {};
+  for (const k of Object.keys(updates)) before[k] = prior[k] ?? '';
+  journal({ pr: Number(pr), updates, before });
+}
+
+function cmdStage(args) {
+  const pr = Number(args[0]);
+  if (!pr) fail('usage: review stage <PR> [--title T] [--url U] [--head SHA]');
+  const opt = (n) => {
+    const i = args.indexOf(`--${n}`);
+    return i === -1 ? '' : args[i + 1] || '';
+  };
+  if (fs.existsSync(recordPath(pr))) {
+    // Re-staging a live review must not blank a draft that already exists.
+    const rec = readRecord(pr);
+    process.stdout.write(`#${pr} exists (status=${statusOf(rec)}); left alone\n`);
+    return;
+  }
+  fs.mkdirSync(STATE_DIR, { recursive: true });
+  const front = [
+    '---',
+    `pr: ${pr}`,
+    `title: ${opt('title')}`,
+    `url: ${opt('url') || `https://github.com/nrwl/nx/pull/${pr}`}`,
+    `head_sha: ${opt('head')}`,
+    'verdict:',
+    'attempt: 0',
+    `status: queued`,
+    `staged_at: ${new Date().toISOString()}`,
+    'posted_at:',
+    'posted_url:',
+    '---',
+    '',
+    `# PR #${pr}${opt('title') ? `: ${opt('title')}` : ''}`,
+    '',
+    '_No draft yet — this review has not reached Step 8._',
+    '',
+  ].join('\n');
+  fs.writeFileSync(recordPath(pr), front);
+  journal({ pr, event: 'staged' });
+  process.stdout.write(`staged #${pr}\n`);
+}
+
+function cmdSet(args) {
+  const pr = Number(args[0]);
+  const status = args[1];
+  if (!pr || !status) fail('usage: review set <PR> <status> [--note "..."]');
+  if (!STATES.includes(status))
+    fail(`unknown status "${status}". One of: ${STATES.join(', ')}`);
+  const i = args.indexOf('--note');
+  const updates = { status };
+  if (i !== -1 && args[i + 1]) updates.note = args[i + 1];
+  setFront(pr, updates);
+  process.stdout.write(`#${pr} -> ${status}\n`);
+}
+
+function cmdList(args) {
+  const want = (() => {
+    const i = args.indexOf('--status');
+    return i === -1 ? null : args[i + 1];
+  })();
+  let recs = listRecords();
+  if (args.includes('--pending'))
+    recs = recs.filter((r) => !TERMINAL.has(statusOf(r)));
+  if (want) recs = recs.filter((r) => statusOf(r) === want);
+  if (args.includes('--json')) {
+    process.stdout.write(
+      JSON.stringify(
+        recs.map((r) => ({
+          pr: r.pr,
+          status: statusOf(r),
+          verdict: r.front.verdict || '',
+          attempt: Number(r.front.attempt || 0),
+          head_sha: r.front.head_sha || '',
+          title: r.front.title || '',
+          path: r.path,
+        })),
+        null,
+        2
+      ) + '\n'
+    );
+    return;
+  }
+  if (!recs.length) {
+    process.stdout.write('no records\n');
+    return;
+  }
+  for (const r of recs) {
+    process.stdout.write(
+      `${String(r.pr).padEnd(7)} ${statusOf(r).padEnd(15)} ${(r.front.verdict || '-').padEnd(14)} a${String(r.front.attempt || 0).padEnd(3)} ${(r.front.title || '').slice(0, 60)}\n`
+    );
+  }
+}
+
+
+/**
+ * One process, every review. Emits a line per transition so a single monitor
+ * covers batches that do not exist yet.
+ *
+ * Transitions are computed against a snapshot taken at start, so a draft written
+ * before this process began is NOT replayed — the bug that made a per-batch
+ * watcher report the previous round's result as a new one.
+ */
+async function cmdWatch(args) {
+  const every =
+    Number((args.find((a) => a.startsWith('--interval=')) || '').split('=')[1] || 15) * 1000;
+  const replay = args.includes('--replay');
+  const seen = new Map();
+  if (!replay)
+    for (const r of listRecords())
+      seen.set(r.pr, `${statusOf(r)}|${r.front.verdict || ''}|${r.front.attempt || 0}`);
+  process.stderr.write(
+    `watching ${STATE_DIR} every ${every / 1000}s (${seen.size} existing record(s) not replayed)\n`
+  );
+  const once = args.includes('--once');
+  let stop = false;
+  process.on('SIGINT', () => (stop = true));
+  process.on('SIGTERM', () => (stop = true));
+  for (;;) {
+    for (const r of listRecords()) {
+      const key = `${statusOf(r)}|${r.front.verdict || ''}|${r.front.attempt || 0}`;
+      const prev = seen.get(r.pr);
+      if (prev === key) continue;
+      seen.set(r.pr, key);
+      const st = statusOf(r);
+      const event = prev === undefined ? 'FILED' : st.toUpperCase().replace(/-/g, '_');
+      process.stdout.write(
+        `${event} ${r.pr} status=${st} verdict=${r.front.verdict || '-'} attempt=${r.front.attempt || 0}\n`
+      );
+    }
+    if (once || stop) break;
+    await new Promise((res) => setTimeout(res, Math.max(1000, every)));
+    if (stop) break;
+  }
+  if (!once) process.stdout.write('WATCH_STOPPED\n');
+}
+
+
+/** `## Name` through to the next `## `, mirroring triage.section so the shared TUI can call it. */
+function section(body, name) {
+  const re = new RegExp(`^## ${name}\\s*$`, 'm');
+  const m = re.exec(body || '');
+  if (!m) return '';
+  const rest = body.slice(m.index + m[0].length);
+  const next = /^## /m.exec(rest);
+  return (next ? rest.slice(0, next.index) : rest).trim();
+}
+
+/**
+ * Records in the shape the shared triage TUI expects. `issue` is aliased to the
+ * PR number because the TUI keys 17 call sites off `front.issue`; teaching it a
+ * second key would be a change to a live tool for no gain, so the adapter lives
+ * on this side of the boundary.
+ */
+function listRecordsForTui() {
+  return listRecords().map((r) => ({
+    ...r,
+    front: {
+      ...r.front,
+      issue: r.pr,
+      kind: 'pr',
+      status: statusOf(r),
+      // Always a string. Drafts written before `title:` was in the contract have
+      // none, and the shared TUI indexes into it.
+      title: r.front.title || `PR #${r.pr}`,
+      author: r.front.author || '',
+      verdict: r.front.verdict || '',
+      url: r.front.url || `https://github.com/nrwl/nx/pull/${r.pr}`,
+    },
+  }));
+}
+
+function readRecordForTui(n) {
+  const r = readRecord(n);
+  if (!r) return null;
+  return { ...r, front: { ...r.front, issue: r.pr, kind: 'pr', status: statusOf(r) } };
+}
+
+/**
+ * Dismiss drafts whose PR already merged or closed.
+ *
+ * ONE `gh` call for every record, not one each: each invocation costs an
+ * out-of-band approval here, so 39 records would be 39 prompts. GraphQL aliases
+ * fetch them all in a single query.
+ *
+ * Dry by default. It writes to the same `posted_at` field the posting flow reads,
+ * so a mistake here silently retires a review nobody looked at.
+ */
+function herdrJson(args) {
+  const { spawnSync } = require('child_process');
+  const r = spawnSync('herdr', args, { encoding: 'utf-8' });
+  // herdr reports errors as JSON on stderr with exit 1, so parse either stream.
+  for (const stream of [r.stdout, r.stderr]) {
+    if (!stream) continue;
+    try {
+      const j = JSON.parse(stream);
+      if (j && j.result) return j.result;
+    } catch {
+      /* not this stream */
+    }
+  }
+  return null;
+}
+
+/** The claude PID for a pane, or 0. Matched via the env herdr puts on the child. */
+function panePid(paneId) {
+  const { spawnSync } = require('child_process');
+  const pids = spawnSync('pgrep', ['-f', 'claude'], { encoding: 'utf-8' }).stdout || '';
+  for (const pid of pids.split('\n').filter(Boolean)) {
+    const env = spawnSync('ps', ['eww', '-p', pid], { encoding: 'utf-8' }).stdout || '';
+    if (env.includes(`HERDR_PANE_ID=${paneId}`)) return Number(pid);
+  }
+  return 0;
+}
+
+/**
+ * Record where a review's Claude session lives, so it can be reopened later.
+ * `--from-agent` asks herdr rather than making the caller plumb three values.
+ */
+function cmdLink(args) {
+  const pr = Number(args[0]);
+  if (!pr) fail('usage: review link <PR> --from-agent <name> | --pane P --session S [--pid N]');
+  const opt = (n) => {
+    const i = args.indexOf(`--${n}`);
+    return i === -1 ? '' : args[i + 1] || '';
+  };
+  let pane = opt('pane');
+  let session = opt('session');
+  let tab = opt('tab');
+  let pid = opt('pid');
+  const from = opt('from-agent');
+  if (from) {
+    const res = herdrJson(['agent', 'get', from]);
+    const a = res && res.agent;
+    if (!a) fail(`herdr does not know an agent named ${from}`);
+    pane = a.pane_id || pane;
+    tab = a.tab_id || tab;
+    session = (a.agent_session || {}).value || session;
+  }
+  if (!pid && pane) pid = String(panePid(pane) || '');
+  setFront(pr, {
+    agent_pane: pane,
+    agent_tab: tab,
+    agent_session: session,
+    agent_pid: pid,
+  });
+  process.stdout.write(`#${pr} linked: pane=${pane || '-'} tab=${tab || '-'} session=${session || '-'} pid=${pid || '-'}\n`);
+}
+
+/**
+ * True when that pid is alive AND is still a claude process, not a recycled number.
+ *
+ * `comm=` (the executable) rather than `command=` (the whole argv): matching the
+ * full command line counts any process that merely MENTIONS claude in its
+ * arguments — including, as it turned out, the probe written to test this. A
+ * false positive here focuses a stale pane instead of resuming the session.
+ */
+function pidIsClaude(pid) {
+  if (!pid) return false;
+  const { spawnSync } = require('child_process');
+  const r = spawnSync('ps', ['-p', String(pid), '-o', 'comm='], { encoding: 'utf-8' });
+  if (r.status !== 0) return false;
+  return path.basename((r.stdout || '').trim()) === 'claude';
+}
+
+/**
+ * Reopen the session that reviewed a PR: focus it if it is still running,
+ * otherwise start a new tab resuming it from its session id.
+ */
+function cmdResume(args) {
+  const pr = Number(args[0]);
+  if (!pr) fail('usage: review resume <PR>');
+  const rec = readRecord(pr);
+  if (!rec) fail(`no record for #${pr}`);
+  const { agent_pane: pane, agent_tab: tab, agent_session: session, agent_pid: pid } = rec.front;
+
+  if (pidIsClaude(pid)) {
+    // Prefer the agent name: it survives a pane being moved between tabs.
+    const byAgent = herdrJson(['agent', 'focus', `pr-${pr}`]);
+    if (byAgent) {
+      process.stdout.write(`#${pr}: focused the live session (pid ${pid})\n`);
+      return;
+    }
+    if (tab && herdrJson(['tab', 'focus', tab])) {
+      process.stdout.write(`#${pr}: focused tab ${tab} (pid ${pid})\n`);
+      return;
+    }
+  }
+
+  if (!session)
+    fail(
+      `#${pr} has no recorded session. Reviews launched before this was added carry nothing to resume.`
+    );
+  const ws = process.env.HERDR_WORKSPACE_ID;
+  if (!ws) fail('HERDR_WORKSPACE_ID is unset — run this from inside herdr.');
+  const created = herdrJson([
+    'tab', 'create', '--workspace', ws,
+    '--cwd', process.env.NX_REPO_PATH || path.join(os.homedir(), 'repos', 'nx'),
+    '--label', `pr-${pr}`,
+  ]);
+  const newPane = created && created.root_pane && created.root_pane.pane_id;
+  if (!newPane) fail('could not create a herdr tab');
+  const { spawnSync } = require('child_process');
+  spawnSync('herdr', ['pane', 'run', newPane, `claude --resume ${session}`], {
+    encoding: 'utf-8',
+  });
+  process.stdout.write(
+    `#${pr}: session ${session} resuming in ${newPane}` +
+      (pid ? ` (pid ${pid} is gone)\n` : '\n')
+  );
+}
+
+function sweepMerged({ apply, quiet }) {
+  const { spawnSync } = require('child_process');
+  const live = listRecords().filter((r) => !TERMINAL.has(statusOf(r)));
+  if (!live.length) return { checked: 0, hits: [], skipped: 'nothing live' };
+  const q =
+    'query{repository(owner:"nrwl",name:"nx"){' +
+    live.map((r) => `p${r.pr}:pullRequest(number:${r.pr}){number state}`).join(' ') +
+    '}}';
+  if (!quiet)
+    process.stderr.write(
+      `checking ${live.length} PR(s) in one query (this may wait on a gh approval)…\n`
+    );
+  const res = spawnSync('gh', ['api', 'graphql', '-f', `query=${q}`], {
+    encoding: 'utf-8',
+    maxBuffer: 1 << 24,
+  });
+  // Never fatal on the startup path: no network, no auth, or a declined approval
+  // must not stand between someone and their review list.
+  if (res.status !== 0)
+    return { checked: live.length, hits: [], skipped: (res.stderr || 'gh failed').trim().split('\n')[0] };
+  let data;
+  try {
+    data = JSON.parse(res.stdout).data.repository;
+  } catch (e) {
+    return { checked: live.length, hits: [], skipped: `unparseable graphql response: ${e.message}` };
+  }
+  const hits = [];
+  for (const r of live) {
+    const pr = data[`p${r.pr}`];
+    // A null entry means the number does not resolve — a transferred or deleted
+    // PR. Leave it alone rather than guessing; an unresolvable record is a
+    // question for a human, not something to retire silently.
+    if (!pr || !pr.state) continue;
+    if (pr.state === 'MERGED' || pr.state === 'CLOSED')
+      hits.push({ pr: r.pr, state: pr.state, status: statusOf(r) });
+  }
+  if (apply)
+    for (const h of hits)
+      setFront(h.pr, {
+        status: 'discarded',
+        posted_at: `${new Date().toISOString()} (dismissed: PR ${h.state.toLowerCase()})`,
+      });
+  return { checked: live.length, hits, skipped: null };
+}
+
+function cmdDismissMerged(args) {
+  const apply = args.includes('--yes');
+  const { checked, hits, skipped } = sweepMerged({ apply, quiet: false });
+  if (skipped) {
+    process.stdout.write(`skipped: ${skipped}\n`);
+    return;
+  }
+  if (!hits.length) {
+    process.stdout.write(`no live record's PR is merged or closed (${checked} checked)\n`);
+    return;
+  }
+  for (const h of hits)
+    process.stdout.write(
+      `${apply ? 'dismissed' : 'would dismiss'} #${h.pr}  ${h.state.toLowerCase().padEnd(7)} (was ${h.status})\n`
+    );
+  process.stdout.write(
+    apply
+      ? `\ndismissed ${hits.length} — undo with: review undo ${hits.map((h) => h.pr).join(' ')}\n`
+      : `\n${hits.length} to dismiss. Re-run with --yes to apply.\n`
+  );
+}
+
+/** Undo the last journalled frontmatter change for one or more PRs. */
+function cmdUndo(args) {
+  const targets = args.filter((a) => /^\d+$/.test(a)).map(Number);
+  if (!targets.length) fail('usage: review undo <PR> [<PR>...]');
+  if (!fs.existsSync(JOURNAL)) fail(`no journal at ${JOURNAL}`);
+  const last = new Map();
+  for (const line of fs.readFileSync(JOURNAL, 'utf8').split('\n')) {
+    if (!line.trim()) continue;
+    try {
+      const e = JSON.parse(line);
+      if (e.pr && e.before) last.set(e.pr, e);
+    } catch {
+      /* a torn line is not worth abandoning the journal over */
+    }
+  }
+  for (const pr of targets) {
+    const e = last.get(pr);
+    if (!e) {
+      process.stdout.write(`#${pr}: nothing journalled with a prior value\n`);
+      continue;
+    }
+    setFront(pr, e.before);
+    process.stdout.write(`#${pr}: restored ${Object.keys(e.before).join(', ')}\n`);
+  }
+}
+
+
+function cmdReview(args = []) {
+  if (!process.stdin.isTTY) {
+    fail(
+      'review review needs a terminal.\n' +
+        'Non-interactively, use: review list, review show <PR>, review watch.'
+    );
+  }
+  const { spawnSync } = require('child_process');
+  if (spawnSync('bun', ['--version'], { encoding: 'utf8' }).status !== 0) {
+    fail(
+      'review review needs Bun: https://bun.sh — opentui\'s renderer is native FFI with no node build.\n' +
+        'Everything else (list, show, set, watch) runs on node and needs nothing extra.'
+    );
+  }
+  // Sweep before the screen takes over. A merged PR's draft is dead weight in the
+  // list and the check is one batched query, so doing it here keeps the queue
+  // honest without anyone remembering to. It is best-effort by construction:
+  // sweepMerged returns a `skipped` reason rather than throwing, so no network,
+  // no auth or a declined approval still opens the pane.
+  if (!args.includes('--no-sweep')) {
+    const { hits, skipped } = sweepMerged({ apply: true, quiet: false });
+    if (skipped) process.stderr.write(`sweep skipped: ${skipped}\n`);
+    else if (hits.length)
+      process.stderr.write(
+        `dismissed ${hits.length} merged/closed: ${hits.map((h) => '#' + h.pr).join(' ')}\n` +
+          `undo with: review undo ${hits.map((h) => h.pr).join(' ')}\n`
+      );
+  }
+
+  const TUI = path.join(__dirname, 'triage-tui', 'index.tsx');
+  if (!fs.existsSync(path.join(path.dirname(TUI), 'node_modules', '@opentui'))) {
+    fail('review review needs the TUI\'s dependencies: run `pnpm install` first.');
+  }
+  // Same renderer as `triage review`, pointed at this store and with the
+  // approve/reject/apply verbs off: posting a review goes through
+  // /review-pending-pr-reviews, which reads the draft body, not through a keypress.
+  const res = spawnSync('bun', [TUI], {
+    stdio: 'inherit',
+    env: {
+      ...process.env,
+      TUI_STORE: __filename,
+      TUI_READONLY: '1',
+      TUI_TITLE: 'reviews',
+      TRIAGE_DIR: STATE_DIR,
+    },
+  });
+  process.exit(res.status === 5 ? 0 : (res.status ?? 0));
+}
+
+module.exports = {
+  STATE_DIR,
+  STATUSES: STATES,
+  // Extra list columns the shared TUI renders for this store. Triage exports none
+  // and is unaffected, so the renderer stays one implementation.
+  TERMINAL_STATUSES: [...TERMINAL],
+  // Keys the shared TUI binds for this store. It shells back to this same script,
+  // so the focus-or-resume decision lives here and is testable, not in a renderer.
+  ACTIONS: [
+    { key: 'R', cmd: 'resume', label: 'resume review session' },
+  ],
+  DEFAULT_PENDING_ONLY: true,
+  COLUMNS: [
+    { key: 'verdict', width: 14 },
+    { key: 'author', width: 13 },
+  ],
+  listRecords: listRecordsForTui,
+  readRecord: readRecordForTui,
+  recordPath,
+  section,
+  writeRecord: (front, body) => {
+    // The TUI only writes on approve/reject, which read-only mode disables. If a
+    // future mode needs it, route through setFront so the body stays review-pr's.
+    throw new Error('review records are read-only in the TUI');
+  },
+  buildBody: (parts) => parts && parts.comment ? parts.comment : '',
+  validate: () => [],
+  ARCHIVE_DIR: STATE_DIR,
+};
+
+const [, , cmd, ...rest] = process.argv;
+const table = {
+  stage: cmdStage,
+  set: cmdSet,
+  list: cmdList,
+  watch: cmdWatch,
+  review: cmdReview,
+  'dismiss-merged': cmdDismissMerged,
+  undo: cmdUndo,
+  link: cmdLink,
+  resume: cmdResume,
+};
+// Requiring this file (the TUI does, as its store) must not run a command.
+if (require.main !== module) {
+  /* exports only */
+} else if (!cmd || cmd === '--help' || !table[cmd]) {
+  process.stdout.write(
+    `review — pending PR-review records.\n\n` +
+      `  stage <PR> [--title T] [--url U] [--head SHA]   create a record if absent\n` +
+      `  list [--status S] [--pending] [--json]          one line per record\n` +
+      `  set <PR> <status> [--note "..."]               statuses: ${STATES.join(', ')}\n` +
+      `  watch [--interval=N] [--replay] [--once]       one line per transition; ONE covers every batch\n` +
+      `  review [--no-sweep]                            live status pane; sweeps merged PRs first\n` +
+      `  dismiss-merged [--yes]                         retire drafts whose PR already merged/closed\n` +
+      `  undo <PR>...                                   restore the last journalled frontmatter change\n` +
+      `  link <PR> --from-agent <name>                  record pane/session/pid so the review can be reopened\n` +
+      `  resume <PR>                                    focus the live session, or resume it in a new tab\n` +
+      `Records live in ${STATE_DIR} (REVIEW_DIR). Journal: ${JOURNAL}.\n` +
+      `Terminal statuses are ${[...TERMINAL].join(' and ')}; everything else is live.\n`
+  );
+  process.exit(cmd && cmd !== '--help' ? 1 : 0);
+} else {
+  Promise.resolve(table[cmd](rest)).catch((e) => fail(e.message));
+}
