@@ -66,6 +66,8 @@ export async function cypressComponentConfiguration(
     isZoneless = getDependencyVersionFromPackageJson(tree, 'zone.js') === null;
   }
 
+  // Cypress 16 dropped `cypress/angular-zoneless`; `cypress/angular` is zoneless there.
+  let mountModule = 'cypress/angular';
   if (isZoneless) {
     const {
       getInstalledCypressVersion,
@@ -79,6 +81,9 @@ export async function cypressComponentConfiguration(
           `The project "${options.project}" is configured without Zone.js. ` +
           `Please upgrade Cypress to version 15.8.0 or higher.`
       );
+    }
+    if (installedCypressVersion && lt(installedCypressVersion, '16.0.0')) {
+      mountModule = 'cypress/angular-zoneless';
     }
   }
 
@@ -94,7 +99,7 @@ export async function cypressComponentConfiguration(
   );
 
   await configureCypressCT(tree, options);
-  tasks.push(await addFiles(tree, projectConfig, options, isZoneless));
+  tasks.push(await addFiles(tree, projectConfig, options, mountModule));
 
   if (projectConfig.projectType === 'application') {
     updateAppEditorTsConfigExcludedFiles(tree, projectConfig);
@@ -111,7 +116,7 @@ async function addFiles(
   tree: Tree,
   projectConfig: ProjectConfiguration,
   options: CypressComponentConfigSchema,
-  isZoneless: boolean
+  mountModule: string
 ): Promise<GeneratorCallback> {
   const componentFile = joinPathFragments(
     projectConfig.root,
@@ -127,7 +132,7 @@ async function addFiles(
   );
   tree.write(
     componentFile,
-    `import { mount } from '${isZoneless ? 'cypress/angular-zoneless' : 'cypress/angular'}';\n${updatedCmpContents}`
+    `import { mount } from '${mountModule}';\n${updatedCmpContents}`
   );
 
   if (!options.generateTests) {

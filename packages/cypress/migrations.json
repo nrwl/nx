@@ -80,6 +80,15 @@
       "implementation": "./dist/src/migrations/update-23-3-0/update-cypress-16-query-command-overwrites",
       "prompt": "./dist/src/migrations/update-23-3-0/adapt-query-command-overwrites.md",
       "documentation": "./dist/src/migrations/update-23-3-0/update-cypress-16-query-command-overwrites.md"
+    },
+    "update-angular-zoneless-mount-import": {
+      "version": "23.3.0-beta.1",
+      "requires": {
+        "cypress": ">=16.0.0"
+      },
+      "description": "Rewrites `cypress/angular-zoneless` and `@cypress/angular-zoneless` imports to `cypress/angular`, which is zoneless in Cypress 16 and the only Angular mount entry point it ships, and removes the deprecated `@cypress/angular-zoneless` package.",
+      "implementation": "./dist/src/migrations/update-23-3-0/update-angular-zoneless-mount-import",
+      "documentation": "./dist/src/migrations/update-23-3-0/update-angular-zoneless-mount-import.md"
     }
   },
   "packageJsonUpdates": {
