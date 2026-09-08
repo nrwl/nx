@@ -6,6 +6,7 @@ jest.mock('node:fs', () => ({
 }));
 
 const mocks = {
+  hashWithWorkspaceContext: jest.fn(async () => 'files-hash'),
   safeSpawn: jest.fn(),
   killChildOnHostExit: jest.fn(),
   killProcessTreeGraceful: jest.fn(() => Promise.resolve()),
@@ -15,7 +16,8 @@ const mocks = {
 jest.mock('@nx/devkit/internal', () => ({
   ...jest.requireActual('@nx/devkit/internal'),
   isCI: () => false,
-  hashWithWorkspaceContext: jest.fn(async () => 'files-hash'),
+  hashWithWorkspaceContext: (...args: unknown[]) =>
+    mocks.hashWithWorkspaceContext(...args),
   hashObject: () => 'options-hash',
   workspaceDataDirectory: '/tmp/workspace-data',
   PluginCache: jest.fn(() => ({
@@ -51,6 +53,8 @@ describe('analyzeProjects', () => {
   beforeEach(() => {
     jest.resetModules();
     jest.clearAllMocks();
+    mocks.hashWithWorkspaceContext.mockImplementation(async () => 'files-hash');
+    mocks.pluginCacheGet.mockReturnValue(undefined);
     delete process.env.NX_DOTNET_PROJECT_GRAPH_TIMEOUT;
     ({
       analyzeProjects,
@@ -223,5 +227,61 @@ describe('analyzeProjects', () => {
     expect(getAnalysisTimeoutMs()).toBe(30_000);
     process.env.NX_DOTNET_PROJECT_GRAPH_TIMEOUT = 'nope';
     expect(getAnalysisTimeoutMs()).toBe(120_000);
+  });
+
+  describe('evaluation inputs', () => {
+    const hashFileList = async (_root: string, files: string[]) =>
+      files.join('|');
+
+    it('should reuse a cached result whose evaluation inputs are unchanged', async () => {
+      mocks.hashWithWorkspaceContext.mockImplementation(hashFileList);
+      const result = {
+        nodesByFile: {},
+        referencesByRoot: {},
+        evaluationInputs: ['build/Common.Build.props'],
+      };
+      mocks.pluginCacheGet.mockReturnValue({
+        result,
+        inputsHash: 'build/Common.Build.props',
+      });
+
+      await expect(analyzeProjects(['a/a.csproj'])).resolves.toEqual(result);
+      expect(mocks.safeSpawn).not.toHaveBeenCalled();
+    });
+
+    it('should rerun the analyzer when an evaluation input changed', async () => {
+      // The glob-matched files are unchanged, so the files hash still hits;
+      // only a file MSBuild imported (outside the glob) differs.
+      mocks.hashWithWorkspaceContext.mockImplementation(hashFileList);
+      mocks.pluginCacheGet.mockReturnValue({
+        result: {
+          nodesByFile: {},
+          referencesByRoot: {},
+          evaluationInputs: ['build/Common.Build.props'],
+        },
+        inputsHash: 'stale',
+      });
+      const child = fakeChild();
+      mocks.safeSpawn.mockReturnValue(child);
+
+      const promise = analyzeProjects(['a/a.csproj']);
+      await new Promise(setImmediate);
+      child.stdout.emit(
+        'data',
+        JSON.stringify({
+          nodesByFile: {},
+          referencesByRoot: {},
+          evaluationInputs: ['build/Other.props'],
+        })
+      );
+      child.emit('close', 0);
+
+      await expect(promise).resolves.toEqual({
+        nodesByFile: {},
+        referencesByRoot: {},
+        evaluationInputs: ['build/Other.props'],
+      });
+      expect(mocks.safeSpawn).toHaveBeenCalledTimes(1);
+    });
   });
 });

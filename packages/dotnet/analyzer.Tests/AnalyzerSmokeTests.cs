@@ -62,7 +62,7 @@ public class AnalyzerSmokeTests : IDisposable
     /// process - registering in the test host would fight the runner over which
     /// MSBuild assemblies get loaded.
     /// </summary>
-    private Dictionary<string, JsonElement> Analyze(string projectFile)
+    private JsonElement AnalyzeWorkspace(string projectFile)
     {
         // Both MsbuildAnalyzer.dll and its runtimeconfig.json land next to the
         // test assembly via the project reference.
@@ -88,16 +88,25 @@ public class AnalyzerSmokeTests : IDisposable
         Assert.True(process.WaitForExit(milliseconds: 180_000), "Analyzer timed out");
         Assert.True(process.ExitCode == 0, $"Analyzer exited {process.ExitCode}. stderr:\n{stderr}");
 
-        var relativeProjectFile = Path.GetRelativePath(_workspaceRoot, projectFile).Replace('\\', '/');
-        var result = JsonDocument.Parse(stdout).RootElement;
+        return JsonDocument.Parse(stdout).RootElement;
+    }
 
-        return result
+    private Dictionary<string, JsonElement> Analyze(string projectFile)
+    {
+        var relativeProjectFile = Path.GetRelativePath(_workspaceRoot, projectFile).Replace('\\', '/');
+
+        return AnalyzeWorkspace(projectFile)
             .GetProperty("nodesByFile")
             .GetProperty(relativeProjectFile)
             .GetProperty("targets")
             .EnumerateObject()
             .ToDictionary(p => p.Name, p => p.Value);
     }
+
+    private static string[] StringInputs(Dictionary<string, JsonElement> targets, string targetName) =>
+        [.. targets[targetName].GetProperty("inputs").EnumerateArray()
+            .Where(i => i.ValueKind == JsonValueKind.String)
+            .Select(i => i.GetString()!)];
 
     /// <summary>
     /// The outputs a target captures, without the restore-only obj exclusions
@@ -167,5 +176,61 @@ public class AnalyzerSmokeTests : IDisposable
                 "{workspaceRoot}/artifacts/obj/Renamed",
             },
             Outputs(targets, "build"));
+    }
+
+    [Fact]
+    public void EvaluatedImportsAndLinkedFiles_AreInputsOnBuild()
+    {
+        Directory.CreateDirectory(Path.Combine(_workspaceRoot, "build"));
+        Directory.CreateDirectory(Path.Combine(_workspaceRoot, "shared"));
+        Directory.CreateDirectory(Path.Combine(_workspaceRoot, "config"));
+        File.WriteAllText(
+            Path.Combine(_workspaceRoot, "Directory.Build.props"),
+            """<Project><Import Project="$(MSBuildThisFileDirectory)build/Common.Build.props" /></Project>""");
+        File.WriteAllText(Path.Combine(_workspaceRoot, "build", "Common.Build.props"), "<Project />");
+        File.WriteAllText(Path.Combine(_workspaceRoot, "shared", "Shared.cs"), "class Shared {}");
+        File.WriteAllText(Path.Combine(_workspaceRoot, "config", "stylecop.json"), "{}");
+        File.WriteAllText(Path.Combine(_workspaceRoot, "global.json"), """{ "sdk": { "rollForward": "latestMajor" } }""");
+
+        var projectFile = WriteProject("MyLib", "");
+        File.WriteAllText(projectFile, """
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFramework>net8.0</TargetFramework>
+              </PropertyGroup>
+              <ItemGroup>
+                <Compile Include="../../shared/Shared.cs" Link="Shared.cs" />
+                <AdditionalFiles Include="../../config/stylecop.json" />
+              </ItemGroup>
+            </Project>
+            """);
+
+        var targets = Analyze(projectFile);
+        var inputs = StringInputs(targets, "build");
+
+        Assert.Contains("{workspaceRoot}/Directory.Build.props", inputs);
+        Assert.Contains("{workspaceRoot}/build/Common.Build.props", inputs);
+        Assert.Contains("{workspaceRoot}/shared/Shared.cs", inputs);
+        Assert.Contains("{workspaceRoot}/config/stylecop.json", inputs);
+        Assert.DoesNotContain(inputs, i => i.Contains("Microsoft.Common", StringComparison.Ordinal));
+        Assert.DoesNotContain(inputs, i => i.Contains("MyLib.csproj", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void EvaluationInputs_ListEveryWorkspaceFileMSBuildImported()
+    {
+        Directory.CreateDirectory(Path.Combine(_workspaceRoot, "build"));
+        File.WriteAllText(
+            Path.Combine(_workspaceRoot, "Directory.Build.props"),
+            """<Project><Import Project="$(MSBuildThisFileDirectory)build/Common.Build.props" /></Project>""");
+        File.WriteAllText(Path.Combine(_workspaceRoot, "build", "Common.Build.props"), "<Project />");
+
+        var result = AnalyzeWorkspace(WriteProject("MyLib", ""));
+        var evaluationInputs = result.GetProperty("evaluationInputs").EnumerateArray().Select(e => e.GetString()!).ToArray();
+
+        Assert.Contains("Directory.Build.props", evaluationInputs);
+        Assert.Contains("build/Common.Build.props", evaluationInputs);
+        Assert.Contains("apps/MyLib/MyLib.csproj", evaluationInputs);
+        Assert.DoesNotContain(evaluationInputs, i => i.Contains("Microsoft.Common", StringComparison.Ordinal));
     }
 }
