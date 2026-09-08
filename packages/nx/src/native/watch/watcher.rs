@@ -741,6 +741,53 @@ mod tests {
     }
 
     #[test]
+    fn hardcoded_ignores_veto_a_gitignore_negation() {
+        // A Yarn Berry zero-install workspace ships `!.yarn/cache`, which as a
+        // plain gitignore entry would un-ignore a hardcoded-ignored path. The
+        // filterer must veto it anyway, matching create_walker: otherwise the
+        // watcher admits `.yarn/cache` files the walk drops, and every rescan
+        // reports them deleted. A non-hardcoded whitelist is still honoured.
+        use notify::EventKind;
+        use notify::event::CreateKind;
+
+        let dir = tempdir().expect("tempdir");
+        let origin = dir.path().canonicalize().expect("canonicalize");
+        let origin_str = origin.to_str().expect("utf-8 path");
+
+        // `!.yarn/cache` negates a hardcoded ignore; `!kept.log` is a normal
+        // whitelist the filterer should honour.
+        let filterer = watch_filterer::create_filter(
+            origin_str,
+            &[
+                "!.yarn/cache".to_string(),
+                "*.log".to_string(),
+                "!kept.log".to_string(),
+            ],
+            false,
+        )
+        .expect("filter");
+
+        let event = |rel: &str| {
+            RawWatchEvent::new(
+                notify::Event::new(EventKind::Create(CreateKind::File)).add_path(origin.join(rel)),
+            )
+        };
+
+        assert!(
+            !filterer.check_event(&event(".yarn/cache/pkg.zip")),
+            ".yarn/cache is a hardcoded ignore; a `!.yarn/cache` negation must not un-ignore it"
+        );
+        assert!(
+            !filterer.check_event(&event("node_modules/pkg/index.js")),
+            "node_modules stays vetoed even without an explicit rule"
+        );
+        assert!(
+            filterer.check_event(&event("kept.log")),
+            "a non-hardcoded whitelist is still honoured — the veto is hardcoded-only"
+        );
+    }
+
+    #[test]
     fn is_dir_from_kind_only_answers_definitive_kinds() {
         use crate::native::watch::types::is_dir_from_kind;
         use notify::EventKind;

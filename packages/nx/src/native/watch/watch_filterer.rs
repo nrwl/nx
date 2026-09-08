@@ -5,6 +5,7 @@ use notify::event::{CreateKind, ModifyKind, RemoveKind};
 use std::path::PathBuf;
 use tracing::trace;
 
+use crate::native::walker::HARDCODED_IGNORE_PATTERNS;
 use crate::native::watch::git_utils::get_gitignore_files;
 use crate::native::watch::types::RawWatchEvent;
 use crate::native::watch::utils::get_nx_ignore;
@@ -16,12 +17,30 @@ pub struct WatchFilterer {
     /// Per-directory gitignore instances, sorted deepest-first (most path components first).
     /// Each entry is (directory the .gitignore applies in, compiled Gitignore).
     git_ignores: Vec<(PathBuf, Gitignore)>,
+    /// node_modules/.git/.nx/cache/.yarn/cache. A hard veto that no .gitignore
+    /// or .nxignore negation can beat, mirroring `create_walker`'s filter_entry
+    /// so the watcher and the walk agree on what is ignored.
+    hardcoded: Gitignore,
 }
 
 impl WatchFilterer {
     fn filter_path(&self, path: &std::path::Path, is_dir: bool) -> bool {
         let path = dunce::simplified(path);
 
+        // The brought-in ignore files decide keep/drop, then the hardcoded
+        // patterns veto unconditionally — applied last so a .gitignore
+        // whitelist (e.g. a zero-install `!.yarn/cache`) cannot un-ignore
+        // them. `create_walker` enforces the same set as an unbeatable
+        // filter_entry; if the two disagreed, files the walker excludes but
+        // the watcher admits would be reported deleted on every rescan.
+        self.brought_in_allows(path, is_dir)
+            && !matches!(
+                self.hardcoded.matched_path_or_any_parents(path, is_dir),
+                Match::Ignore(_)
+            )
+    }
+
+    fn brought_in_allows(&self, path: &std::path::Path, is_dir: bool) -> bool {
         // .nxignore takes precedence over .gitignore. Only consult it for
         // paths under the origin — gitignore-style matchers are scoped to
         // the directory the ignore file lives in, so external symlink
@@ -186,9 +205,19 @@ pub(super) fn create_filter(
         None
     };
 
+    // The hardcoded ignores are enforced unconditionally, independent of
+    // `use_ignore` and of the brought-in files, exactly as `create_walker`
+    // applies them.
+    let mut hardcoded_builder = GitignoreBuilder::new(origin);
+    for pattern in HARDCODED_IGNORE_PATTERNS {
+        hardcoded_builder.add_line(None, pattern)?;
+    }
+    let hardcoded = hardcoded_builder.build()?;
+
     Ok(WatchFilterer {
         origin: PathBuf::from(origin),
         git_ignores,
         nx_ignore,
+        hardcoded,
     })
 }
