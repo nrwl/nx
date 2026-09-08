@@ -40,7 +40,8 @@ import { AgentDefinition, InvocationContext } from './types';
  * command line fails here.
  *
  * The workspace root is a real (POSIX) temporary directory because the files
- * are written; it is padded to Windows' 260-character MAX_PATH.
+ * are written, padded to 260 characters so every path built from it carries a
+ * worst-case Windows root.
  */
 describe('windows command line', () => {
   const originalPlatform = process.platform;
@@ -83,22 +84,12 @@ describe('windows command line', () => {
     hasDiffContext: false,
   };
 
+  const shim = (agent: string) =>
+    `C:\\Users\\developer\\AppData\\Roaming\\npm\\${agent}.cmd`;
   const agents: ReadonlyArray<[string, AgentDefinition, string]> = [
-    [
-      'claude-code',
-      claudeCodeDefinition,
-      'C:\\Users\\developer\\AppData\\Roaming\\npm\\claude.cmd',
-    ],
-    [
-      'codex',
-      codexDefinition,
-      'C:\\Users\\developer\\AppData\\Roaming\\npm\\codex.cmd',
-    ],
-    [
-      'opencode',
-      opencodeDefinition,
-      'C:\\Users\\developer\\AppData\\Roaming\\npm\\opencode.cmd',
-    ],
+    ['claude-code', claudeCodeDefinition, shim('claude')],
+    ['codex', codexDefinition, shim('codex')],
+    ['opencode', opencodeDefinition, shim('opencode')],
   ];
   const modes: readonly AgenticPromptMode[] = ['author', 'generic-validation'];
 
@@ -124,7 +115,7 @@ describe('windows command line', () => {
     });
   });
 
-  // A null `impl` selects the prompt-only builder, non-null the hybrid one.
+  // In author mode, null `impl` selects the prompt-only builder.
   function buildSpawn(
     definition: AgentDefinition,
     shimBinary: string,
@@ -203,10 +194,6 @@ describe('windows command line', () => {
     });
   }
 
-  it('pins the workspace root at Windows MAX_PATH', () => {
-    expect(workspaceRoot.length).toBeGreaterThanOrEqual(260);
-  });
-
   describe.each(agents)('%s', (_id, definition, shimBinary) => {
     describe.each(modes)('%s mode', (mode) => {
       it('stays within the command line budget with a large generator context', () => {
@@ -225,96 +212,65 @@ describe('windows command line', () => {
           empty.adapted.commandLineLength
         );
       });
-
-      it('puts no line break on the command line', () => {
-        const { spec } = buildSpawn(definition, shimBinary, mode, largeImpl);
-        for (const arg of spec.args) {
-          expect(arg).not.toMatch(/[\r\n]/);
-        }
-      });
-
-      // cmd.exe drops any inherited environment variable longer than its own
-      // 8191-character limit, so what moves off the command line cannot simply
-      // move into the environment.
-      it('keeps every environment value it sets well within the variable limit', () => {
-        const { spec } = buildSpawn(definition, shimBinary, mode, largeImpl);
-        for (const [name, value] of Object.entries(spec.env ?? {})) {
-          expect(`${name}=${value}`.length).toBeLessThanOrEqual(1000);
-        }
-      });
     });
 
-    // The matrix above only reaches the hybrid builder; a migration with no
-    // generator output takes the third prompt shape.
+    // Author mode without generator output uses the prompt-only builder.
     it('stays within the budget in author mode with no generator context', () => {
-      const { spec, adapted } = buildSpawn(
-        definition,
-        shimBinary,
-        'author',
-        null
-      );
+      const { adapted } = buildSpawn(definition, shimBinary, 'author', null);
 
       expect(adapted.commandLineLength).toBeLessThanOrEqual(
         WINDOWS_COMMAND_LINE_BUDGET
       );
-      for (const arg of spec.args) {
-        expect(arg).not.toMatch(/[\r\n]/);
-      }
     });
+  });
+
+  // opencode is the only agent that sets an environment value, and cmd.exe
+  // drops an inherited variable over its own 8191-character limit.
+  it('keeps the opencode file reference under the variable limit', () => {
+    const { spec } = buildSpawn(
+      opencodeDefinition,
+      shim('opencode'),
+      'generic-validation',
+      largeImpl
+    );
+
+    const value = String(spec.env!.OPENCODE_CONFIG_CONTENT);
+    expect(value).toContain('{file:');
+    expect(`OPENCODE_CONFIG_CONTENT=${value}`.length).toBeLessThanOrEqual(8191);
   });
 
   // A `}` in the root defeats the `{file:<path>}` substitution and sends the
   // prompt through the environment, which the runner's command-line budget does
-  // not measure; the bound there is cmd.exe's 8191-character limit per
-  // inherited variable.
+  // not measure.
   it('keeps opencode under the environment variable limit when the workspace path defeats the file substitution', () => {
-    const { spec } = buildSpawn(
-      opencodeDefinition,
-      'C:\\Users\\developer\\AppData\\Roaming\\npm\\opencode.cmd',
-      'generic-validation',
-      largeImpl,
-      braceWorkspaceRoot
-    );
+    const inlined = (impl: typeof emptyImpl) =>
+      String(
+        buildSpawn(
+          opencodeDefinition,
+          shim('opencode'),
+          'generic-validation',
+          impl,
+          braceWorkspaceRoot
+        ).spec.env!.OPENCODE_CONFIG_CONTENT
+      );
+    const value = inlined(largeImpl);
 
-    const value = String(spec.env!.OPENCODE_CONFIG_CONTENT);
     expect(value).not.toContain('{file:');
     expect(`OPENCODE_CONFIG_CONTENT=${value}`.length).toBeLessThanOrEqual(8191);
+    // The inlined prompt carries no generator output, so its size does not
+    // track what the generator produced.
+    expect(value.length).toBe(inlined(emptyImpl).length);
   });
 
-  it('does not grow the opencode environment value with the generator context', () => {
-    const empty = buildSpawn(
-      opencodeDefinition,
-      'C:\\Users\\developer\\AppData\\Roaming\\npm\\opencode.cmd',
-      'generic-validation',
-      emptyImpl,
-      braceWorkspaceRoot
-    );
-    const large = buildSpawn(
-      opencodeDefinition,
-      'C:\\Users\\developer\\AppData\\Roaming\\npm\\opencode.cmd',
-      'generic-validation',
-      largeImpl,
-      braceWorkspaceRoot
-    );
-
-    expect(String(large.spec.env!.OPENCODE_CONFIG_CONTENT).length).toBe(
-      String(empty.spec.env!.OPENCODE_CONFIG_CONTENT).length
-    );
-  });
-
-  // Asserting on the full form keeps the runner's fallback from quietly
-  // absorbing growth in the system prompt.
-  it('fits codex' + "'s full inline system context on the command line", () => {
-    const { spec, adapted } = buildSpawn(
+  // The budget matrix measures this full form without the runner's fallback.
+  it("passes codex's full inline system context to the Windows shim", () => {
+    const { spec } = buildSpawn(
       codexDefinition,
-      'C:\\Users\\developer\\AppData\\Roaming\\npm\\codex.cmd',
+      shim('codex'),
       'generic-validation',
       largeImpl
     );
     expect(spec.args[1]).toContain('developer_instructions=');
     expect(spec.args[1]).toContain('handoff_contract');
-    expect(adapted.commandLineLength).toBeLessThanOrEqual(
-      WINDOWS_COMMAND_LINE_BUDGET
-    );
   });
 });

@@ -77,9 +77,9 @@ export interface InvocationContext {
   systemPrompt: string;
   /** Single-line command-line text pointing the agent at its instructions. */
   instructionsPointer: string;
-  /** Handoff contract plus a pointer at `systemPromptFilePath`, carried inline. */
+  /** Inline handoff contract and pointer to `systemPromptFilePath`. */
   inlineSystemContext: string;
-  /** Shorter `inlineSystemContext`, swapped in when the command line would overflow. */
+  /** Shorter `inlineSystemContext`, substituted on Windows shim overflow. */
   inlineSystemContextFallback: string;
   workspaceRoot: string;
   /**

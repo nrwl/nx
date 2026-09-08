@@ -3,12 +3,7 @@ import { join, relative } from 'path';
 import { mkdirSafely, stepPromptsDir } from './handoff';
 
 export interface StepInstructionFiles {
-  /**
-   * Absolute path of the file holding the step's system prompt. Absolute
-   * because the agent's own config loader resolves it (Claude Code's
-   * `--system-prompt-file`, opencode's `{file:...}` substitution), not the
-   * agent itself from its cwd.
-   */
+  /** Absolute path: config loaders resolve it, not the agent from its cwd. */
   systemPromptFilePath: string;
   /** Single-line command-line text pointing the agent at its instructions. */
   instructionsPointer: string;
@@ -23,13 +18,8 @@ export interface WriteStepInstructionFilesArgs {
 }
 
 /**
- * Writes a step's prompts to their own directory beside its handoff file and
- * returns how to reach them. The prompts travel as files rather than as
- * command-line arguments because on Windows npm-installed agents resolve to
- * `.cmd` shims invoked through `cmd.exe /c`, which caps the command line at
- * 8191 characters and cannot carry a newline, and the prompts are kilobytes
- * of multi-line text. Delivery is by file on every platform so that there is
- * one path to keep working.
+ * Writes prompts as files on every platform to keep one delivery path.
+ * Windows npm shims cannot carry multi-line prompts within cmd.exe's limit.
  */
 export function writeStepInstructionFiles(
   args: WriteStepInstructionFilesArgs

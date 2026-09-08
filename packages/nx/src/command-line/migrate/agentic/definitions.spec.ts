@@ -125,13 +125,10 @@ describe('codexDefinition', () => {
   // the raw text as a literal, so an encoding that does not survive a real TOML
   // parse would ship a mangled system context.
   it.each([
-    ['embedded newlines', 'line1\nline2\n\nline4'],
-    ['carriage returns', 'line1\r\nline2'],
+    ['control characters', 'line1\nline2\r\n\ntabbed\tvalue'],
     ['double quotes', 'workspace at "/Users/me/work"'],
     ['backslashes', 'C:\\Users\\me\\My Documents\\ws'],
-    ['tabs', 'a\tb'],
-    ['equals signs and braces', '{ key = "value" }'],
-    ['percent signs', '100% of %PATH%'],
+    ['TOML punctuation', '{ key = "value" } at 100% of %PATH%'],
     ['unicode', 'ends with an em dash — and an ellipsis …'],
   ])(
     'round-trips the inline system context through a TOML parse (%s)',

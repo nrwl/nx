@@ -159,11 +159,9 @@ export const WINDOWS_COMMAND_LINE_BUDGET =
   WINDOWS_COMMAND_LINE_LIMIT - WINDOWS_COMMAND_LINE_RESERVE;
 
 /**
- * Builds the spawn arguments, keeping them within what Windows will execute.
- * An agent carrying a system context on the command line falls back to the
- * shorter form when it does not fit; with nothing left to trade, an argument
- * list still over the limit aborts the step rather than dispatching a
- * truncated one.
+ * Builds Windows shim arguments within budget, trying the shorter context
+ * before aborting. Rejects overflow to avoid truncated instructions.
+ * Leaves command lines unmeasured off the shim path.
  */
 function adaptWithinCommandLineBudget(
   detected: DetectedInstalledAgent,
@@ -429,17 +427,8 @@ async function resolveFromHandoffOrPrompt(
     // unverified, so the skip stays. The orchestrator's standard failure
     // cascade surfaces the abort outcome.
     //
-    // Forward the underlying cause as pre-rendered summary lines so the
-    // caller can log it before "Aborted by user". A Ctrl+C that masked a
-    // SEPARATE crash still needs to show the user what crashed. In this
-    // user-interrupted branch, exit codes 130 and 143 and signals SIGINT
-    // and SIGTERM are stop requests rather than agent crashes, so
-    // surfacing them as "agent crashed" would be noise. Anything else
-    // (code 1, code 137 for OOM, an unrelated signal) is a separate
-    // diagnostic worth keeping. Note that `spawnError` is structurally
-    // impossible here: the spawn-throw path returns directly without
-    // registering the SIGINT listener, so `userInterrupted` can never be
-    // true on that branch.
+    // After user interruption, suppress conventional stop statuses and retain
+    // independent failure diagnostics for the caller to display.
     const exitWasCtrlC =
       cause.exitCode === 130 ||
       cause.exitCode === 143 ||
@@ -515,13 +504,7 @@ export function adaptSpawnForWindowsShim(
   };
 }
 
-/**
- * A `.cmd` shim invocation cannot carry `\r` or `\n` in an argument: no
- * escaping reproduces them on the other side, and cmd.exe truncates the
- * argument list at the break. Refusing means a caller that grows a multi-line
- * argument fails loudly instead of dispatching an agent on truncated
- * instructions.
- */
+/** Rejects line breaks in shim commands to avoid truncated instructions. */
 function assertNoLineBreaks(binary: string, args: readonly string[]): void {
   const offending = [binary, ...args].find((value) => /[\r\n]/.test(value));
   if (offending !== undefined) {
@@ -535,9 +518,6 @@ function assertNoLineBreaks(binary: string, args: readonly string[]): void {
 
 const CMD_META_CHARS = /([()\][!^"`<>&|;, ])/g;
 
-// Backslash-escape embedded quotes per MS C runtime convention, wrap in
-// quotes, caret-escape cmd.exe metacharacters, then neutralize `%` so nothing
-// in the argument expands as a variable reference.
 function escapeCmdArg(arg: string): string {
   return neutralizePercent(caretEscape(quoteCmdArg(arg)));
 }
@@ -548,6 +528,7 @@ function escapeCmdCommand(arg: string): string {
   return neutralizePercent(caretEscape(caretEscape(quoteCmdArg(arg))));
 }
 
+// Double backslashes before quotes for the MS C runtime argv parser.
 function quoteCmdArg(arg: string): string {
   return `"${arg.replace(/(\\*)"/g, '$1$1\\"').replace(/(\\*)$/, '$1$1')}"`;
 }

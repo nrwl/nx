@@ -122,11 +122,9 @@ export interface InlineSystemContext {
 }
 
 /**
- * System context for agents that can only receive it as a command-line value
- * (codex). Everything except the handoff contract is delivered through the file
- * this points at, to stay inside the Windows command-line limit. The contract
- * stays inline because `nx migrate` blocks on the agent honoring it, and the
- * workspace boundary is repeated so it holds if the agent defers reading.
+ * Carries the handoff contract and workspace boundary inline so the agent can
+ * read them before opening the full prompt. File delivery limits the Windows
+ * command-line size.
  */
 export function buildInlineSystemContext(ctx: InlineSystemContext): string {
   return [

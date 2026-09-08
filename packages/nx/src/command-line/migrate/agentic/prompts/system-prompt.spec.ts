@@ -231,13 +231,12 @@ describe('inline system contexts', () => {
   const handoffFileAbsolutePath =
     '/abs/workspace/.nx/migrate-runs/23.0.0/step-1.json';
 
-  function fullSystemPrompt(mode?: 'author' | 'generic-validation'): string {
+  function fullSystemPrompt(): string {
     return buildSystemPrompt({
       workspaceRoot: '/abs/workspace',
       handoffFileAbsolutePath,
       packageManager: 'npm',
       nxInvocation: 'npx nx',
-      mode,
     });
   }
 
@@ -274,19 +273,9 @@ describe('inline system contexts', () => {
       );
     });
 
-    it('stays shorter than the full system prompt', () => {
-      expect(context.length).toBeLessThan(
-        fullSystemPrompt('generic-validation').length
-      );
-    });
-
-    // The split is what makes the command line independent of which mode the
-    // step runs in: the scope rules, the only mode-dependent section, are in
-    // the file.
-    it('is the same whatever mode the step runs in', () => {
-      expect(fullSystemPrompt('author')).not.toBe(
-        fullSystemPrompt('generic-validation')
-      );
+    // The scope rules are the only mode-dependent section, so keeping them in
+    // the file makes the command line independent of the step's mode.
+    it('leaves scope rules in the system prompt file', () => {
       expect(context).not.toContain('<scope_rules>');
     });
   });

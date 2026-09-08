@@ -55,8 +55,6 @@ function claudeCodeHandoffAllowedTools(runDirName: string): string | null {
   return `Edit(${MIGRATE_RUNS_RELATIVE_DIR}/${runDirName}/${HANDOFFS_DIR_NAME}/**)`;
 }
 
-// The prompt is kilobytes of multi-line text, which a `cmd.exe` shim cannot
-// carry as an argument.
 function claudeCodeBuildInteractive(ctx: InvocationContext): InvocationSpec {
   const allowedTools = claudeCodeHandoffAllowedTools(ctx.runDirName);
   return {
@@ -105,14 +103,8 @@ function codexBuildInteractive(ctx: InvocationContext): InvocationSpec {
 }
 
 /**
- * Encodes a value for a codex `-c key=value` override as a TOML basic string.
- *
- * codex falls back to the raw text as a literal when the value does not parse
- * as TOML, so a bad encoding ships a mangled system context with no error. The
- * escapes `JSON.stringify` emits are all TOML basic-string escapes, but the
- * characters it leaves raw include control characters TOML rejects, which is
- * what the round-trip catches. Single-line output is required too: a TOML
- * multi-line string would put raw newlines back on the command line.
+ * Encodes a single-line TOML string for codex overrides. JSON can leave raw
+ * controls that TOML rejects; codex treats parse failures as literal text.
  */
 function encodeTomlString(value: string): string {
   const encoded = JSON.stringify(value);
@@ -188,15 +180,9 @@ function opencodeBuildInteractive(ctx: InvocationContext): InvocationSpec {
 }
 
 /**
- * opencode expands `{env:<name>}` and then `{file:<path>}` over the raw config
- * text and parses the JSON afterwards, so this is a substitution template, not
- * a document. The file reference keeps the prompt out of the environment,
- * where cmd.exe drops any inherited variable over 8191 characters, and the
- * prompt it falls back to inlining carries no pattern opencode can expand.
- *
- * The instructions are never inlined, so the value is bounded by the prompt
- * rather than the generator's output, and `windows-command-line.spec.ts` holds
- * it against 8191 where the runner's own budget check cannot see it.
+ * Escapes inline prompt patterns before opencode's pre-JSON substitution pass.
+ * Excludes generator instructions from the config; cmd.exe drops inherited
+ * variables longer than 8191 characters.
  */
 function opencodeConfigContent(ctx: InvocationContext): string {
   // Windows separators become `/`, which its APIs accept just as well.

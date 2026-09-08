@@ -34,7 +34,7 @@ describe('writeStepInstructionFiles', () => {
   const instructionsRelativePath =
     '.nx/migrate-runs/23.1.0/prompts/@nx/eslint/update-23-1-0/instructions.md';
 
-  it('writes both prompts to their own directory beside the handoff file', () => {
+  it("writes both prompts under the step's prompts directory", () => {
     const files = write(
       'the system prompt\nover two lines',
       'the instructions'
@@ -88,7 +88,8 @@ describe('writeStepInstructionFiles', () => {
     }
   });
 
-  // A `..` segment would put the write outside the run directory entirely.
+  // Without sanitizing, a `..` name would move the prompts into the package's
+  // parent directory.
   it('sanitizes migration identifiers into the directory names', () => {
     const files = writeStepInstructionFiles({
       workspaceRoot,

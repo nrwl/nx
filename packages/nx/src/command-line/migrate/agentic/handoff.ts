@@ -74,10 +74,6 @@ export function initRunDir(workspaceRoot: string, runId: string): string {
 // agent can't write to.
 const WINDOWS_RESERVED_NAMES = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$/i;
 
-/**
- * The bare `.` / `..` check must come first — otherwise a malformed migration
- * name of exactly `..` would let the handoff write escape the run directory.
- */
 function sanitizeSegment(value: string): string {
   if (value === '.' || value === '..') return '_';
   let sanitized = value.replace(/[\x00-\x1f<>:"/\\|?*+]/g, '_');
