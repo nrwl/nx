@@ -51,7 +51,17 @@ export function runLintTasks(
     ),
   }));
 
-  const flags = mergeFlags(resolved.map((r) => r.options.flags));
+  // One Oxlint process gets one flag set: the first task's. Format, --silent
+  // and the warning thresholds still apply per task.
+  const flags = resolved[0].options.flags;
+  const differing = resolved.find(
+    (r) => r.options.flags.join('\u0000') !== flags.join('\u0000')
+  );
+  if (differing) {
+    logger.warn(
+      `[@nx/oxlint] ${differing.task.projectName} resolves different Oxlint options than ${resolved[0].task.projectName}. Oxlint runs once for the whole batch, using ${resolved[0].task.projectName}'s options.`
+    );
+  }
   const ignores = nestedProjectIgnorePatterns(
     resolved.map((r) => ({ projectRoot: r.task.projectRoot, paths: r.paths })),
     oxlintProjectRoots(projectGraph)
@@ -113,31 +123,6 @@ export function runLintTasks(
     `Finished in ${Math.round(start_time * 1000)}ms on ${number_of_files} files using ${threads_count} threads.\n`
   );
   return results;
-}
-
-function mergeFlags(perTask: string[][]): string[] {
-  const byName = new Map<string, string>();
-  const positional: string[] = [];
-  for (const flags of perTask) {
-    for (const flag of flags) {
-      const end = flag.indexOf('=');
-      const name = flag.startsWith('--')
-        ? flag.slice(0, end === -1 ? undefined : end)
-        : null;
-      if (!name) {
-        if (!positional.includes(flag)) positional.push(flag);
-        continue;
-      }
-      const previous = byName.get(name);
-      if (previous !== undefined && previous !== flag) {
-        logger.warn(
-          `[@nx/oxlint] Projects in this run set "${name}" to different values (${previous}, ${flag}). Oxlint runs once for the whole batch, so ${flag} applies to every project.`
-        );
-      }
-      byName.set(name, flag);
-    }
-  }
-  return [...byName.values(), ...positional];
 }
 
 function oxlintProjectRoots(projectGraph: ProjectGraph): string[] {
