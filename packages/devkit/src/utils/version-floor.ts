@@ -9,6 +9,7 @@ import {
   validRange,
 } from 'semver';
 import {
+  getDeclaredPackageVersion,
   getInstalledPackageVersion,
   getInstalledPackageVersionFromTree,
   isNonSemverDistTag,
@@ -72,19 +73,17 @@ export function assertSupportedPackageVersion(
     return;
   }
 
-  const installed =
-    getInstalledPackageVersionFromTree(tree, packageName) ??
-    getInstalledPackageVersionFromProcess(tree, packageName);
+  const installed = getSatisfyingInstalledPackageVersion(
+    tree,
+    packageName,
+    declared
+  );
   if (installed) {
-    // An installed prerelease can match the declared range in either form:
-    // raw (a same-tuple prerelease comparator) or as its release version.
     const release = coerce(installed)?.version ?? installed;
-    if (satisfies(installed, declared) || satisfies(release, declared)) {
-      if (lt(release, minSupportedVersion)) {
-        throwForUnsupportedVersion(packageName, installed, minSupportedVersion);
-      }
-      return;
+    if (lt(release, minSupportedVersion)) {
+      throwForUnsupportedVersion(packageName, installed, minSupportedVersion);
     }
+    return;
   }
 
   const cleaned = clean(declared);
@@ -121,6 +120,61 @@ export function assertSupportedPackageVersion(
   if (coerced && lt(coerced, minSupportedVersion)) {
     throwForUnsupportedVersion(packageName, declared, minSupportedVersion);
   }
+}
+
+/**
+ * Resolves the version of a package a generator should target.
+ *
+ * Resolution order:
+ * - When the installed version satisfies the declared range, the installed
+ *   version decides. This resolves open ranges (e.g. `>=15.0.0 <17.0.0`) to
+ *   what is actually installed.
+ * - Otherwise the declared range's floor, as returned by
+ *   `getDeclaredPackageVersion`. This is the fresh-workspace path (nothing
+ *   installed yet) and the case where a generator is mid-flight re-pinning
+ *   the package: the new range no longer satisfies the still-installed
+ *   version, so intent wins.
+ *
+ * Returns `null` when the package is not declared and no
+ * `latestKnownVersion` is provided; an install that is not declared in the
+ * workspace `package.json` (e.g. a hoisted transitive dependency) is ignored.
+ */
+export function getResolvedPackageVersion(
+  tree: Tree,
+  packageName: string,
+  latestKnownVersion?: string
+): string | null {
+  const declared = getDependencyVersionFromPackageJson(tree, packageName);
+  if (declared && !isNonSemverDistTag(declared)) {
+    const installed = getSatisfyingInstalledPackageVersion(
+      tree,
+      packageName,
+      declared
+    );
+    if (installed) {
+      return installed;
+    }
+  }
+  return getDeclaredPackageVersion(tree, packageName, latestKnownVersion);
+}
+
+function getSatisfyingInstalledPackageVersion(
+  tree: Tree,
+  packageName: string,
+  declared: string
+): string | null {
+  const installed =
+    getInstalledPackageVersionFromTree(tree, packageName) ??
+    getInstalledPackageVersionFromProcess(tree, packageName);
+  if (!installed) {
+    return null;
+  }
+  // An installed prerelease can match the declared range in either form:
+  // raw (a same-tuple prerelease comparator) or as its release version.
+  const release = coerce(installed)?.version ?? installed;
+  return satisfies(installed, declared) || satisfies(release, declared)
+    ? installed
+    : null;
 }
 
 /**

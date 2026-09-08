@@ -89,6 +89,7 @@ export {
 export {
   assertSupportedInstalledPackageVersion,
   assertSupportedPackageVersion,
+  getResolvedPackageVersion,
 } from './src/utils/version-floor';
 export {
   createAsyncIterable,
