@@ -89,6 +89,15 @@
       "description": "Rewrites `cypress/angular-zoneless` and `@cypress/angular-zoneless` imports to `cypress/angular`, which is zoneless in Cypress 16 and the only Angular mount entry point it ships, and removes the deprecated `@cypress/angular-zoneless` package.",
       "implementation": "./dist/src/migrations/update-23-3-0/update-angular-zoneless-mount-import",
       "documentation": "./dist/src/migrations/update-23-3-0/update-angular-zoneless-mount-import.md"
+    },
+    "create-ai-instructions-for-cypress-16": {
+      "version": "23.3.0-beta.1",
+      "requires": {
+        "cypress": ">=16.0.0"
+      },
+      "description": "AI-assisted migration: replaces `Cypress.env()`, `cy.exec()`, `.end()`, `env` test-configuration overrides and runtime `Cypress.config()` writes removed in Cypress 16, whose replacements depend on where each value comes from, so it is driven by an AI prompt rather than a deterministic generator.",
+      "prompt": "./dist/src/migrations/update-23-3-0/ai-instructions-for-cypress-16.md",
+      "documentation": "./dist/src/migrations/update-23-3-0/upgrade-to-cypress-16.md"
     }
   },
   "packageJsonUpdates": {
