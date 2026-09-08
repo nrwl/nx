@@ -367,7 +367,7 @@ describe('task planner', () => {
       expect(plan).toContain('child:libs/child/**/*');
     });
 
-    it('does not hash a task its continuous dependency serves', () => {
+    it("infers a continuous dependency's inputs without being asked", () => {
       const { planner, taskGraph } = fixture();
       const plan = planner.getPlans(
         ['parent:build'],
@@ -375,26 +375,20 @@ describe('task planner', () => {
         snapshotsFor({ 'parent:build': { inputs: ['libs/parent/filea.ts'] } })
       )['parent:build'];
 
-      // The trace saw only the task's own process, so the files its continuous
-      // dependency reads are missing; hashing from it would be a false key.
-      expect(plan).not.toContainEqual(expect.stringMatching(/^io-snapshot:/));
-      expect(plan).toContain(
-        'parent:libs/parent/**/*,!libs/parent/**/*.spec.ts'
-      );
+      // Replacing the declared filesets removes the coverage a served task
+      // had, and its own trace cannot supply it, so the server's inputs come
+      // in whether the target asked for them or not.
+      expect(plan).toContainEqual(expect.stringMatching(/^io-snapshot:/));
+      expect(plan).toContain('child:libs/child/**/*');
     });
 
-    it('hashes from the snapshot anyway when the task forces a fileset', () => {
-      const { planner, taskGraph } = fixture({ forced: true });
-      const plan = planner.getPlans(
-        ['parent:build'],
-        withContinuousDependency(taskGraph),
-        snapshotsFor({ 'parent:build': { inputs: ['libs/parent/filea.ts'] } })
-      )['parent:build'];
-
-      // `force` is the task taking the unseen reads on itself, so the guard
-      // stands down rather than overriding a deliberate choice.
-      expect(plan).toContainEqual(expect.stringMatching(/^io-snapshot:/));
-      expect(plan).toContain('parent:libs/parent/served/**/*');
+    it('leaves a served task alone when it hashes natively', () => {
+      const { planner, taskGraph } = fixture();
+      // No snapshot: the declared filesets still cover what the server reads,
+      // so inferring here would change hashes for a hole that is not open.
+      expect(
+        planner.getPlans(['parent:build'], withContinuousDependency(taskGraph))
+      ).toEqual(planner.getPlans(['parent:build'], taskGraph));
     });
 
     it('keeps a forced fileset that the snapshot would otherwise replace', () => {

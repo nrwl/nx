@@ -289,11 +289,14 @@ impl HashPlanner {
                 // never reach this task's trace, so its inputs are spliced in
                 // whole. Hashed from its declared inputs: a task that never
                 // finishes is never traced.
-                if inputs
+                // Inferred under a snapshot: replacing the declared filesets
+                // removes the coverage a served task had, and the trace cannot
+                // supply it. Declaring the input asks for it either way.
+                let declared_continuous = inputs
                     .self_inputs
                     .iter()
-                    .any(|i| matches!(i, Input::ContinuousDependenciesInputs))
-                {
+                    .any(|i| matches!(i, Input::ContinuousDependenciesInputs));
+                if declared_continuous || snapshot.is_some() {
                     for dep_id in task_graph
                         .continuous_dependencies
                         .get(*id)
@@ -464,30 +467,9 @@ impl HashPlanner {
                 inputs.opted_out.insert(task_id.clone());
             } else if self.declared_files_invalid(task) {
                 inputs.invalid_files_input.insert(task_id.clone());
-            } else if task_graph
-                .continuous_dependencies
-                .get(task_id)
-                .is_some_and(|deps| !deps.is_empty())
-                && !self.covers_unseen_reads(task)
-            {
-                inputs.continuous_dependency.insert(task_id.clone());
             }
         }
         inputs
-    }
-
-    /// Whether the task accounts for reads its own trace cannot see, either by
-    /// forcing a fileset or by taking its continuous dependencies' inputs.
-    fn covers_unseen_reads(&self, task: &Task) -> bool {
-        let Ok(inputs) = get_inputs(task, &self.project_graph, &self.nx_json) else {
-            return false;
-        };
-        inputs.self_inputs.iter().any(|input| {
-            matches!(
-                input,
-                Input::FileSet { force: true, .. } | Input::ContinuousDependenciesInputs
-            )
-        })
     }
 
     /// A declared `{ files }` glob the hasher would reject is a native error;

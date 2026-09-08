@@ -18,11 +18,6 @@ pub(crate) struct EligibilityInputs {
     /// Tasks with a declared `{ files }` glob the hasher would reject; natively
     /// that is an error, so a snapshot must not paper over it.
     pub invalid_files_input: HashSet<String>,
-    /// Tasks a continuous dependency serves. A trace sees one process, so the
-    /// files that dependency reads are absent from the snapshot and the task
-    /// would stop hashing them. Tasks that declare a `force` fileset have
-    /// taken that on themselves and are not listed.
-    pub continuous_dependency: HashSet<String>,
     /// Project name → root, for flattening pre-§2b bucketed bundles.
     pub project_roots: HashMap<String, String>,
 }
@@ -144,10 +139,6 @@ pub(crate) fn resolve(
         }
         if inputs.custom_hasher.contains(task_id) {
             diagnostics.push(IoSnapshotDiagnostic::task("custom-hasher", task_id));
-            continue;
-        }
-        if inputs.continuous_dependency.contains(task_id) {
-            diagnostics.push(IoSnapshotDiagnostic::task("continuous-dependency", task_id));
             continue;
         }
         let Some(entry) = bundle.snapshots.get(task_id) else {
@@ -277,7 +268,6 @@ pub fn io_snapshot_report(
             opted_out: opted_out_task_ids.into_iter().collect(),
             custom_hasher: custom_hasher_task_ids.into_iter().collect(),
             invalid_files_input: HashSet::new(),
-            continuous_dependency: HashSet::new(),
             project_roots: project_roots.unwrap_or_default(),
         },
     )
@@ -323,7 +313,6 @@ pub fn io_snapshot_outputs(
             opted_out: opted_out_task_ids.into_iter().collect(),
             custom_hasher: custom_hasher_task_ids.into_iter().collect(),
             invalid_files_input: HashSet::new(),
-            continuous_dependency: HashSet::new(),
             project_roots: project_roots.unwrap_or_default(),
         },
     )
