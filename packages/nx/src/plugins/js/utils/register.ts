@@ -948,8 +948,6 @@ function resolveFromWorkspacePackageExports(
       { name: packageName, exports: packageExports },
       '.' + specifier.slice(packageName.length),
       {
-        // Preserve runtime user and module-sync conditions when adding graph
-        // conditions.
         conditions: [...(contextConditions ?? []), ...graph.conditions],
         require: isRequire,
       }
@@ -965,17 +963,13 @@ function resolveFromWorkspacePackageExports(
         return realpathSync(candidate);
       }
     }
-  } catch {
-    // fall back to the default resolution
-  }
+  } catch {}
   return null;
 }
 
 /**
- * The package's `package.json` as Node would find it from `fromDir`: its own
- * package scope for a self-reference, else the package manager's link.
- * Accepted only when it lies in the workspace: a same-named external package
- * must keep Node's own resolution.
+ * Resolves as Node would from `fromDir`: the self-reference scope first, then
+ * the package manager's link. Rejects external packages.
  */
 function findWorkspacePackageJson(
   packageName: string,
@@ -997,9 +991,8 @@ function findWorkspacePackageJson(
 }
 
 /**
- * Node resolves a package's own name through the nearest package scope that
- * declares `exports`, never past a `node_modules` directory; no self-link is
- * needed for that.
+ * Node resolves a self-reference through the nearest package scope with
+ * non-null `exports`, never past `node_modules`; no self-link is needed.
  */
 function findSelfReferencePackageJson(
   packageName: string,
@@ -1073,7 +1066,6 @@ function findPnpPackageJson(
       considerBuiltins: false,
     });
   } catch {
-    // Any PnP lookup failure falls back to Node's normal resolution path.
     return null;
   }
 }

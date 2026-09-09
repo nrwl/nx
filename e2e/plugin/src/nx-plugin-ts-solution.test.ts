@@ -673,8 +673,6 @@ exports.createNodesV2 = [
       return pkg;
     });
 
-    // A bare-name plugin without a build target must select source through
-    // the root exports.
     const barePlugin = uniq('bare-plugin');
     createFile(
       `packages/${barePlugin}/package.json`,
@@ -842,11 +840,9 @@ export default (tree: any) =>
     expect(runCLI(`build ${bareInferredProject}`)).toContain(sourceMarker);
   }, 180000);
 
-  // An import-only ESM entry resolves to the same file with and without the
-  // custom condition, so only its sourceRoot placement marks it as source.
-  // Its transitive workspace import then needs the condition in the isolated
-  // worker (Node flags) and in the daemon (resolve hooks) to reach the sibling
-  // source, which has no build output.
+  // The import-only entry resolves identically with and without the custom
+  // condition, so sourceRoot marks it as source. Both loading modes must
+  // resolve its sibling's source export without build output.
   describe('import-only ESM plugin entry under sourceRoot', () => {
     const sourceMarker = 'resolved-esm-workspace-dep-from-source';
     let inferredProject: string;
@@ -916,8 +912,7 @@ export const createNodesV2 = [
       );
 
       updateJson(`packages/${plugin}/package.json`, (pkg) => {
-        // The generated plugin declares no sourceRoot; the entry needs it to
-        // load as source.
+        // This JavaScript entry needs sourceRoot to be classified as source.
         pkg.nx.sourceRoot = `packages/${plugin}/src`;
         pkg.dependencies ??= {};
         pkg.dependencies[`@${workspaceName}/${lib}`] =
