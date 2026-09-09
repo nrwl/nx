@@ -13,7 +13,10 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { relative } from 'path';
-import { assertCypressComponentTestingSupport } from '../../utils/assert-cypress-component-testing-support';
+import {
+  assertCypressComponentTestingSupport,
+  findCypressBelow,
+} from '../../utils/assert-cypress-component-testing-support';
 import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import { isZonelessApp } from '../../utils/zoneless';
 import { nxVersion } from '../../utils/versions';
@@ -73,16 +76,17 @@ export async function cypressComponentConfiguration(
       getInstalledCypressVersion,
     }: typeof import('@nx/cypress/internal') = require('@nx/cypress/internal');
     const installedCypressVersion = getInstalledCypressVersion(tree);
-    // Zoneless support was introduced in Cypress 15.8.0
     // If Cypress is not yet installed, we'll install the latest version, which will have zoneless support
-    if (installedCypressVersion && lt(installedCypressVersion, '15.8.0')) {
-      throw new Error(
-        `Cypress Component Testing doesn't support Zoneless Angular projects for your installed Cypress version (${installedCypressVersion}). ` +
-          `The project "${options.project}" is configured without Zone.js. ` +
-          `Please upgrade Cypress to version 15.8.0 or higher.`
-      );
-    }
     if (installedCypressVersion && lt(installedCypressVersion, '16.0.0')) {
+      // Zoneless support was introduced in Cypress 15.8.0
+      const unsupportedCypressVersion = findCypressBelow(tree, '15.8.0');
+      if (unsupportedCypressVersion) {
+        throw new Error(
+          `Cypress Component Testing doesn't support Zoneless Angular projects for your Cypress version (${unsupportedCypressVersion}). ` +
+            `The project "${options.project}" is configured without Zone.js. ` +
+            `Please upgrade Cypress to version 15.8.0 or higher.`
+        );
+      }
       mountModule = 'cypress/angular-zoneless';
     }
   }
