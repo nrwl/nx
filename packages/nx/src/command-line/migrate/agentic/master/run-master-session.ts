@@ -4,12 +4,15 @@ import {
   reportMigrateRunError,
 } from '../../migrate-analytics';
 import {
+  completionSummaryLines,
   completionWarnings,
+  hasUnresolvedIssues,
   MigrateRunState,
   readRunState,
   runDir,
   runOrchestratorInit,
   RunOrchestratorInitInput,
+  tallySteps,
 } from '../../run';
 import { DetectedInstalledAgent } from '../types';
 import { spawnMasterSession } from './spawn-master';
@@ -93,13 +96,10 @@ export async function runMasterSession(
       });
       return 1;
     case 'completed': {
-      const applied = state.steps.filter(
-        (s) => s.status === 'succeeded'
-      ).length;
-      const skipped = state.steps.filter((s) => s.status === 'skipped').length;
+      const tally = tallySteps(state);
       output.log({
         title: `Migrate run ${runId} is complete.`,
-        bodyLines: [`  applied: ${applied}`, `  skipped: ${skipped}`],
+        bodyLines: completionSummaryLines(state),
       });
       for (const lines of completionWarnings(runRoot, runId, state)) {
         output.warn({ title: lines[0], bodyLines: lines.slice(1) });
@@ -108,8 +108,16 @@ export async function runMasterSession(
         agenticOutcome: 'enabled',
         agentUsed: agent.id,
         migrationCount: state.steps.length,
-        appliedCount: applied,
+        appliedCount: tally.applied + tally.adopted,
       });
+      // Exit 0 is for a run that left nothing to resolve: a migration given
+      // up on or a reported problem nobody fixed is the user's to finish.
+      if (tally.unresolved.length > 0 || hasUnresolvedIssues(state)) {
+        output.warn({
+          title: `Migrate run ${runId} left work unresolved; exiting with code 1.`,
+        });
+        return 1;
+      }
       return;
     }
     default: {
