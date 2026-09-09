@@ -122,6 +122,23 @@ type T = typeof import('cypress/angular-zoneless');
     expect(devDependencies).toEqual({ cypress: '^16.0.0' });
   });
 
+  it('should rewrite imports in a shared library without a Cypress target', async () => {
+    addProjectConfiguration(tree, 'testing-utils', {
+      root: 'libs/testing-utils',
+      projectType: 'library',
+    });
+    tree.write(
+      'libs/testing-utils/src/mount.ts',
+      `export { mount } from 'cypress/angular-zoneless';\n`
+    );
+
+    await migration(tree);
+
+    expect(tree.read('libs/testing-utils/src/mount.ts', 'utf-8')).toBe(
+      `export { mount } from 'cypress/angular';\n`
+    );
+  });
+
   it('should leave package.json alone when @cypress/angular-zoneless is not installed', async () => {
     updateJson(tree, 'package.json', (json) => ({
       ...json,
@@ -147,16 +164,6 @@ const harness: Harness = 'cypress/angular-zoneless';
     await migration(tree);
 
     expect(tree.read('apps/app/src/app/app.cy.ts', 'utf-8')).toBe(content);
-  });
-
-  it('should not touch files outside Cypress projects', async () => {
-    addProjectConfiguration(tree, 'lib', { root: 'libs/lib' });
-    const content = `import { mount } from 'cypress/angular-zoneless';\n`;
-    tree.write('libs/lib/src/lib/lib.cy.ts', content);
-
-    await migration(tree);
-
-    expect(tree.read('libs/lib/src/lib/lib.cy.ts', 'utf-8')).toBe(content);
   });
 
   it('should skip an unparseable file without throwing', async () => {

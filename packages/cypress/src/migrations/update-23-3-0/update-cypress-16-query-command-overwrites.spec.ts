@@ -66,6 +66,30 @@ Cypress.Commands.overwrite('visit', (originalFn, url, options) => originalFn(url
     ]);
   });
 
+  it('should rename overwrites in a shared library without a Cypress target', async () => {
+    addProjectConfiguration(tree, 'testing-utils', {
+      root: 'libs/testing-utils',
+      projectType: 'library',
+    });
+    tree.write(
+      'libs/testing-utils/src/commands.ts',
+      `Cypress.Commands.overwrite('getCookie', (originalFn, name) => originalFn(name));
+`
+    );
+
+    const result = await migration(tree);
+
+    expect(tree.read('libs/testing-utils/src/commands.ts', 'utf-8')).toBe(
+      `Cypress.Commands.overwriteQuery('getCookie', (originalFn, name) => originalFn(name));
+`
+    );
+    expect(result.nextSteps).toEqual([
+      expect.stringContaining(
+        "libs/testing-utils/src/commands.ts: `'getCookie'`"
+      ),
+    ]);
+  });
+
   it('should not touch overwrites of commands that are not queries', async () => {
     const content = `Cypress.Commands.overwrite('visit', (originalFn, url) => originalFn(url));
 Cypress.Commands.overwrite('setCookie', (originalFn, name, value) => originalFn(name, value));

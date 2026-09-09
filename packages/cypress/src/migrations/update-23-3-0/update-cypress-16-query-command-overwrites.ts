@@ -9,7 +9,6 @@ import {
 import { ensureTypescript } from '@nx/js/internal';
 import { ast, query } from '@phenomnomnominal/tsquery';
 import type { CallExpression } from 'typescript';
-import { cypressProjectConfigs } from '../../utils/migrations';
 
 // Commands that became queries in Cypress 16
 // (packages/driver/src/cy/commands/{cookies,storage}.ts).
@@ -28,36 +27,36 @@ export default async function updateCypress16QueryCommandOverwrites(
 ) {
   const migrated: string[] = [];
 
-  for await (const { projectConfig } of cypressProjectConfigs(tree)) {
-    visitNotIgnoredFiles(tree, projectConfig.root, (filePath) => {
-      if (!isJsTsFile(filePath) || !tree.exists(filePath)) {
-        return;
-      }
+  // Shared support libraries can hold the overwrites, so the whole workspace
+  // is scanned rather than the Cypress project roots.
+  visitNotIgnoredFiles(tree, '.', (filePath) => {
+    if (!isJsTsFile(filePath)) {
+      return;
+    }
 
-      const originalContent = tree.read(filePath, 'utf-8');
-      if (!originalContent.includes('overwrite')) {
-        return;
-      }
+    const originalContent = tree.read(filePath, 'utf-8');
+    if (!originalContent.includes('overwrite')) {
+      return;
+    }
 
-      const overwrites = findQueryOverwrites(originalContent);
-      if (overwrites.length === 0) {
-        return;
-      }
+    const overwrites = findQueryOverwrites(originalContent);
+    if (overwrites.length === 0) {
+      return;
+    }
 
-      tree.write(
-        filePath,
-        applyChangesToString(
-          originalContent,
-          overwrites.flatMap((call) => renameToOverwriteQuery(call))
-        )
-      );
-      migrated.push(
-        `${filePath}: ${overwrites
-          .map((call) => `\`${call.arguments[0].getText()}\``)
-          .join(', ')}`
-      );
-    });
-  }
+    tree.write(
+      filePath,
+      applyChangesToString(
+        originalContent,
+        overwrites.flatMap((call) => renameToOverwriteQuery(call))
+      )
+    );
+    migrated.push(
+      `${filePath}: ${overwrites
+        .map((call) => `\`${call.arguments[0].getText()}\``)
+        .join(', ')}`
+    );
+  });
 
   if (migrated.length === 0) {
     return { skipAgentic: true };

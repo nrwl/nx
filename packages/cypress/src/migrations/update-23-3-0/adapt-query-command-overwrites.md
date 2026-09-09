@@ -57,4 +57,4 @@ Callbacks that call other `cy.*` commands, use `cy.wrap()`, or run asynchronous 
 
 ## Nx-Specific Notes
 
-The support files live under each Cypress project's `src/support/` (or `cypress/support/` for component testing). Do not change the Cypress config or Nx target configuration for this migration.
+The support files live under each Cypress project's `src/support/` (or `cypress/support/` for component testing), or in a shared library the support file imports. Do not change the Cypress config or Nx target configuration for this migration.
