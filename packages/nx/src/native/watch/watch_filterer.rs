@@ -30,23 +30,26 @@ impl WatchFilterer {
     fn filter_path(&self, path: &std::path::Path, is_dir: bool) -> bool {
         let path = dunce::simplified(path);
 
+        // A path outside the workspace is not subject to its ignore rules, and
+        // the origin-rooted matchers panic on one (matched_path_or_any_parents
+        // asserts the path is under the root). canonicalize_event_paths can
+        // produce one on Linux by resolving a watched symlink out of the tree.
+        // Reject it rather than admit it — admitting emits an out-of-workspace
+        // path into the file map and nx watch, and still panics the transform's
+        // Create branch when a root .nxignore is present.
+        if !path.starts_with(&self.origin) {
+            return false;
+        }
+
         // The brought-in ignore files decide keep/drop, then the hardcoded
         // patterns veto unconditionally — applied last so a .gitignore
-        // whitelist (e.g. a zero-install `!.yarn/cache`) cannot un-ignore
-        // them. `create_walker` enforces the same set as an unbeatable
-        // filter_entry; if the two disagreed, files the walker excludes but
-        // the watcher admits would be reported deleted on every rescan.
-        //
-        // The origin guard matches the .nxignore/gitignore sites: the matcher
-        // is rooted at origin and matched_path_or_any_parents panics on a path
-        // outside its root, which a symlink resolved out of the workspace can
-        // produce on Linux.
+        // whitelist (a zero-install `!.yarn/cache`) cannot un-ignore them,
+        // matching create_walker's filter_entry.
         self.brought_in_allows(path, is_dir)
-            && !(path.starts_with(&self.origin)
-                && matches!(
-                    self.hardcoded.matched_path_or_any_parents(path, is_dir),
-                    Match::Ignore(_)
-                ))
+            && !matches!(
+                self.hardcoded.matched_path_or_any_parents(path, is_dir),
+                Match::Ignore(_)
+            )
     }
 
     fn brought_in_allows(&self, path: &std::path::Path, is_dir: bool) -> bool {
@@ -151,6 +154,15 @@ pub(super) fn create_filter(
     additional_globs: &[String],
     use_ignore: bool,
 ) -> anyhow::Result<WatchFilterer> {
+    // Match the canonical form the event paths take: filter_path rejects any
+    // path not under origin, and canonicalize_event_paths realpaths every event
+    // on Linux. A symlinked NX_WORKSPACE_ROOT_PATH left un-canonicalized here
+    // would then fail that prefix check for every event and drop them all.
+    let origin = dunce::canonicalize(origin)
+        .map(|p| p.to_string_lossy().into_owned())
+        .unwrap_or_else(|_| origin.to_string());
+    let origin = origin.as_str();
+
     let ignore_files = use_ignore.then(|| get_gitignore_files(origin));
     let nx_ignore_path = get_nx_ignore(origin);
 

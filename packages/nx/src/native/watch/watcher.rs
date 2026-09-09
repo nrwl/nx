@@ -547,7 +547,13 @@ impl WatchPipeline {
                             self.pending_rescan = false;
                             self.rescan_deadline = None;
                         } else {
-                            self.flush_deadline = self.rescan_deadline;
+                            // Poll within IDLE_WINDOW, capped by the deadline, so
+                            // the rescan releases shortly after the storm settles
+                            // even if only filtered events (which return early
+                            // without refreshing flush_deadline) kept it held.
+                            self.flush_deadline = self
+                                .rescan_deadline
+                                .map(|d| d.min(Instant::now() + IDLE_WINDOW));
                         }
                     } else {
                         self.reset_burst();
@@ -859,10 +865,38 @@ mod tests {
     }
 
     #[test]
-    fn a_path_outside_origin_does_not_panic_the_veto() {
-        // canonicalize_event_paths can resolve a symlink out of the workspace,
-        // and matched_path_or_any_parents panics on a path outside the matcher
-        // root. check_event must handle it, not crash the pipeline thread.
+    fn nested_nxignore_outranks_a_same_dir_dot_ignore() {
+        // The ignore crate ranks a custom ignore file (.nxignore) above .ignore.
+        // A nested pkg/.nxignore that excludes a path a pkg/.ignore un-ignores
+        // must win. Pins the .nxignore rank above .ignore in git_ignores.
+        use notify::EventKind;
+        use notify::event::CreateKind;
+
+        let dir = tempdir().expect("tempdir");
+        let origin = dir.path().canonicalize().expect("canonicalize");
+        let pkg = origin.join("pkg");
+        fs::create_dir_all(&pkg).expect("mkdir pkg");
+        fs::write(pkg.join(".ignore"), "!keep.tmp\n").expect("write .ignore");
+        fs::write(pkg.join(".nxignore"), "keep.tmp\n").expect("write .nxignore");
+
+        let filterer = watch_filterer::create_filter(origin.to_str().expect("utf-8"), &[], true)
+            .expect("filter");
+        let event = RawWatchEvent::new(
+            notify::Event::new(EventKind::Create(CreateKind::File)).add_path(pkg.join("keep.tmp")),
+        );
+        assert!(
+            !filterer.check_event(&event),
+            ".nxignore excludes keep.tmp and outranks the .ignore negation"
+        );
+    }
+
+    #[test]
+    fn a_path_outside_origin_is_rejected_not_admitted() {
+        // canonicalize_event_paths can resolve a symlink out of the workspace.
+        // Such a path must be rejected, not admitted: admitting emits an
+        // out-of-workspace path into the file map and nx watch. Rejecting also
+        // avoids the matched_path_or_any_parents panic on a path outside the
+        // matcher root — reverting the origin guard makes the veto panic here.
         use notify::EventKind;
         use notify::event::CreateKind;
 
@@ -881,8 +915,7 @@ mod tests {
         let event = RawWatchEvent::new(
             notify::Event::new(EventKind::Create(CreateKind::File)).add_path(outside),
         );
-        // Must not panic; an out-of-origin path is not subject to workspace rules.
-        assert!(filterer.check_event(&event));
+        assert!(!filterer.check_event(&event));
     }
 
     #[test]
