@@ -28,7 +28,10 @@ import {
   type TargetDependencyConfig,
 } from '@nx/devkit';
 import { getLockFileName, getRootTsConfigFileName } from '@nx/js';
-import { walkTsconfigExtendsChain } from '@nx/js/internal';
+import {
+  createConfigFileDependencyCollector,
+  walkTsconfigExtendsChain,
+} from '@nx/js/internal';
 import type { PlaywrightTestConfig } from '@playwright/test';
 import { minimatch } from 'minimatch';
 import { existsSync, readdirSync } from 'node:fs';
@@ -132,6 +135,12 @@ export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
         context
       );
 
+      const collectConfigDependencies = createConfigFileDependencyCollector(
+        context.workspaceRoot
+      );
+      const configHashes = entries.map(
+        (e) => collectConfigDependencies(e.configFile).hash
+      );
       const projectHashes = await calculateHashesForCreateNodes(
         entries.map((e) => e.projectRoot),
         { ...normalizedOptions, ambientEnvHash },
@@ -164,7 +173,9 @@ export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
               pluginCache,
               pmc,
               entries[idx].externalTsconfigInputs,
-              projectHashes[idx],
+              configHashes[idx] === undefined
+                ? undefined
+                : projectHashes[idx] + configHashes[idx],
               dotEnvFileHashes
             ),
           entries.map((e) => e.configFile),
@@ -210,7 +221,7 @@ async function createNodesInternal(
   pluginCache: PluginCache<PlaywrightTargets>,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   externalTsconfigInputs: string[],
-  hash: string,
+  hash: string | undefined,
   dotEnvFileHashes: Map<string, string | null>
 ) {
   const projectRoot = dirname(configFilePath);
@@ -240,7 +251,7 @@ async function createNodesInternal(
     npmConfigProxy,
   })}`;
 
-  let playwrightTargets = pluginCache.get(cacheKey);
+  let playwrightTargets = hash ? pluginCache.get(cacheKey) : undefined;
   if (!playwrightTargets) {
     const { taskEnvEvalFailed, ...built } = await buildPlaywrightTargets(
       configFilePath,
@@ -256,7 +267,7 @@ async function createNodesInternal(
     // The key encodes nothing about evaluation success, so caching a failed
     // evaluation's gate-less fallback would make a transient failure (a
     // timeout, a fork error) permanent; leave it out so the next pass retries.
-    if (!taskEnvEvalFailed) {
+    if (hash && !taskEnvEvalFailed) {
       pluginCache.set(cacheKey, built);
     }
     playwrightTargets = built;
