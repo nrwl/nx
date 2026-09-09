@@ -283,6 +283,58 @@ describe('run-state', () => {
       expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
     });
 
+    it('refuses an unresolved issue id that names no issue or sits on a step not given up on', () => {
+      const dir = join(root, 'run-1');
+      mkdirSync(dir, { recursive: true });
+      const unresolvedStep = {
+        id: 'step-1',
+        roundIndex: 0,
+        migrationId: '@nx/js:a',
+        status: 'unresolved',
+        attempt: 1,
+        dispenseCount: 1,
+        unresolvedIssueId: 'issue-1',
+      };
+      const summary =
+        'Migration @nx/js:a was left unresolved after 1 attempt: boom';
+      const issue = {
+        id: 'issue-1',
+        fingerprint: issueFingerprint(summary),
+        summary,
+        reportedByStepId: 'step-1',
+        applicableStepIds: 'unknown',
+        disposition: 'deferred-final',
+      };
+      const withState = (overrides: Record<string, unknown>) =>
+        JSON.stringify(
+          buildState({
+            steps: [unresolvedStep],
+            issues: [issue],
+            ...overrides,
+          } as never)
+        );
+
+      writeFileSync(join(dir, 'run.json'), withState({}));
+      expect(readRunState(dir).steps[0].unresolvedIssueId).toBe('issue-1');
+
+      writeFileSync(join(dir, 'run.json'), withState({ issues: [] }));
+      expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+
+      writeFileSync(
+        join(dir, 'run.json'),
+        withState({ steps: [{ ...unresolvedStep, status: 'failed' }] })
+      );
+      expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+
+      writeFileSync(
+        join(dir, 'run.json'),
+        withState({
+          steps: [{ ...unresolvedStep, unresolvedIssueId: 'nope' }],
+        })
+      );
+      expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+    });
+
     it('refuses attempt and lineage-boundary values outside the counters nx writes', () => {
       // The attempt names stored payload files and bounds a retry's scan, so a
       // fractional, non-finite, or past-the-attempt value names no real attempt.
