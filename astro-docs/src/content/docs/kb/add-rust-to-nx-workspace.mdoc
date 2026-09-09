@@ -6,9 +6,22 @@ topics:
   - 'Extending Nx'
 ---
 
-Nx is able to process your Rust crates as part of the its task graph, allowing you benefit from caching (locally and on CI), affected calculation as well as allowing to run Rust projects in a polyglot monorepo setup alongside other languages.
+Nx integrates your Rust crates into its project and task graph, so they benefit from the same Nx
+features as the rest of the workspace: task pipelines, local and remote caching, affected
+calculation, and distribution on CI. That's what lets you add a Rust-based application to an
+existing monorepo.
+
+{% youtube
+src="https://youtu.be/lyHbNUdLQhI"
+title="Polyglot Nx Monorepo with Rust and TanStack"
+/%}
 
 {% github_repository title="Example repository with JavaScript and Rust projects" url="https://github.com/juristr/nx-polyglot-rust" /%}
+
+{% callout title="Point your agent at this page" %}
+This article lists the main building blocks for integrating Rust projects into your Nx monorepo.
+Point an AI agent at this page and let it handle the setup.
+{% /callout %}
 
 ## Install the Rust toolchain
 
@@ -27,8 +40,8 @@ same task rebuilt on an agent come out of the same compiler.
 
 ## Declare the Cargo workspace
 
-Nx doesn't link crates. The root `Cargo.toml` lists the members and centralizes shared versions,
-including the path dependencies between local crates:
+Nx doesn't manage the linking of crates. The root `Cargo.toml` lists the members and centralizes
+shared versions, including the path dependencies between local crates:
 
 ```toml
 # Cargo.toml
@@ -55,14 +68,15 @@ Nx reads to draw edges between Rust projects in the graph.
 
 ## Add the Rust plugin
 
-Cargo operations reach Nx through the community [`@monodon/rust`](https://github.com/Cammisuli/monodon)
-plugin:
+Nx has an [extensibility API](/docs/kb/extending-nx) that lets you develop plugins integrating new
+technologies into Nx. This example uses the
+[`@monodon/rust`](https://github.com/Cammisuli/monodon) community plugin.
 
 ```shell
 nx add @monodon/rust
 ```
 
-That registers the plugin in `nx.json` and gives you executors that wrap the Cargo commands.
+This command registers the plugin in `nx.json` and gives you executors that wrap the Cargo commands.
 `@monodon/rust:build` runs `cargo build`, `:test` runs `cargo test`, `:lint` runs `cargo clippy`,
 and `:run` runs `cargo run`.
 
