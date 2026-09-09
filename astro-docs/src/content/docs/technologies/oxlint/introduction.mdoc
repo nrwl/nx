@@ -11,7 +11,7 @@ filter: 'type:References'
 The `@nx/oxlint` plugin runs it as a cacheable Nx task, so a change re-lints only the projects it affects.
 
 {% aside type="caution" title="Experimental" %}
-`@nx/oxlint` is experimental. The module boundaries bridge depends on the Oxlint JavaScript plugin API, which Oxlint excludes from its semantic versioning policy and can change in any release.
+`@nx/oxlint` is experimental. Module boundaries support depends on the Oxlint JavaScript plugin API, which Oxlint excludes from its semantic versioning policy and can change in any release.
 {% /aside %}
 
 ## Set up
@@ -60,7 +60,7 @@ invalidates the cache. The task does not use the `default` named input, so what
 re-lints does not depend on how the workspace defines it.
 
 Dependencies are hashed only when the config registers the
-[module boundaries](#module-boundaries) bridge, because that is the one rule
+[module boundaries](#module-boundaries) plugin, because that is the one rule
 that looks across projects. A `jsPlugins` package or workspace project becomes a
 dependency of every project linted under that config, so upgrading or editing
 the plugin invalidates the cache and marks those projects as affected.
@@ -131,7 +131,7 @@ Turn them on for a single run with `nx lint my-app --type-aware`, which Nx forwa
 
 ## Module boundaries
 
-`@nx/oxlint` exposes the project-graph-aware `enforce-module-boundaries` rule as an Oxlint JavaScript plugin. Register the bridge in `.oxlintrc.json`:
+`@nx/oxlint` ships the `@nx/enforce-module-boundaries` rule as an Oxlint JavaScript plugin. Register it in `.oxlintrc.json`:
 
 ```json
 {

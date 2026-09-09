@@ -6,6 +6,7 @@ import type {
   MigrateCommitLedgerEntry,
   MigrateRunState,
   MigrateStep,
+  MigrateStepAwaitingKind,
   MigrateStepOutcome,
   MigrateStepPromptOutcome,
 } from './run-state';
@@ -32,6 +33,7 @@ export type StepEvent =
       type: 'awaitPromptOutcome';
       stepId: string;
       finishedAt: string;
+      awaitingKind: MigrateStepAwaitingKind;
     }
   // `foldPromptOutcome` and `markDied` carry the attempt they were observed
   // on. Both are written after an unlocked read, and both source statuses
@@ -43,9 +45,15 @@ export type StepEvent =
       attempt: number;
       promptOutcome: MigrateStepPromptOutcome;
     }
-  // Emitted between the generator half and the commit attempt, so a retry
-  // after a failed commit or install does not reapply the generator.
-  | { type: 'markGeneratorCompleted'; stepId: string }
+  // Emitted between the generator half and the commit attempt, so a retry after
+  // a failed commit or install does not reapply the generator.
+  | {
+      type: 'markGeneratorCompleted';
+      stepId: string;
+      agenticWaived: boolean;
+      validationOwed: boolean;
+      madeChanges: boolean;
+    }
   | { type: 'markDied'; stepId: string; attempt: number }
   // `attempt` binds the action to the attempt the caller validated (its
   // acceptance gates run outside the locked state write), so the locked
@@ -125,11 +133,21 @@ export function applyStepEvent(
         ...step,
         status: 'awaiting-prompt-outcome',
         finishedAt: event.finishedAt,
+        awaitingKind: event.awaitingKind,
       });
 
     case 'markGeneratorCompleted':
       if (step.status !== 'running') return illegal(step, event.type);
-      return commit(state, index, { ...step, generatorCompleted: true });
+      return commit(state, index, {
+        ...step,
+        generatorCompleted: true,
+        generatorCompletedAtAttempt: step.attempt,
+        ...(event.agenticWaived ? { agenticWaived: true } : {}),
+        ...(event.validationOwed ? { validationOwed: true } : {}),
+        // Written even when false, unlike the conditional spreads above: absent is
+        // reserved for markers an older nx wrote.
+        generatorMadeChanges: event.madeChanges,
+      });
 
     case 'foldPromptOutcome':
       if (step.status !== 'awaiting-prompt-outcome')
@@ -266,6 +284,22 @@ function rearm(
       : {}),
     ...(keepGeneratorCompleted && step.generatorCompleted
       ? { generatorCompleted: true }
+      : {}),
+    ...(keepGeneratorCompleted &&
+    step.generatorCompleted &&
+    step.generatorCompletedAtAttempt !== undefined
+      ? { generatorCompletedAtAttempt: step.generatorCompletedAtAttempt }
+      : {}),
+    ...(keepGeneratorCompleted && step.generatorCompleted && step.agenticWaived
+      ? { agenticWaived: true }
+      : {}),
+    ...(keepGeneratorCompleted && step.generatorCompleted && step.validationOwed
+      ? { validationOwed: true }
+      : {}),
+    ...(keepGeneratorCompleted &&
+    step.generatorCompleted &&
+    step.generatorMadeChanges !== undefined
+      ? { generatorMadeChanges: step.generatorMadeChanges }
       : {}),
   };
 }
