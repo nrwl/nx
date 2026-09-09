@@ -21,9 +21,9 @@ pub fn selective_files_hash(workspace_root: &Path, archived_files: &FilesArchive
     let mut not_archived = vec![];
     let now = std::time::Instant::now();
     // Entries read during the previous gather cannot be trusted on an mtime
-    // match alone: where mtime resolution is coarse — the ~15.6ms system tick
-    // on Windows, whole seconds on some filesystems (ext4 and APFS record
-    // nanoseconds, where this is rare) — a rewrite within that tick leaves the
+    // match alone. get_mod_time reports whole seconds on unix (st_mtime/mtime(),
+    // regardless of filesystem — the sub-second field is discarded) and the
+    // ~15.6ms system tick on Windows, so a rewrite inside that window leaves the
     // timestamp identical and the archived hash silently stale. Re-hash those;
     // they are a handful of files touched during the gather window, not the
     // workspace.

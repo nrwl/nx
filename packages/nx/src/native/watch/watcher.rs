@@ -151,8 +151,9 @@ impl WatchPipeline {
         // in the transform (origin_path below), and the watch registration all
         // agree on the workspace root. Event paths arrive realpath'd
         // (canonicalize_event_paths on Linux, FSEvents on macOS), so a symlinked
-        // NX_WORKSPACE_ROOT_PATH left un-canonicalized would pass the filter but
-        // fail relative_to_origin and emit absolute paths.
+        // NX_WORKSPACE_ROOT_PATH left un-canonicalized would no longer match
+        // filter_path's origin prefix — every realpath'd event would be dropped
+        // and the daemon would see no changes at all.
         let origin = dunce::canonicalize(&origin)
             .map(|p| p.to_string_lossy().into_owned())
             .unwrap_or(origin);
