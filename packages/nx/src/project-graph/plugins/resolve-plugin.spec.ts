@@ -115,6 +115,64 @@ function onlyFilesExist(...files: string[]) {
 // Tests
 // ---------------------------------------------------------------------------
 
+describe('tsconfig path mapped plugin entries (via getPluginPathAndName)', () => {
+  async function mapPluginTo(file: string) {
+    resetResolvePluginCache();
+    const { readJsonFile } = await import('../../utils/fileutils');
+    const { findProjectForPath } =
+      await import('../../project-graph/utils/find-project-for-path');
+    vi.mocked(readJsonFile).mockReturnValue({
+      compilerOptions: { paths: { '@scope/my-plugin': [file] } },
+    });
+    vi.mocked(findProjectForPath).mockReturnValue('my-plugin');
+    onlyFilesExist(`${root}/tsconfig.base.json`, `${root}/${file}`);
+  }
+
+  afterEach(async () => {
+    const { readJsonFile } = await import('../../utils/fileutils');
+    const { findProjectForPath } =
+      await import('../../project-graph/utils/find-project-for-path');
+    vi.mocked(readJsonFile).mockReturnValue({ compilerOptions: { paths: {} } });
+    vi.mocked(findProjectForPath).mockReturnValue(null);
+    resetResolvePluginCache();
+    vi.clearAllMocks();
+  });
+
+  it('treats a mapped JavaScript file under a declared build output as built', async () => {
+    await mapPluginTo('packages/my-plugin/dist/index.js');
+    const projects = setupProject({}, [], {
+      name: 'my-plugin',
+      sourceRoot: 'packages/my-plugin/src',
+      targets: { build: { outputs: ['{projectRoot}/dist'] } },
+    });
+
+    const result = getPluginPathAndName(
+      '@scope/my-plugin',
+      [`${root}/node_modules`],
+      projects,
+      root
+    );
+
+    expect(result.pluginPath).toBe(`${projectPath}/dist/index.js`);
+    expect(result.isSourcePlugin).toBe(false);
+  });
+
+  it('treats a mapped TypeScript file as source', async () => {
+    await mapPluginTo('packages/my-plugin/src/index.ts');
+    const projects = setupProject({}, [], { name: 'my-plugin' });
+
+    const result = getPluginPathAndName(
+      '@scope/my-plugin',
+      [`${root}/node_modules`],
+      projects,
+      root
+    );
+
+    expect(result.pluginPath).toBe(`${projectPath}/src/index.ts`);
+    expect(result.isSourcePlugin).toBe(true);
+  });
+});
+
 describe('resolveSubpathFromExports (via getPluginPathAndName)', () => {
   beforeEach(() => {
     // Default: tsconfig exists (tests exercise the tsconfig-present path), nothing else.

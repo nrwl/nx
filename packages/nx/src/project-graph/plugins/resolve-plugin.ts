@@ -225,7 +225,15 @@ function tryResolveLocalPluginFromSource(
   root: string
 ): LocalPluginResolution | null {
   if (plugin.resolvedFile) {
-    return { path: plugin.resolvedFile, isSource: true };
+    return {
+      path: plugin.resolvedFile,
+      isSource: isSourceEntry(
+        plugin.resolvedFile,
+        false,
+        plugin.projectConfig,
+        root
+      ),
+    };
   }
 
   const subpath = getSubpathOfLocalPackage(moduleName, plugin);
