@@ -115,6 +115,7 @@ describe('runMasterSession', () => {
       runId,
       runbookPath: ready.runbookPath,
       reconcileCommand: ready.reconcileCommand,
+      policy: { createCommits: false, skipInstall: false },
     });
     expect(mockReadRunState).toHaveBeenCalledWith(
       join(root, '.nx', 'migrate-runs', runId)

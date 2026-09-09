@@ -96,6 +96,7 @@ import {
   writeRunState,
   type MigrateCommitLedgerEntry,
   type MigrateRunIssue,
+  type MigrateRunPolicy,
   type MigrateRunState,
   type MigrateStep,
   type MigrateStepStatus,
@@ -600,6 +601,7 @@ describe('orchestrator', () => {
       mockGetWorkingTreeStatus.mockImplementationOnce(() => {
         setupRun('competitor-run', {
           steps: [migStep('step-1', '@nx/js:a', 'pending')],
+          createCommits: true,
           planHash: computePlanHash(migrationsJson),
         });
         return 'clean';
@@ -641,6 +643,106 @@ describe('orchestrator', () => {
       ).rejects.toThrow(/already active with a different plan/);
 
       expect(activeRunDirNames()).toEqual(['competitor-run']);
+    });
+
+    describe('resume policy', () => {
+      // run.json is writable from an agent's sandbox, so a resume proceeds
+      // only when the stored flags match what this invocation resolved.
+      const MISMATCH =
+        /recorded install and commit policy differs from this invocation/;
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      const invocation = {
+        root,
+        migrationsJson,
+        commitPrefix: 'chore: [nx migration] ',
+        installedNxVersion: '23.0.0',
+        validate: undefined,
+      };
+
+      it.each<
+        [
+          string,
+          { createCommits?: boolean; skipInstall?: boolean },
+          MigrateRunPolicy,
+        ]
+      >([
+        [
+          'run.json commits and this invocation does not',
+          { createCommits: true },
+          { createCommits: false, skipInstall: false },
+        ],
+        [
+          'run.json skips installs and this invocation does not',
+          { skipInstall: true },
+          { createCommits: false, skipInstall: false },
+        ],
+        [
+          'run.json records no install policy and this invocation skips installs',
+          {},
+          { createCommits: false, skipInstall: true },
+        ],
+      ])('refuses to resume when %s', async (_case, stored, policy) => {
+        const dir = setupRun('run-1', {
+          steps: [migStep('step-1', '@nx/js:a', 'pending')],
+          planHash: computePlanHash(migrationsJson),
+          plan: migrationsJson.migrations,
+          ...stored,
+        });
+        const before = readRunState(dir);
+
+        await expect(
+          runOrchestratorInit({ ...invocation, root, ...policy })
+        ).rejects.toThrow(MISMATCH);
+
+        expect(readRunState(dir)).toEqual(before);
+        expect(mockInit).not.toHaveBeenCalled();
+      });
+
+      it('refuses before the checkpoint retry can act on a flipped createCommits', async () => {
+        mockGetWorkingTreeStatus.mockReturnValue('dirty');
+        const dir = setupRun('run-1', {
+          steps: [migStep('step-1', '@nx/js:a', 'pending')],
+          planHash: computePlanHash(migrationsJson),
+          plan: migrationsJson.migrations,
+          createCommits: true,
+          checkpointFailed: true,
+        });
+        const before = readRunState(dir);
+
+        await expect(
+          runOrchestratorInit({
+            ...invocation,
+            root,
+            createCommits: false,
+            skipInstall: false,
+          })
+        ).rejects.toThrow(MISMATCH);
+
+        expect(mockCheckpoint).not.toHaveBeenCalled();
+        expect(mockGetPathCommitExposure).not.toHaveBeenCalled();
+        expect(readRunState(dir)).toEqual(before);
+      });
+
+      it('refuses a run a concurrent init created with a differing policy, found under the creation lock', async () => {
+        mockGetWorkingTreeStatus.mockImplementationOnce(() => {
+          setupRun('competitor-run', {
+            steps: [migStep('step-1', '@nx/js:a', 'pending')],
+            planHash: computePlanHash(migrationsJson),
+          });
+          return 'clean';
+        });
+
+        await expect(
+          runOrchestratorInit({
+            ...invocation,
+            root,
+            createCommits: true,
+            skipInstall: false,
+          })
+        ).rejects.toThrow(MISMATCH);
+
+        expect(activeRunDirNames()).toEqual(['competitor-run']);
+      });
     });
 
     it('re-emits instead of failing when a concurrent process dispensed the step first', async () => {
@@ -5573,7 +5675,6 @@ describe('orchestrator', () => {
         kind: 'action-install',
         stepId: 'step-1',
         attempt: 1,
-        skipInstall: false,
       });
     });
 

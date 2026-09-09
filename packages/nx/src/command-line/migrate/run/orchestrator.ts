@@ -62,6 +62,7 @@ import {
   SHELL_SAFE_VALUE,
   type MigrateCommitLedgerEntry,
   type MigrateRunNoProgress,
+  type MigrateRunPolicy,
   type MigrateRunState,
   type MigrateStep,
   type MigrateStepPromptOutcome,
@@ -274,8 +275,15 @@ export async function runOrchestratorInit(
     }
   }
 
+  const policy: MigrateRunPolicy = { createCommits, skipInstall };
   if (active) {
-    return resumeRun(root, active.runId, active.state, emitAgentInstructions);
+    return resumeRun(
+      root,
+      active.runId,
+      active.state,
+      policy,
+      emitAgentInstructions
+    );
   }
 
   const runId = createRunId();
@@ -380,7 +388,13 @@ export async function runOrchestratorInit(
     return null;
   });
   if (winner) {
-    return resumeRun(root, winner.runId, winner.state, emitAgentInstructions);
+    return resumeRun(
+      root,
+      winner.runId,
+      winner.state,
+      policy,
+      emitAgentInstructions
+    );
   }
 
   return finishInit(root, dir, runId, state, 'created', emitAgentInstructions);
@@ -438,8 +452,20 @@ function resumeRun(
   root: string,
   runId: string,
   state: MigrateRunState,
+  policy: MigrateRunPolicy,
   emitAgentInstructions: boolean
 ): OrchestratorInitResult {
+  // Before anything acts on the stored flags: the checkpoint retry below is
+  // a commit, and the run dir is writable by an agent's sandbox.
+  if (
+    state.createCommits !== policy.createCommits ||
+    (state.skipInstall === true) !== policy.skipInstall
+  ) {
+    throw new Error(
+      `Nx did not resume the active migrate run because its recorded install and commit policy differs from this invocation. ` +
+        `Run the command that started run '${runId}' again with its original flags, or remove ${MIGRATE_RUNS_RELATIVE_DIR}/${runId} to abandon it.`
+    );
+  }
   const dir = runDir(root, runId);
   // Ignore/index state can change while a durable run is paused (a checkout,
   // a .gitignore edit, a forced add). Probe before the checkpoint retry:
@@ -1200,7 +1226,7 @@ async function installFailedForStep(
 ): Promise<boolean> {
   const skipInstall = state.skipInstall === true;
   try {
-    await installStepTree(dir, step, skipInstall, seam, () =>
+    await installStepTree(dir, step, seam, () =>
       installDepsChangedSinceDispense(
         root,
         dir,
@@ -1385,7 +1411,7 @@ async function commitForStep(
   const skipInstall = state.skipInstall === true;
   let commit: BrokeredCommit;
   try {
-    commit = await commitStepTree(dir, step, skipInstall, absorbedStepIds, () =>
+    commit = await commitStepTree(dir, step, absorbedStepIds, () =>
       commitMigrationIfRequested(
         root,
         { name },
