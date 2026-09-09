@@ -28,16 +28,53 @@ describe('versions', () => {
     expect(cypressVersion).toMatch(/^\^16\./);
   });
 
-  it('should return the compatible versions for the declared cypress major', () => {
-    declareCypress(tree, '^15.20.1');
-
-    expect(versions(tree)).toMatchObject({
+  const compatibleVersions = {
+    13: {
+      cypressVersion: '^13.13.0',
+      cypressViteDevServerVersion: '^2.2.1',
+      cypressWebpackVersion: '^3.8.0',
+      viteVersion: '~5.0.0',
+    },
+    14: {
+      cypressVersion: '^14.2.1',
+      cypressViteDevServerVersion: '^6.0.3',
+      cypressWebpackVersion: '^4.0.2',
+      viteVersion: '^6.0.0',
+    },
+    15: {
       cypressVersion: '^15.20.1',
       cypressViteDevServerVersion: '^7.3.1',
       cypressWebpackVersion: '^5.4.1',
       viteVersion: '^6.0.0',
-    });
-  });
+    },
+  };
+
+  it.each([
+    ['^13.13.0', 13],
+    ['^14.2.1', 14],
+    ['^15.20.1', 15],
+  ] as const)(
+    'should return the compatible versions for the declared cypress range %s',
+    (range, major) => {
+      declareCypress(tree, range);
+
+      expect(versions(tree)).toMatchObject(compatibleVersions[major]);
+    }
+  );
+
+  it.each([
+    ['13.13.0', 13],
+    ['14.2.1', 14],
+    ['15.20.1', 15],
+  ] as const)(
+    'should return the compatible versions for the installed cypress %s',
+    (installed, major) => {
+      declareCypress(tree, `^${installed}`);
+      installCypress(tree, installed);
+
+      expect(versions(tree)).toMatchObject(compatibleVersions[major]);
+    }
+  );
 
   it('should use the installed cypress version when it satisfies a range spanning majors', () => {
     declareCypress(tree, '>=15.20.1 <17');
