@@ -175,8 +175,9 @@ export class BatchProcess {
   }
 
   private capture(chunk: string | Buffer, source?: Readable | null) {
-    // Stops on release or on a capture failure; otherwise a handed-over
-    // capture keeps appending until the fold is rendered.
+    // Stops on release or on a capture failure; otherwise it keeps appending
+    // until `flushCapturedOutput` ends the stream, which `runBatch` does before
+    // anything reads the file.
     if (this.capturedOutputDiscarded || this.capturedOutputFailed) {
       return;
     }

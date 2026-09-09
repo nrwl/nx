@@ -109,9 +109,8 @@ const BATCH_OUTPUT_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
  */
 const BATCH_OUTPUT_MAX_BYTES = 1024 * 1024 * 1024;
 /**
- * A log younger than this may belong to a batch that is still writing to it,
- * possibly in another Nx process. Only the age sweep is safe without this - it
- * deletes at 7 days, where nothing is live.
+ * How recently a log must have been written to be treated as live. Measured
+ * from mtime, so a batch mid-way through a long silent phase is not protected.
  */
 const MIN_EVICTION_AGE_MS = 60 * 60 * 1000;
 
@@ -123,9 +122,10 @@ const MIN_EVICTION_AGE_MS = 60 * 60 * 1000;
  * is appended to while its batch runs, so a size recorded anywhere else is
  * wrong until the batch ends.
  *
- * Neither pass can delete a log a live batch is still writing: the age sweep
- * deletes at 7 days, and the size eviction skips anything younger than
- * `MIN_EVICTION_AGE_MS`.
+ * The age sweep deletes at 7 days; the size eviction skips anything written to
+ * within `MIN_EVICTION_AGE_MS`. That is last-write, not creation, so a batch
+ * that has been silent longer than the window - a long quiet Gradle phase - is
+ * evictable once the directory is over budget.
  */
 export function sweepBatchOutputs(
   now = Date.now(),

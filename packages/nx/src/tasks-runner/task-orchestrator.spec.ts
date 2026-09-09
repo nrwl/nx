@@ -1087,6 +1087,10 @@ describe('TaskOrchestrator', () => {
       // batches with different bodies - which is what makes the fold-count map
       // key load-bearing in `labels each fold with the batch it came from`.
       orchestrator.capturedForTest = captured;
+      // Observable so a test can pin whether the log survived the run: the
+      // `finally` skips the discard for any batch whose log was announced, and
+      // that guard is the only thing keeping the file on disk for the sweep.
+      orchestrator.discardedForTest = vi.fn();
       orchestrator.forkedProcessTaskRunner = {
         forkProcessForBatch: vi.fn().mockResolvedValue({
           onOutput: vi.fn(),
@@ -1097,7 +1101,7 @@ describe('TaskOrchestrator', () => {
               ? capturedPath(orchestrator.capturedForTest)
               : undefined,
           flushCapturedOutput: async () => {},
-          discardCapturedOutput: () => {},
+          discardCapturedOutput: orchestrator.discardedForTest,
         }),
       };
       return orchestrator;
@@ -1186,6 +1190,34 @@ describe('TaskOrchestrator', () => {
       // The task's own file holds the exit error; the worker log is addressed.
       expect(results[0].terminalOutput).toContain(EXIT_ERROR);
       expect(results[0].terminalOutput).not.toContain('Could not resolve');
+    });
+
+    it('keeps an announced batch log rather than unlinking it', async () => {
+      const orchestrator = createOrchestrator(
+        'FAILURE: Could not resolve all dependencies',
+        false
+      );
+      orchestrator.resolvedOutputStyle = 'summary';
+
+      await orchestrator.runBatch(batch, {}, 0);
+
+      // Announced, so the file has to outlive the run - the sweep collects it
+      // later. Discarding here would unlink the only copy the moment the
+      // summary printed its path.
+      expect(
+        orchestrator.options.lifeCycle.batchOutputAvailable
+      ).toHaveBeenCalled();
+      expect(orchestrator.discardedForTest).not.toHaveBeenCalled();
+    });
+
+    it('discards a batch log nobody was told about', async () => {
+      const orchestrator = createOrchestrator('noisy but harmless', false);
+      // A printing style never announces, so nothing will ever read this file.
+      orchestrator.resolvedOutputStyle = 'static';
+
+      await orchestrator.runBatch(batch, {}, 0);
+
+      expect(orchestrator.discardedForTest).toHaveBeenCalled();
     });
 
     it("surfaces a crashed batch's captured log alongside the exit error", async () => {
