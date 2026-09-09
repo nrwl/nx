@@ -128,14 +128,14 @@ export declare class NxCache {
    *
    * Without a row the file is invisible to `remove_old_cache_records`,
    * which only ever walks hashes it finds in the database, so these files
-   * would accumulate forever. The row carries `has_artifacts = 0` so it can
-   * never be served as a cache hit.
+   * would accumulate forever. The row carries `is_cache_entry = FALSE` so it
+   * can never be served as a cache hit.
    *
    * On conflict `accessed_at` always moves: the reads filter these rows out,
    * so they would otherwise age from the first write and be collected out
    * from under a task that is still being run daily. `size` moves only while
-   * the row is still output-only (`has_artifacts = 0`), so a task rerun with
-   * a longer log stops undercounting against `maxCacheSize`. `has_artifacts`
+   * the row is still output-only (`NOT is_cache_entry`), so a task rerun with
+   * a longer log stops undercounting against `maxCacheSize`. `is_cache_entry`
    * is never touched, and a row that already has artifacts keeps the size
    * `put` recorded, so a rewrite can neither demote a real entry nor replace
    * its whole-entry size with the terminal output's.
