@@ -85,8 +85,7 @@ export async function formatInitWrites(
   // already finished.
   //
   // Chunked as `nx format` chunks: the Angular flow records a `project.json`
-  // per project. The prettier path is sized against its quoted length; oxfmt
-  // goes through execFile and gets raw paths.
+  // per project.
   let formatter: ReturnType<typeof detectFormatter> = null;
   try {
     formatter = detectFormatter(repoRoot);
