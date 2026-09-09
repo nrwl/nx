@@ -53,6 +53,7 @@ export interface MigrateArgs {
   runMigration?: string;
   runId?: string;
   stepAction?: StepAction;
+  startFresh?: boolean;
   include?: MigrateInclude;
   /**
    * nx.json `migrate.include` default. Consumed by `resolveInclude` only when the
@@ -115,7 +116,7 @@ function withMigrationOptions(yargs: Argv) {
     .option('runId', {
       // Hidden with the orchestrator itself.
       describe:
-        'The orchestrated migrate run to record a single migration into, or to reconcile when given without --run-migration.',
+        'The orchestrated migrate run to record a single migration into, to continue with --run-migrations, or to reconcile when given alone.',
       type: 'string',
       hidden: true,
     })
@@ -124,6 +125,12 @@ function withMigrationOptions(yargs: Argv) {
         'How an orchestrated reconcile resolves its single failed or died step.',
       choices: STEP_ACTIONS,
       type: 'string',
+      hidden: true,
+    })
+    .option('startFresh', {
+      describe:
+        'With --run-migrations under the orchestrator: delete the record of the active migrate run and start a new run over the whole plan. Migrations the deleted run applied stay applied.',
+      type: 'boolean',
       hidden: true,
     })
     .option('ifExists', {

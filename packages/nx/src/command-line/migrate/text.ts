@@ -22,3 +22,24 @@
 export function singleLine(value: string): string {
   return value.replace(/[\r\n\u000b\u000c\u0085\u2028\u2029]+/g, ' ');
 }
+
+/**
+ * Renders an ISO timestamp as a human age ("6 hours ago"), falling back to
+ * the raw value when it is not parseable or lies in the future.
+ */
+export function formatAge(timestamp: string, nowMs = Date.now()): string {
+  const elapsedMs = nowMs - Date.parse(timestamp);
+  if (!Number.isFinite(elapsedMs) || elapsedMs < 0) {
+    return timestamp;
+  }
+  const minutes = Math.floor(elapsedMs / 60_000);
+  if (minutes < 60) {
+    return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+  }
+  const hours = Math.floor(elapsedMs / 3_600_000);
+  if (hours < 48) {
+    return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+  }
+  const days = Math.floor(elapsedMs / 86_400_000);
+  return `${days} day${days === 1 ? '' : 's'} ago`;
+}

@@ -1006,7 +1006,7 @@ export function renderUnresolvedIssueLines(
   return [heading, ...boundedEntryLines(entries, runId, budget)];
 }
 
-function unresolvedIssues(state: MigrateRunState): MigrateRunIssue[] {
+export function unresolvedIssues(state: MigrateRunState): MigrateRunIssue[] {
   return (state.issues ?? []).filter((i) => i.disposition !== 'resolved');
 }
 
