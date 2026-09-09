@@ -1,10 +1,11 @@
-import { type Tree } from '@nx/devkit';
+import { getDependencyVersionFromPackageJson, type Tree } from '@nx/devkit';
 import {
   getInstalledPackageVersion,
   getResolvedPackageVersion,
+  getSatisfyingInstalledPackageVersion,
 } from '@nx/devkit/internal';
 import { join } from 'path';
-import { major } from 'semver';
+import { coerce, intersects, major, validRange } from 'semver';
 
 export const nxVersion = require(join('@nx/cypress', 'package.json')).version;
 export const minSupportedCypressVersion = '13.0.0';
@@ -70,6 +71,12 @@ const versionMap: Record<CompatVersions, CypressVersions> = {
   },
 };
 
+// Highest first, so a range reaching several majors resolves to the top one.
+const supportedMajors = [
+  major(coerce(cypressVersion)),
+  ...Object.keys(versionMap).map(Number),
+].sort((a, b) => b - a);
+
 export function versions(tree: Tree): CypressVersions {
   const installedCypressVersion = getInstalledCypressVersion(tree);
   if (!installedCypressVersion) {
@@ -84,7 +91,26 @@ export function getInstalledCypressVersion(tree?: Tree): string | null {
   if (!tree) {
     return getInstalledPackageVersion('cypress');
   }
-  return getResolvedPackageVersion(tree, 'cypress');
+
+  const resolved = getResolvedPackageVersion(tree, 'cypress');
+  const declared = getDependencyVersionFromPackageJson(tree, 'cypress');
+  if (
+    !resolved ||
+    !declared ||
+    !validRange(declared) ||
+    getSatisfyingInstalledPackageVersion(tree, 'cypress', declared)
+  ) {
+    return resolved;
+  }
+
+  // Nothing installed, so `resolved` is the range floor. A clean install
+  // resolves the highest version the range admits, so follow the highest
+  // supported major it reaches; the version inside that major is unknown.
+  const floorMajor = major(resolved);
+  const reachedMajor = supportedMajors.find(
+    (m) => m > floorMajor && intersects(declared, `${m}.x`)
+  );
+  return reachedMajor ? `${reachedMajor}.0.0` : resolved;
 }
 
 export function getInstalledCypressMajorVersion(tree?: Tree): number | null {

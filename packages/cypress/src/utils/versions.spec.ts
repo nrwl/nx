@@ -46,9 +46,24 @@ describe('versions', () => {
     expect(versions(tree).cypressVersion).toBe(cypressVersion);
   });
 
-  it('should fall back to the floor of a range spanning majors when cypress is not installed', () => {
+  it('should keep the installed cypress version when it is the floor of a range spanning majors', () => {
     declareCypress(tree, '>=15.20.1 <17');
+    installCypress(tree, '15.20.1');
 
     expect(versions(tree).cypressVersion).toBe('^15.20.1');
   });
+
+  it.each([
+    ['>=15.20.1 <17', cypressVersion],
+    ['>=14 <16', '^15.20.1'],
+    ['>=14 <15.10', '^15.20.1'],
+    ['>=13 <14.5', '^14.2.1'],
+  ])(
+    'should resolve the range %s to the highest supported major it reaches when cypress is not installed',
+    (range, expected) => {
+      declareCypress(tree, range);
+
+      expect(versions(tree).cypressVersion).toBe(expected);
+    }
+  );
 });
