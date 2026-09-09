@@ -18,6 +18,8 @@ describe('@nx/vite nx-tsconfig-paths-load-file', () => {
     join(ws, 'packages/weird/$&.ts'),
     join(ws, 'packages/broad/exact/thing.ts'),
     join(ws, 'packages/narrow/thing.ts'),
+    join(ws, 'packages/broad/foo/bar.ts'),
+    join(ws, 'packages/narrow/bar.ts'),
   ]);
   const existsSyncImpl = ((path: string) => fs.has(path)) as any;
 
@@ -168,6 +170,30 @@ describe('@nx/vite nx-tsconfig-paths-load-file', () => {
     (_, paths, expected) => {
       expect(loadFileFromPaths(paths, '@repo/exact/thing')).toEqual(
         join(ws, expected)
+      );
+    }
+  );
+
+  it.each([
+    [
+      'the broader alias',
+      {
+        '@repo/*': ['packages/broad/*.ts'],
+        '@repo/foo/*': ['packages/narrow/*.ts'],
+      },
+    ],
+    [
+      'the narrower alias',
+      {
+        '@repo/foo/*': ['packages/narrow/*.ts'],
+        '@repo/*': ['packages/broad/*.ts'],
+      },
+    ],
+  ])(
+    'should pick the longest wildcard prefix over the declaration order, %s first',
+    (_, paths) => {
+      expect(loadFileFromPaths(paths, '@repo/foo/bar')).toEqual(
+        join(ws, 'packages/narrow/bar.ts')
       );
     }
   );
