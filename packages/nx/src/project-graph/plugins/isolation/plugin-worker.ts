@@ -135,9 +135,8 @@ const server = createServer((socket) => {
                 require(require.resolve('../load-resolved-plugin'))
               );
 
-              // Keep the source graph for the worker lifetime because plugins
-              // never unload. The package set is a load-time snapshot; a
-              // conditions change reloads the plugin set, worker included.
+              // Keep the graph until worker exit; a conditions change reloads
+              // the worker, and package names are a load-time snapshot.
               if (isSourcePlugin) {
                 (
                   require('../../../plugins/js/utils/register') as typeof import('../../../plugins/js/utils/register')

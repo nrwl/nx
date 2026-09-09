@@ -201,8 +201,7 @@ export async function getPluginsSeparated(
     return pendingSeparatedPlugins.promise;
   }
 
-  // A state change invalidates cached and in-flight plugin loads. Tear down
-  // the old plugins and clear pendingPluginsPromise before reloading.
+  // Clear in-flight loads too, or reloading can reuse the previous plugin set.
   cleanupSpecifiedPlugins?.();
   pendingPluginsPromise = undefined;
 

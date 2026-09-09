@@ -226,8 +226,7 @@ describe('getPluginsSeparated', () => {
     (getRootTsConfigCustomConditions as Mock).mockReturnValue(['@proj/src']);
     await getPluginsSeparated({ plugins: ['test-a'] }, '/workspace');
 
-    // A source worker takes the conditions as process flags at spawn, so the
-    // old set is torn down rather than refreshed in place.
+    // Conditions are worker startup flags, so a change replaces the worker set.
     expect(cleanup).toHaveBeenCalled();
     expect(loadsOf('test-a')).toBe(2);
   });

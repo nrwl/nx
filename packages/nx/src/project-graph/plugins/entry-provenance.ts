@@ -16,11 +16,9 @@ import type { ProjectConfiguration } from '../../config/workspace-json-project-j
 export const TS_SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.cts', '.mts']);
 
 /**
- * Source entries register a source graph and pass tsconfig conditions to
- * isolated workers. A conditioned export the default resolution would not
- * select, or a TypeScript file, is source. A JavaScript file the default
- * resolution also selects is built under a build output, source under
- * `sourceRoot`, else built, so a dist-only package never gets a source graph.
+ * Conditioned-only or TypeScript entries are source. Otherwise an entry under
+ * a build output is built, under `sourceRoot` is source, and anything else is
+ * built.
  */
 export function isSourceEntry(
   entryPath: string,
@@ -62,9 +60,8 @@ function isBuildOutput(
   });
 }
 
-// A plain output is a path, which may lie above the workspace. A glob
-// keeps its minimatch tail; only the literal prefix is resolved, so `./`,
-// `..`, trailing and Windows separators settle without touching `{a/../b,c}`.
+// Outputs may lie above the workspace. Only a glob's literal prefix is
+// resolved, so `{a/../b,c}` keeps its brace pattern.
 function normalizeOutput(
   output: string,
   root: string

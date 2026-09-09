@@ -4,8 +4,7 @@ vi.mock('../plugins/js/utils/register', () => ({
   requireWithTsconfigFallback: vi.fn(),
 }));
 
-// schema-utils caches the first metadata result for the process lifetime, so
-// tests mutate this one object instead of returning a fresh one.
+// schema-utils retains this metadata object, so tests must mutate it in place.
 const packagesMetadata = vi.hoisted(() => ({
   packageToProjectMap: {} as Record<string, ProjectConfiguration>,
   packageManagerWorkspacePackageNames: [] as string[],

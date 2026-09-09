@@ -169,9 +169,8 @@ export function getRootTsConfigResolveExportsConditions(
 }
 
 /**
- * Returns Node `--conditions` arguments for a source-loaded isolated worker.
- * Excludes the `development` fallback because it could select third-party
- * development builds.
+ * Node `--conditions` for a source-loaded worker, without the `development`
+ * fallback that could select third-party development builds.
  */
 export function getPluginResolveConditionNodeArgs(
   root: string = workspaceRoot

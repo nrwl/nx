@@ -194,8 +194,6 @@ describe('plugin state freshness', () => {
     const { setWorkspaceRoot } = await import('../../utils/workspace-root');
     setWorkspaceRoot(fs.tempDir);
 
-    // Delay the first retrieval after the plugin-state snapshot without
-    // replacing it.
     let releaseFirstRetrieve: () => void;
     const firstRetrieveGate = new Promise<void>((resolve) => {
       releaseFirstRetrieve = resolve;
@@ -237,7 +235,6 @@ describe('plugin state freshness', () => {
     const result = await first;
     expect(result.error).toBeNull();
     expect(result.projectGraph).toBeDefined();
-    // A second retrieval proves the stale result chained to a successor.
     expect(retrieveCallCount).toBeGreaterThanOrEqual(2);
   });
 });

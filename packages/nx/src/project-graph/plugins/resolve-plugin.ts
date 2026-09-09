@@ -49,8 +49,6 @@ async function getProjectsWithoutInference(root: string) {
   projectsWithoutInferencePromise ??=
     retrieveProjectConfigurationsWithoutPluginInference(root).then(
       (projects) => {
-        // Refresh registered source graphs from the rebuilt snapshot so they
-        // do not keep stale package names.
         refreshSourceGraphResolvers(
           root,
           () =>
@@ -251,8 +249,6 @@ function tryResolveLocalPluginFromSource(
     return { path: path.join(root, main), isSource: true };
   }
 
-  // Without a configured build `main`, a bare package name selects source or
-  // dist through the root `exports` entry.
   if (moduleName === plugin.projectConfig.metadata?.js?.packageName) {
     return resolveSubpathFromExports(
       plugin.projectConfig,

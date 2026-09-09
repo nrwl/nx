@@ -2,10 +2,8 @@ import type { PluginConfiguration } from '../../config/nx-json';
 import { hashObject } from '../../hasher/file-hasher';
 
 /**
- * Identity of a loaded plugin set. The root `customConditions` are part of it
- * because a source-loaded isolated worker takes them as process flags at
- * spawn, so a change has to reload the set. In-process plugins share the
- * cache, so they reload with it.
+ * Identity of a loaded plugin set. Root `customConditions` are worker startup
+ * flags, so a change reloads the whole set, in-process plugins included.
  */
 export function hashPluginState(
   plugins: PluginConfiguration[] | undefined,

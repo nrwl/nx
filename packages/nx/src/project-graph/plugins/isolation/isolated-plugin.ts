@@ -659,8 +659,7 @@ async function startPluginWorker(name: string, isSourcePlugin: boolean) {
   const worker = spawn(
     process.execPath,
     [
-      // Add tsconfig conditions only for source-loaded workers; adding them to
-      // a built worker could select unbuilt source exports.
+      // Built workers must not get conditions that select unbuilt source.
       ...(isSourcePlugin ? getPluginResolveConditionNodeArgs() : []),
       // swc transpiles without type-checking: ~7x faster to boot, and this is
       // paid once per worker spawn.
