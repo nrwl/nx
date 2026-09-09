@@ -24,6 +24,91 @@ const BATCH_OUTPUT_MAX_BYTES: u64 = 1024 * 1024 * 1024;
 /// How recently a log must have been written to count as live.
 const BATCH_OUTPUT_MIN_EVICTION_AGE: Duration = Duration::from_secs(60 * 60);
 
+/// One directory, one file per batch — keyed by the batch rather than a
+/// task hash, since one worker produces one log and the hash of any task in
+/// it is still preliminary while it runs. Mirrored by
+/// `batchOutputPathForKey` in tasks-runner/cache.ts, which writes them.
+fn batch_outputs_path(cache_path: &str) -> PathBuf {
+    PathBuf::from(cache_path).join("batchOutputs")
+}
+
+/// A free function, not a method: `BatchProcess` writes these logs whichever
+/// cache implementation is active, so the sweep must not be reachable only
+/// through the DB-backed one.
+///
+/// Deletes batch logs by age, then oldest-first while the directory is over
+/// budget.
+///
+/// No database rows: nothing looks a batch log up by key, so a row would be
+/// write-only bookkeeping that a hard-killed process could skip, orphaning
+/// the file forever. The filesystem cannot drift from itself, and the file
+/// is appended to for the life of its batch, so a size recorded anywhere
+/// else is wrong until that batch ends.
+///
+/// The budget is separate from `maxCacheSize` on purpose: these are debug
+/// artifacts, and sharing a budget would let one evict a replayable cache
+/// entry — trading a rebuild for a text file.
+///
+/// The age sweep deletes at `BATCH_OUTPUT_MAX_AGE`; the eviction skips
+/// anything written within `BATCH_OUTPUT_MIN_EVICTION_AGE`. That is
+/// last-write, not creation, so a batch silent through a long quiet phase is
+/// not protected.
+#[napi]
+pub fn sweep_batch_outputs(cache_path: String) -> anyhow::Result<()> {
+    let dir = batch_outputs_path(&cache_path);
+    let entries = match read_dir(&dir) {
+        Ok(entries) => entries,
+        // Nothing has captured a batch log yet.
+        Err(_) => return Ok(()),
+    };
+
+    let now = SystemTime::now();
+    let mut files: Vec<(PathBuf, u64, SystemTime)> = Vec::new();
+    for entry in entries.flatten() {
+        // From the dirent, so a symlink is neither followed for its age nor
+        // counted as a file.
+        if !entry.file_type().map(|t| t.is_file()).unwrap_or(false) {
+            continue;
+        }
+        let path = entry.path();
+        let Ok(metadata) = entry.metadata() else {
+            continue;
+        };
+        let Ok(modified) = metadata.modified() else {
+            continue;
+        };
+        let age = now.duration_since(modified).unwrap_or(Duration::ZERO);
+        if age > BATCH_OUTPUT_MAX_AGE {
+            // Racing another Nx process sweeping the same directory is fine.
+            let _ = remove_file(&path);
+            continue;
+        }
+        files.push((path, metadata.len(), modified));
+    }
+
+    let mut total: u64 = files.iter().map(|(_, size, _)| size).sum();
+    if total <= BATCH_OUTPUT_MAX_BYTES {
+        return Ok(());
+    }
+
+    // Never evict a log young enough to belong to a batch that is still
+    // running, possibly in another Nx process. Going over budget recovers on
+    // the next sweep; deleting a live batch's only log does not.
+    files.retain(|(_, _, modified)| {
+        now.duration_since(*modified).unwrap_or(Duration::ZERO) > BATCH_OUTPUT_MIN_EVICTION_AGE
+    });
+    files.sort_by_key(|(_, _, modified)| *modified);
+    for (path, size, _) in files {
+        if total <= BATCH_OUTPUT_MAX_BYTES {
+            break;
+        }
+        if remove_file(&path).is_ok() {
+            total = total.saturating_sub(size);
+        }
+    }
+    Ok(())
+}
+
 #[napi(object)]
 #[derive(Clone, Debug)]
 pub struct TerminalOutputRecord {
@@ -385,88 +470,6 @@ impl NxCache {
     pub fn get_task_outputs_path(&self, hash: String) -> String {
         self.get_task_outputs_path_internal(&hash)
             .to_normalized_string()
-    }
-
-    /// One directory, one file per batch — keyed by the batch rather than a
-    /// task hash, since one worker produces one log and the hash of any task in
-    /// it is still preliminary while it runs. Mirrored by
-    /// `batchOutputPathForKey` in tasks-runner/cache.ts, which writes them.
-    fn get_batch_outputs_path_internal(&self) -> PathBuf {
-        self.cache_path.join("batchOutputs")
-    }
-
-    /// Deletes batch logs by age, then oldest-first while the directory is over
-    /// budget.
-    ///
-    /// No database rows: nothing looks a batch log up by key, so a row would be
-    /// write-only bookkeeping that a hard-killed process could skip, orphaning
-    /// the file forever. The filesystem cannot drift from itself, and the file
-    /// is appended to for the life of its batch, so a size recorded anywhere
-    /// else is wrong until that batch ends.
-    ///
-    /// The budget is separate from `maxCacheSize` on purpose: these are debug
-    /// artifacts, and sharing a budget would let one evict a replayable cache
-    /// entry — trading a rebuild for a text file.
-    ///
-    /// The age sweep deletes at `BATCH_OUTPUT_MAX_AGE`; the eviction skips
-    /// anything written within `BATCH_OUTPUT_MIN_EVICTION_AGE`. That is
-    /// last-write, not creation, so a batch silent through a long quiet phase is
-    /// not protected.
-    #[napi]
-    pub fn sweep_batch_outputs(&self) -> anyhow::Result<()> {
-        let dir = self.get_batch_outputs_path_internal();
-        let entries = match read_dir(&dir) {
-            Ok(entries) => entries,
-            // Nothing has captured a batch log yet.
-            Err(_) => return Ok(()),
-        };
-
-        let now = SystemTime::now();
-        let mut files: Vec<(PathBuf, u64, SystemTime)> = Vec::new();
-        for entry in entries.flatten() {
-            // From the dirent, so a symlink is neither followed for its age nor
-            // counted as a file, and a stray directory is not silently ignored
-            // by the size accounting.
-            if !entry.file_type().map(|t| t.is_file()).unwrap_or(false) {
-                continue;
-            }
-            let path = entry.path();
-            let Ok(metadata) = entry.metadata() else {
-                continue;
-            };
-            let Ok(modified) = metadata.modified() else {
-                continue;
-            };
-            let age = now.duration_since(modified).unwrap_or(Duration::ZERO);
-            if age > BATCH_OUTPUT_MAX_AGE {
-                // Racing another Nx process sweeping the same directory is fine.
-                let _ = remove_file(&path);
-                continue;
-            }
-            files.push((path, metadata.len(), modified));
-        }
-
-        let mut total: u64 = files.iter().map(|(_, size, _)| size).sum();
-        if total <= BATCH_OUTPUT_MAX_BYTES {
-            return Ok(());
-        }
-
-        // Never evict a log young enough to belong to a batch that is still
-        // running, possibly in another Nx process. Going over budget recovers on
-        // the next sweep; deleting a live batch's only log does not.
-        files.retain(|(_, _, modified)| {
-            now.duration_since(*modified).unwrap_or(Duration::ZERO) > BATCH_OUTPUT_MIN_EVICTION_AGE
-        });
-        files.sort_by_key(|(_, _, modified)| *modified);
-        for (path, size, _) in files {
-            if total <= BATCH_OUTPUT_MAX_BYTES {
-                break;
-            }
-            if remove_file(&path).is_ok() {
-                total = total.saturating_sub(size);
-            }
-        }
-        Ok(())
     }
 
     fn record_to_cache(&self, hash: String, code: i16, size: i64) -> anyhow::Result<()> {

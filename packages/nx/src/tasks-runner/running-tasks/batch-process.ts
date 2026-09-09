@@ -249,6 +249,11 @@ export class BatchProcess {
    * reads it.
    */
   async flushCapturedOutput(): Promise<void> {
+    // Before the early return, and unconditionally: `end()` means a pending
+    // 'drain' will never arrive, so a source paused for backpressure has
+    // nothing left to resume it. Measured: 20/20 runs reach 'finish' with the
+    // source still paused.
+    this.resumeCapturedSources();
     const stream = this.capturedOutputStream;
     if (!stream || stream.destroyed || stream.writableEnded) {
       return;

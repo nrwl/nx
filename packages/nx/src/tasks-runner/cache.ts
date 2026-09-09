@@ -12,6 +12,7 @@ import {
   CachedResult as NativeCacheResult,
   NxCache,
   getDefaultMaxCacheSize,
+  sweepBatchOutputs as nativeSweepBatchOutputs,
 } from '../native';
 import {
   NxCloudClientUnavailableError,
@@ -89,6 +90,10 @@ export function terminalOutputPathForHash(hash: string): string {
  * in cache.rs, which is what actually sweeps the directory — the same mirroring
  * `terminalOutputPathForHash` does for `get_task_outputs_path_internal`.
  */
+export function sweepBatchOutputs(): void {
+  nativeSweepBatchOutputs(cacheDir);
+}
+
 export function batchOutputPathForKey(key: string): string {
   return join(cacheDir, 'batchOutputs', `${key}.log`);
 }
@@ -273,10 +278,6 @@ export class DbCache {
 
   removeOldCacheRecords() {
     return this.cache.removeOldCacheRecords();
-  }
-
-  sweepBatchOutputs() {
-    return this.cache.sweepBatchOutputs();
   }
 
   temporaryOutputPath(task: Task) {
@@ -585,8 +586,6 @@ export class Cache {
    * collection is directory-based rather than driven by cache records.
    */
   recordTerminalOutputs(_records: { hash: string; size: number }[]) {}
-
-  sweepBatchOutputs() {}
 
   private async expandOutputsInWorkspace(outputs: string[]) {
     return this._expandOutputs(outputs, workspaceRoot);
