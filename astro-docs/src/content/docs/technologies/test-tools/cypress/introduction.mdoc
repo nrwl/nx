@@ -346,10 +346,11 @@ nx e2e frontend-e2e --env.API_URL="https://api.my-nx-website.com" --env.API_KEY=
 Providing a flag will override any option with the same name set in the project or workspace configuration.
 {% /aside %}
 
-### Reading environment variables in tests
+### Reading environment variables in tests on Cypress 16
 
 Cypress 16 removed `Cypress.env()`.
-Read `env` values with the asynchronous `cy.env()` command, which takes the list of keys to read:
+Cypress 13 to 15 keep it, so tests on those versions read `env` values synchronously as before.
+On Cypress 16, read `env` values with the asynchronous `cy.env()` command, which takes the list of keys to read:
 
 ```ts
 cy.env(['API_URL']).then(({ API_URL }) => {
