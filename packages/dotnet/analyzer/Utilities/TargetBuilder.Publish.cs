@@ -12,7 +12,7 @@ public static partial class TargetBuilder
         string projectName,
         string fileName,
         bool isTest,
-        Dictionary<string, string> properties,
+        EvaluatedProperties properties,
         string projectDirectory,
         string workspaceRoot,
         PluginOptions options,
@@ -20,8 +20,8 @@ public static partial class TargetBuilder
         List<string> directoryBuildInputs)
     {
         // The configuration MSBuild evaluated the paths at; the target runs at Release.
-        var defaultConfiguration = properties.GetValueOrDefault("Configuration");
-        var releaseProperties = WithConfiguration(properties, "Release");
+        var defaultConfiguration = properties.Configuration;
+        var releaseProperties = properties.WithConfiguration("Release");
 
         var publishDir = GetPublishDir(releaseProperties, defaultConfiguration, projectDirectory, workspaceRoot);
         // `dotnet publish` writes incremental-publish state (e.g.

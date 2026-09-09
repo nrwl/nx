@@ -12,7 +12,7 @@ public static partial class TargetBuilder
         string projectName,
         string fileName,
         List<PackageReference> packageRefs,
-        Dictionary<string, string> properties,
+        EvaluatedProperties properties,
         string projectDirectory,
         string workspaceRoot,
         PluginOptions options,
