@@ -369,7 +369,6 @@ const PNP_UNSUPPORTED_OPTIONS_RE = /aren't supported by PnP yet \(([^)]*)\)/;
 /**
  * Yarn PnP below 4.11 rejects the `conditions` option Node adds to CJS
  * resolution once a sync resolve hook exists, so retry without it.
- * Exported for unit tests.
  */
 export function callResolveFilename(
   original: ResolveFilename,
