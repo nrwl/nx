@@ -43,7 +43,6 @@ import {
   DbCache,
   dbCacheEnabled,
   getCache,
-  sweepBatchOutputs,
 } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
@@ -286,7 +285,7 @@ export class TaskOrchestrator {
     );
     if (!this.stopRequested) {
       this.cache.removeOldCacheRecords();
-      sweepBatchOutputs();
+      this.cache.sweepBatchOutputs();
     }
     await this.cleanup();
     await this.dispose();

@@ -142,6 +142,26 @@ export declare class NxCache {
    */
   recordTerminalOutputs(records: Array<TerminalOutputRecord>): void
   getTaskOutputsPath(hash: string): string
+  /**
+   * Deletes batch logs by age, then oldest-first while the directory is over
+   * budget.
+   *
+   * No database rows: nothing looks a batch log up by key, so a row would be
+   * write-only bookkeeping that a hard-killed process could skip, orphaning
+   * the file forever. The filesystem cannot drift from itself, and the file
+   * is appended to for the life of its batch, so a size recorded anywhere
+   * else is wrong until that batch ends.
+   *
+   * The budget is separate from `maxCacheSize` on purpose: these are debug
+   * artifacts, and sharing a budget would let one evict a replayable cache
+   * entry — trading a rebuild for a text file.
+   *
+   * The age sweep deletes at `BATCH_OUTPUT_MAX_AGE`; the eviction skips
+   * anything written within `BATCH_OUTPUT_MIN_EVICTION_AGE`. That is
+   * last-write, not creation, so a batch silent through a long quiet phase is
+   * not protected.
+   */
+  sweepBatchOutputs(): void
   getCacheSize(): number
   copyFilesFromCache(cachedResult: CachedResult, outputs: Array<string>): number
   removeOldCacheRecords(): void
