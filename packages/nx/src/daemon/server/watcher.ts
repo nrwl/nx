@@ -33,10 +33,10 @@ function dispatchWorkspaceChanges(
 }
 
 // Mirrors the per-directory ignore files create_filter reads (watch_filterer.rs).
-// The other two sources it honours cannot trigger a restart from here:
-// .git/info/exclude lives under the hardcoded-ignored .git (never watched) and
-// the global core.excludesFile is outside the tree — a change to either only
-// takes effect on the next daemon start.
+// The sources it honours that cannot trigger a restart from here — because they
+// are never watched — only take effect on the next daemon start: .git/info/exclude
+// (under the hardcoded-ignored .git), the global core.excludesFile (outside the
+// tree), and parent .gitignore files above the workspace root.
 const IGNORE_FILE_NAMES = ['.gitignore', '.ignore', '.nxignore'];
 
 /**
