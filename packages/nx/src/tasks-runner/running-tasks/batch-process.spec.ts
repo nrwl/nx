@@ -12,15 +12,22 @@ import { existsSync, readFileSync } from 'fs';
 // changes nothing the capture can see. The module mock sidesteps the
 // distinction entirely.
 let mockFailWriteStream = false;
+// Applies backpressure and never drains, without failing: the shape a slow
+// disk produces, where only an explicit resume can unpause the source.
+let mockBackpressureOnly = false;
 vi.mock('fs', async () => {
   const actual = require('fs');
   return {
     ...actual,
     createWriteStream: (...args: unknown[]) => {
       const stream = (actual.createWriteStream as any)(...args);
+      if (mockBackpressureOnly) {
+        stream.write = () => false;
+      }
       if (mockFailWriteStream) {
-        const write = stream.write.bind(stream);
-        stream.write = (chunk: any) => {
+        // Never performs the real write: a genuine 'drain' would resume the
+        // source on its own and the test would pass on unfixed code.
+        stream.write = () => {
           // Asynchronous, like the real thing: the write is accepted and the
           // failure arrives as an 'error' event afterwards.
           setImmediate(() =>
@@ -31,7 +38,7 @@ vi.mock('fs', async () => {
               })
             )
           );
-          return write(chunk);
+          return false;
         };
       }
       return stream;
@@ -472,6 +479,32 @@ describe('BatchProcess', () => {
       expect((child as any).stdout.isPaused()).toBe(false);
     } finally {
       mockFailWriteStream = false;
+    }
+  });
+  it('resumes the worker when a paused capture is flushed', async () => {
+    const child = fakeChildProcess();
+
+    try {
+      mockBackpressureOnly = true;
+      const batch = withEnvironmentVariables(FOLDING_ENV, () => {
+        const b = new BatchProcess(child, '@nx/gradle:batch');
+        captureForwarded(() => {
+          (child as any).stdout.emit('data', Buffer.alloc(128 * 1024, 'x'));
+        });
+        return b;
+      });
+      expect((child as any).stdout.isPaused()).toBe(true);
+
+      await batch.flushCapturedOutput();
+
+      // `end()` means the pending 'drain' will never arrive, so without an
+      // explicit resume the worker stays blocked on a full pipe for the rest
+      // of the run - which is the announced-log path, where the file is
+      // deliberately kept and `discardCapturedOutput` never runs.
+      expect((child as any).stdout.isPaused()).toBe(false);
+      batch.discardCapturedOutput();
+    } finally {
+      mockBackpressureOnly = false;
     }
   });
 });

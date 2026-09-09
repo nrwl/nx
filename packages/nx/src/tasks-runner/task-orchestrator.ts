@@ -43,6 +43,7 @@ import {
   DbCache,
   dbCacheEnabled,
   getCache,
+  sweepBatchOutputs,
 } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
@@ -285,7 +286,9 @@ export class TaskOrchestrator {
     );
     if (!this.stopRequested) {
       this.cache.removeOldCacheRecords();
-      this.cache.sweepBatchOutputs();
+      // Free function, not a cache method: `BatchProcess` writes these logs
+      // whichever cache implementation is active.
+      sweepBatchOutputs();
     }
     await this.cleanup();
     await this.dispose();
