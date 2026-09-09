@@ -12,10 +12,19 @@ Move `packages/<name>`'s unit tests from Jest to Vitest 4, inferred through the
 **Start from `packages/workspace`, not `packages/nx`.** The shared machinery a
 sibling package needs already exists — read these first and reuse them as-is:
 
-- `scripts/vitest-setup.mts` — the port of `scripts/unit-test-setup.js`; every
+- `tools/vitest/setup.mts` — the port of `scripts/unit-test-setup.js`; every
   migrated package loads it as its `setupFiles`
-- `scripts/vitest-nx-source-resolver.mts` — resolves `nx` / `@nx/*` to this
+- `tools/vitest/nx-source-resolver.mts` — resolves `nx` / `@nx/*` to this
   repo's source, for both vite and node
+- `tools/vitest/tsconfig.json` — a leaf tsconfig whose only job is to stop
+  vite's tsconfig lookup. **Do not move these files to the workspace root.**
+  With no tsconfig beside them, the nearest one is the root solution file, and
+  vite walks its `references` — reading all ~114 project tsconfigs on every
+  run, which lands as a sandbox violation. `tools/vitest` is deliberately a
+  plain directory, not an Nx project: adding `project.json` makes
+  `@nx/js:typescript-sync` demand a project reference to a test-only tool from
+  each consuming package's _published_ `tsconfig.lib.json` (`composite: false`
+  does not suppress it)
 - `packages/workspace/vitest.config.mts` — the config those two plug into
 - `packages/workspace/project.json` — `test.inputs` naming the shared scripts
 
@@ -82,7 +91,7 @@ Capture:
      dropping it. `@clack/prompts` is load-bearing: the stub answers `undefined`
      where the real library drives a **synchronous** prompt, and a generator
      that asks a question blocks the worker forever with no test timeout.
-     `scripts/vitest-setup.mts` already keeps that one. `prettier`'s stub also
+     `tools/vitest/setup.mts` already keeps that one. `prettier`'s stub also
      pins `resolveConfig: () => null`, which matters if the package snapshots
      formatted output.
    - `maxWorkers: 1` — Vitest runs files in parallel. Any spec relying on
@@ -149,7 +158,7 @@ export default defineConfig({
   resolve: {
     conditions: ['@nx/nx-source'],
   },
-  plugins: [nxSourceResolver()], // scripts/vitest-nx-source-resolver.mts
+  plugins: [nxSourceResolver()], // tools/vitest/nx-source-resolver.mts
 });
 ```
 
@@ -160,13 +169,13 @@ Rules for resolution — the part that most looks solved and isn't:
   only, no source), and their exports maps advertise `@nx/nx-source` entries
   pointing at `./src/index.ts` files the tarball does not ship — so the
   condition resolves to a file that isn't there. Use `nxSourceResolver()` from
-  `scripts/vitest-nx-source-resolver.mts`, which maps `nx` / `@nx/*` through
+  `tools/vitest/nx-source-resolver.mts`, which maps `nx` / `@nx/*` through
   the _local_ `packages/<pkg>/package.json`, with a file fallback for deep
   imports no exports entry covers (`@nx/workspace/src/...`).
 - **`execArgv: ['--conditions=@nx/nx-source']` on its own actively breaks node
   resolution**, for the same reason: a lazy `require('@nx/js')` dies with
   `Cannot find module '.../node_modules/@nx/js/src/index.ts'`. Keep the flag,
-  but `scripts/vitest-setup.mts` must also patch `Module._resolveFilename`
+  but `tools/vitest/setup.mts` must also patch `Module._resolveFilename`
   with the same mapping so both channels agree.
 - **Aliases use regex, not strings.** Vite string aliases do prefix matching,
   so `'@nx/devkit'` would rewrite `@nx/devkit/internal` too. Use
@@ -187,10 +196,10 @@ Rules for resolution — the part that most looks solved and isn't:
 Point the config at the shared file; do not write a per-package copy:
 
 ```ts
-setupFiles: ['../../scripts/vitest-setup.mts'],
+setupFiles: ['../../tools/vitest/setup.mts'],
 ```
 
-`scripts/vitest-setup.mts` is the port of `scripts/unit-test-setup.js` (which
+`tools/vitest/setup.mts` is the port of `scripts/unit-test-setup.js` (which
 is jest-only — `jest.doMock` — so it can never be imported from vitest). Read
 it before assuming anything is missing; it already does all of the following,
 and each line is there because its absence broke `packages/workspace`:
@@ -247,12 +256,21 @@ an edit:
 "test": {
   "inputs": [
     "...",
-    "{workspaceRoot}/scripts/vitest-setup.mts",
-    "{workspaceRoot}/scripts/vitest-nx-source-resolver.mts",
-    "{workspaceRoot}/scripts/jest-mocks/clack-prompts.js"
+    "{workspaceRoot}/tools/vitest/**/*",
+    "{workspaceRoot}/scripts/jest-mocks/clack-prompts.js",
+    "{workspaceRoot}/.editorconfig"
   ]
 }
 ```
+
+These are not optional bookkeeping. Nothing infers a setup file outside the
+project root — `default` is project-scoped and `^production` is
+dependency-scoped — so leaving them off does not fail loudly; it serves a
+**stale cache hit** the next time someone edits the shared setup. (nx#36920
+teaches `@nx/vitest` to infer them; until it lands, declare them by hand.)
+
+`.editorconfig` is there because the formatter resolves it from the real repo
+during a run. See Step 9.
 
 ---
 
@@ -377,7 +395,7 @@ pgrep -aP $p                            # a spawned worker/install it waits for
 
 In `packages/workspace` this was `project-graph.lock`: real graph construction
 running on the CJS channel. The three causes seen so far are all handled by
-`scripts/vitest-setup.mts` — CJS graph mocks, `NX_ISOLATE_PLUGINS=false`, and
+`tools/vitest/setup.mts` — CJS graph mocks, `NX_ISOLATE_PLUGINS=false`, and
 the `@clack/prompts` stub — so first check the setup is actually loaded before
 hunting further.
 
@@ -435,10 +453,16 @@ pnpm nx test <name> --skip-nx-cache
 # a single file still works (paths relative to the package root)
 pnpm nx run <name>:test -- src/utils/some-file.spec.ts
 
-# nothing else broke
-pnpm nx run-many -t test,build,lint -p <name>
-pnpm nx affected -t build,test,lint
+# nothing else broke - EVERY target the project has, not a set you picked
+pnpm nx show project <name> --json | jq '.targets | keys'
+pnpm nx run-many -t test,build,lint,oxlint -p <name> --skip-nx-cache
+pnpm nx sync:check
 ```
+
+**`oxlint` is a separate target from `lint`.** Running `test,build,lint` and
+calling it green is how a restricted-import error reaches CI: this repo bans
+`nx/src/...` imports in favour of `@nx/devkit/internal*`, and only `oxlint`
+catches it. Read the target list rather than assuming the usual three.
 
 Parity is **test count**, not just a green run. A dropped `include` pattern or
 a silently-skipped directory shows up as a lower count, and a green suite hides
@@ -446,6 +470,65 @@ it. If the count differs, find every missing file before proceeding.
 
 Note the caching caveat: after a mechanical sweep, `nx affected` can replay a
 stale cached pass. Always validate with `--skip-nx-cache`.
+
+Do **not** run a full `nx affected`: a new or moved file under a workspace-root
+directory marks all ~90 projects affected, which is hours of jest for changes
+that touch nothing jest reads. Run one still-on-jest package as a canary
+instead — `devkit` is the most entangled.
+
+---
+
+## Step 8b — Sandbox violations
+
+The migration is not done when CI is green. Nx Cloud reports the task's file
+reads against its declared inputs, and a vitest suite reads things the jest one
+did not. Fetch them once the PR has run:
+
+```bash
+npx nx-cloud get sandbox-reports --branch <PR-number> --since 1d
+npx nx-cloud validate sandbox-violations \
+  .nx/workspace-data/sandbox-reports/<PR-number>/index.json --json
+```
+
+`nx reset` deletes `.nx/workspace-data`, and the downloaded reports with it —
+re-download after one.
+
+The per-task JSON carries `processTree` plus a `pid` on every read, which is
+how you attribute a violation instead of guessing. Map them:
+
+```python
+tree = {p['pid']: p for p in report['processTree']}
+for r in report['unexpectedReads']:
+    print(r['path'], tree.get(r['pid'], {}).get('cmd'))
+```
+
+The two this migration produced, both worth checking for:
+
+- **Every project's `tsconfig.json`, read by the vitest main process.** The
+  timestamps show the root solution tsconfig read milliseconds after a
+  workspace-root source file. Cause and fix are in the Step 3 note about where
+  the shared setup lives. Confirm with the resolver vite itself uses rather
+  than a filesystem tracer — `tsconfck`'s `parse()` reports what it consulted,
+  and a tracer on `fs` misses it because the ESM `node:fs/promises` bindings
+  are snapshotted before a `--require` preload can patch them:
+
+  ```js
+  const { parse } =
+    await import('<repo>/node_modules/.pnpm/tsconfck@*/node_modules/tsconfck/src/index.js');
+  console.log((await parse('tools/vitest/setup.mts')).referenced?.length); // 0 == leaf, 114 == solution root
+  ```
+
+- **`.editorconfig`, read by a worker.** The formatter resolves config from the
+  real repo; the jest prettier shim pinned `resolveConfig: () => null` and hid
+  it. Declaring it as an input keeps the cache correct. Whether unit tests
+  _should_ inherit the repo's formatting config is a separate question — raise
+  it rather than silently choosing.
+
+Prefer declaring an input over excluding a path: an over-broad input costs
+cache misses, an over-broad exclusion buys wrong cache hits. But a violation
+that only exists because a file sits in the wrong place is a **layout** bug —
+fix the layout. Declaring 114 tsconfigs as inputs would have been "correct"
+and would have quietly wrecked the cache for every vitest suite in the repo.
 
 ---
 
