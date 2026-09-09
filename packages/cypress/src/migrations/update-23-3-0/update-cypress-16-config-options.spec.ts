@@ -416,6 +416,42 @@ export default defineConfig({
     `);
   });
 
+  it('should migrate a block shared by e2e and component once', async () => {
+    const configPath = addCypressProject(
+      tree,
+      'app',
+      `import { defineConfig } from 'cypress';
+
+const shared = {
+  experimentalMemoryManagement: false,
+  execTimeout: 1000,
+  experimentalFastVisibility: true,
+};
+const e2e = shared;
+
+export default defineConfig({ e2e, component: shared });
+`
+    );
+
+    const result = await migration(tree);
+
+    expect(result.nextSteps).toEqual([
+      'Review the Cypress config option change: apps/app/cypress.config.ts: removed `execTimeout: 1000`; `cy.exec()` is gone, set `taskTimeout` if the replacement `cy.task()` needs more than the 60000ms default',
+    ]);
+    expect(tree.read(configPath, 'utf-8')).toMatchInlineSnapshot(`
+      "import { defineConfig } from 'cypress';
+
+      const shared = {
+        manageBrowserMemory: false,
+        visibilityStrategy: 'modern',
+      };
+      const e2e = shared;
+
+      export default defineConfig({ e2e, component: shared });
+      "
+    `);
+  });
+
   it('should report a config it cannot resolve statically', async () => {
     const config = `import { defineConfig } from 'cypress';
 import { baseConfig } from '@acme/cypress-config';
