@@ -286,8 +286,6 @@ export class TaskOrchestrator {
     );
     if (!this.stopRequested) {
       this.cache.removeOldCacheRecords();
-      // Batch logs are swept from disk rather than the database: nothing looks
-      // one up by key, so a row would only ever be bookkeeping.
       sweepBatchOutputs();
     }
     await this.cleanup();
@@ -1033,18 +1031,6 @@ export class TaskOrchestrator {
     }
   }
 
-  /**
-   * Gives the batch worker's captured log to the results that need it, for a
-   * style that prints nothing and so renders no fold.
-   *
-   * Only when something failed. A batch whose tasks all succeeded has nothing
-   * the worker's chatter would explain, and `summary`'s contract is that a
-   * failure's log is readable, not that every byte the run produced is.
-   *
-   * One worker means one log, so a single task carries it and the rest address
-   * that copy. Inlining it into each would write a byte-identical unbounded
-   * file per task, every one charged in full against `maxCacheSize`.
-   */
   /**
    * Tells the life cycle where the batch worker's own log is, when something
    * failed and a style that prints nothing would otherwise leave it unread.

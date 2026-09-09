@@ -270,7 +270,7 @@ describe('BatchProcess', () => {
     expect(seen).toEqual(['out chunk']);
   });
 
-  it('replays a chunk that arrives after the path is handed over', async () => {
+  it('drops a chunk that arrives after the flush, without a second file', async () => {
     const child = fakeChildProcess();
 
     const batch = withEnvironmentVariables(FOLDING_ENV, () => {
@@ -282,18 +282,21 @@ describe('BatchProcess', () => {
     });
 
     const path = batch.getCapturedOutputPath();
-    // stdout can deliver past the exit event that getResults() settles on, and
-    // that trailing output is what the fold exists to carry - so it belongs in
-    // the same file, not dropped and not in a second one.
-    withEnvironmentVariables(FOLDING_ENV, () => {
-      captureForwarded(() => {
-        (child as any).stdout.emit('data', Buffer.from('after handover\n'));
-      });
-    });
-
+    // Production order: both readers flush before touching the path. stdout can
+    // still deliver past the exit event that getResults() settles on, and the
+    // flush has ended the stream by then - so the late chunk is lost. What must
+    // NOT happen is a second file, or the write killing the run.
     await batch.flushCapturedOutput();
+    expect(() =>
+      withEnvironmentVariables(FOLDING_ENV, () => {
+        captureForwarded(() => {
+          (child as any).stdout.emit('data', Buffer.from('after handover\n'));
+        });
+      })
+    ).not.toThrow();
+
     expect(batch.getCapturedOutputPath()).toEqual(path);
-    expect(readFileSync(path, 'utf-8')).toEqual('during\nafter handover\n');
+    expect(readFileSync(path, 'utf-8')).toEqual('during\n');
     batch.discardCapturedOutput();
     expect(existsSync(path)).toBe(false);
   });

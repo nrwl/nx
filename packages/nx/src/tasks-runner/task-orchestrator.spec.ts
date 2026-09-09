@@ -937,10 +937,6 @@ describe('TaskOrchestrator', () => {
       ).toHaveBeenCalledWith(b, 'failure', 'b failed');
     });
 
-    // The fold above is the only consumer of the captured file on the results
-    // path, and the test above is why it does not run under summary. Without
-    // the handoff below, the worker's own stderr is captured, read by nobody,
-    // and unlinked by `discardCapturedOutput` when the batch ends.
     it('still collapses an all-green batch on the default, captured log or not', async () => {
       const orchestrator = createOrchestrator();
       const a = makeTask('a:build');
