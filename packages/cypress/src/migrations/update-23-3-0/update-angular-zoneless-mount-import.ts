@@ -5,13 +5,13 @@ import {
   readJson,
   removeDependenciesFromPackageJson,
   visitNotIgnoredFiles,
-  type GeneratorCallback,
   type StringChange,
   type Tree,
 } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/internal';
 import { ast, query } from '@phenomnomnominal/tsquery';
-import type { StringLiteralLike } from 'typescript';
+import type { SourceFile, StringLiteralLike } from 'typescript';
+import { hasLocalValueBinding } from '../../utils/migrations';
 
 // Cypress 16 dropped the `cypress/angular-zoneless` export and deprecated the
 // standalone npm package of the same harness; `cypress/angular` is zoneless there.
@@ -24,10 +24,9 @@ const NEW_SPECIFIER = 'cypress/angular';
 
 let ts: typeof import('typescript');
 
-export default async function updateAngularZonelessMountImport(
-  tree: Tree
-): Promise<GeneratorCallback | void> {
+export default async function updateAngularZonelessMountImport(tree: Tree) {
   let wereFilesMigrated = false;
+  const shadowedRequires: string[] = [];
 
   // Shared support libraries can hold the import, so the whole workspace is
   // scanned rather than the Cypress project roots.
@@ -41,8 +40,19 @@ export default async function updateAngularZonelessMountImport(
       return;
     }
 
-    const changes = findModuleSpecifiers(originalContent).map(
-      (specifier): StringChange[] => {
+    const sourceFile = ast(originalContent);
+    const specifiers = findModuleSpecifiers(sourceFile);
+    // A file with its own `require` value is not calling the CommonJS loader.
+    const shadowsRequire =
+      specifiers.some(isRequireArgument) &&
+      hasLocalValueBinding(sourceFile, 'require');
+    if (shadowsRequire) {
+      shadowedRequires.push(filePath);
+    }
+
+    const changes = specifiers
+      .filter((specifier) => !shadowsRequire || !isRequireArgument(specifier))
+      .map((specifier): StringChange[] => {
         const quote = specifier.getText()[0];
         const start = specifier.getStart();
         return [
@@ -57,8 +67,7 @@ export default async function updateAngularZonelessMountImport(
             text: `${quote}${NEW_SPECIFIER}${quote}`,
           },
         ];
-      }
-    );
+      });
     if (changes.length === 0) {
       return;
     }
@@ -67,16 +76,22 @@ export default async function updateAngularZonelessMountImport(
     wereFilesMigrated = true;
   });
 
-  const installTask = removeDeprecatedPackage(tree);
+  removeDeprecatedPackage(tree);
 
   if (wereFilesMigrated) {
     await formatFiles(tree);
   }
 
-  return installTask;
+  if (shadowedRequires.length > 0) {
+    const notes = shadowedRequires.map(
+      (filePath) =>
+        `Left the \`require()\` calls in ${filePath} untouched because it declares its own \`require\`; point them at \`${NEW_SPECIFIER}\` by hand if they load the Cypress harness`
+    );
+    return { nextSteps: notes, agentContext: notes };
+  }
 }
 
-function removeDeprecatedPackage(tree: Tree): GeneratorCallback | undefined {
+function removeDeprecatedPackage(tree: Tree): void {
   const { dependencies = {}, devDependencies = {} } = readJson(
     tree,
     'package.json'
@@ -85,10 +100,10 @@ function removeDeprecatedPackage(tree: Tree): GeneratorCallback | undefined {
     !dependencies[DEPRECATED_PACKAGE] &&
     !devDependencies[DEPRECATED_PACKAGE]
   ) {
-    return undefined;
+    return;
   }
 
-  return removeDependenciesFromPackageJson(
+  removeDependenciesFromPackageJson(
     tree,
     [DEPRECATED_PACKAGE],
     [DEPRECATED_PACKAGE]
@@ -96,11 +111,11 @@ function removeDeprecatedPackage(tree: Tree): GeneratorCallback | undefined {
 }
 
 // `import`/`export ... from`, `import()`, `typeof import()` and `require()` forms.
-function findModuleSpecifiers(content: string): StringLiteralLike[] {
+function findModuleSpecifiers(sourceFile: SourceFile): StringLiteralLike[] {
   ts ??= ensureTypescript();
 
   return query<StringLiteralLike>(
-    ast(content),
+    sourceFile,
     `:matches(StringLiteral, NoSubstitutionTemplateLiteral)`
   ).filter((literal) => {
     if (!OLD_SPECIFIERS.has(literal.text)) {
@@ -116,13 +131,22 @@ function findModuleSpecifiers(content: string): StringLiteralLike[] {
       return true;
     }
     return (
-      ts.isCallExpression(parent) &&
-      parent.arguments[0] === literal &&
-      (parent.expression.kind === ts.SyntaxKind.ImportKeyword ||
-        (ts.isIdentifier(parent.expression) &&
-          parent.expression.text === 'require'))
+      (ts.isCallExpression(parent) &&
+        parent.arguments[0] === literal &&
+        parent.expression.kind === ts.SyntaxKind.ImportKeyword) ||
+      isRequireArgument(literal)
     );
   });
+}
+
+function isRequireArgument(literal: StringLiteralLike): boolean {
+  const parent = literal.parent;
+  return (
+    ts.isCallExpression(parent) &&
+    parent.arguments[0] === literal &&
+    ts.isIdentifier(parent.expression) &&
+    parent.expression.text === 'require'
+  );
 }
 
 function isJsTsFile(filePath: string): boolean {

@@ -90,6 +90,101 @@ Cypress.Commands.overwrite('visit', (originalFn, url, options) => originalFn(url
     ]);
   });
 
+  it('should rename overwrites spelled with bracket access', async () => {
+    tree.write(
+      'apps/app-e2e/src/support/commands.ts',
+      `Cypress.Commands['overwrite']('getCookie', (originalFn, name) => originalFn(name));
+Cypress['Commands'].overwrite("getCookies", (originalFn, options) => originalFn(options));
+Cypress.Commands[\`overwrite\`]('getAllCookies', (originalFn, options) => originalFn(options));
+Cypress.Commands[overwrite]('getAllLocalStorage', (originalFn, options) => originalFn(options));
+`
+    );
+
+    const result = await migration(tree);
+
+    expect(tree.read('apps/app-e2e/src/support/commands.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "Cypress.Commands['overwriteQuery']('getCookie', (originalFn, name) => originalFn(name));
+      Cypress['Commands'].overwriteQuery('getCookies', (originalFn, options) => originalFn(options));
+      Cypress.Commands[\`overwriteQuery\`]('getAllCookies', (originalFn, options) => originalFn(options));
+      Cypress.Commands[overwrite]('getAllLocalStorage', (originalFn, options) => originalFn(options));
+      "
+    `);
+    expect(result.nextSteps).toEqual([
+      expect.stringContaining(
+        "apps/app-e2e/src/support/commands.ts: `'getCookie'`, `\"getCookies\"`, `'getAllCookies'`"
+      ),
+    ]);
+  });
+
+  it.each([
+    "const Cypress = require('./fake-cypress');",
+    'let Cypress; Cypress = globalThis.Cypress;',
+    'const { Cypress } = globalThis;',
+    "import Cypress from './fake-cypress';",
+    "import { Cypress } from './fake-cypress';",
+    "import { fake as Cypress } from './fake-cypress';",
+    "import * as Cypress from './fake-cypress';",
+    "import Cypress = require('./fake-cypress');",
+    'function Cypress() {}',
+    'class Cypress {}',
+    'enum Cypress {}',
+    'namespace Cypress { export const Commands = { overwrite() {} }; }',
+    'function setup(Cypress) {}',
+  ])(
+    'should leave a file that binds its own Cypress value alone and report it: %s',
+    async (binding) => {
+      const content = `${binding}
+Cypress.Commands.overwrite('getCookie', (originalFn, name) => originalFn(name));
+`;
+      tree.write('apps/app-e2e/src/support/commands.ts', content);
+
+      const result = await migration(tree);
+
+      expect(tree.read('apps/app-e2e/src/support/commands.ts', 'utf-8')).toBe(
+        content
+      );
+      expect(result.skipAgentic).toBeFalsy();
+      expect(result.nextSteps).toEqual([
+        expect.stringContaining(
+          'Left apps/app-e2e/src/support/commands.ts untouched because it declares its own `Cypress`'
+        ),
+      ]);
+      expect(result.agentContext).toEqual(result.nextSteps);
+    }
+  );
+
+  it.each([
+    'declare global { namespace Cypress { interface Chainable { login(): void } } }',
+    'declare namespace Cypress { interface Chainable { login(): void } }',
+    'declare const Cypress: any;',
+    "import type { Cypress } from './types';",
+    "import { type Cypress } from './types';",
+    "import type * as Cypress from './types';",
+    "import type Cypress = require('./types');",
+    'const { Cypress: local } = globalThis;',
+  ])(
+    'should rename overwrites next to a declaration that does not bind a Cypress value: %s',
+    async (declaration) => {
+      tree.write(
+        'apps/app-e2e/src/support/commands.ts',
+        `${declaration}
+Cypress.Commands.overwrite('getCookie', (originalFn, name) => originalFn(name));
+`
+      );
+
+      const result = await migration(tree);
+
+      expect(
+        tree.read('apps/app-e2e/src/support/commands.ts', 'utf-8')
+      ).toContain(
+        "Cypress.Commands.overwriteQuery('getCookie', (originalFn, name) => originalFn(name));"
+      );
+      expect(result.nextSteps).toHaveLength(1);
+      expect(result.nextSteps[0]).not.toContain('untouched');
+    }
+  );
+
   it('should not touch overwrites of commands that are not queries', async () => {
     const content = `Cypress.Commands.overwrite('visit', (originalFn, url) => originalFn(url));
 Cypress.Commands.overwrite('setCookie', (originalFn, name, value) => originalFn(name, value));
