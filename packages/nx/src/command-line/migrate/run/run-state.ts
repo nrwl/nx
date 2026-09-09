@@ -149,6 +149,9 @@ export interface MigrateStep {
   // A 'succeeded' recorded by the adopt action: the tree was taken as the
   // migration's result instead of a worker producing it.
   adopted?: boolean;
+  // The run issue minted when the step was given up on, carrying its last
+  // failure to the completion report.
+  unresolvedIssueId?: string;
   // Recorded when the step enters 'awaiting-prompt-outcome'; dropped on re-arm
   // with the other per-attempt fields.
   awaitingKind?: MigrateStepAwaitingKind;
@@ -488,6 +491,10 @@ function isStepShape(value: unknown): boolean {
     isOptionalBoolean(value.generatorMadeChanges) &&
     isOptionalBoolean(value.installFailed) &&
     isOptionalBoolean(value.adopted) &&
+    isOptionalMatching(ISSUE_ID, value.unresolvedIssueId) &&
+    // Minted by the same write that gives the step up, so it never names a
+    // step in any other status.
+    (value.unresolvedIssueId === undefined || value.status === 'unresolved') &&
     // A cross-field invariant the rest of the loop relies on: a running step
     // without a pid is never reclassified as died and no step action targets
     // it, so it stalls the run forever.
@@ -683,15 +690,22 @@ function hasValidRunStateShape(parsed: Record<string, unknown>): boolean {
     (parsed.commits as { issueIds?: string[] }[]).every(
       (c) =>
         c.issueIds === undefined ||
-        c.issueIds.every((id) =>
-          ((parsed.issues as { id: string }[] | undefined) ?? []).some(
-            (i) => i.id === id
-          )
-        )
+        c.issueIds.every((id) => hasIssueWithId(parsed, id))
+    ) &&
+    (parsed.steps as { unresolvedIssueId?: string }[]).every(
+      (s) =>
+        s.unresolvedIssueId === undefined ||
+        hasIssueWithId(parsed, s.unresolvedIssueId)
     ) &&
     isNoProgressShape(parsed.noProgress) &&
     isTreeOperationShape(parsed.treeOperation) &&
     isAnalyticsShape(parsed.analytics)
+  );
+}
+
+function hasIssueWithId(parsed: Record<string, unknown>, id: string): boolean {
+  return ((parsed.issues as { id: string }[] | undefined) ?? []).some(
+    (i) => i.id === id
   );
 }
 

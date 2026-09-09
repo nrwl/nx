@@ -89,8 +89,10 @@ import {
 import {
   appendCommit,
   applyStepEvent,
+  clearCommitStarted,
   commitReceipt,
   commitMayBeInHistory,
+  commitNameForStep,
   commitResultToLedgerEntry,
   hasPendingCommitDebt,
   latestRound,
@@ -98,6 +100,7 @@ import {
   splitMigrationId,
   stepsToPendingMigrations,
   uncoveredFailedStepIds,
+  type CommitMarker,
   type StepAction,
   type StepEvent,
 } from './state-machine';
@@ -136,6 +139,7 @@ import {
   claimIssuesForStep,
   enrichCommitEntryIssueIds,
   applicationArchivesIntact,
+  mintUnresolvedIssue,
   parseHandoffIssues,
   renderIssueDigestLines,
   renderUnresolvedIssueLines,
@@ -833,35 +837,22 @@ export async function runOrchestratorReconcile(
       const target = result.targetStep;
       // The commit is a git side effect, so it runs before the lock (locked
       // sections stay synchronous); the transition and any unrecorded entry then
-      // land in one write. Adopt, skip and unresolved keep the tree, so the
-      // install they owe runs here: the next dispense would take the changed
-      // deps as its baseline. Retries owe nothing: the rearmed attempt
+      // land in one write. Adopt and skip keep the tree, so the install they owe
+      // runs here: the next dispense would take the changed deps as its baseline.
+      // Giving up keeps it the same way, unless commits are on and no reset
+      // ran: the partial result is then committed under the migration's name,
+      // marked unresolved, so a later revert does not have to untangle it from
+      // the next step's work. Retries owe nothing: the rearmed attempt
       // reconciles itself.
-      const { entry, installFailed, recorded }: StepSideEffects =
-        stepAction === 'adopt'
-          ? state.createCommits
-            ? await commitForStep(root, dir, state, target, scope)
-            : {
-                entry: null,
-                installFailed: await installFailedForStep(
-                  root,
-                  dir,
-                  state,
-                  target,
-                  'action-install',
-                  scope
-                ),
-              }
-          : stepAction === 'skip' || stepAction === 'unresolved'
-            ? await retainedTreeSideEffects(
-                root,
-                dir,
-                state,
-                target,
-                'action-install',
-                scope
-              )
-            : { entry: null, installFailed: false };
+      const { entry, installFailed, recorded } = await stepActionSideEffects(
+        root,
+        dir,
+        state,
+        target,
+        stepAction,
+        result.resetTree,
+        scope
+      );
       // A rearm starts a fresh attempt; drop the stale handoff before the rearm
       // is persisted so a crash in between can't refold the old outcome into the
       // new attempt. Losing the handoff without the rearm is safe: the step is
@@ -883,6 +874,7 @@ export async function runOrchestratorReconcile(
       // rejection surfaces through emitError instead of being written over. The
       // bound attempt keeps the snapshot checks above honest.
       let freshRejection: string | undefined;
+      let unresolvedArchiveError: unknown = null;
       const written = updateRunState(dir, (fresh) => {
         // A plain retry takes no reservation of its own, so this is where it
         // learns that a live process still commits or installs for the step.
@@ -903,19 +895,63 @@ export async function runOrchestratorReconcile(
           freshRejection = `Cannot apply action 'retry' to step '${target.id}': whether its generator ran changed since this reconcile read it. Run the reconcile again.`;
           return null;
         }
-        const reapplied = applyStepEvent(fresh, {
-          type: 'stepAction',
-          stepId: target.id,
-          action: stepAction,
-          attempt: target.attempt,
-        });
+        // The transition refuses a step whose commit may be in history, and
+        // the marked commit this action ran is one: its mark and its entry
+        // (recorded by a session's parent) are this action's own, so the
+        // check runs on the ledger as it stood at acceptance. The reservation
+        // held since then keeps any other commit of the step out.
+        const reapplied = applyStepEvent(
+          stepAction === 'unresolved'
+            ? {
+                ...clearCommitStarted(fresh, target.id),
+                commits: fresh.commits.slice(0, state.commits.length),
+              }
+            : fresh,
+          {
+            type: 'stepAction',
+            stepId: target.id,
+            action: stepAction,
+            attempt: target.attempt,
+          }
+        );
         if (reapplied.kind === 'error') {
           freshRejection = reapplied.reason;
           return null;
         }
+        let settled = reapplied.state;
+        if (stepAction === 'unresolved') {
+          const transitioned = settled.steps.find((s) => s.id === target.id);
+          settled = {
+            ...fresh,
+            steps: fresh.steps.map((s) =>
+              s.id === target.id ? { ...s, ...transitioned } : s
+            ),
+          };
+        }
+        // The issue that carries the failure to the completion report is
+        // minted in the same write as the status, so neither can exist without
+        // the other. Its archive file is best-effort: run.json is
+        // authoritative, and undoing the transition for a lost detail file
+        // would leave the agent re-issuing an action the run already took.
+        if (stepAction === 'unresolved') {
+          const minted = mintUnresolvedIssue(settled, target);
+          try {
+            archiveIssues(dir, minted.application);
+          } catch (e) {
+            unresolvedArchiveError = e;
+          }
+          settled = {
+            ...minted.application.state,
+            steps: minted.application.state.steps.map((s) =>
+              s.id === target.id
+                ? { ...s, unresolvedIssueId: minted.issueId }
+                : s
+            ),
+          };
+        }
         const next = installFailed
-          ? markInstallFailed(reapplied.state, target.id)
-          : reapplied.state;
+          ? markInstallFailed(settled, target.id)
+          : settled;
         // An adopted commit absorbs uncovered failed steps the same way a fold
         // commit does, so it carries their resolved issues too. A session's
         // parent records its own commits as it answers.
@@ -932,6 +968,14 @@ export async function runOrchestratorReconcile(
             : freshRejection
         );
         return;
+      }
+      if (unresolvedArchiveError !== null) {
+        warnToAgent({
+          title: `The issue recording that ${target.migrationId} was left unresolved could not be archived (${summarizeError(unresolvedArchiveError)}).`,
+          bodyLines: [
+            `run.json stays authoritative: the step is unresolved and the issue is in its ledger; only the archived file under the run's issues directory is missing.`,
+          ],
+        });
       }
       state = written;
     } finally {
@@ -1319,7 +1363,14 @@ async function applyReconcileStepAction(
   action: StepAction,
   scope: TreeScope
 ): Promise<
-  | { kind: 'ok'; state: MigrateRunState; targetStep: MigrateStep }
+  | {
+      kind: 'ok';
+      state: MigrateRunState;
+      targetStep: MigrateStep;
+      // The action's tree handling was the reset the dispense asked for, so
+      // the failed attempt's tree is gone.
+      resetTree: boolean;
+    }
   | { kind: 'error'; reason: string }
 > {
   const candidates = state.steps.filter(
@@ -1351,10 +1402,10 @@ async function applyReconcileStepAction(
       step.status === 'died'
         ? commitMayBeInHistory(state, step)
           ? `Use 'adopt' instead.`
-          : `Use 'adopt' or 'skip' instead.`
+          : `Use 'adopt', 'skip' or 'unresolved' instead.`
         : commitMayBeInHistory(state, step)
           ? `Use 'retry' instead.`
-          : `Use 'retry' or 'skip' instead.`;
+          : `Use 'retry', 'skip' or 'unresolved' instead.`;
     if (!canOfferCleanRetry(root, state, step, head)) {
       return {
         kind: 'error',
@@ -1395,6 +1446,42 @@ async function applyReconcileStepAction(
       };
     }
   }
+  // Giving up discards what a generator that never completed left behind
+  // when the same restore point a clean retry needs exists, through the same
+  // reserved reset. When there is no such point the tree is kept: what an
+  // agent authored is never discarded, and a reset here would have no
+  // verified target.
+  const resetTree =
+    action === 'unresolved' &&
+    unresolvedResetsTree(root, state, step, getLatestCommitSha(root));
+  if (resetTree) {
+    try {
+      await resetStepTree(
+        dir,
+        step,
+        () => resetForCleanRetry(root, dir, step.id),
+        scope
+      );
+    } catch (e) {
+      if (
+        e instanceof BrokerStaleRequestError ||
+        e instanceof BrokerUnavailableError ||
+        e instanceof TreeBusyError
+      ) {
+        throw e;
+      }
+      return {
+        kind: 'error',
+        reason: `Cannot apply action 'unresolved' to step '${step.id}': the reset to ${step.gitRefBefore} failed: ${e instanceof Error ? e.message : String(e)}`,
+      };
+    }
+    if (getWorkingTreeStatus(root) !== 'clean') {
+      return {
+        kind: 'error',
+        reason: `Cannot apply action 'unresolved' to step '${step.id}': the working tree is not verifiably clean after the reset to ${step.gitRefBefore}. Inspect it with \`git status\`, then re-run it.`,
+      };
+    }
+  }
   // A failed generator can have written to the tree before throwing, and a
   // plain retry reruns it, so a pre-marker retry is accepted only when git
   // can see nothing of the failed attempt in the tree. The state machine is
@@ -1409,7 +1496,7 @@ async function applyReconcileStepAction(
       return {
         kind: 'error',
         reason: `Cannot apply action 'retry' to step '${step.id}': ${safety.reason} Use 'retry-clean' where offered${
-          commitMayBeInHistory(state, step) ? '' : `, or 'skip'`
+          commitMayBeInHistory(state, step) ? '' : `, 'skip' or 'unresolved'`
         }.`,
       };
     }
@@ -1429,7 +1516,19 @@ async function applyReconcileStepAction(
   if (applied.kind === 'error') {
     return applied;
   }
-  return { kind: 'ok', state: applied.state, targetStep: step };
+  return { kind: 'ok', state: applied.state, targetStep: step, resetTree };
+}
+
+// Whether giving up on the step resets its tree: only a generator that never
+// completed can have left nothing worth keeping, and only a clean-retry
+// restore point makes the reset safe.
+function unresolvedResetsTree(
+  root: string,
+  state: MigrateRunState,
+  step: MigrateStep,
+  head: string | null
+): boolean {
+  return generatorPending(step) && canOfferCleanRetry(root, state, step, head);
 }
 
 // What a reconcile's git and install side effects owe the run state, applied
@@ -1443,19 +1542,79 @@ interface StepSideEffects {
   recorded?: boolean;
 }
 
-// Commits the working tree left by a folded prompt outcome or an adopted
-// death. The caller persists `entry` with the step transition unless
-// `recorded` says a session's parent already did; null when nothing to
-// commit. A crash between the git commit and the state write leaves that
+// What each accepted action owes the tree it leaves, before the transition
+// is written (git and install side effects stay outside the lock).
+async function stepActionSideEffects(
+  root: string,
+  dir: string,
+  state: MigrateRunState,
+  step: MigrateStep,
+  action: StepAction,
+  resetTree: boolean,
+  scope: TreeScope
+): Promise<StepSideEffects> {
+  switch (action) {
+    case 'adopt':
+      return state.createCommits
+        ? commitForStep(root, dir, state, step, scope)
+        : {
+            entry: null,
+            installFailed: await installFailedForStep(
+              root,
+              dir,
+              state,
+              step,
+              'action-install',
+              scope
+            ),
+          };
+    case 'unresolved':
+      // A reset restored the tree the step was dispensed against, so nothing
+      // is left to install or to record as debt.
+      if (resetTree) return { entry: null, installFailed: false };
+      return state.createCommits
+        ? commitForStep(root, dir, state, step, scope, 'unresolved')
+        : retainedTreeSideEffects(
+            root,
+            dir,
+            state,
+            step,
+            'action-install',
+            scope
+          );
+    case 'skip':
+      return retainedTreeSideEffects(
+        root,
+        dir,
+        state,
+        step,
+        'action-install',
+        scope
+      );
+    case 'retry':
+    case 'retry-clean':
+      return { entry: null, installFailed: false };
+    default: {
+      const exhaustive: never = action;
+      throw new Error(`Unhandled step action '${exhaustive}'.`);
+    }
+  }
+}
+
+// Commits the working tree left by a folded prompt outcome, an adopted death
+// or a given-up step. The caller persists `entry` with the step transition
+// unless `recorded` says a session's parent already did; null when nothing
+// to commit. A crash between the git commit and the state write leaves that
 // commit in history and out of the ledger; the refold then sees a clean tree.
 async function commitForStep(
   root: string,
   dir: string,
   state: MigrateRunState,
   step: MigrateStep,
-  scope: TreeScope
+  scope: TreeScope,
+  commitAs?: CommitMarker
 ): Promise<StepSideEffects> {
-  const { name } = splitMigrationId(step.migrationId);
+  const name = commitNameForStep(step, commitAs);
   const absorbedStepIds = uncoveredFailedStepIds(state).filter(
     (id) => id !== step.id
   );
@@ -1482,7 +1641,8 @@ async function commitForStep(
             ),
           stepsToPendingMigrations(state, absorbedStepIds)
         ),
-      scope
+      scope,
+      commitAs
     );
   } catch (e) {
     // Nothing to record: the step moved on, another process holds the tree, or
@@ -1775,7 +1935,10 @@ function emitRetryFailed(
   }
   // Refused by the state machine: the migration is, or may be, committed.
   if (!commitMayBeInHistory(state, step)) {
-    lines.push(`  skip:  ${reconcileCommand(root, runId, 'skip')}`);
+    lines.push(
+      `  skip:  ${reconcileCommand(root, runId, 'skip')}`,
+      unresolvedOptionLine(root, runId, state, step, pending && cleanRetry)
+    );
   }
   if (pending) {
     lines.push(UNVERIFIABLE_WRITES_LINE);
@@ -1905,6 +2068,28 @@ function assessPreMarkerRetry(
   return { kind: 'safe' };
 }
 
+// The give-up option, worded for what happens to the tree: the reserved
+// reset, a partial commit, or the tree left as it stands.
+function unresolvedOptionLine(
+  root: string,
+  runId: string,
+  state: MigrateRunState,
+  step: MigrateStep,
+  resetTree: boolean
+): string {
+  const command = reconcileCommand(root, runId, 'unresolved');
+  const recorded = `The failure is recorded as a run issue and listed in the completion report.`;
+  if (resetTree) {
+    return `  unresolved: give up on this migration, resetting the tree to ${
+      step.gitRefBefore ?? 'the pre-migration ref'
+    } (discarding what the failed attempt left, ${MIGRATE_RUNS_RELATIVE_DIR} kept), then run: ${command}. ${recorded}`;
+  }
+  if (state.createCommits) {
+    return `  unresolved: give up on this migration; its partial changes are committed under its name, marked unresolved, and the run moves on. Then run: ${command}. ${recorded}`;
+  }
+  return `  unresolved: give up on this migration, leaving the tree as it stands, and move on. Then run: ${command}. ${recorded}`;
+}
+
 function emitDied(
   root: string,
   runId: string,
@@ -1971,7 +2156,8 @@ function emitDied(
         root,
         runId,
         'skip'
-      )}`
+      )}`,
+      unresolvedOptionLine(root, runId, state, step, !resume && cleanRetry)
     );
   }
   lines.push(`Choose exactly one:`);
