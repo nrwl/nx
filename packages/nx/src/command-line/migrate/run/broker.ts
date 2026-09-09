@@ -41,12 +41,13 @@ import { updateRunState } from './state-lock';
 import {
   appendCommit,
   clearCommitStarted,
+  commitNameForStep,
   commitResultToLedgerEntry,
   markCommitStarted,
   markInstallFailed,
-  splitMigrationId,
   stepsToPendingMigrations,
   uncoveredFailedStepIds,
+  type CommitMarker,
 } from './state-machine';
 import { attachIssueIdsToCommitEntry } from './issues';
 import { resetForCleanRetry } from './clean-retry';
@@ -58,7 +59,8 @@ const CHILD_POLL_INTERVAL_MS = 250;
 
 // The seam a request comes from, and its name: within a session, non-reset
 // seams reuse one answer per attempt (see `invocation`). A worker's commit,
-// the fold's and the adopt's share one seam.
+// the fold's and the adopt's share one seam; a marked commit is a request of
+// its own, since giving up after a worker's commit failed must land one.
 export type BrokerRequestKind =
   | 'commit'
   // A worker's install: after its generator, or a retry's from the baseline.
@@ -73,7 +75,8 @@ export type BrokerRequestKind =
 export type InstallSeam = 'install' | 'fold-install' | 'action-install';
 
 // Names the seam only. Whether to install or commit is the parent's own
-// policy, so a request carries nothing that would widen it.
+// policy, so a request carries nothing that would widen it; the marker only
+// changes what a commit the policy already allows is called.
 export interface BrokerRequest {
   kind: BrokerRequestKind;
   stepId: string;
@@ -81,6 +84,9 @@ export interface BrokerRequest {
   // Reset only: a fresh id per clean retry, so a second retry of the same
   // attempt resets again instead of reading the first reset's answer.
   invocation?: string;
+  // The parent owns commit policy; the marker only changes what a commit the
+  // policy already allows is called.
+  commitAs?: CommitMarker;
 }
 
 export type BrokerResult =
@@ -267,7 +273,7 @@ const SEAM_STATUSES: Record<
   BrokerRequestKind,
   ReadonlySet<MigrateStepStatus>
 > = {
-  commit: new Set(['running', 'awaiting-prompt-outcome', 'died']),
+  commit: new Set(['running', 'awaiting-prompt-outcome', 'failed', 'died']),
   install: new Set(['running']),
   'fold-install': new Set(['awaiting-prompt-outcome']),
   'action-install': new Set(['failed', 'died']),
@@ -322,12 +328,14 @@ export async function commitStepTree(
   step: MigrateStep,
   absorbedStepIds: string[],
   commitInProcess: () => Promise<CommitResult>,
-  scope: TreeScope
+  scope: TreeScope,
+  commitAs?: CommitMarker
 ): Promise<BrokeredCommit> {
   const request: BrokerRequest = {
     kind: 'commit',
     stepId: step.id,
     attempt: step.attempt,
+    ...(commitAs !== undefined ? { commitAs } : {}),
   };
   const nonce = process.env[BROKER_ENV_VAR];
   if (!nonce) {
@@ -431,7 +439,7 @@ async function ask(
 ): Promise<BrokerAnswer> {
   const id = `${nonce}-${request.stepId}-${request.attempt}-${request.kind}${
     request.invocation ? `-${request.invocation}` : ''
-  }`;
+  }${request.commitAs !== undefined ? `-${request.commitAs}` : ''}`;
   const path = resultPath(dir, id);
   // A repeat reads the first answer, whatever became of the session since.
   if (existsSync(path)) {
@@ -631,7 +639,8 @@ export class MigrateCommitBroker {
       !Object.hasOwn(SEAM_STATUSES, request.kind) ||
       !isAtSeam(step, request) ||
       ((request.kind === 'commit' || request.kind === 'reset') &&
-        !this.policy.createCommits)
+        !this.policy.createCommits) ||
+      (request.commitAs !== undefined && request.commitAs !== 'unresolved')
     ) {
       return { kind: 'stale' };
     }
@@ -666,7 +675,7 @@ export class MigrateCommitBroker {
       );
       const result = await commitMigrationIfRequested(
         this.root,
-        { name: splitMigrationId(step.migrationId).name },
+        { name: commitNameForStep(step, request.commitAs) },
         true,
         state.commitPrefix,
         install,
