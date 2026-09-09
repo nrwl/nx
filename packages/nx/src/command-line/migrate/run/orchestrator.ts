@@ -94,11 +94,14 @@ import {
   commitMayBeInHistory,
   commitNameForStep,
   commitResultToLedgerEntry,
+  completionSummaryLines,
+  coveringLandedEntries,
   hasPendingCommitDebt,
   latestRound,
   markInstallFailed,
   splitMigrationId,
   stepsToPendingMigrations,
+  tallySteps,
   uncoveredFailedStepIds,
   type CommitAction,
   type StepAction,
@@ -517,21 +520,22 @@ function resumeRun(
 }
 
 function announceResume(runId: string, state: MigrateRunState): void {
-  const applied = state.steps.filter((s) => s.status === 'succeeded').length;
-  const skipped = state.steps.filter((s) => s.status === 'skipped').length;
-  const remaining = state.steps.length - applied - skipped;
-  // A subset of `remaining`, called out separately: a run is resumed most often
-  // because one of these is waiting on a decision, and the count alone would
-  // read as work that has not been reached yet.
-  const stalled = state.steps.filter(
-    (s) => s.status === 'failed' || s.status === 'died'
-  ).length;
+  const tally = tallySteps(state);
+  // Stalled steps are a subset of the remaining ones, called out separately:
+  // a run is resumed most often because one of these is waiting on a
+  // decision, and the count alone would read as work not reached yet.
   logToAgent({
     title: `nx migrate: resuming run ${runId}`,
     bodyLines: [
       `  started: ${state.createdAt}`,
-      `  progress: ${applied} applied, ${skipped} skipped, ${remaining} remaining${
-        stalled > 0 ? ` (${stalled} awaiting a decision)` : ''
+      `  progress: ${tally.applied + tally.adopted} applied, ${
+        tally.skipped
+      } skipped, ${
+        tally.unresolved.length > 0
+          ? `${tally.unresolved.length} unresolved, `
+          : ''
+      }${tally.remaining} remaining${
+        tally.stalled > 0 ? ` (${tally.stalled} awaiting a decision)` : ''
       }`,
     ],
   });
@@ -2552,10 +2556,7 @@ function completeRun(
   state: MigrateRunState
 ): void {
   let current = state;
-  const completed = current.steps.filter(
-    (s) => s.status === 'succeeded'
-  ).length;
-  const skipped = current.steps.filter((s) => s.status === 'skipped').length;
+  const tally = tallySteps(current);
   const dispenseCount = current.steps.reduce((n, s) => n + s.dispenseCount, 0);
 
   // Persist the terminal status and claim the watermark in one fresh-state
@@ -2578,8 +2579,8 @@ function completeRun(
   }
   if (shouldEmit) {
     reportMigrateOrchestratorComplete({
-      completed,
-      skipped,
+      completed: tally.applied + tally.adopted,
+      skipped: tally.skipped,
       dispenseCount,
     });
   }
@@ -2590,8 +2591,7 @@ function completeRun(
   }
   const instructionLines = [
     `Migrate run ${runId} is complete.`,
-    `  applied: ${completed}`,
-    `  skipped: ${skipped}`,
+    ...completionSummaryLines(current),
     ...warnings.flat(),
   ];
   logToAgent({ title: 'nx migrate: complete', bodyLines: instructionLines });
