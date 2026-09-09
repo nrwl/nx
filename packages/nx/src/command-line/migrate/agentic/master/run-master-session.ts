@@ -52,6 +52,10 @@ export async function runMasterSession(
     runId,
     runbookPath,
     reconcileCommand,
+    policy: {
+      createCommits: init.createCommits,
+      skipInstall: init.skipInstall,
+    },
   });
   if (session.kind === 'spawn-failed') {
     output.error({

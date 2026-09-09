@@ -246,6 +246,13 @@ export interface MigrateRunNoProgress {
   firstSeenAt: string;
 }
 
+// Resolved from the invocation's own flags. An agent's sandbox can write run
+// state, so a master session authorizes installs and commits from this.
+export interface MigrateRunPolicy {
+  createCommits: boolean;
+  skipInstall: boolean;
+}
+
 export interface MigrateRunState {
   formatVersion: number;
   runId: string;
