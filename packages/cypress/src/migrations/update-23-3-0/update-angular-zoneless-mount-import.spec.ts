@@ -108,9 +108,9 @@ type T = typeof import('cypress/angular-zoneless');
       },
     }));
 
-    const installTask = await migration(tree);
+    const result = await migration(tree);
 
-    expect(installTask).toEqual(expect.any(Function));
+    expect(result).toBeUndefined();
     expect(tree.read('apps/app/cypress/support/component.ts', 'utf-8')).toBe(
       `import { mount } from 'cypress/angular';\n`
     );
@@ -146,10 +146,53 @@ type T = typeof import('cypress/angular-zoneless');
     }));
     const before = tree.read('package.json', 'utf-8');
 
-    const installTask = await migration(tree);
+    const result = await migration(tree);
 
-    expect(installTask).toBeUndefined();
+    expect(result).toBeUndefined();
     expect(tree.read('package.json', 'utf-8')).toBe(before);
+  });
+
+  it('should leave require() calls alone in a file that binds its own require and report it', async () => {
+    tree.write(
+      'apps/app/src/app/app.cy.ts',
+      `import { mount } from 'cypress/angular-zoneless';
+const require = (id: string) => registry.get(id);
+const { MountConfig } = require('cypress/angular-zoneless');
+`
+    );
+
+    const result = await migration(tree);
+
+    expect(tree.read('apps/app/src/app/app.cy.ts', 'utf-8')).toBe(
+      `import { mount } from 'cypress/angular';
+const require = (id: string) => registry.get(id);
+const { MountConfig } = require('cypress/angular-zoneless');
+`
+    );
+    expect(result.nextSteps).toEqual([
+      expect.stringContaining(
+        'Left the `require()` calls in apps/app/src/app/app.cy.ts untouched because it declares its own `require`'
+      ),
+    ]);
+    expect(result.agentContext).toEqual(result.nextSteps);
+  });
+
+  it('should rewrite require() calls next to an ambient require declaration', async () => {
+    tree.write(
+      'apps/app/src/app/app.cy.ts',
+      `declare const require: NodeRequire;
+const { mount } = require('cypress/angular-zoneless');
+`
+    );
+
+    const result = await migration(tree);
+
+    expect(result).toBeUndefined();
+    expect(tree.read('apps/app/src/app/app.cy.ts', 'utf-8')).toBe(
+      `declare const require: NodeRequire;
+const { mount } = require('cypress/angular');
+`
+    );
   });
 
   it('should not rewrite the specifier outside module references', async () => {
