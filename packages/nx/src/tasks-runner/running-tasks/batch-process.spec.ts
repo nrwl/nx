@@ -1,16 +1,8 @@
 import * as figures from 'figures';
 import { EventEmitter } from 'events';
+import { PassThrough } from 'stream';
 import { existsSync, readFileSync } from 'fs';
 
-// Replaces the module rather than spying, and gates the failure on a flag so
-// every other test here keeps the real fs.
-//
-// A spy would also work, but only through `require('fs')` - NOT through an
-// `import * as fs`, which under this repo's transform is an interop wrapper
-// around the module rather than the module object itself, so mutating it
-// changes nothing `capture()` can see. Measured: namespace spy 0 calls,
-// `require` spy 1, for the same code path. The module mock sidesteps the
-// distinction entirely.
 // Fails the capture stream on its first write - a full disk. Gated on a flag so
 // every other test here keeps the real fs.
 //
@@ -54,11 +46,14 @@ import { BatchProcess } from './batch-process';
 
 function fakeChildProcess() {
   const child = new EventEmitter() as unknown as ChildProcess & {
-    stdout: EventEmitter;
-    stderr: EventEmitter;
+    stdout: PassThrough;
+    stderr: PassThrough;
   };
-  (child as any).stdout = new EventEmitter();
-  (child as any).stderr = new EventEmitter();
+  // Real streams, not bare emitters: the capture pauses the source when the
+  // file's write buffer fills, so a double without `pause`/`resume` would pass
+  // tests that production cannot reach.
+  (child as any).stdout = new PassThrough();
+  (child as any).stderr = new PassThrough();
   return child;
 }
 
@@ -145,7 +140,6 @@ describe('BatchProcess', () => {
       return b;
     });
 
-    // The stream buffers, so the file is only complete once flushed.
     await batch.flushCapturedOutput();
     const captured = readFileSync(batch.getCapturedOutputPath(), 'utf-8');
     expect(captured).toContain('build log line');
@@ -190,7 +184,6 @@ describe('BatchProcess', () => {
       return b;
     });
 
-    // The stream buffers, so the file is only complete once flushed.
     await batch.flushCapturedOutput();
     const captured = readFileSync(batch.getCapturedOutputPath(), 'utf-8');
     expect(captured.length).toEqual(3_000_000 + 'FINAL_FATAL'.length);
@@ -212,7 +205,6 @@ describe('BatchProcess', () => {
       return b;
     });
 
-    // The stream buffers, so the file is only complete once flushed.
     await batch.flushCapturedOutput();
     const path = batch.getCapturedOutputPath();
     expect(path).toBeDefined();
@@ -299,7 +291,6 @@ describe('BatchProcess', () => {
       });
     });
 
-    // The stream buffers, so the file is only complete once flushed.
     await batch.flushCapturedOutput();
     expect(batch.getCapturedOutputPath()).toEqual(path);
     expect(readFileSync(path, 'utf-8')).toEqual('during\nafter handover\n');
@@ -413,7 +404,6 @@ describe('BatchProcess', () => {
       }
     );
 
-    // The stream buffers, so the file is only complete once flushed.
     await batch.flushCapturedOutput();
     const path = batch.getCapturedOutputPath();
     expect(path).toBeDefined();

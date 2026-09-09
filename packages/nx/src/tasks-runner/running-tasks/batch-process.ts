@@ -1,4 +1,5 @@
 import type { ChildProcess, Serializable } from 'child_process';
+import type { Readable } from 'stream';
 import { createWriteStream, mkdirSync, rmSync, type WriteStream } from 'fs';
 import { join } from 'path';
 import { killProcessTreeGraceful } from '../../native';
@@ -49,14 +50,7 @@ export class BatchProcess {
    */
   private capturedOutputFailed = false;
   private static captureSeq = 0;
-  /**
-   * Discriminates this capture file from every other in the process. Assigned
-   * once here rather than at open time: a value minted inside the lazy open
-   * changed the name on every reopen, orphaning what had already been captured.
-   * `batchId` alone is not enough: `TasksSchedule.batchCounters` is per
-   * instance, so a second schedule in the same process mints `<executor> 1`
-   * again and the pid does not separate them either.
-   */
+  /** Discriminates this capture file from every other in the process. */
   private readonly captureSeq = ++BatchProcess.captureSeq;
 
   constructor(
@@ -74,12 +68,7 @@ export class BatchProcess {
      * ever claims, so it would exist nowhere.
      */
     private readonly printsOutput: boolean = true,
-    /**
-     * Labels the capture file so it is identifiable in `batch-outputs/`. Carries
-     * the executor already (`<executor> <n>`, from `TasksSchedule`), and is one
-     * of the three components of the name; `captureSeq` is what makes it
-     * unique.
-     */
+    /** Labels the capture file so it is identifiable in `batch-outputs/`. */
     private readonly batchId: string = executorName
   ) {
     this.childProcess.on('message', (message: BatchMessage) => {
@@ -128,7 +117,7 @@ export class BatchProcess {
         // routinely end mid-line, so they go through `output` to keep its line
         // tracking accurate for whatever prints next.
         if (shouldGroupBatchOutput() || !this.printsOutput) {
-          this.capture(chunk);
+          this.capture(chunk, this.childProcess.stdout);
         } else {
           output.writeTaskOutputChunk(chunk);
         }
@@ -146,7 +135,7 @@ export class BatchProcess {
         const text = chunk.toString();
 
         if (shouldGroupBatchOutput() || !this.printsOutput) {
-          this.capture(chunk);
+          this.capture(chunk, this.childProcess.stderr);
         } else {
           // Maintain current terminal output behavior
           output.writeTaskOutputChunk(chunk, process.stderr);
@@ -176,21 +165,27 @@ export class BatchProcess {
     this.outputCallbacks.push(cb);
   }
 
-  private capture(chunk: string | Buffer) {
-    // Only a released capture stops recording; a handed-over one keeps
-    // appending until the fold is rendered.
+  private capture(chunk: string | Buffer, source?: Readable | null) {
+    // Stops on release or on a capture failure; otherwise a handed-over
+    // capture keeps appending until the fold is rendered.
     if (this.capturedOutputDiscarded || this.capturedOutputFailed) {
       return;
     }
-    this.openCapturedOutput()?.write(chunk);
+    const stream = this.openCapturedOutput();
+    if (!stream) {
+      return;
+    }
+    // A full write buffer pauses the worker rather than growing in this
+    // process - which is the whole reason the capture is a file and not a
+    // string.
+    if (!stream.write(chunk) && source) {
+      source.pause();
+      stream.once('drain', () => source.resume());
+    }
   }
 
   /**
-   * The capture file, opened on the first chunk. A `WriteStream` rather than a
-   * hand-rolled `writeSync` loop: it already handles partial writes and
-   * backpressure, and backpressure is what should happen here — a slow disk
-   * should slow the worker rather than grow an unbounded buffer in this
-   * process.
+   * The capture file, opened on the first chunk.
    */
   private openCapturedOutput(): WriteStream | undefined {
     if (this.capturedOutputStream) {
@@ -228,9 +223,7 @@ export class BatchProcess {
 
   /**
    * Flushes and closes the capture so the file is complete before a caller
-   * reads it. A `WriteStream` buffers, unlike the synchronous writes this
-   * replaced, so the read has to be sequenced against the flush rather than
-   * relying on every byte already being on disk.
+   * reads it.
    */
   async flushCapturedOutput(): Promise<void> {
     const stream = this.capturedOutputStream;
@@ -263,9 +256,9 @@ export class BatchProcess {
   }
 
   /**
-   * Closes the fd and unlinks the file, leaving no path behind for a caller to
-   * read. Tolerates a partially-initialized capture, since it also runs when
-   * opening or writing the file is what failed.
+   * Destroys the stream and unlinks the file, leaving no path behind for a
+   * caller to read. Tolerates a partially-initialized capture, since it also
+   * runs when opening or writing the file is what failed.
    */
   private releaseCapturedOutput() {
     this.closeCapturedOutput();
@@ -282,7 +275,7 @@ export class BatchProcess {
     }
   }
 
-  /** Closes the stream, keeping the file and its path readable. */
+  /** Destroys the stream, dropping anything still buffered. The file stays. */
   private closeCapturedOutput() {
     if (this.capturedOutputStream) {
       this.capturedOutputStream.destroy();
