@@ -117,6 +117,12 @@ function registryEnv(cacheRoot) {
     npm_config_registry: registry,
     [`npm_config_//${listenAddress}:${port}/:_authToken`]: authToken,
     npm_config_cache: join(cacheRoot, 'npm'),
+    // pnpm resolves an exact version from its own metadata cache without asking
+    // the registry, so the global cache serves the previous run's nx@<major>
+    // under the same version string. global-setup.ts gives the specs a per-run
+    // cache for this reason (#36802); the template needs the same or it is built
+    // from stale bits the specs will never install.
+    pnpm_config_cache_dir: join(cacheRoot, 'pnpm'),
     // The nx packages were just published to verdaccio (publish date = now). A
     // user's `min-release-age` would filter them out as "too fresh" and fail to
     // resolve create-nx-workspace. Harmless in CI, where it isn't set.
