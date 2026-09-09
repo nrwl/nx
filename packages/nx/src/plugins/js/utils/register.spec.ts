@@ -1708,6 +1708,86 @@ describe('CJS resolution under Yarn PnP below 4.11', () => {
     expect(original).toHaveBeenCalledTimes(1);
   });
 
+  const installExtensionResolver = async (original: unknown) => {
+    const nodeModule = require('node:module') as any;
+    const realResolveFilename = nodeModule._resolveFilename;
+    vi.resetModules();
+    const { ensureCjsResolverPatched } = await import('./register');
+    nodeModule._resolveFilename = original;
+    ensureCjsResolverPatched();
+    return () => {
+      nodeModule._resolveFilename = realResolveFilename;
+    };
+  };
+
+  it('applies the retry to the extension resolver call', async () => {
+    const original = vi.fn(function (
+      request: string,
+      _parent: unknown,
+      _isMain: unknown,
+      options?: { conditions?: unknown }
+    ) {
+      if (options?.conditions) throw unsupported();
+      return `/ws/${request}.js`;
+    });
+    const parent = { filename: '/ws/a.js' };
+    const options = { conditions: new Set(['node']), paths: ['/ws'] };
+    const restore = await installExtensionResolver(original);
+    try {
+      expect(
+        (require('node:module') as any)._resolveFilename(
+          'pkg',
+          parent,
+          false,
+          options
+        )
+      ).toBe('/ws/pkg.js');
+      expect(original.mock.calls).toEqual([
+        ['pkg', parent, false, options],
+        ['pkg', parent, false, { paths: ['/ws'] }],
+      ]);
+    } finally {
+      restore();
+    }
+  });
+
+  it('applies the retry to the TypeScript extension fallback', async () => {
+    const original = vi.fn(function (
+      request: string,
+      _parent: unknown,
+      _isMain: unknown,
+      options?: { conditions?: unknown }
+    ) {
+      if (request.endsWith('.js')) {
+        throw Object.assign(new Error(`Cannot find module '${request}'`), {
+          code: 'MODULE_NOT_FOUND',
+        });
+      }
+      if (options?.conditions) throw unsupported();
+      return `/ws/${request.slice(2)}`;
+    });
+    const parent = { filename: '/ws/entry.ts' };
+    const options = { conditions: new Set(['node']), paths: ['/ws'] };
+    const restore = await installExtensionResolver(original);
+    try {
+      expect(
+        (require('node:module') as any)._resolveFilename(
+          './dep.js',
+          parent,
+          false,
+          options
+        )
+      ).toBe('/ws/dep.ts');
+      expect(original.mock.calls).toEqual([
+        ['./dep.js', parent, false, options],
+        ['./dep.ts', parent, false, options],
+        ['./dep.ts', parent, false, { paths: ['/ws'] }],
+      ]);
+    } finally {
+      restore();
+    }
+  });
+
   it('applies the retry inside the source graph resolver patch', () => {
     const nodeModule = require('node:module') as any;
     const realResolveFilename = nodeModule._resolveFilename;
