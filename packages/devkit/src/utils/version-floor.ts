@@ -130,8 +130,8 @@ export function assertSupportedPackageVersion(
  *   version decides. This resolves open ranges (e.g. `>=15.0.0 <17.0.0`) to
  *   what is actually installed. A dist tag (`latest`, `next`) resolved to
  *   the installed version, so that version decides as well.
- * - Otherwise the declared range's floor, as returned by
- *   `getDeclaredPackageVersion`. This is the fresh-workspace path (nothing
+ * - Otherwise the declared range's floor (`semver.minVersion`, a prerelease
+ *   when the range starts at one). This is the fresh-workspace path (nothing
  *   installed yet) and the case where a generator is mid-flight re-pinning
  *   the package: the new range no longer satisfies the still-installed
  *   version, so intent wins. A dist tag with nothing installed resolves to
@@ -155,6 +155,12 @@ export function getResolvedPackageVersion(
     );
     if (installed) {
       return installed;
+    }
+    // `minVersion` reads the whole range, so `<16 >=15.8.0` floors at 15.8.0.
+    // It is null for a range nothing satisfies.
+    const floor = validRange(declared) ? minVersion(declared)?.version : null;
+    if (floor) {
+      return floor;
     }
   }
   return getDeclaredPackageVersion(tree, packageName, latestKnownVersion);
