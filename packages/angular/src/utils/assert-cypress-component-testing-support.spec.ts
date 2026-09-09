@@ -1,4 +1,4 @@
-import { updateJson, type Tree } from '@nx/devkit';
+import { updateJson, writeJson, type Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { assertCypressComponentTestingSupport } from './assert-cypress-component-testing-support';
 
@@ -51,6 +51,50 @@ describe('assertCypressComponentTestingSupport', () => {
       expect(() => assertCypressComponentTestingSupport(tree)).not.toThrow();
     }
   );
+
+  function installCypress(version: string) {
+    writeJson(tree, 'node_modules/cypress/package.json', {
+      name: 'cypress',
+      version,
+    });
+  }
+
+  it.each(['15.17.0', '15.20.0'])(
+    'throws when the installed Cypress %s satisfies a range spanning the floor',
+    (installed) => {
+      setVersions({ '@angular/core': '~22.1.0', cypress: '>=15.0.0 <17' });
+      installCypress(installed);
+
+      expect(() => assertCypressComponentTestingSupport(tree)).toThrow(
+        new RegExp(
+          `requires Cypress 15\\.20\\.1 or higher.*Found Cypress ${installed}`
+        )
+      );
+    }
+  );
+
+  it.each(['15.20.1', '16.0.0'])(
+    'does not throw when the installed Cypress %s satisfies a range spanning the floor',
+    (installed) => {
+      setVersions({ '@angular/core': '~22.1.0', cypress: '>=15.0.0 <17' });
+      installCypress(installed);
+
+      expect(() => assertCypressComponentTestingSupport(tree)).not.toThrow();
+    }
+  );
+
+  it('does not throw for a range spanning the floor when Cypress is not installed', () => {
+    setVersions({ '@angular/core': '~22.1.0', cypress: '>=15.0.0 <17' });
+
+    expect(() => assertCypressComponentTestingSupport(tree)).not.toThrow();
+  });
+
+  it('ignores an installed Cypress that does not satisfy the declared range', () => {
+    setVersions({ '@angular/core': '~22.1.0', cypress: '^15.20.1' });
+    installCypress('15.17.0');
+
+    expect(() => assertCypressComponentTestingSupport(tree)).not.toThrow();
+  });
 
   it('does not throw when Cypress is not installed and the version to install is supported', () => {
     setVersions({ '@angular/core': '~22.1.0' });
