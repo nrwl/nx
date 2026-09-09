@@ -2,6 +2,7 @@
 // run's runbook (run/runbook.ts) must state identically.
 
 import { formatCommandFor } from '../format-command';
+import { MIGRATE_RUNS_RELATIVE_DIR } from '../types';
 
 export function renderNxInvocationNote(
   packageManager: string,
@@ -42,6 +43,7 @@ export function renderAuthorScopeRuleLines(
     `- Do not refactor or update dependencies beyond what the migration prompt directs, and do not reformat files you did not change.`,
     renderFormatRule(pmExec, format),
     `- Do not modify files outside the workspace root.`,
+    `- Do not edit anything under \`${MIGRATE_RUNS_RELATIVE_DIR}\` except the handoff file you are asked to write, and do not edit the \`migrate\` section of nx.json.`,
     `- Do not run \`nx\` commands that mutate workspace state (\`nx migrate\`, \`nx reset\`, \`nx format:write\`, \`nx run-many\`, generators, etc.). Read-only inspection (\`nx show\`, \`nx graph --file\`, reading files) is fine.`,
     `- If the migration instructions are unclear, internally inconsistent, or conflict with the current workspace state, ask the user for direction (see the handoff contract). Do not guess.`,
   ];
@@ -86,6 +88,7 @@ export function renderValidationScopeRuleLines(): string[] {
     `- You may apply minor fixes only when the issue lies within the scope of what this migration intended to accomplish (e.g. a missing import the generator's template should have produced, a type annotation the template missed). Do not refactor, do not modify unrelated functionality, do not extend the migration's scope, do not touch code the migration was not concerned with. If you are unsure whether a fix is in scope, report it in \`summary\` instead of applying.`,
     `- Do not run other \`nx\` commands that mutate workspace state (\`nx migrate\`, \`nx reset\`, generators, etc.).`,
     `- Do not modify files outside the workspace root.`,
+    `- Do not edit anything under \`${MIGRATE_RUNS_RELATIVE_DIR}\` except the handoff file you are asked to write, and do not edit the \`migrate\` section of nx.json.`,
     `- If validation finds blocking issues you cannot resolve within scope: apply every fix you can within scope, then report the unresolved findings to the user and ask how to proceed (see the handoff contract). Do not guess.`,
   ];
 }
