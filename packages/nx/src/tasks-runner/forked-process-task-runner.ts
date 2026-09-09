@@ -32,6 +32,8 @@ export class ForkedProcessTaskRunner {
 
   private readonly verbose = process.env.NX_VERBOSE_LOGGING === 'true';
   private processes = new Set<RunningTask | BatchProcess>();
+  private processMessageHandler: (message: Serializable) => void;
+  private processExitHandler: () => void;
   private finishedProcesses = new Set<BatchProcess>();
   private pseudoTerminals = new Set<PseudoTerminal>();
 
@@ -415,7 +417,7 @@ export class ForkedProcessTaskRunner {
   }
 
   private setupProcessEventListeners() {
-    const messageHandler = (message: Serializable) => {
+    this.processMessageHandler = (message: Serializable) => {
       this.pseudoTerminals.forEach((p) => {
         p.sendMessageToChildren(message);
       });
@@ -426,15 +428,25 @@ export class ForkedProcessTaskRunner {
         }
       });
     };
+    this.processExitHandler = () => {
+      this.cleanup();
+      process.off('message', this.processMessageHandler);
+    };
 
     // When the nx process gets a message, it will be sent into the task's process
-    process.on('message', messageHandler);
+    process.on('message', this.processMessageHandler);
 
     // Terminate any task processes on exit
-    process.once('exit', () => {
-      this.cleanup();
-      process.off('message', messageHandler);
-    });
+    process.once('exit', this.processExitHandler);
     // Signal handlers removed - TaskOrchestrator owns signal handling
+  }
+
+  // Long-lived processes (Nx Cloud agents) create a runner per invocation;
+  // without this each instance stays reachable from `process` forever.
+  // Call only after cleanup(): the exit handler is the last-resort child
+  // kill, so it must not be removed while children may still be alive.
+  removeProcessEventListeners() {
+    process.off('message', this.processMessageHandler);
+    process.off('exit', this.processExitHandler);
   }
 }
