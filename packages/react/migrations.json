@@ -85,7 +85,7 @@
           "alwaysAddToPackageJson": false
         },
         "@module-federation/node": {
-          "version": "^2.7.21",
+          "version": "^2.7.50",
           "alwaysAddToPackageJson": false
         }
       }
@@ -171,11 +171,11 @@
       "x-prompt": "Bump @module-federation packages to v2.x to resolve koa CVE-2026-27959 (via dts-plugin)",
       "packages": {
         "@module-federation/enhanced": {
-          "version": "^2.1.0",
+          "version": "^2.9.0",
           "alwaysAddToPackageJson": false
         },
         "@module-federation/node": {
-          "version": "^2.7.21",
+          "version": "^2.7.50",
           "alwaysAddToPackageJson": false
         }
       }
