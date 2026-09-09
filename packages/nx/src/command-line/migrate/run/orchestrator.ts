@@ -462,8 +462,9 @@ function resumeRun(
     (state.skipInstall === true) !== policy.skipInstall
   ) {
     throw new Error(
-      `Nx did not resume the active migrate run because its recorded install and commit policy differs from this invocation. ` +
-        `Run the command that started run '${runId}' again with its original flags, or remove ${MIGRATE_RUNS_RELATIVE_DIR}/${runId} to abandon it.`
+      `Nx did not resume the active migrate run because its recorded install and commit policy differs from this invocation's. ` +
+        `Nx takes that policy from --create-commits and --skip-install, and from nx.json "migrate.createCommits" when the commit flag is omitted. ` +
+        `Re-run with explicit flags for the policy run '${runId}' started with, or remove ${MIGRATE_RUNS_RELATIVE_DIR}/${runId} to abandon it.`
     );
   }
   const dir = runDir(root, runId);
