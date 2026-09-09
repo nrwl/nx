@@ -37,6 +37,8 @@ export class BatchProcess {
    */
   private capturedOutputPath: string | undefined;
   private capturedOutputStream: WriteStream | undefined;
+  /** Sources paused for backpressure, awaiting a 'drain' that may never come. */
+  private readonly pausedSources = new Set<Readable>();
   /**
    * Set once the capture is released. A chunk can still arrive after that —
    * stdout delivers past the exit event — and writing then would reach a file
@@ -183,11 +185,30 @@ export class BatchProcess {
       return;
     }
     // A full write buffer pauses the worker rather than growing in this
-    // process.
+    // process. Tracked, because only 'drain' resumes it and a stream that
+    // errors never emits one - see `resumeCapturedSources`.
     if (!stream.write(chunk) && source) {
+      this.pausedSources.add(source);
       source.pause();
-      stream.once('drain', () => source.resume());
+      stream.once('drain', () => {
+        this.pausedSources.delete(source);
+        source.resume();
+      });
     }
+  }
+
+  /**
+   * Lets the worker write again after the capture has stopped.
+   *
+   * Without this a failed capture wedges the whole run: the source stays
+   * paused, so the worker blocks once its stdout pipe fills, never sends its
+   * results, and `getResults` waits on a batch that can no longer finish.
+   */
+  private resumeCapturedSources() {
+    for (const source of this.pausedSources) {
+      source.resume();
+    }
+    this.pausedSources.clear();
   }
 
   private openCapturedOutput(): WriteStream | undefined {
@@ -210,6 +231,7 @@ export class BatchProcess {
       // where a compiler's first non-cascading errors are.
       stream.on('error', () => {
         this.capturedOutputFailed = true;
+        this.resumeCapturedSources();
       });
       this.capturedOutputPath = path;
       this.capturedOutputStream = stream;
@@ -274,6 +296,7 @@ export class BatchProcess {
 
   /** Destroys the stream, dropping anything still buffered. The file stays. */
   private closeCapturedOutput() {
+    this.resumeCapturedSources();
     if (this.capturedOutputStream) {
       this.capturedOutputStream.destroy();
       this.capturedOutputStream = undefined;

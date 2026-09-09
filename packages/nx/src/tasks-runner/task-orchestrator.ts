@@ -992,9 +992,9 @@ export class TaskOrchestrator {
 
       // The worker died without reporting results, so nothing was attributed to
       // a task and no per-task output ran. Everything it wrote went to
-      // stdout/stderr, held back under grouping or under a style that prints
-      // nothing — surface it as one fold. Outside both, it already streamed
-      // live. This matters just as much when the batch was stopped: every task
+      // stdout/stderr, held back under grouping - surface it as one fold. Under
+      // a style that prints nothing there is no fold; the log is announced by
+      // path above instead. Outside both, it already streamed live. This matters just as much when the batch was stopped: every task
       // is marked stopped whether or not it finished, so the log is the only
       // record of what got through. Only the exit-code error is dropped there,
       // since it restates the cancellation.
