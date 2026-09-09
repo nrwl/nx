@@ -833,9 +833,10 @@ export async function runOrchestratorReconcile(
       const target = result.targetStep;
       // The commit is a git side effect, so it runs before the lock (locked
       // sections stay synchronous); the transition and any unrecorded entry then
-      // land in one write. Adopt and skip keep the tree, so the install they owe
-      // runs here: the next dispense would take the changed deps as its baseline.
-      // Retries owe nothing: the rearmed attempt reconciles itself.
+      // land in one write. Adopt, skip and unresolved keep the tree, so the
+      // install they owe runs here: the next dispense would take the changed
+      // deps as its baseline. Retries owe nothing: the rearmed attempt
+      // reconciles itself.
       const { entry, installFailed, recorded }: StepSideEffects =
         stepAction === 'adopt'
           ? state.createCommits
@@ -851,7 +852,7 @@ export async function runOrchestratorReconcile(
                   scope
                 ),
               }
-          : stepAction === 'skip'
+          : stepAction === 'skip' || stepAction === 'unresolved'
             ? await retainedTreeSideEffects(
                 root,
                 dir,
@@ -1569,6 +1570,7 @@ function advanceAndDispense(root: string, dir: string, runId: string): void {
       break;
     case 'succeeded':
     case 'skipped':
+    case 'unresolved':
       // firstActionableStep already excludes these via TERMINAL_STEP_STATUSES;
       // landing here means an already-terminal step slipped through
       // unclassified rather than being left to stall the run silently.
