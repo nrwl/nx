@@ -11,8 +11,10 @@ namespace MsbuildAnalyzer.Models;
 ///
 /// The cost is that renaming a member changes which property is read, so treat
 /// these names as the external contract they are. Members that interpret a value
-/// (<see cref="IsExecutable"/>, <see cref="ProjectExtensionsPath"/>) are derived
-/// from a raw member rather than named freely, so the rule holds everywhere.
+/// either derive from a raw member (<see cref="IsExecutable"/>,
+/// <see cref="ProjectExtensionsPath"/>) or carry the MSBuild name themselves
+/// (<see cref="IsTestProject"/>); both routes bind the name with <c>nameof</c>,
+/// so the rule holds everywhere.
 ///
 /// Backed by the whole evaluated set rather than a curated one, so a property
 /// no member models is still reachable through <see cref="Get"/>.
@@ -78,8 +80,9 @@ public sealed class EvaluatedProperties
     public string? OpenApiGenerateDocumentsOptions => Get(nameof(OpenApiGenerateDocumentsOptions));
     public string? TestResultsDirectory => Get(nameof(TestResultsDirectory));
 
-    // Interpreted values. Derived from the raw members above so every MSBuild
-    // name still comes from a `nameof`.
+    // Interpreted values. Each derives from a raw member above or, like
+    // IsTestProject, carries the MSBuild name itself; either way the name comes
+    // from a `nameof`.
     public bool IsTestProject => Get(nameof(IsTestProject)) == "true";
     public bool UsesArtifactsOutput =>
         string.Equals(UseArtifactsOutput, "true", StringComparison.OrdinalIgnoreCase);
@@ -90,10 +93,14 @@ public sealed class EvaluatedProperties
     /// The directory NuGet writes its restore-generated imports into.
     /// <c>Microsoft.Common.props</c> rebases <c>MSBuildProjectExtensionsPath</c> to an
     /// absolute path on every SDK project, so the fallback only covers a project that
-    /// never imported it. Callers combine the result with the project directory.
+    /// never imported it. There the value is MSBuild-flavoured (<c>obj\</c>) and its
+    /// separators have to be normalized before it can be combined on a non-Windows path.
+    /// Absolute when rebased and possibly relative on the fallbacks; callers combine it
+    /// with the project directory through <c>Path.Combine</c>, which keeps an absolute
+    /// value as it is.
     /// </summary>
     public string ProjectExtensionsPath =>
         MSBuildProjectExtensionsPath
-        ?? BaseIntermediateOutputPath
+        ?? BaseIntermediateOutputPath?.Replace('\\', '/')
         ?? "obj";
 }
