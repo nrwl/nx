@@ -458,6 +458,26 @@ describe('getResolvedPackageVersion', () => {
     expect(getResolvedPackageVersion(tree, 'some-pkg')).toBe('1.0.0');
   });
 
+  it('returns the declared floor when the range lists its upper bound first', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { 'some-pkg': '<3.0.0 >=1.5.0' },
+    }));
+
+    expect(getResolvedPackageVersion(tree, 'some-pkg')).toBe('1.5.0');
+  });
+
+  it('falls back to the coerced declaration when nothing satisfies the declared range', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { 'some-pkg': '>=2.0.0 <1.0.0' },
+    }));
+
+    expect(getResolvedPackageVersion(tree, 'some-pkg')).toBe('2.0.0');
+  });
+
   it('returns the installed version when it satisfies the declared range', () => {
     const tree = createTreeWithEmptyWorkspace();
     updateJson(tree, 'package.json', (json) => ({
