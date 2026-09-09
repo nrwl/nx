@@ -5,7 +5,13 @@ import { format } from './format';
 // whether CI passes - fail-open, configured-but-not-installed, and the
 // write/check dispatch - have no fast test. These mock the seams around it.
 
-vi.mock('../../utils/formatters', () => ({ detectFormatter: vi.fn() }));
+vi.mock('../../utils/formatters', async () => ({
+  detectFormatter: vi.fn(),
+  resolveFormatterBin: {
+    oxfmt: (await import('../../utils/formatters/oxfmt')).getOxfmtBinPath,
+    prettier: (await import('../../utils/formatters/prettier')).getPrettierPath,
+  },
+}));
 vi.mock('../../utils/formatters/oxfmt', () => ({
   getOxfmtBinPath: vi.fn(),
   writeWithOxfmt: vi.fn(),
