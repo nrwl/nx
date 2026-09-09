@@ -148,11 +148,12 @@ const HANG_THRESHOLD_MS = 15 * 60 * 1000;
 // 'no-progress' action. A still-running worker is exempt until the hang
 // threshold: waiting on a live worker is not looping.
 const NO_PROGRESS_THRESHOLD = 3;
-// Rearms of one step before its failed/died dispense escalates: the retry
-// guidance flips against retrying and the preselected `next` is withheld, so
-// an agent that follows `next` blindly cannot retry forever. An explicit
-// retry is still honored; the cap never refuses.
-const REARM_ESCALATION_CAP = 3;
+// Rearms of one step before its retries are refused: a second attempt for
+// the diagnosed fix and a third for a correction to it. Past the cap the
+// failed/died dispense offers only adopt, skip and unresolved, and the
+// reconcile rejects retry and retry-clean, so neither a blindly-followed
+// `next` nor an explicit choice retries forever.
+const REARM_ESCALATION_CAP = 2;
 
 export interface RunOrchestratorInitInput {
   root: string;
@@ -1341,6 +1342,17 @@ function applyReconcileStepAction(
     };
   }
   const step = candidates[0];
+  if (
+    (action === 'retry' || action === 'retry-clean') &&
+    rearmCapReached(step)
+  ) {
+    return {
+      kind: 'error',
+      reason: `Cannot apply action '${action}' to step '${step.id}': ${rearmCapLine(
+        step
+      )}`,
+    };
+  }
   // A retry-clean the dispense would not have offered must be refused here
   // too, or a hand-crafted reconcile could reset a tree with no restore point
   // and destroy prior steps' work.
@@ -1797,9 +1809,11 @@ function emitRetryFailed(
     ``,
     ...(capReached ? [rearmCapLine(step), ``] : []),
     `Decide how to proceed and re-run reconcile with one of:`,
-    retryOptionLine(retrySafety, reconcileCommand(root, runId, 'retry')),
+    ...(capReached
+      ? []
+      : [retryOptionLine(retrySafety, reconcileCommand(root, runId, 'retry'))]),
   ];
-  if (cleanRetry) {
+  if (cleanRetry && !capReached) {
     lines.push(
       `  retry-clean: restore the tree to ${
         step.gitRefBefore ?? 'the pre-migration ref'
@@ -1827,9 +1841,8 @@ function emitRetryFailed(
   // A step whose generator may still run gets no `next`, whichever retry the
   // checks above would accept: git can vouch for the tracked tree only, and
   // an agent that follows `next` blindly must not rerun a generator over
-  // writes nothing here could see. Choosing a retry has to be explicit. The
-  // rearm cap withholds it too: each rearm resets the response streak, so a
-  // blindly-followed retry `next` would loop past every escalation.
+  // writes nothing here could see. Choosing a retry has to be explicit. Past
+  // the rearm cap no retry is offered or accepted at all.
   emit(
     root,
     runId,
@@ -1851,13 +1864,11 @@ function rearmCapReached(step: MigrateStep): boolean {
   return step.attempt - 1 >= REARM_ESCALATION_CAP;
 }
 
-// No availability promise: which retry forms remain is the option list's to
-// say (a pre-marker death may offer none), and the cap itself withholds only
-// the preselected continuation.
+// Opens a capped dispense and is the reason a retry past the cap is refused.
 function rearmCapLine(step: MigrateStep): string {
   return `This migration has already been retried ${
     step.attempt - 1
-  } times without completing. Repeating an unchanged retry is unlikely to end differently: fix the underlying problem first, choose one of the non-retry options below, or ask the user how to proceed.`;
+  } times without completing, and no further retry is accepted. Choose adopt, skip or unresolved, or ask the user how to proceed.`;
 }
 
 // Whether the step's generator half may still have to run: it exists and no
@@ -2075,7 +2086,7 @@ function emitDied(
     ...(capReached ? [rearmCapLine(step), ``] : []),
   ];
   const options: string[] = [];
-  if (resume) {
+  if (resume && !capReached) {
     options.push(
       `  retry: keep everything this migration already produced (its commit, if any, and the current tree) and run only the part that did not complete, then run: ${reconcileCommand(
         root,
@@ -2084,7 +2095,7 @@ function emitDied(
       )}`
     );
   }
-  if (cleanRetry) {
+  if (cleanRetry && !capReached) {
     options.push(
       `  retry-clean: restore the tree to ${
         ref ?? 'the pre-migration ref'
@@ -2096,7 +2107,7 @@ function emitDied(
         'retry-clean'
       )}`
     );
-  } else {
+  } else if (!capReached) {
     lines.push(
       `A clean retry is unavailable: ${cleanRetryUnavailableReason(
         root,
@@ -2129,8 +2140,7 @@ function emitDied(
   // the generator may still run there is no `next` at all: a reset cannot be
   // verified against writes git does not see, and adopting records a result
   // nothing checked, so an agent that follows `next` blindly must land on
-  // neither. The rearm cap withholds it for the same reason as in
-  // emitRetryFailed.
+  // neither. Past the rearm cap no retry is offered or accepted at all.
   emit(
     root,
     runId,

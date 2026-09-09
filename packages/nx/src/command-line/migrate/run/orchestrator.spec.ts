@@ -5446,35 +5446,7 @@ describe('orchestrator', () => {
       );
     });
 
-    it('escalates the retry options once the step has used its three rearms, withholding the preselected retry', async () => {
-      mockGetLatestCommitSha.mockReturnValue(
-        'beef0001beef0001beef0001beef0001beef0001'
-      );
-      setupRun('run-1', {
-        steps: [
-          migStep('step-1', '@nx/js:gen', 'failed', {
-            gitRefBefore: 'beef0001beef0001beef0001beef0001beef0001',
-            treeCleanAtDispense: true,
-            generatorCompleted: true,
-            attempt: 4,
-          }),
-        ],
-        createCommits: true,
-        plan: [genMig('@nx/js', 'gen')],
-      });
-
-      await runOrchestratorReconcile({ root, runId: 'run-1' });
-
-      const block = lastBlock();
-      expect(block.action).toBe('retry-failed');
-      expect(block.payload.instructions).toContain(
-        'already been retried 3 times'
-      );
-      expect(block.payload.instructions).toContain('retry:');
-      expect(block.payload.next).toBeUndefined();
-    });
-
-    it('keeps the preselected retry while rearms remain below the cap', async () => {
+    it('withholds every retry once the step has used its two rearms', async () => {
       mockGetLatestCommitSha.mockReturnValue(
         'beef0001beef0001beef0001beef0001beef0001'
       );
@@ -5494,16 +5466,49 @@ describe('orchestrator', () => {
       await runOrchestratorReconcile({ root, runId: 'run-1' });
 
       const block = lastBlock();
+      expect(block.action).toBe('retry-failed');
+      expect(block.payload.instructions).toContain(
+        'already been retried 2 times'
+      );
+      expect(block.payload.instructions).not.toContain('retry:');
+      expect(block.payload.instructions).not.toContain('retry-clean');
+      expect(block.payload.instructions).toContain('--step-action=adopt');
+      expect(block.payload.instructions).toContain('--step-action=skip');
+      expect(block.payload.instructions).toContain('--step-action=unresolved');
+      expect(block.payload.next).toBeUndefined();
+    });
+
+    it('keeps the preselected retry while rearms remain below the cap', async () => {
+      mockGetLatestCommitSha.mockReturnValue(
+        'beef0001beef0001beef0001beef0001beef0001'
+      );
+      setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'failed', {
+            gitRefBefore: 'beef0001beef0001beef0001beef0001beef0001',
+            treeCleanAtDispense: true,
+            generatorCompleted: true,
+            attempt: 2,
+          }),
+        ],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const block = lastBlock();
       expect(block.payload.instructions).not.toContain('already been retried');
+      expect(block.payload.instructions).toContain('retry-clean:');
       expect(block.payload.next).toMatch(/--step-action=retry$/);
     });
 
-    it('escalates a died step past the cap the same way', async () => {
+    it('withholds every retry from a died step past the cap the same way', async () => {
       setupRun('run-1', {
         steps: [
           migStep('step-1', '@nx/js:gen', 'died', {
             generatorCompleted: true,
-            attempt: 4,
+            attempt: 3,
           }),
         ],
         plan: [genMig('@nx/js', 'gen')],
@@ -5514,32 +5519,53 @@ describe('orchestrator', () => {
       const block = lastBlock();
       expect(block.action).toBe('died');
       expect(block.payload.instructions).toContain(
-        'already been retried 3 times'
+        'already been retried 2 times'
       );
-      expect(block.payload.instructions).toContain('retry:');
+      expect(block.payload.instructions).not.toContain('retry:');
+      expect(block.payload.instructions).not.toContain(
+        'A clean retry is unavailable'
+      );
+      expect(block.payload.instructions).toContain('--step-action=adopt');
       expect(block.payload.next).toBeUndefined();
     });
 
-    it('still honors an explicit retry past the cap', async () => {
-      const dir = setupRun('run-1', {
-        steps: [
-          migStep('step-1', '@nx/js:gen', 'failed', {
-            generatorCompleted: true,
-            attempt: 4,
-          }),
-        ],
-        plan: [genMig('@nx/js', 'gen')],
-      });
+    it.each(['retry', 'retry-clean'] as const)(
+      'refuses an explicit %s past the cap, leaving state untouched',
+      async (stepAction) => {
+        mockGetLatestCommitSha.mockReturnValue(
+          'beef0001beef0001beef0001beef0001beef0001'
+        );
+        const dir = setupRun('run-1', {
+          steps: [
+            migStep('step-1', '@nx/js:gen', 'failed', {
+              gitRefBefore: 'beef0001beef0001beef0001beef0001beef0001',
+              treeCleanAtDispense: true,
+              generatorCompleted: true,
+              attempt: 3,
+            }),
+          ],
+          createCommits: true,
+          plan: [genMig('@nx/js', 'gen')],
+        });
+        const before = readFileSync(join(dir, 'run.json'), 'utf-8');
 
-      await runOrchestratorReconcile({
-        root,
-        runId: 'run-1',
-        stepAction: 'retry',
-      });
+        await runOrchestratorReconcile({
+          root,
+          runId: 'run-1',
+          stepAction,
+        });
 
-      expect(lastBlock().action).toBe('next-step');
-      expect(readRunState(dir).steps[0].attempt).toBe(5);
-    });
+        expect(readFileSync(join(dir, 'run.json'), 'utf-8')).toBe(before);
+        const block = lastBlock();
+        expect(block.action).toBe('error');
+        expect(block.payload.instructions).toContain(
+          `Cannot apply action '${stepAction}'`
+        );
+        expect(block.payload.instructions).toContain(
+          'already been retried 2 times'
+        );
+      }
+    );
   });
 
   describe('reconcile: no-progress escalation', () => {
