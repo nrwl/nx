@@ -1399,9 +1399,12 @@ function expandInputs(
       workspaceRootInputs.push(...inputs);
       return;
     }
-    // `files` groups look like files:[glob,!otherGlob] and expand on disk
-    if (input.startsWith('files:[')) {
-      filesInputs.push(input.substring(7, input.length - 1).split(','));
+    // Disk-backed groups look like files:{project}:[glob,!otherGlob]. They
+    // expand on disk, so they must be matched before the `:` catch-all below
+    // classifies them as external dependencies.
+    const diskBacked = /^files:.*?:\[(.*)\]$/.exec(input);
+    if (diskBacked) {
+      filesInputs.push(diskBacked[1].split(','));
       return;
     }
     const maybeProjectName = input.split(':')[0];

@@ -19,7 +19,7 @@ use crate::native::walker::HARDCODED_IGNORE_PATTERNS;
 /// exist: absence is an observation, so the key flips when the file appears.
 const MISSING_FILE_HASH: &str = "missing";
 
-/// Expansion per `files:[...]` instruction, scoped to one `hash_plans` call:
+/// Expansion per `files:{project}:[...]` instruction, scoped to one `hash_plans` call:
 /// nothing watches gitignored directories, so a longer-lived memo goes stale.
 pub(crate) type FilesExpansionCache = DashMap<String, Arc<FilesExpansion>>;
 

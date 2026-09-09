@@ -193,7 +193,7 @@ describe('getExpandedTaskInputs', () => {
     getPlansMock.mockReturnValue({
       'myproj:build': [
         'io-snapshot:abc123',
-        'files:[libs/myproj/generated/a.json,!libs/myproj/generated/b.json]',
+        'files:myproj:[libs/myproj/generated/a.json,!libs/myproj/generated/b.json]',
         'npm:some-pkg',
       ],
     });
@@ -209,7 +209,7 @@ describe('getExpandedTaskInputs', () => {
     });
 
     getPlansMock.mockReturnValue({
-      'myproj:build': ['files:[libs/myproj/generated/a.json]'],
+      'myproj:build': ['files:myproj:[libs/myproj/generated/a.json]'],
     });
     const declared = await getExpandedTaskInputs(
       makeResponse(),
