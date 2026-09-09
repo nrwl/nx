@@ -2,9 +2,8 @@ import { realpathSync } from 'node:fs';
 import * as path from 'node:path';
 
 /**
- * Tests workspace-local membership by realpath when available, so package
- * symlinks and root aliases compare consistently; installed `node_modules`
- * paths remain external.
+ * Compares by realpath when available so symlinks and root aliases agree;
+ * installed `node_modules` paths stay external.
  */
 export function isWorkspaceLocalResolution(
   resolvedPath: string,
@@ -28,8 +27,7 @@ function canonicalPath(p: string): string {
 
 /**
  * Adds build/source guidance when a workspace-local built entry cannot resolve
- * a workspace path or package. Preserves the original error as cause and
- * leading message.
+ * a workspace dependency, keeping the original error as cause and message.
  */
 export function withBuiltEntryResolutionHint(
   error: unknown,

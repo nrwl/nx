@@ -32,8 +32,7 @@ import {
 } from '../../../internal-testing-utils/cjs-mock';
 import { TempFs } from '../../../internal-testing-utils/temp-fs';
 
-// Node below 22.15 has no `module.registerHooks`, and `vi.spyOn` refuses a
-// missing property. Stub it for the spy and remove the stub afterwards.
+// Provide registerHooks when absent so tests can spy on it.
 function stubRegisterHooksIfAbsent(nodeModule: {
   registerHooks?: unknown;
 }): () => void {
@@ -911,9 +910,7 @@ describe('registerSourceGraphResolver', () => {
     cleanup();
   });
 
-  // TypeScript moves on to the next matching condition when a target does not
-  // resolve, so a graph member falls through to the default resolution where
-  // Node's own `--conditions` would fail with a missing file.
+  // Match TypeScript's fallback when a selected condition target is missing.
   it('falls through to the default resolution when the selected source target is missing (ESM)', () => {
     const hooks = captureResolveHook();
     vi.spyOn(
@@ -1128,9 +1125,7 @@ describe('registerSourceGraphResolver CJS path cache isolation', () => {
       // The relative hop verifies lazy graph-member tracking.
       'workspace/graph-entry.cjs':
         "module.exports = { ...require('./inner.cjs'), nested: require('./nested/member.cjs'), dynamic: require('./dynamic-member.cjs') };\n",
-      // A dynamic import from a graph member follows Node's own resolution
-      // without `module.registerHooks`. `new Function` keeps the import out
-      // of the CommonJS transform.
+      // new Function preserves dynamic import through the CommonJS transform.
       'workspace/dynamic-member.cjs':
         "module.exports = () => new Function('s', 'return import(s)')('@proj/pkg').then((m) => m.default);\n",
       'workspace/inner.cjs':
@@ -1162,8 +1157,7 @@ describe('registerSourceGraphResolver CJS path cache isolation', () => {
       }),
       'workspace/packages/pkg/src/index.js': "module.exports = 'source';\n",
       'workspace/packages/pkg/dist/index.js': "module.exports = 'dist';\n",
-      // Never linked under node_modules: only Node's self-reference rule
-      // reaches it.
+      // Leave this package unlinked to exercise self-reference resolution.
       'workspace/packages/self/package.json': JSON.stringify({
         name: '@proj/self',
         exports: {
@@ -1177,8 +1171,7 @@ describe('registerSourceGraphResolver CJS path cache isolation', () => {
         "module.exports = require('@proj/self/sub');\n",
       'workspace/packages/self/src/sub.js': "module.exports = 'self-source';\n",
       'workspace/packages/self/dist/sub.js': "module.exports = 'self-dist';\n",
-      // `exports: null` is no self-reference scope for Node, so the request
-      // continues to the linked package under the same name.
+      // A null exports map must fall through to the linked package.
       'workspace/packages/null-exports/package.json': JSON.stringify({
         name: '@proj/null-exports',
         exports: null,
@@ -1219,8 +1212,7 @@ describe('registerSourceGraphResolver CJS path cache isolation', () => {
         `const base = process.argv[4] === 'alias-root' ? ${JSON.stringify(aliasDir)} : ${JSON.stringify(workspaceDir)};`,
         `const entry = base + '/graph-entry.cjs';`,
         `const sibling = base + '/sibling.cjs';`,
-        // Register the real path first to cover alias registration after an
-        // existing graph.
+        // Register the real path before its alias to exercise graph reuse.
         `const cleanupReal = process.argv[4] === 'alias-root' ? registerSourceGraphResolver(${JSON.stringify(join(workspaceDir, 'graph-entry.cjs'))}, ${JSON.stringify(workspaceDir)}, ['@proj/pkg']) : () => {};`,
         `const cleanup = registerSourceGraphResolver(entry, base, ['@proj/pkg']);`,
         `(async () => {`,
@@ -1382,8 +1374,8 @@ describe('registerSourceGraphResolver CJS path cache isolation', () => {
   );
 });
 
-// Graph conditions must union with runtime conditions so all consumers select
-// the same package instance.
+// Preserve runtime conditions alongside graph conditions; dropping them
+// can change exports selected by the user's flags.
 describe('registerSourceGraphResolver CJS runtime condition union', () => {
   const registerHooksAvailable =
     typeof (require('node:module') as { registerHooks?: unknown })
