@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatAffectedExplanation,
   formatAffectedReason,
   isExplaining,
   type AffectedReason,
@@ -121,5 +122,34 @@ describe('isExplaining', () => {
     ['reasons.json', true],
   ])('%s -> %s', (value, expected) => {
     expect(isExplaining(value as any)).toBe(expected);
+  });
+});
+
+describe('formatAffectedExplanation', () => {
+  const reasons: Record<string, AffectedReason[]> = {
+    'app:build': [{ kind: 'dependent-output', producer: 'ui:build' }],
+    'ui:build': [{ kind: 'input-file', file: 'libs/ui/src/x.ts' }],
+  };
+
+  /**
+   * Only the command that is about to run the closure reports it. `nx affected`
+   * does; `nx show projects` answers a question and runs nothing, so a count of
+   * what it would drag in would describe a run that is not happening.
+   */
+  it('names the closure when the caller is going to run it', () => {
+    expect(formatAffectedExplanation(reasons, 'Affected tasks', 149)).toContain(
+      '2 affected tasks and 149 tasks they depend on.'
+    );
+  });
+
+  it('reports the selection alone when no closure is passed', () => {
+    const out = formatAffectedExplanation(reasons, 'Affected tasks');
+    expect(out).toContain('2 affected tasks.');
+    expect(out).not.toContain('depend on');
+  });
+
+  it('sorts an entry reached only through a dependency to the bottom', () => {
+    const out = formatAffectedExplanation(reasons, 'Affected tasks');
+    expect(out.indexOf('ui:build')).toBeLessThan(out.indexOf('app:build'));
   });
 });

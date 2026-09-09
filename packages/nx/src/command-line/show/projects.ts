@@ -11,7 +11,6 @@ import {
 import { computeAffectedTasks } from '../../project-graph/affected/affected-tasks';
 import { resolveAffectedGranularity } from '../../project-graph/affected/granularity';
 import { printAffectedExplanation } from '../../project-graph/affected/print-explanation';
-import { pruneTaskGraphToSelection } from '../../tasks-runner/prune-task-graph';
 import { isExplaining } from '../../project-graph/affected/affected-reasons';
 import {
   FileChange,
@@ -66,21 +65,15 @@ export async function showProjectsHandler(
         explain: isExplaining(nxArgs.explain),
       });
       if (isExplaining(nxArgs.explain)) {
-        // The closure the selected tasks drag in, which is what actually runs.
-        const dependencyCount =
-          Object.keys(
-            pruneTaskGraphToSelection(
-              affectedTasks.taskGraph,
-              affectedTasks.affectedTaskIds
-            ).tasks
-          ).length - affectedTasks.affectedTaskIds.size;
+        // No dependency count: this command answers which tasks are affected
+        // and never runs their closure, so reporting what it would drag in
+        // would describe a run that is not happening.
         printAffectedExplanation(
           affectedTasks.reasons ?? {},
           'Affected tasks',
           // show projects declares its own --json, which has no executor to
           // pass through to.
-          args.json ? 'stdout' : nxArgs.explain,
-          dependencyCount
+          args.json ? 'stdout' : nxArgs.explain
         );
         await output.drain();
         return;
