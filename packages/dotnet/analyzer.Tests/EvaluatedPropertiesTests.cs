@@ -58,6 +58,23 @@ public class EvaluatedPropertiesTests
         Assert.Equal("sentinel", member!.GetValue(properties) as string);
     }
 
+    /// <summary>
+    /// Same guard for the interpreted member that carries an MSBuild name itself
+    /// rather than deriving from a raw member: it reads a bool, so the string theory
+    /// above cannot cover it.
+    /// </summary>
+    [Theory]
+    [InlineData("IsTestProject")]
+    public void BoolMemberIsNamedAsMSBuildNamesTheProperty(string msbuildName)
+    {
+        var member = typeof(EvaluatedProperties).GetProperty(msbuildName);
+        Assert.True(member is not null, $"No member named '{msbuildName}'; a rename would change which property is read.");
+
+        Assert.True((bool)member!.GetValue(Properties((msbuildName, "true")))!);
+        Assert.False((bool)member.GetValue(Properties((msbuildName, "false")))!);
+        Assert.False((bool)member.GetValue(Properties())!);
+    }
+
     [Fact]
     public void ProjectExtensionsPath_PrefersTheRebasedProperty()
     {
@@ -66,6 +83,16 @@ public class EvaluatedPropertiesTests
             ("BaseIntermediateOutputPath", @"obj\"));
 
         Assert.Equal("/ws/apps/MyLib/obj/", properties.ProjectExtensionsPath);
+    }
+
+    [Fact]
+    public void ProjectExtensionsPath_NormalizesSeparatorsInTheFallback()
+    {
+        // A project that never imported Microsoft.Common.props leaves the
+        // MSBuild-flavoured `obj\`, which would not combine on a non-Windows path.
+        var properties = Properties(("BaseIntermediateOutputPath", @"custom\obj\"));
+
+        Assert.Equal("custom/obj/", properties.ProjectExtensionsPath);
     }
 
     [Fact]
