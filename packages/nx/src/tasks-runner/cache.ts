@@ -1,5 +1,12 @@
 import { spawn } from 'child_process';
-import { existsSync, mkdirSync, readdirSync, rmSync, statSync } from 'node:fs';
+import {
+  type Dirent,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  rmSync,
+  statSync,
+} from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
@@ -126,9 +133,9 @@ export function sweepBatchOutputs(
   maxBytes = BATCH_OUTPUT_MAX_BYTES
 ): void {
   const dir = join(cacheDir, 'batchOutputs');
-  let entries: string[];
+  let entries: Dirent[];
   try {
-    entries = readdirSync(dir);
+    entries = readdirSync(dir, { withFileTypes: true });
   } catch {
     // Nothing has captured a batch log yet.
     return;
@@ -136,10 +143,13 @@ export function sweepBatchOutputs(
 
   const files: { path: string; size: number; mtimeMs: number }[] = [];
   for (const entry of entries) {
-    const path = join(dir, entry);
+    // Regular files only, from the dirent rather than a stat: a symlink here
+    // would otherwise be aged by its target's mtime, and a directory would be
+    // invisible to both the age pass and the size accounting.
+    if (!entry.isFile()) continue;
+    const path = join(dir, entry.name);
     try {
       const stats = statSync(path);
-      if (!stats.isFile()) continue;
       if (now - stats.mtimeMs > maxAgeMs) {
         rmSync(path, { force: true });
         continue;

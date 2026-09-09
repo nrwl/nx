@@ -451,4 +451,27 @@ describe('BatchProcess', () => {
       mockFailWriteStream = false;
     }
   });
+  it('lets the worker keep writing when the capture dies mid-backpressure', async () => {
+    const child = fakeChildProcess();
+
+    try {
+      mockFailWriteStream = true;
+      withEnvironmentVariables(FOLDING_ENV, () => {
+        new BatchProcess(child, '@nx/gradle:batch');
+        captureForwarded(() => {
+          // Big enough to exceed the write buffer, so the source is paused
+          // awaiting a 'drain' that a failed stream never emits.
+          (child as any).stdout.emit('data', Buffer.alloc(128 * 1024, 'x'));
+        });
+      });
+
+      await new Promise((resolve) => setImmediate(resolve));
+
+      // Left paused, the worker blocks once its stdout pipe fills, never sends
+      // its results, and the run hangs with nothing on screen.
+      expect((child as any).stdout.isPaused()).toBe(false);
+    } finally {
+      mockFailWriteStream = false;
+    }
+  });
 });
