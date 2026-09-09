@@ -23,6 +23,7 @@ const ALL_STEP_STATUSES: MigrateStepStatus[] = [
   'failed',
   'skipped',
   'died',
+  'unresolved',
 ];
 
 function stateWithStep(overrides: Partial<MigrateStep> = {}): MigrateRunState {
@@ -398,7 +399,13 @@ describe('applyStepEvent', () => {
   });
 
   describe('stepAction', () => {
-    const ALL_ACTIONS: StepAction[] = ['retry', 'skip', 'retry-clean', 'adopt'];
+    const ALL_ACTIONS: StepAction[] = [
+      'retry',
+      'skip',
+      'retry-clean',
+      'adopt',
+      'unresolved',
+    ];
 
     // The only legal (status, action) pairs for a step with no recorded
     // generator half; every other combination must be rejected. `null` marks
@@ -415,11 +422,15 @@ describe('applyStepEvent', () => {
         else if (status === 'failed' && action === 'retry-clean')
           expected = 'pending';
         else if (status === 'failed' && action === 'skip') expected = 'skipped';
+        else if (status === 'failed' && action === 'unresolved')
+          expected = 'unresolved';
         else if (status === 'died' && action === 'retry-clean')
           expected = 'pending';
         else if (status === 'died' && action === 'adopt')
           expected = 'succeeded';
         else if (status === 'died' && action === 'skip') expected = 'skipped';
+        else if (status === 'died' && action === 'unresolved')
+          expected = 'unresolved';
         return { status, action, expected };
       })
     );
@@ -813,6 +824,51 @@ describe('applyStepEvent', () => {
           expect(result.state.steps[0].outcome?.summary).toContain(
             expectedFragment
           );
+        }
+      }
+    );
+
+    it('adopt marks the step adopted', () => {
+      const state = stateWithStep({ status: 'died' });
+
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        attempt: 1,
+        action: 'adopt',
+      });
+
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        expect(result.state.steps[0].status).toBe('succeeded');
+        expect(result.state.steps[0].adopted).toBe(true);
+      }
+    });
+
+    it.each(['failed', 'died'] as const)(
+      'unresolved from %s keeps the attempt and the failure it gave up on',
+      (status) => {
+        const state = stateWithStep({
+          status,
+          attempt: 3,
+          gitRefBefore: 'abc123',
+          outcome: { summary: 'generator threw' },
+          promptOutcome: { status: 'failed', summary: 'nope' },
+        });
+
+        const result = applyStepEvent(state, {
+          type: 'stepAction',
+          stepId: 'step-1',
+          attempt: 3,
+          action: 'unresolved',
+        });
+
+        expect(result.kind).toBe('ok');
+        if (result.kind === 'ok') {
+          expect(result.state.steps[0]).toEqual({
+            ...state.steps[0],
+            status: 'unresolved',
+          });
         }
       }
     );

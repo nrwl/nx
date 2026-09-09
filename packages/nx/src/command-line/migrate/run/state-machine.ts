@@ -200,6 +200,8 @@ function applyStepAction(
         return commit(state, index, cleanRearm(state, step));
       case 'skip':
         return commit(state, index, { ...step, status: 'skipped' });
+      case 'unresolved':
+        return commit(state, index, { ...step, status: 'unresolved' });
     }
   }
   if (step.status === 'died') {
@@ -215,19 +217,17 @@ function applyStepAction(
         }
         return {
           kind: 'error',
-          reason: `Cannot apply action 'retry' to step '${step.id}': the worker died before recording that its generator ran, so keeping the current tree could apply the migration twice. Use 'retry-clean', 'adopt' or 'skip' instead.`,
+          reason: `Cannot apply action 'retry' to step '${step.id}': the worker died before recording that its generator ran, so keeping the current tree could apply the migration twice. Use 'retry-clean', 'adopt', 'skip' or 'unresolved' instead.`,
         };
       case 'retry-clean':
         return commit(state, index, cleanRearm(state, step));
       case 'adopt':
-        return commit(state, index, {
-          ...step,
-          status: 'succeeded',
-          outcome: { ...step.outcome, summary: adoptedSummary(step) },
-        });
+        return commit(state, index, adopt(step));
       case 'skip':
         // Same as skipping a failure: the tree stays as the worker left it.
         return commit(state, index, { ...step, status: 'skipped' });
+      case 'unresolved':
+        return commit(state, index, { ...step, status: 'unresolved' });
     }
   }
   return {
@@ -244,8 +244,18 @@ function cleanRearm(state: MigrateRunState, step: MigrateStep): MigrateStep {
   return rearm(step, coveringLandedEntries(state, step.id).length > 0);
 }
 
-// An adopted death records how far the worker got, since 'succeeded' alone
-// says the migration was applied and cannot say by what.
+// The summary records how the tree came to be the result ('succeeded' alone
+// cannot say by what); the marker is what the completion report lists
+// adopted steps by.
+function adopt(step: MigrateStep): MigrateStep {
+  return {
+    ...step,
+    status: 'succeeded',
+    adopted: true,
+    outcome: { ...step.outcome, summary: adoptedSummary(step) },
+  };
+}
+
 function adoptedSummary(step: MigrateStep): string {
   return step.generatorCompleted === true
     ? "Adopted after the worker died: its generator had run, and the working tree it left was taken as this migration's result."
