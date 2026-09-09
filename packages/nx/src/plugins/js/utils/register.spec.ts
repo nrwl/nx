@@ -1400,9 +1400,9 @@ describe('registerSourceGraphResolver CJS runtime condition union', () => {
 
     tempFs.createFilesSync({
       'workspace/graph-entry.cjs':
-        "module.exports = { user: require('@proj/user-pkg'), dual: require('@proj/dual') };\n",
+        "module.exports = { user: require('@proj/user-pkg'), dual: require('@proj/dual'), addons: require('@proj/addons') };\n",
       'workspace/sibling.cjs':
-        "module.exports = { user: require('@proj/user-pkg'), dual: require('@proj/dual') };\n",
+        "module.exports = { user: require('@proj/user-pkg'), dual: require('@proj/dual'), addons: require('@proj/addons') };\n",
       'workspace/packages/user-pkg/package.json': JSON.stringify({
         name: '@proj/user-pkg',
         exports: {
@@ -1429,42 +1429,193 @@ describe('registerSourceGraphResolver CJS runtime condition union', () => {
       }),
       'workspace/packages/dual/esm/index.js': "module.exports = 'esm';\n",
       'workspace/packages/dual/cjs/index.js': "module.exports = 'cjs';\n",
+      'workspace/packages/addons/package.json': JSON.stringify({
+        name: '@proj/addons',
+        exports: {
+          '.': {
+            'node-addons': './addons/index.js',
+            default: './plain/index.js',
+          },
+        },
+      }),
+      'workspace/packages/addons/addons/index.js':
+        "module.exports = 'addons';\n",
+      'workspace/packages/addons/plain/index.js': "module.exports = 'plain';\n",
       'run.cjs': [
         `require(${JSON.stringify(swcRegisterPath)}).register({ esModuleInterop: true });`,
         `const { registerSourceGraphResolver } = require(${JSON.stringify(registerTsPath)});`,
         `const entry = ${JSON.stringify(graphEntry)};`,
         `const sibling = ${JSON.stringify(sibling)};`,
-        `const cleanup = registerSourceGraphResolver(entry, ${JSON.stringify(workspaceDir)}, ['@proj/user-pkg', '@proj/dual']);`,
+        `const cleanup = registerSourceGraphResolver(entry, ${JSON.stringify(workspaceDir)}, ['@proj/user-pkg', '@proj/dual', '@proj/addons']);`,
         `const results = { entry: require(entry), sibling: require(sibling) };`,
         `cleanup();`,
         `console.log(JSON.stringify(results));`,
       ].join('\n'),
     });
-    linkWorkspacePackages(workspaceDir, ['user-pkg', 'dual']);
+    linkWorkspacePackages(workspaceDir, ['user-pkg', 'dual', 'addons']);
   });
 
   afterAll(() => {
     tempFs.cleanup();
   });
 
+  const run = (execArgs: string[], nodeOptions?: string) => {
+    const env = { ...process.env, NX_WORKSPACE_ROOT_PATH: workspaceDir };
+    if (nodeOptions !== undefined) env.NODE_OPTIONS = nodeOptions;
+    const stdout = execFileSync(process.execPath, [...execArgs, runScript], {
+      cwd: workspaceDir,
+      env,
+      encoding: 'utf8',
+    });
+    return JSON.parse(stdout.trim().split('\n').pop()!);
+  };
+
   it.runIf(registerHooksAvailable)(
     'applies user --conditions and module-sync to graph members like any other consumer',
     () => {
-      const stdout = execFileSync(
-        process.execPath,
-        ['--conditions=userA', runScript],
-        {
-          cwd: workspaceDir,
-          env: { ...process.env, NX_WORKSPACE_ROOT_PATH: workspaceDir },
-          encoding: 'utf8',
-        }
-      );
-      const results = JSON.parse(stdout.trim().split('\n').pop()!);
-      expect(results.sibling).toEqual({ user: 'user', dual: 'esm' });
-      expect(results.entry.user).toBe('user');
-      expect(results.entry.dual).toBe(results.sibling.dual);
+      const results = run(['--conditions=userA']);
+      expect(results.sibling).toEqual({
+        user: 'user',
+        dual: 'esm',
+        addons: 'addons',
+      });
+      expect(results.entry).toEqual(results.sibling);
     },
     120_000
+  );
+
+  it.runIf(registerHooksAvailable).each([
+    [
+      '--no-experimental-require-module in execArgv',
+      ['--no-experimental-require-module'],
+      undefined,
+      'cjs',
+    ],
+    [
+      '--no-experimental-require-module in NODE_OPTIONS',
+      [],
+      '--no-experimental-require-module',
+      'cjs',
+    ],
+    [
+      'execArgv re-enabling a NODE_OPTIONS flag',
+      ['--experimental-require-module'],
+      '--no-experimental-require-module',
+      'esm',
+    ],
+    [
+      'execArgv disabling a NODE_OPTIONS flag',
+      ['--no-experimental-require-module'],
+      '--experimental-require-module',
+      'cjs',
+    ],
+    [
+      'the last repeated flag',
+      ['--no-experimental-require-module', '--experimental-require-module'],
+      undefined,
+      'esm',
+    ],
+    [
+      'the underscore spelling and an ignored =value',
+      ['--no_experimental_require_module=false'],
+      undefined,
+      'cjs',
+    ],
+    [
+      'a re-enabling underscore spelling',
+      ['--no-experimental-require-module', '--experimental_require_module'],
+      undefined,
+      'esm',
+    ],
+    [
+      'a double-quoted NODE_OPTIONS flag',
+      [],
+      '"--no-experimental-require-module"',
+      'cjs',
+    ],
+    [
+      'a flag-like word inside a quoted NODE_OPTIONS condition',
+      [],
+      '--conditions="x --no-experimental-require-module y"',
+      'esm',
+    ],
+  ])(
+    'follows %s for graph members like any other consumer',
+    (_name, execArgs, nodeOptions, dual) => {
+      const results = run(execArgs, nodeOptions);
+      expect(results.sibling).toEqual({ user: 'dist', dual, addons: 'addons' });
+      expect(results.entry.dual).toBe(dual);
+      expect(results.entry.addons).toBe('addons');
+    },
+    120_000
+  );
+
+  // swc's native binding cannot load under --no-addons, so these run in-process
+  // against the flags Node would have seen.
+  const requireAddonsAsGraphMember = async (
+    execArgv: string[],
+    nodeOptions: string | undefined
+  ) => {
+    const savedExecArgv = process.execArgv;
+    const savedNodeOptions = process.env.NODE_OPTIONS;
+    process.execArgv = execArgv;
+    if (nodeOptions === undefined) {
+      delete process.env.NODE_OPTIONS;
+    } else {
+      process.env.NODE_OPTIONS = nodeOptions;
+    }
+    vi.resetModules();
+    const fresh = await import('./register');
+    const graphEntry = join(workspaceDir, 'graph-entry.cjs');
+    const cleanup = fresh.registerSourceGraphResolver(
+      graphEntry,
+      workspaceDir,
+      ['@proj/addons']
+    );
+    try {
+      return createRequire(graphEntry)('@proj/addons');
+    } finally {
+      cleanup();
+      process.execArgv = savedExecArgv;
+      if (savedNodeOptions === undefined) {
+        delete process.env.NODE_OPTIONS;
+      } else {
+        process.env.NODE_OPTIONS = savedNodeOptions;
+      }
+    }
+  };
+
+  it.each([
+    ['--no-addons in execArgv', ['--no-addons'], undefined, 'plain'],
+    ['--no-addons in NODE_OPTIONS', [], '--no-addons', 'plain'],
+    ['execArgv re-enabling addons', ['--addons'], '--no-addons', 'addons'],
+    ['execArgv disabling addons', ['--no-addons'], '--addons', 'plain'],
+    [
+      'the last repeated addons flag',
+      ['--no-addons', '--addons'],
+      undefined,
+      'addons',
+    ],
+    ['an underscore spelling', ['--no_addons=false'], undefined, 'plain'],
+    [
+      'a flag-like word inside a quoted NODE_OPTIONS condition',
+      [],
+      '--conditions="x --no-addons y"',
+      'addons',
+    ],
+    [
+      'a backslash-escaped quote in NODE_OPTIONS',
+      [],
+      '--conditions="a\\"b" --no-addons',
+      'plain',
+    ],
+  ])(
+    'follows %s for graph members',
+    async (_name, execArgv, nodeOptions, expected) => {
+      expect(await requireAddonsAsGraphMember(execArgv, nodeOptions)).toBe(
+        expected
+      );
+    }
   );
 });
 
