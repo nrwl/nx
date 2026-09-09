@@ -958,6 +958,10 @@ export class TaskOrchestrator {
         };
       });
 
+      // The capture stream buffers, so both readers below would otherwise be
+      // racing bytes that have not reached the file yet.
+      await batchProcess.flushCapturedOutput();
+
       if (shouldGroupBatchOutput()) {
         this.renderBatchOutputSafely(batch.id, () =>
           this.printGroupedBatchOutput(
@@ -992,6 +996,8 @@ export class TaskOrchestrator {
           terminalOutput: isBatchStopping ? '' : (e.stack ?? e.message ?? ''),
         };
       });
+
+      await batchProcess?.flushCapturedOutput();
 
       // The same handoff the results path uses, rather than a second copy of
       // it: a style that prints nothing renders no fold, so the captured log
