@@ -20,10 +20,15 @@ pub struct WatchFilterer {
     /// wins: nested .nxignore > .ignore > .gitignore > .git-exclude/global. Full
     /// class-above-depth parity with the ignore crate is a tracked follow-up.
     git_ignores: Vec<(PathBuf, u8, Gitignore)>,
-    /// node_modules/.git/.nx/cache/.yarn/cache. A hard veto that no .gitignore
-    /// or .nxignore negation can beat, mirroring `create_walker`'s filter_entry
-    /// so the watcher and the walk agree on what is ignored.
+    /// node_modules/.git/.nx/cache/.yarn/cache. A hard veto that no user
+    /// .gitignore or .nxignore negation can beat, mirroring `create_walker`'s
+    /// filter_entry so the watcher and the walk agree on what is ignored.
     hardcoded: Gitignore,
+    /// nx's own watch-scoping globs (create_filter's `additional_globs`, e.g. the
+    /// outputs watcher's `!.nx/workspace-data/.../server-process.json`). An
+    /// internal opt-in, so it outranks even the hardcoded veto — the veto only
+    /// stops USER ignore files un-ignoring hardcoded paths, not nx's own scoping.
+    additional_globs: Option<Gitignore>,
 }
 
 impl WatchFilterer {
@@ -41,10 +46,24 @@ impl WatchFilterer {
             return false;
         }
 
-        // The brought-in ignore files decide keep/drop, then the hardcoded
-        // patterns veto unconditionally — applied last so a .gitignore
-        // whitelist (a zero-install `!.yarn/cache`) cannot un-ignore them,
-        // matching create_walker's filter_entry.
+        // nx's own watch globs are an internal opt-in and take precedence over
+        // everything, the hardcoded veto included: the outputs watcher's
+        // `!.nx/workspace-data/.../server-process.json` must punch through the
+        // .nx/workspace-data veto, or that event is dropped and a superseded
+        // daemon never sees it to self-terminate. The veto is only there to stop
+        // USER ignore files un-ignoring hardcoded paths, which these never carry.
+        if let Some(globs) = &self.additional_globs {
+            match globs.matched_path_or_any_parents(path, is_dir) {
+                Match::Whitelist(_) => return true,
+                Match::Ignore(_) => return false,
+                Match::None => {}
+            }
+        }
+
+        // The brought-in USER ignore files decide keep/drop, then the hardcoded
+        // patterns veto unconditionally — applied last so a .gitignore whitelist
+        // (a zero-install `!.yarn/cache`) cannot un-ignore them, matching
+        // create_walker's filter_entry.
         self.brought_in_allows(path, is_dir)
             && !matches!(
                 self.hardcoded.matched_path_or_any_parents(path, is_dir),
@@ -245,15 +264,19 @@ pub(super) fn create_filter(
         git_ignores.push((PathBuf::from(origin), 0, workspace_wide.build()?));
     }
 
-    // Build additional globs as a synthetic gitignore rooted at origin
-    if !additional_globs.is_empty() {
+    // nx's own watch-scoping globs, kept OUT of git_ignores and the hardcoded
+    // veto: they are an internal opt-in that must win. The outputs watcher passes
+    // `!.nx/workspace-data/.../server-process.json` to punch through the
+    // .nx/workspace-data hardcoded ignore so a superseded daemon self-terminates.
+    let additional_globs = if additional_globs.is_empty() {
+        None
+    } else {
         let mut builder = GitignoreBuilder::new(origin);
         for glob in additional_globs {
             builder.add_line(None, glob)?;
         }
-        let gitignore = builder.build()?;
-        git_ignores.push((PathBuf::from(origin), 0, gitignore));
-    }
+        Some(builder.build()?)
+    };
 
     // Sort deepest-first (most path components first) so deeper gitignores take priority
     git_ignores.sort_by(|(a, ra, _), (b, rb, _)| {
@@ -291,5 +314,6 @@ pub(super) fn create_filter(
         git_ignores,
         nx_ignore,
         hardcoded,
+        additional_globs,
     })
 }

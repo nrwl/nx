@@ -1082,12 +1082,54 @@ mod tests {
     }
 
     #[test]
-    fn hardcoded_ignores_veto_a_gitignore_negation() {
-        // A Yarn Berry zero-install workspace ships `!.yarn/cache`, which as a
-        // plain gitignore entry would un-ignore a hardcoded-ignored path. The
-        // filterer must veto it anyway, matching create_walker: otherwise the
-        // watcher admits `.yarn/cache` files the walk drops, and every rescan
-        // reports them deleted. A non-hardcoded whitelist is still honoured.
+    fn a_user_gitignore_negation_cannot_beat_the_hardcoded_veto() {
+        // A Yarn Berry zero-install ships `!.yarn/cache` in a real .gitignore.
+        // The filterer must veto it anyway, matching create_walker: a USER ignore
+        // file cannot un-ignore a hardcoded path, or the watcher admits
+        // .yarn/cache files the walk drops and reports them deleted every rescan.
+        use notify::EventKind;
+        use notify::event::CreateKind;
+
+        let dir = tempdir().expect("tempdir");
+        let origin = dunce::canonicalize(dir.path()).expect("canonicalize");
+        let origin_str = origin.to_str().expect("utf-8 path");
+        fs::write(
+            origin.join(".gitignore"),
+            "!.yarn/cache\n*.log\n!kept.log\n",
+        )
+        .expect("write .gitignore");
+
+        let filterer = watch_filterer::create_filter(origin_str, &[], true).expect("filter");
+
+        let event = |rel: &str| {
+            RawWatchEvent::new(
+                notify::Event::new(EventKind::Create(CreateKind::File)).add_path(origin.join(rel)),
+            )
+        };
+
+        assert!(
+            !filterer.check_event(&event(".yarn/cache/pkg.zip")),
+            "a .gitignore `!.yarn/cache` negation must not un-ignore a hardcoded path"
+        );
+        assert!(
+            !filterer.check_event(&event("node_modules/pkg/index.js")),
+            "node_modules stays vetoed even without an explicit rule"
+        );
+        assert!(
+            filterer.check_event(&event("kept.log")),
+            "a non-hardcoded gitignore whitelist is still honoured — the veto is hardcoded-only"
+        );
+    }
+
+    #[test]
+    fn nx_own_globs_outrank_the_hardcoded_veto() {
+        // watchOutputFiles passes `!.nx/workspace-data/.../server-process.json`
+        // as an additional glob (use_ignore=false). `.nx/workspace-data` is a
+        // hardcoded ignore, so if the veto beat nx's own glob the outputs watcher
+        // would never see server-process.json and a superseded daemon could never
+        // self-terminate — it would linger holding its watches and file map. nx's
+        // internal globs are an opt-in and must win; the veto only stops USER
+        // ignore files un-ignoring hardcoded paths.
         use notify::EventKind;
         use notify::event::CreateKind;
 
@@ -1095,12 +1137,10 @@ mod tests {
         let origin = dunce::canonicalize(dir.path()).expect("canonicalize");
         let origin_str = origin.to_str().expect("utf-8 path");
 
-        // `!.yarn/cache` negates a hardcoded ignore; `!kept.log` is a normal
-        // whitelist the filterer should honour.
         let filterer = watch_filterer::create_filter(
             origin_str,
             &[
-                "!.yarn/cache".to_string(),
+                "!.nx/workspace-data/d/server-process.json".to_string(),
                 "*.log".to_string(),
                 "!kept.log".to_string(),
             ],
@@ -1115,16 +1155,20 @@ mod tests {
         };
 
         assert!(
-            !filterer.check_event(&event(".yarn/cache/pkg.zip")),
-            ".yarn/cache is a hardcoded ignore; a `!.yarn/cache` negation must not un-ignore it"
+            filterer.check_event(&event(".nx/workspace-data/d/server-process.json")),
+            "nx's own whitelist must punch through the hardcoded veto so the outputs watcher sees server-process.json"
+        );
+        assert!(
+            !filterer.check_event(&event(".nx/workspace-data/d/other.dat")),
+            "other .nx/workspace-data churn stays vetoed — only the whitelisted path punches through"
         );
         assert!(
             !filterer.check_event(&event("node_modules/pkg/index.js")),
-            "node_modules stays vetoed even without an explicit rule"
+            "node_modules stays vetoed"
         );
         assert!(
             filterer.check_event(&event("kept.log")),
-            "a non-hardcoded whitelist is still honoured — the veto is hardcoded-only"
+            "a non-hardcoded additional-glob whitelist is honoured"
         );
     }
 
