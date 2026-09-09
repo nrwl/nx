@@ -32,6 +32,22 @@ import {
 } from '../../../internal-testing-utils/cjs-mock';
 import { TempFs } from '../../../internal-testing-utils/temp-fs';
 
+// Node below 22.15 has no `module.registerHooks`, and `vi.spyOn` refuses a
+// missing property. Stub it for the spy and remove the stub afterwards.
+function stubRegisterHooksIfAbsent(nodeModule: {
+  registerHooks?: unknown;
+}): () => void {
+  if (typeof nodeModule.registerHooks === 'function') {
+    return () => {};
+  }
+  nodeModule.registerHooks = () => {
+    throw new Error('registerHooks stub must be mocked by the test');
+  };
+  return () => {
+    delete nodeModule.registerHooks;
+  };
+}
+
 function linkWorkspacePackages(base: string, dirs: string[]) {
   mkdirSync(join(base, 'node_modules/@proj'), { recursive: true });
   for (const dir of dirs) {
@@ -762,10 +778,16 @@ describe('registerSourceGraphResolver', () => {
     tempFs.cleanup();
   });
 
-  afterEach(() => vi.restoreAllMocks());
+  let restoreRegisterHooks = () => {};
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    restoreRegisterHooks();
+  });
 
   function captureResolveHook() {
     const nodeModule = require('node:module') as typeof import('node:module');
+    restoreRegisterHooks = stubRegisterHooksIfAbsent(nodeModule);
     const deregister = vi.fn();
     let resolveHook: Function;
     const registerHooks = vi
@@ -1386,8 +1408,11 @@ describe('registerSourceGraphResolver under Yarn PnP', () => {
     tempFs.cleanup();
   });
 
+  let restoreRegisterHooks = () => {};
+
   beforeEach(() => {
     nodeModule = require('node:module');
+    restoreRegisterHooks = stubRegisterHooksIfAbsent(nodeModule);
     Object.defineProperty(process.versions, 'pnp', {
       value: '3',
       configurable: true,
@@ -1403,6 +1428,7 @@ describe('registerSourceGraphResolver under Yarn PnP', () => {
     delete (process.versions as { pnp?: string }).pnp;
     delete nodeModule.findPnpApi;
     vi.restoreAllMocks();
+    restoreRegisterHooks();
   });
 
   function withPnpApi(resolveToUnqualified: (request: string) => string) {
@@ -1585,6 +1611,7 @@ describe('CJS resolution under Yarn PnP below 4.11', () => {
     const realResolveFilename = nodeModule._resolveFilename;
     const original = pnpStyleResolve();
     nodeModule._resolveFilename = original;
+    const restoreRegisterHooks = stubRegisterHooksIfAbsent(nodeModule);
     vi.spyOn(nodeModule, 'registerHooks').mockImplementation(
       () => ({ deregister: vi.fn() }) as any
     );
@@ -1600,6 +1627,7 @@ describe('CJS resolution under Yarn PnP below 4.11', () => {
       cleanup();
       nodeModule._resolveFilename = realResolveFilename;
       vi.restoreAllMocks();
+      restoreRegisterHooks();
     }
   });
 });
