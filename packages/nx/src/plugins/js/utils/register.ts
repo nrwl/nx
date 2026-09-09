@@ -858,38 +858,103 @@ let processRequireConditions: string[] | undefined;
 
 /**
  * Reconstructs Node's CJS resolve-hook conditions for the `Module._load`
- * patch, including `module-sync` where Node enables it.
+ * patch: `node-addons` unless `--no-addons`, `module-sync` on Node 22.10+
+ * unless `--no-experimental-require-module`, plus user `--conditions`. Node
+ * applies `NODE_OPTIONS` before `execArgv`, and the last flag wins.
  */
 function getProcessRequireConditions(): string[] {
   if (!processRequireConditions) {
-    const nodeOptions = process.env.NODE_OPTIONS;
+    const flags = getNodeResolveFlags([
+      ...parseNodeOptions(process.env.NODE_OPTIONS ?? ''),
+      ...(process.execArgv ?? []),
+    ]);
     processRequireConditions = [
       'require',
       'node',
-      'node-addons',
-      ...getUserConditionsFromArgs(process.execArgv ?? []),
-      ...(nodeOptions
-        ? getUserConditionsFromArgs(nodeOptions.split(/\s+/))
+      ...(flags.addons ? ['node-addons'] : []),
+      ...flags.conditions,
+      ...(flags.requireModule && gte(process.versions.node, '22.10.0')
+        ? ['module-sync']
         : []),
-      ...(gte(process.versions.node, '22.10.0') ? ['module-sync'] : []),
     ];
   }
   return processRequireConditions;
 }
 
-function getUserConditionsFromArgs(args: string[]): string[] {
-  const conditions: string[] = [];
+// Node's own rules: `_` spells `-` in option names and a boolean flag ignores
+// any `=value`.
+function getNodeResolveFlags(args: string[]): {
+  conditions: string[];
+  addons: boolean;
+  requireModule: boolean;
+} {
+  const flags = {
+    conditions: [] as string[],
+    addons: true,
+    requireModule: true,
+  };
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    if (arg === '--conditions' || arg === '-C') {
+    if (arg === '-C') {
       if (args[i + 1]) {
-        conditions.push(args[i + 1]);
+        flags.conditions.push(args[++i]);
       }
-    } else if (arg.startsWith('--conditions=')) {
-      conditions.push(arg.slice('--conditions='.length));
+      continue;
+    }
+    if (!arg.startsWith('--')) {
+      continue;
+    }
+    const equals = arg.indexOf('=');
+    const name = (equals === -1 ? arg : arg.slice(0, equals)).replace(
+      /_/g,
+      '-'
+    );
+    if (name === '--conditions') {
+      const value = equals === -1 ? args[++i] : arg.slice(equals + 1);
+      if (value) {
+        flags.conditions.push(value);
+      }
+    } else if (name === '--addons' || name === '--no-addons') {
+      flags.addons = name === '--addons';
+    } else if (
+      name === '--experimental-require-module' ||
+      name === '--no-experimental-require-module'
+    ) {
+      flags.requireModule = name === '--experimental-require-module';
     }
   }
-  return conditions;
+  return flags;
+}
+
+// Port of Node's ParseNodeOptionsEnvVar: spaces separate arguments outside
+// double quotes, quotes group and are dropped, and a backslash escapes the next
+// character inside quotes.
+function parseNodeOptions(nodeOptions: string): string[] {
+  const args: string[] = [];
+  let inString = false;
+  let startNewArg = true;
+  for (let i = 0; i < nodeOptions.length; i++) {
+    let c = nodeOptions[i];
+    if (c === '\\' && inString) {
+      if (i + 1 === nodeOptions.length) {
+        return args;
+      }
+      c = nodeOptions[++i];
+    } else if (c === ' ' && !inString) {
+      startNewArg = true;
+      continue;
+    } else if (c === '"') {
+      inString = !inString;
+      continue;
+    }
+    if (startNewArg) {
+      args.push(c);
+      startNewArg = false;
+    } else {
+      args[args.length - 1] += c;
+    }
+  }
+  return args;
 }
 
 // Cache parsed manifests; graph refresh clears it after manifest changes.
