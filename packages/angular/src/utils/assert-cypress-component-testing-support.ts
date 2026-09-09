@@ -17,6 +17,22 @@ export function assertCypressComponentTestingSupport(tree: Tree): void {
     return;
   }
 
+  const found = findCypressBelow(tree, minCypressVersion);
+  if (found) {
+    throwForUnsupportedCypress(found);
+  }
+}
+
+/**
+ * Returns the installed Cypress version, or the declared range when nothing
+ * satisfying is installed, if it cannot reach `floor`; `null` otherwise.
+ *
+ * A satisfying install decides. Without one, only a range capped below the
+ * floor fails: `^15.17.0` installs 15.20.1+, so its lower bound cannot be
+ * compared. Dist tags (`latest`, `next`) are not ranges and are not gated.
+ * When Cypress is not declared, the generators install `cypressVersion`.
+ */
+export function findCypressBelow(tree: Tree, floor: string): string | null {
   const {
     cypressVersion,
   }: typeof import('@nx/cypress/internal') = require('@nx/cypress/internal');
@@ -34,20 +50,11 @@ export function assertCypressComponentTestingSupport(tree: Tree): void {
   if (installedCypressVersion) {
     const release =
       coerce(installedCypressVersion)?.version ?? installedCypressVersion;
-    if (lt(release, minCypressVersion)) {
-      throwForUnsupportedCypress(installedCypressVersion);
-    }
-    return;
+    return lt(release, floor) ? installedCypressVersion : null;
   }
 
-  // Nothing installed: gate only ranges capped below the floor. `^15.17.0`
-  // installs 15.20.1+, so comparing its lower bound would reject workspaces
-  // that work. Dist tags (`latest`, `next`) aren't ranges and aren't gated.
-  // When Cypress is not declared, the generators install `cypressVersion`.
   const range = declaredCypressVersion ?? cypressVersion;
-  if (validRange(range) && subset(range, `<${minCypressVersion}`)) {
-    throwForUnsupportedCypress(range);
-  }
+  return validRange(range) && subset(range, `<${floor}`) ? range : null;
 }
 
 function throwForUnsupportedCypress(found: string): never {
