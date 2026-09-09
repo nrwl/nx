@@ -1110,6 +1110,7 @@ describe('registerSourceGraphResolver CJS path cache isolation', () => {
   let tempFs: InstanceType<typeof TempFs>;
   let workspaceDir: string;
   let runScript: string;
+  let selfScript: string;
 
   beforeAll(() => {
     const req = createRequire(import.meta.url);
@@ -1126,7 +1127,12 @@ describe('registerSourceGraphResolver CJS path cache isolation', () => {
     tempFs.createFilesSync({
       // The relative hop verifies lazy graph-member tracking.
       'workspace/graph-entry.cjs':
-        "module.exports = { ...require('./inner.cjs'), nested: require('./nested/member.cjs') };\n",
+        "module.exports = { ...require('./inner.cjs'), nested: require('./nested/member.cjs'), dynamic: require('./dynamic-member.cjs') };\n",
+      // A dynamic import from a graph member follows Node's own resolution
+      // without `module.registerHooks`. `new Function` keeps the import out
+      // of the CommonJS transform.
+      'workspace/dynamic-member.cjs':
+        "module.exports = () => new Function('s', 'return import(s)')('@proj/pkg').then((m) => m.default);\n",
       'workspace/inner.cjs':
         "module.exports = { value: require('@proj/pkg'), resolved: require.resolve('@proj/pkg') };\n",
       // The nearer same-named external package must retain Node's resolution.
@@ -1156,6 +1162,54 @@ describe('registerSourceGraphResolver CJS path cache isolation', () => {
       }),
       'workspace/packages/pkg/src/index.js': "module.exports = 'source';\n",
       'workspace/packages/pkg/dist/index.js': "module.exports = 'dist';\n",
+      // Never linked under node_modules: only Node's self-reference rule
+      // reaches it.
+      'workspace/packages/self/package.json': JSON.stringify({
+        name: '@proj/self',
+        exports: {
+          './sub': {
+            development: './src/sub.js',
+            default: './dist/sub.js',
+          },
+        },
+      }),
+      'workspace/packages/self/src/index.cjs':
+        "module.exports = require('@proj/self/sub');\n",
+      'workspace/packages/self/src/sub.js': "module.exports = 'self-source';\n",
+      'workspace/packages/self/dist/sub.js': "module.exports = 'self-dist';\n",
+      // `exports: null` is no self-reference scope for Node, so the request
+      // continues to the linked package under the same name.
+      'workspace/packages/null-exports/package.json': JSON.stringify({
+        name: '@proj/null-exports',
+        exports: null,
+      }),
+      'workspace/packages/null-exports/src/index.cjs':
+        "module.exports = require('@proj/null-exports');\n",
+      'workspace/packages/null-exports-linked/package.json': JSON.stringify({
+        name: '@proj/null-exports',
+        exports: {
+          '.': {
+            development: './src/index.js',
+            default: './dist/index.js',
+          },
+        },
+      }),
+      'workspace/packages/null-exports-linked/src/index.js':
+        "module.exports = 'linked-source';\n",
+      'workspace/packages/null-exports-linked/dist/index.js':
+        "module.exports = 'linked-dist';\n",
+      'self.cjs': [
+        `require(${JSON.stringify(swcRegisterPath)}).register({ esModuleInterop: true });`,
+        `if (process.argv[2] === 'no-hooks') {`,
+        `  require('node:module').registerHooks = undefined;`,
+        `}`,
+        `const { registerSourceGraphResolver } = require(${JSON.stringify(registerTsPath)});`,
+        `const entry = ${JSON.stringify(workspaceDir)} + '/' + process.argv[3];`,
+        `const cleanup = registerSourceGraphResolver(entry, ${JSON.stringify(workspaceDir)}, [process.argv[4]]);`,
+        `const result = require(entry);`,
+        `cleanup();`,
+        `console.log(JSON.stringify(result));`,
+      ].join('\n'),
       'run.cjs': [
         `require(${JSON.stringify(swcRegisterPath)}).register({ esModuleInterop: true });`,
         `if (process.argv[3] === 'no-hooks') {`,
@@ -1169,23 +1223,32 @@ describe('registerSourceGraphResolver CJS path cache isolation', () => {
         // existing graph.
         `const cleanupReal = process.argv[4] === 'alias-root' ? registerSourceGraphResolver(${JSON.stringify(join(workspaceDir, 'graph-entry.cjs'))}, ${JSON.stringify(workspaceDir)}, ['@proj/pkg']) : () => {};`,
         `const cleanup = registerSourceGraphResolver(entry, base, ['@proj/pkg']);`,
-        `const results = {};`,
-        `if (process.argv[2] === 'sibling-first') {`,
-        `  results.sibling = require(sibling);`,
-        `  results.entry = require(entry);`,
-        `} else {`,
-        `  results.entry = require(entry);`,
-        `  results.sibling = require(sibling);`,
-        `}`,
-        `cleanupReal();`,
-        `cleanup();`,
-        `delete require.cache[sibling];`,
-        `results.siblingAfterCleanup = require(sibling);`,
-        `console.log(JSON.stringify(results));`,
+        `(async () => {`,
+        `  const results = {};`,
+        `  if (process.argv[2] === 'sibling-first') {`,
+        `    results.sibling = require(sibling);`,
+        `    results.entry = require(entry);`,
+        `  } else {`,
+        `    results.entry = require(entry);`,
+        `    results.sibling = require(sibling);`,
+        `  }`,
+        `  results.entry.dynamic = await results.entry.dynamic();`,
+        `  cleanupReal();`,
+        `  cleanup();`,
+        `  delete require.cache[sibling];`,
+        `  results.siblingAfterCleanup = require(sibling);`,
+        `  console.log(JSON.stringify(results));`,
+        `})();`,
       ].join('\n'),
     });
     linkWorkspacePackages(workspaceDir, ['pkg']);
+    symlinkSync(
+      join(workspaceDir, 'packages/null-exports-linked'),
+      join(workspaceDir, 'node_modules/@proj/null-exports'),
+      'dir'
+    );
     symlinkSync(workspaceDir, aliasDir, 'dir');
+    selfScript = join(tempFs.tempDir, 'self.cjs');
   });
 
   afterAll(() => {
@@ -1210,17 +1273,39 @@ describe('registerSourceGraphResolver CJS path cache isolation', () => {
     return JSON.parse(stdout.trim().split('\n').pop()!);
   }
 
-  const expectScoped = () => ({
+  // Without `module.registerHooks` a dynamic import cannot be scoped, so it
+  // selects `dist`.
+  const dynamicExport = (hooks: 'hooks' | 'no-hooks') =>
+    hooks === 'hooks' && registerHooksAvailable ? 'source' : 'dist';
+  const expectScoped = (dynamic: 'source' | 'dist' = 'source') => ({
     entry: {
       value: 'source',
       resolved: realpathSync(
         join(workspaceDir, 'node_modules/@proj/pkg/src/index.js')
       ),
       nested: 'ext-dist',
+      dynamic,
     },
     sibling: 'dist',
     siblingAfterCleanup: 'dist',
   });
+
+  function runSelfReference(
+    hooks: 'hooks' | 'no-hooks',
+    entry: string,
+    packageName: string
+  ) {
+    const stdout = execFileSync(
+      process.execPath,
+      [selfScript, hooks, entry, packageName],
+      {
+        cwd: workspaceDir,
+        env: { ...process.env, NX_WORKSPACE_ROOT_PATH: workspaceDir },
+        encoding: 'utf8',
+      }
+    );
+    return JSON.parse(stdout.trim().split('\n').pop()!);
+  }
 
   it.runIf(registerHooksAvailable)(
     'keeps the source export scoped to the graph entry when it resolves first',
@@ -1241,7 +1326,7 @@ describe('registerSourceGraphResolver CJS path cache isolation', () => {
   it.each(['graph-first', 'sibling-first'] as const)(
     'scopes the source export without module.registerHooks (%s)',
     (order) => {
-      expect(runOrdering(order, 'no-hooks')).toEqual(expectScoped());
+      expect(runOrdering(order, 'no-hooks')).toEqual(expectScoped('dist'));
     },
     120_000
   );
@@ -1250,7 +1335,7 @@ describe('registerSourceGraphResolver CJS path cache isolation', () => {
     'scopes the graph when the configured root is an alias of the real path (%s)',
     (hooks) => {
       expect(runOrdering('graph-first', hooks, 'alias-root')).toEqual(
-        expectScoped()
+        expectScoped(dynamicExport(hooks))
       );
     },
     120_000
@@ -1265,8 +1350,33 @@ describe('registerSourceGraphResolver CJS path cache isolation', () => {
       // Node keeps the alias spelling here, so only compare the markers.
       expect(results.entry.value).toBe('source');
       expect(results.entry.nested).toBe('ext-dist');
+      expect(results.entry.dynamic).toBe(dynamicExport(hooks));
       expect(results.sibling).toBe('dist');
       expect(results.siblingAfterCleanup).toBe('dist');
+    },
+    120_000
+  );
+
+  it.each(['hooks', 'no-hooks'] as const)(
+    'resolves a package self-reference without a node_modules self-link (%s)',
+    (hooks) => {
+      expect(
+        runSelfReference(hooks, 'packages/self/src/index.cjs', '@proj/self')
+      ).toBe('self-source');
+    },
+    120_000
+  );
+
+  it.each(['hooks', 'no-hooks'] as const)(
+    'skips a package scope whose exports is null, as Node does (%s)',
+    (hooks) => {
+      expect(
+        runSelfReference(
+          hooks,
+          'packages/null-exports/src/index.cjs',
+          '@proj/null-exports'
+        )
+      ).toBe('linked-source');
     },
     120_000
   );
