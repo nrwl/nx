@@ -3,7 +3,7 @@
 // existsSync is destructure-imported, so we must mock the whole module.
 // ---------------------------------------------------------------------------
 
-const existsSyncMock = vi.fn<boolean, [unknown]>(() => false);
+const existsSyncMock = vi.hoisted(() => vi.fn<boolean, [unknown]>(() => false));
 
 vi.mock('node:fs', async () => ({
   ...require('node:fs'),
@@ -71,7 +71,10 @@ import { join, resolve } from 'node:path';
 const root = '/workspace';
 const projectPath = `${root}/packages/my-plugin`;
 
-function makeProject(exports: Record<string, unknown>): ProjectConfiguration {
+function makeProject(
+  exports: Record<string, unknown>,
+  config: Partial<ProjectConfiguration> = {}
+): ProjectConfiguration {
   return {
     root: 'packages/my-plugin',
     targets: {},
@@ -81,15 +84,17 @@ function makeProject(exports: Record<string, unknown>): ProjectConfiguration {
         packageExports: exports,
       },
     },
+    ...config,
   } as any;
 }
 
 /** Register a project in the mock entry-points map and return the projects record. */
 function setupProject(
   exports: Record<string, unknown>,
-  subpaths: string[] = []
+  subpaths: string[] = [],
+  config: Partial<ProjectConfiguration> = {}
 ): Record<string, ProjectConfiguration> {
-  const project = makeProject(exports);
+  const project = makeProject(exports, config);
   // Clear and repopulate the shared map object.
   for (const key of Object.keys(entryPointsToProjectMapMock)) {
     delete entryPointsToProjectMapMock[key];
@@ -291,23 +296,51 @@ describe('resolveSubpathFromExports (via getPluginPathAndName)', () => {
     expect(result.isSourcePlugin).toBe(false);
   });
 
-  it('resolves an import-only subpath entry, which the loader reaches through import()', () => {
+  it('resolves an import-only subpath entry under sourceRoot as source, which the loader reaches through import()', () => {
     const esmFile = `${projectPath}/src/plugin.mjs`;
     onlyFilesExist(`${root}/tsconfig.base.json`, esmFile);
 
     const projects = setupProject(
       { './plugin': { import: './src/plugin.mjs' } },
-      ['@scope/my-plugin/plugin']
+      ['@scope/my-plugin/plugin'],
+      { sourceRoot: 'packages/my-plugin/src' }
     );
 
-    const { pluginPath } = getPluginPathAndName(
+    const result = getPluginPathAndName(
       '@scope/my-plugin/plugin',
       [`${root}/node_modules`],
       projects,
       root
     );
 
-    expect(pluginPath).toBe(esmFile);
+    expect(result.pluginPath).toBe(esmFile);
+    expect(result.isSourcePlugin).toBe(true);
+  });
+
+  it('resolves a default-only JavaScript subpath entry under the build outputPath as built, even inside sourceRoot', () => {
+    const distFile = `${projectPath}/dist/plugin.mjs`;
+    onlyFilesExist(`${root}/tsconfig.base.json`, distFile);
+
+    const projects = setupProject(
+      { './plugin': { import: './dist/plugin.mjs' } },
+      ['@scope/my-plugin/plugin'],
+      {
+        sourceRoot: 'packages/my-plugin',
+        targets: {
+          build: { options: { outputPath: 'packages/my-plugin/dist' } },
+        },
+      }
+    );
+
+    const result = getPluginPathAndName(
+      '@scope/my-plugin/plugin',
+      [`${root}/node_modules`],
+      projects,
+      root
+    );
+
+    expect(result.pluginPath).toBe(distFile);
+    expect(result.isSourcePlugin).toBe(false);
   });
 
   it('resolves a dual package subpath to the require target', () => {

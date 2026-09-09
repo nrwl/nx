@@ -842,6 +842,153 @@ export default (tree: any) =>
     expect(runCLI(`build ${bareInferredProject}`)).toContain(sourceMarker);
   }, 180000);
 
+  // An import-only ESM entry resolves to the same file with and without the
+  // custom condition, so only its sourceRoot placement marks it as source.
+  // Its transitive workspace import then needs the condition in the isolated
+  // worker (Node flags) and in the daemon (resolve hooks) to reach the sibling
+  // source, which has no build output.
+  describe('import-only ESM plugin entry under sourceRoot', () => {
+    const sourceMarker = 'resolved-esm-workspace-dep-from-source';
+    let inferredProject: string;
+
+    beforeAll(() => {
+      const plugin = uniq('esm-plugin');
+      const lib = uniq('esm-lib');
+      const pm = getSelectedPackageManager();
+
+      runCLI(`generate @nx/plugin:plugin packages/${plugin}`);
+
+      const sourceCondition =
+        readJson('tsconfig.base.json').compilerOptions.customConditions[0];
+      expect(sourceCondition).not.toBe('development');
+
+      createFile(
+        `packages/${lib}/package.json`,
+        JSON.stringify({
+          name: `@${workspaceName}/${lib}`,
+          version: '0.0.1',
+          exports: {
+            './package.json': './package.json',
+            '.': {
+              [sourceCondition]: './src/index.mjs',
+              default: './dist/index.mjs',
+            },
+          },
+        })
+      );
+      createFile(
+        `packages/${lib}/src/index.mjs`,
+        `export const workspaceDepMarker = '${sourceMarker}';\n`
+      );
+
+      updateFile(
+        `packages/${plugin}/src/plugins/esm/plugin.mjs`,
+        `import { basename, dirname } from 'node:path';
+import { workspaceDepMarker } from '@${workspaceName}/${lib}';
+
+export const createNodesV2 = [
+  '**/my-esm-file',
+  (files, options) =>
+    files.map((f) => {
+      const root = dirname(f);
+      const name = basename(root);
+      return [
+        f,
+        {
+          projects: {
+            [root]: {
+              root,
+              name,
+              targets: {
+                build: {
+                  executor: 'nx:run-commands',
+                  options: { command: \`echo '\${workspaceDepMarker}'\` },
+                },
+              },
+              tags: options.inferredTags,
+            },
+          },
+        },
+      ];
+    }),
+];
+`
+      );
+
+      updateJson(`packages/${plugin}/package.json`, (pkg) => {
+        // The generated plugin declares no sourceRoot; the entry needs it to
+        // load as source.
+        pkg.nx.sourceRoot = `packages/${plugin}/src`;
+        pkg.dependencies ??= {};
+        pkg.dependencies[`@${workspaceName}/${lib}`] =
+          pm === 'pnpm' ? 'workspace:*' : '*';
+        pkg.exports = {
+          ...pkg.exports,
+          './esm': { import: './src/plugins/esm/plugin.mjs' },
+        };
+        return pkg;
+      });
+
+      updateJson(`nx.json`, (nxJson) => {
+        nxJson.plugins ??= [];
+        nxJson.plugins.push({
+          plugin: `@${workspaceName}/${plugin}/esm`,
+          options: { inferredTags: ['esm-tag'] },
+        });
+        return nxJson;
+      });
+
+      runCommand(getPackageManagerCommand({ packageManager: pm }).install);
+
+      inferredProject = uniq('esm-inferred');
+      createFile(
+        `packages/${inferredProject}/package.json`,
+        JSON.stringify({ name: inferredProject, version: '0.0.1' })
+      );
+      createFile(`packages/${inferredProject}/my-esm-file`);
+    });
+
+    it('should load the plugin from source in an isolated worker', () => {
+      const env = { NX_ISOLATE_PLUGINS: 'true' };
+      runCLI('reset', { env });
+      try {
+        expect(
+          JSON.parse(runCLI(`show project ${inferredProject} --json`, { env }))
+            .tags
+        ).toContain('esm-tag');
+        expect(runCLI(`build ${inferredProject}`, { env })).toContain(
+          sourceMarker
+        );
+      } finally {
+        runCLI('reset');
+      }
+    });
+
+    // In-process ESM imports go through module.registerHooks (Node 22.15+).
+    const registerHooksAvailable =
+      typeof (require('node:module') as { registerHooks?: unknown })
+        .registerHooks === 'function';
+    (registerHooksAvailable ? it : it.skip)(
+      'should load the plugin from source in the daemon process',
+      () => {
+        const env = { NX_ISOLATE_PLUGINS: 'false' };
+        runCLI('reset', { env });
+        try {
+          expect(
+            JSON.parse(
+              runCLI(`show project ${inferredProject} --json`, { env })
+            ).tags
+          ).toContain('esm-tag');
+          expect(runCLI(`build ${inferredProject}`, { env })).toContain(
+            sourceMarker
+          );
+        } finally {
+          runCLI('reset');
+        }
+      }
+    );
+  });
+
   it('should respect and support generating plugins with a name different than the import path', async () => {
     const plugin = uniq('plugin');
 
