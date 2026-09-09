@@ -12,7 +12,6 @@ import {
 import { ensureTypescript } from '@nx/js/internal';
 import { ast, query } from '@phenomnomnominal/tsquery';
 import type { StringLiteralLike } from 'typescript';
-import { cypressProjectConfigs } from '../../utils/migrations';
 
 // Cypress 16 dropped the `cypress/angular-zoneless` export and deprecated the
 // standalone npm package of the same harness; `cypress/angular` is zoneless there.
@@ -30,46 +29,43 @@ export default async function updateAngularZonelessMountImport(
 ): Promise<GeneratorCallback | void> {
   let wereFilesMigrated = false;
 
-  for await (const { projectConfig } of cypressProjectConfigs(tree)) {
-    visitNotIgnoredFiles(tree, projectConfig.root, (filePath) => {
-      if (!isJsTsFile(filePath) || !tree.exists(filePath)) {
-        return;
-      }
+  // Shared support libraries can hold the import, so the whole workspace is
+  // scanned rather than the Cypress project roots.
+  visitNotIgnoredFiles(tree, '.', (filePath) => {
+    if (!isJsTsFile(filePath)) {
+      return;
+    }
 
-      const originalContent = tree.read(filePath, 'utf-8');
-      if (!originalContent.includes('angular-zoneless')) {
-        return;
-      }
+    const originalContent = tree.read(filePath, 'utf-8');
+    if (!originalContent.includes('angular-zoneless')) {
+      return;
+    }
 
-      const changes = findModuleSpecifiers(originalContent).map(
-        (specifier): StringChange[] => {
-          const quote = specifier.getText()[0];
-          const start = specifier.getStart();
-          return [
-            {
-              type: ChangeType.Delete,
-              start,
-              length: specifier.getEnd() - start,
-            },
-            {
-              type: ChangeType.Insert,
-              index: start,
-              text: `${quote}${NEW_SPECIFIER}${quote}`,
-            },
-          ];
-        }
-      );
-      if (changes.length === 0) {
-        return;
+    const changes = findModuleSpecifiers(originalContent).map(
+      (specifier): StringChange[] => {
+        const quote = specifier.getText()[0];
+        const start = specifier.getStart();
+        return [
+          {
+            type: ChangeType.Delete,
+            start,
+            length: specifier.getEnd() - start,
+          },
+          {
+            type: ChangeType.Insert,
+            index: start,
+            text: `${quote}${NEW_SPECIFIER}${quote}`,
+          },
+        ];
       }
+    );
+    if (changes.length === 0) {
+      return;
+    }
 
-      tree.write(
-        filePath,
-        applyChangesToString(originalContent, changes.flat())
-      );
-      wereFilesMigrated = true;
-    });
-  }
+    tree.write(filePath, applyChangesToString(originalContent, changes.flat()));
+    wereFilesMigrated = true;
+  });
 
   const installTask = removeDeprecatedPackage(tree);
 
