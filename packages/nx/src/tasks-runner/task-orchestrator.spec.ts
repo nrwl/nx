@@ -747,6 +747,7 @@ describe('TaskOrchestrator', () => {
         args.outputStyle ?? 'static-failures-only';
       // Object.create bypasses field initializers.
       orchestrator.batchFoldRenders = new Map();
+      orchestrator.announcedBatchLogs = new Set();
       return orchestrator;
     }
 
@@ -940,91 +941,6 @@ describe('TaskOrchestrator', () => {
     // path, and the test above is why it does not run under summary. Without
     // the handoff below, the worker's own stderr is captured, read by nobody,
     // and unlinked by `discardCapturedOutput` when the batch ends.
-    it('gives a failed batch its worker log under summary', () => {
-      const orchestrator = createOrchestrator({ outputStyle: 'summary' });
-      const a = makeTask('a:build');
-      const b = { ...makeTask('b:build'), hash: 'hash-b' } as Task;
-      const taskResults = [
-        { task: a, status: 'success', code: 0, terminalOutput: 'a body' },
-        { task: b, status: 'failure', code: 1, terminalOutput: 'b failed' },
-      ];
-
-      const withLog = orchestrator.attachBatchWorkerLog(
-        taskResults,
-        capturedOutputFile('gradlew: OutOfMemoryError')
-      );
-
-      // The failing task carries it, so the path summary prints for b holds the
-      // reason the batch runner died rather than only b's own line.
-      expect(withLog[1].terminalOutput).toContain('gradlew: OutOfMemoryError');
-      expect(withLog[1].terminalOutput).toContain('b failed');
-      // A task that succeeded is left alone; there is nothing to explain.
-      expect(withLog[0].terminalOutput).toEqual('a body');
-    });
-
-    it('points the other failures at that copy rather than duplicating it', () => {
-      const orchestrator = createOrchestrator({ outputStyle: 'summary' });
-      const a = { ...makeTask('a:build'), hash: 'hash-a' } as Task;
-      const b = { ...makeTask('b:build'), hash: 'hash-b' } as Task;
-      const taskResults = [
-        { task: a, status: 'failure', code: 1, terminalOutput: 'a failed' },
-        { task: b, status: 'failure', code: 1, terminalOutput: 'b failed' },
-      ];
-
-      const withLog = orchestrator.attachBatchWorkerLog(
-        taskResults,
-        capturedOutputFile('gradlew: OutOfMemoryError')
-      );
-
-      // The log is unbounded, so a copy per task would write a byte-identical
-      // file for each and charge every one against maxCacheSize.
-      expect(withLog[0].terminalOutput).toContain('gradlew: OutOfMemoryError');
-      expect(withLog[1].terminalOutput).not.toContain(
-        'gradlew: OutOfMemoryError'
-      );
-      // Names the task, not a path built from its hash. The hash is still
-      // preliminary here - applyFromCacheOrRunBatch re-hashes depsOutputs tasks
-      // that ran, failures included, before persistTerminalOutputs writes under
-      // the new one - so a path minted now addresses a file nothing writes.
-      expect(withLog[1].terminalOutput).toContain(
-        'batch worker log: reported with a:build'
-      );
-      expect(withLog[1].terminalOutput).not.toContain('terminalOutputs');
-      expect(withLog[1].terminalOutput).not.toContain('hash-a');
-    });
-
-    it('leaves an all-green batch alone, so its chatter is not persisted', () => {
-      const orchestrator = createOrchestrator({ outputStyle: 'summary' });
-      const a = makeTask('a:build');
-      const taskResults = [
-        { task: a, status: 'success', code: 0, terminalOutput: 'a body' },
-      ];
-
-      expect(
-        orchestrator.attachBatchWorkerLog(
-          taskResults,
-          capturedOutputFile('noisy but harmless')
-        )
-      ).toBe(taskResults);
-    });
-
-    it('leaves the results alone when the style prints task output', () => {
-      const orchestrator = createOrchestrator({ outputStyle: 'static' });
-      const a = { ...makeTask('a:build'), hash: 'hash-a' } as Task;
-      const taskResults = [
-        { task: a, status: 'failure', code: 1, terminalOutput: 'a failed' },
-      ];
-
-      // static already streamed it or folded it; adding it here would duplicate
-      // the whole worker log into the task's persisted output.
-      expect(
-        orchestrator.attachBatchWorkerLog(
-          taskResults,
-          capturedOutputFile('already on the terminal')
-        )
-      ).toBe(taskResults);
-    });
-
     it('still collapses an all-green batch on the default, captured log or not', async () => {
       const orchestrator = createOrchestrator();
       const a = makeTask('a:build');
@@ -1151,10 +1067,12 @@ describe('TaskOrchestrator', () => {
           printTaskTerminalOutput: vi.fn(),
           appendTaskOutput: vi.fn(),
           setTaskStatus: vi.fn(),
+          batchOutputAvailable: vi.fn(),
         },
       };
       // Object.create bypasses field initializers.
       orchestrator.batchFoldRenders = new Map();
+      orchestrator.announcedBatchLogs = new Set();
       orchestrator.stopRequested = stopRequested;
       orchestrator.projectGraph = {} as ProjectGraph;
       orchestrator.taskGraph = {
@@ -1237,11 +1155,17 @@ describe('TaskOrchestrator', () => {
 
       const results: any = await orchestrator.runBatch(batch, {}, 0);
 
-      expect(results[0].status).toEqual('failure');
-      expect(results[0].terminalOutput).toContain(
-        'gradlew: OutOfMemoryError in the daemon'
+      // The log is addressed, not copied: one worker means one log, and it
+      // explains the batch rather than any single task.
+      expect(
+        orchestrator.options.lifeCycle.batchOutputAvailable
+      ).toHaveBeenCalledWith(
+        batch.id,
+        capturedPath('gradlew: OutOfMemoryError in the daemon')
       );
-      expect(results[0].terminalOutput).toContain('a failed');
+      expect(results[0].status).toEqual('failure');
+      expect(results[0].terminalOutput).toEqual('a failed');
+      expect(results[0].terminalOutput).not.toContain('OutOfMemoryError');
     });
 
     // The fold tests above all run under grouping, where the handoff is a no-op,
@@ -1256,11 +1180,16 @@ describe('TaskOrchestrator', () => {
 
       const results: any = await orchestrator.runBatch(batch, {}, 0);
 
-      expect(results[0].status).toEqual('failure');
-      expect(results[0].terminalOutput).toContain(
-        'FAILURE: Could not resolve all dependencies'
+      expect(
+        orchestrator.options.lifeCycle.batchOutputAvailable
+      ).toHaveBeenCalledWith(
+        batch.id,
+        capturedPath('FAILURE: Could not resolve all dependencies')
       );
+      expect(results[0].status).toEqual('failure');
+      // The task's own file holds the exit error; the worker log is addressed.
       expect(results[0].terminalOutput).toContain(EXIT_ERROR);
+      expect(results[0].terminalOutput).not.toContain('Could not resolve');
     });
 
     it("surfaces a crashed batch's captured log alongside the exit error", async () => {
@@ -1289,12 +1218,17 @@ describe('TaskOrchestrator', () => {
 
       const results: any = await orchestrator.runBatch(batch, {}, 0);
 
-      expect(results[0].status).toEqual('stopped');
-      expect(results[0].terminalOutput).toContain(
-        'gradle: still resolving dependencies'
+      // A stopped batch's partial log is the only record of what got through,
+      // so it is still addressed - but no task's file is given a copy, which
+      // previously left every non-holder holding only a pointer sentence.
+      expect(
+        orchestrator.options.lifeCycle.batchOutputAvailable
+      ).toHaveBeenCalledWith(
+        batch.id,
+        capturedPath('gradle: still resolving dependencies')
       );
-      // The exit error still stays out: it restates the cancellation.
-      expect(results[0].terminalOutput).not.toContain(EXIT_ERROR);
+      expect(results[0].status).toEqual('stopped');
+      expect(results[0].terminalOutput).toEqual('');
     });
 
     it("surfaces a stopped batch's captured log, without the exit error", async () => {
