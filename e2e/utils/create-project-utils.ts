@@ -23,7 +23,7 @@ import { angularDevkitVersion as defaultAngularCliVersion } from '@nx/angular/in
 import { typescriptVersion as defaultTypescriptVersion } from '@nx/js/src/utils/versions';
 import { dump } from '@zkochan/js-yaml';
 import { execSync, ExecSyncOptions } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { performance, PerformanceMeasure } from 'node:perf_hooks';
 import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
@@ -90,6 +90,32 @@ export function openInEditor(projectDirectory: string = tmpProjPath()) {
  * Sets up a new project in the temporary project path
  * for the currently selected CLI.
  */
+/**
+ * Locate a pre-built base workspace template for this package manager and preset,
+ * produced by the `populate-e2e-base-workspace` task and restored via Nx cache on
+ * each agent. Existence of the directory is the only gate, so a combination that
+ * isn't pre-built just falls back to building the workspace the original way.
+ */
+function sharedBaseWorkspacePath(
+  packageManager: string,
+  preset: string
+): string | null {
+  if (process.env.NX_E2E_SKIP_SHARED_BASE === 'true') {
+    return null;
+  }
+  const candidate = join(
+    __dirname,
+    '..',
+    '..',
+    'dist',
+    'local-registry',
+    'proj-backup',
+    packageManager,
+    preset
+  );
+  return directoryExists(candidate) ? candidate : null;
+}
+
 export function newProject({
   name = uniq('proj'),
   packageManager = getSelectedPackageManager(),
@@ -118,10 +144,22 @@ export function newProject({
       const createNxWorkspaceStart = performance.mark(
         'create-nx-workspace:start'
       );
-      runCreateWorkspace(projScope, {
-        preset,
-        packageManager,
-      });
+      // Seed from the pre-built template when one exists for this package
+      // manager and preset, instead of running the ~40-70s create-nx-workspace.
+      const sharedBase = sharedBaseWorkspacePath(packageManager, preset);
+      if (sharedBase) {
+        ensureDirSync(e2eCwd);
+        copySync(sharedBase, `${e2eCwd}/${projScope}`);
+        // runCreateWorkspace (the else branch) sets the module-level projName as a
+        // side effect that downstream helpers (packageInstall ->
+        // getPackageManagerCommand) rely on; mirror it when seeding from the template.
+        projName = projScope;
+      } else {
+        runCreateWorkspace(projScope, {
+          preset,
+          packageManager,
+        });
+      }
       const createNxWorkspaceEnd = performance.mark('create-nx-workspace:end');
       createNxWorkspaceMeasure = performance.measure(
         'create-nx-workspace',
@@ -495,14 +533,22 @@ export function packageInstall(
 ) {
   const cwd = projName ? `${e2eCwd}/${projName}` : tmpProjPath();
   const pm = getPackageManagerCommand({ path: cwd });
-  const pkgsWithVersions = pkg
-    .split(' ')
-    .map((pgk) => `${pgk}@${version}`)
-    .join(' ');
+  // Record the dependencies and reconcile the whole graph, rather than `add`ing
+  // them onto whatever node_modules happens to be there. `add` is targeted: it
+  // trusts the existing tree, so a workspace seeded from the prebuilt template
+  // keeps a sub-graph pnpm never revisits, and @nx/js ends up without its link
+  // to @nx/devkit. Versions are pinned exactly, which `add` did in effect anyway
+  // since it is always given an exact version or a dist-tag.
+  const packageJsonPath = join(cwd, 'package.json');
+  const packageJson = readJsonFile(packageJsonPath);
+  const field = mode === 'dev' ? 'devDependencies' : 'dependencies';
+  packageJson[field] ??= {};
+  for (const name of pkg.split(' ').filter(Boolean)) {
+    packageJson[field][name] = version;
+  }
+  writeFileSync(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`);
 
-  const command = `${
-    mode === 'dev' ? pm.addDev : pm.addProd
-  } ${pkgsWithVersions}`;
+  const command = pm.install;
 
   try {
     const install = execSync(command, {
