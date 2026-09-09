@@ -17,10 +17,12 @@ vi.mock('../plugins/js/utils/packages', () => ({
 import { mkdirSync, realpathSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { TempFs } from '../internal-testing-utils/temp-fs';
-import { registerSourceGraphResolver } from '../plugins/js/utils/register';
+import {
+  registerSourceGraphResolver,
+  requireWithTsconfigFallback,
+} from '../plugins/js/utils/register';
 import { setWorkspaceRoot, workspaceRoot } from '../utils/workspace-root';
 import { getImplementationFactory } from './schema-utils';
-import { requireWithTsconfigFallback } from '../plugins/js/utils/register';
 import type { ProjectConfiguration } from './workspace-json-project-json';
 
 describe('getImplementationFactory', () => {
