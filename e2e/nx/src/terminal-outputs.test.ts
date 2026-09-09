@@ -100,7 +100,12 @@ describe('terminal outputs on disk', () => {
       `${pluginRoot}/impl.js`,
       `module.exports = {
         default: async (options) => {
-          console.log(options.text);
+          // Distinct from the batch marker on purpose: batching falls back to
+          // this silently when the batch implementation does not resolve
+          // (tasks-schedule.ts returns without a diagnostic), and the
+          // single-task path already wrote the output file before this PR - so
+          // a shared marker would keep the test green on the unfixed code.
+          console.log(options.text + '-single');
           return { success: true };
         },
       };`
@@ -113,7 +118,7 @@ describe('terminal outputs on disk', () => {
           for (const taskId of Object.keys(taskGraph.tasks)) {
             results[taskId] = {
               success: true,
-              terminalOutput: inputs[taskId].text,
+              terminalOutput: inputs[taskId].text + '-batched',
             };
           }
           return results;
@@ -137,7 +142,9 @@ describe('terminal outputs on disk', () => {
 
     runCLI(`echo ${lib}`, { env: { NX_BATCH_MODE: 'true' } });
 
-    expect(terminalOutputContains(marker)).toBe(true);
+    // The batched marker specifically: this is the path NXC-4694 is about, and
+    // the non-batch fallback wrote a file at base too.
+    expect(terminalOutputContains(`${marker}-batched`)).toBe(true);
   }, 120000);
 
   it('should not replay a task whose output was written without artifacts', () => {
