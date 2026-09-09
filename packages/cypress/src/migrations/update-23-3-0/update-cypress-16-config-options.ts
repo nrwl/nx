@@ -14,7 +14,10 @@ import type {
   ShorthandPropertyAssignment,
   StringLiteralLike,
 } from 'typescript';
-import { resolveCypressConfigObject } from '../../utils/config';
+import {
+  resolveCypressConfigObject,
+  resolveObjectLiteral,
+} from '../../utils/config';
 import { cypressProjectConfigs } from '../../utils/migrations';
 
 // Cypress 16 breakingOptions (packages/config/src/options.ts).
@@ -51,12 +54,20 @@ export default async function updateCypress16ConfigOptions(tree: Tree) {
     }
 
     const contents = tree.read(cypressConfigPath, 'utf-8');
-    if (!TRIGGER_OPTIONS.some((option) => contents.includes(option))) {
+    const mentionedOptions = TRIGGER_OPTIONS.filter((option) =>
+      contents.includes(option)
+    );
+    if (mentionedOptions.length === 0) {
       continue;
     }
 
     const config = resolveCypressConfigObject(contents);
     if (!config) {
+      unhandled.push(
+        `${cypressConfigPath}: the config object could not be resolved statically; it mentions ${mentionedOptions
+          .map((option) => `\`${option}\``)
+          .join(', ')}, migrate those by hand`
+      );
       continue;
     }
 
@@ -144,17 +155,26 @@ function getRemovalFollowUp(property: ConfigProperty): string | null {
   return null;
 }
 
+// An `e2e`/`component` block held in a variable of the same file is edited
+// in place, so it is collected like an inline one.
 function getOptionBlocks(
   config: ObjectLiteralExpression
 ): ObjectLiteralExpression[] {
   const blocks = [config];
+  const sourceFile = config.getSourceFile();
   for (const property of config.properties) {
     if (
-      ts.isPropertyAssignment(property) &&
-      TESTING_TYPE_BLOCKS.includes(getPropertyName(property.name)) &&
-      ts.isObjectLiteralExpression(property.initializer)
+      !isConfigProperty(property) ||
+      !TESTING_TYPE_BLOCKS.includes(getPropertyName(property.name))
     ) {
-      blocks.push(property.initializer);
+      continue;
+    }
+    const block = resolveObjectLiteral(
+      ts.isPropertyAssignment(property) ? property.initializer : property.name,
+      sourceFile
+    );
+    if (block) {
+      blocks.push(block);
     }
   }
   return blocks;

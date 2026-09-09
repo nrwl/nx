@@ -445,6 +445,76 @@ export default config;
     `);
   });
 
+  it('should handle "export default <variable>" when <variable> holds defineConfig()', async () => {
+    const config = resolveCypressConfigObject(
+      `import { defineConfig } from 'cypress';
+
+const config = defineConfig({
+  e2e: {
+    baseUrl: 'https://example.com',
+  },
+});
+
+export default config;
+`
+    );
+
+    expect(config).toBeDefined();
+    expect(config.getText()).toMatchInlineSnapshot(`
+      "{
+        e2e: {
+          baseUrl: 'https://example.com',
+        },
+      }"
+    `);
+  });
+
+  it('should follow a chain of variables', async () => {
+    const config = resolveCypressConfigObject(
+      `const base = {
+  e2e: {
+    baseUrl: 'https://example.com',
+  },
+};
+const config = base;
+
+export default config;
+`
+    );
+
+    expect(config).toBeDefined();
+    expect(config.getText()).toMatchInlineSnapshot(`
+      "{
+        e2e: {
+          baseUrl: 'https://example.com',
+        },
+      }"
+    `);
+  });
+
+  it('should return null for a variable that is not an object literal', async () => {
+    expect(
+      resolveCypressConfigObject(`import { getConfig } from './config';
+const config = getConfig();
+
+export default config;
+`)
+    ).toBeNull();
+    expect(
+      resolveCypressConfigObject(`let config;
+
+export default config;
+`)
+    ).toBeNull();
+    expect(
+      resolveCypressConfigObject(`const a = b;
+const b = a;
+
+export default a;
+`)
+    ).toBeNull();
+  });
+
   it('should handle "module.exports = defineConfig()"', async () => {
     const config = resolveCypressConfigObject(
       `const { defineConfig } = require('cypress');
@@ -474,6 +544,30 @@ module.exports = defineConfig({
     baseUrl: 'https://example.com',
   },
 };
+`
+    );
+
+    expect(config).toBeDefined();
+    expect(config.getText()).toMatchInlineSnapshot(`
+      "{
+        e2e: {
+          baseUrl: 'https://example.com',
+        },
+      }"
+    `);
+  });
+
+  it('should handle "module.exports = <variable>" when <variable> holds defineConfig()', async () => {
+    const config = resolveCypressConfigObject(
+      `const { defineConfig } = require('cypress');
+
+const config = defineConfig({
+  e2e: {
+    baseUrl: 'https://example.com',
+  },
+});
+
+module.exports = config;
 `
     );
 

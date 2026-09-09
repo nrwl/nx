@@ -337,6 +337,103 @@ export default defineConfig({
     expect(await migration(tree)).toBeUndefined();
   });
 
+  it('should migrate a config exported through a variable holding defineConfig()', async () => {
+    const configPath = addCypressProject(
+      tree,
+      'app',
+      `import { defineConfig } from 'cypress';
+
+const config = defineConfig({
+  experimentalMemoryManagement: false,
+  e2e: {
+    execTimeout: 1000,
+  },
+});
+
+export default config;
+`
+    );
+
+    const result = await migration(tree);
+
+    expect(result.nextSteps).toEqual([
+      expect.stringContaining('removed `execTimeout: 1000`'),
+    ]);
+    expect(tree.read(configPath, 'utf-8')).toMatchInlineSnapshot(`
+      "import { defineConfig } from 'cypress';
+
+      const config = defineConfig({
+        manageBrowserMemory: false,
+        e2e: {},
+      });
+
+      export default config;
+      "
+    `);
+  });
+
+  it('should migrate e2e and component blocks held in variables', async () => {
+    const configPath = addCypressProject(
+      tree,
+      'app',
+      `import { defineConfig } from 'cypress';
+
+const e2eConfig = {
+  baseUrl: 'http://localhost:4200',
+  experimentalFastVisibility: true,
+};
+const component = {
+  experimentalMemoryManagement: false,
+  allowCypressEnv: true,
+};
+
+export default defineConfig({
+  e2e: e2eConfig,
+  component,
+});
+`
+    );
+
+    const result = await migration(tree);
+
+    expect(result).toBeUndefined();
+    expect(tree.read(configPath, 'utf-8')).toMatchInlineSnapshot(`
+      "import { defineConfig } from 'cypress';
+
+      const e2eConfig = {
+        baseUrl: 'http://localhost:4200',
+        visibilityStrategy: 'modern',
+      };
+      const component = {
+        manageBrowserMemory: false,
+      };
+
+      export default defineConfig({
+        e2e: e2eConfig,
+        component,
+      });
+      "
+    `);
+  });
+
+  it('should report a config it cannot resolve statically', async () => {
+    const config = `import { defineConfig } from 'cypress';
+import { baseConfig } from '@acme/cypress-config';
+
+export default defineConfig(
+  baseConfig({ experimentalMemoryManagement: false, execTimeout: 1000 })
+);
+`;
+    const configPath = addCypressProject(tree, 'app', config);
+
+    const result = await migration(tree);
+
+    expect(result.nextSteps).toEqual([
+      'Review the Cypress config option change: apps/app/cypress.config.ts: the config object could not be resolved statically; it mentions `execTimeout`, `experimentalMemoryManagement`, migrate those by hand',
+    ]);
+    expect(tree.read(configPath, 'utf-8')).toBe(config);
+  });
+
   it('should not touch options outside the config object', async () => {
     const config = `import { defineConfig } from 'cypress';
 
