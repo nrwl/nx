@@ -103,8 +103,8 @@ export function formatAffectedExplanation(
   reasons: Record<string, AffectedReason[]>,
   heading: string,
   /**
-   * Tasks that will run only to satisfy the selected ones. Absent on the
-   * project path, which has no closure to report.
+   * Tasks that will run only to satisfy the selected ones. Absent unless the
+   * caller is about to run them, so `show projects` never passes it.
    */
   dependencies?: number
 ): string {
