@@ -1810,7 +1810,8 @@ function emitRetryFailed(
     `  current HEAD: ${head ?? '(unknown)'}`,
     `  working tree: ${tree === null ? '(unknown)' : tree ? `\n${tree}` : '(clean)'}`,
     ``,
-    ...(capReached ? [rearmCapLine(step), ``] : []),
+    retryBudgetLine(step),
+    ``,
     `Decide how to proceed and re-run reconcile with one of:`,
     ...(capReached
       ? []
@@ -1865,6 +1866,18 @@ function emitRetryFailed(
 // rearms, whichever retry action produced them.
 function rearmCapReached(step: MigrateStep): boolean {
   return step.attempt - 1 >= REARM_ESCALATION_CAP;
+}
+
+// Opens every failed and died dispense with how many retries are left and
+// what a retry is for, so the choice is made against the budget.
+function retryBudgetLine(step: MigrateStep): string {
+  if (rearmCapReached(step)) return rearmCapLine(step);
+  const left = REARM_ESCALATION_CAP - (step.attempt - 1);
+  return `Retries left for this migration: ${left}. Diagnose the failure first and retry only with a plausible fix in hand; ${
+    left === 1
+      ? 'this is the last one, so ask the user before using it'
+      : 'ask the user before using the last one'
+  }. When no user can answer, give the step up with unresolved and continue.`;
 }
 
 // Opens a capped dispense and is the reason a retry past the cap is refused.
@@ -2086,7 +2099,8 @@ function emitDied(
     `  current HEAD: ${head ?? '(unknown)'}`,
     `  working tree: ${tree === null ? '(unknown)' : tree ? `\n${tree}` : '(clean)'}`,
     ``,
-    ...(capReached ? [rearmCapLine(step), ``] : []),
+    retryBudgetLine(step),
+    ``,
   ];
   const options: string[] = [];
   if (resume && !capReached) {
