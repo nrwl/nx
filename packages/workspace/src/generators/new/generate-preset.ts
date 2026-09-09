@@ -64,10 +64,10 @@ const presetDependencyBuildScripts: Record<string, Record<string, boolean>> = {
   '@nx/webpack': { '@parcel/watcher': false },
 };
 
-export function getPresetBuildScripts({
-  dependencies,
-  dev,
-}: PresetDependencies): Record<string, boolean> {
+export function getPresetBuildScripts(
+  options: NormalizedSchema,
+  { dependencies, dev }: PresetDependencies
+): Record<string, boolean> {
   // The conditional entries are keyed unconditionally and left `undefined` when
   // they don't apply, so the version is what says a package gets installed.
   const declared: Record<string, string | undefined> = {
@@ -80,6 +80,12 @@ export function getPresetBuildScripts({
     if (declared[pkg]) {
       Object.assign(buildScripts, presetDependencyBuildScripts[pkg]);
     }
+  }
+
+  // A third-party preset's install script is unvetted, and pnpm 10 does not run
+  // it today, so deny it rather than opting in on pnpm 11.
+  if (options.isCustomPreset) {
+    buildScripts[options.preset] = false;
   }
 
   return buildScripts;

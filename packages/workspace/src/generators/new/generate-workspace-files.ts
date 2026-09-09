@@ -357,10 +357,10 @@ function addPnpmSettings(
 ) {
   const buildScripts = {
     nx: true,
-    ...getPresetBuildScripts(presetDependencies),
+    ...getPresetBuildScripts(options, presetDependencies),
   };
-  // pnpm 10 only understands the allow-list form, so a denied package is simply
-  // left out. pnpm 11 needs an explicit decision for every scripted package.
+  // pnpm 10 skips an undecided script instead of erroring, and only 10.26 and
+  // later read `allowBuilds`, so the allow-list form covers all of pnpm 10.
   const buildAllowlist = gte(packageManagerVersion, '11.0.0')
     ? { allowBuilds: buildScripts }
     : {
