@@ -79,6 +79,15 @@ describe('nxViteTsPaths', () => {
     await expect(resolveWith('@nope/missing')).resolves.toBeNull();
   });
 
+  it('should resolve an alias of the project tsconfig when the workspace has no root-level tsconfig', async () => {
+    await withProjectTsConfigOutsideWorkspace();
+    await tempFs.createFiles({ 'external/libs/foo.ts': '' });
+
+    await expect(resolveWith('@ext/foo')).resolves.toEqual(
+      join(tempFs.tempDir, 'external/libs/foo.ts')
+    );
+  });
+
   it('should defer to other resolvers when the root-level tsconfig cannot be loaded', async () => {
     await withProjectTsConfigOutsideWorkspace();
     await tempFs.createFiles({ 'tsconfig.base.json': JSON.stringify({}) });
