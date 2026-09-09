@@ -23,6 +23,9 @@ describe('renderRunbook', () => {
 
     expect(runbook).toContain('# Nx migrate run run-1');
     expect(runbook).toContain("Never infer the run's progress");
+    expect(runbook).toContain(
+      'Do not edit anything under `.nx/migrate-runs` except the handoff file'
+    );
     expect(runbook).toContain('    npx nx migrate --run-id=run-1');
   });
 
