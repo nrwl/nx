@@ -77,6 +77,7 @@ import {
   modifyYarnRcYmlToFitNewDirectory,
   packageRegistryPack,
   packageRegistryView,
+  parseRegistryViewJson,
   parseVersionFromPackageManagerField,
   resolvePackageVersionUsingRegistry,
   PackageManager,
@@ -1494,6 +1495,26 @@ describe('package-manager', () => {
 
       const [, , options] = execMock.mock.calls[0];
       expect(options.cwd).toBe(workspaceRoot);
+    });
+  });
+
+  describe('parseRegistryViewJson', () => {
+    it('returns a bare value unchanged', () => {
+      expect(parseRegistryViewJson('{"version":"1.0.0"}')).toEqual({
+        version: '1.0.0',
+      });
+    });
+
+    it('unwraps the one-element array npm 12 prints for an exact spec', () => {
+      expect(parseRegistryViewJson('[{"version":"1.0.0"}]')).toEqual({
+        version: '1.0.0',
+      });
+    });
+
+    it('keeps a multi-version array intact', () => {
+      expect(
+        parseRegistryViewJson('[{"version":"1.0.0"},{"version":"1.1.0"}]')
+      ).toEqual([{ version: '1.0.0' }, { version: '1.1.0' }]);
     });
   });
 
