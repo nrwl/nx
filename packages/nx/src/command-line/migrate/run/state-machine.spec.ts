@@ -13,6 +13,7 @@ import {
   discardGeneratorRun,
   hasPendingCommitDebt,
   stepsToPendingMigrations,
+  tallySteps,
   type StepAction,
   type StepEvent,
 } from './state-machine';
@@ -1187,6 +1188,36 @@ describe('appendCommit', () => {
 
     expect(failed.steps[0].commitStarted).toBe(true);
     expect(checkpoint.steps[0].commitStarted).toBe(true);
+  });
+});
+
+describe('tallySteps', () => {
+  it('counts every status once, telling adopted successes and stalled steps apart', () => {
+    const base = stateWithStep();
+    const state: MigrateRunState = {
+      ...base,
+      steps: ALL_STEP_STATUSES.map((status, index) => ({
+        ...base.steps[0],
+        id: `step-${index + 1}`,
+        status,
+      })).concat({
+        ...base.steps[0],
+        id: 'step-10',
+        status: 'succeeded',
+        adopted: true,
+      }),
+    };
+
+    const tally = tallySteps(state);
+
+    expect(tally).toEqual({
+      applied: 1,
+      adopted: 1,
+      skipped: 1,
+      unresolved: [expect.objectContaining({ status: 'unresolved' })],
+      remaining: 6,
+      stalled: 2,
+    });
   });
 });
 
