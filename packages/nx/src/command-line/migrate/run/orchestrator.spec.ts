@@ -5556,6 +5556,61 @@ describe('orchestrator', () => {
       expect(block.payload.next).toBeUndefined();
     });
 
+    it.each([
+      [
+        1,
+        'Retries left for this migration: 2',
+        'ask the user before using the last one',
+      ],
+      [
+        2,
+        'Retries left for this migration: 1',
+        'this is the last one, so ask the user',
+      ],
+    ])(
+      'opens the failed dispense of attempt %s with the retry budget',
+      async (attempt, budget, ask) => {
+        setupRun('run-1', {
+          steps: [
+            migStep('step-1', '@nx/js:gen', 'failed', {
+              generatorCompleted: true,
+              attempt,
+            }),
+          ],
+          plan: [genMig('@nx/js', 'gen')],
+        });
+
+        await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+        const block = lastBlock();
+        expect(block.action).toBe('retry-failed');
+        expect(block.payload.instructions).toContain(budget);
+        expect(block.payload.instructions).toContain(ask);
+        expect(block.payload.instructions).toContain(
+          'give the step up with unresolved'
+        );
+      }
+    );
+
+    it('opens the died dispense with the retry budget', async () => {
+      setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'died', {
+            generatorCompleted: true,
+          }),
+        ],
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const block = lastBlock();
+      expect(block.action).toBe('died');
+      expect(block.payload.instructions).toContain(
+        'Retries left for this migration: 2'
+      );
+    });
+
     it('keeps the preselected retry while rearms remain below the cap', async () => {
       mockGetLatestCommitSha.mockReturnValue(
         'beef0001beef0001beef0001beef0001beef0001'
