@@ -80,7 +80,7 @@ impl NxCache {
     }
 
     fn setup(&self) -> anyhow::Result<()> {
-        // `has_artifacts` distinguishes a real cache entry, which owns a
+        // `is_cache_entry` distinguishes a real cache entry, which owns a
         // `<cacheDir>/<hash>` directory, from a row that exists only so the
         // terminal output of an uncacheable run is reachable by the GC. Only
         // the former may be served as a cache hit — see `get`/`fetch_cache_rows`.
@@ -89,7 +89,7 @@ impl NxCache {
                 hash    TEXT PRIMARY KEY NOT NULL,
                 code   INTEGER NOT NULL,
                 size   INTEGER NOT NULL,
-                has_artifacts INTEGER NOT NULL DEFAULT 1,
+                is_cache_entry BOOLEAN NOT NULL DEFAULT TRUE CHECK (is_cache_entry IN (0, 1)),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 accessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (hash) REFERENCES task_details (hash)
@@ -100,7 +100,7 @@ impl NxCache {
                 hash    TEXT PRIMARY KEY NOT NULL,
                 code   INTEGER NOT NULL,
                 size   INTEGER NOT NULL,
-                has_artifacts INTEGER NOT NULL DEFAULT 1,
+                is_cache_entry BOOLEAN NOT NULL DEFAULT TRUE CHECK (is_cache_entry IN (0, 1)),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 accessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
@@ -129,7 +129,7 @@ impl NxCache {
             .query_row(
                 "UPDATE cache_outputs
                     SET accessed_at = CURRENT_TIMESTAMP
-                    WHERE hash = ?1 AND has_artifacts = 1
+                    WHERE hash = ?1 AND is_cache_entry
                     RETURNING code, size",
                 params![hash],
                 |row| Ok((row.get::<_, i16>(0)?, row.get::<_, i64>(1)?)),
@@ -198,7 +198,7 @@ impl NxCache {
             .unwrap()
             .query_map(
                 "UPDATE cache_outputs SET accessed_at = CURRENT_TIMESTAMP
-                 WHERE hash IN rarray(?1) AND has_artifacts = 1
+                 WHERE hash IN rarray(?1) AND is_cache_entry
                  RETURNING hash, code, size",
                 [values],
                 |row| {
@@ -319,14 +319,14 @@ impl NxCache {
     ///
     /// Without a row the file is invisible to `remove_old_cache_records`,
     /// which only ever walks hashes it finds in the database, so these files
-    /// would accumulate forever. The row carries `has_artifacts = 0` so it can
-    /// never be served as a cache hit.
+    /// would accumulate forever. The row carries `is_cache_entry = FALSE` so it
+    /// can never be served as a cache hit.
     ///
     /// On conflict `accessed_at` always moves: the reads filter these rows out,
     /// so they would otherwise age from the first write and be collected out
     /// from under a task that is still being run daily. `size` moves only while
-    /// the row is still output-only (`has_artifacts = 0`), so a task rerun with
-    /// a longer log stops undercounting against `maxCacheSize`. `has_artifacts`
+    /// the row is still output-only (`NOT is_cache_entry`), so a task rerun with
+    /// a longer log stops undercounting against `maxCacheSize`. `is_cache_entry`
     /// is never touched, and a row that already has artifacts keeps the size
     /// `put` recorded, so a rewrite can neither demote a real entry nor replace
     /// its whole-entry size with the terminal output's.
@@ -352,11 +352,11 @@ impl NxCache {
                         // otherwise keep its first size forever and undercount
                         // against maxCacheSize. A row with artifacts is owned by
                         // `record_to_cache`, whose size covers the whole entry.
-                        "INSERT INTO cache_outputs (hash, code, size, has_artifacts)
-                         VALUES (?1, 0, ?2, 0)
+                        "INSERT INTO cache_outputs (hash, code, size, is_cache_entry)
+                         VALUES (?1, 0, ?2, FALSE)
                          ON CONFLICT(hash) DO UPDATE SET
                              accessed_at = CURRENT_TIMESTAMP,
-                             size = CASE WHEN has_artifacts = 0 THEN excluded.size ELSE size END",
+                             size = CASE WHEN NOT is_cache_entry THEN excluded.size ELSE size END",
                         params![record.hash, record.size],
                     )?;
                 }
@@ -382,12 +382,12 @@ impl NxCache {
 
     fn record_to_cache(&self, hash: String, code: i16, size: i64) -> anyhow::Result<()> {
         trace!("Recording to cache: {}, {}, {}", &hash, code, size);
-        // `has_artifacts` is forced back to 1 on conflict: an earlier
+        // `is_cache_entry` is forced back to TRUE on conflict: an earlier
         // uncacheable run of the same hash (`--skip-nx-cache`) may have left a
         // terminal-output-only row, and this run did write the artifacts.
         self.db.lock().unwrap().execute(
-            "INSERT INTO cache_outputs (hash, code, size, has_artifacts) VALUES (?1, ?2, ?3, 1)
-             ON CONFLICT(hash) DO UPDATE SET code = excluded.code, size = excluded.size, has_artifacts = 1, created_at = CURRENT_TIMESTAMP, accessed_at = CURRENT_TIMESTAMP",
+            "INSERT INTO cache_outputs (hash, code, size, is_cache_entry) VALUES (?1, ?2, ?3, TRUE)
+             ON CONFLICT(hash) DO UPDATE SET code = excluded.code, size = excluded.size, is_cache_entry = TRUE, created_at = CURRENT_TIMESTAMP, accessed_at = CURRENT_TIMESTAMP",
             params![hash, code, size],
         )?;
         if self.max_cache_size != 0 {
@@ -520,7 +520,7 @@ impl NxCache {
             .query_row(
                 // Only real cache entries own a `<hash>` directory, so only
                 // those can be out of sync with the filesystem.
-                "SELECT EXISTS (SELECT 1 FROM cache_outputs WHERE has_artifacts = 1)",
+                "SELECT EXISTS (SELECT 1 FROM cache_outputs WHERE is_cache_entry)",
                 [],
                 |row| {
                     let exists: bool = row.get(0)?;
