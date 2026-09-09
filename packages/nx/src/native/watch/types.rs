@@ -80,7 +80,9 @@ pub(super) fn is_dir_from_kind(kind: &EventKind) -> Option<bool> {
         EventKind::Create(CreateKind::Folder) => Some(true),
         EventKind::Remove(RemoveKind::File) => Some(false),
         EventKind::Remove(RemoveKind::Folder) => Some(true),
-        // Directories carry no data stream, so a data change is always a file.
+        // inotify and ReadDirectoryChangesW raise Data only for files. FSEvents
+        // does not distinguish, so macOS classifies from the stat instead.
+        #[cfg(not(target_os = "macos"))]
         EventKind::Modify(ModifyKind::Data(_)) => Some(false),
         _ => None,
     }

@@ -57,6 +57,18 @@ export const handleOutputsChanges: FileWatcherCallback = async (
       return;
     }
 
+    if (changeEvents.some((event) => event.type === 'rescan')) {
+      // Dropped events cannot be classified: any recorded output hash and any
+      // gitignored dotenv file may have changed unseen. Start the tracker
+      // over and invalidate the graph rather than trust either.
+      serverLogger.watcherLog(
+        'The outputs watcher reported dropped events; clearing recorded output hashes and invalidating the graph cache.'
+      );
+      clearRecordedOutputsHashes();
+      invalidateGraphCache();
+      return;
+    }
+
     // A dotenv change that a task chain loads must refresh the graph so
     // createNodes re-resolves config reading process.env. This runs above the
     // outputsWatcherError guard: the two concerns are independent, and a
@@ -74,18 +86,6 @@ export const handleOutputsChanges: FileWatcherCallback = async (
     // here cannot trip the outputs-tracking kill switch below, which belongs
     // to an unrelated subsystem, and it fails safe by invalidating: a stale
     // graph on a dotenv edit is the bug this prevents.
-    if (changeEvents.some((event) => event.type === 'rescan')) {
-      // Dropped events cannot be classified: any recorded output hash and any
-      // gitignored dotenv file may have changed unseen. Start the tracker
-      // over and invalidate the graph rather than trust either.
-      serverLogger.watcherLog(
-        'The outputs watcher reported dropped events; clearing recorded output hashes and invalidating the graph cache.'
-      );
-      clearRecordedOutputsHashes();
-      invalidateGraphCache();
-      return;
-    }
-
     try {
       const { invalidating, unclassified } = classifyDotEnvChanges(
         changeEvents,

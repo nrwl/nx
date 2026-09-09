@@ -1130,10 +1130,10 @@ mod tests {
         // watchOutputFiles passes `!.nx/workspace-data/.../server-process.json`
         // as an additional glob (use_ignore=false). `.nx/workspace-data` is a
         // hardcoded ignore, so if the veto beat nx's own glob the outputs watcher
-        // would never see server-process.json and a superseded daemon could never
-        // self-terminate — it would linger holding its watches and file map. nx's
-        // internal globs are an opt-in and must win; the veto only stops USER
-        // ignore files un-ignoring hardcoded paths.
+        // would never see server-process.json and would lose its prompt shutdown
+        // signal — server.ts's 20ms poll is the backstop, not this. nx's internal
+        // globs are an opt-in and must win; the veto only stops USER ignore files
+        // un-ignoring hardcoded paths.
         use notify::EventKind;
         use notify::event::CreateKind;
 

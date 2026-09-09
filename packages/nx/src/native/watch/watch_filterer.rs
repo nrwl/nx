@@ -49,9 +49,10 @@ impl WatchFilterer {
         // nx's own watch globs are an internal opt-in and take precedence over
         // everything, the hardcoded veto included: the outputs watcher's
         // `!.nx/workspace-data/.../server-process.json` must punch through the
-        // .nx/workspace-data veto, or that event is dropped and a superseded
-        // daemon never sees it to self-terminate. The veto is only there to stop
-        // USER ignore files un-ignoring hardcoded paths.
+        // .nx/workspace-data veto, or the outputs watcher loses its prompt
+        // shutdown signal (server.ts's 20ms poll still terminates the daemon).
+        // The veto is only there to stop USER ignore files un-ignoring
+        // hardcoded paths.
         if let Some(globs) = &self.additional_globs {
             match globs.matched_path_or_any_parents(path, is_dir) {
                 Match::Whitelist(_) => return true,
@@ -178,8 +179,8 @@ pub(super) fn create_filter(
     // dunce::canonicalize and hands the same string here and to origin_path.
     // filter_path rejects any path not under origin and dunce::simplifies event
     // paths, so a `\\?\` origin would reject every event. The disallowed_methods
-    // clippy lint bans std::fs::canonicalize so every caller — tests included —
-    // stays on dunce and this precondition holds.
+    // clippy lint keeps lib code on dunce, but `lint-native` runs clippy without
+    // --all-targets, so cfg(test) is unlinted — tests must hold this by hand.
     let ignore_files = use_ignore.then(|| get_gitignore_files(origin));
     let nx_ignore_path = get_nx_ignore(origin);
 
@@ -267,7 +268,7 @@ pub(super) fn create_filter(
     // nx's own watch-scoping globs, kept OUT of git_ignores and the hardcoded
     // veto: they are an internal opt-in that must win. The outputs watcher passes
     // `!.nx/workspace-data/.../server-process.json` to punch through the
-    // .nx/workspace-data hardcoded ignore so a superseded daemon self-terminates.
+    // .nx/workspace-data hardcoded ignore so it keeps its prompt shutdown signal.
     let additional_globs = if additional_globs.is_empty() {
         None
     } else {
