@@ -1,6 +1,6 @@
 import { defaultMaxListeners } from 'events';
 import type { OutputStyle } from '../command-line/yargs-utils/shared-options';
-import { existsSync, statSync, writeFileSync } from 'fs';
+import { statSync, writeFileSync } from 'fs';
 import { relative } from 'path';
 import { performance } from 'perf_hooks';
 import * as pc from 'picocolors';
@@ -1902,11 +1902,12 @@ export class TaskOrchestrator {
    */
   private recordContinuousTerminalOutput(task: Task) {
     if (!task.hash) return;
-    const path = this.cache.temporaryOutputPath(task);
-    if (!existsSync(path)) return;
-    this.cache.recordTerminalOutputs([
-      { hash: task.hash, size: statSync(path).size },
-    ]);
+    try {
+      const { size } = statSync(this.cache.temporaryOutputPath(task));
+      this.cache.recordTerminalOutputs([{ hash: task.hash, size }]);
+    } catch {
+      // Exit handler: a throw here would be an unhandled rejection.
+    }
   }
 
   private async scheduleNextTasksAndReleaseThreads() {
