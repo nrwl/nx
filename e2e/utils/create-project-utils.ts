@@ -284,7 +284,7 @@ export function runCreateWorkspace(
     extraArgs?: string;
     useDetectedPm?: boolean;
     cwd?: string;
-    bundler?: 'webpack' | 'vite';
+    bundler?: 'webpack' | 'vite' | 'rspack';
     standaloneApi?: boolean;
     routing?: boolean;
     useReactRouter?: boolean;

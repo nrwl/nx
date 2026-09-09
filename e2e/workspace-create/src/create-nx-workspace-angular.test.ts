@@ -81,6 +81,24 @@ describe('create-nx-workspace --preset=angular', () => {
     expectCodeIsFormatted();
   });
 
+  it('should be able to create an angular workspace using rspack', () => {
+    const wsName = uniq('angular');
+    const appName = uniq('app');
+    runCreateWorkspace(wsName, {
+      preset: 'angular-monorepo',
+      style: 'css',
+      appName,
+      packageManager,
+      standaloneApi: false,
+      routing: true,
+      unitTestRunner: 'jest',
+      e2eTestRunner: 'none',
+      bundler: 'rspack',
+      ssr: false,
+    });
+    expectCodeIsFormatted();
+  });
+
   it('should fail correctly when preset errors', () => {
     // Using Angular Preset as the example here to test
     // It will error when prefix is not valid
