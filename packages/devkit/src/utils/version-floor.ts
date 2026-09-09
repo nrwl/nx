@@ -158,7 +158,13 @@ export function getResolvedPackageVersion(
   return getDeclaredPackageVersion(tree, packageName, latestKnownVersion);
 }
 
-function getSatisfyingInstalledPackageVersion(
+/**
+ * Returns the installed version of a package when it satisfies the declared
+ * range, `null` when nothing is installed or the install does not match the
+ * declaration. Use it to gate on what actually runs while keeping the
+ * declared-range fallback for the fresh-install path.
+ */
+export function getSatisfyingInstalledPackageVersion(
   tree: Tree,
   packageName: string,
   declared: string
