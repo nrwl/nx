@@ -156,11 +156,12 @@ function getRemovalFollowUp(property: ConfigProperty): string | null {
 }
 
 // An `e2e`/`component` block held in a variable of the same file is edited
-// in place, so it is collected like an inline one.
+// in place, so it is collected like an inline one. One variable shared by
+// both blocks is collected once, or its edits would apply twice.
 function getOptionBlocks(
   config: ObjectLiteralExpression
-): ObjectLiteralExpression[] {
-  const blocks = [config];
+): Set<ObjectLiteralExpression> {
+  const blocks = new Set([config]);
   const sourceFile = config.getSourceFile();
   for (const property of config.properties) {
     if (
@@ -174,7 +175,7 @@ function getOptionBlocks(
       sourceFile
     );
     if (block) {
-      blocks.push(block);
+      blocks.add(block);
     }
   }
   return blocks;
