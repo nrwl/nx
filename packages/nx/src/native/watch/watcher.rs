@@ -929,10 +929,29 @@ mod tests {
         assert!(!filterer.check_event(&event));
     }
 
-    // Symlink creation on Windows needs elevation/developer mode, so this pins
-    // the platform-independent canonicalization on unix. The behaviour it guards
-    // matters most on Windows (the recursive root), but the logic is the same.
-    #[cfg(unix)]
+    /// Create a directory symlink cross-platform. Windows needs
+    /// SeCreateSymbolicLinkPrivilege (Developer Mode or an elevated process); a
+    /// caller that gets an error skips rather than fails, so a symlink test still
+    /// runs on every platform that allows it instead of being compiled out.
+    fn make_dir_symlink(target: &Path, link: &Path) -> std::io::Result<()> {
+        #[cfg(unix)]
+        {
+            std::os::unix::fs::symlink(target, link)
+        }
+        #[cfg(windows)]
+        {
+            std::os::windows::fs::symlink_dir(target, link)
+        }
+        #[cfg(not(any(unix, windows)))]
+        {
+            let _ = (target, link);
+            Err(std::io::Error::new(
+                std::io::ErrorKind::Unsupported,
+                "directory symlinks are unsupported on this platform",
+            ))
+        }
+    }
+
     #[test]
     fn new_canonicalizes_origin_so_a_symlinked_root_strips_to_relative() {
         // NX_WORKSPACE_ROOT_PATH can be a symlink. Event paths arrive realpath'd
@@ -947,7 +966,13 @@ mod tests {
         let real = dunce::canonicalize(&real).expect("canonicalize real");
 
         let link = dir.path().join("linked");
-        std::os::unix::fs::symlink(&real, &link).expect("symlink");
+        if let Err(e) = make_dir_symlink(&real, &link) {
+            eprintln!(
+                "skipping new_canonicalizes_origin_so_a_symlinked_root_strips_to_relative: \
+                 cannot create a directory symlink here ({e})"
+            );
+            return;
+        }
 
         let pipeline = WatchPipeline::new(link.to_str().expect("utf-8").to_string(), &[], false)
             .expect("pipeline");
@@ -962,14 +987,12 @@ mod tests {
         );
     }
 
-    // Real-backend proof of the same fix: start the watcher on a symlinked
-    // root and confirm a write under it is delivered with a workspace-relative
-    // path. This exercises the platform's actual backend, where the failure
-    // modes differed — on macOS FSEvents drops any path not under the watched
-    // dir, so a symlinked root delivered nothing at all; on Linux the event
-    // arrived realpath'd and an un-canonical origin emitted an absolute path.
-    // Windows symlink creation needs elevation, so this is unix-only.
-    #[cfg(unix)]
+    // Real-backend proof of the same fix: start the watcher on a symlinked root
+    // and confirm a write under it is delivered with a workspace-relative path.
+    // This exercises the platform's actual backend, where the failure modes
+    // differ — on Linux the event arrives realpath'd and an un-canonical origin
+    // emits an absolute path; on macOS FSEvents echoes the watched path (so the
+    // fix is a no-op there). Skips on Windows without symlink privilege.
     #[test]
     fn a_symlinked_root_delivers_relative_events_end_to_end() {
         let dir = tempdir().expect("tempdir");
@@ -977,7 +1000,13 @@ mod tests {
         fs::create_dir_all(real.join("src")).expect("mkdir workspace/src");
 
         let link = dir.path().join("linked");
-        std::os::unix::fs::symlink(&real, &link).expect("symlink");
+        if let Err(e) = make_dir_symlink(&real, &link) {
+            eprintln!(
+                "skipping a_symlinked_root_delivers_relative_events_end_to_end: \
+                 cannot create a directory symlink here ({e})"
+            );
+            return;
+        }
 
         // Start on the SYMLINK, non-canonical, as NX_WORKSPACE_ROOT_PATH may be.
         let mut w = Watcher::new(link.to_str().expect("utf-8").to_string(), None, Some(false));
@@ -992,16 +1021,30 @@ mod tests {
         std::thread::sleep(Duration::from_millis(300));
         captured.lock().unwrap().clear();
 
-        fs::write(link.join("src/x.ts"), "export const x = 1;").expect("write");
+        fs::write(link.join("src").join("x.ts"), "export const x = 1;").expect("write");
 
-        // wait_for_path matches e.path == "src/x.ts" exactly, so it proves both
-        // delivery and that the path is workspace-relative, not absolute.
-        wait_for_path(
-            &w,
-            &captured,
-            "src/x.ts",
-            "a write under a symlinked root must be delivered with a relative path",
-        );
+        // Proves both delivery and that the path is workspace-relative: an
+        // absolute path would carry the root/drive and never normalize to
+        // "src/x.ts". Separators are normalized so the check holds on Windows.
+        let deadline = Instant::now() + Duration::from_secs(2);
+        loop {
+            let norm = |p: &str| p.replace('\\', "/");
+            let flushed = w.force_flush_pending();
+            let seen = flushed.iter().any(|e| norm(&e.path) == "src/x.ts")
+                || captured
+                    .lock()
+                    .unwrap()
+                    .iter()
+                    .any(|e| norm(&e.path) == "src/x.ts");
+            if seen {
+                break;
+            }
+            assert!(
+                Instant::now() < deadline,
+                "a write under a symlinked root must be delivered with a relative path"
+            );
+            std::thread::sleep(Duration::from_millis(20));
+        }
     }
 
     #[test]
