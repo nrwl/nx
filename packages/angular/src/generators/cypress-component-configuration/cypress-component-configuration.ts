@@ -29,7 +29,7 @@ import { getProjectEntryPoints } from '../utils/storybook-ast/entry-point';
 import { getModuleFilePaths } from '../utils/storybook-ast/module-info';
 import { updateAppEditorTsConfigExcludedFiles } from '../utils/update-app-editor-tsconfig-excluded-files';
 import { CypressComponentConfigSchema } from './schema';
-import { lt } from 'semver';
+import { major } from 'semver';
 
 const webpackExecutors = new Set<string>([
   '@nx/angular:webpack-browser',
@@ -77,7 +77,7 @@ export async function cypressComponentConfiguration(
     }: typeof import('@nx/cypress/internal') = require('@nx/cypress/internal');
     const installedCypressVersion = getInstalledCypressVersion(tree);
     // If Cypress is not yet installed, we'll install the latest version, which will have zoneless support
-    if (installedCypressVersion && lt(installedCypressVersion, '16.0.0')) {
+    if (installedCypressVersion && major(installedCypressVersion) < 16) {
       // Zoneless support was introduced in Cypress 15.8.0
       const unsupportedCypressVersion = findCypressBelow(tree, '15.8.0');
       if (unsupportedCypressVersion) {

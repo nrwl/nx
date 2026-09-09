@@ -1102,6 +1102,55 @@ describe('Cypress Component Testing Configuration', () => {
     ).toContain(`import { mount } from 'cypress/angular';`);
   });
 
+  it.each([
+    ['nothing is installed', null],
+    ['16.0.0-beta.1 is installed', '16.0.0-beta.1'],
+  ])(
+    'should import mount from cypress/angular when a cypress 16 prerelease range is declared and %s',
+    async (_, installed) => {
+      updateJson(tree, 'package.json', (json) => {
+        json.dependencies = {
+          ...json.dependencies,
+          cypress: '^16.0.0-beta.1',
+        };
+        return json;
+      });
+      if (installed) {
+        tree.write(
+          'node_modules/cypress/package.json',
+          JSON.stringify({ name: 'cypress', version: installed })
+        );
+      }
+      await generateTestApplication(tree, {
+        directory: 'zoneless-app',
+        bundler: 'webpack',
+        skipFormat: true,
+      });
+
+      projectGraph = {
+        nodes: {
+          'zoneless-app': {
+            name: 'zoneless-app',
+            type: 'app',
+            data: { ...readProjectConfiguration(tree, 'zoneless-app') } as any,
+          },
+        },
+        dependencies: {},
+      };
+
+      useAngularSupportedByCypress(tree);
+      await cypressComponentConfiguration(tree, {
+        project: 'zoneless-app',
+        generateTests: false,
+        skipFormat: true,
+      });
+
+      expect(
+        tree.read('zoneless-app/cypress/support/component.ts', 'utf-8')
+      ).toContain(`import { mount } from 'cypress/angular';`);
+    }
+  );
+
   it('should import mount from cypress/angular when a range spanning majors is declared and cypress is not installed', async () => {
     updateJson(tree, 'package.json', (json) => {
       json.dependencies = {
@@ -1139,42 +1188,45 @@ describe('Cypress Component Testing Configuration', () => {
     ).toContain(`import { mount } from 'cypress/angular';`);
   });
 
-  it('should generate a zoneless support file when the declared range reaches 15.8.0 and cypress is not installed', async () => {
-    updateJson(tree, 'package.json', (json) => {
-      json.dependencies = {
-        ...json.dependencies,
-        cypress: '>=14 <15.10',
-      };
-      return json;
-    });
-    await generateTestApplication(tree, {
-      directory: 'zoneless-app',
-      bundler: 'webpack',
-      skipFormat: true,
-    });
+  it.each(['>=14 <15.10', '<16 >=15.8.0'])(
+    'should generate a zoneless support file when the declared range %s reaches 15.8.0 and cypress is not installed',
+    async (range) => {
+      updateJson(tree, 'package.json', (json) => {
+        json.dependencies = {
+          ...json.dependencies,
+          cypress: range,
+        };
+        return json;
+      });
+      await generateTestApplication(tree, {
+        directory: 'zoneless-app',
+        bundler: 'webpack',
+        skipFormat: true,
+      });
 
-    projectGraph = {
-      nodes: {
-        'zoneless-app': {
-          name: 'zoneless-app',
-          type: 'app',
-          data: { ...readProjectConfiguration(tree, 'zoneless-app') } as any,
+      projectGraph = {
+        nodes: {
+          'zoneless-app': {
+            name: 'zoneless-app',
+            type: 'app',
+            data: { ...readProjectConfiguration(tree, 'zoneless-app') } as any,
+          },
         },
-      },
-      dependencies: {},
-    };
+        dependencies: {},
+      };
 
-    useAngularSupportedByCypress(tree);
-    await cypressComponentConfiguration(tree, {
-      project: 'zoneless-app',
-      generateTests: false,
-      skipFormat: true,
-    });
+      useAngularSupportedByCypress(tree);
+      await cypressComponentConfiguration(tree, {
+        project: 'zoneless-app',
+        generateTests: false,
+        skipFormat: true,
+      });
 
-    expect(
-      tree.read('zoneless-app/cypress/support/component.ts', 'utf-8')
-    ).toContain(`import { mount } from 'cypress/angular-zoneless';`);
-  });
+      expect(
+        tree.read('zoneless-app/cypress/support/component.ts', 'utf-8')
+      ).toContain(`import { mount } from 'cypress/angular-zoneless';`);
+    }
+  );
 
   it('should throw an error when the application is zoneless and the declared cypress range is capped below 15.8.0', async () => {
     updateJson(tree, 'package.json', (json) => {

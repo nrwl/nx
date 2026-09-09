@@ -1,6 +1,10 @@
 import { updateJson, type Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { cypressVersion, versions } from './versions';
+import {
+  cypressVersion,
+  getInstalledCypressVersion,
+  versions,
+} from './versions';
 
 function declareCypress(tree: Tree, version: string): void {
   updateJson(tree, 'package.json', (json) => {
@@ -103,6 +107,7 @@ describe('versions', () => {
   it.each([
     ['>=15.20.1 <17', cypressVersion],
     ['>=14 <16', '^15.20.1'],
+    ['<16 >=14', '^15.20.1'],
     ['>=14 <15.10', '^15.20.1'],
     ['>=13 <14.5', '^14.2.1'],
   ])(
@@ -111,6 +116,15 @@ describe('versions', () => {
       declareCypress(tree, range);
 
       expect(versions(tree).cypressVersion).toBe(expected);
+    }
+  );
+
+  it.each(['>=15.8.0 <16', '<16 >=15.8.0'])(
+    'should keep the floor of the range %s when it reaches no higher supported major and cypress is not installed',
+    (range) => {
+      declareCypress(tree, range);
+
+      expect(getInstalledCypressVersion(tree)).toBe('15.8.0');
     }
   );
 });
