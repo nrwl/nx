@@ -562,9 +562,58 @@ describe('pnpm min-release-age behavior', () => {
       expect(result.outcome).toBe('inactive');
     });
 
-    it('pnpm 12+ -> ambiguous', async () => {
-      const result = await readPnpmPolicy('/root', '12.0.0');
+    it('pnpm 13+ -> ambiguous', async () => {
+      const result = await readPnpmPolicy('/root', '13.0.0');
       expect(result.outcome).toBe('ambiguous');
+    });
+
+    it.each(['12.0.0', '12.3.1'])(
+      'v%s no explicit window -> active loose default 1440',
+      async (version) => {
+        await mockPnpmConfig({});
+        const result = await readPnpmPolicy('/root', version);
+        expect(result.outcome).toBe('active');
+        if (result.outcome === 'active') {
+          expect(result.policy.windowMs).toBe(1440 * MINUTE);
+          const behavior = pnpmBehavior(result.policy.behavior);
+          expect(behavior.strict).toBe(false);
+          expect(behavior.looseFallback).toBe(true);
+          expect(behavior.missingTimeMap).toBe('skip');
+          expect(behavior.writesExcludes).toBe(true);
+        }
+      }
+    );
+
+    it('v12 explicit window auto-enables strict', async () => {
+      await mockPnpmConfig({ minimumReleaseAge: 2880 });
+      const result = await readPnpmPolicy('/root', '12.3.1');
+      expect(result.outcome).toBe('active');
+      if (result.outcome === 'active') {
+        expect(result.policy.windowMs).toBe(2880 * MINUTE);
+        const behavior = pnpmBehavior(result.policy.behavior);
+        expect(behavior.strict).toBe(true);
+        expect(behavior.looseFallback).toBe(false);
+      }
+    });
+
+    it('v12 explicit strict:false wins over the auto-on rule', async () => {
+      await mockPnpmConfig({
+        minimumReleaseAge: 2880,
+        minimumReleaseAgeStrict: false,
+      });
+      const result = await readPnpmPolicy('/root', '12.3.1');
+      expect(result.outcome).toBe('active');
+      if (result.outcome === 'active') {
+        const behavior = pnpmBehavior(result.policy.behavior);
+        expect(behavior.strict).toBe(false);
+        expect(behavior.looseFallback).toBe(true);
+      }
+    });
+
+    it('v12 zero window -> inactive', async () => {
+      await mockPnpmConfig({ minimumReleaseAge: 0 });
+      const result = await readPnpmPolicy('/root', '12.3.1');
+      expect(result.outcome).toBe('inactive');
     });
 
     it('unable to read pnpm config -> ambiguous (defer to install)', async () => {
