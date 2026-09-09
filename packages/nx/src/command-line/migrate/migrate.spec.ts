@@ -3220,7 +3220,7 @@ module.exports = {
         await expect(() =>
           parseMigrationsOptions({ runId: 'run-1', stepAction: 'bogus' })
         ).rejects.toThrow(
-          /'--step-action' must be one of retry, skip, retry-clean, adopt/
+          /'--step-action' must be one of retry, skip, retry-clean, adopt, unresolved/
         );
       });
 
