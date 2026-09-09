@@ -19,13 +19,14 @@ export interface GeneratorOutputCapture {
 
 export const MAX_GENERATOR_OUTPUT_BYTES = 16384;
 const HEAD_BYTES = 4096;
-const omittedMarker = (omitted: number | string, what: string) =>
-  `[nx migrate: ${omitted} bytes of ${what} omitted]`;
+const omittedMarker = (omitted: number | string) =>
+  `[nx migrate: ${omitted} bytes of generator output omitted]`;
 // Reserved at the widest number spelling so a growing count cannot push a
 // flush over the cap.
-const markerBytes = (what: string) =>
-  Buffer.byteLength(`\n${omittedMarker(Number.MAX_VALUE, what)}\n`);
-export const MARKER_BYTES = markerBytes('generator output');
+export const MARKER_BYTES = Buffer.byteLength(
+  `\n${omittedMarker(Number.MAX_VALUE)}\n`
+);
+const TAIL_LIMIT = MAX_GENERATOR_OUTPUT_BYTES - HEAD_BYTES - MARKER_BYTES;
 
 // Keeps the last `maxBytes` of `value`, cut on a code point.
 function keepTailUtf8(value: string, maxBytes: number): string {
@@ -46,10 +47,8 @@ function keepTailUtf8(value: string, maxBytes: number): string {
   return value.slice(start);
 }
 
-// The head/marker/tail buffer behind `flush()` above; `what` names the omitted
-// output in the marker.
+// The head/marker/tail buffer behind `flush()` above.
 export class BoundedOutput {
-  private readonly tailLimit: number;
   private readonly head: string[] = [];
   private headBytes = 0;
   private headOpen = true;
@@ -58,11 +57,6 @@ export class BoundedOutput {
   private readonly tail: { text: string; cost: number }[] = [];
   private tailBytes = 0;
   private omitted = 0;
-
-  constructor(private readonly what = 'generator output') {
-    this.tailLimit =
-      MAX_GENERATOR_OUTPUT_BYTES - HEAD_BYTES - markerBytes(what);
-  }
 
   append(record: string): void {
     if (this.headOpen) {
@@ -90,13 +84,13 @@ export class BoundedOutput {
     const cost = Buffer.byteLength(record) + 1;
     this.tail.push({ text: record, cost });
     this.tailBytes += cost;
-    while (this.tailBytes > this.tailLimit && this.tail.length > 1) {
+    while (this.tailBytes > TAIL_LIMIT && this.tail.length > 1) {
       const dropped = this.tail.shift().cost;
       this.tailBytes -= dropped;
       this.omitted += dropped;
     }
-    if (this.tailBytes > this.tailLimit) {
-      const text = keepTailUtf8(this.tail[0].text, this.tailLimit - 1);
+    if (this.tailBytes > TAIL_LIMIT) {
+      const text = keepTailUtf8(this.tail[0].text, TAIL_LIMIT - 1);
       const kept = Buffer.byteLength(text) + 1;
       this.omitted += this.tailBytes - kept;
       this.tail[0] = { text, cost: kept };
@@ -108,7 +102,7 @@ export class BoundedOutput {
     const head = this.head.join('\n');
     const tail = this.tail.map((record) => record.text).join('\n');
     if (this.omitted > 0) {
-      return `${head}\n${omittedMarker(this.omitted, this.what)}\n${tail}`;
+      return `${head}\n${omittedMarker(this.omitted)}\n${tail}`;
     }
     if (!this.tail.length) return head;
     return this.headSplit ? head + tail : `${head}\n${tail}`;
