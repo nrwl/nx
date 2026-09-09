@@ -1392,7 +1392,6 @@ function saveProjectsConfigurationsInWrappedSchematic(
   }
 }
 
-/** Exported for tests. */
 export async function getWrappedWorkspaceNodeModulesArchitectHost(
   workspace: workspaces.WorkspaceDefinition,
   root: string,
