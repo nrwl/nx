@@ -13,7 +13,8 @@ export function printAffectedExplanation(
   reasons: Record<string, AffectedReason[]>,
   heading: string,
   destination: string | boolean | undefined,
-  /** Tasks that run only to satisfy the selected ones; omitted for projects. */
+  /** Tasks that run only to satisfy the selected ones. Only `nx affected`
+   * runs them, so `show projects` leaves this off. */
   dependencies?: number
 ): void {
   if (destination === 'stdout') {
