@@ -23,7 +23,7 @@ import { angularDevkitVersion as defaultAngularCliVersion } from '@nx/angular/in
 import { typescriptVersion as defaultTypescriptVersion } from '@nx/js/src/utils/versions';
 import { dump } from '@zkochan/js-yaml';
 import { execSync, ExecSyncOptions } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { performance, PerformanceMeasure } from 'node:perf_hooks';
 import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
@@ -533,14 +533,22 @@ export function packageInstall(
 ) {
   const cwd = projName ? `${e2eCwd}/${projName}` : tmpProjPath();
   const pm = getPackageManagerCommand({ path: cwd });
-  const pkgsWithVersions = pkg
-    .split(' ')
-    .map((pgk) => `${pgk}@${version}`)
-    .join(' ');
+  // Record the dependencies and reconcile the whole graph, rather than `add`ing
+  // them onto whatever node_modules happens to be there. `add` is targeted: it
+  // trusts the existing tree, so a workspace seeded from the prebuilt template
+  // keeps a sub-graph pnpm never revisits, and @nx/js ends up without its link
+  // to @nx/devkit. Versions are pinned exactly, which `add` did in effect anyway
+  // since it is always given an exact version or a dist-tag.
+  const packageJsonPath = join(cwd, 'package.json');
+  const packageJson = readJsonFile(packageJsonPath);
+  const field = mode === 'dev' ? 'devDependencies' : 'dependencies';
+  packageJson[field] ??= {};
+  for (const name of pkg.split(' ').filter(Boolean)) {
+    packageJson[field][name] = version;
+  }
+  writeFileSync(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`);
 
-  const command = `${
-    mode === 'dev' ? pm.addDev : pm.addProd
-  } ${pkgsWithVersions}`;
+  const command = pm.install;
 
   try {
     const install = execSync(command, {
