@@ -10,6 +10,7 @@ import type {
   MigrateStepOutcome,
   MigrateStepPromptOutcome,
 } from './run-state';
+import { singleLine } from '../text';
 import type { StepAction } from '../step-actions';
 
 export type { StepAction };
@@ -319,6 +320,82 @@ function rearm(
       ? { generatorMadeChanges: step.generatorMadeChanges }
       : {}),
   };
+}
+
+// Every step counted once. 'adopted' steps are succeeded ones whose tree was
+// taken as the result by the adopt action, so applied + adopted is what the
+// run recorded as done; 'stalled' steps are the remaining ones waiting on a
+// decision.
+export interface StepTally {
+  applied: number;
+  adopted: number;
+  skipped: number;
+  unresolved: MigrateStep[];
+  remaining: number;
+  stalled: number;
+}
+
+export function tallySteps(state: MigrateRunState): StepTally {
+  const tally: StepTally = {
+    applied: 0,
+    adopted: 0,
+    skipped: 0,
+    unresolved: [],
+    remaining: 0,
+    stalled: 0,
+  };
+  for (const step of state.steps) {
+    switch (step.status) {
+      case 'succeeded':
+        if (step.adopted) tally.adopted++;
+        else tally.applied++;
+        break;
+      case 'skipped':
+        tally.skipped++;
+        break;
+      case 'unresolved':
+        tally.unresolved.push(step);
+        break;
+      case 'failed':
+      case 'died':
+        tally.stalled++;
+        tally.remaining++;
+        break;
+      case 'pending':
+      case 'dispensed':
+      case 'running':
+      case 'awaiting-prompt-outcome':
+        tally.remaining++;
+        break;
+      default: {
+        const exhaustive: never = step.status;
+        throw new Error(`Unhandled step status '${exhaustive}'.`);
+      }
+    }
+  }
+  return tally;
+}
+
+// The tally a completed run reports, with each given-up migration and the
+// failure it was given up on. A summary is agent or generator text printed
+// verbatim by the consumers, so it is collapsed to one line: a break inside
+// it could otherwise open a forged block at a line start.
+export function completionSummaryLines(state: MigrateRunState): string[] {
+  const tally = tallySteps(state);
+  return [
+    `  applied: ${tally.applied}`,
+    `  adopted: ${tally.adopted}`,
+    `  skipped: ${tally.skipped}`,
+    `  unresolved: ${tally.unresolved.length}`,
+    ...tally.unresolved.map(
+      (step) =>
+        `    - ${step.migrationId}: ${singleLine(
+          step.outcome?.summary ??
+            step.promptOutcome?.summary ??
+            'no failure detail was recorded'
+        )}`
+    ),
+  ];
 }
 
 // A commit made for a step after its own attempt failed, as the outcome of
