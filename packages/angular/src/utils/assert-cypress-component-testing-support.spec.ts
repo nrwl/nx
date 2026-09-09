@@ -108,6 +108,36 @@ describe('assertCypressComponentTestingSupport', () => {
     expect(() => assertCypressComponentTestingSupport(tree)).not.toThrow();
   });
 
+  it('does not throw when the Angular range lists its upper bound first and is capped below 22.1', () => {
+    setVersions({ '@angular/core': '<22.1 >=22.0', cypress: '15.20.0' });
+
+    expect(() => assertCypressComponentTestingSupport(tree)).not.toThrow();
+  });
+
+  it.each([
+    ['22.0.5', false],
+    ['22.1.0', true],
+    ['22.1.0-next.1', true],
+  ])(
+    'reads the installed Angular %s when it satisfies a range spanning 22.1 (throws: %s)',
+    (installed, throws) => {
+      setVersions({ '@angular/core': '>=22.0.0 <23', cypress: '15.20.0' });
+      writeJson(tree, 'node_modules/@angular/core/package.json', {
+        name: '@angular/core',
+        version: installed,
+      });
+
+      const assertion = expect(() =>
+        assertCypressComponentTestingSupport(tree)
+      );
+      if (throws) {
+        assertion.toThrow(/requires Cypress 15\.20\.1 or higher/);
+      } else {
+        assertion.not.toThrow();
+      }
+    }
+  );
+
   it('does not throw when Angular is not installed', () => {
     setVersions({ cypress: '15.20.0' });
 

@@ -1,6 +1,6 @@
 import { getDependencyVersionFromPackageJson, type Tree } from '@nx/devkit';
 import {
-  getDeclaredPackageVersion,
+  getResolvedPackageVersion,
   getSatisfyingInstalledPackageVersion,
 } from '@nx/devkit/internal';
 import { coerce, lt, subset, validRange } from 'semver';
@@ -12,8 +12,13 @@ const minCypressVersion = '15.20.1';
  * Angular version. Must be called after `@nx/cypress` has been ensured.
  */
 export function assertCypressComponentTestingSupport(tree: Tree): void {
-  const angularVersion = getDeclaredPackageVersion(tree, '@angular/core');
-  if (!angularVersion || lt(angularVersion, '22.1.0')) {
+  const angularVersion = getResolvedPackageVersion(tree, '@angular/core');
+  if (!angularVersion) {
+    return;
+  }
+  // A prerelease of 22.1 counts as 22.1.
+  const angularRelease = coerce(angularVersion)?.version ?? angularVersion;
+  if (lt(angularRelease, '22.1.0')) {
     return;
   }
 
