@@ -1119,6 +1119,10 @@ mod tests {
             filterer.check_event(&event("kept.log")),
             "a non-hardcoded gitignore whitelist is still honoured — the veto is hardcoded-only"
         );
+        assert!(
+            !filterer.check_event(&event("dropped.log")),
+            "the *.log ignore still drops a non-whitelisted log — the control that makes kept.log meaningful"
+        );
     }
 
     #[test]
@@ -1169,6 +1173,10 @@ mod tests {
         assert!(
             filterer.check_event(&event("kept.log")),
             "a non-hardcoded additional-glob whitelist is honoured"
+        );
+        assert!(
+            !filterer.check_event(&event("dropped.log")),
+            "a non-whitelisted *.log additional glob still blocks — the control that makes kept.log meaningful"
         );
     }
 

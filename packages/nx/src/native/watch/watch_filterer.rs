@@ -20,9 +20,9 @@ pub struct WatchFilterer {
     /// wins: nested .nxignore > .ignore > .gitignore > .git-exclude/global. Full
     /// class-above-depth parity with the ignore crate is a tracked follow-up.
     git_ignores: Vec<(PathBuf, u8, Gitignore)>,
-    /// node_modules/.git/.nx/cache/.yarn/cache. A hard veto that no user
-    /// .gitignore or .nxignore negation can beat, mirroring `create_walker`'s
-    /// filter_entry so the watcher and the walk agree on what is ignored.
+    /// node_modules/.git/.nx/cache/.nx/workspace-data/.yarn/cache. A hard veto
+    /// that no user .gitignore or .nxignore negation can beat, mirroring
+    /// `create_walker`'s filter_entry so the watcher and the walk agree.
     hardcoded: Gitignore,
     /// nx's own watch-scoping globs (create_filter's `additional_globs`, e.g. the
     /// outputs watcher's `!.nx/workspace-data/.../server-process.json`). An
@@ -51,7 +51,7 @@ impl WatchFilterer {
         // `!.nx/workspace-data/.../server-process.json` must punch through the
         // .nx/workspace-data veto, or that event is dropped and a superseded
         // daemon never sees it to self-terminate. The veto is only there to stop
-        // USER ignore files un-ignoring hardcoded paths, which these never carry.
+        // USER ignore files un-ignoring hardcoded paths.
         if let Some(globs) = &self.additional_globs {
             match globs.matched_path_or_any_parents(path, is_dir) {
                 Match::Whitelist(_) => return true,
