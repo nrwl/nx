@@ -147,6 +147,16 @@ impl WatchPipeline {
         additional_globs: &[String],
         use_ignore: bool,
     ) -> std::result::Result<Self, String> {
+        // Canonicalize once, up front, so the filterer, the origin-prefix strip
+        // in the transform (origin_path below), and the watch registration all
+        // agree on the workspace root. Event paths arrive realpath'd
+        // (canonicalize_event_paths on Linux, FSEvents on macOS), so a symlinked
+        // NX_WORKSPACE_ROOT_PATH left un-canonicalized would pass the filter but
+        // fail relative_to_origin and emit absolute paths.
+        let origin = dunce::canonicalize(&origin)
+            .map(|p| p.to_string_lossy().into_owned())
+            .unwrap_or(origin);
+
         let filterer = watch_filterer::create_filter(&origin, additional_globs, use_ignore)
             .map_err(|e| format!("failed to create watch filter: {e}"))?;
 
@@ -916,6 +926,39 @@ mod tests {
             notify::Event::new(EventKind::Create(CreateKind::File)).add_path(outside),
         );
         assert!(!filterer.check_event(&event));
+    }
+
+    // Symlink creation on Windows needs elevation/developer mode, so this pins
+    // the platform-independent canonicalization on unix. The behaviour it guards
+    // matters most on Windows (the recursive root), but the logic is the same.
+    #[cfg(unix)]
+    #[test]
+    fn new_canonicalizes_origin_so_a_symlinked_root_strips_to_relative() {
+        // NX_WORKSPACE_ROOT_PATH can be a symlink. Event paths arrive realpath'd
+        // (canonicalize_event_paths on Linux, FSEvents on macOS), so if
+        // origin_path kept the symlink form, relative_to_origin would fail its
+        // prefix strip and emit absolute paths into the file map and nx watch.
+        // new() canonicalizes once and threads that through create_filter and
+        // origin_path so the filter and the transform agree.
+        let dir = tempdir().expect("tempdir");
+        let real = dir.path().join("workspace");
+        fs::create_dir_all(&real).expect("mkdir real");
+        let real = real.canonicalize().expect("canonicalize real");
+
+        let link = dir.path().join("linked");
+        std::os::unix::fs::symlink(&real, &link).expect("symlink");
+
+        let pipeline = WatchPipeline::new(link.to_str().expect("utf-8").to_string(), &[], false)
+            .expect("pipeline");
+
+        let mut expected = real.to_str().expect("utf-8").to_string();
+        if !expected.ends_with(MAIN_SEPARATOR) {
+            expected.push(MAIN_SEPARATOR);
+        }
+        assert_eq!(
+            pipeline.origin_path, expected,
+            "origin_path must be canonical so realpath'd events strip to workspace-relative"
+        );
     }
 
     #[test]

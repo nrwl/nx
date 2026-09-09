@@ -154,15 +154,12 @@ pub(super) fn create_filter(
     additional_globs: &[String],
     use_ignore: bool,
 ) -> anyhow::Result<WatchFilterer> {
-    // Match the canonical form the event paths take: filter_path rejects any
-    // path not under origin, and canonicalize_event_paths realpaths every event
-    // on Linux. A symlinked NX_WORKSPACE_ROOT_PATH left un-canonicalized here
-    // would then fail that prefix check for every event and drop them all.
-    let origin = dunce::canonicalize(origin)
-        .map(|p| p.to_string_lossy().into_owned())
-        .unwrap_or_else(|_| origin.to_string());
-    let origin = origin.as_str();
-
+    // `origin` must already be canonical: filter_path rejects any path not under
+    // it, and event paths arrive realpath'd (canonicalize_event_paths on Linux,
+    // FSEvents on macOS). WatchPipeline::new canonicalizes once and hands the
+    // same string here and to origin_path, so the prefix check and the
+    // transform's relative_to_origin agree. Tests call this directly and pass a
+    // canonicalized temp path for the same reason.
     let ignore_files = use_ignore.then(|| get_gitignore_files(origin));
     let nx_ignore_path = get_nx_ignore(origin);
 
