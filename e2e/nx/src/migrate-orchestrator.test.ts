@@ -1467,6 +1467,39 @@ process.exit(status ?? 1);
     return { pmDir, pmLog: join(tmpProjPath(), 'fake-pm.log') };
   }
 
+  // `git` on PATH, forwarding every call and logging each commit's message
+  // and whether the gate env var (stripped from the agent's env) reached it.
+  const FAKE_GIT_SCRIPT = `#!/usr/bin/env node
+const { spawnSync } = require('child_process');
+const fs = require('fs');
+const path = require('path');
+const args = process.argv.slice(2);
+const real = process.env.PATH.split(path.delimiter)
+  .filter((dir) => dir !== path.dirname(__filename))
+  .map((dir) => path.join(dir, 'git'))
+  .find((candidate) => fs.existsSync(candidate));
+// nx passes the message on stdin; nothing else on this path reads stdin.
+const message = args[0] === 'commit' ? fs.readFileSync(0, 'utf8') : null;
+if (message !== null) {
+  fs.appendFileSync(
+    process.env.FAKE_GIT_LOG,
+    JSON.stringify({ message, orchestrator: process.env.NX_MIGRATE_ORCHESTRATOR ?? null }) + '\\n'
+  );
+}
+const { status } = spawnSync(real, args, {
+  input: message ?? undefined,
+  stdio: [message === null ? 'inherit' : 'pipe', 'inherit', 'inherit'],
+});
+process.exit(status ?? 1);
+`;
+
+  function installFakeGit(): { gitDir: string; gitLog: string } {
+    const gitDir = join(tmpProjPath(), 'fake-git');
+    mkdirSync(gitDir, { recursive: true });
+    writeFileSync(join(gitDir, 'git'), FAKE_GIT_SCRIPT, { mode: 0o755 });
+    return { gitDir, gitLog: join(tmpProjPath(), 'fake-git.log') };
+  }
+
   function readFakeAgentLog(logFile: string): Record<string, any>[] {
     if (!existsSync(logFile)) return [];
     return readFileSync(logFile, 'utf8')
@@ -1619,11 +1652,13 @@ process.exit(status ?? 1);
     it('should land each step through the parent, printing what it deferred in the step command', async () => {
       writePlan([depsMig, promptMig]);
       const { binDir, logFile } = installFakeAgent();
+      const { gitDir, gitLog } = installFakeGit();
 
       const { exitCode, output } = await runMigrateInTerminal(
         {
-          PATH: `${binDir}:${process.env.PATH}`,
+          PATH: `${gitDir}:${binDir}:${process.env.PATH}`,
           FAKE_AGENT_LOG: logFile,
+          FAKE_GIT_LOG: gitLog,
           NX_MIGRATE_ORCHESTRATOR: 'true',
         },
         '--create-commits --skip-install --validate=false'
@@ -1652,11 +1687,24 @@ process.exit(status ?? 1);
       expect(state.commits.filter((c) => c.kind === 'landed')).toHaveLength(2);
       expect(commitCountFor('deps-mig')).toBe(1);
       expect(commitCountFor('prompt-mig')).toBe(1);
-      // Only the harness's own files: the fake agent keeps appending to its
-      // log after the checkpoint took it, and the exit code lands last.
+      // The checkpoint and both step commits, all from the parent's env and
+      // none from the agent's.
+      const commits = readFakeAgentLog(gitLog);
+      expect(commits.map((c) => c.orchestrator)).toEqual([
+        'true',
+        'true',
+        'true',
+      ]);
+      expect(commits.map((c) => c.message.split('\n')[0])).toEqual([
+        expect.stringContaining('checkpoint before running migrations'),
+        expect.stringContaining('deps-mig'),
+        expect.stringContaining('prompt-mig'),
+      ]);
+      // Only harness files: the agent and git logs keep growing after a commit
+      // took them, and the exit code lands last.
       expect(
         runCommand(
-          'git status --porcelain -- . :!fake-agent.log :!migrate-exit-code'
+          'git status --porcelain -- . :!fake-agent.log :!fake-git.log :!migrate-exit-code'
         ).trim()
       ).toBe('');
       expect(listFiles(`.nx/migrate-runs/${runId}/broker`)).toEqual([]);
@@ -1833,7 +1881,7 @@ process.exit(status ?? 1);
     }, 600000);
 
     it('should keep spawning the agent per step without the gate env var', async () => {
-      writePlan([promptMig]);
+      writePlan([promptMig, promptTwoMig]);
       const { binDir, logFile } = installFakeAgent();
 
       const { exitCode } = await runMigrateInTerminal({
@@ -1843,9 +1891,11 @@ process.exit(status ?? 1);
 
       expect(exitCode).toBe(0);
       const starts = readFakeAgentLog(logFile).filter((entry) => entry.args);
-      expect(starts).toHaveLength(1);
-      expect(starts[0].args).toContain('--system-prompt');
-      expect(starts[0].args).not.toContain('--append-system-prompt');
+      expect(starts).toHaveLength(2);
+      for (const start of starts) {
+        expect(start.args).toContain('--system-prompt');
+        expect(start.args).not.toContain('--append-system-prompt');
+      }
       for (const dir of runDirs()) {
         expect(
           existsSync(

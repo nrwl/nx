@@ -11,6 +11,10 @@ import {
 import { HANDOFFS_DIR_NAME, MIGRATE_RUNS_RELATIVE_DIR } from '../agentic/types';
 import { singleLine } from '../text';
 
+// A resume without a commit flag takes its policy from nx.json and refuses
+// the run when it differs from the recorded one.
+const NX_JSON_MIGRATE_RULE = `  - Do not edit the \`migrate\` section of nx.json.`;
+
 export const RUNBOOK_FILE_NAME = 'RUNBOOK.md';
 
 export interface RunbookContext {
@@ -97,16 +101,18 @@ export function renderRunbook(ctx: RunbookContext): string {
     ...renderAuthorScopeRuleLines(singleLine(ctx.pmExec), {
       source: 'dispensed-step',
     }).map((line) => `  ${line}`),
+    NX_JSON_MIGRATE_RULE,
     `  The \`nx migrate\` commands this runbook and the step blocks hand you`,
-    `  (the reconcile, worker and \`next\` commands) are the exception to that`,
-    `  rule: run them as given.`,
+    `  (the reconcile, worker and \`next\` commands) are the exception to the`,
+    `  rule against mutating \`nx\` commands: run them as given.`,
   ];
   if (ctx.validate) {
     lines.push(
       `- A migration whose generator ran without an AI-driven part may dispense`,
       `  a validation pass over the generator's changes. Scope rules for that`,
       `  work:`,
-      ...renderValidationScopeRuleLines().map((line) => `  ${line}`)
+      ...renderValidationScopeRuleLines().map((line) => `  ${line}`),
+      NX_JSON_MIGRATE_RULE
     );
   }
   lines.push(
