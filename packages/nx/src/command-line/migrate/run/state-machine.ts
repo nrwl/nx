@@ -314,6 +314,21 @@ function rearm(
   };
 }
 
+// A commit made for a step that did not succeed: 'unresolved' names the
+// partial result of a migration the run gave up on, so the commit is not read
+// as the migration applied.
+export type CommitMarker = 'unresolved';
+
+// The migration name a step's commit is made under, with the marker a reader
+// of the history needs to tell a partial result from an applied migration.
+export function commitNameForStep(
+  step: MigrateStep,
+  commitAs?: CommitMarker
+): string {
+  const { name } = splitMigrationId(step.migrationId);
+  return commitAs === undefined ? name : `${name} (${commitAs})`;
+}
+
 // A guarded transition whose observation was made against an earlier attempt
 // of the same step: the status recurred, so the observation says nothing about
 // the attempt on disk now.

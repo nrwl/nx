@@ -617,6 +617,46 @@ describe('migrate commit broker', () => {
     });
   });
 
+  it('lands the commit of a step given up on after its own commit failed, instead of replaying that answer', async () => {
+    // The worker's commit request failed at its install; the agent fixed the
+    // dependencies and gave the step up. The partial commit is a different
+    // operation on the same attempt and must not read the cached failure.
+    mockRunInstall.mockRejectedValueOnce(new Error('registry unreachable'));
+    mockCommit.mockImplementation(async (...args: unknown[]) => {
+      await (args[4] as () => Promise<void>)();
+      return committed;
+    });
+    const broker = new MigrateCommitBroker(root, dir, 'npx nx migrate', POLICY);
+    process.env.NX_MIGRATE_BROKER = broker.nonce;
+
+    const worker = commitStepTree(dir, step(), [], vi.fn());
+    await sleep(20);
+    await broker.service();
+    await expect(worker).rejects.toThrow('registry unreachable');
+    writeRunState(
+      dir,
+      runState({
+        steps: [step({ status: 'failed', generatorCompleted: true })],
+      })
+    );
+    const givenUp = commitStepTree(
+      dir,
+      step({ status: 'failed', generatorCompleted: true }),
+      [],
+      vi.fn(),
+      'unresolved'
+    );
+    await sleep(20);
+    await broker.service();
+    const partial = await givenUp;
+    broker.close();
+
+    expect(partial).toEqual({ result: committed, absorbedStepIds: [] });
+    expect(mockRunInstall).toHaveBeenCalledTimes(2);
+    expect(mockCommit).toHaveBeenCalledTimes(2);
+    expect(mockCommit.mock.calls[1][1]).toEqual({ name: 'gen (unresolved)' });
+  });
+
   describe('MigrateCommitBroker', () => {
     function writeRequest(
       nonce: string,
@@ -678,7 +718,7 @@ describe('migrate commit broker', () => {
     it.each<[string, Partial<MigrateRunState>]>([
       ['the attempt moved on', { steps: [step({ attempt: 2 })] }],
       ['the step is settled', { steps: [step({ status: 'succeeded' })] }],
-      ['the step failed', { steps: [step({ status: 'failed' })] }],
+      ['the step was given up on', { steps: [step({ status: 'unresolved' })] }],
       ['the step is unknown', { steps: [step({ id: 'step-9' })] }],
     ])(
       'answers stale without installing or committing when %s',
@@ -705,6 +745,59 @@ describe('migrate commit broker', () => {
         expect(mockRunInstall).not.toHaveBeenCalled();
       }
     );
+
+    it.each(['failed', 'died'] as const)(
+      'commits the partial tree of a %s step given up on under its name, marked unresolved',
+      async (status) => {
+        writeRunState(dir, runState({ steps: [step({ status })] }));
+        const broker = new MigrateCommitBroker(
+          root,
+          dir,
+          'npx nx migrate',
+          POLICY
+        );
+        const resultPath = writeRequest(broker.nonce, {
+          kind: 'commit',
+          stepId: 'step-1',
+          attempt: 1,
+          commitAs: 'unresolved',
+        });
+
+        await broker.service();
+        const result = JSON.parse(readFileSync(resultPath, 'utf8'));
+        broker.close();
+
+        expect(result.kind).toBe('commit');
+        expect(mockCommit).toHaveBeenCalledTimes(1);
+        expect(mockCommit.mock.calls[0][1]).toEqual({
+          name: 'gen (unresolved)',
+        });
+      }
+    );
+
+    it('answers stale to a commit request carrying an unknown marker', async () => {
+      // A running step is at the commit seam, so only the marker rejects.
+      writeRunState(dir, runState());
+      const broker = new MigrateCommitBroker(
+        root,
+        dir,
+        'npx nx migrate',
+        POLICY
+      );
+      const resultPath = writeRequest(broker.nonce, {
+        kind: 'commit',
+        stepId: 'step-1',
+        attempt: 1,
+        commitAs: 'applied',
+      });
+
+      await broker.service();
+      const result = JSON.parse(readFileSync(resultPath, 'utf8'));
+      broker.close();
+
+      expect(result).toEqual({ kind: 'stale' });
+      expect(mockCommit).not.toHaveBeenCalled();
+    });
 
     it('answers a commit request stale from the session policy, whatever run.json says', async () => {
       // The run dir is writable from the agent's sandbox, so a createCommits
