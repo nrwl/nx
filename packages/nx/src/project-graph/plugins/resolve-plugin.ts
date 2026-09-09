@@ -21,6 +21,7 @@ import {
   retrieveProjectConfigurationsWithoutPluginInference,
 } from '../utils/retrieve-workspace-files';
 import { isWorkspaceLocalResolution } from './built-entry-resolution-hint';
+import { isSourceEntry, TS_SOURCE_EXTENSIONS } from './entry-provenance';
 
 import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
@@ -38,8 +39,6 @@ type LocalPluginResolution = {
   isSource: boolean;
   path: string;
 };
-
-const TS_SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.cts', '.mts']);
 
 let projectsWithoutInference: Record<string, ProjectConfiguration>;
 let projectsWithoutInferencePromise: Promise<
@@ -321,11 +320,16 @@ function resolveSubpathFromExports(
     for (const match of matches) {
       const candidate = path.join(projectPath, match);
       if (existsSync(candidate)) {
+        // Plugins resolve before inference, so only declared targets
+        // contribute build outputs here.
         return {
           path: candidate,
-          isSource:
-            defaultMatch !== match ||
-            TS_SOURCE_EXTENSIONS.has(path.extname(candidate)),
+          isSource: isSourceEntry(
+            candidate,
+            defaultMatch !== match,
+            projectConfig,
+            root
+          ),
         };
       }
     }

@@ -12,6 +12,7 @@ import {
   isWorkspaceLocalResolution,
   withBuiltEntryResolutionHint,
 } from '../project-graph/plugins/built-entry-resolution-hint';
+import { isSourceEntry } from '../project-graph/plugins/entry-provenance';
 import {
   createProjectRootMappingsFromProjectConfigurations,
   findProjectForPath,
@@ -179,7 +180,7 @@ function resolveImplementationWithMetadata(
         projects
       );
       if (maybeImplementationFromSource) {
-        return { path: maybeImplementationFromSource, isSource: true };
+        return maybeImplementationFromSource;
       }
     }
   }
@@ -231,7 +232,7 @@ export function resolveSchema(
       projects
     );
     if (schemaPathFromSource) {
-      return schemaPathFromSource;
+      return schemaPathFromSource.path;
     }
   }
 
@@ -296,7 +297,7 @@ function tryResolveFromSource(
   directory: string,
   packageName: string,
   projects: Record<string, ProjectConfiguration>
-): string | null {
+): { path: string; isSource: boolean } | null {
   packageMetadata ??= getWorkspacePackagesMetadata(projects);
   let localProject = packageMetadata.packageToProjectMap[packageName];
   // The `packageName` might be a path to the collection rather than an actual
@@ -321,9 +322,27 @@ function tryResolveFromSource(
       conditions: getRootTsConfigResolveExportsConditions(),
     });
     if (fromExports && fromExports.length) {
+      let defaultMatches: string[] | void;
+      try {
+        defaultMatches = resolveExports({ name, exports }, path, {
+          conditions: [],
+        });
+      } catch {}
+      const defaultMatch = (defaultMatches || []).find((m) =>
+        existsSync(join(directory, m))
+      );
       for (const exportPath of fromExports) {
-        if (existsSync(join(directory, exportPath))) {
-          return join(directory, exportPath);
+        const candidate = join(directory, exportPath);
+        if (existsSync(candidate)) {
+          return {
+            path: candidate,
+            isSource: isSourceEntry(
+              candidate,
+              defaultMatch !== exportPath,
+              localProject,
+              workspaceRoot
+            ),
+          };
         }
       }
     }
@@ -345,7 +364,15 @@ function tryResolveFromSource(
 
     for (const possiblePath of possiblePaths) {
       if (existsSync(possiblePath)) {
-        return possiblePath;
+        return {
+          path: possiblePath,
+          isSource: isSourceEntry(
+            possiblePath,
+            false,
+            localProject,
+            workspaceRoot
+          ),
+        };
       }
     }
   }
