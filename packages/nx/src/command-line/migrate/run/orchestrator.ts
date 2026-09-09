@@ -100,7 +100,7 @@ import {
   splitMigrationId,
   stepsToPendingMigrations,
   uncoveredFailedStepIds,
-  type CommitMarker,
+  type CommitAction,
   type StepAction,
   type StepEvent,
 } from './state-machine';
@@ -1405,7 +1405,7 @@ async function applyReconcileStepAction(
           : `Use 'adopt', 'skip' or 'unresolved' instead.`
         : commitMayBeInHistory(state, step)
           ? `Use 'retry' instead.`
-          : `Use 'retry', 'skip' or 'unresolved' instead.`;
+          : `Use 'retry', 'adopt', 'skip' or 'unresolved' instead.`;
     if (!canOfferCleanRetry(root, state, step, head)) {
       return {
         kind: 'error',
@@ -1497,7 +1497,7 @@ async function applyReconcileStepAction(
         kind: 'error',
         reason: `Cannot apply action 'retry' to step '${step.id}': ${safety.reason} Use 'retry-clean' where offered${
           commitMayBeInHistory(state, step) ? '' : `, 'skip' or 'unresolved'`
-        }.`,
+        }, or 'adopt'.`,
       };
     }
     if (safety.kind === 'warned') {
@@ -1555,8 +1555,17 @@ async function stepActionSideEffects(
 ): Promise<StepSideEffects> {
   switch (action) {
     case 'adopt':
+      // A died step's adopt shares the worker's commit request, which may
+      // have landed before the death; a failed step's is a new one.
       return state.createCommits
-        ? commitForStep(root, dir, state, step, scope)
+        ? commitForStep(
+            root,
+            dir,
+            state,
+            step,
+            scope,
+            step.status === 'failed' ? 'adopt' : undefined
+          )
         : {
             entry: null,
             installFailed: await installFailedForStep(
@@ -1612,7 +1621,7 @@ async function commitForStep(
   state: MigrateRunState,
   step: MigrateStep,
   scope: TreeScope,
-  commitAs?: CommitMarker
+  commitAs?: CommitAction
 ): Promise<StepSideEffects> {
   const name = commitNameForStep(step, commitAs);
   const absorbedStepIds = uncoveredFailedStepIds(state).filter(
@@ -1933,6 +1942,13 @@ function emitRetryFailed(
       )}`
     );
   }
+  lines.push(
+    `  adopt: the migration was applied by hand; keep the current working-tree state as its result, then run: ${reconcileCommand(
+      root,
+      runId,
+      'adopt'
+    )}`
+  );
   // Refused by the state machine: the migration is, or may be, committed.
   if (!commitMayBeInHistory(state, step)) {
     lines.push(

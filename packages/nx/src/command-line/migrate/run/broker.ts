@@ -47,7 +47,7 @@ import {
   markInstallFailed,
   stepsToPendingMigrations,
   uncoveredFailedStepIds,
-  type CommitMarker,
+  type CommitAction,
 } from './state-machine';
 import { attachIssueIdsToCommitEntry } from './issues';
 import { resetForCleanRetry } from './clean-retry';
@@ -59,8 +59,10 @@ const CHILD_POLL_INTERVAL_MS = 250;
 
 // The seam a request comes from, and its name: within a session, non-reset
 // seams reuse one answer per attempt (see `invocation`). A worker's commit,
-// the fold's and the adopt's share one seam; a marked commit is a request of
-// its own, since giving up after a worker's commit failed must land one.
+// the fold's and a died step's adopt share one seam, and the worker may have
+// landed it before dying. A commit made after a failure is a request of its
+// own: the worker's ended in the failed install the step recorded, so adopting
+// or giving up then owes a new install and commit.
 export type BrokerRequestKind =
   | 'commit'
   // A worker's install: after its generator, or a retry's from the baseline.
@@ -75,8 +77,8 @@ export type BrokerRequestKind =
 export type InstallSeam = 'install' | 'fold-install' | 'action-install';
 
 // Names the seam only. Whether to install or commit is the parent's own
-// policy, so a request carries nothing that would widen it; the marker only
-// changes what a commit the policy already allows is called.
+// policy, so a request carries nothing that would widen it; the action only
+// tells a post-failure commit apart from the worker's and names it.
 export interface BrokerRequest {
   kind: BrokerRequestKind;
   stepId: string;
@@ -84,9 +86,9 @@ export interface BrokerRequest {
   // Reset only: a fresh id per clean retry, so a second retry of the same
   // attempt resets again instead of reading the first reset's answer.
   invocation?: string;
-  // The parent owns commit policy; the marker only changes what a commit the
-  // policy already allows is called.
-  commitAs?: CommitMarker;
+  // The parent owns commit policy; the action only tells a post-failure commit
+  // apart from the worker's and names it.
+  commitAs?: CommitAction;
 }
 
 export type BrokerResult =
@@ -329,7 +331,7 @@ export async function commitStepTree(
   absorbedStepIds: string[],
   commitInProcess: () => Promise<CommitResult>,
   scope: TreeScope,
-  commitAs?: CommitMarker
+  commitAs?: CommitAction
 ): Promise<BrokeredCommit> {
   const request: BrokerRequest = {
     kind: 'commit',
@@ -640,7 +642,9 @@ export class MigrateCommitBroker {
       !isAtSeam(step, request) ||
       ((request.kind === 'commit' || request.kind === 'reset') &&
         !this.policy.createCommits) ||
-      (request.commitAs !== undefined && request.commitAs !== 'unresolved')
+      (request.commitAs !== undefined &&
+        request.commitAs !== 'adopt' &&
+        request.commitAs !== 'unresolved')
     ) {
       return { kind: 'stale' };
     }
