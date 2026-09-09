@@ -103,6 +103,7 @@ export {
 export { findNpmDependencies } from './src/utils/find-npm-dependencies';
 
 // Plugin helpers
+export { createConfigFileDependencyCollector } from './src/utils/config-file-dependencies';
 export {
   addBuildAndWatchDepsTargets,
   isValidPackageJsonBuildConfig,

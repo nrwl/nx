@@ -1267,6 +1267,28 @@ export function registerTsConfigPaths(tsConfigPath): () => void {
   throw new Error(`Unable to load ${tsConfigPath}`);
 }
 
+export function createTsConfigPathMatcher(tsConfigPath: string):
+  | {
+      matchPath: ReturnType<typeof import('tsconfig-paths').createMatchPath>;
+      key: string;
+    }
+  | undefined {
+  const tsconfigPaths = loadTsConfigPaths();
+  const config = tsconfigPaths?.loadConfig(tsConfigPath);
+  if (
+    config?.resultType !== 'success' ||
+    !config.paths ||
+    Object.keys(config.paths).length === 0
+  ) {
+    return undefined;
+  }
+  const baseUrl = resolvePathsBaseUrl(tsConfigPath);
+  return {
+    matchPath: tsconfigPaths.createMatchPath(baseUrl, config.paths),
+    key: JSON.stringify([baseUrl, config.paths]),
+  };
+}
+
 function readCompilerOptions(tsConfigPath): {
   compilerOptions: CompilerOptions;
   tsConfigRaw?: unknown;
