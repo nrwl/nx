@@ -1,4 +1,12 @@
-import { dirname, isAbsolute, join, relative, resolve, sep } from 'path';
+import {
+  basename,
+  dirname,
+  isAbsolute,
+  join,
+  relative,
+  resolve,
+  sep,
+} from 'path';
 import { existsSync, readFileSync, realpathSync } from 'fs';
 import { resolve as resolveExports } from 'resolve.exports';
 import { gte } from 'semver';
@@ -754,7 +762,7 @@ export function refreshSourceGraphResolvers(
   root: string,
   getWorkspacePackageNames?: () => string[]
 ): void {
-  workspacePackageExportsCache.clear();
+  workspaceManifestCache.clear();
   if (sourceGraphs.size === 0) return;
   root = canonicalPath(root);
   const conditions = getRootTsConfigResolveExportsConditions(root);
@@ -893,9 +901,26 @@ function getUserConditionsFromArgs(args: string[]): string[] {
   return conditions;
 }
 
-// Cache parsed exports per manifest; graph refresh clears it after manifest
-// changes.
-const workspacePackageExportsCache = new Map<string, any>();
+// Cache parsed manifests; graph refresh clears it after manifest changes.
+const workspaceManifestCache = new Map<
+  string,
+  { name?: string; exports?: unknown }
+>();
+
+function readWorkspaceManifest(packageJsonPath: string): {
+  name?: string;
+  exports?: unknown;
+} {
+  let manifest = workspaceManifestCache.get(packageJsonPath);
+  if (manifest === undefined) {
+    const { name, exports } = JSON.parse(
+      readFileSync(packageJsonPath, 'utf-8')
+    );
+    manifest = { name, exports };
+    workspaceManifestCache.set(packageJsonPath, manifest);
+  }
+  return manifest;
+}
 
 function resolveFromWorkspacePackageExports(
   specifier: string,
@@ -915,12 +940,7 @@ function resolveFromWorkspacePackageExports(
     if (!packageJsonPath) {
       return null;
     }
-    let packageExports = workspacePackageExportsCache.get(packageJsonPath);
-    if (packageExports === undefined) {
-      packageExports =
-        JSON.parse(readFileSync(packageJsonPath, 'utf-8')).exports ?? null;
-      workspacePackageExportsCache.set(packageJsonPath, packageExports);
-    }
+    const packageExports = readWorkspaceManifest(packageJsonPath).exports;
     if (!packageExports) {
       return null;
     }
@@ -952,18 +972,21 @@ function resolveFromWorkspacePackageExports(
 }
 
 /**
- * The package's `package.json` as the package manager links it for `fromDir`,
- * accepted only when it links into the workspace: a same-named external
- * package must keep Node's own resolution.
+ * The package's `package.json` as Node would find it from `fromDir`: its own
+ * package scope for a self-reference, else the package manager's link.
+ * Accepted only when it lies in the workspace: a same-named external package
+ * must keep Node's own resolution.
  */
 function findWorkspacePackageJson(
   packageName: string,
   fromDir: string,
   root: string
 ): string | null {
-  const candidate = process.versions.pnp
-    ? findPnpPackageJson(packageName, fromDir)
-    : findNodeModulesPackageJson(packageName, fromDir);
+  const candidate =
+    findSelfReferencePackageJson(packageName, fromDir) ??
+    (process.versions.pnp
+      ? findPnpPackageJson(packageName, fromDir)
+      : findNodeModulesPackageJson(packageName, fromDir));
   if (!candidate) {
     return null;
   }
@@ -971,6 +994,35 @@ function findWorkspacePackageJson(
   return isWorkspaceModuleUrl(pathToFileURL(realpathSync(candidate)).href, root)
     ? candidate
     : null;
+}
+
+/**
+ * Node resolves a package's own name through the nearest package scope that
+ * declares `exports`, never past a `node_modules` directory; no self-link is
+ * needed for that.
+ */
+function findSelfReferencePackageJson(
+  packageName: string,
+  fromDir: string
+): string | null {
+  let dir = fromDir;
+  while (basename(dir) !== 'node_modules') {
+    const candidate = join(dir, 'package.json');
+    if (existsSync(candidate)) {
+      try {
+        const { name, exports } = readWorkspaceManifest(candidate);
+        return name === packageName && exports != null ? candidate : null;
+      } catch {
+        return null;
+      }
+    }
+    const parent = dirname(dir);
+    if (parent === dir) {
+      break;
+    }
+    dir = parent;
+  }
+  return null;
 }
 
 function findNodeModulesPackageJson(
