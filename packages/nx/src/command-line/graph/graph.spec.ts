@@ -21,6 +21,17 @@ vi.mock('../../project-graph/project-graph', () => ({
   createProjectGraphAsync: vi.fn(),
   createProjectGraphAndSourceMapsAsync: vi.fn(),
   handleProjectGraphError: vi.fn(),
+  // Mirrors the real one: customHasherTaskIds reads it whenever I/O snapshots
+  // are enabled, which is off locally and on in CI.
+  readProjectsConfigurationFromProjectGraph: (graph: any) => ({
+    projects: Object.fromEntries(
+      Object.entries(graph?.nodes ?? {}).map(([name, node]: any) => [
+        name,
+        node.data,
+      ])
+    ),
+    version: 2,
+  }),
 }));
 vi.mock('../../config/configuration', () => ({
   readNxJson: vi.fn(() => ({})),
