@@ -18,6 +18,5 @@ version = "9"
 os = ["linux", "macos"]
 
 [env]
-# Match the second Java version above and expose it to Gradle toolchain discovery.
-# It may not exist yet while mise installs tools on a fresh machine.
-JAVA17_HOME = { value = "{{ tools.java[1].path | default(value='') }}", tools = true }
+# Second Java version above, for Gradle toolchain discovery.
+JAVA17_HOME = { value = "{% if tools.java[1] is defined %}{{ tools.java[1].path }}{% endif %}", tools = true }
