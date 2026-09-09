@@ -26,6 +26,9 @@ describe('renderRunbook', () => {
     expect(runbook).toContain(
       'Do not edit anything under `.nx/migrate-runs` except the handoff file'
     );
+    expect(runbook).toContain(
+      '  - Do not edit the `migrate` section of nx.json.'
+    );
     expect(runbook).toContain('    npx nx migrate --run-id=run-1');
   });
 

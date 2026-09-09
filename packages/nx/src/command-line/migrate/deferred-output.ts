@@ -1,7 +1,6 @@
 import * as pc from 'picocolors';
 import { logger } from '../../utils/logger';
 import { output } from '../../utils/output';
-import type { BoundedOutput } from './agentic/capture-generator-output';
 
 // What a dependency install or a migration commit tells the user, as the
 // calls that would print it. The helpers write through a sink so a caller
@@ -34,17 +33,13 @@ export type DeferredOutputRecord =
 
 interface RawBlock {
   kind: 'raw-block';
-  buffer: BoundedOutput;
-  // The part of the last chunk after its final newline: a line is appended
-  // only once it is complete, so the cap cuts on lines rather than chunks.
-  pending: string;
+  chunks: string[];
 }
 
 /**
  * Collects the output as records that `replayDeferredOutput` prints later.
- * Package manager chunks are bounded like generator output; the notices and
- * lines are few and always kept. Render once the output is complete: a
- * rendered collector accepts nothing more.
+ * Render once the output is complete: a rendered collector accepts nothing
+ * more.
  */
 export class DeferredOutputCollector implements MigrateOutputSink {
   private readonly records: (DeferredOutputRecord | RawBlock)[] = [];
@@ -73,30 +68,22 @@ export class DeferredOutputCollector implements MigrateOutputSink {
     this.assertOpen();
     let block = this.records[this.records.length - 1];
     if (block?.kind !== 'raw-block') {
-      // Lazy: the non-agentic migrate path must not load the agentic chain.
-      const { BoundedOutput } =
-        require('./agentic/capture-generator-output') as typeof import('./agentic/capture-generator-output');
-      block = {
-        kind: 'raw-block',
-        buffer: new BoundedOutput('install output'),
-        pending: '',
-      };
+      block = { kind: 'raw-block', chunks: [] };
       this.records.push(block);
     }
-    const lines = (block.pending + chunk).split('\n');
-    block.pending = lines.pop();
-    for (const line of lines) block.buffer.append(line);
+    block.chunks.push(chunk);
   }
 
   render(): DeferredOutputRecord[] {
     this.rendered = true;
     return this.records.map((record) => {
       if (record.kind !== 'raw-block') return record;
-      if (record.pending) {
-        record.buffer.append(record.pending);
-        record.pending = '';
-      }
-      return { kind: 'raw', text: record.buffer.render() };
+      // The replay adds the final newline back.
+      const text = record.chunks.join('');
+      return {
+        kind: 'raw',
+        text: text.endsWith('\n') ? text.slice(0, -1) : text,
+      };
     });
   }
 }

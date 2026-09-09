@@ -1,6 +1,5 @@
 import { logger } from '../../utils/logger';
 import { output } from '../../utils/output';
-import { MAX_GENERATOR_OUTPUT_BYTES } from './agentic/capture-generator-output';
 import {
   DeferredOutputCollector,
   MigrateOutputSink,
@@ -103,23 +102,17 @@ describe('deferred output', () => {
       );
     });
 
-    it('bounds the package manager output, naming it in the marker', () => {
+    it('keeps the whole package manager output, however long', () => {
       const collector = new DeferredOutputCollector();
-      for (let i = 0; i < 400; i++) {
-        collector.raw(`line-${i}`.padEnd(99, '.') + '\n');
-      }
+      const lines = Array.from({ length: 400 }, (_, i) =>
+        `line-${i}`.padEnd(99, '.')
+      );
+      for (const line of lines) collector.raw(`${line}\n`);
+      const sink = recordingSink();
 
-      const [record] = collector.render();
-      expect(record.kind).toBe('raw');
-      const text = (record as { text: string }).text;
-      expect(Buffer.byteLength(text)).toBeLessThanOrEqual(
-        MAX_GENERATOR_OUTPUT_BYTES
-      );
-      expect(text).toMatch(/^line-0\.+\n/);
-      expect(text).toMatch(
-        /\[nx migrate: \d+ bytes of install output omitted\]/
-      );
-      expect(text).toMatch(/\nline-399\.+$/);
+      replayDeferredOutput(collector.render(), sink);
+
+      expect(sink.calls).toEqual([['raw', lines.join('\n') + '\n']]);
     });
   });
 
