@@ -83,7 +83,7 @@ import {
   markInstallFailed,
   stepsToPendingMigrations,
   uncoveredFailedStepIds,
-  type CommitMarker,
+  type CommitAction,
   type StepAction,
   type StepEvent,
 } from './state-machine';
@@ -794,7 +794,7 @@ export async function runOrchestratorReconcile(
       return; // state untouched
     }
     const target = result.targetStep;
-    // An adopted death commits its working tree; that git side effect runs
+    // An adopted step commits its working tree; that git side effect runs
     // before the lock (locked sections must stay synchronous), then the
     // transition and its ledger entry land in one fresh-state write so a
     // crash can't leave the step succeeded unrecorded. As with a fold, that
@@ -803,7 +803,7 @@ export async function runOrchestratorReconcile(
     // history, the ledger misses it, and the rejection names it below so the
     // agent re-decides against the moved HEAD.
     // Without commits the adopted tree is still this migration's result, and
-    // it can carry package.json edits the dead worker never installed; the
+    // it can carry package.json edits the worker never installed; the
     // install has to run here or the next dispense captures the modified
     // dependencies as its own baseline and nothing is left to detect them.
     // A skip leaves the tree as it stands too, so it owes the same install
@@ -1349,7 +1349,7 @@ function applyReconcileStepAction(
     const fallback =
       step.status === 'died'
         ? `Use 'adopt', 'skip' or 'unresolved' instead.`
-        : `Use 'retry', 'skip' or 'unresolved' instead.`;
+        : `Use 'retry', 'adopt', 'skip' or 'unresolved' instead.`;
     if (!canOfferCleanRetry(root, state, step, head)) {
       return {
         kind: 'error',
@@ -1401,7 +1401,7 @@ function applyReconcileStepAction(
     if (safety.kind === 'unsafe') {
       return {
         kind: 'error',
-        reason: `Cannot apply action 'retry' to step '${step.id}': ${safety.reason} Use 'retry-clean' where offered, 'skip' or 'unresolved'.`,
+        reason: `Cannot apply action 'retry' to step '${step.id}': ${safety.reason} Use 'retry-clean' where offered, 'adopt', 'skip' or 'unresolved'.`,
       };
     }
     if (safety.kind === 'warned') {
@@ -1463,8 +1463,16 @@ async function stepActionSideEffects(
 ): Promise<StepSideEffects> {
   switch (action) {
     case 'adopt':
+      // A died step's adopt shares the worker's commit request, which may
+      // have landed before the death; a failed step's is a new one.
       return state.createCommits
-        ? commitForStep(root, dir, state, step)
+        ? commitForStep(
+            root,
+            dir,
+            state,
+            step,
+            step.status === 'failed' ? 'adopt' : undefined
+          )
         : {
             entry: null,
             installFailed: await installFailedForStep(
@@ -1508,7 +1516,7 @@ async function commitForStep(
   dir: string,
   state: MigrateRunState,
   step: MigrateStep,
-  commitAs?: CommitMarker
+  commitAs?: CommitAction
 ): Promise<StepSideEffects> {
   const name = commitNameForStep(step, commitAs);
   const absorbedStepIds = uncoveredFailedStepIds(state).filter(
@@ -1805,6 +1813,11 @@ function emitRetryFailed(
     );
   }
   lines.push(
+    `  adopt: the migration was applied by hand; keep the current working-tree state as its result, then run: ${reconcileCommand(
+      root,
+      runId,
+      'adopt'
+    )}`,
     `  skip:  ${reconcileCommand(root, runId, 'skip')}`,
     unresolvedOptionLine(root, runId, state, step, pending && cleanRetry)
   );
