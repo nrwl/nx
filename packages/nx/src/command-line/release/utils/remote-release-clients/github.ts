@@ -348,7 +348,7 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
       } else {
         console.log(this.inspectWithRedactedToken(error));
         console.error(
-          `An unknown error occurred while trying to create a release on GitHub, please report this on https://github.com/nrwl/nx (NOTE: make sure to redact your GitHub token from the error message!)`
+          `An unknown error occurred while trying to create a release on GitHub, please report this on https://github.com/nrwl/nx (NOTE: your GitHub token is redacted above, but please double-check before sharing)`
         );
       }
     }

@@ -157,8 +157,8 @@ describe('GitLabRemoteReleaseClient', () => {
 
     it('should redact the token when it contains a line break', async () => {
       const token = 'glpat-secret';
-      // Node strips CR/LF from outgoing header values, so the dump holds the
-      // stripped token while tokenData still carries the line break.
+      // Defensive: node rejects a CR/LF header outright, so axios cannot produce
+      // this pairing. Pins the needle that would cover it if it ever could.
       const clientWithToken = new GitLabRemoteReleaseClient(repoData, false, {
         token: `${token.slice(0, 4)}\r\n${token.slice(4)}`,
         headerName: 'PRIVATE-TOKEN',
@@ -193,8 +193,6 @@ describe('GitLabRemoteReleaseClient', () => {
 
     it('should leave the dump untouched when the token is blank', async () => {
       const clientWithToken = new GitLabRemoteReleaseClient(repoData, false, {
-        // a single space: the previous guard tested tokenData, not the token,
-        // so this split the dump on every space
         token: ' ',
         headerName: 'PRIVATE-TOKEN',
       });

@@ -241,7 +241,7 @@ export class GitLabRemoteReleaseClient extends RemoteReleaseClient<GitLabRelease
       } else {
         console.log(this.inspectWithRedactedToken(error));
         console.error(
-          `An unknown error occurred while trying to create a release on GitLab, please report this on https://github.com/nrwl/nx (NOTE: make sure to redact your GitLab token from the error message!)`
+          `An unknown error occurred while trying to create a release on GitLab, please report this on https://github.com/nrwl/nx (NOTE: your GitLab token is redacted above, but please double-check before sharing)`
         );
       }
     }

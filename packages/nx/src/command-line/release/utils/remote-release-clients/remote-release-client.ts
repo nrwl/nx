@@ -71,9 +71,9 @@ export abstract class RemoteReleaseClient<
   protected inspectWithRedactedToken(error: unknown): string {
     const inspected = inspect(error);
     // The dump can hold a different string than the raw token: axios trims
-    // header values, node strips CR/LF from them, and inspect() escapes the
-    // result while leaving the token bare in message/stack. Redact every
-    // rendering; the Set collapses them for an ordinary token.
+    // header values and inspect() escapes the result, while message/stack keep
+    // it bare. Redact every rendering; the Set collapses them for an ordinary
+    // token. The CR/LF needle is belt-and-braces — node rejects such headers.
     const token = this.tokenData?.token?.trim();
     if (!token) {
       return inspected;
