@@ -71,7 +71,9 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
   warnNxViteTsPathsDeprecation();
   let foundTsConfigPath: string;
   let matchTsPathEsm: MatchPath;
+  let matchTsPathEsmExact: MatchPath;
   let matchTsPathFallback: MatchPath | undefined;
+  let matchTsPathFallbackExact: MatchPath | undefined;
   let tsConfigPathsEsm: ConfigLoaderSuccessResult;
   let tsConfigPathsFallback: ConfigLoaderSuccessResult | undefined;
 
@@ -184,6 +186,11 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
         parsed.paths,
         options.mainFields
       );
+      matchTsPathEsmExact = createExactMatchPath(
+        pathsBaseUrl,
+        parsed.paths,
+        options.mainFields
+      );
 
       const rootLevelTsConfig = getTsConfig(
         join(workspaceRoot, 'tsconfig.base.json')
@@ -205,6 +212,11 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
             rootLevelParsed.paths,
             ['main', 'module']
           );
+          matchTsPathFallbackExact = createExactMatchPath(
+            rootLevelPathsBaseUrl,
+            rootLevelParsed.paths,
+            ['main', 'module']
+          );
         }
       }
     },
@@ -220,10 +232,16 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
 
       let resolvedFile: string;
       try {
-        resolvedFile = matchTsPathEsm(importPath);
+        resolvedFile =
+          matchTsPathEsmExact(importPath) ??
+          loadFileFromExactAlias(tsConfigPathsEsm, importPath) ??
+          matchTsPathEsm(importPath);
       } catch (e) {
         logIt('Using fallback path matching.');
-        resolvedFile = matchTsPathFallback?.(importPath);
+        resolvedFile =
+          matchTsPathFallbackExact?.(importPath) ??
+          loadFileFromExactAlias(tsConfigPathsFallback, importPath) ??
+          matchTsPathFallback?.(importPath);
       }
 
       if (!resolvedFile || !existsSync(resolvedFile)) {
@@ -291,6 +309,32 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
     }
   }
 
+  /**
+   * Resolves an import that names an alias exactly, through that alias alone.
+   *
+   * The matcher above already covers a mapped path that names a file or a
+   * package entry, so this is what finds an `index` or supplies the extension.
+   * Restricting it to the one alias keeps it from answering with a wildcard,
+   * which is the last resort's job.
+   */
+  function loadFileFromExactAlias(
+    tsconfig: ConfigLoaderSuccessResult | undefined,
+    importPath: string
+  ) {
+    // An own-property check, because an import named after an `Object`
+    // prototype member (`constructor`, `toString`) would otherwise read the
+    // inherited value and hand a non-array on to the resolver.
+    if (!tsconfig || !Object.hasOwn(tsconfig.paths, importPath)) {
+      return undefined;
+    }
+
+    return loadFileFromPaths(
+      { ...tsconfig, paths: { [importPath]: tsconfig.paths[importPath] } },
+      importPath,
+      options.extensions
+    );
+  }
+
   function loadFileFromPathsWithLogging(
     tsconfig: ConfigLoaderSuccessResult | undefined,
     importPath: string
@@ -304,4 +348,25 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
     );
     return loadFileFromPaths(tsconfig, importPath, options.extensions);
   }
+}
+
+/**
+ * Matcher over the non-wildcard aliases alone, to run before the full one.
+ *
+ * `tsconfig-paths` ranks an alias by the length of the text before its `*`,
+ * counting one without a `*` as zero, so an exact alias sorts no higher than
+ * any wildcard. TypeScript matches an exact alias first.
+ */
+function createExactMatchPath(
+  absoluteBaseUrl: string,
+  paths: ConfigLoaderSuccessResult['paths'],
+  mainFields: nxViteTsPathsOptions['mainFields']
+): MatchPath {
+  const exactPaths = Object.fromEntries(
+    Object.entries(paths).filter(([alias]) => !alias.includes('*'))
+  );
+
+  // The match-all `*` entry would resolve any import against `baseUrl` before
+  // the wildcard aliases of the full matcher get their turn.
+  return createMatchPath(absoluteBaseUrl, exactPaths, mainFields, false);
 }
