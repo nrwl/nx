@@ -50,7 +50,14 @@ export class BatchProcess {
    */
   private capturedOutputFailed = false;
   private static captureSeq = 0;
-  /** Discriminates this capture file from every other in the process. */
+  /**
+   * Makes the capture file unique across every batch in the process, which
+   * `batchId` alone does not: `TasksSchedule.batchCounters` is per instance, so
+   * a second orchestrator in the same process - `runDiscreteTasks` and
+   * `runContinuousTasks`, not the CLI - re-mints `<executor> 1`, and the pid
+   * cannot separate them. These files now outlive their batch, so a collision
+   * would truncate a log an earlier run is still pointing at.
+   */
   private readonly captureSeq = ++BatchProcess.captureSeq;
 
   constructor(
@@ -193,9 +200,7 @@ export class BatchProcess {
     }
     try {
       // `batchId` names the file for a human reading the directory;
-      // `captureSeq` is what makes it unique, since a second `TasksSchedule`
-      // in the same process re-mints the same id and the pid cannot separate
-      // them.
+      // `captureSeq` is what makes it unique - see the field.
       const key = `${this.batchId.replace(/[^a-zA-Z0-9]+/g, '-')}-${
         process.pid
       }-${this.captureSeq}`;
