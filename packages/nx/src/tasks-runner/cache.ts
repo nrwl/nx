@@ -1,5 +1,5 @@
 import { spawn } from 'child_process';
-import { existsSync, mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
@@ -82,6 +82,81 @@ export function getCache(options: DefaultTasksRunnerOptions): DbCache | Cache {
  */
 export function terminalOutputPathForHash(hash: string): string {
   return join(cacheDir, 'terminalOutputs', hash);
+}
+
+/**
+ * Where a batch worker's own log lives. Keyed by the batch rather than a task
+ * hash: one worker produces one log, and the hash of any task in the batch is
+ * still preliminary while it runs.
+ */
+export function batchOutputPathForKey(key: string): string {
+  return join(cacheDir, 'batchOutputs', `${key}.log`);
+}
+
+/** Batch logs older than this are swept. Matches `remove_old_cache_records`. */
+const BATCH_OUTPUT_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+/**
+ * Budget for `batchOutputs/`, separate from `maxCacheSize` on purpose: these
+ * are debug artifacts, and sharing a budget would let one evict a replayable
+ * cache entry — trading a rebuild for a text file.
+ */
+const BATCH_OUTPUT_MAX_BYTES = 1024 * 1024 * 1024;
+
+/**
+ * Deletes batch logs by age, then oldest-first until the directory is under
+ * budget. No database: nothing looks a batch log up by key, so a row would be
+ * write-only bookkeeping that a hard-killed process could skip, orphaning the
+ * file forever. `stat` cannot drift from what is actually on disk, and the file
+ * is appended to while its batch runs, so a size recorded anywhere else is
+ * wrong until the batch ends.
+ *
+ * The age threshold is what makes this safe to run while other Nx processes
+ * are live: a running batch's log is minutes old, not days.
+ */
+export function sweepBatchOutputs(
+  now = Date.now(),
+  maxAgeMs = BATCH_OUTPUT_MAX_AGE_MS,
+  maxBytes = BATCH_OUTPUT_MAX_BYTES
+): void {
+  const dir = join(cacheDir, 'batchOutputs');
+  let entries: string[];
+  try {
+    entries = readdirSync(dir);
+  } catch {
+    // Nothing has captured a batch log yet.
+    return;
+  }
+
+  const files: { path: string; size: number; mtimeMs: number }[] = [];
+  for (const entry of entries) {
+    const path = join(dir, entry);
+    try {
+      const stats = statSync(path);
+      if (!stats.isFile()) continue;
+      if (now - stats.mtimeMs > maxAgeMs) {
+        rmSync(path, { force: true });
+        continue;
+      }
+      files.push({ path, size: stats.size, mtimeMs: stats.mtimeMs });
+    } catch {
+      // Raced with another Nx process sweeping the same directory.
+    }
+  }
+
+  let total = files.reduce((sum, f) => sum + f.size, 0);
+  if (total <= maxBytes) {
+    return;
+  }
+  files.sort((a, b) => a.mtimeMs - b.mtimeMs);
+  for (const file of files) {
+    if (total <= maxBytes) break;
+    try {
+      rmSync(file.path, { force: true });
+      total -= file.size;
+    } catch {
+      // As above.
+    }
+  }
 }
 
 export class DbCache {

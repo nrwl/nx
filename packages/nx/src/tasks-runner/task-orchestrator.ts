@@ -1,6 +1,6 @@
 import { defaultMaxListeners } from 'events';
 import type { OutputStyle } from '../command-line/yargs-utils/shared-options';
-import { existsSync, readFileSync, statSync, writeFileSync } from 'fs';
+import { existsSync, statSync, writeFileSync } from 'fs';
 import { relative } from 'path';
 import { performance } from 'perf_hooks';
 import * as pc from 'picocolors';
@@ -43,6 +43,7 @@ import {
   DbCache,
   dbCacheEnabled,
   getCache,
+  sweepBatchOutputs,
 } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
@@ -87,22 +88,6 @@ function resolveBatchTaskStatus(result: {
   status?: TaskStatus;
 }): TaskStatus {
   return result.status ?? (result.success ? 'success' : 'failure');
-}
-
-/**
- * The captured batch log, or empty if there is nothing readable. Reading it
- * fully is acceptable only on the crash path: the batch is over, and the
- * alternative is losing the only copy of why the worker died.
- */
-function readCapturedBatchLog(path: string | undefined): string {
-  if (!path) {
-    return '';
-  }
-  try {
-    return readFileSync(path, 'utf-8');
-  } catch {
-    return '';
-  }
 }
 
 export class TaskOrchestrator {
@@ -206,6 +191,8 @@ export class TaskOrchestrator {
   // exit, and the paths that never spawn one write it inline. The backstop in
   // postRunSteps consults this so a task's output is written exactly once.
   private tasksWithPersistedOutput = new Set<string>();
+  /** Batches whose worker log was handed to the life cycle, so it must survive. */
+  private announcedBatchLogs = new Set<string>();
   // endregion internal state
 
   constructor(
@@ -299,6 +286,9 @@ export class TaskOrchestrator {
     );
     if (!this.stopRequested) {
       this.cache.removeOldCacheRecords();
+      // Batch logs are swept from disk rather than the database: nothing looks
+      // one up by key, so a row would only ever be bookkeeping.
+      sweepBatchOutputs();
     }
     await this.cleanup();
     await this.dispose();
@@ -972,15 +962,12 @@ export class TaskOrchestrator {
         );
       }
 
-      // The worker reported results, but its own stderr is not any task's
-      // output and has no route to a reader under a style that prints nothing:
-      // the fold above needs `shouldGroupBatchOutput`, `printGroupedBatchOutput`
-      // needs `printsTaskOutput` on top of that, and `discardCapturedOutput`
-      // unlinks the file when this method returns.
-      return this.attachBatchWorkerLog(
+      this.announceBatchWorkerLog(
+        batch.id,
         taskResults,
         batchProcess.getCapturedOutputPath()
       );
+      return taskResults;
     } catch (e) {
       const isBatchStopping = this.stopRequested;
 
@@ -999,15 +986,8 @@ export class TaskOrchestrator {
 
       await batchProcess?.flushCapturedOutput();
 
-      // The same handoff the results path uses, rather than a second copy of
-      // it: a style that prints nothing renders no fold, so the captured log
-      // reaches a reader only by riding in the results, and a crashed worker's
-      // output is exactly what no task claims. A stopped batch is included: its
-      // partial log is the only record of what got through before the
-      // cancellation, and the fold below cannot carry it under `summary`
-      // because that gate gets `printsTaskOutput` too, so without this the
-      // `finally` unlinks the only copy.
-      const withWorkerLog = this.attachBatchWorkerLog(
+      this.announceBatchWorkerLog(
+        batch.id,
         taskResults,
         batchProcess?.getCapturedOutputPath()
       );
@@ -1036,9 +1016,14 @@ export class TaskOrchestrator {
         }
       }
 
-      return withWorkerLog;
+      return taskResults;
     } finally {
-      batchProcess?.discardCapturedOutput();
+      // Kept only when something failed and the log was announced; an all-green
+      // batch's chatter explains nothing and would sit in `batchOutputs/` until
+      // the sweep.
+      if (!this.announcedBatchLogs.has(batch.id)) {
+        batchProcess?.discardCapturedOutput();
+      }
       const runBatchEnd = performance.mark('TaskOrchestrator-run-batch:end');
       performance.measure(
         'TaskOrchestrator-run-batch',
@@ -1060,51 +1045,30 @@ export class TaskOrchestrator {
    * that copy. Inlining it into each would write a byte-identical unbounded
    * file per task, every one charged in full against `maxCacheSize`.
    */
-  private attachBatchWorkerLog<
-    T extends { task: Task; status: TaskStatus; terminalOutput?: string },
-  >(results: T[], capturedOutputPath: string | undefined): T[] {
-    if (printsTaskOutput(this.resolvedOutputStyle)) {
-      return results;
+  /**
+   * Tells the life cycle where the batch worker's own log is, when something
+   * failed and a style that prints nothing would otherwise leave it unread.
+   *
+   * The path is announced rather than the bytes copied into a task: one worker
+   * produces one log, it explains the batch rather than any single task, and a
+   * task's own output file is read back verbatim on a cache hit.
+   */
+  private announceBatchWorkerLog(
+    batchId: string,
+    results: { status: TaskStatus }[],
+    capturedOutputPath: string | undefined
+  ): void {
+    if (!capturedOutputPath || printsTaskOutput(this.resolvedOutputStyle)) {
+      return;
     }
-    const failures = results.filter(
+    const failed = results.some(
       (r) => r.status === 'failure' || r.status === 'stopped'
     );
-    if (!failures.length) {
-      return results;
+    if (!failed) {
+      return;
     }
-    const workerLog = readCapturedBatchLog(capturedOutputPath);
-    if (!workerLog) {
-      return results;
-    }
-
-    // Names the task rather than a path. `task.hash` is still preliminary here:
-    // `applyFromCacheOrRunBatch` clears and recomputes it for any depsOutputs
-    // task that ran, failures included, before `persistTerminalOutputs` writes
-    // under the NEW hash. A path minted from the hash as it stands would address
-    // a file nothing ever writes. The reader loses nothing, since the holder
-    // failed too and `summary` prints its own `full log:` line.
-    const holder = failures[0];
-    const pointer = `batch worker log: reported with ${holder.task.id}`;
-
-    return results.map((result) => {
-      if (result === holder) {
-        return {
-          ...result,
-          terminalOutput: [workerLog, result.terminalOutput]
-            .filter(Boolean)
-            .join('\n'),
-        };
-      }
-      if (pointer && failures.includes(result)) {
-        return {
-          ...result,
-          terminalOutput: [result.terminalOutput, pointer]
-            .filter(Boolean)
-            .join('\n'),
-        };
-      }
-      return result;
-    });
+    this.announcedBatchLogs.add(batchId);
+    this.options.lifeCycle.batchOutputAvailable?.(batchId, capturedOutputPath);
   }
 
   /**

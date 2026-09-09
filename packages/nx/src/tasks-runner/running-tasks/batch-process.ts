@@ -1,10 +1,10 @@
 import type { ChildProcess, Serializable } from 'child_process';
 import type { Readable } from 'stream';
 import { createWriteStream, mkdirSync, rmSync, type WriteStream } from 'fs';
-import { join } from 'path';
+import { dirname } from 'path';
 import { killProcessTreeGraceful } from '../../native';
 import type { TaskResult } from '../../config/misc-interfaces';
-import { workspaceDataDirectory } from '../../utils/cache-directory';
+import { batchOutputPathForKey } from '../cache';
 import { signalToCode } from '../../utils/exit-codes';
 import { output, shouldGroupBatchOutput } from '../../utils/output';
 import {
@@ -192,16 +192,15 @@ export class BatchProcess {
       return this.capturedOutputStream;
     }
     try {
-      const dir = join(workspaceDataDirectory, 'batch-outputs');
-      mkdirSync(dir, { recursive: true });
       // `batchId` names the file for a human reading the directory;
       // `captureSeq` is what makes it unique, since a second `TasksSchedule`
       // in the same process re-mints the same id and the pid cannot separate
       // them.
-      const name = `${this.batchId.replace(/[^a-zA-Z0-9]+/g, '-')}-${
+      const key = `${this.batchId.replace(/[^a-zA-Z0-9]+/g, '-')}-${
         process.pid
-      }-${this.captureSeq}.log`;
-      const path = join(dir, name);
+      }-${this.captureSeq}`;
+      const path = batchOutputPathForKey(key);
+      mkdirSync(dirname(path), { recursive: true });
       const stream = createWriteStream(path);
       // Mandatory, not defensive: a write error reaches a stream as an 'error'
       // event, and an unhandled one is an uncaught exception that would take

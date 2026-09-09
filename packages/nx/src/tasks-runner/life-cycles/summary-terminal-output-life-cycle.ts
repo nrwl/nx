@@ -27,11 +27,16 @@ export class SummaryTerminalOutputLifeCycle implements LifeCycle {
   private succeeded = 0;
   private cached = 0;
   private cloudLink: { label: string; url: string } | undefined;
+  private readonly batchLogs = new Map<string, string>();
 
   constructor(private readonly tasks: Task[]) {}
 
   setCloudLink(label: string, url: string): void {
     this.cloudLink = { label, url };
+  }
+
+  batchOutputAvailable(batchId: string, path: string): void {
+    this.batchLogs.set(batchId, path);
   }
 
   /**
@@ -99,6 +104,14 @@ export class SummaryTerminalOutputLifeCycle implements LifeCycle {
             : [line];
         })
       );
+    }
+    if (this.batchLogs.size > 0) {
+      // One line per worker, not per task: a batch's log explains the whole
+      // batch, and no task's own output file contains it.
+      bodyLines.push('', output.dim('Batch worker logs:'));
+      for (const [batchId, path] of this.batchLogs) {
+        bodyLines.push(output.dim(`${output.dim('-')} ${batchId}: ${path}`));
+      }
     }
     if (this.cloudLink) {
       bodyLines.push('', `${this.cloudLink.label} ${this.cloudLink.url}`);
