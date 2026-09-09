@@ -101,6 +101,12 @@ const BATCH_OUTPUT_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
  * cache entry — trading a rebuild for a text file.
  */
 const BATCH_OUTPUT_MAX_BYTES = 1024 * 1024 * 1024;
+/**
+ * A log younger than this may belong to a batch that is still writing to it,
+ * possibly in another Nx process. Only the age sweep is safe without this - it
+ * deletes at 7 days, where nothing is live.
+ */
+const MIN_EVICTION_AGE_MS = 60 * 60 * 1000;
 
 /**
  * Deletes batch logs by age, then oldest-first until the directory is under
@@ -110,8 +116,9 @@ const BATCH_OUTPUT_MAX_BYTES = 1024 * 1024 * 1024;
  * is appended to while its batch runs, so a size recorded anywhere else is
  * wrong until the batch ends.
  *
- * The age threshold is what makes this safe to run while other Nx processes
- * are live: a running batch's log is minutes old, not days.
+ * Neither pass can delete a log a live batch is still writing: the age sweep
+ * deletes at 7 days, and the size eviction skips anything younger than
+ * `MIN_EVICTION_AGE_MS`.
  */
 export function sweepBatchOutputs(
   now = Date.now(),
@@ -147,8 +154,14 @@ export function sweepBatchOutputs(
   if (total <= maxBytes) {
     return;
   }
-  files.sort((a, b) => a.mtimeMs - b.mtimeMs);
-  for (const file of files) {
+  // Never evict a log young enough to belong to a batch that is still running:
+  // the file is appended to for the life of its batch, and another Nx process
+  // may be doing exactly that right now. Going over budget is recoverable on
+  // the next sweep; deleting a live batch's only log is not.
+  const evictable = files
+    .filter((f) => now - f.mtimeMs > MIN_EVICTION_AGE_MS)
+    .sort((a, b) => a.mtimeMs - b.mtimeMs);
+  for (const file of evictable) {
     if (total <= maxBytes) break;
     try {
       rmSync(file.path, { force: true });

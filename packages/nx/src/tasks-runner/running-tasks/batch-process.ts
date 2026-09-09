@@ -75,7 +75,7 @@ export class BatchProcess {
      * ever claims, so it would exist nowhere.
      */
     private readonly printsOutput: boolean = true,
-    /** Labels the capture file so it is identifiable in `batch-outputs/`. */
+    /** Labels the capture file so it is identifiable in `batchOutputs/`. */
     private readonly batchId: string = executorName
   ) {
     this.childProcess.on('message', (message: BatchMessage) => {
@@ -183,17 +183,13 @@ export class BatchProcess {
       return;
     }
     // A full write buffer pauses the worker rather than growing in this
-    // process - which is the whole reason the capture is a file and not a
-    // string.
+    // process.
     if (!stream.write(chunk) && source) {
       source.pause();
       stream.once('drain', () => source.resume());
     }
   }
 
-  /**
-   * The capture file, opened on the first chunk.
-   */
   private openCapturedOutput(): WriteStream | undefined {
     if (this.capturedOutputStream) {
       return this.capturedOutputStream;
@@ -242,12 +238,9 @@ export class BatchProcess {
    * log grouping, or undefined if nothing was captured. Used to render the whole
    * batch as one fold, so output no task claimed is not lost.
    *
-   * The stream is deliberately left open rather than closed here. A worker's
-   * stdout can deliver after its exit event — which is what `getResults()`
-   * settles on — and leaving it open keeps such a chunk appending to this same
-   * file rather than opening a second one that nothing cleans up. Call
-   * `flushCapturedOutput` before reading: the stream buffers, so a read that
-   * has not been sequenced against the flush can see a short file.
+   * Not valid to read before `flushCapturedOutput`; that flush ends the stream,
+   * so a chunk arriving afterwards - a worker's stdout can deliver past the
+   * exit event `getResults()` settles on - is dropped rather than appended.
    */
   getCapturedOutputPath(): string | undefined {
     return this.capturedOutputPath;

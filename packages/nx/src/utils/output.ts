@@ -41,7 +41,7 @@ export function isStaticOutputStyle(outputStyle: string | undefined): boolean {
  * Withholding is only half of it. Whatever a caller suppresses here has to be
  * readable somewhere else, because the style's contract is that the output
  * moved, not that it is gone - `BatchProcess` captures to a file rather than
- * dropping, and `runBatch`'s crash path folds that file into the task results.
+ * dropping, and `runBatch` hands its path to the life cycle.
  */
 export function printsTaskOutput(outputStyle: string | undefined): boolean {
   return outputStyle !== 'summary';
