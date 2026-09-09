@@ -26,6 +26,7 @@ import {
 import { publishFileAtomically } from './atomic-write';
 import {
   readRunState,
+  type MigrateRunPolicy,
   type MigrateStep,
   type MigrateStepStatus,
 } from './run-state';
@@ -56,12 +57,12 @@ export type BrokerRequestKind =
   // The install a skip or a non-commit adopt owes for the tree it keeps.
   | 'action-install';
 
+// Names the seam only. Whether to install or commit is the parent's own
+// policy, so a request carries nothing that would widen it.
 export interface BrokerRequest {
   kind: BrokerRequestKind;
   stepId: string;
   attempt: number;
-  // The caller's effective value: the run's policy and this invocation's flag.
-  skipInstall: boolean;
 }
 
 export type BrokerResult =
@@ -141,7 +142,6 @@ function resultPath(runDirPath: string, id: string): string {
 export async function commitStepTree(
   dir: string,
   step: MigrateStep,
-  skipInstall: boolean,
   absorbedStepIds: string[],
   commitInProcess: () => Promise<CommitResult>
 ): Promise<BrokeredCommit> {
@@ -153,7 +153,6 @@ export async function commitStepTree(
     kind: 'commit',
     stepId: step.id,
     attempt: step.attempt,
-    skipInstall,
   });
   if (answer.kind !== 'commit') {
     throw new Error(`Unexpected '${answer.kind}' answer to a commit request.`);
@@ -168,7 +167,6 @@ export async function commitStepTree(
 export async function installStepTree(
   dir: string,
   step: MigrateStep,
-  skipInstall: boolean,
   seam: Exclude<BrokerRequestKind, 'commit'>,
   installInProcess: () => Promise<void>
 ): Promise<void> {
@@ -180,7 +178,6 @@ export async function installStepTree(
     kind: seam,
     stepId: step.id,
     attempt: step.attempt,
-    skipInstall,
   });
   if (answer.kind !== 'installed') {
     throw new Error(
@@ -262,7 +259,9 @@ function settle(result: BrokerResult): BrokerAnswer {
  * The parent side. Holds one exclusive lock for the session's lifetime so a
  * waiting step can tell a slow parent from a dead one, answers each request
  * once, and removes its own files on close. Requests carrying another
- * session's nonce belong to that session and are never touched.
+ * session's nonce belong to that session and are never touched. Whether to
+ * install or commit comes from the policy the session started with, never
+ * from run state, which the agent's sandbox can write.
  */
 export class MigrateCommitBroker {
   readonly nonce = randomBytes(4).toString('hex');
@@ -273,7 +272,8 @@ export class MigrateCommitBroker {
   constructor(
     private readonly root: string,
     private readonly dir: string,
-    private readonly reconcileCommand: string
+    private readonly reconcileCommand: string,
+    private readonly policy: MigrateRunPolicy
   ) {
     mkdirSync(brokerDir(dir), { recursive: true });
     this.lock = IS_WASM ? null : new FileLock(lockPath(dir, this.nonce));
@@ -304,7 +304,7 @@ export class MigrateCommitBroker {
     if (
       !Object.hasOwn(SEAM_STATUSES, request.kind) ||
       !isAtSeam(step, request) ||
-      (request.kind === 'commit' && !state.createCommits)
+      (request.kind === 'commit' && !this.policy.createCommits)
     ) {
       return { kind: 'stale' };
     }
@@ -314,7 +314,7 @@ export class MigrateCommitBroker {
         this.root,
         this.dir,
         step,
-        request.skipInstall,
+        this.policy.skipInstall,
         this.reconcileCommand,
         output
       );

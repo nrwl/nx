@@ -11,10 +11,12 @@ import {
   runCommand,
   tmpProjPath,
   updateFile,
+  updateJson,
   waitUntil,
 } from '@nx/e2e-utils';
 import { spawn } from 'child_process';
 import {
+  cpSync,
   existsSync,
   mkdirSync,
   readFileSync,
@@ -253,7 +255,7 @@ function setupMigrationPackage(): void {
     `
       exports.default = function (host) {
         const pkg = JSON.parse(host.read('package.json', 'utf8'));
-        pkg.devDependencies = { ...pkg.devDependencies, 'migrate-orch-dep': '1.0.0' };
+        pkg.devDependencies = { ...pkg.devDependencies, 'migrate-orch-dep': 'file:./migrate-orch-dep' };
         host.write('package.json', JSON.stringify(pkg, null, 2));
       };
       `
@@ -1318,8 +1320,6 @@ describe('migrate orchestrator (dark launch)', () => {
     expect(runCommand('git status --porcelain').trim()).toBe('');
   }, 600000);
 
-  // --- master session (dark) -----------------------------------------------
-
   // A `claude` on PATH that records how it was started, then drives the run
   // the way a session would: through the reconcile command in its bootstrap.
   // Started by the per-step runner instead, it writes the step's handoff.
@@ -1427,6 +1427,44 @@ setTimeout(() => {}, 120000);
     mkdirSync(binDir, { recursive: true });
     writeFileSync(join(binDir, 'claude'), FAKE_AGENT_SCRIPT, { mode: 0o755 });
     return { binDir, logFile: join(tmpProjPath(), 'fake-agent.log') };
+  }
+
+  // The selected package manager on PATH, logging each call and whether the
+  // gate env var (stripped from the agent's env) reached it. PATH stays as is
+  // for the child: stripping it would hide an install a dispensed command ran.
+  const FAKE_PM_SCRIPT = `#!/usr/bin/env node
+const { spawnSync } = require('child_process');
+const fs = require('fs');
+const path = require('path');
+const args = process.argv.slice(2);
+fs.appendFileSync(
+  process.env.FAKE_PM_LOG,
+  JSON.stringify({ args, orchestrator: process.env.NX_MIGRATE_ORCHESTRATOR ?? null }) + '\\n'
+);
+const real = process.env.PATH.split(path.delimiter)
+  .filter((dir) => dir !== process.env.FAKE_PM_DIR)
+  .map((dir) => path.join(dir, path.basename(__filename)))
+  .find((candidate) => fs.existsSync(candidate));
+const { status } = spawnSync(real, args, { stdio: 'inherit' });
+process.exit(status ?? 1);
+`;
+
+  // `<pm> install ...`, or bare `yarn` with only flags; not `<pm> exec nx`,
+  // `yarn nx`, or the version probes.
+  function isInstallInvocation(args: string[]): boolean {
+    return (
+      args[0] === 'install' ||
+      (!args.includes('--version') && args.every((a) => a.startsWith('--')))
+    );
+  }
+
+  function installFakePackageManager(): { pmDir: string; pmLog: string } {
+    const pmDir = join(tmpProjPath(), 'fake-pm');
+    mkdirSync(pmDir, { recursive: true });
+    writeFileSync(join(pmDir, getSelectedPackageManager()), FAKE_PM_SCRIPT, {
+      mode: 0o755,
+    });
+    return { pmDir, pmLog: join(tmpProjPath(), 'fake-pm.log') };
   }
 
   function readFakeAgentLog(logFile: string): Record<string, any>[] {
@@ -1576,6 +1614,7 @@ setTimeout(() => {}, 120000);
 
     const SKIPPED_INSTALL_WARNING =
       'Migrations updated your dependencies, but the install was skipped';
+    const INSTALL_NOTICE = 'to make sure necessary packages are installed';
 
     it('should land each step through the parent, printing what it deferred in the step command', async () => {
       writePlan([depsMig, promptMig]);
@@ -1621,6 +1660,69 @@ setTimeout(() => {}, 120000);
         ).trim()
       ).toBe('');
       expect(listFiles(`.nx/migrate-runs/${runId}/broker`)).toEqual([]);
+    }, 600000);
+
+    it('should run every install in the parent, outside the agent session, when installs are on', async () => {
+      writePlan([depsMig]);
+      const { binDir, logFile } = installFakeAgent();
+      const { pmDir, pmLog } = installFakePackageManager();
+      // A real install prunes what package.json does not declare, so the
+      // migration package is declared from a copy, and the dependency
+      // deps-mig adds exists locally. Neither needs a registry.
+      cpSync(
+        join(tmpProjPath(), 'node_modules', PKG),
+        join(tmpProjPath(), PKG),
+        {
+          recursive: true,
+        }
+      );
+      updateJson('package.json', (pkg) => {
+        pkg.devDependencies[PKG] = `file:./${PKG}`;
+        return pkg;
+      });
+      mkdirSync(join(tmpProjPath(), 'migrate-orch-dep'));
+      writeFileSync(
+        join(tmpProjPath(), 'migrate-orch-dep', 'package.json'),
+        JSON.stringify({ name: 'migrate-orch-dep', version: '1.0.0' })
+      );
+
+      const { exitCode, output } = await runMigrateInTerminal(
+        {
+          PATH: `${pmDir}:${binDir}:${process.env.PATH}`,
+          FAKE_AGENT_LOG: logFile,
+          FAKE_PM_DIR: pmDir,
+          FAKE_PM_LOG: pmLog,
+          NX_MIGRATE_ORCHESTRATOR: 'true',
+          NX_MIGRATE_SKIP_INSTALL: '',
+          // Both installs change the lockfile; CI=true would make yarn berry
+          // refuse that.
+          YARN_ENABLE_IMMUTABLE_INSTALLS: 'false',
+        },
+        '--create-commits --validate=false'
+      );
+
+      expect(exitCode).toBe(0);
+      expect(output).toContain('is complete');
+      // The pre-migration install, then the step's post-migration one, both
+      // from the parent and none from the agent's env.
+      expect(
+        readFakeAgentLog(pmLog)
+          .filter((entry) => isInstallInvocation(entry.args))
+          .map((entry) => entry.orchestrator)
+      ).toEqual(['true', 'true']);
+      const log = readFakeAgentLog(logFile);
+      const runId = log.find((entry) => entry.complete).complete;
+      expect(readRunStateFile(runId).status).toBe('completed');
+      // The terminal saw the pre-migration install only; the step's was
+      // collected for the step command.
+      expect(output.split(INSTALL_NOTICE)).toHaveLength(2);
+      expect(log.find((entry) => entry.stdout).stdout).toContain(
+        INSTALL_NOTICE
+      );
+      expect(commitCountFor('deps-mig')).toBe(1);
+      expect(
+        existsSync(join(tmpProjPath(), 'node_modules', 'migrate-orch-dep'))
+      ).toBe(true);
     }, 600000);
 
     it('should install through the parent before handing validation to the agent, then commit at the fold', async () => {

@@ -24,6 +24,7 @@ export type {
   MigrateRunIssue,
   MigrateRunAnalytics,
   MigrateRunNoProgress,
+  MigrateRunPolicy,
   MigrateRunState,
 } from './run-state';
 

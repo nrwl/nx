@@ -6,6 +6,7 @@ import { resetSgrAfterAgent } from '../../migrate-output';
 import {
   BROKER_ENV_VAR,
   MigrateCommitBroker,
+  MigrateRunPolicy,
   runDir,
   runHandoffsDir,
 } from '../../run';
@@ -29,6 +30,9 @@ export interface SpawnMasterSessionInput {
   runId: string;
   runbookPath: string;
   reconcileCommand: string;
+  // This invocation's own install and commit policy, answered from for every
+  // request the session makes.
+  policy: MigrateRunPolicy;
   sentinelPollIntervalMs?: number;
   gracefulExitMs?: number;
   forceKillWaitMs?: number;
@@ -81,6 +85,7 @@ export async function spawnMasterSession(
     runId,
     runbookPath,
     reconcileCommand,
+    policy,
     sentinelPollIntervalMs = 500,
     gracefulExitMs = AGENT_GRACEFUL_EXIT_MS,
     forceKillWaitMs = FORCE_KILL_WAIT_MS,
@@ -94,7 +99,8 @@ export async function spawnMasterSession(
     broker = new MigrateCommitBroker(
       runRoot,
       runDir(runRoot, runId),
-      reconcileCommand
+      reconcileCommand,
+      policy
     );
     sentinelPath = sessionCompleteSentinel(runRoot, runId, broker.nonce);
     const spec = buildMasterInvocation(agent.id, {
