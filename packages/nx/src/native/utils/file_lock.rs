@@ -123,7 +123,6 @@ impl FileLock {
     }
 }
 
-// TODO: Fix the tests
 #[cfg(test)]
 mod test {
     use super::*;
@@ -131,32 +130,63 @@ mod test {
     use assert_fs::TempDir;
     use assert_fs::prelude::*;
 
-    #[test]
-    fn test_new_lock() {
-        let tmp_dir = TempDir::new().unwrap();
-        let lock_file = tmp_dir.child("test_lock_file");
-        let lock_file_path = lock_file.path().to_path_buf();
-        let lock_file_path_str = lock_file_path.into_os_string().into_string().unwrap();
-        let mut file_lock = FileLock::new(lock_file_path_str).unwrap();
-        assert_eq!(file_lock.locked, false);
-        let _ = file_lock.lock();
-        assert_eq!(file_lock.locked, true);
-        assert!(lock_file.exists());
-        let _ = file_lock.unlock();
-        assert_eq!(file_lock.locked, false);
+    fn lock_path(tmp_dir: &TempDir, name: &str) -> String {
+        let lock_file = tmp_dir.child(name);
+        lock_file
+            .path()
+            .to_path_buf()
+            .into_os_string()
+            .into_string()
+            .unwrap()
     }
 
     #[test]
-    fn test_drop() {
-        let tmp_dir = TempDir::new().unwrap();
-        let lock_file = tmp_dir.child("test_lock_file");
-        let lock_file_path = lock_file.path().to_path_buf();
-        let lock_file_path_str = lock_file_path.into_os_string().into_string().unwrap();
+    fn test_new_lock() {
+        let tmp = TempDir::new().unwrap();
+        let path = lock_path(&tmp, "test_new_lock");
+        let mut file_lock = FileLock::new(path.clone()).unwrap();
+        assert!(!file_lock.locked);
+
+        file_lock.lock().unwrap();
+        assert!(file_lock.locked);
+        assert!(tmp.child("test_new_lock").exists());
+
+        file_lock.unlock().unwrap();
+        assert!(!file_lock.locked);
+    }
+
+    #[test]
+    fn test_drop_releases_lock() {
+        let tmp = TempDir::new().unwrap();
+        let path = lock_path(&tmp, "test_drop");
         {
-            let mut file_lock = FileLock::new(lock_file_path_str.clone()).unwrap();
-            let _ = file_lock.lock();
+            let mut lock = FileLock::new(path.clone()).unwrap();
+            lock.lock().unwrap();
+            assert!(lock.locked);
         }
-        let file_lock = FileLock::new(lock_file_path_str.clone());
-        assert_eq!(file_lock.unwrap().locked, false);
+        let lock = FileLock::new(path).unwrap();
+        assert!(!lock.locked);
+    }
+
+    #[test]
+    fn test_check_detects_contention() {
+        let tmp = TempDir::new().unwrap();
+        let path = lock_path(&tmp, "test_check");
+
+        // No one holds the lock
+        let mut lock_a = FileLock::new(path.clone()).unwrap();
+        assert!(!lock_a.check().unwrap());
+
+        // A second handle acquires the lock
+        let mut lock_b = FileLock::new(path.clone()).unwrap();
+        lock_b.lock().unwrap();
+
+        // lock_a should detect the contention
+        assert!(lock_a.check().unwrap());
+
+        lock_b.unlock().unwrap();
+
+        // After release, no contention
+        assert!(!lock_a.check().unwrap());
     }
 }
