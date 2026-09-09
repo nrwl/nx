@@ -7,9 +7,12 @@ import {
 } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/internal';
 import type {
+  Node,
   ObjectLiteralExpression,
   PropertyAssignment,
   PropertyName,
+  ShorthandPropertyAssignment,
+  StringLiteralLike,
 } from 'typescript';
 import { resolveCypressConfigObject } from '../../utils/config';
 import { cypressProjectConfigs } from '../../utils/migrations';
@@ -32,6 +35,9 @@ const TRIGGER_OPTIONS = [
 ];
 // Cypress reads these options at the top level and inside `e2e`/`component`.
 const TESTING_TYPE_BLOCKS = ['e2e', 'component'];
+
+// The property forms with a static name; spreads and methods are left alone.
+type ConfigProperty = PropertyAssignment | ShorthandPropertyAssignment;
 
 let ts: typeof import('typescript');
 
@@ -58,7 +64,7 @@ export default async function updateCypress16ConfigOptions(tree: Tree) {
     const changes: StringChange[] = [];
     for (const block of getOptionBlocks(config)) {
       for (const property of block.properties) {
-        if (!ts.isPropertyAssignment(property)) {
+        if (!isConfigProperty(property)) {
           continue;
         }
         const name = getPropertyName(property.name);
@@ -74,11 +80,13 @@ export default async function updateCypress16ConfigOptions(tree: Tree) {
           }
         } else if (name in RENAMED_OPTIONS) {
           const newName = RENAMED_OPTIONS[name];
-          changes.push(
-            ...(hasProperty(block, newName)
-              ? removeProperty(contents, property)
-              : replaceNode(property.name, quoteLike(property.name, newName)))
-          );
+          if (hasProperty(block, newName)) {
+            changes.push(...removeProperty(contents, property));
+          } else if (ts.isPropertyAssignment(property)) {
+            changes.push(...replaceNode(property.name, newName));
+          } else {
+            changes.push(...replaceNode(property, `${newName}: ${name}`));
+          }
         } else if (name === FAST_VISIBILITY_OPTION) {
           const strategy = getVisibilityStrategy(property);
           if (hasProperty(block, VISIBILITY_STRATEGY_OPTION)) {
@@ -87,15 +95,12 @@ export default async function updateCypress16ConfigOptions(tree: Tree) {
             changes.push(
               ...replaceNode(
                 property,
-                `${quoteLike(
-                  property.name,
-                  VISIBILITY_STRATEGY_OPTION
-                )}: '${strategy}'`
+                `${VISIBILITY_STRATEGY_OPTION}: '${strategy}'`
               )
             );
           } else {
             unhandled.push(
-              `${cypressConfigPath}: \`${FAST_VISIBILITY_OPTION}\` is set to a non-literal value (${property.initializer.getText()}); replace it with \`${VISIBILITY_STRATEGY_OPTION}: 'modern'\` (was true) or \`${VISIBILITY_STRATEGY_OPTION}: 'legacy'\` (was false)`
+              `${cypressConfigPath}: \`${FAST_VISIBILITY_OPTION}\` is set to a non-literal value (${getValueText(property)}); replace it with \`${VISIBILITY_STRATEGY_OPTION}: 'modern'\` (was true) or \`${VISIBILITY_STRATEGY_OPTION}: 'legacy'\` (was false)`
             );
           }
         }
@@ -122,17 +127,19 @@ export default async function updateCypress16ConfigOptions(tree: Tree) {
   }
 }
 
-// Removed options whose value carried intent the replacement needs.
-function getRemovalFollowUp(property: PropertyAssignment): string | null {
+// Removed options whose value carried intent the replacement needs. A
+// shorthand value is unknown, so it gets the follow-up too.
+function getRemovalFollowUp(property: ConfigProperty): string | null {
   const name = getPropertyName(property.name);
   if (name === 'execTimeout') {
-    return `removed \`execTimeout: ${property.initializer.getText()}\`; \`cy.exec()\` is gone, set \`taskTimeout\` if the replacement \`cy.task()\` needs more than the 60000ms default`;
+    return `removed \`${property.getText()}\`; \`cy.exec()\` is gone, set \`taskTimeout\` if the replacement \`cy.task()\` needs more than the 60000ms default`;
   }
   if (
     name === 'experimentalSourceRewriting' &&
-    property.initializer.kind === ts.SyntaxKind.TrueKeyword
+    (ts.isShorthandPropertyAssignment(property) ||
+      property.initializer.kind === ts.SyntaxKind.TrueKeyword)
   ) {
-    return `removed \`experimentalSourceRewriting: true\`; set \`removeSRIAttributes: true\` if it worked around Subresource Integrity errors`;
+    return `removed \`${property.getText()}\`; set \`removeSRIAttributes: true\` if it worked around Subresource Integrity errors`;
   }
   return null;
 }
@@ -156,27 +163,43 @@ function getOptionBlocks(
 function hasProperty(block: ObjectLiteralExpression, name: string): boolean {
   return block.properties.some(
     (property) =>
-      ts.isPropertyAssignment(property) &&
-      getPropertyName(property.name) === name
+      isConfigProperty(property) && getPropertyName(property.name) === name
   );
 }
 
-function getPropertyName(name: PropertyName): string | null {
-  return ts.isIdentifier(name) ||
-    ts.isStringLiteral(name) ||
-    ts.isNoSubstitutionTemplateLiteral(name)
-    ? name.text
-    : null;
+function isConfigProperty(node: Node): node is ConfigProperty {
+  return (
+    ts.isPropertyAssignment(node) || ts.isShorthandPropertyAssignment(node)
+  );
 }
 
-function quoteLike(name: PropertyName, text: string): string {
-  const original = name.getText();
-  return ts.isIdentifier(name) ? text : `${original[0]}${text}${original[0]}`;
+// A computed identifier (`[key]: value`) resolves at runtime, so it is skipped.
+function getPropertyName(name: PropertyName): string | null {
+  if (ts.isIdentifier(name) || isStringLiteralName(name)) {
+    return name.text;
+  }
+  if (ts.isComputedPropertyName(name) && isStringLiteralName(name.expression)) {
+    return name.expression.text;
+  }
+  return null;
+}
+
+function isStringLiteralName(node: Node): node is StringLiteralLike {
+  return ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node);
+}
+
+function getValueText(property: ConfigProperty): string {
+  return ts.isPropertyAssignment(property)
+    ? property.initializer.getText()
+    : property.name.text;
 }
 
 function getVisibilityStrategy(
-  property: PropertyAssignment
+  property: ConfigProperty
 ): 'modern' | 'legacy' | null {
+  if (ts.isShorthandPropertyAssignment(property)) {
+    return null;
+  }
   switch (property.initializer.kind) {
     case ts.SyntaxKind.TrueKeyword:
       return 'modern';
@@ -191,7 +214,7 @@ function getVisibilityStrategy(
 // property is alone on it.
 function removeProperty(
   contents: string,
-  property: PropertyAssignment
+  property: ConfigProperty
 ): StringChange[] {
   let start = property.getStart();
   let end = property.getEnd();
@@ -212,10 +235,7 @@ function removeProperty(
   return [{ type: ChangeType.Delete, start, length: end - start }];
 }
 
-function replaceNode(
-  node: import('typescript').Node,
-  text: string
-): StringChange[] {
+function replaceNode(node: Node, text: string): StringChange[] {
   const start = node.getStart();
   return [
     { type: ChangeType.Delete, start, length: node.getEnd() - start },

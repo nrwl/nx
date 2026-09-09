@@ -83,7 +83,7 @@ export default defineConfig({
     `);
   });
 
-  it('should keep the key quoting style', async () => {
+  it('should migrate quoted keys', async () => {
     const configPath = addCypressProject(
       tree,
       'app',
@@ -109,6 +109,147 @@ module.exports = defineConfig({
         e2e: {
           manageBrowserMemory: true,
           visibilityStrategy: 'modern',
+        },
+      });
+      "
+    `);
+  });
+
+  it('should migrate shorthand properties and report the unknown values', async () => {
+    const configPath = addCypressProject(
+      tree,
+      'app',
+      `import { defineConfig } from 'cypress';
+
+const experimentalMemoryManagement = false;
+const experimentalFastVisibility = true;
+const experimentalSourceRewriting = false;
+const execTimeout = 1000;
+
+export default defineConfig({
+  e2e: {
+    experimentalMemoryManagement,
+    experimentalFastVisibility,
+    experimentalSourceRewriting,
+    execTimeout,
+  },
+});
+`
+    );
+
+    const result = await migration(tree);
+
+    expect(tree.read(configPath, 'utf-8')).toMatchInlineSnapshot(`
+      "import { defineConfig } from 'cypress';
+
+      const experimentalMemoryManagement = false;
+      const experimentalFastVisibility = true;
+      const experimentalSourceRewriting = false;
+      const execTimeout = 1000;
+
+      export default defineConfig({
+        e2e: {
+          manageBrowserMemory: experimentalMemoryManagement,
+          experimentalFastVisibility,
+        },
+      });
+      "
+    `);
+    expect(result.nextSteps).toEqual([
+      expect.stringContaining(
+        'apps/app/cypress.config.ts: `experimentalFastVisibility` is set to a non-literal value (experimentalFastVisibility)'
+      ),
+      expect.stringContaining(
+        'apps/app/cypress.config.ts: removed `experimentalSourceRewriting`; set `removeSRIAttributes: true`'
+      ),
+      expect.stringContaining(
+        'apps/app/cypress.config.ts: removed `execTimeout`; `cy.exec()` is gone, set `taskTimeout`'
+      ),
+    ]);
+  });
+
+  it('should migrate computed keys with a static name', async () => {
+    const configPath = addCypressProject(
+      tree,
+      'app',
+      `import { defineConfig } from 'cypress';
+
+export default defineConfig({
+  e2e: {
+    ['experimentalMemoryManagement']: true,
+    [\`experimentalFastVisibility\`]: false,
+    ["execTimeout"]: 1000,
+  },
+});
+`
+    );
+
+    const result = await migration(tree);
+
+    expect(tree.read(configPath, 'utf-8')).toMatchInlineSnapshot(`
+      "import { defineConfig } from 'cypress';
+
+      export default defineConfig({
+        e2e: {
+          manageBrowserMemory: true,
+          visibilityStrategy: 'legacy',
+        },
+      });
+      "
+    `);
+    expect(result.nextSteps).toEqual([
+      expect.stringContaining('removed `["execTimeout"]: 1000`'),
+    ]);
+  });
+
+  it('should not touch computed keys resolved at runtime', async () => {
+    const config = `import { defineConfig } from 'cypress';
+
+const execTimeout = 'taskTimeout';
+const experimentalMemoryManagement = 'manageBrowserMemory';
+
+export default defineConfig({
+  e2e: {
+    [execTimeout]: 120000,
+    [experimentalMemoryManagement]: true,
+  },
+});
+`;
+    const configPath = addCypressProject(tree, 'app', config);
+
+    const result = await migration(tree);
+
+    expect(tree.read(configPath, 'utf-8')).toBe(config);
+    expect(result).toBeUndefined();
+  });
+
+  it('should drop the old option when a shorthand new one is already set', async () => {
+    const configPath = addCypressProject(
+      tree,
+      'app',
+      `import { defineConfig } from 'cypress';
+
+const manageBrowserMemory = false;
+
+export default defineConfig({
+  e2e: {
+    experimentalMemoryManagement: true,
+    manageBrowserMemory,
+  },
+});
+`
+    );
+
+    await migration(tree);
+
+    expect(tree.read(configPath, 'utf-8')).toMatchInlineSnapshot(`
+      "import { defineConfig } from 'cypress';
+
+      const manageBrowserMemory = false;
+
+      export default defineConfig({
+        e2e: {
+          manageBrowserMemory,
         },
       });
       "
