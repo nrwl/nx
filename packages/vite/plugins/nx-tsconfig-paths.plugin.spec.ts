@@ -87,6 +87,42 @@ describe('nxViteTsPaths', () => {
     await expect(resolveWith('@nope/missing')).resolves.toBeNull();
   });
 
+  // An import named after an `Object` prototype member reaches every lookup
+  // keyed on the import path, and an inherited value is not a mapped path.
+  it.each(['constructor', 'toString', '__proto__'])(
+    'should defer to other resolvers for the unmapped import %s',
+    async (importPath) => {
+      await tempFs.createFiles({
+        'tsconfig.base.json': JSON.stringify({
+          compilerOptions: { baseUrl: '.', paths: {} },
+        }),
+        'app/src/main.ts': '',
+      });
+
+      await expect(resolveWith(importPath)).resolves.toBeNull();
+    }
+  );
+
+  it.each(['constructor', 'toString', '__proto__'])(
+    'should resolve the alias %s when the tsconfig declares it',
+    async (importPath) => {
+      await tempFs.createFiles({
+        'tsconfig.base.json': JSON.stringify({
+          compilerOptions: {
+            baseUrl: '.',
+            paths: { [importPath]: ['libs/declared'] },
+          },
+        }),
+        'libs/declared/index.ts': '',
+        'app/src/main.ts': '',
+      });
+
+      await expect(resolveWith(importPath)).resolves.toEqual(
+        join(tempFs.tempDir, 'libs/declared/index.ts')
+      );
+    }
+  );
+
   it('should resolve a workspace alias through the root-level tsconfig', async () => {
     await tempFs.createFiles({
       'tsconfig.base.json': JSON.stringify({
@@ -140,8 +176,48 @@ describe('nxViteTsPaths', () => {
   });
 
   describe('when more than one alias resolves', () => {
-    const exact = { '@repo/exact': ['packages/exact'] };
-    const wildcard = { '@repo/*': ['generic/*'] };
+    // Whether a mapped path names an extension decides which pass answers:
+    // `tsconfig-paths` probes for `.js`, `.json` and `.node` only, so a
+    // wildcard naming one resolves there while an exact alias waits for a pass
+    // that knows the configured extensions.
+    const mappedPathShapes: [string, string[], string[]][] = [
+      ['neither names an extension', ['packages/exact'], ['generic/*']],
+      ['both name an extension', ['packages/exact/index.ts'], ['generic/*.ts']],
+      [
+        'only the wildcard names an extension',
+        ['packages/exact'],
+        ['generic/*.ts'],
+      ],
+      [
+        'only the exact alias names an extension',
+        ['packages/exact/index.ts'],
+        ['generic/*'],
+      ],
+    ];
+
+    const declarationOrders = mappedPathShapes.flatMap(
+      ([shape, exactPaths, wildcardPaths]) => {
+        const exact = { '@repo/exact': exactPaths };
+        const wildcard = { '@repo/*': wildcardPaths };
+
+        return [
+          [
+            `${shape} and the exact alias is declared first`,
+            {
+              ...exact,
+              ...wildcard,
+            },
+          ],
+          [
+            `${shape} and the wildcard alias is declared first`,
+            {
+              ...wildcard,
+              ...exact,
+            },
+          ],
+        ] as [string, Record<string, string[]>][];
+      }
+    );
 
     const resolveWithTypeScript = (
       paths: Record<string, string[]>,
@@ -155,10 +231,7 @@ describe('nxViteTsPaths', () => {
         ts.sys
       ).resolvedModule?.resolvedFileName;
 
-    it.each([
-      ['the exact alias is declared first', { ...exact, ...wildcard }],
-      ['the wildcard alias is declared first', { ...wildcard, ...exact }],
-    ])('should pick the alias TypeScript picks when %s', async (_, paths) => {
+    const expectTypeScriptsPick = async (paths: Record<string, string[]>) => {
       await tempFs.createFiles({
         'tsconfig.base.json': JSON.stringify({
           compilerOptions: { baseUrl: '.', paths },
@@ -191,6 +264,34 @@ describe('nxViteTsPaths', () => {
         )
       ).toEqual(expected);
       await expect(resolveWith('@repo/exact')).resolves.toEqual(expected);
+    };
+
+    it.each(declarationOrders)(
+      'should pick the alias TypeScript picks when %s',
+      (_, paths) => expectTypeScriptsPick(paths)
+    );
+
+    it('should keep the package entry of an exact alias over an index file', async () => {
+      const paths = {
+        '@repo/exact': ['packages/exact'],
+        '@repo/*': ['generic/*.ts'],
+      };
+      await tempFs.createFiles({
+        'tsconfig.base.json': JSON.stringify({
+          compilerOptions: { baseUrl: '.', paths },
+        }),
+        'packages/exact/package.json': JSON.stringify({
+          exports: { '.': { import: './dist/index.js' } },
+        }),
+        'packages/exact/dist/index.js': '',
+        'packages/exact/index.ts': '',
+        'generic/exact.ts': '',
+        'app/src/main.ts': '',
+      });
+
+      await expect(resolveWith('@repo/exact')).resolves.toEqual(
+        join(tempFs.tempDir, 'packages/exact/dist/index.js')
+      );
     });
   });
 });
