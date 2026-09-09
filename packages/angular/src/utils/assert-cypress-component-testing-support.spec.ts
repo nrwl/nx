@@ -124,9 +124,31 @@ describe('assertCypressComponentTestingSupport', () => {
   );
 
   it.each(['latest', 'next'])(
-    'does not throw when Cypress is `%s`',
+    'does not throw when Cypress is `%s` and not installed',
     (distTag) => {
       setVersions({ '@angular/core': '~22.1.0', cypress: distTag });
+
+      expect(() => assertCypressComponentTestingSupport(tree)).not.toThrow();
+    }
+  );
+
+  it.each(['latest', 'next'])(
+    'throws when Cypress is `%s` and the installed version is below 15.20.1',
+    (distTag) => {
+      setVersions({ '@angular/core': '~22.1.0', cypress: distTag });
+      installCypress('15.17.0');
+
+      expect(() => assertCypressComponentTestingSupport(tree)).toThrow(
+        /requires Cypress 15\.20\.1 or higher.*Found Cypress 15\.17\.0/
+      );
+    }
+  );
+
+  it.each(['latest', 'next'])(
+    'does not throw when Cypress is `%s` and the installed version meets 15.20.1',
+    (distTag) => {
+      setVersions({ '@angular/core': '~22.1.0', cypress: distTag });
+      installCypress('16.0.0');
 
       expect(() => assertCypressComponentTestingSupport(tree)).not.toThrow();
     }
