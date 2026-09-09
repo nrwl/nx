@@ -339,7 +339,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
       try {
         if (!this.#initializationError) {
           const { errors, warnings } = await (this.#diagnosticsPromise ??
-            this.#angularCompilation.diagnoseFiles(this.#diagnosticModes()));
+            this.#createDiagnosticsPromise());
           for (const error of errors ?? []) {
             compilation.errors.push({
               name: PLUGIN_NAME,
@@ -707,12 +707,54 @@ export class AngularRspackPlugin implements RspackPluginInstance {
     }
   }
 
-  // Skipping type checking skips only the semantic pass; option and
-  // syntactic diagnostics still surface configuration and parse errors.
-  #diagnosticModes(): DiagnosticModes {
-    return this.#_options.skipTypeChecking
-      ? ((DiagnosticModes.All & ~DiagnosticModes.Semantic) as DiagnosticModes)
-      : DiagnosticModes.All;
+  // Starts diagnostics collection for this build.
+  #createDiagnosticsPromise(): ReturnType<AngularCompilation['diagnoseFiles']> {
+    if (!this.#_options.skipTypeChecking) {
+      return this.#angularCompilation.diagnoseFiles(DiagnosticModes.All);
+    }
+
+    // Surface everything except Semantic (type-checking) diagnostics.
+    const surfacedDiagnostics = this.#angularCompilation.diagnoseFiles(
+      (DiagnosticModes.All & ~DiagnosticModes.Semantic) as DiagnosticModes
+    );
+
+    // Still run the Semantic pass silently, purely for its side effect: it's
+    // the only thing that advances the compiler's incremental state to
+    // `Analyzed`, which is required for incremental rebuilds to skip
+    // re-emitting unchanged files. Its result is always discarded and must
+    // never surface or fail the build.
+    //
+    // - `collectDiagnostics()` only calls `getDiagnosticsForFile()` when
+    //   Semantic mode is requested:
+    //   https://github.com/angular/angular-cli/blob/60078fc914b35158598bd141f480e38d3455114e/packages/angular/build/src/tools/angular/compilation/aot-compilation.ts#L282-L306
+    // - `getDiagnosticsForFile()`/`getDiagnostics()` are the only callers of
+    //   `ensureAnalyzed()`, which triggers `recordSuccessfulAnalysis()`:
+    //   https://github.com/angular/angular/blob/7c15737f50c0f22b2f04e138f18ec862ac446d09/packages/compiler-cli/src/ngtsc/core/src/compiler.ts#L616-L619
+    //   https://github.com/angular/angular/blob/7c15737f50c0f22b2f04e138f18ec862ac446d09/packages/compiler-cli/src/ngtsc/core/src/compiler.ts#L1243-L1245
+    //   https://github.com/angular/angular/blob/7c15737f50c0f22b2f04e138f18ec862ac446d09/packages/compiler-cli/src/ngtsc/core/src/compiler.ts#L1016-L1045
+    // - `recordSuccessfulAnalysis()` is the only place the incremental state
+    //   moves from `Fresh` to `Analyzed`:
+    //   https://github.com/angular/angular/blob/7c15737f50c0f22b2f04e138f18ec862ac446d09/packages/compiler-cli/src/ngtsc/incremental/src/incremental.ts#L247
+    // - Without that, `IncrementalCompilation.incremental()` always
+    //   short-circuits back to `.fresh()`, and `safeToSkipEmit()` always
+    //   returns `false` (`this.step === null`), forcing a full re-emit:
+    //   https://github.com/angular/angular/blob/7c15737f50c0f22b2f04e138f18ec862ac446d09/packages/compiler-cli/src/ngtsc/incremental/src/incremental.ts#L125-L128
+    //   https://github.com/angular/angular/blob/7c15737f50c0f22b2f04e138f18ec862ac446d09/packages/compiler-cli/src/ngtsc/incremental/src/incremental.ts#L376-L379
+    //
+    // Safe to run alongside the surfaced call above: it never requests
+    // Semantic mode, so it never touches the `diagnosticCache`/
+    // `getDiagnosticsForFile` path this call exercises, and both only ever
+    // read `affectedFiles`, never mutate it.
+    const silentSemanticWarmup = this.#angularCompilation
+      .diagnoseFiles(DiagnosticModes.Semantic)
+      .then(
+        () => undefined,
+        () => undefined
+      );
+
+    return Promise.all([surfacedDiagnostics, silentSemanticWarmup]).then(
+      ([result]) => result
+    );
   }
 
   private async buildAndAnalyze() {
@@ -737,9 +779,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
     // worker-based compilation it runs off the main thread and the emit hook
     // only waits for what is left. Diagnostics still run after an emit
     // failure since they usually carry the root cause.
-    const diagnosticsPromise = this.#angularCompilation.diagnoseFiles(
-      this.#diagnosticModes()
-    );
+    const diagnosticsPromise = this.#createDiagnosticsPromise();
     // Failed builds skip the emit hook that reports the result; don't
     // leave the rejection unhandled.
     diagnosticsPromise.catch(() => {});
