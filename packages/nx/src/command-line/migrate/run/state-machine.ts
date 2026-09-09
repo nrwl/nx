@@ -198,6 +198,10 @@ function applyStepAction(
         // exec side effect, or a crash mid-flush), so a reset-backed retry is
         // offered under the same guard as for a death.
         return commit(state, index, cleanRearm(state, step));
+      case 'adopt':
+        // The migration was applied by hand after its attempt failed; the
+        // tree is the result, as for a death.
+        return commit(state, index, adopt(step));
       case 'skip':
         return commit(state, index, { ...step, status: 'skipped' });
       case 'unresolved':
@@ -257,6 +261,9 @@ function adopt(step: MigrateStep): MigrateStep {
 }
 
 function adoptedSummary(step: MigrateStep): string {
+  if (step.status === 'failed') {
+    return "Adopted after the attempt failed: the working tree, as applied by hand, was taken as this migration's result.";
+  }
   return step.generatorCompleted === true
     ? "Adopted after the worker died: its generator had run, and the working tree it left was taken as this migration's result."
     : "Adopted after the worker died before recording that its generator had run; the working tree it left was taken as this migration's result.";
@@ -314,19 +321,20 @@ function rearm(
   };
 }
 
-// A commit made for a step that did not succeed: 'unresolved' names the
-// partial result of a migration the run gave up on, so the commit is not read
-// as the migration applied.
-export type CommitMarker = 'unresolved';
+// A commit made for a step after its own attempt failed, as the outcome of
+// a step action rather than of the worker: an adopted failure is the
+// migration applied by hand; an unresolved one is the partial result of a
+// migration the run gave up on, and is named so a reader of the history does
+// not take it for the migration applied.
+export type CommitAction = 'adopt' | 'unresolved';
 
-// The migration name a step's commit is made under, with the marker a reader
-// of the history needs to tell a partial result from an applied migration.
+// The migration name a step's commit is made under.
 export function commitNameForStep(
   step: MigrateStep,
-  commitAs?: CommitMarker
+  commitAs?: CommitAction
 ): string {
   const { name } = splitMigrationId(step.migrationId);
-  return commitAs === undefined ? name : `${name} (${commitAs})`;
+  return commitAs === 'unresolved' ? `${name} (unresolved)` : name;
 }
 
 // A guarded transition whose observation was made against an earlier attempt

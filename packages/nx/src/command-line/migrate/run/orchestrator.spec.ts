@@ -4698,17 +4698,16 @@ describe('orchestrator', () => {
       expect(readFileSync(join(dir, 'run.json'), 'utf-8')).toBe(before);
       const block = lastBlock();
       expect(block.action).toBe('error');
-      // 'adopt' is died-only, so the failed-step rejection must not point at
-      // it.
       expect(block.payload.instructions).toContain(
-        "Use 'retry', 'skip' or 'unresolved'"
+        "Use 'retry', 'adopt', 'skip' or 'unresolved'"
       );
-      expect(block.payload.instructions).not.toContain('adopt');
     });
 
     it('rejects an illegal action, emitting an error dispense and leaving state untouched', async () => {
+      vi.spyOn(process, 'kill').mockReturnValue(true as never);
       const dir = setupRun('run-1', {
-        steps: [migStep('step-1', '@nx/js:gen', 'failed')],
+        // A death before the generator marker cannot be retried in place.
+        steps: [migStep('step-1', '@nx/js:gen', 'died')],
         plan: [genMig('@nx/js', 'gen')],
       });
       const before = readFileSync(join(dir, 'run.json'), 'utf-8');
@@ -4716,7 +4715,7 @@ describe('orchestrator', () => {
       await runOrchestratorReconcile({
         root,
         runId: 'run-1',
-        stepAction: 'adopt', // adopt is died-only
+        stepAction: 'retry',
       });
 
       expect(readFileSync(join(dir, 'run.json'), 'utf-8')).toBe(before);
@@ -4740,6 +4739,72 @@ describe('orchestrator', () => {
       const block = lastBlock();
       expect(block.action).toBe('error');
       expect(block.payload.instructions).toContain('No step is failed or died');
+    });
+
+    it.each([
+      ['with commits, under its plain name', true],
+      ['without commits, installing what it left', false],
+    ])(
+      'adopts a failed step applied by hand %s',
+      async (_case, createCommits) => {
+        mockGetWorkingTreeStatus.mockReturnValue('dirty');
+        mockCommit.mockResolvedValue({
+          status: 'committed',
+          sha: 'face0031face0031face0031face0031face0031',
+        });
+        const dir = setupRun('run-1', {
+          steps: [
+            migStep('step-1', '@nx/js:gen', 'failed', {
+              outcome: { summary: 'boom' },
+              depsHashAtDispense: 'baseline-from-an-earlier-dispense',
+            }),
+          ],
+          createCommits,
+          plan: [genMig('@nx/js', 'gen')],
+        });
+
+        await runOrchestratorReconcile({
+          root,
+          runId: 'run-1',
+          stepAction: 'adopt',
+        });
+
+        const state = readRunState(dir);
+        expect(state.steps[0]).toMatchObject({
+          status: 'succeeded',
+          adopted: true,
+          outcome: { summary: expect.stringContaining('applied by hand') },
+        });
+        if (createCommits) {
+          expect(mockCommit).toHaveBeenCalledTimes(1);
+          expect(mockCommit.mock.calls[0][1]).toEqual({ name: 'gen' });
+          expect(state.commits).toEqual([
+            {
+              kind: 'landed',
+              sha: 'face0031face0031face0031face0031face0031',
+              stepIds: ['step-1'],
+            },
+          ]);
+        } else {
+          expect(mockCommit).not.toHaveBeenCalled();
+          expect(mockRunInstall).toHaveBeenCalledTimes(1);
+          expect(state.commits).toEqual([]);
+        }
+      }
+    );
+
+    it('offers adopt for a failed step', async () => {
+      setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'failed')],
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const block = lastBlock();
+      expect(block.action).toBe('retry-failed');
+      expect(block.payload.instructions).toContain('--step-action=adopt');
+      expect(block.payload.instructions).toContain('applied by hand');
     });
 
     it('adopts a died step and commits its working tree at reconcile', async () => {
@@ -5205,7 +5270,7 @@ describe('orchestrator', () => {
   });
 
   describe('reconcile: retry-failed dispense', () => {
-    it('surfaces the failed step outcome summary and offers only retry or skip without a restore point', async () => {
+    it('surfaces the failed step outcome summary and withholds retry-clean without a restore point', async () => {
       setupRun('run-1', {
         steps: [
           migStep('step-1', '@nx/js:gen', 'failed', {

@@ -421,6 +421,8 @@ describe('applyStepEvent', () => {
         if (status === 'failed' && action === 'retry') expected = 'pending';
         else if (status === 'failed' && action === 'retry-clean')
           expected = 'pending';
+        else if (status === 'failed' && action === 'adopt')
+          expected = 'succeeded';
         else if (status === 'failed' && action === 'skip') expected = 'skipped';
         else if (status === 'failed' && action === 'unresolved')
           expected = 'unresolved';
@@ -828,8 +830,31 @@ describe('applyStepEvent', () => {
       }
     );
 
-    it('adopt marks the step adopted', () => {
-      const state = stateWithStep({ status: 'died' });
+    it.each(['failed', 'died'] as const)(
+      'adopt from %s marks the step adopted',
+      (status) => {
+        const state = stateWithStep({ status });
+
+        const result = applyStepEvent(state, {
+          type: 'stepAction',
+          stepId: 'step-1',
+          attempt: 1,
+          action: 'adopt',
+        });
+
+        expect(result.kind).toBe('ok');
+        if (result.kind === 'ok') {
+          expect(result.state.steps[0].status).toBe('succeeded');
+          expect(result.state.steps[0].adopted).toBe(true);
+        }
+      }
+    );
+
+    it('adopt from failed records that the tree was applied by hand, keeping the failure outcome', () => {
+      const state = stateWithStep({
+        status: 'failed',
+        outcome: { summary: 'generator threw', fileChanges: ['a.ts'] },
+      });
 
       const result = applyStepEvent(state, {
         type: 'stepAction',
@@ -840,8 +865,10 @@ describe('applyStepEvent', () => {
 
       expect(result.kind).toBe('ok');
       if (result.kind === 'ok') {
-        expect(result.state.steps[0].status).toBe('succeeded');
-        expect(result.state.steps[0].adopted).toBe(true);
+        expect(result.state.steps[0].outcome).toEqual({
+          fileChanges: ['a.ts'],
+          summary: expect.stringContaining('applied by hand'),
+        });
       }
     });
 

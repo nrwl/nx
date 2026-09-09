@@ -36,7 +36,7 @@ import {
   markInstallFailed,
   stepsToPendingMigrations,
   uncoveredFailedStepIds,
-  type CommitMarker,
+  type CommitAction,
 } from './state-machine';
 import { installDepsChangedSinceDispense } from './util';
 
@@ -47,9 +47,11 @@ const CHILD_POLL_INTERVAL_MS = 250;
 // The seam a request comes from. A seam runs once per attempt, so the seam
 // names the request: a repeat of the same operation (a refold after a crash,
 // the adopt of a worker that died mid-commit) reads the first answer instead
-// of landing twice. Commits share one seam: a worker's, the fold's and the
-// adopt's are the same operation on the same tree. A marked commit is not:
-// giving up after a worker's commit failed must land its own.
+// of landing twice. Commits share one seam: a worker's, the fold's and a
+// died step's adopt are the same operation on the same tree, and the worker
+// may have landed it before dying. A commit made after a failure is not: the
+// worker's own request ended in the failed install the step recorded, so
+// adopting or giving up then owes a new install and commit.
 export type BrokerRequestKind =
   | 'commit'
   // A worker's install: after its generator, or a retry's from the baseline.
@@ -60,13 +62,13 @@ export type BrokerRequestKind =
   | 'action-install';
 
 // Names the seam only. Whether to install or commit is the parent's own
-// policy, so a request carries nothing that would widen it; the marker only
-// changes what a commit the policy already allows is called.
+// policy, so a request carries nothing that would widen it; the action only
+// tells a post-failure commit apart from the worker's and names it.
 export interface BrokerRequest {
   kind: BrokerRequestKind;
   stepId: string;
   attempt: number;
-  commitAs?: CommitMarker;
+  commitAs?: CommitAction;
 }
 
 export type BrokerResult =
@@ -98,8 +100,8 @@ export class BrokerStaleRequestError extends Error {}
 export class BrokerUnavailableError extends Error {}
 
 // The statuses a step has at each seam: a worker mid-run, a fold of a
-// handed-back prompt, a skipped failure, an adopted death, or a failure or
-// death given up on with its partial tree committed.
+// handed-back prompt, a skipped failure, an adopted failure or death, or a
+// failure or death given up on with its partial tree committed.
 const SEAM_STATUSES: Record<
   BrokerRequestKind,
   ReadonlySet<MigrateStepStatus>
@@ -149,7 +151,7 @@ export async function commitStepTree(
   step: MigrateStep,
   absorbedStepIds: string[],
   commitInProcess: () => Promise<CommitResult>,
-  commitAs?: CommitMarker
+  commitAs?: CommitAction
 ): Promise<BrokeredCommit> {
   const nonce = process.env[BROKER_ENV_VAR];
   if (!nonce) {
@@ -314,7 +316,9 @@ export class MigrateCommitBroker {
       !Object.hasOwn(SEAM_STATUSES, request.kind) ||
       !isAtSeam(step, request) ||
       (request.kind === 'commit' && !this.policy.createCommits) ||
-      (request.commitAs !== undefined && request.commitAs !== 'unresolved')
+      (request.commitAs !== undefined &&
+        request.commitAs !== 'adopt' &&
+        request.commitAs !== 'unresolved')
     ) {
       return { kind: 'stale' };
     }
