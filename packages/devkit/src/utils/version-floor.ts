@@ -128,12 +128,14 @@ export function assertSupportedPackageVersion(
  * Resolution order:
  * - When the installed version satisfies the declared range, the installed
  *   version decides. This resolves open ranges (e.g. `>=15.0.0 <17.0.0`) to
- *   what is actually installed.
+ *   what is actually installed. A dist tag (`latest`, `next`) resolved to
+ *   the installed version, so that version decides as well.
  * - Otherwise the declared range's floor, as returned by
  *   `getDeclaredPackageVersion`. This is the fresh-workspace path (nothing
  *   installed yet) and the case where a generator is mid-flight re-pinning
  *   the package: the new range no longer satisfies the still-installed
- *   version, so intent wins.
+ *   version, so intent wins. A dist tag with nothing installed resolves to
+ *   `latestKnownVersion`.
  *
  * Returns `null` when the package is not declared and no
  * `latestKnownVersion` is provided; an install that is not declared in the
@@ -145,7 +147,7 @@ export function getResolvedPackageVersion(
   latestKnownVersion?: string
 ): string | null {
   const declared = getDependencyVersionFromPackageJson(tree, packageName);
-  if (declared && !isNonSemverDistTag(declared)) {
+  if (declared) {
     const installed = getSatisfyingInstalledPackageVersion(
       tree,
       packageName,
@@ -161,8 +163,9 @@ export function getResolvedPackageVersion(
 /**
  * Returns the installed version of a package when it satisfies the declared
  * range, `null` when nothing is installed or the install does not match the
- * declaration. Use it to gate on what actually runs while keeping the
- * declared-range fallback for the fresh-install path.
+ * declaration. A dist tag (`latest`, `next`) admits whatever is installed:
+ * the tag resolved to that version. Use it to gate on what actually runs
+ * while keeping the declared-range fallback for the fresh-install path.
  */
 export function getSatisfyingInstalledPackageVersion(
   tree: Tree,
@@ -174,6 +177,9 @@ export function getSatisfyingInstalledPackageVersion(
     getInstalledPackageVersionFromProcess(tree, packageName);
   if (!installed) {
     return null;
+  }
+  if (isNonSemverDistTag(declared)) {
+    return installed;
   }
   // An installed prerelease can match the declared range in either form:
   // raw (a same-tuple prerelease comparator) or as its release version.

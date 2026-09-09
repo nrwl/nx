@@ -83,6 +83,16 @@ describe('versions', () => {
     expect(versions(tree).cypressVersion).toBe(cypressVersion);
   });
 
+  it.each(['latest', 'next'])(
+    'should use the installed cypress version when cypress is declared as %s',
+    (distTag) => {
+      declareCypress(tree, distTag);
+      installCypress(tree, '15.20.1');
+
+      expect(versions(tree)).toMatchObject(compatibleVersions[15]);
+    }
+  );
+
   it('should keep the installed cypress version when it is the floor of a range spanning majors', () => {
     declareCypress(tree, '>=15.20.1 <17');
     installCypress(tree, '15.20.1');
