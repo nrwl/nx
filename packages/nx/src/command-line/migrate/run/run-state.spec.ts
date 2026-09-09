@@ -269,6 +269,18 @@ describe('run-state', () => {
         )
       );
       expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+
+      // The completion report lists adopted steps by this marker; a string
+      // would count as adopted under a truthiness check.
+      writeFileSync(
+        join(dir, 'run.json'),
+        JSON.stringify(
+          buildState({
+            steps: [{ ...validStep, adopted: 'true' }] as never,
+          })
+        )
+      );
+      expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
     });
 
     it('refuses attempt and lineage-boundary values outside the counters nx writes', () => {

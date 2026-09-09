@@ -87,14 +87,16 @@ const MIGRATE_STEP_STATUSES = [
   'failed',
   'skipped',
   'died',
+  'unresolved',
 ] as const;
 export type MigrateStepStatus = (typeof MIGRATE_STEP_STATUSES)[number];
 
 // 'failed' and 'died' are not terminal: both can be re-armed into a fresh
-// attempt.
+// attempt. 'unresolved' is the given-up form of either and cannot be.
 export const TERMINAL_STEP_STATUSES: ReadonlySet<MigrateStepStatus> = new Set([
   'succeeded',
   'skipped',
+  'unresolved',
 ]);
 
 const PROMPT_OUTCOME_STATUSES = ['completed', 'skipped', 'failed'] as const;
@@ -150,6 +152,9 @@ export interface MigrateStep {
   outcome?: MigrateStepOutcome;
   // Folded from the handoff file at reconcile time.
   promptOutcome?: MigrateStepPromptOutcome;
+  // A 'succeeded' recorded by the adopt action: the tree was taken as the
+  // migration's result instead of a worker producing it.
+  adopted?: boolean;
   // Recorded when the step enters 'awaiting-prompt-outcome'; dropped on re-arm
   // with the other per-attempt fields.
   awaitingKind?: MigrateStepAwaitingKind;
@@ -451,6 +456,7 @@ function isStepShape(value: unknown): boolean {
     isOptionalBoolean(value.validationOwed) &&
     isOptionalBoolean(value.generatorMadeChanges) &&
     isOptionalBoolean(value.installFailed) &&
+    isOptionalBoolean(value.adopted) &&
     // A cross-field invariant the rest of the loop relies on: a running step
     // without a pid is never reclassified as died and no step action targets
     // it, so it stalls the run forever.

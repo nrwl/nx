@@ -806,7 +806,8 @@ export async function runOrchestratorReconcile(
     // dependencies as its own baseline and nothing is left to detect them.
     // A skip leaves the tree as it stands too, so it owes the same install
     // and, with commits on, the same debt record as a prompt that did not
-    // complete. Retries owe nothing: the rearmed attempt reconciles itself.
+    // complete; so does giving up on the step. Retries owe nothing: the
+    // rearmed attempt reconciles itself.
     const { entry, installFailed }: StepSideEffects =
       stepAction === 'adopt'
         ? state.createCommits
@@ -821,7 +822,7 @@ export async function runOrchestratorReconcile(
                 'action-install'
               ),
             }
-        : stepAction === 'skip'
+        : stepAction === 'skip' || stepAction === 'unresolved'
           ? await retainedTreeSideEffects(
               root,
               dir,
@@ -1511,6 +1512,7 @@ function advanceAndDispense(root: string, dir: string, runId: string): void {
       break;
     case 'succeeded':
     case 'skipped':
+    case 'unresolved':
       // firstActionableStep already excludes these via TERMINAL_STEP_STATUSES;
       // landing here means an already-terminal step slipped through
       // unclassified rather than being left to stall the run silently.
