@@ -129,8 +129,9 @@ function* allTargetOptions<T>(
 
 /**
  * Whether the file binds `name` as a runtime value anywhere: a variable,
- * parameter, destructured element, function, class, enum, namespace, or a
- * value import (`import x`, `import { x }`, `import * as x`, `import x =`).
+ * parameter, destructured element, function or class (declaration or named
+ * expression), enum, namespace, or a value import (`import x`,
+ * `import { x }`, `import * as x`, `import x =`).
  * Type-only imports and ambient declarations (`declare ...`, including
  * everything under `declare global`) do not count, so the usual
  * `declare global { namespace Cypress { ... } }` augmentation never hides the
@@ -151,7 +152,9 @@ export function hasLocalValueBinding(
       ts.isParameter(node) ||
       ts.isBindingElement(node) ||
       ts.isFunctionDeclaration(node) ||
+      ts.isFunctionExpression(node) ||
       ts.isClassDeclaration(node) ||
+      ts.isClassExpression(node) ||
       ts.isEnumDeclaration(node) ||
       ts.isModuleDeclaration(node)
     ) {
