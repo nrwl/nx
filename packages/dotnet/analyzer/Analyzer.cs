@@ -174,7 +174,7 @@ public static class Analyzer
 
                     // Determine project type
                     var isTest = IsTestProject(properties, packageRefs);
-                    var isExe = IsExecutableProject(properties);
+                    var isExe = properties.IsExecutable;
 
                     // Build targets
                     var projectName = ProjectUtilities.GetProjectName(primaryNode.ProjectInstance);
@@ -194,11 +194,8 @@ public static class Analyzer
                     // extensions directory and MSBuild imports them when present. They
                     // embed the absolute packages folder and change on every restore, so
                     // they are neither a task input nor part of the evaluation key.
-                    var extensionsDirectory = Path.GetFullPath(Path.Combine(
-                        projectDirectory,
-                        properties.GetValueOrDefault("MSBuildProjectExtensionsPath")
-                            ?? properties.GetValueOrDefault("BaseIntermediateOutputPath")
-                            ?? "obj"));
+                    var extensionsDirectory = Path.GetFullPath(
+                        Path.Combine(projectDirectory, properties.ProjectExtensionsPath));
                     var importPaths = instances
                         .SelectMany(instance => instance.ImportPaths)
                         .Where(path => !ProjectUtilities.IsUnderDirectory(path, extensionsDirectory))
@@ -325,12 +322,12 @@ public static class Analyzer
 
     /// <summary>
     /// Snapshots the project's evaluated MSBuild properties. Every property is
-    /// captured rather than a curated list: the helpers that read them look up
-    /// by name, so a list is one more thing to keep in sync and a typo in it
+    /// captured rather than a curated list: <see cref="EvaluatedProperties"/> looks
+    /// them up by name, so a list is one more thing to keep in sync and a typo in it
     /// fails silently. Empty values are skipped so callers can treat a missing
     /// key and an unset property alike.
     /// </summary>
-    private static Dictionary<string, string> CollectProperties(ProjectInstance project)
+    private static EvaluatedProperties CollectProperties(ProjectInstance project)
     {
         // MSBuild property names are case-insensitive; matching that here keeps
         // a project that spells one <outputpath> readable to the helpers.
@@ -348,16 +345,10 @@ public static class Analyzer
     }
 
     private static bool IsTestProject(
-        Dictionary<string, string> properties,
+        EvaluatedProperties properties,
         List<PackageReference> packageRefs)
     {
-        return properties.GetValueOrDefault("IsTestProject") == "true" ||
+        return properties.IsTestProject ||
                packageRefs.Any(p => p.Include == "Microsoft.NET.Test.Sdk" || p.Include.StartsWith("Microsoft.Testing"));
-    }
-
-    private static bool IsExecutableProject(Dictionary<string, string> properties)
-    {
-        return properties.GetValueOrDefault("OutputType")?
-            .Equals("Exe", StringComparison.OrdinalIgnoreCase) == true;
     }
 }
