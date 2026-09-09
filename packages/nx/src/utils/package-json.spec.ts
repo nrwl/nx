@@ -700,6 +700,32 @@ describe('readModulePackageJson', () => {
       rmSync(dir, { recursive: true, force: true });
     }
   });
+
+  it('walks up from the entry point when the package does not export package.json', () => {
+    const dir = realpathSync(
+      mkdtempSync(join(tmpdir(), 'nx-read-module-package-json-'))
+    );
+    try {
+      const pkgDir = join(dir, 'node_modules', 'nx');
+      mkdirSync(pkgDir, { recursive: true });
+      writeFileSync(
+        join(pkgDir, 'package.json'),
+        JSON.stringify({
+          name: 'nx',
+          version: '0.0.0-fixture',
+          exports: { '.': './index.js' },
+        })
+      );
+      writeFileSync(join(pkgDir, 'index.js'), 'module.exports = {};');
+
+      const { path, packageJson } = readModulePackageJson('nx', [dir]);
+
+      expect(path).toBe(join(pkgDir, 'package.json'));
+      expect(packageJson.version).toBe('0.0.0-fixture');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });
 
 describe('getDependencyVersionFromPackageJson', () => {
