@@ -3673,14 +3673,9 @@ describe('orchestrator', () => {
       expect(lastBlock().payload.command).toContain('@nx/js:next');
     });
 
-    it.each([
-      ['died', 'skip', 'skipped'],
-      ['failed', 'skip', 'skipped'],
-      ['died', 'unresolved', 'unresolved'],
-      ['failed', 'unresolved', 'unresolved'],
-    ] as const)(
-      'installs the dependency edits a %s step left behind after %s and records debt on a committing run',
-      async (status, stepAction, expectedStatus) => {
+    it.each(['died', 'failed'] as const)(
+      'installs the dependency edits a skipped %s step left behind and records debt on a committing run',
+      async (status) => {
         // The worker edited package.json but never installed (it died, or
         // threw before its install), so the deps no longer hash to the
         // dispense baseline. Skipping keeps that tree, and without the install
@@ -3700,11 +3695,11 @@ describe('orchestrator', () => {
         await runOrchestratorReconcile({
           root,
           runId: 'run-1',
-          stepAction,
+          stepAction: 'skip',
         });
 
         const state = readRunState(dir);
-        expect(state.steps[0].status).toBe(expectedStatus);
+        expect(state.steps[0].status).toBe('skipped');
         expect(mockRunInstall).toHaveBeenCalledTimes(1);
         expect(mockRunInstall).toHaveBeenCalledWith(
           root,
@@ -3716,6 +3711,36 @@ describe('orchestrator', () => {
         expect(state.commits).toEqual([
           { kind: 'failed', stepIds: ['step-1'] },
         ]);
+      }
+    );
+
+    it.each(['died', 'failed'] as const)(
+      'installs the dependency edits a %s step left behind when it is given up on without commits',
+      async (status) => {
+        // Without commits the tree is kept as a skip keeps it, so the install
+        // the worker never ran is owed here for the same reason.
+        mockGetWorkingTreeStatus.mockReturnValue('dirty');
+        const dir = setupRun('run-1', {
+          steps: [
+            migStep('step-1', '@nx/js:gen', status, {
+              depsHashAtDispense: 'baseline-from-an-earlier-dispense',
+            }),
+          ],
+          createCommits: false,
+          plan: [genMig('@nx/js', 'gen')],
+        });
+
+        await runOrchestratorReconcile({
+          root,
+          runId: 'run-1',
+          stepAction: 'unresolved',
+        });
+
+        const state = readRunState(dir);
+        expect(state.steps[0].status).toBe('unresolved');
+        expect(mockRunInstall).toHaveBeenCalledTimes(1);
+        expect(mockCommit).not.toHaveBeenCalled();
+        expect(state.commits).toEqual([]);
       }
     );
 
@@ -4399,7 +4424,7 @@ describe('orchestrator', () => {
       const block = lastBlock();
       expect(block.action).toBe('error');
       expect(block.payload.instructions).toContain('not verifiably clean');
-      expect(block.payload.instructions).toContain("or 'skip'");
+      expect(block.payload.instructions).toContain("'skip' or 'unresolved'");
     });
 
     it('rejects a pre-marker retry when HEAD moved off the started-from ref, even with a clean tree', async () => {
@@ -4675,7 +4700,9 @@ describe('orchestrator', () => {
       expect(block.action).toBe('error');
       // 'adopt' is died-only, so the failed-step rejection must not point at
       // it.
-      expect(block.payload.instructions).toContain("Use 'retry' or 'skip'");
+      expect(block.payload.instructions).toContain(
+        "Use 'retry', 'skip' or 'unresolved'"
+      );
       expect(block.payload.instructions).not.toContain('adopt');
     });
 
@@ -4910,6 +4937,270 @@ describe('orchestrator', () => {
 
       expect(readRunState(dir).steps[0].status).toBe('awaiting-prompt-outcome');
       expect(lastBlock().action).toBe('await-prompt');
+    });
+  });
+
+  describe('reconcile: unresolved', () => {
+    const REF = 'beef0001beef0001beef0001beef0001beef0001';
+    // A failed generator step with the restore point a clean retry needs.
+    function restorableFailure(
+      status: 'failed' | 'died',
+      extra: Partial<MigrateStep> = {}
+    ): MigrateStep {
+      return migStep('step-1', '@nx/js:gen', status, {
+        gitRefBefore: REF,
+        treeCleanAtDispense: true,
+        outcome: { summary: 'boom: the generator broke' },
+        ...extra,
+      });
+    }
+
+    it.each(['failed', 'died'] as const)(
+      'gives up on a %s step whose generator never ran once the tree is verifiably reset, and mints the issue that carries its failure',
+      async (status) => {
+        vi.spyOn(process, 'kill').mockReturnValue(true as never);
+        mockGetLatestCommitSha.mockReturnValue(REF);
+        const dir = setupRun('run-1', {
+          steps: [restorableFailure(status)],
+          createCommits: true,
+          plan: [genMig('@nx/js', 'gen')],
+        });
+
+        await runOrchestratorReconcile({
+          root,
+          runId: 'run-1',
+          stepAction: 'unresolved',
+        });
+
+        const state = readRunState(dir);
+        expect(state.steps[0]).toMatchObject({
+          status: 'unresolved',
+          attempt: 1,
+          outcome: { summary: 'boom: the generator broke' },
+          unresolvedIssueId: 'issue-1',
+        });
+        expect(mockCommit).not.toHaveBeenCalled();
+        expect(state.commits).toEqual([]);
+        expect(state.issues).toEqual([
+          {
+            id: 'issue-1',
+            fingerprint: expect.any(String),
+            summary:
+              'Migration @nx/js:gen was left unresolved after 1 attempt: boom: the generator broke',
+            reportedByStepId: 'step-1',
+            applicableStepIds: 'unknown',
+            disposition: 'deferred-final',
+          },
+        ]);
+        const archived = JSON.parse(
+          readFileSync(join(dir, 'issues', 'issue-1.json'), 'utf-8')
+        );
+        expect(archived).toMatchObject({
+          id: 'issue-1',
+          reportedByStepId: 'step-1',
+          disposition: 'deferred-final',
+        });
+      }
+    );
+
+    it('refuses to give up on a step with a restore point until the tree is reset', async () => {
+      mockGetLatestCommitSha.mockReturnValue(REF);
+      mockGetWorkingTreeStatus.mockReturnValue('dirty');
+      const dir = setupRun('run-1', {
+        steps: [restorableFailure('failed')],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+      const before = readFileSync(join(dir, 'run.json'), 'utf-8');
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'unresolved',
+      });
+
+      expect(readFileSync(join(dir, 'run.json'), 'utf-8')).toBe(before);
+      expect(mockCommit).not.toHaveBeenCalled();
+      const block = lastBlock();
+      expect(block.action).toBe('error');
+      expect(block.payload.instructions).toContain(`git reset --hard ${REF}`);
+    });
+
+    it("reopens the failed attempt's resolved issues when giving up discards its tree", async () => {
+      mockGetLatestCommitSha.mockReturnValue(REF);
+      const dir = setupRun('run-1', {
+        steps: [restorableFailure('failed')],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+        issues: [
+          {
+            id: 'issue-1',
+            fingerprint: issueFingerprint('summary of issue-1'),
+            summary: 'summary of issue-1',
+            reportedByStepId: 'step-1',
+            applicableStepIds: ['step-1'],
+            disposition: 'resolved',
+            resolvedByStepId: 'step-1',
+            resolvedAtCommitCount: 0,
+          },
+        ],
+      });
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'unresolved',
+      });
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('unresolved');
+      expect(state.steps[0].unresolvedIssueId).toBe('issue-2');
+      // Nothing left can claim it: the only applicable step is terminal.
+      expect(state.issues[0].disposition).toBe('deferred-final');
+      expect(state.issues[0].resolvedByStepId).toBeUndefined();
+    });
+
+    it.each([
+      [
+        'has no restore point',
+        restorableFailure('failed', { gitRefBefore: undefined }),
+      ],
+      [
+        'had already run its generator',
+        restorableFailure('failed', { generatorCompleted: true }),
+      ],
+    ])(
+      'commits the partial tree of a failed step given up on under its name, marked unresolved, when the step %s',
+      async (_case, failedStep) => {
+        mockGetLatestCommitSha.mockReturnValue(REF);
+        mockGetWorkingTreeStatus.mockReturnValue('dirty');
+        mockCommit.mockResolvedValue({
+          status: 'committed',
+          sha: 'face0021face0021face0021face0021face0021',
+        });
+        const dir = setupRun('run-1', {
+          steps: [failedStep],
+          createCommits: true,
+          plan: [genMig('@nx/js', 'gen')],
+        });
+
+        await runOrchestratorReconcile({
+          root,
+          runId: 'run-1',
+          stepAction: 'unresolved',
+        });
+
+        const state = readRunState(dir);
+        expect(state.steps[0].status).toBe('unresolved');
+        expect(state.steps[0].unresolvedIssueId).toBe('issue-1');
+        expect(mockCommit).toHaveBeenCalledTimes(1);
+        expect(mockCommit.mock.calls[0][1]).toEqual({
+          name: 'gen (unresolved)',
+        });
+        expect(state.commits).toEqual([
+          {
+            kind: 'landed',
+            sha: 'face0021face0021face0021face0021face0021',
+            stepIds: ['step-1'],
+          },
+        ]);
+      }
+    );
+
+    it('keeps the step unresolved with its issue in the ledger when the archive file cannot be written', async () => {
+      const warned: { title: string }[] = [];
+      vi.spyOn(output, 'warn').mockImplementation((opts) => {
+        warned.push(opts as { title: string });
+      });
+      const dir = setupRun('run-1', {
+        steps: [restorableFailure('failed', { gitRefBefore: undefined })],
+        createCommits: false,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+      mkdirSync(join(dir, 'issues', 'issue-1.json'), { recursive: true });
+      writeFileSync(join(dir, 'issues', 'issue-1.json', 'occupied'), 'x');
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'unresolved',
+      });
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('unresolved');
+      expect(state.steps[0].unresolvedIssueId).toBe('issue-1');
+      expect(state.issues).toHaveLength(1);
+      expect(
+        warned.some((w) =>
+          w.title.includes('left unresolved could not be archived')
+        )
+      ).toBe(true);
+    });
+
+    it.each([
+      [
+        'discarding what the failed attempt left',
+        { createCommits: true, step: restorableFailure('failed') },
+      ],
+      [
+        'committed under its name, marked unresolved',
+        {
+          createCommits: true,
+          step: restorableFailure('failed', { gitRefBefore: undefined }),
+        },
+      ],
+      [
+        'leaving the tree as it stands',
+        { createCommits: false, step: restorableFailure('failed') },
+      ],
+    ])(
+      'offers giving up on a failed step, worded "%s"',
+      async (wording, { createCommits, step }) => {
+        mockGetLatestCommitSha.mockReturnValue(REF);
+        setupRun('run-1', {
+          steps: [step],
+          createCommits,
+          plan: [genMig('@nx/js', 'gen')],
+        });
+
+        await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+        const block = lastBlock();
+        expect(block.action).toBe('retry-failed');
+        expect(block.payload.instructions).toContain(
+          '--step-action=unresolved'
+        );
+        expect(block.payload.instructions).toContain(`unresolved: give up`);
+        expect(block.payload.instructions).toContain(wording);
+      }
+    );
+
+    it('offers giving up on a died step, with the reset when its generator never ran', async () => {
+      vi.spyOn(process, 'kill').mockImplementation(() => {
+        throw Object.assign(new Error('no such process'), { code: 'ESRCH' });
+      });
+      mockGetLatestCommitSha.mockReturnValue(REF);
+      setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'running', {
+            pid: 999999,
+            startedAt: '2026-01-01T00:00:00.000Z',
+            gitRefBefore: REF,
+            treeCleanAtDispense: true,
+          }),
+        ],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const block = lastBlock();
+      expect(block.action).toBe('died');
+      expect(block.payload.instructions).toContain('--step-action=unresolved');
+      expect(block.payload.instructions).toContain(
+        'discarding what the failed attempt left'
+      );
     });
   });
 
