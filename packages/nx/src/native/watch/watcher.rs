@@ -765,7 +765,7 @@ mod tests {
         use notify::event::{CreateKind, Flag};
 
         let dir = tempdir().expect("tempdir");
-        let canonical = dir.path().canonicalize().expect("canonicalize tempdir");
+        let canonical = dunce::canonicalize(dir.path()).expect("canonicalize tempdir");
         let mut pipeline = WatchPipeline::new(
             canonical.to_str().expect("utf-8 path").to_string(),
             &[],
@@ -814,7 +814,7 @@ mod tests {
         use notify::event::Flag;
 
         let dir = tempdir().expect("tempdir");
-        let canonical = dir.path().canonicalize().expect("canonicalize");
+        let canonical = dunce::canonicalize(dir.path()).expect("canonicalize");
         let mut pipeline = WatchPipeline::new(
             canonical.to_str().expect("utf-8 path").to_string(),
             &[],
@@ -856,7 +856,7 @@ mod tests {
         use notify::event::CreateKind;
 
         let dir = tempdir().expect("tempdir");
-        let origin = dir.path().canonicalize().expect("canonicalize");
+        let origin = dunce::canonicalize(dir.path()).expect("canonicalize");
         let pkg = origin.join("pkg");
         fs::create_dir_all(&pkg).expect("mkdir pkg");
         fs::write(pkg.join(".gitignore"), "!conflict.log\n").expect("write .gitignore");
@@ -884,7 +884,7 @@ mod tests {
         use notify::event::CreateKind;
 
         let dir = tempdir().expect("tempdir");
-        let origin = dir.path().canonicalize().expect("canonicalize");
+        let origin = dunce::canonicalize(dir.path()).expect("canonicalize");
         let pkg = origin.join("pkg");
         fs::create_dir_all(&pkg).expect("mkdir pkg");
         fs::write(pkg.join(".ignore"), "!keep.tmp\n").expect("write .ignore");
@@ -914,7 +914,7 @@ mod tests {
         let dir = tempdir().expect("tempdir");
         let origin = dir.path().join("workspace");
         fs::create_dir_all(&origin).expect("mkdir origin");
-        let origin = origin.canonicalize().expect("canonicalize");
+        let origin = dunce::canonicalize(&origin).expect("canonicalize");
         let outside = dir
             .path()
             .join("elsewhere")
@@ -944,7 +944,7 @@ mod tests {
         let dir = tempdir().expect("tempdir");
         let real = dir.path().join("workspace");
         fs::create_dir_all(&real).expect("mkdir real");
-        let real = real.canonicalize().expect("canonicalize real");
+        let real = dunce::canonicalize(&real).expect("canonicalize real");
 
         let link = dir.path().join("linked");
         std::os::unix::fs::symlink(&real, &link).expect("symlink");
@@ -962,6 +962,48 @@ mod tests {
         );
     }
 
+    // Real-backend proof of the same fix: start the watcher on a symlinked
+    // root and confirm a write under it is delivered with a workspace-relative
+    // path. This exercises the platform's actual backend, where the failure
+    // modes differed — on macOS FSEvents drops any path not under the watched
+    // dir, so a symlinked root delivered nothing at all; on Linux the event
+    // arrived realpath'd and an un-canonical origin emitted an absolute path.
+    // Windows symlink creation needs elevation, so this is unix-only.
+    #[cfg(unix)]
+    #[test]
+    fn a_symlinked_root_delivers_relative_events_end_to_end() {
+        let dir = tempdir().expect("tempdir");
+        let real = dir.path().join("workspace");
+        fs::create_dir_all(real.join("src")).expect("mkdir workspace/src");
+
+        let link = dir.path().join("linked");
+        std::os::unix::fs::symlink(&real, &link).expect("symlink");
+
+        // Start on the SYMLINK, non-canonical, as NX_WORKSPACE_ROOT_PATH may be.
+        let mut w = Watcher::new(link.to_str().expect("utf-8").to_string(), None, Some(false));
+        let captured: Captured = Arc::new(Mutex::new(Vec::new()));
+        let captured_for_cb = captured.clone();
+        let callback: WatchEventCallback = Box::new(move |res| {
+            if let Ok(events) = res {
+                captured_for_cb.lock().unwrap().extend(events);
+            }
+        });
+        w.watch_inner(callback).expect("start watch");
+        std::thread::sleep(Duration::from_millis(300));
+        captured.lock().unwrap().clear();
+
+        fs::write(link.join("src/x.ts"), "export const x = 1;").expect("write");
+
+        // wait_for_path matches e.path == "src/x.ts" exactly, so it proves both
+        // delivery and that the path is workspace-relative, not absolute.
+        wait_for_path(
+            &w,
+            &captured,
+            "src/x.ts",
+            "a write under a symlinked root must be delivered with a relative path",
+        );
+    }
+
     #[test]
     fn git_info_exclude_is_honoured_like_the_walker() {
         // `.git/info/exclude` is where local, uncommittable exclusions live
@@ -973,7 +1015,7 @@ mod tests {
         use notify::event::CreateKind;
 
         let dir = tempdir().expect("tempdir");
-        let origin = dir.path().canonicalize().expect("canonicalize");
+        let origin = dunce::canonicalize(dir.path()).expect("canonicalize");
         let origin_str = origin.to_str().expect("utf-8 path");
         fs::create_dir_all(origin.join(".git/info")).expect("mkdir .git/info");
         fs::write(origin.join(".git/info/exclude"), "secrets/\n").expect("write exclude");
@@ -1007,7 +1049,7 @@ mod tests {
         use notify::event::CreateKind;
 
         let dir = tempdir().expect("tempdir");
-        let origin = dir.path().canonicalize().expect("canonicalize");
+        let origin = dunce::canonicalize(dir.path()).expect("canonicalize");
         let origin_str = origin.to_str().expect("utf-8 path");
 
         // `!.yarn/cache` negates a hardcoded ignore; `!kept.log` is a normal
@@ -1052,7 +1094,7 @@ mod tests {
         use notify::event::Flag;
 
         let dir = tempdir().expect("tempdir");
-        let canonical = dir.path().canonicalize().expect("canonicalize");
+        let canonical = dunce::canonicalize(dir.path()).expect("canonicalize");
         let (pipeline, tx) = WatchPipeline::with_test_channel(canonical.to_str().expect("utf-8"));
 
         let (ff_tx, ff_rx) = bounded::<ForceFlushReply>(0);
@@ -1103,7 +1145,7 @@ mod tests {
         use notify::event::Flag;
 
         let dir = tempdir().expect("tempdir");
-        let canonical = dir.path().canonicalize().expect("canonicalize");
+        let canonical = dunce::canonicalize(dir.path()).expect("canonicalize");
         let mut pipeline = WatchPipeline::new(
             canonical.to_str().expect("utf-8 path").to_string(),
             &[],
@@ -1198,7 +1240,7 @@ mod tests {
         use notify::event::CreateKind;
 
         let dir = tempdir().expect("tempdir");
-        let origin = dir.path().canonicalize().expect("canonicalize");
+        let origin = dunce::canonicalize(dir.path()).expect("canonicalize");
         let origin_str = origin.to_str().expect("utf-8 path");
         let target = origin.join("ignored_dir");
         fs::create_dir_all(&target).expect("mkdir target");

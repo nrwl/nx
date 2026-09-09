@@ -154,12 +154,13 @@ pub(super) fn create_filter(
     additional_globs: &[String],
     use_ignore: bool,
 ) -> anyhow::Result<WatchFilterer> {
-    // `origin` must already be canonical: filter_path rejects any path not under
-    // it, and event paths arrive realpath'd (canonicalize_event_paths on Linux,
-    // FSEvents on macOS). WatchPipeline::new canonicalizes once and hands the
-    // same string here and to origin_path, so the prefix check and the
-    // transform's relative_to_origin agree. Tests call this directly and pass a
-    // canonicalized temp path for the same reason.
+    // `origin` is expected canonical and in dunce form (no Windows `\\?\`
+    // verbatim prefix): WatchPipeline::new canonicalizes it with
+    // dunce::canonicalize and hands the same string here and to origin_path.
+    // filter_path rejects any path not under origin and dunce::simplifies event
+    // paths, so a `\\?\` origin would reject every event. The disallowed_methods
+    // clippy lint bans std::fs::canonicalize so every caller — tests included —
+    // stays on dunce and this precondition holds.
     let ignore_files = use_ignore.then(|| get_gitignore_files(origin));
     let nx_ignore_path = get_nx_ignore(origin);
 

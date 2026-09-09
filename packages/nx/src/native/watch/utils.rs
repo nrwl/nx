@@ -1,4 +1,3 @@
-use std::fs::canonicalize;
 use std::path::{Path, PathBuf};
 
 use notify::Event;
@@ -20,7 +19,7 @@ pub(super) fn canonicalize_event_paths(event: &Event) -> Event {
         let mut event = event.clone();
         for path in &mut event.paths {
             trace!("canonicalizing {:?}", path);
-            if let Ok(real_path) = canonicalize(&path) {
+            if let Ok(real_path) = dunce::canonicalize(&path) {
                 trace!("real path {:?}", real_path);
                 *path = real_path;
             }
