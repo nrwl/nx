@@ -500,19 +500,40 @@ describe('getResolvedPackageVersion', () => {
     expect(getResolvedPackageVersion(tree, 'some-pkg')).toBe('3.0.0');
   });
 
-  it('resolves `latest` to `latestKnownVersion` without consulting the install', () => {
-    const tree = createTreeWithEmptyWorkspace();
-    updateJson(tree, 'package.json', (json) => ({
-      ...json,
-      dependencies: { 'some-pkg': 'latest' },
-    }));
-    tree.write(
-      'node_modules/some-pkg/package.json',
-      JSON.stringify({ name: 'some-pkg', version: '2.5.0' })
-    );
+  it.each(['latest', 'next'])(
+    'returns the installed version when the package is declared as `%s`',
+    (distTag) => {
+      const tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { 'some-pkg': distTag },
+      }));
+      tree.write(
+        'node_modules/some-pkg/package.json',
+        JSON.stringify({ name: 'some-pkg', version: '2.5.0' })
+      );
 
-    expect(getResolvedPackageVersion(tree, 'some-pkg', '^3.0.0')).toBe('3.0.0');
-  });
+      expect(getResolvedPackageVersion(tree, 'some-pkg', '^3.0.0')).toBe(
+        '2.5.0'
+      );
+    }
+  );
+
+  it.each(['latest', 'next'])(
+    'falls back to `latestKnownVersion` when the package is declared as `%s` and nothing is installed',
+    (distTag) => {
+      const tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { 'some-pkg': distTag },
+      }));
+
+      expect(getResolvedPackageVersion(tree, 'some-pkg', '^3.0.0')).toBe(
+        '3.0.0'
+      );
+      expect(getResolvedPackageVersion(tree, 'some-pkg')).toBeNull();
+    }
+  );
 
   it('falls back to module resolution when the tree has no node_modules (e.g. Yarn PnP)', () => {
     const spy = jest
