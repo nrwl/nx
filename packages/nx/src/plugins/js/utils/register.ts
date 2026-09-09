@@ -791,13 +791,8 @@ function trackSourceGraphModule(url: string, graph: SourceGraph): void {
   graph.modules.add(url);
   if (!sourceGraphModules.has(url)) {
     sourceGraphModules.set(url, graph);
-    try {
-      const { fileURLToPath } =
-        require('node:url') as typeof import('node:url');
-      sourceGraphModulePaths.set(fileURLToPath(url), graph);
-    } catch {
-      // non-file URLs have no CJS filename to track
-    }
+    const { fileURLToPath } = require('node:url') as typeof import('node:url');
+    sourceGraphModulePaths.set(fileURLToPath(url), graph);
   }
 }
 
@@ -839,15 +834,11 @@ function untrackSourceGraphModules(graph: SourceGraph): void {
     } else {
       sourceGraphModules.delete(url);
     }
-    try {
-      const path = fileURLToPath(url);
-      if (replacement) {
-        sourceGraphModulePaths.set(path, replacement);
-      } else {
-        sourceGraphModulePaths.delete(path);
-      }
-    } catch {
-      // non-file URLs were never tracked by path
+    const path = fileURLToPath(url);
+    if (replacement) {
+      sourceGraphModulePaths.set(path, replacement);
+    } else {
+      sourceGraphModulePaths.delete(path);
     }
   }
 }
