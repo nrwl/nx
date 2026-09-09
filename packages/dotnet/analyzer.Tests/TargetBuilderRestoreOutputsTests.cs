@@ -20,8 +20,12 @@ public class TargetBuilderRestoreOutputsTests
 
     private static readonly string[] RestoreOnlyExclusions =
     [
-        "!{projectRoot}/obj/project.*",
-        "!{projectRoot}/obj/*.nuget.*",
+        "!{projectRoot}/obj/**/project.assets.json",
+        "!{projectRoot}/obj/**/project.nuget.cache",
+        "!{projectRoot}/obj/**/project.packagespec.json",
+        "!{projectRoot}/obj/**/*.nuget.dgspec.json",
+        "!{projectRoot}/obj/**/*.nuget.g.props",
+        "!{projectRoot}/obj/**/*.nuget.g.targets",
     ];
 
     private static Dictionary<string, Target> BuildTargets(bool isExe, Dictionary<string, string>? properties = null) =>
@@ -66,8 +70,8 @@ public class TargetBuilderRestoreOutputsTests
         var outputs = BuildTargets(isExe: false, properties)["build"].Outputs!;
 
         Assert.Contains("{workspaceRoot}/dist/obj/MyProj/**/*", outputs);
-        Assert.Contains("!{workspaceRoot}/dist/obj/MyProj/project.*", outputs);
-        Assert.Contains("!{workspaceRoot}/dist/obj/MyProj/*.nuget.*", outputs);
-        Assert.DoesNotContain("!{projectRoot}/obj/project.*", outputs);
+        Assert.Contains("!{workspaceRoot}/dist/obj/MyProj/**/project.assets.json", outputs);
+        Assert.Contains("!{workspaceRoot}/dist/obj/MyProj/**/*.nuget.g.props", outputs);
+        Assert.DoesNotContain("!{projectRoot}/obj/**/project.assets.json", outputs);
     }
 }

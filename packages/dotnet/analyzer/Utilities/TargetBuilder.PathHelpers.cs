@@ -219,16 +219,20 @@ public static partial class TargetBuilder
 
     /// <summary>
     /// Outputs for the intermediate directory minus the files only
-    /// <c>dotnet restore</c> writes there (project.assets.json, project.nuget.cache,
-    /// project.packagespec.json, the *.nuget.g.props/targets and dgspec). restore is
-    /// not cached and runs outside the task chain, so build, publish and pack must
-    /// not capture them: a cache hit would replay another machine's
-    /// project.assets.json, absolute packages path and all, over the local restore.
+    /// <c>dotnet restore</c> writes: project.assets.json, project.nuget.cache,
+    /// project.packagespec.json, and the per-project *.nuget.g.props, *.nuget.g.targets
+    /// and *.nuget.dgspec.json. restore is not cached and runs outside the task chain,
+    /// so build, publish and pack must not capture them: a cache hit would replay
+    /// another machine's project.assets.json, absolute packages path and all, over the
+    /// local restore. They are matched at any depth because NuGet writes them to
+    /// RestoreOutputPath, which defaults to MSBuildProjectExtensionsPath and can be
+    /// pointed at a subdirectory of obj. Everything else under obj, including the
+    /// per-configuration and per-framework build output, stays captured.
     /// The directory is declared as a glob, not a bare path, because of how Nx
     /// hashes dependent outputs: a bare directory is walked wholesale with nothing
     /// subtracted, and a negated literal path is treated as a root of its own and
-    /// added back. Wildcard exclusions partition to the same root as the glob and
-    /// are the one shape that path honours.
+    /// added back. Exclusions with a wildcard segment partition to the same root as
+    /// the glob and are the one shape that path honours.
     /// </summary>
     private static string[] GetIntermediateOutputs(string? intermediatePath)
     {
@@ -241,8 +245,12 @@ public static partial class TargetBuilder
         return
         [
             $"{obj}/**/*",
-            $"!{obj}/project.*",
-            $"!{obj}/*.nuget.*",
+            $"!{obj}/**/project.assets.json",
+            $"!{obj}/**/project.nuget.cache",
+            $"!{obj}/**/project.packagespec.json",
+            $"!{obj}/**/*.nuget.dgspec.json",
+            $"!{obj}/**/*.nuget.g.props",
+            $"!{obj}/**/*.nuget.g.targets",
         ];
     }
 
