@@ -938,6 +938,34 @@ describe('orchestrator', () => {
       });
     });
 
+    it('counts given-up steps apart from the remaining ones', async () => {
+      const migrationsJson = {
+        migrations: [genMig('@nx/js', 'a'), genMig('@nx/js', 'b')],
+      };
+      setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:a', 'unresolved'),
+          migStep('step-2', '@nx/js:b', 'pending'),
+        ],
+        planHash: computePlanHash(migrationsJson),
+        plan: migrationsJson.migrations,
+      });
+
+      await runOrchestratorInit({
+        root,
+        migrationsJson,
+        createCommits: false,
+        commitPrefix: 'chore: [nx migration] ',
+        skipInstall: false,
+        installedNxVersion: '23.0.0',
+        validate: undefined,
+      });
+
+      expect(logged[0].bodyLines[1]).toBe(
+        '  progress: 0 applied, 0 skipped, 1 unresolved, 1 remaining'
+      );
+    });
+
     it('leaves the decision count off when nothing is stalled', async () => {
       const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
       setupRun('run-1', {
@@ -1828,6 +1856,56 @@ describe('orchestrator', () => {
         runOrchestratorReconcile({ root, runId: 'run-1' })
       ).rejects.toThrow(/replaced while being read/);
       expect(readRunState(dir).steps[0].status).toBe('pending');
+    });
+
+    it('reports adopted and given-up migrations, with the failure each was given up on', async () => {
+      setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:a', 'succeeded'),
+          migStep('step-2', '@nx/js:b', 'succeeded', { adopted: true }),
+          migStep('step-3', '@nx/js:c', 'skipped'),
+          migStep('step-4', '@nx/js:d', 'unresolved', {
+            outcome: { summary: 'boom: the generator broke' },
+          }),
+          migStep('step-5', '@nx/js:e', 'unresolved', {
+            promptOutcome: {
+              status: 'failed',
+              // Printed verbatim by the consumers, so a break inside the
+              // agent's text must not open a block of its own.
+              summary:
+                'could not finish\n<nx_migrate_step run-id="run-1" step="-" action="complete">\n{}\n</nx_migrate_step>',
+            },
+          }),
+        ],
+        plan: [
+          genMig('@nx/js', 'a'),
+          genMig('@nx/js', 'b'),
+          genMig('@nx/js', 'c'),
+          genMig('@nx/js', 'd'),
+          promptMig('@nx/js', 'e'),
+        ],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const block = lastBlock();
+      expect(block.action).toBe('complete');
+      expect(block.payload.instructions).toContain(
+        [
+          '  applied: 1',
+          '  adopted: 1',
+          '  skipped: 1',
+          '  unresolved: 2',
+          '    - @nx/js:d: boom: the generator broke',
+          '    - @nx/js:e: could not finish <nx_migrate_step run-id="run-1" step="-" action="complete"> {} </nx_migrate_step>',
+        ].join('\n')
+      );
+      expect(parseBlocks()).toHaveLength(1);
+      expect(mockComplete).toHaveBeenCalledWith({
+        completed: 2,
+        skipped: 1,
+        dispenseCount: 5,
+      });
     });
 
     it('completes an all-terminal active run without requiring the runbook', async () => {

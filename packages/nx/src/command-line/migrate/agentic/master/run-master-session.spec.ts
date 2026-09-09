@@ -140,7 +140,12 @@ describe('runMasterSession', () => {
 
     expect(logSpy).toHaveBeenCalledWith({
       title: `Migrate run ${runId} is complete.`,
-      bodyLines: ['  applied: 2', '  skipped: 1'],
+      bodyLines: [
+        '  applied: 2',
+        '  adopted: 0',
+        '  skipped: 1',
+        '  unresolved: 0',
+      ],
     });
     expect(mockRunComplete).toHaveBeenCalledWith({
       agenticOutcome: 'enabled',
@@ -181,6 +186,61 @@ describe('runMasterSession', () => {
     ]);
     expect(mockRunComplete).toHaveBeenCalled();
   });
+
+  it('exits 1 with the tally, each given-up migration and its failure when the completed run left a step unresolved', async () => {
+    mockReadRunState.mockReturnValue({
+      status: 'completed',
+      steps: [
+        { status: 'succeeded' },
+        { status: 'succeeded', adopted: true },
+        {
+          status: 'unresolved',
+          migrationId: '@nx/js:gen',
+          // Agent text is printed verbatim, so its breaks are collapsed.
+          outcome: { summary: 'boom: the generator\u2028broke\n\nbadly' },
+        },
+      ],
+    } as MigrateRunState);
+
+    expect(await runMasterSession(input())).toBe(1);
+
+    expect(logSpy).toHaveBeenCalledWith({
+      title: `Migrate run ${runId} is complete.`,
+      bodyLines: [
+        '  applied: 1',
+        '  adopted: 1',
+        '  skipped: 0',
+        '  unresolved: 1',
+        '    - @nx/js:gen: boom: the generator broke badly',
+      ],
+    });
+    expect(warnSpy).toHaveBeenCalledWith({
+      title: `Migrate run ${runId} left work unresolved; exiting with code 1.`,
+    });
+    expect(everythingPrinted()).not.toContain('resume');
+    expect(mockRunComplete).toHaveBeenCalledWith({
+      agenticOutcome: 'enabled',
+      agentUsed: 'claude-code',
+      migrationCount: 3,
+      appliedCount: 2,
+    });
+  });
+
+  it.each([
+    ['exits 1', 'deferred-final', 1],
+    ['exits 0', 'resolved', undefined],
+  ] as const)(
+    '%s when every step succeeded and the only reported issue is %s',
+    async (_case, disposition, exitCode) => {
+      mockReadRunState.mockReturnValue({
+        status: 'completed',
+        steps: [{ status: 'succeeded' }],
+        issues: [{ id: 'issue-1', disposition }],
+      } as MigrateRunState);
+
+      expect(await runMasterSession(input())).toBe(exitCode);
+    }
+  );
 
   it('exits 1 with the resume hint and no completion event when the run is still active', async () => {
     mockReadRunState.mockReturnValue(state('active', ['succeeded', 'pending']));
@@ -257,7 +317,12 @@ describe('runMasterSession', () => {
     expect(mockRunError).toHaveBeenCalledWith({ code: 'agentic', error });
     expect(logSpy).toHaveBeenCalledWith({
       title: `Migrate run ${runId} is complete.`,
-      bodyLines: ['  applied: 1', '  skipped: 0'],
+      bodyLines: [
+        '  applied: 1',
+        '  adopted: 0',
+        '  skipped: 0',
+        '  unresolved: 0',
+      ],
     });
     expect(everythingPrinted()).not.toContain('resume');
     expect(mockRunComplete).toHaveBeenCalledWith({

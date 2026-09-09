@@ -28,7 +28,13 @@ export type {
   MigrateRunState,
 } from './run-state';
 
-export { applyStepEvent, hasPendingCommitDebt } from './state-machine';
+export {
+  applyStepEvent,
+  completionSummaryLines,
+  hasPendingCommitDebt,
+  tallySteps,
+} from './state-machine';
+export { hasUnresolvedIssues } from './issues';
 export type {
   StepAction,
   StepEvent,

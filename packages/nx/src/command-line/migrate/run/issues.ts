@@ -1010,6 +1010,10 @@ function unresolvedIssues(state: MigrateRunState): MigrateRunIssue[] {
   return (state.issues ?? []).filter((i) => i.disposition !== 'resolved');
 }
 
+export function hasUnresolvedIssues(state: MigrateRunState): boolean {
+  return unresolvedIssues(state).length > 0;
+}
+
 function stepDigestHeading(runId: string): string {
   return `Known issues reported earlier in this run (details under ${issuesDirRef(
     runId
