@@ -1469,6 +1469,7 @@ process.exit(status ?? 1);
 
   // `git` on PATH, forwarding every call and logging each commit's message
   // and whether the gate env var (stripped from the agent's env) reached it.
+  // A commit whose message contains FAKE_GIT_REFUSE fails instead.
   const FAKE_GIT_SCRIPT = `#!/usr/bin/env node
 const { spawnSync } = require('child_process');
 const fs = require('fs');
@@ -1485,6 +1486,10 @@ if (message !== null) {
     process.env.FAKE_GIT_LOG,
     JSON.stringify({ message, orchestrator: process.env.NX_MIGRATE_ORCHESTRATOR ?? null }) + '\\n'
   );
+  if (process.env.FAKE_GIT_REFUSE && message.includes(process.env.FAKE_GIT_REFUSE)) {
+    process.stderr.write('fake git: refused the commit\\n');
+    process.exit(1);
+  }
 }
 const { status } = spawnSync(real, args, {
   input: message ?? undefined,
@@ -1707,6 +1712,46 @@ process.exit(status ?? 1);
           'git status --porcelain -- . :!fake-agent.log :!fake-git.log :!migrate-exit-code'
         ).trim()
       ).toBe('');
+      expect(listFiles(`.nx/migrate-runs/${runId}/broker`)).toEqual([]);
+    }, 600000);
+
+    it('should print a commit the parent could not land, with its guidance, in the step command', async () => {
+      writePlan([depsMig]);
+      const { binDir, logFile } = installFakeAgent();
+      const { gitDir, gitLog } = installFakeGit();
+
+      const { exitCode, output } = await runMigrateInTerminal(
+        {
+          PATH: `${gitDir}:${binDir}:${process.env.PATH}`,
+          FAKE_AGENT_LOG: logFile,
+          FAKE_GIT_LOG: gitLog,
+          FAKE_GIT_REFUSE: 'deps-mig',
+          NX_MIGRATE_ORCHESTRATOR: 'true',
+        },
+        '--create-commits --skip-install --validate=false'
+      );
+
+      // A failed commit is not a failed step: the run completes and the
+      // session's summary carries the debt.
+      expect(exitCode).toBe(0);
+      expect(output).toContain('is complete');
+      expect(output).toContain('could not be committed');
+      const failure = 'Could not create a commit for deps-mig';
+      expect(output).not.toContain(failure);
+      const log = readFakeAgentLog(logFile);
+      const runId = log.find((entry) => entry.complete).complete;
+      const state = readRunStateFile(runId);
+      expect(state.status).toBe('completed');
+      expect(state.steps.map((s) => s.status)).toEqual(['succeeded']);
+      expect(state.commits).toEqual([
+        { kind: 'checkpoint', sha: expect.any(String), stepIds: [] },
+        { kind: 'failed', stepIds: [state.steps[0].id] },
+      ]);
+      const stepOutput = log.find((entry) => entry.stdout).stdout;
+      expect(stepOutput).toContain(failure);
+      expect(stepOutput).toContain('fake git: refused the commit');
+      expect(stepOutput).toContain('The next successful commit will absorb it');
+      expect(commitCountFor('deps-mig')).toBe(0);
       expect(listFiles(`.nx/migrate-runs/${runId}/broker`)).toEqual([]);
     }, 600000);
 
