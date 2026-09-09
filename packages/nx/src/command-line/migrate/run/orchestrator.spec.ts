@@ -3673,9 +3673,14 @@ describe('orchestrator', () => {
       expect(lastBlock().payload.command).toContain('@nx/js:next');
     });
 
-    it.each(['died', 'failed'] as const)(
-      'installs the dependency edits a skipped %s step left behind and records debt on a committing run',
-      async (status) => {
+    it.each([
+      ['died', 'skip', 'skipped'],
+      ['failed', 'skip', 'skipped'],
+      ['died', 'unresolved', 'unresolved'],
+      ['failed', 'unresolved', 'unresolved'],
+    ] as const)(
+      'installs the dependency edits a %s step left behind after %s and records debt on a committing run',
+      async (status, stepAction, expectedStatus) => {
         // The worker edited package.json but never installed (it died, or
         // threw before its install), so the deps no longer hash to the
         // dispense baseline. Skipping keeps that tree, and without the install
@@ -3695,11 +3700,11 @@ describe('orchestrator', () => {
         await runOrchestratorReconcile({
           root,
           runId: 'run-1',
-          stepAction: 'skip',
+          stepAction,
         });
 
         const state = readRunState(dir);
-        expect(state.steps[0].status).toBe('skipped');
+        expect(state.steps[0].status).toBe(expectedStatus);
         expect(mockRunInstall).toHaveBeenCalledTimes(1);
         expect(mockRunInstall).toHaveBeenCalledWith(
           root,
