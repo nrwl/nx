@@ -31,6 +31,8 @@ vi.mock('../resolve-plugin', () => ({
   }),
 }));
 
+import { resolveNxPlugin } from '../resolve-plugin';
+
 describe('IsolatedPlugin', () => {
   describe('plugin worker socket ids', () => {
     const initialWorkerCount = global.nxPluginWorkerCount;
@@ -658,6 +660,48 @@ describe('IsolatedPlugin', () => {
       // Post-task phase
       await plugin.postTasksExecution!({} as any);
       expect(shutdown).toHaveBeenCalledTimes(1); // finally done
+    });
+  });
+
+  describe('load', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    function failLoad(isSourcePlugin: boolean) {
+      const error = Object.assign(
+        new Error("Cannot find module '@proj/util'"),
+        { code: 'MODULE_NOT_FOUND' }
+      );
+      vi.mocked(resolveNxPlugin).mockResolvedValueOnce({
+        name: 'test-plugin',
+        pluginPath: '/mock/root/packages/plugin/dist/index.js',
+        shouldRegisterTSTranspiler: false,
+        isSourcePlugin,
+        workspacePackageNames: ['@proj/util'],
+      });
+      vi.spyOn(
+        IsolatedPlugin.prototype as any,
+        'spawnAndConnect'
+      ).mockRejectedValue(error);
+      return {
+        error,
+        loading: IsolatedPlugin.load('test-plugin', '/mock/root'),
+      };
+    }
+
+    it('adds the built-entry hint when a built plugin misses a workspace sibling', async () => {
+      const { loading } = failLoad(false);
+
+      await expect(loading).rejects.toThrow(
+        /Cannot find module '@proj\/util'[\s\S]*"@proj\/util" was requested from "packages\/plugin\/dist\/index.js"/
+      );
+    });
+
+    it('leaves a source plugin load failure unchanged', async () => {
+      const { error, loading } = failLoad(true);
+
+      await expect(loading).rejects.toBe(error);
     });
   });
 });
