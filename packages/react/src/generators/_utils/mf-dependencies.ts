@@ -84,6 +84,9 @@ function bundlerDeps(bundler: SupportedBundler): DepsBundle {
           '@rspack/cli': mfVersions.rspackCliVersion,
           '@rspack/core': mfVersions.rspackCoreVersion,
           '@rspack/dev-server': mfVersions.rspackDevServerVersion,
+          '@rspack/plugin-react-refresh':
+            mfVersions.rspackPluginReactRefreshVersion,
+          'react-refresh': mfVersions.reactRefreshVersion,
         },
       };
   }

@@ -222,6 +222,40 @@ describe('hostGenerator', () => {
       expect(packageJson.devDependencies['@nx/web']).toBeDefined();
     });
 
+    it('should install @swc-node/register so the TS config loads without native type stripping', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      await hostGenerator(tree, {
+        directory: 'test',
+        style: 'css',
+        linter: 'none',
+        unitTestRunner: 'none',
+        e2eTestRunner: 'none',
+        skipFormat: true,
+        bundler: 'rspack',
+      });
+
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies['@swc-node/register']).toBeDefined();
+      expect(packageJson.devDependencies['@swc/core']).toBeDefined();
+    });
+
+    it('should not install @swc-node/register for a JS config', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      await hostGenerator(tree, {
+        directory: 'test',
+        style: 'css',
+        linter: 'none',
+        unitTestRunner: 'none',
+        e2eTestRunner: 'none',
+        skipFormat: true,
+        bundler: 'rspack',
+        typescriptConfiguration: false,
+      });
+
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies['@swc-node/register']).toBeUndefined();
+    });
+
     it('should generate host files and configs for SSR', async () => {
       await hostGenerator(tree, {
         directory: 'test',

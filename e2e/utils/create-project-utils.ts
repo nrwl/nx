@@ -163,7 +163,12 @@ export function newProject({
         // Installing typescript directly reclaims that slot. pnpm/yarn resolve
         // peers per dependent, so they are unaffected.
         // TODO: remove once tsquery bounds its peer or nx stops depending on it.
-        if (packageManager === 'npm') {
+        // The `apps` preset pins typescript ~6.0.3, so any suite that needs an
+        // older line (Remix) re-pins regardless of package manager.
+        if (
+          packageManager === 'npm' ||
+          typescriptVersion !== defaultTypescriptVersion
+        ) {
           packageInstall('typescript', projScope, typescriptVersion);
         }
         const packageInstallEnd = performance.mark('packageInstall:end');
