@@ -1182,6 +1182,7 @@ describe('TaskOrchestrator', () => {
             orchestrator.capturedForTest
               ? capturedPath(orchestrator.capturedForTest)
               : undefined,
+          flushCapturedOutput: async () => {},
           discardCapturedOutput: () => {},
         }),
       };
@@ -1230,6 +1231,7 @@ describe('TaskOrchestrator', () => {
           }),
           getCapturedOutputPath: () =>
             capturedPath('gradlew: OutOfMemoryError in the daemon'),
+          flushCapturedOutput: async () => {},
           discardCapturedOutput: () => {},
         });
 
