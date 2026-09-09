@@ -592,9 +592,9 @@ async function runRecorded(
   // invocation may have claimed a later attempt whose flag `step` predates.
   const startedStep = state.steps.find((s) => s.id === step.id);
   const generatorAlreadyCompleted = startedStep.generatorCompleted === true;
-  // The run records its own install policy because dispensed worker commands
-  // are re-invoked by the loop and never carry the user's flags; an explicit
-  // --skip-install on this invocation still applies on top of it.
+  // Dispensed worker commands never carry the user's flags, so the run records
+  // its install policy. An explicit --skip-install here applies only to the
+  // installs this process runs itself; a parent session answers from its own.
   const effectiveSkipInstall = state.skipInstall === true || skipInstall;
   // The run records the resolved validation policy at init; absent (a state
   // predating the field) falls back to the same default init applies.
@@ -602,7 +602,7 @@ async function runRecorded(
   // Called before a retry hands the step's work back: the prompt or validation
   // may need the dependencies the earlier attempt's generator added.
   const reinstallFromBaseline = () =>
-    installStepTree(dir, startedStep, effectiveSkipInstall, 'install', () =>
+    installStepTree(dir, startedStep, 'install', () =>
       recordingInstallFailure(dir, step.id, () =>
         installDepsChangedSinceDispense(
           root,
@@ -792,17 +792,10 @@ async function runRecorded(
           state,
           step,
           migration,
-          install,
-          effectiveSkipInstall
-        );
-      } else {
-        await installStepTree(
-          dir,
-          step,
-          effectiveSkipInstall,
-          'install',
           install
         );
+      } else {
+        await installStepTree(dir, step, 'install', install);
       }
 
       if (installer.skippedInstall) {
@@ -919,18 +912,10 @@ async function finishCompletedGenerator(
   // commit: absent means an older nx wrote the marker without recording the
   // answer, and the commit is kept as that version's retries did.
   if (!state.createCommits || step.generatorMadeChanges === false) {
-    await installStepTree(dir, step, skipInstall, 'install', installDeps);
+    await installStepTree(dir, step, 'install', installDeps);
     return state;
   }
-  return commitStepChanges(
-    dir,
-    root,
-    state,
-    step,
-    migration,
-    installDeps,
-    skipInstall
-  );
+  return commitStepChanges(dir, root, state, step, migration, installDeps);
 }
 
 // Installs what the step changed, commits it, and records the result in the
@@ -943,15 +928,14 @@ async function commitStepChanges(
   state: MigrateRunState,
   step: MigrateStep,
   migration: PlannedMigration,
-  installDeps: () => Promise<void>,
-  skipInstall: boolean
+  installDeps: () => Promise<void>
 ): Promise<MigrateRunState> {
   const absorbedStepIds = uncoveredFailedStepIds(state).filter(
     (id) => id !== step.id
   );
   let commit: BrokeredCommit;
   try {
-    commit = await commitStepTree(dir, step, skipInstall, absorbedStepIds, () =>
+    commit = await commitStepTree(dir, step, absorbedStepIds, () =>
       commitMigrationIfRequested(
         root,
         migration,

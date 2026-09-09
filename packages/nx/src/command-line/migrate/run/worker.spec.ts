@@ -2630,7 +2630,6 @@ describe('runSingleMigrationWorker', () => {
         kind: 'commit',
         stepId: 'step-1',
         attempt: 1,
-        skipInstall: true,
       });
     });
 
@@ -2692,7 +2691,6 @@ describe('runSingleMigrationWorker', () => {
         kind: 'install',
         stepId: 'step-1',
         attempt: 1,
-        skipInstall: true,
       });
     });
 

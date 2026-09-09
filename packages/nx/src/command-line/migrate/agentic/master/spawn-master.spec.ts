@@ -114,6 +114,7 @@ function input(
     runId,
     runbookPath: join(runRoot, '.nx', 'migrate-runs', runId, 'RUNBOOK.md'),
     reconcileCommand: `npx nx migrate --run-id=${runId}`,
+    policy: { createCommits: true, skipInstall: false },
     sentinelPollIntervalMs: 5,
     gracefulExitMs: 20,
     forceKillWaitMs: 20,
@@ -265,7 +266,8 @@ describe('spawnMasterSession', () => {
       expect(mockBrokerCtor).toHaveBeenCalledWith(
         runRoot,
         join(runRoot, '.nx', 'migrate-runs', runId),
-        `npx nx migrate --run-id=${runId}`
+        `npx nx migrate --run-id=${runId}`,
+        { createCommits: true, skipInstall: false }
       );
       expect(mockBrokerCtor.mock.invocationCallOrder[0]).toBeLessThan(
         mockSpawn.mock.invocationCallOrder[0]
