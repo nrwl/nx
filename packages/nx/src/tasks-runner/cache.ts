@@ -1,12 +1,5 @@
 import { spawn } from 'child_process';
-import {
-  type Dirent,
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  rmSync,
-  statSync,
-} from 'node:fs';
+import { existsSync, mkdirSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
@@ -92,94 +85,12 @@ export function terminalOutputPathForHash(hash: string): string {
 }
 
 /**
- * Where a batch worker's own log lives. Keyed by the batch rather than a task
- * hash: one worker produces one log, and the hash of any task in the batch is
- * still preliminary while it runs.
+ * Where a batch worker's own log lives. Mirrors `get_batch_outputs_path_internal`
+ * in cache.rs, which is what actually sweeps the directory — the same mirroring
+ * `terminalOutputPathForHash` does for `get_task_outputs_path_internal`.
  */
 export function batchOutputPathForKey(key: string): string {
   return join(cacheDir, 'batchOutputs', `${key}.log`);
-}
-
-/** Batch logs older than this are swept. Matches `remove_old_cache_records`. */
-const BATCH_OUTPUT_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
-/**
- * Budget for `batchOutputs/`, separate from `maxCacheSize` on purpose: these
- * are debug artifacts, and sharing a budget would let one evict a replayable
- * cache entry — trading a rebuild for a text file.
- */
-const BATCH_OUTPUT_MAX_BYTES = 1024 * 1024 * 1024;
-/**
- * How recently a log must have been written to be treated as live. Measured
- * from mtime, so a batch mid-way through a long silent phase is not protected.
- */
-const MIN_EVICTION_AGE_MS = 60 * 60 * 1000;
-
-/**
- * Deletes batch logs by age, then oldest-first until the directory is under
- * budget. No database: nothing looks a batch log up by key, so a row would be
- * write-only bookkeeping that a hard-killed process could skip, orphaning the
- * file forever. `stat` cannot drift from what is actually on disk, and the file
- * is appended to while its batch runs, so a size recorded anywhere else is
- * wrong until the batch ends.
- *
- * The age sweep deletes at 7 days; the size eviction skips anything written to
- * within `MIN_EVICTION_AGE_MS`. That is last-write, not creation, so a batch
- * that has been silent longer than the window - a long quiet Gradle phase - is
- * evictable once the directory is over budget.
- */
-export function sweepBatchOutputs(
-  now = Date.now(),
-  maxAgeMs = BATCH_OUTPUT_MAX_AGE_MS,
-  maxBytes = BATCH_OUTPUT_MAX_BYTES
-): void {
-  const dir = join(cacheDir, 'batchOutputs');
-  let entries: Dirent[];
-  try {
-    entries = readdirSync(dir, { withFileTypes: true });
-  } catch {
-    // Nothing has captured a batch log yet.
-    return;
-  }
-
-  const files: { path: string; size: number; mtimeMs: number }[] = [];
-  for (const entry of entries) {
-    // Regular files only, from the dirent rather than a stat: a symlink here
-    // would otherwise be aged by its target's mtime, and a directory would be
-    // invisible to both the age pass and the size accounting.
-    if (!entry.isFile()) continue;
-    const path = join(dir, entry.name);
-    try {
-      const stats = statSync(path);
-      if (now - stats.mtimeMs > maxAgeMs) {
-        rmSync(path, { force: true });
-        continue;
-      }
-      files.push({ path, size: stats.size, mtimeMs: stats.mtimeMs });
-    } catch {
-      // Raced with another Nx process sweeping the same directory.
-    }
-  }
-
-  let total = files.reduce((sum, f) => sum + f.size, 0);
-  if (total <= maxBytes) {
-    return;
-  }
-  // Never evict a log young enough to belong to a batch that is still running:
-  // the file is appended to for the life of its batch, and another Nx process
-  // may be doing exactly that right now. Going over budget is recoverable on
-  // the next sweep; deleting a live batch's only log is not.
-  const evictable = files
-    .filter((f) => now - f.mtimeMs > MIN_EVICTION_AGE_MS)
-    .sort((a, b) => a.mtimeMs - b.mtimeMs);
-  for (const file of evictable) {
-    if (total <= maxBytes) break;
-    try {
-      rmSync(file.path, { force: true });
-      total -= file.size;
-    } catch {
-      // As above.
-    }
-  }
 }
 
 export class DbCache {
@@ -362,6 +273,10 @@ export class DbCache {
 
   removeOldCacheRecords() {
     return this.cache.removeOldCacheRecords();
+  }
+
+  sweepBatchOutputs() {
+    return this.cache.sweepBatchOutputs();
   }
 
   temporaryOutputPath(task: Task) {
@@ -670,6 +585,8 @@ export class Cache {
    * collection is directory-based rather than driven by cache records.
    */
   recordTerminalOutputs(_records: { hash: string; size: number }[]) {}
+
+  sweepBatchOutputs() {}
 
   private async expandOutputsInWorkspace(outputs: string[]) {
     return this._expandOutputs(outputs, workspaceRoot);
