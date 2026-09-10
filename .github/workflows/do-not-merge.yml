@@ -4,6 +4,8 @@ on:
   pull_request:
     types: [synchronize, opened, reopened, labeled, unlabeled]
 
+permissions: {}
+
 jobs:
   do-not-merge:
     if: ${{ github.repository_owner == 'nrwl' }}

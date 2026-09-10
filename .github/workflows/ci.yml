@@ -9,6 +9,9 @@ on:
     branches:
       - "**"
 
+permissions:
+  contents: read
+
 env:
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
   NX_CLOUD_ENABLE_METRICS_COLLECTION: 'true'

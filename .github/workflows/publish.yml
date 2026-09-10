@@ -14,6 +14,11 @@ on:
   release:
     types: [ published ]
 
+# Default for jobs that do not declare their own. The publish, PR comment
+# and data resolution jobs override this with exactly what they use.
+permissions:
+  contents: read
+
 # Dynamically generate the display name for the GitHub UI based on the event type and inputs
 run-name: ${{ github.event.inputs.pr && format('PR Release for {0}', github.event.inputs.pr) || github.event_name == 'schedule' && 'Canary Release' || github.event_name == 'workflow_dispatch' && !github.event.inputs.pr && 'Release Dry-Run' || github.ref_name }}
 
@@ -50,6 +55,9 @@ jobs:
     name: Resolve Required Data
     if: ${{ github.repository_owner == 'nrwl' }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read # publish-resolve-data.js calls pulls.get
     outputs:
       version: ${{ steps.script.outputs.version }}
       dry_run_flag: ${{ steps.script.outputs.dry_run_flag }}
@@ -361,7 +369,10 @@ jobs:
             ~/.cargo/git/db/
             .cargo-cache
             target/
-          key: ${{ matrix.settings.target }}-cargo-registry
+          # Scoped to the ref being released, so a release build only restores a
+          # cache written from that same ref rather than any branch that shares
+          # the target name.
+          key: ${{ matrix.settings.target }}-cargo-registry-${{ github.ref_name }}
 
       - name: Setup toolchain
         run: ${{ matrix.settings.setup }}
@@ -384,7 +395,6 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           check-latest: true
-          cache: pnpm
           architecture: x86
 
       - name: Build in docker
@@ -718,6 +728,7 @@ jobs:
       - build-freebsd
       - build
     runs-on: ubuntu-latest
+    permissions: {} # posts to Slack only
     timeout-minutes: 10
     continue-on-error: true  # Don't fail the workflow if notification fails
     outputs:
@@ -813,6 +824,7 @@ jobs:
       - publish
       - report-pending-publish
     runs-on: ubuntu-latest
+    permissions: {} # posts to Slack only
     timeout-minutes: 10
     continue-on-error: true  # Don't fail the workflow if notification fails
     steps:

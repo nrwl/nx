@@ -4,6 +4,9 @@ on:
   schedule:
     - cron: "0 5 * * 0,4" # sunday, thursday 5AM
 
+permissions:
+  contents: read
+
 jobs:
   cache-and-install:
     if: github.repository == 'nrwl/nx'
