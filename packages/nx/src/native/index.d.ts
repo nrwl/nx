@@ -73,7 +73,21 @@ export declare class FileLock {
   constructor(lockFilePath: string)
   unlock(): void
   check(): boolean
+  /**
+   * Waits for the holder to release, with no ceiling of its own.
+   *
+   * Gated on `locked`, so a caller that has not had `check` or `try_lock` set
+   * it gets a promise that resolves at once while the file is still held. That
+   * mutation is load-bearing rather than bookkeeping: removing it turns this
+   * into an immediate resolve and any loop around it into a hot spin.
+   */
   wait(): Promise<void>
+  tryLock(): boolean
+  /**
+   * Resolves true when the holder released within `timeout_ms`, false when it
+   * did not. Awaiting this does not block the JS thread.
+   */
+  waitForRelease(timeoutMs: number): Promise<boolean>
   lock(): void
 }
 
@@ -316,8 +330,9 @@ export declare const enum BatchStatus {
 
 /**
  * What a plugin module registers, independent of the options it is configured
- * with. Every field is a presence check on the module's static exports, so the
- * record is valid for any nx.json entry pointing at the same module.
+ * with. Every field describes the module's exports, and an entry's options only
+ * reach a plugin as an argument when a hook is called, so one record is valid
+ * for every nx.json entry naming the same module.
  */
 export interface CachedPluginCapabilities {
   name: string
