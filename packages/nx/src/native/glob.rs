@@ -4,14 +4,57 @@ mod glob_parser;
 pub mod glob_transform;
 
 use crate::native::glob::glob_transform::convert_glob;
-use dashmap::DashMap;
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
+use lru::LruCache;
+use once_cell::sync::OnceCell;
+use parking_lot::Mutex;
 use std::fmt::Debug;
+use std::num::NonZeroUsize;
 use std::path::Path;
 use std::sync::{Arc, LazyLock};
 use tracing::trace;
 
-static GLOB_CACHE: LazyLock<DashMap<String, Arc<NxGlobSet>>> = LazyLock::new(DashMap::new);
+// Compiled matchers can be much larger than their pattern strings. Retain
+// recent sets, rather than every project-specific pattern seen by the process.
+static GLOB_CACHE: LazyLock<GlobCache> = LazyLock::new(|| GlobCache::new(128));
+
+type GlobCell = Arc<OnceCell<Arc<NxGlobSet>>>;
+
+struct GlobCache {
+    entries: Mutex<LruCache<String, GlobCell>>,
+}
+
+impl GlobCache {
+    fn new(capacity: usize) -> Self {
+        Self {
+            entries: Mutex::new(LruCache::new(
+                NonZeroUsize::new(capacity).expect("glob cache capacity must be nonzero"),
+            )),
+        }
+    }
+
+    fn get_or_try_init(
+        &self,
+        key: String,
+        build: impl FnOnce() -> anyhow::Result<NxGlobSet>,
+    ) -> anyhow::Result<Arc<NxGlobSet>> {
+        let (cell, evicted) = {
+            let mut entries = self.entries.lock();
+            if let Some(cell) = entries.get(&key) {
+                (Arc::clone(cell), None)
+            } else {
+                let cell = Arc::new(OnceCell::new());
+                let evicted = entries.push(key, Arc::clone(&cell));
+                (cell, evicted)
+            }
+        };
+        // Neither compilation nor destruction of an evicted matcher holds
+        // the cache lock. Callers retain their Arcs across eviction, and a
+        // shared cell prevents duplicate compilation of concurrent misses.
+        drop(evicted);
+        cell.get_or_try_init(|| build().map(Arc::new)).cloned()
+    }
+}
 
 pub struct NxGlobSetBuilder {
     included_globs: GlobSetBuilder,
@@ -138,40 +181,36 @@ pub(crate) fn build_glob_set<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Resu
     sorted_globs.sort();
     let cache_key = sorted_globs.join("\0");
 
-    if let Some(cached) = GLOB_CACHE.get(&cache_key) {
-        return Ok(Arc::clone(cached.value()));
-    }
+    GLOB_CACHE.get_or_try_init(cache_key, || {
+        let result = globs
+            .iter()
+            .flat_map(|s| potential_glob_split(s.as_ref()))
+            .map(|glob| {
+                // Decide on the pattern without its negation marker. A leading `!`
+                // marks the whole glob as an exclusion — it is not extglob syntax —
+                // and convert_glob strips bare `@`, `+` and `?` out of anything it
+                // touches (see special_char_with_no_group, which `+spec.ts`-style
+                // patterns rely on). Routing a plain exclusion through it purely
+                // because of that leading `!` silently rewrote `!dist/@scope/pkg`
+                // to `!dist/scope/pkg`, so the exclusion matched nothing.
+                let pattern = glob.strip_prefix('!').unwrap_or(glob);
+                if pattern.contains('!')
+                    || pattern.contains('|')
+                    || pattern.contains('(')
+                    || pattern.contains("{,")
+                {
+                    convert_glob(glob)
+                } else {
+                    Ok(vec![glob.to_string()])
+                }
+            })
+            .collect::<anyhow::Result<Vec<_>>>()?
+            .concat();
 
-    let result = globs
-        .iter()
-        .flat_map(|s| potential_glob_split(s.as_ref()))
-        .map(|glob| {
-            // Decide on the pattern without its negation marker. A leading `!`
-            // marks the whole glob as an exclusion — it is not extglob syntax —
-            // and convert_glob strips bare `@`, `+` and `?` out of anything it
-            // touches (see special_char_with_no_group, which `+spec.ts`-style
-            // patterns rely on). Routing a plain exclusion through it purely
-            // because of that leading `!` silently rewrote `!dist/@scope/pkg`
-            // to `!dist/scope/pkg`, so the exclusion matched nothing.
-            let pattern = glob.strip_prefix('!').unwrap_or(glob);
-            if pattern.contains('!')
-                || pattern.contains('|')
-                || pattern.contains('(')
-                || pattern.contains("{,")
-            {
-                convert_glob(glob)
-            } else {
-                Ok(vec![glob.to_string()])
-            }
-        })
-        .collect::<anyhow::Result<Vec<_>>>()?
-        .concat();
+        trace!(?globs, ?result, "converted globs");
 
-    trace!(?globs, ?result, "converted globs");
-
-    let glob_set = Arc::new(NxGlobSetBuilder::new(&result)?.build()?);
-    GLOB_CACHE.insert(cache_key, Arc::clone(&glob_set));
-    Ok(glob_set)
+        NxGlobSetBuilder::new(&result)?.build()
+    })
 }
 
 #[napi]
@@ -202,6 +241,77 @@ pub(crate) fn contains_glob_pattern(value: &str) -> bool {
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[test]
+    fn glob_cache_is_bounded_and_keeps_recent_matchers() {
+        let cache = GlobCache::new(2);
+        let build = || NxGlobSetBuilder::new(&["src/**", "!src/ignored/**"])?.build();
+        let first = cache.get_or_try_init("first".into(), build).unwrap();
+        let second = cache.get_or_try_init("second".into(), build).unwrap();
+        let recent = cache
+            .get_or_try_init("first".into(), || panic!("cache hit"))
+            .unwrap();
+        assert!(Arc::ptr_eq(&first, &recent));
+        cache.get_or_try_init("third".into(), build).unwrap();
+        assert_eq!(cache.entries.lock().len(), 2);
+        let rebuilt = cache.get_or_try_init("second".into(), build).unwrap();
+        assert!(!Arc::ptr_eq(&second, &rebuilt));
+        // Eviction never invalidates a matcher held by an active caller.
+        assert!(first.is_match("src/index.ts"));
+        assert!(!first.is_match("src/ignored/index.ts"));
+        assert_eq!(cache.entries.lock().len(), 2);
+    }
+
+    #[test]
+    fn glob_cache_compiles_concurrent_misses_once() {
+        use std::sync::Barrier;
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        let cache = GlobCache::new(2);
+        let barrier = Barrier::new(8);
+        let calls = AtomicUsize::new(0);
+        std::thread::scope(|scope| {
+            let results: Vec<_> = (0..8)
+                .map(|_| {
+                    scope.spawn(|| {
+                        barrier.wait();
+                        cache
+                            .get_or_try_init("shared".into(), || {
+                                calls.fetch_add(1, Ordering::SeqCst);
+                                std::thread::sleep(std::time::Duration::from_millis(5));
+                                NxGlobSetBuilder::new(&["**/*.ts"])?.build()
+                            })
+                            .unwrap()
+                    })
+                })
+                .collect();
+            for result in results {
+                assert!(result.join().unwrap().is_match("src/index.ts"));
+            }
+        });
+        assert_eq!(calls.load(Ordering::SeqCst), 1);
+    }
+
+    #[test]
+    fn glob_cache_retries_failed_initialization() {
+        let cache = GlobCache::new(2);
+        assert!(
+            cache
+                .get_or_try_init("pattern".into(), || anyhow::bail!("invalid glob"))
+                .is_err()
+        );
+        let recovered = cache
+            .get_or_try_init("pattern".into(), || {
+                NxGlobSetBuilder::new(&["**/*.ts"])?.build()
+            })
+            .unwrap();
+        assert!(recovered.is_match("src/index.ts"));
+        assert!(Arc::ptr_eq(
+            &recovered,
+            &cache
+                .get_or_try_init("pattern".into(), || panic!("cache hit"))
+                .unwrap()
+        ));
+    }
 
     #[test]
     fn should_not_strip_literal_chars_from_plain_negated_globs() {
