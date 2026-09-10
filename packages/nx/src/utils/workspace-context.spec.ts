@@ -5,6 +5,7 @@ const mockDaemonMultiGlob = vi.fn();
 const mockEnabled = vi.fn();
 const mockIsOnDaemon = vi.fn();
 const mockReady = vi.fn();
+const mockRefresh = vi.fn();
 
 // The source lazy-requires ../native (CJS channel), which vi.mock cannot
 // intercept. Mutate the CJS instance directly; each test file runs in its own
@@ -17,6 +18,7 @@ cjsNative.WorkspaceContext = vi.fn().mockImplementation(function (
     glob: mockGlob,
     multiGlob: mockMultiGlob,
     ready: mockReady,
+    refresh: mockRefresh,
     workspaceRoot: root,
   };
 });
@@ -184,15 +186,23 @@ describe('refreshing the context before a graph build', () => {
     mockGlob.mockReturnValue(['result']);
   });
 
-  it('builds a new context so reads after it see files written since the last walk', async () => {
+  it('re-walks the existing context and makes the next read wait for it', async () => {
     await globWithWorkspaceContext('/some/root', ['**/*.ts']);
 
     refreshWorkspaceContext('/some/root');
     await globWithWorkspaceContext('/some/root', ['**/*.ts']);
 
-    expect(cjsNative.WorkspaceContext).toHaveBeenCalledTimes(2);
-    // The new context's walk is awaited, not the old one's.
+    expect(cjsNative.WorkspaceContext).toHaveBeenCalledTimes(1);
+    expect(mockRefresh).toHaveBeenCalledTimes(1);
+    // The read after the refresh awaits its walk, not the first one.
     expect(mockReady).toHaveBeenCalledTimes(2);
+  });
+
+  it('walks fresh when there is no context for the root yet', () => {
+    refreshWorkspaceContext('/some/root');
+
+    expect(cjsNative.WorkspaceContext).toHaveBeenCalledTimes(1);
+    expect(mockRefresh).not.toHaveBeenCalled();
   });
 
   it('leaves the context to the daemon when a client will ask it', () => {

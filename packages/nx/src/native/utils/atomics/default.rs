@@ -9,6 +9,9 @@ impl<T> NxMutex<T> {
     pub fn lock(&self) -> anyhow::Result<MutexGuard<'_, T>> {
         Ok(self.0.lock())
     }
+    pub fn try_lock(&self) -> Option<MutexGuard<'_, T>> {
+        self.0.try_lock()
+    }
 }
 
 pub struct NxCondvar(Condvar);

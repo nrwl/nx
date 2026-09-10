@@ -216,7 +216,12 @@ export function refreshWorkspaceContext(workspaceRoot: string) {
   if (workspaceRoot === '/virtual' || isOnDaemon() || daemonClient.enabled()) {
     return;
   }
-  setupWorkspaceContext(workspaceRoot);
+  if (workspaceContext?.workspaceRoot !== workspaceRoot) {
+    setupWorkspaceContext(workspaceRoot);
+    return;
+  }
+  workspaceContext.refresh();
+  filesReady = undefined;
 }
 
 function ensureContextAvailable(workspaceRoot: string) {

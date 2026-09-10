@@ -36,6 +36,7 @@ use xxhash_rust::xxh3;
 pub struct WorkspaceContext {
     pub workspace_root: String,
     workspace_root_path: PathBuf,
+    cache_dir: String,
     files_worker: FilesWorker,
 }
 
@@ -399,6 +400,51 @@ impl FilesWorker {
         FilesWorker(Some(files_lock))
     }
 
+    /// Walks again into the same list, rewriting the archive. Returns false,
+    /// doing nothing, when a walk is already in progress.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn refresh(&self, workspace_root: &Path, cache_dir: String) -> bool {
+        let Some(files_sync) = &self.0 else {
+            return false;
+        };
+        let (files_lock, _) = files_sync.deref();
+        // The first walk holds the lock throughout, and a refresh leaves the
+        // list empty while it walks, so either means a walk is in progress.
+        let Some(mut files) = files_lock.try_lock() else {
+            return false;
+        };
+        if files.is_empty() {
+            return false;
+        }
+        // Readers wait while the list is empty, so none sees the old one.
+        *files = Vec::new();
+        drop(files);
+
+        let files_sync = Arc::clone(files_sync);
+        let workspace_root = workspace_root.to_owned();
+        std::thread::spawn(move || {
+            let files = acquire_files(&workspace_root, &cache_dir, false, files_lock_wait());
+            let (lock, cvar) = &*files_sync;
+            let mut workspace_files = lock.lock().expect("Should be able to lock files");
+            *workspace_files = files;
+            trace!(files_len = workspace_files.len(), "files refreshed");
+            drop(workspace_files);
+            cvar.notify_all();
+        });
+        true
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    fn refresh(&self, workspace_root: &Path, cache_dir: String) -> bool {
+        let Some(files_sync) = &self.0 else {
+            return false;
+        };
+        let files = gather_and_hash_files(workspace_root, cache_dir);
+        let (files_lock, _) = files_sync.deref();
+        *files_lock.lock().expect("Should be able to lock files") = files;
+        true
+    }
+
     fn get_files(&self) -> Vec<FileData> {
         if let Some(files_sync) = &self.0 {
             let (files_lock, cvar) = files_sync.deref();
@@ -444,10 +490,14 @@ impl FilesWorker {
             return HashMap::new();
         };
 
-        let (files_lock, _) = &files_sync.deref();
-        let mut files = files_lock
+        let (files_lock, cvar) = &files_sync.deref();
+        let files = files_lock
             .lock()
             .expect("Should always be able to update files");
+        // Draining an empty list mid-refresh would publish only these updates.
+        let mut files = cvar
+            .wait(files, |guard| guard.is_empty())
+            .expect("Should be able to wait for files");
         let mut map: HashMap<PathBuf, String> = files.drain(..).collect();
 
         for deleted_path in deleted_files_and_directories {
@@ -510,6 +560,7 @@ impl WorkspaceContext {
             files_worker: FilesWorker::gather_files(&workspace_root_path, cache_dir.clone()),
             workspace_root,
             workspace_root_path,
+            cache_dir,
         }
     }
 
@@ -522,10 +573,20 @@ impl WorkspaceContext {
         let workspace_root_path = PathBuf::from(&workspace_root);
 
         WorkspaceContext {
-            files_worker: FilesWorker::from_archive(&workspace_root_path, cache_dir),
+            files_worker: FilesWorker::from_archive(&workspace_root_path, cache_dir.clone()),
             workspace_root,
             workspace_root_path,
+            cache_dir,
         }
+    }
+
+    /// Walks the workspace again into this context, so it and the archive
+    /// include writes made since the last walk. Does nothing while a walk is
+    /// in progress. Await `ready()` before reading.
+    #[napi]
+    pub fn refresh(&self) -> bool {
+        self.files_worker
+            .refresh(&self.workspace_root_path, self.cache_dir.clone())
     }
 
     /// Resolves once the files behind this context exist. The readers below
@@ -1043,6 +1104,56 @@ mod tests {
 
         let names: Vec<String> = waiter.join().unwrap().into_iter().map(|(f, _)| f).collect();
         assert_eq!(names, vec!["a.ts"]);
+    }
+
+    #[test]
+    #[cfg(not(target_arch = "wasm32"))]
+    fn refresh_picks_up_writes_since_the_walk_and_rewrites_the_archive() {
+        let temp = workspace_with(&["a.ts"]);
+        let cache = TempDir::new().unwrap();
+        let ctx = WorkspaceContext::new(as_string(&temp), as_string(&cache));
+        let before = files_of(&ctx);
+
+        temp.child("a.ts").write_str("changed").unwrap();
+        std::fs::File::options()
+            .write(true)
+            .open(temp.child("a.ts").path())
+            .unwrap()
+            .set_modified(SystemTime::now() + Duration::from_secs(5))
+            .unwrap();
+        temp.child("b.ts").write_str("b").unwrap();
+
+        assert!(ctx.refresh());
+        let after = files_of(&ctx);
+        assert_eq!(
+            after.iter().map(|(f, _)| f.as_str()).collect::<Vec<_>>(),
+            vec!["a.ts", "b.ts"]
+        );
+        assert_ne!(after[0].1, before[0].1);
+        // A plugin worker loading the archive now sees the same files.
+        let loaded = WorkspaceContext::from_archive(as_string(&temp), as_string(&cache));
+        assert_eq!(files_of(&loaded), after);
+    }
+
+    #[test]
+    #[cfg(not(target_arch = "wasm32"))]
+    fn refresh_leaves_a_walk_in_progress_alone() {
+        let temp = workspace_with(&["a.ts"]);
+        let cache = TempDir::new().unwrap();
+        let lock_path = cache.path().join(NX_FILES_LOCK);
+        let mut holder = hold_lock(&cache);
+        let waits_before = waits_started_on(&lock_path);
+
+        let ctx = WorkspaceContext::new(as_string(&temp), as_string(&cache));
+        let deadline = Instant::now() + Duration::from_secs(10);
+        while waits_started_on(&lock_path) == waits_before {
+            assert!(Instant::now() < deadline, "the walk never started");
+            std::thread::sleep(Duration::from_millis(5));
+        }
+
+        assert!(!ctx.refresh());
+        holder.unlock().unwrap();
+        assert_eq!(files_of(&ctx).len(), 1);
     }
 
     /// Plugin createNodes pipelines (and therefore atomized target name
