@@ -72,9 +72,58 @@ export declare class FileLock {
   locked: boolean
   constructor(lockFilePath: string)
   unlock(): void
+  /**
+   * Whether anybody holds the lock, the caller itself included.
+   *
+   * The caller's own lock is never disturbed by asking. A lock that is
+   * *free* is briefly taken and released on a file description of the
+   * probe's own, and that hold is real: two processes asking at the same
+   * instant can each be told the lock is held, and a concurrent
+   * `lockTimeout(0)` can fail against nobody. flock has no query operation,
+   * so a take-and-release is the only way to ask.
+   */
   check(): boolean
   wait(): Promise<void>
+  /**
+   * Resolves `true` as soon as nobody holds the lock exclusively, `false`
+   * once the timeout has passed with it still held. Nothing is held on
+   * return either way, and `locked` is left as it was: a caller that wants
+   * the current answer asks `check()`, as the graph wait loop does.
+   *
+   * The probe uses its own file description, so a handle that itself holds
+   * the lock waits on nobody but itself and gets `false` at the deadline.
+   *
+   * `timeoutMs` is a count of milliseconds: `Infinity` means `wait()`, with
+   * no deadline at all, and a negative or NaN value is refused. The refusal
+   * is thrown synchronously, before the promise exists, so it cannot be
+   * reached with `.catch()`.
+   */
+  waitTimeout(timeoutMs: number): Promise<boolean>
   lock(): void
+  /**
+   * `lock()` that gives up: `true` and the lock is held, `false` once the
+   * timeout has passed without acquiring it. Blocks the calling thread for
+   * at most that long, as `lock()` blocks it indefinitely.
+   *
+   * `timeoutMs` is a count of milliseconds: `0` is a single attempt,
+   * `Infinity` is `lock()` itself, and a negative or NaN value is refused.
+   *
+   * After a `false`, `locked` still reads `true`. The field says whether
+   * anybody holds the lock, not whether this handle does - `false` is
+   * precisely the answer that somebody else does - so `unlock()` after one
+   * would be releasing a lock this handle never took.
+   *
+   * On Windows the lock is `LockFileEx` over the whole range, and an
+   * overlapping request conflicts with a lock the same handle already holds
+   * rather than being granted as flock grants it. So a handle asking for a
+   * lock it already holds gets `true` at once on Unix, while on Windows a
+   * finite budget would poll to the deadline and answer `false` and
+   * `Infinity` - which is `lock()`, the blocking form with no
+   * `LOCKFILE_FAIL_IMMEDIATELY` - would wait on itself. Read out of the
+   * `fs4` source and the Win32 contract, not run there; neither in-tree
+   * caller asks.
+   */
+  lockTimeout(timeoutMs: number): boolean
 }
 
 export declare class HashPlanInspector {
