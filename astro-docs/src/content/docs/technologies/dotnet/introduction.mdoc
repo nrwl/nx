@@ -130,8 +130,8 @@ Editing any of these files updates the project graph without an `nx reset`.
 
 `restore` isn't cached and isn't part of the task chain.
 Run it once before `build`.
-The files it writes to `obj` are excluded from the outputs of `build`, `publish`, and `pack`, so a
-cache hit never replaces a machine's own restore.
+The files it writes to the top level of `obj` are excluded from the outputs of `build`, `publish`,
+and `pack`, so a cache hit doesn't replace your restore.
 
 ### Test results
 
