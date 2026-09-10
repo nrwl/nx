@@ -186,6 +186,10 @@ let workspaceWatcherError: Error | undefined;
 global.NX_DAEMON = true;
 process.env.NX_DAEMON_PROCESS = 'true';
 
+const DAEMON_POLLING_INTERVAL_MS = process.env.NX_DAEMON_POLLING_INTERVAL
+  ? Number(process.env.NX_DAEMON_POLLING_INTERVAL) || 500
+  : 500;
+
 export type HandlerResult = {
   description: string;
   error?: any;
@@ -712,7 +716,9 @@ export async function startServer(): Promise<Server> {
     killSocketOrPath();
   }
 
-  serverLogger.log(`[Server] Starting outdated check interval (20ms)`);
+  serverLogger.log(
+    `[Server] Starting outdated check interval (${DAEMON_POLLING_INTERVAL_MS}ms)`
+  );
 
   setInterval(() => {
     if (getDaemonProcessIdSync() !== process.pid) {
@@ -744,7 +750,7 @@ export async function startServer(): Promise<Server> {
         });
       }
     }
-  }, 500).unref();
+  }, DAEMON_POLLING_INTERVAL_MS).unref();
 
   return new Promise(async (resolve, reject) => {
     // `listen` reports a failed bind asynchronously on the server, which the
