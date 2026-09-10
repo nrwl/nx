@@ -20,7 +20,7 @@ export interface GeneratorOutputCapture {
 export const MAX_GENERATOR_OUTPUT_BYTES = 16384;
 const HEAD_BYTES = 4096;
 const omittedMarker = (omitted: number | string) =>
-  `[nx migrate: ${omitted} bytes of generator output omitted]`;
+  `[nx migrate: ${omitted} bytes of output omitted]`;
 // Reserved at the widest number spelling so a growing count cannot push a
 // flush over the cap.
 export const MARKER_BYTES = Buffer.byteLength(
@@ -106,6 +106,39 @@ export class BoundedOutput {
     }
     if (!this.tail.length) return head;
     return this.headSplit ? head + tail : `${head}\n${tail}`;
+  }
+}
+
+// The same head/marker/tail bound over a byte stream: chunks carry no record
+// boundary, so the cuts land on code points wherever the budgets run out and
+// the result does not depend on how the stream was chunked.
+export class BoundedChunks {
+  private head = '';
+  private headOpen = true;
+  private tail = '';
+  private omitted = 0;
+
+  append(chunk: string): void {
+    if (this.headOpen) {
+      const prefix = truncateUtf8(
+        chunk,
+        HEAD_BYTES - Buffer.byteLength(this.head)
+      );
+      this.head += prefix;
+      chunk = chunk.slice(prefix.length);
+      if (!chunk) return;
+      this.headOpen = false;
+    }
+    const joined = this.tail + chunk;
+    this.tail = keepTailUtf8(joined, TAIL_LIMIT);
+    this.omitted += Buffer.byteLength(joined) - Buffer.byteLength(this.tail);
+  }
+
+  render(): string {
+    if (this.omitted > 0) {
+      return `${this.head}\n${omittedMarker(this.omitted)}\n${this.tail}`;
+    }
+    return this.head + this.tail;
   }
 }
 

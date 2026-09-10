@@ -1,4 +1,5 @@
 import {
+  BoundedChunks,
   installGeneratorOutputCapture,
   MARKER_BYTES,
   MAX_GENERATOR_OUTPUT_BYTES,
@@ -109,7 +110,7 @@ describe('generator output capture', () => {
   });
 
   describe('output cap', () => {
-    const marker = /\[nx migrate: (\d+) bytes of generator output omitted\]/;
+    const marker = /\[nx migrate: (\d+) bytes of output omitted\]/;
     const bytes = (value: string) => Buffer.byteLength(value);
 
     function captured(emit: () => void): string {
@@ -175,10 +176,12 @@ describe('generator output capture', () => {
     });
 
     it('keeps a lone low surrogate that fits at the tail cut', () => {
-      // 4096 bytes fill the head; the rest overflows the tail by one byte, so
-      // the cut lands between `A` and the lone surrogate.
+      // 4096 bytes fill the head; the rest (`A`, the 3-byte surrogate, the
+      // x's and the record's newline) overflows the tail by one byte, so the
+      // cut lands between `A` and the lone surrogate.
+      const tail = MAX_GENERATOR_OUTPUT_BYTES - 4096 - MARKER_BYTES;
       const flushed = captured(() =>
-        console.log('h'.repeat(4096) + 'A\uDC00' + 'x'.repeat(12211))
+        console.log('h'.repeat(4096) + 'A\uDC00' + 'x'.repeat(tail - 4))
       );
 
       expect(bytes(flushed)).toBeLessThanOrEqual(MAX_GENERATOR_OUTPUT_BYTES);
@@ -189,9 +192,43 @@ describe('generator output capture', () => {
     it('reserves the marker at the widest number spelling', () => {
       for (const count of [Number.MAX_VALUE, Infinity, 1e21 + 131072]) {
         expect(MARKER_BYTES).toBeGreaterThanOrEqual(
-          bytes(`\n[nx migrate: ${count} bytes of generator output omitted]\n`)
+          bytes(`\n[nx migrate: ${count} bytes of output omitted]\n`)
         );
       }
+    });
+
+    it('bounds a byte stream the same way regardless of its chunking', () => {
+      const text =
+        'HEAD:' + 'x'.repeat(MAX_GENERATOR_OUTPUT_BYTES - 9) + 'ERR_PNPM_NO\n';
+      const chunked = new BoundedChunks();
+      chunked.append(text.slice(0, 16384));
+      chunked.append(text.slice(16384, 16389));
+      chunked.append(text.slice(16389));
+      const whole = new BoundedChunks();
+      whole.append(text);
+
+      const rendered = chunked.render();
+
+      expect(rendered).toBe(whole.render());
+      expect(rendered.startsWith('HEAD:')).toBe(true);
+      expect(rendered.endsWith('ERR_PNPM_NO\n')).toBe(true);
+      expect(bytes(rendered)).toBeLessThanOrEqual(MAX_GENERATOR_OUTPUT_BYTES);
+      expect(Number(rendered.match(marker)[1])).toBe(
+        bytes(text) - 4096 - (MAX_GENERATOR_OUTPUT_BYTES - 4096 - MARKER_BYTES)
+      );
+    });
+
+    it('cuts a byte stream on code points at both ends', () => {
+      const bounded = new BoundedChunks();
+      for (let i = 0; i < 100; i++) bounded.append('€'.repeat(100));
+
+      const rendered = bounded.render();
+
+      expect(bytes(rendered)).toBeLessThanOrEqual(MAX_GENERATOR_OUTPUT_BYTES);
+      const [head, tail] = rendered.split(marker.exec(rendered)[0]);
+      expect(head).toMatch(/^€+\n$/);
+      expect(tail).toMatch(/^\n€+$/);
+      expect(rendered).not.toContain('�');
     });
 
     it('stays within the cap while the omitted count gains a digit', () => {
