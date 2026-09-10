@@ -10,11 +10,8 @@ fn collect_workspace_gitignores<P: AsRef<Path>>(root: P) -> Vec<PathBuf> {
 
 /// Collect ignore files with any of `names` anywhere in the workspace
 /// (node_modules pruned), returning absolute paths. `create_walker` honours
-/// `.ignore` and nested `.nxignore` in addition to `.gitignore`; the watch
-/// filterer discovers the same set so it no longer misses a directory the walk
-/// excludes. (Within one directory the sources rank exactly like the ignore
-/// crate; cross-DIRECTORY precedence is depth-first where the crate is
-/// class-first — a tracked follow-up, see WatchFilterer::git_ignores.)
+/// nested `.nxignore` in addition to `.gitignore`; the watch filterer discovers
+/// the same set so it no longer misses a directory the walk excludes.
 pub(in crate::native) fn collect_workspace_ignore_files<P: AsRef<Path>>(
     root: P,
     names: &[&str],

@@ -848,10 +848,10 @@ mod tests {
     }
 
     #[test]
-    fn dot_ignore_beats_a_same_dir_gitignore_negation() {
-        // The ignore crate ranks .ignore above .gitignore. A pkg/.gitignore
-        // that un-ignores a path a pkg/.ignore excludes must stay excluded, or
-        // the watcher admits a file the walk drops and reports it deleted.
+    fn dot_ignore_is_not_an_ignore_source() {
+        // `.ignore` is a ripgrep convention nx never adopted, and create_walker
+        // now turns it off. The watcher must not read it either, or it drops a
+        // file the walk keeps and never reports it at all.
         use notify::EventKind;
         use notify::event::CreateKind;
 
@@ -859,7 +859,6 @@ mod tests {
         let origin = dunce::canonicalize(dir.path()).expect("canonicalize");
         let pkg = origin.join("pkg");
         fs::create_dir_all(&pkg).expect("mkdir pkg");
-        fs::write(pkg.join(".gitignore"), "!conflict.log\n").expect("write .gitignore");
         fs::write(pkg.join(".ignore"), "conflict.log\n").expect("write .ignore");
 
         let filterer = watch_filterer::create_filter(origin.to_str().expect("utf-8"), &[], true)
@@ -870,16 +869,17 @@ mod tests {
                 .add_path(pkg.join("conflict.log")),
         );
         assert!(
-            !filterer.check_event(&event),
-            ".ignore excludes conflict.log and outranks the .gitignore negation"
+            filterer.check_event(&event),
+            "a .ignore entry must not exclude conflict.log"
         );
     }
 
     #[test]
-    fn nested_nxignore_outranks_a_same_dir_dot_ignore() {
-        // The ignore crate ranks a custom ignore file (.nxignore) above .ignore.
-        // A nested pkg/.nxignore that excludes a path a pkg/.ignore un-ignores
-        // must win. Pins the .nxignore rank above .ignore in git_ignores.
+    fn nested_nxignore_outranks_a_same_dir_gitignore_negation() {
+        // The ignore crate ranks a custom ignore file (.nxignore) above
+        // .gitignore. A nested pkg/.nxignore that excludes a path a
+        // pkg/.gitignore un-ignores must win, or the watcher admits a file the
+        // walk drops and reports it deleted on the next rescan.
         use notify::EventKind;
         use notify::event::CreateKind;
 
@@ -887,7 +887,7 @@ mod tests {
         let origin = dunce::canonicalize(dir.path()).expect("canonicalize");
         let pkg = origin.join("pkg");
         fs::create_dir_all(&pkg).expect("mkdir pkg");
-        fs::write(pkg.join(".ignore"), "!keep.tmp\n").expect("write .ignore");
+        fs::write(pkg.join(".gitignore"), "!keep.tmp\n").expect("write .gitignore");
         fs::write(pkg.join(".nxignore"), "keep.tmp\n").expect("write .nxignore");
 
         let filterer = watch_filterer::create_filter(origin.to_str().expect("utf-8"), &[], true)
@@ -897,8 +897,82 @@ mod tests {
         );
         assert!(
             !filterer.check_event(&event),
-            ".nxignore excludes keep.tmp and outranks the .ignore negation"
+            ".nxignore excludes keep.tmp and outranks the .gitignore negation"
         );
+    }
+
+    #[test]
+    fn nested_nxignore_outranks_a_deeper_gitignore_negation() {
+        // The crate keeps the deepest match per CLASS and then prefers the
+        // higher class, so a .nxignore beats a .gitignore at any depth. Pins
+        // rank-before-depth in the git_ignores sort: ordering by depth first
+        // lets the deeper negation un-ignore the file.
+        use notify::EventKind;
+        use notify::event::CreateKind;
+
+        let dir = tempdir().expect("tempdir");
+        let origin = dunce::canonicalize(dir.path()).expect("canonicalize");
+        let deep = origin.join("pkg").join("deep");
+        fs::create_dir_all(&deep).expect("mkdir deep");
+        fs::write(origin.join("pkg").join(".nxignore"), "keep.tmp\n").expect("write .nxignore");
+        fs::write(deep.join(".gitignore"), "!keep.tmp\n").expect("write .gitignore");
+
+        let filterer = watch_filterer::create_filter(origin.to_str().expect("utf-8"), &[], true)
+            .expect("filter");
+        let event = RawWatchEvent::new(
+            notify::Event::new(EventKind::Create(CreateKind::File)).add_path(deep.join("keep.tmp")),
+        );
+        assert!(
+            !filterer.check_event(&event),
+            "the shallower .nxignore outranks the deeper .gitignore negation"
+        );
+    }
+
+    #[test]
+    fn a_nested_nxignore_outranks_the_root_nxignore() {
+        // Same class, so the deeper file wins — the root .nxignore is an
+        // ordinary git_ignores entry, not a slot above everything. The walk
+        // resolves it this way, and a watcher that admitted the file would
+        // report it deleted on the next rescan.
+        use notify::EventKind;
+        use notify::event::CreateKind;
+
+        let dir = tempdir().expect("tempdir");
+        let origin = dunce::canonicalize(dir.path()).expect("canonicalize");
+        let pkg = origin.join("pkg");
+        fs::create_dir_all(&pkg).expect("mkdir pkg");
+        fs::write(origin.join(".nxignore"), "!keep.tmp\n").expect("write root .nxignore");
+        fs::write(pkg.join(".nxignore"), "keep.tmp\n").expect("write nested .nxignore");
+
+        let filterer = watch_filterer::create_filter(origin.to_str().expect("utf-8"), &[], true)
+            .expect("filter");
+        let event = RawWatchEvent::new(
+            notify::Event::new(EventKind::Create(CreateKind::File)).add_path(pkg.join("keep.tmp")),
+        );
+        assert!(
+            !filterer.check_event(&event),
+            "the nested .nxignore excludes keep.tmp and outranks the root negation"
+        );
+    }
+
+    #[test]
+    fn the_root_nxignore_applies_even_when_git_ignores_are_off() {
+        // .nxignore is nx's own opt-out, not a git source, so use_ignore=false
+        // must not disable it. Folding it into git_ignores could have lost this.
+        use notify::EventKind;
+        use notify::event::CreateKind;
+
+        let dir = tempdir().expect("tempdir");
+        let origin = dunce::canonicalize(dir.path()).expect("canonicalize");
+        fs::write(origin.join(".nxignore"), "scratch.tmp\n").expect("write .nxignore");
+
+        let filterer = watch_filterer::create_filter(origin.to_str().expect("utf-8"), &[], false)
+            .expect("filter");
+        let event = RawWatchEvent::new(
+            notify::Event::new(EventKind::Create(CreateKind::File))
+                .add_path(origin.join("scratch.tmp")),
+        );
+        assert!(!filterer.check_event(&event));
     }
 
     #[test]

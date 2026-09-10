@@ -37,7 +37,7 @@ function dispatchWorkspaceChanges(
 // are never watched — only take effect on the next daemon start: .git/info/exclude
 // (under the hardcoded-ignored .git), the global core.excludesFile (outside the
 // tree), and parent .gitignore files above the workspace root.
-const IGNORE_FILE_NAMES = ['.gitignore', '.ignore', '.nxignore'];
+const IGNORE_FILE_NAMES = ['.gitignore', '.nxignore'];
 
 /**
  * The native filterer's ignore rules are fixed when the watcher starts, so an

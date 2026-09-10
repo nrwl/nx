@@ -13,12 +13,13 @@ use crate::native::watch::utils::get_nx_ignore;
 #[derive(Debug)]
 pub struct WatchFilterer {
     origin: PathBuf,
-    nx_ignore: Option<Gitignore>,
     /// Per-directory ignore matchers, consulted first-match-wins. Each entry is
     /// (directory the matcher applies in, class rank, compiled matcher), sorted
-    /// deepest-first then by rank so within a directory a more specific source
-    /// wins: nested .nxignore > .ignore > .gitignore > .git-exclude/global. Full
-    /// class-above-depth parity with the ignore crate is a tracked follow-up.
+    /// by rank then depth so the higher class wins at any depth and the deepest
+    /// file wins within a class: .nxignore > .gitignore > .git-exclude/global.
+    /// That is how the ignore crate resolves a path, so the watcher and
+    /// `create_walker` agree. The root `.nxignore` is an ordinary entry at the
+    /// .nxignore rank, so a nested one beats it.
     git_ignores: Vec<(PathBuf, u8, Gitignore)>,
     /// node_modules/.git/.nx/cache/.nx/workspace-data/.yarn/cache. A hard veto
     /// that no user .gitignore or .nxignore negation can beat, mirroring
@@ -73,31 +74,10 @@ impl WatchFilterer {
     }
 
     fn brought_in_allows(&self, path: &std::path::Path, is_dir: bool) -> bool {
-        // .nxignore takes precedence over .gitignore. Only consult it for
-        // paths under the origin — gitignore-style matchers are scoped to
-        // the directory the ignore file lives in, so external symlink
-        // targets shouldn't be matched against workspace rules.
-        let nx_match = if let Some(ig) = &self.nx_ignore
-            && path.starts_with(&self.origin)
-        {
-            ig.matched_path_or_any_parents(path, is_dir)
-        } else {
-            Match::None
-        };
-
-        match nx_match {
-            Match::Whitelist(_) => {
-                trace!(?path, "nxignore whitelist match, ignoring gitignore");
-                return true;
-            }
-            Match::Ignore(_) => {
-                trace!(?path, "nxignore ignore match, ignoring gitignore");
-                return false;
-            }
-            Match::None => {}
-        }
-
-        // Check gitignores deepest-first; first non-None match wins.
+        // Ranked highest class first, deepest file first within a class; the
+        // first non-None match wins. Each matcher is only consulted for paths
+        // under its own directory — gitignore-style matchers are scoped to
+        // where the ignore file lives.
         let git_match = self
             .git_ignores
             .iter()
@@ -107,11 +87,11 @@ impl WatchFilterer {
 
         match git_match {
             Some(Match::Ignore(_)) => {
-                trace!(?path, "gitignore match - blocked");
+                trace!(?path, "ignore file match - blocked");
                 false
             }
             Some(Match::Whitelist(_)) => {
-                trace!(?path, "gitignore whitelist match - allowed");
+                trace!(?path, "ignore file whitelist match - allowed");
                 true
             }
             _ => true,
@@ -182,7 +162,6 @@ pub(super) fn create_filter(
     // clippy lint keeps lib code on dunce, but `lint-native` runs clippy without
     // --all-targets, so cfg(test) is unlinted — tests must hold this by hand.
     let ignore_files = use_ignore.then(|| get_gitignore_files(origin));
-    let nx_ignore_path = get_nx_ignore(origin);
 
     trace!(
         ?use_ignore,
@@ -212,14 +191,14 @@ pub(super) fn create_filter(
         }
     }
 
-    // `.ignore` and nested `.nxignore` — create_walker honours both, so a
-    // directory they exclude must not reach the watcher (it would be inserted
-    // into the file map and then reported deleted on the next rescan, since the
-    // rescan walk drops it). The root `.nxignore` keeps its dedicated
-    // highest-precedence slot below, so it is skipped here.
+    // Nested `.nxignore` — create_walker honours it, so a directory it excludes
+    // must not reach the watcher (it would be inserted into the file map and
+    // then reported deleted on the next rescan, since the rescan walk drops it).
+    // The root `.nxignore` is added below, outside the `use_ignore` gate, so it
+    // is skipped here rather than added twice.
     if use_ignore {
         let root_nxignore = PathBuf::from(origin).join(".nxignore");
-        for path in collect_workspace_ignore_files(origin, &[".ignore", ".nxignore"]) {
+        for path in collect_workspace_ignore_files(origin, &[".nxignore"]) {
             if path == root_nxignore {
                 continue;
             }
@@ -232,20 +211,15 @@ pub(super) fn create_filter(
                 );
             }
             let dir = path.parent().unwrap_or(&path).to_path_buf();
-            let rank = if path.file_name().and_then(|n| n.to_str()) == Some(".nxignore") {
-                3
-            } else {
-                2
-            };
-            git_ignores.push((dir, rank, gitignore));
+            git_ignores.push((dir, 2, gitignore));
         }
 
         // `.git/info/exclude` and the global core.excludesFile: the canonical
         // homes for local, uncommittable exclusions (scratch, secrets). Both
         // are gitignore-format and apply workspace-wide, so they are rooted at
         // origin (not at their own parent dir, which would break the prefix
-        // strip in matched_path_or_any_parents) and sit at the shallowest
-        // depth, below any per-directory rule.
+        // strip in matched_path_or_any_parents) and take the lowest rank, below
+        // any per-directory rule.
         let mut workspace_wide = GitignoreBuilder::new(origin);
         let git_exclude = PathBuf::from(origin)
             .join(".git")
@@ -279,15 +253,11 @@ pub(super) fn create_filter(
         Some(builder.build()?)
     };
 
-    // Sort deepest-first (most path components first) so deeper gitignores take priority
-    git_ignores.sort_by(|(a, ra, _), (b, rb, _)| {
-        let a_depth = a.components().count();
-        let b_depth = b.components().count();
-        b_depth.cmp(&a_depth).then(rb.cmp(ra))
-    });
-
-    // Build .nxignore
-    let nx_ignore = if let Some(nxignore_path) = nx_ignore_path {
+    // The root `.nxignore` applies whether or not `use_ignore` is set — it is
+    // nx's own opt-out, not a git source. It joins git_ignores at the .nxignore
+    // rank rather than above everything, so a nested .nxignore beats it the way
+    // it does in the walk.
+    if let Some(nxignore_path) = get_nx_ignore(origin) {
         let (gitignore, err) = Gitignore::new(&nxignore_path);
         if let Some(err) = err {
             trace!(
@@ -296,10 +266,18 @@ pub(super) fn create_filter(
                 "error parsing nxignore, using partial result"
             );
         }
-        Some(gitignore)
-    } else {
-        None
-    };
+        git_ignores.push((PathBuf::from(origin), 2, gitignore));
+    }
+
+    // Rank before depth, matching how the ignore crate combines classes: it
+    // keeps the deepest match per class and then prefers the higher class, so a
+    // nested .nxignore beats a .gitignore at ANY depth. Sorting depth first
+    // would let a deeper .gitignore negation un-ignore it.
+    git_ignores.sort_by(|(a, ra, _), (b, rb, _)| {
+        let a_depth = a.components().count();
+        let b_depth = b.components().count();
+        rb.cmp(ra).then(b_depth.cmp(&a_depth))
+    });
 
     // The hardcoded ignores are enforced unconditionally, independent of
     // `use_ignore` and of the brought-in files, exactly as `create_walker`
@@ -313,7 +291,6 @@ pub(super) fn create_filter(
     Ok(WatchFilterer {
         origin: PathBuf::from(origin),
         git_ignores,
-        nx_ignore,
         hardcoded,
         additional_globs,
     })
