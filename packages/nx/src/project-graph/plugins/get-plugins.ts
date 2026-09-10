@@ -498,6 +498,11 @@ async function resolveCapabilityKeys(
  * `getPluginsSeparated` already gives one plugin set, and excluded for the
  * daemon, which outlives the edits an answer depends on.
  *
+ * This cannot be the thing that goes stale. Editing a plugin moves its key, so
+ * a fresh answer would miss and fall through to `getPlugins`, which hands back
+ * the set it loaded earlier in the process anyway. `cleanupPlugins` drops both
+ * together for the same reason.
+ *
  * Only a complete answer is held. A null one means some plugin has no record,
  * and the load that follows records it, so the next caller can do better.
  */
