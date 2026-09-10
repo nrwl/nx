@@ -1,5 +1,6 @@
 import { output } from '../../../../utils/output';
 import {
+  reportMigrateOrchestratorAbandoned,
   reportMigrateRunComplete,
   reportMigrateRunError,
 } from '../../migrate-analytics';
@@ -19,6 +20,7 @@ import {
   runOrchestratorInit,
   type RunOrchestratorInitInput,
   runOrchestratorResume,
+  runTallies,
   tallySteps,
 } from '../../run';
 import { canPrompt, migrateChoice } from '../../safe-prompt';
@@ -161,6 +163,10 @@ export async function runMasterSession(
   }
   switch (state.status) {
     case 'active':
+      reportMigrateOrchestratorAbandoned({
+        ...runTallies(state),
+        agentUsed: agent.id,
+      });
       output.warn({
         title: `Migrate run ${runId} is still active. ${resumeHint}`,
       });

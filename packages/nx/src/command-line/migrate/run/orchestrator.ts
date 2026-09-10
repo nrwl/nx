@@ -64,7 +64,10 @@ import {
 import {
   reportMigrateOrchestratorComplete,
   reportMigrateOrchestratorDispense,
+  reportMigrateOrchestratorExistingRun,
   reportMigrateOrchestratorInit,
+  reportMigrateOrchestratorResume,
+  reportMigrateOrchestratorStepDispensed,
 } from '../migrate-analytics';
 import { sortMigrations } from '../sort-migrations';
 import { createRunId, RUN_ID_SAFE } from './run-id';
@@ -117,6 +120,7 @@ import {
   uncoveredFailedStepIds,
   type StepAction,
   type StepEvent,
+  runTallies,
 } from './state-machine';
 import {
   recordUnresolvedIssue,
@@ -669,6 +673,7 @@ function reportExistingRun(
   if (replaceRunId !== undefined) {
     facts.replacedRunId = replaceRunId;
   }
+  reportMigrateOrchestratorExistingRun(runTallies(state));
   if (emitAgentInstructions) {
     const report = renderExistingRunReport(
       facts,
@@ -922,6 +927,9 @@ function finishInit(
         createCommits: current.createCommits,
       });
     }
+  }
+  if (origin === 'resumed') {
+    reportMigrateOrchestratorResume(runTallies(current));
   }
   const content = runbook ?? ensureRunbook(root, dir, runId, current);
   if (content === null) {
@@ -2024,7 +2032,7 @@ function advanceAndDispense(root: string, dir: string, runId: string): void {
   // operation with a live worker keeps still-running, which offers none.
   const held = liveTreeOperation(state);
   if (held && !isOwnOperation(step, held)) {
-    emitHeld(root, runId, step, held, noProgress);
+    emitHeld(root, runId, state, step, held, noProgress);
     return;
   }
   switch (step.status) {
@@ -2042,7 +2050,7 @@ function advanceAndDispense(root: string, dir: string, runId: string): void {
       emitDied(root, runId, state, step, noProgress);
       break;
     case 'running':
-      emitStillRunning(root, runId, step, held, noProgress);
+      emitStillRunning(root, runId, state, step, held, noProgress);
       break;
     case 'awaiting-prompt-outcome':
       emitAwaitPrompt(root, dir, runId, step, noProgress);
@@ -2170,16 +2178,15 @@ function dispenseNextStep(
     return;
   }
   if (held) {
-    emitHeld(root, runId, step, held, noProgress);
+    emitHeld(root, runId, current, step, held, noProgress);
     return;
   }
-  emitNextStep(
-    root,
-    runId,
-    current,
-    current.steps.find((s) => s.id === step.id),
-    noProgress
-  );
+  const dispensed = current.steps.find((s) => s.id === step.id);
+  reportMigrateOrchestratorStepDispensed({
+    attempt: dispensed.attempt,
+    ordinal: runTallies(current).dispenseCount,
+  });
+  emitNextStep(root, runId, current, dispensed, noProgress);
 }
 
 function emitNextStep(
@@ -2193,6 +2200,7 @@ function emitNextStep(
   emit(
     root,
     runId,
+    state,
     step,
     'next-step',
     {
@@ -2293,6 +2301,7 @@ function emitRetryFailed(
   emit(
     root,
     runId,
+    state,
     step,
     'retry-failed',
     {
@@ -2541,6 +2550,7 @@ function emitDied(
   emit(
     root,
     runId,
+    state,
     step,
     'died',
     {
@@ -2556,6 +2566,7 @@ function emitDied(
 function emitHeld(
   root: string,
   runId: string,
+  state: MigrateRunState,
   step: MigrateStep,
   held: MigrateTreeOperation,
   noProgress: MigrateRunNoProgress | null
@@ -2563,6 +2574,7 @@ function emitHeld(
   emit(
     root,
     runId,
+    state,
     step,
     'held',
     {
@@ -2576,6 +2588,7 @@ function emitHeld(
 function emitStillRunning(
   root: string,
   runId: string,
+  state: MigrateRunState,
   step: MigrateStep,
   held: MigrateTreeOperation | undefined,
   noProgress: MigrateRunNoProgress | null
@@ -2608,6 +2621,7 @@ function emitStillRunning(
   emit(
     root,
     runId,
+    state,
     step,
     'still-running',
     {
@@ -2728,6 +2742,7 @@ function emitAwaitPrompt(
   emit(
     root,
     runId,
+    claimed,
     step,
     'await-prompt',
     {
@@ -2892,8 +2907,6 @@ function completeRun(
   state: MigrateRunState
 ): void {
   let current = state;
-  const tally = tallySteps(current);
-  const dispenseCount = current.steps.reduce((n, s) => n + s.dispenseCount, 0);
 
   // Persist the terminal status and claim the watermark in one fresh-state
   // write before emitting: a crash between the write and the output can't
@@ -2914,11 +2927,7 @@ function completeRun(
     });
   }
   if (shouldEmit) {
-    reportMigrateOrchestratorComplete({
-      completed: tally.applied + tally.adopted,
-      skipped: tally.skipped,
-      dispenseCount,
-    });
+    reportMigrateOrchestratorComplete(runTallies(current));
   }
 
   const warnings = completionWarnings(root, runId, current);
@@ -2949,6 +2958,7 @@ interface DispensePayload {
 function emit(
   root: string,
   runId: string,
+  state: MigrateRunState,
   step: MigrateStep,
   action: string,
   payload: DispensePayload,
@@ -2978,6 +2988,7 @@ function emit(
   reportMigrateOrchestratorDispense({
     action: effectiveAction,
     attempt: step.attempt,
+    ordinal: runTallies(state).dispenseCount,
   });
 }
 

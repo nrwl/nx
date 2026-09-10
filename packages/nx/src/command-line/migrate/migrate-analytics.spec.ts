@@ -91,6 +91,10 @@ describe('GA4 event name length cap', () => {
       'migrate_orchestrator_init',
       'migrate_orchestrator_dispense',
       'migrate_orchestrator_complete',
+      'migrate_orchestrator_abandoned',
+      'migrate_orchestrator_resume',
+      'migrate_orchestrator_step_dispensed',
+      'migrate_orchestrator_existing_run',
       'migrate_single_migration_recorded',
       'migrate_single_migration_invocation',
       ...Object.keys(PROMPT_NAMES).map((p) => `migrate_prompt_${p}`),
@@ -463,15 +467,35 @@ describe('migrate-analytics events', () => {
       });
     });
 
-    it('reports the dispense action and attempt', async () => {
+    it('reports the dispense action, attempt and ordinal', async () => {
       const a = await load();
       a.reportMigrateOrchestratorDispense({
         action: 'next-step',
         attempt: 2,
+        ordinal: 5,
       });
       expect(paramsFor('migrate_orchestrator_dispense')).toEqual({
         promptChoice: 'next-step',
         migrationCount: 2,
+        taskCount: 5,
+      });
+    });
+
+    it('reports the attempt and ordinal of a durable dispense', async () => {
+      const a = await load();
+      a.reportMigrateOrchestratorStepDispensed({ attempt: 2, ordinal: 3 });
+      expect(paramsFor('migrate_orchestrator_step_dispensed')).toEqual({
+        migrationCount: 2,
+        taskCount: 3,
+      });
+    });
+
+    it('carries no ordinal for a rejected step action', async () => {
+      const a = await load();
+      a.reportMigrateOrchestratorDispense({ action: 'error', attempt: 0 });
+      expect(paramsFor('migrate_orchestrator_dispense')).toEqual({
+        promptChoice: 'error',
+        migrationCount: 0,
       });
     });
 
@@ -486,6 +510,50 @@ describe('migrate-analytics events', () => {
         appliedCount: 3,
         taskCount: 1,
         migrationCount: 9,
+      });
+    });
+
+    it('reports the tallies and the agent on abandonment', async () => {
+      const a = await load();
+      a.reportMigrateOrchestratorAbandoned({
+        completed: 2,
+        skipped: 0,
+        dispenseCount: 4,
+        agentUsed: 'claude-code',
+      });
+      expect(paramsFor('migrate_orchestrator_abandoned')).toEqual({
+        appliedCount: 2,
+        taskCount: 0,
+        migrationCount: 4,
+        agentUsed: 'claude-code',
+      });
+    });
+
+    it('reports the tallies on resume', async () => {
+      const a = await load();
+      a.reportMigrateOrchestratorResume({
+        completed: 1,
+        skipped: 1,
+        dispenseCount: 3,
+      });
+      expect(paramsFor('migrate_orchestrator_resume')).toEqual({
+        appliedCount: 1,
+        taskCount: 1,
+        migrationCount: 3,
+      });
+    });
+
+    it('reports the tallies on an existing-run report', async () => {
+      const a = await load();
+      a.reportMigrateOrchestratorExistingRun({
+        completed: 2,
+        skipped: 0,
+        dispenseCount: 4,
+      });
+      expect(paramsFor('migrate_orchestrator_existing_run')).toEqual({
+        appliedCount: 2,
+        taskCount: 0,
+        migrationCount: 4,
       });
     });
 
