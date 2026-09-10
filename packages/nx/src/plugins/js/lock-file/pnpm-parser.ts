@@ -5,7 +5,9 @@ import type {
   ProjectSnapshot,
 } from '@pnpm/lockfile-types';
 import {
+  extractEnvLockfileDocument,
   isV5Syntax,
+  joinPnpmLockfileDocuments,
   loadPnpmHoistedDepsDefinition,
   parseAndNormalizePnpmLockfile,
   stringifyToPnpmYaml,
@@ -927,7 +929,10 @@ export function stringifyPnpmLockfile(
 
   stripStandaloneLockfileConfig(output);
 
-  return stringifyToPnpmYaml(output);
+  return joinPnpmLockfileDocuments(
+    extractEnvLockfileDocument(rootLockFileContent),
+    stringifyToPnpmYaml(output)
+  );
 }
 
 /**
