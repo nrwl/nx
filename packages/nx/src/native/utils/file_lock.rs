@@ -49,6 +49,7 @@ impl FileLock {
             .read(true)
             .write(true)
             .create(true)
+            .truncate(false)
             .open(&lock_file_path)?;
 
         trace!("Locking file {}", lock_file_path);
@@ -99,6 +100,7 @@ impl FileLock {
                     .read(true)
                     .write(true)
                     .create(true)
+                    .truncate(false)
                     .open(&lock_file_path)?;
                 fs4::fs_std::FileExt::lock_shared(&file)?;
                 fs4::fs_std::FileExt::unlock(&file)?;
@@ -204,14 +206,19 @@ mod test {
         let mut holder = FileLock::new(path.clone()).unwrap();
         holder.lock().unwrap();
         let waiter = std::thread::spawn(move || {
-            FileLock::new(path)
+            let started = Instant::now();
+            let released = FileLock::new(path)
                 .unwrap()
                 .wait_blocking(Duration::from_secs(10))
-                .unwrap()
+                .unwrap();
+            (released, started.elapsed())
         });
         std::thread::sleep(Duration::from_millis(100));
         holder.unlock().unwrap();
-        assert!(waiter.join().unwrap());
+        let (released, waited) = waiter.join().unwrap();
+        assert!(released);
+        // It really blocked on the holder rather than getting the lock at once.
+        assert!(waited >= Duration::from_millis(100));
     }
 
     #[test]

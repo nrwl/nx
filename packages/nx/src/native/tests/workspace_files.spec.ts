@@ -375,17 +375,16 @@ describe('WorkspaceContext.ready', () => {
       fs.tempDir + '/.nx/workspace-data'
     );
 
+    let ticks = 0;
+    const timer = setInterval(() => ticks++, 1);
     try {
-      let ticks = 0;
-      const timer = setInterval(() => ticks++, 1);
       await ctx.ready();
-      clearInterval(timer);
-
       expect(ctx.glob(['dir-3/**']).length).toBe(100);
       // A blocked loop cannot run timers; the walk of 4000 files is long enough
       // for at least one tick to land while it runs.
       expect(ticks).toBeGreaterThan(0);
     } finally {
+      clearInterval(timer);
       fs.cleanup();
     }
   });

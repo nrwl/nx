@@ -155,10 +155,32 @@ fn sweep_orphaned_staging_files(cache_dir: &Path) {
             .ok()
             .and_then(|written| SystemTime::now().duration_since(written).ok())
             .is_some_and(|age| age > STAGING_ORPHAN_AGE);
-        if orphaned {
-            let _ = std::fs::remove_file(entry.path());
+        if !orphaned {
+            continue;
+        }
+        if let Err(e) = std::fs::remove_file(entry.path()) {
+            trace!(
+                "could not remove the orphaned staging file {}: {e:?}",
+                entry.path().display()
+            );
         }
     }
+}
+
+/// Where a write stages its bytes before the rename. The random part keeps
+/// two writers apart even when their pids collide, as they can across
+/// containers sharing one checkout.
+fn staging_path(archive_path: &Path, nonce: u64) -> PathBuf {
+    archive_path.with_extension(format!("nxt.{}.{nonce:016x}.tmp", std::process::id()))
+}
+
+/// Opens the staging file, refusing anything already at that path, so a
+/// planted file or symlink is never written through.
+fn create_staging_file(path: &Path) -> std::io::Result<std::fs::File> {
+    std::fs::File::options()
+        .write(true)
+        .create_new(true)
+        .open(path)
 }
 
 pub fn write_files_archive<P: AsRef<Path>>(cache_dir: P, files: &NxFileHashes) {
@@ -166,21 +188,12 @@ pub fn write_files_archive<P: AsRef<Path>>(cache_dir: P, files: &NxFileHashes) {
     let archive_path = archive_path(&cache_dir);
     sweep_orphaned_staging_files(cache_dir.as_ref());
     // Written beside the archive and renamed into place, so a process that
-    // trusts the archive can never read a partial one. The name carries a
-    // random part because pids repeat across containers sharing a checkout,
-    // and `create_new` refuses to follow anything already at that path.
-    let staging_path = archive_path.with_extension(format!(
-        "nxt.{}.{:016x}.tmp",
-        std::process::id(),
-        rand::random::<u64>()
-    ));
+    // trusts the archive can never read a partial one.
+    let staging_path = staging_path(&archive_path, rand::random());
     let result = rkyv::to_bytes::<_, 2048>(files)
         .map_err(anyhow::Error::from)
         .and_then(|encoded| {
-            let mut staging = std::fs::File::options()
-                .write(true)
-                .create_new(true)
-                .open(&staging_path)?;
+            let mut staging = create_staging_file(&staging_path)?;
             staging.write_all(&encoded)?;
             drop(staging);
             std::fs::rename(&staging_path, &archive_path)?;
@@ -231,21 +244,71 @@ mod tests {
             .unwrap();
         let live = cache.child("nx_files.nxt.2.cafebabe.tmp");
         live.write_str("x").unwrap();
+        // Old neighbours that are not staging files stay, whatever their age.
+        for name in ["other.tmp", "nx_files.nxt.bak"] {
+            let neighbour = cache.child(name);
+            neighbour.write_str("x").unwrap();
+            std::fs::File::options()
+                .write(true)
+                .open(neighbour.path())
+                .unwrap()
+                .set_modified(SystemTime::now() - STAGING_ORPHAN_AGE * 2)
+                .unwrap();
+        }
 
         write_files_archive(cache.path(), &one_file());
 
         assert_eq!(
             names_in(cache.path()),
-            vec!["nx_files.nxt", "nx_files.nxt.2.cafebabe.tmp"]
+            vec![
+                "nx_files.nxt",
+                "nx_files.nxt.2.cafebabe.tmp",
+                "nx_files.nxt.bak",
+                "other.tmp"
+            ]
         );
     }
 
     #[test]
-    fn the_staging_file_is_never_reused_across_writes() {
+    fn a_second_write_replaces_the_archive_and_leaves_no_staging_file() {
         let cache = TempDir::new().unwrap();
         write_files_archive(cache.path(), &one_file());
-        write_files_archive(cache.path(), &one_file());
+        let two_files: NxFileHashes = [
+            ("a.ts".to_string(), NxFileHashed("h".to_string(), 1)),
+            ("b.ts".to_string(), NxFileHashed("i".to_string(), 2)),
+        ]
+        .into_iter()
+        .collect();
+        write_files_archive(cache.path(), &two_files);
         assert_eq!(names_in(cache.path()), vec!["nx_files.nxt"]);
-        assert_eq!(read_files_archive(cache.path()).unwrap().len(), 1);
+        assert_eq!(read_files_archive(cache.path()).unwrap().len(), 2);
+    }
+
+    #[test]
+    fn staging_paths_differ_between_writes_of_one_process() {
+        let archive = Path::new("/cache/nx_files.nxt");
+        let first = staging_path(archive, 1);
+        let second = staging_path(archive, 2);
+        assert_ne!(first, second);
+        for path in [&first, &second] {
+            let name = path.file_name().unwrap().to_string_lossy();
+            assert!(
+                name.starts_with("nx_files.nxt.") && name.ends_with(".tmp"),
+                "{name}"
+            );
+            assert_eq!(path.parent(), archive.parent());
+        }
+    }
+
+    #[test]
+    fn a_staging_file_is_never_opened_over_something_already_there() {
+        let cache = TempDir::new().unwrap();
+        let planted = cache.child("nx_files.nxt.7.0000000000000001.tmp");
+        planted.write_str("planted").unwrap();
+
+        let err = create_staging_file(planted.path()).unwrap_err();
+
+        assert_eq!(err.kind(), std::io::ErrorKind::AlreadyExists);
+        assert_eq!(std::fs::read_to_string(planted.path()).unwrap(), "planted");
     }
 }

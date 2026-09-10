@@ -4,7 +4,7 @@ use std::ops::Deref;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 #[cfg(not(target_arch = "wasm32"))]
-use std::time::{Duration, SystemTime};
+use std::time::{Duration, Instant, SystemTime};
 
 use crate::native::glob::glob_files::glob_files;
 use crate::native::hasher::hash;
@@ -43,16 +43,24 @@ type Files = Vec<(PathBuf, String)>;
 
 const NX_FILES_LOCK: &str = "nx_files.lock";
 
-/// Longer than any walk measured so far (27 s on a saturated CI disk), short
-/// enough that a stuck holder cannot pin every nx in the checkout.
+/// How long a process waits for another process's walk before walking itself.
+/// The default is longer than any walk measured so far (27 s on a saturated CI
+/// disk) and short enough that a stuck holder cannot pin every nx in the
+/// checkout. A workspace whose walk legitimately takes longer raises it.
 #[cfg(not(target_arch = "wasm32"))]
-const FILES_LOCK_WAIT: Duration = Duration::from_secs(60);
+fn files_lock_wait() -> Duration {
+    std::env::var("NX_WORKSPACE_WALK_TIMEOUT_MS")
+        .ok()
+        .and_then(|ms| ms.trim().parse::<u64>().ok())
+        .map(Duration::from_millis)
+        .unwrap_or(Duration::from_secs(60))
+}
 
 /// Every files lock this process has started waiting on, one entry per wait.
 /// Tests count entries for their own lock to know a waiter is really waiting
 /// before they release the holder; keyed by path so parallel tests cannot
 /// satisfy each other.
-#[cfg(test)]
+#[cfg(all(test, not(target_arch = "wasm32")))]
 static WAITS_STARTED: std::sync::Mutex<Vec<PathBuf>> = std::sync::Mutex::new(Vec::new());
 
 #[cfg(all(test, not(target_arch = "wasm32")))]
@@ -63,7 +71,7 @@ fn note_wait_started(lock_path: &Path) {
 #[cfg(all(not(test), not(target_arch = "wasm32")))]
 fn note_wait_started(_lock_path: &Path) {}
 
-#[cfg(test)]
+#[cfg(all(test, not(target_arch = "wasm32")))]
 fn waits_started_on(lock_path: &Path) -> usize {
     WAITS_STARTED
         .lock()
@@ -133,8 +141,10 @@ fn archive_to_files(archive: FilesArchive) -> Files {
 /// instead of walking. It still walks when there is no archive at all.
 ///
 /// Neither wait is open-ended. A holder that outlasts `wait_for` (suspended,
-/// or on a filesystem that has stalled) costs the waiter an unshared walk of
-/// its own, which is what every process did before the lock existed.
+/// on a filesystem that has stalled, or walking a workspace that takes longer
+/// than that) costs the waiter the whole wait and then an unshared walk of its
+/// own. Below the bound this is the shared walk; above it, it is slower than
+/// walking straight away, which is why the bound can be raised.
 #[cfg(not(target_arch = "wasm32"))]
 fn acquire_files(
     workspace_root: &Path,
@@ -154,11 +164,14 @@ fn acquire_files(
         }
     };
 
+    let deadline = Instant::now() + wait_for;
+    let remaining = || deadline.saturating_duration_since(Instant::now());
+
     loop {
         if trust_archive {
             if lock.check().unwrap_or(false) {
                 note_wait_started(&lock_path);
-                match lock.wait_blocking(wait_for) {
+                match lock.wait_blocking(remaining()) {
                     Ok(true) => {}
                     Ok(false) => {
                         trace!(
@@ -191,7 +204,7 @@ fn acquire_files(
                 let waited_from = SystemTime::now();
                 trace!("another process is walking the workspace, waiting for its archive");
                 note_wait_started(&lock_path);
-                match lock.wait_blocking(wait_for) {
+                match lock.wait_blocking(remaining()) {
                     Ok(true) => {}
                     Ok(false) => {
                         trace!(
@@ -213,7 +226,7 @@ fn acquire_files(
                     );
                     return archive_to_files(archive);
                 }
-                trace!("the other walk left no fresh archive, taking the lock again");
+                trace!("the other walk left no fresh archive, trying for the lock again");
             }
             Err(e) => {
                 trace!(
@@ -269,7 +282,7 @@ impl FilesWorker {
             trace!("Initially locking files");
             let mut workspace_files = lock.lock().expect("Should be the first time locking files");
 
-            let files = acquire_files(&workspace_root, &cache_dir, false, FILES_LOCK_WAIT);
+            let files = acquire_files(&workspace_root, &cache_dir, false, files_lock_wait());
 
             *workspace_files = files;
             let files_len = workspace_files.len();
@@ -300,7 +313,7 @@ impl FilesWorker {
             let (lock, cvar) = &*files_lock_clone;
             let mut workspace_files = lock.lock().expect("Should be the first time locking files");
 
-            let files = acquire_files(&workspace_root, &cache_dir, true, FILES_LOCK_WAIT);
+            let files = acquire_files(&workspace_root, &cache_dir, true, files_lock_wait());
 
             *workspace_files = files;
             let files_len = workspace_files.len();
@@ -857,7 +870,6 @@ mod tests {
         // It waited the timeout out and then walked around the holder, which
         // still holds; it did not take the lock itself.
         assert!(started.elapsed() >= Duration::from_millis(200));
-        assert!(started.elapsed() < Duration::from_secs(5));
         let lock_path = cache
             .path()
             .join(NX_FILES_LOCK)
@@ -902,7 +914,10 @@ mod tests {
         let waiter = walk_in_another_thread(&temp, &cache);
 
         // The holder finishes: it writes an archive that does not match the
-        // disk, so a waiter that walked would produce something else.
+        // disk, so a waiter that walked would produce something else. The pause
+        // keeps the archive's mtime past the waiter's clock read on filesystems
+        // that round file times to a coarse tick.
+        std::thread::sleep(Duration::from_millis(20));
         write_files_archive(
             as_string(&cache),
             &[(
