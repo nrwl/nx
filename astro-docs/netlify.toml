@@ -314,6 +314,13 @@ to = "/docs/kb/what-is-a-monorepo"
 from = "/docs/concepts/typescript-project-linking"
 to = "/docs/kb/typescript-project-linking"
 
+# force = true so this wins over the hidden extending-nx/index.mdoc stub page.
+[[redirects]]
+from = "/docs/extending-nx"
+to = "/docs/kb/extending-nx"
+status = 301
+force = true
+
 [[redirects]]
 from = "/docs/extending-nx/compose-executors"
 to = "/docs/kb/compose-executors"
