@@ -1,9 +1,11 @@
 import {
   addDependenciesToPackageJson,
+  detectPackageManager,
   runTasksInSerial,
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
+import { acknowledgeBuildScripts } from '@nx/devkit/internal';
 import { addSwcDependencies } from '@nx/js/internal';
 import {
   reactRefreshVersion,
@@ -36,6 +38,11 @@ export function ensureDependencies(
   }
 
   if (options.uiFramework === 'react') {
+    // @pmmmwh/react-refresh-webpack-plugin depends on core-js-pure, whose
+    // install script only prints a funding message.
+    acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+      'core-js-pure': false,
+    });
     devDependencies['@pmmmwh/react-refresh-webpack-plugin'] =
       reactRefreshWebpackPluginVersion;
     devDependencies['@svgr/webpack'] = svgrWebpackVersion;

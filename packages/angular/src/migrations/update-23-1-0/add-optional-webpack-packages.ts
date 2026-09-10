@@ -1,5 +1,6 @@
 import {
   addDependenciesToPackageJson,
+  detectPackageManager,
   getProjects,
   joinPathFragments,
   type NxJsonConfiguration,
@@ -7,7 +8,10 @@ import {
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { readTargetDefaultsForTarget } from '@nx/devkit/internal';
+import {
+  acknowledgeBuildScripts,
+  readTargetDefaultsForTarget,
+} from '@nx/devkit/internal';
 import { nxVersion, webpackMergeVersion } from '../../utils/versions';
 
 const webpackExecutors = new Set([
@@ -130,6 +134,15 @@ export default async function addOptionalWebpackPackages(tree: Tree) {
 
   if (!needsWebpack && !needsModuleFederation && !needsRspack) {
     return;
+  }
+
+  if (needsWebpack || needsRspack) {
+    // @nx/webpack and @nx/rspack depend on sass, which pulls in
+    // @parcel/watcher. Its install script only builds from source when
+    // npm_config_build_from_source is set, so skip it.
+    acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+      '@parcel/watcher': false,
+    });
   }
 
   return addDependenciesToPackageJson(

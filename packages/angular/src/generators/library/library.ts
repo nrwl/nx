@@ -15,6 +15,7 @@ import init from '../../generators/init/init';
 import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import { UnitTestRunner } from '../../utils/test-runners';
 import addLintingGenerator from '../add-linting/add-linting';
+import { acknowledgeAngularBuildScripts } from '../utils/acknowledge-build-scripts';
 import { addJest } from '../utils/add-jest';
 import { addVitestAnalog, addVitestAngular } from '../utils/add-vitest';
 import { addBuildableLibrariesPostCssDependencies } from '../utils/dependencies';
@@ -79,6 +80,7 @@ export async function libraryGenerator(
     (libraryOptions.buildable || libraryOptions.publishable) &&
     !libraryOptions.skipPackageJson
   ) {
+    acknowledgeAngularBuildScripts(tree);
     addDependenciesToPackageJson(
       tree,
       {},

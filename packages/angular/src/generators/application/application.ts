@@ -16,6 +16,7 @@ import { assertSupportedAngularVersion } from '../../utils/assert-supported-angu
 import { convertToRspack } from '../convert-to-rspack/convert-to-rspack';
 import { angularInitGenerator } from '../init/init';
 import { setupSsr } from '../setup-ssr/setup-ssr';
+import { acknowledgeAngularBuildScripts } from '../utils/acknowledge-build-scripts';
 import { ensureAngularDependencies } from '../utils/ensure-angular-dependencies';
 import { assertNotUsingTsSolutionSetup } from '../utils/validations';
 import {
@@ -151,6 +152,7 @@ export async function applicationGenerator(
       devDependencies['less'] = packageVersions.lessVersion;
     }
     if (Object.keys(devDependencies).length) {
+      acknowledgeAngularBuildScripts(tree);
       addDependenciesToPackageJson(tree, {}, devDependencies, undefined, true);
     }
   }
