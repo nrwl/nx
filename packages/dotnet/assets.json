@@ -4,6 +4,7 @@
     {
       "glob": "*.md"
     },
+    { "glob": "**/files/**", "input": "packages/dotnet/src" },
     { "glob": "**/schema.json", "input": "packages/dotnet/src" },
     { "glob": "**/schema.d.ts", "input": "packages/dotnet/src" },
     {
