@@ -22,6 +22,8 @@ vi.mock('../../../config/nx-json', async () => ({
 // while still allowing filterAffected to run its real logic
 vi.mock('../../../project-graph/plugins/get-plugins', () => ({
   getPlugins: vi.fn().mockResolvedValue([]),
+  // No records, so the affected locators fall through to `getPlugins`.
+  peekPluginCapabilities: vi.fn().mockResolvedValue(null),
 }));
 
 import { createVersionConfig } from './test/test-utils';
