@@ -38,8 +38,7 @@ export function getMaxMessageSize(): number {
 
 /**
  * `nx reset` only helps while a daemon is enabled: it and its plugin workers keep the
- * limit they were spawned with, and the var is excluded from the daemon env hash so
- * changing it restarts nothing. Every other reader re-reads the env per invocation.
+ * limit they were spawned with. Every other reader re-reads the env per invocation.
  * Required lazily because the daemon client imports this module.
  */
 function daemonHoldsItsOwnLimit(): boolean {
