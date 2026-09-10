@@ -267,13 +267,26 @@ function applyStepAction(
             reason: `Cannot apply action 'unresolved' to step '${step.id}': a commit of its changes landed or was started and never recorded, so the migration may be committed. Use 'adopt' to record it as applied.`,
           };
         }
-        return commit(state, index, { ...step, status: 'unresolved' });
+        // A death records no outcome, so the failure the step is given up on
+        // is the death itself; without it the report and the minted issue
+        // would say nothing was recorded.
+        return commit(state, index, {
+          ...step,
+          status: 'unresolved',
+          outcome: { summary: workerDiedSummary(step) },
+        });
     }
   }
   return {
     kind: 'error',
     reason: `Cannot apply action '${action}' to step '${step.id}' in status '${step.status}'.`,
   };
+}
+
+function workerDiedSummary(step: MigrateStep): string {
+  return `the worker process${
+    step.pid === undefined ? '' : ` (pid ${step.pid})`
+  } died before recording an outcome`;
 }
 
 // Re-arms for a retry that resets the tree first. The reset target predates

@@ -939,7 +939,12 @@ export async function runOrchestratorReconcile(
         // authoritative, and undoing the transition for a lost detail file
         // would leave the agent re-issuing an action the run already took.
         if (stepAction === 'unresolved') {
-          const minted = mintUnresolvedIssue(settled, target);
+          // Minted from the transitioned step: a died one only gains its
+          // failure in the transition.
+          const minted = mintUnresolvedIssue(
+            settled,
+            settled.steps.find((s) => s.id === target.id)
+          );
           try {
             archiveIssues(dir, minted.application);
           } catch (e) {
@@ -1636,8 +1641,8 @@ async function stepActionSideEffects(
   }
 }
 
-// Commits the working tree left by a folded prompt outcome, an adopted death
-// or a given-up step. The caller persists `entry` with the step transition
+// Commits the working tree left by a folded prompt outcome, an adopted step
+// (failed or died) or a given-up step. The caller persists `entry` with the step transition
 // unless `recorded` says a session's parent already did; null when nothing
 // to commit. A crash between the git commit and the state write leaves that
 // commit in history and out of the ledger; the refold then sees a clean tree.
