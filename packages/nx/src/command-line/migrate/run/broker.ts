@@ -321,7 +321,7 @@ export class MigrateCommitBroker {
     try {
       if (request.kind !== 'commit') {
         await install();
-        return { kind: 'installed', output: output.render() };
+        return { kind: 'installed', output: output.render('drop') };
       }
       const absorbedStepIds = uncoveredFailedStepIds(state).filter(
         (id) => id !== step.id
@@ -340,7 +340,7 @@ export class MigrateCommitBroker {
         kind: 'commit',
         result,
         absorbedStepIds,
-        output: output.render(),
+        output: output.render('drop'),
       };
     } catch (e) {
       // The install is the only thing that throws: the commit reports through
@@ -358,7 +358,9 @@ export class MigrateCommitBroker {
       return {
         kind: 'install-failed',
         message: e instanceof Error ? e.message : String(e),
-        output: output.render(),
+        // The package manager's own output: for pnpm, Yarn and Bun the error
+        // says only that the command failed.
+        output: output.render('keep'),
       };
     }
   }
