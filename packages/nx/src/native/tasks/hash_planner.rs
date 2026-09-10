@@ -821,7 +821,13 @@ fn resolve_tokens(fileset: &str, project_root: &str, project_name: &str) -> Stri
     } else {
         fileset.replace("{projectRoot}", project_root)
     };
-    resolved.replace("{projectName}", project_name)
+    // Most patterns have no project-name token. Keep the first allocation in
+    // that case, preserving sequential substitution when the root adds a token.
+    if resolved.contains("{projectName}") {
+        resolved.replace("{projectName}", project_name)
+    } else {
+        resolved
+    }
 }
 
 fn find_external_dependency_node_name<'a>(
@@ -849,6 +855,29 @@ fn find_external_dependency_node_name<'a>(
 mod tests {
     use super::*;
     use crate::native::project_graph::types::{ExternalNode, Project, Target};
+
+    #[test]
+    fn token_resolution_preserves_root_and_sequential_substitution() {
+        for (pattern, root, name) in [
+            ("!{projectRoot}/**/*", ".", "app"),
+            ("{projectRoot}", ".", "app"),
+            ("{workspaceRoot}/file", "libs/app", "app"),
+            (
+                "{projectRoot}/{projectName}/{projectRoot}",
+                "libs/{projectName}",
+                "app",
+            ),
+            ("{projectRoot}/{projectName}", "libs/app", "{projectRoot}"),
+        ] {
+            let old = if root == "." {
+                pattern.replace("{projectRoot}/", "")
+            } else {
+                pattern.replace("{projectRoot}", root)
+            }
+            .replace("{projectName}", name);
+            assert_eq!(resolve_tokens(pattern, root, name), old);
+        }
+    }
 
     #[test]
     fn instruction_union_preserves_ids_across_word_boundaries() {
