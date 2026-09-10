@@ -11,10 +11,20 @@ export function getWorkspacePackagesMetadata<
   entryPointsToProjectMap: Record<string, T>;
   wildcardEntryPointsToProjectMap: Record<string, T>;
   packageToProjectMap: Record<string, T>;
+  ambiguousEntryPoints: Set<string>;
 } {
   const entryPointsToProjectMap: Record<string, T> = {};
   const wildcardEntryPointsToProjectMap: Record<string, T> = {};
   const packageToProjectMap: Record<string, T> = {};
+  const ambiguousEntryPoints = new Set<string>();
+  const addEntryPoint = (entryPoint: string, project: T): void => {
+    const existingProject = entryPointsToProjectMap[entryPoint];
+    if (existingProject && existingProject !== project) {
+      ambiguousEntryPoints.add(entryPoint);
+    }
+    entryPointsToProjectMap[entryPoint] = project;
+  };
+
   for (const project of Object.values(projects)) {
     const metadata = (
       'data' in project ? project.data.metadata : project.metadata
@@ -43,7 +53,7 @@ export function getWorkspacePackagesMetadata<
       if (typeof packageExports === 'string') {
         // it points to a file, which would be the equivalent of an '.' export,
         // in which case the package name is the entry point
-        entryPointsToProjectMap[packageName] = project;
+        addEntryPoint(packageName, project);
       } else {
         for (const entryPoint of Object.keys(packageExports)) {
           if (packageExports[entryPoint] === null) {
@@ -57,19 +67,19 @@ export function getWorkspacePackagesMetadata<
               wildcardEntryPointsToProjectMap[join(packageName, entryPoint)] =
                 project;
             } else {
-              entryPointsToProjectMap[join(packageName, entryPoint)] = project;
+              addEntryPoint(join(packageName, entryPoint), project);
             }
           } else {
             // it's a conditional export, so we use the package name as the entry point
             // https://nodejs.org/api/packages.html#conditional-exports
-            entryPointsToProjectMap[packageName] = project;
+            addEntryPoint(packageName, project);
           }
         }
       }
     } else if (packageMain) {
       // if there is no exports, but there is a main, the package name is the
       // entry point
-      entryPointsToProjectMap[packageName] = project;
+      addEntryPoint(packageName, project);
     }
   }
 
@@ -77,6 +87,7 @@ export function getWorkspacePackagesMetadata<
     entryPointsToProjectMap,
     wildcardEntryPointsToProjectMap,
     packageToProjectMap,
+    ambiguousEntryPoints,
   };
 }
 
