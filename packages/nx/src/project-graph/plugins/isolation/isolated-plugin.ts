@@ -15,7 +15,7 @@ import {
   describeMessage,
   parseMessage,
 } from '../../../utils/consume-messages-from-socket';
-import { getPluginResolveConditionNodeArgs } from '../../../plugins/js/utils/typescript';
+import { getRootTsConfigCustomConditions } from '../../../plugins/js/utils/typescript';
 import { getNxRequirePaths } from '../../../utils/installation-directory';
 import { isSandbox } from '../../../utils/is-sandbox';
 import { logger } from '../../../utils/logger';
@@ -137,7 +137,8 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   static async load(
     plugin: PluginConfiguration,
     root: string,
-    index?: number
+    index?: number,
+    conditions = getRootTsConfigCustomConditions(root)
   ): Promise<IsolatedPlugin> {
     const moduleName = typeof plugin === 'string' ? plugin : plugin.plugin;
     const {
@@ -156,7 +157,8 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       shouldRegisterTSTranspiler,
       isSourcePlugin,
       workspacePackageNames,
-      index
+      index,
+      conditions
     );
 
     let loadResult: LoadResultPayload;
@@ -184,7 +186,8 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     shouldRegisterTSTranspiler: boolean,
     isSourcePlugin: boolean,
     workspacePackageNames: string[],
-    public readonly index?: number
+    public readonly index?: number,
+    private readonly conditions: string[] = []
   ) {
     this.plugin = plugin;
     this.root = root;
@@ -198,7 +201,8 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   private async spawnAndConnect(): Promise<LoadResultPayload> {
     const { worker, socket } = await startPluginWorker(
       this.name,
-      this.isSourcePlugin
+      this.isSourcePlugin,
+      this.conditions
     );
     this.worker = worker;
     this.socket = socket;
@@ -626,7 +630,11 @@ export function getPluginWorkerSocketId(): string {
   )}`;
 }
 
-async function startPluginWorker(name: string, isSourcePlugin: boolean) {
+async function startPluginWorker(
+  name: string,
+  isSourcePlugin: boolean,
+  conditions: string[]
+) {
   performance.mark(`start-plugin-worker:${name}`);
 
   const isWorkerTypescript = path.extname(__filename) === '.ts';
@@ -660,7 +668,7 @@ async function startPluginWorker(name: string, isSourcePlugin: boolean) {
     process.execPath,
     [
       // Built workers must not get conditions that select unbuilt source.
-      ...(isSourcePlugin ? getPluginResolveConditionNodeArgs() : []),
+      ...(isSourcePlugin ? conditions.flatMap((c) => ['--conditions', c]) : []),
       // swc transpiles without type-checking: ~7x faster to boot, and this is
       // paid once per worker spawn.
       ...(isWorkerTypescript ? ['--require', '@swc-node/register'] : []),

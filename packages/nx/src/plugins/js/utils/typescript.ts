@@ -168,19 +168,6 @@ export function getRootTsConfigResolveExportsConditions(
     : [...conditions, 'development'];
 }
 
-/**
- * Node `--conditions` for a source-loaded worker, without the `development`
- * fallback that could select third-party development builds.
- */
-export function getPluginResolveConditionNodeArgs(
-  root: string = workspaceRoot
-): string[] {
-  return getRootTsConfigCustomConditions(root).flatMap((c) => [
-    '--conditions',
-    c,
-  ]);
-}
-
 export function findNodes(
   node: Node,
   kind: SyntaxKind | SyntaxKind[],

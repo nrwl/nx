@@ -1,3 +1,4 @@
+import { getRootTsConfigCustomConditions } from '../../../plugins/js/utils/typescript';
 import { PluginConfiguration } from '../../../config/nx-json';
 
 import type { LoadedNxPlugin } from '../loaded-nx-plugin';
@@ -13,21 +14,25 @@ const isolatedPluginCache: IsolatedPluginCache = (global[
 export async function loadIsolatedNxPlugin(
   plugin: PluginConfiguration,
   root: string,
-  index?: number
+  index?: number,
+  conditions = getRootTsConfigCustomConditions(root)
 ): Promise<[Promise<LoadedNxPlugin>, () => void]> {
-  const cacheKey = JSON.stringify({ plugin, root });
+  const cacheKey = JSON.stringify({ plugin, root, conditions });
 
   if (isolatedPluginCache.has(cacheKey)) {
     return [isolatedPluginCache.get(cacheKey), () => {}];
   }
 
-  const pluginPromise = IsolatedPlugin.load(plugin, root, index).catch(
-    (err) => {
-      // Remove failed entries from cache so subsequent calls can retry
-      isolatedPluginCache.delete(cacheKey);
-      throw err;
-    }
-  );
+  const pluginPromise = IsolatedPlugin.load(
+    plugin,
+    root,
+    index,
+    conditions
+  ).catch((err) => {
+    // Remove failed entries from cache so subsequent calls can retry
+    isolatedPluginCache.delete(cacheKey);
+    throw err;
+  });
 
   isolatedPluginCache.set(cacheKey, pluginPromise);
 
