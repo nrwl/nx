@@ -19,12 +19,21 @@ pub const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS plugin_capabilities (
     has_create_dependencies   INTEGER NOT NULL,
     has_create_metadata   INTEGER NOT NULL,
     has_pre_tasks_execution   INTEGER NOT NULL,
-    has_post_tasks_execution   INTEGER NOT NULL
+    has_post_tasks_execution   INTEGER NOT NULL,
+    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );";
 
+/// How long a record outlives the run that wrote it. A key carries a version or
+/// a source hash, so rows are never updated in place: an upgrade or an edit to a
+/// local plugin mints a new one and orphans the old. Evicting by age costs a
+/// long-lived plugin one reload per window and keeps the table from growing for
+/// the life of the workspace.
+const MAX_RECORD_AGE: &str = "-30 days";
+
 /// What a plugin module registers, independent of the options it is configured
-/// with. Every field is a presence check on the module's static exports, so the
-/// record is valid for any nx.json entry pointing at the same module.
+/// with. Every field describes the module's exports, and an entry's options only
+/// reach a plugin as an argument when a hook is called, so one record is valid
+/// for every nx.json entry naming the same module.
 #[napi(object)]
 #[derive(Clone, Debug)]
 pub struct CachedPluginCapabilities {
@@ -99,6 +108,14 @@ impl PluginCapabilitiesCache {
     pub fn record(&mut self, entries: Vec<PluginCapabilitiesEntry>) -> anyhow::Result<()> {
         trace!("Recording capabilities for {} plugin(s)", entries.len());
         self.db.lock().unwrap().transaction(|conn| {
+            // Swept here rather than on read: a read happens on most commands
+            // and a write only when a plugin had to be loaded, so this keeps the
+            // common path free of writes.
+            conn.execute(
+                "DELETE FROM plugin_capabilities WHERE created_at < datetime('now', ?1)",
+                params![MAX_RECORD_AGE],
+            )?;
+
             let mut stmt = conn.prepare(
                 "INSERT INTO plugin_capabilities (key, name, create_nodes_pattern,
                         has_create_dependencies, has_create_metadata,
@@ -110,7 +127,8 @@ impl PluginCapabilitiesCache {
                         has_create_dependencies = excluded.has_create_dependencies,
                         has_create_metadata = excluded.has_create_metadata,
                         has_pre_tasks_execution = excluded.has_pre_tasks_execution,
-                        has_post_tasks_execution = excluded.has_post_tasks_execution",
+                        has_post_tasks_execution = excluded.has_post_tasks_execution,
+                        created_at = CURRENT_TIMESTAMP",
             )?;
             for entry in entries.iter() {
                 let capabilities = &entry.capabilities;
