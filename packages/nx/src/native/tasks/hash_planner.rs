@@ -46,6 +46,52 @@ struct SubtreeResult {
     needs_legacy: bool,
 }
 
+/// A temporary union of dense pool ids. Merge dependency closures without
+/// copying their repeated ids into a large Vec and sorting all occurrences.
+/// The bitset is discarded once the exact-sized, sorted result is produced.
+#[derive(Default)]
+struct InstructionIdSet {
+    words: Vec<u64>,
+}
+
+impl Extend<u32> for InstructionIdSet {
+    fn extend<T: IntoIterator<Item = u32>>(&mut self, values: T) {
+        for id in values {
+            let word = id as usize / 64;
+            if word >= self.words.len() {
+                self.words.resize(word + 1, 0);
+            }
+            self.words[word] |= 1u64 << (id % 64);
+        }
+    }
+}
+
+impl FromIterator<u32> for InstructionIdSet {
+    fn from_iter<T: IntoIterator<Item = u32>>(values: T) -> Self {
+        let mut result = Self::default();
+        result.extend(values);
+        result
+    }
+}
+
+impl InstructionIdSet {
+    fn into_sorted_vec(self) -> Vec<u32> {
+        let count = self
+            .words
+            .iter()
+            .map(|word| word.count_ones() as usize)
+            .sum();
+        let mut result = Vec::with_capacity(count);
+        for (word_index, mut word) in self.words.into_iter().enumerate() {
+            while word != 0 {
+                result.push(word_index as u32 * 64 + word.trailing_zeros());
+                word &= word - 1;
+            }
+        }
+        result
+    }
+}
+
 /// Cycle-detection set with an undo log. Each dependency input needs its own
 /// visitation scope (see `gather_dependency_inputs`); rolling insertions back
 /// keeps that scoping without cloning the whole set per input.
@@ -486,7 +532,7 @@ impl HashPlanner {
         let mut needs_legacy =
             !dep_inputs.deps_outputs.is_empty() || dep_inputs.deps_inputs.len() != 1;
         let pool = &self.instruction_pool;
-        let mut ids: Vec<u32> = self
+        let mut ids: InstructionIdSet = self
             .gather_self_inputs(dep, &dep_inputs.self_inputs)
             .into_iter()
             .map(|instruction| pool.intern(instruction))
@@ -501,7 +547,7 @@ impl HashPlanner {
                     let sub =
                         self.memoized_dep_subtree(child, child_input, external_deps_mapped)?;
                     needs_legacy |= sub.needs_legacy;
-                    ids.extend_from_slice(&sub.ids);
+                    ids.extend(sub.ids.iter().copied());
                 } else if let Some(external_deps) = external_deps_mapped.get(child) {
                     external_inputs.insert(child);
                     external_inputs.extend(external_deps);
@@ -514,8 +560,7 @@ impl HashPlanner {
                 .into_iter()
                 .map(|s| pool.intern(HashInstruction::External(s.to_string()))),
         );
-        ids.sort_unstable();
-        ids.dedup();
+        let ids = ids.into_sorted_vec();
 
         Ok(SubtreeResult { ids, needs_legacy })
     }
@@ -541,7 +586,7 @@ impl HashPlanner {
             );
         }
 
-        let mut deps_inputs: Vec<u32> = Vec::with_capacity(inputs.len() * project_deps.len());
+        let mut deps_inputs = InstructionIdSet::default();
 
         for input in inputs {
             // Dependency inputs are independent. Scope cycle detection to each
@@ -559,7 +604,7 @@ impl HashPlanner {
             visited.rollback_to(scope);
         }
 
-        Ok(deps_inputs)
+        Ok(deps_inputs.into_sorted_vec())
     }
 
     fn gather_dependency_input<'a>(
@@ -573,7 +618,7 @@ impl HashPlanner {
     ) -> anyhow::Result<Vec<u32>> {
         let pool = &self.instruction_pool;
         let memo_enabled = self.dependency_memo_enabled();
-        let mut deps_inputs: Vec<u32> = Vec::with_capacity(project_deps.len());
+        let mut deps_inputs = InstructionIdSet::default();
         // External membership is separate from project cycle detection, whose
         // scopes must still be rolled back independently for sibling inputs.
         let mut external_inputs = hashbrown::HashSet::new();
@@ -587,10 +632,9 @@ impl HashPlanner {
                 if memo_enabled {
                     let sub = self.memoized_dep_subtree(dep, input, external_deps_mapped)?;
                     if !sub.needs_legacy {
-                        // Spliced subtrees skip per-node visited marking, so
-                        // sibling deps with shared closures emit duplicates;
-                        // the plan-level sort + dedup collapses them.
-                        deps_inputs.extend_from_slice(&sub.ids);
+                        // Shared closures are unioned by id before allocation,
+                        // without changing the per-input visitation rules.
+                        deps_inputs.extend(sub.ids.iter().copied());
                         continue;
                     }
                 }
@@ -624,7 +668,7 @@ impl HashPlanner {
                 .into_iter()
                 .map(|s| pool.intern(HashInstruction::External(s.to_string()))),
         );
-        Ok(deps_inputs)
+        Ok(deps_inputs.into_sorted_vec())
     }
 
     fn gather_self_inputs(
@@ -805,6 +849,85 @@ fn find_external_dependency_node_name<'a>(
 mod tests {
     use super::*;
     use crate::native::project_graph::types::{ExternalNode, Project, Target};
+
+    #[test]
+    fn instruction_union_preserves_ids_across_word_boundaries() {
+        let values = vec![1024, 0, 63, 64, 65, 127, 128, 63, 1024, 1, 0];
+        let mut expected = values.clone();
+        expected.sort_unstable();
+        expected.dedup();
+        let mut set: InstructionIdSet = values.into_iter().collect();
+        set.extend([128, 65, 0]);
+        assert_eq!(set.into_sorted_vec(), expected);
+        assert!(InstructionIdSet::default().into_sorted_vec().is_empty());
+    }
+
+    #[test]
+    fn overlapping_project_closures_retain_only_unique_instruction_capacity() {
+        let branches: Vec<String> = (0..20).map(|i| format!("branch-{i}")).collect();
+        let leaves: Vec<String> = (0..30).map(|i| format!("leaf-{i}")).collect();
+        let names: Vec<String> = std::iter::once("app".to_string())
+            .chain(branches.iter().cloned())
+            .chain(leaves.iter().cloned())
+            .collect();
+        let mut dependencies = HashMap::from([("app".to_string(), branches.clone())]);
+        for branch in &branches {
+            dependencies.insert(branch.clone(), leaves.clone());
+        }
+        for leaf in &leaves {
+            dependencies.insert(leaf.clone(), vec![]);
+        }
+        let graph = ProjectGraph {
+            nodes: names
+                .iter()
+                .map(|name| {
+                    (
+                        name.clone(),
+                        Project {
+                            root: name.clone(),
+                            targets: HashMap::from([("build".to_string(), Target::default())]),
+                            ..Default::default()
+                        },
+                    )
+                })
+                .collect(),
+            dependencies,
+            external_nodes: HashMap::new(),
+        };
+        let planner = HashPlanner::new(
+            NxJson { named_inputs: None },
+            &External::new(Arc::new(graph)),
+        );
+        let subtree = planner
+            .memoized_dep_subtree(
+                "app",
+                &Input::Inputs {
+                    input: "default",
+                    dependencies: true,
+                },
+                &HashMap::new(),
+            )
+            .unwrap();
+        assert!(!subtree.needs_legacy);
+        let projects = subtree
+            .ids
+            .iter()
+            .filter(|id| {
+                matches!(
+                    planner.instruction_pool.get(**id).value(),
+                    HashInstruction::ProjectConfiguration(_)
+                )
+            })
+            .count();
+        assert_eq!(projects, names.len());
+        assert!(subtree.ids.windows(2).all(|ids| ids[0] < ids[1]));
+        assert!(
+            subtree.ids.capacity() <= subtree.ids.len() * 2,
+            "{} unique instructions retained {} slots",
+            subtree.ids.len(),
+            subtree.ids.capacity()
+        );
+    }
 
     #[test]
     fn insert_reports_first_insertion_only() {

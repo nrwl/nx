@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt;
-use std::ops::{Deref, DerefMut};
+use std::ops::Deref;
 use std::sync::Arc;
 
 use napi::bindgen_prelude::{FromNapiValue, ToNapiValue, TypeName, ValidateNapiValue, ValueType};
@@ -123,35 +123,29 @@ impl ToNapiValue for SharedStr {
     }
 }
 
-/// A string map whose property names also use SharedStr's handle cache.
-/// napi's generic HashMap conversion creates a JS key from its bytes for
-/// every entry, bypassing SharedStr::to_napi_value for property names.
+/// A JS object assembled from unique string entries. Keeping the entries
+/// contiguous avoids rebuilding a native hash table just to enumerate it at
+/// the N-API boundary. Both keys and values use SharedStr's handle cache.
 #[derive(Debug, Default)]
-pub struct SharedStrMap(HashMap<SharedStr, SharedStr>);
+pub struct SharedStrMap(Vec<(SharedStr, SharedStr)>);
+
+impl SharedStrMap {
+    /// Callers must supply unique keys, with duplicate resolution already done.
+    pub(crate) fn from_unique_entries(entries: Vec<(SharedStr, SharedStr)>) -> Self {
+        Self(entries)
+    }
+}
 
 impl From<HashMap<SharedStr, SharedStr>> for SharedStrMap {
     fn from(value: HashMap<SharedStr, SharedStr>) -> Self {
-        Self(value)
-    }
-}
-
-impl Deref for SharedStrMap {
-    type Target = HashMap<SharedStr, SharedStr>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for SharedStrMap {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
+        Self(value.into_iter().collect())
     }
 }
 
 impl FromNapiValue for SharedStrMap {
     unsafe fn from_napi_value(env: sys::napi_env, val: sys::napi_value) -> napi::Result<Self> {
-        Ok(Self(unsafe { HashMap::from_napi_value(env, val) }?))
+        let entries = unsafe { HashMap::<SharedStr, SharedStr>::from_napi_value(env, val) }?;
+        Ok(entries.into())
     }
 }
 

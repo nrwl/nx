@@ -157,6 +157,66 @@ impl ToNapiValue for TaskHashes {
     }
 }
 
+/// Assign each pooled key its position in the existing UTF-8 hash order.
+/// Equal display keys share a rank, even when their instruction ids differ.
+fn instruction_key_ranks(keys: &[SharedStr]) -> (Vec<u32>, bool) {
+    let mut ids: Vec<u32> = (0..keys.len() as u32).collect();
+    ids.sort_unstable_by(|&left, &right| keys[left as usize].cmp(&keys[right as usize]));
+    let mut ranks = vec![0; keys.len()];
+    let mut duplicate_keys = false;
+    let mut rank = 0;
+    for (index, &id) in ids.iter().enumerate() {
+        if index > 0 {
+            if keys[id as usize] == keys[ids[index - 1] as usize] {
+                duplicate_keys = true;
+            } else {
+                rank += 1;
+            }
+        }
+        ranks[id as usize] = rank;
+    }
+    (ranks, duplicate_keys)
+}
+
+fn assemble_ranked_hash(
+    mut entries: Vec<(u32, SharedStr)>,
+    keys: &[SharedStr],
+    ranks: &[u32],
+    duplicate_keys: bool,
+    inputs: HashInputsBuilder,
+) -> HashDetails {
+    if duplicate_keys {
+        // Match HashMap insertion's last-value-wins behavior. A stable sort
+        // retains the incoming order of equal display keys before deduping.
+        entries.sort_by_key(|(id, _)| ranks[*id as usize]);
+        entries.dedup_by(|later, earlier| {
+            if ranks[later.0 as usize] == ranks[earlier.0 as usize] {
+                std::mem::swap(&mut later.1, &mut earlier.1);
+                true
+            } else {
+                false
+            }
+        });
+    } else {
+        entries.sort_unstable_by_key(|(id, _)| ranks[*id as usize]);
+    }
+    let mut hasher = xxhash_rust::xxh3::Xxh3::new();
+    for (id, value) in &entries {
+        trace!("Adding {} ({}) to hash", value, keys[*id as usize]);
+        hasher.update(value.as_bytes());
+    }
+    HashDetails {
+        value: hasher.digest().to_string(),
+        details: SharedStrMap::from_unique_entries(
+            entries
+                .into_iter()
+                .map(|(id, value)| (keys[id as usize].clone(), value))
+                .collect(),
+        ),
+        inputs: inputs.into(),
+    }
+}
+
 /// Returns the shared Arc for `value`, allocating it on first sight. Only
 /// Environment and Runtime values flow through here: they depend on the
 /// task's env, so they cannot live in the shared per-id slots, but tasks
@@ -321,6 +381,7 @@ impl TaskHasher {
         let instruction_keys: Vec<SharedStr> = (0..pool.len() as u32)
             .map(|id| SharedStr::from(pool.key(id)))
             .collect();
+        let (key_ranks, duplicate_keys) = instruction_key_ranks(&instruction_keys);
         // Classify once per instruction, so cache hits do not need the pool's
         // shard lock. The exhaustive match keeps env-dependent inputs out of
         // the shared slots even when new instruction variants are introduced.
@@ -358,7 +419,7 @@ impl TaskHasher {
                     value_slots[id as usize].as_ref().and_then(OnceCell::get)
                 };
                 if let Some(value) = cached {
-                    entries.push((instruction_keys[id as usize].clone(), value.clone()));
+                    entries.push((id, value.clone()));
                 } else {
                     pending.push(id);
                 }
@@ -413,7 +474,7 @@ impl TaskHasher {
                             }
                         };
 
-                        entries.push((instruction_keys[id as usize].clone(), value));
+                        entries.push((id, value));
                         Ok::<_, anyhow::Error>((entries, task_inputs))
                     },
                 )
@@ -428,47 +489,28 @@ impl TaskHasher {
             entries.extend(computed);
             hashes.insert(
                 task_id.clone(),
-                HashDetails {
-                    value: String::new(),
-                    details: entries.into_iter().collect::<HashMap<_, _>>().into(),
-                    inputs: inputs.into(),
-                },
+                trace_span!("Assembling hash", hash_id = task_id).in_scope(|| {
+                    assemble_ranked_hash(
+                        entries,
+                        &instruction_keys,
+                        &key_ranks,
+                        duplicate_keys,
+                        inputs,
+                    )
+                }),
             );
             Ok::<_, anyhow::Error>(())
         })?;
 
-        let assemble_start = std::time::Instant::now();
-
-        hashes.par_iter_mut().for_each(|mut h| {
-            let (hash_id, hash_details) = h.pair_mut();
-            // Entries avoid looking values up by key again after sorting.
-            // Map keys are unique, so unstable sorting preserves exactly the
-            // same lexicographic order used by the hash format.
-            let mut entries = hash_details.details.iter().collect::<Vec<_>>();
-            entries.par_sort_unstable_by(|(left, _), (right, _)| left.cmp(right));
-            let mut hasher = xxhash_rust::xxh3::Xxh3::new();
-            trace_span!("Assembling hash", hash_id).in_scope(|| {
-                for (key, value) in entries {
-                    trace!("Adding {} ({}) to hash", value, key);
-                    hasher.update(value.as_bytes());
-                }
-                let hash = hasher.digest().to_string();
-                trace!("Hash Value: {}", hash);
-                hash_details.value = hash;
-            });
-        });
-
-        let assemble_duration = assemble_start.elapsed();
         let hash_duration = hash_time.elapsed();
         let total_duration = function_start.elapsed();
 
         debug!(
-            "hash_plans COMPLETED in {:?} - processed {} plans (setup: {:?}, hashing: {:?}, assembly: {:?})",
+            "hash_plans COMPLETED in {:?} - processed {} plans (setup: {:?}, hashing: {:?})",
             total_duration,
             hash_plans.plans.len(),
             setup_duration,
-            hash_duration,
-            assemble_duration
+            hash_duration
         );
 
         Ok(TaskHashes(hashes))
@@ -737,6 +779,48 @@ struct HashInstructionArgs<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn ranked_assembly_matches_map_order_and_duplicate_resolution() {
+        for names in [
+            vec!["z", "a", "\u{e000}", "🤖"],
+            vec!["z", "a", "\u{e000}", "🤖", "a", "z"],
+        ] {
+            let keys: Vec<SharedStr> = names.into_iter().map(|s| s.to_string().into()).collect();
+            let (ranks, duplicate_keys) = instruction_key_ranks(&keys);
+            for offset in 0..keys.len() {
+                for reverse in [false, true] {
+                    let mut entries: Vec<(u32, SharedStr)> = (0..keys.len())
+                        .map(|id| (id as u32, format!("value-{id}").into()))
+                        .collect();
+                    entries.rotate_left(offset);
+                    if reverse {
+                        entries.reverse();
+                    }
+                    let expected: HashMap<SharedStr, SharedStr> = entries
+                        .iter()
+                        .map(|(id, value)| (keys[*id as usize].clone(), value.clone()))
+                        .collect();
+                    let mut expected_entries: Vec<_> = expected.iter().collect();
+                    expected_entries.sort_unstable_by(|(left, _), (right, _)| left.cmp(right));
+                    let mut expected_hash = xxhash_rust::xxh3::Xxh3::new();
+                    for (_, value) in expected_entries {
+                        expected_hash.update(value.as_bytes());
+                    }
+                    let actual = assemble_ranked_hash(
+                        entries,
+                        &keys,
+                        &ranks,
+                        duplicate_keys,
+                        HashInputsBuilder::default(),
+                    );
+                    assert_eq!(actual.value, expected_hash.digest().to_string());
+                }
+            }
+        }
+        let empty = assemble_ranked_hash(vec![], &[], &[], false, HashInputsBuilder::default());
+        assert_eq!(empty.value, hash(b""));
+    }
 
     #[test]
     fn intern_value_shares_one_allocation_per_unique_value() {
