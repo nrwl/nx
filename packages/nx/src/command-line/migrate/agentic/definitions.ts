@@ -103,11 +103,13 @@ function codexBuildInteractive(ctx: InvocationContext): InvocationSpec {
 }
 
 /**
- * Encodes a single-line TOML string for codex overrides. JSON can leave raw
- * controls that TOML rejects; codex treats parse failures as literal text.
+ * Encodes a single-line TOML string for codex overrides. Codex treats a parse
+ * failure as literal text instead of reporting it, so the result is parsed
+ * back before it reaches the command line.
  */
 function encodeTomlString(value: string): string {
-  const encoded = JSON.stringify(value);
+  // JSON escapes every control TOML rejects except DEL, which it leaves raw.
+  const encoded = JSON.stringify(value).replace(/\x7f/g, '\\u007F');
   let decoded: unknown;
   try {
     decoded = (parseToml(`value = ${encoded}`) as { value: unknown }).value;

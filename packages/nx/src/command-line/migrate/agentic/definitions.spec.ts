@@ -130,6 +130,8 @@ describe('codexDefinition', () => {
     ['backslashes', 'C:\\Users\\me\\My Documents\\ws'],
     ['TOML punctuation', '{ key = "value" } at 100% of %PATH%'],
     ['unicode', 'ends with an em dash — and an ellipsis …'],
+    // A migration key or workspace path can carry a DEL, which JSON leaves raw.
+    ['a DEL', 'before\x7fafter'],
   ])(
     'round-trips the inline system context through a TOML parse (%s)',
     (_label, inlineSystemContext) => {
@@ -143,15 +145,6 @@ describe('codexDefinition', () => {
       );
     }
   );
-
-  it('refuses a system context that cannot be encoded as TOML', () => {
-    expect(() =>
-      // A raw DEL is legal in a JSON string but not in a TOML basic string.
-      codexDefinition.buildInteractive(
-        makeContext({ inlineSystemContext: 'before\x7fafter' })
-      )
-    ).toThrow('Could not encode the agent');
-  });
 });
 
 describe('opencodeDefinition', () => {

@@ -784,7 +784,7 @@ describe('runAgentic', () => {
         spawnWithHandoff({ status: 'success', summary: 'ok' });
         const definition = echoingDefinition();
 
-        await runAgentic({
+        const outcome = await runAgentic({
           detected: shimAgent(),
           definition,
           invocationContext: {
@@ -793,8 +793,10 @@ describe('runAgentic', () => {
             inlineSystemContextFallback: 'short',
           },
           handoffFilePath,
+          handoffsDir: workspace,
         });
 
+        expect(outcome).toEqual({ kind: 'success', summary: 'ok' });
         const cmdLine = mockSpawn.mock.calls[0][1][5];
         expect(cmdLine).toContain('short');
         expect(cmdLine.length).toBeLessThanOrEqual(WINDOWS_COMMAND_LINE_BUDGET);
@@ -817,6 +819,7 @@ describe('runAgentic', () => {
                 ),
               },
               handoffFilePath,
+              handoffsDir: workspace,
             })
           ).rejects.toThrow('exceeds the Windows limit');
           expect(mockSpawn).not.toHaveBeenCalled();
@@ -841,7 +844,7 @@ describe('runAgentic', () => {
     it('does not measure a command line off the Windows shim path', async () => {
       spawnWithHandoff({ status: 'success', summary: 'ok' });
 
-      await runAgentic({
+      const outcome = await runAgentic({
         detected: makeDetected(),
         definition: echoingDefinition(),
         invocationContext: {
@@ -849,8 +852,10 @@ describe('runAgentic', () => {
           inlineSystemContext: 'x'.repeat(WINDOWS_COMMAND_LINE_BUDGET * 2),
         },
         handoffFilePath,
+        handoffsDir: workspace,
       });
 
+      expect(outcome).toEqual({ kind: 'success', summary: 'ok' });
       expect(mockSpawn.mock.calls[0][1][1]).toContain('x'.repeat(100));
     });
   });
