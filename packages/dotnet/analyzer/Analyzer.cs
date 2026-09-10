@@ -1,4 +1,6 @@
+using Microsoft.Build.Definition;
 using Microsoft.Build.Evaluation;
+using Microsoft.Build.Evaluation.Context;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Graph;
 using MsbuildAnalyzer.Models;
@@ -71,11 +73,40 @@ public static class Analyzer
         ProjectGraph projectGraph;
         using (var graphPerf = PerfLogger.Start("analyze workspace > create project graph"))
         {
-            projectGraph = new ProjectGraph(absoluteProjectFiles);
+            // Evaluation only. The SDK's default EmbeddedResource, None and Content globs
+            // are switched off: they walk every file under each project directory to
+            // produce items that all sit inside it, and the only items read here are the
+            // explicit ones linked in from outside, which survive. Compile stays on
+            // because its evaluated items are the only faithful answer to "what does this
+            // project compile" (excludes, Remove/Update entries, hand-listed sources),
+            // which per-class test splitting needs; it costs a few milliseconds per
+            // project. The shared context caches SDK resolution and directory listings
+            // across the projects.
+            var globalProperties = new Dictionary<string, string>
+            {
+                ["EnableDefaultEmbeddedResourceItems"] = "false",
+                ["EnableDefaultNoneItems"] = "false",
+                ["EnableDefaultContentItems"] = "false",
+            };
+            var evaluationContext = EvaluationContext.Create(EvaluationContext.SharingPolicy.Shared);
+            using var projectCollection = new ProjectCollection();
+            projectGraph = new ProjectGraph(
+                absoluteProjectFiles.Select(p => new ProjectGraphEntryPoint(p, globalProperties)),
+                projectCollection,
+                (path, properties, collection) => ProjectInstance.FromFile(
+                    path,
+                    new ProjectOptions
+                    {
+                        GlobalProperties = properties,
+                        ProjectCollection = collection,
+                        EvaluationContext = evaluationContext,
+                        LoadSettings = ProjectLoadSettings.DoNotEvaluateElementsWithFalseCondition,
+                    }));
         }
 
         var nodesByFile = new Dictionary<string, NxProjectGraphNode>();
         var referencesByRoot = new Dictionary<string, ReferencesInfo>();
+        var evaluationInputs = new SortedSet<string>(StringComparer.Ordinal);
 
         // Group nodes by project file path to handle multi-targeting projects.
         // Multi-targeting projects (using TargetFrameworks plural) create multiple nodes:
@@ -143,20 +174,46 @@ public static class Analyzer
 
                     // Determine project type
                     var isTest = IsTestProject(properties, packageRefs);
-                    var isExe = IsExecutableProject(properties);
+                    var isExe = properties.IsExecutable;
 
                     // Build targets
                     var projectName = ProjectUtilities.GetProjectName(primaryNode.ProjectInstance);
                     var projectDirectory = Path.GetDirectoryName(projectPath)!;
 
-                    // The closest Directory.Build.* / Directory.Solution.* ancestors that exist
-                    // for this project — declared as inputs on every target that already has an
-                    // Inputs array, so Nx invalidates downstream caches when they change.
+                    // Everything outside the project directory that feeds the build — the nearest
+                    // Directory.* ancestors, every file MSBuild imported, and sources or analyzer
+                    // files linked in from elsewhere — declared as inputs on every target that
+                    // already has an Inputs array. Imports and items are unioned across inner
+                    // builds, since a conditional import can differ per target framework.
+                    var instances = nodes
+                        .Select(n => n.ProjectInstance)
+                        .Where(instance => instance is not null)
+                        .Select(instance => instance!)
+                        .ToList();
+                    // Restore writes <project>.nuget.g.props/.targets into the project
+                    // extensions directory and MSBuild imports them when present. They
+                    // embed the absolute packages folder and change on every restore, so
+                    // they are neither a task input nor part of the evaluation key.
+                    var extensionsDirectory = Path.GetFullPath(
+                        Path.Combine(projectDirectory, properties.ProjectExtensionsPath));
+                    var importPaths = instances
+                        .SelectMany(instance => instance.ImportPaths)
+                        .Where(path => !ProjectUtilities.IsUnderDirectory(path, extensionsDirectory))
+                        .ToList();
+                    var linkedFiles = instances
+                        .SelectMany(instance => LinkedItemTypes.SelectMany(instance.GetItems))
+                        .Select(item => item.GetMetadataValue("FullPath"));
                     var directoryBuildInputs = ProjectUtilities.GetDirectoryBuildInputs(
-                        projectPath,
-                        workspaceRoot,
-                        directoryFilesByDir
-                    );
+                            projectPath,
+                            workspaceRoot,
+                            directoryFilesByDir
+                        )
+                        .Concat(ProjectUtilities.GetSharedInputs(projectDirectory, workspaceRoot, importPaths.Concat(linkedFiles)))
+                        .Distinct()
+                        .ToList();
+
+                    evaluationInputs.Add(relativeProjectFile);
+                    evaluationInputs.UnionWith(ProjectUtilities.GetWorkspaceRelativePaths(workspaceRoot, importPaths));
 
                     var targets = TargetBuilder.BuildTargets(
                         projectName,
@@ -202,9 +259,16 @@ public static class Analyzer
         return new AnalysisResult
         {
             NodesByFile = nodesByFile,
-            ReferencesByRoot = referencesByRoot
+            ReferencesByRoot = referencesByRoot,
+            EvaluationInputs = evaluationInputs.ToList()
         };
     }
+
+    /// <summary>
+    /// Item types whose includes are build inputs. Only entries resolving outside the
+    /// project directory are declared; the rest are covered by the {projectRoot} input.
+    /// </summary>
+    private static readonly string[] LinkedItemTypes = { "Compile", "AdditionalFiles", "EmbeddedResource", "Content" };
 
     private static List<PackageReference> CollectPackageReferences(ProjectInstance project)
     {
@@ -258,12 +322,12 @@ public static class Analyzer
 
     /// <summary>
     /// Snapshots the project's evaluated MSBuild properties. Every property is
-    /// captured rather than a curated list: the helpers that read them look up
-    /// by name, so a list is one more thing to keep in sync and a typo in it
+    /// captured rather than a curated list: <see cref="EvaluatedProperties"/> looks
+    /// them up by name, so a list is one more thing to keep in sync and a typo in it
     /// fails silently. Empty values are skipped so callers can treat a missing
     /// key and an unset property alike.
     /// </summary>
-    private static Dictionary<string, string> CollectProperties(ProjectInstance project)
+    private static EvaluatedProperties CollectProperties(ProjectInstance project)
     {
         // MSBuild property names are case-insensitive; matching that here keeps
         // a project that spells one <outputpath> readable to the helpers.
@@ -281,16 +345,10 @@ public static class Analyzer
     }
 
     private static bool IsTestProject(
-        Dictionary<string, string> properties,
+        EvaluatedProperties properties,
         List<PackageReference> packageRefs)
     {
-        return properties.GetValueOrDefault("IsTestProject") == "true" ||
+        return properties.IsTestProject ||
                packageRefs.Any(p => p.Include == "Microsoft.NET.Test.Sdk" || p.Include.StartsWith("Microsoft.Testing"));
-    }
-
-    private static bool IsExecutableProject(Dictionary<string, string> properties)
-    {
-        return properties.GetValueOrDefault("OutputType")?
-            .Equals("Exe", StringComparison.OrdinalIgnoreCase) == true;
     }
 }

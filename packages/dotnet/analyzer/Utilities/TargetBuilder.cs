@@ -16,7 +16,7 @@ public static partial class TargetBuilder
         bool isTest,
         bool isExe,
         List<PackageReference> packageRefs,
-        Dictionary<string, string> properties,
+        EvaluatedProperties properties,
         string projectDirectory,
         string workspaceRoot,
         PluginOptions options,
@@ -69,22 +69,5 @@ public static partial class TargetBuilder
         }
 
         return "default";
-    }
-
-    /// <summary>
-    /// Copies <paramref name="properties"/> with <c>Configuration</c> set to
-    /// <paramref name="configuration"/>, preserving the source comparer. The
-    /// <c>Dictionary</c> copy constructor silently falls back to an ordinal
-    /// comparer, which would hide any property MSBuild reports under a
-    /// non-canonical spelling from every helper reading the copy.
-    /// </summary>
-    private static Dictionary<string, string> WithConfiguration(
-        Dictionary<string, string> properties,
-        string configuration)
-    {
-        return new Dictionary<string, string>(properties, properties.Comparer)
-        {
-            ["Configuration"] = configuration
-        };
     }
 }

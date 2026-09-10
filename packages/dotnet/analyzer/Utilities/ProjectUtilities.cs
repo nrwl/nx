@@ -63,9 +63,10 @@ public static class ProjectUtilities
     /// up from the project to the first ancestor that defines them. Directory.Build.rsp is read by
     /// the dotnet CLI from the same walk. Directory.Solution.props/.targets apply for .sln builds.
     /// Directory.Packages.props is read by the Central Package Management SDK import to source
-    /// PackageVersion items. We mirror MSBuild's "first ancestor wins" rule so the inputs match
-    /// what the build actually reads — over-declaring would let unrelated shadowed parents bust
-    /// the cache.
+    /// PackageVersion items. global.json is read by the SDK resolver walking up from the
+    /// invocation directory. We mirror the "first ancestor wins" rule they share so the inputs
+    /// match what the build actually reads — over-declaring would let unrelated shadowed
+    /// parents bust the cache.
     /// </summary>
     public static readonly string[] DirectoryBuildFileNames =
     {
@@ -75,6 +76,18 @@ public static class ProjectUtilities
         "Directory.Solution.props",
         "Directory.Solution.targets",
         "Directory.Packages.props",
+        "global.json",
+    };
+
+    /// <summary>
+    /// Files every ancestor contributes rather than only the nearest: NuGet merges each
+    /// nuget.config on the walk to the root, and analyzers read each .editorconfig up to
+    /// the one that sets root=true, which we do not parse for.
+    /// </summary>
+    public static readonly string[] CascadingFileNames =
+    {
+        "nuget.config",
+        ".editorconfig",
     };
 
     /// <summary>
@@ -91,9 +104,12 @@ public static class ProjectUtilities
     }
 
     /// <summary>
-    /// For a given project, find the closest ancestor occurrence of each Directory.* filename
-    /// using the pre-built directory→filename-set index. Returns paths suitable for use as Nx
-    /// inputs (prefixed with "{workspaceRoot}/...").
+    /// For a given project, find the closest ancestor occurrence of each
+    /// <see cref="DirectoryBuildFileNames"/> entry and every ancestor occurrence of each
+    /// <see cref="CascadingFileNames"/> entry, using the pre-built directory→filename-set
+    /// index. Names match case-insensitively but the declared path keeps the on-disk casing,
+    /// since on a case-sensitive filesystem the two spellings are different files. Returns
+    /// paths suitable for use as Nx inputs (prefixed with "{workspaceRoot}/...").
     /// </summary>
     public static List<string> GetDirectoryBuildInputs(
         string projectPath,
@@ -128,20 +144,26 @@ public static class ProjectUtilities
             {
                 foreach (var fileName in DirectoryBuildFileNames)
                 {
-                    if (!found.ContainsKey(fileName) && filesInDir.Contains(fileName))
+                    if (!found.ContainsKey(fileName) && filesInDir.TryGetValue(fileName, out var onDiskName))
                     {
                         var path = relativeDir == "."
-                            ? fileName
-                            : $"{relativeDir}/{fileName}";
+                            ? onDiskName
+                            : $"{relativeDir}/{onDiskName}";
                         found[fileName] = path;
                         inputs.Add($"{{workspaceRoot}}/{path}");
                     }
                 }
-            }
 
-            if (found.Count == DirectoryBuildFileNames.Length)
-            {
-                break;
+                foreach (var fileName in CascadingFileNames)
+                {
+                    if (filesInDir.TryGetValue(fileName, out var onDiskName))
+                    {
+                        var path = relativeDir == "."
+                            ? onDiskName
+                            : $"{relativeDir}/{onDiskName}";
+                        inputs.Add($"{{workspaceRoot}}/{path}");
+                    }
+                }
             }
 
             if (string.Equals(normalizedDir, workspaceRootFull, StringComparison.OrdinalIgnoreCase))
@@ -153,6 +175,57 @@ public static class ProjectUtilities
         }
 
         return inputs;
+    }
+
+    /// <summary>
+    /// Workspace-relative, forward-slashed paths for the absolute paths that lie inside
+    /// the workspace. SDK and package imports lie outside it and are dropped.
+    /// </summary>
+    public static List<string> GetWorkspaceRelativePaths(string workspaceRoot, IEnumerable<string> absolutePaths)
+    {
+        var root = Path.GetFullPath(workspaceRoot)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        var result = new SortedSet<string>(StringComparer.Ordinal);
+
+        foreach (var absolutePath in absolutePaths)
+        {
+            var full = Path.GetFullPath(absolutePath);
+            if (string.Equals(full, root, StringComparison.OrdinalIgnoreCase) || !IsSameOrUnder(full, root))
+            {
+                continue;
+            }
+            result.Add(Path.GetRelativePath(root, full).Replace('\\', '/'));
+        }
+
+        return result.ToList();
+    }
+
+    /// <summary>
+    /// Nx inputs for the files MSBuild pulled into a project from outside its directory:
+    /// imports, linked sources, analyzer AdditionalFiles. Files under the project directory
+    /// are already covered by the {projectRoot} input, and files outside the workspace
+    /// cannot be hashed.
+    /// </summary>
+    public static List<string> GetSharedInputs(string projectDirectory, string workspaceRoot, IEnumerable<string> absolutePaths)
+    {
+        var project = Path.GetFullPath(projectDirectory)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        var outsideProject = absolutePaths.Where(p => !IsSameOrUnder(Path.GetFullPath(p), project));
+
+        return GetWorkspaceRelativePaths(workspaceRoot, outsideProject)
+            .Select(relative => $"{{workspaceRoot}}/{relative}")
+            .ToList();
+    }
+
+    /// <summary>
+    /// True when <paramref name="absolutePath"/> is <paramref name="directory"/> or lies
+    /// beneath it, comparing normalized full paths.
+    /// </summary>
+    public static bool IsUnderDirectory(string absolutePath, string directory)
+    {
+        var root = Path.GetFullPath(directory)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        return IsSameOrUnder(Path.GetFullPath(absolutePath), root);
     }
 
     private static bool IsSameOrUnder(string path, string root)
