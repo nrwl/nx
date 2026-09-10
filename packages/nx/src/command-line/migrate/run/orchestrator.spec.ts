@@ -6816,6 +6816,42 @@ describe('orchestrator', () => {
         expect(state.steps[0].status).toBe('skipped');
         expect(state.commits).toEqual([]);
       });
+
+      it('records nothing and keeps skip and unresolved open when the session holds no answer', async () => {
+        // A commit the worker made in-process leaves no answer: HEAD moved
+        // past the captured ref, and the ledger stays the only gate.
+        mockGetLatestCommitSha.mockReturnValue(
+          'beef0002beef0002beef0002beef0002beef0002'
+        );
+        const dir = setupRun('run-1', {
+          steps: [
+            migStep('step-1', '@nx/js:gen', 'died', {
+              gitRefBefore: 'beef0001beef0001beef0001beef0001beef0001',
+              generatorCompleted: true,
+            }),
+          ],
+          createCommits: true,
+          plan: [genMig('@nx/js', 'gen')],
+        });
+
+        await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+        const block = lastBlock();
+        expect(block.action).toBe('died');
+        expect(block.payload.instructions).toContain('--step-action=skip');
+        expect(block.payload.instructions).toContain(
+          '--step-action=unresolved'
+        );
+        expect(readRunState(dir).commits).toEqual([]);
+
+        await answered(dir, { kind: 'installed', output: [] }, () =>
+          runOrchestratorReconcile({ root, runId: 'run-1', stepAction: 'skip' })
+        );
+
+        const state = readRunState(dir);
+        expect(state.steps[0].status).toBe('skipped');
+        expect(state.commits).toEqual([]);
+      });
     });
 
     it('leaves an adopt for the next reconcile when the session is gone', async () => {

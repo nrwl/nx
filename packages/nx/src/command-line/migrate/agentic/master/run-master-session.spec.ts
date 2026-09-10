@@ -228,6 +228,7 @@ describe('runMasterSession', () => {
 
   it.each([
     ['exits 1', 'deferred-final', 1],
+    ['exits 1', 'recorded', 1],
     ['exits 0', 'resolved', undefined],
   ] as const)(
     '%s when every step succeeded and the only reported issue is %s',
