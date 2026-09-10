@@ -205,14 +205,17 @@ mod test {
         let path = tmp_dir.child("lock").path().to_string_lossy().to_string();
         let mut holder = FileLock::new(path.clone()).unwrap();
         holder.lock().unwrap();
+        let (waiting, on_waiting) = std::sync::mpsc::channel();
         let waiter = std::thread::spawn(move || {
+            let lock = FileLock::new(path).unwrap();
             let started = Instant::now();
-            let released = FileLock::new(path)
-                .unwrap()
-                .wait_blocking(Duration::from_secs(10))
-                .unwrap();
+            waiting.send(()).unwrap();
+            let released = lock.wait_blocking(Duration::from_secs(10)).unwrap();
             (released, started.elapsed())
         });
+        // Release only once the waiter is about to block, so the elapsed
+        // check below cannot pass on a waiter that never blocked.
+        on_waiting.recv().unwrap();
         std::thread::sleep(Duration::from_millis(100));
         holder.unlock().unwrap();
         let (released, waited) = waiter.join().unwrap();

@@ -43,17 +43,34 @@ type Files = Vec<(PathBuf, String)>;
 
 const NX_FILES_LOCK: &str = "nx_files.lock";
 
+const WALK_WAIT_VAR: &str = "NX_WORKSPACE_WALK_WAIT_MS";
+const DEFAULT_WALK_WAIT: Duration = Duration::from_secs(60);
+/// A wait this long is a wedge with a name on it, so anything above is capped.
+const MAX_WALK_WAIT: Duration = Duration::from_secs(3600);
+
 /// How long a process waits for another process's walk before walking itself.
 /// The default is longer than any walk measured so far (27 s on a saturated CI
 /// disk) and short enough that a stuck holder cannot pin every nx in the
 /// checkout. A workspace whose walk legitimately takes longer raises it.
 #[cfg(not(target_arch = "wasm32"))]
 fn files_lock_wait() -> Duration {
-    std::env::var("NX_WORKSPACE_WALK_TIMEOUT_MS")
-        .ok()
-        .and_then(|ms| ms.trim().parse::<u64>().ok())
-        .map(Duration::from_millis)
-        .unwrap_or(Duration::from_secs(60))
+    walk_wait_from(std::env::var(WALK_WAIT_VAR).ok().as_deref())
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn walk_wait_from(configured: Option<&str>) -> Duration {
+    let Some(value) = configured else {
+        return DEFAULT_WALK_WAIT;
+    };
+    match value.trim().parse::<u64>() {
+        Ok(ms) => Duration::from_millis(ms).min(MAX_WALK_WAIT),
+        Err(_) => {
+            trace!(
+                "{WALK_WAIT_VAR}={value:?} is not a whole number of milliseconds, waiting {DEFAULT_WALK_WAIT:?}"
+            );
+            DEFAULT_WALK_WAIT
+        }
+    }
 }
 
 /// Every files lock this process has started waiting on, one entry per wait.
@@ -227,6 +244,10 @@ fn acquire_files(
                     return archive_to_files(archive);
                 }
                 trace!("the other walk left no fresh archive, trying for the lock again");
+                if remaining().is_zero() {
+                    trace!("no time left to wait for another walk, walking unshared");
+                    return gather_and_hash_files(workspace_root, cache_dir.to_owned());
+                }
             }
             Err(e) => {
                 trace!(
@@ -849,6 +870,25 @@ mod tests {
 
     #[test]
     #[cfg(not(target_arch = "wasm32"))]
+    fn the_walk_wait_comes_from_the_environment_capped_and_with_a_default() {
+        assert_eq!(walk_wait_from(None), Duration::from_secs(60));
+        assert_eq!(walk_wait_from(Some("90000")), Duration::from_secs(90));
+        assert_eq!(walk_wait_from(Some(" 0 ")), Duration::ZERO);
+        assert_eq!(
+            walk_wait_from(Some("99999999999")),
+            Duration::from_secs(3600)
+        );
+        for malformed in ["", "90s", "1e5", "90_000", "1.5", "-1", "abc"] {
+            assert_eq!(
+                walk_wait_from(Some(malformed)),
+                Duration::from_secs(60),
+                "{malformed:?}"
+            );
+        }
+    }
+
+    #[test]
+    #[cfg(not(target_arch = "wasm32"))]
     fn a_waiter_gives_up_on_a_holder_that_never_releases_and_walks_itself() {
         let temp = workspace_with(&["a.ts"]);
         let cache = TempDir::new().unwrap();
@@ -870,6 +910,7 @@ mod tests {
         // It waited the timeout out and then walked around the holder, which
         // still holds; it did not take the lock itself.
         assert!(started.elapsed() >= Duration::from_millis(200));
+        assert!(started.elapsed() < Duration::from_secs(30));
         let lock_path = cache
             .path()
             .join(NX_FILES_LOCK)
@@ -891,12 +932,14 @@ mod tests {
         );
         let _holder = hold_lock(&cache);
 
+        let started = Instant::now();
         let files = acquire_files(
             temp.path(),
             &as_string(&cache),
             true,
             Duration::from_millis(200),
         );
+        assert!(started.elapsed() < Duration::from_secs(30));
 
         let names: Vec<String> = files
             .into_iter()
@@ -914,10 +957,7 @@ mod tests {
         let waiter = walk_in_another_thread(&temp, &cache);
 
         // The holder finishes: it writes an archive that does not match the
-        // disk, so a waiter that walked would produce something else. The pause
-        // keeps the archive's mtime past the waiter's clock read on filesystems
-        // that round file times to a coarse tick.
-        std::thread::sleep(Duration::from_millis(20));
+        // disk, so a waiter that walked would produce something else.
         write_files_archive(
             as_string(&cache),
             &[(
@@ -927,6 +967,14 @@ mod tests {
             .into_iter()
             .collect::<NxFileHashes>(),
         );
+        // Stamped well after the waiter's clock read, whatever the
+        // filesystem's timestamp resolution.
+        std::fs::File::options()
+            .write(true)
+            .open(archive_path(cache.path()))
+            .unwrap()
+            .set_modified(SystemTime::now() + Duration::from_secs(5))
+            .unwrap();
         holder.unlock().unwrap();
 
         assert_eq!(

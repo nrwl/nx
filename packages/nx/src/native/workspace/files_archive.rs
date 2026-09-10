@@ -170,17 +170,31 @@ fn sweep_orphaned_staging_files(cache_dir: &Path) {
 /// Where a write stages its bytes before the rename. The random part keeps
 /// two writers apart even when their pids collide, as they can across
 /// containers sharing one checkout.
-fn staging_path(archive_path: &Path, nonce: u64) -> PathBuf {
-    archive_path.with_extension(format!("nxt.{}.{nonce:016x}.tmp", std::process::id()))
+fn staging_path(archive_path: &Path) -> PathBuf {
+    archive_path.with_extension(format!(
+        "nxt.{}.{:016x}.tmp",
+        std::process::id(),
+        rand::random::<u64>()
+    ))
 }
 
-/// Opens the staging file, refusing anything already at that path, so a
-/// planted file or symlink is never written through.
-fn create_staging_file(path: &Path) -> std::io::Result<std::fs::File> {
-    std::fs::File::options()
+/// Encodes `files` into `staging_path`, then renames it over `archive_path`.
+/// The staging file is opened with `create_new`, so anything already at that
+/// path, planted or left behind, is refused rather than written through.
+fn write_files_archive_at(
+    archive_path: &Path,
+    staging_path: &Path,
+    files: &NxFileHashes,
+) -> anyhow::Result<()> {
+    let encoded = rkyv::to_bytes::<_, 2048>(files)?;
+    let mut staging = std::fs::File::options()
         .write(true)
         .create_new(true)
-        .open(path)
+        .open(staging_path)?;
+    staging.write_all(&encoded)?;
+    drop(staging);
+    std::fs::rename(staging_path, archive_path)?;
+    Ok(())
 }
 
 pub fn write_files_archive<P: AsRef<Path>>(cache_dir: P, files: &NxFileHashes) {
@@ -189,24 +203,9 @@ pub fn write_files_archive<P: AsRef<Path>>(cache_dir: P, files: &NxFileHashes) {
     sweep_orphaned_staging_files(cache_dir.as_ref());
     // Written beside the archive and renamed into place, so a process that
     // trusts the archive can never read a partial one.
-    let staging_path = staging_path(&archive_path, rand::random());
-    let result = rkyv::to_bytes::<_, 2048>(files)
-        .map_err(anyhow::Error::from)
-        .and_then(|encoded| {
-            let mut staging = create_staging_file(&staging_path)?;
-            staging.write_all(&encoded)?;
-            drop(staging);
-            std::fs::rename(&staging_path, &archive_path)?;
-            Ok(())
-        });
-
-    match result {
-        Ok(_) => {
-            trace!("write archive in {:?}", now.elapsed());
-        }
-        Err(e) => {
-            trace!("could not write files archive: {:?}", e);
-        }
+    match write_files_archive_at(&archive_path, &staging_path(&archive_path), files) {
+        Ok(()) => trace!("write archive in {:?}", now.elapsed()),
+        Err(e) => trace!("could not write files archive: {:?}", e),
     }
 }
 
@@ -287,8 +286,8 @@ mod tests {
     #[test]
     fn staging_paths_differ_between_writes_of_one_process() {
         let archive = Path::new("/cache/nx_files.nxt");
-        let first = staging_path(archive, 1);
-        let second = staging_path(archive, 2);
+        let first = staging_path(archive);
+        let second = staging_path(archive);
         assert_ne!(first, second);
         for path in [&first, &second] {
             let name = path.file_name().unwrap().to_string_lossy();
@@ -301,14 +300,19 @@ mod tests {
     }
 
     #[test]
-    fn a_staging_file_is_never_opened_over_something_already_there() {
+    fn a_write_refuses_a_staging_path_something_already_occupies() {
         let cache = TempDir::new().unwrap();
+        let archive = archive_path(cache.path());
         let planted = cache.child("nx_files.nxt.7.0000000000000001.tmp");
         planted.write_str("planted").unwrap();
 
-        let err = create_staging_file(planted.path()).unwrap_err();
+        let err = write_files_archive_at(&archive, planted.path(), &one_file()).unwrap_err();
 
-        assert_eq!(err.kind(), std::io::ErrorKind::AlreadyExists);
+        assert_eq!(
+            err.downcast_ref::<std::io::Error>().map(|e| e.kind()),
+            Some(std::io::ErrorKind::AlreadyExists)
+        );
         assert_eq!(std::fs::read_to_string(planted.path()).unwrap(), "planted");
+        assert!(!archive.exists());
     }
 }
