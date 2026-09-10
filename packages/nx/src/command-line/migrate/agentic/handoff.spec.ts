@@ -1,15 +1,35 @@
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'fs';
+import { createHash } from 'crypto';
 import { tmpdir } from 'os';
-import { join } from 'path';
+import { basename, dirname, join } from 'path';
 import {
   initRunDir,
+  handoffsDirState,
   mkdirSafely,
   readHandoff,
   readHandoffWithReason,
+  runStepHandoffPath,
   stepHandoffPath,
   waitForValidHandoff,
 } from './handoff';
 import { HANDOFFS_DIR_NAME } from './types';
+
+// Mirrors the production hash for the property tests over sanitization and
+// collisions; the literal filenames below are the contract's independent
+// oracle, so never rewrite them in terms of this helper.
+function handoffPath(prefix: string, pkg: string, name: string): string {
+  const hash = createHash('sha256')
+    .update(JSON.stringify([pkg, name]))
+    .digest('hex');
+  return join('/run', 'handoffs', `${prefix}-${hash}.json`);
+}
 
 describe('handoff', () => {
   let workspace: string;
@@ -78,35 +98,51 @@ describe('handoff', () => {
   describe('stepHandoffPath', () => {
     it('places the handoff under the handoffs subtree, the only part of a run directory an agent is pre-authorized to write', () => {
       expect(stepHandoffPath('/run', { package: 'pkg', name: 'm1' })).toBe(
-        join('/run', HANDOFFS_DIR_NAME, 'pkg', 'm1.json')
+        join(
+          '/run',
+          'handoffs',
+          'pkg+m1-05ea13721e9fe88ecfc919eb77195957c3f31a5fda24c3eac1af3081028c8437.json'
+        )
       );
     });
 
-    it('treats the package scope as a subdirectory', () => {
+    it('joins scope, package and migration name with `+`, which no package name can contain', () => {
       expect(
         stepHandoffPath('/run', {
           package: '@nx/storybook',
           name: 'migrate-css',
         })
-      ).toBe(join('/run', 'handoffs', '@nx', 'storybook', 'migrate-css.json'));
+      ).toBe(
+        join(
+          '/run',
+          'handoffs',
+          '@nx+storybook+migrate-css-e97a7bbd1f6d8f7efee3f102337f1daf50e4a35e2a5dd789410a27359be74e57.json'
+        )
+      );
     });
 
-    it('uses a single segment for unscoped packages', () => {
+    it('joins an unscoped package and migration name with `+`', () => {
       expect(
         stepHandoffPath('/run', { package: 'plain-pkg', name: 'm1-gen' })
-      ).toBe(join('/run', 'handoffs', 'plain-pkg', 'm1-gen.json'));
+      ).toBe(
+        join(
+          '/run',
+          'handoffs',
+          'plain-pkg+m1-gen-afe76ee463c4880afbcff2d62c35d97c71ae72a546316c0269b6f4eb4c126dbc.json'
+        )
+      );
     });
 
     it('replaces path-traversal segments with `_` so a malformed name cannot escape the run dir', () => {
       expect(
         stepHandoffPath('/run', { package: '@nx/react', name: '..' })
-      ).toBe(join('/run', 'handoffs', '@nx', 'react', '_.json'));
+      ).toBe(handoffPath('@nx+react+_', '@nx/react', '..'));
       expect(
         stepHandoffPath('/run', {
           package: '../escape',
           name: 'm1',
         })
-      ).toBe(join('/run', 'handoffs', '_', 'escape', 'm1.json'));
+      ).toBe(handoffPath('_+escape+m1', '../escape', 'm1'));
     });
 
     it('replaces Windows-reserved and control characters with `_`', () => {
@@ -116,7 +152,11 @@ describe('handoff', () => {
           name: 'bad:name*with?chars',
         })
       ).toBe(
-        join('/run', 'handoffs', '@scope', 'pkg', 'bad_name_with_chars.json')
+        handoffPath(
+          '@scope+pkg+bad_name_with_chars',
+          '@scope/pkg',
+          'bad:name*with?chars'
+        )
       );
       expect(
         stepHandoffPath('/run', {
@@ -124,7 +164,11 @@ describe('handoff', () => {
           name: 'has/slash\\and|pipe',
         })
       ).toBe(
-        join('/run', 'handoffs', '@scope', 'pkg', 'has_slash_and_pipe.json')
+        handoffPath(
+          '@scope+pkg+has_slash_and_pipe',
+          '@scope/pkg',
+          'has/slash\\and|pipe'
+        )
       );
     });
 
@@ -134,7 +178,7 @@ describe('handoff', () => {
           package: '@scope/pkg',
           name: 'trailing.   ',
         })
-      ).toBe(join('/run', 'handoffs', '@scope', 'pkg', 'trailing.json'));
+      ).toBe(handoffPath('@scope+pkg+trailing', '@scope/pkg', 'trailing.   '));
     });
 
     it.each([
@@ -150,7 +194,7 @@ describe('handoff', () => {
       (input, expected) => {
         expect(
           stepHandoffPath('/run', { package: '@scope/pkg', name: input })
-        ).toBe(join('/run', 'handoffs', '@scope', 'pkg', `${expected}.json`));
+        ).toBe(handoffPath(`@scope+pkg+${expected}`, '@scope/pkg', input));
       }
     );
 
@@ -159,9 +203,66 @@ describe('handoff', () => {
       (input) => {
         expect(
           stepHandoffPath('/run', { package: '@scope/pkg', name: input })
-        ).toBe(join('/run', 'handoffs', '@scope', 'pkg', `${input}.json`));
+        ).toBe(handoffPath(`@scope+pkg+${input}`, '@scope/pkg', input));
       }
     );
+
+    it('gives migrations whose sanitized names coincide distinct files', () => {
+      const paths = [
+        { package: '@scope/pkg', name: 'a+b' },
+        { package: '@scope/pkg', name: 'a_b' },
+        { package: '@scope/pkg', name: 'a/b' },
+        { package: '@scope/pkg', name: 'CON' },
+        { package: '@scope/pkg', name: '_CON' },
+        { package: '@scope/pkg', name: 'trailing' },
+        { package: '@scope/pkg', name: 'trailing.' },
+        { package: '@scope/pkg+a', name: 'b' },
+      ].map((migration) => stepHandoffPath('/run', migration));
+      expect(new Set(paths).size).toBe(paths.length);
+      expect(basename(paths[0])).toMatch(
+        /^@scope\+pkg\+a_b-[0-9a-f]{64}\.json$/
+      );
+    });
+
+    it('bounds the file name so a long migration name stays within the per-component filesystem limit', () => {
+      const name = 'n'.repeat(250);
+      const path = stepHandoffPath('/run', { package: '@scope/pkg', name });
+      expect(basename(path)).toHaveLength(64 + 1 + 64 + '.json'.length);
+      expect(basename(path).startsWith('@scope+pkg+nnnn')).toBe(true);
+      expect(path).not.toBe(
+        stepHandoffPath('/run', { package: '@scope/pkg', name: name + 'x' })
+      );
+    });
+
+    it('bounds the file name by UTF-8 bytes, not characters', () => {
+      const path = stepHandoffPath('/run', {
+        package: 'p',
+        name: '\u754c'.repeat(250),
+      });
+      expect(Buffer.byteLength(basename(path))).toBeLessThanOrEqual(
+        64 + 1 + 64 + '.json'.length
+      );
+      expect(basename(path).startsWith('p+\u754c')).toBe(true);
+    });
+
+    it('never splits a multibyte character at the cut', () => {
+      // 61 bytes of ASCII, then a 4-byte emoji that no longer fits.
+      const path = stepHandoffPath('/run', {
+        package: 'p',
+        name: 'n'.repeat(59) + '\u{1F600}rest',
+      });
+      const prefix = basename(path).slice(0, -('.json'.length + 65));
+      expect(prefix).toBe('p+' + 'n'.repeat(59));
+      expect(prefix).toEqual(expect.not.stringContaining('\uFFFD'));
+    });
+  });
+
+  describe('runStepHandoffPath', () => {
+    it('names the handoff after the step id, directly inside the handoffs dir', () => {
+      expect(runStepHandoffPath('/run', 'step-3')).toBe(
+        join('/run', 'handoffs', 'step-3.json')
+      );
+    });
   });
 
   describe('readHandoff', () => {
@@ -171,7 +272,7 @@ describe('handoff', () => {
     ])('parses a %s handoff with status + summary', (_label, payload) => {
       const file = join(workspace, `${_label}.json`);
       writeFileSync(file, JSON.stringify(payload));
-      expect(readHandoff(file)).toEqual(payload);
+      expect(readHandoff(file, workspace)).toEqual(payload);
     });
 
     it('preserves extra fields in `extras`', () => {
@@ -185,7 +286,7 @@ describe('handoff', () => {
           notes: 'fyi',
         })
       );
-      expect(readHandoff(file)).toEqual({
+      expect(readHandoff(file, workspace)).toEqual({
         status: 'success',
         summary: 'done',
         extras: { changedFiles: ['a.ts'], notes: 'fyi' },
@@ -207,7 +308,7 @@ describe('handoff', () => {
         '{"status":"success","summary":"ok","custom":"data","__proto__":{"polluted":true}}'
       );
 
-      const result = readHandoffWithReason(file);
+      const result = readHandoffWithReason(file, workspace);
       expect(result.ok).toBe(true);
       if (!result.ok) return;
 
@@ -226,14 +327,17 @@ describe('handoff', () => {
 
   describe('readHandoffWithReason', () => {
     it('returns a missing reason when the file does not exist', () => {
-      const result = readHandoffWithReason(join(workspace, 'nope.json'));
+      const result = readHandoffWithReason(
+        join(workspace, 'nope.json'),
+        workspace
+      );
       expect(result).toEqual({ ok: false, reason: 'missing' });
     });
 
     it('returns a parse-error reason with detail when JSON is malformed', () => {
       const file = join(workspace, 'broken.json');
       writeFileSync(file, '{ not json');
-      const result = readHandoffWithReason(file);
+      const result = readHandoffWithReason(file, workspace);
       expect(result.ok).toBe(false);
       if (!result.ok) {
         expect(result.reason).toBe('parse-error');
@@ -244,15 +348,76 @@ describe('handoff', () => {
     it('returns a shape-mismatch reason for a valid JSON without `summary`', () => {
       const file = join(workspace, 'shape.json');
       writeFileSync(file, JSON.stringify({ status: 'success' }));
-      const result = readHandoffWithReason(file);
+      const result = readHandoffWithReason(file, workspace);
       expect(result).toEqual({ ok: false, reason: 'shape-mismatch' });
+    });
+
+    it('returns a read-error reason for a symlinked handoff instead of following it', () => {
+      const target = join(workspace, 'target.json');
+      writeFileSync(
+        target,
+        JSON.stringify({ status: 'success', summary: 'x' })
+      );
+      const link = join(workspace, 'link.json');
+      symlinkSync(target, link);
+      const result = readHandoffWithReason(link, workspace);
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.reason).toBe('read-error');
+        expect(result.detail).toContain('not a regular file');
+      }
+    });
+
+    it('returns a read-error reason when the handoffs dir is a symlink instead of reading through it', () => {
+      const outside = join(workspace, 'elsewhere');
+      mkdirSync(outside);
+      writeFileSync(
+        join(outside, 'm.json'),
+        JSON.stringify({ status: 'success', summary: 'x' })
+      );
+      const handoffs = join(workspace, HANDOFFS_DIR_NAME);
+      symlinkSync(outside, handoffs);
+      const result = readHandoffWithReason(join(handoffs, 'm.json'), handoffs);
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.reason).toBe('read-error');
+        expect(result.detail).toContain('is not a directory');
+      }
     });
 
     it('returns a shape-mismatch reason for an unknown `status` value', () => {
       const file = join(workspace, 'status.json');
       writeFileSync(file, JSON.stringify({ status: 'maybe', summary: 'x' }));
-      const result = readHandoffWithReason(file);
+      const result = readHandoffWithReason(file, workspace);
       expect(result).toEqual({ ok: false, reason: 'shape-mismatch' });
+    });
+  });
+
+  describe('handoffsDirState', () => {
+    it('reports a real directory', () => {
+      const handoffs = join(workspace, HANDOFFS_DIR_NAME);
+      mkdirSync(handoffs);
+      expect(handoffsDirState(handoffs)).toBe('directory');
+    });
+
+    it('reports a symlink to a directory as other', () => {
+      const outside = join(workspace, 'elsewhere');
+      mkdirSync(outside);
+      const handoffs = join(workspace, HANDOFFS_DIR_NAME);
+      symlinkSync(outside, handoffs);
+      expect(handoffsDirState(handoffs)).toBe('other');
+    });
+
+    it('reports a file in its place as other', () => {
+      const handoffs = join(workspace, HANDOFFS_DIR_NAME);
+      writeFileSync(handoffs, '');
+      expect(handoffsDirState(handoffs)).toBe('other');
+    });
+
+    it('reports a dir that does not exist yet as missing', () => {
+      expect(handoffsDirState(join(workspace, HANDOFFS_DIR_NAME))).toBe(
+        'missing'
+      );
     });
   });
 
@@ -260,7 +425,7 @@ describe('handoff', () => {
     it('keeps polling past invalid contents and resolves once the file becomes a valid handoff', async () => {
       const file = join(workspace, 'h.json');
       writeFileSync(file, '{ partial');
-      const promise = waitForValidHandoff(file, { intervalMs: 10 });
+      const promise = waitForValidHandoff(file, workspace, { intervalMs: 10 });
       setTimeout(() => {
         writeFileSync(
           file,
@@ -273,7 +438,7 @@ describe('handoff', () => {
     it('rejects with the abort reason when the signal is aborted mid-poll', async () => {
       const file = join(workspace, 'h.json');
       const ac = new AbortController();
-      const promise = waitForValidHandoff(file, {
+      const promise = waitForValidHandoff(file, workspace, {
         intervalMs: 10,
         signal: ac.signal,
       });
@@ -286,7 +451,10 @@ describe('handoff', () => {
       const ac = new AbortController();
       ac.abort(new Error('already-cancelled'));
       await expect(
-        waitForValidHandoff(file, { intervalMs: 10, signal: ac.signal })
+        waitForValidHandoff(file, workspace, {
+          intervalMs: 10,
+          signal: ac.signal,
+        })
       ).rejects.toThrow('already-cancelled');
     });
   });

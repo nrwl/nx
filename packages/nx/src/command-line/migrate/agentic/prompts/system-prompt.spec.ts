@@ -7,6 +7,8 @@ describe('buildSystemPrompt', () => {
       '/abs/workspace/.nx/migrate-runs/23.0.0/step-1.json',
     packageManager: 'npm',
     nxInvocation: 'npx nx',
+    formatCommand: 'npx prettier --write --ignore-unknown -- <paths>',
+    pmExec: 'npx',
   };
 
   it('embeds the workspace root inside its tag', () => {
@@ -29,7 +31,7 @@ describe('buildSystemPrompt', () => {
 
   it('renders the nx invocation distinct from the package manager so npm gets `npx nx`', () => {
     const prompt = buildSystemPrompt(ctx);
-    expect(prompt).toMatch(/To invoke nx, use `npx nx …`/);
+    expect(prompt).toMatch(/To invoke nx, use `npx nx \.\.\.`/);
   });
 
   it('honors a package-manager-specific nx invocation (e.g. `pnpm exec nx`)', () => {
@@ -39,7 +41,7 @@ describe('buildSystemPrompt', () => {
       nxInvocation: 'pnpm exec nx',
     });
     expect(prompt).toContain('<package_manager>pnpm</package_manager>');
-    expect(prompt).toMatch(/To invoke nx, use `pnpm exec nx …`/);
+    expect(prompt).toMatch(/To invoke nx, use `pnpm exec nx \.\.\.`/);
   });
 
   it('wraps the opening brief, handoff contract, environment note, and scope rules in their tags', () => {
@@ -146,18 +148,67 @@ describe('buildSystemPrompt', () => {
   });
 
   describe('formatting the agent’s changes (author mode)', () => {
-    it('directs the agent to format the files it changed before handoff, via nx format:write', () => {
+    it('directs the agent to run the resolved formatter command over only the files it changed, rather than nx format:write', () => {
       const prompt = buildSystemPrompt(ctx);
-      expect(prompt).toMatch(
-        /format the files you created or modified .* run `nx format:write`/
+      expect(prompt).toContain(
+        'run `npx prettier --write --ignore-unknown -- <paths>` over exactly the files you created or modified'
+      );
+      // nx format:write cannot be scoped that tightly: it selects the branch
+      // delta by default and always appends the root config files, both of
+      // which the scope rules forbid touching.
+      expect(prompt).toMatch(/Do not use `nx format:write` for this/);
+    });
+
+    it('renders the oxfmt command verbatim when that is the resolved formatter', () => {
+      const prompt = buildSystemPrompt({
+        ...ctx,
+        formatCommand:
+          'pnpm exec oxfmt --no-error-on-unmatched-pattern -- <paths>',
+      });
+      expect(prompt).toContain(
+        'run `pnpm exec oxfmt --no-error-on-unmatched-pattern -- <paths>` over exactly the files you created or modified'
+      );
+      expect(prompt).not.toContain('run `npx prettier');
+    });
+
+    it('tells the agent not to run a formatter when the workspace has none', () => {
+      const prompt = buildSystemPrompt({ ...ctx, formatCommand: null });
+      expect(prompt).toContain(
+        'No configured formatter is installed in this workspace; do not install or run one over your changes.'
+      );
+      expect(prompt).not.toContain(
+        'After applying your changes and before writing the handoff, run'
       );
     });
 
-    it('carves nx format:write out of the mutating-nx-command prohibition', () => {
+    it.each([
+      [
+        'a resolved command',
+        'npx prettier --write --ignore-unknown -- <paths>',
+      ],
+      ['no formatter', null],
+    ])(
+      'names the exact replacement commands for a migration that changes the formatter itself (%s)',
+      (_name, formatCommand) => {
+        const prompt = buildSystemPrompt({
+          ...ctx,
+          formatCommand,
+          pmExec: 'pnpm exec',
+        });
+        // The command was resolved before the step ran, so only the agent
+        // knows the formatter changed; the flags must not be left to it.
+        expect(prompt).toContain(
+          'If this migration itself added or replaced the workspace formatter, run the new one over exactly the files you created or modified instead: `pnpm exec prettier --write --ignore-unknown -- <paths>` for Prettier, `pnpm exec oxfmt --no-error-on-unmatched-pattern -- <paths>` for oxfmt, but only if it is installed under node_modules; if it is not, do not install or run it. If you created or modified no files, do not run it.'
+        );
+      }
+    );
+
+    it('lists nx format:write among the forbidden mutating nx commands', () => {
       const prompt = buildSystemPrompt(ctx);
       expect(prompt).toMatch(
-        /mutate workspace state .*, except `nx format:write` to format the files you changed/
+        /mutate workspace state \(`nx migrate`, `nx reset`, `nx format:write`/
       );
+      expect(prompt).not.toMatch(/except `nx format:write`/);
     });
 
     it('no longer blanket-forbids reformatting, only reformatting untouched files', () => {
