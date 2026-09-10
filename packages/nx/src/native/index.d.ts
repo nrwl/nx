@@ -255,6 +255,14 @@ export declare class WorkspaceContext {
    * process whose host already walked, such as a plugin worker.
    */
   static fromArchive(workspaceRoot: string, cacheDir: string): WorkspaceContext
+  /**
+   * Resolves once the files behind this context exist. The readers below
+   * block the calling thread until they do; awaiting this first keeps a
+   * plugin host responsive while its workers are connecting.
+   */
+  ready(): Promise<void>
+  /** On wasm the files are gathered when the context is constructed. */
+  ready(): void
   getWorkspaceFiles(projectRootMap: Record<string, string>): NxWorkspaceFiles
   glob(globs: Array<string>, exclude?: Array<string> | undefined | null): Array<string>
   /**

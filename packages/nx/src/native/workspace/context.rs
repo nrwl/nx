@@ -23,7 +23,11 @@ use crate::native::workspace::types::{
     FileMap, NxWorkspaceFilesExternals, ProjectFiles, UpdatedWorkspaceFiles,
 };
 use crate::native::workspace::{types::NxWorkspaceFiles, workspace_files};
+#[cfg(not(target_arch = "wasm32"))]
+use napi::bindgen_prelude::AsyncTask;
 use napi::bindgen_prelude::External;
+#[cfg(not(target_arch = "wasm32"))]
+use napi::{Env, Task};
 use rayon::prelude::*;
 use tracing::{trace, warn};
 use xxhash_rust::xxh3;
@@ -38,6 +42,34 @@ pub struct WorkspaceContext {
 type Files = Vec<(PathBuf, String)>;
 
 const NX_FILES_LOCK: &str = "nx_files.lock";
+
+/// Waits for the walk behind a context on a libuv thread, so JS can await the
+/// files without holding its own thread while the walk runs.
+#[cfg(not(target_arch = "wasm32"))]
+pub struct FilesReady(Option<Arc<(NxMutex<Files>, NxCondvar)>>);
+
+#[cfg(not(target_arch = "wasm32"))]
+impl Task for FilesReady {
+    type Output = ();
+    type JsValue = ();
+
+    fn compute(&mut self) -> napi::Result<()> {
+        if let Some(files_sync) = &self.0 {
+            let (files_lock, cvar) = files_sync.deref();
+            let files = files_lock
+                .lock()
+                .map_err(|e| napi::Error::from_reason(e.to_string()))?;
+            let _files = cvar
+                .wait(files, |guard| guard.len() == 0)
+                .map_err(|e| napi::Error::from_reason(e.to_string()))?;
+        }
+        Ok(())
+    }
+
+    fn resolve(&mut self, _env: Env, _output: ()) -> napi::Result<()> {
+        Ok(())
+    }
+}
 
 fn hashes_to_files(hashes: NxFileHashes) -> Files {
     let mut files: Files = hashes
@@ -385,6 +417,20 @@ impl WorkspaceContext {
             workspace_root_path,
         }
     }
+
+    /// Resolves once the files behind this context exist. The readers below
+    /// block the calling thread until they do; awaiting this first keeps a
+    /// plugin host responsive while its workers are connecting.
+    #[cfg(not(target_arch = "wasm32"))]
+    #[napi(ts_return_type = "Promise<void>")]
+    pub fn ready(&self) -> AsyncTask<FilesReady> {
+        AsyncTask::new(FilesReady(self.files_worker.0.clone()))
+    }
+
+    /// On wasm the files are gathered when the context is constructed.
+    #[cfg(target_arch = "wasm32")]
+    #[napi]
+    pub fn ready(&self) {}
 
     #[napi]
     pub fn get_workspace_files(

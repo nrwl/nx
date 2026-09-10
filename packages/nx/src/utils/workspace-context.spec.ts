@@ -4,16 +4,20 @@ const mockDaemonGlob = vi.fn();
 const mockDaemonMultiGlob = vi.fn();
 const mockEnabled = vi.fn();
 const mockIsOnDaemon = vi.fn();
+const mockReady = vi.fn();
 
 // The source lazy-requires ../native (CJS channel), which vi.mock cannot
 // intercept. Mutate the CJS instance directly; each test file runs in its own
 // forked process, so the mutation cannot leak to other files.
 const cjsNative = require('../native');
-cjsNative.WorkspaceContext = vi.fn().mockImplementation(function () {
+cjsNative.WorkspaceContext = vi.fn().mockImplementation(function (
+  root: string
+) {
   return {
     glob: mockGlob,
     multiGlob: mockMultiGlob,
-    workspaceRoot: '/virtual',
+    ready: mockReady,
+    workspaceRoot: root,
   };
 });
 cjsNative.getMainWorktreeRoot = vi.fn().mockReturnValue('/virtual');
@@ -38,6 +42,7 @@ import {
   globWithWorkspaceContext,
   multiGlobWithWorkspaceContext,
   resetWorkspaceContext,
+  startWorkspaceContext,
 } from './workspace-context';
 
 describe('workspace-context /virtual short-circuit', () => {
@@ -119,5 +124,43 @@ describe('which constructor a process uses', () => {
       '/virtual/.nx'
     );
     expect(fromArchive).not.toHaveBeenCalled();
+  });
+});
+
+describe('waiting for the walk', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    resetWorkspaceContext();
+    mockEnabled.mockReturnValue(false);
+    mockIsOnDaemon.mockReturnValue(false);
+    mockReady.mockResolvedValue(undefined);
+    mockGlob.mockReturnValue(['result']);
+  });
+
+  it('an async read waits for the files before touching the native context', async () => {
+    await globWithWorkspaceContext('/virtual', ['**/*.ts']);
+
+    expect(mockReady).toHaveBeenCalledTimes(1);
+    expect(mockReady.mock.invocationCallOrder[0]).toBeLessThan(
+      mockGlob.mock.invocationCallOrder[0]
+    );
+  });
+
+  it('starting the context early begins the wait once and later reads reuse it', async () => {
+    startWorkspaceContext('/some/root');
+    await globWithWorkspaceContext('/some/root', ['**/*.ts']);
+    await multiGlobWithWorkspaceContext('/some/root', ['**/*.ts']);
+
+    expect(cjsNative.WorkspaceContext).toHaveBeenCalledTimes(1);
+    expect(mockReady).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not start a context in a client that will ask the daemon', () => {
+    mockEnabled.mockReturnValue(true);
+
+    startWorkspaceContext('/some/root');
+
+    expect(cjsNative.WorkspaceContext).not.toHaveBeenCalled();
+    expect(mockReady).not.toHaveBeenCalled();
   });
 });

@@ -104,6 +104,7 @@ vi.doMock(workspaceContextPath, async () => {
       if (root === realWorkspaceRoot) return;
       return actual.setupWorkspaceContext(root);
     },
+    startWorkspaceContext: guarded('startWorkspaceContext', () => undefined),
     getNxWorkspaceFilesFromContext: guarded(
       'getNxWorkspaceFilesFromContext',
       () =>

@@ -9,6 +9,7 @@ import * as plugins from './plugins/get-plugins';
 
 vi.mock('../utils/workspace-context', () => {
   return {
+    startWorkspaceContext: vi.fn(),
     globWithWorkspaceContext: vi.fn().mockReturnValue(['file']),
     // multiGlob returns one file list per glob group (string[][]).
     multiGlobWithWorkspaceContext: vi.fn().mockReturnValue([['file']]),
