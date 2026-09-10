@@ -1186,13 +1186,17 @@ describe('stepsToPendingMigrations', () => {
 describe('commitResultToLedgerEntry', () => {
   it('maps a committed result to a landed entry covering the absorbed steps', () => {
     expect(
-      commitResultToLedgerEntry({ status: 'committed', sha: 'abc' }, 'step-2', [
-        'step-1',
-      ])
+      commitResultToLedgerEntry(
+        { status: 'committed', sha: 'abc' },
+        'step-2',
+        ['step-1'],
+        2
+      )
     ).toEqual({
       kind: 'landed',
       sha: 'abc',
       stepIds: ['step-2', 'step-1'],
+      ownerAttempt: 2,
     });
   });
 
@@ -1201,9 +1205,10 @@ describe('commitResultToLedgerEntry', () => {
       commitResultToLedgerEntry(
         { status: 'committed', sha: null },
         'step-1',
-        []
+        [],
+        1
       )
-    ).toEqual({ kind: 'landed', stepIds: ['step-1'] });
+    ).toEqual({ kind: 'landed', stepIds: ['step-1'], ownerAttempt: 1 });
   });
 
   it('maps a failed result to a debt entry naming only this step', () => {
@@ -1211,7 +1216,8 @@ describe('commitResultToLedgerEntry', () => {
       commitResultToLedgerEntry(
         { status: 'failed', reason: 'boom' },
         'step-2',
-        ['step-1']
+        ['step-1'],
+        1
       )
     ).toEqual({ kind: 'failed', stepIds: ['step-2'] });
   });
@@ -1219,7 +1225,7 @@ describe('commitResultToLedgerEntry', () => {
   it.each(['no-changes', 'disabled'] as const)(
     'records nothing for %s',
     (status) => {
-      expect(commitResultToLedgerEntry({ status }, 'step-1', [])).toBeNull();
+      expect(commitResultToLedgerEntry({ status }, 'step-1', [], 1)).toBeNull();
     }
   );
 });

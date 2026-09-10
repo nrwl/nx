@@ -2283,6 +2283,7 @@ describe('orchestrator', () => {
           kind: 'landed',
           sha: 'face0007face0007face0007face0007face0007',
           stepIds: ['step-1'],
+          ownerAttempt: 1,
         },
       ]);
     });
@@ -2355,6 +2356,7 @@ describe('orchestrator', () => {
           kind: 'landed',
           sha: 'face0006face0006face0006face0006face0006',
           stepIds: ['step-1'],
+          ownerAttempt: 1,
         },
       ]);
     });
@@ -2914,6 +2916,7 @@ describe('orchestrator', () => {
           kind: 'landed',
           sha: 'face0001face0001face0001face0001face0001',
           stepIds: ['step-1'],
+          ownerAttempt: 1,
         },
       ]);
     });
@@ -3157,6 +3160,7 @@ describe('orchestrator', () => {
           sha: 'face0009face0009face0009face0009face0009',
           stepIds: ['step-1'],
           issueIds: ['issue-1', 'issue-2'],
+          ownerAttempt: 1,
         },
       ]);
     });
@@ -3356,6 +3360,7 @@ describe('orchestrator', () => {
           sha: 'face0011face0011face0011face0011face0011',
           stepIds: ['step-2', 'step-1'],
           issueIds: ['issue-1'],
+          ownerAttempt: 1,
         },
       ]);
     });
@@ -3393,6 +3398,7 @@ describe('orchestrator', () => {
         sha: 'face0012face0012face0012face0012face0012',
         stepIds: ['step-1'],
         issueIds: ['issue-1'],
+        ownerAttempt: 1,
       });
     });
 
@@ -4350,6 +4356,7 @@ describe('orchestrator', () => {
             kind: 'landed',
             sha: 'face0004face0004face0004face0004face0004',
             stepIds: ['step-1'],
+            ownerAttempt: 1,
           },
         ],
       ],
@@ -4425,6 +4432,14 @@ describe('orchestrator', () => {
       expect(block.action).toBe('died');
       expect(block.payload.instructions).toContain('retry-clean:');
       expect(block.payload.instructions).toContain('--step-action=retry-clean');
+      // The commit survives a reset but still is the migration's result.
+      expect(block.payload.instructions).not.toContain('--step-action=skip');
+      expect(block.payload.instructions).not.toContain(
+        '--step-action=unresolved'
+      );
+      expect(block.payload.instructions).toContain(
+        'adopt the landed commit and continue'
+      );
       expect(block.payload.next).toBeUndefined();
       expect(mockIsAncestorCommit).toHaveBeenCalledWith(
         'face0003face0003face0003face0003face0003',
@@ -4432,6 +4447,63 @@ describe('orchestrator', () => {
         root
       );
     });
+
+    it.each([
+      ['failed', 'skip'],
+      ['failed', 'unresolved'],
+      ['died', 'skip'],
+      ['died', 'unresolved'],
+    ] as const)(
+      "rejects %s -> %s when an earlier attempt's landed commit predates the captured ref, leaving state untouched",
+      async (status, action) => {
+        mockIsAncestorCommit.mockReturnValue(true);
+        mockGetLatestCommitSha.mockReturnValue(
+          'beef0001beef0001beef0001beef0001beef0001'
+        );
+        const dir = setupRun('run-1', {
+          steps: [
+            migStep('step-1', '@nx/js:gen', status, {
+              attempt: 2,
+              gitRefBefore: 'beef0001beef0001beef0001beef0001beef0001',
+              treeCleanAtDispense: true,
+              generatorCompleted: true,
+              ...(status === 'failed'
+                ? { outcome: { summary: 'install failed on the retry' } }
+                : {}),
+            }),
+          ],
+          createCommits: true,
+          commits: [
+            {
+              kind: 'landed',
+              sha: 'face0003face0003face0003face0003face0003',
+              stepIds: ['step-1'],
+              ownerAttempt: 1,
+            },
+          ],
+          plan: [genMig('@nx/js', 'gen')],
+        });
+        const before = readFileSync(join(dir, 'run.json'), 'utf-8');
+
+        await runOrchestratorReconcile({
+          root,
+          runId: 'run-1',
+          stepAction: action,
+        });
+
+        expect(readFileSync(join(dir, 'run.json'), 'utf-8')).toBe(before);
+        expect(mockCommit).not.toHaveBeenCalled();
+        const block = lastBlock();
+        expect(block.action).toBe('error');
+        expect(block.payload.instructions).toContain(
+          `Cannot apply action '${action}'`
+        );
+        expect(block.payload.instructions).toContain(
+          'face0003face0003face0003face0003face0003'
+        );
+        expect(block.payload.instructions).toContain("Use 'adopt'");
+      }
+    );
 
     it('rejects retry-clean when the run has no restore point, leaving state untouched', async () => {
       const dir = setupRun('run-1', {
@@ -4939,6 +5011,7 @@ describe('orchestrator', () => {
               kind: 'landed',
               sha: 'face0031face0031face0031face0031face0031',
               stepIds: ['step-1'],
+              ownerAttempt: 1,
             },
           ]);
         } else {
@@ -4987,6 +5060,7 @@ describe('orchestrator', () => {
         kind: 'landed',
         sha: 'face0004face0004face0004face0004face0004',
         stepIds: ['step-1'],
+        ownerAttempt: 1,
       });
     });
 
@@ -5333,6 +5407,7 @@ describe('orchestrator', () => {
             kind: 'landed',
             sha: 'face0021face0021face0021face0021face0021',
             stepIds: ['step-1'],
+            ownerAttempt: 1,
           },
         ]);
       }
@@ -5549,6 +5624,7 @@ describe('orchestrator', () => {
             kind: 'landed',
             sha: 'face0004face0004face0004face0004face0004',
             stepIds: ['step-1'],
+            ownerAttempt: 1,
           },
         ],
       ],
@@ -6157,6 +6233,7 @@ describe('orchestrator', () => {
         kind: 'landed',
         sha: 'face0005face0005face0005face0005face0005',
         stepIds: ['step-2', 'step-1'],
+        ownerAttempt: 1,
       });
     });
   });
@@ -6382,6 +6459,7 @@ describe('orchestrator', () => {
           kind: 'landed',
           sha: 'face0004face0004face0004face0004face0004',
           stepIds: ['step-1', 'step-0'],
+          ownerAttempt: 1,
         },
       ]);
     });
@@ -6515,8 +6593,229 @@ describe('orchestrator', () => {
           kind: 'landed',
           sha: 'face0004face0004face0004face0004face0004',
           stepIds: ['step-1'],
+          ownerAttempt: 1,
         },
       ]);
+    });
+
+    describe('recovering the commit a dead worker never recorded', () => {
+      const LANDED = 'face0005face0005face0005face0005face0005';
+
+      // The worker died between the session's answer and its ledger append:
+      // the commit is in history and the answer on disk, the ledger has none.
+      function diedAfterUnrecordedCommit(
+        answer: { sha: string | null; absorbedStepIds?: string[] },
+        opts: {
+          attempt?: number;
+          commits?: MigrateCommitLedgerEntry[];
+          steps?: MigrateStep[];
+          issues?: MigrateRunIssue[];
+        } = {}
+      ): string {
+        const attempt = opts.attempt ?? 1;
+        const dir = setupRun('run-1', {
+          steps: [
+            ...(opts.steps ?? []),
+            migStep('step-1', '@nx/js:gen', 'died', {
+              attempt,
+              gitRefBefore: 'beef0001beef0001beef0001beef0001beef0001',
+              generatorCompleted: true,
+            }),
+          ],
+          createCommits: true,
+          commits: opts.commits,
+          issues: opts.issues,
+          plan: [genMig('@nx/js', 'gen')],
+        });
+        const brokerDir = join(dir, 'broker');
+        mkdirSync(brokerDir, { recursive: true });
+        writeFileSync(
+          join(brokerDir, `${nonce}-step-1-${attempt}-commit.result.json`),
+          JSON.stringify({
+            kind: 'commit',
+            result: { status: 'committed', sha: answer.sha },
+            absorbedStepIds: answer.absorbedStepIds ?? [],
+            output: [],
+          })
+        );
+        return dir;
+      }
+
+      it.each(['skip', 'unresolved'] as const)(
+        'records the commit before refusing %s as the first reconcile after the death',
+        async (action) => {
+          const dir = diedAfterUnrecordedCommit({ sha: LANDED });
+
+          await runOrchestratorReconcile({
+            root,
+            runId: 'run-1',
+            stepAction: action,
+          });
+
+          const block = lastBlock();
+          expect(block.action).toBe('error');
+          expect(block.payload.instructions).toContain(
+            `Cannot apply action '${action}'`
+          );
+          expect(block.payload.instructions).toContain(LANDED);
+          expect(block.payload.instructions).toContain("Use 'adopt'");
+          const state = readRunState(dir);
+          expect(state.steps[0].status).toBe('died');
+          expect(state.commits).toEqual([
+            {
+              kind: 'landed',
+              sha: LANDED,
+              stepIds: ['step-1'],
+              ownerAttempt: 1,
+            },
+          ]);
+        }
+      );
+
+      it('dispenses adopt without skip or unresolved once the commit is recorded', async () => {
+        const dir = diedAfterUnrecordedCommit({ sha: LANDED });
+
+        await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+        const block = lastBlock();
+        expect(block.action).toBe('died');
+        expect(block.payload.instructions).toContain('--step-action=adopt');
+        expect(block.payload.instructions).not.toContain('--step-action=skip');
+        expect(block.payload.instructions).not.toContain(
+          '--step-action=unresolved'
+        );
+        expect(block.payload.instructions).toContain(
+          'adopt the landed commit and continue'
+        );
+        expect(readRunState(dir).commits).toEqual([
+          { kind: 'landed', sha: LANDED, stepIds: ['step-1'], ownerAttempt: 1 },
+        ]);
+      });
+
+      it("records the current attempt's commit alongside an earlier attempt's entry", async () => {
+        mockIsAncestorCommit.mockReturnValue(true);
+        const earlier: MigrateCommitLedgerEntry = {
+          kind: 'landed',
+          sha: 'face0003face0003face0003face0003face0003',
+          stepIds: ['step-1'],
+          ownerAttempt: 1,
+        };
+        const dir = diedAfterUnrecordedCommit(
+          { sha: LANDED },
+          { attempt: 2, commits: [earlier] }
+        );
+
+        await runOrchestratorReconcile({
+          root,
+          runId: 'run-1',
+          stepAction: 'skip',
+        });
+
+        expect(lastBlock().action).toBe('error');
+        expect(readRunState(dir).commits).toEqual([
+          earlier,
+          { kind: 'landed', sha: LANDED, stepIds: ['step-1'], ownerAttempt: 2 },
+        ]);
+      });
+
+      it.each([
+        ['a resolved sha', LANDED],
+        ['no sha', null],
+      ])(
+        'records a commit with %s once across repeated reconciles',
+        async (_name, sha) => {
+          const dir = diedAfterUnrecordedCommit({ sha });
+
+          await runOrchestratorReconcile({ root, runId: 'run-1' });
+          await runOrchestratorReconcile({ root, runId: 'run-1' });
+          await runOrchestratorReconcile({
+            root,
+            runId: 'run-1',
+            stepAction: 'unresolved',
+          });
+
+          expect(lastBlock().action).toBe('error');
+          expect(readRunState(dir).commits).toEqual([
+            {
+              kind: 'landed',
+              ...(sha ? { sha } : {}),
+              stepIds: ['step-1'],
+              ownerAttempt: 1,
+            },
+          ]);
+        }
+      );
+
+      it("carries the answer's absorbed steps and their resolved issues onto the recorded entry", async () => {
+        const summary = 'peer dep conflict';
+        const dir = diedAfterUnrecordedCommit(
+          { sha: LANDED, absorbedStepIds: ['step-0'] },
+          {
+            steps: [
+              migStep('step-0', '@nx/js:zero', 'failed', {
+                outcome: { summary: 'its own commit failed' },
+              }),
+            ],
+            commits: [{ kind: 'failed', stepIds: ['step-0'] }],
+            issues: [
+              {
+                id: 'issue-1',
+                fingerprint: issueFingerprint(summary),
+                summary,
+                reportedByStepId: 'step-0',
+                applicableStepIds: ['step-0'],
+                disposition: 'resolved',
+                resolvedByStepId: 'step-0',
+                resolvedAtCommitCount: 0,
+              },
+            ],
+          }
+        );
+
+        await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+        expect(readRunState(dir).commits).toEqual([
+          { kind: 'failed', stepIds: ['step-0'] },
+          {
+            kind: 'landed',
+            sha: LANDED,
+            stepIds: ['step-1', 'step-0'],
+            issueIds: ['issue-1'],
+            ownerAttempt: 1,
+          },
+        ]);
+      });
+
+      it('records nothing when the session answered no-changes, keeping skip open', async () => {
+        const dir = setupRun('run-1', {
+          steps: [
+            migStep('step-1', '@nx/js:gen', 'died', {
+              generatorCompleted: true,
+            }),
+          ],
+          createCommits: true,
+          plan: [genMig('@nx/js', 'gen')],
+        });
+        const brokerDir = join(dir, 'broker');
+        mkdirSync(brokerDir, { recursive: true });
+        writeFileSync(
+          join(brokerDir, `${nonce}-step-1-1-commit.result.json`),
+          JSON.stringify({
+            kind: 'commit',
+            result: { status: 'no-changes' },
+            absorbedStepIds: [],
+            output: [],
+          })
+        );
+
+        await answered(dir, { kind: 'installed', output: [] }, () =>
+          runOrchestratorReconcile({ root, runId: 'run-1', stepAction: 'skip' })
+        );
+
+        const state = readRunState(dir);
+        expect(state.steps[0].status).toBe('skipped');
+        expect(state.commits).toEqual([]);
+      });
     });
 
     it('leaves an adopt for the next reconcile when the session is gone', async () => {
