@@ -385,9 +385,7 @@ describe('AngularRspackPlugin', () => {
 
     // DiagnosticModes.All & ~DiagnosticModes.Semantic === 7 & ~4 === 3
     expect(diagnoseFiles).toHaveBeenCalledWith(3);
-    // DiagnosticModes.Semantic === 4 - run silently so NgCompiler still
-    // reaches `ensureAnalyzed()` and advances its incremental state, even
-    // though these diagnostics are never surfaced.
+    // DiagnosticModes.Semantic === 4
     expect(diagnoseFiles).toHaveBeenCalledWith(4);
     expect(diagnoseFiles).toHaveBeenCalledTimes(2);
   });
@@ -470,9 +468,7 @@ describe('AngularRspackPlugin', () => {
     } as never);
     plugin.apply(compiler as never);
 
-    // beforeRun/beforeCompile await buildAndAnalyze(), which only awaits up
-    // to starting (not resolving) the diagnostics promise, so this settles
-    // even while the surfaced call above is still pending.
+    // Keep surfaced diagnostics pending while both build-start hooks settle.
     await fireAsyncTaps(compiler.hooks.beforeRun, compiler);
     await fireAsyncTaps(compiler.hooks.beforeCompile, {});
 
