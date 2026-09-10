@@ -239,8 +239,18 @@ function removeProperty(
 ): StringChange[] {
   let start = property.getStart();
   let end = property.getEnd();
-  if (contents[end] === ',') {
-    end++;
+  // The node ends before its trailing trivia, so the comma can sit behind a
+  // comment or a line break.
+  const scanner = ts.createScanner(
+    ts.ScriptTarget.Latest,
+    true,
+    ts.LanguageVariant.Standard,
+    contents,
+    undefined,
+    end
+  );
+  if (scanner.scan() === ts.SyntaxKind.CommaToken) {
+    end = scanner.getTokenEnd();
   }
   const lineStart = contents.lastIndexOf('\n', start - 1) + 1;
   const lineEnd = contents.indexOf('\n', end);
