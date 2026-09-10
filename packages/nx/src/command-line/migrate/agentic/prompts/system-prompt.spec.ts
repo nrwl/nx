@@ -237,6 +237,8 @@ describe('inline system contexts', () => {
       handoffFileAbsolutePath,
       packageManager: 'npm',
       nxInvocation: 'npx nx',
+      formatCommand: 'npx prettier --write --ignore-unknown -- <paths>',
+      pmExec: 'npx',
     });
   }
 

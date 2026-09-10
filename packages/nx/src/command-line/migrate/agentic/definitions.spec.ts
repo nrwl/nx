@@ -278,6 +278,8 @@ describe('opencodeDefinition', () => {
       packageManager: 'npm',
       nxInvocation: 'npx nx',
       mode: 'author',
+      formatCommand: 'npx prettier --write --ignore-unknown -- <paths>',
+      pmExec: 'npx',
     });
     const spec = opencodeDefinition.buildInteractive(
       makeContext({

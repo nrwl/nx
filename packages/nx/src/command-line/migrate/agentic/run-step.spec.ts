@@ -42,10 +42,10 @@ const mockRunAgentic = runAgentic as Mock;
 const mockGetDefinition = getAgentDefinition as Mock;
 const mockWriteInstructionFiles = writeStepInstructionFiles as Mock;
 
-const SYSTEM_PROMPT_FILE =
-  '/ws/.nx/migrate-runs/20.0.0/prompts/@nx/test/m1/system.md';
-const INSTRUCTIONS_POINTER =
-  'Your instructions for this migration step are in the file .nx/migrate-runs/20.0.0/prompts/@nx/test/m1/instructions.md';
+const PROMPTS_DIR =
+  'prompts/@nx+test+m1-b8120fb43e4a804c45a80036cd51c33e1936d1f6edac5538ba677ba73ae5749a';
+const SYSTEM_PROMPT_FILE = `/ws/.nx/migrate-runs/20.0.0/${PROMPTS_DIR}/system.md`;
+const INSTRUCTIONS_POINTER = `Your instructions for this migration step are in the file .nx/migrate-runs/20.0.0/${PROMPTS_DIR}/instructions.md`;
 const HANDOFF_FILE = stepHandoffPath(
   '/ws/.nx/migrate-runs/20.0.0',
   makeMigration()

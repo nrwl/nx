@@ -50,7 +50,7 @@ describe('windows command line', () => {
   let braceWorkspaceRoot: string;
 
   // Long enough that its own contribution to every path is visible.
-  const migration = {
+  const baseMigration = {
     package: `@nx/${'a'.repeat(60)}`,
     name: `update-23-1-0-${'b'.repeat(80)}`,
     version: '23.1.0',
@@ -121,7 +121,8 @@ describe('windows command line', () => {
     shimBinary: string,
     mode: AgenticPromptMode,
     impl: typeof emptyImpl | null,
-    root: string = workspaceRoot
+    root: string = workspaceRoot,
+    migration: typeof baseMigration = baseMigration
   ) {
     const runDir = join(root, '.nx', 'migrate-runs', migration.version);
     const handoffFileAbsolutePath = stepHandoffPath(runDir, migration);
@@ -133,6 +134,11 @@ describe('windows command line', () => {
       packageManager: 'npm',
       nxInvocation: 'npx nx',
       mode,
+      formatCommand:
+        mode === 'generic-validation'
+          ? null
+          : 'npx prettier --write --ignore-unknown -- <paths>',
+      pmExec: 'npx',
     });
     const promptCtx = {
       ...migration,
@@ -220,6 +226,27 @@ describe('windows command line', () => {
 
       expect(adapted.commandLineLength).toBeLessThanOrEqual(
         WINDOWS_COMMAND_LINE_BUDGET
+      );
+    });
+
+    // The migration identity reaches the command line through the prompt and
+    // handoff paths, and `migrations.json` caps neither package nor name.
+    it('costs the same on the command line whatever the migration is named', () => {
+      const { adapted } = buildSpawn(
+        definition,
+        shimBinary,
+        'author',
+        largeImpl,
+        workspaceRoot,
+        { ...baseMigration, name: 'n'.repeat(5000) }
+      );
+
+      expect(adapted.commandLineLength).toBeLessThanOrEqual(
+        WINDOWS_COMMAND_LINE_BUDGET
+      );
+      expect(adapted.commandLineLength).toBe(
+        buildSpawn(definition, shimBinary, 'author', largeImpl).adapted
+          .commandLineLength
       );
     });
   });

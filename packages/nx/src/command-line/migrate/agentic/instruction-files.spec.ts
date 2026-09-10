@@ -1,6 +1,6 @@
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from 'fs';
 import { tmpdir } from 'os';
-import { join } from 'path';
+import { basename, dirname, join } from 'path';
 import { stepPromptsDir } from './handoff';
 import { writeStepInstructionFiles } from './instruction-files';
 
@@ -31,8 +31,9 @@ describe('writeStepInstructionFiles', () => {
     });
   }
 
-  const instructionsRelativePath =
-    '.nx/migrate-runs/23.1.0/prompts/@nx/eslint/update-23-1-0/instructions.md';
+  const stem =
+    '@nx+eslint+update-23-1-0-a2863e5f7374e381fd67c82e096067a0dea40a46c9d72c5eeb8f61981cd0a6fa';
+  const instructionsRelativePath = `.nx/migrate-runs/23.1.0/prompts/${stem}/instructions.md`;
 
   it("writes both prompts under the step's prompts directory", () => {
     const files = write(
@@ -41,7 +42,7 @@ describe('writeStepInstructionFiles', () => {
     );
 
     expect(files.systemPromptFilePath).toBe(
-      join(runDir, 'prompts', '@nx', 'eslint', 'update-23-1-0', 'system.md')
+      join(runDir, 'prompts', stem, 'system.md')
     );
     expect(readFileSync(files.systemPromptFilePath, 'utf-8')).toBe(
       'the system prompt\nover two lines'
@@ -88,37 +89,30 @@ describe('writeStepInstructionFiles', () => {
     }
   });
 
-  // Without sanitizing, a `..` name would move the prompts into the package's
-  // parent directory.
-  it('sanitizes migration identifiers into the directory names', () => {
-    const files = writeStepInstructionFiles({
-      workspaceRoot,
-      runDir,
-      migration: { package: '@scope/pkg', name: '..' },
-      systemPrompt: 'system prompt',
-      instructions: 'do the thing',
-    });
+  // `migrations.json` puts no length limit on a migration name, and a name
+  // this long is what the directory would be called if it were not bounded.
+  it.each([
+    ['ascii', 'a'.repeat(256)],
+    ['multibyte', '界'.repeat(256)],
+  ])(
+    'writes prompts for a %s migration name past the per-component limit',
+    (_label, name) => {
+      const files = writeStepInstructionFiles({
+        workspaceRoot,
+        runDir,
+        migration: { package: '@nx/eslint', name },
+        systemPrompt: 'system prompt',
+        instructions: 'do the thing',
+      });
 
-    expect(files.systemPromptFilePath).toBe(
-      join(runDir, 'prompts', '@scope', 'pkg', '_', 'system.md')
-    );
-  });
-
-  // A name this long only fits as a directory of its own; as a filename prefix
-  // the suffix would push it past the 255-character limit.
-  it('writes prompts for a migration name that fills a path component', () => {
-    const files = writeStepInstructionFiles({
-      workspaceRoot,
-      runDir,
-      migration: { package: '@nx/eslint', name: 'a'.repeat(250) },
-      systemPrompt: 'system prompt',
-      instructions: 'do the thing',
-    });
-
-    expect(readFileSync(files.systemPromptFilePath, 'utf-8')).toBe(
-      'system prompt'
-    );
-  });
+      expect(readFileSync(files.systemPromptFilePath, 'utf-8')).toBe(
+        'system prompt'
+      );
+      expect(
+        Buffer.byteLength(basename(dirname(files.systemPromptFilePath)))
+      ).toBeLessThanOrEqual(64 + 1 + 64);
+    }
+  );
 
   // A directory in the way fails one write and only that one, which is what it
   // takes to see whether the diagnostic names the right file.
