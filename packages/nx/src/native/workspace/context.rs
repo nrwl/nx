@@ -43,9 +43,12 @@ type Files = Vec<(PathBuf, String)>;
 
 const NX_FILES_LOCK: &str = "nx_files.lock";
 
+#[cfg(not(target_arch = "wasm32"))]
 const WALK_WAIT_VAR: &str = "NX_WORKSPACE_WALK_WAIT_MS";
+#[cfg(not(target_arch = "wasm32"))]
 const DEFAULT_WALK_WAIT: Duration = Duration::from_secs(60);
 /// A wait this long is a wedge with a name on it, so anything above is capped.
+#[cfg(not(target_arch = "wasm32"))]
 const MAX_WALK_WAIT: Duration = Duration::from_secs(3600);
 
 /// How long a process waits for another process's walk before walking itself.
