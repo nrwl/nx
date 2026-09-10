@@ -226,7 +226,10 @@ public static partial class TargetBuilder
     /// another machine's project.assets.json, absolute packages path and all, over the
     /// local restore. They are matched at any depth because NuGet writes them to
     /// RestoreOutputPath, which defaults to MSBuildProjectExtensionsPath and can be
-    /// pointed at a subdirectory of obj. Everything else under obj, including the
+    /// pointed at a subdirectory of obj. That keeps nested products out of the
+    /// dependent-output hash; the cache copy drops them only at the obj root,
+    /// because expandOutputs hands a matched directory to the copier and the copy
+    /// re-applies no globs. Everything else under obj, including the
     /// per-configuration and per-framework build output, stays captured.
     /// The directory is declared as a glob, not a bare path, because of how Nx
     /// hashes dependent outputs: a bare directory is walked wholesale with nothing
