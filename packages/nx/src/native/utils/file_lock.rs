@@ -16,6 +16,67 @@ use fs4::fs_std::FileExt;
 #[cfg(not(target_arch = "wasm32"))]
 const LOCK_POLL_INTERVAL: Duration = Duration::from_millis(25);
 
+/// Whether the lock on `lock_file_path` was released within `timeout`.
+///
+/// Takes a shared lock and drops it again, so the caller learns that the holder
+/// is gone without becoming one. Polled rather than blocking outright, so a
+/// holder that never returns cannot hold the caller forever.
+#[cfg(not(target_arch = "wasm32"))]
+fn wait_for_release(lock_file_path: &str, timeout: Duration) -> std::io::Result<bool> {
+    let file = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .truncate(false)
+        .open(lock_file_path)?;
+    let deadline = Instant::now() + timeout;
+    loop {
+        match fs4::fs_std::FileExt::try_lock_shared(&file) {
+            Ok(()) => {
+                fs4::fs_std::FileExt::unlock(&file)?;
+                return Ok(true);
+            }
+            Err(e) if is_contended(&e) => {}
+            Err(e) => return Err(e),
+        }
+        if Instant::now() >= deadline {
+            return Ok(false);
+        }
+        std::thread::sleep(LOCK_POLL_INTERVAL);
+    }
+}
+
+/// Contention reports as `WouldBlock` on some platforms and as the raw OS error
+/// on others, and neither means the lock file is unusable.
+#[cfg(not(target_arch = "wasm32"))]
+fn is_contended(e: &std::io::Error) -> bool {
+    e.kind() == std::io::ErrorKind::WouldBlock
+        || e.raw_os_error() == fs4::lock_contended_error().raw_os_error()
+}
+
+/// Waits for whoever holds a lock to release it, on a libuv thread rather than
+/// the JS one, so awaiting it leaves the event loop free to run timers, service
+/// sockets and handle signals.
+#[cfg(not(target_arch = "wasm32"))]
+pub struct WaitForRelease {
+    lock_file_path: String,
+    timeout: Duration,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl Task for WaitForRelease {
+    type Output = bool;
+    type JsValue = bool;
+
+    fn compute(&mut self) -> napi::Result<bool> {
+        Ok(wait_for_release(&self.lock_file_path, self.timeout)?)
+    }
+
+    fn resolve(&mut self, _env: Env, output: bool) -> napi::Result<bool> {
+        Ok(output)
+    }
+}
+
 #[napi]
 #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
 pub struct FileLock {
@@ -26,15 +87,17 @@ pub struct FileLock {
 }
 
 /// const lock = new FileLock('lockfile.lock');
-/// if (lock.locked) {
-///   lock.wait()
-///   readFromCache()
+/// if (lock.tryLock()) {
+///   ... do some work
+///   writeToCache()
+///   lock.unlock()
 /// } else {
-///  lock.lock()
-///  ... do some work
-///  writeToCache()
-///  lock.unlock()
+///   await lock.waitForRelease(timeoutMs)
+///   readFromCache()
 /// }
+///
+/// `lock()` is the same acquire, blocking the JS thread until it succeeds, and
+/// `wait()` the same wait, with no ceiling.
 
 #[napi]
 #[cfg(not(target_arch = "wasm32"))]
@@ -90,6 +153,12 @@ impl FileLock {
         Ok(self.locked)
     }
 
+    /// Waits for the holder to release, with no ceiling of its own.
+    ///
+    /// Gated on `locked`, so a caller that has not had `check` or `try_lock` set
+    /// it gets a promise that resolves at once while the file is still held. That
+    /// mutation is load-bearing rather than bookkeeping: removing it turns this
+    /// into an immediate resolve and any loop around it into a hot spin.
     #[napi(ts_return_type = "Promise<void>")]
     pub fn wait(&mut self, env: Env) -> napi::Result<PromiseRaw<'static, ()>> {
         if self.locked {
@@ -115,6 +184,43 @@ impl FileLock {
         }
     }
 
+    /// Takes the lock and keeps it, reporting whether this handle got it.
+    ///
+    /// Unlike `check`, which releases whatever it took, and unlike `lock`, which
+    /// blocks the calling thread until the holder releases. Blocking matters on
+    /// the JS side: `lock` is synchronous, so a process that loses a race for the
+    /// lock freezes its own event loop until the winner is done.
+    pub fn try_lock(&mut self) -> std::io::Result<bool> {
+        match self.file.try_lock_exclusive() {
+            Ok(()) => {
+                self.locked = true;
+                Ok(true)
+            }
+            Err(e) if is_contended(&e) => {
+                // Held by someone, which is what `locked` records. The return
+                // value is what says whether this handle is that someone.
+                self.locked = true;
+                Ok(false)
+            }
+            Err(e) => Err(e),
+        }
+    }
+
+    #[napi(js_name = "tryLock")]
+    pub fn try_lock_js(&mut self) -> napi::Result<bool> {
+        Ok(self.try_lock()?)
+    }
+
+    /// Resolves true when the holder released within `timeout_ms`, false when it
+    /// did not. Awaiting this does not block the JS thread.
+    #[napi(ts_return_type = "Promise<boolean>")]
+    pub fn wait_for_release(&self, timeout_ms: u32) -> AsyncTask<WaitForRelease> {
+        AsyncTask::new(WaitForRelease {
+            lock_file_path: self.lock_file_path.clone(),
+            timeout: Duration::from_millis(timeout_ms as u64),
+        })
+    }
+
     #[napi]
     pub fn lock(&mut self) -> napi::Result<()> {
         self.file.lock_exclusive()?;
@@ -122,48 +228,11 @@ impl FileLock {
         Ok(())
     }
 
-    /// Takes the lock if nobody holds it, without blocking. For Rust callers on
-    /// a plain thread; the JS surface reads `locked` and calls `lock()`.
-    pub fn try_lock(&mut self) -> std::io::Result<bool> {
-        match self.file.try_lock_exclusive() {
-            Ok(()) => {
-                self.locked = true;
-                Ok(true)
-            }
-            Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => Ok(false),
-            Err(e) if e.raw_os_error() == fs4::lock_contended_error().raw_os_error() => Ok(false),
-            Err(e) => Err(e),
-        }
-    }
-
-    /// Blocks the calling thread until the current holder releases or
-    /// `timeout` passes, and says which. The same shared-then-release dance as
-    /// `wait`, for callers without a napi `Env`, polled so that a holder that
-    /// never returns (suspended, or on a filesystem that has stalled) cannot
-    /// hold the caller forever.
+    /// Blocks the calling thread until the current holder releases or `timeout`
+    /// passes, and says which. For Rust callers without a napi `Env`; from JS,
+    /// `wait_for_release` is the same wait without blocking the thread.
     pub fn wait_blocking(&self, timeout: Duration) -> std::io::Result<bool> {
-        let file = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .create(true)
-            .truncate(false)
-            .open(&self.lock_file_path)?;
-        let deadline = Instant::now() + timeout;
-        loop {
-            match fs4::fs_std::FileExt::try_lock_shared(&file) {
-                Ok(()) => {
-                    fs4::fs_std::FileExt::unlock(&file)?;
-                    return Ok(true);
-                }
-                Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {}
-                Err(e) if e.raw_os_error() == fs4::lock_contended_error().raw_os_error() => {}
-                Err(e) => return Err(e),
-            }
-            if Instant::now() >= deadline {
-                return Ok(false);
-            }
-            std::thread::sleep(LOCK_POLL_INTERVAL);
-        }
+        wait_for_release(&self.lock_file_path, timeout)
     }
 }
 
