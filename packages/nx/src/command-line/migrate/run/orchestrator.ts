@@ -1405,7 +1405,8 @@ async function applyReconcileStepAction(
     return {
       kind: 'error',
       reason: `Cannot apply action '${action}' to step '${step.id}': ${rearmCapLine(
-        step
+        step,
+        commitMayBeInHistory(state, step)
       )}`,
     };
   }
@@ -1414,14 +1415,11 @@ async function applyReconcileStepAction(
   // and destroy prior steps' work.
   if (action === 'retry-clean') {
     const head = getLatestCommitSha(root);
-    const fallback =
-      step.status === 'died'
-        ? commitMayBeInHistory(state, step)
-          ? `Use 'adopt' instead.`
-          : `Use 'adopt', 'skip' or 'unresolved' instead.`
-        : commitMayBeInHistory(state, step)
-          ? `Use 'retry' instead.`
-          : `Use 'retry', 'adopt', 'skip' or 'unresolved' instead.`;
+    const fallback = `Use ${actionList([
+      ...(step.status === 'died' ? [] : ['retry']),
+      'adopt',
+      ...(commitMayBeInHistory(state, step) ? [] : ['skip', 'unresolved']),
+    ])} instead.`;
     if (!canOfferCleanRetry(root, state, step, head)) {
       return {
         kind: 'error',
@@ -1535,6 +1533,13 @@ async function applyReconcileStepAction(
   return { kind: 'ok', state: applied.state, targetStep: step, resetTree };
 }
 
+function actionList(actions: string[]): string {
+  const quoted = actions.map((a) => `'${a}'`);
+  return quoted.length === 1
+    ? quoted[0]
+    : `${quoted.slice(0, -1).join(', ')} or ${quoted[quoted.length - 1]}`;
+}
+
 // Whether giving up on the step resets its tree: only a generator that never
 // completed can have left nothing worth keeping, and only a clean-retry
 // restore point makes the reset safe.
@@ -1572,7 +1577,9 @@ async function stepActionSideEffects(
   switch (action) {
     case 'adopt':
       // A died step's adopt shares the worker's commit request, which may
-      // have landed before the death; a failed step's is a new one.
+      // have landed before the death. Once the ledger records that commit the
+      // same request would read its answer back, so what changed since goes
+      // out under an adopt request of its own, as a failed step's always does.
       return state.createCommits
         ? commitForStep(
             root,
@@ -1580,7 +1587,10 @@ async function stepActionSideEffects(
             state,
             step,
             scope,
-            step.status === 'failed' ? 'adopt' : undefined
+            step.status === 'failed' ||
+              coveringLandedEntries(state, step.id).length > 0
+              ? 'adopt'
+              : undefined
           )
         : {
             entry: null,
@@ -1927,6 +1937,8 @@ function emitRetryFailed(
   const head = getLatestCommitSha(root);
   const tree = dirtyTreeSummary(root);
   const cleanRetry = canOfferCleanRetry(root, state, step, head);
+  const landed = lastCoveringLandedEntry(state, step);
+  const committed = commitMayBeInHistory(state, step);
   // A failure recorded before the generator marker can still have written to
   // the tree (a direct fs or exec side effect, or a crash mid-flush); a
   // marker means only the handed-back half (a prompt or a validation pass)
@@ -1943,7 +1955,7 @@ function emitRetryFailed(
     `  current HEAD: ${head ?? '(unknown)'}`,
     `  working tree: ${tree === null ? '(unknown)' : tree ? `\n${tree}` : '(clean)'}`,
     ``,
-    retryBudgetLine(step),
+    retryBudgetLine(step, committed),
     ``,
     `Decide how to proceed and re-run reconcile with one of:`,
     ...(capReached
@@ -1962,11 +1974,19 @@ function emitRetryFailed(
     );
   }
   lines.push(
-    `  adopt: the migration was applied by hand; keep the current working-tree state as its result, then run: ${reconcileCommand(
-      root,
-      runId,
-      'adopt'
-    )}`
+    landed
+      ? `  adopt: keep the landed commit${
+          landed.sha ? ` ${landed.sha}` : ''
+        } and the current working-tree state as the migration's result, then run: ${reconcileCommand(
+          root,
+          runId,
+          'adopt'
+        )}`
+      : `  adopt: the migration was applied by hand; keep the current working-tree state as its result, then run: ${reconcileCommand(
+          root,
+          runId,
+          'adopt'
+        )}`
   );
   // Refused by the state machine: the migration is, or may be, committed.
   if (!commitMayBeInHistory(state, step)) {
@@ -2006,21 +2026,27 @@ function rearmCapReached(step: MigrateStep): boolean {
 
 // Opens every failed and died dispense with how many retries are left and
 // what a retry is for, so the choice is made against the budget.
-function retryBudgetLine(step: MigrateStep): string {
-  if (rearmCapReached(step)) return rearmCapLine(step);
+// `committed`: the step's commit is, or may be, in history, so giving up is
+// not offered and adopt is the unattended choice.
+function retryBudgetLine(step: MigrateStep, committed: boolean): string {
+  if (rearmCapReached(step)) return rearmCapLine(step, committed);
   const left = REARM_ESCALATION_CAP - (step.attempt - 1);
   return `Retries left for this migration: ${left}. Diagnose the failure first and retry only with a plausible fix in hand; ${
     left === 1
       ? 'this is the last one, so ask the user before using it'
       : 'ask the user before using the last one'
-  }. When no user can answer, give the step up with unresolved and continue.`;
+  }. When no user can answer, ${
+    committed ? 'adopt the commit' : 'give the step up with unresolved'
+  } and continue.`;
 }
 
 // Opens a capped dispense and is the reason a retry past the cap is refused.
-function rearmCapLine(step: MigrateStep): string {
+function rearmCapLine(step: MigrateStep, committed: boolean): string {
   return `This migration has already been retried ${
     step.attempt - 1
-  } times without completing, and no further retry is accepted. Choose adopt, skip or unresolved, or ask the user how to proceed.`;
+  } times without completing, and no further retry is accepted. Choose ${
+    committed ? 'adopt' : 'adopt, skip or unresolved'
+  }, or ask the user how to proceed.`;
 }
 
 // Whether the step's generator half may still have to run: it exists and no
@@ -2112,6 +2138,15 @@ function assessPreMarkerRetry(
   return { kind: 'safe' };
 }
 
+// Whichever attempt landed it, the commit is this migration's result.
+function lastCoveringLandedEntry(
+  state: MigrateRunState,
+  step: MigrateStep
+): MigrateCommitLedgerEntry | null {
+  const entries = coveringLandedEntries(state, step.id);
+  return entries.length > 0 ? entries[entries.length - 1] : null;
+}
+
 // The give-up option, worded for what happens to the tree: the reserved
 // reset, a partial commit, or the tree left as it stands.
 function unresolvedOptionLine(
@@ -2146,6 +2181,7 @@ function emitDied(
   const head = getLatestCommitSha(root);
   const tree = dirtyTreeSummary(root);
   const cleanRetry = canOfferCleanRetry(root, state, step, head);
+  const committed = commitMayBeInHistory(state, step);
   const resume = !generatorPending(step);
   const capReached = rearmCapReached(step);
   const lines = [
@@ -2154,7 +2190,7 @@ function emitDied(
     `  current HEAD: ${head ?? '(unknown)'}`,
     `  working tree: ${tree === null ? '(unknown)' : tree ? `\n${tree}` : '(clean)'}`,
     ``,
-    retryBudgetLine(step),
+    retryBudgetLine(step, committed),
     ``,
   ];
   const options: string[] = [];

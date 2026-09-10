@@ -4439,8 +4439,57 @@ describe('orchestrator', () => {
       );
       expect(block.payload.instructions).not.toContain('retry-clean');
       expect(block.payload.instructions).toContain('--step-action=adopt');
+      expect(block.payload.instructions).not.toContain('--step-action=skip');
+      expect(block.payload.instructions).not.toContain(
+        '--step-action=unresolved'
+      );
+      expect(block.payload.instructions).toContain(
+        'adopt the commit and continue'
+      );
       expect(block.payload.next).toBeUndefined();
     });
+
+    it.each(['skip', 'unresolved'] as const)(
+      'rejects %s when the died step is already covered by a landed ledger entry, leaving state untouched',
+      async (action) => {
+        mockGetLatestCommitSha.mockReturnValue(
+          'beef0001beef0001beef0001beef0001beef0001'
+        );
+        const dir = setupRun('run-1', {
+          steps: [
+            migStep('step-1', '@nx/js:gen', 'died', {
+              gitRefBefore: 'beef0001beef0001beef0001beef0001beef0001',
+            }),
+          ],
+          createCommits: true,
+          commits: [
+            {
+              kind: 'landed',
+              sha: 'face0003face0003face0003face0003face0003',
+              stepIds: ['step-1'],
+            },
+          ],
+          plan: [genMig('@nx/js', 'gen')],
+        });
+        const before = readFileSync(join(dir, 'run.json'), 'utf-8');
+
+        await runOrchestratorReconcile({
+          root,
+          runId: 'run-1',
+          stepAction: action,
+        });
+
+        expect(readFileSync(join(dir, 'run.json'), 'utf-8')).toBe(before);
+        expect(mockCommit).not.toHaveBeenCalled();
+        const block = lastBlock();
+        expect(block.action).toBe('error');
+        expect(block.payload.instructions).toContain(
+          `Cannot apply action '${action}'`
+        );
+        expect(block.payload.instructions).toContain('landed');
+        expect(block.payload.instructions).toContain("Use 'adopt'");
+      }
+    );
 
     it('rejects retry-clean when the died step is already covered by a landed ledger entry, leaving state untouched', async () => {
       mockGetLatestCommitSha.mockReturnValue(
@@ -4477,6 +4526,7 @@ describe('orchestrator', () => {
       expect(block.payload.instructions).toContain(
         'face0003face0003face0003face0003face0003'
       );
+      expect(block.payload.instructions).toContain("Use 'adopt' instead.");
     });
 
     it('withholds retry-clean when a commit landed that the dying worker never recorded', async () => {
@@ -4591,40 +4641,62 @@ describe('orchestrator', () => {
       );
     });
 
-    it('accepts adopt when the died step is already covered by a landed ledger entry, leaving the ledger unchanged', async () => {
-      const dir = setupRun('run-1', {
-        steps: [
-          migStep('step-1', '@nx/js:gen', 'died', {
-            gitRefBefore: 'beef0001beef0001beef0001beef0001beef0001',
-          }),
+    it.each([
+      ['a clean tree keeps the one entry', { status: 'no-changes' }, []],
+      [
+        'changes made since land as a second entry',
+        {
+          status: 'committed',
+          sha: 'face0004face0004face0004face0004face0004',
+        },
+        [
+          {
+            kind: 'landed',
+            sha: 'face0004face0004face0004face0004face0004',
+            stepIds: ['step-1'],
+          },
         ],
-        createCommits: true,
-        commits: [
+      ],
+    ] as const)(
+      'accepts adopt when the died step is already covered by a landed ledger entry: %s',
+      async (_, commit, added) => {
+        mockCommit.mockResolvedValue(commit);
+        const dir = setupRun('run-1', {
+          steps: [
+            migStep('step-1', '@nx/js:gen', 'died', {
+              gitRefBefore: 'beef0001beef0001beef0001beef0001beef0001',
+            }),
+          ],
+          createCommits: true,
+          commits: [
+            {
+              kind: 'landed',
+              sha: 'face0003face0003face0003face0003face0003',
+              stepIds: ['step-1'],
+            },
+          ],
+          plan: [genMig('@nx/js', 'gen')],
+        });
+
+        await runOrchestratorReconcile({
+          root,
+          runId: 'run-1',
+          stepAction: 'adopt',
+        });
+
+        expect(mockCommit).toHaveBeenCalledTimes(1);
+        const state = readRunState(dir);
+        expect(state.steps[0].status).toBe('succeeded');
+        expect(state.commits).toEqual([
           {
             kind: 'landed',
             sha: 'face0003face0003face0003face0003face0003',
             stepIds: ['step-1'],
           },
-        ],
-        plan: [genMig('@nx/js', 'gen')],
-      });
-
-      await runOrchestratorReconcile({
-        root,
-        runId: 'run-1',
-        stepAction: 'adopt',
-      });
-
-      const state = readRunState(dir);
-      expect(state.steps[0].status).toBe('succeeded');
-      expect(state.commits).toEqual([
-        {
-          kind: 'landed',
-          sha: 'face0003face0003face0003face0003face0003',
-          stepIds: ['step-1'],
-        },
-      ]);
-    });
+          ...added,
+        ]);
+      }
+    );
 
     it('still offers retry-clean when a landed commit from an earlier attempt predates the captured ref', async () => {
       // A retried step re-captures gitRefBefore after the earlier attempt's
@@ -4815,7 +4887,7 @@ describe('orchestrator', () => {
           commitStarted: true,
         },
         [],
-        "Use 'retry' instead.",
+        "Use 'retry' or 'adopt' instead.",
       ],
     ])(
       'steers a rejected retry-clean on a %s step to its one fallback while a commit may be in history',
@@ -5249,7 +5321,11 @@ describe('orchestrator', () => {
         expect(state.steps[0]).toMatchObject({
           status: 'succeeded',
           adopted: true,
-          outcome: { summary: expect.stringContaining('applied by hand') },
+          outcome: {
+            summary: expect.stringContaining(
+              'Adopted after the attempt failed'
+            ),
+          },
         });
         if (createCommits) {
           expect(mockCommit).toHaveBeenCalledTimes(1);
@@ -5779,6 +5855,146 @@ describe('orchestrator', () => {
   });
 
   describe('reconcile: retry-failed dispense', () => {
+    // A worker commits before it reports the outcome, so a failure after the
+    // commit leaves a failed step whose result already sits in history.
+    function failedAfterLandedCommit(extra: Partial<MigrateStep> = {}): string {
+      mockGetLatestCommitSha.mockReturnValue(
+        'face0003face0003face0003face0003face0003'
+      );
+      return setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'failed', {
+            gitRefBefore: 'beef0001beef0001beef0001beef0001beef0001',
+            generatorCompleted: true,
+            outcome: { summary: 'boom after the commit' },
+            ...extra,
+          }),
+        ],
+        createCommits: true,
+        commits: [
+          {
+            kind: 'landed',
+            sha: 'face0003face0003face0003face0003face0003',
+            stepIds: ['step-1'],
+          },
+        ],
+        plan: [genMig('@nx/js', 'gen')],
+      });
+    }
+
+    it('offers retry and adopt only when the failed step is already covered by a landed ledger entry', async () => {
+      failedAfterLandedCommit();
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const block = lastBlock();
+      expect(block.action).toBe('retry-failed');
+      expect(block.payload.instructions).toContain('--step-action=retry');
+      expect(block.payload.instructions).toContain('--step-action=adopt');
+      expect(block.payload.instructions).not.toContain('retry-clean');
+      expect(block.payload.instructions).not.toContain('--step-action=skip');
+      expect(block.payload.instructions).not.toContain(
+        '--step-action=unresolved'
+      );
+      expect(block.payload.instructions).toContain(
+        'adopt: keep the landed commit face0003face0003face0003face0003face0003'
+      );
+      expect(block.payload.instructions).not.toContain('applied by hand');
+      expect(block.payload.instructions).toContain(
+        'adopt the commit and continue'
+      );
+    });
+
+    it('names adopt alone once the retry cap is reached on a failed step covered by a landed ledger entry', async () => {
+      const dir = failedAfterLandedCommit({ attempt: 3 });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+      const block = lastBlock();
+      expect(block.action).toBe('retry-failed');
+      expect(block.payload.instructions).toContain(
+        'Choose adopt, or ask the user how to proceed.'
+      );
+      expect(block.payload.instructions).not.toContain('--step-action=retry');
+
+      const before = readFileSync(join(dir, 'run.json'), 'utf-8');
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'retry',
+      });
+      expect(readFileSync(join(dir, 'run.json'), 'utf-8')).toBe(before);
+      expect(lastBlock().action).toBe('error');
+      expect(lastBlock().payload.instructions).toContain(
+        'Choose adopt, or ask the user how to proceed.'
+      );
+    });
+
+    it.each(['skip', 'unresolved'] as const)(
+      'rejects %s when the failed step is already covered by a landed ledger entry, leaving state untouched',
+      async (action) => {
+        const dir = failedAfterLandedCommit();
+        const before = readFileSync(join(dir, 'run.json'), 'utf-8');
+
+        await runOrchestratorReconcile({
+          root,
+          runId: 'run-1',
+          stepAction: action,
+        });
+
+        expect(readFileSync(join(dir, 'run.json'), 'utf-8')).toBe(before);
+        expect(mockCommit).not.toHaveBeenCalled();
+        const block = lastBlock();
+        expect(block.action).toBe('error');
+        expect(block.payload.instructions).toContain(
+          `Cannot apply action '${action}'`
+        );
+        expect(block.payload.instructions).toContain('landed');
+        expect(block.payload.instructions).toContain("'adopt' to record it");
+      }
+    );
+
+    it.each([
+      ['a clean tree keeps the one entry', { status: 'no-changes' }, []],
+      [
+        'repairs made since land as a second entry',
+        {
+          status: 'committed',
+          sha: 'face0004face0004face0004face0004face0004',
+        },
+        [
+          {
+            kind: 'landed',
+            sha: 'face0004face0004face0004face0004face0004',
+            stepIds: ['step-1'],
+          },
+        ],
+      ],
+    ] as const)(
+      'accepts adopt when the failed step is already covered by a landed ledger entry: %s',
+      async (_, commit, added) => {
+        mockCommit.mockResolvedValue(commit);
+        const dir = failedAfterLandedCommit();
+
+        await runOrchestratorReconcile({
+          root,
+          runId: 'run-1',
+          stepAction: 'adopt',
+        });
+
+        expect(mockCommit).toHaveBeenCalledTimes(1);
+        const state = readRunState(dir);
+        expect(state.steps[0].status).toBe('succeeded');
+        expect(state.commits).toEqual([
+          {
+            kind: 'landed',
+            sha: 'face0003face0003face0003face0003face0003',
+            stepIds: ['step-1'],
+          },
+          ...added,
+        ]);
+      }
+    );
+
     it('surfaces the failed step outcome summary and withholds retry-clean without a restore point', async () => {
       setupRun('run-1', {
         steps: [
@@ -6613,7 +6829,6 @@ describe('orchestrator', () => {
 
       finishCommit();
       await servicing;
-      broker.close();
       let state = readRunState(dir);
       expect(state.steps[0].status).toBe('running');
       expect(state.commits).toHaveLength(1);
@@ -6623,11 +6838,26 @@ describe('orchestrator', () => {
       expect(readRunState(dir).steps[0].status).toBe('died');
       expect(lastBlock().action).toBe('died');
 
-      await runOrchestratorReconcile({
+      // The adopt asks under its own request, since the worker's answer is
+      // recorded; a clean tree lands nothing more.
+      mockCommit.mockResolvedValue({ status: 'no-changes' });
+      const adopting = runOrchestratorReconcile({
         root,
         runId: 'run-1',
         stepAction: 'adopt',
       });
+      for (let i = 0; i < 100; i++) {
+        await broker.service();
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+      await adopting;
+      expect(readRequest(dir)).toEqual({
+        kind: 'commit',
+        stepId: 'step-1',
+        attempt: 1,
+        commitAs: 'adopt',
+      });
+      broker.close();
       state = readRunState(dir);
       expect(state.steps[0].status).toBe('succeeded');
       expect(state.commits).toEqual([
@@ -6637,7 +6867,7 @@ describe('orchestrator', () => {
           stepIds: ['step-1'],
         },
       ]);
-      expect(mockCommit).toHaveBeenCalledTimes(1);
+      expect(mockCommit).toHaveBeenCalledTimes(2);
       expect(lastBlock().action).toBe('next-step');
     });
 
@@ -6890,6 +7120,71 @@ describe('orchestrator', () => {
       expect(state.steps[0].status).toBe('awaiting-prompt-outcome');
       expect(state.steps[0].installFailed).toBeUndefined();
       expect(existsSync(handoffPathIn(dir, '@nx/js', 'p'))).toBe(true);
+    });
+
+    it('adopts a died step whose commit the session already landed under a fresh adopt request', async () => {
+      // The worker's commit request was answered before the death; the same
+      // request id would read that answer back and land the entry twice.
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'died', {
+            gitRefBefore: 'beef0001beef0001beef0001beef0001beef0001',
+          }),
+        ],
+        createCommits: true,
+        commits: [
+          {
+            kind: 'landed',
+            sha: 'face0003face0003face0003face0003face0003',
+            stepIds: ['step-1'],
+          },
+        ],
+        plan: [genMig('@nx/js', 'gen')],
+      });
+      const brokerDir = join(dir, 'broker');
+      mkdirSync(brokerDir, { recursive: true });
+      writeFileSync(
+        join(brokerDir, `${nonce}-step-1-1-commit.result.json`),
+        JSON.stringify({
+          kind: 'commit',
+          result: {
+            status: 'committed',
+            sha: 'face0003face0003face0003face0003face0003',
+          },
+          absorbedStepIds: [],
+          output: [],
+        })
+      );
+
+      mockCommit.mockResolvedValue({
+        status: 'committed',
+        sha: 'face0004face0004face0004face0004face0004',
+      });
+      await serviced(root, dir, POLICY, () =>
+        runOrchestratorReconcile({
+          root,
+          runId: 'run-1',
+          stepAction: 'adopt',
+        })
+      );
+
+      // A replayed worker answer would have run no commit at all.
+      expect(mockCommit).toHaveBeenCalledTimes(1);
+      expect(mockCommit.mock.calls[0][1]).toEqual({ name: 'gen' });
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('succeeded');
+      expect(state.commits).toEqual([
+        {
+          kind: 'landed',
+          sha: 'face0003face0003face0003face0003face0003',
+          stepIds: ['step-1'],
+        },
+        {
+          kind: 'landed',
+          sha: 'face0004face0004face0004face0004face0004',
+          stepIds: ['step-1'],
+        },
+      ]);
     });
 
     it('leaves an adopt for the next reconcile when the session is gone', async () => {
