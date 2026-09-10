@@ -92,7 +92,7 @@ describe('renderRunbook', () => {
       'give the step up with `unresolved` and continue the run'
     );
     expect(runbook).toContain(
-      "Withheld, with `skip`, when the attempt's changes already landed"
+      "Withheld, with `skip`, when the run has a commit of this migration's\n  changes on record"
     );
     expect(runbook).toContain(
       'where the dispense withholds it, `adopt`\nis that choice.'
