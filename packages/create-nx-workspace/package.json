@@ -40,7 +40,7 @@
     "@clack/prompts": "catalog:",
     "axios": "1.18.1",
     "chalk": "catalog:",
-    "flat": "^5.0.2",
+    "flat": "^6.0.1",
     "open": "^8.4.0",
     "ora": "catalog:",
     "tar-stream": "~2.2.0",
