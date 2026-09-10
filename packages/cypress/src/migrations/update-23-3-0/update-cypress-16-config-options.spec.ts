@@ -288,6 +288,36 @@ export default defineConfig({
     `);
   });
 
+  it.each([
+    [
+      'a block comment before the comma',
+      `  allowCypressEnv: true /* explanation */,\n`,
+      '',
+    ],
+    ['whitespace before the comma', `  allowCypressEnv: true ,\n`, ''],
+    ['the comma on the next line', `  allowCypressEnv: true\n  ,\n`, ''],
+    [
+      'the new option already set and a comment before the comma',
+      `  experimentalMemoryManagement: true /* explanation */,\n  manageBrowserMemory: true,\n`,
+      `  manageBrowserMemory: true,\n`,
+    ],
+  ])(
+    'should remove the separator of a removed option with %s',
+    async (_, before, after) => {
+      const configPath = addCypressProject(
+        tree,
+        'app',
+        `import { defineConfig } from 'cypress';\n\nexport default defineConfig({\n${before}  e2e: {},\n});\n`
+      );
+
+      await migration(tree);
+
+      expect(tree.read(configPath, 'utf-8')).toBe(
+        `import { defineConfig } from 'cypress';\n\nexport default defineConfig({\n${after}  e2e: {},\n});\n`
+      );
+    }
+  );
+
   it('should report a non-literal experimentalFastVisibility value instead of guessing', async () => {
     const configPath = addCypressProject(
       tree,
