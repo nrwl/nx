@@ -70,5 +70,4 @@ public static partial class TargetBuilder
 
         return "default";
     }
-
 }
