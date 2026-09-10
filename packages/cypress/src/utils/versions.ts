@@ -103,8 +103,8 @@ export function getInstalledCypressVersion(tree?: Tree): string | null {
     return resolved;
   }
 
-  // Nothing installed, so `resolved` is the range floor. A clean install
-  // resolves the highest version the range admits, so follow the highest
+  // No installed Cypress satisfies the range. A clean install of a satisfiable
+  // range lands on the highest version it admits, so follow the highest
   // supported major it reaches; the version inside that major is unknown.
   const floorMajor = major(resolved);
   const reachedMajor = supportedMajors.find(
