@@ -206,6 +206,19 @@ export function startWorkspaceContext(workspaceRoot: string) {
   filesReady ??= workspaceContext.ready?.() ?? Promise.resolve();
 }
 
+/**
+ * Re-walks the host's files so the archive its plugin workers load includes
+ * writes made since the last walk, such as a migration flushing to disk. The
+ * walk is selective and shared through the files lock; one still running is
+ * reused rather than repeated.
+ */
+export function refreshWorkspaceContext(workspaceRoot: string) {
+  if (workspaceRoot === '/virtual' || isOnDaemon() || daemonClient.enabled()) {
+    return;
+  }
+  setupWorkspaceContext(workspaceRoot);
+}
+
 function ensureContextAvailable(workspaceRoot: string) {
   if (!workspaceContext || workspaceContext?.workspaceRoot !== workspaceRoot) {
     setupWorkspaceContext(workspaceRoot);

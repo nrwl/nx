@@ -41,6 +41,7 @@ vi.mock('../daemon/is-on-daemon', () => ({
 import {
   globWithWorkspaceContext,
   multiGlobWithWorkspaceContext,
+  refreshWorkspaceContext,
   resetWorkspaceContext,
   startWorkspaceContext,
 } from './workspace-context';
@@ -170,5 +171,43 @@ describe('waiting for the walk', () => {
 
     expect(cjsNative.WorkspaceContext).not.toHaveBeenCalled();
     expect(mockReady).not.toHaveBeenCalled();
+  });
+});
+
+describe('refreshing the context before a graph build', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    resetWorkspaceContext();
+    mockEnabled.mockReturnValue(false);
+    mockIsOnDaemon.mockReturnValue(false);
+    mockReady.mockResolvedValue(undefined);
+    mockGlob.mockReturnValue(['result']);
+  });
+
+  it('builds a new context so reads after it see files written since the last walk', async () => {
+    await globWithWorkspaceContext('/some/root', ['**/*.ts']);
+
+    refreshWorkspaceContext('/some/root');
+    await globWithWorkspaceContext('/some/root', ['**/*.ts']);
+
+    expect(cjsNative.WorkspaceContext).toHaveBeenCalledTimes(2);
+    // The new context's walk is awaited, not the old one's.
+    expect(mockReady).toHaveBeenCalledTimes(2);
+  });
+
+  it('leaves the context to the daemon when a client will ask it', () => {
+    mockEnabled.mockReturnValue(true);
+
+    refreshWorkspaceContext('/some/root');
+
+    expect(cjsNative.WorkspaceContext).not.toHaveBeenCalled();
+  });
+
+  it('leaves the daemon to its watcher', () => {
+    mockIsOnDaemon.mockReturnValue(true);
+
+    refreshWorkspaceContext('/some/root');
+
+    expect(cjsNative.WorkspaceContext).not.toHaveBeenCalled();
   });
 });
