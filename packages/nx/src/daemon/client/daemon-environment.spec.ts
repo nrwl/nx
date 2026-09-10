@@ -237,12 +237,34 @@ describe('daemon environment', () => {
     it('should apply the required and overridable daemon settings', () => {
       process.env.NX_PROJECT_GLOB_CACHE = 'true';
       delete process.env.NX_VERBOSE_LOGGING;
+      delete process.env.NX_PERF_LOGGING;
+      delete process.env.NX_NATIVE_LOGGING;
 
       const env = getDaemonEnv();
 
       expect(env.NX_PROJECT_GLOB_CACHE).toBe('false');
       expect(env.NX_CACHE_PROJECTS_CONFIG).toBe('false');
       expect(env.NX_VERBOSE_LOGGING).toBe('true');
+      expect(env.NX_PERF_LOGGING).toBe('true');
+      expect(env.NX_NATIVE_LOGGING).toBe('nx=debug');
+    });
+
+    it('should let the client env override the overridable daemon settings', () => {
+      process.env.NX_VERBOSE_LOGGING = 'false';
+      process.env.NX_PERF_LOGGING = 'false';
+      process.env.NX_NATIVE_LOGGING = 'off';
+
+      const env = getDaemonEnv();
+
+      expect(env.NX_VERBOSE_LOGGING).toBe('false');
+      expect(env.NX_PERF_LOGGING).toBe('false');
+      expect(env.NX_NATIVE_LOGGING).toBe('off');
+    });
+
+    it('should not let the client env override the required daemon settings', () => {
+      process.env.NX_CACHE_PROJECTS_CONFIG = 'true';
+
+      expect(getDaemonEnv().NX_CACHE_PROJECTS_CONFIG).toBe('false');
     });
   });
 
@@ -368,13 +390,16 @@ describe('daemon environment', () => {
       expect(process.env.NX_CACHE_PROJECTS_CONFIG).toBe('false');
     });
 
-    it('should turn on the overridable logging settings on the daemon', () => {
+    it("should carry the client's overridable logging settings to the daemon", () => {
       process.env.NX_VERBOSE_LOGGING = 'false';
+      const payload = getDaemonEnv();
+      process.env.NX_VERBOSE_LOGGING = 'true';
+      applyDaemonEnvFromClient({ ...process.env });
 
-      const changed = applyDaemonEnvFromClient(getDaemonEnv());
+      const changed = applyDaemonEnvFromClient(payload);
 
       expect(changed).toContain('NX_VERBOSE_LOGGING');
-      expect(process.env.NX_VERBOSE_LOGGING).toBe('true');
+      expect(process.env.NX_VERBOSE_LOGGING).toBe('false');
     });
 
     it('should apply and delete the Nx Cloud auth tokens like any forwarded var', () => {
@@ -563,11 +588,16 @@ describe('daemon environment', () => {
     });
 
     // Pins that the overridable settings need no dedicated skip like the
-    // required ones above: they are already in the exclusion set.
+    // required ones above: they are already in the exclusion set. Without
+    // this, `--verbose` alone would discard the daemon's cached graph.
     it('is stable when an overridable daemon setting changes', () => {
       delete process.env.NX_VERBOSE_LOGGING;
+      delete process.env.NX_PERF_LOGGING;
+      delete process.env.NX_NATIVE_LOGGING;
       const base = hashDaemonClientEnv();
       process.env.NX_VERBOSE_LOGGING = 'true';
+      process.env.NX_PERF_LOGGING = 'false';
+      process.env.NX_NATIVE_LOGGING = 'off';
       expect(hashDaemonClientEnv()).toEqual(base);
     });
   });
