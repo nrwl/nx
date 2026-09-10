@@ -250,6 +250,25 @@ export declare class Watcher {
 export declare class WorkspaceContext {
   workspaceRoot: string
   constructor(workspaceRoot: string, cacheDir: string)
+  /**
+   * Loads the files the last walk recorded instead of walking. For a
+   * process whose host already walked, such as a plugin worker.
+   */
+  static fromArchive(workspaceRoot: string, cacheDir: string): WorkspaceContext
+  /**
+   * Walks the workspace again into this context, so it and the archive
+   * include writes made since the last walk. Does nothing while a walk is
+   * in progress. Await `ready()` before reading.
+   */
+  refresh(): boolean
+  /**
+   * Resolves once the files behind this context exist. The readers below
+   * block the calling thread until they do; awaiting this first keeps a
+   * plugin host responsive while its workers are connecting.
+   */
+  ready(): Promise<void>
+  /** On wasm the files are gathered when the context is constructed. */
+  ready(): void
   getWorkspaceFiles(projectRootMap: Record<string, string>): NxWorkspaceFiles
   glob(globs: Array<string>, exclude?: Array<string> | undefined | null): Array<string>
   /**

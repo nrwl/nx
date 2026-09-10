@@ -360,3 +360,32 @@ describe('Workspace Context', () => {
   //   });
   // });
 });
+
+describe('WorkspaceContext.ready', () => {
+  it('resolves once the files exist without blocking the event loop while the walk runs', async () => {
+    const { WorkspaceContext } = require('../index');
+    const { TempFs } = require('../../internal-testing-utils/temp-fs');
+    const fs = new TempFs('workspace-context-ready');
+    const files: Record<string, string> = {};
+    for (let i = 0; i < 4000; i++)
+      files[`dir-${i % 40}/file-${i}.ts`] = `export const v${i} = ${i};`;
+    await fs.createFiles(files);
+    const ctx = new WorkspaceContext(
+      fs.tempDir,
+      fs.tempDir + '/.nx/workspace-data'
+    );
+
+    let ticks = 0;
+    const timer = setInterval(() => ticks++, 1);
+    try {
+      await ctx.ready();
+      expect(ctx.glob(['dir-3/**']).length).toBe(100);
+      // A blocked loop cannot run timers; the walk of 4000 files is long enough
+      // for at least one tick to land while it runs.
+      expect(ticks).toBeGreaterThan(0);
+    } finally {
+      clearInterval(timer);
+      fs.cleanup();
+    }
+  });
+});
