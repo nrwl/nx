@@ -660,4 +660,133 @@ describe('IsolatedPlugin', () => {
       expect(shutdown).toHaveBeenCalledTimes(1); // finally done
     });
   });
+
+  describe('wiring a plugin from recorded capabilities', () => {
+    const resolved = {
+      name: 'test-plugin',
+      pluginPath: '/mock/plugin/path',
+      shouldRegisterTSTranspiler: false,
+    };
+
+    const capabilities = {
+      name: 'test-plugin',
+      createNodesPattern: '**/*.config.ts',
+      hasCreateDependencies: true,
+      hasCreateMetadata: false,
+      hasPreTasksExecution: false,
+      hasPostTasksExecution: false,
+    };
+
+    function interceptSpawn(loadResult: LoadResultPayload) {
+      return vi
+        .spyOn(IsolatedPlugin.prototype as any, 'spawnAndConnect')
+        .mockImplementation(async function (this: any) {
+          this._alive = true;
+          return loadResult;
+        });
+    }
+
+    beforeEach(() => {
+      vi.spyOn(
+        IsolatedPlugin.prototype as any,
+        'sendRequest'
+      ).mockResolvedValue({ success: true, result: [], dependencies: [] });
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('starts no worker until a hook is called', async () => {
+      const spawnAndConnect = interceptSpawn(
+        createLoadResult({
+          createNodesPattern: '**/*.config.ts',
+          hasCreateDependencies: true,
+        })
+      );
+
+      const plugin = IsolatedPlugin.fromCapabilities(
+        'test-plugin',
+        '/root',
+        resolved,
+        capabilities
+      );
+
+      // Everything a caller that only reads capabilities needs is here.
+      expect(plugin.createNodes?.[0]).toBe('**/*.config.ts');
+      expect(plugin.createDependencies).toBeDefined();
+      expect(plugin.createMetadata).toBeUndefined();
+      expect(spawnAndConnect).not.toHaveBeenCalled();
+
+      await plugin.createNodes![1]([], {} as any);
+
+      expect(spawnAndConnect).toHaveBeenCalledTimes(1);
+    });
+
+    it('takes include and exclude from the nx.json entry', () => {
+      interceptSpawn(createLoadResult({}));
+
+      const plugin = IsolatedPlugin.fromCapabilities(
+        {
+          plugin: 'test-plugin',
+          include: ['apps/**'],
+          exclude: ['apps/legacy'],
+        },
+        '/root',
+        resolved,
+        capabilities
+      );
+
+      expect(plugin.include).toEqual(['apps/**']);
+      expect(plugin.exclude).toEqual(['apps/legacy']);
+    });
+
+    it("reports the worker's own capabilities once one spawns", async () => {
+      interceptSpawn(
+        createLoadResult({
+          createNodesPattern: '**/*.config.ts',
+          hasCreateDependencies: true,
+          // The record said this plugin had no createMetadata.
+          hasCreateMetadata: true,
+        })
+      );
+      const onLoaded = vi.fn();
+
+      const plugin = IsolatedPlugin.fromCapabilities(
+        'test-plugin',
+        '/root',
+        resolved,
+        capabilities,
+        undefined,
+        onLoaded
+      );
+
+      await plugin.createNodes![1]([], {} as any);
+
+      expect(onLoaded).toHaveBeenCalledTimes(1);
+      expect(onLoaded.mock.calls[0][0]).toEqual({
+        ...capabilities,
+        hasCreateMetadata: true,
+      });
+    });
+
+    it('reports the worker only once, however many hooks run', async () => {
+      interceptSpawn(createLoadResult({ hasCreateDependencies: true }));
+      const onLoaded = vi.fn();
+
+      const plugin = IsolatedPlugin.fromCapabilities(
+        'test-plugin',
+        '/root',
+        resolved,
+        { ...capabilities, createNodesPattern: undefined },
+        undefined,
+        onLoaded
+      );
+
+      await plugin.createDependencies!({} as any);
+      await plugin.createDependencies!({} as any);
+
+      expect(onLoaded).toHaveBeenCalledTimes(1);
+    });
+  });
 });
