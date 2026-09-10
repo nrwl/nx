@@ -138,12 +138,20 @@ describe('waiting for the walk', () => {
   });
 
   it('an async read waits for the files before touching the native context', async () => {
-    await globWithWorkspaceContext('/virtual', ['**/*.ts']);
+    let filesReady: () => void;
+    mockReady.mockReturnValue(
+      new Promise<void>((resolve) => (filesReady = resolve))
+    );
+
+    const read = globWithWorkspaceContext('/virtual', ['**/*.ts']);
+    await new Promise((resolve) => setImmediate(resolve));
 
     expect(mockReady).toHaveBeenCalledTimes(1);
-    expect(mockReady.mock.invocationCallOrder[0]).toBeLessThan(
-      mockGlob.mock.invocationCallOrder[0]
-    );
+    expect(mockGlob).not.toHaveBeenCalled();
+
+    filesReady!();
+    expect(await read).toEqual(['result']);
+    expect(mockGlob).toHaveBeenCalledTimes(1);
   });
 
   it('starting the context early begins the wait once and later reads reuse it', async () => {

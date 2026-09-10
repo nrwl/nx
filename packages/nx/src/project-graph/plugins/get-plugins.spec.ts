@@ -15,13 +15,13 @@ vi.mock('../../adapter/angular-json', () => ({
 vi.mock('./in-process-loader', () => ({
   loadNxPlugin: vi.fn(),
 }));
-// Resolution of local plugins relies on a cached workspace snapshot;
-// loadSpecifiedNxPlugins must drop it on every reload. Mocked so the test can
-// assert that wiring without touching the real filesystem-backed resolver.
 // The workspace walk is the context module's concern, not plugin loading's.
 vi.mock('../../utils/workspace-context', () => ({
   startWorkspaceContext: vi.fn(),
 }));
+// Resolution of local plugins relies on a cached workspace snapshot;
+// loadSpecifiedNxPlugins must drop it on every reload. Mocked so the test can
+// assert that wiring without touching the real filesystem-backed resolver.
 vi.mock('./resolve-plugin', () => ({
   resetResolvePluginCache: vi.fn(),
 }));

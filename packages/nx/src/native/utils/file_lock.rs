@@ -2,12 +2,19 @@
 use napi::bindgen_prelude::*;
 use std::fs;
 #[cfg(not(target_arch = "wasm32"))]
-use std::{fs::OpenOptions, path::Path};
+use std::{
+    fs::OpenOptions,
+    path::Path,
+    time::{Duration, Instant},
+};
 #[cfg(not(target_arch = "wasm32"))]
 use tracing::trace;
 
 #[cfg(not(target_arch = "wasm32"))]
 use fs4::fs_std::FileExt;
+
+#[cfg(not(target_arch = "wasm32"))]
+const LOCK_POLL_INTERVAL: Duration = Duration::from_millis(25);
 
 #[napi]
 #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
@@ -127,17 +134,34 @@ impl FileLock {
         }
     }
 
-    /// Blocks the calling thread until the current holder releases. The same
-    /// shared-then-release dance as `wait`, for callers without a napi `Env`.
-    pub fn wait_blocking(&self) -> std::io::Result<()> {
+    /// Blocks the calling thread until the current holder releases or
+    /// `timeout` passes, and says which. The same shared-then-release dance as
+    /// `wait`, for callers without a napi `Env`, polled so that a holder that
+    /// never returns (suspended, or on a filesystem that has stalled) cannot
+    /// hold the caller forever.
+    pub fn wait_blocking(&self, timeout: Duration) -> std::io::Result<bool> {
         let file = OpenOptions::new()
             .read(true)
             .write(true)
             .create(true)
+            .truncate(false)
             .open(&self.lock_file_path)?;
-        fs4::fs_std::FileExt::lock_shared(&file)?;
-        fs4::fs_std::FileExt::unlock(&file)?;
-        Ok(())
+        let deadline = Instant::now() + timeout;
+        loop {
+            match fs4::fs_std::FileExt::try_lock_shared(&file) {
+                Ok(()) => {
+                    fs4::fs_std::FileExt::unlock(&file)?;
+                    return Ok(true);
+                }
+                Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {}
+                Err(e) if e.raw_os_error() == fs4::lock_contended_error().raw_os_error() => {}
+                Err(e) => return Err(e),
+            }
+            if Instant::now() >= deadline {
+                return Ok(false);
+            }
+            std::thread::sleep(LOCK_POLL_INTERVAL);
+        }
     }
 }
 
@@ -171,6 +195,42 @@ mod test {
         assert!(lock_file.exists());
         let _ = file_lock.unlock();
         assert_eq!(file_lock.locked, false);
+    }
+
+    #[test]
+    fn wait_blocking_returns_true_once_the_holder_releases() {
+        let tmp_dir = TempDir::new().unwrap();
+        let path = tmp_dir.child("lock").path().to_string_lossy().to_string();
+        let mut holder = FileLock::new(path.clone()).unwrap();
+        holder.lock().unwrap();
+        let waiter = std::thread::spawn(move || {
+            FileLock::new(path)
+                .unwrap()
+                .wait_blocking(Duration::from_secs(10))
+                .unwrap()
+        });
+        std::thread::sleep(Duration::from_millis(100));
+        holder.unlock().unwrap();
+        assert!(waiter.join().unwrap());
+    }
+
+    #[test]
+    fn wait_blocking_returns_false_when_the_holder_outlasts_the_timeout() {
+        let tmp_dir = TempDir::new().unwrap();
+        let path = tmp_dir.child("lock").path().to_string_lossy().to_string();
+        let mut holder = FileLock::new(path.clone()).unwrap();
+        holder.lock().unwrap();
+        let started = Instant::now();
+        let released = FileLock::new(path.clone())
+            .unwrap()
+            .wait_blocking(Duration::from_millis(200))
+            .unwrap();
+        assert!(!released);
+        assert!(started.elapsed() >= Duration::from_millis(200));
+        // Seen from a fresh handle; `check` on the holder's own handle would
+        // release it, since the lock is held by that handle.
+        assert!(FileLock::new(path).unwrap().locked);
+        drop(holder);
     }
 
     #[test]
