@@ -67,10 +67,12 @@ export interface DotNetPluginOptions {
    */
   clean?: TargetConfigurationWithName | false;
   /**
-   * Configuration for the restore target.
-   * Use `targetName` to rename the target, and provide additional options/configurations to merge with the generated target.
+   * Configuration for the restore target, which is not created by default.
+   * Set to `true`, or provide a configuration object, to opt in. `restore` is
+   * neither cached nor part of the task chain, so running it through Nx behaves
+   * the same as running `dotnet restore` directly.
    */
-  restore?: TargetConfigurationWithName | false;
+  restore?: TargetConfigurationWithName | boolean;
   /**
    * Configuration for the publish target.
    * Use `targetName` to rename the target, and provide additional options/configurations to merge with the generated target.
@@ -107,39 +109,46 @@ const dotnetProjectGlob =
 /**
  * Merge user-specified target configurations with the generated targets from the analyzer
  */
-function mergeUserTargetConfigurations(
+export function mergeUserTargetConfigurations(
   node: ProjectConfiguration,
-  options: DotNetPluginOptions
+  options: DotNetPluginOptions | undefined
 ): ProjectConfiguration {
-  if (!node.targets || !options) {
+  if (!node.targets) {
     return node;
   }
 
+  const pluginOptions = options ?? {};
   const targetMappings: Array<{
-    targetOption: TargetConfigurationWithName | false | undefined;
+    targetOption: TargetConfigurationWithName | boolean | undefined;
     defaultTargetName: string;
+    optIn?: boolean;
   }> = [
-    { targetOption: options.build, defaultTargetName: 'build' },
-    { targetOption: options.test, defaultTargetName: 'test' },
-    { targetOption: options.clean, defaultTargetName: 'clean' },
-    { targetOption: options.restore, defaultTargetName: 'restore' },
-    { targetOption: options.publish, defaultTargetName: 'publish' },
-    { targetOption: options.pack, defaultTargetName: 'pack' },
-    { targetOption: options.watch, defaultTargetName: 'watch' },
-    { targetOption: options.run, defaultTargetName: 'run' },
+    { targetOption: pluginOptions.build, defaultTargetName: 'build' },
+    { targetOption: pluginOptions.test, defaultTargetName: 'test' },
+    { targetOption: pluginOptions.clean, defaultTargetName: 'clean' },
+    {
+      targetOption: pluginOptions.restore,
+      defaultTargetName: 'restore',
+      optIn: true,
+    },
+    { targetOption: pluginOptions.publish, defaultTargetName: 'publish' },
+    { targetOption: pluginOptions.pack, defaultTargetName: 'pack' },
+    { targetOption: pluginOptions.watch, defaultTargetName: 'watch' },
+    { targetOption: pluginOptions.run, defaultTargetName: 'run' },
   ];
 
   const mergedTargets = { ...node.targets };
 
-  for (const { targetOption, defaultTargetName } of targetMappings) {
-    // Disabled target from user configuration
-    if (targetOption === false) {
+  for (const { targetOption, defaultTargetName, optIn } of targetMappings) {
+    if (targetOption === false || (optIn && targetOption === undefined)) {
       delete mergedTargets[defaultTargetName];
+      removeFromDependsOn(mergedTargets, defaultTargetName);
       continue;
     }
 
-    // Use empty object as default when option is not provided
-    const { targetName, ...userSpecifiedConfig } = targetOption ?? {};
+    // `true` opts a target in and carries no configuration of its own.
+    const { targetName, ...userSpecifiedConfig } =
+      targetOption === true ? {} : (targetOption ?? {});
     const actualTargetName = targetName ?? defaultTargetName;
 
     // Find the generated target - it might be under the default name or the user-specified name
@@ -176,6 +185,30 @@ function mergeUserTargetConfigurations(
   };
 }
 
+/**
+ * Drops a removed target from the remaining targets' `dependsOn`. `watch`
+ * depends on `restore`, and Nx silently skips a dependency naming a target the
+ * project does not have, so a leftover entry is inert but still advertises a
+ * target that no longer exists.
+ */
+function removeFromDependsOn(
+  targets: Record<string, TargetConfiguration>,
+  removed: string
+): void {
+  for (const [name, target] of Object.entries(targets)) {
+    if (!target.dependsOn) continue;
+
+    const dependsOn = target.dependsOn.filter((dependency) =>
+      typeof dependency === 'string'
+        ? dependency !== removed && dependency !== `^${removed}`
+        : dependency.target !== removed
+    );
+    if (dependsOn.length !== target.dependsOn.length) {
+      targets[name] = { ...target, dependsOn };
+    }
+  }
+}
+
 export const createNodes: CreateNodes<DotNetPluginOptions> = [
   dotnetProjectGlob,
   async (configFilePaths, options, context) => {
@@ -196,7 +229,8 @@ export const createNodes: CreateNodes<DotNetPluginOptions> = [
           (normalizedOptions.clean && normalizedOptions.clean.targetName) ||
           'clean',
         restoreTargetName:
-          (normalizedOptions.restore && normalizedOptions.restore.targetName) ||
+          (typeof normalizedOptions.restore === 'object' &&
+            normalizedOptions.restore.targetName) ||
           'restore',
         publishTargetName:
           (normalizedOptions.publish && normalizedOptions.publish.targetName) ||
