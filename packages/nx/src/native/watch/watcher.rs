@@ -1380,9 +1380,15 @@ mod tests {
             is_dir_from_kind(&EventKind::Remove(RemoveKind::Folder)),
             Some(true)
         );
+        // FSEvents does not distinguish files from directories, so macOS
+        // classifies a data change from the stat instead of the kind.
         assert_eq!(
             is_dir_from_kind(&EventKind::Modify(ModifyKind::Data(DataChange::Any))),
-            Some(false)
+            if cfg!(target_os = "macos") {
+                None
+            } else {
+                Some(false)
+            }
         );
 
         // Ambiguous kinds must fall back to a stat, never guess.
