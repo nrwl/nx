@@ -31,6 +31,18 @@ vi.mock('../resolve-plugin', () => ({
   }),
 }));
 
+vi.mock('child_process', async () => ({
+  ...(await vi.importActual('child_process')),
+  spawn: vi.fn(),
+}));
+
+// Returns something other than what the tests pass, so a spawn that reads the
+// live cache instead of the loaded conditions is caught.
+vi.mock('../../../plugins/js/utils/typescript', () => ({
+  getRootTsConfigCustomConditions: vi.fn(() => ['stale']),
+}));
+
+import { spawn } from 'child_process';
 import { resolveNxPlugin } from '../resolve-plugin';
 
 describe('IsolatedPlugin', () => {
@@ -336,6 +348,43 @@ describe('IsolatedPlugin', () => {
       await expect(
         connectToWorker(worker, '/mock/socket/path', 'test-plugin')
       ).rejects.toSatisfy((error) => !isPluginWorkerSocketRefusal(error));
+    });
+  });
+
+  describe('spawning the worker', () => {
+    afterEach(() => {
+      vi.mocked(spawn).mockReset();
+      vi.mocked(waitForSocketConnection).mockReset();
+    });
+
+    it('passes the conditions the plugin was loaded with to a source worker', async () => {
+      vi.mocked(resolveNxPlugin).mockResolvedValueOnce({
+        name: 'source-plugin',
+        pluginPath: '/mock/plugin/path',
+        shouldRegisterTSTranspiler: true,
+        isSourcePlugin: true,
+        workspacePackageNames: [],
+      } as any);
+      const worker = new EventEmitter() as any;
+      worker.pid = 4243;
+      worker.stdout = null;
+      worker.stderr = null;
+      worker.unref = () => {};
+      vi.mocked(spawn).mockReturnValue(worker);
+      vi.mocked(waitForSocketConnection).mockResolvedValue(null);
+
+      await expect(
+        IsolatedPlugin.load('source-plugin', '/mock/root', 0, ['a', 'b'])
+      ).rejects.toThrow('Failed to start plugin worker');
+
+      const args: string[] = vi.mocked(spawn).mock.calls[0][1] as string[];
+      expect(args.slice(0, 4)).toEqual([
+        '--conditions',
+        'a',
+        '--conditions',
+        'b',
+      ]);
+      expect(args).not.toContain('stale');
     });
   });
 
