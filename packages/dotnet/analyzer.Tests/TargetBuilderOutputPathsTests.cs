@@ -685,6 +685,20 @@ public class TargetBuilderOutputPathsTests
             Declared(targets["pack"]));
     }
 
+    [Fact]
+    public void Pack_ArtifactsOutput_HonoursArtifactsPackageOutputName()
+    {
+        var projectDirectory = ProjectDir("libs", "foo");
+        var properties = ArtifactsProperties("foo");
+        properties["ArtifactsPackageOutputName"] = "packages";
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
+
+        Assert.Equal(
+            new[] { "{workspaceRoot}/artifacts/packages/*.nupkg", "{workspaceRoot}/artifacts/obj/foo" },
+            Declared(targets["pack"]));
+    }
+
     // --- Regressions: comparer preservation and configuration matching -------
 
     [Fact]
