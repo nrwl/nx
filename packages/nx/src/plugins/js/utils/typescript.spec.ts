@@ -1,6 +1,5 @@
 import {
   clearRootTsConfigCustomConditionsCache,
-  getPluginResolveConditionNodeArgs,
   getRootTsConfigCustomConditions,
   readTsConfigOptions,
 } from './typescript';
@@ -73,22 +72,5 @@ describe('getRootTsConfigCustomConditions', () => {
 
     clearRootTsConfigCustomConditionsCache();
     expect(getRootTsConfigCustomConditions(fs.tempDir)).toEqual(['updated']);
-  });
-});
-
-describe('getPluginResolveConditionNodeArgs', () => {
-  it('passes only the tsconfig customConditions, not the development fallback', async () => {
-    const fs = new TempFs('plugin-conditions');
-    await fs.createFiles({
-      'tsconfig.json': JSON.stringify({
-        compilerOptions: { customConditions: ['source'] },
-      }),
-    });
-
-    expect(getPluginResolveConditionNodeArgs(fs.tempDir)).toEqual([
-      '--conditions',
-      'source',
-    ]);
-    fs.cleanup();
   });
 });

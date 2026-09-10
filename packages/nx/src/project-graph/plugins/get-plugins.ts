@@ -91,7 +91,8 @@ export function resetIsolationFallbackForTesting() {
 export const loadingMethod = async (
   plugin: PluginConfiguration,
   root: string,
-  index?: number
+  index?: number,
+  conditions = getRootTsConfigCustomConditions(root)
 ): Promise<readonly [Promise<LoadedNxPlugin>, () => void]> => {
   if (!isIsolationEnabled() || isolationRefusedInThisProcess) {
     return loadNxPlugin(plugin, root, index);
@@ -100,7 +101,8 @@ export const loadingMethod = async (
   const [isolatedPlugin, cleanup] = await loadIsolatedNxPlugin(
     plugin,
     root,
-    index
+    index,
+    conditions
   );
 
   // Awaited here rather than handed on, because the worker failure surfaces on
@@ -182,10 +184,8 @@ export async function getPluginsSeparated(
   root = workspaceRoot
 ): Promise<SeparatedPlugins> {
   const pluginsConfiguration = nxJson.plugins ?? [];
-  const pluginStateHash = hashPluginState(
-    pluginsConfiguration,
-    getRootTsConfigCustomConditions(root)
-  );
+  const conditions = getRootTsConfigCustomConditions(root);
+  const pluginStateHash = hashPluginState(pluginsConfiguration, conditions);
 
   if (cachedSeparatedPlugins && pluginStateHash === currentPluginStateHash) {
     refreshSourceGraphResolvers(root);
@@ -210,7 +210,8 @@ export async function getPluginsSeparated(
       getOnlyDefaultPlugins(root),
       (pendingPluginsPromise ??= loadSpecifiedNxPlugins(
         pluginsConfiguration,
-        root
+        root,
+        conditions
       )),
     ]);
 
@@ -342,13 +343,19 @@ async function loadDefaultNxPlugins(root = workspaceRoot) {
   performance.mark('loadDefaultNxPlugins:start');
 
   const plugins = getDefaultPlugins(root);
+  const conditions = getRootTsConfigCustomConditions(root);
 
   const cleanupFunctions: Array<() => void> = [];
   const results = await Promise.allSettled(
     plugins.map(async (plugin) => {
       performance.mark(`Load Nx Plugin: ${plugin} - start`);
 
-      const [loadedPluginPromise, cleanup] = await loadingMethod(plugin, root);
+      const [loadedPluginPromise, cleanup] = await loadingMethod(
+        plugin,
+        root,
+        undefined,
+        conditions
+      );
 
       cleanupFunctions.push(cleanup);
       const res = await loadedPluginPromise;
@@ -413,7 +420,8 @@ async function loadDefaultNxPlugins(root = workspaceRoot) {
 
 async function loadSpecifiedNxPlugins(
   pluginsConfigurations: PluginConfiguration[],
-  root = workspaceRoot
+  root = workspaceRoot,
+  conditions = getRootTsConfigCustomConditions(root)
 ): Promise<LoadedNxPlugin[]> {
   // Returning existing plugins is handled by getPlugins,
   // so, if we are here and there are existing plugins, they are stale
@@ -439,7 +447,8 @@ async function loadSpecifiedNxPlugins(
       const [loadedPluginPromise, cleanup] = await loadingMethod(
         plugin,
         root,
-        index
+        index,
+        conditions
       );
 
       cleanupFunctions.push(cleanup);

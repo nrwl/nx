@@ -75,13 +75,13 @@ vi.doMock(loadIsolatedPath, async () => {
   const actual = await vi.importActual<any>(loadIsolatedPath);
   return {
     ...actual,
-    loadIsolatedNxPlugin: vi.fn((plugin, root, index) => {
+    loadIsolatedNxPlugin: vi.fn((plugin, root, ...rest) => {
       if (root === realWorkspaceRoot) {
         throw new Error(
           '[vitest-setup] loadIsolatedNxPlugin called with the real workspace root'
         );
       }
-      return actual.loadIsolatedNxPlugin(plugin, root, index);
+      return actual.loadIsolatedNxPlugin(plugin, root, ...rest);
     }),
   };
 });
