@@ -290,40 +290,125 @@ export function reportMigrateOrchestratorInit(opts: {
 }
 
 /**
- * One event per orchestrator dispense. The `action` (dispense case) is a
- * closed enum carried on a reused dimension, read conditioned on the event
- * name (the same multiplexing pattern as {@link reportMigratePrompt});
- * `attempt` rides the migration-count dimension.
+ * One event per orchestrator response, repeated on every reconcile until the
+ * step moves. The `action` (dispense case) is a closed enum carried on a
+ * reused dimension, read conditioned on the event name (the same
+ * multiplexing pattern as {@link reportMigratePrompt}); `attempt` rides the
+ * migration-count dimension and `ordinal` (the run's dispense count so far)
+ * the task-count one. The action mix per ordinal shows what a run was being
+ * asked around each position; the survival curve itself comes from
+ * {@link reportMigrateOrchestratorStepDispensed}. A rejected step action has
+ * no ordinal: it is an answer, not a dispense.
  */
 export function reportMigrateOrchestratorDispense(opts: {
   action: string;
   attempt: number;
+  ordinal?: number;
 }): void {
   safeReport(() => {
     if (!customDimensions) return;
     reportEvent('migrate_orchestrator_dispense', {
       [customDimensions.promptChoice]: opts.action,
       [customDimensions.migrationCount]: opts.attempt,
+      [customDimensions.taskCount]: opts.ordinal,
     });
   });
+}
+
+/**
+ * Once per durable dispense transition, unlike the response event above,
+ * which repeats on every reconcile until the step moves. Counting these per
+ * ordinal is the survival curve; the response event's ordinal is the action
+ * mix around each position.
+ */
+export function reportMigrateOrchestratorStepDispensed(opts: {
+  attempt: number;
+  ordinal: number;
+}): void {
+  safeReport(() => {
+    if (!customDimensions) return;
+    reportEvent('migrate_orchestrator_step_dispensed', {
+      [customDimensions.migrationCount]: opts.attempt,
+      [customDimensions.taskCount]: opts.ordinal,
+    });
+  });
+}
+
+export interface MigrateOrchestratorTallies {
+  completed: number;
+  skipped: number;
+  dispenseCount: number;
+}
+
+function orchestratorTallyParams(tallies: MigrateOrchestratorTallies) {
+  return {
+    [customDimensions.appliedCount]: tallies.completed,
+    [customDimensions.taskCount]: tallies.skipped,
+    [customDimensions.migrationCount]: tallies.dispenseCount,
+  };
 }
 
 /**
  * Terminal funnel event. The two step tallies and the total dispense count
  * ride reused numeric dimensions, read conditioned on the event name.
  */
-export function reportMigrateOrchestratorComplete(opts: {
-  completed: number;
-  skipped: number;
-  dispenseCount: number;
-}): void {
+export function reportMigrateOrchestratorComplete(
+  opts: MigrateOrchestratorTallies
+): void {
   safeReport(() => {
     if (!customDimensions) return;
-    reportEvent('migrate_orchestrator_complete', {
-      [customDimensions.appliedCount]: opts.completed,
-      [customDimensions.taskCount]: opts.skipped,
-      [customDimensions.migrationCount]: opts.dispenseCount,
+    reportEvent('migrate_orchestrator_complete', orchestratorTallyParams(opts));
+  });
+}
+
+/**
+ * The spawned agent exited with the run still active. Only the parent that
+ * spawned it can report this: an agent-initiated run has no process left to
+ * notice it stopped. Same tallies as complete, read the same way.
+ */
+export function reportMigrateOrchestratorAbandoned(
+  opts: MigrateOrchestratorTallies & { agentUsed: string }
+): void {
+  safeReport(() => {
+    if (!customDimensions) return;
+    reportEvent('migrate_orchestrator_abandoned', {
+      ...orchestratorTallyParams(opts),
+      [customDimensions.agentUsed]: opts.agentUsed,
     });
+  });
+}
+
+/**
+ * The orchestrator took up an existing active run instead of creating one.
+ * The start watermark hides that, so this is the only trace of how far a run
+ * got before its session was restarted; every resume reports, since the state
+ * cannot tell a crashed session from a re-invocation. A bare --run-id
+ * reconcile is not a resume: nothing in run state marks the first call after
+ * a lost session.
+ */
+export function reportMigrateOrchestratorResume(
+  opts: MigrateOrchestratorTallies
+): void {
+  safeReport(() => {
+    if (!customDimensions) return;
+    reportEvent('migrate_orchestrator_resume', orchestratorTallyParams(opts));
+  });
+}
+
+/**
+ * An invocation found an active run and started nothing. On the master path
+ * this precedes the resume when the user continues; on the agent path it is
+ * the only trace of a revisit. Same tallies as the resume event.
+ */
+export function reportMigrateOrchestratorExistingRun(
+  opts: MigrateOrchestratorTallies
+): void {
+  safeReport(() => {
+    if (!customDimensions) return;
+    reportEvent(
+      'migrate_orchestrator_existing_run',
+      orchestratorTallyParams(opts)
+    );
   });
 }
 

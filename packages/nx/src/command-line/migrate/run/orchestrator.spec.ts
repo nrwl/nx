@@ -2,12 +2,20 @@ import type { Mock } from 'vitest';
 const mockInit = vi.fn();
 const mockDispense = vi.fn();
 const mockComplete = vi.fn();
+const mockResume = vi.fn();
+const mockExistingRun = vi.fn();
+const mockStepDispensed = vi.fn();
 vi.mock('../migrate-analytics', () => ({
   reportMigrateOrchestratorInit: (...args: unknown[]) => mockInit(...args),
   reportMigrateOrchestratorDispense: (...args: unknown[]) =>
     mockDispense(...args),
   reportMigrateOrchestratorComplete: (...args: unknown[]) =>
     mockComplete(...args),
+  reportMigrateOrchestratorResume: (...args: unknown[]) => mockResume(...args),
+  reportMigrateOrchestratorExistingRun: (...args: unknown[]) =>
+    mockExistingRun(...args),
+  reportMigrateOrchestratorStepDispensed: (...args: unknown[]) =>
+    mockStepDispensed(...args),
 }));
 
 const mockStringifiedDeps = vi.fn();
@@ -147,6 +155,9 @@ describe('orchestrator', () => {
     mockInit.mockReset();
     mockDispense.mockReset();
     mockComplete.mockReset();
+    mockResume.mockReset();
+    mockExistingRun.mockReset();
+    mockStepDispensed.mockReset();
     mockCommit.mockReset().mockResolvedValue({ status: 'no-changes' });
     mockCheckpoint.mockReset();
     mockGetAncestorStatus.mockReset().mockReturnValue('unknown');
@@ -405,6 +416,7 @@ describe('orchestrator', () => {
         migrationCount: 2,
         createCommits: false,
       });
+      expect(mockResume).not.toHaveBeenCalled();
     });
 
     it('dispenses the first migration on the reconcile that follows init', async () => {
@@ -2202,6 +2214,94 @@ describe('orchestrator', () => {
       expect(logged.map((l) => l.title)).toEqual([
         'nx migrate: resuming run run-1',
       ]);
+    });
+
+    it('reports the tallies of the resumed run on every resume', async () => {
+      const migrationsJson = {
+        migrations: [
+          genMig('@nx/js', 'a'),
+          genMig('@nx/js', 'b'),
+          genMig('@nx/js', 'c'),
+        ],
+      };
+      setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:a', 'succeeded'),
+          migStep('step-2', '@nx/js:b', 'skipped'),
+          migStep('step-3', '@nx/js:c', 'pending', { dispenseCount: 2 }),
+        ],
+        planHash: computePlanHash(migrationsJson),
+        plan: migrationsJson.migrations,
+      });
+      const policy = { createCommits: false, skipInstall: false };
+
+      await runOrchestratorResume({ root, runId: 'run-1', policy });
+      await runOrchestratorResume({ root, runId: 'run-1', policy });
+
+      expect(mockInit).not.toHaveBeenCalled();
+      expect(mockExistingRun).not.toHaveBeenCalled();
+      expect(mockResume.mock.calls).toEqual([
+        [{ completed: 1, skipped: 1, dispenseCount: 4 }],
+        [{ completed: 1, skipped: 1, dispenseCount: 4 }],
+      ]);
+    });
+
+    it('reports the tallies of the active run on every existing-run report, with or without agent instructions', async () => {
+      const migrationsJson = {
+        migrations: [
+          genMig('@nx/js', 'a'),
+          genMig('@nx/js', 'b'),
+          genMig('@nx/js', 'c'),
+        ],
+      };
+      setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:a', 'succeeded'),
+          migStep('step-2', '@nx/js:b', 'skipped'),
+          migStep('step-3', '@nx/js:c', 'pending', { dispenseCount: 2 }),
+        ],
+        planHash: computePlanHash(migrationsJson),
+        plan: migrationsJson.migrations,
+      });
+
+      await runOrchestratorInit(initInput(migrationsJson));
+      await runOrchestratorInit({
+        ...initInput(migrationsJson),
+        emitAgentInstructions: false,
+      });
+
+      expect(mockInit).not.toHaveBeenCalled();
+      expect(mockResume).not.toHaveBeenCalled();
+      expect(mockExistingRun.mock.calls).toEqual([
+        [{ completed: 1, skipped: 1, dispenseCount: 4 }],
+        [{ completed: 1, skipped: 1, dispenseCount: 4 }],
+      ]);
+    });
+
+    it('reports the existing run before the resume when the master session continues it', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending', { dispenseCount: 1 })],
+        planHash: computePlanHash(migrationsJson),
+        plan: migrationsJson.migrations,
+      });
+
+      await runOrchestratorInit({
+        ...initInput(migrationsJson),
+        emitAgentInstructions: false,
+      });
+      await runOrchestratorResume({
+        root,
+        runId: 'run-1',
+        policy: { createCommits: false, skipInstall: false },
+        emitAgentInstructions: false,
+      });
+
+      expect(mockExistingRun).toHaveBeenCalledTimes(1);
+      expect(mockResume).toHaveBeenCalledTimes(1);
+      expect(mockExistingRun.mock.invocationCallOrder[0]).toBeLessThan(
+        mockResume.mock.invocationCallOrder[0]
+      );
     });
 
     it('replaces a non-regular entry at the runbook path with the re-rendered runbook', async () => {
@@ -6803,7 +6903,87 @@ describe('orchestrator', () => {
       expect(mockDispense).toHaveBeenLastCalledWith({
         action: 'no-progress',
         attempt: 1,
+        ordinal: 1,
       });
+    });
+
+    it('numbers each dispense by the run-wide dispense count, cumulative across retries', async () => {
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:p', 'failed', { hasGenerator: false }),
+          migStep('step-2', '@nx/js:q', 'pending'),
+        ],
+        createCommits: false,
+        plan: [promptMig('@nx/js', 'p'), promptMig('@nx/js', 'q')],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'retry',
+      });
+      const state = readRunState(dir);
+      writeRunState(dir, {
+        ...state,
+        steps: [
+          {
+            ...state.steps[0],
+            status: 'succeeded',
+            finishedAt: '2026-01-01T00:01:00.000Z',
+          },
+          state.steps[1],
+        ],
+      });
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(mockDispense.mock.calls).toEqual([
+        [{ action: 'retry-failed', attempt: 1, ordinal: 1 }],
+        [{ action: 'next-step', attempt: 2, ordinal: 2 }],
+        [{ action: 'next-step', attempt: 1, ordinal: 3 }],
+      ]);
+      expect(mockStepDispensed.mock.calls).toEqual([
+        [{ attempt: 2, ordinal: 2 }],
+        [{ attempt: 1, ordinal: 3 }],
+      ]);
+    });
+
+    it('reports a durable dispense once while the response repeats on every reconcile', async () => {
+      setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'pending')],
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(mockDispense.mock.calls).toEqual([
+        [{ action: 'next-step', attempt: 1, ordinal: 1 }],
+        [{ action: 'next-step', attempt: 1, ordinal: 1 }],
+        [{ action: 'next-step', attempt: 1, ordinal: 1 }],
+      ]);
+      expect(mockStepDispensed.mock.calls).toEqual([
+        [{ attempt: 1, ordinal: 1 }],
+      ]);
+    });
+
+    it('reports a rejected step action without an ordinal', async () => {
+      setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+        plan: [genMig('@nx/js', 'a')],
+      });
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'retry',
+      });
+
+      expect(lastBlock().action).toBe('error');
+      expect(mockDispense.mock.calls).toEqual([
+        [{ action: 'error', attempt: 0 }],
+      ]);
     });
 
     it('resets the streak on a durable transition and counts the next step independently', async () => {
