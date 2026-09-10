@@ -112,6 +112,33 @@ impl FileLock {
         self.locked = true;
         Ok(())
     }
+
+    /// Takes the lock if nobody holds it, without blocking. For Rust callers on
+    /// a plain thread; the JS surface reads `locked` and calls `lock()`.
+    pub fn try_lock(&mut self) -> std::io::Result<bool> {
+        match self.file.try_lock_exclusive() {
+            Ok(()) => {
+                self.locked = true;
+                Ok(true)
+            }
+            Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => Ok(false),
+            Err(e) if e.raw_os_error() == fs4::lock_contended_error().raw_os_error() => Ok(false),
+            Err(e) => Err(e),
+        }
+    }
+
+    /// Blocks the calling thread until the current holder releases. The same
+    /// shared-then-release dance as `wait`, for callers without a napi `Env`.
+    pub fn wait_blocking(&self) -> std::io::Result<()> {
+        let file = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .create(true)
+            .open(&self.lock_file_path)?;
+        fs4::fs_std::FileExt::lock_shared(&file)?;
+        fs4::fs_std::FileExt::unlock(&file)?;
+        Ok(())
+    }
 }
 
 #[napi]

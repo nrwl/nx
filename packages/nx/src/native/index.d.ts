@@ -250,6 +250,11 @@ export declare class Watcher {
 export declare class WorkspaceContext {
   workspaceRoot: string
   constructor(workspaceRoot: string, cacheDir: string)
+  /**
+   * Loads the files the last walk recorded instead of walking. For a
+   * process whose host already walked, such as a plugin worker.
+   */
+  static fromArchive(workspaceRoot: string, cacheDir: string): WorkspaceContext
   getWorkspaceFiles(projectRootMap: Record<string, string>): NxWorkspaceFiles
   glob(globs: Array<string>, exclude?: Array<string> | undefined | null): Array<string>
   /**

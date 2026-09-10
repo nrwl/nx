@@ -2,7 +2,8 @@ use anyhow::anyhow;
 use hashbrown::HashMap;
 use rkyv::{Archive, Deserialize, Infallible, Serialize};
 use std::ops::{Deref, DerefMut};
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use std::time::SystemTime;
 
 use tracing::trace;
 
@@ -38,9 +39,20 @@ impl FromIterator<(String, NxFileHashed)> for NxFileHashes {
     }
 }
 
+pub fn archive_path<P: AsRef<Path>>(cache_dir: P) -> PathBuf {
+    cache_dir.as_ref().join(NX_FILES_ARCHIVE)
+}
+
+/// When the archive on disk was last written, or `None` when there is none.
+pub fn archive_modified_at<P: AsRef<Path>>(cache_dir: P) -> Option<SystemTime> {
+    std::fs::metadata(archive_path(cache_dir))
+        .and_then(|m| m.modified())
+        .ok()
+}
+
 pub fn read_files_archive<P: AsRef<Path>>(cache_dir: P) -> Option<NxFileHashes> {
     let now = std::time::Instant::now();
-    let archive_path = cache_dir.as_ref().join(NX_FILES_ARCHIVE);
+    let archive_path = archive_path(cache_dir);
     if !archive_path.exists() {
         return None;
     }
@@ -72,11 +84,15 @@ pub fn read_files_archive<P: AsRef<Path>>(cache_dir: P) -> Option<NxFileHashes> 
 
 pub fn write_files_archive<P: AsRef<Path>>(cache_dir: P, files: NxFileHashes) {
     let now = std::time::Instant::now();
-    let archive_path = cache_dir.as_ref().join(NX_FILES_ARCHIVE);
+    let archive_path = archive_path(cache_dir);
+    // Written beside the archive and renamed into place, so a process that
+    // trusts the archive can never read a partial one.
+    let staging_path = archive_path.with_extension(format!("nxt.{}.tmp", std::process::id()));
     let result = rkyv::to_bytes::<_, 2048>(&files)
         .map_err(anyhow::Error::from)
         .and_then(|encoded| {
-            std::fs::write(archive_path, encoded)?;
+            std::fs::write(&staging_path, encoded)?;
+            std::fs::rename(&staging_path, &archive_path)?;
             Ok(())
         });
 
