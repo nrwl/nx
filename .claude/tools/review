@@ -293,6 +293,100 @@ function section(body, name) {
  * second key would be a change to a live tool for no gain, so the adapter lives
  * on this side of the boundary.
  */
+const REPO_DIR = process.env.NX_REPO_PATH || path.join(os.homedir(), 'repos', 'nx');
+
+function git(args) {
+  const { spawnSync } = require('child_process');
+  const r = spawnSync('git', ['-C', REPO_DIR, ...args], {
+    encoding: 'utf-8',
+    maxBuffer: 1 << 28,
+  });
+  return { ok: r.status === 0, out: (r.stdout || '').trim() };
+}
+
+function haveCommit(sha) {
+  return git(['cat-file', '-e', `${sha}^{commit}`]).ok;
+}
+
+/** The patch-id of a PR's OWN change, which survives a rebase when the change does. */
+function prPatchId(sha) {
+  const mb = git(['merge-base', 'origin/master', sha]);
+  if (!mb.ok || !mb.out) return null;
+  const { spawnSync } = require('child_process');
+  const diff = spawnSync('git', ['-C', REPO_DIR, 'diff', mb.out, sha], {
+    encoding: 'utf-8',
+    maxBuffer: 1 << 28,
+  });
+  if (diff.status !== 0) return null;
+  const pid = spawnSync('git', ['patch-id', '--stable'], {
+    input: diff.stdout,
+    encoding: 'utf-8',
+    maxBuffer: 1 << 28,
+  });
+  return (pid.stdout || '').trim().split(/\s+/)[0] || null;
+}
+
+/**
+ * How a PR moved since it was reviewed, computed with local git so it costs no
+ * gh approval.
+ *
+ * Comparing shas only says the head moved. Comparing trees says whether any file
+ * changed, but a rebase changes the tree even when the PR's own change does not,
+ * so trees cannot answer the rebase case. Comparing the patch-id of the PR's diff
+ * against its merge base does.
+ *
+ * The +/- count is restricted to the files the PR touches at either point. A
+ * whole-tree diff across a rebase reports the upstream churn the branch was
+ * rebased onto, which on #36912 was 1354 insertions of other people's work
+ * against 417 of the author's.
+ */
+function headDelta(reviewedSha, currentSha) {
+  if (!reviewedSha || !currentSha) return null;
+  if (reviewedSha === currentSha) return 'none';
+  for (const sha of [reviewedSha, currentSha])
+    if (!haveCommit(sha)) git(['fetch', '-q', 'origin', sha]);
+  if (!haveCommit(reviewedSha) || !haveCommit(currentSha)) return null;
+
+  const a = prPatchId(reviewedSha);
+  const b = prPatchId(currentSha);
+  const rebased = !git(['merge-base', '--is-ancestor', reviewedSha, currentSha]).ok;
+  if (a && b && a === b) return rebased ? 'rebased-same' : 'none';
+
+  const files = new Set();
+  for (const sha of [reviewedSha, currentSha]) {
+    const mb = git(['merge-base', 'origin/master', sha]);
+    if (!mb.ok) continue;
+    for (const f of git(['diff', '--name-only', mb.out, sha]).out.split('\n'))
+      if (f) files.add(f);
+  }
+  if (!files.size) return rebased ? 'rebased-same' : 'none';
+  const stat = git(['diff', '--shortstat', reviewedSha, currentSha, '--', ...files]);
+  const ins = /(\d+) insertion/.exec(stat.out);
+  const del = /(\d+) deletion/.exec(stat.out);
+  const n = ins ? Number(ins[1]) : 0;
+  const m = del ? Number(del[1]) : 0;
+  if (!n && !m) return rebased ? 'rebased-same' : 'none';
+  const short = (v) => (v >= 1000 ? `${(v / 1000).toFixed(1)}k` : String(v));
+  return `${rebased ? 'rebased ' : ''}+${short(n)}/-${short(m)}`;
+}
+
+/**
+ * What the review looked at, and whether the PR has moved past it. ⟳ is what the
+ * pane colours yellow, so it marks only the cases a reader must act on. A head
+ * that moved without changing the PR's content is reported, not flagged.
+ */
+function reviewedAt(front) {
+  const at = (front.head_sha || '').trim();
+  if (!at) return '';
+  const now = (front.current_head || '').trim();
+  if (!now || now === at) return at.slice(0, 8);
+  const change = (front.head_change || '').trim();
+  if (change === 'none') return `${at.slice(0, 8)} = no change`;
+  if (change === 'rebased-same') return `${at.slice(0, 8)} = rebased, same`;
+  if (change) return `${at.slice(0, 8)} ⟳ ${change}`;
+  return `${at.slice(0, 8)} ⟳ stale`;
+}
+
 function listRecordsForTui() {
   return listRecords().map((r) => ({
     ...r,
@@ -306,6 +400,7 @@ function listRecordsForTui() {
       title: r.front.title || `PR #${r.pr}`,
       author: r.front.author || '',
       verdict: r.front.verdict || '',
+      reviewed: reviewedAt(r.front),
       url: r.front.url || `https://github.com/nrwl/nx/pull/${r.pr}`,
     },
   }));
@@ -457,7 +552,7 @@ function sweepMerged({ apply, quiet }) {
   if (!live.length) return { checked: 0, hits: [], skipped: 'nothing live' };
   const q =
     'query{repository(owner:"nrwl",name:"nx"){' +
-    live.map((r) => `p${r.pr}:pullRequest(number:${r.pr}){number state}`).join(' ') +
+    live.map((r) => `p${r.pr}:pullRequest(number:${r.pr}){number state headRefOid headRefName}`).join(' ') +
     '}}';
   if (!quiet)
     process.stderr.write(
@@ -478,22 +573,37 @@ function sweepMerged({ apply, quiet }) {
     return { checked: live.length, hits: [], skipped: `unparseable graphql response: ${e.message}` };
   }
   const hits = [];
+  const heads = [];
   for (const r of live) {
     const pr = data[`p${r.pr}`];
-    // A null entry means the number does not resolve — a transferred or deleted
-    // PR. Leave it alone rather than guessing; an unresolvable record is a
-    // question for a human, not something to retire silently.
+    // A null entry means the number does not resolve, so leave it alone rather
+    // than guessing.
     if (!pr || !pr.state) continue;
     if (pr.state === 'MERGED' || pr.state === 'CLOSED')
       hits.push({ pr: r.pr, state: pr.state, status: statusOf(r) });
+    if (pr.headRefOid) {
+      const update = {};
+      if ((r.front.current_head || '') !== pr.headRefOid)
+        update.current_head = pr.headRefOid;
+      if (pr.headRefName && (r.front.branch || '') !== pr.headRefName)
+        update.branch = pr.headRefName;
+      // Local git, so no second approval. Null means the commits could not be
+      // resolved even after a fetch, and the renderer falls back to a bare stale
+      // marker rather than inventing a number.
+      const delta = headDelta((r.front.head_sha || '').trim(), pr.headRefOid);
+      if (delta !== null && (r.front.head_change || '') !== delta)
+        update.head_change = delta;
+      if (Object.keys(update).length) heads.push({ pr: r.pr, update });
+    }
   }
+  if (apply) for (const h of heads) setFront(h.pr, h.update);
   if (apply)
     for (const h of hits)
       setFront(h.pr, {
         status: 'discarded',
         posted_at: `${new Date().toISOString()} (dismissed: PR ${h.state.toLowerCase()})`,
       });
-  return { checked: live.length, hits, skipped: null };
+  return { checked: live.length, hits, heads, skipped: null };
 }
 
 function cmdDismissMerged(args) {
@@ -545,6 +655,61 @@ function cmdUndo(args) {
 }
 
 
+/**
+ * A prompt for handing the fixups to another session.
+ *
+ * It carries the facts that session cannot cheaply rediscover, which is the
+ * branch, the draft's path on disk, and how far the PR has moved since the review
+ * was written. Everything else it should read from the draft itself rather than
+ * from a summary that can drift.
+ */
+function cmdHandoff(args) {
+  const pr = Number(args[0]);
+  if (!pr) fail('usage: review handoff <PR>');
+  const rec = readRecord(pr);
+  if (!rec) fail(`no record for #${pr}`);
+  const f = rec.front;
+  const drift = reviewedAt(f);
+  const moved = (f.current_head || '').trim() && f.current_head !== f.head_sha;
+
+  const text = [
+    `Apply the review findings for nrwl/nx PR #${pr}.`,
+    '',
+    `Title:   ${f.title || '(untitled)'}`,
+    `Branch:  ${f.branch || '(unknown, check the PR)'}`,
+    `URL:     ${f.url || `https://github.com/nrwl/nx/pull/${pr}`}`,
+    `Draft:   ${recordPath(pr)}`,
+    `Verdict: ${f.verdict || '(none)'} (attempt ${f.attempt || 0})`,
+    `Reviewed at ${(f.head_sha || '').slice(0, 12) || '(unknown)'}${
+      moved ? `, PR now at ${(f.current_head || '').slice(0, 12)}, ${drift}` : ''
+    }`,
+    '',
+    'Read the draft file in full before changing anything. It is the source of',
+    'truth and this message is only a pointer. Work the Critical findings first,',
+    'then Important. Each finding carries NET-NEW, TRIGGER and FIX lines, and the',
+    'FIX is a sketch rather than a patch, so verify it still applies.',
+    '',
+    moved
+      ? 'The PR has moved since the review. Check each finding still reproduces at\nthe current head before fixing it, and say so if one is already resolved.'
+      : 'The PR has not moved since the review, so the findings should apply as written.',
+    '',
+    'Do not re-litigate a finding\'s tier. If you disagree with one, fix what is',
+    'real, and say plainly which you are not acting on and why. Leave the draft',
+    'file alone; it is the review record and a later pass diffs against it.',
+    '',
+    'Do not post anything to GitHub.',
+  ].join('\n');
+
+  const { spawnSync } = require('child_process');
+  const cp = spawnSync('pbcopy', { input: text, encoding: 'utf-8' });
+  process.stdout.write(text + '\n');
+  process.stderr.write(
+    cp.status === 0
+      ? `\n(copied to the clipboard, ${text.length} chars)\n`
+      : '\n(pbcopy unavailable, printed above)\n'
+  );
+}
+
 function cmdReview(args = []) {
   if (!process.stdin.isTTY) {
     fail(
@@ -595,6 +760,8 @@ function cmdReview(args = []) {
 }
 
 module.exports = {
+  reviewedAt,
+  headDelta,
   STATE_DIR,
   STATUSES: STATES,
   // Extra list columns the shared TUI renders for this store. Triage exports none
@@ -604,11 +771,13 @@ module.exports = {
   // so the focus-or-resume decision lives here and is testable, not in a renderer.
   ACTIONS: [
     { key: 'R', cmd: 'resume', label: 'resume review session' },
+    { key: 'c', cmd: 'handoff', label: 'copy fixup prompt' },
   ],
   DEFAULT_PENDING_ONLY: true,
   COLUMNS: [
     { key: 'verdict', width: 14 },
     { key: 'author', width: 13 },
+    { key: 'reviewed', width: 27 },
   ],
   listRecords: listRecordsForTui,
   readRecord: readRecordForTui,
@@ -635,6 +804,7 @@ const table = {
   undo: cmdUndo,
   link: cmdLink,
   resume: cmdResume,
+  handoff: cmdHandoff,
 };
 // Requiring this file (the TUI does, as its store) must not run a command.
 if (require.main !== module) {
@@ -651,6 +821,7 @@ if (require.main !== module) {
       `  undo <PR>...                                   restore the last journalled frontmatter change\n` +
       `  link <PR> --from-agent <name>                  record pane/session/pid so the review can be reopened\n` +
       `  resume <PR>                                    focus the live session, or resume it in a new tab\n` +
+      `  handoff <PR>                                   copy a fixup handoff prompt to the clipboard\n` +
       `Records live in ${STATE_DIR} (REVIEW_DIR). Journal: ${JOURNAL}.\n` +
       `Terminal statuses are ${[...TERMINAL].join(' and ')}; everything else is live.\n`
   );
