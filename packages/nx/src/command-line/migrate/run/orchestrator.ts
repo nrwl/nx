@@ -1345,6 +1345,7 @@ function applyReconcileStepAction(
     };
   }
   const step = candidates[0];
+  const landed = endangeredLandedEntry(root, state, step);
   if (
     (action === 'retry' || action === 'retry-clean') &&
     rearmCapReached(step)
@@ -1352,8 +1353,20 @@ function applyReconcileStepAction(
     return {
       kind: 'error',
       reason: `Cannot apply action '${action}' to step '${step.id}': ${rearmCapLine(
-        step
+        step,
+        landed !== null
       )}`,
+    };
+  }
+  // A step whose commit already landed is not given up or skipped: the run
+  // would record as unresolved or skipped a migration whose result sits in
+  // history. Adopt keeps the commit.
+  if (landed && (action === 'skip' || action === 'unresolved')) {
+    return {
+      kind: 'error',
+      reason: `Cannot apply action '${action}' to step '${
+        step.id
+      }': ${landedCommitPhrase(landed)}. Use 'adopt' to keep it.`,
     };
   }
   // A retry-clean the dispense would not have offered must be refused here
@@ -1361,10 +1374,11 @@ function applyReconcileStepAction(
   // and destroy prior steps' work.
   if (action === 'retry-clean') {
     const head = getLatestCommitSha(root);
-    const fallback =
-      step.status === 'died'
-        ? `Use 'adopt', 'skip' or 'unresolved' instead.`
-        : `Use 'retry', 'adopt', 'skip' or 'unresolved' instead.`;
+    const fallback = `Use ${actionList([
+      ...(step.status === 'died' ? [] : ['retry']),
+      'adopt',
+      ...(landed ? [] : ['skip', 'unresolved']),
+    ])} instead.`;
     if (!canOfferCleanRetry(root, state, step, head)) {
       return {
         kind: 'error',
@@ -1438,6 +1452,13 @@ function applyReconcileStepAction(
   return { kind: 'ok', state: applied.state, targetStep: step, resetTree };
 }
 
+function actionList(actions: string[]): string {
+  const quoted = actions.map((a) => `'${a}'`);
+  return quoted.length === 1
+    ? quoted[0]
+    : `${quoted.slice(0, -1).join(', ')} or ${quoted[quoted.length - 1]}`;
+}
+
 // Whether giving up on the step resets its tree: only a generator that never
 // completed can have left nothing worth keeping, and only a clean-retry
 // restore point makes the reset safe.
@@ -1479,14 +1500,19 @@ async function stepActionSideEffects(
   switch (action) {
     case 'adopt':
       // A died step's adopt shares the worker's commit request, which may
-      // have landed before the death; a failed step's is a new one.
+      // have landed before the death. Once the ledger records that commit the
+      // same request would read its answer back and land the entry twice, so
+      // what changed since goes out under an adopt request of its own, as a
+      // failed step's always does.
       return state.createCommits
         ? commitForStep(
             root,
             dir,
             state,
             step,
-            step.status === 'failed' ? 'adopt' : undefined
+            step.status === 'failed' || endangeredLandedEntry(root, state, step)
+              ? 'adopt'
+              : undefined
           )
         : {
             entry: null,
@@ -1794,6 +1820,7 @@ function emitRetryFailed(
   const head = getLatestCommitSha(root);
   const tree = dirtyTreeSummary(root);
   const cleanRetry = canOfferCleanRetry(root, state, step, head);
+  const landed = endangeredLandedEntry(root, state, step);
   // A failure recorded before the generator marker can still have written to
   // the tree (a direct fs or exec side effect, or a crash mid-flush); a
   // marker means only the handed-back half (a prompt or a validation pass)
@@ -1810,7 +1837,7 @@ function emitRetryFailed(
     `  current HEAD: ${head ?? '(unknown)'}`,
     `  working tree: ${tree === null ? '(unknown)' : tree ? `\n${tree}` : '(clean)'}`,
     ``,
-    retryBudgetLine(step),
+    retryBudgetLine(step, landed !== null),
     ``,
     `Decide how to proceed and re-run reconcile with one of:`,
     ...(capReached
@@ -1831,14 +1858,26 @@ function emitRetryFailed(
     );
   }
   lines.push(
-    `  adopt: the migration was applied by hand; keep the current working-tree state as its result, then run: ${reconcileCommand(
-      root,
-      runId,
-      'adopt'
-    )}`,
-    `  skip:  ${reconcileCommand(root, runId, 'skip')}`,
-    unresolvedOptionLine(root, runId, state, step, pending && cleanRetry)
+    landed
+      ? `  adopt: keep the landed commit${
+          landed.sha ? ` ${landed.sha}` : ''
+        } and the current working-tree state as the migration's result, then run: ${reconcileCommand(
+          root,
+          runId,
+          'adopt'
+        )}`
+      : `  adopt: the migration was applied by hand; keep the current working-tree state as its result, then run: ${reconcileCommand(
+          root,
+          runId,
+          'adopt'
+        )}`
   );
+  if (!landed) {
+    lines.push(
+      `  skip:  ${reconcileCommand(root, runId, 'skip')}`,
+      unresolvedOptionLine(root, runId, state, step, pending && cleanRetry)
+    );
+  }
   if (pending) {
     lines.push(UNVERIFIABLE_WRITES_LINE);
   }
@@ -1870,21 +1909,27 @@ function rearmCapReached(step: MigrateStep): boolean {
 
 // Opens every failed and died dispense with how many retries are left and
 // what a retry is for, so the choice is made against the budget.
-function retryBudgetLine(step: MigrateStep): string {
-  if (rearmCapReached(step)) return rearmCapLine(step);
+// `landed`: the step's commit already sits in history, so giving up is not
+// offered and adopt is the unattended choice.
+function retryBudgetLine(step: MigrateStep, landed: boolean): string {
+  if (rearmCapReached(step)) return rearmCapLine(step, landed);
   const left = REARM_ESCALATION_CAP - (step.attempt - 1);
   return `Retries left for this migration: ${left}. Diagnose the failure first and retry only with a plausible fix in hand; ${
     left === 1
       ? 'this is the last one, so ask the user before using it'
       : 'ask the user before using the last one'
-  }. When no user can answer, give the step up with unresolved and continue.`;
+  }. When no user can answer, ${
+    landed ? 'adopt the landed commit' : 'give the step up with unresolved'
+  } and continue.`;
 }
 
 // Opens a capped dispense and is the reason a retry past the cap is refused.
-function rearmCapLine(step: MigrateStep): string {
+function rearmCapLine(step: MigrateStep, landed: boolean): string {
   return `This migration has already been retried ${
     step.attempt - 1
-  } times without completing, and no further retry is accepted. Choose adopt, skip or unresolved, or ask the user how to proceed.`;
+  } times without completing, and no further retry is accepted. Choose ${
+    landed ? 'adopt' : 'adopt, skip or unresolved'
+  }, or ask the user how to proceed.`;
 }
 
 // Whether the step's generator half may still have to run: it exists and no
@@ -1983,10 +2028,8 @@ function endangeredLandedEntry(
   return endangered;
 }
 
-// Explains why retry-clean is withheld for a failed or died step; feeds the
-// death dispense and a rejected --step-action=retry-clean.
-// The give-up option, worded for what happens to the tree: the reset the
-// acceptance will verify, a partial commit, or the tree left as it stands.
+// The give-up option, worded for what happens to the tree: a verified reset,
+// a partial commit, or the tree left as it stands.
 function unresolvedOptionLine(
   root: string,
   runId: string,
@@ -2009,6 +2052,14 @@ function unresolvedOptionLine(
   return `  unresolved: give up on this migration, leaving the tree as it stands, and move on. Then run: ${command}. ${recorded}`;
 }
 
+function landedCommitPhrase(entry: MigrateCommitLedgerEntry): string {
+  return entry.sha
+    ? `this migration's changes already landed in commit ${entry.sha}`
+    : `this migration's changes already landed in a commit`;
+}
+
+// Explains why retry-clean is withheld for a failed or died step; feeds the
+// death dispense and a rejected --step-action=retry-clean.
 function cleanRetryUnavailableReason(
   root: string,
   state: MigrateRunState,
@@ -2017,9 +2068,7 @@ function cleanRetryUnavailableReason(
 ): string {
   const endangered = endangeredLandedEntry(root, state, step);
   if (endangered) {
-    return endangered.sha
-      ? `this migration's changes already landed in commit ${endangered.sha}, which a reset would discard.`
-      : `this migration's changes already landed in a commit, which a reset would discard.`;
+    return `${landedCommitPhrase(endangered)}, which a reset would discard.`;
   }
   if (step.gitRefBefore && head !== step.gitRefBefore) {
     return `HEAD is at ${head ?? '(unreadable)'} rather than the ${
@@ -2091,6 +2140,7 @@ function emitDied(
   const head = getLatestCommitSha(root);
   const tree = dirtyTreeSummary(root);
   const cleanRetry = canOfferCleanRetry(root, state, step, head);
+  const landed = endangeredLandedEntry(root, state, step) !== null;
   const resume = !generatorPending(step);
   const capReached = rearmCapReached(step);
   const lines = [
@@ -2099,7 +2149,7 @@ function emitDied(
     `  current HEAD: ${head ?? '(unknown)'}`,
     `  working tree: ${tree === null ? '(unknown)' : tree ? `\n${tree}` : '(clean)'}`,
     ``,
-    retryBudgetLine(step),
+    retryBudgetLine(step, landed),
     ``,
   ];
   const options: string[] = [];
@@ -2139,14 +2189,19 @@ function emitDied(
       root,
       runId,
       'adopt'
-    )}`,
-    `  skip: leave the tree as it stands and move on without this migration, then run: ${reconcileCommand(
-      root,
-      runId,
-      'skip'
-    )}`,
-    unresolvedOptionLine(root, runId, state, step, !resume && cleanRetry)
+    )}`
   );
+  // A landed commit is kept, not skipped or given up (see the acceptance).
+  if (!landed) {
+    options.push(
+      `  skip: leave the tree as it stands and move on without this migration, then run: ${reconcileCommand(
+        root,
+        runId,
+        'skip'
+      )}`,
+      unresolvedOptionLine(root, runId, state, step, !resume && cleanRetry)
+    );
+  }
   lines.push(`Choose exactly one:`);
   lines.push(...options);
   if (!resume) {
