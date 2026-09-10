@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt;
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
 
 use napi::bindgen_prelude::{FromNapiValue, ToNapiValue, TypeName, ValidateNapiValue, ValueType};
@@ -120,5 +120,54 @@ impl ToNapiValue for SharedStr {
             }
         });
         Ok(handle)
+    }
+}
+
+/// A string map whose property names also use SharedStr's handle cache.
+/// napi's generic HashMap conversion creates a JS key from its bytes for
+/// every entry, bypassing SharedStr::to_napi_value for property names.
+#[derive(Debug, Default)]
+pub struct SharedStrMap(HashMap<SharedStr, SharedStr>);
+
+impl From<HashMap<SharedStr, SharedStr>> for SharedStrMap {
+    fn from(value: HashMap<SharedStr, SharedStr>) -> Self {
+        Self(value)
+    }
+}
+
+impl Deref for SharedStrMap {
+    type Target = HashMap<SharedStr, SharedStr>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for SharedStrMap {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl FromNapiValue for SharedStrMap {
+    unsafe fn from_napi_value(env: sys::napi_env, val: sys::napi_value) -> napi::Result<Self> {
+        Ok(Self(unsafe { HashMap::from_napi_value(env, val) }?))
+    }
+}
+
+impl ToNapiValue for SharedStrMap {
+    unsafe fn to_napi_value(env: sys::napi_env, val: Self) -> napi::Result<sys::napi_value> {
+        let napi_env = napi::Env::from(env);
+        let object = napi::bindgen_prelude::Object::new(&napi_env)?;
+        let object_raw = unsafe { napi::bindgen_prelude::Object::to_napi_value(env, object) }?;
+        for (key, value) in val.0 {
+            // Keys and values belong to the same native-call handle scope.
+            // The cache retains each Arc until conversion ends, preventing
+            // address reuse while a cached JS handle still refers to it.
+            let key = unsafe { SharedStr::to_napi_value(env, key) }?;
+            let value = unsafe { SharedStr::to_napi_value(env, value) }?;
+            napi::check_status!(unsafe { sys::napi_set_property(env, object_raw, key, value) })?;
+        }
+        Ok(object_raw)
     }
 }
