@@ -252,7 +252,6 @@ describe('migrate commit broker', () => {
         root,
         expect.anything()
       );
-      // The parent's output, printed here.
       expect(logger.info).toHaveBeenCalledWith(
         pc.dim('- Committed @nx/js:gen.')
       );
