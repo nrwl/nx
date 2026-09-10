@@ -876,6 +876,27 @@ mod tests {
         handle
     }
 
+    /// Runs `acquire_files` where a regression to an unbounded wait fails the
+    /// test instead of hanging it.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn acquire_within(
+        ceiling: Duration,
+        root: &TempDir,
+        cache: &TempDir,
+        trust_archive: bool,
+        wait_for: Duration,
+    ) -> Files {
+        let (done, on_done) = std::sync::mpsc::channel();
+        let root = root.path().to_path_buf();
+        let cache_dir = as_string(cache);
+        std::thread::spawn(move || {
+            let _ = done.send(acquire_files(&root, &cache_dir, trust_archive, wait_for));
+        });
+        on_done
+            .recv_timeout(ceiling)
+            .expect("acquire_files did not return within the ceiling")
+    }
+
     #[test]
     #[cfg(not(target_arch = "wasm32"))]
     fn walk_wait_from_parses_caps_and_defaults() {
@@ -904,10 +925,11 @@ mod tests {
         let cache = TempDir::new().unwrap();
         let _holder = hold_lock(&cache);
 
-        let started = std::time::Instant::now();
-        let files = acquire_files(
-            temp.path(),
-            &as_string(&cache),
+        let started = Instant::now();
+        let files = acquire_within(
+            Duration::from_secs(30),
+            &temp,
+            &cache,
             false,
             Duration::from_millis(200),
         );
@@ -920,7 +942,6 @@ mod tests {
         // It waited the timeout out and then walked around the holder, which
         // still holds; it did not take the lock itself.
         assert!(started.elapsed() >= Duration::from_millis(200));
-        assert!(started.elapsed() < Duration::from_secs(30));
         let lock_path = cache
             .path()
             .join(NX_FILES_LOCK)
@@ -942,14 +963,13 @@ mod tests {
         );
         let _holder = hold_lock(&cache);
 
-        let started = Instant::now();
-        let files = acquire_files(
-            temp.path(),
-            &as_string(&cache),
+        let files = acquire_within(
+            Duration::from_secs(30),
+            &temp,
+            &cache,
             true,
             Duration::from_millis(200),
         );
-        assert!(started.elapsed() < Duration::from_secs(30));
 
         let names: Vec<String> = files
             .into_iter()
