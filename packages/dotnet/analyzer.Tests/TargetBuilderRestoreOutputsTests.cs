@@ -70,8 +70,11 @@ public class TargetBuilderRestoreOutputsTests
         var outputs = BuildTargets(isExe: false, properties)["build"].Outputs!;
 
         Assert.Contains("{workspaceRoot}/dist/obj/MyProj/**/*", outputs);
-        Assert.Contains("!{workspaceRoot}/dist/obj/MyProj/**/project.assets.json", outputs);
-        Assert.Contains("!{workspaceRoot}/dist/obj/MyProj/**/*.nuget.g.props", outputs);
+        foreach (var exclusion in RestoreOnlyExclusions)
+        {
+            Assert.Contains(exclusion.Replace("{projectRoot}/obj", "{workspaceRoot}/dist/obj/MyProj"), outputs);
+        }
+
         Assert.DoesNotContain("!{projectRoot}/obj/**/project.assets.json", outputs);
     }
 }
