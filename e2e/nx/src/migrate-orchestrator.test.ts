@@ -1343,9 +1343,10 @@ record({
 });
 const master = args.indexOf('--append-system-prompt');
 if (master === -1) {
-  const handoffPath = args[args.length - 1].match(
-    /<handoff_path>\\n?([\\s\\S]*?)\\n?<\\/handoff_path>/
-  )[1];
+  const instructionsPath = args[args.length - 1].match(/in the file (\\S+) \\(/)[1];
+  const handoffPath = fs
+    .readFileSync(instructionsPath, 'utf8')
+    .match(/<handoff_path>\\n?([\\s\\S]*?)\\n?<\\/handoff_path>/)[1];
   fs.writeFileSync(
     handoffPath.trim(),
     JSON.stringify({ status: 'success', summary: 'applied by fake agent' })
@@ -1938,7 +1939,7 @@ process.exit(status ?? 1);
       const starts = readFakeAgentLog(logFile).filter((entry) => entry.args);
       expect(starts).toHaveLength(2);
       for (const start of starts) {
-        expect(start.args).toContain('--system-prompt');
+        expect(start.args).toContain('--system-prompt-file');
         expect(start.args).not.toContain('--append-system-prompt');
       }
       for (const dir of runDirs()) {
