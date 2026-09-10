@@ -131,9 +131,9 @@ impl From<HashInputsBuilder> for HashInputs {
 #[derive(Debug)]
 pub struct HashDetails {
     pub value: String,
-    // Keys and values are shared Arcs: the same instruction key and hash
-    // value appear in the details of every task that depends on the input,
-    // so per-map owned strings would duplicate them once per task.
+    // Keys are indices into a shared table; values are shared Arcs. The same
+    // input appears in many tasks, so retain the compact assembly entries
+    // until conversion instead of materializing per-task key/value pairs.
     #[napi(ts_type = "Record<string, string>")]
     pub details: SharedStrMap,
     /// Structured inputs used for hashing (file patterns, env vars, etc.)
@@ -180,7 +180,7 @@ fn instruction_key_ranks(keys: &[SharedStr]) -> (Vec<u32>, bool) {
 
 fn assemble_ranked_hash(
     mut entries: Vec<(u32, SharedStr)>,
-    keys: &[SharedStr],
+    keys: &Arc<[SharedStr]>,
     ranks: &[u32],
     duplicate_keys: bool,
     inputs: HashInputsBuilder,
@@ -197,6 +197,9 @@ fn assemble_ranked_hash(
                 false
             }
         });
+        // The result now keeps this buffer. Do not retain slots discarded by
+        // duplicate display-key resolution (the old materialization shrank it).
+        entries.shrink_to_fit();
     } else {
         entries.sort_unstable_by_key(|(id, _)| ranks[*id as usize]);
     }
@@ -207,12 +210,7 @@ fn assemble_ranked_hash(
     }
     HashDetails {
         value: hasher.digest().to_string(),
-        details: SharedStrMap::from_unique_entries(
-            entries
-                .into_iter()
-                .map(|(id, value)| (keys[id as usize].clone(), value))
-                .collect(),
-        ),
+        details: SharedStrMap::from_indexed_entries(Arc::clone(keys), entries),
         inputs: inputs.into(),
     }
 }
@@ -378,7 +376,7 @@ impl TaskHasher {
         // invocation, so its value lives in a per-id slot: a filled OnceCell
         // is an atomic load, and it lets the loop skip hash_instruction
         // entirely when inputs are not collected.
-        let instruction_keys: Vec<SharedStr> = (0..pool.len() as u32)
+        let instruction_keys: Arc<[SharedStr]> = (0..pool.len() as u32)
             .map(|id| SharedStr::from(pool.key(id)))
             .collect();
         let (key_ranks, duplicate_keys) = instruction_key_ranks(&instruction_keys);
@@ -786,7 +784,7 @@ mod tests {
             vec!["z", "a", "\u{e000}", "🤖"],
             vec!["z", "a", "\u{e000}", "🤖", "a", "z"],
         ] {
-            let keys: Vec<SharedStr> = names.into_iter().map(|s| s.to_string().into()).collect();
+            let keys: Arc<[SharedStr]> = names.into_iter().map(|s| s.to_string().into()).collect();
             let (ranks, duplicate_keys) = instruction_key_ranks(&keys);
             for offset in 0..keys.len() {
                 for reverse in [false, true] {
@@ -818,8 +816,38 @@ mod tests {
                 }
             }
         }
-        let empty = assemble_ranked_hash(vec![], &[], &[], false, HashInputsBuilder::default());
+        let empty = assemble_ranked_hash(
+            vec![],
+            &Arc::from([]),
+            &[],
+            false,
+            HashInputsBuilder::default(),
+        );
         assert_eq!(empty.value, hash(b""));
+    }
+
+    #[test]
+    fn duplicate_detail_keys_do_not_retain_discarded_entry_capacity() {
+        let key: SharedStr = "duplicate".to_string().into();
+        let value: SharedStr = "shared-value".to_string().into();
+        let keys: Arc<[SharedStr]> = vec![key; 10_000].into();
+        let (ranks, duplicate_keys) = instruction_key_ranks(&keys);
+        let entries = (0..keys.len() as u32)
+            .map(|id| (id, value.clone()))
+            .collect();
+        let result = assemble_ranked_hash(
+            entries,
+            &keys,
+            &ranks,
+            duplicate_keys,
+            HashInputsBuilder::default(),
+        );
+        assert_eq!(result.value, hash(value.as_bytes()));
+        assert!(
+            result.details.entry_capacity() <= 2,
+            "One detail retained {} entry slots",
+            result.details.entry_capacity()
+        );
     }
 
     #[test]

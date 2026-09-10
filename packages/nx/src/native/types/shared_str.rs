@@ -103,6 +103,14 @@ impl FromNapiValue for SharedStr {
 
 impl ToNapiValue for SharedStr {
     unsafe fn to_napi_value(env: sys::napi_env, val: Self) -> napi::Result<sys::napi_value> {
+        unsafe { Self::to_napi_value_ref(env, &val) }
+    }
+}
+
+impl SharedStr {
+    // Borrow pooled keys during conversion instead of incrementing/decrementing
+    // their Arc for every task entry. Cache misses still retain the Arc.
+    unsafe fn to_napi_value_ref(env: sys::napi_env, val: &Self) -> napi::Result<sys::napi_value> {
         let address = Arc::as_ptr(&val.0) as *const () as usize;
         let cached = HANDLE_CACHE.with(|cache| {
             cache
@@ -126,19 +134,48 @@ impl ToNapiValue for SharedStr {
 /// A JS object assembled from unique string entries. Keeping the entries
 /// contiguous avoids rebuilding a native hash table just to enumerate it at
 /// the N-API boundary. Both keys and values use SharedStr's handle cache.
-#[derive(Debug, Default)]
-pub struct SharedStrMap(Vec<(SharedStr, SharedStr)>);
+#[derive(Debug)]
+pub struct SharedStrMap(SharedStrMapEntries);
+
+#[derive(Debug)]
+enum SharedStrMapEntries {
+    Owned(Vec<(SharedStr, SharedStr)>),
+    Indexed {
+        keys: Arc<[SharedStr]>,
+        entries: Vec<(u32, SharedStr)>,
+    },
+}
+
+impl Default for SharedStrMap {
+    fn default() -> Self {
+        Self(SharedStrMapEntries::Owned(Vec::new()))
+    }
+}
 
 impl SharedStrMap {
-    /// Callers must supply unique keys, with duplicate resolution already done.
-    pub(crate) fn from_unique_entries(entries: Vec<(SharedStr, SharedStr)>) -> Self {
-        Self(entries)
+    #[cfg(test)]
+    pub(crate) fn entry_capacity(&self) -> usize {
+        match &self.0 {
+            SharedStrMapEntries::Owned(entries) => entries.capacity(),
+            SharedStrMapEntries::Indexed { entries, .. } => entries.capacity(),
+        }
+    }
+
+    /// Keep the assembly buffer and share its key table across tasks. A u32 key
+    /// index replaces each fat Arc<str>, avoiding per-entry key clones and a
+    /// second, larger allocation just before converting the results to JS.
+    /// Callers must resolve duplicate keys before constructing the map.
+    pub(crate) fn from_indexed_entries(
+        keys: Arc<[SharedStr]>,
+        entries: Vec<(u32, SharedStr)>,
+    ) -> Self {
+        Self(SharedStrMapEntries::Indexed { keys, entries })
     }
 }
 
 impl From<HashMap<SharedStr, SharedStr>> for SharedStrMap {
     fn from(value: HashMap<SharedStr, SharedStr>) -> Self {
-        Self(value.into_iter().collect())
+        Self(SharedStrMapEntries::Owned(value.into_iter().collect()))
     }
 }
 
@@ -154,13 +191,25 @@ impl ToNapiValue for SharedStrMap {
         let napi_env = napi::Env::from(env);
         let object = napi::bindgen_prelude::Object::new(&napi_env)?;
         let object_raw = unsafe { napi::bindgen_prelude::Object::to_napi_value(env, object) }?;
-        for (key, value) in val.0 {
-            // Keys and values belong to the same native-call handle scope.
-            // The cache retains each Arc until conversion ends, preventing
-            // address reuse while a cached JS handle still refers to it.
-            let key = unsafe { SharedStr::to_napi_value(env, key) }?;
+        let set_entry = |key: &SharedStr, value: SharedStr| -> napi::Result<()> {
+            // Keep ordinary Set semantics, including inherited setters. Bulk
+            // DefineProperty would change observable behavior for those keys.
+            let key = unsafe { SharedStr::to_napi_value_ref(env, key) }?;
             let value = unsafe { SharedStr::to_napi_value(env, value) }?;
             napi::check_status!(unsafe { sys::napi_set_property(env, object_raw, key, value) })?;
+            Ok(())
+        };
+        match val.0 {
+            SharedStrMapEntries::Owned(entries) => {
+                for (key, value) in entries {
+                    set_entry(&key, value)?;
+                }
+            }
+            SharedStrMapEntries::Indexed { keys, entries } => {
+                for (id, value) in entries {
+                    set_entry(&keys[id as usize], value)?;
+                }
+            }
         }
         Ok(object_raw)
     }

@@ -163,6 +163,59 @@ describe('task hash result conversion and assembly', () => {
     }
   );
 
+  it('recovers after a setter throws during result conversion', () => {
+    const { ids, hash } = fixture();
+    const expected = hash(ids, false);
+    const key = 'env:SELECTED_ENV';
+    Object.defineProperty(Object.prototype, key, {
+      configurable: true,
+      set() {
+        throw new Error('fixture setter failure');
+      },
+    });
+    try {
+      expect(() => hash(ids, false)).toThrow('fixture setter failure');
+    } finally {
+      delete Object.prototype[key];
+    }
+    expect(hash(ids, false)).toEqual(expected);
+  });
+
+  it('preserves inherited setters and independent detail objects', () => {
+    const { ids, hash } = fixture();
+    const expected = hash(ids, false);
+    const key = 'env:SELECTED_ENV';
+    const seen: string[] = [];
+    Object.defineProperty(Object.prototype, key, {
+      configurable: true,
+      set(value: string) {
+        seen.push(value);
+        Object.defineProperty(this, key, {
+          value,
+          configurable: true,
+          enumerable: true,
+          writable: true,
+        });
+      },
+    });
+    let actual: ReturnType<typeof hash>;
+    try {
+      actual = hash(ids, false);
+    } finally {
+      delete Object.prototype[key];
+    }
+    expect(seen.sort()).toEqual(
+      ids.map((id) => expected[id].details[key]).sort()
+    );
+    expect(actual).toEqual(expected);
+    for (const id of ids.slice(1)) {
+      expect(actual[id].details).not.toBe(actual[ids[0]].details);
+    }
+    actual[ids[0]].details[key] = 'mutated';
+    for (const id of ids.slice(1)) expect(actual[id]).toEqual(expected[id]);
+    expect(hash(ids, false)).toEqual(expected);
+  });
+
   it('preserves empty selections and recovers after missing task environments', () => {
     const { ids, hash } = fixture();
     expect(hash([], false)).toEqual({});
