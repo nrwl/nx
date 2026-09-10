@@ -45,7 +45,6 @@ import {
   multiGlobWithWorkspaceContext,
   refreshWorkspaceContext,
   resetWorkspaceContext,
-  startWorkspaceContext,
 } from './workspace-context';
 
 describe('workspace-context /virtual short-circuit', () => {
@@ -157,22 +156,12 @@ describe('waiting for the walk', () => {
     expect(mockGlob).toHaveBeenCalledTimes(1);
   });
 
-  it('starting the context early begins the wait once and later reads reuse it', async () => {
-    startWorkspaceContext('/some/root');
+  it('later reads reuse the first wait', async () => {
     await globWithWorkspaceContext('/some/root', ['**/*.ts']);
     await multiGlobWithWorkspaceContext('/some/root', ['**/*.ts']);
 
     expect(cjsNative.WorkspaceContext).toHaveBeenCalledTimes(1);
     expect(mockReady).toHaveBeenCalledTimes(1);
-  });
-
-  it('does not start a context in a client that will ask the daemon', () => {
-    mockEnabled.mockReturnValue(true);
-
-    startWorkspaceContext('/some/root');
-
-    expect(cjsNative.WorkspaceContext).not.toHaveBeenCalled();
-    expect(mockReady).not.toHaveBeenCalled();
   });
 });
 

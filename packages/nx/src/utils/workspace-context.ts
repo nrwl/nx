@@ -191,22 +191,6 @@ async function ensureFilesReady(workspaceRoot: string) {
 }
 
 /**
- * Starts the walk without waiting for it. A plugin host calls this before it
- * spawns workers, so the walk overlaps their startup and the readers above
- * find the files ready instead of waiting for them.
- */
-export function startWorkspaceContext(workspaceRoot: string) {
-  if (
-    workspaceRoot === '/virtual' ||
-    (!isOnDaemon() && daemonClient.enabled())
-  ) {
-    return;
-  }
-  ensureContextAvailable(workspaceRoot);
-  filesReady ??= workspaceContext.ready?.() ?? Promise.resolve();
-}
-
-/**
  * Re-walks the host's files so the archive its plugin workers load includes
  * writes made since the last walk, such as a migration flushing to disk. The
  * walk is selective and shared through the files lock; one still running is

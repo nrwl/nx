@@ -8,7 +8,6 @@ import {
 } from '../../config/nx-json';
 import { hashObject } from '../../hasher/file-hasher';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { startWorkspaceContext } from '../../utils/workspace-context';
 import { loadNxPlugin } from './in-process-loader';
 import { loadIsolatedNxPlugin } from './isolation';
 import { resetResolvePluginCache } from './resolve-plugin';
@@ -205,11 +204,6 @@ export async function getPluginsSeparated(
   // down the old workers and force a fresh load.
   cleanupSpecifiedPlugins?.();
   pendingPluginsPromise = undefined;
-
-  // Resolving a workspace-local plugin below needs the workspace files. Start
-  // the walk now so it overlaps the workers' startup rather than running while
-  // they wait on this process for their load message.
-  startWorkspaceContext(root);
 
   const loadPromise = (async (): Promise<SeparatedPlugins> => {
     const results = await Promise.allSettled([
