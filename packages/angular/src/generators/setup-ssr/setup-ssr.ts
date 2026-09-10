@@ -13,7 +13,7 @@ import {
   generateTsConfigServerJsonForBrowserBuilder,
   normalizeOptions,
   setRouterInitialNavigation,
-  setServerTsConfigOptionsForApplicationBuilder,
+  setServerTsConfigOptionsForSingleProgramBuild,
   updateProjectConfigForApplicationBuilder,
   updateProjectConfigForBrowserBuilder,
   validateOptions,
@@ -26,11 +26,7 @@ export async function setupSsr(tree: Tree, schema: Schema) {
   const options = await normalizeOptions(tree, schema);
 
   if (!schema.skipPackageJson) {
-    addDependencies(
-      tree,
-      options.isUsingApplicationBuilder,
-      options.isUsingWebpackBuilder
-    );
+    addDependencies(tree, options);
   }
   generateSSRFiles(tree, options);
 
@@ -44,9 +40,15 @@ export async function setupSsr(tree: Tree, schema: Schema) {
 
   if (options.isUsingApplicationBuilder) {
     updateProjectConfigForApplicationBuilder(tree, options);
-    setServerTsConfigOptionsForApplicationBuilder(tree, options);
   } else {
     updateProjectConfigForBrowserBuilder(tree, options);
+  }
+
+  // rspack compiles the browser and the server bundles from the build tsconfig,
+  // so the separate tsconfig.server.json the server builder needs is dead weight
+  if (options.isUsingApplicationBuilder || options.isRspack) {
+    setServerTsConfigOptionsForSingleProgramBuild(tree, options);
+  } else {
     generateTsConfigServerJsonForBrowserBuilder(tree, options);
   }
 

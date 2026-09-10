@@ -7,8 +7,13 @@ import {
   isForwardableSourceMap,
 } from './inline-source-map';
 
+export interface AngularPartialTransformLoaderOptions {
+  /** Absolute path of the engine manifest virtual module. */
+  engineManifestPath: string;
+}
+
 export default function loader(
-  this: LoaderContext<unknown>,
+  this: LoaderContext<AngularPartialTransformLoaderOptions>,
   content: string,
   inputMap?: string | RawSourceMap
 ) {
@@ -45,6 +50,14 @@ export default function loader(
       request.startsWith('data:text/javascript') &&
       request.includes('__module_federation_bundler_runtime__')
     ) {
+      callback(null, content, chainMap);
+      return;
+    }
+
+    // The engine manifest virtual module mentions '@angular' but needs no
+    // transform, and it has no on-disk file for the transformer worker to
+    // read.
+    if (request === this.getOptions().engineManifestPath) {
       callback(null, content, chainMap);
       return;
     }
