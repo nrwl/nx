@@ -851,7 +851,7 @@ describe('applyStepEvent', () => {
       }
     );
 
-    it('adopt from failed records that the tree was applied by hand, keeping the failure outcome', () => {
+    it('adopt from failed records that the tree as it stood was taken, keeping the failure outcome', () => {
       const state = stateWithStep({
         status: 'failed',
         outcome: { summary: 'generator threw', fileChanges: ['a.ts'] },
@@ -868,7 +868,7 @@ describe('applyStepEvent', () => {
       if (result.kind === 'ok') {
         expect(result.state.steps[0].outcome).toEqual({
           fileChanges: ['a.ts'],
-          summary: expect.stringContaining('applied by hand'),
+          summary: expect.stringContaining('Adopted after the attempt failed'),
         });
       }
     });

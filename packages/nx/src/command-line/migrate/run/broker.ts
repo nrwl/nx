@@ -49,9 +49,9 @@ const CHILD_POLL_INTERVAL_MS = 250;
 // the adopt of a worker that died mid-commit) reads the first answer instead
 // of landing twice. Commits share one seam: a worker's, the fold's and a
 // died step's adopt are the same operation on the same tree, and the worker
-// may have landed it before dying. A commit made after a failure is not: the
-// worker's own request ended in the failed install the step recorded, so
-// adopting or giving up then owes a new install and commit.
+// may have landed it before dying. Once the ledger records that commit, or a
+// failure recorded none, an adopt or give-up commit is a new operation over
+// what the tree holds now, so it asks under its own action.
 export type BrokerRequestKind =
   | 'commit'
   // A worker's install: after its generator, or a retry's from the baseline.

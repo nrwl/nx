@@ -200,8 +200,8 @@ function applyStepAction(
         // offered under the same guard as for a death.
         return commit(state, index, cleanRearm(state, step));
       case 'adopt':
-        // The migration was applied by hand after its attempt failed; the
-        // tree is the result, as for a death.
+        // The tree as it stands after the failed attempt (applied by hand,
+        // or committed before the failure) is the result, as for a death.
         return commit(state, index, adopt(step));
       case 'skip':
         return commit(state, index, { ...step, status: 'skipped' });
@@ -263,7 +263,7 @@ function adopt(step: MigrateStep): MigrateStep {
 
 function adoptedSummary(step: MigrateStep): string {
   if (step.status === 'failed') {
-    return "Adopted after the attempt failed: the working tree, as applied by hand, was taken as this migration's result.";
+    return "Adopted after the attempt failed: the working tree as it stood was taken as this migration's result.";
   }
   return step.generatorCompleted === true
     ? "Adopted after the worker died: its generator had run, and the working tree it left was taken as this migration's result."

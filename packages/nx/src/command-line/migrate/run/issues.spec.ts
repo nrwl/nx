@@ -1283,26 +1283,27 @@ describe('migrate run issues', () => {
       }
     );
 
-    it('abbreviates an overlong migration id with a digest, keeping the attempts, the failure and distinct identities', () => {
+    it('abbreviates an overlong migration id with a digest that keeps distinct ids distinct', () => {
+      // Same attempt and failure on both: only the digest can tell the two
+      // summaries apart, so a digest of a shared prefix would fold them.
       const first = step('step-1', `@nx/js:${'m'.repeat(600)}a`, 'unresolved');
       first.outcome = { summary: 'boom' };
-      const second = {
-        ...step('step-2', `@nx/js:${'m'.repeat(600)}b`, 'unresolved'),
-        attempt: 2,
-        outcome: { summary: 'bang' },
-      };
+      const second = step('step-2', `@nx/js:${'m'.repeat(600)}b`, 'unresolved');
+      second.outcome = { summary: 'boom' };
       const state = stateWith([first, second]);
 
       const minted = mintUnresolvedIssue(state, first);
       const again = mintUnresolvedIssue(minted.application.state, second);
 
+      expect(again.application.state.issues).toHaveLength(2);
       const [one, two] = again.application.state.issues.map((i) => i.summary);
       expect(one).toMatch(
         /^Migration @nx\/js:m+\.\.\.\[[0-9a-f]{8}\] was left unresolved after 1 attempt: boom$/
       );
       expect(two).toMatch(
-        /^Migration @nx\/js:m+\.\.\.\[[0-9a-f]{8}\] was left unresolved after 2 attempts: bang$/
+        /^Migration @nx\/js:m+\.\.\.\[[0-9a-f]{8}\] was left unresolved after 1 attempt: boom$/
       );
+      expect(one).not.toBe(two);
       expect(one.length).toBeLessThan(500);
       expect(again.application.state.issues.map((i) => i.id)).toEqual([
         'issue-1',

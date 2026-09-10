@@ -91,6 +91,12 @@ describe('renderRunbook', () => {
     expect(runbook).toContain(
       'give the step up with `unresolved` and continue the run'
     );
+    expect(runbook).toContain(
+      "Withheld, with `skip`, when the attempt's changes already landed"
+    );
+    expect(runbook).toContain(
+      'where the dispense withholds it, `adopt`\nis that choice.'
+    );
     // Unattended, the failed handoff is the only way from an unfinishable
     // prompt to the give-up option.
     expect(runbook).toContain(
