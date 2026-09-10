@@ -15,12 +15,16 @@ import {
 import {
   createDotNetProject,
   addProjectReference,
+  setDotNetPluginOptions,
 } from './utils/create-dotnet-project';
 
 describe('.NET Plugin - Advanced MSBuild Features', () => {
   beforeAll(() => {
     newProject({ packages: [] });
     runCLI(`add @nx/dotnet`, { verbose: true });
+    // These suites build with `--no-restore`, so they need Nx to drive the
+    // restore. The target is opt-in.
+    setDotNetPluginOptions({ restore: true });
   });
 
   afterAll(() => cleanupProject());
@@ -452,9 +456,9 @@ describe('.NET Plugin - Advanced MSBuild Features', () => {
         '{workspaceRoot}/Directory.Packages.props'
       );
 
-      // Targets without a declared inputs array (e.g. restore) are left untouched
+      // Targets without a declared inputs array (e.g. clean) are left untouched
       // so we don't accidentally narrow Nx's default-input fallback.
-      expect(details.targets.restore.inputs).toBeUndefined();
+      expect(details.targets.clean.inputs).toBeUndefined();
     });
   });
 
