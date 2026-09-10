@@ -140,11 +140,16 @@ export interface AngularRspackPluginOptions extends PluginUnsupportedOptions {
   namedChunks?: boolean;
   optimization?: boolean | OptimizationOptions;
   outputHashing?: OutputHashing;
+  outputMode?: 'server' | 'static';
   outputPath?:
     string | (Required<Pick<OutputPath, 'base'>> & Partial<OutputPath>);
   polyfills?: string[];
   root?: string;
   scripts?: ScriptOrStyleEntry[];
+  security?: {
+    allowedHosts?: string[];
+    autoCsp?: boolean | { unsafeEval?: boolean };
+  };
   server?: string;
   skipTypeChecking?: boolean;
   sourceMap?: boolean | Partial<SourceMap>;
@@ -313,6 +318,13 @@ Controls build optimization settings for scripts, styles, and fonts.
 `OutputHashing` `default: 'none'`
 Defines the hashing strategy for output files. Can be 'none', 'all', 'media', or 'bundles'.
 
+### outputMode
+
+`'server' | 'static'`
+Defines the build output target for server-side rendered applications.
+Only `server` is currently supported.
+The `static` mode (build-time prerendering of the full application) is rejected.
+
 ### outputPath
 
 `string | OutputPath`
@@ -332,6 +344,15 @@ The root directory of the project where the rspack.config.ts file is located.
 
 `ScriptOrStyleEntry[]`
 Array of global scripts to include in the build, with options for bundling and injection.
+
+### security
+
+`{ allowedHosts?: string[]; autoCsp?: boolean | { unsafeEval?: boolean } }`
+Security features for the server-side application.
+`allowedHosts` lists the hostnames the `@angular/ssr` application engine accepts.
+A non-empty list in an SSR build requires `@angular/ssr` 21.2.0 or greater.
+It is also available from 20.3.17 within Angular 20 and from 21.1.5 within Angular 21.1.
+Enabling `autoCsp` is not supported yet and is rejected.
 
 ### server
 

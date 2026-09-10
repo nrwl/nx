@@ -27,6 +27,16 @@ interface ServerBundleExports {
   /** Standalone application bootstrapping function. */
   default?: (() => Promise<ApplicationRef>) | Type<unknown>;
 
+  /**
+   * The main.server default export re-exported by the platform-server-exports
+   * loader: a bootstrap function for standalone applications or the
+   * AppServerModule class for NgModule ones. Server entries written for the
+   * `@angular/ssr` application engine APIs export no default of their own.
+   */
+  __ngRspackMainServerBootstrap?:
+    | (() => Promise<ApplicationRef>)
+    | Type<unknown>;
+
   /** Method to extract routes from the router config. */
   ɵgetRoutesFromAngularRouterConfig: typeof ɵgetRoutesFromAngularRouterConfig;
 }
@@ -41,15 +51,17 @@ async function extract(): Promise<string[]> {
     AppServerModule,
     ɵgetRoutesFromAngularRouterConfig: getRoutesFromAngularRouterConfig,
     default: bootstrapAppFn,
+    __ngRspackMainServerBootstrap,
   } = require(serverBundlePath) as ServerBundleExports;
 
   const browserIndexInputPath = path.join(outputPath, indexFile);
   const document = await fs.promises.readFile(browserIndexInputPath, 'utf8');
 
-  const bootstrapAppFnOrModule = bootstrapAppFn || AppServerModule;
+  const bootstrapAppFnOrModule =
+    bootstrapAppFn || __ngRspackMainServerBootstrap || AppServerModule;
   assert(
     bootstrapAppFnOrModule,
-    `The file "${serverBundlePath}" does not have a default export for an AppServerModule or a bootstrapping function.`
+    `Neither an AppServerModule nor a bootstrapping function was exported from: ${serverBundlePath}.`
   );
 
   const routes: string[] = [];

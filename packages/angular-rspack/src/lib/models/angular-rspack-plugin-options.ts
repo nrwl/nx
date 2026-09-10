@@ -265,6 +265,17 @@ export interface AngularRspackPluginOptions {
   ngswConfigPath?: string;
   optimization?: boolean | OptimizationOptions;
   outputHashing?: OutputHashing;
+  /**
+   * Defines the build output target. Only 'server' is currently supported:
+   * it requires the `server` and `ssr.entry` options and the `@angular/ssr`
+   * package, and disables build-time prerendering (`prerender`/`appShell`).
+   * The `@angular/ssr` application engine wiring itself is active for any
+   * SSR build with `@angular/ssr` installed, with or without this option,
+   * except when locale inlining is enabled.
+   * 'static' (build-time prerendering of the full application) is not
+   * supported yet and is rejected.
+   */
+  outputMode?: 'server' | 'static';
   outputPath?:
     | string
     | (Required<Pick<OutputPath, 'base'>> & Partial<OutputPath>);
@@ -302,6 +313,23 @@ export interface AngularRspackPluginOptions {
   progress?: boolean;
   root?: string;
   scripts?: ScriptOrStyleEntry[];
+  /**
+   * Security features to protect against XSS and other common attacks.
+   */
+  security?: {
+    /**
+     * A list of hostnames that are allowed to access the server-side
+     * application. Requires `@angular/ssr` version 21.2.0 or greater (also
+     * backported to 20.3.17 and 21.1.5). For more information, see
+     * https://angular.dev/best-practices/security#preventing-server-side-request-forgery-ssrf.
+     */
+    allowedHosts?: string[];
+    /**
+     * Automatic content security policy generation. Not supported yet;
+     * enabling it is rejected.
+     */
+    autoCsp?: boolean | { unsafeEval?: boolean };
+  };
   server?: string;
   /**
    * Generates a service worker config for production builds.
@@ -376,6 +404,7 @@ export interface NormalizedAngularRspackPluginOptions extends Omit<
   namedChunks: boolean;
   optimization: NormalizedOptimizationOptions;
   outputHashing: OutputHashing;
+  outputMode: 'server' | undefined;
   outputPath: OutputPath;
   polyfills: string[];
   projectName: string | undefined;
