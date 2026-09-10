@@ -55,14 +55,31 @@ fn batch_outputs_path(cache_path: &str) -> PathBuf {
 /// not protected.
 #[napi]
 pub fn sweep_batch_outputs(cache_path: String) -> anyhow::Result<()> {
-    let dir = batch_outputs_path(&cache_path);
-    let entries = match read_dir(&dir) {
+    sweep_batch_outputs_with(
+        &batch_outputs_path(&cache_path),
+        SystemTime::now(),
+        BATCH_OUTPUT_MAX_AGE,
+        BATCH_OUTPUT_MAX_BYTES,
+        BATCH_OUTPUT_MIN_EVICTION_AGE,
+    )
+}
+
+/// The sweep proper, with its thresholds as parameters. Split out so tests can
+/// drive the eviction path without writing a gigabyte, and pin the age window
+/// without waiting a week.
+fn sweep_batch_outputs_with(
+    dir: &Path,
+    now: SystemTime,
+    max_age: Duration,
+    max_bytes: u64,
+    min_eviction_age: Duration,
+) -> anyhow::Result<()> {
+    let entries = match read_dir(dir) {
         Ok(entries) => entries,
         // Nothing has captured a batch log yet.
         Err(_) => return Ok(()),
     };
 
-    let now = SystemTime::now();
     let mut files: Vec<(PathBuf, u64, SystemTime)> = Vec::new();
     for entry in entries.flatten() {
         // From the dirent, so a symlink is neither followed for its age nor
@@ -78,7 +95,7 @@ pub fn sweep_batch_outputs(cache_path: String) -> anyhow::Result<()> {
             continue;
         };
         let age = now.duration_since(modified).unwrap_or(Duration::ZERO);
-        if age > BATCH_OUTPUT_MAX_AGE {
+        if age > max_age {
             // Racing another Nx process sweeping the same directory is fine.
             let _ = remove_file(&path);
             continue;
@@ -87,7 +104,7 @@ pub fn sweep_batch_outputs(cache_path: String) -> anyhow::Result<()> {
     }
 
     let mut total: u64 = files.iter().map(|(_, size, _)| size).sum();
-    if total <= BATCH_OUTPUT_MAX_BYTES {
+    if total <= max_bytes {
         return Ok(());
     }
 
@@ -95,11 +112,11 @@ pub fn sweep_batch_outputs(cache_path: String) -> anyhow::Result<()> {
     // running, possibly in another Nx process. Going over budget recovers on
     // the next sweep; deleting a live batch's only log does not.
     files.retain(|(_, _, modified)| {
-        now.duration_since(*modified).unwrap_or(Duration::ZERO) > BATCH_OUTPUT_MIN_EVICTION_AGE
+        now.duration_since(*modified).unwrap_or(Duration::ZERO) > min_eviction_age
     });
     files.sort_by_key(|(_, _, modified)| *modified);
     for (path, size, _) in files {
-        if total <= BATCH_OUTPUT_MAX_BYTES {
+        if total <= max_bytes {
             break;
         }
         if remove_file(&path).is_ok() {
@@ -735,6 +752,85 @@ fn escapes_workspace(path: &Path) -> bool {
 #[cfg(test)]
 mod test {
     use super::*;
+
+    use assert_fs::TempDir;
+    use std::fs::{File, create_dir_all};
+    use std::time::Duration;
+
+    fn write_log(dir: &Path, name: &str, bytes: usize, age: Duration) -> PathBuf {
+        create_dir_all(dir).unwrap();
+        let path = dir.join(name);
+        std::fs::write(&path, vec![b'x'; bytes]).unwrap();
+        let mtime = SystemTime::now() - age;
+        File::options()
+            .write(true)
+            .open(&path)
+            .unwrap()
+            .set_modified(mtime)
+            .unwrap();
+        path
+    }
+
+    const HOUR: Duration = Duration::from_secs(3600);
+
+    fn sweep(dir: &Path, max_bytes: u64) {
+        sweep_batch_outputs_with(dir, SystemTime::now(), 7 * 24 * HOUR, max_bytes, HOUR).unwrap();
+    }
+
+    #[test]
+    fn sweep_batch_outputs_is_a_noop_without_the_directory() {
+        let temp = TempDir::new().unwrap();
+        // Nothing has captured a batch log yet; this runs on every command.
+        sweep_batch_outputs(temp.path().to_str().unwrap().to_string()).unwrap();
+    }
+
+    #[test]
+    fn sweep_batch_outputs_deletes_by_age() {
+        let temp = TempDir::new().unwrap();
+        let old = write_log(temp.path(), "old.log", 16, 8 * 24 * HOUR);
+        let fresh = write_log(temp.path(), "fresh.log", 16, Duration::from_secs(30));
+
+        sweep(temp.path(), u64::MAX);
+
+        assert!(
+            !old.exists(),
+            "a log past the age limit should be collected"
+        );
+        assert!(fresh.exists(), "a log inside the window should survive");
+    }
+
+    #[test]
+    fn sweep_batch_outputs_evicts_oldest_first_to_the_budget() {
+        let temp = TempDir::new().unwrap();
+        let oldest = write_log(temp.path(), "a.log", 100, 5 * HOUR);
+        let middle = write_log(temp.path(), "b.log", 100, 4 * HOUR);
+        let newest = write_log(temp.path(), "c.log", 100, 3 * HOUR);
+
+        // 300 bytes present, budget 150: the two oldest go.
+        sweep(temp.path(), 150);
+
+        assert!(!oldest.exists());
+        assert!(!middle.exists());
+        assert!(
+            newest.exists(),
+            "eviction stops as soon as it is under budget"
+        );
+    }
+
+    #[test]
+    fn sweep_batch_outputs_will_not_evict_a_log_a_live_batch_may_still_hold() {
+        let temp = TempDir::new().unwrap();
+        // Far over budget, but written seconds ago - a running batch appends to
+        // its log for the life of the batch, possibly from another Nx process,
+        // so evicting this loses the only copy of a run still going.
+        let live = write_log(temp.path(), "live.log", 500, Duration::from_secs(5));
+        let stale = write_log(temp.path(), "stale.log", 500, 3 * HOUR);
+
+        sweep(temp.path(), 100);
+
+        assert!(live.exists(), "a log written within the hour is off limits");
+        assert!(!stale.exists(), "an older one over budget still goes");
+    }
 
     #[cfg(unix)]
     #[test]
