@@ -60,9 +60,9 @@ const CHILD_POLL_INTERVAL_MS = 250;
 // The seam a request comes from, and its name: within a session, non-reset
 // seams reuse one answer per attempt (see `invocation`). A worker's commit,
 // the fold's and a died step's adopt share one seam, and the worker may have
-// landed it before dying. A commit made after a failure is a request of its
-// own: the worker's ended in the failed install the step recorded, so adopting
-// or giving up then owes a new install and commit.
+// landed it before dying. Once the ledger records that commit, or a failure
+// recorded none, an adopt or give-up commit is a new operation over what the
+// tree holds now, so it asks under its own action.
 export type BrokerRequestKind =
   | 'commit'
   // A worker's install: after its generator, or a retry's from the baseline.
