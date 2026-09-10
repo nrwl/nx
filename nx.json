@@ -488,6 +488,9 @@
         "rule": "./tools/workspace-plugin/dist/src/conformance-rules/migration-markdown-assets"
       },
       {
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/generator-template-assets"
+      },
+      {
         "rule": "./tools/workspace-plugin/dist/src/conformance-rules/no-ignored-tracked-files"
       },
       {
