@@ -41,8 +41,8 @@ const NX_FILES_LOCK: &str = "nx_files.lock";
 
 fn archive_to_files(archive: NxFileHashes) -> Files {
     let mut files: Files = archive
-        .iter()
-        .map(|(path, hashed)| (PathBuf::from(path), hashed.0.clone()))
+        .into_iter()
+        .map(|(path, hashed)| (PathBuf::from(path), hashed.0))
         .collect();
     files.par_sort();
     files
@@ -131,14 +131,12 @@ fn gather_and_hash_files(workspace_root: &Path, cache_dir: String) -> Vec<(PathB
         full_files_hash(workspace_root)
     };
 
-    let mut files = file_hashes
-        .iter()
-        .map(|(path, file_hashed)| (PathBuf::from(path), file_hashed.0.to_owned()))
-        .collect::<Vec<_>>();
-    files.par_sort();
-    trace!("hashed and sorted files in {:?}", now.elapsed());
+    write_files_archive(&cache_dir, &file_hashes);
 
-    write_files_archive(&cache_dir, file_hashes);
+    // Drain the map rather than clone it: the path and hash strings move into
+    // the vec, so the list is never held twice.
+    let files = archive_to_files(file_hashes);
+    trace!("hashed and sorted files in {:?}", now.elapsed());
 
     files
 }
@@ -703,12 +701,12 @@ mod tests {
         // disk, so a waiter that walked would produce something else.
         write_files_archive(
             as_string(&cache),
-            [(
+            &[(
                 "from-the-other-process.ts".to_string(),
                 NxFileHashed("h".to_string(), 1),
             )]
             .into_iter()
-            .collect(),
+            .collect::<NxFileHashes>(),
         );
         holder.unlock().unwrap();
 
@@ -727,9 +725,9 @@ mod tests {
         // An archive from an earlier run, older than any wait that starts now.
         write_files_archive(
             as_string(&cache),
-            [("stale.ts".to_string(), NxFileHashed("h".to_string(), 1))]
+            &[("stale.ts".to_string(), NxFileHashed("h".to_string(), 1))]
                 .into_iter()
-                .collect(),
+                .collect::<NxFileHashes>(),
         );
         std::fs::File::options()
             .write(true)

@@ -31,6 +31,15 @@ impl DerefMut for NxFileHashes {
     }
 }
 
+impl IntoIterator for NxFileHashes {
+    type Item = (String, NxFileHashed);
+    type IntoIter = hashbrown::hash_map::IntoIter<String, NxFileHashed>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
 impl FromIterator<(String, NxFileHashed)> for NxFileHashes {
     fn from_iter<T: IntoIterator<Item = (String, NxFileHashed)>>(iter: T) -> NxFileHashes {
         let mut map = HashMap::with_hasher(Default::default());
@@ -82,13 +91,13 @@ pub fn read_files_archive<P: AsRef<Path>>(cache_dir: P) -> Option<NxFileHashes> 
     }
 }
 
-pub fn write_files_archive<P: AsRef<Path>>(cache_dir: P, files: NxFileHashes) {
+pub fn write_files_archive<P: AsRef<Path>>(cache_dir: P, files: &NxFileHashes) {
     let now = std::time::Instant::now();
     let archive_path = archive_path(cache_dir);
     // Written beside the archive and renamed into place, so a process that
     // trusts the archive can never read a partial one.
     let staging_path = archive_path.with_extension(format!("nxt.{}.tmp", std::process::id()));
-    let result = rkyv::to_bytes::<_, 2048>(&files)
+    let result = rkyv::to_bytes::<_, 2048>(files)
         .map_err(anyhow::Error::from)
         .and_then(|encoded| {
             std::fs::write(&staging_path, encoded)?;
