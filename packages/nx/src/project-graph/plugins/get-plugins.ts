@@ -24,6 +24,7 @@ import {
   recordCapabilities,
   sameCapabilities,
 } from './capabilities-cache';
+import { isOnDaemon } from '../../daemon/is-on-daemon';
 import { DelayedSpinner } from '../../utils/delayed-spinner';
 import { logger } from '../../utils/logger';
 import {
@@ -345,6 +346,7 @@ export function getPluginsIfLoadedOrLoading():
 }
 
 export function cleanupPlugins() {
+  peeked = undefined;
   cleanupSpecifiedPlugins?.();
   cleanupDefaultPlugins?.();
   pendingPluginsPromise = undefined;
@@ -489,12 +491,29 @@ async function resolveCapabilityKeys(
  * needs to know whether a hook exists anywhere can ask before committing to a
  * load it may not need.
  */
+/**
+ * One command asks the question up to three times, and each answer costs a
+ * module resolution per plugin plus a source hash for the workspace-local ones.
+ * Held for processes that are not the daemon, which is the same lifetime
+ * `getPluginsSeparated` already gives one plugin set, and excluded for the
+ * daemon, which outlives the edits an answer depends on.
+ *
+ * Only a complete answer is held. A null one means some plugin has no record,
+ * and the load that follows records it, so the next caller can do better.
+ */
+let peeked: { key: string; capabilities: PluginCapabilities[] } | undefined;
+
 export async function peekPluginCapabilities(
   nxJson: NxJsonConfiguration,
   root = workspaceRoot
 ): Promise<PluginCapabilities[] | null> {
   if (!capabilityCacheApplies()) {
     return null;
+  }
+
+  const memoKey = `${root}:${hashObject(nxJson.plugins ?? [])}`;
+  if (!isOnDaemon() && peeked?.key === memoKey) {
+    return peeked.capabilities;
   }
 
   const configurations = [
@@ -517,7 +536,12 @@ export async function peekPluginCapabilities(
   if (recorded.size !== new Set(loads.map((load) => load.key)).size) {
     return null;
   }
-  return loads.map((load) => recorded.get(load.key));
+
+  const capabilities = loads.map((load) => recorded.get(load.key));
+  if (!isOnDaemon()) {
+    peeked = { key: memoKey, capabilities };
+  }
+  return capabilities;
 }
 
 async function useCapabilityCache(
@@ -541,26 +565,32 @@ async function useCapabilityCache(
         return;
       }
 
-      const heldByAnotherProcess = lock?.check() ?? false;
-      if (heldByAnotherProcess && Date.now() < deadline) {
-        logger.verbose(
-          'Waiting for another process to finish loading Nx plugins'
-        );
-        spinner ??= new DelayedSpinner(
-          'Waiting for another process to finish loading Nx plugins'
-        );
-        await lock.wait();
-        continue;
-      }
+      // One atomic step, rather than checking and then calling `lock`. That
+      // call is synchronous, so a process that loses the race would block its
+      // own event loop until the holder finished, which in the daemon means no
+      // client is served and no signal is handled for the duration.
+      const holdingLock = lock?.tryLock() ?? false;
 
-      // Still held here only once the deadline has passed, and then the lock is
-      // left alone rather than waited on any longer: `wait` has no ceiling of
-      // its own, so a wedged holder would otherwise stall every other process
-      // for as long as it lives. Loading anyway costs a second load of the same
-      // plugins, which is what every process did before this cache existed, and
-      // the record write is an upsert.
-      const holdLock = !!lock && !heldByAnotherProcess;
-      if (lock && !holdLock) {
+      if (!holdingLock && lock) {
+        const remaining = deadline - Date.now();
+        if (remaining > 0) {
+          spinner ??= new DelayedSpinner(
+            'Waiting for another process to finish loading Nx plugins'
+          );
+          // Waited on a libuv thread with a ceiling, rather than through
+          // `lock.wait()`, which settles only when the holder releases. A holder
+          // whose own event loop is blocked never reaches its load timeout and
+          // so never releases, and one unbounded wait is all it takes to hang
+          // every other process in the workspace. The loop re-reads the records
+          // and re-checks the budget either way.
+          await lock.waitForRelease(remaining);
+          continue;
+        }
+
+        // Out of budget, so the lock is left to whoever holds it and this
+        // process loads anyway. That costs a second load of the same plugins,
+        // which is what every process did before this cache existed, and the
+        // record write is an upsert.
         logger.verbose(
           `Another process has held the plugin capabilities lock for over ${
             MAX_WAIT_FOR_ANOTHER_PROCESS / 1000
@@ -568,16 +598,12 @@ async function useCapabilityCache(
         );
       }
 
-      if (holdLock) {
-        lock.lock();
-      }
       try {
-        // `check` and `lock` are separate calls, so two processes can both
-        // find the lock free and queue on it. Reading again here is what
-        // stops the second one loading what the first just recorded.
+        // Read once more now the lock is held, since another process may have
+        // recorded these between the read above and the acquire.
         await loadAndRecord(wireRecordedCapabilities(missing, root), root);
       } finally {
-        if (holdLock) {
+        if (holdingLock) {
           lock.unlock();
         }
       }
