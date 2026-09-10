@@ -15,10 +15,9 @@ const mocks = vi.hoisted(() => ({
   readCachedCapabilities: vi.fn(),
   recordCapabilities: vi.fn(),
   lock: {
-    check: vi.fn(() => false),
-    lock: vi.fn(),
+    tryLock: vi.fn(() => true),
+    waitForRelease: vi.fn(() => Promise.resolve(true)),
     unlock: vi.fn(),
-    wait: vi.fn(() => Promise.resolve()),
   },
 }));
 
@@ -96,12 +95,11 @@ describe('loading plugins through the capability cache', () => {
       return found;
     });
     mocks.recordCapabilities.mockReset();
-    mocks.lock.check.mockReset();
-    mocks.lock.check.mockReturnValue(false);
-    mocks.lock.lock.mockReset();
+    mocks.lock.tryLock.mockReset();
+    mocks.lock.tryLock.mockReturnValue(true);
     mocks.lock.unlock.mockReset();
-    mocks.lock.wait.mockReset();
-    mocks.lock.wait.mockResolvedValue(undefined);
+    mocks.lock.waitForRelease.mockReset();
+    mocks.lock.waitForRelease.mockResolvedValue(true);
 
     ({ loadIsolatedNxPlugin, useIsolatedNxPluginCapabilities } =
       (await import('./isolation')) as any);
@@ -180,55 +178,130 @@ describe('loading plugins through the capability cache', () => {
   });
 
   it('waits for the process that is already loading rather than loading too', async () => {
-    mocks.lock.check.mockReturnValue(true);
-    mocks.lock.wait.mockImplementation(async () => {
+    mocks.lock.tryLock.mockReturnValue(false);
+    mocks.lock.waitForRelease.mockImplementation(async () => {
       // The holder finishes while this process waits.
       everythingRecorded = true;
-      mocks.lock.check.mockReturnValue(false);
+      return true;
     });
 
     await getPluginsSeparated({ plugins: ['test-plugin'] });
 
-    expect(mocks.lock.wait).toHaveBeenCalled();
-    expect(mocks.lock.lock).not.toHaveBeenCalled();
+    expect(mocks.lock.waitForRelease).toHaveBeenCalled();
     expect(loadIsolatedNxPlugin).not.toHaveBeenCalled();
+    // Never acquired, so nothing to release.
+    expect(mocks.lock.unlock).not.toHaveBeenCalled();
   });
 
-  it('reads the cache again after taking the lock, since two processes can both find it free', async () => {
-    // `check` and `lock` are separate calls. This process found the lock free,
-    // then blocked in `lock` behind a holder that recorded everything.
-    mocks.lock.lock.mockImplementation(() => {
+  it('reads the cache again once it holds the lock', async () => {
+    // Acquired here, with the records arriving from the process that held it
+    // immediately before.
+    mocks.lock.tryLock.mockImplementation(() => {
       everythingRecorded = true;
+      return true;
     });
 
     await getPluginsSeparated({ plugins: ['test-plugin'] });
 
-    expect(mocks.lock.lock).toHaveBeenCalled();
     expect(loadIsolatedNxPlugin).not.toHaveBeenCalled();
     expect(mocks.lock.unlock).toHaveBeenCalledTimes(1);
   });
 
   it('loads anyway when whoever holds the lock never finishes', async () => {
-    const start = Date.now();
-    let now = start;
+    let now = Date.now();
     const dateNow = vi.spyOn(Date, 'now').mockImplementation(() => now);
+    let waits = 0;
     try {
-      // Held for the whole test, and each wait returns having recorded nothing.
-      mocks.lock.check.mockReturnValue(true);
-      mocks.lock.wait.mockImplementation(async () => {
-        now += 61_000;
+      // Held for the whole test, and every wait times out having seen nothing
+      // recorded.
+      mocks.lock.tryLock.mockReturnValue(false);
+      mocks.lock.waitForRelease.mockImplementation(async (ms: number) => {
+        // Fails loudly rather than spinning, so losing the budget shows up as
+        // one named test instead of a killed worker.
+        if (++waits > 4) {
+          throw new Error(`waited ${waits} times: the budget is not bounding`);
+        }
+        expect(ms).toBeGreaterThan(0);
+        expect(ms).toBeLessThanOrEqual(60_000);
+        // The wait consumed the whole remaining budget.
+        now += ms;
+        return false;
       });
 
       await getPluginsSeparated({ plugins: ['test-plugin'] });
 
-      // Reaching these assertions at all is the point: an unbounded wait
-      // against a lock that is never released would spin here forever.
-      expect(mocks.lock.wait).toHaveBeenCalled();
-      expect(mocks.lock.lock).not.toHaveBeenCalled();
+      expect(mocks.lock.waitForRelease).toHaveBeenCalled();
       expect(loadsOf('test-plugin')).toHaveLength(1);
+      expect(mocks.lock.unlock).not.toHaveBeenCalled();
     } finally {
       dateNow.mockRestore();
     }
+  });
+
+  it('records each plugin against its own key', async () => {
+    loadIsolatedNxPlugin.mockImplementation(async (plugin: unknown) => {
+      const label =
+        typeof plugin === 'string' ? plugin : (plugin as any).plugin;
+      return [
+        Promise.resolve({
+          name: label,
+          createNodes: [`**/${label}.config.ts`, async () => []],
+        }),
+        () => {},
+      ];
+    });
+
+    await getPluginsSeparated({ plugins: ['plugin-a', 'plugin-b'] });
+
+    const recorded = new Map(
+      mocks.recordCapabilities.mock.calls
+        .flatMap(([entries]) => entries)
+        .map((entry) => [entry.key, entry.capabilities])
+    );
+    // Pairing a key with another plugin's capabilities would poison the record
+    // silently, so the two are checked against each other rather than counted.
+    expect(recorded.get('key:/resolved/plugin-a').createNodesPattern).toBe(
+      '**/plugin-a.config.ts'
+    );
+    expect(recorded.get('key:/resolved/plugin-b').createNodesPattern).toBe(
+      '**/plugin-b.config.ts'
+    );
+  });
+
+  describe('a record the key failed to invalidate', () => {
+    async function loadedFromRecordThenReport(actual: PluginCapabilities) {
+      everythingRecorded = true;
+      await getPluginsSeparated({ plugins: ['test-plugin'] });
+
+      const [, , , , , onLoaded] =
+        useIsolatedNxPluginCapabilities.mock.calls.find(
+          ([plugin]) => plugin === 'test-plugin'
+        );
+      mocks.recordCapabilities.mockClear();
+      onLoaded(actual);
+    }
+
+    it('is replaced by what the worker reported', async () => {
+      await loadedFromRecordThenReport({
+        ...CAPABILITIES,
+        hasPostTasksExecution: true,
+      });
+
+      expect(mocks.recordCapabilities).toHaveBeenCalledWith([
+        {
+          key: 'key:/resolved/test-plugin',
+          capabilities: expect.objectContaining({
+            hasPostTasksExecution: true,
+          }),
+        },
+      ]);
+    });
+
+    it('is left alone when the worker agrees with it', async () => {
+      await loadedFromRecordThenReport({ ...CAPABILITIES });
+
+      expect(mocks.recordCapabilities).not.toHaveBeenCalled();
+    });
   });
 
   it('releases the lock when a plugin fails to load', async () => {
@@ -243,10 +316,12 @@ describe('loading plugins through the capability cache', () => {
       getPluginsSeparated({ plugins: ['test-plugin'] })
     ).rejects.toThrow('boom');
 
-    expect(mocks.lock.lock).toHaveBeenCalled();
-    expect(mocks.lock.unlock).toHaveBeenCalledTimes(
-      mocks.lock.lock.mock.calls.length
-    );
+    // Every acquire is released, however many batches took the lock.
+    const acquires = mocks.lock.tryLock.mock.results.filter(
+      (result) => result.value === true
+    ).length;
+    expect(acquires).toBeGreaterThan(0);
+    expect(mocks.lock.unlock).toHaveBeenCalledTimes(acquires);
     // A plugin that did not load has nothing to record.
     const recorded = mocks.recordCapabilities.mock.calls
       .flatMap(([entries]) => entries)
@@ -271,6 +346,20 @@ describe('loading plugins through the capability cache', () => {
       expect(
         await peekPluginCapabilities({ plugins: ['test-plugin'] })
       ).toBeNull();
+    });
+
+    it('counts distinct modules, so two entries naming one module still answer', async () => {
+      everythingRecorded = true;
+
+      const peeked = await peekPluginCapabilities({
+        plugins: ['test-plugin', { plugin: 'test-plugin', options: {} }],
+      });
+
+      // Both entries resolve to one module and therefore one key, so comparing
+      // the records against the number of entries would decline here.
+      expect(peeked).not.toBeNull();
+      expect(peeked[0]).toEqual(CAPABILITIES);
+      expect(peeked[1]).toEqual(CAPABILITIES);
     });
 
     it('declines when a plugin module cannot be identified', async () => {
