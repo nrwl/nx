@@ -1171,7 +1171,6 @@ describe('migrate orchestrator (dark launch)', () => {
     const complete = parseLastDispense(runDispensed(unresolvedCommand));
     expect(complete.action).toBe('complete');
     expect(complete.payload.instructions).toContain('unresolved: 1');
-    expect(complete.payload.instructions).toContain(`- ${PKG}:slow-mig:`);
     expect(complete.payload.instructions).toContain('remains unresolved');
 
     const state = readRunStateFile(runId);
@@ -1180,10 +1179,16 @@ describe('migrate orchestrator (dark launch)', () => {
     expect(step.status).toBe('unresolved');
     expect(step.attempt).toBe(1);
     expect(step.unresolvedIssueId).toBe('issue-1');
+    // The killed worker recorded no outcome: the death is the failure both
+    // the report and the issue carry.
+    const deathDetail = `the worker process (pid ${step.pid}) died before recording an outcome`;
+    expect(complete.payload.instructions).toContain(
+      `- ${PKG}:slow-mig: ${deathDetail}`
+    );
     expect(state.issues).toEqual([
       expect.objectContaining({
         id: 'issue-1',
-        summary: expect.stringContaining(`${PKG}:slow-mig was left unresolved`),
+        summary: `Migration ${PKG}:slow-mig was left unresolved after 1 attempt: ${deathDetail}`,
         disposition: 'deferred-final',
       }),
     ]);
