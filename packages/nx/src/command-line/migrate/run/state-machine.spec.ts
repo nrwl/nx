@@ -873,33 +873,60 @@ describe('applyStepEvent', () => {
       }
     });
 
-    it.each(['failed', 'died'] as const)(
-      'unresolved from %s keeps the attempt and the failure it gave up on',
-      (status) => {
-        const state = stateWithStep({
-          status,
-          attempt: 3,
-          gitRefBefore: 'abc123',
-          outcome: { summary: 'generator threw' },
-          promptOutcome: { status: 'failed', summary: 'nope' },
-        });
+    it('unresolved from failed keeps the attempt and the failure it gave up on', () => {
+      const state = stateWithStep({
+        status: 'failed',
+        attempt: 3,
+        gitRefBefore: 'abc123',
+        outcome: { summary: 'generator threw' },
+        promptOutcome: { status: 'failed', summary: 'nope' },
+      });
 
-        const result = applyStepEvent(state, {
-          type: 'stepAction',
-          stepId: 'step-1',
-          attempt: 3,
-          action: 'unresolved',
-        });
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        attempt: 3,
+        action: 'unresolved',
+      });
 
-        expect(result.kind).toBe('ok');
-        if (result.kind === 'ok') {
-          expect(result.state.steps[0]).toEqual({
-            ...state.steps[0],
-            status: 'unresolved',
-          });
-        }
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        expect(result.state.steps[0]).toEqual({
+          ...state.steps[0],
+          status: 'unresolved',
+        });
       }
-    );
+    });
+
+    it('unresolved from died keeps the attempt and records the death as the failure', () => {
+      // A death leaves no outcome behind (markDied records the status only),
+      // so the transition supplies the failure the report and the issue show.
+      const state = stateWithStep({
+        status: 'died',
+        attempt: 3,
+        pid: 4242,
+        gitRefBefore: 'abc123',
+      });
+
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        attempt: 3,
+        action: 'unresolved',
+      });
+
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        expect(result.state.steps[0]).toEqual({
+          ...state.steps[0],
+          status: 'unresolved',
+          outcome: {
+            summary:
+              'the worker process (pid 4242) died before recording an outcome',
+          },
+        });
+      }
+    });
 
     it('adopt keeps the outcome the dead worker had already recorded', () => {
       const state = stateWithStep({

@@ -232,13 +232,26 @@ function applyStepAction(
         // Same as skipping a failure: the tree stays as the worker left it.
         return commit(state, index, { ...step, status: 'skipped' });
       case 'unresolved':
-        return commit(state, index, { ...step, status: 'unresolved' });
+        // A death records no outcome, so the failure the step is given up on
+        // is the death itself; without it the report and the minted issue
+        // would say nothing was recorded.
+        return commit(state, index, {
+          ...step,
+          status: 'unresolved',
+          outcome: { summary: workerDiedSummary(step) },
+        });
     }
   }
   return {
     kind: 'error',
     reason: `Cannot apply action '${action}' to step '${step.id}' in status '${step.status}'.`,
   };
+}
+
+function workerDiedSummary(step: MigrateStep): string {
+  return `the worker process${
+    step.pid === undefined ? '' : ` (pid ${step.pid})`
+  } died before recording an outcome`;
 }
 
 // Re-arms for a retry that resets the tree first. The reset target predates

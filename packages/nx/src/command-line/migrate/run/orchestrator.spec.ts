@@ -5163,7 +5163,12 @@ describe('orchestrator', () => {
 
   describe('reconcile: unresolved', () => {
     const REF = 'beef0001beef0001beef0001beef0001beef0001';
-    // A failed generator step with the restore point a clean retry needs.
+    // A failed generator step with the restore point a clean retry needs. A
+    // death records no outcome, so its failure is the death itself.
+    const FAILURE_DETAIL = {
+      failed: 'boom: the generator broke',
+      died: 'the worker process (pid 999999) died before recording an outcome',
+    } as const;
     function restorableFailure(
       status: 'failed' | 'died',
       extra: Partial<MigrateStep> = {}
@@ -5171,7 +5176,9 @@ describe('orchestrator', () => {
       return migStep('step-1', '@nx/js:gen', status, {
         gitRefBefore: REF,
         treeCleanAtDispense: true,
-        outcome: { summary: 'boom: the generator broke' },
+        ...(status === 'failed'
+          ? { outcome: { summary: FAILURE_DETAIL.failed } }
+          : { pid: 999999 }),
         ...extra,
       });
     }
@@ -5197,17 +5204,20 @@ describe('orchestrator', () => {
         expect(state.steps[0]).toMatchObject({
           status: 'unresolved',
           attempt: 1,
-          outcome: { summary: 'boom: the generator broke' },
+          outcome: { summary: FAILURE_DETAIL[status] },
           unresolvedIssueId: 'issue-1',
         });
+        expect(lastBlock().action).toBe('complete');
+        expect(lastBlock().payload.instructions).toContain(
+          `    - @nx/js:gen: ${FAILURE_DETAIL[status]}`
+        );
         expect(mockCommit).not.toHaveBeenCalled();
         expect(state.commits).toEqual([]);
         expect(state.issues).toEqual([
           {
             id: 'issue-1',
             fingerprint: expect.any(String),
-            summary:
-              'Migration @nx/js:gen was left unresolved after 1 attempt: boom: the generator broke',
+            summary: `Migration @nx/js:gen was left unresolved after 1 attempt: ${FAILURE_DETAIL[status]}`,
             reportedByStepId: 'step-1',
             applicableStepIds: 'unknown',
             disposition: 'deferred-final',

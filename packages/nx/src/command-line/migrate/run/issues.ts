@@ -354,8 +354,8 @@ export interface IssueApplication {
 /**
  * Mints the run issue that carries a given-up step's last failure to the
  * completion report. Unscoped and deferred, so nothing claims it; the
- * migration id in the summary keeps two steps failing the same way from
- * folding into one entry. An agent report that already carries the exact
+ * migration id in the summary distinguishes identical failures from
+ * different migrations. An agent report that already carries the exact
  * text is taken over rather than merged into: the fingerprint is derived
  * from the summary, so the ledger cannot hold both, and a merge would keep
  * the report's scope and let a later step claim and resolve the failure
@@ -1206,8 +1206,6 @@ const NEW_ISSUE_ARCHIVE_KEYS = [
   'detail',
 ] as const;
 
-// Shared by the write path and the intactness check so their shapes cannot
-// drift.
 // An overlong id keeps a digest of the whole, so two ids sharing a visible
 // prefix still mint distinct issues.
 function abbreviatedMigrationId(migrationId: string): string {
@@ -1219,6 +1217,8 @@ function abbreviatedMigrationId(migrationId: string): string {
   return `${migrationId.slice(0, MAX_UNRESOLVED_ID_CHARS - 12)}...[${digest}]`;
 }
 
+// Shared by the write path and the intactness check so their shapes cannot
+// drift.
 function newIssueArchiveRecord(
   entry: MigrateRunIssue,
   report: ReportedIssue
