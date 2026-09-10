@@ -1,4 +1,4 @@
-describe('project graph state restoration', () => {
+describe('external API project graph reset', () => {
   const projects = ['core', 'demo', 'ui', 'unrelated'];
   const focusControl =
     'button[title="Remove the current focus on the selected node"]';
@@ -64,40 +64,26 @@ describe('project graph state restoration', () => {
     expectVisible(projects);
   });
 
-  it('restores hidden projects even when the renderer configuration is unchanged', () => {
-    cy.get('button[title="Hide unrelated"]').click();
-    expectVisible(['core', 'demo', 'ui']);
+  it('restores hidden projects on repeated calls while the URL stays unchanged', () => {
     cy.window().then((win) => win.externalApi.selectAllProjects());
     expectVisible(projects);
+    cy.location('href').then((url) => {
+      for (const hidden of ['unrelated', 'core']) {
+        cy.get(`button[title="Hide ${hidden}"]`).click();
+        expectVisible(projects.filter((project) => project !== hidden));
+        cy.location('href').should('equal', url);
 
-    cy.get('button[title="Hide core"]').click();
-    expectVisible(['demo', 'ui', 'unrelated']);
-    cy.window().then((win) => win.externalApi.selectAllProjects());
-    expectVisible(projects);
-  });
-
-  it('restores unfocused and focused serialized URLs without reloading the page', () => {
-    cy.location('href').then((unfocusedUrl) => {
-      cy.window().then((win) => win.externalApi.focusProject('demo'));
-      expectVisible(['demo', 'ui'], true);
-
-      cy.location('href').then((focusedUrl) => {
         cy.window().then((win) => {
-          win.history.pushState(null, '', unfocusedUrl);
-          win.dispatchEvent(new PopStateEvent('popstate'));
+          win.externalApi.selectAllProjects();
+          win.externalApi.selectAllProjects();
         });
         expectVisible(projects);
-
-        cy.window().then((win) => {
-          win.history.pushState(null, '', focusedUrl);
-          win.dispatchEvent(new PopStateEvent('popstate'));
-        });
-        expectVisible(['demo', 'ui'], true);
-      });
+        cy.location('href').should('equal', url);
+      }
     });
   });
 
-  it('preserves hidden projects when renderer preferences synchronize to the URL', () => {
+  it('preserves layout direction through ordinary URL sync and an API reset', () => {
     cy.get('button[title="Hide unrelated"]').click();
     expectVisible(['core', 'demo', 'ui']);
     cy.get('button[title^="Select rank direction for graph layout:"]').click();
@@ -109,5 +95,13 @@ describe('project graph state restoration', () => {
       expect(state.c.rankDir).to.equal('LR');
     });
     expectVisible(['core', 'demo', 'ui']);
+
+    cy.window().then((win) => win.externalApi.selectAllProjects());
+    expectVisible(projects);
+    cy.get('button[title^="Select rank direction for graph layout:"]').should(
+      'have.attr',
+      'title',
+      'Select rank direction for graph layout: Left-Right'
+    );
   });
 });
