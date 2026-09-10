@@ -884,7 +884,12 @@ export async function runOrchestratorReconcile(
       // authoritative, and undoing the transition for a lost detail file
       // would leave the agent re-issuing an action the run already took.
       if (stepAction === 'unresolved') {
-        const minted = mintUnresolvedIssue(rearmed, target);
+        // Minted from the transitioned step: a died one only gains its
+        // failure in the transition.
+        const minted = mintUnresolvedIssue(
+          rearmed,
+          rearmed.steps.find((s) => s.id === target.id)
+        );
         try {
           archiveIssues(dir, minted.application);
         } catch (e) {
@@ -1540,8 +1545,8 @@ async function stepActionSideEffects(
   }
 }
 
-// Commits the working tree left by a folded prompt outcome, an adopted death
-// or a given-up step, returning the ledger entry the caller persists together
+// Commits the working tree left by a folded prompt outcome, an adopted step
+// (failed or died) or a given-up step, returning the ledger entry the caller persists together
 // with the step transition (null when there was nothing to commit). The
 // worker's recorded-commit path classifies through the same
 // commitResultToLedgerEntry.
