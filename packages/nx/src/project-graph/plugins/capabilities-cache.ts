@@ -1,4 +1,4 @@
-import { dirname, join, relative, sep } from 'node:path';
+import { basename, dirname, join, relative, sep } from 'node:path';
 import { existsSync } from 'node:fs';
 
 import {
@@ -14,7 +14,6 @@ import { getDbConnection } from '../../utils/db-connection';
 import { readJsonFile } from '../../utils/fileutils';
 import { logger } from '../../utils/logger';
 import { normalizePath } from '../../utils/path';
-import { nxVersion } from '../../utils/versions';
 import { hashWithWorkspaceContext } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
 import type { LoadedNxPlugin } from './loaded-nx-plugin';
@@ -27,6 +26,21 @@ import type { LoadedNxPlugin } from './loaded-nx-plugin';
 export type PluginCapabilities = CachedPluginCapabilities;
 
 const LOCK_FILE_NAME = 'plugin-capabilities.lock';
+
+/**
+ * The version of the Nx that is running, from its own manifest rather than
+ * through `require('nx/package.json')`, which resolves to whichever Nx the
+ * module graph finds first. A source build reports the placeholder version in
+ * the repository, so a change to what Nx records from a plugin needs an
+ * `nx reset` during development.
+ */
+let runningNxVersion: string | undefined;
+function nxVersion(): string {
+  runningNxVersion ??= readJsonFile<{ version?: string }>(
+    join(__dirname, '../../../package.json')
+  ).version;
+  return runningNxVersion ?? '';
+}
 
 const SOURCE_EXTENSIONS = '{ts,tsx,cts,mts,js,cjs,mjs}';
 
@@ -129,22 +143,12 @@ export function sameCapabilities(
 }
 
 /**
- * Identifies the plugin module, so that two nx.json entries pointing at the
- * same module share a record and an upgrade never reuses one. Options are
- * deliberately absent: every capability is a presence check on the module's
- * static exports, and options are bound when a hook is called.
+ * Identifies the plugin module, or returns null when that cannot be done, which
+ * leaves the plugin to be loaded as it was before. Nx's own version is part of
+ * every key, since a record says what Nx believed about a module.
  *
- * Nx's own version is part of the key because a record says what Nx believed
- * about a module, and which hooks Nx looks for is Nx's to change. A release
- * that learns a new hook therefore reads no record written before it, rather
- * than reading a record whose missing field looks like "this plugin has no
- * such hook".
- *
- * Returns null for a module whose identity cannot be established, which is
- * then loaded as it was before.
- *
- * Deliberately not memoized per path. The daemon outlives edits to a local
- * plugin, so a remembered key would stop a change from invalidating anything.
+ * Not memoized per path: the daemon outlives edits to a local plugin, so a
+ * remembered key would stop a change from invalidating anything.
  */
 export async function computeCapabilityKey(
   pluginPath: string,
@@ -155,15 +159,27 @@ export async function computeCapabilityKey(
   }
   try {
     const id = pluginId(pluginPath, root);
-    const installedVersion = readInstalledVersion(pluginPath);
-    if (installedVersion) {
-      return hashArray(['installed', nxVersion, id, installedVersion]);
+
+    if (isInstalled(pluginPath)) {
+      const version = readInstalledVersion(pluginPath);
+      return version
+        ? hashArray(['installed', nxVersion(), id, version])
+        : null;
     }
+
+    // Without a project there is nothing to hash but the entry file, and a hook
+    // the entry re-exports would never move the key. Declining costs this
+    // plugin the load it paid for before the records existed.
+    const projectRoot = findLocalProjectRoot(pluginPath, root);
+    if (!projectRoot) {
+      return null;
+    }
+
     return hashArray([
       'local',
-      nxVersion,
+      nxVersion(),
       id,
-      await hashPluginSource(pluginPath, root),
+      await hashPluginSource(projectRoot, pluginPath, root),
     ]);
   } catch (e) {
     logger.verbose(`Could not identify the plugin at ${pluginPath}`, e);
@@ -182,21 +198,26 @@ function pluginId(pluginPath: string, root: string): string {
   );
 }
 
+function isInstalled(pluginPath: string): boolean {
+  return pluginPath.split(sep).includes('node_modules');
+}
+
 /**
- * The version of the installed package the module belongs to, or null when the
- * module is not installed. A package under `node_modules` cannot change without
- * its version changing, which is what makes the version sufficient on its own.
+ * The version of the installed package the module belongs to, or null when that
+ * package declares none. Identifying an installed package by its version is the
+ * same assumption Nx makes when it hashes task inputs from a lockfile; a tool
+ * that rewrites a package in place, such as patch-package, defeats both.
+ *
+ * The walk stops at the `node_modules` holding the package, so a package with
+ * no version is declined rather than taking the version of whatever sits above
+ * it, which would be the workspace's own.
  */
 function readInstalledVersion(pluginPath: string): string | null {
-  if (!pluginPath.split(sep).includes('node_modules')) {
-    return null;
-  }
-
   // Starts at the resolved path itself, which is a directory when Node was
   // left to resolve the package's own `main`.
   let dir = pluginPath;
   let previous: string | undefined;
-  while (dir !== previous) {
+  while (dir !== previous && basename(dir) !== 'node_modules') {
     const packageJsonPath = join(dir, 'package.json');
     if (existsSync(packageJsonPath)) {
       const { name, version } = readJsonFile(packageJsonPath);
@@ -211,27 +232,26 @@ function readInstalledVersion(pluginPath: string): string | null {
 }
 
 /**
- * Hashes the source a workspace-local plugin's exports could come from, which
- * is the whole project rather than the entry file, since a hook is commonly
+ * Hashes the sources a workspace-local plugin's exports can come from, which is
+ * its whole project rather than its entry file, since a hook is commonly
  * declared in a module the entry re-exports.
+ *
+ * Two kinds of source sit outside these globs and so cannot move the key: a
+ * module in another project, and a file this workspace ignores. The entry file
+ * is hashed directly, which covers neither beyond the entry itself. That is the
+ * limit of identifying a local plugin by its own project's sources.
  */
 async function hashPluginSource(
+  projectRoot: string,
   pluginPath: string,
   root: string
 ): Promise<string> {
-  const projectRoot = findLocalProjectRoot(pluginPath, root);
-  const globs = projectRoot
-    ? [
-        `${projectRoot}/**/*.${SOURCE_EXTENSIONS}`,
-        `${projectRoot}/package.json`,
-      ]
-    : [pluginId(pluginPath, root)];
-
-  // The entry file is hashed directly as well, because the globs run through
-  // the workspace context and so skip anything the workspace ignores.
   return hashArray([
     hashFile(pluginPath),
-    await hashWithWorkspaceContext(root, globs),
+    await hashWithWorkspaceContext(root, [
+      `${projectRoot}/**/*.${SOURCE_EXTENSIONS}`,
+      `${projectRoot}/package.json`,
+    ]),
   ]);
 }
 

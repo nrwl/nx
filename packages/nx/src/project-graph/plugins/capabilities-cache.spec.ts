@@ -119,6 +119,45 @@ describe('computeCapabilityKey', () => {
     expect(await computeCapabilityKey(pluginPath, root)).not.toEqual(before);
   });
 
+  it('declines a plugin with no project, rather than keying it on its entry file', async () => {
+    // `nx.json` can name a bare file, and nothing between it and the root is a
+    // project. Keying on the entry alone would miss a hook declared in a sibling
+    // the entry re-exports, and a stale record there skips the hook silently.
+    mkdirSync(join(root, 'tools'), { recursive: true });
+    const pluginPath = join(root, 'tools', 'my-plugin.ts');
+    writeFileSync(pluginPath, "export * from './hooks';");
+
+    expect(await computeCapabilityKey(pluginPath, root)).toBeNull();
+    expect(hashWithWorkspaceContext).not.toHaveBeenCalled();
+  });
+
+  it('declines an installed package that declares no version', async () => {
+    const packageRoot = join(root, 'node_modules', '@acme', 'unversioned');
+    mkdirSync(packageRoot, { recursive: true });
+    writeFileSync(
+      join(packageRoot, 'package.json'),
+      JSON.stringify({ name: '@acme/unversioned' })
+    );
+    // The workspace above it has one, and taking that would key every version of
+    // this package the same.
+    writeFileSync(
+      join(root, 'package.json'),
+      JSON.stringify({ name: 'the-workspace', version: '1.0.0' })
+    );
+    const pluginPath = join(packageRoot, 'index.js');
+    writeFileSync(pluginPath, 'module.exports = {};');
+
+    expect(await computeCapabilityKey(pluginPath, root)).toBeNull();
+  });
+
+  it('declines a plugin resolved outside the workspace', async () => {
+    const outside = mkdtempSync(join(tmpdir(), 'nx-linked-plugin-'));
+    const pluginPath = join(outside, 'index.ts');
+    writeFileSync(pluginPath, 'export const createNodes = [];');
+
+    expect(await computeCapabilityKey(pluginPath, root)).toBeNull();
+  });
+
   it('declines to identify a plugin when the cache is turned off', async () => {
     const pluginPath = writeInstalledPlugin('1.2.3');
 
