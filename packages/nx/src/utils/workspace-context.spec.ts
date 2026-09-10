@@ -80,3 +80,44 @@ describe('workspace-context /virtual short-circuit', () => {
     expect(result).toEqual([['daemon-result']]);
   });
 });
+
+describe('which constructor a process uses', () => {
+  const fromArchive = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    resetWorkspaceContext();
+    mockEnabled.mockReturnValue(false);
+    mockIsOnDaemon.mockReturnValue(false);
+    mockGlob.mockReturnValue(['result']);
+    (cjsNative.WorkspaceContext as any).fromArchive =
+      fromArchive.mockImplementation(() => ({
+        glob: mockGlob,
+        multiGlob: mockMultiGlob,
+        workspaceRoot: '/virtual',
+      }));
+  });
+
+  afterEach(() => {
+    delete (global as any).NX_PLUGIN_WORKER;
+  });
+
+  it('a plugin worker loads the archive its host wrote instead of walking', async () => {
+    (global as any).NX_PLUGIN_WORKER = true;
+
+    await globWithWorkspaceContext('/virtual', ['**/*.ts']);
+
+    expect(fromArchive).toHaveBeenCalledWith('/virtual', '/virtual/.nx');
+    expect(cjsNative.WorkspaceContext).not.toHaveBeenCalled();
+  });
+
+  it('a host walks', async () => {
+    await globWithWorkspaceContext('/virtual', ['**/*.ts']);
+
+    expect(cjsNative.WorkspaceContext).toHaveBeenCalledWith(
+      '/virtual',
+      '/virtual/.nx'
+    );
+    expect(fromArchive).not.toHaveBeenCalled();
+  });
+});

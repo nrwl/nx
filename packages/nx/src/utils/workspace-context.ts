@@ -11,10 +11,12 @@ export function setupWorkspaceContext(workspaceRoot: string) {
   const { WorkspaceContext } =
     require('../native') as typeof import('../native');
   performance.mark('workspace-context');
-  workspaceContext = new WorkspaceContext(
-    workspaceRoot,
-    workspaceDataDirectoryForWorkspace(workspaceRoot)
-  );
+  const cacheDir = workspaceDataDirectoryForWorkspace(workspaceRoot);
+  // A plugin worker is only asked for files after its host finished walking
+  // and wrote the archive, so it loads that rather than walking again.
+  workspaceContext = (global as any).NX_PLUGIN_WORKER
+    ? WorkspaceContext.fromArchive(workspaceRoot, cacheDir)
+    : new WorkspaceContext(workspaceRoot, cacheDir);
   performance.mark('workspace-context:end');
   performance.measure(
     'workspace context init',
