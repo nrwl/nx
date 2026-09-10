@@ -29,10 +29,10 @@ pub struct HashPlanner {
     /// Memoized instruction ids contributed by (dependency project, propagated
     /// input), including its whole transitive closure. Shared across all tasks
     /// in all get_plans calls: values derive only from the immutable project
-    /// graph and nx_json. Only consulted on acyclic graphs — see
+    /// graph and nx_json. Only consulted for acyclic dependency closures — see
     /// `dependency_memo_enabled`.
     subtree_memo: OnceCache<SubtreeResult>,
-    is_acyclic: OnceLock<bool>,
+    acyclic_dependency_projects: OnceLock<hashbrown::HashSet<String>>,
     /// Interner backing every plan this planner produces.
     instruction_pool: Arc<InstructionPool>,
 }
@@ -146,7 +146,7 @@ impl HashPlanner {
             project_graph: Arc::clone(project_graph),
             external_deps_mapped: OnceLock::new(),
             subtree_memo: OnceCache::new(),
-            is_acyclic: OnceLock::new(),
+            acyclic_dependency_projects: OnceLock::new(),
             instruction_pool: Arc::new(InstructionPool::new()),
         }
     }
@@ -448,50 +448,54 @@ impl HashPlanner {
             .collect()
     }
 
-    /// The subtree memo composes child results without per-path cycle checks,
-    /// so it is only sound on acyclic graphs (also avoids OnceCell deadlock on
-    /// a dependency cycle). Cyclic graphs use the visited-scoped traversal.
-    fn dependency_memo_enabled(&self) -> bool {
-        *self
-            .is_acyclic
-            .get_or_init(|| self.project_graph_is_acyclic())
+    /// A closure is safe to memoize only if no project in it reaches a cycle.
+    /// This also prevents recursive OnceCell waits. Other projects retain the
+    /// visited-scoped traversal even when they share acyclic dependencies.
+    fn dependency_memo_enabled(&self, project: &str) -> bool {
+        self.acyclic_dependency_projects
+            .get_or_init(|| self.find_acyclic_dependency_projects())
+            .contains(project)
     }
 
-    fn project_graph_is_acyclic(&self) -> bool {
-        const WHITE: u8 = 0;
-        const GRAY: u8 = 1;
-        const BLACK: u8 = 2;
-        let deps = &self.project_graph.dependencies;
-        let mut color: hashbrown::HashMap<&str, u8> = hashbrown::HashMap::new();
-
-        for start in deps.keys() {
-            if color.get(start.as_str()).copied().unwrap_or(WHITE) != WHITE {
-                continue;
+    fn find_acyclic_dependency_projects(&self) -> hashbrown::HashSet<String> {
+        // Remove sinks and then their parents (reverse topological order).
+        // Exactly the nodes that cannot reach a project cycle are removed.
+        // Count repeated edges consistently and ignore external-node cycles.
+        let mut remaining = hashbrown::HashMap::new();
+        let mut parents: hashbrown::HashMap<&str, Vec<&str>> = hashbrown::HashMap::new();
+        let mut ready = Vec::new();
+        for project in self.project_graph.nodes.keys() {
+            let mut count = 0;
+            if let Some(deps) = self.project_graph.dependencies.get(project) {
+                for dep in deps {
+                    if self.project_graph.nodes.contains_key(dep) {
+                        count += 1;
+                        parents
+                            .entry(dep.as_str())
+                            .or_default()
+                            .push(project.as_str());
+                    }
+                }
             }
-            let mut stack: Vec<(&str, usize)> = vec![(start.as_str(), 0)];
-            color.insert(start.as_str(), GRAY);
-            while let Some((node, edge_idx)) = stack.last_mut() {
-                let children = deps.get(*node).map(|c| c.as_slice()).unwrap_or(&[]);
-                if let Some(child) = children.get(*edge_idx) {
-                    *edge_idx += 1;
-                    if !self.project_graph.nodes.contains_key(child) {
-                        continue;
+            remaining.insert(project.as_str(), count);
+            if count == 0 {
+                ready.push(project.as_str());
+            }
+        }
+        let mut acyclic = hashbrown::HashSet::new();
+        while let Some(project) = ready.pop() {
+            acyclic.insert(project.to_string());
+            if let Some(dependents) = parents.get(project) {
+                for parent in dependents {
+                    let count = remaining.get_mut(parent).unwrap();
+                    *count -= 1;
+                    if *count == 0 {
+                        ready.push(parent);
                     }
-                    match color.get(child.as_str()).copied().unwrap_or(WHITE) {
-                        GRAY => return false,
-                        WHITE => {
-                            color.insert(child.as_str(), GRAY);
-                            stack.push((child.as_str(), 0));
-                        }
-                        _ => {}
-                    }
-                } else {
-                    color.insert(node, BLACK);
-                    stack.pop();
                 }
             }
         }
-        true
+        acyclic
     }
 
     fn memoized_dep_subtree(
@@ -617,7 +621,6 @@ impl HashPlanner {
         visited: &mut VisitedTracker<'a>,
     ) -> anyhow::Result<Vec<u32>> {
         let pool = &self.instruction_pool;
-        let memo_enabled = self.dependency_memo_enabled();
         let mut deps_inputs = InstructionIdSet::default();
         // External membership is separate from project cycle detection, whose
         // scopes must still be rolled back independently for sibling inputs.
@@ -629,7 +632,7 @@ impl HashPlanner {
             }
 
             if self.project_graph.nodes.contains_key(dep) {
-                if memo_enabled {
+                if self.dependency_memo_enabled(dep) {
                     let sub = self.memoized_dep_subtree(dep, input, external_deps_mapped)?;
                     if !sub.needs_legacy {
                         // Shared closures are unioned by id before allocation,
@@ -855,6 +858,153 @@ fn find_external_dependency_node_name<'a>(
 mod tests {
     use super::*;
     use crate::native::project_graph::types::{ExternalNode, Project, Target};
+
+    fn mixed_cycle_planner(with_outputs: bool) -> HashPlanner {
+        use crate::native::types::{DepsOutputsInput, JsInputs};
+        use napi::bindgen_prelude::Either9;
+        let edges = [
+            ("app", vec!["cycle-a", "branch", "leaf"]),
+            ("cycle-a", vec!["cycle-b", "branch"]),
+            ("cycle-b", vec!["cycle-a", "leaf"]),
+            ("branch", vec!["leaf", "leaf"]),
+            ("leaf", vec!["npm:external"]),
+            ("self-cycle", vec!["self-cycle"]),
+            ("isolated", vec![]),
+        ];
+        let nodes = edges
+            .iter()
+            .map(|(name, _)| {
+                let mut prod: Vec<JsInputs> = vec![Either9::B("{projectRoot}/prod".into())];
+                if with_outputs && *name == "leaf" {
+                    prod.push(Either9::G(DepsOutputsInput {
+                        dependent_tasks_output_files: "**/*.js".into(),
+                        transitive: Some(true),
+                    }));
+                }
+                (
+                    name.to_string(),
+                    Project {
+                        root: name.to_string(),
+                        named_inputs: Some(HashMap::from([
+                            ("prod".into(), prod),
+                            ("spec".into(), vec![Either9::B("{projectRoot}/spec".into())]),
+                        ])),
+                        targets: HashMap::from([(
+                            "build".into(),
+                            Target {
+                                inputs: Some(vec![
+                                    Either9::B("default".into()),
+                                    Either9::B("^prod".into()),
+                                    Either9::B("^spec".into()),
+                                ]),
+                                ..Default::default()
+                            },
+                        )]),
+                        ..Default::default()
+                    },
+                )
+            })
+            .collect();
+        let mut dependencies: HashMap<String, Vec<String>> = edges
+            .into_iter()
+            .map(|(name, deps)| {
+                (
+                    name.to_string(),
+                    deps.into_iter().map(str::to_string).collect(),
+                )
+            })
+            .collect();
+        dependencies.insert("npm:external".into(), vec!["npm:external".into()]);
+        HashPlanner::new(
+            NxJson { named_inputs: None },
+            &External::new(Arc::new(ProjectGraph {
+                nodes,
+                dependencies,
+                external_nodes: HashMap::from([(
+                    "npm:external".into(),
+                    ExternalNode {
+                        package_name: Some("external".into()),
+                        version: "1".into(),
+                        hash: None,
+                    },
+                )]),
+            })),
+        )
+    }
+
+    #[test]
+    fn only_project_closures_without_cycles_are_memoized() {
+        let planner = mixed_cycle_planner(false);
+        let safe = planner.find_acyclic_dependency_projects();
+        assert_eq!(
+            safe,
+            hashbrown::HashSet::from(["branch".into(), "leaf".into(), "isolated".into()])
+        );
+        for name in planner.project_graph.nodes.keys() {
+            assert_eq!(planner.dependency_memo_enabled(name), safe.contains(name));
+        }
+    }
+
+    #[test]
+    fn mixed_cycles_match_visited_traversal_with_multiple_inputs_and_output_fallback() {
+        for with_outputs in [false, true] {
+            let cached = mixed_cycle_planner(with_outputs);
+            let legacy = mixed_cycle_planner(with_outputs);
+            legacy
+                .acyclic_dependency_projects
+                .set(hashbrown::HashSet::new())
+                .unwrap();
+            let tasks = || {
+                let tasks: HashMap<_, _> = cached
+                    .project_graph
+                    .nodes
+                    .keys()
+                    .map(|name| {
+                        let task =
+                            Task::new(name, "build").with_outputs(vec![format!("{name}/out.js")]);
+                        (task.id.clone(), task)
+                    })
+                    .collect();
+                TaskGraph {
+                    roots: tasks.keys().cloned().collect(),
+                    dependencies: tasks
+                        .keys()
+                        .map(|id| {
+                            (
+                                id.clone(),
+                                if id == "app:build" {
+                                    vec!["leaf:build".to_string()]
+                                } else {
+                                    vec![]
+                                },
+                            )
+                        })
+                        .collect(),
+                    continuous_dependencies: HashMap::new(),
+                    tasks,
+                }
+            };
+            let mut ids: Vec<_> = tasks().tasks.keys().cloned().collect();
+            let expected = legacy
+                .get_plans_materialized(ids.iter().map(String::as_str).collect(), tasks())
+                .unwrap();
+            for _ in 0..3 {
+                ids.reverse();
+                assert_eq!(
+                    cached
+                        .get_plans_materialized(ids.iter().map(String::as_str).collect(), tasks())
+                        .unwrap(),
+                    expected
+                );
+            }
+            for id in &ids {
+                assert_eq!(
+                    cached.get_plans_materialized(vec![id], tasks()).unwrap()[id],
+                    expected[id]
+                );
+            }
+        }
+    }
 
     #[test]
     fn token_resolution_preserves_root_and_sequential_substitution() {
