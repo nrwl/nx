@@ -192,6 +192,67 @@ console.log('resume');
   check('link preserves the body', /No draft yet/.test(front), true);
 }
 
+console.log('staleness');
+{
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const store = require('./review');
+  const at = 'ac79d3b0aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+  const moved = '11ded7cdbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
+  check('an unmoved head shows the sha alone', store.reviewedAt({ head_sha: at, current_head: at }), 'ac79d3b0');
+  // The case the tree comparison could not answer: a rebase changes the tree even
+  // when the PR's own change is identical, so only patch-ids settle it.
+  check(
+    'a rebase that kept the same change is not flagged',
+    store.reviewedAt({ head_sha: at, current_head: moved, head_change: 'rebased-same' }),
+    'ac79d3b0 = rebased, same'
+  );
+  check(
+    'a head that moved with no file change is not flagged',
+    store.reviewedAt({ head_sha: at, current_head: moved, head_change: 'none' }),
+    'ac79d3b0 = no change'
+  );
+  check(
+    'a plain advance shows its counts',
+    store.reviewedAt({ head_sha: at, current_head: moved, head_change: '+250/-32' }),
+    'ac79d3b0 ⟳ +250/-32'
+  );
+  check(
+    'a rebase that changed the PR shows both facts',
+    store.reviewedAt({ head_sha: at, current_head: moved, head_change: 'rebased +30/-19' }),
+    'ac79d3b0 ⟳ rebased +30/-19'
+  );
+  check(
+    'an unresolvable comparison falls back to stale rather than hiding it',
+    store.reviewedAt({ head_sha: at, current_head: moved }),
+    'ac79d3b0 ⟳ stale'
+  );
+  check('no recorded sha renders empty', store.reviewedAt({}), '');
+}
+
+console.log('handoff');
+{
+  const dir = tmp();
+  fs.writeFileSync(
+    path.join(dir, '90.md'),
+    '---\npr: 90\ntitle: t\nbranch: my/branch\nhead_sha: aaaaaaaaaaaa\ncurrent_head: bbbbbbbbbbbb\nhead_change: +5/-2\nverdict: needs-changes\nattempt: 2\nposted_at:\n---\n\nbody\n'
+  );
+  const out = run(dir, ['handoff', '90']).out;
+  check('carries the branch', /Branch:  my\/branch/.test(out), true);
+  check('carries the draft path', out.includes(path.join(dir, '90.md')), true);
+  check('states the drift', /⟳ \+5\/-2/.test(out), true);
+  check('warns that the PR moved', /has moved since the review/.test(out), true);
+  fs.writeFileSync(
+    path.join(dir, '91.md'),
+    '---\npr: 91\ntitle: t\nhead_sha: aaaaaaaaaaaa\ncurrent_head: aaaaaaaaaaaa\nverdict: lgtm\nattempt: 1\nposted_at:\n---\n\nbody\n'
+  );
+  check(
+    'and says the opposite when it has not',
+    /has not moved since the review/.test(run(dir, ['handoff', '91']).out),
+    true
+  );
+  check('a missing record fails loudly', run(dir, ['handoff', '999']).code, 1);
+}
+
 console.log('undo');
 {
   const dir = tmp();

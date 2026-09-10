@@ -458,27 +458,11 @@ function detailLines(record: Record_, width: number, notes: string[]): Line[] {
   // theirs `## Review draft`) would otherwise render an empty pane. Show the
   // record's own prose instead of nothing.
   if (!comment && !rationale && !feedback) {
-    const draft =
-      triage.section(body, 'Review draft') ||
-      body.replace(/^#[^\n]*\n/, '').trim();
-    // The cap is load-bearing, not tidiness. Measured: at 400 lines the list above
-    // shifts by a row at some cursor positions, at 120 it still does, at 40 and 15
-    // it does not. The list's own arithmetic is identical across shifted and
-    // unshifted frames, so the coupling is inside the renderer rather than in this
-    // file. 40 keeps it stable and still fills the pane; the whole draft is one
-    // `review show <PR>` away, and this pane is for status.
-    const all = wrapText(draft || '(no body)', width);
-    const CAP = 40;
-    const shown = all.slice(0, CAP).map((t) => ln({ t }));
-    if (all.length > CAP)
-      shown.push(
-        ln({ t: '' }),
-        ln({
-          t: `  … ${all.length - CAP} more lines — review show ${record.front.issue}`,
-          color: DIM,
-        })
-      );
-    return shown;
+    // The whole record, not just its current attempt. `## Prior reviews` holds
+    // every earlier round, and on #36870 the current draft is 84 lines of a
+    // 2371-line record. The pane scrolls, so length is free.
+    const draft = body.replace(/^#[^\n]*\n/, '').trim();
+    return wrapText(draft || '(no body)', width).map((t) => ln({ t }));
   }
 
   const out: Line[] = [];
@@ -794,6 +778,10 @@ function App() {
   // Defaults to the store's preference: a review list is mostly settled records
   // (23 dismissed and 20 posted against 17 live at the time of writing), so
   // opening on everything buries the work. Triage leaves it off as before.
+  // The detail pane is windowed here rather than left to the scrollbox's own
+  // scrolling, so the keyboard can drive it. opentui scrolls a scrollbox on the
+  // mouse wheel only, and an uncapped body is otherwise reachable only by mouse.
+  const [detailOffset, setDetailOffset] = useState(0);
   const [pendingOnly, setPendingOnly] = useState(
     triage.DEFAULT_PENDING_ONLY ?? false
   );
@@ -1199,8 +1187,18 @@ function App() {
     // so that quitting always goes through the same path that leaves the screen
     // before printing the summary.
     if (k.name === 'q' || (k.ctrl && k.name === 'c')) quit();
-    else if (k.name === 'j' || k.name === 'down') moveBy(1);
-    else if (k.name === 'k' || k.name === 'up') moveBy(-1);
+    else if (k.name === 'j' || k.name === 'down') { setDetailOffset(0); moveBy(1); }
+    else if (k.name === 'k' || k.name === 'up') { setDetailOffset(0); moveBy(-1); }
+    else if (k.ctrl && k.name === 'd')
+      setDetailOffset((o) => Math.min(maxOffset, o + Math.max(1, Math.floor(contentH / 2))));
+    else if (k.ctrl && k.name === 'u')
+      setDetailOffset((o) => Math.max(0, o - Math.max(1, Math.floor(contentH / 2))));
+    else if (k.name === 'pagedown') setDetailOffset((o) => Math.min(maxOffset, o + contentH));
+    else if (k.name === 'pageup') setDetailOffset((o) => Math.max(0, o - contentH));
+    // A record can run to a couple of thousand lines, so paging to the end is not
+    // a reasonable way to reach it.
+    else if (k.sequence === 'G' || k.name === 'end') setDetailOffset(maxOffset);
+    else if (k.sequence === 'g' || k.name === 'home') setDetailOffset(0);
     else if (ACTIONS.some((a) => a.key === k.sequence) && current) {
       const act = ACTIONS.find((a) => a.key === k.sequence)!;
       // Detached and ignored: the action opens or focuses a tab elsewhere, and
@@ -1257,6 +1255,15 @@ function App() {
   // rows in the list, not something drawn beside it.
   const LIST_H = Math.max(3, Math.min(9, size.rows - 12));
 
+  // What is left for the detail pane once everything fixed is paid for: the
+  // header, the margin above the list, the list, the margin above this pane, its
+  // two border rows and the footer.
+  const detailH = Math.max(3, size.rows - LIST_H - 6);
+  // `height` on a scrollbox counts its borders, so the drawable area is two rows
+  // smaller. Slicing by detailH fed it two more lines than it could draw and
+  // silently clipped them, losing the last line of every long record.
+  const contentH = Math.max(1, detailH - 2);
+
   // Solved in two passes because it is circular: whether a marker is needed
   // depends on how many issue rows fit, which depends on how many markers take
   // a line. Two passes settle it for any list length.
@@ -1286,7 +1293,7 @@ function App() {
   const rows = visible.slice(start, start + count);
   const hiddenAbove = start;
   const hiddenBelow = visible.length - (start + count);
-  const lines = current
+  const allLines = current
     ? detailLines(
         current,
         Math.max(24, size.cols - 6),
@@ -1295,6 +1302,9 @@ function App() {
           .map((n) => n.note)
       )
     : [];
+  const maxOffset = Math.max(0, allLines.length - contentH);
+  const offset = Math.min(detailOffset, maxOffset);
+  const lines = allLines.slice(offset, offset + contentH);
 
   return (
     <box flexDirection="column" width="100%" height="100%">
@@ -1397,7 +1407,11 @@ function App() {
                     fg={
                       c.key === 'verdict'
                         ? VERDICT_COLOR[r.front[c.key]] || DIM
-                        : DIM
+                        : // A store marks a value as needing attention with ⟳. One
+                          // generic rule beats a per-column colour map.
+                          String(r.front[c.key] ?? '').includes('⟳')
+                          ? 'yellow'
+                          : DIM
                     }
                   >
                     {truncate(String(r.front[c.key] ?? ''), c.width - 1).padEnd(
@@ -1455,17 +1469,13 @@ function App() {
       </box>
 
       <scrollbox
-        flexGrow={1}
-        // Defensive, not the fix: a flex item's minimum size defaults to its
-        // content, and pinning it to 0 is correct regardless. It did NOT stop the
-        // list above from shifting — measured, with a 400-line detail it still
-        // moved. What stops it is capping the line COUNT below (see detailLines):
-        // past roughly 40 children this scrollbox perturbs its sibling's layout,
-        // and I did not find why. Nothing in the list's own arithmetic is
-        // involved — instrumenting it showed identical H/count/start/hidden
-        // values across a shifted and an unshifted frame.
+        // Explicit height rather than flexGrow. Sized from the terminal, this pane
+        // cannot grow with its content, so a long body scrolls inside it instead
+        // of pushing the list above out of position. flexGrow made the pane's
+        // height a function of how many children it held.
+        height={detailH}
         minHeight={0}
-        flexShrink={1}
+        flexShrink={0}
         marginTop={1}
         border
         borderColor={DIM}
@@ -1613,6 +1623,15 @@ function App() {
               <span>esc closes</span>
             ) : (
               <span>
+                {maxOffset > 0 ? (
+                  <span fg={DIM}>
+                    {`${offset + 1}-${Math.min(offset + contentH, allLines.length)}/${allLines.length} `}
+                    <span fg="cyan">^d/^u</span>
+                    {' scroll · '}
+                    <span fg="cyan">g/G</span>
+                    {' ends · '}
+                  </span>
+                ) : null}
                 {ACTIONS.map((a) => (
                   <span key={a.key}>
                     <span fg="cyan">{a.key}</span>
