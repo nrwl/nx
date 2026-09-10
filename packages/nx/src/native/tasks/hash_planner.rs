@@ -13,7 +13,6 @@ use rayon::prelude::*;
 use std::collections::HashMap;
 use tracing::trace;
 
-use std::sync::OnceLock;
 use crate::native::tasks::hashers::OnceCache;
 use crate::native::tasks::inputs::{
     expand_single_project_inputs, get_inputs, get_inputs_for_dependency, get_named_inputs,
@@ -21,6 +20,7 @@ use crate::native::tasks::inputs::{
 use crate::native::tasks::utils;
 use crate::native::utils::find_matching_projects;
 use std::sync::Arc;
+use std::sync::OnceLock;
 
 #[napi]
 pub struct HashPlanner {
