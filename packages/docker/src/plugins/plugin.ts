@@ -333,7 +333,9 @@ async function createDockerTargets(
 
   targets[interpolatedRunTarget.name] = {
     dependsOn: [interpolatedBuildTarget.name],
-    command: `docker run {args} ${imageRef}`,
+    command: interpolatedBuildTarget.skipDefaultTag
+      ? `docker run {args}`
+      : `docker run {args} ${imageRef}`,
     options: runOptions,
     ...(runConfigurations && { configurations: runConfigurations }),
     inputs: [
