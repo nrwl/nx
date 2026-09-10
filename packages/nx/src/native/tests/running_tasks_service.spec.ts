@@ -29,9 +29,11 @@ describe('RunningTasksService', () => {
 
   it('should record a task as running', () => {
     runningTasksService.addRunningTask('app:build');
-    expect(runningTasksService.getRunningTasks(['app:build'])).toEqual([
-      'app:build',
-    ]);
+    const results = runningTasksService.getRunningTasks(['app:build']);
+    expect(results).toHaveLength(1);
+    expect(results[0].taskId).toEqual('app:build');
+    expect(results[0].pid).toBeDefined();
+    expect(results[0].cwd).toBeDefined();
   });
 
   it('should remove a task from running tasks', () => {
