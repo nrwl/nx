@@ -16,7 +16,7 @@ use crate::native::utils::{Normalize, NxCondvar, NxMutex, path::get_child_files}
 #[cfg(not(target_arch = "wasm32"))]
 use crate::native::workspace::files_archive::archive_modified_at;
 use crate::native::workspace::files_archive::{
-    NxFileHashes, read_files_archive, write_files_archive,
+    FilesArchive, NxFileHashes, read_files_archive, write_files_archive,
 };
 use crate::native::workspace::files_hashing::{full_files_hash, selective_files_hash};
 use crate::native::workspace::types::{
@@ -39,10 +39,19 @@ type Files = Vec<(PathBuf, String)>;
 
 const NX_FILES_LOCK: &str = "nx_files.lock";
 
-fn archive_to_files(archive: NxFileHashes) -> Files {
-    let mut files: Files = archive
+fn hashes_to_files(hashes: NxFileHashes) -> Files {
+    let mut files: Files = hashes
         .into_iter()
         .map(|(path, hashed)| (PathBuf::from(path), hashed.0))
+        .collect();
+    files.par_sort();
+    files
+}
+
+fn archive_to_files(archive: FilesArchive) -> Files {
+    let mut files: Files = archive
+        .iter()
+        .map(|(path, hash, _)| (PathBuf::from(path), hash.to_owned()))
         .collect();
     files.par_sort();
     files
@@ -126,7 +135,7 @@ fn gather_and_hash_files(workspace_root: &Path, cache_dir: String) -> Vec<(PathB
     trace!("Gathering files in {}", workspace_root.display());
     let now = std::time::Instant::now();
     let file_hashes = if let Some(archived_files) = archived_files {
-        selective_files_hash(workspace_root, archived_files)
+        selective_files_hash(workspace_root, &archived_files)
     } else {
         full_files_hash(workspace_root)
     };
@@ -135,7 +144,7 @@ fn gather_and_hash_files(workspace_root: &Path, cache_dir: String) -> Vec<(PathB
 
     // Drain the map rather than clone it: the path and hash strings move into
     // the vec, so the list is never held twice.
-    let files = archive_to_files(file_hashes);
+    let files = hashes_to_files(file_hashes);
     trace!("hashed and sorted files in {:?}", now.elapsed());
 
     files

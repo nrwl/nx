@@ -1,6 +1,6 @@
 use anyhow::anyhow;
 use hashbrown::HashMap;
-use rkyv::{Archive, Deserialize, Infallible, Serialize};
+use rkyv::{AlignedVec, Archive, Deserialize, Serialize};
 use std::ops::{Deref, DerefMut};
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
@@ -59,27 +59,67 @@ pub fn archive_modified_at<P: AsRef<Path>>(cache_dir: P) -> Option<SystemTime> {
         .ok()
 }
 
-pub fn read_files_archive<P: AsRef<Path>>(cache_dir: P) -> Option<NxFileHashes> {
+/// The archive as written, validated once and read in place. Lookups and
+/// iteration borrow straight from the bytes, so loading an archive never
+/// materializes the hash map it was serialized from.
+pub struct FilesArchive {
+    bytes: AlignedVec,
+}
+
+impl FilesArchive {
+    /// Serializes an owned map into an in-memory archive, for tests.
+    #[cfg(test)]
+    pub fn from_hashes(files: &NxFileHashes) -> Option<Self> {
+        rkyv::to_bytes::<_, 2048>(files)
+            .ok()
+            .map(|bytes| FilesArchive { bytes })
+    }
+
+    fn archived(&self) -> &ArchivedNxFileHashes {
+        // The bytes were validated by `check_archived_root` when this was
+        // constructed, which is the only way to construct it.
+        unsafe { rkyv::archived_root::<NxFileHashes>(&self.bytes) }
+    }
+
+    pub fn len(&self) -> usize {
+        self.archived().0.len()
+    }
+
+    /// The recorded hash and modification time for a workspace-relative path.
+    pub fn get(&self, path: &str) -> Option<(&str, i64)> {
+        self.archived()
+            .0
+            .get(path)
+            .map(|hashed| (hashed.0.as_str(), hashed.1))
+    }
+
+    /// Every entry as (path, hash, modification time).
+    pub fn iter(&self) -> impl Iterator<Item = (&str, &str, i64)> {
+        self.archived()
+            .0
+            .iter()
+            .map(|(path, hashed)| (path.as_str(), hashed.0.as_str(), hashed.1))
+    }
+}
+
+pub fn read_files_archive<P: AsRef<Path>>(cache_dir: P) -> Option<FilesArchive> {
     let now = std::time::Instant::now();
     let archive_path = archive_path(cache_dir);
     if !archive_path.exists() {
         return None;
     }
 
-    let bytes = std::fs::read(archive_path)
+    let result = std::fs::File::open(&archive_path)
         .map_err(anyhow::Error::from)
-        .and_then(|bytes| {
-            // let archived = unsafe { rkyv::archived_root::<NxFilesArchive>(&bytes) };
-            let archived = rkyv::check_archived_root::<NxFileHashes>(&bytes)
+        .and_then(|mut file| {
+            let mut bytes = AlignedVec::new();
+            bytes.extend_from_reader(&mut file)?;
+            rkyv::check_archived_root::<NxFileHashes>(&bytes)
                 .map_err(|_| anyhow!("invalid archive file"))?;
-            <ArchivedNxFileHashes as Deserialize<NxFileHashes, Infallible>>::deserialize(
-                archived,
-                &mut rkyv::Infallible,
-            )
-            .map_err(anyhow::Error::from)
+            Ok(FilesArchive { bytes })
         });
 
-    match bytes {
+    match result {
         Ok(archive) => {
             trace!("read archive in {:?}", now.elapsed());
             Some(archive)

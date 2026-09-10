@@ -7,7 +7,7 @@ use tracing::trace;
 
 use crate::native::hasher::hash_file_path;
 use crate::native::walker::{NxFile, nx_walker};
-use crate::native::workspace::files_archive::{NxFileHashed, NxFileHashes};
+use crate::native::workspace::files_archive::{FilesArchive, NxFileHashed, NxFileHashes};
 
 pub fn full_files_hash(workspace_root: &Path) -> NxFileHashes {
     let files = nx_walker(workspace_root, true).collect::<Vec<_>>();
@@ -15,19 +15,19 @@ pub fn full_files_hash(workspace_root: &Path) -> NxFileHashes {
     hash_files(files).into_iter().collect()
 }
 
-pub fn selective_files_hash(
-    workspace_root: &Path,
-    mut archived_files: NxFileHashes,
-) -> NxFileHashes {
+pub fn selective_files_hash(workspace_root: &Path, archived_files: &FilesArchive) -> NxFileHashes {
     let files = nx_walker(workspace_root, true).collect::<Vec<_>>();
     let mut archived = vec![];
     let mut not_archived = vec![];
     let now = std::time::Instant::now();
 
     for file in files {
-        if let Some(archived_file) = archived_files.remove(&file.normalized_path) {
-            if archived_file.1 == file.mod_time {
-                archived.push((file.normalized_path, archived_file));
+        if let Some((hash, mod_time)) = archived_files.get(&file.normalized_path) {
+            if mod_time == file.mod_time {
+                archived.push((
+                    file.normalized_path,
+                    NxFileHashed(hash.to_owned(), mod_time),
+                ));
                 continue;
             }
         }
@@ -90,7 +90,7 @@ mod tests {
     use assert_fs::prelude::*;
 
     use crate::native::utils::get_mod_time;
-    use crate::native::workspace::files_archive::{NxFileHashed, NxFileHashes};
+    use crate::native::workspace::files_archive::{FilesArchive, NxFileHashed, NxFileHashes};
 
     fn setup_fs() -> TempDir {
         let temp = TempDir::new().unwrap();
@@ -148,7 +148,8 @@ mod tests {
         .into_iter()
         .collect::<NxFileHashes>();
 
-        let hashed_files = super::selective_files_hash(temp.path(), archived_files);
+        let archived_files = FilesArchive::from_hashes(&archived_files).unwrap();
+        let hashed_files = super::selective_files_hash(temp.path(), &archived_files);
         let mut hashed_files = hashed_files
             .iter()
             .map(|(path, _)| path.as_str())
