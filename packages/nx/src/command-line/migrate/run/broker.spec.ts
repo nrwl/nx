@@ -259,7 +259,7 @@ describe('migrate commit broker', () => {
       expect(brokerFiles()).toEqual([]);
     });
 
-    it('prints the install output the session collected before landing the commit', async () => {
+    it('lands the commit after a succeeded install, keeping the install output out of the step', async () => {
       parentCommits();
       const broker = new MigrateCommitBroker(
         root,
@@ -286,7 +286,7 @@ describe('migrate commit broker', () => {
         'npx nx migrate',
         expect.anything()
       );
-      expect(stdout).toBe('added 1 package\n');
+      expect(stdout).toBe('');
     });
 
     it('fails the step with the install error the session reported, after printing what the install said', async () => {
@@ -471,7 +471,7 @@ describe('migrate commit broker', () => {
         'npx nx migrate',
         expect.anything()
       );
-      expect(stdout).toBe('added 1 package\n');
+      expect(stdout).toBe('');
       expect(readRunState(dir).steps[0].depsHashAtDispense).not.toBe(
         'baseline'
       );

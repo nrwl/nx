@@ -1,6 +1,7 @@
 import * as pc from 'picocolors';
 import { logger } from '../../utils/logger';
 import { output } from '../../utils/output';
+import type { BoundedChunks } from './agentic/capture-generator-output';
 
 // What a dependency install or a migration commit tells the user, as the
 // calls that would print it. The helpers write through a sink so a caller
@@ -33,13 +34,14 @@ export type DeferredOutputRecord =
 
 interface RawBlock {
   kind: 'raw-block';
-  chunks: string[];
+  buffer: BoundedChunks;
 }
 
 /**
  * Collects the output as records that `replayDeferredOutput` prints later.
- * Render once the output is complete: a rendered collector accepts nothing
- * more.
+ * The notices and lines are always kept; package manager output is bounded
+ * like generator output and rendered only on request. Render once the output
+ * is complete: a rendered collector accepts nothing more.
  */
 export class DeferredOutputCollector implements MigrateOutputSink {
   private readonly records: (DeferredOutputRecord | RawBlock)[] = [];
@@ -68,23 +70,32 @@ export class DeferredOutputCollector implements MigrateOutputSink {
     this.assertOpen();
     let block = this.records[this.records.length - 1];
     if (block?.kind !== 'raw-block') {
-      block = { kind: 'raw-block', chunks: [] };
+      // Lazy: the non-agentic migrate path must not load the agentic chain.
+      const { BoundedChunks } =
+        require('./agentic/capture-generator-output') as typeof import('./agentic/capture-generator-output');
+      block = { kind: 'raw-block', buffer: new BoundedChunks() };
       this.records.push(block);
     }
-    block.chunks.push(chunk);
+    block.buffer.append(chunk);
   }
 
-  render(): DeferredOutputRecord[] {
+  render(rawOutput: 'keep' | 'drop'): DeferredOutputRecord[] {
     this.rendered = true;
-    return this.records.map((record) => {
-      if (record.kind !== 'raw-block') return record;
+    const records: DeferredOutputRecord[] = [];
+    for (const record of this.records) {
+      if (record.kind !== 'raw-block') {
+        records.push(record);
+        continue;
+      }
+      if (rawOutput === 'drop') continue;
       // The replay adds the final newline back.
-      const text = record.chunks.join('');
-      return {
+      const text = record.buffer.render();
+      records.push({
         kind: 'raw',
         text: text.endsWith('\n') ? text.slice(0, -1) : text,
-      };
-    });
+      });
+    }
+    return records;
   }
 }
 
