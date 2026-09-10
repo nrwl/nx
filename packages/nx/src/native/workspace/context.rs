@@ -63,10 +63,14 @@ fn walk_wait_from(configured: Option<&str>) -> Duration {
         return DEFAULT_WALK_WAIT;
     };
     match value.trim().parse::<u64>() {
-        Ok(ms) => Duration::from_millis(ms).min(MAX_WALK_WAIT),
+        Ok(ms) if Duration::from_millis(ms) > MAX_WALK_WAIT => {
+            trace!("{WALK_WAIT_VAR}={value:?} is above the cap, waiting {MAX_WALK_WAIT:?}");
+            MAX_WALK_WAIT
+        }
+        Ok(ms) => Duration::from_millis(ms),
         Err(_) => {
             trace!(
-                "{WALK_WAIT_VAR}={value:?} is not a whole number of milliseconds, waiting {DEFAULT_WALK_WAIT:?}"
+                "{WALK_WAIT_VAR}={value:?} is not a non-negative whole number of milliseconds, waiting {DEFAULT_WALK_WAIT:?}"
             );
             DEFAULT_WALK_WAIT
         }
@@ -155,7 +159,8 @@ fn archive_to_files(archive: FilesArchive) -> Files {
 /// spawns them, so a worker may well be asked for files while that walk is
 /// still running. The lock wait below covers that: once the lock is free the
 /// host has written its archive, and that archive is what the worker loads
-/// instead of walking. It still walks when there is no archive at all.
+/// instead of walking. It still walks when there is no archive at all, or when
+/// the wait runs out.
 ///
 /// Neither wait is open-ended. A holder that outlasts `wait_for` (suspended,
 /// on a filesystem that has stalled, or walking a workspace that takes longer
@@ -218,6 +223,9 @@ fn acquire_files(
                 return files;
             }
             Ok(false) => {
+                // Sampled before the wait, so an archive the holder writes while
+                // this process waits counts as fresh. Sampled after, no waiter
+                // would ever accept one and every waiter would walk.
                 let waited_from = SystemTime::now();
                 trace!("another process is walking the workspace, waiting for its archive");
                 note_wait_started(&lock_path);
@@ -870,7 +878,9 @@ mod tests {
 
     #[test]
     #[cfg(not(target_arch = "wasm32"))]
-    fn the_walk_wait_comes_from_the_environment_capped_and_with_a_default() {
+    fn walk_wait_from_parses_caps_and_defaults() {
+        // The docs tell users to set this exact name; nothing else ties the two.
+        assert_eq!(WALK_WAIT_VAR, "NX_WORKSPACE_WALK_WAIT_MS");
         assert_eq!(walk_wait_from(None), Duration::from_secs(60));
         assert_eq!(walk_wait_from(Some("90000")), Duration::from_secs(90));
         assert_eq!(walk_wait_from(Some(" 0 ")), Duration::ZERO);

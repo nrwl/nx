@@ -181,6 +181,9 @@ fn staging_path(archive_path: &Path) -> PathBuf {
 /// Encodes `files` into `staging_path`, then renames it over `archive_path`.
 /// The staging file is opened with `create_new`, so anything already at that
 /// path, planted or left behind, is refused rather than written through.
+/// `staging_path` stays a parameter, though the caller always derives it from
+/// `archive_path`, because that refusal can only be tested through a path the
+/// test chose.
 fn write_files_archive_at(
     archive_path: &Path,
     staging_path: &Path,
