@@ -672,6 +672,7 @@ describe('run-state', () => {
             sha: 'abc0'.repeat(10),
             stepIds: ['step-1'],
             issueIds: ['issue-1'],
+            ownerAttempt: 2,
           },
         ],
         checkpointFailed: true,
@@ -797,6 +798,39 @@ describe('run-state', () => {
         )
       );
       expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+    });
+
+    it('refuses a landed entry whose ownerAttempt is not a positive integer, and the field on any other kind', () => {
+      // The recovery of a dead worker's commit dedupes on it, so a value that
+      // cannot equal a step's attempt would record that commit twice.
+      const dir = join(root, 'run-1');
+      mkdirSync(dir, { recursive: true });
+      const sha = 'abc0'.repeat(10);
+      for (const entry of [
+        { kind: 'landed', sha, stepIds: ['step-1'], ownerAttempt: 0 },
+        { kind: 'landed', sha, stepIds: ['step-1'], ownerAttempt: 1.5 },
+        { kind: 'landed', sha, stepIds: ['step-1'], ownerAttempt: '1' },
+        { kind: 'landed', sha, stepIds: ['step-1'], ownerAttempt: null },
+        { kind: 'failed', stepIds: ['step-1'], ownerAttempt: 1 },
+        { kind: 'checkpoint', sha, stepIds: [], ownerAttempt: 1 },
+      ]) {
+        writeFileSync(
+          join(dir, 'run.json'),
+          JSON.stringify(buildState({ commits: [entry] as never }))
+        );
+
+        expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+      }
+      // Absent stays valid: entries an older nx wrote carry none.
+      writeFileSync(
+        join(dir, 'run.json'),
+        JSON.stringify(
+          buildState({
+            commits: [{ kind: 'landed', sha, stepIds: ['step-1'] }],
+          })
+        )
+      );
+      expect(readRunState(dir).commits[0].ownerAttempt).toBeUndefined();
     });
 
     it('refuses a runbookPath that is not the file name Nx writes', () => {

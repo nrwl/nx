@@ -198,6 +198,11 @@ export interface MigrateCommitLedgerEntry {
   stepIds: string[];
   // Issues from the run's ledger whose fixes this commit carries.
   issueIds?: string[];
+  // The attempt of stepIds[0] that landed the commit. Identifies the entry
+  // when a reconcile recovers a died worker's commit from the session's
+  // cached answer, which the sha alone cannot once it failed to resolve.
+  // Absent on checkpoint and failed entries and on entries an older nx wrote.
+  ownerAttempt?: number;
 }
 
 /**
@@ -481,7 +486,11 @@ function isCommitLedgerEntryShape(value: unknown): boolean {
       (Array.isArray(value.issueIds) &&
         value.issueIds.every(
           (id) => typeof id === 'string' && ISSUE_ID.test(id)
-        )))
+        ))) &&
+    (value.ownerAttempt === undefined ||
+      (value.kind === 'landed' &&
+        Number.isInteger(value.ownerAttempt) &&
+        (value.ownerAttempt as number) >= 1))
   );
 }
 

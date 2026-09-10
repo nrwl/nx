@@ -565,7 +565,8 @@ export function stepsToPendingMigrations(
 export function commitResultToLedgerEntry(
   result: CommitResult,
   stepId: string,
-  absorbedStepIds: string[]
+  absorbedStepIds: string[],
+  ownerAttempt: number
 ): MigrateCommitLedgerEntry | null {
   switch (result.status) {
     case 'committed':
@@ -573,6 +574,7 @@ export function commitResultToLedgerEntry(
         kind: 'landed',
         ...(result.sha ? { sha: result.sha } : {}),
         stepIds: [stepId, ...absorbedStepIds],
+        ownerAttempt,
       };
     case 'failed':
       return { kind: 'failed', stepIds: [stepId] };

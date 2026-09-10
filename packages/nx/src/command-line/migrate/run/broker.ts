@@ -195,14 +195,41 @@ export async function installStepTree(
   }
 }
 
+/**
+ * The parent's answer to the step's own commit request for the given attempt,
+ * if it answered one. A worker that died after the parent landed its commit
+ * but before recording it leaves this answer as the only record of that
+ * commit; null when nothing was asked or answered, or the answer is not a
+ * commit's.
+ */
+export function readCachedCommitAnswer(
+  dir: string,
+  nonce: string,
+  step: Pick<MigrateStep, 'id' | 'attempt'>
+): BrokeredCommit | null {
+  const path = resultPath(
+    dir,
+    requestId(nonce, { kind: 'commit', stepId: step.id, attempt: step.attempt })
+  );
+  if (!existsSync(path)) return null;
+  const result = readJsonFile<BrokerResult>(path);
+  return result.kind === 'commit'
+    ? { result: result.result, absorbedStepIds: result.absorbedStepIds }
+    : null;
+}
+
+function requestId(nonce: string, request: BrokerRequest): string {
+  return `${nonce}-${request.stepId}-${request.attempt}-${request.kind}${
+    request.commitAs !== undefined ? `-${request.commitAs}` : ''
+  }`;
+}
+
 async function ask(
   dir: string,
   nonce: string,
   request: BrokerRequest
 ): Promise<BrokerAnswer> {
-  const id = `${nonce}-${request.stepId}-${request.attempt}-${request.kind}${
-    request.commitAs !== undefined ? `-${request.commitAs}` : ''
-  }`;
+  const id = requestId(nonce, request);
   try {
     publishFileAtomically(requestPath(dir, id), (tmpPath) =>
       writeJsonFile(tmpPath, request)

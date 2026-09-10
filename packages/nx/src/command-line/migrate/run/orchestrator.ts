@@ -11,10 +11,12 @@ import { join } from 'path';
 import { readJsonFile, writeJsonFile } from '../../../utils/fileutils';
 import { publishFileAtomically } from './atomic-write';
 import {
+  BROKER_ENV_VAR,
   BrokerStaleRequestError,
   BrokerUnavailableError,
   commitStepTree,
   installStepTree,
+  readCachedCommitAnswer,
   type BrokeredCommit,
   type BrokerRequestKind,
 } from './broker';
@@ -788,14 +790,17 @@ export async function runOrchestratorReconcile(
 
   // (a) fold handoffs into prompt outcomes (committing completed ones).
   state = await foldHandoffs(root, dir, state);
-  // (b) reclassify running steps whose worker process is gone.
+  // (b) reclassify running steps whose worker process is gone, and record
+  // the commit a dead worker's session landed for it but the death kept out
+  // of the ledger. Before (c): a hand-written skip or unresolved must see it.
   state = detectDeaths(dir, state);
+  state = recoverLandedCommits(dir, state);
   // (c) apply the decision relay to the single failed/died step.
   if (stepAction) {
     const result = applyReconcileStepAction(root, state, stepAction);
     if (result.kind === 'error') {
       emitError(root, runId, result.reason);
-      return; // state untouched
+      return;
     }
     const target = result.targetStep;
     // An adopted step commits its working tree; that git side effect runs
@@ -1350,7 +1355,7 @@ function applyReconcileStepAction(
     };
   }
   const step = candidates[0];
-  const landed = endangeredLandedEntry(root, state, step);
+  const landed = lastCoveringLandedEntry(state, step);
   if (
     (action === 'retry' || action === 'retry-clean') &&
     rearmCapReached(step)
@@ -1363,9 +1368,10 @@ function applyReconcileStepAction(
       )}`,
     };
   }
-  // A step whose commit already landed is not given up or skipped: the run
-  // would record as unresolved or skipped a migration whose result sits in
-  // history. Adopt keeps the commit.
+  // A step whose commit the ledger records is not given up or skipped: the
+  // run would record as unresolved or skipped a migration whose result sits
+  // in history. Adopt keeps the commit. Only a recorded commit counts: one a
+  // worker made in-process and died before recording is not seen here.
   if (landed && (action === 'skip' || action === 'unresolved')) {
     return {
       kind: 'error',
@@ -1505,9 +1511,10 @@ async function stepActionSideEffects(
   switch (action) {
     case 'adopt':
       // A died step's adopt shares the worker's commit request, which may
-      // have landed before the death. Once the ledger records that commit the
-      // same request would read its answer back and land the entry twice, so
-      // what changed since goes out under an adopt request of its own, as a
+      // have landed before the death. Once the ledger records that commit
+      // (the worker did, or reconcile recovered it from the answer) the same
+      // request would read its answer back and land the entry twice, so what
+      // changed since goes out under an adopt request of its own, as a
       // failed step's always does.
       return state.createCommits
         ? commitForStep(
@@ -1515,7 +1522,7 @@ async function stepActionSideEffects(
             dir,
             state,
             step,
-            step.status === 'failed' || endangeredLandedEntry(root, state, step)
+            step.status === 'failed' || lastCoveringLandedEntry(state, step)
               ? 'adopt'
               : undefined
           )
@@ -1623,7 +1630,8 @@ async function commitForStep(
     entry: commitResultToLedgerEntry(
       commit.result,
       step.id,
-      commit.absorbedStepIds
+      commit.absorbedStepIds,
+      step.attempt
     ),
     installFailed: false,
   };
@@ -1825,7 +1833,7 @@ function emitRetryFailed(
   const head = getLatestCommitSha(root);
   const tree = dirtyTreeSummary(root);
   const cleanRetry = canOfferCleanRetry(root, state, step, head);
-  const landed = endangeredLandedEntry(root, state, step);
+  const landed = lastCoveringLandedEntry(state, step);
   // A failure recorded before the generator marker can still have written to
   // the tree (a direct fs or exec side effect, or a crash mid-flush); a
   // marker means only the handed-back half (a prompt or a validation pass)
@@ -2011,6 +2019,65 @@ function canOfferCleanRetry(
   );
 }
 
+// The last landed ledger entry covering the step, whichever attempt landed
+// it: the step's result is in history, so it is adopted, never skipped or
+// given up.
+function lastCoveringLandedEntry(
+  state: MigrateRunState,
+  step: MigrateStep
+): MigrateCommitLedgerEntry | null {
+  const entries = coveringLandedEntries(state, step.id);
+  return entries.length > 0 ? entries[entries.length - 1] : null;
+}
+
+// Records the commit a died step's session landed for its current attempt
+// when the worker died between the answer and its ledger append. Keyed on
+// the worker's own request (no action suffix). The answer stays on disk, so
+// every reconcile reads it again and the ledger has to say whether it holds
+// the entry already: by owner attempt, or by sha for an entry an older nx
+// wrote without one. A commit made in-process leaves no answer and stays
+// unrecorded.
+function recoverLandedCommits(
+  dir: string,
+  state: MigrateRunState
+): MigrateRunState {
+  const nonce = process.env[BROKER_ENV_VAR];
+  if (!nonce) return state;
+  for (const step of state.steps) {
+    if (step.status !== 'died') continue;
+    const answer = readCachedCommitAnswer(dir, nonce, step);
+    if (!answer || answer.result.status !== 'committed') continue;
+    const sha = answer.result.sha;
+    // Re-validated on fresh state: a concurrent reconcile may have acted on
+    // the step, or recorded this same commit, since `state` was read.
+    state = updateRunState(dir, (fresh) => {
+      const current = fresh.steps.find((s) => s.id === step.id);
+      if (
+        !current ||
+        current.status !== 'died' ||
+        current.attempt !== step.attempt ||
+        fresh.commits.some(
+          (c) =>
+            c.kind === 'landed' &&
+            (c.ownerAttempt !== undefined
+              ? c.stepIds[0] === step.id && c.ownerAttempt === step.attempt
+              : sha !== null && c.sha === sha)
+        )
+      ) {
+        return null;
+      }
+      const entry = commitResultToLedgerEntry(
+        answer.result,
+        step.id,
+        answer.absorbedStepIds,
+        step.attempt
+      );
+      return appendCommit(fresh, attachIssueIdsToCommitEntry(fresh, entry));
+    });
+  }
+  return state;
+}
+
 // The last landed ledger entry covering the step whose commit a reset to the
 // step's gitRefBefore would discard. Entries from earlier attempts predate the
 // ref re-captured at re-dispense and survive the reset; only a commit that is
@@ -2145,7 +2212,7 @@ function emitDied(
   const head = getLatestCommitSha(root);
   const tree = dirtyTreeSummary(root);
   const cleanRetry = canOfferCleanRetry(root, state, step, head);
-  const landed = endangeredLandedEntry(root, state, step) !== null;
+  const landed = lastCoveringLandedEntry(state, step) !== null;
   const resume = !generatorPending(step);
   const capReached = rearmCapReached(step);
   const lines = [
@@ -2196,7 +2263,7 @@ function emitDied(
       'adopt'
     )}`
   );
-  // A landed commit is kept, not skipped or given up (see the acceptance).
+  // A recorded commit is kept, not skipped or given up (see the acceptance).
   if (!landed) {
     options.push(
       `  skip: leave the tree as it stands and move on without this migration, then run: ${reconcileCommand(
