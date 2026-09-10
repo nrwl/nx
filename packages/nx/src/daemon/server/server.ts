@@ -17,6 +17,11 @@ import { nxVersion } from '../../utils/versions';
 import { setupWorkspaceContext } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache';
+import {
+  acquireDaemonStartLock,
+  findHealthyDaemonOwner,
+  releaseDaemonStartLock,
+} from './start-lock';
 import { isNxVersionMismatch } from '../is-nx-version-mismatch';
 import { getInstalledNxVersion } from '../../utils/installed-nx-version';
 import { serverLogger } from '../logger';
@@ -672,21 +677,28 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
 };
 
 export async function startServer(): Promise<Server> {
-  // Watch before scan: a file written during boot must be visible to the
-  // watcher or the scan below. Scan-first left a blind window where such
-  // files stayed invisible to both until an unrelated change arrived.
-  if (!getWatcherInstance()) {
-    storeWatcherInstance(await watchWorkspace(server, handleWorkspaceChanges));
-    serverLogger.watcherLog(
-      `Subscribed to changes within: ${workspaceRoot} (native)`
+  // Claim the workspace before doing anything expensive. A starter that loses
+  // the race exits, and everything it set up first - the watcher below, the
+  // workspace context, the project graph - is work thrown away. The claim is
+  // held until this process is listening, not just until it has registered:
+  // the gap between the two contains the whole workspace scan, and a starter
+  // arriving inside it must wait rather than read a silent socket as a vacant
+  // workspace. See start-lock.ts.
+  const startLock = await acquireDaemonStartLock();
+  const ownerPid = await findHealthyDaemonOwner(startLock);
+  if (ownerPid !== null) {
+    // process.exit skips finally blocks, so the lock is released explicitly.
+    releaseDaemonStartLock(startLock);
+    serverLogger.log(
+      `Another daemon already owns this workspace (pid ${ownerPid}); standing down`
     );
+    process.exit(0);
   }
 
-  setupWorkspaceContext(workspaceRoot);
-
-  // Initialize analytics for daemon process
-  await startAnalytics();
-
+  // Resolved after the stand-down rather than before it: the socket directory
+  // name hashes this pid, so asking for the path creates a directory that only
+  // this process could ever have used. A starter that stands down should leave
+  // nothing behind.
   const socketPath = getFullOsSocketPath();
 
   // Log daemon startup information for debugging
@@ -703,6 +715,21 @@ export async function startServer(): Promise<Server> {
     socketPath,
     nxVersion,
   });
+
+  // Watch before scan: a file written during boot must be visible to the
+  // watcher or the scan below. Scan-first left a blind window where such
+  // files stayed invisible to both until an unrelated change arrived.
+  if (!getWatcherInstance()) {
+    storeWatcherInstance(await watchWorkspace(server, handleWorkspaceChanges));
+    serverLogger.watcherLog(
+      `Subscribed to changes within: ${workspaceRoot} (native)`
+    );
+  }
+
+  setupWorkspaceContext(workspaceRoot);
+
+  // Initialize analytics for daemon process
+  await startAnalytics();
 
   // See notes in socket-command-line-utils.ts on OS differences regarding clean up of existings connections.
   if (!isWindows) {
@@ -750,6 +777,7 @@ export async function startServer(): Promise<Server> {
     // The exit code is what carries the errno to the client, which otherwise
     // sees only a missing socket and cannot tell a refusal from a cold start.
     server.on('error', (error: NodeJS.ErrnoException) => {
+      releaseDaemonStartLock(startLock);
       serverLogger.log(`Failed to listen on: ${socketPath} (${error.message})`);
       process.exit(isPermissionDenied(error) ? SOCKET_REFUSED_EXIT_CODE : 1);
     });
@@ -758,6 +786,10 @@ export async function startServer(): Promise<Server> {
       server.listen(socketPath, async () => {
         try {
           serverLogger.log(`Started listening on: ${socketPath}`);
+
+          // Only now is the claim redundant: a starter that takes the lock
+          // after this point probes a socket that answers.
+          releaseDaemonStartLock(startLock);
 
           // Linux gates connect() on write permission to the socket file; macOS/BSD gate
           // on the directory, which is already 0700. Done after listen because

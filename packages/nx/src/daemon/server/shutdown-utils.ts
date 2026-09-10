@@ -11,6 +11,7 @@ import {
 import { cleanupPlugins } from '../../project-graph/plugins/get-plugins';
 import { writeMessage } from '../../utils/consume-messages-from-socket';
 import { cleanupLatestNx } from './latest-nx';
+import { releaseDaemonStartLock } from './start-lock';
 import { flushAnalytics } from '../../analytics';
 import { spawn } from 'child_process';
 import { join } from 'path';
@@ -151,6 +152,14 @@ async function performShutdown(
 
     serverLogger.log(`Server stopped because: "${reason}"`);
   } finally {
+    // In the finally rather than beside deleteDaemonJsonProcessCache(): every
+    // await above can reject, and a rejection lands here and exits. The lock
+    // file outlives the process and is judged by the liveness of the pid in it,
+    // so one left behind by a daemon that stopped mid-boot goes stale the
+    // moment that pid is reused - after a reboot, certainly. Releasing it is
+    // safe from any process: releaseDaemonStartLock removes the file only when
+    // it names this pid.
+    releaseDaemonStartLock(true);
     process.exit(0);
   }
 }
