@@ -131,10 +131,7 @@ import {
   VersionMismatchError,
 } from './daemon-socket-messenger';
 
-import {
-  getDaemonEnv,
-  getDaemonSpawnEnv,
-} from './daemon-environment';
+import { getDaemonEnv, getDaemonSpawnEnv } from './daemon-environment';
 
 /** A refused connect: the errno, and the path it was made against. */
 type ConnectRefusal = {
