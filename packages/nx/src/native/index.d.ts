@@ -142,6 +142,16 @@ export declare class NxTaskHistory {
   getEstimatedTaskTimings(targets: Array<TaskTarget>): Record<string, number>
 }
 
+export declare class PluginCapabilitiesCache {
+  constructor(db: ExternalObject<NxDbConnection>)
+  /**
+   * Returns only the keys that are present, so the caller can take the
+   * difference and load the rest.
+   */
+  get(keys: Array<string>): Record<string, CachedPluginCapabilities>
+  record(entries: Array<PluginCapabilitiesEntry>): void
+}
+
 /**
  * High-performance metrics collector for Nx tasks
  * Thread-safe and designed for minimal overhead
@@ -302,6 +312,20 @@ export declare const enum BatchStatus {
   Running = 'Running',
   Success = 'Success',
   Failure = 'Failure'
+}
+
+/**
+ * What a plugin module registers, independent of the options it is configured
+ * with. Every field is a presence check on the module's static exports, so the
+ * record is valid for any nx.json entry pointing at the same module.
+ */
+export interface CachedPluginCapabilities {
+  name: string
+  createNodesPattern?: string
+  hasCreateDependencies: boolean
+  hasCreateMetadata: boolean
+  hasPreTasksExecution: boolean
+  hasPostTasksExecution: boolean
 }
 
 export interface CachedResult {
@@ -677,6 +701,11 @@ export interface PerformanceSummaryPayload {
    * remote-cache CTA); empty when none apply.
    */
   links: Array<Link>
+}
+
+export interface PluginCapabilitiesEntry {
+  key: string
+  capabilities: CachedPluginCapabilities
 }
 
 /** Process metadata (static, doesn't change during process lifetime) */

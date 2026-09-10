@@ -586,6 +586,7 @@ module.exports.ImportResult = nativeBinding.ImportResult
 module.exports.NxCache = nativeBinding.NxCache
 module.exports.NxConsolePreferences = nativeBinding.NxConsolePreferences
 module.exports.NxTaskHistory = nativeBinding.NxTaskHistory
+module.exports.PluginCapabilitiesCache = nativeBinding.PluginCapabilitiesCache
 module.exports.ProcessMetricsCollector = nativeBinding.ProcessMetricsCollector
 module.exports.RunningTasksService = nativeBinding.RunningTasksService
 module.exports.RustPseudoTerminal = nativeBinding.RustPseudoTerminal
