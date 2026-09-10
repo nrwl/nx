@@ -275,7 +275,7 @@ impl HashPlanner {
                 // todo)) @Cammisuli: we need to gather the project's inputs and its dep inputs similar to how we do it in `self_and_deps_inputs`
                 return Ok(None);
             };
-            let mut external_deps: Vec<&'a String> = vec![];
+            let mut external_deps = hashbrown::HashSet::new();
             trace!(
                 "Add External Instruction for executor {existing_package}: {}",
                 target.executor.as_ref().unwrap()
@@ -284,7 +284,7 @@ impl HashPlanner {
                 "Add External Instructions for dependencies of executor {existing_package}: {:?}",
                 &external_deps_map[existing_package]
             );
-            external_deps.push(existing_package);
+            external_deps.insert(existing_package);
             external_deps.extend(&external_deps_map[existing_package]);
             Ok(Some(
                 external_deps
@@ -293,7 +293,7 @@ impl HashPlanner {
                     .collect(),
             ))
         } else {
-            let mut external_deps: Vec<&'a String> = vec![];
+            let mut external_deps = hashbrown::HashSet::new();
             let mut has_external_deps = false;
             for input in self_inputs {
                 match input {
@@ -328,7 +328,7 @@ impl HashPlanner {
                                 "Add External Instructions for dependencies of External Input {external_node_name}: {:?}",
                                 &external_deps_map[external_node_name]
                             );
-                            external_deps.push(external_node_name);
+                            external_deps.insert(external_node_name);
                             external_deps.extend(&external_deps_map[external_node_name]);
                         }
                     }
@@ -492,6 +492,9 @@ impl HashPlanner {
             .map(|instruction| pool.intern(instruction))
             .collect();
 
+        // Deduplicate borrowed names before allocating or interning instructions.
+        // Keep each memo entry self-contained so cache hits retain its externals.
+        let mut external_inputs = hashbrown::HashSet::new();
         if let Some(child_input) = dep_inputs.deps_inputs.first() {
             for child in &self.project_graph.dependencies[dep] {
                 if self.project_graph.nodes.contains_key(child) {
@@ -500,16 +503,17 @@ impl HashPlanner {
                     needs_legacy |= sub.needs_legacy;
                     ids.extend_from_slice(&sub.ids);
                 } else if let Some(external_deps) = external_deps_mapped.get(child) {
-                    ids.push(pool.intern(HashInstruction::External(child.to_string())));
-                    ids.extend(
-                        external_deps
-                            .iter()
-                            .map(|s| pool.intern(HashInstruction::External(s.to_string()))),
-                    );
+                    external_inputs.insert(child);
+                    external_inputs.extend(external_deps);
                 }
             }
         }
 
+        ids.extend(
+            external_inputs
+                .into_iter()
+                .map(|s| pool.intern(HashInstruction::External(s.to_string()))),
+        );
         ids.sort_unstable();
         ids.dedup();
 
@@ -570,6 +574,9 @@ impl HashPlanner {
         let pool = &self.instruction_pool;
         let memo_enabled = self.dependency_memo_enabled();
         let mut deps_inputs: Vec<u32> = Vec::with_capacity(project_deps.len());
+        // External membership is separate from project cycle detection, whose
+        // scopes must still be rolled back independently for sibling inputs.
+        let mut external_inputs = hashbrown::HashSet::new();
 
         for dep in project_deps {
             if !visited.insert(dep.as_str()) {
@@ -606,16 +613,17 @@ impl HashPlanner {
             } else {
                 // todo(jcammisuli): add a check to skip this when the new task hasher is ready, and when `AllExternalDependencies` is used
                 if let Some(external_deps) = external_deps_mapped.get(dep) {
-                    deps_inputs.push(pool.intern(HashInstruction::External(dep.to_string())));
-                    deps_inputs.extend(
-                        external_deps
-                            .iter()
-                            .map(|s| pool.intern(HashInstruction::External(s.to_string()))),
-                    );
+                    external_inputs.insert(dep);
+                    external_inputs.extend(external_deps);
                 }
             }
         }
 
+        deps_inputs.extend(
+            external_inputs
+                .into_iter()
+                .map(|s| pool.intern(HashInstruction::External(s.to_string()))),
+        );
         Ok(deps_inputs)
     }
 
@@ -795,7 +803,8 @@ fn find_external_dependency_node_name<'a>(
 
 #[cfg(test)]
 mod tests {
-    use super::VisitedTracker;
+    use super::*;
+    use crate::native::project_graph::types::{ExternalNode, Project, Target};
 
     #[test]
     fn insert_reports_first_insertion_only() {
@@ -819,5 +828,75 @@ mod tests {
         assert!(visited.insert("inner1"));
         assert!(!visited.insert("outer"));
         assert!(!visited.insert("seed"));
+    }
+
+    #[test]
+    fn overlapping_external_closures_retain_capacity_proportional_to_unique_inputs() {
+        let direct_count = 50;
+        let shared_count = 100;
+        let direct: Vec<String> = (0..direct_count)
+            .map(|i| format!("npm:direct-{i}"))
+            .collect();
+        let shared: Vec<String> = (0..shared_count)
+            .map(|i| format!("npm:shared-{i}"))
+            .collect();
+        let mut dependencies = HashMap::from([("app".to_string(), direct.clone())]);
+        for dep in &direct {
+            dependencies.insert(dep.clone(), shared.clone());
+        }
+        let graph = ProjectGraph {
+            nodes: HashMap::from([(
+                "app".to_string(),
+                Project {
+                    root: "app".to_string(),
+                    targets: HashMap::from([("build".to_string(), Target::default())]),
+                    ..Default::default()
+                },
+            )]),
+            dependencies,
+            external_nodes: direct
+                .into_iter()
+                .chain(shared)
+                .map(|name| {
+                    (
+                        name,
+                        ExternalNode {
+                            package_name: None,
+                            version: "1.0.0".to_string(),
+                            hash: None,
+                        },
+                    )
+                })
+                .collect(),
+        };
+        let planner = HashPlanner::new(
+            NxJson { named_inputs: None },
+            &External::new(Arc::new(graph)),
+        );
+        let task = Task::new("app", "build");
+        let task_graph = TaskGraph {
+            roots: vec![task.id.clone()],
+            tasks: HashMap::from([(task.id.clone(), task)]),
+            dependencies: HashMap::new(),
+            continuous_dependencies: HashMap::new(),
+        };
+        let plans = planner
+            .get_plans_internal(vec!["app:build"], task_graph)
+            .unwrap();
+        let plan = &plans.plans["app:build"];
+        assert_eq!(
+            plan.iter()
+                .filter(|id| matches!(plans.pool.get(**id).value(), HashInstruction::External(_)))
+                .count(),
+            direct_count + shared_count
+        );
+        // Vec::dedup alone leaves storage for all 5,050 external occurrences.
+        // Bound retained storage without depending on exact allocator growth.
+        assert!(
+            plan.capacity() <= plan.len() * 2,
+            "{} unique instructions retained {} slots",
+            plan.len(),
+            plan.capacity()
+        );
     }
 }
