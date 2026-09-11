@@ -1,6 +1,11 @@
 import { join } from 'node:path/posix';
 import type { ProjectGraphProjectNode } from '../../../config/project-graph';
 import type { ProjectConfiguration } from '../../../config/workspace-json-project-json';
+import {
+  findProjectForPath,
+  normalizeProjectRoot,
+  type ProjectRootMappings,
+} from '../../../project-graph/utils/find-project-for-path';
 import type { PackageJsonProjectMetadata } from '../../../utils/package-json';
 
 function getPackageTargets(value: unknown): string[] {
@@ -24,47 +29,65 @@ export function getWorkspacePackagesMetadata<
   entryPointsToProjectMap: Record<string, T>;
   wildcardEntryPointsToProjectMap: Record<string, T>;
   packageToProjectMap: Record<string, T>;
-  ambiguousEntryPoints: Set<string>;
-  entryPointsWithProjectBoundaryCrossings: Set<string>;
+  directlyResolvableWorkspaceEntryPoints: Set<string>;
 } {
   const entryPointsToProjectMap: Record<string, T> = {};
   const wildcardEntryPointsToProjectMap: Record<string, T> = {};
   const packageToProjectMap: Record<string, T> = {};
-  const ambiguousEntryPoints = new Set<string>();
-  const entryPointsWithProjectBoundaryCrossings = new Set<string>();
-  const projectRoots = Object.values(projects)
-    .map((project) => ({
-      project,
-      root: join('data' in project ? project.data.root : project.root),
-    }))
-    .sort((a, b) => b.root.length - a.root.length);
-  const projectRootByProject = new Map(
-    projectRoots.map(({ project, root }) => [project, root])
-  );
+  const directlyResolvableWorkspaceEntryPoints = new Set<string>();
+  const projectRootMappings: ProjectRootMappings = new Map();
+  const projectIdentityByProject = new Map<T, { name: string; root: string }>();
+
+  for (const [projectName, project] of Object.entries(projects)) {
+    const root = normalizeProjectRoot(
+      'data' in project ? project.data.root : project.root
+    );
+    const name = project.name ?? projectName;
+    projectRootMappings.set(root, name);
+    projectIdentityByProject.set(project, { name, root });
+  }
+
+  const targetsRemainInProject = (
+    project: T,
+    packageTargets: string[]
+  ): boolean => {
+    if (packageTargets.length === 0) {
+      return false;
+    }
+
+    const { name: projectName, root: projectRoot } =
+      projectIdentityByProject.get(project)!;
+
+    return packageTargets.every(
+      (target) =>
+        findProjectForPath(join(projectRoot, target), projectRootMappings) ===
+        projectName
+    );
+  };
+
   const addEntryPoint = (
     entryPoint: string,
     project: T,
     packageTargets: string[]
   ): void => {
+    const hasExistingEntryPoint = Object.hasOwn(
+      entryPointsToProjectMap,
+      entryPoint
+    );
     const existingProject = entryPointsToProjectMap[entryPoint];
-    if (existingProject && existingProject !== project) {
-      ambiguousEntryPoints.add(entryPoint);
+    const targetsAreOwnedByProject = targetsRemainInProject(
+      project,
+      packageTargets
+    );
+
+    if (!hasExistingEntryPoint) {
+      if (targetsAreOwnedByProject) {
+        directlyResolvableWorkspaceEntryPoints.add(entryPoint);
+      }
+    } else if (existingProject !== project || !targetsAreOwnedByProject) {
+      directlyResolvableWorkspaceEntryPoints.delete(entryPoint);
     }
-    const projectRoot = projectRootByProject.get(project)!;
-    if (
-      packageTargets.some((target) => {
-        const targetPath = join(projectRoot, target);
-        const targetProject = projectRoots.find(
-          (candidate) =>
-            candidate.root === '.' ||
-            targetPath === candidate.root ||
-            targetPath.startsWith(`${candidate.root}/`)
-        );
-        return targetProject && targetProject.project !== project;
-      })
-    ) {
-      entryPointsWithProjectBoundaryCrossings.add(entryPoint);
-    }
+
     entryPointsToProjectMap[entryPoint] = project;
   };
 
@@ -138,8 +161,7 @@ export function getWorkspacePackagesMetadata<
     entryPointsToProjectMap,
     wildcardEntryPointsToProjectMap,
     packageToProjectMap,
-    ambiguousEntryPoints,
-    entryPointsWithProjectBoundaryCrossings,
+    directlyResolvableWorkspaceEntryPoints,
   };
 }
 

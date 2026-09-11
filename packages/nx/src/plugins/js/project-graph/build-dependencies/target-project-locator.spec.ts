@@ -1466,7 +1466,9 @@ describe('TargetProjectLocator', () => {
         'packages/source/index.ts'
       );
 
-      expect(packagesMetadata.ambiguousEntryPoints).toContain('@org/pkg1');
+      expect(
+        packagesMetadata.directlyResolvableWorkspaceEntryPoints
+      ).not.toContain('@org/pkg1');
       expect(result).toEqual('pkg2');
       expect(typescriptResolution).toHaveBeenCalledOnce();
       expect(requireResolution).toHaveBeenCalledOnce();
@@ -1500,12 +1502,39 @@ describe('TargetProjectLocator', () => {
       );
 
       expect(
-        packagesMetadata.entryPointsWithProjectBoundaryCrossings
-      ).toContain('@org/pkg1/feature');
+        packagesMetadata.directlyResolvableWorkspaceEntryPoints
+      ).not.toContain('@org/pkg1/feature');
       expect(result).toEqual('feature');
       expect(npmResolution).toHaveBeenCalledOnce();
       expect(typescriptResolution).toHaveBeenCalledOnce();
       expect(requireResolution).toHaveBeenCalledOnce();
+    });
+
+    it('should not requalify an entry point after one condition crosses a project boundary', () => {
+      const projects = {
+        pkg1: createWorkspaceProject('pkg1', {
+          packageExports: {
+            require: './feature/index.js',
+            default: './dist/index.js',
+          },
+        }),
+        feature: {
+          name: 'feature',
+          type: 'lib' as const,
+          data: {
+            root: 'packages/pkg1/feature',
+          },
+        },
+      };
+
+      const packagesMetadata = getWorkspacePackagesMetadata(projects);
+
+      expect(
+        packagesMetadata.directlyResolvableWorkspaceEntryPoints
+      ).not.toContain('@org/pkg1');
+      expect(
+        packagesMetadata.entryPointsToProjectMap['@org/pkg1'].name
+      ).toEqual('pkg1');
     });
 
     it('should bypass the fast path for wildcard entry points', () => {
