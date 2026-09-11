@@ -1,4 +1,4 @@
-use std::fs::{create_dir_all, read_dir, read_to_string, remove_file, write};
+use std::fs::{create_dir_all, read_dir, read_to_string, remove_file, symlink_metadata, write};
 use std::path::{Component, Path, PathBuf};
 use std::rc::Rc;
 use std::time::{Duration, Instant, SystemTime};
@@ -74,6 +74,16 @@ fn sweep_batch_outputs_with(
     max_bytes: u64,
     min_eviction_age: Duration,
 ) -> anyhow::Result<()> {
+    // `read_dir` opens through `opendir(2)`, which follows a symlink on the
+    // directory itself - so without this a `batchOutputs` symlinked elsewhere
+    // would have that directory's aged files deleted instead. The per-entry
+    // handling below already refuses to follow a link; this is the one hop it
+    // cannot see. `~/.nx` is writable by anything sharing our uid, which is why
+    // `probeWritable` opens with `wx` for the same reason.
+    if symlink_metadata(dir).map(|m| !m.is_dir()).unwrap_or(true) {
+        return Ok(());
+    }
+
     let entries = match read_dir(dir) {
         Ok(entries) => entries,
         // Nothing has captured a batch log yet.
@@ -830,6 +840,26 @@ mod test {
 
         assert!(live.exists(), "a log written within the hour is off limits");
         assert!(!stale.exists(), "an older one over budget still goes");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn sweep_batch_outputs_will_not_follow_a_symlinked_directory() {
+        let temp = TempDir::new().unwrap();
+        // What an agent confined to `~/.nx` can plant: `batchOutputs` pointing
+        // somewhere it was never granted. Following it would delete that
+        // directory's aged files instead of our own.
+        let victim = temp.path().join("victim");
+        let aged = write_log(&victim, "secrets.env", 16, 8 * 24 * HOUR);
+        let link = temp.path().join("batchOutputs");
+        std::os::unix::fs::symlink(&victim, &link).unwrap();
+
+        sweep(&link, u64::MAX);
+
+        assert!(
+            aged.exists(),
+            "a symlinked sweep root must be refused, not walked"
+        );
     }
 
     #[cfg(unix)]
