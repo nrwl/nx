@@ -702,9 +702,8 @@ public class TargetBuilderAtomizerTests
     [Fact]
     public void ResultsDirectoryOutsideTheWorkspace_ReportsWhyNothingSplit()
     {
-        // Matches the two sibling gates (unsupported platform, no parser
-        // available): reports why splitting stopped rather than bailing out
-        // silently.
+        // Matches the sibling gate (no parser available): reports why splitting
+        // stopped rather than bailing out silently.
         var properties = new Dictionary<string, string>
         {
             ["TestResultsDirectory"] =

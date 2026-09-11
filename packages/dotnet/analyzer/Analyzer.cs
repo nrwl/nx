@@ -373,12 +373,27 @@ public static class Analyzer
     /// Requires MSTest on Microsoft.Testing.Platform. The platform alone is not
     /// enough: its <c>--treenode-filter</c> is only registered by frameworks
     /// that opt in, and MSTest is not one, so the filters use <c>--filter</c>,
-    /// whose syntax comes from MSTest. Short of both properties
+    /// whose syntax comes from MSTest. Short of both conditions
     /// <c>dotnet test</c> routes through the VSTest bridge, which accepts the
     /// split arguments and ignores them, so every task would silently run the
-    /// whole suite. <c>MSTest.Sdk</c> sets both, which is also how that SDK is
-    /// detected.
+    /// whole suite.
     /// </remarks>
-    internal static bool SupportsTestSplitting(EvaluatedProperties properties) =>
-        properties.EnableMSTestRunner && properties.TestingPlatformDotnetTestSupport;
+    internal static bool SupportsTestSplitting(EvaluatedProperties properties)
+    {
+        if (!properties.EnableMSTestRunner)
+        {
+            return false;
+        }
+
+        if (IsExplicitlyFalse(properties, nameof(EvaluatedProperties.TestingPlatformDotnetTestSupport)))
+        {
+            return false;
+        }
+
+        return properties.TestingPlatformDotnetTestSupport ||
+               properties.IsTestingPlatformApplication;
+    }
+
+    private static bool IsExplicitlyFalse(EvaluatedProperties properties, string name) =>
+        string.Equals(properties.Get(name), "false", StringComparison.OrdinalIgnoreCase);
 }

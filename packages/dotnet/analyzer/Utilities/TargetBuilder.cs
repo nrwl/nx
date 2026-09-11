@@ -41,24 +41,11 @@ public static partial class TargetBuilder
         {
             AddTestTarget(targets, projectName, fileName, packageRefs, properties, projectDirectory, workspaceRoot, options, productionInput, directoryBuildInputs);
 
-            if (options.TestCiTargetName is not null && discoverTestUnits is not null)
+            if (options.TestCiTargetName is not null && discoverTestUnits is not null && supportsSplitting)
             {
-                if (!supportsSplitting)
+                if (!canDiscover)
                 {
-                    // The filter options come from MSTest's contribution to
-                    // Microsoft.Testing.Platform, so the request cannot be
-                    // honored here.
-                    Console.Error.WriteLine(
-                        $"@nx/dotnet: cannot split tests for '{projectName}'. Splitting needs MSTest on " +
-                        "Microsoft.Testing.Platform. Set <EnableMSTestRunner>true</EnableMSTestRunner> " +
-                        "and <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>, " +
-                        "or use the MSTest.Sdk project SDK.");
-                }
-                else if (!canDiscover)
-                {
-                    // Nothing the project can change; say so rather than
-                    // sending the reader after MSTest properties that are
-                    // already correct.
+                    // Nothing the project can change, so it is worth saying.
                     Console.Error.WriteLine(
                         $"@nx/dotnet: cannot split tests for '{projectName}'. The .NET SDK in use does " +
                         "not provide the C# parser the analyzer needs to discover test classes.");
