@@ -4885,6 +4885,31 @@ module.exports = {
       }
     );
 
+    it('reads the one-element array npm 12 prints for an exact spec', async () => {
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockResolvedValue('2.0.1');
+      vi.spyOn(packageMgrUtils, 'packageRegistryView').mockResolvedValue(
+        JSON.stringify([
+          {
+            dist: {
+              tarball:
+                'https://registry.npmjs.org/mypackage/-/mypackage-2.0.1.tgz',
+            },
+          },
+        ])
+      );
+      const fetch = createFetcher({} as any);
+      await expect(fetch('mypackage', '2.0.1')).resolves.toMatchObject({
+        version: '2.0.1',
+      });
+      expect(fetch.stats).toMatchObject({
+        registryCount: 1,
+        installCount: 0,
+      });
+    });
+
     it('skips the tarball-host check when the package declares migration config', async () => {
       // The tarball host is off the allowlist on purpose, so only the declared
       // nx-migrations can skip the check.

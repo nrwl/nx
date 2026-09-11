@@ -48,8 +48,8 @@ describe('getInstalledNxVersion', () => {
     const Module = await import('module');
     const pollutedPath = '/nonexistent/tmp/nx/package.json';
     // Brute-force pollution: write the bogus value under every cache key
-    // that mentions 'nx/package.json'. The fs-walk path reads from disk
-    // unconditionally and should be unaffected.
+    // that mentions 'nx/package.json'. The detached resolver swaps this cache
+    // out for the call and should be unaffected.
     for (const key of Object.keys(Module._pathCache)) {
       if (key.startsWith('nx/package.json\0')) {
         Module._pathCache[key] = pollutedPath;
