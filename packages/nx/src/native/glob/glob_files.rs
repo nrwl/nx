@@ -1,5 +1,6 @@
 use rayon::prelude::*;
 use std::borrow::Cow;
+use std::ops::Range;
 use std::path::PathBuf;
 
 use crate::native::glob::build_glob_set;
@@ -18,16 +19,56 @@ pub fn glob_files(
 
 /// Query a workspace snapshot without cloning every filename and hash first.
 /// Collection retains input order, including the original PathBuf sort order.
-pub(crate) fn glob_paths(
-    files: &[(PathBuf, String)],
+pub(crate) fn glob_paths<'a>(
+    files: impl ParallelIterator<Item = &'a (PathBuf, String)>,
     globs: Vec<String>,
     exclude: Option<Vec<String>>,
-) -> napi::Result<impl ParallelIterator<Item = (Cow<'_, str>, &str)>> {
+) -> napi::Result<impl ParallelIterator<Item = (Cow<'a, str>, &'a str)>> {
     let matches = file_matcher(globs, exclude)?;
-    Ok(files.par_iter().filter_map(move |(path, hash)| {
+    Ok(files.filter_map(move |(path, hash)| {
         let path = normalized_path(path);
         matches(&path).then_some((path, hash.as_str()))
     }))
+}
+
+/// Ranges are merged and sorted by their original snapshot indices. Rayon's
+/// ordered collection retains that order even across disjoint ranges.
+pub(crate) fn paths_in_ranges(
+    files: &[(PathBuf, String)],
+    ranges: Vec<Range<usize>>,
+) -> impl ParallelIterator<Item = &(PathBuf, String)> {
+    ranges
+        .into_par_iter()
+        .flat_map(move |range| files[range].par_iter())
+}
+
+/// Small literal-root queries do less work than scheduling a parallel scan.
+/// Map while collecting so glob results do not need a temporary match vector.
+pub(crate) fn glob_ranges<'a, T: Send>(
+    files: &'a [(PathBuf, String)],
+    ranges: Vec<Range<usize>>,
+    globs: Vec<String>,
+    exclude: Option<Vec<String>>,
+    map: impl Fn((Cow<'a, str>, &'a str)) -> T + Send + Sync,
+) -> napi::Result<Vec<T>> {
+    let matches = file_matcher(globs, exclude)?;
+    let filter = |(path, hash): &'a (PathBuf, String)| {
+        let path = normalized_path(path);
+        matches(&path).then_some((path, hash.as_str()))
+    };
+    if ranges.iter().map(|range| range.len()).sum::<usize>() <= 1024 {
+        Ok(ranges
+            .into_iter()
+            .flat_map(|range| files[range].iter())
+            .filter_map(filter)
+            .map(map)
+            .collect())
+    } else {
+        Ok(paths_in_ranges(files, ranges)
+            .filter_map(filter)
+            .map(map)
+            .collect())
+    }
 }
 
 fn file_matcher(
@@ -105,7 +146,7 @@ mod test {
                         .unwrap()
                         .map(|file| (file.file.clone(), file.hash.clone()))
                         .collect();
-                    let actual: Vec<_> = glob_paths(&files, globs, exclude)
+                    let actual: Vec<_> = glob_paths(files.par_iter(), globs, exclude)
                         .unwrap()
                         .map(|(path, hash)| (path.into_owned(), hash.to_owned()))
                         .collect();

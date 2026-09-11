@@ -71,6 +71,20 @@ if (mode === 'fixture') {
       );
     else if (operation === 'broad')
       output = context.hashFilesMatchingGlob(['**/*']);
+    else if (operation === 'batch-broad')
+      output = context.hashFilesMatchingGlobs(
+        Array.from({ length: 10 }, () => ['**/*.ts', '!**/*.spec.ts'])
+      );
+    else if (operation === 'multi-broad')
+      output = context.multiGlob(
+        Array.from({ length: 10 }, () => '**/*.spec.ts')
+      );
+    else if (operation === 'batch-mixed')
+      output = context.hashFilesMatchingGlobs([
+        ['**/*.spec.ts'],
+        ...groups,
+        ['{packages/project-0,packages/project-1}/**/*'],
+      ]);
     else throw Error('Unknown operation');
     const elapsedMs = performance.now() - start,
       used = process.cpuUsage(cpu),
@@ -98,6 +112,6 @@ if (mode === 'fixture') {
   });
 } else {
   throw Error(
-    'Usage: fixture <new-directory> [projects] [files-per-project] | measure <binding.node> <fixture> <cache> <single|batch|glob|multi|broad>'
+    'Usage: fixture <new-directory> [projects] [files-per-project] | measure <binding.node> <fixture> <cache> <single|batch|glob|multi|broad|batch-broad|multi-broad|batch-mixed>'
   );
 }
