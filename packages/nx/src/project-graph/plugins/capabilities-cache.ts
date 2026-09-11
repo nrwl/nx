@@ -138,23 +138,34 @@ export function recordIsFresh(record: PluginRecord, root: string): boolean {
     return true;
   }
 
-  const hashes = record.sourceFiles.map((file) =>
-    hashFile(absolute(file, root))
-  );
-  // A file that is gone hashes to null, and `hashArray` folds null in as though
-  // the entry were absent, so a deletion is checked rather than hashed.
-  if (hashes.some((hash) => hash === null)) {
-    return false;
-  }
-  return hashArray(hashes) === record.sourceHash;
+  const current = hashSourceFiles(record.sourceFiles, root);
+  return current !== null && current === record.sourceHash;
 }
 
 /**
  * Hashes a closure in the order it was recorded, so the comparison does not
  * depend on the order a runtime happened to load it in.
  */
-export function hashSourceFiles(sourceFiles: string[], root: string): string {
-  return hashArray(sourceFiles.map((file) => hashFile(absolute(file, root))));
+/**
+ * The hash of a closure, or null when it cannot be hashed.
+ *
+ * Both halves of that matter. `hashFile` returns null for a path it cannot read,
+ * and a directory, an unreadable file and a dangling symlink all take that
+ * branch while `existsSync` says they are there, so the null is the signal and
+ * not the presence of the path. And `hashArray` folds null in as though the entry
+ * were absent, which makes `hashArray([])` and `hashArray([null])` the same
+ * value, so the paths are hashed alongside their contents: an unhashable closure
+ * cannot land on the value an empty one has, whatever produced the null.
+ */
+export function hashSourceFiles(
+  sourceFiles: string[],
+  root: string
+): string | null {
+  const hashes = sourceFiles.map((file) => hashFile(absolute(file, root)));
+  if (hashes.some((hash) => hash === null)) {
+    return null;
+  }
+  return hashArray([...sourceFiles, ...hashes]);
 }
 
 function absolute(file: string, root: string): string {

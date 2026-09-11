@@ -50,6 +50,9 @@ vi.mock('./capabilities-cache', async (importOriginal) => ({
   computeCapabilityKey: (pluginPath: string) =>
     pluginPath.includes('unidentifiable') ? null : `key:${pluginPath}`,
   createCapabilitiesLock: () => mocks.lock,
+  // Hashing has its own spec. Here the closures are stand-ins that never touch
+  // disk, and an unhashable one is deliberately not recorded, so stub the hash.
+  hashSourceFiles: () => 'source-hash',
   readValidRecords: mocks.readValidRecords,
   recordCapabilities: mocks.recordCapabilities,
 }));
