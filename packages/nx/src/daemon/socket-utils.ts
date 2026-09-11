@@ -12,6 +12,7 @@ import {
 import { createSerializableError } from '../utils/serializable-error';
 import { isV8SerializerEnabled } from './is-v8-serializer-enabled';
 import { serialize as v8_serialize } from 'v8';
+import { encodeAuto } from '../utils/dedupe-serialization';
 import { writeMessage } from '../utils/consume-messages-from-socket';
 
 export const isWindows = platform() === 'win32';
@@ -142,9 +143,12 @@ export function serializeWithFallback(
  * @returns Serialized data as bytes ready to be framed onto a socket
  */
 export function serialize(data: any, force?: 'v8' | 'json'): Buffer {
-  return force
-    ? serializeAs(data, force)
-    : serializeWithFallback(data, isV8SerializerEnabled() ? 'v8' : 'json');
+  if (force) return serializeAs(data, force);
+  // Repetition-heavy payloads (per-task hash details) get a string table;
+  // the encoder bails cheaply on everything else.
+  const deduped = encodeAuto(data);
+  if (deduped) return v8_serialize(deduped);
+  return serializeWithFallback(data, isV8SerializerEnabled() ? 'v8' : 'json');
 }
 
 /**

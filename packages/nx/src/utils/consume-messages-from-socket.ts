@@ -1,5 +1,6 @@
 import type { Socket } from 'net';
 import { deserialize } from 'v8';
+import { decodeDeduped, isDedupedPayload } from './dedupe-serialization';
 
 export const MESSAGE_HEADER_PREFIX = 'NX_MSG_';
 const MESSAGE_HEADER_TERMINATOR = ':'.charCodeAt(0);
@@ -325,7 +326,7 @@ export interface DescribeMessageOptions {
  * Parse a message produced by `serialize()` in `daemon/socket-utils.ts`.
  */
 export function parseMessage<T = unknown>(message: Buffer): T {
-  return isJsonMessage(message)
-    ? JSON.parse(message.toString('utf8'))
-    : deserialize(message);
+  if (isJsonMessage(message)) return JSON.parse(message.toString('utf8'));
+  const value = deserialize(message);
+  return isDedupedPayload(value) ? decodeDeduped<T>(value) : value;
 }
