@@ -8,6 +8,7 @@ import {
 } from '@nx/devkit';
 import { createTree } from '@nx/devkit/testing';
 import Ajv from 'ajv';
+import { parse } from 'yaml';
 import { Preset } from '../utils/presets';
 import { generateWorkspaceFiles } from './generate-workspace-files';
 
@@ -427,4 +428,28 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
     `);
     expect(tree.exists('proj/.npmrc')).toBeFalsy();
   });
+
+  it.each([Preset.AngularMonorepo, Preset.AngularStandalone])(
+    'should acknowledge bootstrap dependencies before installing %s with pnpm 11',
+    async (preset) => {
+      jest.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('11.21.0');
+
+      await generateWorkspaceFiles(tree, {
+        name: 'proj',
+        directory: 'proj',
+        preset,
+        defaultBase: 'main',
+        packageManager: 'pnpm',
+        isCustomPreset: false,
+      });
+
+      expect(
+        parse(tree.read('proj/pnpm-workspace.yaml', 'utf-8')).allowBuilds
+      ).toEqual({
+        nx: true,
+        '@parcel/watcher': false,
+        less: false,
+      });
+    }
+  );
 });

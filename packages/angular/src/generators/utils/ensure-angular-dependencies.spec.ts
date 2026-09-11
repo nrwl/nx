@@ -1,5 +1,7 @@
 import { readJson, updateJson, type Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import * as devkit from '@nx/devkit';
+import { parse } from 'yaml';
 import { angularDevkitVersion, angularVersion } from '../../utils/versions';
 import { ensureAngularDependencies } from './ensure-angular-dependencies';
 
@@ -8,6 +10,52 @@ describe('ensureAngularDependencies', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+  });
+
+  describe('pnpm build scripts', () => {
+    afterEach(() => jest.restoreAllMocks());
+
+    it('should record decisions before installation and preserve user choices', () => {
+      jest.spyOn(devkit, 'detectPackageManager').mockReturnValue('pnpm');
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        packageManager: 'pnpm@11.21.0',
+      }));
+      tree.write(
+        'pnpm-workspace.yaml',
+        'allowBuilds:\n  nx: true\n  esbuild: true\n  lmdb: false\n  "@parcel/watcher": set this to true or false\n'
+      );
+
+      ensureAngularDependencies(tree, true);
+
+      expect(
+        parse(tree.read('pnpm-workspace.yaml', 'utf-8')).allowBuilds
+      ).toEqual({
+        nx: true,
+        '@parcel/watcher': false,
+        esbuild: true,
+        lmdb: false,
+        'msgpackr-extract': false,
+        less: false,
+      });
+    });
+
+    it.each(['pnpm@10.6.0', 'npm@10.9.8'])(
+      'should not change build settings for %s',
+      (packageManager) => {
+        jest
+          .spyOn(devkit, 'detectPackageManager')
+          .mockReturnValue(packageManager.startsWith('pnpm') ? 'pnpm' : 'npm');
+        updateJson(tree, 'package.json', (json) => ({
+          ...json,
+          packageManager,
+        }));
+
+        ensureAngularDependencies(tree, true);
+
+        expect(tree.exists('pnpm-workspace.yaml')).toBe(false);
+      }
+    );
   });
 
   it('should add angular dependencies when not installed', () => {
