@@ -1399,6 +1399,10 @@ function getExternalProjectReferenceTsconfigPatterns(
   );
 }
 
+/**
+ * Caches immediate edges only so the caller retains transitive traversal,
+ * ordering, and root-local visited semantics.
+ */
 function getReferenceExpansion(
   configPath: string,
   ownerProject: ProjectContext,
@@ -1406,6 +1410,7 @@ function getReferenceExpansion(
   cache: InvocationCache
 ): ReferenceExpansion {
   const configKey = posixRelative(workspaceRoot, configPath);
+  // Reference classification and relative patterns depend on the owner.
   const ownerKey = ownerProject.normalized;
 
   let ownerCache = cache.referenceExpansionCache.get(configKey);
@@ -1421,6 +1426,8 @@ function getReferenceExpansion(
   const tsConfigData = tsConfigCacheData[configKey]?.data;
 
   if (tsConfigData) {
+    // tsc reads extended configs while resolving project references.
+    // Workspace-root configs are covered by the local project's extends walk.
     for (const extended of tsConfigData.extendedConfigFiles ?? []) {
       if (!extended.filePath) {
         continue;
@@ -1466,6 +1473,7 @@ function getReferenceExpansion(
       expansion.projectReferences.push({
         configPath: refPath,
         ownerProject: refContext.project,
+        // Only references owned by this project contribute input patterns.
         pattern: isExternalProjectReference(
           refContext,
           ownerProject,
