@@ -56,6 +56,23 @@ function isAlreadyPublishedPublishError(
   );
 }
 
+function isNpmViewNotFoundError(err: any): boolean {
+  if (err.code === 'ENOBUFS' || err.signal) {
+    return false;
+  }
+
+  try {
+    const errorCode = JSON.parse(err.stdout?.toString() || '{}').error?.code;
+    if (errorCode) {
+      return errorCode === 'E404';
+    }
+  } catch {}
+
+  return /(?:^|\n)npm (?:ERR!|error) code E404(?:\n|$)/i.test(
+    err.stderr?.toString() || ''
+  );
+}
+
 export default async function runExecutor(
   options: PublishExecutorSchema,
   context: ExecutorContext
@@ -196,11 +213,12 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
 
   // Use bun info when bun is the package manager, otherwise use npm view
   // (npm view works across npm/pnpm/yarn environments and is the established default)
+  const npmViewDistTagField = `dist-tags[${tag}]`;
   const npmViewCommandSegments =
     pm === 'bun'
       ? ['bun info', packageName, `--json --"${registryConfigKey}=${registry}"`]
       : [
-          `npm view ${packageName} versions dist-tags --json --"${registryConfigKey}=${registry}"`,
+          `npm view ${packageName}@${packageJson.version} name version "${npmViewDistTagField}" --json --"${registryConfigKey}=${registry}"`,
         ];
   const npmDistTagAddCommandSegments = [
     `npm dist-tag add ${packageName}@${packageJson.version} ${tag} --"${registryConfigKey}=${registry}"`,
@@ -225,8 +243,40 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
       });
 
       const resultJson = JSON.parse(result.toString());
-      const distTags = resultJson['dist-tags'] || {};
-      if (distTags[tag] === currentVersion) {
+      let distTagVersion: string | undefined;
+      let versionExists: boolean;
+
+      if (pm === 'bun') {
+        distTagVersion = resultJson['dist-tags']?.[tag];
+        versionExists = (
+          Array.isArray(resultJson.versions)
+            ? resultJson.versions
+            : [resultJson.versions]
+        ).includes(currentVersion);
+      } else {
+        const metadataEntries = Array.isArray(resultJson)
+          ? resultJson
+          : [resultJson];
+        const currentVersionMetadata = metadataEntries.find(
+          (metadata) =>
+            metadata?.name === packageName &&
+            metadata?.version === currentVersion
+        );
+
+        if (!currentVersionMetadata) {
+          console.error(
+            `Something unexpected went wrong when checking for existing dist-tags. The registry returned metadata that did not match ${packageName}@${currentVersion}.`
+          );
+          return {
+            success: false,
+          };
+        }
+
+        distTagVersion = currentVersionMetadata[npmViewDistTagField];
+        versionExists = true;
+      }
+
+      if (distTagVersion === currentVersion) {
         console.warn(
           `Skipped ${packageTxt} because v${currentVersion} already exists in ${registry} with tag "${tag}"`
         );
@@ -236,12 +286,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
       }
 
       if (isNpmInstalled) {
-        // If only one version of a package exists in the registry, versions will be a string instead of an array.
-        const versions = Array.isArray(resultJson.versions)
-          ? resultJson.versions
-          : [resultJson.versions];
-
-        if (versions.includes(currentVersion)) {
+        if (versionExists) {
           try {
             if (!isDryRun) {
               execSync(npmDistTagAddCommandSegments.join(' '), {
@@ -317,52 +362,23 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
         }
       }
     } catch (err) {
-      try {
-        const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
-        // If the error is that the package doesn't exist, then we can ignore it because we will be publishing it for the first time in the next step
-        if (
-          !(
-            stdoutData.error?.code?.includes('E404') &&
-            stdoutData.error?.summary?.toLowerCase().includes('not found')
-          ) &&
-          !(
-            err.stderr?.toString().includes('E404') &&
-            err.stderr?.toString().toLowerCase().includes('not found')
-          ) &&
-          // bun uses plain '404' instead of 'E404'
-          !(
-            err.stderr?.toString().includes('404') &&
-            err.stderr?.toString().toLowerCase().includes('not found')
-          )
-        ) {
-          console.error(
-            `Something unexpected went wrong when checking for existing dist-tags.\n`,
-            err
-          );
-          return {
-            success: false,
-          };
-        }
-      } catch {
-        // JSON parse failed entirely — check stderr/stdout for plain 404
-        const stderrStr = err.stderr?.toString() || '';
-        const stdoutStr = err.stdout?.toString() || '';
-        if (
-          !(
-            (stderrStr.includes('404') &&
-              stderrStr.toLowerCase().includes('not found')) ||
-            (stdoutStr.includes('404') &&
-              stdoutStr.toLowerCase().includes('not found'))
-          )
-        ) {
-          console.error(
-            `Something unexpected went wrong when checking for existing dist-tags.\n`,
-            err
-          );
-          return {
-            success: false,
-          };
-        }
+      const isNotFound =
+        pm === 'bun'
+          ? [err.stderr?.toString(), err.stdout?.toString()].some(
+              (output) =>
+                output?.includes('404') &&
+                output.toLowerCase().includes('not found')
+            )
+          : isNpmViewNotFoundError(err);
+
+      if (!isNotFound) {
+        console.error(
+          `Something unexpected went wrong when checking for existing dist-tags.\n`,
+          err
+        );
+        return {
+          success: false,
+        };
       }
     }
   }
