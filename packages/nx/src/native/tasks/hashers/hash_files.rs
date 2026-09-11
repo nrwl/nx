@@ -130,8 +130,8 @@ pub fn expand_files(workspace_root: &Path, globs: &[String]) -> Result<FilesExpa
         };
         // The prefix is caller-supplied (a snapshot bundle, or config); confine
         // it to the workspace after symlink resolution, not just lexically.
-        let canonical_root = workspace_root.canonicalize()?;
-        if !start.canonicalize()?.starts_with(&canonical_root) {
+        let canonical_root = dunce::canonicalize(workspace_root)?;
+        if !dunce::canonicalize(&start)?.starts_with(&canonical_root) {
             bail!("The `files` input \"{glob}\" resolves outside the workspace.");
         }
         if metadata.is_file() {
@@ -155,9 +155,7 @@ pub fn expand_files(workspace_root: &Path, globs: &[String]) -> Result<FilesExpa
                 || (file_type.is_symlink()
                     && std::fs::metadata(entry.path()).is_ok_and(|m| m.is_file())
                     // A link pointing out of the workspace is not workspace content.
-                    && entry
-                        .path()
-                        .canonicalize()
+                    && dunce::canonicalize(entry.path())
                         .is_ok_and(|target| target.starts_with(&canonical_root)));
             if !is_file {
                 continue;
