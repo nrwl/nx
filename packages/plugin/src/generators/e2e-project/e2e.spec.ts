@@ -67,6 +67,28 @@ describe('NxPlugin e2e-project Generator', () => {
     expect(tree.exists('my-plugin-e2e/src/my-plugin.spec.ts')).toBeTruthy();
   });
 
+  it('should create the test workspace with the requested package manager', async () => {
+    // An explicit non-npm choice with a literal expectation. Detection in this
+    // suite resolves to npm, so a template that hardcodes npm would pass an
+    // assertion written against the detected value.
+    await e2eProjectGenerator(tree, {
+      pluginName: 'my-plugin',
+      pluginOutputPath: `dist/libs/my-plugin`,
+      npmPackageName: '@proj/my-plugin',
+      packageManager: 'pnpm',
+      addPlugin: true,
+    });
+
+    const spec = tree.read('my-plugin-e2e/src/my-plugin.spec.ts', 'utf-8');
+
+    expect(spec).toContain('--packageManager=pnpm');
+
+    // Creation, install and checks all have to run under that same manager.
+    expect(spec).toContain('pnpm dlx create-nx-workspace@latest');
+    expect(spec).toMatch(/pnpm add .*my-plugin@e2e/);
+    expect(spec).toMatch(/pnpm ls .*my-plugin/);
+  });
+
   it('should budget the setup hook for a cold package manager cache', async () => {
     await e2eProjectGenerator(tree, {
       pluginName: 'my-plugin',
