@@ -12,7 +12,7 @@ import { validateAndNormalizeProjectRootMap } from './project-configuration/targ
 import { Minimatch } from 'minimatch';
 import { performance } from 'perf_hooks';
 
-import { DelayedSpinner } from '../../utils/delayed-spinner';
+import type { DelayedSpinner } from '../../utils/delayed-spinner';
 import { formatPluginProgressText } from '../../utils/plugin-progress-text';
 import { ProgressTopics } from '../../utils/progress-topics';
 import {
@@ -123,6 +123,9 @@ export async function createProjectConfigurationsWithPlugins(
     ...projectFiles.defaultPluginFiles,
   ];
   const specifiedCount = specifiedCreateNodesPlugins.length;
+  // Lazy: pulls in ora, which nothing else on this path needs.
+  const { DelayedSpinner } =
+    require('../../utils/delayed-spinner') as typeof import('../../utils/delayed-spinner');
   spinner = new DelayedSpinner(getSpinnerText(), {
     progressTopic: ProgressTopics.GraphConstruction,
   });

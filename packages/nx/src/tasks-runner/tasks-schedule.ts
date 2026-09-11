@@ -83,8 +83,21 @@ export class TasksSchedule {
     this.scheduledTasks = this.scheduledTasks.filter(
       (id) => !removedSet.has(id)
     );
-    for (const [key, deps] of Object.entries(this.reverseTaskDeps)) {
-      this.reverseTaskDeps[key] = deps.filter((d) => !removedSet.has(d));
+    // A task is only listed as a dependent of its own dependencies, so those
+    // are the only entries that can change; rewriting every entry per
+    // completion was quadratic in the task count.
+    for (const taskId of taskIds) {
+      for (const dep of [
+        ...(this.taskGraph.dependencies[taskId] ?? []),
+        ...(this.taskGraph.continuousDependencies[taskId] ?? []),
+      ]) {
+        const dependents = this.reverseTaskDeps[dep];
+        if (dependents?.length) {
+          this.reverseTaskDeps[dep] = dependents.filter(
+            (d) => !removedSet.has(d)
+          );
+        }
+      }
     }
     this.notScheduledTaskGraph = removeTasksFromTaskGraph(
       this.notScheduledTaskGraph,

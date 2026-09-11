@@ -1,6 +1,5 @@
 import * as pc from 'picocolors';
 import { isOnDaemon } from '../daemon/is-on-daemon';
-import { serverLogger } from '../daemon/logger';
 
 export const NX_PREFIX = pc.inverse(pc.bold(pc.cyan(' NX ')));
 
@@ -51,6 +50,10 @@ export function createLogger(driver: LogDriver) {
 export const logger = createLogger(
   isOnDaemon()
     ? (() => {
+        // Lazy: daemon/logger drags socket-utils and tmp-dir into every
+        // process that logs, and only the daemon itself takes this branch.
+        const { serverLogger } =
+          require('../daemon/logger') as typeof import('../daemon/logger');
         const log = serverLogger.log.bind(serverLogger);
         return {
           warn: log,

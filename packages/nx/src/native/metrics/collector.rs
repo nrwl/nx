@@ -970,13 +970,13 @@ impl ProcessMetricsCollector {
     /// Create a new ProcessMetricsCollector with custom configuration
     fn with_config(config: CollectorConfig) -> Self {
         // Use targeted refresh instead of new_all() to avoid loading unnecessary data
-        // (disks, networks, components, users). Load processes to establish CPU baseline
-        // so first collection cycle has accurate CPU data.
+        // (disks, networks, components, users). Processes are not loaded here: that
+        // enumeration costs ~10ms, and a CLI that only registers pids never collects.
+        // `start_collection` establishes the CPU baseline before the first cycle.
         let sys = System::new_with_specifics(
             RefreshKind::nothing()
                 .with_cpu(CpuRefreshKind::nothing())
-                .with_memory(MemoryRefreshKind::nothing().with_ram())
-                .with_processes(ProcessRefreshKind::nothing().with_cpu().with_memory()),
+                .with_memory(MemoryRefreshKind::nothing().with_ram()),
         );
         let host_cpu_count = sys.cpus().len() as u32;
         let cpu_cores = detect_effective_cpu_count(host_cpu_count);
@@ -1019,6 +1019,13 @@ impl ProcessMetricsCollector {
         }
 
         self.should_collect.store(true, Ordering::Release);
+
+        // Establish the CPU baseline so the first collection cycle has accurate data.
+        self.system.lock().refresh_processes_specifics(
+            sysinfo::ProcessesToUpdate::All,
+            false,
+            ProcessRefreshKind::nothing().with_cpu().with_memory(),
+        );
 
         // Create unbounded channel for metrics communication
         // Unbounded ensures collection never blocks on sending metrics

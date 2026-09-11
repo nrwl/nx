@@ -13,8 +13,6 @@ import {
 } from '../config/workspace-json-project-json';
 import type { Tree } from '../generators/tree';
 import { readJson } from '../generators/utils/json';
-import { readTargetDefaultsForTarget } from '../project-graph/utils/project-configuration-utils';
-import { mergeTargetConfigurations } from '../project-graph/utils/project-configuration/target-merging';
 import { getCatalogManager } from './catalog';
 import { readJsonFile } from './fileutils';
 import { hasNxJsPlugin } from './has-nx-js-plugin';
@@ -271,6 +269,10 @@ export function readTargetsFromPackageJson(
   workspaceRoot: string,
   packageManagerCommand: PackageManagerCommands
 ) {
+  const { mergeTargetConfigurations } =
+    require('../project-graph/utils/project-configuration/target-merging') as typeof import('../project-graph/utils/project-configuration/target-merging');
+  const { readTargetDefaultsForTarget } =
+    require('../project-graph/utils/project-configuration-utils') as typeof import('../project-graph/utils/project-configuration-utils');
   const { scripts, nx, private: isPrivate } = packageJson ?? {};
   const res: Record<string, TargetConfiguration> = {};
   const includedScripts = nx?.includedScripts || Object.keys(scripts ?? {});
