@@ -14,6 +14,21 @@ import { applicationGenerator } from './application';
 import { join } from 'path';
 
 describe('app', () => {
+  it('declares Node types without a unit test runner or linter', async () => {
+    const workspace = createTreeWithEmptyWorkspace();
+    await applicationGenerator(workspace, {
+      directory: 'app',
+      style: 'css',
+      unitTestRunner: 'none',
+      e2eTestRunner: 'none',
+      linter: 'none',
+      skipFormat: true,
+    });
+    expect(
+      readJson(workspace, 'package.json').devDependencies['@types/node']
+    ).toBeDefined();
+  });
+
   let tree: Tree;
   let envBackup: string | undefined;
 
