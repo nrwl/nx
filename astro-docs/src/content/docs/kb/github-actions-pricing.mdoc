@@ -87,24 +87,55 @@ Nx Cloud comes out cheaper than plain GitHub Actions when the minutes the cache 
 1 minute per job to restore it, are worth more than the $0.275 pipeline fee.
 On a standard 2-core runner that is roughly 46 net minutes per run, and on an 8-core runner 12.5.
 
-The table below is the baseline you need today, in machine-minutes per run, before the cache pays
-for itself, assuming 3 minutes of checkout and install per job and 1 minute to restore the cache.
+The table below is the baseline a single-job pipeline needs today, in machine-minutes per run,
+before the cache pays for itself.
 Each row holds the runner fixed and compares a pipeline against itself.
 Above these numbers Nx Cloud is faster and cheaper, below them it is faster and costs slightly more.
 
-| Runner                | Jobs per run | Break-even at 50% hits | Break-even at 70% hits |
-| --------------------- | ------------ | ---------------------- | ---------------------- |
-| Linux 2-core ($0.006) | 1            | 97 machine-minutes     | 70 machine-minutes     |
-| Linux 2-core ($0.006) | 4            | 112 machine-minutes    | 83 machine-minutes     |
-| Linux 8-core ($0.022) | 1            | 30 machine-minutes     | 22 machine-minutes     |
-| Linux 8-core ($0.022) | 4            | 45 machine-minutes     | 36 machine-minutes     |
-| Linux 8-core ($0.022) | 8            | 65 machine-minutes     | 53 machine-minutes     |
+| Runner                | Break-even at 50% hits | Break-even at 70% hits |
+| --------------------- | ---------------------- | ---------------------- |
+| Linux 2-core ($0.006) | 97 machine-minutes     | 70 machine-minutes     |
+| Linux 8-core ($0.022) | 30 machine-minutes     | 22 machine-minutes     |
+
+Splitting across a matrix raises the bar, because every job pays its own cache restore.
+At 50% hits, four 2-core jobs break even at 112 machine-minutes and eight 8-core jobs at 65.
 
 Plan on 50% for a workspace that has connected Nx Cloud and left the default inputs alone, and 70%
 once [inputs](/docs/kb/configure-inputs) are tuned and PR branches populate the cache for each
 other.
 The more expensive the runner, the sooner the cache pays for itself, because every minute it skips
 is worth more.
+
+### Run it on your own numbers
+
+Per run, with the jobs still on GitHub runners:
+
+```plaintext
+savings  = J * r * (w * h - c) - 0.275
+feedback = s + c + w * (1 - h)
+```
+
+- `J` jobs per run
+- `r` runner rate in dollars per minute, from the rate card above
+- `s` setup minutes per job, meaning checkout and install
+- `w` task minutes per job today, not counting setup
+- `h` cache hit rate, between 0 and 1
+- `c` minutes to restore the cache, about 1
+
+Nx Cloud is cheaper whenever `savings` is positive.
+The four-job example below has `J=4`, `r=0.006`, `s=3`, `w=27`, and `c=1`, so at `h=0.5` it saves
+`4 * 0.006 * (27 * 0.5 - 1) - 0.275`, or $0.025 per run and $12.50 across 500 runs.
+
+The arithmetic assumes:
+
+- Jobs stay on GitHub runners. Moving them to Nx Agents replaces `r` with the agent rate.
+- Setup is never cached, so `s` is the same with and without Nx Cloud.
+- The hit rate applies evenly across task time. A pipeline whose slowest task always misses saves
+  less than `h` suggests.
+- Jobs are balanced and run in parallel, so wall-clock feedback is one job's time.
+- `0.275` is the Team plan price of one CI pipeline execution.
+- GitHub's round-up to the whole minute is ignored, which understates the plain GitHub Actions cost
+  a little.
 
 {% aside type="note" %}
 The examples below are illustrations, not benchmarks.
