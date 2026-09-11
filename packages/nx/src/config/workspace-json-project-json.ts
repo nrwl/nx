@@ -228,11 +228,17 @@ export type InputDefinition =
   | { input: string; projects: string | string[] }
   | { input: string; dependencies: true }
   | { input: string }
-  | { fileset: string }
-  | { fileset: string; dependencies: true }
+  | { fileset: string; includeIgnored?: boolean; force?: boolean }
+  | {
+      fileset: string;
+      dependencies: true;
+      includeIgnored?: boolean;
+      force?: boolean;
+    }
   | { runtime: string }
   | { externalDependencies: string[] }
   | { dependentTasksOutputFiles: string; transitive?: boolean }
+  | { continuousDependenciesInputs: boolean }
   | { env: string }
   | { workingDirectory: 'relative' | 'absolute' }
   | JsonInput;

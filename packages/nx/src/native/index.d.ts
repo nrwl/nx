@@ -82,6 +82,12 @@ export declare class HashPlanInspector {
   /** @deprecated Use `inspectInputs()` instead for structured output. */
   inspect(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>): Record<string, string[]>
   /**
+   * The file-input groups of each task's plan, as globs. Unlike `inspect`
+   * and `inspect_inputs` this does not touch the disk or the file map, so
+   * it stays cheap on plans whose globs expand to thousands of files.
+   */
+  inspectInputGlobs(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>): Record<string, Array<EffectiveInputGroup>>
+  /**
    * Like `inspect()` but returns structured `HashInputs` objects instead of flat strings.
    * Each `HashInstruction` is categorized into the appropriate bucket (files, runtime,
    * environment, depOutputs, external). TsConfiguration is resolved to the root tsconfig
@@ -94,8 +100,13 @@ export declare class HashPlanInspector {
 
 export declare class HashPlanner {
   constructor(nxJson: NxJson, projectGraph: ExternalObject<ProjectGraph>)
-  getPlans(taskIds: Array<string>, taskGraph: TaskGraph): Record<string, string[]>
-  getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph): ExternalObject<Record<string, Array<HashInstruction>>>
+  getPlans(taskIds: Array<string>, taskGraph: TaskGraph, snapshots?: IoSnapshots | undefined | null, customHasherTaskIds?: Array<string> | undefined | null): Record<string, string[]>
+  /**
+   * The same eligibility walk `getPlans` performs, reported: which tasks
+   * hash from their snapshot and why the others do not.
+   */
+  ioSnapshotReport(taskGraph: TaskGraph, snapshots?: IoSnapshots | undefined | null, customHasherTaskIds?: Array<string> | undefined | null): IoSnapshotReport
+  getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph, snapshots?: IoSnapshots | undefined | null, customHasherTaskIds?: Array<string> | undefined | null): ExternalObject<Record<string, Array<HashInstruction>>>
 }
 
 export declare class HttpRemoteCache {
@@ -109,6 +120,27 @@ export declare class ImportResult {
   sourceProject: string
   dynamicImportExpressions: Array<string>
   staticImportExpressions: Array<string>
+}
+
+/**
+ * The fetched or loaded bundle for one commit, plus what resolving it
+ * reported. Handed to the hash planner as-is; `bundle` is `None` when the
+ * task hashes natively (status `skipped`, or a load failure).
+ */
+export declare class IoSnapshots {
+  /** `fetched` | `cached` | `skipped` */
+  get status(): string
+  /**
+   * Why the fetch was skipped, `stale-offline` when a stale bundle was
+   * reused, or `no-bundle` / `invalid-bundle` from `loadIoSnapshots`.
+   */
+  get reason(): string | null
+  get message(): string | null
+  /** The bundle file a load failure refers to. */
+  get file(): string | null
+  /** Directory holding `snapshots.json` when a bundle was resolved. */
+  get directory(): string | null
+  get resolution(): IoSnapshotResolution | null
 }
 
 export declare class NxCache {
@@ -328,6 +360,14 @@ export declare function closeDbConnection(connection: ExternalObject<NxDbConnect
 
 export declare function connectToNxDb(cacheDir: string, dbName?: string | undefined | null): ExternalObject<NxDbConnection>
 
+/**
+ * Hash everything the task's continuous dependencies hash. A trace sees one
+ * process, so a dev server's reads are otherwise absent from the task.
+ */
+export interface ContinuousDependenciesInputsInput {
+  continuousDependenciesInputs: boolean
+}
+
 export declare function copy(src: string, dest: string): number
 
 export interface DepsOutputsInput {
@@ -341,6 +381,33 @@ export interface DepsOutputsInput {
  * Filtering against supported agents should be done on the TypeScript side.
  */
 export declare function detectAiAgent(): string | null
+
+/**
+ * One file-input group of a task's hash plan, as globs rather than resolved
+ * paths. `project` is `None` for workspace-level groups.
+ */
+export interface EffectiveInputGroup {
+  project?: string
+  globs: Array<string>
+  /** Globs the task was observed reading. Empty for a declared fileset. */
+  observed: Array<string>
+  /**
+   * Globs the planner carried over from a declared input -- the exclusions
+   * an inferred target writes against `{projectRoot}`, which still apply on
+   * top of the trace.
+   */
+  declared: Array<string>
+  /**
+   * Disk-backed: an I/O snapshot's observed reads, or a declared
+   * `includeIgnored` fileset. Gitignored and generated files count.
+   */
+  includeIgnored: boolean
+  /**
+   * True when this task hashes from an I/O snapshot, so the groups are the
+   * observed reads rather than the declared filesets.
+   */
+  fromSnapshot: boolean
+}
 
 export interface EnvironmentInput {
   env: string
@@ -391,6 +458,9 @@ export declare const enum EventType {
   rescan = 'rescan'
 }
 
+/** The existing files a `{ files: [...] }` input group matches on disk, sorted. */
+export declare function expandFilesInput(workspaceRoot: string, globs: Array<string>): Array<string>
+
 export declare function expandOutputs(directory: string, entries: Array<string>): Array<string>
 
 export interface ExternalDependenciesInput {
@@ -402,6 +472,13 @@ export interface ExternalNode {
   version: string
   hash?: string
 }
+
+/**
+ * Resolves the I/O snapshot bundle for the workspace's current HEAD, serving
+ * it from the on-disk cache when fresh and fetching from Nx Cloud otherwise.
+ * Never fails the caller: every problem is reported as a `skipped` result.
+ */
+export declare function fetchIoSnapshots(options: IoSnapshotFetchOptions): Promise<IoSnapshots>
 
 export interface FileData {
   file: string
@@ -416,6 +493,16 @@ export interface FileMap {
 export interface FileSetInput {
   fileset: string
   dependencies?: boolean
+  /**
+   * Hash the glob straight from disk (so gitignored/generated files count)
+   * instead of the workspace file map. Self inputs only.
+   */
+  includeIgnored?: boolean
+  /**
+   * Keep hashing this fileset even when an I/O snapshot replaces the rest.
+   * For reads a trace cannot see, such as those of a continuous dependency.
+   */
+  force?: boolean
 }
 
 export declare function findImports(projectFileMap: Record<string, Array<string>>): Array<ImportResult>
@@ -524,6 +611,10 @@ export interface HashInputs {
   depOutputs: Array<string>
   /** External dependencies */
   external: Array<string>
+  /** Provenance of every value above, keyed by the value itself. */
+  sources: Record<string, 'snapshot' | 'target' | 'dependency' | 'native'>
+  /** Domain markers in the plan, e.g. `io-snapshot:<digest>`. */
+  markers: Array<string>
 }
 
 /**
@@ -555,6 +646,83 @@ export declare function installNxConsoleForEditor(editor: SupportedEditor): Prom
 export interface InvocationRecord {
   parentPid: number
   taskId: string
+}
+
+/**
+ * Tasks whose snapshot read another task's outputs: they hash after their
+ * producers ran, because those files only exist then. Needs no project graph,
+ * so the client can call it before the first hashing wave on the daemon path.
+ * Opted-out and custom-hasher tasks are not excluded: deferring a task that
+ * ends up hashed natively only delays its hash, it never changes it.
+ */
+export declare function ioSnapshotDeferredTaskIds(snapshots: IoSnapshots, taskGraph: TaskGraph): Array<string>
+
+/**
+ * Why a task (or the whole run) hashes natively. `reason` strings are the
+ * contract `nx show`, `nx graph`, and the run summary render.
+ */
+export interface IoSnapshotDiagnostic {
+  reason: string
+  taskId?: string
+  project?: string
+  glob?: string
+  producer?: string
+  file?: string
+  message?: string
+}
+
+export interface IoSnapshotFetchOptions {
+  workspaceRoot: string
+  /** Shared cache root for snapshot bundles (`<cacheDir>/io-snapshots`). */
+  cacheDirectory: string
+  apiUrl: string
+  accessToken?: string
+  nxCloudId?: string
+  clientVersion?: string
+  maxCommits?: number
+  timeoutMs?: number
+  /** Age after which a cached bundle for the same commit is refetched. 0 always refetches. */
+  maxAgeMs?: number
+  /**
+   * Age after which a remembered fetch failure for the same commit and API
+   * URL is retried. Defaults to `max_age_ms`.
+   */
+  failureMaxAgeMs?: number
+  retain?: number
+}
+
+/**
+ * Observed outputs per eligible task (same walk as hashing), for the runner
+ * to union into `task.outputs` and for `nx show` to label them.
+ */
+export declare function ioSnapshotOutputs(snapshots: IoSnapshots, taskGraph: TaskGraph, optedOutTaskIds: Array<string>, customHasherTaskIds: Array<string>, projectRoots?: Record<string, string> | undefined | null): Record<string, Array<string>>
+
+/**
+ * The eligibility report without a planner: the client prints the run
+ * summary from this on the daemon path, where it never transfers a project
+ * graph. `invalid-files-input` needs nx.json to expand named inputs, so it
+ * is only reported through the planner.
+ */
+export declare function ioSnapshotReport(snapshots: IoSnapshots, taskGraph: TaskGraph, optedOutTaskIds: Array<string>, customHasherTaskIds: Array<string>, projectRoots?: Record<string, string> | undefined | null): IoSnapshotReport
+
+export interface IoSnapshotReport {
+  /** Task ids hashed from their snapshot. */
+  used: Array<string>
+  /** Subset of `used` whose snapshot also contributes observed outputs. */
+  tasksWithOutputs: Array<string>
+  diagnostics: Array<IoSnapshotDiagnostic>
+  resolution?: IoSnapshotResolution
+}
+
+/** What was resolved for a commit; persisted alongside the bundle. */
+export interface IoSnapshotResolution {
+  requestedCommit: string
+  commits: Array<string>
+  sourceCommits: Array<string>
+  digest: string
+  fetchedAt: number
+  clientVersion: string
+  tasks: number
 }
 
 export const IS_WASM: boolean
@@ -601,6 +769,12 @@ export interface Link {
   href: string
 }
 
+/**
+ * Reads an already-fetched bundle directory without touching the network:
+ * `nx show`/`nx graph` and the daemon load the directory the client resolved.
+ */
+export declare function loadIoSnapshots(directory: string): IoSnapshots
+
 export declare function logDebug(message: string): void
 
 /**
@@ -638,7 +812,7 @@ export interface MetricsUpdate {
 
 /** Stripped version of the NxJson interface for use in rust */
 export interface NxJson {
-  namedInputs?: Record<string, Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | WorkingDirectoryInput | JsonInput>>
+  namedInputs?: Record<string, Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | WorkingDirectoryInput | JsonInput | ContinuousDependenciesInputsInput>>
 }
 
 export interface NxWorkspaceFiles {
@@ -700,7 +874,7 @@ export interface ProcessMetrics {
 
 export interface Project {
   root: string
-  namedInputs?: Record<string, Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | WorkingDirectoryInput | JsonInput>>
+  namedInputs?: Record<string, Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | WorkingDirectoryInput | JsonInput | ContinuousDependenciesInputsInput>>
   tags?: Array<string>
   targets: Record<string, Target>
 }
@@ -748,7 +922,7 @@ export interface SystemInfo {
 
 export interface Target {
   executor?: string
-  inputs?: Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | WorkingDirectoryInput | JsonInput>
+  inputs?: Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | WorkingDirectoryInput | JsonInput | ContinuousDependenciesInputsInput>
   outputs?: Array<string>
   options?: string
   configurations?: string

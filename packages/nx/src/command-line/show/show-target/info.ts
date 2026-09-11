@@ -1,8 +1,16 @@
+import type { EffectiveInputGroup } from '../../../native';
 import type { NxJsonConfiguration } from '../../../config/nx-json';
 import type { ProjectGraph } from '../../../config/project-graph';
 import type { InputDefinition } from '../../../config/workspace-json-project-json';
 import type { ConfigurationSourceMaps } from '../../../project-graph/utils/project-configuration/source-maps';
 import { getNamedInputs } from '../../../hasher/task-hasher';
+import {
+  getTaskEffectiveInputGroups,
+  getTaskIoSnapshotStatus,
+  getTaskOutputs,
+  getTaskRawInputs,
+  type IoSnapshotStatus,
+} from '../../../hasher/check-task-files';
 import { createTaskGraph } from '../../../tasks-runner/create-task-graph';
 import {
   createTaskId,
@@ -22,7 +30,48 @@ export async function showTargetInfoHandler(
   args: ShowTargetBaseOptions
 ): Promise<void> {
   const t = await resolveTarget(args, { withSourceMaps: true });
-  const data = resolveTargetInfoData(t);
+  const taskId = createTaskId(t.projectName, t.targetName, t.configuration);
+  const snapshot = await getTaskIoSnapshotStatus(taskId, {
+    projectGraph: t.graph,
+    nxJson: t.nxJson,
+  });
+  // A snapshot-backed task hashes its observed reads, not the declared
+  // filesets, so the declared list would be inputs that are not inputs.
+  const effectiveGroups =
+    snapshot.status === 'used'
+      ? await getTaskEffectiveInputGroups(taskId, {
+          projectGraph: t.graph,
+          nxJson: t.nxJson,
+        })
+      : [];
+  // Already resolved for the snapshot status above, so this is a cache read.
+  const hashed =
+    effectiveGroups.length > 0
+      ? ((
+          await getTaskRawInputs(taskId, {
+            projectGraph: t.graph,
+            nxJson: t.nxJson,
+          })
+        )?.files ?? [])
+      : [];
+  // A snapshot contributes the writes it observed on top of the declared
+  // outputs; without them the listing is only half of what the runner caches.
+  const observedOutputs =
+    snapshot.status === 'used'
+      ? await getTaskOutputs(taskId, {
+          projectGraph: t.graph,
+          nxJson: t.nxJson,
+        }).then((outputs) =>
+          outputs.resolved.filter((o) => outputs.sources[o] === 'snapshot')
+        )
+      : [];
+  const data = resolveTargetInfoData(
+    t,
+    snapshot,
+    effectiveGroups,
+    hashed,
+    observedOutputs
+  );
   renderTargetInfo(data, args);
 }
 
@@ -36,7 +85,13 @@ interface ExpandedInput {
   originalIndex: number;
 }
 
-function resolveTargetInfoData(t: ResolvedTarget) {
+function resolveTargetInfoData(
+  t: ResolvedTarget,
+  snapshot: IoSnapshotStatus,
+  effectiveGroups: EffectiveInputGroup[] = [],
+  hashedFiles: string[] = [],
+  observedOutputs: string[] = []
+) {
   const {
     projectName,
     targetName,
@@ -116,6 +171,53 @@ function resolveTargetInfoData(t: ResolvedTarget) {
     parallelism: targetConfig.parallelism ?? true,
     continuous: targetConfig.continuous ?? false,
     cache: targetConfig.cache ?? false,
+    ...(targetConfig.sandbox?.enabled === false
+      ? { sandbox: { enabled: false } }
+      : {}),
+    snapshot,
+    ...(effectiveGroups.length > 0
+      ? {
+          effectiveInputs: (() => {
+            const roots = effectiveGroups.map((group) => ({
+              name: group.project ?? '{workspaceRoot}',
+              root: group.project
+                ? graph.nodes[group.project]?.data?.root
+                : undefined,
+            }));
+            const fileCounts = countFilesByProject(hashedFiles, roots);
+            return effectiveGroups.map((group) => {
+              const root = group.project
+                ? graph.nodes[group.project]?.data?.root
+                : undefined;
+              return {
+                ...group,
+                projectRoot: root,
+                files: fileCounts.get(group.project ?? '{workspaceRoot}') ?? 0,
+                globs: group.globs.map((glob) =>
+                  tokenizeProjectRoot(glob, root)
+                ),
+                observed: group.observed.map((glob) =>
+                  tokenizeProjectRoot(glob, root)
+                ),
+                declared: group.declared.map((glob) =>
+                  tokenizeProjectRoot(glob, root)
+                ),
+              };
+            });
+          })(),
+          _declaredSources: declaredExclusionSources(
+            effectiveGroups,
+            targetName,
+            graph,
+            nxJson,
+            sourceMaps
+          ),
+          _declaredVia: declaredExclusionsViaNamedInputs(
+            targetConfig.inputs,
+            nxJson
+          ),
+        }
+      : {}),
     ...(targetConfig.inputs
       ? (() => {
           const expanded = expandInputsForDisplay(
@@ -131,6 +233,14 @@ function resolveTargetInfoData(t: ResolvedTarget) {
       : {}),
     ...(targetConfig.outputs
       ? { outputs: targetConfig.outputs as string[] }
+      : {}),
+    ...(observedOutputs.length > 0
+      ? {
+          // Written against {projectRoot} like the declared outputs beside them.
+          observedOutputs: observedOutputs.map((output) =>
+            tokenizeProjectRoot(output, node.data.root)
+          ),
+        }
       : {}),
     options: {
       ...targetConfig.options,
@@ -306,6 +416,197 @@ function findDepConfigIndex(
  * tracking which original input index each expanded item came from.
  * This lets the renderer look up `inputs.${originalIndex}` in the source map.
  */
+/** True for file-shaped inputs (strings, filesets); env/runtime/externalDependencies are not. */
+function isFileInput(value: InputDefinition | string): boolean {
+  if (typeof value === 'string') return true;
+  return !(
+    'env' in value ||
+    'runtime' in value ||
+    'externalDependencies' in value
+  );
+}
+
+/**
+ * Rewrites a workspace-relative glob to `{projectRoot}`-relative when it sits
+ * inside the owning project, matching how the declared inputs above are
+ * written. A project rooted at "." owns every path, so its globs tokenize
+ * whole. Negations keep their leading `!`.
+ */
+function tokenizeProjectRoot(glob: string, root: string | undefined): string {
+  if (!root) return glob;
+  const negated = glob.startsWith('!');
+  const path = negated ? glob.slice(1) : glob;
+  const token =
+    root === '.' ? `{projectRoot}/${path}` : tokenizeUnder(path, root);
+  return negated ? `!${token}` : token;
+}
+
+function tokenizeUnder(path: string, root: string): string {
+  if (path === root) return '{projectRoot}';
+  return path.startsWith(`${root}/`)
+    ? `{projectRoot}/${path.slice(root.length + 1)}`
+    : path;
+}
+
+/** Direct dependencies listed before the rest become a count. */
+const DEPENDS_ON_PREVIEW = 10;
+
+/** Projects summarised before the rest become a count. */
+const PROJECT_PREVIEW = 25;
+
+/** A group once the renderer has resolved the owning project's root. */
+type ResolvedInputGroup = EffectiveInputGroup & {
+  projectRoot?: string;
+  files: number;
+};
+
+/**
+ * The globs a snapshot-backed task hashes, grouped by the project they belong
+ * to. The default names the projects; `--verbose` lists each project's globs,
+ * split by whether the trace read them, the trace excluded them, or a declared
+ * input excluded them.
+ */
+function renderEffectiveInputs(
+  data: TargetInfoData,
+  c: ReturnType<typeof pc>,
+  args: ShowTargetBaseOptions
+): void {
+  const groups = data.effectiveInputs;
+  if (!groups?.length) return;
+
+  const isRead = (glob: string) => !glob.startsWith('!');
+  const readsOf = (group: ResolvedInputGroup) => group.observed.filter(isRead);
+  const tracedOf = (group: ResolvedInputGroup) =>
+    group.observed.filter((glob) => !isRead(glob));
+  const readTotal = groups.reduce((n, g) => n + readsOf(g).length, 0);
+  const excludeTotal = groups.reduce(
+    (n, g) => n + tracedOf(g).length + g.declared.length,
+    0
+  );
+  const fileTotal = groups.reduce((n, g) => n + g.files, 0);
+
+  // The replaced filesets are not printed at all, so this has to say what the
+  // snapshot stands in for. Anything still listed above it -- env, runtime,
+  // externalDependencies -- a snapshot never replaces.
+  const commit = data.snapshot.commit?.slice(0, 8);
+  console.log(
+    `  ${c.dim(
+      `file inputs come from the I/O snapshot${commit ? ` at ${commit}` : ''},` +
+        ` in place of this target's declared filesets` +
+        ` — \`nx show target inputs ${data.project}:${data.target}\` lists the files`
+    )}`
+  );
+  console.log(
+    `  ${c.dim(
+      `considers ${fileTotal} file${fileTotal === 1 ? '' : 's'} from ${groups.length}` +
+        ` project${groups.length === 1 ? '' : 's'}` +
+        ` (${readTotal} globs included, ${excludeTotal} excluded):`
+    )}`
+  );
+
+  if (!args.verbose) {
+    // Most files first: the projects a change is most likely to invalidate.
+    const ranked = [...groups].sort(
+      (a, b) =>
+        b.files - a.files || (a.project ?? '').localeCompare(b.project ?? '')
+    );
+    for (const group of ranked.slice(0, PROJECT_PREVIEW)) {
+      console.log(
+        `    - ${projectLabel(group, c)}: ${group.files} file${group.files === 1 ? '' : 's'}`
+      );
+    }
+    const hidden = ranked.length - Math.min(PROJECT_PREVIEW, ranked.length);
+    if (hidden > 0) {
+      console.log(`    ${c.dim(`... ${hidden} more projects (--verbose)`)}`);
+    }
+    return;
+  }
+
+  // Alphabetical here: a reader in this mode is looking for one project.
+  const sources = data._declaredSources ?? {};
+  const via = data._declaredVia ?? {};
+  const declaredHint = (glob: string): string => {
+    if (via[glob]) return ` ${c.dim(`(from ${via[glob]})`)}`;
+    const entry = sources[glob];
+    if (!entry) return '';
+    const [file, plugin] = entry;
+    if (file && plugin) return ` ${c.dim(`(from ${file} by ${plugin})`)}`;
+    if (file) return ` ${c.dim(`(from ${file})`)}`;
+    return plugin ? ` ${c.dim(`(by ${plugin})`)}` : '';
+  };
+
+  const sorted = [...groups].sort((a, b) =>
+    (a.project ?? '').localeCompare(b.project ?? '')
+  );
+  for (const group of sorted) {
+    console.log(
+      `    ${projectLabel(group, c)} ${c.dim(`— ${group.files} file${group.files === 1 ? '' : 's'}`)}:`
+    );
+    renderGlobList('included by the snapshot', readsOf(group), c);
+    renderGlobList('excluded by the snapshot', tracedOf(group), c);
+    renderGlobList(
+      'excluded by a declared input',
+      group.declared,
+      c,
+      declaredHint
+    );
+  }
+}
+
+function projectLabel(
+  group: ResolvedInputGroup,
+  c: ReturnType<typeof pc>
+): string {
+  const name = group.project ?? '{workspaceRoot}';
+  return group.projectRoot
+    ? `${name}${c.dim(` (${group.projectRoot})`)}`
+    : name;
+}
+
+function renderGlobList(
+  label: string,
+  globs: readonly string[],
+  c: ReturnType<typeof pc>,
+  hintFor?: (glob: string) => string
+): void {
+  if (globs.length === 0) return;
+  console.log(`      ${c.dim(`${label}:`)}`);
+  for (const glob of globs) {
+    console.log(`        - ${glob}${hintFor?.(glob) ?? ''}`);
+  }
+}
+
+function renderSnapshotSection(
+  data: TargetInfoData,
+  c: ReturnType<typeof pc>,
+  verbose: boolean
+): void {
+  const snap = data.snapshot;
+  const label = c.bold('I/O snapshot');
+  if (snap.status === 'used') {
+    const commit = snap.commit?.slice(0, 8) ?? '?';
+    // The Inputs section already lists the observed reads when they resolved;
+    // only point elsewhere when it is still showing the declared filesets.
+    const note = data.effectiveInputs?.length
+      ? '(the observed reads are listed above)'
+      : `(the file inputs above are replaced by the observed reads; see \`nx show target inputs ${data.project}:${data.target}\`)`;
+    console.log(
+      `${label}: ${c.green('used')} — commit ${commit} ${c.dim(note)}`
+    );
+  } else if (snap.status === 'fallback') {
+    const reason = snap.reason ? ` (${snap.reason})` : '';
+    const commit = snap.commit?.slice(0, 8);
+    const from = commit ? ` of the snapshot at ${commit}` : '';
+    console.log(
+      `${label}: ${c.yellow('fallback')}${reason}${from} — hashed from the declared inputs above`
+    );
+  } else if (verbose) {
+    // Every non-Cloud target would otherwise print this on each nx show target.
+    const reason = snap.reason ? ` (${snap.reason})` : '';
+    console.log(`${label}: ${c.dim(`none${reason}`)}`);
+  }
+}
+
 function expandInputsForDisplay(
   inputs: (InputDefinition | string)[],
   node: ProjectGraph['nodes'][string],
@@ -346,6 +647,126 @@ function expandInputsForDisplay(
   return result;
 }
 
+/**
+ * Splits the task's hashed files across the projects that own them, longest
+ * root first so a nested project wins. Mirrors how the planner assigned globs,
+ * so the counts line up with the globs listed under each project.
+ */
+function countFilesByProject(
+  files: readonly string[],
+  projects: readonly { name: string; root?: string }[]
+): Map<string, number> {
+  const rooted = projects
+    .filter(
+      (p): p is { name: string; root: string } => !!p.root && p.root !== '.'
+    )
+    .sort((a, b) => b.root.length - a.root.length);
+  const fallback =
+    projects.find((p) => p.root === '.') ??
+    projects.find((p) => p.name === '{workspaceRoot}');
+
+  const counts = new Map<string, number>();
+  for (const file of files) {
+    const owner = rooted.find((p) => file.startsWith(`${p.root}/`)) ?? fallback;
+    if (owner) counts.set(owner.name, (counts.get(owner.name) ?? 0) + 1);
+  }
+  return counts;
+}
+
+/**
+ * Where each declared exclusion was authored. An exclusion inherited through
+ * `^` belongs to a dependency's own target, so it is resolved against that
+ * project's inputs and source map rather than this one's.
+ */
+function declaredExclusionSources(
+  groups: EffectiveInputGroup[],
+  targetName: string,
+  graph: ProjectGraph,
+  nxJson: NxJsonConfiguration,
+  sourceMaps?: ConfigurationSourceMaps
+): Record<string, [file: string | null, plugin: string]> {
+  const sources: Record<string, [string | null, string]> = {};
+  if (!sourceMaps) return sources;
+
+  const found = new Map<string, [string | null, string][]>();
+  const carriers = new Map<string, number>();
+  for (const group of groups) {
+    if (!group.project || group.declared.length === 0) continue;
+    const node = graph.nodes[group.project];
+    const inputs = node?.data.targets?.[targetName]?.inputs;
+    const projectMap = sourceMaps[node?.data.root ?? ''];
+    if (!inputs || !projectMap) continue;
+
+    const root = node.data.root;
+    const expanded = expandInputsForDisplay(inputs, node, nxJson);
+    for (const glob of group.declared) {
+      const token = tokenizeProjectRoot(glob, root);
+      carriers.set(token, (carriers.get(token) ?? 0) + 1);
+      // Only an exact match attributes; a near miss would name the wrong line.
+      const origin = expanded.find((e) => e.value === token);
+      if (!origin) continue;
+      const entry =
+        projectMap[`targets.${targetName}.inputs.${origin.originalIndex}`];
+      if (!entry) continue;
+      const list = found.get(token);
+      if (list) list.push(entry);
+      else found.set(token, [entry]);
+    }
+  }
+
+  // An exclusion every project carries was authored once per project, so
+  // naming one project's file would imply it is the cause. A file is reported
+  // only when every carrier agrees on it; otherwise the plugin is all that is
+  // true of the whole group.
+  for (const [glob, entries] of found) {
+    const plugins = new Set(entries.map(([, plugin]) => plugin));
+    if (plugins.size !== 1) continue;
+    const plugin = [...plugins][0];
+    const files = new Set(entries.map(([file]) => file));
+    const everyCarrier = entries.length === carriers.get(glob);
+    sources[glob] =
+      everyCarrier && files.size === 1
+        ? [[...files][0], plugin]
+        : [null, plugin];
+  }
+  return sources;
+}
+
+/**
+ * Where a `^`-inherited exclusion was defined. The planner collects these from
+ * a dependency's expansion of a named input, so they exist in no project's
+ * target config -- only in the nx.json definition the `^` reference reaches.
+ */
+function declaredExclusionsViaNamedInputs(
+  targetInputs: (InputDefinition | string)[] | undefined,
+  nxJson: NxJsonConfiguration
+): Record<string, string> {
+  const named = nxJson.namedInputs ?? {};
+  const via: Record<string, string> = {};
+
+  const walk = (name: string, root: string, seen: Set<string>): void => {
+    if (seen.has(name)) return;
+    seen.add(name);
+    for (const member of named[name] ?? []) {
+      if (typeof member !== 'string') continue;
+      if (named[member]) {
+        walk(member, root, seen);
+      } else if (member.startsWith('!')) {
+        via[member] ??= `nx.json#namedInputs.${name} via ^${root}`;
+      }
+    }
+  };
+
+  for (const input of targetInputs ?? []) {
+    const name =
+      typeof input === 'string' && input.startsWith('^')
+        ? input.slice(1)
+        : undefined;
+    if (name && named[name]) walk(name, name, new Set());
+  }
+  return via;
+}
+
 function extractTargetSourceMap(
   projectRoot: string,
   targetName: string,
@@ -376,7 +797,14 @@ function extractTargetSourceMap(
 function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
   if (args.json) {
     // Strip internal renderer-only fields from JSON output
-    const { _inputSources, _depSources, _commandSourceKey, ...jsonData } = data;
+    const {
+      _inputSources,
+      _depSources,
+      _commandSourceKey,
+      _declaredSources,
+      _declaredVia,
+      ...jsonData
+    } = data;
     console.log(JSON.stringify(jsonData, null, 2));
     return;
   }
@@ -422,13 +850,22 @@ function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
 
   if (data.dependsOn && data.dependsOn.length > 0) {
     console.log(`${c.bold('Depends On')}:`);
-    for (let i = 0; i < data.dependsOn.length; i++) {
+    // A wide target depends on hundreds of tasks, which buries everything
+    // below it. The count is the useful part at a glance.
+    const shown = args.verbose
+      ? data.dependsOn.length
+      : Math.min(DEPENDS_ON_PREVIEW, data.dependsOn.length);
+    for (let i = 0; i < shown; i++) {
       const srcIdx = data._depSources?.[i];
       const hint =
         srcIdx !== undefined && srcIdx >= 0
           ? sourceHint(`dependsOn.${srcIdx}`, 'dependsOn')
           : sourceHint('dependsOn');
       console.log(`  ${data.dependsOn[i]}${hint}`);
+    }
+    const hiddenDeps = data.dependsOn.length - shown;
+    if (hiddenDeps > 0) {
+      console.log(`  ${c.dim(`... ${hiddenDeps} more (--verbose)`)}`);
     }
     if (data.transitiveTasks && data.transitiveTasks.length > 0) {
       console.log(`  ${c.dim(formatTransitiveSummary(data.transitiveTasks))}`);
@@ -442,6 +879,11 @@ function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
     `${c.bold('Continuous')}: ${data.continuous}${sourceHint('continuous')}`
   );
   console.log(`${c.bold('Cache')}: ${data.cache}${sourceHint('cache')}`);
+  if (data.sandbox?.enabled === false) {
+    console.log(
+      `${c.bold('I/O snapshots')}: ${c.dim('disabled')}${sourceHint('sandbox')}`
+    );
+  }
 
   if (data.inputs && data.inputs.length > 0) {
     console.log(`${c.bold('Inputs')}:`);
@@ -467,23 +909,43 @@ function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
       }
       return 0;
     });
+    // Under a snapshot the declared filesets are not hashed. When the observed
+    // reads resolved they are printed in their place; otherwise the declared
+    // ones stay, tagged. env/runtime/external are never replaced.
+    const hasGroups = !!data.effectiveInputs?.length;
+    const tagReplaced =
+      args.verbose && data.snapshot.status === 'used' && !hasGroups;
     for (const { value, sourceIndex } of entries) {
+      if (hasGroups && isFileInput(value)) continue;
       const display = typeof value === 'string' ? value : JSON.stringify(value);
       const hint =
         sourceIndex !== undefined
           ? sourceHint(`inputs.${sourceIndex}`, 'inputs')
           : '';
-      console.log(`  - ${display}${hint}`);
+      const replaced =
+        tagReplaced && isFileInput(value)
+          ? ` ${c.dim('(replaced by snapshot)')}`
+          : '';
+      console.log(`  - ${display}${hint}${replaced}`);
+    }
+    renderEffectiveInputs(data, c, args);
+  }
+
+  const observed = data.observedOutputs ?? [];
+  if ((data.outputs && data.outputs.length > 0) || observed.length > 0) {
+    console.log(`${c.bold('Outputs')}:`);
+    for (let i = 0; i < (data.outputs?.length ?? 0); i++) {
+      const hint = sourceHint(`outputs.${i}`, 'outputs');
+      console.log(`  - ${data.outputs![i]}${hint}`);
+    }
+    // Writes the trace saw that no declared output covers. The runner caches
+    // these too, so leaving them out understates what the task produces.
+    for (const output of observed) {
+      console.log(`  - ${output} ${c.dim('(observed by the I/O snapshot)')}`);
     }
   }
 
-  if (data.outputs && data.outputs.length > 0) {
-    console.log(`${c.bold('Outputs')}:`);
-    for (let i = 0; i < data.outputs.length; i++) {
-      const hint = sourceHint(`outputs.${i}`, 'outputs');
-      console.log(`  - ${data.outputs[i]}${hint}`);
-    }
-  }
+  renderSnapshotSection(data, c, !!args.verbose);
 
   // When command is hoisted, hide the corresponding option key from display
   const hoistedOptionKey = data._commandSourceKey?.startsWith('options.')

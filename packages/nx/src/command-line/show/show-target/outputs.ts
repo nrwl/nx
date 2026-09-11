@@ -81,7 +81,7 @@ async function checkOutputs(
 function renderOutputs(
   project: string,
   target: string,
-  { resolved, expanded, unresolved }: TaskOutputs,
+  { resolved, expanded, unresolved, sources }: TaskOutputs,
   args: ShowTargetOutputsOptions
 ) {
   if (args.json) {
@@ -91,6 +91,8 @@ function renderOutputs(
       outputPaths: resolved,
       expandedOutputs: expanded,
       unresolvedOutputs: unresolved,
+      // path -> 'declared' | 'snapshot'
+      sources,
     });
     return;
   }
@@ -100,7 +102,12 @@ function renderOutputs(
     `${c.bold('Output paths for')} ${c.cyan(project)}:${c.green(target)}`
   );
 
-  printList('Configured outputs', resolved);
+  printList(
+    'Configured outputs',
+    resolved.map((o) =>
+      sources[o] === 'snapshot' ? `${o} ${c.dim('(snapshot)')}` : o
+    )
+  );
   printList('Resolved outputs', expanded);
   printList(`${c.yellow('Unresolved outputs')} (option not set)`, unresolved);
 

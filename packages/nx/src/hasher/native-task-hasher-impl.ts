@@ -6,6 +6,7 @@ import {
   FileData,
   HasherOptions,
   HashPlanner,
+  IoSnapshots,
   ProjectGraph as NativeProjectGraph,
   NxWorkspaceFilesExternals,
   TaskHasher,
@@ -15,6 +16,7 @@ import { transformProjectGraphForRust } from '../native/transform-objects';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
 import { readJsonFile } from '../utils/fileutils';
+import { customHasherTaskIds } from '../io-snapshots/overrides';
 import { PartialHash, TaskHasherImpl } from './task-hasher';
 
 export class NativeTaskHasherImpl implements TaskHasherImpl {
@@ -27,8 +29,8 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
 
   constructor(
     workspaceRoot: string,
-    nxJson: NxJsonConfiguration,
-    projectGraph: ProjectGraph,
+    private readonly nxJson: NxJsonConfiguration,
+    private readonly projectGraph: ProjectGraph,
     externals: NxWorkspaceFilesExternals,
     options: { selectivelyHashTsConfig: boolean }
   ) {
@@ -69,14 +71,16 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     taskGraph: TaskGraph,
     env: NodeJS.ProcessEnv,
     cwd?: string,
-    collectInputs?: boolean
+    collectInputs?: boolean,
+    ioSnapshots?: IoSnapshots
   ): Promise<PartialHash> {
     const hashes = await this.hashTasks(
       [task],
       taskGraph,
       { [task.id]: env },
       cwd,
-      collectInputs
+      collectInputs,
+      ioSnapshots
     );
     return hashes[0];
   }
@@ -86,11 +90,16 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     taskGraph: TaskGraph,
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd?: string,
-    collectInputs?: boolean
+    collectInputs?: boolean,
+    ioSnapshots?: IoSnapshots
   ): Promise<PartialHash[]> {
     const plans = this.planner.getPlansReference(
       tasks.map((t) => t.id),
-      taskGraph
+      taskGraph,
+      ioSnapshots,
+      ioSnapshots
+        ? customHasherTaskIds(this.projectGraph, taskGraph)
+        : undefined
     );
     const shouldCollectInputs =
       collectInputs ?? getTaskIOService().hasTaskInputSubscribers();

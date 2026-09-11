@@ -10,6 +10,9 @@ vi.mock('../../native', async (importOriginal) => ({
   ...(await importOriginal<any>()),
   HashPlanner: vi.fn(),
   transferProjectGraph: vi.fn((g) => g),
+  expandFilesInput: vi.fn((_root: string, globs: string[]) =>
+    globs.filter((g) => !g.startsWith('!'))
+  ),
 }));
 vi.mock('../../native/transform-objects', () => ({
   transformProjectGraphForRust: vi.fn((g) => g),
@@ -18,6 +21,17 @@ vi.mock('../../project-graph/project-graph', () => ({
   createProjectGraphAsync: vi.fn(),
   createProjectGraphAndSourceMapsAsync: vi.fn(),
   handleProjectGraphError: vi.fn(),
+  // Mirrors the real one: customHasherTaskIds reads it whenever I/O snapshots
+  // are enabled, which is off locally and on in CI.
+  readProjectsConfigurationFromProjectGraph: (graph: any) => ({
+    projects: Object.fromEntries(
+      Object.entries(graph?.nodes ?? {}).map(([name, node]: any) => [
+        name,
+        node.data,
+      ])
+    ),
+    version: 2,
+  }),
 }));
 vi.mock('../../config/configuration', () => ({
   readNxJson: vi.fn(() => ({})),
@@ -182,6 +196,41 @@ describe('getExpandedTaskInputs', () => {
     });
     // and the same result is stored in the cache
     expect(cache.get('myproj:build')).toBe(result);
+  });
+
+  it('labels files groups as observed only when the plan carries an io-snapshot marker', async () => {
+    allFileDataMock.mockResolvedValue([] as FileData[]);
+
+    getPlansMock.mockReturnValue({
+      'myproj:build': [
+        'io-snapshot:abc123',
+        'files:myproj:[libs/myproj/generated/a.json,!libs/myproj/generated/b.json]',
+        'npm:some-pkg',
+      ],
+    });
+    const observed = await getExpandedTaskInputs(
+      makeResponse(),
+      new Map(),
+      'myproj:build'
+    );
+    expect(observed).toEqual({
+      general: ['libs/myproj/generated/a.json'],
+      observed: ['libs/myproj/generated/a.json'],
+      external: ['npm:some-pkg'],
+    });
+
+    getPlansMock.mockReturnValue({
+      'myproj:build': ['files:myproj:[libs/myproj/generated/a.json]'],
+    });
+    const declared = await getExpandedTaskInputs(
+      makeResponse(),
+      new Map(),
+      'myproj:build'
+    );
+    expect(declared).toEqual({
+      general: ['libs/myproj/generated/a.json'],
+      external: [],
+    });
   });
 
   it('memoizes: a second call for the same task reuses the cached result', async () => {
