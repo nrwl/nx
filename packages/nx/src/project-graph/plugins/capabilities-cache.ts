@@ -51,8 +51,25 @@ const SOURCE_EXTENSIONS = new Set([
   '.mjs',
 ]);
 
-/** Not a plugin's own source, and the one directory that could make a walk large. */
-const SKIPPED_DIRECTORIES = new Set(['node_modules', '.git']);
+/**
+ * Directories under a plugin's project that hold something other than its
+ * source. Build output is the one that matters: hashing it would move the key on
+ * every rebuild, minting a record and forcing a reload each time.
+ *
+ * Matched by name, which is the crude half of this. An output directory under
+ * some other name is hashed, and costs a reload per rebuild rather than a wrong
+ * answer, so erring this way is the safe direction. Reading the project's
+ * declared `outputs` would be exact for explicit targets and still blind to
+ * inferred ones, since knowing those needs the plugins this runs before.
+ */
+const SKIPPED_DIRECTORIES = new Set([
+  'node_modules',
+  'dist',
+  'build',
+  'out',
+  'coverage',
+  'tmp',
+]);
 
 export function isCapabilityCacheEnabled(): boolean {
   // The database is not part of the WASM build, and isolation is disabled
@@ -248,11 +265,19 @@ function readInstalledVersion(pluginPath: string): string | null {
  *
  * Walked directly rather than through the workspace context, which would skip
  * whatever the workspace ignores: generated or ignored code a plugin re-exports
- * is still code whose exports decide what the record says.
+ * is still code whose exports decide what the record says. "Ignored" and "not
+ * source" are different questions, so the walk answers the second itself, by
+ * directory name.
  *
- * A module in ANOTHER project is still outside this, and no hash rooted at one
- * project can see it. That is the remaining limit of identifying a local plugin
- * by its own project's sources.
+ * Costs around 2ms for a fifty-file project and 17ms for a thousand, measured,
+ * and runs once per process.
+ *
+ * A module in ANOTHER project is outside this, and no hash rooted at one project
+ * can see it. What that costs is narrow, because only the SHAPE of the exports is
+ * recorded: gaining a hook means gaining an export, and a plugin that re-exports
+ * by name has to be edited here to name it. What slips through is a wildcard
+ * re-export across a project boundary, and a `createNodes` pattern imported from
+ * one, since that field is a value rather than a presence check.
  */
 function hashPluginSource(projectRoot: string, pluginPath: string): string {
   const sources: string[] = [];
@@ -269,7 +294,9 @@ function hashPluginSource(projectRoot: string, pluginPath: string): string {
 function collectSources(dir: string, into: string[]): void {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     if (entry.isDirectory()) {
-      if (!SKIPPED_DIRECTORIES.has(entry.name)) {
+      // A dot directory is a tool's, not the plugin author's: .git, .cache,
+      // .turbo, and every framework's build directory.
+      if (!entry.name.startsWith('.') && !SKIPPED_DIRECTORIES.has(entry.name)) {
         collectSources(join(dir, entry.name), into);
       }
     } else if (

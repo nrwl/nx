@@ -144,6 +144,21 @@ describe('computeCapabilityKey', () => {
     expect(computeCapabilityKey(pluginPath, root)).not.toEqual(before);
   });
 
+  it("ignores the plugin project's own build output", async () => {
+    const pluginPath = writeLocalPlugin();
+    const projectRoot = join(root, 'tools', 'my-plugin');
+    const before = computeCapabilityKey(pluginPath, root);
+
+    // A local plugin built into its own project would otherwise mint a new
+    // record on every rebuild.
+    mkdirSync(join(projectRoot, 'dist'), { recursive: true });
+    writeFileSync(join(projectRoot, 'dist', 'index.js'), 'exports.x = 1;');
+    mkdirSync(join(projectRoot, '.cache'), { recursive: true });
+    writeFileSync(join(projectRoot, '.cache', 'stale.js'), 'exports.y = 2;');
+
+    expect(computeCapabilityKey(pluginPath, root)).toEqual(before);
+  });
+
   it("ignores a change outside the plugin's project", async () => {
     const pluginPath = writeLocalPlugin();
     const before = computeCapabilityKey(pluginPath, root);

@@ -25,6 +25,7 @@ import {
   sameCapabilities,
 } from './capabilities-cache';
 import { isOnDaemon } from '../../daemon/is-on-daemon';
+import { serverLogger } from '../../daemon/logger';
 import { DelayedSpinner } from '../../utils/delayed-spinner';
 import { logger } from '../../utils/logger';
 import {
@@ -41,6 +42,7 @@ import { sandboxSocketHint } from '../../daemon/sandbox-socket-hint';
 import { isSandbox } from '../../utils/is-sandbox';
 import { isAiAgent } from '../../native';
 import { output } from '../../utils/output';
+import { ProgressTopics } from '../../utils/progress-topics';
 import type { LoadedNxPlugin } from './loaded-nx-plugin';
 import {
   cleanupPluginTSTranspiler,
@@ -707,10 +709,27 @@ function repairRecord(
     return;
   }
   recordCapabilities([{ key, capabilities: actual }]);
+
+  const title = `Nx had stale information about what the "${actual.name}" plugin does.`;
+  const detail =
+    'Its hooks may not have run in this command. The record has been corrected, so running the command again will use the right one.';
+
+  // On the daemon, `output.warn` would reach the daemon's log and no terminal.
+  // The graph-construction topic is how a plugin worker's lines get to whoever
+  // is waiting on a graph, and this is the same kind of line.
+  if (isOnDaemon()) {
+    serverLogger.logToClient(
+      ProgressTopics.GraphConstruction,
+      `${title} ${detail}`,
+      'warn'
+    );
+    return;
+  }
+
   output.warn({
-    title: `Nx had stale information about what the "${actual.name}" plugin does.`,
+    title,
     bodyLines: [
-      'Its hooks may not have run in this command. The record has been corrected, so running the command again will use the right one.',
+      detail,
       'If you see this repeatedly, please report it at https://github.com/nrwl/nx/issues with the plugin name.',
     ],
   });
