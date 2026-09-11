@@ -161,6 +161,13 @@ export function hashSourceFiles(
   sourceFiles: string[],
   root: string
 ): string | null {
+  // A plugin whose every source is vendored has nothing to hash, and its key
+  // carries the version that identifies it. Hashing the empty list would store a
+  // real-looking value that no read ever compares.
+  if (!sourceFiles.length) {
+    return '';
+  }
+
   const hashes = sourceFiles.map((file) => hashFile(absolute(file, root)));
   if (hashes.some((hash) => hash === null)) {
     return null;

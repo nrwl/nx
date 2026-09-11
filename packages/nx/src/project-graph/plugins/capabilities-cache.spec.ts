@@ -372,6 +372,13 @@ describe('recordIsFresh', () => {
     expect(storableSourceFiles([inside], root)).toEqual(['libs/p/index.js']);
   });
 
+  it('stores no hash for a plugin whose every source is vendored', () => {
+    // A published plugin contributes nothing after vendor filtering, and its key
+    // carries the version. Hashing the empty list would put a real-looking value
+    // in a column no read compares.
+    expect(hashSourceFiles([], root)).toBe('');
+  });
+
   it('holds for a plugin whose every source is vendored', () => {
     // Nothing to hash, and the key carried the installed version.
     expect(
