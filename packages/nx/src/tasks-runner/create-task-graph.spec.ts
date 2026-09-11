@@ -2931,6 +2931,50 @@ describe('createTaskGraph', () => {
     ]);
   });
 
+  it('should handle dependsOn targets whose names contain glob characters', () => {
+    const graph: ProjectGraph = {
+      nodes: {
+        app1: {
+          name: 'app1',
+          type: 'app',
+          data: {
+            root: 'app1-root',
+            targets: {
+              'test-ci': {
+                executor: 'nx:noop',
+                dependsOn: [
+                  'test-ci--plain.test.ts',
+                  'test-ci--src/app/[id]/page.test.ts',
+                ],
+              },
+              'test-ci--plain.test.ts': {
+                executor: 'nx:run-commands',
+              },
+              'test-ci--src/app/[id]/page.test.ts': {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        app1: [],
+      },
+    };
+    const taskGraph = createTaskGraph(
+      graph,
+      {},
+      ['app1'],
+      ['test-ci'],
+      null,
+      {}
+    );
+    expect(taskGraph.dependencies['app1:test-ci']).toEqual([
+      'app1:test-ci--plain.test.ts',
+      'app1:test-ci--src/app/[id]/page.test.ts',
+    ]);
+  });
+
   it('should handle negative patterns in dependsOn', () => {
     const graph: ProjectGraph = {
       nodes: {

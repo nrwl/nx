@@ -182,6 +182,16 @@ export function expandWildcardTargetConfiguration(
     allTargetNames
   );
 
+  // A bracket expression never matches its own literal text, so an atomized
+  // target such as `test-ci--src/app/[id]/page.test.ts` matches nothing here.
+  // Treat a pattern that matches no target as the target name it spells out.
+  if (
+    !matchingTargets.length &&
+    allTargetNames.includes(dependencyConfig.target)
+  ) {
+    return [dependencyConfig];
+  }
+
   return matchingTargets.map((t) => ({
     ...dependencyConfig,
     target: t,
