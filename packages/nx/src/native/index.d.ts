@@ -82,6 +82,11 @@ export declare class FileLock {
    * into an immediate resolve and any loop around it into a hot spin.
    */
   wait(): Promise<void>
+  /**
+   * From JS, pair this with `waitForRelease` rather than with `wait`. A failed
+   * `tryLock` leaves `locked` set, which is what `wait` keys off, so waiting
+   * that way has no ceiling.
+   */
   tryLock(): boolean
   /**
    * Resolves true when the holder released within `timeout_ms`, false when it

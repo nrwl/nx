@@ -13,8 +13,15 @@ use tracing::trace;
 #[cfg(not(target_arch = "wasm32"))]
 use fs4::fs_std::FileExt;
 
-/// Set for pickup latency rather than for cost. A contended poll measures 0.32us
-/// including the napi crossing, so 250 a second is 0.008% of a core.
+/// Set for pickup latency, not for cost. A waiter notices a release within one
+/// interval, and what it waits for is a plugin load or a workspace walk, so the
+/// interval is the whole of the lag a caller can see.
+///
+/// Cost is small but not as small as the syscall alone suggests, because the
+/// timer wake dominates it: measured with eleven waiters on one held lock, 4ms
+/// costs 0.31% of a core per waiting process and 3.4% in aggregate, against
+/// 0.057% and 0.62% at 25ms. Measured on a fourteen-core macOS box; the ratio
+/// holds elsewhere, the absolute percentages will not.
 #[cfg(not(target_arch = "wasm32"))]
 const LOCK_POLL_INTERVAL: Duration = Duration::from_millis(4);
 
@@ -211,6 +218,9 @@ impl FileLock {
         }
     }
 
+    /// From JS, pair this with `waitForRelease` rather than with `wait`. A failed
+    /// `tryLock` leaves `locked` set, which is what `wait` keys off, so waiting
+    /// that way has no ceiling.
     #[napi(js_name = "tryLock")]
     pub fn try_lock_js(&mut self) -> napi::Result<bool> {
         Ok(self.try_lock()?)
@@ -312,7 +322,9 @@ mod test {
         assert!(!released);
         let waited = started.elapsed();
         assert!(waited >= Duration::from_millis(200));
-        // Gave up at the deadline rather than after one more interval past it.
+        // Near the deadline rather than an order of magnitude past it. What keeps
+        // it exact is the sleep being capped by the remaining budget; a
+        // wall-clock bound tight enough to pin a 4ms overshoot would flake.
         assert!(waited < Duration::from_millis(400), "waited {waited:?}");
         // Seen from a fresh handle; `check` on the holder's own handle would
         // release it, since the lock is held by that handle.
