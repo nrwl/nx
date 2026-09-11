@@ -108,10 +108,13 @@ Changing one of those doesn't re-infer the address.
 `CI` itself isn't filtered, so changing it re-infers the address.
 Running `nx reset` also discards the cached address.
 
-Files the config imports from outside its project, such as a shared helper in `tools/`, are not
-part of the cache either.
-Editing one doesn't refresh an already-cached address.
-Run `nx reset` to re-infer it.
+Nx also fingerprints workspace files referenced by literal imports or `require()` calls,
+including transitive helpers outside the project, such as a shared helper in `tools/`.
+Editing one refreshes the cached address when inference runs again.
+Nx doesn't track computed imports, arbitrary filesystem reads, or files outside the workspace.
+Run `nx reset` when those inputs change.
+You may also need to reset Nx when ignored files don't trigger a graph update or a reused loader
+retains transitive ECMAScript modules.
 
 A task dependency can't carry a target configuration, so the address is always inferred without
 one and a configuration-scoped env file such as `.env.e2e.production` never affects it.

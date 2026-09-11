@@ -101,6 +101,65 @@ describe('@nx/playwright/plugin', () => {
     process.env.NX_CACHE_PROJECT_GRAPH = originalCacheProjectGraph;
   });
 
+  it('accepts an empty config list with a virtual workspace root', async () => {
+    await expect(
+      createNodesFunction(
+        [],
+        {},
+        {
+          ...context,
+          workspaceRoot: join(tempFs.tempDir, 'virtual'),
+        }
+      )
+    ).resolves.toEqual([]);
+  });
+
+  it('refreshes cached atomized targets and outputs after only a shared transitive config changes', async () => {
+    process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+    await tempFs.createFiles({
+      'apps/e2e/package.json': '{}',
+      'apps/e2e/playwright.config.cjs': `globalThis.__playwrightInferenceLoads = (globalThis.__playwrightInferenceLoads ?? 0) + 1; module.exports = require('../../shared/config.cjs');`,
+      'apps/e2e/specs/a.spec.ts': '',
+      'apps/e2e/specs/b.spec.ts': '',
+      'shared/config.cjs': `const { selected } = require('./selection.json'); module.exports = { testDir: 'specs', testMatch: '**/' + selected + '.spec.ts', outputDir: '../../out/' + selected };`,
+      'shared/selection.json': '{"selected":"a"}',
+      'shared/unrelated.cjs': 'module.exports = 1;',
+    });
+    const infer = async () => {
+      // Clear Jest's module registry while retaining the plugin's disk cache.
+      jest.resetModules();
+      const nodes = await createNodesFunction(
+        ['apps/e2e/playwright.config.cjs'],
+        {
+          targetName: 'e2e',
+          ciTargetName: 'e2e-ci',
+          waitForWebServer: false,
+        },
+        context
+      );
+      return nodes[0][1].projects['apps/e2e'].targets;
+    };
+    try {
+      const first = await infer();
+      expect(first['e2e-ci--specs/a.spec.ts']).toBeDefined();
+      expect(first['e2e'].outputs.join()).toContain('out/a');
+      expect((globalThis as any).__playwrightInferenceLoads).toBe(1);
+
+      tempFs.writeFile('shared/unrelated.cjs', 'module.exports = 2;');
+      expect(await infer()).toEqual(first);
+      expect((globalThis as any).__playwrightInferenceLoads).toBe(1);
+
+      tempFs.writeFile('shared/selection.json', '{"selected":"b"}');
+      const second = await infer();
+      expect(second['e2e-ci--specs/a.spec.ts']).toBeUndefined();
+      expect(second['e2e-ci--specs/b.spec.ts']).toBeDefined();
+      expect(second['e2e'].outputs.join()).toContain('out/b');
+      expect((globalThis as any).__playwrightInferenceLoads).toBe(2);
+    } finally {
+      delete (globalThis as any).__playwrightInferenceLoads;
+    }
+  });
+
   it('should create nodes with default playwright configuration', async () => {
     await mockPlaywrightConfig(tempFs, {});
     const results = await createNodesFunction(

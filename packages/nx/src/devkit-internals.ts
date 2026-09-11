@@ -90,6 +90,7 @@ export {
   isRequireInEsmScopeError,
   isTsEsmNamedExportLinkageError,
   requireWithTsconfigFallback,
+  createTsConfigPathMatcher,
 } from './plugins/js/utils/register';
 export { interpolate } from './tasks-runner/utils';
 export {
