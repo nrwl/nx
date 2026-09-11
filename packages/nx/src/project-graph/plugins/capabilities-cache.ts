@@ -45,7 +45,7 @@ function nxVersion(): string {
 export function isCapabilityCacheEnabled(): boolean {
   // The database is not part of the WASM build, and isolation is disabled
   // there anyway, so there is no worker spawn to save.
-  return !IS_WASM && process.env.NX_PLUGIN_CAPABILITY_CACHE !== 'false';
+  return !IS_WASM;
 }
 
 /**

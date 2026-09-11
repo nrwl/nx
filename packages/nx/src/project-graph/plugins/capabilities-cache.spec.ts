@@ -136,17 +136,6 @@ describe('computeCapabilityKey', () => {
 
     expect(computeCapabilityKey(pluginPath, root)).toBeNull();
   });
-
-  it('declines to identify a plugin when the cache is turned off', async () => {
-    const pluginPath = writeInstalledPlugin('1.2.3');
-
-    process.env.NX_PLUGIN_CAPABILITY_CACHE = 'false';
-    try {
-      expect(computeCapabilityKey(pluginPath, root)).toBeNull();
-    } finally {
-      delete process.env.NX_PLUGIN_CAPABILITY_CACHE;
-    }
-  });
 });
 
 describe('capabilitiesOfLoadedPlugin', () => {
