@@ -106,41 +106,11 @@ other.
 The more expensive the runner, the sooner the cache pays for itself, because every minute it skips
 is worth more.
 
-### Run it on your own numbers
-
-Per run, with the jobs still on GitHub runners:
-
-```plaintext
-savings  = J * r * (w * h - c) - 0.275
-wall_clock = s + c + w * (1 - h)
-```
-
-- `J` jobs per run
-- `r` runner rate in dollars per minute, from the rate card above
-- `s` setup minutes per job, meaning checkout and install
-- `w` task minutes per job today, not counting setup
-- `h` cache hit rate, between 0 and 1
-- `c` minutes to restore the cache, about 1
-
-Nx Cloud is cheaper whenever `savings` is positive.
-The four-job example below has `J=4`, `r=0.006`, `s=3`, `w=27`, and `c=1`, so at `h=0.5` it saves
-`4 * 0.006 * (27 * 0.5 - 1) - 0.275`, or $0.025 per run and $12.50 across 500 runs.
-
-The arithmetic assumes:
-
-- Jobs stay on GitHub runners. Moving them to Nx Agents replaces `r` with the agent rate.
-- Setup is never cached, so `s` is the same with and without Nx Cloud.
-- The hit rate applies evenly across task time. A pipeline whose slowest task always misses saves
-  less than `h` suggests.
-- Jobs are balanced and run in parallel, so the wall clock is one job's time.
-- `0.275` is the Team plan price of one CI pipeline execution.
-- GitHub's round-up to the whole minute is ignored, which understates the plain GitHub Actions cost
-  a little.
-
 {% aside type="note" %}
 The examples below are illustrations, not benchmarks.
 Real costs and times depend on your task mix, how well tasks parallelize, how often inputs change,
-and your own cache hit rate, so run the numbers against your own workspace.
+and your own cache hit rate, so
+[run the numbers](#appendix-run-it-on-your-own-numbers) against your own workspace.
 {% /aside %}
 
 ## Example: four-job matrix on standard runners
@@ -224,3 +194,34 @@ runner sits partly idle.
 Nx Agents also take over the job matrix you maintain by hand.
 One `distribute-on` line in the [CI configuration file](/docs/reference/nx-cloud/ci-config) sets how
 many machines a run uses, and raising it leaves the workflow file alone.
+
+## Appendix: run it on your own numbers
+
+Per run, with the jobs still on GitHub runners:
+
+```plaintext
+savings  = J * r * (w * h - c) - 0.275
+wall_clock = s + c + w * (1 - h)
+```
+
+- `J` jobs per run
+- `r` runner rate in dollars per minute, from the rate card above
+- `s` setup minutes per job, meaning checkout and install
+- `w` task minutes per job today, not counting setup
+- `h` cache hit rate, between 0 and 1
+- `c` minutes to restore the cache, about 1
+
+Nx Cloud is cheaper whenever `savings` is positive.
+The four-job example above has `J=4`, `r=0.006`, `s=3`, `w=27`, and `c=1`, so at `h=0.5` it saves
+`4 * 0.006 * (27 * 0.5 - 1) - 0.275`, or $0.025 per run and $12.50 across 500 runs.
+
+The arithmetic assumes:
+
+- Jobs stay on GitHub runners. Moving them to Nx Agents replaces `r` with the agent rate.
+- Setup is never cached, so `s` is the same with and without Nx Cloud.
+- The hit rate applies evenly across task time. A pipeline whose slowest task always misses saves
+  less than `h` suggests.
+- Jobs are balanced and run in parallel, so the wall clock is one job's time.
+- `0.275` is the Team plan price of one CI pipeline execution.
+- GitHub's round-up to the whole minute is ignored, which understates the plain GitHub Actions cost
+  a little.
