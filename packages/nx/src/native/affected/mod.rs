@@ -5,6 +5,7 @@
 //! `source`, so it cannot rebuild what `filterAffected` returns.
 
 pub mod dependent_outputs;
+mod plan_ids;
 mod project_paths;
 pub mod tasks;
 

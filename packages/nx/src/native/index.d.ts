@@ -335,14 +335,47 @@ export interface AffectedOptions {
   workspaceRoot: string
 }
 
-/**
- * Task ids with at least one changed file among their plan's file inputs.
- *
- * `changed_project_configs` is the subset of `changed_files` that is project
- * configuration, decided in TypeScript because it needs the plugins'
- * createNodes globs.
- */
-export declare function affectedTasks(projectGraph: ExternalObject<ProjectGraph>, hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, changedFiles: Array<string>, changedProjectConfigs: Array<string>): Array<string>
+export declare function affectedTasks(projectGraph: ExternalObject<ProjectGraph>, hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, taskGraph: TaskGraph, changedFiles: Array<string>, options: AffectedTasksOptions): AffectedTaskSelection
+
+export interface AffectedTaskSelection {
+  /** Every affected task, sorted. */
+  affected: Array<string>
+  /**
+   * Consumer -> the affected producers whose outputs it reads. Only the
+   * edges the walk crossed, which is what `--explain` reports.
+   */
+  producersOf: Record<string, Array<string>>
+  /**
+   * Changed project configs no longer on disk. Every task was seeded for
+   * them, since the project each described is gone from the graph.
+   */
+  deletedProjectConfigs: Array<string>
+}
+
+export interface AffectedTasksOptions {
+  /**
+   * `createNodes` globs of every loaded plugin. Resolved in TypeScript because
+   * `getPlugins` is async and spawns plugin workers.
+   */
+  projectGlobPatterns: Array<string>
+  workspaceRoot: string
+  /**
+   * Tasks of the projects a dependency change names outright, through
+   * `projectsAffectedByDependencyUpdates` or as a workspace project the root
+   * package.json depends on. Ids not in the task graph are ignored.
+   */
+  seedTaskIds: Array<string>
+  /**
+   * External node names whose version or integrity moved. A plan carries them
+   * as `External(name)`, so a package is matched the way a path is.
+   */
+  changedExternals: Array<string>
+  /**
+   * The change could not be pinned to packages, or the workspace asked for
+   * everything on a lockfile change, so every external counts as moved.
+   */
+  allExternalsChanged: boolean
+}
 
 export interface BatchInfo {
   executorName: string
@@ -388,17 +421,6 @@ export interface ContinuousDependenciesInputsInput {
 }
 
 export declare function copy(src: string, dest: string): number
-
-/**
- * Consumer task id -> the upstream task ids whose declared outputs it reads.
- *
- * Producers are searched over the whole dependency closure, not just direct
- * dependencies: `TaskOutput` does not record whether its `transitive` flag was
- * set, and an observed read cannot say how deep the producer sits. Over-
- * reporting an edge costs a task that was going to be a cache hit; missing one
- * skips a task that needed to run.
- */
-export declare function dependentOutputEdges(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, taskGraph: TaskGraph): Record<string, Array<string>>
 
 export interface DepsOutputsInput {
   dependentTasksOutputFiles: string

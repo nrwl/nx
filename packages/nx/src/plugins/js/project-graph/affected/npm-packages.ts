@@ -1,4 +1,5 @@
 import {
+  FileChange,
   isWholeFileChange,
   WholeFileChange,
 } from '../../../../project-graph/file-utils';
@@ -8,8 +9,12 @@ import {
   JsonChange,
 } from '../../../../utils/json-diff';
 import { logger } from '../../../../utils/logger';
-import { TouchedProjectLocator } from '../../../../project-graph/affected/affected-project-graph-models';
 import {
+  DependencyChanges,
+  TouchedProjectLocator,
+} from '../../../../project-graph/affected/affected-project-graph-models';
+import {
+  ProjectGraph,
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
 } from '../../../../config/project-graph';
@@ -18,7 +23,41 @@ import { getPackageNameFromImportPath } from '../../../../utils/get-package-name
 
 export const getTouchedNpmPackages: TouchedProjectLocator<
   WholeFileChange | JsonChange
-> = (touchedFiles, _, nxJson, packageJson, projectGraph): string[] => {
+> = (touchedFiles, _nodes, nxJson, _packageJson, projectGraph): string[] =>
+  touchedNpmPackages(touchedFiles, nxJson, projectGraph) ??
+  Object.keys(projectGraph.nodes);
+
+/**
+ * The same change as task selection consumes it: the packages that moved,
+ * which a plan names as `External`, and the workspace projects the root
+ * package.json depends on directly.
+ */
+export function packageJsonDependencyChanges(
+  touchedFiles: FileChange<WholeFileChange | JsonChange>[],
+  nxJson: NxJsonConfiguration,
+  projectGraph: ProjectGraph
+): DependencyChanges {
+  const touched = touchedNpmPackages(touchedFiles, nxJson, projectGraph);
+  if (touched === null) {
+    return { externals: [], allExternals: true, projects: [] };
+  }
+  return {
+    externals: touched.filter((name) => name in projectGraph.externalNodes),
+    allExternals: false,
+    projects: touched.filter((name) => name in projectGraph.nodes),
+  };
+}
+
+/**
+ * External nodes and workspace projects the root package.json change names,
+ * or null when it cannot be pinned to them: a removed dependency, a global
+ * package, or an override selector matching nothing in the graph.
+ */
+function touchedNpmPackages(
+  touchedFiles: FileChange<WholeFileChange | JsonChange>[],
+  nxJson: NxJsonConfiguration,
+  projectGraph: ProjectGraph
+): string[] | null {
   const packageJsonChange = touchedFiles.find((f) => f.file === 'package.json');
   if (!packageJsonChange) return [];
 
@@ -38,10 +77,8 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
       (c.path[0] === 'dependencies' || c.path[0] === 'devDependencies') &&
       c.path.length === 2
     ) {
-      // A package was deleted so mark all workspace projects as touched.
       if (c.type === JsonDiffType.Deleted) {
-        touched = Object.keys(projectGraph.nodes);
-        break;
+        return null;
       } else {
         let npmPackage: ProjectGraphProjectNode | ProjectGraphExternalNode =
           npmPackages.find((pkg) => pkg.data.packageName === c.path[1]);
@@ -67,7 +104,7 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
 
         if ('packageName' in npmPackage.data) {
           if (globalPackages.has(npmPackage.data.packageName)) {
-            return Object.keys(projectGraph.nodes);
+            return null;
           }
         }
       }
@@ -87,10 +124,9 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
         c.path[0] === 'pnpm'
       );
 
-      // An unresolved selector can still target a transitive dependency,
-      // so fall back to marking every project affected.
+      // An unresolved selector can still target a transitive dependency.
       if (!matchingNpmPackages.length) {
-        return Object.keys(projectGraph.nodes);
+        return null;
       }
 
       if (
@@ -98,7 +134,7 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
           globalPackages.has(pkg.data.packageName)
         )
       ) {
-        return Object.keys(projectGraph.nodes);
+        return null;
       }
 
       touched.push(...matchingNpmPackages.map((pkg) => pkg.name));
@@ -117,7 +153,7 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
     );
   }
   return [...new Set(touched)];
-};
+}
 
 function getPackageSelector(change: JsonChange): string | undefined {
   if (
