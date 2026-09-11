@@ -16,6 +16,7 @@ if (process.env['NX_PSEUDO_TERMINAL_EXEC_ARGV']) {
 
 const childProcess = fork(script, {
   stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
+  serialization: 'advanced',
   env: process.env,
   execArgv,
 });
