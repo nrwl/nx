@@ -49,7 +49,7 @@ export function useIsolatedNxPluginCapabilities(
   resolved: ResolvedPluginModule,
   capabilities: PluginCapabilities,
   index?: number,
-  onLoaded?: (actual: PluginCapabilities) => void
+  onLoaded?: (actual: PluginCapabilities, sourceFiles: string[] | null) => void
 ): readonly [Promise<LoadedNxPlugin>, () => void] {
   const cacheKey = getCacheKey(plugin, root);
 

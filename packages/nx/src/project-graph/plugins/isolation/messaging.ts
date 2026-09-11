@@ -46,6 +46,13 @@ type PluginMessageDefs = DefineMessages<{
           name: string;
           include?: string[];
           exclude?: string[];
+          /**
+           * The non-vendor files this load read, or null when the runtime could
+           * not be asked completely. What the plugin registers depends on these
+           * and on nothing else, so a host holding them can tell whether an
+           * answer it recorded earlier still holds.
+           */
+          sourceFiles: string[] | null;
           createNodesPattern: string;
           hasCreateDependencies: boolean;
           hasProcessProjectGraph: boolean;
