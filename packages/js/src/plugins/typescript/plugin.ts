@@ -140,12 +140,19 @@ const TS_CONFIG_CACHE_PATH = join(
 type ReferenceExpansionEntry = {
   configPath: string;
   ownerProject: ProjectContext;
-  pattern?: string;
+};
+
+type ExtendedConfigExpansionEntry = ReferenceExpansionEntry & {
+  pattern: string;
+};
+
+type ProjectReferenceExpansionEntry = ReferenceExpansionEntry & {
+  pattern: string | undefined;
 };
 
 type ReferenceExpansion = {
-  extendedConfigs: Array<ReferenceExpansionEntry & { pattern: string }>;
-  projectReferences: ReferenceExpansionEntry[];
+  extendedConfigs: ExtendedConfigExpansionEntry[];
+  projectReferences: ProjectReferenceExpansionEntry[];
 };
 
 type ReferenceExpansionCache = Map<string, Map<string, ReferenceExpansion>>;
@@ -1368,6 +1375,7 @@ function getExternalProjectReferenceTsconfigPatterns(
       cache
     );
 
+    // Extended-config patterns follow the traversal's first-visit semantics.
     for (const extended of expansion.extendedConfigs) {
       if (visited.has(extended.configPath)) {
         continue;
@@ -1380,8 +1388,9 @@ function getExternalProjectReferenceTsconfigPatterns(
       });
     }
 
+    // Reference patterns are collected even when traversal already visited them.
     for (const ref of expansion.projectReferences) {
-      if (ref.pattern) {
+      if (ref.pattern !== undefined) {
         uniqueRelPaths.add(ref.pattern);
       }
 
@@ -1464,6 +1473,7 @@ function getReferenceExpansion(
         refPath = join(refPath, 'tsconfig.json');
       }
 
+      // References absent from the invocation's tsconfig data remain ignored.
       const refWsRelPath = posixRelative(workspaceRoot, refPath);
       if (!tsConfigCacheData[refWsRelPath]) {
         continue;
@@ -1486,6 +1496,7 @@ function getReferenceExpansion(
     }
   }
 
+  // Cache empty expansions too; tsconfig data is stable for this invocation.
   ownerCache ??= new Map();
   ownerCache.set(ownerKey, expansion);
   cache.referenceExpansionCache.set(configKey, ownerCache);
