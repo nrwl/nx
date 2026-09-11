@@ -4,7 +4,7 @@ import {
   ExecutorContext,
   readJsonFile,
 } from '@nx/devkit';
-import { execSync } from 'child_process';
+import { safeExecFileSync } from '@nx/devkit/internal';
 import { statSync } from 'fs';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { join } from 'path';
@@ -66,9 +66,7 @@ export default async function runExecutor(
   let isNpmInstalled = false;
   try {
     isNpmInstalled =
-      execSync('npm --version', {
-        encoding: 'utf-8',
-        windowsHide: true,
+      safeExecFileSync('npm', ['--version'], {
         stdio: ['ignore', 'pipe', 'ignore'],
       }).trim() !== '';
   } catch {
@@ -196,15 +194,38 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
 
   // Use bun info when bun is the package manager, otherwise use npm view
   // (npm view works across npm/pnpm/yarn environments and is the established default)
-  const npmViewCommandSegments =
+  const npmViewCommand =
     pm === 'bun'
-      ? ['bun info', packageName, `--json --"${registryConfigKey}=${registry}"`]
-      : [
-          `npm view ${packageName} versions dist-tags --json --"${registryConfigKey}=${registry}"`,
-        ];
-  const npmDistTagAddCommandSegments = [
-    `npm dist-tag add ${packageName}@${packageJson.version} ${tag} --"${registryConfigKey}=${registry}"`,
-  ];
+      ? {
+          command: 'bun',
+          args: [
+            'info',
+            packageName,
+            '--json',
+            `--${registryConfigKey}=${registry}`,
+          ],
+        }
+      : {
+          command: 'npm',
+          args: [
+            'view',
+            packageName,
+            'versions',
+            'dist-tags',
+            '--json',
+            `--${registryConfigKey}=${registry}`,
+          ],
+        };
+  const npmDistTagAddCommand = {
+    command: 'npm',
+    args: [
+      'dist-tag',
+      'add',
+      `${packageName}@${packageJson.version}`,
+      tag,
+      `--${registryConfigKey}=${registry}`,
+    ],
+  };
 
   /**
    * In a dry-run scenario, it is most likely that all commands are being run with dry-run, therefore
@@ -217,14 +238,17 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
   if (!isDryRun && !options.firstRelease) {
     const currentVersion = packageJson.version;
     try {
-      const result = execSync(npmViewCommandSegments.join(' '), {
-        env: processEnv(true),
-        cwd: context.root,
-        stdio: ['ignore', 'pipe', 'pipe'],
-        windowsHide: true,
-      });
+      const result = safeExecFileSync(
+        npmViewCommand.command,
+        npmViewCommand.args,
+        {
+          env: processEnv(true),
+          cwd: context.root,
+          stdio: ['ignore', 'pipe', 'pipe'],
+        }
+      );
 
-      const resultJson = JSON.parse(result.toString());
+      const resultJson = JSON.parse(result);
       const distTags = resultJson['dist-tags'] || {};
       if (distTags[tag] === currentVersion) {
         console.warn(
@@ -244,12 +268,15 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
         if (versions.includes(currentVersion)) {
           try {
             if (!isDryRun) {
-              execSync(npmDistTagAddCommandSegments.join(' '), {
-                env: processEnv(true),
-                cwd: context.root,
-                stdio: 'ignore',
-                windowsHide: true,
-              });
+              safeExecFileSync(
+                npmDistTagAddCommand.command,
+                npmDistTagAddCommand.args,
+                {
+                  env: processEnv(true),
+                  cwd: context.root,
+                  stdio: 'ignore',
+                }
+              );
               console.log(
                 `Added the dist-tag ${tag} to v${currentVersion} for registry ${registry}.\n`
               );
@@ -420,29 +447,31 @@ function runPublish(ctx: RunPublishContext): { success: boolean } {
     packageTxt,
   } = ctx;
   const pmCommand = getPackageManagerCommand(pm);
-  const publishCommandSegments = [
-    pmCommand.publish(packageRoot, registry, registryConfigKey, tag),
-  ];
+  const { command: publishCommand, args: publishArgs } = pmCommand.publishArgv(
+    packageRoot,
+    registry,
+    registryConfigKey,
+    tag
+  );
 
   if (options.otp) {
-    publishCommandSegments.push(`--otp=${options.otp}`);
+    publishArgs.push(`--otp=${options.otp}`);
   }
 
   if (options.access) {
-    publishCommandSegments.push(`--access=${options.access}`);
+    publishArgs.push(`--access=${options.access}`);
   }
 
   if (isDryRun) {
-    publishCommandSegments.push(`--dry-run`);
+    publishArgs.push(`--dry-run`);
   }
 
   try {
-    const output = execSync(publishCommandSegments.join(' '), {
+    const output = safeExecFileSync(publishCommand, publishArgs, {
       maxBuffer: LARGE_BUFFER,
       env: processEnv(true),
       cwd: context.root,
       stdio: ['ignore', 'pipe', 'pipe'],
-      windowsHide: true,
     });
     // If in dry-run mode, the version on disk will not represent the version that would be published, so we scrub it from the output to avoid confusion.
     const dryRunVersionPlaceholder = 'X.X.X-dry-run';
@@ -455,7 +484,7 @@ function runPublish(ctx: RunPublishContext): { success: boolean } {
 
     // bun publish does not support outputting JSON, so we need to modify and print the output string directly
     if (pm === 'bun') {
-      let outputStr = output.toString();
+      let outputStr = output;
       if (isDryRun) {
         outputStr = outputStr.replace(
           new RegExp(`${packageJson.name}@${packageJson.version}`, 'g'),
@@ -474,7 +503,7 @@ function runPublish(ctx: RunPublishContext): { success: boolean } {
      * Additionally, we want to capture and show the lifecycle script outputs as beforeJsonData and afterJsonData and print them accordingly below.
      */
     const { beforeJsonData, jsonData, afterJsonData } =
-      extractNpmPublishJsonData(output.toString());
+      extractNpmPublishJsonData(output);
     if (!jsonData) {
       console.error(
         `The ${pm} publish output data could not be extracted. Please report this issue on https://github.com/nrwl/nx`
