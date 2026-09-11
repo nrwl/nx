@@ -1,5 +1,5 @@
-import { basename, dirname, join, relative, sep } from 'node:path';
-import { existsSync } from 'node:fs';
+import { basename, dirname, extname, join, relative, sep } from 'node:path';
+import { existsSync, readdirSync } from 'node:fs';
 
 import {
   type CachedPluginCapabilities,
@@ -14,7 +14,6 @@ import { getDbConnection } from '../../utils/db-connection';
 import { readJsonFile } from '../../utils/fileutils';
 import { logger } from '../../utils/logger';
 import { normalizePath } from '../../utils/path';
-import { hashWithWorkspaceContext } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
 import type { LoadedNxPlugin } from './loaded-nx-plugin';
 
@@ -42,7 +41,18 @@ function nxVersion(): string {
   return runningNxVersion ?? '';
 }
 
-const SOURCE_EXTENSIONS = '{ts,tsx,cts,mts,js,cjs,mjs}';
+const SOURCE_EXTENSIONS = new Set([
+  '.ts',
+  '.tsx',
+  '.cts',
+  '.mts',
+  '.js',
+  '.cjs',
+  '.mjs',
+]);
+
+/** Not a plugin's own source, and the one directory that could make a walk large. */
+const SKIPPED_DIRECTORIES = new Set(['node_modules', '.git']);
 
 export function isCapabilityCacheEnabled(): boolean {
   // The database is not part of the WASM build, and isolation is disabled
@@ -150,10 +160,10 @@ export function sameCapabilities(
  * Not memoized per path: the daemon outlives edits to a local plugin, so a
  * remembered key would stop a change from invalidating anything.
  */
-export async function computeCapabilityKey(
+export function computeCapabilityKey(
   pluginPath: string,
   root: string
-): Promise<string | null> {
+): string | null {
   if (!isCapabilityCacheEnabled()) {
     return null;
   }
@@ -179,7 +189,7 @@ export async function computeCapabilityKey(
       'local',
       nxVersion(),
       id,
-      await hashPluginSource(projectRoot, pluginPath, root),
+      hashPluginSource(join(root, projectRoot), pluginPath),
     ]);
   } catch (e) {
     logger.verbose(`Could not identify the plugin at ${pluginPath}`, e);
@@ -236,23 +246,39 @@ function readInstalledVersion(pluginPath: string): string | null {
  * its whole project rather than its entry file, since a hook is commonly
  * declared in a module the entry re-exports.
  *
- * Two kinds of source sit outside these globs and so cannot move the key: a
- * module in another project, and a file this workspace ignores. The entry file
- * is hashed directly, which covers neither beyond the entry itself. That is the
- * limit of identifying a local plugin by its own project's sources.
+ * Walked directly rather than through the workspace context, which would skip
+ * whatever the workspace ignores: generated or ignored code a plugin re-exports
+ * is still code whose exports decide what the record says.
+ *
+ * A module in ANOTHER project is still outside this, and no hash rooted at one
+ * project can see it. That is the remaining limit of identifying a local plugin
+ * by its own project's sources.
  */
-async function hashPluginSource(
-  projectRoot: string,
-  pluginPath: string,
-  root: string
-): Promise<string> {
+function hashPluginSource(projectRoot: string, pluginPath: string): string {
+  const sources: string[] = [];
+  collectSources(projectRoot, sources);
+  // Sorted so the key does not depend on the order the filesystem happens to
+  // return entries in.
+  sources.sort();
   return hashArray([
     hashFile(pluginPath),
-    await hashWithWorkspaceContext(root, [
-      `${projectRoot}/**/*.${SOURCE_EXTENSIONS}`,
-      `${projectRoot}/package.json`,
-    ]),
+    ...sources.map((file) => hashFile(file)),
   ]);
+}
+
+function collectSources(dir: string, into: string[]): void {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (entry.isDirectory()) {
+      if (!SKIPPED_DIRECTORIES.has(entry.name)) {
+        collectSources(join(dir, entry.name), into);
+      }
+    } else if (
+      SOURCE_EXTENSIONS.has(extname(entry.name)) ||
+      entry.name === 'package.json'
+    ) {
+      into.push(join(dir, entry.name));
+    }
+  }
 }
 
 function findLocalProjectRoot(pluginPath: string, root: string): string | null {

@@ -467,7 +467,7 @@ async function resolveCapabilityKeys(
     loads.map(async (load) => {
       try {
         load.resolved = await resolveModule(load.plugin, root);
-        load.key = await computeCapabilityKey(load.resolved.pluginPath, root);
+        load.key = computeCapabilityKey(load.resolved.pluginPath, root);
       } catch (e) {
         // Left for the loader, which reports a resolution failure with the
         // plugin name and the context the caller expects.
@@ -692,6 +692,11 @@ async function loadAndRecord(loads: PluginLoad[], root: string): Promise<void> {
 /**
  * A record the key failed to invalidate. The plugin's hooks were already wired
  * from it, so the fix is for the next run rather than this one.
+ *
+ * Warned rather than logged quietly, because this is the only moment anything
+ * notices. A plugin whose record understates it has had a hook skipped
+ * somewhere, and a run that says nothing about it leaves the user to find that
+ * out from the consequence instead.
  */
 function repairRecord(
   key: string,
@@ -701,10 +706,14 @@ function repairRecord(
   if (sameCapabilities(recorded, actual)) {
     return;
   }
-  logger.verbose(
-    `Cached capabilities for "${actual.name}" did not match the loaded plugin. Replacing the record.`
-  );
   recordCapabilities([{ key, capabilities: actual }]);
+  output.warn({
+    title: `Nx had stale information about what the "${actual.name}" plugin does.`,
+    bodyLines: [
+      'Its hooks may not have run in this command. The record has been corrected, so running the command again will use the right one.',
+      'If you see this repeatedly, please report it at https://github.com/nrwl/nx/issues with the plugin name.',
+    ],
+  });
 }
 
 async function loadDefaultNxPlugins(root = workspaceRoot) {
