@@ -15,6 +15,7 @@ A 25-minute pipeline split across four parallel jobs burns 100 machine-minutes a
 a 100-minute pipeline on a single runner.
 Cutting that bill means running fewer minutes, not buying cheaper ones, and a remote cache plus
 `nx affected` is how you stop paying twice for the same work.
+It also replaces the job matrix you maintain by hand with a single line of configuration.
 
 ## GitHub Actions pricing for private repositories
 
@@ -86,7 +87,7 @@ minutes you never buy:
   A hand-written matrix pays full checkout, install, and idle time on every job in the matrix,
   whether or not that job had anything to do.
 
-## Break-even: how much the cache has to save
+## Caching and cost savings
 
 Nx Cloud comes out cheaper than plain GitHub Actions when the minutes the cache avoids, minus about
 1 minute per job to restore it, are worth more than the $0.275 pipeline fee.
@@ -116,46 +117,53 @@ for each other.
 The more expensive the runner, the sooner the cache pays for itself, because every minute it skips
 is worth more.
 
+{% aside type="note" %}
+The examples below are illustrations, not benchmarks.
+Real costs and times depend on your task mix, how well tasks parallelize, project graph shape, how
+often inputs change, runner availability, and your own cache hit rate.
+Use them to see which lever moves your bill, then run the numbers against your workspace.
+{% /aside %}
+
 ## Example: four-job matrix on standard runners
 
-A workspace runs 400 CI pipelines a month.
+A workspace runs 500 CI pipelines a month.
 To keep PR feedback near 30 minutes it splits lint, test, build, and e2e across a four-job matrix on
 standard 2-core Linux runners.
 Each job takes about 30 minutes, 3 of them checkout and install, for 120 machine-minutes per run.
 
-| Setup                    | Machine-minutes | GitHub per run | Nx Cloud per run | Total per run | 400 runs | PR feedback |
+| Setup                    | Machine-minutes | GitHub per run | Nx Cloud per run | Total per run | 500 runs | PR feedback |
 | ------------------------ | --------------- | -------------- | ---------------- | ------------- | -------- | ----------- |
-| Plain GitHub Actions     | 120             | $0.72          | None             | $0.72         | $288     | 30 min      |
-| Nx Cloud, 50% cache hits | 70              | $0.42          | $0.275           | $0.695        | $278     | 17.5 min    |
-| Nx Cloud, 70% cache hits | 48.4            | $0.29          | $0.275           | $0.565        | $226     | 12.1 min    |
+| Plain GitHub Actions     | 120             | $0.72          | None             | $0.72         | $360     | 30 min      |
+| Nx Cloud, 50% cache hits | 70              | $0.42          | $0.275           | $0.695        | $348     | 17.5 min    |
+| Nx Cloud, 70% cache hits | 48.4            | $0.29          | $0.275           | $0.565        | $283     | 12.1 min    |
 
 At 50% the jobs stay on GitHub runners and each one pays 3 minutes of setup, 1 minute to restore the
 cache, then half of its remaining 27 minutes of work.
-The month comes in 3% cheaper and PR feedback drops by 12.5 minutes, or about 83 hours of waiting
-across 400 runs.
+The month comes in 3% cheaper and PR feedback drops by 12.5 minutes, or about 104 hours of waiting
+across 500 runs.
 At 70% the same pipeline runs in 12.1 minutes and the bill falls 22%.
 
 ## Example: eight-job matrix on 8-core runners
 
-A larger workspace runs 600 pipelines a month across eight jobs on 8-core runners, 20 minutes each,
-for 160 machine-minutes per run.
+A larger workspace runs the same 500 pipelines a month across eight jobs on 8-core runners,
+20 minutes each, for 160 machine-minutes per run.
 That baseline is well above the 65-minute break-even, so the cache is cheaper at either hit rate.
 
-| Setup                    | Machine-minutes | GitHub per run | Nx Cloud per run | Total per run | 600 runs | PR feedback |
+| Setup                    | Machine-minutes | GitHub per run | Nx Cloud per run | Total per run | 500 runs | PR feedback |
 | ------------------------ | --------------- | -------------- | ---------------- | ------------- | -------- | ----------- |
-| Plain GitHub Actions     | 160             | $3.52          | None             | $3.52         | $2,112   | 20 min      |
-| Nx Cloud, 50% cache hits | 100             | $2.20          | $0.275           | $2.475        | $1,485   | 12.5 min    |
-| Nx Cloud, 70% cache hits | 72.8            | $1.60          | $0.275           | $1.877        | $1,126   | 9.1 min     |
+| Plain GitHub Actions     | 160             | $3.52          | None             | $3.52         | $1,760   | 20 min      |
+| Nx Cloud, 50% cache hits | 100             | $2.20          | $0.275           | $2.475        | $1,238   | 12.5 min    |
+| Nx Cloud, 70% cache hits | 72.8            | $1.60          | $0.275           | $1.877        | $938     | 9.1 min     |
 
 That is 30% off the bill at 50% hits and 47% off at 70%, with PR feedback down to 12.5 and 9.1
 minutes.
 This is the shape the break-even table points at: a pipeline already on large runners, where each
 skipped minute is worth almost four times what it is on a standard runner.
-The Nx Cloud share is 600 pipeline executions, $165 a month, and the Team plan covers the first $29
+The Nx Cloud share is 500 pipeline executions, $138 a month, and the Team plan covers the first $29
 of it.
 
 A small single-job pipeline is the case where Nx Cloud doesn't pay for itself on compute.
-A 30-minute job on one 2-core runner costs $72 a month at 400 runs, and about $152 with Nx Cloud.
+A 30-minute job on one 2-core runner costs $90 a month at 500 runs, and about $190 with Nx Cloud.
 It finishes in 17.5 minutes instead of 30, which many teams will take, but that's speed rather than
 a lower bill.
 
@@ -167,13 +175,13 @@ GitHub prices cores close to linearly, so work that scales perfectly costs about
 Checkout and install don't scale, and those 3 fixed minutes per job are what tip it.
 Taking the four-job pipeline from the first example:
 
-| Option                            | PR feedback | Cost per run | 400 runs |
+| Option                            | PR feedback | Cost per run | 500 runs |
 | --------------------------------- | ----------- | ------------ | -------- |
-| Four 2-core jobs, as-is           | 30 min      | $0.72        | $288     |
-| Four 8-core jobs                  | 9.8 min     | $0.86        | $343     |
-| Four 2-core jobs, Nx Cloud at 50% | 17.5 min    | $0.695       | $278     |
-| Four 2-core jobs, Nx Cloud at 70% | 12.1 min    | $0.565       | $226     |
-| Four 8-core jobs, Nx Cloud at 70% | 6 min       | $0.805       | $322     |
+| Four 2-core jobs, as-is           | 30 min      | $0.72        | $360     |
+| Four 8-core jobs                  | 9.8 min     | $0.86        | $429     |
+| Four 2-core jobs, Nx Cloud at 50% | 17.5 min    | $0.695       | $348     |
+| Four 2-core jobs, Nx Cloud at 70% | 12.1 min    | $0.565       | $283     |
+| Four 8-core jobs, Nx Cloud at 70% | 6 min       | $0.805       | $403     |
 
 Both 8-core rows assume tasks scale perfectly with cores, which is the optimistic end, so the real
 premium is larger than shown.
@@ -182,63 +190,6 @@ gives the fastest pipeline for less than big runners alone.
 
 Extra cores need `--parallel` raised to match.
 Nx runs 3 tasks at a time by default, so an 8-core runner sits partly idle until you ask for more.
-
-## Simpler configuration
-
-Splitting work by hand on GitHub Actions means choosing the bins yourself and rebalancing them as
-projects are added:
-
-```yaml
-// .github/workflows/ci.yml
-jobs:
-  ci:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        target: [lint, test, build, e2e]
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 24
-          cache: 'npm'
-      - run: npm ci
-      - run: npx nx run-many -t ${{ matrix.target }}
-```
-
-Every job in that matrix re-runs checkout and install, and a slow target holds up the run while the
-other three sit idle.
-With Nx Cloud the pipeline is a single job, and how many machines it uses is one line of
-configuration:
-
-```yaml
-// .nx/ci-config.yaml
-dte:
-  distribute-on: 8 linux-medium-js
-```
-
-```yaml
-// .github/workflows/ci.yml
-jobs:
-  main:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          filter: tree:0
-          fetch-depth: 0
-      - run: npx nx-cloud start-nx-agents
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 24
-          cache: 'npm'
-      - run: npm ci
-      - uses: nrwl/nx-set-shas@v5
-      - run: npx nx affected -t lint test build e2e
-```
-
-Changing `distribute-on` from `8` to `16` doubles the machines without touching the workflow file.
-The full setup, including the other CI providers, is in [setting up CI for Nx Cloud](/docs/kb/setup-ci).
 
 ## How to cut your GitHub Actions bill
 
@@ -257,3 +208,7 @@ The full setup, including the other CI providers, is in [setting up CI for Nx Cl
   Skip the division if you run with `--parallel=1`.
 - Track total minutes, since rate shopping between GitHub runners and Nx Agents moves the bill by
   single-digit percentages while the cache hit rate moves it by tens.
+
+Beyond the time and the money, Nx Agents take over the job matrix you maintain by hand.
+One `distribute-on` line in the [CI configuration file](/docs/reference/nx-cloud/ci-config) sets how
+many machines a run uses, and raising it leaves the workflow file alone.
