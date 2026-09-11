@@ -335,6 +335,31 @@ describe('recordIsFresh', () => {
     expect(recordIsFresh(record, root)).toBe(false);
   });
 
+  it('validates against the reading workspace, not the writing one', () => {
+    // The database can be shared between worktrees of one repository, so a record
+    // written by one is read by another. In-workspace entries are stored relative
+    // and re-resolved against the current root, which is what makes sharing
+    // correct rather than merely possible.
+    const other = mkdtempSync(join(tmpdir(), 'nx-other-worktree-'));
+    mkdirSync(join(other, 'libs/p'), { recursive: true });
+    const sameContents = 'module.exports = {};';
+    write('libs/p/index.js', sameContents);
+    writeFileSync(join(other, 'libs/p/index.js'), sameContents);
+    const record = recordFor([join(root, 'libs/p/index.js')]);
+
+    expect(record.sourceFiles).toEqual(['libs/p/index.js']);
+    expect(recordIsFresh(record, other)).toBe(true);
+
+    // Edited here and untouched in the writing workspace, whose copy is still on
+    // disk: a record must never be validated against another checkout's files.
+    writeFileSync(
+      join(other, 'libs/p/index.js'),
+      'module.exports.postTasksExecution = async () => {};'
+    );
+    expect(recordIsFresh(record, other)).toBe(false);
+    expect(recordIsFresh(record, root)).toBe(true);
+  });
+
   it('holds for a plugin whose every source is vendored', () => {
     // Nothing to hash, and the key carried the installed version.
     expect(
