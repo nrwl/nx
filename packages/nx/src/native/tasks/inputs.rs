@@ -152,7 +152,7 @@ fn split_inputs_into_self_and_deps<'a>(
         },
     );
 
-    let expanded_inputs = expand_single_project_inputs(&self_inputs, &named_inputs)?;
+    let expanded_inputs = expand_single_project_inputs(self_inputs, &named_inputs)?;
 
     let (self_inputs, deps_outputs): (Vec<_>, Vec<_>) = expanded_inputs
         .into_iter()
@@ -167,7 +167,7 @@ fn split_inputs_into_self_and_deps<'a>(
 }
 
 pub(super) fn expand_single_project_inputs<'a>(
-    inputs: &Vec<Input<'a>>,
+    inputs: impl IntoIterator<Item = Input<'a>>,
     named_inputs: &NamedInputs<'a>,
 ) -> anyhow::Result<Vec<Input<'a>>> {
     let mut expanded = vec![];
@@ -212,7 +212,7 @@ pub(super) fn expand_single_project_inputs<'a>(
                 transitive,
                 dependent_tasks_output_files,
             } => expanded.push(Input::DepsOutputs {
-                transitive: *transitive,
+                transitive,
                 dependent_tasks_output_files,
             }),
             Input::WorkingDirectory(mode) => expanded.push(Input::WorkingDirectory(mode)),
@@ -224,8 +224,8 @@ pub(super) fn expand_single_project_inputs<'a>(
                 validate_file_set(json)?;
                 expanded.push(Input::Json {
                     json,
-                    fields: *fields,
-                    exclude_fields: *exclude_fields,
+                    fields,
+                    exclude_fields,
                 });
             }
             Input::Projects { .. }
@@ -270,17 +270,23 @@ pub(super) fn expand_named_input<'a>(
     input: &str,
     named_inputs: &NamedInputs<'a>,
 ) -> anyhow::Result<Vec<Input<'a>>> {
-    if let Some(inputs) = named_inputs.get(input) {
-        let inputs = inputs.iter().map(Input::from).collect();
-        expand_single_project_inputs(&inputs, named_inputs)
-    } else if input == "default" {
-        Ok(vec![Input::FileSet {
+    match named_inputs.resolve(input) {
+        Some(NamedInput::Configured(inputs)) => {
+            expand_single_project_inputs(inputs.iter().map(Input::from), named_inputs)
+        }
+        Some(NamedInput::BuiltInDefault) => Ok(vec![Input::FileSet {
             fileset: "{projectRoot}/**/*",
             dependencies: false,
-        }])
-    } else {
-        anyhow::bail!("Input '{}' is not defined", input)
+        }]),
+        None => anyhow::bail!("Input '{}' is not defined", input),
     }
+}
+
+/// The definition a name resolves to, so the built-in `default` fallback is
+/// expressed in one place rather than re-tested at each call site.
+enum NamedInput<'a> {
+    Configured(&'a Vec<JsInputs>),
+    BuiltInDefault,
 }
 
 /// Look up only the requested definition, borrowing the immutable maps instead
@@ -292,14 +298,20 @@ pub(super) struct NamedInputs<'a> {
 }
 
 impl<'a> NamedInputs<'a> {
-    fn get(&self, name: &str) -> Option<&'a Vec<JsInputs>> {
-        self.project
+    fn resolve(&self, name: &str) -> Option<NamedInput<'a>> {
+        let configured = self
+            .project
             .and_then(|inputs| inputs.get(name))
-            .or_else(|| self.workspace.and_then(|inputs| inputs.get(name)))
+            .or_else(|| self.workspace.and_then(|inputs| inputs.get(name)));
+        match configured {
+            Some(inputs) => Some(NamedInput::Configured(inputs)),
+            None if name == "default" => Some(NamedInput::BuiltInDefault),
+            None => None,
+        }
     }
 
     fn contains(&self, name: &str) -> bool {
-        name == "default" || self.get(name).is_some()
+        self.resolve(name).is_some()
     }
 }
 

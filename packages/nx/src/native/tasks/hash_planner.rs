@@ -514,11 +514,13 @@ impl HashPlanner {
         external_deps_mapped: &HashMap<String, Vec<String>>,
     ) -> anyhow::Result<Arc<SubtreeResult>> {
         let cache_key = match input {
-            Input::Inputs { input, .. } => format!("{dep}\0i\0{input}"),
-            Input::FileSet { fileset, .. } => format!("{dep}\0f\0{fileset}"),
+            Input::Inputs { input, .. } => prefixed_cache_key(dep, 'i', input),
+            // Only `dependencies: true` filesets reach here, since that is what
+            // get_inputs_for_dependency puts in deps_inputs.
+            Input::FileSet { fileset, .. } => prefixed_cache_key(dep, 'f', fileset),
             // Other input kinds never reach dependencies (get_inputs_for_dependency
             // returns None for them), so they share one empty entry per project.
-            _ => format!("{dep}\0none"),
+            _ => prefixed_cache_key(dep, 'n', ""),
         };
         self.subtree_memo.get_or_try_init(cache_key, || {
             self.compute_dep_subtree(dep, input, external_deps_mapped)
@@ -898,7 +900,7 @@ impl HashPlanner {
                 let named_inputs =
                     get_named_inputs(&self.nx_json, &self.project_graph.nodes[project]);
                 let expanded_input = expand_single_project_inputs(
-                    &vec![Input::Inputs {
+                    [Input::Inputs {
                         input,
                         dependencies: false,
                     }],
@@ -911,15 +913,20 @@ impl HashPlanner {
     }
 }
 
+/// Length-prefixing the project keeps arbitrary project and input strings
+/// unambiguous, including ones containing the kind character.
+fn prefixed_cache_key(dep: &str, kind: char, rest: &str) -> String {
+    format!("{}:{dep}{kind}{rest}", dep.len())
+}
+
+/// Unsupported kinds are uncached.
 fn local_input_cache_key(dep: &str, input: &Input) -> Option<String> {
-    // A length prefix keeps arbitrary project/input strings unambiguous,
-    // including strings containing separators. Unsupported kinds are uncached.
     match input {
-        Input::Inputs { input, .. } => Some(format!("{}:{dep}i{input}", dep.len())),
+        Input::Inputs { input, .. } => Some(prefixed_cache_key(dep, 'i', input)),
         Input::FileSet {
             fileset,
             dependencies: true,
-        } => Some(format!("{}:{dep}f{fileset}", dep.len())),
+        } => Some(prefixed_cache_key(dep, 'f', fileset)),
         _ => None,
     }
 }
