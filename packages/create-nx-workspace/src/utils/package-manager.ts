@@ -1,6 +1,6 @@
 import { execSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join, sep } from 'node:path';
+import { join } from 'node:path';
 import { CnwError } from './error-utils';
 
 /*
@@ -289,6 +289,21 @@ export function getPackageManagerVersion(
  * Default to 'npm'
  */
 export function detectInvokedPackageManager(): PackageManager {
+  // Nested invocations (e.g. pnpm -> npx) can retain the parent's user agent.
+  // The executable identifies the manager that actually launched this process.
+  const executable = process.env.npm_execpath?.split(/[\\/]/).pop();
+  if (executable) {
+    for (const pm of packageManagerList) {
+      if (
+        new RegExp(`^${pm}(?:-cli|-[\\d.]+)?(?:\\.[cm]?js|\\.exe)?$`).test(
+          executable
+        )
+      ) {
+        return pm;
+      }
+    }
+  }
+
   if (process.env.npm_config_user_agent) {
     for (const pm of packageManagerList) {
       if (process.env.npm_config_user_agent.startsWith(`${pm}/`)) {
@@ -297,12 +312,5 @@ export function detectInvokedPackageManager(): PackageManager {
     }
   }
 
-  if (process.env.npm_execpath) {
-    for (const pm of packageManagerList) {
-      if (process.env.npm_execpath.split(sep).includes(pm)) {
-        return pm;
-      }
-    }
-  }
   return 'npm';
 }
