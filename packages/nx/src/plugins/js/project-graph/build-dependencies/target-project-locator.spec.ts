@@ -1472,6 +1472,42 @@ describe('TargetProjectLocator', () => {
       expect(requireResolution).toHaveBeenCalledOnce();
     });
 
+    it('should bypass the fast path when an exact export targets a nested project', () => {
+      process.env[fastPathEnv] = 'true';
+      const projects = {
+        pkg1: createWorkspaceProject('pkg1', {
+          packageExports: {
+            './feature': './feature/index.js',
+          },
+        }),
+        feature: {
+          name: 'feature',
+          type: 'lib' as const,
+          data: {
+            root: 'packages/pkg1/feature',
+          },
+        },
+      };
+      const packagesMetadata = getWorkspacePackagesMetadata(projects);
+      const targetProjectLocator = createLocator(projects);
+      const { npmResolution, typescriptResolution, requireResolution } =
+        spyOnResolutionPaths(targetProjectLocator);
+      requireResolution.mockReturnValue('packages/pkg1/feature/index.js');
+
+      const result = targetProjectLocator.findProjectFromImport(
+        '@org/pkg1/feature',
+        'packages/source/index.ts'
+      );
+
+      expect(
+        packagesMetadata.entryPointsWithProjectBoundaryCrossings
+      ).toContain('@org/pkg1/feature');
+      expect(result).toEqual('feature');
+      expect(npmResolution).toHaveBeenCalledOnce();
+      expect(typescriptResolution).toHaveBeenCalledOnce();
+      expect(requireResolution).toHaveBeenCalledOnce();
+    });
+
     it('should bypass the fast path for wildcard entry points', () => {
       process.env[fastPathEnv] = 'true';
       const targetProjectLocator = createLocator({

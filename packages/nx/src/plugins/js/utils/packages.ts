@@ -3,6 +3,19 @@ import type { ProjectGraphProjectNode } from '../../../config/project-graph';
 import type { ProjectConfiguration } from '../../../config/workspace-json-project-json';
 import type { PackageJsonProjectMetadata } from '../../../utils/package-json';
 
+function getPackageTargets(value: unknown): string[] {
+  if (typeof value === 'string') {
+    return [value];
+  }
+  if (Array.isArray(value)) {
+    return value.flatMap(getPackageTargets);
+  }
+  if (value && typeof value === 'object') {
+    return Object.values(value).flatMap(getPackageTargets);
+  }
+  return [];
+}
+
 export function getWorkspacePackagesMetadata<
   T extends ProjectGraphProjectNode | ProjectConfiguration,
 >(
@@ -12,15 +25,45 @@ export function getWorkspacePackagesMetadata<
   wildcardEntryPointsToProjectMap: Record<string, T>;
   packageToProjectMap: Record<string, T>;
   ambiguousEntryPoints: Set<string>;
+  entryPointsWithProjectBoundaryCrossings: Set<string>;
 } {
   const entryPointsToProjectMap: Record<string, T> = {};
   const wildcardEntryPointsToProjectMap: Record<string, T> = {};
   const packageToProjectMap: Record<string, T> = {};
   const ambiguousEntryPoints = new Set<string>();
-  const addEntryPoint = (entryPoint: string, project: T): void => {
+  const entryPointsWithProjectBoundaryCrossings = new Set<string>();
+  const projectRoots = Object.values(projects)
+    .map((project) => ({
+      project,
+      root: join('data' in project ? project.data.root : project.root),
+    }))
+    .sort((a, b) => b.root.length - a.root.length);
+  const projectRootByProject = new Map(
+    projectRoots.map(({ project, root }) => [project, root])
+  );
+  const addEntryPoint = (
+    entryPoint: string,
+    project: T,
+    packageTargets: string[]
+  ): void => {
     const existingProject = entryPointsToProjectMap[entryPoint];
     if (existingProject && existingProject !== project) {
       ambiguousEntryPoints.add(entryPoint);
+    }
+    const projectRoot = projectRootByProject.get(project)!;
+    if (
+      packageTargets.some((target) => {
+        const targetPath = join(projectRoot, target);
+        const targetProject = projectRoots.find(
+          (candidate) =>
+            candidate.root === '.' ||
+            targetPath === candidate.root ||
+            targetPath.startsWith(`${candidate.root}/`)
+        );
+        return targetProject && targetProject.project !== project;
+      })
+    ) {
+      entryPointsWithProjectBoundaryCrossings.add(entryPoint);
     }
     entryPointsToProjectMap[entryPoint] = project;
   };
@@ -53,7 +96,7 @@ export function getWorkspacePackagesMetadata<
       if (typeof packageExports === 'string') {
         // it points to a file, which would be the equivalent of an '.' export,
         // in which case the package name is the entry point
-        addEntryPoint(packageName, project);
+        addEntryPoint(packageName, project, [packageExports]);
       } else {
         for (const entryPoint of Object.keys(packageExports)) {
           if (packageExports[entryPoint] === null) {
@@ -67,19 +110,27 @@ export function getWorkspacePackagesMetadata<
               wildcardEntryPointsToProjectMap[join(packageName, entryPoint)] =
                 project;
             } else {
-              addEntryPoint(join(packageName, entryPoint), project);
+              addEntryPoint(
+                join(packageName, entryPoint),
+                project,
+                getPackageTargets(packageExports[entryPoint])
+              );
             }
           } else {
             // it's a conditional export, so we use the package name as the entry point
             // https://nodejs.org/api/packages.html#conditional-exports
-            addEntryPoint(packageName, project);
+            addEntryPoint(
+              packageName,
+              project,
+              getPackageTargets(packageExports[entryPoint])
+            );
           }
         }
       }
     } else if (packageMain) {
       // if there is no exports, but there is a main, the package name is the
       // entry point
-      addEntryPoint(packageName, project);
+      addEntryPoint(packageName, project, [packageMain]);
     }
   }
 
@@ -88,6 +139,7 @@ export function getWorkspacePackagesMetadata<
     wildcardEntryPointsToProjectMap,
     packageToProjectMap,
     ambiguousEntryPoints,
+    entryPointsWithProjectBoundaryCrossings,
   };
 }
 

@@ -366,7 +366,12 @@ export class TargetProjectLocator {
   ): string | null {
     this.packagesMetadata ??= getWorkspacePackagesMetadata(this.nodes);
 
-    if (this.packagesMetadata.ambiguousEntryPoints.has(importPath)) {
+    if (
+      this.packagesMetadata.ambiguousEntryPoints.has(importPath) ||
+      this.packagesMetadata.entryPointsWithProjectBoundaryCrossings.has(
+        importPath
+      )
+    ) {
       return null;
     }
 
