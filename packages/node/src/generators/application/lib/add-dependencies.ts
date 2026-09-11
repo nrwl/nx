@@ -29,6 +29,9 @@ export function addProjectDependencies(
       '@nx/esbuild': nxVersion,
       esbuild: esbuildVersion,
     },
+    rspack: {
+      '@nx/rspack': nxVersion,
+    },
   };
 
   const exprPkgVersions = expressVersions(tree);
