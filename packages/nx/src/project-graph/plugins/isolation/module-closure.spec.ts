@@ -1,6 +1,13 @@
-import { sep } from 'node:path';
+import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 import { withModuleClosure } from './module-closure';
+
+// A path under a fake workspace, spelled the way this platform spells it, and
+// the URL a loader would report it as. `resolve` supplies the drive letter
+// Windows needs, which `fileURLToPath` rejects a URL without.
+const wsFile = (path: string) => resolve('/ws', path);
+const loadedAs = (path: string) => pathToFileURL(path).href;
 
 describe('withModuleClosure', () => {
   function registrarFor(urls: string[]) {
@@ -15,35 +22,32 @@ describe('withModuleClosure', () => {
   }
 
   it('reports the files the load read', async () => {
+    const entry = wsFile('libs/p/index.js');
+    const shared = wsFile('libs/shared/hooks.js');
+
     const { result, sourceFiles } = await withModuleClosure(
       async () => 'loaded',
-      registrarFor([
-        `file://${sep}ws${sep}libs${sep}p${sep}index.js`,
-        `file://${sep}ws${sep}libs${sep}shared${sep}hooks.js`,
-      ])
+      registrarFor([loadedAs(entry), loadedAs(shared)])
     );
 
     expect(result).toBe('loaded');
-    expect(sourceFiles).toEqual([
-      `${sep}ws${sep}libs${sep}p${sep}index.js`,
-      `${sep}ws${sep}libs${sep}shared${sep}hooks.js`,
-    ]);
+    expect(sourceFiles).toEqual([entry, shared]);
   });
 
   it.each([
     ['a builtin under its new spelling', 'node:fs'],
     ['a builtin under its old spelling', 'fs'],
-    ['a vendored file', `file://${sep}ws${sep}node_modules${sep}dep${sep}i.js`],
+    ['a vendored file', loadedAs(wsFile('node_modules/dep/i.js'))],
     ['a non-file scheme', 'data:text/javascript,export%20default%201'],
   ])('leaves out %s', async (_what, specifier) => {
-    const entry = `file://${sep}ws${sep}libs${sep}p${sep}index.js`;
+    const entry = wsFile('libs/p/index.js');
 
     const { sourceFiles } = await withModuleClosure(
       async () => null,
-      registrarFor([entry, specifier])
+      registrarFor([loadedAs(entry), specifier])
     );
 
-    expect(sourceFiles).toEqual([`${sep}ws${sep}libs${sep}p${sep}index.js`]);
+    expect(sourceFiles).toEqual([entry]);
   });
 
   it('deregisters the hook even when the load throws', async () => {

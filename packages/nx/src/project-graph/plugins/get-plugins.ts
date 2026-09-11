@@ -539,7 +539,11 @@ async function resolveCapabilityKeys(
     loads.map(async (load) => {
       try {
         load.resolved = await resolveModule(load.plugin, root);
-        load.key = computeCapabilityKey(load.resolved.pluginPath, root);
+        load.key = computeCapabilityKey(
+          pluginLabel(load.plugin),
+          load.resolved.pluginPath,
+          root
+        );
       } catch (e) {
         // Left for the loader, which reports a resolution failure with the
         // plugin name and the context the caller expects.
