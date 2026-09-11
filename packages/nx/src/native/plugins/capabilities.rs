@@ -25,11 +25,13 @@ pub const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS plugin_capabilities (
     created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );";
 
-/// How long a record outlives the run that wrote it. A key carries a version or
-/// a source hash, so rows are never updated in place: an upgrade or an edit to a
-/// local plugin mints a new one and orphans the old. Evicting by age costs a
-/// long-lived plugin one reload per window and keeps the table from growing for
-/// the life of the workspace.
+/// How long a record outlives the run that wrote it.
+///
+/// An installed plugin's key carries its version, so an upgrade mints a new row
+/// and orphans the old one. A local plugin's key is identity alone and its row is
+/// updated in place when its sources change, which refreshes this. So the rows
+/// this collects are the orphans: upgrades, uninstalls, and plugins a workspace
+/// stopped configuring.
 const MAX_RECORD_AGE: &str = "-30 days";
 
 /// What a plugin module registers, independent of the options it is configured
