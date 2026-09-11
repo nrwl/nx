@@ -188,6 +188,39 @@ describe('SummaryTerminalOutputLifeCycle', () => {
     expect(out).not.toContain('full log');
   });
 
+  // The production shape: `runBatch` gives every task of a stopped batch `''`,
+  // not `undefined`, and `persistTerminalOutputs` writes that as a 0-byte file.
+  // An address is only worth printing when something is behind it.
+  it('does not address a log for a stopped task whose output is empty', () => {
+    const a = makeTask('a');
+    const lifeCycle = new SummaryTerminalOutputLifeCycle([a]);
+
+    const out = captureOutput(() => {
+      lifeCycle.endTasks([result(a, 'stopped')]);
+      lifeCycle.endCommand();
+    });
+
+    expect(out).toContain('a:test');
+    expect(out).not.toContain('full log');
+  });
+
+  it('addresses the batch worker log it was told about', () => {
+    const a = makeTask('a');
+    const lifeCycle = new SummaryTerminalOutputLifeCycle([a]);
+
+    const out = captureOutput(() => {
+      lifeCycle.batchOutputAvailable(
+        '@nx/gradle:batch 1',
+        '/cache/batchOutputs/g.log'
+      );
+      lifeCycle.endTasks([result(a, 'stopped')]);
+      lifeCycle.endCommand();
+    });
+
+    expect(out).toContain('Batch worker logs:');
+    expect(out).toContain('@nx/gradle:batch 1: /cache/batchOutputs/g.log');
+  });
+
   it('renders the cloud link when one is set', () => {
     const a = makeTask('a');
     const lifeCycle = new SummaryTerminalOutputLifeCycle([a]);

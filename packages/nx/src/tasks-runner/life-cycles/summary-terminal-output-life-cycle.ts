@@ -50,23 +50,23 @@ export class SummaryTerminalOutputLifeCycle implements LifeCycle {
       this.completed.add(task.id);
       switch (status) {
         case 'failure':
-          // Whether a log file exists is decided here, not at render time:
-          // `persistTerminalOutputs` skips a result whose `terminalOutput` is
-          // undefined, so pointing at its path would address a file nobody
-          // wrote. A batch executor that reports a failure without attributing
-          // output to the task produces exactly that.
+          // Whether a log file exists is decided here, not at render time.
+          // `persistTerminalOutputs` skips only an undefined `terminalOutput`,
+          // so an empty one still writes a 0-byte file - truthiness, not
+          // definedness, is what says a reader will find something there.
           this.failed.push({
             task,
-            hasOutput: terminalOutput !== undefined,
+            hasOutput: !!terminalOutput,
           });
           break;
         case 'stopped':
-          // A stopped batch's tasks carry the worker's partial log, which is
-          // the only record of what got through before the cancellation, so
-          // they are addressed the same way a failure is.
+          // Every task of a stopped batch carries `''`: the worker's partial
+          // log is announced as the batch's own artifact now, not folded into
+          // any task. So these address a file only when something else wrote
+          // one, and the batch log is addressed once below.
           this.stopped.push({
             task,
-            hasOutput: terminalOutput !== undefined,
+            hasOutput: !!terminalOutput,
           });
           break;
         case 'local-cache':
@@ -110,7 +110,9 @@ export class SummaryTerminalOutputLifeCycle implements LifeCycle {
       // batch, and no task's own output file contains it.
       bodyLines.push('', output.dim('Batch worker logs:'));
       for (const [batchId, path] of this.batchLogs) {
-        bodyLines.push(output.dim(`${output.dim('-')} ${batchId}: ${path}`));
+        bodyLines.push(
+          `${output.dim('-')} ${output.dim(`${batchId}: ${path}`)}`
+        );
       }
     }
     if (this.cloudLink) {
