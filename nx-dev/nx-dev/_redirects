@@ -1360,3 +1360,6 @@
 /nx/reset /docs/reference/nx-commands#nx-reset 301
 /core-concepts/computation-caching /docs/features/cache-task-results 301
 /nx-community /docs/getting-started/intro 301
+
+# --- DOC-660: indexed mixed-case legacy URL ---
+/Docs/Knowledge /docs/kb 301
