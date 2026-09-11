@@ -33,7 +33,17 @@ pub(crate) fn candidate_ranges<T>(
         let start = files.partition_point(|(file, _)| file.as_path() < path);
         let end = start
             + if recursive.is_some() {
-                files[start..].partition_point(|(file, _)| file.starts_with(path))
+                // `partition_point` on `starts_with` is only monotonic because the
+                // snapshot is sorted component-wise, which keeps a directory's
+                // entries contiguous and ahead of byte-prefix siblings like `a-b`.
+                let len = files[start..].partition_point(|(file, _)| file.starts_with(path));
+                debug_assert!(
+                    files[start + len..]
+                        .iter()
+                        .all(|(file, _)| !file.starts_with(path)),
+                    "snapshot is not component-sorted: range for `{literal}` is short"
+                );
+                len
             } else {
                 files[start..].partition_point(|(file, _)| file.as_path() == path)
             };
