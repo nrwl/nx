@@ -32,6 +32,9 @@ pub struct HashPlanner {
     /// graph and nx_json. Only consulted for acyclic dependency closures — see
     /// `dependency_memo_enabled`.
     subtree_memo: OnceCache<SubtreeResult>,
+    /// Own-project instructions can be reused even when a cyclic closure must
+    /// still be traversed for each task. Initialized only on that fallback.
+    local_inputs_memo: OnceLock<OnceCache<LocalDependencyInputs>>,
     acyclic_dependency_projects: OnceLock<hashbrown::HashSet<String>>,
     /// Interner backing every plan this planner produces.
     instruction_pool: Arc<InstructionPool>,
@@ -43,6 +46,11 @@ struct SubtreeResult {
     /// True when the subtree cannot be spliced from the memo: it contains
     /// deps-outputs inputs (whose resolution depends on the root task) or an
     /// unexpected propagation shape. Callers must use the per-task traversal.
+    needs_legacy: bool,
+}
+
+struct LocalDependencyInputs {
+    ids: Vec<u32>,
     needs_legacy: bool,
 }
 
@@ -146,6 +154,7 @@ impl HashPlanner {
             project_graph: Arc::clone(project_graph),
             external_deps_mapped: OnceLock::new(),
             subtree_memo: OnceCache::new(),
+            local_inputs_memo: OnceLock::new(),
             acyclic_dependency_projects: OnceLock::new(),
             instruction_pool: Arc::new(InstructionPool::new()),
         }
@@ -569,6 +578,72 @@ impl HashPlanner {
         Ok(SubtreeResult { ids, needs_legacy })
     }
 
+    fn local_dependency_inputs(
+        &self,
+        dep: &str,
+        input: &Input,
+    ) -> anyhow::Result<Option<Arc<LocalDependencyInputs>>> {
+        let Some(key) = local_input_cache_key(dep, input) else {
+            return Ok(None);
+        };
+        self.local_inputs_memo
+            .get_or_init(OnceCache::new)
+            .get_or_try_init(key, || {
+                let Some(inputs) = get_inputs_for_dependency(
+                    &self.project_graph.nodes[dep],
+                    &self.nx_json,
+                    input,
+                )?
+                else {
+                    return Ok(LocalDependencyInputs {
+                        ids: vec![],
+                        needs_legacy: true,
+                    });
+                };
+                // Only cache canonical, task-independent expansion. Root-task
+                // output resolution and unexpected propagation shapes keep their
+                // original path. The initializer never follows project edges,
+                // so cyclic graphs cannot introduce recursive cache waits.
+                let same_propagation = match (input, inputs.deps_inputs.as_slice()) {
+                    (
+                        Input::Inputs { input: before, .. },
+                        [
+                            Input::Inputs {
+                                input: after,
+                                dependencies: true,
+                            },
+                        ],
+                    ) => before == after,
+                    (
+                        Input::FileSet {
+                            fileset: before,
+                            dependencies: true,
+                        },
+                        [
+                            Input::FileSet {
+                                fileset: after,
+                                dependencies: true,
+                            },
+                        ],
+                    ) => before == after,
+                    _ => false,
+                };
+                let needs_legacy = !same_propagation
+                    || !inputs.deps_outputs.is_empty()
+                    || !inputs.project_inputs.is_empty();
+                let ids = if needs_legacy {
+                    vec![]
+                } else {
+                    self.gather_self_inputs(dep, &inputs.self_inputs)
+                        .into_iter()
+                        .map(|instruction| self.instruction_pool.intern(instruction))
+                        .collect()
+                };
+                Ok(LocalDependencyInputs { ids, needs_legacy })
+            })
+            .map(Some)
+    }
+
     // todo(jcammisuli): parallelize this more. This function takes the longest time to run
     fn gather_dependency_inputs<'a>(
         &'a self,
@@ -638,6 +713,20 @@ impl HashPlanner {
                         // Shared closures are unioned by id before allocation,
                         // without changing the per-input visitation rules.
                         deps_inputs.extend(sub.ids.iter().copied());
+                        continue;
+                    }
+                }
+                if let Some(local) = self.local_dependency_inputs(dep, input)? {
+                    if !local.needs_legacy {
+                        deps_inputs.extend(local.ids.iter().copied());
+                        deps_inputs.extend(self.gather_dependency_input(
+                            task,
+                            input,
+                            task_graph,
+                            &self.project_graph.dependencies[dep],
+                            external_deps_mapped,
+                            visited,
+                        )?);
                         continue;
                     }
                 }
@@ -815,6 +904,19 @@ impl HashPlanner {
     }
 }
 
+fn local_input_cache_key(dep: &str, input: &Input) -> Option<String> {
+    // A length prefix keeps arbitrary project/input strings unambiguous,
+    // including strings containing separators. Unsupported kinds are uncached.
+    match input {
+        Input::Inputs { input, .. } => Some(format!("{}:{dep}i{input}", dep.len())),
+        Input::FileSet {
+            fileset,
+            dependencies: true,
+        } => Some(format!("{}:{dep}f{fileset}", dep.len())),
+        _ => None,
+    }
+}
+
 /// Resolves `{projectRoot}` and `{projectName}` tokens in a fileset pattern.
 /// For root-level projects (project_root == "."), strips `{projectRoot}/` instead of
 /// replacing with "." to avoid producing invalid paths like `./**/*`.
@@ -954,6 +1056,25 @@ mod tests {
                 .acyclic_dependency_projects
                 .set(hashbrown::HashSet::new())
                 .unwrap();
+            // Force both optimizations off in the reference planner, retaining
+            // the original visited traversal rather than comparing two cache paths.
+            let local_cache = legacy.local_inputs_memo.get_or_init(OnceCache::new);
+            for name in legacy.project_graph.nodes.keys() {
+                for input in ["prod", "spec"] {
+                    let input = Input::Inputs {
+                        input,
+                        dependencies: true,
+                    };
+                    local_cache
+                        .get_or_try_init(local_input_cache_key(name, &input).unwrap(), || {
+                            Ok::<_, ()>(LocalDependencyInputs {
+                                ids: vec![],
+                                needs_legacy: true,
+                            })
+                        })
+                        .unwrap();
+                }
+            }
             let tasks = || {
                 let tasks: HashMap<_, _> = cached
                     .project_graph
@@ -1004,6 +1125,75 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn local_input_cache_is_non_recursive_and_retains_output_fallback() {
+        let planner = mixed_cycle_planner(true);
+        let input = Input::Inputs {
+            input: "prod",
+            dependencies: true,
+        };
+        let first = planner
+            .local_dependency_inputs("cycle-a", &input)
+            .unwrap()
+            .unwrap();
+        let second = planner
+            .local_dependency_inputs("cycle-a", &input)
+            .unwrap()
+            .unwrap();
+        assert!(Arc::ptr_eq(&first, &second));
+        assert!(!first.needs_legacy);
+        assert_eq!(first.ids.len(), 3);
+        for id in &first.ids {
+            match planner.instruction_pool.get(*id).value() {
+                HashInstruction::ProjectConfiguration(name)
+                | HashInstruction::TsConfiguration(name)
+                | HashInstruction::ProjectFileSet(name, _) => assert_eq!(name, "cycle-a"),
+                other => panic!("Unexpected local instruction: {other:?}"),
+            }
+        }
+        assert_eq!(planner.local_inputs_memo.get().unwrap().len(), 1);
+        assert_eq!(planner.subtree_memo.len(), 0);
+        let output = planner
+            .local_dependency_inputs("leaf", &input)
+            .unwrap()
+            .unwrap();
+        assert!(output.needs_legacy);
+        assert!(output.ids.is_empty());
+    }
+
+    #[test]
+    fn local_input_keys_preserve_boundaries_and_input_kinds() {
+        let named = |input| Input::Inputs {
+            input,
+            dependencies: true,
+        };
+        assert_ne!(
+            local_input_cache_key("a", &named("b\0i\0c")),
+            local_input_cache_key("a\0i\0b", &named("c"))
+        );
+        assert_ne!(
+            local_input_cache_key("a", &named("{projectRoot}/file")),
+            local_input_cache_key(
+                "a",
+                &Input::FileSet {
+                    fileset: "{projectRoot}/file",
+                    dependencies: true
+                }
+            )
+        );
+        assert!(
+            local_input_cache_key(
+                "a",
+                &Input::FileSet {
+                    fileset: "{projectRoot}/file",
+                    dependencies: false
+                }
+            )
+            .is_none()
+        );
+        assert!(local_input_cache_key("a", &Input::String("default")).is_none());
     }
 
     #[test]
