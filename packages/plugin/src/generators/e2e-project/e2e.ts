@@ -4,6 +4,7 @@ import {
 } from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
+  detectPackageManager,
   ensurePackage,
   formatFiles,
   generateFiles,
@@ -113,11 +114,17 @@ function addFiles(host: Tree, options: NormalizedSchema) {
   );
 
   const simplePluginName = options.pluginName.split('/').pop();
+
+  // One manager drives workspace creation, the install and the checks, so the
+  // generated e2e test cannot straddle two.
+  const packageManager = options.packageManager ?? detectPackageManager();
+
   generateFiles(host, join(__dirname, './files'), options.projectRoot, {
     ...options,
     tmpl: '',
     rootTsConfigPath: getRelativePathToRootTsConfig(host, options.projectRoot),
-    packageManagerCommands: getPackageManagerCommand(),
+    packageManagerCommands: getPackageManagerCommand(packageManager),
+    packageManager,
     pluginPackageName,
     simplePluginName,
   });
