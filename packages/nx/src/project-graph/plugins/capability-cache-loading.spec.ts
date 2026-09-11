@@ -14,7 +14,9 @@ const CAPABILITIES: PluginCapabilities = {
 const mocks = vi.hoisted(() => ({
   readValidRecords: vi.fn(),
   recordCapabilities: vi.fn(),
+  forgetCapabilities: vi.fn(),
   storableSourceFiles: vi.fn(),
+  canObserveModuleClosure: vi.fn(() => true),
   warn: vi.fn(),
   lock: {
     tryLock: vi.fn(() => true),
@@ -58,6 +60,11 @@ vi.mock('./capabilities-cache', async (importOriginal) => ({
   storableSourceFiles: (files: string[]) => mocks.storableSourceFiles(files),
   readValidRecords: mocks.readValidRecords,
   recordCapabilities: mocks.recordCapabilities,
+  forgetCapabilities: mocks.forgetCapabilities,
+}));
+
+vi.mock('./isolation/module-closure', () => ({
+  canObserveModuleClosure: () => mocks.canObserveModuleClosure(),
 }));
 
 vi.mock('../../adapter/angular-json', () => ({
@@ -106,8 +113,11 @@ describe('loading plugins through the capability cache', () => {
       return found;
     });
     mocks.recordCapabilities.mockReset();
+    mocks.forgetCapabilities.mockReset();
     mocks.storableSourceFiles.mockReset();
     mocks.storableSourceFiles.mockImplementation((files: string[]) => files);
+    mocks.canObserveModuleClosure.mockReset();
+    mocks.canObserveModuleClosure.mockReturnValue(true);
     mocks.warn.mockReset();
     mocks.lock.tryLock.mockReset();
     mocks.lock.tryLock.mockReturnValue(true);
@@ -336,23 +346,35 @@ describe('loading plugins through the capability cache', () => {
       );
     });
 
-    it('is not replaced by an empty closure when the worker could not report one', async () => {
-      await loadedFromRecordThenReport(
-        { ...CAPABILITIES, hasPostTasksExecution: true },
-        null
-      );
+    it('is dropped, and the command fails, when no closure can be stored for it', async () => {
+      await expect(
+        loadedFromRecordThenReport(
+          { ...CAPABILITIES, hasPostTasksExecution: true },
+          null
+        )
+      ).rejects.toThrow('The stale record has been cleared');
 
       // An empty closure is the vendor-only case, which `recordIsFresh` accepts
       // without hashing anything. Writing one here would make a stale record
-      // permanent on every runtime.
+      // permanent on every runtime, so the record goes instead and the next run
+      // loads the plugin.
       expect(mocks.recordCapabilities).not.toHaveBeenCalled();
-      expect(mocks.warn).toHaveBeenCalledWith(
-        expect.objectContaining({
-          bodyLines: expect.arrayContaining([
-            expect.stringContaining('nx reset'),
-          ]),
-        })
+      expect(mocks.forgetCapabilities).toHaveBeenCalledWith(
+        'key:/resolved/test-plugin'
       );
+    });
+
+    it('says what a runtime that cannot observe a closure needs', async () => {
+      mocks.canObserveModuleClosure.mockReturnValue(false);
+
+      await expect(
+        loadedFromRecordThenReport(
+          { ...CAPABILITIES, hasPostTasksExecution: true },
+          null
+        )
+        // The only thing the user can act on here is the Node version, since
+        // every other process that writes a record needs the same floor.
+      ).rejects.toThrow('Node 22.15');
     });
 
     it('is left alone when the worker agrees with it', async () => {
