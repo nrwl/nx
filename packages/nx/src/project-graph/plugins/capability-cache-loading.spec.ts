@@ -50,7 +50,7 @@ vi.mock('./isolation/isolated-plugin', () => ({
 vi.mock('./capabilities-cache', async (importOriginal) => ({
   ...(await importOriginal<typeof import('./capabilities-cache')>()),
   isCapabilityCacheEnabled: () => true,
-  computeCapabilityKey: (pluginPath: string) =>
+  computeCapabilityKey: (_moduleName: string, pluginPath: string) =>
     pluginPath.includes('unidentifiable') ? null : `key:${pluginPath}`,
   createCapabilitiesLock: () => mocks.lock,
   // Hashing and path handling have their own spec. Here the closures are

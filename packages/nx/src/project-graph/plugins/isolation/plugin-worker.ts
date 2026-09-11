@@ -133,9 +133,8 @@ const server = createServer((socket) => {
             loadErrorTimeout?.clear();
             process.chdir(root);
             return withErrorHandling(async () => {
-              const { loadResolvedNxPluginAsync } = await Promise.resolve(
-                require(require.resolve('../load-resolved-plugin'))
-              );
+              const { loadResolvedNxPluginAsync } =
+                require('../load-resolved-plugin') as typeof import('../load-resolved-plugin');
 
               // Register the ts-transpiler if we are pointing to a
               // plain ts file that's not part of a plugin project
@@ -144,9 +143,8 @@ const server = createServer((socket) => {
                   require('../transpiler') as typeof import('../transpiler')
                 ).registerPluginTSTranspiler();
               }
-              const { withModuleClosure } = await Promise.resolve(
-                require(require.resolve('./module-closure'))
-              );
+              const { withModuleClosure } =
+                require('./module-closure') as typeof import('./module-closure');
               const { result, sourceFiles } = await withModuleClosure(() =>
                 loadResolvedNxPluginAsync(pluginConfiguration, pluginPath, name)
               );

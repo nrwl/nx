@@ -75,17 +75,28 @@ describe('computeCapabilityKey', () => {
   it('identifies an installed plugin by the version of the package it belongs to', async () => {
     const pluginPath = writeInstalledPlugin('1.2.3');
 
-    const first = computeCapabilityKey(pluginPath, root);
-    const second = computeCapabilityKey(pluginPath, root);
+    const first = computeCapabilityKey('@acme/plugin', pluginPath, root);
+    const second = computeCapabilityKey('@acme/plugin', pluginPath, root);
 
+    // Non-null as well as stable: both would be null if the package's manifest
+    // could not be found, and a key nothing identifies caches nothing.
+    expect(first).not.toBeNull();
     expect(first).toEqual(second);
     // An installed package cannot change without its version changing, so the
-    // version alone is enough and no file is read.
+    // version alone is enough and no source file is read.
   });
 
   it('gives an upgraded plugin a different key', async () => {
-    const before = computeCapabilityKey(writeInstalledPlugin('1.2.3'), root);
-    const after = computeCapabilityKey(writeInstalledPlugin('1.2.4'), root);
+    const before = computeCapabilityKey(
+      '@acme/plugin',
+      writeInstalledPlugin('1.2.3'),
+      root
+    );
+    const after = computeCapabilityKey(
+      '@acme/plugin',
+      writeInstalledPlugin('1.2.4'),
+      root
+    );
 
     expect(before).not.toEqual(after);
   });
@@ -102,20 +113,22 @@ describe('computeCapabilityKey', () => {
     );
     writeFileSync(otherEntryPoint, 'module.exports = {};');
 
-    expect(computeCapabilityKey(pluginPath, root)).not.toEqual(
-      computeCapabilityKey(otherEntryPoint, root)
+    expect(computeCapabilityKey('@acme/plugin', pluginPath, root)).not.toEqual(
+      computeCapabilityKey('@acme/plugin/src/other', otherEntryPoint, root)
     );
   });
 
   it('identifies a local plugin without reading its contents', async () => {
     const pluginPath = writeLocalPlugin();
-    const first = computeCapabilityKey(pluginPath, root);
+    const first = computeCapabilityKey('@my-org/plugin', pluginPath, root);
 
     // Deliberate: the key says WHICH module this is, and the record says what
     // its sources were when Nx last read them.
     writeFileSync(pluginPath, 'export const createDependencies = () => [];');
 
-    expect(computeCapabilityKey(pluginPath, root)).toEqual(first);
+    expect(computeCapabilityKey('@my-org/plugin', pluginPath, root)).toEqual(
+      first
+    );
   });
 
   it('declines an installed package that declares no version', async () => {
@@ -134,7 +147,9 @@ describe('computeCapabilityKey', () => {
     const pluginPath = join(packageRoot, 'index.js');
     writeFileSync(pluginPath, 'module.exports = {};');
 
-    expect(computeCapabilityKey(pluginPath, root)).toBeNull();
+    expect(
+      computeCapabilityKey('@acme/unversioned', pluginPath, root)
+    ).toBeNull();
   });
 });
 
