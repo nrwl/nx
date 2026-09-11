@@ -308,6 +308,6 @@ function writeTopLevelSourceMap(ctx: SourceMapContext | undefined): void {
   }
 }
 
-function isObject(value: unknown): value is Record<string, unknown> {
+export function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
