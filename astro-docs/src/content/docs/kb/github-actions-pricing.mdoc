@@ -112,7 +112,7 @@ Per run, with the jobs still on GitHub runners:
 
 ```plaintext
 savings  = J * r * (w * h - c) - 0.275
-feedback = s + c + w * (1 - h)
+wall_clock = s + c + w * (1 - h)
 ```
 
 - `J` jobs per run
@@ -132,7 +132,7 @@ The arithmetic assumes:
 - Setup is never cached, so `s` is the same with and without Nx Cloud.
 - The hit rate applies evenly across task time. A pipeline whose slowest task always misses saves
   less than `h` suggests.
-- Jobs are balanced and run in parallel, so wall-clock feedback is one job's time.
+- Jobs are balanced and run in parallel, so the wall clock is one job's time.
 - `0.275` is the Team plan price of one CI pipeline execution.
 - GitHub's round-up to the whole minute is ignored, which understates the plain GitHub Actions cost
   a little.
@@ -146,15 +146,15 @@ and your own cache hit rate, so run the numbers against your own workspace.
 ## Example: four-job matrix on standard runners
 
 A workspace runs 500 CI pipelines a month.
-To keep PR feedback near 30 minutes it splits lint, test, build, and e2e across a four-job matrix on
+To keep the wall clock near 30 minutes it splits lint, test, build, and e2e across a four-job matrix on
 standard 2-core Linux runners.
 Each job takes about 30 minutes, 3 of them checkout and install, for 120 machine-minutes per run.
 
-| Setup                    | Machine-minutes | GitHub per run | Nx Cloud per run | Total per run | 500 runs | PR feedback |
-| ------------------------ | --------------- | -------------- | ---------------- | ------------- | -------- | ----------- |
-| Plain GitHub Actions     | 120             | $0.72          | None             | $0.72         | $360     | 30 min      |
-| Nx Cloud, 50% cache hits | 70              | $0.42          | $0.275           | $0.695        | $348     | 17.5 min    |
-| Nx Cloud, 70% cache hits | 48.4            | $0.29          | $0.275           | $0.565        | $283     | 12.1 min    |
+| Setup                    | Machine-minutes | GitHub per run | Nx Cloud per run | Total per run | 500 runs | Wall clock |
+| ------------------------ | --------------- | -------------- | ---------------- | ------------- | -------- | ---------- |
+| Plain GitHub Actions     | 120             | $0.72          | None             | $0.72         | $360     | 30 min     |
+| Nx Cloud, 50% cache hits | 70              | $0.42          | $0.275           | $0.695        | $348     | 17.5 min   |
+| Nx Cloud, 70% cache hits | 48.4            | $0.29          | $0.275           | $0.565        | $283     | 12.1 min   |
 
 At 50% each job pays 3 minutes of setup, 1 minute to restore the cache, then half of its remaining
 27 minutes of work.
@@ -168,13 +168,13 @@ A larger workspace runs the same 500 pipelines a month across eight jobs on 8-co
 20 minutes each, for 160 machine-minutes per run.
 That baseline is well above the 65-minute break-even, so the cache is cheaper at either hit rate.
 
-| Setup                    | Machine-minutes | GitHub per run | Nx Cloud per run | Total per run | 500 runs | PR feedback |
-| ------------------------ | --------------- | -------------- | ---------------- | ------------- | -------- | ----------- |
-| Plain GitHub Actions     | 160             | $3.52          | None             | $3.52         | $1,760   | 20 min      |
-| Nx Cloud, 50% cache hits | 100             | $2.20          | $0.275           | $2.475        | $1,238   | 12.5 min    |
-| Nx Cloud, 70% cache hits | 72.8            | $1.60          | $0.275           | $1.877        | $938     | 9.1 min     |
+| Setup                    | Machine-minutes | GitHub per run | Nx Cloud per run | Total per run | 500 runs | Wall clock |
+| ------------------------ | --------------- | -------------- | ---------------- | ------------- | -------- | ---------- |
+| Plain GitHub Actions     | 160             | $3.52          | None             | $3.52         | $1,760   | 20 min     |
+| Nx Cloud, 50% cache hits | 100             | $2.20          | $0.275           | $2.475        | $1,238   | 12.5 min   |
+| Nx Cloud, 70% cache hits | 72.8            | $1.60          | $0.275           | $1.877        | $938     | 9.1 min    |
 
-That is 30% off the bill at 50% hits and 47% off at 70%, with PR feedback down to 12.5 and 9.1
+That is 30% off the bill at 50% hits and 47% off at 70%, with the wall clock down to 12.5 and 9.1
 minutes.
 On large runners each skipped minute is worth almost four times what it is on a standard one.
 The Nx Cloud share is 500 pipeline executions, $138 a month, and the Team plan covers the first $29
@@ -192,13 +192,13 @@ GitHub prices cores close to linearly, so work that scales perfectly costs about
 Checkout and install don't scale, and those 3 fixed minutes per job tip the balance.
 Taking the four-job pipeline from the first example:
 
-| Option                            | PR feedback | Cost per run | 500 runs |
-| --------------------------------- | ----------- | ------------ | -------- |
-| Four 2-core jobs, as-is           | 30 min      | $0.72        | $360     |
-| Four 8-core jobs                  | 9.8 min     | $0.86        | $429     |
-| Four 2-core jobs, Nx Cloud at 50% | 17.5 min    | $0.695       | $348     |
-| Four 2-core jobs, Nx Cloud at 70% | 12.1 min    | $0.565       | $283     |
-| Four 8-core jobs, Nx Cloud at 70% | 6 min       | $0.805       | $403     |
+| Option                            | Wall clock | Cost per run | 500 runs |
+| --------------------------------- | ---------- | ------------ | -------- |
+| Four 2-core jobs, as-is           | 30 min     | $0.72        | $360     |
+| Four 8-core jobs                  | 9.8 min    | $0.86        | $429     |
+| Four 2-core jobs, Nx Cloud at 50% | 17.5 min   | $0.695       | $348     |
+| Four 2-core jobs, Nx Cloud at 70% | 12.1 min   | $0.565       | $283     |
+| Four 8-core jobs, Nx Cloud at 70% | 6 min      | $0.805       | $403     |
 
 Both 8-core rows assume perfect scaling with cores, so the real premium is larger than shown.
 Bigger runners cut the time and raise the bill, while the cache cuts both, and stacking the two
