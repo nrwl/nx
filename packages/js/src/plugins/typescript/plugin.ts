@@ -1409,8 +1409,9 @@ function getExternalProjectReferenceTsconfigPatterns(
 }
 
 /**
- * Caches immediate edges only so the caller retains transitive traversal,
- * ordering, and root-local visited semantics.
+ * Returns a config's immediate `extends` and project-reference expansion for
+ * the current owner, caching it for reuse within this invocation. Transitive
+ * traversal, ordering, and visited checks remain with the caller.
  */
 function getReferenceExpansion(
   configPath: string,
@@ -1435,8 +1436,10 @@ function getReferenceExpansion(
   const tsConfigData = tsConfigCacheData[configKey]?.data;
 
   if (tsConfigData) {
-    // tsc reads extended configs while resolving project references.
-    // Workspace-root configs are covered by the local project's extends walk.
+    // Walk `extends` chains for the visited tsconfig. tsc reads extended
+    // configs while resolving project references, so the rel paths must be
+    // emitted as inputs. Workspace-root files (no owning project) are skipped
+    // — those are covered by the local project's own extends walk.
     for (const extended of tsConfigData.extendedConfigFiles ?? []) {
       if (!extended.filePath) {
         continue;
@@ -1496,7 +1499,6 @@ function getReferenceExpansion(
     }
   }
 
-  // Cache empty expansions too; tsconfig data is stable for this invocation.
   ownerCache ??= new Map();
   ownerCache.set(ownerKey, expansion);
   cache.referenceExpansionCache.set(configKey, ownerCache);
