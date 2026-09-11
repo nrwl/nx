@@ -99,45 +99,114 @@ impl PluginCapabilitiesCache {
     /// difference and load the rest.
     #[napi]
     pub fn get(&self, keys: Vec<String>) -> anyhow::Result<HashMap<String, PluginRecord>> {
-        let mut found = HashMap::with_capacity(keys.len());
-        let db = self.db.lock().unwrap();
-        for key in keys.into_iter() {
-            let row = db.query_row(
-                "SELECT name, create_nodes_pattern, has_create_dependencies, has_create_metadata,
-                        has_pre_tasks_execution, has_post_tasks_execution, source_files, source_hash
-                 FROM plugin_capabilities WHERE key = ?1",
-                params![&key],
-                |row| {
-                    let files: String = row.get(6)?;
-                    Ok(PluginRecord {
+        if keys.is_empty() {
+            return Ok(HashMap::new());
+        }
+
+        let sql = format!(
+            "SELECT key, name, create_nodes_pattern, has_create_dependencies, has_create_metadata,
+                    has_pre_tasks_execution, has_post_tasks_execution, source_files, source_hash
+             FROM plugin_capabilities WHERE key IN ({})",
+            placeholders(keys.len())
+        );
+
+        let rows = self.db.lock().unwrap().query_map(
+            &sql,
+            rusqlite::params_from_iter(keys.iter()),
+            |row| {
+                let files: String = row.get(7)?;
+                Ok((
+                    row.get::<_, String>(0)?,
+                    PluginRecord {
                         capabilities: CachedPluginCapabilities {
-                            name: row.get(0)?,
-                            create_nodes_pattern: row.get(1)?,
-                            has_create_dependencies: row.get(2)?,
-                            has_create_metadata: row.get(3)?,
-                            has_pre_tasks_execution: row.get(4)?,
-                            has_post_tasks_execution: row.get(5)?,
+                            name: row.get(1)?,
+                            create_nodes_pattern: row.get(2)?,
+                            has_create_dependencies: row.get(3)?,
+                            has_create_metadata: row.get(4)?,
+                            has_pre_tasks_execution: row.get(5)?,
+                            has_post_tasks_execution: row.get(6)?,
                         },
                         source_files: if files.is_empty() {
                             vec![]
                         } else {
                             files.lines().map(|l| l.to_string()).collect()
                         },
-                        source_hash: row.get(7)?,
-                    })
-                },
-            )?;
-            if let Some(record) = row {
-                trace!("Found a record for {}", &key);
-                found.insert(key, record);
-            }
+                        source_hash: row.get(8)?,
+                    },
+                ))
+            },
+        )?;
+
+        trace!("Found {} of {} record(s)", rows.len(), keys.len());
+        Ok(rows.into_iter().collect())
+    }
+
+    /// Drops the records for `keys`, for a caller that has found one wrong and
+    /// cannot write the right one. Leaving it would mean every later run reading
+    /// the same wrong answer.
+    #[napi]
+    pub fn remove(&self, keys: Vec<String>) -> anyhow::Result<()> {
+        if keys.is_empty() {
+            return Ok(());
         }
-        Ok(found)
+        trace!("Dropping {} record(s)", keys.len());
+        self.db.lock().unwrap().execute(
+            &format!(
+                "DELETE FROM plugin_capabilities WHERE key IN ({})",
+                placeholders(keys.len())
+            ),
+            rusqlite::params_from_iter(keys.iter()),
+        )?;
+        Ok(())
     }
 
     #[napi]
     pub fn record(&mut self, entries: Vec<PluginCapabilitiesEntry>) -> anyhow::Result<()> {
-        trace!("Recording capabilities for {} plugin(s)", entries.len());
+        // Two nx.json entries can name one module, and an upsert cannot write the
+        // same row twice in one statement.
+        let mut rows: HashMap<&String, &PluginRecord> = HashMap::new();
+        for entry in entries.iter() {
+            rows.insert(&entry.key, &entry.record);
+        }
+        if rows.is_empty() {
+            return Ok(());
+        }
+
+        trace!("Recording capabilities for {} plugin(s)", rows.len());
+
+        let sql = format!(
+            "INSERT INTO plugin_capabilities (key, name, create_nodes_pattern,
+                    has_create_dependencies, has_create_metadata,
+                    has_pre_tasks_execution, has_post_tasks_execution,
+                    source_files, source_hash)
+             VALUES {}
+             ON CONFLICT(key) DO UPDATE SET
+                    name = excluded.name,
+                    create_nodes_pattern = excluded.create_nodes_pattern,
+                    has_create_dependencies = excluded.has_create_dependencies,
+                    has_create_metadata = excluded.has_create_metadata,
+                    has_pre_tasks_execution = excluded.has_pre_tasks_execution,
+                    has_post_tasks_execution = excluded.has_post_tasks_execution,
+                    source_files = excluded.source_files,
+                    source_hash = excluded.source_hash,
+                    created_at = CURRENT_TIMESTAMP",
+            vec!["(?, ?, ?, ?, ?, ?, ?, ?, ?)"; rows.len()].join(", ")
+        );
+
+        let mut values: Vec<Box<dyn rusqlite::ToSql>> = Vec::with_capacity(rows.len() * 9);
+        for (key, record) in rows {
+            let capabilities = &record.capabilities;
+            values.push(Box::new(key.clone()));
+            values.push(Box::new(capabilities.name.clone()));
+            values.push(Box::new(capabilities.create_nodes_pattern.clone()));
+            values.push(Box::new(capabilities.has_create_dependencies));
+            values.push(Box::new(capabilities.has_create_metadata));
+            values.push(Box::new(capabilities.has_pre_tasks_execution));
+            values.push(Box::new(capabilities.has_post_tasks_execution));
+            values.push(Box::new(record.source_files.join("\n")));
+            values.push(Box::new(record.source_hash.clone()));
+        }
+
         self.db.lock().unwrap().transaction(|conn| {
             // Swept here rather than on read: a read happens on most commands
             // and a write only when a plugin had to be loaded, so this keeps the
@@ -146,41 +215,14 @@ impl PluginCapabilitiesCache {
                 "DELETE FROM plugin_capabilities WHERE created_at < datetime('now', ?1)",
                 params![MAX_RECORD_AGE],
             )?;
-
-            let mut stmt = conn.prepare(
-                "INSERT INTO plugin_capabilities (key, name, create_nodes_pattern,
-                        has_create_dependencies, has_create_metadata,
-                        has_pre_tasks_execution, has_post_tasks_execution,
-                        source_files, source_hash)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)
-                 ON CONFLICT(key) DO UPDATE SET
-                        name = excluded.name,
-                        create_nodes_pattern = excluded.create_nodes_pattern,
-                        has_create_dependencies = excluded.has_create_dependencies,
-                        has_create_metadata = excluded.has_create_metadata,
-                        has_pre_tasks_execution = excluded.has_pre_tasks_execution,
-                        has_post_tasks_execution = excluded.has_post_tasks_execution,
-                        source_files = excluded.source_files,
-                        source_hash = excluded.source_hash,
-                        created_at = CURRENT_TIMESTAMP",
-            )?;
-            for entry in entries.iter() {
-                let capabilities = &entry.record.capabilities;
-                stmt.execute(params![
-                    entry.key,
-                    capabilities.name,
-                    capabilities.create_nodes_pattern,
-                    capabilities.has_create_dependencies,
-                    capabilities.has_create_metadata,
-                    capabilities.has_pre_tasks_execution,
-                    capabilities.has_post_tasks_execution,
-                    entry.record.source_files.join("\n"),
-                    entry.record.source_hash,
-                ])?;
-            }
+            conn.execute(&sql, rusqlite::params_from_iter(values.iter()))?;
             Ok(())
         })?;
 
         Ok(())
     }
+}
+
+fn placeholders(count: usize) -> String {
+    vec!["?"; count].join(", ")
 }

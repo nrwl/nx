@@ -168,6 +168,12 @@ export declare class PluginCapabilitiesCache {
    * difference and load the rest.
    */
   get(keys: Array<string>): Record<string, PluginRecord>
+  /**
+   * Drops the records for `keys`, for a caller that has found one wrong and
+   * cannot write the right one. Leaving it would mean every later run reading
+   * the same wrong answer.
+   */
+  remove(keys: Array<string>): void
   record(entries: Array<PluginCapabilitiesEntry>): void
 }
 
