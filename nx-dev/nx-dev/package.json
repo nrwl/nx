@@ -19,7 +19,7 @@
     "@tailwindcss/typography": "0.5.16",
     "ai": "3.0.19",
     "gpt3-tokenizer": "catalog:",
-    "next": "14.2.35",
+    "next": "15.5.25",
     "next-seo": "catalog:",
     "openai": "~4.3.1",
     "react": "18.3.1",
