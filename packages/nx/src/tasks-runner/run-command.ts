@@ -54,7 +54,6 @@ import {
 } from '../utils/sync-generators';
 import { workspaceRoot } from '../utils/workspace-root';
 import { createTaskGraph } from './create-task-graph';
-import { pruneTaskGraphToSelection } from './prune-task-graph';
 import type { TaskPlanningContext } from '../hasher/task-planning-context';
 
 /**
@@ -96,7 +95,11 @@ import {
   validateNoAtomizedTasks,
 } from './task-graph-utils';
 import { TasksRunner, TaskStatus } from './tasks-runner';
-import { shouldStreamOutput } from './utils';
+import {
+  collectTaskDependencyClosure,
+  removeTasksFromTaskGraph,
+  shouldStreamOutput,
+} from './utils';
 import { signalToCode } from '../utils/exit-codes';
 import { handleImport } from '../utils/handle-import';
 import * as pc from 'picocolors';
@@ -463,7 +466,11 @@ function createTaskGraphAndRunValidations(
 
   // Before validation, so a cycle or atomizer error names what will actually run.
   if (taskSelection) {
-    taskGraph = pruneTaskGraphToSelection(taskGraph, taskSelection.taskIds);
+    const keep = collectTaskDependencyClosure(taskGraph, taskSelection.taskIds);
+    taskGraph = removeTasksFromTaskGraph(
+      taskGraph,
+      Object.keys(taskGraph.tasks).filter((id) => !keep.has(id))
+    );
   }
 
   assertTaskGraphDoesNotContainInvalidTargets(taskGraph);
@@ -1042,7 +1049,13 @@ export async function invokeTasksRunner({
 
   // Must precede hashing: the bundle is the snapshot source for task hashes,
   // and observed outputs join the task outputs the hasher and cache see.
-  const ioSnapshots = await fetchIoSnapshotsForRun(nxJson, runnerOptions);
+  // Affected resolved it already when it planned the selection, and the hasher
+  // reuses those plans only against the same bundle, so it is carried rather
+  // than fetched again.
+  const ioSnapshots =
+    planningContext?.ioSnapshots !== undefined
+      ? planningContext.ioSnapshots
+      : await fetchIoSnapshotsForRun(nxJson, runnerOptions);
   if (ioSnapshots) {
     applyIoSnapshotOutputs(projectGraph, taskGraph, ioSnapshots);
   }

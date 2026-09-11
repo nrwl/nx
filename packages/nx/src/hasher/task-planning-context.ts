@@ -4,6 +4,7 @@ import {
   ExternalObject,
   HashPlanner,
   HashInstruction,
+  IoSnapshots,
   ProjectGraph as NativeProjectGraph,
 } from '../native';
 import { marshalGraph } from '../project-graph/affected/marshal-graph';
@@ -31,6 +32,12 @@ export interface TaskPlanningContext {
    * they cannot answer, so this is an optimisation and never a contract.
    */
   plans?: ExternalObject<Record<string, Array<HashInstruction>>>;
+  /**
+   * The I/O snapshot bundle `plans` were built with, `null` when fetching was
+   * off. Set only by affected; the runner then reuses it instead of fetching
+   * again, and the hasher reuses `plans` only against this same bundle.
+   */
+  ioSnapshots?: IoSnapshots | null;
 }
 
 export function createTaskPlanningContext(

@@ -106,12 +106,12 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     // skips a second pass over the same planner, which costs about as much as
     // the first even with the subtree memo warm.
     //
-    // Only without a snapshot bundle: those plans were built before the bundle
-    // was fetched, so they describe a different hashing configuration and would
+    // Only against the bundle those plans were built with. Plans from a
+    // different one describe a different hashing configuration and would
     // produce keys that no snapshot-backed run can match.
     const plans =
-      (!ioSnapshots &&
-        this.planningContext?.plans &&
+      (this.planningContext?.plans &&
+        (ioSnapshots ?? null) === (this.planningContext.ioSnapshots ?? null) &&
         subsetHashPlans(this.planningContext.plans, taskIds)) ||
       this.planner.getPlansReference(
         taskIds,
