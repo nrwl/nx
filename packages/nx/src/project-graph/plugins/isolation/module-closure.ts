@@ -52,7 +52,11 @@ export async function withModuleClosure<T>(
     return { result: await load(), sourceFiles: [...observed] };
   } finally {
     // Left registered it would keep collecting through every later hook call,
-    // billing those files to the load.
+    // billing those files to the load. Only that direction is live: every hook
+    // on an isolated plugin awaits the connect promise first, and that settles
+    // only after this reply, so nothing else can be loading modules while this
+    // is registered. A hook path added later that does not wait would break
+    // that.
     hooks.deregister();
   }
 }

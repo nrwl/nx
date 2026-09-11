@@ -725,6 +725,11 @@ async function loadAndRecord(loads: PluginLoad[], root: string): Promise<void> {
     // written now could never be invalidated.
     const observed = observedClosures.get(result.value);
     if (observed === null || observed === undefined) {
+      // Said out loud, because the alternative is a workspace where this cache
+      // silently does nothing and no one can tell why.
+      logger.verbose(
+        `Nx could not observe which files "${result.value.name}" read while loading, so its capabilities were not recorded. Observing them needs Node 22.15, 23.5 or newer.`
+      );
       continue;
     }
 
