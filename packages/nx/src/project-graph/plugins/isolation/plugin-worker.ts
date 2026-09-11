@@ -144,15 +144,18 @@ const server = createServer((socket) => {
                   require('../transpiler') as typeof import('../transpiler')
                 ).registerPluginTSTranspiler();
               }
-              plugin = await loadResolvedNxPluginAsync(
-                pluginConfiguration,
-                pluginPath,
-                name
+              const { withModuleClosure } = await Promise.resolve(
+                require(require.resolve('./module-closure'))
               );
+              const { result, sourceFiles } = await withModuleClosure(() =>
+                loadResolvedNxPluginAsync(pluginConfiguration, pluginPath, name)
+              );
+              plugin = result;
               logger.verbose(
                 `[plugin-worker] "${name}" (pid: ${process.pid}) loaded successfully`
               );
               return {
+                sourceFiles,
                 name: plugin.name,
                 include: plugin.include,
                 exclude: plugin.exclude,

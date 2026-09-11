@@ -156,7 +156,10 @@ export class IsolatedPlugin implements LoadedNxPlugin {
 
   private lifecycle: PluginLifecycleManager;
   /** Set only for an instance wired from a cached record. Called once. */
-  private onLoaded?: (actual: PluginCapabilities) => void;
+  private onLoaded?: (
+    actual: PluginCapabilities,
+    sourceFiles: string[] | null
+  ) => void;
   private exitHandler:
     | ((code: number | null, signal: NodeJS.Signals | null) => void)
     | null = null;
@@ -183,8 +186,16 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       loadResult.include,
       loadResult.exclude
     );
+    instance.sourceFiles = loadResult.sourceFiles;
     return instance;
   }
+
+  /**
+   * The non-vendor files the worker read while loading, or null when its runtime
+   * could not report them completely. Null is not the same as none: it means the
+   * answer cannot be validated later and so should not be recorded.
+   */
+  sourceFiles: string[] | null = null;
 
   /**
    * Wires the plugin's hooks from a previous load's capabilities, without a
@@ -201,7 +212,10 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     resolved: ResolvedPluginModule,
     capabilities: PluginCapabilities,
     index?: number,
-    onLoaded?: (actual: PluginCapabilities) => void
+    onLoaded?: (
+      actual: PluginCapabilities,
+      sourceFiles: string[] | null
+    ) => void
   ): IsolatedPlugin {
     const instance = new IsolatedPlugin(plugin, root, resolved, index);
     instance.onLoaded = onLoaded;
@@ -319,10 +333,12 @@ export class IsolatedPlugin implements LoadedNxPlugin {
 
     const loadResult = await this._connectPromise;
 
+    this.sourceFiles = loadResult.sourceFiles;
+
     const onLoaded = this.onLoaded;
     if (onLoaded) {
       this.onLoaded = undefined;
-      onLoaded(capabilitiesFromLoadResult(loadResult));
+      onLoaded(capabilitiesFromLoadResult(loadResult), loadResult.sourceFiles);
     }
   }
 
