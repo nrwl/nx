@@ -14,6 +14,7 @@ const CAPABILITIES: PluginCapabilities = {
 const mocks = vi.hoisted(() => ({
   readValidRecords: vi.fn(),
   recordCapabilities: vi.fn(),
+  storableSourceFiles: vi.fn(),
   warn: vi.fn(),
   lock: {
     tryLock: vi.fn(() => true),
@@ -50,9 +51,11 @@ vi.mock('./capabilities-cache', async (importOriginal) => ({
   computeCapabilityKey: (pluginPath: string) =>
     pluginPath.includes('unidentifiable') ? null : `key:${pluginPath}`,
   createCapabilitiesLock: () => mocks.lock,
-  // Hashing has its own spec. Here the closures are stand-ins that never touch
-  // disk, and an unhashable one is deliberately not recorded, so stub the hash.
+  // Hashing and path handling have their own spec. Here the closures are
+  // stand-ins that never touch disk, and one that cannot be stored or hashed is
+  // deliberately not recorded, so both are stubbed.
   hashSourceFiles: () => 'source-hash',
+  storableSourceFiles: (files: string[]) => mocks.storableSourceFiles(files),
   readValidRecords: mocks.readValidRecords,
   recordCapabilities: mocks.recordCapabilities,
 }));
@@ -103,6 +106,8 @@ describe('loading plugins through the capability cache', () => {
       return found;
     });
     mocks.recordCapabilities.mockReset();
+    mocks.storableSourceFiles.mockReset();
+    mocks.storableSourceFiles.mockImplementation((files: string[]) => files);
     mocks.warn.mockReset();
     mocks.lock.tryLock.mockReset();
     mocks.lock.tryLock.mockReturnValue(true);
@@ -277,6 +282,17 @@ describe('loading plugins through the capability cache', () => {
     expect(recorded.get('key:/resolved/plugin-b').createNodesPattern).toBe(
       '**/plugin-b.config.ts'
     );
+  });
+
+  it('records nothing for a plugin whose closure cannot be stored', async () => {
+    // A closure reaching outside the workspace, which two checkouts sharing a
+    // database could not validate against their own files.
+    mocks.storableSourceFiles.mockReturnValue(null);
+
+    await getPluginsSeparated({ plugins: ['test-plugin'] });
+
+    expect(loadsOf('test-plugin')).toHaveLength(1);
+    expect(mocks.recordCapabilities).toHaveBeenCalledWith([]);
   });
 
   describe('a record the key failed to invalidate', () => {

@@ -168,24 +168,38 @@ export function hashSourceFiles(
   return hashArray([...sourceFiles, ...hashes]);
 }
 
+/** Stored entries are workspace-relative, which is what `storableSourceFiles` guarantees. */
 function absolute(file: string, root: string): string {
-  return isAbsolute(file) ? file : join(root, file);
+  return join(root, file);
 }
 
 /**
- * Workspace-relative where possible, so a record written in one worktree is
- * usable from another checkout of the same repository.
+ * The closure as it should be stored, workspace-relative, or null when any of it
+ * sits outside the workspace.
+ *
+ * Relative is what makes a record usable from another checkout of the same
+ * repository, which is the point of sharing one database between them. An
+ * out-of-root path could only be stored as-is and re-hashed as-is, and since a
+ * plugin's key is workspace-relative both checkouts compute the same key: one
+ * would then validate against the other's sibling directory, which is present,
+ * unchanged, and not the file this checkout would load. Declining costs that
+ * plugin its record, which is the load it paid before this cache existed.
  */
-export function relativizeSourceFiles(
+export function storableSourceFiles(
   sourceFiles: string[],
   root: string
-): string[] {
-  return sourceFiles.map((file) => {
+): string[] | null {
+  const stored: string[] = [];
+  for (const file of sourceFiles) {
     const relativePath = relative(root, file);
-    return relativePath.startsWith('..')
-      ? normalizePath(file)
-      : normalizePath(relativePath);
-  });
+    // Absolute when the two are on different Windows drives, which `..` cannot
+    // express.
+    if (relativePath.startsWith('..') || isAbsolute(relativePath)) {
+      return null;
+    }
+    stored.push(normalizePath(relativePath));
+  }
+  return stored;
 }
 
 export function recordCapabilities(
