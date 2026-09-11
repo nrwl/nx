@@ -167,7 +167,7 @@ export declare class PluginCapabilitiesCache {
    * Returns only the keys that are present, so the caller can take the
    * difference and load the rest.
    */
-  get(keys: Array<string>): Record<string, CachedPluginCapabilities>
+  get(keys: Array<string>): Record<string, PluginRecord>
   record(entries: Array<PluginCapabilitiesEntry>): void
 }
 
@@ -725,7 +725,19 @@ export interface PerformanceSummaryPayload {
 
 export interface PluginCapabilitiesEntry {
   key: string
+  record: PluginRecord
+}
+
+/**
+ * A record, which is the capabilities plus what they were derived from. The
+ * files are the non-vendor closure the plugin's load read, newline separated,
+ * and the hash is of their contents at that moment. Empty for a plugin whose
+ * every source is vendored, where the key's version identifies it instead.
+ */
+export interface PluginRecord {
   capabilities: CachedPluginCapabilities
+  sourceFiles: Array<string>
+  sourceHash: string
 }
 
 /** Process metadata (static, doesn't change during process lifetime) */

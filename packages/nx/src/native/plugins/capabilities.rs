@@ -20,6 +20,8 @@ pub const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS plugin_capabilities (
     has_create_metadata   INTEGER NOT NULL,
     has_pre_tasks_execution   INTEGER NOT NULL,
     has_post_tasks_execution   INTEGER NOT NULL,
+    source_files   TEXT NOT NULL,
+    source_hash   TEXT NOT NULL,
     created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );";
 
@@ -45,11 +47,23 @@ pub struct CachedPluginCapabilities {
     pub has_post_tasks_execution: bool,
 }
 
+/// A record, which is the capabilities plus what they were derived from. The
+/// files are the non-vendor closure the plugin's load read, newline separated,
+/// and the hash is of their contents at that moment. Empty for a plugin whose
+/// every source is vendored, where the key's version identifies it instead.
+#[napi(object)]
+#[derive(Clone, Debug)]
+pub struct PluginRecord {
+    pub capabilities: CachedPluginCapabilities,
+    pub source_files: Vec<String>,
+    pub source_hash: String,
+}
+
 #[napi(object)]
 #[derive(Clone, Debug)]
 pub struct PluginCapabilitiesEntry {
     pub key: String,
-    pub capabilities: CachedPluginCapabilities,
+    pub record: PluginRecord,
 }
 
 #[napi]
@@ -73,32 +87,38 @@ impl PluginCapabilitiesCache {
     /// Returns only the keys that are present, so the caller can take the
     /// difference and load the rest.
     #[napi]
-    pub fn get(
-        &self,
-        keys: Vec<String>,
-    ) -> anyhow::Result<HashMap<String, CachedPluginCapabilities>> {
+    pub fn get(&self, keys: Vec<String>) -> anyhow::Result<HashMap<String, PluginRecord>> {
         let mut found = HashMap::with_capacity(keys.len());
         let db = self.db.lock().unwrap();
         for key in keys.into_iter() {
             let row = db.query_row(
                 "SELECT name, create_nodes_pattern, has_create_dependencies, has_create_metadata,
-                        has_pre_tasks_execution, has_post_tasks_execution
+                        has_pre_tasks_execution, has_post_tasks_execution, source_files, source_hash
                  FROM plugin_capabilities WHERE key = ?1",
                 params![&key],
                 |row| {
-                    Ok(CachedPluginCapabilities {
-                        name: row.get(0)?,
-                        create_nodes_pattern: row.get(1)?,
-                        has_create_dependencies: row.get(2)?,
-                        has_create_metadata: row.get(3)?,
-                        has_pre_tasks_execution: row.get(4)?,
-                        has_post_tasks_execution: row.get(5)?,
+                    let files: String = row.get(6)?;
+                    Ok(PluginRecord {
+                        capabilities: CachedPluginCapabilities {
+                            name: row.get(0)?,
+                            create_nodes_pattern: row.get(1)?,
+                            has_create_dependencies: row.get(2)?,
+                            has_create_metadata: row.get(3)?,
+                            has_pre_tasks_execution: row.get(4)?,
+                            has_post_tasks_execution: row.get(5)?,
+                        },
+                        source_files: if files.is_empty() {
+                            vec![]
+                        } else {
+                            files.lines().map(|l| l.to_string()).collect()
+                        },
+                        source_hash: row.get(7)?,
                     })
                 },
             )?;
-            if let Some(capabilities) = row {
-                trace!("Found cached capabilities for {}", &key);
-                found.insert(key, capabilities);
+            if let Some(record) = row {
+                trace!("Found a record for {}", &key);
+                found.insert(key, record);
             }
         }
         Ok(found)
@@ -119,8 +139,9 @@ impl PluginCapabilitiesCache {
             let mut stmt = conn.prepare(
                 "INSERT INTO plugin_capabilities (key, name, create_nodes_pattern,
                         has_create_dependencies, has_create_metadata,
-                        has_pre_tasks_execution, has_post_tasks_execution)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
+                        has_pre_tasks_execution, has_post_tasks_execution,
+                        source_files, source_hash)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)
                  ON CONFLICT(key) DO UPDATE SET
                         name = excluded.name,
                         create_nodes_pattern = excluded.create_nodes_pattern,
@@ -128,10 +149,12 @@ impl PluginCapabilitiesCache {
                         has_create_metadata = excluded.has_create_metadata,
                         has_pre_tasks_execution = excluded.has_pre_tasks_execution,
                         has_post_tasks_execution = excluded.has_post_tasks_execution,
+                        source_files = excluded.source_files,
+                        source_hash = excluded.source_hash,
                         created_at = CURRENT_TIMESTAMP",
             )?;
             for entry in entries.iter() {
-                let capabilities = &entry.capabilities;
+                let capabilities = &entry.record.capabilities;
                 stmt.execute(params![
                     entry.key,
                     capabilities.name,
@@ -140,6 +163,8 @@ impl PluginCapabilitiesCache {
                     capabilities.has_create_metadata,
                     capabilities.has_pre_tasks_execution,
                     capabilities.has_post_tasks_execution,
+                    entry.record.source_files.join("\n"),
+                    entry.record.source_hash,
                 ])?;
             }
             Ok(())

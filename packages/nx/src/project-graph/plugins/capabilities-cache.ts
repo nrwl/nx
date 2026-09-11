@@ -1,9 +1,10 @@
-import { basename, dirname, extname, join, relative, sep } from 'node:path';
-import { existsSync, readdirSync } from 'node:fs';
+import { basename, dirname, isAbsolute, join, relative, sep } from 'node:path';
+import { existsSync } from 'node:fs';
 
 import {
   type CachedPluginCapabilities,
   FileLock,
+  type PluginRecord,
   hashArray,
   hashFile,
   IS_WASM,
@@ -40,36 +41,6 @@ function nxVersion(): string {
   ).version;
   return runningNxVersion ?? '';
 }
-
-const SOURCE_EXTENSIONS = new Set([
-  '.ts',
-  '.tsx',
-  '.cts',
-  '.mts',
-  '.js',
-  '.cjs',
-  '.mjs',
-]);
-
-/**
- * Directories under a plugin's project that hold something other than its
- * source. Build output is the one that matters: hashing it would move the key on
- * every rebuild, minting a record and forcing a reload each time.
- *
- * Matched by name, which is the crude half of this. An output directory under
- * some other name is hashed, and costs a reload per rebuild rather than a wrong
- * answer, so erring this way is the safe direction. Reading the project's
- * declared `outputs` would be exact for explicit targets and still blind to
- * inferred ones, since knowing those needs the plugins this runs before.
- */
-const SKIPPED_DIRECTORIES = new Set([
-  'node_modules',
-  'dist',
-  'build',
-  'out',
-  'coverage',
-  'tmp',
-]);
 
 export function isCapabilityCacheEnabled(): boolean {
   // The database is not part of the WASM build, and isolation is disabled
@@ -109,23 +80,88 @@ function getCache(): PluginCapabilitiesCache | null {
   }
 }
 
-export function readCachedCapabilities(
-  keys: string[]
+/**
+ * Records whose sources are unchanged since they were written.
+ *
+ * A record carries the files the plugin's load actually read, so validating one
+ * is hashing exactly the code its answer came from. A record with no files came
+ * from a plugin whose every source is vendored, and its key's version identifies
+ * it on its own.
+ */
+export function readValidRecords(
+  keys: string[],
+  root: string
 ): Map<string, PluginCapabilities> {
   if (!keys.length) {
     return new Map();
   }
   try {
     const found = getCache()?.get(keys) ?? {};
-    return new Map(Object.entries(found));
+    const valid = new Map<string, PluginCapabilities>();
+    for (const [key, record] of Object.entries(found)) {
+      if (recordIsFresh(record, root)) {
+        valid.set(key, record.capabilities);
+      } else {
+        logger.verbose(
+          `Sources behind the record for "${record.capabilities.name}" changed; loading it again`
+        );
+      }
+    }
+    return valid;
   } catch (e) {
     logger.verbose('Could not read cached plugin capabilities', e);
     return new Map();
   }
 }
 
+/**
+ * Whether a record still describes its plugin.
+ *
+ * The files are the ones the plugin's load read, so this asks the only question
+ * that matters: has any of the code that produced this answer changed? A file
+ * outside that set cannot have contributed, and cannot start contributing
+ * without an edit to a file inside it.
+ *
+ * A record with no files came from a plugin whose every source is vendored, and
+ * its key's version identifies it.
+ */
+export function recordIsFresh(record: PluginRecord, root: string): boolean {
+  if (!record.sourceFiles.length) {
+    return true;
+  }
+  return hashSourceFiles(record.sourceFiles, root) === record.sourceHash;
+}
+
+/**
+ * Hashes a closure in the order it was recorded, so the comparison does not
+ * depend on the order a runtime happened to load it in.
+ */
+export function hashSourceFiles(sourceFiles: string[], root: string): string {
+  return hashArray(
+    sourceFiles.map((file) =>
+      hashFile(isAbsolute(file) ? file : join(root, file))
+    )
+  );
+}
+
+/**
+ * Workspace-relative where possible, so a record written in one worktree is
+ * usable from another checkout of the same repository.
+ */
+export function relativizeSourceFiles(
+  sourceFiles: string[],
+  root: string
+): string[] {
+  return sourceFiles.map((file) => {
+    const relativePath = relative(root, file);
+    return relativePath.startsWith('..')
+      ? normalizePath(file)
+      : normalizePath(relativePath);
+  });
+}
+
 export function recordCapabilities(
-  entries: Array<{ key: string; capabilities: PluginCapabilities }>
+  entries: Array<{ key: string; record: PluginRecord }>
 ): void {
   if (!entries.length) {
     return;
@@ -170,12 +206,16 @@ export function sameCapabilities(
 }
 
 /**
- * Identifies the plugin module, or returns null when that cannot be done, which
- * leaves the plugin to be loaded as it was before. Nx's own version is part of
- * every key, since a record says what Nx believed about a module.
+ * Identifies the plugin module. Nx's own version is part of every key, since a
+ * record says what Nx believed about a module.
  *
- * Not memoized per path: the daemon outlives edits to a local plugin, so a
- * remembered key would stop a change from invalidating anything.
+ * The key says nothing about the module's CONTENTS: what a plugin registers
+ * depends on whichever files its load happens to read, which is knowable only
+ * after loading it once. The record carries those files, and reading one checks
+ * them. So this only has to be stable and unambiguous, not fresh.
+ *
+ * Null for a plugin under `node_modules` that declares no version, which leaves
+ * nothing to tell two different copies apart.
  */
 export function computeCapabilityKey(
   pluginPath: string,
@@ -186,28 +226,13 @@ export function computeCapabilityKey(
   }
   try {
     const id = pluginId(pluginPath, root);
-
     if (isInstalled(pluginPath)) {
       const version = readInstalledVersion(pluginPath);
       return version
         ? hashArray(['installed', nxVersion(), id, version])
         : null;
     }
-
-    // Without a project there is nothing to hash but the entry file, and a hook
-    // the entry re-exports would never move the key. Declining costs this
-    // plugin the load it paid for before the records existed.
-    const projectRoot = findLocalProjectRoot(pluginPath, root);
-    if (!projectRoot) {
-      return null;
-    }
-
-    return hashArray([
-      'local',
-      nxVersion(),
-      id,
-      hashPluginSource(join(root, projectRoot), pluginPath),
-    ]);
+    return hashArray(['local', nxVersion(), id]);
   } catch (e) {
     logger.verbose(`Could not identify the plugin at ${pluginPath}`, e);
     return null;
@@ -253,70 +278,6 @@ function readInstalledVersion(pluginPath: string): string | null {
       }
     }
     previous = dir;
-    dir = dirname(dir);
-  }
-  return null;
-}
-
-/**
- * Hashes the sources a workspace-local plugin's exports can come from, which is
- * its whole project rather than its entry file, since a hook is commonly
- * declared in a module the entry re-exports.
- *
- * Walked directly rather than through the workspace context, which would skip
- * whatever the workspace ignores: generated or ignored code a plugin re-exports
- * is still code whose exports decide what the record says. "Ignored" and "not
- * source" are different questions, so the walk answers the second itself, by
- * directory name.
- *
- * Costs around 2ms for a fifty-file project and 17ms for a thousand, measured,
- * and runs once per process.
- *
- * A module in ANOTHER project is outside this, and no hash rooted at one project
- * can see it. What that costs is narrow, because only the SHAPE of the exports is
- * recorded: gaining a hook means gaining an export, and a plugin that re-exports
- * by name has to be edited here to name it. What slips through is a wildcard
- * re-export across a project boundary, and a `createNodes` pattern imported from
- * one, since that field is a value rather than a presence check.
- */
-function hashPluginSource(projectRoot: string, pluginPath: string): string {
-  const sources: string[] = [];
-  collectSources(projectRoot, sources);
-  // Sorted so the key does not depend on the order the filesystem happens to
-  // return entries in.
-  sources.sort();
-  return hashArray([
-    hashFile(pluginPath),
-    ...sources.map((file) => hashFile(file)),
-  ]);
-}
-
-function collectSources(dir: string, into: string[]): void {
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    if (entry.isDirectory()) {
-      // A dot directory is a tool's, not the plugin author's: .git, .cache,
-      // .turbo, and every framework's build directory.
-      if (!entry.name.startsWith('.') && !SKIPPED_DIRECTORIES.has(entry.name)) {
-        collectSources(join(dir, entry.name), into);
-      }
-    } else if (
-      SOURCE_EXTENSIONS.has(extname(entry.name)) ||
-      entry.name === 'package.json'
-    ) {
-      into.push(join(dir, entry.name));
-    }
-  }
-}
-
-function findLocalProjectRoot(pluginPath: string, root: string): string | null {
-  let dir = dirname(pluginPath);
-  while (dir.startsWith(root) && dir !== root) {
-    if (
-      existsSync(join(dir, 'package.json')) ||
-      existsSync(join(dir, 'project.json'))
-    ) {
-      return normalizePath(relative(root, dir));
-    }
     dir = dirname(dir);
   }
   return null;
