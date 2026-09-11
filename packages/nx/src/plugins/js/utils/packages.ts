@@ -80,6 +80,9 @@ export function getWorkspacePackagesMetadata<
       packageTargets
     );
 
+    // Directly resolvable entry points have one owning project and all declared
+    // targets remain within that project's boundary. Duplicate ownership or a
+    // cross-project target removes the entry because its project is not definitive.
     if (!hasExistingEntryPoint) {
       if (targetsAreOwnedByProject) {
         directlyResolvableWorkspaceEntryPoints.add(entryPoint);
