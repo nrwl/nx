@@ -90,6 +90,15 @@ function resolveBatchTaskStatus(result: {
   return result.status ?? (result.success ? 'success' : 'failure');
 }
 
+/** Whether a path names a file with bytes in it. */
+function hasContent(path: string): boolean {
+  try {
+    return statSync(path).size > 0;
+  } catch {
+    return false;
+  }
+}
+
 export class TaskOrchestrator {
   private taskDetails: TaskDetails | null = getTaskDetails();
   private cache: DbCache | Cache = getCache(this.options);
@@ -287,7 +296,8 @@ export class TaskOrchestrator {
     if (!this.stopRequested) {
       this.cache.removeOldCacheRecords();
       // Free function, not a cache method: `BatchProcess` writes these logs
-      // whichever cache implementation is active.
+      // whichever cache implementation is active. It no-ops under WASM, where
+      // the native half does not exist.
       sweepBatchOutputs();
     }
     await this.cleanup();
@@ -1054,6 +1064,13 @@ export class TaskOrchestrator {
       (r) => r.status === 'failure' || r.status === 'stopped'
     );
     if (!failed) {
+      return;
+    }
+    // The path is minted when the file is opened, before any byte reaches it,
+    // so a capture that failed on its first write leaves one that exists and is
+    // empty. Announcing that offers the reader an address holding nothing.
+    // Checked after the flush, so the size is what a reader will actually see.
+    if (!hasContent(capturedOutputPath)) {
       return;
     }
     this.announcedBatchLogs.add(batchId);
