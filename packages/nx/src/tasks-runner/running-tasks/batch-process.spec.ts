@@ -15,6 +15,9 @@ let mockFailWriteStream = false;
 // Applies backpressure and never drains, without failing: the shape a slow
 // disk produces, where only an explicit resume can unpause the source.
 let mockBackpressureOnly = false;
+// Backpressure that still writes. `mockBackpressureOnly` drops the bytes, so it
+// cannot show whether a paused source's tail survives the flush.
+let mockBackpressureButWrites = false;
 vi.mock('fs', async () => {
   const actual = require('fs');
   return {
@@ -23,6 +26,14 @@ vi.mock('fs', async () => {
       const stream = (actual.createWriteStream as any)(...args);
       if (mockBackpressureOnly) {
         stream.write = () => false;
+      }
+      if (mockBackpressureButWrites) {
+        const realWrite = stream.write.bind(stream);
+        stream.write = (...writeArgs: unknown[]) => {
+          realWrite(...writeArgs);
+          // Always "full", so every chunk pauses the source.
+          return false;
+        };
       }
       if (mockFailWriteStream) {
         // Never performs the real write: a genuine 'drain' would resume the
@@ -88,6 +99,33 @@ function captureForwarded(cb: () => void): { stdout: string; stderr: string } {
     process.stderr.write = originalStderr;
   }
   return { stdout, stderr };
+}
+
+/**
+ * `withEnvironmentVariables` is synchronous, but a real `stream.write` delivers
+ * its 'data' on a later tick - after the env has been restored, so the capture
+ * would see no grouping. Holds FOLDING_ENV across awaits instead. Deletes
+ * rather than assigning `undefined`, which would restore as the string.
+ */
+function withFoldingEnvAsync<T>(cb: () => Promise<T>): Promise<T> {
+  const prior = {
+    GITHUB_ACTIONS: process.env.GITHUB_ACTIONS,
+    NX_SKIP_LOG_GROUPING: process.env.NX_SKIP_LOG_GROUPING,
+    NX_STREAM_OUTPUT: process.env.NX_STREAM_OUTPUT,
+  };
+  process.env.GITHUB_ACTIONS = 'true';
+  delete process.env.NX_SKIP_LOG_GROUPING;
+  delete process.env.NX_STREAM_OUTPUT;
+  const restore = () => {
+    for (const [key, value] of Object.entries(prior)) {
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
+  };
+  return cb().finally(restore);
 }
 
 const FOLDING_ENV = {
@@ -421,8 +459,9 @@ describe('BatchProcess', () => {
     batch.discardCapturedOutput();
   });
 
-  it('survives a capture write error rather than taking the run down', async () => {
+  it('forwards to the terminal and warns when the capture cannot be written', async () => {
     const child = fakeChildProcess();
+    const warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
 
     try {
       mockFailWriteStream = true;
@@ -435,27 +474,66 @@ describe('BatchProcess', () => {
       });
       const path = batch.getCapturedOutputPath();
 
-      // The failure reaches a stream as an 'error' event, asynchronously.
-      // Without a listener on the stream that is an uncaught exception, which
-      // would kill a run that had nothing else wrong with it.
-      await new Promise((resolve) => setImmediate(resolve));
+      // The failure reaches a stream as an 'error' event, asynchronously, so
+      // wait for the effect rather than a fixed number of turns.
+      await vi.waitFor(() => expect(warn).toHaveBeenCalled());
 
-      // Capture is over, but the batch keeps running and later chunks are not
-      // an error either.
+      // Capture is over, but the batch keeps running - and the bytes are not
+      // optional. A style withholds output on the promise that it is readable
+      // elsewhere; once the file cannot keep that promise, the terminal does.
+      let forwarded = { stdout: '', stderr: '' };
       expect(() =>
         withEnvironmentVariables(FOLDING_ENV, () => {
-          captureForwarded(() => {
+          forwarded = captureForwarded(() => {
             (child as any).stdout.emit('data', Buffer.from('after\n'));
+            (child as any).stderr.emit('data', Buffer.from('err after\n'));
           });
         })
       ).not.toThrow();
+      expect(forwarded.stdout).toContain('after');
+      expect(forwarded.stderr).toContain('err after');
+
+      // Once, not per chunk: an unwritable directory fails every write, and
+      // warning on each would bury the output this path exists to save.
+      expect(warn).toHaveBeenCalledTimes(1);
 
       // What reached the file before the failure is kept, not unlinked: it is
-      // the head of the batch's log.
-      expect(existsSync(path)).toBe(true);
+      // the head of the batch's log. The open is asynchronous, so wait for it.
+      await vi.waitFor(() => expect(existsSync(path)).toBe(true));
       batch.discardCapturedOutput();
     } finally {
       mockFailWriteStream = false;
+      warn.mockRestore();
+    }
+  });
+
+  it('keeps the tail a paused source still holds when the capture is flushed', async () => {
+    const child = fakeChildProcess();
+
+    try {
+      mockBackpressureButWrites = true;
+      await withFoldingEnvAsync(async () => {
+        const batch = new BatchProcess(child, '@nx/gradle:batch');
+
+        // Written through the stream rather than emitted as 'data': the tail
+        // has to sit in the source's own buffer while it is paused, which a
+        // synthetic emit bypasses entirely.
+        (child as any).stdout.write('head\n');
+        await new Promise((resolve) => setImmediate(resolve));
+        (child as any).stdout.write('TAIL-AFTER-PAUSE\n');
+
+        await batch.flushCapturedOutput();
+
+        // `resume()` delivers on the next tick and `end()` takes effect in this
+        // one, so without a drain the tail is written to an ended stream and
+        // lost.
+        const captured = readFileSync(batch.getCapturedOutputPath(), 'utf-8');
+        expect(captured).toContain('head');
+        expect(captured).toContain('TAIL-AFTER-PAUSE');
+        batch.discardCapturedOutput();
+      });
+    } finally {
+      mockBackpressureButWrites = false;
     }
   });
   it('lets the worker keep writing when the capture dies mid-backpressure', async () => {

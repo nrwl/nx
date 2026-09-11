@@ -1,6 +1,7 @@
 import type { ChildProcess, Serializable } from 'child_process';
 import type { Readable } from 'stream';
 import { createWriteStream, mkdirSync, rmSync, type WriteStream } from 'fs';
+import { randomBytes } from 'crypto';
 import { dirname } from 'path';
 import { killProcessTreeGraceful } from '../../native';
 import type { TaskResult } from '../../config/misc-interfaces';
@@ -48,19 +49,31 @@ export class BatchProcess {
   /**
    * Set when the capture file could not be written. Whatever reached it is kept
    * and still rendered: that is the head of the batch's log, where a compiler's
-   * first non-cascading errors are.
+   * first non-cascading errors are. Everything after it goes to the terminal -
+   * see `capture`.
    */
   private capturedOutputFailed = false;
+  /** Set once the failure has been reported, so it is said once per batch. */
+  private capturedOutputWarned = false;
   private static captureSeq = 0;
+  /** Turns `flushCapturedOutput` waits for a resumed source to empty. */
+  private static readonly MAX_DRAIN_TURNS = 100;
   /**
    * Makes the capture file unique across every batch in the process, which
    * `batchId` alone does not: `TasksSchedule.batchCounters` is per instance, so
    * a second orchestrator in the same process - `runDiscreteTasks` and
    * `runContinuousTasks`, not the CLI - re-mints `<executor> 1`, and the pid
-   * cannot separate them. These files now outlive their batch, so a collision
-   * would truncate a log an earlier run is still pointing at.
+   * cannot separate them.
    */
   private readonly captureSeq = ++BatchProcess.captureSeq;
+  /**
+   * Separates this capture from one minted by a DIFFERENT process, which
+   * `captureSeq` cannot: it is a per-process static that restarts at 1. These
+   * files now outlive their batch and `cacheDir` can be shared across checkouts
+   * of a repo, so without this a recycled pid truncates a log an earlier run's
+   * summary is still pointing at.
+   */
+  private readonly captureNonce = randomBytes(4).toString('hex');
 
   constructor(
     private childProcess: ChildProcess,
@@ -175,14 +188,24 @@ export class BatchProcess {
   }
 
   private capture(chunk: string | Buffer, source?: Readable | null) {
-    // Stops on release or on a capture failure; otherwise it keeps appending
-    // until `flushCapturedOutput` ends the stream, which `runBatch` does before
-    // anything reads the file.
-    if (this.capturedOutputDiscarded || this.capturedOutputFailed) {
+    // A released capture drops the chunk. The renderer has already read the
+    // file, so there is nothing left for these bytes to reach.
+    if (this.capturedOutputDiscarded) {
+      return;
+    }
+    // A failed one does not. The style withheld these bytes on the promise that
+    // they are readable elsewhere; once the file is unwritable that promise
+    // cannot be kept, so they go to the terminal even under a style that prints
+    // nothing. Losing the format is survivable, losing task output is what this
+    // path exists to prevent.
+    if (this.capturedOutputFailed) {
+      this.forwardUncaptured(chunk, source);
       return;
     }
     const stream = this.openCapturedOutput();
     if (!stream) {
+      // Opening is what failed, so nothing of this chunk reached disk.
+      this.forwardUncaptured(chunk, source);
       return;
     }
     // A full write buffer pauses the worker rather than growing in this
@@ -199,17 +222,46 @@ export class BatchProcess {
   }
 
   /**
+   * Puts bytes the capture could not take back on the terminal, on the stream
+   * they arrived on.
+   */
+  private forwardUncaptured(chunk: string | Buffer, source?: Readable | null) {
+    output.writeTaskOutputChunk(
+      chunk,
+      source === this.childProcess.stderr ? process.stderr : process.stdout
+    );
+  }
+
+  /**
+   * Names the failure once. A stream reports it asynchronously, so the chunk
+   * that tripped it may or may not have reached disk - unlike a `writeSync`,
+   * there is no byte count to tell. Every chunk after it is forwarded.
+   */
+  private warnCaptureFailed(reason: string) {
+    if (this.capturedOutputWarned) {
+      return;
+    }
+    this.capturedOutputWarned = true;
+    output.warn({
+      title: `Could not capture batch output for ${this.executorName}`,
+      bodyLines: [reason, 'Streaming the rest of it live instead.'],
+    });
+  }
+
+  /**
    * Lets the worker write again after the capture has stopped.
    *
    * Without this a failed capture wedges the whole run: the source stays
    * paused, so the worker blocks once its stdout pipe fills, never sends its
    * results, and `getResults` waits on a batch that can no longer finish.
    */
-  private resumeCapturedSources() {
-    for (const source of this.pausedSources) {
+  private resumeCapturedSources(): Readable[] {
+    const resumed = [...this.pausedSources];
+    for (const source of resumed) {
       source.resume();
     }
     this.pausedSources.clear();
+    return resumed;
   }
 
   private openCapturedOutput(): WriteStream | undefined {
@@ -218,28 +270,32 @@ export class BatchProcess {
     }
     try {
       // `batchId` names the file for a human reading the directory;
-      // `captureSeq` is what makes it unique - see the field.
+      // `captureSeq` separates batches within this process and `captureNonce`
+      // separates it from every other process - see both fields.
       const key = `${this.batchId.replace(/[^a-zA-Z0-9]+/g, '-')}-${
         process.pid
-      }-${this.captureSeq}`;
+      }-${this.captureSeq}-${this.captureNonce}`;
       const path = batchOutputPathForKey(key);
       mkdirSync(dirname(path), { recursive: true });
       const stream = createWriteStream(path);
       // Mandatory, not defensive: a write error reaches a stream as an 'error'
       // event, and an unhandled one is an uncaught exception that would take
-      // down a run with nothing else wrong with it. Stop capturing and keep
-      // what already reached the file — that is the head of the batch's log,
-      // where a compiler's first non-cascading errors are.
-      stream.on('error', () => {
+      // down a run with nothing else wrong with it. Stop capturing, keep what
+      // already reached the file — the head of the batch's log, where a
+      // compiler's first non-cascading errors are — and put everything after
+      // it on the terminal.
+      stream.on('error', (e) => {
         this.capturedOutputFailed = true;
         this.resumeCapturedSources();
+        this.warnCaptureFailed(e.message);
       });
       this.capturedOutputPath = path;
       this.capturedOutputStream = stream;
-    } catch {
+    } catch (e) {
       // mkdir is the only synchronous throw here; the stream reports its own
       // failures through the handler above.
       this.capturedOutputFailed = true;
+      this.warnCaptureFailed(e.message);
     }
     return this.capturedOutputStream;
   }
@@ -253,7 +309,19 @@ export class BatchProcess {
     // 'drain' will never arrive, so a source paused for backpressure has
     // nothing left to resume it. Measured: 20/20 runs reach 'finish' with the
     // source still paused.
-    this.resumeCapturedSources();
+    const resumed = this.resumeCapturedSources();
+    // `resume()` delivers on the next tick while `end()` takes effect in this
+    // one, so ending here would strand everything the source still holds - the
+    // tail of the log, which is where a build tool puts what went wrong.
+    // Bounded, because a source that never empties must not hold the run open.
+    for (
+      let turn = 0;
+      turn < BatchProcess.MAX_DRAIN_TURNS &&
+      resumed.some((source) => source.readableLength > 0);
+      turn++
+    ) {
+      await new Promise<void>((resolve) => setImmediate(resolve));
+    }
     const stream = this.capturedOutputStream;
     if (!stream || stream.destroyed || stream.writableEnded) {
       return;
