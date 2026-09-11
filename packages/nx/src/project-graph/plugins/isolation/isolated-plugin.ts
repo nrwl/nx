@@ -134,6 +134,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   private worker: ChildProcess | null = null;
   private socket: Socket | null = null;
   private _alive = false;
+  private _released = false;
   private _connectPromise: Promise<LoadResultPayload> | null = null;
   private txId = 0;
   private pendingCount = 0;
@@ -451,7 +452,16 @@ export class IsolatedPlugin implements LoadedNxPlugin {
         hook,
         async (...args: TArgs) => {
           await this.ensureAlive();
-          return hookFn(...args);
+          try {
+            return await hookFn(...args);
+          } finally {
+            // A released plugin is still answering a caller that had it when it
+            // was current. The call gets its answer, and then the worker goes
+            // back down rather than waiting for a phase end nothing will reach.
+            if (this._released) {
+              shutdown(hook);
+            }
+          }
         },
         () => shutdown(hook)
       );
@@ -614,6 +624,17 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     if (this.lifecycle?.notifyPhaseAborted(phase, lastCompletedHook)) {
       this.shutdownIfInactive(lastCompletedHook);
     }
+  }
+
+  /**
+   * Gives the worker up for good, which `shutdown` alone does not: a shut-down
+   * worker respawns on the next hook call, and after this nothing holds the
+   * instance, so a respawn would be a process nobody could ever stop. A hook
+   * that arrives anyway still gets its answer and then puts the worker back down.
+   */
+  dispose(): void {
+    this._released = true;
+    this.shutdown();
   }
 
   shutdown(): void {

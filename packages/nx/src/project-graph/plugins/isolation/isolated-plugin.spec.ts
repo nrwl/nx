@@ -457,6 +457,47 @@ describe('IsolatedPlugin', () => {
     });
   });
 
+  describe('a released plugin', () => {
+    // A plugin with later hooks in the same phase, so one createNodes call does
+    // not end the phase: what shuts the worker down here is the release.
+    const graphHooks = {
+      createNodesPattern: '**/*.json',
+      hasCreateDependencies: true,
+      hasCreateMetadata: true,
+    };
+
+    it('answers a straggling call and then puts the worker back down', async () => {
+      const { plugin, spawnAndConnect, shutdown } = createTestPlugin(
+        createLoadResult(graphHooks)
+      );
+
+      plugin.dispose();
+      expect(shutdown).toHaveBeenCalledTimes(1);
+
+      // A caller that took this plugin while it was still the current one.
+      await plugin.createNodes![1]([], {} as any);
+
+      // It got its answer, which took a worker...
+      expect(spawnAndConnect).toHaveBeenCalledTimes(1);
+      // ...and the worker did not outlive the call, even though the phase is
+      // still open. Nothing holds a released plugin, so a worker left running
+      // here is one no process can stop.
+      expect(shutdown).toHaveBeenCalledTimes(2);
+      expect(plugin._alive).toBe(false);
+    });
+
+    it('keeps the worker up for the rest of the phase while it is still held', async () => {
+      const { plugin, shutdown } = createTestPlugin(
+        createLoadResult(graphHooks)
+      );
+
+      await plugin.createNodes![1]([], {} as any);
+
+      expect(shutdown).not.toHaveBeenCalled();
+      expect(plugin._alive).toBe(true);
+    });
+  });
+
   describe('concurrent calls', () => {
     it('should handle concurrent calls with ref counting', async () => {
       const { plugin, shutdown, sendRequest } = createTestPlugin(
