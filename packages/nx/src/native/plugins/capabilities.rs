@@ -5,6 +5,15 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use tracing::trace;
 
+/// `source_files` is the closure the plugin's load read, newline separated, and
+/// `source_hash` is the hash of those files. Both are EMPTY for a plugin whose
+/// every source is vendored, which the version in its key identifies instead.
+///
+/// Empty rather than nullable, deliberately. Null already means "could not be
+/// observed, so do not record this" on the JavaScript side, and one token cannot
+/// also mean "nothing here needed hashing" without reviving the collapse those
+/// two meanings caused once already.
+///
 /// Created by the service rather than `create_all_tables`, which only runs for
 /// a database file that did not already exist. Registering it there instead
 /// would need a `DB_VERSION` bump, and the version is part of the database
