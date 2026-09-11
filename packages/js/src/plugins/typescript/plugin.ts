@@ -137,6 +137,19 @@ const TS_CONFIG_CACHE_PATH = join(
   workspaceDataDirectory,
   'tsconfig-files.hash'
 );
+type ReferenceExpansionEntry = {
+  configPath: string;
+  ownerProject: ProjectContext;
+  pattern?: string;
+};
+
+type ReferenceExpansion = {
+  extendedConfigs: Array<ReferenceExpansionEntry & { pattern: string }>;
+  projectReferences: ReferenceExpansionEntry[];
+};
+
+type ReferenceExpansionCache = Map<string, Map<string, ReferenceExpansion>>;
+
 type InvocationCache = {
   fileHashes: Record<string, string>;
   rawFiles: Record<string, string>;
@@ -145,6 +158,7 @@ type InvocationCache = {
   configOwners: Map<string, string>;
   projectContexts: Map<string, ProjectContext>;
   configContexts: Map<string, ConfigContext>;
+  referenceExpansionCache: ReferenceExpansionCache;
 };
 
 // Module-level cache store — each invocation gets a unique Symbol key
@@ -282,6 +296,7 @@ export const createNodesV2: CreateNodes<TscPluginOptions> = [
       configOwners: new Map(),
       projectContexts: new Map(),
       configContexts: new Map(),
+      referenceExpansionCache: new Map(),
     });
     const cache = cacheStore.get(cacheKey)!;
 
@@ -1346,82 +1361,34 @@ function getExternalProjectReferenceTsconfigPatterns(
     }
     visited.add(configPath);
 
-    const wsRelPath = posixRelative(workspaceRoot, configPath);
-    const tsConfigData = tsConfigCacheData[wsRelPath]?.data;
-    if (!tsConfigData) {
-      continue;
-    }
+    const expansion = getReferenceExpansion(
+      configPath,
+      ownerProject,
+      workspaceRoot,
+      cache
+    );
 
-    // Walk `extends` chains for the visited tsconfig. tsc reads extended
-    // configs while resolving project references, so the rel paths must be
-    // emitted as inputs. Workspace-root files (no owning project) are skipped
-    // — those are covered by the local project's own extends walk.
-    if (tsConfigData.extendedConfigFiles?.length) {
-      for (const extended of tsConfigData.extendedConfigFiles) {
-        if (!extended.filePath || visited.has(extended.filePath)) {
-          continue;
-        }
-        const extendedWsRelPath = posixRelative(
-          workspaceRoot,
-          extended.filePath
-        );
-        if (!tsConfigCacheData[extendedWsRelPath]) {
-          continue;
-        }
-        const extendedContext = getConfigContext(
-          extended.filePath,
-          workspaceRoot,
-          cache
-        );
-        if (
-          extendedContext.project.root &&
-          extendedContext.project.root !== '.'
-        ) {
-          uniqueRelPaths.add(
-            posixRelative(extendedContext.project.absolute, extended.filePath)
-          );
-          worklist.push({
-            configPath: extended.filePath,
-            ownerProject: extendedContext.project,
-          });
-        }
-      }
-    }
-
-    if (!tsConfigData.projectReferences?.length) {
-      continue;
-    }
-
-    for (const ref of tsConfigData.projectReferences) {
-      let refPath = ref.path;
-      if (!refPath.endsWith('.json')) {
-        refPath = join(refPath, 'tsconfig.json');
-      }
-
-      // Skip references not found in the tsconfig cache
-      const refWsRelPath = posixRelative(workspaceRoot, refPath);
-      if (!tsConfigCacheData[refWsRelPath]) {
+    for (const extended of expansion.extendedConfigs) {
+      if (visited.has(extended.configPath)) {
         continue;
       }
 
-      const refContext = getConfigContext(refPath, workspaceRoot, cache);
+      uniqueRelPaths.add(extended.pattern);
+      worklist.push({
+        configPath: extended.configPath,
+        ownerProject: extended.ownerProject,
+      });
+    }
 
-      // Collect paths for references within the same project
-      if (
-        !isExternalProjectReference(
-          refContext,
-          ownerProject,
-          workspaceRoot,
-          cache
-        )
-      ) {
-        uniqueRelPaths.add(posixRelative(ownerProject.absolute, refPath));
+    for (const ref of expansion.projectReferences) {
+      if (ref.pattern) {
+        uniqueRelPaths.add(ref.pattern);
       }
 
-      if (!visited.has(refPath)) {
+      if (!visited.has(ref.configPath)) {
         worklist.push({
-          configPath: refPath,
-          ownerProject: refContext.project,
+          configPath: ref.configPath,
+          ownerProject: ref.ownerProject,
         });
       }
     }
@@ -1430,6 +1397,92 @@ function getExternalProjectReferenceTsconfigPatterns(
   return Array.from(uniqueRelPaths).map(
     (relPath) => `^{projectRoot}/${relPath}`
   );
+}
+
+function getReferenceExpansion(
+  configPath: string,
+  ownerProject: ProjectContext,
+  workspaceRoot: string,
+  cache: InvocationCache
+): ReferenceExpansion {
+  const configKey = posixRelative(workspaceRoot, configPath);
+  const ownerKey = ownerProject.normalized;
+
+  let ownerCache = cache.referenceExpansionCache.get(configKey);
+  const cached = ownerCache?.get(ownerKey);
+  if (cached) {
+    return cached;
+  }
+
+  const expansion: ReferenceExpansion = {
+    extendedConfigs: [],
+    projectReferences: [],
+  };
+  const tsConfigData = tsConfigCacheData[configKey]?.data;
+
+  if (tsConfigData) {
+    for (const extended of tsConfigData.extendedConfigFiles ?? []) {
+      if (!extended.filePath) {
+        continue;
+      }
+
+      const extendedWsRelPath = posixRelative(workspaceRoot, extended.filePath);
+      if (!tsConfigCacheData[extendedWsRelPath]) {
+        continue;
+      }
+
+      const extendedContext = getConfigContext(
+        extended.filePath,
+        workspaceRoot,
+        cache
+      );
+      if (
+        extendedContext.project.root &&
+        extendedContext.project.root !== '.'
+      ) {
+        expansion.extendedConfigs.push({
+          configPath: extended.filePath,
+          ownerProject: extendedContext.project,
+          pattern: posixRelative(
+            extendedContext.project.absolute,
+            extended.filePath
+          ),
+        });
+      }
+    }
+
+    for (const ref of tsConfigData.projectReferences ?? []) {
+      let refPath = ref.path;
+      if (!refPath.endsWith('.json')) {
+        refPath = join(refPath, 'tsconfig.json');
+      }
+
+      const refWsRelPath = posixRelative(workspaceRoot, refPath);
+      if (!tsConfigCacheData[refWsRelPath]) {
+        continue;
+      }
+
+      const refContext = getConfigContext(refPath, workspaceRoot, cache);
+      expansion.projectReferences.push({
+        configPath: refPath,
+        ownerProject: refContext.project,
+        pattern: isExternalProjectReference(
+          refContext,
+          ownerProject,
+          workspaceRoot,
+          cache
+        )
+          ? undefined
+          : posixRelative(ownerProject.absolute, refPath),
+      });
+    }
+  }
+
+  ownerCache ??= new Map();
+  ownerCache.set(ownerKey, expansion);
+  cache.referenceExpansionCache.set(configKey, ownerCache);
+
+  return expansion;
 }
 
 function isExternalProjectReference(
