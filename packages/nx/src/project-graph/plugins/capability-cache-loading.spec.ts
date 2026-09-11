@@ -14,6 +14,7 @@ const CAPABILITIES: PluginCapabilities = {
 const mocks = vi.hoisted(() => ({
   readCachedCapabilities: vi.fn(),
   recordCapabilities: vi.fn(),
+  warn: vi.fn(),
   lock: {
     tryLock: vi.fn(() => true),
     waitForRelease: vi.fn(() => Promise.resolve(true)),
@@ -46,7 +47,7 @@ vi.mock('./isolation/isolated-plugin', () => ({
 vi.mock('./capabilities-cache', async (importOriginal) => ({
   ...(await importOriginal<typeof import('./capabilities-cache')>()),
   isCapabilityCacheEnabled: () => true,
-  computeCapabilityKey: async (pluginPath: string) =>
+  computeCapabilityKey: (pluginPath: string) =>
     pluginPath.includes('unidentifiable') ? null : `key:${pluginPath}`,
   createCapabilitiesLock: () => mocks.lock,
   readCachedCapabilities: mocks.readCachedCapabilities,
@@ -64,6 +65,10 @@ vi.mock('./resolve-plugin', () => ({
 vi.mock('./transpiler', () => ({
   pluginTranspilerIsRegistered: () => false,
   cleanupPluginTSTranspiler: vi.fn(),
+}));
+
+vi.mock('../../utils/output', () => ({
+  output: { warn: mocks.warn },
 }));
 
 vi.mock('../../utils/delayed-spinner', () => ({
@@ -95,6 +100,7 @@ describe('loading plugins through the capability cache', () => {
       return found;
     });
     mocks.recordCapabilities.mockReset();
+    mocks.warn.mockReset();
     mocks.lock.tryLock.mockReset();
     mocks.lock.tryLock.mockReturnValue(true);
     mocks.lock.unlock.mockReset();
@@ -295,12 +301,20 @@ describe('loading plugins through the capability cache', () => {
           }),
         },
       ]);
+      // The only moment anything can notice a record that drifted, so it is not
+      // a verbose-only log.
+      expect(mocks.warn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.stringContaining('test-plugin'),
+        })
+      );
     });
 
     it('is left alone when the worker agrees with it', async () => {
       await loadedFromRecordThenReport({ ...CAPABILITIES });
 
       expect(mocks.recordCapabilities).not.toHaveBeenCalled();
+      expect(mocks.warn).not.toHaveBeenCalled();
     });
   });
 

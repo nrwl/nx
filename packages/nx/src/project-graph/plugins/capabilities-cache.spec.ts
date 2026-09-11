@@ -10,20 +10,28 @@ import {
 } from './capabilities-cache';
 import type { LoadedNxPlugin } from './loaded-nx-plugin';
 
-const hashWithWorkspaceContext = vi.fn<() => Promise<string>>();
+const state = vi.hoisted(() => ({ nxManifestVersion: '23.0.0' }));
 
-vi.mock('../../utils/workspace-context', () => ({
-  hashWithWorkspaceContext: (...args: unknown[]) =>
-    hashWithWorkspaceContext.apply(null, args as []),
-}));
+// Only Nx's own manifest is faked. Everything else, including each plugin's
+// package.json, is read from the temp workspace the test writes.
+vi.mock('../../utils/fileutils', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../utils/fileutils')>();
+  const nxManifest = join('packages', 'nx', 'package.json');
+  return {
+    ...actual,
+    readJsonFile: (path: string, ...rest: unknown[]) =>
+      path.endsWith(nxManifest)
+        ? { version: state.nxManifestVersion }
+        : (actual.readJsonFile as any)(path, ...rest),
+  };
+});
 
 describe('computeCapabilityKey', () => {
   let root: string;
 
   beforeEach(() => {
     root = mkdtempSync(join(tmpdir(), 'nx-capability-key-'));
-    hashWithWorkspaceContext.mockReset();
-    hashWithWorkspaceContext.mockResolvedValue('source-hash');
+    state.nxManifestVersion = '23.0.0';
   });
 
   function writeInstalledPlugin(version: string): string {
@@ -45,32 +53,29 @@ describe('computeCapabilityKey', () => {
       join(projectRoot, 'package.json'),
       JSON.stringify({ name: '@my-org/plugin' })
     );
+    writeFileSync(
+      join(projectRoot, 'src', 'hooks.ts'),
+      'export const postTasksExecution = async () => {};'
+    );
     const pluginPath = join(projectRoot, 'src', 'index.ts');
-    writeFileSync(pluginPath, 'export const createNodes = [];');
+    writeFileSync(pluginPath, "export * from './hooks';");
     return pluginPath;
   }
 
   it('identifies an installed plugin by the version of the package it belongs to', async () => {
     const pluginPath = writeInstalledPlugin('1.2.3');
 
-    const first = await computeCapabilityKey(pluginPath, root);
-    const second = await computeCapabilityKey(pluginPath, root);
+    const first = computeCapabilityKey(pluginPath, root);
+    const second = computeCapabilityKey(pluginPath, root);
 
     expect(first).toEqual(second);
     // An installed package cannot change without its version changing, so the
     // version alone is enough and no file is read.
-    expect(hashWithWorkspaceContext).not.toHaveBeenCalled();
   });
 
   it('gives an upgraded plugin a different key', async () => {
-    const before = await computeCapabilityKey(
-      writeInstalledPlugin('1.2.3'),
-      root
-    );
-    const after = await computeCapabilityKey(
-      writeInstalledPlugin('1.2.4'),
-      root
-    );
+    const before = computeCapabilityKey(writeInstalledPlugin('1.2.3'), root);
+    const after = computeCapabilityKey(writeInstalledPlugin('1.2.4'), root);
 
     expect(before).not.toEqual(after);
   });
@@ -87,36 +92,80 @@ describe('computeCapabilityKey', () => {
     );
     writeFileSync(otherEntryPoint, 'module.exports = {};');
 
-    expect(await computeCapabilityKey(pluginPath, root)).not.toEqual(
-      await computeCapabilityKey(otherEntryPoint, root)
+    expect(computeCapabilityKey(pluginPath, root)).not.toEqual(
+      computeCapabilityKey(otherEntryPoint, root)
     );
   });
 
-  it('identifies a workspace-local plugin by the hash of its project sources', async () => {
+  it('moves when a module the entry re-exports changes', async () => {
     const pluginPath = writeLocalPlugin();
+    const before = computeCapabilityKey(pluginPath, root);
 
-    const before = await computeCapabilityKey(pluginPath, root);
-    hashWithWorkspaceContext.mockResolvedValue('source-hash-after-an-edit');
-    const after = await computeCapabilityKey(pluginPath, root);
+    // The hook lives here rather than in the entry file, which is the usual
+    // shape and the reason the whole project is hashed.
+    writeFileSync(
+      join(root, 'tools', 'my-plugin', 'src', 'hooks.ts'),
+      'export const postTasksExecution = async () => { /* changed */ };'
+    );
 
-    expect(before).not.toEqual(after);
-    // The whole project is hashed, not just the entry file, because a hook is
-    // commonly declared in a module the entry re-exports.
-    expect(hashWithWorkspaceContext).toHaveBeenCalledWith(root, [
-      'tools/my-plugin/**/*.{ts,tsx,cts,mts,js,cjs,mjs}',
-      'tools/my-plugin/package.json',
-    ]);
+    expect(computeCapabilityKey(pluginPath, root)).not.toEqual(before);
   });
 
-  it('keys a local plugin on its own contents as well as the glob hash', async () => {
+  it('moves when a file the workspace ignores changes', async () => {
     const pluginPath = writeLocalPlugin();
+    const projectRoot = join(root, 'tools', 'my-plugin');
+    writeFileSync(
+      join(root, '.gitignore'),
+      'tools/my-plugin/src/generated.ts\n'
+    );
+    writeFileSync(
+      join(projectRoot, 'src', 'generated.ts'),
+      'export const createMetadata = async () => ({});'
+    );
+    writeFileSync(pluginPath, "export * from './generated';");
+    const before = computeCapabilityKey(pluginPath, root);
 
-    const before = await computeCapabilityKey(pluginPath, root);
-    // A plugin the workspace ignores matches no glob, so the hash the context
-    // returns never moves and only the entry file's own hash can.
+    // Generated code a plugin re-exports still decides what the record says, so
+    // the walk cannot be the one the workspace context does.
+    writeFileSync(
+      join(projectRoot, 'src', 'generated.ts'),
+      'export const createMetadata = async () => ({ changed: true });'
+    );
+
+    expect(computeCapabilityKey(pluginPath, root)).not.toEqual(before);
+  });
+
+  it('moves when the entry file itself changes', async () => {
+    const pluginPath = writeLocalPlugin();
+    const before = computeCapabilityKey(pluginPath, root);
+
     writeFileSync(pluginPath, 'export const createDependencies = () => [];');
 
-    expect(await computeCapabilityKey(pluginPath, root)).not.toEqual(before);
+    expect(computeCapabilityKey(pluginPath, root)).not.toEqual(before);
+  });
+
+  it("ignores a change outside the plugin's project", async () => {
+    const pluginPath = writeLocalPlugin();
+    const before = computeCapabilityKey(pluginPath, root);
+
+    mkdirSync(join(root, 'apps', 'unrelated'), { recursive: true });
+    writeFileSync(join(root, 'apps', 'unrelated', 'main.ts'), 'export {};');
+
+    expect(computeCapabilityKey(pluginPath, root)).toEqual(before);
+  });
+
+  it('moves when Nx itself changes version', async () => {
+    const pluginPath = writeInstalledPlugin('1.2.3');
+    const onOldNx = computeCapabilityKey(pluginPath, root);
+
+    // A record says what Nx believed about a module, so a release that reads a
+    // different set of exports must not read records written before it.
+    state.nxManifestVersion = '24.0.0';
+    vi.resetModules();
+    const { computeCapabilityKey: onNewNxKey } =
+      await import('./capabilities-cache');
+
+    expect(onNewNxKey(pluginPath, root)).not.toEqual(onOldNx);
   });
 
   it('declines a plugin with no project, rather than keying it on its entry file', async () => {
@@ -127,8 +176,7 @@ describe('computeCapabilityKey', () => {
     const pluginPath = join(root, 'tools', 'my-plugin.ts');
     writeFileSync(pluginPath, "export * from './hooks';");
 
-    expect(await computeCapabilityKey(pluginPath, root)).toBeNull();
-    expect(hashWithWorkspaceContext).not.toHaveBeenCalled();
+    expect(computeCapabilityKey(pluginPath, root)).toBeNull();
   });
 
   it('declines an installed package that declares no version', async () => {
@@ -147,7 +195,7 @@ describe('computeCapabilityKey', () => {
     const pluginPath = join(packageRoot, 'index.js');
     writeFileSync(pluginPath, 'module.exports = {};');
 
-    expect(await computeCapabilityKey(pluginPath, root)).toBeNull();
+    expect(computeCapabilityKey(pluginPath, root)).toBeNull();
   });
 
   it('declines a plugin resolved outside the workspace', async () => {
@@ -155,7 +203,7 @@ describe('computeCapabilityKey', () => {
     const pluginPath = join(outside, 'index.ts');
     writeFileSync(pluginPath, 'export const createNodes = [];');
 
-    expect(await computeCapabilityKey(pluginPath, root)).toBeNull();
+    expect(computeCapabilityKey(pluginPath, root)).toBeNull();
   });
 
   it('declines to identify a plugin when the cache is turned off', async () => {
@@ -163,7 +211,7 @@ describe('computeCapabilityKey', () => {
 
     process.env.NX_PLUGIN_CAPABILITY_CACHE = 'false';
     try {
-      expect(await computeCapabilityKey(pluginPath, root)).toBeNull();
+      expect(computeCapabilityKey(pluginPath, root)).toBeNull();
     } finally {
       delete process.env.NX_PLUGIN_CAPABILITY_CACHE;
     }
