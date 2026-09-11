@@ -729,12 +729,18 @@ async function loadAndRecord(loads: PluginLoad[], root: string): Promise<void> {
     }
 
     const sourceFiles = relativizeSourceFiles(observed, root);
+    const sourceHash = hashSourceFiles(sourceFiles, root);
+    // Unhashable now means unverifiable later, so there is nothing worth storing.
+    if (sourceHash === null) {
+      continue;
+    }
+
     entries.push({
       key: loads[i].key,
       record: {
         capabilities: capabilitiesOfLoadedPlugin(result.value),
         sourceFiles,
-        sourceHash: hashSourceFiles(sourceFiles, root),
+        sourceHash,
       },
     });
   }
@@ -762,16 +768,15 @@ function repairRecord(
     return;
   }
   const observed = sourceFiles ? relativizeSourceFiles(sourceFiles, root) : [];
-  recordCapabilities([
-    {
-      key,
-      record: {
-        capabilities: actual,
-        sourceFiles: observed,
-        sourceHash: hashSourceFiles(observed, root),
+  const sourceHash = hashSourceFiles(observed, root);
+  if (sourceHash !== null) {
+    recordCapabilities([
+      {
+        key,
+        record: { capabilities: actual, sourceFiles: observed, sourceHash },
       },
-    },
-  ]);
+    ]);
+  }
 
   const title = `Nx had stale information about what the "${actual.name}" plugin does.`;
   const detail =

@@ -1,4 +1,11 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  chmodSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
@@ -203,10 +210,12 @@ describe('recordIsFresh', () => {
 
   function recordFor(files: string[]) {
     const sourceFiles = relativizeSourceFiles(files, root);
+    const sourceHash = hashSourceFiles(sourceFiles, root);
+    expect(sourceHash).not.toBeNull();
     return {
       capabilities: {} as PluginCapabilities,
       sourceFiles,
-      sourceHash: hashSourceFiles(sourceFiles, root),
+      sourceHash,
     };
   }
 
@@ -263,6 +272,53 @@ describe('recordIsFresh', () => {
     rmSync(hooks);
 
     expect(recordIsFresh(record, root)).toBe(false);
+  });
+
+  it.each([
+    ['a directory', (p: string) => mkdirSync(p, { recursive: true })],
+    [
+      'an unreadable file',
+      (p: string) => {
+        writeFileSync(p, 'x');
+        chmodSync(p, 0o000);
+      },
+    ],
+    [
+      'a dangling symlink',
+      (p: string) => symlinkSync(join(root, 'never-existed.js'), p),
+    ],
+  ])('fails when a closure entry becomes %s', (_what, make) => {
+    const entry = write('libs/p/index.js', 'module.exports = {};');
+    const record = recordFor([entry]);
+
+    // Each of these is unhashable while `existsSync` says it is there, so the
+    // null from `hashFile` is what the check has to key on.
+    rmSync(entry);
+    make(entry);
+
+    expect(recordIsFresh(record, root)).toBe(false);
+  });
+
+  it('cannot mistake an unhashable closure for an empty one', () => {
+    const entry = write('libs/p/index.js', 'module.exports = {};');
+    const record = recordFor([entry]);
+    rmSync(entry);
+
+    // `hashArray([])` and `hashArray([null])` are the same value, so a closure
+    // of unreadable files would otherwise hash like a vendor-only one, which is
+    // treated as valid.
+    expect(hashSourceFiles(record.sourceFiles, root)).toBeNull();
+    expect(recordIsFresh(record, root)).toBe(false);
+    expect(
+      recordIsFresh(
+        {
+          capabilities: {} as PluginCapabilities,
+          sourceFiles: [],
+          sourceHash: record.sourceHash,
+        },
+        root
+      )
+    ).toBe(true);
   });
 
   it('fails rather than folding a missing file into the same hash as none', () => {
