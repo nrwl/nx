@@ -62,12 +62,15 @@ describe('getPluginsSeparated', () => {
   let loadNxPlugin: Mock;
   // Resolver for each deferred specified-plugin load, keyed by plugin name.
   let pendingPluginLoads: Map<string, (plugin: unknown) => void>;
+  // The release each load handed back, keyed by plugin name.
+  let pluginReleases: Map<string, Mock>;
 
   beforeEach(async () => {
     // Fresh module state per test — getPluginsSeparated caches at module
     // level, so a stale cache would mask the behavior under test.
     vi.resetModules();
     pendingPluginLoads = new Map();
+    pluginReleases = new Map();
 
     ({ loadNxPlugin } = await import('./in-process-loader'));
     // Unlike jest, resetModules does not re-run vi.mock factories, so the
@@ -81,13 +84,15 @@ describe('getPluginsSeparated', () => {
       // Default plugins load from absolute paths — resolve them immediately.
       // Only the `test-*` specified plugins are deferred, so a test controls
       // which load finishes first.
+      const release = vi.fn();
+      pluginReleases.set(name, release);
       if (!name.startsWith('test-')) {
-        return [Promise.resolve({ name }), () => {}];
+        return [Promise.resolve({ name }), release];
       }
       const promise = new Promise((resolve) => {
         pendingPluginLoads.set(name, resolve);
       });
-      return [promise, () => {}];
+      return [promise, release];
     });
 
     ({ getPluginsSeparated, getPluginsIfLoadedOrLoading } =
@@ -101,6 +106,49 @@ describe('getPluginsSeparated', () => {
     }
     resolve({ name: pluginName });
   }
+
+  function releaseFor(pluginName: string): Mock {
+    const release = pluginReleases.get(pluginName);
+    if (!release) {
+      throw new Error(`Plugin "${pluginName}" was never loaded`);
+    }
+    return release;
+  }
+
+  it('releases a plugin set that is superseded while it is still loading', async () => {
+    const superseded = getPluginsSeparated({ plugins: ['test-a'] });
+    // Let test-a's load get as far as handing back its release.
+    await new Promise((resolve) => setImmediate(resolve));
+
+    // nx.json changes while test-a's workers are still loading.
+    const current = getPluginsSeparated({ plugins: ['test-b'] });
+
+    // Nothing can reach test-a's workers through the plugin set any more, so
+    // the reload has to have let go of them. Before this they ran until the
+    // daemon died.
+    expect(releaseFor('test-a')).toHaveBeenCalled();
+    expect(pluginReleases.has('test-b')).toBe(true);
+    expect(releaseFor('test-b')).not.toHaveBeenCalled();
+
+    finishLoading('test-a');
+    finishLoading('test-b');
+    await Promise.all([superseded, current]);
+
+    // The set that won the race is still held.
+    expect(releaseFor('test-b')).not.toHaveBeenCalled();
+  });
+
+  it('does not release a set two concurrent callers are sharing', async () => {
+    const first = getPluginsSeparated({ plugins: ['test-a'] });
+    const second = getPluginsSeparated({ plugins: ['test-a'] });
+
+    finishLoading('test-a');
+    await Promise.all([first, second]);
+
+    // Same plugins, so the second caller shares the load rather than replacing
+    // it. Releasing here would take down workers the first caller is using.
+    expect(releaseFor('test-a')).not.toHaveBeenCalled();
+  });
 
   it('does not poison the cache when an older recompute finishes after a newer one', async () => {
     // Two recomputes race — as happens when a daemon restart fires an

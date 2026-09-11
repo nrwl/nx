@@ -457,6 +457,47 @@ describe('IsolatedPlugin', () => {
     });
   });
 
+  describe('a released plugin', () => {
+    // A plugin with later hooks in the same phase, so one createNodes call does
+    // not end the phase: what shuts the worker down here is the release.
+    const graphHooks = {
+      createNodesPattern: '**/*.json',
+      hasCreateDependencies: true,
+      hasCreateMetadata: true,
+    };
+
+    it('answers a straggling call and then puts the worker back down', async () => {
+      const { plugin, spawnAndConnect, shutdown } = createTestPlugin(
+        createLoadResult(graphHooks)
+      );
+
+      plugin.dispose();
+      expect(shutdown).toHaveBeenCalledTimes(1);
+
+      // A caller that took this plugin while it was still the current one.
+      await plugin.createNodes![1]([], {} as any);
+
+      // It got its answer, which took a worker...
+      expect(spawnAndConnect).toHaveBeenCalledTimes(1);
+      // ...and the worker did not outlive the call, even though the phase is
+      // still open. Nothing holds a released plugin, so a worker left running
+      // here is one no process can stop.
+      expect(shutdown).toHaveBeenCalledTimes(2);
+      expect(plugin._alive).toBe(false);
+    });
+
+    it('keeps the worker up for the rest of the phase while it is still held', async () => {
+      const { plugin, shutdown } = createTestPlugin(
+        createLoadResult(graphHooks)
+      );
+
+      await plugin.createNodes![1]([], {} as any);
+
+      expect(shutdown).not.toHaveBeenCalled();
+      expect(plugin._alive).toBe(true);
+    });
+  });
+
   describe('concurrent calls', () => {
     it('should handle concurrent calls with ref counting', async () => {
       const { plugin, shutdown, sendRequest } = createTestPlugin(
@@ -658,6 +699,135 @@ describe('IsolatedPlugin', () => {
       // Post-task phase
       await plugin.postTasksExecution!({} as any);
       expect(shutdown).toHaveBeenCalledTimes(1); // finally done
+    });
+  });
+
+  describe('wiring a plugin from recorded capabilities', () => {
+    const resolved = {
+      name: 'test-plugin',
+      pluginPath: '/mock/plugin/path',
+      shouldRegisterTSTranspiler: false,
+    };
+
+    const capabilities = {
+      name: 'test-plugin',
+      createNodesPattern: '**/*.config.ts',
+      hasCreateDependencies: true,
+      hasCreateMetadata: false,
+      hasPreTasksExecution: false,
+      hasPostTasksExecution: false,
+    };
+
+    function interceptSpawn(loadResult: LoadResultPayload) {
+      return vi
+        .spyOn(IsolatedPlugin.prototype as any, 'spawnAndConnect')
+        .mockImplementation(async function (this: any) {
+          this._alive = true;
+          return loadResult;
+        });
+    }
+
+    beforeEach(() => {
+      vi.spyOn(
+        IsolatedPlugin.prototype as any,
+        'sendRequest'
+      ).mockResolvedValue({ success: true, result: [], dependencies: [] });
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('starts no worker until a hook is called', async () => {
+      const spawnAndConnect = interceptSpawn(
+        createLoadResult({
+          createNodesPattern: '**/*.config.ts',
+          hasCreateDependencies: true,
+        })
+      );
+
+      const plugin = IsolatedPlugin.fromCapabilities(
+        'test-plugin',
+        '/root',
+        resolved,
+        capabilities
+      );
+
+      // Everything a caller that only reads capabilities needs is here.
+      expect(plugin.createNodes?.[0]).toBe('**/*.config.ts');
+      expect(plugin.createDependencies).toBeDefined();
+      expect(plugin.createMetadata).toBeUndefined();
+      expect(spawnAndConnect).not.toHaveBeenCalled();
+
+      await plugin.createNodes![1]([], {} as any);
+
+      expect(spawnAndConnect).toHaveBeenCalledTimes(1);
+    });
+
+    it('takes include and exclude from the nx.json entry', () => {
+      interceptSpawn(createLoadResult({}));
+
+      const plugin = IsolatedPlugin.fromCapabilities(
+        {
+          plugin: 'test-plugin',
+          include: ['apps/**'],
+          exclude: ['apps/legacy'],
+        },
+        '/root',
+        resolved,
+        capabilities
+      );
+
+      expect(plugin.include).toEqual(['apps/**']);
+      expect(plugin.exclude).toEqual(['apps/legacy']);
+    });
+
+    it("reports the worker's own capabilities once one spawns", async () => {
+      interceptSpawn(
+        createLoadResult({
+          createNodesPattern: '**/*.config.ts',
+          hasCreateDependencies: true,
+          // The record said this plugin had no createMetadata.
+          hasCreateMetadata: true,
+        })
+      );
+      const onLoaded = vi.fn();
+
+      const plugin = IsolatedPlugin.fromCapabilities(
+        'test-plugin',
+        '/root',
+        resolved,
+        capabilities,
+        undefined,
+        onLoaded
+      );
+
+      await plugin.createNodes![1]([], {} as any);
+
+      expect(onLoaded).toHaveBeenCalledTimes(1);
+      expect(onLoaded.mock.calls[0][0]).toEqual({
+        ...capabilities,
+        hasCreateMetadata: true,
+      });
+    });
+
+    it('reports the worker only once, however many hooks run', async () => {
+      interceptSpawn(createLoadResult({ hasCreateDependencies: true }));
+      const onLoaded = vi.fn();
+
+      const plugin = IsolatedPlugin.fromCapabilities(
+        'test-plugin',
+        '/root',
+        resolved,
+        { ...capabilities, createNodesPattern: undefined },
+        undefined,
+        onLoaded
+      );
+
+      await plugin.createDependencies!({} as any);
+      await plugin.createDependencies!({} as any);
+
+      expect(onLoaded).toHaveBeenCalledTimes(1);
     });
   });
 });

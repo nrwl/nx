@@ -4,6 +4,9 @@ import { filterAffected } from './affected-project-graph';
 
 vi.mock('../plugins/get-plugins', async () => ({
   ...(await vi.importActual('../plugins/get-plugins')),
+  // Stubbed rather than left actual: the real one resolves this workspace's
+  // plugins and hashes their sources, which a unit test should not do.
+  peekPluginCapabilities: async () => null,
   getPlugins: async () => [
     {
       name: 'test',
