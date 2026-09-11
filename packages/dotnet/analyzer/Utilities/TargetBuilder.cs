@@ -50,9 +50,11 @@ public static partial class TargetBuilder
                     // honored here.
                     Console.Error.WriteLine(
                         $"@nx/dotnet: cannot split tests for '{projectName}'. Splitting needs MSTest on " +
-                        "Microsoft.Testing.Platform. Set <EnableMSTestRunner>true</EnableMSTestRunner> " +
-                        "and <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>, " +
-                        "or use the MSTest.Sdk project SDK.");
+                        "Microsoft.Testing.Platform. Use the MSTest.Sdk project SDK, or set " +
+                        "<EnableMSTestRunner>true</EnableMSTestRunner> and " +
+                        "<TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>. " +
+                        "On the .NET 10 SDK the latter is rejected; opt in with " +
+                        "\"test\": { \"runner\": \"Microsoft.Testing.Platform\" } in global.json instead.");
                 }
                 else if (!canDiscover)
                 {
