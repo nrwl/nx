@@ -17,8 +17,11 @@ import { createNextConfigFile } from './lib/create-next-config-file';
 import { checkPublicDirectory } from './lib/check-project';
 import { NextBuildBuilderOptions } from '../../utils/types';
 import { ChildProcess, fork } from 'child_process';
-import { createCliOptions } from '../../utils/create-cli-options';
-import { signalToCode, checkAndCleanWithSemver } from '@nx/devkit/internal';
+import {
+  checkAndCleanWithSemver,
+  createCliOptions,
+  signalToCode,
+} from '@nx/devkit/internal';
 import { getInstalledNextVersionRuntime } from '../../utils/runtime-version-utils';
 import { warnNextBuildExecutorDeprecation } from '../../utils/deprecation';
 

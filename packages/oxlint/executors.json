@@ -1,0 +1,11 @@
+{
+  "executors": {
+    "lint": {
+      "implementation": "./dist/src/executors/lint/lint.impl",
+      "batchImplementation": "./dist/src/executors/lint/lint.batch-impl",
+      "preferBatch": true,
+      "schema": "./dist/src/executors/lint/schema.json",
+      "description": "Lint a project with Oxlint. Batched by default: one Oxlint process lints every project in the run."
+    }
+  }
+}
