@@ -158,6 +158,7 @@ export function getStrippedEnvironmentVariables(cwd: string = tmpProjPath()) {
         'NX_ADD_PLUGINS',
         'NX_ISOLATE_PLUGINS',
         'NX_VERBOSE_LOGGING',
+        'NX_SKIP_LOG_GROUPING',
         'NX_NATIVE_LOGGING',
         'NX_USE_LOCAL',
       ];
