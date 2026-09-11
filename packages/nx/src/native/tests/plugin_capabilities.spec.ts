@@ -109,4 +109,30 @@ describe('PluginCapabilitiesCache', () => {
       'key-b',
     ]);
   });
+
+  it('writes one row for a module two nx.json entries name', () => {
+    const updated = { ...capabilities, hasCreateMetadata: true };
+
+    // Both entries resolve to one module, so both carry one key.
+    cache.record([
+      { key: 'key-a', record: recordFor() },
+      { key: 'key-a', record: recordFor(updated) },
+    ]);
+
+    expect(cache.get(['key-a'])['key-a'].capabilities).toEqual(updated);
+  });
+
+  it('drops a record so the next run asks the plugin instead', () => {
+    cache.record([
+      { key: 'key-a', record: recordFor() },
+      {
+        key: 'key-b',
+        record: recordFor({ ...capabilities, name: '@acme/other' }),
+      },
+    ]);
+
+    cache.remove(['key-a']);
+
+    expect(Object.keys(cache.get(['key-a', 'key-b']))).toEqual(['key-b']);
+  });
 });
