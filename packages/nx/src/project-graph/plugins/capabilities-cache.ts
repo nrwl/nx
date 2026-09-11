@@ -117,10 +117,18 @@ export function readValidRecords(
 /**
  * Whether a record still describes its plugin.
  *
- * The files are the ones the plugin's load read, so this asks the only question
- * that matters: has any of the code that produced this answer changed? A file
- * outside that set cannot have contributed, and cannot start contributing
- * without an edit to a file inside it.
+ * The files are the ones the plugin's load read, so this asks: has any of the
+ * code that produced this answer changed? A MODULE outside that set cannot have
+ * contributed, and cannot start contributing without an edit to a module inside
+ * it, because becoming imported means editing an importer.
+ *
+ * Three things sit outside that, and none is closed by this. A plugin that reads
+ * a non-module file at load time, `readFileSync` of a JSON rather than `require`
+ * of it, since the loader sees modules and not reads. A plugin whose exports
+ * depend on the environment rather than on any file. And a bare specifier whose
+ * resolution moves because a package was installed nearer to it, which leaves
+ * every recorded file present and unchanged. The invariant is exact over the
+ * module graph and silent about inputs that are not files.
  *
  * A record with no files came from a plugin whose every source is vendored, and
  * its key's version identifies it.
@@ -129,7 +137,16 @@ export function recordIsFresh(record: PluginRecord, root: string): boolean {
   if (!record.sourceFiles.length) {
     return true;
   }
-  return hashSourceFiles(record.sourceFiles, root) === record.sourceHash;
+
+  const hashes = record.sourceFiles.map((file) =>
+    hashFile(absolute(file, root))
+  );
+  // A file that is gone hashes to null, and `hashArray` folds null in as though
+  // the entry were absent, so a deletion is checked rather than hashed.
+  if (hashes.some((hash) => hash === null)) {
+    return false;
+  }
+  return hashArray(hashes) === record.sourceHash;
 }
 
 /**
@@ -137,11 +154,11 @@ export function recordIsFresh(record: PluginRecord, root: string): boolean {
  * depend on the order a runtime happened to load it in.
  */
 export function hashSourceFiles(sourceFiles: string[], root: string): string {
-  return hashArray(
-    sourceFiles.map((file) =>
-      hashFile(isAbsolute(file) ? file : join(root, file))
-    )
-  );
+  return hashArray(sourceFiles.map((file) => hashFile(absolute(file, root))));
+}
+
+function absolute(file: string, root: string): string {
+  return isAbsolute(file) ? file : join(root, file);
 }
 
 /**

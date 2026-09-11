@@ -1,5 +1,5 @@
 import * as nodeModule from 'node:module';
-import { sep } from 'node:path';
+import { isAbsolute, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const VENDOR_SEGMENT = `${sep}node_modules${sep}`;
@@ -60,18 +60,28 @@ export async function withModuleClosure<T>(
 }
 
 /**
- * Vendored code is left out. An installed package's version already identifies
- * it, and hashing its whole dependency closure on every command would cost more
- * than loading the plugin.
+ * Only files whose contents could differ between two runs of the same Nx.
+ *
+ * A builtin has no contents to hash, and vendored code is identified by its
+ * package's version: hashing a package's whole dependency closure on every
+ * command would cost more than loading the plugin.
  */
 function record(into: Set<string>, specifier: string): void {
+  if (specifier.startsWith('node:')) {
+    return;
+  }
+
   let path = specifier;
   if (path.startsWith('file://')) {
     path = fileURLToPath(path);
   } else if (path.includes('://')) {
     return;
   }
-  if (!path.includes(VENDOR_SEGMENT)) {
-    into.add(path);
+
+  // A bare specifier that reached here is a builtin under its old spelling, such
+  // as `fs`. Anything else resolves to a path.
+  if (!isAbsolute(path) || path.includes(VENDOR_SEGMENT)) {
+    return;
   }
+  into.add(path);
 }

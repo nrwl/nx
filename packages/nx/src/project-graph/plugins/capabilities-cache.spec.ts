@@ -265,6 +265,20 @@ describe('recordIsFresh', () => {
     expect(recordIsFresh(record, root)).toBe(false);
   });
 
+  it('fails rather than folding a missing file into the same hash as none', () => {
+    const entry = write('libs/p/index.js', "require('./hooks');");
+    const hooks = write('libs/p/hooks.js', 'module.exports = {};');
+    const record = recordFor([entry, hooks]);
+
+    rmSync(entry);
+    rmSync(hooks);
+
+    // hashFile returns null for a missing path and hashArray folds null in as
+    // though the entry were absent, so a closure whose every file is gone hashes
+    // like an empty one. Checked rather than hashed for exactly that reason.
+    expect(recordIsFresh(record, root)).toBe(false);
+  });
+
   it('holds for a plugin whose every source is vendored', () => {
     // Nothing to hash, and the key carried the installed version.
     expect(
