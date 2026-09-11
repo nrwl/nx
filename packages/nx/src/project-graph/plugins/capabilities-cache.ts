@@ -223,6 +223,19 @@ export function recordCapabilities(
 }
 
 /**
+ * Drops a record, for a caller that has found one wrong and cannot write the
+ * right one in its place. Leaving it would hand every later run the same wrong
+ * answer.
+ */
+export function forgetCapabilities(key: string): void {
+  try {
+    getCache()?.remove([key]);
+  } catch (e) {
+    logger.verbose('Could not drop a plugin capability record', e);
+  }
+}
+
+/**
  * The capabilities of a plugin that is already loaded, which is what gets
  * recorded. Reading them off the instance rather than the worker's reply means
  * an in-process load is recorded the same way an isolated one is.

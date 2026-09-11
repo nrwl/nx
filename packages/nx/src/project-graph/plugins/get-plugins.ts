@@ -18,6 +18,7 @@ import {
   capabilitiesOfLoadedPlugin,
   computeCapabilityKey,
   createCapabilitiesLock,
+  forgetCapabilities,
   hashSourceFiles,
   isCapabilityCacheEnabled,
   type PluginCapabilities,
@@ -36,6 +37,7 @@ import {
   resolveModule,
   type ResolvedPluginModule,
 } from './isolation/isolated-plugin';
+import { canObserveModuleClosure } from './isolation/module-closure';
 
 import { isIsolationEnabled } from './isolation/enabled';
 import { sandboxSocketHint } from '../../daemon/sandbox-socket-hint';
@@ -861,20 +863,32 @@ function repairRecord(
   const observed =
     sourceFiles === null ? null : storableSourceFiles(sourceFiles, root);
   const sourceHash = observed === null ? null : hashSourceFiles(observed, root);
-  const corrected = observed !== null && sourceHash !== null;
-  if (corrected) {
-    recordCapabilities([
-      {
-        key,
-        record: { capabilities: actual, sourceFiles: observed, sourceHash },
-      },
-    ]);
+
+  if (observed === null || sourceHash === null) {
+    // Nothing to write in its place, so the wrong record goes. Thrown rather
+    // than warned: a hook this record hid has already been skipped, so the
+    // command's answer is wrong, and with the record gone the next run loads
+    // the plugin and gets it right.
+    forgetCapabilities(key);
+    throw new Error(
+      `Nx had stale information about what the "${actual.name}" plugin does, so some of its hooks may not have run. ` +
+        (canObserveModuleClosure()
+          ? 'Nx could not tell which files to watch for this plugin, so it could not record the right answer now. '
+          : `Recording the right answer needs Node 22.15, 23.5 or newer, and this is ${process.version}. `) +
+        'The stale record has been cleared, so running this command again will load the plugin and use what it reports.'
+    );
   }
 
+  recordCapabilities([
+    {
+      key,
+      record: { capabilities: actual, sourceFiles: observed, sourceHash },
+    },
+  ]);
+
   const title = `Nx had stale information about what the "${actual.name}" plugin does.`;
-  const detail = corrected
-    ? 'Its hooks may not have run in this command. The record has been corrected, so running the command again will use the right one.'
-    : 'Its hooks may not have run in this command, and Nx could not tell which files to watch for this plugin, so the stale record is still there. Run `nx reset` to clear it.';
+  const detail =
+    'Its hooks may not have run in this command. The record has been corrected, so running the command again will use the right one.';
 
   // On the daemon, `output.warn` would reach the daemon's log and no terminal.
   // The graph-construction topic is how a plugin worker's lines get to whoever
