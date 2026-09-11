@@ -19,44 +19,42 @@ type RegisterHooks = (hooks: LoadHooks) => { deregister(): void };
  * plugin keeps its sources or at which of them it reaches.
  */
 export async function withModuleClosure<T>(
-  load: () => Promise<T>
-): Promise<{ result: T; sourceFiles: string[] | null }> {
-  const observed = new Set<string>();
-  const registerHooks = (
+  load: () => Promise<T>,
+  // Null says "this runtime has none", which a test can say and an absent
+  // default cannot: a default parameter treats an explicit undefined as absent.
+  registerHooks: RegisterHooks | null | undefined = (
     nodeModule as unknown as { registerHooks?: RegisterHooks }
-  ).registerHooks;
+  ).registerHooks
+): Promise<{ result: T; sourceFiles: string[] | null }> {
+  // Below Node 22.15 there is no way to observe this, and a partial answer is
+  // worse than none. The require cache was the obvious fallback and is not one:
+  // it sees a CJS graph but not an ESM edge reached from inside it, so a plugin
+  // whose entry re-exports its hooks from a sibling module reports only the
+  // entry, and nothing distinguishes that from a complete capture. A record
+  // built on it would never notice the sibling changing, which is the failure
+  // this whole mechanism exists to prevent.
+  if (typeof registerHooks !== 'function') {
+    return { result: await load(), sourceFiles: null };
+  }
 
   // Synchronous in-thread hooks, which see CJS and ESM alike. `module.register`
-  // is the older door, but it runs hooks on another thread and reports over a
+  // is the other door, but it runs hooks on another thread and reports over a
   // port with no guarantee every message has landed by the time the import
   // resolves, so it cannot answer this without a race.
-  if (typeof registerHooks === 'function') {
-    const hooks = registerHooks({
-      load(url, context, next) {
-        record(observed, url);
-        return next(url, context);
-      },
-    });
-    try {
-      return { result: await load(), sourceFiles: [...observed] };
-    } finally {
-      // Left registered it would keep collecting through every later hook call,
-      // billing those files to the load.
-      hooks.deregister();
-    }
+  const observed = new Set<string>();
+  const hooks = registerHooks({
+    load(url, context, next) {
+      record(observed, url);
+      return next(url, context);
+    },
+  });
+  try {
+    return { result: await load(), sourceFiles: [...observed] };
+  } finally {
+    // Left registered it would keep collecting through every later hook call,
+    // billing those files to the load.
+    hooks.deregister();
   }
-
-  // Older runtimes: the require cache covers CJS, and TypeScript that went
-  // through a require hook, but not a module reached by dynamic import. An
-  // empty result tells the caller the set is unusable rather than small.
-  const before = new Set(Object.keys(require.cache));
-  const result = await load();
-  for (const file of Object.keys(require.cache)) {
-    if (!before.has(file)) {
-      record(observed, file);
-    }
-  }
-  return { result, sourceFiles: observed.size ? [...observed] : null };
 }
 
 /**

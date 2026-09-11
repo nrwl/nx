@@ -497,15 +497,15 @@ async function resolveCapabilityKeys(
  */
 /**
  * One command asks the question up to three times, and each answer costs a
- * module resolution per plugin plus a source hash for the workspace-local ones.
+ * module resolution per plugin plus a closure hash for the workspace-local ones.
  * Held for processes that are not the daemon, which is the same lifetime
  * `getPluginsSeparated` already gives one plugin set, and excluded for the
  * daemon, which outlives the edits an answer depends on.
  *
- * This cannot be the thing that goes stale. Editing a plugin moves its key, so
- * a fresh answer would miss and fall through to `getPlugins`, which hands back
- * the set it loaded earlier in the process anyway. `cleanupPlugins` drops both
- * together for the same reason.
+ * This cannot be the thing that goes stale. Editing a plugin leaves its key
+ * alone, but a fresh answer re-hashes the closure, misses, and falls through to
+ * `getPlugins`, which hands back the set it loaded earlier in the process anyway.
+ * `cleanupPlugins` drops both together for the same reason.
  *
  * Only a complete answer is held. A null one means some plugin has no record,
  * and the load that follows records it, so the next caller can do better.
@@ -771,9 +771,15 @@ function repairRecord(
   if (sameCapabilities(recorded, actual)) {
     return;
   }
-  const observed = sourceFiles ? storableSourceFiles(sourceFiles, root) : [];
-  const sourceHash = observed && hashSourceFiles(observed, root);
-  if (observed !== null && sourceHash !== null) {
+  // Null is not none. An unobservable closure coerced to an empty one would
+  // write a record that `recordIsFresh` accepts without hashing anything, so no
+  // later edit on any runtime could invalidate it, and a self-correcting hole
+  // would become a permanent one.
+  const observed =
+    sourceFiles === null ? null : storableSourceFiles(sourceFiles, root);
+  const sourceHash = observed === null ? null : hashSourceFiles(observed, root);
+  const corrected = observed !== null && sourceHash !== null;
+  if (corrected) {
     recordCapabilities([
       {
         key,
@@ -783,8 +789,9 @@ function repairRecord(
   }
 
   const title = `Nx had stale information about what the "${actual.name}" plugin does.`;
-  const detail =
-    'Its hooks may not have run in this command. The record has been corrected, so running the command again will use the right one.';
+  const detail = corrected
+    ? 'Its hooks may not have run in this command. The record has been corrected, so running the command again will use the right one.'
+    : 'Its hooks may not have run in this command, and Nx could not tell which files to watch for this plugin, so the stale record is still there. Run `nx reset` to clear it.';
 
   // On the daemon, `output.warn` would reach the daemon's log and no terminal.
   // The graph-construction topic is how a plugin worker's lines get to whoever

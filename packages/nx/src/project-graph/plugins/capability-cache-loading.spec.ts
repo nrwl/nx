@@ -296,7 +296,10 @@ describe('loading plugins through the capability cache', () => {
   });
 
   describe('a record the key failed to invalidate', () => {
-    async function loadedFromRecordThenReport(actual: PluginCapabilities) {
+    async function loadedFromRecordThenReport(
+      actual: PluginCapabilities,
+      sourceFiles: string[] | null = ['/resolved/test-plugin']
+    ) {
       everythingRecorded = true;
       await getPluginsSeparated({ plugins: ['test-plugin'] });
 
@@ -305,7 +308,7 @@ describe('loading plugins through the capability cache', () => {
           ([plugin]) => plugin === 'test-plugin'
         );
       mocks.recordCapabilities.mockClear();
-      onLoaded(actual, ['/resolved/test-plugin']);
+      onLoaded(actual, sourceFiles);
     }
 
     it('is replaced by what the worker reported', async () => {
@@ -329,6 +332,25 @@ describe('loading plugins through the capability cache', () => {
       expect(mocks.warn).toHaveBeenCalledWith(
         expect.objectContaining({
           title: expect.stringContaining('test-plugin'),
+        })
+      );
+    });
+
+    it('is not replaced by an empty closure when the worker could not report one', async () => {
+      await loadedFromRecordThenReport(
+        { ...CAPABILITIES, hasPostTasksExecution: true },
+        null
+      );
+
+      // An empty closure is the vendor-only case, which `recordIsFresh` accepts
+      // without hashing anything. Writing one here would make a stale record
+      // permanent on every runtime.
+      expect(mocks.recordCapabilities).not.toHaveBeenCalled();
+      expect(mocks.warn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          bodyLines: expect.arrayContaining([
+            expect.stringContaining('nx reset'),
+          ]),
         })
       );
     });
