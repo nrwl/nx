@@ -31,15 +31,13 @@ import { serverLogger } from '../../daemon/logger';
 import { DelayedSpinner } from '../../utils/delayed-spinner';
 import { logger } from '../../utils/logger';
 import {
+  isPluginWorkerSocketRefusal,
+  isPluginWorkerStartupFailure,
   resolveModule,
   type ResolvedPluginModule,
 } from './isolation/isolated-plugin';
 
 import { isIsolationEnabled } from './isolation/enabled';
-import {
-  isPluginWorkerSocketRefusal,
-  isPluginWorkerStartupFailure,
-} from './isolation/isolated-plugin';
 import { sandboxSocketHint } from '../../daemon/sandbox-socket-hint';
 import { isSandbox } from '../../utils/is-sandbox';
 import { isAiAgent } from '../../native';
