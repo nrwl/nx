@@ -73,7 +73,7 @@ The Team plan has no such cap, and usage beyond the $29 of included credit is bi
 
 ### Is Nx Cloud cheaper than running CI on GitHub Actions alone?
 
-It depends on how many machine-minutes your pipeline burns today. Each run costs one CI pipeline execution, worth about 46 minutes on a standard GitHub runner, so the cache has to avoid more than that to pay for itself. Pipelines that already spread work across a job matrix or larger runners clear that bar comfortably. See [GitHub Actions pricing and how to cut your CI bill](/docs/kb/github-actions-pricing) for the rate tables and the break-even math at 50% and 70% cache hit rates.
+At a 70% cache hit rate, eight jobs on 8-core runners come in 47% cheaper with PR feedback down from 20 minutes to 9. A four-job matrix on standard runners saves 22% and cuts feedback by 60%. The savings scale with how many machine-minutes your pipeline burns today, so [GitHub Actions pricing and how to cut your CI bill](/docs/kb/github-actions-pricing) has the rate tables, the break-even math at 50% and 70% hit rates, and the small pipelines where the trade buys speed rather than savings.
 
 ### Do unused credits carry over?
 
