@@ -202,6 +202,21 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
       : [
           `npm view ${packageName} versions dist-tags --json --"${registryConfigKey}=${registry}"`,
         ];
+  /**
+   * Both commands above resolve the packument through a version spec that defaults to the
+   * `latest` dist-tag, so a package only ever published under a different tag looks like it has
+   * no data at all. Asking for the tag being published recovers it.
+   */
+  const npmViewForTagCommandSegments =
+    pm === 'bun'
+      ? [
+          'bun info',
+          `${packageName}@${tag}`,
+          `--json --"${registryConfigKey}=${registry}"`,
+        ]
+      : [
+          `npm view ${packageName} versions dist-tags --json --"${registryConfigKey}=${registry}" --tag ${tag}`,
+        ];
   const npmDistTagAddCommandSegments = [
     `npm dist-tag add ${packageName}@${packageJson.version} ${tag} --"${registryConfigKey}=${registry}"`,
   ];
@@ -216,15 +231,91 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
    */
   if (!isDryRun && !options.firstRelease) {
     const currentVersion = packageJson.version;
-    try {
-      const result = execSync(npmViewCommandSegments.join(' '), {
+    const runNpmView = (commandSegments: string[]) =>
+      execSync(commandSegments.join(' '), {
         env: processEnv(true),
         cwd: context.root,
         stdio: ['ignore', 'pipe', 'pipe'],
         windowsHide: true,
-      });
+      })
+        .toString()
+        .trim();
 
-      const resultJson = JSON.parse(result.toString());
+    /**
+     * An unresolvable version spec is not an error here, it just means there is nothing to compare
+     * the local version against, so fall back to publishing. npm exits 0 printing nothing in that
+     * case, bun exits 1 reporting "No matching version found" on stdout.
+     */
+    const runNpmViewForTag = (): string | null => {
+      if (tag === 'latest') {
+        return null;
+      }
+      try {
+        return runNpmView(npmViewForTagCommandSegments) || null;
+      } catch {
+        return null;
+      }
+    };
+
+    let npmViewOutput: string | null = null;
+    try {
+      npmViewOutput = runNpmView(npmViewCommandSegments) || runNpmViewForTag();
+    } catch (err) {
+      if (err.stdout?.toString().includes('No matching version found')) {
+        npmViewOutput = runNpmViewForTag();
+      } else {
+        try {
+          const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
+          // If the error is that the package doesn't exist, then we can ignore it because we will be publishing it for the first time in the next step
+          if (
+            !(
+              stdoutData.error?.code?.includes('E404') &&
+              stdoutData.error?.summary?.toLowerCase().includes('not found')
+            ) &&
+            !(
+              err.stderr?.toString().includes('E404') &&
+              err.stderr?.toString().toLowerCase().includes('not found')
+            ) &&
+            // bun uses plain '404' instead of 'E404'
+            !(
+              err.stderr?.toString().includes('404') &&
+              err.stderr?.toString().toLowerCase().includes('not found')
+            )
+          ) {
+            console.error(
+              `Something unexpected went wrong when checking for existing dist-tags.\n`,
+              err
+            );
+            return {
+              success: false,
+            };
+          }
+        } catch {
+          // JSON parse failed entirely - check stderr/stdout for plain 404
+          const stderrStr = err.stderr?.toString() || '';
+          const stdoutStr = err.stdout?.toString() || '';
+          if (
+            !(
+              (stderrStr.includes('404') &&
+                stderrStr.toLowerCase().includes('not found')) ||
+              (stdoutStr.includes('404') &&
+                stdoutStr.toLowerCase().includes('not found'))
+            )
+          ) {
+            console.error(
+              `Something unexpected went wrong when checking for existing dist-tags.\n`,
+              err
+            );
+            return {
+              success: false,
+            };
+          }
+        }
+      }
+    }
+
+    if (npmViewOutput) {
+      const resultJson = JSON.parse(npmViewOutput);
       const distTags = resultJson['dist-tags'] || {};
       if (distTags[tag] === currentVersion) {
         console.warn(
@@ -314,54 +405,6 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
               };
             }
           }
-        }
-      }
-    } catch (err) {
-      try {
-        const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
-        // If the error is that the package doesn't exist, then we can ignore it because we will be publishing it for the first time in the next step
-        if (
-          !(
-            stdoutData.error?.code?.includes('E404') &&
-            stdoutData.error?.summary?.toLowerCase().includes('not found')
-          ) &&
-          !(
-            err.stderr?.toString().includes('E404') &&
-            err.stderr?.toString().toLowerCase().includes('not found')
-          ) &&
-          // bun uses plain '404' instead of 'E404'
-          !(
-            err.stderr?.toString().includes('404') &&
-            err.stderr?.toString().toLowerCase().includes('not found')
-          )
-        ) {
-          console.error(
-            `Something unexpected went wrong when checking for existing dist-tags.\n`,
-            err
-          );
-          return {
-            success: false,
-          };
-        }
-      } catch {
-        // JSON parse failed entirely — check stderr/stdout for plain 404
-        const stderrStr = err.stderr?.toString() || '';
-        const stdoutStr = err.stdout?.toString() || '';
-        if (
-          !(
-            (stderrStr.includes('404') &&
-              stderrStr.toLowerCase().includes('not found')) ||
-            (stdoutStr.includes('404') &&
-              stdoutStr.toLowerCase().includes('not found'))
-          )
-        ) {
-          console.error(
-            `Something unexpected went wrong when checking for existing dist-tags.\n`,
-            err
-          );
-          return {
-            success: false,
-          };
         }
       }
     }
