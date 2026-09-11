@@ -25,6 +25,20 @@ use fs4::fs_std::FileExt;
 #[cfg(not(target_arch = "wasm32"))]
 const LOCK_POLL_INTERVAL: Duration = Duration::from_millis(4);
 
+/// The lock file, created if it is not there yet.
+///
+/// Never truncated: the lock is on the file rather than on anything written in
+/// it, and a holder's own handle would be the one losing its contents.
+#[cfg(not(target_arch = "wasm32"))]
+fn open_lock_file(lock_file_path: &str) -> std::io::Result<fs::File> {
+    OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .truncate(false)
+        .open(lock_file_path)
+}
+
 /// Whether the lock on `lock_file_path` was released within `timeout`.
 ///
 /// Takes a shared lock and drops it again, so the caller learns that the holder
@@ -32,12 +46,7 @@ const LOCK_POLL_INTERVAL: Duration = Duration::from_millis(4);
 /// holder that never returns cannot hold the caller forever.
 #[cfg(not(target_arch = "wasm32"))]
 fn wait_for_release(lock_file_path: &str, timeout: Duration) -> std::io::Result<bool> {
-    let file = OpenOptions::new()
-        .read(true)
-        .write(true)
-        .create(true)
-        .truncate(false)
-        .open(lock_file_path)?;
+    let file = open_lock_file(lock_file_path)?;
     let deadline = Instant::now() + timeout;
     loop {
         match fs4::fs_std::FileExt::try_lock_shared(&file) {
@@ -119,13 +128,7 @@ impl FileLock {
         // Creates the directory where the lock file will be stored
         fs::create_dir_all(Path::new(&lock_file_path).parent().unwrap())?;
 
-        // Opens the lock file
-        let file = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .create(true)
-            .truncate(false)
-            .open(&lock_file_path)?;
+        let file = open_lock_file(&lock_file_path)?;
 
         trace!("Locking file {}", lock_file_path);
 
@@ -177,12 +180,7 @@ impl FileLock {
             let lock_file_path = self.lock_file_path.clone();
             self.locked = false;
             let promise = env.spawn_future(async move {
-                let file = OpenOptions::new()
-                    .read(true)
-                    .write(true)
-                    .create(true)
-                    .truncate(false)
-                    .open(&lock_file_path)?;
+                let file = open_lock_file(&lock_file_path)?;
                 fs4::fs_std::FileExt::lock_shared(&file)?;
                 fs4::fs_std::FileExt::unlock(&file)?;
                 Ok(())
