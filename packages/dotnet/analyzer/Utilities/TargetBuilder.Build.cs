@@ -53,7 +53,13 @@ public static partial class TargetBuilder
                     Args = [.. defaultFlags, "--configuration", "Release"]
                 }
             },
-            DependsOn = [$"^{targetName}"],
+            // Forward CLI params (e.g. --runtime) to the upstream build of
+            // dependency projects so they build against the same runtime. We do
+            // NOT forward task options: Nx already propagates the configuration
+            // to `^build` tasks, and forwarding a run-commands target's options
+            // would copy this project's `cwd`/`args` onto the dependency, making
+            // it build the wrong project (CS0006 on missing ref assemblies).
+            DependsOn = [new TargetDependency { Target = targetName, Dependencies = true, Params = "forward" }],
             Cache = true,
             Inputs =
             [
