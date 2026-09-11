@@ -13,8 +13,10 @@ use tracing::trace;
 #[cfg(not(target_arch = "wasm32"))]
 use fs4::fs_std::FileExt;
 
+/// Set for pickup latency rather than for cost. A contended poll measures 0.32us
+/// including the napi crossing, so 250 a second is 0.008% of a core.
 #[cfg(not(target_arch = "wasm32"))]
-const LOCK_POLL_INTERVAL: Duration = Duration::from_millis(25);
+const LOCK_POLL_INTERVAL: Duration = Duration::from_millis(4);
 
 /// Whether the lock on `lock_file_path` was released within `timeout`.
 ///
@@ -39,10 +41,13 @@ fn wait_for_release(lock_file_path: &str, timeout: Duration) -> std::io::Result<
             Err(e) if is_contended(&e) => {}
             Err(e) => return Err(e),
         }
-        if Instant::now() >= deadline {
+        let remaining = deadline.saturating_duration_since(Instant::now());
+        if remaining.is_zero() {
             return Ok(false);
         }
-        std::thread::sleep(LOCK_POLL_INTERVAL);
+        // Never past the deadline, so the caller's ceiling is the ceiling rather
+        // than the ceiling plus one interval.
+        std::thread::sleep(LOCK_POLL_INTERVAL.min(remaining));
     }
 }
 
@@ -305,7 +310,10 @@ mod test {
             .wait_blocking(Duration::from_millis(200))
             .unwrap();
         assert!(!released);
-        assert!(started.elapsed() >= Duration::from_millis(200));
+        let waited = started.elapsed();
+        assert!(waited >= Duration::from_millis(200));
+        // Gave up at the deadline rather than after one more interval past it.
+        assert!(waited < Duration::from_millis(400), "waited {waited:?}");
         // Seen from a fresh handle; `check` on the holder's own handle would
         // release it, since the lock is held by that handle.
         assert!(FileLock::new(path).unwrap().locked);
