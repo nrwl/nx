@@ -5,7 +5,6 @@ import {
   packageInstall,
   readJson,
   runCLI,
-  runCommand,
   runCreateWorkspace,
   uniq,
 } from '@nx/e2e-utils';
@@ -20,21 +19,23 @@ describe('create-nx-workspace --preset=npm', () => {
     // glob cache is causing previous projects to show in Workspace for maxWorkers overrides
     // which fails due to files no longer being available
     process.env.NX_PROJECT_GLOB_CACHE = 'false';
+  });
 
+  beforeEach(() => {
+    // Each case tests one generator in a fresh package-based workspace. Keeping
+    // dependencies from earlier cases couples unrelated framework peer ranges.
     runCreateWorkspace(wsName, {
       preset: 'npm',
       packageManager: getSelectedPackageManager(),
     });
-  });
+  }, 120_000);
 
-  afterEach(() => {
-    // cleanup previous projects
-    runCommand(`rm -rf packages/** tsconfig.base.json tsconfig.json`);
-  });
+  afterEach(() => cleanupProject());
 
   afterAll(() => {
-    process.env.NX_PROJECT_GLOB_CACHE = orginalGlobCache;
-    cleanupProject({ skipReset: true });
+    if (orginalGlobCache === undefined)
+      delete process.env.NX_PROJECT_GLOB_CACHE;
+    else process.env.NX_PROJECT_GLOB_CACHE = orginalGlobCache;
   });
 
   it('should setup package-based workspace', () => {
