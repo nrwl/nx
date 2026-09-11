@@ -23,7 +23,7 @@ import {
   type PluginCapabilities,
   readValidRecords,
   recordCapabilities,
-  relativizeSourceFiles,
+  storableSourceFiles,
   sameCapabilities,
 } from './capabilities-cache';
 import { isOnDaemon } from '../../daemon/is-on-daemon';
@@ -728,9 +728,13 @@ async function loadAndRecord(loads: PluginLoad[], root: string): Promise<void> {
       continue;
     }
 
-    const sourceFiles = relativizeSourceFiles(observed, root);
+    // Unstorable or unhashable now means unverifiable later, so there is nothing
+    // worth storing.
+    const sourceFiles = storableSourceFiles(observed, root);
+    if (sourceFiles === null) {
+      continue;
+    }
     const sourceHash = hashSourceFiles(sourceFiles, root);
-    // Unhashable now means unverifiable later, so there is nothing worth storing.
     if (sourceHash === null) {
       continue;
     }
@@ -767,9 +771,9 @@ function repairRecord(
   if (sameCapabilities(recorded, actual)) {
     return;
   }
-  const observed = sourceFiles ? relativizeSourceFiles(sourceFiles, root) : [];
-  const sourceHash = hashSourceFiles(observed, root);
-  if (sourceHash !== null) {
+  const observed = sourceFiles ? storableSourceFiles(sourceFiles, root) : [];
+  const sourceHash = observed && hashSourceFiles(observed, root);
+  if (observed !== null && sourceHash !== null) {
     recordCapabilities([
       {
         key,

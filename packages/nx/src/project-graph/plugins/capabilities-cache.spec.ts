@@ -14,7 +14,7 @@ import {
   computeCapabilityKey,
   hashSourceFiles,
   recordIsFresh,
-  relativizeSourceFiles,
+  storableSourceFiles,
   sameCapabilities,
   type PluginCapabilities,
 } from './capabilities-cache';
@@ -209,7 +209,8 @@ describe('recordIsFresh', () => {
   }
 
   function recordFor(files: string[]) {
-    const sourceFiles = relativizeSourceFiles(files, root);
+    const sourceFiles = storableSourceFiles(files, root);
+    expect(sourceFiles).not.toBeNull();
     const sourceHash = hashSourceFiles(sourceFiles, root);
     expect(sourceHash).not.toBeNull();
     return {
@@ -358,6 +359,17 @@ describe('recordIsFresh', () => {
     );
     expect(recordIsFresh(record, other)).toBe(false);
     expect(recordIsFresh(record, root)).toBe(true);
+  });
+
+  it('declines to store a closure that reaches outside the workspace', () => {
+    const inside = write('libs/p/index.js', "require('../../../shared/x');");
+    const outside = join(root, '..', 'shared', 'x.js');
+
+    // Two checkouts of one repository share a database and compute the same key
+    // for this plugin, so a stored absolute path would let one validate against
+    // the other's sibling directory.
+    expect(storableSourceFiles([inside, outside], root)).toBeNull();
+    expect(storableSourceFiles([inside], root)).toEqual(['libs/p/index.js']);
   });
 
   it('holds for a plugin whose every source is vendored', () => {
