@@ -10,6 +10,17 @@ type LoadHooks = {
 type RegisterHooks = (hooks: LoadHooks) => { deregister(): void };
 
 /**
+ * Whether this runtime can report what a plugin's load read. Without it nothing
+ * is recorded, so the whole capability cache does nothing here.
+ */
+export function canObserveModuleClosure(): boolean {
+  return (
+    typeof (nodeModule as unknown as { registerHooks?: RegisterHooks })
+      .registerHooks === 'function'
+  );
+}
+
+/**
  * The files a plugin's load actually read, or null when this runtime cannot be
  * asked completely.
  *
