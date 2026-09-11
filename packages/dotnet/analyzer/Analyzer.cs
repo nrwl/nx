@@ -317,18 +317,32 @@ public static class Analyzer
     /// Requires MSTest on Microsoft.Testing.Platform. The platform alone is not
     /// enough: its <c>--treenode-filter</c> is only registered by frameworks
     /// that opt in, and MSTest is not one, so the filters use <c>--filter</c>,
-    /// whose syntax comes from MSTest. Short of both properties
+    /// whose syntax comes from MSTest. Short of both conditions
     /// <c>dotnet test</c> routes through the VSTest bridge, which accepts the
     /// split arguments and ignores them, so every task would silently run the
-    /// whole suite. <c>MSTest.Sdk</c> sets both, which is also how that SDK is
-    /// detected.
+    /// whole suite.
     /// </remarks>
-    internal static bool SupportsTestSplitting(Dictionary<string, string> properties) =>
-        IsTrue(properties, "EnableMSTestRunner") &&
-        IsTrue(properties, "TestingPlatformDotnetTestSupport");
+    internal static bool SupportsTestSplitting(Dictionary<string, string> properties)
+    {
+        if (!IsTrue(properties, "EnableMSTestRunner"))
+        {
+            return false;
+        }
+
+        if (IsExplicitlyFalse(properties, "TestingPlatformDotnetTestSupport"))
+        {
+            return false;
+        }
+
+        return IsTrue(properties, "TestingPlatformDotnetTestSupport") ||
+               IsTrue(properties, "IsTestingPlatformApplication");
+    }
 
     private static bool IsTrue(Dictionary<string, string> properties, string name) =>
         properties.GetValueOrDefault(name)?.Equals("true", StringComparison.OrdinalIgnoreCase) == true;
+
+    private static bool IsExplicitlyFalse(Dictionary<string, string> properties, string name) =>
+        properties.GetValueOrDefault(name)?.Equals("false", StringComparison.OrdinalIgnoreCase) == true;
 
     private static bool IsExecutableProject(Dictionary<string, string> properties)
     {

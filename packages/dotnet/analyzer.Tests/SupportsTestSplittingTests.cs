@@ -7,8 +7,8 @@ namespace MsbuildAnalyzer.Tests;
 /// Unit tests for the gate that decides whether a project's tests can be split.
 ///
 /// Getting this wrong is not a build error. The emitted tasks use options that
-/// only reach the test platform when both properties below are set; short of
-/// that, `dotnet test` routes through the VSTest bridge, which accepts the same
+/// only reach the test platform when MSTest runs on it; short of that,
+/// `dotnet test` routes through the VSTest bridge, which accepts the same
 /// arguments and ignores them. Every split task would then run the whole suite
 /// and report success. Each configuration that decides the answer is pinned
 /// here.
@@ -20,13 +20,14 @@ public class SupportsTestSplittingTests
 
     private const string Runner = "EnableMSTestRunner";
     private const string DotnetTestSupport = "TestingPlatformDotnetTestSupport";
+    private const string PlatformApplication = "IsTestingPlatformApplication";
 
     [Fact]
-    public void BothProperties_AreRequiredAndSufficient()
+    public void BothProperties_AreSufficient()
     {
-        // Also covers a project using the MSTest.Sdk project SDK: MSBuild does
-        // not surface a project's Sdk attribute, but MSTest.Sdk sets both of
-        // these properties, so such a project is recognized without one.
+        // Also covers a project using the MSTest.Sdk project SDK below 4.0.0:
+        // MSBuild does not surface a project's Sdk attribute, but that SDK sets
+        // both of these properties, so such a project is recognized without one.
         Assert.True(Analyzer.SupportsTestSplitting(
             Props((Runner, "true"), (DotnetTestSupport, "true"))));
     }
@@ -74,5 +75,32 @@ public class SupportsTestSplittingTests
     public void NoEvidenceAtAll_IsNotEnough()
     {
         Assert.False(Analyzer.SupportsTestSplitting(Props()));
+    }
+
+    [Fact]
+    public void PlatformApplicationProperty_StandsInForDotnetTestSupport()
+    {
+        Assert.True(Analyzer.SupportsTestSplitting(
+            Props((Runner, "true"), (PlatformApplication, "true"))));
+    }
+
+    [Fact]
+    public void BothRoutingSignals_AreStillEnough()
+    {
+        Assert.True(Analyzer.SupportsTestSplitting(
+            Props((Runner, "true"), (DotnetTestSupport, "true"), (PlatformApplication, "true"))));
+    }
+
+    [Fact]
+    public void PlatformApplicationAlone_IsNotEnough()
+    {
+        Assert.False(Analyzer.SupportsTestSplitting(Props((PlatformApplication, "true"))));
+    }
+
+    [Fact]
+    public void ExplicitDotnetTestSupportFalse_VetoesPlatformApplication()
+    {
+        Assert.False(Analyzer.SupportsTestSplitting(
+            Props((Runner, "true"), (DotnetTestSupport, "false"), (PlatformApplication, "true"))));
     }
 }
