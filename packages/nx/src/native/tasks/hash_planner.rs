@@ -701,7 +701,20 @@ impl HashPlanner {
         // scopes must still be rolled back independently for sibling inputs.
         let mut external_inputs = hashbrown::HashSet::new();
 
-        for dep in project_deps {
+        // Keep one accumulator for this propagated input. Returning a vector
+        // from every intermediate project repeatedly copies the same closure.
+        // Saving parent iterators preserves depth-first visitation and errors;
+        // the stack stays unallocated when subtree memoization answers directly.
+        let mut children = project_deps.iter();
+        let mut parents = Vec::new();
+        loop {
+            let Some(dep) = children.next() else {
+                if let Some(parent) = parents.pop() {
+                    children = parent;
+                    continue;
+                }
+                break;
+            };
             if !visited.insert(dep.as_str()) {
                 continue;
             }
@@ -719,14 +732,8 @@ impl HashPlanner {
                 if let Some(local) = self.local_dependency_inputs(dep, input)? {
                     if !local.needs_legacy {
                         deps_inputs.extend(local.ids.iter().copied());
-                        deps_inputs.extend(self.gather_dependency_input(
-                            task,
-                            input,
-                            task_graph,
-                            &self.project_graph.dependencies[dep],
-                            external_deps_mapped,
-                            visited,
-                        )?);
+                        parents.push(children);
+                        children = self.project_graph.dependencies[dep].iter();
                         continue;
                     }
                 }
