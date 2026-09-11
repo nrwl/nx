@@ -28,15 +28,19 @@ tests/Catalog.Tests       an xunit project covering the library
 ```
 
 `@nx/dotnet` reads the `.csproj` files and infers the targets. Nothing about
-build, test or restore is configured by hand:
+build or test is configured by hand:
 
-| Target                      | Which projects get it                  |
-| --------------------------- | -------------------------------------- |
-| `build`, `build:release`    | all three                              |
-| `restore`, `clean`, `watch` | all three                              |
-| `test`                      | test projects, so `Catalog.Tests` only |
-| `run`, `publish`            | executable projects, so `Api` only     |
-| `pack`                      | library projects, so `Catalog` only    |
+| Target                   | Which projects get it                  |
+| ------------------------ | -------------------------------------- |
+| `build`, `build:release` | all three                              |
+| `clean`, `watch`         | all three                              |
+| `test`                   | test projects, so `Catalog.Tests` only |
+| `run`, `publish`         | executable projects, so `Api` only     |
+| `pack`                   | library projects, so `Catalog` only    |
+
+`restore` is the one target this workspace asks for, with `"restore": true` in
+`nx.json`. It is off by default because restoring is a prerequisite you own
+rather than a step Nx sequences.
 
 `<ProjectReference>` becomes an edge in the Nx graph, so ordering falls out of
 the project files rather than out of Nx config:
@@ -50,13 +54,13 @@ nx graph          # Api -> Catalog <- Catalog.Tests
 ```bash
 # From this directory
 pnpm install    # also builds the linked local packages
-pnpm validate   # nx run-many -t build,test
+pnpm validate   # nx run-many -t restore, then build and test
 ```
 
 ## Notes
 
 - Targets `net9.0` to match the SDK pinned in the repo's `mise.toml`.
-- The inferred `build` runs `dotnet build --no-restore`, so `nx.json` adds
-  `"dependsOn": ["...", "restore"]` to it. The `"..."` keeps the `^build` the
-  plugin already inferred and puts the restore ahead of it, which is what lets
-  `pnpm validate` work from a clean checkout.
+- The inferred `build` runs `dotnet build --no-restore`, so a project that has
+  never been restored fails with `NETSDK1004`. That is why `nx.json` opts the
+  `restore` target in and `pnpm validate` runs it before `build`, which is what
+  lets the example work from a clean checkout.

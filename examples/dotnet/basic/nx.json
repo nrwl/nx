@@ -1,6 +1,13 @@
 {
   "$schema": "../../../node_modules/nx/schemas/nx-schema.json",
-  "plugins": ["@nx/dotnet"],
+  "plugins": [
+    {
+      "plugin": "@nx/dotnet",
+      "options": {
+        "restore": true
+      }
+    }
+  ],
   "analytics": false,
   "neverConnectToCloud": true
 }

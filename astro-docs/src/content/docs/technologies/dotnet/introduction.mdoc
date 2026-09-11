@@ -128,10 +128,29 @@ and the files MSBuild read from outside the project directory while evaluating i
 
 Editing any of these files updates the project graph without an `nx reset`.
 
-`restore` isn't cached and isn't part of the task chain.
-Run it once before `build`.
-The files it writes to `obj` are excluded from the outputs of `build`, `publish`, and `pack`, so a
-cache hit never replaces a machine's own restore.
+Run `dotnet restore` once before `build`.
+`build` runs with `--no-restore`, so an unrestored project fails with `NETSDK1004` naming the
+missing assets file.
+Nx does not infer a `restore` target by default, because restoring is a prerequisite you own
+rather than a step Nx sequences.
+The files restore writes to `obj` are excluded from the outputs of `build`, `publish`, and `pack`,
+so a cache hit never replaces a machine's own restore.
+
+To have Nx wrap it anyway, opt the target in:
+
+```json
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/dotnet",
+      "options": {
+        "restore": true
+      }
+    }
+  ]
+}
+```
 
 ### Test project detection
 
@@ -201,7 +220,7 @@ Each target type can be configured with:
 
 - `targetName` - Rename the target if needed (e.g., change "build" to "compile")
 - Additional target configuration properties (options, configurations, dependsOn, cache, inputs, outputs)
-- Set to `false` to disable a target
+- Set to `false` to disable a target, or `true` to enable one that is off by default
 
 For example:
 
@@ -236,7 +255,7 @@ Once a .NET project file has been identified, the targets are created with the c
 - `build` - Compiles the project
 - `test` - Runs unit tests (for test projects)
 - `clean` - Removes build outputs
-- `restore` - Restores NuGet package dependencies
+- `restore` - Restores NuGet package dependencies. Not created unless you opt in with `"restore": true`
 - `publish` - Publishes the application (for executable projects)
 - `pack` - Creates a NuGet package (for library projects)
 - `watch` - Watches the project for changes and rebuilds (automatically marked as continuous)
@@ -248,9 +267,11 @@ Use `include` and `exclude` glob patterns on the plugin entry to scope inference
 
 Not all targets are available for every project type. The plugin intelligently determines which targets to create based on the project type:
 
-- **Console Applications & Web Projects**: build, clean, restore, publish, watch, run
-- **Class Libraries**: build, clean, restore, pack, watch
-- **Test Projects**: build, clean, restore, test, watch
+- **Console Applications & Web Projects**: build, clean, publish, watch, run
+- **Class Libraries**: build, clean, pack, watch
+- **Test Projects**: build, clean, test, watch
+
+`restore` is absent from all three until you opt in.
 
 ### Continuous tasks
 
