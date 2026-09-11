@@ -18,10 +18,12 @@ import {
   capabilitiesOfLoadedPlugin,
   computeCapabilityKey,
   createCapabilitiesLock,
+  hashSourceFiles,
   isCapabilityCacheEnabled,
   type PluginCapabilities,
-  readCachedCapabilities,
+  readValidRecords,
   recordCapabilities,
+  relativizeSourceFiles,
   sameCapabilities,
 } from './capabilities-cache';
 import { isOnDaemon } from '../../daemon/is-on-daemon';
@@ -537,7 +539,10 @@ export async function peekPluginCapabilities(
     return null;
   }
 
-  const recorded = readCachedCapabilities(loads.map((load) => load.key));
+  const recorded = readValidRecords(
+    loads.map((load) => load.key),
+    root
+  );
   // Two nx.json entries can name one module, so compare against the distinct
   // keys rather than the number of plugins.
   if (recorded.size !== new Set(loads.map((load) => load.key)).size) {
@@ -633,7 +638,10 @@ function wireRecordedCapabilities(
     return [];
   }
 
-  const recorded = readCachedCapabilities(pending.map((load) => load.key));
+  const recorded = readValidRecords(
+    pending.map((load) => load.key),
+    root
+  );
   const missing: PluginLoad[] = [];
   for (const load of pending) {
     const capabilities = recorded.get(load.key);
@@ -647,10 +655,24 @@ function wireRecordedCapabilities(
       load.resolved,
       capabilities,
       load.index,
-      (actual) => repairRecord(load.key, capabilities, actual)
+      (actual, sourceFiles) =>
+        repairRecord(load.key, root, capabilities, actual, sourceFiles)
     );
   }
   return missing;
+}
+
+/**
+ * What the worker reported about the load it just did. Absent for an in-process
+ * load, which this cache does not record.
+ */
+const observedClosures = new WeakMap<LoadedNxPlugin, string[] | null>();
+
+export function noteObservedClosure(
+  plugin: LoadedNxPlugin,
+  sourceFiles: string[] | null
+): void {
+  observedClosures.set(plugin, sourceFiles);
 }
 
 async function loadAndRecord(loads: PluginLoad[], root: string): Promise<void> {
@@ -667,6 +689,13 @@ async function loadAndRecord(loads: PluginLoad[], root: string): Promise<void> {
           load.index,
           load.resolved
         );
+        // The closure the worker observed travels with the instance, so the
+        // record is written from what actually ran rather than from a guess.
+        const loaded = await load.loaded[0];
+        noteObservedClosure(
+          loaded,
+          (loaded as { sourceFiles?: string[] | null }).sourceFiles ?? null
+        );
       } catch (e) {
         // Rethrown by the caller, so the failure reaches the same error
         // aggregation an uncached load would have reached.
@@ -677,15 +706,37 @@ async function loadAndRecord(loads: PluginLoad[], root: string): Promise<void> {
     })
   );
 
-  const entries: Array<{ key: string; capabilities: PluginCapabilities }> = [];
+  const entries: Array<{
+    key: string;
+    record: {
+      capabilities: PluginCapabilities;
+      sourceFiles: string[];
+      sourceHash: string;
+    };
+  }> = [];
   for (let i = 0; i < settled.length; i++) {
     const result = settled[i];
-    if (result.status === 'fulfilled') {
-      entries.push({
-        key: loads[i].key,
-        capabilities: capabilitiesOfLoadedPlugin(result.value),
-      });
+    if (result.status !== 'fulfilled') {
+      continue;
     }
+
+    // Null means the runtime could not report the closure completely. Without it
+    // there is nothing a later read could validate the record against, so one
+    // written now could never be invalidated.
+    const observed = observedClosures.get(result.value);
+    if (observed === null || observed === undefined) {
+      continue;
+    }
+
+    const sourceFiles = relativizeSourceFiles(observed, root);
+    entries.push({
+      key: loads[i].key,
+      record: {
+        capabilities: capabilitiesOfLoadedPlugin(result.value),
+        sourceFiles,
+        sourceHash: hashSourceFiles(sourceFiles, root),
+      },
+    });
   }
 
   recordCapabilities(entries);
@@ -702,13 +753,25 @@ async function loadAndRecord(loads: PluginLoad[], root: string): Promise<void> {
  */
 function repairRecord(
   key: string,
+  root: string,
   recorded: PluginCapabilities,
-  actual: PluginCapabilities
+  actual: PluginCapabilities,
+  sourceFiles: string[] | null
 ): void {
   if (sameCapabilities(recorded, actual)) {
     return;
   }
-  recordCapabilities([{ key, capabilities: actual }]);
+  const observed = sourceFiles ? relativizeSourceFiles(sourceFiles, root) : [];
+  recordCapabilities([
+    {
+      key,
+      record: {
+        capabilities: actual,
+        sourceFiles: observed,
+        sourceHash: hashSourceFiles(observed, root),
+      },
+    },
+  ]);
 
   const title = `Nx had stale information about what the "${actual.name}" plugin does.`;
   const detail =

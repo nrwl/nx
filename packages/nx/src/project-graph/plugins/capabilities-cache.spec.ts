@@ -1,10 +1,13 @@
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 import {
   capabilitiesOfLoadedPlugin,
   computeCapabilityKey,
+  hashSourceFiles,
+  recordIsFresh,
+  relativizeSourceFiles,
   sameCapabilities,
   type PluginCapabilities,
 } from './capabilities-cache';
@@ -97,101 +100,15 @@ describe('computeCapabilityKey', () => {
     );
   });
 
-  it('moves when a module the entry re-exports changes', async () => {
+  it('identifies a local plugin without reading its contents', async () => {
     const pluginPath = writeLocalPlugin();
-    const before = computeCapabilityKey(pluginPath, root);
+    const first = computeCapabilityKey(pluginPath, root);
 
-    // The hook lives here rather than in the entry file, which is the usual
-    // shape and the reason the whole project is hashed.
-    writeFileSync(
-      join(root, 'tools', 'my-plugin', 'src', 'hooks.ts'),
-      'export const postTasksExecution = async () => { /* changed */ };'
-    );
-
-    expect(computeCapabilityKey(pluginPath, root)).not.toEqual(before);
-  });
-
-  it('moves when a file the workspace ignores changes', async () => {
-    const pluginPath = writeLocalPlugin();
-    const projectRoot = join(root, 'tools', 'my-plugin');
-    writeFileSync(
-      join(root, '.gitignore'),
-      'tools/my-plugin/src/generated.ts\n'
-    );
-    writeFileSync(
-      join(projectRoot, 'src', 'generated.ts'),
-      'export const createMetadata = async () => ({});'
-    );
-    writeFileSync(pluginPath, "export * from './generated';");
-    const before = computeCapabilityKey(pluginPath, root);
-
-    // Generated code a plugin re-exports still decides what the record says, so
-    // the walk cannot be the one the workspace context does.
-    writeFileSync(
-      join(projectRoot, 'src', 'generated.ts'),
-      'export const createMetadata = async () => ({ changed: true });'
-    );
-
-    expect(computeCapabilityKey(pluginPath, root)).not.toEqual(before);
-  });
-
-  it('moves when the entry file itself changes', async () => {
-    const pluginPath = writeLocalPlugin();
-    const before = computeCapabilityKey(pluginPath, root);
-
+    // Deliberate: the key says WHICH module this is, and the record says what
+    // its sources were when Nx last read them.
     writeFileSync(pluginPath, 'export const createDependencies = () => [];');
 
-    expect(computeCapabilityKey(pluginPath, root)).not.toEqual(before);
-  });
-
-  it("ignores the plugin project's own build output", async () => {
-    const pluginPath = writeLocalPlugin();
-    const projectRoot = join(root, 'tools', 'my-plugin');
-    const before = computeCapabilityKey(pluginPath, root);
-
-    // A local plugin built into its own project would otherwise mint a new
-    // record on every rebuild.
-    mkdirSync(join(projectRoot, 'dist'), { recursive: true });
-    writeFileSync(join(projectRoot, 'dist', 'index.js'), 'exports.x = 1;');
-    mkdirSync(join(projectRoot, '.cache'), { recursive: true });
-    writeFileSync(join(projectRoot, '.cache', 'stale.js'), 'exports.y = 2;');
-
-    expect(computeCapabilityKey(pluginPath, root)).toEqual(before);
-  });
-
-  it("ignores a change outside the plugin's project", async () => {
-    const pluginPath = writeLocalPlugin();
-    const before = computeCapabilityKey(pluginPath, root);
-
-    mkdirSync(join(root, 'apps', 'unrelated'), { recursive: true });
-    writeFileSync(join(root, 'apps', 'unrelated', 'main.ts'), 'export {};');
-
-    expect(computeCapabilityKey(pluginPath, root)).toEqual(before);
-  });
-
-  it('moves when Nx itself changes version', async () => {
-    const pluginPath = writeInstalledPlugin('1.2.3');
-    const onOldNx = computeCapabilityKey(pluginPath, root);
-
-    // A record says what Nx believed about a module, so a release that reads a
-    // different set of exports must not read records written before it.
-    state.nxManifestVersion = '24.0.0';
-    vi.resetModules();
-    const { computeCapabilityKey: onNewNxKey } =
-      await import('./capabilities-cache');
-
-    expect(onNewNxKey(pluginPath, root)).not.toEqual(onOldNx);
-  });
-
-  it('declines a plugin with no project, rather than keying it on its entry file', async () => {
-    // `nx.json` can name a bare file, and nothing between it and the root is a
-    // project. Keying on the entry alone would miss a hook declared in a sibling
-    // the entry re-exports, and a stale record there skips the hook silently.
-    mkdirSync(join(root, 'tools'), { recursive: true });
-    const pluginPath = join(root, 'tools', 'my-plugin.ts');
-    writeFileSync(pluginPath, "export * from './hooks';");
-
-    expect(computeCapabilityKey(pluginPath, root)).toBeNull();
+    expect(computeCapabilityKey(pluginPath, root)).toEqual(first);
   });
 
   it('declines an installed package that declares no version', async () => {
@@ -209,14 +126,6 @@ describe('computeCapabilityKey', () => {
     );
     const pluginPath = join(packageRoot, 'index.js');
     writeFileSync(pluginPath, 'module.exports = {};');
-
-    expect(computeCapabilityKey(pluginPath, root)).toBeNull();
-  });
-
-  it('declines a plugin resolved outside the workspace', async () => {
-    const outside = mkdtempSync(join(tmpdir(), 'nx-linked-plugin-'));
-    const pluginPath = join(outside, 'index.ts');
-    writeFileSync(pluginPath, 'export const createNodes = [];');
 
     expect(computeCapabilityKey(pluginPath, root)).toBeNull();
   });
@@ -275,5 +184,98 @@ describe('sameCapabilities', () => {
     ['hasPostTasksExecution', { hasPostTasksExecution: true }],
   ])('fails when %s differs', (_field, change) => {
     expect(sameCapabilities(base, { ...base, ...change })).toBe(false);
+  });
+});
+
+describe('recordIsFresh', () => {
+  let root: string;
+
+  beforeEach(() => {
+    root = mkdtempSync(join(tmpdir(), 'nx-record-fresh-'));
+  });
+
+  function write(relativePath: string, contents: string): string {
+    const path = join(root, relativePath);
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, contents);
+    return path;
+  }
+
+  function recordFor(files: string[]) {
+    const sourceFiles = relativizeSourceFiles(files, root);
+    return {
+      capabilities: {} as PluginCapabilities,
+      sourceFiles,
+      sourceHash: hashSourceFiles(sourceFiles, root),
+    };
+  }
+
+  it('holds while every file the load read is unchanged', () => {
+    const entry = write('libs/p/index.js', "require('./hooks');");
+    const hooks = write('libs/p/hooks.js', 'module.exports = {};');
+
+    expect(recordIsFresh(recordFor([entry, hooks]), root)).toBe(true);
+  });
+
+  it('fails when a module in another project changes', () => {
+    const entry = write('libs/p/index.js', "require('../shared/hooks');");
+    const shared = write('libs/shared/hooks.js', 'module.exports = {};');
+    const record = recordFor([entry, shared]);
+
+    // The gap a project-directory hash could not see, since no hash rooted at
+    // one project reaches another.
+    write(
+      'libs/shared/hooks.js',
+      'module.exports.postTasksExecution = () => {};'
+    );
+
+    expect(recordIsFresh(record, root)).toBe(false);
+  });
+
+  it('fails when a file the workspace ignores changes', () => {
+    const entry = write('libs/p/index.js', "require('./generated');");
+    const generated = write('libs/p/generated.js', 'module.exports = {};');
+    write('.gitignore', 'libs/p/generated.js\n');
+    const record = recordFor([entry, generated]);
+
+    write('libs/p/generated.js', 'module.exports.createMetadata = () => ({});');
+
+    expect(recordIsFresh(record, root)).toBe(false);
+  });
+
+  it('ignores a file the load never read, including build output', () => {
+    const entry = write('libs/p/index.js', 'module.exports = {};');
+    const record = recordFor([entry]);
+
+    // Never read, so it decided nothing. This is what a directory walk had to
+    // guess at by directory name.
+    write('libs/p/dist/index.js', 'exports.stale = true;');
+    write('libs/p/README.md', 'docs');
+
+    expect(recordIsFresh(record, root)).toBe(true);
+  });
+
+  it('fails when a file the load read is deleted', () => {
+    const entry = write('libs/p/index.js', "require('./hooks');");
+    const hooks = write('libs/p/hooks.js', 'module.exports = {};');
+    const record = recordFor([entry, hooks]);
+
+    rmSync(hooks);
+
+    expect(recordIsFresh(record, root)).toBe(false);
+  });
+
+  it('holds for a plugin whose every source is vendored', () => {
+    // Nothing to hash, and the key carried the installed version.
+    expect(
+      recordIsFresh(
+        {
+          capabilities: {} as PluginCapabilities,
+          sourceFiles: [],
+          sourceHash: '',
+        },
+        root
+      )
+    ).toBe(true);
   });
 });

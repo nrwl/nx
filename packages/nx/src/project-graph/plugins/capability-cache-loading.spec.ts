@@ -12,7 +12,7 @@ const CAPABILITIES: PluginCapabilities = {
 };
 
 const mocks = vi.hoisted(() => ({
-  readCachedCapabilities: vi.fn(),
+  readValidRecords: vi.fn(),
   recordCapabilities: vi.fn(),
   warn: vi.fn(),
   lock: {
@@ -50,7 +50,7 @@ vi.mock('./capabilities-cache', async (importOriginal) => ({
   computeCapabilityKey: (pluginPath: string) =>
     pluginPath.includes('unidentifiable') ? null : `key:${pluginPath}`,
   createCapabilitiesLock: () => mocks.lock,
-  readCachedCapabilities: mocks.readCachedCapabilities,
+  readValidRecords: mocks.readValidRecords,
   recordCapabilities: mocks.recordCapabilities,
 }));
 
@@ -89,8 +89,8 @@ describe('loading plugins through the capability cache', () => {
     vi.resetModules();
     everythingRecorded = false;
 
-    mocks.readCachedCapabilities.mockReset();
-    mocks.readCachedCapabilities.mockImplementation((keys: string[]) => {
+    mocks.readValidRecords.mockReset();
+    mocks.readValidRecords.mockImplementation((keys: string[]) => {
       const found = new Map<string, PluginCapabilities>();
       if (everythingRecorded) {
         for (const key of keys) {
@@ -118,6 +118,7 @@ describe('loading plugins through the capability cache', () => {
           name: label,
           createNodes: ['**/*.config.ts', async () => []],
           createDependencies: async () => [],
+          sourceFiles: [`/resolved/${label}`],
         }),
         () => {},
       ];
@@ -153,7 +154,7 @@ describe('loading plugins through the capability cache', () => {
     const recorded = mocks.recordCapabilities.mock.calls
       .flatMap(([entries]) => entries)
       .find((entry) => entry.key === 'key:/resolved/test-plugin');
-    expect(recorded.capabilities).toEqual({
+    expect(recorded.record.capabilities).toEqual({
       name: 'test-plugin',
       createNodesPattern: '**/*.config.ts',
       hasCreateDependencies: true,
@@ -252,6 +253,7 @@ describe('loading plugins through the capability cache', () => {
         Promise.resolve({
           name: label,
           createNodes: [`**/${label}.config.ts`, async () => []],
+          sourceFiles: [`/resolved/${label}`],
         }),
         () => {},
       ];
@@ -262,7 +264,7 @@ describe('loading plugins through the capability cache', () => {
     const recorded = new Map(
       mocks.recordCapabilities.mock.calls
         .flatMap(([entries]) => entries)
-        .map((entry) => [entry.key, entry.capabilities])
+        .map((entry) => [entry.key, entry.record.capabilities])
     );
     // Pairing a key with another plugin's capabilities would poison the record
     // silently, so the two are checked against each other rather than counted.
@@ -284,7 +286,7 @@ describe('loading plugins through the capability cache', () => {
           ([plugin]) => plugin === 'test-plugin'
         );
       mocks.recordCapabilities.mockClear();
-      onLoaded(actual);
+      onLoaded(actual, ['/resolved/test-plugin']);
     }
 
     it('is replaced by what the worker reported', async () => {
@@ -296,8 +298,10 @@ describe('loading plugins through the capability cache', () => {
       expect(mocks.recordCapabilities).toHaveBeenCalledWith([
         {
           key: 'key:/resolved/test-plugin',
-          capabilities: expect.objectContaining({
-            hasPostTasksExecution: true,
+          record: expect.objectContaining({
+            capabilities: expect.objectContaining({
+              hasPostTasksExecution: true,
+            }),
           }),
         },
       ]);
