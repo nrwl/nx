@@ -6,7 +6,7 @@ use std::sync::Arc;
 #[cfg(not(target_arch = "wasm32"))]
 use std::time::{Duration, Instant, SystemTime};
 
-use crate::native::glob::glob_files::glob_files;
+use crate::native::glob::glob_files::{glob_files, glob_paths};
 use crate::native::hasher::hash;
 use crate::native::project_graph::utils::{ProjectRootMappings, find_project_for_path};
 use crate::native::types::FileData;
@@ -491,38 +491,32 @@ impl FilesWorker {
         true
     }
 
-    fn get_files(&self) -> Vec<FileData> {
+    fn with_files<T>(&self, read: impl FnOnce(&[(PathBuf, String)]) -> T) -> T {
         if let Some(files_sync) = &self.0 {
             let (files_lock, cvar) = files_sync.deref();
-
             trace!("waiting for files to be available");
             let files = files_lock.lock().expect("Should be able to lock files");
-
-            #[cfg(target_arch = "wasm32")]
             let files = cvar
                 .wait(files, |guard| guard.is_empty())
                 .expect("Should be able to wait for files");
+            // Keep the snapshot stable until this read completes. Refreshes and
+            // incremental updates must not mutate paths borrowed by a query.
+            read(&files)
+        } else {
+            read(&[])
+        }
+    }
 
-            #[cfg(not(target_arch = "wasm32"))]
-            let files = cvar
-                .wait(files, |guard| guard.is_empty())
-                .expect("Should be able to wait for files");
-
-            let file_data = files
+    fn get_files(&self) -> Vec<FileData> {
+        self.with_files(|files| {
+            files
                 .iter()
                 .map(|(path, hash)| FileData {
                     file: path.to_normalized_string(),
                     hash: hash.clone(),
                 })
-                .collect();
-
-            drop(files);
-
-            trace!("files are available");
-            file_data
-        } else {
-            vec![]
-        }
+                .collect()
+        })
     }
 
     /// Re-walk the workspace, diff it against the map we are holding, then adopt
@@ -691,9 +685,11 @@ impl WorkspaceContext {
         globs: Vec<String>,
         exclude: Option<Vec<String>>,
     ) -> napi::Result<Vec<String>> {
-        let file_data = self.all_file_data();
-        let globbed_files = glob_files(&file_data, globs, exclude)?;
-        Ok(globbed_files.map(|file| file.file.to_owned()).collect())
+        self.files_worker.with_files(|files| {
+            Ok(glob_paths(files, globs, exclude)?
+                .map(|(path, _)| path.into_owned())
+                .collect())
+        })
     }
 
     /// Performs multiple glob pattern matches against workspace files in parallel
@@ -745,16 +741,11 @@ impl WorkspaceContext {
         globs: Vec<String>,
         exclude: Option<Vec<String>>,
     ) -> napi::Result<String> {
-        let files = &self.all_file_data();
-        let globbed_files = glob_files(files, globs, exclude)?.collect::<Vec<_>>();
-
-        let mut hasher = xxh3::Xxh3::new();
-        for file in globbed_files {
-            hasher.update(file.file.as_bytes());
-            hasher.update(file.hash.as_bytes());
-        }
-
-        Ok(hasher.digest().to_string())
+        self.files_worker.with_files(|files| {
+            Ok(hash_paths(
+                glob_paths(files, globs, exclude)?.collect::<Vec<_>>(),
+            ))
+        })
     }
 
     #[napi]
@@ -893,6 +884,17 @@ impl WorkspaceContext {
     pub fn get_files_in_directory(&self, directory: String) -> Vec<String> {
         get_child_files(directory, self.files_worker.get_files())
     }
+}
+
+fn hash_paths<'a, P: AsRef<str>>(matches: impl IntoIterator<Item = (P, &'a str)>) -> String {
+    let mut hasher = xxh3::Xxh3::new();
+    // Hash the same normalized path/hash bytes in the same order as before.
+    // Do not combine parallel partial hashes: that would change task hashes.
+    for (path, hash) in matches {
+        hasher.update(path.as_ref().as_bytes());
+        hasher.update(hash.as_bytes());
+    }
+    hasher.digest().to_string()
 }
 
 impl Drop for WorkspaceContext {
@@ -1320,6 +1322,79 @@ mod tests {
                 "multi_glob group {i} must be sorted regardless of file creation order"
             );
         }
+    }
+
+    #[test]
+    fn glob_hash_queries_match_the_original_snapshot_before_and_after_updates() {
+        use crate::native::glob::glob_files::glob_files;
+        fn verify(ctx: &WorkspaceContext) {
+            let files = ctx.all_file_data();
+            let groups: Vec<Vec<String>> = [
+                vec![],
+                vec!["**/*"],
+                vec!["src/**/*"],
+                vec!["**/*.ts", "!**/*.spec.ts"],
+                vec!["package.json", "src/**/*.ts"],
+                vec!["missing/**/*"],
+            ]
+            .into_iter()
+            .map(|g| g.into_iter().map(str::to_string).collect())
+            .collect();
+            let mut expected_hashes = Vec::new();
+            for globs in &groups {
+                for exclude in [None, Some(vec!["**/*.spec.ts".to_string()])] {
+                    let matches: Vec<_> = glob_files(&files, globs.clone(), exclude.clone())
+                        .unwrap()
+                        .collect();
+                    let mut hasher = xxh3::Xxh3::new();
+                    for file in &matches {
+                        hasher.update(file.file.as_bytes());
+                        hasher.update(file.hash.as_bytes());
+                    }
+                    let expected = hasher.digest().to_string();
+                    assert_eq!(
+                        ctx.hash_files_matching_glob(globs.clone(), exclude.clone())
+                            .unwrap(),
+                        expected
+                    );
+                    assert_eq!(
+                        ctx.glob(globs.clone(), exclude.clone()).unwrap(),
+                        matches.iter().map(|f| f.file.clone()).collect::<Vec<_>>()
+                    );
+                    if exclude.is_none() {
+                        expected_hashes.push(expected);
+                    }
+                }
+            }
+            assert_eq!(
+                ctx.hash_files_matching_globs(groups).unwrap(),
+                expected_hashes
+            );
+            let patterns = vec!["**/*.ts".to_string(), "src/**/*".to_string()];
+            let expected: Vec<_> = patterns
+                .iter()
+                .map(|glob| ctx.glob(vec![glob.clone()], None).unwrap())
+                .collect();
+            assert_eq!(ctx.multi_glob(patterns, None).unwrap(), expected);
+        }
+        let temp = workspace_with(&[
+            "src/a.ts",
+            "src/a.spec.ts",
+            "src/nested/b.ts",
+            "package.json",
+            "東京/é.ts",
+        ]);
+        let cache = TempDir::new().unwrap();
+        let ctx = WorkspaceContext::new(as_string(&temp), as_string(&cache));
+        verify(&ctx);
+        temp.child("src/a.ts").write_str("changed").unwrap();
+        temp.child("src/new.ts").write_str("new").unwrap();
+        std::fs::remove_file(temp.child("src/a.spec.ts").path()).unwrap();
+        ctx.incremental_update(
+            vec!["src/a.ts".into(), "src/new.ts".into()],
+            vec!["src/a.spec.ts".into()],
+        );
+        verify(&ctx);
     }
 
     /// Restoring a cached task output rewrites a file with identical bytes
