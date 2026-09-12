@@ -455,8 +455,9 @@ impl FilesWorker {
             return false;
         };
         let (files_lock, _) = files_sync.deref();
-        // The first walk holds the lock throughout, and a refresh leaves the
-        // list empty while it walks, so either means a walk is in progress.
+        // Queries share the JS thread with this method, so a held lock here is
+        // the first walk (or a `ready()` waiter passing through), and an empty
+        // list is a refresh mid-walk.
         let Some(mut files) = files_lock.try_lock() else {
             return false;
         };
