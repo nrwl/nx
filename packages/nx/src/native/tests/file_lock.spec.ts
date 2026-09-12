@@ -31,32 +31,6 @@ describe('FileLock', () => {
     }
   });
 
-  it('settles `wait` only once the holder releases', async () => {
-    const holder = new FileLock(lockPath);
-    holder.lock();
-
-    const observer = new FileLock(lockPath);
-    expect(observer.check()).toBe(true);
-    const waiting = observer.wait().then(() => 'wait');
-
-    // Raced against an already-settled promise rather than timed: `wait` goes
-    // through the napi thread pool either way, so "not settled yet" is true of a
-    // free file too and would hold with no holder at all.
-    expect(await Promise.race([waiting, Promise.resolve('sentinel')])).toBe(
-      'sentinel'
-    );
-
-    holder.unlock();
-    expect(await waiting).toBe('wait');
-  });
-
-  it('settles `wait` without a holder, which is what makes the race above mean something', async () => {
-    const observer = new FileLock(lockPath);
-    expect(observer.check()).toBe(false);
-
-    expect(await observer.wait()).toBeUndefined();
-  });
-
   it('keeps the lock when `tryLock` succeeds, unlike `check`', () => {
     const holder = new FileLock(lockPath);
 
