@@ -483,7 +483,11 @@ impl HashPlanner {
     ) -> anyhow::Result<Arc<SubtreeResult>> {
         let cache_key = match input {
             Input::Inputs { input, .. } => format!("{dep}\0i\0{input}"),
-            Input::FileSet { fileset, .. } => format!("{dep}\0f\0{fileset}"),
+            Input::FileSet {
+                fileset,
+                include_ignored,
+                ..
+            } => format!("{dep}\0f\0{include_ignored}\0{fileset}"),
             // Other input kinds never reach dependencies (get_inputs_for_dependency
             // returns None for them), so they share one empty entry per project.
             _ => format!("{dep}\0none"),
@@ -713,6 +717,12 @@ impl HashPlanner {
         let disk_backed_inputs = if ignored_file_sets.is_empty() {
             vec![]
         } else {
+            if ignored_file_sets.iter().all(|f| f.starts_with('!')) {
+                anyhow::bail!(
+                    "The includeIgnored fileset \"{}\" is a negation with no positive includeIgnored fileset to filter in the inputs for \"{project_name}\". A negation only filters includeIgnored filesets declared for the same project, and a fileset with `dependencies: true` is hashed on its own.",
+                    ignored_file_sets[0]
+                );
+            }
             let resolved: Vec<String> = ignored_file_sets
                 .iter()
                 .map(|f| resolve_files_glob(f, project_root, project_name))

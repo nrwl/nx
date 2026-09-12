@@ -199,6 +199,89 @@ describe('task planner', () => {
         ])
       ).toThrow(/no leading directory/);
     });
+
+    it('rejects a negation with no positive includeIgnored fileset to filter', () => {
+      expect(() =>
+        planFor([
+          'default',
+          { fileset: '!{projectRoot}/dist/**/*.map', includeIgnored: true },
+        ])
+      ).toThrow(/no positive includeIgnored fileset/);
+    });
+
+    function twoConsumersOfShared(aInputs: any[], bInputs: any[]) {
+      const builder = new ProjectGraphBuilder();
+      builder.addNode({
+        name: 'a',
+        type: 'lib',
+        data: {
+          root: 'libs/a',
+          targets: { build: { executor: 'nx:run-commands', inputs: aInputs } },
+        },
+      });
+      builder.addNode({
+        name: 'b',
+        type: 'lib',
+        data: {
+          root: 'libs/b',
+          targets: { build: { executor: 'nx:run-commands', inputs: bInputs } },
+        },
+      });
+      builder.addNode({
+        name: 'shared',
+        type: 'lib',
+        data: {
+          root: 'libs/shared',
+          targets: { build: { executor: 'nx:run-commands' } },
+        },
+      });
+      builder.addImplicitDependency('a', 'shared');
+      builder.addImplicitDependency('b', 'shared');
+      const projectGraph = builder.getUpdatedProjectGraph();
+      const taskGraph = createTaskGraph(
+        projectGraph,
+        {},
+        ['a', 'b'],
+        ['build'],
+        undefined,
+        {},
+        false
+      );
+      const ref = transferProjectGraph(
+        transformProjectGraphForRust(projectGraph)
+      );
+      return (order: string[]) =>
+        new HashPlanner({} as any, ref).getPlans(order, taskGraph);
+    }
+
+    it('keys the dependency subtree memo on the backing store', () => {
+      const plansIn = twoConsumersOfShared(
+        [
+          {
+            fileset: '{projectRoot}/dist/**',
+            dependencies: true,
+            includeIgnored: true,
+          },
+        ],
+        [{ fileset: '{projectRoot}/dist/**', dependencies: true }]
+      );
+
+      // Whichever task is planned first must not hand its store to the other.
+      for (const order of [
+        ['a:build', 'b:build'],
+        ['b:build', 'a:build'],
+      ]) {
+        const plans = plansIn(order);
+        expect(plans['a:build']).toContain(
+          'files:shared:[libs/shared/dist/**]'
+        );
+        expect(plans['a:build']).not.toContain('shared:libs/shared/dist/**');
+        expect(plans['b:build']).toContain('shared:libs/shared/dist/**');
+        expect(plans['b:build']).not.toContain(
+          'files:shared:[libs/shared/dist/**]'
+        );
+      }
+    });
   });
 
   it('should plan the task where the project has dependencies', async () => {
