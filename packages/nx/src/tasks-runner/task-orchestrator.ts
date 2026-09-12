@@ -14,6 +14,7 @@ import { walkTaskGraph } from './task-graph-utils';
 import { getInputs, TaskHasher } from '../hasher/task-hasher';
 import {
   BatchStatus,
+  InvocationRecord,
   IS_WASM,
   TaskStatus as NativeTaskStatus,
   parseTaskStatus,
@@ -56,18 +57,22 @@ import {
   getEnvVariablesForBatchProcess,
   getEnvVariablesForTask,
   getForceColorForChild,
+  getInvocationAncestorPids,
+  getInvocationRootPid,
   getTaskSpecificEnv,
 } from './task-env';
 import { TaskStatus } from './tasks-runner';
 import { Batch, TasksSchedule } from './tasks-schedule';
 import {
   calculateReverseDeps,
+  createTaskInvocationKey,
   expandInitiatingTasksThroughNoop,
   getExecutorForTask,
   getPrintableCommandArgsForTask,
   getTargetConfigurationForTask,
   removeTasksFromTaskGraph,
   shouldStreamOutput,
+  taskIdFromInvocationKey,
 } from './utils';
 
 type CacheHit = {
@@ -107,12 +112,13 @@ export class TaskOrchestrator {
   private taskInvocationTracker = !IS_WASM
     ? new TaskInvocationTracker(
         getLocalDbConnection(),
-        Number(process.env.NX_INVOCATION_ROOT_PID ?? process.pid)
+        getInvocationRootPid(),
+        getInvocationAncestorPids()
       )
     : null;
-  // Tracks tasks registered by THIS process so that recursive code paths
-  // (e.g. applyFromCacheOrRunBatch looping on incomplete batches) don't
-  // re-register and trip the DB uniqueness constraint.
+  // Tasks this process has already registered. Recursive code paths (e.g.
+  // applyFromCacheOrRunBatch looping on incomplete batches) re-enter the
+  // detector for the same task; skipping them saves a DB round trip.
   private registeredInvocations = new Set<string>();
   private tasksSchedule = new TasksSchedule(
     this.projectGraph,
@@ -445,38 +451,52 @@ export class TaskOrchestrator {
   }
 
   /**
-   * Registers a task invocation and checks for loops across nested Nx processes.
-   * Uses the task_invocations DB table keyed by root PID. registerTask() throws
-   * on unique constraint violation when a parent Nx process already registered
-   * this task — indicating an infinite loop.
+   * Registers a task invocation and checks for loops across nested Nx
+   * processes. registerTask() returns the invocation chain only when an
+   * *ancestor* Nx process is already running this task — a genuine loop.
+   * Sibling processes running the same task are legitimate and register
+   * without complaint.
    */
   private detectTaskInvocationLoop(task: Task): void {
     if (!this.taskInvocationTracker) return;
-    if (this.registeredInvocations.has(task.id)) return;
-    try {
-      this.taskInvocationTracker.registerTask(process.pid, task.id);
-      this.registeredInvocations.add(task.id);
-    } catch {
-      // Unique constraint violation — task already invoked by an ancestor Nx process
-      const chain = this.taskInvocationTracker.getInvocationChain();
-      const chainDisplay = chain.map((r) => r.taskId).join(' -> ');
+    const invocationKey = createTaskInvocationKey(task);
+    if (this.registeredInvocations.has(invocationKey)) return;
 
-      output.error({
-        title: 'Recursive task invocation detected',
-        bodyLines: [
-          `Nx detected a recursive loop of task invocations:`,
-          ``,
-          `  ${chainDisplay} -> ${task.id}`,
-          ``,
-          `Task "${task.id}" was already invoked by a parent Nx process in this chain.`,
-          `This typically happens when a task's command (e.g., "nx ${task.target.target} ${task.target.project}")`,
-          `triggers a chain of tasks that eventually re-invokes itself.`,
-          ``,
-          `To fix this, review the command configuration for the tasks in the chain above.`,
-        ],
-      });
-      process.exit(1);
+    let chain: InvocationRecord[] | null;
+    try {
+      chain = this.taskInvocationTracker.registerTask(
+        process.pid,
+        invocationKey
+      );
+    } catch {
+      // Loop detection is diagnostic only; a DB failure must not fail the run
+      // or be mistaken for a loop.
+      return;
     }
+
+    if (!chain) {
+      this.registeredInvocations.add(invocationKey);
+      return;
+    }
+
+    const chainDisplay = chain
+      .map((r) => taskIdFromInvocationKey(r.taskId))
+      .join(' -> ');
+    output.error({
+      title: 'Recursive task invocation detected',
+      bodyLines: [
+        `Nx detected a recursive loop of task invocations:`,
+        ``,
+        `  ${chainDisplay} -> ${task.id}`,
+        ``,
+        `Task "${task.id}" was already invoked by a parent Nx process in this chain.`,
+        `This typically happens when a task's command (e.g., "nx ${task.target.target} ${task.target.project}")`,
+        `triggers a chain of tasks that eventually re-invokes itself.`,
+        ``,
+        `To fix this, review the command configuration for the tasks in the chain above.`,
+      ],
+    });
+    process.exit(1);
   }
 
   // endregion Processing Scheduled Tasks
@@ -1560,49 +1580,64 @@ export class TaskOrchestrator {
       return runningTask;
     }
 
-    const taskSpecificEnv = await this.processedTasks.get(task.id);
-    await this.preRunSteps([task], { groupId });
-
-    const pipeOutput = await this.pipeOutputCapture(task);
-    // obtain metadata
-    const temporaryOutputPath = this.cache.temporaryOutputPath(task);
-    const streamOutput = isStaticOutputStyle(this.outputStyle)
-      ? false
-      : shouldStreamOutput(task, this.initiatingProject);
-
-    let env = pipeOutput
-      ? getEnvVariablesForTask(
-          task,
-          taskSpecificEnv,
-          getForceColorForChild(),
-          this.options.skipNxCache,
-          this.options.captureStderr,
-          null,
-          null
-        )
-      : getEnvVariablesForTask(
-          task,
-          taskSpecificEnv,
-          undefined,
-          this.options.skipNxCache,
-          this.options.captureStderr,
-          temporaryOutputPath,
-          streamOutput
-        );
-    this.detectTaskInvocationLoop(task);
-    const childProcess = await this.runTask(
-      task,
-      streamOutput,
-      env,
-      temporaryOutputPath,
-      pipeOutput
-    );
+    // Claim the task before doing any of the work below. getRunningTasks()
+    // above is a check-then-act: until this row exists, a sibling Nx process
+    // asking the same question is told the task is not running and starts a
+    // duplicate of it.
     this.runningTasksService?.addRunningTask(task.id);
-    this.runningContinuousTasks.set(task.id, {
-      runningTask: childProcess,
-      groupId,
-      ownsRunningTasksService: true,
-    });
+
+    let childProcess: RunningTask;
+    try {
+      const taskSpecificEnv = await this.processedTasks.get(task.id);
+      await this.preRunSteps([task], { groupId });
+
+      const pipeOutput = await this.pipeOutputCapture(task);
+      // obtain metadata
+      const temporaryOutputPath = this.cache.temporaryOutputPath(task);
+      const streamOutput = isStaticOutputStyle(this.outputStyle)
+        ? false
+        : shouldStreamOutput(task, this.initiatingProject);
+
+      let env = pipeOutput
+        ? getEnvVariablesForTask(
+            task,
+            taskSpecificEnv,
+            getForceColorForChild(),
+            this.options.skipNxCache,
+            this.options.captureStderr,
+            null,
+            null
+          )
+        : getEnvVariablesForTask(
+            task,
+            taskSpecificEnv,
+            undefined,
+            this.options.skipNxCache,
+            this.options.captureStderr,
+            temporaryOutputPath,
+            streamOutput
+          );
+      this.detectTaskInvocationLoop(task);
+      childProcess = await this.runTask(
+        task,
+        streamOutput,
+        env,
+        temporaryOutputPath,
+        pipeOutput
+      );
+      this.runningContinuousTasks.set(task.id, {
+        runningTask: childProcess,
+        groupId,
+        ownsRunningTasksService: true,
+      });
+    } catch (e) {
+      // Nothing owns the claim until runningContinuousTasks holds it — the
+      // release paths (completeContinuousTask, the signal handler) both iterate
+      // that map. Drop it here or siblings wait on a task no one is running.
+      this.runningTasksService?.removeRunningTask(task.id);
+      throw e;
+    }
+
     this.continuousTaskExitHandled.set(
       task.id,
       new Promise<void>((resolve) => {
@@ -1780,8 +1815,9 @@ export class TaskOrchestrator {
       if (this.completedTasks.has(task.id)) continue;
 
       this.completedTasks.set(task.id, status);
-      this.taskInvocationTracker?.unregisterTask(task.id);
-      this.registeredInvocations.delete(task.id);
+      const invocationKey = createTaskInvocationKey(task);
+      this.taskInvocationTracker?.unregisterTask(process.pid, invocationKey);
+      this.registeredInvocations.delete(invocationKey);
 
       if (this.tuiEnabled) {
         this.options.lifeCycle.setTaskStatus(
