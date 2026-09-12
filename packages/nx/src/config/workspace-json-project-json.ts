@@ -212,8 +212,8 @@ export type InputDefinition =
   | { input: string; projects: string | string[] }
   | { input: string; dependencies: true }
   | { input: string }
-  | { fileset: string }
-  | { fileset: string; dependencies: true }
+  | { fileset: string; includeIgnored?: boolean }
+  | { fileset: string; dependencies: true; includeIgnored?: boolean }
   | { runtime: string }
   | { externalDependencies: string[] }
   | { dependentTasksOutputFiles: string; transitive?: boolean }

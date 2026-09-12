@@ -397,6 +397,9 @@ export declare const enum EventType {
   rescan = 'rescan'
 }
 
+/** The existing files an `includeIgnored` fileset group matches on disk, sorted. */
+export declare function expandFilesInput(workspaceRoot: string, globs: Array<string>): Array<string>
+
 export declare function expandOutputs(directory: string, entries: Array<string>): Array<string>
 
 export interface ExternalDependenciesInput {
@@ -422,6 +425,11 @@ export interface FileMap {
 export interface FileSetInput {
   fileset: string
   dependencies?: boolean
+  /**
+   * Hash the glob straight from disk (so gitignored/generated files count)
+   * instead of the workspace file map.
+   */
+  includeIgnored?: boolean
 }
 
 export declare function findImports(projectFileMap: Record<string, Array<string>>): Array<ImportResult>
