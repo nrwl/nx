@@ -87,6 +87,52 @@ describe('encodeAuto', () => {
     expect(payload.shapes.length).toBeGreaterThanOrEqual(300);
   });
 
+  it('keeps shapes apart when their bucket hashes collide', () => {
+    // Shapes are bucketed by a 32-bit hash over each key's string-table id,
+    // seeded with the key count. These id lists were found by search to
+    // collide: one pair of equal length, and one list with its own prefix.
+    // The pool object registers key1..key40 as ids 1..40 ('v' takes 0).
+    const equal = [
+      [18, 9, 19, 7, 16, 26, 40, 17],
+      [38, 32, 25, 13, 27, 21, 12, 28],
+    ];
+    const prefix = [
+      [14, 31, 24, 11, 40, 28, 17, 38, 33],
+      [14, 31, 24, 11, 40, 28, 17, 38],
+    ];
+    const hash = (ids: number[]) => {
+      let h = ids.length;
+      for (const id of ids) h = (Math.imul(h, 0x9e3779b1) ^ id) | 0;
+      return h;
+    };
+    const object = (ids: number[]) =>
+      Object.fromEntries(ids.map((id) => [`key${id}`, 'v']));
+    const pool = object(Array.from({ length: 40 }, (_, i) => i + 1));
+    const input = {
+      pool,
+      a: object(equal[0]),
+      b: object(equal[1]),
+      c: object(prefix[0]),
+      d: object(prefix[1]),
+      fill: Array.from({ length: 300 }, () =>
+        object(Array.from({ length: 20 }, (_, i) => i + 1))
+      ),
+    };
+    const payload = encodeAuto(input);
+    expect(payload).toBeDefined();
+    // Precondition: the ids and the hash formula still match the encoder's.
+    // If this fails, re-search the pairs rather than loosening the test.
+    for (let id = 1; id <= 40; id++) {
+      expect(payload.strings[id]).toBe(`key${id}`);
+    }
+    expect(hash(equal[0])).toBe(hash(equal[1]));
+    expect(hash(prefix[0])).toBe(hash(prefix[1]));
+    const decoded = decodeDeduped<typeof input>(payload);
+    expect(Object.keys(decoded.b)).toEqual(equal[1].map((id) => `key${id}`));
+    expect(Object.keys(decoded.d)).toEqual(prefix[1].map((id) => `key${id}`));
+    expect(decoded).toEqual(input);
+  });
+
   it('interns one shape per distinct key list', () => {
     const payload = encodeAuto(taskGraphLike(40, 100));
     // 40 tasks share the task shape, the target shape and the nodes shape.
