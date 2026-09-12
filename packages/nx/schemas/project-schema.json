@@ -347,17 +347,6 @@
             },
             "required": ["json"],
             "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "continuousDependenciesInputs": {
-                "type": "boolean",
-                "description": "Whether to also hash the inputs of the task's continuous dependencies, such as a dev server it depends on. Those tasks run in their own process, so their inputs are otherwise not part of this task's hash."
-              }
-            },
-            "required": ["continuousDependenciesInputs"],
-            "additionalProperties": false
           }
         ]
       }

@@ -968,7 +968,7 @@ describe('task planner', () => {
       expect(plans).toMatchSnapshot();
     });
   });
-  describe('continuousDependenciesInputs', () => {
+  describe('continuous dependencies', () => {
     it("hashes a continuous dependency's inputs into the task it serves", () => {
       const builder = new ProjectGraphBuilder(undefined, {
         parent: [{ file: 'libs/parent/filea.ts', hash: 'a.hash' }],
@@ -992,10 +992,7 @@ describe('task planner', () => {
           targets: {
             test: {
               executor: 'nx:run-commands',
-              inputs: [
-                '{projectRoot}/**/*',
-                { continuousDependenciesInputs: true },
-              ],
+              inputs: ['{projectRoot}/**/*'],
               dependsOn: [{ projects: 'child', target: 'serve' }],
             },
           },

@@ -140,7 +140,6 @@ fn split_inputs_into_self_and_deps<'a>(
                 | Input::DepsOutputs { .. }
                 | Input::ExternalDependency(_)
                 | Input::WorkingDirectory(_)
-                | Input::ContinuousDependenciesInputs
                 | Input::Json { .. } => {
                     acc.1.push(input);
                 }
@@ -203,9 +202,6 @@ pub(super) fn expand_single_project_inputs<'a>(
                     fileset,
                     dependencies: false,
                 });
-            }
-            Input::ContinuousDependenciesInputs => {
-                expanded.push(Input::ContinuousDependenciesInputs)
             }
             Input::Runtime(runtime) => expanded.push(Input::Runtime(runtime)),
             Input::Environment(env) => expanded.push(Input::Environment(env)),

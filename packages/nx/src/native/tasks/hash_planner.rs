@@ -166,33 +166,26 @@ impl HashPlanner {
                     &mut VisitedTracker::new(task.target.project.as_str()),
                 )?);
 
-                // A continuous dependency runs in its own process, so its reads
-                // never reach this task. Its inputs are spliced in whole, from
-                // its declared inputs: a task that never finishes is never traced.
-                if inputs
-                    .self_inputs
-                    .iter()
-                    .any(|i| matches!(i, Input::ContinuousDependenciesInputs))
+                // A continuous dependency serves this task from its own process,
+                // so what it reads is hashed here through its declared inputs.
+                for dep_id in task_graph
+                    .continuous_dependencies
+                    .get(*id)
+                    .into_iter()
+                    .flatten()
                 {
-                    for dep_id in task_graph
-                        .continuous_dependencies
-                        .get(*id)
-                        .into_iter()
-                        .flatten()
-                    {
-                        let Some(dep_task) = task_graph.tasks.get(dep_id) else {
-                            continue;
-                        };
-                        let dep_inputs = get_inputs(dep_task, &self.project_graph, &self.nx_json)?;
-                        ids.extend(self.self_and_deps_inputs(
-                            &dep_task.target.project,
-                            dep_task,
-                            &dep_inputs,
-                            &task_graph,
-                            external_deps_mapped,
-                            &mut VisitedTracker::new(dep_task.target.project.as_str()),
-                        )?);
-                    }
+                    let Some(dep_task) = task_graph.tasks.get(dep_id) else {
+                        continue;
+                    };
+                    let dep_inputs = get_inputs(dep_task, &self.project_graph, &self.nx_json)?;
+                    ids.extend(self.self_and_deps_inputs(
+                        &dep_task.target.project,
+                        dep_task,
+                        &dep_inputs,
+                        &task_graph,
+                        external_deps_mapped,
+                        &mut VisitedTracker::new(dep_task.target.project.as_str()),
+                    )?);
                 }
 
                 ids.sort_unstable();
