@@ -1,6 +1,6 @@
 // nx-ignore-next-line
 import type { OutputBundle } from 'rollup'; // only used  for types
-import { relative } from 'path';
+import { dirname, relative } from 'path';
 import { stripIndents } from '@nx/devkit';
 
 /*
@@ -44,7 +44,15 @@ export function typeDefinitions(options: { projectRoot: string }) {
           '.d.ts'
         );
 
-        const relativeSourceDtsName = JSON.stringify('./' + entrySourceDtsName);
+        const relativeSourceDtsFile = relative(
+          dirname(file.fileName),
+          entrySourceDtsName
+        );
+        const relativeSourceDtsName = JSON.stringify(
+          relativeSourceDtsFile.startsWith('.')
+            ? relativeSourceDtsFile
+            : `./${relativeSourceDtsFile}`
+        );
         const dtsFileSource = hasDefaultExport
           ? stripIndents`
               export * from ${relativeSourceDtsName};
