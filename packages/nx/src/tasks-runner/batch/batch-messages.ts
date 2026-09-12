@@ -23,8 +23,8 @@ export interface RunTasksMessage {
   type: BatchMessageType.RunTasks;
   executorName: string;
   projectGraph: ProjectGraph;
-  batchTaskGraph: TaskGraph;
-  fullTaskGraph: TaskGraph;
+  batchTaskGraph: TaskGraph | Buffer;
+  fullTaskGraph: TaskGraph | Buffer;
 }
 
 export interface CompleteTaskMessage {

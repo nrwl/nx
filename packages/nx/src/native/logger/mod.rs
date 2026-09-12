@@ -119,9 +119,16 @@ fn initialize_logger() {
                 .unwrap_or_else(|_| EnvFilter::new("nx::native=info")),
         );
 
+    // The task runner cannot use the TUI without a terminal on stderr,
+    // unless its explicit capability-check override is enabled. Avoid
+    // formatting and buffering trace events for a UI that cannot be shown.
+    let tui_layer = tui_logging_layer(
+        std::io::stderr().is_terminal(),
+        env::var("NX_TUI_SKIP_CAPABILITY_CHECK").ok().as_deref(),
+    );
     let registry = tracing_subscriber::registry()
         .with(stdout_layer)
-        .with(TuiTracingSubscriberLayer);
+        .with(tui_layer);
     tui_logger::init_logger(tui_logger::LevelFilter::Trace).ok();
 
     if env::var("NX_NATIVE_FILE_LOGGING").is_err() {
@@ -154,4 +161,44 @@ fn initialize_logger() {
         );
 
     registry.with(file_layer).try_init().ok();
+}
+
+fn tui_logging_layer(
+    stderr_is_terminal: bool,
+    skip_capability_check: Option<&str>,
+) -> Option<TuiTracingSubscriberLayer> {
+    (stderr_is_terminal || skip_capability_check == Some("true"))
+        .then_some(TuiTracingSubscriberLayer)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn filters_invisible_tui_traces_but_preserves_requested_logging() {
+        // The event macros gate on `LevelFilter::current()`, the highest level
+        // any live subscriber in the process asks for, so `tracing::enabled!`
+        // would answer for whatever other tests are running. The subscriber's
+        // own hint is what that gate is built from.
+        fn trace_enabled(terminal: bool, override_value: Option<&str>, console: &str) -> bool {
+            let subscriber = tracing_subscriber::registry()
+                .with(
+                    tracing_subscriber::fmt::layer()
+                        .with_writer(std::io::sink)
+                        .with_filter(EnvFilter::new(console)),
+                )
+                .with(tui_logging_layer(terminal, override_value));
+            subscriber
+                .max_level_hint()
+                .is_none_or(|hint| hint >= tracing::level_filters::LevelFilter::TRACE)
+        }
+        assert!(!trace_enabled(false, None, "info"));
+        assert!(!trace_enabled(false, Some("false"), "info"));
+        assert!(trace_enabled(true, None, "info"));
+        assert!(trace_enabled(false, Some("true"), "info"));
+        // Console/file subscribers keep their own filters: explicitly
+        // requesting trace still works when the TUI sink is absent.
+        assert!(trace_enabled(false, None, "trace"));
+    }
 }

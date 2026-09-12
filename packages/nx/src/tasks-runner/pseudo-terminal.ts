@@ -264,8 +264,8 @@ export class PseudoTtyProcessWithSend extends PseudoTtyProcess {
     super(rustPseudoTerminal, _childProcess, quiet);
   }
 
-  send(message: Serializable) {
-    this.pseudoIpc.sendMessageToChild(this.id, message);
+  send(message: Serializable, format?: 'v8' | 'json') {
+    this.pseudoIpc.sendMessageToChild(this.id, message, format);
   }
 }
 

@@ -8,6 +8,7 @@ import {
 import { workspaceRoot } from '../../utils/workspace-root';
 import { combineOptionsForExecutor, Options } from '../../utils/params';
 import { TaskGraph } from '../../config/task-graph';
+import { parseMessage } from '../../utils/consume-messages-from-socket';
 import { ExecutorContext } from '../../config/misc-interfaces';
 import { readProjectsConfigurationFromProjectGraph } from '../../project-graph/project-graph';
 import { readNxJson } from '../../config/configuration';
@@ -22,6 +23,18 @@ import { ProjectGraph } from '../../config/project-graph';
 // Batch workers are inside an Nx run just like task workers (see
 // bin/run-executor.ts) — mark it so nested tooling can detect Nx.
 process.env.NX_CLI_SET = 'true';
+
+// The channel uses advanced serialization, which rejects values JSON used to
+// drop silently, such as a function on a third-party executor's result.
+function sendToRunner(
+  message: CompleteTaskMessage | CompleteBatchExecutionMessage
+) {
+  try {
+    process.send(message);
+  } catch {
+    process.send(JSON.parse(JSON.stringify(message)));
+  }
+}
 
 function getBatchExecutor(
   executorName: string,
@@ -95,11 +108,11 @@ async function runTasks(
 
         if (!current.done) {
           batchResults[current.value.task] = current.value.result;
-          process.send({
+          sendToRunner({
             type: BatchMessageType.CompleteTask,
             task: current.value.task,
             result: current.value.result,
-          } as CompleteTaskMessage);
+          });
         } else {
           break;
         }
@@ -116,19 +129,32 @@ async function runTasks(
   }
 }
 
+function decodeTaskGraph(graph: TaskGraph | Buffer): TaskGraph {
+  return Buffer.isBuffer(graph) ? parseMessage<TaskGraph>(graph) : graph;
+}
+
 process.on('message', async (message: BatchMessage) => {
   switch (message.type) {
     case BatchMessageType.RunTasks: {
-      const results = await runTasks(
-        message.executorName,
-        message.projectGraph,
-        message.batchTaskGraph,
-        message.fullTaskGraph
-      );
-      process.send({
-        type: BatchMessageType.CompleteBatchExecution,
-        results,
-      } as CompleteBatchExecutionMessage);
+      // runTasks reports its own failures; this covers decoding the graphs
+      // and replying, which would otherwise die as an unhandled rejection.
+      try {
+        const results = await runTasks(
+          message.executorName,
+          message.projectGraph,
+          decodeTaskGraph(message.batchTaskGraph),
+          decodeTaskGraph(message.fullTaskGraph)
+        );
+        sendToRunner({
+          type: BatchMessageType.CompleteBatchExecution,
+          results,
+        });
+      } catch (e) {
+        console.error(
+          `Batch ${message.executorName} failed before it could report results: ${e.message}`
+        );
+        process.exit(1);
+      }
     }
   }
 });
