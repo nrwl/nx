@@ -2653,6 +2653,706 @@ describe('createTaskGraph', () => {
     });
   });
 
+  it('should keep a continuous dependency reached through a project without the target', () => {
+    projectGraph = {
+      nodes: {
+        e2e: {
+          name: 'e2e',
+          type: 'e2e',
+          data: {
+            root: 'e2e-root',
+            targets: {
+              e2e: {
+                executor: 'nx:run-commands',
+                dependsOn: ['^serve'],
+              },
+            },
+          },
+        },
+        shared: {
+          name: 'shared',
+          type: 'lib',
+          data: {
+            root: 'shared-root',
+            targets: {},
+          },
+        },
+        app: {
+          name: 'app',
+          type: 'app',
+          data: {
+            root: 'app-root',
+            targets: {
+              serve: {
+                executor: 'nx:run-commands',
+                continuous: true,
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        e2e: [{ source: 'e2e', target: 'shared', type: 'static' }],
+        shared: [{ source: 'shared', target: 'app', type: 'static' }],
+        app: [],
+      },
+    };
+
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['e2e'],
+      ['e2e'],
+      undefined,
+      {
+        __overrides_unparsed__: [],
+      }
+    );
+    expect(taskGraph).toEqual({
+      roots: ['app:serve'],
+      tasks: {
+        'e2e:e2e': {
+          id: 'e2e:e2e',
+          target: {
+            project: 'e2e',
+            target: 'e2e',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'e2e-root',
+          cache: false,
+          parallelism: true,
+          continuous: false,
+        },
+        'app:serve': {
+          id: 'app:serve',
+          target: {
+            project: 'app',
+            target: 'serve',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'app-root',
+          cache: false,
+          parallelism: true,
+          continuous: true,
+        },
+      },
+      dependencies: {
+        'e2e:e2e': [],
+        'app:serve': [],
+      },
+      continuousDependencies: {
+        'e2e:e2e': ['app:serve'],
+        'app:serve': [],
+      },
+    });
+  });
+
+  it('should split continuous and regular dependencies reached through a chain of projects without the target', () => {
+    projectGraph = {
+      nodes: {
+        e2e: {
+          name: 'e2e',
+          type: 'e2e',
+          data: {
+            root: 'e2e-root',
+            targets: {
+              e2e: {
+                executor: 'nx:run-commands',
+                dependsOn: ['^serve'],
+              },
+            },
+          },
+        },
+        shared1: {
+          name: 'shared1',
+          type: 'lib',
+          data: {
+            root: 'shared1-root',
+            targets: {},
+          },
+        },
+        shared2: {
+          name: 'shared2',
+          type: 'lib',
+          data: {
+            root: 'shared2-root',
+            targets: {},
+          },
+        },
+        app: {
+          name: 'app',
+          type: 'app',
+          data: {
+            root: 'app-root',
+            targets: {
+              serve: {
+                executor: 'nx:run-commands',
+                continuous: true,
+              },
+            },
+          },
+        },
+        lib: {
+          name: 'lib',
+          type: 'lib',
+          data: {
+            root: 'lib-root',
+            targets: {
+              serve: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        e2e: [{ source: 'e2e', target: 'shared1', type: 'static' }],
+        shared1: [{ source: 'shared1', target: 'shared2', type: 'static' }],
+        shared2: [
+          { source: 'shared2', target: 'app', type: 'static' },
+          { source: 'shared2', target: 'lib', type: 'static' },
+        ],
+        app: [],
+        lib: [],
+      },
+    };
+
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['e2e'],
+      ['e2e'],
+      undefined,
+      {
+        __overrides_unparsed__: [],
+      }
+    );
+    expect(taskGraph).toEqual({
+      roots: ['app:serve', 'lib:serve'],
+      tasks: {
+        'e2e:e2e': {
+          id: 'e2e:e2e',
+          target: {
+            project: 'e2e',
+            target: 'e2e',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'e2e-root',
+          cache: false,
+          parallelism: true,
+          continuous: false,
+        },
+        'app:serve': {
+          id: 'app:serve',
+          target: {
+            project: 'app',
+            target: 'serve',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'app-root',
+          cache: false,
+          parallelism: true,
+          continuous: true,
+        },
+        'lib:serve': {
+          id: 'lib:serve',
+          target: {
+            project: 'lib',
+            target: 'serve',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'lib-root',
+          cache: false,
+          parallelism: true,
+          continuous: false,
+        },
+      },
+      dependencies: {
+        'e2e:e2e': ['lib:serve'],
+        'app:serve': [],
+        'lib:serve': [],
+      },
+      continuousDependencies: {
+        'e2e:e2e': ['app:serve'],
+        'app:serve': [],
+        'lib:serve': [],
+      },
+    });
+  });
+
+  it('should keep a continuous dependency reached through a cycle of projects without the target', () => {
+    projectGraph = {
+      nodes: {
+        e2e: {
+          name: 'e2e',
+          type: 'e2e',
+          data: {
+            root: 'e2e-root',
+            targets: {
+              e2e: {
+                executor: 'nx:run-commands',
+                dependsOn: ['^serve'],
+              },
+            },
+          },
+        },
+        shared: {
+          name: 'shared',
+          type: 'lib',
+          data: {
+            root: 'shared-root',
+            targets: {},
+          },
+        },
+        app: {
+          name: 'app',
+          type: 'app',
+          data: {
+            root: 'app-root',
+            targets: {
+              serve: {
+                executor: 'nx:run-commands',
+                continuous: true,
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        e2e: [{ source: 'e2e', target: 'shared', type: 'static' }],
+        shared: [
+          { source: 'shared', target: 'app', type: 'static' },
+          { source: 'shared', target: 'e2e', type: 'static' },
+        ],
+        app: [],
+      },
+    };
+
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['e2e'],
+      ['e2e'],
+      undefined,
+      {
+        __overrides_unparsed__: [],
+      }
+    );
+    expect(taskGraph).toEqual({
+      roots: ['app:serve'],
+      tasks: {
+        'e2e:e2e': {
+          id: 'e2e:e2e',
+          target: {
+            project: 'e2e',
+            target: 'e2e',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'e2e-root',
+          cache: false,
+          parallelism: true,
+          continuous: false,
+        },
+        'app:serve': {
+          id: 'app:serve',
+          target: {
+            project: 'app',
+            target: 'serve',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'app-root',
+          cache: false,
+          parallelism: true,
+          continuous: true,
+        },
+      },
+      dependencies: {
+        'e2e:e2e': [],
+        'app:serve': [],
+      },
+      continuousDependencies: {
+        'e2e:e2e': ['app:serve'],
+        'app:serve': [],
+      },
+    });
+  });
+
+  it('should keep a continuous cycle reached only through projects without the target', () => {
+    projectGraph = {
+      nodes: {
+        a: {
+          name: 'a',
+          type: 'app',
+          data: {
+            root: 'a-root',
+            targets: {
+              serve: {
+                executor: 'nx:run-commands',
+                continuous: true,
+                dependsOn: ['^serve'],
+              },
+            },
+          },
+        },
+        x: {
+          name: 'x',
+          type: 'lib',
+          data: {
+            root: 'x-root',
+            targets: {},
+          },
+        },
+        b: {
+          name: 'b',
+          type: 'app',
+          data: {
+            root: 'b-root',
+            targets: {
+              serve: {
+                executor: 'nx:run-commands',
+                continuous: true,
+                dependsOn: ['^serve'],
+              },
+            },
+          },
+        },
+        y: {
+          name: 'y',
+          type: 'lib',
+          data: {
+            root: 'y-root',
+            targets: {},
+          },
+        },
+      },
+      dependencies: {
+        a: [{ source: 'a', target: 'x', type: 'static' }],
+        x: [{ source: 'x', target: 'b', type: 'static' }],
+        b: [{ source: 'b', target: 'y', type: 'static' }],
+        y: [{ source: 'y', target: 'a', type: 'static' }],
+      },
+    };
+
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['a'],
+      ['serve'],
+      undefined,
+      {
+        __overrides_unparsed__: [],
+      }
+    );
+    expect(taskGraph).toEqual({
+      roots: [],
+      tasks: {
+        'a:serve': {
+          id: 'a:serve',
+          target: {
+            project: 'a',
+            target: 'serve',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'a-root',
+          cache: false,
+          parallelism: true,
+          continuous: true,
+        },
+        'b:serve': {
+          id: 'b:serve',
+          target: {
+            project: 'b',
+            target: 'serve',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'b-root',
+          cache: false,
+          parallelism: true,
+          continuous: true,
+        },
+      },
+      dependencies: {
+        'a:serve': [],
+        'b:serve': [],
+      },
+      continuousDependencies: {
+        'a:serve': ['b:serve'],
+        'b:serve': ['a:serve'],
+      },
+    });
+  });
+
+  it('should not duplicate a continuous dependency reached both directly and through a project without the target', () => {
+    projectGraph = {
+      nodes: {
+        e2e: {
+          name: 'e2e',
+          type: 'e2e',
+          data: {
+            root: 'e2e-root',
+            targets: {
+              e2e: {
+                executor: 'nx:run-commands',
+                dependsOn: ['^serve'],
+              },
+            },
+          },
+        },
+        shared: {
+          name: 'shared',
+          type: 'lib',
+          data: {
+            root: 'shared-root',
+            targets: {},
+          },
+        },
+        app: {
+          name: 'app',
+          type: 'app',
+          data: {
+            root: 'app-root',
+            targets: {
+              serve: {
+                executor: 'nx:run-commands',
+                continuous: true,
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        e2e: [
+          { source: 'e2e', target: 'app', type: 'static' },
+          { source: 'e2e', target: 'shared', type: 'static' },
+        ],
+        shared: [{ source: 'shared', target: 'app', type: 'static' }],
+        app: [],
+      },
+    };
+
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['e2e'],
+      ['e2e'],
+      undefined,
+      {
+        __overrides_unparsed__: [],
+      }
+    );
+    expect(taskGraph).toEqual({
+      roots: ['app:serve'],
+      tasks: {
+        'e2e:e2e': {
+          id: 'e2e:e2e',
+          target: {
+            project: 'e2e',
+            target: 'e2e',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'e2e-root',
+          cache: false,
+          parallelism: true,
+          continuous: false,
+        },
+        'app:serve': {
+          id: 'app:serve',
+          target: {
+            project: 'app',
+            target: 'serve',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'app-root',
+          cache: false,
+          parallelism: true,
+          continuous: true,
+        },
+      },
+      dependencies: {
+        'e2e:e2e': [],
+        'app:serve': [],
+      },
+      continuousDependencies: {
+        'e2e:e2e': ['app:serve'],
+        'app:serve': [],
+      },
+    });
+  });
+
+  it('should exclude a continuous dependency reached through a project without the target like a direct one', () => {
+    projectGraph = {
+      nodes: {
+        e2e: {
+          name: 'e2e',
+          type: 'e2e',
+          data: {
+            root: 'e2e-root',
+            targets: {
+              e2e: {
+                executor: 'nx:run-commands',
+                dependsOn: ['^serve'],
+              },
+            },
+          },
+        },
+        shared: {
+          name: 'shared',
+          type: 'lib',
+          data: {
+            root: 'shared-root',
+            targets: {},
+          },
+        },
+        app: {
+          name: 'app',
+          type: 'app',
+          data: {
+            root: 'app-root',
+            targets: {
+              serve: {
+                executor: 'nx:run-commands',
+                continuous: true,
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        e2e: [{ source: 'e2e', target: 'shared', type: 'static' }],
+        shared: [{ source: 'shared', target: 'app', type: 'static' }],
+        app: [],
+      },
+    };
+
+    expect(
+      createTaskGraph(
+        projectGraph,
+        {},
+        ['e2e'],
+        ['e2e'],
+        undefined,
+        {
+          __overrides_unparsed__: [],
+        },
+        true
+      )
+    ).toEqual({
+      roots: ['e2e:e2e'],
+      tasks: {
+        'e2e:e2e': {
+          id: 'e2e:e2e',
+          target: {
+            project: 'e2e',
+            target: 'e2e',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'e2e-root',
+          cache: false,
+          parallelism: true,
+          continuous: false,
+        },
+      },
+      dependencies: {
+        'e2e:e2e': [],
+      },
+      continuousDependencies: {
+        'e2e:e2e': [],
+      },
+    });
+
+    expect(
+      createTaskGraph(
+        projectGraph,
+        {},
+        ['e2e', 'app'],
+        ['e2e', 'serve'],
+        undefined,
+        {
+          __overrides_unparsed__: [],
+        },
+        true
+      )
+    ).toEqual({
+      roots: ['app:serve'],
+      tasks: {
+        'e2e:e2e': {
+          id: 'e2e:e2e',
+          target: {
+            project: 'e2e',
+            target: 'e2e',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'e2e-root',
+          cache: false,
+          parallelism: true,
+          continuous: false,
+        },
+        'app:serve': {
+          id: 'app:serve',
+          target: {
+            project: 'app',
+            target: 'serve',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'app-root',
+          cache: false,
+          parallelism: true,
+          continuous: true,
+        },
+      },
+      dependencies: {
+        'e2e:e2e': [],
+        'app:serve': [],
+      },
+      continuousDependencies: {
+        'e2e:e2e': ['app:serve'],
+        'app:serve': [],
+      },
+    });
+  });
+
   it('should create deterministic task graphs regardless of target order', () => {
     // This test addresses an issue where dummy tasks (created when a dependency project
     // doesn't have the required target) would have different dependency structures
