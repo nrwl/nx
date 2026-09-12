@@ -606,10 +606,12 @@ export class TargetProjectLocator {
       if (parsedPackageJson.name && parsedPackageJson.version) {
         this.packageJsonResolutionCache.set(packageJsonPath, parsedPackageJson);
         return parsedPackageJson;
-      } else {
-        this.packageJsonResolutionCache.set(packageJsonPath, null);
-        return null;
       }
+      // A wildcard export such as `"./*": "./dist/cjs/*"` reroutes
+      // `<package>/package.json` to a module-format stub (`{"type":"commonjs"}`)
+      // that carries no name or version. That stub is not the package manifest,
+      // so fall through and traverse upwards from it, exactly as we do when the
+      // package.json is not directly resolvable at all.
     }
 
     try {
@@ -621,23 +623,28 @@ export class TargetProjectLocator {
       while (dir !== dirname(dir)) {
         const packageJsonPath = join(dir, 'package.json');
         if (this.packageJsonResolutionCache.has(packageJsonPath)) {
-          return this.packageJsonResolutionCache.get(packageJsonPath);
-        }
-        try {
-          const parsedPackageJson = readJsonFile(packageJsonPath);
-          // Ensure the package.json contains the "name" and "version" fields
-          if (parsedPackageJson.name && parsedPackageJson.version) {
-            this.packageJsonResolutionCache.set(
-              packageJsonPath,
-              parsedPackageJson
-            );
-            return parsedPackageJson;
-          } else {
-            this.packageJsonResolutionCache.set(packageJsonPath, null);
-            return null;
+          const cached = this.packageJsonResolutionCache.get(packageJsonPath);
+          if (cached) {
+            return cached;
           }
-        } catch {
-          // Package.json is invalid, keep traversing
+          // A cached null marks a module-format stub; keep traversing.
+        } else {
+          try {
+            const parsedPackageJson = readJsonFile(packageJsonPath);
+            // Ensure the package.json contains the "name" and "version" fields
+            if (parsedPackageJson.name && parsedPackageJson.version) {
+              this.packageJsonResolutionCache.set(
+                packageJsonPath,
+                parsedPackageJson
+              );
+              return parsedPackageJson;
+            }
+            // A module-format stub without name/version: remember it and keep
+            // traversing towards the real manifest.
+            this.packageJsonResolutionCache.set(packageJsonPath, null);
+          } catch {
+            // Package.json is invalid, keep traversing
+          }
         }
         dir = dirname(dir);
       }
