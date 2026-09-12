@@ -6,49 +6,63 @@ import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 import { IsolatedPlugin, type ResolvedPluginModule } from './isolated-plugin';
 
 /**
- * One plugin instance and the number of plugin sets using it.
+ * The plugins this process has loaded, and the generation each belongs to.
  *
- * Counted rather than shared outright, because both directions are wrong. A
- * release that shut the worker down would kill one a set still loading is about
- * to use, and a second holder given nothing to release would leave the worker
- * running with no way to reach it.
+ * This map is the only thing that knows which workers exist, so it is also what
+ * puts them down. A reload sweeps it and bumps the generation, which is what
+ * covers a load still in flight: its plugins are stamped with the generation
+ * their load started in, so one arriving after the sweep is disposed of rather
+ * than joining the set that replaced it.
  */
-type HeldPlugin = {
+type LoadedPlugin = {
   plugin: Promise<IsolatedPlugin>;
-  holders: number;
+  readonly generation: number;
 };
 
 // Keyed separately from the older `isolatedPluginCache`: two copies of Nx in one
 // process share this object, and they do not share this shape.
-const heldPlugins: Map<string, HeldPlugin> = (global['nxHeldPlugins'] ??=
+const loadedPlugins: Map<string, LoadedPlugin> = (global['nxLoadedPlugins'] ??=
   new Map());
 
-export async function loadIsolatedNxPlugin(
+let currentGeneration = 0;
+
+/** The generation a load should stamp its plugins with. Read once, at its start. */
+export function pluginGeneration(): number {
+  return currentGeneration;
+}
+
+/**
+ * Puts every loaded plugin down and starts a new generation, which is what a
+ * reload does before it loads the next set.
+ */
+export function disposeIsolatedPlugins(): void {
+  currentGeneration++;
+  const loaded = [...loadedPlugins.values()];
+  loadedPlugins.clear();
+  for (const entry of loaded) {
+    dispose(entry);
+  }
+}
+
+export function loadIsolatedNxPlugin(
   plugin: PluginConfiguration,
   root: string,
+  generation: number,
   index?: number,
   resolved?: ResolvedPluginModule
-): Promise<[Promise<LoadedNxPlugin>, () => void]> {
+): Promise<LoadedNxPlugin> {
   const cacheKey = getCacheKey(plugin, root);
 
-  const held = heldPlugins.get(cacheKey);
-  if (held) {
-    return [held.plugin, holdOn(held, cacheKey)];
+  const loaded = loadedPlugins.get(cacheKey);
+  if (loaded) {
+    return loaded.plugin;
   }
 
-  const entry: HeldPlugin = {
-    plugin: IsolatedPlugin.load(plugin, root, index, resolved),
-    holders: 0,
-  };
-  // A failed load is not worth handing to the next caller, so the entry goes and
-  // the next call retries.
-  entry.plugin = entry.plugin.catch((err) => {
-    forget(cacheKey, entry);
-    throw err;
-  });
-  heldPlugins.set(cacheKey, entry);
-
-  return [entry.plugin, holdOn(entry, cacheKey)];
+  return register(
+    cacheKey,
+    IsolatedPlugin.load(plugin, root, index, resolved),
+    generation
+  );
 }
 
 /**
@@ -58,65 +72,84 @@ export async function loadIsolatedNxPlugin(
 export function useIsolatedNxPluginCapabilities(
   plugin: PluginConfiguration,
   root: string,
+  generation: number,
   resolved: ResolvedPluginModule,
   capabilities: PluginCapabilities,
   index?: number,
   onLoaded?: (actual: PluginCapabilities, sourceFiles: string[] | null) => void
-): readonly [Promise<LoadedNxPlugin>, () => void] {
+): Promise<LoadedNxPlugin> {
   const cacheKey = getCacheKey(plugin, root);
 
-  const held = heldPlugins.get(cacheKey);
-  if (held) {
-    return [held.plugin, holdOn(held, cacheKey)] as const;
+  const loaded = loadedPlugins.get(cacheKey);
+  if (loaded) {
+    return loaded.plugin;
   }
 
-  const instance = IsolatedPlugin.fromCapabilities(
-    plugin,
-    root,
-    resolved,
-    capabilities,
-    index,
-    onLoaded
+  return register(
+    cacheKey,
+    Promise.resolve(
+      IsolatedPlugin.fromCapabilities(
+        plugin,
+        root,
+        resolved,
+        capabilities,
+        index,
+        onLoaded
+      )
+    ),
+    generation
   );
-  const entry: HeldPlugin = { plugin: Promise.resolve(instance), holders: 0 };
-  heldPlugins.set(cacheKey, entry);
+}
 
-  return [entry.plugin, holdOn(entry, cacheKey)] as const;
+function register(
+  cacheKey: string,
+  loading: Promise<IsolatedPlugin>,
+  generation: number
+): Promise<IsolatedPlugin> {
+  const entry: LoadedPlugin = {
+    generation,
+    plugin: loading.then(
+      (plugin) => {
+        // Swept while this was loading. The load that asked for it is the only
+        // thing waiting on it, and that load's set has been replaced.
+        if (generation !== currentGeneration) {
+          plugin.dispose();
+        }
+        return plugin;
+      },
+      (err) => {
+        // A failed load is not worth handing to the next caller, so the entry
+        // goes and the next call retries.
+        forget(cacheKey, generation);
+        throw err;
+      }
+    ),
+  };
+
+  // Only the current set is reachable. Registering a superseded load's plugin
+  // would hand it to the next caller as though it were current.
+  if (generation === currentGeneration) {
+    loadedPlugins.set(cacheKey, entry);
+  }
+  return entry.plugin;
+}
+
+function dispose(entry: LoadedPlugin): void {
+  entry.plugin.then(
+    (plugin) => plugin.dispose(),
+    // A load that failed has no worker to dispose of, and its rejection is
+    // already the caller's to report.
+    () => {}
+  );
 }
 
 function getCacheKey(plugin: PluginConfiguration, root: string): string {
   return JSON.stringify({ plugin, root });
 }
 
-/**
- * Takes a hold for one plugin set and returns its release, which is idempotent
- * so a set can be released twice without taking a count that is not its own.
- */
-function holdOn(entry: HeldPlugin, cacheKey: string): () => void {
-  entry.holders++;
-  let released = false;
-  return () => {
-    if (released) {
-      return;
-    }
-    released = true;
-    entry.holders--;
-    if (entry.holders > 0) {
-      return;
-    }
-    forget(cacheKey, entry);
-    entry.plugin.then(
-      (instance) => instance.dispose(),
-      // A load that failed has no worker to dispose of, and its rejection is
-      // already the caller's to report.
-      () => {}
-    );
-  };
-}
-
-/** Drops the entry, unless a later load has already replaced it. */
-function forget(cacheKey: string, entry: HeldPlugin): void {
-  if (heldPlugins.get(cacheKey) === entry) {
-    heldPlugins.delete(cacheKey);
+/** Drops the entry, unless a later generation has already replaced it. */
+function forget(cacheKey: string, generation: number): void {
+  if (loadedPlugins.get(cacheKey)?.generation === generation) {
+    loadedPlugins.delete(cacheKey);
   }
 }
