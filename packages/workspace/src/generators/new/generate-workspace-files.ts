@@ -344,9 +344,20 @@ function addPnpmSettings(
   options: NormalizedSchema,
   packageManagerVersion: string
 ) {
-  const buildAllowlist = gte(packageManagerVersion, '11.0.0')
+  let buildAllowlist = gte(packageManagerVersion, '11.0.0')
     ? `allowBuilds:\n  nx: true`
     : `onlyBuiltDependencies:\n  - nx`;
+
+  // The Angular plugin is installed before its generators can acknowledge
+  // build scripts. These can be pulled in by its dependencies/auto-installed
+  // peers: watcher ships prebuilt binaries and less's script is development-only.
+  if (
+    gte(packageManagerVersion, '11.0.0') &&
+    (options.preset === Preset.AngularMonorepo ||
+      options.preset === Preset.AngularStandalone)
+  ) {
+    buildAllowlist += `\n  '@parcel/watcher': false\n  less: false`;
+  }
 
   tree.write(
     join(options.directory, 'pnpm-workspace.yaml'),

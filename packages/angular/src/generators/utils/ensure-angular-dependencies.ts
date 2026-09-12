@@ -1,17 +1,29 @@
 import {
   addDependenciesToPackageJson,
+  detectPackageManager,
   getDependencyVersionFromPackageJson,
   readJson,
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
 import { getInstalledAngularDevkitVersion, versions } from './version-utils';
-import { type PackageJson } from '@nx/devkit/internal';
+import { acknowledgeBuildScripts, type PackageJson } from '@nx/devkit/internal';
 
 export function ensureAngularDependencies(
   tree: Tree,
   zoneless: boolean
 ): GeneratorCallback {
+  // Angular's tooling ships native binaries as optional dependencies. Its
+  // install scripts only provide source-build fallbacks; less's postinstall
+  // is for its own development environment. Match pnpm 10's skip behavior.
+  acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+    '@parcel/watcher': false,
+    esbuild: false,
+    lmdb: false,
+    'msgpackr-extract': false,
+    less: false,
+  });
+
   const dependencies: Record<string, string> = {};
   const devDependencies: Record<string, string> = {};
   const pkgVersions = versions(tree);
