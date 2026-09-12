@@ -1089,5 +1089,200 @@ describe('task planner', () => {
       expect(plan).toContain('child:libs/child/**/*');
       expect(plan).toContain('grandchild:libs/grandchild/**/*');
     });
+
+    // Builds the served/server pair the tests below vary: parent:test depends
+    // on child:serve, a continuous target with the given configuration.
+    function servedBy(
+      serve: Record<string, unknown>,
+      extraTargets: Record<string, unknown> = {},
+      externals: string[] = [],
+      testInputs: unknown[] = ['{projectRoot}/**/*']
+    ) {
+      const builder = new ProjectGraphBuilder(undefined, {
+        parent: [{ file: 'libs/parent/filea.ts', hash: 'a.hash' }],
+        child: [{ file: 'libs/child/fileb.ts', hash: 'b.hash' }],
+      });
+      for (const name of externals) {
+        builder.addExternalNode({
+          name: `npm:${name}`,
+          type: 'npm',
+          data: { packageName: name, version: '1.0.0', hash: `${name}.hash` },
+        });
+      }
+      builder.addNode({
+        name: 'child',
+        type: 'lib',
+        data: {
+          root: 'libs/child',
+          targets: {
+            serve: { executor: 'nx:run-commands', continuous: true, ...serve },
+            ...extraTargets,
+          },
+        },
+      });
+      builder.addNode({
+        name: 'parent',
+        type: 'lib',
+        data: {
+          root: 'libs/parent',
+          targets: {
+            test: {
+              executor: 'nx:run-commands',
+              inputs: testInputs,
+              dependsOn: [{ projects: 'child', target: 'serve' }],
+            },
+          },
+        },
+      });
+      const projectGraph = builder.getUpdatedProjectGraph();
+      const taskGraph = createTaskGraph(
+        projectGraph,
+        {},
+        ['parent'],
+        ['test'],
+        undefined,
+        {}
+      );
+      const planner = new HashPlanner(
+        {} as any,
+        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+      );
+      return { planner, taskGraph };
+    }
+
+    it("hashes a continuous dependency's external dependencies", () => {
+      const { planner, taskGraph } = servedBy(
+        { inputs: ['{projectRoot}/**/*', { externalDependencies: ['vite'] }] },
+        {},
+        ['vite', 'cypress'],
+        ['{projectRoot}/**/*', { externalDependencies: ['cypress'] }]
+      );
+
+      const plan = planner.getPlans(['parent:test'], taskGraph)['parent:test'];
+      expect(plan).toContain('npm:cypress');
+      expect(plan).toContain('npm:vite');
+      expect(plan).not.toContain('AllExternalDependencies');
+    });
+
+    it('hashes all external dependencies for a continuous dependency that declares none', () => {
+      // The served task declares its own, so the fallback can only be the server's.
+      const { planner, taskGraph } = servedBy(
+        {},
+        {},
+        ['cypress'],
+        ['{projectRoot}/**/*', { externalDependencies: ['cypress'] }]
+      );
+
+      const plan = planner.getPlans(['parent:test'], taskGraph)['parent:test'];
+      expect(plan).toContain('npm:cypress');
+      expect(plan).toContain('AllExternalDependencies');
+    });
+
+    it("leaves out the outputs of a continuous dependency's own dependencies", () => {
+      const { planner, taskGraph } = servedBy(
+        {
+          dependsOn: ['build'],
+          inputs: [
+            '{projectRoot}/**/*',
+            { dependentTasksOutputFiles: '**/*.d.ts', transitive: true },
+          ],
+        },
+        {
+          build: {
+            executor: 'nx:run-commands',
+            outputs: ['{workspaceRoot}/dist/libs/child'],
+          },
+        }
+      );
+
+      // The served task is hashed before child:build runs, so its outputs
+      // cannot be part of the hash.
+      expect(taskGraph.dependencies['parent:test']).toEqual([]);
+      const plan = planner.getPlans(['parent:test'], taskGraph)['parent:test'];
+      expect(plan).toContain('child:libs/child/**/*');
+      expect(plan.some((entry) => entry.includes('**/*.d.ts'))).toBe(false);
+    });
+
+    it('terminates on a cycle of continuous dependencies and hashes each server once', () => {
+      const { planner, taskGraph } = servedBy({});
+      // child:serve is (nonsensically) served by parent:test, closing a loop.
+      taskGraph.continuousDependencies['child:serve'] = ['parent:test'];
+
+      const plan = planner.getPlans(['parent:test'], taskGraph)['parent:test'];
+      expect(
+        plan.filter((entry) => entry === 'child:libs/child/**/*')
+      ).toHaveLength(1);
+      expect(
+        plan.filter((entry) => entry === 'parent:libs/parent/**/*')
+      ).toHaveLength(1);
+    });
+
+    it('hashes a server shared by two continuous dependencies once', () => {
+      const builder = new ProjectGraphBuilder(undefined, {
+        parent: [{ file: 'libs/parent/filea.ts', hash: 'a.hash' }],
+        left: [{ file: 'libs/left/fileb.ts', hash: 'b.hash' }],
+        right: [{ file: 'libs/right/filec.ts', hash: 'c.hash' }],
+        shared: [{ file: 'libs/shared/filed.ts', hash: 'd.hash' }],
+      });
+      const serve = (dependsOn?: unknown[]) => ({
+        executor: 'nx:run-commands',
+        continuous: true,
+        ...(dependsOn ? { dependsOn } : {}),
+      });
+      builder.addNode({
+        name: 'shared',
+        type: 'lib',
+        data: { root: 'libs/shared', targets: { serve: serve() } },
+      });
+      for (const name of ['left', 'right']) {
+        builder.addNode({
+          name,
+          type: 'lib',
+          data: {
+            root: `libs/${name}`,
+            targets: {
+              serve: serve([{ projects: 'shared', target: 'serve' }]),
+            },
+          },
+        });
+      }
+      builder.addNode({
+        name: 'parent',
+        type: 'lib',
+        data: {
+          root: 'libs/parent',
+          targets: {
+            test: {
+              executor: 'nx:run-commands',
+              inputs: ['{projectRoot}/**/*'],
+              dependsOn: [
+                { projects: 'left', target: 'serve' },
+                { projects: 'right', target: 'serve' },
+              ],
+            },
+          },
+        },
+      });
+      const projectGraph = builder.getUpdatedProjectGraph();
+      const taskGraph = createTaskGraph(
+        projectGraph,
+        {},
+        ['parent'],
+        ['test'],
+        undefined,
+        {}
+      );
+      const planner = new HashPlanner(
+        {} as any,
+        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+      );
+
+      const plan = planner.getPlans(['parent:test'], taskGraph)['parent:test'];
+      for (const name of ['left', 'right', 'shared']) {
+        expect(
+          plan.filter((entry) => entry === `${name}:libs/${name}/**/*`)
+        ).toHaveLength(1);
+      }
+    });
   });
 });
