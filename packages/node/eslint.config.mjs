@@ -26,6 +26,7 @@ export default [
             // Installed on demand via `ensurePackage` when the generator is
             // asked for that bundler / unit test runner.
             '@nx/webpack',
+            '@nx/rspack',
             '@nx/vitest',
             'express',
             'koa',

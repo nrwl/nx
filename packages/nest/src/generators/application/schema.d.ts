@@ -9,6 +9,7 @@ export interface ApplicationGeneratorOptions {
   skipFormat?: boolean;
   skipPackageJson?: boolean;
   tags?: string;
+  bundler?: 'webpack' | 'rspack';
   unitTestRunner?: 'jest' | 'vitest' | 'none';
   e2eTestRunner?: 'jest' | 'none';
   enableTypedLinting?: boolean;

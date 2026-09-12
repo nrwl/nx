@@ -689,4 +689,44 @@ describe('application generator', () => {
       expect(readJson(tree, 'myapp-e2e/package.json').nx).toBeUndefined();
     });
   });
+  describe('--bundler', () => {
+    it('should default to webpack', async () => {
+      await applicationGenerator(tree, { directory: appDirectory });
+
+      expect(tree.exists(`${appDirectory}/webpack.config.js`)).toBe(true);
+      expect(tree.exists(`${appDirectory}/rspack.config.js`)).toBe(false);
+    });
+
+    it('should generate an rspack config when asked for rspack', async () => {
+      await applicationGenerator(tree, {
+        directory: appDirectory,
+        bundler: 'rspack',
+      });
+
+      expect(tree.exists(`${appDirectory}/rspack.config.js`)).toBe(true);
+      expect(tree.exists(`${appDirectory}/webpack.config.js`)).toBe(false);
+    });
+
+    it('should keep class and function names so Nest can resolve providers', async () => {
+      await applicationGenerator(tree, {
+        directory: appDirectory,
+        bundler: 'rspack',
+      });
+
+      const config = tree.read(`${appDirectory}/rspack.config.js`, 'utf-8');
+      expect(config).toContain('SwcJsMinimizerRspackPlugin');
+      expect(config).toContain('keep_classnames: true');
+      expect(config).toContain('keep_fnames: true');
+    });
+
+    it('should add @nx/rspack to the workspace', async () => {
+      await applicationGenerator(tree, {
+        directory: appDirectory,
+        bundler: 'rspack',
+      });
+
+      const { devDependencies } = readJson(tree, 'package.json');
+      expect(devDependencies['@nx/rspack']).toBeDefined();
+    });
+  });
 });
