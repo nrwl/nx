@@ -232,6 +232,25 @@ describe('getExpandedTaskInputs', () => {
     );
   });
 
+  it('keeps a brace group intact in a workspace group too', async () => {
+    getPlansMock.mockReturnValue({
+      'myproj:build': ['workspace:[{workspaceRoot}/{nx,tsconfig.base}.json]'],
+    });
+    allFileDataMock.mockResolvedValue([
+      { file: 'nx.json', hash: '1' },
+      { file: 'tsconfig.base.json', hash: '2' },
+      { file: 'tsconfig.json', hash: '3' },
+    ] as FileData[]);
+
+    const result = await getExpandedTaskInputs(
+      makeResponse(),
+      new Map(),
+      'myproj:build'
+    );
+
+    expect(result.general).toEqual(['nx.json', 'tsconfig.base.json']);
+  });
+
   it('memoizes: a second call for the same task reuses the cached result', async () => {
     getPlansMock.mockReturnValue({
       'myproj:build': ['npm:some-pkg'],
