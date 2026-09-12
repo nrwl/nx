@@ -8,6 +8,12 @@ use nom::sequence::{preceded, terminated};
 use nom::{Finish, IResult};
 use std::borrow::Cow;
 
+#[derive(Clone, Copy)]
+enum UngroupedSpecialCharBehavior {
+    Discard,
+    Preserve,
+}
+
 /// Consumes special characters if they are not part of a group, otherwise returns an error
 /// Example:
 /// - ?snap -> snap
@@ -24,6 +30,15 @@ fn special_char_with_no_group(input: &str) -> IResult<&str, &str, VerboseError<&
         // consume the special character and return the rest of the alt input
         Ok((alt_input, ""))
     })(input)
+}
+
+fn ungrouped_special_char(input: &str) -> IResult<&str, GlobGroup<'_>, VerboseError<&str>> {
+    context(
+        "ungrouped_special_char",
+        map(alt((tag("?"), tag("+"), tag("@"))), |character: &str| {
+            GlobGroup::UngroupedSpecialChar(character.chars().next().unwrap())
+        }),
+    )(input)
 }
 
 fn simple_group(input: &str) -> IResult<&str, GlobGroup<'_>, VerboseError<&str>> {
@@ -135,17 +150,25 @@ fn separated_group_items(input: &str) -> IResult<&str, Cow<'_, str>, VerboseErro
     )(input)
 }
 
-fn parse_segment(input: &str) -> IResult<&str, Vec<GlobGroup<'_>>, VerboseError<&str>> {
+fn parse_segment(
+    input: &str,
+    ungrouped_special_char_behavior: UngroupedSpecialCharBehavior,
+) -> IResult<&str, Vec<GlobGroup<'_>>, VerboseError<&str>> {
     context(
         "parse_segment",
         many_till(
             context("glob_group", |input| {
                 // check if the special character is part of a group
-                let group_input = match special_char_with_no_group(input) {
-                    // if there was no (, then we know that the special character is not part of a group, we can return this input
-                    Ok((no_group_input, _)) => no_group_input,
-                    // otherwise, there was a ( after the special character, so we need to parse the original input
-                    Err(_) => input,
+                let group_input = match ungrouped_special_char_behavior {
+                    UngroupedSpecialCharBehavior::Discard => {
+                        match special_char_with_no_group(input) {
+                            // if there was no (, then we know that the special character is not part of a group, we can return this input
+                            Ok((no_group_input, _)) => no_group_input,
+                            // otherwise, there was a ( after the special character, so we need to parse the original input
+                            Err(_) => input,
+                        }
+                    }
+                    UngroupedSpecialCharBehavior::Preserve => input,
                 };
                 alt((
                     simple_group,
@@ -157,6 +180,7 @@ fn parse_segment(input: &str) -> IResult<&str, Vec<GlobGroup<'_>>, VerboseError<
                     negated_wildcard,
                     negated_group,
                     brace_group_with_empty_item,
+                    ungrouped_special_char,
                     non_special_character,
                 ))(group_input)
             }),
@@ -166,8 +190,16 @@ fn parse_segment(input: &str) -> IResult<&str, Vec<GlobGroup<'_>>, VerboseError<
     .map(|(i, (groups, _))| (i, groups))
 }
 
-fn separated_segments(input: &str) -> IResult<&str, Vec<Vec<GlobGroup<'_>>>, VerboseError<&str>> {
-    separated_list0(tag("/"), map_parser(take_till(|c| c == '/'), parse_segment))(input)
+fn separated_segments(
+    input: &str,
+    ungrouped_special_char_behavior: UngroupedSpecialCharBehavior,
+) -> IResult<&str, Vec<Vec<GlobGroup<'_>>>, VerboseError<&str>> {
+    separated_list0(
+        tag("/"),
+        map_parser(take_till(|c| c == '/'), move |segment| {
+            parse_segment(segment, ungrouped_special_char_behavior)
+        }),
+    )(input)
 }
 
 // match on !test/, but not !(test)/
@@ -183,9 +215,12 @@ fn negated_glob(input: &str) -> (&str, bool) {
     }
 }
 
-pub fn parse_glob(input: &str) -> anyhow::Result<(bool, Vec<Vec<GlobGroup<'_>>>)> {
+fn parse_glob_with_behavior(
+    input: &str,
+    ungrouped_special_char_behavior: UngroupedSpecialCharBehavior,
+) -> anyhow::Result<(bool, Vec<Vec<GlobGroup<'_>>>)> {
     let (input, negated) = negated_glob(input);
-    let result = separated_segments(input).finish();
+    let result = separated_segments(input, ungrouped_special_char_behavior).finish();
     if let Ok((_, result)) = result {
         Ok((negated, result))
     } else {
@@ -194,6 +229,18 @@ pub fn parse_glob(input: &str) -> anyhow::Result<(bool, Vec<Vec<GlobGroup<'_>>>)
             convert_error(input, result.err().unwrap())
         ))
     }
+}
+
+pub fn parse_glob(input: &str) -> anyhow::Result<(bool, Vec<Vec<GlobGroup<'_>>>)> {
+    parse_glob_with_behavior(input, UngroupedSpecialCharBehavior::Discard)
+}
+
+/// Retains ungrouped special characters so literal path segments such as
+/// `packages/@acme` can be reconstructed after parsing.
+pub fn parse_glob_preserving_ungrouped_special_chars(
+    input: &str,
+) -> anyhow::Result<(bool, Vec<Vec<GlobGroup<'_>>>)> {
+    parse_glob_with_behavior(input, UngroupedSpecialCharBehavior::Preserve)
 }
 
 #[cfg(test)]
@@ -353,6 +400,28 @@ mod test {
                     vec![GlobGroup::NonSpecial("packages".into())],
                     vec![GlobGroup::NegatedWildcard("package-a".into()),],
                     vec![GlobGroup::NonSpecial("package.json".into())]
+                ]
+            )
+        );
+    }
+
+    #[test]
+    fn should_preserve_ungrouped_special_chars_when_requested() {
+        let result = super::parse_glob_preserving_ungrouped_special_chars("@scope/a+b").unwrap();
+        assert_eq!(
+            result,
+            (
+                false,
+                vec![
+                    vec![
+                        GlobGroup::UngroupedSpecialChar('@'),
+                        GlobGroup::NonSpecial("scope".into())
+                    ],
+                    vec![
+                        GlobGroup::NonSpecial("a".into()),
+                        GlobGroup::UngroupedSpecialChar('+'),
+                        GlobGroup::NonSpecial("b".into())
+                    ]
                 ]
             )
         );
