@@ -277,6 +277,7 @@ impl TaskHasher {
         cwd: String,
         collect_task_inputs: Option<bool>,
     ) -> anyhow::Result<TaskHashes> {
+        let function_start = std::time::Instant::now();
         let pool = &hash_plans.pool;
         let plans: HashMap<String, Vec<u32>> = hash_plans
             .plans
@@ -287,6 +288,15 @@ impl TaskHasher {
             })
             .map(|(task_id, ids)| (task_id.clone(), ids.clone()))
             .collect();
+        let partition_duration = function_start.elapsed();
+        let (upfront_count, total_count) = (plans.len(), hash_plans.plans.len());
+        trace!(
+            "hash_plans_upfront: {} of {} plans hash up front, {} wait for other tasks' outputs (partition: {:?})",
+            upfront_count,
+            total_count,
+            total_count - upfront_count,
+            partition_duration
+        );
         for task_id in plans.keys() {
             if !per_task_envs.contains_key(task_id) {
                 anyhow::bail!("hash_plans_upfront: missing env entry for task {}", task_id);
@@ -296,11 +306,21 @@ impl TaskHasher {
             pool: pool.clone(),
             plans,
         };
-        self.hash_plans_impl(&upfront, cwd, collect_task_inputs, |task_id| {
+        let hashes = self.hash_plans_impl(&upfront, cwd, collect_task_inputs, |task_id| {
             per_task_envs
                 .get(task_id)
                 .expect("per-task env presence verified above")
-        })
+        })?;
+        debug!(
+            "hash_plans_upfront COMPLETED in {:?} - hashed {} of {} plans up front, {} deferred (partition: {:?}, hashing: {:?})",
+            function_start.elapsed(),
+            upfront_count,
+            total_count,
+            total_count - upfront_count,
+            partition_duration,
+            function_start.elapsed() - partition_duration
+        );
+        Ok(hashes)
     }
 
     fn hash_plans_impl<'a, F>(
