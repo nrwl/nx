@@ -22,6 +22,29 @@ import {
   NX_PLUGIN_V2_CONTENTS,
 } from './nx-plugin.fixtures';
 
+function dumpDaemonLog(label: string) {
+  try {
+    const daemonLog = join(
+      tmpProjPath(),
+      '.nx',
+      'workspace-data',
+      'd',
+      'daemon.log'
+    );
+    if (existsSync(daemonLog)) {
+      console.log(
+        `\n========== daemon.log (${label}, trimmed) ==========\n${trimDaemonLog(
+          readFileSync(daemonLog, 'utf-8')
+        )}\n========== end daemon.log ==========\n`
+      );
+    } else {
+      console.log(`[plugin-debug] no daemon log at ${daemonLog} (${label})`);
+    }
+  } catch (e) {
+    console.log(`[plugin-debug] failed to read daemon log (${label}): ${e}`);
+  }
+}
+
 describe('Nx Plugin (TS solution)', () => {
   let workspaceName: string;
 
@@ -33,31 +56,7 @@ describe('Nx Plugin (TS solution)', () => {
   });
 
   afterAll(() => {
-    // The suite shares one long-lived daemon, so dump its log once before
-    // teardown — CI shows why an inferred project went missing (stale graph,
-    // plugin load failure, missed watcher events).
-    try {
-      const daemonLog = join(
-        tmpProjPath(),
-        '.nx',
-        'workspace-data',
-        'd',
-        'daemon.log'
-      );
-      if (existsSync(daemonLog)) {
-        // Trimmed — see trimDaemonLog; the raw log is thousands of lines.
-        console.log(
-          `\n========== daemon.log (trimmed) ==========\n${trimDaemonLog(
-            readFileSync(daemonLog, 'utf-8')
-          )}\n========== end daemon.log ==========\n`
-        );
-      } else {
-        console.log(`[plugin-debug] no daemon log at ${daemonLog}`);
-      }
-    } catch (e) {
-      console.log(`[plugin-debug] failed to read daemon log: ${e}`);
-    }
-
+    dumpDaemonLog('before teardown');
     cleanupProject();
   });
 
@@ -545,10 +544,11 @@ exports.createNodesV2 = [
     );
   });
 
-  it('should resolve a source-loaded local plugin transitive workspace import from source', async () => {
+  it('should scope custom conditions to a source-loaded plugin graph', async () => {
     const plugin = uniq('plugin');
     const lib = uniq('lib');
-    const marker = 'resolved-workspace-dep-from-source';
+    const sourceMarker = 'resolved-workspace-dep-from-source';
+    const builtMarker = 'resolved-workspace-dep-from-dist';
     const pm = getSelectedPackageManager();
 
     runCLI(`generate @nx/plugin:plugin packages/${plugin}`);
@@ -557,9 +557,6 @@ exports.createNodesV2 = [
       readJson('tsconfig.base.json').compilerOptions.customConditions[0];
     expect(sourceCondition).not.toBe('development');
 
-    // A sibling workspace package exposing its TS source via the workspace
-    // custom condition and its built output via `default`. Its `dist` is never
-    // built, so the plugin can only import it if source resolution wins.
     createFile(
       `packages/${lib}/package.json`,
       JSON.stringify({
@@ -577,7 +574,11 @@ exports.createNodesV2 = [
     );
     createFile(
       `packages/${lib}/src/index.ts`,
-      `export const workspaceDepMarker = '${marker}';\n`
+      `export const workspaceDepMarker = '${sourceMarker}';\n`
+    );
+    createFile(
+      `packages/${lib}/dist/index.js`,
+      `exports.workspaceDepMarker = '${builtMarker}';\n`
     );
 
     // The plugin's registered (source) entry statically imports the sibling
@@ -620,26 +621,174 @@ export const createNodesV2: CreateNodesV2<PluginOptions> = [
 `
     );
 
+    createFile(
+      `packages/${plugin}/dist/plugins/deps-built/plugin.js`,
+      `const { basename, dirname } = require('path');
+const { workspaceDepMarker } = require('@${workspaceName}/${lib}');
+
+exports.createNodesV2 = [
+  '**/my-built-file',
+  (files, options) =>
+    files.map((f) => {
+      const root = dirname(f);
+      const name = basename(root);
+      return [
+        f,
+        {
+          projects: {
+            [root]: {
+              root,
+              name,
+              targets: {
+                build: {
+                  executor: 'nx:run-commands',
+                  options: { command: \`echo '\${workspaceDepMarker}'\` },
+                },
+              },
+              tags: options.inferredTags,
+            },
+          },
+        },
+      ];
+    }),
+];
+`
+    );
+
     updateJson(`packages/${plugin}/package.json`, (pkg) => {
       pkg.dependencies ??= {};
       pkg.dependencies[`@${workspaceName}/${lib}`] =
         pm === 'pnpm' ? 'workspace:*' : '*';
+      pkg.generators = './generators.json';
       pkg.exports = {
         ...pkg.exports,
         './deps': {
           [sourceCondition]: './src/plugins/deps/plugin.ts',
           default: './dist/plugins/deps/plugin.js',
         },
+        './deps-built': {
+          default: './dist/plugins/deps-built/plugin.js',
+        },
       };
       return pkg;
     });
 
+    const barePlugin = uniq('bare-plugin');
+    createFile(
+      `packages/${barePlugin}/package.json`,
+      JSON.stringify({
+        name: `@${workspaceName}/${barePlugin}`,
+        version: '0.0.1',
+        dependencies: {
+          [`@${workspaceName}/${lib}`]: pm === 'pnpm' ? 'workspace:*' : '*',
+        },
+        exports: {
+          './package.json': './package.json',
+          '.': {
+            [sourceCondition]: './src/index.ts',
+            default: './dist/index.js',
+          },
+        },
+      })
+    );
+    createFile(
+      `packages/${barePlugin}/src/index.ts`,
+      `import { basename, dirname } from 'path';
+import type { CreateNodesV2 } from '@nx/devkit';
+import { workspaceDepMarker } from '@${workspaceName}/${lib}';
+
+export const createNodesV2: CreateNodesV2<{ inferredTags: string[] }> = [
+  '**/my-bare-file',
+  (files, options) =>
+    files.map((f) => {
+      const root = dirname(f);
+      const name = basename(root);
+      return [
+        f,
+        {
+          projects: {
+            [root]: {
+              root,
+              name,
+              targets: {
+                build: {
+                  executor: 'nx:run-commands',
+                  options: { command: \`echo '\${workspaceDepMarker}'\` },
+                },
+              },
+              tags: options.inferredTags,
+            },
+          },
+        },
+      ];
+    }),
+];
+`
+    );
+    createFile(
+      `packages/${barePlugin}/dist/index.js`,
+      `exports.createNodesV2 = ['**/my-bare-file', () => { throw new Error('bare plugin loaded from dist'); }];\n`
+    );
+
+    // Both generators must run in one daemon to test per-entry built/source
+    // conditions.
+    createFile(
+      `packages/${plugin}/generators.json`,
+      JSON.stringify({
+        generators: {
+          sync: {
+            factory: './dist/generators/sync.js',
+            schema: './dist/generators/schema.json',
+          },
+          'sync-source': {
+            factory: './src/generators/sync-source.ts',
+            schema: './src/generators/sync-source-schema.json',
+          },
+        },
+      })
+    );
+    createFile(`packages/${plugin}/dist/generators/schema.json`, '{}');
+    createFile(
+      `packages/${plugin}/dist/generators/sync.js`,
+      `const { workspaceDepMarker } = require('@${workspaceName}/${lib}');
+module.exports = (tree) => tree.write('sync-output.txt', workspaceDepMarker);
+`
+    );
+    createFile(
+      `packages/${plugin}/src/generators/sync-source-schema.json`,
+      '{}'
+    );
+    createFile(
+      `packages/${plugin}/src/generators/sync-source.ts`,
+      `import { workspaceDepMarker } from '@${workspaceName}/${lib}';
+
+export default (tree: any) =>
+  tree.write('sync-source-output.txt', workspaceDepMarker);
+`
+    );
+
     updateJson(`nx.json`, (nxJson) => {
       nxJson.plugins ??= [];
-      nxJson.plugins.push({
-        plugin: `@${workspaceName}/${plugin}/deps`,
-        options: { inferredTags: ['deps-tag'] },
-      });
+      nxJson.plugins.push(
+        {
+          plugin: `@${workspaceName}/${plugin}/deps`,
+          options: { inferredTags: ['deps-tag'] },
+        },
+        {
+          plugin: `@${workspaceName}/${plugin}/deps-built`,
+          options: { inferredTags: ['deps-built-tag'] },
+        },
+        {
+          plugin: `@${workspaceName}/${barePlugin}`,
+          options: { inferredTags: ['bare-tag'] },
+        }
+      );
+      nxJson.sync = {
+        globalGenerators: [
+          `@${workspaceName}/${plugin}:sync`,
+          `@${workspaceName}/${plugin}:sync-source`,
+        ],
+      };
       return nxJson;
     });
 
@@ -652,17 +801,188 @@ export const createNodesV2: CreateNodesV2<PluginOptions> = [
       JSON.stringify({ name: inferredProject, version: '0.0.1' })
     );
     createFile(`packages/${inferredProject}/my-project-file`);
+    const builtInferredProject = uniq('deps-built-inferred');
+    createFile(
+      `packages/${builtInferredProject}/package.json`,
+      JSON.stringify({ name: builtInferredProject, version: '0.0.1' })
+    );
+    createFile(`packages/${builtInferredProject}/my-built-file`);
+    const bareInferredProject = uniq('bare-inferred');
+    createFile(
+      `packages/${bareInferredProject}/package.json`,
+      JSON.stringify({ name: bareInferredProject, version: '0.0.1' })
+    );
+    createFile(`packages/${bareInferredProject}/my-bare-file`);
 
-    // The plugin loads from source during graph construction; its import of the
-    // sibling package must resolve to source (dist was never built). If it fell
-    // through to dist, plugin load would fail and the inferred target wouldn't
-    // exist.
+    runCLI('reset');
+    runCLI('sync');
+    expect(readFileSync(join(tmpProjPath(), 'sync-output.txt'), 'utf-8')).toBe(
+      builtMarker
+    );
+    expect(
+      readFileSync(join(tmpProjPath(), 'sync-source-output.txt'), 'utf-8')
+    ).toBe(sourceMarker);
+
     const configuration = JSON.parse(
       runCLI(`show project ${inferredProject} --json`)
     );
     expect(configuration.tags).toContain('deps-tag');
-    expect(runCLI(`build ${inferredProject}`)).toContain(marker);
-  }, 120000);
+    expect(runCLI(`build ${inferredProject}`)).toContain(sourceMarker);
+
+    expect(
+      JSON.parse(runCLI(`show project ${builtInferredProject} --json`)).tags
+    ).toContain('deps-built-tag');
+    expect(runCLI(`build ${builtInferredProject}`)).toContain(builtMarker);
+
+    expect(
+      JSON.parse(runCLI(`show project ${bareInferredProject} --json`)).tags
+    ).toContain('bare-tag');
+    expect(runCLI(`build ${bareInferredProject}`)).toContain(sourceMarker);
+  }, 180000);
+
+  // The import-only entry resolves identically with and without the custom
+  // condition, so sourceRoot marks it as source. Both loading modes must
+  // resolve its sibling's source export without build output.
+  describe('import-only ESM plugin entry under sourceRoot', () => {
+    const sourceMarker = 'resolved-esm-workspace-dep-from-source';
+    let inferredProject: string;
+
+    beforeAll(() => {
+      const plugin = uniq('esm-plugin');
+      const lib = uniq('esm-lib');
+      const pm = getSelectedPackageManager();
+
+      runCLI(`generate @nx/plugin:plugin packages/${plugin}`);
+
+      const sourceCondition =
+        readJson('tsconfig.base.json').compilerOptions.customConditions[0];
+      expect(sourceCondition).not.toBe('development');
+
+      createFile(
+        `packages/${lib}/package.json`,
+        JSON.stringify({
+          name: `@${workspaceName}/${lib}`,
+          version: '0.0.1',
+          exports: {
+            './package.json': './package.json',
+            '.': {
+              [sourceCondition]: './src/index.mjs',
+              default: './dist/index.mjs',
+            },
+          },
+        })
+      );
+      createFile(
+        `packages/${lib}/src/index.mjs`,
+        `export const workspaceDepMarker = '${sourceMarker}';\n`
+      );
+
+      updateFile(
+        `packages/${plugin}/src/plugins/esm/plugin.mjs`,
+        `import { basename, dirname } from 'node:path';
+import { workspaceDepMarker } from '@${workspaceName}/${lib}';
+
+export const createNodesV2 = [
+  '**/my-esm-file',
+  (files, options) =>
+    files.map((f) => {
+      const root = dirname(f);
+      const name = basename(root);
+      return [
+        f,
+        {
+          projects: {
+            [root]: {
+              root,
+              name,
+              targets: {
+                build: {
+                  executor: 'nx:run-commands',
+                  options: { command: \`echo '\${workspaceDepMarker}'\` },
+                },
+              },
+              tags: options.inferredTags,
+            },
+          },
+        },
+      ];
+    }),
+];
+`
+      );
+
+      updateJson(`packages/${plugin}/package.json`, (pkg) => {
+        // This JavaScript entry needs sourceRoot to be classified as source.
+        pkg.nx.sourceRoot = `packages/${plugin}/src`;
+        pkg.dependencies ??= {};
+        pkg.dependencies[`@${workspaceName}/${lib}`] =
+          pm === 'pnpm' ? 'workspace:*' : '*';
+        pkg.exports = {
+          ...pkg.exports,
+          './esm': { import: './src/plugins/esm/plugin.mjs' },
+        };
+        return pkg;
+      });
+
+      updateJson(`nx.json`, (nxJson) => {
+        nxJson.plugins ??= [];
+        nxJson.plugins.push({
+          plugin: `@${workspaceName}/${plugin}/esm`,
+          options: { inferredTags: ['esm-tag'] },
+        });
+        return nxJson;
+      });
+
+      runCommand(getPackageManagerCommand({ packageManager: pm }).install);
+
+      inferredProject = uniq('esm-inferred');
+      createFile(
+        `packages/${inferredProject}/package.json`,
+        JSON.stringify({ name: inferredProject, version: '0.0.1' })
+      );
+      createFile(`packages/${inferredProject}/my-esm-file`);
+    });
+
+    it('should load the plugin from source in an isolated worker', () => {
+      const env = { NX_ISOLATE_PLUGINS: 'true' };
+      runCLI('reset', { env });
+      try {
+        expect(
+          JSON.parse(runCLI(`show project ${inferredProject} --json`, { env }))
+            .tags
+        ).toContain('esm-tag');
+        expect(runCLI(`build ${inferredProject}`, { env })).toContain(
+          sourceMarker
+        );
+      } finally {
+        runCLI('reset');
+      }
+    });
+
+    // In-process ESM imports go through module.registerHooks (Node 22.15+).
+    const registerHooksAvailable =
+      typeof (require('node:module') as { registerHooks?: unknown })
+        .registerHooks === 'function';
+    (registerHooksAvailable ? it : it.skip)(
+      'should load the plugin from source in the daemon process',
+      () => {
+        const env = { NX_ISOLATE_PLUGINS: 'false' };
+        runCLI('reset', { env });
+        try {
+          expect(
+            JSON.parse(
+              runCLI(`show project ${inferredProject} --json`, { env })
+            ).tags
+          ).toContain('esm-tag');
+          expect(runCLI(`build ${inferredProject}`, { env })).toContain(
+            sourceMarker
+          );
+        } finally {
+          runCLI('reset');
+        }
+      }
+    );
+  });
 
   it('should respect and support generating plugins with a name different than the import path', async () => {
     const plugin = uniq('plugin');

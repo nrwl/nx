@@ -15,7 +15,7 @@ import {
   describeMessage,
   parseMessage,
 } from '../../../utils/consume-messages-from-socket';
-import { getPluginResolveConditionNodeArgs } from '../../../plugins/js/utils/typescript';
+import { getRootTsConfigCustomConditions } from '../../../plugins/js/utils/typescript';
 import { getNxRequirePaths } from '../../../utils/installation-directory';
 import { isSandbox } from '../../../utils/is-sandbox';
 import { logger } from '../../../utils/logger';
@@ -34,6 +34,7 @@ import type {
   ProjectsMetadata,
 } from '../public-api';
 import { resolveNxPlugin } from '../resolve-plugin';
+import { withBuiltEntryResolutionHint } from '../built-entry-resolution-hint';
 import type {
   MessageResult,
   PluginWorkerLoadResult,
@@ -122,6 +123,8 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   private readonly root: string;
   private readonly pluginPath: string;
   private readonly shouldRegisterTSTranspiler: boolean;
+  private readonly isSourcePlugin: boolean;
+  private readonly workspacePackageNames: string[];
 
   private lifecycle: PluginLifecycleManager;
   private exitHandler:
@@ -134,11 +137,17 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   static async load(
     plugin: PluginConfiguration,
     root: string,
-    index?: number
+    index?: number,
+    conditions = getRootTsConfigCustomConditions(root)
   ): Promise<IsolatedPlugin> {
     const moduleName = typeof plugin === 'string' ? plugin : plugin.plugin;
-    const { name, pluginPath, shouldRegisterTSTranspiler } =
-      await resolveNxPlugin(moduleName, root, getNxRequirePaths(root));
+    const {
+      name,
+      pluginPath,
+      shouldRegisterTSTranspiler,
+      isSourcePlugin,
+      workspacePackageNames,
+    } = await resolveNxPlugin(moduleName, root, getNxRequirePaths(root));
 
     const instance = new IsolatedPlugin(
       plugin,
@@ -146,10 +155,25 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       name,
       pluginPath,
       shouldRegisterTSTranspiler,
-      index
+      isSourcePlugin,
+      workspacePackageNames,
+      index,
+      conditions
     );
 
-    const loadResult = await instance.spawnAndConnect();
+    let loadResult: LoadResultPayload;
+    try {
+      loadResult = await instance.spawnAndConnect();
+    } catch (e) {
+      throw isSourcePlugin
+        ? e
+        : withBuiltEntryResolutionHint(
+            e,
+            pluginPath,
+            root,
+            workspacePackageNames
+          );
+    }
     instance.setupHooks(loadResult);
     return instance;
   }
@@ -160,17 +184,26 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     name: string,
     pluginPath: string,
     shouldRegisterTSTranspiler: boolean,
-    public readonly index?: number
+    isSourcePlugin: boolean,
+    workspacePackageNames: string[],
+    public readonly index?: number,
+    private readonly conditions: string[] = []
   ) {
     this.plugin = plugin;
     this.root = root;
     this.name = name;
     this.pluginPath = pluginPath;
     this.shouldRegisterTSTranspiler = shouldRegisterTSTranspiler;
+    this.isSourcePlugin = isSourcePlugin;
+    this.workspacePackageNames = workspacePackageNames;
   }
 
   private async spawnAndConnect(): Promise<LoadResultPayload> {
-    const { worker, socket } = await startPluginWorker(this.name);
+    const { worker, socket } = await startPluginWorker(
+      this.name,
+      this.isSourcePlugin,
+      this.conditions
+    );
     this.worker = worker;
     this.socket = socket;
 
@@ -339,6 +372,8 @@ export class IsolatedPlugin implements LoadedNxPlugin {
           name: this.name,
           pluginPath: this.pluginPath,
           shouldRegisterTSTranspiler: this.shouldRegisterTSTranspiler,
+          isSourcePlugin: this.isSourcePlugin,
+          workspacePackageNames: this.workspacePackageNames,
         },
         tx,
       });
@@ -595,7 +630,11 @@ export function getPluginWorkerSocketId(): string {
   )}`;
 }
 
-async function startPluginWorker(name: string) {
+async function startPluginWorker(
+  name: string,
+  isSourcePlugin: boolean,
+  conditions: string[]
+) {
   performance.mark(`start-plugin-worker:${name}`);
 
   const isWorkerTypescript = path.extname(__filename) === '.ts';
@@ -628,9 +667,8 @@ async function startPluginWorker(name: string) {
   const worker = spawn(
     process.execPath,
     [
-      // Spawn the worker with the same resolve conditions Nx uses for plugin
-      // entries so the plugin's transitive workspace imports resolve to source.
-      ...getPluginResolveConditionNodeArgs(),
+      // Built workers must not get conditions that select unbuilt source.
+      ...(isSourcePlugin ? conditions.flatMap((c) => ['--conditions', c]) : []),
       // swc transpiles without type-checking: ~7x faster to boot, and this is
       // paid once per worker spawn.
       ...(isWorkerTypescript ? ['--require', '@swc-node/register'] : []),

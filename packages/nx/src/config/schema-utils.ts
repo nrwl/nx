@@ -1,12 +1,18 @@
 import { existsSync } from 'fs';
-import { join, relative } from 'path';
+import { extname, join, relative } from 'path';
 import { resolve as resolveExports } from 'resolve.exports';
 import {
   loadTsFile,
+  registerSourceGraphResolver,
   requireWithTsconfigFallback,
 } from '../plugins/js/utils/register';
 import { getWorkspacePackagesMetadata } from '../plugins/js/utils/packages';
 import { getRootTsConfigResolveExportsConditions } from '../plugins/js/utils/typescript';
+import {
+  isWorkspaceLocalResolution,
+  withBuiltEntryResolutionHint,
+} from '../project-graph/plugins/built-entry-resolution-hint';
+import { isSourceEntry } from '../project-graph/plugins/entry-provenance';
 import {
   createProjectRootMappingsFromProjectConfigurations,
   findProjectForPath,
@@ -71,7 +77,7 @@ export function getImplementationFactory<T>(
   const [implementationModulePath, implementationExportName] =
     implementation.split('#');
   return () => {
-    const modulePath = resolveImplementation(
+    const { path: modulePath, isSource } = resolveImplementationWithSourceGraph(
       implementationModulePath,
       directory,
       packageName,
@@ -82,9 +88,22 @@ export function getImplementationFactory<T>(
     // set and bubbles errors like extensionless `./schema` imports (strict
     // ESM resolution failures) straight to the CLI. JS entrypoints use
     // requireWithTsconfigFallback so workspace-alias imports still resolve.
-    const module = /\.[cm]?ts$/.test(modulePath)
-      ? loadTsFile(modulePath)
-      : requireWithTsconfigFallback(modulePath);
+    let module: any;
+    try {
+      module = /\.[cm]?ts$/.test(modulePath)
+        ? loadTsFile(modulePath)
+        : requireWithTsconfigFallback(modulePath);
+    } catch (e) {
+      throw isSource
+        ? e
+        : withBuiltEntryResolutionHint(
+            e,
+            modulePath,
+            workspaceRoot,
+            getWorkspacePackagesMetadata(projects)
+              .packageManagerWorkspacePackageNames
+          );
+    }
     return implementationExportName
       ? module[implementationExportName]
       : (module.default ?? module);
@@ -103,6 +122,44 @@ export function resolveImplementation(
   packageName: string,
   projects: Record<string, ProjectConfiguration>
 ): string {
+  return resolveImplementationWithMetadata(
+    implementationModulePath,
+    directory,
+    packageName,
+    projects
+  ).path;
+}
+
+export function resolveImplementationWithSourceGraph(
+  implementationModulePath: string,
+  directory: string,
+  packageName: string,
+  projects: Record<string, ProjectConfiguration>
+): { path: string; isSource: boolean } {
+  const resolved = resolveImplementationWithMetadata(
+    implementationModulePath,
+    directory,
+    packageName,
+    projects
+  );
+  if (resolved.isSource) {
+    // Loaded entries have no unload lifecycle, so the per-entry resolver
+    // stays for the process lifetime.
+    registerSourceGraphResolver(
+      resolved.path,
+      workspaceRoot,
+      getWorkspacePackagesMetadata(projects).packageManagerWorkspacePackageNames
+    );
+  }
+  return resolved;
+}
+
+function resolveImplementationWithMetadata(
+  implementationModulePath: string,
+  directory: string,
+  packageName: string,
+  projects: Record<string, ProjectConfiguration>
+): { path: string; isSource: boolean } {
   const validImplementations = ['', '.js', '.ts'].map(
     (x) => implementationModulePath + x
   );
@@ -127,17 +184,31 @@ export function resolveImplementation(
   for (const maybeImplementation of validImplementations) {
     const maybeImplementationPath = join(directory, maybeImplementation);
     if (existsSync(maybeImplementationPath)) {
-      return maybeImplementationPath;
+      return {
+        path: maybeImplementationPath,
+        isSource: isWorkspaceLocalTsImplementation(maybeImplementationPath),
+      };
     }
 
     try {
-      return require.resolve(maybeImplementation, {
+      const resolvedPath = require.resolve(maybeImplementation, {
         paths: [directory],
       });
+      return {
+        path: resolvedPath,
+        isSource: isWorkspaceLocalTsImplementation(resolvedPath),
+      };
     } catch {}
   }
 
   throw new ImplementationResolutionError(implementationModulePath, directory);
+}
+
+function isWorkspaceLocalTsImplementation(modulePath: string): boolean {
+  return (
+    /\.(?:[cm]?ts|tsx)$/.test(extname(modulePath)) &&
+    isWorkspaceLocalResolution(modulePath, workspaceRoot)
+  );
 }
 
 export function resolveSchema(
@@ -157,7 +228,7 @@ export function resolveSchema(
       projects
     );
     if (schemaPathFromSource) {
-      return schemaPathFromSource;
+      return schemaPathFromSource.path;
     }
   }
 
@@ -222,7 +293,7 @@ function tryResolveFromSource(
   directory: string,
   packageName: string,
   projects: Record<string, ProjectConfiguration>
-): string | null {
+): { path: string; isSource: boolean } | null {
   packageMetadata ??= getWorkspacePackagesMetadata(projects);
   let localProject = packageMetadata.packageToProjectMap[packageName];
   // The `packageName` might be a path to the collection rather than an actual
@@ -247,9 +318,27 @@ function tryResolveFromSource(
       conditions: getRootTsConfigResolveExportsConditions(),
     });
     if (fromExports && fromExports.length) {
+      let defaultMatches: string[] | void;
+      try {
+        defaultMatches = resolveExports({ name, exports }, path, {
+          conditions: [],
+        });
+      } catch {}
+      const defaultMatch = (defaultMatches || []).find((m) =>
+        existsSync(join(directory, m))
+      );
       for (const exportPath of fromExports) {
-        if (existsSync(join(directory, exportPath))) {
-          return join(directory, exportPath);
+        const candidate = join(directory, exportPath);
+        if (existsSync(candidate)) {
+          return {
+            path: candidate,
+            isSource: isSourceEntry(
+              candidate,
+              defaultMatch !== exportPath,
+              localProject,
+              workspaceRoot
+            ),
+          };
         }
       }
     }
@@ -271,7 +360,15 @@ function tryResolveFromSource(
 
     for (const possiblePath of possiblePaths) {
       if (existsSync(possiblePath)) {
-        return possiblePath;
+        return {
+          path: possiblePath,
+          isSource: isSourceEntry(
+            possiblePath,
+            false,
+            localProject,
+            workspaceRoot
+          ),
+        };
       }
     }
   }
