@@ -329,11 +329,22 @@ async function buildViteTargets(
     };
 
     if (isUsingTsSolutionSetup) {
-      targets[options.typecheckTargetName].dependsOn = [
+      const typecheckTarget = targets[options.typecheckTargetName];
+      typecheckTarget.dependsOn = [
+        options.buildTargetName,
         `^${options.typecheckTargetName}`,
       ];
-      targets[options.typecheckTargetName].syncGenerators = [
+      typecheckTarget.syncGenerators = [
         '@nx/js:typescript-sync',
+      ];
+      const tsbuildinfoName = `${tsConfigToUse.replace('.json', '')}.tsbuildinfo`;
+      typecheckTarget.outputs = [
+        `{projectRoot}/${tsbuildinfoName}`,
+        ...buildOutputs.flatMap((buildOutput) => [
+          `${buildOutput}/**/*.{d.ts,d.cts,d.mts}`,
+          `${buildOutput}/**/*.{d.ts,d.cts,d.mts}.map`,
+          `${buildOutput}/${tsbuildinfoName}`,
+        ]),
       ];
     }
   }

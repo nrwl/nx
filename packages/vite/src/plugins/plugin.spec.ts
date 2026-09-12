@@ -171,6 +171,9 @@ describe('@nx/vite/plugin', () => {
       expect(
         nodes[0][1].projects['.'].targets.typecheck.syncGenerators
       ).toBeUndefined();
+      expect(
+        nodes[0][1].projects['.'].targets.typecheck.outputs
+      ).toBeUndefined();
     });
 
     it('should infer typecheck with --build flag when using TS solution setup', async () => {
@@ -210,11 +213,18 @@ describe('@nx/vite/plugin', () => {
         }
       `);
       expect(nodes[0][1].projects['.'].targets.typecheck.dependsOn).toEqual([
+        'build',
         `^typecheck`,
       ]);
       expect(
         nodes[0][1].projects['.'].targets.typecheck.syncGenerators
       ).toEqual(['@nx/js:typescript-sync']);
+      expect(nodes[0][1].projects['.'].targets.typecheck.outputs).toEqual([
+        '{projectRoot}/tsconfig.tsbuildinfo',
+        '{projectRoot}/dist/**/*.{d.ts,d.cts,d.mts}',
+        '{projectRoot}/dist/**/*.{d.ts,d.cts,d.mts}.map',
+        '{projectRoot}/dist/tsconfig.tsbuildinfo',
+      ]);
     });
 
     it('should use tsgo for typecheck when compiler option is tsgo', async () => {
