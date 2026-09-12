@@ -479,7 +479,7 @@ function interpolateOverrides<T = any>(
  * Dummies are linked only through `dependencies`, so the continuous edges
  * recorded under them must be lifted onto the real task before they are deleted.
  */
-export function liftContinuousDependenciesThroughDummyTasks(
+function liftContinuousDependenciesThroughDummyTasks(
   dependencies: { [k: string]: string[] },
   continuousDependencies: { [k: string]: string[] }
 ) {
