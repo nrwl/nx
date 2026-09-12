@@ -97,4 +97,27 @@ describe('run-executor task graph transport', () => {
       }
     }
   );
+  it('reports and exits when the task graph buffer cannot be decoded', async () => {
+    vi.mocked(run).mockClear();
+    const exit = vi
+      .spyOn(process, 'exit')
+      .mockImplementation(() => undefined as never);
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const on = vi.spyOn(process, 'on');
+    await import('./run-executor');
+    const callback = on.mock.calls.find(([event]) => event === 'message')?.[1];
+    try {
+      await callback({
+        targetDescription: { project: 'a', target: 'build' },
+        overrides: {},
+        taskGraph: encodeTaskGraphForWorker(graph(['a'], 300)).subarray(0, 16),
+        isVerbose: false,
+      });
+      expect(run).not.toHaveBeenCalled();
+      expect(error).toHaveBeenCalledTimes(1);
+      expect(exit).toHaveBeenCalledWith(1);
+    } finally {
+      process.removeListener('message', callback);
+    }
+  });
 });

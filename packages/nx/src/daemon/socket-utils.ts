@@ -114,6 +114,9 @@ function serializeAs(data: any, format: 'v8' | 'json'): Buffer {
  * Neither format subsumes the other: JSON cannot represent a BigInt and hits the
  * max string length far sooner, while v8 cannot clone a function.
  *
+ * Repetition-heavy payloads such as per-task hash details go as a v8-serialized
+ * string table instead, whatever `preferred` is; every reader sniffs the format.
+ *
  * @param data Data to serialize
  * @param preferred Format to attempt first
  * @returns Serialized data as bytes ready to be framed onto a socket
@@ -122,6 +125,8 @@ export function serializeWithFallback(
   data: any,
   preferred: 'v8' | 'json'
 ): Buffer {
+  const deduped = encodeAuto(data);
+  if (deduped) return v8_serialize(deduped);
   try {
     return serializeAs(data, preferred);
   } catch (e) {
@@ -137,17 +142,14 @@ export function serializeWithFallback(
  * Serialize data for IPC using the format the user configured.
  *
  * @param data Data to serialize
- * @param force Use this format without falling back. For callers whose data is
- *              known to be unrepresentable in the other format, where a fallback
- *              would only swap one failure for a less obvious one.
+ * @param force Use this format without deduping or falling back. For callers
+ *              whose data is known to be unrepresentable in the other format,
+ *              where a fallback would only swap one failure for a less obvious
+ *              one.
  * @returns Serialized data as bytes ready to be framed onto a socket
  */
 export function serialize(data: any, force?: 'v8' | 'json'): Buffer {
   if (force) return serializeAs(data, force);
-  // Repetition-heavy payloads (per-task hash details) get a string table;
-  // the encoder bails cheaply on everything else.
-  const deduped = encodeAuto(data);
-  if (deduped) return v8_serialize(deduped);
   return serializeWithFallback(data, isV8SerializerEnabled() ? 'v8' : 'json');
 }
 

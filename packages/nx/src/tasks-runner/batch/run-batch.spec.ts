@@ -1,4 +1,4 @@
-import { deserialize } from 'v8';
+import { deserialize, serialize } from 'v8';
 import { TaskGraph } from '../../config/task-graph';
 import { isDedupedPayload } from '../../utils/dedupe-serialization';
 import { encodeTaskGraphForWorker } from '../task-graph-for-worker';
@@ -120,4 +120,74 @@ describe('batch worker task graph transport', () => {
       }
     }
   );
+
+  it('reports and exits when a task graph buffer cannot be decoded', async () => {
+    const send = vi.spyOn(process, 'send').mockImplementation(() => true);
+    const exit = vi
+      .spyOn(process, 'exit')
+      .mockImplementation((() => undefined) as never);
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const on = vi.spyOn(process, 'on');
+    await import('./run-batch');
+    const callback = on.mock.calls.find(([event]) => event === 'message')?.[1];
+    try {
+      await callback({
+        type: BatchMessageType.RunTasks,
+        executorName: 'test-plugin:build',
+        projectGraph: { nodes: {}, dependencies: {} },
+        batchTaskGraph: encodeTaskGraphForWorker(graph(['a'], 300)).subarray(
+          0,
+          16
+        ),
+        fullTaskGraph: graph(['a'], 1),
+      });
+      expect(exit).toHaveBeenCalledWith(1);
+      expect(error.mock.calls[0][0]).toMatch(/Batch test-plugin:build failed/);
+      expect(send).not.toHaveBeenCalled();
+    } finally {
+      process.removeListener('message', callback);
+    }
+  });
+
+  it('sends results in JSON shape when the channel cannot clone them', async () => {
+    execute.mockResolvedValueOnce({
+      'a:build': { success: true, terminalOutput: 'ok', fn() {} },
+    } as any);
+    // Advanced serialization throws on a function where JSON dropped it.
+    const send = vi.spyOn(process, 'send').mockImplementation((m: any) => {
+      serialize(m);
+      return true;
+    });
+    const on = vi.spyOn(process, 'on');
+    await import('./run-batch');
+    const callback = on.mock.calls.find(([event]) => event === 'message')?.[1];
+    try {
+      await callback({
+        type: BatchMessageType.RunTasks,
+        executorName: 'test-plugin:build',
+        projectGraph: {
+          nodes: {
+            a: {
+              name: 'a',
+              type: 'lib',
+              data: {
+                root: 'a',
+                targets: { build: { executor: 'test-plugin:build' } },
+              },
+            },
+          },
+          dependencies: { a: [] },
+        },
+        batchTaskGraph: graph(['a'], 1),
+        fullTaskGraph: graph(['a'], 1),
+      });
+      expect(send).toHaveBeenCalledTimes(2);
+      expect(send.mock.calls[1][0]).toEqual({
+        type: BatchMessageType.CompleteBatchExecution,
+        results: { 'a:build': { success: true, terminalOutput: 'ok' } },
+      });
+    } finally {
+      process.removeListener('message', callback);
+    }
+  });
 });

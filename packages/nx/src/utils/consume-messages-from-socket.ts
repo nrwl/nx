@@ -326,7 +326,8 @@ export interface DescribeMessageOptions {
  * Parse a message produced by `serialize()` in `daemon/socket-utils.ts`.
  */
 export function parseMessage<T = unknown>(message: Buffer): T {
-  if (isJsonMessage(message)) return JSON.parse(message.toString('utf8'));
-  const value = deserialize(message);
+  const value = isJsonMessage(message)
+    ? JSON.parse(message.toString('utf8'))
+    : deserialize(message);
   return isDedupedPayload(value) ? decodeDeduped<T>(value) : value;
 }

@@ -80,10 +80,10 @@ process.on(
     taskGraph: TaskGraph | Buffer;
     isVerbose: boolean;
   }) => {
-    const taskGraph = Buffer.isBuffer(message.taskGraph)
-      ? parseMessage<TaskGraph>(message.taskGraph)
-      : message.taskGraph;
     try {
+      const taskGraph = Buffer.isBuffer(message.taskGraph)
+        ? parseMessage<TaskGraph>(message.taskGraph)
+        : message.taskGraph;
       const statusCode = await run(
         process.cwd(),
         process.env.NX_WORKSPACE_ROOT,
