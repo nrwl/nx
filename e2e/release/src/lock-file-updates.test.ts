@@ -87,8 +87,11 @@ describe('nx release lock file updates', () => {
 
   afterAll(() => {
     process.env.SELECTED_PM = previousPackageManager;
-    process.env.YARN_ENABLE_IMMUTABLE_INSTALLS =
-      previousYarnEnableImmutableInstalls;
+    if (previousYarnEnableImmutableInstalls === undefined)
+      delete process.env.YARN_ENABLE_IMMUTABLE_INSTALLS;
+    else
+      process.env.YARN_ENABLE_IMMUTABLE_INSTALLS =
+        previousYarnEnableImmutableInstalls;
   });
 
   it('should update package-lock.json when package manager is npm', async () => {
@@ -196,7 +199,6 @@ describe('nx release lock file updates', () => {
       return json;
     });
 
-    runCommand(`corepack prepare yarn@1.22.19 --activate`);
     runCommand(`yarn set version 1.22.19`);
     runCommand(`yarn install`);
 
@@ -234,7 +236,6 @@ describe('nx release lock file updates', () => {
       return json;
     });
 
-    runCommand(`corepack prepare yarn@4.0.2 --activate`);
     runCommand(`yarn set version 4.0.2`);
     runCommand(`yarn install`);
 
