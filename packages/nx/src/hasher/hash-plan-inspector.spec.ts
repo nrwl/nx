@@ -157,6 +157,23 @@ describe('HashPlanInspector', () => {
       expect(inputs.files).toContain('apps/test-app/dist/out.js');
       expect(inputs.files).not.toContain('apps/test-app/dist/out.js.map');
     });
+
+    it('reports a declared exact path that is missing', async () => {
+      const graph: ProjectGraph = JSON.parse(JSON.stringify(projectGraph));
+      graph.nodes['test-app'].data.targets.build.inputs = [
+        { fileset: '{projectRoot}/dist/absent.js', includeIgnored: true },
+      ];
+      const diskInspector = new HashPlanInspector(graph, tempFs.tempDir);
+      await diskInspector.init();
+
+      const inputs = diskInspector.inspectTaskInputs({
+        project: 'test-app',
+        target: 'build',
+      })['test-app:build'];
+
+      // It hashes as a sentinel, so it is an input even before it exists.
+      expect(inputs.files).toContain('apps/test-app/dist/absent.js');
+    });
   });
 
   describe('inspectHashPlan', () => {

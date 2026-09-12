@@ -251,6 +251,19 @@ describe('getExpandedTaskInputs', () => {
     expect(result.general).toEqual(['nx.json', 'tsconfig.base.json']);
   });
 
+  it('falls back to a plain split when a brace is unbalanced', async () => {
+    getPlansMock.mockReturnValue({
+      'myproj:build': ['files:myproj:[libs/myproj/{a.json,libs/myproj/b.json]'],
+    });
+
+    await getExpandedTaskInputs(makeResponse(), new Map(), 'myproj:build');
+
+    expect(expandFilesInput as unknown as Mock).toHaveBeenCalledWith(
+      expect.any(String),
+      ['libs/myproj/{a.json', 'libs/myproj/b.json']
+    );
+  });
+
   it('memoizes: a second call for the same task reuses the cached result', async () => {
     getPlansMock.mockReturnValue({
       'myproj:build': ['npm:some-pkg'],
