@@ -719,7 +719,7 @@ impl HashPlanner {
         } else {
             if ignored_file_sets.iter().all(|f| f.starts_with('!')) {
                 anyhow::bail!(
-                    "The includeIgnored fileset \"{}\" is a negation with no positive includeIgnored fileset to filter in the inputs for \"{project_name}\". A negation only filters includeIgnored filesets declared for the same project, and a fileset with `dependencies: true` is hashed on its own.",
+                    "The includeIgnored fileset \"{}\" applied to \"{project_name}\" is a negation with no positive includeIgnored fileset to filter. A negation only filters positive includeIgnored filesets in the same group: declare one for the same project, and note a fileset with `dependencies: true` is hashed on its own for each dependency, so a negation there has nothing to filter.",
                     ignored_file_sets[0]
                 );
             }
