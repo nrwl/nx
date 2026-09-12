@@ -212,6 +212,26 @@ describe('getExpandedTaskInputs', () => {
     });
   });
 
+  it('keeps a brace group intact when splitting a disk-backed group', async () => {
+    getPlansMock.mockReturnValue({
+      'myproj:build': [
+        'files:myproj:[{nx,tsconfig.base}.json,libs/myproj/gen/{a,b}/*.ts,!libs/myproj/gen/b/x.ts]',
+      ],
+    });
+
+    const cache = new Map<string, Record<string, string[]>>();
+    await getExpandedTaskInputs(makeResponse(), cache, 'myproj:build');
+
+    expect(expandFilesInput as unknown as Mock).toHaveBeenCalledWith(
+      expect.any(String),
+      [
+        '{nx,tsconfig.base}.json',
+        'libs/myproj/gen/{a,b}/*.ts',
+        '!libs/myproj/gen/b/x.ts',
+      ]
+    );
+  });
+
   it('memoizes: a second call for the same task reuses the cached result', async () => {
     getPlansMock.mockReturnValue({
       'myproj:build': ['npm:some-pkg'],

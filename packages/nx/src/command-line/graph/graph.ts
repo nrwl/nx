@@ -1346,6 +1346,29 @@ export async function getExpandedTaskInputs(
   return result;
 }
 
+// A brace group ({a,b}.json) carries commas, so a glob list joined with
+// commas can only be split at brace depth zero.
+function splitGlobGroup(group: string): string[] {
+  const globs: string[] = [];
+  let current = '';
+  let depth = 0;
+  for (const char of group) {
+    if (char === '{') {
+      depth++;
+    } else if (char === '}' && depth > 0) {
+      depth--;
+    }
+    if (char === ',' && depth === 0) {
+      globs.push(current);
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  globs.push(current);
+  return globs;
+}
+
 function expandInputs(
   inputs: string[],
   project: ProjectGraphProjectNode,
@@ -1371,7 +1394,7 @@ function expandInputs(
     // classifies them as external dependencies.
     const diskBacked = /^files:.*?:\[(.*)\]$/.exec(input);
     if (diskBacked) {
-      filesInputs.push(diskBacked[1].split(','));
+      filesInputs.push(splitGlobGroup(diskBacked[1]));
       return;
     }
     const maybeProjectName = input.split(':')[0];
