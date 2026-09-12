@@ -177,6 +177,10 @@ mod tests {
 
     #[test]
     fn filters_invisible_tui_traces_but_preserves_requested_logging() {
+        // The event macros gate on `LevelFilter::current()`, the highest level
+        // any live subscriber in the process asks for, so `tracing::enabled!`
+        // would answer for whatever other tests are running. The subscriber's
+        // own hint is what that gate is built from.
         fn trace_enabled(terminal: bool, override_value: Option<&str>, console: &str) -> bool {
             let subscriber = tracing_subscriber::registry()
                 .with(
@@ -185,7 +189,9 @@ mod tests {
                         .with_filter(EnvFilter::new(console)),
                 )
                 .with(tui_logging_layer(terminal, override_value));
-            tracing::subscriber::with_default(subscriber, || tracing::enabled!(Level::TRACE))
+            subscriber
+                .max_level_hint()
+                .is_none_or(|hint| hint >= tracing::level_filters::LevelFilter::TRACE)
         }
         assert!(!trace_enabled(false, None, "info"));
         assert!(!trace_enabled(false, Some("false"), "info"));
