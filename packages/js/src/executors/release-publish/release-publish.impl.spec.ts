@@ -325,6 +325,47 @@ describe('release-publish executor', () => {
     });
   });
 
+  describe('npm view empty output handling', () => {
+    it('should continue to publish when npm view returns empty output instead of crashing on JSON.parse', async () => {
+      // `npm view` can exit 0 with empty stdout when the package exists in the
+      // registry but has no published versions/dist-tags yet (e.g. GitHub
+      // Packages). Previously this crashed on `JSON.parse('')` and was reported
+      // as "Something unexpected went wrong when checking for existing
+      // dist-tags." See https://github.com/nrwl/nx/issues/36358
+      mockExecSync
+        .mockReturnValueOnce(Buffer.from('') as any) // npm view -> empty stdout
+        .mockReturnValueOnce(Buffer.from('{}') as any); // npm publish
+
+      jest.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue({
+        beforeJsonData: '',
+        jsonData: {
+          id: '@scope/test-package@1.0.0',
+          name: '@scope/test-package',
+          version: '1.0.0',
+          size: 100,
+          unpackedSize: 200,
+          shasum: 'abc123',
+          integrity: 'sha512-abc',
+          filename: 'test-package-1.0.0.tgz',
+          files: [],
+          entryCount: 1,
+          bundled: [],
+        },
+        afterJsonData: '',
+      } as any);
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(true);
+      expect(console.error).not.toHaveBeenCalledWith(
+        'Something unexpected went wrong when checking for existing dist-tags.\n',
+        expect.anything()
+      );
+      // Should have proceeded with npm --version, npm view, and publish
+      expect(mockExecSync).toHaveBeenCalledTimes(3);
+    });
+  });
+
   describe('npm availability check', () => {
     it('should continue without error when pm is bun and npm is not installed', async () => {
       mockDetectPackageManager.mockReturnValue('bun');
