@@ -1505,4 +1505,72 @@ describe('native task hasher', () => {
     ]);
     expect(taskGraph.dependencies['e2e:e2e']).toEqual([]);
   });
+
+  it('leaves a task with a fileset read from disk for run time', async () => {
+    await tempFs.createFiles({
+      'libs/gen/project.json': JSON.stringify({ name: 'gen' }),
+      'libs/gen/index.ts': 'gen',
+      'libs/plain/project.json': JSON.stringify({ name: 'plain' }),
+      'libs/plain/index.ts': 'plain',
+    });
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/gen': 'gen',
+      'libs/plain': 'plain',
+    });
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      workspaceFiles.fileMap.projectFileMap
+    );
+    // Neither task depends on another. Only the disk-backed fileset holds
+    // gen:compile back, since it may read what some other task writes.
+    builder.addNode({
+      name: 'gen',
+      type: 'lib',
+      data: {
+        root: 'libs/gen',
+        targets: {
+          compile: {
+            executor: 'nx:run-commands',
+            inputs: [
+              'default',
+              { fileset: '{projectRoot}/generated/**/*', includeIgnored: true },
+            ],
+          },
+        },
+      },
+    });
+    builder.addNode({
+      name: 'plain',
+      type: 'lib',
+      data: {
+        root: 'libs/plain',
+        targets: {
+          compile: { executor: 'nx:run-commands', inputs: ['default'] },
+        },
+      },
+    });
+    const projectGraph = builder.getUpdatedProjectGraph();
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['gen', 'plain'],
+      ['compile'],
+      undefined,
+      {}
+    );
+    const tasks = Object.values(taskGraph.tasks);
+    const hashes = await new NativeTaskHasherImpl(
+      tempFs.tempDir,
+      nxJson,
+      projectGraph,
+      workspaceFiles.rustReferences,
+      { selectivelyHashTsConfig: false }
+    ).hashTasksUpfront(
+      tasks,
+      taskGraph,
+      Object.fromEntries(tasks.map((t) => [t.id, {}]))
+    );
+
+    expect(Object.keys(hashes)).toEqual(['plain:compile']);
+  });
 });

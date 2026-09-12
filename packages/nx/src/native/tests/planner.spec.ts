@@ -127,6 +127,168 @@ describe('task planner', () => {
     });
   });
 
+  describe('includeIgnored filesets', () => {
+    function planFor(inputs: any[], namedInputs?: Record<string, any[]>) {
+      const builder = new ProjectGraphBuilder();
+      builder.addNode({
+        name: 'parent',
+        type: 'lib',
+        data: {
+          root: 'libs/parent',
+          namedInputs,
+          targets: { build: { executor: 'nx:run-commands', inputs } },
+        },
+      });
+      const projectGraph = builder.getUpdatedProjectGraph();
+      const taskGraph = createTaskGraph(
+        projectGraph,
+        {},
+        ['parent'],
+        ['build'],
+        undefined,
+        {},
+        false
+      );
+      const ref = transferProjectGraph(
+        transformProjectGraphForRust(projectGraph)
+      );
+      return new HashPlanner({} as any, ref).getPlans(
+        ['parent:build'],
+        taskGraph
+      )['parent:build'];
+    }
+
+    it('aggregates includeIgnored filesets into one disk-backed group with tokens resolved', () => {
+      const plan = planFor([
+        'default',
+        { fileset: '{projectRoot}/dist/**/*.js', includeIgnored: true },
+        { fileset: '!{projectRoot}/dist/**/*.map', includeIgnored: true },
+        { fileset: '{workspaceRoot}/.env.generated', includeIgnored: true },
+      ]);
+
+      expect(plan).toContain(
+        'files:parent:[libs/parent/dist/**/*.js,!libs/parent/dist/**/*.map,.env.generated]'
+      );
+      // The map-backed fileset is untouched by the flag.
+      expect(plan).toContain('parent:libs/parent/**/*');
+    });
+
+    it('plans a disk-backed group declared through a named input', () => {
+      const plan = planFor(['generated'], {
+        generated: [
+          { fileset: '{projectRoot}/generated', includeIgnored: true },
+        ],
+      });
+
+      expect(plan).toContain('files:parent:[libs/parent/generated]');
+    });
+
+    it('accepts a root brace group of literal file names', () => {
+      const plan = planFor([
+        {
+          fileset: '{workspaceRoot}/{nx,tsconfig.base}.json',
+          includeIgnored: true,
+        },
+      ]);
+
+      expect(plan).toContain('files:parent:[{nx,tsconfig.base}.json]');
+    });
+
+    it('rejects a glob that would walk from the workspace root', () => {
+      expect(() =>
+        planFor([{ fileset: '{workspaceRoot}/**', includeIgnored: true }])
+      ).toThrow(/no leading directory/);
+      expect(() =>
+        planFor([
+          { fileset: '{workspaceRoot}/{nx,*}.json', includeIgnored: true },
+        ])
+      ).toThrow(/no leading directory/);
+    });
+
+    it('rejects a negation with no positive includeIgnored fileset to filter', () => {
+      expect(() =>
+        planFor([
+          'default',
+          { fileset: '!{projectRoot}/dist/**/*.map', includeIgnored: true },
+        ])
+      ).toThrow(/no positive includeIgnored fileset/);
+    });
+
+    function twoConsumersOfShared(aInputs: any[], bInputs: any[]) {
+      const builder = new ProjectGraphBuilder();
+      builder.addNode({
+        name: 'a',
+        type: 'lib',
+        data: {
+          root: 'libs/a',
+          targets: { build: { executor: 'nx:run-commands', inputs: aInputs } },
+        },
+      });
+      builder.addNode({
+        name: 'b',
+        type: 'lib',
+        data: {
+          root: 'libs/b',
+          targets: { build: { executor: 'nx:run-commands', inputs: bInputs } },
+        },
+      });
+      builder.addNode({
+        name: 'shared',
+        type: 'lib',
+        data: {
+          root: 'libs/shared',
+          targets: { build: { executor: 'nx:run-commands' } },
+        },
+      });
+      builder.addImplicitDependency('a', 'shared');
+      builder.addImplicitDependency('b', 'shared');
+      const projectGraph = builder.getUpdatedProjectGraph();
+      const taskGraph = createTaskGraph(
+        projectGraph,
+        {},
+        ['a', 'b'],
+        ['build'],
+        undefined,
+        {},
+        false
+      );
+      const ref = transferProjectGraph(
+        transformProjectGraphForRust(projectGraph)
+      );
+      return (order: string[]) =>
+        new HashPlanner({} as any, ref).getPlans(order, taskGraph);
+    }
+
+    it('keys the dependency subtree memo on the backing store', () => {
+      const plansIn = twoConsumersOfShared(
+        [
+          {
+            fileset: '{projectRoot}/dist/**',
+            dependencies: true,
+            includeIgnored: true,
+          },
+        ],
+        [{ fileset: '{projectRoot}/dist/**', dependencies: true }]
+      );
+
+      // Whichever task is planned first must not hand its store to the other.
+      for (const order of [
+        ['a:build', 'b:build'],
+        ['b:build', 'a:build'],
+      ]) {
+        const plans = plansIn(order);
+        expect(plans['a:build']).toContain(
+          'files:shared:[libs/shared/dist/**]'
+        );
+        expect(plans['a:build']).not.toContain('shared:libs/shared/dist/**');
+        expect(plans['b:build']).toContain('shared:libs/shared/dist/**');
+        expect(plans['b:build']).not.toContain(
+          'files:shared:[libs/shared/dist/**]'
+        );
+      }
+    });
+  });
+
   it('should plan the task where the project has dependencies', async () => {
     const projectFileMap = {
       parent: [

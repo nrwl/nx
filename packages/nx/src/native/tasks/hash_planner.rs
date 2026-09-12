@@ -12,7 +12,7 @@ use rayon::prelude::*;
 use std::collections::HashMap;
 use tracing::trace;
 
-use crate::native::tasks::hashers::OnceCache;
+use crate::native::tasks::hashers::{OnceCache, validate_files_globs};
 use crate::native::tasks::inputs::{
     expand_single_project_inputs, get_inputs, get_inputs_for_dependency, get_named_inputs,
 };
@@ -390,7 +390,7 @@ impl HashPlanner {
         let project_deps = &self.project_graph.dependencies[project_name];
 
         let mut ids: Vec<u32> = self
-            .gather_self_inputs(project_name, &inputs.self_inputs)
+            .gather_self_inputs(project_name, &inputs.self_inputs)?
             .into_iter()
             .chain(self.gather_dependency_outputs(task, task_graph, &inputs.deps_outputs)?)
             .chain(self.gather_project_inputs(&inputs.project_inputs)?)
@@ -483,7 +483,11 @@ impl HashPlanner {
     ) -> anyhow::Result<Arc<SubtreeResult>> {
         let cache_key = match input {
             Input::Inputs { input, .. } => format!("{dep}\0i\0{input}"),
-            Input::FileSet { fileset, .. } => format!("{dep}\0f\0{fileset}"),
+            Input::FileSet {
+                fileset,
+                include_ignored,
+                ..
+            } => format!("{dep}\0f\0{include_ignored}\0{fileset}"),
             // Other input kinds never reach dependencies (get_inputs_for_dependency
             // returns None for them), so they share one empty entry per project.
             _ => format!("{dep}\0none"),
@@ -514,7 +518,7 @@ impl HashPlanner {
             !dep_inputs.deps_outputs.is_empty() || dep_inputs.deps_inputs.len() != 1;
         let pool = &self.instruction_pool;
         let mut ids: Vec<u32> = self
-            .gather_self_inputs(dep, &dep_inputs.self_inputs)
+            .gather_self_inputs(dep, &dep_inputs.self_inputs)?
             .into_iter()
             .map(|instruction| pool.intern(instruction))
             .collect();
@@ -658,11 +662,28 @@ impl HashPlanner {
         &self,
         project_name: &str,
         self_inputs: &[Input],
-    ) -> Vec<HashInstruction> {
+    ) -> anyhow::Result<Vec<HashInstruction>> {
+        // `includeIgnored` filesets hash from disk as one aggregated group, so
+        // a negation filters across entries; the rest read the file map.
+        let ignored_file_sets: Vec<&str> = self_inputs
+            .iter()
+            .filter_map(|input| match input {
+                Input::FileSet {
+                    fileset,
+                    include_ignored: true,
+                    ..
+                } => Some(*fileset),
+                _ => None,
+            })
+            .collect();
         let (project_file_sets, workspace_file_sets): (Vec<&str>, Vec<&str>) = self_inputs
             .iter()
             .filter_map(|input| match input {
-                Input::FileSet { fileset, .. } => Some(*fileset),
+                Input::FileSet {
+                    fileset,
+                    include_ignored: false,
+                    ..
+                } => Some(*fileset),
                 _ => None,
             })
             .partition(|file_set| {
@@ -684,6 +705,7 @@ impl HashPlanner {
                         .iter()
                         .map(|f| resolve_tokens(f, project_root, project_name))
                         .collect(),
+                    false,
                 ),
                 HashInstruction::ProjectConfiguration(project_name.to_string()),
                 HashInstruction::TsConfiguration(project_name.to_string()),
@@ -698,6 +720,26 @@ impl HashPlanner {
                     .iter()
                     .map(|f| resolve_tokens(f, project_root, project_name))
                     .collect(),
+            )]
+        };
+        let disk_backed_inputs = if ignored_file_sets.is_empty() {
+            vec![]
+        } else {
+            if ignored_file_sets.iter().all(|f| f.starts_with('!')) {
+                anyhow::bail!(
+                    "The includeIgnored fileset \"{}\" applied to \"{project_name}\" is a negation with no positive includeIgnored fileset to filter. A negation only filters positive includeIgnored filesets in the same group: declare one for the same project, and note a fileset with `dependencies: true` is hashed on its own for each dependency, so a negation there has nothing to filter.",
+                    ignored_file_sets[0]
+                );
+            }
+            let resolved: Vec<String> = ignored_file_sets
+                .iter()
+                .map(|f| resolve_files_glob(f, project_root, project_name))
+                .collect();
+            validate_files_globs(&resolved)?;
+            vec![HashInstruction::ProjectFileSet(
+                project_name.to_string(),
+                resolved,
+                true,
             )]
         };
         let runtime_and_env_inputs = self_inputs.iter().filter_map(|i| match i {
@@ -730,11 +772,12 @@ impl HashPlanner {
             _ => None,
         });
 
-        project_inputs
+        Ok(project_inputs
             .into_iter()
             .chain(workspace_file_set_inputs)
+            .chain(disk_backed_inputs)
             .chain(runtime_and_env_inputs)
-            .collect()
+            .collect())
     }
 
     fn gather_dependency_outputs(
@@ -788,7 +831,7 @@ impl HashPlanner {
                     }],
                     &named_inputs,
                 )?;
-                result.extend(self.gather_self_inputs(project, &expanded_input))
+                result.extend(self.gather_self_inputs(project, &expanded_input)?)
             }
         }
         Ok(result)
@@ -805,6 +848,19 @@ fn resolve_tokens(fileset: &str, project_root: &str, project_name: &str) -> Stri
         fileset.replace("{projectRoot}", project_root)
     };
     resolved.replace("{projectName}", project_name)
+}
+
+/// Disk-backed globs are workspace-relative once resolved: `{workspaceRoot}/`
+/// is a no-op prefix here, unlike map-backed filesets where the hasher strips it.
+fn resolve_files_glob(glob: &str, project_root: &str, project_name: &str) -> String {
+    let resolved = resolve_tokens(glob, project_root, project_name);
+    match resolved.strip_prefix("!{workspaceRoot}/") {
+        Some(rest) => format!("!{rest}"),
+        None => resolved
+            .strip_prefix("{workspaceRoot}/")
+            .map(str::to_string)
+            .unwrap_or(resolved),
+    }
 }
 
 fn find_external_dependency_node_name<'a>(

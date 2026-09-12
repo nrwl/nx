@@ -216,7 +216,8 @@ export declare class TaskHasher {
   hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, perTaskEnvs: Record<string, Record<string, string>>, cwd: string, collectTaskInputs?: boolean | undefined | null): Record<string, HashDetails>
   /**
    * Like `hash_plans`, but only for the plans that hold no output of another
-   * task. The rest are left out and hash once those tasks have run; their
+   * task and no fileset read from disk (which may be what another task
+   * writes). The rest are left out and hash once those tasks have run; their
    * ids are absent from the result and need no entry in `per_task_envs`.
    */
   hashPlansUpfront(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, perTaskEnvs: Record<string, Record<string, string>>, cwd: string, collectTaskInputs?: boolean | undefined | null): Record<string, HashDetails>
@@ -397,6 +398,9 @@ export declare const enum EventType {
   rescan = 'rescan'
 }
 
+/** The existing files an `includeIgnored` fileset group matches on disk, sorted. */
+export declare function expandFilesInput(workspaceRoot: string, globs: Array<string>): Array<string>
+
 export declare function expandOutputs(directory: string, entries: Array<string>): Array<string>
 
 export interface ExternalDependenciesInput {
@@ -422,6 +426,11 @@ export interface FileMap {
 export interface FileSetInput {
   fileset: string
   dependencies?: boolean
+  /**
+   * Hash the glob straight from disk (so gitignored/generated files count)
+   * instead of the workspace file map.
+   */
+  includeIgnored?: boolean
 }
 
 export declare function findImports(projectFileMap: Record<string, Array<string>>): Array<ImportResult>
