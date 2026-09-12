@@ -3,7 +3,7 @@ use std::path::Path;
 use std::sync::Arc;
 use std::time::UNIX_EPOCH;
 
-use anyhow::{Result, bail};
+use anyhow::{Context, Result, bail};
 use dashmap::DashMap;
 use rayon::prelude::*;
 use tracing::trace;
@@ -27,6 +27,8 @@ pub(crate) type FilesExpansionCache = DashMap<String, Arc<FilesExpansion>>;
 /// (mtime, size). Safe to keep for the TaskHasher lifetime.
 pub(crate) type FileContentCache = DashMap<String, CachedFileContent>;
 
+/// Revalidated by (mtime, size) only: on a filesystem with coarse mtime a
+/// same-size rewrite inside one tick is a stale hit (the racy-index problem).
 pub(crate) struct CachedFileContent {
     mtime: u128,
     size: u64,
@@ -112,7 +114,12 @@ pub fn expand_files(workspace_root: &Path, globs: &[String]) -> Result<FilesExpa
         .filter(|g| !g.starts_with('!'))
         .flat_map(|g| expand_literal_braces(g))
         .collect();
-    let canonical_root = dunce::canonicalize(workspace_root)?;
+    let canonical_root = dunce::canonicalize(workspace_root).with_context(|| {
+        format!(
+            "Cannot resolve the workspace root {}",
+            workspace_root.display()
+        )
+    })?;
     for glob in &positives {
         let (root, patterns) = partition_glob(glob)?;
         if root.is_empty() {
@@ -130,7 +137,9 @@ pub fn expand_files(workspace_root: &Path, globs: &[String]) -> Result<FilesExpa
         };
         // Confine the prefix to the workspace after symlink resolution, not
         // just lexically.
-        if !dunce::canonicalize(&start)?.starts_with(&canonical_root) {
+        let resolved = dunce::canonicalize(&start)
+            .with_context(|| format!("Cannot resolve the includeIgnored fileset \"{glob}\""))?;
+        if !resolved.starts_with(&canonical_root) {
             bail!("The includeIgnored fileset \"{glob}\" resolves outside the workspace.");
         }
         if metadata.is_file() {
