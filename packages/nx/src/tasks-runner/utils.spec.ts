@@ -1106,15 +1106,15 @@ describe('collectTaskDependencyClosure', () => {
   };
 
   it('keeps the selection and everything it depends on', () => {
-    expect([...collectTaskDependencyClosure(graph, ['app:build'])].sort()).toEqual(
-      ['app:build', 'lib:build']
-    );
+    expect(
+      [...collectTaskDependencyClosure(graph, ['app:build'])].sort()
+    ).toEqual(['app:build', 'lib:build']);
   });
 
   it('follows continuous dependencies too', () => {
-    expect([...collectTaskDependencyClosure(graph, ['app:serve'])].sort()).toEqual(
-      ['api:serve', 'app:build', 'app:serve', 'lib:build']
-    );
+    expect(
+      [...collectTaskDependencyClosure(graph, ['app:serve'])].sort()
+    ).toEqual(['api:serve', 'app:build', 'app:serve', 'lib:build']);
   });
 
   /**
