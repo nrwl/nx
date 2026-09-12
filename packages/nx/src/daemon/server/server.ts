@@ -149,6 +149,7 @@ import {
   handleOutputsChanges,
 } from './handle-outputs-changes';
 import {
+  handleWatcherRescan,
   scheduleProjectGraphRecomputation,
   registerProjectGraphRecomputationListener,
 } from './project-graph-incremental-recomputation';
@@ -665,6 +666,14 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
       console.error(error);
       workspaceWatcherError = error;
       notifyFileWatcherSocketsOfError(error);
+      return;
+    }
+
+    if (changeEvents.some((event) => event.type === 'rescan')) {
+      serverLogger.watcherLog(
+        'The watcher reported dropped events; re-walking the workspace to recover the missed changes.'
+      );
+      await handleWatcherRescan();
       return;
     }
 

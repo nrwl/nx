@@ -130,6 +130,24 @@ export function recordOutputsHashBatch(
   }
 }
 
+/**
+ * One-shot reset for a watcher rescan: recorded hashes may describe outputs
+ * whose change events were dropped, so none can be trusted. Unlike
+ * `disableOutputsTracking` the tracker keeps running; it just starts over.
+ */
+export function clearRecordedOutputsHashes() {
+  for (const store of [
+    dirsContainingOutputs,
+    recordedHashes,
+    timestamps,
+    numberOfExpandedOutputs,
+  ]) {
+    for (const key of Object.keys(store)) {
+      delete store[key];
+    }
+  }
+}
+
 export function disableOutputsTracking() {
   disabled = true;
 }

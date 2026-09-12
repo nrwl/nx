@@ -310,6 +310,23 @@ describe('Nx Affected and Graph Tests', () => {
       expect(affectedProjects).toContain(myapp);
       expect(affectedProjects).toContain(myapp2);
     });
+
+    it('should detect changes to files inside directories with unicode names', () => {
+      generateAll();
+      // Git C-quotes the path below when this is on, which is the default.
+      runCommand('git config core.quotepath true');
+
+      // Committed first: `--uncommitted` reads `git diff HEAD`, which never
+      // lists an untracked file.
+      const umlautFile = `apps/${myapp}/src/app/Einkäufe/test.ts`;
+      updateFile(umlautFile, 'export const x = 1;');
+      runCommand('git add . && git commit -m "add unicode file"');
+      updateFile(umlautFile, 'export const x = 2;');
+
+      const affectedProjects = runCLI('show projects --affected --uncommitted');
+
+      expect(affectedProjects).toContain(myapp);
+    });
   });
 
   describe('graph', () => {

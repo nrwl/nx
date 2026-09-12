@@ -250,6 +250,25 @@ export declare class Watcher {
 export declare class WorkspaceContext {
   workspaceRoot: string
   constructor(workspaceRoot: string, cacheDir: string)
+  /**
+   * Loads the files the last walk recorded instead of walking. For a
+   * process whose host already walked, such as a plugin worker.
+   */
+  static fromArchive(workspaceRoot: string, cacheDir: string): WorkspaceContext
+  /**
+   * Walks the workspace again into this context, so it and the archive
+   * include writes made since the last walk. Does nothing while a walk is
+   * in progress. Await `ready()` before reading.
+   */
+  refresh(): boolean
+  /**
+   * Resolves once the files behind this context exist. The readers below
+   * block the calling thread until they do; awaiting this first keeps a
+   * plugin host responsive while its workers are connecting.
+   */
+  ready(): Promise<void>
+  /** On wasm the files are gathered when the context is constructed. */
+  ready(): void
   getWorkspaceFiles(projectRootMap: Record<string, string>): NxWorkspaceFiles
   glob(globs: Array<string>, exclude?: Array<string> | undefined | null): Array<string>
   /**
@@ -264,6 +283,13 @@ export declare class WorkspaceContext {
   incrementalUpdate(updatedFiles: Array<string>, deletedFiles: Array<string>): Record<string, string>
   updateProjectFiles(projectRootMappings: Record<string, string>, projectFiles: ExternalObject<Record<string, Array<FileData>>>, globalFiles: ExternalObject<Array<FileData>>, updatedFiles: Record<string, string>, deletedFiles: Array<string>): UpdatedWorkspaceFiles
   allFileData(): Array<FileData>
+  /**
+   * Recover from dropped watch events: re-walk, and report what changed
+   * against the map this context was holding. The fresh map is adopted, so
+   * the caller only has to feed the returned changes through its normal
+   * recomputation path.
+   */
+  rescanAndDiff(): RescanDiff
   getFilesInDirectory(directory: string): Array<string>
 }
 
@@ -357,7 +383,12 @@ export interface EventDimensions {
 export declare const enum EventType {
   delete = 'delete',
   update = 'update',
-  create = 'create'
+  create = 'create',
+  /**
+   * The kernel dropped events (e.g. an inotify queue overflow); per-path
+   * events cannot be trusted complete and consumers must re-walk.
+   */
+  rescan = 'rescan'
 }
 
 export declare function expandOutputs(directory: string, entries: Array<string>): Array<string>
@@ -681,6 +712,13 @@ export interface ProjectGraph {
 }
 
 export declare function remove(src: string): void
+
+/** What a rescan re-walk found had changed while the watcher was not being told. */
+export interface RescanDiff {
+  createdFiles: Array<FileData>
+  updatedFiles: Array<FileData>
+  deletedFiles: Array<string>
+}
 
 export declare function restoreTerminal(): void
 
