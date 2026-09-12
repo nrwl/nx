@@ -7,7 +7,7 @@ import { getTaskIOService } from '../tasks-runner/task-io-service';
 import { getTaskSpecificEnv } from '../tasks-runner/task-env';
 import { getCustomHasher } from '../tasks-runner/utils';
 import { getDbConnection } from '../utils/db-connection';
-import { getInputs, Hash, TaskHasher } from './task-hasher';
+import { TaskHasher } from './task-hasher';
 
 let taskDetails: TaskDetails;
 
@@ -50,16 +50,11 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
   for (const task of candidates) {
     perTaskEnvs[task.id] = getTaskSpecificEnv(task, projectGraph);
   }
-  const hashes = hasher.hashTasksUpfront
-    ? await hasher.hashTasksUpfront(candidates, taskGraph, perTaskEnvs)
-    : await hashTasksWithoutDependencyOutputs(
-        hasher,
-        candidates,
-        taskGraph,
-        perTaskEnvs,
-        projectGraph,
-        nxJson
-      );
+  const hashes = await hasher.hashTasksUpfront(
+    candidates,
+    taskGraph,
+    perTaskEnvs
+  );
   const tasksToHash = candidates.filter((task) => task.id in hashes);
   const ioService = getTaskIOService();
   const hasInputSubscribers = ioService.hasTaskInputSubscribers();
@@ -90,28 +85,6 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     'hashMultipleTasks:start',
     'hashMultipleTasks:end'
   );
-}
-
-// Hashers built against an older Nx lack `hashTasksUpfront`. They get the
-// tasks that declare no outputs of their own dependencies; a task served by
-// one that does is hashed as if those outputs were already in place.
-async function hashTasksWithoutDependencyOutputs(
-  hasher: TaskHasher,
-  tasks: Task[],
-  taskGraph: TaskGraph,
-  perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
-  projectGraph: ProjectGraph,
-  nxJson: NxJsonConfiguration
-): Promise<Record<string, Hash>> {
-  const eager = tasks.filter(
-    (task) =>
-      !(
-        taskGraph.dependencies[task.id]?.length > 0 &&
-        getInputs(task, projectGraph, nxJson).depsOutputs.length > 0
-      )
-  );
-  const hashes = await hasher.hashTasks(eager, taskGraph, perTaskEnvs);
-  return Object.fromEntries(eager.map((task, i) => [task.id, hashes[i]]));
 }
 
 export async function hashTask(

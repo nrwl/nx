@@ -90,10 +90,10 @@ export interface TaskHasher {
 
   /**
    * Hash the tasks whose hash needs no output of another task, keyed by
-   * task id; a task absent from the result hashes once the tasks it reads
-   * from have run. Optional: hashers built against older Nx lack it.
+   * task id. A task absent from the result hashes once the tasks it reads
+   * from have run.
    */
-  hashTasksUpfront?(
+  hashTasksUpfront(
     tasks: Task[],
     taskGraph: TaskGraph,
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
@@ -268,13 +268,13 @@ export class InProcessTaskHasher implements TaskHasher {
       cwd ?? process.cwd(),
       collectInputs
     );
-    const tasksById = new Map(tasks.map((task) => [task.id, task]));
-    return Object.fromEntries(
-      Object.entries(hashes).map(([id, hash]) => [
-        id,
-        this.createHashDetails(tasksById.get(id), hash),
-      ])
-    );
+    const result: Record<string, Hash> = {};
+    for (const task of tasks) {
+      if (hashes[task.id]) {
+        result[task.id] = this.createHashDetails(task, hashes[task.id]);
+      }
+    }
+    return result;
   }
 
   async hashTask(

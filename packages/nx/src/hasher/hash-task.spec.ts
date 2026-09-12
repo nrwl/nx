@@ -78,22 +78,4 @@ describe('hashTasksThatDoNotDependOnOutputsOfOtherTasks', () => {
     expect(taskGraph.tasks['app:e2e'].hash).toBeUndefined();
     expect(taskGraph.tasks['app:custom'].hash).toBeUndefined();
   });
-
-  it('keeps a hasher without hashTasksUpfront to tasks that read no dependency outputs', async () => {
-    const { projectGraph, taskGraph } = graph();
-    const hashTasks = vi.fn(async (tasks: { id: string }[]) =>
-      tasks.map((t) => hashOf(t.id))
-    );
-    await hashTasksThatDoNotDependOnOutputsOfOtherTasks(
-      { hashTasks } as unknown as TaskHasher,
-      projectGraph,
-      taskGraph,
-      nxJson,
-      null
-    );
-
-    expect(hashTasks.mock.calls[0][0].map((t) => t.id)).toEqual(['app:build']);
-    expect(taskGraph.tasks['app:build'].hash).toBe('hash-app:build');
-    expect(taskGraph.tasks['app:e2e'].hash).toBeUndefined();
-  });
 });
