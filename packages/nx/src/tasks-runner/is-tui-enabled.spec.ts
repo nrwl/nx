@@ -100,7 +100,11 @@ describe('shouldUseTui', () => {
       },
       () => {
         expect(
-          shouldUseTui({ tui: { enabled: true } }, { outputStyle }, true)
+          shouldUseTui(
+            { tui: { enabled: true } },
+            { specifiedOutputStyle: outputStyle },
+            true
+          )
         ).toBe(false);
       }
     )
@@ -116,7 +120,7 @@ describe('shouldUseTui', () => {
         expect(
           shouldUseTui(
             { tui: { enabled: true } },
-            { outputStyle: 'dynamic' },
+            { specifiedOutputStyle: 'dynamic' },
             true
           )
         ).toBe(true);
@@ -132,7 +136,9 @@ describe('shouldUseTui', () => {
           CI: 'false',
         },
         () => {
-          expect(shouldUseTui({}, { outputStyle: 'dynamic' }, true)).toBe(true);
+          expect(
+            shouldUseTui({}, { specifiedOutputStyle: 'dynamic' }, true)
+          ).toBe(true);
         }
       ));
 

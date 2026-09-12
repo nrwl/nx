@@ -122,6 +122,25 @@ export declare class NxCache {
   getBatch(hashes: Array<string>): Array<CachedResult | undefined | null>
   put(hash: string, terminalOutput: string, outputs: Array<string>, code: number): Array<string>
   applyRemoteCacheResults(hash: string, result: CachedResult, outputs?: Array<string> | undefined | null): void
+  /**
+   * Register terminal outputs that were written without a cache entry —
+   * uncacheable tasks, and cacheable ones run with `--skip-nx-cache`.
+   *
+   * Without a row the file is invisible to `remove_old_cache_records`,
+   * which only ever walks hashes it finds in the database, so these files
+   * would accumulate forever. The row carries `is_cache_entry = FALSE` so it
+   * can never be served as a cache hit.
+   *
+   * On conflict `accessed_at` always moves: the reads filter these rows out,
+   * so they would otherwise age from the first write and be collected out
+   * from under a task that is still being run daily. `size` moves only while
+   * the row is still output-only (`NOT is_cache_entry`), so a task rerun with
+   * a longer log stops undercounting against `maxCacheSize`. `is_cache_entry`
+   * is never touched, and a row that already has artifacts keeps the size
+   * `put` recorded, so a rewrite can neither demote a real entry nor replace
+   * its whole-entry size with the terminal output's.
+   */
+  recordTerminalOutputs(records: Array<TerminalOutputRecord>): void
   getTaskOutputsPath(hash: string): string
   getCacheSize(): number
   copyFilesFromCache(cachedResult: CachedResult, outputs: Array<string>): number
@@ -740,6 +759,31 @@ export declare const enum SupportedEditor {
   Unknown = 5
 }
 
+/**
+ * A free function, not a method: `BatchProcess` writes these logs whichever
+ * cache implementation is active, so the sweep must not be reachable only
+ * through the DB-backed one.
+ *
+ * Deletes batch logs by age, then oldest-first while the directory is over
+ * budget.
+ *
+ * No database rows: nothing looks a batch log up by key, so a row would be
+ * write-only bookkeeping that a hard-killed process could skip, orphaning
+ * the file forever. The filesystem cannot drift from itself, and the file
+ * is appended to for the life of its batch, so a size recorded anywhere
+ * else is wrong until that batch ends.
+ *
+ * The budget is separate from `maxCacheSize` on purpose: these are debug
+ * artifacts, and sharing a budget would let one evict a replayable cache
+ * entry — trading a rebuild for a text file.
+ *
+ * The age sweep deletes at `BATCH_OUTPUT_MAX_AGE`; the eviction skips
+ * anything written within `BATCH_OUTPUT_MIN_EVICTION_AGE`. That is
+ * last-write, not creation, so a batch silent through a long quiet phase is
+ * not protected.
+ */
+export declare function sweepBatchOutputs(cachePath: string): void
+
 /** System information (static system-level data) */
 export interface SystemInfo {
   cpuCores: number
@@ -847,6 +891,15 @@ export interface TaskTarget {
   target: string
   /** The configuration of the target which the task invokes */
   configuration?: string
+}
+
+export interface TerminalOutputRecord {
+  hash: string
+  /**
+   * Byte length of the terminal output written for this hash, so these
+   * files are counted against `maxCacheSize` like any other cache content.
+   */
+  size: number
 }
 
 export declare function testOnlyTransferFileMap(projectFiles: Record<string, Array<FileData>>, nonProjectFiles: Array<FileData>): NxWorkspaceFilesExternals
