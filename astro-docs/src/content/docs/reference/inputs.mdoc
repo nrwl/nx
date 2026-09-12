@@ -112,8 +112,8 @@ To get a better idea of how to use inputs, you can browse some [common input set
 ### Gitignored files
 
 A fileset only sees files in the workspace file map, which follows `.gitignore` and `.nxignore`.
-A gitignored or generated file, such as a downloaded schema or a generated `.env`, is never in that map, so a plain fileset can't hash it.
-Add `includeIgnored: true` to hash the glob straight from the disk instead:
+A gitignored or generated file, such as a downloaded schema or a generated client, is never in that map, so a plain fileset can't hash it.
+Add `includeIgnored: true` to expand the glob on disk instead, so untracked matches count too (a tracked match still hashes from the file map):
 
 ```jsonc
 {
@@ -123,7 +123,10 @@ Add `includeIgnored: true` to hash the glob straight from the disk instead:
       "fileset": "!{projectRoot}/generated/**/*.local.json",
       "includeIgnored": true,
     },
-    { "fileset": "{workspaceRoot}/.env.generated", "includeIgnored": true },
+    {
+      "fileset": "{workspaceRoot}/openapi.generated.json",
+      "includeIgnored": true,
+    },
   ],
 }
 ```
@@ -131,6 +134,8 @@ Add `includeIgnored: true` to hash the glob straight from the disk instead:
 Use it for files no task in the run produces.
 The outputs of a task this task depends on, such as a dependency's `dist/`, belong in [`dependentTasksOutputFiles`](#outputs-of-dependent-tasks), which is built for that.
 A task whose hash includes an `includeIgnored` fileset, its own or one it inherits from a dependency or a continuous dependency, is hashed right before it runs, after its task dependencies, like a task with `dependentTasksOutputFiles`.
+That holds even for a task with no task dependencies, so such a task skips the up-front remote cache lookup.
+Each input's digest is recorded in the task's hash details and shared with Nx Cloud, so don't point an `includeIgnored` fileset at a file that holds a secret.
 
 `{projectRoot}` and `{workspaceRoot}` resolve as for any fileset, and every glob must start with one of them.
 A glob that would walk from the workspace root, such as `{workspaceRoot}/**`, is a configuration error.
