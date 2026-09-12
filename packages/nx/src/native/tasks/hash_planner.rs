@@ -9,7 +9,7 @@ use crate::native::{
 };
 use napi::bindgen_prelude::External;
 use rayon::prelude::*;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use tracing::trace;
 
 use crate::native::tasks::hashers::OnceCache;
@@ -167,13 +167,30 @@ impl HashPlanner {
                 )?);
 
                 // A continuous dependency serves this task from its own process,
-                // so what it reads is hashed here through its declared inputs.
-                for dep_id in task_graph
+                // so what it reads is hashed here through its declared inputs --
+                // and so is whatever serves that server, since it runs alongside.
+                let mut served_by: Vec<&String> = Vec::new();
+                let mut seen: HashSet<&str> = HashSet::from([*id]);
+                let mut pending: Vec<&String> = task_graph
                     .continuous_dependencies
                     .get(*id)
                     .into_iter()
                     .flatten()
-                {
+                    .collect();
+                while let Some(dep_id) = pending.pop() {
+                    if !seen.insert(dep_id.as_str()) {
+                        continue;
+                    }
+                    served_by.push(dep_id);
+                    pending.extend(
+                        task_graph
+                            .continuous_dependencies
+                            .get(dep_id)
+                            .into_iter()
+                            .flatten(),
+                    );
+                }
+                for dep_id in served_by {
                     let Some(dep_task) = task_graph.tasks.get(dep_id) else {
                         continue;
                     };

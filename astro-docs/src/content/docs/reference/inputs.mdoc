@@ -240,6 +240,7 @@ Files such as `dist/libs/my-lib/index.d.ts` would be matched by patterns `**/*.d
 
 A [continuous task](/docs/kb/defining-task-pipeline#continuous-task-dependencies), such as the `serve` task an `e2e` task depends on, runs in its own process.
 What it reads still decides what the task it serves observes, so that task also hashes whatever each of its continuous dependencies hashes, based on the declared inputs of those tasks.
+Nx follows the chain: a server the `serve` task itself depends on counts too, since it runs alongside.
 There's nothing to declare for this.
 Only continuous dependencies are included.
 

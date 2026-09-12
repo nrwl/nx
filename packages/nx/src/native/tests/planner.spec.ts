@@ -1021,5 +1021,73 @@ describe('task planner', () => {
         planner.getPlans(['parent:test'], taskGraph)['parent:test']
       ).toContain('child:libs/child/**/*');
     });
+
+    it('follows the servers that serve a continuous dependency', () => {
+      const builder = new ProjectGraphBuilder(undefined, {
+        parent: [{ file: 'libs/parent/filea.ts', hash: 'a.hash' }],
+        child: [{ file: 'libs/child/fileb.ts', hash: 'b.hash' }],
+        grandchild: [{ file: 'libs/grandchild/filec.ts', hash: 'c.hash' }],
+      });
+      // grandchild serves child over the network: no project dependency, so
+      // only the task graph links them.
+      builder.addNode({
+        name: 'grandchild',
+        type: 'lib',
+        data: {
+          root: 'libs/grandchild',
+          targets: {
+            serve: { executor: 'nx:run-commands', continuous: true },
+          },
+        },
+      });
+      builder.addNode({
+        name: 'child',
+        type: 'lib',
+        data: {
+          root: 'libs/child',
+          targets: {
+            serve: {
+              executor: 'nx:run-commands',
+              continuous: true,
+              dependsOn: [{ projects: 'grandchild', target: 'serve' }],
+            },
+          },
+        },
+      });
+      builder.addNode({
+        name: 'parent',
+        type: 'lib',
+        data: {
+          root: 'libs/parent',
+          targets: {
+            test: {
+              executor: 'nx:run-commands',
+              inputs: ['{projectRoot}/**/*'],
+              dependsOn: [{ projects: 'child', target: 'serve' }],
+            },
+          },
+        },
+      });
+      const projectGraph = builder.getUpdatedProjectGraph();
+      const taskGraph = createTaskGraph(
+        projectGraph,
+        {},
+        ['parent'],
+        ['test'],
+        undefined,
+        {}
+      );
+      const planner = new HashPlanner(
+        {} as any,
+        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+      );
+
+      expect(taskGraph.continuousDependencies['child:serve']).toContain(
+        'grandchild:serve'
+      );
+      const plan = planner.getPlans(['parent:test'], taskGraph)['parent:test'];
+      expect(plan).toContain('child:libs/child/**/*');
+      expect(plan).toContain('grandchild:libs/grandchild/**/*');
+    });
   });
 });
