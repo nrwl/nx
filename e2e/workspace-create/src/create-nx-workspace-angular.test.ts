@@ -5,7 +5,7 @@ import {
   expectCodeIsFormatted,
   getSelectedPackageManager,
   readJson,
-  runNxCommandAsync,
+  runCLIAsync,
   runCreateWorkspace,
   uniq,
 } from '@nx/e2e-utils';
@@ -36,8 +36,8 @@ describe('create-nx-workspace --preset=angular', () => {
           extraArgs: '--bundler=esbuild --zoneless=true',
         });
 
-        await runNxCommandAsync('build sample-app');
-        await runNxCommandAsync('test sample-app');
+        await runCLIAsync('build sample-app');
+        await runCLIAsync('test sample-app');
       } finally {
         if (strictDepBuilds === undefined) {
           delete process.env.pnpm_config_strict_dep_builds;
