@@ -61,6 +61,125 @@ exports[`task planner > should build plans where the project graph has circular 
 }
 `;
 
+exports[`task planner > should deduplicate overlapping external closures for all inputs without losing sibling project inputs > overlapping external all hash 1`] = `
+{
+  "details": {
+    "AllExternalDependencies": "13071596994106544840",
+    "app:ProjectConfiguration": "17530813657774869408",
+    "app:TsConfig": "1389868326933519382",
+    "app:apps/app/**/*": "3244421341483603138",
+    "child:ProjectConfiguration": "14397347420239404290",
+    "child:TsConfig": "1389868326933519382",
+    "child:libs/child/prod.ts": "13546527163958192884",
+    "child:libs/child/test.ts": "17746510544300185116",
+    "env:NX_CLOUD_ENCRYPTION_KEY": "3244421341483603138",
+    "npm:@nx/left": "11507288172457604164",
+    "npm:leaf": "11507288172457604164",
+    "npm:right": "11507288172457604164",
+    "npm:shared": "11507288172457604164",
+    "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "9198976360534335893",
+  },
+  "inputs": {
+    "depOutputs": [],
+    "environment": [
+      "NX_CLOUD_ENCRYPTION_KEY",
+    ],
+    "external": [
+      "AllExternalDependencies",
+      "npm:@nx/left",
+      "npm:leaf",
+      "npm:right",
+      "npm:shared",
+    ],
+    "files": [
+      "libs/child/prod.ts",
+      "libs/child/test.ts",
+      "nx.json",
+    ],
+    "runtime": [],
+  },
+  "value": "6233822002282478864",
+}
+`;
+
+exports[`task planner > should deduplicate overlapping external closures for executor inputs without losing sibling project inputs > overlapping external executor hash 1`] = `
+{
+  "details": {
+    "app:ProjectConfiguration": "16742437351803050589",
+    "app:TsConfig": "1389868326933519382",
+    "app:apps/app/**/*": "3244421341483603138",
+    "child:ProjectConfiguration": "14397347420239404290",
+    "child:TsConfig": "1389868326933519382",
+    "child:libs/child/prod.ts": "13546527163958192884",
+    "child:libs/child/test.ts": "17746510544300185116",
+    "env:NX_CLOUD_ENCRYPTION_KEY": "3244421341483603138",
+    "npm:@nx/left": "11507288172457604164",
+    "npm:leaf": "11507288172457604164",
+    "npm:right": "11507288172457604164",
+    "npm:shared": "11507288172457604164",
+    "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "9198976360534335893",
+  },
+  "inputs": {
+    "depOutputs": [],
+    "environment": [
+      "NX_CLOUD_ENCRYPTION_KEY",
+    ],
+    "external": [
+      "npm:@nx/left",
+      "npm:leaf",
+      "npm:right",
+      "npm:shared",
+    ],
+    "files": [
+      "libs/child/prod.ts",
+      "libs/child/test.ts",
+      "nx.json",
+    ],
+    "runtime": [],
+  },
+  "value": "235537722388302509",
+}
+`;
+
+exports[`task planner > should deduplicate overlapping external closures for explicit inputs without losing sibling project inputs > overlapping external explicit hash 1`] = `
+{
+  "details": {
+    "app:ProjectConfiguration": "17530813657774869408",
+    "app:TsConfig": "1389868326933519382",
+    "app:apps/app/**/*": "3244421341483603138",
+    "child:ProjectConfiguration": "14397347420239404290",
+    "child:TsConfig": "1389868326933519382",
+    "child:libs/child/prod.ts": "13546527163958192884",
+    "child:libs/child/test.ts": "17746510544300185116",
+    "env:NX_CLOUD_ENCRYPTION_KEY": "3244421341483603138",
+    "npm:@nx/left": "11507288172457604164",
+    "npm:leaf": "11507288172457604164",
+    "npm:right": "11507288172457604164",
+    "npm:shared": "11507288172457604164",
+    "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "9198976360534335893",
+  },
+  "inputs": {
+    "depOutputs": [],
+    "environment": [
+      "NX_CLOUD_ENCRYPTION_KEY",
+    ],
+    "external": [
+      "npm:@nx/left",
+      "npm:leaf",
+      "npm:right",
+      "npm:shared",
+    ],
+    "files": [
+      "libs/child/prod.ts",
+      "libs/child/test.ts",
+      "nx.json",
+    ],
+    "runtime": [],
+  },
+  "value": "17658889447241127891",
+}
+`;
+
 exports[`task planner > should hash executors 1`] = `
 {
   "proj:lint": [
