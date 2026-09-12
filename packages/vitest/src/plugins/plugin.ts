@@ -686,6 +686,47 @@ function collectTsconfigInputsByProjectRoot(
 
   const rootTsConfigName = getRootTsConfigFileName();
 
+  // Memoize the ws-relative tsconfig paths discovered by walking a single
+  // directory's own tsconfig extends-chain. The set of files reached from a
+  // given directory depends only on that directory (and the on-disk tsconfig
+  // contents, stable within one graph build via `jsonCache`), never on which
+  // project triggered the walk. In a large monorepo the ancestor directories
+  // (e.g. `packages`, `packages/<product>`, `packages/<product>/libs`) are
+  // shared by hundreds of projects, so without memoization the same
+  // existsSync + walkTsconfigExtendsChain + JSON parse work is repeated once
+  // per project.
+  const dirChainCache = new Map<string, string[]>();
+  // Raw ws-relative tsconfig paths reachable from `dir`'s own tsconfig.json
+  // (its extends chain), unfiltered. `dir` is a ws-relative directory (POSIX
+  // separators), or '' for the workspace root.
+  const collectDirChain = (dir: string): string[] => {
+    const cached = dirChainCache.get(dir);
+    if (cached !== undefined) return cached;
+    const paths: string[] = [];
+    const localSeen = new Set<string>();
+    const tsconfigPath = dir
+      ? join(workspaceRoot, dir, 'tsconfig.json')
+      : join(workspaceRoot, 'tsconfig.json');
+    if (existsSync(tsconfigPath)) {
+      walkTsconfigExtendsChain(
+        tsconfigPath,
+        (absPath) => {
+          const wsRelative = relative(workspaceRoot, absPath)
+            .split(sep)
+            .join('/');
+          if (!localSeen.has(wsRelative)) {
+            localSeen.add(wsRelative);
+            paths.push(wsRelative);
+          }
+          return 'continue';
+        },
+        { jsonCache }
+      );
+    }
+    dirChainCache.set(dir, paths);
+    return paths;
+  };
+
   for (const projectRoot of projectRoots) {
     if (projectRoot === '.') continue;
 
@@ -693,10 +734,9 @@ function collectTsconfigInputsByProjectRoot(
     const seen = new Set<string>();
     const projectPrefix = `${projectRoot}/`;
 
-    const collect = (absolutePath: string) => {
-      const wsRelative = relative(workspaceRoot, absolutePath)
-        .split(sep)
-        .join('/');
+    // Applies the project-specific exclusions to an already-resolved
+    // ws-relative path. Cheap string work; safe to repeat per project.
+    const collectWsRelative = (wsRelative: string) => {
       if (seen.has(wsRelative)) return;
       seen.add(wsRelative);
       if (wsRelative.startsWith('../') || wsRelative === '..') return;
@@ -711,13 +751,17 @@ function collectTsconfigInputsByProjectRoot(
       outside.push(wsRelative);
     };
 
-    // 1. Walk the project tsconfig's extends chain
+    // 1. Walk the project tsconfig's extends chain. Project-specific (entry
+    //    directory is the project root), so not memoized.
     const projectTsconfig = join(workspaceRoot, projectRoot, 'tsconfig.json');
     if (existsSync(projectTsconfig)) {
       walkTsconfigExtendsChain(
         projectTsconfig,
         (absPath) => {
-          collect(absPath);
+          const wsRelative = relative(workspaceRoot, absPath)
+            .split(sep)
+            .join('/');
+          collectWsRelative(wsRelative);
           return 'continue';
         },
         { jsonCache }
@@ -725,19 +769,12 @@ function collectTsconfigInputsByProjectRoot(
     }
 
     // 2. Walk UP ancestor directories (esbuild reads every tsconfig.json
-    //    between the entry point and the filesystem root)
+    //    between the entry point and the filesystem root). Each ancestor
+    //    directory's own chain is memoized across projects.
     let dir = dirname(projectRoot);
     while (dir && dir !== '.') {
-      const ancestorTsconfig = join(workspaceRoot, dir, 'tsconfig.json');
-      if (existsSync(ancestorTsconfig)) {
-        walkTsconfigExtendsChain(
-          ancestorTsconfig,
-          (absPath) => {
-            collect(absPath);
-            return 'continue';
-          },
-          { jsonCache }
-        );
+      for (const wsRelative of collectDirChain(dir)) {
+        collectWsRelative(wsRelative);
       }
       const parent = dirname(dir);
       if (parent === dir) break;
@@ -745,16 +782,8 @@ function collectTsconfigInputsByProjectRoot(
     }
 
     // 3. Check the workspace root itself (dirname loop above stops at '.')
-    const rootTsconfig = join(workspaceRoot, 'tsconfig.json');
-    if (existsSync(rootTsconfig)) {
-      walkTsconfigExtendsChain(
-        rootTsconfig,
-        (absPath) => {
-          collect(absPath);
-          return 'continue';
-        },
-        { jsonCache }
-      );
+    for (const wsRelative of collectDirChain('')) {
+      collectWsRelative(wsRelative);
     }
 
     if (outside.length > 0) {
