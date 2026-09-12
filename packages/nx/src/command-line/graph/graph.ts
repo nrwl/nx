@@ -47,7 +47,11 @@ import {
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { allFileData } from '../../utils/all-file-data';
 import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
-import { HashPlanner, transferProjectGraph } from '../../native';
+import {
+  expandFilesInput,
+  HashPlanner,
+  transferProjectGraph,
+} from '../../native';
 import { transformProjectGraphForRust } from '../../native/transform-objects';
 import { getAffectedGraphNodes } from '../affected/affected';
 import { readFileMapCache } from '../../project-graph/nx-deps-cache';
@@ -1354,11 +1358,20 @@ function expandInputs(
   const projectRootInputs: string[] = [];
   const externalInputs: string[] = [];
   const otherInputs: string[] = [];
+  const filesInputs: string[][] = [];
   inputs.forEach((input) => {
     // grouped workspace inputs look like workspace:[pattern,otherPattern]
     if (input.startsWith('workspace:[')) {
       const inputs = input.substring(11, input.length - 1).split(',');
       workspaceRootInputs.push(...inputs);
+      return;
+    }
+    // Disk-backed groups look like files:{project}:[glob,!otherGlob]. They
+    // expand on disk, so they must be matched before the `:` catch-all below
+    // classifies them as external dependencies.
+    const diskBacked = /^files:.*?:\[(.*)\]$/.exec(input);
+    if (diskBacked) {
+      filesInputs.push(diskBacked[1].split(','));
       return;
     }
     const maybeProjectName = input.split(':')[0];
@@ -1384,6 +1397,9 @@ function expandInputs(
   const workspaceRootsExpanded: string[] = getExpandedWorkspaceRoots(
     workspaceRootInputs,
     allWorkspaceFiles
+  );
+  const filesExpanded = filesInputs.flatMap((globs) =>
+    expandFilesInput(workspaceRoot, globs)
   );
 
   const otherInputsExpanded = otherInputs.map((input) => {
@@ -1427,7 +1443,11 @@ function expandInputs(
     }, {});
 
   return {
-    general: [...workspaceRootsExpanded, ...otherInputsExpanded],
+    general: [
+      ...workspaceRootsExpanded,
+      ...filesExpanded,
+      ...otherInputsExpanded,
+    ],
     ...projectRootsExpanded,
     external: externalInputs,
   };

@@ -1,6 +1,6 @@
 import type { Mock } from 'vitest';
 import type { FileData } from '../../config/project-graph';
-import { HashPlanner } from '../../native';
+import { expandFilesInput, HashPlanner } from '../../native';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { allFileData } from '../../utils/all-file-data';
@@ -10,6 +10,9 @@ vi.mock('../../native', async (importOriginal) => ({
   ...(await importOriginal<any>()),
   HashPlanner: vi.fn(),
   transferProjectGraph: vi.fn((g) => g),
+  expandFilesInput: vi.fn((_root: string, globs: string[]) =>
+    globs.filter((g) => !g.startsWith('!'))
+  ),
 }));
 vi.mock('../../native/transform-objects', () => ({
   transformProjectGraphForRust: vi.fn((g) => g),
@@ -182,6 +185,31 @@ describe('getExpandedTaskInputs', () => {
     });
     // and the same result is stored in the cache
     expect(cache.get('myproj:build')).toBe(result);
+  });
+
+  it('expands a disk-backed group on disk instead of treating it as external', async () => {
+    getPlansMock.mockReturnValue({
+      'myproj:build': [
+        'files:myproj:[libs/myproj/generated/a.json,!libs/myproj/generated/b.json]',
+        'npm:some-pkg',
+      ],
+    });
+
+    const cache = new Map<string, Record<string, string[]>>();
+    const result = await getExpandedTaskInputs(
+      makeResponse(),
+      cache,
+      'myproj:build'
+    );
+
+    expect(expandFilesInput as unknown as Mock).toHaveBeenCalledWith(
+      expect.any(String),
+      ['libs/myproj/generated/a.json', '!libs/myproj/generated/b.json']
+    );
+    expect(result).toEqual({
+      general: ['libs/myproj/generated/a.json'],
+      external: ['npm:some-pkg'],
+    });
   });
 
   it('memoizes: a second call for the same task reuses the cached result', async () => {
