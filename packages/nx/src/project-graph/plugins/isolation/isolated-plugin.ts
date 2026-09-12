@@ -180,14 +180,23 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       index
     );
 
-    const loadResult = await instance.spawnAndConnect();
-    instance.setupHooks(
-      capabilitiesFromLoadResult(loadResult),
-      loadResult.include,
-      loadResult.exclude
-    );
-    instance.sourceFiles = loadResult.sourceFiles;
-    return instance;
+    try {
+      const loadResult = await instance.spawnAndConnect();
+      instance.setupHooks(
+        capabilitiesFromLoadResult(loadResult),
+        loadResult.include,
+        loadResult.exclude
+      );
+      instance.sourceFiles = loadResult.sourceFiles;
+      return instance;
+    } catch (e) {
+      // The worker is running whenever the failure was a timeout rather than an
+      // exit, and the caller is about to drop this instance, so nothing else
+      // could reach it. That is the whole of how a failed load used to leave a
+      // process behind.
+      instance.shutdown();
+      throw e;
+    }
   }
 
   /**
@@ -638,7 +647,9 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   }
 
   shutdown(): void {
-    if (!this._alive) return;
+    // Not `_alive`: that is only set once the worker answers a load, so gating
+    // on it would leave a worker that never got that far running.
+    if (!this.worker && !this.socket) return;
     this._alive = false;
     this._connectPromise = null;
 
