@@ -543,8 +543,13 @@ impl HashPlanner {
         let cache_key = match input {
             Input::Inputs { input, .. } => prefixed_cache_key(dep, 'i', input),
             // Only `dependencies: true` filesets reach here, since that is what
-            // get_inputs_for_dependency puts in deps_inputs.
-            Input::FileSet { fileset, .. } => prefixed_cache_key(dep, 'f', fileset),
+            // get_inputs_for_dependency puts in deps_inputs. The kind keeps the
+            // two backing stores apart: the same glob is a different subtree.
+            Input::FileSet {
+                fileset,
+                include_ignored,
+                ..
+            } => prefixed_cache_key(dep, fileset_kind(*include_ignored), fileset),
             // Other input kinds never reach dependencies (get_inputs_for_dependency
             // returns None for them), so they share one empty entry per project.
             _ => prefixed_cache_key(dep, 'n', ""),
@@ -868,6 +873,12 @@ impl HashPlanner {
         let disk_backed_inputs = if ignored_file_sets.is_empty() {
             vec![]
         } else {
+            if ignored_file_sets.iter().all(|f| f.starts_with('!')) {
+                anyhow::bail!(
+                    "The includeIgnored fileset \"{}\" is a negation with no positive includeIgnored fileset to filter in the inputs for \"{project_name}\". A negation only filters includeIgnored filesets declared for the same project, and a fileset with `dependencies: true` is hashed on its own.",
+                    ignored_file_sets[0]
+                );
+            }
             let resolved: Vec<String> = ignored_file_sets
                 .iter()
                 .map(|f| resolve_files_glob(f, project_root, project_name))
@@ -981,6 +992,11 @@ fn prefixed_cache_key(dep: &str, kind: char, rest: &str) -> String {
     format!("{}:{dep}{kind}{rest}", dep.len())
 }
 
+/// `f` reads the file map, `d` reads the disk (`includeIgnored`).
+fn fileset_kind(include_ignored: bool) -> char {
+    if include_ignored { 'd' } else { 'f' }
+}
+
 /// Unsupported kinds are uncached.
 fn local_input_cache_key(dep: &str, input: &Input) -> Option<String> {
     match input {
@@ -988,8 +1004,12 @@ fn local_input_cache_key(dep: &str, input: &Input) -> Option<String> {
         Input::FileSet {
             fileset,
             dependencies: true,
-            ..
-        } => Some(prefixed_cache_key(dep, 'f', fileset)),
+            include_ignored,
+        } => Some(prefixed_cache_key(
+            dep,
+            fileset_kind(*include_ignored),
+            fileset,
+        )),
         _ => None,
     }
 }
