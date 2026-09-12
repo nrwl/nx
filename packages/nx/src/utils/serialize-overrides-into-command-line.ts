@@ -1,4 +1,3 @@
-import { flatten } from 'flat';
 import { isAlreadyQuoted, needsShellQuoting } from './shell-quoting';
 
 export function serializeOverridesIntoCommandLine(options: {
@@ -23,6 +22,8 @@ function serializeOption(key: string, value: any, unparsed: string[]) {
   } else if (Array.isArray(value)) {
     value.forEach((item) => serializeOption(key, item, unparsed));
   } else if (Object.prototype.toString.call(value) === '[object Object]') {
+    // flat is ESM-only; a top-level require would reach every jest run that imports @nx/devkit.
+    const { flatten } = require('flat') as typeof import('flat');
     const flattened = flatten<any, any>(value, { safe: true });
     for (const flattenedKey in flattened) {
       serializeOption(
