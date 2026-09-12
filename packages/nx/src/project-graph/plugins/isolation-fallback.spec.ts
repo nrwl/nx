@@ -27,11 +27,8 @@ const mockIsSandbox = isSandbox as MockedFunction<typeof isSandbox>;
 const mockIsAiAgent = isAiAgent as MockedFunction<typeof isAiAgent>;
 const mockHint = sandboxSocketHint as MockedFunction<typeof sandboxSocketHint>;
 
-/** The shape `loadIsolatedNxPlugin` resolves to: [pluginPromise, cleanup]. */
-const isolatedResolving = (value: any) =>
-  Promise.resolve([Promise.resolve(value), vi.fn()]);
-const isolatedRejecting = (err: unknown, cleanup = vi.fn()) =>
-  Promise.resolve([Promise.reject(err), cleanup]);
+const isolatedResolving = (value: any) => Promise.resolve(value);
+const isolatedRejecting = (err: unknown) => Promise.reject(err);
 
 const startupFailure = () => {
   const e = new Error('Plugin worker exited before the connection');
@@ -53,7 +50,7 @@ describe('plugin isolation fallback', () => {
     vi.clearAllMocks();
     resetIsolationFallbackForTesting();
     warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
-    mockInProcess.mockReturnValue([Promise.resolve('in-process'), vi.fn()]);
+    mockInProcess.mockReturnValue(Promise.resolve('in-process'));
   });
 
   afterEach(() => warn.mockRestore());
@@ -62,7 +59,7 @@ describe('plugin isolation fallback', () => {
     mockIsSandbox.mockReturnValue(true);
     mockIsolated.mockReturnValue(isolatedResolving('isolated'));
 
-    const [plugin] = await loadingMethod('p', '/root');
+    const plugin = await loadingMethod('p', '/root', 0);
 
     expect(await plugin).toBe('isolated');
     expect(mockInProcess).not.toHaveBeenCalled();
@@ -72,7 +69,7 @@ describe('plugin isolation fallback', () => {
     mockIsSandbox.mockReturnValue(true);
     mockIsolated.mockReturnValue(isolatedRejecting(startupFailure()));
 
-    const [plugin] = await loadingMethod('p', '/root');
+    const plugin = await loadingMethod('p', '/root', 0);
 
     expect(await plugin).toBe('in-process');
     expect(mockInProcess).toHaveBeenCalled();
@@ -84,7 +81,7 @@ describe('plugin isolation fallback', () => {
     mockIsSandbox.mockReturnValue(true);
     mockIsolated.mockReturnValue(isolatedRejecting(startupFailure()));
 
-    await loadingMethod('p', '/root');
+    await loadingMethod('p', '/root', 0);
 
     expect(warn).toHaveBeenCalledTimes(1);
     const { title, bodyLines } = warn.mock.calls[0][0];
@@ -98,9 +95,9 @@ describe('plugin isolation fallback', () => {
     mockIsSandbox.mockReturnValue(true);
     mockIsolated.mockReturnValue(isolatedRejecting(startupFailure()));
 
-    await loadingMethod('a', '/root');
-    await loadingMethod('b', '/root');
-    await loadingMethod('c', '/root');
+    await loadingMethod('a', '/root', 0);
+    await loadingMethod('b', '/root', 0);
+    await loadingMethod('c', '/root', 0);
 
     expect(warn).toHaveBeenCalledTimes(1);
     // The first plugin tried a worker; the rest went straight in-process.
@@ -123,11 +120,7 @@ describe('plugin isolation fallback', () => {
     expect(warn).toHaveBeenCalledTimes(1);
     // Every plugin still gets loaded; only the advice is deduped.
     expect(mockInProcess).toHaveBeenCalledTimes(3);
-    expect(await Promise.all(loaded.map(([plugin]) => plugin))).toEqual([
-      'in-process',
-      'in-process',
-      'in-process',
-    ]);
+    expect(loaded).toEqual(['in-process', 'in-process', 'in-process']);
   });
 
   it('rethrows a plugin that loaded and then threw', async () => {
@@ -164,7 +157,7 @@ describe('falling back on the worker errno rather than the environment', () => {
     vi.clearAllMocks();
     resetIsolationFallbackForTesting();
     warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
-    mockInProcess.mockReturnValue([Promise.resolve('in-process'), vi.fn()]);
+    mockInProcess.mockReturnValue(Promise.resolve('in-process'));
   });
 
   afterEach(() => warn.mockRestore());
@@ -174,9 +167,9 @@ describe('falling back on the worker errno rather than the environment', () => {
     mockIsAiAgent.mockReturnValue(true);
     mockIsolated.mockReturnValue(isolatedRejecting(socketRefusal()));
 
-    const [plugin] = await loadingMethod({ plugin: 'p' } as any, '/root', 0);
+    const plugin = await loadingMethod({ plugin: 'p' } as any, '/root', 0, 0);
 
-    await expect(plugin).resolves.toBe('in-process');
+    expect(plugin).toBe('in-process');
   });
 
   it('should rethrow a refusal outside an agent, where losing isolation silently would be worse', async () => {
@@ -207,9 +200,9 @@ describe('falling back on the worker errno rather than the environment', () => {
     mockIsAiAgent.mockReturnValue(false);
     mockIsolated.mockReturnValue(isolatedRejecting(startupFailure()));
 
-    const [plugin] = await loadingMethod({ plugin: 'p' } as any, '/root', 0);
+    const plugin = await loadingMethod({ plugin: 'p' } as any, '/root', 0, 0);
 
-    await expect(plugin).resolves.toBe('in-process');
+    expect(plugin).toBe('in-process');
   });
 
   it('should treat the errno as proof even when the environment is what allowed the fallback', async () => {
@@ -219,7 +212,7 @@ describe('falling back on the worker errno rather than the environment', () => {
     mockIsAiAgent.mockReturnValue(false);
     mockIsolated.mockReturnValue(isolatedRejecting(socketRefusal()));
 
-    await loadingMethod({ plugin: 'p' } as any, '/root', 0);
+    await loadingMethod({ plugin: 'p' } as any, '/root', 0, 0);
 
     expect(mockHint).toHaveBeenCalledWith({ certain: true });
   });
@@ -229,7 +222,7 @@ describe('falling back on the worker errno rather than the environment', () => {
     mockIsAiAgent.mockReturnValue(false);
     mockIsolated.mockReturnValue(isolatedRejecting(startupFailure()));
 
-    await loadingMethod({ plugin: 'p' } as any, '/root', 0);
+    await loadingMethod({ plugin: 'p' } as any, '/root', 0, 0);
 
     expect(mockHint).toHaveBeenCalledWith({ certain: false });
   });
@@ -243,7 +236,7 @@ describe('falling back on the worker errno rather than the environment', () => {
     mockIsAiAgent.mockReturnValue(true);
     mockIsolated.mockReturnValue(isolatedRejecting(socketRefusal()));
 
-    await loadingMethod({ plugin: 'p' } as any, '/root', 0);
+    await loadingMethod({ plugin: 'p' } as any, '/root', 0, 0);
 
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn.mock.calls[0][0].title).not.toContain('sandbox');

@@ -10,7 +10,9 @@ import { hashObject } from '../../hasher/file-hasher';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { loadNxPlugin } from './in-process-loader';
 import {
+  disposeIsolatedPlugins,
   loadIsolatedNxPlugin,
+  pluginGeneration,
   useIsolatedNxPluginCapabilities,
 } from './isolation';
 import { resetResolvePluginCache } from './resolve-plugin';
@@ -59,73 +61,20 @@ let cachedSeparatedPlugins: SeparatedPlugins;
 let pendingPluginsPromise: Promise<LoadedNxPlugin[]> | undefined;
 
 /**
- * The holds one plugin set has taken, collected as each plugin arrives.
+ * Lets go of every plugin this process has loaded, which is what a reload does
+ * before it loads the next set.
  *
- * Registered before the set starts loading, so a reload can release a set whose
- * workers are still forking. A hold taken after the release is released at once:
- * the set it would have joined is gone, and a worker nothing holds is one that
- * outlives every process that could stop it.
+ * Everything, rather than the set being replaced: the plugins live in one map in
+ * the isolation layer, and that map is what knows which workers exist. A set
+ * whose workers were still forking used to leave them behind, because the only
+ * thing that could have stopped them was a release the next load overwrote.
  */
-class PluginSetHolds {
-  private readonly releases: Array<() => void> = [];
-  private released = false;
-
-  hold(release: () => void): void {
-    if (this.released) {
-      release();
-      return;
-    }
-    this.releases.push(release);
-  }
-
-  releaseAll(): void {
-    this.released = true;
-    while (this.releases.length) {
-      this.releases.pop()();
-    }
-  }
-}
-
-/** Every specified plugin set this process holds, loaded or still loading. */
-const specifiedPluginSets = new Set<PluginSetHolds>();
-
-/** Every default plugin set this process holds, loaded or still loading. */
-const defaultPluginSets = new Set<PluginSetHolds>();
-
-/**
- * Lets go of every specified plugin set, which is what a reload does before it
- * forks new workers.
- *
- * Every set rather than the newest: a set superseded while it was still loading
- * registered its release where the next load overwrote it, so its workers ran on
- * with nothing able to stop them until the daemon died.
- */
-function releaseSpecifiedPlugins(): void {
-  if (!specifiedPluginSets.size) {
-    return;
-  }
-  for (const set of specifiedPluginSets) {
-    set.releaseAll();
-  }
-  specifiedPluginSets.clear();
+function releasePlugins(): void {
+  disposeIsolatedPlugins();
   if (pluginTranspilerIsRegistered()) {
     cleanupPluginTSTranspiler();
   }
   pendingPluginsPromise = undefined;
-}
-
-/** The same, for the plugins Nx configures itself. */
-function releaseDefaultPlugins(): void {
-  if (!defaultPluginSets.size) {
-    return;
-  }
-  for (const set of defaultPluginSets) {
-    set.releaseAll();
-  }
-  defaultPluginSets.clear();
-  if (pluginTranspilerIsRegistered()) {
-    cleanupPluginTSTranspiler();
-  }
   loadedDefaultPlugins = undefined;
   pendingDefaultPluginPromise = undefined;
 }
@@ -183,24 +132,24 @@ export function resetIsolationFallbackForTesting() {
 export const loadingMethod = async (
   plugin: PluginConfiguration,
   root: string,
+  generation: number,
   index?: number,
   resolved?: ResolvedPluginModule
-): Promise<readonly [Promise<LoadedNxPlugin>, () => void]> => {
+): Promise<LoadedNxPlugin> => {
   if (!isIsolationEnabled() || isolationRefusedInThisProcess) {
     return loadNxPlugin(plugin, root, index);
   }
 
-  const [isolatedPlugin, cleanup] = await loadIsolatedNxPlugin(
-    plugin,
-    root,
-    index,
-    resolved
-  );
-
   // Awaited here rather than handed on, because the worker failure surfaces on
   // this promise and the fallback has to happen before the caller sees it.
   try {
-    return [Promise.resolve(await isolatedPlugin), cleanup] as const;
+    return await loadIsolatedNxPlugin(
+      plugin,
+      root,
+      generation,
+      index,
+      resolved
+    );
   } catch (e) {
     // Proof, kept separate from policy. The errno the worker saw is what makes
     // the message certain; whether that errno is also grounds for degrading is a
@@ -215,8 +164,6 @@ export const loadingMethod = async (
     ) {
       throw e;
     }
-
-    cleanup();
 
     // Read and set in one synchronous step. Concurrently loaded plugins each
     // arrive here with their own failure, so testing the latch after setting it
@@ -298,8 +245,7 @@ export async function getPluginsSeparated(
   // pendingPluginsPromise — the in-flight load — would otherwise be reused
   // by the `??=` below and serve the previous plugin set forever. Tear
   // down the old workers and force a fresh load.
-  releaseSpecifiedPlugins();
-  pendingPluginsPromise = undefined;
+  releasePlugins();
 
   const loadPromise = (async (): Promise<SeparatedPlugins> => {
     const results = await Promise.allSettled([
@@ -373,13 +319,6 @@ export async function getOnlyDefaultPlugins(root = workspaceRoot) {
     return loadedDefaultPlugins;
   }
 
-  // Release the committed set before loading another one. A load already in
-  // flight is shared instead: a second caller arriving mid-load wants the same
-  // plugins, and releasing there would fork a second set of workers.
-  if (loadedDefaultPlugins) {
-    releaseDefaultPlugins();
-  }
-
   const loadPromise = (pendingDefaultPluginPromise ??=
     loadDefaultNxPlugins(workspaceRoot));
   const result = await loadPromise;
@@ -417,8 +356,7 @@ export function getPluginsIfLoadedOrLoading():
 
 export function cleanupPlugins() {
   peeked = undefined;
-  releaseSpecifiedPlugins();
-  releaseDefaultPlugins();
+  releasePlugins();
   cachedSeparatedPlugins = undefined;
   // Drop the in-flight load too: clearing the marker flips its commit gate to
   // false, so a load resolving after teardown can't repopulate the torn-down cache.
@@ -444,7 +382,7 @@ interface PluginLoad {
   /** Null when the module's identity could not be established. */
   key: string | null;
   /** Set once the plugin is loaded, or wired from a recorded capability set. */
-  loaded?: readonly [Promise<LoadedNxPlugin>, () => void];
+  loaded?: Promise<LoadedNxPlugin>;
   error?: unknown;
 }
 
@@ -466,15 +404,17 @@ function capabilityCacheApplies(): boolean {
 }
 
 /**
- * Every hold is registered with `holds` the moment it is taken, here and in the
- * cache path both. That is what lets a reload release a set mid-load.
+ * The generation is read once, here, and carried to every plugin this load
+ * starts. A load that is superseded while it runs stamps its plugins with a
+ * generation the isolation layer has already moved past, which is what puts
+ * their workers down instead of leaving them to the next reload.
  */
 async function loadPlugins(
   pluginConfigurations: PluginConfiguration[],
   root: string,
-  assignIndexes: boolean,
-  holds: PluginSetHolds
+  assignIndexes: boolean
 ): Promise<PromiseSettledResult<LoadedNxPlugin>[]> {
+  const generation = pluginGeneration();
   const loads: PluginLoad[] = pluginConfigurations.map((plugin, index) => ({
     plugin,
     index: assignIndexes ? index : undefined,
@@ -484,7 +424,7 @@ async function loadPlugins(
   // Gated synchronously: with no cache to consult, the loads must start in
   // this tick, as they did before the cache existed.
   if (loads.length && capabilityCacheApplies()) {
-    await useCapabilityCache(loads, root, holds);
+    await useCapabilityCache(loads, root, generation);
   }
 
   return Promise.allSettled(
@@ -496,17 +436,15 @@ async function loadPlugins(
         throw load.error;
       }
 
-      if (!load.loaded) {
-        load.loaded = await loadingMethod(
-          load.plugin,
-          root,
-          load.index,
-          load.resolved
-        );
-        holds.hold(load.loaded[1]);
-      }
+      load.loaded ??= loadingMethod(
+        load.plugin,
+        root,
+        generation,
+        load.index,
+        load.resolved
+      );
 
-      const res = await load.loaded[0];
+      const res = await load.loaded;
       performance.mark(`Load Nx Plugin: ${label} - end`);
       performance.measure(
         `Load Nx Plugin: ${label}`,
@@ -631,7 +569,7 @@ export async function peekPluginCapabilities(
 async function useCapabilityCache(
   loads: PluginLoad[],
   root: string,
-  holds: PluginSetHolds
+  generation: number
 ): Promise<void> {
   await resolveCapabilityKeys(loads, root);
 
@@ -645,7 +583,7 @@ async function useCapabilityCache(
   let spinner: DelayedSpinner | undefined;
   try {
     while (true) {
-      const missing = wireRecordedCapabilities(cacheable, root, holds);
+      const missing = wireRecordedCapabilities(cacheable, root, generation);
       if (!missing.length) {
         return;
       }
@@ -687,9 +625,9 @@ async function useCapabilityCache(
         // Read once more now the lock is held, since another process may have
         // recorded these between the read above and the acquire.
         await loadAndRecord(
-          wireRecordedCapabilities(missing, root, holds),
+          wireRecordedCapabilities(missing, root, generation),
           root,
-          holds
+          generation
         );
       } finally {
         if (holdingLock) {
@@ -709,7 +647,7 @@ async function useCapabilityCache(
 function wireRecordedCapabilities(
   loads: PluginLoad[],
   root: string,
-  holds: PluginSetHolds
+  generation: number
 ): PluginLoad[] {
   const pending = loads.filter((load) => !load.loaded);
   if (!pending.length) {
@@ -730,13 +668,13 @@ function wireRecordedCapabilities(
     load.loaded = useIsolatedNxPluginCapabilities(
       load.plugin,
       root,
+      generation,
       load.resolved,
       capabilities,
       load.index,
       (actual, sourceFiles) =>
         repairRecord(load.key, root, capabilities, actual, sourceFiles)
     );
-    holds.hold(load.loaded[1]);
   }
   return missing;
 }
@@ -757,7 +695,7 @@ export function noteObservedClosure(
 async function loadAndRecord(
   loads: PluginLoad[],
   root: string,
-  holds: PluginSetHolds
+  generation: number
 ): Promise<void> {
   if (!loads.length) {
     return;
@@ -766,16 +704,16 @@ async function loadAndRecord(
   const settled = await Promise.allSettled(
     loads.map(async (load) => {
       try {
-        load.loaded = await loadingMethod(
+        load.loaded = loadingMethod(
           load.plugin,
           root,
+          generation,
           load.index,
           load.resolved
         );
-        holds.hold(load.loaded[1]);
         // The closure the worker observed travels with the instance, so the
         // record is written from what actually ran rather than from a guess.
-        const loaded = await load.loaded[0];
+        const loaded = await load.loaded;
         noteObservedClosure(
           loaded,
           (loaded as { sourceFiles?: string[] | null }).sourceFiles ?? null
@@ -786,7 +724,7 @@ async function loadAndRecord(
         load.error = e;
         throw e;
       }
-      return load.loaded[0];
+      return load.loaded;
     })
   );
 
@@ -922,10 +860,7 @@ async function loadDefaultNxPlugins(
 
   const plugins = getDefaultPlugins(root);
 
-  const holds = new PluginSetHolds();
-  defaultPluginSets.add(holds);
-
-  const results = await loadPlugins(plugins, root, false, holds);
+  const results = await loadPlugins(plugins, root, false);
 
   const defaultPluginResults: LoadedNxPlugin[] = [];
   const errors: Array<{ pluginName: string; error: Error }> = [];
@@ -943,8 +878,7 @@ async function loadDefaultNxPlugins(
   }
 
   if (errors.length > 0) {
-    defaultPluginSets.delete(holds);
-    holds.releaseAll();
+    releasePlugins();
     const errorMessage = errors
       .map((e) => `  - ${e.pluginName}: ${e.error.message}`)
       .join('\n');
@@ -967,10 +901,6 @@ async function loadSpecifiedNxPlugins(
   pluginsConfigurations: PluginConfiguration[],
   root = workspaceRoot
 ): Promise<LoadedNxPlugin[]> {
-  // Returning existing plugins is handled by getPlugins,
-  // so, if we are here and there are existing plugins, they are stale
-  releaseSpecifiedPlugins();
-
   performance.mark('loadSpecifiedNxPlugins:start');
 
   pluginsConfigurations ??= [];
@@ -980,10 +910,7 @@ async function loadSpecifiedNxPlugins(
   // resolve it to the workspace root. Runs only when the plugin set changed.
   resetResolvePluginCache();
 
-  const holds = new PluginSetHolds();
-  specifiedPluginSets.add(holds);
-
-  const results = await loadPlugins(pluginsConfigurations, root, true, holds);
+  const results = await loadPlugins(pluginsConfigurations, root, true);
   performance.mark('loadSpecifiedNxPlugins:end');
   performance.measure(
     'loadSpecifiedNxPlugins',
@@ -1010,8 +937,7 @@ async function loadSpecifiedNxPlugins(
   }
 
   if (errors.length > 0) {
-    specifiedPluginSets.delete(holds);
-    holds.releaseAll();
+    releasePlugins();
     const errorMessage = errors
       .map((e) => `  - ${e.pluginName}: ${e.error.message}`)
       .join('\n');
