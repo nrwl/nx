@@ -337,6 +337,43 @@ describe('IsolatedPlugin', () => {
     });
   });
 
+  describe('a load that fails', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('puts the worker down instead of leaving it loading', async () => {
+      const shutdown = vi.spyOn(IsolatedPlugin.prototype as any, 'shutdown');
+      vi.spyOn(
+        IsolatedPlugin.prototype as any,
+        'spawnAndConnect'
+      ).mockRejectedValue(new Error('Loading "test-plugin" timed out'));
+
+      await expect(IsolatedPlugin.load('test-plugin', '/root')).rejects.toThrow(
+        'timed out'
+      );
+
+      // Nothing else holds this instance once load rejects, so a worker left
+      // running here is one no later call could reach.
+      expect(shutdown).toHaveBeenCalled();
+    });
+
+    it('ends the socket of a worker that never answered a load', () => {
+      const plugin: any = Object.create(IsolatedPlugin.prototype);
+      const socket = { end: vi.fn() };
+      // What a load timeout leaves behind: connected, never alive.
+      plugin._alive = false;
+      plugin.worker = null;
+      plugin.socket = socket;
+
+      plugin.shutdown();
+
+      // The worker clears its own connect and load timers once it starts
+      // loading, so closing the socket is what its 'end' handler exits on.
+      expect(socket.end).toHaveBeenCalled();
+    });
+  });
+
   describe('lifecycle integration', () => {
     it('should shutdown after single-hook plugin completes', async () => {
       const { plugin, shutdown } = createTestPlugin(
