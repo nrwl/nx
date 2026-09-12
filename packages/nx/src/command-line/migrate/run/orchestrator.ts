@@ -8,6 +8,7 @@ import {
   type BigIntStats,
 } from 'fs';
 import { join } from 'path';
+import { IS_WASM } from '../../../native';
 import { readJsonFile, writeJsonFile } from '../../../utils/fileutils';
 import { publishFileAtomically } from './atomic-write';
 import {
@@ -21,6 +22,8 @@ import {
   type BrokerRequestKind,
 } from './broker';
 import {
+  getAncestorStatus,
+  getGitCurrentBranch,
   getGitRepositoryStatus,
   getLatestCommitSha,
   getPathCommitExposure,
@@ -61,6 +64,7 @@ import {
   runHandoffsDir,
   writeRunState,
   CURRENT_RUN_STATE_FORMAT_VERSION,
+  RUN_STATE_FILE_NAME,
   SHELL_SAFE_VALUE,
   type MigrateCommitLedgerEntry,
   type MigrateRunNoProgress,
@@ -71,6 +75,10 @@ import {
   TERMINAL_STEP_STATUSES,
 } from './run-state';
 import {
+  hasLiveRunActivity,
+  holdRunActivity,
+  registerRunActivity,
+  releaseRunActivity,
   updateRunState,
   withRunCreationLock,
   withRunStateLock,
@@ -138,6 +146,14 @@ import {
   RUNBOOK_FILE_NAME,
   type RunbookContext,
 } from './runbook';
+import {
+  collectExistingRunFacts,
+  progressLine,
+  recordedShas,
+  renderExistingRunReport,
+  type ExistingRunFacts,
+  renderStartFresh,
+} from './existing-run-report';
 import { detectPackageManager } from '../../../utils/package-manager';
 
 // The dark migrate orchestrator: drives a durable run one dispense at a time.
@@ -163,6 +179,9 @@ export interface RunOrchestratorInitInput {
   root: string;
   // The full parsed migrations.json, snapshotted verbatim as plan-0.json.
   migrationsJson: { migrations?: PlannedMigration[]; [k: string]: unknown };
+  // The --run-migrations path as the user passed it; the start-fresh hint
+  // repeats it when it is not the default.
+  migrationsPath?: string;
   createCommits: boolean;
   commitPrefix: string;
   // The run's install policy. Dispensed commands carry no flags of the user's,
@@ -174,6 +193,19 @@ export interface RunOrchestratorInitInput {
   // Off when a parent process hands the run to an agent it spawns: the runbook
   // reaches that agent as a file and this stdout belongs to the user.
   emitAgentInstructions?: boolean;
+  // What to do when a run is already active. 'report' (the default) reports
+  // it and starts nothing; 'start-fresh' deletes its record and starts a new
+  // run. Continuing an active run is a separate entry point
+  // (runOrchestratorResume), never an init outcome.
+  onExistingRun?: 'report' | 'start-fresh';
+  // With 'start-fresh': the only run the caller was told about and agreed to
+  // replace. A different active run is reported instead of deleted.
+  replaceRunId?: string;
+  // Asked once init has decided to start a run, before any run is deleted or
+  // any git side effect lands; false refuses. Sits here rather than in the
+  // caller because only init knows, under its own discovery, whether a run
+  // is about to start or an existing one is about to be reported.
+  confirmStart?: () => Promise<boolean>;
 }
 
 export type OrchestratorInitResult =
@@ -184,8 +216,18 @@ export type OrchestratorInitResult =
       runbookPath: string;
       reconcileCommand: string;
     }
-  // The exit-0 refusal: the runbook is missing and another nx wrote the run.
-  | { kind: 'refused' };
+  // The exit-0 refusal: the runbook is missing and another nx wrote the run,
+  // or the caller's confirmStart declined.
+  | { kind: 'refused' }
+  // The exit-0 report: a run is already active and nothing was started.
+  | { kind: 'existing-run'; runId: string; facts: ExistingRunFacts };
+
+export interface RunOrchestratorResumeInput {
+  root: string;
+  runId: string;
+  policy: MigrateRunPolicy;
+  emitAgentInstructions?: boolean;
+}
 
 export interface RunOrchestratorReconcileInput {
   root: string;
@@ -250,31 +292,49 @@ export async function runOrchestratorInit(
   const {
     root,
     migrationsJson,
+    migrationsPath,
     createCommits,
     commitPrefix,
     skipInstall,
     installedNxVersion,
     validate,
     emitAgentInstructions = true,
+    onExistingRun = 'report',
+    replaceRunId,
+    confirmStart,
   } = input;
   const planHash = computePlanHash(migrationsJson);
-
-  // An active run means a prior init already happened (e.g. it crashed before
-  // the agent's first reconcile); starting a second run would compete with it.
-  // Same plan: resume it. Different plan: refuse rather than guess which plan
-  // the agent means. NewerRunStateFormatError propagates.
-  const active = findActiveRunForPlan(root, planHash);
-
-  // Dispensed commands interpolate migration ids verbatim, so every init
-  // (fresh or resumed) validates the incoming plan's ids. After the mismatch
-  // check: a plan that will be refused anyway should get the more actionable
-  // mismatch error, not this one.
   const migrations = (migrationsJson.migrations ?? []) as PlannedMigration[];
   const sorted = sortMigrations(migrations.slice(), {
     hoistHandoffGitignore: true,
   });
-  for (const m of sorted) {
-    const id = `${m.package}:${m.name}`;
+  const plannedIds = sorted.map((m) => `${m.package}:${m.name}`);
+
+  // An active run means a prior init already happened (e.g. it crashed before
+  // the agent's first reconcile); starting a second run would compete with it,
+  // and whether to continue it or replace it is the user's call, not a guess
+  // from the plans. Reported before the id check below: this plan is not
+  // being started. NewerRunStateFormatError propagates.
+  const active = findActiveRunForInit(root);
+  if (
+    active &&
+    (onExistingRun === 'report' ||
+      (replaceRunId !== undefined && active.runId !== replaceRunId))
+  ) {
+    return reportExistingRun(
+      root,
+      active.runId,
+      active.state,
+      plannedIds,
+      migrationsPath,
+      emitAgentInstructions
+    );
+  }
+
+  // Dispensed commands interpolate migration ids verbatim, so every init
+  // validates the incoming plan's ids. Before the delete below: a run must
+  // not be thrown away for a plan that cannot start.
+  for (const id of plannedIds) {
     if (!SHELL_SAFE_VALUE.test(id)) {
       throw new Error(
         `The migration id '${id}' contains characters that are not shell-safe. Orchestrated runs require shell-safe migration ids.`
@@ -282,15 +342,8 @@ export async function runOrchestratorInit(
     }
   }
 
-  const policy: MigrateRunPolicy = { createCommits, skipInstall };
-  if (active) {
-    return resumeRun(
-      root,
-      active.runId,
-      active.state,
-      policy,
-      emitAgentInstructions
-    );
+  if (confirmStart && !(await confirmStart())) {
+    return { kind: 'refused' };
   }
 
   const runId = createRunId();
@@ -331,6 +384,12 @@ export async function runOrchestratorInit(
       INIT_CONTINUE_HINT
     );
   }
+  // Deleted only once every refusal of the replacement is behind: a refused
+  // start would otherwise have thrown away the run with nothing in its place.
+  // Before any commit, so a refused delete leaves no orphan checkpoint.
+  if (active) {
+    deleteRunForStartFresh(root, active.runId);
+  }
   // Checkpoint pre-existing working-tree state BEFORE the run dir exists, so
   // the checkpoint's `git add -A` can't track this run's scratch and a clean
   // tree stays uncommitted (writing run.json would otherwise dirty it and fire
@@ -345,6 +404,7 @@ export async function runOrchestratorInit(
   // retry-clean reset destroy the very work this flag exists to protect.
   const checkpointFailed =
     createCommits && getWorkingTreeStatus(root) !== 'clean';
+  const branch = getGitCurrentBranch(root);
   const state: MigrateRunState = {
     formatVersion: CURRENT_RUN_STATE_FORMAT_VERSION,
     runId,
@@ -356,6 +416,7 @@ export async function runOrchestratorInit(
     ...(skipInstall ? { skipInstall: true } : {}),
     validate: validate !== false,
     runbookPath: RUNBOOK_FILE_NAME,
+    ...(branch ? { branch } : {}),
     rounds: [
       {
         index: 0,
@@ -375,7 +436,7 @@ export async function runOrchestratorInit(
   // init's checkpoint commit is the same orphan shape as the crash window
   // above, and the fallback's .gitignore edit is idempotent.
   const winner = withRunCreationLock(root, () => {
-    const nowActive = findActiveRunForPlan(root, planHash);
+    const nowActive = findActiveRunForInit(root);
     if (nowActive) {
       return nowActive;
     }
@@ -392,14 +453,21 @@ export async function runOrchestratorInit(
       { flag: 'wx' }
     );
     createRun(root, state);
+    // Held before the lock drops: a start-fresh must never find this run
+    // discoverable and unheld.
+    registerRunActivity(dir);
     return null;
   });
   if (winner) {
-    return resumeRun(
+    // A run created concurrently since the check above. Reported, not
+    // deleted, even under 'start-fresh': that consent covered the run the
+    // user saw, not one that appeared while this init was running.
+    return reportExistingRun(
       root,
       winner.runId,
       winner.state,
-      policy,
+      plannedIds,
+      migrationsPath,
       emitAgentInstructions
     );
   }
@@ -407,14 +475,39 @@ export async function runOrchestratorInit(
   return finishInit(root, dir, runId, state, 'created', emitAgentInstructions);
 }
 
-// Reads the newest active run, refusing one whose plan differs from the
-// incoming plan; null when no run is active. Uninterpretable run dirs refuse
-// a fresh start (one of them could be an active run this init would compete
-// with) but only warn when a healthy active run is being resumed.
+/**
+ * Continues the active run `runId` names, as an explicit `--run-id` does for
+ * the agent path. Throws when the id names no run or a finished one.
+ */
+export function runOrchestratorResume(
+  input: RunOrchestratorResumeInput
+): OrchestratorInitResult {
+  const { root, runId, policy, emitAgentInstructions = true } = input;
+  if (!RUN_ID_SAFE.test(runId)) {
+    throw new Error(`Invalid run id '${runId}'.`);
+  }
+  const dir = runDir(root, runId);
+  if (!hasRunState(dir)) {
+    throw new Error(
+      `No migrate run '${runId}' was found under ${MIGRATE_RUNS_RELATIVE_DIR}.`
+    );
+  }
+  const state = readRunState(dir);
+  if (state.status !== 'active') {
+    throw new Error(
+      `Migrate run '${runId}' is already complete; there is nothing to continue.`
+    );
+  }
+  holdRunActivity(root, runId);
+  return resumeRun(root, runId, state, policy, emitAgentInstructions);
+}
+
+// Reads the newest active run; null when no run is active. Uninterpretable
+// run dirs refuse a fresh start (one of them could be an active run this
+// init would compete with) but only warn when a healthy active run is found.
 // NewerRunStateFormatError propagates from the read.
-function findActiveRunForPlan(
-  root: string,
-  planHash: string
+function findActiveRunForInit(
+  root: string
 ): { runId: string; state: MigrateRunState } | null {
   const { active, uninterpretable } = findActiveRun(root);
   if (uninterpretable.length > 0) {
@@ -434,7 +527,7 @@ function findActiveRunForPlan(
         [
           `Whether a migrate run is still active could not be determined; starting a new run could re-apply migrations an unfinished run already applied.`,
           ...details,
-          `Fix or remove the listed ${noun} (removing a run directory abandons that run; migrations it already applied remain applied), then re-run the command.`,
+          `Fix or remove the listed ${noun}, then re-run the command.`,
         ].join('\n')
       );
     }
@@ -443,18 +536,112 @@ function findActiveRunForPlan(
       bodyLines: details,
     });
   }
-  if (active && latestRound(active.state)?.planHash !== planHash) {
-    throw new Error(
-      `A migrate run '${active.runId}' is already active with a different plan. ` +
-        `Finish it first by running \`${reconcileCommand(root, active.runId)}\`, ` +
-        `or remove ${MIGRATE_RUNS_RELATIVE_DIR}/${active.runId} to abandon it.`
-    );
-  }
   return active;
 }
 
-// Shared resume tail for an active run found before or under the creation
-// lock, so the two discovery points cannot drift apart.
+function startFreshCommand(
+  root: string,
+  runMigrationsFlag = '--run-migrations'
+): string {
+  return `${pmExecPrefix(root)} nx migrate ${runMigrationsFlag} --start-fresh`;
+}
+
+// The exit-0 report for an init that found a run already active. On the
+// agent path the report and both ways forward go to stdout, in a block of
+// its own kind: an `error` block would read as a crash, and this is a
+// decision for the user.
+function reportExistingRun(
+  root: string,
+  runId: string,
+  state: MigrateRunState,
+  plannedIds: readonly string[],
+  migrationsPath: string | undefined,
+  emitAgentInstructions: boolean
+): OrchestratorInitResult {
+  const facts = collectExistingRunFacts(root, runId, state, plannedIds);
+  if (emitAgentInstructions) {
+    const report = renderExistingRunReport(facts, {
+      continueCommand: reconcileCommand(root, runId),
+      startFresh: renderStartFresh(migrationsPath, (flag) =>
+        startFreshCommand(root, flag)
+      ),
+    });
+    logToAgent(report);
+    const lines = safeLines([
+      report.title,
+      ...report.bodyLines,
+      ``,
+      `No migration step ran in this response. Show this report to the user and let them choose; run neither command until they do.`,
+    ]);
+    emitStepBlock(runId, '-', 'existing-run', {
+      instructions: lines.join('\n'),
+    });
+  }
+  return { kind: 'existing-run', runId, facts };
+}
+
+// Removes an active run's record so a new run can start. Refused while a
+// worker the run dispensed is still alive: deleting under it would strand a
+// migration mid-flight. run.json goes first, under the state lock, so that
+// from then on no reconcile or worker can discover the run and start against
+// a directory that is about to disappear. The rest is removed after the lock
+// is released, and best effort: the lock file stays open in this process
+// until it is collected, and a directory holding an open file cannot be
+// removed on every platform. What is left holds no run.
+function deleteRunForStartFresh(root: string, runId: string): void {
+  const dir = runDir(root, runId);
+  if (IS_WASM) {
+    throw new Error(
+      `Not deleting migrate run '${runId}': without a native file lock nx cannot tell whether another nx migrate process is acting on it. Make sure none is, remove ${MIGRATE_RUNS_RELATIVE_DIR}/${runId}, then re-run the command.`
+    );
+  }
+  // Under the creation lock so no process can register itself on the run
+  // between the probe and the delete.
+  const deleted = withRunCreationLock(root, () => {
+    releaseRunActivity(dir);
+    if (hasLiveRunActivity(dir)) {
+      throw new Error(
+        `Not deleting migrate run '${runId}': another nx migrate process is acting on it (an agent session, a reconcile, or a step). Wait for it to end, then re-run the command.`
+      );
+    }
+    return withRunStateLock(dir, () => {
+      // A concurrent replacement got here first; the creation lock below then
+      // reports its run.
+      if (!hasRunState(dir)) return false;
+      const fresh = readRunState(dir);
+      const live = fresh.steps.filter(
+        (s) =>
+          s.status === 'running' && s.pid !== undefined && isPidAlive(s.pid)
+      );
+      if (live.length > 0) {
+        throw new Error(
+          `Not deleting migrate run '${runId}': ${live
+            .map(
+              (w) => `pid ${w.pid} is still running ${w.id} (${w.migrationId})`
+            )
+            .join('; ')}. ` +
+            `Wait for it to finish, then re-run the command. If that pid is not an nx migrate worker, stop it or remove ${MIGRATE_RUNS_RELATIVE_DIR}/${runId}, then re-run the command.`
+        );
+      }
+      rmSync(join(dir, RUN_STATE_FILE_NAME), { force: true });
+      return true;
+    });
+  });
+  if (!deleted) return;
+  try {
+    rmSync(dir, { recursive: true, force: true });
+  } catch (e) {
+    warnToAgent({
+      title: `Could not remove the rest of ${MIGRATE_RUNS_RELATIVE_DIR}/${runId}: ${summarizeError(e)}. It no longer holds a run; remove it when convenient.`,
+    });
+  }
+  logToAgent({
+    title: `Deleted the record of migrate run ${runId}; starting a new run.`,
+  });
+}
+
+// The continue tail behind runOrchestratorResume: the runbook, checkpoint and
+// analytics steps a paused run needs before it can be driven again.
 function resumeRun(
   root: string,
   runId: string,
@@ -471,7 +658,7 @@ function resumeRun(
     throw new Error(
       `Nx did not resume the active migrate run because its recorded install and commit policy differs from this invocation's. ` +
         `Nx takes that policy from --create-commits and --skip-install, and from nx.json "migrate.createCommits" when the commit flag is omitted. ` +
-        `Re-run with explicit flags for the policy run '${runId}' started with, or remove ${MIGRATE_RUNS_RELATIVE_DIR}/${runId} to abandon it.`
+        `Re-run with explicit flags for the policy run '${runId}' started with, or run ${startFreshCommand(root)} to abandon it.`
     );
   }
   const dir = runDir(root, runId);
@@ -505,23 +692,11 @@ function resumeRun(
 }
 
 function announceResume(runId: string, state: MigrateRunState): void {
-  const tally = tallySteps(state);
-  // Stalled steps are a subset of the remaining ones, called out separately:
-  // a run is resumed most often because one of these is waiting on a
-  // decision, and the count alone would read as work not reached yet.
   logToAgent({
     title: `nx migrate: resuming run ${runId}`,
     bodyLines: [
       `  started: ${state.createdAt}`,
-      `  progress: ${tally.applied + tally.adopted} applied, ${
-        tally.skipped
-      } skipped, ${
-        tally.unresolved.length > 0
-          ? `${tally.unresolved.length} unresolved, `
-          : ''
-      }${tally.remaining} remaining${
-        tally.stalled > 0 ? ` (${tally.stalled} awaiting a decision)` : ''
-      }`,
+      `  progress: ${progressLine(tallySteps(state))}`,
     ],
   });
 }
@@ -598,6 +773,9 @@ function finishInit(
   // which must fail before its git and state side effects).
   runbook?: string
 ): OrchestratorInitResult {
+  // Already held by the creating init; the resume path holds here. The master
+  // session is this process and lives for the whole agent session.
+  holdRunActivity(root, runId);
   let current = state;
   if (!current.analytics.startEmitted) {
     // Claim the watermark on the fresh state first: of two concurrent inits
@@ -692,7 +870,7 @@ function ensureRunbook(
       `The runbook for run '${runId}' is missing from ${MIGRATE_RUNS_RELATIVE_DIR}/${runId}, and this nx (${nxVersion}) cannot re-render the one nx ${singleLine(
         state.nxVersion
       )} wrote.`,
-      `Restore the file (or, if the run was created before runbooks existed, re-run with the nx version that created it), or remove ${MIGRATE_RUNS_RELATIVE_DIR}/${runId} to abandon the run (migrations it already applied remain applied).`,
+      `Restore the file (or, if the run was created before runbooks existed, re-run with the nx version that created it), or start a new run with \`${startFreshCommand(root)}\`.`,
     ];
     warnToAgent({ title: reason[0], bodyLines: [reason[1]] });
     emitStepBlock(runId, '-', 'error', {
@@ -748,6 +926,28 @@ function runbookContext(
   };
 }
 
+// Only the newest recorded commit is checked, so the warning stops on its own
+// once the next step commits on the new history; checking every ledger entry
+// would repeat it on every reconcile after a rebase.
+function warnIfHistoryRewound(
+  root: string,
+  runId: string,
+  state: MigrateRunState
+): void {
+  const shas = recordedShas(state);
+  const newest = shas[shas.length - 1];
+  if (!newest) return;
+  const head = getLatestCommitSha(root);
+  if (!head || getAncestorStatus(newest, head, root) !== 'not-ancestor') {
+    return;
+  }
+  const facts = collectExistingRunFacts(root, runId, state);
+  warnToAgent({
+    title: `The newest commit migrate run ${runId} recorded is not reachable from HEAD. Continuing the run as asked.`,
+    bodyLines: renderExistingRunReport(facts).bodyLines,
+  });
+}
+
 export async function runOrchestratorReconcile(
   input: RunOrchestratorReconcileInput
 ): Promise<void> {
@@ -764,8 +964,10 @@ export async function runOrchestratorReconcile(
       `No migrate run '${runId}' was found under ${MIGRATE_RUNS_RELATIVE_DIR}.`
     );
   }
+  holdRunActivity(root, runId);
   // Version refusal (NewerRunStateFormatError) propagates.
   let state = readRunState(dir);
+  warnIfHistoryRewound(root, runId, state);
 
   // Ignore/index state can change while a durable run is paused (a checkout,
   // a .gitignore edit, a forced add); re-verify before foldHandoffs, which

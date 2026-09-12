@@ -8,6 +8,7 @@ export {
   writeRunState,
   findActiveRun,
   createRun,
+  readLatestPlanSnapshot,
 } from './run-state';
 export type {
   MigrateRunStatus,
@@ -50,10 +51,20 @@ export {
   completionWarnings,
   runOrchestratorInit,
   runOrchestratorReconcile,
+  runOrchestratorResume,
 } from './orchestrator';
 export type {
+  OrchestratorInitResult,
   RunOrchestratorInitInput,
   RunOrchestratorReconcileInput,
+  RunOrchestratorResumeInput,
 } from './orchestrator';
+
+export {
+  renderExistingRunReport,
+  renderStartFresh,
+} from './existing-run-report';
+export { pmExecPrefix } from './util';
+export type { ExistingRunFacts } from './existing-run-report';
 
 export { BROKER_ENV_VAR, MigrateCommitBroker } from './broker';

@@ -3237,8 +3237,104 @@ module.exports = {
             runMigrations: 'migrations.json',
           })
         ).rejects.toThrow(
+          /'--run-id' .* cannot be combined with '--run-migrations'.*pass '--agentic=<agent>' as well/
+        );
+        await expect(() =>
+          parseMigrationsOptions({
+            runId: 'run-1',
+            runMigrations: 'migrations.json',
+            agentic: false,
+          })
+        ).rejects.toThrow(
           /'--run-id' .* cannot be combined with '--run-migrations'/
         );
+      });
+
+      it('continues a run in a new agent session for --run-migrations --agentic=<agent> --run-id', async () => {
+        expect(
+          await parseMigrationsOptions({
+            runId: 'run-1',
+            runMigrations: 'migrations.json',
+            agentic: 'claude-code',
+            ifExists: false,
+          })
+        ).toEqual({
+          type: 'runMigrations',
+          runMigrations: 'migrations.json',
+          ifExists: false,
+          agentic: 'claude-code',
+          validate: undefined,
+          interactive: undefined,
+          runId: 'run-1',
+        });
+        expect(
+          await parseMigrationsOptions({
+            runId: 'run-1',
+            runMigrations: '',
+            agentic: true,
+            ifExists: false,
+          })
+        ).toMatchObject({ type: 'runMigrations', runId: 'run-1' });
+      });
+
+      it('rejects a step action on a continue', async () => {
+        await expect(() =>
+          parseMigrationsOptions({
+            runId: 'run-1',
+            runMigrations: 'migrations.json',
+            agentic: 'claude-code',
+            stepAction: 'retry',
+          })
+        ).rejects.toThrow(
+          /'--step-action' cannot be combined with '--run-migrations'/
+        );
+      });
+    });
+
+    describe('--start-fresh', () => {
+      it('carries it on a --run-migrations invocation only', async () => {
+        expect(
+          await parseMigrationsOptions({
+            runMigrations: 'migrations.json',
+            startFresh: true,
+            ifExists: false,
+          })
+        ).toEqual({
+          type: 'runMigrations',
+          runMigrations: 'migrations.json',
+          ifExists: false,
+          agentic: undefined,
+          validate: undefined,
+          interactive: undefined,
+          startFresh: true,
+        });
+        // yargs' boolean default is not a request.
+        expect(
+          await parseMigrationsOptions({
+            runMigrations: 'migrations.json',
+            startFresh: false,
+            ifExists: false,
+          })
+        ).not.toHaveProperty('startFresh');
+      });
+
+      it('rejects it without --run-migrations and with the single-run flags', async () => {
+        await expect(() =>
+          parseMigrationsOptions({ startFresh: true })
+        ).rejects.toThrow(/'--start-fresh' requires '--run-migrations'/);
+        await expect(() =>
+          parseMigrationsOptions({ startFresh: true, runMigration: 'a' })
+        ).rejects.toThrow(
+          /'--start-fresh' cannot be combined with '--run-migration'/
+        );
+        await expect(() =>
+          parseMigrationsOptions({
+            startFresh: true,
+            runId: 'run-1',
+            runMigrations: 'migrations.json',
+            agentic: 'claude-code',
+          })
+        ).rejects.toThrow(/'--start-fresh' cannot be combined with '--run-id'/);
       });
     });
 
@@ -3302,6 +3398,14 @@ module.exports = {
       await expect(() =>
         parseMigrationsOptions({ runId: 'r1', agentic: 'claude-code' })
       ).rejects.toThrow(/'--agentic' cannot be combined with '--run-id'/);
+      // The --run-migrations shape is where --run-id names a run to continue.
+      await expect(
+        parseMigrationsOptions({
+          runId: 'r1',
+          runMigrations: 'migrations.json',
+          agentic: 'claude-code',
+        })
+      ).resolves.toMatchObject({ type: 'runMigrations', runId: 'r1' });
       await expect(
         parseMigrationsOptions({
           runMigration: 'a',

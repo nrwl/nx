@@ -1,6 +1,7 @@
 // Internal to run/: deliberately not re-exported from ./index.
 
 import { createHash } from 'crypto';
+import { needsShellQuoting, quoteShellArg } from '../../../utils/shell-quoting';
 import {
   detectPackageManager,
   getPackageManagerCommand,
@@ -166,6 +167,25 @@ function pmCommands(root: string): ReturnType<typeof getPackageManagerCommand> {
 
 export function pmExecPrefix(root: string): string {
   return pmCommands(root).exec;
+}
+
+const DEFAULT_MIGRATIONS_FILE = 'migrations.json';
+
+// The --run-migrations flag a rendered command repeats: a custom path stays,
+// the default is left implicit. On a POSIX shell the argument is quoted. On
+// Windows the paste target may be cmd.exe or PowerShell, whose quoting and
+// expansion rules conflict (`%VAR%` expands in cmd, `$(...)` runs in
+// PowerShell), so only a path neither would touch is rendered; null says the
+// path cannot be rendered as executable text for this shell.
+export function runMigrationsFlag(migrationsPath: string): string | null {
+  if (migrationsPath === DEFAULT_MIGRATIONS_FILE) {
+    return '--run-migrations';
+  }
+  const arg = `--run-migrations=${migrationsPath}`;
+  if (process.platform !== 'win32') {
+    return quoteShellArg(arg);
+  }
+  return !needsShellQuoting(arg) && !/[%^]/.test(arg) ? arg : null;
 }
 
 export function pmInstallCommand(root: string): string {

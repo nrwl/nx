@@ -4,6 +4,8 @@
 // below don't leak into the other migrate specs.
 
 const mockRunOrchestratorInit = vi.fn();
+const mockRunOrchestratorResume = vi.fn();
+const mockReadLatestPlanSnapshot = vi.fn();
 // migrate.ts lazy-requires ./run (CJS channel), which vi.mock cannot
 // intercept; replace the module in the require channel instead.
 import { mockCjsModule } from '../../internal-testing-utils/cjs-mock';
@@ -11,6 +13,10 @@ mockCjsModule(import.meta.url, './run', {
   runSingleMigrationWorker: vi.fn(),
   runOrchestratorInit: (...args: unknown[]) => mockRunOrchestratorInit(...args),
   runOrchestratorReconcile: vi.fn(),
+  runOrchestratorResume: (...args: unknown[]) =>
+    mockRunOrchestratorResume(...args),
+  readLatestPlanSnapshot: (...args: unknown[]) =>
+    mockReadLatestPlanSnapshot(...args),
 });
 const mockRunMasterSession = vi.fn();
 mockCjsModule(import.meta.url, './agentic/master/run-master-session', {
@@ -126,6 +132,8 @@ describe('migrate() orchestrated init dispatch', () => {
     );
     process.env.NX_MIGRATE_ORCHESTRATOR = 'true';
     mockRunOrchestratorInit.mockReset().mockResolvedValue(undefined);
+    mockRunOrchestratorResume.mockReset().mockReturnValue(undefined);
+    mockReadLatestPlanSnapshot.mockReset().mockReturnValue({ migrations: [] });
     mockRunMasterSession.mockReset().mockResolvedValue(undefined);
     mockResolveAgentic.mockReset().mockResolvedValue({ kind: 'disabled' });
     mockReportRunStart.mockReset();
@@ -159,12 +167,21 @@ describe('migrate() orchestrated init dispatch', () => {
     };
   }
 
-  it('stops without a run when commits default on and the branch is the default one', async () => {
+  // The default-branch check is handed to init as confirmStart, which asks
+  // only once it is about to start a run; the mock never does, so the
+  // closure is exercised directly.
+  async function confirmStartFromInit(): Promise<boolean> {
+    expect(mockRunOrchestratorInit).toHaveBeenCalledTimes(1);
+    const { confirmStart } = mockRunOrchestratorInit.mock.calls[0][0];
+    return confirmStart();
+  }
+
+  it('refuses the start when commits default on and the branch is the default one', async () => {
     mockGetGitCurrentBranch.mockReturnValue('main');
 
     await migrate(root, runMigrationsArgs(), ['--run-migrations']);
 
-    expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
+    expect(await confirmStartFromInit()).toBe(false);
     // Prompting was possible, and still nothing asked: the stop is the answer.
     expect(mockMigrateConfirm).not.toHaveBeenCalled();
     expect(output.log).toHaveBeenCalledWith({
@@ -178,13 +195,13 @@ describe('migrate() orchestrated init dispatch', () => {
     });
   });
 
-  it('stops against the local branch name when the base ref carries an origin/ prefix', async () => {
+  it('refuses against the local branch name when the base ref carries an origin/ prefix', async () => {
     mockGetGitCurrentBranch.mockReturnValue('main');
     mockGetBaseRef.mockReturnValue('origin/main');
 
     await migrate(root, runMigrationsArgs(), ['--run-migrations']);
 
-    expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
+    expect(await confirmStartFromInit()).toBe(false);
     expect(output.log).toHaveBeenCalledWith(
       expect.objectContaining({
         title: expect.stringContaining(`default branch 'main'`),
@@ -200,8 +217,8 @@ describe('migrate() orchestrated init dispatch', () => {
       '--create-commits',
     ]);
 
+    expect(await confirmStartFromInit()).toBe(true);
     expect(mockMigrateConfirm).not.toHaveBeenCalled();
-    expect(mockRunOrchestratorInit).toHaveBeenCalledTimes(1);
   });
 
   it('starts the run on the default branch when nx.json enables commits', async () => {
@@ -210,8 +227,8 @@ describe('migrate() orchestrated init dispatch', () => {
 
     await migrate(root, runMigrationsArgs(), ['--run-migrations']);
 
+    expect(await confirmStartFromInit()).toBe(true);
     expect(mockMigrateConfirm).not.toHaveBeenCalled();
-    expect(mockRunOrchestratorInit).toHaveBeenCalledTimes(1);
   });
 
   it('starts the run on the default branch when the run will not commit', async () => {
@@ -269,6 +286,103 @@ describe('migrate() orchestrated init dispatch', () => {
     }
   );
 
+  it('continues the run --run-id names through the resume entry point, on the plan the run recorded', async () => {
+    // The workspace file is not read: the run may outlive it.
+    rmSync(join(root, 'migrations.json'));
+
+    await migrate(
+      root,
+      runMigrationsArgs({ runId: 'run-1', agentic: 'claude-code' }),
+      ['--run-migrations', '--agentic=claude-code', '--run-id=run-1']
+    );
+
+    expect(mockReadLatestPlanSnapshot).toHaveBeenCalledWith(root, 'run-1');
+    expect(mockRunOrchestratorResume).toHaveBeenCalledWith({
+      root,
+      runId: 'run-1',
+      policy: { createCommits: true, skipInstall: false },
+    });
+    expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
+  });
+
+  // Both flags act on a run's record; outside the orchestrator they would
+  // silently do nothing, so every route out of it refuses them.
+  it.each<[string, string, () => void]>([
+    [
+      '--start-fresh',
+      'the gate env var is not set',
+      () => {
+        delete process.env.NX_MIGRATE_ORCHESTRATOR;
+      },
+    ],
+    [
+      '--run-id',
+      'the gate env var is not set',
+      () => {
+        delete process.env.NX_MIGRATE_ORCHESTRATOR;
+      },
+    ],
+    [
+      '--start-fresh',
+      'no agent is driving the process',
+      () => {
+        mockIsInsideAgent.mockReturnValue(false);
+      },
+    ],
+    [
+      '--run-id',
+      'no agent is driving the process',
+      () => {
+        mockIsInsideAgent.mockReturnValue(false);
+      },
+    ],
+  ])(
+    'refuses %s when %s instead of ignoring it',
+    async (flag, _label, arrange) => {
+      arrange();
+      const overrides =
+        flag === '--start-fresh'
+          ? { startFresh: true }
+          : { runId: 'run-1', agentic: 'claude-code' };
+      const args =
+        flag === '--start-fresh'
+          ? ['--run-migrations', '--start-fresh']
+          : ['--run-migrations', '--agentic=claude-code', '--run-id=run-1'];
+
+      // migrate() reports through handleErrors and returns the exit code.
+      expect(await migrate(root, runMigrationsArgs(overrides), args)).toBe(1);
+      expect(output.error).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: `'${flag}' acts on an orchestrated migrate run (NX_MIGRATE_ORCHESTRATOR=true with an enabled agent), and this invocation is not orchestrated.`,
+        })
+      );
+
+      expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
+      expect(mockRunOrchestratorResume).not.toHaveBeenCalled();
+      expect(mockRunMasterSession).not.toHaveBeenCalled();
+    }
+  );
+
+  it('refuses --start-fresh when --agentic=false keeps an outside invocation off the orchestrator', async () => {
+    mockIsInsideAgent.mockReturnValue(false);
+
+    expect(
+      await migrate(
+        root,
+        runMigrationsArgs({ startFresh: true, agentic: false }),
+        ['--run-migrations', '--agentic=false', '--start-fresh']
+      )
+    ).toBe(1);
+    expect(output.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title:
+          "'--start-fresh' acts on an orchestrated migrate run (NX_MIGRATE_ORCHESTRATOR=true with an enabled agent), and this invocation is not orchestrated.",
+      })
+    );
+
+    expect(mockReportRunStart).not.toHaveBeenCalled();
+  });
+
   describe('user-initiated run with the agentic flow enabled', () => {
     const selectedAgent = {
       id: 'claude-code',
@@ -285,7 +399,7 @@ describe('migrate() orchestrated init dispatch', () => {
       });
     });
 
-    it('hands the run to the master session, after the default-branch confirmation, when the gate env var is set', async () => {
+    it('hands the run and the default-branch confirmation to the master session when the gate env var is set', async () => {
       mockGetGitCurrentBranch.mockReturnValue('main');
 
       await migrate(root, runMigrationsArgs({ agentic: 'claude-code' }), [
@@ -294,24 +408,30 @@ describe('migrate() orchestrated init dispatch', () => {
       ]);
 
       expect(mockReportRunStart).toHaveBeenCalledTimes(1);
-      expect(mockMigrateConfirm).toHaveBeenCalledTimes(1);
       expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
       expect(mockRunMasterSession).toHaveBeenCalledTimes(1);
-      expect(mockMigrateConfirm.mock.invocationCallOrder[0]).toBeLessThan(
-        mockRunMasterSession.mock.invocationCallOrder[0]
-      );
       expect(mockRunMasterSession).toHaveBeenCalledWith({
         root,
         migrationsJson: expect.objectContaining({
           migrations: expect.any(Array),
         }),
+        migrationsPath: 'migrations.json',
         createCommits: true,
         commitPrefix: expect.any(String),
         skipInstall: false,
         installedNxVersion: '23.0.0',
         validate: undefined,
         agent: selectedAgent,
+        interactive: undefined,
+        runId: undefined,
+        startFresh: undefined,
+        confirmNewRun: expect.any(Function),
       });
+      // Asked by init once it is about to start a run, never up front.
+      expect(mockMigrateConfirm).not.toHaveBeenCalled();
+      const { confirmNewRun } = mockRunMasterSession.mock.calls[0][0];
+      expect(await confirmNewRun()).toBe(true);
+      expect(mockMigrateConfirm).toHaveBeenCalledTimes(1);
       expect(output.log).not.toHaveBeenCalledWith(
         expect.objectContaining({
           title: expect.stringContaining('Running migrations from'),
@@ -319,7 +439,7 @@ describe('migrate() orchestrated init dispatch', () => {
       );
     });
 
-    it('starts nothing when the default-branch confirmation is declined', async () => {
+    it('refuses the start when the default-branch confirmation is declined', async () => {
       mockGetGitCurrentBranch.mockReturnValue('main');
       mockMigrateConfirm.mockResolvedValue(false);
 
@@ -328,7 +448,9 @@ describe('migrate() orchestrated init dispatch', () => {
         '--agentic=claude-code',
       ]);
 
-      expect(mockRunMasterSession).not.toHaveBeenCalled();
+      expect(mockRunMasterSession).toHaveBeenCalledTimes(1);
+      const { confirmNewRun } = mockRunMasterSession.mock.calls[0][0];
+      expect(await confirmNewRun()).toBe(false);
       expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
       expect(output.log).not.toHaveBeenCalledWith(
         expect.objectContaining({

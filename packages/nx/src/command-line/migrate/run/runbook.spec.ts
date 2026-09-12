@@ -46,6 +46,9 @@ describe('renderRunbook', () => {
     // so the agent is never told to write one without a path.
     expect(runbook).toContain('run the\n   `next` command first');
     expect(runbook).toContain('`no-progress` action');
+    expect(runbook).toContain(
+      'An `existing-run` action means no run was started'
+    );
     expect(runbook).toContain('report the blocker to the user');
   });
 

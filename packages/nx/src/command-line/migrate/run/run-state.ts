@@ -283,6 +283,9 @@ export interface MigrateRunState {
   validate?: boolean;
   // A bare file name despite the field name; it is joined to the run directory.
   runbookPath?: string;
+  // The branch checked out when the run started; absent on a detached HEAD or
+  // when git could not say. Reported back when a later init finds the run.
+  branch?: string;
   rounds: MigrateRunRound[];
   steps: MigrateStep[];
   commits: MigrateCommitLedgerEntry[];
@@ -312,6 +315,32 @@ const REQUIRED_TOP_LEVEL_FIELDS: readonly (keyof MigrateRunState)[] = [
   'commits',
   'analytics',
 ];
+
+/**
+ * The plan of a run's latest round, read back from the snapshot Nx wrote next
+ * to run.json. What a continue uses instead of the workspace's current
+ * migrations file, which the run does not depend on.
+ */
+export function readLatestPlanSnapshot(
+  root: string,
+  runId: string
+): { migrations?: unknown[]; [k: string]: unknown } {
+  const dir = runDir(root, runId);
+  if (!RUN_ID_SAFE.test(runId)) {
+    throw new Error(`Invalid run id '${runId}'.`);
+  }
+  if (!hasRunState(dir)) {
+    throw new Error(
+      `No migrate run '${runId}' was found under ${MIGRATE_RUNS_RELATIVE_DIR}.`
+    );
+  }
+  const state = readRunState(dir);
+  const round = state.rounds[state.rounds.length - 1];
+  if (!round) {
+    throw new Error(`Migrate run '${runId}' records no plan.`);
+  }
+  return JSON.parse(readFileSync(join(dir, round.planSnapshot), 'utf-8'));
+}
 
 export function migrateRunsDir(root: string): string {
   return join(root, MIGRATE_RUNS_RELATIVE_DIR);
@@ -637,6 +666,7 @@ function hasValidRunStateShape(parsed: Record<string, unknown>): boolean {
     isOptionalBoolean(parsed.skipInstall) &&
     isOptionalBoolean(parsed.validate) &&
     isOptionalMatching(RUNBOOK_NAME, parsed.runbookPath) &&
+    isOptionalString(parsed.branch) &&
     (parsed.rounds as unknown[]).every(isRoundShape) &&
     (parsed.steps as unknown[]).every(isStepShape) &&
     hasUniqueStepIds(parsed.steps as unknown[]) &&
@@ -834,9 +864,12 @@ export interface UninterpretableRunDir {
  */
 export function findActiveRun(root: string): {
   active: { runId: string; state: MigrateRunState } | null;
+  // Every resumable active run, `active` included, in directory order.
+  activeRunIds: string[];
   uninterpretable: UninterpretableRunDir[];
 } {
   let newest: { runId: string; state: MigrateRunState } | null = null;
+  const activeRunIds: string[] = [];
   const uninterpretable: UninterpretableRunDir[] = [];
   for (const entry of readDirEntries(migrateRunsDir(root))) {
     if (!entry.isDirectory()) continue;
@@ -865,11 +898,12 @@ export function findActiveRun(root: string): {
       });
       continue;
     }
+    activeRunIds.push(entry.name);
     if (!newest || state.createdAt > newest.state.createdAt) {
       newest = { runId: entry.name, state };
     }
   }
-  return { active: newest, uninterpretable };
+  return { active: newest, activeRunIds, uninterpretable };
 }
 
 /**
