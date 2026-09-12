@@ -766,4 +766,99 @@ describe('copyWorkspaceModules', () => {
       )
     ).toBe(true);
   });
+  describe('workspace package aliases', () => {
+    function mockAliasWorkspace() {
+      tempFs.createFilesSync({
+        'libs/lib-a/package.json': JSON.stringify({
+          name: '@myorg/lib-a',
+          version: '1.0.0',
+          dependencies: { 'custom-inner': 'workspace:@myorg/lib-b@*' },
+        }),
+        'libs/lib-b/package.json': JSON.stringify({
+          name: '@myorg/lib-b',
+          version: '1.0.0',
+        }),
+      });
+      mockGetWorkspacePackages.mockReturnValue(
+        new Map([
+          [
+            '@myorg/lib-a',
+            {
+              name: '@myorg/lib-a',
+              type: 'lib',
+              data: {
+                root: 'libs/lib-a',
+                metadata: {
+                  js: { packageName: '@myorg/lib-a', packageVersion: '1.0.0' },
+                },
+              },
+            } as any,
+          ],
+          [
+            '@myorg/lib-b',
+            {
+              name: '@myorg/lib-b',
+              type: 'lib',
+              data: {
+                root: 'libs/lib-b',
+                metadata: {
+                  js: { packageName: '@myorg/lib-b', packageVersion: '1.0.0' },
+                },
+              },
+            } as any,
+          ],
+        ])
+      );
+    }
+
+    async function runWithDependencies(dependencies: Record<string, string>) {
+      mockAliasWorkspace();
+      tempFs.createFilesSync({
+        [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
+          name: 'app',
+          version: '0.0.1',
+          dependencies,
+        }),
+      });
+      tempFs.createDirSync('dist/app');
+      await runExecutor();
+    }
+
+    function modulePath(...segments: string[]) {
+      return join(
+        tempFs.tempDir,
+        'dist',
+        'app',
+        'workspace_modules',
+        ...segments
+      );
+    }
+
+    it('copies a workspace dependency referenced through a workspace alias', async () => {
+      await runWithDependencies({ 'custom-lib': 'workspace:@myorg/lib-a@*' });
+
+      expect(existsSync(modulePath('@myorg/lib-a', 'package.json'))).toBe(true);
+    });
+
+    it('copies a workspace dependency referenced through an npm alias', async () => {
+      await runWithDependencies({ 'custom-lib': 'npm:@myorg/lib-a@1.0.0' });
+
+      expect(existsSync(modulePath('@myorg/lib-a', 'package.json'))).toBe(true);
+    });
+
+    it('rewrites aliased nested workspace dependencies to the target module dir and copies the target', async () => {
+      await runWithDependencies({ '@myorg/lib-a': 'workspace:*' });
+
+      expect(existsSync(modulePath('@myorg/lib-b', 'package.json'))).toBe(true);
+      expect(readCopiedManifest('@myorg/lib-a').dependencies).toEqual({
+        'custom-inner': 'file:../lib-b',
+      });
+    });
+
+    it('does not copy anything for an npm alias to a registry package', async () => {
+      await runWithDependencies({ 'custom-lib': 'npm:lodash@^4.17.21' });
+
+      expect(existsSync(modulePath('@myorg'))).toBe(false);
+    });
+  });
 });

@@ -3,6 +3,7 @@ import {
   fileExists,
   generatePrunedDeployOutput,
   type PackageJson,
+  type ProjectPackageDependencies,
   readFileMapCache,
 } from '@nx/devkit/internal';
 
@@ -23,7 +24,6 @@ import {
 import { DependentBuildableProjectNode } from '../buildable-libs-utils';
 import { existsSync } from 'node:fs';
 import { basename, dirname, join, parse, relative } from 'path';
-
 import { getRelativeDirectoryToProjectRoot } from '../get-main-file-dir';
 import { stripGlobToBaseDir } from '../strip-glob-to-base-dir';
 
@@ -181,11 +181,19 @@ function addMissingDependencies(
         return;
       }
 
-      if (
-        !packageJson.dependencies?.[packageName] &&
-        !packageJson.devDependencies?.[packageName] &&
-        !packageJson.peerDependencies?.[packageName]
-      ) {
+      // Preserve every source alias key; emit registry-installable npm aliases
+      // in build output.
+      const manifestKeys = getManifestKeysForPackage(
+        projectGraph.nodes[projectName]?.data.metadata?.js?.packageDependencies,
+        packageName
+      );
+      const missingKeys = manifestKeys.filter(
+        (key) =>
+          !packageJson.dependencies?.[key] &&
+          !packageJson.devDependencies?.[key] &&
+          !packageJson.peerDependencies?.[key]
+      );
+      if (missingKeys.length > 0) {
         const outputs = getOutputsForTargetAndConfiguration(
           {
             project: projectName,
@@ -206,11 +214,35 @@ function addMissingDependencies(
           const version = readJsonFile(depPackageJsonPath).version;
 
           packageJson[propType] ??= {};
-          packageJson[propType][packageName] = version;
+          for (const key of missingKeys) {
+            packageJson[propType][key] =
+              key === packageName ? version : `npm:${packageName}@${version}`;
+          }
         }
       }
     }
   });
+}
+
+/** Returns source keys targeting packageName, or packageName when none are recorded. */
+function getManifestKeysForPackage(
+  packageDependencies: ProjectPackageDependencies | undefined,
+  packageName: string
+): string[] {
+  const keys = new Set<string>();
+  if (packageDependencies) {
+    for (const collection of Object.values(packageDependencies)) {
+      for (const [key, entry] of Object.entries(collection)) {
+        if (entry.requestedPackageName === packageName) {
+          keys.add(key);
+        }
+      }
+    }
+  }
+  if (keys.size === 0) {
+    keys.add(packageName);
+  }
+  return [...keys];
 }
 
 interface Exports {

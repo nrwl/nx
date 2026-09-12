@@ -140,7 +140,7 @@ describe('nx release preserve matching dependency ranges', () => {
         {project-name} 📄 Resolved the current version as 1.0.0 from manifest: {project-name}/package.json
         {project-name} ❓ Applied explicit semver value "1.1.0", from the given specifier, to get new version 1.1.0
         {project-name} ✍️  New version 1.1.0 written to manifest: {project-name}/package.json
-        {project-name} ✍️  Updated 3 dependencies in manifest: {project-name}/package.json
+        {project-name} ✍️  Updated 2 dependencies in manifest: {project-name}/package.json
         NX   Running release version for project: {project-name}
         {project-name} 📄 Resolved the current version as 1.0.0 from manifest: {project-name}/package.json
         {project-name} ❓ Applied version 1.1.0 directly, because the project is a member of a fixed release group containing {project-name}
@@ -320,7 +320,7 @@ describe('nx release preserve matching dependency ranges', () => {
         {project-name} 📄 Resolved the current version as 1.0.0 from manifest: {project-name}/package.json
         {project-name} ❓ Applied semver relative bump "minor", from the given specifier, to get new version 1.1.0
         {project-name} ✍️  New version 1.1.0 written to manifest: {project-name}/package.json
-        {project-name} ✍️  Updated 3 dependencies in manifest: {project-name}/package.json
+        {project-name} ✍️  Updated 2 dependencies in manifest: {project-name}/package.json
         NX   Running release version for project: {project-name}
         {project-name} 📄 Resolved the current version as 1.0.0 from manifest: {project-name}/package.json
         {project-name} ❓ Applied version 1.1.0 directly, because the project is a member of a fixed release group containing {project-name}

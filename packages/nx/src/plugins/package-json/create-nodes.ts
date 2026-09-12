@@ -23,6 +23,8 @@ import {
 import { joinPathFragments } from '../../utils/path';
 import { nxVersion } from '../../utils/versions';
 import { createNodesFromFiles, CreateNodes } from '../../project-graph/plugins';
+import { getWorkspacePackageDependencies } from '../js/utils/dependency-specifiers';
+import { findInvalidWorkspaceAliases } from './validate-workspace-aliases';
 import { basename } from 'path';
 import { hashObject } from '../../hasher/file-hasher';
 import {
@@ -66,8 +68,65 @@ export const createNodes: CreateNodes = [
       context.workspaceRoot
     );
 
+    // The root manifest participates in the package manager's install even
+    // when it is not an Nx project, so alias validation checks it too.
+    const isWorkspaceManifest = (packageJsonPath: string) =>
+      packageJsonPath === 'package.json' ||
+      isInPackageJsonWorkspaces(packageJsonPath);
+
+    const { packageJsonContents, getWorkspacePackageVersion } =
+      preloadWorkspacePackages(
+        packageJsons,
+        (packageJsonPath) =>
+          isWorkspaceManifest(packageJsonPath) ||
+          isNextToProjectJson(packageJsonPath),
+        readJson
+      );
+
+    // Skip batch alias validation after any workspace manifest parse
+    // failure; incomplete names could cause false missing-target errors.
+    const workspacePackageNames = new Set<string>();
+    let workspacePackageNamesComplete = true;
+    for (const packageJsonPath of packageJsons) {
+      if (!isWorkspaceManifest(packageJsonPath)) {
+        continue;
+      }
+      const json = packageJsonContents.get(packageJsonPath);
+      if (!json) {
+        workspacePackageNamesComplete = false;
+      } else if (json.name) {
+        workspacePackageNames.add(json.name);
+      }
+    }
+
     return createNodesFromFiles(
       (packageJsonPath, options, context) => {
+        const json = packageJsonContents.get(packageJsonPath);
+
+        // Re-read failed workspace manifests here so createNodesFromFiles
+        // attributes parse errors to their files; a failed root manifest
+        // would otherwise be swallowed by the workspaces-pattern fallback and
+        // skipped as a non-project.
+        if (!json && isWorkspaceManifest(packageJsonPath)) {
+          readJson(packageJsonPath);
+        }
+
+        // Validated before the non-project skip below so a root manifest
+        // without an "nx" property is still checked.
+        if (
+          json &&
+          workspacePackageNamesComplete &&
+          isWorkspaceManifest(packageJsonPath)
+        ) {
+          const aliasIssues = findInvalidWorkspaceAliases(
+            json,
+            workspacePackageNames
+          );
+          if (aliasIssues.length > 0) {
+            throw new Error(aliasIssues.join('\n\n'));
+          }
+        }
+
         const isInPackageManagerWorkspaces =
           isInPackageJsonWorkspaces(packageJsonPath);
         if (
@@ -78,12 +137,17 @@ export const createNodes: CreateNodes = [
           return null;
         }
 
-        return createNodeFromPackageJson(
-          packageJsonPath,
-          context.workspaceRoot,
-          cache,
-          isInPackageManagerWorkspaces,
-          packageManagerCommand
+        return attachPackageDependencies(
+          createNodeFromPackageJson(
+            packageJsonPath,
+            context.workspaceRoot,
+            cache,
+            isInPackageManagerWorkspaces,
+            packageManagerCommand,
+            json
+          ),
+          json,
+          getWorkspacePackageVersion
         );
       },
       packageJsons,
@@ -92,6 +156,77 @@ export const createNodes: CreateNodes = [
     );
   },
 ];
+
+/**
+ * Preloads eligible manifests and package versions; leaves read failures for
+ * per-file processing.
+ */
+export function preloadWorkspacePackages(
+  packageJsonPaths: string[],
+  isEligible: (packageJsonPath: string) => boolean,
+  readJson: (packageJsonPath: string) => PackageJson
+): {
+  packageJsonContents: Map<string, PackageJson>;
+  getWorkspacePackageVersion: (
+    packageName: string
+  ) => string | null | undefined;
+} {
+  const packageJsonContents = new Map<string, PackageJson>();
+  const workspacePackageVersions = new Map<string, string | null>();
+  for (const packageJsonPath of packageJsonPaths) {
+    if (!isEligible(packageJsonPath)) {
+      continue;
+    }
+    try {
+      const json: PackageJson = readJson(packageJsonPath);
+      packageJsonContents.set(packageJsonPath, json);
+      if (json.name) {
+        workspacePackageVersions.set(json.name, json.version ?? null);
+      }
+    } catch {}
+  }
+  return {
+    packageJsonContents,
+    getWorkspacePackageVersion: (packageName) =>
+      workspacePackageVersions.get(packageName),
+  };
+}
+
+/**
+ * Attaches workspace dependency metadata to a project clone so cross-manifest
+ * data never enters the per-file cache.
+ */
+export function attachPackageDependencies(
+  result: ReturnType<typeof createNodeFromPackageJson>,
+  json: PackageJson | undefined,
+  getWorkspacePackageVersion: (packageName: string) => string | null | undefined
+): ReturnType<typeof createNodeFromPackageJson> {
+  if (!json) {
+    return result;
+  }
+  const packageDependencies = getWorkspacePackageDependencies(
+    json,
+    getWorkspacePackageVersion
+  );
+  if (!packageDependencies) {
+    return result;
+  }
+  const [root, project] = Object.entries(result.projects)[0];
+  if (!project.metadata?.js) {
+    return result;
+  }
+  return {
+    projects: {
+      [root]: {
+        ...project,
+        metadata: {
+          ...project.metadata,
+          js: { ...project.metadata.js, packageDependencies },
+        },
+      },
+    },
+  };
+}
 
 function splitConfigFiles(configFiles: readonly string[]): {
   packageJsons: string[];
@@ -184,9 +319,11 @@ export function createNodeFromPackageJson(
   workspaceRoot: string,
   cache: PackageJsonConfigurationCache,
   isInPackageManagerWorkspaces: boolean,
-  packageManagerCommand: PackageManagerCommands
+  packageManagerCommand: PackageManagerCommands,
+  preloadedPackageJson?: PackageJson
 ) {
-  const json: PackageJson = readJsonFile(join(workspaceRoot, pkgJsonPath));
+  const json: PackageJson =
+    preloadedPackageJson ?? readJsonFile(join(workspaceRoot, pkgJsonPath));
 
   const projectRoot = dirname(pkgJsonPath);
 

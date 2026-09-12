@@ -18,6 +18,7 @@ import {
   movePeerDependencyToDependencies,
   type PackageJson,
   type PackageJsonDependencySection,
+  resolveWorkspaceDependencyTarget,
 } from '@nx/devkit/internal';
 import { type PruneLockfileOptions } from './schema';
 import { stripGlobToBaseDir } from '../../utils/strip-glob-to-base-dir';
@@ -71,11 +72,16 @@ function rewriteWorkspaceModuleSpecifiers(
     if (!deps) {
       continue;
     }
-    for (const pkgName of Object.keys(deps)) {
-      if (!workspacePackages.has(pkgName)) {
+    for (const [pkgName, pkgVersion] of Object.entries(deps)) {
+      const target = resolveWorkspaceDependencyTarget(
+        pkgName,
+        pkgVersion,
+        workspacePackages
+      );
+      if (!target) {
         continue;
       }
-      const fileSpec = `file:./workspace_modules/${pkgName}`;
+      const fileSpec = `file:./workspace_modules/${target}`;
       if (section === 'peerDependencies') {
         movePeerDependencyToDependencies(packageJson, pkgName, fileSpec);
       } else {
