@@ -241,6 +241,7 @@ Files such as `dist/libs/my-lib/index.d.ts` would be matched by patterns `**/*.d
 A [continuous task](/docs/kb/defining-task-pipeline#continuous-task-dependencies), such as the `serve` task an `e2e` task depends on, runs in its own process, yet what it reads still decides what the task it serves observes.
 A task therefore also hashes the declared inputs of every continuous dependency it has, and of the servers those depend on in turn: files, environment variables, runtime commands and external dependencies alike.
 There's nothing to declare, and only continuous dependencies count.
+A server that declares no inputs contributes its whole project, so declare inputs on servers that live at the workspace root, such as a local registry.
 When a server reads the outputs of its own build dependencies, Nx hashes the task it serves once the server is running, so those outputs count too.
 
 ### A subset of the root `tsconfig.json` or `tsconfig.base.json`

@@ -4,6 +4,10 @@
   "targets": {
     "local-registry": {
       "executor": "@nx/js:verdaccio",
+      "inputs": [
+        "{workspaceRoot}/.verdaccio/**/*",
+        { "externalDependencies": ["verdaccio"] }
+      ],
       "options": {
         "port": 4873,
         "config": ".verdaccio/config.yml",
@@ -13,6 +17,10 @@
     },
     "local-registry-e2e": {
       "executor": "@nx/js:verdaccio",
+      "inputs": [
+        "{workspaceRoot}/.verdaccio/**/*",
+        { "externalDependencies": ["verdaccio"] }
+      ],
       "options": {
         "port": 4873,
         "config": ".verdaccio/config.yml",
