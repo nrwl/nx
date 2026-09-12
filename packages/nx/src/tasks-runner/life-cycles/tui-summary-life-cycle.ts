@@ -65,6 +65,29 @@ export function getTuiTerminalSummaryLifeCycle({
   const getTerminalOutput = (taskId: string): string =>
     tasksToTerminalOutputs[taskId] ?? taskOutputChunks[taskId]?.join('') ?? '';
 
+  // A task that was stopped, or was still running when the run ended, did not fail — it was
+  // interrupted.
+  const wasInterrupted = (taskId: string): boolean =>
+    displayStoppedTasks.has(taskId) ||
+    tasksToTaskStatus[taskId] === 'stopped' ||
+    inProgressTasks.has(taskId);
+
+  // Whether to leave a task out of the output replayed above the summary.
+  //
+  // A continuous task's buffered output is unbounded and the TUI has already shown it live, so
+  // replaying it on a clean interrupt buries the terminal for no gain: `nx run-many -t serve`
+  // quit with Ctrl-C stops every task, and the summary reprints every dev server's entire
+  // scrollback. Those tasks are still listed in the checklist, just not replayed.
+  //
+  // Two cases deliberately keep today's behaviour. A run containing a failure replays
+  // everything, because there the summary is the debugging surface and a stopped dev server's
+  // log is the context you need. And an interrupted *discrete* task still replays, since its
+  // partial output is bounded and shows how far it got.
+  const skipReplayingOutput = (taskId: string): boolean =>
+    totalFailedTasks === 0 &&
+    taskGraph.tasks[taskId]?.continuous === true &&
+    wasInterrupted(taskId);
+
   lifeCycle.startTasks = (tasks) => {
     for (let t of tasks) {
       taskOutputChunks[t.id] ??= [];
@@ -190,6 +213,10 @@ export function getTuiTerminalSummaryLifeCycle({
       const taskStatus = tasksToTaskStatus[taskId];
       // Skipped tasks never ran; don't print a misleading `> nx run` header.
       if (taskStatus === 'skipped') {
+        continue;
+      }
+      // Nothing to replay, so don't print an empty `> nx run` block either.
+      if (skipReplayingOutput(taskId)) {
         continue;
       }
       const terminalOutput = getTerminalOutput(taskId);
@@ -339,8 +366,11 @@ export function getTuiTerminalSummaryLifeCycle({
       const taskStatus = tasksToTaskStatus[taskId];
       const terminalOutput = getTerminalOutput(taskId);
       if (displayStoppedTasks.has(taskId) || !taskStatus) {
-        output.logCommandOutput(taskId, taskStatus, terminalOutput);
-        output.addNewline();
+        // The checklist below still lists the task; only the replay is skipped.
+        if (!skipReplayingOutput(taskId)) {
+          output.logCommandOutput(taskId, taskStatus, terminalOutput);
+          output.addNewline();
+        }
         checklistLines.push(
           `${LEFT_PAD}${output.colors.cyan(
             figures.squareSmallFilled
