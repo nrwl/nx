@@ -7,6 +7,10 @@ vi.mock('../tasks-runner/utils', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../tasks-runner/utils')>()),
   getCustomHasher: () => null,
 }));
+// The real implementation reads the workspace's .env files.
+vi.mock('../tasks-runner/task-env', () => ({
+  getTaskSpecificEnv: () => ({}),
+}));
 
 describe('hashTasksThatDoNotDependOnOutputsOfOtherTasks', () => {
   const nxJson = {
