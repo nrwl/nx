@@ -531,4 +531,133 @@ describe('release-publish executor', () => {
       );
     });
   });
+  describe('unresolvable version spec', () => {
+    function mockNextTag() {
+      mockParseRegistryOptions.mockResolvedValue({
+        registry: 'https://registry.npmjs.org/',
+        tag: 'next',
+        registryConfigKey: 'registry',
+      });
+    }
+
+    function mockPublishJsonData() {
+      jest.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue({
+        beforeJsonData: '',
+        jsonData: {
+          id: '@scope/test-package@1.0.0',
+          name: '@scope/test-package',
+          version: '1.0.0',
+          size: 100,
+          unpackedSize: 200,
+          shasum: 'abc123',
+          integrity: 'sha512-abc',
+          filename: 'test-package-1.0.0.tgz',
+          files: [],
+          entryCount: 1,
+          bundled: [],
+        },
+        afterJsonData: '',
+      } as any);
+    }
+
+    it('should retry against the release tag when npm view prints nothing', async () => {
+      mockNextTag();
+      mockExecSync
+        .mockReturnValueOnce(Buffer.from('')) // npm view, no `latest` dist-tag to resolve
+        .mockReturnValueOnce(
+          Buffer.from(
+            JSON.stringify({
+              versions: ['1.0.0'],
+              'dist-tags': { next: '1.0.0' },
+            })
+          )
+        ); // npm view --tag next
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(true);
+      expect(mockExecSync).toHaveBeenNthCalledWith(
+        3,
+        expect.stringContaining('--tag next'),
+        expect.anything()
+      );
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining('already exists')
+      );
+      expect(mockExecSync).toHaveBeenCalledTimes(3);
+    });
+
+    it('should publish when the release tag does not resolve either', async () => {
+      mockNextTag();
+      mockPublishJsonData();
+      mockExecSync
+        .mockReturnValueOnce(Buffer.from('')) // npm view
+        .mockImplementationOnce(() => {
+          const error: any = new Error('npm view failed');
+          error.stdout = Buffer.from(
+            JSON.stringify({
+              error: {
+                code: 'E404',
+                summary: 'No match found for version next',
+              },
+            })
+          );
+          error.stderr = Buffer.from('');
+          throw error;
+        }) // npm view --tag next
+        .mockReturnValueOnce(Buffer.from('{}') as any); // npm publish
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(true);
+      expect(console.error).not.toHaveBeenCalled();
+      expect(mockExecSync).toHaveBeenCalledTimes(4);
+    });
+
+    it('should not retry when the release tag is latest', async () => {
+      mockPublishJsonData();
+      mockExecSync
+        .mockReturnValueOnce(Buffer.from('')) // npm view
+        .mockReturnValueOnce(Buffer.from('{}') as any); // npm publish
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(true);
+      expect(console.error).not.toHaveBeenCalled();
+      expect(mockExecSync).toHaveBeenCalledTimes(3);
+    });
+
+    it('should retry against the release tag when bun info reports no matching version', async () => {
+      mockDetectPackageManager.mockReturnValue('bun');
+      mockNextTag();
+      mockExecSync
+        .mockImplementationOnce(() => {
+          const error: any = new Error('bun info failed');
+          error.stdout = Buffer.from(
+            JSON.stringify({
+              error: 'No matching version found',
+              version: '@scope/test-package',
+            })
+          );
+          error.stderr = Buffer.from('');
+          throw error;
+        }) // bun info
+        .mockReturnValueOnce(
+          Buffer.from(JSON.stringify({ versions: ['1.0.0'] }))
+        ) // bun info @scope/test-package@next
+        .mockReturnValueOnce(Buffer.from('') as any); // npm dist-tag add
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(true);
+      expect(mockExecSync).toHaveBeenNthCalledWith(
+        3,
+        expect.stringContaining('@scope/test-package@next'),
+        expect.anything()
+      );
+      expect(console.log).toHaveBeenCalledWith(
+        expect.stringContaining('Added the dist-tag next to v1.0.0')
+      );
+    });
+  });
 });
