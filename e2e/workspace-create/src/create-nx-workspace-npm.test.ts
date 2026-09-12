@@ -8,6 +8,7 @@ import {
   runCreateWorkspace,
   uniq,
 } from '@nx/e2e-utils';
+import { typescriptVersion } from '@nx/js/src/utils/versions';
 
 describe('create-nx-workspace --preset=npm', () => {
   const wsName = uniq('npm');
@@ -28,6 +29,12 @@ describe('create-nx-workspace --preset=npm', () => {
       preset: 'npm',
       packageManager: getSelectedPackageManager(),
     });
+    // Match newProject's npm safeguard: tsquery's unbounded peer otherwise
+    // selects TypeScript 7, which no longer exposes the compiler API used by
+    // these generators. Each isolated fixture needs its own supported version.
+    if (getSelectedPackageManager() === 'npm') {
+      packageInstall('typescript', wsName, typescriptVersion);
+    }
   }, 120_000);
 
   afterEach(() => cleanupProject());
