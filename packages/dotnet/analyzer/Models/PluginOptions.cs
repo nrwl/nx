@@ -44,4 +44,13 @@ public class PluginOptions
     /// The name of the run target. Defaults to "run".
     /// </summary>
     public string RunTargetName { get; set; } = "run";
+
+    /// <summary>
+    /// When true, multi-targeted projects additionally get per-target-framework
+    /// target variants (e.g. "build-net10.0-ios") alongside the unqualified
+    /// targets. Opt-in because expanding the task graph this way is only useful
+    /// for workspaces that need to invoke a single framework in isolation.
+    /// Defaults to false, leaving the generated targets unchanged.
+    /// </summary>
+    public bool FrameworkVariants { get; set; } = false;
 }
