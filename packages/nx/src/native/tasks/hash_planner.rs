@@ -1,5 +1,5 @@
 use crate::native::tasks::{
-    dep_outputs::get_dep_output,
+    dep_outputs::{collect_continuous_dependencies, get_dep_output},
     types::{CwdMode, HashInstruction, HashPlans, InstructionPool, JsonFileSetInput, TaskGraph},
 };
 use crate::native::types::{Input, NxJson};
@@ -9,7 +9,7 @@ use crate::native::{
 };
 use napi::bindgen_prelude::External;
 use rayon::prelude::*;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use tracing::trace;
 
 use crate::native::tasks::hashers::OnceCache;
@@ -168,32 +168,9 @@ impl HashPlanner {
 
                 // A continuous dependency serves this task from its own process, so
                 // its declared inputs and externals are hashed here, and its own
-                // servers' in turn. hash-task.ts defers the task past its builds.
-                let mut served_by: Vec<&String> = Vec::new();
-                let mut seen: HashSet<&str> = HashSet::from([*id]);
-                let mut pending: Vec<&String> = task_graph
-                    .continuous_dependencies
-                    .get(*id)
-                    .into_iter()
-                    .flatten()
-                    .collect();
-                while let Some(dep_id) = pending.pop() {
-                    if !seen.insert(dep_id.as_str()) {
-                        continue;
-                    }
-                    served_by.push(dep_id);
-                    pending.extend(
-                        task_graph
-                            .continuous_dependencies
-                            .get(dep_id)
-                            .into_iter()
-                            .flatten(),
-                    );
-                }
-                for dep_id in served_by {
-                    let Some(dep_task) = task_graph.tasks.get(dep_id) else {
-                        continue;
-                    };
+                // servers' in turn. Its builds' outputs land in this plan too, which
+                // is what holds the task back from the up-front hashing batch.
+                for dep_task in collect_continuous_dependencies(&task_graph, id) {
                     let dep_inputs = get_inputs(dep_task, &self.project_graph, &self.nx_json)?;
                     ids.extend(
                         self.target_input(
