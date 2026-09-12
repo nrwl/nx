@@ -80,6 +80,7 @@ For example, in a structure like `packages/parent/nested-child/`, using `{projec
 
 {% aside type="tip" title="Gitignored Files Are Excluded" %}
 Files listed in `.gitignore` are automatically excluded from inputs. Nx will not consider gitignored files when computing the hash for tasks; therefore, changes to ignored files will not invalidate the cache.
+To hash a gitignored file anyway, see [gitignored files](#gitignored-files).
 {% /aside %}
 
 Prefixing a source file input with `!` will exclude the files matching the pattern from the set of files used to calculate the hash.
@@ -111,29 +112,40 @@ To get a better idea of how to use inputs, you can browse some [common input set
 ### Gitignored files
 
 A fileset only sees files in the workspace file map, which follows `.gitignore` and `.nxignore`.
-A gitignored or generated file, such as a build artifact under `dist/` or a generated `.env`, is never in that map, so a plain fileset can't hash it.
+A gitignored or generated file, such as a downloaded schema or a generated `.env`, is never in that map, so a plain fileset can't hash it.
 Add `includeIgnored: true` to hash the glob straight from the disk instead:
 
 ```jsonc
 {
   "inputs": [
-    { "fileset": "{projectRoot}/dist/**/*.js", "includeIgnored": true },
-    { "fileset": "!{projectRoot}/dist/**/*.map", "includeIgnored": true },
+    { "fileset": "{projectRoot}/generated/**/*.json", "includeIgnored": true },
+    {
+      "fileset": "!{projectRoot}/generated/**/*.local.json",
+      "includeIgnored": true,
+    },
     { "fileset": "{workspaceRoot}/.env.generated", "includeIgnored": true },
   ],
 }
 ```
 
+Use it for files no task in the run produces.
+The outputs of a task this task depends on, such as a dependency's `dist/`, belong in [`dependentTasksOutputFiles`](#outputs-of-dependent-tasks), which is built for that.
+A task with an `includeIgnored` fileset and task dependencies is hashed after those dependencies finish, like a task with `dependentTasksOutputFiles`.
+
 `{projectRoot}` and `{workspaceRoot}` resolve as for any fileset, and every glob must start with one of them.
 A glob that would walk from the workspace root, such as `{workspaceRoot}/**`, is a configuration error.
+Nx walks the globs again on every run, so keep them narrow.
 Nx expands the globs when it hashes the task, so it picks up a new matching file without a configuration change, and a path that names a directory matches everything under it.
 A path that names a single missing file still takes part in the hash, so the cache key changes when the file appears or is removed.
 
-Nx hashes all of a task's `includeIgnored` filesets together as one group, so a `!` negation filters every positive glob in the task, but only when the negation also sets `includeIgnored: true`.
+Nx hashes each project's `includeIgnored` filesets together as one group, so a `!` negation filters every positive glob declared for that project, but only when the negation also sets `includeIgnored: true`.
 Without the flag it stays a normal fileset and never filters a disk-backed match.
+A negation with no positive `includeIgnored` fileset to filter is a configuration error.
+With `dependencies: true`, the glob resolves against each dependency's root and each fileset is hashed on its own, so a negation can't be combined with it.
 
 Globs skip the directories the workspace file map never enters: `node_modules`, `.git`, `.nx/cache`, `.nx/workspace-data`, and `.yarn/cache`.
-Nx reads an exact path inside one of them, such as `node_modules/foo/package.json`, as-is.
+Nx reads an exact path inside one of them, such as `node_modules/foo/package.json`, as-is, and walks a directory prefix inside one of them, such as `node_modules/foo/dist`, in full.
+Symlinks aren't followed: a symlinked directory under the glob isn't walked, a symlinked file counts only when its target is inside the workspace, and a glob whose prefix resolves outside the workspace is a configuration error.
 
 ### JSON files
 
