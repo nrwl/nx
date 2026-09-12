@@ -47,6 +47,7 @@ import {
   PlayIcon,
 } from '@heroicons/react/24/outline';
 import { useCurrentPath } from '../hooks/use-current-path';
+import { useGraphWheelSensitivity } from '../hooks/use-graph-wheel-sensitivity';
 import { createTaskName } from '../util';
 import classNames from 'classnames';
 import { ElementData, RenderPlatform } from '@nx/graph';
@@ -182,6 +183,8 @@ function TasksShellInner() {
   const [element] = useElementPanel<
     ElementData.TaskNode | ElementData.CompositeTaskNode
   >(orchestrator);
+
+  useGraphWheelSensitivity(orchestrator);
 
   useEffect(() => {
     if (!orchestrator) return;
