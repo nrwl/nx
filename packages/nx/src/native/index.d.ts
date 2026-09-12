@@ -335,6 +335,48 @@ export interface AffectedOptions {
   workspaceRoot: string
 }
 
+export declare function affectedTasks(projectGraph: ExternalObject<ProjectGraph>, hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, taskGraph: TaskGraph, changedFiles: Array<string>, options: AffectedTasksOptions): AffectedTaskSelection
+
+export interface AffectedTaskSelection {
+  /** Every affected task, sorted. */
+  affected: Array<string>
+  /**
+   * Consumer -> the affected producers whose outputs it reads. Only the
+   * edges the walk crossed, which is what `--explain` reports.
+   */
+  producersOf: Record<string, Array<string>>
+  /**
+   * Changed project configs no longer on disk. Every task was seeded for
+   * them, since the project each described is gone from the graph.
+   */
+  deletedProjectConfigs: Array<string>
+}
+
+export interface AffectedTasksOptions {
+  /**
+   * `createNodes` globs of every loaded plugin. Resolved in TypeScript because
+   * `getPlugins` is async and spawns plugin workers.
+   */
+  projectGlobPatterns: Array<string>
+  workspaceRoot: string
+  /**
+   * Tasks of the projects a dependency change names outright, through
+   * `projectsAffectedByDependencyUpdates` or as a workspace project the root
+   * package.json depends on. Ids not in the task graph are ignored.
+   */
+  seedTaskIds: Array<string>
+  /**
+   * External node names whose version or integrity moved. A plan carries them
+   * as `External(name)`, so a package is matched the way a path is.
+   */
+  changedExternals: Array<string>
+  /**
+   * The change could not be pinned to packages, or the workspace asked for
+   * everything on a lockfile change, so every external counts as moved.
+   */
+  allExternalsChanged: boolean
+}
+
 export interface BatchInfo {
   executorName: string
   taskIds: Array<string>
@@ -923,6 +965,18 @@ export declare const enum RunMode {
 export interface RuntimeInput {
   runtime: string
 }
+
+/**
+ * Narrows an existing set of plans to `task_ids`, sharing the instruction pool
+ * rather than re-planning.
+ *
+ * Returns `None` when any requested task has no plan, which is the caller's
+ * signal that the plans were built for a different task set and cannot answer
+ * for this one. A plan depends on the task graph only through the dependent
+ * output instructions, so a subset is sound exactly when every kept task's
+ * dependency closure survived intact.
+ */
+export declare function subsetHashPlans(plans: ExternalObject<Record<string, Array<HashInstruction>>>, taskIds: Array<string>): ExternalObject<Record<string, Array<HashInstruction>>> | null
 
 export declare const enum SupportedEditor {
   VSCode = 0,
