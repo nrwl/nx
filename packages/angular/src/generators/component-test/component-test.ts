@@ -60,8 +60,7 @@ export async function componentTestGenerator(
   }
 
   const tasks: GeneratorCallback[] = [];
-  if (!options.skipPackageJson) {
-    // Cypress CT still requires @angular/platform-browser-dynamic
+  if (!options.skipPackageJson && usesPlatformBrowserDynamic(tree)) {
     tasks.push(
       addDependenciesToPackageJson(
         tree,
@@ -80,6 +79,16 @@ export async function componentTestGenerator(
   }
 
   return runTasksInSerial(...tasks);
+}
+
+// The Cypress 16 harness bootstraps through @angular/platform-browser/testing;
+// earlier harnesses need @angular/platform-browser-dynamic/testing.
+function usesPlatformBrowserDynamic(tree: Tree): boolean {
+  const {
+    getInstalledCypressMajorVersion,
+  }: typeof import('@nx/cypress/internal') = require('@nx/cypress/internal');
+  const cypressMajorVersion = getInstalledCypressMajorVersion(tree);
+  return cypressMajorVersion !== null && cypressMajorVersion < 16;
 }
 
 export default componentTestGenerator;

@@ -61,6 +61,43 @@
       "description": "Set `justInTimeCompile: false` in webpack component testing Cypress configs on Cypress 14+, where it defaults to true and can intermittently run 0 tests in CI.",
       "implementation": "./dist/src/migrations/update-23-1-0/disable-webpack-ct-just-in-time-compile",
       "documentation": "./dist/src/migrations/update-23-1-0/disable-webpack-ct-just-in-time-compile.md"
+    },
+    "update-cypress-16-config-options": {
+      "version": "23.3.0-beta.1",
+      "requires": {
+        "cypress": ">=16.0.0"
+      },
+      "description": "Renames `experimentalMemoryManagement` to `manageBrowserMemory`, replaces `experimentalFastVisibility` with `visibilityStrategy`, and removes `experimentalSourceRewriting`, `allowCypressEnv` and `execTimeout` from `cypress.config.{ts,js,mjs,cjs}`, matching the Cypress 16 config changes.",
+      "implementation": "./dist/src/migrations/update-23-3-0/update-cypress-16-config-options",
+      "documentation": "./dist/src/migrations/update-23-3-0/update-cypress-16-config-options.md"
+    },
+    "update-cypress-16-query-command-overwrites": {
+      "version": "23.3.0-beta.1",
+      "requires": {
+        "cypress": ">=16.0.0"
+      },
+      "description": "Renames `Cypress.Commands.overwrite()` to `Cypress.Commands.overwriteQuery()` for `getCookie`, `getCookies`, `getAllCookies`, `getAllLocalStorage` and `getAllSessionStorage`, which are queries in Cypress 16; an AI prompt then adapts the callbacks to the query contract.",
+      "implementation": "./dist/src/migrations/update-23-3-0/update-cypress-16-query-command-overwrites",
+      "prompt": "./dist/src/migrations/update-23-3-0/adapt-query-command-overwrites.md",
+      "documentation": "./dist/src/migrations/update-23-3-0/update-cypress-16-query-command-overwrites.md"
+    },
+    "update-angular-zoneless-mount-import": {
+      "version": "23.3.0-beta.1",
+      "requires": {
+        "cypress": ">=16.0.0"
+      },
+      "description": "Rewrites `cypress/angular-zoneless` and `@cypress/angular-zoneless` imports to `cypress/angular`, which is zoneless in Cypress 16 and the only Angular mount entry point it ships, and removes the deprecated `@cypress/angular-zoneless` package.",
+      "implementation": "./dist/src/migrations/update-23-3-0/update-angular-zoneless-mount-import",
+      "documentation": "./dist/src/migrations/update-23-3-0/update-angular-zoneless-mount-import.md"
+    },
+    "create-ai-instructions-for-cypress-16": {
+      "version": "23.3.0-beta.1",
+      "requires": {
+        "cypress": ">=16.0.0"
+      },
+      "description": "AI-assisted migration: replaces `Cypress.env()`, `cy.exec()`, `.end()`, `env` test-configuration overrides and runtime `Cypress.config()` writes removed in Cypress 16, whose replacements depend on where each value comes from, so it is driven by an AI prompt rather than a deterministic generator.",
+      "prompt": "./dist/src/migrations/update-23-3-0/ai-instructions-for-cypress-16.md",
+      "documentation": "./dist/src/migrations/update-23-3-0/upgrade-to-cypress-16.md"
     }
   },
   "packageJsonUpdates": {
@@ -157,6 +194,26 @@
       "packages": {
         "cypress": {
           "version": "^15.20.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.3.0-cypress-16": {
+      "version": "23.3.0-beta.1",
+      "requires": {
+        "cypress": ">=15.0.0 <16.0.0"
+      },
+      "packages": {
+        "cypress": {
+          "version": "^16.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@cypress/vite-dev-server": {
+          "version": "^8.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@cypress/webpack-dev-server": {
+          "version": "^6.0.0",
           "alwaysAddToPackageJson": false
         }
       }
