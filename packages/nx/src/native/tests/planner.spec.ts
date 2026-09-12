@@ -1,5 +1,10 @@
 import { TempFs } from '../../internal-testing-utils/temp-fs';
-import { HashPlanner, transferProjectGraph } from '../index';
+import {
+  HashPlanner,
+  TaskHasher,
+  testOnlyTransferFileMap,
+  transferProjectGraph,
+} from '../index';
 import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
 import { ProjectGraphBuilder } from '../../project-graph/project-graph-builder';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
@@ -806,6 +811,174 @@ describe('task planner', () => {
     const plans = planner.getPlans(['app:build'], taskGraph);
     expect(plans).toMatchSnapshot();
   });
+
+  it.each(['explicit', 'executor', 'all'])(
+    'should deduplicate overlapping external closures for %s inputs without losing sibling project inputs',
+    (mode) => {
+      const builder = new ProjectGraphBuilder();
+      builder.addNode({
+        name: 'app',
+        type: 'app',
+        data: {
+          root: 'apps/app',
+          targets: {
+            build: {
+              executor:
+                mode === 'executor' ? '@nx/left:build' : 'nx:run-commands',
+              inputs: [
+                'default',
+                '^prod',
+                '^test',
+                ...(mode === 'explicit'
+                  ? [
+                      {
+                        externalDependencies: ['@nx/left', 'right', '@nx/left'],
+                      },
+                    ]
+                  : []),
+              ],
+            },
+          },
+        },
+      });
+      builder.addNode({
+        name: 'child',
+        type: 'lib',
+        data: {
+          root: 'libs/child',
+          namedInputs: {
+            prod: ['{projectRoot}/prod.ts'],
+            test: ['{projectRoot}/test.ts'],
+          },
+          targets: {},
+        },
+      });
+      for (const packageName of ['@nx/left', 'right', 'shared', 'leaf']) {
+        builder.addExternalNode({
+          name: `npm:${packageName}`,
+          type: 'npm',
+          data: { packageName, version: '1.0.0' },
+        });
+      }
+      builder.addImplicitDependency('app', 'child');
+      builder.addImplicitDependency('child', 'app');
+      builder.addImplicitDependency('app', 'npm:@nx/left');
+      builder.addImplicitDependency('child', 'npm:@nx/left');
+      builder.addImplicitDependency('child', 'npm:right');
+      builder.addStaticDependency('npm:@nx/left', 'npm:shared');
+      builder.addStaticDependency('npm:right', 'npm:shared');
+      builder.addStaticDependency('npm:shared', 'npm:leaf');
+      builder.addStaticDependency('npm:leaf', 'npm:shared');
+      const graph = builder.getUpdatedProjectGraph();
+      const tasks = createTaskGraph(
+        graph,
+        {},
+        ['app'],
+        ['build'],
+        undefined,
+        {}
+      );
+      const planner = new HashPlanner(
+        {},
+        transferProjectGraph(transformProjectGraphForRust(graph))
+      );
+      const plan = planner.getPlans(['app:build'], tasks)['app:build'];
+      expect(
+        plan.filter((instruction) => instruction.startsWith('npm:'))
+      ).toEqual(['npm:@nx/left', 'npm:leaf', 'npm:right', 'npm:shared']);
+      expect(plan).toContain('child:libs/child/prod.ts');
+      expect(plan).toContain('child:libs/child/test.ts');
+      expect(plan.includes('AllExternalDependencies')).toBe(mode === 'all');
+      const hashGraph = (
+        reverse: boolean,
+        changes: {
+          leafVersion?: string;
+          prodHash?: string;
+          ignoredHash?: string;
+          acyclic?: boolean;
+        } = {}
+      ) => {
+        const files = testOnlyTransferFileMap(
+          {
+            app: [],
+            child: [
+              {
+                file: 'libs/child/prod.ts',
+                hash: changes.prodHash ?? 'prod-hash',
+              },
+              { file: 'libs/child/test.ts', hash: 'test-hash' },
+              {
+                file: 'libs/child/ignored.ts',
+                hash: changes.ignoredHash ?? 'ignored-hash',
+              },
+            ],
+          },
+          [{ file: 'nx.json', hash: 'nx-json-hash' }]
+        );
+        const transformed = transformProjectGraphForRust(graph);
+        if (changes.acyclic) {
+          transformed.dependencies.child =
+            transformed.dependencies.child.filter((dep) => dep !== 'app');
+        }
+        if (changes.leafVersion)
+          transformed.externalNodes['npm:leaf'].version = changes.leafVersion;
+        if (reverse) {
+          transformed.nodes = Object.fromEntries(
+            Object.entries(transformed.nodes).reverse()
+          );
+          transformed.externalNodes = Object.fromEntries(
+            Object.entries(transformed.externalNodes).reverse()
+          );
+          transformed.dependencies = Object.fromEntries(
+            Object.entries(transformed.dependencies)
+              .reverse()
+              .map(([name, deps]) => [name, [...deps].reverse()])
+          );
+        }
+        const ref = transferProjectGraph(transformed);
+        const reorderedPlanner = new HashPlanner({}, ref);
+        expect(
+          reorderedPlanner.getPlans(['app:build'], tasks)['app:build']
+        ).toEqual(plan);
+        const hasher = new TaskHasher(
+          tempFs.tempDir,
+          ref,
+          files.projectFiles,
+          files.allWorkspaceFiles,
+          Buffer.from('{}'),
+          {},
+          undefined,
+          { selectivelyHashTsConfig: false }
+        );
+        return hasher.hashPlans(
+          reorderedPlanner.getPlansReference(['app:build'], tasks),
+          { 'app:build': {} },
+          tempFs.tempDir,
+          true
+        )['app:build'];
+      };
+      const hash = hashGraph(false);
+      expect(hash).toMatchSnapshot(`overlapping external ${mode} hash`);
+      expect(hashGraph(true)).toEqual(hash);
+      expect(hashGraph(false, { leafVersion: '2.0.0' }).value).not.toBe(
+        hash.value
+      );
+      expect(hashGraph(false, { prodHash: 'changed' }).value).not.toBe(
+        hash.value
+      );
+      expect(hashGraph(false, { ignoredHash: 'changed' })).toEqual(hash);
+      // Removing the back-edge enables subtree memoization. The same inputs
+      // must survive both the initial plan and the subsequent cached call.
+      expect(hashGraph(false, { acyclic: true })).toEqual(hash);
+      expect(hashGraph(true, { acyclic: true })).toEqual(hash);
+      expect(
+        hashGraph(false, { acyclic: true, leafVersion: '2.0.0' }).value
+      ).not.toBe(hash.value);
+      expect(
+        hashGraph(false, { acyclic: true, prodHash: 'changed' }).value
+      ).not.toBe(hash.value);
+    }
+  );
 
   it('should interpolate {projectRoot} and {projectName} in {workspaceRoot} input patterns', async () => {
     let projectFileMap = {
