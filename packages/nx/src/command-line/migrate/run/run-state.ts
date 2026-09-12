@@ -87,14 +87,16 @@ const MIGRATE_STEP_STATUSES = [
   'failed',
   'skipped',
   'died',
+  'unresolved',
 ] as const;
 export type MigrateStepStatus = (typeof MIGRATE_STEP_STATUSES)[number];
 
 // 'failed' and 'died' are not terminal: both can be re-armed into a fresh
-// attempt.
+// attempt. 'unresolved' is the given-up form of either and cannot be.
 export const TERMINAL_STEP_STATUSES: ReadonlySet<MigrateStepStatus> = new Set([
   'succeeded',
   'skipped',
+  'unresolved',
 ]);
 
 const PROMPT_OUTCOME_STATUSES = ['completed', 'skipped', 'failed'] as const;
@@ -150,6 +152,12 @@ export interface MigrateStep {
   outcome?: MigrateStepOutcome;
   // Folded from the handoff file at reconcile time.
   promptOutcome?: MigrateStepPromptOutcome;
+  // A 'succeeded' recorded through the adopt action: the tree as it stood was
+  // accepted as the migration's result.
+  adopted?: boolean;
+  // The run issue minted when the step was given up on, carrying its last
+  // failure to the completion report.
+  unresolvedIssueId?: string;
   // Recorded when the step enters 'awaiting-prompt-outcome'; dropped on re-arm
   // with the other per-attempt fields.
   awaitingKind?: MigrateStepAwaitingKind;
@@ -190,6 +198,11 @@ export interface MigrateCommitLedgerEntry {
   stepIds: string[];
   // Issues from the run's ledger whose fixes this commit carries.
   issueIds?: string[];
+  // The attempt of stepIds[0] that landed the commit. Identifies the entry
+  // when a reconcile recovers a died worker's commit from the session's
+  // cached answer, which the sha alone cannot once it failed to resolve.
+  // Absent on checkpoint and failed entries and on entries an older nx wrote.
+  ownerAttempt?: number;
 }
 
 /**
@@ -451,6 +464,11 @@ function isStepShape(value: unknown): boolean {
     isOptionalBoolean(value.validationOwed) &&
     isOptionalBoolean(value.generatorMadeChanges) &&
     isOptionalBoolean(value.installFailed) &&
+    isOptionalBoolean(value.adopted) &&
+    isOptionalMatching(ISSUE_ID, value.unresolvedIssueId) &&
+    // Minted by the same write that gives the step up, so it never names a
+    // step in any other status.
+    (value.unresolvedIssueId === undefined || value.status === 'unresolved') &&
     // A cross-field invariant the rest of the loop relies on: a running step
     // without a pid is never reclassified as died and no step action targets
     // it, so it stalls the run forever.
@@ -468,7 +486,11 @@ function isCommitLedgerEntryShape(value: unknown): boolean {
       (Array.isArray(value.issueIds) &&
         value.issueIds.every(
           (id) => typeof id === 'string' && ISSUE_ID.test(id)
-        )))
+        ))) &&
+    (value.ownerAttempt === undefined ||
+      (value.kind === 'landed' &&
+        Number.isInteger(value.ownerAttempt) &&
+        (value.ownerAttempt as number) >= 1))
   );
 }
 
@@ -630,14 +652,21 @@ function hasValidRunStateShape(parsed: Record<string, unknown>): boolean {
     (parsed.commits as { issueIds?: string[] }[]).every(
       (c) =>
         c.issueIds === undefined ||
-        c.issueIds.every((id) =>
-          ((parsed.issues as { id: string }[] | undefined) ?? []).some(
-            (i) => i.id === id
-          )
-        )
+        c.issueIds.every((id) => hasIssueWithId(parsed, id))
+    ) &&
+    (parsed.steps as { unresolvedIssueId?: string }[]).every(
+      (s) =>
+        s.unresolvedIssueId === undefined ||
+        hasIssueWithId(parsed, s.unresolvedIssueId)
     ) &&
     isNoProgressShape(parsed.noProgress) &&
     isAnalyticsShape(parsed.analytics)
+  );
+}
+
+function hasIssueWithId(parsed: Record<string, unknown>, id: string): boolean {
+  return ((parsed.issues as { id: string }[] | undefined) ?? []).some(
+    (i) => i.id === id
   );
 }
 
@@ -652,9 +681,11 @@ function corruptRunStateError(filePath: string, reason: string): Error {
  *
  * Adding a member to any persisted closed set (run status, step status,
  * awaiting kind, prompt-outcome status, commit kind, issue disposition) needs a
- * `CURRENT_RUN_STATE_FORMAT_VERSION` bump: without it, an older Nx reading
- * the new value would reject the run as corrupt (the closed-set validation
- * fails) instead of refusing with this error's ask for a newer Nx.
+ * `CURRENT_RUN_STATE_FORMAT_VERSION` bump once runs can outlive an Nx
+ * upgrade: without it, an older Nx reading the new value rejects the run as
+ * corrupt (the closed-set validation fails) instead of refusing with this
+ * error's ask for a newer Nx. While the orchestrator is dark, runs are not
+ * supported across Nx versions and the bump waits for its promotion.
  */
 export class NewerRunStateFormatError extends Error {
   constructor(message: string) {

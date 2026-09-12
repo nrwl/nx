@@ -25,6 +25,7 @@ import {
   renderUnresolvedIssueLines,
   reopenResolutionsForStep,
   settleUnclaimableIssues,
+  mintUnresolvedIssue,
 } from './issues';
 import type {
   MigrateRunIssue,
@@ -1166,6 +1167,147 @@ describe('migrate run issues', () => {
           note: 'fixed it',
         },
         { issueId: 'issue-2', stepId: 'step-1', disposition: 'resolved' },
+      ]);
+    });
+  });
+
+  describe('mintUnresolvedIssue', () => {
+    it('mints an unscoped, deferred issue naming the migration and its last failure', () => {
+      const steps = [
+        { ...step('step-1', '@nx/js:one', 'unresolved'), attempt: 2 },
+        step('step-2', '@nx/js:two', 'pending'),
+      ];
+      steps[0].outcome = { summary: 'generator threw: boom' };
+
+      const { application, issueId } = mintUnresolvedIssue(
+        stateWith(steps),
+        steps[0]
+      );
+
+      expect(issueId).toBe('issue-1');
+      expect(application.state.issues).toEqual([
+        {
+          id: 'issue-1',
+          fingerprint: issueFingerprint(
+            'Migration @nx/js:one was left unresolved after 2 attempts: generator threw: boom'
+          ),
+          summary:
+            'Migration @nx/js:one was left unresolved after 2 attempts: generator threw: boom',
+          reportedByStepId: 'step-1',
+          applicableStepIds: 'unknown',
+          disposition: 'deferred-final',
+        },
+      ]);
+      expect(application.newIssues.map((n) => n.entry.id)).toEqual(['issue-1']);
+    });
+
+    it("falls back to the prompt outcome's summary, then to a fixed line, and bounds the summary", () => {
+      const prompted = step('step-1', '@nx/js:one', 'unresolved');
+      prompted.promptOutcome = {
+        status: 'failed',
+        summary: `line one\nline two ${'x'.repeat(600)}`,
+      };
+      const minted = mintUnresolvedIssue(stateWith([prompted]), prompted);
+      expect(minted.application.state.issues[0].summary).toMatch(
+        /^Migration @nx\/js:one was left unresolved after 1 attempt: line one line two x+\.\.\.$/
+      );
+      expect(minted.application.state.issues[0].summary.length).toBe(500);
+
+      const silent = step('step-1', '@nx/js:one', 'unresolved');
+      expect(
+        mintUnresolvedIssue(stateWith([silent]), silent).application.state
+          .issues[0].summary
+      ).toBe(
+        'Migration @nx/js:one was left unresolved after 1 attempt: no failure detail was recorded'
+      );
+    });
+
+    it.each([
+      [
+        'recorded and claimed',
+        {
+          applicableStepIds: ['step-2'],
+          disposition: 'recorded' as const,
+          claimedByStepId: 'step-2',
+        },
+      ],
+      [
+        'resolved',
+        {
+          applicableStepIds: ['step-2'],
+          disposition: 'resolved' as const,
+          resolvedByStepId: 'step-1',
+          resolvedAtCommitCount: 0,
+        },
+      ],
+    ])(
+      'takes over an existing %s issue carrying the same summary, leaving it unscoped and deferred',
+      (_case, extra) => {
+        const steps = [
+          step('step-1', '@nx/js:one', 'unresolved'),
+          step('step-2', '@nx/js:two', 'pending'),
+        ];
+        steps[0].outcome = { summary: 'boom' };
+        const summary =
+          'Migration @nx/js:one was left unresolved after 1 attempt: boom';
+        const existing = issue('issue-7', {
+          summary,
+          fingerprint: issueFingerprint(summary),
+          ...extra,
+        });
+
+        const { application, issueId } = mintUnresolvedIssue(
+          stateWith(steps, [existing]),
+          steps[0]
+        );
+
+        expect(issueId).toBe('issue-7');
+        expect(application.newIssues).toEqual([]);
+        expect(application.state.issues).toEqual([
+          {
+            id: 'issue-7',
+            fingerprint: issueFingerprint(summary),
+            summary,
+            reportedByStepId: 'step-1',
+            applicableStepIds: 'unknown',
+            disposition: 'deferred-final',
+          },
+        ]);
+        expect(application.updates).toEqual([
+          {
+            issueId: 'issue-7',
+            stepId: 'step-1',
+            disposition: 'deferred-final',
+          },
+        ]);
+      }
+    );
+
+    it('abbreviates an overlong migration id with a digest that keeps distinct ids distinct', () => {
+      // Same attempt and failure on both: only the digest can tell the two
+      // summaries apart, so a digest of a shared prefix would fold them.
+      const first = step('step-1', `@nx/js:${'m'.repeat(600)}a`, 'unresolved');
+      first.outcome = { summary: 'boom' };
+      const second = step('step-2', `@nx/js:${'m'.repeat(600)}b`, 'unresolved');
+      second.outcome = { summary: 'boom' };
+      const state = stateWith([first, second]);
+
+      const minted = mintUnresolvedIssue(state, first);
+      const again = mintUnresolvedIssue(minted.application.state, second);
+
+      expect(again.application.state.issues).toHaveLength(2);
+      const [one, two] = again.application.state.issues.map((i) => i.summary);
+      expect(one).toMatch(
+        /^Migration @nx\/js:m+\.\.\.\[[0-9a-f]{8}\] was left unresolved after 1 attempt: boom$/
+      );
+      expect(two).toMatch(
+        /^Migration @nx\/js:m+\.\.\.\[[0-9a-f]{8}\] was left unresolved after 1 attempt: boom$/
+      );
+      expect(one).not.toBe(two);
+      expect(one.length).toBeLessThan(500);
+      expect(again.application.state.issues.map((i) => i.id)).toEqual([
+        'issue-1',
+        'issue-2',
       ]);
     });
   });

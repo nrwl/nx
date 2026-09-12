@@ -32,10 +32,11 @@ import {
 } from './run-state';
 import { updateRunState } from './state-lock';
 import {
+  commitNameForStep,
   markInstallFailed,
-  splitMigrationId,
   stepsToPendingMigrations,
   uncoveredFailedStepIds,
+  type CommitAction,
 } from './state-machine';
 import { installDepsChangedSinceDispense } from './util';
 
@@ -46,8 +47,11 @@ const CHILD_POLL_INTERVAL_MS = 250;
 // The seam a request comes from. A seam runs once per attempt, so the seam
 // names the request: a repeat of the same operation (a refold after a crash,
 // the adopt of a worker that died mid-commit) reads the first answer instead
-// of landing twice. Commits share one seam: a worker's, the fold's and the
-// adopt's are the same operation on the same tree.
+// of landing twice. Commits share one seam: a worker's, the fold's and a
+// died step's adopt are the same operation on the same tree, and the worker
+// may have landed it before dying. Once the ledger records that commit, or a
+// failure recorded none, an adopt or give-up commit is a new operation over
+// what the tree holds now, so it asks under its own action.
 export type BrokerRequestKind =
   | 'commit'
   // A worker's install: after its generator, or a retry's from the baseline.
@@ -58,11 +62,13 @@ export type BrokerRequestKind =
   | 'action-install';
 
 // Names the seam only. Whether to install or commit is the parent's own
-// policy, so a request carries nothing that would widen it.
+// policy, so a request carries nothing that would widen it; the action only
+// tells a post-failure commit apart from the worker's and names it.
 export interface BrokerRequest {
   kind: BrokerRequestKind;
   stepId: string;
   attempt: number;
+  commitAs?: CommitAction;
 }
 
 export type BrokerResult =
@@ -94,12 +100,13 @@ export class BrokerStaleRequestError extends Error {}
 export class BrokerUnavailableError extends Error {}
 
 // The statuses a step has at each seam: a worker mid-run, a fold of a
-// handed-back prompt, a skipped failure or an adopted death.
+// handed-back prompt, a skipped failure, an adopted failure or death, or a
+// failure or death given up on with its partial tree committed.
 const SEAM_STATUSES: Record<
   BrokerRequestKind,
   ReadonlySet<MigrateStepStatus>
 > = {
-  commit: new Set(['running', 'awaiting-prompt-outcome', 'died']),
+  commit: new Set(['running', 'awaiting-prompt-outcome', 'failed', 'died']),
   install: new Set(['running']),
   'fold-install': new Set(['awaiting-prompt-outcome']),
   'action-install': new Set(['failed', 'died']),
@@ -143,7 +150,8 @@ export async function commitStepTree(
   dir: string,
   step: MigrateStep,
   absorbedStepIds: string[],
-  commitInProcess: () => Promise<CommitResult>
+  commitInProcess: () => Promise<CommitResult>,
+  commitAs?: CommitAction
 ): Promise<BrokeredCommit> {
   const nonce = process.env[BROKER_ENV_VAR];
   if (!nonce) {
@@ -153,6 +161,7 @@ export async function commitStepTree(
     kind: 'commit',
     stepId: step.id,
     attempt: step.attempt,
+    ...(commitAs !== undefined ? { commitAs } : {}),
   });
   if (answer.kind !== 'commit') {
     throw new Error(`Unexpected '${answer.kind}' answer to a commit request.`);
@@ -186,12 +195,41 @@ export async function installStepTree(
   }
 }
 
+/**
+ * The parent's answer to the step's own commit request for the given attempt,
+ * if it answered one. A worker that died after the parent landed its commit
+ * but before recording it leaves this answer as the only record of that
+ * commit; null when nothing was asked or answered, or the answer is not a
+ * commit's.
+ */
+export function readCachedCommitAnswer(
+  dir: string,
+  nonce: string,
+  step: Pick<MigrateStep, 'id' | 'attempt'>
+): BrokeredCommit | null {
+  const path = resultPath(
+    dir,
+    requestId(nonce, { kind: 'commit', stepId: step.id, attempt: step.attempt })
+  );
+  if (!existsSync(path)) return null;
+  const result = readJsonFile<BrokerResult>(path);
+  return result.kind === 'commit'
+    ? { result: result.result, absorbedStepIds: result.absorbedStepIds }
+    : null;
+}
+
+function requestId(nonce: string, request: BrokerRequest): string {
+  return `${nonce}-${request.stepId}-${request.attempt}-${request.kind}${
+    request.commitAs !== undefined ? `-${request.commitAs}` : ''
+  }`;
+}
+
 async function ask(
   dir: string,
   nonce: string,
   request: BrokerRequest
 ): Promise<BrokerAnswer> {
-  const id = `${nonce}-${request.stepId}-${request.attempt}-${request.kind}`;
+  const id = requestId(nonce, request);
   try {
     publishFileAtomically(requestPath(dir, id), (tmpPath) =>
       writeJsonFile(tmpPath, request)
@@ -304,7 +342,10 @@ export class MigrateCommitBroker {
     if (
       !Object.hasOwn(SEAM_STATUSES, request.kind) ||
       !isAtSeam(step, request) ||
-      (request.kind === 'commit' && !this.policy.createCommits)
+      (request.kind === 'commit' && !this.policy.createCommits) ||
+      (request.commitAs !== undefined &&
+        request.commitAs !== 'adopt' &&
+        request.commitAs !== 'unresolved')
     ) {
       return { kind: 'stale' };
     }
@@ -328,7 +369,7 @@ export class MigrateCommitBroker {
       );
       const result = await commitMigrationIfRequested(
         this.root,
-        { name: splitMigrationId(step.migrationId).name },
+        { name: commitNameForStep(step, request.commitAs) },
         true,
         state.commitPrefix,
         install,

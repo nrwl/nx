@@ -80,6 +80,34 @@ describe('renderRunbook', () => {
     expect(runbook).toContain('give up');
   });
 
+  it('carries the failed-step guidance: diagnose first, two retries with the user asked before the last, give up when nobody can answer', () => {
+    const runbook = renderRunbook(buildContext());
+
+    expect(runbook).toContain('## Failed and died steps');
+    expect(runbook).toContain('Diagnose the failure before choosing');
+    expect(runbook).toContain('A step allows two retries');
+    expect(runbook).toContain('ask the user before using the last one');
+    expect(runbook).toContain('`unresolved`: give the migration up');
+    expect(runbook).toContain(
+      'give the step up with `unresolved` and continue the run'
+    );
+    expect(runbook).toContain(
+      "Withheld, with `skip`, when the run has a commit of this migration's\n  changes on record"
+    );
+    expect(runbook).toContain(
+      'where the dispense withholds it, `adopt`\nis that choice.'
+    );
+    // Unattended, the failed handoff is the only way from an unfinishable
+    // prompt to the give-up option.
+    expect(runbook).toContain(
+      'write that failed handoff yourself with the problems'
+    );
+    expect(runbook).toContain('run `next` so the step is recorded as failed');
+    expect(runbook).toContain('a session Nx started for this run');
+    expect(runbook).not.toContain('the run exits non-zero');
+    expect(runbook).not.toContain('retry/skip options');
+  });
+
   it('carries the author scope rules, and the validation scope rules only when validation is on', () => {
     const withValidation = renderRunbook(buildContext({ validate: true }));
     const withoutValidation = renderRunbook(buildContext({ validate: false }));

@@ -64,6 +64,8 @@ interface RunStateFile {
     attempt: number;
     pid?: number;
     gitRefBefore?: string;
+    adopted?: boolean;
+    unresolvedIssueId?: string;
   }[];
   commits: {
     kind: string;
@@ -375,6 +377,25 @@ function reconcileAfterInit(initOutput: string): DispenseBlock {
   const init = parseLastDispense(initOutput);
   expect(init.action).toBe('initialized');
   return parseLastDispense(runDispensed(init.payload.next));
+}
+
+// Parks the prompt step, applies some work, and hands it back as failed;
+// returns the retry-failed dispense. `output` is the reconcile response that
+// dispensed the step's worker command.
+function failPromptStep(output: string, summary: string): DispenseBlock {
+  const dispense = parseLastDispense(output);
+  expect(dispense.action).toBe('next-step');
+  runDispensed(dispense.payload.command);
+  const prompt = parseLastDispense(runDispensed(dispense.payload.next));
+  expect(prompt.action).toBe('await-prompt');
+  updateFile(
+    `applied-${prompt.step}.txt`,
+    `applied by fake agent (${summary})`
+  );
+  writeHandoff(prompt, { status: 'failed', summary });
+  const failed = parseLastDispense(runDispensed(prompt.payload.next));
+  expect(failed.action).toBe('retry-failed');
+  return failed;
 }
 
 function commitCountFor(migrationName: string): number {
@@ -1123,6 +1144,184 @@ describe('migrate orchestrator (dark launch)', () => {
     expect(state.commits.some((c) => c.stepIds.includes(step.id))).toBe(false);
   }, 600000);
 
+  it('should give up on a killed worker by reset, minting the issue that carries its failure', async () => {
+    writePlan([slowMig]);
+
+    const { runId, diedBlock, gitRefBefore } = await killWorkerAndReconcile(
+      runInit(' --validate=false')
+    );
+    expect(diedBlock.action).toBe('died');
+    expect(diedBlock.payload.instructions).toContain(
+      'Retries left for this migration: 2'
+    );
+    const unresolvedCommand = stepActionCommand(runId, 'unresolved');
+    expect(diedBlock.payload.instructions).toContain(unresolvedCommand);
+    // The generator never completed and a restore point exists: the option
+    // is the reset, verified at acceptance.
+    expect(diedBlock.payload.instructions).toContain(
+      'discarding what the failed attempt left'
+    );
+    const refused = parseLastDispense(runDispensed(unresolvedCommand));
+    expect(refused.action).toBe('error');
+    expect(refused.payload.instructions).toContain('not verifiably clean');
+
+    runCommand(`git reset --hard ${gitRefBefore}`, { failOnError: true });
+    runCommand('git clean -fd -e .nx/migrate-runs', { failOnError: true });
+
+    const complete = parseLastDispense(runDispensed(unresolvedCommand));
+    expect(complete.action).toBe('complete');
+    expect(complete.payload.instructions).toContain('unresolved: 1');
+    expect(complete.payload.instructions).toContain('remains unresolved');
+
+    const state = readRunStateFile(runId);
+    expect(state.status).toBe('completed');
+    const step = state.steps.find((s) => s.migrationId === `${PKG}:slow-mig`);
+    expect(step.status).toBe('unresolved');
+    expect(step.attempt).toBe(1);
+    expect(step.unresolvedIssueId).toBe('issue-1');
+    // The killed worker recorded no outcome: the death is the failure both
+    // the report and the issue carry.
+    const deathDetail = `the worker process (pid ${step.pid}) died before recording an outcome`;
+    expect(complete.payload.instructions).toContain(
+      `- ${PKG}:slow-mig: ${deathDetail}`
+    );
+    expect(state.issues).toEqual([
+      expect.objectContaining({
+        id: 'issue-1',
+        summary: `Migration ${PKG}:slow-mig was left unresolved after 1 attempt: ${deathDetail}`,
+        disposition: 'deferred-final',
+      }),
+    ]);
+    expect(
+      existsSync(
+        `${tmpProjPath()}/.nx/migrate-runs/${runId}/issues/issue-1.json`
+      )
+    ).toBe(true);
+    expect(existsSync(`${tmpProjPath()}/slow-file`)).toBe(false);
+    expect(commitCountFor('slow-mig')).toBe(0);
+  }, 600000);
+
+  it('should commit the partial tree of a prompt step given up on under its name, marked unresolved', () => {
+    writePlan([promptMig]);
+
+    const failed = failPromptStep(
+      runDispensed(parseLastDispense(runInit()).payload.next),
+      'blocked by fake agent'
+    );
+    expect(failed.payload.instructions).toContain(
+      'Retries left for this migration: 2'
+    );
+    const unresolvedCommand = stepActionCommand(failed.runId, 'unresolved');
+    expect(failed.payload.instructions).toContain(unresolvedCommand);
+    // Nothing to reset to a generator's absence: the agent's work is kept
+    // and committed apart from the next step's.
+    expect(failed.payload.instructions).toContain(
+      'committed under its name, marked unresolved'
+    );
+
+    const complete = parseLastDispense(runDispensed(unresolvedCommand));
+    expect(complete.action).toBe('complete');
+    expect(complete.payload.instructions).toContain('applied: 0');
+    expect(complete.payload.instructions).toContain('unresolved: 1');
+    expect(complete.payload.instructions).toContain(
+      `- ${PKG}:prompt-mig: blocked by fake agent`
+    );
+
+    expect(commitCountFor('prompt-mig (unresolved)')).toBe(1);
+    expect(runCommand('git status --porcelain').trim()).toBe('');
+    const state = readRunStateFile(failed.runId);
+    expect(state.status).toBe('completed');
+    const step = state.steps.find((s) => s.migrationId === `${PKG}:prompt-mig`);
+    expect(step.status).toBe('unresolved');
+    expect(step.unresolvedIssueId).toBe('issue-1');
+    expect(
+      state.commits.some(
+        (c) => c.kind === 'landed' && c.stepIds.includes(step.id)
+      )
+    ).toBe(true);
+    expect(state.issues[0].summary).toContain('blocked by fake agent');
+  }, 600000);
+
+  it('should adopt a failed prompt step applied by hand', () => {
+    writePlan([promptMig]);
+
+    const failed = failPromptStep(
+      runDispensed(parseLastDispense(runInit()).payload.next),
+      'blocked by fake agent'
+    );
+    const adoptCommand = stepActionCommand(failed.runId, 'adopt');
+    expect(failed.payload.instructions).toContain(adoptCommand);
+    expect(failed.payload.instructions).toContain('applied by hand');
+
+    const complete = parseLastDispense(runDispensed(adoptCommand));
+    expect(complete.action).toBe('complete');
+    expect(complete.payload.instructions).toContain('applied: 0');
+    expect(complete.payload.instructions).toContain('adopted: 1');
+    expect(complete.payload.instructions).toContain('unresolved: 0');
+
+    expect(commitCountFor('prompt-mig')).toBe(1);
+    expect(commitCountFor('prompt-mig (unresolved)')).toBe(0);
+    const state = readRunStateFile(failed.runId);
+    expect(state.status).toBe('completed');
+    const step = state.steps.find((s) => s.migrationId === `${PKG}:prompt-mig`);
+    expect(step.status).toBe('succeeded');
+    expect(step.adopted).toBe(true);
+    expect(state.issues ?? []).toEqual([]);
+  }, 600000);
+
+  it('should refuse a retry past two rearms and let the step be given up', () => {
+    writePlan([promptMig]);
+
+    let failed = failPromptStep(
+      runDispensed(parseLastDispense(runInit()).payload.next),
+      'first failure'
+    );
+    const retryCommand = stepActionCommand(failed.runId, 'retry');
+    expect(failed.payload.instructions).toContain(
+      'Retries left for this migration: 2'
+    );
+    failed = failPromptStep(runDispensed(retryCommand), 'second failure');
+    expect(failed.payload.instructions).toContain(
+      'Retries left for this migration: 1'
+    );
+    expect(failed.payload.instructions).toContain(
+      'this is the last one, so ask the user'
+    );
+    failed = failPromptStep(runDispensed(retryCommand), 'third failure');
+    expect(failed.payload.instructions).toContain(
+      'already been retried 2 times'
+    );
+    expect(failed.payload.instructions).not.toContain('retry:');
+    expect(failed.payload.instructions).not.toContain(retryCommand);
+    expect(failed.payload.next).toBeUndefined();
+
+    const refused = parseLastDispense(runDispensed(retryCommand));
+    expect(refused.action).toBe('error');
+    expect(refused.payload.instructions).toContain(
+      "Cannot apply action 'retry'"
+    );
+    expect(refused.payload.instructions).toContain(
+      'already been retried 2 times'
+    );
+    const step = readRunStateFile(failed.runId).steps.find(
+      (s) => s.migrationId === `${PKG}:prompt-mig`
+    );
+    expect(step.status).toBe('failed');
+    expect(step.attempt).toBe(3);
+
+    const complete = parseLastDispense(
+      runDispensed(stepActionCommand(failed.runId, 'unresolved'))
+    );
+    expect(complete.action).toBe('complete');
+    expect(complete.payload.instructions).toContain(
+      `- ${PKG}:prompt-mig: third failure`
+    );
+    const state = readRunStateFile(failed.runId);
+    expect(state.issues[0].summary).toContain(
+      'left unresolved after 3 attempts: third failure'
+    );
+  }, 600000);
+
   it("should adopt a killed worker's changes as the migration result", async () => {
     writePlan([slowMig, hybridMig]);
 
@@ -1407,11 +1606,26 @@ while (block.action !== 'complete') {
     // Both streams: nx prints its warnings to stderr.
     record({ step: block.step, stdout: run(block.payload.command + ' 2>&1') });
   } else if (block.action === 'retry-failed') {
+    if (process.env.FAKE_AGENT_FAIL_PROMPTS) {
+      // The prompt failed on purpose, so a retry has no fix to offer: give
+      // the step up through the option the dispense lists.
+      const giveUp = block.payload.instructions.match(/^  unresolved: .*?Then run: (\\S.*?--step-action=unresolved)/m);
+      if (!giveUp) throw new Error('No unresolved option in: ' + block.payload.instructions);
+      record({ gaveUp: block.step });
+      block = lastBlock(run(giveUp[1]));
+      continue;
+    }
     // \`next\` is the retry: the step's generator already ran.
   } else if (block.action === 'await-prompt') {
     fs.writeFileSync(path.join(process.cwd(), 'applied-' + block.step + '.txt'), 'applied by fake agent');
     const handoffPath = block.payload.instructions.match(/^Handoff file: (.+)$/m)[1];
-    fs.writeFileSync(handoffPath, JSON.stringify({ status: 'success', summary: 'applied by fake agent' }));
+    // Generator validation goes through the same action; only a prompt the
+    // agent has to apply itself can fail here.
+    const failing = process.env.FAKE_AGENT_FAIL_PROMPTS && block.payload.instructions.includes('is a prompt-based migration');
+    const handoff = failing
+      ? { status: 'failed', summary: 'fake agent could not finish' }
+      : { status: 'success', summary: 'applied by fake agent' };
+    fs.writeFileSync(handoffPath, JSON.stringify(handoff));
   } else {
     throw new Error('Unexpected action ' + block.action + ': ' + JSON.stringify(block.payload));
   }
@@ -1631,6 +1845,39 @@ process.exit(status ?? 1);
         'succeeded',
         'succeeded',
       ]);
+    }, 600000);
+
+    it('should exit 1 with the given-up migration in the report when the agent gives a step up', async () => {
+      writePlan([genMig, promptMig]);
+      const { binDir, logFile } = installFakeAgent();
+
+      const { exitCode, output } = await runMigrateInTerminal({
+        PATH: `${binDir}:${process.env.PATH}`,
+        FAKE_AGENT_LOG: logFile,
+        NX_MIGRATE_ORCHESTRATOR: 'true',
+        FAKE_AGENT_FAIL_PROMPTS: '1',
+      });
+
+      expect(exitCode).toBe(1);
+      expect(output).toContain('is complete');
+      expect(output).toContain('applied: 1');
+      expect(output).toContain('unresolved: 1');
+      expect(output).toContain(
+        `- ${PKG}:prompt-mig: fake agent could not finish`
+      );
+      expect(output).toContain('left work unresolved; exiting with code 1');
+      expect(output).not.toContain('resume');
+      const log = readFakeAgentLog(logFile);
+      expect(log.find((entry) => entry.gaveUp)).toBeDefined();
+      const done = log.find((entry) => entry.complete);
+      expect(done).toBeDefined();
+      const state = readRunStateFile(done.complete);
+      expect(state.status).toBe('completed');
+      expect(state.steps.map((s) => s.status)).toEqual([
+        'succeeded',
+        'unresolved',
+      ]);
+      expect(state.issues).toHaveLength(1);
     }, 600000);
 
     it('should exit 1 with the resume hint when the agent session ends before the run completes', async () => {

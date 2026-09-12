@@ -10,6 +10,7 @@ import {
   coveringLandedEntries,
   hasPendingCommitDebt,
   stepsToPendingMigrations,
+  tallySteps,
   type StepAction,
   type StepEvent,
 } from './state-machine';
@@ -23,6 +24,7 @@ const ALL_STEP_STATUSES: MigrateStepStatus[] = [
   'failed',
   'skipped',
   'died',
+  'unresolved',
 ];
 
 function stateWithStep(overrides: Partial<MigrateStep> = {}): MigrateRunState {
@@ -398,7 +400,13 @@ describe('applyStepEvent', () => {
   });
 
   describe('stepAction', () => {
-    const ALL_ACTIONS: StepAction[] = ['retry', 'skip', 'retry-clean', 'adopt'];
+    const ALL_ACTIONS: StepAction[] = [
+      'retry',
+      'skip',
+      'retry-clean',
+      'adopt',
+      'unresolved',
+    ];
 
     // The only legal (status, action) pairs for a step with no recorded
     // generator half; every other combination must be rejected. `null` marks
@@ -414,12 +422,18 @@ describe('applyStepEvent', () => {
         if (status === 'failed' && action === 'retry') expected = 'pending';
         else if (status === 'failed' && action === 'retry-clean')
           expected = 'pending';
+        else if (status === 'failed' && action === 'adopt')
+          expected = 'succeeded';
         else if (status === 'failed' && action === 'skip') expected = 'skipped';
+        else if (status === 'failed' && action === 'unresolved')
+          expected = 'unresolved';
         else if (status === 'died' && action === 'retry-clean')
           expected = 'pending';
         else if (status === 'died' && action === 'adopt')
           expected = 'succeeded';
         else if (status === 'died' && action === 'skip') expected = 'skipped';
+        else if (status === 'died' && action === 'unresolved')
+          expected = 'unresolved';
         return { status, action, expected };
       })
     );
@@ -817,6 +831,103 @@ describe('applyStepEvent', () => {
       }
     );
 
+    it.each(['failed', 'died'] as const)(
+      'adopt from %s marks the step adopted',
+      (status) => {
+        const state = stateWithStep({ status });
+
+        const result = applyStepEvent(state, {
+          type: 'stepAction',
+          stepId: 'step-1',
+          attempt: 1,
+          action: 'adopt',
+        });
+
+        expect(result.kind).toBe('ok');
+        if (result.kind === 'ok') {
+          expect(result.state.steps[0].status).toBe('succeeded');
+          expect(result.state.steps[0].adopted).toBe(true);
+        }
+      }
+    );
+
+    it('adopt from failed records that the tree as it stood was taken, keeping the failure outcome', () => {
+      const state = stateWithStep({
+        status: 'failed',
+        outcome: { summary: 'generator threw', fileChanges: ['a.ts'] },
+      });
+
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        attempt: 1,
+        action: 'adopt',
+      });
+
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        expect(result.state.steps[0].outcome).toEqual({
+          fileChanges: ['a.ts'],
+          summary: expect.stringContaining('Adopted after the attempt failed'),
+        });
+      }
+    });
+
+    it('unresolved from failed keeps the attempt and the failure it gave up on', () => {
+      const state = stateWithStep({
+        status: 'failed',
+        attempt: 3,
+        gitRefBefore: 'abc123',
+        outcome: { summary: 'generator threw' },
+        promptOutcome: { status: 'failed', summary: 'nope' },
+      });
+
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        attempt: 3,
+        action: 'unresolved',
+      });
+
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        expect(result.state.steps[0]).toEqual({
+          ...state.steps[0],
+          status: 'unresolved',
+        });
+      }
+    });
+
+    it('unresolved from died keeps the attempt and records the death as the failure', () => {
+      // A death leaves no outcome behind (markDied records the status only),
+      // so the transition supplies the failure the report and the issue show.
+      const state = stateWithStep({
+        status: 'died',
+        attempt: 3,
+        pid: 4242,
+        gitRefBefore: 'abc123',
+      });
+
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        attempt: 3,
+        action: 'unresolved',
+      });
+
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        expect(result.state.steps[0]).toEqual({
+          ...state.steps[0],
+          status: 'unresolved',
+          outcome: {
+            summary:
+              'the worker process (pid 4242) died before recording an outcome',
+          },
+        });
+      }
+    });
+
     it('adopt keeps the outcome the dead worker had already recorded', () => {
       const state = stateWithStep({
         status: 'died',
@@ -925,6 +1036,36 @@ describe('applyStepEvent', () => {
       if (cleaned.kind !== 'ok') return;
       expect(cleaned.state.steps[0].generatorCompleted).toBe(true);
       expect(cleaned.state.steps[0].status).toBe('pending');
+    });
+  });
+});
+
+describe('tallySteps', () => {
+  it('counts every status once, telling adopted successes and stalled steps apart', () => {
+    const base = stateWithStep();
+    const state: MigrateRunState = {
+      ...base,
+      steps: ALL_STEP_STATUSES.map((status, index) => ({
+        ...base.steps[0],
+        id: `step-${index + 1}`,
+        status,
+      })).concat({
+        ...base.steps[0],
+        id: 'step-10',
+        status: 'succeeded',
+        adopted: true,
+      }),
+    };
+
+    const tally = tallySteps(state);
+
+    expect(tally).toEqual({
+      applied: 1,
+      adopted: 1,
+      skipped: 1,
+      unresolved: [expect.objectContaining({ status: 'unresolved' })],
+      remaining: 6,
+      stalled: 2,
     });
   });
 });
@@ -1045,13 +1186,17 @@ describe('stepsToPendingMigrations', () => {
 describe('commitResultToLedgerEntry', () => {
   it('maps a committed result to a landed entry covering the absorbed steps', () => {
     expect(
-      commitResultToLedgerEntry({ status: 'committed', sha: 'abc' }, 'step-2', [
-        'step-1',
-      ])
+      commitResultToLedgerEntry(
+        { status: 'committed', sha: 'abc' },
+        'step-2',
+        ['step-1'],
+        2
+      )
     ).toEqual({
       kind: 'landed',
       sha: 'abc',
       stepIds: ['step-2', 'step-1'],
+      ownerAttempt: 2,
     });
   });
 
@@ -1060,9 +1205,10 @@ describe('commitResultToLedgerEntry', () => {
       commitResultToLedgerEntry(
         { status: 'committed', sha: null },
         'step-1',
-        []
+        [],
+        1
       )
-    ).toEqual({ kind: 'landed', stepIds: ['step-1'] });
+    ).toEqual({ kind: 'landed', stepIds: ['step-1'], ownerAttempt: 1 });
   });
 
   it('maps a failed result to a debt entry naming only this step', () => {
@@ -1070,7 +1216,8 @@ describe('commitResultToLedgerEntry', () => {
       commitResultToLedgerEntry(
         { status: 'failed', reason: 'boom' },
         'step-2',
-        ['step-1']
+        ['step-1'],
+        1
       )
     ).toEqual({ kind: 'failed', stepIds: ['step-2'] });
   });
@@ -1078,7 +1225,7 @@ describe('commitResultToLedgerEntry', () => {
   it.each(['no-changes', 'disabled'] as const)(
     'records nothing for %s',
     (status) => {
-      expect(commitResultToLedgerEntry({ status }, 'step-1', [])).toBeNull();
+      expect(commitResultToLedgerEntry({ status }, 'step-1', [], 1)).toBeNull();
     }
   );
 });
