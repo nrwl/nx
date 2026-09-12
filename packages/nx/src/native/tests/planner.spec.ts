@@ -1178,7 +1178,7 @@ describe('task planner', () => {
       expect(plan).toContain('AllExternalDependencies');
     });
 
-    it("leaves out the outputs of a continuous dependency's own dependencies", () => {
+    it("hashes the outputs of a continuous dependency's own dependencies", () => {
       const { planner, taskGraph } = servedBy(
         {
           dependsOn: ['build'],
@@ -1195,12 +1195,12 @@ describe('task planner', () => {
         }
       );
 
-      // The served task is hashed before child:build runs, so its outputs
-      // cannot be part of the hash.
+      // parent:test has no task dependency of its own, so hash-task.ts must
+      // defer it past child:build for this entry to be hashed after the build.
       expect(taskGraph.dependencies['parent:test']).toEqual([]);
       const plan = planner.getPlans(['parent:test'], taskGraph)['parent:test'];
       expect(plan).toContain('child:libs/child/**/*');
-      expect(plan.some((entry) => entry.includes('**/*.d.ts'))).toBe(false);
+      expect(plan).toContain('**/*.d.ts:dist/libs/child');
     });
 
     it('terminates on a cycle of continuous dependencies and hashes each server once', () => {

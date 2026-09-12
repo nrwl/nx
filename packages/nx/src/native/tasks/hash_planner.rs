@@ -168,7 +168,7 @@ impl HashPlanner {
 
                 // A continuous dependency serves this task from its own process, so
                 // its declared inputs and externals are hashed here, and its own
-                // servers' in turn. Not its builds' outputs: they have not run yet.
+                // servers' in turn. hash-task.ts defers the task past its builds.
                 let mut served_by: Vec<&String> = Vec::new();
                 let mut seen: HashSet<&str> = HashSet::from([*id]);
                 let mut pending: Vec<&String> = task_graph
@@ -194,10 +194,7 @@ impl HashPlanner {
                     let Some(dep_task) = task_graph.tasks.get(dep_id) else {
                         continue;
                     };
-                    let dep_inputs = SplitInputs {
-                        deps_outputs: Vec::new(),
-                        ..get_inputs(dep_task, &self.project_graph, &self.nx_json)?
-                    };
+                    let dep_inputs = get_inputs(dep_task, &self.project_graph, &self.nx_json)?;
                     ids.extend(
                         self.target_input(
                             &dep_task.target.project,

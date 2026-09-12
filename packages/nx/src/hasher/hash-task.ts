@@ -48,9 +48,11 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
         return false;
       }
 
-      return !(
-        taskGraph.dependencies[task.id].length > 0 &&
-        getInputs(task, projectGraph, nxJson).depsOutputs.length > 0
+      return !dependsOnOutputsOfOtherTasks(
+        task,
+        taskGraph,
+        projectGraph,
+        nxJson
       );
     })
     .map((t) => t.task);
@@ -88,6 +90,34 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     'hashMultipleTasks:start',
     'hashMultipleTasks:end'
   );
+}
+
+// A task hashes the inputs of its continuous dependencies too, so it must
+// wait for their builds as well as its own before its hash is stable.
+function dependsOnOutputsOfOtherTasks(
+  task: Task,
+  taskGraph: TaskGraph,
+  projectGraph: ProjectGraph,
+  nxJson: NxJsonConfiguration
+): boolean {
+  const seen = new Set<string>();
+  const pending = [task.id];
+  while (pending.length) {
+    const id = pending.pop();
+    if (seen.has(id) || !taskGraph.tasks[id]) {
+      continue;
+    }
+    seen.add(id);
+    if (
+      taskGraph.dependencies[id]?.length > 0 &&
+      getInputs(taskGraph.tasks[id], projectGraph, nxJson).depsOutputs.length >
+        0
+    ) {
+      return true;
+    }
+    pending.push(...(taskGraph.continuousDependencies[id] ?? []));
+  }
+  return false;
 }
 
 export async function hashTask(
