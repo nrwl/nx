@@ -10,14 +10,16 @@ import { readNxJson } from '../../config/configuration';
 let storedProjectGraph: any = null;
 let storedHasher: InProcessTaskHasher | null = null;
 
-export async function handleHashTasks(payload: {
+interface HashTasksPayload {
   runnerOptions: any;
   tasks: Task[];
   taskGraph: TaskGraph;
   perTaskEnvs: Record<string, NodeJS.ProcessEnv>;
   cwd: string;
   collectInputs?: boolean;
-}) {
+}
+
+async function getHasher(runnerOptions: any): Promise<InProcessTaskHasher> {
   const { error, projectGraph, rustReferences } =
     await getCachedSerializedProjectGraphPromise();
 
@@ -33,10 +35,15 @@ export async function handleHashTasks(payload: {
       projectGraph,
       nxJson,
       rustReferences,
-      payload.runnerOptions
+      runnerOptions
     );
   }
-  const response = await storedHasher.hashTasks(
+  return storedHasher;
+}
+
+export async function handleHashTasks(payload: HashTasksPayload) {
+  const hasher = await getHasher(payload.runnerOptions);
+  const response = await hasher.hashTasks(
     payload.tasks,
     payload.taskGraph,
     payload.perTaskEnvs,
@@ -46,5 +53,20 @@ export async function handleHashTasks(payload: {
   return {
     response,
     description: 'handleHashTasks',
+  };
+}
+
+export async function handleHashTasksUpfront(payload: HashTasksPayload) {
+  const hasher = await getHasher(payload.runnerOptions);
+  const response = await hasher.hashTasksUpfront(
+    payload.tasks,
+    payload.taskGraph,
+    payload.perTaskEnvs,
+    payload.cwd,
+    payload.collectInputs
+  );
+  return {
+    response,
+    description: 'handleHashTasksUpfront',
   };
 }

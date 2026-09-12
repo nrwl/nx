@@ -102,4 +102,25 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     );
     return tasks.map((t) => hashes[t.id]);
   }
+
+  async hashTasksUpfront(
+    tasks: Task[],
+    taskGraph: TaskGraph,
+    perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
+    cwd?: string,
+    collectInputs?: boolean
+  ): Promise<Record<string, PartialHash>> {
+    const plans = this.planner.getPlansReference(
+      tasks.map((t) => t.id),
+      taskGraph
+    );
+    const shouldCollectInputs =
+      collectInputs ?? getTaskIOService().hasTaskInputSubscribers();
+    return this.hasher.hashPlansUpfront(
+      plans,
+      perTaskEnvs as Record<string, Record<string, string>>,
+      cwd ?? process.cwd(),
+      shouldCollectInputs
+    );
+  }
 }

@@ -87,6 +87,18 @@ export interface TaskHasher {
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd?: string
   ): Promise<Hash[]>;
+
+  /**
+   * Hash the tasks whose hash needs no output of another task, keyed by
+   * task id; a task absent from the result hashes once the tasks it reads
+   * from have run. Optional: hashers built against older Nx lack it.
+   */
+  hashTasksUpfront?(
+    tasks: Task[],
+    taskGraph: TaskGraph,
+    perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
+    cwd?: string
+  ): Promise<Record<string, Hash>>;
 }
 
 export interface TaskHasherImpl {
@@ -111,6 +123,14 @@ export interface TaskHasherImpl {
     cwd?: string,
     collectInputs?: boolean
   ): Promise<PartialHash>;
+
+  hashTasksUpfront(
+    tasks: Task[],
+    taskGraph: TaskGraph,
+    perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
+    cwd?: string,
+    collectInputs?: boolean
+  ): Promise<Record<string, PartialHash>>;
 }
 
 export type Hasher = TaskHasher;
@@ -166,6 +186,22 @@ export class DaemonBasedTaskHasher implements TaskHasher {
     );
   }
 
+  async hashTasksUpfront(
+    tasks: Task[],
+    taskGraph: TaskGraph,
+    perTaskEnvs: Record<string, NodeJS.ProcessEnv>
+  ): Promise<Record<string, Hash>> {
+    const collectInputs = getTaskIOService().hasTaskInputSubscribers();
+    return this.daemonClient.hashTasksUpfront(
+      this.runnerOptions,
+      tasks,
+      taskGraph,
+      perTaskEnvs,
+      process.cwd(),
+      collectInputs
+    );
+  }
+
   async hashTask(
     task: Task,
     taskGraph?: TaskGraph,
@@ -215,6 +251,29 @@ export class InProcessTaskHasher implements TaskHasher {
     );
     return tasks.map((task, index) =>
       this.createHashDetails(task, hashes[index])
+    );
+  }
+
+  async hashTasksUpfront(
+    tasks: Task[],
+    taskGraph: TaskGraph,
+    perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
+    cwd?: string,
+    collectInputs?: boolean
+  ): Promise<Record<string, Hash>> {
+    const hashes = await this.taskHasher.hashTasksUpfront(
+      tasks,
+      taskGraph,
+      perTaskEnvs,
+      cwd ?? process.cwd(),
+      collectInputs
+    );
+    const tasksById = new Map(tasks.map((task) => [task.id, task]));
+    return Object.fromEntries(
+      Object.entries(hashes).map(([id, hash]) => [
+        id,
+        this.createHashDetails(tasksById.get(id), hash),
+      ])
     );
   }
 

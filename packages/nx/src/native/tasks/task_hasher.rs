@@ -265,9 +265,47 @@ impl TaskHasher {
         })
     }
 
+    /// Like `hash_plans`, but only for the plans that hold no output of another
+    /// task. The rest are left out and hash once those tasks have run; their
+    /// ids are absent from the result and need no entry in `per_task_envs`.
+    #[napi(ts_return_type = "Record<string, HashDetails>")]
+    pub fn hash_plans_upfront(
+        &self,
+        #[napi(ts_arg_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
+        hash_plans: &External<HashPlans>,
+        per_task_envs: HashMap<String, HashMap<String, String>>,
+        cwd: String,
+        collect_task_inputs: Option<bool>,
+    ) -> anyhow::Result<TaskHashes> {
+        let pool = &hash_plans.pool;
+        let plans: HashMap<String, Vec<u32>> = hash_plans
+            .plans
+            .iter()
+            .filter(|(_, ids)| {
+                !ids.iter()
+                    .any(|id| matches!(*pool.get(*id), HashInstruction::TaskOutput(_, _)))
+            })
+            .map(|(task_id, ids)| (task_id.clone(), ids.clone()))
+            .collect();
+        for task_id in plans.keys() {
+            if !per_task_envs.contains_key(task_id) {
+                anyhow::bail!("hash_plans_upfront: missing env entry for task {}", task_id);
+            }
+        }
+        let upfront = HashPlans {
+            pool: pool.clone(),
+            plans,
+        };
+        self.hash_plans_impl(&upfront, cwd, collect_task_inputs, |task_id| {
+            per_task_envs
+                .get(task_id)
+                .expect("per-task env presence verified above")
+        })
+    }
+
     fn hash_plans_impl<'a, F>(
         &self,
-        hash_plans: &External<HashPlans>,
+        hash_plans: &HashPlans,
         cwd: String,
         collect_task_inputs: Option<bool>,
         resolve_env: F,
