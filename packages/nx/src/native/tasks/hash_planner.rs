@@ -168,8 +168,8 @@ impl HashPlanner {
 
                 // A continuous dependency serves this task from its own process, so
                 // its declared inputs and externals are hashed here, and its own
-                // servers' in turn. Its builds' outputs land in this plan too, which
-                // is what holds the task back from the up-front hashing batch.
+                // servers' in turn. When it reads its builds' outputs, those land in
+                // this plan too, which holds the task back from the up-front batch.
                 for dep_task in collect_continuous_dependencies(&task_graph, id) {
                     let dep_inputs = get_inputs(dep_task, &self.project_graph, &self.nx_json)?;
                     ids.extend(
