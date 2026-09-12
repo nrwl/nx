@@ -11,6 +11,7 @@ import type {
   MigrateStepPromptOutcome,
 } from './run-state';
 import { singleLine } from '../text';
+import type { MigrateOrchestratorTallies } from '../migrate-analytics';
 import type { StepAction } from '../step-actions';
 
 export type { StepAction };
@@ -387,6 +388,19 @@ export function tallySteps(state: MigrateRunState): StepTally {
     }
   }
   return tally;
+}
+
+/**
+ * Analytics tallies. Adopted steps count as completed; dispenseCount is
+ * cumulative across attempts, so a retried step counts every dispense it had.
+ */
+export function runTallies(state: MigrateRunState): MigrateOrchestratorTallies {
+  const tally = tallySteps(state);
+  return {
+    completed: tally.applied + tally.adopted,
+    skipped: tally.skipped,
+    dispenseCount: state.steps.reduce((n, s) => n + s.dispenseCount, 0),
+  };
 }
 
 // The tally a completed run reports, with each given-up migration and the

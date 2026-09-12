@@ -27,9 +27,12 @@ vi.mock('./spawn-master', () => ({
 
 const mockRunComplete = vi.fn();
 const mockRunError = vi.fn();
+const mockAbandoned = vi.fn();
 vi.mock('../../migrate-analytics', () => ({
   reportMigrateRunComplete: (...args: unknown[]) => mockRunComplete(...args),
   reportMigrateRunError: (...args: unknown[]) => mockRunError(...args),
+  reportMigrateOrchestratorAbandoned: (...args: unknown[]) =>
+    mockAbandoned(...args),
 }));
 
 import { join } from 'path';
@@ -101,7 +104,10 @@ function state(
 ): MigrateRunState {
   return {
     status,
-    steps: stepStatuses.map((s) => ({ status: s })),
+    steps: stepStatuses.map((s) => ({
+      status: s,
+      dispenseCount: s === 'pending' ? 0 : 1,
+    })),
   } as MigrateRunState;
 }
 
@@ -121,6 +127,7 @@ describe('runMasterSession', () => {
     mockSpawnMaster.mockReset().mockResolvedValue({ kind: 'exited' });
     mockRunComplete.mockReset();
     mockRunError.mockReset();
+    mockAbandoned.mockReset();
     logSpy = vi.spyOn(output, 'log').mockImplementation(() => {}) as Mock;
     warnSpy = vi.spyOn(output, 'warn').mockImplementation(() => {}) as Mock;
     errorSpy = vi.spyOn(output, 'error').mockImplementation(() => {}) as Mock;
@@ -446,6 +453,7 @@ describe('runMasterSession', () => {
       migrationCount: 3,
       appliedCount: 2,
     });
+    expect(mockAbandoned).not.toHaveBeenCalled();
     expect(warnSpy).not.toHaveBeenCalled();
   });
 
@@ -536,13 +544,21 @@ describe('runMasterSession', () => {
     }
   );
 
-  it('exits 1 with the resume hint and no completion event when the run is still active', async () => {
-    mockReadRunState.mockReturnValue(state('active', ['succeeded', 'pending']));
+  it('exits 1 with the resume hint and the abandonment event when the run is still active', async () => {
+    mockReadRunState.mockReturnValue(
+      state('active', ['succeeded', 'skipped', 'failed', 'pending'])
+    );
 
     expect(await runMasterSession(input())).toBe(1);
 
     expect(warnSpy).toHaveBeenCalledWith({
       title: `Migrate run ${runId} is still active. Run ${continueCommand} to continue it.`,
+    });
+    expect(mockAbandoned).toHaveBeenCalledWith({
+      completed: 1,
+      skipped: 1,
+      dispenseCount: 3,
+      agentUsed: 'claude-code',
     });
     expect(mockRunComplete).not.toHaveBeenCalled();
     expect(mockRunError).not.toHaveBeenCalled();
