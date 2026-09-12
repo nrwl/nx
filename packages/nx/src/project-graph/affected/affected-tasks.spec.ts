@@ -252,10 +252,17 @@ describe('computeAffectedTasks', () => {
           ],
         },
       ] as any,
+      explain: true,
     });
     expect([...result.affectedTaskIds].sort()).toEqual([
       'hashes_all:test',
       'uses_moved:test',
+    ]);
+    expect(result.reasons['uses_moved:test']).toEqual([
+      { kind: 'npm-package', package: 'npm:moved' },
+    ]);
+    expect(result.reasons['hashes_all:test']).toEqual([
+      { kind: 'external-dependencies', file: 'package-lock.json' },
     ]);
   });
 
@@ -280,6 +287,55 @@ describe('computeAffectedTasks', () => {
     });
     expect([...result.affectedTaskIds]).toEqual(['app:test']);
     expect(result.taskSelection.taskIds).toEqual(['app:test']);
+  });
+
+  /**
+   * Every reason that applies: the input a changed file matched, the affected
+   * producer whose outputs a task reads, and the package a dependency change
+   * moved, or the file that moved it for a plan hashing every external.
+   */
+  it('explains each task with what reached it', async () => {
+    const explain = async (files: string[]) =>
+      (
+        await computeAffectedTasks({
+          projectGraph: graph(),
+          nxJson: {
+            namedInputs: { production: ['{projectRoot}/src/**/*'] },
+          } as any,
+          targets: ['test'],
+          touchedFiles: files.map((file) => ({
+            file,
+            getChanges: () => [new WholeFileChange()],
+          })) as any,
+          explain: true,
+        })
+      ).reasons;
+
+    const byFile = await explain(['packages/nx/src/index.ts']);
+    expect(byFile['lib:test']).toContainEqual(
+      expect.objectContaining({
+        kind: 'input-file',
+        file: 'packages/nx/src/index.ts',
+      })
+    );
+    // app:test inlines lib's production fileset through ^production, so the
+    // same file reaches it as an input rather than through a producer.
+    expect(byFile['app:test']).toContainEqual(
+      expect.objectContaining({
+        kind: 'input-file',
+        file: 'packages/nx/src/index.ts',
+      })
+    );
+
+    // Neither target declares externalDependencies, so each plan hashes every
+    // external and the lockfile reaches both directly: no seed, no dependency
+    // edge to report.
+    const byLockfile = await explain(['pnpm-lock.yaml']);
+    for (const task of ['lib:test', 'app:test']) {
+      expect(byLockfile[task]).toEqual([
+        { kind: 'external-dependencies', file: 'pnpm-lock.yaml' },
+      ]);
+    }
   });
 });
 
@@ -611,6 +667,35 @@ describe('computeAffectedTasks with the daemon on', () => {
 
     expect(daemon.selectAffectedTasks).not.toHaveBeenCalled();
     expect(result.taskSelection.planningContext).toBeDefined();
+  });
+
+  // Reasons are assembled from native plans, which stay in whichever process
+  // planned them, and an explanation runs nothing to share them with.
+  it('explains in-process rather than asking the daemon', async () => {
+    daemon.enabled.mockReturnValueOnce(true);
+
+    const result = await computeAffectedTasks({
+      projectGraph: graph(),
+      nxJson: {
+        namedInputs: { production: ['{projectRoot}/src/**/*'] },
+      } as any,
+      targets: ['test'],
+      touchedFiles: [
+        {
+          file: 'packages/nx/src/x.ts',
+          getChanges: () => [new WholeFileChange()],
+        },
+      ] as any,
+      explain: true,
+    });
+
+    expect(daemon.selectAffectedTasks).not.toHaveBeenCalled();
+    expect(result.reasons['lib:test']).toContainEqual(
+      expect.objectContaining({
+        kind: 'input-file',
+        file: 'packages/nx/src/x.ts',
+      })
+    );
   });
 });
 
