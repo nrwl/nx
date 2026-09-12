@@ -12,6 +12,7 @@ const CAPABILITIES: PluginCapabilities = {
 };
 
 const mocks = vi.hoisted(() => ({
+  loadForCapabilities: vi.fn(),
   readValidRecords: vi.fn(),
   recordCapabilities: vi.fn(),
   forgetCapabilities: vi.fn(),
@@ -39,6 +40,7 @@ vi.mock('./isolation', () => ({
 vi.mock('./isolation/isolated-plugin', () => ({
   isPluginWorkerSocketRefusal: () => false,
   isPluginWorkerStartupFailure: () => false,
+  IsolatedPlugin: { load: mocks.loadForCapabilities },
   resolveModule: vi.fn(async (plugin: unknown) => {
     const label = typeof plugin === 'string' ? plugin : (plugin as any).plugin;
     return {
@@ -115,6 +117,18 @@ describe('loading plugins through the capability cache', () => {
       return found;
     });
     mocks.recordCapabilities.mockReset();
+    mocks.loadForCapabilities.mockReset();
+    mocks.loadForCapabilities.mockImplementation(async (plugin: unknown) => {
+      const label =
+        typeof plugin === 'string' ? plugin : (plugin as any).plugin;
+      return {
+        name: label,
+        createNodes: ['**/*.config.ts', async () => []],
+        createDependencies: async () => [],
+        sourceFiles: [`/resolved/${label}`],
+        dispose: vi.fn(),
+      };
+    });
     mocks.forgetCapabilities.mockReset();
     mocks.storableSourceFiles.mockReset();
     mocks.storableSourceFiles.mockImplementation((files: string[]) => files);
@@ -418,7 +432,48 @@ describe('loading plugins through the capability cache', () => {
       expect(useIsolatedNxPluginCapabilities).not.toHaveBeenCalled();
     });
 
-    it('declines when any plugin has no record', async () => {
+    it('loads only the plugins with no record, and puts them back down', async () => {
+      // A record for everything but the one nx.json names.
+      mocks.readValidRecords.mockImplementation((keys: string[]) => {
+        const found = new Map<string, PluginCapabilities>();
+        for (const key of keys) {
+          if (!key.includes('test-plugin')) {
+            found.set(key, CAPABILITIES);
+          }
+        }
+        return found;
+      });
+
+      const peeked = await peekPluginCapabilities({ plugins: ['test-plugin'] });
+
+      // Complete, rather than null, which used to send the caller off to load
+      // every plugin for the sake of the one that was missing.
+      expect(peeked).not.toBeNull();
+      expect(peeked[0].createNodesPattern).toBe('**/*.config.ts');
+
+      const loaded = mocks.loadForCapabilities.mock.calls.map(([plugin]) =>
+        typeof plugin === 'string' ? plugin : (plugin as any).plugin
+      );
+      expect(loaded).toEqual(['test-plugin']);
+
+      // Kept out of the set this process holds, and put down as soon as it has
+      // answered, so the worker does not outlive the question.
+      const instance = await mocks.loadForCapabilities.mock.results[0].value;
+      expect(instance.dispose).toHaveBeenCalled();
+      expect(loadIsolatedNxPlugin).not.toHaveBeenCalled();
+      expect(useIsolatedNxPluginCapabilities).not.toHaveBeenCalled();
+
+      // Written, so the next command reads it instead of loading again.
+      expect(mocks.recordCapabilities).toHaveBeenCalledWith([
+        expect.objectContaining({ key: 'key:/resolved/test-plugin' }),
+      ]);
+    });
+
+    it('declines when a plugin it has to load fails', async () => {
+      mocks.loadForCapabilities.mockRejectedValue(new Error('boom'));
+
+      // Null sends the caller to its own load, which reports the failure with
+      // the plugin name and the context it expects.
       expect(
         await peekPluginCapabilities({ plugins: ['test-plugin'] })
       ).toBeNull();
