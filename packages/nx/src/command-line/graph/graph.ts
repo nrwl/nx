@@ -1366,7 +1366,9 @@ function splitGlobGroup(group: string): string[] {
     }
   }
   globs.push(current);
-  return globs;
+  // An unbalanced `{` would swallow the rest of the list; a plain split is
+  // the better guess then.
+  return depth === 0 ? globs : group.split(',');
 }
 
 function expandInputs(
@@ -1385,8 +1387,9 @@ function expandInputs(
   inputs.forEach((input) => {
     // grouped workspace inputs look like workspace:[pattern,otherPattern]
     if (input.startsWith('workspace:[')) {
-      const inputs = input.substring(11, input.length - 1).split(',');
-      workspaceRootInputs.push(...inputs);
+      workspaceRootInputs.push(
+        ...splitGlobGroup(input.substring(11, input.length - 1))
+      );
       return;
     }
     // Disk-backed groups look like files:{project}:[glob,!otherGlob]. They
