@@ -281,7 +281,8 @@ impl TaskHasher {
     }
 
     /// Like `hash_plans`, but only for the plans that hold no output of another
-    /// task. The rest are left out and hash once those tasks have run; their
+    /// task and no fileset read from disk (which may be what another task
+    /// writes). The rest are left out and hash once those tasks have run; their
     /// ids are absent from the result and need no entry in `per_task_envs`.
     #[napi(ts_return_type = "Record<string, HashDetails>")]
     pub fn hash_plans_upfront(
@@ -298,8 +299,13 @@ impl TaskHasher {
             .plans
             .iter()
             .filter(|(_, ids)| {
-                !ids.iter()
-                    .any(|id| matches!(*pool.get(*id), HashInstruction::TaskOutput(_, _)))
+                !ids.iter().any(|id| {
+                    matches!(
+                        *pool.get(*id),
+                        HashInstruction::TaskOutput(_, _)
+                            | HashInstruction::ProjectFileSet(_, _, true)
+                    )
+                })
             })
             .map(|(task_id, ids)| (task_id.clone(), ids.clone()))
             .collect();

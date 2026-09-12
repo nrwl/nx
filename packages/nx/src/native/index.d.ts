@@ -216,7 +216,8 @@ export declare class TaskHasher {
   hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, perTaskEnvs: Record<string, Record<string, string>>, cwd: string, collectTaskInputs?: boolean | undefined | null): Record<string, HashDetails>
   /**
    * Like `hash_plans`, but only for the plans that hold no output of another
-   * task. The rest are left out and hash once those tasks have run; their
+   * task and no fileset read from disk (which may be what another task
+   * writes). The rest are left out and hash once those tasks have run; their
    * ids are absent from the result and need no entry in `per_task_envs`.
    */
   hashPlansUpfront(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, perTaskEnvs: Record<string, Record<string, string>>, cwd: string, collectTaskInputs?: boolean | undefined | null): Record<string, HashDetails>

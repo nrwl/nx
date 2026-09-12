@@ -130,7 +130,7 @@ Add `includeIgnored: true` to hash the glob straight from the disk instead:
 
 Use it for files no task in the run produces.
 The outputs of a task this task depends on, such as a dependency's `dist/`, belong in [`dependentTasksOutputFiles`](#outputs-of-dependent-tasks), which is built for that.
-A task with an `includeIgnored` fileset and task dependencies is hashed after those dependencies finish, like a task with `dependentTasksOutputFiles`.
+A task whose hash includes an `includeIgnored` fileset, its own or one it inherits from a dependency or a continuous dependency, is hashed right before it runs, after its task dependencies, like a task with `dependentTasksOutputFiles`.
 
 `{projectRoot}` and `{workspaceRoot}` resolve as for any fileset, and every glob must start with one of them.
 A glob that would walk from the workspace root, such as `{workspaceRoot}/**`, is a configuration error.
