@@ -83,6 +83,12 @@ import {
   summarizeError,
   warnCommitFailed,
 } from './util';
+import {
+  BrokerStaleRequestError,
+  commitStepTree,
+  installStepTree,
+  type BrokeredCommit,
+} from './broker';
 import { singleLine } from '../text';
 import { emitPromptBlock, logToAgent, warnToAgent } from './agent-output';
 import {
@@ -586,9 +592,9 @@ async function runRecorded(
   // invocation may have claimed a later attempt whose flag `step` predates.
   const startedStep = state.steps.find((s) => s.id === step.id);
   const generatorAlreadyCompleted = startedStep.generatorCompleted === true;
-  // The run records its own install policy because dispensed worker commands
-  // are re-invoked by the loop and never carry the user's flags; an explicit
-  // --skip-install on this invocation still applies on top of it.
+  // Dispensed worker commands never carry the user's flags, so the run records
+  // its install policy. An explicit --skip-install here applies only to the
+  // installs this process runs itself; a parent session answers from its own.
   const effectiveSkipInstall = state.skipInstall === true || skipInstall;
   // The run records the resolved validation policy at init; absent (a state
   // predating the field) falls back to the same default init applies.
@@ -596,13 +602,15 @@ async function runRecorded(
   // Called before a retry hands the step's work back: the prompt or validation
   // may need the dependencies the earlier attempt's generator added.
   const reinstallFromBaseline = () =>
-    recordingInstallFailure(dir, step.id, () =>
-      installDepsChangedSinceDispense(
-        root,
-        dir,
-        startedStep,
-        effectiveSkipInstall,
-        `${formatSingleMigrationRerunCommand(migrationId)} --run-id=${runId}`
+    installStepTree(dir, startedStep, 'install', () =>
+      recordingInstallFailure(dir, step.id, () =>
+        installDepsChangedSinceDispense(
+          root,
+          dir,
+          startedStep,
+          effectiveSkipInstall,
+          `${formatSingleMigrationRerunCommand(migrationId)} --run-id=${runId}`
+        )
       )
     );
 
@@ -787,7 +795,7 @@ async function runRecorded(
           install
         );
       } else {
-        await install();
+        await installStepTree(dir, step, 'install', install);
       }
 
       if (installer.skippedInstall) {
@@ -809,6 +817,8 @@ async function runRecorded(
       }
     }
   } catch (e) {
+    // Another attempt owns the step, and `fail` is not attempt-bound.
+    if (e instanceof BrokerStaleRequestError) throw e;
     // The failed-step dispense surfaces this so the agent can decide
     // retry-vs-skip; carry the error's first line, not a full stack.
     transition(dir, {
@@ -902,7 +912,7 @@ async function finishCompletedGenerator(
   // commit: absent means an older nx wrote the marker without recording the
   // answer, and the commit is kept as that version's retries did.
   if (!state.createCommits || step.generatorMadeChanges === false) {
-    await installDeps();
+    await installStepTree(dir, step, 'install', installDeps);
     return state;
   }
   return commitStepChanges(dir, root, state, step, migration, installDeps);
@@ -923,26 +933,34 @@ async function commitStepChanges(
   const absorbedStepIds = uncoveredFailedStepIds(state).filter(
     (id) => id !== step.id
   );
-  let result: CommitResult;
+  let commit: BrokeredCommit;
   try {
-    result = await commitMigrationIfRequested(
-      root,
-      migration,
-      true,
-      state.commitPrefix,
-      installDeps,
-      stepsToPendingMigrations(state, absorbedStepIds)
+    commit = await commitStepTree(dir, step, absorbedStepIds, () =>
+      commitMigrationIfRequested(
+        root,
+        migration,
+        true,
+        state.commitPrefix,
+        installDeps,
+        stepsToPendingMigrations(state, absorbedStepIds)
+      )
     );
   } catch (commitError) {
+    // Nothing ran for a stale request, so there is no debt to record.
+    if (commitError instanceof BrokerStaleRequestError) throw commitError;
     // A post-migration install failure leaves the diff uncommitted; record the
     // debt so only a landed entry can cover it.
     appendCommit(dir, { kind: 'failed', stepIds: [step.id] });
     throw commitError;
   }
-  if (result.status === 'failed') {
+  if (commit.result.status === 'failed') {
     warnCommitFailed(migration.name);
   }
-  const entry = commitResultToLedgerEntry(result, step.id, absorbedStepIds);
+  const entry = commitResultToLedgerEntry(
+    commit.result,
+    step.id,
+    commit.absorbedStepIds
+  );
   return entry ? appendCommit(dir, entry) : state;
 }
 

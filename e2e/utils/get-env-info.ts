@@ -196,6 +196,10 @@ export function getStrippedEnvironmentVariables(cwd: string = tmpProjPath()) {
         'CURSOR_TRACE_ID',
         'COMPOSER_NO_INTERACTION',
         'REPL_ID',
+        'CODEX_THREAD_ID',
+        'SUPERSET_AGENT_ID',
+        'COPILOT_CLI',
+        'VSCODE_AGENT',
       ];
       if (aiAgentEnvVars.includes(key)) {
         return false;

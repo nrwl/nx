@@ -12,6 +12,7 @@ import { output } from '../../utils/output';
 import type { ResolvedAgentic } from './agentic/types';
 import { MIGRATE_RUNS_RELATIVE_DIR } from './agentic/types';
 import { migrateConfirm } from './safe-prompt';
+import { terminalOutput, type MigrateOutputSink } from './deferred-output';
 
 // `git add -A` captures an orchestrated run's scratch state whenever the
 // ignore rule that normally hides it goes missing mid-run (a checkout, a
@@ -53,7 +54,8 @@ export async function commitMigrationIfRequested(
   commitPrefix: string,
   installDepsIfChanged: () => Promise<void>,
   pendingMigrations: ReadonlyArray<{ package: string; name: string }> = [],
-  failureGuidance = 'The next successful commit will absorb it and reference this migration in its body; if no later commit lands, the end-of-run output will list this migration so you can commit or revert manually.'
+  failureGuidance = 'The next successful commit will absorb it and reference this migration in its body; if no later commit lands, the end-of-run output will list this migration so you can commit or revert manually.',
+  out: MigrateOutputSink = terminalOutput
 ): Promise<CommitResult> {
   if (!shouldCreateCommits) return { status: 'disabled' };
   await installDepsIfChanged();
@@ -61,7 +63,7 @@ export async function commitMigrationIfRequested(
   // dir, or the prompt half made no change: log neutrally, not as an error.
   // The probe excludes what the commit excludes, else the commit fails empty.
   if (!hasUncommittedChanges(root, MIGRATE_COMMIT_EXCLUDES)) {
-    logger.info(pc.dim(`- No changes to commit for ${migration.name}.`));
+    out.line('dim', `- No changes to commit for ${migration.name}.`);
     return { status: 'no-changes' };
   }
   const commitMessage = buildCommitMessage(
@@ -73,18 +75,16 @@ export async function commitMigrationIfRequested(
     if (sha) return { status: 'committed', sha };
     // null = commit landed but `git rev-parse HEAD` failed (see
     // `tryCommitChanges`). Degraded-but-correct — log yellow, not red.
-    logger.info(
-      pc.yellow(
-        `The commit for ${migration.name} was created, but its sha could not be resolved (\`git rev-parse HEAD\` failed transiently). Continuing without recording the sha for this step.`
-      )
+    out.line(
+      'yellow',
+      `The commit for ${migration.name} was created, but its sha could not be resolved (\`git rev-parse HEAD\` failed transiently). Continuing without recording the sha for this step.`
     );
     return { status: 'committed', sha: null };
   } catch (err) {
     const reason = err instanceof Error ? err.message : String(err);
-    logger.info(
-      pc.red(
-        `Could not create a commit for ${migration.name}:\n${reason}\nThe migration's diff remains in the working tree; inspect with \`git status\` / \`git diff\` to review. ${failureGuidance}`
-      )
+    out.line(
+      'red',
+      `Could not create a commit for ${migration.name}:\n${reason}\nThe migration's diff remains in the working tree; inspect with \`git status\` / \`git diff\` to review. ${failureGuidance}`
     );
     return { status: 'failed', reason };
   }
