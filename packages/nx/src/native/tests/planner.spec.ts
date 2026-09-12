@@ -1141,4 +1141,321 @@ describe('task planner', () => {
       expect(plans).toMatchSnapshot();
     });
   });
+  describe('continuous dependencies', () => {
+    it("hashes a continuous dependency's inputs into the task it serves", () => {
+      const builder = new ProjectGraphBuilder(undefined, {
+        parent: [{ file: 'libs/parent/filea.ts', hash: 'a.hash' }],
+        child: [{ file: 'libs/child/fileb.ts', hash: 'b.hash' }],
+      });
+      builder.addNode({
+        name: 'child',
+        type: 'lib',
+        data: {
+          root: 'libs/child',
+          targets: {
+            serve: { executor: 'nx:run-commands', continuous: true },
+          },
+        },
+      });
+      builder.addNode({
+        name: 'parent',
+        type: 'lib',
+        data: {
+          root: 'libs/parent',
+          targets: {
+            test: {
+              executor: 'nx:run-commands',
+              inputs: ['{projectRoot}/**/*'],
+              dependsOn: [{ projects: 'child', target: 'serve' }],
+            },
+          },
+        },
+      });
+      const projectGraph = builder.getUpdatedProjectGraph();
+      const taskGraph = createTaskGraph(
+        projectGraph,
+        {},
+        ['parent'],
+        ['test'],
+        undefined,
+        {}
+      );
+      const planner = new HashPlanner(
+        {} as any,
+        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+      );
+
+      // The dependency serving this task runs in its own process, so only its
+      // declared inputs can stand in for what it reads.
+      expect(taskGraph.continuousDependencies['parent:test']).toContain(
+        'child:serve'
+      );
+      expect(
+        planner.getPlans(['parent:test'], taskGraph)['parent:test']
+      ).toContain('child:libs/child/**/*');
+    });
+
+    it('follows the servers that serve a continuous dependency', () => {
+      const builder = new ProjectGraphBuilder(undefined, {
+        parent: [{ file: 'libs/parent/filea.ts', hash: 'a.hash' }],
+        child: [{ file: 'libs/child/fileb.ts', hash: 'b.hash' }],
+        grandchild: [{ file: 'libs/grandchild/filec.ts', hash: 'c.hash' }],
+      });
+      // grandchild serves child over the network: no project dependency, so
+      // only the task graph links them.
+      builder.addNode({
+        name: 'grandchild',
+        type: 'lib',
+        data: {
+          root: 'libs/grandchild',
+          targets: {
+            serve: { executor: 'nx:run-commands', continuous: true },
+          },
+        },
+      });
+      builder.addNode({
+        name: 'child',
+        type: 'lib',
+        data: {
+          root: 'libs/child',
+          targets: {
+            serve: {
+              executor: 'nx:run-commands',
+              continuous: true,
+              dependsOn: [{ projects: 'grandchild', target: 'serve' }],
+            },
+          },
+        },
+      });
+      builder.addNode({
+        name: 'parent',
+        type: 'lib',
+        data: {
+          root: 'libs/parent',
+          targets: {
+            test: {
+              executor: 'nx:run-commands',
+              inputs: ['{projectRoot}/**/*'],
+              dependsOn: [{ projects: 'child', target: 'serve' }],
+            },
+          },
+        },
+      });
+      const projectGraph = builder.getUpdatedProjectGraph();
+      const taskGraph = createTaskGraph(
+        projectGraph,
+        {},
+        ['parent'],
+        ['test'],
+        undefined,
+        {}
+      );
+      const planner = new HashPlanner(
+        {} as any,
+        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+      );
+
+      expect(taskGraph.continuousDependencies['child:serve']).toContain(
+        'grandchild:serve'
+      );
+      const plan = planner.getPlans(['parent:test'], taskGraph)['parent:test'];
+      expect(plan).toContain('child:libs/child/**/*');
+      expect(plan).toContain('grandchild:libs/grandchild/**/*');
+    });
+
+    // Builds the served/server pair the tests below vary: parent:test depends
+    // on child:serve, a continuous target with the given configuration.
+    function servedBy(
+      serve: Record<string, unknown>,
+      extraTargets: Record<string, unknown> = {},
+      externals: string[] = [],
+      testInputs: unknown[] = ['{projectRoot}/**/*']
+    ) {
+      const builder = new ProjectGraphBuilder(undefined, {
+        parent: [{ file: 'libs/parent/filea.ts', hash: 'a.hash' }],
+        child: [{ file: 'libs/child/fileb.ts', hash: 'b.hash' }],
+      });
+      for (const name of externals) {
+        builder.addExternalNode({
+          name: `npm:${name}`,
+          type: 'npm',
+          data: { packageName: name, version: '1.0.0', hash: `${name}.hash` },
+        });
+      }
+      builder.addNode({
+        name: 'child',
+        type: 'lib',
+        data: {
+          root: 'libs/child',
+          targets: {
+            serve: { executor: 'nx:run-commands', continuous: true, ...serve },
+            ...extraTargets,
+          },
+        },
+      });
+      builder.addNode({
+        name: 'parent',
+        type: 'lib',
+        data: {
+          root: 'libs/parent',
+          targets: {
+            test: {
+              executor: 'nx:run-commands',
+              inputs: testInputs,
+              dependsOn: [{ projects: 'child', target: 'serve' }],
+            },
+          },
+        },
+      });
+      const projectGraph = builder.getUpdatedProjectGraph();
+      const taskGraph = createTaskGraph(
+        projectGraph,
+        {},
+        ['parent'],
+        ['test'],
+        undefined,
+        {}
+      );
+      const planner = new HashPlanner(
+        {} as any,
+        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+      );
+      return { planner, taskGraph };
+    }
+
+    it("hashes a continuous dependency's external dependencies", () => {
+      const { planner, taskGraph } = servedBy(
+        { inputs: ['{projectRoot}/**/*', { externalDependencies: ['vite'] }] },
+        {},
+        ['vite', 'cypress'],
+        ['{projectRoot}/**/*', { externalDependencies: ['cypress'] }]
+      );
+
+      const plan = planner.getPlans(['parent:test'], taskGraph)['parent:test'];
+      expect(plan).toContain('npm:cypress');
+      expect(plan).toContain('npm:vite');
+      expect(plan).not.toContain('AllExternalDependencies');
+    });
+
+    it('hashes all external dependencies for a continuous dependency that declares none', () => {
+      // The served task declares its own, so the fallback can only be the server's.
+      const { planner, taskGraph } = servedBy(
+        {},
+        {},
+        ['cypress'],
+        ['{projectRoot}/**/*', { externalDependencies: ['cypress'] }]
+      );
+
+      const plan = planner.getPlans(['parent:test'], taskGraph)['parent:test'];
+      expect(plan).toContain('npm:cypress');
+      expect(plan).toContain('AllExternalDependencies');
+    });
+
+    it("hashes the outputs of a continuous dependency's own dependencies", () => {
+      const { planner, taskGraph } = servedBy(
+        {
+          dependsOn: ['build'],
+          inputs: [
+            '{projectRoot}/**/*',
+            { dependentTasksOutputFiles: '**/*.d.ts', transitive: true },
+          ],
+        },
+        {
+          build: {
+            executor: 'nx:run-commands',
+            outputs: ['{workspaceRoot}/dist/libs/child'],
+          },
+        }
+      );
+
+      // parent:test has no task dependency of its own, so hash-task.ts must
+      // defer it past child:build for this entry to be hashed after the build.
+      expect(taskGraph.dependencies['parent:test']).toEqual([]);
+      const plan = planner.getPlans(['parent:test'], taskGraph)['parent:test'];
+      expect(plan).toContain('child:libs/child/**/*');
+      expect(plan).toContain('**/*.d.ts:dist/libs/child');
+    });
+
+    it('terminates on a cycle of continuous dependencies and hashes each server once', () => {
+      const { planner, taskGraph } = servedBy({});
+      // child:serve is (nonsensically) served by parent:test, closing a loop.
+      taskGraph.continuousDependencies['child:serve'] = ['parent:test'];
+
+      const plan = planner.getPlans(['parent:test'], taskGraph)['parent:test'];
+      expect(
+        plan.filter((entry) => entry === 'child:libs/child/**/*')
+      ).toHaveLength(1);
+      expect(
+        plan.filter((entry) => entry === 'parent:libs/parent/**/*')
+      ).toHaveLength(1);
+    });
+
+    it('hashes a server shared by two continuous dependencies once', () => {
+      const builder = new ProjectGraphBuilder(undefined, {
+        parent: [{ file: 'libs/parent/filea.ts', hash: 'a.hash' }],
+        left: [{ file: 'libs/left/fileb.ts', hash: 'b.hash' }],
+        right: [{ file: 'libs/right/filec.ts', hash: 'c.hash' }],
+        shared: [{ file: 'libs/shared/filed.ts', hash: 'd.hash' }],
+      });
+      const serve = (dependsOn?: unknown[]) => ({
+        executor: 'nx:run-commands',
+        continuous: true,
+        ...(dependsOn ? { dependsOn } : {}),
+      });
+      builder.addNode({
+        name: 'shared',
+        type: 'lib',
+        data: { root: 'libs/shared', targets: { serve: serve() } },
+      });
+      for (const name of ['left', 'right']) {
+        builder.addNode({
+          name,
+          type: 'lib',
+          data: {
+            root: `libs/${name}`,
+            targets: {
+              serve: serve([{ projects: 'shared', target: 'serve' }]),
+            },
+          },
+        });
+      }
+      builder.addNode({
+        name: 'parent',
+        type: 'lib',
+        data: {
+          root: 'libs/parent',
+          targets: {
+            test: {
+              executor: 'nx:run-commands',
+              inputs: ['{projectRoot}/**/*'],
+              dependsOn: [
+                { projects: 'left', target: 'serve' },
+                { projects: 'right', target: 'serve' },
+              ],
+            },
+          },
+        },
+      });
+      const projectGraph = builder.getUpdatedProjectGraph();
+      const taskGraph = createTaskGraph(
+        projectGraph,
+        {},
+        ['parent'],
+        ['test'],
+        undefined,
+        {}
+      );
+      const planner = new HashPlanner(
+        {} as any,
+        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+      );
+
+      const plan = planner.getPlans(['parent:test'], taskGraph)['parent:test'];
+      for (const name of ['left', 'right', 'shared']) {
+        expect(
+          plan.filter((entry) => entry === `${name}:libs/${name}/**/*`)
+        ).toHaveLength(1);
+      }
+    });
+  });
 });

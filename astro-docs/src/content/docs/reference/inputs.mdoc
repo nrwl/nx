@@ -236,6 +236,14 @@ When a task depends on another task, it is possible that the outputs of the depe
 The glob pattern is matched against the file paths resolved from workspace root. For example, if a dependent task has `outputs: ["{workspaceRoot}/dist/{projectRoot}"]` and the project root is `libs/my-lib`, the output path becomes `dist/libs/my-lib`.
 Files such as `dist/libs/my-lib/index.d.ts` would be matched by patterns `**/*.d.ts`, `dist/**/*.d.ts`, or `dist/libs/my-lib/**/*.d.ts`. Setting `transitive` to `true` will also include outputs of all task dependencies of this task in the [task pipeline](/docs/concepts/task-pipeline-configuration). It's possible the dependent tasks can change over time, so be careful to not overly scope the matching glob to prevent accidental false cache hits.
 
+### Inputs of continuous dependencies
+
+A [continuous task](/docs/kb/defining-task-pipeline#continuous-task-dependencies), such as the `serve` task an `e2e` task depends on, runs in its own process, yet what it reads still decides what the task it serves observes.
+A task therefore also hashes the declared inputs of every continuous dependency it has, and of the servers those depend on in turn: files, environment variables, runtime commands and external dependencies alike.
+There's nothing to declare, and only continuous dependencies count.
+A server that declares no inputs contributes its whole project, so declare inputs on servers that live at the workspace root, such as a local registry.
+When a server reads the outputs of its own build dependencies, Nx hashes the task it serves once the server is running, so those outputs count too.
+
 ### A subset of the root `tsconfig.json` or `tsconfig.base.json`
 
 When a root `tsconfig.json` or `tsconfig.base.json` is present, Nx will always consider parts of the file which apply to the project of a task being run.

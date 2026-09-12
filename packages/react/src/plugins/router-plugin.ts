@@ -174,6 +174,7 @@ async function buildReactRouterTargets(
 
   targets[options.devTargetName] = await devTarget(
     projectRoot,
+    namedInputs,
     isUsingTsSolutionSetup
   );
 
@@ -182,6 +183,7 @@ async function buildReactRouterTargets(
       projectRoot,
       serverBuildPath,
       options.buildTargetName,
+      namedInputs,
       isUsingTsSolutionSetup
     );
   }
@@ -232,12 +234,7 @@ async function getBuildTargetConfig(
   const buildTarget: TargetConfiguration = {
     cache: true,
     dependsOn: [`^${buildTargetName}`],
-    inputs: [
-      ...('production' in namedInputs
-        ? ['production', '^production']
-        : ['default', '^default']),
-      { externalDependencies: ['@react-router/dev'] },
-    ],
+    inputs: buildInputs(namedInputs),
     outputs,
     command: 'react-router build',
     options: { cwd: projectRoot },
@@ -262,9 +259,25 @@ async function getBuildPaths(reactRouterConfig, isLibMode: boolean) {
   };
 }
 
-async function devTarget(projectRoot: string, isUsingTsSolutionSetup: boolean) {
+function buildInputs(namedInputs: {
+  [inputName: string]: any[];
+}): TargetConfiguration['inputs'] {
+  return [
+    ...('production' in namedInputs
+      ? ['production', '^production']
+      : ['default', '^default']),
+    { externalDependencies: ['@react-router/dev'] },
+  ];
+}
+
+async function devTarget(
+  projectRoot: string,
+  namedInputs: { [inputName: string]: any[] },
+  isUsingTsSolutionSetup: boolean
+) {
   const devTarget: TargetConfiguration = {
     continuous: true,
+    inputs: buildInputs(namedInputs),
     command: 'react-router dev',
     options: { cwd: projectRoot },
   };
@@ -279,6 +292,7 @@ async function startTarget(
   projectRoot: string,
   serverBuildPath: string,
   buildTargetName: string,
+  namedInputs: { [inputName: string]: any[] },
   isUsingTsSolutionSetup: boolean
 ) {
   const serverPath =
@@ -289,6 +303,7 @@ async function startTarget(
   const startTarget: TargetConfiguration = {
     continuous: true,
     dependsOn: [buildTargetName],
+    inputs: buildInputs(namedInputs),
     command: `react-router-serve ${serverPath}`,
     options: { cwd: projectRoot },
   };

@@ -1,5 +1,5 @@
 use crate::native::tasks::{
-    dep_outputs::get_dep_output,
+    dep_outputs::{collect_continuous_dependencies, get_dep_output},
     types::{CwdMode, HashInstruction, HashPlans, InstructionPool, JsonFileSetInput, TaskGraph},
 };
 use crate::native::types::{Input, NxJson};
@@ -165,6 +165,33 @@ impl HashPlanner {
                     external_deps_mapped,
                     &mut VisitedTracker::new(task.target.project.as_str()),
                 )?);
+
+                // A continuous dependency serves this task from its own process, so
+                // its declared inputs and externals are hashed here, and its own
+                // servers' in turn. When it reads its builds' outputs, those land in
+                // this plan too, which holds the task back from the up-front batch.
+                for dep_task in collect_continuous_dependencies(&task_graph, id) {
+                    let dep_inputs = get_inputs(dep_task, &self.project_graph, &self.nx_json)?;
+                    ids.extend(
+                        self.target_input(
+                            &dep_task.target.project,
+                            &dep_task.target.target,
+                            &dep_inputs.self_inputs,
+                            external_deps_mapped,
+                        )?
+                        .unwrap_or_default()
+                        .into_iter()
+                        .map(|instruction| pool.intern(instruction)),
+                    );
+                    ids.extend(self.self_and_deps_inputs(
+                        &dep_task.target.project,
+                        dep_task,
+                        &dep_inputs,
+                        &task_graph,
+                        external_deps_mapped,
+                        &mut VisitedTracker::new(dep_task.target.project.as_str()),
+                    )?);
+                }
 
                 ids.sort_unstable();
                 ids.dedup();

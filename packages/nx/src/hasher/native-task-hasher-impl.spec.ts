@@ -1391,4 +1391,118 @@ describe('native task hasher', () => {
   //   );
   //   console.dir(hashes, { depth: null });
   // });
+
+  it('hashes up front only the tasks whose plan holds no output of another task', async () => {
+    await tempFs.createFiles({
+      'apps/app/project.json': JSON.stringify({ name: 'app' }),
+      'apps/app/main.ts': 'app',
+      'apps/e2e/project.json': JSON.stringify({ name: 'e2e' }),
+      'apps/e2e/app.spec.ts': 'e2e',
+    });
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+      'libs/child': 'child',
+      'apps/app': 'app',
+      'apps/e2e': 'e2e',
+    });
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      workspaceFiles.fileMap.projectFileMap
+    );
+    builder.addNode({
+      name: 'child',
+      type: 'lib',
+      data: {
+        root: 'libs/child',
+        targets: { compile: { executor: 'nx:run-commands' } },
+      },
+    });
+    // parent reads its dependency's outputs but child:compile emits none
+    // (a `build` target would get the legacy default outputs).
+    builder.addNode({
+      name: 'parent',
+      type: 'lib',
+      data: {
+        root: 'libs/parent',
+        targets: {
+          compile: {
+            executor: 'nx:run-commands',
+            inputs: ['default', { dependentTasksOutputFiles: '**/*.d.ts' }],
+          },
+        },
+      },
+    });
+    builder.addStaticDependency('parent', 'child', 'libs/parent/src/index.ts');
+    // app:serve reads app:build's outputs; e2e is served by app:serve.
+    builder.addNode({
+      name: 'app',
+      type: 'app',
+      data: {
+        root: 'apps/app',
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+            outputs: ['{workspaceRoot}/dist/apps/app'],
+          },
+          serve: {
+            executor: 'nx:run-commands',
+            continuous: true,
+            dependsOn: ['build'],
+            inputs: ['default', { dependentTasksOutputFiles: '**/*.d.ts' }],
+          },
+        },
+      },
+    });
+    builder.addNode({
+      name: 'e2e',
+      type: 'app',
+      data: {
+        root: 'apps/e2e',
+        targets: {
+          e2e: {
+            executor: 'nx:run-commands',
+            inputs: ['default'],
+            dependsOn: [{ projects: 'app', target: 'serve' }],
+          },
+        },
+      },
+    });
+    const projectGraph = builder.getUpdatedProjectGraph();
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      { compile: ['^compile'] },
+      ['parent', 'e2e'],
+      ['compile', 'e2e'],
+      undefined,
+      {}
+    );
+    const tasks = Object.values(taskGraph.tasks);
+    const hashes = await new NativeTaskHasherImpl(
+      tempFs.tempDir,
+      nxJson,
+      projectGraph,
+      workspaceFiles.rustReferences,
+      { selectivelyHashTsConfig: false }
+    ).hashTasksUpfront(
+      tasks,
+      taskGraph,
+      Object.fromEntries(tasks.map((t) => [t.id, {}]))
+    );
+
+    // parent:compile depends on child:compile, which emits nothing, so its
+    // plan holds no outputs; app:serve reads app:build's, and e2e inherits that.
+    expect(Object.keys(taskGraph.tasks).sort()).toEqual([
+      'app:build',
+      'app:serve',
+      'child:compile',
+      'e2e:e2e',
+      'parent:compile',
+    ]);
+    expect(Object.keys(hashes).sort()).toEqual([
+      'app:build',
+      'child:compile',
+      'parent:compile',
+    ]);
+    expect(taskGraph.dependencies['e2e:e2e']).toEqual([]);
+  });
 });

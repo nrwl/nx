@@ -1087,6 +1087,13 @@ export async function invokeTasksRunner({
             envOrPerTaskEnvs as NodeJS.ProcessEnv
           );
         },
+        hashTasksUpfront(
+          tasks: Task[],
+          taskGraph_: TaskGraph,
+          perTaskEnvs: Record<string, NodeJS.ProcessEnv>
+        ) {
+          return hasher.hashTasksUpfront(tasks, taskGraph_, perTaskEnvs);
+        },
       },
       daemon: daemonClient,
     }

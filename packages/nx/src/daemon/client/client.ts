@@ -178,6 +178,32 @@ export class WatcherFailedError extends Error {
  */
 const MAX_CONSECUTIVE_FRAMING_FAILURES = 3;
 
+// Task results get written back onto these task objects as the run
+// progresses — hash/hashDetails/timestamps by hashing and the orchestrator,
+// terminalOutput by the Nx Cloud life cycle (untyped) — so a later message
+// would otherwise re-ship every earlier result.
+function withoutTaskResults(
+  tasks: Task[],
+  taskGraph: TaskGraph
+): { tasks: Task[]; taskGraph: TaskGraph } {
+  const trimmedTasks: Record<string, Task> = {};
+  for (const [id, t] of Object.entries(taskGraph.tasks)) {
+    const {
+      hash,
+      hashDetails,
+      startTime,
+      endTime,
+      terminalOutput,
+      ...strippedTask
+    } = t as Task & { terminalOutput?: string };
+    trimmedTasks[id] = strippedTask as Task;
+  }
+  return {
+    tasks: tasks.map((t) => trimmedTasks[t.id]),
+    taskGraph: { ...taskGraph, tasks: trimmedTasks },
+  };
+}
+
 export class DaemonClient {
   private readonly nxJson: NxJsonConfiguration | null;
 
@@ -374,28 +400,29 @@ export class DaemonClient {
     cwd: string,
     collectInputs?: boolean
   ): Promise<Hash[]> {
-    // Task results get written back onto these task objects as the run
-    // progresses — hash/hashDetails/timestamps by hashing and the
-    // orchestrator, terminalOutput by the Nx Cloud life cycle (untyped) —
-    // so a later message would otherwise re-ship every earlier result.
-    const trimmedTasks: Record<string, Task> = {};
-    for (const [id, t] of Object.entries(taskGraph.tasks)) {
-      const {
-        hash,
-        hashDetails,
-        startTime,
-        endTime,
-        terminalOutput,
-        ...strippedTask
-      } = t as Task & { terminalOutput?: string };
-      trimmedTasks[id] = strippedTask as Task;
-    }
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS',
       runnerOptions,
       perTaskEnvs,
-      tasks: tasks.map((t) => trimmedTasks[t.id]),
-      taskGraph: { ...taskGraph, tasks: trimmedTasks },
+      ...withoutTaskResults(tasks, taskGraph),
+      cwd,
+      collectInputs,
+    });
+  }
+
+  hashTasksUpfront(
+    runnerOptions: any,
+    tasks: Task[],
+    taskGraph: TaskGraph,
+    perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
+    cwd: string,
+    collectInputs?: boolean
+  ): Promise<Record<string, Hash>> {
+    return this.sendToDaemonViaQueue({
+      type: 'HASH_TASKS_UPFRONT',
+      runnerOptions,
+      perTaskEnvs,
+      ...withoutTaskResults(tasks, taskGraph),
       cwd,
       collectInputs,
     });

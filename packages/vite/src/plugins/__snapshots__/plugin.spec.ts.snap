@@ -124,6 +124,15 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
             "dev": {
               "command": "vite",
               "continuous": true,
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "vite",
+                  ],
+                },
+              ],
               "metadata": {
                 "description": "Starts Vite dev server",
                 "help": {
@@ -145,6 +154,15 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
             "my-serve": {
               "command": "vite",
               "continuous": true,
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "vite",
+                  ],
+                },
+              ],
               "metadata": {
                 "deprecated": "Use devTargetName instead. This option will be removed in Nx 22.",
                 "description": "Starts Vite dev server",
@@ -170,6 +188,15 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
               "dependsOn": [
                 "build-something",
               ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "vite",
+                  ],
+                },
+              ],
               "metadata": {
                 "description": "Locally preview Vite production build",
                 "help": {
@@ -191,6 +218,15 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
             "serve-static": {
               "continuous": true,
               "executor": "@nx/web:file-server",
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "vite",
+                  ],
+                },
+              ],
               "options": {
                 "buildTarget": "build-something",
                 "spa": true,
@@ -262,6 +298,15 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
             "dev": {
               "command": "vite",
               "continuous": true,
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "vite",
+                  ],
+                },
+              ],
               "metadata": {
                 "description": "Starts Vite dev server",
                 "help": {
@@ -286,6 +331,15 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
               "dependsOn": [
                 "build",
               ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "vite",
+                  ],
+                },
+              ],
               "metadata": {
                 "description": "Locally preview Vite production build",
                 "help": {
@@ -307,6 +361,15 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
             "serve": {
               "command": "vite",
               "continuous": true,
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "vite",
+                  ],
+                },
+              ],
               "metadata": {
                 "deprecated": "Use devTargetName instead. This option will be removed in Nx 22.",
                 "description": "Starts Vite dev server",
@@ -329,6 +392,15 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
             "serve-static": {
               "continuous": true,
               "executor": "@nx/web:file-server",
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "vite",
+                  ],
+                },
+              ],
               "options": {
                 "buildTarget": "build",
                 "spa": true,
