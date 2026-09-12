@@ -154,4 +154,99 @@ describe('ensurePackageHasProvenance', () => {
       'This could indicate a security risk'
     );
   });
+
+  /**
+   * A PR release is published by the same workflow running on master, so it
+   * carries real provenance but no tag. Rejecting it told anyone testing one to
+   * disable a security check, which is the wrong habit to teach.
+   */
+  describe('which ref is allowed to have built the package', () => {
+    // A full attestation, so these reach the ref check rather than stopping at
+    // the fetch like the cases above.
+    function attestationFor(version: string, ref: string) {
+      const payload = {
+        predicate: {
+          buildDefinition: {
+            externalParameters: {
+              workflow: {
+                repository: 'https://github.com/nrwl/nx',
+                path: '.github/workflows/publish.yml',
+                ref,
+              },
+            },
+          },
+        },
+        subject: [
+          {
+            digest: {
+              sha512: Buffer.from(version, 'base64').toString('hex'),
+            },
+          },
+        ],
+      };
+      return {
+        ok: true,
+        json: async () => ({
+          attestations: [
+            {
+              predicateType: 'https://slsa.dev/provenance/v1',
+              bundle: {
+                dsseEnvelope: {
+                  payload: Buffer.from(JSON.stringify(payload)).toString(
+                    'base64'
+                  ),
+                },
+              },
+            },
+          ],
+        }),
+      };
+    }
+
+    function arrange(version: string, ref: string) {
+      packageRegistryViewSpy.mockResolvedValue(
+        JSON.stringify(packument(version))
+      );
+      global.fetch = vi
+        .fn()
+        .mockResolvedValue(
+          attestationFor(version, ref)
+        ) as unknown as typeof fetch;
+    }
+
+    it('accepts a tagged release built from its own tag', async () => {
+      arrange('1.0.0', 'refs/tags/1.0.0');
+      await expect(
+        ensurePackageHasProvenance('nx', '1.0.0')
+      ).resolves.toBeUndefined();
+    });
+
+    it('accepts a pr release built from master', async () => {
+      arrange('23.3.0-pr.36841.f66e88b', 'refs/heads/master');
+      await expect(
+        ensurePackageHasProvenance('nx', '23.3.0-pr.36841.f66e88b')
+      ).resolves.toBeUndefined();
+    });
+
+    it('accepts a canary release built from master', async () => {
+      arrange('23.2.0-canary.20260908-89f02c1', 'refs/heads/master');
+      await expect(
+        ensurePackageHasProvenance('nx', '23.2.0-canary.20260908-89f02c1')
+      ).resolves.toBeUndefined();
+    });
+
+    it('still rejects a tagged release built from master', async () => {
+      arrange('1.0.0', 'refs/heads/master');
+      await expect(ensurePackageHasProvenance('nx', '1.0.0')).rejects.toThrow(
+        'Version ref does not match refs/tags/1.0.0'
+      );
+    });
+
+    it('does not treat an ordinary prerelease as a pr release', async () => {
+      arrange('1.0.0-preview.1', 'refs/heads/master');
+      await expect(
+        ensurePackageHasProvenance('nx', '1.0.0-preview.1')
+      ).rejects.toThrow('Version ref does not match refs/tags/1.0.0-preview.1');
+    });
+  });
 });
