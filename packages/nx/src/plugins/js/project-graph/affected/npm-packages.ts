@@ -13,6 +13,7 @@ import {
   DependencyChanges,
   TouchedProjectLocator,
 } from '../../../../project-graph/affected/affected-project-graph-models';
+import type { TouchedProject } from '../../../../project-graph/affected/affected-reasons';
 import {
   ProjectGraph,
   ProjectGraphExternalNode,
@@ -23,9 +24,22 @@ import { getPackageNameFromImportPath } from '../../../../utils/get-package-name
 
 export const getTouchedNpmPackages: TouchedProjectLocator<
   WholeFileChange | JsonChange
-> = (touchedFiles, _nodes, nxJson, _packageJson, projectGraph): string[] =>
-  touchedNpmPackages(touchedFiles, nxJson, projectGraph) ??
-  Object.keys(projectGraph.nodes);
+> = (
+  touchedFiles,
+  _nodes,
+  nxJson,
+  _packageJson,
+  projectGraph
+): TouchedProject[] =>
+  (
+    touchedNpmPackages(touchedFiles, nxJson, projectGraph) ??
+    Object.keys(projectGraph.nodes)
+  ).map((name) => ({
+    project: name,
+    kind: 'npm-package' as const,
+    package: name.startsWith('npm:') ? name : undefined,
+    file: 'package.json',
+  }));
 
 /**
  * The same change as task selection consumes it: the packages that moved,
@@ -44,7 +58,14 @@ export function packageJsonDependencyChanges(
   return {
     externals: touched.filter((name) => name in projectGraph.externalNodes),
     allExternals: false,
-    projects: touched.filter((name) => name in projectGraph.nodes),
+    projects: touched
+      .filter((name) => name in projectGraph.nodes)
+      .map((project) => ({
+        project,
+        kind: 'npm-package' as const,
+        package: project,
+        file: 'package.json',
+      })),
   };
 }
 

@@ -23,6 +23,29 @@ vi.mock('../../project-graph/project-graph', async () => ({
 performance.mark = vi.fn();
 performance.measure = vi.fn();
 
+// The affected path is mocked at its two boundaries rather than driven for
+// real: the point of the test below is what show projects passes to the
+// renderer, not how the selection was computed.
+vi.mock('../../project-graph/file-utils', async (importOriginal) => ({
+  ...((await importOriginal()) as object),
+  calculateFileChanges: () => [],
+}));
+vi.mock('../../project-graph/affected/affected-tasks', () => ({
+  computeAffectedTasks: async () => ({
+    affectedTaskIds: new Set(['ui:build']),
+    taskGraph: {
+      tasks: {
+        'ui:build': { id: 'ui:build', target: { project: 'ui' } },
+        'core:build': { id: 'core:build', target: { project: 'core' } },
+      },
+      dependencies: { 'ui:build': ['core:build'], 'core:build': [] },
+      continuousDependencies: { 'ui:build': [], 'core:build': [] },
+      roots: ['core:build'],
+    },
+    reasons: { 'ui:build': [{ kind: 'input-file', file: 'libs/ui/src/x.ts' }] },
+  }),
+}));
+
 describe('show projects', () => {
   beforeEach(() => {
     vi.spyOn(console, 'log').mockImplementation(() => {});
@@ -347,6 +370,34 @@ describe('show projects', () => {
     expect(console.log).toHaveBeenCalledWith('proj1');
     expect(console.log).toHaveBeenCalledWith('proj2');
     expect(console.log).toHaveBeenCalledTimes(2);
+  });
+  /**
+   * `nx affected` runs the closure and says how big it is. This command answers
+   * a question and runs nothing, so naming a closure it will not execute would
+   * describe a run that is not happening.
+   */
+  it('does not report the dependency closure when explaining', async () => {
+    graph = new GraphBuilder()
+      .addProjectConfiguration({ root: 'libs/ui', name: 'ui' }, 'lib')
+      .addProjectConfiguration({ root: 'libs/core', name: 'core' }, 'lib')
+      .build();
+
+    const written: string[] = [];
+    vi.spyOn(process.stdout, 'write').mockImplementation((chunk: any) => {
+      written.push(String(chunk));
+      return true;
+    });
+
+    await showProjectsHandler({
+      affected: true,
+      withTarget: ['build'],
+      explain: true,
+      files: ['libs/ui/src/x.ts'],
+    } as any);
+
+    const printed = written.join('');
+    expect(printed).toContain('1 affected task.');
+    expect(printed).not.toContain('depend on');
   });
 });
 

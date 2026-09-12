@@ -4,9 +4,14 @@ import {
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
-import { filterAffected } from '../../project-graph/affected/affected-project-graph';
+import {
+  filterAffected,
+  filterAffectedWithReasons,
+} from '../../project-graph/affected/affected-project-graph';
 import { computeAffectedTasks } from '../../project-graph/affected/affected-tasks';
 import { resolveAffectedGranularity } from '../../project-graph/affected/granularity';
+import { printAffectedExplanation } from '../../project-graph/affected/print-explanation';
+import { isExplaining } from '../../project-graph/affected/affected-reasons';
 import {
   FileChange,
   calculateFileChanges,
@@ -57,7 +62,22 @@ export async function showProjectsHandler(
         nxJson,
         targets: args.withTarget,
         touchedFiles,
+        explain: isExplaining(nxArgs.explain),
       });
+      if (isExplaining(nxArgs.explain)) {
+        // No dependency count: this command answers which tasks are affected
+        // and never runs their closure, so reporting what it would drag in
+        // would describe a run that is not happening.
+        printAffectedExplanation(
+          affectedTasks.reasons ?? {},
+          'Affected tasks',
+          // show projects declares its own --json, which has no executor to
+          // pass through to.
+          args.json ? 'stdout' : nxArgs.explain
+        );
+        await output.drain();
+        return;
+      }
       const owning = new Set(
         [...affectedTasks.affectedTaskIds].map(
           (id) => affectedTasks.taskGraph.tasks[id].target.project
@@ -69,6 +89,21 @@ export async function showProjectsHandler(
           Object.entries(graph.nodes).filter(([name]) => owning.has(name))
         ),
       };
+    } else if (isExplaining(nxArgs.explain)) {
+      // Reports the selection rather than filtering to it, so the later
+      // --projects and --withTarget filters would only obscure the answer.
+      const { reasons } = await filterAffectedWithReasons(
+        graph,
+        touchedFiles,
+        nxJson
+      );
+      printAffectedExplanation(
+        reasons,
+        'Affected projects',
+        args.json ? 'stdout' : nxArgs.explain
+      );
+      await output.drain();
+      return;
     } else {
       graph = await getAffectedGraph(touchedFiles, nxJson, graph);
     }

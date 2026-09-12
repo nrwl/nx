@@ -7,18 +7,16 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import { FileChange } from '../file-utils';
 import { getTouchedProjects as getJSTouchedProjects } from '../../plugins/js/project-graph/affected/touched-projects';
 import { marshalGraph } from './marshal-graph';
+import type { TouchedProject } from './affected-reasons';
 
-/** Which locator marked a project touched. PR 2 deepens this into a reason. */
-export interface TouchedProject {
-  project: string;
-  locator: string;
-}
+export type { TouchedProject };
 
 /**
  * Runs every locator and returns what each one marked, duplicates included.
  *
- * Provenance is captured here rather than inside `TouchedProjectLocator`, whose
- * `string[]` return the four JS-plugin locators still use.
+ * Each locator reports its own reason: `TouchedProjectLocator` returns
+ * `TouchedProject[]`, and the native side returns the same shape. This only
+ * bridges the napi type to the TypeScript one.
  */
 export async function runTouchedProjectLocators(
   graph: ProjectGraph,
@@ -50,7 +48,11 @@ export async function runTouchedProjectLocators(
         ),
     ]
   );
-  return native.map((project) => ({ project, locator: 'native' }));
+  // `kind` crosses napi as a bare string, so the union is asserted rather than
+  // checked. The values come from the native constants and from the JS locators
+  // this call passes in, which are the only producers; nothing validates that at
+  // runtime, so a new locator kind has to be added to AffectedReasonKind by hand.
+  return native as TouchedProject[];
 }
 
 /** Resolved here because `getPlugins` is async and starts plugin workers. */

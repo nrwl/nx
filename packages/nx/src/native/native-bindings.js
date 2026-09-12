@@ -645,6 +645,7 @@ module.exports.subsetHashPlans = nativeBinding.subsetHashPlans
 module.exports.SupportedEditor = nativeBinding.SupportedEditor
 module.exports.TaskStatus = nativeBinding.TaskStatus
 module.exports.testOnlyTransferFileMap = nativeBinding.testOnlyTransferFileMap
+module.exports.touchedTaskInputMatches = nativeBinding.touchedTaskInputMatches
 module.exports.trackEvent = nativeBinding.trackEvent
 module.exports.trackPageView = nativeBinding.trackPageView
 module.exports.transferProjectGraph = nativeBinding.transferProjectGraph
