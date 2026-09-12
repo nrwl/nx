@@ -80,6 +80,9 @@ describe('nx release pre-version command', () => {
     const result2 = runCLI('release patch -d --first-release');
 
     expect(result2).toContain('NX   Executing pre-version command');
+    expect(result2).not.toContain(
+      'Executing the following pre-version command:'
+    );
 
     const result3 = runCLI('release patch -d --first-release --verbose');
 
