@@ -117,6 +117,15 @@ describe('@nx/rsbuild', () => {
                   "dev-serve": {
                     "command": "rsbuild dev",
                     "continuous": true,
+                    "inputs": [
+                      "production",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "@rsbuild/core",
+                        ],
+                      },
+                    ],
                     "options": {
                       "args": [
                         "--mode=development",
@@ -136,6 +145,15 @@ describe('@nx/rsbuild', () => {
                     "dependsOn": [
                       "build-something",
                       "^build-something",
+                    ],
+                    "inputs": [
+                      "production",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "@rsbuild/core",
+                        ],
+                      },
                     ],
                     "options": {
                       "args": [

@@ -193,6 +193,15 @@ describe('@nx/storybook/plugin', () => {
                   "serve-storybook": {
                     "command": "storybook dev",
                     "continuous": true,
+                    "inputs": [
+                      "production",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "storybook",
+                        ],
+                      },
+                    ],
                     "options": {
                       "cwd": "my-app",
                     },
@@ -203,6 +212,15 @@ describe('@nx/storybook/plugin', () => {
                       "build-storybook",
                     ],
                     "executor": "@nx/web:file-server",
+                    "inputs": [
+                      "production",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "storybook",
+                        ],
+                      },
+                    ],
                     "options": {
                       "buildTarget": "build-storybook",
                       "staticFilePath": "my-app/storybook-static",
@@ -294,6 +312,16 @@ export default config;
                   "serve-storybook": {
                     "continuous": true,
                     "executor": "@storybook/angular:start-storybook",
+                    "inputs": [
+                      "production",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "storybook",
+                          "@storybook/angular",
+                        ],
+                      },
+                    ],
                     "options": {
                       "browserTarget": "my-ng-app:build",
                       "compodoc": false,
@@ -307,6 +335,16 @@ export default config;
                       "build-storybook",
                     ],
                     "executor": "@nx/web:file-server",
+                    "inputs": [
+                      "production",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "storybook",
+                          "@storybook/angular",
+                        ],
+                      },
+                    ],
                     "options": {
                       "buildTarget": "build-storybook",
                       "staticFilePath": "my-ng-app/storybook-static",
@@ -543,6 +581,15 @@ export default config;
                   "serve-storybook": {
                     "command": "storybook dev",
                     "continuous": true,
+                    "inputs": [
+                      "production",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "storybook",
+                        ],
+                      },
+                    ],
                     "options": {
                       "cwd": "my-react-lib",
                     },
@@ -553,6 +600,15 @@ export default config;
                       "build-storybook",
                     ],
                     "executor": "@nx/web:file-server",
+                    "inputs": [
+                      "production",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "storybook",
+                        ],
+                      },
+                    ],
                     "options": {
                       "buildTarget": "build-storybook",
                       "staticFilePath": "my-react-lib/storybook-static",

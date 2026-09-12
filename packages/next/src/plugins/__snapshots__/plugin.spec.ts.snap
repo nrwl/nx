@@ -48,6 +48,19 @@ exports[`@nx/next/plugin integrated projects should create nodes 1`] = `
             "my-serve": {
               "command": "next dev",
               "continuous": true,
+              "inputs": [
+                "default",
+                "^default",
+                {
+                  "externalDependencies": [
+                    "next",
+                  ],
+                },
+                {
+                  "dependentTasksOutputFiles": "**/*.d.ts",
+                  "transitive": true,
+                },
+              ],
               "options": {
                 "cwd": "my-app",
               },
@@ -61,6 +74,19 @@ exports[`@nx/next/plugin integrated projects should create nodes 1`] = `
               "dependsOn": [
                 "my-build",
               ],
+              "inputs": [
+                "default",
+                "^default",
+                {
+                  "externalDependencies": [
+                    "next",
+                  ],
+                },
+                {
+                  "dependentTasksOutputFiles": "**/*.d.ts",
+                  "transitive": true,
+                },
+              ],
               "options": {
                 "cwd": "my-app",
               },
@@ -70,6 +96,19 @@ exports[`@nx/next/plugin integrated projects should create nodes 1`] = `
               "continuous": true,
               "dependsOn": [
                 "my-build",
+              ],
+              "inputs": [
+                "default",
+                "^default",
+                {
+                  "externalDependencies": [
+                    "next",
+                  ],
+                },
+                {
+                  "dependentTasksOutputFiles": "**/*.d.ts",
+                  "transitive": true,
+                },
               ],
               "options": {
                 "cwd": "my-app",
@@ -138,6 +177,19 @@ exports[`@nx/next/plugin root projects should create nodes 1`] = `
             "dev": {
               "command": "next dev",
               "continuous": true,
+              "inputs": [
+                "default",
+                "^default",
+                {
+                  "externalDependencies": [
+                    "next",
+                  ],
+                },
+                {
+                  "dependentTasksOutputFiles": "**/*.d.ts",
+                  "transitive": true,
+                },
+              ],
               "options": {
                 "cwd": ".",
               },
@@ -151,6 +203,19 @@ exports[`@nx/next/plugin root projects should create nodes 1`] = `
               "dependsOn": [
                 "build",
               ],
+              "inputs": [
+                "default",
+                "^default",
+                {
+                  "externalDependencies": [
+                    "next",
+                  ],
+                },
+                {
+                  "dependentTasksOutputFiles": "**/*.d.ts",
+                  "transitive": true,
+                },
+              ],
               "options": {
                 "cwd": ".",
               },
@@ -160,6 +225,19 @@ exports[`@nx/next/plugin root projects should create nodes 1`] = `
               "continuous": true,
               "dependsOn": [
                 "build",
+              ],
+              "inputs": [
+                "default",
+                "^default",
+                {
+                  "externalDependencies": [
+                    "next",
+                  ],
+                },
+                {
+                  "dependentTasksOutputFiles": "**/*.d.ts",
+                  "transitive": true,
+                },
               ],
               "options": {
                 "cwd": ".",

@@ -194,6 +194,7 @@ async function buildRemixTargets(
     serverBuildPath,
     projectRoot,
     remixCompiler,
+    namedInputs,
     isUsingTsSolutionSetup
   );
   targets[options.startTargetName] = startTarget(
@@ -201,6 +202,7 @@ async function buildRemixTargets(
     serverBuildPath,
     options.buildTargetName,
     remixCompiler,
+    namedInputs,
     isUsingTsSolutionSetup
   );
   targets[options.serveStaticTargetName] = startTarget(
@@ -208,6 +210,7 @@ async function buildRemixTargets(
     serverBuildPath,
     options.buildTargetName,
     remixCompiler,
+    namedInputs,
     isUsingTsSolutionSetup
   );
   targets[options.typecheckTargetName] = typecheckTarget(
@@ -261,12 +264,7 @@ function buildTarget(
   const buildTarget: TargetConfiguration = {
     cache: true,
     dependsOn: [`^${buildTargetName}`],
-    inputs: [
-      ...('production' in namedInputs
-        ? ['production', '^production']
-        : ['default', '^default']),
-      { externalDependencies: ['@remix-run/dev'] },
-    ],
+    inputs: buildInputs(namedInputs),
     outputs,
     command:
       remixCompiler === RemixCompiler.IsVte
@@ -282,14 +280,27 @@ function buildTarget(
   return buildTarget;
 }
 
+function buildInputs(namedInputs: {
+  [inputName: string]: any[];
+}): TargetConfiguration['inputs'] {
+  return [
+    ...('production' in namedInputs
+      ? ['production', '^production']
+      : ['default', '^default']),
+    { externalDependencies: ['@remix-run/dev'] },
+  ];
+}
+
 function devTarget(
   serverBuildPath: string,
   projectRoot: string,
   remixCompiler: RemixCompiler,
+  namedInputs: { [inputName: string]: any[] },
   isUsingTsSolutionSetup: boolean
 ): TargetConfiguration {
   const devTarget: TargetConfiguration = {
     continuous: true,
+    inputs: buildInputs(namedInputs),
     command:
       remixCompiler === RemixCompiler.IsVte
         ? 'remix vite:dev'
@@ -309,6 +320,7 @@ function startTarget(
   serverBuildPath: string,
   buildTargetName: string,
   remixCompiler: RemixCompiler,
+  namedInputs: { [inputName: string]: any[] },
   isUsingTsSolutionSetup: boolean
 ): TargetConfiguration {
   let serverPath = serverBuildPath;
@@ -321,6 +333,7 @@ function startTarget(
   const startTarget: TargetConfiguration = {
     dependsOn: [buildTargetName],
     continuous: true,
+    inputs: buildInputs(namedInputs),
     command: `remix-serve ${serverPath}`,
     options: {
       cwd: projectRoot,
