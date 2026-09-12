@@ -1,15 +1,14 @@
-jest.mock('child_process', () => ({
-  __esModule: true,
-  ...jest.requireActual('child_process'),
-}));
+// child_process's ESM namespace is frozen; spy mode wraps the real exports so
+// they can be overridden per test.
+vi.mock('child_process', { spy: true });
 import * as cp from 'child_process';
 import { deduceDefaultBase } from './default-base';
 
 describe('deduceDefaultBase', () => {
-  const execSyncSpy = jest.spyOn(cp, 'execSync');
+  const execSyncSpy = vi.spyOn(cp, 'execSync');
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   it('should work when not set', () => {

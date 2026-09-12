@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (github) should be created for AngularMonorepo preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (github) > should be created for AngularMonorepo preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -85,7 +85,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (github) should be created for AngularStandalone preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (github) > should be created for AngularStandalone preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -170,7 +170,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (github) should be created for Apps preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (github) > should be created for Apps preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -251,7 +251,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (github) should be created for Expo preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (github) > should be created for Expo preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -332,7 +332,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (github) should be created for Express preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (github) > should be created for Express preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -417,7 +417,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (github) should be created for NPM preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (github) > should be created for NPM preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -510,7 +510,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (github) should be created for Nest preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (github) > should be created for Nest preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -595,7 +595,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (github) should be created for NextJs preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (github) > should be created for NextJs preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -680,7 +680,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (github) should be created for NextJsStandalone preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (github) > should be created for NextJsStandalone preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -765,7 +765,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (github) should be created for NodeMonorepo preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (github) > should be created for NodeMonorepo preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -846,7 +846,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (github) should be created for NodeStandalone preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (github) > should be created for NodeStandalone preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -931,7 +931,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (github) should be created for Nuxt preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (github) > should be created for Nuxt preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -1016,7 +1016,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (github) should be created for NuxtStandalone preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (github) > should be created for NuxtStandalone preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -1101,7 +1101,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (github) should be created for ReactMonorepo preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (github) > should be created for ReactMonorepo preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -1186,7 +1186,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (github) should be created for ReactNative preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (github) > should be created for ReactNative preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -1267,7 +1267,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (github) should be created for ReactStandalone preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (github) > should be created for ReactStandalone preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -1352,7 +1352,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (github) should be created for TS preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (github) > should be created for TS preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -1445,7 +1445,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (github) should be created for TsStandalone preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (github) > should be created for TsStandalone preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -1508,7 +1508,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (github) should be created for VueMonorepo preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (github) > should be created for VueMonorepo preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -1593,7 +1593,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (github) should be created for VueStandalone preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (github) > should be created for VueStandalone preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -1678,7 +1678,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (github) should be created for WebComponents preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (github) > should be created for WebComponents preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -1751,7 +1751,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (skip) should be created for AngularMonorepo preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (skip) > should be created for AngularMonorepo preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -1857,7 +1857,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (skip) should be created for AngularStandalone preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (skip) > should be created for AngularStandalone preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -1963,7 +1963,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (skip) should be created for Apps preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (skip) > should be created for Apps preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -2065,7 +2065,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (skip) should be created for Expo preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (skip) > should be created for Expo preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -2167,7 +2167,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (skip) should be created for Express preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (skip) > should be created for Express preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -2273,7 +2273,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (skip) should be created for NPM preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (skip) > should be created for NPM preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -2387,7 +2387,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (skip) should be created for Nest preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (skip) > should be created for Nest preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -2493,7 +2493,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (skip) should be created for NextJs preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (skip) > should be created for NextJs preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -2599,7 +2599,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (skip) should be created for NextJsStandalone preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (skip) > should be created for NextJsStandalone preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -2705,7 +2705,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (skip) should be created for NodeMonorepo preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (skip) > should be created for NodeMonorepo preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -2807,7 +2807,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (skip) should be created for NodeStandalone preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (skip) > should be created for NodeStandalone preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -2913,7 +2913,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (skip) should be created for Nuxt preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (skip) > should be created for Nuxt preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -3019,7 +3019,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (skip) should be created for NuxtStandalone preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (skip) > should be created for NuxtStandalone preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -3125,7 +3125,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (skip) should be created for ReactMonorepo preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (skip) > should be created for ReactMonorepo preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -3231,7 +3231,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (skip) should be created for ReactNative preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (skip) > should be created for ReactNative preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -3333,7 +3333,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (skip) should be created for ReactStandalone preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (skip) > should be created for ReactStandalone preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -3439,7 +3439,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (skip) should be created for TS preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (skip) > should be created for TS preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -3553,7 +3553,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (skip) should be created for TsStandalone preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (skip) > should be created for TsStandalone preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -3637,7 +3637,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (skip) should be created for VueMonorepo preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (skip) > should be created for VueMonorepo preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -3743,7 +3743,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (skip) should be created for VueStandalone preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (skip) > should be created for VueStandalone preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -3849,7 +3849,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (skip) should be created for WebComponents preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (skip) > should be created for WebComponents preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -3943,7 +3943,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (yes) should be created for AngularMonorepo preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (yes) > should be created for AngularMonorepo preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -4028,7 +4028,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (yes) should be created for AngularStandalone preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (yes) > should be created for AngularStandalone preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -4113,7 +4113,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (yes) should be created for Apps preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (yes) > should be created for Apps preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -4194,7 +4194,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (yes) should be created for Expo preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (yes) > should be created for Expo preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -4275,7 +4275,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (yes) should be created for Express preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (yes) > should be created for Express preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -4360,7 +4360,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (yes) should be created for NPM preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (yes) > should be created for NPM preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -4453,7 +4453,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (yes) should be created for Nest preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (yes) > should be created for Nest preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -4538,7 +4538,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (yes) should be created for NextJs preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (yes) > should be created for NextJs preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -4623,7 +4623,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (yes) should be created for NextJsStandalone preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (yes) > should be created for NextJsStandalone preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -4708,7 +4708,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (yes) should be created for NodeMonorepo preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (yes) > should be created for NodeMonorepo preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -4789,7 +4789,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (yes) should be created for NodeStandalone preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (yes) > should be created for NodeStandalone preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -4874,7 +4874,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (yes) should be created for Nuxt preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (yes) > should be created for Nuxt preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -4959,7 +4959,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (yes) should be created for NuxtStandalone preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (yes) > should be created for NuxtStandalone preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -5044,7 +5044,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (yes) should be created for ReactMonorepo preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (yes) > should be created for ReactMonorepo preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -5129,7 +5129,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (yes) should be created for ReactNative preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (yes) > should be created for ReactNative preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -5210,7 +5210,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (yes) should be created for ReactStandalone preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (yes) > should be created for ReactStandalone preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -5295,7 +5295,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (yes) should be created for TS preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (yes) > should be created for TS preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -5388,7 +5388,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (yes) should be created for TsStandalone preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (yes) > should be created for TsStandalone preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -5451,7 +5451,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (yes) should be created for VueMonorepo preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (yes) > should be created for VueMonorepo preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -5536,7 +5536,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (yes) should be created for VueStandalone preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (yes) > should be created for VueStandalone preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -5621,7 +5621,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md Nx Cloud (yes) should be created for WebComponents preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > Nx Cloud (yes) > should be created for WebComponents preset 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -5694,7 +5694,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles README.md should be created for custom plugins 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > README.md > should be created for custom plugins 1`] = `
 "# Proj
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
@@ -5793,7 +5793,7 @@ And join the Nx community:
 "
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles should create package scripts for angular-standalone preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > should create package scripts for angular-standalone preset 1`] = `
 {
   "build": "nx build",
   "start": "nx serve",
@@ -5801,7 +5801,7 @@ exports[`@nx/workspace:generateWorkspaceFiles should create package scripts for 
 }
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles should create package scripts for nextjs-standalone preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > should create package scripts for nextjs-standalone preset 1`] = `
 {
   "build": "nx build",
   "dev": "nx dev",
@@ -5810,7 +5810,7 @@ exports[`@nx/workspace:generateWorkspaceFiles should create package scripts for 
 }
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles should create package scripts for node-standalone preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > should create package scripts for node-standalone preset 1`] = `
 {
   "build": "nx build",
   "start": "nx serve",
@@ -5818,7 +5818,7 @@ exports[`@nx/workspace:generateWorkspaceFiles should create package scripts for 
 }
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles should create package scripts for nuxt-standalone preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > should create package scripts for nuxt-standalone preset 1`] = `
 {
   "build": "nx build",
   "start": "nx serve",
@@ -5826,7 +5826,7 @@ exports[`@nx/workspace:generateWorkspaceFiles should create package scripts for 
 }
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles should create package scripts for react-standalone preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > should create package scripts for react-standalone preset 1`] = `
 {
   "build": "nx build",
   "start": "nx serve",
@@ -5834,14 +5834,14 @@ exports[`@nx/workspace:generateWorkspaceFiles should create package scripts for 
 }
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles should create package scripts for ts-standalone preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > should create package scripts for ts-standalone preset 1`] = `
 {
   "build": "nx build",
   "test": "nx test",
 }
 `;
 
-exports[`@nx/workspace:generateWorkspaceFiles should create package scripts for vue-standalone preset 1`] = `
+exports[`@nx/workspace:generateWorkspaceFiles > should create package scripts for vue-standalone preset 1`] = `
 {
   "build": "nx build",
   "start": "nx serve",

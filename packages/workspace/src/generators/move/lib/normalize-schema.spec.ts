@@ -10,7 +10,7 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { NormalizedSchema, Schema } from '../schema';
 import { normalizeSchema } from './normalize-schema';
 
-xdescribe('normalizeSchema', () => {
+describe.skip('normalizeSchema', () => {
   let tree: Tree;
   let projectConfiguration: ProjectConfiguration;
   const schema: Schema = {
