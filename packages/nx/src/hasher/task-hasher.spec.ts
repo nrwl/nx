@@ -229,6 +229,14 @@ describe('TaskHasher', () => {
   });
 
   describe('expandSingleProjectInputs', () => {
+    it('should pass through includeIgnored filesets unchanged', () => {
+      const input = {
+        fileset: '{projectRoot}/dist/**/*.js',
+        includeIgnored: true,
+      };
+      expect(expandSingleProjectInputs([input], {})).toEqual([input]);
+    });
+
     it('should pass through json inputs unchanged', () => {
       const jsonInput = {
         json: '{workspaceRoot}/tsconfig.base.json',
