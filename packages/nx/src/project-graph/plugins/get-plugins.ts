@@ -34,6 +34,7 @@ import { serverLogger } from '../../daemon/logger';
 import { DelayedSpinner } from '../../utils/delayed-spinner';
 import { logger } from '../../utils/logger';
 import {
+  IsolatedPlugin,
   isPluginWorkerSocketRefusal,
   isPluginWorkerStartupFailure,
   resolveModule,
@@ -381,6 +382,8 @@ interface PluginLoad {
   resolved?: ResolvedPluginModule;
   /** Null when the module's identity could not be established. */
   key: string | null;
+  /** Set from a record, or from a load this process did to write one. */
+  capabilities?: PluginCapabilities;
   /** Set once the plugin is loaded, or wired from a recorded capability set. */
   loaded?: Promise<LoadedNxPlugin>;
   error?: unknown;
@@ -545,25 +548,97 @@ export async function peekPluginCapabilities(
   }));
   await resolveCapabilityKeys(loads, root);
 
+  // Nothing to key a record on, so there is no answer to complete and no point
+  // loading anything here: the caller's own load reports the failure.
   if (loads.some((load) => !load.key)) {
     return null;
   }
 
-  const recorded = readValidRecords(
-    loads.map((load) => load.key),
-    root
-  );
-  // Two nx.json entries can name one module, so compare against the distinct
-  // keys rather than the number of plugins.
-  if (recorded.size !== new Set(loads.map((load) => load.key)).size) {
+  try {
+    await loadWhatIsMissing(
+      () => withRecordedCapabilities(loads, root),
+      (missing) => loadForCapabilities(missing, root)
+    );
+  } catch (e) {
+    // Left to the caller's load, which reports a plugin failure with the name
+    // and the context the caller expects.
+    logger.verbose('Could not read every plugin capability set', e);
     return null;
   }
 
-  const capabilities = loads.map((load) => recorded.get(load.key));
+  const capabilities = loads.map((load) => load.capabilities);
   if (!isOnDaemon()) {
     peeked = { key: memoKey, capabilities };
   }
   return capabilities;
+}
+
+/**
+ * Fills in the capabilities every load has a record for, and returns the rest.
+ */
+function withRecordedCapabilities(
+  loads: PluginLoad[],
+  root: string
+): PluginLoad[] {
+  const pending = loads.filter((load) => !load.capabilities);
+  if (!pending.length) {
+    return [];
+  }
+
+  const recorded = readValidRecords(
+    pending.map((load) => load.key),
+    root
+  );
+  const missing: PluginLoad[] = [];
+  for (const load of pending) {
+    const capabilities = recorded.get(load.key);
+    if (capabilities) {
+      load.capabilities = capabilities;
+    } else {
+      missing.push(load);
+    }
+  }
+  return missing;
+}
+
+/**
+ * Loads the plugins nothing has a record for, records what they register, and
+ * puts them straight back down.
+ *
+ * Only those plugins, and only for as long as the answer takes: a caller here
+ * wants to know what a plugin registers rather than to use it, so holding the
+ * worker would charge it the load the records exist to avoid. A plugin the
+ * command does go on to use is wired from the record this just wrote, and spawns
+ * its worker when a hook is finally called.
+ */
+async function loadForCapabilities(
+  loads: PluginLoad[],
+  root: string
+): Promise<void> {
+  if (!loads.length) {
+    return;
+  }
+
+  const entries = await Promise.all(
+    loads.map(async (load) => {
+      // Loaded outside the set this process keeps, so nothing else can be
+      // holding it when it goes down again.
+      const plugin = await IsolatedPlugin.load(
+        load.plugin,
+        root,
+        undefined,
+        load.resolved
+      );
+      try {
+        load.capabilities = capabilitiesOfLoadedPlugin(plugin);
+        return recordFor(load.key, plugin, plugin.sourceFiles, root);
+      } finally {
+        plugin.dispose();
+      }
+    })
+  );
+
+  recordCapabilities(entries.filter((entry) => !!entry));
 }
 
 async function useCapabilityCache(
@@ -578,12 +653,30 @@ async function useCapabilityCache(
     return;
   }
 
+  await loadWhatIsMissing(
+    () => wireRecordedCapabilities(cacheable, root, generation),
+    (missing) => loadAndRecord(missing, root, generation)
+  );
+}
+
+/**
+ * Loads whatever `stillMissing` reports, with one process doing it rather than
+ * all of them.
+ *
+ * The lock is around the load, and `stillMissing` is asked again each time
+ * around: a waiter that gets in reads what the holder recorded while it waited,
+ * and usually then has nothing left to load.
+ */
+async function loadWhatIsMissing(
+  stillMissing: () => PluginLoad[],
+  load: (missing: PluginLoad[]) => Promise<void>
+): Promise<void> {
   const lock = createCapabilitiesLock();
   const deadline = Date.now() + MAX_WAIT_FOR_ANOTHER_PROCESS;
   let spinner: DelayedSpinner | undefined;
   try {
     while (true) {
-      const missing = wireRecordedCapabilities(cacheable, root, generation);
+      const missing = stillMissing();
       if (!missing.length) {
         return;
       }
@@ -624,11 +717,7 @@ async function useCapabilityCache(
       try {
         // Read once more now the lock is held, since another process may have
         // recorded these between the read above and the acquire.
-        await loadAndRecord(
-          wireRecordedCapabilities(missing, root, generation),
-          root,
-          generation
-        );
+        await load(stillMissing());
       } finally {
         if (holdingLock) {
           lock.unlock();
@@ -728,55 +817,75 @@ async function loadAndRecord(
     })
   );
 
-  const entries: Array<{
-    key: string;
-    record: {
-      capabilities: PluginCapabilities;
-      sourceFiles: string[];
-      sourceHash: string;
-    };
-  }> = [];
+  const entries: PluginCapabilitiesEntry[] = [];
   for (let i = 0; i < settled.length; i++) {
     const result = settled[i];
     if (result.status !== 'fulfilled') {
       continue;
     }
-
-    // Null means the runtime could not report the closure completely. Without it
-    // there is nothing a later read could validate the record against, so one
-    // written now could never be invalidated.
-    const observed = observedClosures.get(result.value);
-    if (observed === null || observed === undefined) {
-      // Said out loud, because the alternative is a workspace where this cache
-      // silently does nothing and no one can tell why.
-      logger.verbose(
-        `Nx could not observe which files "${result.value.name}" read while loading, so its capabilities were not recorded. Observing them needs Node 22.15, 23.5 or newer.`
-      );
-      continue;
+    const entry = recordFor(
+      loads[i].key,
+      result.value,
+      observedClosures.get(result.value) ?? null,
+      root
+    );
+    if (entry) {
+      entries.push(entry);
     }
-
-    // Unstorable or unhashable now means unverifiable later, so there is nothing
-    // worth storing.
-    const sourceFiles = storableSourceFiles(observed, root);
-    if (sourceFiles === null) {
-      continue;
-    }
-    const sourceHash = hashSourceFiles(sourceFiles, root);
-    if (sourceHash === null) {
-      continue;
-    }
-
-    entries.push({
-      key: loads[i].key,
-      record: {
-        capabilities: capabilitiesOfLoadedPlugin(result.value),
-        sourceFiles,
-        sourceHash,
-      },
-    });
   }
 
   recordCapabilities(entries);
+}
+
+type PluginCapabilitiesEntry = {
+  key: string;
+  record: {
+    capabilities: PluginCapabilities;
+    sourceFiles: string[];
+    sourceHash: string;
+  };
+};
+
+/**
+ * The record to write for a plugin that has just loaded, or null when there is
+ * nothing worth writing.
+ *
+ * A null closure means the runtime could not report one completely, and an
+ * unstorable or unhashable one means a later read could not check it. A record
+ * written from any of those could never be invalidated.
+ */
+function recordFor(
+  key: string,
+  plugin: LoadedNxPlugin,
+  observed: string[] | null,
+  root: string
+): PluginCapabilitiesEntry | null {
+  if (observed === null) {
+    // Said out loud, because the alternative is a workspace where this cache
+    // silently does nothing and no one can tell why.
+    logger.verbose(
+      `Nx could not observe which files "${plugin.name}" read while loading, so its capabilities were not recorded. Observing them needs Node 22.15, 23.5 or newer.`
+    );
+    return null;
+  }
+
+  const sourceFiles = storableSourceFiles(observed, root);
+  if (sourceFiles === null) {
+    return null;
+  }
+  const sourceHash = hashSourceFiles(sourceFiles, root);
+  if (sourceHash === null) {
+    return null;
+  }
+
+  return {
+    key,
+    record: {
+      capabilities: capabilitiesOfLoadedPlugin(plugin),
+      sourceFiles,
+      sourceHash,
+    },
+  };
 }
 
 /**

@@ -7,6 +7,7 @@ import { existsSync } from 'fs';
 import { getGlobPatternsOfPlugins } from '../../utils/retrieve-workspace-files';
 import { combineGlobPatterns } from '../../../utils/globs';
 import { getPlugins, peekPluginCapabilities } from '../../plugins/get-plugins';
+import { isDeletedFileChange } from '../../file-utils';
 
 export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
   async (
@@ -17,6 +18,17 @@ export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
     _projectGraph,
     projectDeletionAffectsAllProjects = true
   ): Promise<string[]> => {
+    // A deleted project configuration file is the only thing this locator
+    // answers for, so a change set without a deletion in it has nothing to find
+    // and the patterns it would be matched against are not worth asking the
+    // plugins for.
+    const deleted = touchedFiles.filter((touchedFile) =>
+      touchedFile.getChanges().some(isDeletedFileChange)
+    );
+    if (!deleted.length) {
+      return [];
+    }
+
     const globPattern = await (async () => {
       if (process.env.NX_FORCE_REUSE_CACHED_GRAPH === 'true') {
         return combineGlobPatterns([
@@ -45,7 +57,7 @@ export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
     })();
 
     const touchedProjects = new Set<string>();
-    for (const touchedFile of touchedFiles) {
+    for (const touchedFile of deleted) {
       const isProjectFile = minimatch(touchedFile.file, globPattern, {
         dot: true,
       });

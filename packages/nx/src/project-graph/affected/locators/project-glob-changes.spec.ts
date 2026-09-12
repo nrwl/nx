@@ -1,5 +1,5 @@
 import { ProjectGraphProjectNode } from '../../../config/project-graph';
-import { DeletedFileChange } from '../../file-utils';
+import { DeletedFileChange, WholeFileChange } from '../../file-utils';
 import { getTouchedProjectsFromProjectGlobChanges } from './project-glob-changes';
 const mocks = vi.hoisted(() => ({
   peekPluginCapabilities: vi.fn(),
@@ -85,6 +85,30 @@ describe('getTouchedProjectsFromProjectGlobChanges', () => {
 
     expect(result).toEqual([]);
   });
+  it('asks the plugins nothing when no file was deleted', async () => {
+    const nodes = { proj1: makeProjectGraphNode('proj1') };
+
+    const result = await getTouchedProjectsFromProjectGlobChanges(
+      [
+        {
+          file: 'libs/proj1/project.json',
+          getChanges: () => [new WholeFileChange()],
+        },
+      ],
+      nodes,
+      { plugins: [] },
+      {},
+      { nodes, dependencies: {} }
+    );
+
+    // A modified project configuration marks its own project through its root,
+    // so this locator has nothing to add, and the patterns it would match
+    // against cost a plugin load to work out.
+    expect(result).toEqual([]);
+    expect(mocks.peekPluginCapabilities).not.toHaveBeenCalled();
+    expect(mocks.getPlugins).not.toHaveBeenCalled();
+  });
+
   it('matches against the patterns on record, without loading a plugin', async () => {
     mocks.peekPluginCapabilities.mockResolvedValue([
       {
