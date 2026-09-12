@@ -693,12 +693,11 @@ async function loadWhatIsMissing(
           spinner ??= new DelayedSpinner(
             'Waiting for another process to finish loading Nx plugins'
           );
-          // Waited on a libuv thread with a ceiling, rather than through
-          // `lock.wait()`, which settles only when the holder releases. A holder
-          // whose own event loop is blocked never reaches its load timeout and
-          // so never releases, and one unbounded wait is all it takes to hang
-          // every other process in the workspace. The loop re-reads the records
-          // and re-checks the budget either way.
+          // Waited on a libuv thread, so the event loop stays free to run
+          // timers, serve clients and handle signals, and with a ceiling, so a
+          // holder whose own loop is blocked cannot hold this process for as
+          // long as it lives. The loop re-reads the records and re-checks the
+          // budget either way.
           await lock.waitForRelease(remaining);
           continue;
         }

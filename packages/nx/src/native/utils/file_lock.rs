@@ -117,8 +117,7 @@ pub struct FileLock {
 ///   readFromCache()
 /// }
 ///
-/// `lock()` is the same acquire, blocking the JS thread until it succeeds, and
-/// `wait()` the same wait, with no ceiling.
+/// `lock()` is the same acquire, blocking the JS thread until it succeeds.
 
 #[napi]
 #[cfg(not(target_arch = "wasm32"))]
@@ -168,32 +167,6 @@ impl FileLock {
         Ok(self.locked)
     }
 
-    /// Waits for the holder to release, with no ceiling of its own.
-    ///
-    /// Gated on `locked`, so a caller that has not had `check` or `try_lock` set
-    /// it gets a promise that resolves at once while the file is still held. That
-    /// mutation is load-bearing rather than bookkeeping: removing it turns this
-    /// into an immediate resolve and any loop around it into a hot spin.
-    #[napi(ts_return_type = "Promise<void>")]
-    pub fn wait(&mut self, env: Env) -> napi::Result<PromiseRaw<'static, ()>> {
-        if self.locked {
-            let lock_file_path = self.lock_file_path.clone();
-            self.locked = false;
-            let promise = env.spawn_future(async move {
-                let file = open_lock_file(&lock_file_path)?;
-                fs4::fs_std::FileExt::lock_shared(&file)?;
-                fs4::fs_std::FileExt::unlock(&file)?;
-                Ok(())
-            })?;
-            // SAFETY: PromiseRaw's inner napi_value is GC-managed by V8
-            // and remains valid beyond this stack frame.
-            Ok(unsafe { std::mem::transmute(promise) })
-        } else {
-            let promise = env.spawn_future(async move { Ok(()) })?;
-            Ok(unsafe { std::mem::transmute(promise) })
-        }
-    }
-
     /// Takes the lock and keeps it, reporting whether this handle got it.
     ///
     /// Unlike `check`, which releases whatever it took, and unlike `lock`, which
@@ -216,9 +189,6 @@ impl FileLock {
         }
     }
 
-    /// From JS, pair this with `waitForRelease` rather than with `wait`. A failed
-    /// `tryLock` leaves `locked` set, which is what `wait` keys off, so waiting
-    /// that way has no ceiling.
     #[napi(js_name = "tryLock")]
     pub fn try_lock_js(&mut self) -> napi::Result<bool> {
         Ok(self.try_lock()?)

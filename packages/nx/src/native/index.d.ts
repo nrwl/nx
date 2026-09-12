@@ -73,20 +73,6 @@ export declare class FileLock {
   constructor(lockFilePath: string)
   unlock(): void
   check(): boolean
-  /**
-   * Waits for the holder to release, with no ceiling of its own.
-   *
-   * Gated on `locked`, so a caller that has not had `check` or `try_lock` set
-   * it gets a promise that resolves at once while the file is still held. That
-   * mutation is load-bearing rather than bookkeeping: removing it turns this
-   * into an immediate resolve and any loop around it into a hot spin.
-   */
-  wait(): Promise<void>
-  /**
-   * From JS, pair this with `waitForRelease` rather than with `wait`. A failed
-   * `tryLock` leaves `locked` set, which is what `wait` keys off, so waiting
-   * that way has no ceiling.
-   */
   tryLock(): boolean
   /**
    * Resolves true when the holder released within `timeout_ms`, false when it
