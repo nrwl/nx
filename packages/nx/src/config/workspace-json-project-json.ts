@@ -217,6 +217,7 @@ export type InputDefinition =
   | { runtime: string }
   | { externalDependencies: string[] }
   | { dependentTasksOutputFiles: string; transitive?: boolean }
+  | { continuousDependenciesInputs: boolean }
   | { env: string }
   | { workingDirectory: 'relative' | 'absolute' }
   | JsonInput;

@@ -328,6 +328,14 @@ export declare function closeDbConnection(connection: ExternalObject<NxDbConnect
 
 export declare function connectToNxDb(cacheDir: string, dbName?: string | undefined | null): ExternalObject<NxDbConnection>
 
+/**
+ * Hash everything the task's continuous dependencies hash. A trace sees one
+ * process, so a dev server's reads are otherwise absent from the task.
+ */
+export interface ContinuousDependenciesInputsInput {
+  continuousDependenciesInputs: boolean
+}
+
 export declare function copy(src: string, dest: string): number
 
 export interface DepsOutputsInput {
@@ -638,7 +646,7 @@ export interface MetricsUpdate {
 
 /** Stripped version of the NxJson interface for use in rust */
 export interface NxJson {
-  namedInputs?: Record<string, Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | WorkingDirectoryInput | JsonInput>>
+  namedInputs?: Record<string, Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | WorkingDirectoryInput | JsonInput | ContinuousDependenciesInputsInput>>
 }
 
 export interface NxWorkspaceFiles {
@@ -700,7 +708,7 @@ export interface ProcessMetrics {
 
 export interface Project {
   root: string
-  namedInputs?: Record<string, Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | WorkingDirectoryInput | JsonInput>>
+  namedInputs?: Record<string, Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | WorkingDirectoryInput | JsonInput | ContinuousDependenciesInputsInput>>
   tags?: Array<string>
   targets: Record<string, Target>
 }
@@ -748,7 +756,7 @@ export interface SystemInfo {
 
 export interface Target {
   executor?: string
-  inputs?: Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | WorkingDirectoryInput | JsonInput>
+  inputs?: Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | WorkingDirectoryInput | JsonInput | ContinuousDependenciesInputsInput>
   outputs?: Array<string>
   options?: string
   configurations?: string

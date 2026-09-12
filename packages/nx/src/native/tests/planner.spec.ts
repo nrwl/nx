@@ -968,4 +968,61 @@ describe('task planner', () => {
       expect(plans).toMatchSnapshot();
     });
   });
+  describe('continuousDependenciesInputs', () => {
+    it("hashes a continuous dependency's inputs into the task it serves", () => {
+      const builder = new ProjectGraphBuilder(undefined, {
+        parent: [{ file: 'libs/parent/filea.ts', hash: 'a.hash' }],
+        child: [{ file: 'libs/child/fileb.ts', hash: 'b.hash' }],
+      });
+      builder.addNode({
+        name: 'child',
+        type: 'lib',
+        data: {
+          root: 'libs/child',
+          targets: {
+            serve: { executor: 'nx:run-commands', continuous: true },
+          },
+        },
+      });
+      builder.addNode({
+        name: 'parent',
+        type: 'lib',
+        data: {
+          root: 'libs/parent',
+          targets: {
+            test: {
+              executor: 'nx:run-commands',
+              inputs: [
+                '{projectRoot}/**/*',
+                { continuousDependenciesInputs: true },
+              ],
+              dependsOn: [{ projects: 'child', target: 'serve' }],
+            },
+          },
+        },
+      });
+      const projectGraph = builder.getUpdatedProjectGraph();
+      const taskGraph = createTaskGraph(
+        projectGraph,
+        {},
+        ['parent'],
+        ['test'],
+        undefined,
+        {}
+      );
+      const planner = new HashPlanner(
+        {} as any,
+        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+      );
+
+      // The dependency serving this task runs in its own process, so only its
+      // declared inputs can stand in for what it reads.
+      expect(taskGraph.continuousDependencies['parent:test']).toContain(
+        'child:serve'
+      );
+      expect(
+        planner.getPlans(['parent:test'], taskGraph)['parent:test']
+      ).toContain('child:libs/child/**/*');
+    });
+  });
 });
