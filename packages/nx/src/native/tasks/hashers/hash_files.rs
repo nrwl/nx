@@ -11,7 +11,6 @@ use walkdir::WalkDir;
 use xxhash_rust::xxh3;
 
 use crate::native::glob::build_glob_set;
-use crate::native::glob::glob_transform::partition_glob;
 use crate::native::hasher::hash_file_path;
 use crate::native::walker::HARDCODED_IGNORE_PATTERNS;
 
@@ -78,13 +77,39 @@ pub(crate) fn expand_literal_braces(glob: &str) -> Vec<String> {
         .collect()
 }
 
+/// The literal directory a glob is walked from, and whether a pattern follows
+/// it. `partition_glob` is not used: it treats `@`, `+`, `(`, `)` and `,` as
+/// glob syntax and strips them, but in a path they are ordinary characters
+/// (`node_modules/@scope/pkg`), and the group's glob filter keeps them literal.
+fn literal_prefix(glob: &str) -> Result<(String, bool)> {
+    if Path::new(glob).is_absolute() || glob.starts_with('/') {
+        bail!(
+            "The includeIgnored fileset \"{glob}\" is an absolute path; globs are workspace-relative."
+        );
+    }
+    let mut literal: Vec<&str> = Vec::new();
+    let mut has_pattern = false;
+    for segment in glob.split('/') {
+        if segment == ".." {
+            bail!("The includeIgnored fileset \"{glob}\" points outside the workspace.");
+        }
+        if segment.contains(['*', '?', '[', '{']) {
+            has_pattern = true;
+            break;
+        }
+        literal.push(segment);
+    }
+    let root = literal.join("/").trim_end_matches('/').to_string();
+    Ok((root, has_pattern))
+}
+
 /// Rejects globs with no literal leading directory (`**/*`, `*.gen`): a walk
 /// from the workspace root is never what was meant. A root-level brace group
 /// of literal names is fine: it expands to exact files.
 pub(crate) fn validate_files_globs(globs: &[String]) -> Result<()> {
     for glob in globs.iter().filter(|g| !g.starts_with('!')) {
         for expanded in expand_literal_braces(glob) {
-            let (root, _) = partition_glob(&expanded)?;
+            let (root, _) = literal_prefix(&expanded)?;
             if root.is_empty() {
                 bail!(
                     "The includeIgnored fileset \"{glob}\" has no leading directory, so it would walk the whole workspace. Start it with the directory that holds the files."
@@ -121,13 +146,13 @@ pub fn expand_files(workspace_root: &Path, globs: &[String]) -> Result<FilesExpa
         )
     })?;
     for glob in &positives {
-        let (root, patterns) = partition_glob(glob)?;
+        let (root, has_pattern) = literal_prefix(glob)?;
         if root.is_empty() {
             bail!("The includeIgnored fileset \"{glob}\" has no leading directory.");
         }
         let start = workspace_root.join(&root);
         let Ok(metadata) = std::fs::metadata(&start) else {
-            if patterns.is_empty() {
+            if !has_pattern {
                 // Keep the pattern in the group so the final filter retains
                 // the missing path alongside the files other globs matched.
                 missing.push(root);
@@ -148,10 +173,10 @@ pub fn expand_files(workspace_root: &Path, globs: &[String]) -> Result<FilesExpa
             continue;
         }
         // A directory declared by its exact path means everything under it.
-        effective.push(if patterns.is_empty() {
-            format!("{root}/**")
-        } else {
+        effective.push(if has_pattern {
             glob.clone()
+        } else {
+            format!("{root}/**")
         });
         let walker = WalkDir::new(&start)
             .follow_links(false)
@@ -269,9 +294,15 @@ pub(crate) fn index_file_map(files: &[crate::native::types::FileData]) -> HashMa
 }
 
 #[napi]
-/// The existing files an `includeIgnored` fileset group matches on disk, sorted.
+/// The files an `includeIgnored` fileset group matches on disk, sorted, then
+/// the declared exact paths that are missing (they still take part in the hash).
 pub fn expand_files_input(workspace_root: String, globs: Vec<String>) -> Result<Vec<String>> {
-    Ok(expand_files(Path::new(&workspace_root), &globs)?.files)
+    let expansion = expand_files(Path::new(&workspace_root), &globs)?;
+    Ok(expansion
+        .files
+        .into_iter()
+        .chain(expansion.missing)
+        .collect())
 }
 
 #[cfg(test)]
@@ -454,7 +485,14 @@ mod tests {
         let second = hash_files(temp.path(), &expansion, |_| None, &cache);
         assert_ne!(first, second);
 
-        // Untouched: cache hit yields the same hash.
+        // Same size with the cached mtime restored: the documented stale hit,
+        // which also proves the second call went through the cache.
+        let cached_at = std::fs::metadata(&file).unwrap().modified().unwrap();
+        temp.child("dist/gen/a.js").write_str("q").unwrap();
+        std::fs::File::open(&file)
+            .unwrap()
+            .set_modified(cached_at)
+            .unwrap();
         let third = hash_files(temp.path(), &expansion, |_| None, &cache);
         assert_eq!(second, third);
     }
@@ -481,5 +519,61 @@ mod tests {
         assert!(validate_files_globs(&globs(&["*.gen"])).is_err());
         assert!(validate_files_globs(&globs(&["dist/**/*.gen", "!**/*.map"])).is_ok());
         assert!(validate_files_globs(&globs(&["dist/gen/a.js"])).is_ok());
+    }
+
+    #[test]
+    fn rejects_paths_that_leave_the_workspace_before_touching_the_disk() {
+        for glob in ["../secret", "dist/../../secret", "/etc/passwd", "../**"] {
+            let err = validate_files_globs(&globs(&[glob])).unwrap_err();
+            assert!(
+                err.to_string().contains("outside the workspace")
+                    || err.to_string().contains("absolute path"),
+                "{glob}: {err}"
+            );
+        }
+    }
+
+    #[test]
+    fn keeps_at_and_plus_literal_in_the_walk_root() {
+        let temp = workspace();
+        temp.child("libs/app/@gen/schema.json")
+            .write_str("{}")
+            .unwrap();
+        temp.child("libs/app/gen/schema.json")
+            .write_str("{}")
+            .unwrap();
+        temp.child("libs/app/g+en/schema.json")
+            .write_str("{}")
+            .unwrap();
+        temp.child("node_modules/@scope/pkg/package.json")
+            .write_str("{}")
+            .unwrap();
+        let expand = |glob: &str| expand_files(temp.path(), &globs(&[glob])).unwrap();
+
+        assert_eq!(
+            expand("libs/app/@gen/schema.json").files,
+            vec!["libs/app/@gen/schema.json"]
+        );
+        assert_eq!(
+            expand("libs/app/@gen").files,
+            vec!["libs/app/@gen/schema.json"]
+        );
+        assert_eq!(
+            expand("libs/app/@gen/**").files,
+            vec!["libs/app/@gen/schema.json"]
+        );
+        assert_eq!(
+            expand("libs/app/g+en/schema.json").files,
+            vec!["libs/app/g+en/schema.json"]
+        );
+        assert_eq!(
+            expand("node_modules/@scope/pkg/package.json").files,
+            vec!["node_modules/@scope/pkg/package.json"]
+        );
+        assert_eq!(
+            expand("libs/app/@gen/absent.json").missing,
+            vec!["libs/app/@gen/absent.json"]
+        );
+        assert!(validate_files_globs(&globs(&["@gen/**"])).is_ok());
     }
 }
