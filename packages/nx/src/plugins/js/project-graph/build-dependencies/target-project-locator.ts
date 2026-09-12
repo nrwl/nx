@@ -69,11 +69,11 @@ export class TargetProjectLocator {
   private paths = this.tsConfig.config?.compilerOptions?.paths;
   private parsedPathPatterns: ParsedPatterns | undefined;
   private typescriptResolutionCache = new Map<string, string | null>();
-  private packagesMetadata: {
-    entryPointsToProjectMap: Record<string, ProjectGraphProjectNode>;
-    wildcardEntryPointsToProjectMap: Record<string, ProjectGraphProjectNode>;
-    packageToProjectMap: Record<string, ProjectGraphProjectNode>;
-  };
+  private packagesMetadata: ReturnType<
+    typeof getWorkspacePackagesMetadata<ProjectGraphProjectNode>
+  >;
+  private readonly useWorkspacePackageImportFastPath =
+    process.env.NX_ENABLE_WORKSPACE_PACKAGE_IMPORT_FAST_PATH === 'true';
 
   constructor(
     private readonly nodes: Record<string, ProjectGraphProjectNode>,
@@ -156,6 +156,14 @@ export class TargetProjectLocator {
     const externalProject = this.findNpmProjectFromImport(importExpr, filePath);
     if (externalProject) {
       return externalProject;
+    }
+
+    if (this.useWorkspacePackageImportFastPath && !results) {
+      const workspaceProject =
+        this.findExactImportInWorkspaceProjects(importExpr);
+      if (workspaceProject) {
+        return workspaceProject;
+      }
     }
 
     if (this.tsConfig.config) {
@@ -351,6 +359,24 @@ export class TargetProjectLocator {
     );
 
     return project?.name;
+  }
+
+  private findExactImportInWorkspaceProjects(
+    importPath: string
+  ): string | null {
+    this.packagesMetadata ??= getWorkspacePackagesMetadata(this.nodes);
+
+    if (
+      !this.packagesMetadata.directlyResolvableWorkspaceEntryPoints.has(
+        importPath
+      )
+    ) {
+      return null;
+    }
+
+    return (
+      this.packagesMetadata.entryPointsToProjectMap[importPath]?.name ?? null
+    );
   }
 
   findDependencyInWorkspaceProjects(
