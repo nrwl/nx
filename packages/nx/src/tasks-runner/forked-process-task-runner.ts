@@ -1,4 +1,4 @@
-import { fork, Serializable } from 'child_process';
+import { fork, ForkOptions, Serializable, SpawnOptions } from 'child_process';
 import { writeFileSync } from 'fs';
 import { join } from 'path';
 import { ProjectGraph } from '../config/project-graph';
@@ -68,13 +68,15 @@ export class ForkedProcessTaskRunner {
       output.logCommand(args.join(' '));
     }
 
-    const p = fork(workerPath, {
+    const forkOptions: ForkOptions & Pick<SpawnOptions, 'windowsHide'> = {
+      windowsHide: true,
       stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
       env: {
         ...env,
         NX_FORKED_TASK_EXECUTOR: 'true',
       },
-    });
+    };
+    const p = fork(workerPath, forkOptions);
 
     // Register batch worker process with all tasks
     if (p.pid) {
@@ -284,13 +286,15 @@ export class ForkedProcessTaskRunner {
         output.logCommand(args.join(' '));
       }
 
-      const p = fork(this.cliPath, {
+      const forkOptions: ForkOptions & Pick<SpawnOptions, 'windowsHide'> = {
+        windowsHide: true,
         stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
         env: {
           ...env,
           NX_FORKED_TASK_EXECUTOR: 'true',
         },
-      });
+      };
+      const p = fork(this.cliPath, forkOptions);
 
       // Register forked process for metrics collection
       if (p.pid) {
@@ -350,13 +354,15 @@ export class ForkedProcessTaskRunner {
       if (streamOutput) {
         output.logCommand(args.join(' '));
       }
-      const p = fork(this.cliPath, {
+      const forkOptions: ForkOptions & Pick<SpawnOptions, 'windowsHide'> = {
+        windowsHide: true,
         stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
         env: {
           ...env,
           NX_FORKED_TASK_EXECUTOR: 'true',
         },
-      });
+      };
+      const p = fork(this.cliPath, forkOptions);
 
       // Register forked process for metrics collection
       if (p.pid) {
