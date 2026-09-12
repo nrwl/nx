@@ -1,18 +1,10 @@
 import { FileChange, readPackageJson } from '../file-utils';
-import {
-  getImplicitlyTouchedProjects,
-  getTouchedProjects,
-} from './locators/workspace-projects';
-import { getTouchedProjects as getJSTouchedProjects } from '../../plugins/js/project-graph/affected/touched-projects';
-import {
-  AffectedProjectGraphContext,
-  TouchedProjectLocator,
-} from './affected-project-graph-models';
+import { AffectedProjectGraphContext } from './affected-project-graph-models';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { ProjectGraph } from '../../config/project-graph';
 import { reverse } from '../operators';
 import { readNxJson } from '../../config/configuration';
-import { getTouchedProjectsFromProjectGlobChanges } from './locators/project-glob-changes';
+import { runTouchedProjectLocators } from './affected-projects';
 
 export async function filterAffected(
   graph: ProjectGraph,
@@ -21,33 +13,22 @@ export async function filterAffected(
   packageJson: any = readPackageJson(),
   projectDeletionAffectsAllProjects = true
 ): Promise<ProjectGraph> {
-  // Additional affected logic should be in this array.
-  const touchedProjectLocators: TouchedProjectLocator[] = [
-    getTouchedProjects,
-    getImplicitlyTouchedProjects,
-    getTouchedProjectsFromProjectGlobChanges,
-    getJSTouchedProjects,
-  ];
-
-  const touchedProjects = [];
-  for (const locator of touchedProjectLocators) {
-    performance.mark(locator.name + ':start');
-    const projects = await locator(
+  performance.mark('locateTouchedProjects:start');
+  const touchedProjects = (
+    await runTouchedProjectLocators(
+      graph,
       touchedFiles,
-      graph.nodes,
       nxJson,
       packageJson,
-      graph,
       projectDeletionAffectsAllProjects
-    );
-    performance.mark(locator.name + ':end');
-    performance.measure(
-      locator.name,
-      locator.name + ':start',
-      locator.name + ':end'
-    );
-    touchedProjects.push(...projects);
-  }
+    )
+  ).map((t) => t.project);
+  performance.mark('locateTouchedProjects:end');
+  performance.measure(
+    'locateTouchedProjects',
+    'locateTouchedProjects:start',
+    'locateTouchedProjects:end'
+  );
 
   return filterAffectedProjects(graph, {
     projectGraphNodes: graph.nodes,

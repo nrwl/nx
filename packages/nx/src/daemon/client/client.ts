@@ -372,7 +372,8 @@ export class DaemonClient {
     taskGraph: TaskGraph,
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd: string,
-    collectInputs?: boolean
+    collectInputs?: boolean,
+    ioSnapshots?: { directory?: string }
   ): Promise<Hash[]> {
     // Task results get written back onto these task objects as the run
     // progresses — hash/hashDetails/timestamps by hashing and the
@@ -398,6 +399,10 @@ export class DaemonClient {
       taskGraph: { ...taskGraph, tasks: trimmedTasks },
       cwd,
       collectInputs,
+      // The daemon has its own process.env, so the client decides: the fetched
+      // bundle directory (which pins the HEAD) travels with each request;
+      // absent means native hashing.
+      ioSnapshots,
     });
   }
 

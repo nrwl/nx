@@ -2,7 +2,9 @@ import type { TargetConfiguration } from '../../../config/workspace-json-project
 import type { HashInputs } from '../../../native';
 import {
   checkFilesAreInputs,
+  getTaskIoSnapshotStatus,
   getTaskRawInputs,
+  type IoSnapshotStatus,
 } from '../../../hasher/check-task-files';
 import { createTaskId } from '../../../tasks-runner/utils';
 import type { ShowTargetInputsOptions } from '../command-object';
@@ -51,8 +53,13 @@ export async function showTargetInputsHandler(
     return;
   }
 
+  const snapshot = await getTaskIoSnapshotStatus(taskId, {
+    projectGraph: t.graph,
+    nxJson: t.nxJson,
+  });
+
   renderInputs(
-    { project: projectName, target: targetName, ...hashInputs },
+    { project: projectName, target: targetName, snapshot, ...hashInputs },
     t.node.data.targets[targetName].inputs,
     args
   );
@@ -90,7 +97,11 @@ async function checkInputs(
 // ── Render ──────────────────────────────────────────────────────────
 
 function renderInputs(
-  data: HashInputs & { project: string; target: string },
+  data: HashInputs & {
+    project: string;
+    target: string;
+    snapshot: IoSnapshotStatus;
+  },
   configuredInputs: TargetConfiguration['inputs'] | undefined,
   args: ShowTargetInputsOptions
 ) {
@@ -113,13 +124,40 @@ function renderInputs(
     );
   }
 
+  console.log(
+    `${c.bold('Snapshot')}: ${formatSnapshotStatus(data.snapshot, c)}`
+  );
+
   printList('External dependencies', [...data.external].sort());
   printList('Runtime inputs', [...data.runtime].sort());
   printList('Environment variables', [...data.environment].sort());
-  printList(
-    `Files (${data.files.length})`,
-    [...data.files, ...data.depOutputs].sort()
-  );
+  const files = [...data.files, ...data.depOutputs].sort();
+  if (data.snapshot.status === 'used') {
+    const observed = files.filter((f) => data.sources[f] === 'snapshot');
+    const other = files.filter((f) => data.sources[f] !== 'snapshot');
+    printList(`Observed files (${observed.length})`, observed);
+    printList(`Other files (${other.length})`, other);
+  } else {
+    printList(`Files (${data.files.length})`, files);
+  }
+}
+
+function formatSnapshotStatus(
+  snapshot: IoSnapshotStatus,
+  c: ReturnType<typeof pc>
+): string {
+  switch (snapshot.status) {
+    case 'used':
+      return `${c.green('used')} ${c.dim(
+        `(commit ${snapshot.commit?.slice(0, 12) ?? '?'}, digest ${
+          snapshot.digest?.slice(0, 12) ?? '?'
+        })`
+      )}`;
+    case 'fallback':
+      return `${c.yellow('fallback')} ${c.dim(`(${snapshot.reason})`)}`;
+    default:
+      return `${c.dim(`none (${snapshot.reason})`)}`;
+  }
 }
 
 function renderCustomHasherWarning(

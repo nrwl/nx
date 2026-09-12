@@ -11,8 +11,27 @@ import { workspaceRoot } from '../utils/workspace-root';
 // fresh set of spies. _resetContextForTesting() clears the module-level cache
 // so each test loads a clean context.
 
+// loadIoSnapshotsForHead reads a fetched bundle from disk, so leaving it real
+// makes these tests pass locally and fail on CI, where Nx Cloud has fetched
+// one. Pin it absent; the snapshot path has its own tests.
+vi.mock('../io-snapshots/overrides', async (importOriginal) => ({
+  ...(await importOriginal<any>()),
+  loadIoSnapshotsForHead: vi.fn(() => null),
+}));
+
 vi.mock('../project-graph/project-graph', () => ({
   createProjectGraphAsync: vi.fn(),
+  // Mirrors the real one: customHasherTaskIds reads it whenever I/O snapshots
+  // are enabled, which is off locally and on in CI.
+  readProjectsConfigurationFromProjectGraph: (graph: any) => ({
+    projects: Object.fromEntries(
+      Object.entries(graph?.nodes ?? {}).map(([name, node]: any) => [
+        name,
+        node.data,
+      ])
+    ),
+    version: 2,
+  }),
 }));
 
 vi.mock('../config/nx-json', () => ({
@@ -51,6 +70,7 @@ import {
   checkFilesAreOutputs,
   getTaskOutputs,
   getTaskRawInputs,
+  deriveIoSnapshotStatus,
   _resetContextForTesting,
 } from './check-task-files';
 
@@ -151,6 +171,10 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
       return {
         init: mockInit,
         inspectTaskInputs: mockInspectTaskInputs,
+        inspectTaskInputsWithIoSnapshots: (...args: unknown[]) => ({
+          inputs: mockInspectTaskInputs(...args),
+          report: null,
+        }),
       } as unknown as HashPlanInspector;
     } as any);
 
@@ -1150,6 +1174,75 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
 
       expect(mockInspectTaskInputs).toHaveBeenCalledTimes(1);
       expect(mockGetOutputs).toHaveBeenCalledTimes(1);
+    });
+  });
+});
+
+describe('deriveIoSnapshotStatus', () => {
+  const resolution = {
+    requestedCommit: 'abc',
+    commits: ['abc'],
+    sourceCommits: ['abc'],
+    digest: 'd1',
+    fetchedAt: 0,
+    clientVersion: '1',
+    tasks: 1,
+  };
+
+  it('is none with the unavailability reason when nothing could be resolved', () => {
+    expect(deriveIoSnapshotStatus('a:build', null, 'not-connected')).toEqual({
+      status: 'none',
+      reason: 'not-connected',
+    });
+    expect(deriveIoSnapshotStatus('a:build', null, 'no-head')).toEqual({
+      status: 'none',
+      reason: 'no-head',
+    });
+  });
+
+  it('is used with commit and digest when the task has an override', () => {
+    expect(
+      deriveIoSnapshotStatus('a:build', {
+        used: ['a:build'],
+        diagnostics: [],
+        resolution,
+      })
+    ).toEqual({ status: 'used', commit: 'abc', digest: 'd1' });
+  });
+
+  it('is none when there is no bundle at all', () => {
+    expect(
+      deriveIoSnapshotStatus('a:build', {
+        used: [],
+        diagnostics: [{ reason: 'no-bundle' }],
+      })
+    ).toEqual({ status: 'none', reason: 'no-bundle' });
+  });
+
+  it('is fallback with the task diagnostic reason, defaulting to missing', () => {
+    expect(
+      deriveIoSnapshotStatus('a:build', {
+        used: [],
+        diagnostics: [{ reason: 'disabled', taskId: 'a:build' }],
+        resolution,
+      })
+    ).toEqual({
+      status: 'fallback',
+      reason: 'disabled',
+      commit: 'abc',
+      digest: 'd1',
+    });
+    expect(
+      deriveIoSnapshotStatus('a:build', {
+        used: [],
+        diagnostics: [],
+        resolution,
+      })
+    ).toEqual({
+      status: 'fallback',
+      reason: 'missing',
+      commit: 'abc',
+      digest: 'd1',
     });
   });
 });

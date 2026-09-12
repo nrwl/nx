@@ -1,3 +1,4 @@
+pub mod affected;
 pub mod cache;
 pub mod glob;
 pub mod hasher;
@@ -16,6 +17,7 @@ pub mod workspace;
 mod config;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod db;
+pub mod io_snapshots;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod metrics;
 #[cfg(not(target_arch = "wasm32"))]

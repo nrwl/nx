@@ -7,7 +7,10 @@ use hashbrown::HashSet;
 use crate::native::{
     hasher::hash,
     project_graph::{types::ProjectGraph, utils::create_project_root_mappings},
-    tasks::types::{HashInstruction, HashPlans},
+    tasks::types::{
+        ALWAYS_ON_WORKSPACE_FILES, HashInstruction, HashPlans, IO_SNAPSHOT_MARKER_PREFIX,
+        InstructionPool,
+    },
     types::{NapiDashMap, SharedStr},
 };
 use crate::native::{
@@ -16,11 +19,12 @@ use crate::native::{
 };
 use crate::native::{
     tasks::hashers::{
-        CachedTaskOutput, JsonHashResult, ProjectFileIndicesCache, ProjectFileSetCache,
-        WorkspaceFileIndicesCache, WorkspaceFileSetCache, collect_project_file_paths_cached,
-        collect_workspace_file_paths_cached, hash_all_externals, hash_external, hash_json_files,
-        hash_project_config, hash_project_files_cached, hash_task_output,
-        hash_tsconfig_selectively, hash_workspace_files_cached,
+        CachedTaskOutput, FileContentCache, FilesExpansionCache, JsonHashResult,
+        ProjectFileIndicesCache, ProjectFileSetCache, WorkspaceFileIndicesCache,
+        WorkspaceFileSetCache, collect_project_file_paths_cached,
+        collect_workspace_file_paths_cached, expand_files_cached, hash_all_externals,
+        hash_external, hash_files, hash_json_files, hash_project_config, hash_project_files_cached,
+        hash_task_output, hash_tsconfig_selectively, hash_workspace_files_cached, index_file_map,
     },
     types::FileData,
     workspace::types::ProjectFiles,
@@ -45,6 +49,82 @@ pub struct HashInputs {
     pub dep_outputs: Vec<String>,
     /// External dependencies
     pub external: Vec<String>,
+    /// Provenance of every value above, keyed by the value itself.
+    #[napi(ts_type = "Record<string, 'snapshot' | 'target' | 'dependency' | 'native'>")]
+    pub sources: HashMap<String, String>,
+    /// Domain markers in the plan, e.g. `io-snapshot:<digest>`.
+    pub markers: Vec<String>,
+}
+
+/// Where an input value came from; see `input_source`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum InputSource {
+    Snapshot,
+    Target,
+    Dependency,
+    Native,
+}
+
+impl InputSource {
+    fn as_str(self) -> &'static str {
+        match self {
+            InputSource::Snapshot => "snapshot",
+            InputSource::Target => "target",
+            InputSource::Dependency => "dependency",
+            InputSource::Native => "native",
+        }
+    }
+}
+
+/// Classifies one instruction's inputs for `HashInputs::sources`. A plan that
+/// carries an io-snapshot marker had its declared filesets replaced, so its
+/// file-bearing instructions are snapshot-sourced; otherwise filesets are
+/// `target` (own project) or `dependency`. Env/runtime/externals/config are
+/// always native.
+pub(crate) fn input_source(
+    instruction: &HashInstruction,
+    task_project: &str,
+    snapshot_backed: bool,
+) -> InputSource {
+    match instruction {
+        HashInstruction::ProjectFileSet(project, _, _) => {
+            if snapshot_backed {
+                InputSource::Snapshot
+            } else if project == task_project {
+                InputSource::Target
+            } else {
+                InputSource::Dependency
+            }
+        }
+        HashInstruction::WorkspaceFileSet(file_sets) => {
+            if file_sets.iter().eq(ALWAYS_ON_WORKSPACE_FILES.iter()) {
+                InputSource::Native
+            } else if snapshot_backed {
+                InputSource::Snapshot
+            } else {
+                InputSource::Target
+            }
+        }
+        HashInstruction::TaskOutput(_, _) => {
+            if snapshot_backed {
+                InputSource::Snapshot
+            } else {
+                InputSource::Dependency
+            }
+        }
+        _ => InputSource::Native,
+    }
+}
+
+/// True when the plan carries an io-snapshot marker.
+pub(crate) fn is_snapshot_backed(pool: &InstructionPool, ids: &[u32]) -> bool {
+    ids.iter().any(|id| {
+        matches!(&*pool.get(*id), HashInstruction::Marker(m) if m.starts_with(IO_SNAPSHOT_MARKER_PREFIX))
+    })
+}
+
+pub(crate) fn task_project(task_id: &str) -> &str {
+    task_id.split(':').next().unwrap_or(task_id)
 }
 
 /// Internal builder that uses HashSet for O(1) deduplication during accumulation.
@@ -56,6 +136,8 @@ pub(crate) struct HashInputsBuilder {
     pub(crate) environment: HashSet<String>,
     pub(crate) dep_outputs: HashSet<String>,
     pub(crate) external: HashSet<String>,
+    pub(crate) sources: HashMap<String, &'static str>,
+    pub(crate) markers: HashSet<String>,
 }
 
 impl HashInputsBuilder {
@@ -66,6 +148,26 @@ impl HashInputsBuilder {
         self.environment.extend(other.environment);
         self.dep_outputs.extend(other.dep_outputs);
         self.external.extend(other.external);
+        for (value, source) in other.sources {
+            self.sources.entry(value).or_insert(source);
+        }
+        self.markers.extend(other.markers);
+    }
+
+    /// Records `source` for every value currently in the builder.
+    pub(crate) fn tag(mut self, source: InputSource) -> Self {
+        let label = source.as_str();
+        for value in self
+            .files
+            .iter()
+            .chain(self.runtime.iter())
+            .chain(self.environment.iter())
+            .chain(self.dep_outputs.iter())
+            .chain(self.external.iter())
+        {
+            self.sources.entry(value.clone()).or_insert(label);
+        }
+        self
     }
 }
 
@@ -92,6 +194,10 @@ impl From<&HashInstruction> for HashInputsBuilder {
             },
             HashInstruction::AllExternalDependencies => HashInputsBuilder {
                 external: HashSet::from(["AllExternalDependencies".to_string()]),
+                ..Default::default()
+            },
+            HashInstruction::Marker(marker) => HashInputsBuilder {
+                markers: HashSet::from([marker.clone()]),
                 ..Default::default()
             },
             HashInstruction::ProjectConfiguration(_) | HashInstruction::Cwd(_) => {
@@ -123,6 +229,12 @@ impl From<HashInputsBuilder> for HashInputs {
             environment: to_sorted_vec(builder.environment),
             dep_outputs: to_sorted_vec(builder.dep_outputs),
             external: to_sorted_vec(builder.external),
+            sources: builder
+                .sources
+                .into_iter()
+                .map(|(k, v)| (k, v.to_string()))
+                .collect(),
+            markers: to_sorted_vec(builder.markers),
         }
     }
 }
@@ -201,6 +313,11 @@ pub struct TaskHasher {
     project_file_indices_cache: ProjectFileIndicesCache,
     // Fold over all externals; identical for every task, so computed once.
     all_externals_hash: OnceCell<String>,
+    // `files` inputs: content hashes revalidated by (mtime, size), plus a
+    // path index over the file map so tracked files skip the disk. Both are
+    // built only once a plan carries a `files` instruction.
+    file_content_cache: FileContentCache,
+    workspace_file_index: OnceCell<HashMap<String, u32>>,
 }
 #[napi]
 impl TaskHasher {
@@ -235,7 +352,16 @@ impl TaskHasher {
             workspace_file_indices_cache: WorkspaceFileIndicesCache::new(),
             project_file_indices_cache: ProjectFileIndicesCache::new(),
             all_externals_hash: OnceCell::new(),
+            file_content_cache: FileContentCache::new(),
+            workspace_file_index: OnceCell::new(),
         }
+    }
+
+    fn workspace_file_hash(&self, path: &str) -> Option<String> {
+        self.workspace_file_index
+            .get_or_init(|| index_file_map(&self.all_workspace_files))
+            .get(path)
+            .map(|&i| self.all_workspace_files[i as usize].hash.clone())
     }
 
     /// Hash each task's instructions using the env map keyed by `task.id`.
@@ -280,6 +406,7 @@ impl TaskHasher {
         let task_output_cache = DashMap::new();
         let runtime_cache: DashMap<String, String> = DashMap::new();
         let json_file_set_cache: DashMap<String, JsonHashResult> = DashMap::new();
+        let files_expansion_cache = FilesExpansionCache::new();
         // Deduplicates env-dependent hash values (Environment, Runtime)
         // across tasks; see intern_value. Other instruction types share
         // values through per-id slots instead.
@@ -312,6 +439,15 @@ impl TaskHasher {
         // Use separate maps: one for hash details, one for input accumulation with HashSet
         let hashes: NapiDashMap<String, HashDetails> = NapiDashMap::new();
         // Only allocate inputs accumulator when someone is listening for inputs
+        let snapshot_backed: HashMap<&String, bool> = if should_collect_inputs {
+            hash_plans
+                .plans
+                .iter()
+                .map(|(task_id, ids)| (task_id, is_snapshot_backed(&hash_plans.pool, ids)))
+                .collect()
+        } else {
+            HashMap::new()
+        };
         let inputs_accum: Option<DashMap<String, HashInputsBuilder>> = if should_collect_inputs {
             Some(DashMap::new())
         } else {
@@ -347,13 +483,14 @@ impl TaskHasher {
                     HashInstruction::Environment(_) | HashInstruction::Runtime(_) => None,
                     HashInstruction::WorkspaceFileSet(_)
                     | HashInstruction::Cwd(_)
-                    | HashInstruction::ProjectFileSet(_, _)
+                    | HashInstruction::ProjectFileSet(_, _, _)
                     | HashInstruction::ProjectConfiguration(_)
                     | HashInstruction::TsConfiguration(_)
                     | HashInstruction::TaskOutput(_, _)
                     | HashInstruction::External(_)
                     | HashInstruction::AllExternalDependencies
-                    | HashInstruction::JsonFileSet(_) => Some(&value_slots[id as usize]),
+                    | HashInstruction::JsonFileSet(_)
+                    | HashInstruction::Marker(_) => Some(&value_slots[id as usize]),
                 };
 
                 let cached = if should_collect_inputs {
@@ -380,6 +517,7 @@ impl TaskHasher {
                                 project_file_set_cache: &self.project_file_set_cache,
                                 workspace_file_set_cache: &self.workspace_file_set_cache,
                                 json_file_set_cache: &json_file_set_cache,
+                                files_expansion_cache: &files_expansion_cache,
                                 cwd: cwd_path,
                                 collect_inputs: should_collect_inputs,
                             },
@@ -387,7 +525,15 @@ impl TaskHasher {
 
                         // Accumulate inputs using HashSet for O(1) deduplication (only when collecting)
                         if let Some(ref accum) = inputs_accum {
-                            accum.entry(task_id.to_string()).or_default().extend(inputs);
+                            let source = input_source(
+                                instruction_ref.value(),
+                                task_project(task_id),
+                                snapshot_backed.get(task_id).copied().unwrap_or(false),
+                            );
+                            accum
+                                .entry(task_id.to_string())
+                                .or_default()
+                                .extend(inputs.tag(source));
                         }
 
                         match slot {
@@ -467,6 +613,7 @@ impl TaskHasher {
             project_file_set_cache,
             workspace_file_set_cache,
             json_file_set_cache,
+            files_expansion_cache,
             cwd,
             collect_inputs,
         }: HashInstructionArgs,
@@ -524,7 +671,37 @@ impl TaskHasher {
                 trace!(parent: &span, "hash_cwd: {:?}", now.elapsed());
                 (hashed_cwd, empty)
             }
-            HashInstruction::ProjectFileSet(project_name, file_sets) => {
+            HashInstruction::ProjectFileSet(_, globs, true) => {
+                let workspace_root = Path::new(&self.workspace_root);
+                let expansion = expand_files_cached(
+                    workspace_root,
+                    &instruction.to_string(),
+                    globs,
+                    files_expansion_cache,
+                )?;
+                let hashed = hash_files(
+                    workspace_root,
+                    &expansion,
+                    |path| self.workspace_file_hash(path),
+                    &self.file_content_cache,
+                );
+                trace!(parent: &span, "hash_files: {:?}", now.elapsed());
+                let inputs = if collect_inputs {
+                    HashInputsBuilder {
+                        files: expansion
+                            .files
+                            .iter()
+                            .chain(expansion.missing.iter())
+                            .cloned()
+                            .collect(),
+                        ..Default::default()
+                    }
+                } else {
+                    empty
+                };
+                (hashed, inputs)
+            }
+            HashInstruction::ProjectFileSet(project_name, file_sets, false) => {
                 let hashed = hash_project_files_cached(
                     project_name,
                     file_sets,
@@ -692,6 +869,7 @@ impl TaskHasher {
                 };
                 (cached_entry.hash, inputs)
             }
+            HashInstruction::Marker(marker) => (hash(marker.as_bytes()), empty),
         };
         Ok((hash, inputs))
     }
@@ -708,6 +886,7 @@ struct HashInstructionArgs<'a> {
     project_file_set_cache: &'a ProjectFileSetCache,
     workspace_file_set_cache: &'a WorkspaceFileSetCache,
     json_file_set_cache: &'a DashMap<String, JsonHashResult>,
+    files_expansion_cache: &'a FilesExpansionCache,
     cwd: &'a std::path::Path,
     collect_inputs: bool,
 }
@@ -728,5 +907,77 @@ mod tests {
         assert!(Arc::ptr_eq(&first, &second));
         assert!(!Arc::ptr_eq(&first, &other));
         assert_eq!(interner.len(), 2);
+    }
+
+    #[test]
+    fn input_source_classifies_by_marker_and_project() {
+        let own = HashInstruction::ProjectFileSet("web".into(), vec!["web/**/*".into()], false);
+        let dep = HashInstruction::ProjectFileSet("ui".into(), vec!["ui/**/*".into()], false);
+        let ws = HashInstruction::WorkspaceFileSet(vec!["{workspaceRoot}/x".into()]);
+        let always_on = HashInstruction::WorkspaceFileSet(
+            ALWAYS_ON_WORKSPACE_FILES
+                .iter()
+                .map(|s| s.to_string())
+                .collect(),
+        );
+        let out = HashInstruction::TaskOutput("ui/dist/**".into(), vec!["ui:build".into()]);
+        let env = HashInstruction::Environment("CI".into());
+
+        assert_eq!(input_source(&own, "web", false), InputSource::Target);
+        assert_eq!(input_source(&dep, "web", false), InputSource::Dependency);
+        assert_eq!(input_source(&ws, "web", false), InputSource::Target);
+        assert_eq!(input_source(&out, "web", false), InputSource::Dependency);
+        assert_eq!(input_source(&always_on, "web", false), InputSource::Native);
+        assert_eq!(input_source(&env, "web", false), InputSource::Native);
+
+        assert_eq!(input_source(&own, "web", true), InputSource::Snapshot);
+        assert_eq!(input_source(&dep, "web", true), InputSource::Snapshot);
+        assert_eq!(input_source(&ws, "web", true), InputSource::Snapshot);
+        assert_eq!(input_source(&out, "web", true), InputSource::Snapshot);
+        assert_eq!(input_source(&always_on, "web", true), InputSource::Native);
+        assert_eq!(input_source(&env, "web", true), InputSource::Native);
+
+        // A disk-backed group is attributed like any other project fileset:
+        // the task's own project is target, another project's is dependency.
+        // Under a snapshot marker it carries the observed reads.
+        let files =
+            HashInstruction::ProjectFileSet("web".into(), vec!["apps/web/gen/**".into()], true);
+        let dep_files =
+            HashInstruction::ProjectFileSet("ui".into(), vec!["libs/ui/dist/**".into()], true);
+        assert_eq!(input_source(&files, "web", false), InputSource::Target);
+        assert_eq!(
+            input_source(&dep_files, "web", false),
+            InputSource::Dependency
+        );
+        assert_eq!(input_source(&files, "web", true), InputSource::Snapshot);
+    }
+
+    #[test]
+    fn snapshot_backed_requires_an_io_snapshot_marker() {
+        let pool = InstructionPool::new();
+        let plain = pool.intern(HashInstruction::Environment("CI".into()));
+        let other = pool.intern(HashInstruction::Marker("something-else".into()));
+        let io = pool.intern(HashInstruction::Marker("io-snapshot:abc".into()));
+        assert!(!is_snapshot_backed(&pool, &[plain, other]));
+        assert!(is_snapshot_backed(&pool, &[plain, io]));
+        assert_eq!(task_project("web:build:production"), "web");
+    }
+
+    #[test]
+    fn tag_records_sources_and_extend_keeps_first() {
+        let mut a = HashInputsBuilder {
+            files: HashSet::from(["a.ts".to_string()]),
+            ..Default::default()
+        }
+        .tag(InputSource::Snapshot);
+        let b = HashInputsBuilder {
+            files: HashSet::from(["a.ts".to_string(), "b.ts".to_string()]),
+            ..Default::default()
+        }
+        .tag(InputSource::Target);
+        a.extend(b);
+        let inputs: HashInputs = a.into();
+        assert_eq!(inputs.sources["a.ts"], "snapshot");
+        assert_eq!(inputs.sources["b.ts"], "target");
     }
 }

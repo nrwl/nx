@@ -108,6 +108,28 @@ This may cause Nx to rerun some tasks even when files irrelevant to the task hav
 
 To get a better idea of how to use inputs, you can browse some [common input sets](/docs/kb/configure-inputs#common-inputs).
 
+### Including gitignored files
+
+A fileset only sees files in the workspace file map, which follows `.gitignore` and `.nxignore`. A gitignored or generated file, such as a build artifact under `dist/` or a generated `.env`, is never in that map, so a plain fileset can't hash it. Add `includeIgnored: true` to hash the glob straight from the disk instead:
+
+```jsonc
+{
+  "inputs": [
+    { "fileset": "{projectRoot}/dist/**/*.js", "includeIgnored": true },
+    { "fileset": "!{projectRoot}/dist/**/*.map", "includeIgnored": true },
+    { "fileset": "{workspaceRoot}/.env.generated", "includeIgnored": true },
+  ],
+}
+```
+
+`{projectRoot}` and `{workspaceRoot}` resolve as for any fileset, and every glob must start with one of them; a glob that would walk from the workspace root (for example `{workspaceRoot}/**`) is a configuration error. Nx expands the globs when it hashes the task, so a new matching file is picked up without a configuration change, and a path that names a directory matches everything under it.
+
+A path that names a single missing file still takes part in the hash, so the cache key changes when the file appears or is removed.
+
+All of a task's `includeIgnored` filesets are hashed together as one group, so a `!` negation filters every positive in the task — but only across filesets that **also** set `includeIgnored: true`. A negation without the flag stays a normal fileset and never filters a disk-backed match.
+
+Globs skip the directories the workspace file map never enters: `node_modules`, `.git`, `.nx/cache`, `.nx/workspace-data`, and `.yarn/cache`. An exact path inside one of them, such as `node_modules/foo/package.json`, is read as-is.
+
 ### JSON files
 
 Configuration files such as `package.json` or `tsconfig.base.json` hold fields that are irrelevant to most tasks. Nx can hash a subset of a JSON file so that edits to the remaining fields do not invalidate the cache. JSON inputs are defined like this:

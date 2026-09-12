@@ -6,6 +6,11 @@ import {
   setGraph,
   setMockSourceMaps,
   setMockHasCustomHasher,
+  fetchedForHead,
+  setMockInputGlobs,
+  setMockNxJson,
+  setMockObservedOutputs,
+  setMockIoSnapshotReport,
 } from './test-utils';
 import { showTargetInfoHandler } from './info';
 
@@ -881,5 +886,453 @@ describe('show target info', () => {
     expect(parsed.dependsOn).toEqual(['my-app:serve']);
     expect(parsed.transitiveTasks).toEqual(['my-app:build']);
     expect(parsed.transitiveTasks).not.toContain('my-app-e2e:e2e:ci');
+  });
+
+  describe('I/O snapshot section', () => {
+    function graphWithLintTarget() {
+      return new GraphBuilder()
+        .addProjectConfiguration(
+          {
+            root: 'apps/my-app',
+            name: 'my-app',
+            targets: {
+              lint: {
+                executor: 'nx:run-commands',
+                options: { command: 'eslint .' },
+                inputs: ['{projectRoot}/**/*.ts', { env: 'CI' }],
+              },
+            },
+          },
+          'app'
+        )
+        .build();
+    }
+
+    it('prints the observed reads per project in place of the declared filesets', async () => {
+      setGraph(graphWithLintTarget());
+      setMockIoSnapshotReport({
+        used: ['my-app:lint'],
+        tasksWithOutputs: [],
+        diagnostics: [],
+        resolution: { requestedCommit: 'ae6a03f912ab', digest: '049a9c2f7bcd' },
+      });
+      setMockInputGlobs({
+        'my-app:lint': [
+          {
+            project: 'my-app',
+            globs: ['apps/my-app/src/main.ts', '!apps/my-app/**/*.spec.ts'],
+            observed: ['apps/my-app/src/main.ts'],
+            declared: ['!apps/my-app/**/*.spec.ts'],
+            includeIgnored: true,
+            fromSnapshot: true,
+          },
+          {
+            project: 'ui',
+            globs: ['libs/ui/src/index.ts'],
+            observed: ['libs/ui/src/index.ts'],
+            declared: [],
+            includeIgnored: true,
+            fromSnapshot: true,
+          },
+        ],
+      });
+
+      (console.log as Mock).mockClear();
+      await showTargetInfoHandler({ target: 'my-app:lint', verbose: true });
+      const text = (console.log as Mock).mock.calls.map((c) => c[0]).join('\n');
+
+      // The observed reads, grouped by the project that owns them.
+      expect(text).toContain('included by the snapshot:');
+      expect(text).toContain('the observed reads are listed above');
+      // The pointer to the files sits with the section it describes, not 30
+      // lines below it.
+      expect(text).toContain(
+        'file inputs come from the I/O snapshot at ae6a03f9'
+      );
+      expect(text).toContain('nx show target inputs my-app:lint');
+      // Globs inside the owning project read as {projectRoot}, like the
+      // declared inputs; the header carries the real root.
+      expect(text).toContain('my-app (apps/my-app)');
+      expect(text).toContain('{projectRoot}/src/main.ts');
+      // A project absent from the graph keeps its workspace-relative glob.
+      expect(text).toContain('libs/ui/src/index.ts');
+      // An exclusion carried over from a declared input is named apart from
+      // the reads, since it is why a read can still be excluded.
+      expect(text).toContain('excluded by a declared input:');
+      expect(text).toContain('!{projectRoot}/**/*.spec.ts');
+      // The declared filesets they replace are gone, not merely tagged.
+      expect(text).not.toContain('{projectRoot}/**/*.ts');
+      expect(text).not.toContain('(replaced by snapshot)');
+      // Non-file inputs are never replaced by a snapshot.
+      expect(text).toContain('"env"');
+    });
+
+    it("lists each project's globs under that project when verbose", async () => {
+      setGraph(graphWithLintTarget());
+      setMockIoSnapshotReport({
+        used: ['my-app:lint'],
+        tasksWithOutputs: [],
+        diagnostics: [],
+        resolution: { requestedCommit: 'ae6a03f912ab', digest: '049a9c2f7bcd' },
+      });
+      const shared = '{projectRoot}/**/*.d.ts';
+      setMockInputGlobs({
+        'my-app:lint': [
+          {
+            project: 'my-app',
+            globs: [shared, '{projectRoot}/src/only-mine.ts'],
+            observed: [shared, '{projectRoot}/src/only-mine.ts'],
+            declared: [],
+            includeIgnored: true,
+            fromSnapshot: true,
+          },
+          {
+            project: 'ui',
+            globs: [shared],
+            observed: [shared],
+            declared: [],
+            includeIgnored: true,
+            fromSnapshot: true,
+          },
+        ],
+      });
+
+      (console.log as Mock).mockClear();
+      await showTargetInfoHandler({ target: 'my-app:lint', verbose: true });
+      const lines = (console.log as Mock).mock.calls.map((call) => call[0]);
+      const text = lines.join('\n');
+
+      // Every project gets its own block, so a glob two projects read is
+      // listed under each rather than collapsed into one scoped line.
+      expect(text).toContain('my-app (apps/my-app)');
+      expect(text).toMatch(/\bui — \d+ files?:/);
+      expect(lines.filter((l: string) => l.includes(shared))).toHaveLength(2);
+      // A glob only one project reads stays under that project.
+      expect(text).toContain('{projectRoot}/src/only-mine.ts');
+      expect(text).toContain('{projectRoot}/src/only-mine.ts');
+    });
+
+    it("separates the snapshot's own exclusions from the declared ones", async () => {
+      setGraph(graphWithLintTarget());
+      setMockIoSnapshotReport({
+        used: ['my-app:lint'],
+        tasksWithOutputs: [],
+        diagnostics: [],
+        resolution: { requestedCommit: 'ae6a03f912ab', digest: '049a9c2f7bcd' },
+      });
+      setMockInputGlobs({
+        'my-app:lint': [
+          {
+            project: 'my-app',
+            globs: [
+              'apps/my-app/src/main.ts',
+              '!apps/my-app/package.json',
+              '!apps/my-app/**/*.spec.ts',
+            ],
+            // A trace records what the task did not read, so the bundle
+            // carries negations of its own.
+            observed: ['apps/my-app/src/main.ts', '!apps/my-app/package.json'],
+            declared: ['!apps/my-app/**/*.spec.ts'],
+            includeIgnored: true,
+            fromSnapshot: true,
+          },
+        ],
+      });
+
+      (console.log as Mock).mockClear();
+      await showTargetInfoHandler({ target: 'my-app:lint', verbose: true });
+      const text = (console.log as Mock).mock.calls.map((c) => c[0]).join('\n');
+
+      // Each of the three kinds is counted under its own heading, so no glob
+      // is left looking unexplained.
+      expect(text).toContain('included by the snapshot:');
+      expect(text).toContain('excluded by the snapshot:');
+      expect(text).toContain('excluded by a declared input:');
+      // The snapshot's own negation is not counted among the reads.
+      const readsBlock = text.slice(
+        text.indexOf('observed reads'),
+        text.indexOf('exclusions recorded')
+      );
+      expect(readsBlock).not.toContain('!{projectRoot}/package.json');
+    });
+
+    it('resolves the bundle for HEAD before reading it', async () => {
+      setGraph(graphWithLintTarget());
+      setMockIoSnapshotReport(null);
+
+      await showTargetInfoHandler({ target: 'my-app:lint' });
+
+      // `nx show target` reports what a run would hash, so it resolves the
+      // bundle a run would rather than only reading what one left behind.
+      expect(fetchedForHead).toBeGreaterThan(0);
+    });
+
+    it('traces an inherited exclusion to the named input that defines it', async () => {
+      const graph = graphWithLintTarget();
+      // The target pulls its dependencies' `production`, which is defined
+      // through another named input -- where the exclusion actually lives.
+      graph.nodes['my-app'].data.targets.lint.inputs = [
+        '{projectRoot}/**/*.ts',
+        '^production',
+      ];
+      setGraph(graph);
+      setMockNxJson({
+        namedInputs: {
+          production: ['productionBase', '!{projectRoot}/.storybook/**/*'],
+          productionBase: ['default', '!{projectRoot}/src/test/**/*'],
+          default: ['{projectRoot}/**/*'],
+        },
+      });
+      setMockIoSnapshotReport({
+        used: ['my-app:lint'],
+        tasksWithOutputs: [],
+        diagnostics: [],
+        resolution: { requestedCommit: 'ae6a03f912ab', digest: '049a9c2f7bcd' },
+      });
+      setMockInputGlobs({
+        'my-app:lint': [
+          {
+            project: 'my-app',
+            globs: ['apps/my-app/src/main.ts', '!apps/my-app/src/test/**/*'],
+            observed: ['apps/my-app/src/main.ts'],
+            declared: ['!apps/my-app/src/test/**/*'],
+            includeIgnored: true,
+            fromSnapshot: true,
+          },
+        ],
+      });
+
+      (console.log as Mock).mockClear();
+      await showTargetInfoHandler({ target: 'my-app:lint', verbose: true });
+      const text = (console.log as Mock).mock.calls.map((c) => c[0]).join('\n');
+
+      // Named through the definition it is written in, not the reference that
+      // reached it, and not any one project that merely carries it.
+      expect(text).toContain(
+        '!{projectRoot}/src/test/**/* (from nx.json#namedInputs.productionBase via ^production)'
+      );
+    });
+
+    it("tokenizes a root project's globs like any other project", async () => {
+      const graph = graphWithLintTarget();
+      graph.nodes['root-proj'] = {
+        name: 'root-proj',
+        type: 'lib',
+        data: { root: '.', targets: {} },
+      } as never;
+      setGraph(graph);
+      setMockIoSnapshotReport({
+        used: ['my-app:lint'],
+        tasksWithOutputs: [],
+        diagnostics: [],
+        resolution: { requestedCommit: 'ae6a03f912ab', digest: '049a9c2f7bcd' },
+      });
+      setMockInputGlobs({
+        'my-app:lint': [
+          {
+            project: 'root-proj',
+            globs: ['Cargo.toml'],
+            observed: ['Cargo.toml'],
+            declared: [],
+            includeIgnored: true,
+            fromSnapshot: true,
+          },
+        ],
+      });
+
+      (console.log as Mock).mockClear();
+      await showTargetInfoHandler({ target: 'my-app:lint', verbose: true });
+      const text = (console.log as Mock).mock.calls.map((c) => c[0]).join('\n');
+
+      // `{projectRoot}` is "." for this project, so the glob reads the same
+      // way every other group's does rather than as a bare path.
+      expect(text).toContain('{projectRoot}/Cargo.toml');
+    });
+
+    it('caps the dependency list unless --verbose', async () => {
+      const graph = graphWithLintTarget();
+      const deps: Record<string, unknown> = {};
+      for (let i = 0; i < 30; i++) {
+        deps[`dep-${i}`] = {
+          name: `dep-${i}`,
+          type: 'lib',
+          data: { root: `libs/dep-${i}`, targets: { lint: {} } },
+        };
+      }
+      Object.assign(graph.nodes, deps);
+      graph.nodes['my-app'].data.targets.lint.dependsOn = ['^lint'];
+      graph.dependencies['my-app'] = Object.keys(deps).map((target) => ({
+        source: 'my-app',
+        target,
+        type: 'static',
+      }));
+      setGraph(graph);
+
+      (console.log as Mock).mockClear();
+      await showTargetInfoHandler({ target: 'my-app:lint' });
+      const text = (console.log as Mock).mock.calls.map((c) => c[0]).join('\n');
+
+      // A wide target lists hundreds of tasks, which buries every section
+      // under it; the count carries the useful part.
+      expect(text).toMatch(/\.\.\. \d+ more \(--verbose\)/);
+    });
+
+    it('lists the writes the snapshot observed alongside the declared ones', async () => {
+      setGraph(graphWithLintTarget());
+      setMockIoSnapshotReport({
+        used: ['my-app:lint'],
+        tasksWithOutputs: ['my-app:lint'],
+        diagnostics: [],
+        resolution: { requestedCommit: 'ae6a03f912ab', digest: '049a9c2f7bcd' },
+      });
+      setMockObservedOutputs({ 'my-app:lint': ['apps/my-app/generated/**'] });
+
+      (console.log as Mock).mockClear();
+      await showTargetInfoHandler({ target: 'my-app:lint' });
+      const text = (console.log as Mock).mock.calls.map((c) => c[0]).join('\n');
+
+      // The runner caches these too, so omitting them understated what the
+      // task produces.
+      expect(text).toContain(
+        '{projectRoot}/generated/** (observed by the I/O snapshot)'
+      );
+    });
+
+    it('summarises by project unless --verbose', async () => {
+      setGraph(graphWithLintTarget());
+      setMockIoSnapshotReport({
+        used: ['my-app:lint'],
+        tasksWithOutputs: [],
+        diagnostics: [],
+        resolution: { requestedCommit: 'ae6a03f912ab', digest: '049a9c2f7bcd' },
+      });
+      const shared = '{projectRoot}/**/*.d.ts';
+      setMockInputGlobs({
+        'my-app:lint': [
+          {
+            project: 'my-app',
+            globs: [shared, '{projectRoot}/src/only-mine.ts'],
+            observed: [shared, '{projectRoot}/src/only-mine.ts'],
+            declared: [],
+            includeIgnored: true,
+            fromSnapshot: true,
+          },
+          {
+            project: 'ui',
+            globs: [shared, '{projectRoot}/src/only-ui.ts'],
+            observed: [shared, '{projectRoot}/src/only-ui.ts'],
+            declared: [],
+            includeIgnored: true,
+            fromSnapshot: true,
+          },
+        ],
+      });
+
+      (console.log as Mock).mockClear();
+      await showTargetInfoHandler({ target: 'my-app:lint' });
+      const text = (console.log as Mock).mock.calls.map((c) => c[0]).join('\n');
+
+      // The default answers which projects the task considers, not which
+      // globs; a 196-project task would otherwise print hundreds of lines.
+      expect(text).toMatch(/considers \d+ files? from 2 projects/);
+      expect(text).toContain('my-app (apps/my-app)');
+      expect(text).toContain('ui');
+      expect(text).not.toContain(shared);
+      expect(text).not.toContain('only-mine.ts');
+    });
+
+    it('keeps the declared filesets tagged when no observed reads resolved', async () => {
+      setGraph(graphWithLintTarget());
+      setMockIoSnapshotReport({
+        used: ['my-app:lint'],
+        tasksWithOutputs: [],
+        diagnostics: [],
+        resolution: { requestedCommit: 'ae6a03f912ab', digest: '049a9c2f7bcd' },
+      });
+      setMockInputGlobs({});
+
+      (console.log as Mock).mockClear();
+      await showTargetInfoHandler({ target: 'my-app:lint', verbose: true });
+      const text = (console.log as Mock).mock.calls.map((c) => c[0]).join('\n');
+      expect(text).toContain('{projectRoot}/**/*.ts');
+      expect(text).not.toContain('globs across');
+    });
+
+    it('reports a used snapshot and its commit in text, with the digest in --json', async () => {
+      setGraph(graphWithLintTarget());
+      setMockIoSnapshotReport({
+        used: ['my-app:lint'],
+        tasksWithOutputs: [],
+        diagnostics: [],
+        resolution: {
+          requestedCommit: 'ae6a03f912ab',
+          digest: '049a9c2f7bcd',
+        },
+      });
+
+      await showTargetInfoHandler({ target: 'my-app:lint', verbose: true });
+      const text = (console.log as Mock).mock.calls.map((c) => c[0]).join('\n');
+      expect(text).toContain('I/O snapshot: used — commit ae6a03f9');
+      expect(text).toContain('nx show target inputs my-app:lint');
+      // file input tagged, env input not
+      const fileLine = (console.log as Mock).mock.calls
+        .map((c) => c[0])
+        .find((l: string) => l.includes('{projectRoot}/**/*.ts'));
+      expect(fileLine).toContain('(replaced by snapshot)');
+      const envLine = (console.log as Mock).mock.calls
+        .map((c) => c[0])
+        .find((l: string) => l.includes('"env"'));
+      expect(envLine).not.toContain('(replaced by snapshot)');
+
+      (console.log as Mock).mockClear();
+      await showTargetInfoHandler({ target: 'my-app:lint', json: true });
+      const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
+      expect(parsed.snapshot).toEqual({
+        status: 'used',
+        commit: 'ae6a03f912ab',
+        digest: '049a9c2f7bcd',
+      });
+    });
+
+    it('reports a fallback with its reason', async () => {
+      setGraph(graphWithLintTarget());
+      setMockIoSnapshotReport({
+        used: [],
+        tasksWithOutputs: [],
+        diagnostics: [{ reason: 'root-anchored-glob', taskId: 'my-app:lint' }],
+        resolution: { requestedCommit: 'x', digest: 'y' },
+      });
+      await showTargetInfoHandler({ target: 'my-app:lint' });
+      const text = (console.log as Mock).mock.calls.map((c) => c[0]).join('\n');
+      expect(text).toContain(
+        'I/O snapshot: fallback (root-anchored-glob) of the snapshot at x — hashed from the declared inputs above'
+      );
+    });
+
+    it('hides the none status unless --verbose, and shows it with --verbose', async () => {
+      setGraph(graphWithLintTarget());
+      // default mock report is null ⇒ not-connected
+      await showTargetInfoHandler({ target: 'my-app:lint' });
+      const quiet = (console.log as Mock).mock.calls
+        .map((c) => c[0])
+        .join('\n');
+      expect(quiet).not.toContain('I/O snapshot:');
+
+      (console.log as Mock).mockClear();
+      await showTargetInfoHandler({ target: 'my-app:lint', verbose: true });
+      const verbose = (console.log as Mock).mock.calls
+        .map((c) => c[0])
+        .join('\n');
+      expect(verbose).toContain('I/O snapshot: none (not-connected)');
+
+      // --json carries the snapshot even when the text section is hidden.
+      (console.log as Mock).mockClear();
+      await showTargetInfoHandler({ target: 'my-app:lint', json: true });
+      const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
+      expect(parsed.snapshot).toEqual({
+        status: 'none',
+        reason: 'not-connected',
+      });
+    });
   });
 });

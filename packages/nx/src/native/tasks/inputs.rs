@@ -69,16 +69,22 @@ pub(super) fn get_inputs_for_dependency<'a>(
         Input::FileSet {
             fileset,
             dependencies: true,
+            include_ignored,
+            force,
         } => {
             // For dependency filesets, we apply the same fileset to the dependency
             // and continue recursively with the same pattern
             let self_inputs = vec![Input::FileSet {
                 fileset,
                 dependencies: false,
+                include_ignored: *include_ignored,
+                force: *force,
             }];
             let deps_inputs = vec![Input::FileSet {
                 fileset,
                 dependencies: true,
+                include_ignored: *include_ignored,
+                force: *force,
             }];
 
             Ok(Some(SplitInputs {
@@ -100,7 +106,9 @@ fn split_inputs_into_self_and_deps<'a>(
         vec![
             Input::FileSet {
                 fileset: "{projectRoot}/**/*",
+                include_ignored: false,
                 dependencies: false,
+                force: false,
             },
             Input::Inputs {
                 input: "default",
@@ -140,6 +148,7 @@ fn split_inputs_into_self_and_deps<'a>(
                 | Input::DepsOutputs { .. }
                 | Input::ExternalDependency(_)
                 | Input::WorkingDirectory(_)
+                | Input::ContinuousDependenciesInputs
                 | Input::Json { .. } => {
                     acc.1.push(input);
                 }
@@ -186,6 +195,8 @@ pub(super) fn expand_single_project_inputs<'a>(
                     expanded.push(Input::FileSet {
                         fileset: s,
                         dependencies: false,
+                        include_ignored: false,
+                        force: false,
                     });
                 }
             }
@@ -196,12 +207,19 @@ pub(super) fn expand_single_project_inputs<'a>(
             Input::FileSet {
                 fileset,
                 dependencies: false,
+                include_ignored,
+                force,
             } => {
                 validate_file_set(fileset)?;
                 expanded.push(Input::FileSet {
                     fileset,
                     dependencies: false,
+                    include_ignored: *include_ignored,
+                    force: *force,
                 });
+            }
+            Input::ContinuousDependenciesInputs => {
+                expanded.push(Input::ContinuousDependenciesInputs)
             }
             Input::Runtime(runtime) => expanded.push(Input::Runtime(runtime)),
             Input::Environment(env) => expanded.push(Input::Environment(env)),
@@ -288,6 +306,8 @@ pub(super) fn get_named_inputs<'a>(
         vec![Input::FileSet {
             fileset: "{projectRoot}/**/*",
             dependencies: false,
+            include_ignored: false,
+            force: false,
         }],
     );
 

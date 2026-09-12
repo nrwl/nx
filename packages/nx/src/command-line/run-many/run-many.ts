@@ -4,7 +4,7 @@ import {
   readGraphFileFromGraphArg,
   splitArgsIntoNxArgsAndOverrides,
 } from '../../utils/command-line-utils';
-import { projectHasTarget } from '../../utils/project-graph-utils';
+import { runnableForTarget } from '../../utils/project-graph-utils';
 import { connectToNxCloudIfExplicitlyAsked } from '../nx-cloud/connect/connect-to-nx-cloud';
 import { performance } from 'perf_hooks';
 import {
@@ -127,18 +127,4 @@ export function projectsToRun(
   }
 
   return Object.values(selectedProjects);
-}
-
-function runnableForTarget(
-  projects: Record<string, ProjectGraphProjectNode>,
-  targets: string[]
-): Set<string> {
-  const runnable = new Set<string>();
-  for (let projectName in projects) {
-    const project = projects[projectName];
-    if (targets.find((target) => projectHasTarget(project, target))) {
-      runnable.add(projectName);
-    }
-  }
-  return runnable;
 }

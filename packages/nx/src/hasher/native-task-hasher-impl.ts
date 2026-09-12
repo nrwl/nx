@@ -6,20 +6,25 @@ import {
   FileData,
   HasherOptions,
   HashPlanner,
+  IoSnapshots,
   ProjectGraph as NativeProjectGraph,
   NxWorkspaceFilesExternals,
   TaskHasher,
+  subsetHashPlans,
   transferProjectGraph,
 } from '../native';
 import { transformProjectGraphForRust } from '../native/transform-objects';
+import type { TaskPlanningContext } from './task-planning-context';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
 import { readJsonFile } from '../utils/fileutils';
+import { customHasherTaskIds } from '../io-snapshots/overrides';
 import { PartialHash, TaskHasherImpl } from './task-hasher';
 
 export class NativeTaskHasherImpl implements TaskHasherImpl {
   hasher: TaskHasher;
   planner: HashPlanner;
+  private readonly planningContext?: TaskPlanningContext;
   projectGraphRef: ExternalObject<NativeProjectGraph>;
   allWorkspaceFilesRef: ExternalObject<FileData[]>;
   projectFileMapRef: ExternalObject<Record<string, FileData[]>>;
@@ -27,14 +32,17 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
 
   constructor(
     workspaceRoot: string,
-    nxJson: NxJsonConfiguration,
-    projectGraph: ProjectGraph,
+    private readonly nxJson: NxJsonConfiguration,
+    private readonly projectGraph: ProjectGraph,
     externals: NxWorkspaceFilesExternals,
-    options: { selectivelyHashTsConfig: boolean }
+    options: { selectivelyHashTsConfig: boolean },
+    planningContext?: TaskPlanningContext
   ) {
-    this.projectGraphRef = transferProjectGraph(
-      transformProjectGraphForRust(projectGraph)
-    );
+    // Reuses the marshal and planner memo when affected already built them for
+    // this graph; otherwise this is the only phase that needs them.
+    this.projectGraphRef =
+      planningContext?.projectGraphRef ??
+      transferProjectGraph(transformProjectGraphForRust(projectGraph));
 
     this.allWorkspaceFilesRef = externals.allWorkspaceFiles;
     this.projectFileMapRef = externals.projectFiles;
@@ -51,7 +59,9 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
       }
     }
 
-    this.planner = new HashPlanner(nxJson, this.projectGraphRef);
+    this.planner =
+      planningContext?.planner ?? new HashPlanner(nxJson, this.projectGraphRef);
+    this.planningContext = planningContext;
     this.hasher = new TaskHasher(
       workspaceRoot,
       this.projectGraphRef,
@@ -69,14 +79,16 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     taskGraph: TaskGraph,
     env: NodeJS.ProcessEnv,
     cwd?: string,
-    collectInputs?: boolean
+    collectInputs?: boolean,
+    ioSnapshots?: IoSnapshots
   ): Promise<PartialHash> {
     const hashes = await this.hashTasks(
       [task],
       taskGraph,
       { [task.id]: env },
       cwd,
-      collectInputs
+      collectInputs,
+      ioSnapshots
     );
     return hashes[0];
   }
@@ -86,12 +98,29 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     taskGraph: TaskGraph,
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd?: string,
-    collectInputs?: boolean
+    collectInputs?: boolean,
+    ioSnapshots?: IoSnapshots
   ): Promise<PartialHash[]> {
-    const plans = this.planner.getPlansReference(
-      tasks.map((t) => t.id),
-      taskGraph
-    );
+    const taskIds = tasks.map((t) => t.id);
+    // Affected already planned a superset of these tasks. Reusing that answer
+    // skips a second pass over the same planner, which costs about as much as
+    // the first even with the subtree memo warm.
+    //
+    // Only against the bundle those plans were built with. Plans from a
+    // different one describe a different hashing configuration and would
+    // produce keys that no snapshot-backed run can match.
+    const plans =
+      (this.planningContext?.plans &&
+        (ioSnapshots ?? null) === (this.planningContext.ioSnapshots ?? null) &&
+        subsetHashPlans(this.planningContext.plans, taskIds)) ||
+      this.planner.getPlansReference(
+        taskIds,
+        taskGraph,
+        ioSnapshots,
+        ioSnapshots
+          ? customHasherTaskIds(this.projectGraph, taskGraph)
+          : undefined
+      );
     const shouldCollectInputs =
       collectInputs ?? getTaskIOService().hasTaskInputSubscribers();
     const hashes = this.hasher.hashPlans(
