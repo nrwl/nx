@@ -21,6 +21,31 @@ pub struct Task {
     pub continuous: Option<bool>,
 }
 
+impl Task {
+    /// Build a Task for the given project + target. The id is derived as
+    /// `{project}:{target}`, matching the formula used by the TS task graph
+    /// builder in `tasks-runner/create-task-graph.ts`.
+    pub fn new(project: impl Into<String>, target: impl Into<String>) -> Self {
+        let project = project.into();
+        let target = target.into();
+        let id = format!("{project}:{target}");
+        Task {
+            id,
+            target: TaskTarget {
+                project,
+                target,
+                configuration: None,
+            },
+            ..Default::default()
+        }
+    }
+
+    pub fn with_outputs(mut self, outputs: Vec<String>) -> Self {
+        self.outputs = outputs;
+        self
+    }
+}
+
 #[napi(object)]
 #[derive(Default, Clone, Debug, PartialEq, Eq)]
 pub struct TaskTarget {
