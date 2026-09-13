@@ -31,6 +31,7 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
    */
   private upfrontPlans: {
     fingerprint: string;
+    taskIds: Set<string>;
     plans: ReturnType<HashPlanner['getPlansReference']>;
   } | null = null;
 
@@ -103,7 +104,11 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     const resolvedCwd = cwd ?? process.cwd();
     const hashes: Record<string, PartialHash> = {};
     let unplanned = tasks.map((t) => t.id);
-    if (this.upfrontPlans?.fingerprint === taskGraphFingerprint(taskGraph)) {
+    if (
+      this.upfrontPlans &&
+      unplanned.some((id) => this.upfrontPlans.taskIds.has(id)) &&
+      this.upfrontPlans.fingerprint === taskGraphFingerprint(taskGraph)
+    ) {
       Object.assign(
         hashes,
         this.hasher.hashPlansFor(
@@ -137,7 +142,11 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
       tasks.map((t) => t.id),
       taskGraph
     );
-    this.upfrontPlans = { fingerprint: taskGraphFingerprint(taskGraph), plans };
+    this.upfrontPlans = {
+      fingerprint: taskGraphFingerprint(taskGraph),
+      taskIds: new Set(tasks.map((t) => t.id)),
+      plans,
+    };
     const shouldCollectInputs =
       collectInputs ?? getTaskIOService().hasTaskInputSubscribers();
     return this.hasher.hashPlansUpfront(
