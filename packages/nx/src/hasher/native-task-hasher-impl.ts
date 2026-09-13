@@ -5,6 +5,7 @@ import {
   ExternalObject,
   FileData,
   HasherOptions,
+  hashArray,
   HashPlanner,
   ProjectGraph as NativeProjectGraph,
   NxWorkspaceFilesExternals,
@@ -24,6 +25,14 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
   allWorkspaceFilesRef: ExternalObject<FileData[]>;
   projectFileMapRef: ExternalObject<Record<string, FileData[]>>;
   options: HasherOptions | undefined;
+  /**
+   * Plans of the last up-front batch and the task graph they were built for.
+   * The tasks that batch deferred hash from them later without planning again.
+   */
+  private upfrontPlans: {
+    fingerprint: string;
+    plans: ReturnType<HashPlanner['getPlansReference']>;
+  } | null = null;
 
   constructor(
     workspaceRoot: string,
@@ -88,18 +97,32 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     cwd?: string,
     collectInputs?: boolean
   ): Promise<PartialHash[]> {
-    const plans = this.planner.getPlansReference(
-      tasks.map((t) => t.id),
-      taskGraph
-    );
+    const envs = perTaskEnvs as Record<string, Record<string, string>>;
     const shouldCollectInputs =
       collectInputs ?? getTaskIOService().hasTaskInputSubscribers();
-    const hashes = this.hasher.hashPlans(
-      plans,
-      perTaskEnvs as Record<string, Record<string, string>>,
-      cwd ?? process.cwd(),
-      shouldCollectInputs
-    );
+    const resolvedCwd = cwd ?? process.cwd();
+    const hashes: Record<string, PartialHash> = {};
+    let unplanned = tasks.map((t) => t.id);
+    if (this.upfrontPlans?.fingerprint === taskGraphFingerprint(taskGraph)) {
+      Object.assign(
+        hashes,
+        this.hasher.hashPlansFor(
+          this.upfrontPlans.plans,
+          unplanned,
+          envs,
+          resolvedCwd,
+          shouldCollectInputs
+        )
+      );
+      unplanned = unplanned.filter((id) => !(id in hashes));
+    }
+    if (unplanned.length > 0) {
+      const plans = this.planner.getPlansReference(unplanned, taskGraph);
+      Object.assign(
+        hashes,
+        this.hasher.hashPlans(plans, envs, resolvedCwd, shouldCollectInputs)
+      );
+    }
     return tasks.map((t) => hashes[t.id]);
   }
 
@@ -114,6 +137,7 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
       tasks.map((t) => t.id),
       taskGraph
     );
+    this.upfrontPlans = { fingerprint: taskGraphFingerprint(taskGraph), plans };
     const shouldCollectInputs =
       collectInputs ?? getTaskIOService().hasTaskInputSubscribers();
     return this.hasher.hashPlansUpfront(
@@ -123,4 +147,28 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
       shouldCollectInputs
     );
   }
+}
+
+/**
+ * Plans depend on each task's target, overrides, outputs and root and on the
+ * graph's edges. A run's results (hash, timings) are left out so hashing one
+ * task does not invalidate the plans of the rest.
+ */
+function taskGraphFingerprint(taskGraph: TaskGraph): string {
+  const parts: string[] = [];
+  for (const id of Object.keys(taskGraph.tasks).sort()) {
+    const task = taskGraph.tasks[id];
+    parts.push(
+      id,
+      task.target.project,
+      task.target.target,
+      task.target.configuration ?? '',
+      JSON.stringify(task.overrides ?? {}),
+      (task.outputs ?? []).join(','),
+      task.projectRoot ?? '',
+      (taskGraph.dependencies[id] ?? []).join(','),
+      (taskGraph.continuousDependencies[id] ?? []).join(',')
+    );
+  }
+  return hashArray(parts);
 }

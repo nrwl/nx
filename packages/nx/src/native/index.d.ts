@@ -220,6 +220,12 @@ export declare class TaskHasher {
    * ids are absent from the result and need no entry in `per_task_envs`.
    */
   hashPlansUpfront(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, perTaskEnvs: Record<string, Record<string, string>>, cwd: string, collectTaskInputs?: boolean | undefined | null): Record<string, HashDetails>
+  /**
+   * Hashes `task_ids` from plans built earlier, so a task the up-front batch
+   * deferred needs no second planning pass. Ids without a plan are absent
+   * from the result.
+   */
+  hashPlansFor(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, taskIds: Array<string>, perTaskEnvs: Record<string, Record<string, string>>, cwd: string, collectTaskInputs?: boolean | undefined | null): Record<string, HashDetails>
 }
 
 export declare class TaskInvocationTracker {

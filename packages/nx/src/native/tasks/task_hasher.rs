@@ -323,6 +323,42 @@ impl TaskHasher {
         Ok(hashes)
     }
 
+    /// Hashes `task_ids` from plans built earlier, so a task the up-front batch
+    /// deferred needs no second planning pass. Ids without a plan are absent
+    /// from the result.
+    #[napi(ts_return_type = "Record<string, HashDetails>")]
+    pub fn hash_plans_for(
+        &self,
+        #[napi(ts_arg_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
+        hash_plans: &External<HashPlans>,
+        task_ids: Vec<String>,
+        per_task_envs: HashMap<String, HashMap<String, String>>,
+        cwd: String,
+        collect_task_inputs: Option<bool>,
+    ) -> anyhow::Result<TaskHashes> {
+        let plans: HashMap<String, Vec<u32>> = task_ids
+            .into_iter()
+            .filter_map(|task_id| {
+                let ids = hash_plans.plans.get(&task_id)?.clone();
+                Some((task_id, ids))
+            })
+            .collect();
+        for task_id in plans.keys() {
+            if !per_task_envs.contains_key(task_id) {
+                anyhow::bail!("hash_plans_for: missing env entry for task {}", task_id);
+            }
+        }
+        let subset = HashPlans {
+            pool: hash_plans.pool.clone(),
+            plans,
+        };
+        self.hash_plans_impl(&subset, cwd, collect_task_inputs, |task_id| {
+            per_task_envs
+                .get(task_id)
+                .expect("per-task env presence verified above")
+        })
+    }
+
     fn hash_plans_impl<'a, F>(
         &self,
         hash_plans: &HashPlans,

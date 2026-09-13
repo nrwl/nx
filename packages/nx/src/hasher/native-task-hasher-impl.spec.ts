@@ -3,6 +3,8 @@ import { retrieveWorkspaceFiles } from '../project-graph/utils/retrieve-workspac
 import { NxJsonConfiguration } from '../config/nx-json';
 import { createTaskGraph } from '../tasks-runner/create-task-graph';
 import { NativeTaskHasherImpl } from './native-task-hasher-impl';
+import { HashPlanner } from '../native';
+import { TaskGraph } from '../config/task-graph';
 import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
 
@@ -1392,7 +1394,9 @@ describe('native task hasher', () => {
   //   console.dir(hashes, { depth: null });
   // });
 
-  it('hashes up front only the tasks whose plan holds no output of another task', async () => {
+  // parent:compile -> child:compile (no outputs); app:serve reads app:build's
+  // outputs and serves e2e:e2e, so those two wait for the up-front batch.
+  async function upfrontFixture() {
     await tempFs.createFiles({
       'apps/app/project.json': JSON.stringify({ name: 'app' }),
       'apps/app/main.ts': 'app',
@@ -1476,14 +1480,20 @@ describe('native task hasher', () => {
       undefined,
       {}
     );
-    const tasks = Object.values(taskGraph.tasks);
-    const hashes = await new NativeTaskHasherImpl(
+    const impl = new NativeTaskHasherImpl(
       tempFs.tempDir,
       nxJson,
       projectGraph,
       workspaceFiles.rustReferences,
       { selectivelyHashTsConfig: false }
-    ).hashTasksUpfront(
+    );
+    return { taskGraph, impl };
+  }
+
+  it('hashes up front only the tasks whose plan holds no output of another task', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    const tasks = Object.values(taskGraph.tasks);
+    const hashes = await impl.hashTasksUpfront(
       tasks,
       taskGraph,
       Object.fromEntries(tasks.map((t) => [t.id, {}]))
@@ -1504,5 +1514,75 @@ describe('native task hasher', () => {
       'parent:compile',
     ]);
     expect(taskGraph.dependencies['e2e:e2e']).toEqual([]);
+  });
+
+  function countPlanning(impl: NativeTaskHasherImpl) {
+    const original = impl.planner.getPlansReference.bind(impl.planner);
+    const counter = { calls: 0 };
+    impl.planner.getPlansReference = (
+      ...args: Parameters<HashPlanner['getPlansReference']>
+    ) => {
+      counter.calls++;
+      return original(...args);
+    };
+    return counter;
+  }
+
+  it('hashes a deferred task from the up-front plans without planning again', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    const tasks = Object.values(taskGraph.tasks);
+    await impl.hashTasksUpfront(
+      tasks,
+      taskGraph,
+      Object.fromEntries(tasks.map((t) => [t.id, {}]))
+    );
+    const planning = countPlanning(impl);
+
+    const reused = await impl.hashTask(
+      taskGraph.tasks['e2e:e2e'],
+      taskGraph,
+      {}
+    );
+
+    expect(planning.calls).toBe(0);
+    const { taskGraph: freshGraph, impl: fresh } = await upfrontFixture();
+    const planned = await fresh.hashTask(
+      freshGraph.tasks['e2e:e2e'],
+      freshGraph,
+      {}
+    );
+    expect(reused.value).toEqual(planned.value);
+    expect(reused.details).toEqual(planned.details);
+  });
+
+  it('plans again for a task graph other than the up-front batch, and for a task the batch never planned', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    const planned = Object.values(taskGraph.tasks).filter(
+      (t) => t.id !== 'e2e:e2e'
+    );
+    await impl.hashTasksUpfront(
+      planned,
+      taskGraph,
+      Object.fromEntries(planned.map((t) => [t.id, {}]))
+    );
+    const planning = countPlanning(impl);
+
+    // e2e:e2e was left out of the batch, so it has no plan to reuse.
+    await impl.hashTask(taskGraph.tasks['e2e:e2e'], taskGraph, {});
+    expect(planning.calls).toBe(1);
+
+    // A changed override makes it a different task graph.
+    const changed: TaskGraph = {
+      ...taskGraph,
+      tasks: {
+        ...taskGraph.tasks,
+        'app:serve': {
+          ...taskGraph.tasks['app:serve'],
+          overrides: { port: 4201 },
+        },
+      },
+    };
+    await impl.hashTask(changed.tasks['app:serve'], changed, {});
+    expect(planning.calls).toBe(2);
   });
 });
