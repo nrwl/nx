@@ -8,7 +8,7 @@ use crate::native::{
     hasher::hash,
     project_graph::{types::ProjectGraph, utils::create_project_root_mappings},
     tasks::types::{HashInstruction, HashPlans},
-    types::{NapiDashMap, SharedStr},
+    types::{NapiDashMap, SharedStr, SharedStrMap},
 };
 use crate::native::{
     project_graph::utils::ProjectRootMappings,
@@ -131,11 +131,11 @@ impl From<HashInputsBuilder> for HashInputs {
 #[derive(Debug)]
 pub struct HashDetails {
     pub value: String,
-    // Keys and values are shared Arcs: the same instruction key and hash
-    // value appear in the details of every task that depends on the input,
-    // so per-map owned strings would duplicate them once per task.
+    // Keys are indices into a shared table; values are shared Arcs. The same
+    // input appears in many tasks, so retain the compact assembly entries
+    // until conversion instead of materializing per-task key/value pairs.
     #[napi(ts_type = "Record<string, string>")]
-    pub details: HashMap<SharedStr, SharedStr>,
+    pub details: SharedStrMap,
     /// Structured inputs used for hashing (file patterns, env vars, etc.)
     pub inputs: HashInputs,
 }
@@ -145,17 +145,94 @@ pub struct HasherOptions {
     pub selectively_hash_ts_config: bool,
 }
 
-/// Return type of `hash_plans`. Converts like the wrapped map, but shares one
-/// JS string per unique details value for the duration of the conversion.
-/// napi sets map keys as object property names, so they do not flow through
-/// `SharedStr::to_napi_value`; without this cache, each repeated hash value
-/// would materialize as a separate JS string while converting the result.
+/// Return type of `hash_plans`. Shares JS strings for pooled detail keys and
+/// values across tasks during a single conversion. The cache owns its Arcs
+/// and is cleared before the native call's handle scope ends.
 pub struct TaskHashes(pub NapiDashMap<String, HashDetails>);
 
 impl ToNapiValue for TaskHashes {
     unsafe fn to_napi_value(env: sys::napi_env, val: Self) -> napi::Result<sys::napi_value> {
         let _guard = SharedStr::install_handle_cache();
         unsafe { NapiDashMap::to_napi_value(env, val.0) }
+    }
+}
+
+/// Each pooled key's position in the existing UTF-8 hash order, so per-task
+/// ordering compares integers instead of strings. Equal display keys share a
+/// rank, even when their instruction ids differ.
+struct KeyRanks {
+    by_id: Vec<u32>,
+    has_duplicate_keys: bool,
+}
+
+impl KeyRanks {
+    fn of(&self, id: u32) -> u32 {
+        self.by_id[id as usize]
+    }
+}
+
+fn instruction_key_ranks(keys: &[SharedStr]) -> KeyRanks {
+    let mut ids: Vec<u32> = (0..keys.len() as u32).collect();
+    ids.sort_unstable_by(|&left, &right| keys[left as usize].cmp(&keys[right as usize]));
+    let mut by_id = vec![0; keys.len()];
+    let mut has_duplicate_keys = false;
+    let mut rank = 0;
+    for (index, &id) in ids.iter().enumerate() {
+        if index > 0 {
+            if keys[id as usize] == keys[ids[index - 1] as usize] {
+                has_duplicate_keys = true;
+            } else {
+                rank += 1;
+            }
+        }
+        by_id[id as usize] = rank;
+    }
+    KeyRanks {
+        by_id,
+        has_duplicate_keys,
+    }
+}
+
+/// Collapses equal-ranked entries onto the LAST of each run, matching the
+/// last-value-wins behavior of the HashMap insertion this replaced. `dedup_by`
+/// drops the first argument and keeps the second, so the later value is moved
+/// backwards into the entry that survives.
+fn keep_last_per_rank(entries: &mut Vec<(u32, SharedStr)>, ranks: &KeyRanks) {
+    // Stable, so equal display keys keep their incoming order before deduping.
+    entries.sort_by_key(|(id, _)| ranks.of(*id));
+    entries.dedup_by(|later, earlier| {
+        if ranks.of(later.0) == ranks.of(earlier.0) {
+            std::mem::swap(&mut later.1, &mut earlier.1);
+            true
+        } else {
+            false
+        }
+    });
+}
+
+fn assemble_ranked_hash(
+    mut entries: Vec<(u32, SharedStr)>,
+    keys: &Arc<[SharedStr]>,
+    ranks: &KeyRanks,
+    inputs: HashInputsBuilder,
+) -> HashDetails {
+    if ranks.has_duplicate_keys {
+        keep_last_per_rank(&mut entries, ranks);
+        // The result now keeps this buffer. Do not retain slots discarded by
+        // duplicate display-key resolution (the old materialization shrank it).
+        entries.shrink_to_fit();
+    } else {
+        entries.sort_unstable_by_key(|(id, _)| ranks.of(*id));
+    }
+    let mut hasher = xxhash_rust::xxh3::Xxh3::new();
+    for (id, value) in &entries {
+        trace!("Adding {} ({}) to hash", value, keys[*id as usize]);
+        hasher.update(value.as_bytes());
+    }
+    HashDetails {
+        value: hasher.digest().to_string(),
+        details: SharedStrMap::from_indexed_entries(Arc::clone(keys), entries),
+        inputs: inputs.into(),
     }
 }
 
@@ -309,14 +386,7 @@ impl TaskHasher {
 
         let hash_time = std::time::Instant::now();
 
-        // Use separate maps: one for hash details, one for input accumulation with HashSet
         let hashes: NapiDashMap<String, HashDetails> = NapiDashMap::new();
-        // Only allocate inputs accumulator when someone is listening for inputs
-        let inputs_accum: Option<DashMap<String, HashInputsBuilder>> = if should_collect_inputs {
-            Some(DashMap::new())
-        } else {
-            None
-        };
         let cwd_path = std::path::Path::new(&cwd);
 
         let pool = &hash_plans.pool;
@@ -327,126 +397,138 @@ impl TaskHasher {
         // invocation, so its value lives in a per-id slot: a filled OnceCell
         // is an atomic load, and it lets the loop skip hash_instruction
         // entirely when inputs are not collected.
-        let instruction_keys: Vec<SharedStr> = (0..pool.len() as u32)
+        let instruction_keys: Arc<[SharedStr]> = (0..pool.len() as u32)
             .map(|id| SharedStr::from(pool.key(id)))
             .collect();
-        let value_slots: Vec<OnceCell<SharedStr>> = std::iter::repeat_with(OnceCell::new)
-            .take(pool.len())
+        let key_ranks = instruction_key_ranks(&instruction_keys);
+        // Classify once per instruction, so cache hits do not need the pool's
+        // shard lock. The exhaustive match keeps env-dependent inputs out of
+        // the shared slots even when new instruction variants are introduced.
+        let value_slots: Vec<Option<OnceCell<SharedStr>>> = (0..pool.len() as u32)
+            .map(|id| match pool.get(id).value() {
+                HashInstruction::Environment(_) | HashInstruction::Runtime(_) => None,
+                HashInstruction::WorkspaceFileSet(_)
+                | HashInstruction::Cwd(_)
+                | HashInstruction::ProjectFileSet(_, _)
+                | HashInstruction::ProjectConfiguration(_)
+                | HashInstruction::TsConfiguration(_)
+                | HashInstruction::TaskOutput(_, _)
+                | HashInstruction::External(_)
+                | HashInstruction::AllExternalDependencies
+                | HashInstruction::JsonFileSet(_) => Some(OnceCell::new()),
+            })
             .collect();
-        hash_plans
-            .plans
-            .iter()
-            .flat_map(|(task_id, ids)| ids.iter().map(move |id| (task_id, *id)))
-            .par_bridge()
-            .try_for_each(|(task_id, id)| {
-                let instruction_ref = pool.get(id);
-                // Env-dependent values cannot be shared across tasks. The
-                // match is exhaustive so a new instruction type must be
-                // classified here before it can ride the shared slots.
-                let slot = match instruction_ref.value() {
-                    HashInstruction::Environment(_) | HashInstruction::Runtime(_) => None,
-                    HashInstruction::WorkspaceFileSet(_)
-                    | HashInstruction::Cwd(_)
-                    | HashInstruction::ProjectFileSet(_, _)
-                    | HashInstruction::ProjectConfiguration(_)
-                    | HashInstruction::TsConfiguration(_)
-                    | HashInstruction::TaskOutput(_, _)
-                    | HashInstruction::External(_)
-                    | HashInstruction::AllExternalDependencies
-                    | HashInstruction::JsonFileSet(_) => Some(&value_slots[id as usize]),
-                };
-
+        hash_plans.plans.par_iter().try_for_each(|(task_id, ids)| {
+            if ids.is_empty() {
+                return Ok(());
+            }
+            let js_env = resolve_env(task_id);
+            // Workers accumulate locally, then publish one result per task.
+            // The inner parallel iterator also preserves concurrency when
+            // a single task has several expensive runtime/file inputs.
+            // Most instructions are already shared cache hits after the first
+            // few tasks. Copy those locally; only work that may need computing
+            // goes through the inner parallel iterator.
+            let mut entries = Vec::with_capacity(ids.len());
+            let mut pending = Vec::new();
+            for &id in ids {
                 let cached = if should_collect_inputs {
-                    // Inputs are per task, so every entry must run
-                    // hash_instruction to produce them.
                     None
                 } else {
-                    slot.and_then(|s| s.get()).cloned()
+                    value_slots[id as usize].as_ref().and_then(OnceCell::get)
                 };
-                let value = match cached {
-                    Some(value) => value,
-                    None => {
-                        let (hash_value, inputs) = self.hash_instruction(
-                            task_id,
-                            instruction_ref.value(),
-                            HashInstructionArgs {
-                                js_env: resolve_env(task_id),
-                                ts_config_hash: &ts_config_hash,
-                                project_root_mappings: &project_root_mappings,
-                                sorted_externals: &sorted_externals,
-                                selectively_hash_tsconfig,
-                                task_output_cache: &task_output_cache,
-                                runtime_cache: &runtime_cache,
-                                project_file_set_cache: &self.project_file_set_cache,
-                                workspace_file_set_cache: &self.workspace_file_set_cache,
-                                json_file_set_cache: &json_file_set_cache,
-                                cwd: cwd_path,
-                                collect_inputs: should_collect_inputs,
-                            },
-                        )?;
-
-                        // Accumulate inputs using HashSet for O(1) deduplication (only when collecting)
-                        if let Some(ref accum) = inputs_accum {
-                            accum.entry(task_id.to_string()).or_default().extend(inputs);
-                        }
-
-                        match slot {
-                            Some(slot) => slot.get_or_init(|| SharedStr::from(hash_value)).clone(),
-                            None => intern_value(&value_interner, hash_value).into(),
-                        }
-                    }
-                };
-
-                // Accumulate hash details
-                let mut entry = hashes
-                    .entry(task_id.to_string())
-                    .or_insert_with(|| HashDetails {
-                        value: String::new(),
-                        details: HashMap::new(),
-                        inputs: HashInputs::default(),
-                    });
-                entry
-                    .details
-                    .insert(instruction_keys[id as usize].clone(), value);
-
-                Ok::<(), anyhow::Error>(())
-            })?;
-
-        let assemble_start = std::time::Instant::now();
-
-        hashes.iter_mut().for_each(|mut h| {
-            let (hash_id, hash_details) = h.pair_mut();
-            let mut keys = hash_details.details.keys().collect::<Vec<_>>();
-            keys.par_sort();
-            let mut hasher = xxhash_rust::xxh3::Xxh3::new();
-            trace_span!("Assembling hash", hash_id).in_scope(|| {
-                for key in keys {
-                    trace!("Adding {} ({}) to hash", hash_details.details[key], key);
-                    hasher.update(hash_details.details[key].as_bytes());
-                }
-                let hash = hasher.digest().to_string();
-                trace!("Hash Value: {}", hash);
-                hash_details.value = hash;
-            });
-            // Convert accumulated HashInputsBuilder to HashInputs (sorted Vecs)
-            if let Some(ref accum) = inputs_accum {
-                if let Some((_, builder)) = accum.remove(hash_id) {
-                    hash_details.inputs = builder.into();
+                if let Some(value) = cached {
+                    entries.push((id, value.clone()));
+                } else {
+                    pending.push(id);
                 }
             }
-        });
+            let (computed, inputs) = pending
+                .par_iter()
+                .try_fold(
+                    || (Vec::new(), HashInputsBuilder::default()),
+                    |(mut entries, mut task_inputs), &id| {
+                        let slot = value_slots[id as usize].as_ref();
 
-        let assemble_duration = assemble_start.elapsed();
+                        // Re-check rather than trusting the scan that put this
+                        // id in `pending`: another task's worker may have filled
+                        // the slot since. Missing that costs a whole
+                        // hash_instruction, which can hash a file set or shell
+                        // out for a runtime input.
+                        let cached = if should_collect_inputs {
+                            // Inputs are per task, so every entry must run
+                            // hash_instruction to produce them.
+                            None
+                        } else {
+                            slot.and_then(|s| s.get()).cloned()
+                        };
+                        let value = match cached {
+                            Some(value) => value,
+                            None => {
+                                let instruction_ref = pool.get(id);
+                                let (hash_value, inputs) = self.hash_instruction(
+                                    task_id,
+                                    instruction_ref.value(),
+                                    HashInstructionArgs {
+                                        js_env,
+                                        ts_config_hash: &ts_config_hash,
+                                        project_root_mappings: &project_root_mappings,
+                                        sorted_externals: &sorted_externals,
+                                        selectively_hash_tsconfig,
+                                        task_output_cache: &task_output_cache,
+                                        runtime_cache: &runtime_cache,
+                                        project_file_set_cache: &self.project_file_set_cache,
+                                        workspace_file_set_cache: &self.workspace_file_set_cache,
+                                        json_file_set_cache: &json_file_set_cache,
+                                        cwd: cwd_path,
+                                        collect_inputs: should_collect_inputs,
+                                    },
+                                )?;
+
+                                if should_collect_inputs {
+                                    task_inputs.extend(inputs);
+                                }
+
+                                match slot {
+                                    Some(slot) => {
+                                        slot.get_or_init(|| SharedStr::from(hash_value)).clone()
+                                    }
+                                    None => intern_value(&value_interner, hash_value).into(),
+                                }
+                            }
+                        };
+
+                        entries.push((id, value));
+                        Ok::<_, anyhow::Error>((entries, task_inputs))
+                    },
+                )
+                .try_reduce(
+                    || (Vec::new(), HashInputsBuilder::default()),
+                    |(mut entries, mut inputs), (mut other_entries, other_inputs)| {
+                        entries.append(&mut other_entries);
+                        inputs.extend(other_inputs);
+                        Ok((entries, inputs))
+                    },
+                )?;
+            entries.extend(computed);
+            hashes.insert(
+                task_id.clone(),
+                trace_span!("Assembling hash", hash_id = task_id).in_scope(|| {
+                    assemble_ranked_hash(entries, &instruction_keys, &key_ranks, inputs)
+                }),
+            );
+            Ok::<_, anyhow::Error>(())
+        })?;
+
         let hash_duration = hash_time.elapsed();
         let total_duration = function_start.elapsed();
 
         debug!(
-            "hash_plans COMPLETED in {:?} - processed {} plans (setup: {:?}, hashing: {:?}, assembly: {:?})",
+            "hash_plans COMPLETED in {:?} - processed {} plans (setup: {:?}, hashing: {:?})",
             total_duration,
             hash_plans.plans.len(),
             setup_duration,
-            hash_duration,
-            assemble_duration
+            hash_duration
         );
 
         Ok(TaskHashes(hashes))
@@ -715,6 +797,66 @@ struct HashInstructionArgs<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn ranked_assembly_matches_map_order_and_duplicate_resolution() {
+        for names in [
+            vec!["z", "a", "\u{e000}", "🤖"],
+            vec!["z", "a", "\u{e000}", "🤖", "a", "z"],
+        ] {
+            let keys: Arc<[SharedStr]> = names.into_iter().map(|s| s.to_string().into()).collect();
+            let ranks = instruction_key_ranks(&keys);
+            for offset in 0..keys.len() {
+                for reverse in [false, true] {
+                    let mut entries: Vec<(u32, SharedStr)> = (0..keys.len())
+                        .map(|id| (id as u32, format!("value-{id}").into()))
+                        .collect();
+                    entries.rotate_left(offset);
+                    if reverse {
+                        entries.reverse();
+                    }
+                    let expected: HashMap<SharedStr, SharedStr> = entries
+                        .iter()
+                        .map(|(id, value)| (keys[*id as usize].clone(), value.clone()))
+                        .collect();
+                    let mut expected_entries: Vec<_> = expected.iter().collect();
+                    expected_entries.sort_unstable_by(|(left, _), (right, _)| left.cmp(right));
+                    let mut expected_hash = xxhash_rust::xxh3::Xxh3::new();
+                    for (_, value) in expected_entries {
+                        expected_hash.update(value.as_bytes());
+                    }
+                    let actual =
+                        assemble_ranked_hash(entries, &keys, &ranks, HashInputsBuilder::default());
+                    assert_eq!(actual.value, expected_hash.digest().to_string());
+                }
+            }
+        }
+        let empty = assemble_ranked_hash(
+            vec![],
+            &Arc::from([]),
+            &instruction_key_ranks(&[]),
+            HashInputsBuilder::default(),
+        );
+        assert_eq!(empty.value, hash(b""));
+    }
+
+    #[test]
+    fn duplicate_detail_keys_do_not_retain_discarded_entry_capacity() {
+        let key: SharedStr = "duplicate".to_string().into();
+        let value: SharedStr = "shared-value".to_string().into();
+        let keys: Arc<[SharedStr]> = vec![key; 10_000].into();
+        let ranks = instruction_key_ranks(&keys);
+        let entries = (0..keys.len() as u32)
+            .map(|id| (id, value.clone()))
+            .collect();
+        let result = assemble_ranked_hash(entries, &keys, &ranks, HashInputsBuilder::default());
+        assert_eq!(result.value, hash(value.as_bytes()));
+        assert!(
+            result.details.entry_capacity() <= 2,
+            "One detail retained {} entry slots",
+            result.details.entry_capacity()
+        );
+    }
 
     #[test]
     fn intern_value_shares_one_allocation_per_unique_value() {
