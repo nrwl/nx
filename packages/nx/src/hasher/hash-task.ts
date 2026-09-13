@@ -7,7 +7,7 @@ import { getTaskIOService } from '../tasks-runner/task-io-service';
 import { getTaskSpecificEnv } from '../tasks-runner/task-env';
 import { getCustomHasher } from '../tasks-runner/utils';
 import { getDbConnection } from '../utils/db-connection';
-import { TaskHasher } from './task-hasher';
+import { getInputs, TaskHasher } from './task-hasher';
 
 let taskDetails: TaskDetails;
 
@@ -41,9 +41,16 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     })
   );
 
-  // Custom hashers can read other tasks' outputs, so they hash at run time.
+  // Custom hashers can read other tasks' outputs, so they hash at run time,
+  // and so does a task whose own inputs read them. The hasher still decides
+  // for the rest: outputs also arrive through a dependency's named input or
+  // a continuous server, which only planning reveals.
   const candidates = tasksWithHashers
-    .filter(({ customHasher }) => !customHasher)
+    .filter(
+      ({ task, customHasher }) =>
+        !customHasher &&
+        !readsDependencyOutputs(task, taskGraph, projectGraph, nxJson)
+    )
     .map((t) => t.task);
 
   const perTaskEnvs: Record<string, NodeJS.ProcessEnv> = {};
@@ -84,6 +91,18 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     'hashMultipleTasks',
     'hashMultipleTasks:start',
     'hashMultipleTasks:end'
+  );
+}
+
+function readsDependencyOutputs(
+  task: Task,
+  taskGraph: TaskGraph,
+  projectGraph: ProjectGraph,
+  nxJson: NxJsonConfiguration
+): boolean {
+  return (
+    taskGraph.dependencies[task.id]?.length > 0 &&
+    getInputs(task, projectGraph, nxJson).depsOutputs.length > 0
   );
 }
 

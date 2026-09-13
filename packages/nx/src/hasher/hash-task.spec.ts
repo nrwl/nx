@@ -14,7 +14,12 @@ vi.mock('../tasks-runner/task-env', () => ({
 }));
 
 describe('hashTasksThatDoNotDependOnOutputsOfOtherTasks', () => {
-  const nxJson = { namedInputs: { default: ['{projectRoot}/**/*'] } } as any;
+  const nxJson = {
+    namedInputs: {
+      default: ['{projectRoot}/**/*'],
+      production: ['default', { dependentTasksOutputFiles: '**/*.d.ts' }],
+    },
+  } as any;
   const hashOf = (id: string): Hash => ({
     value: `hash-${id}`,
     details: {} as any,
@@ -40,6 +45,13 @@ describe('hashTasksThatDoNotDependOnOutputsOfOtherTasks', () => {
               { dependentTasksOutputFiles: '**/*.d.ts' },
             ],
           },
+          // Reads outputs only through its dependency's `production`, which
+          // this side never expands.
+          test: {
+            executor: 'nx:run-commands',
+            dependsOn: ['build'],
+            inputs: ['^production'],
+          },
           custom: { executor: 'nx:run-commands' },
         },
       },
@@ -49,14 +61,14 @@ describe('hashTasksThatDoNotDependOnOutputsOfOtherTasks', () => {
       projectGraph,
       {},
       ['app'],
-      ['build', 'e2e', 'custom'],
+      ['build', 'e2e', 'test', 'custom'],
       undefined,
       {}
     );
     return { projectGraph, taskGraph };
   }
 
-  it('assigns the hashes the hasher returns and leaves the rest for run time', async () => {
+  it('offers only tasks that might hash up front and assigns what the hasher returns', async () => {
     const { projectGraph, taskGraph } = graph();
     const hashTasksUpfront = vi.fn(async (tasks: { id: string }[]) => ({
       'app:build': hashOf('app:build'),
@@ -69,13 +81,16 @@ describe('hashTasksThatDoNotDependOnOutputsOfOtherTasks', () => {
       null
     );
 
-    // Everything without a custom hasher is offered; the hasher decides.
+    // app:e2e reads outputs through its own inputs, so it is never planned
+    // up front; app:test's outputs hide behind ^production, so the hasher
+    // must see it to defer it.
     expect(hashTasksUpfront.mock.calls[0][0].map((t) => t.id).sort()).toEqual([
       'app:build',
-      'app:e2e',
+      'app:test',
     ]);
     expect(taskGraph.tasks['app:build'].hash).toBe('hash-app:build');
     expect(taskGraph.tasks['app:e2e'].hash).toBeUndefined();
+    expect(taskGraph.tasks['app:test'].hash).toBeUndefined();
     expect(taskGraph.tasks['app:custom'].hash).toBeUndefined();
   });
 });
