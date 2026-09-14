@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex};
 use std::time::UNIX_EPOCH;
 
 use anyhow::{Context, Result, bail};
@@ -29,6 +29,13 @@ pub(crate) type FilesExpansionCache = DashMap<String, Arc<FilesExpansion>>;
 pub(crate) struct FileContentCache {
     entries: DashMap<PathBuf, CachedFileContent>,
     limit: usize,
+    /// Whether `begin_run` has ever been called: a run boundary exists, and
+    /// inserts never sweep.
+    has_runs: AtomicBool,
+    /// Size at which an insert sweeps in a process that never hashes up
+    /// front: twice the limit, or the limit past the last sweep's survivors.
+    ceiling: AtomicUsize,
+    sweeping: Mutex<()>,
 }
 
 /// Content-hashed output names (`index-a1b2c3.js`) leave a dead key behind
@@ -45,18 +52,34 @@ impl FileContentCache {
         Self {
             entries: DashMap::new(),
             limit,
+            has_runs: AtomicBool::new(false),
+            ceiling: AtomicUsize::new(limit * 2),
+            sweeping: Mutex::new(()),
         }
     }
 
-    /// Call once at the start of a hashing pass. Sweeping only here, never on
-    /// insert, is what lets a live set larger than the limit keep hitting: a
-    /// sweep in the middle of a pass would drop entries the pass already used.
-    pub(crate) fn begin_pass(&self) {
-        if self.entries.len() < self.limit {
+    /// Call once per run, from the up-front batch only. The smaller passes
+    /// that hash deferred tasks must not sweep: that would clear the marks of
+    /// the up-front set, and the next sweep would drop it.
+    pub(crate) fn begin_run(&self) {
+        self.has_runs.store(true, Ordering::Relaxed);
+        self.sweep(|| self.limit);
+    }
+
+    /// Keeps what was used since the last sweep and clears the marks. The
+    /// threshold is read again under the lock, so a thread that saw the same
+    /// size as the sweeper does not sweep a second time and drop everything.
+    fn sweep(&self, threshold: impl Fn() -> usize) {
+        let Ok(_guard) = self.sweeping.try_lock() else {
+            return;
+        };
+        if self.entries.len() < threshold() {
             return;
         }
         self.entries
             .retain(|_, cached| cached.used.swap(false, Ordering::Relaxed));
+        let next = (self.entries.len() + self.limit).max(self.limit * 2);
+        self.ceiling.store(next, Ordering::Relaxed);
     }
 
     fn get(&self, path: &Path, (mtime, size): FileStamp) -> Option<String> {
@@ -69,6 +92,13 @@ impl FileContentCache {
     }
 
     fn insert(&self, path: PathBuf, content: CachedFileContent) {
+        // Without a run boundary, inserts sweep instead. With one, a sweep
+        // here could drop what this run already used.
+        if !self.has_runs.load(Ordering::Relaxed)
+            && self.entries.len() >= self.ceiling.load(Ordering::Relaxed)
+        {
+            self.sweep(|| self.ceiling.load(Ordering::Relaxed));
+        }
         self.entries.insert(path, content);
     }
 
@@ -1074,49 +1104,75 @@ mod tests {
 
     const CACHE_STAMP: FileStamp = (1, 1);
 
+    /// Hits over `paths`, inserting on a miss.
+    fn touch(cache: &FileContentCache, paths: &[usize]) -> usize {
+        paths
+            .iter()
+            .filter(|&&i| {
+                let hit = cache.get(&cache_path(i), CACHE_STAMP).is_some();
+                if !hit {
+                    cache.insert(
+                        cache_path(i),
+                        CachedFileContent::new(CACHE_STAMP, "h".into()),
+                    );
+                }
+                hit
+            })
+            .count()
+    }
+
+    /// One run as the orchestrator makes it: the up-front batch, then the
+    /// smaller passes for deferred tasks. Returns the up-front hits.
+    fn run(cache: &FileContentCache, upfront: &[usize], later: &[&[usize]]) -> usize {
+        cache.begin_run();
+        let hits = touch(cache, upfront);
+        for pass in later {
+            touch(cache, pass);
+        }
+        hits
+    }
+
     #[test]
-    fn content_cache_keeps_a_live_set_larger_than_its_limit() {
+    fn content_cache_keeps_what_a_whole_run_used() {
         let cache = FileContentCache::with_limit(4);
-        // One pass over ten live files: hits, inserting on a miss.
-        let pass = || {
-            cache.begin_pass();
-            (0..10)
-                .filter(|&i| {
-                    let hit = cache.get(&cache_path(i), CACHE_STAMP).is_some();
-                    if !hit {
-                        cache.insert(
-                            cache_path(i),
-                            CachedFileContent::new(CACHE_STAMP, "h".into()),
-                        );
-                    }
-                    hit
-                })
-                .count()
-        };
-        assert_eq!(pass(), 0);
-        assert_eq!(pass(), 10);
-        assert_eq!(pass(), 10);
+        let all: Vec<usize> = (0..10).collect();
+        assert_eq!(run(&cache, &all, &[&[0], &[]]), 0);
+        // The small passes after the batch did not cost the set its marks.
+        assert_eq!(run(&cache, &all, &[&[0], &[]]), 10);
+        assert_eq!(run(&cache, &all, &[]), 10);
         assert_eq!(cache.len(), 10);
     }
 
     #[test]
-    fn content_cache_drops_what_the_previous_pass_did_not_use() {
+    fn content_cache_drops_what_the_previous_run_did_not_use() {
+        let cache = FileContentCache::with_limit(4);
+        let all: Vec<usize> = (0..10).collect();
+        run(&cache, &all, &[]);
+        assert_eq!(run(&cache, &all[..5], &[]), 5);
+        // 5..10 went unused for a whole run, so this run starts without them.
+        assert_eq!(run(&cache, &all, &[]), 5);
+        assert_eq!(cache.len(), 10);
+    }
+
+    #[test]
+    fn content_cache_sweeps_on_insert_at_twice_its_limit_without_a_run() {
         let cache = FileContentCache::with_limit(4);
         let entry = || CachedFileContent::new(CACHE_STAMP, "h".into());
-        cache.begin_pass();
         for i in 0..8 {
             cache.insert(cache_path(i), entry());
         }
-        // Over the limit, but everything was used in the pass just finished.
-        cache.begin_pass();
-        assert_eq!(cache.len(), 8);
-        for i in 4..8 {
-            assert!(cache.get(&cache_path(i), CACHE_STAMP).is_some(), "{i}");
+        // Twice the limit: the sweep keeps everything used since the start.
+        cache.insert(cache_path(8), entry());
+        assert_eq!(cache.len(), 9);
+        // The next sweep waits for the limit past the survivors, then drops
+        // what went unused in between.
+        for i in 9..12 {
+            cache.insert(cache_path(i), entry());
         }
-        // The first four went unused in that pass, so this one drops them.
-        cache.begin_pass();
-        assert_eq!(cache.len(), 4);
-        for i in 0..4 {
+        assert_eq!(cache.len(), 12);
+        cache.insert(cache_path(12), entry());
+        assert_eq!(cache.len(), 5);
+        for i in 0..8 {
             assert!(cache.get(&cache_path(i), CACHE_STAMP).is_none(), "{i}");
         }
         for i in 4..8 {

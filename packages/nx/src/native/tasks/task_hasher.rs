@@ -408,6 +408,9 @@ impl TaskHasher {
             plans,
             deferred: std::collections::HashSet::new(),
         };
+        // One run: the disk-backed content cache sweeps here, not in the
+        // smaller passes that hash the deferred tasks.
+        shared_file_content_cache().begin_run();
         let hashes = self.hash_plans_impl(&upfront, cwd, collect_task_inputs, |task_id| {
             per_task_envs
                 .get(task_id)
@@ -472,8 +475,6 @@ impl TaskHasher {
     where
         F: Fn(&str) -> &'a HashMap<String, String> + Sync,
     {
-        // One hashing pass: the disk-backed content cache sweeps only here.
-        shared_file_content_cache().begin_pass();
         // Per-invocation: these read live disk/exec state (task outputs, shell commands,
         // json file contents) that can change mid-run, so they must not persist.
         let task_output_cache = DashMap::new();
