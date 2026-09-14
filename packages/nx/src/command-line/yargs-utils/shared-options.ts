@@ -228,6 +228,22 @@ export function withAffectedOptions(yargs: Argv) {
         'Change the way Nx is calculating the affected command by providing directly changed files from stdin, one file per line.',
       type: 'boolean',
     })
+    .option('explain', {
+      type: 'string',
+      describe:
+        'Print why each project or task was considered affected, instead of running anything. Pass a file path to save the reasons as JSON instead. Pass "stdout" to print the JSON to the terminal.',
+      // Same shape as `--graph` above, and for the same reason: the value is a
+      // destination, and a bare `--explain` has to arrive as a boolean.
+      // `--json` is deliberately not declared alongside it, because every
+      // builder taking these options also runs tasks, and a declared option
+      // never reaches the executor.
+      coerce: (value) =>
+        value === '' || value === 'true' || value === true
+          ? true
+          : value === 'false' || value === false
+            ? false
+            : value,
+    })
     .option('uncommitted', {
       describe: 'Uncommitted changes.',
       type: 'boolean',
