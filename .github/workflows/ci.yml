@@ -12,6 +12,10 @@ on:
 env:
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
   NX_CLOUD_ENABLE_METRICS_COLLECTION: 'true'
+  # Gates the upload half of I/O snapshots. finalizeExecutionIoSnapshots
+  # runs on this job after the DTE completes and returns 'disabled'
+  # without it, so agents can trace and nothing is ever stored.
+  NX_CLOUD_USE_IO_SNAPSHOTS: 'true'
   PNPM_HOME: ~/.pnpm
   # See the root Cargo.toml: the release profile is incremental for local dev.
   # CI builds cold, so incremental only inflates the cargo cache.
