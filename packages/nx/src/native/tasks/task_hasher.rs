@@ -408,9 +408,9 @@ impl TaskHasher {
             plans,
             deferred: std::collections::HashSet::new(),
         };
-        // One run: the disk-backed content cache ages its entries here, not
-        // in the smaller passes that hash the deferred tasks.
-        shared_file_content_cache().begin_run();
+        // Once per run, before any hashing: drop the content cache entries the
+        // last run's walks proved gone.
+        shared_file_content_cache().reconcile();
         let hashes = self.hash_plans_impl(&upfront, cwd, collect_task_inputs, |task_id| {
             per_task_envs
                 .get(task_id)

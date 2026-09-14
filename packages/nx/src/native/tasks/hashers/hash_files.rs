@@ -1,7 +1,6 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
-use std::sync::{Arc, Mutex, MutexGuard, TryLockError};
+use std::sync::{Arc, Mutex};
 use std::time::UNIX_EPOCH;
 
 use anyhow::{Context, Result, bail};
@@ -28,157 +27,96 @@ pub(crate) type FilesExpansionCache = DashMap<String, Arc<FilesExpansion>>;
 /// daemon keeps one for its whole life through `shared_file_content_cache`.
 pub(crate) struct FileContentCache {
     entries: DashMap<PathBuf, CachedFileContent>,
-    limit: usize,
-    /// The current run; every hit and insert stamps its entry with it.
-    run: AtomicU64,
-    /// Whether `begin_run` has ever been called: a run boundary exists, and
-    /// inserts never evict.
-    has_runs: AtomicBool,
-    /// Size at which an insert evicts in a process that never hashes up
-    /// front: twice the limit, or the limit past the last eviction's survivors.
-    ceiling: AtomicUsize,
-    evicting: Mutex<()>,
+    /// Walks since the last `reconcile`, the latest per prefix: what a walk
+    /// saw decides which entries under its prefix still stand for a file.
+    walks: Mutex<HashMap<(PathBuf, String), Arc<HashSet<u64>>>>,
 }
-
-/// Content-hashed output names (`index-a1b2c3.js`) leave a dead key behind
-/// per build, so the map grows with build count. Past this size, a run
-/// starts by dropping the oldest runs' entries, never the newest run's, until
-/// the map fits.
-const FILE_CONTENT_CACHE_LIMIT: usize = 100_000;
 
 impl FileContentCache {
     pub(crate) fn new() -> Self {
-        Self::with_limit(FILE_CONTENT_CACHE_LIMIT)
-    }
-
-    fn with_limit(limit: usize) -> Self {
         Self {
             entries: DashMap::new(),
-            limit,
-            run: AtomicU64::new(1),
-            has_runs: AtomicBool::new(false),
-            ceiling: AtomicUsize::new(limit * 2),
-            evicting: Mutex::new(()),
+            walks: Mutex::new(HashMap::new()),
         }
     }
 
-    /// Call once per run, from the up-front batch only. The smaller passes
-    /// that hash deferred tasks belong to the same run, so their hits keep
-    /// the run's entries young.
-    pub(crate) fn begin_run(&self) {
-        self.has_runs.store(true, Ordering::Relaxed);
-        let Some(_guard) = self.eviction_guard() else {
-            return;
-        };
-        self.run.fetch_add(1, Ordering::Relaxed);
-        if self.entries.len() > self.limit {
-            self.evict_oldest_runs();
+    /// Remembers what an expansion's walks saw and forgets the exact paths it
+    /// found missing. Every hash of the expansion calls this; a repeat is a
+    /// no-op.
+    fn note(&self, workspace_root: &Path, expansion: &FilesExpansion) {
+        if !expansion.walks.is_empty() {
+            let mut walks = self.walks.lock().unwrap_or_else(|e| e.into_inner());
+            for walk in &expansion.walks {
+                walks.insert(
+                    (walk.workspace_root.clone(), walk.prefix.clone()),
+                    Arc::clone(&walk.seen),
+                );
+            }
+        }
+        for file in &expansion.missing {
+            self.entries.remove(&workspace_root.join(file));
         }
     }
 
-    /// Drops the oldest runs first until the map fits the limit, and only as
-    /// much of the last run it reaches as needed, so two commands whose sets
-    /// each fit the limit, but not together, still share it. The newest run that
-    /// touched the cache is never dropped, however large, so a run in
-    /// between that read nothing costs it nothing.
-    fn evict_oldest_runs(&self) {
-        let mut by_run: BTreeMap<u64, usize> = BTreeMap::new();
-        for entry in self.entries.iter() {
-            *by_run
-                .entry(entry.used_in.load(Ordering::Relaxed))
-                .or_default() += 1;
-        }
-        let Some(&newest) = by_run.keys().next_back() else {
-            return;
-        };
-        let mut remaining = self.entries.len();
-        // Runs below `cutoff` go entirely; `partial` is (run, how many of it go).
-        let mut cutoff = 0;
-        let mut partial = None;
-        for (&run, &count) in &by_run {
-            if run == newest || remaining <= self.limit {
-                break;
-            }
-            if remaining - count >= self.limit {
-                remaining -= count;
-                cutoff = run + 1;
-            } else {
-                partial = Some((run, remaining - self.limit));
-                break;
-            }
-        }
-        if cutoff == 0 && partial.is_none() {
+    /// Call between hashing calls, once per run. Drops every entry under a
+    /// walked prefix that the latest walk of it did not see: a file deleted or
+    /// renamed since. Nothing else retires an entry, because a lookup only
+    /// happens for a path a walk just listed, so the map holds one entry per
+    /// file that exists under a walked prefix and nothing more.
+    pub(crate) fn reconcile(&self) {
+        let walks = std::mem::take(&mut *self.walks.lock().unwrap_or_else(|e| e.into_inner()));
+        if walks.is_empty() {
             return;
         }
-        let (partial_run, mut to_drop) = partial.unwrap_or((0, 0));
-        self.entries.retain(|_, cached| {
-            let run = cached.used_in.load(Ordering::Relaxed);
-            if run < cutoff {
-                return false;
-            }
-            if run == partial_run && to_drop > 0 {
-                to_drop -= 1;
-                return false;
-            }
-            true
+        self.entries.retain(|path, _| {
+            walks.iter().all(|((root, prefix), seen)| {
+                let Ok(relative) = path.strip_prefix(root) else {
+                    return true;
+                };
+                let relative = relative.to_string_lossy().replace('\\', "/");
+                let under = prefix.is_empty()
+                    || relative == *prefix
+                    || relative
+                        .strip_prefix(prefix.as_str())
+                        .is_some_and(|rest| rest.starts_with('/'));
+                !under || seen.contains(&path_key(&relative))
+            })
         });
     }
 
-    /// A poisoned lock still guards; only a busy one means another thread is
-    /// evicting right now.
-    fn eviction_guard(&self) -> Option<MutexGuard<'_, ()>> {
-        match self.evicting.try_lock() {
-            Ok(guard) => Some(guard),
-            Err(TryLockError::Poisoned(poisoned)) => Some(poisoned.into_inner()),
-            Err(TryLockError::WouldBlock) => None,
-        }
-    }
-
     fn get(&self, path: &Path, (mtime, size): FileStamp) -> Option<String> {
-        let cached = self.entries.get(path)?;
-        if cached.mtime != mtime || cached.size != size {
-            return None;
-        }
-        cached
-            .used_in
-            .store(self.run.load(Ordering::Relaxed), Ordering::Relaxed);
-        Some(cached.hash.clone())
+        self.entries
+            .get(path)
+            .filter(|cached| cached.mtime == mtime && cached.size == size)
+            .map(|cached| cached.hash.clone())
     }
 
     fn insert(&self, path: PathBuf, content: CachedFileContent) {
-        // Without a run boundary, inserts evict instead, and each eviction is
-        // the boundary. With one, an eviction here could drop what this run
-        // already used.
-        if !self.has_runs.load(Ordering::Relaxed)
-            && self.entries.len() >= self.ceiling.load(Ordering::Relaxed)
-        {
-            self.evict_without_run();
-        }
-        content
-            .used_in
-            .store(self.run.load(Ordering::Relaxed), Ordering::Relaxed);
         self.entries.insert(path, content);
-    }
-
-    fn evict_without_run(&self) {
-        let Some(_guard) = self.eviction_guard() else {
-            return;
-        };
-        // Re-read under the lock: a thread that saw the same size as the
-        // evictor must not evict a second time.
-        if self.entries.len() < self.ceiling.load(Ordering::Relaxed) {
-            return;
-        }
-        self.run.fetch_add(1, Ordering::Relaxed);
-        self.evict_oldest_runs();
-        let next = (self.entries.len() + self.limit).max(self.limit * 2);
-        self.ceiling.store(next, Ordering::Relaxed);
     }
 
     #[cfg(test)]
     fn len(&self) -> usize {
         self.entries.len()
     }
+
+    #[cfg(test)]
+    fn contains(&self, path: &Path) -> bool {
+        self.entries.contains_key(path)
+    }
+}
+
+/// What one walk covered: the entries under `prefix` (workspace-relative,
+/// empty for the root) whose key is not in `seen` no longer stand for a file.
+pub(crate) struct WalkRecord {
+    workspace_root: PathBuf,
+    prefix: String,
+    seen: Arc<HashSet<u64>>,
+}
+
+/// A walk records what it saw as keys, not paths: 8 bytes per file.
+fn path_key(relative: &str) -> u64 {
+    xxh3::xxh3_64(relative.as_bytes())
 }
 
 /// The process-wide cache. Absolute keys keep separate workspaces apart when
@@ -194,18 +132,11 @@ pub(crate) struct CachedFileContent {
     mtime: u128,
     size: u64,
     hash: String,
-    /// The run that last hit or inserted this entry; eviction goes by it.
-    used_in: AtomicU64,
 }
 
 impl CachedFileContent {
     fn new((mtime, size): FileStamp, hash: String) -> Self {
-        Self {
-            mtime,
-            size,
-            hash,
-            used_in: AtomicU64::new(0),
-        }
+        Self { mtime, size, hash }
     }
 }
 
@@ -221,6 +152,9 @@ pub struct FilesExpansion {
     pub stamps: Vec<Option<FileStamp>>,
     /// Declared exact paths that do not exist on disk.
     pub missing: Vec<String>,
+    /// What each walk covered and saw, so the content cache can drop entries
+    /// for files that are gone.
+    pub(crate) walks: Vec<WalkRecord>,
 }
 
 fn stamp_of(metadata: &std::fs::Metadata) -> FileStamp {
@@ -457,6 +391,14 @@ impl Negation {
     }
 }
 
+/// What a walk found, and everything it saw. `seen` holds the key of every
+/// file under `start`, matched or not, so the content cache can tell a file
+/// that is gone from one a pattern merely skipped.
+struct Walked {
+    found: Vec<(String, Option<FileStamp>)>,
+    seen: HashSet<u64>,
+}
+
 /// Files under `start`, workspace-relative, with the stamp read on the way
 /// for anything the context does not vouch for. Top-level subdirectories walk
 /// in parallel. `start` itself is never skipped; its descendants are subject
@@ -468,9 +410,13 @@ fn walk_files(
     skip: &NxGlobSet,
     accept: &(dyn Fn(&str) -> bool + Sync),
     known: &(dyn Fn(&str) -> bool + Sync),
-) -> Vec<(String, Option<FileStamp>)> {
+) -> Walked {
+    let skipped = |dir: &Path| skip.is_match(dir);
     let Ok(entries) = std::fs::read_dir(start) else {
-        return Vec::new();
+        return Walked {
+            found: Vec::new(),
+            seen: HashSet::new(),
+        };
     };
     let mut leaves = Vec::new();
     let mut dirs = Vec::new();
@@ -481,17 +427,13 @@ fn walk_files(
             Err(_) => {}
         }
     }
-    let visit = |path: &Path,
-                 file_type: std::fs::FileType|
-     -> Option<(String, Option<FileStamp>)> {
+    type Visited = (u64, Option<(String, Option<FileStamp>)>);
+    let visit = |path: &Path, file_type: std::fs::FileType| -> Option<Visited> {
         let relative = path
             .strip_prefix(workspace_root)
             .ok()?
             .to_string_lossy()
             .replace('\\', "/");
-        if !accept(&relative) {
-            return None;
-        }
         if file_type.is_symlink() {
             // A link pointing out of the workspace is not workspace content.
             if !dunce::canonicalize(path).is_ok_and(|target| target.starts_with(canonical_root)) {
@@ -500,38 +442,52 @@ fn walk_files(
         } else if !file_type.is_file() {
             return None;
         }
+        let key = path_key(&relative);
+        if !accept(&relative) {
+            return Some((key, None));
+        }
         if known(&relative) {
-            return Some((relative, None));
+            return Some((key, Some((relative, None))));
         }
         let metadata = std::fs::metadata(path).ok()?;
         if !metadata.is_file() {
-            return None;
+            return Some((key, None));
         }
-        Some((relative, Some(stamp_of(&metadata))))
+        Some((key, Some((relative, Some(stamp_of(&metadata))))))
     };
-    let mut found: Vec<(String, Option<FileStamp>)> = leaves
+    let mut visited: Vec<Visited> = leaves
         .iter()
         .filter_map(|(path, file_type)| visit(path, *file_type))
         .collect();
-    let nested: Vec<Vec<(String, Option<FileStamp>)>> = dirs
+    let nested: Vec<Vec<Visited>> = dirs
         .par_iter()
         .map(|dir| {
-            if skip.is_match(dir) {
+            if skipped(dir) {
                 return Vec::new();
             }
             WalkDir::new(dir)
                 .follow_links(false)
                 .into_iter()
-                .filter_entry(|entry| !skip.is_match(entry.path()))
+                .filter_entry(|entry| !skipped(entry.path()))
                 .flatten()
                 .filter_map(|entry| visit(entry.path(), entry.file_type()))
                 .collect()
         })
         .collect();
     for group in nested {
-        found.extend(group);
+        visited.extend(group);
     }
-    found
+    let mut walked = Walked {
+        found: Vec::with_capacity(visited.len()),
+        seen: HashSet::with_capacity(visited.len()),
+    };
+    for (key, hit) in visited {
+        walked.seen.insert(key);
+        if let Some(hit) = hit {
+            walked.found.push(hit);
+        }
+    }
+    walked
 }
 
 /// Expands an `includeIgnored` fileset group. `known` says whether the
@@ -567,6 +523,12 @@ pub fn expand_files_with(
 
     let mut found: Vec<(String, Option<FileStamp>)> = Vec::new();
     let mut missing: Vec<String> = Vec::new();
+    let mut walks: Vec<WalkRecord> = Vec::new();
+    let record = |prefix: &str, seen: HashSet<u64>| WalkRecord {
+        workspace_root: workspace_root.to_path_buf(),
+        prefix: prefix.to_string(),
+        seen: Arc::new(seen),
+    };
     for glob in &positives {
         let (root, has_pattern) = split_glob(glob, workspace_root, known)?;
         if !has_pattern && known(&root) {
@@ -575,6 +537,8 @@ pub fn expand_files_with(
         }
         let start = workspace_root.join(&root);
         let Ok(metadata) = std::fs::metadata(&start) else {
+            // Nothing exists under it any more, so nothing was seen.
+            walks.push(record(&root, HashSet::new()));
             if !has_pattern {
                 missing.push(root);
             }
@@ -607,14 +571,16 @@ pub fn expand_files_with(
         } else {
             Box::new(move |path: &str| !excluded(path))
         };
-        found.extend(walk_files(
+        let walked = walk_files(
             &start,
             workspace_root,
             &canonical_root,
             &skip,
             &*accept,
             known,
-        ));
+        );
+        found.extend(walked.found);
+        walks.push(record(&root, walked.seen));
     }
 
     found.retain(|(path, _)| !negations.iter().any(|n| n.excludes(path)));
@@ -628,6 +594,7 @@ pub fn expand_files_with(
         files,
         stamps,
         missing,
+        walks,
     })
 }
 
@@ -660,6 +627,7 @@ pub(crate) fn hash_files(
     known: impl Fn(&str) -> Option<String> + Sync,
     cache: &FileContentCache,
 ) -> String {
+    cache.note(workspace_root, expansion);
     let hashes: Vec<String> = expansion
         .files
         .par_iter()
@@ -1165,122 +1133,86 @@ mod tests {
         assert!(validate_files_globs(&globs(&["dist/./gen/**"])).is_err());
     }
 
-    fn cache_path(i: usize) -> PathBuf {
-        PathBuf::from(format!("/cached/{i}"))
-    }
-
-    const CACHE_STAMP: FileStamp = (1, 1);
-
-    /// Hits over `paths`, inserting on a miss.
-    fn touch(cache: &FileContentCache, paths: &[usize]) -> usize {
-        paths
-            .iter()
-            .filter(|&&i| {
-                let hit = cache.get(&cache_path(i), CACHE_STAMP).is_some();
-                if !hit {
-                    cache.insert(
-                        cache_path(i),
-                        CachedFileContent::new(CACHE_STAMP, "h".into()),
-                    );
-                }
-                hit
-            })
-            .count()
-    }
-
-    /// One run as the orchestrator makes it: the up-front batch, then the
-    /// smaller passes for deferred tasks. Returns the up-front hits.
-    fn run(cache: &FileContentCache, upfront: &[usize], later: &[&[usize]]) -> usize {
-        cache.begin_run();
-        let hits = touch(cache, upfront);
-        for pass in later {
-            touch(cache, pass);
-        }
-        hits
+    fn hash_group(temp: &TempDir, cache: &FileContentCache, list: &[&str]) -> String {
+        let expansion = expand_files(temp.path(), &globs(list)).unwrap();
+        hash_files(temp.path(), &expansion, |_| None, cache)
     }
 
     #[test]
-    fn content_cache_keeps_what_a_whole_run_used() {
-        let cache = FileContentCache::with_limit(4);
-        let all: Vec<usize> = (0..10).collect();
-        assert_eq!(run(&cache, &all, &[&[0], &[]]), 0);
-        // A live set larger than the limit keeps hitting, and the small
-        // passes after the batch did not age it.
-        assert_eq!(run(&cache, &all, &[&[0], &[]]), 10);
-        assert_eq!(run(&cache, &all, &[]), 10);
-        assert_eq!(cache.len(), 10);
+    fn content_cache_forgets_a_file_the_next_walk_no_longer_sees() {
+        let temp = workspace();
+        let cache = FileContentCache::new();
+        hash_group(&temp, &cache, &["dist/gen/**/*.js"]);
+        assert_eq!(cache.len(), 2);
+        // A build renames its output: the old name is dead once a walk of
+        // the prefix fails to see it, and the next run drops it.
+        std::fs::rename(
+            temp.path().join("dist/gen/nested/b.js"),
+            temp.path().join("dist/gen/nested/b2.js"),
+        )
+        .unwrap();
+        hash_group(&temp, &cache, &["dist/gen/**/*.js"]);
+        assert_eq!(cache.len(), 3);
+        cache.reconcile();
+        assert_eq!(cache.len(), 2);
+        assert!(!cache.contains(&temp.path().join("dist/gen/nested/b.js")));
+        assert!(cache.contains(&temp.path().join("dist/gen/nested/b2.js")));
+        // Nothing recorded since: a second reconcile changes nothing.
+        cache.reconcile();
+        assert_eq!(cache.len(), 2);
     }
 
     #[test]
-    fn content_cache_survives_runs_that_read_nothing() {
-        let cache = FileContentCache::with_limit(4);
-        let all: Vec<usize> = (0..10).collect();
-        run(&cache, &all, &[]);
-        // A lint in between opens a run but reads no disk-backed file.
-        run(&cache, &[], &[]);
-        run(&cache, &[], &[]);
-        assert_eq!(run(&cache, &all, &[]), 10);
+    fn content_cache_keeps_a_file_a_walk_saw_but_did_not_match() {
+        let temp = workspace();
+        let cache = FileContentCache::new();
+        hash_group(&temp, &cache, &["dist/gen/**/*.map"]);
+        hash_group(&temp, &cache, &["dist/gen/**/*.js"]);
+        assert_eq!(cache.len(), 3);
+        // The `.js` walk saw the `.map` file even though its pattern skipped it.
+        cache.reconcile();
+        assert_eq!(cache.len(), 3);
     }
 
     #[test]
-    fn content_cache_drops_the_oldest_runs_first() {
-        let cache = FileContentCache::with_limit(4);
-        run(&cache, &[0, 1, 2, 3], &[]);
-        run(&cache, &[4, 5, 6, 7], &[]);
-        assert_eq!(cache.len(), 8);
-        // Over the limit: the oldest run goes, the newest stays whole.
-        run(&cache, &[8, 9], &[]);
-        assert_eq!(cache.len(), 6);
-        for i in 0..4 {
-            assert!(cache.get(&cache_path(i), CACHE_STAMP).is_none(), "{i}");
-        }
-        for i in 4..10 {
-            assert!(cache.get(&cache_path(i), CACHE_STAMP).is_some(), "{i}");
-        }
-        // Half of the newest set re-read: the other half is now the oldest.
-        run(&cache, &[4, 5, 6, 7, 8], &[]);
-        assert_eq!(run(&cache, &[4, 5, 6, 7, 8, 9], &[]), 5);
+    fn content_cache_forgets_everything_under_a_removed_directory() {
+        let temp = workspace();
+        let cache = FileContentCache::new();
+        hash_group(&temp, &cache, &["dist/other/**"]);
+        hash_group(&temp, &cache, &["dist/gen/**/*.js"]);
+        assert_eq!(cache.len(), 3);
+        std::fs::remove_dir_all(temp.path().join("dist/other")).unwrap();
+        hash_group(&temp, &cache, &["dist/other/**"]);
+        cache.reconcile();
+        assert_eq!(cache.len(), 2);
+        assert!(!cache.contains(&temp.path().join("dist/other/c.js")));
     }
 
     #[test]
-    fn content_cache_shares_the_limit_between_alternating_commands() {
-        let cache = FileContentCache::with_limit(10);
-        let a: Vec<usize> = (0..6).collect();
-        let b: Vec<usize> = (100..106).collect();
-        let mut hits = Vec::new();
-        for _ in 0..3 {
-            hits.push(run(&cache, &a, &[]));
-            hits.push(run(&cache, &b, &[]));
-        }
-        // Together the sets exceed the limit by two, so each run gives up
-        // two of the other's entries, not all six.
-        assert_eq!(hits, vec![0, 0, 4, 4, 4, 4]);
+    fn content_cache_forgets_a_missing_exact_path_at_once() {
+        let temp = workspace();
+        let cache = FileContentCache::new();
+        hash_group(&temp, &cache, &["dist/gen/a.js"]);
+        assert_eq!(cache.len(), 1);
+        std::fs::remove_file(temp.path().join("dist/gen/a.js")).unwrap();
+        hash_group(&temp, &cache, &["dist/gen/a.js"]);
+        assert_eq!(cache.len(), 0);
     }
 
     #[test]
-    fn content_cache_evicts_on_insert_at_twice_its_limit_without_a_run() {
-        let cache = FileContentCache::with_limit(4);
-        let entry = || CachedFileContent::new(CACHE_STAMP, "h".into());
-        for i in 0..8 {
-            cache.insert(cache_path(i), entry());
-        }
-        // Twice the limit: everything so far is the newest run, so it stays.
-        cache.insert(cache_path(8), entry());
-        assert_eq!(cache.len(), 9);
-        // The next eviction waits for the limit past the survivors, then
-        // drops the older run.
-        for i in 9..12 {
-            cache.insert(cache_path(i), entry());
-        }
-        assert_eq!(cache.len(), 12);
-        cache.insert(cache_path(12), entry());
-        assert_eq!(cache.len(), 5);
-        for i in 0..8 {
-            assert!(cache.get(&cache_path(i), CACHE_STAMP).is_none(), "{i}");
-        }
-        for i in 8..13 {
-            assert!(cache.get(&cache_path(i), CACHE_STAMP).is_some(), "{i}");
-        }
+    fn a_walk_of_one_prefix_leaves_other_prefixes_alone() {
+        let temp = workspace();
+        let cache = FileContentCache::new();
+        hash_group(&temp, &cache, &["dist/other/**"]);
+        hash_group(&temp, &cache, &["dist/gen/**/*.js"]);
+        std::fs::remove_file(temp.path().join("dist/other/c.js")).unwrap();
+        // Only `dist/gen` was walked since, so `dist/other`'s entry is not judged.
+        hash_group(&temp, &cache, &["dist/gen/**/*.js"]);
+        cache.reconcile();
+        assert_eq!(cache.len(), 3);
+        hash_group(&temp, &cache, &["dist/other/**"]);
+        cache.reconcile();
+        assert_eq!(cache.len(), 2);
     }
 
     #[test]
