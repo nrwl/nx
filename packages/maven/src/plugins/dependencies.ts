@@ -1,4 +1,4 @@
-import { CreateDependencies, logger } from '@nx/devkit';
+import { CreateDependencies, logger, normalizePath } from '@nx/devkit';
 import { getCurrentMavenData } from './maven-data-cache';
 import { createProjectRootMappingsFromProjectConfigurations } from '@nx/devkit/internal';
 
@@ -31,17 +31,20 @@ export const createDependencies: CreateDependencies = async (
     context.projects
   );
 
-  // Extract and transform dependencies from the mavenData
+  // A cache written by an older plugin is keyed on project hashes alone, so it
+  // survives an upgrade and can still hold OS-separated paths. Normalize on
+  // read as well, or the graph keeps failing until the user runs `nx reset`.
   const transformedDependencies = mavenData.createDependenciesResults.map(
     (dep) => ({
       ...dep,
+      sourceFile: normalizePath(dep.sourceFile),
       source: dep.source.startsWith('maven:')
         ? dep.source
-        : rootToProjectMap.get(dep.source),
+        : rootToProjectMap.get(normalizePath(dep.source)),
       // External deps use maven: prefix — pass through as-is
       target: dep.target.startsWith('maven:')
         ? dep.target
-        : rootToProjectMap.get(dep.target),
+        : rootToProjectMap.get(normalizePath(dep.target)),
     })
   );
 
