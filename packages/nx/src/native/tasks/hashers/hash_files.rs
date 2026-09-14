@@ -27,9 +27,9 @@ pub(crate) type FilesExpansionCache = DashMap<String, Arc<FilesExpansion>>;
 /// daemon keeps one for its whole life through `shared_file_content_cache`.
 pub(crate) struct FileContentCache {
     entries: DashMap<PathBuf, CachedFileContent>,
-    /// Walks since the last `reconcile`, the latest per prefix: what a walk
-    /// saw decides which entries under its prefix still stand for a file.
-    walks: Mutex<HashMap<(PathBuf, String), Arc<HashSet<u64>>>>,
+    /// Walks since the last `reconcile`, by workspace root and then prefix,
+    /// the latest per prefix.
+    walks: Mutex<HashMap<PathBuf, HashMap<String, Arc<WalkView>>>>,
 }
 
 impl FileContentCache {
@@ -47,10 +47,10 @@ impl FileContentCache {
         if !expansion.walks.is_empty() {
             let mut walks = self.walks.lock().unwrap_or_else(|e| e.into_inner());
             for walk in &expansion.walks {
-                walks.insert(
-                    (walk.workspace_root.clone(), walk.prefix.clone()),
-                    Arc::clone(&walk.seen),
-                );
+                walks
+                    .entry(walk.workspace_root.clone())
+                    .or_default()
+                    .insert(walk.prefix.clone(), Arc::clone(&walk.view));
             }
         }
         for file in &expansion.missing {
@@ -58,29 +58,30 @@ impl FileContentCache {
         }
     }
 
-    /// Call between hashing calls, once per run. Drops every entry under a
-    /// walked prefix that the latest walk of it did not see: a file deleted or
-    /// renamed since. Nothing else retires an entry, because a lookup only
-    /// happens for a path a walk just listed, so the map holds one entry per
-    /// file that exists under a walked prefix and nothing more.
+    /// Call between hashing calls, once per run. Drops every entry that the
+    /// latest walk of the deepest walked prefix above it did not see. A walk
+    /// does not judge what sits under a directory it did not enter (a
+    /// hardcoded skip, a symlinked directory): only a deeper walk reads
+    /// there. Entries with no walk above them, such as exact paths, are left
+    /// alone; `note` forgets an exact path once it is missing. Cost: one pass
+    /// over the map, a few lookups per entry, no disk.
     pub(crate) fn reconcile(&self) {
         let walks = std::mem::take(&mut *self.walks.lock().unwrap_or_else(|e| e.into_inner()));
         if walks.is_empty() {
             return;
         }
         self.entries.retain(|path, _| {
-            walks.iter().all(|((root, prefix), seen)| {
+            for (root, prefixes) in &walks {
                 let Ok(relative) = path.strip_prefix(root) else {
-                    return true;
+                    continue;
                 };
                 let relative = relative.to_string_lossy().replace('\\', "/");
-                let under = prefix.is_empty()
-                    || relative == *prefix
-                    || relative
-                        .strip_prefix(prefix.as_str())
-                        .is_some_and(|rest| rest.starts_with('/'));
-                !under || seen.contains(&path_key(&relative))
-            })
+                let Some(view) = deepest_walk(prefixes, &relative) else {
+                    continue;
+                };
+                return view.leaves_alone(&relative) || view.seen.contains(&path_key(&relative));
+            }
+            true
         });
     }
 
@@ -106,12 +107,64 @@ impl FileContentCache {
     }
 }
 
-/// What one walk covered: the entries under `prefix` (workspace-relative,
-/// empty for the root) whose key is not in `seen` no longer stand for a file.
+/// The recorded walk of the deepest prefix above `relative`, if any. The
+/// root walk's prefix is the empty string.
+fn deepest_walk<'a>(
+    prefixes: &'a HashMap<String, Arc<WalkView>>,
+    relative: &str,
+) -> Option<&'a WalkView> {
+    let mut dir = parent_dir(relative);
+    loop {
+        if let Some(view) = prefixes.get(dir) {
+            return Some(view);
+        }
+        if dir.is_empty() {
+            return None;
+        }
+        dir = parent_dir(dir);
+    }
+}
+
+fn parent_dir(path: &str) -> &str {
+    path.rsplit_once('/').map_or("", |(dir, _)| dir)
+}
+
+/// What one walk of a prefix saw, and what it passed over.
+#[derive(Default)]
+pub(crate) struct WalkView {
+    /// Key of every file the walk saw under its prefix, matched or not.
+    seen: HashSet<u64>,
+    /// Directories under the prefix the walk did not enter, workspace-relative:
+    /// the hardcoded skips and symlinked directories.
+    skipped: HashSet<String>,
+}
+
+impl WalkView {
+    /// Whether `relative` sits under a directory this walk did not enter.
+    fn leaves_alone(&self, relative: &str) -> bool {
+        if self.skipped.is_empty() {
+            return false;
+        }
+        let mut dir = parent_dir(relative);
+        loop {
+            if self.skipped.contains(dir) {
+                return true;
+            }
+            if dir.is_empty() {
+                return false;
+            }
+            dir = parent_dir(dir);
+        }
+    }
+}
+
+/// What one walk covered: the prefix (workspace-relative, empty for the
+/// root) and the view that decides which entries under it still stand for a
+/// file.
 pub(crate) struct WalkRecord {
     workspace_root: PathBuf,
     prefix: String,
-    seen: Arc<HashSet<u64>>,
+    view: Arc<WalkView>,
 }
 
 /// A walk records what it saw as keys, not paths: 8 bytes per file.
@@ -328,12 +381,20 @@ impl Negation {
     }
 }
 
-/// What a walk found, and everything it saw. `seen` holds the key of every
-/// file under `start`, matched or not, so the content cache can tell a file
-/// that is gone from one a pattern merely skipped.
+/// What a walk found, and what it saw or passed over on the way.
 struct Walked {
     found: Vec<(String, Option<FileStamp>)>,
-    seen: HashSet<u64>,
+    view: WalkView,
+}
+
+enum Visit {
+    /// A file the walk saw; `hit` is set when the pattern accepted it.
+    File {
+        key: u64,
+        hit: Option<(String, Option<FileStamp>)>,
+    },
+    /// A directory the walk did not enter.
+    SkippedDir(String),
 }
 
 /// Files under `start`, workspace-relative, with the stamp read on the way
@@ -348,11 +409,18 @@ fn walk_files(
     accept: &(dyn Fn(&str) -> bool + Sync),
     known: &(dyn Fn(&str) -> bool + Sync),
 ) -> Walked {
-    let skipped = |dir: &Path| skip.is_match(dir);
+    let relative_of = |path: &Path| -> Option<String> {
+        Some(
+            path.strip_prefix(workspace_root)
+                .ok()?
+                .to_string_lossy()
+                .replace('\\', "/"),
+        )
+    };
     let Ok(entries) = std::fs::read_dir(start) else {
         return Walked {
             found: Vec::new(),
-            seen: HashSet::new(),
+            view: WalkView::default(),
         };
     };
     let mut leaves = Vec::new();
@@ -364,64 +432,102 @@ fn walk_files(
             Err(_) => {}
         }
     }
-    type Visited = (u64, Option<(String, Option<FileStamp>)>);
-    let visit = |path: &Path, file_type: std::fs::FileType| -> Option<Visited> {
-        let relative = path
-            .strip_prefix(workspace_root)
-            .ok()?
-            .to_string_lossy()
-            .replace('\\', "/");
+    let visit = |path: &Path, file_type: std::fs::FileType| -> Option<Visit> {
+        let relative = relative_of(path)?;
         if file_type.is_symlink() {
-            // A link pointing out of the workspace is not workspace content.
-            if !dunce::canonicalize(path).is_ok_and(|target| target.starts_with(canonical_root)) {
+            // Links are not followed: a linked directory is another walk's to
+            // read, and a linked file counts only when its target is inside
+            // the workspace.
+            let target = std::fs::metadata(path).ok()?;
+            if target.is_dir() {
+                return Some(Visit::SkippedDir(relative));
+            }
+            let key = path_key(&relative);
+            if !accept(&relative) {
+                return Some(Visit::File { key, hit: None });
+            }
+            if !dunce::canonicalize(path).is_ok_and(|t| t.starts_with(canonical_root)) {
                 return None;
             }
-        } else if !file_type.is_file() {
+            let hit = if known(&relative) {
+                (relative, None)
+            } else {
+                (relative, Some(stamp_of(&target)))
+            };
+            return Some(Visit::File {
+                key,
+                hit: Some(hit),
+            });
+        }
+        if !file_type.is_file() {
             return None;
         }
         let key = path_key(&relative);
         if !accept(&relative) {
-            return Some((key, None));
+            return Some(Visit::File { key, hit: None });
         }
         if known(&relative) {
-            return Some((key, Some((relative, None))));
+            return Some(Visit::File {
+                key,
+                hit: Some((relative, None)),
+            });
         }
         let metadata = std::fs::metadata(path).ok()?;
-        if !metadata.is_file() {
-            return Some((key, None));
-        }
-        Some((key, Some((relative, Some(stamp_of(&metadata))))))
+        Some(Visit::File {
+            key,
+            hit: Some((relative, Some(stamp_of(&metadata)))),
+        })
     };
-    let mut visited: Vec<Visited> = leaves
+    let mut visited: Vec<Visit> = leaves
         .iter()
         .filter_map(|(path, file_type)| visit(path, *file_type))
         .collect();
-    let nested: Vec<Vec<Visited>> = dirs
+    let nested: Vec<Vec<Visit>> = dirs
         .par_iter()
         .map(|dir| {
-            if skipped(dir) {
-                return Vec::new();
+            if skip.is_match(dir) {
+                return relative_of(dir)
+                    .map(Visit::SkippedDir)
+                    .into_iter()
+                    .collect();
             }
-            WalkDir::new(dir)
+            let skipped_here = std::cell::RefCell::new(Vec::new());
+            let mut visits: Vec<Visit> = WalkDir::new(dir)
                 .follow_links(false)
                 .into_iter()
-                .filter_entry(|entry| !skipped(entry.path()))
+                .filter_entry(|entry| {
+                    if skip.is_match(entry.path()) {
+                        skipped_here.borrow_mut().extend(relative_of(entry.path()));
+                        false
+                    } else {
+                        true
+                    }
+                })
                 .flatten()
                 .filter_map(|entry| visit(entry.path(), entry.file_type()))
-                .collect()
+                .collect();
+            visits.extend(skipped_here.into_inner().into_iter().map(Visit::SkippedDir));
+            visits
         })
         .collect();
     for group in nested {
         visited.extend(group);
     }
     let mut walked = Walked {
-        found: Vec::with_capacity(visited.len()),
-        seen: HashSet::with_capacity(visited.len()),
+        found: Vec::new(),
+        view: WalkView::default(),
     };
-    for (key, hit) in visited {
-        walked.seen.insert(key);
-        if let Some(hit) = hit {
-            walked.found.push(hit);
+    for visit in visited {
+        match visit {
+            Visit::File { key, hit } => {
+                walked.view.seen.insert(key);
+                if let Some(hit) = hit {
+                    walked.found.push(hit);
+                }
+            }
+            Visit::SkippedDir(dir) => {
+                walked.view.skipped.insert(dir);
+            }
         }
     }
     walked
@@ -461,10 +567,10 @@ pub fn expand_files_with(
     let mut found: Vec<(String, Option<FileStamp>)> = Vec::new();
     let mut missing: Vec<String> = Vec::new();
     let mut walks: Vec<WalkRecord> = Vec::new();
-    let record = |prefix: &str, seen: HashSet<u64>| WalkRecord {
+    let record = |prefix: &str, view: WalkView| WalkRecord {
         workspace_root: workspace_root.to_path_buf(),
         prefix: prefix.to_string(),
-        seen: Arc::new(seen),
+        view: Arc::new(view),
     };
     for glob in &positives {
         let (root, remainder) = literal_prefix(glob)?;
@@ -476,7 +582,7 @@ pub fn expand_files_with(
         let start = workspace_root.join(&root);
         let Ok(metadata) = std::fs::metadata(&start) else {
             // Nothing exists under it any more, so nothing was seen.
-            walks.push(record(&root, HashSet::new()));
+            walks.push(record(&root, WalkView::default()));
             if !has_pattern {
                 missing.push(root);
             }
@@ -518,7 +624,7 @@ pub fn expand_files_with(
             known,
         );
         found.extend(walked.found);
-        walks.push(record(&root, walked.seen));
+        walks.push(record(&root, walked.view));
     }
 
     found.retain(|(path, _)| !negations.iter().any(|n| n.excludes(path)));
@@ -1025,6 +1131,65 @@ mod tests {
         std::fs::remove_file(temp.path().join("dist/gen/a.js")).unwrap();
         hash_group(&temp, &cache, &["dist/gen/a.js"]);
         assert_eq!(cache.len(), 0);
+    }
+
+    #[test]
+    fn a_parent_walk_does_not_judge_what_it_skipped() {
+        let temp = workspace();
+        let cache = FileContentCache::new();
+        // The root walk never enters node_modules; a deeper glob reads it.
+        hash_group(&temp, &cache, &["node_modules/foo/**"]);
+        hash_group(&temp, &cache, &["**/*.js"]);
+        cache.reconcile();
+        assert!(cache.contains(&temp.path().join("node_modules/foo/package.json")));
+        // Even when only the root walk ran since.
+        hash_group(&temp, &cache, &["**/*.js"]);
+        cache.reconcile();
+        assert!(cache.contains(&temp.path().join("node_modules/foo/package.json")));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_parent_walk_does_not_judge_what_sits_behind_a_symlinked_directory() {
+        let temp = workspace();
+        let cache = FileContentCache::new();
+        temp.child("libs/a/x.ts").write_str("x").unwrap();
+        std::os::unix::fs::symlink(
+            temp.path().join("dist/other"),
+            temp.path().join("libs/a/linked"),
+        )
+        .unwrap();
+        hash_group(&temp, &cache, &["libs/a/linked/**"]);
+        hash_group(&temp, &cache, &["libs/a/*.ts"]);
+        assert_eq!(cache.len(), 2);
+        cache.reconcile();
+        assert!(cache.contains(&temp.path().join("libs/a/linked/c.js")));
+        hash_group(&temp, &cache, &["libs/a/*.ts"]);
+        cache.reconcile();
+        assert!(cache.contains(&temp.path().join("libs/a/linked/c.js")));
+    }
+
+    #[test]
+    fn the_deepest_walk_above_an_entry_decides() {
+        let temp = workspace();
+        let cache = FileContentCache::new();
+        hash_group(&temp, &cache, &["dist/**"]);
+        std::fs::remove_file(temp.path().join("dist/gen/nested/b.js")).unwrap();
+        // The later, deeper walk is the one that counts for `dist/gen`.
+        hash_group(&temp, &cache, &["dist/gen/**"]);
+        cache.reconcile();
+        assert!(!cache.contains(&temp.path().join("dist/gen/nested/b.js")));
+        assert!(cache.contains(&temp.path().join("dist/gen/a.js")));
+        assert!(cache.contains(&temp.path().join("dist/other/c.js")));
+
+        // A file the deeper walk did not see is dropped even when a later,
+        // shallower walk saw it: the deepest walk decides, not the latest.
+        hash_group(&temp, &cache, &["dist/gen/**"]);
+        temp.child("dist/gen/new.js").write_str("n").unwrap();
+        hash_group(&temp, &cache, &["dist/**"]);
+        assert!(cache.contains(&temp.path().join("dist/gen/new.js")));
+        cache.reconcile();
+        assert!(!cache.contains(&temp.path().join("dist/gen/new.js")));
     }
 
     #[test]
