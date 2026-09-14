@@ -1,4 +1,3 @@
-import yargsParser from 'yargs-parser';
 import { ExecutorContext } from '../../config/misc-interfaces';
 import { isTuiEnabled } from '../../tasks-runner/is-tui-enabled';
 import { PseudoTerminal } from '../../tasks-runner/pseudo-terminal';
@@ -10,6 +9,14 @@ import {
   SeriallyRunningTasks,
 } from './running-tasks';
 import { isAlreadyQuoted, needsShellQuoting } from '../../utils/shell-quoting';
+
+// yargs-parser is ESM-only; a top-level require would reach every jest run that imports @nx/devkit.
+function yargsParser(
+  ...args: Parameters<typeof import('yargs-parser').default>
+) {
+  const parse: typeof import('yargs-parser').default = require('yargs-parser');
+  return parse(...args);
+}
 
 export const LARGE_BUFFER = 1024 * 1000000;
 export type Json = {

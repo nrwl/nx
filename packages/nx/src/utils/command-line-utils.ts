@@ -1,4 +1,3 @@
-import yargsParser from 'yargs-parser';
 import type { Arguments } from 'yargs';
 import { TEN_MEGABYTES } from '../project-graph/file-utils';
 import { output } from './output';
@@ -8,6 +7,14 @@ import { ProjectGraph } from '../config/project-graph';
 import { assertValidGitRevision } from './git-revision';
 import { workspaceRoot } from './workspace-root';
 import { readParallelFromArgsAndEnv } from '../command-line/yargs-utils/shared-options';
+
+// yargs-parser is ESM-only; a top-level require would reach every jest run that imports @nx/devkit.
+function yargsParser(
+  ...args: Parameters<typeof import('yargs-parser').default>
+) {
+  const parse: typeof import('yargs-parser').default = require('yargs-parser');
+  return parse(...args);
+}
 
 export interface RawNxArgs extends NxArgs {
   prod?: boolean;
