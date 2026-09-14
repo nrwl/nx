@@ -181,11 +181,6 @@ fn literal_prefix_with(glob: &str, brackets_literal: bool) -> Result<(String, bo
             "The includeIgnored fileset \"{glob}\" is an absolute path; globs are workspace-relative."
         );
     }
-    let wildcards: &[char] = if brackets_literal {
-        &['*', '?', '{']
-    } else {
-        &['*', '?', '[', '{']
-    };
     let mut literal: Vec<&str> = Vec::new();
     let mut has_pattern = false;
     for segment in glob.split('/') {
@@ -197,7 +192,9 @@ fn literal_prefix_with(glob: &str, brackets_literal: bool) -> Result<(String, bo
                 "The includeIgnored fileset \"{glob}\" has a `.` segment; write it relative to the workspace root without `./`."
             );
         }
-        if segment.contains(wildcards) {
+        // Only a whole `[name]` segment can be a path; `page.[jt]sx` is a class.
+        let literal_brackets = brackets_literal && is_bracket_segment(segment);
+        if segment.contains(['*', '?', '{']) || (segment.contains('[') && !literal_brackets) {
             has_pattern = true;
             break;
         }
@@ -207,11 +204,16 @@ fn literal_prefix_with(glob: &str, brackets_literal: bool) -> Result<(String, bo
     Ok((root, has_pattern))
 }
 
-/// `literal_prefix`, except that `[name]` segments are read as paths (Next.js
-/// route directories) when the first of them names something that exists,
-/// and as character classes otherwise. One decision covers them all, so
-/// `app/[lang]/[id]/x.tsx` with `[lang]/` on disk stays an exact path before
-/// `[id]/` exists, instead of `[id]` becoming a class over `[lang]/`'s
+/// A whole segment in brackets: `[id]`, `[...slug]`, `[[...slug]]`.
+fn is_bracket_segment(segment: &str) -> bool {
+    segment.starts_with('[') && segment.ends_with(']')
+}
+
+/// `literal_prefix`, except that whole `[name]` segments are read as paths
+/// (Next.js route directories) when the first of them names something that
+/// exists, and as character classes otherwise. One decision covers them all,
+/// so `app/[lang]/[id]/x.tsx` with `[lang]/` on disk stays an exact path
+/// before `[id]/` exists, instead of `[id]` becoming a class over `[lang]/`'s
 /// other subdirectories.
 fn split_glob(
     glob: &str,
@@ -992,6 +994,23 @@ mod tests {
         assert_eq!(
             expand(&["app/[lang]/[id]/**"]).files,
             vec!["app/[lang]/[id]/x.tsx"]
+        );
+
+        // Brackets inside a name stay a class even after a `[name]` path.
+        temp.child("app/[lang]/page.jsx").write_str("j").unwrap();
+        temp.child("app/web/page.tsx").write_str("t").unwrap();
+        temp.child("app/web/page.jsx").write_str("j").unwrap();
+        assert_eq!(
+            expand(&["app/[lang]/page.[jt]sx"]).files,
+            vec!["app/[lang]/page.jsx", "app/[lang]/page.tsx"]
+        );
+        assert_eq!(
+            expand(&["app/[lang]/*.[jt]sx"]).files,
+            vec!["app/[lang]/page.jsx", "app/[lang]/page.tsx"]
+        );
+        assert_eq!(
+            expand(&["app/web/page.[jt]sx"]).files,
+            vec!["app/web/page.jsx", "app/web/page.tsx"]
         );
     }
 
