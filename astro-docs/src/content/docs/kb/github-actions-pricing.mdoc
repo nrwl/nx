@@ -35,14 +35,13 @@ Selected per-minute rates for
 | Linux arm64, 2 core         | $0.005         |
 | macOS, 3 to 4 core          | $0.062         |
 
-GitHub rounds each job up to the next whole minute, so a pipeline made of many short jobs costs more
-than its runtime suggests.
-[Included minutes per month](https://docs.github.com/en/billing/concepts/product-billing/github-actions)
-for private repositories are 2,000 on Free, 3,000 on Pro and Team, and 50,000 on Enterprise Cloud.
-Cutting standard-runner minutes only reaches the invoice once you are past that allowance, and
-larger runners draw on no allowance at all.
-Public repositories on standard GitHub-hosted runners and self-hosted runners carry no per-minute
-charge.
+GitHub rounds each job up to a whole minute, so many short jobs cost more than their runtime.
+Private repositories get
+[included minutes](https://docs.github.com/en/billing/concepts/product-billing/github-actions) each
+month, 2,000 on Free, 3,000 on Pro and Team, and 50,000 on Enterprise Cloud.
+Saved standard-runner minutes only reach the invoice past that allowance.
+Standard runners on public repositories and self-hosted runners are free, and larger runners are
+always billed with no allowance.
 
 ## What Nx Cloud costs in GitHub Actions minutes
 
