@@ -1039,6 +1039,9 @@ fn deferred_tasks(
 /// Brackets count as wildcards here, and a glob the prefix parser rejects
 /// reads as the workspace root, so a doubtful case errs toward deferring.
 fn walk_root(glob: &str) -> String {
+    // Legacy default outputs are spelled `./dist` and `dist/.`.
+    let glob = glob.strip_prefix("./").unwrap_or(glob);
+    let glob = glob.strip_suffix("/.").unwrap_or(glob);
     literal_prefix(&normalize_glob(glob))
         .map(|(root, _)| root)
         .unwrap_or_default()
@@ -1651,6 +1654,8 @@ mod tests {
                 vec![group("web", &["apps/web/.env.generated", "!dist/**"])],
             ),
             ("web:dot", vec![disk("web", "apps/web/.env.generated")]),
+            ("web:dotdist", vec![disk("web", "dist/legacy/**")]),
+            ("web:outside", vec![disk("web", "apps/web/.env.generated")]),
             ("web:outslash", vec![disk("web", "dist/apps/web/**")]),
             ("lib:build", vec![tracked]),
         ]
@@ -1666,6 +1671,8 @@ mod tests {
             ("web:slashes", vec![]),
             ("web:negated", vec![]),
             ("web:dot", vec![]),
+            ("web:dotdist", vec![]),
+            ("web:outside", vec![]),
             ("web:outslash", vec![]),
             ("web:codegen", vec!["apps/web/generated"]),
             ("web:serve", vec!["apps/web/d"]),
@@ -1674,6 +1681,7 @@ mod tests {
                 vec!["dist/libs/lib", "!apps/web/.env.generated"],
             ),
             ("lib:dot", vec!["./dist"]),
+            ("lib:outside", vec!["../outside"]),
             ("lib:outslash", vec!["dist//apps/web"]),
         ]
         .into_iter()
@@ -1700,6 +1708,8 @@ mod tests {
                 ("web:slashes", &["web:codegen"]),
                 ("web:negated", &["lib:build"]),
                 ("web:dot", &["lib:dot"]),
+                ("web:dotdist", &["lib:dot"]),
+                ("web:outside", &["lib:outside"]),
                 ("web:outslash", &["lib:outslash"]),
             ]),
             continuous_dependencies: edges(&[("web:bracket", &["web:serve"])]),
@@ -1712,16 +1722,18 @@ mod tests {
         // web:build reads its codegen's output; web:test's `dist/**` holds
         // lib:build's `dist/libs/lib` two steps up; web:bracket's `[dir]`
         // counts as a wildcard, so `apps/web` meets the served `apps/web/d`;
-        // `//` on either side reads as one slash; an output the parser
-        // rejects (`./dist`) counts as the workspace root. web:lint reads a
-        // file no upstream task writes, and a `!` entry on either side is
-        // neither a read nor a write.
+        // `//` on either side reads as one slash; a legacy `./dist` output
+        // is `dist`, so it holds `dist/legacy` but not `apps/web`; an output
+        // the parser rejects (`../outside`) counts as the workspace root.
+        // web:lint reads a file no upstream task writes, and a `!` entry on
+        // either side is neither a read nor a write.
         assert_eq!(
             deferred,
             vec![
                 "web:bracket",
                 "web:build",
-                "web:dot",
+                "web:dotdist",
+                "web:outside",
                 "web:outslash",
                 "web:slashes",
                 "web:test"
