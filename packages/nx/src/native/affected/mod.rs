@@ -6,6 +6,7 @@
 
 pub mod dependent_outputs;
 mod implicit_dependencies;
+mod plan_ids;
 mod project_glob_changes;
 mod project_paths;
 pub mod tasks;
