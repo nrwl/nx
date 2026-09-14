@@ -200,8 +200,6 @@ function applyStepAction(
         // offered under the same guard as for a death.
         return commit(state, index, cleanRearm(state, step));
       case 'adopt':
-        // The tree as it stands after the failed attempt (applied by hand,
-        // or committed before the failure) is the result, as for a death.
         return commit(state, index, adopt(step));
       case 'skip':
         if (commitMayBeInHistory(state, step)) {
@@ -267,9 +265,8 @@ function applyStepAction(
             reason: `Cannot apply action 'unresolved' to step '${step.id}': a commit of its changes landed or was started and never recorded, so the migration may be committed. Use 'adopt' to record it as applied.`,
           };
         }
-        // A death records no outcome, so the failure the step is given up on
-        // is the death itself; without it the report and the minted issue
-        // would say nothing was recorded.
+        // A death records no outcome, so the failure given up on is the death
+        // itself.
         return commit(state, index, {
           ...step,
           status: 'unresolved',
@@ -297,9 +294,6 @@ function cleanRearm(state: MigrateRunState, step: MigrateStep): MigrateStep {
   return rearm(step, coveringLandedEntries(state, step.id).length > 0);
 }
 
-// The summary records how the tree came to be the result ('succeeded' alone
-// cannot say by what); the marker is what the completion report lists
-// adopted steps by.
 function adopt(step: MigrateStep): MigrateStep {
   return {
     ...step,
@@ -393,10 +387,8 @@ export function discardGeneratorRun(
   };
 }
 
-// Every step counted once. 'adopted' steps are succeeded ones whose tree was
-// taken as the result by the adopt action, so applied + adopted is what the
-// run recorded as done; 'stalled' steps are the remaining ones waiting on a
-// decision.
+// Applied and adopted partition the succeeded steps; stalled steps are included
+// in remaining.
 export interface StepTally {
   applied: number;
   adopted: number;
@@ -448,11 +440,9 @@ export function tallySteps(state: MigrateRunState): StepTally {
 }
 
 // The failure a given-up step is reported with, in the issue ledger and the
-// completion report alike. A summary is agent or generator text printed
-// verbatim by the consumers, so it is collapsed to one line: a break inside
-// it could otherwise open a forged block at a line start. An accepted
-// handoff may carry an empty summary; the fallback keeps the report's line
-// from naming the migration with nothing after it.
+// completion report alike. Agent text is collapsed to one line so a break
+// inside it cannot open a block at a line start; an accepted handoff may carry
+// an empty summary, which gets the fallback.
 export function unresolvedFailureDetail(step: MigrateStep): string {
   const failure = singleLine(
     step.outcome?.summary ?? step.promptOutcome?.summary ?? ''
@@ -460,8 +450,6 @@ export function unresolvedFailureDetail(step: MigrateStep): string {
   return failure.length === 0 ? 'no failure detail was recorded' : failure;
 }
 
-// The tally a completed run reports, with each given-up migration and the
-// failure it was given up on.
 export function completionSummaryLines(state: MigrateRunState): string[] {
   const tally = tallySteps(state);
   return [
@@ -475,14 +463,11 @@ export function completionSummaryLines(state: MigrateRunState): string[] {
   ];
 }
 
-// A commit made for a step after its own attempt failed, as the outcome of
-// a step action rather than of the worker: an adopted failure is the
-// migration applied by hand; an unresolved one is the partial result of a
-// migration the run gave up on, and is named so a reader of the history does
-// not take it for the migration applied.
+// A commit made by a step action after the step's own attempt failed. It
+// suffixes the broker request id and, for 'unresolved', the commit name, so
+// history does not read a partial result as the migration applied.
 export type CommitAction = 'adopt' | 'unresolved';
 
-// The migration name a step's commit is made under.
 export function commitNameForStep(
   step: MigrateStep,
   commitAs?: CommitAction

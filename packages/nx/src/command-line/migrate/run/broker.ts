@@ -57,12 +57,10 @@ export const BROKER_ENV_VAR = 'NX_MIGRATE_BROKER';
 const BROKER_DIR_NAME = 'broker';
 const CHILD_POLL_INTERVAL_MS = 250;
 
-// The seam a request comes from, and its name: within a session, non-reset
-// seams reuse one answer per attempt (see `invocation`). A worker's commit,
-// the fold's and a died step's adopt share one seam, and the worker may have
-// landed it before dying. Once the ledger records that commit, or a failure
-// recorded none, an adopt or give-up commit is a new operation over what the
-// tree holds now, so it asks under its own action.
+// Repeated requests reuse the first answer; a reset asks anew (see
+// `invocation`). A died step's adopt shares the worker's commit request until
+// that commit is recorded; later adopts and a failed step's actions ask under
+// their own request id.
 export type BrokerRequestKind =
   | 'commit'
   // A worker's install: after its generator, or a retry's from the baseline.
@@ -76,9 +74,8 @@ export type BrokerRequestKind =
 
 export type InstallSeam = 'install' | 'fold-install' | 'action-install';
 
-// Names the seam only. Whether to install or commit is the parent's own
-// policy, so a request carries nothing that would widen it; the action only
-// tells a post-failure commit apart from the worker's and names it.
+// The parent owns install and commit policy; commitAs only tells a post-failure
+// commit apart from the worker's and names it.
 export interface BrokerRequest {
   kind: BrokerRequestKind;
   stepId: string;

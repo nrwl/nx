@@ -1289,8 +1289,7 @@ describe('migrate run issues', () => {
     );
 
     it('abbreviates an overlong migration id with a digest that keeps distinct ids distinct', () => {
-      // Same attempt and failure on both: only the digest can tell the two
-      // summaries apart, so a digest of a shared prefix would fold them.
+      // Hash the full ids: the failures and the visible prefixes are identical.
       const first = step('step-1', `@nx/js:${'m'.repeat(600)}a`, 'unresolved');
       first.outcome = { summary: 'boom' };
       const second = step('step-2', `@nx/js:${'m'.repeat(600)}b`, 'unresolved');

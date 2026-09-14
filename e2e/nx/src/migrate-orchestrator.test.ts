@@ -379,9 +379,7 @@ function reconcileAfterInit(initOutput: string): DispenseBlock {
   return parseLastDispense(runDispensed(init.payload.next));
 }
 
-// Parks the prompt step, applies some work, and hands it back as failed;
-// returns the retry-failed dispense. `output` is the reconcile response that
-// dispensed the step's worker command.
+// `output` is the reconcile response that dispensed the worker command.
 function failPromptStep(output: string, summary: string): DispenseBlock {
   const dispense = parseLastDispense(output);
   expect(dispense.action).toBe('next-step');
@@ -1173,8 +1171,6 @@ describe('migrate orchestrator (dark launch)', () => {
     expect(step.status).toBe('unresolved');
     expect(step.attempt).toBe(1);
     expect(step.unresolvedIssueId).toBe('issue-1');
-    // The killed worker recorded no outcome: the death is the failure both
-    // the report and the issue carry.
     const deathDetail = `the worker process (pid ${step.pid}) died before recording an outcome`;
     expect(complete.payload.instructions).toContain(
       `- ${PKG}:slow-mig: ${deathDetail}`
@@ -1207,8 +1203,7 @@ describe('migrate orchestrator (dark launch)', () => {
     );
     const unresolvedCommand = stepActionCommand(failed.runId, 'unresolved');
     expect(failed.payload.instructions).toContain(unresolvedCommand);
-    // Nothing to reset to a generator's absence: the agent's work is kept
-    // and committed apart from the next step's.
+    // A prompt-only step has no generator output to discard.
     expect(failed.payload.instructions).toContain(
       'committed under its name, marked unresolved'
     );

@@ -284,8 +284,8 @@ describe('run-state', () => {
       );
       expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
 
-      // The completion report lists adopted steps by this marker; a string
-      // would count as adopted under a truthiness check.
+      // A string marker would count as adopted under the tally's truthiness
+      // check.
       writeFileSync(
         join(dir, 'run.json'),
         JSON.stringify(

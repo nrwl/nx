@@ -168,11 +168,7 @@ const HANG_THRESHOLD_MS = 15 * 60 * 1000;
 // 'no-progress' action. A still-running worker is exempt until the hang
 // threshold: waiting on a live worker is not looping.
 const NO_PROGRESS_THRESHOLD = 3;
-// Rearms of one step before its retries are refused: a second attempt for
-// the diagnosed fix and a third for a correction to it. Past the cap the
-// failed/died dispense offers only adopt, skip and unresolved, and the
-// reconcile rejects retry and retry-clean, so neither a blindly-followed
-// `next` nor an explicit choice retries forever.
+// Two rearms per step: one for the diagnosed fix and one for its correction.
 const REARM_ESCALATION_CAP = 2;
 
 export interface RunOrchestratorInitInput {
@@ -521,9 +517,8 @@ function resumeRun(
 
 function announceResume(runId: string, state: MigrateRunState): void {
   const tally = tallySteps(state);
-  // Stalled steps are a subset of the remaining ones, called out separately:
-  // a run is resumed most often because one of these is waiting on a
-  // decision, and the count alone would read as work not reached yet.
+  // Stalled steps are included in remaining; the extra count names the ones
+  // waiting on a decision.
   logToAgent({
     title: `nx migrate: resuming run ${runId}`,
     bodyLines: [
@@ -933,11 +928,10 @@ export async function runOrchestratorReconcile(
             ),
           };
         }
-        // The issue that carries the failure to the completion report is
-        // minted in the same write as the status, so neither can exist without
-        // the other. Its archive file is best-effort: run.json is
-        // authoritative, and undoing the transition for a lost detail file
-        // would leave the agent re-issuing an action the run already took.
+        // The unresolved status and its issue are persisted together. The
+        // archive file is best-effort: run.json is authoritative, and undoing
+        // the transition for a lost detail file would make the agent re-issue
+        // an action the run already took.
         if (stepAction === 'unresolved') {
           // Minted from the transitioned step: a died one only gains its
           // failure in the transition.
@@ -1377,8 +1371,7 @@ async function applyReconcileStepAction(
       kind: 'ok';
       state: MigrateRunState;
       targetStep: MigrateStep;
-      // The action's tree handling was the reset the dispense asked for, so
-      // the failed attempt's tree is gone.
+      // When true, the reset the dispense asked for has been verified.
       resetTree: boolean;
     }
   | { kind: 'error'; reason: string }
@@ -1545,9 +1538,6 @@ function actionList(actions: string[]): string {
     : `${quoted.slice(0, -1).join(', ')} or ${quoted[quoted.length - 1]}`;
 }
 
-// Whether giving up on the step resets its tree: only a generator that never
-// completed can have left nothing worth keeping, and only a clean-retry
-// restore point makes the reset safe.
 function unresolvedResetsTree(
   root: string,
   state: MigrateRunState,
@@ -1568,8 +1558,8 @@ interface StepSideEffects {
   recorded?: boolean;
 }
 
-// What each accepted action owes the tree it leaves, before the transition
-// is written (git and install side effects stay outside the lock).
+// Git and install side effects run here, before the transition and outside the
+// synchronous state lock.
 async function stepActionSideEffects(
   root: string,
   dir: string,
@@ -1581,10 +1571,9 @@ async function stepActionSideEffects(
 ): Promise<StepSideEffects> {
   switch (action) {
     case 'adopt':
-      // A died step's adopt shares the worker's commit request, which may
-      // have landed before the death. Once the ledger records that commit the
-      // same request would read its answer back, so what changed since goes
-      // out under an adopt request of its own, as a failed step's always does.
+      // A died worker's unrecorded commit request is reused. A failed step, or
+      // a recorded commit, needs an adopt request of its own, or the old answer
+      // would be replayed.
       return state.createCommits
         ? commitForStep(
             root,
@@ -1642,10 +1631,12 @@ async function stepActionSideEffects(
 }
 
 // Commits the working tree left by a folded prompt outcome, an adopted step
-// (failed or died) or a given-up step. The caller persists `entry` with the step transition
-// unless `recorded` says a session's parent already did; null when nothing
-// to commit. A crash between the git commit and the state write leaves that
-// commit in history and out of the ledger; the refold then sees a clean tree.
+// (failed or died) or a given-up step. The caller persists `entry` with the
+// step transition unless `recorded` says a session's parent already did; null
+// when nothing to commit. A crash between the git commit and the state write
+// leaves that commit in history and out of the ledger, with the failures it
+// absorbed uncovered; completion rechecks the tree before warning about that
+// debt.
 async function commitForStep(
   root: string,
   dir: string,
@@ -2003,11 +1994,8 @@ function emitRetryFailed(
   if (pending) {
     lines.push(UNVERIFIABLE_WRITES_LINE);
   }
-  // A step whose generator may still run gets no `next`, whichever retry the
-  // checks above would accept: git can vouch for the tracked tree only, and
-  // an agent that follows `next` blindly must not rerun a generator over
-  // writes nothing here could see. Choosing a retry has to be explicit. Past
-  // the rearm cap no retry is offered or accepted at all.
+  // No preselected retry while the generator may still run: git cannot vouch
+  // for every write. Past the cap no retry is offered or accepted.
   emit(
     root,
     runId,
@@ -2029,10 +2017,6 @@ function rearmCapReached(step: MigrateStep): boolean {
   return step.attempt - 1 >= REARM_ESCALATION_CAP;
 }
 
-// Opens every failed and died dispense with how many retries are left and
-// what a retry is for, so the choice is made against the budget.
-// `committed`: the step's commit is, or may be, in history, so giving up is
-// not offered and adopt is the unattended choice.
 function retryBudgetLine(step: MigrateStep, committed: boolean): string {
   if (rearmCapReached(step)) return rearmCapLine(step, committed);
   const left = REARM_ESCALATION_CAP - (step.attempt - 1);
@@ -2251,12 +2235,9 @@ function emitDied(
   if (!resume) {
     lines.push(UNVERIFIABLE_WRITES_LINE);
   }
-  // `retry` is preselected wherever it is legal: it is the only resolution that
-  // neither discards work nor records a result the run never produced. While
-  // the generator may still run there is no `next` at all: a reset cannot be
-  // verified against writes git does not see, and adopting records a result
-  // nothing checked, so an agent that follows `next` blindly must land on
-  // neither. Past the rearm cap no retry is offered or accepted at all.
+  // `retry` is preselected only when no generator remains to run and the cap
+  // allows it: a reset cannot be verified against writes git does not see, and
+  // adopting records a result nothing checked, so neither is automatic.
   emit(
     root,
     runId,

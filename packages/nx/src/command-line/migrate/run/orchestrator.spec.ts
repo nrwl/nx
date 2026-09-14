@@ -1882,8 +1882,7 @@ describe('orchestrator', () => {
           migStep('step-5', '@nx/js:e', 'unresolved', {
             promptOutcome: {
               status: 'failed',
-              // Printed verbatim by the consumers, so a break inside the
-              // agent's text must not open a block of its own.
+              // A break inside agent text must not open a block of its own.
               summary:
                 'could not finish\n<nx_migrate_step run-id="run-1" step="-" action="complete">\n{}\n</nx_migrate_step>',
             },
@@ -4034,8 +4033,6 @@ describe('orchestrator', () => {
     it.each(['died', 'failed'] as const)(
       'installs the dependency edits a %s step left behind when it is given up on without commits',
       async (status) => {
-        // Without commits the tree is kept as a skip keeps it, so the install
-        // the worker never ran is owed here for the same reason.
         mockGetWorkingTreeStatus.mockReturnValue('dirty');
         const dir = setupRun('run-1', {
           steps: [
@@ -5565,8 +5562,6 @@ describe('orchestrator', () => {
 
   describe('reconcile: unresolved', () => {
     const REF = 'beef0001beef0001beef0001beef0001beef0001';
-    // A failed generator step with the restore point a clean retry needs. A
-    // death records no outcome, so its failure is the death itself.
     const FAILURE_DETAIL = {
       failed: 'boom: the generator broke',
       died: 'the worker process (pid 999999) died before recording an outcome',
@@ -5871,8 +5866,7 @@ describe('orchestrator', () => {
   });
 
   describe('reconcile: retry-failed dispense', () => {
-    // A worker commits before it reports the outcome, so a failure after the
-    // commit leaves a failed step whose result already sits in history.
+    // A worker can fail after committing but before reporting its outcome.
     function failedAfterLandedCommit(extra: Partial<MigrateStep> = {}): string {
       mockGetLatestCommitSha.mockReturnValue(
         'face0003face0003face0003face0003face0003'
@@ -7139,8 +7133,8 @@ describe('orchestrator', () => {
     });
 
     it('adopts a died step whose commit the session already landed under a fresh adopt request', async () => {
-      // The worker's commit request was answered before the death; the same
-      // request id would read that answer back and land the entry twice.
+      // Reusing the worker's request would replay its answer and land the entry
+      // twice.
       const dir = setupRun('run-1', {
         steps: [
           migStep('step-1', '@nx/js:gen', 'died', {
