@@ -47,7 +47,9 @@ describe('create-nx-workspace --preset=npm', () => {
 
   it('should setup package-based workspace', () => {
     const packageJson = readJson('package.json');
-    expect(packageJson.dependencies).toEqual({});
+    // npm can remove an empty dependencies field when installing the fixture's
+    // TypeScript devDependency. Both shapes mean there are no runtime deps.
+    expect(packageJson.dependencies ?? {}).toEqual({});
 
     if (getSelectedPackageManager() === 'pnpm') {
       checkFilesExist('pnpm-workspace.yaml');

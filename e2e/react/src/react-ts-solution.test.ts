@@ -2,6 +2,7 @@ import {
   checkFilesExist,
   cleanupProject,
   getPackageManagerCommand,
+  getSelectedPackageManager,
   newProject,
   readFile,
   readJson,
@@ -78,13 +79,15 @@ describe('React (TS solution)', () => {
 
     runCLI('sync');
 
-    // Add library to package.json to make sure it is linked (not needed for npm package manager)
+    // pnpm requires an explicit workspace protocol; npm and Yarn can link a
+    // matching local version (npm and Yarn Classic reject workspace:*).
     updateJson(`packages/${appName}/package.json`, (json) => {
       return {
         ...json,
         devDependencies: {
           ...(json.devDependencies || {}),
-          [`@${workspaceName}/${libName}`]: 'workspace:*',
+          [`@${workspaceName}/${libName}`]:
+            getSelectedPackageManager() === 'pnpm' ? 'workspace:*' : '*',
         },
       };
     });
@@ -121,13 +124,14 @@ describe('React (TS solution)', () => {
 
     runCLI('sync');
 
-    // Add library to package.json to make sure it is linked (not needed for npm package manager)
+    // Use a protocol understood by the selected package manager.
     updateJson(`packages/${appName}/package.json`, (json) => {
       return {
         ...json,
         devDependencies: {
           ...(json.devDependencies || {}),
-          [`@${workspaceName}/${libName}`]: 'workspace:*',
+          [`@${workspaceName}/${libName}`]:
+            getSelectedPackageManager() === 'pnpm' ? 'workspace:*' : '*',
         },
       };
     });
