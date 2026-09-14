@@ -96,8 +96,19 @@ export declare class HashPlanInspector {
 
 export declare class HashPlanner {
   constructor(nxJson: NxJson, projectGraph: ExternalObject<ProjectGraph>)
-  getPlans(taskIds: Array<string>, taskGraph: TaskGraph): Record<string, string[]>
-  getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph): ExternalObject<Record<string, Array<HashInstruction>>>
+  /**
+   * `snapshots` is this run's I/O snapshot bundle; a task with an eligible
+   * entry hashes its observed reads instead of its declared filesets.
+   * `customHasherTaskIds` and `optedOutTaskIds` are decided in JS, where
+   * executors and target configuration are resolved.
+   */
+  getPlans(taskIds: Array<string>, taskGraph: TaskGraph, snapshots?: IoSnapshots | undefined | null, customHasherTaskIds?: Array<string> | undefined | null, optedOutTaskIds?: Array<string> | undefined | null): Record<string, string[]>
+  /**
+   * The same eligibility walk `getPlans` performs, reported: which tasks
+   * hash from their snapshot and why the others do not.
+   */
+  ioSnapshotReport(taskGraph: TaskGraph, snapshots?: IoSnapshots | undefined | null, customHasherTaskIds?: Array<string> | undefined | null, optedOutTaskIds?: Array<string> | undefined | null): IoSnapshotReport
+  getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph, snapshots?: IoSnapshots | undefined | null, customHasherTaskIds?: Array<string> | undefined | null, optedOutTaskIds?: Array<string> | undefined | null): ExternalObject<Record<string, Array<HashInstruction>>>
 }
 
 export declare class HttpRemoteCache {
@@ -664,6 +675,10 @@ export interface HashInputs {
   depOutputs: Array<string>
   /** External dependencies */
   external: Array<string>
+  /** Provenance of every value above, keyed by the value itself. */
+  sources: Record<string, 'snapshot' | 'target' | 'dependency' | 'native'>
+  /** Domain markers in the plan, e.g. `io-snapshot:<digest>`. */
+  markers: Array<string>
 }
 
 /**
@@ -704,6 +719,29 @@ export interface InvocationRecord {
   taskId: string
 }
 
+/**
+ * Tasks whose snapshot read another task's outputs: they hash after their
+ * producers ran, because those files only exist then. Needs no project graph,
+ * so the client can call it before the first hashing wave on the daemon path.
+ * Opted-out and custom-hasher tasks are not excluded: deferring a task that
+ * ends up hashed natively only delays its hash, it never changes it.
+ */
+export declare function ioSnapshotDeferredTaskIds(snapshots: IoSnapshots, taskGraph: TaskGraph): Array<string>
+
+/**
+ * Why a task (or the whole run) hashes natively. `reason` strings are the
+ * contract `nx show`, `nx graph`, and the run summary render.
+ */
+export interface IoSnapshotDiagnostic {
+  reason: string
+  taskId?: string
+  project?: string
+  glob?: string
+  producer?: string
+  file?: string
+  message?: string
+}
+
 /** The snapshot set the Nx Cloud client read for HEAD, as JS hands it over. */
 export interface IoSnapshotImportOptions {
   /** Shared cache root for snapshot bundles (`<cacheDir>/io-snapshots`). */
@@ -720,6 +758,29 @@ export interface IoSnapshotImportOptions {
   updatedAt?: number
   clientVersion?: string
   retain?: number
+}
+
+/**
+ * Observed outputs per eligible task (same walk as hashing), for the runner
+ * to union into `task.outputs` and for `nx show` to label them.
+ */
+export declare function ioSnapshotOutputs(snapshots: IoSnapshots, taskGraph: TaskGraph, optedOutTaskIds: Array<string>, customHasherTaskIds: Array<string>, projectRoots?: Record<string, string> | undefined | null): Record<string, Array<string>>
+
+/**
+ * The eligibility report without a planner: the client prints the run
+ * summary from this on the daemon path, where it never transfers a project
+ * graph. `invalid-files-input` needs nx.json to expand named inputs, so it
+ * is only reported through the planner.
+ */
+export declare function ioSnapshotReport(snapshots: IoSnapshots, taskGraph: TaskGraph, optedOutTaskIds: Array<string>, customHasherTaskIds: Array<string>, projectRoots?: Record<string, string> | undefined | null): IoSnapshotReport
+
+export interface IoSnapshotReport {
+  /** Task ids hashed from their snapshot. */
+  used: Array<string>
+  /** Subset of `used` whose snapshot also contributes observed outputs. */
+  tasksWithOutputs: Array<string>
+  diagnostics: Array<IoSnapshotDiagnostic>
+  resolution?: IoSnapshotResolution
 }
 
 /** What was resolved for a commit; persisted alongside the bundle. */

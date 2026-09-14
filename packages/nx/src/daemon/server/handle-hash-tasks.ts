@@ -2,6 +2,7 @@ import { Task, TaskGraph } from '../../config/task-graph';
 import { getCachedSerializedProjectGraphPromise } from './project-graph-incremental-recomputation';
 import { InProcessTaskHasher } from '../../hasher/task-hasher';
 import { readNxJson } from '../../config/configuration';
+import { loadIoSnapshots } from '../../native';
 
 /**
  * We use this not to recreated hasher for every hash operation
@@ -17,6 +18,16 @@ interface HashTasksPayload {
   perTaskEnvs: Record<string, NodeJS.ProcessEnv>;
   cwd: string;
   collectInputs?: boolean;
+  ioSnapshots?: { directory?: string };
+}
+
+// An External cannot cross the socket, so the client sends the bundle
+// directory (which pins the HEAD it fetched for) and the daemon loads it
+// (mtime-cached in Rust). Absent (incl. older clients) ⇒ native hashing.
+function loadedIoSnapshots(payload: HashTasksPayload) {
+  return payload.ioSnapshots?.directory
+    ? loadIoSnapshots(payload.ioSnapshots.directory)
+    : undefined;
 }
 
 async function getHasher(runnerOptions: any): Promise<InProcessTaskHasher> {
@@ -48,7 +59,8 @@ export async function handleHashTasks(payload: HashTasksPayload) {
     payload.taskGraph,
     payload.perTaskEnvs,
     payload.cwd,
-    payload.collectInputs
+    payload.collectInputs,
+    loadedIoSnapshots(payload)
   );
   return {
     response,
@@ -63,7 +75,8 @@ export async function handleHashTasksUpfront(payload: HashTasksPayload) {
     payload.taskGraph,
     payload.perTaskEnvs,
     payload.cwd,
-    payload.collectInputs
+    payload.collectInputs,
+    loadedIoSnapshots(payload)
   );
   return {
     response,
