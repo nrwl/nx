@@ -1,6 +1,6 @@
 export {
   disposeIsolatedPlugins,
   loadIsolatedNxPlugin,
-  pluginGeneration,
   useIsolatedNxPluginCapabilities,
+  wantPlugins,
 } from './load-isolated-plugin';

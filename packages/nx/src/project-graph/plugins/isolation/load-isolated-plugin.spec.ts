@@ -11,8 +11,8 @@ import { IsolatedPlugin } from './isolated-plugin';
 import {
   disposeIsolatedPlugins,
   loadIsolatedNxPlugin,
-  pluginGeneration,
   useIsolatedNxPluginCapabilities,
+  wantPlugins,
 } from './load-isolated-plugin';
 
 const load = IsolatedPlugin.load as unknown as Mock;
@@ -34,46 +34,47 @@ const capabilities = {
 };
 
 describe('the plugins a process has loaded', () => {
-  let instances: Array<{ dispose: Mock }>;
+  let instances: Map<string, { name: string; dispose: Mock }>;
 
   beforeEach(() => {
     // The map lives on `global` so two copies of Nx share one set of workers,
-    // which also means it outlives a module reset. Sweeping it is the reset.
+    // which also means it outlives a module reset. Wanting nothing is the reset.
     disposeIsolatedPlugins();
-    instances = [];
+    instances = new Map();
 
-    const newInstance = () => {
-      const instance = { dispose: vi.fn() };
-      instances.push(instance);
+    const newInstance = (name: string) => {
+      const instance = { name, dispose: vi.fn() };
+      instances.set(name, instance);
       return instance;
     };
     load.mockReset();
-    load.mockImplementation(async () => newInstance());
+    load.mockImplementation(async (plugin: string) => newInstance(plugin));
     fromCapabilities.mockReset();
-    fromCapabilities.mockImplementation(() => newInstance());
+    fromCapabilities.mockImplementation((plugin: string) =>
+      newInstance(plugin)
+    );
   });
 
   it('loads one worker however many loads ask for the plugin', async () => {
-    const generation = pluginGeneration();
+    wantPlugins('specified', ['p'], '/root');
 
-    const first = await loadIsolatedNxPlugin('p', '/root', generation);
-    const second = await loadIsolatedNxPlugin('p', '/root', generation);
+    const first = await loadIsolatedNxPlugin('p', '/root');
+    const second = await loadIsolatedNxPlugin('p', '/root');
 
     expect(load).toHaveBeenCalledTimes(1);
     expect(first).toBe(second);
   });
 
   it('shares a plugin between a recorded wiring and a load', async () => {
-    const generation = pluginGeneration();
+    wantPlugins('specified', ['p'], '/root');
 
     const wired = await useIsolatedNxPluginCapabilities(
       'p',
       '/root',
-      generation,
       resolved,
       capabilities
     );
-    const loaded = await loadIsolatedNxPlugin('p', '/root', generation);
+    const loaded = await loadIsolatedNxPlugin('p', '/root');
 
     // Already wired from a record, so there is nothing to load.
     expect(load).not.toHaveBeenCalled();
@@ -81,89 +82,106 @@ describe('the plugins a process has loaded', () => {
     expect(loaded).toBe(wired);
   });
 
-  it('puts every loaded plugin down when the set is swept', async () => {
-    const generation = pluginGeneration();
-    await loadIsolatedNxPlugin('a', '/root', generation);
-    await loadIsolatedNxPlugin('b', '/root', generation);
+  it('keeps the plugins the next configuration still names', async () => {
+    wantPlugins('specified', ['a', 'b'], '/root');
+    await loadIsolatedNxPlugin('a', '/root');
+    await loadIsolatedNxPlugin('b', '/root');
 
-    disposeIsolatedPlugins();
+    // `b` is gone from nx.json, `c` is new.
+    wantPlugins('specified', ['a', 'c'], '/root');
     await Promise.resolve();
 
-    expect(instances).toHaveLength(2);
-    for (const instance of instances) {
-      expect(instance.dispose).toHaveBeenCalled();
-    }
-  });
-
-  it('loads again after a sweep', async () => {
-    await loadIsolatedNxPlugin('p', '/root', pluginGeneration());
-    disposeIsolatedPlugins();
-
-    await loadIsolatedNxPlugin('p', '/root', pluginGeneration());
-
-    // A disposed plugin is not reusable: its worker is gone for good, so the
-    // entry has to go with it.
+    expect(instances.get('b').dispose).toHaveBeenCalled();
+    // Tearing `a` down would cost a reload of a plugin the new set is about to
+    // ask for again.
+    expect(instances.get('a').dispose).not.toHaveBeenCalled();
+    expect(await loadIsolatedNxPlugin('a', '/root')).toBe(instances.get('a'));
     expect(load).toHaveBeenCalledTimes(2);
   });
 
-  it('disposes a plugin whose load finishes after the sweep', async () => {
-    const supersededGeneration = pluginGeneration();
+  it("leaves another loader's plugins alone", async () => {
+    wantPlugins('default', ['package-json'], '/root');
+    await loadIsolatedNxPlugin('package-json', '/root');
+
+    wantPlugins('specified', ['a'], '/root');
+    await Promise.resolve();
+
+    // The two halves are loaded by separate callers, so one declaring its own
+    // must not take down the other's.
+    expect(instances.get('package-json').dispose).not.toHaveBeenCalled();
+  });
+
+  it('disposes a plugin that arrives after nothing wants it', async () => {
+    wantPlugins('specified', ['p'], '/root');
     let finishLoading: (instance: unknown) => void;
     load.mockImplementationOnce(
       () => new Promise((resolve) => (finishLoading = resolve))
     );
 
-    const stillLoading = loadIsolatedNxPlugin(
-      'p',
-      '/root',
-      supersededGeneration
-    );
+    const stillLoading = loadIsolatedNxPlugin('p', '/root');
 
-    // The plugins changed while that load was in flight.
-    disposeIsolatedPlugins();
+    // nx.json changed while that load waited for the capabilities lock.
+    wantPlugins('specified', ['q'], '/root');
 
     const instance = { dispose: vi.fn() };
     finishLoading!(instance);
     await stillLoading;
 
-    // Its worker would otherwise run with nothing left to stop it, since the
-    // sweep could not see a plugin that had not arrived yet.
+    // Its worker would otherwise run with nothing left to stop it: the sweep
+    // could not see a plugin that had not arrived yet.
     expect(instance.dispose).toHaveBeenCalled();
   });
 
-  it('does not serve a superseded load to a later one', async () => {
-    const supersededGeneration = pluginGeneration();
-    await loadIsolatedNxPlugin('p', '/root', supersededGeneration);
-    disposeIsolatedPlugins();
-
-    // Arriving late, stamped with the generation its load started in.
-    await loadIsolatedNxPlugin('p', '/root', supersededGeneration);
-    const current = await loadIsolatedNxPlugin(
-      'p',
-      '/root',
-      pluginGeneration()
+  it('keeps a plugin that arrives late but is still named', async () => {
+    wantPlugins('specified', ['p'], '/root');
+    let finishLoading: (instance: unknown) => void;
+    load.mockImplementationOnce(
+      () => new Promise((resolve) => (finishLoading = resolve))
     );
 
-    // The current load gets a plugin of its own rather than the disposed one.
-    expect(load).toHaveBeenCalledTimes(3);
-    expect(current).toBe(instances[2]);
+    const stillLoading = loadIsolatedNxPlugin('p', '/root');
+
+    // A different plugin was added, and `p` is still configured.
+    wantPlugins('specified', ['p', 'q'], '/root');
+
+    const instance = { dispose: vi.fn() };
+    finishLoading!(instance);
+
+    expect(await stillLoading).toBe(instance);
+    expect(instance.dispose).not.toHaveBeenCalled();
+  });
+
+  it('puts every plugin down when nothing wants any of them', async () => {
+    wantPlugins('specified', ['a'], '/root');
+    wantPlugins('default', ['package-json'], '/root');
+    await loadIsolatedNxPlugin('a', '/root');
+    await loadIsolatedNxPlugin('package-json', '/root');
+
+    disposeIsolatedPlugins();
+    await Promise.resolve();
+
+    for (const instance of instances.values()) {
+      expect(instance.dispose).toHaveBeenCalled();
+    }
   });
 
   it('does not keep a failed load', async () => {
+    wantPlugins('specified', ['p'], '/root');
     load.mockRejectedValueOnce(new Error('plugin blew up'));
 
-    await expect(
-      loadIsolatedNxPlugin('p', '/root', pluginGeneration())
-    ).rejects.toThrow('plugin blew up');
+    await expect(loadIsolatedNxPlugin('p', '/root')).rejects.toThrow(
+      'plugin blew up'
+    );
 
-    await loadIsolatedNxPlugin('p', '/root', pluginGeneration());
+    await loadIsolatedNxPlugin('p', '/root');
     expect(load).toHaveBeenCalledTimes(2);
   });
 
   it('sweeping a failed load disposes nothing', async () => {
+    wantPlugins('specified', ['p'], '/root');
     load.mockRejectedValueOnce(new Error('plugin blew up'));
 
-    const failed = loadIsolatedNxPlugin('p', '/root', pluginGeneration());
+    const failed = loadIsolatedNxPlugin('p', '/root');
     await expect(failed).rejects.toThrow('plugin blew up');
 
     // The rejection belongs to the caller that asked for the plugin; the sweep
