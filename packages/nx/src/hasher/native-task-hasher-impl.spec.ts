@@ -1600,7 +1600,7 @@ describe('native task hasher', () => {
     expect(planning.calls).toBe(2);
   });
 
-  it('leaves a task with a fileset read from disk for run time', async () => {
+  it('hashes a disk-backed fileset up front unless it reaches a dependency output', async () => {
     await tempFs.createFiles({
       'libs/gen/project.json': JSON.stringify({ name: 'gen' }),
       'libs/gen/index.ts': 'gen',
@@ -1615,16 +1615,21 @@ describe('native task hasher', () => {
       undefined,
       workspaceFiles.fileMap.projectFileMap
     );
-    // Neither task depends on another. Only the disk-backed fileset holds
-    // gen:compile back, since it may read what some other task writes.
+    // gen:compile reads what gen:codegen writes, so it waits for it.
+    // plain:compile reads a generated file no task in the run produces.
     builder.addNode({
       name: 'gen',
       type: 'lib',
       data: {
         root: 'libs/gen',
         targets: {
+          codegen: {
+            executor: 'nx:run-commands',
+            outputs: ['{projectRoot}/generated'],
+          },
           compile: {
             executor: 'nx:run-commands',
+            dependsOn: ['codegen'],
             inputs: [
               'default',
               { fileset: '{projectRoot}/generated/**/*', includeIgnored: true },
@@ -1639,7 +1644,13 @@ describe('native task hasher', () => {
       data: {
         root: 'libs/plain',
         targets: {
-          compile: { executor: 'nx:run-commands', inputs: ['default'] },
+          compile: {
+            executor: 'nx:run-commands',
+            inputs: [
+              'default',
+              { fileset: '{projectRoot}/.env.generated', includeIgnored: true },
+            ],
+          },
         },
       },
     });
@@ -1653,6 +1664,11 @@ describe('native task hasher', () => {
       {}
     );
     const tasks = Object.values(taskGraph.tasks);
+    expect(tasks.map((t) => t.id).sort()).toEqual([
+      'gen:codegen',
+      'gen:compile',
+      'plain:compile',
+    ]);
     const hashes = await new NativeTaskHasherImpl(
       tempFs.tempDir,
       nxJson,
@@ -1665,6 +1681,9 @@ describe('native task hasher', () => {
       Object.fromEntries(tasks.map((t) => [t.id, {}]))
     );
 
-    expect(Object.keys(hashes)).toEqual(['plain:compile']);
+    expect(Object.keys(hashes).sort()).toEqual([
+      'gen:codegen',
+      'plain:compile',
+    ]);
   });
 });

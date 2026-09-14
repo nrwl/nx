@@ -9,10 +9,10 @@ use crate::native::{
 };
 use napi::bindgen_prelude::External;
 use rayon::prelude::*;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use tracing::trace;
 
-use crate::native::tasks::hashers::{OnceCache, validate_files_globs};
+use crate::native::tasks::hashers::{OnceCache, literal_prefix, validate_files_globs};
 use crate::native::tasks::inputs::{
     expand_single_project_inputs, get_inputs, get_inputs_for_dependency, get_named_inputs,
 };
@@ -275,9 +275,13 @@ impl HashPlanner {
             );
         }
 
-        result.map(|plans| HashPlans {
-            pool: Arc::clone(&self.instruction_pool),
-            plans,
+        result.map(|plans| {
+            let deferred = deferred_tasks(&plans, pool, &task_graph);
+            HashPlans {
+                pool: Arc::clone(&self.instruction_pool),
+                plans,
+                deferred,
+            }
         })
     }
 
@@ -993,6 +997,94 @@ fn prefixed_cache_key(dep: &str, kind: char, rest: &str) -> String {
 }
 
 /// `f` reads the file map, `d` reads the disk (`includeIgnored`).
+/// Tasks the up-front batch must leave out: one of their disk-backed
+/// filesets reaches into what a task they depend on, directly or through the
+/// chain, declares as an output, so its files may still change during the
+/// run. Any other disk-backed fileset hashes up front like a tracked one.
+fn deferred_tasks(
+    plans: &HashMap<String, Vec<u32>>,
+    pool: &InstructionPool,
+    task_graph: &TaskGraph,
+) -> HashSet<String> {
+    plans
+        .par_iter()
+        .filter(|(task_id, ids)| {
+            let disk_roots: Vec<String> = ids
+                .iter()
+                .filter_map(|id| match &*pool.get(*id) {
+                    HashInstruction::ProjectFileSet(_, globs, true) => Some(globs.clone()),
+                    _ => None,
+                })
+                .flatten()
+                .filter(|glob| !glob.starts_with('!'))
+                .map(|glob| walk_root(&glob))
+                .collect();
+            if disk_roots.is_empty() {
+                return false;
+            }
+            let output_roots = upstream_output_roots(task_graph, task_id);
+            disk_roots.iter().any(|disk| {
+                output_roots
+                    .iter()
+                    .any(|output| paths_overlap(disk, output))
+            })
+        })
+        .map(|(task_id, _)| task_id.clone())
+        .collect()
+}
+
+/// The directory a glob reads from. Brackets count as wildcards here, and a
+/// glob the prefix parser rejects reads as the workspace root, so a doubtful
+/// case errs toward deferring.
+fn walk_root(glob: &str) -> String {
+    literal_prefix(glob)
+        .map(|(root, _)| root)
+        .unwrap_or_default()
+}
+
+/// Walk roots of every output declared by the tasks `task_id` depends on,
+/// directly or through the chain, continuous dependencies included.
+fn upstream_output_roots(task_graph: &TaskGraph, task_id: &str) -> Vec<String> {
+    let dependencies_of = |id: &str| {
+        [
+            task_graph.dependencies.get(id),
+            task_graph.continuous_dependencies.get(id),
+        ]
+        .into_iter()
+        .flatten()
+        .flat_map(|deps| deps.iter().map(String::as_str))
+        .collect::<Vec<&str>>()
+    };
+    let mut roots = Vec::new();
+    let mut visited: HashSet<&str> = HashSet::new();
+    let mut stack = dependencies_of(task_id);
+    while let Some(id) = stack.pop() {
+        if !visited.insert(id) {
+            continue;
+        }
+        if let Some(task) = task_graph.tasks.get(id) {
+            roots.extend(
+                task.outputs
+                    .iter()
+                    .filter(|output| !output.starts_with('!'))
+                    .map(|output| walk_root(output)),
+            );
+        }
+        stack.extend(dependencies_of(id));
+    }
+    roots
+}
+
+/// Whether one path is the other or lies inside it. The workspace root, the
+/// empty string, holds everything.
+fn paths_overlap(a: &str, b: &str) -> bool {
+    a.is_empty()
+        || b.is_empty()
+        || a == b
+        || a.strip_prefix(b).is_some_and(|rest| rest.starts_with('/'))
+        || b.strip_prefix(a).is_some_and(|rest| rest.starts_with('/'))
+}
+
 fn fileset_kind(include_ignored: bool) -> char {
     if include_ignored { 'd' } else { 'f' }
 }
@@ -1521,5 +1613,89 @@ mod tests {
             plan.len(),
             plan.capacity()
         );
+    }
+
+    #[test]
+    fn defers_only_a_disk_backed_fileset_that_reaches_an_upstream_output() {
+        let pool = InstructionPool::new();
+        let disk = |project: &str, glob: &str| {
+            pool.intern(HashInstruction::ProjectFileSet(
+                project.into(),
+                vec![glob.into()],
+                true,
+            ))
+        };
+        let tracked = pool.intern(HashInstruction::ProjectFileSet(
+            "lib".into(),
+            vec!["libs/lib/src/**".into()],
+            false,
+        ));
+        let plans: HashMap<String, Vec<u32>> = [
+            ("web:build", vec![disk("web", "apps/web/generated/**/*.ts")]),
+            ("web:lint", vec![disk("web", "apps/web/.env.generated")]),
+            ("web:test", vec![disk("web", "dist/**")]),
+            ("web:bracket", vec![disk("web", "apps/web/[dir]/**")]),
+            ("lib:build", vec![tracked]),
+        ]
+        .into_iter()
+        .map(|(id, ids)| (id.to_string(), ids))
+        .collect();
+        let strings = |list: &[&str]| list.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+        let tasks: HashMap<String, Task> = [
+            ("web:build", vec![]),
+            ("web:lint", vec![]),
+            ("web:test", vec![]),
+            ("web:bracket", vec![]),
+            ("web:codegen", vec!["apps/web/generated"]),
+            ("web:serve", vec!["apps/web/d"]),
+            (
+                "lib:build",
+                vec!["dist/libs/lib", "!dist/libs/lib/**/*.map"],
+            ),
+        ]
+        .into_iter()
+        .map(|(id, outputs)| {
+            let (project, target) = id.split_once(':').unwrap();
+            (
+                id.to_string(),
+                Task::new(project, target).with_outputs(strings(&outputs)),
+            )
+        })
+        .collect();
+        let edges = |list: &[(&str, &[&str])]| {
+            list.iter()
+                .map(|(id, deps)| (id.to_string(), strings(deps)))
+                .collect::<HashMap<String, Vec<String>>>()
+        };
+        let task_graph = TaskGraph {
+            roots: vec![],
+            tasks,
+            dependencies: edges(&[
+                ("web:build", &["web:codegen", "lib:build"]),
+                ("web:lint", &["lib:build"]),
+                ("web:test", &["web:build"]),
+            ]),
+            continuous_dependencies: edges(&[("web:bracket", &["web:serve"])]),
+        };
+
+        let mut deferred: Vec<String> = deferred_tasks(&plans, &pool, &task_graph)
+            .into_iter()
+            .collect();
+        deferred.sort();
+        // web:build reads its codegen's output; web:test's `dist/**` holds
+        // lib:build's `dist/libs/lib` two steps up; web:bracket's `[dir]`
+        // counts as a wildcard, so `apps/web` meets the served `apps/web/d`.
+        // web:lint reads a file no upstream task writes.
+        assert_eq!(deferred, vec!["web:bracket", "web:build", "web:test"]);
+    }
+
+    #[test]
+    fn paths_overlap_when_one_holds_the_other() {
+        assert!(paths_overlap("dist", "dist/libs/lib"));
+        assert!(paths_overlap("dist/libs/lib", "dist"));
+        assert!(paths_overlap("dist", "dist"));
+        assert!(paths_overlap("", "anything"));
+        assert!(!paths_overlap("dist", "distribution"));
+        assert!(!paths_overlap("apps/web/dist", "apps/webapp"));
     }
 }

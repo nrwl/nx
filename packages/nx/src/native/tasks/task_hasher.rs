@@ -363,9 +363,10 @@ impl TaskHasher {
     }
 
     /// Like `hash_plans`, but only for the plans that hold no output of another
-    /// task and no fileset read from disk (which may be what another task
-    /// writes). The rest are left out and hash once those tasks have run; their
-    /// ids are absent from the result and need no entry in `per_task_envs`.
+    /// task and no disk-backed fileset reaching into an upstream task's outputs
+    /// (`HashPlans::deferred`). The rest are left out and hash once those tasks
+    /// have run; their ids are absent from the result and need no entry in
+    /// `per_task_envs`.
     #[napi(ts_return_type = "Record<string, HashDetails>")]
     pub fn hash_plans_upfront(
         &self,
@@ -380,14 +381,11 @@ impl TaskHasher {
         let plans: HashMap<String, Vec<u32>> = hash_plans
             .plans
             .iter()
-            .filter(|(_, ids)| {
-                !ids.iter().any(|id| {
-                    matches!(
-                        *pool.get(*id),
-                        HashInstruction::TaskOutput(_, _)
-                            | HashInstruction::ProjectFileSet(_, _, true)
-                    )
-                })
+            .filter(|(task_id, ids)| {
+                !hash_plans.deferred.contains(task_id.as_str())
+                    && !ids
+                        .iter()
+                        .any(|id| matches!(*pool.get(*id), HashInstruction::TaskOutput(_, _)))
             })
             .map(|(task_id, ids)| (task_id.clone(), ids.clone()))
             .collect();
@@ -408,6 +406,7 @@ impl TaskHasher {
         let upfront = HashPlans {
             pool: pool.clone(),
             plans,
+            deferred: std::collections::HashSet::new(),
         };
         let hashes = self.hash_plans_impl(&upfront, cwd, collect_task_inputs, |task_id| {
             per_task_envs
@@ -454,6 +453,7 @@ impl TaskHasher {
         let subset = HashPlans {
             pool: hash_plans.pool.clone(),
             plans,
+            deferred: std::collections::HashSet::new(),
         };
         self.hash_plans_impl(&subset, cwd, collect_task_inputs, |task_id| {
             per_task_envs
