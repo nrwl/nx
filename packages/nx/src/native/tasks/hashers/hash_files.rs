@@ -1,7 +1,7 @@
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex, MutexGuard, TryLockError};
 use std::time::UNIX_EPOCH;
 
 use anyhow::{Context, Result, bail};
@@ -29,18 +29,21 @@ pub(crate) type FilesExpansionCache = DashMap<String, Arc<FilesExpansion>>;
 pub(crate) struct FileContentCache {
     entries: DashMap<PathBuf, CachedFileContent>,
     limit: usize,
+    /// The current run; every hit and insert stamps its entry with it.
+    run: AtomicU64,
     /// Whether `begin_run` has ever been called: a run boundary exists, and
-    /// inserts never sweep.
+    /// inserts never evict.
     has_runs: AtomicBool,
-    /// Size at which an insert sweeps in a process that never hashes up
-    /// front: twice the limit, or the limit past the last sweep's survivors.
+    /// Size at which an insert evicts in a process that never hashes up
+    /// front: twice the limit, or the limit past the last eviction's survivors.
     ceiling: AtomicUsize,
-    sweeping: Mutex<()>,
+    evicting: Mutex<()>,
 }
 
 /// Content-hashed output names (`index-a1b2c3.js`) leave a dead key behind
 /// per build, so the map grows with build count. Past this size, a run
-/// starts by dropping what the previous run did not use.
+/// starts by dropping the oldest runs' entries, never the newest run's, until
+/// the map fits.
 const FILE_CONTENT_CACHE_LIMIT: usize = 100_000;
 
 impl FileContentCache {
@@ -52,34 +55,63 @@ impl FileContentCache {
         Self {
             entries: DashMap::new(),
             limit,
+            run: AtomicU64::new(1),
             has_runs: AtomicBool::new(false),
             ceiling: AtomicUsize::new(limit * 2),
-            sweeping: Mutex::new(()),
+            evicting: Mutex::new(()),
         }
     }
 
     /// Call once per run, from the up-front batch only. The smaller passes
-    /// that hash deferred tasks must not sweep: that would clear the marks of
-    /// the up-front set, and the next sweep would drop it.
+    /// that hash deferred tasks belong to the same run, so their hits keep
+    /// the run's entries young.
     pub(crate) fn begin_run(&self) {
         self.has_runs.store(true, Ordering::Relaxed);
-        self.sweep(|| self.limit);
-    }
-
-    /// Keeps what was used since the last sweep and clears the marks. The
-    /// threshold is read again under the lock, so a thread that saw the same
-    /// size as the sweeper does not sweep a second time and drop everything.
-    fn sweep(&self, threshold: impl Fn() -> usize) {
-        let Ok(_guard) = self.sweeping.try_lock() else {
+        let Some(_guard) = self.eviction_guard() else {
             return;
         };
-        if self.entries.len() < threshold() {
-            return;
+        self.run.fetch_add(1, Ordering::Relaxed);
+        if self.entries.len() > self.limit {
+            self.evict_oldest_runs();
         }
-        self.entries
-            .retain(|_, cached| cached.used.swap(false, Ordering::Relaxed));
-        let next = (self.entries.len() + self.limit).max(self.limit * 2);
-        self.ceiling.store(next, Ordering::Relaxed);
+    }
+
+    /// Drops whole runs, oldest first, until the map fits the limit. The
+    /// newest run that touched the cache is never dropped, however large,
+    /// so a run in between that read nothing costs it nothing.
+    fn evict_oldest_runs(&self) {
+        let mut by_run: BTreeMap<u64, usize> = BTreeMap::new();
+        for entry in self.entries.iter() {
+            *by_run
+                .entry(entry.used_in.load(Ordering::Relaxed))
+                .or_default() += 1;
+        }
+        let Some(&newest) = by_run.keys().next_back() else {
+            return;
+        };
+        let mut remaining = self.entries.len();
+        let mut cutoff = 0;
+        for (&run, &count) in &by_run {
+            if run == newest || remaining <= self.limit {
+                break;
+            }
+            remaining -= count;
+            cutoff = run + 1;
+        }
+        if cutoff > 0 {
+            self.entries
+                .retain(|_, cached| cached.used_in.load(Ordering::Relaxed) >= cutoff);
+        }
+    }
+
+    /// A poisoned lock still guards; only a busy one means another thread is
+    /// evicting right now.
+    fn eviction_guard(&self) -> Option<MutexGuard<'_, ()>> {
+        match self.evicting.try_lock() {
+            Ok(guard) => Some(guard),
+            Err(TryLockError::Poisoned(poisoned)) => Some(poisoned.into_inner()),
+            Err(TryLockError::WouldBlock) => None,
+        }
     }
 
     fn get(&self, path: &Path, (mtime, size): FileStamp) -> Option<String> {
@@ -87,19 +119,40 @@ impl FileContentCache {
         if cached.mtime != mtime || cached.size != size {
             return None;
         }
-        cached.used.store(true, Ordering::Relaxed);
+        cached
+            .used_in
+            .store(self.run.load(Ordering::Relaxed), Ordering::Relaxed);
         Some(cached.hash.clone())
     }
 
     fn insert(&self, path: PathBuf, content: CachedFileContent) {
-        // Without a run boundary, inserts sweep instead. With one, a sweep
-        // here could drop what this run already used.
+        // Without a run boundary, inserts evict instead, and each eviction is
+        // the boundary. With one, an eviction here could drop what this run
+        // already used.
         if !self.has_runs.load(Ordering::Relaxed)
             && self.entries.len() >= self.ceiling.load(Ordering::Relaxed)
         {
-            self.sweep(|| self.ceiling.load(Ordering::Relaxed));
+            self.evict_without_run();
         }
+        content
+            .used_in
+            .store(self.run.load(Ordering::Relaxed), Ordering::Relaxed);
         self.entries.insert(path, content);
+    }
+
+    fn evict_without_run(&self) {
+        let Some(_guard) = self.eviction_guard() else {
+            return;
+        };
+        // Re-read under the lock: a thread that saw the same size as the
+        // evictor must not evict a second time.
+        if self.entries.len() < self.ceiling.load(Ordering::Relaxed) {
+            return;
+        }
+        self.run.fetch_add(1, Ordering::Relaxed);
+        self.evict_oldest_runs();
+        let next = (self.entries.len() + self.limit).max(self.limit * 2);
+        self.ceiling.store(next, Ordering::Relaxed);
     }
 
     #[cfg(test)]
@@ -121,8 +174,8 @@ pub(crate) struct CachedFileContent {
     mtime: u128,
     size: u64,
     hash: String,
-    /// Set by every hit and by insertion; a sweep clears it.
-    used: AtomicBool,
+    /// The run that last hit or inserted this entry; eviction goes by it.
+    used_in: AtomicU64,
 }
 
 impl CachedFileContent {
@@ -131,7 +184,7 @@ impl CachedFileContent {
             mtime,
             size,
             hash,
-            used: AtomicBool::new(true),
+            used_in: AtomicU64::new(0),
         }
     }
 }
@@ -1137,35 +1190,56 @@ mod tests {
         let cache = FileContentCache::with_limit(4);
         let all: Vec<usize> = (0..10).collect();
         assert_eq!(run(&cache, &all, &[&[0], &[]]), 0);
-        // The small passes after the batch did not cost the set its marks.
+        // A live set larger than the limit keeps hitting, and the small
+        // passes after the batch did not age it.
         assert_eq!(run(&cache, &all, &[&[0], &[]]), 10);
         assert_eq!(run(&cache, &all, &[]), 10);
         assert_eq!(cache.len(), 10);
     }
 
     #[test]
-    fn content_cache_drops_what_the_previous_run_did_not_use() {
+    fn content_cache_survives_runs_that_read_nothing() {
         let cache = FileContentCache::with_limit(4);
         let all: Vec<usize> = (0..10).collect();
         run(&cache, &all, &[]);
-        assert_eq!(run(&cache, &all[..5], &[]), 5);
-        // 5..10 went unused for a whole run, so this run starts without them.
-        assert_eq!(run(&cache, &all, &[]), 5);
-        assert_eq!(cache.len(), 10);
+        // A lint in between opens a run but reads no disk-backed file.
+        run(&cache, &[], &[]);
+        run(&cache, &[], &[]);
+        assert_eq!(run(&cache, &all, &[]), 10);
     }
 
     #[test]
-    fn content_cache_sweeps_on_insert_at_twice_its_limit_without_a_run() {
+    fn content_cache_drops_the_oldest_runs_first() {
+        let cache = FileContentCache::with_limit(4);
+        run(&cache, &[0, 1, 2, 3], &[]);
+        run(&cache, &[4, 5, 6, 7], &[]);
+        assert_eq!(cache.len(), 8);
+        // Over the limit: the oldest run goes, the newest stays whole.
+        run(&cache, &[8, 9], &[]);
+        assert_eq!(cache.len(), 6);
+        for i in 0..4 {
+            assert!(cache.get(&cache_path(i), CACHE_STAMP).is_none(), "{i}");
+        }
+        for i in 4..10 {
+            assert!(cache.get(&cache_path(i), CACHE_STAMP).is_some(), "{i}");
+        }
+        // Half of the newest set re-read: the other half is now the oldest.
+        run(&cache, &[4, 5, 6, 7, 8], &[]);
+        assert_eq!(run(&cache, &[4, 5, 6, 7, 8, 9], &[]), 5);
+    }
+
+    #[test]
+    fn content_cache_evicts_on_insert_at_twice_its_limit_without_a_run() {
         let cache = FileContentCache::with_limit(4);
         let entry = || CachedFileContent::new(CACHE_STAMP, "h".into());
         for i in 0..8 {
             cache.insert(cache_path(i), entry());
         }
-        // Twice the limit: the sweep keeps everything used since the start.
+        // Twice the limit: everything so far is the newest run, so it stays.
         cache.insert(cache_path(8), entry());
         assert_eq!(cache.len(), 9);
-        // The next sweep waits for the limit past the survivors, then drops
-        // what went unused in between.
+        // The next eviction waits for the limit past the survivors, then
+        // drops the older run.
         for i in 9..12 {
             cache.insert(cache_path(i), entry());
         }
