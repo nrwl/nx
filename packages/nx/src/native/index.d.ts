@@ -1141,15 +1141,6 @@ export interface TaskSandboxConfiguration {
    * pattern to a directory instead of leading with `**`.
    */
   ignoredWrites?: Array<string>
-  /**
-   * Whether a recorded IO snapshot backfills this target's declared inputs
-   * and outputs. Defaults to true. When false, the task hashes from its
-   * declared filesets and caches its declared outputs, even though its IO is
-   * still recorded. Reads and writes are one switch: a task whose hash came
-   * from the recording but whose cache did not would describe a state that
-   * never ran.
-   */
-  backfill?: boolean
 }
 
 export declare const enum TaskStatus {

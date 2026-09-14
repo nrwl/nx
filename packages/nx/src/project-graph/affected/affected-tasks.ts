@@ -255,8 +255,10 @@ function topologicalOrder(taskGraph: TaskGraph): string[] {
 
   const queue = ids.filter((id) => inDegree.get(id) === 0);
   const order: string[] = [];
-  while (queue.length) {
-    const id = queue.shift()!;
+  // Read index rather than shift(), which moves every remaining element on each
+  // pop and turns the walk quadratic on a large graph.
+  for (let head = 0; head < queue.length; head++) {
+    const id = queue[head];
     order.push(id);
     for (const dependent of dependents.get(id) ?? []) {
       const next = (inDegree.get(dependent) ?? 1) - 1;
