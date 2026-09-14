@@ -270,8 +270,8 @@ describe('run-state', () => {
       );
       expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
 
-      // The completion report lists adopted steps by this marker; a string
-      // would count as adopted under a truthiness check.
+      // A string marker would count as adopted under the tally's truthiness
+      // check.
       writeFileSync(
         join(dir, 'run.json'),
         JSON.stringify(
@@ -801,8 +801,8 @@ describe('run-state', () => {
     });
 
     it('refuses a landed entry whose ownerAttempt is not a positive integer, and the field on any other kind', () => {
-      // The recovery of a dead worker's commit dedupes on it, so a value that
-      // cannot equal a step's attempt would record that commit twice.
+      // Recovery dedupes on it, so a value no attempt can equal would record
+      // the commit twice.
       const dir = join(root, 'run-1');
       mkdirSync(dir, { recursive: true });
       const sha = 'abc0'.repeat(10);
@@ -821,7 +821,7 @@ describe('run-state', () => {
 
         expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
       }
-      // Absent stays valid: entries an older nx wrote carry none.
+      // Legacy entries omit ownerAttempt.
       writeFileSync(
         join(dir, 'run.json'),
         JSON.stringify(

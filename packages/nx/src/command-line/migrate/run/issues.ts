@@ -24,8 +24,7 @@ import {
 export { issueFingerprint };
 import { splitMigrationId, unresolvedFailureDetail } from './state-machine';
 
-// Leaves a minted summary room for the attempt count and the failure
-// whatever the migration id's length.
+// Reserves summary space for the attempt count and the failure.
 const MAX_UNRESOLVED_ID_CHARS = 200;
 
 const ISSUES_DIR_NAME = 'issues';
@@ -351,14 +350,12 @@ export interface IssueApplication {
 }
 
 /**
- * Mints the run issue that carries a given-up step's last failure to the
- * completion report. Unscoped and deferred, so nothing claims it; the
- * migration id in the summary distinguishes identical failures from
- * different migrations. An agent report that already carries the exact
- * text is taken over rather than merged into: the fingerprint is derived
- * from the summary, so the ledger cannot hold both, and a merge would keep
- * the report's scope and let a later step claim and resolve the failure
- * record. Same locking contract as {@link applyReportedIssues}.
+ * Mints the run issue carrying a given-up step's last failure to the completion
+ * report: unscoped and deferred, so no later step claims it, with the migration
+ * id in the summary so identical failures stay apart. A report with the same
+ * text is taken over, not merged: the fingerprint is derived from the summary,
+ * so the ledger cannot hold both, and a merge would keep the report's scope.
+ * Same locking contract as {@link applyReportedIssues}.
  */
 export function mintUnresolvedIssue(
   state: MigrateRunState,
@@ -1202,8 +1199,7 @@ const NEW_ISSUE_ARCHIVE_KEYS = [
   'detail',
 ] as const;
 
-// An overlong id keeps a digest of the whole, so two ids sharing a visible
-// prefix still mint distinct issues.
+// Hashes the full id so ids sharing a visible prefix stay distinct.
 function abbreviatedMigrationId(migrationId: string): string {
   if (migrationId.length <= MAX_UNRESOLVED_ID_CHARS) return migrationId;
   const digest = createHash('sha256')

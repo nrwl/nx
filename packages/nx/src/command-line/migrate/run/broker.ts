@@ -46,14 +46,9 @@ export const BROKER_ENV_VAR = 'NX_MIGRATE_BROKER';
 const BROKER_DIR_NAME = 'broker';
 const CHILD_POLL_INTERVAL_MS = 250;
 
-// The seam a request comes from. A seam runs once per attempt, so the seam
-// names the request: a repeat of the same operation (a refold after a crash,
-// the adopt of a worker that died mid-commit) reads the first answer instead
-// of landing twice. Commits share one seam: a worker's, the fold's and a
-// died step's adopt are the same operation on the same tree, and the worker
-// may have landed it before dying. Once the ledger records that commit, or a
-// failure recorded none, an adopt or give-up commit is a new operation over
-// what the tree holds now, so it asks under its own action.
+// Repeated requests reuse the first answer. A died step's adopt shares the
+// worker's commit request until that commit is recorded; later adopts and a
+// failed step's actions ask under their own request id.
 export type BrokerRequestKind =
   | 'commit'
   // A worker's install: after its generator, or a retry's from the baseline.
@@ -63,9 +58,8 @@ export type BrokerRequestKind =
   // The install a skip or a non-commit adopt owes for the tree it keeps.
   | 'action-install';
 
-// Names the seam only. Whether to install or commit is the parent's own
-// policy, so a request carries nothing that would widen it; the action only
-// tells a post-failure commit apart from the worker's and names it.
+// The parent owns install and commit policy; commitAs only tells a post-failure
+// commit apart from the worker's and names it.
 export interface BrokerRequest {
   kind: BrokerRequestKind;
   stepId: string;
@@ -106,9 +100,6 @@ export class BrokerStaleRequestError extends Error {}
  */
 export class BrokerUnavailableError extends Error {}
 
-// The statuses a step has at each seam: a worker mid-run, a fold of a
-// handed-back prompt, a skipped failure, an adopted failure or death, or a
-// failure or death given up on with its partial tree committed.
 const SEAM_STATUSES: Record<
   BrokerRequestKind,
   ReadonlySet<MigrateStepStatus>
@@ -203,11 +194,9 @@ export async function installStepTree(
 }
 
 /**
- * The parent's answer to the step's own commit request for the given attempt,
- * if it answered one. A worker that died after the parent landed its commit
- * but before recording it leaves this answer as the only record of that
- * commit; null when nothing was asked or answered, or the answer is not a
- * commit's.
+ * The worker's own commit answer for the attempt, excluding action requests.
+ * After a death before the ledger write it may be the only record of the
+ * commit. Null for an absent or non-commit answer.
  */
 export function readCachedCommitAnswer(
   dir: string,

@@ -110,8 +110,6 @@ export async function runMasterSession(
         migrationCount: state.steps.length,
         appliedCount: tally.applied + tally.adopted,
       });
-      // Exit 0 is for a run that left nothing to resolve: a migration given
-      // up on or a reported problem nobody fixed is the user's to finish.
       if (tally.unresolved.length > 0 || hasUnresolvedIssues(state)) {
         output.warn({
           title: `Migrate run ${runId} left work unresolved; exiting with code 1.`,

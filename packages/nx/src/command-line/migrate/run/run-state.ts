@@ -91,8 +91,7 @@ const MIGRATE_STEP_STATUSES = [
 ] as const;
 export type MigrateStepStatus = (typeof MIGRATE_STEP_STATUSES)[number];
 
-// 'failed' and 'died' are not terminal: both can be re-armed into a fresh
-// attempt. 'unresolved' is the given-up form of either and cannot be.
+// 'failed' and 'died' can be re-armed; 'unresolved' cannot.
 export const TERMINAL_STEP_STATUSES: ReadonlySet<MigrateStepStatus> = new Set([
   'succeeded',
   'skipped',
@@ -152,8 +151,7 @@ export interface MigrateStep {
   outcome?: MigrateStepOutcome;
   // Folded from the handoff file at reconcile time.
   promptOutcome?: MigrateStepPromptOutcome;
-  // A 'succeeded' recorded through the adopt action: the tree as it stood was
-  // accepted as the migration's result.
+  // A success accepted through the adopt action.
   adopted?: boolean;
   // The run issue minted when the step was given up on, carrying its last
   // failure to the completion report.
@@ -198,10 +196,9 @@ export interface MigrateCommitLedgerEntry {
   stepIds: string[];
   // Issues from the run's ledger whose fixes this commit carries.
   issueIds?: string[];
-  // The attempt of stepIds[0] that landed the commit. Identifies the entry
-  // when a reconcile recovers a died worker's commit from the session's
-  // cached answer, which the sha alone cannot once it failed to resolve.
-  // Absent on checkpoint and failed entries and on entries an older nx wrote.
+  // The attempt of stepIds[0] that landed the commit; recovery dedupes on it
+  // when the sha failed to resolve. Absent on checkpoint, failed and legacy
+  // entries.
   ownerAttempt?: number;
 }
 
@@ -675,17 +672,15 @@ function corruptRunStateError(filePath: string, reason: string): Error {
 }
 
 /**
- * Thrown when a run.json declares a `formatVersion` newer than this Nx
+ * Thrown for a run.json whose `formatVersion` is newer than this Nx
  * understands. Callers must not treat such a run as absent: an older Nx
  * ignoring a newer active run would start a competing run on top of it.
  *
- * Adding a member to any persisted closed set (run status, step status,
- * awaiting kind, prompt-outcome status, commit kind, issue disposition) needs a
- * `CURRENT_RUN_STATE_FORMAT_VERSION` bump once runs can outlive an Nx
- * upgrade: without it, an older Nx reading the new value rejects the run as
- * corrupt (the closed-set validation fails) instead of refusing with this
- * error's ask for a newer Nx. While the orchestrator is dark, runs are not
- * supported across Nx versions and the bump waits for its promotion.
+ * Adding a member to a persisted closed set needs a
+ * `CURRENT_RUN_STATE_FORMAT_VERSION` bump only once a released Nx can read the
+ * run, or that Nx rejects the new value as corruption instead of asking for a
+ * newer Nx. While the orchestrator is dark the sets grow at v1, and the feature
+ * goes public at v1.
  */
 export class NewerRunStateFormatError extends Error {
   constructor(message: string) {
