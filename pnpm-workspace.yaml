@@ -52,7 +52,7 @@ catalog:
   '@babel/core': '^7.29.6'
   '@clack/prompts': '^1.7.0'
   '@heroicons/react': '^2.1.4'
-  '@module-federation/enhanced': '^2.3.3'
+  '@module-federation/enhanced': '^2.9.0'
   '@playwright/test': '^1.36.0'
   '@svgr/webpack': '^8.0.1'
   '@zkochan/js-yaml': '0.0.7'
