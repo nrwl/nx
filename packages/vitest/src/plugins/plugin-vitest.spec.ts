@@ -135,6 +135,37 @@ describe('@nx/vitest', () => {
       expect(nodes).toMatchSnapshot();
     });
 
+    it('should retry the config load when require() of an ESM plugin races an in-flight import()', async () => {
+      const raceError = Object.assign(
+        new Error(
+          'Unexpected module status 0. Cannot require() ES Module /x/@vitejs/plugin-react/dist/index.js because it is not yet fully loaded.'
+        ),
+        { code: 'ERR_INTERNAL_ASSERTION' }
+      );
+      const resolveConfig = jest
+        .fn()
+        .mockRejectedValueOnce(raceError)
+        .mockResolvedValue({
+          path: 'vitest.config.ts',
+          config: {},
+          dependencies: [],
+        });
+      (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
+        resolveConfig,
+      });
+
+      const nodes = await createNodesFunction(
+        ['vitest.config.ts'],
+        { testTargetName: 'test-after-retry' },
+        context
+      );
+
+      expect(resolveConfig).toHaveBeenCalledTimes(2);
+      expect(
+        nodes[0]?.[1]?.projects?.['.']?.targets?.['test-after-retry']?.command
+      ).toMatch(/vitest/);
+    });
+
     it('should not set projectType so it does not override the type from other plugins', async () => {
       const nodes = await createNodesFunction(
         ['vitest.config.ts'],

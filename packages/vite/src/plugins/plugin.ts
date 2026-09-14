@@ -26,6 +26,7 @@ import {
 import { existsSync, readdirSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, sep } from 'node:path';
 import { loadViteDynamicImport } from '../utils/executor-utils';
+import { retryOnRequireEsmRace } from '../utils/retry-on-require-esm-race';
 import picomatch = require('picomatch');
 import type { ResolvedConfig } from 'vite';
 
@@ -204,26 +205,16 @@ async function buildViteTargets(
   } catch {
     // do nothing
   }
-  // Workaround for race condition with ESM-only Vite plugins (e.g. @vitejs/plugin-vue@6+)
-  // If vite.config.ts is compiled as CJS, then when both require('@vitejs/plugin-vue') and import('@vitejs/plugin-vue')
-  // are pending in the same process, Node will throw an error:
-  // Error [ERR_INTERNAL_ASSERTION]: Cannot require() ES Module @vitejs/plugin-vue/dist/index.js because it is not yet fully loaded.
-  // This may be caused by a race condition if the module is simultaneously dynamically import()-ed via Promise.all().
-  try {
-    const importVuePlugin = () =>
-      new Function('return import("@vitejs/plugin-vue")')();
-    await importVuePlugin();
-  } catch {
-    // Plugin not installed or not needed, ignore
-  }
   const { resolveConfig } = await loadViteDynamicImport();
-  const viteBuildConfig = await resolveConfig(
-    {
-      configFile: absoluteConfigFilePath,
-      mode: 'development',
-      root: projectRoot,
-    },
-    'build'
+  const viteBuildConfig = await retryOnRequireEsmRace(() =>
+    resolveConfig(
+      {
+        configFile: absoluteConfigFilePath,
+        mode: 'development',
+        root: projectRoot,
+      },
+      'build'
+    )
   );
 
   const metadata: ProjectConfiguration['metadata'] = {};
