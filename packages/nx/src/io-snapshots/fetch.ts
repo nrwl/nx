@@ -1,4 +1,3 @@
-import { join } from 'path';
 import type { NxJsonConfiguration } from '../config/nx-json';
 import {
   importIoSnapshots,
@@ -9,7 +8,7 @@ import {
 } from '../native';
 import { findAncestorNodeModules } from '../nx-cloud/resolution-helpers';
 import { verifyOrUpdateNxCloudClient } from '../nx-cloud/update-manager';
-import { cacheDir } from '../utils/cache-directory';
+import { getDbConnection } from '../utils/db-connection';
 import { getLatestCommitSha } from '../utils/git-utils';
 import { logger } from '../utils/logger';
 import { isNxCloudDisabled, isNxCloudUsed } from '../utils/nx-cloud-utils';
@@ -18,9 +17,6 @@ import { nxVersion } from '../utils/versions';
 import { workspaceRoot } from '../utils/workspace-root';
 
 export type { IoSnapshotResolution, IoSnapshots } from '../native';
-
-/** Shared across worktrees: `cacheDir` resolves to the main worktree. */
-export const ioSnapshotsCacheDirectory = join(cacheDir, 'io-snapshots');
 
 /** A cached bundle younger than this is served without asking Nx Cloud. */
 const DEFAULT_MAX_AGE_MS = 60 * 60 * 1000;
@@ -87,10 +83,9 @@ export function ioSnapshotOptionsFromNxJson(
   };
 }
 
-/** Where the bundle for this workspace's HEAD lands; `null` outside a git repo. */
-export function ioSnapshotBundleDirForHead(): string | null {
-  const head = getLatestCommitSha();
-  return head ? join(ioSnapshotsCacheDirectory, head) : null;
+/** The commit whose stored set applies to this checkout; `null` outside a git repo. */
+export function ioSnapshotCommitForHead(): string | null {
+  return getLatestCommitSha() || null;
 }
 
 // Reasons that indicate misconfiguration rather than an expected offline
@@ -120,12 +115,12 @@ export async function fetchIoSnapshotsForRun(
       skippedIoSnapshots('not-a-git-repo', 'Could not resolve HEAD')
     );
   }
-  const bundleDir = join(ioSnapshotsCacheDirectory, head);
-  const cached = readIoSnapshotResolution(ioSnapshotsCacheDirectory, head);
+  const db = getDbConnection();
+  const cached = readIoSnapshotResolution(db, head);
   const maxAge =
     parseMaxAge(process.env.NX_IO_SNAPSHOTS_MAX_AGE) ?? DEFAULT_MAX_AGE_MS;
   if (cached && maxAge > 0 && Date.now() - cached.fetchedAt <= maxAge) {
-    const fresh = loadIoSnapshots(bundleDir);
+    const fresh = loadIoSnapshots(db, head);
     if (fresh.status !== 'skipped') {
       return report(fresh);
     }
@@ -158,11 +153,10 @@ export async function fetchIoSnapshotsForRun(
     });
     if (result === null) {
       // Unchanged since the cached set: the bundle on disk is still current.
-      return report(loadIoSnapshots(bundleDir));
+      return report(loadIoSnapshots(db, head));
     }
     return report(
-      importIoSnapshots({
-        cacheDirectory: ioSnapshotsCacheDirectory,
+      importIoSnapshots(db, {
         requestedCommit: head,
         commits: result.commits,
         snapshotsJson: JSON.stringify(result.snapshots),
@@ -173,11 +167,7 @@ export async function fetchIoSnapshotsForRun(
   } catch (e) {
     const reason = reasonFromError(e);
     if (cached) {
-      const stale = loadIoSnapshots(
-        bundleDir,
-        'stale-offline',
-        errorMessage(e)
-      );
+      const stale = loadIoSnapshots(db, head, 'stale-offline', errorMessage(e));
       if (stale.status !== 'skipped') {
         return report(stale);
       }

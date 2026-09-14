@@ -399,7 +399,7 @@ export class DaemonClient {
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd: string,
     collectInputs?: boolean,
-    ioSnapshots?: { directory?: string }
+    ioSnapshots?: { commit?: string }
   ): Promise<Hash[]> {
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS',
@@ -408,9 +408,8 @@ export class DaemonClient {
       ...withoutTaskResults(tasks, taskGraph),
       cwd,
       collectInputs,
-      // The daemon has its own process.env, so the client decides: the fetched
-      // bundle directory (which pins the HEAD) travels with each request;
-      // absent means native hashing.
+      // The daemon has its own process.env, so the client decides: the commit
+      // of the stored set travels with each request; absent means native hashing.
       ioSnapshots,
     });
   }
@@ -422,7 +421,7 @@ export class DaemonClient {
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd: string,
     collectInputs?: boolean,
-    ioSnapshots?: { directory?: string }
+    ioSnapshots?: { commit?: string }
   ): Promise<Record<string, Hash>> {
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS_UPFRONT',

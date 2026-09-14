@@ -1,8 +1,12 @@
 import { TempFs } from '../../internal-testing-utils/temp-fs';
-import { mkdirSync, writeFileSync } from 'fs';
+import { rmSync } from 'fs';
 import { join } from 'path';
+import { tmpdir } from 'os';
 import {
+  closeDbConnection,
+  connectToNxDb,
   HashPlanner,
+  importIoSnapshots,
   ioSnapshotDeferredTaskIds,
   loadIoSnapshots,
   TaskHasher,
@@ -1701,43 +1705,43 @@ describe('task planner', () => {
       };
     }
 
+    const snapshotDbDir = join(
+      tmpdir(),
+      `nx-planner-io-snapshots-${process.pid}-${Date.now()}`
+    );
+    const snapshotDb = connectToNxDb(snapshotDbDir, 'io-snapshots');
+    afterAll(() => {
+      closeDbConnection(snapshotDb);
+      rmSync(snapshotDbDir, { recursive: true, force: true });
+    });
     let bundleCount = 0;
-    /** Writes a bundle with the given entries and loads it as the run would. */
+    /** Stores a set with the given entries and loads it as the daemon would. */
     function snapshotsFor(
       entries: Record<
         string,
         { inputs?: string[]; taskOutputs?: Record<string, string[]> }
       >
     ) {
-      const dir = join(tempFs.tempDir, 'io-snapshots', `b${bundleCount++}`);
-      mkdirSync(dir, { recursive: true });
-      writeFileSync(
-        join(dir, 'snapshots.json'),
-        JSON.stringify({
-          version: 1,
-          resolution: {
-            requestedCommit: 'c'.repeat(40),
-            commits: [],
-            sourceCommits: [],
-            digest: 'abc123',
-            fetchedAt: 1,
-            clientVersion: 'nx/test',
-            tasks: Object.keys(entries).length,
-          },
-          snapshots: Object.fromEntries(
+      const commit = `c${bundleCount++}`.padEnd(40, 'c');
+      importIoSnapshots(snapshotDb, {
+        requestedCommit: commit,
+        commits: [commit],
+        clientVersion: 'nx/test',
+        snapshotsJson: JSON.stringify(
+          Object.fromEntries(
             Object.entries(entries).map(([id, e]) => [
               id,
               {
-                commit: 'c'.repeat(40),
+                commit,
                 inputs: e.inputs ?? [],
                 taskOutputs: e.taskOutputs,
                 outputs: [],
               },
             ])
-          ),
-        })
-      );
-      return loadIoSnapshots(dir);
+          )
+        ),
+      });
+      return loadIoSnapshots(snapshotDb, commit);
     }
 
     const PARENT_NEG = '!libs/parent/**/*.spec.ts';
@@ -1815,7 +1819,7 @@ describe('task planner', () => {
           'env:NX_CLOUD_ENCRYPTION_KEY',
           'workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]',
           'AllExternalDependencies',
-          'io-snapshot:abc123',
+          expect.stringMatching(/^io-snapshot:[0-9a-f]{64}$/),
         ])
       );
       expect(plan).not.toContainEqual(
@@ -1917,7 +1921,7 @@ describe('task planner', () => {
         ['custom-hasher', 'child:build'],
         ['producer-not-in-graph', 'parent:build'],
       ]);
-      expect(report.resolution.digest).toBe('abc123');
+      expect(report.resolution.digest).toMatch(/^[0-9a-f]{64}$/);
       expect(ioSnapshotDeferredTaskIds(withProducer, taskGraph)).toEqual([]);
 
       const plain = planner.getPlans(['parent:build'], taskGraph);
@@ -1981,7 +1985,7 @@ describe('task planner', () => {
           'env:TESTENV',
           'runtime:echo runtime123',
           'files:parent:[libs/parent/generated]',
-          'io-snapshot:abc123',
+          expect.stringMatching(/^io-snapshot:[0-9a-f]{64}$/),
         ])
       );
       expect(plan).not.toContainEqual(

@@ -1,19 +1,21 @@
 import type { Mock } from 'vitest';
-import { mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { TempFs } from '../internal-testing-utils/temp-fs';
 import type { ProjectGraph } from '../config/project-graph';
 import type { TaskGraph } from '../config/task-graph';
 
 const HEAD = 'a'.repeat(40);
-let cacheRoot: string;
+let snapshotDb: ReturnType<typeof connectToNxDb>;
 
 vi.mock('../utils/git-utils', () => ({
   getLatestCommitSha: vi.fn(() => HEAD),
 }));
 vi.mock('./fetch', () => ({
-  ioSnapshotBundleDirForHead: () => join(cacheRoot, HEAD),
+  ioSnapshotCommitForHead: () => HEAD,
   isIoSnapshotFetchEnabled: vi.fn(() => true),
+}));
+vi.mock('../utils/db-connection', () => ({
+  getDbConnection: () => snapshotDb,
 }));
 vi.mock('../tasks-runner/utils', () => ({
   getExecutorForTask: vi.fn((task: { target: { target: string } }) => ({
@@ -21,6 +23,7 @@ vi.mock('../tasks-runner/utils', () => ({
   })),
 }));
 
+import { closeDbConnection, connectToNxDb, importIoSnapshots } from '../native';
 import { isIoSnapshotFetchEnabled } from './fetch';
 import { buildIoSnapshotOverrides, loadIoSnapshotsForHead } from './overrides';
 
@@ -77,25 +80,13 @@ function graph(...ids: string[]): TaskGraph {
   };
 }
 
-function writeBundle(snapshots: Record<string, unknown>, version = 1) {
-  const dir = join(cacheRoot, HEAD);
-  mkdirSync(dir, { recursive: true });
-  writeFileSync(
-    join(dir, 'snapshots.json'),
-    JSON.stringify({
-      version,
-      resolution: {
-        requestedCommit: HEAD,
-        commits: [HEAD],
-        sourceCommits: [HEAD],
-        digest: 'd1',
-        fetchedAt: 1,
-        clientVersion: 'nx/test',
-        tasks: Object.keys(snapshots).length,
-      },
-      snapshots,
-    })
-  );
+function writeBundle(snapshots: Record<string, unknown>) {
+  importIoSnapshots(snapshotDb, {
+    requestedCommit: HEAD,
+    commits: [HEAD],
+    clientVersion: 'nx/test',
+    snapshotsJson: JSON.stringify(snapshots),
+  });
 }
 
 describe('buildIoSnapshotOverrides', () => {
@@ -103,11 +94,14 @@ describe('buildIoSnapshotOverrides', () => {
 
   beforeEach(() => {
     tempFs = new TempFs('io-snapshot-overrides');
-    cacheRoot = join(tempFs.tempDir, 'io-snapshots');
+    snapshotDb = connectToNxDb(join(tempFs.tempDir, 'db'), 'io-snapshots');
     (isIoSnapshotFetchEnabled as Mock).mockReturnValue(true);
   });
 
-  afterEach(() => tempFs.cleanup());
+  afterEach(() => {
+    closeDbConnection(snapshotDb);
+    tempFs.cleanup();
+  });
 
   it('returns null when snapshots are off', () => {
     (isIoSnapshotFetchEnabled as Mock).mockReturnValue(false);
@@ -132,20 +126,6 @@ describe('buildIoSnapshotOverrides', () => {
     expect(result.diagnostics[0]).toMatchObject({ reason: 'no-bundle' });
   });
 
-  it('rejects an unknown bundle version without throwing', () => {
-    writeBundle({}, 2);
-    const result = buildIoSnapshotOverrides(
-      projectGraph,
-      graph('web:build'),
-      {}
-    );
-    expect(result.used).toEqual([]);
-    expect(result.diagnostics[0]).toMatchObject({
-      reason: 'invalid-bundle',
-      file: expect.stringContaining('snapshots.json'),
-    });
-  });
-
   it('uses flat entries, including one that read nothing', () => {
     writeBundle({
       'web:build': {
@@ -165,7 +145,7 @@ describe('buildIoSnapshotOverrides', () => {
     expect(result.diagnostics.map((d) => [d.reason, d.taskId])).toEqual([
       ['missing', 'ui:build'],
     ]);
-    expect(result.resolution.digest).toBe('d1');
+    expect(result.resolution.digest).toMatch(/^[0-9a-f]{64}$/);
   });
 
   it('flattens legacy bucketed entries and skips unknown projects', () => {
@@ -227,14 +207,13 @@ describe('buildIoSnapshotOverrides', () => {
     expect(result.diagnostics[1].producer).toBe('gone:build');
   });
 
-  it('accepts a bundle directory or a loaded handle', () => {
+  it('accepts a commit or a loaded handle', () => {
     writeBundle({ 'web:build': { commit: HEAD, inputs: [], outputs: [] } });
-    const dir = join(cacheRoot, HEAD);
     const byDir = buildIoSnapshotOverrides(
       projectGraph,
       graph('web:build'),
       {},
-      dir
+      HEAD
     );
     const byHandle = buildIoSnapshotOverrides(
       projectGraph,

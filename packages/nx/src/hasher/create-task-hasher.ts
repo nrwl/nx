@@ -24,7 +24,7 @@ export function createTaskHasher(
     return new DaemonBasedTaskHasher(
       daemonClient,
       runnerOptions,
-      ioSnapshots?.directory ? { directory: ioSnapshots.directory } : undefined
+      ioSnapshots?.commit ? { commit: ioSnapshots.commit } : undefined
     );
   } else {
     const { rustReferences } = getFileMap();

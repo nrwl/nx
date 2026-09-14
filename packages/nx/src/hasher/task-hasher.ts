@@ -172,7 +172,7 @@ export class DaemonBasedTaskHasher implements TaskHasher {
     private readonly daemonClient: DaemonClient,
     private readonly runnerOptions: any,
     // The client decides whether snapshots apply; the daemon only obeys.
-    private readonly ioSnapshots?: { directory?: string }
+    private readonly ioSnapshots?: { commit?: string }
   ) {}
 
   async hashTasks(
