@@ -1446,6 +1446,7 @@ export async function getWrappedWorkspaceNodeModulesArchitectHost(
       executorsFilePath: string;
       executorConfig: ExecutorJsonEntryConfig;
       isNgCompat: true;
+      resolvedNodeModule: string;
     } {
       const { json: packageJson, path: packageJsonPath } =
         readPluginPackageJson(
@@ -1479,7 +1480,12 @@ export async function getWrappedWorkspaceNodeModulesArchitectHost(
         return this.readExecutorsJson(packageName, executorName, [basePath]);
       }
 
-      return { executorsFilePath, executorConfig, isNgCompat: true };
+      return {
+        executorsFilePath,
+        executorConfig,
+        isNgCompat: true,
+        resolvedNodeModule: nodeModule,
+      };
     }
 
     private readExecutor(
@@ -1487,8 +1493,12 @@ export async function getWrappedWorkspaceNodeModulesArchitectHost(
       executor: string
     ): ExecutorConfig & { isNgCompat: boolean } {
       try {
-        const { executorsFilePath, executorConfig, isNgCompat } =
-          this.readExecutorsJson(nodeModule, executor);
+        const {
+          executorsFilePath,
+          executorConfig,
+          isNgCompat,
+          resolvedNodeModule,
+        } = this.readExecutorsJson(nodeModule, executor);
         const executorsDir = dirname(executorsFilePath);
         const schemaPath = resolveSchema(
           executorConfig.schema,
@@ -1501,14 +1511,16 @@ export async function getWrappedWorkspaceNodeModulesArchitectHost(
         const implementationFactory = this.getImplementationFactory<Executor>(
           executorConfig.implementation,
           executorsDir,
-          nodeModule
+          nodeModule,
+          resolvedNodeModule
         );
 
         const batchImplementationFactory = executorConfig.batchImplementation
           ? this.getImplementationFactory<TaskGraphExecutor>(
               executorConfig.batchImplementation,
               executorsDir,
-              nodeModule
+              nodeModule,
+              resolvedNodeModule
             )
           : null;
 
@@ -1516,7 +1528,8 @@ export async function getWrappedWorkspaceNodeModulesArchitectHost(
           ? this.getImplementationFactory<CustomHasher>(
               executorConfig.hasher,
               executorsDir,
-              nodeModule
+              nodeModule,
+              resolvedNodeModule
             )
           : null;
 
@@ -1537,13 +1550,15 @@ export async function getWrappedWorkspaceNodeModulesArchitectHost(
     private getImplementationFactory<T>(
       implementation: string,
       executorsDir: string,
-      packageName: string
+      packageName: string,
+      entryPackageName: string
     ): () => T {
       return getImplementationFactory(
         implementation,
         executorsDir,
         packageName,
-        this.projects
+        this.projects,
+        entryPackageName
       );
     }
   }

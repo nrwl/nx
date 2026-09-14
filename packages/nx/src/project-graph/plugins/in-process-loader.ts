@@ -99,7 +99,8 @@ export async function loadNxPluginAsync(
     name,
     shouldRegisterTSTranspiler,
     isSourcePlugin,
-    workspacePackageNames,
+    projectRoot,
+    workspacePackages,
   } = resolvedPlugin;
   let cleanupSourceGraphResolver = () => {};
 
@@ -108,7 +109,7 @@ export async function loadNxPluginAsync(
       cleanupSourceGraphResolver = registerSourceGraphResolver(
         pluginPath,
         root,
-        workspacePackageNames
+        workspacePackages.map((pkg) => pkg.name)
       );
       setCleanupSourceGraphResolver?.(cleanupSourceGraphResolver);
     }
@@ -132,9 +133,9 @@ export async function loadNxPluginAsync(
       ? e
       : withBuiltEntryResolutionHint(
           e,
-          pluginPath,
+          { path: pluginPath, projectRoot },
           root,
-          workspacePackageNames
+          workspacePackages
         );
   }
 }

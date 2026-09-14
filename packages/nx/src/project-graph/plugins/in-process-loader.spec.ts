@@ -17,7 +17,10 @@ import { handleImport } from '../../utils/handle-import';
 
 const root = '/workspace';
 const sourceEntry = '/workspace/packages/plugin/src/index.ts';
-const packageNames = ['@proj/plugin', '@proj/utils'];
+const workspacePackages = [
+  { name: '@proj/plugin', root: 'packages/plugin' },
+  { name: '@proj/utils', root: 'packages/utils' },
+];
 
 function resolved(isSourcePlugin: boolean) {
   return {
@@ -27,7 +30,8 @@ function resolved(isSourcePlugin: boolean) {
     name: '@proj/plugin',
     shouldRegisterTSTranspiler: false,
     isSourcePlugin,
-    workspacePackageNames: packageNames,
+    projectRoot: 'packages/plugin',
+    workspacePackages,
   };
 }
 
@@ -62,7 +66,7 @@ describe('loadNxPlugin source graph lifecycle', () => {
     expect(registerSourceGraphResolver).toHaveBeenCalledWith(
       sourceEntry,
       root,
-      packageNames
+      ['@proj/plugin', '@proj/utils']
     );
     expect(calls).toEqual(['register', 'load']);
     expect(resolverCleanup).not.toHaveBeenCalled();

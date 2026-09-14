@@ -363,7 +363,7 @@ describe('IsolatedPlugin', () => {
         pluginPath: '/mock/plugin/path',
         shouldRegisterTSTranspiler: true,
         isSourcePlugin: true,
-        workspacePackageNames: [],
+        workspacePackages: [],
       } as any);
       const worker = new EventEmitter() as any;
       worker.pid = 4243;
@@ -727,7 +727,8 @@ describe('IsolatedPlugin', () => {
         pluginPath: '/mock/root/packages/plugin/dist/index.js',
         shouldRegisterTSTranspiler: false,
         isSourcePlugin,
-        workspacePackageNames: ['@proj/util'],
+        projectRoot: 'packages/plugin',
+        workspacePackages: [{ name: '@proj/util', root: 'packages/util' }],
       });
       vi.spyOn(
         IsolatedPlugin.prototype as any,

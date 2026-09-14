@@ -66,13 +66,17 @@ export class ImplementationResolutionError extends Error {
  * This function is used to get the implementation factory of an executor or generator.
  * @param implementation path to the implementation
  * @param directory path to the directory
+ * @param entryPackageName the package the collection was read from after
+ * following `extends` or builder aliases; names the entry's project in load
+ * errors
  * @returns a function that returns the implementation
  */
 export function getImplementationFactory<T>(
   implementation: string,
   directory: string,
   packageName: string,
-  projects: Record<string, ProjectConfiguration>
+  projects: Record<string, ProjectConfiguration>,
+  entryPackageName = packageName
 ): () => T {
   const [implementationModulePath, implementationExportName] =
     implementation.split('#');
@@ -94,15 +98,19 @@ export function getImplementationFactory<T>(
         ? loadTsFile(modulePath)
         : requireWithTsconfigFallback(modulePath);
     } catch (e) {
-      throw isSource
-        ? e
-        : withBuiltEntryResolutionHint(
-            e,
-            modulePath,
-            workspaceRoot,
-            getWorkspacePackagesMetadata(projects)
-              .packageManagerWorkspacePackageNames
-          );
+      if (isSource) {
+        throw e;
+      }
+      const metadata = getWorkspacePackagesMetadata(projects);
+      throw withBuiltEntryResolutionHint(
+        e,
+        {
+          path: modulePath,
+          projectRoot: metadata.packageToProjectMap[entryPackageName]?.root,
+        },
+        workspaceRoot,
+        metadata.packageManagerWorkspacePackages
+      );
     }
     return implementationExportName
       ? module[implementationExportName]

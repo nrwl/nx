@@ -15,6 +15,7 @@ import {
   describeMessage,
   parseMessage,
 } from '../../../utils/consume-messages-from-socket';
+import type { WorkspacePackage } from '../../../plugins/js/utils/packages';
 import { getRootTsConfigCustomConditions } from '../../../plugins/js/utils/typescript';
 import { getNxRequirePaths } from '../../../utils/installation-directory';
 import { isSandbox } from '../../../utils/is-sandbox';
@@ -124,7 +125,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   private readonly pluginPath: string;
   private readonly shouldRegisterTSTranspiler: boolean;
   private readonly isSourcePlugin: boolean;
-  private readonly workspacePackageNames: string[];
+  private readonly workspacePackages: WorkspacePackage[];
 
   private lifecycle: PluginLifecycleManager;
   private exitHandler:
@@ -146,7 +147,8 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       pluginPath,
       shouldRegisterTSTranspiler,
       isSourcePlugin,
-      workspacePackageNames,
+      projectRoot,
+      workspacePackages,
     } = await resolveNxPlugin(moduleName, root, getNxRequirePaths(root));
 
     const instance = new IsolatedPlugin(
@@ -156,7 +158,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       pluginPath,
       shouldRegisterTSTranspiler,
       isSourcePlugin,
-      workspacePackageNames,
+      workspacePackages,
       index,
       conditions
     );
@@ -169,9 +171,9 @@ export class IsolatedPlugin implements LoadedNxPlugin {
         ? e
         : withBuiltEntryResolutionHint(
             e,
-            pluginPath,
+            { path: pluginPath, projectRoot },
             root,
-            workspacePackageNames
+            workspacePackages
           );
     }
     instance.setupHooks(loadResult);
@@ -185,7 +187,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     pluginPath: string,
     shouldRegisterTSTranspiler: boolean,
     isSourcePlugin: boolean,
-    workspacePackageNames: string[],
+    workspacePackages: WorkspacePackage[],
     public readonly index?: number,
     private readonly conditions: string[] = []
   ) {
@@ -195,7 +197,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     this.pluginPath = pluginPath;
     this.shouldRegisterTSTranspiler = shouldRegisterTSTranspiler;
     this.isSourcePlugin = isSourcePlugin;
-    this.workspacePackageNames = workspacePackageNames;
+    this.workspacePackages = workspacePackages;
   }
 
   private async spawnAndConnect(): Promise<LoadResultPayload> {
@@ -373,7 +375,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
           pluginPath: this.pluginPath,
           shouldRegisterTSTranspiler: this.shouldRegisterTSTranspiler,
           isSourcePlugin: this.isSourcePlugin,
-          workspacePackageNames: this.workspacePackageNames,
+          workspacePackageNames: this.workspacePackages.map((pkg) => pkg.name),
         },
         tx,
       });
