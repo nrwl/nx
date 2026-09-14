@@ -9,8 +9,8 @@ vi.mock('./isolation/enabled', () => ({
 vi.mock('./isolation', () => ({
   loadIsolatedNxPlugin: vi.fn(),
   useIsolatedNxPluginCapabilities: vi.fn(),
-  pluginGeneration: vi.fn(() => 0),
   disposeIsolatedPlugins: vi.fn(),
+  wantPlugins: vi.fn(),
 }));
 vi.mock('../../adapter/angular-json', () => ({
   shouldMergeAngularProjects: () => false,
@@ -63,7 +63,7 @@ describe('getPluginsSeparated', () => {
   let getPluginsSeparated: typeof import('./get-plugins').getPluginsSeparated;
   let getPluginsIfLoadedOrLoading: typeof import('./get-plugins').getPluginsIfLoadedOrLoading;
   let loadNxPlugin: Mock;
-  let disposeIsolatedPlugins: Mock;
+  let wantPlugins: Mock;
   // Resolver for each deferred specified-plugin load, keyed by plugin name.
   let pendingPluginLoads: Map<string, (plugin: unknown) => void>;
 
@@ -73,8 +73,8 @@ describe('getPluginsSeparated', () => {
     vi.resetModules();
     pendingPluginLoads = new Map();
 
-    ({ disposeIsolatedPlugins } = (await import('./isolation')) as any);
-    disposeIsolatedPlugins.mockClear();
+    ({ wantPlugins } = (await import('./isolation')) as any);
+    wantPlugins.mockClear();
 
     ({ loadNxPlugin } = await import('./in-process-loader'));
     // Unlike jest, resetModules does not re-run vi.mock factories, so the
@@ -108,37 +108,41 @@ describe('getPluginsSeparated', () => {
     resolve({ name: pluginName });
   }
 
-  it('puts the loaded plugins down when the plugin configuration changes', async () => {
+  function wantedBy(loader: string): string[][] {
+    return wantPlugins.mock.calls
+      .filter(([which]) => which === loader)
+      .map(([, plugins]) => plugins);
+  }
+
+  it('says which plugins it wants before each load of the specified set', async () => {
     const superseded = getPluginsSeparated({ plugins: ['test-a'] });
     await new Promise((resolve) => setImmediate(resolve));
-    // One sweep per load that starts, so the generation a load stamps its
-    // plugins with is its own.
-    expect(disposeIsolatedPlugins).toHaveBeenCalledTimes(1);
+    expect(wantedBy('specified')).toEqual([['test-a']]);
 
     // nx.json changes while test-a is still loading.
     const current = getPluginsSeparated({ plugins: ['test-b'] });
 
-    // The reload owns the teardown, whether or not the set it replaces had
-    // finished loading. Before this, a set still loading kept its workers,
-    // because the only thing that could stop them was a release the new load
-    // overwrote.
-    expect(disposeIsolatedPlugins).toHaveBeenCalledTimes(2);
+    // The new load is what puts down whatever the old one left, including a set
+    // whose workers were still forking. Before this, a set still loading kept
+    // its workers, because the only thing that could stop them was a release
+    // the new load overwrote.
+    expect(wantedBy('specified')).toEqual([['test-a'], ['test-b']]);
 
     finishLoading('test-a');
     finishLoading('test-b');
     await Promise.all([superseded, current]);
   });
 
-  it('does not sweep again for two concurrent callers sharing a load', async () => {
+  it('does not re-declare for two concurrent callers sharing a load', async () => {
     const first = getPluginsSeparated({ plugins: ['test-a'] });
     const second = getPluginsSeparated({ plugins: ['test-a'] });
 
     finishLoading('test-a');
     await Promise.all([first, second]);
 
-    // Same plugins, so the second caller shares the load rather than replacing
-    // it. Sweeping there would take down workers the first caller is using.
-    expect(disposeIsolatedPlugins).toHaveBeenCalledTimes(1);
+    // Same plugins, so the second caller shares the load rather than starting
+    // one, and a second declaration would be a sweep of a set in use.
+    expect(wantedBy('specified')).toEqual([['test-a']]);
   });
 
   it('does not poison the cache when an older recompute finishes after a newer one', async () => {

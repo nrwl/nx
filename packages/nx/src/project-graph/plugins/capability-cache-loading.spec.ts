@@ -33,8 +33,8 @@ vi.mock('./isolation/enabled', () => ({
 vi.mock('./isolation', () => ({
   loadIsolatedNxPlugin: vi.fn(),
   useIsolatedNxPluginCapabilities: vi.fn(),
-  pluginGeneration: vi.fn(() => 0),
   disposeIsolatedPlugins: vi.fn(),
+  wantPlugins: vi.fn(),
 }));
 
 vi.mock('./isolation/isolated-plugin', () => ({
@@ -156,7 +156,7 @@ describe('loading plugins through the capability cache', () => {
     });
     useIsolatedNxPluginCapabilities.mockReset();
     useIsolatedNxPluginCapabilities.mockImplementation(
-      (plugin: unknown, _root, _generation, _resolved, capabilities) =>
+      (plugin: unknown, _root, _resolved, capabilities) =>
         Promise.resolve({
           name: typeof plugin === 'string' ? plugin : (plugin as any).plugin,
           createNodes: capabilities.createNodesPattern
@@ -204,7 +204,6 @@ describe('loading plugins through the capability cache', () => {
     expect(useIsolatedNxPluginCapabilities).toHaveBeenCalledWith(
       'test-plugin',
       expect.any(String),
-      expect.any(Number),
       expect.objectContaining({ pluginPath: '/resolved/test-plugin' }),
       CAPABILITIES,
       0,
@@ -322,7 +321,7 @@ describe('loading plugins through the capability cache', () => {
       everythingRecorded = true;
       await getPluginsSeparated({ plugins: ['test-plugin'] });
 
-      const [, , , , , , onLoaded] =
+      const [, , , , , onLoaded] =
         useIsolatedNxPluginCapabilities.mock.calls.find(
           ([plugin]) => plugin === 'test-plugin'
         );
