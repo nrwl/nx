@@ -9,11 +9,13 @@ import {
   readFile,
   runCLI,
   runCommand,
+  runCommandAsync,
   tmpProjPath,
   uniq,
   updateJson,
 } from '@nx/e2e-utils';
 import { execSync } from 'child_process';
+import { configureModernYarn } from './utils';
 
 expect.addSnapshotSerializer({
   serialize(str: string) {
@@ -69,10 +71,15 @@ describe('nx release - independent projects', () => {
   let pkg3: string;
   let e2eRegistryUrl: string;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     newProject({
       packages: ['@nx/js'],
     });
+
+    if (getSelectedPackageManager() === 'yarn') {
+      await configureModernYarn();
+      await runCommandAsync('yarn install');
+    }
 
     pkg1 = uniq('my-pkg-1');
     runCLI(`generate @nx/workspace:npm-package ${pkg1}`);
