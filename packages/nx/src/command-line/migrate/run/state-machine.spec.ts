@@ -7,10 +7,12 @@ import type {
 import {
   applyStepEvent,
   commitResultToLedgerEntry,
+  completionSummaryLines,
   coveringLandedEntries,
   hasPendingCommitDebt,
   stepsToPendingMigrations,
   tallySteps,
+  unresolvedFailureDetail,
   type StepAction,
   type StepEvent,
 } from './state-machine';
@@ -1068,6 +1070,29 @@ describe('tallySteps', () => {
       stalled: 2,
     });
   });
+});
+
+describe('unresolvedFailureDetail', () => {
+  it.each([
+    ['an empty summary', ''],
+    ['a whitespace-only summary', ' \n\t '],
+  ])(
+    'reports the fallback for %s, in the report and the ledger alike',
+    (_case, summary) => {
+      const state = stateWithStep({
+        status: 'unresolved',
+        migrationId: '@nx/js:gen',
+        promptOutcome: { status: 'failed', summary },
+      });
+
+      expect(unresolvedFailureDetail(state.steps[0])).toBe(
+        'no failure detail was recorded'
+      );
+      expect(completionSummaryLines(state)).toContain(
+        '    - @nx/js:gen: no failure detail was recorded'
+      );
+    }
+  );
 });
 
 describe('hasPendingCommitDebt', () => {
