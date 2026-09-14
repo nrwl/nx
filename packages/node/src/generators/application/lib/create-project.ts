@@ -16,13 +16,44 @@ import {
   type MatchedTargetRef,
 } from '@nx/js/internal';
 import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
+import { hasRspackPlugin } from '../../../utils/has-rspack-plugin';
 import { NormalizedSchema } from './normalized-schema';
 import {
   getEsBuildConfig,
   getServeConfig,
   getWebpackBuildConfig,
+  getRspackBuildConfig,
   getPruneTargets,
 } from './create-targets';
+
+type BundlerSpec = {
+  executor: string;
+  createTarget: (
+    tree: Tree,
+    project: ProjectConfiguration,
+    options: NormalizedSchema
+  ) => TargetConfiguration;
+  isInferred?: (tree: Tree, options: NormalizedSchema) => boolean;
+};
+
+const BUNDLERS: Record<NormalizedSchema['bundler'], BundlerSpec> = {
+  esbuild: {
+    executor: '@nx/esbuild:esbuild',
+    createTarget: getEsBuildConfig,
+  },
+  webpack: {
+    executor: '@nx/webpack:webpack',
+    createTarget: getWebpackBuildConfig,
+    isInferred: (tree, options) =>
+      hasWebpackPlugin(tree) || options.addPlugin !== false,
+  },
+  rspack: {
+    executor: '@nx/rspack:rspack',
+    createTarget: getRspackBuildConfig,
+    isInferred: (tree, options) =>
+      hasRspackPlugin(tree) || options.addPlugin !== false,
+  },
+};
 
 export function addProject(
   tree: Tree,
@@ -43,22 +74,16 @@ export function addProject(
   const pnpmDeployInputs = tree.exists('pnpm-lock.yaml')
     ? PNPM_INSTALL_SETTINGS_INPUTS
     : [];
-  if (options.bundler === 'esbuild') {
-    addBuildTargetDefaults(tree, '@nx/esbuild:esbuild', 'build', [
+  const bundler = BUNDLERS[options.bundler];
+  // Plugin-backed bundlers infer their own build target, so an explicit one is
+  // written only when inference is unavailable. esbuild has no plugin.
+  if (bundler && !bundler.isInferred?.(tree, options)) {
+    addBuildTargetDefaults(tree, bundler.executor, 'build', [
       TS_SOLUTION_SETUP_TSCONFIG_INPUT,
       ...pnpmDeployInputs,
     ]);
-    project.targets.build = getEsBuildConfig(tree, project, options);
+    project.targets.build = bundler.createTarget(tree, project, options);
     ensurePnpmDeployInputs(tree, options, project.targets.build);
-  } else if (options.bundler === 'webpack') {
-    if (!hasWebpackPlugin(tree) && options.addPlugin === false) {
-      addBuildTargetDefaults(tree, `@nx/webpack:webpack`, 'build', [
-        TS_SOLUTION_SETUP_TSCONFIG_INPUT,
-        ...pnpmDeployInputs,
-      ]);
-      project.targets.build = getWebpackBuildConfig(tree, project, options);
-      ensurePnpmDeployInputs(tree, options, project.targets.build);
-    }
   }
   project.targets = {
     ...project.targets,
