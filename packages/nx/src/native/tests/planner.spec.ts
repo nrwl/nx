@@ -2051,7 +2051,9 @@ describe('task planner', () => {
           targets: {
             build: {
               executor: 'nx:run-commands',
-              inputs: [{ fileset: '{workspaceRoot}/**', includeIgnored: true }],
+              // A negation with nothing to filter is the native error the
+              // snapshot must not hide.
+              inputs: [{ fileset: '!{workspaceRoot}/', includeIgnored: true }],
             },
           },
         },
@@ -2074,7 +2076,7 @@ describe('task planner', () => {
       });
       expect(() =>
         planner.getPlans(['parent:build'], taskGraph, snapshots)
-      ).toThrow(/no leading directory/);
+      ).toThrow(/no positive includeIgnored fileset/);
       expect(
         planner.ioSnapshotReport(taskGraph, snapshots).diagnostics
       ).toEqual([
