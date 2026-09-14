@@ -97,10 +97,6 @@ Above these numbers Nx Cloud is faster and cheaper, below them it is faster and 
 | Linux 2-core ($0.006) | ~100 machine-minutes     | ~72 machine-minutes      |
 | Linux 8-core ($0.022) | ~31 machine-minutes      | ~23 machine-minutes      |
 
-Splitting across a matrix raises the bar, because every job pays its own cache restore.
-At 50% cached, four 2-core jobs break even around 125 machine-minutes and eight 8-core jobs just
-over 70.
-
 The more expensive the runner, the sooner the cache pays for itself, because every minute it skips
 is worth more.
 
@@ -136,7 +132,7 @@ At 70% each job bills as 13 minutes and the bill falls 15%.
 
 A larger workspace runs the same 500 pipelines a month across eight jobs on 8-core runners,
 20 minutes each, for 160 machine-minutes per run.
-That baseline is well above the 72-minute break-even, so the cache is cheaper at either share.
+That baseline is well above break-even, so the cache is cheaper at either share.
 
 | Setup                | Billed minutes | GitHub per run | Nx Cloud per run | Total per run | 500 runs  | Wall clock |
 | -------------------- | -------------- | -------------- | ---------------- | ------------- | --------- | ---------- |
