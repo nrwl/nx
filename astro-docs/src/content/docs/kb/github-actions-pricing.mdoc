@@ -33,7 +33,6 @@ Per-minute rates for
 | Linux x64, 8 core           | $0.022         |
 | Linux x64, 16 core          | $0.042         |
 | Linux arm64, 2 core         | $0.005         |
-| Windows x64, 2 core         | $0.010         |
 | macOS, 3 to 4 core          | $0.062         |
 
 GitHub rounds each job up to the next whole minute, so a pipeline made of many short jobs costs more
@@ -58,9 +57,9 @@ runners prices out like this:
 | Linux medium, 2 vCPU     | 10                 | $0.0055        | Linux x64, 2 core        | $0.006                |
 | Linux XL, 8 vCPU         | 40                 | $0.022         | Linux x64, 8 core        | $0.022                |
 
-Linux x64 agents run about 8% below the equivalent GitHub runner at 2 cores and match it at 8.
-The GitHub arm64 and Windows runners are cheaper than the matching Nx Agents classes, so price those
-workloads separately.
+Linux x64 agents cost roughly the same as the equivalent GitHub runners at 2 and 8 cores.
+GitHub arm64 runners are cheaper than the matching Nx Agents class, so price those workloads
+separately.
 These are compute rates only, and a Team plan also covers contributors, concurrent connections, and
 add-ons.
 Full rates are in the [credit pricing reference](/docs/reference/nx-cloud/credits-pricing).
