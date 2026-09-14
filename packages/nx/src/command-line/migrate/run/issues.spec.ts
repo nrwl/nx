@@ -1214,12 +1214,16 @@ describe('migrate run issues', () => {
       expect(minted.application.state.issues[0].summary.length).toBe(500);
 
       const silent = step('step-1', '@nx/js:one', 'unresolved');
-      expect(
-        mintUnresolvedIssue(stateWith([silent]), silent).application.state
-          .issues[0].summary
-      ).toBe(
-        'Migration @nx/js:one was left unresolved after 1 attempt: no failure detail was recorded'
-      );
+      const blank = step('step-1', '@nx/js:one', 'unresolved');
+      blank.promptOutcome = { status: 'failed', summary: ' \n ' };
+      for (const s of [silent, blank]) {
+        expect(
+          mintUnresolvedIssue(stateWith([s]), s).application.state.issues[0]
+            .summary
+        ).toBe(
+          'Migration @nx/js:one was left unresolved after 1 attempt: no failure detail was recorded'
+        );
+      }
     });
 
     it.each([
