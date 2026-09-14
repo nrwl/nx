@@ -1,6 +1,6 @@
 ---
 title: 'GitHub Actions Pricing and How to Cut Your CI Bill'
-description: 'GitHub Actions per-minute rates for private repositories, how Nx Cloud credits convert into those minutes, and the break-even math at 50% and 70% cache hit rates.'
+description: 'GitHub Actions per-minute rates for private repositories, and when caching cuts your CI bill. At a 70% cache hit rate a workspace can save 47% and halve its wall clock.'
 sidebar:
   label: GitHub Actions pricing
 filter: 'type:Guides'
@@ -8,6 +8,12 @@ topics:
   - 'Continuous integration'
   - 'Nx Cloud'
 ---
+
+At a 70% cache hit rate,
+[a workspace burning 160 machine-minutes of CI per run](#example-eight-job-matrix-on-8-core-runners)
+cuts its GitHub Actions bill by 47% and more than halves its wall clock.
+Savings scale with how many machine-minutes a pipeline burns today, so the larger the pipeline the
+wider the gap.
 
 GitHub Actions bills private repositories by the minute, and the bill follows total machine-minutes
 rather than how long a pipeline takes on the wall clock.
