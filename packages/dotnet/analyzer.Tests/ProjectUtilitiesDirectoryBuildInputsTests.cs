@@ -192,10 +192,11 @@ public class ProjectUtilitiesDirectoryBuildInputsTests
     }
 
     [Fact]
-    public void StopsWalkingOnceAllFileNamesFound()
+    public void ShadowedAncestorCopiesAreNotIncluded()
     {
-        // Every canonical filename exists at the project's own directory. The
-        // walker should NOT continue to ancestors and pick up shadowed copies.
+        // Every nearest-ancestor filename exists at the project's own directory.
+        // The walk still visits the ancestors (cascading names need them), but a
+        // name already found must not pick up a shadowed copy higher up.
         var index = IndexByDir(
             "apps/foo/Directory.Build.props",
             "apps/foo/Directory.Build.targets",
@@ -214,5 +215,69 @@ public class ProjectUtilitiesDirectoryBuildInputsTests
 
         Assert.All(inputs, i => Assert.StartsWith("{workspaceRoot}/apps/foo/", i));
         Assert.Equal(6, inputs.Count);
+    }
+
+    [Fact]
+    public void GlobalJson_NearestAncestorWins()
+    {
+        // The SDK resolver walks up from the invocation directory and stops at
+        // the first global.json, so a nearer one shadows the root.
+        var index = IndexByDir("global.json", "apps/global.json");
+
+        var inputs = ProjectUtilities.GetDirectoryBuildInputs(
+            projectPath: ProjectPath("apps", "foo", "foo.csproj"),
+            workspaceRoot: WorkspaceRoot,
+            filesByDir: index);
+
+        Assert.Equal(new[] { "{workspaceRoot}/apps/global.json" }, inputs);
+    }
+
+    [Fact]
+    public void NuGetConfig_EveryAncestorIsAnInput()
+    {
+        // NuGet merges every nuget.config on the walk to the root, so none of
+        // them shadows another.
+        var index = IndexByDir("nuget.config", "apps/foo/nuget.config");
+
+        var inputs = ProjectUtilities.GetDirectoryBuildInputs(
+            projectPath: ProjectPath("apps", "foo", "foo.csproj"),
+            workspaceRoot: WorkspaceRoot,
+            filesByDir: index);
+
+        Assert.Contains("{workspaceRoot}/apps/foo/nuget.config", inputs);
+        Assert.Contains("{workspaceRoot}/nuget.config", inputs);
+        Assert.Equal(2, inputs.Count);
+    }
+
+    [Fact]
+    public void NuGetConfig_KeepsTheOnDiskCasing()
+    {
+        // The match is case-insensitive, the declared input is not: on Linux
+        // `nuget.config` and `NuGet.Config` are different files.
+        var index = IndexByDir("NuGet.Config");
+
+        var inputs = ProjectUtilities.GetDirectoryBuildInputs(
+            projectPath: ProjectPath("apps", "foo", "foo.csproj"),
+            workspaceRoot: WorkspaceRoot,
+            filesByDir: index);
+
+        Assert.Equal(new[] { "{workspaceRoot}/NuGet.Config" }, inputs);
+    }
+
+    [Fact]
+    public void EditorConfig_EveryAncestorIsAnInput()
+    {
+        // .editorconfig cascades: analyzers read every file up to the one that
+        // sets root=true, and we do not parse for that marker.
+        var index = IndexByDir(".editorconfig", "apps/foo/.editorconfig");
+
+        var inputs = ProjectUtilities.GetDirectoryBuildInputs(
+            projectPath: ProjectPath("apps", "foo", "foo.csproj"),
+            workspaceRoot: WorkspaceRoot,
+            filesByDir: index);
+
+        Assert.Contains("{workspaceRoot}/apps/foo/.editorconfig", inputs);
+        Assert.Contains("{workspaceRoot}/.editorconfig", inputs);
+        Assert.Equal(2, inputs.Count);
     }
 }

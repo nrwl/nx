@@ -111,6 +111,53 @@ The plugin analyzes your MSBuild project files to determine:
 - Available build targets (build, test, clean, etc.)
 - Project outputs and configuration
 
+### What counts as an input
+
+Every cacheable target hashes the project's own files, the outputs of the projects it depends on,
+and the files MSBuild read from outside the project directory while evaluating it:
+
+- The nearest `Directory.Build.props`, `Directory.Build.targets`, `Directory.Build.rsp`,
+  `Directory.Solution.props`, `Directory.Solution.targets`, `Directory.Packages.props`, and
+  `global.json` above the project.
+- Every `nuget.config` and `.editorconfig` between the project and the workspace root, since NuGet
+  and the analyzers read all of them.
+- Any other file the project imports, plus any `Compile`, `AdditionalFiles`, `EmbeddedResource`, or
+  `Content` item linked in from another directory.
+- The `NUGET_PACKAGES` environment variable, because the restore output records the packages folder
+  by absolute path.
+
+Editing any of these files updates the project graph without an `nx reset`.
+
+`restore` isn't cached and isn't part of the task chain.
+Run it once before `build`.
+The files it writes to the top level of `obj` are excluded from the outputs of `build`, `publish`,
+and `pack`, so a cache hit doesn't replace your restore.
+
+### Test results
+
+`dotnet test` writes nothing to disk on its own.
+Results appear only when a file logger or a coverage collector is configured, and they land in `TestResults` inside the project directory unless you say otherwise.
+To send them somewhere else and let Nx cache them, pass `results-directory` through target options together with the logger.
+The `test` target declares `{projectRoot}/{options.results-directory}` as an output.
+The value is relative to the project directory, the same way `dotnet test` reads the flag:
+
+```json
+// nx.json
+{
+  "targetDefaults": {
+    "test": [
+      {
+        "filter": { "plugin": "@nx/dotnet" },
+        "options": {
+          "args": ["...", "--logger", "trx"],
+          "results-directory": "../../dist/test-reports/{projectRoot}"
+        }
+      }
+    ]
+  }
+}
+```
+
 ## View inferred tasks
 
 To view inferred tasks for a project, open the [project details view](/docs/features/explore-graph#explore-projects-in-your-workspace) in Nx Console or run `nx show project my-project` in the command line.
