@@ -272,15 +272,18 @@ describe('Nx Commands', () => {
           runCLI(`build ${app}`);
         });
 
-        it('should render target info', () => {
-          const output = normalizeOutput(
-            runCLI(`show target ${app}:build`, { verbose: false })
-          );
-          // pnpm adds workspace configuration and version inputs to the target.
-          expect(output).toMatchSnapshot(
-            getSelectedPackageManager() === 'pnpm' ? 'pnpm' : 'npm-and-yarn'
-          );
-        });
+        for (const variant of ['pnpm', 'npm-and-yarn']) {
+          const selectedVariant =
+            getSelectedPackageManager() === 'pnpm' ? 'pnpm' : 'npm-and-yarn';
+          // Register the other variant as skipped so Jest retains its snapshot.
+          const test = variant === selectedVariant ? it : it.skip;
+          test(`should render target info: ${variant}`, () => {
+            const output = normalizeOutput(
+              runCLI(`show target ${app}:build`, { verbose: false })
+            );
+            expect(output).toMatchSnapshot();
+          });
+        }
 
         it('should render output paths', () => {
           const output = normalizeOutput(
