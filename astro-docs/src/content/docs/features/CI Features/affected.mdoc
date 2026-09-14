@@ -258,7 +258,50 @@ NX_HEAD=origin/main
 
 **The recommended approach is to set the base SHA to the latest successful commit** on the `main` branch. This ensures that all changes since the last successful CI run are accounted for.
 
-See our guides to get the [last successful CI run for your CI provider](/docs/kb/setup-ci#get-the-commit-of-the-last-successful-build).
+{% tabs syncKey="ci-provider" %}
+{% tabitem label="GitHub" %}
+The [`nrwl/nx-set-shas`](https://github.com/nrwl/nx-set-shas) action uses the GitHub API to find the last successful workflow run on `main` and sets `NX_BASE` and `NX_HEAD`, so `nx affected` needs no extra flags.
+
+```yaml
+// .github/workflows/ci.yml
+steps:
+  - uses: actions/checkout@v7
+    with:
+      fetch-depth: 0
+      filter: tree:0
+  - run: npm ci
+  - uses: nrwl/nx-set-shas@v5
+  - run: npx nx affected -t lint test build
+```
+
+`fetch-depth: 0` is required. Without the full Git history, there is no base commit to compare against.
+{% /tabitem %}
+{% tabitem label="CircleCI" %}
+The `nx/set-shas` command from the [Nx Orb](https://github.com/nrwl/nx-orb) finds the last successful pipeline on `main` and sets `NX_BASE` and `NX_HEAD`, so `nx affected` needs no extra flags.
+
+```yaml
+// .circleci/config.yml
+version: 2.1
+
+orbs:
+  nx: nrwl/nx@1.7.0
+
+jobs:
+  main:
+    docker:
+      - image: cimg/node:lts-browsers
+    steps:
+      - checkout
+      - run: npm ci
+      - nx/set-shas:
+          main-branch-name: 'main'
+      - run: npx nx affected -t lint test build
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+For other CI providers (Jenkins, GitLab, Azure Pipelines, Bitbucket), see our guides to get the [last successful CI run for your CI provider](/docs/kb/setup-ci#get-the-commit-of-the-last-successful-build).
 
 ## Ignoring files from affected commands
 
