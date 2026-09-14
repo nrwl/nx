@@ -167,8 +167,9 @@ async function buildTemplate({ pm, preset }) {
 
     const dest = join(outputRoot, pm, preset);
     rmSync(dest, { recursive: true, force: true });
-    // dereference: false keeps pnpm's relative node_modules symlinks intact.
-    cpSync(projDir, dest, { recursive: true, dereference: false });
+    // Without verbatimSymlinks, cpSync rewrites pnpm's relative links to absolute
+    // paths into `work`, which is deleted below.
+    cpSync(projDir, dest, { recursive: true, verbatimSymlinks: true });
     console.log(`Wrote base workspace template: ${dest}`);
   } finally {
     rmSync(work, { recursive: true, force: true });
