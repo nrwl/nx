@@ -1,45 +1,52 @@
 type MatrixDataProject = {
-  name: string,
-  codeowners: string,
-  is_golden?: boolean, // true if this is a golden project, false otherwise
+  name: string;
+  codeowners: string;
+  is_golden?: boolean; // true if this is a golden project, false otherwise
+  timeout_minutes?: number;
 };
 
 type MatrixDataOS = {
-  os: string, // GH runner machine name: e.g. ubuntu-latest
-  os_name: string, // short name that will be printed in the report and on the action
-  os_timeout: number, // 60
-  package_managers: string[], // package managers to run on this OS
-  node_versions: Array<number | string>, // node versions to run on this OS
-  excluded?: string[], // projects to exclude from running on this OS
+  os: string; // GH runner machine name: e.g. ubuntu-latest
+  os_name: string; // short name that will be printed in the report and on the action
+  os_timeout: number; // 60
+  package_managers: string[]; // package managers to run on this OS
+  node_versions: Array<number | string>; // node versions to run on this OS
+  excluded?: string[]; // projects to exclude from running on this OS
 };
 
 type MatrixData = {
-  coreProjects: MatrixDataProject[],
-  projects: MatrixDataProject[],
-  lowestNodeLTS: number,
-  setup: MatrixDataOS[],
-}
+  coreProjects: MatrixDataProject[];
+  projects: MatrixDataProject[];
+  lowestNodeLTS: number;
+  setup: MatrixDataOS[];
+};
 
 export type MatrixItem = {
-  project: string,
-  codeowners: string,
-  node_version: number | string,
-  package_manager: string,
-  os: string,
-  os_name: string,
-  os_timeout: number,
-  is_golden?: boolean,
+  project: string;
+  codeowners: string;
+  node_version: number | string;
+  package_manager: string;
+  os: string;
+  os_name: string;
+  os_timeout: number;
+  is_golden?: boolean;
 };
 
 // TODO: Extract Slack groups into named groups for easier maintenance
 const matrixData: MatrixData = {
   coreProjects: [
-    { name: 'e2e-lerna-smoke-tests', codeowners: 'S04TNCVEETS', is_golden: true },
+    {
+      name: 'e2e-lerna-smoke-tests',
+      codeowners: 'S04TNCVEETS',
+      is_golden: true,
+    },
     { name: 'e2e-js', codeowners: 'S04SJ6HHP0X', is_golden: true },
     { name: 'e2e-nx-init', codeowners: 'S04SYHYKGNP', is_golden: true },
-    { name: 'e2e-nx', codeowners: 'S04SYHYKGNP' },
+    // Core runs 18 suites serially, including repeated workspace installs.
+    // Slower combinations are still making progress at the default 60m limit.
+    { name: 'e2e-nx', codeowners: 'S04SYHYKGNP', timeout_minutes: 120 },
     { name: 'e2e-release', codeowners: 'S04SYHYKGNP' },
-    { name: 'e2e-workspace-create', codeowners: 'S04SYHYKGNP' }
+    { name: 'e2e-workspace-create', codeowners: 'S04SYHYKGNP' },
   ],
   projects: [
     { name: 'e2e-cypress', codeowners: 'S04T16BTJJY', is_golden: true },
@@ -66,7 +73,7 @@ const matrixData: MatrixData = {
     { name: 'e2e-rollup', codeowners: 'S04SJ6PL98X' },
     { name: 'e2e-storybook', codeowners: 'S04SVQ8H0G5' },
     { name: 'e2e-nuxt', codeowners: 'S04SJ6PL98X' },
-    { name: 'e2e-oxlint', codeowners: 'S04SYJGKSCT' }
+    { name: 'e2e-oxlint', codeowners: 'S04SYJGKSCT' },
   ],
   // Non-core plugins only run on the lowest LTS. Plugin-level changes are
   // less Node-version-sensitive than core, so single-version coverage is enough.
@@ -81,22 +88,34 @@ const matrixData: MatrixData = {
       // See https://github.com/microsoft/playwright/issues/40724
       // Floors track @angular/cli engines (^22.22.3 || ^24.15.0): ng new refuses older.
       node_versions: ['22.22.3', '24.15.0'],
-      excluded: ['e2e-detox', 'e2e-react-native', 'e2e-expo']
+      excluded: ['e2e-detox', 'e2e-react-native', 'e2e-expo'],
     },
     // Docker is not supported on ARM-based macOS runners (no nested virtualization)
     // See: https://github.com/docker/setup-docker-action and https://github.com/douglascamata/setup-docker-macos-action
     // We may want to look into adding intel only for this docker case, at least until vm-in-vm works on latest macos
     // TODO: re-add '26.0.0' once playwright ships the yauzl fix for node 26 extract hang.
     // See https://github.com/microsoft/playwright/issues/40724
-    { os: 'macos-latest', os_name: 'MacOS', os_timeout: 90, package_managers: ['npm'], node_versions: ['24.15.0'], excluded: ['e2e-docker'] }
+    {
+      os: 'macos-latest',
+      os_name: 'MacOS',
+      os_timeout: 90,
+      package_managers: ['npm'],
+      node_versions: ['24.15.0'],
+      excluded: ['e2e-docker'],
+    },
     // TODO (Jack): Fix Windows support as gradle fails when running nx build https://staging.nx.app/runs/LgD4vxGn8w?utm_source=pull-request&utm_medium=comment
     // { os: 'windows-latest', os_name: 'WinOS', os_timeout: 180, package_managers: ['npm'], node_versions: ['24.0.0'], excluded: ['e2e-detox', 'e2e-react-native', 'e2e-expo'] }
-  ]
+  ],
 };
 
 const matrix: Array<MatrixItem> = [];
 
-function addMatrixCombo(project: MatrixDataProject, nodeVersion: number | string, pm: number, os: number) {
+function addMatrixCombo(
+  project: MatrixDataProject,
+  nodeVersion: number | string,
+  pm: number,
+  os: number
+) {
   matrix.push({
     project: project.name,
     codeowners: project.codeowners,
@@ -104,20 +123,28 @@ function addMatrixCombo(project: MatrixDataProject, nodeVersion: number | string
     package_manager: matrixData.setup[os].package_managers[pm],
     os: matrixData.setup[os].os,
     os_name: matrixData.setup[os].os_name,
-    os_timeout: matrixData.setup[os].os_timeout,
-    is_golden: !!project.is_golden // Mark golden projects as true, others as false
+    os_timeout: project.timeout_minutes ?? matrixData.setup[os].os_timeout,
+    is_golden: !!project.is_golden, // Mark golden projects as true, others as false
   });
 }
 
 function processProject(project: MatrixDataProject, nodeVersion?: number) {
   for (let os = 0; os < matrixData.setup.length; os++) {
     for (let pm = 0; pm < matrixData.setup[os].package_managers.length; pm++) {
-      if (!matrixData.setup[os].excluded || !matrixData.setup[os].excluded?.includes(project.name)) {
+      if (
+        !matrixData.setup[os].excluded ||
+        !matrixData.setup[os].excluded?.includes(project.name)
+      ) {
         if (nodeVersion) {
           addMatrixCombo(project, nodeVersion, pm, os);
         } else {
           for (let n = 0; n < matrixData.setup[os].node_versions.length; n++) {
-            addMatrixCombo(project, matrixData.setup[os].node_versions[n], pm, os);
+            addMatrixCombo(
+              project,
+              matrixData.setup[os].node_versions[n],
+              pm,
+              os
+            );
           }
         }
       }
@@ -135,7 +162,9 @@ for (let p = 0; p < matrixData.projects.length; p++) {
 }
 
 if (matrix.length > 256) {
-  throw new Error('You have exceeded the size of the matrix. GitHub allows only 256 jobs in a matrix. Found ${matrix.length} jobs.');
+  throw new Error(
+    'You have exceeded the size of the matrix. GitHub allows only 256 jobs in a matrix. Found ${matrix.length} jobs.'
+  );
 }
 
 // print result to stdout for pipeline to consume
