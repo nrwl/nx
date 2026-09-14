@@ -157,32 +157,6 @@ A 30-minute job on one 2-core runner costs about $90 a month at 500 runs, and ab
 Nx Cloud at 50% cached.
 It finishes in 18 billed minutes instead of 30, so what you are buying here is speed.
 
-## Larger runners cost more for the same work
-
-Moving the same jobs onto bigger runners is the other lever, and it does buy real time.
-GitHub prices cores close to linearly, so work that scales perfectly costs about the same on an
-8-core runner as on a 2-core one and finishes in a quarter of the time.
-Checkout and install don't scale, and those 3 fixed minutes per job tip the balance.
-Taking the four-job pipeline from the first example:
-
-| Option                            | Wall clock | Cost per run | 500 runs |
-| --------------------------------- | ---------- | ------------ | -------- |
-| Four 2-core jobs, as-is           | 30 min     | $0.72        | $360.00  |
-| Four 8-core jobs                  | 9.8 min    | $0.88        | $440.00  |
-| Four 2-core jobs, Nx Cloud at 50% | 17.5 min   | $0.729       | $364.50  |
-| Four 2-core jobs, Nx Cloud at 70% | 12.1 min   | $0.609       | $304.50  |
-| Four 8-core jobs, Nx Cloud at 70% | 6 min      | $0.913       | $456.50  |
-
-Both 8-core rows assume perfect scaling with cores, so the real premium is larger than shown.
-Bigger runners buy time, not savings.
-The cache buys both, once the pipeline clears break-even.
-Stacking them is the fastest option here and also the most expensive, because the per-job round-up
-costs proportionally more on a short cached job than on a long one.
-
-Nx runs 3 tasks at a time by default, so extra cores can sit idle.
-Raise `--parallel` when tasks are single-threaded, and keep it below the core count when they
-already use several cores each.
-
 ## How to cut your GitHub Actions bill
 
 - Count machine-minutes, not wall-clock minutes.
@@ -194,6 +168,9 @@ already use several cores each.
   it by that figure plus the task time actually run.
   That ratio is your cache share.
   If it is low, over-broad `inputs` and `namedInputs` are worth checking first.
+- Nx runs 3 tasks at a time by default, so extra cores can sit idle.
+  Raise `--parallel` when tasks are single-threaded, and keep it below the core count when they
+  already use several cores each.
 - To put a dollar figure on the "computation time saved" that Nx Cloud reports, divide the saved
   task-minutes by two for a 2-core runner running two tasks at once, then multiply by the runner
   rate.
