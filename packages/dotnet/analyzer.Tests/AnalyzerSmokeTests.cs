@@ -182,6 +182,53 @@ public class AnalyzerSmokeTests : IDisposable
     }
 
     [Fact]
+    public void TestingPlatformApplication_GetsATestTarget()
+    {
+        // Set directly rather than restoring a real MTP package, which would
+        // need the network. The property is what the analyzer reads either way.
+        var targets = Analyze(WriteProject("MyTests", """
+            <OutputType>Exe</OutputType>
+            <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
+            """));
+
+        Assert.Contains("test", targets.Keys);
+    }
+
+    [Fact]
+    public void PlainExecutable_GetsNoTestTarget()
+    {
+        var targets = Analyze(WriteProject("MyApp", "<OutputType>Exe</OutputType>"));
+
+        Assert.DoesNotContain("test", targets.Keys);
+        Assert.Contains("run", targets.Keys);
+    }
+
+    [Fact]
+    public void LibraryReferencingATestFramework_KeepsPackAndGetsNoTestTarget()
+    {
+        // A helper library referencing xunit is not runnable by `dotnet test`,
+        // and pack is gated on the project not being a test project, so a wrong
+        // answer here costs it the pack target.
+        var projectFile = WriteProject("MyHelpers", "<IsTestProject>false</IsTestProject>");
+        File.WriteAllText(projectFile, """
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFramework>net8.0</TargetFramework>
+                <IsTestProject>false</IsTestProject>
+              </PropertyGroup>
+              <ItemGroup>
+                <PackageReference Include="xunit.abstractions" Version="2.0.3" />
+              </ItemGroup>
+            </Project>
+            """);
+
+        var targets = Analyze(projectFile);
+
+        Assert.DoesNotContain("test", targets.Keys);
+        Assert.Contains("pack", targets.Keys);
+    }
+
+    [Fact]
     public void EvaluatedImportsAndLinkedFiles_AreInputsOnBuild()
     {
         Directory.CreateDirectory(Path.Combine(_workspaceRoot, "build"));

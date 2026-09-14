@@ -1,4 +1,5 @@
 using Microsoft.Build.Execution;
+using MsbuildAnalyzer.Models;
 
 namespace MsbuildAnalyzer.Utilities;
 
@@ -261,5 +262,50 @@ public static class ProjectUtilities
 
 
         return techs;
+    }
+
+    /// <summary>
+    /// The test SDK packages that mark a project before it has been restored.
+    /// Matched case-insensitively because NuGet ids are.
+    /// </summary>
+    private const string TestSdkPackage = "Microsoft.NET.Test.Sdk";
+    private const string TestingPlatformPackagePrefix = "Microsoft.Testing.";
+
+    /// <summary>
+    /// Whether the project gets a <c>test</c> target.
+    ///
+    /// The property pair is the SDK's own gate, from
+    /// <c>Microsoft.TestPlatform.ImportAfter.targets</c>:
+    /// <c>IsTestProject == 'true' OR IsTestingPlatformApplication == 'true'</c>.
+    /// A framework reference is deliberately not a signal, since a library can
+    /// reference xunit or NUnit to expose helpers without being runnable.
+    /// </summary>
+    public static bool IsTestProject(
+        EvaluatedProperties properties,
+        IEnumerable<PackageReference> packageRefs)
+    {
+        if (properties.IsTestProject || properties.IsTestingPlatformApplication)
+        {
+            return true;
+        }
+
+        // A non-true IsTestProject is the project's own answer and settles it.
+        // MSBuild leaves the property empty when nothing assigns it, so an
+        // explicit `false` is distinguishable from an absent value.
+        //
+        // IsTestingPlatformApplication is deliberately not read this way. It
+        // describes the runner kind rather than the project kind, and MSTest.Sdk
+        // evaluates it to `false` on a project it has already marked with
+        // IsTestProject=true.
+        if (properties.Get(nameof(EvaluatedProperties.IsTestProject)) is not null)
+        {
+            return false;
+        }
+
+        // Both properties arrive with a restored package, so a reference to the
+        // test SDK is the only evidence available before the first restore.
+        return packageRefs.Any(p =>
+            p.Include.Equals(TestSdkPackage, StringComparison.OrdinalIgnoreCase) ||
+            p.Include.StartsWith(TestingPlatformPackagePrefix, StringComparison.OrdinalIgnoreCase));
     }
 }

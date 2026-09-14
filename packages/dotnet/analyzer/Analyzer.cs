@@ -173,7 +173,7 @@ public static class Analyzer
                     var properties = CollectProperties(primaryNode.ProjectInstance!);
 
                     // Determine project type
-                    var isTest = IsTestProject(properties, packageRefs);
+                    var isTest = ProjectUtilities.IsTestProject(properties, packageRefs);
                     var isExe = properties.IsExecutable;
 
                     // Build targets
@@ -342,13 +342,5 @@ public static class Analyzer
         }
 
         return properties;
-    }
-
-    private static bool IsTestProject(
-        EvaluatedProperties properties,
-        List<PackageReference> packageRefs)
-    {
-        return properties.IsTestProject ||
-               packageRefs.Any(p => p.Include == "Microsoft.NET.Test.Sdk" || p.Include.StartsWith("Microsoft.Testing"));
     }
 }
