@@ -46,7 +46,13 @@ const matrixData: MatrixData = {
     // Slower combinations are still making progress at the default 60m limit.
     { name: 'e2e-nx', codeowners: 'S04SYHYKGNP', timeout_minutes: 120 },
     { name: 'e2e-release', codeowners: 'S04SYHYKGNP' },
-    { name: 'e2e-workspace-create', codeowners: 'S04SYHYKGNP' },
+    // Preset coverage repeatedly creates and installs full workspaces.
+    // Linux/npm can exceed 60m while continuing to complete passing suites.
+    {
+      name: 'e2e-workspace-create',
+      codeowners: 'S04SYHYKGNP',
+      timeout_minutes: 120,
+    },
   ],
   projects: [
     { name: 'e2e-cypress', codeowners: 'S04T16BTJJY', is_golden: true },
