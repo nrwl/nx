@@ -348,6 +348,7 @@ export class ProcessTasks {
           undefined
         );
         this.dependencies[task.id].push(dummyId);
+        this.continuousDependencies[task.id].push(dummyId);
         this.dependencies[dummyId] ??= [];
         this.continuousDependencies[dummyId] ??= [];
         const noopTask = this.createDummyTask(dummyId, task);
