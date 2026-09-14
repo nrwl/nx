@@ -299,9 +299,28 @@ jobs:
 ```
 
 {% /tabitem %}
+{% tabitem label="GitLab" %}
+GitLab has no equivalent action. Set `NX_BASE` and `NX_HEAD` from GitLab's predefined variables instead. Merge request pipelines compare against the merge request's diff base, and pushes to `main` compare against the previous commit on the branch.
+
+```yaml
+// .gitlab-ci.yml
+image: node:22
+
+CI:
+  only:
+    - main
+    - merge_requests
+  script:
+    - npm ci
+    - export NX_HEAD=$CI_COMMIT_SHA
+    - export NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
+    - npx nx affected -t lint test build
+```
+
+{% /tabitem %}
 {% /tabs %}
 
-For other CI providers (Jenkins, GitLab, Azure Pipelines, Bitbucket), see our guides to get the [last successful CI run for your CI provider](/docs/kb/setup-ci#get-the-commit-of-the-last-successful-build).
+For other CI providers (Jenkins, Azure Pipelines, Bitbucket), see our guides to get the [last successful CI run for your CI provider](/docs/kb/setup-ci#get-the-commit-of-the-last-successful-build).
 
 ## Ignoring files from affected commands
 
