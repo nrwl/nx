@@ -57,7 +57,9 @@ const LOCKFILES: [&str; 6] = [
 /// actually read. An unparsable glob keeps the native instruction (conservative).
 struct SnapshotContext<'a> {
     io: &'a SnapshotTask,
-    /// Matcher over the positive observed globs; `None` when there are none.
+    /// Observed reads that name one path outright, answered without a matcher.
+    literal: HashSet<&'a str>,
+    /// Matcher over the observed reads that are real globs; `None` when there are none.
     observed: Option<NxGlobSet>,
     /// A glob failed to parse: treat every class-mapped file as read so the
     /// native instruction is kept.
@@ -66,27 +68,36 @@ struct SnapshotContext<'a> {
 
 impl<'a> SnapshotContext<'a> {
     fn new(io: &'a SnapshotTask) -> Self {
-        let positives: Vec<&str> = io
-            .files
-            .iter()
-            .map(String::as_str)
-            .filter(|g| !g.starts_with('!'))
-            .collect();
-        if positives.is_empty() {
+        let mut literal = HashSet::new();
+        let mut patterns: Vec<&str> = Vec::new();
+        for glob in io.files.iter().map(String::as_str) {
+            if glob.starts_with('!') {
+                continue;
+            }
+            if snapshot_eligibility::is_literal_path(glob) {
+                literal.insert(glob);
+            } else {
+                patterns.push(glob);
+            }
+        }
+        if patterns.is_empty() {
             return Self {
                 io,
+                literal,
                 observed: None,
                 unparsable: false,
             };
         }
-        match NxGlobSetBuilder::new(&positives).and_then(|b| b.build()) {
+        match NxGlobSetBuilder::new(&patterns).and_then(|b| b.build()) {
             Ok(set) => Self {
                 io,
+                literal,
                 observed: Some(set),
                 unparsable: false,
             },
             Err(_) => Self {
                 io,
+                literal,
                 observed: None,
                 unparsable: true,
             },
@@ -94,10 +105,11 @@ impl<'a> SnapshotContext<'a> {
     }
 
     fn read(&self, path: &str) -> bool {
-        match &self.observed {
-            Some(set) => set.is_match(path),
-            None => self.unparsable,
-        }
+        self.literal.contains(path)
+            || match &self.observed {
+                Some(set) => set.is_match(path),
+                None => self.unparsable,
+            }
     }
 
     fn root_tsconfig_read(&self) -> bool {
@@ -121,6 +133,8 @@ pub struct HashPlanner {
     /// still be traversed for each task. Initialized only on that fallback.
     local_inputs_memo: OnceLock<OnceCache<LocalDependencyInputs>>,
     acyclic_dependency_projects: OnceLock<hashbrown::HashSet<String>>,
+    /// Project name by root, for attributing observed reads to their owner.
+    project_by_root: OnceLock<HashMap<String, String>>,
     /// Interner backing every plan this planner produces.
     instruction_pool: Arc<InstructionPool>,
 }
@@ -243,8 +257,22 @@ impl HashPlanner {
             subtree_memo: OnceCache::new(),
             local_inputs_memo: OnceLock::new(),
             acyclic_dependency_projects: OnceLock::new(),
+            project_by_root: OnceLock::new(),
             instruction_pool: Arc::new(InstructionPool::new()),
         }
+    }
+
+    fn project_by_root(&self) -> &HashMap<String, String> {
+        self.project_by_root.get_or_init(|| {
+            self.project_graph
+                .nodes
+                .iter()
+                .filter(|(_, project)| project.root != ".")
+                .map(|(name, project)| {
+                    (project.root.trim_end_matches('/').to_string(), name.clone())
+                })
+                .collect()
+        })
     }
 
     pub fn get_plans_internal(
@@ -257,10 +285,16 @@ impl HashPlanner {
     ) -> anyhow::Result<HashPlans> {
         let function_start = std::time::Instant::now();
         let snapshot_tasks = snapshots.map(|snapshots| {
-            snapshot_eligibility::resolve(
+            snapshot_eligibility::resolve_scoped(
                 snapshots,
                 &task_graph,
-                &self.eligibility_inputs(&task_graph, custom_hasher_task_ids, opted_out_task_ids),
+                &self.eligibility_inputs(
+                    &task_graph,
+                    custom_hasher_task_ids,
+                    opted_out_task_ids,
+                    Some(&task_ids),
+                ),
+                Some(&task_ids),
             )
             .tasks
         });
@@ -486,6 +520,7 @@ impl HashPlanner {
                     &task_graph,
                     custom_hasher_task_ids.as_deref().unwrap_or(&[]),
                     opted_out_task_ids.as_deref().unwrap_or(&[]),
+                    None,
                 ),
             )
             .report(),
@@ -519,11 +554,14 @@ impl HashPlanner {
     }
 
     /// What the eligibility walk needs from this planner's graph and nx.json.
+    /// `scope` limits the declared-glob validation to those tasks; eligibility
+    /// is per task, so a call planning one task pays for one.
     fn eligibility_inputs(
         &self,
         task_graph: &TaskGraph,
         custom_hasher_task_ids: &[String],
         opted_out_task_ids: &[String],
+        scope: Option<&[&str]>,
     ) -> EligibilityInputs {
         let mut inputs = EligibilityInputs {
             custom_hasher: custom_hasher_task_ids.iter().cloned().collect(),
@@ -536,7 +574,14 @@ impl HashPlanner {
                 .collect(),
             ..Default::default()
         };
-        for (task_id, task) in &task_graph.tasks {
+        let scoped: Vec<(&String, &Task)> = match scope {
+            Some(ids) => ids
+                .iter()
+                .filter_map(|id| task_graph.tasks.get_key_value(*id))
+                .collect(),
+            None => task_graph.tasks.iter().collect(),
+        };
+        for (task_id, task) in scoped {
             if !inputs.opted_out.contains(task_id) && self.declared_files_invalid(task) {
                 inputs.invalid_files_input.insert(task_id.clone());
             }
@@ -588,16 +633,9 @@ impl HashPlanner {
             })
             .collect();
 
-        // Longest project root first, so nested projects win. A project rooted
-        // at "." cannot be prefix-matched, so it is the fallback owner instead.
-        let mut roots: Vec<(&str, &str)> = self
-            .project_graph
-            .nodes
-            .iter()
-            .filter(|(_, project)| project.root != ".")
-            .map(|(name, project)| (name.as_str(), project.root.as_str()))
-            .collect();
-        roots.sort_by(|a, b| b.1.len().cmp(&a.1.len()).then(a.0.cmp(b.0)));
+        // The deepest ancestor directory that is a project root wins. A project
+        // rooted at "." cannot be prefix-matched, so it is the fallback owner.
+        let project_by_root = self.project_by_root();
         let unowned = self
             .project_graph
             .nodes
@@ -606,15 +644,14 @@ impl HashPlanner {
             .map(|(name, _)| name.as_str())
             .unwrap_or(self_project);
         let owner = |glob: &str| -> &str {
-            let path = glob.strip_prefix('!').unwrap_or(glob);
-            roots
-                .iter()
-                .find(|(_, root)| {
-                    path.strip_prefix(*root)
-                        .is_some_and(|rest| rest.starts_with('/'))
-                })
-                .map(|(name, _)| *name)
-                .unwrap_or(unowned)
+            let mut dir = glob.strip_prefix('!').unwrap_or(glob);
+            while let Some(cut) = dir.rfind('/') {
+                dir = &dir[..cut];
+                if let Some(name) = project_by_root.get(dir) {
+                    return name.as_str();
+                }
+            }
+            unowned
         };
 
         // Bundles collapse sibling files into brace groups; class mapping needs
@@ -1460,7 +1497,7 @@ fn deferred_tasks(
 /// The directory a glob reads from, spelled the way expansion reads it. A
 /// glob with no literal prefix, or one that climbs out of the workspace,
 /// reads as the workspace root, so a doubtful case errs toward deferring.
-fn walk_root(glob: &str) -> String {
+pub(crate) fn walk_root(glob: &str) -> String {
     // Legacy default outputs are spelled `./dist` and `dist/.`.
     let glob = glob.strip_prefix("./").unwrap_or(glob);
     let glob = glob.strip_suffix("/.").unwrap_or(glob);
