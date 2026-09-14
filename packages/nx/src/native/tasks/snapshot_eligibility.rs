@@ -235,11 +235,13 @@ pub(crate) fn resolve_scoped(
             continue;
         }
         // A path that names one file never walks, so only real globs can be
-        // root-anchored.
+        // root-anchored. A declared fileset may walk from the workspace root;
+        // an observed one is withheld, as hashing that walk per task is not
+        // what a trace is for.
         if let Some(glob) = files
             .iter()
             .filter(|g| !g.starts_with('!') && !is_literal_path(g))
-            .find(|g| validate_files_globs(std::slice::from_ref(*g)).is_err())
+            .find(|g| validate_files_globs(std::slice::from_ref(*g)).is_err() || walks_from_root(g))
         {
             let mut diagnostic = IoSnapshotDiagnostic::task("root-anchored-glob", task_id);
             diagnostic.glob = Some(glob.clone());
@@ -341,6 +343,13 @@ pub fn io_snapshot_outputs(
 /// A glob that would resolve outside the workspace: absolute, drive-lettered,
 /// or carrying a `..` segment. The bundle is server-supplied, so this is the
 /// line that keeps a hostile snapshot from turning hashing into a read oracle.
+/// A glob with no literal leading directory reads from the workspace root.
+fn walks_from_root(glob: &str) -> bool {
+    expand_literal_braces(glob)
+        .iter()
+        .any(|expanded| walk_root(expanded).is_empty())
+}
+
 /// Whether an observed read names exactly one path, with no glob syntax.
 pub(crate) fn is_literal_path(glob: &str) -> bool {
     !glob.bytes().any(|b| matches!(b, b'*' | b'?' | b'[' | b'{'))
