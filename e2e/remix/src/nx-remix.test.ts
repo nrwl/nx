@@ -211,7 +211,11 @@ describe('Remix E2E Tests', () => {
     let proj: string;
 
     beforeAll(() => {
-      proj = newProject({ packages: ['@nx/remix'] });
+      proj = newProject({
+        packages: ['@nx/remix'],
+        // The standalone preset requires the same TS 5.x line as Remix apps.
+        typescriptVersion: '~5.9.2',
+      });
     });
 
     afterAll(() => {
