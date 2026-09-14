@@ -231,8 +231,9 @@ impl InstructionPool {
 pub struct HashPlans {
     pub pool: Arc<InstructionPool>,
     pub plans: HashMap<String, Vec<u32>>,
-    /// Tasks the up-front batch leaves out: a disk-backed fileset of theirs
-    /// reaches into what a task they depend on declares as an output.
+    /// Tasks the up-front batch leaves out: the directory a disk-backed
+    /// fileset of theirs reads from contains, or sits inside, an output a
+    /// task they depend on declares.
     pub deferred: std::collections::HashSet<String>,
 }
 

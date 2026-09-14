@@ -216,10 +216,10 @@ export declare class TaskHasher {
   hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, perTaskEnvs: Record<string, Record<string, string>>, cwd: string, collectTaskInputs?: boolean | undefined | null): Record<string, HashDetails>
   /**
    * Like `hash_plans`, but only for the plans that hold no output of another
-   * task and no disk-backed fileset reaching into an upstream task's outputs
-   * (`HashPlans::deferred`). The rest are left out and hash once those tasks
-   * have run; their ids are absent from the result and need no entry in
-   * `per_task_envs`.
+   * task and no disk-backed fileset whose directory contains, or sits inside,
+   * an upstream task's output (`HashPlans::deferred`). The rest are left out
+   * and hash once those tasks have run; their ids are absent from the result
+   * and need no entry in `per_task_envs`.
    */
   hashPlansUpfront(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, perTaskEnvs: Record<string, Record<string, string>>, cwd: string, collectTaskInputs?: boolean | undefined | null): Record<string, HashDetails>
   /**
