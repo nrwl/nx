@@ -210,7 +210,9 @@ describe('Workspace Tests', () => {
 
     // Move/remove tests below exercise project.json and tsconfig path mappings,
     // not the TS solution layout inferred for a bare package-based workspace.
-    runCLI('generate @nx/js:init --addTsConfigBase --skipFormat');
+    runCLI('generate @nx/js:init --addTsConfigBase --skipFormat', {
+      env: { NX_ADD_PLUGINS: 'false' },
+    });
   });
 
   afterAll(() => cleanupProject());
