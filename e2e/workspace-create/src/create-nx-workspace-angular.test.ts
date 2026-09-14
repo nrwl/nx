@@ -11,6 +11,22 @@ import {
 
 describe('create-nx-workspace --preset=angular', () => {
   const packageManager = getSelectedPackageManager() || 'pnpm';
+  let strictDepBuilds: string | undefined;
+
+  beforeAll(() => {
+    // The harness turns pnpm's build-script check off for every e2e, so a
+    // generator that misses a decision would not fail the creation.
+    strictDepBuilds = process.env.pnpm_config_strict_dep_builds;
+    process.env.pnpm_config_strict_dep_builds = 'true';
+  });
+
+  afterAll(() => {
+    if (strictDepBuilds === undefined) {
+      delete process.env.pnpm_config_strict_dep_builds;
+    } else {
+      process.env.pnpm_config_strict_dep_builds = strictDepBuilds;
+    }
+  });
 
   afterEach(() => cleanupProject());
 
@@ -84,32 +100,36 @@ describe('create-nx-workspace --preset=angular', () => {
   it('should be able to create an angular workspace using rspack', () => {
     const wsName = uniq('angular');
     const appName = uniq('app');
-    // The harness turns pnpm's build-script check off for the whole suite. Put
-    // it back so an install script with no decision fails the creation.
-    const strictDepBuilds = process.env.pnpm_config_strict_dep_builds;
-    process.env.pnpm_config_strict_dep_builds = 'true';
+    runCreateWorkspace(wsName, {
+      preset: 'angular-monorepo',
+      style: 'css',
+      appName,
+      packageManager,
+      standaloneApi: false,
+      routing: true,
+      unitTestRunner: 'jest',
+      e2eTestRunner: 'none',
+      bundler: 'rspack',
+      ssr: false,
+    });
+    expectCodeIsFormatted();
+  });
 
-    try {
-      runCreateWorkspace(wsName, {
-        preset: 'angular-monorepo',
-        style: 'css',
-        appName,
-        packageManager,
-        standaloneApi: false,
-        routing: true,
-        unitTestRunner: 'jest',
-        e2eTestRunner: 'none',
-        bundler: 'rspack',
-        ssr: false,
-      });
-    } finally {
-      if (strictDepBuilds === undefined) {
-        delete process.env.pnpm_config_strict_dep_builds;
-      } else {
-        process.env.pnpm_config_strict_dep_builds = strictDepBuilds;
-      }
-    }
-
+  it('should be able to create an angular workspace using esbuild', () => {
+    const wsName = uniq('angular');
+    const appName = uniq('app');
+    runCreateWorkspace(wsName, {
+      preset: 'angular-monorepo',
+      style: 'css',
+      appName,
+      packageManager,
+      standaloneApi: false,
+      routing: true,
+      unitTestRunner: 'jest',
+      e2eTestRunner: 'none',
+      bundler: 'esbuild',
+      ssr: false,
+    });
     expectCodeIsFormatted();
   });
 
