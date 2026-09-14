@@ -134,6 +134,48 @@ describe('HashPlanInspector', () => {
     tempFs.reset();
   });
 
+  describe('includeIgnored filesets', () => {
+    it('expands the group on disk, including gitignored files', async () => {
+      await tempFs.createFiles({
+        '.gitignore': 'dist\n',
+        'apps/test-app/dist/out.js': 'built',
+        'apps/test-app/dist/out.js.map': 'map',
+      });
+      const graph: ProjectGraph = JSON.parse(JSON.stringify(projectGraph));
+      graph.nodes['test-app'].data.targets.build.inputs = [
+        { fileset: '{projectRoot}/dist/**/*.js', includeIgnored: true },
+        { fileset: '!{projectRoot}/dist/**/*.map', includeIgnored: true },
+      ];
+      const diskInspector = new HashPlanInspector(graph, tempFs.tempDir);
+      await diskInspector.init();
+
+      const inputs = diskInspector.inspectTaskInputs({
+        project: 'test-app',
+        target: 'build',
+      })['test-app:build'];
+
+      expect(inputs.files).toContain('apps/test-app/dist/out.js');
+      expect(inputs.files).not.toContain('apps/test-app/dist/out.js.map');
+    });
+
+    it('reports a declared exact path that is missing', async () => {
+      const graph: ProjectGraph = JSON.parse(JSON.stringify(projectGraph));
+      graph.nodes['test-app'].data.targets.build.inputs = [
+        { fileset: '{projectRoot}/dist/absent.js', includeIgnored: true },
+      ];
+      const diskInspector = new HashPlanInspector(graph, tempFs.tempDir);
+      await diskInspector.init();
+
+      const inputs = diskInspector.inspectTaskInputs({
+        project: 'test-app',
+        target: 'build',
+      })['test-app:build'];
+
+      // It hashes as a sentinel, so it is an input even before it exists.
+      expect(inputs.files).toContain('apps/test-app/dist/absent.js');
+    });
+  });
+
   describe('inspectHashPlan', () => {
     beforeAll(async () => {
       await inspector.init();
@@ -475,5 +517,124 @@ describe('HashPlanInspector', () => {
         inspector.inspectHashPlan(['test-app'], ['non-existent-target']);
       }).toThrow();
     });
+  });
+});
+
+describe('HashPlanInspector with continuous dependencies', () => {
+  // e2e depends on web:serve, which depends on api:serve. There is no project
+  // dependency between the three, so only the task graph links them.
+  let tempFs: TempFs;
+  let inspector: HashPlanInspector;
+
+  const serveTarget = (dependsOn?: { projects: string; target: string }[]) => ({
+    executor: 'nx:run-commands',
+    continuous: true,
+    inputs: ['production', '^production'],
+    ...(dependsOn ? { dependsOn } : {}),
+  });
+  const e2eTarget = {
+    executor: 'nx:run-commands',
+    inputs: ['{projectRoot}/**/*'],
+    dependsOn: [{ projects: 'web', target: 'serve' }],
+  };
+
+  beforeAll(async () => {
+    tempFs = new TempFs('hash-plan-inspector-continuous');
+    await tempFs.createFiles({
+      'package.json': JSON.stringify({
+        name: 'test-workspace',
+        devDependencies: { nx: '0.0.0' },
+      }),
+      'nx.json': JSON.stringify({
+        extends: 'nx/presets/npm.json',
+        namedInputs: {
+          default: ['{projectRoot}/**/*'],
+          production: ['default', '!{projectRoot}/**/*.spec.ts'],
+        },
+      }),
+      'apps/e2e/project.json': JSON.stringify({
+        name: 'e2e',
+        targets: { e2e: e2eTarget },
+      }),
+      'apps/e2e/src/app.spec.ts': '',
+      'apps/web/project.json': JSON.stringify({
+        name: 'web',
+        targets: {
+          serve: serveTarget([{ projects: 'api', target: 'serve' }]),
+        },
+      }),
+      'apps/web/src/main.ts': '',
+      'apps/web/src/main.spec.ts': '',
+      'apps/api/project.json': JSON.stringify({
+        name: 'api',
+        targets: { serve: serveTarget() },
+      }),
+      'apps/api/src/server.ts': '',
+    });
+
+    const builder = new ProjectGraphBuilder();
+    builder.addNode({
+      name: 'api',
+      type: 'app',
+      data: { root: 'apps/api', targets: { serve: serveTarget() } },
+    });
+    builder.addNode({
+      name: 'web',
+      type: 'app',
+      data: {
+        root: 'apps/web',
+        targets: {
+          serve: serveTarget([{ projects: 'api', target: 'serve' }]),
+        },
+      },
+    });
+    builder.addNode({
+      name: 'e2e',
+      type: 'app',
+      data: { root: 'apps/e2e', targets: { e2e: e2eTarget } },
+    });
+
+    inspector = new HashPlanInspector(
+      builder.getUpdatedProjectGraph(),
+      tempFs.tempDir
+    );
+    await inspector.init();
+  });
+
+  afterAll(() => {
+    tempFs.reset();
+  });
+
+  it('reports the files of every server in the chain as inputs of the served task', () => {
+    const plan = inspector.inspectTask({ project: 'e2e', target: 'e2e' })[
+      'e2e:e2e'
+    ];
+
+    expect(plan).toContain('file:apps/e2e/src/app.spec.ts');
+    expect(plan).toContain('file:apps/web/src/main.ts');
+    expect(plan).toContain('file:apps/api/src/server.ts');
+
+    const { files } = inspector.inspectTaskInputs({
+      project: 'e2e',
+      target: 'e2e',
+    })['e2e:e2e'];
+    expect(files).toEqual(
+      expect.arrayContaining([
+        'apps/e2e/src/app.spec.ts',
+        'apps/web/src/main.ts',
+        'apps/api/src/server.ts',
+      ])
+    );
+  });
+
+  it("honors each server's own declared inputs", () => {
+    const plan = inspector.inspectTask({ project: 'e2e', target: 'e2e' })[
+      'e2e:e2e'
+    ];
+
+    // web:serve declares `production`, which excludes its spec files; e2e's
+    // own `{projectRoot}/**/*` still brings in e2e's.
+    expect(plan).not.toContain('file:apps/web/src/main.spec.ts');
+    expect(plan).toContain('file:apps/e2e/src/app.spec.ts');
   });
 });

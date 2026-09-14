@@ -1,4 +1,7 @@
-import { TouchedProjectLocator } from '../../../../project-graph/affected/affected-project-graph-models';
+import {
+  DependencyChanges,
+  TouchedProjectLocator,
+} from '../../../../project-graph/affected/affected-project-graph-models';
 import {
   FileChange,
   isLockFileChange,
@@ -12,6 +15,7 @@ import {
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
 } from '../../../../config/project-graph';
+import { NxJsonConfiguration } from '../../../../config/nx-json';
 import { hashArray } from '../../../../hasher/file-hasher';
 import { output } from '../../../../utils/output';
 import { PackageJson } from '../../../../utils/package-json';
@@ -30,19 +34,18 @@ export const getTouchedProjectsFromLockFile: TouchedProjectLocator<
   projectGraph
 ): string[] => {
   const { projectsAffectedByDependencyUpdates } = readJsPluginConfig(nxJson);
-
-  const changedLockFile = fileChanges.find((f) =>
-    AUTO_AFFECTED_LOCK_FILES.includes(
-      f.file as (typeof AUTO_AFFECTED_LOCK_FILES)[number]
-    )
-  );
+  const changedLockFile = findChangedLockFile(fileChanges);
+  const allProjectNames = Object.values(projectGraphNodes).map((p) => p.name);
 
   if (projectsAffectedByDependencyUpdates === 'auto') {
-    return getAutoAffected(
-      changedLockFile,
-      projectGraphNodes,
-      projectGraph,
-      packageJson
+    if (!changedLockFile) {
+      return [];
+    }
+    // External node names, which the reverse walk in filterAffected carries
+    // back to the projects depending on them.
+    return (
+      changedExternalNodes(changedLockFile, projectGraph, packageJson) ??
+      allProjectNames
     );
   } else if (Array.isArray(projectsAffectedByDependencyUpdates)) {
     return findMatchingProjects(
@@ -51,39 +54,73 @@ export const getTouchedProjectsFromLockFile: TouchedProjectLocator<
     );
   }
 
-  if (changedLockFile) {
-    return Object.values(projectGraphNodes).map((p) => p.name);
-  }
-  return [];
+  return changedLockFile ? allProjectNames : [];
 };
 
 /**
- * In auto mode, parse the lock file at the base and head revisions
- * using Nx's existing lock file parsers, then diff the resulting
- * external-node maps to determine which packages actually changed.
- *
- * Returns external node names (e.g. "npm:lodash@4.17.21") so the
- * graph reversal in filterAffected can walk back to workspace projects.
+ * The same change as task selection consumes it: the packages that moved,
+ * which a plan names as `External`, rather than the projects depending on them.
  */
-function getAutoAffected(
-  changedLockFile: FileChange<WholeFileChange | LockFileChange> | undefined,
+export function lockFileDependencyChanges(
+  fileChanges: FileChange<WholeFileChange | LockFileChange>[],
   projectGraphNodes: Record<string, ProjectGraphProjectNode>,
-  projectGraph: ProjectGraph,
-  packageJson: PackageJson | undefined
-): string[] {
-  const allProjectNames = Object.values(projectGraphNodes).map((p) => p.name);
-
+  nxJson: NxJsonConfiguration,
+  packageJson: PackageJson | undefined,
+  projectGraph: ProjectGraph
+): DependencyChanges {
+  const none: DependencyChanges = {
+    externals: [],
+    allExternals: false,
+    projects: [],
+  };
+  const changedLockFile = findChangedLockFile(fileChanges);
   if (!changedLockFile) {
-    return [];
+    return none;
   }
 
-  const changes = changedLockFile.getChanges();
+  const { projectsAffectedByDependencyUpdates } = readJsPluginConfig(nxJson);
+  if (Array.isArray(projectsAffectedByDependencyUpdates)) {
+    return {
+      ...none,
+      projects: findMatchingProjects(
+        projectsAffectedByDependencyUpdates,
+        projectGraphNodes
+      ),
+    };
+  }
+  const externals =
+    projectsAffectedByDependencyUpdates === 'auto'
+      ? changedExternalNodes(changedLockFile, projectGraph, packageJson)
+      : null;
+  return externals ? { ...none, externals } : { ...none, allExternals: true };
+}
 
-  // A WholeFileChange means we were unable to read both revisions of
-  // the lock file (e.g. missing base revision, git error). Fall back
-  // to marking all projects affected.
+function findChangedLockFile(
+  fileChanges: FileChange<WholeFileChange | LockFileChange>[]
+): FileChange<WholeFileChange | LockFileChange> | undefined {
+  return fileChanges.find((f) =>
+    AUTO_AFFECTED_LOCK_FILES.includes(
+      f.file as (typeof AUTO_AFFECTED_LOCK_FILES)[number]
+    )
+  );
+}
+
+/**
+ * Diffs the lock file's base and head revisions with the parsers the project
+ * graph is built from, and names the external nodes whose package changed.
+ *
+ * Null when the diff cannot be pinned to packages: a WholeFileChange (a
+ * revision could not be read), a parse failure, or a changed package with no
+ * external node in the head graph.
+ */
+function changedExternalNodes(
+  changedLockFile: FileChange<WholeFileChange | LockFileChange>,
+  projectGraph: ProjectGraph,
+  packageJson: PackageJson | undefined
+): string[] | null {
+  const changes = changedLockFile.getChanges();
   if (!changes.every(isLockFileChange)) {
-    return allProjectNames;
+    return null;
   }
 
   const changedPackageNames = getChangedPackageNames(
@@ -91,29 +128,19 @@ function getAutoAffected(
     changes,
     packageJson
   );
-
   if (changedPackageNames === null) {
-    return allProjectNames;
+    return null;
   }
-
   if (changedPackageNames.size === 0) {
     return [];
   }
 
-  // Look up the changed packages in the project graph's external nodes
-  // and return the external node names. The graph reversal in
-  // filterAffected walks from these nodes to workspace projects.
   const { touchedNodeNames, missingPackageNames } =
     findExternalNodesByPackageName(
       changedPackageNames,
       projectGraph.externalNodes ?? {}
     );
-
-  if (missingPackageNames.size > 0) {
-    return allProjectNames;
-  }
-
-  return touchedNodeNames;
+  return missingPackageNames.size > 0 ? null : touchedNodeNames;
 }
 
 /**

@@ -47,7 +47,11 @@ import {
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { allFileData } from '../../utils/all-file-data';
 import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
-import { HashPlanner, transferProjectGraph } from '../../native';
+import {
+  expandFilesInput,
+  HashPlanner,
+  transferProjectGraph,
+} from '../../native';
 import { transformProjectGraphForRust } from '../../native/transform-objects';
 import { getAffectedGraphNodes } from '../affected/affected';
 import { readFileMapCache } from '../../project-graph/nx-deps-cache';
@@ -1342,6 +1346,31 @@ export async function getExpandedTaskInputs(
   return result;
 }
 
+// A brace group ({a,b}.json) carries commas, so a glob list joined with
+// commas can only be split at brace depth zero.
+function splitGlobGroup(group: string): string[] {
+  const globs: string[] = [];
+  let current = '';
+  let depth = 0;
+  for (const char of group) {
+    if (char === '{') {
+      depth++;
+    } else if (char === '}' && depth > 0) {
+      depth--;
+    }
+    if (char === ',' && depth === 0) {
+      globs.push(current);
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  globs.push(current);
+  // An unbalanced `{` would swallow the rest of the list; a plain split is
+  // the better guess then.
+  return depth === 0 ? globs : group.split(',');
+}
+
 function expandInputs(
   inputs: string[],
   project: ProjectGraphProjectNode,
@@ -1354,11 +1383,21 @@ function expandInputs(
   const projectRootInputs: string[] = [];
   const externalInputs: string[] = [];
   const otherInputs: string[] = [];
+  const filesInputs: string[][] = [];
   inputs.forEach((input) => {
     // grouped workspace inputs look like workspace:[pattern,otherPattern]
     if (input.startsWith('workspace:[')) {
-      const inputs = input.substring(11, input.length - 1).split(',');
-      workspaceRootInputs.push(...inputs);
+      workspaceRootInputs.push(
+        ...splitGlobGroup(input.substring(11, input.length - 1))
+      );
+      return;
+    }
+    // Disk-backed groups look like files:{project}:[glob,!otherGlob]. They
+    // expand on disk, so they must be matched before the `:` catch-all below
+    // classifies them as external dependencies.
+    const diskBacked = /^files:.*?:\[(.*)\]$/.exec(input);
+    if (diskBacked) {
+      filesInputs.push(splitGlobGroup(diskBacked[1]));
       return;
     }
     const maybeProjectName = input.split(':')[0];
@@ -1384,6 +1423,9 @@ function expandInputs(
   const workspaceRootsExpanded: string[] = getExpandedWorkspaceRoots(
     workspaceRootInputs,
     allWorkspaceFiles
+  );
+  const filesExpanded = filesInputs.flatMap((globs) =>
+    expandFilesInput(workspaceRoot, globs)
   );
 
   const otherInputsExpanded = otherInputs.map((input) => {
@@ -1427,7 +1469,11 @@ function expandInputs(
     }, {});
 
   return {
-    general: [...workspaceRootsExpanded, ...otherInputsExpanded],
+    general: [
+      ...workspaceRootsExpanded,
+      ...filesExpanded,
+      ...otherInputsExpanded,
+    ],
     ...projectRootsExpanded,
     external: externalInputs,
   };

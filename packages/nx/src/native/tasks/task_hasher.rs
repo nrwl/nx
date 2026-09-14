@@ -16,11 +16,12 @@ use crate::native::{
 };
 use crate::native::{
     tasks::hashers::{
-        CachedTaskOutput, JsonHashResult, ProjectFileIndicesCache, ProjectFileSetCache,
-        WorkspaceFileIndicesCache, WorkspaceFileSetCache, collect_project_file_paths_cached,
-        collect_workspace_file_paths_cached, hash_all_externals, hash_external, hash_json_files,
-        hash_project_config, hash_project_files_cached, hash_task_output,
-        hash_tsconfig_selectively, hash_workspace_files_cached,
+        CachedTaskOutput, FileContentCache, FilesExpansionCache, JsonHashResult,
+        ProjectFileIndicesCache, ProjectFileSetCache, WorkspaceFileIndicesCache,
+        WorkspaceFileSetCache, collect_project_file_paths_cached,
+        collect_workspace_file_paths_cached, expand_files_cached, hash_all_externals,
+        hash_external, hash_files, hash_json_files, hash_project_config, hash_project_files_cached,
+        hash_task_output, hash_tsconfig_selectively, hash_workspace_files_cached, index_file_map,
     },
     types::FileData,
     workspace::types::ProjectFiles,
@@ -278,6 +279,11 @@ pub struct TaskHasher {
     project_file_indices_cache: ProjectFileIndicesCache,
     // Fold over all externals; identical for every task, so computed once.
     all_externals_hash: OnceCell<String>,
+    // `includeIgnored` filesets: content hashes revalidated by (mtime, size),
+    // plus a path index over the file map so tracked files skip the disk.
+    // Both are built only once a plan carries a disk-backed group.
+    file_content_cache: FileContentCache,
+    workspace_file_index: OnceCell<HashMap<String, u32>>,
 }
 #[napi]
 impl TaskHasher {
@@ -312,7 +318,22 @@ impl TaskHasher {
             workspace_file_indices_cache: WorkspaceFileIndicesCache::new(),
             project_file_indices_cache: ProjectFileIndicesCache::new(),
             all_externals_hash: OnceCell::new(),
+            file_content_cache: FileContentCache::new(),
+            workspace_file_index: OnceCell::new(),
         }
+    }
+
+    fn workspace_file_known(&self, path: &str) -> bool {
+        self.workspace_file_index
+            .get_or_init(|| index_file_map(&self.all_workspace_files))
+            .contains_key(path)
+    }
+
+    fn workspace_file_hash(&self, path: &str) -> Option<String> {
+        self.workspace_file_index
+            .get_or_init(|| index_file_map(&self.all_workspace_files))
+            .get(path)
+            .map(|&i| self.all_workspace_files[i as usize].hash.clone())
     }
 
     /// Hash each task's instructions using the env map keyed by `task.id`.
@@ -342,9 +363,109 @@ impl TaskHasher {
         })
     }
 
+    /// Like `hash_plans`, but only for the plans that hold no output of another
+    /// task and no fileset read from disk (which may be what another task
+    /// writes). The rest are left out and hash once those tasks have run; their
+    /// ids are absent from the result and need no entry in `per_task_envs`.
+    #[napi(ts_return_type = "Record<string, HashDetails>")]
+    pub fn hash_plans_upfront(
+        &self,
+        #[napi(ts_arg_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
+        hash_plans: &External<HashPlans>,
+        per_task_envs: HashMap<String, HashMap<String, String>>,
+        cwd: String,
+        collect_task_inputs: Option<bool>,
+    ) -> anyhow::Result<TaskHashes> {
+        let function_start = std::time::Instant::now();
+        let pool = &hash_plans.pool;
+        let plans: HashMap<String, Vec<u32>> = hash_plans
+            .plans
+            .iter()
+            .filter(|(_, ids)| {
+                !ids.iter().any(|id| {
+                    matches!(
+                        *pool.get(*id),
+                        HashInstruction::TaskOutput(_, _)
+                            | HashInstruction::ProjectFileSet(_, _, true)
+                    )
+                })
+            })
+            .map(|(task_id, ids)| (task_id.clone(), ids.clone()))
+            .collect();
+        let partition_duration = function_start.elapsed();
+        let (upfront_count, total_count) = (plans.len(), hash_plans.plans.len());
+        trace!(
+            "hash_plans_upfront: {} of {} plans hash up front, {} wait for other tasks' outputs (partition: {:?})",
+            upfront_count,
+            total_count,
+            total_count - upfront_count,
+            partition_duration
+        );
+        for task_id in plans.keys() {
+            if !per_task_envs.contains_key(task_id) {
+                anyhow::bail!("hash_plans_upfront: missing env entry for task {}", task_id);
+            }
+        }
+        let upfront = HashPlans {
+            pool: pool.clone(),
+            plans,
+        };
+        let hashes = self.hash_plans_impl(&upfront, cwd, collect_task_inputs, |task_id| {
+            per_task_envs
+                .get(task_id)
+                .expect("per-task env presence verified above")
+        })?;
+        debug!(
+            "hash_plans_upfront COMPLETED in {:?} - hashed {} of {} plans up front, {} deferred (partition: {:?}, hashing: {:?})",
+            function_start.elapsed(),
+            upfront_count,
+            total_count,
+            total_count - upfront_count,
+            partition_duration,
+            function_start.elapsed() - partition_duration
+        );
+        Ok(hashes)
+    }
+
+    /// Hashes `task_ids` from plans built earlier, so a task the up-front batch
+    /// deferred needs no second planning pass. Ids without a plan are absent
+    /// from the result.
+    #[napi(ts_return_type = "Record<string, HashDetails>")]
+    pub fn hash_plans_for(
+        &self,
+        #[napi(ts_arg_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
+        hash_plans: &External<HashPlans>,
+        task_ids: Vec<String>,
+        per_task_envs: HashMap<String, HashMap<String, String>>,
+        cwd: String,
+        collect_task_inputs: Option<bool>,
+    ) -> anyhow::Result<TaskHashes> {
+        let plans: HashMap<String, Vec<u32>> = task_ids
+            .into_iter()
+            .filter_map(|task_id| {
+                let ids = hash_plans.plans.get(&task_id)?.clone();
+                Some((task_id, ids))
+            })
+            .collect();
+        for task_id in plans.keys() {
+            if !per_task_envs.contains_key(task_id) {
+                anyhow::bail!("hash_plans_for: missing env entry for task {}", task_id);
+            }
+        }
+        let subset = HashPlans {
+            pool: hash_plans.pool.clone(),
+            plans,
+        };
+        self.hash_plans_impl(&subset, cwd, collect_task_inputs, |task_id| {
+            per_task_envs
+                .get(task_id)
+                .expect("per-task env presence verified above")
+        })
+    }
+
     fn hash_plans_impl<'a, F>(
         &self,
-        hash_plans: &External<HashPlans>,
+        hash_plans: &HashPlans,
         cwd: String,
         collect_task_inputs: Option<bool>,
         resolve_env: F,
@@ -357,6 +478,7 @@ impl TaskHasher {
         let task_output_cache = DashMap::new();
         let runtime_cache: DashMap<String, String> = DashMap::new();
         let json_file_set_cache: DashMap<String, JsonHashResult> = DashMap::new();
+        let files_expansion_cache = FilesExpansionCache::new();
         // Deduplicates env-dependent hash values (Environment, Runtime)
         // across tasks; see intern_value. Other instruction types share
         // values through per-id slots instead.
@@ -409,7 +531,7 @@ impl TaskHasher {
                 HashInstruction::Environment(_) | HashInstruction::Runtime(_) => None,
                 HashInstruction::WorkspaceFileSet(_)
                 | HashInstruction::Cwd(_)
-                | HashInstruction::ProjectFileSet(_, _)
+                | HashInstruction::ProjectFileSet(_, _, _)
                 | HashInstruction::ProjectConfiguration(_)
                 | HashInstruction::TsConfiguration(_)
                 | HashInstruction::TaskOutput(_, _)
@@ -480,6 +602,7 @@ impl TaskHasher {
                                         project_file_set_cache: &self.project_file_set_cache,
                                         workspace_file_set_cache: &self.workspace_file_set_cache,
                                         json_file_set_cache: &json_file_set_cache,
+                                        files_expansion_cache: &files_expansion_cache,
                                         cwd: cwd_path,
                                         collect_inputs: should_collect_inputs,
                                     },
@@ -549,6 +672,7 @@ impl TaskHasher {
             project_file_set_cache,
             workspace_file_set_cache,
             json_file_set_cache,
+            files_expansion_cache,
             cwd,
             collect_inputs,
         }: HashInstructionArgs,
@@ -606,7 +730,38 @@ impl TaskHasher {
                 trace!(parent: &span, "hash_cwd: {:?}", now.elapsed());
                 (hashed_cwd, empty)
             }
-            HashInstruction::ProjectFileSet(project_name, file_sets) => {
+            HashInstruction::ProjectFileSet(_, globs, true) => {
+                let workspace_root = Path::new(&self.workspace_root);
+                let expansion = expand_files_cached(
+                    workspace_root,
+                    &instruction.to_string(),
+                    globs,
+                    files_expansion_cache,
+                    &|path| self.workspace_file_known(path),
+                )?;
+                let hashed = hash_files(
+                    workspace_root,
+                    &expansion,
+                    |path| self.workspace_file_hash(path),
+                    &self.file_content_cache,
+                );
+                trace!(parent: &span, "hash_files: {:?}", now.elapsed());
+                let inputs = if collect_inputs {
+                    HashInputsBuilder {
+                        files: expansion
+                            .files
+                            .iter()
+                            .chain(expansion.missing.iter())
+                            .cloned()
+                            .collect(),
+                        ..Default::default()
+                    }
+                } else {
+                    empty
+                };
+                (hashed, inputs)
+            }
+            HashInstruction::ProjectFileSet(project_name, file_sets, false) => {
                 let hashed = hash_project_files_cached(
                     project_name,
                     file_sets,
@@ -790,6 +945,7 @@ struct HashInstructionArgs<'a> {
     project_file_set_cache: &'a ProjectFileSetCache,
     workspace_file_set_cache: &'a WorkspaceFileSetCache,
     json_file_set_cache: &'a DashMap<String, JsonHashResult>,
+    files_expansion_cache: &'a FilesExpansionCache,
     cwd: &'a std::path::Path,
     collect_inputs: bool,
 }

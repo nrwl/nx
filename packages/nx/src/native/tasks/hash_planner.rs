@@ -1,5 +1,5 @@
 use crate::native::tasks::{
-    dep_outputs::get_dep_output,
+    dep_outputs::{collect_continuous_dependencies, get_dep_output},
     types::{CwdMode, HashInstruction, HashPlans, InstructionPool, JsonFileSetInput, TaskGraph},
 };
 use crate::native::types::{Input, NxJson};
@@ -12,7 +12,7 @@ use rayon::prelude::*;
 use std::collections::HashMap;
 use tracing::trace;
 
-use crate::native::tasks::hashers::OnceCache;
+use crate::native::tasks::hashers::{OnceCache, validate_files_globs};
 use crate::native::tasks::inputs::{
     expand_single_project_inputs, get_inputs, get_inputs_for_dependency, get_named_inputs,
 };
@@ -140,6 +140,35 @@ impl<'a> VisitedTracker<'a> {
     }
 }
 
+/// Narrows an existing set of plans to `task_ids`, sharing the instruction pool
+/// rather than re-planning.
+///
+/// Returns `None` when any requested task has no plan, which is the caller's
+/// signal that the plans were built for a different task set and cannot answer
+/// for this one. A plan depends on the task graph only through the dependent
+/// output instructions, so a subset is sound exactly when every kept task's
+/// dependency closure survived intact.
+#[napi(ts_return_type = "ExternalObject<Record<string, Array<HashInstruction>>> | null")]
+pub fn subset_hash_plans(
+    #[napi(ts_arg_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
+    plans: &External<HashPlans>,
+    task_ids: Vec<String>,
+) -> Option<External<HashPlans>> {
+    subset_plans(plans, &task_ids).map(External::new)
+}
+
+pub(crate) fn subset_plans(plans: &HashPlans, task_ids: &[String]) -> Option<HashPlans> {
+    let subset: HashMap<String, Vec<u32>> = task_ids
+        .iter()
+        .map(|id| Some((id.clone(), plans.plans.get(id)?.clone())))
+        .collect::<Option<_>>()?;
+
+    Some(HashPlans {
+        pool: Arc::clone(&plans.pool),
+        plans: subset,
+    })
+}
+
 #[napi]
 impl HashPlanner {
     #[napi(constructor)]
@@ -220,6 +249,33 @@ impl HashPlanner {
                     external_deps_mapped,
                     &mut VisitedTracker::new(task.target.project.as_str()),
                 )?);
+
+                // A continuous dependency serves this task from its own process, so
+                // its declared inputs and externals are hashed here, and its own
+                // servers' in turn. When it reads its builds' outputs, those land in
+                // this plan too, which holds the task back from the up-front batch.
+                for dep_task in collect_continuous_dependencies(&task_graph, id) {
+                    let dep_inputs = get_inputs(dep_task, &self.project_graph, &self.nx_json)?;
+                    ids.extend(
+                        self.target_input(
+                            &dep_task.target.project,
+                            &dep_task.target.target,
+                            &dep_inputs.self_inputs,
+                            external_deps_mapped,
+                        )?
+                        .unwrap_or_default()
+                        .into_iter()
+                        .map(|instruction| pool.intern(instruction)),
+                    );
+                    ids.extend(self.self_and_deps_inputs(
+                        &dep_task.target.project,
+                        dep_task,
+                        &dep_inputs,
+                        &task_graph,
+                        external_deps_mapped,
+                        &mut VisitedTracker::new(dep_task.target.project.as_str()),
+                    )?);
+                }
 
                 ids.sort_unstable();
                 ids.dedup();
@@ -418,7 +474,7 @@ impl HashPlanner {
         let project_deps = &self.project_graph.dependencies[project_name];
 
         let mut ids: Vec<u32> = self
-            .gather_self_inputs(project_name, &inputs.self_inputs)
+            .gather_self_inputs(project_name, &inputs.self_inputs)?
             .into_iter()
             .chain(self.gather_dependency_outputs(task, task_graph, &inputs.deps_outputs)?)
             .chain(self.gather_project_inputs(&inputs.project_inputs)?)
@@ -516,8 +572,13 @@ impl HashPlanner {
         let cache_key = match input {
             Input::Inputs { input, .. } => prefixed_cache_key(dep, 'i', input),
             // Only `dependencies: true` filesets reach here, since that is what
-            // get_inputs_for_dependency puts in deps_inputs.
-            Input::FileSet { fileset, .. } => prefixed_cache_key(dep, 'f', fileset),
+            // get_inputs_for_dependency puts in deps_inputs. The kind keeps the
+            // two backing stores apart: the same glob is a different subtree.
+            Input::FileSet {
+                fileset,
+                include_ignored,
+                ..
+            } => prefixed_cache_key(dep, fileset_kind(*include_ignored), fileset),
             // Other input kinds never reach dependencies (get_inputs_for_dependency
             // returns None for them), so they share one empty entry per project.
             _ => prefixed_cache_key(dep, 'n', ""),
@@ -548,7 +609,7 @@ impl HashPlanner {
             !dep_inputs.deps_outputs.is_empty() || dep_inputs.deps_inputs.len() != 1;
         let pool = &self.instruction_pool;
         let mut ids: InstructionIdSet = self
-            .gather_self_inputs(dep, &dep_inputs.self_inputs)
+            .gather_self_inputs(dep, &dep_inputs.self_inputs)?
             .into_iter()
             .map(|instruction| pool.intern(instruction))
             .collect();
@@ -620,14 +681,16 @@ impl HashPlanner {
                         Input::FileSet {
                             fileset: before,
                             dependencies: true,
+                            include_ignored: before_ignored,
                         },
                         [
                             Input::FileSet {
                                 fileset: after,
                                 dependencies: true,
+                                include_ignored: after_ignored,
                             },
                         ],
-                    ) => before == after,
+                    ) => before == after && before_ignored == after_ignored,
                     _ => false,
                 };
                 let needs_legacy = !same_propagation
@@ -636,7 +699,7 @@ impl HashPlanner {
                 let ids = if needs_legacy {
                     vec![]
                 } else {
-                    self.gather_self_inputs(dep, &inputs.self_inputs)
+                    self.gather_self_inputs(dep, &inputs.self_inputs)?
                         .into_iter()
                         .map(|instruction| self.instruction_pool.intern(instruction))
                         .collect()
@@ -776,11 +839,28 @@ impl HashPlanner {
         &self,
         project_name: &str,
         self_inputs: &[Input],
-    ) -> Vec<HashInstruction> {
+    ) -> anyhow::Result<Vec<HashInstruction>> {
+        // `includeIgnored` filesets hash from disk as one aggregated group, so
+        // a negation filters across entries; the rest read the file map.
+        let ignored_file_sets: Vec<&str> = self_inputs
+            .iter()
+            .filter_map(|input| match input {
+                Input::FileSet {
+                    fileset,
+                    include_ignored: true,
+                    ..
+                } => Some(*fileset),
+                _ => None,
+            })
+            .collect();
         let (project_file_sets, workspace_file_sets): (Vec<&str>, Vec<&str>) = self_inputs
             .iter()
             .filter_map(|input| match input {
-                Input::FileSet { fileset, .. } => Some(*fileset),
+                Input::FileSet {
+                    fileset,
+                    include_ignored: false,
+                    ..
+                } => Some(*fileset),
                 _ => None,
             })
             .partition(|file_set| {
@@ -802,6 +882,7 @@ impl HashPlanner {
                         .iter()
                         .map(|f| resolve_tokens(f, project_root, project_name))
                         .collect(),
+                    false,
                 ),
                 HashInstruction::ProjectConfiguration(project_name.to_string()),
                 HashInstruction::TsConfiguration(project_name.to_string()),
@@ -816,6 +897,26 @@ impl HashPlanner {
                     .iter()
                     .map(|f| resolve_tokens(f, project_root, project_name))
                     .collect(),
+            )]
+        };
+        let disk_backed_inputs = if ignored_file_sets.is_empty() {
+            vec![]
+        } else {
+            if ignored_file_sets.iter().all(|f| f.starts_with('!')) {
+                anyhow::bail!(
+                    "The includeIgnored fileset \"{}\" applied to \"{project_name}\" is a negation with no positive includeIgnored fileset to filter. A negation only filters positive includeIgnored filesets in the same group: declare one for the same project, and note a fileset with `dependencies: true` is hashed on its own for each dependency, so a negation there has nothing to filter.",
+                    ignored_file_sets[0]
+                );
+            }
+            let resolved: Vec<String> = ignored_file_sets
+                .iter()
+                .map(|f| resolve_files_glob(f, project_root, project_name))
+                .collect();
+            validate_files_globs(&resolved)?;
+            vec![HashInstruction::ProjectFileSet(
+                project_name.to_string(),
+                resolved,
+                true,
             )]
         };
         let runtime_and_env_inputs = self_inputs.iter().filter_map(|i| match i {
@@ -848,11 +949,12 @@ impl HashPlanner {
             _ => None,
         });
 
-        project_inputs
+        Ok(project_inputs
             .into_iter()
             .chain(workspace_file_set_inputs)
+            .chain(disk_backed_inputs)
             .chain(runtime_and_env_inputs)
-            .collect()
+            .collect())
     }
 
     fn gather_dependency_outputs(
@@ -906,7 +1008,7 @@ impl HashPlanner {
                     }],
                     &named_inputs,
                 )?;
-                result.extend(self.gather_self_inputs(project, &expanded_input))
+                result.extend(self.gather_self_inputs(project, &expanded_input)?)
             }
         }
         Ok(result)
@@ -919,6 +1021,11 @@ fn prefixed_cache_key(dep: &str, kind: char, rest: &str) -> String {
     format!("{}:{dep}{kind}{rest}", dep.len())
 }
 
+/// `f` reads the file map, `d` reads the disk (`includeIgnored`).
+fn fileset_kind(include_ignored: bool) -> char {
+    if include_ignored { 'd' } else { 'f' }
+}
+
 /// Unsupported kinds are uncached.
 fn local_input_cache_key(dep: &str, input: &Input) -> Option<String> {
     match input {
@@ -926,7 +1033,12 @@ fn local_input_cache_key(dep: &str, input: &Input) -> Option<String> {
         Input::FileSet {
             fileset,
             dependencies: true,
-        } => Some(prefixed_cache_key(dep, 'f', fileset)),
+            include_ignored,
+        } => Some(prefixed_cache_key(
+            dep,
+            fileset_kind(*include_ignored),
+            fileset,
+        )),
         _ => None,
     }
 }
@@ -946,6 +1058,19 @@ fn resolve_tokens(fileset: &str, project_root: &str, project_name: &str) -> Stri
         resolved.replace("{projectName}", project_name)
     } else {
         resolved
+    }
+}
+
+/// Disk-backed globs are workspace-relative once resolved: `{workspaceRoot}/`
+/// is a no-op prefix here, unlike map-backed filesets where the hasher strips it.
+fn resolve_files_glob(glob: &str, project_root: &str, project_name: &str) -> String {
+    let resolved = resolve_tokens(glob, project_root, project_name);
+    match resolved.strip_prefix("!{workspaceRoot}/") {
+        Some(rest) => format!("!{rest}"),
+        None => resolved
+            .strip_prefix("{workspaceRoot}/")
+            .map(str::to_string)
+            .unwrap_or(resolved),
     }
 }
 
@@ -1163,7 +1288,7 @@ mod tests {
             match planner.instruction_pool.get(*id).value() {
                 HashInstruction::ProjectConfiguration(name)
                 | HashInstruction::TsConfiguration(name)
-                | HashInstruction::ProjectFileSet(name, _) => assert_eq!(name, "cycle-a"),
+                | HashInstruction::ProjectFileSet(name, _, _) => assert_eq!(name, "cycle-a"),
                 other => panic!("Unexpected local instruction: {other:?}"),
             }
         }
@@ -1193,7 +1318,27 @@ mod tests {
                 "a",
                 &Input::FileSet {
                     fileset: "{projectRoot}/file",
-                    dependencies: true
+                    dependencies: true,
+                    include_ignored: false,
+                }
+            )
+        );
+        // The two backing stores are different subtrees for the same glob.
+        assert_ne!(
+            local_input_cache_key(
+                "a",
+                &Input::FileSet {
+                    fileset: "{projectRoot}/file",
+                    dependencies: true,
+                    include_ignored: false,
+                }
+            ),
+            local_input_cache_key(
+                "a",
+                &Input::FileSet {
+                    fileset: "{projectRoot}/file",
+                    dependencies: true,
+                    include_ignored: true,
                 }
             )
         );
@@ -1202,7 +1347,8 @@ mod tests {
                 "a",
                 &Input::FileSet {
                     fileset: "{projectRoot}/file",
-                    dependencies: false
+                    dependencies: false,
+                    include_ignored: false,
                 }
             )
             .is_none()
@@ -1404,5 +1550,49 @@ mod tests {
             plan.len(),
             plan.capacity()
         );
+    }
+}
+
+#[cfg(test)]
+mod subset_tests {
+    use super::*;
+
+    fn plans(entries: &[(&str, &[u32])]) -> HashPlans {
+        HashPlans {
+            pool: Arc::new(InstructionPool::default()),
+            plans: entries
+                .iter()
+                .map(|(id, plan)| (id.to_string(), plan.to_vec()))
+                .collect(),
+        }
+    }
+
+    fn ids(ids: &[&str]) -> Vec<String> {
+        ids.iter().map(|id| id.to_string()).collect()
+    }
+
+    #[test]
+    fn keeps_only_the_requested_tasks() {
+        let source = plans(&[("a:build", &[1, 2]), ("b:build", &[3]), ("c:build", &[4])]);
+        let subset = subset_plans(&source, &ids(&["a:build", "c:build"])).unwrap();
+
+        assert_eq!(subset.plans.len(), 2);
+        assert_eq!(subset.plans["a:build"], vec![1, 2]);
+        assert_eq!(subset.plans["c:build"], vec![4]);
+    }
+
+    /// The guard: an unplanned task means these plans describe a different task
+    /// graph, so the caller has to plan for real rather than hash a subset.
+    #[test]
+    fn refuses_when_a_task_was_never_planned() {
+        let source = plans(&[("a:build", &[1])]);
+        assert!(subset_plans(&source, &ids(&["a:build", "missing:build"])).is_none());
+    }
+
+    #[test]
+    fn shares_the_instruction_pool_rather_than_copying_it() {
+        let source = plans(&[("a:build", &[1])]);
+        let subset = subset_plans(&source, &ids(&["a:build"])).unwrap();
+        assert!(Arc::ptr_eq(&source.pool, &subset.pool));
     }
 }
