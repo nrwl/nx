@@ -61,6 +61,20 @@ describe('app', () => {
     expect(pnpmWorkspace).toMatch(/['"]@parcel\/watcher['"]: false/);
   });
 
+  it('should record the build script decision for less when styling with it', async () => {
+    await withPnpm(appTree, '11.2.2', () =>
+      generateApp(appTree, 'my-app', {
+        style: 'less',
+        e2eTestRunner: E2eTestRunner.None,
+        unitTestRunner: UnitTestRunner.None,
+      })
+    );
+
+    expect(appTree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+      /['"]?less['"]?: false/
+    );
+  });
+
   it('should add angular dependencies', async () => {
     // ACT
     await generateApp(appTree);
