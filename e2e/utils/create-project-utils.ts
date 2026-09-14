@@ -95,7 +95,7 @@ export function newProject({
   packageManager = getSelectedPackageManager(),
   packages,
   preset = 'apps',
-  typescriptVersion = defaultTypescriptVersion,
+  typescriptVersion,
 }: {
   name?: string;
   packageManager?: 'npm' | 'yarn' | 'pnpm' | 'bun';
@@ -164,7 +164,7 @@ export function newProject({
         // peers per dependent, so they are unaffected.
         // TODO: remove once tsquery bounds its peer or nx stops depending on it.
         if (packageManager === 'npm') {
-          packageInstall('typescript', projScope, typescriptVersion);
+          packageInstall('typescript', projScope, defaultTypescriptVersion);
         }
         const packageInstallEnd = performance.mark('packageInstall:end');
         packageInstallMeasure = performance.measure(
@@ -210,6 +210,16 @@ export function newProject({
         console.error('Full error:', e);
         throw e;
       }
+    }
+
+    // Apply suite-specific versions after copying the shared package-manager
+    // backup so they work for every package manager without changing the backup.
+    if (
+      typescriptVersion &&
+      readJsonFile(`${projectDirectory}/package.json`).devDependencies
+        ?.typescript !== typescriptVersion
+    ) {
+      packageInstall('typescript', projName, typescriptVersion);
     }
 
     const newProjectEnd = performance.mark('new-project:end');

@@ -22,7 +22,13 @@ let proj: string;
 describe('@nx/workspace:infer-targets', () => {
   beforeEach(() => {
     proj = newProject({
-      packages: ['@nx/playwright', '@nx/remix', '@nx/eslint', '@nx/jest'],
+      packages: [
+        '@nx/workspace',
+        '@nx/playwright',
+        '@nx/remix',
+        '@nx/eslint',
+        '@nx/jest',
+      ],
       // These conversion fixtures exercise Remix, which still requires TS 5.
       typescriptVersion: '~5.9.2',
     });
@@ -163,6 +169,7 @@ describe('@nx/workspace:convert-to-monorepo', () => {
   beforeEach(() => {
     proj = newProject({
       packages: [
+        '@nx/workspace',
         '@nx/eslint',
         '@nx/js',
         '@nx/playwright',
