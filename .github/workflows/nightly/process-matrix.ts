@@ -72,7 +72,8 @@ const matrixData: MatrixData = {
     { name: 'e2e-jest', codeowners: 'S04T16BTJJY', is_golden: true },
     { name: 'e2e-expo', codeowners: 'S04TNCNJG5N', is_golden: true },
     { name: 'e2e-react-native', codeowners: 'S04TNCNJG5N', is_golden: true },
-    { name: 'e2e-angular', codeowners: 'S04SS457V38' },
+    // Yarn reaches only 17 of 20 serial files within the default 60m budget.
+    { name: 'e2e-angular', codeowners: 'S04SS457V38', timeout_minutes: 90 },
     { name: 'e2e-next', codeowners: 'S04TNCNJG5N' },
     { name: 'e2e-plugin', codeowners: 'S04SYHYKGNP' },
     // React serializes 32 test files, including browser and federation builds.
