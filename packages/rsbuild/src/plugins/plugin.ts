@@ -189,19 +189,21 @@ async function createRsbuildTargets(
 
   const targets: Record<string, TargetConfiguration> = {};
 
+  const buildInputs: TargetConfiguration['inputs'] = [
+    ...('production' in namedInputs
+      ? ['production', '^production']
+      : ['default', '^default']),
+    {
+      externalDependencies: ['@rsbuild/core'],
+    },
+  ];
+
   targets[options.buildTargetName] = {
     command: `rsbuild build`,
     options: { cwd: projectRoot, args: ['--mode=production'] },
     cache: true,
     dependsOn: [`^${options.buildTargetName}`],
-    inputs: [
-      ...('production' in namedInputs
-        ? ['production', '^production']
-        : ['default', '^default']),
-      {
-        externalDependencies: ['@rsbuild/core'],
-      },
-    ],
+    inputs: [...buildInputs],
     outputs: buildOutputs,
     metadata: {
       technologies: ['rsbuild'],
@@ -219,6 +221,7 @@ async function createRsbuildTargets(
 
   targets[options.devTargetName] = {
     continuous: true,
+    inputs: [...buildInputs],
     command: `rsbuild dev`,
     options: {
       cwd: projectRoot,
@@ -228,6 +231,7 @@ async function createRsbuildTargets(
 
   targets[options.previewTargetName] = {
     continuous: true,
+    inputs: [...buildInputs],
     command: `rsbuild preview`,
     dependsOn: [`${options.buildTargetName}`, `^${options.buildTargetName}`],
     options: {
