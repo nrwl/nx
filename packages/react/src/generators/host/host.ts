@@ -3,7 +3,6 @@ import { assertSupportedReactVersion } from '../../utils/assert-supported-react-
 import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import {
   addDependenciesToPackageJson,
-  detectPackageManager,
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
@@ -39,6 +38,7 @@ import {
 import { updateModuleFederationTsconfig } from './lib/update-module-federation-tsconfig';
 import { normalizeHostName } from './lib/normalize-host-name';
 import { warnReactHostGeneratorDeprecation } from '../../utils/module-federation-deprecation';
+import { getWorkspaceDependencyVersion } from '../../utils/get-workspace-dependency-version';
 
 export async function hostGenerator(
   host: Tree,
@@ -225,8 +225,7 @@ function addRemotesAsHostDependencies(
     );
   }
 
-  const packageManager = detectPackageManager(tree.root);
-  const versionSpec = packageManager === 'npm' ? '*' : 'workspace:*';
+  const versionSpec = getWorkspaceDependencyVersion(tree.root);
 
   updateJson(tree, hostPackageJsonPath, (json) => {
     json.devDependencies ??= {};
