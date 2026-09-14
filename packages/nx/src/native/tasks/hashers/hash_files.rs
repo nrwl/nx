@@ -39,8 +39,8 @@ pub(crate) struct FileContentCache {
 }
 
 /// Content-hashed output names (`index-a1b2c3.js`) leave a dead key behind
-/// per build, so the map grows with build count. Past this size, the next
-/// pass starts by dropping what the previous pass did not use.
+/// per build, so the map grows with build count. Past this size, a run
+/// starts by dropping what the previous run did not use.
 const FILE_CONTENT_CACHE_LIMIT: usize = 100_000;
 
 impl FileContentCache {
@@ -284,7 +284,7 @@ fn first_bracket_segment_exists(
 
 /// Collapses repeated and trailing slashes so `dist//gen/` and `dist/gen`
 /// name the same directory, and so prefix arithmetic below lines up.
-fn normalize_glob(glob: &str) -> String {
+pub(crate) fn normalize_glob(glob: &str) -> String {
     let (prefix, body) = match glob.strip_prefix('!') {
         Some(body) => ("!", body),
         None => ("", glob),
@@ -1175,7 +1175,7 @@ mod tests {
         for i in 0..8 {
             assert!(cache.get(&cache_path(i), CACHE_STAMP).is_none(), "{i}");
         }
-        for i in 4..8 {
+        for i in 8..13 {
             assert!(cache.get(&cache_path(i), CACHE_STAMP).is_some(), "{i}");
         }
     }

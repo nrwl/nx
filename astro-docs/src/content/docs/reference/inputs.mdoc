@@ -133,9 +133,8 @@ Add `includeIgnored: true` to expand the glob on disk instead, so untracked matc
 
 Use it for files no task in the run produces.
 The outputs of a task this task depends on, such as a dependency's `dist/`, belong in [`dependentTasksOutputFiles`](#outputs-of-dependent-tasks), which is built for that.
-An `includeIgnored` fileset is hashed up front with the task's other inputs, unless it points inside a directory that an upstream task declares as an output.
-An upstream task is one this task depends on, directly or through a chain of dependencies.
-Then the task is hashed right before it runs, after its task dependencies, like a task with `dependentTasksOutputFiles`, and it skips the up-front remote cache lookup.
+An `includeIgnored` fileset is hashed up front with the task's other inputs, unless the directory it reads from contains, or sits inside, an output declared by an upstream task, one this task depends on directly or through a chain of dependencies.
+In that case the task is hashed right before it runs, after its task dependencies, like a task with `dependentTasksOutputFiles`, and it skips the up-front remote cache lookup.
 A fileset inherited from a dependency or a continuous dependency is checked the same way.
 Each input's digest is recorded in the task's hash details and shared with Nx Cloud, so don't point an `includeIgnored` fileset at a file that holds a secret.
 

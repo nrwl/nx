@@ -12,7 +12,9 @@ use rayon::prelude::*;
 use std::collections::{HashMap, HashSet};
 use tracing::trace;
 
-use crate::native::tasks::hashers::{OnceCache, literal_prefix, validate_files_globs};
+use crate::native::tasks::hashers::{
+    OnceCache, literal_prefix, normalize_glob, validate_files_globs,
+};
 use crate::native::tasks::inputs::{
     expand_single_project_inputs, get_inputs, get_inputs_for_dependency, get_named_inputs,
 };
@@ -996,11 +998,11 @@ fn prefixed_cache_key(dep: &str, kind: char, rest: &str) -> String {
     format!("{}:{dep}{kind}{rest}", dep.len())
 }
 
-/// `f` reads the file map, `d` reads the disk (`includeIgnored`).
 /// Tasks the up-front batch must leave out: one of their disk-backed
-/// filesets reaches into what a task they depend on, directly or through the
-/// chain, declares as an output, so its files may still change during the
-/// run. Any other disk-backed fileset hashes up front like a tracked one.
+/// filesets reads from a directory that contains, or sits inside, an output
+/// declared by a task they depend on, directly or through the chain, so its
+/// files may still change during the run. Any other disk-backed fileset
+/// hashes up front like a tracked one.
 fn deferred_tasks(
     plans: &HashMap<String, Vec<u32>>,
     pool: &InstructionPool,
@@ -1033,11 +1035,11 @@ fn deferred_tasks(
         .collect()
 }
 
-/// The directory a glob reads from. Brackets count as wildcards here, and a
-/// glob the prefix parser rejects reads as the workspace root, so a doubtful
-/// case errs toward deferring.
+/// The directory a glob reads from, spelled the way expansion reads it.
+/// Brackets count as wildcards here, and a glob the prefix parser rejects
+/// reads as the workspace root, so a doubtful case errs toward deferring.
 fn walk_root(glob: &str) -> String {
-    literal_prefix(glob)
+    literal_prefix(&normalize_glob(glob))
         .map(|(root, _)| root)
         .unwrap_or_default()
 }
@@ -1085,6 +1087,7 @@ fn paths_overlap(a: &str, b: &str) -> bool {
         || b.strip_prefix(a).is_some_and(|rest| rest.starts_with('/'))
 }
 
+/// `f` reads the file map, `d` reads the disk (`includeIgnored`).
 fn fileset_kind(include_ignored: bool) -> char {
     if include_ignored { 'd' } else { 'f' }
 }
@@ -1630,11 +1633,25 @@ mod tests {
             vec!["libs/lib/src/**".into()],
             false,
         ));
+        let group = |project: &str, globs: &[&str]| {
+            pool.intern(HashInstruction::ProjectFileSet(
+                project.into(),
+                globs.iter().map(|g| g.to_string()).collect(),
+                true,
+            ))
+        };
         let plans: HashMap<String, Vec<u32>> = [
             ("web:build", vec![disk("web", "apps/web/generated/**/*.ts")]),
             ("web:lint", vec![disk("web", "apps/web/.env.generated")]),
             ("web:test", vec![disk("web", "dist/**")]),
             ("web:bracket", vec![disk("web", "apps/web/[dir]/**")]),
+            ("web:slashes", vec![disk("web", "apps/web//generated/**")]),
+            (
+                "web:negated",
+                vec![group("web", &["apps/web/.env.generated", "!dist/**"])],
+            ),
+            ("web:dot", vec![disk("web", "apps/web/.env.generated")]),
+            ("web:outslash", vec![disk("web", "dist/apps/web/**")]),
             ("lib:build", vec![tracked]),
         ]
         .into_iter()
@@ -1646,12 +1663,18 @@ mod tests {
             ("web:lint", vec![]),
             ("web:test", vec![]),
             ("web:bracket", vec![]),
+            ("web:slashes", vec![]),
+            ("web:negated", vec![]),
+            ("web:dot", vec![]),
+            ("web:outslash", vec![]),
             ("web:codegen", vec!["apps/web/generated"]),
             ("web:serve", vec!["apps/web/d"]),
             (
                 "lib:build",
-                vec!["dist/libs/lib", "!dist/libs/lib/**/*.map"],
+                vec!["dist/libs/lib", "!apps/web/.env.generated"],
             ),
+            ("lib:dot", vec!["./dist"]),
+            ("lib:outslash", vec!["dist//apps/web"]),
         ]
         .into_iter()
         .map(|(id, outputs)| {
@@ -1674,6 +1697,10 @@ mod tests {
                 ("web:build", &["web:codegen", "lib:build"]),
                 ("web:lint", &["lib:build"]),
                 ("web:test", &["web:build"]),
+                ("web:slashes", &["web:codegen"]),
+                ("web:negated", &["lib:build"]),
+                ("web:dot", &["lib:dot"]),
+                ("web:outslash", &["lib:outslash"]),
             ]),
             continuous_dependencies: edges(&[("web:bracket", &["web:serve"])]),
         };
@@ -1684,9 +1711,22 @@ mod tests {
         deferred.sort();
         // web:build reads its codegen's output; web:test's `dist/**` holds
         // lib:build's `dist/libs/lib` two steps up; web:bracket's `[dir]`
-        // counts as a wildcard, so `apps/web` meets the served `apps/web/d`.
-        // web:lint reads a file no upstream task writes.
-        assert_eq!(deferred, vec!["web:bracket", "web:build", "web:test"]);
+        // counts as a wildcard, so `apps/web` meets the served `apps/web/d`;
+        // `//` on either side reads as one slash; an output the parser
+        // rejects (`./dist`) counts as the workspace root. web:lint reads a
+        // file no upstream task writes, and a `!` entry on either side is
+        // neither a read nor a write.
+        assert_eq!(
+            deferred,
+            vec![
+                "web:bracket",
+                "web:build",
+                "web:dot",
+                "web:outslash",
+                "web:slashes",
+                "web:test"
+            ]
+        );
     }
 
     #[test]
