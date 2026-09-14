@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::UNIX_EPOCH;
 
@@ -25,7 +25,47 @@ pub(crate) type FilesExpansionCache = DashMap<String, Arc<FilesExpansion>>;
 /// Content hashes keyed by absolute path, revalidated by (mtime, size).
 /// Validated per lookup, so it outlives hashers and project graphs; the
 /// daemon keeps one for its whole life through `shared_file_content_cache`.
-pub(crate) type FileContentCache = DashMap<std::path::PathBuf, CachedFileContent>;
+pub(crate) struct FileContentCache {
+    entries: DashMap<PathBuf, CachedFileContent>,
+    limit: usize,
+}
+
+/// Content-hashed output names (`index-a1b2c3.js`) leave a dead key behind
+/// per build, so the map grows with build count; at this size it starts over
+/// and the next hash re-reads only what is still live.
+const FILE_CONTENT_CACHE_LIMIT: usize = 100_000;
+
+impl FileContentCache {
+    pub(crate) fn new() -> Self {
+        Self::with_limit(FILE_CONTENT_CACHE_LIMIT)
+    }
+
+    fn with_limit(limit: usize) -> Self {
+        Self {
+            entries: DashMap::new(),
+            limit,
+        }
+    }
+
+    fn get(&self, path: &Path, (mtime, size): FileStamp) -> Option<String> {
+        self.entries
+            .get(path)
+            .filter(|cached| cached.mtime == mtime && cached.size == size)
+            .map(|cached| cached.hash.clone())
+    }
+
+    fn insert(&self, path: PathBuf, content: CachedFileContent) {
+        if self.entries.len() >= self.limit {
+            self.entries.clear();
+        }
+        self.entries.insert(path, content);
+    }
+
+    #[cfg(test)]
+    fn len(&self) -> usize {
+        self.entries.len()
+    }
+}
 
 /// The process-wide cache. Absolute keys keep separate workspaces apart when
 /// one process hashes several (tests do).
@@ -527,15 +567,9 @@ fn hash_file_cached(
 ) -> String {
     let path = workspace_root.join(file);
     let stamp = stamp.or_else(|| std::fs::metadata(&path).ok().map(|m| stamp_of(&m)));
-    if let Some((mtime, size)) = stamp {
-        let hit = cache
-            .get(&path)
-            .filter(|cached| cached.mtime == mtime && cached.size == size)
-            .map(|cached| cached.hash.clone());
-        if let Some(hash) = hit {
-            trace!("files content cache HIT for {file}");
-            return hash;
-        }
+    if let Some(hash) = stamp.and_then(|stamp| cache.get(&path, stamp)) {
+        trace!("files content cache HIT for {file}");
+        return hash;
     }
     let hash = hash_file_path(&path).unwrap_or_else(|| MISSING_FILE_HASH.to_string());
     if let Some((mtime, size)) = stamp {
@@ -958,6 +992,25 @@ mod tests {
     }
 
     #[test]
+    fn hashing_reuses_the_stamp_the_expansion_recorded() {
+        let temp = workspace();
+        let cache = FileContentCache::new();
+        let expansion = expand_files(temp.path(), &globs(&["dist/gen/a.js"])).unwrap();
+        let first = hash_files(temp.path(), &expansion, |_| None, &cache);
+
+        // A different size after expansion: a fresh stat would miss the
+        // cache, but the recorded stamp still matches the cached entry.
+        temp.child("dist/gen/a.js").write_str("longer").unwrap();
+        let same_expansion = hash_files(temp.path(), &expansion, |_| None, &cache);
+        assert_eq!(first, same_expansion);
+        let re_expanded = expand_files(temp.path(), &globs(&["dist/gen/a.js"])).unwrap();
+        assert_ne!(
+            first,
+            hash_files(temp.path(), &re_expanded, |_| None, &cache)
+        );
+    }
+
+    #[test]
     fn repeated_slashes_are_normalized_and_a_bare_negation_is_rejected() {
         let temp = workspace();
         let expand = |list: &[&str]| expand_files(temp.path(), &globs(list)).unwrap();
@@ -977,6 +1030,25 @@ mod tests {
         }
         assert!(validate_files_globs(&globs(&["dist/**", "!../x"])).is_err());
         assert!(validate_files_globs(&globs(&["dist/./gen/**"])).is_err());
+    }
+
+    #[test]
+    fn content_cache_starts_over_at_its_limit() {
+        let temp = workspace();
+        let cache = FileContentCache::with_limit(2);
+        let hash = |glob: &str| {
+            let expansion = expand_files(temp.path(), &globs(&[glob])).unwrap();
+            hash_files(temp.path(), &expansion, |_| None, &cache)
+        };
+        hash("dist/gen/a.js");
+        hash("dist/gen/a.js.map");
+        assert_eq!(cache.len(), 2);
+        // A third file crosses the limit: the map starts over, then refills
+        // with whatever is hashed next.
+        hash("dist/other/c.js");
+        assert_eq!(cache.len(), 1);
+        hash("dist/gen/a.js");
+        assert_eq!(cache.len(), 2);
     }
 
     #[test]
