@@ -7,6 +7,7 @@ import {
   deriveGroupNameFromTarget,
   globWithWorkspaceContext,
   quoteShellArg,
+  retryOnRequireEsmRace,
 } from '@nx/devkit/internal';
 import {
   CreateDependencies,
@@ -34,7 +35,6 @@ import {
   loadViteDynamicImport,
   loadVitestConfigDynamicImport,
 } from '../utils/executor-utils';
-import { retryOnRequireEsmRace } from '../utils/retry-on-require-esm-race';
 
 export interface VitestPluginOptions {
   testTargetName?: string;

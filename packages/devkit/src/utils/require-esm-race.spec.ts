@@ -1,7 +1,7 @@
 import {
   isRequireEsmRaceError,
   retryOnRequireEsmRace,
-} from './retry-on-require-esm-race';
+} from './require-esm-race';
 
 const node26Race = Object.assign(
   new Error(

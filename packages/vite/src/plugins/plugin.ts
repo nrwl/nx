@@ -4,6 +4,7 @@ import {
   PluginCache,
   hashObject,
   workspaceDataDirectory,
+  retryOnRequireEsmRace,
 } from '@nx/devkit/internal';
 import {
   CreateDependencies,
@@ -26,7 +27,6 @@ import {
 import { existsSync, readdirSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, sep } from 'node:path';
 import { loadViteDynamicImport } from '../utils/executor-utils';
-import { retryOnRequireEsmRace } from '../utils/retry-on-require-esm-race';
 import picomatch = require('picomatch');
 import type { ResolvedConfig } from 'vite';
 

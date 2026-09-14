@@ -12,10 +12,11 @@ export function isRequireEsmRaceError(e: unknown): boolean {
   );
 }
 
-// Vite bundles a vite.config.ts in a CJS package to CJS and require()s it, so an
-// ESM-only plugin it imports gets require()d. Configs load in parallel during
-// graph creation, so that require() can land while another config's import() of
-// the same plugin is still linking. The import settles within a few turns.
+// A config compiled to CJS require()s the ESM-only packages it imports, and
+// configs load in parallel during graph creation - so that require() can land
+// while another load's import() of the same package is still linking. The
+// import settles within a few turns, so the same load strategy is retried
+// rather than switched to import(), which would change the config's scope.
 export async function retryOnRequireEsmRace<T>(
   load: () => Promise<T>
 ): Promise<T> {

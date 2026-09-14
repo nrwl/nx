@@ -1,7 +1,10 @@
+import { mkdtempSync, rmSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
 import { join } from 'path';
 import {
   clearConfigFromRequireCache,
   isTranspilerRecoverableError,
+  loadConfigFile,
   unwrapCjsInterop,
 } from './config-utils';
 
@@ -221,5 +224,62 @@ describe('unwrapCjsInterop', () => {
     };
 
     expect(unwrapCjsInterop(path, module, cache)).toBe(module);
+  });
+});
+
+describe('loadConfigFile', () => {
+  let tmpDir: string;
+
+  beforeEach(() => {
+    tmpDir = mkdtempSync(join(tmpdir(), 'nx-load-config-file-'));
+  });
+
+  afterEach(() => {
+    rmSync(tmpDir, { recursive: true, force: true });
+    delete (globalThis as any).__nxConfigLoadAttempts;
+  });
+
+  function writeConfig(name: string, contents: string): string {
+    const path = join(tmpDir, name);
+    writeFileSync(path, contents);
+    return path;
+  }
+
+  it('retries a config whose load hits the require/import ESM race', async () => {
+    const path = writeConfig(
+      'race.config.js',
+      `globalThis.__nxConfigLoadAttempts = (globalThis.__nxConfigLoadAttempts ?? 0) + 1;
+       if (globalThis.__nxConfigLoadAttempts === 1) {
+         const e = new Error('Cannot require() ES Module /x/esm-only/index.js because it is not yet fully loaded.');
+         e.code = 'ERR_REQUIRE_ESM_RACE_CONDITION';
+         throw e;
+       }
+       module.exports = { loaded: true };`
+    );
+
+    await expect(loadConfigFile(path)).resolves.toEqual({ loaded: true });
+    expect((globalThis as any).__nxConfigLoadAttempts).toBe(2);
+  });
+
+  it('propagates any other error on the first attempt', async () => {
+    const path = writeConfig(
+      'broken.config.js',
+      `globalThis.__nxConfigLoadAttempts = (globalThis.__nxConfigLoadAttempts ?? 0) + 1;
+       throw new Error('config blew up');`
+    );
+
+    await expect(loadConfigFile(path)).rejects.toThrow('config blew up');
+    expect((globalThis as any).__nxConfigLoadAttempts).toBe(1);
+  });
+
+  it('loads a working config without retrying', async () => {
+    const path = writeConfig(
+      'ok.config.js',
+      `globalThis.__nxConfigLoadAttempts = (globalThis.__nxConfigLoadAttempts ?? 0) + 1;
+       module.exports = { value: 42 };`
+    );
+
+    await expect(loadConfigFile(path)).resolves.toEqual({ value: 42 });
+    expect((globalThis as any).__nxConfigLoadAttempts).toBe(1);
   });
 });
