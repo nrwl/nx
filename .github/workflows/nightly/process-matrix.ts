@@ -75,7 +75,9 @@ const matrixData: MatrixData = {
     { name: 'e2e-angular', codeowners: 'S04SS457V38' },
     { name: 'e2e-next', codeowners: 'S04TNCNJG5N' },
     { name: 'e2e-plugin', codeowners: 'S04SYHYKGNP' },
-    { name: 'e2e-react', codeowners: 'S04TNCNJG5N' },
+    // React serializes 32 test files, including browser and federation builds.
+    // The 60m budget cut npm off after just 11 passing suites.
+    { name: 'e2e-react', codeowners: 'S04TNCNJG5N', timeout_minutes: 180 },
     { name: 'e2e-rollup', codeowners: 'S04SJ6PL98X' },
     { name: 'e2e-storybook', codeowners: 'S04SVQ8H0G5' },
     { name: 'e2e-nuxt', codeowners: 'S04SJ6PL98X' },
