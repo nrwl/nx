@@ -1048,8 +1048,7 @@ describe('applyStepEvent', () => {
     });
 
     it('unresolved from died keeps the attempt and records the death as the failure', () => {
-      // A death leaves no outcome behind (markDied records the status only),
-      // so the transition supplies the failure the report and the issue show.
+      // markDied records no outcome; the transition supplies the death detail.
       const state = stateWithStep({
         status: 'died',
         attempt: 3,
