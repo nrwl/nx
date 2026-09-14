@@ -12,12 +12,13 @@ topics:
 At a 70% cache hit rate,
 [a workspace using 160 machine-minutes of CI per run](#example-eight-job-matrix-on-8-core-runners)
 cuts its GitHub Actions bill by more than 40% and reduces CI duration (wall clock) by half.
-The more machine-minutes your pipeline uses today, the more you save.
 
-GitHub Actions bills private repositories by the minute, and the bill follows total machine-minutes
-rather than how long a pipeline takes on the wall clock.
+GitHub Actions bills private repositories by the minute, so the bill tracks machine-minutes, the
+total across every job, rather than how long the pipeline takes end to end.
 A 25-minute pipeline split across four parallel jobs uses 100 machine-minutes and costs the same as
 a 100-minute pipeline on a single runner.
+The more machine-minutes your pipeline uses today, the more you save.
+
 A remote cache plus `nx affected` is how you cut that bill, and it replaces the job matrix you
 maintain by hand with a single line of configuration.
 
