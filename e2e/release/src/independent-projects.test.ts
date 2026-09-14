@@ -15,7 +15,6 @@ import {
   updateJson,
 } from '@nx/e2e-utils';
 import { execSync } from 'child_process';
-import { configureModernYarn } from './utils';
 
 expect.addSnapshotSerializer({
   serialize(str: string) {
@@ -52,6 +51,10 @@ expect.addSnapshotSerializer({
           '{lock-file-command}'
         )
         .replaceAll('pnpm install --lockfile-only', '{lock-file-command}')
+        .replaceAll(
+          /Skipped lock file update because (?:it is not necessary for Yarn Classic|(?:npm|pnpm|yarn|bun) workspaces are not enabled)\./g,
+          'Skipped lock file update because {package-manager-specific reason}.'
+        )
         .replaceAll(getSelectedPackageManager(), '{package-manager}')
         .replaceAll(e2eRegistryUrl, '{registryUrl}')
         // We trim each line to reduce the chances of snapshot flakiness
@@ -76,10 +79,8 @@ describe('nx release - independent projects', () => {
       packages: ['@nx/js'],
     });
 
-    if (getSelectedPackageManager() === 'yarn') {
-      await configureModernYarn();
-      await runCommandAsync('yarn install');
-    }
+    // Keep generated package names aligned with the fixture's dependencies.
+    updateJson('package.json', (json) => ({ ...json, name: '@proj/source' }));
 
     pkg1 = uniq('my-pkg-1');
     runCLI(`generate @nx/workspace:npm-package ${pkg1}`);
@@ -266,7 +267,7 @@ describe('nx release - independent projects', () => {
         "exports": {
 
 
-        Skipped lock file update because {package-manager} workspaces are not enabled.
+        Skipped lock file update because {package-manager-specific reason}.
 
         NX   Committing changes with git
 
@@ -378,7 +379,7 @@ describe('nx release - independent projects', () => {
         }
 
 
-        Skipped lock file update because {package-manager} workspaces are not enabled.
+        Skipped lock file update because {package-manager-specific reason}.
 
         NX   Committing changes with git
 

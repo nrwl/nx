@@ -103,6 +103,9 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     process.env.YARN_CACHE_FOLDER = join(e2eCacheDir, 'yarn');
     // yarnv2
     process.env.YARN_ENABLE_GLOBAL_CACHE = 'false';
+    // Yarn keeps registry metadata in its global folder even with a local
+    // package cache. Do not reuse metadata from an earlier local registry.
+    process.env.YARN_GLOBAL_FOLDER = join(e2eCacheDir, 'yarn-global');
 
     process.env.NX_SKIP_PROVENANCE_CHECK = 'true';
 
