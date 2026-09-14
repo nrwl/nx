@@ -168,13 +168,8 @@ It finishes in 18 billed minutes instead of 30, so what you are buying here is s
   it by that figure plus the task time actually run.
   That ratio is your cache share.
   If it is low, over-broad `inputs` and `namedInputs` are worth checking first.
-- Nx runs 3 tasks at a time by default, so extra cores can sit idle.
-  Raise `--parallel` when tasks are single-threaded, and keep it below the core count when they
-  already use several cores each.
-- To put a dollar figure on the "computation time saved" that Nx Cloud reports, divide the saved
-  task-minutes by two for a 2-core runner running two tasks at once, then multiply by the runner
-  rate.
-  Skip the division if you run with `--parallel=1`.
+- Nx runs 3 tasks at a time by default, so raise `--parallel` on larger runners or the extra cores
+  sit idle.
 
 Nx Agents also take over the job matrix you maintain by hand.
 One `distribute-on` line in the [CI configuration file](/docs/reference/nx-cloud/ci-config) sets how
