@@ -140,8 +140,8 @@ A fileset inherited from a dependency or a continuous dependency is checked the 
 Each input's digest is recorded in the task's hash details and shared with Nx Cloud, so don't point an `includeIgnored` fileset at a file that holds a secret.
 
 `{projectRoot}` and `{workspaceRoot}` resolve as for any fileset, and every glob must start with one of them.
-A glob that would walk from the workspace root, such as `{workspaceRoot}/**`, is a configuration error.
 Nx walks the globs again on every run, so keep them narrow.
+A glob with no leading directory, such as `{workspaceRoot}/**`, is allowed, but it walks the whole workspace on every run and sweeps in every gitignored file under it.
 Everything before the first wildcard is read as a plain path, so `@scope`, `+`, and parentheses such as `app/(marketing)` need no escaping.
 When the first `[name]` segment before any wildcard is an existing directory or file, every `[name]` segment before the first wildcard is a path, and when it isn't, they're all character classes.
 So `app/[lang]/[id]/page.tsx` stays one path while `[lang]/` exists, even before `[id]/` does.

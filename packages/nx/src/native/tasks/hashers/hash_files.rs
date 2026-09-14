@@ -382,9 +382,9 @@ pub(crate) fn normalize_glob(glob: &str) -> String {
     out
 }
 
-/// Rejects globs with no literal leading directory (`**/*`, `*.gen`): a walk
-/// from the workspace root is never what was meant. A root-level brace group
-/// of literal names is fine: it expands to exact files.
+/// Rejects globs that would read outside the workspace or exclude nothing.
+/// A glob with no leading directory (`**/*`, `*.gen`) is allowed: it walks
+/// from the workspace root, which is slow but not wrong.
 pub(crate) fn validate_files_globs(globs: &[String]) -> Result<()> {
     for glob in globs {
         if let Some(body) = glob.strip_prefix('!') {
@@ -398,12 +398,7 @@ pub(crate) fn validate_files_globs(globs: &[String]) -> Result<()> {
             continue;
         }
         for expanded in expand_literal_braces(&normalize_glob(glob)) {
-            let (root, _) = literal_prefix_with(&expanded, true)?;
-            if root.is_empty() {
-                bail!(
-                    "The includeIgnored fileset \"{glob}\" has no leading directory, so it would walk the whole workspace. Start it with the directory that holds the files."
-                );
-            }
+            literal_prefix_with(&expanded, true)?;
         }
     }
     Ok(())
@@ -574,9 +569,6 @@ pub fn expand_files_with(
     let mut missing: Vec<String> = Vec::new();
     for glob in &positives {
         let (root, has_pattern) = split_glob(glob, workspace_root, known)?;
-        if root.is_empty() {
-            bail!("The includeIgnored fileset \"{glob}\" has no leading directory.");
-        }
         if !has_pattern && known(&root) {
             found.push((root, None));
             continue;
@@ -606,8 +598,9 @@ pub fn expand_files_with(
         // Excluded files are dropped before they are stat'ed.
         let excluded = |path: &str| negations.iter().any(|n| n.excludes(path));
         let accept: Box<dyn Fn(&str) -> bool + Sync> = if has_pattern {
-            let set = build_glob_set(&[&glob[root.len() + 1..]])?;
-            let prefix_len = root.len() + 1;
+            // An empty root is the workspace root: the whole glob is the pattern.
+            let prefix_len = if root.is_empty() { 0 } else { root.len() + 1 };
+            let set = build_glob_set(&[&glob[prefix_len..]])?;
             Box::new(move |path: &str| {
                 path.len() > prefix_len && set.is_match(&path[prefix_len..]) && !excluded(path)
             })
@@ -781,7 +774,7 @@ mod tests {
     }
 
     #[test]
-    fn accepts_a_root_brace_group_of_literals_and_rejects_wildcards_there() {
+    fn a_root_brace_group_of_literals_names_exact_files_and_a_wildcard_one_walks() {
         let temp = workspace();
         temp.child("nx.json").write_str("{}").unwrap();
         temp.child("tsconfig.base.json").write_str("{}").unwrap();
@@ -790,8 +783,9 @@ mod tests {
         let expansion = expand_files(temp.path(), &group).unwrap();
         assert_eq!(expansion.files, vec!["nx.json", "tsconfig.base.json"]);
         assert_eq!(expansion.missing, vec!["missing.json"]);
-        assert!(validate_files_globs(&globs(&["{nx,*}.json"])).is_err());
-        assert!(validate_files_globs(&globs(&["{*,nx}.json"])).is_err());
+        // A wildcard alternative stays a glob, walked from the workspace root.
+        let walked = expand_files(temp.path(), &globs(&["{nx,*}.json"])).unwrap();
+        assert_eq!(walked.files, vec!["nx.json", "tsconfig.base.json"]);
         // In-directory groups keep matching as before.
         let nested = expand_files(temp.path(), &globs(&["dist/gen/{a,nested/b}.js"])).unwrap();
         assert_eq!(nested.files, vec!["dist/gen/a.js", "dist/gen/nested/b.js"]);
@@ -1295,11 +1289,30 @@ mod tests {
     }
 
     #[test]
-    fn rejects_globs_without_a_leading_directory() {
-        assert!(validate_files_globs(&globs(&["**/*.gen"])).is_err());
-        assert!(validate_files_globs(&globs(&["*.gen"])).is_err());
-        assert!(validate_files_globs(&globs(&["dist/**/*.gen", "!**/*.map"])).is_ok());
-        assert!(validate_files_globs(&globs(&["dist/gen/a.js"])).is_ok());
+    fn a_glob_with_no_leading_directory_walks_from_the_workspace_root() {
+        let temp = workspace();
+        temp.child("root.json").write_str("{}").unwrap();
+        validate_files_globs(&globs(&["**/*.js", "*.json", "dist/**/*.gen", "!**/*.map"])).unwrap();
+        // The hardcoded skips still apply below the root, so node_modules is out.
+        assert_eq!(
+            expand_files(temp.path(), &globs(&["**/*.js"]))
+                .unwrap()
+                .files,
+            vec!["dist/gen/a.js", "dist/gen/nested/b.js", "dist/other/c.js"]
+        );
+        assert_eq!(
+            expand_files(temp.path(), &globs(&["*.json"]))
+                .unwrap()
+                .files,
+            vec!["root.json"]
+        );
+        // A negation with no leading directory filters the walk the same way.
+        assert_eq!(
+            expand_files(temp.path(), &globs(&["**/*.js", "!**/nested/**"]))
+                .unwrap()
+                .files,
+            vec!["dist/gen/a.js", "dist/other/c.js"]
+        );
     }
 
     #[test]

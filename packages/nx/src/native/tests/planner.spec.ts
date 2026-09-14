@@ -194,15 +194,15 @@ describe('task planner', () => {
       expect(plan).toContain('files:parent:[{nx,tsconfig.base}.json]');
     });
 
-    it('rejects a glob that would walk from the workspace root', () => {
-      expect(() =>
+    it('plans a glob that walks from the workspace root', () => {
+      expect(
         planFor([{ fileset: '{workspaceRoot}/**', includeIgnored: true }])
-      ).toThrow(/no leading directory/);
-      expect(() =>
+      ).toContain('files:parent:[**]');
+      expect(
         planFor([
           { fileset: '{workspaceRoot}/{nx,*}.json', includeIgnored: true },
         ])
-      ).toThrow(/no leading directory/);
+      ).toContain('files:parent:[{nx,*}.json]');
     });
 
     it('rejects a negation with no positive includeIgnored fileset to filter', () => {
