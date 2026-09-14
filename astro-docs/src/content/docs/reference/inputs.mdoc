@@ -140,7 +140,10 @@ Each input's digest is recorded in the task's hash details and shared with Nx Cl
 `{projectRoot}` and `{workspaceRoot}` resolve as for any fileset, and every glob must start with one of them.
 A glob that would walk from the workspace root, such as `{workspaceRoot}/**`, is a configuration error.
 Nx walks the globs again on every run, so keep them narrow.
-Everything before the first wildcard is read as a plain path, so `@scope`, `+`, and parentheses such as `app/(marketing)` need no escaping, and a `[name]` segment is a path when such a directory exists and a character class otherwise.
+Everything before the first wildcard is read as a plain path, so `@scope`, `+`, and parentheses such as `app/(marketing)` need no escaping.
+When the first `[name]` segment before any wildcard is an existing directory or file, every `[name]` segment before the first wildcard is a path, and when it isn't, they're all character classes.
+So `app/[lang]/[id]/page.tsx` stays one path while `[lang]/` exists, even before `[id]/` does.
+After the first wildcard, the remainder is a glob, so brackets are a character class there.
 Nx expands the globs when it hashes the task, so it picks up a new matching file without a configuration change, and a path that names a directory matches everything under it.
 A path that names a single missing file still takes part in the hash, so the cache key changes when the file appears or is removed.
 
