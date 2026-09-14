@@ -217,8 +217,18 @@ fn normalize_glob(glob: &str) -> String {
 /// from the workspace root is never what was meant. A root-level brace group
 /// of literal names is fine: it expands to exact files.
 pub(crate) fn validate_files_globs(globs: &[String]) -> Result<()> {
-    for glob in globs.iter().filter(|g| !g.starts_with('!')) {
-        for expanded in expand_literal_braces(glob) {
+    for glob in globs {
+        if let Some(body) = glob.strip_prefix('!') {
+            let body = normalize_glob(body);
+            if body.is_empty() {
+                bail!("The includeIgnored fileset \"{glob}\" names nothing to exclude.");
+            }
+            for expanded in expand_literal_braces(&body) {
+                literal_prefix_with(&expanded, true)?;
+            }
+            continue;
+        }
+        for expanded in expand_literal_braces(&normalize_glob(glob)) {
             let (root, _) = literal_prefix_with(&expanded, true)?;
             if root.is_empty() {
                 bail!(
@@ -247,6 +257,9 @@ impl Negation {
         let normalized = normalize_glob(glob);
         let body = normalized.strip_prefix('!').unwrap_or(&normalized);
         let (root, has_pattern) = split_glob(body, workspace_root, known)?;
+        if root.is_empty() && !has_pattern {
+            bail!("The includeIgnored fileset \"{glob}\" names nothing to exclude.");
+        }
         let remainder = if has_pattern {
             let rest = if root.is_empty() {
                 body
@@ -942,6 +955,28 @@ mod tests {
         .unwrap();
         assert_eq!(expansion.files, vec!["apps/web/app/[id]/page.tsx"]);
         assert_eq!(expansion.stamps, vec![None]);
+    }
+
+    #[test]
+    fn repeated_slashes_are_normalized_and_a_bare_negation_is_rejected() {
+        let temp = workspace();
+        let expand = |list: &[&str]| expand_files(temp.path(), &globs(list)).unwrap();
+        assert_eq!(
+            expand(&["dist//gen/**", "!dist//gen//**/*.map"]).files,
+            vec!["dist/gen/a.js", "dist/gen/nested/b.js"]
+        );
+        assert_eq!(
+            expand(&["dist/gen/"]).files,
+            vec!["dist/gen/a.js", "dist/gen/a.js.map", "dist/gen/nested/b.js"]
+        );
+        // A negation that normalizes to nothing would exclude everything.
+        for bare in ["!", "!/", "!//"] {
+            let group = globs(&["dist/**", bare]);
+            assert!(validate_files_globs(&group).is_err(), "{bare}");
+            assert!(expand_files(temp.path(), &group).is_err(), "{bare}");
+        }
+        assert!(validate_files_globs(&globs(&["dist/**", "!../x"])).is_err());
+        assert!(validate_files_globs(&globs(&["dist/./gen/**"])).is_err());
     }
 
     #[test]
