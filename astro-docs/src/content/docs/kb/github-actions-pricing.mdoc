@@ -95,21 +95,22 @@ The difference is in machine-minutes:
 
 Nx Cloud comes out cheaper than plain GitHub Actions when the minutes the cache avoids, minus about
 1 minute per job to restore it, are worth more than the per-run Nx Cloud charge.
-On a standard 2-core runner that is roughly 50 net minutes per run, and on an 8-core runner 14.
+On a standard 2-core runner that is roughly 50 net minutes per run, and about 14 on an 8-core
+runner.
 Every figure here bills each job as a whole minute, the way GitHub does.
 
-The table below is the baseline a single-job pipeline needs today, in machine-minutes per run,
-before the cache pays for itself.
+The table below is roughly the baseline a single-job pipeline needs today, in machine-minutes per
+run, before the cache pays for itself.
 Each row holds the runner fixed and compares a pipeline against itself.
 Above these numbers Nx Cloud is faster and cheaper, below them it is faster and costs slightly more.
 
 | Runner                | Break-even at 50% hits | Break-even at 70% hits |
 | --------------------- | ---------------------- | ---------------------- |
-| Linux 2-core ($0.006) | 96 machine-minutes     | 69 machine-minutes     |
-| Linux 8-core ($0.022) | 30 machine-minutes     | 22 machine-minutes     |
+| Linux 2-core ($0.006) | ~95 machine-minutes    | ~70 machine-minutes    |
+| Linux 8-core ($0.022) | ~30 machine-minutes    | ~22 machine-minutes    |
 
 Splitting across a matrix raises the bar, because every job pays its own cache restore.
-At 50% hits, four 2-core jobs break even at 112 machine-minutes and eight 8-core jobs at 64.
+At 50% hits, four 2-core jobs break even around 110 machine-minutes and eight 8-core jobs around 65.
 
 Plan on 50% for a workspace that has connected Nx Cloud and left the default inputs alone, and 70%
 once [inputs](/docs/kb/configure-inputs) are tuned and PR branches populate the cache for each
@@ -119,6 +120,8 @@ is worth more.
 
 {% aside type="note" %}
 The examples below are illustrations, not benchmarks.
+The tables show the model's exact output so you can check the arithmetic, but treat every figure as
+an estimate.
 Real costs and times depend on your task mix, how well tasks parallelize, how often inputs change,
 and your own cache hit rate, so
 [run the numbers](#appendix-run-it-on-your-own-numbers) against your own workspace.
@@ -139,9 +142,9 @@ Each job takes about 30 minutes, 3 of them checkout and install, for 120 machine
 
 At 50% each job pays 3 minutes of setup, 1 minute to restore the cache, then half of its remaining
 27 minutes of work, which is 17.5 minutes that GitHub bills as 18.
-The month lands 1% above plain GitHub Actions, so at this size and hit rate the cache buys 12.5
-minutes off every PR rather than a lower bill.
-At 70% each job bills as 13 minutes and the bill falls 15%.
+The month lands slightly above plain GitHub Actions, so at this size and hit rate the cache buys
+about 12 minutes off every PR rather than a lower bill.
+At 70% each job bills as 13 minutes and the bill falls by about 15%.
 
 ## Example: eight-job matrix on 8-core runners
 
@@ -155,15 +158,16 @@ That baseline is well above the 65-minute break-even, so the cache is cheaper at
 | Nx Cloud, 50% cache hits | 104            | $2.288         | $0.319           | $2.607        | $1,303.50 | 12.5 min   |
 | Nx Cloud, 70% cache hits | 80             | $1.76          | $0.319           | $2.079        | $1,039.50 | 9.1 min    |
 
-That is 26% off the bill at 50% hits and 41% off at 70%, with the wall clock down to 12.5 and 9.1
-minutes.
+That is roughly 25% off the bill at 50% hits and 40% off at 70%, with the wall clock down to about
+12 and 9 minutes.
 On large runners each skipped minute is worth almost four times what it is on a standard one, which
 is why the same cache pays off here and not in the four-job example.
-The Nx Cloud share is $159.50 a month, 500 pipeline executions plus the resource usage reports, and the
-Team plan covers the first $29 of it.
+The Nx Cloud share is about $160 a month, 500 pipeline executions plus the resource usage reports,
+and the Team plan covers the first $29 of it.
 
 A small single-job pipeline is where Nx Cloud doesn't pay for itself on compute.
-A 30-minute job on one 2-core runner costs $90 a month at 500 runs and about $194 with Nx Cloud.
+A 30-minute job on one 2-core runner costs about $90 a month at 500 runs and about $195 with
+Nx Cloud.
 It finishes in 18 billed minutes instead of 30, so that is speed rather than a lower bill.
 
 ## Larger runners cost more for the same work
@@ -197,7 +201,7 @@ already use several cores each.
   Matrix jobs and larger runners multiply the baseline, and those are the pipelines where caching is
   cheaper as well as faster.
 - Connect the pipelines already on large runners first.
-  An 8-core job breaks even after 30 machine-minutes, a 2-core job after 96.
+  An 8-core job breaks even after about 30 machine-minutes, a 2-core job after about 95.
 - Check the cache hit rate in the Nx Cloud workspace overview after two weeks.
   Under 50% usually means `inputs` and `namedInputs` need tuning.
 - To put a dollar figure on the "computation time saved" that Nx Cloud reports, divide the saved
