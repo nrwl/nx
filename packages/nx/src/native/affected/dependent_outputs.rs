@@ -18,14 +18,17 @@
 //! fileset. I/O tracing turns an observed read of a generated artifact into one
 //! of these, which can preclude the explicit input entirely, so a plan can read a
 //! dependency's output with no `TaskOutput` anywhere in it. Its project names the
-//! owner of the read paths rather than the task producing them, so the patterns
-//! are compared to declared outputs on their literal prefixes, over the
-//! consumer's dependency closure. That walk runs only for tasks carrying a read.
+//! owner of the read paths rather than the task producing them, so each pattern
+//! is compared to declared outputs, over the consumer's dependency closure: by
+//! directory containment when the read names one, and by what the glob can
+//! match when it leads with a wildcard. That walk runs only for tasks carrying
+//! a read.
 
-use napi::bindgen_prelude::*;
 use rayon::prelude::*;
 use std::collections::{HashMap, HashSet};
 
+use crate::native::affected::plan_ids::referenced_ids;
+use crate::native::glob::build_glob_set;
 use crate::native::tasks::types::{HashInstruction, HashPlans, TaskGraph};
 
 /// Consumer task id -> the upstream task ids whose declared outputs it reads.
@@ -35,24 +38,15 @@ use crate::native::tasks::types::{HashInstruction, HashPlans, TaskGraph};
 /// set, and an observed read cannot say how deep the producer sits. Over-
 /// reporting an edge costs a task that was going to be a cache hit; missing one
 /// skips a task that needed to run.
-#[napi(ts_return_type = "Record<string, Array<string>>")]
-pub fn dependent_output_edges(
-    #[napi(ts_arg_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
-    hash_plans: &External<HashPlans>,
-    task_graph: TaskGraph,
-) -> HashMap<String, Vec<String>> {
-    compute_dependent_output_edges(hash_plans, &task_graph)
-}
-
 pub(crate) fn compute_dependent_output_edges(
     hash_plans: &HashPlans,
     task_graph: &TaskGraph,
 ) -> HashMap<String, Vec<String>> {
     // Indexed both ways, because the two read kinds ask different questions:
-    // TaskOutput matches an output vector whole, an includeIgnored glob matches
-    // a directory prefix.
+    // TaskOutput matches an output vector whole, an includeIgnored glob is
+    // tested against each output pattern.
     let mut producers_by_outputs: HashMap<&[String], Vec<&str>> = HashMap::new();
-    let mut output_prefixes: HashMap<&str, Vec<String>> = HashMap::new();
+    let mut outputs_of: HashMap<&str, Vec<OutputPattern<'_>>> = HashMap::new();
     for (id, task) in &task_graph.tasks {
         if task.outputs.is_empty() {
             continue;
@@ -61,26 +55,31 @@ pub(crate) fn compute_dependent_output_edges(
             .entry(task.outputs.as_slice())
             .or_default()
             .push(id.as_str());
-        output_prefixes.insert(id.as_str(), positive_prefixes(&task.outputs));
+        outputs_of.insert(
+            id.as_str(),
+            task.outputs.iter().map(|o| OutputPattern::new(o)).collect(),
+        );
     }
 
     // Resolved once per distinct instruction rather than once per task: one
     // instruction shared by a thousand plans is interned to a single id. Cloned
     // rather than borrowed, since the pool hands out a guard that cannot outlive
     // the lookup; the count is bounded by unique inputs, not by task count.
-    let mut ids: Vec<u32> = hash_plans.plans.values().flatten().copied().collect();
-    ids.par_sort_unstable();
-    ids.dedup();
-
     let mut declared_reads: HashMap<u32, Vec<String>> = HashMap::new();
-    let mut glob_reads: HashMap<u32, Vec<String>> = HashMap::new();
-    for id in ids {
+    let mut glob_reads: HashMap<u32, Vec<ReadPattern>> = HashMap::new();
+    for id in referenced_ids(hash_plans) {
         match hash_plans.pool.get(id).value() {
             HashInstruction::TaskOutput(_, outputs) => {
                 declared_reads.insert(id, outputs.clone());
             }
             HashInstruction::ProjectFileSet(_, globs, true) => {
-                glob_reads.insert(id, positive_prefixes(globs));
+                // Negated patterns are exclusions, not things read.
+                let reads = globs
+                    .iter()
+                    .filter(|glob| !glob.starts_with('!'))
+                    .map(|glob| ReadPattern::new(glob))
+                    .collect();
+                glob_reads.insert(id, reads);
             }
             _ => {}
         }
@@ -103,18 +102,18 @@ pub(crate) fn compute_dependent_output_edges(
 
             // Only an includeIgnored read needs the closure, so a plan without
             // one never pays for the walk.
-            let read_prefixes: Vec<&String> = plan
+            let reads: Vec<&ReadPattern> = plan
                 .iter()
                 .filter_map(|id| glob_reads.get(id))
                 .flatten()
                 .collect();
-            if !read_prefixes.is_empty() {
+            if !reads.is_empty() {
                 for upstream in closure_of(task_graph, consumer, seen) {
-                    if let Some(outputs) = output_prefixes.get(upstream) {
-                        let overlaps = read_prefixes
+                    if let Some(outputs) = outputs_of.get(upstream) {
+                        let claims = reads
                             .iter()
-                            .any(|read| outputs.iter().any(|out| paths_overlap(read, out)));
-                        if overlaps {
+                            .any(|read| outputs.iter().any(|out| read.claims(out)));
+                        if claims {
                             producers.push(upstream);
                         }
                     }
@@ -163,19 +162,82 @@ fn closure_of<'a>(
     reached
 }
 
-fn positive_prefixes(patterns: &[String]) -> Vec<String> {
-    patterns
-        .iter()
-        .filter(|pattern| !pattern.starts_with('!'))
-        .map(|pattern| literal_prefix(pattern).to_string())
-        .collect()
+/// A producer's declared output, with the literal directory it is under.
+struct OutputPattern<'a> {
+    raw: &'a str,
+    prefix: &'a str,
 }
 
-/// Directory containment between two patterns, compared on their literal
-/// prefixes because neither side is a concrete path. An empty prefix means the
-/// pattern leads with a wildcard and could match anywhere.
-fn paths_overlap(a: &str, b: &str) -> bool {
-    a.is_empty() || b.is_empty() || is_path_prefix(a, b) || is_path_prefix(b, a)
+impl<'a> OutputPattern<'a> {
+    fn new(raw: &'a str) -> Self {
+        Self {
+            raw,
+            prefix: literal_prefix(raw),
+        }
+    }
+}
+
+/// An observed or declared read, classified by how it can be compared to a
+/// producer's outputs. Neither side is a concrete path, so this is containment
+/// between patterns, and it errs towards claiming: an edge too many costs a
+/// cache hit, one too few skips a task that needed to run.
+enum ReadPattern {
+    /// Leads with a literal directory, `dist/libs/ui/**/*.js`. Compared to an
+    /// output by directory containment on their literal prefixes.
+    Under(String),
+    /// Leads with `**`, so it can reach into any output directory. Ruled out
+    /// only when both name a literal extension and the two differ.
+    Anywhere(String),
+    /// Leads with a single-level wildcard, `*.json`. Names only root-level
+    /// paths, so it claims an output only when the glob itself matches it.
+    RootLevel(String),
+}
+
+impl ReadPattern {
+    fn new(pattern: &str) -> Self {
+        let prefix = literal_prefix(pattern);
+        if !prefix.is_empty() {
+            Self::Under(prefix.to_string())
+        } else if pattern.starts_with("**") {
+            Self::Anywhere(pattern.to_string())
+        } else {
+            Self::RootLevel(pattern.to_string())
+        }
+    }
+
+    fn claims(&self, output: &OutputPattern<'_>) -> bool {
+        match self {
+            // An output whose own prefix is empty leads with a wildcard and
+            // could be anywhere, so it is claimed.
+            Self::Under(prefix) => {
+                output.prefix.is_empty()
+                    || is_path_prefix(prefix, output.prefix)
+                    || is_path_prefix(output.prefix, prefix)
+            }
+            Self::Anywhere(pattern) => !distinct_extensions(pattern, output.raw),
+            // Cached by pattern string, so this compiles once per distinct read.
+            Self::RootLevel(pattern) => build_glob_set(std::slice::from_ref(pattern))
+                .is_ok_and(|glob| glob.is_match(output.prefix)),
+        }
+    }
+}
+
+/// Whether two patterns each end in a literal extension and the two differ, in
+/// which case no path can match both.
+fn distinct_extensions(a: &str, b: &str) -> bool {
+    matches!(
+        (literal_extension(a), literal_extension(b)),
+        (Some(x), Some(y)) if x != y
+    )
+}
+
+/// The literal extension a pattern's last segment ends in: `js` for
+/// `dist/**/*.js`. None when the segment has no extension or the extension
+/// itself carries a wildcard.
+fn literal_extension(pattern: &str) -> Option<&str> {
+    let segment = pattern.rsplit('/').next().unwrap_or(pattern);
+    let ext = segment.rsplit_once('.')?.1;
+    (!ext.is_empty() && !ext.contains(['*', '?', '[', '{', '('])).then_some(ext)
 }
 
 /// Segment-wise, so `dist/libs/ui` does not contain `dist/libs/ui-legacy` the
@@ -189,7 +251,8 @@ fn is_path_prefix(prefix: &str, path: &str) -> bool {
 
 /// The leading path segments of a glob that contain no wildcard, so
 /// `dist/libs/ui/**/*.js` reduces to `dist/libs/ui`. A pattern whose first
-/// segment is already a wildcard reduces to `""`, which overlaps everything.
+/// segment is already a wildcard reduces to `""`; how it then compares to an
+/// output is `ReadPattern`'s decision.
 fn literal_prefix(pattern: &str) -> &str {
     let pattern = pattern.strip_prefix('!').unwrap_or(pattern);
     let Some(wildcard) = pattern.find(['*', '?', '[', '{', '(']) else {
@@ -455,6 +518,49 @@ mod tests {
             )],
         );
         assert!(e.is_empty());
+    }
+
+    /// A read leading with `**` can reach into any output directory, so it
+    /// still claims a directory output. It stops claiming an output whose
+    /// literal extension it can never match.
+    #[test]
+    fn a_recursive_root_glob_claims_directories_but_not_a_different_extension() {
+        let e = edges(
+            &[
+                ("ui:build", &["dist/libs/ui"]),
+                ("js:build", &["dist/**/*.js"]),
+                ("app:build", &["dist/app"]),
+            ],
+            &[("app:build", &["ui:build", "js:build"])],
+            &[("app:build", vec![include_ignored(&["**/*.gen"])])],
+        );
+        assert_eq!(e["app:build"], strings(&["ui:build"]));
+    }
+
+    /// A single-level root glob names only root-level paths, so it claims an
+    /// output only when the glob itself matches it.
+    #[test]
+    fn a_single_level_root_glob_claims_only_what_it_matches() {
+        let e = edges(
+            &[
+                ("manifest:build", &["package.json"]),
+                ("ui:build", &["dist/libs/ui"]),
+                ("app:build", &["dist/app"]),
+            ],
+            &[("app:build", &["manifest:build", "ui:build"])],
+            &[("app:build", vec![include_ignored(&["*.json"])])],
+        );
+        assert_eq!(e["app:build"], strings(&["manifest:build"]));
+    }
+
+    #[test]
+    fn literal_extension_reads_only_a_fixed_suffix() {
+        assert_eq!(literal_extension("dist/**/*.js"), Some("js"));
+        assert_eq!(literal_extension("**/*.gen"), Some("gen"));
+        assert_eq!(literal_extension("dist/out.d.ts"), Some("ts"));
+        assert_eq!(literal_extension("dist/libs/ui"), None);
+        assert_eq!(literal_extension("dist/**"), None);
+        assert_eq!(literal_extension("dist/*.{js,ts}"), None);
     }
 
     #[test]
