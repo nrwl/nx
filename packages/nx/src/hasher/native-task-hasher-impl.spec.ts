@@ -1571,8 +1571,22 @@ describe('native task hasher', () => {
     await impl.hashTask(taskGraph.tasks['e2e:e2e'], taskGraph, {});
     expect(planning.calls).toBe(1);
 
-    // A changed override makes it a different task graph.
+    // A changed output set is a different task graph to the planner; an
+    // override is not, since plans never read it.
     const changed: TaskGraph = {
+      ...taskGraph,
+      tasks: {
+        ...taskGraph.tasks,
+        'app:serve': {
+          ...taskGraph.tasks['app:serve'],
+          outputs: ['{workspaceRoot}/dist/apps/app-serve'],
+        },
+      },
+    };
+    await impl.hashTask(changed.tasks['app:serve'], changed, {});
+    expect(planning.calls).toBe(2);
+
+    const overridden: TaskGraph = {
       ...taskGraph,
       tasks: {
         ...taskGraph.tasks,
@@ -1582,7 +1596,7 @@ describe('native task hasher', () => {
         },
       },
     };
-    await impl.hashTask(changed.tasks['app:serve'], changed, {});
+    await impl.hashTask(overridden.tasks['app:serve'], overridden, {});
     expect(planning.calls).toBe(2);
   });
 });

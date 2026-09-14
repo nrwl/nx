@@ -159,9 +159,11 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
 }
 
 /**
- * Plans depend on each task's target, overrides, outputs and root and on the
- * graph's edges. A run's results (hash, timings) are left out so hashing one
- * task does not invalidate the plans of the rest.
+ * Everything the planner reads from a task graph: each task's target and
+ * outputs, and the graph's edges. The project graph and nx.json are fixed for
+ * the life of a hasher, so equal fingerprints mean equal plans. A run's
+ * results (hash, timings) are left out so hashing one task does not
+ * invalidate the plans of the rest.
  */
 function taskGraphFingerprint(taskGraph: TaskGraph): string {
   const parts: string[] = [];
@@ -172,9 +174,7 @@ function taskGraphFingerprint(taskGraph: TaskGraph): string {
       task.target.project,
       task.target.target,
       task.target.configuration ?? '',
-      JSON.stringify(task.overrides ?? {}),
       (task.outputs ?? []).join(','),
-      task.projectRoot ?? '',
       (taskGraph.dependencies[id] ?? []).join(','),
       (taskGraph.continuousDependencies[id] ?? []).join(',')
     );

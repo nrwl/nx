@@ -1368,8 +1368,8 @@ describe('task planner', () => {
         }
       );
 
-      // parent:test has no task dependency of its own, so hash-task.ts must
-      // defer it past child:build for this entry to be hashed after the build.
+      // parent:test has no task dependency of its own; the TaskOutput entry
+      // is what makes hash_plans_upfront hold it back until child:build ran.
       expect(taskGraph.dependencies['parent:test']).toEqual([]);
       const plan = planner.getPlans(['parent:test'], taskGraph)['parent:test'];
       expect(plan).toContain('child:libs/child/**/*');
