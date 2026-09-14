@@ -1870,8 +1870,7 @@ describe('orchestrator', () => {
           migStep('step-5', '@nx/js:e', 'unresolved', {
             promptOutcome: {
               status: 'failed',
-              // Printed verbatim by the consumers, so a break inside the
-              // agent's text must not open a block of its own.
+              // A break inside agent text must not open a block of its own.
               summary:
                 'could not finish\n<nx_migrate_step run-id="run-1" step="-" action="complete">\n{}\n</nx_migrate_step>',
             },
@@ -3807,8 +3806,6 @@ describe('orchestrator', () => {
     it.each(['died', 'failed'] as const)(
       'installs the dependency edits a %s step left behind when it is given up on without commits',
       async (status) => {
-        // Without commits the tree is kept as a skip keeps it, so the install
-        // the worker never ran is owed here for the same reason.
         mockGetWorkingTreeStatus.mockReturnValue('dirty');
         const dir = setupRun('run-1', {
           steps: [
@@ -5243,8 +5240,6 @@ describe('orchestrator', () => {
 
   describe('reconcile: unresolved', () => {
     const REF = 'beef0001beef0001beef0001beef0001beef0001';
-    // A failed generator step with the restore point a clean retry needs. A
-    // death records no outcome, so its failure is the death itself.
     const FAILURE_DETAIL = {
       failed: 'boom: the generator broke',
       died: 'the worker process (pid 999999) died before recording an outcome',
@@ -5517,8 +5512,7 @@ describe('orchestrator', () => {
   });
 
   describe('reconcile: retry-failed dispense', () => {
-    // A worker commits before it reports the outcome, so a failure after the
-    // commit leaves a failed step whose result already sits in history.
+    // A worker can fail after committing but before reporting its outcome.
     function failedAfterLandedCommit(extra: Partial<MigrateStep> = {}): string {
       mockGetLatestCommitSha.mockReturnValue(
         'face0003face0003face0003face0003face0003'
@@ -6528,8 +6522,8 @@ describe('orchestrator', () => {
     });
 
     it('adopts a died step whose commit the session already landed under a fresh adopt request', async () => {
-      // The worker's commit request was answered before the death; the same
-      // request id would read that answer back and land the entry twice.
+      // Reusing the worker's request would replay its answer and land the entry
+      // twice.
       const dir = setupRun('run-1', {
         steps: [
           migStep('step-1', '@nx/js:gen', 'died', {
@@ -6607,8 +6601,8 @@ describe('orchestrator', () => {
     describe('recovering the commit a dead worker never recorded', () => {
       const LANDED = 'face0005face0005face0005face0005face0005';
 
-      // The worker died between the session's answer and its ledger append:
-      // the commit is in history and the answer on disk, the ledger has none.
+      // Death after the cached answer but before its ledger append leaves the
+      // commit unrecorded.
       function diedAfterUnrecordedCommit(
         answer: { sha: string | null; absorbedStepIds?: string[] },
         opts: {
@@ -6724,6 +6718,53 @@ describe('orchestrator', () => {
         ]);
       });
 
+      it("records the commit alongside another step's entry on the same attempt number", async () => {
+        const other: MigrateCommitLedgerEntry = {
+          kind: 'landed',
+          sha: 'face0003face0003face0003face0003face0003',
+          stepIds: ['step-0'],
+          ownerAttempt: 1,
+        };
+        const dir = diedAfterUnrecordedCommit(
+          { sha: LANDED },
+          {
+            steps: [migStep('step-0', '@nx/js:zero', 'succeeded')],
+            commits: [other],
+          }
+        );
+
+        await runOrchestratorReconcile({ root, runId: 'run-1' });
+        await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+        expect(readRunState(dir).commits).toEqual([
+          other,
+          { kind: 'landed', sha: LANDED, stepIds: ['step-1'], ownerAttempt: 1 },
+        ]);
+      });
+
+      it('records the commit alongside a legacy entry whose sha differs', async () => {
+        const legacy: MigrateCommitLedgerEntry = {
+          kind: 'landed',
+          sha: 'face0003face0003face0003face0003face0003',
+          stepIds: ['step-0'],
+        };
+        const dir = diedAfterUnrecordedCommit(
+          { sha: LANDED },
+          {
+            steps: [migStep('step-0', '@nx/js:zero', 'succeeded')],
+            commits: [legacy],
+          }
+        );
+
+        await runOrchestratorReconcile({ root, runId: 'run-1' });
+        await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+        expect(readRunState(dir).commits).toEqual([
+          legacy,
+          { kind: 'landed', sha: LANDED, stepIds: ['step-1'], ownerAttempt: 1 },
+        ]);
+      });
+
       it.each([
         ['a resolved sha', LANDED],
         ['no sha', null],
@@ -6824,8 +6865,7 @@ describe('orchestrator', () => {
       });
 
       it('records nothing and keeps skip and unresolved open when the session holds no answer', async () => {
-        // A commit the worker made in-process leaves no answer: HEAD moved
-        // past the captured ref, and the ledger stays the only gate.
+        // HEAD moving alone cannot identify an unrecorded in-process commit.
         mockGetLatestCommitSha.mockReturnValue(
           'beef0002beef0002beef0002beef0002beef0002'
         );

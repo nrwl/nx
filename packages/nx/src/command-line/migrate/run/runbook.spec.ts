@@ -97,8 +97,8 @@ describe('renderRunbook', () => {
     expect(runbook).toContain(
       'where the dispense withholds it, `adopt`\nis that choice.'
     );
-    // Unattended, the failed handoff is the only way from an unfinishable
-    // prompt to the give-up option.
+    // Unattended, an unfinishable prompt reaches the give-up option only
+    // through a failed handoff.
     expect(runbook).toContain(
       'write that failed handoff yourself with the problems'
     );

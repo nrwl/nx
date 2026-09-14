@@ -738,9 +738,8 @@ describe('migrate commit broker', () => {
   });
 
   it('lands the commit of a step given up on after its own commit failed, instead of replaying that answer', async () => {
-    // The worker's commit request failed at its install; the agent fixed the
-    // dependencies and gave the step up. The partial commit is a different
-    // operation on the same attempt and must not read the cached failure.
+    // Giving up is a new operation on the same attempt; it must not replay the
+    // worker's cached failure.
     mockRunInstall.mockRejectedValueOnce(new Error('registry unreachable'));
     mockCommit.mockImplementation(async (...args: unknown[]) => {
       await (args[4] as () => Promise<void>)();
