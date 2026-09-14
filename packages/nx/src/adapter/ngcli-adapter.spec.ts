@@ -96,6 +96,87 @@ describe('getWrappedWorkspaceNodeModulesArchitectHost', () => {
   });
 });
 
+describe('getWrappedWorkspaceNodeModulesArchitectHost aliases', () => {
+  let fs: TempFs;
+
+  afterEach(() => {
+    fs?.cleanup();
+  });
+
+  it('classifies an aliased builder against the package that declares it', async () => {
+    fs = new TempFs('ngcli-adapter-builder-alias');
+    fs.createFilesSync({
+      'package.json': JSON.stringify({
+        name: 'root',
+        workspaces: ['packages/*'],
+      }),
+      'packages/alias/package.json': JSON.stringify({
+        name: '@proj/alias',
+        builders: './builders.json',
+      }),
+      'packages/alias/builders.json': JSON.stringify({
+        builders: { build: '@proj/impl:build' },
+      }),
+      'packages/impl/package.json': JSON.stringify({
+        name: '@proj/impl',
+        builders: './builders.json',
+      }),
+      'packages/impl/builders.json': JSON.stringify({
+        builders: {
+          build: { implementation: './src/build', schema: './src/schema.json' },
+        },
+      }),
+      'packages/impl/src/build.js': 'module.exports = () => {};\n',
+      'packages/impl/src/schema.json': JSON.stringify({ type: 'object' }),
+    });
+    vi.resetModules();
+    const { setWorkspaceRoot } = await import('../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
+    const { registerSourceGraphResolver } =
+      await import('../plugins/js/utils/register');
+    (registerSourceGraphResolver as Mock).mockClear();
+    const { getWrappedWorkspaceNodeModulesArchitectHost } =
+      await import('./ngcli-adapter');
+    const js = (packageName: string) =>
+      ({
+        js: {
+          packageName,
+          packageExports: './dist/index.js',
+          packageMain: 'dist/index.js',
+          isInPackageManagerWorkspaces: true,
+        },
+      }) as ProjectConfiguration['metadata'];
+    const projects: Record<string, ProjectConfiguration> = {
+      alias: {
+        name: 'alias',
+        root: 'packages/alias',
+        metadata: js('@proj/alias'),
+      },
+      impl: {
+        name: 'impl',
+        root: 'packages/impl',
+        sourceRoot: 'packages/impl/src',
+        metadata: js('@proj/impl'),
+      },
+    };
+
+    const host = await getWrappedWorkspaceNodeModulesArchitectHost(
+      {} as any,
+      fs.tempDir,
+      projects
+    );
+    const info = await host.resolveBuilder('@proj/alias:build');
+
+    const builderPath = join(fs.tempDir, 'packages/impl/src/build.js');
+    expect(info.import).toBe(builderPath);
+    expect(registerSourceGraphResolver).toHaveBeenCalledWith(
+      builderPath,
+      fs.tempDir,
+      ['@proj/alias', '@proj/impl']
+    );
+  });
+});
+
 describe('ngcli-adapter', () => {
   it('arrayBufferToString should support large buffers', () => {
     const largeString = 'a'.repeat(1000000);

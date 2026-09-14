@@ -245,6 +245,114 @@ describe('plugin state freshness', () => {
   });
 });
 
+describe('workspace package names', () => {
+  let fs: TempFs;
+
+  beforeEach(() => {
+    fs = new TempFs('pgir-package-names');
+  });
+
+  afterEach(() => {
+    fs.cleanup();
+  });
+
+  // A source graph resolves a workspace import only for a package it knows,
+  // so an added package has to reach the graphs before the hooks that may
+  // import it, and it has to survive a hook that fails.
+  it('publishes an added package to the source graphs before the hooks run and keeps it after a failed hook', async () => {
+    fs.createFilesSync({
+      'nx.json': JSON.stringify({}),
+      'package.json': JSON.stringify({
+        name: 'root',
+        workspaces: ['packages/*'],
+      }),
+      'packages/a/package.json': JSON.stringify({ name: '@proj/a' }),
+    });
+
+    vi.resetModules();
+    vi.doUnmock('../../project-graph/plugins/get-plugins');
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
+
+    // One sequence for both spies so the order of publication and hooks is
+    // observable.
+    let seq = 0;
+    const refreshes: Array<{ seq: number; names?: string[] }> = [];
+    const retrievals: number[] = [];
+    let failRetrieval = false;
+    vi.doMock('../../plugins/js/utils/register', async () => {
+      const actual = (await vi.importActual(
+        '../../plugins/js/utils/register'
+      )) as any;
+      return {
+        ...actual,
+        refreshSourceGraphResolvers: (
+          root: string,
+          getNames?: () => string[]
+        ) => {
+          refreshes.push({ seq: ++seq, names: getNames?.() });
+          return actual.refreshSourceGraphResolvers(root, getNames);
+        },
+      };
+    });
+    vi.doMock(
+      '../../project-graph/utils/retrieve-workspace-files',
+      async () => {
+        const actual = (await vi.importActual(
+          '../../project-graph/utils/retrieve-workspace-files'
+        )) as any;
+        return {
+          ...actual,
+          retrieveProjectConfigurations: async (...args: unknown[]) => {
+            retrievals.push(++seq);
+            if (failRetrieval) {
+              throw new Error('hook failed');
+            }
+            return actual.retrieveProjectConfigurations(...args);
+          },
+        };
+      }
+    );
+
+    const {
+      getCachedSerializedProjectGraphPromise,
+      scheduleProjectGraphRecomputation,
+    } = await import('./project-graph-incremental-recomputation');
+
+    expect((await getCachedSerializedProjectGraphPromise()).error).toBeNull();
+
+    fs.createFileSync(
+      'packages/b/package.json',
+      JSON.stringify({ name: '@proj/b' })
+    );
+    failRetrieval = true;
+    scheduleProjectGraphRecomputation(['packages/b/package.json'], [], []);
+    const failed = await getCachedSerializedProjectGraphPromise();
+    expect(failed.error?.message).toBe('hook failed');
+    const failedRetrievals = retrievals.length;
+    expect(failedRetrievals).toBeGreaterThan(1);
+
+    const between = (from: number, to: number) =>
+      refreshes.filter((r) => r.seq > from && r.seq < to);
+    expect(
+      between(retrievals[0], retrievals[1]).map((r) => r.names)
+    ).toContainEqual(['@proj/a', '@proj/b']);
+
+    failRetrieval = false;
+    fs.createFileSync('packages/a/index.js', '');
+    scheduleProjectGraphRecomputation(['packages/a/index.js'], [], []);
+    expect((await getCachedSerializedProjectGraphPromise()).error).toBeNull();
+
+    // The set outlived the failures: nothing was republished or rescanned.
+    const afterFailure = between(
+      retrievals[failedRetrievals - 1],
+      retrievals[retrievals.length - 1]
+    );
+    expect(afterFailure.length).toBeGreaterThan(0);
+    expect(afterFailure.every((r) => r.names === undefined)).toBe(true);
+  });
+});
+
 describe('pending dotenv replay before serving a graph', () => {
   let fs: TempFs;
 

@@ -34,6 +34,7 @@ vi.mock('../../plugins/js/utils/register', () => ({
 
 vi.mock('../../utils/workspace-root', () => ({
   workspaceRoot: '/workspace',
+  setWorkspaceRoot: vi.fn(),
 }));
 
 // Return a minimal tsconfig for tests that exercise the tsconfig-present path.
@@ -61,7 +62,10 @@ import {
   resetResolvePluginCache,
   resolveNxPlugin,
 } from './resolve-plugin';
+import { findProjectForPath } from '../../project-graph/utils/find-project-for-path';
+import { TempFs } from '../../internal-testing-utils/temp-fs';
 import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
+import { mkdirSync, symlinkSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 // ---------------------------------------------------------------------------
@@ -498,6 +502,94 @@ describe('getPluginPathAndName', () => {
 
     expect(result.pluginPath).toBe(join(__dirname, 'resolve-plugin.ts'));
     expect(result.isSourcePlugin).toBe(true);
+  });
+
+  describe('path-registered JavaScript plugins', () => {
+    let fs: TempFs;
+    const projects: Record<string, ProjectConfiguration> = {
+      plugin: {
+        name: 'plugin',
+        root: 'packages/plugin',
+        sourceRoot: 'packages/plugin/src',
+        targets: { build: { outputs: ['{projectRoot}/dist'] } },
+      },
+      // Generates into the plugin's sourceRoot.
+      codegen: {
+        name: 'codegen',
+        root: 'packages/codegen',
+        targets: {
+          gen: { outputs: ['{workspaceRoot}/packages/plugin/src/generated'] },
+        },
+      },
+    };
+
+    beforeEach(() => {
+      fs = new TempFs('resolve-plugin-relative-js', false);
+      fs.createFilesSync({
+        'packages/plugin/src/plugin.mjs': '',
+        'packages/plugin/src/generated/index.js': '',
+        'packages/plugin/dist/plugin.js': '',
+        'tools/plugin.mjs': '',
+      });
+      vi.mocked(findProjectForPath).mockImplementation(
+        (file: string) =>
+          Object.values(projects).find((p) => file.startsWith(p.root + '/'))
+            ?.name ?? null
+      );
+    });
+
+    afterEach(() => {
+      vi.mocked(findProjectForPath).mockImplementation(() => null);
+      fs.cleanup();
+    });
+
+    const load = (specifier: string) =>
+      getPluginPathAndName(specifier, [fs.tempDir], projects, fs.tempDir);
+
+    it('classifies a file under the containing project sourceRoot as source', () => {
+      const result = load('./packages/plugin/src/plugin.mjs');
+
+      expect(result.isSourcePlugin).toBe(true);
+      expect(result.projectRoot).toBe('packages/plugin');
+    });
+
+    it('keeps a file under a declared output built, whichever project declares it', () => {
+      const own = load('./packages/plugin/dist/plugin.js');
+      expect(own.isSourcePlugin).toBe(false);
+      expect(own.projectRoot).toBe('packages/plugin');
+
+      // The producer owns the entry for diagnostics, not the directory.
+      const generated = load('./packages/plugin/src/generated/index.js');
+      expect(generated.isSourcePlugin).toBe(false);
+      expect(generated.projectRoot).toBe('packages/codegen');
+    });
+
+    it('leaves a bare specifier linked into the workspace on the extension rule', () => {
+      mkdirSync(join(fs.tempDir, 'node_modules'), { recursive: true });
+      symlinkSync(
+        join(fs.tempDir, 'packages/plugin/src'),
+        join(fs.tempDir, 'node_modules/alias')
+      );
+
+      const result = load('alias/plugin.mjs');
+
+      expect(result.isSourcePlugin).toBe(false);
+      expect(result.projectRoot).toBeUndefined();
+    });
+
+    it('keeps a file outside every project built', () => {
+      const result = load('./tools/plugin.mjs');
+
+      expect(result.isSourcePlugin).toBe(false);
+      expect(result.projectRoot).toBeUndefined();
+    });
+
+    it('leaves an absolute registration on the extension rule even with projects loaded', () => {
+      const result = load(join(fs.tempDir, 'packages/plugin/src/plugin.mjs'));
+
+      expect(result.isSourcePlugin).toBe(false);
+      expect(result.projectRoot).toBeUndefined();
+    });
   });
 });
 

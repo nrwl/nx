@@ -123,6 +123,88 @@ describe('getImplementationFactory', () => {
     }
   });
 
+  it('classifies an aliased implementation against the package that declares it', () => {
+    const fs = new TempFs('schema-utils-alias-source');
+    const directory = join(fs.tempDir, 'packages/impl');
+    mkdirSync(join(directory, 'src'), { recursive: true });
+    writeFileSync(join(directory, 'src/build.js'), '');
+    const alias = {
+      name: 'alias',
+      root: 'packages/alias',
+      targets: {},
+      metadata: { js: { packageName: '@proj/alias', packageExports: {} } },
+    } as ProjectConfiguration;
+    const impl = {
+      name: 'impl',
+      root: 'packages/impl',
+      sourceRoot: 'packages/impl/src',
+      targets: {},
+      metadata: { js: { packageName: '@proj/impl', packageExports: {} } },
+    } as ProjectConfiguration;
+    packagesMetadata.packageToProjectMap['@proj/alias'] = alias;
+    packagesMetadata.packageToProjectMap['@proj/impl'] = impl;
+    vi.mocked(registerSourceGraphResolver).mockClear();
+    vi.mocked(requireWithTsconfigFallback).mockReturnValue({});
+    const originalRoot = workspaceRoot;
+    setWorkspaceRoot(fs.tempDir);
+    try {
+      const projects = { alias, impl };
+      // Requested as the alias, read from the declaring package.
+      getImplementationFactory(
+        './dist/build',
+        directory,
+        '@proj/alias',
+        projects
+      )();
+      expect(registerSourceGraphResolver).not.toHaveBeenCalled();
+
+      getImplementationFactory(
+        './dist/build',
+        directory,
+        '@proj/alias',
+        projects,
+        '@proj/impl'
+      )();
+      expect(registerSourceGraphResolver).toHaveBeenCalledWith(
+        join(directory, 'src/build.js'),
+        fs.tempDir,
+        []
+      );
+    } finally {
+      setWorkspaceRoot(originalRoot);
+      delete packagesMetadata.packageToProjectMap['@proj/alias'];
+      delete packagesMetadata.packageToProjectMap['@proj/impl'];
+      fs.cleanup();
+    }
+  });
+
+  it('keeps an installed TypeScript implementation built even under a root project', () => {
+    const fs = new TempFs('schema-utils-installed-ts');
+    const directory = join(fs.tempDir, 'node_modules/pkg');
+    mkdirSync(directory, { recursive: true });
+    writeFileSync(join(directory, 'impl.ts'), '');
+    const root = {
+      name: 'root',
+      root: '.',
+      targets: {},
+      metadata: { js: { packageName: 'root', packageExports: {} } },
+    } as ProjectConfiguration;
+    packagesMetadata.packageToProjectMap['root'] = root;
+    vi.mocked(registerSourceGraphResolver).mockClear();
+    vi.mocked(requireWithTsconfigFallback).mockReturnValue({});
+    const originalRoot = workspaceRoot;
+    setWorkspaceRoot(fs.tempDir);
+    try {
+      getImplementationFactory('./impl', directory, 'pkg', { root })();
+
+      expect(registerSourceGraphResolver).not.toHaveBeenCalled();
+    } finally {
+      setWorkspaceRoot(originalRoot);
+      delete packagesMetadata.packageToProjectMap['root'];
+      fs.cleanup();
+    }
+  });
+
   it('loads a JavaScript file guessed under src as source only when sourceRoot covers it', () => {
     const fs = new TempFs('schema-utils-guessed-source');
     const directory = join(fs.tempDir, 'packages/plugin');

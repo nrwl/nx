@@ -37,7 +37,6 @@ import {
   retrieveProjectConfigurations,
   retrieveWorkspaceFiles,
 } from '../../project-graph/utils/retrieve-workspace-files';
-import { getWorkspacePackagesMetadata } from '../../plugins/js/utils/packages';
 import { refreshSourceGraphResolvers } from '../../plugins/js/utils/register';
 import {
   clearRootTsConfigCustomConditionsCache,
@@ -70,6 +69,10 @@ import {
   restartDaemonIfIgnoreFilesChanged,
 } from './watcher';
 import { serverLogger } from '../logger';
+import {
+  resetWorkspacePackageNames,
+  updateWorkspacePackageNames,
+} from './workspace-package-names';
 
 interface SerializedProjectGraph {
   error: Error | null;
@@ -111,6 +114,7 @@ let storedWorkspaceConfigHash: string | undefined;
 let knownExternalNodes: Record<string, ProjectGraphExternalNode> = {};
 let fileChangeCounter = 0;
 let recomputationGeneration = 0;
+let refreshedPackageNamesVersion = 0;
 
 // The graph the settled cached promise serves, with the generation its
 // computation claimed. Set only when a computation's own success becomes the
@@ -176,13 +180,6 @@ function kickOffRecompute() {
         if (servedGraphCandidate?.graph === result.projectGraph) {
           servedGraphState = servedGraphCandidate;
         }
-        const { nodes } = result.projectGraph;
-        refreshSourceGraphResolvers(
-          workspaceRoot,
-          () =>
-            getWorkspacePackagesMetadata(nodes)
-              .packageManagerWorkspacePackageNames
-        );
         notifyProjectGraphRecomputationListeners(
           result.projectGraph,
           result.sourceMaps,
@@ -685,6 +682,32 @@ async function processFilesAndCreateAndSerializeProjectGraph(
     serverLogger.requestLog(updatedFiles);
     serverLogger.requestLog(deletedFiles);
     const nxJson = readNxJson(workspaceRoot);
+
+    // Publish before any hook: a hook may import a package this batch added,
+    // and a failing hook must not defer the set.
+    const packageNames = await updateWorkspacePackageNames(
+      workspaceRoot,
+      updatedFiles,
+      deletedFiles,
+      () => myGeneration === recomputationGeneration
+    );
+    if (!packageNames) {
+      return chainToLatest(false);
+    }
+    refreshSourceGraphResolvers(
+      workspaceRoot,
+      packageNames.version !== refreshedPackageNamesVersion
+        ? () => packageNames.names
+        : undefined
+    );
+    refreshedPackageNamesVersion = packageNames.version;
+    for (const plugin of plugins) {
+      plugin.setWorkspacePackageNames?.(
+        packageNames.names,
+        packageNames.version
+      );
+    }
+
     global.NX_GRAPH_CREATION = true;
 
     let projectConfigurationsResult: ConfigurationResult;
@@ -958,6 +981,8 @@ async function resetInternalState() {
   currentSourceMaps = undefined;
   collectedUpdatedFiles.clear();
   collectedDeletedFiles.clear();
+  // The dropped changes may include manifests; rescan on the next compute.
+  resetWorkspacePackageNames();
   cacheHasBeenPersisted = false;
   resetWorkspaceContext();
 }

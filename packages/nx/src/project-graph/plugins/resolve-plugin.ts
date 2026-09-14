@@ -20,8 +20,15 @@ import {
   clearProjectsWithoutPluginInferenceCache,
   retrieveProjectConfigurationsWithoutPluginInference,
 } from '../utils/retrieve-workspace-files';
-import { isWorkspaceLocalResolution } from './built-entry-resolution-hint';
-import { isSourceEntry, TS_SOURCE_EXTENSIONS } from './entry-provenance';
+import {
+  canonicalPath,
+  isWorkspaceLocalResolution,
+} from './built-entry-resolution-hint';
+import {
+  findDeclaredOutputOwners,
+  isSourceEntry,
+  TS_SOURCE_EXTENSIONS,
+} from './entry-provenance';
 
 import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
@@ -185,9 +192,18 @@ export function getPluginPathAndName(
   }
 
   const ext = path.extname(pluginPath);
-  isSourcePlugin ||=
-    TS_SOURCE_EXTENSIONS.has(ext) &&
-    isWorkspaceLocalResolution(pluginPath, root);
+  let projectRoot = localPlugin?.projectConfig.root;
+  if (!localPlugin && isWorkspaceLocalResolution(pluginPath, root)) {
+    // A relative registration names no package, so the project containing the
+    // file classifies it. Other registrations (absolute paths, bare names
+    // linked into the workspace) stay on the extension rule.
+    const owner =
+      projects && moduleName.startsWith('.')
+        ? findEntryOwner(pluginPath, ext, projects, root)
+        : undefined;
+    projectRoot = owner?.project?.root;
+    isSourcePlugin ||= owner ? owner.isSource : TS_SOURCE_EXTENSIONS.has(ext);
+  }
   // Directory paths fall through to Node's `package.json` `main` resolution
   // which may land on a TS file; only opt out of TS transpiler registration
   // when the resolved path is unambiguously JS.
@@ -205,8 +221,65 @@ export function getPluginPathAndName(
     name,
     shouldRegisterTSTranspiler,
     isSourcePlugin,
-    projectRoot: localPlugin?.projectConfig.root,
+    projectRoot,
   };
+}
+
+// A declared output belongs to its producer wherever it lands; only an
+// unambiguous producer owns it for diagnostics. Anything else belongs to the
+// project containing it.
+function findEntryOwner(
+  filePath: string,
+  ext: string,
+  projects: Record<string, ProjectConfiguration>,
+  root: string
+): { project: ProjectConfiguration | undefined; isSource: boolean } {
+  if (!TS_SOURCE_EXTENSIONS.has(ext)) {
+    const producers = findDeclaredOutputOwners(filePath, projects, root);
+    if (producers.length) {
+      return {
+        project: producers.length === 1 ? producers[0] : undefined,
+        isSource: false,
+      };
+    }
+  }
+  const containing = findProjectContainingPath(filePath, projects, root);
+  return {
+    project: containing,
+    isSource: containing
+      ? isSourceEntry(filePath, false, containing, root)
+      : TS_SOURCE_EXTENSIONS.has(ext),
+  };
+}
+
+const projectLookupsBySnapshot = new WeakMap<
+  Record<string, ProjectConfiguration>,
+  {
+    rootMappings: ProjectRootMappings;
+    byName: Map<string, ProjectConfiguration>;
+  }
+>();
+
+function findProjectContainingPath(
+  filePath: string,
+  projects: Record<string, ProjectConfiguration>,
+  root: string
+): ProjectConfiguration | undefined {
+  let lookups = projectLookupsBySnapshot.get(projects);
+  if (!lookups) {
+    lookups = { rootMappings: new Map(), byName: new Map() };
+    for (const project of Object.values(projects)) {
+      lookups.rootMappings.set(project.root, project.name);
+      lookups.byName.set(project.name, project);
+    }
+    projectLookupsBySnapshot.set(projects, lookups);
+  }
+  // Node resolves through symlinks; the configured root may not.
+  const projectName = findProjectForPath(
+    normalizePath(path.relative(canonicalPath(root), canonicalPath(filePath))),
+    lookups.rootMappings
+  );
+  return projectName ? lookups.byName.get(projectName) : undefined;
 }
 
 function getSubpathOfLocalPackage(
