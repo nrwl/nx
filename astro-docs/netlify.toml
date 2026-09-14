@@ -1170,6 +1170,16 @@ to = "/docs/technologies/module-federation/introduction"
 from = "/docs/concepts/decisions"
 to = "/docs/kb/monorepo-vs-polyrepo"
 
+# DOC-660: bare /docs/<slug> forms of these kb pages are indexed and ranking,
+# but only the old deep paths were redirected.
+[[redirects]]
+from = "/docs/what-is-a-monorepo"
+to = "/docs/kb/what-is-a-monorepo"
+
+[[redirects]]
+from = "/docs/angular-nx-version-matrix"
+to = "/docs/kb/angular-nx-version-matrix"
+
 # Rewrite for base path handling (keeps URL the same)
 [[redirects]]
 from = "/docs/*"
