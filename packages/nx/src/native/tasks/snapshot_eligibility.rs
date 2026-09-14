@@ -3,6 +3,7 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use crate::native::cache::expand_outputs::match_output_paths;
 use crate::native::io_snapshots::bundle::{TaskInputs, TaskIoSnapshot};
 use crate::native::io_snapshots::{IoSnapshotResolution, IoSnapshots};
+use crate::native::tasks::hash_planner::walk_root;
 use crate::native::tasks::hashers::{expand_literal_braces, validate_files_globs};
 use crate::native::tasks::types::TaskGraph;
 
@@ -108,6 +109,17 @@ pub(crate) fn resolve(
     task_graph: &TaskGraph,
     inputs: &EligibilityInputs,
 ) -> Resolved {
+    resolve_scoped(snapshots, task_graph, inputs, None)
+}
+
+/// `resolve` for the given task ids only; eligibility is per task, so a
+/// planner call for one task need not walk the whole graph.
+pub(crate) fn resolve_scoped(
+    snapshots: &IoSnapshots,
+    task_graph: &TaskGraph,
+    inputs: &EligibilityInputs,
+    scope: Option<&[&str]>,
+) -> Resolved {
     let Some(bundle) = snapshots.bundle.as_ref() else {
         return Resolved {
             tasks: HashMap::new(),
@@ -128,7 +140,13 @@ pub(crate) fn resolve(
 
     let mut tasks = HashMap::new();
     let mut diagnostics = Vec::new();
-    let mut task_ids: Vec<&String> = task_graph.tasks.keys().collect();
+    let mut task_ids: Vec<&String> = match scope {
+        Some(ids) => ids
+            .iter()
+            .filter_map(|id| task_graph.tasks.get_key_value(*id).map(|(key, _)| key))
+            .collect(),
+        None => task_graph.tasks.keys().collect(),
+    };
     task_ids.sort();
 
     for task_id in task_ids {
@@ -203,18 +221,24 @@ pub(crate) fn resolve(
         files.sort();
         files.dedup();
         if let Some(glob) = files.iter().find(|g| {
-            expand_literal_braces(g)
-                .iter()
-                .any(|e| escapes_workspace(e))
+            if g.contains('{') {
+                expand_literal_braces(g)
+                    .iter()
+                    .any(|e| escapes_workspace(e))
+            } else {
+                escapes_workspace(g)
+            }
         }) {
             let mut diagnostic = IoSnapshotDiagnostic::task("escapes-workspace", task_id);
             diagnostic.glob = Some(glob.clone());
             diagnostics.push(diagnostic);
             continue;
         }
+        // A path that names one file never walks, so only real globs can be
+        // root-anchored.
         if let Some(glob) = files
             .iter()
-            .filter(|g| !g.starts_with('!'))
+            .filter(|g| !g.starts_with('!') && !is_literal_path(g))
             .find(|g| validate_files_globs(std::slice::from_ref(*g)).is_err())
         {
             let mut diagnostic = IoSnapshotDiagnostic::task("root-anchored-glob", task_id);
@@ -317,6 +341,27 @@ pub fn io_snapshot_outputs(
 /// A glob that would resolve outside the workspace: absolute, drive-lettered,
 /// or carrying a `..` segment. The bundle is server-supplied, so this is the
 /// line that keeps a hostile snapshot from turning hashing into a read oracle.
+/// Whether an observed read names exactly one path, with no glob syntax.
+pub(crate) fn is_literal_path(glob: &str) -> bool {
+    !glob.bytes().any(|b| matches!(b, b'*' | b'?' | b'[' | b'{'))
+}
+
+/// The candidates equal to `root` or below it, from a sorted list. An empty
+/// root is the workspace itself and holds every candidate.
+fn candidates_under(sorted: &[String], root: &str) -> Vec<String> {
+    if root.is_empty() {
+        return sorted.to_vec();
+    }
+    let prefix = format!("{root}/");
+    let start = sorted.partition_point(|c| c.as_str() < prefix.as_str());
+    let end = start + sorted[start..].partition_point(|c| c.starts_with(&prefix));
+    let mut hits: Vec<String> = sorted[start..end].to_vec();
+    if let Ok(i) = sorted.binary_search_by(|c| c.as_str().cmp(root)) {
+        hits.push(sorted[i].clone());
+    }
+    hits
+}
+
 fn escapes_workspace(glob: &str) -> bool {
     let path = glob.strip_prefix('!').unwrap_or(glob);
     let bytes = path.as_bytes();
@@ -333,11 +378,12 @@ fn producers_by_declared_outputs(
     files: &[String],
     task_graph: &TaskGraph,
 ) -> BTreeMap<String, Vec<String>> {
-    let candidates: Vec<String> = files
+    let mut candidates: Vec<String> = files
         .iter()
         .filter(|f| !f.starts_with('!'))
         .cloned()
         .collect();
+    candidates.sort();
     let mut producers = BTreeMap::new();
     if candidates.is_empty() {
         return producers;
@@ -356,11 +402,23 @@ fn producers_by_declared_outputs(
             if producer.outputs.is_empty() {
                 continue;
             }
-            let Ok(matched) = match_output_paths(producer.outputs.clone(), candidates.clone())
-            else {
+            // Only reads under an output's walk root can match it; glob
+            // semantics (negations included) are settled on those few.
+            let mut under: Vec<String> = producer
+                .outputs
+                .iter()
+                .filter(|output| !output.starts_with('!'))
+                .flat_map(|output| candidates_under(&candidates, &walk_root(output)))
+                .collect();
+            under.sort();
+            under.dedup();
+            if under.is_empty() {
+                continue;
+            }
+            let Ok(matched) = match_output_paths(producer.outputs.clone(), under.clone()) else {
                 continue;
             };
-            let paths: Vec<String> = candidates
+            let paths: Vec<String> = under
                 .iter()
                 .zip(matched)
                 .filter(|(_, hit)| *hit)
@@ -430,6 +488,31 @@ pub fn io_snapshot_deferred_task_ids(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn candidates_under_a_root_ignores_siblings_that_share_its_prefix() {
+        let sorted: Vec<String> = [
+            "dist/a",
+            "dist/a-b/x.js",
+            "dist/a/x.js",
+            "dist/a/y/z.js",
+            "dist/b/x.js",
+        ]
+        .into_iter()
+        .map(String::from)
+        .collect();
+        assert_eq!(
+            candidates_under(&sorted, "dist/a"),
+            vec![
+                "dist/a/x.js".to_string(),
+                "dist/a/y/z.js".to_string(),
+                "dist/a".to_string()
+            ]
+        );
+        assert_eq!(candidates_under(&sorted, "dist/c"), Vec::<String>::new());
+        assert_eq!(candidates_under(&sorted, "").len(), sorted.len());
+        assert!(is_literal_path("dist/a/x.js") && !is_literal_path("dist/a/*.js"));
+    }
 
     #[test]
     fn observed_outputs_are_confined_and_skip_cache_dirs() {
