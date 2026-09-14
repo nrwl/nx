@@ -4,10 +4,11 @@ use std::sync::Arc;
 
 use hashbrown::HashSet;
 
+use crate::native::tasks::types::{ALWAYS_ON_WORKSPACE_FILES, IO_SNAPSHOT_MARKER_PREFIX};
 use crate::native::{
     hasher::hash,
     project_graph::{types::ProjectGraph, utils::create_project_root_mappings},
-    tasks::types::{HashInstruction, HashPlans},
+    tasks::types::{HashInstruction, HashPlans, InstructionPool},
     types::{NapiDashMap, SharedStr, SharedStrMap},
 };
 use crate::native::{
@@ -47,6 +48,82 @@ pub struct HashInputs {
     pub dep_outputs: Vec<String>,
     /// External dependencies
     pub external: Vec<String>,
+    /// Provenance of every value above, keyed by the value itself.
+    #[napi(ts_type = "Record<string, 'snapshot' | 'target' | 'dependency' | 'native'>")]
+    pub sources: HashMap<String, String>,
+    /// Domain markers in the plan, e.g. `io-snapshot:<digest>`.
+    pub markers: Vec<String>,
+}
+
+/// Where an input value came from; see `input_source`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum InputSource {
+    Snapshot,
+    Target,
+    Dependency,
+    Native,
+}
+
+impl InputSource {
+    fn as_str(self) -> &'static str {
+        match self {
+            InputSource::Snapshot => "snapshot",
+            InputSource::Target => "target",
+            InputSource::Dependency => "dependency",
+            InputSource::Native => "native",
+        }
+    }
+}
+
+/// Classifies one instruction's inputs for `HashInputs::sources`. A plan that
+/// carries an io-snapshot marker had its declared filesets replaced, so its
+/// file-bearing instructions are snapshot-sourced; otherwise filesets are
+/// `target` (own project) or `dependency`. Env/runtime/externals/config are
+/// always native.
+pub(crate) fn input_source(
+    instruction: &HashInstruction,
+    task_project: &str,
+    snapshot_backed: bool,
+) -> InputSource {
+    match instruction {
+        HashInstruction::ProjectFileSet(project, _, _) => {
+            if snapshot_backed {
+                InputSource::Snapshot
+            } else if project == task_project {
+                InputSource::Target
+            } else {
+                InputSource::Dependency
+            }
+        }
+        HashInstruction::WorkspaceFileSet(file_sets) => {
+            if file_sets.iter().eq(ALWAYS_ON_WORKSPACE_FILES.iter()) {
+                InputSource::Native
+            } else if snapshot_backed {
+                InputSource::Snapshot
+            } else {
+                InputSource::Target
+            }
+        }
+        HashInstruction::TaskOutput(_, _) => {
+            if snapshot_backed {
+                InputSource::Snapshot
+            } else {
+                InputSource::Dependency
+            }
+        }
+        _ => InputSource::Native,
+    }
+}
+
+/// True when the plan carries an io-snapshot marker.
+pub(crate) fn is_snapshot_backed(pool: &InstructionPool, ids: &[u32]) -> bool {
+    ids.iter().any(|id| {
+        matches!(&*pool.get(*id), HashInstruction::Marker(m) if m.starts_with(IO_SNAPSHOT_MARKER_PREFIX))
+    })
+}
+
+pub(crate) fn task_project(task_id: &str) -> &str {
+    task_id.split(':').next().unwrap_or(task_id)
 }
 
 /// Internal builder that uses HashSet for O(1) deduplication during accumulation.
@@ -58,6 +135,8 @@ pub(crate) struct HashInputsBuilder {
     pub(crate) environment: HashSet<String>,
     pub(crate) dep_outputs: HashSet<String>,
     pub(crate) external: HashSet<String>,
+    pub(crate) sources: HashMap<String, &'static str>,
+    pub(crate) markers: HashSet<String>,
 }
 
 impl HashInputsBuilder {
@@ -68,6 +147,26 @@ impl HashInputsBuilder {
         self.environment.extend(other.environment);
         self.dep_outputs.extend(other.dep_outputs);
         self.external.extend(other.external);
+        for (value, source) in other.sources {
+            self.sources.entry(value).or_insert(source);
+        }
+        self.markers.extend(other.markers);
+    }
+
+    /// Records `source` for every value currently in the builder.
+    pub(crate) fn tag(mut self, source: InputSource) -> Self {
+        let label = source.as_str();
+        for value in self
+            .files
+            .iter()
+            .chain(self.runtime.iter())
+            .chain(self.environment.iter())
+            .chain(self.dep_outputs.iter())
+            .chain(self.external.iter())
+        {
+            self.sources.entry(value.clone()).or_insert(label);
+        }
+        self
     }
 }
 
@@ -94,6 +193,10 @@ impl From<&HashInstruction> for HashInputsBuilder {
             },
             HashInstruction::AllExternalDependencies => HashInputsBuilder {
                 external: HashSet::from(["AllExternalDependencies".to_string()]),
+                ..Default::default()
+            },
+            HashInstruction::Marker(marker) => HashInputsBuilder {
+                markers: HashSet::from([marker.clone()]),
                 ..Default::default()
             },
             HashInstruction::ProjectConfiguration(_) | HashInstruction::Cwd(_) => {
@@ -125,6 +228,12 @@ impl From<HashInputsBuilder> for HashInputs {
             environment: to_sorted_vec(builder.environment),
             dep_outputs: to_sorted_vec(builder.dep_outputs),
             external: to_sorted_vec(builder.external),
+            sources: builder
+                .sources
+                .into_iter()
+                .map(|(k, v)| (k, v.to_string()))
+                .collect(),
+            markers: to_sorted_vec(builder.markers),
         }
     }
 }
@@ -580,7 +689,8 @@ impl TaskHasher {
                 | HashInstruction::TaskOutput(_, _)
                 | HashInstruction::External(_)
                 | HashInstruction::AllExternalDependencies
-                | HashInstruction::JsonFileSet(_) => Some(OnceCell::new()),
+                | HashInstruction::JsonFileSet(_)
+                | HashInstruction::Marker(_) => Some(OnceCell::new()),
             })
             .collect();
         hash_plans.plans.par_iter().try_for_each(|(task_id, ids)| {
@@ -588,6 +698,7 @@ impl TaskHasher {
                 return Ok(());
             }
             let js_env = resolve_env(task_id);
+            let snapshot_backed = should_collect_inputs && is_snapshot_backed(pool, ids);
             // Workers accumulate locally, then publish one result per task.
             // The inner parallel iterator also preserves concurrency when
             // a single task has several expensive runtime/file inputs.
@@ -652,7 +763,11 @@ impl TaskHasher {
                                 )?;
 
                                 if should_collect_inputs {
-                                    task_inputs.extend(inputs);
+                                    task_inputs.extend(inputs.tag(input_source(
+                                        instruction_ref.value(),
+                                        task_project(task_id),
+                                        snapshot_backed,
+                                    )));
                                 }
 
                                 match slot {
@@ -932,6 +1047,14 @@ impl TaskHasher {
                     empty
                 };
                 (hashed_external, inputs)
+            }
+            HashInstruction::Marker(marker) => {
+                let inputs = if collect_inputs {
+                    instruction.into()
+                } else {
+                    empty
+                };
+                (hash(marker.as_bytes()), inputs)
             }
             HashInstruction::AllExternalDependencies => {
                 // Identical for every task, so fold once and reuse (individual externals
