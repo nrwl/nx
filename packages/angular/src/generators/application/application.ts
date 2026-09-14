@@ -1,6 +1,10 @@
-import { logShowProjectCommand } from '@nx/devkit/internal';
+import {
+  acknowledgeBuildScripts,
+  logShowProjectCommand,
+} from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
+  detectPackageManager,
   formatFiles,
   GeneratorCallback,
   installPackagesTask,
@@ -127,6 +131,11 @@ export async function applicationGenerator(
     }
     if (options.style === 'less') {
       devDependencies['less'] = packageVersions.lessVersion;
+      // less's postinstall only installs Playwright browsers, which nothing
+      // that consumes less needs.
+      acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+        less: false,
+      });
     }
     if (Object.keys(devDependencies).length) {
       acknowledgeAngularBuildScripts(tree);
