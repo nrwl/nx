@@ -472,6 +472,8 @@ impl TaskHasher {
     where
         F: Fn(&str) -> &'a HashMap<String, String> + Sync,
     {
+        // One hashing pass: the disk-backed content cache sweeps only here.
+        shared_file_content_cache().begin_pass();
         // Per-invocation: these read live disk/exec state (task outputs, shell commands,
         // json file contents) that can change mid-run, so they must not persist.
         let task_output_cache = DashMap::new();

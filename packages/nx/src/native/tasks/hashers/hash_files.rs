@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::UNIX_EPOCH;
 
 use anyhow::{Context, Result, bail};
@@ -31,8 +32,8 @@ pub(crate) struct FileContentCache {
 }
 
 /// Content-hashed output names (`index-a1b2c3.js`) leave a dead key behind
-/// per build, so the map grows with build count; at this size it starts over
-/// and the next hash re-reads only what is still live.
+/// per build, so the map grows with build count. Past this size, the next
+/// pass starts by dropping what the previous pass did not use.
 const FILE_CONTENT_CACHE_LIMIT: usize = 100_000;
 
 impl FileContentCache {
@@ -47,17 +48,27 @@ impl FileContentCache {
         }
     }
 
-    fn get(&self, path: &Path, (mtime, size): FileStamp) -> Option<String> {
+    /// Call once at the start of a hashing pass. Sweeping only here, never on
+    /// insert, is what lets a live set larger than the limit keep hitting: a
+    /// sweep in the middle of a pass would drop entries the pass already used.
+    pub(crate) fn begin_pass(&self) {
+        if self.entries.len() < self.limit {
+            return;
+        }
         self.entries
-            .get(path)
-            .filter(|cached| cached.mtime == mtime && cached.size == size)
-            .map(|cached| cached.hash.clone())
+            .retain(|_, cached| cached.used.swap(false, Ordering::Relaxed));
+    }
+
+    fn get(&self, path: &Path, (mtime, size): FileStamp) -> Option<String> {
+        let cached = self.entries.get(path)?;
+        if cached.mtime != mtime || cached.size != size {
+            return None;
+        }
+        cached.used.store(true, Ordering::Relaxed);
+        Some(cached.hash.clone())
     }
 
     fn insert(&self, path: PathBuf, content: CachedFileContent) {
-        if self.entries.len() >= self.limit {
-            self.entries.clear();
-        }
         self.entries.insert(path, content);
     }
 
@@ -80,6 +91,19 @@ pub(crate) struct CachedFileContent {
     mtime: u128,
     size: u64,
     hash: String,
+    /// Set by every hit and by insertion; a sweep clears it.
+    used: AtomicBool,
+}
+
+impl CachedFileContent {
+    fn new((mtime, size): FileStamp, hash: String) -> Self {
+        Self {
+            mtime,
+            size,
+            hash,
+            used: AtomicBool::new(true),
+        }
+    }
 }
 
 /// The `(mtime, size)` a file showed when expansion looked at it.
@@ -572,15 +596,8 @@ fn hash_file_cached(
         return hash;
     }
     let hash = hash_file_path(&path).unwrap_or_else(|| MISSING_FILE_HASH.to_string());
-    if let Some((mtime, size)) = stamp {
-        cache.insert(
-            path,
-            CachedFileContent {
-                mtime,
-                size,
-                hash: hash.clone(),
-            },
-        );
+    if let Some(stamp) = stamp {
+        cache.insert(path, CachedFileContent::new(stamp, hash.clone()));
     }
     hash
 }
@@ -1032,23 +1049,60 @@ mod tests {
         assert!(validate_files_globs(&globs(&["dist/./gen/**"])).is_err());
     }
 
+    fn cache_path(i: usize) -> PathBuf {
+        PathBuf::from(format!("/cached/{i}"))
+    }
+
+    const CACHE_STAMP: FileStamp = (1, 1);
+
     #[test]
-    fn content_cache_starts_over_at_its_limit() {
-        let temp = workspace();
-        let cache = FileContentCache::with_limit(2);
-        let hash = |glob: &str| {
-            let expansion = expand_files(temp.path(), &globs(&[glob])).unwrap();
-            hash_files(temp.path(), &expansion, |_| None, &cache)
+    fn content_cache_keeps_a_live_set_larger_than_its_limit() {
+        let cache = FileContentCache::with_limit(4);
+        // One pass over ten live files: hits, inserting on a miss.
+        let pass = || {
+            cache.begin_pass();
+            (0..10)
+                .filter(|&i| {
+                    let hit = cache.get(&cache_path(i), CACHE_STAMP).is_some();
+                    if !hit {
+                        cache.insert(
+                            cache_path(i),
+                            CachedFileContent::new(CACHE_STAMP, "h".into()),
+                        );
+                    }
+                    hit
+                })
+                .count()
         };
-        hash("dist/gen/a.js");
-        hash("dist/gen/a.js.map");
-        assert_eq!(cache.len(), 2);
-        // A third file crosses the limit: the map starts over, then refills
-        // with whatever is hashed next.
-        hash("dist/other/c.js");
-        assert_eq!(cache.len(), 1);
-        hash("dist/gen/a.js");
-        assert_eq!(cache.len(), 2);
+        assert_eq!(pass(), 0);
+        assert_eq!(pass(), 10);
+        assert_eq!(pass(), 10);
+        assert_eq!(cache.len(), 10);
+    }
+
+    #[test]
+    fn content_cache_drops_what_the_previous_pass_did_not_use() {
+        let cache = FileContentCache::with_limit(4);
+        let entry = || CachedFileContent::new(CACHE_STAMP, "h".into());
+        cache.begin_pass();
+        for i in 0..8 {
+            cache.insert(cache_path(i), entry());
+        }
+        // Over the limit, but everything was used in the pass just finished.
+        cache.begin_pass();
+        assert_eq!(cache.len(), 8);
+        for i in 4..8 {
+            assert!(cache.get(&cache_path(i), CACHE_STAMP).is_some(), "{i}");
+        }
+        // The first four went unused in that pass, so this one drops them.
+        cache.begin_pass();
+        assert_eq!(cache.len(), 4);
+        for i in 0..4 {
+            assert!(cache.get(&cache_path(i), CACHE_STAMP).is_none(), "{i}");
+        }
+        for i in 4..8 {
+            assert!(cache.get(&cache_path(i), CACHE_STAMP).is_some(), "{i}");
+        }
     }
 
     #[test]
