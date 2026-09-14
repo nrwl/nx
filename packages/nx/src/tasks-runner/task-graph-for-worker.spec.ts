@@ -28,6 +28,16 @@ function graph(): TaskGraph {
 }
 
 describe('encodeTaskGraphForWorker', () => {
+  it('hands the graph itself to the channel under NX_LEGACY_IPC', () => {
+    vi.stubEnv('NX_LEGACY_IPC', 'true');
+    try {
+      const g = graph();
+      expect(encodeTaskGraphForWorker(g)).toBe(g);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
   it('reuses the same bytes for the same graph', () => {
     const g = graph();
     expect(encodeTaskGraphForWorker(g)).toBe(encodeTaskGraphForWorker(g));

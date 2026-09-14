@@ -13,6 +13,7 @@ import { createSerializableError } from '../utils/serializable-error';
 import { isV8SerializerEnabled } from './is-v8-serializer-enabled';
 import { serialize as v8_serialize } from 'v8';
 import { encodeAuto } from '../utils/dedupe-serialization';
+import { isLegacyIpc } from '../utils/legacy-ipc';
 import { writeMessage } from '../utils/consume-messages-from-socket';
 
 export const isWindows = platform() === 'win32';
@@ -115,7 +116,8 @@ function serializeAs(data: any, format: 'v8' | 'json'): Buffer {
  * max string length far sooner, while v8 cannot clone a function.
  *
  * Repetition-heavy payloads such as per-task hash details go as a v8-serialized
- * string table instead, whatever `preferred` is; every reader sniffs the format.
+ * string table instead, whatever `preferred` is, unless `NX_LEGACY_IPC` opts
+ * out; every reader sniffs the format.
  *
  * @param data Data to serialize
  * @param preferred Format to attempt first
@@ -125,7 +127,7 @@ export function serializeWithFallback(
   data: any,
   preferred: 'v8' | 'json'
 ): Buffer {
-  const deduped = encodeAuto(data);
+  const deduped = isLegacyIpc() ? undefined : encodeAuto(data);
   if (deduped) return v8_serialize(deduped);
   try {
     return serializeAs(data, preferred);

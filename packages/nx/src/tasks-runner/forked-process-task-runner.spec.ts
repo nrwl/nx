@@ -94,6 +94,28 @@ describe('task graph transport to worker processes', () => {
     }
   );
 
+  it('forks a JSON channel and sends the graph itself under NX_LEGACY_IPC', async () => {
+    vi.stubEnv('NX_LEGACY_IPC', 'true');
+    try {
+      const input = graph();
+      const runner = new ForkedProcessTaskRunner(
+        { lifeCycle: {} } as any,
+        false
+      );
+      await runner.forkProcessLegacy(input.tasks.a, {
+        taskGraph: input,
+        env: {},
+        temporaryOutputPath: '/unused',
+        streamOutput: false,
+        pipeOutput: true,
+      });
+      expect(options.serialization).toBe('json');
+      expect(child.send.mock.calls[0][0].taskGraph).toBe(input);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
   it('reuses the encoded bytes across forks until a task is re-hashed', async () => {
     const input = graph();
     const runner = new ForkedProcessTaskRunner({ lifeCycle: {} } as any, false);

@@ -2,6 +2,7 @@ import { fork, Serializable } from 'child_process';
 import { join } from 'path';
 import { PseudoIPCClient } from './pseudo-ipc';
 import { signalToCode } from '../utils/exit-codes';
+import { workerSerialization } from '../utils/legacy-ipc';
 
 const pseudoIPCPath = process.argv[2];
 const forkId = process.argv[3];
@@ -16,7 +17,7 @@ if (process.env['NX_PSEUDO_TERMINAL_EXEC_ARGV']) {
 
 const childProcess = fork(script, {
   stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
-  serialization: 'advanced',
+  serialization: workerSerialization(),
   env: process.env,
   execArgv,
 });

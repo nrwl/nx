@@ -4,6 +4,7 @@ import { join } from 'path';
 import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 
+import { workerSerialization } from '../utils/legacy-ipc';
 import { output } from '../utils/output';
 import { stripIndents } from '../utils/strip-indents';
 import { BatchMessageType } from './batch/batch-messages';
@@ -70,7 +71,7 @@ export class ForkedProcessTaskRunner {
 
     const p = fork(workerPath, {
       stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
-      serialization: 'advanced',
+      serialization: workerSerialization(),
       env: {
         ...env,
         NX_FORKED_TASK_EXECUTOR: 'true',
@@ -291,7 +292,7 @@ export class ForkedProcessTaskRunner {
 
       const p = fork(this.cliPath, {
         stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
-        serialization: 'advanced',
+        serialization: workerSerialization(),
         env: {
           ...env,
           NX_FORKED_TASK_EXECUTOR: 'true',
@@ -358,7 +359,7 @@ export class ForkedProcessTaskRunner {
       }
       const p = fork(this.cliPath, {
         stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
-        serialization: 'advanced',
+        serialization: workerSerialization(),
         env: {
           ...env,
           NX_FORKED_TASK_EXECUTOR: 'true',

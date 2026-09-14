@@ -274,6 +274,18 @@ describe('serialize() with automatic dedupe', () => {
     }
   );
 
+  it('sends no string table under NX_LEGACY_IPC', () => {
+    vi.stubEnv('NX_LEGACY_IPC', 'true');
+    try {
+      const input = taskGraphLike();
+      const bytes = serialize(input);
+      expect(bytes[0]).toBe('{'.charCodeAt(0));
+      expect(parseMessage(bytes)).toEqual(input);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
   it('decodes a string table whichever format carried it', () => {
     const input = taskGraphLike();
     const asJson = Buffer.from(JSON.stringify(encodeAuto(input)));
