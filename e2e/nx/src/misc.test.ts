@@ -798,10 +798,10 @@ describe('migrate', () => {
   beforeEach(() => {
     newProject({ packages: [] });
 
-    // The synthetic run11 migration uses Angular schematics. Yarn Classic
-    // doesn't auto-install these optional peers of Nx.
+    // Synthetic migrations use Angular schematics and workspace utilities.
+    // Install before patching Nx below, since installs can replace that patch.
     packageInstall(
-      '@angular-devkit/core @angular-devkit/schematics',
+      '@angular-devkit/core @angular-devkit/schematics @schematics/angular',
       undefined,
       angularDevkitVersion
     );
