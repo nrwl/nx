@@ -323,6 +323,12 @@ impl TaskHasher {
         }
     }
 
+    fn workspace_file_known(&self, path: &str) -> bool {
+        self.workspace_file_index
+            .get_or_init(|| index_file_map(&self.all_workspace_files))
+            .contains_key(path)
+    }
+
     fn workspace_file_hash(&self, path: &str) -> Option<String> {
         self.workspace_file_index
             .get_or_init(|| index_file_map(&self.all_workspace_files))
@@ -731,6 +737,7 @@ impl TaskHasher {
                     &instruction.to_string(),
                     globs,
                     files_expansion_cache,
+                    &|path| self.workspace_file_known(path),
                 )?;
                 let hashed = hash_files(
                     workspace_root,

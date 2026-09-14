@@ -10,7 +10,7 @@ use tracing::trace;
 use walkdir::WalkDir;
 use xxhash_rust::xxh3;
 
-use crate::native::glob::build_glob_set;
+use crate::native::glob::{NxGlobSet, build_glob_set};
 use crate::native::hasher::hash_file_path;
 use crate::native::walker::HARDCODED_IGNORE_PATTERNS;
 
@@ -34,11 +34,28 @@ pub(crate) struct CachedFileContent {
     hash: String,
 }
 
+/// The `(mtime, size)` a file showed when expansion looked at it.
+pub type FileStamp = (u128, u64);
+
 pub struct FilesExpansion {
     /// Existing files matched by the group, sorted, workspace-relative.
     pub files: Vec<String>,
+    /// Aligned with `files`: the stamp read while expanding, so hashing does
+    /// not stat again, or `None` when the workspace context vouched for the
+    /// file and the disk was never consulted.
+    pub stamps: Vec<Option<FileStamp>>,
     /// Declared exact paths that do not exist on disk.
     pub missing: Vec<String>,
+}
+
+fn stamp_of(metadata: &std::fs::Metadata) -> FileStamp {
+    let mtime = metadata
+        .modified()
+        .ok()
+        .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
+        .map(|d| d.as_nanos())
+        .unwrap_or(0);
+    (mtime, metadata.len())
 }
 
 /// Expands brace groups whose alternatives are all literal names into the
@@ -80,20 +97,35 @@ pub(crate) fn expand_literal_braces(glob: &str) -> Vec<String> {
 /// The literal directory a glob is walked from, and whether a pattern follows
 /// it. `partition_glob` is not used: it treats `@`, `+`, `(`, `)` and `,` as
 /// glob syntax and strips them, but in a path they are ordinary characters
-/// (`node_modules/@scope/pkg`), and the group's glob filter keeps them literal.
+/// (`node_modules/@scope/pkg`, `app/(marketing)`). The prefix is only ever
+/// compared as text; just the remainder reaches the glob parser.
 fn literal_prefix(glob: &str) -> Result<(String, bool)> {
+    literal_prefix_with(glob, false)
+}
+
+fn literal_prefix_with(glob: &str, brackets_literal: bool) -> Result<(String, bool)> {
     if Path::new(glob).is_absolute() || glob.starts_with('/') {
         bail!(
             "The includeIgnored fileset \"{glob}\" is an absolute path; globs are workspace-relative."
         );
     }
+    let wildcards: &[char] = if brackets_literal {
+        &['*', '?', '{']
+    } else {
+        &['*', '?', '[', '{']
+    };
     let mut literal: Vec<&str> = Vec::new();
     let mut has_pattern = false;
     for segment in glob.split('/') {
         if segment == ".." {
             bail!("The includeIgnored fileset \"{glob}\" points outside the workspace.");
         }
-        if segment.contains(['*', '?', '[', '{']) {
+        if segment == "." {
+            bail!(
+                "The includeIgnored fileset \"{glob}\" starts with `./`; write it relative to the workspace root without the dot."
+            );
+        }
+        if segment.contains(wildcards) {
             has_pattern = true;
             break;
         }
@@ -103,13 +135,30 @@ fn literal_prefix(glob: &str) -> Result<(String, bool)> {
     Ok((root, has_pattern))
 }
 
+/// `literal_prefix`, except that a `[name]` segment is read as a path when
+/// such a path exists (a Next.js route directory), and as a character class
+/// otherwise.
+fn split_glob(
+    glob: &str,
+    workspace_root: &Path,
+    known: &(dyn Fn(&str) -> bool + Sync),
+) -> Result<(String, bool)> {
+    if glob.contains('[') {
+        let (root, has_pattern) = literal_prefix_with(glob, true)?;
+        if !root.is_empty() && (known(&root) || workspace_root.join(&root).exists()) {
+            return Ok((root, has_pattern));
+        }
+    }
+    literal_prefix(glob)
+}
+
 /// Rejects globs with no literal leading directory (`**/*`, `*.gen`): a walk
 /// from the workspace root is never what was meant. A root-level brace group
 /// of literal names is fine: it expands to exact files.
 pub(crate) fn validate_files_globs(globs: &[String]) -> Result<()> {
     for glob in globs.iter().filter(|g| !g.starts_with('!')) {
         for expanded in expand_literal_braces(glob) {
-            let (root, _) = literal_prefix(&expanded)?;
+            let (root, _) = literal_prefix_with(&expanded, true)?;
             if root.is_empty() {
                 bail!(
                     "The includeIgnored fileset \"{glob}\" has no leading directory, so it would walk the whole workspace. Start it with the directory that holds the files."
@@ -120,43 +169,178 @@ pub(crate) fn validate_files_globs(globs: &[String]) -> Result<()> {
     Ok(())
 }
 
-/// Expands an `includeIgnored` fileset group against the disk: every positive glob is walked
-/// from its literal prefix, then the whole group (negations included) filters
-/// the candidates. Walks skip the same directories the workspace walker never
-/// enters, but an exact path or a prefix inside one of them is read as-is.
-pub fn expand_files(workspace_root: &Path, globs: &[String]) -> Result<FilesExpansion> {
-    let skip = build_glob_set(HARDCODED_IGNORE_PATTERNS)?;
-    let mut effective: Vec<String> = globs
-        .iter()
-        .filter(|g| g.starts_with('!'))
-        .cloned()
-        .collect();
-    let mut files: Vec<String> = Vec::new();
-    let mut missing: Vec<String> = Vec::new();
+/// A `!` entry split at its literal prefix. The prefix is compared as text;
+/// only the remainder is a glob. Without a remainder it names an exact file,
+/// or a directory whose whole contents are excluded.
+struct Negation {
+    root: String,
+    remainder: Option<Arc<NxGlobSet>>,
+}
 
-    let positives: Vec<String> = globs
+impl Negation {
+    fn parse(
+        glob: &str,
+        workspace_root: &Path,
+        known: &(dyn Fn(&str) -> bool + Sync),
+    ) -> Result<Self> {
+        let body = glob.strip_prefix('!').unwrap_or(glob);
+        let (root, has_pattern) = split_glob(body, workspace_root, known)?;
+        let remainder = if has_pattern {
+            let rest = if root.is_empty() {
+                body
+            } else {
+                &body[root.len() + 1..]
+            };
+            Some(build_glob_set(&[rest])?)
+        } else {
+            None
+        };
+        Ok(Self { root, remainder })
+    }
+
+    fn excludes(&self, path: &str) -> bool {
+        let rest = if self.root.is_empty() {
+            Some(path)
+        } else {
+            path.strip_prefix(self.root.as_str()).and_then(|rest| {
+                if rest.is_empty() {
+                    Some(rest)
+                } else {
+                    rest.strip_prefix('/')
+                }
+            })
+        };
+        match (&self.remainder, rest) {
+            (_, None) => false,
+            (None, Some(_)) => true,
+            (Some(set), Some(rest)) => set.is_match(rest),
+        }
+    }
+}
+
+/// Files under `start`, workspace-relative, with the stamp read on the way
+/// for anything the context does not vouch for. Top-level subdirectories walk
+/// in parallel. `start` itself is never skipped; its descendants are subject
+/// to the hardcoded ignores, so `node_modules/foo/**` works.
+fn walk_files(
+    start: &Path,
+    workspace_root: &Path,
+    canonical_root: &Path,
+    skip: &NxGlobSet,
+    accept: &(dyn Fn(&str) -> bool + Sync),
+    known: &(dyn Fn(&str) -> bool + Sync),
+) -> Vec<(String, Option<FileStamp>)> {
+    let Ok(entries) = std::fs::read_dir(start) else {
+        return Vec::new();
+    };
+    let mut leaves = Vec::new();
+    let mut dirs = Vec::new();
+    for entry in entries.flatten() {
+        match entry.file_type() {
+            Ok(file_type) if file_type.is_dir() => dirs.push(entry.path()),
+            Ok(file_type) => leaves.push((entry.path(), file_type)),
+            Err(_) => {}
+        }
+    }
+    let visit = |path: &Path,
+                 file_type: std::fs::FileType|
+     -> Option<(String, Option<FileStamp>)> {
+        let relative = path
+            .strip_prefix(workspace_root)
+            .ok()?
+            .to_string_lossy()
+            .replace('\\', "/");
+        if !accept(&relative) {
+            return None;
+        }
+        if file_type.is_symlink() {
+            // A link pointing out of the workspace is not workspace content.
+            if !dunce::canonicalize(path).is_ok_and(|target| target.starts_with(canonical_root)) {
+                return None;
+            }
+        } else if !file_type.is_file() {
+            return None;
+        }
+        if known(&relative) {
+            return Some((relative, None));
+        }
+        let metadata = std::fs::metadata(path).ok()?;
+        if !metadata.is_file() {
+            return None;
+        }
+        Some((relative, Some(stamp_of(&metadata))))
+    };
+    let mut found: Vec<(String, Option<FileStamp>)> = leaves
         .iter()
-        .filter(|g| !g.starts_with('!'))
-        .flat_map(|g| expand_literal_braces(g))
+        .filter_map(|(path, file_type)| visit(path, *file_type))
         .collect();
+    let nested: Vec<Vec<(String, Option<FileStamp>)>> = dirs
+        .par_iter()
+        .map(|dir| {
+            if skip.is_match(dir) {
+                return Vec::new();
+            }
+            WalkDir::new(dir)
+                .follow_links(false)
+                .into_iter()
+                .filter_entry(|entry| !skip.is_match(entry.path()))
+                .flatten()
+                .filter_map(|entry| visit(entry.path(), entry.file_type()))
+                .collect()
+        })
+        .collect();
+    for group in nested {
+        found.extend(group);
+    }
+    found
+}
+
+/// Expands an `includeIgnored` fileset group. `known` says whether the
+/// workspace context tracks a path: an exact path it knows is a member
+/// without touching the disk, and a walked file it knows needs no stamp.
+/// Every positive glob is resolved from its literal prefix, then the
+/// negations filter the result. Walks skip the same directories the workspace
+/// walker never enters, but an exact path or a prefix inside one of them is
+/// read as-is.
+pub fn expand_files_with(
+    workspace_root: &Path,
+    globs: &[String],
+    known: &(dyn Fn(&str) -> bool + Sync),
+) -> Result<FilesExpansion> {
+    let skip = build_glob_set(HARDCODED_IGNORE_PATTERNS)?;
     let canonical_root = dunce::canonicalize(workspace_root).with_context(|| {
         format!(
             "Cannot resolve the workspace root {}",
             workspace_root.display()
         )
     })?;
+    let negations: Vec<Negation> = globs
+        .iter()
+        .filter(|g| g.starts_with('!'))
+        .flat_map(|g| expand_literal_braces(g))
+        .map(|g| Negation::parse(&g, workspace_root, known))
+        .collect::<Result<_>>()?;
+    let positives: Vec<String> = globs
+        .iter()
+        .filter(|g| !g.starts_with('!'))
+        .flat_map(|g| expand_literal_braces(g))
+        .collect();
+
+    let mut found: Vec<(String, Option<FileStamp>)> = Vec::new();
+    let mut missing: Vec<String> = Vec::new();
     for glob in &positives {
-        let (root, has_pattern) = literal_prefix(glob)?;
+        let (root, has_pattern) = split_glob(glob, workspace_root, known)?;
         if root.is_empty() {
             bail!("The includeIgnored fileset \"{glob}\" has no leading directory.");
+        }
+        if !has_pattern && known(&root) {
+            found.push((root, None));
+            continue;
         }
         let start = workspace_root.join(&root);
         let Ok(metadata) = std::fs::metadata(&start) else {
             if !has_pattern {
-                // Keep the pattern in the group so the final filter retains
-                // the missing path alongside the files other globs matched.
                 missing.push(root);
-                effective.push(glob.clone());
             }
             continue;
         };
@@ -168,45 +352,48 @@ pub fn expand_files(workspace_root: &Path, globs: &[String]) -> Result<FilesExpa
             bail!("The includeIgnored fileset \"{glob}\" resolves outside the workspace.");
         }
         if metadata.is_file() {
-            files.push(root);
-            effective.push(glob.clone());
+            if !has_pattern {
+                found.push((root, Some(stamp_of(&metadata))));
+            }
             continue;
         }
-        // A directory declared by its exact path means everything under it.
-        effective.push(if has_pattern {
-            glob.clone()
+        // A directory declared by its exact path means everything under it;
+        // with a pattern, only the remainder after the prefix is matched.
+        let accept: Box<dyn Fn(&str) -> bool + Sync> = if has_pattern {
+            let set = build_glob_set(&[&glob[root.len() + 1..]])?;
+            let prefix_len = root.len() + 1;
+            Box::new(move |path: &str| path.len() > prefix_len && set.is_match(&path[prefix_len..]))
         } else {
-            format!("{root}/**")
-        });
-        let walker = WalkDir::new(&start)
-            .follow_links(false)
-            .into_iter()
-            .filter_entry(|entry| entry.depth() == 0 || !skip.is_match(entry.path()));
-        for entry in walker.flatten() {
-            let file_type = entry.file_type();
-            let is_file = file_type.is_file()
-                || (file_type.is_symlink()
-                    && std::fs::metadata(entry.path()).is_ok_and(|m| m.is_file())
-                    // A link pointing out of the workspace is not workspace content.
-                    && dunce::canonicalize(entry.path())
-                        .is_ok_and(|target| target.starts_with(&canonical_root)));
-            if !is_file {
-                continue;
-            }
-            if let Ok(relative) = entry.path().strip_prefix(workspace_root) {
-                files.push(relative.to_string_lossy().replace('\\', "/"));
-            }
-        }
+            Box::new(|_| true)
+        };
+        found.extend(walk_files(
+            &start,
+            workspace_root,
+            &canonical_root,
+            &skip,
+            &*accept,
+            known,
+        ));
     }
 
-    let glob_set = build_glob_set(&effective)?;
-    files.sort_unstable();
-    files.dedup();
-    files.retain(|file| glob_set.is_match(file));
+    found.retain(|(path, _)| !negations.iter().any(|n| n.excludes(path)));
+    missing.retain(|path| !negations.iter().any(|n| n.excludes(path)));
+    found.sort_unstable_by(|a, b| a.0.cmp(&b.0));
+    found.dedup_by(|a, b| a.0 == b.0);
     missing.sort_unstable();
     missing.dedup();
-    missing.retain(|file| glob_set.is_match(file));
-    Ok(FilesExpansion { files, missing })
+    let (files, stamps) = found.into_iter().unzip();
+    Ok(FilesExpansion {
+        files,
+        stamps,
+        missing,
+    })
+}
+
+/// `expand_files_with` without a workspace context: every path is checked on
+/// disk.
+pub fn expand_files(workspace_root: &Path, globs: &[String]) -> Result<FilesExpansion> {
+    expand_files_with(workspace_root, globs, &|_| false)
 }
 
 pub(crate) fn expand_files_cached(
@@ -214,11 +401,12 @@ pub(crate) fn expand_files_cached(
     key: &str,
     globs: &[String],
     cache: &FilesExpansionCache,
+    known: &(dyn Fn(&str) -> bool + Sync),
 ) -> Result<Arc<FilesExpansion>> {
     if let Some(cached) = cache.get(key) {
         return Ok(Arc::clone(&cached));
     }
-    let expansion = Arc::new(expand_files(workspace_root, globs)?);
+    let expansion = Arc::new(expand_files_with(workspace_root, globs, known)?);
     cache.insert(key.to_string(), Arc::clone(&expansion));
     Ok(expansion)
 }
@@ -234,7 +422,10 @@ pub(crate) fn hash_files(
     let hashes: Vec<String> = expansion
         .files
         .par_iter()
-        .map(|file| known(file).unwrap_or_else(|| hash_file_cached(workspace_root, file, cache)))
+        .zip(expansion.stamps.par_iter())
+        .map(|(file, stamp)| {
+            known(file).unwrap_or_else(|| hash_file_cached(workspace_root, file, *stamp, cache))
+        })
         .collect();
 
     let mut hasher = xxh3::Xxh3::new();
@@ -249,17 +440,14 @@ pub(crate) fn hash_files(
     hasher.digest().to_string()
 }
 
-fn hash_file_cached(workspace_root: &Path, file: &str, cache: &FileContentCache) -> String {
+fn hash_file_cached(
+    workspace_root: &Path,
+    file: &str,
+    stamp: Option<FileStamp>,
+    cache: &FileContentCache,
+) -> String {
     let path = workspace_root.join(file);
-    let stamp = std::fs::metadata(&path).ok().map(|m| {
-        let mtime = m
-            .modified()
-            .ok()
-            .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
-            .map(|d| d.as_nanos())
-            .unwrap_or(0);
-        (mtime, m.len())
-    });
+    let stamp = stamp.or_else(|| std::fs::metadata(&path).ok().map(|m| stamp_of(&m)));
     if let Some((mtime, size)) = stamp {
         let hit = cache
             .get(file)
@@ -471,9 +659,10 @@ mod tests {
     fn content_cache_revalidates_by_mtime_and_size() {
         let temp = workspace();
         let cache = FileContentCache::new();
-        let expansion = expand_files(temp.path(), &globs(&["dist/gen/a.js"])).unwrap();
+        let group = globs(&["dist/gen/a.js"]);
+        let expand = || expand_files(temp.path(), &group).unwrap();
 
-        let first = hash_files(temp.path(), &expansion, |_| None, &cache);
+        let first = hash_files(temp.path(), &expand(), |_| None, &cache);
         assert_eq!(cache.len(), 1);
 
         // Same size, forced newer mtime: must re-read, not trust the cache.
@@ -482,7 +671,7 @@ mod tests {
         let file = temp.path().join("dist/gen/a.js");
         let now = std::fs::File::open(&file).unwrap();
         now.set_modified(std::time::SystemTime::now()).unwrap();
-        let second = hash_files(temp.path(), &expansion, |_| None, &cache);
+        let second = hash_files(temp.path(), &expand(), |_| None, &cache);
         assert_ne!(first, second);
 
         // Same size with the cached mtime restored: the documented stale hit,
@@ -493,7 +682,7 @@ mod tests {
             .unwrap()
             .set_modified(cached_at)
             .unwrap();
-        let third = hash_files(temp.path(), &expansion, |_| None, &cache);
+        let third = hash_files(temp.path(), &expand(), |_| None, &cache);
         assert_eq!(second, third);
     }
 
@@ -511,6 +700,112 @@ mod tests {
             &cache,
         );
         assert_ne!(from_disk, from_map);
+    }
+
+    #[test]
+    fn keeps_parens_and_brackets_literal_after_the_walk() {
+        let temp = workspace();
+        temp.child("apps/web/app/(marketing)/page.tsx")
+            .write_str("m")
+            .unwrap();
+        temp.child("apps/web/app/(marketing)/gen/x.json")
+            .write_str("{}")
+            .unwrap();
+        temp.child("apps/web/app/[id]/page.tsx")
+            .write_str("i")
+            .unwrap();
+        temp.child("apps/web/app/plain/page.tsx")
+            .write_str("p")
+            .unwrap();
+        let expand = |list: &[&str]| expand_files(temp.path(), &globs(list)).unwrap();
+
+        assert_eq!(
+            expand(&["apps/web/app/(marketing)/page.tsx"]).files,
+            vec!["apps/web/app/(marketing)/page.tsx"]
+        );
+        assert_eq!(
+            expand(&["apps/web/app/(marketing)"]).files,
+            vec![
+                "apps/web/app/(marketing)/gen/x.json",
+                "apps/web/app/(marketing)/page.tsx"
+            ]
+        );
+        assert_eq!(
+            expand(&["apps/web/app/(marketing)/**/*.json"]).files,
+            vec!["apps/web/app/(marketing)/gen/x.json"]
+        );
+        assert_eq!(
+            expand(&["apps/web/app/[id]/page.tsx"]).files,
+            vec!["apps/web/app/[id]/page.tsx"]
+        );
+        assert_eq!(
+            expand(&["apps/web/app/[id]/*.tsx"]).files,
+            vec!["apps/web/app/[id]/page.tsx"]
+        );
+        assert_eq!(
+            expand(&["apps/web/app/(absent)/x.json"]).missing,
+            vec!["apps/web/app/(absent)/x.json"]
+        );
+        // A negation's literal prefix is compared as text too.
+        assert_eq!(
+            expand(&["apps/web/app/**/*.tsx", "!apps/web/app/(marketing)/**"]).files,
+            vec!["apps/web/app/[id]/page.tsx", "apps/web/app/plain/page.tsx"]
+        );
+        assert_eq!(
+            expand(&["apps/web/app/**/*.tsx", "!apps/web/app/[id]/page.tsx"]).files,
+            vec![
+                "apps/web/app/(marketing)/page.tsx",
+                "apps/web/app/plain/page.tsx"
+            ]
+        );
+        // Without such a directory, `[ab]` is still a character class.
+        temp.child("dist/gen/a.js").write_str("a").unwrap();
+        assert_eq!(expand(&["dist/gen/[ab].js"]).files, vec!["dist/gen/a.js"]);
+    }
+
+    #[test]
+    fn an_exact_path_the_context_knows_never_touches_the_disk() {
+        let temp = workspace();
+        // Neither path is on disk: membership comes from the context alone.
+        let expansion = expand_files_with(
+            temp.path(),
+            &globs(&["libs/x/tracked.ts", "libs/x/absent.ts"]),
+            &|path| path == "libs/x/tracked.ts",
+        )
+        .unwrap();
+        assert_eq!(expansion.files, vec!["libs/x/tracked.ts"]);
+        assert_eq!(expansion.stamps, vec![None]);
+        assert_eq!(expansion.missing, vec!["libs/x/absent.ts"]);
+    }
+
+    #[test]
+    fn walked_files_carry_their_stamp_unless_the_context_knows_them() {
+        let temp = workspace();
+        let expansion = expand_files_with(temp.path(), &globs(&["dist/gen/**/*.js"]), &|path| {
+            path == "dist/gen/a.js"
+        })
+        .unwrap();
+        assert_eq!(
+            expansion.files,
+            vec!["dist/gen/a.js", "dist/gen/nested/b.js"]
+        );
+        assert!(expansion.stamps[0].is_none());
+        assert!(expansion.stamps[1].is_some());
+        let cache = FileContentCache::new();
+        let hashed = hash_files(
+            temp.path(),
+            &expansion,
+            |path| (path == "dist/gen/a.js").then(|| "known".to_string()),
+            &cache,
+        );
+        assert!(!hashed.is_empty());
+        // Only the walked, unknown file was read and cached.
+        assert_eq!(cache.len(), 1);
+    }
+
+    #[test]
+    fn rejects_a_dot_slash_prefix() {
+        assert!(validate_files_globs(&globs(&["./dist/**"])).is_err());
     }
 
     #[test]
