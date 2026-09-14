@@ -10,6 +10,16 @@ import { TaskGraph } from '../config/task-graph';
 import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
 
+vi.mock('../tasks-runner/utils', async () => {
+  const actual = await vi.importActual('../tasks-runner/utils');
+  return {
+    ...actual,
+    // The real lookup reads this repo's built `packages/nx/dist` executor
+    // schema, which nx:test does not declare as an input.
+    getExecutorForTask: vi.fn(() => ({})),
+  };
+});
+
 // Helper to normalize hash results for deterministic snapshot comparison
 // (parallel processing may produce inputs in arbitrary order)
 function sortHashInputs(hashResults: any[] | any): any[] | any {
