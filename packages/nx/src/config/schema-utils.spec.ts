@@ -8,6 +8,7 @@ vi.mock('../plugins/js/utils/register', () => ({
 const packagesMetadata = vi.hoisted(() => ({
   packageToProjectMap: {} as Record<string, ProjectConfiguration>,
   packageManagerWorkspacePackageNames: [] as string[],
+  packageManagerWorkspacePackages: [] as { name: string; root: string }[],
 }));
 vi.mock('../plugins/js/utils/packages', () => ({
   getWorkspacePackagesMetadata: vi.fn(() => packagesMetadata),
@@ -84,6 +85,10 @@ describe('getImplementationFactory', () => {
     } as ProjectConfiguration;
     packagesMetadata.packageToProjectMap['@proj/plugin'] = project;
     packagesMetadata.packageManagerWorkspacePackageNames.push('@proj/sibling');
+    packagesMetadata.packageManagerWorkspacePackages.push({
+      name: '@proj/sibling',
+      root: 'packages/sibling',
+    });
     const notFound = Object.assign(
       new Error("Cannot find module '@proj/sibling'"),
       { code: 'MODULE_NOT_FOUND' }
@@ -113,6 +118,7 @@ describe('getImplementationFactory', () => {
       setWorkspaceRoot(originalRoot);
       delete packagesMetadata.packageToProjectMap['@proj/plugin'];
       packagesMetadata.packageManagerWorkspacePackageNames.length = 0;
+      packagesMetadata.packageManagerWorkspacePackages.length = 0;
       fs.cleanup();
     }
   });

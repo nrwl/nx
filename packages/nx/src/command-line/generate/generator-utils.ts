@@ -57,7 +57,8 @@ export function getGeneratorInformation(
       generatorConfig.implementation,
       generatorsDir,
       collectionName,
-      projects
+      projects,
+      resolvedCollectionName
     );
     const normalizedGeneratorConfiguration: GeneratorsJsonEntry = {
       ...generatorConfig,

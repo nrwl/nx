@@ -94,14 +94,11 @@ export async function resolveNxPlugin(
     projectsWithoutInference,
     root
   );
-  const workspacePackageNames = projectsWithoutInference
+  const workspacePackages = projectsWithoutInference
     ? getCachedWorkspacePackagesMetadata(projectsWithoutInference)
-        .packageManagerWorkspacePackageNames
-    : undefined;
-  return {
-    ...result,
-    workspacePackageNames: workspacePackageNames ?? [],
-  };
+        .packageManagerWorkspacePackages
+    : [];
+  return { ...result, workspacePackages };
 }
 
 function isPackageResolutionError(e: unknown): boolean {
@@ -203,7 +200,13 @@ export function getPluginPathAndName(
     existsSync(packageJsonPath) // plugin has a package.json
       ? readJsonFile(packageJsonPath) // read name from package.json
       : { name: moduleName };
-  return { pluginPath, name, shouldRegisterTSTranspiler, isSourcePlugin };
+  return {
+    pluginPath,
+    name,
+    shouldRegisterTSTranspiler,
+    isSourcePlugin,
+    projectRoot: localPlugin?.projectConfig.root,
+  };
 }
 
 function getSubpathOfLocalPackage(
