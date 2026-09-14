@@ -16,12 +16,13 @@ use crate::native::{
 };
 use crate::native::{
     tasks::hashers::{
-        CachedTaskOutput, FileContentCache, FilesExpansionCache, JsonHashResult,
-        ProjectFileIndicesCache, ProjectFileSetCache, WorkspaceFileIndicesCache,
-        WorkspaceFileSetCache, collect_project_file_paths_cached,
-        collect_workspace_file_paths_cached, expand_files_cached, hash_all_externals,
-        hash_external, hash_files, hash_json_files, hash_project_config, hash_project_files_cached,
-        hash_task_output, hash_tsconfig_selectively, hash_workspace_files_cached, index_file_map,
+        CachedTaskOutput, FilesExpansionCache, JsonHashResult, ProjectFileIndicesCache,
+        ProjectFileSetCache, WorkspaceFileIndicesCache, WorkspaceFileSetCache,
+        collect_project_file_paths_cached, collect_workspace_file_paths_cached,
+        expand_files_cached, hash_all_externals, hash_external, hash_files, hash_json_files,
+        hash_project_config, hash_project_files_cached, hash_task_output,
+        hash_tsconfig_selectively, hash_workspace_files_cached, index_file_map,
+        shared_file_content_cache,
     },
     types::FileData,
     workspace::types::ProjectFiles,
@@ -279,10 +280,9 @@ pub struct TaskHasher {
     project_file_indices_cache: ProjectFileIndicesCache,
     // Fold over all externals; identical for every task, so computed once.
     all_externals_hash: OnceCell<String>,
-    // `includeIgnored` filesets: content hashes revalidated by (mtime, size),
-    // plus a path index over the file map so tracked files skip the disk.
-    // Both are built only once a plan carries a disk-backed group.
-    file_content_cache: FileContentCache,
+    // `includeIgnored` filesets: a path index over the file map so tracked
+    // files skip the disk, built only once a plan carries a disk-backed
+    // group. Their content cache is process-wide (shared_file_content_cache).
     workspace_file_index: OnceCell<HashMap<String, u32>>,
 }
 #[napi]
@@ -318,7 +318,6 @@ impl TaskHasher {
             workspace_file_indices_cache: WorkspaceFileIndicesCache::new(),
             project_file_indices_cache: ProjectFileIndicesCache::new(),
             all_externals_hash: OnceCell::new(),
-            file_content_cache: FileContentCache::new(),
             workspace_file_index: OnceCell::new(),
         }
     }
@@ -743,7 +742,7 @@ impl TaskHasher {
                     workspace_root,
                     &expansion,
                     |path| self.workspace_file_hash(path),
-                    &self.file_content_cache,
+                    shared_file_content_cache(),
                 );
                 trace!(parent: &span, "hash_files: {:?}", now.elapsed());
                 let inputs = if collect_inputs {

@@ -22,9 +22,17 @@ const MISSING_FILE_HASH: &str = "missing";
 /// nothing watches gitignored directories, so a longer-lived memo goes stale.
 pub(crate) type FilesExpansionCache = DashMap<String, Arc<FilesExpansion>>;
 
-/// Content hashes keyed by workspace-relative path, revalidated by
-/// (mtime, size). Safe to keep for the TaskHasher lifetime.
-pub(crate) type FileContentCache = DashMap<String, CachedFileContent>;
+/// Content hashes keyed by absolute path, revalidated by (mtime, size).
+/// Validated per lookup, so it outlives hashers and project graphs; the
+/// daemon keeps one for its whole life through `shared_file_content_cache`.
+pub(crate) type FileContentCache = DashMap<std::path::PathBuf, CachedFileContent>;
+
+/// The process-wide cache. Absolute keys keep separate workspaces apart when
+/// one process hashes several (tests do).
+pub(crate) fn shared_file_content_cache() -> &'static FileContentCache {
+    static CACHE: std::sync::OnceLock<FileContentCache> = std::sync::OnceLock::new();
+    CACHE.get_or_init(FileContentCache::new)
+}
 
 /// Revalidated by (mtime, size) only: on a filesystem with coarse mtime a
 /// same-size rewrite inside one tick is a stale hit (the racy-index problem).
@@ -450,7 +458,7 @@ fn hash_file_cached(
     let stamp = stamp.or_else(|| std::fs::metadata(&path).ok().map(|m| stamp_of(&m)));
     if let Some((mtime, size)) = stamp {
         let hit = cache
-            .get(file)
+            .get(&path)
             .filter(|cached| cached.mtime == mtime && cached.size == size)
             .map(|cached| cached.hash.clone());
         if let Some(hash) = hit {
@@ -461,7 +469,7 @@ fn hash_file_cached(
     let hash = hash_file_path(&path).unwrap_or_else(|| MISSING_FILE_HASH.to_string());
     if let Some((mtime, size)) = stamp {
         cache.insert(
-            file.to_string(),
+            path,
             CachedFileContent {
                 mtime,
                 size,
