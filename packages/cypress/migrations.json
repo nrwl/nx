@@ -203,6 +203,29 @@
       "requires": {
         "cypress": ">=15.0.0 <16.0.0"
       },
+      "incompatibleWith": {
+        "@cypress/vite-dev-server": "*"
+      },
+      "packages": {
+        "cypress": {
+          "version": "^16.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@cypress/webpack-dev-server": {
+          "version": "^6.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.3.0-cypress-16-vite": {
+      "version": "23.3.0-beta.1",
+      "requires": {
+        "cypress": ">=15.0.0 <16.0.0",
+        "@cypress/vite-dev-server": ">=7.0.0 <8.0.0"
+      },
+      "incompatibleWith": {
+        "vite": "<8.0.0"
+      },
       "packages": {
         "cypress": {
           "version": "^16.0.0",
