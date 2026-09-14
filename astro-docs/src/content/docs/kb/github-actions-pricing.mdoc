@@ -19,9 +19,7 @@ total across every job, rather than how long the pipeline takes end to end.
 Four 25-minute jobs running in parallel use 100 machine-minutes and cost the same as a 100-minute
 pipeline on a single runner.
 The more machine-minutes your pipeline uses today, the more you save.
-
-A remote cache is how you cut that bill, and every figure below is the cache alone, with the jobs
-left where they are.
+A remote cache is one way to cut them.
 
 ## GitHub Actions pricing for private repositories
 
@@ -87,12 +85,6 @@ The difference is in machine-minutes.
 
 A task that hits the [remote cache](/docs/features/ci-features/remote-cache) costs a few seconds of
 download instead of its full runtime, and the cache is shared across every PR and every machine.
-That is the only lever in the numbers below.
-
-Two others cut machine-minutes further and are not modelled here.
-`nx affected` skips projects a change doesn't touch, and
-[Nx Agents](/docs/features/ci-features/distribute-task-execution) pack tasks onto machines instead
-of paying full checkout and idle time on every job in a hand-written matrix.
 
 ## Caching and cost savings
 
@@ -120,6 +112,7 @@ The more expensive the runner, the sooner the cache pays for itself, because eve
 is worth more.
 
 {% aside type="note" %}
+The examples below price remote caching only, with the jobs left on GitHub runners.
 50% and 70% are two points on a dial, not what a workspace should expect.
 The tables show the model's exact output so you can check the arithmetic, but what you get depends
 on your task mix, how often [inputs](/docs/kb/configure-inputs) change, and how your task time is
@@ -242,9 +235,8 @@ bills as 13 minutes instead of 30 and the run saves
 Two assumptions move the answer more than the rest.
 `h` is a share of task minutes, not a share of tasks, and the two match only when cached and
 uncached tasks take about the same time, so a pipeline whose slowest task always misses saves less.
-And `fixed` counts a 10 credit
-[resource usage report](/docs/features/ci-features/resource-usage) per machine, on by default for
-new organizations and switchable off.
+And `fixed` counts a 10 credit resource usage report per machine, on by default for new
+organizations and switchable off.
 
 The rest:
 
