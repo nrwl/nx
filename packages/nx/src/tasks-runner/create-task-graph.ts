@@ -77,11 +77,6 @@ export class ProcessTasks {
       this.processTask(task, task.target.project, configuration, overrides);
     }
 
-    liftContinuousDependenciesThroughDummyTasks(
-      this.dependencies,
-      this.continuousDependencies
-    );
-
     if (excludeTaskDependencies) {
       for (let t of Object.keys(this.tasks)) {
         if (!initialTasks[t]) {
@@ -353,6 +348,7 @@ export class ProcessTasks {
           undefined
         );
         this.dependencies[task.id].push(dummyId);
+        this.continuousDependencies[task.id].push(dummyId);
         this.dependencies[dummyId] ??= [];
         this.continuousDependencies[dummyId] ??= [];
         const noopTask = this.createDummyTask(dummyId, task);
@@ -473,35 +469,6 @@ function interpolateOverrides<T = any>(
         : value;
   });
   return interpolatedArgs;
-}
-
-/**
- * Dummies are linked only through `dependencies`, so the continuous edges
- * recorded under them must be lifted onto the real task before they are deleted.
- */
-function liftContinuousDependenciesThroughDummyTasks(
-  dependencies: { [k: string]: string[] },
-  continuousDependencies: { [k: string]: string[] }
-) {
-  const isDummyTask = (id: string) => id.endsWith(DUMMY_TASK_TARGET);
-  for (const taskId of Object.keys(dependencies)) {
-    if (isDummyTask(taskId)) {
-      continue;
-    }
-    const seen = new Set<string>();
-    const stack = dependencies[taskId].filter(isDummyTask);
-    while (stack.length > 0) {
-      const dummyId = stack.pop();
-      if (seen.has(dummyId)) {
-        continue;
-      }
-      seen.add(dummyId);
-      continuousDependencies[taskId].push(
-        ...(continuousDependencies[dummyId] ?? [])
-      );
-      stack.push(...(dependencies[dummyId] ?? []).filter(isDummyTask));
-    }
-  }
 }
 
 /**

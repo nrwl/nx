@@ -2895,7 +2895,7 @@ describe('createTaskGraph', () => {
     });
   });
 
-  it('should keep a continuous dependency reached through a cycle of projects without the target', () => {
+  it('should drop a continuous dependency reached through a cycle of projects without the target, like a regular one', () => {
     projectGraph = {
       nodes: {
         e2e: {
@@ -2954,7 +2954,7 @@ describe('createTaskGraph', () => {
       }
     );
     expect(taskGraph).toEqual({
-      roots: ['app:serve'],
+      roots: ['e2e:e2e', 'app:serve'],
       tasks: {
         'e2e:e2e': {
           id: 'e2e:e2e',
@@ -2992,13 +2992,13 @@ describe('createTaskGraph', () => {
         'app:serve': [],
       },
       continuousDependencies: {
-        'e2e:e2e': ['app:serve'],
+        'e2e:e2e': [],
         'app:serve': [],
       },
     });
   });
 
-  it('should keep a continuous cycle reached only through projects without the target', () => {
+  it('should break a continuous cycle reached only through projects without the target, like a regular one', () => {
     projectGraph = {
       nodes: {
         a: {
@@ -3065,7 +3065,7 @@ describe('createTaskGraph', () => {
       }
     );
     expect(taskGraph).toEqual({
-      roots: [],
+      roots: ['a:serve', 'b:serve'],
       tasks: {
         'a:serve': {
           id: 'a:serve',
@@ -3103,8 +3103,8 @@ describe('createTaskGraph', () => {
         'b:serve': [],
       },
       continuousDependencies: {
-        'a:serve': ['b:serve'],
-        'b:serve': ['a:serve'],
+        'a:serve': [],
+        'b:serve': [],
       },
     });
   });
@@ -3212,7 +3212,7 @@ describe('createTaskGraph', () => {
     });
   });
 
-  it('should exclude a continuous dependency reached through a project without the target like a direct one', () => {
+  it('should exclude a continuous dependency reached through a project without the target, like a regular one', () => {
     projectGraph = {
       nodes: {
         e2e: {
@@ -3309,7 +3309,7 @@ describe('createTaskGraph', () => {
         true
       )
     ).toEqual({
-      roots: ['app:serve'],
+      roots: ['e2e:e2e', 'app:serve'],
       tasks: {
         'e2e:e2e': {
           id: 'e2e:e2e',
@@ -3347,7 +3347,7 @@ describe('createTaskGraph', () => {
         'app:serve': [],
       },
       continuousDependencies: {
-        'e2e:e2e': ['app:serve'],
+        'e2e:e2e': [],
         'app:serve': [],
       },
     });
