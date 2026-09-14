@@ -1,29 +1,41 @@
 use std::collections::BTreeMap;
-use std::fs;
-use std::io;
-use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
 
-use serde::{Deserialize, Serialize};
+use anyhow::{Context, Result};
+use rusqlite::{ToSql, params};
 use sha2::{Digest, Sha256};
 
 use super::IoSnapshotResolution;
 use super::bundle::{TaskInputs, TaskIoSnapshot};
+use crate::native::db::connection::NxDbConnection;
 
-pub const BUNDLE_VERSION: u32 = 1;
-pub const BUNDLE_FILE: &str = "snapshots.json";
+pub type Db = Arc<Mutex<NxDbConnection>>;
 
-/// One resolved snapshot set, cached per requested commit.
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+/// One resolved snapshot set, as imported for a requested commit.
 pub struct Bundle {
-    pub version: u32,
     pub resolution: IoSnapshotResolution,
     pub snapshots: BTreeMap<String, TaskIoSnapshot>,
 }
 
-pub fn bundle_dir(output_directory: &Path, commit: &str) -> PathBuf {
-    output_directory.join(commit)
-}
+/// One row per commit for the resolution, one row per task for its entry, so
+/// a run reads the tasks it plans instead of the workspace's whole set.
+const SCHEMA: &str = "
+CREATE TABLE IF NOT EXISTS io_snapshot_bundles (
+    commit_sha TEXT PRIMARY KEY NOT NULL,
+    digest TEXT NOT NULL,
+    fetched_at INTEGER NOT NULL,
+    resolution TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS io_snapshot_tasks (
+    commit_sha TEXT NOT NULL,
+    task_id TEXT NOT NULL,
+    entry TEXT NOT NULL,
+    PRIMARY KEY (commit_sha, task_id)
+) WITHOUT ROWID;
+";
+
+/// Entries per `IN (...)` list; SQLite's default parameter limit is 999.
+const READ_CHUNK: usize = 500;
 
 /// Deterministic identity of the snapshot content, independent of which
 /// commit it was requested for.
@@ -54,304 +66,195 @@ fn sort_unique(values: &mut Vec<String>) {
     values.dedup();
 }
 
-/// Why a bundle directory yielded no bundle; mirrors the TS diagnostic reasons.
-#[derive(Debug)]
-pub(crate) struct BundleReadError {
-    pub reason: &'static str,
-    pub file: String,
-    pub message: String,
-}
-
-static BUNDLE_CACHE: std::sync::LazyLock<
-    dashmap::DashMap<PathBuf, (std::time::SystemTime, std::sync::Arc<Bundle>)>,
-> = std::sync::LazyLock::new(dashmap::DashMap::new);
-
-/// Parses `<directory>/snapshots.json`, re-reading only when its mtime changes
-/// so a long-lived daemon serves repeated requests from memory.
-pub(crate) fn read_bundle(directory: &Path) -> Result<std::sync::Arc<Bundle>, BundleReadError> {
-    let file = directory.join(BUNDLE_FILE);
-    let file_name = file.to_string_lossy().into_owned();
-    let mtime = match fs::metadata(&file).and_then(|m| m.modified()) {
-        Ok(mtime) => mtime,
-        Err(err) => {
-            let reason = if err.kind() == io::ErrorKind::NotFound {
-                "no-bundle"
-            } else {
-                "invalid-bundle"
-            };
-            return Err(BundleReadError {
-                reason,
-                file: file_name,
-                message: err.to_string(),
-            });
-        }
-    };
-    if let Some(cached) = BUNDLE_CACHE.get(&file)
-        && cached.0 == mtime
-    {
-        return Ok(std::sync::Arc::clone(&cached.1));
-    }
-    let parsed = fs::File::open(&file)
-        .map_err(|e| e.to_string())
-        .and_then(|f| {
-            serde_json::from_reader::<_, Bundle>(io::BufReader::new(f)).map_err(|e| e.to_string())
-        })
-        .and_then(|bundle| {
-            if bundle.version == BUNDLE_VERSION {
-                Ok(bundle)
-            } else {
-                Err(format!("not a version {BUNDLE_VERSION} snapshot bundle"))
-            }
-        });
-    match parsed {
-        Ok(bundle) => {
-            let bundle = std::sync::Arc::new(bundle);
-            BUNDLE_CACHE.insert(file, (mtime, std::sync::Arc::clone(&bundle)));
-            Ok(bundle)
-        }
-        Err(message) => Err(BundleReadError {
-            reason: "invalid-bundle",
-            file: file_name,
-            message,
-        }),
-    }
-}
-
-pub fn read_resolution(output_directory: &Path, commit: &str) -> Option<IoSnapshotResolution> {
-    let file = fs::File::open(bundle_dir(output_directory, commit).join(BUNDLE_FILE)).ok()?;
-    #[derive(Deserialize)]
-    struct Header {
-        version: u32,
-        resolution: IoSnapshotResolution,
-    }
-    let header: Header = serde_json::from_reader(io::BufReader::new(file)).ok()?;
-    (header.version == BUNDLE_VERSION).then_some(header.resolution)
-}
-
-/// Writes the bundle into a sibling temp directory and swaps it into place, so
-/// a reader always sees either the previous bundle or the new one, never a
-/// gap. Concurrent writers for the same commit: last one in wins.
-pub fn write(output_directory: &Path, bundle: &Bundle) -> io::Result<PathBuf> {
+/// Replaces whatever was stored for the bundle's commit and keeps only the
+/// newest `retain` commits by fetch time, this one included. One transaction,
+/// so a reader sees the previous set or the new one, never a gap.
+pub fn write(db: &Db, bundle: &Bundle, retain: usize) -> Result<()> {
+    let resolution =
+        serde_json::to_string(&bundle.resolution).context("serializing the resolution")?;
+    let entries: Vec<(&String, String)> = bundle
+        .snapshots
+        .iter()
+        .map(|(task_id, entry)| Ok((task_id, serde_json::to_string(entry)?)))
+        .collect::<Result<_>>()
+        .context("serializing snapshot entries")?;
     let commit = &bundle.resolution.requested_commit;
-    let target = bundle_dir(output_directory, commit);
-    let temp = output_directory.join(format!(".tmp-{}-{}", commit, std::process::id()));
-    let old = output_directory.join(format!(".old-{}-{}", commit, std::process::id()));
-    fs::create_dir_all(&temp)?;
-    let written = (|| {
-        let file = fs::File::create(temp.join(BUNDLE_FILE))?;
-        serde_json::to_writer(io::BufWriter::new(file), bundle)?;
-        if target.exists() {
-            fs::rename(&target, &old)?;
+    let digest = &bundle.resolution.digest;
+    let fetched_at = bundle.resolution.fetched_at;
+    let mut db = db.lock().unwrap();
+    db.execute_batch(SCHEMA)?;
+    db.transaction(|conn| {
+        conn.execute(
+            "DELETE FROM io_snapshot_tasks WHERE commit_sha = ?1",
+            params![commit],
+        )?;
+        conn.execute(
+            "INSERT OR REPLACE INTO io_snapshot_bundles (commit_sha, digest, fetched_at, resolution) \
+             VALUES (?1, ?2, ?3, ?4)",
+            params![commit, digest, fetched_at, resolution],
+        )?;
+        let mut insert = conn.prepare(
+            "INSERT INTO io_snapshot_tasks (commit_sha, task_id, entry) VALUES (?1, ?2, ?3)",
+        )?;
+        for (task_id, entry) in &entries {
+            insert.execute(params![commit, task_id, entry])?;
         }
-        let swapped = fs::rename(&temp, &target);
-        if swapped.is_err() && old.exists() && !target.exists() {
-            let _ = fs::rename(&old, &target);
+        let stale: Vec<String> = conn
+            .prepare(
+                "SELECT commit_sha FROM io_snapshot_bundles \
+                 ORDER BY fetched_at DESC, commit_sha LIMIT -1 OFFSET ?1",
+            )?
+            .query_map(params![retain.max(1) as i64], |row| row.get(0))?
+            .collect::<rusqlite::Result<_>>()?;
+        for old in stale {
+            conn.execute(
+                "DELETE FROM io_snapshot_tasks WHERE commit_sha = ?1",
+                params![old],
+            )?;
+            conn.execute(
+                "DELETE FROM io_snapshot_bundles WHERE commit_sha = ?1",
+                params![old],
+            )?;
         }
-        let _ = fs::remove_dir_all(&old);
-        swapped
-    })();
-    match written {
-        Ok(()) => Ok(target),
-        Err(err) => {
-            let _ = fs::remove_dir_all(&temp);
-            if target.join(BUNDLE_FILE).is_file() {
-                Ok(target)
-            } else {
-                Err(err)
-            }
-        }
-    }
+        Ok(())
+    })
 }
 
-/// Keeps the newest `retain` bundles (by fetch time) plus `keep`.
-pub fn prune(output_directory: &Path, retain: usize, keep: &str) {
-    let Ok(entries) = fs::read_dir(output_directory) else {
-        return;
+/// A query against a table no import has created yet reads as empty.
+fn absent_table(err: &anyhow::Error) -> bool {
+    err.to_string().contains("no such table")
+}
+
+pub fn read_resolution(db: &Db, commit: &str) -> Result<Option<IoSnapshotResolution>> {
+    let row: Option<String> = match db.lock().unwrap().query_row(
+        "SELECT resolution FROM io_snapshot_bundles WHERE commit_sha = ?1",
+        params![commit],
+        |row| row.get(0),
+    ) {
+        Ok(row) => row,
+        Err(err) if absent_table(&err) => None,
+        Err(err) => return Err(err),
     };
-    let mut bundles: Vec<(i64, PathBuf)> = Vec::new();
-    for entry in entries.flatten() {
-        let path = entry.path();
-        let name = entry.file_name();
-        let name = name.to_string_lossy();
-        if name.starts_with(".tmp-") {
-            let _ = fs::remove_dir_all(&path);
-            continue;
+    row.map(|json| serde_json::from_str(&json).context("parsing a stored resolution"))
+        .transpose()
+}
+
+/// The stored entries among `task_ids` for `commit`; an id with no entry is
+/// simply absent from the result.
+pub fn read_entries(
+    db: &Db,
+    commit: &str,
+    task_ids: &[&str],
+) -> Result<Vec<(String, TaskIoSnapshot)>> {
+    let mut entries = Vec::new();
+    let db = db.lock().unwrap();
+    for chunk in task_ids.chunks(READ_CHUNK) {
+        let placeholders = (0..chunk.len())
+            .map(|i| format!("?{}", i + 2))
+            .collect::<Vec<_>>()
+            .join(",");
+        let sql = format!(
+            "SELECT task_id, entry FROM io_snapshot_tasks \
+             WHERE commit_sha = ?1 AND task_id IN ({placeholders})"
+        );
+        let mut args: Vec<&dyn ToSql> = Vec::with_capacity(chunk.len() + 1);
+        args.push(&commit);
+        args.extend(chunk.iter().map(|id| id as &dyn ToSql));
+        let rows: Vec<(String, String)> =
+            match db.query_map(&sql, args.as_slice(), |row| Ok((row.get(0)?, row.get(1)?))) {
+                Ok(rows) => rows,
+                Err(err) if absent_table(&err) => return Ok(entries),
+                Err(err) => return Err(err),
+            };
+        for (task_id, json) in rows {
+            let entry = serde_json::from_str(&json)
+                .with_context(|| format!("parsing the stored snapshot of {task_id}"))?;
+            entries.push((task_id, entry));
         }
-        if name == keep || !path.is_dir() {
-            continue;
-        }
-        let fetched_at = read_resolution(output_directory, &name)
-            .map(|r| r.fetched_at)
-            .unwrap_or(0);
-        bundles.push((fetched_at, path));
     }
-    bundles.sort_by_key(|(fetched_at, _)| std::cmp::Reverse(*fetched_at));
-    for (_, path) in bundles.into_iter().skip(retain.saturating_sub(1)) {
-        let _ = fs::remove_dir_all(path);
-    }
+    Ok(entries)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use assert_fs::TempDir;
+    use crate::native::db::initialize::initialize_db;
 
-    fn snapshot(commit: &str, inputs: &[&str]) -> TaskIoSnapshot {
-        TaskIoSnapshot {
-            commit: commit.into(),
-            inputs: TaskInputs::Flat(inputs.iter().map(|s| s.to_string()).collect()),
-            task_outputs: None,
-            outputs: vec![],
-        }
+    fn temp_db() -> (tempfile::TempDir, Db) {
+        let dir = tempfile::tempdir().unwrap();
+        let conn = initialize_db(&dir.path().join("test.db")).unwrap();
+        (dir, Arc::new(Mutex::new(conn)))
     }
 
-    fn resolution(commit: &str, fetched_at: i64) -> IoSnapshotResolution {
-        IoSnapshotResolution {
-            requested_commit: commit.into(),
-            commits: vec![commit.into()],
-            source_commits: vec![],
-            digest: String::new(),
-            fetched_at,
-            updated_at: None,
-            client_version: "test".into(),
-            tasks: 0,
-        }
-    }
-
-    #[test]
-    fn digest_is_order_independent_after_normalize() {
-        let mut a = BTreeMap::new();
-        a.insert("app:build".to_string(), snapshot("c1", &["b", "a", "a"]));
-        let mut b = BTreeMap::new();
-        b.insert("app:build".to_string(), snapshot("c1", &["a", "b"]));
-        normalize(&mut a);
-        normalize(&mut b);
-        assert_eq!(digest(&a), digest(&b));
-        assert_eq!(
-            a["app:build"].inputs,
-            TaskInputs::Flat(vec!["a".into(), "b".into()])
-        );
-    }
-
-    #[test]
-    fn accepts_flat_and_structured_inputs() {
-        let json = r#"{
-          "flat": {
-            "commit": "c",
-            "inputs": ["b", "a", "dist/libs/ui/index.js"],
-            "taskOutputs": { "ui:build": ["dist/libs/ui/index.js"] },
-            "outputs": []
-          },
-          "structured": {
-            "commit": "c",
-            "inputs": {
-              "projects": { "web": ["src/**/*.ts", "src/**/*.ts"] },
-              "workspace": ["tsconfig.base.json"],
-              "taskOutputs": { "ui:build": ["libs/ui/dist/index.js"] }
+    fn bundle(commit: &str, fetched_at: i64, tasks: &[&str]) -> Bundle {
+        let snapshots: BTreeMap<String, TaskIoSnapshot> = tasks
+            .iter()
+            .map(|id| {
+                (
+                    id.to_string(),
+                    TaskIoSnapshot {
+                        commit: commit.into(),
+                        inputs: TaskInputs::Flat(vec![format!("libs/{id}/a.ts"), "b.ts".into()]),
+                        task_outputs: None,
+                        outputs: vec![],
+                    },
+                )
+            })
+            .collect();
+        Bundle {
+            resolution: IoSnapshotResolution {
+                requested_commit: commit.into(),
+                commits: vec![commit.into()],
+                source_commits: vec![commit.into()],
+                digest: digest(&snapshots),
+                fetched_at,
+                updated_at: None,
+                client_version: "test".into(),
+                tasks: snapshots.len() as u32,
             },
-            "outputs": ["apps/web/dist/**"]
-          }
-        }"#;
-        let mut snapshots: BTreeMap<String, TaskIoSnapshot> = serde_json::from_str(json).unwrap();
-        normalize(&mut snapshots);
-        assert_eq!(
-            snapshots["flat"].inputs,
-            TaskInputs::Flat(vec!["a".into(), "b".into(), "dist/libs/ui/index.js".into()])
-        );
-        assert_eq!(
-            snapshots["flat"].task_outputs.as_ref().unwrap()["ui:build"],
-            vec!["dist/libs/ui/index.js"]
-        );
-        let TaskInputs::Structured(inputs) = &snapshots["structured"].inputs else {
-            panic!("expected structured inputs");
-        };
-        assert_eq!(inputs.projects["web"], vec!["src/**/*.ts"]);
-        assert_eq!(
-            inputs.task_outputs["ui:build"],
-            vec!["libs/ui/dist/index.js"]
-        );
-        // Round-trips through the on-disk bundle unchanged.
-        let text = serde_json::to_string(&snapshots).unwrap();
-        let again: BTreeMap<String, TaskIoSnapshot> = serde_json::from_str(&text).unwrap();
-        assert_eq!(again, snapshots);
-    }
-
-    #[test]
-    fn write_then_read_round_trips_and_prunes() {
-        let temp = TempDir::new().unwrap();
-        for (commit, at) in [("aaa", 1), ("bbb", 2), ("ccc", 3)] {
-            let bundle = Bundle {
-                version: BUNDLE_VERSION,
-                resolution: resolution(commit, at),
-                snapshots: BTreeMap::new(),
-            };
-            let dir = write(&temp, &bundle).unwrap();
-            assert!(dir.join(BUNDLE_FILE).is_file());
-            assert_eq!(read_resolution(&temp, commit).unwrap().fetched_at, at);
+            snapshots,
         }
-        fs::create_dir_all(temp.join(".tmp-zzz-1")).unwrap();
-
-        prune(&temp, 2, "ccc");
-        assert!(read_resolution(&temp, "ccc").is_some());
-        assert!(read_resolution(&temp, "bbb").is_some());
-        assert!(read_resolution(&temp, "aaa").is_none());
-        assert!(!temp.join(".tmp-zzz-1").exists());
     }
 
     #[test]
-    fn read_bundle_reports_missing_and_invalid_and_caches_by_mtime() {
-        let temp = TempDir::new().unwrap();
-        let dir = temp.join("aaa");
-        let missing = read_bundle(&dir).unwrap_err();
-        assert_eq!(missing.reason, "no-bundle");
+    fn reads_only_the_requested_tasks_and_prunes_old_commits() {
+        let (_dir, db) = temp_db();
+        assert!(read_resolution(&db, "c1").unwrap().is_none());
+        assert!(read_entries(&db, "c1", &["a:build"]).unwrap().is_empty());
 
-        fs::create_dir_all(&dir).unwrap();
-        fs::write(dir.join(BUNDLE_FILE), "{ not json").unwrap();
-        let invalid = read_bundle(&dir).unwrap_err();
-        assert_eq!(invalid.reason, "invalid-bundle");
-        assert!(invalid.file.ends_with(BUNDLE_FILE));
+        write(&db, &bundle("c1", 1, &["a:build", "b:build", "c:build"]), 2).unwrap();
+        write(&db, &bundle("c2", 2, &["a:build"]), 2).unwrap();
+        write(&db, &bundle("c3", 3, &["a:build"]), 2).unwrap();
 
-        let mut bundle = Bundle {
-            version: BUNDLE_VERSION,
-            resolution: resolution("aaa", 1),
-            snapshots: BTreeMap::new(),
-        };
-        write(&temp, &bundle).unwrap();
-        let first = read_bundle(&dir).unwrap();
-        assert!(std::sync::Arc::ptr_eq(&first, &read_bundle(&dir).unwrap()));
-
-        bundle.resolution.fetched_at = 2;
-        write(&temp, &bundle).unwrap();
-        let later = std::time::SystemTime::now() + std::time::Duration::from_secs(5);
-        let file = fs::File::options()
-            .write(true)
-            .open(dir.join(BUNDLE_FILE))
-            .unwrap();
-        file.set_modified(later).unwrap();
-        assert_eq!(read_bundle(&dir).unwrap().resolution.fetched_at, 2);
-
-        bundle.version = 99;
-        write(&temp, &bundle).unwrap();
-        let file = fs::File::options()
-            .write(true)
-            .open(dir.join(BUNDLE_FILE))
-            .unwrap();
-        file.set_modified(later + std::time::Duration::from_secs(5))
-            .unwrap();
-        assert_eq!(read_bundle(&dir).unwrap_err().reason, "invalid-bundle");
+        let entries = read_entries(&db, "c3", &["a:build", "zzz:build"]).unwrap();
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].0, "a:build");
+        assert_eq!(
+            entries[0].1.inputs,
+            TaskInputs::Flat(vec!["libs/a:build/a.ts".into(), "b.ts".into()])
+        );
+        assert_eq!(read_resolution(&db, "c3").unwrap().unwrap().tasks, 1);
+        // Only the newest two commits survive.
+        assert!(read_resolution(&db, "c1").unwrap().is_none());
+        assert!(read_entries(&db, "c1", &["a:build"]).unwrap().is_empty());
+        assert!(read_resolution(&db, "c2").unwrap().is_some());
     }
 
     #[test]
-    fn rewriting_a_commit_replaces_the_bundle() {
-        let temp = TempDir::new().unwrap();
-        let mut bundle = Bundle {
-            version: BUNDLE_VERSION,
-            resolution: resolution("aaa", 1),
-            snapshots: BTreeMap::new(),
-        };
-        write(&temp, &bundle).unwrap();
-        bundle.resolution.fetched_at = 5;
-        write(&temp, &bundle).unwrap();
-        assert_eq!(read_resolution(&temp, "aaa").unwrap().fetched_at, 5);
+    fn rewriting_a_commit_replaces_its_entries() {
+        let (_dir, db) = temp_db();
+        write(&db, &bundle("c1", 1, &["a:build", "b:build"]), 5).unwrap();
+        write(&db, &bundle("c1", 2, &["a:build"]), 5).unwrap();
+        assert!(read_entries(&db, "c1", &["b:build"]).unwrap().is_empty());
+        assert_eq!(read_entries(&db, "c1", &["a:build"]).unwrap().len(), 1);
+    }
+
+    #[test]
+    fn reads_in_chunks_beyond_the_parameter_limit() {
+        let (_dir, db) = temp_db();
+        let ids: Vec<String> = (0..1200).map(|i| format!("p{i}:build")).collect();
+        let refs: Vec<&str> = ids.iter().map(String::as_str).collect();
+        write(&db, &bundle("c1", 1, &refs), 5).unwrap();
+        assert_eq!(read_entries(&db, "c1", &refs).unwrap().len(), 1200);
     }
 }

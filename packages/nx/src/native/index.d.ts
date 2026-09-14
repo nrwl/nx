@@ -131,23 +131,23 @@ export declare class ImportResult {
 }
 
 /**
- * The imported or loaded bundle for one commit, plus what resolving it
- * reported. Handed to the hash planner as-is; `bundle` is `None` when the
- * task hashes natively (status `skipped`, or a load failure).
+ * The snapshot set for one commit, plus what resolving it reported. Handed
+ * to the hash planner as-is. Entries are read from the workspace database
+ * per task as they are asked for, and remembered for the handle's lifetime,
+ * so a run costs the tasks it plans rather than the workspace's whole set.
+ * `resolution` is `None` when every task hashes natively (status `skipped`).
  */
 export declare class IoSnapshots {
   /** `fetched` | `cached` | `skipped` */
   get status(): string
   /**
-   * Why the fetch was skipped, `stale-offline` when a stale bundle was
+   * Why the fetch was skipped, `stale-offline` when a stale set was
    * reused, or `no-bundle` / `invalid-bundle` from `loadIoSnapshots`.
    */
   get reason(): string | null
   get message(): string | null
-  /** The bundle file a load failure refers to. */
-  get file(): string | null
-  /** Directory holding `snapshots.json` when a bundle was resolved. */
-  get directory(): string | null
+  /** The commit whose stored set this is, when one was resolved. */
+  get commit(): string | null
   get resolution(): IoSnapshotResolution | null
 }
 
@@ -663,10 +663,10 @@ export interface HashInputs {
 
 /**
  * Stores the snapshot set the Nx Cloud client read for `requested_commit`
- * and returns it as this run's bundle. Never fails the caller: a payload nx
- * cannot read or a cache it cannot write is reported as a `skipped` result.
+ * and returns it as this run's set. Never fails the caller: a payload nx
+ * cannot read or a database it cannot write is reported as `skipped`.
  */
-export declare function importIoSnapshots(options: IoSnapshotImportOptions): IoSnapshots
+export declare function importIoSnapshots(db: ExternalObject<NxDbConnection>, options: IoSnapshotImportOptions): IoSnapshots
 
 /**
  * Initialize telemetry using a DB connection.
@@ -724,8 +724,6 @@ export interface IoSnapshotDiagnostic {
 
 /** The snapshot set the Nx Cloud client read for HEAD, as JS hands it over. */
 export interface IoSnapshotImportOptions {
-  /** Shared cache root for snapshot bundles (`<cacheDir>/io-snapshots`). */
-  cacheDirectory: string
   requestedCommit: string
   /** The commits the client asked about, newest first. */
   commits: Array<string>
@@ -763,7 +761,7 @@ export interface IoSnapshotReport {
   resolution?: IoSnapshotResolution
 }
 
-/** What was resolved for a commit; persisted alongside the bundle. */
+/** What was resolved for a commit; stored beside its entries. */
 export interface IoSnapshotResolution {
   requestedCommit: string
   commits: Array<string>
@@ -824,11 +822,11 @@ export interface Link {
 }
 
 /**
- * Reads an already-fetched bundle directory without touching the network:
- * `nx show`/`nx graph` and the daemon load the directory the client resolved.
- * `reason`/`message` annotate a deliberate reuse, such as `stale-offline`.
+ * The stored set for `commit`, without touching the network: `nx show`,
+ * `nx graph` and the daemon load the commit the run resolved. `reason` and
+ * `message` annotate a deliberate reuse, such as `stale-offline`.
  */
-export declare function loadIoSnapshots(directory: string, reason?: string | undefined | null, message?: string | undefined | null): IoSnapshots
+export declare function loadIoSnapshots(db: ExternalObject<NxDbConnection>, commit: string, reason?: string | undefined | null, message?: string | undefined | null): IoSnapshots
 
 export declare function logDebug(message: string): void
 
@@ -942,11 +940,10 @@ export interface ProjectGraph {
 }
 
 /**
- * The resolution header of the cached bundle for `commit`, without parsing
- * the snapshots: enough to decide whether to ask Nx Cloud at all and what
- * `knownUpdatedAt` to send.
+ * The resolution stored for `commit`, without reading any entries: enough
+ * to decide whether to ask Nx Cloud at all and what `knownUpdatedAt` to send.
  */
-export declare function readIoSnapshotResolution(cacheDirectory: string, commit: string): IoSnapshotResolution | null
+export declare function readIoSnapshotResolution(db: ExternalObject<NxDbConnection>, commit: string): IoSnapshotResolution | null
 
 export declare function remove(src: string): void
 

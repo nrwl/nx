@@ -3,8 +3,13 @@ import { retrieveWorkspaceFiles } from '../project-graph/utils/retrieve-workspac
 import { NxJsonConfiguration } from '../config/nx-json';
 import { createTaskGraph } from '../tasks-runner/create-task-graph';
 import { NativeTaskHasherImpl } from './native-task-hasher-impl';
-import { HashPlanner, loadIoSnapshots } from '../native';
-import { mkdirSync, writeFileSync } from 'fs';
+import {
+  closeDbConnection,
+  connectToNxDb,
+  HashPlanner,
+  importIoSnapshots,
+  loadIoSnapshots,
+} from '../native';
 import { join } from 'path';
 import { TaskGraph } from '../config/task-graph';
 import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
@@ -1695,28 +1700,23 @@ describe('native task hasher', () => {
   it('hashes a task from its snapshot and labels where each input came from', async () => {
     const { taskGraph, impl } = await upfrontFixture();
     await tempFs.createFiles({ 'libs/child/observed.txt': 'observed' });
-    const dir = join(tempFs.tempDir, 'io-snapshots', 'head');
-    mkdirSync(dir, { recursive: true });
-    const bundle = (inputs: string[]) =>
-      writeFileSync(
-        join(dir, 'snapshots.json'),
-        JSON.stringify({
-          version: 1,
-          resolution: {
-            requestedCommit: 'head',
-            commits: [],
-            sourceCommits: [],
-            digest: 'd1',
-            fetchedAt: 1,
-            clientVersion: 'nx/test',
-            tasks: 1,
-          },
-          snapshots: {
-            'child:compile': { commit: 'head', inputs, outputs: [] },
-          },
-        })
-      );
-    bundle(['libs/child/observed.txt']);
+    const commit = 'head'.padEnd(40, '0');
+    const snapshotDb = connectToNxDb(
+      join(tempFs.tempDir, 'io-snapshots-db'),
+      'io-snapshots'
+    );
+    const bundle = (inputs: string[]) => {
+      importIoSnapshots(snapshotDb, {
+        requestedCommit: commit,
+        commits: [commit],
+        clientVersion: 'nx/test',
+        snapshotsJson: JSON.stringify({
+          'child:compile': { commit, inputs, outputs: [] },
+        }),
+      });
+      return loadIoSnapshots(snapshotDb, commit);
+    };
+    const snapshots = bundle(['libs/child/observed.txt']);
     const task = taskGraph.tasks['child:compile'];
 
     const native = await impl.hashTask(
@@ -1732,7 +1732,7 @@ describe('native task hasher', () => {
       {},
       tempFs.tempDir,
       true,
-      loadIoSnapshots(dir)
+      snapshots
     );
 
     expect(fromSnapshot.value).not.toBe(native.value);
@@ -1746,7 +1746,9 @@ describe('native task hasher', () => {
     expect(fromSnapshot.inputs.sources['libs/child/observed.txt']).toBe(
       'snapshot'
     );
-    expect(fromSnapshot.inputs.markers).toEqual(['io-snapshot:d1']);
+    expect(fromSnapshot.inputs.markers).toEqual([
+      expect.stringMatching(/^io-snapshot:[0-9a-f]{64}$/),
+    ]);
     expect(native.inputs.markers).toEqual([]);
     expect(native.inputs.sources['libs/child/observed.txt']).toBeUndefined();
 
@@ -1758,9 +1760,10 @@ describe('native task hasher', () => {
       {},
       tempFs.tempDir,
       true,
-      loadIoSnapshots(dir)
+      snapshots
     );
     expect(changed.value).not.toBe(fromSnapshot.value);
+    closeDbConnection(snapshotDb);
   });
 
   it('plans again for a task graph other than the up-front batch, and for a task the batch never planned', async () => {

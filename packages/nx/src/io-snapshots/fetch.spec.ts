@@ -1,4 +1,4 @@
-import { fetchIoSnapshotsForRun, ioSnapshotsCacheDirectory } from './fetch';
+import { fetchIoSnapshotsForRun } from './fetch';
 
 const native = vi.hoisted(() => ({
   importIoSnapshots: vi.fn(),
@@ -23,6 +23,7 @@ vi.mock('../nx-cloud/resolution-helpers', () => ({
   findAncestorNodeModules: () => [],
 }));
 vi.mock('../utils/git-utils', () => ({ getLatestCommitSha: () => 'head' }));
+vi.mock('../utils/db-connection', () => ({ getDbConnection: () => 'db' }));
 vi.mock('../utils/nx-cloud-utils', () => ({
   isNxCloudUsed: () => true,
   isNxCloudDisabled: () => false,
@@ -32,7 +33,6 @@ vi.mock('../utils/logger', () => ({ logger: { verbose: vi.fn() } }));
 
 describe('fetchIoSnapshotsForRun', () => {
   const nxJson = {} as any;
-  const bundleDir = `${ioSnapshotsCacheDirectory}/head`;
   const cached = (fetchedAt: number, updatedAt = 7) => ({
     fetchedAt,
     updatedAt,
@@ -73,7 +73,7 @@ describe('fetchIoSnapshotsForRun', () => {
     native.readIoSnapshotResolution.mockReturnValue(cached(Date.now()));
     const result = await fetchIoSnapshotsForRun(nxJson, {});
     expect(result.status).toBe('cached');
-    expect(native.loadIoSnapshots).toHaveBeenCalledWith(bundleDir);
+    expect(native.loadIoSnapshots).toHaveBeenCalledWith('db', 'head');
     expect(cloud.verifyOrUpdateNxCloudClient).not.toHaveBeenCalled();
   });
 
@@ -106,8 +106,8 @@ describe('fetchIoSnapshotsForRun', () => {
     });
     const result = await fetchIoSnapshotsForRun(nxJson, {});
     expect(native.importIoSnapshots).toHaveBeenCalledWith(
+      'db',
       expect.objectContaining({
-        cacheDirectory: ioSnapshotsCacheDirectory,
         requestedCommit: 'head',
         commits: ['head', 'parent'],
         updatedAt: 9,
@@ -133,7 +133,8 @@ describe('fetchIoSnapshotsForRun', () => {
     native.loadIoSnapshots.mockReturnValue(loaded('stale-offline'));
     const stale = await fetchIoSnapshotsForRun(nxJson, {});
     expect(native.loadIoSnapshots).toHaveBeenCalledWith(
-      bundleDir,
+      'db',
+      'head',
       'stale-offline',
       'getaddrinfo ENOTFOUND'
     );

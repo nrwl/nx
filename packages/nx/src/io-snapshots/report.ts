@@ -55,7 +55,7 @@ export function formatIoSnapshotSummary(
   if (fetch) {
     bodyLines.push(
       `bundle: ${fetch.status}${fetch.reason ? ` (${fetch.reason})` : ''}${
-        fetch.directory ? ` at ${fetch.directory}` : ''
+        fetch.commit ? ` for ${fetch.commit}` : ''
       }`
     );
   }
@@ -96,7 +96,7 @@ function describeDiagnostic(d: IoSnapshotDiagnostic): string {
     case 'no-bundle':
       return 'no snapshot bundle for the current commit';
     case 'invalid-bundle':
-      return `invalid snapshot bundle ${d.file}: ${d.message}`;
+      return `invalid snapshot set: ${d.message}`;
     case 'disabled':
       return `${d.taskId}: sandbox.enabled is false`;
     case 'custom-hasher':

@@ -15,11 +15,16 @@ vi.mock('./project-graph-incremental-recomputation', () => ({
   }),
 }));
 vi.mock('../../config/configuration', () => ({ readNxJson: () => ({}) }));
-const mockLoadIoSnapshots = vi.fn((directory: string) => ({ directory }));
+const mockLoadIoSnapshots = vi.fn((db: string, commit: string) => ({
+  commit,
+  resolution: { digest: `digest-of-${commit}` },
+}));
 // Lazy so the hoisted mock factory does not touch the const before it exists.
 vi.mock('../../native', () => ({
-  loadIoSnapshots: (directory: string) => mockLoadIoSnapshots(directory),
+  loadIoSnapshots: (db: string, commit: string) =>
+    mockLoadIoSnapshots(db, commit),
 }));
+vi.mock('../../utils/db-connection', () => ({ getDbConnection: () => 'db' }));
 
 import { handleHashTasks, handleHashTasksUpfront } from './handle-hash-tasks';
 
@@ -38,28 +43,28 @@ describe('handleHashTasks', () => {
     collectInputs: false,
   };
 
-  it('loads the fetched bundle and hands the instance to the hasher on every request', async () => {
-    const directory = '/w/.nx/cache/io-snapshots/abc';
-    await handleHashTasks({ ...base, ioSnapshots: { directory } });
-    expect(mockLoadIoSnapshots).toHaveBeenLastCalledWith(directory);
-    expect(hashTasks).toHaveBeenLastCalledWith(
-      base.tasks,
-      base.taskGraph,
-      base.perTaskEnvs,
-      base.cwd,
-      false,
-      { directory }
-    );
-
-    await handleHashTasksUpfront({ ...base, ioSnapshots: { directory } });
+  it('loads the stored set for the commit and keeps one handle while its digest holds', async () => {
+    const commit = 'abc';
+    await handleHashTasks({ ...base, ioSnapshots: { commit } });
+    expect(mockLoadIoSnapshots).toHaveBeenLastCalledWith('db', commit);
+    const first = hashTasks.mock.lastCall[5];
+    expect(first).toMatchObject({ commit });
+    await handleHashTasksUpfront({ ...base, ioSnapshots: { commit } });
     expect(hashTasksUpfront).toHaveBeenLastCalledWith(
       base.tasks,
       base.taskGraph,
       base.perTaskEnvs,
       base.cwd,
       false,
-      { directory }
+      first
     );
+    // A re-import for the same commit (new digest) replaces the handle.
+    mockLoadIoSnapshots.mockImplementationOnce((db, c) => ({
+      commit: c,
+      resolution: { digest: 'new' },
+    }));
+    await handleHashTasks({ ...base, ioSnapshots: { commit } });
+    expect(hashTasks.mock.lastCall[5]).not.toBe(first);
   });
 
   it('passes nothing when an older client omits the field', async () => {

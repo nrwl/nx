@@ -2,7 +2,8 @@ import { Task, TaskGraph } from '../../config/task-graph';
 import { getCachedSerializedProjectGraphPromise } from './project-graph-incremental-recomputation';
 import { InProcessTaskHasher } from '../../hasher/task-hasher';
 import { readNxJson } from '../../config/configuration';
-import { loadIoSnapshots } from '../../native';
+import { loadIoSnapshots, type IoSnapshots } from '../../native';
+import { getDbConnection } from '../../utils/db-connection';
 
 /**
  * We use this not to recreated hasher for every hash operation
@@ -18,16 +19,26 @@ interface HashTasksPayload {
   perTaskEnvs: Record<string, NodeJS.ProcessEnv>;
   cwd: string;
   collectInputs?: boolean;
-  ioSnapshots?: { directory?: string };
+  ioSnapshots?: { commit?: string };
 }
 
-// An External cannot cross the socket, so the client sends the bundle
-// directory (which pins the HEAD it fetched for) and the daemon loads it
-// (mtime-cached in Rust). Absent (incl. older clients) ⇒ native hashing.
+// An External cannot cross the socket, so the client sends the commit of the
+// set it resolved and the daemon reads that set from the database. Absent
+// (incl. older clients) ⇒ native hashing. One handle per commit while its
+// digest holds, so entries read for one request serve the next.
+const loadedByCommit = new Map<string, IoSnapshots>();
 function loadedIoSnapshots(payload: HashTasksPayload) {
-  return payload.ioSnapshots?.directory
-    ? loadIoSnapshots(payload.ioSnapshots.directory)
-    : undefined;
+  const commit = payload.ioSnapshots?.commit;
+  if (!commit) {
+    return undefined;
+  }
+  const fresh = loadIoSnapshots(getDbConnection(), commit);
+  const known = loadedByCommit.get(commit);
+  if (known && known.resolution?.digest === fresh.resolution?.digest) {
+    return known;
+  }
+  loadedByCommit.set(commit, fresh);
+  return fresh;
 }
 
 async function getHasher(runnerOptions: any): Promise<InProcessTaskHasher> {

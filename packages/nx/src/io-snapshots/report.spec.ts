@@ -2,16 +2,13 @@ import { formatIoSnapshotSummary, ioSnapshotReportToJson } from './report';
 import type { IoSnapshotReport, IoSnapshots } from '../native';
 
 function fetchResult(
-  partial: Partial<
-    Record<'status' | 'reason' | 'message' | 'file' | 'directory', string>
-  >
+  partial: Partial<Record<'status' | 'reason' | 'message' | 'commit', string>>
 ): IoSnapshots {
   return {
     status: 'skipped',
     reason: null,
     message: null,
-    file: null,
-    directory: null,
+    commit: null,
     resolution: null,
     ...partial,
   } as unknown as IoSnapshots;
@@ -50,14 +47,14 @@ describe('formatIoSnapshotSummary', () => {
       result,
       fetchResult({
         status: 'cached',
-        directory: '/w/.nx/cache/io-snapshots/abc123',
+        commit: 'abc123',
       })
     );
     expect(summary.line).toBe(
       'I/O snapshots: 2 tasks hashed from snapshot (1 with observed outputs), 5 tasks fell back (2 missing, 1 disabled, 1 escapes-workspace, 1 root-anchored-glob)'
     );
     expect(summary.bodyLines).toEqual([
-      'bundle: cached at /w/.nx/cache/io-snapshots/abc123',
+      'bundle: cached for abc123',
       'commit abc123, digest deadbeef, 3 tasks in bundle',
       'c:e2e: sandbox.enabled is false',
       'd:test: no snapshot for this task',
@@ -86,7 +83,6 @@ describe('formatIoSnapshotSummary', () => {
           diagnostics: [
             {
               reason: 'invalid-bundle',
-              file: 'snapshots.json',
               message: 'bad',
             },
           ],

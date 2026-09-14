@@ -11,7 +11,8 @@ import {
 } from '../native';
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
 import { getExecutorForTask } from '../tasks-runner/utils';
-import { ioSnapshotBundleDirForHead, isIoSnapshotFetchEnabled } from './fetch';
+import { getDbConnection } from '../utils/db-connection';
+import { ioSnapshotCommitForHead, isIoSnapshotFetchEnabled } from './fetch';
 
 export type {
   IoSnapshotDiagnostic,
@@ -32,8 +33,8 @@ export function loadIoSnapshotsForHead(
   if (!isIoSnapshotFetchEnabled(nxJson)) {
     return null;
   }
-  const directory = ioSnapshotBundleDirForHead();
-  return directory ? loadIoSnapshots(directory) : null;
+  const head = ioSnapshotCommitForHead();
+  return head ? loadIoSnapshots(getDbConnection(), head) : null;
 }
 
 const customHasherMemo = new WeakMap<
@@ -120,7 +121,7 @@ export function buildIoSnapshotOverrides(
 ): IoSnapshotReport | null {
   const resolved =
     typeof snapshots === 'string'
-      ? loadIoSnapshots(snapshots)
+      ? loadIoSnapshots(getDbConnection(), snapshots)
       : (snapshots ?? loadIoSnapshotsForHead(nxJson));
   if (!resolved) {
     return null;
