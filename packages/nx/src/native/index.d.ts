@@ -121,6 +121,27 @@ export declare class ImportResult {
   staticImportExpressions: Array<string>
 }
 
+/**
+ * The imported or loaded bundle for one commit, plus what resolving it
+ * reported. Handed to the hash planner as-is; `bundle` is `None` when the
+ * task hashes natively (status `skipped`, or a load failure).
+ */
+export declare class IoSnapshots {
+  /** `fetched` | `cached` | `skipped` */
+  get status(): string
+  /**
+   * Why the fetch was skipped, `stale-offline` when a stale bundle was
+   * reused, or `no-bundle` / `invalid-bundle` from `loadIoSnapshots`.
+   */
+  get reason(): string | null
+  get message(): string | null
+  /** The bundle file a load failure refers to. */
+  get file(): string | null
+  /** Directory holding `snapshots.json` when a bundle was resolved. */
+  get directory(): string | null
+  get resolution(): IoSnapshotResolution | null
+}
+
 export declare class NxCache {
   cacheDirectory: string
   constructor(workspaceRoot: string, cachePath: string, dbConnection: ExternalObject<NxDbConnection>, linkTaskDetails?: boolean | undefined | null, maxCacheSize?: number | undefined | null)
@@ -617,6 +638,13 @@ export interface HashInputs {
 }
 
 /**
+ * Stores the snapshot set the Nx Cloud client read for `requested_commit`
+ * and returns it as this run's bundle. Never fails the caller: a payload nx
+ * cannot read or a cache it cannot write is reported as a `skipped` result.
+ */
+export declare function importIoSnapshots(options: IoSnapshotImportOptions): IoSnapshots
+
+/**
  * Initialize telemetry using a DB connection.
  * Gets/creates the session ID from the DB, stores the connection
  * for persisting session refreshes on flush, and returns the session ID
@@ -645,6 +673,40 @@ export declare function installNxConsoleForEditor(editor: SupportedEditor): Prom
 export interface InvocationRecord {
   parentPid: number
   taskId: string
+}
+
+/** The snapshot set the Nx Cloud client read for HEAD, as JS hands it over. */
+export interface IoSnapshotImportOptions {
+  /** Shared cache root for snapshot bundles (`<cacheDir>/io-snapshots`). */
+  cacheDirectory: string
+  requestedCommit: string
+  /** The commits the client asked about, newest first. */
+  commits: Array<string>
+  /**
+   * `Record<taskId, { commit, inputs, outputs }>` as JSON. `inputs` is an
+   * untagged shape (flat globs or the older per-project buckets) that serde
+   * reads directly; a typed napi object would have to model both.
+   */
+  snapshotsJson: string
+  updatedAt?: number
+  clientVersion?: string
+  retain?: number
+}
+
+/** What was resolved for a commit; persisted alongside the bundle. */
+export interface IoSnapshotResolution {
+  requestedCommit: string
+  commits: Array<string>
+  sourceCommits: Array<string>
+  digest: string
+  fetchedAt: number
+  /**
+   * The set's `updatedAt` as Nx Cloud reported it; sent back as
+   * `knownUpdatedAt` so an unchanged set costs no payload.
+   */
+  updatedAt?: number
+  clientVersion: string
+  tasks: number
 }
 
 export const IS_WASM: boolean
@@ -690,6 +752,13 @@ export interface Link {
   text: string
   href: string
 }
+
+/**
+ * Reads an already-fetched bundle directory without touching the network:
+ * `nx show`/`nx graph` and the daemon load the directory the client resolved.
+ * `reason`/`message` annotate a deliberate reuse, such as `stale-offline`.
+ */
+export declare function loadIoSnapshots(directory: string, reason?: string | undefined | null, message?: string | undefined | null): IoSnapshots
 
 export declare function logDebug(message: string): void
 
@@ -802,6 +871,13 @@ export interface ProjectGraph {
   externalNodes: Record<string, ExternalNode>
 }
 
+/**
+ * The resolution header of the cached bundle for `commit`, without parsing
+ * the snapshots: enough to decide whether to ask Nx Cloud at all and what
+ * `knownUpdatedAt` to send.
+ */
+export declare function readIoSnapshotResolution(cacheDirectory: string, commit: string): IoSnapshotResolution | null
+
 export declare function remove(src: string): void
 
 export declare function restoreTerminal(): void
@@ -814,6 +890,12 @@ export declare const enum RunMode {
 export interface RuntimeInput {
   runtime: string
 }
+
+/**
+ * A result that hashes every task natively, for the cases JS decides
+ * (no git HEAD, no Nx Cloud client, a read that failed with nothing cached).
+ */
+export declare function skippedIoSnapshots(reason: string, message: string): IoSnapshots
 
 export declare const enum SupportedEditor {
   VSCode = 0,
