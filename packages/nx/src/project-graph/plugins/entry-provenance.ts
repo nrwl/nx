@@ -38,13 +38,49 @@ export function isSourceEntry(
   );
 }
 
+const outputsBySnapshot = new WeakMap<
+  Record<string, ProjectConfiguration>,
+  Array<[ProjectConfiguration, string[]]>
+>();
+
+/**
+ * The projects declaring an output that contains the entry. Serves entries
+ * whose declaring project is unknown, since output may land in another
+ * project's `sourceRoot`.
+ */
+export function findDeclaredOutputOwners(
+  entryPath: string,
+  projects: Record<string, ProjectConfiguration>,
+  root: string
+): ProjectConfiguration[] {
+  let outputs = outputsBySnapshot.get(projects);
+  if (!outputs) {
+    outputs = Object.values(projects).map((project) => [
+      project,
+      getBuildOutputs(project),
+    ]);
+    outputsBySnapshot.set(projects, outputs);
+  }
+  return outputs
+    .filter(([, declared]) => containsEntry(entryPath, declared, root))
+    .map(([project]) => project);
+}
+
 function isBuildOutput(
   entryPath: string,
   project: ProjectConfiguration,
   root: string
 ): boolean {
+  return containsEntry(entryPath, getBuildOutputs(project), root);
+}
+
+function containsEntry(
+  entryPath: string,
+  outputs: string[],
+  root: string
+): boolean {
   const entry = toPosix(relative(root, entryPath));
-  return getBuildOutputs(project).some((output) => {
+  return outputs.some((output) => {
     const normalized = normalizeOutput(output, root);
     if (normalized.glob !== undefined) {
       // Outputs expand hidden paths too (native globset has no dot rule).

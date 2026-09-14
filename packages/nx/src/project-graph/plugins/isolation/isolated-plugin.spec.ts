@@ -42,8 +42,14 @@ vi.mock('../../../plugins/js/utils/typescript', () => ({
   getRootTsConfigCustomConditions: vi.fn(() => ['stale']),
 }));
 
+vi.mock('./messaging', async () => ({
+  ...(await vi.importActual('./messaging')),
+  sendMessageOverSocket: vi.fn(),
+}));
+
 import { spawn } from 'child_process';
 import { resolveNxPlugin } from '../resolve-plugin';
+import { sendMessageOverSocket } from './messaging';
 
 describe('IsolatedPlugin', () => {
   describe('plugin worker socket ids', () => {
@@ -116,6 +122,9 @@ describe('IsolatedPlugin', () => {
     // Initialize required state
     plugin._alive = true;
     plugin.pendingCount = 0;
+    plugin.workspacePackageNames = [];
+    plugin.workspacePackageNamesVersion = 0;
+    plugin.sentWorkspacePackageNamesVersion = 0;
     plugin.spawnAndConnectCount = 0;
     plugin.shutdownCount = 0;
 
@@ -709,6 +718,165 @@ describe('IsolatedPlugin', () => {
       // Post-task phase
       await plugin.postTasksExecution!({} as any);
       expect(shutdown).toHaveBeenCalledTimes(1); // finally done
+    });
+  });
+
+  describe('workspace package names', () => {
+    it('sends a changed set to a source worker once, on its next hook', async () => {
+      const { plugin, sendRequest } = createTestPlugin(
+        createLoadResult({
+          createNodesPattern: '**/*',
+          hasCreateDependencies: true,
+        })
+      );
+      plugin.isSourcePlugin = true;
+      plugin.workspacePackageNames = ['@proj/a'];
+
+      await plugin.createNodes![1]([], {} as any);
+      expect(sendRequest.mock.calls[0][1]).not.toHaveProperty(
+        'workspacePackageNames'
+      );
+
+      plugin.setWorkspacePackageNames(['@proj/a', '@proj/b'], 1);
+      await plugin.createNodes![1]([], {} as any);
+      expect(sendRequest.mock.calls[1][1].workspacePackageNames).toEqual([
+        '@proj/a',
+        '@proj/b',
+      ]);
+      await plugin.createDependencies!({} as any);
+      expect(sendRequest.mock.calls[2][1]).not.toHaveProperty(
+        'workspacePackageNames'
+      );
+
+      plugin.setWorkspacePackageNames(['@proj/a'], 2);
+      await plugin.createDependencies!({} as any);
+      expect(sendRequest.mock.calls[3][1].workspacePackageNames).toEqual([
+        '@proj/a',
+      ]);
+    });
+
+    it('resends a set whose request failed, even when an older request succeeded meanwhile', async () => {
+      const { plugin, sendRequest } = createTestPlugin(
+        createLoadResult({ createNodesPattern: '**/*' })
+      );
+      plugin.isSourcePlugin = true;
+      const settle: Array<{
+        resolve: (v: unknown) => void;
+        reject: (e: Error) => void;
+      }> = [];
+      sendRequest.mockImplementation(
+        () =>
+          new Promise((resolve, reject) => {
+            settle.push({ resolve, reject });
+          })
+      );
+
+      // The wrappers reach the transport after an alive check.
+      const settled = () => new Promise((resolve) => setImmediate(resolve));
+      plugin.setWorkspacePackageNames(['@proj/a'], 1);
+      const first = plugin.createNodes![1]([], {} as any);
+      await settled();
+      plugin.setWorkspacePackageNames(['@proj/a', '@proj/b'], 2);
+      const second = plugin.createNodes![1]([], {} as any);
+      await settled();
+      expect(sendRequest.mock.calls[0][1].workspacePackageNames).toEqual([
+        '@proj/a',
+      ]);
+      expect(sendRequest.mock.calls[1][1].workspacePackageNames).toEqual([
+        '@proj/a',
+        '@proj/b',
+      ]);
+
+      settle[1].reject(new Error('worker died'));
+      await expect(second).rejects.toThrow('worker died');
+      settle[0].resolve({ success: true, result: [] });
+      await first;
+
+      // The worker answered the first set only; the second goes out again.
+      const third = plugin.createNodes![1]([], {} as any);
+      await settled();
+      expect(sendRequest.mock.calls[2][1].workspacePackageNames).toEqual([
+        '@proj/a',
+        '@proj/b',
+      ]);
+      settle[2].resolve({ success: true, result: [] });
+      await third;
+    });
+
+    it('keeps a set delivered by a load when a later names-free hook resolves', async () => {
+      const { plugin, sendRequest } = createTestPlugin(
+        createLoadResult({ createNodesPattern: '**/*' })
+      );
+      plugin.isSourcePlugin = true;
+      plugin.setWorkspacePackageNames(['@proj/a'], 1);
+      await plugin.createNodes![1]([], {} as any);
+      expect(sendRequest.mock.calls[0][1].workspacePackageNames).toEqual([
+        '@proj/a',
+      ]);
+
+      // A restart's load carried a newer set.
+      plugin.setWorkspacePackageNames(['@proj/a', '@proj/b'], 2);
+      plugin.sentWorkspacePackageNamesVersion = 2;
+      await plugin.createNodes![1]([], {} as any);
+      await plugin.createNodes![1]([], {} as any);
+
+      expect(sendRequest.mock.calls[1][1]).not.toHaveProperty(
+        'workspacePackageNames'
+      );
+      expect(sendRequest.mock.calls[2][1]).not.toHaveProperty(
+        'workspacePackageNames'
+      );
+    });
+
+    it('never sends the set to a built worker', async () => {
+      const { plugin, sendRequest } = createTestPlugin(
+        createLoadResult({ createNodesPattern: '**/*' })
+      );
+      plugin.isSourcePlugin = false;
+      plugin.setWorkspacePackageNames(['@proj/a'], 1);
+
+      await plugin.createNodes![1]([], {} as any);
+
+      expect(sendRequest.mock.calls[0][1]).not.toHaveProperty(
+        'workspacePackageNames'
+      );
+    });
+
+    it('loads a restarted worker with the current set', () => {
+      const plugin: any = Object.create(IsolatedPlugin.prototype);
+      plugin.plugin = 'test-plugin';
+      plugin.name = 'test-plugin';
+      plugin.root = '/mock/root';
+      plugin.pluginPath = '/mock/plugin/path';
+      plugin.isSourcePlugin = true;
+      plugin.socket = {};
+      plugin.worker = { pid: 1 };
+      plugin.txId = 0;
+      plugin.responseHandlers = new Map();
+      plugin.workspacePackageNames = ['@proj/a'];
+      plugin.workspacePackageNamesVersion = 0;
+      plugin.sentWorkspacePackageNamesVersion = 0;
+      vi.mocked(sendMessageOverSocket).mockClear();
+
+      plugin.setWorkspacePackageNames(['@proj/a', '@proj/b'], 3);
+      const loading = plugin.sendLoadMessage();
+
+      const sent = vi.mocked(sendMessageOverSocket).mock.calls[0][1] as any;
+      expect(sent.type).toBe('load');
+      expect(sent.payload.workspacePackageNames).toEqual([
+        '@proj/a',
+        '@proj/b',
+      ]);
+      // The load counts as delivery.
+      expect(plugin.sentWorkspacePackageNamesVersion).toBe(3);
+
+      for (const handler of plugin.responseHandlers.values()) {
+        handler.onMessage({
+          type: 'loadResult',
+          payload: createLoadResult({ createNodesPattern: '**/*' }),
+        });
+      }
+      return expect(loading).resolves.toMatchObject({ name: 'test-plugin' });
     });
   });
 

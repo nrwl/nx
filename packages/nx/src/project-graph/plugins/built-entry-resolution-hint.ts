@@ -20,7 +20,7 @@ export function isWorkspaceLocalResolution(
 
 // A missing file resolves through its nearest existing ancestor so an aliased
 // root still yields the real spelling.
-function canonicalPath(p: string): string {
+export function canonicalPath(p: string): string {
   const rest: string[] = [];
   let current = p;
   while (true) {

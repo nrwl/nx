@@ -69,7 +69,8 @@ export function getExecutorInformation(
       executorConfig.schema,
       executorsDir,
       nodeModule,
-      projects
+      projects,
+      resolvedNodeModule
     );
     const schema = normalizeExecutorSchema(readJsonFile(schemaPath));
 

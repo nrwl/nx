@@ -1415,10 +1415,8 @@ export async function getWrappedWorkspaceNodeModulesArchitectHost(
     async resolveBuilder(builderStr: string): Promise<NodeModulesBuilderInfo> {
       const [packageName, builderName] = builderStr.split(':');
 
-      const { executorsFilePath, executorConfig } = this.readExecutorsJson(
-        packageName,
-        builderName
-      );
+      const { executorsFilePath, executorConfig, resolvedNodeModule } =
+        this.readExecutorsJson(packageName, builderName);
       const builderInfo = this.readExecutor(packageName, builderName);
       // Architect requires this path itself, so a source builder's graph has
       // to exist before it does.
@@ -1426,7 +1424,8 @@ export async function getWrappedWorkspaceNodeModulesArchitectHost(
         executorConfig.implementation,
         dirname(executorsFilePath),
         packageName,
-        this.projects
+        this.projects,
+        resolvedNodeModule
       );
 
       return {
@@ -1504,7 +1503,8 @@ export async function getWrappedWorkspaceNodeModulesArchitectHost(
           executorConfig.schema,
           executorsDir,
           nodeModule,
-          this.projects
+          this.projects,
+          resolvedNodeModule
         );
         const schema = normalizeExecutorSchema(readJsonFile(schemaPath));
 

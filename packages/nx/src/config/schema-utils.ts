@@ -67,8 +67,8 @@ export class ImplementationResolutionError extends Error {
  * @param implementation path to the implementation
  * @param directory path to the directory
  * @param entryPackageName the package the collection was read from after
- * following `extends` or builder aliases; names the entry's project in load
- * errors
+ * following `extends` or builder aliases; its project classifies the entry
+ * and names it in load errors
  * @returns a function that returns the implementation
  */
 export function getImplementationFactory<T>(
@@ -85,7 +85,8 @@ export function getImplementationFactory<T>(
       implementationModulePath,
       directory,
       packageName,
-      projects
+      projects,
+      entryPackageName
     );
     // Route .ts entrypoints through loadTsFile so the native-strip ->
     // swc/ts-node fallback chain runs. Plain require() bypasses the matcher
@@ -142,13 +143,15 @@ export function resolveImplementationWithSourceGraph(
   implementationModulePath: string,
   directory: string,
   packageName: string,
-  projects: Record<string, ProjectConfiguration>
+  projects: Record<string, ProjectConfiguration>,
+  entryPackageName = packageName
 ): { path: string; isSource: boolean } {
   const resolved = resolveImplementationWithMetadata(
     implementationModulePath,
     directory,
     packageName,
-    projects
+    projects,
+    entryPackageName
   );
   if (resolved.isSource) {
     // Loaded entries have no unload lifecycle, so the per-entry resolver
@@ -166,11 +169,15 @@ function resolveImplementationWithMetadata(
   implementationModulePath: string,
   directory: string,
   packageName: string,
-  projects: Record<string, ProjectConfiguration>
+  projects: Record<string, ProjectConfiguration>,
+  entryPackageName = packageName
 ): { path: string; isSource: boolean } {
   const validImplementations = ['', '.js', '.ts'].map(
     (x) => implementationModulePath + x
   );
+  const entryProject = directory.includes('node_modules')
+    ? null
+    : getEntryProject(entryPackageName, directory, projects);
 
   if (!directory.includes('node_modules')) {
     // It might be a local plugin where the implementation path points to the
@@ -181,7 +188,8 @@ function resolveImplementationWithMetadata(
         maybeImplementation,
         directory,
         packageName,
-        projects
+        projects,
+        entryProject
       );
       if (maybeImplementationFromSource) {
         return maybeImplementationFromSource;
@@ -194,7 +202,16 @@ function resolveImplementationWithMetadata(
     if (existsSync(maybeImplementationPath)) {
       return {
         path: maybeImplementationPath,
-        isSource: isWorkspaceLocalTsImplementation(maybeImplementationPath),
+        isSource:
+          entryProject &&
+          isWorkspaceLocalResolution(maybeImplementationPath, workspaceRoot)
+            ? isSourceEntry(
+                maybeImplementationPath,
+                false,
+                entryProject,
+                workspaceRoot
+              )
+            : isWorkspaceLocalTsImplementation(maybeImplementationPath),
       };
     }
 
@@ -223,7 +240,8 @@ export function resolveSchema(
   schemaPath: string,
   directory: string,
   packageName: string,
-  projects: Record<string, ProjectConfiguration>
+  projects: Record<string, ProjectConfiguration>,
+  entryPackageName = packageName
 ): string {
   if (!directory.includes('node_modules')) {
     // It might be a local plugin where the schema path points to the outputs
@@ -233,7 +251,8 @@ export function resolveSchema(
       schemaPath,
       directory,
       packageName,
-      projects
+      projects,
+      getEntryProject(entryPackageName, directory, projects)
     );
     if (schemaPathFromSource) {
       return schemaPathFromSource.path;
@@ -254,16 +273,36 @@ export function resolveSchema(
   }
 }
 
-let projectRootMappings: Map<string, string>;
+// A path-referenced collection has no package name; its directory locates it.
+function getEntryProject(
+  entryPackageName: string,
+  directory: string,
+  projects: Record<string, ProjectConfiguration>
+): ProjectConfiguration | null {
+  packageMetadata ??= getWorkspacePackagesMetadata(projects);
+  return (
+    packageMetadata.packageToProjectMap[entryPackageName] ??
+    getProjectForDirectory(directory, projects)
+  );
+}
+
+// Keyed by the project snapshot: a daemon sees many.
+const projectRootMappings = new WeakMap<
+  Record<string, ProjectConfiguration>,
+  Map<string, string>
+>();
 function getProjectForDirectory(
   directory: string,
   projects: Record<string, ProjectConfiguration>
 ): ProjectConfiguration | null {
-  projectRootMappings ??=
-    createProjectRootMappingsFromProjectConfigurations(projects);
+  let mappings = projectRootMappings.get(projects);
+  if (!mappings) {
+    mappings = createProjectRootMappingsFromProjectConfigurations(projects);
+    projectRootMappings.set(projects, mappings);
+  }
   const projectName = findProjectForPath(
     relative(workspaceRoot, directory),
-    projectRootMappings
+    mappings
   );
   return projectName ? projects[projectName] : null;
 }
@@ -300,7 +339,8 @@ function tryResolveFromSource(
   path: string,
   directory: string,
   packageName: string,
-  projects: Record<string, ProjectConfiguration>
+  projects: Record<string, ProjectConfiguration>,
+  entryProject: ProjectConfiguration | null
 ): { path: string; isSource: boolean } | null {
   packageMetadata ??= getWorkspacePackagesMetadata(projects);
   let localProject = packageMetadata.packageToProjectMap[packageName];
@@ -312,6 +352,9 @@ function tryResolveFromSource(
   if (!localProject) {
     return null;
   }
+  // The requested package's exports select the file; the declaring project
+  // classifies it, since an alias or `extends` reads another package's files.
+  const classifyingProject = entryProject ?? localProject;
   const js =
     (localProject.metadata as PackageJsonProjectMetadata)?.js ??
     readJsPackageMetadata(localProject);
@@ -343,7 +386,7 @@ function tryResolveFromSource(
             isSource: isSourceEntry(
               candidate,
               defaultMatch !== exportPath,
-              localProject,
+              classifyingProject,
               workspaceRoot
             ),
           };
@@ -373,7 +416,7 @@ function tryResolveFromSource(
           isSource: isSourceEntry(
             possiblePath,
             false,
-            localProject,
+            classifyingProject,
             workspaceRoot
           ),
         };
