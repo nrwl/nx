@@ -295,6 +295,21 @@ describe('daemon environment', () => {
 
       expect('NX_MAX_MESSAGE_SIZE' in getDaemonSpawnEnv()).toBe(false);
     });
+
+    it('should keep NX_LEGACY_IPC so the daemon starts in the spawning client mode', () => {
+      process.env.NX_LEGACY_IPC = 'true';
+
+      expect(getDaemonSpawnEnv().NX_LEGACY_IPC).toBe('true');
+      // not reflected: reflection only sets keys, so one client's opt-out
+      // would hold for every later client until the daemon restarts
+      expect(getDaemonEnv().NX_LEGACY_IPC).toBeUndefined();
+    });
+
+    it('should not add NX_LEGACY_IPC when the client does not have it', () => {
+      delete process.env.NX_LEGACY_IPC;
+
+      expect('NX_LEGACY_IPC' in getDaemonSpawnEnv()).toBe(false);
+    });
   });
 
   describe('applyDaemonEnvFromClient', () => {

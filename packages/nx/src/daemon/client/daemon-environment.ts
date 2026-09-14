@@ -50,6 +50,10 @@ const DAEMON_ENV_VARS_EXCLUSIONS = new Set([
   // to the next client's connection. Pinned at daemon spawn instead; see
   // getDaemonSpawnEnv.
   'NX_MAX_MESSAGE_SIZE',
+  // Reflection only ever sets keys, so one client's opt-out would leave the
+  // daemon in legacy mode for every later client. Pinned at daemon spawn
+  // instead; see getDaemonSpawnEnv.
+  'NX_LEGACY_IPC',
 
   // Nx UI/logging vars (don't affect graph structure)
   'NX_TUI',
@@ -326,9 +330,9 @@ export function getDaemonClientEnvGeneration(): number {
  *   the pin, a root without markers under an ancestor that has them
  *   resolves to the ancestor and the daemon publishes its socket under the
  *   wrong workspace.
- * - NX_MAX_MESSAGE_SIZE: excluded from reflection (see above), so the value
- *   here holds for the daemon's whole lifetime. Changing it therefore needs a
- *   daemon restart (`nx reset`).
+ * - NX_MAX_MESSAGE_SIZE and NX_LEGACY_IPC: excluded from reflection (see
+ *   above), so the values here hold for the daemon's whole lifetime. Changing
+ *   either therefore needs a daemon restart (`nx reset`).
  */
 export function getDaemonSpawnEnv() {
   const env = getDaemonEnv();
@@ -340,6 +344,9 @@ export function getDaemonSpawnEnv() {
   }
   if (process.env.NX_MAX_MESSAGE_SIZE !== undefined) {
     env.NX_MAX_MESSAGE_SIZE = process.env.NX_MAX_MESSAGE_SIZE;
+  }
+  if (process.env.NX_LEGACY_IPC !== undefined) {
+    env.NX_LEGACY_IPC = process.env.NX_LEGACY_IPC;
   }
   return env;
 }
