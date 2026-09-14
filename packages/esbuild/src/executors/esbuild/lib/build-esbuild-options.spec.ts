@@ -1,5 +1,9 @@
-import { buildEsbuildOptions } from './build-esbuild-options';
+import { buildEsbuildOptions, getRegisterFileContent } from './build-esbuild-options';
 import { ExecutorContext } from '@nx/devkit';
+import { execFileSync } from 'child_process';
+import { mkdtempSync, mkdirSync, writeFileSync } from 'fs';
+import { join } from 'path';
+import { tmpdir } from 'os';
 import path = require('path');
 
 describe('buildEsbuildOptions', () => {
@@ -603,6 +607,96 @@ describe('buildEsbuildOptions', () => {
       outExtension: {
         '.js': '.js',
       },
+    });
+  });
+
+  describe('getRegisterFileContent', () => {
+    const project = {
+      type: 'app' as const,
+      name: 'myapp',
+      data: { root: 'apps/myapp' },
+    };
+
+    it('should not use require.resolve in the CJS isFile helper', () => {
+      const content = getRegisterFileContent(
+        project,
+        { '@acme/lib': ['libs/lib/src/index.ts'] },
+        './apps/myapp/src/main.js',
+        '.js',
+        'cjs'
+      );
+
+      expect(content).not.toContain('require.resolve');
+      expect(content).toContain('fs.statSync(candidate).isFile()');
+    });
+
+    it('should resolve workspace imports without recursion', () => {
+      const distPath = mkdtempSync(join(tmpdir(), 'nx-esbuild-isfile-'));
+      const appMain = join(distPath, 'apps/myapp/src/main.js');
+      mkdirSync(join(distPath, 'apps/myapp/src'), { recursive: true });
+      mkdirSync(join(distPath, 'libs/lib/src'), { recursive: true });
+      writeFileSync(appMain, "module.exports = require('@acme/lib');");
+      writeFileSync(
+        join(distPath, 'libs/lib/src/index.js'),
+        'module.exports = { ok: true };'
+      );
+
+      const content = getRegisterFileContent(
+        project,
+        { '@acme/lib': ['libs/lib/src/index.ts'] },
+        './apps/myapp/src/main.js',
+        '.js',
+        'cjs'
+      );
+
+      writeFileSync(join(distPath, 'main.js'), content);
+
+      const start = Date.now();
+      const output = execFileSync(
+        process.execPath,
+        [
+          '-e',
+          `console.log(JSON.stringify(require(${JSON.stringify(
+            join(distPath, 'main.js')
+          )})))`,
+        ],
+        { encoding: 'utf8' }
+      );
+      expect(JSON.parse(output.trim())).toEqual({ ok: true });
+      expect(Date.now() - start).toBeLessThan(1000);
+    });
+
+    it('should resolve wildcard paths to index.js without recursion', () => {
+      const distPath = mkdtempSync(join(tmpdir(), 'nx-esbuild-isfile-'));
+      const appMain = join(distPath, 'apps/myapp/src/main.js');
+      mkdirSync(join(distPath, 'apps/myapp/src/config'), { recursive: true });
+      writeFileSync(appMain, "module.exports = require('@app/config');");
+      writeFileSync(
+        join(distPath, 'apps/myapp/src/config/index.js'),
+        'module.exports = { ok: true };'
+      );
+
+      const content = getRegisterFileContent(
+        project,
+        { '@app/*': ['apps/myapp/src/*'] },
+        './apps/myapp/src/main.js',
+        '.js',
+        'cjs'
+      );
+
+      writeFileSync(join(distPath, 'main.js'), content);
+
+      const output = execFileSync(
+        process.execPath,
+        [
+          '-e',
+          `console.log(JSON.stringify(require(${JSON.stringify(
+            join(distPath, 'main.js')
+          )})))`,
+        ],
+        { encoding: 'utf8' }
+      );
+      expect(JSON.parse(output.trim())).toEqual({ ok: true });
     });
   });
 

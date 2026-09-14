@@ -471,12 +471,15 @@ Module._resolveFilename = function(request, parent) {
 };
 
 function isFile(s) {
-  try {
-    require.resolve(s);
-    return true;
-  } catch (_e) {
-    return false;
+  const candidates = [s, s + '.js', path.join(s, 'index.js')];
+  for (const candidate of candidates) {
+    try {
+      if (fs.statSync(candidate).isFile()) {
+        return true;
+      }
+    } catch (_e) {}
   }
+  return false;
 }
 
 // Call the user-defined main.
