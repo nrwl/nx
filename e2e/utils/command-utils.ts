@@ -158,11 +158,16 @@ export function getPackageManagerCommand({
         npmMajorVersion && +npmMajorVersion >= 7 ? '--yes' : ''
       } create-nx-workspace@${publishedVersion}`,
       run: (script: string, args: string) => `yarn ${script} ${args}`,
-      runNx: `yarn nx`,
+      // Yarn Classic's script runner consumes the first `--`, including the
+      // delimiter required by `nx exec`. Its exec command preserves argv.
+      runNx:
+        yarnMajorVersion && +yarnMajorVersion >= 2
+          ? 'yarn nx'
+          : 'yarn exec -- nx',
       runNxSilent:
         yarnMajorVersion && +yarnMajorVersion >= 2
           ? 'yarn nx'
-          : `yarn --silent nx`,
+          : 'yarn --silent exec -- nx',
       runUninstalledPackage: 'npx --yes',
       install: 'yarn',
       ciInstall: 'yarn --frozen-lockfile',
@@ -173,7 +178,10 @@ export function getPackageManagerCommand({
         yarnMajorVersion && +yarnMajorVersion >= 2
           ? 'yarn lerna'
           : `yarn --silent lerna`,
-      exec: 'yarn',
+      exec:
+        yarnMajorVersion && +yarnMajorVersion >= 2
+          ? 'yarn'
+          : 'yarn --silent exec --',
     },
     pnpm: {
       createWorkspace: `pnpm dlx create-nx-workspace@${publishedVersion}`,
@@ -241,7 +249,6 @@ export function runCommandAsync(
   command: string,
   opts: RunCmdOpts = {
     silenceError: false,
-    env: process['env'],
   }
 ): Promise<{ stdout: string; stderr: string; combinedOutput: string }> {
   return new Promise((resolve, reject) => {

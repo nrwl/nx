@@ -3,7 +3,21 @@ import {
   createFile,
   updateJson,
   removeFile,
+  getSelectedPackageManager,
 } from '@nx/e2e-utils';
+
+export async function configureModernYarn() {
+  if (getSelectedPackageManager() !== 'yarn') {
+    return;
+  }
+
+  // These release fixtures exercise workspace lock-file updates. Yarn Classic
+  // doesn't store workspace versions in yarn.lock; it has dedicated coverage in
+  // lock-file-updates.test.ts. Pin only this project, never Corepack's default.
+  await runCommandAsync('corepack yarn@4.0.2 set version 4.0.2 --yarn-path');
+  await runCommandAsync('yarn config set nodeLinker node-modules');
+  await runCommandAsync('yarn config set enableImmutableInstalls false');
+}
 
 export function setupWorkspaces(
   packageManager: 'npm' | 'yarn' | 'pnpm' | 'bun',
@@ -36,11 +50,7 @@ export async function prepareAndInstallDependencies(
     removeFile('package-lock.json');
     removeFile('pnpm-lock.yaml');
     removeFile('pnpm-workspace.yaml');
-    updateJson('package.json', (pkgJson) => {
-      delete pkgJson.packageManager;
-      return pkgJson;
-    });
-    await runCommandAsync(`yarn config set enableImmutableInstalls false`);
+    await configureModernYarn();
   } else if (packageManager === 'pnpm') {
     removeFile('package-lock.json');
     removeFile('yarn.lock');

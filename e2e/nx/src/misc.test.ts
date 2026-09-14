@@ -10,6 +10,7 @@ import {
   isNotWindows,
   killProcessAndPorts,
   newProject,
+  packageInstall,
   readFile,
   readJson,
   removeFile,
@@ -28,6 +29,7 @@ import { ensureDirSync } from 'fs-extra';
 import * as path from 'path';
 import { major } from 'semver';
 import { join } from 'path';
+import { angularDevkitVersion } from '@nx/angular/src/utils/versions';
 
 describe('Nx Commands', () => {
   beforeAll(() =>
@@ -47,6 +49,23 @@ describe('Nx Commands', () => {
   );
 
   afterAll(() => cleanupProject());
+
+  it('should isolate async commands from the parent Nx invocation', async () => {
+    const original = process.env.NX_CLI_SET;
+    process.env.NX_CLI_SET = 'true';
+    try {
+      const { stdout } = await runCommandAsync(
+        `node -e "console.log(process.env.NX_CLI_SET || 'unset')"`
+      );
+      expect(stdout.trim()).toBe('unset');
+    } finally {
+      if (original === undefined) {
+        delete process.env.NX_CLI_SET;
+      } else {
+        process.env.NX_CLI_SET = original;
+      }
+    }
+  });
 
   describe('show', () => {
     it('should show the list of projects', async () => {
@@ -254,8 +273,13 @@ describe('Nx Commands', () => {
         });
 
         it('should render target info', () => {
-          const output = normalizeOutput(runCLI(`show target ${app}:build`));
-          expect(output).toMatchSnapshot();
+          const output = normalizeOutput(
+            runCLI(`show target ${app}:build`, { verbose: false })
+          );
+          // pnpm adds workspace configuration and version inputs to the target.
+          expect(output).toMatchSnapshot(
+            getSelectedPackageManager() === 'pnpm' ? 'pnpm' : 'npm-and-yarn'
+          );
         });
 
         it('should render output paths', () => {
@@ -770,6 +794,14 @@ describe('Nx Commands', () => {
 describe('migrate', () => {
   beforeEach(() => {
     newProject({ packages: [] });
+
+    // The synthetic run11 migration uses Angular schematics. Yarn Classic
+    // doesn't auto-install these optional peers of Nx.
+    packageInstall(
+      '@angular-devkit/core @angular-devkit/schematics',
+      undefined,
+      angularDevkitVersion
+    );
 
     updateFile(
       `./node_modules/migrate-parent-package/package.json`,
