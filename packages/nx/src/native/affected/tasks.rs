@@ -22,9 +22,7 @@ use crate::native::project_graph::types::ProjectGraph;
 use crate::native::tasks::hashers::globs_from_workspace_globs;
 use crate::native::tasks::types::{HashInstruction, HashPlans};
 
-/// The root tsconfig names `TsConfiguration` hashes, in the hasher's own
-/// preference order (`hash_tsconfig`).
-const ROOT_TSCONFIGS: [&str; 2] = ["tsconfig.base.json", "tsconfig.json"];
+pub(crate) const ROOT_TSCONFIG_FILES: [&str; 2] = ["tsconfig.base.json", "tsconfig.json"];
 
 /// Task ids with at least one changed file among their plan's file inputs.
 ///
@@ -141,9 +139,9 @@ fn instruction_matches(
                 None,
             ),
         },
-        HashInstruction::TsConfiguration(_) => {
-            Ok(files.iter().any(|f| ROOT_TSCONFIGS.contains(&f.as_str())))
-        }
+        HashInstruction::TsConfiguration(_) => Ok(files
+            .iter()
+            .any(|f| ROOT_TSCONFIG_FILES.contains(&f.as_str()))),
         // Hashes the project's config object, which resolves to no files, so it
         // is matched on the config having changed rather than on a fileset. The
         // planner splices one of these per dependency, which is what carries a
@@ -225,7 +223,8 @@ mod tests {
     #[test]
     fn project_fileset_matches_only_inside_its_own_project() {
         let g = graph(&[("a", "libs/a"), ("b", "libs/b")]);
-        let instruction = HashInstruction::ProjectFileSet("a".into(), strings(&["libs/**/*.ts"]), false);
+        let instruction =
+            HashInstruction::ProjectFileSet("a".into(), strings(&["libs/**/*.ts"]), false);
         assert_eq!(
             affected_for(&g, vec![instruction.clone()], &["libs/a/src/x.ts"]),
             vec!["a:build"]
@@ -237,14 +236,16 @@ mod tests {
     /// deleted path is in no file index, so a resolved list could never contain
     /// it and every rename would be missed.
     #[test]
-    fn a_deleted_file_still_matches() {
+    fn matches_a_path_with_no_file_behind_it() {
         let g = graph(&[("a", "libs/a")]);
         assert_eq!(
             affected_for(
                 &g,
                 vec![HashInstruction::ProjectFileSet(
                     "a".into(),
-                    strings(&["libs/a/**/*.ts"]), false)],
+                    strings(&["libs/a/**/*.ts"]),
+                    false
+                )],
                 &["libs/a/src/deleted.ts"]
             ),
             vec!["a:build"]
@@ -287,7 +288,7 @@ mod tests {
     #[test]
     fn tsconfiguration_matches_either_root_tsconfig() {
         let g = graph(&[("a", "libs/a")]);
-        for file in ROOT_TSCONFIGS {
+        for file in ROOT_TSCONFIG_FILES {
             assert_eq!(
                 affected_for(
                     &g,
@@ -315,9 +316,11 @@ mod tests {
         assert_eq!(
             affected_for(
                 &g,
-                vec![HashInstruction::ProjectFileSet("app".into(), strings(&[
-                    "libs/a/generated/**/*.ts"
-                ]), true)],
+                vec![HashInstruction::ProjectFileSet(
+                    "app".into(),
+                    strings(&["libs/a/generated/**/*.ts"]),
+                    true
+                )],
                 &["libs/a/generated/api.ts"]
             ),
             vec!["a:build"]

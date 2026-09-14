@@ -305,7 +305,11 @@ mod tests {
             &[("app:build", &["ui:build"])],
             &[(
                 "app:build",
-                vec![HashInstruction::ProjectFileSet("app".into(), strings(&["dist/libs/ui/**/*.js"]), true)],
+                vec![HashInstruction::ProjectFileSet(
+                    "app".into(),
+                    strings(&["dist/libs/ui/**/*.js"]),
+                    true,
+                )],
             )],
         );
         assert_eq!(e["app:build"], strings(&["ui:build"]));
@@ -321,7 +325,11 @@ mod tests {
             &[("app:build", &["ui:build"])],
             &[(
                 "app:build",
-                vec![HashInstruction::ProjectFileSet("app".into(), strings(&["vendor/**/*.js"]), true)],
+                vec![HashInstruction::ProjectFileSet(
+                    "app".into(),
+                    strings(&["vendor/**/*.js"]),
+                    true,
+                )],
             )],
         );
         assert!(e.is_empty());
@@ -339,7 +347,11 @@ mod tests {
             &[("app:build", &["ui:build"])],
             &[(
                 "app:build",
-                vec![HashInstruction::ProjectFileSet("app".into(), strings(&["dist/**/*.js"]), true)],
+                vec![HashInstruction::ProjectFileSet(
+                    "app".into(),
+                    strings(&["dist/**/*.js"]),
+                    true,
+                )],
             )],
         );
         assert_eq!(e["app:build"], strings(&["ui:build"]));
@@ -356,7 +368,11 @@ mod tests {
             &[("app:build", &["legacy:build"])],
             &[(
                 "app:build",
-                vec![HashInstruction::ProjectFileSet("app".into(), strings(&["dist/libs/ui/**/*.js"]), true)],
+                vec![HashInstruction::ProjectFileSet(
+                    "app".into(),
+                    strings(&["dist/libs/ui/**/*.js"]),
+                    true,
+                )],
             )],
         );
         assert!(e.is_empty());
@@ -374,7 +390,11 @@ mod tests {
             &[],
             &[(
                 "app:build",
-                vec![HashInstruction::ProjectFileSet("app".into(), strings(&["dist/libs/ui/**/*.js"]), true)],
+                vec![HashInstruction::ProjectFileSet(
+                    "app".into(),
+                    strings(&["dist/libs/ui/**/*.js"]),
+                    true,
+                )],
             )],
         );
         assert!(e.is_empty());
@@ -393,7 +413,11 @@ mod tests {
             &[("app:build", &["ui:build"]), ("ui:build", &["core:build"])],
             &[(
                 "app:build",
-                vec![HashInstruction::ProjectFileSet("app".into(), strings(&["dist/libs/core/**/*.js"]), true)],
+                vec![HashInstruction::ProjectFileSet(
+                    "app".into(),
+                    strings(&["dist/libs/core/**/*.js"]),
+                    true,
+                )],
             )],
         );
         assert_eq!(e["app:build"], strings(&["core:build"]));
@@ -410,7 +434,11 @@ mod tests {
             &[("app:build", &["ui:build"])],
             &[(
                 "app:build",
-                vec![HashInstruction::ProjectFileSet("app".into(), strings(&["!dist/libs/ui/**/*.js"]), true)],
+                vec![HashInstruction::ProjectFileSet(
+                    "app".into(),
+                    strings(&["!dist/libs/ui/**/*.js"]),
+                    true,
+                )],
             )],
         );
         assert!(e.is_empty());
@@ -426,7 +454,11 @@ mod tests {
             &[("a:build", &["b:build"]), ("b:build", &["a:build"])],
             &[(
                 "a:build",
-                vec![HashInstruction::ProjectFileSet("app".into(), strings(&["dist/**/*.js"]), true)],
+                vec![HashInstruction::ProjectFileSet(
+                    "app".into(),
+                    strings(&["dist/**/*.js"]),
+                    true,
+                )],
             )],
         );
         assert_eq!(e["a:build"], strings(&["a:build", "b:build"]));
@@ -451,7 +483,9 @@ mod tests {
                 "app:build",
                 vec![HashInstruction::ProjectFileSet(
                     "app".into(),
-                    strings(&["apps/app/**/*"]), false,)],
+                    strings(&["apps/app/**/*"]),
+                    false,
+                )],
             )],
         );
         assert!(e.is_empty());
