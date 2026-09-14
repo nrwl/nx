@@ -13,4 +13,6 @@ export { resolveUserDefinedWebpackConfig } from './src/utils/webpack/resolve-use
 export { suppressWebpackComposeHelperWarnings } from './src/utils/deprecation';
 export { WebpackNxBuildCoordinationPlugin } from './src/plugins/webpack-nx-build-coordination-plugin';
 export type { WebSsrDevServerOptions } from './src/executors/ssr-dev-server/schema';
-export { default as ssrDevServerExecutor } from './src/executors/ssr-dev-server/ssr-dev-server.impl';
+// Re-export the named binding so Node can detect it when dynamically importing
+// the compiled CommonJS entry (the React SSR executor uses this path).
+export { ssrDevServerExecutor } from './src/executors/ssr-dev-server/ssr-dev-server.impl';
