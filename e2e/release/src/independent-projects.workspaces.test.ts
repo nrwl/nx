@@ -7,6 +7,7 @@ import {
   getSelectedPackageManager,
   newProject,
   readFile,
+  readJson,
   runCLI,
   runCommand,
   tmpProjPath,
@@ -194,7 +195,12 @@ describe('nx release - independent projects - workspaces', () => {
       const versionPkg3Output = runCLI(
         `release version 999.9.9-package.3 -p ${pkg3}`
       );
-      expect(versionPkg3Output).toMatchInlineSnapshot(`
+      expect(
+        readJson(`${pkg2}/package.json`).dependencies[`@proj/${pkg3}`]
+      ).toBe(packageManager === 'pnpm' ? 'workspace:*' : '999.9.9-package.3');
+      // workspace:* is preserved by pnpm; concrete npm/Yarn ranges are updated.
+      if (packageManager === 'pnpm') {
+        expect(versionPkg3Output).toMatchInlineSnapshot(`
 
           NX   Your filter "{project-name}" matched the following projects:
 
@@ -233,6 +239,53 @@ describe('nx release - independent projects - workspaces', () => {
 
 
         `);
+      } else {
+        expect(versionPkg3Output).toMatchInlineSnapshot(`
+
+          NX   Your filter "{project-name}" matched the following projects:
+
+          - {project-name}
+
+
+          NX   Running release version for project: {project-name}
+
+          {project-name} 📄 Resolved the current version as 999.9.9-package.2 from manifest: {project-name}/package.json
+          {project-name} ❓ Applied semver relative bump "patch", because a dependency was bumped, to get new version 999.9.9
+          {project-name} ✍️  New version 999.9.9 written to manifest: {project-name}/package.json
+          {project-name} ✍️  Updated 1 dependency in manifest: {project-name}/package.json
+
+          NX   Running release version for project: {project-name}
+
+          {project-name} 📄 Resolved the current version as 0.0.0 from manifest: {project-name}/package.json
+          {project-name} ❓ Applied explicit semver value "999.9.9-package.3", from the given specifier, to get new version 999.9.9-package.3
+          {project-name} ✍️  New version 999.9.9-package.3 written to manifest: {project-name}/package.json
+
+
+          "name": "@proj/{project-name}",
+          -   "version": "0.0.0",
+          +   "version": "999.9.9-package.3",
+          "exports": {
+
+
+          "name": "@proj/{project-name}",
+          -   "version": "999.9.9-package.2",
+          +   "version": "999.9.9",
+          "exports": {
+
+          "dependencies": {
+          -     "@proj/{project-name}": "0.0.0"
+          +     "@proj/{project-name}": "999.9.9-package.3"
+          }
+
+
+          NX   Updating {package-manager} lock file
+
+
+          NX   Staging changed files with git
+
+
+        `);
+      }
     }, 500000);
 
     it('should support automated git operations after versioning when configured', async () => {
@@ -336,7 +389,16 @@ describe('nx release - independent projects - workspaces', () => {
       const versionWithGitActionsConfigOutput = runCLI(
         `release version 999.9.9-version-git-operations-test.3 --verbose` // add verbose so we get richer output
       );
-      expect(versionWithGitActionsConfigOutput).toMatchInlineSnapshot(`
+      expect(
+        readJson(`${pkg2}/package.json`).dependencies[`@proj/${pkg3}`]
+      ).toBe(
+        packageManager === 'pnpm'
+          ? 'workspace:*'
+          : '999.9.9-version-git-operations-test.3'
+      );
+      // workspace:* is preserved by pnpm; concrete npm/Yarn ranges are updated.
+      if (packageManager === 'pnpm') {
+        expect(versionWithGitActionsConfigOutput).toMatchInlineSnapshot(`
 
           NX   Running release version for project: {project-name}
 
@@ -398,6 +460,76 @@ describe('nx release - independent projects - workspaces', () => {
           git tag --annotate {project-name}@999.9.9-version-git-operations-test.3 --message {project-name}@999.9.9-version-git-operations-test.3
 
       `);
+      } else {
+        expect(versionWithGitActionsConfigOutput).toMatchInlineSnapshot(`
+
+          NX   Running release version for project: {project-name}
+
+          {project-name} 📄 Resolved the current version as 999.9.9-package.3 from manifest: {project-name}/package.json
+          {project-name} ❓ Applied explicit semver value "999.9.9-version-git-operations-test.3", from the given specifier, to get new version 999.9.9-version-git-operations-test.3
+          {project-name} ✍️  New version 999.9.9-version-git-operations-test.3 written to manifest: {project-name}/package.json
+
+          NX   Running release version for project: {project-name}
+
+          {project-name} 📄 Resolved the current version as 999.9.9-version-git-operations-test.2 from manifest: {project-name}/package.json
+          {project-name} ❓ Applied explicit semver value "999.9.9-version-git-operations-test.3", from the given specifier, to get new version 999.9.9-version-git-operations-test.3
+          {project-name} ✍️  New version 999.9.9-version-git-operations-test.3 written to manifest: {project-name}/package.json
+
+          NX   Running release version for project: {project-name}
+
+          {project-name} 📄 Resolved the current version as 999.9.9 from manifest: {project-name}/package.json
+          {project-name} ❓ Applied explicit semver value "999.9.9-version-git-operations-test.3", from the given specifier, to get new version 999.9.9-version-git-operations-test.3
+          {project-name} ✍️  New version 999.9.9-version-git-operations-test.3 written to manifest: {project-name}/package.json
+          {project-name} ✍️  Updated 1 dependency in manifest: {project-name}/package.json
+
+
+          "name": "@proj/{project-name}",
+          -   "version": "999.9.9-package.3",
+          +   "version": "999.9.9-version-git-operations-test.3",
+          "exports": {
+
+
+          "name": "@proj/{project-name}",
+          -   "version": "999.9.9-version-git-operations-test.2",
+          +   "version": "999.9.9-version-git-operations-test.3",
+          "exports": {
+
+
+          "name": "@proj/{project-name}",
+          -   "version": "999.9.9",
+          +   "version": "999.9.9-version-git-operations-test.3",
+          "exports": {
+
+          "dependencies": {
+          -     "@proj/{project-name}": "999.9.9-package.3"
+          +     "@proj/{project-name}": "999.9.9-version-git-operations-test.3"
+          }
+
+
+          NX   Updating {package-manager} lock file
+
+          Updating {lock-file} with the following command:
+          {lock-file-command}
+
+          NX   Committing changes with git
+
+          Staging files in git with the following command:
+          git add {project-name}/package.json {project-name}/package.json {project-name}/package.json {lock-file}
+
+          Committing files in git with the following command:
+          git commit --message chore(release): publish --message - project: {project-name} 999.9.9-version-git-operations-test.3 --message - project: {project-name} 999.9.9-version-git-operations-test.3 --message - release-group: fixed 999.9.9-version-git-operations-test.3
+
+          NX   Tagging commit with git
+
+          Tagging the current commit in git with the following command:
+          git tag --annotate {project-name}@999.9.9-version-git-operations-test.3 --message {project-name}@999.9.9-version-git-operations-test.3
+          Tagging the current commit in git with the following command:
+          git tag --annotate {project-name}@999.9.9-version-git-operations-test.3 --message {project-name}@999.9.9-version-git-operations-test.3
+          Tagging the current commit in git with the following command:
+          git tag --annotate {project-name}@999.9.9-version-git-operations-test.3 --message {project-name}@999.9.9-version-git-operations-test.3
+
+      `);
+      }
 
       // Ensure the git operations were performed
       expect(runCommand(`git rev-parse HEAD`).trim()).not.toEqual(headSHA);
