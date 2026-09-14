@@ -129,7 +129,10 @@ export default async function (globalConfig: Config.ConfigGlobals) {
      * verdaccio storage.
      */
     if (!requiresLocalRelease) {
-      let publishedVersion = await getPublishedVersion();
+      // An explicit version identifies the packages under test. Registry
+      // `latest` can resolve to an upstream release instead of our local build.
+      const publishedVersion =
+        process.env.PUBLISHED_VERSION ?? (await getPublishedVersion());
       console.log(`Testing Published version: Nx ${publishedVersion}`);
       if (publishedVersion) {
         process.env.PUBLISHED_VERSION = publishedVersion;
