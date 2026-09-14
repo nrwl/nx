@@ -672,7 +672,7 @@ impl TaskHasher {
         // is an atomic load, and it lets the loop skip hash_instruction
         // entirely when inputs are not collected.
         let instruction_keys: Arc<[SharedStr]> = (0..pool.len() as u32)
-            .map(|id| SharedStr::from(pool.key(id)))
+            .map(|id| SharedStr::from(pool.label(id)))
             .collect();
         let key_ranks = instruction_key_ranks(&instruction_keys);
         // Classify once per instruction, so cache hits do not need the pool's
@@ -742,10 +742,12 @@ impl TaskHasher {
                             Some(value) => value,
                             None => {
                                 let instruction_ref = pool.get(id);
+                                let label = pool.label(id);
                                 let (hash_value, inputs) = self.hash_instruction(
                                     task_id,
                                     instruction_ref.value(),
                                     HashInstructionArgs {
+                                        label: &label,
                                         js_env,
                                         ts_config_hash: &ts_config_hash,
                                         project_root_mappings: &project_root_mappings,
@@ -820,6 +822,7 @@ impl TaskHasher {
         task_id: &str,
         instruction: &HashInstruction,
         HashInstructionArgs {
+            label,
             js_env,
             ts_config_hash,
             project_root_mappings,
@@ -896,7 +899,7 @@ impl TaskHasher {
                 let members: Members = if trust_file_map { &listed } else { WALK };
                 let expansion = expand_files_cached(
                     workspace_root,
-                    &instruction.to_string(),
+                    label,
                     globs,
                     files_expansion_cache,
                     &|path| trust_file_map && self.workspace_file_known(path),
@@ -1118,6 +1121,9 @@ impl TaskHasher {
 }
 
 struct HashInstructionArgs<'a> {
+    /// `InstructionPool::label` of the instruction: the details key, and the
+    /// key a disk-backed group's expansion is shared under within one call.
+    label: &'a str,
     js_env: &'a HashMap<String, String>,
     ts_config_hash: &'a str,
     project_root_mappings: &'a ProjectRootMappings,

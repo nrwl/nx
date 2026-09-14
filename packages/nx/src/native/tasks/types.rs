@@ -191,6 +191,8 @@ pub struct InstructionPool {
     // Display strings, rendered once per unique instruction at intern time so
     // hashing can hand out shared keys instead of re-rendering per task.
     keys: DashMap<u32, Arc<str>>,
+    /// `HashInstruction::label` per id, rendered once like `keys`.
+    labels: DashMap<u32, Arc<str>>,
     next_id: AtomicU32,
     /// Instruction kind per id, for lock-cheap plan filtering.
     kinds: parking_lot::RwLock<Vec<InstructionKind>>,
@@ -218,6 +220,7 @@ impl InstructionPool {
                 let id = self.next_id.fetch_add(1, Ordering::Relaxed);
                 self.items.insert(id, vacant.key().clone());
                 self.keys.insert(id, Arc::from(vacant.key().to_string()));
+                self.labels.insert(id, Arc::from(vacant.key().label()));
                 let kind = InstructionKind::of(vacant.key());
                 {
                     let mut kinds = self.kinds.write();
@@ -274,6 +277,15 @@ impl InstructionPool {
             .clone()
     }
 
+    /// The instruction's label (see `HashInstruction::label`), shared across
+    /// all tasks that reference the instruction.
+    pub fn label(&self, id: u32) -> Arc<str> {
+        self.labels
+            .get(&id)
+            .expect("instruction ids are only handed out by intern()")
+            .clone()
+    }
+
     pub fn len(&self) -> usize {
         self.items.len()
     }
@@ -310,6 +322,26 @@ pub struct HashPlans {
     /// fileset of theirs reads from contains, or sits inside, an output a
     /// task they depend on declares.
     pub deferred: std::collections::HashSet<String>,
+}
+
+/// Entries above which a disk-backed group's label carries a count and a
+/// digest instead of every path. A snapshot group can run to thousands.
+pub const COMPACT_FILES_LABEL_ABOVE: usize = 8;
+
+impl HashInstruction {
+    /// What hash details name this instruction: its Display, except that a
+    /// large disk-backed group folds to a count and a digest of its paths.
+    pub fn label(&self) -> String {
+        match self {
+            HashInstruction::ProjectFileSet(project, globs, true)
+                if globs.len() > COMPACT_FILES_LABEL_ABOVE =>
+            {
+                let digest = crate::native::hasher::hash(globs.join(",").as_bytes());
+                format!("files:{project}:[{} paths #{digest}]", globs.len())
+            }
+            _ => self.to_string(),
+        }
+    }
 }
 
 impl ToNapiValue for HashInstruction {
@@ -406,6 +438,27 @@ impl fmt::Display for HashInstruction {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn label_folds_a_large_disk_backed_group_and_keeps_small_ones_verbatim() {
+        let small =
+            HashInstruction::ProjectFileSet("p".into(), vec!["a".into(), "!b".into()], true);
+        assert_eq!(small.label(), small.to_string());
+        let globs: Vec<String> = (0..20).map(|i| format!("libs/p/f{i}.ts")).collect();
+        let big = HashInstruction::ProjectFileSet("p".into(), globs.clone(), true);
+        let label = big.label();
+        assert!(label.starts_with("files:p:[20 paths #"), "{label}");
+        let mut changed = globs.clone();
+        changed[3] = "libs/p/other.ts".into();
+        let relabeled = HashInstruction::ProjectFileSet("p".into(), changed, true).label();
+        assert_ne!(label, relabeled);
+        let tracked = HashInstruction::ProjectFileSet("p".into(), globs, false);
+        assert_eq!(tracked.label(), tracked.to_string());
+        let pool = InstructionPool::new();
+        let id = pool.intern(big.clone());
+        assert_eq!(&*pool.label(id), label.as_str());
+        assert_eq!(&*pool.key(id), big.to_string().as_str());
+    }
 
     #[test]
     fn marker_display_is_verbatim_and_interns_by_value() {
