@@ -1,6 +1,6 @@
 ---
 title: 'GitHub Actions Pricing and How to Cut Your CI Bill'
-description: 'GitHub Actions per-minute rates for private repositories, and when caching cuts your CI bill. With 70% of task time served from cache a workspace can save about 40% and halve its CI duration.'
+description: 'GitHub Actions per-minute rates for private repositories, and when caching cuts your CI bill. With 70% of task time served from cache a workspace can cut total CI spend about 40% and halve its CI duration.'
 sidebar:
   label: GitHub Actions pricing
 filter: 'type:Guides'
@@ -11,12 +11,13 @@ topics:
 
 With 70% of task time served from cache,
 [a workspace using 160 machine-minutes of CI per run](#example-eight-job-matrix-on-8-core-runners)
-cuts its GitHub Actions bill by about 40% and reduces CI duration (wall clock) by half.
+halves both its GitHub Actions minutes and its CI duration (wall clock).
+Total CI spend, Nx Cloud included, drops about 40%.
 
 GitHub Actions bills private repositories by the minute, so the bill tracks machine-minutes, the
 total across every job, rather than how long the pipeline takes end to end.
-A 25-minute pipeline split across four parallel jobs uses 100 machine-minutes and costs the same as
-a 100-minute pipeline on a single runner.
+Four 25-minute jobs running in parallel use 100 machine-minutes and cost the same as a 100-minute
+pipeline on a single runner.
 The more machine-minutes your pipeline uses today, the more you save.
 
 A remote cache plus `nx affected` is how you cut that bill, and every figure below is the cache
@@ -164,13 +165,13 @@ That baseline is well above the 72-minute break-even, so the cache is cheaper at
 That is roughly 25% off the bill at 50% cached and 40% off at 70%, with the wall clock down to about
 12 and 9 minutes.
 On large runners each skipped minute is worth almost four times what it is on a standard one, which
-is why the same cache pays off here and not in the four-job example.
+is why the same cache pays off here and the four-job example needs 70% to get there.
 The Nx Cloud share is about $160 a month, 500 pipeline executions plus the resource usage reports,
 and the Team plan covers the first $29 of it.
 
 A small single-job pipeline is where Nx Cloud doesn't pay for itself on compute.
-A 30-minute job on one 2-core runner costs about $90 a month at 500 runs and about $195 with
-Nx Cloud.
+A 30-minute job on one 2-core runner costs about $90 a month at 500 runs, and about $195 with
+Nx Cloud at 50% cached.
 It finishes in 18 billed minutes instead of 30, so that is speed rather than a lower bill.
 
 ## Larger runners cost more for the same work
@@ -202,12 +203,13 @@ already use several cores each.
 ## How to cut your GitHub Actions bill
 
 - Count machine-minutes, not wall-clock minutes.
-  Matrix jobs and larger runners multiply the baseline, and those are the pipelines where caching is
-  cheaper as well as faster.
+  Matrix jobs and larger runners multiply the baseline, so those are the pipelines most likely to
+  clear break-even.
 - Connect the pipelines already on large runners first.
   An 8-core job breaks even after about 30 machine-minutes, a 2-core job after about 100.
-- Read the computation time saved in the Nx Cloud workspace overview after two weeks and use that,
-  not a task count, as your cache share.
+- Read the computation time saved in the Nx Cloud workspace overview after two weeks, then divide
+  it by that figure plus the task time actually run.
+  That ratio is your cache share, and it is not the share of tasks that hit.
   If it is low, over-broad `inputs` and `namedInputs` are worth checking first.
 - To put a dollar figure on the "computation time saved" that Nx Cloud reports, divide the saved
   task-minutes by two for a 2-core runner running two tasks at once, then multiply by the runner
@@ -256,4 +258,4 @@ The arithmetic assumes:
   default for new organizations. Contributor seats, add-ons, and concurrency limits sit outside
   this.
 - Monthly totals are metered usage before GitHub's allowances. Standard-runner minutes draw on the
-  2,000 to 3,000 included each month, and larger-runner minutes do not.
+  2,000 to 50,000 included each month depending on plan, and larger-runner minutes do not.
