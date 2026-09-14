@@ -231,6 +231,9 @@ impl InstructionPool {
 pub struct HashPlans {
     pub pool: Arc<InstructionPool>,
     pub plans: HashMap<String, Vec<u32>>,
+    /// Tasks the up-front batch leaves out: a disk-backed fileset of theirs
+    /// reaches into what a task they depend on declares as an output.
+    pub deferred: std::collections::HashSet<String>,
 }
 
 impl ToNapiValue for HashInstruction {

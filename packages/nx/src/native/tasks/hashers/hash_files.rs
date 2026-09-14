@@ -171,7 +171,7 @@ pub(crate) fn expand_literal_braces(glob: &str) -> Vec<String> {
 /// glob syntax and strips them, but in a path they are ordinary characters
 /// (`node_modules/@scope/pkg`, `app/(marketing)`). The prefix is only ever
 /// compared as text; just the remainder reaches the glob parser.
-fn literal_prefix(glob: &str) -> Result<(String, bool)> {
+pub(crate) fn literal_prefix(glob: &str) -> Result<(String, bool)> {
     literal_prefix_with(glob, false)
 }
 
