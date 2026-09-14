@@ -79,6 +79,9 @@ describe('nx release - independent projects - workspaces', () => {
       packages: ['@nx/js'],
     });
 
+    // Keep generated package names aligned with the fixture's dependencies.
+    updateJson('package.json', (json) => ({ ...json, name: '@proj/source' }));
+
     pkg1 = uniq('my-pkg-1');
     runCLI(`generate @nx/workspace:npm-package ${pkg1}`);
 
