@@ -76,9 +76,11 @@ impl FileContentCache {
         }
     }
 
-    /// Drops whole runs, oldest first, until the map fits the limit. The
-    /// newest run that touched the cache is never dropped, however large,
-    /// so a run in between that read nothing costs it nothing.
+    /// Drops the oldest runs first until the map fits the limit, and only as
+    /// much of the last run it reaches as needed, so two commands whose sets
+    /// each fit the limit, but not together, still share it. The newest run that
+    /// touched the cache is never dropped, however large, so a run in
+    /// between that read nothing costs it nothing.
     fn evict_oldest_runs(&self) {
         let mut by_run: BTreeMap<u64, usize> = BTreeMap::new();
         for entry in self.entries.iter() {
@@ -90,18 +92,36 @@ impl FileContentCache {
             return;
         };
         let mut remaining = self.entries.len();
+        // Runs below `cutoff` go entirely; `partial` is (run, how many of it go).
         let mut cutoff = 0;
+        let mut partial = None;
         for (&run, &count) in &by_run {
             if run == newest || remaining <= self.limit {
                 break;
             }
-            remaining -= count;
-            cutoff = run + 1;
+            if remaining - count >= self.limit {
+                remaining -= count;
+                cutoff = run + 1;
+            } else {
+                partial = Some((run, remaining - self.limit));
+                break;
+            }
         }
-        if cutoff > 0 {
-            self.entries
-                .retain(|_, cached| cached.used_in.load(Ordering::Relaxed) >= cutoff);
+        if cutoff == 0 && partial.is_none() {
+            return;
         }
+        let (partial_run, mut to_drop) = partial.unwrap_or((0, 0));
+        self.entries.retain(|_, cached| {
+            let run = cached.used_in.load(Ordering::Relaxed);
+            if run < cutoff {
+                return false;
+            }
+            if run == partial_run && to_drop > 0 {
+                to_drop -= 1;
+                return false;
+            }
+            true
+        });
     }
 
     /// A poisoned lock still guards; only a busy one means another thread is
@@ -1226,6 +1246,21 @@ mod tests {
         // Half of the newest set re-read: the other half is now the oldest.
         run(&cache, &[4, 5, 6, 7, 8], &[]);
         assert_eq!(run(&cache, &[4, 5, 6, 7, 8, 9], &[]), 5);
+    }
+
+    #[test]
+    fn content_cache_shares_the_limit_between_alternating_commands() {
+        let cache = FileContentCache::with_limit(10);
+        let a: Vec<usize> = (0..6).collect();
+        let b: Vec<usize> = (100..106).collect();
+        let mut hits = Vec::new();
+        for _ in 0..3 {
+            hits.push(run(&cache, &a, &[]));
+            hits.push(run(&cache, &b, &[]));
+        }
+        // Together the sets exceed the limit by two, so each run gives up
+        // two of the other's entries, not all six.
+        assert_eq!(hits, vec![0, 0, 4, 4, 4, 4]);
     }
 
     #[test]

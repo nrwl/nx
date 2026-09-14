@@ -408,8 +408,8 @@ impl TaskHasher {
             plans,
             deferred: std::collections::HashSet::new(),
         };
-        // One run: the disk-backed content cache sweeps here, not in the
-        // smaller passes that hash the deferred tasks.
+        // One run: the disk-backed content cache ages its entries here, not
+        // in the smaller passes that hash the deferred tasks.
         shared_file_content_cache().begin_run();
         let hashes = self.hash_plans_impl(&upfront, cwd, collect_task_inputs, |task_id| {
             per_task_envs
