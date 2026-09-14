@@ -1,10 +1,10 @@
 pub(crate) mod bundle;
 pub(crate) mod store;
 
-use std::collections::BTreeMap;
-use std::path::Path;
-use std::sync::Arc;
+use std::collections::{BTreeMap, HashMap};
+use std::sync::{Arc, Mutex};
 
+use napi::bindgen_prelude::External;
 use serde::{Deserialize, Serialize};
 use tracing::debug;
 
@@ -12,7 +12,7 @@ use crate::native::utils::time::current_timestamp_millis;
 
 const DEFAULT_RETAIN: u32 = 5;
 
-/// What was resolved for a commit; persisted alongside the bundle.
+/// What was resolved for a commit; stored beside its entries.
 #[napi(object)]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -33,8 +33,6 @@ pub struct IoSnapshotResolution {
 /// The snapshot set the Nx Cloud client read for HEAD, as JS hands it over.
 #[napi(object)]
 pub struct IoSnapshotImportOptions {
-    /// Shared cache root for snapshot bundles (`<cacheDir>/io-snapshots`).
-    pub cache_directory: String,
     pub requested_commit: String,
     /// The commits the client asked about, newest first.
     pub commits: Vec<String>,
@@ -47,17 +45,19 @@ pub struct IoSnapshotImportOptions {
     pub retain: Option<u32>,
 }
 
-/// The imported or loaded bundle for one commit, plus what resolving it
-/// reported. Handed to the hash planner as-is; `bundle` is `None` when the
-/// task hashes natively (status `skipped`, or a load failure).
+/// The snapshot set for one commit, plus what resolving it reported. Handed
+/// to the hash planner as-is. Entries are read from the workspace database
+/// per task as they are asked for, and remembered for the handle's lifetime,
+/// so a run costs the tasks it plans rather than the workspace's whole set.
+/// `resolution` is `None` when every task hashes natively (status `skipped`).
 #[napi]
 pub struct IoSnapshots {
-    pub(crate) bundle: Option<Arc<store::Bundle>>,
     status: String,
     reason: Option<String>,
     message: Option<String>,
-    file: Option<String>,
-    directory: Option<String>,
+    resolution: Option<IoSnapshotResolution>,
+    db: Option<store::Db>,
+    entries: Mutex<HashMap<String, Option<Arc<bundle::TaskIoSnapshot>>>>,
 }
 
 #[napi]
@@ -68,7 +68,7 @@ impl IoSnapshots {
         self.status.clone()
     }
 
-    /// Why the fetch was skipped, `stale-offline` when a stale bundle was
+    /// Why the fetch was skipped, `stale-offline` when a stale set was
     /// reused, or `no-bundle` / `invalid-bundle` from `loadIoSnapshots`.
     #[napi(getter)]
     pub fn reason(&self) -> Option<String> {
@@ -80,31 +80,66 @@ impl IoSnapshots {
         self.message.clone()
     }
 
-    /// The bundle file a load failure refers to.
+    /// The commit whose stored set this is, when one was resolved.
     #[napi(getter)]
-    pub fn file(&self) -> Option<String> {
-        self.file.clone()
-    }
-
-    /// Directory holding `snapshots.json` when a bundle was resolved.
-    #[napi(getter)]
-    pub fn directory(&self) -> Option<String> {
-        self.directory.clone()
+    pub fn commit(&self) -> Option<String> {
+        self.resolution
+            .as_ref()
+            .map(|resolution| resolution.requested_commit.clone())
     }
 
     #[napi(getter)]
     pub fn resolution(&self) -> Option<IoSnapshotResolution> {
-        self.bundle.as_ref().map(|b| b.resolution.clone())
+        self.resolution.clone()
+    }
+
+    pub(crate) fn resolution_ref(&self) -> Option<&IoSnapshotResolution> {
+        self.resolution.as_ref()
+    }
+
+    /// The stored entries among `task_ids`; an id without one is absent.
+    /// Reads each id from the database once per handle.
+    pub(crate) fn entries_for(
+        &self,
+        task_ids: &[&str],
+    ) -> anyhow::Result<HashMap<String, Arc<bundle::TaskIoSnapshot>>> {
+        let (Some(resolution), Some(db)) = (&self.resolution, &self.db) else {
+            return Ok(HashMap::new());
+        };
+        let mut entries = self.entries.lock().unwrap();
+        let missing: Vec<&str> = task_ids
+            .iter()
+            .copied()
+            .filter(|id| !entries.contains_key(*id))
+            .collect();
+        if !missing.is_empty() {
+            let read = store::read_entries(db, &resolution.requested_commit, &missing)?;
+            for id in &missing {
+                entries.insert((*id).to_string(), None);
+            }
+            for (id, entry) in read {
+                entries.insert(id, Some(Arc::new(entry)));
+            }
+        }
+        Ok(task_ids
+            .iter()
+            .filter_map(|id| {
+                entries
+                    .get(*id)
+                    .and_then(|entry| entry.as_ref())
+                    .map(|entry| ((*id).to_string(), Arc::clone(entry)))
+            })
+            .collect())
     }
 
     pub(crate) fn skipped(reason: impl Into<String>, message: impl Into<String>) -> Self {
         Self {
-            bundle: None,
             status: "skipped".into(),
             reason: Some(reason.into()),
             message: Some(message.into()),
-            file: None,
-            directory: None,
+            resolution: None,
+            db: None,
+            entries: Mutex::new(HashMap::new()),
         }
     }
 
@@ -112,16 +147,17 @@ impl IoSnapshots {
         status: &str,
         reason: Option<String>,
         message: Option<String>,
-        directory: &Path,
-        bundle: Arc<store::Bundle>,
+        resolution: IoSnapshotResolution,
+        db: store::Db,
+        entries: HashMap<String, Option<Arc<bundle::TaskIoSnapshot>>>,
     ) -> Self {
         Self {
-            bundle: Some(bundle),
             status: status.into(),
             reason,
             message,
-            file: None,
-            directory: Some(directory.to_string_lossy().into_owned()),
+            resolution: Some(resolution),
+            db: Some(db),
+            entries: Mutex::new(entries),
         }
     }
 }
@@ -133,46 +169,51 @@ pub fn skipped_io_snapshots(reason: String, message: String) -> IoSnapshots {
     IoSnapshots::skipped(reason, message)
 }
 
-/// Reads an already-fetched bundle directory without touching the network:
-/// `nx show`/`nx graph` and the daemon load the directory the client resolved.
-/// `reason`/`message` annotate a deliberate reuse, such as `stale-offline`.
+/// The stored set for `commit`, without touching the network: `nx show`,
+/// `nx graph` and the daemon load the commit the run resolved. `reason` and
+/// `message` annotate a deliberate reuse, such as `stale-offline`.
 #[napi]
 pub fn load_io_snapshots(
-    directory: String,
+    #[napi(ts_arg_type = "ExternalObject<NxDbConnection>")] db: &External<store::Db>,
+    commit: String,
     reason: Option<String>,
     message: Option<String>,
 ) -> IoSnapshots {
-    let dir = Path::new(&directory);
-    match store::read_bundle(dir) {
-        Ok(bundle) => IoSnapshots::resolved("cached", reason, message, dir, bundle),
-        Err(err) => IoSnapshots {
-            bundle: None,
-            status: "skipped".into(),
-            reason: Some(err.reason.into()),
-            message: Some(err.message),
-            file: Some(err.file),
-            directory: None,
-        },
+    match store::read_resolution(db, &commit) {
+        Ok(Some(resolution)) => IoSnapshots::resolved(
+            "cached",
+            reason,
+            message,
+            resolution,
+            Arc::clone(db),
+            HashMap::new(),
+        ),
+        Ok(None) => IoSnapshots::skipped(
+            "no-bundle",
+            format!("no I/O snapshot set is stored for {commit}"),
+        ),
+        Err(err) => IoSnapshots::skipped("invalid-bundle", err.to_string()),
     }
 }
 
-/// The resolution header of the cached bundle for `commit`, without parsing
-/// the snapshots: enough to decide whether to ask Nx Cloud at all and what
-/// `knownUpdatedAt` to send.
+/// The resolution stored for `commit`, without reading any entries: enough
+/// to decide whether to ask Nx Cloud at all and what `knownUpdatedAt` to send.
 #[napi]
 pub fn read_io_snapshot_resolution(
-    cache_directory: String,
+    #[napi(ts_arg_type = "ExternalObject<NxDbConnection>")] db: &External<store::Db>,
     commit: String,
 ) -> Option<IoSnapshotResolution> {
-    store::read_resolution(Path::new(&cache_directory), &commit)
+    store::read_resolution(db, &commit).ok().flatten()
 }
 
 /// Stores the snapshot set the Nx Cloud client read for `requested_commit`
-/// and returns it as this run's bundle. Never fails the caller: a payload nx
-/// cannot read or a cache it cannot write is reported as a `skipped` result.
+/// and returns it as this run's set. Never fails the caller: a payload nx
+/// cannot read or a database it cannot write is reported as `skipped`.
 #[napi]
-pub fn import_io_snapshots(options: IoSnapshotImportOptions) -> IoSnapshots {
-    let cache_directory = Path::new(&options.cache_directory);
+pub fn import_io_snapshots(
+    #[napi(ts_arg_type = "ExternalObject<NxDbConnection>")] db: &External<store::Db>,
+    options: IoSnapshotImportOptions,
+) -> IoSnapshots {
     let mut snapshots: BTreeMap<String, bundle::TaskIoSnapshot> =
         match serde_json::from_str(&options.snapshots_json) {
             Ok(snapshots) => snapshots,
@@ -198,14 +239,16 @@ pub fn import_io_snapshots(options: IoSnapshotImportOptions) -> IoSnapshots {
         tasks: snapshots.len() as u32,
     };
     let bundle = store::Bundle {
-        version: store::BUNDLE_VERSION,
         resolution: resolution.clone(),
         snapshots,
     };
-    let directory = match store::write(cache_directory, &bundle) {
-        Ok(dir) => dir,
-        Err(err) => return IoSnapshots::skipped("write-failed", err.to_string()),
-    };
+    if let Err(err) = store::write(
+        db,
+        &bundle,
+        options.retain.unwrap_or(DEFAULT_RETAIN) as usize,
+    ) {
+        return IoSnapshots::skipped("write-failed", err.to_string());
+    }
     if resolution.tasks == 0 {
         debug!(
             "io snapshots: Nx Cloud has no snapshots for any of the {} commit(s) ending at {}; every task falls back to its declared inputs",
@@ -220,76 +263,87 @@ pub fn import_io_snapshots(options: IoSnapshotImportOptions) -> IoSnapshots {
             resolution.digest
         );
     }
-    store::prune(
-        cache_directory,
-        options.retain.unwrap_or(DEFAULT_RETAIN) as usize,
-        &resolution.requested_commit,
-    );
-
-    IoSnapshots::resolved("fetched", None, None, &directory, Arc::new(bundle))
+    // The importing process keeps what it just parsed; nothing to re-read.
+    let entries = bundle
+        .snapshots
+        .into_iter()
+        .map(|(id, entry)| (id, Some(Arc::new(entry))))
+        .collect();
+    IoSnapshots::resolved("fetched", None, None, resolution, Arc::clone(db), entries)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use assert_fs::TempDir;
+    use crate::native::db::initialize::initialize_db;
 
-    fn import(cache: &Path, json: &str) -> IoSnapshots {
-        import_io_snapshots(IoSnapshotImportOptions {
-            cache_directory: cache.to_string_lossy().into_owned(),
-            requested_commit: "head".into(),
-            commits: vec!["head".into(), "parent".into()],
-            snapshots_json: json.into(),
-            updated_at: Some(42),
-            client_version: Some("nx/test".into()),
-            retain: None,
-        })
+    fn temp_db() -> (tempfile::TempDir, External<store::Db>) {
+        let dir = tempfile::tempdir().unwrap();
+        let conn = initialize_db(&dir.path().join("test.db")).unwrap();
+        (dir, External::new(Arc::new(Mutex::new(conn))))
+    }
+
+    fn import(db: &External<store::Db>, json: &str) -> IoSnapshots {
+        import_io_snapshots(
+            db,
+            IoSnapshotImportOptions {
+                requested_commit: "head".into(),
+                commits: vec!["head".into(), "parent".into()],
+                snapshots_json: json.into(),
+                updated_at: Some(42),
+                client_version: Some("nx/test".into()),
+                retain: None,
+            },
+        )
     }
 
     #[test]
-    fn imports_a_payload_and_loads_it_back() {
-        let temp = TempDir::new().unwrap();
+    fn imports_a_payload_and_loads_it_back_per_task() {
+        let (_dir, db) = temp_db();
         let json = r#"{
           "web:build": { "commit": "parent", "inputs": ["apps/web/src/**/*.ts", "apps/web/src/**/*.ts"], "outputs": ["dist/apps/web/**"] },
           "ui:test": { "commit": "head", "inputs": ["libs/ui/**/*.ts"], "outputs": [] }
         }"#;
-        let imported = import(&temp, json);
+        let imported = import(&db, json);
         assert_eq!(imported.status(), "fetched");
         let resolution = imported.resolution().unwrap();
         assert_eq!(resolution.tasks, 2);
         assert_eq!(resolution.source_commits, vec!["head", "parent"]);
         assert_eq!(resolution.updated_at, Some(42));
         assert_eq!(resolution.commits, vec!["head", "parent"]);
+        assert_eq!(imported.commit().as_deref(), Some("head"));
 
-        let header =
-            read_io_snapshot_resolution(temp.to_string_lossy().into_owned(), "head".into())
-                .unwrap();
+        let header = read_io_snapshot_resolution(&db, "head".into()).unwrap();
         assert_eq!(header.digest, resolution.digest);
 
-        let loaded = load_io_snapshots(
-            imported.directory().unwrap(),
-            Some("stale-offline".into()),
-            None,
-        );
+        let loaded = load_io_snapshots(&db, "head".into(), Some("stale-offline".into()), None);
         assert_eq!(loaded.status(), "cached");
         assert_eq!(loaded.reason().as_deref(), Some("stale-offline"));
         assert_eq!(loaded.resolution().unwrap().digest, resolution.digest);
-        // Normalized on import: duplicates collapsed.
-        let bundle = loaded.bundle.as_ref().unwrap();
+        // Read per task, normalized on import: duplicates collapsed.
+        let entries = loaded.entries_for(&["web:build", "gone:build"]).unwrap();
+        assert_eq!(entries.len(), 1);
         assert_eq!(
-            bundle.snapshots["web:build"].inputs,
+            entries["web:build"].inputs,
             bundle::TaskInputs::Flat(vec!["apps/web/src/**/*.ts".into()])
+        );
+        // A second ask for the same ids does not go back to the database.
+        assert_eq!(loaded.entries.lock().unwrap().len(), 2);
+        assert_eq!(
+            loaded.entries_for(&["web:build", "ui:test"]).unwrap().len(),
+            2
         );
     }
 
     #[test]
     fn reports_a_payload_it_cannot_read() {
-        let temp = TempDir::new().unwrap();
-        let skipped = import(&temp, "{ not json");
+        let (_dir, db) = temp_db();
+        let skipped = import(&db, "{ not json");
         assert_eq!(skipped.status(), "skipped");
         assert_eq!(skipped.reason().as_deref(), Some("invalid-response"));
+        assert!(skipped.commit().is_none());
         assert!(
-            load_io_snapshots(temp.join("head").to_string_lossy().into_owned(), None, None)
+            load_io_snapshots(&db, "head".into(), None, None)
                 .reason()
                 .is_some_and(|r| r == "no-bundle")
         );

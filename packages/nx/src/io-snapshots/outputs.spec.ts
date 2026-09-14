@@ -1,9 +1,14 @@
-import { mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { TempFs } from '../internal-testing-utils/temp-fs';
 import type { ProjectGraph } from '../config/project-graph';
 import type { TaskGraph } from '../config/task-graph';
-import { ioSnapshotDeferredTaskIds, loadIoSnapshots } from '../native';
+import {
+  closeDbConnection,
+  connectToNxDb,
+  importIoSnapshots,
+  ioSnapshotDeferredTaskIds,
+  loadIoSnapshots,
+} from '../native';
 
 vi.mock('../tasks-runner/utils', () => ({
   getExecutorForTask: vi.fn((task: { target: { target: string } }) => ({
@@ -64,42 +69,38 @@ function graph(
 }
 
 let tempFs: TempFs;
+let snapshotDb: ReturnType<typeof connectToNxDb>;
 let bundles = 0;
 
 function snapshotsFor(
   entries: Record<string, { inputs?: string[]; outputs?: string[] }>
 ) {
-  const dir = join(tempFs.tempDir, `bundle-${bundles++}`);
-  mkdirSync(dir, { recursive: true });
-  writeFileSync(
-    join(dir, 'snapshots.json'),
-    JSON.stringify({
-      version: 1,
-      resolution: {
-        requestedCommit: 'a'.repeat(40),
-        commits: [],
-        sourceCommits: [],
-        digest: 'd1',
-        fetchedAt: 1,
-        clientVersion: 'nx/test',
-        tasks: Object.keys(entries).length,
-      },
-      snapshots: Object.fromEntries(
+  const commit = `a${bundles++}`.padEnd(40, 'a');
+  importIoSnapshots(snapshotDb, {
+    requestedCommit: commit,
+    commits: [commit],
+    clientVersion: 'nx/test',
+    snapshotsJson: JSON.stringify(
+      Object.fromEntries(
         Object.entries(entries).map(([id, e]) => [
           id,
-          { commit: 'a', inputs: e.inputs ?? [], outputs: e.outputs ?? [] },
+          { commit, inputs: e.inputs ?? [], outputs: e.outputs ?? [] },
         ])
-      ),
-    })
-  );
-  return loadIoSnapshots(dir);
+      )
+    ),
+  });
+  return loadIoSnapshots(snapshotDb, commit);
 }
 
 describe('io snapshot outputs', () => {
   beforeEach(() => {
     tempFs = new TempFs('io-snapshot-outputs');
+    snapshotDb = connectToNxDb(join(tempFs.tempDir, 'db'), 'io-snapshots');
   });
-  afterEach(() => tempFs.cleanup());
+  afterEach(() => {
+    closeDbConnection(snapshotDb);
+    tempFs.cleanup();
+  });
 
   it('unions observed outputs after the declared ones, deduplicated, only for eligible tasks', () => {
     const taskGraph = graph([

@@ -61,6 +61,19 @@ impl IoSnapshotDiagnostic {
             message: None,
         }
     }
+
+    /// A run-level diagnostic: nothing hashed from snapshots, for `reason`.
+    fn run(reason: String, message: Option<String>) -> Self {
+        Self {
+            reason,
+            task_id: None,
+            project: None,
+            glob: None,
+            producer: None,
+            file: None,
+            message,
+        }
+    }
 }
 
 #[napi(object)]
@@ -120,20 +133,15 @@ pub(crate) fn resolve_scoped(
     inputs: &EligibilityInputs,
     scope: Option<&[&str]>,
 ) -> Resolved {
-    let Some(bundle) = snapshots.bundle.as_ref() else {
+    let Some(resolution) = snapshots.resolution_ref() else {
         return Resolved {
             tasks: HashMap::new(),
-            diagnostics: vec![IoSnapshotDiagnostic {
-                reason: snapshots
+            diagnostics: vec![IoSnapshotDiagnostic::run(
+                snapshots
                     .reason()
                     .unwrap_or_else(|| "no-bundle".to_string()),
-                task_id: None,
-                project: None,
-                glob: None,
-                producer: None,
-                file: snapshots.file(),
-                message: snapshots.message(),
-            }],
+                snapshots.message(),
+            )],
             resolution: None,
         };
     };
@@ -148,6 +156,20 @@ pub(crate) fn resolve_scoped(
         None => task_graph.tasks.keys().collect(),
     };
     task_ids.sort();
+    let entries =
+        match snapshots.entries_for(&task_ids.iter().map(|id| id.as_str()).collect::<Vec<_>>()) {
+            Ok(entries) => entries,
+            Err(err) => {
+                return Resolved {
+                    tasks: HashMap::new(),
+                    diagnostics: vec![IoSnapshotDiagnostic::run(
+                        "invalid-bundle".to_string(),
+                        Some(err.to_string()),
+                    )],
+                    resolution: Some(resolution.clone()),
+                };
+            }
+        };
 
     for task_id in task_ids {
         if inputs.opted_out.contains(task_id) {
@@ -158,7 +180,7 @@ pub(crate) fn resolve_scoped(
             diagnostics.push(IoSnapshotDiagnostic::task("custom-hasher", task_id));
             continue;
         }
-        let Some(entry) = bundle.snapshots.get(task_id) else {
+        let Some(entry) = entries.get(task_id) else {
             diagnostics.push(IoSnapshotDiagnostic::task("missing", task_id));
             continue;
         };
@@ -254,7 +276,7 @@ pub(crate) fn resolve_scoped(
             SnapshotTask {
                 files,
                 outputs: observed_outputs(entry),
-                digest: bundle.resolution.digest.clone(),
+                digest: resolution.digest.clone(),
             },
         );
     }
@@ -262,7 +284,7 @@ pub(crate) fn resolve_scoped(
     Resolved {
         tasks,
         diagnostics,
-        resolution: Some(bundle.resolution.clone()),
+        resolution: Some(resolution.clone()),
     }
 }
 
@@ -469,14 +491,16 @@ pub fn io_snapshot_deferred_task_ids(
     snapshots: &IoSnapshots,
     task_graph: TaskGraph,
 ) -> Vec<String> {
-    let Some(bundle) = snapshots.bundle.as_ref() else {
+    if snapshots.resolution_ref().is_none() {
         return vec![];
-    };
+    }
+    let ids: Vec<&str> = task_graph.tasks.keys().map(String::as_str).collect();
+    let entries = snapshots.entries_for(&ids).unwrap_or_default();
     let mut deferred: Vec<String> = task_graph
         .tasks
         .keys()
         .filter(|task_id| {
-            bundle.snapshots.get(*task_id).is_some_and(|entry| {
+            entries.get(*task_id).is_some_and(|entry| {
                 let mut producers: Vec<String> = entry_task_outputs(entry).into_keys().collect();
                 producers.extend(
                     producers_by_declared_outputs(task_id, &entry_files(entry), &task_graph)

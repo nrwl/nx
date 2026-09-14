@@ -1240,7 +1240,7 @@ function reportIoSnapshots(
   if (!ioSnapshots) return;
   if (!nxArgs.verbose && process.env.NX_VERBOSE_LOGGING !== 'true') return;
   const summary = formatIoSnapshotSummary(
-    ioSnapshots.directory
+    ioSnapshots.commit
       ? buildIoSnapshotOverrides(projectGraph, taskGraph, nxJson, ioSnapshots)
       : null,
     ioSnapshots
