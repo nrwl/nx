@@ -84,13 +84,12 @@ download instead of its full runtime, and the cache is shared across every PR an
 
 Nx Cloud comes out cheaper than plain GitHub Actions when the minutes the cache avoids are worth
 more than the per-run Nx Cloud charge.
-On a standard 2-core runner that is roughly 50 minutes per run, and about 14 on an 8-core runner.
 Every figure here bills each job as a whole minute, the way GitHub does.
 
 The table below is roughly the baseline a single-job pipeline needs today, in machine-minutes per
 run, before the cache pays for itself.
 Each row holds the runner fixed and compares a pipeline against itself.
-Above these numbers Nx Cloud is faster and cheaper, below them it is faster and costs slightly more.
+Above these numbers Nx Cloud is faster and cheaper, below them it is faster and costs more.
 
 | Runner                | Break-even at 50% cached | Break-even at 70% cached |
 | --------------------- | ------------------------ | ------------------------ |
