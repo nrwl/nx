@@ -202,6 +202,11 @@ describe('runMasterSession', () => {
           // Agent text is printed verbatim, so its breaks are collapsed.
           outcome: { summary: 'boom: the generator\u2028broke\n\nbadly' },
         },
+        {
+          status: 'unresolved',
+          migrationId: '@nx/js:blank',
+          promptOutcome: { status: 'failed', summary: ' \n ' },
+        },
       ],
     } as MigrateRunState);
 
@@ -213,8 +218,9 @@ describe('runMasterSession', () => {
         '  applied: 1',
         '  adopted: 1',
         '  skipped: 0',
-        '  unresolved: 1',
+        '  unresolved: 2',
         '    - @nx/js:gen: boom: the generator broke badly',
+        '    - @nx/js:blank: no failure detail was recorded',
       ],
     });
     expect(warnSpy).toHaveBeenCalledWith({
@@ -224,7 +230,7 @@ describe('runMasterSession', () => {
     expect(mockRunComplete).toHaveBeenCalledWith({
       agenticOutcome: 'enabled',
       agentUsed: 'claude-code',
-      migrationCount: 3,
+      migrationCount: 4,
       appliedCount: 2,
     });
   });
