@@ -6,18 +6,20 @@
  *
  * `encodeAuto` decides for itself. The tree format costs a fixed amount per
  * object or array and an entry per distinct string, so it pays only when refs
- * per container is high and most refs repeat. The walk checks both at the
- * first CONTAINER_CHECK containers and then every CHECK, and repetition again
- * at REF_CHECK refs, so a payload that bails pays the walk up to the first
- * failed check and the tree never grows. The checks err toward bailing: a
- * payload that is sparse first and dense later keeps the plain path. The ref
- * check sits late because one task's inputs are all distinct until the next
- * task repeats them.
+ * per container is high and most refs repeat. Both are checked at the first
+ * CONTAINER_CHECK containers and then every CHECK; repetition is checked again
+ * at REF_CHECK refs, late because one task's inputs are all distinct until the
+ * next task repeats them, and a map wider than that bails before its values
+ * are walked. A payload that bails has paid the walk up to the check that
+ * failed it. The checks err toward bailing: a payload that is sparse first
+ * and dense later keeps the plain path.
  *
  * It also bails on non-plain objects, `toJSON` and depth past MAX_DEPTH, so
  * Dates, Buffers, class instances and cycles keep the existing path. Scalars
- * follow JSON: `undefined`, functions and symbols are dropped, non-finite
- * numbers and array holes become null, and -0 becomes 0.
+ * follow JSON except for BigInt, which JSON rejects and this keeps for v8:
+ * `undefined`, functions and symbols are dropped as object values and become
+ * null in arrays, as do array holes; NaN and the infinities become null; -0
+ * becomes 0.
  */
 const CHECK = 4096;
 const CONTAINER_CHECK = 512;
