@@ -26,6 +26,8 @@ export type CypressVersions = Record<
     | 'getInstalledCypressVersion'
     | 'getInstalledCypressMajorVersion'
     | 'assertMinimumCypressVersion'
+    | 'assertViteSupportsInstalledCypress'
+    | 'componentTestingVersions'
   >,
   string
 >;
@@ -87,6 +89,22 @@ export function versions(tree: Tree): CypressVersions {
   return versionMap[cypressMajorVersion as CompatVersions] ?? latestVersions;
 }
 
+// A fresh Vite component testing setup on an older Vite gets the last set
+// that runs on it; Cypress 16 only runs on Vite 8.
+export function componentTestingVersions(
+  tree: Tree,
+  bundler: 'vite' | 'webpack' | undefined
+): CypressVersions {
+  if (
+    bundler === 'vite' &&
+    !getInstalledCypressVersion(tree) &&
+    getViteVersionBelowCypress16Floor(tree)
+  ) {
+    return versionMap[15];
+  }
+  return versions(tree);
+}
+
 export function getInstalledCypressVersion(tree?: Tree): string | null {
   if (!tree) {
     return getInstalledPackageVersion('cypress');
@@ -116,6 +134,22 @@ export function getInstalledCypressVersion(tree?: Tree): string | null {
 export function getInstalledCypressMajorVersion(tree?: Tree): number | null {
   const installedCypressVersion = getInstalledCypressVersion(tree);
   return installedCypressVersion ? major(installedCypressVersion) : null;
+}
+
+export function assertViteSupportsInstalledCypress(tree: Tree): void {
+  const cypressMajor = getInstalledCypressMajorVersion(tree);
+  const viteVersion = getViteVersionBelowCypress16Floor(tree);
+  if (cypressMajor >= 16 && viteVersion) {
+    throw new Error(
+      `Cypress ${cypressMajor} component testing requires Vite 8. Found Vite ${viteVersion}. Update Vite to 8 or use Cypress 15.`
+    );
+  }
+}
+
+// Cypress 16 component testing rejects an older Vite at runtime.
+function getViteVersionBelowCypress16Floor(tree: Tree): string | null {
+  const viteVersion = getResolvedPackageVersion(tree, 'vite');
+  return viteVersion && major(viteVersion) < 8 ? viteVersion : null;
 }
 
 export function assertMinimumCypressVersion(

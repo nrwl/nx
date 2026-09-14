@@ -1,14 +1,24 @@
 import { updateJson, type Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
+  assertViteSupportsInstalledCypress,
+  componentTestingVersions,
   cypressVersion,
   getInstalledCypressVersion,
   versions,
 } from './versions';
 
 function declareCypress(tree: Tree, version: string): void {
+  declareDevDependency(tree, 'cypress', version);
+}
+
+function declareVite(tree: Tree, version: string): void {
+  declareDevDependency(tree, 'vite', version);
+}
+
+function declareDevDependency(tree: Tree, name: string, version: string): void {
   updateJson(tree, 'package.json', (json) => {
-    json.devDependencies = { ...json.devDependencies, cypress: version };
+    json.devDependencies = { ...json.devDependencies, [name]: version };
     return json;
   });
 }
@@ -127,4 +137,77 @@ describe('versions', () => {
       expect(getInstalledCypressVersion(tree)).toBe('15.8.0');
     }
   );
+
+  it('should keep the latest versions when cypress is not declared and vite is below 8', () => {
+    declareVite(tree, '^7.0.0');
+
+    expect(versions(tree).cypressVersion).toBe(cypressVersion);
+  });
+
+  describe('componentTestingVersions', () => {
+    it('should return the cypress 15 versions for the vite bundler when cypress is not declared and vite is below 8', () => {
+      declareVite(tree, '^7.0.0');
+
+      expect(componentTestingVersions(tree, 'vite')).toMatchObject(
+        compatibleVersions[15]
+      );
+    });
+
+    it.each([
+      ['the webpack bundler with vite 7', 'webpack', '^7.0.0'],
+      ['no bundler with vite 7', undefined, '^7.0.0'],
+      ['the vite bundler with vite 8', 'vite', '^8.0.0'],
+      ['the vite bundler without vite', 'vite', null],
+    ] as const)(
+      'should return the latest versions for %s when cypress is not declared',
+      (_, bundler, vite) => {
+        if (vite) {
+          declareVite(tree, vite);
+        }
+
+        expect(componentTestingVersions(tree, bundler).cypressVersion).toBe(
+          cypressVersion
+        );
+      }
+    );
+
+    it('should follow the installed cypress for the vite bundler with vite 7', () => {
+      declareCypress(tree, '^15.20.1');
+      installCypress(tree, '15.20.1');
+      declareVite(tree, '^7.0.0');
+
+      expect(componentTestingVersions(tree, 'vite')).toMatchObject(
+        compatibleVersions[15]
+      );
+    });
+  });
+
+  describe('assertViteSupportsInstalledCypress', () => {
+    it('should reject cypress 16 with a vite below 8', () => {
+      declareCypress(tree, '^16.0.0');
+      installCypress(tree, '16.0.0');
+      declareVite(tree, '^7.0.0');
+
+      expect(() => assertViteSupportsInstalledCypress(tree)).toThrow(
+        'Cypress 16 component testing requires Vite 8. Found Vite 7.0.0. Update Vite to 8 or use Cypress 15.'
+      );
+    });
+
+    it.each([
+      ['cypress 16 with vite 8', '16.0.0', '^8.0.0'],
+      ['cypress 15 with vite 7', '15.20.1', '^7.0.0'],
+      ['cypress 16 without vite', '16.0.0', null],
+      ['no cypress with vite 7', null, '^7.0.0'],
+    ])('should accept %s', (_, cypress, vite) => {
+      if (cypress) {
+        declareCypress(tree, `^${cypress}`);
+        installCypress(tree, cypress);
+      }
+      if (vite) {
+        declareVite(tree, vite);
+      }
+
+      expect(() => assertViteSupportsInstalledCypress(tree)).not.toThrow();
+    });
+  });
 });
