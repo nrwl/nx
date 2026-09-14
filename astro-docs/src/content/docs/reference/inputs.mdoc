@@ -132,14 +132,9 @@ Add `includeIgnored: true` to match files on disk, whether Git tracks them or no
 }
 ```
 
-Use it for files no task in the run produces.
-The outputs of a task this task depends on, such as a dependency's `dist/`, belong in [`dependentTasksOutputFiles`](#outputs-of-dependent-tasks), which is built for that.
-Don't point an `includeIgnored` fileset at a file that holds a secret.
-
 `{projectRoot}` and `{workspaceRoot}` resolve as for any fileset, and every glob must start with one of them.
 Nx checks the matched files on every run, so keep the globs narrow.
 A glob such as `{workspaceRoot}/**` is allowed, but it covers every gitignored file in the workspace, so the task's inputs change whenever any of them does.
-Paths with characters such as `@`, `+`, parentheses, or a Next.js `[id]` directory work as written.
 A new matching file counts without a configuration change, and a path that names a directory matches everything under it.
 A path that names a single missing file still counts, so the cache key changes when the file appears or is removed.
 
