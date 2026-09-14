@@ -50,7 +50,6 @@ import {
 } from '../utils/sync-generators';
 import { workspaceRoot } from '../utils/workspace-root';
 import { createTaskGraph } from './create-task-graph';
-import { pruneTaskGraphToSelection } from './prune-task-graph';
 import type { TaskPlanningContext } from '../hasher/task-planning-context';
 
 /**
@@ -92,7 +91,11 @@ import {
   validateNoAtomizedTasks,
 } from './task-graph-utils';
 import { TasksRunner, TaskStatus } from './tasks-runner';
-import { shouldStreamOutput } from './utils';
+import {
+  collectTaskDependencyClosure,
+  removeTasksFromTaskGraph,
+  shouldStreamOutput,
+} from './utils';
 import { signalToCode } from '../utils/exit-codes';
 import { handleImport } from '../utils/handle-import';
 import * as pc from 'picocolors';
@@ -459,7 +462,11 @@ function createTaskGraphAndRunValidations(
 
   // Before validation, so a cycle or atomizer error names what will actually run.
   if (taskSelection) {
-    taskGraph = pruneTaskGraphToSelection(taskGraph, taskSelection.taskIds);
+    const keep = collectTaskDependencyClosure(taskGraph, taskSelection.taskIds);
+    taskGraph = removeTasksFromTaskGraph(
+      taskGraph,
+      Object.keys(taskGraph.tasks).filter((id) => !keep.has(id))
+    );
   }
 
   assertTaskGraphDoesNotContainInvalidTargets(taskGraph);
