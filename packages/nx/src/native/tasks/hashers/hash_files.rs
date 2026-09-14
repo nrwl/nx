@@ -203,23 +203,22 @@ pub(crate) fn expand_literal_braces(glob: &str) -> Vec<String> {
         .collect()
 }
 
-/// The literal directory a glob is walked from, and whether a pattern follows
-/// it. `partition_glob` is not used: it treats `@`, `+`, `(`, `)` and `,` as
-/// glob syntax and strips them, but in a path they are ordinary characters
-/// (`node_modules/@scope/pkg`, `app/(marketing)`). The prefix is only ever
-/// compared as text; just the remainder reaches the glob parser.
-pub(crate) fn literal_prefix(glob: &str) -> Result<(String, bool)> {
-    literal_prefix_with(glob, false)
-}
-
-fn literal_prefix_with(glob: &str, brackets_literal: bool) -> Result<(String, bool)> {
+/// The literal directory a glob is walked from, and the pattern after it,
+/// if any. The prefix ends at the first segment with glob syntax as the
+/// engine reads it: `*`, `?`, `{`, `[`, or a `(` group. What follows reaches
+/// the engine unchanged, so brackets, groups, and escapes mean exactly what
+/// they mean in any other fileset. `@` and `+` are ordinary characters both
+/// here and in the engine (`node_modules/@scope/pkg`, `g+en`), which is why
+/// `partition_glob`, which strips them, is not used.
+pub(crate) fn literal_prefix(glob: &str) -> Result<(String, Option<&str>)> {
     if Path::new(glob).is_absolute() || glob.starts_with('/') {
         bail!(
             "The includeIgnored fileset \"{glob}\" is an absolute path; globs are workspace-relative."
         );
     }
     let mut literal: Vec<&str> = Vec::new();
-    let mut has_pattern = false;
+    let mut consumed = 0;
+    let mut remainder = None;
     for segment in glob.split('/') {
         if segment == ".." {
             bail!("The includeIgnored fileset \"{glob}\" points outside the workspace.");
@@ -229,64 +228,15 @@ fn literal_prefix_with(glob: &str, brackets_literal: bool) -> Result<(String, bo
                 "The includeIgnored fileset \"{glob}\" has a `.` segment; write it relative to the workspace root without `./`."
             );
         }
-        // Only a whole `[name]` segment can be a path; `page.[jt]sx` is a class.
-        let literal_brackets = brackets_literal && is_bracket_segment(segment);
-        if segment.contains(['*', '?', '{']) || (segment.contains('[') && !literal_brackets) {
-            has_pattern = true;
+        if segment.contains(['*', '?', '{', '[', '(']) {
+            remainder = Some(&glob[consumed..]);
             break;
         }
         literal.push(segment);
+        consumed += segment.len() + 1;
     }
     let root = literal.join("/").trim_end_matches('/').to_string();
-    Ok((root, has_pattern))
-}
-
-/// A whole segment in brackets: `[id]`, `[...slug]`, `[[...slug]]`.
-fn is_bracket_segment(segment: &str) -> bool {
-    segment.starts_with('[') && segment.ends_with(']')
-}
-
-/// `literal_prefix`, except that whole `[name]` segments are read as paths
-/// (Next.js route directories) when the first of them names something that
-/// exists, and as character classes otherwise. One decision covers them all,
-/// so `app/[lang]/[id]/x.tsx` with `[lang]/` on disk stays an exact path
-/// before `[id]/` exists, instead of `[id]` becoming a class over `[lang]/`'s
-/// other subdirectories.
-fn split_glob(
-    glob: &str,
-    workspace_root: &Path,
-    known: &(dyn Fn(&str) -> bool + Sync),
-) -> Result<(String, bool)> {
-    if glob.contains('[') {
-        let (root, has_pattern) = literal_prefix_with(glob, true)?;
-        if !root.is_empty() && first_bracket_segment_exists(&root, workspace_root, known) {
-            return Ok((root, has_pattern));
-        }
-    }
-    literal_prefix(glob)
-}
-
-/// Checks the prefix up to and including the first `[name]` segment of
-/// `root`, or `root` itself when the context tracks it.
-fn first_bracket_segment_exists(
-    root: &str,
-    workspace_root: &Path,
-    known: &(dyn Fn(&str) -> bool + Sync),
-) -> bool {
-    // A file the context tracks exists, and so does every directory above it.
-    if known(root) {
-        return true;
-    }
-    let mut end = 0;
-    for segment in root.split('/') {
-        end += segment.len();
-        if segment.contains('[') {
-            let up_to_segment = &root[..end];
-            return known(up_to_segment) || workspace_root.join(up_to_segment).exists();
-        }
-        end += 1;
-    }
-    true
+    Ok((root, remainder))
 }
 
 /// Collapses repeated and trailing slashes so `dist//gen/` and `dist/gen`
@@ -327,12 +277,12 @@ pub(crate) fn validate_files_globs(globs: &[String]) -> Result<()> {
                 bail!("The includeIgnored fileset \"{glob}\" names nothing to exclude.");
             }
             for expanded in expand_literal_braces(&body) {
-                literal_prefix_with(&expanded, true)?;
+                literal_prefix(&expanded)?;
             }
             continue;
         }
         for expanded in expand_literal_braces(&normalize_glob(glob)) {
-            literal_prefix_with(&expanded, true)?;
+            literal_prefix(&expanded)?;
         }
     }
     Ok(())
@@ -347,27 +297,14 @@ struct Negation {
 }
 
 impl Negation {
-    fn parse(
-        glob: &str,
-        workspace_root: &Path,
-        known: &(dyn Fn(&str) -> bool + Sync),
-    ) -> Result<Self> {
+    fn parse(glob: &str) -> Result<Self> {
         let normalized = normalize_glob(glob);
         let body = normalized.strip_prefix('!').unwrap_or(&normalized);
-        let (root, has_pattern) = split_glob(body, workspace_root, known)?;
-        if root.is_empty() && !has_pattern {
+        let (root, remainder) = literal_prefix(body)?;
+        if root.is_empty() && remainder.is_none() {
             bail!("The includeIgnored fileset \"{glob}\" names nothing to exclude.");
         }
-        let remainder = if has_pattern {
-            let rest = if root.is_empty() {
-                body
-            } else {
-                &body[root.len() + 1..]
-            };
-            Some(build_glob_set(&[rest])?)
-        } else {
-            None
-        };
+        let remainder = remainder.map(|rest| build_glob_set(&[rest])).transpose()?;
         Ok(Self { root, remainder })
     }
 
@@ -513,7 +450,7 @@ pub fn expand_files_with(
         .iter()
         .filter(|g| g.starts_with('!'))
         .flat_map(|g| expand_literal_braces(g))
-        .map(|g| Negation::parse(&g, workspace_root, known))
+        .map(|g| Negation::parse(&g))
         .collect::<Result<_>>()?;
     let positives: Vec<String> = globs
         .iter()
@@ -530,7 +467,8 @@ pub fn expand_files_with(
         seen: Arc::new(seen),
     };
     for glob in &positives {
-        let (root, has_pattern) = split_glob(glob, workspace_root, known)?;
+        let (root, remainder) = literal_prefix(glob)?;
+        let has_pattern = remainder.is_some();
         if !has_pattern && known(&root) {
             found.push((root, None));
             continue;
@@ -561,10 +499,10 @@ pub fn expand_files_with(
         // with a pattern, only the remainder after the prefix is matched.
         // Excluded files are dropped before they are stat'ed.
         let excluded = |path: &str| negations.iter().any(|n| n.excludes(path));
-        let accept: Box<dyn Fn(&str) -> bool + Sync> = if has_pattern {
-            // An empty root is the workspace root: the whole glob is the pattern.
+        let accept: Box<dyn Fn(&str) -> bool + Sync> = if let Some(pattern) = remainder {
+            // An empty root is the workspace root: the whole path is matched.
             let prefix_len = if root.is_empty() { 0 } else { root.len() + 1 };
-            let set = build_glob_set(&[&glob[prefix_len..]])?;
+            let set = build_glob_set(&[pattern])?;
             Box::new(move |path: &str| {
                 path.len() > prefix_len && set.is_match(&path[prefix_len..]) && !excluded(path)
             })
@@ -900,64 +838,46 @@ mod tests {
     }
 
     #[test]
-    fn keeps_parens_and_brackets_literal_after_the_walk() {
+    fn reads_brackets_parentheses_and_escapes_as_any_fileset_does() {
         let temp = workspace();
-        temp.child("apps/web/app/(marketing)/page.tsx")
-            .write_str("m")
-            .unwrap();
-        temp.child("apps/web/app/(marketing)/gen/x.json")
-            .write_str("{}")
-            .unwrap();
-        temp.child("apps/web/app/[id]/page.tsx")
-            .write_str("i")
-            .unwrap();
-        temp.child("apps/web/app/plain/page.tsx")
-            .write_str("p")
-            .unwrap();
+        for file in [
+            "apps/web/app/(marketing)/page.tsx",
+            "apps/web/app/marketing/page.tsx",
+            "apps/web/app/[id]/page.tsx",
+            "apps/web/app/i/page.tsx",
+            "apps/web/app/d/page.tsx",
+            "apps/web/app/plain/page.tsx",
+        ] {
+            temp.child(file).write_str("x").unwrap();
+        }
         let expand = |list: &[&str]| expand_files(temp.path(), &globs(list)).unwrap();
 
-        assert_eq!(
-            expand(&["apps/web/app/(marketing)/page.tsx"]).files,
-            vec!["apps/web/app/(marketing)/page.tsx"]
-        );
-        assert_eq!(
-            expand(&["apps/web/app/(marketing)"]).files,
-            vec![
-                "apps/web/app/(marketing)/gen/x.json",
-                "apps/web/app/(marketing)/page.tsx"
-            ]
-        );
-        assert_eq!(
-            expand(&["apps/web/app/(marketing)/**/*.json"]).files,
-            vec!["apps/web/app/(marketing)/gen/x.json"]
-        );
+        // `[id]` is a character class and `(marketing)` a group, as in a
+        // regular fileset; a backslash escapes brackets the same way too.
         assert_eq!(
             expand(&["apps/web/app/[id]/page.tsx"]).files,
+            vec!["apps/web/app/d/page.tsx", "apps/web/app/i/page.tsx"]
+        );
+        assert_eq!(
+            expand(&["apps/web/app/\\[id\\]/page.tsx"]).files,
             vec!["apps/web/app/[id]/page.tsx"]
         );
         assert_eq!(
-            expand(&["apps/web/app/[id]/*.tsx"]).files,
-            vec!["apps/web/app/[id]/page.tsx"]
+            expand(&["apps/web/app/(marketing)/**"]).files,
+            vec!["apps/web/app/marketing/page.tsx"]
         );
+        // A negation reads the same way.
         assert_eq!(
-            expand(&["apps/web/app/(absent)/x.json"]).missing,
-            vec!["apps/web/app/(absent)/x.json"]
-        );
-        // A negation's literal prefix is compared as text too.
-        assert_eq!(
-            expand(&["apps/web/app/**/*.tsx", "!apps/web/app/(marketing)/**"]).files,
-            vec!["apps/web/app/[id]/page.tsx", "apps/web/app/plain/page.tsx"]
-        );
-        assert_eq!(
-            expand(&["apps/web/app/**/*.tsx", "!apps/web/app/[id]/page.tsx"]).files,
+            expand(&["apps/web/app/**/page.tsx", "!apps/web/app/[id]/**"]).files,
             vec![
                 "apps/web/app/(marketing)/page.tsx",
+                "apps/web/app/[id]/page.tsx",
+                "apps/web/app/marketing/page.tsx",
                 "apps/web/app/plain/page.tsx"
             ]
         );
-        // Without such a directory, `[ab]` is still a character class.
-        temp.child("dist/gen/a.js").write_str("a").unwrap();
-        assert_eq!(expand(&["dist/gen/[ab].js"]).files, vec!["dist/gen/a.js"]);
+        // The prefix stops before the group, so no exact path is involved.
+        assert!(expand(&["apps/web/app/(absent)/x.json"]).missing.is_empty());
     }
 
     #[test]
@@ -998,98 +918,6 @@ mod tests {
         assert!(!hashed.is_empty());
         // Only the walked, unknown file was read and cached.
         assert_eq!(cache.len(), 1);
-    }
-
-    #[test]
-    fn a_bracket_segment_is_a_path_when_that_directory_exists() {
-        let temp = workspace();
-        temp.child("apps/web/app/[id]/page.tsx")
-            .write_str("i")
-            .unwrap();
-        // Sibling directories a `[id]` character class would match.
-        temp.child("apps/web/app/i/absent.tsx")
-            .write_str("i")
-            .unwrap();
-        temp.child("apps/web/app/d/absent.tsx")
-            .write_str("d")
-            .unwrap();
-        let expand = |list: &[&str]| expand_files(temp.path(), &globs(list)).unwrap();
-
-        // The file does not exist yet, but its `[id]/` directory does: it is a
-        // path, recorded as missing, never a class over the siblings.
-        let absent = expand(&["apps/web/app/[id]/absent.tsx"]);
-        assert_eq!(absent.files, Vec::<String>::new());
-        assert_eq!(absent.missing, vec!["apps/web/app/[id]/absent.tsx"]);
-        assert_eq!(
-            expand(&["apps/web/app/[id]/gen/**"]).files,
-            Vec::<String>::new()
-        );
-        // Without such a directory anywhere, brackets are a class again.
-        assert_eq!(
-            expand(&["apps/web/app/[di]/absent.tsx"]).files,
-            vec!["apps/web/app/d/absent.tsx", "apps/web/app/i/absent.tsx"]
-        );
-    }
-
-    #[test]
-    fn later_bracket_segments_follow_the_first_one() {
-        let temp = workspace();
-        temp.child("app/[lang]/page.tsx").write_str("l").unwrap();
-        // Siblings a class reading of `[lang]` or of `[id]` would match.
-        temp.child("app/l/i/x.tsx").write_str("x").unwrap();
-        temp.child("app/g/d/x.tsx").write_str("x").unwrap();
-        temp.child("app/[lang]/i/x.tsx").write_str("x").unwrap();
-        let expand = |list: &[&str]| expand_files(temp.path(), &globs(list)).unwrap();
-
-        // `[lang]/` exists and `[id]/` does not yet: still one exact path.
-        let absent = expand(&["app/[lang]/[id]/x.tsx"]);
-        assert_eq!(absent.files, Vec::<String>::new());
-        assert_eq!(absent.missing, vec!["app/[lang]/[id]/x.tsx"]);
-        assert_eq!(expand(&["app/[lang]/[id]/**"]).files, Vec::<String>::new());
-        assert_eq!(
-            expand(&["app/[lang]/absent/x.tsx"]).missing,
-            vec!["app/[lang]/absent/x.tsx"]
-        );
-
-        temp.child("app/[lang]/[id]/x.tsx").write_str("x").unwrap();
-        assert_eq!(
-            expand(&["app/[lang]/[id]/x.tsx"]).files,
-            vec!["app/[lang]/[id]/x.tsx"]
-        );
-        assert_eq!(
-            expand(&["app/[lang]/[id]/**"]).files,
-            vec!["app/[lang]/[id]/x.tsx"]
-        );
-
-        // Brackets inside a name stay a class even after a `[name]` path.
-        temp.child("app/[lang]/page.jsx").write_str("j").unwrap();
-        temp.child("app/web/page.tsx").write_str("t").unwrap();
-        temp.child("app/web/page.jsx").write_str("j").unwrap();
-        assert_eq!(
-            expand(&["app/[lang]/page.[jt]sx"]).files,
-            vec!["app/[lang]/page.jsx", "app/[lang]/page.tsx"]
-        );
-        assert_eq!(
-            expand(&["app/[lang]/*.[jt]sx"]).files,
-            vec!["app/[lang]/page.jsx", "app/[lang]/page.tsx"]
-        );
-        assert_eq!(
-            expand(&["app/web/page.[jt]sx"]).files,
-            vec!["app/web/page.jsx", "app/web/page.tsx"]
-        );
-    }
-
-    #[test]
-    fn the_context_can_vouch_for_a_bracket_path_that_is_not_on_disk() {
-        let temp = workspace();
-        let expansion = expand_files_with(
-            temp.path(),
-            &globs(&["apps/web/app/[id]/page.tsx"]),
-            &|path| path == "apps/web/app/[id]/page.tsx",
-        )
-        .unwrap();
-        assert_eq!(expansion.files, vec!["apps/web/app/[id]/page.tsx"]);
-        assert_eq!(expansion.stamps, vec![None]);
     }
 
     #[test]

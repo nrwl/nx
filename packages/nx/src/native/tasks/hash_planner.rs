@@ -1035,9 +1035,9 @@ fn deferred_tasks(
         .collect()
 }
 
-/// The directory a glob reads from, spelled the way expansion reads it.
-/// Brackets count as wildcards here, and a glob the prefix parser rejects
-/// reads as the workspace root, so a doubtful case errs toward deferring.
+/// The directory a glob reads from, spelled the way expansion reads it. A
+/// glob the prefix parser rejects reads as the workspace root, so a doubtful
+/// case errs toward deferring.
 fn walk_root(glob: &str) -> String {
     // Legacy default outputs are spelled `./dist` and `dist/.`.
     let glob = glob.strip_prefix("./").unwrap_or(glob);
