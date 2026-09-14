@@ -5,6 +5,7 @@ import {
   decodeDeduped,
   encodeAuto,
   isDedupedPayload,
+  shapeHash,
 } from './dedupe-serialization';
 
 function taskGraphLike(tasks = 50, inputs = 200) {
@@ -100,11 +101,6 @@ describe('encodeAuto', () => {
       [14, 31, 24, 11, 40, 28, 17, 38, 33],
       [14, 31, 24, 11, 40, 28, 17, 38],
     ];
-    const hash = (ids: number[]) => {
-      let h = ids.length;
-      for (const id of ids) h = (Math.imul(h, 0x9e3779b1) ^ id) | 0;
-      return h;
-    };
     const object = (ids: number[]) =>
       Object.fromEntries(ids.map((id) => [`key${id}`, 'v']));
     const pool = object(Array.from({ length: 40 }, (_, i) => i + 1));
@@ -120,13 +116,14 @@ describe('encodeAuto', () => {
     };
     const payload = encodeAuto(input);
     expect(payload).toBeDefined();
-    // Precondition: the ids and the hash formula still match the encoder's.
-    // If this fails, re-search the pairs rather than loosening the test.
+    // Precondition: the ids sit where the layout puts them and the encoder's
+    // own hash still collides. If this fails, re-search the pairs rather
+    // than loosening the test.
     for (let id = 1; id <= 40; id++) {
       expect(payload.strings[id]).toBe(`key${id}`);
     }
-    expect(hash(equal[0])).toBe(hash(equal[1]));
-    expect(hash(prefix[0])).toBe(hash(prefix[1]));
+    expect(shapeHash(equal[0])).toBe(shapeHash(equal[1]));
+    expect(shapeHash(prefix[0])).toBe(shapeHash(prefix[1]));
     const decoded = decodeDeduped<typeof input>(payload);
     expect(Object.keys(decoded.b)).toEqual(equal[1].map((id) => `key${id}`));
     expect(Object.keys(decoded.d)).toEqual(prefix[1].map((id) => `key${id}`));

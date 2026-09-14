@@ -136,8 +136,9 @@ function decodeTaskGraph(graph: TaskGraph | Buffer): TaskGraph {
 process.on('message', async (message: BatchMessage) => {
   switch (message.type) {
     case BatchMessageType.RunTasks: {
-      // runTasks reports its own failures; this covers decoding the graphs
-      // and replying, which would otherwise die as an unhandled rejection.
+      // runTasks reports failures from inside its own try; anything thrown
+      // before it, by it while resolving the executor, or after it while
+      // replying lands here instead of dying as an unhandled rejection.
       try {
         const results = await runTasks(
           message.executorName,
@@ -150,9 +151,7 @@ process.on('message', async (message: BatchMessage) => {
           results,
         });
       } catch (e) {
-        console.error(
-          `Batch ${message.executorName} failed before it could report results: ${e.message}`
-        );
+        console.error(`Batch ${message.executorName} failed: ${e.message}`);
         process.exit(1);
       }
     }

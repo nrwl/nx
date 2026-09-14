@@ -6,10 +6,13 @@
  *
  * `encodeAuto` decides for itself. The tree format costs a fixed amount per
  * object or array and an entry per distinct string, so it pays only when refs
- * per container is high and most refs repeat. The walk checks both early and
- * then every CHECK containers or refs, so a payload that bails pays a small
- * fixed cost and the tree never grows. The early checks err toward bailing:
- * a payload that is sparse first and dense later keeps the plain path.
+ * per container is high and most refs repeat. The walk checks both at the
+ * first CONTAINER_CHECK containers and then every CHECK, and repetition again
+ * at REF_CHECK refs, so a payload that bails pays the walk up to the first
+ * failed check and the tree never grows. The checks err toward bailing: a
+ * payload that is sparse first and dense later keeps the plain path. The ref
+ * check sits late because one task's inputs are all distinct until the next
+ * task repeats them.
  *
  * It also bails on non-plain objects, `toJSON` and depth past MAX_DEPTH, so
  * Dates, Buffers, class instances and cycles keep the existing path. Scalars
@@ -17,8 +20,8 @@
  * numbers and array holes become null, and -0 becomes 0.
  */
 const CHECK = 4096;
-const FIRST_CONTAINER_CHECK = 512;
-const FIRST_REF_CHECK = 1024;
+const CONTAINER_CHECK = 512;
+const REF_CHECK = 1 << 18;
 const MIN_DENSITY = 16;
 const MIN_REFS = 2048;
 const MAX_DEPTH = 512;
@@ -34,6 +37,13 @@ export interface DedupedPayload {
 
 class Bail extends Error {}
 
+/** Bucket hash for a shape: its key count folded with each key's ref id. */
+export function shapeHash(ids: readonly number[], length = ids.length): number {
+  let h = length;
+  for (let i = 0; i < length; i++) h = (Math.imul(h, 0x9e3779b1) ^ ids[i]) | 0;
+  return h;
+}
+
 export function encodeAuto(root: unknown): DedupedPayload | undefined {
   const strings: string[] = [];
   const sindex = new Map<string, number>();
@@ -41,8 +51,8 @@ export function encodeAuto(root: unknown): DedupedPayload | undefined {
   const cand = new Map<number, number[]>();
   let refs = 0;
   let containers = 0;
-  let nextCheck = FIRST_CONTAINER_CHECK;
-  let nextRefCheck = FIRST_REF_CHECK;
+  let nextCheck = CONTAINER_CHECK;
+  let nextRefCheck = REF_CHECK;
   let depth = 0;
 
   const repeating = () => strings.length * 2 <= refs;
@@ -62,7 +72,7 @@ export function encodeAuto(root: unknown): DedupedPayload | undefined {
   const container = () => {
     if (++depth > MAX_DEPTH) throw new Bail();
     if (++containers === nextCheck) {
-      if (refs / containers < MIN_DENSITY) throw new Bail();
+      if (refs / containers < MIN_DENSITY || !repeating()) throw new Bail();
       nextCheck += CHECK;
     }
   };
@@ -74,13 +84,12 @@ export function encodeAuto(root: unknown): DedupedPayload | undefined {
   // belong to any existing shape, so that object starts a new one directly.
   const ids: number[] = [];
   const shapeOf = (keys: string[]): number => {
-    let h = keys.length;
     for (let i = 0; i < keys.length; i++) {
       const id = sindex.get(keys[i]);
       if (id === undefined) return newShape(keys);
       ids[i] = id;
-      h = (Math.imul(h, 0x9e3779b1) ^ id) | 0;
     }
+    const h = shapeHash(ids, keys.length);
     const list = cand.get(h);
     if (list) {
       for (const sid of list) {
@@ -100,12 +109,9 @@ export function encodeAuto(root: unknown): DedupedPayload | undefined {
     }
     return newShape(keys, h);
   };
-  const newShape = (keys: string[], h?: number): number => {
+  const newShape = (keys: string[], h = -1): number => {
     const shape = keys.map(ref);
-    if (h === undefined) {
-      h = keys.length;
-      for (const id of shape) h = (Math.imul(h, 0x9e3779b1) ^ id) | 0;
-    }
+    if (h === -1) h = shapeHash(shape);
     const id = shapes.length;
     shapes.push(shape);
     const list = cand.get(h);
@@ -139,9 +145,13 @@ export function encodeAuto(root: unknown): DedupedPayload | undefined {
       throw new Bail();
     }
     container();
+    const own = Object.keys(v);
+    // Keys are refs only once the object is walked, so a map wider than the
+    // ref check would be walked in full before that check could fail it.
+    if (own.length > REF_CHECK) throw new Bail();
     const keys: string[] = [];
     const vals: unknown[] = [];
-    for (const key of Object.keys(v)) {
+    for (const key of own) {
       const x = (v as Record<string, unknown>)[key];
       if (dropped(x)) continue;
       keys.push(key);
