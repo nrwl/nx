@@ -84,18 +84,32 @@ describe('create-nx-workspace --preset=angular', () => {
   it('should be able to create an angular workspace using rspack', () => {
     const wsName = uniq('angular');
     const appName = uniq('app');
-    runCreateWorkspace(wsName, {
-      preset: 'angular-monorepo',
-      style: 'css',
-      appName,
-      packageManager,
-      standaloneApi: false,
-      routing: true,
-      unitTestRunner: 'jest',
-      e2eTestRunner: 'none',
-      bundler: 'rspack',
-      ssr: false,
-    });
+    // The harness turns pnpm's build-script check off for the whole suite. Put
+    // it back so an install script with no decision fails the creation.
+    const strictDepBuilds = process.env.pnpm_config_strict_dep_builds;
+    process.env.pnpm_config_strict_dep_builds = 'true';
+
+    try {
+      runCreateWorkspace(wsName, {
+        preset: 'angular-monorepo',
+        style: 'css',
+        appName,
+        packageManager,
+        standaloneApi: false,
+        routing: true,
+        unitTestRunner: 'jest',
+        e2eTestRunner: 'none',
+        bundler: 'rspack',
+        ssr: false,
+      });
+    } finally {
+      if (strictDepBuilds === undefined) {
+        delete process.env.pnpm_config_strict_dep_builds;
+      } else {
+        process.env.pnpm_config_strict_dep_builds = strictDepBuilds;
+      }
+    }
+
     expectCodeIsFormatted();
   });
 
