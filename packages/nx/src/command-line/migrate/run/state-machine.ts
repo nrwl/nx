@@ -447,10 +447,21 @@ export function tallySteps(state: MigrateRunState): StepTally {
   return tally;
 }
 
-// The tally a completed run reports, with each given-up migration and the
-// failure it was given up on. A summary is agent or generator text printed
+// The failure a given-up step is reported with, in the issue ledger and the
+// completion report alike. A summary is agent or generator text printed
 // verbatim by the consumers, so it is collapsed to one line: a break inside
-// it could otherwise open a forged block at a line start.
+// it could otherwise open a forged block at a line start. An accepted
+// handoff may carry an empty summary; the fallback keeps the report's line
+// from naming the migration with nothing after it.
+export function unresolvedFailureDetail(step: MigrateStep): string {
+  const failure = singleLine(
+    step.outcome?.summary ?? step.promptOutcome?.summary ?? ''
+  ).trim();
+  return failure.length === 0 ? 'no failure detail was recorded' : failure;
+}
+
+// The tally a completed run reports, with each given-up migration and the
+// failure it was given up on.
 export function completionSummaryLines(state: MigrateRunState): string[] {
   const tally = tallySteps(state);
   return [
@@ -459,12 +470,7 @@ export function completionSummaryLines(state: MigrateRunState): string[] {
     `  skipped: ${tally.skipped}`,
     `  unresolved: ${tally.unresolved.length}`,
     ...tally.unresolved.map(
-      (step) =>
-        `    - ${step.migrationId}: ${singleLine(
-          step.outcome?.summary ??
-            step.promptOutcome?.summary ??
-            'no failure detail was recorded'
-        )}`
+      (step) => `    - ${step.migrationId}: ${unresolvedFailureDetail(step)}`
     ),
   ];
 }

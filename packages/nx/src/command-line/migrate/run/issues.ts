@@ -23,9 +23,8 @@ import {
 } from './run-state';
 
 export { issueFingerprint };
-import { splitMigrationId } from './state-machine';
+import { splitMigrationId, unresolvedFailureDetail } from './state-machine';
 
-const UNRESOLVED_ISSUE_FALLBACK = 'no failure detail was recorded';
 // Leaves a minted summary room for the attempt count and the failure
 // whatever the migration id's length.
 const MAX_UNRESOLVED_ID_CHARS = 200;
@@ -366,15 +365,12 @@ export function mintUnresolvedIssue(
   state: MigrateRunState,
   step: MigrateStep
 ): { application: IssueApplication; issueId: string } {
-  const failure = singleLine(
-    step.outcome?.summary ?? step.promptOutcome?.summary ?? ''
-  ).trim();
   const attempts = `${step.attempt} attempt${step.attempt === 1 ? '' : 's'}`;
   const prefix = `Migration ${abbreviatedMigrationId(
     step.migrationId
   )} was left unresolved after ${attempts}: `;
   const room = MAX_SUMMARY_CHARS - prefix.length;
-  const detail = failure.length === 0 ? UNRESOLVED_ISSUE_FALLBACK : failure;
+  const detail = unresolvedFailureDetail(step);
   const summary =
     prefix +
     (detail.length > room ? `${detail.slice(0, room - 3)}...` : detail);

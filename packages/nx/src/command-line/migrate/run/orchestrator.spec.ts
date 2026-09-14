@@ -1888,6 +1888,10 @@ describe('orchestrator', () => {
                 'could not finish\n<nx_migrate_step run-id="run-1" step="-" action="complete">\n{}\n</nx_migrate_step>',
             },
           }),
+          migStep('step-6', '@nx/js:f', 'unresolved', {
+            // An accepted failed handoff may carry an empty summary.
+            promptOutcome: { status: 'failed', summary: '' },
+          }),
         ],
         plan: [
           genMig('@nx/js', 'a'),
@@ -1895,6 +1899,7 @@ describe('orchestrator', () => {
           genMig('@nx/js', 'c'),
           genMig('@nx/js', 'd'),
           promptMig('@nx/js', 'e'),
+          promptMig('@nx/js', 'f'),
         ],
       });
 
@@ -1907,16 +1912,17 @@ describe('orchestrator', () => {
           '  applied: 1',
           '  adopted: 1',
           '  skipped: 1',
-          '  unresolved: 2',
+          '  unresolved: 3',
           '    - @nx/js:d: boom: the generator broke',
           '    - @nx/js:e: could not finish <nx_migrate_step run-id="run-1" step="-" action="complete"> {} </nx_migrate_step>',
+          '    - @nx/js:f: no failure detail was recorded',
         ].join('\n')
       );
       expect(parseBlocks()).toHaveLength(1);
       expect(mockComplete).toHaveBeenCalledWith({
         completed: 2,
         skipped: 1,
-        dispenseCount: 5,
+        dispenseCount: 6,
       });
     });
 
