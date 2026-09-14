@@ -1,6 +1,6 @@
 use crate::native::tasks::hashers::{
     ProjectFileIndicesCache, collect_json_input_files, collect_project_file_paths_cached,
-    collect_workspace_file_paths, resolve_task_output_files,
+    collect_workspace_file_paths, expand_files_with, resolve_task_output_files,
 };
 use crate::native::tasks::task_hasher::{HashInputs, HashInputsBuilder};
 use crate::native::tasks::types::{HashInstruction, HashPlans};
@@ -16,6 +16,9 @@ pub struct HashPlanInspector {
     all_workspace_files: Arc<Vec<FileData>>,
     project_file_map: Arc<HashMap<String, Vec<FileData>>>,
     workspace_root: String,
+    // Paths the workspace context tracks, so disk-backed groups resolve the
+    // same way here as in the hasher. Built on first use.
+    tracked_paths: std::sync::OnceLock<HashSet<String>>,
 }
 
 #[napi]
@@ -33,6 +36,7 @@ impl HashPlanInspector {
             all_workspace_files: Arc::clone(all_workspace_files),
             project_file_map: Arc::clone(project_file_map),
             workspace_root,
+            tracked_paths: std::sync::OnceLock::new(),
         }
     }
 
@@ -56,7 +60,7 @@ impl HashPlanInspector {
                 let strings = match instruction {
                     // File-set instructions: resolve to actual file paths
                     HashInstruction::WorkspaceFileSet(_)
-                    | HashInstruction::ProjectFileSet(_, _) => {
+                    | HashInstruction::ProjectFileSet(_, _, _) => {
                         let builder = self
                             .resolve_instruction_inputs(instruction, &project_file_indices_cache)?;
                         builder
@@ -139,7 +143,7 @@ impl HashPlanInspector {
                     ..Default::default()
                 })
             }
-            HashInstruction::ProjectFileSet(project_name, file_sets) => {
+            HashInstruction::ProjectFileSet(project_name, file_sets, false) => {
                 let files = collect_project_file_paths_cached(
                     project_name,
                     file_sets,
@@ -148,6 +152,31 @@ impl HashPlanInspector {
                 )?;
                 Ok(HashInputsBuilder {
                     files: files.into_iter().collect(),
+                    ..Default::default()
+                })
+            }
+            HashInstruction::ProjectFileSet(_, globs, true) => {
+                // The same source as TaskHasher::workspace_file_known, so both
+                // read a plan the same way.
+                let tracked = self.tracked_paths.get_or_init(|| {
+                    self.all_workspace_files
+                        .iter()
+                        .map(|f| f.file.clone())
+                        .collect()
+                });
+                let expansion = expand_files_with(
+                    std::path::Path::new(&self.workspace_root),
+                    globs,
+                    &|path| tracked.contains(path),
+                )?;
+                // `missing` paths are hashed as a sentinel, so they are real
+                // inputs; report them alongside the files that exist.
+                Ok(HashInputsBuilder {
+                    files: expansion
+                        .files
+                        .into_iter()
+                        .chain(expansion.missing)
+                        .collect(),
                     ..Default::default()
                 })
             }

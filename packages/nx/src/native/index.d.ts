@@ -216,8 +216,10 @@ export declare class TaskHasher {
   hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, perTaskEnvs: Record<string, Record<string, string>>, cwd: string, collectTaskInputs?: boolean | undefined | null): Record<string, HashDetails>
   /**
    * Like `hash_plans`, but only for the plans that hold no output of another
-   * task. The rest are left out and hash once those tasks have run; their
-   * ids are absent from the result and need no entry in `per_task_envs`.
+   * task and no disk-backed fileset whose directory contains, or sits inside,
+   * an upstream task's output (`HashPlans::deferred`). The rest are left out
+   * and hash once those tasks have run; their ids are absent from the result
+   * and need no entry in `per_task_envs`.
    */
   hashPlansUpfront(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, perTaskEnvs: Record<string, Record<string, string>>, cwd: string, collectTaskInputs?: boolean | undefined | null): Record<string, HashDetails>
   /**
@@ -403,6 +405,12 @@ export declare const enum EventType {
   rescan = 'rescan'
 }
 
+/**
+ * The files an `includeIgnored` fileset group matches on disk, sorted, then
+ * the declared exact paths that are missing (they still take part in the hash).
+ */
+export declare function expandFilesInput(workspaceRoot: string, globs: Array<string>): Array<string>
+
 export declare function expandOutputs(directory: string, entries: Array<string>): Array<string>
 
 export interface ExternalDependenciesInput {
@@ -428,6 +436,11 @@ export interface FileMap {
 export interface FileSetInput {
   fileset: string
   dependencies?: boolean
+  /**
+   * Hash the glob straight from disk (so gitignored/generated files count)
+   * instead of the workspace file map.
+   */
+  includeIgnored?: boolean
 }
 
 export declare function findImports(projectFileMap: Record<string, Array<string>>): Array<ImportResult>
