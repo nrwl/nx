@@ -10,14 +10,14 @@ topics:
 ---
 
 At a 70% cache hit rate,
-[a workspace burning 160 machine-minutes of CI per run](#example-eight-job-matrix-on-8-core-runners)
+[a workspace using 160 machine-minutes of CI per run](#example-eight-job-matrix-on-8-core-runners)
 cuts its GitHub Actions bill by 47% and more than halves its wall clock.
-Savings scale with how many machine-minutes a pipeline burns today, so the larger the pipeline the
+Savings scale with how many machine-minutes a pipeline uses today, so the larger the pipeline the
 wider the gap.
 
 GitHub Actions bills private repositories by the minute, and the bill follows total machine-minutes
 rather than how long a pipeline takes on the wall clock.
-A 25-minute pipeline split across four parallel jobs burns 100 machine-minutes and costs the same as
+A 25-minute pipeline split across four parallel jobs uses 100 machine-minutes and costs the same as
 a 100-minute pipeline on a single runner.
 A remote cache plus `nx affected` is how you cut that bill, and it replaces the job matrix you
 maintain by hand with a single line of configuration.
@@ -122,8 +122,8 @@ and your own cache hit rate, so
 ## Example: four-job matrix on standard runners
 
 A workspace runs 500 CI pipelines a month.
-To keep the wall clock near 30 minutes it splits lint, test, build, and e2e across a four-job matrix on
-standard 2-core Linux runners.
+To keep the wall clock near 30 minutes it splits lint, test, build, and e2e across a four-job
+matrix on standard 2-core Linux runners.
 Each job takes about 30 minutes, 3 of them checkout and install, for 120 machine-minutes per run.
 
 | Setup                    | Machine-minutes | GitHub per run | Nx Cloud per run | Total per run | 500 runs | Wall clock |
