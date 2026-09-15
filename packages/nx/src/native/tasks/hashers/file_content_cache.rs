@@ -6,7 +6,7 @@
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
-use std::time::UNIX_EPOCH;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use dashmap::DashMap;
 use tracing::trace;
@@ -85,7 +85,7 @@ impl FileContentCache {
     fn get(&self, path: &Path, (mtime, size): FileStamp) -> Option<String> {
         self.entries
             .get(path)
-            .filter(|cached| cached.mtime == mtime && cached.size == size)
+            .filter(|cached| cached.mtime == mtime && cached.size == size && !cached.racy())
             .map(|cached| cached.hash.clone())
     }
 
@@ -177,17 +177,34 @@ pub(crate) fn shared_file_content_cache() -> &'static FileContentCache {
     CACHE.get_or_init(FileContentCache::new)
 }
 
-/// Revalidated by (mtime, size) only: on a filesystem with coarse mtime a
-/// same-size rewrite inside one tick is a stale hit (the racy-index problem).
+/// Revalidated by (mtime, size), with git's racy rule: a file modified in
+/// the same second the entry was made could be rewritten to the same size
+/// inside one mtime tick, so such an entry is never trusted (it is rehashed
+/// until a later second remakes it).
 pub(crate) struct CachedFileContent {
     mtime: u128,
     size: u64,
     hash: String,
+    /// Whole seconds since the epoch when the entry was made.
+    made_at: u64,
 }
 
 impl CachedFileContent {
     fn new((mtime, size): FileStamp, hash: String) -> Self {
-        Self { mtime, size, hash }
+        let made_at = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|d| d.as_secs())
+            .unwrap_or(0);
+        Self {
+            mtime,
+            size,
+            hash,
+            made_at,
+        }
+    }
+
+    fn racy(&self) -> bool {
+        (self.mtime / 1_000_000_000) as u64 >= self.made_at
     }
 }
 
@@ -238,16 +255,15 @@ mod tests {
         let cache = FileContentCache::new();
         let group = globs(&["dist/gen/a.js"]);
         let expand = || expand_files(temp.path(), &group).unwrap();
+        let file = temp.path().join("dist/gen/a.js");
 
+        age(&file);
         let first = hash_files(temp.path(), &expand(), |_| None, &cache);
         assert_eq!(cache.len(), 1);
 
-        // Same size, forced newer mtime: must re-read, not trust the cache.
-        std::thread::sleep(std::time::Duration::from_millis(20));
+        // Same size, newer mtime: must re-read, not trust the cache.
         temp.child("dist/gen/a.js").write_str("z").unwrap();
-        let file = temp.path().join("dist/gen/a.js");
-        let now = std::fs::File::open(&file).unwrap();
-        now.set_modified(std::time::SystemTime::now()).unwrap();
+        age(&file);
         let second = hash_files(temp.path(), &expand(), |_| None, &cache);
         assert_ne!(first, second);
 
@@ -255,12 +271,45 @@ mod tests {
         // which also proves the second call went through the cache.
         let cached_at = std::fs::metadata(&file).unwrap().modified().unwrap();
         temp.child("dist/gen/a.js").write_str("q").unwrap();
-        std::fs::File::open(&file)
-            .unwrap()
-            .set_modified(cached_at)
-            .unwrap();
+        set_modified(&file, cached_at);
         let third = hash_files(temp.path(), &expand(), |_| None, &cache);
         assert_eq!(second, third);
+    }
+
+    #[test]
+    fn an_entry_made_in_the_second_the_file_changed_is_not_trusted() {
+        let temp = workspace();
+        let cache = FileContentCache::new();
+        let group = globs(&["dist/gen/a.js"]);
+        let expand = || expand_files(temp.path(), &group).unwrap();
+        let file = temp.path().join("dist/gen/a.js");
+
+        // Written and hashed inside one second, then rewritten to the same
+        // size with the same mtime: git's racy case. The entry is remade,
+        // never served.
+        let now = std::time::SystemTime::now();
+        temp.child("dist/gen/a.js").write_str("r").unwrap();
+        set_modified(&file, now);
+        let first = hash_files(temp.path(), &expand(), |_| None, &cache);
+        temp.child("dist/gen/a.js").write_str("s").unwrap();
+        set_modified(&file, now);
+        assert_ne!(first, hash_files(temp.path(), &expand(), |_| None, &cache));
+    }
+
+    fn set_modified(file: &Path, time: std::time::SystemTime) {
+        std::fs::File::open(file)
+            .unwrap()
+            .set_modified(time)
+            .unwrap();
+    }
+
+    /// Dates the file before the cache entry that will be made for it, so
+    /// the entry is trusted.
+    fn age(file: &Path) {
+        set_modified(
+            file,
+            std::time::SystemTime::now() - std::time::Duration::from_secs(10),
+        );
     }
 
     #[test]
@@ -292,6 +341,7 @@ mod tests {
     fn hashing_reuses_the_stamp_the_expansion_recorded() {
         let temp = workspace();
         let cache = FileContentCache::new();
+        age(&temp.path().join("dist/gen/a.js"));
         let expansion = expand_files(temp.path(), &globs(&["dist/gen/a.js"])).unwrap();
         let first = hash_files(temp.path(), &expansion, |_| None, &cache);
 
