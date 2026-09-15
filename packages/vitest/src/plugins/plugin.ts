@@ -686,19 +686,8 @@ function collectTsconfigInputsByProjectRoot(
 
   const rootTsConfigName = getRootTsConfigFileName();
 
-  // Memoize the ws-relative tsconfig paths discovered by walking a single
-  // directory's own tsconfig extends-chain. The set of files reached from a
-  // given directory depends only on that directory (and the on-disk tsconfig
-  // contents, stable within one graph build via `jsonCache`), never on which
-  // project triggered the walk. In a large monorepo the ancestor directories
-  // (e.g. `packages`, `packages/<product>`, `packages/<product>/libs`) are
-  // shared by hundreds of projects, so without memoization the same
-  // existsSync + walkTsconfigExtendsChain + JSON parse work is repeated once
-  // per project.
+  // A directory cache requires project-specific filtering on replay.
   const dirChainCache = new Map<string, string[]>();
-  // Raw ws-relative tsconfig paths reachable from `dir`'s own tsconfig.json
-  // (its extends chain), unfiltered. `dir` is a ws-relative directory (POSIX
-  // separators), or '' for the workspace root.
   const collectDirChain = (dir: string): string[] => {
     const cached = dirChainCache.get(dir);
     if (cached !== undefined) return cached;
@@ -734,8 +723,6 @@ function collectTsconfigInputsByProjectRoot(
     const seen = new Set<string>();
     const projectPrefix = `${projectRoot}/`;
 
-    // Applies the project-specific exclusions to an already-resolved
-    // ws-relative path. Cheap string work; safe to repeat per project.
     const collectWsRelative = (wsRelative: string) => {
       if (seen.has(wsRelative)) return;
       seen.add(wsRelative);
@@ -751,8 +738,6 @@ function collectTsconfigInputsByProjectRoot(
       outside.push(wsRelative);
     };
 
-    // 1. Walk the project tsconfig's extends chain. Project-specific (entry
-    //    directory is the project root), so not memoized.
     const projectTsconfig = join(workspaceRoot, projectRoot, 'tsconfig.json');
     if (existsSync(projectTsconfig)) {
       walkTsconfigExtendsChain(
@@ -769,8 +754,7 @@ function collectTsconfigInputsByProjectRoot(
     }
 
     // 2. Walk UP ancestor directories (esbuild reads every tsconfig.json
-    //    between the entry point and the filesystem root). Each ancestor
-    //    directory's own chain is memoized across projects.
+    //    between the entry point and the filesystem root)
     let dir = dirname(projectRoot);
     while (dir && dir !== '.') {
       for (const wsRelative of collectDirChain(dir)) {
