@@ -686,6 +686,36 @@ function collectTsconfigInputsByProjectRoot(
 
   const rootTsConfigName = getRootTsConfigFileName();
 
+  // A directory cache requires project-specific filtering on replay.
+  const dirChainCache = new Map<string, string[]>();
+  const collectDirChain = (dir: string): string[] => {
+    const cached = dirChainCache.get(dir);
+    if (cached !== undefined) return cached;
+    const paths: string[] = [];
+    const localSeen = new Set<string>();
+    const tsconfigPath = dir
+      ? join(workspaceRoot, dir, 'tsconfig.json')
+      : join(workspaceRoot, 'tsconfig.json');
+    if (existsSync(tsconfigPath)) {
+      walkTsconfigExtendsChain(
+        tsconfigPath,
+        (absPath) => {
+          const wsRelative = relative(workspaceRoot, absPath)
+            .split(sep)
+            .join('/');
+          if (!localSeen.has(wsRelative)) {
+            localSeen.add(wsRelative);
+            paths.push(wsRelative);
+          }
+          return 'continue';
+        },
+        { jsonCache }
+      );
+    }
+    dirChainCache.set(dir, paths);
+    return paths;
+  };
+
   for (const projectRoot of projectRoots) {
     if (projectRoot === '.') continue;
 
@@ -693,10 +723,7 @@ function collectTsconfigInputsByProjectRoot(
     const seen = new Set<string>();
     const projectPrefix = `${projectRoot}/`;
 
-    const collect = (absolutePath: string) => {
-      const wsRelative = relative(workspaceRoot, absolutePath)
-        .split(sep)
-        .join('/');
+    const collectWsRelative = (wsRelative: string) => {
       if (seen.has(wsRelative)) return;
       seen.add(wsRelative);
       if (wsRelative.startsWith('../') || wsRelative === '..') return;
@@ -711,13 +738,15 @@ function collectTsconfigInputsByProjectRoot(
       outside.push(wsRelative);
     };
 
-    // 1. Walk the project tsconfig's extends chain
     const projectTsconfig = join(workspaceRoot, projectRoot, 'tsconfig.json');
     if (existsSync(projectTsconfig)) {
       walkTsconfigExtendsChain(
         projectTsconfig,
         (absPath) => {
-          collect(absPath);
+          const wsRelative = relative(workspaceRoot, absPath)
+            .split(sep)
+            .join('/');
+          collectWsRelative(wsRelative);
           return 'continue';
         },
         { jsonCache }
@@ -728,16 +757,8 @@ function collectTsconfigInputsByProjectRoot(
     //    between the entry point and the filesystem root)
     let dir = dirname(projectRoot);
     while (dir && dir !== '.') {
-      const ancestorTsconfig = join(workspaceRoot, dir, 'tsconfig.json');
-      if (existsSync(ancestorTsconfig)) {
-        walkTsconfigExtendsChain(
-          ancestorTsconfig,
-          (absPath) => {
-            collect(absPath);
-            return 'continue';
-          },
-          { jsonCache }
-        );
+      for (const wsRelative of collectDirChain(dir)) {
+        collectWsRelative(wsRelative);
       }
       const parent = dirname(dir);
       if (parent === dir) break;
@@ -745,16 +766,8 @@ function collectTsconfigInputsByProjectRoot(
     }
 
     // 3. Check the workspace root itself (dirname loop above stops at '.')
-    const rootTsconfig = join(workspaceRoot, 'tsconfig.json');
-    if (existsSync(rootTsconfig)) {
-      walkTsconfigExtendsChain(
-        rootTsconfig,
-        (absPath) => {
-          collect(absPath);
-          return 'continue';
-        },
-        { jsonCache }
-      );
+    for (const wsRelative of collectDirChain('')) {
+      collectWsRelative(wsRelative);
     }
 
     if (outside.length > 0) {
