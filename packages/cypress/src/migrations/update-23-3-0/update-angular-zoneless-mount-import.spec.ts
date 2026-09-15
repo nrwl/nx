@@ -241,7 +241,7 @@ const harness: Harness = 'cypress/angular-zoneless';
     expect(tree.read('apps/app/src/app/app.cy.ts', 'utf-8')).toBe(content);
   });
 
-  it('should skip an unparseable file without throwing', async () => {
+  it('should rewrite the import in a file with a syntax error', async () => {
     const content = `import { mount } from 'cypress/angular-zoneless'\nconst x = (`;
     tree.write('apps/app/src/app/app.cy.ts', content);
 
