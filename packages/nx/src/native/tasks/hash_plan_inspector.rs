@@ -1,6 +1,6 @@
 use crate::native::tasks::hashers::{
     ProjectFileIndicesCache, collect_json_input_files, collect_project_file_paths_cached,
-    collect_workspace_file_paths, expand_files_with, resolve_task_output_files,
+    collect_workspace_file_paths, expand_files_with_skips, resolve_task_output_files,
 };
 use crate::native::tasks::task_hasher::{HashInputs, HashInputsBuilder};
 use crate::native::tasks::types::{HashInstruction, HashPlans};
@@ -19,6 +19,8 @@ pub struct HashPlanInspector {
     // Paths the workspace context tracks, so disk-backed groups resolve the
     // same way here as in the hasher. Built on first use.
     tracked_paths: std::sync::OnceLock<HashSet<String>>,
+    /// See `HasherOptions::skipped_directories`.
+    disk_skip: Vec<std::path::PathBuf>,
 }
 
 #[napi]
@@ -31,12 +33,19 @@ impl HashPlanInspector {
         #[napi(ts_arg_type = "ExternalObject<Record<string, Array<FileData>>>")]
         project_file_map: &External<Arc<HashMap<String, Vec<FileData>>>>,
         workspace_root: String,
+        skipped_directories: Option<Vec<String>>,
     ) -> Self {
+        let disk_skip = skipped_directories
+            .unwrap_or_default()
+            .iter()
+            .map(|d| std::path::Path::new(&workspace_root).join(d))
+            .collect();
         Self {
             all_workspace_files: Arc::clone(all_workspace_files),
             project_file_map: Arc::clone(project_file_map),
             workspace_root,
             tracked_paths: std::sync::OnceLock::new(),
+            disk_skip,
         }
     }
 
@@ -168,10 +177,11 @@ impl HashPlanInspector {
                 })
             }
             HashInstruction::IgnoredFileSet(globs) => {
-                let expansion = expand_files_with(
+                let expansion = expand_files_with_skips(
                     std::path::Path::new(&self.workspace_root),
                     globs,
                     &|path| self.tracked().contains(path),
+                    &self.disk_skip,
                 )?;
                 Ok(HashInputsBuilder {
                     files: expansion.files.into_iter().collect(),
@@ -183,6 +193,7 @@ impl HashPlanInspector {
                     std::path::Path::new(&self.workspace_root),
                     glob,
                     dep_outputs,
+                    &self.disk_skip,
                 )
                 .map(|files| files.into_iter().collect())
                 .unwrap_or_else(|_| dep_outputs.iter().cloned().collect());

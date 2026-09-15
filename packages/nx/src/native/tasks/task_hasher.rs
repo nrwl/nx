@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use hashbrown::HashSet;
@@ -145,6 +145,10 @@ pub struct HashDetails {
 #[napi(object)]
 pub struct HasherOptions {
     pub selectively_hash_ts_config: bool,
+    /// Workspace-relative directories a disk-backed fileset walk never enters:
+    /// the Nx cache and workspace-data locations when they sit inside the
+    /// workspace. The walker only knows their default spots.
+    pub skipped_directories: Option<Vec<String>>,
 }
 
 /// Return type of `hash_plans`. Shares JS strings for pooled detail keys and
@@ -270,6 +274,7 @@ pub struct TaskHasher {
     ts_config_paths: HashMap<String, Vec<String>>,
     root_tsconfig_path: Option<String>,
     options: Option<HasherOptions>,
+    disk_skip: Vec<PathBuf>,
     external_cache: Arc<DashMap<String, String>>,
     // Persisted across hash_plans() calls: they only fold the immutable FileData
     // snapshot, so they never go stale. The set caches are hash-only; the indices
@@ -309,6 +314,15 @@ impl TaskHasher {
             Arc<IgnoredIndexReader>,
         >,
     ) -> Self {
+        let disk_skip = options
+            .as_ref()
+            .and_then(|o| o.skipped_directories.as_ref())
+            .map(|dirs| {
+                dirs.iter()
+                    .map(|d| Path::new(&workspace_root).join(d))
+                    .collect()
+            })
+            .unwrap_or_default();
         Self {
             ignored_index: Arc::clone(ignored_index),
             workspace_root,
@@ -319,6 +333,7 @@ impl TaskHasher {
             ts_config_paths,
             root_tsconfig_path,
             options,
+            disk_skip,
             external_cache: Arc::new(DashMap::new()),
             workspace_file_set_cache: WorkspaceFileSetCache::new(),
             project_file_set_cache: ProjectFileSetCache::new(),
@@ -359,6 +374,13 @@ impl TaskHasher {
         prefixes.dedup();
         prefixes.sort_by_key(|p| p.len());
         let workspace_root = Path::new(&self.workspace_root);
+        if let Some(skipped) = self
+            .options
+            .as_ref()
+            .and_then(|o| o.skipped_directories.as_deref())
+        {
+            self.ignored_index.skip(skipped);
+        }
         for prefix in prefixes {
             self.ignored_index.register(workspace_root, &prefix);
         }
@@ -792,6 +814,7 @@ impl TaskHasher {
                     globs,
                     files_expansion_cache,
                     &|path| trust_file_map && self.workspace_file_known(path),
+                    &self.disk_skip,
                     members,
                 )?;
                 let hashed = hash_files(
@@ -908,6 +931,7 @@ impl TaskHasher {
                     outputs,
                     files_expansion_cache,
                     self.ignored_index.index(),
+                    &self.disk_skip,
                 )?;
                 trace!(parent: &span, "hash_task_output: {:?}", now.elapsed());
                 let inputs = if collect_inputs {

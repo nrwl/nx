@@ -900,6 +900,11 @@ impl IgnoredIndexReader {
         &self.index
     }
 
+    /// See `IgnoredIndex::skip`.
+    pub(crate) fn skip(&self, dirs: &[String]) {
+        self.index.skip(dirs)
+    }
+
     /// See `IgnoredIndex::register`.
     pub(crate) fn register(&self, workspace_root: &Path, prefix: &str) -> bool {
         self.index.register(workspace_root, prefix)

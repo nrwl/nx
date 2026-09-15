@@ -194,6 +194,14 @@ describe('task planner', () => {
       expect(plan).toContain('files:[{nx,tsconfig.base}.json]');
     });
 
+    it('rejects a glob that still holds a root token before the walk', () => {
+      for (const fileset of ['{workspaceRoot}', '{workspaceRoot}**/*.js']) {
+        expect(() => planFor([{ fileset, includeIgnored: true }])).toThrow(
+          /root token/
+        );
+      }
+    });
+
     it('plans a glob that walks from the workspace root', () => {
       expect(
         planFor([{ fileset: '{workspaceRoot}/**', includeIgnored: true }])
