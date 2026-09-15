@@ -342,9 +342,103 @@ impl TaskHasher {
         })
     }
 
+    /// Like `hash_plans`, but only for the plans that hold no output of another
+    /// task. The rest are left out and hash once those tasks have run; their
+    /// ids are absent from the result and need no entry in `per_task_envs`.
+    #[napi(ts_return_type = "Record<string, HashDetails>")]
+    pub fn hash_plans_upfront(
+        &self,
+        #[napi(ts_arg_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
+        hash_plans: &External<HashPlans>,
+        per_task_envs: HashMap<String, HashMap<String, String>>,
+        cwd: String,
+        collect_task_inputs: Option<bool>,
+    ) -> anyhow::Result<TaskHashes> {
+        let function_start = std::time::Instant::now();
+        let pool = &hash_plans.pool;
+        let plans: HashMap<String, Vec<u32>> = hash_plans
+            .plans
+            .iter()
+            .filter(|(_, ids)| {
+                !ids.iter()
+                    .any(|id| matches!(*pool.get(*id), HashInstruction::TaskOutput(_, _)))
+            })
+            .map(|(task_id, ids)| (task_id.clone(), ids.clone()))
+            .collect();
+        let partition_duration = function_start.elapsed();
+        let (upfront_count, total_count) = (plans.len(), hash_plans.plans.len());
+        trace!(
+            "hash_plans_upfront: {} of {} plans hash up front, {} wait for other tasks' outputs (partition: {:?})",
+            upfront_count,
+            total_count,
+            total_count - upfront_count,
+            partition_duration
+        );
+        for task_id in plans.keys() {
+            if !per_task_envs.contains_key(task_id) {
+                anyhow::bail!("hash_plans_upfront: missing env entry for task {}", task_id);
+            }
+        }
+        let upfront = HashPlans {
+            pool: pool.clone(),
+            plans,
+        };
+        let hashes = self.hash_plans_impl(&upfront, cwd, collect_task_inputs, |task_id| {
+            per_task_envs
+                .get(task_id)
+                .expect("per-task env presence verified above")
+        })?;
+        debug!(
+            "hash_plans_upfront COMPLETED in {:?} - hashed {} of {} plans up front, {} deferred (partition: {:?}, hashing: {:?})",
+            function_start.elapsed(),
+            upfront_count,
+            total_count,
+            total_count - upfront_count,
+            partition_duration,
+            function_start.elapsed() - partition_duration
+        );
+        Ok(hashes)
+    }
+
+    /// Hashes `task_ids` from plans built earlier, so a task the up-front batch
+    /// deferred needs no second planning pass. Ids without a plan are absent
+    /// from the result.
+    #[napi(ts_return_type = "Record<string, HashDetails>")]
+    pub fn hash_plans_for(
+        &self,
+        #[napi(ts_arg_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
+        hash_plans: &External<HashPlans>,
+        task_ids: Vec<String>,
+        per_task_envs: HashMap<String, HashMap<String, String>>,
+        cwd: String,
+        collect_task_inputs: Option<bool>,
+    ) -> anyhow::Result<TaskHashes> {
+        let plans: HashMap<String, Vec<u32>> = task_ids
+            .into_iter()
+            .filter_map(|task_id| {
+                let ids = hash_plans.plans.get(&task_id)?.clone();
+                Some((task_id, ids))
+            })
+            .collect();
+        for task_id in plans.keys() {
+            if !per_task_envs.contains_key(task_id) {
+                anyhow::bail!("hash_plans_for: missing env entry for task {}", task_id);
+            }
+        }
+        let subset = HashPlans {
+            pool: hash_plans.pool.clone(),
+            plans,
+        };
+        self.hash_plans_impl(&subset, cwd, collect_task_inputs, |task_id| {
+            per_task_envs
+                .get(task_id)
+                .expect("per-task env presence verified above")
+        })
+    }
+
     fn hash_plans_impl<'a, F>(
         &self,
-        hash_plans: &External<HashPlans>,
+        hash_plans: &HashPlans,
         cwd: String,
         collect_task_inputs: Option<bool>,
         resolve_env: F,

@@ -156,6 +156,23 @@ describe('@nx/webpack/plugin', () => {
                   "my-serve": {
                     "command": "webpack-cli serve",
                     "continuous": true,
+                    "inputs": [
+                      "production",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "webpack-cli",
+                        ],
+                      },
+                      {
+                        "fields": [
+                          "extends",
+                          "files",
+                          "include",
+                        ],
+                        "json": "{workspaceRoot}/tsconfig.json",
+                      },
+                    ],
                     "metadata": {
                       "description": "Starts Webpack dev server",
                       "help": {
@@ -183,6 +200,23 @@ describe('@nx/webpack/plugin', () => {
                   "preview-site": {
                     "command": "webpack-cli serve",
                     "continuous": true,
+                    "inputs": [
+                      "production",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "webpack-cli",
+                        ],
+                      },
+                      {
+                        "fields": [
+                          "extends",
+                          "files",
+                          "include",
+                        ],
+                        "json": "{workspaceRoot}/tsconfig.json",
+                      },
+                    ],
                     "metadata": {
                       "description": "Starts Webpack dev server in production mode",
                       "help": {
@@ -213,6 +247,23 @@ describe('@nx/webpack/plugin', () => {
                       "build-something",
                     ],
                     "executor": "@nx/web:file-server",
+                    "inputs": [
+                      "production",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "webpack-cli",
+                        ],
+                      },
+                      {
+                        "fields": [
+                          "extends",
+                          "files",
+                          "include",
+                        ],
+                        "json": "{workspaceRoot}/tsconfig.json",
+                      },
+                    ],
                     "options": {
                       "buildTarget": "build-something",
                       "port": 9000,

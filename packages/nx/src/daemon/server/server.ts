@@ -118,7 +118,7 @@ import { handleGetRegisteredSyncGenerators } from './handle-get-registered-sync-
 import { handleGetSyncGeneratorChanges } from './handle-get-sync-generator-changes';
 import { handleGlob, handleMultiGlob } from './handle-glob';
 import { handleHashGlob, handleHashMultiGlob } from './handle-hash-glob';
-import { handleHashTasks } from './handle-hash-tasks';
+import { handleHashTasks, handleHashTasksUpfront } from './handle-hash-tasks';
 import {
   handleGetNxConsoleStatus,
   handleSetNxConsolePreferenceAndInstall,
@@ -317,6 +317,13 @@ async function handleMessage(socket: Socket, data: Buffer) {
       socket,
       'HASH_TASKS',
       () => handleHashTasks(payload),
+      mode
+    );
+  } else if (payload.type === 'HASH_TASKS_UPFRONT') {
+    await handleResult(
+      socket,
+      'HASH_TASKS_UPFRONT',
+      () => handleHashTasksUpfront(payload),
       mode
     );
   } else if (payload.type === 'PROCESS_IN_BACKGROUND') {
