@@ -129,9 +129,17 @@ export class PseudoIPCServer {
     });
   }
 
-  sendMessageToChild(id: string, message: Serializable) {
+  sendMessageToChild(
+    id: string,
+    message: Serializable,
+    format?: 'v8' | 'json'
+  ) {
     this.sockets.forEach((socket) => {
-      sendMessage(socket, { type: 'TO_CHILDREN_FROM_PARENT', id, message });
+      sendMessage(
+        socket,
+        { type: 'TO_CHILDREN_FROM_PARENT', id, message },
+        format
+      );
     });
   }
 

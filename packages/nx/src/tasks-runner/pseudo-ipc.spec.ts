@@ -1,4 +1,4 @@
-import { PseudoIPCServer } from './pseudo-ipc';
+import { PseudoIPCClient, PseudoIPCServer } from './pseudo-ipc';
 import { existsSync, writeFileSync, unlinkSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
@@ -21,6 +21,30 @@ describe('PseudoIPCServer', () => {
     try {
       unlinkSync(socketPath);
     } catch {}
+  });
+
+  it('preserves an explicitly binary startup envelope for the PTY bridge', async () => {
+    const server = new PseudoIPCServer(socketPath);
+    await server.init();
+    const id = 'worker';
+    const ready = server.waitForChildReady(id);
+    const client = new PseudoIPCClient(socketPath);
+    try {
+      const received = new Promise<unknown>((resolve, reject) => {
+        client.onMessageFromParent(id, resolve, () => {}, reject);
+      });
+      client.notifyChildIsReady(id);
+      await ready;
+      const message = {
+        type: 'NX_TASK_MESSAGE',
+        payload: Buffer.from([0xff, 0, 10, 128]),
+      };
+      server.sendMessageToChild(id, message, 'v8');
+      expect(await received).toEqual(message);
+    } finally {
+      client.close();
+      server.close();
+    }
   });
 
   it('should clean up stale socket file before listening', async () => {
