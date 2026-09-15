@@ -369,7 +369,10 @@ impl NxCache {
                     if let Ok((hash, size)) = row {
                         cache_size -= size;
                         db.execute("DELETE FROM cache_outputs WHERE hash = ?1", params![hash])?;
-                        remove_items(&[self.cache_path.join(&hash)])?;
+                        remove_items(&[
+                            self.cache_path.join(&hash),
+                            self.get_task_outputs_path_internal(&hash),
+                        ])?;
                     }
                     // We've deleted enough cache entries to be under the
                     // target cache size, stop looking for more.
