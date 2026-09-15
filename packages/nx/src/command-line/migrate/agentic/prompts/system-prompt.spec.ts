@@ -1,4 +1,8 @@
-import { buildSystemPrompt } from './system-prompt';
+import {
+  buildInlineSystemContext,
+  buildMinimalSystemContext,
+  buildSystemPrompt,
+} from './system-prompt';
 
 describe('buildSystemPrompt', () => {
   const ctx = {
@@ -217,6 +221,88 @@ describe('buildSystemPrompt', () => {
         'Do not refactor, reformat, or update dependencies'
       );
       expect(prompt).toMatch(/do not reformat files you did not change/);
+    });
+  });
+});
+
+describe('inline system contexts', () => {
+  const systemPromptFilePath =
+    '/abs/workspace/.nx/migrate-runs/23.0.0/step-1.system.md';
+  const handoffFileAbsolutePath =
+    '/abs/workspace/.nx/migrate-runs/23.0.0/step-1.json';
+
+  function fullSystemPrompt(): string {
+    return buildSystemPrompt({
+      workspaceRoot: '/abs/workspace',
+      handoffFileAbsolutePath,
+      packageManager: 'npm',
+      nxInvocation: 'npx nx',
+      formatCommand: 'npx prettier --write --ignore-unknown -- <paths>',
+      pmExec: 'npx',
+    });
+  }
+
+  describe('buildInlineSystemContext', () => {
+    const context = buildInlineSystemContext({
+      handoffFileAbsolutePath,
+      systemPromptFilePath,
+    });
+
+    it('points at the system prompt file', () => {
+      expect(context).toContain(
+        `<operating_instructions>\n${systemPromptFilePath}\n</operating_instructions>`
+      );
+    });
+
+    // nx blocks on the handoff, so that part cannot depend on the agent
+    // getting around to opening the file.
+    it('carries the same handoff contract the system prompt file does', () => {
+      const full = fullSystemPrompt();
+      const closing = '</handoff_contract>';
+      const contract = full.slice(
+        full.indexOf('<handoff_contract>'),
+        full.indexOf(closing) + closing.length
+      );
+      expect(context).toContain(contract);
+      expect(contract).toContain(handoffFileAbsolutePath);
+    });
+
+    // Repeats the boundary inline in case the agent acts before reading the
+    // file.
+    it('restates the workspace-root boundary', () => {
+      expect(context).toContain(
+        'Do not modify files outside the workspace root.'
+      );
+    });
+
+    // The scope rules are the only mode-dependent section, so keeping them in
+    // the file makes the command line independent of the step's mode.
+    it('leaves scope rules in the system prompt file', () => {
+      expect(context).not.toContain('<scope_rules>');
+    });
+  });
+
+  describe('buildMinimalSystemContext', () => {
+    const context = buildMinimalSystemContext(systemPromptFilePath);
+
+    it('points at the system prompt file and names what is in it', () => {
+      expect(context).toContain(
+        `<operating_instructions>\n${systemPromptFilePath}\n</operating_instructions>`
+      );
+      expect(context).toContain('handoff contract');
+      expect(context).toContain(
+        'Do not modify files outside the workspace root.'
+      );
+    });
+
+    it('trades the inline handoff contract for length', () => {
+      expect(context).not.toContain('<handoff_contract>');
+      expect(context.length).toBeLessThan(
+        buildInlineSystemContext({
+          handoffFileAbsolutePath,
+          systemPromptFilePath,
+        }).length
+      );
     });
   });
 });

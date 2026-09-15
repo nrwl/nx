@@ -26,6 +26,7 @@ import { logger } from '../utils/logger';
 import { output } from '../utils/output';
 import { stripIndents } from '../utils/strip-indents';
 import { workspaceRoot } from '../utils/workspace-root';
+import { refreshWorkspaceContext } from '../utils/workspace-context';
 import {
   buildProjectGraphUsingProjectFileMap,
   hydrateFileMap,
@@ -118,6 +119,7 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
 
   global.NX_GRAPH_CREATION = true;
   const nxJson = readNxJson();
+  refreshWorkspaceContext(workspaceRoot);
 
   performance.mark('retrieve-project-configurations:start');
   let configurationResult: ConfigurationResult;

@@ -5,6 +5,7 @@ vi.mock('../logger', () => ({
   serverLogger: { watcherLog: vi.fn() },
 }));
 vi.mock('./outputs-tracking', () => ({
+  clearRecordedOutputsHashes: vi.fn(),
   disableOutputsTracking: vi.fn(),
   processFileChangesInOutputs: vi.fn(),
 }));
@@ -26,6 +27,7 @@ describe('handleOutputsChanges', () => {
   let handleOutputsChanges: typeof import('./handle-outputs-changes').handleOutputsChanges;
   let getOutputsWatcherTerminalError: typeof import('./handle-outputs-changes').getOutputsWatcherTerminalError;
   let outputsTracking: {
+    clearRecordedOutputsHashes: Mock;
     disableOutputsTracking: Mock;
     processFileChangesInOutputs: Mock;
   };
@@ -58,6 +60,18 @@ describe('handleOutputsChanges', () => {
 
   afterEach(() => {
     consoleError.mockRestore();
+  });
+
+  it('starts the tracker over and invalidates the graph on a rescan, without processing per-path events', async () => {
+    await handleOutputsChanges(null, [{ path: '', type: EventType.rescan }]);
+
+    expect(outputsTracking.clearRecordedOutputsHashes).toHaveBeenCalled();
+    expect(recomputation.invalidateGraphCache).toHaveBeenCalled();
+    expect(outputsTracking.processFileChangesInOutputs).not.toHaveBeenCalled();
+    expect(dotenvChanges.classifyDotEnvChanges).not.toHaveBeenCalled();
+    // A rescan is recoverable: the watch stream is still alive.
+    expect(getOutputsWatcherTerminalError()).toBeUndefined();
+    expect(outputsTracking.disableOutputsTracking).not.toHaveBeenCalled();
   });
 
   it('records a native watcher error as terminal, preserving its message, and disables outputs tracking', async () => {

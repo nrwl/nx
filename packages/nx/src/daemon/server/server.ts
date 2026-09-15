@@ -118,7 +118,7 @@ import { handleGetRegisteredSyncGenerators } from './handle-get-registered-sync-
 import { handleGetSyncGeneratorChanges } from './handle-get-sync-generator-changes';
 import { handleGlob, handleMultiGlob } from './handle-glob';
 import { handleHashGlob, handleHashMultiGlob } from './handle-hash-glob';
-import { handleHashTasks } from './handle-hash-tasks';
+import { handleHashTasks, handleHashTasksUpfront } from './handle-hash-tasks';
 import {
   handleGetNxConsoleStatus,
   handleSetNxConsolePreferenceAndInstall,
@@ -146,6 +146,7 @@ import {
   handleOutputsChanges,
 } from './handle-outputs-changes';
 import {
+  handleWatcherRescan,
   scheduleProjectGraphRecomputation,
   registerProjectGraphRecomputationListener,
 } from './project-graph-incremental-recomputation';
@@ -316,6 +317,13 @@ async function handleMessage(socket: Socket, data: Buffer) {
       socket,
       'HASH_TASKS',
       () => handleHashTasks(payload),
+      mode
+    );
+  } else if (payload.type === 'HASH_TASKS_UPFRONT') {
+    await handleResult(
+      socket,
+      'HASH_TASKS_UPFRONT',
+      () => handleHashTasksUpfront(payload),
       mode
     );
   } else if (payload.type === 'PROCESS_IN_BACKGROUND') {
@@ -658,6 +666,14 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
       console.error(error);
       workspaceWatcherError = error;
       notifyFileWatcherSocketsOfError(error);
+      return;
+    }
+
+    if (changeEvents.some((event) => event.type === 'rescan')) {
+      serverLogger.watcherLog(
+        'The watcher reported dropped events; re-walking the workspace to recover the missed changes.'
+      );
+      await handleWatcherRescan();
       return;
     }
 

@@ -339,7 +339,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
       try {
         if (!this.#initializationError) {
           const { errors, warnings } = await (this.#diagnosticsPromise ??
-            this.#angularCompilation.diagnoseFiles(this.#diagnosticModes()));
+            this.#createDiagnosticsPromise());
           for (const error of errors ?? []) {
             compilation.errors.push({
               name: PLUGIN_NAME,
@@ -707,12 +707,29 @@ export class AngularRspackPlugin implements RspackPluginInstance {
     }
   }
 
-  // Skipping type checking skips only the semantic pass; option and
-  // syntactic diagnostics still surface configuration and parse errors.
-  #diagnosticModes(): DiagnosticModes {
-    return this.#_options.skipTypeChecking
-      ? ((DiagnosticModes.All & ~DiagnosticModes.Semantic) as DiagnosticModes)
-      : DiagnosticModes.All;
+  // Starts diagnostics collection for this build.
+  #createDiagnosticsPromise(): ReturnType<AngularCompilation['diagnoseFiles']> {
+    if (!this.#_options.skipTypeChecking) {
+      return this.#angularCompilation.diagnoseFiles(DiagnosticModes.All);
+    }
+
+    // Surface everything except Semantic (type-checking) diagnostics.
+    const surfacedDiagnostics = this.#angularCompilation.diagnoseFiles(
+      (DiagnosticModes.All & ~DiagnosticModes.Semantic) as DiagnosticModes
+    );
+
+    // Angular records state needed for incremental emission during semantic diagnostics.
+    // Start both calls together, but discard the semantic result or rejection.
+    const silentSemanticWarmup = this.#angularCompilation
+      .diagnoseFiles(DiagnosticModes.Semantic)
+      .then(
+        () => undefined,
+        () => undefined
+      );
+
+    return Promise.all([surfacedDiagnostics, silentSemanticWarmup]).then(
+      ([result]) => result
+    );
   }
 
   private async buildAndAnalyze() {
@@ -737,9 +754,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
     // worker-based compilation it runs off the main thread and the emit hook
     // only waits for what is left. Diagnostics still run after an emit
     // failure since they usually carry the root cause.
-    const diagnosticsPromise = this.#angularCompilation.diagnoseFiles(
-      this.#diagnosticModes()
-    );
+    const diagnosticsPromise = this.#createDiagnosticsPromise();
     // Failed builds skip the emit hook that reports the result; don't
     // leave the rejection unhandled.
     diagnosticsPromise.catch(() => {});

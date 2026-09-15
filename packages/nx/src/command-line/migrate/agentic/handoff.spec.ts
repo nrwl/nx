@@ -17,6 +17,7 @@ import {
   readHandoffWithReason,
   runStepHandoffPath,
   stepHandoffPath,
+  stepPromptsDir,
   waitForValidHandoff,
 } from './handoff';
 import { HANDOFFS_DIR_NAME } from './types';
@@ -29,6 +30,13 @@ function handoffPath(prefix: string, pkg: string, name: string): string {
     .update(JSON.stringify([pkg, name]))
     .digest('hex');
   return join('/run', 'handoffs', `${prefix}-${hash}.json`);
+}
+
+function promptsDir(prefix: string, pkg: string, name: string): string {
+  const hash = createHash('sha256')
+    .update(JSON.stringify([pkg, name]))
+    .digest('hex');
+  return join('/run', 'prompts', `${prefix}-${hash}`);
 }
 
 describe('handoff', () => {
@@ -254,6 +262,57 @@ describe('handoff', () => {
       const prefix = basename(path).slice(0, -('.json'.length + 65));
       expect(prefix).toBe('p+' + 'n'.repeat(59));
       expect(prefix).toEqual(expect.not.stringContaining('\uFFFD'));
+    });
+  });
+
+  describe('stepPromptsDir', () => {
+    it('names the directory with the same stem the step handoff file uses', () => {
+      const migration = { package: '@nx/storybook', name: 'migrate-css' };
+      expect(stepPromptsDir('/run', migration)).toBe(
+        join(
+          '/run',
+          'prompts',
+          '@nx+storybook+migrate-css-e97a7bbd1f6d8f7efee3f102337f1daf50e4a35e2a5dd789410a27359be74e57'
+        )
+      );
+      expect(basename(stepPromptsDir('/run', migration))).toBe(
+        basename(stepHandoffPath('/run', migration), '.json')
+      );
+    });
+
+    it('replaces path-traversal segments with `_` so a malformed name cannot escape the prompts subtree', () => {
+      expect(stepPromptsDir('/run', { package: '../escape', name: '..' })).toBe(
+        promptsDir('_+escape+_', '../escape', '..')
+      );
+    });
+
+    it('bounds the directory name so a long migration name stays within the per-component filesystem limit', () => {
+      const name = 'n'.repeat(250);
+      const dir = stepPromptsDir('/run', { package: '@scope/pkg', name });
+      expect(basename(dir)).toHaveLength(64 + 1 + 64);
+      expect(basename(dir).startsWith('@scope+pkg+nnnn')).toBe(true);
+      expect(dir).not.toBe(
+        stepPromptsDir('/run', { package: '@scope/pkg', name: name + 'x' })
+      );
+    });
+
+    it('bounds the directory name by UTF-8 bytes, not characters', () => {
+      const dir = stepPromptsDir('/run', {
+        package: 'p',
+        name: '界'.repeat(250),
+      });
+      expect(Buffer.byteLength(basename(dir))).toBeLessThanOrEqual(64 + 1 + 64);
+      expect(basename(dir).startsWith('p+界')).toBe(true);
+    });
+
+    it('gives migrations whose sanitized names coincide distinct directories', () => {
+      const dirs = [
+        { package: '@scope/pkg', name: 'a+b' },
+        { package: '@scope/pkg', name: 'a_b' },
+        { package: '@scope/pkg', name: 'a/b' },
+        { package: '@scope/pkg+a', name: 'b' },
+      ].map((migration) => stepPromptsDir('/run', migration));
+      expect(new Set(dirs).size).toBe(dirs.length);
     });
   });
 

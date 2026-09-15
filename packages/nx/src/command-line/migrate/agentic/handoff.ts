@@ -17,6 +17,7 @@ import {
   HANDOFFS_DIR_NAME,
   HandoffFile,
   MIGRATE_RUNS_RELATIVE_DIR,
+  PROMPTS_DIR_NAME,
 } from './types';
 
 /** Returns the run directory for a given workspace + run id (target version). */
@@ -73,10 +74,6 @@ export function initRunDir(workspaceRoot: string, runId: string): string {
 // agent can't write to.
 const WINDOWS_RESERVED_NAMES = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$/i;
 
-/**
- * The bare `.` / `..` check must come first — otherwise a malformed migration
- * name of exactly `..` would let the handoff write escape the run directory.
- */
 function sanitizeSegment(value: string): string {
   if (value === '.' || value === '..') return '_';
   let sanitized = value.replace(/[\x00-\x1f<>:"/\\|?*+]/g, '_');
@@ -88,7 +85,7 @@ function sanitizeSegment(value: string): string {
   return sanitized || '_';
 }
 
-const HANDOFF_NAME_PREFIX_MAX_BYTES = 64;
+const STEP_NAME_PREFIX_MAX_BYTES = 64;
 
 // Cuts on code points so a multibyte character is never split, and counts
 // UTF-8 bytes because the filesystem limit is per byte, not per character.
@@ -105,29 +102,40 @@ function truncateUtf8(value: string, maxBytes: number): string {
 }
 
 /**
- * Sanitizing folds many characters to `_`, so distinct migrations can share a
- * prefix. The SHA-256 of the raw package and name is what keeps their handoffs
- * collision-resistant.
+ * The name a step's own files are keyed by, bounded to fit one path component.
+ * Sanitizing folds many characters to `_` and the prefix is cut to fit, so the
+ * SHA-256 of the raw package and name is what keeps two migrations apart.
  */
-export function stepHandoffPath(
-  runDir: string,
-  migration: { package: string; name: string }
-): string {
+function stepStem(migration: { package: string; name: string }): string {
   const prefix = truncateUtf8(
     [...migration.package.split('/'), migration.name]
       .map(sanitizeSegment)
       .join('+'),
-    HANDOFF_NAME_PREFIX_MAX_BYTES
+    STEP_NAME_PREFIX_MAX_BYTES
   );
   const hash = createHash('sha256')
     .update(JSON.stringify([migration.package, migration.name]))
     .digest('hex');
-  return join(runDir, HANDOFFS_DIR_NAME, `${prefix}-${hash}.json`);
+  return `${prefix}-${hash}`;
+}
+
+export function stepHandoffPath(
+  runDir: string,
+  migration: { package: string; name: string }
+): string {
+  return join(runDir, HANDOFFS_DIR_NAME, `${stepStem(migration)}.json`);
 }
 
 /** Handoff path for a run step. No hash needed: step ids are unique within the run. */
 export function runStepHandoffPath(runDir: string, stepId: string): string {
   return join(runDir, HANDOFFS_DIR_NAME, `${sanitizeSegment(stepId)}.json`);
+}
+
+export function stepPromptsDir(
+  runDir: string,
+  migration: { package: string; name: string }
+): string {
+  return join(runDir, PROMPTS_DIR_NAME, stepStem(migration));
 }
 
 export type HandoffReadFailureReason =
