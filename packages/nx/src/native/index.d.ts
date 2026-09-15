@@ -295,6 +295,10 @@ export declare class WorkspaceContext {
    * were; reads no longer pull anything in.
    */
   stopWatching(): void
+  onChanges(): void
+  onWatchEvents(): void
+  settle(): ChangeBatch
+  stopWatching(): void
   /**
    * Bumped once per applied batch that changed anything. Equal values
    * mean equal files, so a consumer that remembers the value it computed

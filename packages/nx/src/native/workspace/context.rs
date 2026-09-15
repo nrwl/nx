@@ -1036,6 +1036,28 @@ impl WorkspaceContext {
         self.events.clear();
     }
 
+    // wasm has no watcher, so nothing is ever delivered or applied from one.
+    // These keep the napi class registration whole there; napi registers every
+    // method the impl declares, so a cfg-gated method needs a counterpart.
+
+    #[cfg(target_arch = "wasm32")]
+    #[napi]
+    pub fn on_changes(&self) {}
+
+    #[cfg(target_arch = "wasm32")]
+    #[napi]
+    pub fn on_watch_events(&self) {}
+
+    #[cfg(target_arch = "wasm32")]
+    #[napi]
+    pub fn settle(&self) -> ChangeBatch {
+        ChangeBatch::default()
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    #[napi]
+    pub fn stop_watching(&self) {}
+
     /// Bumped once per applied batch that changed anything. Equal values
     /// mean equal files, so a consumer that remembers the value it computed
     /// from can skip recomputing.
