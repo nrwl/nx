@@ -30,11 +30,9 @@ class ProcessTaskUtilsTest {
     val projectRoot = Path("home", "user", "workspace", "project").toString()
     val workspaceRoot = Path("home", "user", "workspace").toString()
 
+    assertEquals("{projectRoot}/src/main/java", replaceRootInPath(path, projectRoot, workspaceRoot))
     assertEquals(
-        Path("{projectRoot}", "src", "main", "java").toString(),
-        replaceRootInPath(path, projectRoot, workspaceRoot))
-    assertEquals(
-        Path("{workspaceRoot}", "project", "src", "main", "java").toString(),
+        "{workspaceRoot}/project/src/main/java",
         replaceRootInPath(path, Path("other", "path").toString(), workspaceRoot))
     assertNull(replaceRootInPath(Path("external", "other").toString(), projectRoot, workspaceRoot))
   }
@@ -298,6 +296,21 @@ class ProcessTaskUtilsTest {
     }
 
     @Test
+    fun `test getInputsForTask reads a root directory input as everything under it`() {
+      val task = project.tasks.register("rootDirInput").get()
+      task.inputs.files(java.io.File(projectRoot))
+
+      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+      val result =
+          getInputsForTask(
+              null, task, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+
+      assertNotNull(result)
+      assertTrue(result!!.contains("{projectRoot}/**/*"))
+      assertFalse(result.contains("{projectRoot}"))
+    }
+
+    @Test
     fun `test getInputsForTask with dependsOn outputs exclusion`() {
       // Create dependent task with outputs
       val dependentTask = project.tasks.register("dependentTask").get()
@@ -329,7 +342,7 @@ class ProcessTaskUtilsTest {
           })
 
       // Should contain the non-conflicting input file
-      assertTrue(result.any { it == Path("{projectRoot}", "src", "main.kt").toString() })
+      assertTrue(result.any { it == "{projectRoot}/src/main.kt" })
     }
 
     @Test
@@ -833,11 +846,10 @@ class ProcessTaskUtilsTest {
           getInputsForTask(
               null, copyTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)!!
 
-      val dirGlob = Path("{projectRoot}", "src", "main", "resources").toString() + "/**/*"
+      val dirGlob = "{projectRoot}/src/main/resources" + "/**/*"
       assertTrue(result.contains(dirGlob), "Expected directory glob $dirGlob, got $result")
       assertFalse(
-          result.contains(
-              Path("{projectRoot}", "src", "main", "resources", "application.conf").toString()),
+          result.contains("{projectRoot}/src/main/resources/application.conf"),
           "Files under a globbed source dir must not be enumerated, got $result")
     }
 
@@ -859,11 +871,10 @@ class ProcessTaskUtilsTest {
               mutableMapOf(),
               gitIgnoreClassifier)!!
 
-      val dirGlob = Path("{projectRoot}", "src", "main", "resources").toString() + "/**/*"
+      val dirGlob = "{projectRoot}/src/main/resources" + "/**/*"
       assertTrue(result.contains(dirGlob), "Expected directory glob $dirGlob, got $result")
       assertFalse(
-          result.contains(
-              Path("{projectRoot}", "src", "main", "resources", "application.conf").toString()),
+          result.contains("{projectRoot}/src/main/resources/application.conf"),
           "Resource files under a globbed source dir must not be enumerated, got $result")
     }
 
@@ -900,10 +911,10 @@ class ProcessTaskUtilsTest {
           getInputsForTask(
               null, compileJava, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)!!
 
-      val rootGlob = Path("{projectRoot}", "src", "main", "java").toString() + "/**/*"
+      val rootGlob = "{projectRoot}/src/main/java" + "/**/*"
       assertTrue(result.contains(rootGlob), "Expected source root glob $rootGlob, got $result")
       assertFalse(
-          result.contains(Path("{projectRoot}", "src", "main", "java", "Foo.java").toString()),
+          result.contains("{projectRoot}/src/main/java/Foo.java"),
           "Source files under a globbed root must not be enumerated, got $result")
     }
 
@@ -927,8 +938,8 @@ class ProcessTaskUtilsTest {
               ?.filterIsInstance<String>()
               ?.filter { it.endsWith("/**/*") } ?: emptyList()
 
-      val mainGlob = Path("{projectRoot}", "src", "main", "java").toString() + "/**/*"
-      val testGlob = Path("{projectRoot}", "src", "test", "java").toString() + "/**/*"
+      val mainGlob = "{projectRoot}/src/main/java" + "/**/*"
+      val testGlob = "{projectRoot}/src/test/java" + "/**/*"
       assertTrue(globsOf("compileJava").contains(mainGlob))
       assertFalse(globsOf("compileJava").contains(testGlob))
       assertTrue(globsOf("compileTestJava").contains(testGlob))
@@ -1242,10 +1253,8 @@ class ProcessTaskUtilsTest {
           })
 
       // Should contain the input file
-      assertTrue(
-          resultWithPreComputed.any { it == Path("{projectRoot}", "src", "main.kt").toString() })
-      assertTrue(
-          resultWithoutPreComputed.any { it == Path("{projectRoot}", "src", "main.kt").toString() })
+      assertTrue(resultWithPreComputed.any { it == "{projectRoot}/src/main.kt" })
+      assertTrue(resultWithoutPreComputed.any { it == "{projectRoot}/src/main.kt" })
     }
 
     @Test
@@ -1351,8 +1360,8 @@ class ProcessTaskUtilsTest {
           })
 
       // Should contain regular input files
-      assertTrue(result.any { it == Path("{projectRoot}", "src", "main.kt").toString() })
-      assertTrue(result.any { it == Path("{projectRoot}", "config", "app.properties").toString() })
+      assertTrue(result.any { it == "{projectRoot}/src/main.kt" })
+      assertTrue(result.any { it == "{projectRoot}/config/app.properties" })
 
       // Verify we have exactly 3 dependentTasksOutputFiles entries (one per unique extension: jar,
       // class, xml)
@@ -1402,17 +1411,17 @@ class ProcessTaskUtilsTest {
       assertNotNull(result)
 
       // Source file should be regular input
-      assertTrue(result!!.any { it == Path("{projectRoot}", "src", "main.kt").toString() })
+      assertTrue(result!!.any { it == "{projectRoot}/src/main.kt" })
 
       // Config file should be regular input
-      assertTrue(result.any { it == Path("{projectRoot}", "config", "app.properties").toString() })
+      assertTrue(result.any { it == "{projectRoot}/config/app.properties" })
 
       // Gitignored build artifacts must NOT be added as direct source inputs.
       assertFalse(
-          result.any { it == Path("{projectRoot}", "build", "classes", "Main.class").toString() },
+          result.any { it == "{projectRoot}/build/classes/Main.class" },
           "Gitignored build artifact should not be a direct input: $result")
       assertFalse(
-          result.any { it == Path("{projectRoot}", "app.log").toString() },
+          result.any { it == "{projectRoot}/app.log" },
           "Gitignored log file should not be a direct input: $result")
 
       // Extensions are NOT harvested from gitignored inputs on disk; they are derived from the task
@@ -1457,14 +1466,14 @@ class ProcessTaskUtilsTest {
 
       assertNotNull(result)
 
-      assertTrue(result!!.any { it == Path("{projectRoot}", "src", "Main.java").toString() })
+      assertTrue(result!!.any { it == "{projectRoot}/src/Main.java" })
 
       // Gitignored build artifacts must NOT be added as direct source inputs.
       assertFalse(
-          result.any { it == Path("{projectRoot}", "dist", "production", "Main.class").toString() },
+          result.any { it == "{projectRoot}/dist/production/Main.class" },
           "Gitignored build artifact should not be a direct input: $result")
       assertFalse(
-          result.any { it == Path("{projectRoot}", "dist", "app.jar").toString() },
+          result.any { it == "{projectRoot}/dist/app.jar" },
           "Gitignored build artifact should not be a direct input: $result")
 
       // Extensions are NOT harvested from gitignored inputs on disk (this task has no dependents).
@@ -1527,7 +1536,7 @@ class ProcessTaskUtilsTest {
     // Verify inputs contain both regular inputs and consolidated dependentTasksOutputFiles
     val inputs = result["inputs"] as? List<*>
     assertNotNull(inputs)
-    assertTrue(inputs!!.any { it == Path("{projectRoot}", "src", "test.kt").toString() })
+    assertTrue(inputs!!.any { it == "{projectRoot}/src/test.kt" })
     assertTrue(
         inputs.any {
           it is Map<*, *> &&
@@ -1739,13 +1748,10 @@ class ProcessTaskUtilsTest {
 
         assertEquals(2, result.size, "Expected 2 gradle wrapper files")
         assertTrue(
-            result.contains(
-                Path("{workspaceRoot}", "gradle", "wrapper", "gradle-wrapper.jar").toString()),
+            result.contains("{workspaceRoot}/gradle/wrapper/gradle-wrapper.jar"),
             "Expected gradle-wrapper.jar in $result")
         assertTrue(
-            result.contains(
-                Path("{workspaceRoot}", "gradle", "wrapper", "gradle-wrapper.properties")
-                    .toString()),
+            result.contains("{workspaceRoot}/gradle/wrapper/gradle-wrapper.properties"),
             "Expected gradle-wrapper.properties in $result")
       } finally {
         tempDir.deleteRecursively()
@@ -1768,7 +1774,7 @@ class ProcessTaskUtilsTest {
 
         assertEquals(1, result.size, "Expected 1 gradle file")
         assertTrue(
-            result.contains(Path("{workspaceRoot}", "gradle.properties").toString()),
+            result.contains("{workspaceRoot}/gradle.properties"),
             "Expected gradle.properties in $result")
       } finally {
         tempDir.deleteRecursively()
@@ -1795,17 +1801,13 @@ class ProcessTaskUtilsTest {
 
         assertEquals(3, result.size, "Expected 3 gradle files")
         assertTrue(
-            result.contains(
-                Path("{workspaceRoot}", "gradle", "wrapper", "gradle-wrapper.jar").toString()),
+            result.contains("{workspaceRoot}/gradle/wrapper/gradle-wrapper.jar"),
             "Expected gradle-wrapper.jar")
         assertTrue(
-            result.contains(
-                Path("{workspaceRoot}", "gradle", "wrapper", "gradle-wrapper.properties")
-                    .toString()),
+            result.contains("{workspaceRoot}/gradle/wrapper/gradle-wrapper.properties"),
             "Expected gradle-wrapper.properties")
         assertTrue(
-            result.contains(Path("{workspaceRoot}", "gradle.properties").toString()),
-            "Expected gradle.properties")
+            result.contains("{workspaceRoot}/gradle.properties"), "Expected gradle.properties")
       } finally {
         tempDir.deleteRecursively()
       }
@@ -1840,10 +1842,10 @@ class ProcessTaskUtilsTest {
 
         assertNotNull(result)
         assertTrue(
-            result!!.any { it == Path("{workspaceRoot}", "gradle.properties").toString() },
+            result!!.any { it == "{workspaceRoot}/gradle.properties" },
             "Expected gradle.properties in inputs: $result")
         assertTrue(
-            result.any { it == Path("{projectRoot}", "src", "main.kt").toString() },
+            result.any { it == "{projectRoot}/src/main.kt" },
             "Expected src/main.kt in inputs: $result")
       } finally {
         tempDir.deleteRecursively()
@@ -1878,7 +1880,7 @@ class ProcessTaskUtilsTest {
         assertNotNull(result)
         // Should have src/main.kt but no gradle files
         assertTrue(
-            result!!.any { it == Path("{projectRoot}", "src", "main.kt").toString() },
+            result!!.any { it == "{projectRoot}/src/main.kt" },
             "Expected src/main.kt in inputs: $result")
         assertFalse(
             result.any { it.toString().contains("gradle") },

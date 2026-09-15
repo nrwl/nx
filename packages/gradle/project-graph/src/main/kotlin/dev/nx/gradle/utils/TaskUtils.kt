@@ -8,7 +8,6 @@ import dev.nx.gradle.data.ExternalNode
 import java.io.File
 import java.util.Collections
 import java.util.WeakHashMap
-import kotlin.io.path.Path
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -170,7 +169,7 @@ private val GRADLE_INPUT_FILES =
  */
 fun getGradleFilesInputs(workspaceRoot: String): List<String> {
   return GRADLE_INPUT_FILES.filter { relativePath -> File("$workspaceRoot/$relativePath").exists() }
-      .map { relativePath -> Path("{workspaceRoot}", relativePath).toString() }
+      .map { relativePath -> "{workspaceRoot}/$relativePath" }
 }
 
 /**
@@ -563,6 +562,9 @@ private fun getInputsForTaskImpl(
           val root = sourceRoots.firstOrNull { inputFile.path.startsWith(it.path + File.separator) }
           if (root != null) {
             usedRoots.add(root)
+          } else if (relativePath == "{projectRoot}" || relativePath == "{workspaceRoot}") {
+            // A bare root token is not a fileset; the directory means everything under it.
+            inputs.add("$relativePath/**/*")
           } else {
             inputs.add(relativePath)
           }
@@ -809,15 +811,19 @@ fun getExternalDepFromInputFile(
  * @return mapped path if inside workspace, null if outside workspace
  */
 fun replaceRootInPath(path: String, projectRoot: String, workspaceRoot: String): String? {
-  return when {
-    path.startsWith(projectRoot + File.separator) -> path.replaceFirst(projectRoot, "{projectRoot}")
-    path == projectRoot -> "{projectRoot}"
-    path.startsWith(workspaceRoot + File.separator) ->
-        path.replaceFirst(workspaceRoot, "{workspaceRoot}")
+  val mapped =
+      when {
+        path.startsWith(projectRoot + File.separator) ->
+            path.replaceFirst(projectRoot, "{projectRoot}")
+        path == projectRoot -> "{projectRoot}"
+        path.startsWith(workspaceRoot + File.separator) ->
+            path.replaceFirst(workspaceRoot, "{workspaceRoot}")
 
-    path == workspaceRoot -> "{workspaceRoot}"
-    else -> null
-  }
+        path == workspaceRoot -> "{workspaceRoot}"
+        else -> null
+      }
+  // Filesets are `/`-separated on every platform.
+  return mapped?.replace(File.separatorChar, '/')
 }
 
 private val continuousTasks = setOf("bootRun")
