@@ -150,6 +150,7 @@ vi.doMock(workspaceContextPath, async () => {
       'subscribeToWorkspaceChanges',
       () => undefined
     ),
+    subscribeToWatchEvents: guarded('subscribeToWatchEvents', () => undefined),
     settleWorkspaceContext: guarded('settleWorkspaceContext', () => ({
       seq: 0,
       createdFiles: [],

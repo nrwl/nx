@@ -1,6 +1,7 @@
 import type {
   ChangeBatch,
   NxWorkspaceFilesExternals,
+  WatchEvent,
   WorkspaceContext,
   WorkspaceContextOptions,
 } from '../native';
@@ -11,6 +12,10 @@ import { daemonClient } from '../daemon/client/client';
 import { handleImport } from './handle-import';
 
 type ChangeSubscriber = (err: string | null, batch: ChangeBatch | null) => void;
+type EventSubscriber = (
+  err: string | null,
+  events: WatchEvent[] | null
+) => void;
 
 let workspaceContext: WorkspaceContext | undefined;
 let filesReady: Promise<void> | undefined;
@@ -18,6 +23,7 @@ let filesReady: Promise<void> | undefined;
 // recreate it, and that context must watch and report like the one before.
 let contextOptions: WorkspaceContextOptions | undefined;
 let changeSubscriber: ChangeSubscriber | undefined;
+let eventSubscriber: EventSubscriber | undefined;
 
 export function setupWorkspaceContext(
   workspaceRoot: string,
@@ -36,6 +42,9 @@ export function setupWorkspaceContext(
   filesReady = undefined;
   if (options?.watch && changeSubscriber) {
     workspaceContext.onChanges(changeSubscriber);
+  }
+  if (options?.watch && eventSubscriber) {
+    workspaceContext.onWatchEvents(eventSubscriber);
   }
   performance.mark('workspace-context:end');
   performance.measure(
@@ -206,8 +215,23 @@ export function settleWorkspaceContext(workspaceRoot: string): ChangeBatch {
   return workspaceContext.settle();
 }
 
+/**
+ * Hears every event the context's watch delivers, including writes under
+ * ignored directories and the `rescan` marker. The applied batches are
+ * `subscribeToWorkspaceChanges`.
+ */
+export function subscribeToWatchEvents(
+  workspaceRoot: string,
+  callback: EventSubscriber
+) {
+  eventSubscriber = callback;
+  ensureContextAvailable(workspaceRoot);
+  workspaceContext.onWatchEvents(callback);
+}
+
 export function stopWatchingWorkspaceContext() {
   changeSubscriber = undefined;
+  eventSubscriber = undefined;
   contextOptions = undefined;
   workspaceContext?.stopWatching();
 }

@@ -3,7 +3,6 @@ import type { Server, Socket } from 'net';
 import { serverLogger } from '../logger';
 import { serializeResult } from '../socket-utils';
 import { deleteDaemonJsonProcessCache } from '../cache';
-import type { Watcher } from '../../native';
 import type { WorkspaceWatch } from './watcher';
 import {
   DaemonProjectGraphError,
@@ -75,9 +74,9 @@ export function getWatcherInstance() {
   return watcherInstance;
 }
 
-let outputWatcherInstance: Watcher | undefined;
+let outputWatcherInstance: WorkspaceWatch | undefined;
 
-export function storeOutputWatcherInstance(instance: Watcher) {
+export function storeOutputWatcherInstance(instance: WorkspaceWatch) {
   outputWatcherInstance = instance;
 }
 

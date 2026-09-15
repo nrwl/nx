@@ -9,11 +9,11 @@ import { normalizePath } from '../../utils/path';
 import { getDaemonProcessIdSync, serverProcessJsonPath } from '../cache';
 import type { ChangeBatch, WatchEvent } from '../../native';
 import { openSockets } from './server';
-import { handleImport } from '../../utils/handle-import';
 import {
   settleWorkspaceContext,
   setupWorkspaceContext,
   stopWatchingWorkspaceContext,
+  subscribeToWatchEvents,
   subscribeToWorkspaceChanges,
 } from '../../utils/workspace-context';
 
@@ -95,10 +95,18 @@ export function restartDaemonIfIgnoreFilesChanged(paths: string[]): boolean {
   return false;
 }
 
+// The daemon's own process file lives under the hardcoded-ignored
+// .nx/workspace-data; admitting it into the event stream is what lets
+// watchOutputFiles notice that this process is no longer the current daemon.
+const relativeServerProcess = normalizePath(
+  relative(workspaceRoot, serverProcessJsonPath)
+);
+
 /**
- * Sets up the workspace context with its own watcher and subscribes to the
+ * Sets up the workspace context with its own watch and subscribes to the
  * batches it applies. The context starts watching before it scans, so no
- * write from here on is invisible to both.
+ * write from here on is invisible to both. The same watch feeds
+ * watchOutputFiles, so the daemon runs one.
  */
 export async function watchWorkspace(
   server: Server,
@@ -106,7 +114,10 @@ export async function watchWorkspace(
 ): Promise<WorkspaceWatch> {
   activeServer = server;
   workspaceChangesCallback = cb;
-  setupWorkspaceContext(workspaceRoot, { watch: true });
+  setupWorkspaceContext(workspaceRoot, {
+    watch: true,
+    watchGlobs: [`!${relativeServerProcess}`],
+  });
   subscribeToWorkspaceChanges(workspaceRoot, (err, batch) => {
     if (err) {
       return cb(err, null);
@@ -134,21 +145,16 @@ export async function flushPendingWorkspaceChanges() {
   await dispatchWorkspaceChanges(batch);
 }
 
+/**
+ * Hears every event the workspace context's watch delivers, which is gated
+ * only by the hardcoded ignores: writes to gitignored outputs and dotenv files
+ * reach this, unlike the applied batches. Call after watchWorkspace.
+ */
 export async function watchOutputFiles(
   server: Server,
   cb: FileWatcherCallback
-) {
-  const { Watcher } = await handleImport('../../native/index.js', __dirname);
-
-  const relativeServerProcess = normalizePath(
-    relative(workspaceRoot, serverProcessJsonPath)
-  );
-  const watcher = new Watcher(
-    workspaceRoot,
-    [`!${relativeServerProcess}`],
-    false
-  );
-  watcher.watch((err, events) => {
+): Promise<WorkspaceWatch> {
+  subscribeToWatchEvents(workspaceRoot, (err, events) => {
     if (err) {
       return cb(err, null);
     }
@@ -170,7 +176,11 @@ export async function watchOutputFiles(
       cb(null, events);
     }
   });
-  return watcher;
+  return {
+    async stop() {
+      stopWatchingWorkspaceContext();
+    },
+  };
 }
 
 /**
