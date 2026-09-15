@@ -22,6 +22,7 @@ import {
   runHandoffsDir,
   writeRunState,
   type MigrateRunState,
+  readLatestPlanSnapshot,
 } from './run-state';
 
 function buildState(overrides: Partial<MigrateRunState> = {}): MigrateRunState {
@@ -679,6 +680,7 @@ describe('run-state', () => {
         skipInstall: true,
         validate: false,
         runbookPath: 'RUNBOOK.md',
+        branch: 'feature/upgrade',
         issues: [
           {
             id: 'issue-1',
@@ -831,6 +833,17 @@ describe('run-state', () => {
         )
       );
       expect(readRunState(dir).commits[0].ownerAttempt).toBeUndefined();
+    });
+
+    it('refuses a non-string branch', () => {
+      const dir = join(root, 'run-1');
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(
+        join(dir, 'run.json'),
+        JSON.stringify(buildState({ branch: 42 as never }))
+      );
+
+      expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
     });
 
     it('refuses a runbookPath that is not the file name Nx writes', () => {
@@ -1161,6 +1174,7 @@ describe('run-state', () => {
     it('returns no active run when there are no runs', () => {
       expect(findActiveRun(root)).toEqual({
         active: null,
+        activeRunIds: [],
         uninterpretable: [],
       });
     });
@@ -1203,6 +1217,7 @@ describe('run-state', () => {
 
       expect(result.active?.runId).toBe('newer');
       expect(result.active?.state.status).toBe('active');
+      expect(result.activeRunIds.sort()).toEqual(['newer', 'older']);
       expect(result.uninterpretable).toEqual([
         { dirName: 'corrupt', reason: expect.stringContaining('JSON') },
       ]);
@@ -1235,6 +1250,7 @@ describe('run-state', () => {
       const result = findActiveRun(root);
 
       expect(result.active).toBeNull();
+      expect(result.activeRunIds).toEqual([]);
       expect(result.uninterpretable).toEqual([
         { dirName: 'evil;rm -rf', reason: 'its name is not a valid run id' },
       ]);
@@ -1292,6 +1308,40 @@ describe('run-state', () => {
       createRun(root, buildState({ runId: 'run-1', status: 'active' }));
 
       expect(existsSync(runHandoffsDir(runDir(root, 'run-1')))).toBe(true);
+    });
+  });
+
+  describe('readLatestPlanSnapshot', () => {
+    it('reads the plan of the latest round back from the run directory', () => {
+      const dir = join(migrateRunsDir(root), 'run-1');
+      writeRun(
+        root,
+        'run-1',
+        buildState({
+          rounds: [
+            { index: 0, planHash: 'h0', planSnapshot: 'plan-0.json' },
+            { index: 1, planHash: 'h1', planSnapshot: 'plan-1.json' },
+          ],
+        })
+      );
+      writeFileSync(join(dir, 'plan-0.json'), '{"migrations":[]}');
+      writeFileSync(
+        join(dir, 'plan-1.json'),
+        JSON.stringify({ migrations: [{ package: 'p', name: 'n' }] })
+      );
+
+      expect(readLatestPlanSnapshot(root, 'run-1')).toEqual({
+        migrations: [{ package: 'p', name: 'n' }],
+      });
+    });
+
+    it('names a missing or invalid run instead of failing on the file read', () => {
+      expect(() => readLatestPlanSnapshot(root, 'missing')).toThrow(
+        "No migrate run 'missing' was found under .nx/migrate-runs."
+      );
+      expect(() => readLatestPlanSnapshot(root, 'bad;id')).toThrow(
+        "Invalid run id 'bad;id'."
+      );
     });
   });
 

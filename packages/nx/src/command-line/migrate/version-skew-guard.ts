@@ -23,6 +23,8 @@ export const NEW_MIGRATE_FLAGS = [
   '--runId',
   '--step-action',
   '--stepAction',
+  '--start-fresh',
+  '--startFresh',
 ] as const;
 
 const RUN_ID_FLAGS = ['--run-id', '--runId'] as const;
