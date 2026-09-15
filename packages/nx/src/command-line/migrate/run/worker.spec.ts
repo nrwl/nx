@@ -2642,6 +2642,7 @@ describe('runSingleMigrationWorker', () => {
           {
             kind: 'install-failed',
             message: 'registry unreachable',
+            peerDeps: false,
             output: [],
           },
           run
@@ -2703,6 +2704,7 @@ describe('runSingleMigrationWorker', () => {
           {
             kind: 'install-failed',
             message: 'registry unreachable',
+            peerDeps: false,
             output: [],
           },
           run
