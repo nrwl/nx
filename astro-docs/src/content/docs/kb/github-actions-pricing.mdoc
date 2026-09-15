@@ -114,16 +114,14 @@ Each job takes about 30 minutes, 3 of them checkout and install, for 120 machine
 | Nx Cloud, 50% cached | 72             | $0.432         | $0.297           | $0.729        | $364.50  | 17.5 min   |
 | Nx Cloud, 70% cached | 52             | $0.312         | $0.297           | $0.609        | $304.50  | 12.1 min   |
 
-At 50% cached each job pays 3 minutes of setup, 1 minute to restore the cache, then half of its
-remaining 27 minutes of work. That is 17.5 minutes, which GitHub bills as 18.
-The month costs $4.50 more than plain GitHub Actions.
-At this size the cache buys 12 minutes off every run, not a lower bill.
-At 70% each job bills as 13 minutes and the bill falls 15%.
+At 50% cached the month costs $4.50 more than plain GitHub Actions, so the cache buys 12.5 minutes
+off every run rather than a lower bill.
+At 70% the bill falls 15%.
 
 ## Example: eight-job matrix on 8-core runners
 
 A larger workspace runs the same 500 pipelines a month across eight jobs on 8-core runners,
-20 minutes each, for 160 machine-minutes per run.
+20 minutes each including 3 of checkout and install, for 160 machine-minutes per run.
 That baseline is well above break-even, so the cache is cheaper at either share.
 
 | Setup                | Billed minutes | GitHub per run | Nx Cloud per run | Total per run | 500 runs  | Wall clock |
