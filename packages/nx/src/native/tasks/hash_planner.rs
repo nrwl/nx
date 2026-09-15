@@ -588,24 +588,27 @@ impl HashPlanner {
         inputs
     }
 
-    /// A declared `includeIgnored` glob the hasher would reject is a native
-    /// error; a snapshot must not turn it into a plan with a hole.
+    /// A declared `includeIgnored` group the hasher would reject is a native
+    /// error; a snapshot must not turn it into a plan with a hole. The plain
+    /// planner is the judge, so its group rules apply here unchanged.
     fn declared_files_invalid(&self, task: &Task) -> bool {
         let Ok(inputs) = get_inputs(task, &self.project_graph, &self.nx_json) else {
             return false;
         };
-        let project = &self.project_graph.nodes[&task.target.project];
-        inputs.self_inputs.iter().any(|input| match input {
-            Input::FileSet {
-                fileset,
-                include_ignored: true,
-                ..
-            } => {
-                let resolved = resolve_files_glob(fileset, &project.root, &task.target.project);
-                validate_files_globs(std::slice::from_ref(&resolved)).is_err()
-            }
-            _ => false,
-        })
+        // Only an includeIgnored group can fail there, so the rest skip it.
+        let declares_ignored = inputs.self_inputs.iter().any(|input| {
+            matches!(
+                input,
+                Input::FileSet {
+                    include_ignored: true,
+                    ..
+                }
+            )
+        });
+        declares_ignored
+            && self
+                .gather_self_inputs(&task.target.project, &inputs.self_inputs, None)
+                .is_err()
     }
 
     /// The file half of a snapshot-hashed task: the observed reads minus files
