@@ -20,6 +20,7 @@ import {
   replayDeferredOutput,
   type DeferredOutputRecord,
 } from '../deferred-output';
+import { NpmPeerDepsInstallError } from '../execute-migration';
 import {
   commitMigrationIfRequested,
   type CommitResult,
@@ -74,7 +75,12 @@ export type BrokerResult =
       output: DeferredOutputRecord[];
     }
   | { kind: 'installed'; output: DeferredOutputRecord[] }
-  | { kind: 'install-failed'; message: string; output: DeferredOutputRecord[] }
+  | {
+      kind: 'install-failed';
+      message: string;
+      peerDeps: boolean;
+      output: DeferredOutputRecord[];
+    }
   | { kind: 'stale' };
 
 type BrokerAnswer = Extract<BrokerResult, { kind: 'commit' | 'installed' }>;
@@ -258,7 +264,10 @@ function settle(result: BrokerResult): BrokerAnswer {
       return result;
     case 'install-failed':
       replayDeferredOutput(result.output);
-      throw new Error(result.message);
+      // The CLI catch returns 1 on the typed error instead of logging again.
+      throw result.peerDeps
+        ? new NpmPeerDepsInstallError()
+        : new Error(result.message);
     case 'stale':
       throw new BrokerStaleRequestError(
         `The request for this step no longer matches its attempt; nothing was installed or committed.`
@@ -389,6 +398,7 @@ export class MigrateCommitBroker {
       return {
         kind: 'install-failed',
         message: e instanceof Error ? e.message : String(e),
+        peerDeps: e instanceof NpmPeerDepsInstallError,
         // The package manager's own output: for pnpm, Yarn and Bun the error
         // says only that the command failed.
         output: output.render('keep'),
