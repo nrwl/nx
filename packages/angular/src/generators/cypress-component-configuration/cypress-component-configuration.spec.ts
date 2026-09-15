@@ -3,6 +3,7 @@ import {
   DependencyType,
   joinPathFragments,
   ProjectGraph,
+  readJson,
   readProjectConfiguration,
   Tree,
   updateJson,
@@ -1059,6 +1060,57 @@ describe('Cypress Component Testing Configuration', () => {
     expect(
       tree.read('zoneless-app/cypress/support/component.ts', 'utf-8')
     ).toContain(`import { mount } from 'cypress/angular';`);
+  });
+
+  it('should generate component tests for a zone-based application on cypress 16 without @angular/platform-browser-dynamic', async () => {
+    mockedInstalledCypressVersion.mockReturnValue(16);
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = {
+        ...json.dependencies,
+        cypress: '16.0.0',
+      };
+      return json;
+    });
+    await generateTestApplication(tree, {
+      directory: 'zone-app',
+      bundler: 'webpack',
+      zoneless: false,
+      skipFormat: true,
+    });
+    await componentGenerator(tree, {
+      name: 'fancy-cmp',
+      path: 'zone-app/src/app/fancy-cmp/fancy-cmp',
+      skipFormat: true,
+    });
+    projectGraph = {
+      nodes: {
+        'zone-app': {
+          name: 'zone-app',
+          type: 'app',
+          data: { ...readProjectConfiguration(tree, 'zone-app') } as any,
+        },
+      },
+      dependencies: {},
+    };
+
+    useAngularSupportedByCypress(tree);
+    await cypressComponentConfiguration(tree, {
+      project: 'zone-app',
+      generateTests: true,
+      skipFormat: true,
+    });
+
+    expect(
+      tree.read('zone-app/cypress/support/component.ts', 'utf-8')
+    ).toContain(`import { mount } from 'cypress/angular';`);
+    expect(tree.exists('zone-app/src/app/fancy-cmp/fancy-cmp.cy.ts')).toBe(
+      true
+    );
+    const { dependencies, devDependencies } = readJson(tree, 'package.json');
+    expect(dependencies['@angular/platform-browser-dynamic']).toBeUndefined();
+    expect(
+      devDependencies['@angular/platform-browser-dynamic']
+    ).toBeUndefined();
   });
 
   it('should import mount from cypress/angular when the installed cypress 16 satisfies a range spanning majors', async () => {
