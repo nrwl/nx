@@ -12,7 +12,7 @@ import {
   TaskHasher,
   transferProjectGraph,
 } from '../native';
-import type { IgnoredIndex } from '../native';
+import type { IgnoredIndexReader } from '../native';
 import { transformProjectGraphForRust } from '../native/transform-objects';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
@@ -25,7 +25,7 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
   projectGraphRef: ExternalObject<NativeProjectGraph>;
   allWorkspaceFilesRef: ExternalObject<FileData[]>;
   projectFileMapRef: ExternalObject<Record<string, FileData[]>>;
-  ignoredIndexRef: ExternalObject<IgnoredIndex>;
+  ignoredIndexRef: ExternalObject<IgnoredIndexReader>;
   options: HasherOptions | undefined;
   /**
    * Plans of the last up-front batch and the task graph they were built for.

@@ -104,7 +104,13 @@ export declare class HttpRemoteCache {
   store(hash: string, cacheDirectory: string, terminalOutput: string, code: number): Promise<boolean>
 }
 
-export declare class IgnoredIndex {
+/**
+ * The context's index of the directories hashed from disk, read the way
+ * the context reads its files: what the watch has delivered is applied
+ * first, and a walk in progress is waited out, so a listing never predates
+ * a write the watch has already reported or misses a rescan's re-listing.
+ */
+export declare class IgnoredIndexReader {
 
 }
 
@@ -208,7 +214,7 @@ export declare class TaskDetails {
 }
 
 export declare class TaskHasher {
-  constructor(workspaceRoot: string, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<Record<string, Array<FileData>>>, allWorkspaceFiles: ExternalObject<Array<FileData>>, tsConfig: Buffer, tsConfigPaths: Record<string, Array<string>>, rootTsconfigPath: string | undefined | null, options: HasherOptions | undefined | null, ignoredIndex: ExternalObject<IgnoredIndex>)
+  constructor(workspaceRoot: string, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<Record<string, Array<FileData>>>, allWorkspaceFiles: ExternalObject<Array<FileData>>, tsConfig: Buffer, tsConfigPaths: Record<string, Array<string>>, rootTsconfigPath: string | undefined | null, options: HasherOptions | undefined | null, ignoredIndex: ExternalObject<IgnoredIndexReader>)
   /**
    * Hash each task's instructions using the env map keyed by `task.id`.
    * Every task in `hash_plans` must have an entry in `per_task_envs` —
@@ -739,7 +745,7 @@ export interface NxWorkspaceFilesExternals {
   projectFiles: ExternalObject<Record<string, Array<FileData>>>
   globalFiles: ExternalObject<Array<FileData>>
   allWorkspaceFiles: ExternalObject<Array<FileData>>
-  ignoredIndex: ExternalObject<IgnoredIndex>
+  ignoredIndex: ExternalObject<IgnoredIndexReader>
 }
 
 export declare function parseTaskStatus(stringStatus: string): TaskStatus

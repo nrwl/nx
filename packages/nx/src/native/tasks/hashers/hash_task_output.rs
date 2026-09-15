@@ -66,7 +66,8 @@ pub fn hash_task_output(
     index: &IgnoredIndex,
 ) -> Result<TaskOutputHashResult> {
     let expansion = expand_task_outputs(workspace_root, glob, outputs, cache)?;
-    let hash = hash_files(workspace_root, &expansion, |_| None, index);
+    // Written by a task that has run, so never taken on trust.
+    let hash = hash_files(workspace_root, &expansion, |_| None, index, false);
     Ok(TaskOutputHashResult {
         hash,
         files: expansion.files,

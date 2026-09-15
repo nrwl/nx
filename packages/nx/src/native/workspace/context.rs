@@ -67,8 +67,10 @@ pub struct WorkspaceContext {
     batches: Publisher<ChangeBatch>,
     #[cfg(not(target_arch = "wasm32"))]
     events: Publisher<Vec<WatchEvent>>,
+    /// Shared with the readers the context hands out, so they drain the same
+    /// watch and stop hearing it once the context stops watching.
     #[cfg(not(target_arch = "wasm32"))]
-    watch: Mutex<Option<WatchSession>>,
+    watch: Arc<Mutex<Option<WatchSession>>>,
 }
 
 /// Sorted by path, which is the order every reader hands out.
@@ -761,6 +763,87 @@ fn apply(state: &mut State, workspace_root: &Path, changes: Vec<Change>) -> Outc
     outcomes
 }
 
+/// The context's index of the directories hashed from disk, read the way
+/// the context reads its files: what the watch has delivered is applied
+/// first, and a walk in progress is waited out, so a listing never predates
+/// a write the watch has already reported or misses a rescan's re-listing.
+#[napi]
+pub struct IgnoredIndexReader {
+    index: Arc<IgnoredIndex>,
+    files: FileState,
+    batches: Publisher<ChangeBatch>,
+    #[cfg(not(target_arch = "wasm32"))]
+    events: Publisher<Vec<WatchEvent>>,
+    #[cfg(not(target_arch = "wasm32"))]
+    watch: Arc<Mutex<Option<WatchSession>>>,
+    workspace_root_path: PathBuf,
+    cache_dir: String,
+}
+
+impl IgnoredIndexReader {
+    /// A reader over an index nothing watches or walks, for a hasher built
+    /// without a context.
+    pub(crate) fn unwatched() -> Self {
+        IgnoredIndexReader {
+            index: Arc::new(IgnoredIndex::new(None)),
+            files: FileState::default(),
+            batches: Publisher::default(),
+            #[cfg(not(target_arch = "wasm32"))]
+            events: Publisher::default(),
+            #[cfg(not(target_arch = "wasm32"))]
+            watch: Arc::new(Mutex::new(None)),
+            workspace_root_path: PathBuf::new(),
+            cache_dir: String::new(),
+        }
+    }
+
+    pub(crate) fn index(&self) -> &IgnoredIndex {
+        &self.index
+    }
+
+    /// See `IgnoredIndex::register`.
+    pub(crate) fn register(&self, workspace_root: &Path, prefix: &str) -> bool {
+        self.index.register(workspace_root, prefix)
+    }
+
+    /// The files under `dir` once the index has caught up, or `None` when no
+    /// registered directory covers it.
+    pub(crate) fn list(&self, dir: &str) -> Option<Vec<String>> {
+        if !self.index.covers(dir) {
+            return None;
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let batch = self.drain(FlushMode::Delivered, WhenScanning::Wait);
+            if !batch.is_empty() {
+                self.batches.publish(Ok(batch));
+            }
+        }
+        self.files.wait_ready();
+        self.index.list(dir)
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn drain(&self, mode: FlushMode, when_scanning: WhenScanning) -> ChangeBatch {
+        // Cloned out so the lock is not held through the pipeline round trip.
+        let Some(session) = self.watch.lock().clone() else {
+            return ChangeBatch::default();
+        };
+        let delivered = session.flush(mode);
+        if delivered.is_empty() {
+            return ChangeBatch::default();
+        }
+        self.events.publish(Ok(delivered.clone()));
+        let changes = delivered.into_iter().map(Change::from).collect();
+        self.files.ingest(
+            &self.workspace_root_path,
+            &self.cache_dir,
+            changes,
+            when_scanning,
+        )
+    }
+}
+
 /// Where what the context produces goes. The daemon subscribes once; until
 /// then deliveries are dropped, and an error is held for the subscriber that
 /// arrives.
@@ -912,7 +995,7 @@ impl WorkspaceContext {
             workspace_root_path,
             cache_dir,
             #[cfg(not(target_arch = "wasm32"))]
-            watch: Mutex::new(watch),
+            watch: Arc::new(Mutex::new(watch)),
         })
     }
 
@@ -992,22 +1075,22 @@ impl WorkspaceContext {
     /// for the caller to publish or hand back; empty when not watching.
     #[cfg(not(target_arch = "wasm32"))]
     fn drain(&self, mode: FlushMode, when_scanning: WhenScanning) -> ChangeBatch {
-        // Cloned out so the lock is not held through the pipeline round trip.
-        let Some(session) = self.watch.lock().clone() else {
-            return ChangeBatch::default();
-        };
-        let delivered = session.flush(mode);
-        if delivered.is_empty() {
-            return ChangeBatch::default();
+        self.reader().drain(mode, when_scanning)
+    }
+
+    /// A handle on the index that reads it as the context reads its files.
+    fn reader(&self) -> IgnoredIndexReader {
+        IgnoredIndexReader {
+            index: Arc::clone(&self.ignored),
+            files: self.files.clone(),
+            batches: self.batches.clone(),
+            #[cfg(not(target_arch = "wasm32"))]
+            events: self.events.clone(),
+            #[cfg(not(target_arch = "wasm32"))]
+            watch: Arc::clone(&self.watch),
+            workspace_root_path: self.workspace_root_path.clone(),
+            cache_dir: self.cache_dir.clone(),
         }
-        self.events.publish(Ok(delivered.clone()));
-        let changes = delivered.into_iter().map(Change::from).collect();
-        self.files.ingest(
-            &self.workspace_root_path,
-            &self.cache_dir,
-            changes,
-            when_scanning,
-        )
     }
 
     /// The files as of now: whatever the watcher has delivered is applied
@@ -1175,7 +1258,7 @@ impl WorkspaceContext {
         workspace_files::get_files(
             project_root_map,
             self.current_files(),
-            Arc::clone(&self.ignored),
+            Arc::new(self.reader()),
         )
         .map_err(anyhow::Error::from)
     }
@@ -1392,7 +1475,7 @@ impl WorkspaceContext {
                 project_files: External::new(Arc::new(project_files_map)),
                 global_files: External::new(Arc::new(non_project_files)),
                 all_workspace_files: External::new(Arc::new(self.current_files())),
-                ignored_index: External::new(Arc::clone(&self.ignored)),
+                ignored_index: External::new(Arc::new(self.reader())),
             },
         }
     }
@@ -2133,12 +2216,12 @@ mod tests {
         assert!(!names_of(&ctx).contains(&"dist/out.js".to_string()));
 
         // A hash is trusted until the watch reports the file again.
-        let first = index.hash_file(&root, "dist/out.js", None);
+        let first = index.hash_file(&root, "dist/out.js", None, true);
         assert!(index.trusted_hash("dist/out.js").is_some());
         temp.child("dist/out.js").write_str("xx").unwrap();
         ctx.settle();
         assert!(index.trusted_hash("dist/out.js").is_none());
-        assert_ne!(first, index.hash_file(&root, "dist/out.js", None));
+        assert_ne!(first, index.hash_file(&root, "dist/out.js", None, true));
 
         // Tracked files under a registered directory are listed too, and
         // still reach the files.
@@ -2185,6 +2268,78 @@ mod tests {
         .unwrap();
         ctx.settle();
         assert_eq!(index.list("dist").unwrap(), vec!["dist/sub2/x.js"]);
+
+        // Tracked files move with their directory in the files too: the old
+        // path leaves as a delete of the directory, the new one arrives
+        // through its files.
+        temp.child("src/sub/t.ts").write_str("t").unwrap();
+        ctx.settle();
+        assert!(names_of(&ctx).contains(&"src/sub/t.ts".to_string()));
+        std::fs::rename(temp.child("src/sub").path(), temp.child("src/sub2").path()).unwrap();
+        ctx.settle();
+        let names = names_of(&ctx);
+        assert!(names.contains(&"src/sub2/t.ts".to_string()));
+        assert!(!names.contains(&"src/sub/t.ts".to_string()));
+    }
+
+    #[test]
+    #[cfg(not(target_arch = "wasm32"))]
+    fn a_listing_sees_a_write_nobody_settled() {
+        let temp = workspace_with(&["a.ts"]);
+        temp.child(".gitignore").write_str("dist/\n").unwrap();
+        let cache = TempDir::new().unwrap();
+        let ctx = watching_context(&temp, &cache);
+        ctx.all_file_data();
+        let root = dunce::canonicalize(temp.path()).unwrap();
+        let reader = ctx.reader();
+        assert!(reader.register(&root, "dist"));
+
+        // No settle: a listing applies what the watch has delivered itself,
+        // so the write shows up within the kernel's hop, not the idle flush.
+        temp.child("dist/out.js").write_str("x").unwrap();
+        wait_until("a listing never saw the write", || {
+            reader.list("dist").unwrap() == vec!["dist/out.js"]
+        });
+    }
+
+    #[test]
+    #[cfg(not(target_arch = "wasm32"))]
+    fn a_listing_waits_for_a_walk_in_progress_to_relist() {
+        let temp = workspace_with(&["a.ts"]);
+        temp.child("dist/a.js").write_str("a").unwrap();
+        let cache = TempDir::new().unwrap();
+        let ctx = context(&temp, &cache);
+        files_of(&ctx);
+        let root = temp.path().to_path_buf();
+        let reader = ctx.reader();
+        assert!(reader.register(&root, "dist"));
+
+        // Nothing watches, so only the walk can find this file.
+        temp.child("dist/b.js").write_str("b").unwrap();
+        let lock_path = cache.path().join(NX_FILES_LOCK);
+        let mut holder = hold_lock(&cache);
+        let waits_before = waits_started_on(&lock_path);
+        assert!(ctx.refresh());
+        let deadline = Instant::now() + Duration::from_secs(10);
+        while waits_started_on(&lock_path) == waits_before {
+            assert!(Instant::now() < deadline, "the walk never started");
+            std::thread::sleep(Duration::from_millis(5));
+        }
+
+        let (tx, rx) = std::sync::mpsc::channel();
+        let listing = std::thread::spawn(move || {
+            tx.send(reader.list("dist").unwrap()).unwrap();
+        });
+        assert!(
+            rx.recv_timeout(Duration::from_millis(300)).is_err(),
+            "the listing answered while the walk was still running"
+        );
+        holder.unlock().unwrap();
+        assert_eq!(
+            rx.recv_timeout(Duration::from_secs(10)).unwrap(),
+            vec!["dist/a.js", "dist/b.js"]
+        );
+        listing.join().unwrap();
     }
 
     #[test]

@@ -7,13 +7,13 @@ use rayon::prelude::*;
 use tracing::trace;
 
 use crate::native::types::FileData;
-use crate::native::workspace::ignored_index::IgnoredIndex;
+use crate::native::workspace::context::IgnoredIndexReader;
 use crate::native::workspace::types::{FileLocation, NxWorkspaceFiles, NxWorkspaceFilesExternals};
 
 pub(super) fn get_files(
     project_root_map: HashMap<String, String>,
     files: Vec<FileData>,
-    ignored_index: Arc<IgnoredIndex>,
+    ignored_index: Arc<IgnoredIndexReader>,
 ) -> napi::Result<NxWorkspaceFiles> {
     if files.is_empty() {
         return Ok(Default::default());

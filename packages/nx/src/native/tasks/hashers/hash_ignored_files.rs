@@ -15,18 +15,21 @@ use crate::native::workspace::ignored_index::IgnoredIndex;
 /// Folds `(path, content hash)` pairs in path order, like a fileset. `known`
 /// answers from the workspace file map, when the caller trusts it, so those
 /// files are not read; everything else is the index's to answer or read.
+/// `trust_index` is `IgnoredIndex::hash_file`'s `trust`.
 pub(crate) fn hash_files(
     workspace_root: &Path,
     expansion: &FilesExpansion,
     known: impl Fn(&str) -> Option<String> + Sync,
     index: &IgnoredIndex,
+    trust_index: bool,
 ) -> String {
     let hashes: Vec<String> = expansion
         .files
         .par_iter()
         .zip(expansion.stamps.par_iter())
         .map(|(file, stamp)| {
-            known(file).unwrap_or_else(|| index.hash_file(workspace_root, file, *stamp))
+            known(file)
+                .unwrap_or_else(|| index.hash_file(workspace_root, file, *stamp, trust_index))
         })
         .collect();
 
@@ -78,14 +81,14 @@ mod tests {
         let before = expand_files(temp.path(), &input).unwrap();
         assert!(before.files.is_empty());
         assert_eq!(before.missing, vec!["dist/gen/generated.d.ts"]);
-        let hash_before = hash_files(temp.path(), &before, |_| None, &index);
+        let hash_before = hash_files(temp.path(), &before, |_| None, &index, false);
 
         temp.child("dist/gen/generated.d.ts")
             .write_str("x")
             .unwrap();
         let after = expand_files(temp.path(), &input).unwrap();
         assert_eq!(after.files, vec!["dist/gen/generated.d.ts"]);
-        let hash_after = hash_files(temp.path(), &after, |_| None, &index);
+        let hash_after = hash_files(temp.path(), &after, |_| None, &index, false);
 
         assert_ne!(hash_before, hash_after);
     }
@@ -96,12 +99,13 @@ mod tests {
         let index = IgnoredIndex::new(None);
         let expansion = expand_files(temp.path(), &globs(&["dist/gen/a.js"])).unwrap();
 
-        let from_disk = hash_files(temp.path(), &expansion, |_| None, &index);
+        let from_disk = hash_files(temp.path(), &expansion, |_| None, &index, false);
         let from_map = hash_files(
             temp.path(),
             &expansion,
             |path| (path == "dist/gen/a.js").then(|| "known".to_string()),
             &index,
+            false,
         );
         assert_ne!(from_disk, from_map);
     }

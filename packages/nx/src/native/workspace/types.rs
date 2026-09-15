@@ -1,5 +1,5 @@
 use crate::native::types::FileData;
-use crate::native::workspace::ignored_index::IgnoredIndex;
+use crate::native::workspace::context::IgnoredIndexReader;
 use napi::bindgen_prelude::*;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -29,8 +29,8 @@ pub struct NxWorkspaceFilesExternals {
     pub project_files: External<Arc<ProjectFiles>>,
     pub global_files: External<Arc<Vec<FileData>>>,
     pub all_workspace_files: External<Arc<Vec<FileData>>>,
-    #[napi(ts_type = "ExternalObject<IgnoredIndex>")]
-    pub ignored_index: External<Arc<IgnoredIndex>>,
+    #[napi(ts_type = "ExternalObject<IgnoredIndexReader>")]
+    pub ignored_index: External<Arc<IgnoredIndexReader>>,
 }
 
 #[napi(object, object_from_js = false)]

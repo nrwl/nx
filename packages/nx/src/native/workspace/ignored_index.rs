@@ -22,7 +22,6 @@ use crate::native::tasks::hashers::{FileStamp, MISSING_FILE_HASH, seed_walk, sta
 /// directory when the flag is set). A prefix it drops cannot be kept current.
 pub(crate) type Gate = Arc<dyn Fn(&str, bool) -> bool + Send + Sync>;
 
-#[napi]
 pub struct IgnoredIndex {
     /// Registered directories, workspace-relative, `""` for the root. One
     /// inside another is covered by the outer.
@@ -155,6 +154,7 @@ impl IgnoredIndex {
             return;
         }
         self.generation.fetch_add(1, Ordering::AcqRel);
+        trace!("written under an indexed directory: {path}");
         match std::fs::metadata(workspace_root.join(path)) {
             Ok(metadata) if metadata.is_dir() => {
                 if let Some(seeded) = seed_walk(workspace_root, path) {
@@ -177,6 +177,7 @@ impl IgnoredIndex {
             return;
         }
         self.generation.fetch_add(1, Ordering::AcqRel);
+        trace!("deleted under an indexed directory: {path}");
         self.remove(path);
     }
 
@@ -243,14 +244,18 @@ impl IgnoredIndex {
     /// The content hash of `path`, from the entry when its stamp still
     /// matches (`stamp` is the one expansion read, or the file is stat'ed),
     /// otherwise read from disk and remembered. A path no watch keeps is
-    /// remembered only when nothing watches at all.
+    /// remembered only when nothing watches at all. `trust` lets a trusted
+    /// entry answer without a stat; only a caller whose watch events are all
+    /// applied may pass it, since a task that just wrote a file may not have
+    /// been heard yet.
     pub(crate) fn hash_file(
         &self,
         workspace_root: &Path,
         path: &str,
         stamp: Option<FileStamp>,
+        trust: bool,
     ) -> String {
-        if let Some(hash) = self.trusted_hash(path) {
+        if trust && let Some(hash) = self.trusted_hash(path) {
             return hash;
         }
         let full_path = workspace_root.join(path);
@@ -268,6 +273,7 @@ impl IgnoredIndex {
         // Taken before the read: a same-size write between the read and a
         // later stamp is then inside the entry's own second, and racy.
         let made_at = now_secs();
+        trace!("reading {path}");
         let hash = hash_file_path(&full_path).unwrap_or_else(|| MISSING_FILE_HASH.to_string());
         if let Some(stamp) = stamp
             && keep
@@ -446,18 +452,27 @@ mod tests {
         index.register(temp.path(), "dist");
         let file = temp.path().join("dist/gen/a.js");
         age(&file);
-        let first = index.hash_file(temp.path(), "dist/gen/a.js", None);
+        let first = index.hash_file(temp.path(), "dist/gen/a.js", None, true);
         assert_eq!(
             index.trusted_hash("dist/gen/a.js").as_deref(),
             Some(first.as_str())
         );
-        // A write with no event behind it is invisible: that is the contract.
+        // A write with no event behind it is invisible to a trusting caller:
+        // that is the contract. One that cannot vouch for the watch checks
+        // the stamp and sees it.
         temp.child("dist/gen/a.js").write_str("rewritten").unwrap();
-        assert_eq!(index.hash_file(temp.path(), "dist/gen/a.js", None), first);
-        // The event drops the trust; the stamp then says the file changed.
+        assert_eq!(
+            index.hash_file(temp.path(), "dist/gen/a.js", None, true),
+            first
+        );
+        assert_ne!(
+            index.hash_file(temp.path(), "dist/gen/a.js", None, false),
+            first
+        );
+        // An event drops the trust; the next read makes the entry again.
         index.note_written(temp.path(), "dist/gen/a.js");
         assert!(index.trusted_hash("dist/gen/a.js").is_none());
-        let second = index.hash_file(temp.path(), "dist/gen/a.js", None);
+        let second = index.hash_file(temp.path(), "dist/gen/a.js", None, true);
         assert_ne!(first, second);
         assert!(index.trusted_hash("dist/gen/a.js").is_some());
     }
@@ -469,10 +484,13 @@ mod tests {
         index.register(temp.path(), "dist");
         let file = temp.path().join("dist/gen/a.js");
         age(&file);
-        let first = index.hash_file(temp.path(), "dist/gen/a.js", None);
+        let first = index.hash_file(temp.path(), "dist/gen/a.js", None, true);
         index.note_written(temp.path(), "dist/gen/a.js");
         // Untouched on disk: the stamp matches, no read, trusted again.
-        assert_eq!(index.hash_file(temp.path(), "dist/gen/a.js", None), first);
+        assert_eq!(
+            index.hash_file(temp.path(), "dist/gen/a.js", None, true),
+            first
+        );
         assert!(index.trusted_hash("dist/gen/a.js").is_some());
 
         // Written and hashed inside one second, then rewritten to the same
@@ -481,11 +499,14 @@ mod tests {
         temp.child("dist/gen/a.js").write_str("r").unwrap();
         set_modified(&file, now);
         index.note_written(temp.path(), "dist/gen/a.js");
-        let racy = index.hash_file(temp.path(), "dist/gen/a.js", None);
+        let racy = index.hash_file(temp.path(), "dist/gen/a.js", None, true);
         temp.child("dist/gen/a.js").write_str("s").unwrap();
         set_modified(&file, now);
         index.note_written(temp.path(), "dist/gen/a.js");
-        assert_ne!(racy, index.hash_file(temp.path(), "dist/gen/a.js", None));
+        assert_ne!(
+            racy,
+            index.hash_file(temp.path(), "dist/gen/a.js", None, true)
+        );
     }
 
     #[test]
@@ -493,11 +514,11 @@ mod tests {
         let temp = workspace();
         let index = watched();
         index.register(temp.path(), "dist");
-        index.hash_file(temp.path(), "src/index.ts", None);
+        index.hash_file(temp.path(), "src/index.ts", None, true);
         assert!(!index.remembered("src/index.ts"));
         assert!(index.trusted_hash("src/index.ts").is_none());
         let unwatched = IgnoredIndex::new(None);
-        unwatched.hash_file(temp.path(), "src/index.ts", None);
+        unwatched.hash_file(temp.path(), "src/index.ts", None, true);
         assert!(unwatched.remembered("src/index.ts"));
         // Never trusted blind without a watch: the stamp is checked each time.
         assert!(unwatched.trusted_hash("src/index.ts").is_none());
@@ -509,7 +530,7 @@ mod tests {
         let index = watched();
         index.register(temp.path(), "dist");
         assert_eq!(
-            index.hash_file(temp.path(), "dist/gen/absent.js", None),
+            index.hash_file(temp.path(), "dist/gen/absent.js", None, true),
             MISSING_FILE_HASH
         );
         assert!(!index.remembered("dist/gen/absent.js"));

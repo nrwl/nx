@@ -24,7 +24,7 @@ use crate::native::{
         literal_prefix, normalize_glob, output_prefixes,
     },
     types::FileData,
-    workspace::ignored_index::IgnoredIndex,
+    workspace::context::IgnoredIndexReader,
     workspace::types::ProjectFiles,
 };
 use dashmap::DashMap;
@@ -261,7 +261,7 @@ fn intern_value(interner: &DashMap<String, Arc<str>>, value: String) -> Arc<str>
 pub struct TaskHasher {
     /// The context\'s index of the directories hashed from disk, see
     /// `register_prefixes`.
-    ignored_index: Arc<IgnoredIndex>,
+    ignored_index: Arc<IgnoredIndexReader>,
     workspace_root: String,
     project_graph: Arc<ProjectGraph>,
     project_file_map: Arc<HashMap<String, Vec<FileData>>>,
@@ -305,8 +305,8 @@ impl TaskHasher {
         ts_config_paths: HashMap<String, Vec<String>>,
         root_tsconfig_path: Option<String>,
         options: Option<HasherOptions>,
-        #[napi(ts_arg_type = "ExternalObject<IgnoredIndex>")] ignored_index: &External<
-            Arc<IgnoredIndex>,
+        #[napi(ts_arg_type = "ExternalObject<IgnoredIndexReader>")] ignored_index: &External<
+            Arc<IgnoredIndexReader>,
         >,
     ) -> Self {
         Self {
@@ -797,7 +797,8 @@ impl TaskHasher {
                             None
                         }
                     },
-                    &self.ignored_index,
+                    self.ignored_index.index(),
+                    trust_file_map,
                 );
                 trace!(parent: &span, "hash_files: {:?}", now.elapsed());
                 let inputs = if collect_inputs {
@@ -904,7 +905,7 @@ impl TaskHasher {
                     glob,
                     outputs,
                     files_expansion_cache,
-                    &self.ignored_index,
+                    self.ignored_index.index(),
                 )?;
                 trace!(parent: &span, "hash_task_output: {:?}", now.elapsed());
                 let inputs = if collect_inputs {
