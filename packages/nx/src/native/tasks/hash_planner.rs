@@ -819,30 +819,28 @@ impl HashPlanner {
     ) -> anyhow::Result<Vec<HashInstruction>> {
         // `includeIgnored` filesets hash from disk as one aggregated group, so
         // a negation filters across entries; the rest read the file map.
-        let ignored_file_sets: Vec<&str> = self_inputs
-            .iter()
-            .filter_map(|input| match input {
-                Input::FileSet {
-                    fileset,
-                    include_ignored: true,
-                    ..
-                } => Some(*fileset),
-                _ => None,
-            })
-            .collect();
-        let (project_file_sets, workspace_file_sets): (Vec<&str>, Vec<&str>) = self_inputs
-            .iter()
-            .filter_map(|input| match input {
-                Input::FileSet {
-                    fileset,
-                    include_ignored: false,
-                    ..
-                } => Some(*fileset),
-                _ => None,
-            })
-            .partition(|file_set| {
-                file_set.starts_with("{projectRoot}/") || file_set.starts_with("!{projectRoot}/")
-            });
+        let mut ignored_file_sets: Vec<&str> = Vec::new();
+        let mut project_file_sets: Vec<&str> = Vec::new();
+        let mut workspace_file_sets: Vec<&str> = Vec::new();
+        for input in self_inputs {
+            let Input::FileSet {
+                fileset,
+                include_ignored,
+                ..
+            } = input
+            else {
+                continue;
+            };
+            if *include_ignored {
+                ignored_file_sets.push(fileset);
+            } else if fileset.starts_with("{projectRoot}/")
+                || fileset.starts_with("!{projectRoot}/")
+            {
+                project_file_sets.push(fileset);
+            } else {
+                workspace_file_sets.push(fileset);
+            }
+        }
 
         let project_root = &self.project_graph.nodes[project_name].root;
 
@@ -879,17 +877,11 @@ impl HashPlanner {
         let disk_backed_inputs = if ignored_file_sets.is_empty() {
             vec![]
         } else {
-            if ignored_file_sets.iter().all(|f| f.starts_with('!')) {
-                anyhow::bail!(
-                    "The includeIgnored fileset \"{}\" applied to \"{project_name}\" is a negation with no positive includeIgnored fileset to filter. A negation only filters positive includeIgnored filesets in the same group: declare one for the same project, and note a fileset with `dependencies: true` is hashed on its own for each dependency, so a negation there has nothing to filter.",
-                    ignored_file_sets[0]
-                );
-            }
             let resolved: Vec<String> = ignored_file_sets
                 .iter()
                 .map(|f| resolve_files_glob(f, project_root, project_name))
                 .collect();
-            validate_files_globs(&resolved)?;
+            validate_files_globs(project_name, &resolved)?;
             vec![HashInstruction::ProjectFileSet(
                 project_name.to_string(),
                 resolved,
@@ -998,11 +990,12 @@ fn prefixed_cache_key(dep: &str, kind: char, rest: &str) -> String {
     format!("{}:{dep}{kind}{rest}", dep.len())
 }
 
-/// Tasks the up-front batch must leave out: one of their disk-backed
-/// filesets reads from a directory that contains, or sits inside, an output
-/// declared by a task they depend on, directly or through the chain, so its
-/// files may still change during the run. Any other disk-backed fileset
-/// hashes up front like a tracked one.
+/// Tasks the up-front batch must leave out because they read what a task
+/// they depend on, directly or through the chain, writes: any task with a
+/// `dependentTasksOutputFiles` instruction, and any task with a disk-backed
+/// fileset that reads from a directory containing, or sitting inside, an
+/// output an upstream task declares. Any other disk-backed fileset hashes up
+/// front like a tracked one.
 fn deferred_tasks(
     plans: &HashMap<String, Vec<u32>>,
     pool: &InstructionPool,
@@ -1011,16 +1004,19 @@ fn deferred_tasks(
     plans
         .par_iter()
         .filter(|(task_id, ids)| {
-            let disk_roots: Vec<String> = ids
-                .iter()
-                .filter_map(|id| match &*pool.get(*id) {
-                    HashInstruction::ProjectFileSet(_, globs, true) => Some(globs.clone()),
-                    _ => None,
-                })
-                .flatten()
-                .filter(|glob| !glob.starts_with('!'))
-                .map(|glob| walk_root(&glob))
-                .collect();
+            let mut disk_roots: Vec<String> = Vec::new();
+            for id in ids.iter() {
+                match &*pool.get(*id) {
+                    HashInstruction::TaskOutput(_, _) => return true,
+                    HashInstruction::ProjectFileSet(_, globs, true) => disk_roots.extend(
+                        globs
+                            .iter()
+                            .filter(|glob| !glob.starts_with('!'))
+                            .map(|glob| walk_root(glob)),
+                    ),
+                    _ => {}
+                }
+            }
             if disk_roots.is_empty() {
                 return false;
             }
@@ -1622,7 +1618,7 @@ mod tests {
     }
 
     #[test]
-    fn defers_only_a_disk_backed_fileset_that_reaches_an_upstream_output() {
+    fn defers_a_task_that_reads_an_upstream_output() {
         let pool = InstructionPool::new();
         let disk = |project: &str, glob: &str| {
             pool.intern(HashInstruction::ProjectFileSet(
@@ -1658,6 +1654,13 @@ mod tests {
             ("web:outside", vec![disk("web", "apps/web/.env.generated")]),
             ("web:outslash", vec![disk("web", "dist/apps/web/**")]),
             ("lib:build", vec![tracked]),
+            (
+                "web:e2e",
+                vec![pool.intern(HashInstruction::TaskOutput(
+                    "**/*.js".into(),
+                    vec!["apps/web/dist".into()],
+                ))],
+            ),
         ]
         .into_iter()
         .map(|(id, ids)| (id.to_string(), ids))
@@ -1674,6 +1677,7 @@ mod tests {
             ("web:dotdist", vec![]),
             ("web:outside", vec![]),
             ("web:outslash", vec![]),
+            ("web:e2e", vec![]),
             ("web:codegen", vec!["apps/web/generated"]),
             ("web:serve", vec!["apps/web/d"]),
             (
@@ -1726,13 +1730,15 @@ mod tests {
         // is `dist`, so it holds `dist/legacy` but not `apps/web`; an output
         // the parser rejects (`../outside`) counts as the workspace root.
         // web:lint reads a file no upstream task writes, and a `!` entry on
-        // either side is neither a read nor a write.
+        // either side is neither a read nor a write. web:e2e reads dependent
+        // task outputs, which always wait.
         assert_eq!(
             deferred,
             vec![
                 "web:bracket",
                 "web:build",
                 "web:dotdist",
+                "web:e2e",
                 "web:outside",
                 "web:outslash",
                 "web:slashes",

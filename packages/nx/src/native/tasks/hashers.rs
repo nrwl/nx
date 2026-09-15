@@ -1,7 +1,9 @@
+mod disk_expansion;
+mod file_content_cache;
 mod hash_cwd;
 mod hash_env;
 mod hash_external;
-mod hash_files;
+mod hash_ignored_files;
 mod hash_json;
 mod hash_project_config;
 mod hash_project_files;
@@ -11,10 +13,12 @@ mod hash_tsconfig;
 mod hash_workspace_files;
 mod once_cache;
 
+pub use disk_expansion::*;
+pub use file_content_cache::*;
 pub use hash_cwd::*;
 pub use hash_env::*;
 pub use hash_external::*;
-pub use hash_files::*;
+pub use hash_ignored_files::*;
 pub use hash_json::*;
 pub use hash_project_config::*;
 pub(crate) use hash_project_files::{

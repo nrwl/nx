@@ -16,12 +16,11 @@ use crate::native::{
 };
 use crate::native::{
     tasks::hashers::{
-        CachedTaskOutput, FilesExpansionCache, JsonHashResult, ProjectFileIndicesCache,
-        ProjectFileSetCache, WorkspaceFileIndicesCache, WorkspaceFileSetCache,
-        collect_project_file_paths_cached, collect_workspace_file_paths_cached,
-        expand_files_cached, hash_all_externals, hash_external, hash_files, hash_json_files,
-        hash_project_config, hash_project_files_cached, hash_task_output,
-        hash_tsconfig_selectively, hash_workspace_files_cached, index_file_map,
+        FilesExpansionCache, JsonHashResult, ProjectFileIndicesCache, ProjectFileSetCache,
+        WorkspaceFileIndicesCache, WorkspaceFileSetCache, collect_project_file_paths_cached,
+        collect_workspace_file_paths_cached, expand_files_cached, hash_all_externals,
+        hash_external, hash_files, hash_json_files, hash_project_config, hash_project_files_cached,
+        hash_task_output, hash_tsconfig_selectively, hash_workspace_files_cached, index_file_map,
         shared_file_content_cache,
     },
     types::FileData,
@@ -355,18 +354,19 @@ impl TaskHasher {
                 anyhow::bail!("hash_plans: missing env entry for task {}", task_id);
             }
         }
-        self.hash_plans_impl(hash_plans, cwd, collect_task_inputs, |task_id| {
+        self.hash_plans_impl(hash_plans, cwd, collect_task_inputs, false, |task_id| {
             per_task_envs
                 .get(task_id)
                 .expect("per-task env presence verified above")
         })
     }
 
-    /// Like `hash_plans`, but only for the plans that hold no output of another
-    /// task and no disk-backed fileset whose directory contains, or sits inside,
-    /// an upstream task's output (`HashPlans::deferred`). The rest are left out
-    /// and hash once those tasks have run; their ids are absent from the result
-    /// and need no entry in `per_task_envs`.
+    /// Like `hash_plans`, but only for the plans the planner did not defer
+    /// (`HashPlans::deferred`: a task that reads another task's outputs, or a
+    /// disk-backed fileset whose directory contains, or sits inside, an
+    /// upstream task's output). The rest are left out and hash once those
+    /// tasks have run; their ids are absent from the result and need no entry
+    /// in `per_task_envs`.
     #[napi(ts_return_type = "Record<string, HashDetails>")]
     pub fn hash_plans_upfront(
         &self,
@@ -381,12 +381,7 @@ impl TaskHasher {
         let plans: HashMap<String, Vec<u32>> = hash_plans
             .plans
             .iter()
-            .filter(|(task_id, ids)| {
-                !hash_plans.deferred.contains(task_id.as_str())
-                    && !ids
-                        .iter()
-                        .any(|id| matches!(*pool.get(*id), HashInstruction::TaskOutput(_, _)))
-            })
+            .filter(|(task_id, _)| !hash_plans.deferred.contains(task_id.as_str()))
             .map(|(task_id, ids)| (task_id.clone(), ids.clone()))
             .collect();
         let partition_duration = function_start.elapsed();
@@ -411,7 +406,7 @@ impl TaskHasher {
         // Once per run, before any hashing: drop the content cache entries the
         // last run's walks proved gone.
         shared_file_content_cache().reconcile();
-        let hashes = self.hash_plans_impl(&upfront, cwd, collect_task_inputs, |task_id| {
+        let hashes = self.hash_plans_impl(&upfront, cwd, collect_task_inputs, true, |task_id| {
             per_task_envs
                 .get(task_id)
                 .expect("per-task env presence verified above")
@@ -458,18 +453,23 @@ impl TaskHasher {
             plans,
             deferred: std::collections::HashSet::new(),
         };
-        self.hash_plans_impl(&subset, cwd, collect_task_inputs, |task_id| {
+        self.hash_plans_impl(&subset, cwd, collect_task_inputs, false, |task_id| {
             per_task_envs
                 .get(task_id)
                 .expect("per-task env presence verified above")
         })
     }
 
+    /// `trust_file_map` lets a disk-backed fileset take the file map's word
+    /// for tracked files. That holds before any task runs; once one has,
+    /// a tracked file it rewrote is stale in the map, so everything reads
+    /// from disk.
     fn hash_plans_impl<'a, F>(
         &self,
         hash_plans: &HashPlans,
         cwd: String,
         collect_task_inputs: Option<bool>,
+        trust_file_map: bool,
         resolve_env: F,
     ) -> anyhow::Result<TaskHashes>
     where
@@ -477,7 +477,6 @@ impl TaskHasher {
     {
         // Per-invocation: these read live disk/exec state (task outputs, shell commands,
         // json file contents) that can change mid-run, so they must not persist.
-        let task_output_cache = DashMap::new();
         let runtime_cache: DashMap<String, String> = DashMap::new();
         let json_file_set_cache: DashMap<String, JsonHashResult> = DashMap::new();
         let files_expansion_cache = FilesExpansionCache::new();
@@ -599,12 +598,12 @@ impl TaskHasher {
                                         project_root_mappings: &project_root_mappings,
                                         sorted_externals: &sorted_externals,
                                         selectively_hash_tsconfig,
-                                        task_output_cache: &task_output_cache,
                                         runtime_cache: &runtime_cache,
                                         project_file_set_cache: &self.project_file_set_cache,
                                         workspace_file_set_cache: &self.workspace_file_set_cache,
                                         json_file_set_cache: &json_file_set_cache,
                                         files_expansion_cache: &files_expansion_cache,
+                                        trust_file_map,
                                         cwd: cwd_path,
                                         collect_inputs: should_collect_inputs,
                                     },
@@ -669,12 +668,12 @@ impl TaskHasher {
             project_root_mappings,
             sorted_externals,
             selectively_hash_tsconfig,
-            task_output_cache,
             runtime_cache,
             project_file_set_cache,
             workspace_file_set_cache,
             json_file_set_cache,
             files_expansion_cache,
+            trust_file_map,
             cwd,
             collect_inputs,
         }: HashInstructionArgs,
@@ -739,12 +738,18 @@ impl TaskHasher {
                     &instruction.to_string(),
                     globs,
                     files_expansion_cache,
-                    &|path| self.workspace_file_known(path),
+                    &|path| trust_file_map && self.workspace_file_known(path),
                 )?;
                 let hashed = hash_files(
                     workspace_root,
                     &expansion,
-                    |path| self.workspace_file_hash(path),
+                    |path| {
+                        if trust_file_map {
+                            self.workspace_file_hash(path)
+                        } else {
+                            None
+                        }
+                    },
                     shared_file_content_cache(),
                 );
                 trace!(parent: &span, "hash_files: {:?}", now.elapsed());
@@ -847,8 +852,12 @@ impl TaskHasher {
                 (ts_hash, inputs)
             }
             HashInstruction::TaskOutput(glob, outputs) => {
-                let result =
-                    hash_task_output(&self.workspace_root, glob, outputs, task_output_cache)?;
+                let result = hash_task_output(
+                    Path::new(&self.workspace_root),
+                    glob,
+                    outputs,
+                    files_expansion_cache,
+                )?;
                 trace!(parent: &span, "hash_task_output: {:?}", now.elapsed());
                 let inputs = if collect_inputs {
                     HashInputsBuilder {
@@ -942,12 +951,12 @@ struct HashInstructionArgs<'a> {
     project_root_mappings: &'a ProjectRootMappings,
     sorted_externals: &'a [&'a String],
     selectively_hash_tsconfig: bool,
-    task_output_cache: &'a DashMap<String, CachedTaskOutput>,
     runtime_cache: &'a DashMap<String, String>,
     project_file_set_cache: &'a ProjectFileSetCache,
     workspace_file_set_cache: &'a WorkspaceFileSetCache,
     json_file_set_cache: &'a DashMap<String, JsonHashResult>,
     files_expansion_cache: &'a FilesExpansionCache,
+    trust_file_map: bool,
     cwd: &'a std::path::Path,
     collect_inputs: bool,
 }
