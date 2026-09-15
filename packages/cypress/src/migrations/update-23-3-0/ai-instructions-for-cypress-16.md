@@ -43,7 +43,7 @@ Plugins that call `Cypress.env()` throw on Cypress 16. Update them to the versio
 
 ## Step 2: Remove `env` overrides in test configuration
 
-`env` can no longer be set in the `it`/`describe` configuration object; Cypress 16 fails the test. Move the values to `expose` and read them with `Cypress.expose()`.
+`env` can no longer be set in the `it`/`describe` configuration object; Cypress 16 fails the test. Move the values to `expose` and read them with `Cypress.expose()`. Apply the Step 1 classification first: a sensitive value (a key, token, password or credential) must not move to `expose`, which is for non-sensitive values; keep it in `env` (`cypress.env.json`, `CYPRESS_*` or `--env`) and read it with `cy.env()` inside the test.
 
 **Before:**
 
@@ -63,7 +63,7 @@ it('uses the sandbox account', { expose: { ACCOUNT: 'sandbox' } }, () => {
 
 ## Step 3: Replace `cy.exec()` with `cy.task()`
 
-`cy.exec()` throws in Cypress 16. Run the command from a `task` registered in `setupNodeEvents` and call it with `cy.task()`. A task returns a value or `null` and times out after 60 seconds; set `taskTimeout` when a former `execTimeout` was higher. Spawn external programs with `execFileSync` and an argument array so no shell is involved. A Cypress config that uses `nxE2EPreset` must keep calling the preset's `setupNodeEvents` (see the Nx notes below).
+`cy.exec()` throws in Cypress 16. Run the command from a `task` registered in `setupNodeEvents` and call it with `cy.task()`. A task returns a value or `null` and times out after 60 seconds; set `taskTimeout` when a former `execTimeout` was higher. Spawn external programs with `execFileSync` and an argument array so no shell is involved. Register one task per command; never a generic task that runs a command string the spec passes in. Values the spec used to template into the command (an id, a file name) travel as task arguments and become entries of the `execFileSync` argument array. A Cypress config that uses `nxE2EPreset` must keep calling the preset's `setupNodeEvents` (see the Nx notes below).
 
 **Before:**
 
