@@ -47,10 +47,14 @@ export function applyNxJsonMigrateDefaults(
     merged.runMigration !== undefined || merged.runId !== undefined;
 
   // Both overlays are for an invocation that decides these options for
-  // itself, which a `--run-id` invocation never does: the recorded worker and
-  // the reconcile both read the commit config from run.json, and overlaying
-  // `agentic` would trip the `--agentic`/`--run-id` parse conflict.
-  if ((isRunMigrations || isSingleMigration) && merged.runId === undefined) {
+  // itself, which a `--run-id` invocation only does when it starts fresh: the
+  // recorded worker and the reconcile both read the commit config from
+  // run.json, and overlaying `agentic` would trip the `--agentic`/`--run-id`
+  // parse conflict.
+  if (
+    (isRunMigrations || isSingleMigration) &&
+    (merged.runId === undefined || merged.startFresh === true)
+  ) {
     if (
       merged.createCommits === undefined &&
       migrateConfig.createCommits !== undefined
