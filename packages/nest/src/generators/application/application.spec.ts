@@ -392,15 +392,15 @@ describe('application generator', () => {
       expect(readJson(tree, 'myapp/package.json')).toMatchInlineSnapshot(`
         {
           "dependencies": {
-            "@nestjs/common": "^11.0.0",
-            "@nestjs/core": "^11.0.0",
-            "@nestjs/platform-express": "^11.0.0",
+            "@nestjs/common": "^12.0.0",
+            "@nestjs/core": "^12.0.0",
+            "@nestjs/platform-express": "^12.0.0",
             "reflect-metadata": "^0.2.0",
             "rxjs": "^7.8.0",
             "tslib": "^2.3.0",
           },
           "devDependencies": {
-            "@nestjs/testing": "^11.0.0",
+            "@nestjs/testing": "^12.0.0",
           },
           "name": "@proj/myapp",
           "nx": {
