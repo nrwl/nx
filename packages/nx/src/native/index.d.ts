@@ -105,10 +105,8 @@ export declare class HttpRemoteCache {
 }
 
 /**
- * The context's index of the directories hashed from disk, read the way
- * the context reads its files: what the watch has delivered is applied
- * first, and a walk in progress is waited out, so a listing never predates
- * a write the watch has already reported or misses a rescan's re-listing.
+ * The hasher's handle on an index: lists only after catching up with the
+ * watch behind it.
  */
 export declare class IgnoredIndexReader {
 

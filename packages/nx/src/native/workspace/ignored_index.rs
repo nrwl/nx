@@ -436,6 +436,55 @@ impl IgnoredIndex {
     }
 }
 
+/// Brings an index up to date before a listing: applies what its watch has
+/// delivered and waits out a walk in progress. Supplied by the context that
+/// owns the watch.
+pub(crate) type CatchUp = Arc<dyn Fn() + Send + Sync>;
+
+/// The hasher's handle on an index: lists only after catching up with the
+/// watch behind it.
+#[napi]
+pub struct IgnoredIndexReader {
+    index: Arc<IgnoredIndex>,
+    catch_up: CatchUp,
+}
+
+impl IgnoredIndexReader {
+    pub(crate) fn new(index: Arc<IgnoredIndex>, catch_up: CatchUp) -> Self {
+        Self { index, catch_up }
+    }
+
+    /// A reader over an index nothing watches, for a hasher built without a
+    /// context.
+    pub(crate) fn unwatched() -> Self {
+        Self::new(Arc::new(IgnoredIndex::new(None)), Arc::new(|| {}))
+    }
+
+    pub(crate) fn index(&self) -> &IgnoredIndex {
+        &self.index
+    }
+
+    /// See `IgnoredIndex::register`.
+    pub(crate) fn register(&self, workspace_root: &Path, prefix: &str) -> bool {
+        self.index.register(workspace_root, prefix)
+    }
+
+    /// See `IgnoredIndex::keep`.
+    pub(crate) fn keep(&self, prefix: &str) -> bool {
+        self.index.keep(prefix)
+    }
+
+    /// The files under `dir` once the index has caught up, or `None` when no
+    /// registered directory covers it.
+    pub(crate) fn list(&self, dir: &str) -> Option<Vec<String>> {
+        if !self.index.covers(dir) {
+            return None;
+        }
+        (self.catch_up)();
+        self.index.list(dir)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

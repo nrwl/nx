@@ -24,7 +24,7 @@ use crate::native::{
         literal_prefix, normalize_glob, output_prefixes,
     },
     types::FileData,
-    workspace::context::IgnoredIndexReader,
+    workspace::ignored_index::IgnoredIndexReader,
     workspace::types::ProjectFiles,
 };
 use dashmap::DashMap;

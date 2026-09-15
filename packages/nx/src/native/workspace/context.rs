@@ -24,7 +24,7 @@ use crate::native::workspace::files_archive::{
     FilesArchive, NxFileHashes, read_files_archive, write_files_archive,
 };
 use crate::native::workspace::files_hashing::{full_files_hash, selective_files_hash};
-use crate::native::workspace::ignored_index::IgnoredIndex;
+use crate::native::workspace::ignored_index::{IgnoredIndex, IgnoredIndexReader};
 use crate::native::workspace::types::{
     FileMap, NxWorkspaceFilesExternals, ProjectFiles, UpdatedWorkspaceFiles,
 };
@@ -862,89 +862,29 @@ fn apply(state: &mut State, workspace_root: &Path, changes: Vec<Change>) -> Outc
     outcomes
 }
 
-/// The context's index of the directories hashed from disk, read the way
-/// the context reads its files: what the watch has delivered is applied
-/// first, and a walk in progress is waited out, so a listing never predates
-/// a write the watch has already reported or misses a rescan's re-listing.
-#[napi]
-pub struct IgnoredIndexReader {
-    index: Arc<IgnoredIndex>,
-    files: FileState,
-    batches: Publisher<Delivery>,
-    #[cfg(not(target_arch = "wasm32"))]
-    events: Publisher<Vec<WatchEvent>>,
-    #[cfg(not(target_arch = "wasm32"))]
-    watch: Arc<Mutex<Option<WatchSession>>>,
-    workspace_root_path: PathBuf,
-    cache_dir: String,
-}
-
-impl IgnoredIndexReader {
-    /// A reader over an index nothing watches or walks, for a hasher built
-    /// without a context.
-    pub(crate) fn unwatched() -> Self {
-        IgnoredIndexReader {
-            index: Arc::new(IgnoredIndex::new(None)),
-            files: FileState::default(),
-            batches: Publisher::default(),
-            #[cfg(not(target_arch = "wasm32"))]
-            events: Publisher::default(),
-            #[cfg(not(target_arch = "wasm32"))]
-            watch: Arc::new(Mutex::new(None)),
-            workspace_root_path: PathBuf::new(),
-            cache_dir: String::new(),
-        }
+/// Pulls what the watch pipeline holds into the files, after anything it
+/// already delivered. Returns the batch for the caller to publish or hand
+/// back; empty when nothing was pending.
+#[cfg(not(target_arch = "wasm32"))]
+fn drain_watch(
+    files: &FileState,
+    watch: &Mutex<Option<WatchSession>>,
+    events: &Publisher<Vec<WatchEvent>>,
+    workspace_root: &Path,
+    cache_dir: &str,
+    mode: FlushMode,
+    when_scanning: WhenScanning,
+) -> ChangeBatch {
+    // Cloned out so the lock is not held through the pipeline round trip.
+    let session = watch.lock().clone();
+    let flushed = session
+        .map(|session| session.flush(mode))
+        .unwrap_or_default();
+    if !flushed.is_empty() {
+        events.publish(Ok(flushed.clone()));
     }
-
-    pub(crate) fn index(&self) -> &IgnoredIndex {
-        &self.index
-    }
-
-    /// See `IgnoredIndex::register`.
-    pub(crate) fn register(&self, workspace_root: &Path, prefix: &str) -> bool {
-        self.index.register(workspace_root, prefix)
-    }
-
-    /// See `IgnoredIndex::keep`.
-    pub(crate) fn keep(&self, prefix: &str) -> bool {
-        self.index.keep(prefix)
-    }
-
-    /// The files under `dir` once the index has caught up, or `None` when no
-    /// registered directory covers it.
-    pub(crate) fn list(&self, dir: &str) -> Option<Vec<String>> {
-        if !self.index.covers(dir) {
-            return None;
-        }
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            let batch = self.drain(FlushMode::Delivered, WhenScanning::Wait);
-            if !batch.is_empty() {
-                self.batches.publish(Ok(Delivery::Applied(batch)));
-            }
-        }
-        self.files.wait_ready();
-        self.index.list(dir)
-    }
-
-    #[cfg(not(target_arch = "wasm32"))]
-    fn drain(&self, mode: FlushMode, when_scanning: WhenScanning) -> ChangeBatch {
-        // Cloned out so the lock is not held through the pipeline round trip.
-        let session = self.watch.lock().clone();
-        let flushed = session
-            .map(|session| session.flush(mode))
-            .unwrap_or_default();
-        if !flushed.is_empty() {
-            self.events.publish(Ok(flushed.clone()));
-        }
-        let changes = flushed.into_iter().map(Change::from).collect();
-        self.files.ingest(
-            &self.workspace_root_path,
-            &self.cache_dir,
-            changes,
-            when_scanning,
-        )
-    }
+    let changes = flushed.into_iter().map(Change::from).collect();
+    files.ingest(workspace_root, cache_dir, changes, when_scanning)
 }
 
 /// What the context hands its change subscriber: a batch already applied (by
@@ -1244,22 +1184,52 @@ impl WorkspaceContext {
     /// for the caller to publish or hand back; empty when not watching.
     #[cfg(not(target_arch = "wasm32"))]
     fn drain(&self, mode: FlushMode, when_scanning: WhenScanning) -> ChangeBatch {
-        self.reader().drain(mode, when_scanning)
+        drain_watch(
+            &self.files,
+            &self.watch,
+            &self.events,
+            &self.workspace_root_path,
+            &self.cache_dir,
+            mode,
+            when_scanning,
+        )
     }
 
-    /// A handle on the index that reads it as the context reads its files.
+    /// A handle on the index that reads it as the context reads its files:
+    /// what the watch has delivered is applied first and a walk in progress
+    /// is waited out, so a listing never predates a reported write or misses
+    /// a rescan's re-listing.
     fn reader(&self) -> IgnoredIndexReader {
-        IgnoredIndexReader {
-            index: Arc::clone(&self.ignored),
-            files: self.files.clone(),
-            batches: self.batches.clone(),
-            #[cfg(not(target_arch = "wasm32"))]
-            events: self.events.clone(),
-            #[cfg(not(target_arch = "wasm32"))]
-            watch: Arc::clone(&self.watch),
-            workspace_root_path: self.workspace_root_path.clone(),
-            cache_dir: self.cache_dir.clone(),
-        }
+        let files = self.files.clone();
+        #[cfg(not(target_arch = "wasm32"))]
+        let (batches, events, watch, root, cache_dir) = (
+            self.batches.clone(),
+            self.events.clone(),
+            Arc::clone(&self.watch),
+            self.workspace_root_path.clone(),
+            self.cache_dir.clone(),
+        );
+        IgnoredIndexReader::new(
+            Arc::clone(&self.ignored),
+            Arc::new(move || {
+                #[cfg(not(target_arch = "wasm32"))]
+                {
+                    let batch = drain_watch(
+                        &files,
+                        &watch,
+                        &events,
+                        &root,
+                        &cache_dir,
+                        FlushMode::Delivered,
+                        WhenScanning::Wait,
+                    );
+                    if !batch.is_empty() {
+                        batches.publish(Ok(Delivery::Applied(batch)));
+                    }
+                }
+                files.wait_ready();
+            }),
+        )
     }
 
     /// The files as of now: whatever the watcher has delivered is applied

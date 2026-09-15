@@ -1,5 +1,5 @@
 use crate::native::types::FileData;
-use crate::native::workspace::context::IgnoredIndexReader;
+use crate::native::workspace::ignored_index::IgnoredIndexReader;
 use napi::bindgen_prelude::*;
 use std::collections::HashMap;
 use std::sync::Arc;
