@@ -1,14 +1,14 @@
 //! The files under the directories the hasher registers, whether tracked or
 //! not, with their content hashes. A watching context keeps the members
 //! current from its events (see `WorkspaceContext`); a walk seeds a prefix
-//! and is the fallback wherever the watch does not reach. Nothing watches in
-//! a plain CLI process, so there the seed stands for the run, which is what a
-//! walk at the same moment would have said.
+//! and is the fallback wherever the watch does not reach. With no watch, a
+//! prefix is walked again every time it is registered, once per up-front
+//! batch, so the listing is what a walk at that moment would say.
 
 use std::collections::BTreeSet;
-use std::path::Path;
-use std::sync::Arc;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Arc, OnceLock};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use dashmap::DashMap;
@@ -18,33 +18,76 @@ use tracing::trace;
 use crate::native::hasher::hash_file_path;
 use crate::native::tasks::hashers::{FileStamp, MISSING_FILE_HASH, seed_walk, stamp_of};
 
-/// Whether the watch delivers events for a workspace-relative path (a
-/// directory when the flag is set). A prefix it drops cannot be kept current.
-pub(crate) type Gate = Arc<dyn Fn(&str, bool) -> bool + Send + Sync>;
+/// What the watch behind an index reaches.
+pub(crate) struct Watch {
+    /// Whether the watch delivers events for a workspace-relative path (a
+    /// directory when the flag is set).
+    pub(crate) reaches: Arc<dyn Fn(&str, bool) -> bool + Send + Sync>,
+    /// The root `.nxignore` rules. The watch drops what they match and a walk
+    /// does not, so no prefix they could match under is indexed.
+    pub(crate) nxignore: Vec<String>,
+}
+
+impl Watch {
+    /// Whether the watch could miss events somewhere under `prefix`.
+    fn may_miss_under(&self, prefix: &str) -> bool {
+        !(self.reaches)(prefix, true) || nxignore_may_match_under(&self.nxignore, prefix)
+    }
+}
+
+/// Whether a gitignore-style rule could match `prefix` or a path under it. A
+/// rule with no slash before its end matches at any depth; an anchored one
+/// only where its literal leading directories meet `prefix`.
+fn nxignore_may_match_under(rules: &[String], prefix: &str) -> bool {
+    rules.iter().any(|line| {
+        let rule = line.trim();
+        if rule.is_empty() || rule.starts_with('#') || rule.starts_with('!') {
+            return false;
+        }
+        let rule = rule.trim_end_matches('/');
+        if !rule.contains('/') {
+            return true;
+        }
+        let rule = rule.trim_start_matches('/');
+        let literal: Vec<&str> = rule
+            .split('/')
+            .take_while(|segment| !segment.contains(['*', '?', '[', '{']))
+            .collect();
+        let literal = literal.join("/");
+        under(&literal, prefix) || under(prefix, &literal)
+    })
+}
 
 pub struct IgnoredIndex {
-    /// Registered directories, workspace-relative, `""` for the root. One
-    /// inside another is covered by the outer.
+    /// Directories whose files are listed, workspace-relative. One inside
+    /// another is covered by the outer.
     prefixes: RwLock<BTreeSet<String>>,
-    /// Every file under a registered prefix, sorted, workspace-relative.
+    /// Directories whose file hashes are kept but whose files are not listed:
+    /// declared outputs, which are always walked after the task that writes
+    /// them has run.
+    kept: RwLock<BTreeSet<String>>,
+    /// Every file under a listed prefix, sorted, workspace-relative.
     members: RwLock<BTreeSet<String>>,
-    /// Content by path: members, and when nothing watches, anything hashed.
+    /// Content by path, under a listed or kept prefix, or anywhere when
+    /// nothing watches.
     contents: DashMap<String, Content>,
-    /// Present when a watch keeps the members current.
-    gate: Option<Gate>,
-    /// Bumped by every change the watch reports under a prefix, so a seed
-    /// can tell whether the members moved while it walked.
+    watch: Option<Watch>,
+    canonical_root: OnceLock<Option<PathBuf>>,
+    /// Bumped by every change the watch reports under a prefix, so a seed or
+    /// a read can tell whether something moved while it ran.
     generation: AtomicU64,
 }
 
-/// A file's hash and the (mtime, size) it was read at. `trusted` is set once
-/// hashed under a watch and cleared by any event for the path: a trusted
-/// entry answers without a stat, an untrusted one is stat'ed and revalidated
-/// by the stamp, with git's racy rule (an entry made in the same second as
-/// the file's mtime could hide a same-size rewrite, so it is never served
-/// by stamp until a later second remakes it; on a filesystem with 2 s
-/// mtimes, FAT and exFAT, a rewrite in the next second still slips
-/// through, as it does for git).
+/// A file's hash and the (mtime, size) it was read at. A `trusted` entry
+/// answers without a stat: it is set only when a caller that has applied
+/// every delivered event read the file with no event arriving meanwhile, and
+/// cleared by any event for the path. An untrusted entry is stat'ed and
+/// revalidated by the stamp, with git's racy rule (an entry made in the same
+/// second as the file's mtime could hide a same-size rewrite, so it is never
+/// served by stamp until a later second remakes it; on a filesystem with 2 s
+/// mtimes, FAT and exFAT, a rewrite in the next second still slips through,
+/// as it does for git). A symlinked file is never trusted: the watch reports
+/// changes to its target, not to the link.
 struct Content {
     stamp: FileStamp,
     hash: String,
@@ -73,39 +116,80 @@ fn under(path: &str, dir: &str) -> bool {
         || (path.len() > dir.len() && path.starts_with(dir) && path.as_bytes()[dir.len()] == b'/')
 }
 
+/// Whether `set` holds `path` or one of its ancestors: one lookup per level.
+fn holds(set: &BTreeSet<String>, path: &str) -> bool {
+    if set.is_empty() {
+        return false;
+    }
+    let mut current = path;
+    loop {
+        if set.contains(current) {
+            return true;
+        }
+        match current.rfind('/') {
+            Some(i) => current = &current[..i],
+            None => return false,
+        }
+    }
+}
+
 impl IgnoredIndex {
-    /// An index a watch keeps current (`gate` says what it reaches), or one
-    /// with no watch behind it, whose members stay as seeded.
-    pub(crate) fn new(gate: Option<Gate>) -> Self {
+    /// An index a watch keeps current, or one with no watch behind it.
+    pub(crate) fn new(watch: Option<Watch>) -> Self {
         Self {
             prefixes: RwLock::new(BTreeSet::new()),
+            kept: RwLock::new(BTreeSet::new()),
             members: RwLock::new(BTreeSet::new()),
             contents: DashMap::new(),
-            gate,
+            watch,
+            canonical_root: OnceLock::new(),
             generation: AtomicU64::new(0),
         }
     }
 
-    /// Whether a registered prefix holds `path`.
+    /// Whether a listed prefix holds `path`.
     pub(crate) fn covers(&self, path: &str) -> bool {
-        self.prefixes.read().iter().any(|p| under(path, p))
+        holds(&self.prefixes.read(), path)
     }
 
-    /// Registers `prefix` and seeds its members from a walk of
-    /// `workspace_root`. Refused, leaving the caller to walk, when the watch
-    /// would not deliver events for it (a hardcoded ignore, the root
-    /// `.nxignore`) or when it resolves outside the workspace. Registering a
-    /// covered prefix is a no-op.
+    /// Whether content under `path` is kept.
+    fn keeps(&self, path: &str) -> bool {
+        self.covers(path) || holds(&self.kept.read(), path)
+    }
+
+    fn canonical_root(&self, workspace_root: &Path) -> Option<&Path> {
+        self.canonical_root
+            .get_or_init(|| dunce::canonicalize(workspace_root).ok())
+            .as_deref()
+    }
+
+    /// Why `prefix` cannot be kept current from events, if it cannot.
+    fn refusal(&self, prefix: &str) -> Option<&'static str> {
+        if prefix.is_empty() {
+            return Some("it is the whole workspace");
+        }
+        match &self.watch {
+            Some(watch) if watch.may_miss_under(prefix) => {
+                Some("the watch does not report everything under it")
+            }
+            _ => None,
+        }
+    }
+
+    /// Registers `prefix` and lists its files from a walk of
+    /// `workspace_root`. Refused, leaving the caller to walk, for the whole
+    /// workspace, where the watch could miss a change (a hardcoded ignore, a
+    /// root `.nxignore` rule), or when it resolves outside the workspace.
+    /// Under a watch, registering a covered prefix is a no-op; without one it
+    /// is walked again.
     pub(crate) fn register(&self, workspace_root: &Path, prefix: &str) -> bool {
         let prefix = prefix.trim_matches('/');
-        if self.covers(prefix) {
-            return true;
-        }
-        if let Some(gate) = &self.gate
-            && !gate(prefix, true)
-        {
-            trace!("not indexing {prefix:?}: the watch does not reach it");
+        if let Some(reason) = self.refusal(prefix) {
+            trace!("not indexing {prefix:?}: {reason}");
             return false;
+        }
+        if self.watch.is_some() && self.covers(prefix) {
+            return true;
         }
         for _ in 0..3 {
             let generation = self.generation.load(Ordering::Acquire);
@@ -119,15 +203,31 @@ impl IgnoredIndex {
                 continue;
             }
             let mut prefixes = self.prefixes.write();
-            // Anything now covered by the wider prefix is re-listed by the walk.
-            prefixes.retain(|p| !under(p, prefix));
-            prefixes.insert(prefix.to_string());
+            if !holds(&prefixes, prefix) {
+                // Anything now covered by the wider prefix is re-listed by the walk.
+                prefixes.retain(|p| !under(p, prefix));
+                prefixes.insert(prefix.to_string());
+            }
             self.replace_under(&mut members, prefix, seeded);
             trace!("indexed {prefix:?}");
             return true;
         }
         trace!("not indexing {prefix:?}: it kept changing while walked");
         false
+    }
+
+    /// Keeps the file hashes under `prefix` without listing its files, for a
+    /// directory that is always walked. Refused where `register` would be.
+    pub(crate) fn keep(&self, prefix: &str) -> bool {
+        let prefix = prefix.trim_matches('/');
+        if let Some(reason) = self.refusal(prefix) {
+            trace!("not keeping hashes under {prefix:?}: {reason}");
+            return false;
+        }
+        if !self.keeps(prefix) {
+            self.kept.write().insert(prefix.to_string());
+        }
+        true
     }
 
     /// The files under `dir`, sorted, when a registered prefix covers it.
@@ -145,35 +245,51 @@ impl IgnoredIndex {
         )
     }
 
-    /// A reported write or creation. A file under a registered prefix
-    /// becomes a member with its hash no longer trusted; a directory is
-    /// re-listed from a walk, since its files may have arrived without
-    /// events of their own; a path that is gone is dropped.
+    /// A reported write or creation. Under a listed prefix a file becomes a
+    /// member and a directory is re-listed from a walk, since its files may
+    /// have arrived without events of their own. A path that is gone, a
+    /// linked directory, or a linked file whose target is outside the
+    /// workspace is not a member, as a walk would not list it. Any kept hash
+    /// for the path stops being trusted.
     pub(crate) fn note_written(&self, workspace_root: &Path, path: &str) {
-        if !self.covers(path) {
+        if !self.keeps(path) {
             return;
         }
         self.generation.fetch_add(1, Ordering::AcqRel);
         trace!("written under an indexed directory: {path}");
-        match std::fs::metadata(workspace_root.join(path)) {
-            Ok(metadata) if metadata.is_dir() => {
-                if let Some(seeded) = seed_walk(workspace_root, path) {
-                    self.replace_under(&mut self.members.write(), path, seeded);
-                }
+        if let Some(mut content) = self.contents.get_mut(path) {
+            content.trusted = false;
+        }
+        let listed = self.covers(path);
+        let full_path = workspace_root.join(path);
+        let Ok(link) = std::fs::symlink_metadata(&full_path) else {
+            self.remove(path);
+            return;
+        };
+        if link.is_dir() {
+            if listed && let Some(seeded) = seed_walk(workspace_root, path) {
+                self.replace_under(&mut self.members.write(), path, seeded);
             }
-            Ok(_) => {
-                self.members.write().insert(path.to_string());
-                if let Some(mut content) = self.contents.get_mut(path) {
-                    content.trusted = false;
-                }
+            return;
+        }
+        if link.file_type().is_symlink() {
+            let inside = std::fs::metadata(&full_path).is_ok_and(|target| !target.is_dir())
+                && self.canonical_root(workspace_root).is_some_and(|root| {
+                    dunce::canonicalize(&full_path).is_ok_and(|t| t.starts_with(root))
+                });
+            if !inside {
+                self.remove(path);
+                return;
             }
-            Err(_) => self.remove(path),
+        }
+        if listed {
+            self.members.write().insert(path.to_string());
         }
     }
 
     /// A reported deletion of a file, or of a directory and all under it.
     pub(crate) fn note_deleted(&self, path: &str) {
-        if !self.covers(path) {
+        if !self.keeps(path) {
             return;
         }
         self.generation.fetch_add(1, Ordering::AcqRel);
@@ -181,31 +297,41 @@ impl IgnoredIndex {
         self.remove(path);
     }
 
-    /// The watch lost events: every registered prefix is re-listed from a walk.
+    /// The watch lost events: every listed prefix is walked again, and the
+    /// hashes kept under unlisted ones are forgotten.
     pub(crate) fn reseed(&self, workspace_root: &Path) {
+        self.generation.fetch_add(1, Ordering::AcqRel);
         let prefixes: Vec<String> = self.prefixes.read().iter().cloned().collect();
         for prefix in prefixes {
-            self.generation.fetch_add(1, Ordering::AcqRel);
             if let Some(seeded) = seed_walk(workspace_root, &prefix) {
                 self.replace_under(&mut self.members.write(), &prefix, seeded);
             }
+        }
+        let kept: Vec<String> = self.kept.read().iter().cloned().collect();
+        if !kept.is_empty() {
+            self.contents
+                .retain(|path, _| !kept.iter().any(|dir| under(path, dir)) || self.covers(path));
+        }
+        for mut content in self.contents.iter_mut() {
+            content.trusted = false;
         }
     }
 
     fn remove(&self, path: &str) {
         let mut members = self.members.write();
-        if members.remove(path) {
-            self.contents.remove(path);
-            return;
-        }
         let gone: Vec<String> = members
             .range(path.to_string()..)
             .take_while(|p| under(p, path))
             .cloned()
             .collect();
-        for p in gone {
-            members.remove(&p);
-            self.contents.remove(&p);
+        for p in &gone {
+            members.remove(p);
+            self.contents.remove(p);
+        }
+        drop(members);
+        if self.contents.remove(path).is_none() && gone.is_empty() {
+            // A kept, unlisted directory: its hashes are not in any order.
+            self.contents.retain(|p, _| !under(p, path));
         }
     }
 
@@ -243,11 +369,11 @@ impl IgnoredIndex {
 
     /// The content hash of `path`, from the entry when its stamp still
     /// matches (`stamp` is the one expansion read, or the file is stat'ed),
-    /// otherwise read from disk and remembered. A path no watch keeps is
-    /// remembered only when nothing watches at all. `trust` lets a trusted
-    /// entry answer without a stat; only a caller whose watch events are all
-    /// applied may pass it, since a task that just wrote a file may not have
-    /// been heard yet.
+    /// otherwise read from disk and remembered where hashes are kept. `trust`
+    /// says the caller has applied every delivered watch event: only then may
+    /// a trusted entry answer without a stat, or a read become trusted. A
+    /// stamp the caller took earlier predates this call, so it never makes
+    /// an entry trusted.
     pub(crate) fn hash_file(
         &self,
         workspace_root: &Path,
@@ -255,19 +381,29 @@ impl IgnoredIndex {
         stamp: Option<FileStamp>,
         trust: bool,
     ) -> String {
-        if trust && let Some(hash) = self.trusted_hash(path) {
+        if trust
+            && stamp.is_none()
+            && let Some(hash) = self.trusted_hash(path)
+        {
             return hash;
         }
+        let generation = self.generation.load(Ordering::Acquire);
         let full_path = workspace_root.join(path);
+        let may_trust = trust
+            && stamp.is_none()
+            && self.watch.is_some()
+            && self.covers(path)
+            && std::fs::symlink_metadata(&full_path).is_ok_and(|m| !m.file_type().is_symlink());
         let stamp = stamp.or_else(|| std::fs::metadata(&full_path).ok().map(|m| stamp_of(&m)));
-        let keep = self.gate.is_none() || self.covers(path);
+        let keep = self.watch.is_none() || self.keeps(path);
+        let unmoved = || self.generation.load(Ordering::Acquire) == generation;
         if let Some(stamp) = stamp
             && let Some(mut content) = self.contents.get_mut(path)
             && content.stamp == stamp
             && !content.racy()
         {
             trace!("content hash held for {path}");
-            content.trusted = keep && self.gate.is_some();
+            content.trusted = may_trust && unmoved();
             return content.hash.clone();
         }
         // Taken before the read: a same-size write between the read and a
@@ -284,7 +420,7 @@ impl IgnoredIndex {
                     stamp,
                     hash: hash.clone(),
                     made_at,
-                    trusted: self.gate.is_some(),
+                    trusted: may_trust && unmoved(),
                 },
             );
         }
@@ -317,9 +453,14 @@ mod tests {
     }
 
     fn watched() -> IgnoredIndex {
-        IgnoredIndex::new(Some(Arc::new(|path: &str, _| {
-            !path.starts_with("node_modules")
-        })))
+        watched_with_nxignore(&[])
+    }
+
+    fn watched_with_nxignore(rules: &[&str]) -> IgnoredIndex {
+        IgnoredIndex::new(Some(Watch {
+            reaches: Arc::new(|path: &str, _| !path.starts_with("node_modules")),
+            nxignore: rules.iter().map(|r| r.to_string()).collect(),
+        }))
     }
 
     fn set_modified(file: &Path, time: SystemTime) {
@@ -495,7 +636,8 @@ mod tests {
 
         // Written and hashed inside one second, then rewritten to the same
         // size with the same mtime: never served by stamp.
-        let now = SystemTime::now();
+        // Ahead of the clock, so the second cannot roll over first.
+        let now = SystemTime::now() + std::time::Duration::from_secs(2);
         temp.child("dist/gen/a.js").write_str("r").unwrap();
         set_modified(&file, now);
         index.note_written(temp.path(), "dist/gen/a.js");
@@ -534,5 +676,155 @@ mod tests {
             MISSING_FILE_HASH
         );
         assert!(!index.remembered("dist/gen/absent.js"));
+    }
+
+    #[test]
+    fn a_prefix_a_root_nxignore_rule_could_hide_under_is_refused() {
+        let temp = workspace();
+        // Anchored under the prefix, above it, and unanchored: all could hide
+        // a file under dist/gen from the watch.
+        for rule in ["dist/gen/nested", "/dist", "*.log", "**/cache"] {
+            assert!(
+                !watched_with_nxignore(&[rule]).register(temp.path(), "dist/gen"),
+                "{rule} should refuse dist/gen"
+            );
+        }
+        // Elsewhere, negated, or a comment: nothing under dist/gen is hidden.
+        let index = watched_with_nxignore(&["src/generated", "!dist/gen", "# dist"]);
+        assert!(index.register(temp.path(), "dist/gen"));
+    }
+
+    #[test]
+    fn the_whole_workspace_is_never_indexed() {
+        let temp = workspace();
+        assert!(!watched().register(temp.path(), ""));
+        assert!(!IgnoredIndex::new(None).register(temp.path(), "/"));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_linked_member_is_never_trusted() {
+        let temp = workspace();
+        temp.child("shared/real.js").write_str("one").unwrap();
+        std::os::unix::fs::symlink(
+            temp.path().join("shared/real.js"),
+            temp.path().join("dist/gen/link.js"),
+        )
+        .unwrap();
+        let index = watched();
+        assert!(index.register(temp.path(), "dist"));
+        assert!(
+            index
+                .list("dist")
+                .unwrap()
+                .contains(&"dist/gen/link.js".to_string())
+        );
+        age(&temp.path().join("shared/real.js"));
+        let first = index.hash_file(temp.path(), "dist/gen/link.js", None, true);
+        assert!(index.trusted_hash("dist/gen/link.js").is_none());
+        // The watch reports the target, which is outside the prefix; the
+        // link is re-checked by its stamp and sees the change.
+        temp.child("shared/real.js").write_str("two!").unwrap();
+        assert_ne!(
+            first,
+            index.hash_file(temp.path(), "dist/gen/link.js", None, true)
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_linked_file_or_directory_leading_outside_is_not_a_member() {
+        let temp = workspace();
+        let elsewhere = TempDir::new().unwrap();
+        elsewhere.child("secret/id_rsa").write_str("key").unwrap();
+        let index = watched();
+        assert!(index.register(temp.path(), "dist"));
+        std::os::unix::fs::symlink(
+            elsewhere.path().join("secret/id_rsa"),
+            temp.path().join("dist/id_rsa"),
+        )
+        .unwrap();
+        index.note_written(temp.path(), "dist/id_rsa");
+        std::os::unix::fs::symlink(
+            elsewhere.path().join("secret"),
+            temp.path().join("dist/lnk"),
+        )
+        .unwrap();
+        index.note_written(temp.path(), "dist/lnk");
+        let listed = index.list("dist").unwrap();
+        assert!(
+            !listed
+                .iter()
+                .any(|p| p.contains("id_rsa") || p.contains("lnk"))
+        );
+    }
+
+    #[test]
+    fn a_stamp_from_before_an_event_never_makes_an_entry_trusted() {
+        let temp = workspace();
+        let index = watched();
+        index.register(temp.path(), "dist");
+        let file = temp.path().join("dist/gen/a.js");
+        age(&file);
+        let old = stamp_of(&std::fs::metadata(&file).unwrap());
+        index.hash_file(temp.path(), "dist/gen/a.js", None, true);
+        temp.child("dist/gen/a.js").write_str("rewritten").unwrap();
+        age(&file);
+        index.note_written(temp.path(), "dist/gen/a.js");
+        // A walker's stamp from before the write matches the old entry: it
+        // may answer, but it must not re-arm the trust.
+        index.hash_file(temp.path(), "dist/gen/a.js", Some(old), false);
+        index.hash_file(temp.path(), "dist/gen/a.js", Some(old), true);
+        assert!(index.trusted_hash("dist/gen/a.js").is_none());
+        let fresh = index.hash_file(temp.path(), "dist/gen/a.js", None, true);
+        assert_eq!(fresh, index.trusted_hash("dist/gen/a.js").unwrap());
+    }
+
+    #[test]
+    fn kept_output_hashes_are_forgotten_with_their_files() {
+        let temp = workspace();
+        let index = watched();
+        assert!(index.keep("dist/other"));
+        assert!(index.list("dist/other").is_none());
+        index.hash_file(temp.path(), "dist/other/c.js", None, false);
+        assert!(index.remembered("dist/other/c.js"));
+        assert!(index.trusted_hash("dist/other/c.js").is_none());
+        std::fs::remove_dir_all(temp.path().join("dist/other")).unwrap();
+        index.note_deleted("dist/other");
+        assert!(!index.remembered("dist/other/c.js"));
+        // Outside every listed or kept prefix, a watching index keeps nothing.
+        index.hash_file(temp.path(), "src/index.ts", None, false);
+        assert!(!index.remembered("src/index.ts"));
+    }
+
+    #[test]
+    fn without_a_watch_registering_again_walks_again() {
+        let temp = workspace();
+        let index = IgnoredIndex::new(None);
+        assert!(index.register(temp.path(), "dist"));
+        temp.child("dist/gen/late.js").write_str("late").unwrap();
+        assert!(
+            !index
+                .list("dist")
+                .unwrap()
+                .contains(&"dist/gen/late.js".to_string())
+        );
+        assert!(index.register(temp.path(), "dist/gen"));
+        assert!(
+            index
+                .list("dist")
+                .unwrap()
+                .contains(&"dist/gen/late.js".to_string())
+        );
+    }
+
+    #[test]
+    fn coverage_is_by_ancestor() {
+        let mut set = BTreeSet::new();
+        set.insert("dist/apps".to_string());
+        assert!(holds(&set, "dist/apps"));
+        assert!(holds(&set, "dist/apps/web/index.js"));
+        assert!(!holds(&set, "dist/apps-other/index.js"));
+        assert!(!holds(&set, "dist"));
     }
 }

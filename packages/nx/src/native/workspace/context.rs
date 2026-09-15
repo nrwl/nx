@@ -806,6 +806,11 @@ impl IgnoredIndexReader {
         self.index.register(workspace_root, prefix)
     }
 
+    /// See `IgnoredIndex::keep`.
+    pub(crate) fn keep(&self, prefix: &str) -> bool {
+        self.index.keep(prefix)
+    }
+
     /// The files under `dir` once the index has caught up, or `None` when no
     /// registered directory covers it.
     pub(crate) fn list(&self, dir: &str) -> Option<Vec<String>> {
@@ -951,7 +956,7 @@ impl WorkspaceContext {
             let policy = Self::workspace_policy(&workspace_root_path).map_err(failed)?;
             let extra_globs = options.watch_globs.unwrap_or_default();
             let ignored = Arc::new(IgnoredIndex::new(Some(
-                Self::watch_gate(&workspace_root_path, &extra_globs).map_err(failed)?,
+                Self::index_watch(&workspace_root_path, &extra_globs).map_err(failed)?,
             )));
             let files = FileState::new(&workspace_root_path, Some(policy), Arc::clone(&ignored));
             let session = Self::start_watching(
@@ -1017,19 +1022,26 @@ impl WorkspaceContext {
     /// the same gate the session runs with, so the index registers only
     /// directories whose events it will hear.
     #[cfg(not(target_arch = "wasm32"))]
-    fn watch_gate(
+    fn index_watch(
         workspace_root_path: &Path,
         extra_globs: &[String],
-    ) -> std::result::Result<crate::native::workspace::ignored_index::Gate, String> {
+    ) -> std::result::Result<crate::native::workspace::ignored_index::Watch, String> {
         let origin = dunce::canonicalize(workspace_root_path)
             .unwrap_or_else(|_| workspace_root_path.to_path_buf());
         let mut globs = default_watch_globs();
         globs.extend(extra_globs.iter().cloned());
         let filter = create_filter(&origin.to_string_lossy(), &globs, false)
             .map_err(|e| format!("failed to build the watch gate: {e}"))?;
-        Ok(Arc::new(move |path: &str, is_dir: bool| {
-            filter.admits(&origin.join(path), is_dir)
-        }))
+        // An .nxignore edit restarts the daemon, so reading it once holds.
+        let nxignore = std::fs::read_to_string(origin.join(".nxignore"))
+            .map(|text| text.lines().map(str::to_string).collect())
+            .unwrap_or_default();
+        Ok(crate::native::workspace::ignored_index::Watch {
+            reaches: Arc::new(move |path: &str, is_dir: bool| {
+                filter.admits(&origin.join(path), is_dir)
+            }),
+            nxignore,
+        })
     }
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -2340,6 +2352,47 @@ mod tests {
             vec!["dist/a.js", "dist/b.js"]
         );
         listing.join().unwrap();
+    }
+
+    #[test]
+    #[cfg(not(target_arch = "wasm32"))]
+    fn a_directory_with_a_root_nxignore_rule_under_it_is_walked_not_indexed() {
+        let temp = workspace_with(&["a.ts"]);
+        temp.child(".gitignore").write_str("dist/\n").unwrap();
+        temp.child(".nxignore").write_str("dist/gen\n").unwrap();
+        temp.child("dist/gen/x.js").write_str("x").unwrap();
+        let cache = TempDir::new().unwrap();
+        let ctx = watching_context(&temp, &cache);
+        ctx.all_file_data();
+        let root = dunce::canonicalize(temp.path()).unwrap();
+        let reader = ctx.reader();
+        // The watch never reports dist/gen, so dist cannot be kept from events.
+        assert!(!reader.register(&root, "dist"));
+        assert!(reader.list("dist").is_none());
+        assert!(reader.register(&root, "src"));
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn a_linked_directory_moved_in_reports_nothing_from_outside() {
+        let temp = workspace_with(&["a.ts"]);
+        let elsewhere = TempDir::new().unwrap();
+        elsewhere.child("secret/id_rsa").write_str("key").unwrap();
+        let staging = TempDir::new().unwrap();
+        std::os::unix::fs::symlink(elsewhere.path().join("secret"), staging.path().join("lnk"))
+            .unwrap();
+        let cache = TempDir::new().unwrap();
+        let ctx = watching_context(&temp, &cache);
+        ctx.all_file_data();
+        std::fs::create_dir_all(temp.path().join("src")).unwrap();
+        std::fs::rename(staging.path().join("lnk"), temp.path().join("src/lnk")).unwrap();
+        // A write after the move, so the settle below has seen the move's events.
+        temp.child("src/after.ts").write_str("after").unwrap();
+        wait_until("the later write never arrived", || {
+            ctx.settle();
+            names_of(&ctx).contains(&"src/after.ts".to_string())
+        });
+        assert!(!names_of(&ctx).iter().any(|n| n.contains("id_rsa")));
     }
 
     #[test]

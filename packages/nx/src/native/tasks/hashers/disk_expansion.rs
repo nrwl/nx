@@ -11,7 +11,7 @@ use rayon::prelude::*;
 use walkdir::WalkDir;
 
 use crate::native::glob::{NxGlobSet, build_glob_set};
-use crate::native::walker::HARDCODED_IGNORE_PATTERNS;
+use crate::native::walker::{HARDCODED_IGNORE_PATTERNS, TRANSIENT_FILE_GLOBS};
 
 /// Hashed in place of the content of a declared exact path that does not
 /// exist: absence is an observation, so the key flips when the file appears.
@@ -28,6 +28,17 @@ pub(crate) fn stamp_of(metadata: &std::fs::Metadata) -> FileStamp {
         .map(|d| d.as_nanos())
         .unwrap_or(0);
     (mtime, metadata.len())
+}
+
+/// What a walk never enters or lists: the hardcoded directories, and the
+/// transient files the watch never reports.
+fn walk_skips() -> Result<Arc<NxGlobSet>> {
+    let patterns: Vec<String> = HARDCODED_IGNORE_PATTERNS
+        .iter()
+        .map(|p| (*p).to_string())
+        .chain(TRANSIENT_FILE_GLOBS.iter().map(|g| format!("**/{g}")))
+        .collect();
+    build_glob_set(&patterns)
 }
 
 /// Expansion per `files:{project}:[...]` instruction, scoped to one `hash_plans`
@@ -327,6 +338,7 @@ fn walk_files(
         };
     let mut found: Vec<(String, Option<FileStamp>)> = leaves
         .iter()
+        .filter(|(path, _)| !skip.is_match(path))
         .filter_map(|(path, file_type)| visit(path, *file_type))
         .collect();
     let nested: Vec<Vec<(String, Option<FileStamp>)>> = dirs
@@ -394,7 +406,7 @@ pub(crate) fn expand_entries(
     confine: bool,
     members: Members,
 ) -> Result<FilesExpansion> {
-    let skip = build_glob_set(HARDCODED_IGNORE_PATTERNS)?;
+    let skip = walk_skips()?;
     let canonical_root = if confine {
         Some(dunce::canonicalize(workspace_root).with_context(|| {
             format!(
@@ -509,7 +521,7 @@ pub(crate) fn seed_walk(workspace_root: &Path, dir: &str) -> Option<Vec<(String,
     if !resolved.is_dir() {
         return Some(Vec::new());
     }
-    let skip = build_glob_set(HARDCODED_IGNORE_PATTERNS).ok()?;
+    let skip = walk_skips().ok()?;
     let walked = walk_files(
         &start,
         workspace_root,

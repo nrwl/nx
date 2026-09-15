@@ -15,9 +15,9 @@ use tracing::{debug, trace};
 
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
 use crate::native::glob::{NxGlobSet, build_glob_set};
-use crate::native::walker::HARDCODED_IGNORE_PATTERNS;
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
 use crate::native::walker::create_walker;
+use crate::native::walker::{HARDCODED_IGNORE_PATTERNS, TRANSIENT_FILE_GLOBS};
 use crate::native::watch::types::{
     EventType, RawWatchEvent, WatchEvent, WatchEventInternal, transform_event_to_watch_events,
 };
@@ -132,12 +132,7 @@ pub(crate) fn default_watch_globs() -> Vec<String> {
         .map(|p| (*p).to_string())
         .collect();
     // Vite/Vitest write timestamp files that we don't want to watch.
-    globs.extend([
-        "vitest.config.ts.timestamp*.mjs".into(),
-        "vite.config.ts.timestamp*.mjs".into(),
-        "vitest.config.mts.timestamp*.mjs".into(),
-        "vite.config.mts.timestamp*.mjs".into(),
-    ]);
+    globs.extend(TRANSIENT_FILE_GLOBS.iter().map(|g| (*g).to_string()));
     globs
 }
 

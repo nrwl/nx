@@ -221,15 +221,19 @@ mod tests {
     }
 
     fn hash(temp: &TempDir, glob: &str, outputs: &[&str], cache: &FilesExpansionCache) -> String {
-        hash_task_output(
-            temp.path(),
-            glob,
-            &strings(outputs),
-            cache,
-            &IgnoredIndex::new(None),
-        )
-        .unwrap()
-        .hash
+        hash_with(temp, glob, outputs, cache, &IgnoredIndex::new(None))
+    }
+
+    fn hash_with(
+        temp: &TempDir,
+        glob: &str,
+        outputs: &[&str],
+        cache: &FilesExpansionCache,
+        index: &IgnoredIndex,
+    ) -> String {
+        hash_task_output(temp.path(), glob, &strings(outputs), cache, index)
+            .unwrap()
+            .hash
     }
 
     #[test]
@@ -416,12 +420,15 @@ mod tests {
     #[test]
     fn the_hash_follows_the_content() {
         let temp = workspace();
+        // One index across the hashes, so a remembered hash could answer.
+        let index = IgnoredIndex::new(None);
         let hash = || {
-            hash(
+            hash_with(
                 &temp,
                 "**/*.js",
                 &["dist/apps/web"],
                 &FilesExpansionCache::new(),
+                &index,
             )
         };
         let first = hash();

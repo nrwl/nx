@@ -329,13 +329,14 @@ impl TaskHasher {
         }
     }
 
-    /// Hands the index every directory the plans read from disk: each
-    /// includeIgnored glob's literal prefix and each declared output's. The
-    /// index lists a registered directory to the up-front batch and keeps the
-    /// hashes of what is under it; unregistered ones are walked.
+    /// Hands the index the directories the plans read from disk. Each
+    /// includeIgnored glob's literal prefix is listed to the up-front batch;
+    /// a declared output's directory, always walked after its task runs, only
+    /// has its file hashes kept. Anything refused is walked.
     fn register_prefixes(&self, hash_plans: &HashPlans) {
         let pool = &hash_plans.pool;
         let mut prefixes: Vec<String> = Vec::new();
+        let mut output_roots: Vec<String> = Vec::new();
         for id in 0..pool.len() as u32 {
             match pool.get(id).value() {
                 HashInstruction::ProjectFileSet(_, globs, true) => prefixes.extend(
@@ -348,7 +349,7 @@ impl TaskHasher {
                         }),
                 ),
                 HashInstruction::TaskOutput(_, outputs) => {
-                    prefixes.extend(output_prefixes(outputs))
+                    output_roots.extend(output_prefixes(outputs))
                 }
                 _ => {}
             }
@@ -360,6 +361,11 @@ impl TaskHasher {
         let workspace_root = Path::new(&self.workspace_root);
         for prefix in prefixes {
             self.ignored_index.register(workspace_root, &prefix);
+        }
+        output_roots.sort();
+        output_roots.dedup();
+        for root in output_roots {
+            self.ignored_index.keep(&root);
         }
     }
 
