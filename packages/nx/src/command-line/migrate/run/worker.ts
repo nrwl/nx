@@ -74,7 +74,7 @@ import {
   uncoveredFailedStepIds,
   type StepEvent,
 } from './state-machine';
-import { updateRunState } from './state-lock';
+import { holdRunActivity, updateRunState } from './state-lock';
 import {
   installDepsChangedSinceDispense,
   nowIso,
@@ -557,6 +557,7 @@ async function runRecorded(
   const dir = runDir(root, runId);
   // Version refusal (NewerRunStateFormatError) propagates.
   let state = readRunState(dir);
+  holdRunActivity(root, runId);
 
   // A recorded run never resolves the agentic flow: the outer agent drives it,
   // and the dispensed command is part of the orchestrated protocol whoever
