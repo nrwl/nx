@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use anyhow::Result;
 
@@ -138,9 +138,34 @@ fn relative_output_entry(workspace_root: &Path, entry: &str) -> Option<String> {
     if !Path::new(body).is_absolute() {
         return normalize_output_entry(entry);
     }
-    let inside = Path::new(body).strip_prefix(workspace_root).ok()?;
+    let inside = match Path::new(body).strip_prefix(workspace_root) {
+        Ok(inside) => inside.to_path_buf(),
+        Err(_) => resolved_inside(workspace_root, Path::new(body))?,
+    };
     let inside = inside.to_string_lossy().replace('\\', "/");
     normalize_output_entry(&format!("{bang}{inside}"))
+}
+
+/// `path` relative to the workspace when the two are spelled differently,
+/// through a symlink (`/tmp` and `/private/tmp`) or a drive letter's case:
+/// both are resolved, the path through its longest existing ancestor, since
+/// the rest may be a glob or not written yet.
+fn resolved_inside(workspace_root: &Path, path: &Path) -> Option<PathBuf> {
+    let root = dunce::canonicalize(workspace_root).ok()?;
+    let mut existing = path;
+    let mut rest = Vec::new();
+    let resolved = loop {
+        if let Ok(resolved) = dunce::canonicalize(existing) {
+            break resolved;
+        }
+        rest.push(existing.file_name()?);
+        existing = existing.parent()?;
+    };
+    let full: PathBuf = rest
+        .iter()
+        .rev()
+        .fold(resolved, |full, part| full.join(part));
+    full.strip_prefix(&root).ok().map(Path::to_path_buf)
 }
 
 /// Resolves `.` and `..` lexically: outputs are declared relative to the
@@ -344,6 +369,31 @@ mod tests {
         assert!(files(&temp, "**/*.js", &[&outside.to_string_lossy()]).is_empty());
     }
 
+    #[cfg(unix)]
+    #[test]
+    fn an_absolute_output_spelled_through_a_symlink_is_still_inside() {
+        let temp = workspace();
+        let aliases = TempDir::new().unwrap();
+        let alias = aliases.path().join("ws");
+        std::os::unix::fs::symlink(temp.path(), &alias).unwrap();
+        // The root spelled one way and the entries the other, both ways round.
+        for (root, spelling) in [
+            (temp.path(), alias.as_path()),
+            (alias.as_path(), temp.path()),
+        ] {
+            let entry = |rest: &str| spelling.join(rest).to_string_lossy().to_string();
+            assert_eq!(
+                resolve_task_output_files(root, "**/*.js", &[entry("dist/libs/lib")]).unwrap(),
+                vec!["dist/libs/lib/index.js"]
+            );
+            // A glob's tail does not exist; it resolves through its prefix.
+            assert_eq!(
+                resolve_task_output_files(root, "**/*.js", &[entry("dist/libs/**/*.js")]).unwrap(),
+                vec!["dist/libs/lib/index.js"]
+            );
+        }
+    }
+
     #[test]
     fn a_missing_output_is_not_an_input() {
         let temp = workspace();
@@ -382,8 +432,8 @@ mod tests {
             .unwrap();
         let second = hash();
         assert_ne!(first, second);
-        // A same-size rewrite with the same mtime still counts: the entry
-        // was made in the file's own second, so it is never trusted.
+        // A same-size rewrite with the same mtime still counts: the pinned
+        // mtime is not before the entry's second, so the entry is racy.
         let instant = std::time::SystemTime::now() + std::time::Duration::from_secs(2);
         let pin = || {
             std::fs::File::open(&file)
