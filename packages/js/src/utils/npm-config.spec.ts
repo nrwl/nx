@@ -1,47 +1,39 @@
-import { ExecException } from 'child_process';
 import { join } from 'path';
 import { getNpmRegistry, getNpmTag, parseRegistryOptions } from './npm-config';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
-import { PackageJson } from '@nx/devkit/internal';
+import { PackageJson, safeSpawn } from '@nx/devkit/internal';
 
-jest.mock('child_process', () => {
-  const original = jest.requireActual('child_process');
+jest.mock('@nx/devkit/internal', () => {
+  const { EventEmitter } = require('events');
+  const { PassThrough } = require('stream');
+  const CONFIG_VALUES: Record<string, string> = {
+    '@scope:registry': 'https://scoped-registry.com',
+    '@missing:registry': 'undefined',
+    registry: 'https://custom-registry.com',
+    tag: 'next',
+  };
+
   return {
-    ...original,
-    exec: jest
-      .fn()
-      .mockImplementation(
-        (
-          command: string,
-          _: unknown,
-          callback: (
-            error: ExecException,
-            stdout: string,
-            stderr: string
-          ) => void
-        ) => {
-          switch (command) {
-            case 'npm config get @scope:registry':
-              callback(null, 'https://scoped-registry.com', null);
-              break;
-            case 'npm config get @missing:registry':
-              callback(null, 'undefined', null);
-              break;
-            case 'npm config get registry':
-              callback(null, 'https://custom-registry.com', null);
-              break;
-            case 'npm config get tag':
-              callback(null, 'next', null);
-              break;
-            default:
-              callback(
-                new Error(`unexpected command: ${command}`),
-                null,
-                'ERROR'
-              );
-          }
-        }
-      ),
+    ...jest.requireActual('@nx/devkit/internal'),
+    safeSpawn: jest.fn((binary: string, args: string[]) => {
+      const child: any = new EventEmitter();
+      child.stdout = new PassThrough();
+      child.stderr = new PassThrough();
+
+      const [subcommand, action, key] = args;
+      const value =
+        binary === 'npm' && subcommand === 'config' && action === 'get'
+          ? CONFIG_VALUES[key]
+          : undefined;
+
+      process.nextTick(() => {
+        child.stdout.end(value === undefined ? '' : `${value}\n`);
+        child.stderr.end(value === undefined ? 'ERROR' : '');
+        setImmediate(() => child.emit('close', value === undefined ? 1 : 0));
+      });
+
+      return child;
+    }),
   };
 });
 
@@ -66,6 +58,19 @@ describe('npm-config', () => {
     it('should return registry if package is not scoped', async () => {
       const registry = await getNpmRegistry(tempFs.tempDir);
       expect(registry).toEqual('https://custom-registry.com');
+    });
+
+    it('should pass a scope carrying shell syntax to npm as a single argv element', async () => {
+      // the scope comes from the package's own manifest name
+      const scope = '@evil$(touch NX_PWNED)';
+
+      await getNpmRegistry(tempFs.tempDir, scope);
+
+      expect(safeSpawn).toHaveBeenCalledWith(
+        'npm',
+        ['config', 'get', `${scope}:registry`],
+        expect.anything()
+      );
     });
   });
 

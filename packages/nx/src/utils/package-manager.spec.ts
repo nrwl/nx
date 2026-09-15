@@ -1009,14 +1009,14 @@ describe('package-manager', () => {
     it('should return npm publish command', () => {
       const commands = getPackageManagerCommand('npm');
       expect(commands.publish(...publishCmdParam)).toEqual(
-        'npm publish "dist/packages/my-pkg" --json --"@org:registry=https://registry.npmjs.org/" --tag=latest'
+        'npm publish dist/packages/my-pkg --json --@org:registry=https://registry.npmjs.org/ --tag=latest'
       );
     });
 
     it('should return yarn publish command using npm publish', () => {
       const commands = getPackageManagerCommand('yarn');
       expect(commands.publish(...publishCmdParam)).toEqual(
-        'npm publish "dist/packages/my-pkg" --json --"@org:registry=https://registry.npmjs.org/" --tag=latest'
+        'npm publish dist/packages/my-pkg --json --@org:registry=https://registry.npmjs.org/ --tag=latest'
       );
     });
 
@@ -1031,7 +1031,7 @@ describe('package-manager', () => {
         });
         const commands = getPackageManagerCommand('pnpm');
         expect(commands.publish(...publishCmdParam)).toEqual(
-          'pnpm publish "dist/packages/my-pkg" --json --"@org:registry=https://registry.npmjs.org/" --tag=latest --no-git-checks'
+          'pnpm publish dist/packages/my-pkg --json --@org:registry=https://registry.npmjs.org/ --tag=latest --no-git-checks'
         );
       }
     );
@@ -1047,7 +1047,7 @@ describe('package-manager', () => {
         });
         const commands = getPackageManagerCommand('pnpm');
         expect(commands.publish(...publishCmdParam)).toEqual(
-          'pnpm publish "dist/packages/my-pkg" --json --"config.@org:registry=https://registry.npmjs.org/" --tag=latest --no-git-checks'
+          'pnpm publish dist/packages/my-pkg --json --config.@org:registry=https://registry.npmjs.org/ --tag=latest --no-git-checks'
         );
       }
     );
@@ -1064,14 +1064,136 @@ describe('package-manager', () => {
       vi.spyOn(fileUtils, 'readJsonFile').mockReturnValueOnce({});
       const commands = getPackageManagerCommand('pnpm');
       expect(commands.publish(...publishCmdParam)).toEqual(
-        'pnpm publish "dist/packages/my-pkg" --json --"registry=https://registry.npmjs.org/" --tag=latest --no-git-checks'
+        'pnpm publish dist/packages/my-pkg --json --registry=https://registry.npmjs.org/ --tag=latest --no-git-checks'
       );
     });
 
     it('should return bun publish command with registry and tag', () => {
       const commands = getPackageManagerCommand('bun');
       expect(commands.publish(...publishCmdParam)).toEqual(
-        'bun publish --cwd="dist/packages/my-pkg" --json --registry="https://registry.npmjs.org/" --tag=latest'
+        'bun publish --cwd=dist/packages/my-pkg --json --registry=https://registry.npmjs.org/ --tag=latest'
+      );
+    });
+
+    describe('untrusted .npmrc values', () => {
+      // `tag` and `registry` come from `npm config get`, i.e. verbatim from a
+      // workspace .npmrc an install script can write.
+      const TAG_PAYLOAD = 'latest; touch NX_PWNED';
+      // an .npmrc `tag = "latest\ncalc"` yields an interior newline, which
+      // getNpmConfigValue's stdout.trim() does not remove
+      const NEWLINE_TAG_PAYLOAD = 'latest\ntouch NX_PWNED';
+      const REGISTRY_PAYLOAD = 'https://r.example.com/"; touch NX_PWNED; "';
+
+      it.each(['npm', 'yarn', 'pnpm', 'bun'] as const)(
+        'should keep a %s tag carrying shell syntax in one argv element',
+        (packageManager) => {
+          const { args } = getPackageManagerCommand(packageManager).publishArgv(
+            'dist/packages/my-pkg',
+            'https://registry.npmjs.org/',
+            '@org:registry',
+            TAG_PAYLOAD
+          );
+          expect(args).toContain(`--tag=${TAG_PAYLOAD}`);
+        }
+      );
+
+      it.each(['npm', 'yarn', 'pnpm', 'bun'] as const)(
+        'should keep a %s registry carrying quotes in one argv element',
+        (packageManager) => {
+          const { args } = getPackageManagerCommand(packageManager).publishArgv(
+            'dist/packages/my-pkg',
+            REGISTRY_PAYLOAD,
+            '@org:registry',
+            'latest'
+          );
+          expect(args.some((arg) => arg.endsWith(`=${REGISTRY_PAYLOAD}`))).toBe(
+            true
+          );
+        }
+      );
+
+      it.each(['npm', 'yarn', 'pnpm', 'bun'] as const)(
+        'should keep a %s tag carrying a line break in one argv element',
+        (packageManager) => {
+          const { args } = getPackageManagerCommand(packageManager).publishArgv(
+            'dist/packages/my-pkg',
+            'https://registry.npmjs.org/',
+            '@org:registry',
+            NEWLINE_TAG_PAYLOAD
+          );
+          expect(args).toContain(`--tag=${NEWLINE_TAG_PAYLOAD}`);
+        }
+      );
+
+      it('should refuse a line break on Windows rather than emitting it', () => {
+        const original = Object.getOwnPropertyDescriptor(process, 'platform');
+        Object.defineProperty(process, 'platform', { value: 'win32' });
+        try {
+          expect(() =>
+            getPackageManagerCommand('npm').publish(
+              'dist/packages/my-pkg',
+              'https://registry.npmjs.org/',
+              '@org:registry',
+              NEWLINE_TAG_PAYLOAD
+            )
+          ).toThrow('a line break inside it');
+        } finally {
+          Object.defineProperty(process, 'platform', original);
+        }
+      });
+
+      it.runIf(process.platform !== 'win32')(
+        'should quote both fields in the string form',
+        () => {
+          expect(
+            getPackageManagerCommand('npm').publish(
+              'dist/packages/my-pkg',
+              REGISTRY_PAYLOAD,
+              '@org:registry',
+              TAG_PAYLOAD
+            )
+          ).toEqual(
+            `npm publish dist/packages/my-pkg --json ` +
+              `'--@org:registry=https://r.example.com/"; touch NX_PWNED; "' ` +
+              `'--tag=latest; touch NX_PWNED'`
+          );
+        }
+      );
+
+      it.runIf(process.platform !== 'win32')(
+        'should tokenize the string form back into exactly the argv, executing nothing',
+        async () => {
+          const { execSync: realExecSync } =
+            await vi.importActual<typeof import('child_process')>(
+              'child_process'
+            );
+          const realFs = await vi.importActual<typeof import('fs')>('fs');
+          const cwd = realFs.mkdtempSync(join(tmpdir(), 'nx-publish-quoting-'));
+
+          const commands = getPackageManagerCommand('npm');
+          const publishArgs = [
+            'dist/packages/my-pkg',
+            REGISTRY_PAYLOAD,
+            '@org:registry',
+            TAG_PAYLOAD,
+          ] as const;
+          const { command, args } = commands.publishArgv(...publishArgs);
+
+          // `$@` hands back exactly what the shell parsed the emitted string
+          // into, so the payload forking into extra tokens shows up here. NUL
+          // delimits, because a newline payload would forge a boundary.
+          const tokens = realExecSync(
+            `sh -c 'printf "%s\\0" "$@"' _ ${commands.publish(...publishArgs)}`,
+            { cwd, encoding: 'utf-8' }
+          );
+
+          try {
+            expect(tokens.split('\0').slice(0, -1)).toEqual([command, ...args]);
+            expect(realFs.existsSync(join(cwd, 'NX_PWNED'))).toBe(false);
+          } finally {
+            realFs.rmSync(cwd, { recursive: true, force: true });
+          }
+        }
       );
     });
 
