@@ -13,8 +13,8 @@ use super::disk_expansion::{FilesExpansion, MISSING_FILE_HASH, expand_files};
 use crate::native::workspace::ignored_index::IgnoredIndex;
 
 /// Folds `(path, content hash)` pairs in path order, like a fileset. `known`
-/// answers from the workspace file map so tracked files never touch the disk;
-/// everything else is the index's to answer or read.
+/// answers from the workspace file map, when the caller trusts it, so those
+/// files are not read; everything else is the index's to answer or read.
 pub(crate) fn hash_files(
     workspace_root: &Path,
     expansion: &FilesExpansion,
