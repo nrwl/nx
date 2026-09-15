@@ -18,6 +18,15 @@ use crate::native::walker::HARDCODED_IGNORE_PATTERNS;
 /// nothing watches gitignored directories, so a longer-lived memo goes stale.
 pub(crate) type FilesExpansionCache = DashMap<String, Arc<FilesExpansion>>;
 
+/// Where the files under a directory come from when not from a walk. Asked
+/// with a workspace-relative directory (empty for the root); `Some` is its
+/// files, sorted and workspace-relative, from an index the caller keeps
+/// current; `None` walks the disk.
+pub(crate) type Members<'a> = &'a (dyn Fn(&str) -> Option<Vec<String>> + Sync);
+
+/// The walk, for a caller with no index.
+pub(crate) const WALK: Members<'static> = &|_| None;
+
 pub struct FilesExpansion {
     /// Existing files matched by the group, sorted, workspace-relative.
     pub files: Vec<String>,
@@ -407,6 +416,12 @@ pub fn expand_files_with(
     globs: &[String],
     known: &(dyn Fn(&str) -> bool + Sync),
 ) -> Result<FilesExpansion> {
+    let (positives, negations) = parse_group(globs)?;
+    expand_entries(workspace_root, &positives, &negations, known, true, WALK)
+}
+
+/// A group's entries split at their literal prefixes, positives then negations.
+fn parse_group(globs: &[String]) -> Result<(Vec<Positive>, Vec<Negation>)> {
     let negations: Vec<Negation> = globs
         .iter()
         .filter(|g| g.starts_with('!'))
@@ -419,17 +434,19 @@ pub fn expand_files_with(
         .flat_map(|g| expand_literal_braces(&normalize_glob(g)))
         .map(|g| Positive::parse(&g))
         .collect::<Result<_>>()?;
-    expand_entries(workspace_root, &positives, &negations, known, true)
+    Ok((positives, negations))
 }
 
 /// `expand_files_with` for entries the caller has already split. Without
 /// `confine`, an entry is read wherever it points, as a declared output is.
+/// A directory `members` lists is taken from the list; any other is walked.
 pub(crate) fn expand_entries(
     workspace_root: &Path,
     positives: &[Positive],
     negations: &[Negation],
     known: &(dyn Fn(&str) -> bool + Sync),
     confine: bool,
+    members: Members,
 ) -> Result<FilesExpansion> {
     let skip = build_glob_set(HARDCODED_IGNORE_PATTERNS)?;
     let canonical_root = if confine {
@@ -503,6 +520,17 @@ pub(crate) fn expand_entries(
         } else {
             Box::new(move |path: &str| !excluded(path))
         };
+        if let Some(listed) = members(root) {
+            // Listed files carry no stamp: the index that listed them is
+            // asked for their content, or they are stat'ed when hashed.
+            found.extend(
+                listed
+                    .into_iter()
+                    .filter(|path| accept(path))
+                    .map(|path| (path, None)),
+            );
+            continue;
+        }
         let walked = walk_files(
             &start,
             workspace_root,
@@ -542,9 +570,11 @@ pub(crate) fn expand_files_cached(
     globs: &[String],
     cache: &FilesExpansionCache,
     known: &(dyn Fn(&str) -> bool + Sync),
+    members: Members,
 ) -> Result<Arc<FilesExpansion>> {
     expand_cached(key, cache, || {
-        expand_files_with(workspace_root, globs, known)
+        let (positives, negations) = parse_group(globs)?;
+        expand_entries(workspace_root, &positives, &negations, known, true, members)
     })
 }
 
@@ -584,6 +614,51 @@ pub(crate) mod tests {
 
     pub(crate) fn globs(list: &[&str]) -> Vec<String> {
         list.iter().map(|s| s.to_string()).collect()
+    }
+
+    #[test]
+    fn a_directory_the_members_list_is_taken_from_the_list_not_the_disk() {
+        let temp = workspace();
+        let listed = |dir: &str| {
+            (dir == "dist/gen").then(|| {
+                globs(&[
+                    "dist/gen/a.js",
+                    "dist/gen/a.js.map",
+                    "dist/gen/nested/b.js",
+                    "dist/gen/phantom.js",
+                ])
+            })
+        };
+        let group = globs(&["dist/gen/**/*.js", "!dist/gen/nested/**"]);
+        let (positives, negations) = parse_group(&group).unwrap();
+        let expansion = expand_entries(
+            temp.path(),
+            &positives,
+            &negations,
+            &|_| false,
+            true,
+            &listed,
+        )
+        .unwrap();
+        // The pattern and the negation apply to the list; nothing is stat'ed.
+        assert_eq!(
+            expansion.files,
+            vec!["dist/gen/a.js", "dist/gen/phantom.js"]
+        );
+        assert!(expansion.stamps.iter().all(Option::is_none));
+        assert!(expansion.walks.is_empty());
+        // A directory the list does not hold is walked as before.
+        let expansion = expand_entries(
+            temp.path(),
+            &parse_group(&globs(&["dist/other/**"])).unwrap().0,
+            &[],
+            &|_| false,
+            true,
+            &listed,
+        )
+        .unwrap();
+        assert_eq!(expansion.files, vec!["dist/other/c.js"]);
+        assert_eq!(expansion.walks.len(), 1);
     }
 
     #[test]

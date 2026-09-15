@@ -3,7 +3,7 @@ use std::path::Path;
 use anyhow::Result;
 
 use super::disk_expansion::{
-    FilesExpansion, FilesExpansionCache, Negation, Positive, expand_cached, expand_entries,
+    FilesExpansion, FilesExpansionCache, Negation, Positive, WALK, expand_cached, expand_entries,
 };
 use super::file_content_cache::{FileStamp, shared_file_content_cache};
 use super::hash_ignored_files::hash_files;
@@ -31,7 +31,14 @@ pub fn expand_task_outputs(
         // Outputs were written by a task that has run: the file map predates
         // it, so no path is taken as known, and they are read wherever they
         // point.
-        expand_entries(workspace_root, &positives, &negations, &|_| false, false)
+        expand_entries(
+            workspace_root,
+            &positives,
+            &negations,
+            &|_| false,
+            false,
+            WALK,
+        )
     })?;
     let selected = build_glob_set(&[glob])?;
     let (files, stamps): (Vec<String>, Vec<Option<FileStamp>>) = expansion
