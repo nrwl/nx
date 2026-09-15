@@ -5,10 +5,10 @@ import {
   packageInstall,
   readJson,
   runCLI,
-  runCommand,
   runCreateWorkspace,
   uniq,
 } from '@nx/e2e-utils';
+import { typescriptVersion } from '@nx/js/src/utils/versions';
 
 describe('create-nx-workspace --preset=npm', () => {
   const wsName = uniq('npm');
@@ -20,26 +20,36 @@ describe('create-nx-workspace --preset=npm', () => {
     // glob cache is causing previous projects to show in Workspace for maxWorkers overrides
     // which fails due to files no longer being available
     process.env.NX_PROJECT_GLOB_CACHE = 'false';
+  });
 
+  beforeEach(() => {
+    // Each case tests one generator in a fresh package-based workspace. Keeping
+    // dependencies from earlier cases couples unrelated framework peer ranges.
     runCreateWorkspace(wsName, {
       preset: 'npm',
       packageManager: getSelectedPackageManager(),
     });
-  });
+    // Match newProject's npm safeguard: tsquery's unbounded peer otherwise
+    // selects TypeScript 7, which no longer exposes the compiler API used by
+    // these generators. Each isolated fixture needs its own supported version.
+    if (getSelectedPackageManager() === 'npm') {
+      packageInstall('typescript', wsName, typescriptVersion);
+    }
+  }, 120_000);
 
-  afterEach(() => {
-    // cleanup previous projects
-    runCommand(`rm -rf packages/** tsconfig.base.json tsconfig.json`);
-  });
+  afterEach(() => cleanupProject());
 
   afterAll(() => {
-    process.env.NX_PROJECT_GLOB_CACHE = orginalGlobCache;
-    cleanupProject({ skipReset: true });
+    if (orginalGlobCache === undefined)
+      delete process.env.NX_PROJECT_GLOB_CACHE;
+    else process.env.NX_PROJECT_GLOB_CACHE = orginalGlobCache;
   });
 
   it('should setup package-based workspace', () => {
     const packageJson = readJson('package.json');
-    expect(packageJson.dependencies).toEqual({});
+    // npm can remove an empty dependencies field when installing the fixture's
+    // TypeScript devDependency. Both shapes mean there are no runtime deps.
+    expect(packageJson.dependencies ?? {}).toEqual({});
 
     if (getSelectedPackageManager() === 'pnpm') {
       checkFilesExist('pnpm-workspace.yaml');

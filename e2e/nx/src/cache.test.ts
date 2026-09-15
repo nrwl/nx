@@ -256,11 +256,12 @@ describe('cache', () => {
     // Create a file in the dist that does not match output glob
     updateFile('dist/apps/c.ts', '');
 
-    // Rerun. Outputs were modified (extra file in dist), so the daemon's
-    // outputs-hash check fails and nx restores from cache → "[local cache]"
-    // rather than the "existing outputs match" no-op path.
+    // The unrelated file must not invalidate the task cache. Depending on when
+    // the daemon observes it, Nx can restore outputs or leave them in place.
     const rerunWithNewUnrelatedFile = runCLI(`build ${mylib}`);
-    expect(rerunWithNewUnrelatedFile).toContain('local cache');
+    expect(rerunWithNewUnrelatedFile).toMatch(
+      /\[(?:local cache|existing outputs match the cache, left as is)\]/
+    );
     const outputsAfterAddingUntouchedFileAndRerunning = [
       ...listFiles('dist/apps'),
       ...listFiles('dist/.next').map((f) => `.next/${f}`),
@@ -817,7 +818,9 @@ console.log('Build complete');
   ) {
     const matchingProjects = [];
     const lines = actualOutput.split('\n');
-    lines.forEach((s) => {
+    lines.forEach((line) => {
+      // GitHub log groups prefix the task header with a cache-status icon.
+      const s = line.replace(/^(?:::group::|##\[group\])[^>]*(?=> nx run)/, '');
       if (s.trimStart().startsWith(`> nx run`)) {
         const projectName = s
           .trimStart()

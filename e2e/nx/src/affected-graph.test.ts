@@ -623,7 +623,8 @@ describe('show projects --affected', () => {
     );
 
     const { stdout: resWithoutTarget } = await runCLIAsync(
-      `show projects --affected --files=apps/${myapp}/src/app/app.element.spec.ts`
+      `show projects --affected --files=apps/${myapp}/src/app/app.element.spec.ts`,
+      { silent: true }
     );
     compareTwoArrays(resWithoutTarget.split('\n').filter(Boolean), [
       `${myapp}-e2e`,
