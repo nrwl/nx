@@ -990,11 +990,12 @@ fn prefixed_cache_key(dep: &str, kind: char, rest: &str) -> String {
     format!("{}:{dep}{kind}{rest}", dep.len())
 }
 
-/// Tasks the up-front batch must leave out: one of their disk-backed
-/// filesets reads from a directory that contains, or sits inside, an output
-/// declared by a task they depend on, directly or through the chain, so its
-/// files may still change during the run. Any other disk-backed fileset
-/// hashes up front like a tracked one.
+/// Tasks the up-front batch must leave out because they read what a task
+/// they depend on, directly or through the chain, writes: any task with a
+/// `dependentTasksOutputFiles` instruction, and any task with a disk-backed
+/// fileset that reads from a directory containing, or sitting inside, an
+/// output an upstream task declares. Any other disk-backed fileset hashes up
+/// front like a tracked one.
 fn deferred_tasks(
     plans: &HashMap<String, Vec<u32>>,
     pool: &InstructionPool,
@@ -1003,16 +1004,19 @@ fn deferred_tasks(
     plans
         .par_iter()
         .filter(|(task_id, ids)| {
-            let disk_roots: Vec<String> = ids
-                .iter()
-                .filter_map(|id| match &*pool.get(*id) {
-                    HashInstruction::ProjectFileSet(_, globs, true) => Some(globs.clone()),
-                    _ => None,
-                })
-                .flatten()
-                .filter(|glob| !glob.starts_with('!'))
-                .map(|glob| walk_root(&glob))
-                .collect();
+            let mut disk_roots: Vec<String> = Vec::new();
+            for id in ids.iter() {
+                match &*pool.get(*id) {
+                    HashInstruction::TaskOutput(_, _) => return true,
+                    HashInstruction::ProjectFileSet(_, globs, true) => disk_roots.extend(
+                        globs
+                            .iter()
+                            .filter(|glob| !glob.starts_with('!'))
+                            .map(|glob| walk_root(glob)),
+                    ),
+                    _ => {}
+                }
+            }
             if disk_roots.is_empty() {
                 return false;
             }
@@ -1650,6 +1654,13 @@ mod tests {
             ("web:outside", vec![disk("web", "apps/web/.env.generated")]),
             ("web:outslash", vec![disk("web", "dist/apps/web/**")]),
             ("lib:build", vec![tracked]),
+            (
+                "web:e2e",
+                vec![pool.intern(HashInstruction::TaskOutput(
+                    "**/*.js".into(),
+                    vec!["apps/web/dist".into()],
+                ))],
+            ),
         ]
         .into_iter()
         .map(|(id, ids)| (id.to_string(), ids))
@@ -1666,6 +1677,7 @@ mod tests {
             ("web:dotdist", vec![]),
             ("web:outside", vec![]),
             ("web:outslash", vec![]),
+            ("web:e2e", vec![]),
             ("web:codegen", vec!["apps/web/generated"]),
             ("web:serve", vec!["apps/web/d"]),
             (
@@ -1718,13 +1730,15 @@ mod tests {
         // is `dist`, so it holds `dist/legacy` but not `apps/web`; an output
         // the parser rejects (`../outside`) counts as the workspace root.
         // web:lint reads a file no upstream task writes, and a `!` entry on
-        // either side is neither a read nor a write.
+        // either side is neither a read nor a write. web:e2e reads dependent
+        // task outputs, which always wait.
         assert_eq!(
             deferred,
             vec![
                 "web:bracket",
                 "web:build",
                 "web:dotdist",
+                "web:e2e",
                 "web:outside",
                 "web:outslash",
                 "web:slashes",

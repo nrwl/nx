@@ -361,11 +361,12 @@ impl TaskHasher {
         })
     }
 
-    /// Like `hash_plans`, but only for the plans that hold no output of another
-    /// task and no disk-backed fileset whose directory contains, or sits inside,
-    /// an upstream task's output (`HashPlans::deferred`). The rest are left out
-    /// and hash once those tasks have run; their ids are absent from the result
-    /// and need no entry in `per_task_envs`.
+    /// Like `hash_plans`, but only for the plans the planner did not defer
+    /// (`HashPlans::deferred`: a task that reads another task's outputs, or a
+    /// disk-backed fileset whose directory contains, or sits inside, an
+    /// upstream task's output). The rest are left out and hash once those
+    /// tasks have run; their ids are absent from the result and need no entry
+    /// in `per_task_envs`.
     #[napi(ts_return_type = "Record<string, HashDetails>")]
     pub fn hash_plans_upfront(
         &self,
@@ -380,12 +381,7 @@ impl TaskHasher {
         let plans: HashMap<String, Vec<u32>> = hash_plans
             .plans
             .iter()
-            .filter(|(task_id, ids)| {
-                !hash_plans.deferred.contains(task_id.as_str())
-                    && !ids
-                        .iter()
-                        .any(|id| matches!(*pool.get(*id), HashInstruction::TaskOutput(_, _)))
-            })
+            .filter(|(task_id, _)| !hash_plans.deferred.contains(task_id.as_str()))
             .map(|(task_id, ids)| (task_id.clone(), ids.clone()))
             .collect();
         let partition_duration = function_start.elapsed();
