@@ -356,6 +356,22 @@ async function handleMessage(socket: Socket, data: Buffer) {
     );
   } else if (payload.type === 'REGISTER_FILE_WATCHER') {
     registeredFileWatcherSockets.push({ socket, config: payload.config });
+    // A client must not announce readiness until this socket is subscribed.
+    // Older clients do not request an acknowledgement and expect only changes.
+    if (payload.registrationId) {
+      await handleResult(
+        socket,
+        'REGISTER_FILE_WATCHER',
+        async () => ({
+          description: 'File watcher registered',
+          response: {
+            type: 'FILE_WATCHER_REGISTERED',
+            registrationId: payload.registrationId,
+          },
+        }),
+        mode
+      );
+    }
   } else if (isRegisterProjectGraphListenerMessage(payload)) {
     registeredProjectGraphListenerSockets.push(socket);
   } else if (isHandleGlobMessage(payload)) {

@@ -237,6 +237,10 @@ export class DaemonClient {
   private fileWatcherMessenger: DaemonSocketMessenger | undefined;
   private fileWatcherReconnecting: boolean = false;
   private fileWatcherFramingFailures = 0;
+  private fileWatcherRegistrations = new Map<
+    string,
+    { resolve: () => void; reject: (error: Error) => void }
+  >();
   private fileWatcherCallbacks: Map<
     string,
     (
@@ -321,6 +325,7 @@ export class DaemonClient {
   }
 
   reset() {
+    this.rejectFileWatcherRegistrations(new Error('Daemon client reset'));
     this.socketMessenger?.close();
     this.socketMessenger = null;
     this.queue = new PromisedBasedQueue();
@@ -456,83 +461,91 @@ export class DaemonClient {
     // Generate unique ID for this callback
     const callbackId = Math.random().toString(36).substring(2, 11);
 
-    // Store callback and config for reconnection
-    this.fileWatcherCallbacks.set(callbackId, callback);
-    this.fileWatcherConfigs.set(callbackId, config);
-
-    await this.queue.sendToQueue(async () => {
-      // If we already have a connection, just register the new config
-      if (this.fileWatcherMessenger) {
-        this.fileWatcherMessenger.sendMessage({
-          type: 'REGISTER_FILE_WATCHER',
-          config,
-        });
-        return;
-      }
-
-      await this.startDaemonIfNecessary();
-
-      const socketPath = this.getSocketPath();
-
-      this.fileWatcherMessenger = new DaemonSocketMessenger(
-        connect(socketPath)
-      ).listen(
-        (message) => {
-          try {
-            const parsedMessage = parseMessage<any>(message);
-            // A delivered message means the stream is healthy again.
-            this.fileWatcherFramingFailures = 0;
-            if (parsedMessage?.watcherError) {
-              const error = new WatcherFailedError(parsedMessage.watcherError);
-              for (const cb of this.fileWatcherCallbacks.values()) {
-                cb(error, null);
-              }
-              return;
-            }
-            // Notify all callbacks
-            for (const cb of this.fileWatcherCallbacks.values()) {
-              cb(null, parsedMessage);
-            }
-          } catch (e) {
-            for (const cb of this.fileWatcherCallbacks.values()) {
-              cb(e, null);
-            }
-          }
-        },
-        () => {
-          // Connection closed - trigger reconnection
-          clientLogger.log(
-            `[FileWatcher] Socket closed, triggering reconnection`
-          );
-          this.fileWatcherMessenger = undefined;
-          for (const cb of this.fileWatcherCallbacks.values()) {
-            cb('reconnecting', null);
-          }
-          this.reconnectFileWatcher();
-        },
-        (err) => {
-          if (err instanceof VersionMismatchError) {
-            for (const cb of this.fileWatcherCallbacks.values()) {
-              cb('closed', null);
-            }
-            process.exit(1);
-          }
-          for (const cb of this.fileWatcherCallbacks.values()) {
-            cb(err, null);
-          }
-          if (err instanceof MessageFramingError) {
-            this.fileWatcherFramingFailures++;
-          }
-          // Close so 'close' fires and the reconnect path runs; a framing
-          // failure would otherwise leave this channel silent forever.
-          this.fileWatcherMessenger?.close();
+    await this.queue
+      .sendToQueue(async () => {
+        // Only registrations whose queue entry has started belong to this
+        // connection. A failed earlier entry must not reconnect a queued one.
+        this.fileWatcherCallbacks.set(callbackId, callback);
+        this.fileWatcherConfigs.set(callbackId, config);
+        // If we already have a connection, just register the new config
+        if (this.fileWatcherMessenger) {
+          await this.sendFileWatcherRegistration(callbackId);
+          return;
         }
-      );
-      this.fileWatcherMessenger.sendMessage({
-        type: 'REGISTER_FILE_WATCHER',
-        config,
+
+        await this.startDaemonIfNecessary();
+
+        const socketPath = this.getSocketPath();
+
+        this.fileWatcherMessenger = new DaemonSocketMessenger(
+          connect(socketPath)
+        ).listen(
+          (message) => {
+            try {
+              const parsedMessage = parseMessage<any>(message);
+              if (this.handleFileWatcherRegistration(parsedMessage)) return;
+              // A delivered message means the stream is healthy again.
+              this.fileWatcherFramingFailures = 0;
+              if (parsedMessage?.watcherError) {
+                const error = new WatcherFailedError(
+                  parsedMessage.watcherError
+                );
+                for (const cb of this.fileWatcherCallbacks.values()) {
+                  cb(error, null);
+                }
+                return;
+              }
+              // Notify all callbacks
+              for (const cb of this.fileWatcherCallbacks.values()) {
+                cb(null, parsedMessage);
+              }
+            } catch (e) {
+              for (const cb of this.fileWatcherCallbacks.values()) {
+                cb(e, null);
+              }
+            }
+          },
+          () => {
+            // Connection closed - trigger reconnection
+            clientLogger.log(
+              `[FileWatcher] Socket closed, triggering reconnection`
+            );
+            this.fileWatcherMessenger = undefined;
+            this.rejectFileWatcherRegistrations(
+              new Error(
+                'Daemon disconnected before watcher registration completed'
+              )
+            );
+            for (const cb of this.fileWatcherCallbacks.values()) {
+              cb('reconnecting', null);
+            }
+            this.reconnectFileWatcher();
+          },
+          (err) => {
+            if (err instanceof VersionMismatchError) {
+              for (const cb of this.fileWatcherCallbacks.values()) {
+                cb('closed', null);
+              }
+              process.exit(1);
+            }
+            for (const cb of this.fileWatcherCallbacks.values()) {
+              cb(err, null);
+            }
+            if (err instanceof MessageFramingError) {
+              this.fileWatcherFramingFailures++;
+            }
+            // Close so 'close' fires and the reconnect path runs; a framing
+            // failure would otherwise leave this channel silent forever.
+            this.fileWatcherMessenger?.close();
+          }
+        );
+        await this.sendFileWatcherRegistration(callbackId);
+      })
+      .catch((error) => {
+        this.fileWatcherCallbacks.delete(callbackId);
+        this.fileWatcherConfigs.delete(callbackId);
+        throw error;
       });
-    });
 
     // Return unregister function
     return () => {
@@ -545,6 +558,57 @@ export class DaemonClient {
         this.fileWatcherMessenger = undefined;
       }
     };
+  }
+
+  private sendFileWatcherRegistration(callbackId: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const cleanup = () => {
+        clearTimeout(timeout);
+        this.fileWatcherRegistrations.delete(callbackId);
+      };
+      const fail = (error: Error) => {
+        cleanup();
+        this.fileWatcherCallbacks.delete(callbackId);
+        this.fileWatcherConfigs.delete(callbackId);
+        reject(error);
+        if (this.fileWatcherCallbacks.size === 0) {
+          this.fileWatcherMessenger?.close();
+        }
+      };
+      const timeout = setTimeout(
+        () =>
+          fail(new Error('Timed out waiting for daemon watcher registration')),
+        WAIT_FOR_SERVER_CONFIG.maxAttempts * WAIT_FOR_SERVER_CONFIG.delayMs
+      );
+      this.fileWatcherRegistrations.set(callbackId, {
+        resolve: () => {
+          cleanup();
+          resolve();
+        },
+        reject: fail,
+      });
+      try {
+        this.fileWatcherMessenger.sendMessage({
+          type: 'REGISTER_FILE_WATCHER',
+          config: this.fileWatcherConfigs.get(callbackId),
+          registrationId: callbackId,
+        });
+      } catch (error) {
+        fail(error);
+      }
+    });
+  }
+
+  private handleFileWatcherRegistration(message: any): boolean {
+    if (message?.type !== 'FILE_WATCHER_REGISTERED') return false;
+    this.fileWatcherRegistrations.get(message.registrationId)?.resolve();
+    return true;
+  }
+
+  private rejectFileWatcherRegistrations(error: Error) {
+    for (const registration of [...this.fileWatcherRegistrations.values()]) {
+      registration.reject(error);
+    }
   }
 
   private async reconnectFileWatcher() {
@@ -617,6 +681,7 @@ export class DaemonClient {
         (message) => {
           try {
             const parsedMessage = parseMessage<any>(message);
+            if (this.handleFileWatcherRegistration(parsedMessage)) return;
             // A delivered message means the stream is healthy again.
             this.fileWatcherFramingFailures = 0;
             for (const cb of this.fileWatcherCallbacks.values()) {
@@ -631,6 +696,11 @@ export class DaemonClient {
         () => {
           // Connection closed - trigger reconnection again
           this.fileWatcherMessenger = undefined;
+          this.rejectFileWatcherRegistrations(
+            new Error(
+              'Daemon disconnected before watcher registration completed'
+            )
+          );
           // Reset reconnection flag before triggering reconnection
           this.fileWatcherReconnecting = false;
           for (const cb of this.fileWatcherCallbacks.values()) {
