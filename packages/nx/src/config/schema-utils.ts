@@ -10,6 +10,7 @@ import { getWorkspacePackagesMetadata } from '../plugins/js/utils/packages';
 import { getRootTsConfigResolveExportsConditions } from '../plugins/js/utils/typescript';
 import {
   isWorkspaceLocalResolution,
+  toRootSpelling,
   withBuiltEntryResolutionHint,
 } from '../project-graph/plugins/built-entry-resolution-hint';
 import { isSourceEntry } from '../project-graph/plugins/entry-provenance';
@@ -198,32 +199,23 @@ function resolveImplementationWithMetadata(
   }
 
   for (const maybeImplementation of validImplementations) {
-    const maybeImplementationPath = join(directory, maybeImplementation);
-    if (existsSync(maybeImplementationPath)) {
-      return {
-        path: maybeImplementationPath,
-        isSource:
-          entryProject &&
-          isWorkspaceLocalResolution(maybeImplementationPath, workspaceRoot)
-            ? isSourceEntry(
-                maybeImplementationPath,
-                false,
-                entryProject,
-                workspaceRoot
-              )
-            : isWorkspaceLocalTsImplementation(maybeImplementationPath),
-      };
+    let resolvedPath = join(directory, maybeImplementation);
+    if (!existsSync(resolvedPath)) {
+      try {
+        resolvedPath = require.resolve(maybeImplementation, {
+          paths: [directory],
+        });
+      } catch {
+        continue;
+      }
     }
-
-    try {
-      const resolvedPath = require.resolve(maybeImplementation, {
-        paths: [directory],
-      });
-      return {
-        path: resolvedPath,
-        isSource: isWorkspaceLocalTsImplementation(resolvedPath),
-      };
-    } catch {}
+    return {
+      path: resolvedPath,
+      isSource:
+        entryProject && isWorkspaceLocalResolution(resolvedPath, workspaceRoot)
+          ? isSourceEntry(resolvedPath, false, entryProject, workspaceRoot)
+          : isWorkspaceLocalTsImplementation(resolvedPath),
+    };
   }
 
   throw new ImplementationResolutionError(implementationModulePath, directory);
@@ -301,7 +293,7 @@ function getProjectForDirectory(
     projectRootMappings.set(projects, mappings);
   }
   const projectName = findProjectForPath(
-    relative(workspaceRoot, directory),
+    relative(workspaceRoot, toRootSpelling(directory, workspaceRoot)),
     mappings
   );
   return projectName ? projects[projectName] : null;

@@ -15,8 +15,9 @@ vi.mock('../plugins/js/utils/packages', () => ({
 }));
 
 import { mkdirSync, realpathSync, symlinkSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { TempFs } from '../internal-testing-utils/temp-fs';
+import { readGeneratorsJson } from '../command-line/generate/generator-utils';
 import {
   registerSourceGraphResolver,
   requireWithTsconfigFallback,
@@ -66,6 +67,122 @@ describe('getImplementationFactory', () => {
       fs.cleanup();
     }
   });
+
+  it('registers a JavaScript implementation from a JSON collection with an aliased workspace root', () => {
+    const fs = new TempFs('schema-utils-js-alias-root', false);
+    fs.createFilesSync({
+      'ws/packages/plugin/generators.json': JSON.stringify({
+        generators: { probe: { implementation: './src/impl.js' } },
+      }),
+      'ws/packages/plugin/src/impl.js': '',
+    });
+    const alias = join(fs.tempDir, 'alias');
+    symlinkSync(join(fs.tempDir, 'ws'), alias, 'dir');
+    const { generatorsFilePath: collection } = readGeneratorsJson(
+      join(alias, 'packages/plugin/generators.json'),
+      'probe',
+      alias,
+      {}
+    );
+    const originalRoot = workspaceRoot;
+    setWorkspaceRoot(alias);
+    vi.mocked(registerSourceGraphResolver).mockClear();
+    vi.mocked(requireWithTsconfigFallback).mockReturnValue({});
+    try {
+      getImplementationFactory(
+        './src/impl.js',
+        dirname(collection),
+        './packages/plugin/generators.json',
+        {
+          plugin: {
+            name: 'plugin',
+            root: 'packages/plugin',
+            sourceRoot: 'packages/plugin/src',
+            targets: {},
+          },
+        }
+      )();
+
+      expect(registerSourceGraphResolver).toHaveBeenCalledWith(
+        join(fs.tempDir, 'ws/packages/plugin/src/impl.js'),
+        alias,
+        []
+      );
+    } finally {
+      setWorkspaceRoot(originalRoot);
+      fs.cleanup();
+    }
+  });
+
+  it.each([
+    {
+      kind: 'source symlink',
+      implementation: './src/plugin.js',
+      link: 'src',
+      sourceRoot: 'packages/plugin/src',
+      source: true,
+    },
+    {
+      kind: 'output symlink',
+      implementation: './out/plugin.js',
+      link: 'out',
+      sourceRoot: 'packages/plugin',
+      source: false,
+    },
+    {
+      kind: 'extensionless file',
+      implementation: './src/impl',
+      link: undefined,
+      sourceRoot: 'packages/plugin/src',
+      source: true,
+    },
+  ])(
+    'classifies $kind using its project',
+    ({ implementation, link, sourceRoot, source }) => {
+      const fs = new TempFs('schema-utils-entry-spelling', false);
+      fs.createFilesSync({ 'packages/plugin/actual/plugin.js': '' });
+      if (link) {
+        symlinkSync('actual', join(fs.tempDir, 'packages/plugin', link), 'dir');
+      } else {
+        fs.createFilesSync({ 'packages/plugin/src/impl.js': '' });
+      }
+      const originalRoot = workspaceRoot;
+      setWorkspaceRoot(fs.tempDir);
+      vi.mocked(registerSourceGraphResolver).mockClear();
+      vi.mocked(requireWithTsconfigFallback).mockReturnValue({});
+      try {
+        getImplementationFactory(
+          implementation,
+          join(fs.tempDir, 'packages/plugin'),
+          './generators.json',
+          {
+            plugin: {
+              name: 'plugin',
+              root: 'packages/plugin',
+              sourceRoot,
+              targets: { build: { outputs: ['{projectRoot}/out'] } },
+            },
+          }
+        )();
+        if (source) {
+          expect(registerSourceGraphResolver).toHaveBeenCalledWith(
+            join(
+              fs.tempDir,
+              'packages/plugin',
+              link ? implementation : './src/impl.js'
+            ),
+            fs.tempDir,
+            []
+          );
+        } else {
+          expect(registerSourceGraphResolver).not.toHaveBeenCalled();
+        }
+      } finally {
+        setWorkspaceRoot(originalRoot);
+        fs.cleanup();
+      }
+    }
+  );
 
   it('loads a default-only built exports target as built and hints at the missing sibling output', () => {
     const fs = new TempFs('schema-utils-built-exports');

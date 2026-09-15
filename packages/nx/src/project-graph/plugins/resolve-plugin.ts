@@ -235,6 +235,7 @@ function findEntryOwner(
   root: string
 ): { project: ProjectConfiguration | undefined; isSource: boolean } {
   if (!TS_SOURCE_EXTENSIONS.has(ext)) {
+    filePath = canonicalPath(filePath);
     const producers = findDeclaredOutputOwners(filePath, projects, root);
     if (producers.length) {
       return {

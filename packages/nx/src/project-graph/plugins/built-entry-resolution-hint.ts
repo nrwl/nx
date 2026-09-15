@@ -37,6 +37,17 @@ export function canonicalPath(p: string): string {
   }
 }
 
+// In-project symlinks must keep their configured spelling for classification.
+export function toRootSpelling(p: string, root: string): string {
+  const inside = (rel: string) =>
+    rel !== '..' && !rel.startsWith(`..${path.sep}`) && !path.isAbsolute(rel);
+  if (inside(path.relative(root, p))) {
+    return p;
+  }
+  const fromRoot = path.relative(canonicalPath(root), canonicalPath(p));
+  return inside(fromRoot) ? path.join(root, fromRoot) : p;
+}
+
 function ownerOf<T extends { root: string }>(
   canonicalTarget: string,
   packages: T[]

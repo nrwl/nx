@@ -2,8 +2,8 @@ import type { PluginConfiguration } from '../../config/nx-json';
 import { hashObject } from '../../hasher/file-hasher';
 
 /**
- * Identity of a loaded plugin set. Root `customConditions` are worker startup
- * flags, so a change reloads the whole set, in-process plugins included.
+ * Plugin set identity. A conditions change replaces the specified plugin workers;
+ * in-process plugins keep Node's module cache until the daemon restarts.
  */
 export function hashPluginState(
   plugins: PluginConfiguration[] | undefined,
