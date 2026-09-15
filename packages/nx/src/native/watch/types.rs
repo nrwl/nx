@@ -242,7 +242,13 @@ pub(super) fn transform_event_to_watch_events(
 
     #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
     {
-        if matches!(event_kind, EventKind::Create(CreateKind::Folder)) {
+        // A directory moved into place arrives as a rename, not a creation,
+        // and inotify reports nothing for the files inside it.
+        let moved_in_dir = matches!(
+            event_kind,
+            EventKind::Modify(ModifyKind::Name(RenameMode::To))
+        ) && fs::symlink_metadata(path_ref).is_ok_and(|m| m.is_dir());
+        if matches!(event_kind, EventKind::Create(CreateKind::Folder)) || moved_in_dir {
             folder_events(path_ref, origin)
         } else {
             Ok(create_watch_event_internal(origin, event_kind, path_ref))
@@ -252,36 +258,44 @@ pub(super) fn transform_event_to_watch_events(
 
 /// A `create` for every file under a directory that appeared whole, so
 /// files that had no events of their own are still reported. The root
-/// `.nxignore` applies, as it does to the watch.
+/// `.nxignore` and the hardcoded ignores apply, as they do to the watch.
+/// Links are not followed, the directory itself included: a linked directory
+/// moved into the workspace would otherwise report files outside it.
 fn folder_events(path_ref: &Path, origin: &str) -> anyhow::Result<Vec<WatchEventInternal>> {
-    use crate::native::walker::nx_walker_sync;
+    use crate::native::glob::build_glob_set;
+    use crate::native::walker::HARDCODED_IGNORE_PATTERNS;
     use ignore::Match;
     use ignore::gitignore::GitignoreBuilder;
+    use walkdir::WalkDir;
 
-    let mut result = vec![];
+    if fs::symlink_metadata(path_ref).map_or(true, |m| !m.is_dir()) {
+        return Ok(vec![]);
+    }
 
     let mut gitignore_builder = GitignoreBuilder::new(origin);
     let origin_path: &Path = origin.as_ref();
     gitignore_builder.add(origin_path.join(".nxignore"));
     let ignore = gitignore_builder.build()?;
+    let hardcoded = build_glob_set(HARDCODED_IGNORE_PATTERNS)?;
 
-    for path in nx_walker_sync(path_ref, None) {
-        let path = path_ref.join(path);
-        let is_dir = path.is_dir();
-        if is_dir
-            || matches!(
-                ignore.matched_path_or_any_parents(&path, is_dir),
+    let result = WalkDir::new(path_ref)
+        .follow_links(false)
+        .follow_root_links(false)
+        .into_iter()
+        .filter_entry(|entry| !hardcoded.is_match(entry.path()))
+        .flatten()
+        .filter(|entry| !entry.file_type().is_dir())
+        .filter(|entry| {
+            !matches!(
+                ignore.matched_path_or_any_parents(entry.path(), false),
                 Match::Ignore(_)
             )
-        {
-            continue;
-        }
-
-        result.push(WatchEventInternal {
-            path: relative_to_origin(&path, origin),
+        })
+        .map(|entry| WatchEventInternal {
+            path: relative_to_origin(entry.path(), origin),
             r#type: EventType::create,
-        });
-    }
+        })
+        .collect();
 
     Ok(result)
 }
