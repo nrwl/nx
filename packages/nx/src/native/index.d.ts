@@ -326,10 +326,9 @@ export declare class WorkspaceContext {
   rescanAndDiff(): ChangeBatch
   getFilesInDirectory(directory: string): Array<string>
   /**
-   * Subscribes to the batches the context applies: from its watcher, from
-   * a walk, and from reads that pulled changes in. Replaces any earlier
-   * subscriber. A batch `settle` or `incrementalUpdate` hands back to its
-   * caller is not published here.
+   * Subscribes to the context's changes: the callback is called whenever
+   * something was applied or delivered, with everything not yet taken by
+   * it or by `settle`. Replaces any earlier subscriber.
    */
   onChanges(callback: (err: string | null, batch: ChangeBatch) => void): void
   /**
@@ -341,12 +340,17 @@ export declare class WorkspaceContext {
   onWatchEvents(callback: (err: string | null, events: WatchEvent[]) => void): void
   /**
    * Applies everything the watch has delivered, waiting out the kernel hop,
-   * then returns every change applied since the previous `settle`, one
-   * entry per path at its latest state. A subscriber may have heard some of
-   * these changes already, and may yet hear them after this returns; the
-   * batch's `seq` orders them.
+   * then takes every change applied and not yet taken, one entry per path
+   * at its latest state. The change subscriber takes from the same place,
+   * so no change is handed out twice.
    */
   settle(): ChangeBatch
+  /**
+   * Takes every change applied and not yet taken, without waiting for the
+   * watch: for a caller that just applied changes itself, through
+   * `incrementalUpdate` or `rescanAndDiff`.
+   */
+  takeAppliedChanges(): ChangeBatch
   /**
    * Stops the watcher and forgets the subscribers. The files stay as they
    * were; reads no longer pull anything in.

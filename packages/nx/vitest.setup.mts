@@ -157,6 +157,13 @@ vi.doMock(workspaceContextPath, async () => {
       updatedFiles: [],
       deletedFiles: [],
     })),
+    takeAppliedWorkspaceChanges: guarded('takeAppliedWorkspaceChanges', () => ({
+      seq: 0,
+      createdFiles: [],
+      updatedFiles: [],
+      deletedFiles: [],
+    })),
+    isWatchingWorkspaceContext: realFn('isWatchingWorkspaceContext'),
     stopWatchingWorkspaceContext: realFn('stopWatchingWorkspaceContext'),
     getFilesInDirectoryUsingContext: guarded(
       'getFilesInDirectoryUsingContext',

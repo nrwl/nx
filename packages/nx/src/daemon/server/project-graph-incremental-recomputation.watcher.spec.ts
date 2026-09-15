@@ -3,8 +3,8 @@ import { join } from 'node:path';
 
 import { TempFs } from '../../internal-testing-utils/temp-fs';
 
-// Loading the module under test pulls in the daemon server (via ./watcher),
-// which registers a process-global PerformanceObserver. That observer outlives
+// Loading the module under test pulls in the daemon's modules, which register
+// a process-global PerformanceObserver. That observer outlives
 // each test's isolated module registry, so a measure emitted by the last real
 // compute would dispatch after teardown and its lazy requires would throw.
 vi.mock('../../utils/perf-logging', () => ({}));
@@ -48,19 +48,20 @@ describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () 
     const { setWorkspaceRoot } = await import('../../utils/workspace-root');
     setWorkspaceRoot(fs.tempDir);
 
-    const { watchWorkspace } = await import('./watcher');
-    const { storeWatcherInstance } = await import('./shutdown-utils');
-    const { getCachedSerializedProjectGraphPromise } =
+    const {
+      setupWorkspaceContext,
+      subscribeToWorkspaceChanges,
+      stopWatchingWorkspaceContext,
+    } = await import('../../utils/workspace-context');
+    const { getCachedSerializedProjectGraphPromise, routeAppliedChanges } =
       await import('./project-graph-incremental-recomputation');
-    const { routeWorkspaceChanges } =
-      await import('./file-watching/route-workspace-changes');
 
-    const fakeServer = {} as unknown as import('net').Server;
-    const watcher = await watchWorkspace(fakeServer, async (err, batch) => {
+    setupWorkspaceContext(fs.tempDir, { watch: true });
+    subscribeToWorkspaceChanges(fs.tempDir, (err, batch) => {
       if (err || !batch) return;
-      routeWorkspaceChanges(batch);
+      routeAppliedChanges(batch);
     });
-    storeWatcherInstance(watcher);
+    const watcher = { stop: async () => stopWatchingWorkspaceContext() };
 
     try {
       // First request — graph has no 'foo' project.

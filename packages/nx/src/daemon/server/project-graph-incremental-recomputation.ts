@@ -39,8 +39,11 @@ import {
 } from '../../project-graph/utils/retrieve-workspace-files';
 import { fileExists } from '../../utils/fileutils';
 import {
+  isWatchingWorkspaceContext,
   rescanAndDiffInContext,
   resetWorkspaceContext,
+  settleWorkspaceContext,
+  takeAppliedWorkspaceChanges,
   updateFilesInContext,
 } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
@@ -55,14 +58,13 @@ import {
   hasPendingDotEnvEvidence,
   hasRelevantPendingDotEnvEvidence,
 } from './dotenv-graph-changes';
-import { AppliedChangeLedger } from './file-watching/applied-changes';
 import { notifyFileChangeListeners } from './file-watching/file-change-events';
 import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
 import { notifyProjectGraphListenerSockets } from './project-graph-listener-sockets';
 import {
-  flushPendingWorkspaceChanges,
+  changedPaths,
   restartDaemonIfIgnoreFilesChanged,
-} from './watcher';
+} from './restart-checks';
 import { serverLogger } from '../logger';
 
 interface SerializedProjectGraph {
@@ -338,7 +340,46 @@ export async function getCachedSerializedProjectGraphPromise(
   }
 }
 
-const appliedChanges = new AppliedChangeLedger();
+const SUMMARY_CAP = 10;
+
+function summarize(files: string[]): string {
+  if (files.length === 0) return '(none)';
+  const listed = files.slice(0, SUMMARY_CAP).map((f) => `  - ${f}`);
+  if (files.length > SUMMARY_CAP) {
+    listed.push(`  ... and ${files.length - SUMMARY_CAP} more`);
+  }
+  return listed.join('\n');
+}
+
+/**
+ * Takes in changes the workspace context handed out: restarts the daemon if
+ * an ignore file changed, otherwise schedules the recomputation.
+ */
+export function routeAppliedChanges(batch: ChangeBatch): void {
+  const paths = changedPaths(batch);
+  if (paths.length && restartDaemonIfIgnoreFilesChanged(paths)) {
+    return;
+  }
+  if (paths.length) {
+    serverLogger.watcherLog(
+      `File changes detected (seq ${batch.seq}):\n` +
+        `Created:\n${summarize(batch.createdFiles.map(({ file }) => file))}\n` +
+        `Updated:\n${summarize(batch.updatedFiles.map(({ file }) => file))}\n` +
+        `Deleted:\n${summarize(batch.deletedFiles)}`
+    );
+  }
+  scheduleAppliedChanges(batch);
+}
+
+/**
+ * Applies everything the workspace watcher has seen and routes what changed.
+ * Call before serving a cached project graph, so a change the watcher already
+ * saw is never missed.
+ */
+export async function flushPendingWorkspaceChanges() {
+  if (!isWatchingWorkspaceContext()) return;
+  routeAppliedChanges(settleWorkspaceContext(workspaceRoot));
+}
 
 /**
  * Applies changes a caller learned of on its own to the workspace context,
@@ -366,25 +407,22 @@ export function scheduleProjectGraphRecomputation(
     'hash-reported-changes-start',
     'hash-reported-changes-end'
   );
-  if (batch) {
-    // The context cannot tell a reported creation from an update.
-    const created = new Set(createdFiles);
-    batch.createdFiles = batch.updatedFiles.filter((f) => created.has(f.file));
-    batch.updatedFiles = batch.updatedFiles.filter((f) => !created.has(f.file));
-  }
-  scheduleAppliedChanges(batch);
+  // A watching context hands every applied change out once, from one place.
+  routeAppliedChanges(
+    isWatchingWorkspaceContext()
+      ? takeAppliedWorkspaceChanges(workspaceRoot)
+      : batch
+  );
 }
 
 /**
  * Schedules a recomputation for changes the workspace context has applied:
  * no-op rewrites are already dropped, deleted directories expanded, and every
- * created or updated file carries its hash. A batch older than what was
- * already taken in for a path is ignored for that path.
+ * created or updated file carries its hash.
  */
-export function scheduleAppliedChanges(batch: ChangeBatch) {
+function scheduleAppliedChanges(batch: ChangeBatch) {
   ++fileChangeCounter;
-  const { createdFiles, updatedFiles, deletedFiles } =
-    appliedChanges.accept(batch);
+  const { createdFiles, updatedFiles, deletedFiles } = batch;
 
   for (const { file, hash } of [...createdFiles, ...updatedFiles]) {
     collectedDeletedFiles.delete(file);
@@ -432,7 +470,10 @@ export function scheduleInitialProjectGraphComputation() {
  */
 export async function handleWatcherRescan(): Promise<void> {
   performance.mark('watcher-rescan-start');
-  const batch = rescanAndDiffInContext(workspaceRoot);
+  const recovered = rescanAndDiffInContext(workspaceRoot);
+  const batch = isWatchingWorkspaceContext()
+    ? takeAppliedWorkspaceChanges(workspaceRoot)
+    : recovered;
   performance.mark('watcher-rescan-end');
   performance.measure(
     're-walk workspace after watcher rescan',
@@ -441,17 +482,10 @@ export async function handleWatcherRescan(): Promise<void> {
   );
   const { createdFiles, updatedFiles, deletedFiles } = batch;
 
-  // An overflow can drop an ignore-file edit outright, so dispatchWorkspaceChanges
-  // never sees it and the native filterer keeps stale ignore rules. The re-walk
-  // is where it resurfaces, so restart here too — the fresh daemon rebuilds the
-  // filterer from the current ignore files.
-  if (
-    restartDaemonIfIgnoreFilesChanged([
-      ...createdFiles.map(({ file }) => file),
-      ...updatedFiles.map(({ file }) => file),
-      ...deletedFiles,
-    ])
-  ) {
+  // An overflow can drop an ignore-file edit outright, and the re-walk is
+  // where it resurfaces, so restart here too: the fresh daemon rebuilds the
+  // watch's rules from the current ignore files.
+  if (restartDaemonIfIgnoreFilesChanged(changedPaths(batch))) {
     serverLogger.watcherLog(
       'Rescan recovered an ignore-file change; restarting the daemon to reload ignore rules.'
     );
@@ -939,7 +973,6 @@ async function resetInternalState() {
   currentSourceMaps = undefined;
   collectedUpdatedFiles.clear();
   collectedDeletedFiles.clear();
-  appliedChanges.clear();
   cacheHasBeenPersisted = false;
   resetWorkspaceContext();
 }

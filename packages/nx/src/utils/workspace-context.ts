@@ -11,8 +11,11 @@ import { isOnDaemon } from '../daemon/is-on-daemon';
 import { daemonClient } from '../daemon/client/client';
 import { handleImport } from './handle-import';
 
-type ChangeSubscriber = (err: string | null, batch: ChangeBatch | null) => void;
-type EventSubscriber = (
+export type WorkspaceChangesListener = (
+  err: string | null,
+  batch: ChangeBatch | null
+) => void;
+export type WatchEventsListener = (
   err: string | null,
   events: WatchEvent[] | null
 ) => void;
@@ -24,8 +27,8 @@ let filesReady: Promise<void> | undefined;
 let contextOptions: WorkspaceContextOptions | undefined;
 let contextRoot: string | undefined;
 let contextGeneration = 0;
-let changeSubscriber: ChangeSubscriber | undefined;
-let eventSubscriber: EventSubscriber | undefined;
+const changeListeners = new Set<WorkspaceChangesListener>();
+const eventListeners = new Set<WatchEventsListener>();
 
 export function setupWorkspaceContext(
   workspaceRoot: string,
@@ -193,23 +196,25 @@ export function rescanAndDiffInContext(workspaceRoot: string): ChangeBatch {
 }
 
 /**
- * Hears the batches the context applies from its own watcher. Requires a
- * context set up with `watch: true`. `settleWorkspaceContext` can hand back a
- * change this also delivers, before or after; each batch's `seq` orders them.
+ * Listens for the changes a watching context applies: each change reaches the
+ * listeners once, here or in `settleWorkspaceContext`, whichever takes it
+ * first. Any number of listeners may listen. Returns a function that stops
+ * this one.
  */
 export function subscribeToWorkspaceChanges(
   workspaceRoot: string,
-  callback: ChangeSubscriber
-) {
-  changeSubscriber = callback;
+  listener: WorkspaceChangesListener
+): () => void {
+  changeListeners.add(listener);
   ensureContextAvailable(workspaceRoot);
   attachSubscribers();
+  return () => changeListeners.delete(listener);
 }
 
 /**
  * Applies every change the watcher has delivered, waiting out the kernel hop,
- * and hands back every change applied since the previous settle for the caller
- * to route. Empty when the context is not watching.
+ * and takes every change applied and not yet handed out. Empty when the
+ * context is not watching.
  */
 export function settleWorkspaceContext(workspaceRoot: string): ChangeBatch {
   ensureContextAvailable(workspaceRoot);
@@ -217,41 +222,65 @@ export function settleWorkspaceContext(workspaceRoot: string): ChangeBatch {
 }
 
 /**
- * Hears every event the context's watch delivers, including writes under
- * ignored directories and the `rescan` marker. The applied batches are
- * `subscribeToWorkspaceChanges`.
+ * Takes every change applied and not yet handed out, without waiting for the
+ * watcher: for a caller that has just applied changes itself.
+ */
+export function takeAppliedWorkspaceChanges(
+  workspaceRoot: string
+): ChangeBatch {
+  ensureContextAvailable(workspaceRoot);
+  return workspaceContext.takeAppliedChanges();
+}
+
+export function isWatchingWorkspaceContext(): boolean {
+  return !!contextOptions?.watch;
+}
+
+/**
+ * Listens for every event the context's watch delivers, including writes
+ * under ignored directories and the `rescan` marker. Any number of listeners
+ * may listen. Returns a function that stops this one.
  */
 export function subscribeToWatchEvents(
   workspaceRoot: string,
-  callback: EventSubscriber
-) {
-  eventSubscriber = callback;
+  listener: WatchEventsListener
+): () => void {
+  eventListeners.add(listener);
   ensureContextAvailable(workspaceRoot);
   attachSubscribers();
+  return () => eventListeners.delete(listener);
 }
 
+function isEmptyBatch(batch: ChangeBatch): boolean {
+  return (
+    batch.createdFiles.length === 0 &&
+    batch.updatedFiles.length === 0 &&
+    batch.deletedFiles.length === 0
+  );
+}
+
+/**
+ * The native context takes one subscriber per stream; it fans out here. A
+ * delivery a replaced context had already queued does not reach listeners as
+ * if it came from the current one.
+ */
 function attachSubscribers() {
-  // Deliveries a replaced context had already queued must not reach the
-  // subscriber as if they came from the current one.
+  if (!workspaceContext || !contextOptions?.watch) return;
   const generation = contextGeneration;
   const current = () => generation === contextGeneration;
-  if (changeSubscriber) {
-    const subscriber = changeSubscriber;
-    workspaceContext.onChanges((err, batch) => {
-      if (current()) subscriber(err, batch);
-    });
-  }
-  if (eventSubscriber) {
-    const subscriber = eventSubscriber;
-    workspaceContext.onWatchEvents((err, events) => {
-      if (current()) subscriber(err, events);
-    });
-  }
+  workspaceContext.onChanges((err, batch) => {
+    if (!current() || (!err && (!batch || isEmptyBatch(batch)))) return;
+    for (const listener of changeListeners) listener(err, batch);
+  });
+  workspaceContext.onWatchEvents((err, events) => {
+    if (!current()) return;
+    for (const listener of eventListeners) listener(err, events);
+  });
 }
 
 export function stopWatchingWorkspaceContext() {
-  changeSubscriber = undefined;
-  eventSubscriber = undefined;
+  changeListeners.clear();
+  eventListeners.clear();
   contextOptions = undefined;
   workspaceContext?.stopWatching();
 }

@@ -14,7 +14,7 @@ import {
   invalidateGraphCache,
   isKnownWorkspaceFile,
 } from './project-graph-incremental-recomputation';
-import type { FileWatcherCallback } from './watcher';
+import type { WatchEvent } from '../../native';
 
 let outputsWatcherError: Error | undefined;
 let outputsWatcherTerminalError: Error | undefined;
@@ -30,10 +30,10 @@ export function getOutputsWatcherTerminalError(): Error | undefined {
   return outputsWatcherTerminalError;
 }
 
-export const handleOutputsChanges: FileWatcherCallback = async (
-  err,
-  changeEvents
-) => {
+export const handleOutputsChanges = async (
+  err: Error | string | null,
+  changeEvents: WatchEvent[] | null
+): Promise<void> => {
   try {
     if (err || !changeEvents || !changeEvents.length) {
       let error = typeof err === 'string' ? new Error(err) : err;

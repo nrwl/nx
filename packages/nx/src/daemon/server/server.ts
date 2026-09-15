@@ -97,7 +97,6 @@ import {
   serializeWithFallback,
 } from '../socket-utils';
 import { registerFileChangeListener } from './file-watching/file-change-events';
-import { routeWorkspaceChanges } from './file-watching/route-workspace-changes';
 import {
   hasRegisteredFileWatcherSockets,
   notifyFileWatcherSocketsOfError,
@@ -146,16 +145,20 @@ import {
 } from './handle-outputs-changes';
 import {
   registerProjectGraphRecomputationListener,
+  routeAppliedChanges,
   scheduleInitialProjectGraphComputation,
 } from './project-graph-incremental-recomputation';
+import {
+  registerDaemonForRestartChecks,
+  relativeServerProcess,
+  stopDaemonIfReplaced,
+} from './restart-checks';
 import {
   hasRegisteredProjectGraphListenerSockets,
   registeredProjectGraphListenerSockets,
   removeRegisteredProjectGraphListenerSocket,
 } from './project-graph-listener-sockets';
 import {
-  getOutputWatcherInstance,
-  getWatcherInstance,
   handleServerProcessTermination,
   handleServerProcessTerminationWithRestart,
   resetInactivityTimeout,
@@ -163,18 +166,19 @@ import {
   respondWithError,
   respondWithErrorAndExit,
   SERVER_INACTIVITY_TIMEOUT_MS,
-  storeOutputWatcherInstance,
-  storeWatcherInstance,
 } from './shutdown-utils';
 import {
   clearSyncGeneratorsCache,
   collectAndScheduleSyncGenerators,
 } from './sync-generators';
+
 import {
-  watchOutputFiles,
-  watchWorkspace,
-  WorkspaceChangesCallback,
-} from './watcher';
+  isWatchingWorkspaceContext,
+  setupWorkspaceContext,
+  subscribeToWatchEvents,
+  subscribeToWorkspaceChanges,
+} from '../../utils/workspace-context';
+import type { ChangeBatch } from '../../native';
 
 let workspaceWatcherError: Error | undefined;
 
@@ -640,7 +644,10 @@ function lockFileHashChanged(): boolean {
  * we need to recompute the cached serialized project graph so that it is readily
  * available for the next client request to the server.
  */
-const handleWorkspaceChanges: WorkspaceChangesCallback = async (err, batch) => {
+const handleWorkspaceChanges = (
+  err: Error | string | null,
+  batch: ChangeBatch | null
+) => {
   if (workspaceWatcherError) {
     serverLogger.watcherLog(
       'Skipping handleWorkspaceChanges because of a previously recorded watcher error.'
@@ -663,7 +670,7 @@ const handleWorkspaceChanges: WorkspaceChangesCallback = async (err, batch) => {
       return;
     }
 
-    routeWorkspaceChanges(batch);
+    routeAppliedChanges(batch);
   } catch (err) {
     serverLogger.watcherLog(`Unexpected workspace error`, err.message);
     console.error(err);
@@ -673,10 +680,15 @@ const handleWorkspaceChanges: WorkspaceChangesCallback = async (err, batch) => {
 };
 
 export async function startServer(): Promise<Server> {
-  // The workspace context owns the watcher and starts it before it scans, so
-  // a file written during boot is visible to one or the other.
-  if (!getWatcherInstance()) {
-    storeWatcherInstance(await watchWorkspace(server, handleWorkspaceChanges));
+  // The workspace context owns the daemon's one watch and starts it before
+  // it scans, so a file written during boot is visible to one or the other.
+  if (!isWatchingWorkspaceContext()) {
+    registerDaemonForRestartChecks(server, openSockets);
+    setupWorkspaceContext(workspaceRoot, {
+      watch: true,
+      watchGlobs: [`!${relativeServerProcess}`],
+    });
+    subscribeToWorkspaceChanges(workspaceRoot, handleWorkspaceChanges);
     serverLogger.watcherLog(
       `Subscribed to changes within: ${workspaceRoot} (native)`
     );
@@ -771,11 +783,16 @@ export async function startServer(): Promise<Server> {
           // this triggers the storage of the lock file hash
           daemonIsOutdated();
 
-          if (!getOutputWatcherInstance()) {
-            storeOutputWatcherInstance(
-              await watchOutputFiles(server, handleOutputsChanges)
-            );
-          }
+          // Every event the watch delivers, gitignored outputs and dotenv
+          // files included.
+          subscribeToWatchEvents(workspaceRoot, (err, events) => {
+            if (!err && events && stopDaemonIfReplaced(events)) {
+              return;
+            }
+            if (err || events?.length) {
+              handleOutputsChanges(err, events);
+            }
+          });
 
           // listen for project graph recomputation events to collect and schedule sync generators
           registerProjectGraphRecomputationListener(
