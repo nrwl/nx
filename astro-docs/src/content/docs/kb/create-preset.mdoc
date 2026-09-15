@@ -114,7 +114,8 @@ npx create-nx-workspace my-workspace --preset=my-plugin-name
 
 pnpm 11 and later refuses to install a dependency whose build scripts are neither allowed nor denied. `create-nx-workspace` installs your preset package before your preset generator runs, so the generator can't approve the build scripts of the packages your preset depends on. Declare those decisions in the `pnpm.allowBuilds` field of your plugin's `package.json` instead:
 
-```json {% fileName="package.json" %}
+```json
+// package.json
 {
   "name": "my-plugin-name",
   "pnpm": {
