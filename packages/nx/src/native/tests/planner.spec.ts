@@ -2283,7 +2283,7 @@ describe('task planner', () => {
       }
     });
 
-    it('withholds the snapshot when a declared includeIgnored glob is invalid, so the native error still fires', () => {
+    function lonelyParent(inputs: { fileset: string; includeIgnored: true }[]) {
       const builder = new ProjectGraphBuilder(undefined, {
         parent: [{ file: 'libs/parent/filea.ts', hash: 'a.hash' }],
       });
@@ -2292,14 +2292,7 @@ describe('task planner', () => {
         type: 'lib',
         data: {
           root: 'libs/parent',
-          targets: {
-            build: {
-              executor: 'nx:run-commands',
-              // A negation with nothing to filter is the native error the
-              // snapshot must not hide.
-              inputs: [{ fileset: '!{workspaceRoot}/', includeIgnored: true }],
-            },
-          },
+          targets: { build: { executor: 'nx:run-commands', inputs } },
         },
       });
       const projectGraph = builder.getUpdatedProjectGraph();
@@ -2318,6 +2311,15 @@ describe('task planner', () => {
       const snapshots = snapshotsFor({
         'parent:build': { inputs: ['libs/parent/filea.ts'] },
       });
+      return { planner, taskGraph, snapshots };
+    }
+
+    it('withholds the snapshot when a declared includeIgnored group is invalid, so the native error still fires', () => {
+      // A well-formed negation with nothing to filter: the group, not the
+      // entry, is the native error the snapshot must not hide.
+      const { planner, taskGraph, snapshots } = lonelyParent([
+        { fileset: '!{projectRoot}/dist/**/*.map', includeIgnored: true },
+      ]);
       expect(() =>
         planner.getPlans(['parent:build'], taskGraph, snapshots)
       ).toThrow(/no positive includeIgnored fileset/);
@@ -2329,6 +2331,25 @@ describe('task planner', () => {
           taskId: 'parent:build',
         }),
       ]);
+    });
+
+    it('keeps the snapshot when a declared includeIgnored negation has a positive fileset to filter', () => {
+      const { planner, taskGraph, snapshots } = lonelyParent([
+        { fileset: '{projectRoot}/dist/**', includeIgnored: true },
+        { fileset: '!{projectRoot}/dist/**/*.map', includeIgnored: true },
+      ]);
+      const plan = planner.getPlans(['parent:build'], taskGraph, snapshots)[
+        'parent:build'
+      ];
+      expect(plan).toEqual(
+        expect.arrayContaining([
+          'files:parent:[libs/parent/dist/**,!libs/parent/dist/**/*.map]',
+          expect.stringMatching(/^io-snapshot:[0-9a-f]{64}$/),
+        ])
+      );
+      expect(
+        planner.ioSnapshotReport(taskGraph, snapshots).diagnostics
+      ).toEqual([]);
     });
   });
 });
