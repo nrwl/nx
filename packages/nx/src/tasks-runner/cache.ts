@@ -214,7 +214,7 @@ export class DbCache {
     outputs: string[],
     code: number
   ) {
-    return tryAndRetry(async () => {
+    await tryAndRetry(async () => {
       const expandedOutputs = this.cache.put(
         task.hash,
         terminalOutput,
@@ -224,16 +224,49 @@ export class DbCache {
 
       // Notify TaskIOService of actual output files
       getTaskIOService().notifyTaskOutputs(task.id, expandedOutputs);
+    });
 
-      if (this.remoteCache) {
-        await this.remoteCache.store(
-          task.hash,
+    if (this.remoteCache) {
+      await this.storeRemoteCache(task.hash, terminalOutput, code);
+    }
+  }
+
+  /**
+   * Stores an entry in the remote cache, retrying failed attempts.
+   *
+   * When the attempts are exhausted for a task that passed, the write is
+   * skipped with a warning instead of failing the run. The local cache record
+   * has already been written at that point, so the only consequence of a
+   * skipped remote write is a cache miss for this hash on the next run, while
+   * throwing fails a run in which every task succeeded. Storing the outputs of
+   * a task that failed (NX_CACHE_FAILURES) still throws, as that run fails
+   * anyway.
+   */
+  private async storeRemoteCache(
+    hash: string,
+    terminalOutput: string | null,
+    code: number
+  ) {
+    try {
+      await tryAndRetry(() =>
+        this.remoteCache.store(
+          hash,
           this.cache.cacheDirectory,
           terminalOutput,
           code
-        );
+        )
+      );
+    } catch (e) {
+      if (code !== 0) {
+        throw e;
       }
-    });
+
+      logger.warn(
+        `Remote cache write skipped for ${hash}: ${
+          e instanceof Error ? e.message : String(e)
+        }`
+      );
+    }
   }
 
   copyFilesFromCache(_: string, cachedResult: CachedResult, outputs: string[]) {
