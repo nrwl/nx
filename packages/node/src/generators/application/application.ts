@@ -157,6 +157,19 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
         })
       );
     }
+  } else if (options.bundler === 'rspack' && !options.skipPackageJson) {
+    // The init generator has no `skipPackageJson` option, and it writes
+    // dependencies eagerly, so it's skipped entirely rather than only its
+    // install task when the caller asked not to touch package.json.
+    const { rspackInitGenerator } = ensurePackage<typeof import('@nx/rspack')>(
+      '@nx/rspack',
+      nxVersion
+    );
+    const rspackInitTask = await rspackInitGenerator(tree, {
+      framework: 'none',
+      addPlugin: options.addPlugin,
+    });
+    tasks.push(rspackInitTask);
   }
 
   addAppFiles(tree, options);
