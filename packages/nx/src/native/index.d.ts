@@ -214,6 +214,18 @@ export declare class TaskHasher {
    * every task id.
    */
   hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, perTaskEnvs: Record<string, Record<string, string>>, cwd: string, collectTaskInputs?: boolean | undefined | null): Record<string, HashDetails>
+  /**
+   * Like `hash_plans`, but only for the plans that hold no output of another
+   * task. The rest are left out and hash once those tasks have run; their
+   * ids are absent from the result and need no entry in `per_task_envs`.
+   */
+  hashPlansUpfront(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, perTaskEnvs: Record<string, Record<string, string>>, cwd: string, collectTaskInputs?: boolean | undefined | null): Record<string, HashDetails>
+  /**
+   * Hashes `task_ids` from plans built earlier, so a task the up-front batch
+   * deferred needs no second planning pass. Ids without a plan are absent
+   * from the result.
+   */
+  hashPlansFor(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, taskIds: Array<string>, perTaskEnvs: Record<string, Record<string, string>>, cwd: string, collectTaskInputs?: boolean | undefined | null): Record<string, HashDetails>
 }
 
 export declare class TaskInvocationTracker {
@@ -283,6 +295,13 @@ export declare class WorkspaceContext {
   incrementalUpdate(updatedFiles: Array<string>, deletedFiles: Array<string>): Record<string, string>
   updateProjectFiles(projectRootMappings: Record<string, string>, projectFiles: ExternalObject<Record<string, Array<FileData>>>, globalFiles: ExternalObject<Array<FileData>>, updatedFiles: Record<string, string>, deletedFiles: Array<string>): UpdatedWorkspaceFiles
   allFileData(): Array<FileData>
+  /**
+   * Recover from dropped watch events: re-walk, and report what changed
+   * against the map this context was holding. The fresh map is adopted, so
+   * the caller only has to feed the returned changes through its normal
+   * recomputation path.
+   */
+  rescanAndDiff(): RescanDiff
   getFilesInDirectory(directory: string): Array<string>
 }
 
@@ -376,7 +395,12 @@ export interface EventDimensions {
 export declare const enum EventType {
   delete = 'delete',
   update = 'update',
-  create = 'create'
+  create = 'create',
+  /**
+   * The kernel dropped events (e.g. an inotify queue overflow); per-path
+   * events cannot be trusted complete and consumers must re-walk.
+   */
+  rescan = 'rescan'
 }
 
 export declare function expandOutputs(directory: string, entries: Array<string>): Array<string>
@@ -700,6 +724,13 @@ export interface ProjectGraph {
 }
 
 export declare function remove(src: string): void
+
+/** What a rescan re-walk found had changed while the watcher was not being told. */
+export interface RescanDiff {
+  createdFiles: Array<FileData>
+  updatedFiles: Array<FileData>
+  deletedFiles: Array<string>
+}
 
 export declare function restoreTerminal(): void
 
