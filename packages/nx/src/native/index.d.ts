@@ -280,37 +280,6 @@ export declare class WorkspaceContext {
    */
   static fromArchive(workspaceRoot: string, cacheDir: string, options?: WorkspaceContextOptions | undefined | null): WorkspaceContext
   /**
-   * Subscribes to the batches the context applies: from its watcher, from
-   * a walk, and from reads that pulled changes in. Replaces any earlier
-   * subscriber. A batch `settle` or `incrementalUpdate` hands back to its
-   * caller is not repeated here.
-   */
-  onChanges(callback: (err: string | null, batch: ChangeBatch) => void): void
-  /**
-   * Subscribes to every event the watch delivers, whether or not it
-   * concerns the files: writes under ignored directories included, and
-   * the `rescan` marker when the kernel dropped events. Replaces any
-   * earlier subscriber. Batches applied to the files are `onChanges`.
-   */
-  onWatchEvents(callback: (err: string | null, events: WatchEvent[]) => void): void
-  /**
-   * Waits for the kernel→watcher hop to settle and applies everything it
-   * delivered, so a write made before the call is in the files. Blocks the
-   * caller for up to the settle cap, and through any walk in progress.
-   * Returns what it applied; that batch is the caller's to route, and
-   * subscribers do not see it.
-   */
-  settle(): ChangeBatch
-  /**
-   * Stops the watcher and forgets the subscriber. The files stay as they
-   * were; reads no longer pull anything in.
-   */
-  stopWatching(): void
-  onChanges(): void
-  onWatchEvents(): void
-  settle(): ChangeBatch
-  stopWatching(): void
-  /**
    * Bumped once per applied batch that changed anything. Equal values
    * mean equal files, so a consumer that remembers the value it computed
    * from can skip recomputing.
@@ -344,10 +313,10 @@ export declare class WorkspaceContext {
   hashFilesMatchingGlob(globs: Array<string>, exclude?: Array<string> | undefined | null): string
   /**
    * Applies changes a caller learned of on its own. Waits through a walk in
-   * progress so the answer reflects them. Returns the hash of every file
-   * whose content really changed; the batch is not repeated to subscribers.
+   * progress so the answer reflects them. Returns what really changed; the
+   * batch is not published to subscribers.
    */
-  incrementalUpdate(updatedFiles: Array<string>, deletedFiles: Array<string>): Record<string, string>
+  incrementalUpdate(updatedFiles: Array<string>, deletedFiles: Array<string>): ChangeBatch
   updateProjectFiles(projectRootMappings: Record<string, string>, projectFiles: ExternalObject<Record<string, Array<FileData>>>, globalFiles: ExternalObject<Array<FileData>>, updatedFiles: Record<string, string>, deletedFiles: Array<string>): UpdatedWorkspaceFiles
   allFileData(): Array<FileData>
   /**
@@ -358,6 +327,33 @@ export declare class WorkspaceContext {
    */
   rescanAndDiff(): ChangeBatch
   getFilesInDirectory(directory: string): Array<string>
+  /**
+   * Subscribes to the batches the context applies: from its watcher, from
+   * a walk, and from reads that pulled changes in. Replaces any earlier
+   * subscriber. A batch `settle` or `incrementalUpdate` hands back to its
+   * caller is not published here.
+   */
+  onChanges(callback: (err: string | null, batch: ChangeBatch) => void): void
+  /**
+   * Subscribes to every event the watch delivers, whether or not it
+   * concerns the files: writes under ignored directories included, and
+   * the `rescan` marker when the kernel dropped events. Replaces any
+   * earlier subscriber. Batches applied to the files are `onChanges`.
+   */
+  onWatchEvents(callback: (err: string | null, events: WatchEvent[]) => void): void
+  /**
+   * Applies everything the watch has delivered, waiting out the kernel hop,
+   * then returns every change applied since the previous `settle`, one
+   * entry per path at its latest state. A subscriber may have heard some of
+   * these changes already, and may yet hear them after this returns; the
+   * batch's `seq` orders them.
+   */
+  settle(): ChangeBatch
+  /**
+   * Stops the watcher and forgets the subscribers. The files stay as they
+   * were; reads no longer pull anything in.
+   */
+  stopWatching(): void
 }
 
 export interface BatchInfo {
@@ -394,7 +390,9 @@ export declare function canInstallNxConsoleForEditor(editor: SupportedEditor): P
 /**
  * What one application of changes did to the files. `seq` is the context's
  * change sequence afterwards; it is unchanged, and the lists empty, when
- * nothing the batch reported was really different.
+ * nothing the batch reported was really different. A path can reach a
+ * consumer in more than one batch (see `settle`): the one with the higher
+ * `seq` holds its later state.
  */
 export interface ChangeBatch {
   seq: number

@@ -10,6 +10,7 @@ import {
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { hashArray, hashObject } from '../../hasher/file-hasher';
 import { NxWorkspaceFilesExternals } from '../../native';
+import type { ChangeBatch } from '../../native';
 import { buildProjectGraphUsingProjectFileMap as buildProjectGraphUsingFileMap } from '../../project-graph/build-project-graph';
 import {
   DaemonProjectGraphError,
@@ -54,6 +55,7 @@ import {
   hasPendingDotEnvEvidence,
   hasRelevantPendingDotEnvEvidence,
 } from './dotenv-graph-changes';
+import { AppliedChangeLedger } from './file-watching/applied-changes';
 import { notifyFileChangeListeners } from './file-watching/file-change-events';
 import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
 import { notifyProjectGraphListenerSockets } from './project-graph-listener-sockets';
@@ -336,100 +338,103 @@ export async function getCachedSerializedProjectGraphPromise(
   }
 }
 
+const appliedChanges = new AppliedChangeLedger();
+
 /**
- * `appliedHashes` is for changes the workspace context has already applied
- * (a batch from its watcher): the hash of every created or updated file, with
- * no-op rewrites already dropped. Without it the files are fed to the context
- * here, which hashes them and drops the no-ops itself.
+ * Applies changes a caller learned of on its own to the workspace context,
+ * then schedules the recomputation as for a batch the context applied.
  */
 export function scheduleProjectGraphRecomputation(
   createdFiles: string[],
   updatedFiles: string[],
-  deletedFiles: string[],
-  appliedHashes?: Record<string, string>
+  deletedFiles: string[]
 ) {
-  ++fileChangeCounter;
-
-  // Hash the changed files up front and drop no-op rewrites before they can
-  // trigger an expensive recompute. Restoring a cached task output, a
-  // `git checkout` back to the same content, or a formatter that changes
-  // nothing all rewrite a file (new inode) the watcher reports as changed
-  // even though the bytes are identical. updateFilesInContext updates the
-  // workspace context and returns only the files whose content actually
-  // changed. Hashing here — once per batch — rather than inside the
-  // recompute keeps it off the stale-retry path, which would otherwise see
-  // "no change" after the first pass already updated the context hashes.
-  performance.mark('hash-watched-changes-start');
-  const changedFileHashes =
-    appliedHashes ??
-    (createdFiles.length > 0 ||
-    updatedFiles.length > 0 ||
-    deletedFiles.length > 0
-      ? (updateFilesInContext(
-          workspaceRoot,
-          [...createdFiles, ...updatedFiles],
-          deletedFiles
-        ) ?? {})
-      : {});
-  performance.mark('hash-watched-changes-end');
-  performance.measure(
-    'hash changed files from watcher',
-    'hash-watched-changes-start',
-    'hash-watched-changes-end'
+  if (!createdFiles.length && !updatedFiles.length && !deletedFiles.length) {
+    scheduleAppliedChanges(undefined);
+    return;
+  }
+  // Hashed once here, not inside the recompute, so a stale retry does not see
+  // "no change" after the first pass already updated the context.
+  performance.mark('hash-reported-changes-start');
+  const batch = updateFilesInContext(
+    workspaceRoot,
+    [...createdFiles, ...updatedFiles],
+    deletedFiles
   );
+  performance.mark('hash-reported-changes-end');
+  performance.measure(
+    'hash reported file changes',
+    'hash-reported-changes-start',
+    'hash-reported-changes-end'
+  );
+  if (batch) {
+    // The context cannot tell a reported creation from an update.
+    const created = new Set(createdFiles);
+    batch.createdFiles = batch.updatedFiles.filter((f) => created.has(f.file));
+    batch.updatedFiles = batch.updatedFiles.filter((f) => !created.has(f.file));
+  }
+  scheduleAppliedChanges(batch);
+}
 
-  for (const [f, hash] of Object.entries(changedFileHashes)) {
-    collectedDeletedFiles.delete(f);
-    collectedUpdatedFiles.set(f, { version: fileChangeCounter, hash });
+/**
+ * Schedules a recomputation for changes the workspace context has applied:
+ * no-op rewrites are already dropped, deleted directories expanded, and every
+ * created or updated file carries its hash. A batch older than what was
+ * already taken in for a path is ignored for that path.
+ */
+export function scheduleAppliedChanges(batch: ChangeBatch | undefined) {
+  ++fileChangeCounter;
+  const { createdFiles, updatedFiles, deletedFiles } = batch
+    ? appliedChanges.accept(batch)
+    : { createdFiles: [], updatedFiles: [], deletedFiles: [] };
+
+  for (const { file, hash } of [...createdFiles, ...updatedFiles]) {
+    collectedDeletedFiles.delete(file);
+    collectedUpdatedFiles.set(file, { version: fileChangeCounter, hash });
+  }
+  for (const file of deletedFiles) {
+    collectedUpdatedFiles.delete(file);
+    collectedDeletedFiles.set(file, fileChangeCounter);
   }
 
-  for (let f of deletedFiles) {
-    collectedUpdatedFiles.delete(f);
-    collectedDeletedFiles.set(f, fileChangeCounter);
-  }
-
-  // The native watcher already coalesces a burst of events into one batch,
-  // so socket + listener notifications dispatch immediately.
-  if (Object.keys(changedFileHashes).length > 0 || deletedFiles.length > 0) {
-    notifyFileChangeListeners({ createdFiles, updatedFiles, deletedFiles });
-    notifyFileWatcherSockets(createdFiles, updatedFiles, deletedFiles);
+  if (createdFiles.length || updatedFiles.length || deletedFiles.length) {
+    const createdFileNames = createdFiles.map(({ file }) => file);
+    const updatedFileNames = updatedFiles.map(({ file }) => file);
+    notifyFileChangeListeners({
+      createdFiles: createdFileNames,
+      updatedFiles: updatedFileNames,
+      deletedFiles,
+    });
+    notifyFileWatcherSockets(createdFileNames, updatedFileNames, deletedFiles);
     // Bump generation synchronously so any in-flight compute fails its
     // next isStale() check and chains to the newer one. kickOffRecompute
     // would also bump on first resume, but only after its first await —
     // a window during which the old compute could falsely pass.
     ++recomputationGeneration;
     kickOffRecompute();
-  } else {
+  } else if (!cachedSerializedProjectGraphPromise) {
     // First call (initial startup) — no events but we still need a graph.
-    if (!cachedSerializedProjectGraphPromise) {
-      kickOffRecompute();
-    }
+    kickOffRecompute();
   }
 }
 
 /**
  * Recover from changes that reached the workspace on no reported path: re-walk
  * it, diff against the context's known files, and feed what differs through
- * the same collection and notification path a watcher batch takes. The
- * context's own watcher recovers from its dropped events this way on its own,
- * and delivers the result as an ordinary batch; this is the entry point for a
- * caller that learned of a gap some other way.
- *
- * The walk and the diff both happen in the workspace context: it already owns
- * the file map, so diffing there keeps the whole workspace from crossing the
- * napi boundary twice per recovery, and lets the context re-gather in place
- * instead of being torn down and rebuilt.
+ * the same path a watcher batch takes. The context's own watch recovers from
+ * its dropped events without this; it is for a caller that learned of a gap
+ * some other way.
  */
 export async function handleWatcherRescan(): Promise<void> {
   performance.mark('watcher-rescan-start');
-  const { createdFiles, updatedFiles, deletedFiles } =
-    rescanAndDiffInContext(workspaceRoot);
+  const batch = rescanAndDiffInContext(workspaceRoot);
   performance.mark('watcher-rescan-end');
   performance.measure(
     're-walk workspace after watcher rescan',
     'watcher-rescan-start',
     'watcher-rescan-end'
   );
+  const { createdFiles, updatedFiles, deletedFiles } = batch;
 
   // An overflow can drop an ignore-file edit outright, so dispatchWorkspaceChanges
   // never sees it and the native filterer keeps stale ignore rules. The re-walk
@@ -462,27 +467,7 @@ export async function handleWatcherRescan(): Promise<void> {
     `Rescan re-walk recovered ${createdFiles.length} created, ` +
       `${updatedFiles.length} updated and ${deletedFiles.length} deleted file(s).`
   );
-
-  ++fileChangeCounter;
-  for (const { file, hash } of [...createdFiles, ...updatedFiles]) {
-    collectedDeletedFiles.delete(file);
-    collectedUpdatedFiles.set(file, { version: fileChangeCounter, hash });
-  }
-  for (const file of deletedFiles) {
-    collectedUpdatedFiles.delete(file);
-    collectedDeletedFiles.set(file, fileChangeCounter);
-  }
-
-  const createdFileNames = createdFiles.map(({ file }) => file);
-  const updatedFileNames = updatedFiles.map(({ file }) => file);
-  notifyFileChangeListeners({
-    createdFiles: createdFileNames,
-    updatedFiles: updatedFileNames,
-    deletedFiles,
-  });
-  notifyFileWatcherSockets(createdFileNames, updatedFileNames, deletedFiles);
-  ++recomputationGeneration;
-  kickOffRecompute();
+  scheduleAppliedChanges(batch);
 }
 
 export function registerProjectGraphRecomputationListener(
@@ -949,6 +934,7 @@ async function resetInternalState() {
   currentSourceMaps = undefined;
   collectedUpdatedFiles.clear();
   collectedDeletedFiles.clear();
+  appliedChanges.clear();
   cacheHasBeenPersisted = false;
   resetWorkspaceContext();
 }

@@ -1,6 +1,6 @@
 import type { ChangeBatch } from '../../../native';
 import { serverLogger } from '../../logger';
-import { scheduleProjectGraphRecomputation } from '../project-graph-incremental-recomputation';
+import { scheduleAppliedChanges } from '../project-graph-incremental-recomputation';
 
 const SUMMARY_CAP = 10;
 
@@ -19,9 +19,6 @@ function summarize(files: string[]): string {
 
 /**
  * Route a batch the workspace context applied into the recomputation queue.
- * The context already consulted the disk: directories and vanished files are
- * gone from the batch, deleted directories are expanded to their files, and
- * every created or updated file carries its new hash.
  */
 export function routeWorkspaceChanges(batch: ChangeBatch): void {
   const createdFiles = batch.createdFiles.map(({ file }) => file);
@@ -37,18 +34,5 @@ export function routeWorkspaceChanges(batch: ChangeBatch): void {
     );
   }
 
-  const hashes: Record<string, string> = {};
-  for (const { file, hash } of batch.createdFiles) {
-    hashes[file] = hash;
-  }
-  for (const { file, hash } of batch.updatedFiles) {
-    hashes[file] = hash;
-  }
-
-  scheduleProjectGraphRecomputation(
-    createdFiles,
-    updatedFiles,
-    deletedFiles,
-    hashes
-  );
+  scheduleAppliedChanges(batch);
 }

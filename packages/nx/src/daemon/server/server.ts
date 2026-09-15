@@ -171,7 +171,6 @@ import {
   collectAndScheduleSyncGenerators,
 } from './sync-generators';
 import {
-  convertChangeBatchToLogMessage,
   watchOutputFiles,
   watchWorkspace,
   WorkspaceChangesCallback,
@@ -664,7 +663,6 @@ const handleWorkspaceChanges: WorkspaceChangesCallback = async (err, batch) => {
       return;
     }
 
-    serverLogger.watcherLog(convertChangeBatchToLogMessage(batch));
     routeWorkspaceChanges(batch);
   } catch (err) {
     serverLogger.watcherLog(`Unexpected workspace error`, err.message);

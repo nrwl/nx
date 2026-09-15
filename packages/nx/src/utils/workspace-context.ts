@@ -22,6 +22,8 @@ let filesReady: Promise<void> | undefined;
 // Survive a reset: the daemon tears its context down and lets the next read
 // recreate it, and that context must watch and report like the one before.
 let contextOptions: WorkspaceContextOptions | undefined;
+let contextRoot: string | undefined;
+let contextGeneration = 0;
 let changeSubscriber: ChangeSubscriber | undefined;
 let eventSubscriber: EventSubscriber | undefined;
 
@@ -39,12 +41,11 @@ export function setupWorkspaceContext(
     ? WorkspaceContext.fromArchive(workspaceRoot, cacheDir, options)
     : new WorkspaceContext(workspaceRoot, cacheDir, options);
   contextOptions = options;
+  contextRoot = workspaceRoot;
+  contextGeneration++;
   filesReady = undefined;
-  if (options?.watch && changeSubscriber) {
-    workspaceContext.onChanges(changeSubscriber);
-  }
-  if (options?.watch && eventSubscriber) {
-    workspaceContext.onWatchEvents(eventSubscriber);
+  if (options?.watch) {
+    attachSubscribers();
   }
   performance.mark('workspace-context:end');
   performance.measure(
@@ -192,9 +193,9 @@ export function rescanAndDiffInContext(workspaceRoot: string): ChangeBatch {
 }
 
 /**
- * Hears every batch the context applies from its own watcher. Requires a
- * context set up with `watch: true`; the batches `settleWorkspaceContext`
- * hands back are not repeated here.
+ * Hears the batches the context applies from its own watcher. Requires a
+ * context set up with `watch: true`. `settleWorkspaceContext` can hand back a
+ * change this also delivers, before or after; each batch's `seq` orders them.
  */
 export function subscribeToWorkspaceChanges(
   workspaceRoot: string,
@@ -202,13 +203,13 @@ export function subscribeToWorkspaceChanges(
 ) {
   changeSubscriber = callback;
   ensureContextAvailable(workspaceRoot);
-  workspaceContext.onChanges(callback);
+  attachSubscribers();
 }
 
 /**
- * Applies every change the watcher has seen, waiting out the kernel hop so a
- * write made before the call is included, and hands back what it applied for
- * the caller to route. Empty when the context is not watching.
+ * Applies every change the watcher has delivered, waiting out the kernel hop,
+ * and hands back every change applied since the previous settle for the caller
+ * to route. Empty when the context is not watching.
  */
 export function settleWorkspaceContext(workspaceRoot: string): ChangeBatch {
   ensureContextAvailable(workspaceRoot);
@@ -226,7 +227,26 @@ export function subscribeToWatchEvents(
 ) {
   eventSubscriber = callback;
   ensureContextAvailable(workspaceRoot);
-  workspaceContext.onWatchEvents(callback);
+  attachSubscribers();
+}
+
+function attachSubscribers() {
+  // Deliveries a replaced context had already queued must not reach the
+  // subscriber as if they came from the current one.
+  const generation = contextGeneration;
+  const current = () => generation === contextGeneration;
+  if (changeSubscriber) {
+    const subscriber = changeSubscriber;
+    workspaceContext.onChanges((err, batch) => {
+      if (current()) subscriber(err, batch);
+    });
+  }
+  if (eventSubscriber) {
+    const subscriber = eventSubscriber;
+    workspaceContext.onWatchEvents((err, events) => {
+      if (current()) subscriber(err, events);
+    });
+  }
 }
 
 export function stopWatchingWorkspaceContext() {
@@ -234,11 +254,6 @@ export function stopWatchingWorkspaceContext() {
   eventSubscriber = undefined;
   contextOptions = undefined;
   workspaceContext?.stopWatching();
-}
-
-export function workspaceContextChangeSeq(workspaceRoot: string): number {
-  ensureContextAvailable(workspaceRoot);
-  return workspaceContext.changeSeq();
 }
 
 export async function getFilesInDirectoryUsingContext(
@@ -309,4 +324,9 @@ export function resetWorkspaceContext() {
   workspaceContext?.stopWatching?.();
   workspaceContext = undefined;
   filesReady = undefined;
+  // A watching context is the daemon's only watch; left for the next read to
+  // re-create, output and dotenv events in between would be lost.
+  if (contextOptions?.watch && contextRoot) {
+    setupWorkspaceContext(contextRoot, contextOptions);
+  }
 }

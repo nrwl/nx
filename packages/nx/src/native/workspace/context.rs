@@ -302,7 +302,9 @@ fn acquire_files(
 
 /// What one application of changes did to the files. `seq` is the context's
 /// change sequence afterwards; it is unchanged, and the lists empty, when
-/// nothing the batch reported was really different.
+/// nothing the batch reported was really different. A path can reach a
+/// consumer in more than one batch (see `settle`): the one with the higher
+/// `seq` holds its later state.
 #[napi(object)]
 #[derive(Default, Debug, Clone)]
 pub struct ChangeBatch {
@@ -468,6 +470,11 @@ struct State {
     /// Bumped once per application that changed anything. A reader that
     /// remembers the value it last saw can tell whether the files moved.
     change_seq: u64,
+    /// Every outcome sealed since the last `settle`, latest per path. Kept
+    /// only by a watching context, whose batches reach its consumer
+    /// asynchronously and so can arrive after `settle` has answered.
+    pending: Outcomes,
+    track_pending: bool,
 }
 
 /// Who is asking to apply changes, which decides what happens during a walk.
@@ -493,6 +500,7 @@ impl FileState {
             );
             return FileState(None);
         }
+        let track_pending = policy.is_some();
         FileState(Some(Arc::new((
             NxMutex::new(State {
                 phase: Phase::Scanning,
@@ -501,6 +509,8 @@ impl FileState {
                 files: Files::new(),
                 queued: Vec::new(),
                 change_seq: 0,
+                pending: Outcomes::new(),
+                track_pending,
             }),
             NxCondvar::new(),
         ))))
@@ -509,7 +519,13 @@ impl FileState {
     /// Runs the first walk off-thread. The state stays `Scanning` until it
     /// lands, so readers wait and reported changes queue behind it.
     #[cfg(not(target_arch = "wasm32"))]
-    fn scan(&self, workspace_root: &Path, cache_dir: String, trust_archive: bool) {
+    fn scan(
+        &self,
+        workspace_root: &Path,
+        cache_dir: String,
+        trust_archive: bool,
+        batches: Publisher<ChangeBatch>,
+    ) {
         let Some(_) = &self.0 else {
             return;
         };
@@ -523,12 +539,22 @@ impl FileState {
                 files_lock_wait(),
             );
             trace!(files_len = files.len(), "files retrieved");
-            state.finish_walk(&workspace_root, files, true);
+            // Changes the watch reported during the walk land in this batch.
+            let batch = state.finish_walk(&workspace_root, &cache_dir, files, true);
+            if !batch.is_empty() {
+                batches.publish(Ok(batch));
+            }
         });
     }
 
     #[cfg(target_arch = "wasm32")]
-    fn scan(&self, workspace_root: &Path, cache_dir: String, trust_archive: bool) {
+    fn scan(
+        &self,
+        workspace_root: &Path,
+        cache_dir: String,
+        trust_archive: bool,
+        _batches: Publisher<ChangeBatch>,
+    ) {
         let Some(_) = &self.0 else {
             return;
         };
@@ -537,10 +563,10 @@ impl FileState {
             .flatten()
         {
             Some(archive) => archive_to_files(archive),
-            None => gather_and_hash_files(workspace_root, cache_dir),
+            None => gather_and_hash_files(workspace_root, cache_dir.clone()),
         };
         trace!("{} files retrieved", files.len());
-        self.finish_walk(workspace_root, files, true);
+        self.finish_walk(workspace_root, &cache_dir, files, true);
     }
 
     /// Marks a walk in progress. False, doing nothing, when one already is.
@@ -559,33 +585,66 @@ impl FileState {
 
     /// Adopts a walk's result and reports what it changed: the diff against
     /// the list it replaces (none for the first walk), with the changes queued
-    /// during the walk applied on top. Wakes every waiting reader.
-    fn finish_walk(&self, workspace_root: &Path, fresh: Files, initial: bool) -> ChangeBatch {
+    /// during the walk applied on top. A rescan queued during the walk walks
+    /// again: the events it stands for may have been lost after the walk
+    /// passed their directories. Wakes every waiting reader once current.
+    fn finish_walk(
+        &self,
+        workspace_root: &Path,
+        cache_dir: &str,
+        mut fresh: Files,
+        mut initial: bool,
+    ) -> ChangeBatch {
         let Some(sync) = &self.0 else {
             return ChangeBatch::default();
         };
         let (lock, cvar) = sync.deref();
-        let mut state = lock.lock().expect("Should be able to lock files");
-        let mut outcomes = if initial {
-            Outcomes::new()
-        } else {
-            // The watch lost events, or a refresh was asked for: the index
-            // can no longer trust what it heard either.
-            state.ignored.reseed(workspace_root);
-            diff_files(&state.files, &fresh)
+        let mut outcomes = Outcomes::new();
+        loop {
+            if !initial {
+                // The watch lost events, or a refresh was asked for: the index
+                // can no longer trust what it heard either. Readers wait for
+                // Ready and changes queue meanwhile, so it re-walks unlocked.
+                let ignored =
+                    Arc::clone(&lock.lock().expect("Should be able to lock files").ignored);
+                ignored.reseed(workspace_root);
+            }
+            let mut state = lock.lock().expect("Should be able to lock files");
+            if !initial {
+                outcomes.extend(diff_files(&state.files, &fresh));
+            }
+            state.files = fresh;
+            if state.queued.iter().any(|c| c.kind == ChangeKind::Rescan) {
+                state.queued.retain(|c| c.kind != ChangeKind::Rescan);
+                drop(state);
+                initial = false;
+                fresh = gather_and_hash_files(workspace_root, cache_dir.to_owned());
+                continue;
+            }
+            let queued = std::mem::take(&mut state.queued);
+            outcomes.extend(apply(&mut state, workspace_root, queued));
+            let batch = seal(&mut state, outcomes);
+            state.phase = Phase::Ready;
+            drop(state);
+            cvar.notify_all();
+            return batch;
+        }
+    }
+
+    /// Everything sealed since the last call, one outcome per path (its
+    /// latest), under the `seq` of the newest batch it includes. Waits out a
+    /// walk in progress. Empty for a context that does not watch.
+    fn take_pending(&self) -> ChangeBatch {
+        let Some(sync) = &self.0 else {
+            return ChangeBatch::default();
         };
-        state.files = fresh;
-        // A queued rescan is satisfied by the walk that just landed.
-        let queued: Vec<Change> = std::mem::take(&mut state.queued)
-            .into_iter()
-            .filter(|c| c.kind != ChangeKind::Rescan)
-            .collect();
-        outcomes.extend(apply(&mut state, workspace_root, queued));
-        let batch = seal(&mut state, outcomes);
-        state.phase = Phase::Ready;
-        drop(state);
-        cvar.notify_all();
-        batch
+        let (lock, cvar) = sync.deref();
+        let state = lock.lock().expect("Should be able to lock files");
+        let mut state = cvar
+            .wait(state, |s| s.phase == Phase::Scanning)
+            .expect("Should be able to wait for files");
+        let pending = std::mem::take(&mut state.pending);
+        outcomes_to_batch(pending, state.change_seq)
     }
 
     fn wait_ready(&self) {
@@ -646,7 +705,7 @@ impl FileState {
             state.phase = Phase::Scanning;
             drop(state);
             let fresh = gather_and_hash_files(workspace_root, cache_dir.to_owned());
-            return self.finish_walk(workspace_root, fresh, false);
+            return self.finish_walk(workspace_root, cache_dir, fresh, false);
         }
         let outcomes = apply(&mut state, workspace_root, changes);
         seal(&mut state, outcomes)
@@ -680,6 +739,11 @@ impl FileState {
 fn seal(state: &mut State, outcomes: Outcomes) -> ChangeBatch {
     if !outcomes.is_empty() {
         state.change_seq += 1;
+        if state.track_pending {
+            for (path, outcome) in &outcomes {
+                state.pending.insert(path.clone(), outcome.clone());
+            }
+        }
     }
     outcomes_to_batch(outcomes, state.change_seq)
 }
@@ -988,7 +1052,12 @@ impl WorkspaceContext {
             )
         };
 
-        files.scan(&workspace_root_path, cache_dir.clone(), trust_archive);
+        files.scan(
+            &workspace_root_path,
+            cache_dir.clone(),
+            trust_archive,
+            batches.clone(),
+        );
 
         Ok(WorkspaceContext {
             files,
@@ -1044,7 +1113,6 @@ impl WorkspaceContext {
         })
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
     /// One watch serves both the files and the raw event stream, so it is
     /// gated only by the hardcoded ignores, the root `.nxignore` and the
     /// caller's globs: everything a walk would skip still reaches the stream,
@@ -1118,97 +1186,6 @@ impl WorkspaceContext {
         self.files.get_files()
     }
 
-    /// Subscribes to the batches the context applies: from its watcher, from
-    /// a walk, and from reads that pulled changes in. Replaces any earlier
-    /// subscriber. A batch `settle` or `incrementalUpdate` hands back to its
-    /// caller is not repeated here.
-    #[cfg(not(target_arch = "wasm32"))]
-    #[napi]
-    pub fn on_changes(
-        &self,
-        #[napi(ts_arg_type = "(err: string | null, batch: ChangeBatch) => void")]
-        callback: ThreadsafeFunction<ChangeBatch>,
-    ) {
-        self.batches.subscribe(Arc::new(move |result| match result {
-            Ok(batch) => {
-                callback.call(Ok(batch), ThreadsafeFunctionCallMode::NonBlocking);
-            }
-            Err(message) => {
-                callback.call(
-                    Err(napi::Error::new(napi::Status::GenericFailure, message)),
-                    ThreadsafeFunctionCallMode::NonBlocking,
-                );
-            }
-        }));
-    }
-
-    /// Subscribes to every event the watch delivers, whether or not it
-    /// concerns the files: writes under ignored directories included, and
-    /// the `rescan` marker when the kernel dropped events. Replaces any
-    /// earlier subscriber. Batches applied to the files are `onChanges`.
-    #[cfg(not(target_arch = "wasm32"))]
-    #[napi]
-    pub fn on_watch_events(
-        &self,
-        #[napi(ts_arg_type = "(err: string | null, events: WatchEvent[]) => void")]
-        callback: ThreadsafeFunction<Vec<WatchEvent>>,
-    ) {
-        self.events.subscribe(Arc::new(move |result| match result {
-            Ok(events) => {
-                callback.call(Ok(events), ThreadsafeFunctionCallMode::NonBlocking);
-            }
-            Err(message) => {
-                callback.call(
-                    Err(napi::Error::new(napi::Status::GenericFailure, message)),
-                    ThreadsafeFunctionCallMode::NonBlocking,
-                );
-            }
-        }));
-    }
-
-    /// Waits for the kernel→watcher hop to settle and applies everything it
-    /// delivered, so a write made before the call is in the files. Blocks the
-    /// caller for up to the settle cap, and through any walk in progress.
-    /// Returns what it applied; that batch is the caller's to route, and
-    /// subscribers do not see it.
-    #[cfg(not(target_arch = "wasm32"))]
-    #[napi]
-    pub fn settle(&self) -> ChangeBatch {
-        self.drain(FlushMode::Settled, WhenScanning::Wait)
-    }
-
-    /// Stops the watcher and forgets the subscriber. The files stay as they
-    /// were; reads no longer pull anything in.
-    #[cfg(not(target_arch = "wasm32"))]
-    #[napi]
-    pub fn stop_watching(&self) {
-        *self.watch.lock() = None;
-        self.batches.clear();
-        self.events.clear();
-    }
-
-    // wasm has no watcher, so nothing is ever delivered or applied from one.
-    // These keep the napi class registration whole there; napi registers every
-    // method the impl declares, so a cfg-gated method needs a counterpart.
-
-    #[cfg(target_arch = "wasm32")]
-    #[napi]
-    pub fn on_changes(&self) {}
-
-    #[cfg(target_arch = "wasm32")]
-    #[napi]
-    pub fn on_watch_events(&self) {}
-
-    #[cfg(target_arch = "wasm32")]
-    #[napi]
-    pub fn settle(&self) -> ChangeBatch {
-        ChangeBatch::default()
-    }
-
-    #[cfg(target_arch = "wasm32")]
-    #[napi]
-    pub fn stop_watching(&self) {}
-
     /// Bumped once per applied batch that changed anything. Equal values
     /// mean equal files, so a consumer that remembers the value it computed
     /// from can skip recomputing.
@@ -1234,8 +1211,8 @@ impl WorkspaceContext {
             #[cfg(not(target_arch = "wasm32"))]
             let fresh = acquire_files(&workspace_root, &cache_dir, false, files_lock_wait());
             #[cfg(target_arch = "wasm32")]
-            let fresh = gather_and_hash_files(&workspace_root, cache_dir);
-            let batch = files.finish_walk(&workspace_root, fresh, false);
+            let fresh = gather_and_hash_files(&workspace_root, cache_dir.clone());
+            let batch = files.finish_walk(&workspace_root, &cache_dir, fresh, false);
             trace!("files refreshed");
             if !batch.is_empty() {
                 publisher.publish(Ok(batch));
@@ -1353,14 +1330,14 @@ impl WorkspaceContext {
     }
 
     /// Applies changes a caller learned of on its own. Waits through a walk in
-    /// progress so the answer reflects them. Returns the hash of every file
-    /// whose content really changed; the batch is not repeated to subscribers.
+    /// progress so the answer reflects them. Returns what really changed; the
+    /// batch is not published to subscribers.
     #[napi]
     pub fn incremental_update(
         &self,
         updated_files: Vec<String>,
         deleted_files: Vec<String>,
-    ) -> HashMap<String, String> {
+    ) -> ChangeBatch {
         let changes = deleted_files
             .into_iter()
             .map(|path| Change {
@@ -1372,18 +1349,12 @@ impl WorkspaceContext {
                 kind: ChangeKind::Updated,
             }))
             .collect();
-        let batch = self.files.ingest(
+        self.files.ingest(
             &self.workspace_root_path,
             &self.cache_dir,
             changes,
             WhenScanning::Wait,
-        );
-        batch
-            .created_files
-            .into_iter()
-            .chain(batch.updated_files)
-            .map(|f| (f.file, f.hash))
-            .collect()
+        )
     }
 
     #[napi]
@@ -1514,6 +1485,78 @@ impl WorkspaceContext {
     #[napi]
     pub fn get_files_in_directory(&self, directory: String) -> Vec<String> {
         get_child_files(directory, self.current_files())
+    }
+}
+
+/// The watch-only half of the API, in its own block: napi registers every
+/// method an impl block declares, so these cannot sit behind a per-method cfg.
+#[cfg(not(target_arch = "wasm32"))]
+#[napi]
+impl WorkspaceContext {
+    /// Subscribes to the batches the context applies: from its watcher, from
+    /// a walk, and from reads that pulled changes in. Replaces any earlier
+    /// subscriber. A batch `settle` or `incrementalUpdate` hands back to its
+    /// caller is not published here.
+    #[napi]
+    pub fn on_changes(
+        &self,
+        #[napi(ts_arg_type = "(err: string | null, batch: ChangeBatch) => void")]
+        callback: ThreadsafeFunction<ChangeBatch>,
+    ) {
+        self.batches.subscribe(Arc::new(move |result| match result {
+            Ok(batch) => {
+                callback.call(Ok(batch), ThreadsafeFunctionCallMode::NonBlocking);
+            }
+            Err(message) => {
+                callback.call(
+                    Err(napi::Error::new(napi::Status::GenericFailure, message)),
+                    ThreadsafeFunctionCallMode::NonBlocking,
+                );
+            }
+        }));
+    }
+
+    /// Subscribes to every event the watch delivers, whether or not it
+    /// concerns the files: writes under ignored directories included, and
+    /// the `rescan` marker when the kernel dropped events. Replaces any
+    /// earlier subscriber. Batches applied to the files are `onChanges`.
+    #[napi]
+    pub fn on_watch_events(
+        &self,
+        #[napi(ts_arg_type = "(err: string | null, events: WatchEvent[]) => void")]
+        callback: ThreadsafeFunction<Vec<WatchEvent>>,
+    ) {
+        self.events.subscribe(Arc::new(move |result| match result {
+            Ok(events) => {
+                callback.call(Ok(events), ThreadsafeFunctionCallMode::NonBlocking);
+            }
+            Err(message) => {
+                callback.call(
+                    Err(napi::Error::new(napi::Status::GenericFailure, message)),
+                    ThreadsafeFunctionCallMode::NonBlocking,
+                );
+            }
+        }));
+    }
+
+    /// Applies everything the watch has delivered, waiting out the kernel hop,
+    /// then returns every change applied since the previous `settle`, one
+    /// entry per path at its latest state. A subscriber may have heard some of
+    /// these changes already, and may yet hear them after this returns; the
+    /// batch's `seq` orders them.
+    #[napi]
+    pub fn settle(&self) -> ChangeBatch {
+        self.drain(FlushMode::Settled, WhenScanning::Wait);
+        self.files.take_pending()
+    }
+
+    /// Stops the watcher and forgets the subscribers. The files stay as they
+    /// were; reads no longer pull anything in.
+    #[napi]
+    pub fn stop_watching(&self) {
+        *self.watch.lock() = None;
+        self.batches.clear();
+        self.events.clear();
     }
 }
 
@@ -1998,8 +2041,12 @@ mod tests {
         temp.child("b.txt").write_str("changed").unwrap();
         let changed = ctx.incremental_update(vec!["b.txt".into()], vec![]);
         assert_eq!(
-            changed.keys().collect::<Vec<_>>(),
-            vec![&"b.txt".to_string()],
+            changed
+                .updated_files
+                .iter()
+                .map(|f| f.file.as_str())
+                .collect::<Vec<_>>(),
+            vec!["b.txt"],
             "a real content change must be reported; got {changed:?}"
         );
         assert_eq!(ctx.change_seq(), seq_after_scan + 1);
@@ -2008,7 +2055,7 @@ mod tests {
         temp.child("c.txt").write_str("new").unwrap();
         let created = ctx.incremental_update(vec!["c.txt".into()], vec![]);
         assert!(
-            created.contains_key("c.txt"),
+            created.updated_files.iter().any(|f| f.file == "c.txt"),
             "a newly-created file must be reported; got {created:?}"
         );
     }
@@ -2203,6 +2250,10 @@ mod tests {
         temp.child("c.ts").write_str("c").unwrap();
         let batch = ctx.settle();
         assert!(batch.created_files.iter().any(|f| f.file == "c.ts"));
+        // settle answers with everything since the last settle, so the batch
+        // the subscriber already heard is in it too, under an earlier or equal seq.
+        assert!(batch.created_files.iter().any(|f| f.file == "b.ts"));
+        assert!(heard.lock().iter().all(|b| b.seq <= batch.seq));
         std::thread::sleep(Duration::from_millis(300));
         assert_eq!(heard.lock().len(), heard_so_far);
         assert!(names_of(&ctx).contains(&"c.ts".to_string()));
@@ -2465,7 +2516,9 @@ mod tests {
         assert!(
             plain
                 .incremental_update(vec!["dist/out.js".into()], vec![])
-                .contains_key("dist/out.js")
+                .updated_files
+                .iter()
+                .any(|f| f.file == "dist/out.js")
         );
     }
 
@@ -2514,5 +2567,41 @@ mod tests {
             "only the admitted path punches through the hardcoded veto"
         );
         assert_eq!(names_of(&ctx), vec!["a.ts"], "the stream is not the files");
+    }
+
+    #[test]
+    fn a_rescan_queued_during_a_walk_walks_again() {
+        // An overflow during a walk can drop events for directories the walk
+        // had already passed, so the walk that lands cannot stand in for it.
+        let temp = workspace_with(&["a.ts"]);
+        let cache = TempDir::new().unwrap();
+        let ctx = context(&temp, &cache);
+        let walked: Files = ctx
+            .all_file_data()
+            .into_iter()
+            .map(|f| (PathBuf::from(f.file), f.hash))
+            .collect();
+
+        assert!(ctx.files.begin_walk());
+        temp.child("b.ts").write_str("b").unwrap();
+        ctx.files
+            .0
+            .as_ref()
+            .unwrap()
+            .0
+            .lock()
+            .unwrap()
+            .queued
+            .push(Change::rescan());
+
+        let batch = ctx
+            .files
+            .finish_walk(&ctx.workspace_root_path, &ctx.cache_dir, walked, false);
+
+        assert_eq!(names_of(&ctx), vec!["a.ts", "b.ts"]);
+        assert!(
+            batch.created_files.iter().any(|f| f.file == "b.ts"),
+            "{batch:?}"
+        );
     }
 }

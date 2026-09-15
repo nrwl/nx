@@ -146,9 +146,10 @@ export async function flushPendingWorkspaceChanges() {
 }
 
 /**
- * Hears every event the workspace context's watch delivers, which is gated
- * only by the hardcoded ignores: writes to gitignored outputs and dotenv files
- * reach this, unlike the applied batches. Call after watchWorkspace.
+ * Hears every event the workspace context's watch delivers. The watch skips
+ * the hardcoded ignores, root `.nxignore` paths and `watchGlobs` exclusions,
+ * but not `.gitignore`d paths, so writes to gitignored outputs and dotenv
+ * files reach this, unlike the applied batches. Call after watchWorkspace.
  */
 export async function watchOutputFiles(
   server: Server,
@@ -181,27 +182,4 @@ export async function watchOutputFiles(
       stopWatchingWorkspaceContext();
     },
   };
-}
-
-/**
- * NOTE: A created file may be one the user restored to an earlier version
- * with git after modifying or deleting it, so the log language allows for it.
- */
-export function convertChangeBatchToLogMessage(batch: ChangeBatch): string {
-  const numCreatedOrRestoredFiles = batch.createdFiles.length;
-  const numModifiedFiles = batch.updatedFiles.length;
-  const numDeletedFiles = batch.deletedFiles.length;
-
-  // If only a single file was changed, show the information inline
-  if (numCreatedOrRestoredFiles + numModifiedFiles + numDeletedFiles === 1) {
-    if (numCreatedOrRestoredFiles) {
-      return `${batch.createdFiles[0].file} was created or restored`;
-    }
-    if (numModifiedFiles) {
-      return `${batch.updatedFiles[0].file} was modified`;
-    }
-    return `${batch.deletedFiles[0]} was deleted`;
-  }
-
-  return `${numCreatedOrRestoredFiles} file(s) created or restored, ${numModifiedFiles} file(s) modified, ${numDeletedFiles} file(s) deleted`;
 }
