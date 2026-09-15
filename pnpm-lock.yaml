@@ -3883,7 +3883,7 @@ importers:
         specifier: ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0
         version: 7.1.3(@types/node@24.12.2)(jiti@2.7.0)(less@4.8.1(supports-color@10.2.2))(lightningcss@1.32.0)(sass-embedded@1.97.2)(sass@1.101.0)(terser@5.49.0)(tsx@4.20.5)(yaml@2.9.0)
       vitest:
-        specifier: ^3.0.0 || ^4.0.0
+        specifier: ^3.0.0 || ^4.0.0 || ^5.0.0
         version: 4.1.2(@types/node@24.12.2)(jsdom@26.1.0(supports-color@10.2.2))(vite@7.1.3(@types/node@24.12.2)(jiti@2.7.0)(less@4.8.1(supports-color@10.2.2))(lightningcss@1.32.0)(sass-embedded@1.97.2)(sass@1.101.0)(terser@5.49.0)(tsx@4.20.5)(yaml@2.9.0))
     devDependencies:
       nx:
