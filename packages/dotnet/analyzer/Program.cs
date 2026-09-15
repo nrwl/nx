@@ -20,6 +20,7 @@ List<string> projectFiles;
 List<string> directoryFiles = new();
 PluginOptions? pluginOptions = null;
 
+
 var directoryFileNameSet = new HashSet<string>(
     ProjectUtilities.DirectoryBuildFileNames,
     StringComparer.OrdinalIgnoreCase
@@ -47,10 +48,7 @@ if (Console.IsInputRedirected)
     {
         try
         {
-            pluginOptions = JsonSerializer.Deserialize<PluginOptions>(optionsLine, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
+            pluginOptions = JsonSerializer.Deserialize<PluginOptions>(optionsLine, AnalyzerJson.PluginOptions);
         }
         catch (Exception ex)
         {
@@ -111,6 +109,8 @@ if (projectFiles.Count == 0)
 // Use default plugin options if not provided
 pluginOptions ??= new PluginOptions();
 
+var roslynAvailable = false;
+
 // Register MSBuild BEFORE any MSBuild types are referenced
 try
 {
@@ -160,6 +160,10 @@ try
     }
 
     MSBuildLocator.RegisterInstance(selectedInstance);
+
+    // Roslyn is resolved from the same SDK, so it has to be wired up while the
+    // instance is in hand and before any syntax type is touched.
+    roslynAvailable = RoslynResolver.TryRegister(selectedInstance.MSBuildPath);
 }
 catch (Exception ex)
 {
@@ -167,24 +171,16 @@ catch (Exception ex)
     return 2;
 }
 
-// JSON serialization options (cached for reuse)
-var jsonOptions = new JsonSerializerOptions
-{
-    WriteIndented = false,
-    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-};
-
 // Run the analyzer
 AnalysisResult result;
 using (var analyzePerf = PerfLogger.Start("analyze workspace"))
 {
-    result = Analyzer.AnalyzeWorkspace(projectFiles, directoryFiles, workspaceRoot, pluginOptions);
+    result = Analyzer.AnalyzeWorkspace(projectFiles, directoryFiles, workspaceRoot, pluginOptions, roslynAvailable);
 }
 
 // Serialize and output results
 using (PerfLogger.Start("serialize results"))
 {
-    Console.WriteLine(JsonSerializer.Serialize(result, jsonOptions));
+    Console.WriteLine(JsonSerializer.Serialize(result, AnalyzerJson.Output));
 }
 return 0;
