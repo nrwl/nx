@@ -1713,7 +1713,10 @@ process.exit(status ?? 1);
           'git status --porcelain -- . :!fake-agent.log :!fake-git.log :!migrate-exit-code'
         ).trim()
       ).toBe('');
-      expect(listFiles(`.nx/migrate-runs/${runId}/broker`)).toEqual([]);
+      expect(listFiles(`.nx/migrate-runs/${runId}/broker`).sort()).toEqual([
+        expect.stringMatching(/^[0-9a-f]{8}-step-1-1-commit\.result\.json$/),
+        expect.stringMatching(/^[0-9a-f]{8}-step-2-1-commit\.result\.json$/),
+      ]);
     }, 600000);
 
     it('should print a commit the parent could not land, with its guidance, in the step command', async () => {
@@ -1753,7 +1756,9 @@ process.exit(status ?? 1);
       expect(stepOutput).toContain('fake git: refused the commit');
       expect(stepOutput).toContain('The next successful commit will absorb it');
       expect(commitCountFor('deps-mig')).toBe(0);
-      expect(listFiles(`.nx/migrate-runs/${runId}/broker`)).toEqual([]);
+      expect(listFiles(`.nx/migrate-runs/${runId}/broker`).sort()).toEqual([
+        expect.stringMatching(/^[0-9a-f]{8}-step-1-1-commit\.result\.json$/),
+      ]);
     }, 600000);
 
     it('should run every install in the parent, outside the agent session, when installs are on', async () => {
@@ -1860,7 +1865,11 @@ process.exit(status ?? 1);
           'git status --porcelain -- . :!fake-agent.log :!migrate-exit-code'
         ).trim()
       ).toBe('');
-      expect(listFiles(`.nx/migrate-runs/${runId}/broker`)).toEqual([]);
+      expect(listFiles(`.nx/migrate-runs/${runId}/broker`).sort()).toEqual([
+        expect.stringMatching(/^[0-9a-f]{8}-step-1-1-commit\.result\.json$/),
+        expect.stringMatching(/^[0-9a-f]{8}-step-1-1-install\.result\.json$/),
+        expect.stringMatching(/^[0-9a-f]{8}-step-2-1-commit\.result\.json$/),
+      ]);
     }, 600000);
 
     it('should release a step waiting on a killed parent and land it through the next session', async () => {
