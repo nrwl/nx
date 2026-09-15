@@ -9,9 +9,9 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/internal';
-import { ast, query } from '@phenomnomnominal/tsquery';
+import { query } from '@phenomnomnominal/tsquery';
 import type { SourceFile, StringLiteralLike } from 'typescript';
-import { hasLocalValueBinding } from '../../utils/migrations';
+import { hasLocalValueBinding, parseSourceFile } from '../../utils/migrations';
 
 // Cypress 16 dropped the `cypress/angular-zoneless` export and deprecated the
 // standalone npm package of the same harness; `cypress/angular` is zoneless there.
@@ -40,7 +40,7 @@ export default async function updateAngularZonelessMountImport(tree: Tree) {
       return;
     }
 
-    const sourceFile = ast(originalContent);
+    const sourceFile = parseSourceFile(filePath, originalContent);
     const specifiers = findModuleSpecifiers(sourceFile);
     // A file with its own `require` value is not calling the CommonJS loader.
     const shadowsRequire =

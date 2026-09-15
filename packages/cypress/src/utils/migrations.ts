@@ -127,6 +127,19 @@ function* allTargetOptions<T>(
   }
 }
 
+// The extension picks the script kind, so `<T>x` in a .ts file and JSX in a
+// .tsx file both parse; tsquery's `ast()` parses everything as TSX.
+export function parseSourceFile(filePath: string, content: string): SourceFile {
+  ts ??= ensureTypescript();
+
+  return ts.createSourceFile(
+    filePath,
+    content,
+    ts.ScriptTarget.Latest,
+    /* setParentNodes */ true
+  );
+}
+
 /**
  * Whether the file binds `name` as a runtime value anywhere: a variable,
  * parameter, destructured element, function or class (declaration or named
