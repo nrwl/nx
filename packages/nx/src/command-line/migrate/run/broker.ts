@@ -14,6 +14,7 @@ import { existsSync, mkdirSync, readdirSync, rmSync } from 'fs';
 import { join } from 'path';
 import { FileLock, IS_WASM } from '../../../native';
 import { readJsonFile, writeJsonFile } from '../../../utils/fileutils';
+import { handoffsDirState } from '../agentic/handoff';
 import {
   DeferredOutputCollector,
   replayDeferredOutput,
@@ -192,38 +193,52 @@ async function ask(
   request: BrokerRequest
 ): Promise<BrokerAnswer> {
   const id = `${nonce}-${request.stepId}-${request.attempt}-${request.kind}`;
+  const path = resultPath(dir, id);
+  // A repeat reads the first answer, whatever became of the session since.
+  if (existsSync(path)) {
+    return settle(readJsonFile<BrokerResult>(path));
+  }
+  // No deadline: an install or a commit over a large tree takes as long as it
+  // takes; the poll ends with an answer or a released lock. The probe is built
+  // first so a request is never left unwatched, and once: each instance holds
+  // a descriptor, and `wait()` would pin this process until the session ends.
+  let lock: FileLock | null = null;
+  try {
+    lock = IS_WASM ? null : new FileLock(lockPath(dir, nonce));
+  } catch (e) {
+    if (existsSync(path)) {
+      return settle(readJsonFile<BrokerResult>(path));
+    }
+    throw notAccepting(e);
+  }
   try {
     publishFileAtomically(requestPath(dir, id), (tmpPath) =>
       writeJsonFile(tmpPath, request)
     );
   } catch (e) {
-    throw new BrokerUnavailableError(
-      `The nx migrate session that started this step is not accepting its request (${
-        e instanceof Error ? e.message : String(e)
-      }).`
-    );
+    throw notAccepting(e);
   }
-  // No deadline: an install or a commit over a large tree takes as long as it
-  // takes. The parent's death releases the lock, and that is the only way
-  // out without a result. Probed on one instance: each constructed one holds
-  // a descriptor, and `wait()` would pin this process until the session ends.
-  // A probe that cannot be built says nothing about the parent.
-  let lock: FileLock | null = null;
-  try {
-    lock = IS_WASM ? null : new FileLock(lockPath(dir, nonce));
-  } catch {}
   for (;;) {
-    const path = resultPath(dir, id);
     if (existsSync(path)) {
       return settle(readJsonFile<BrokerResult>(path));
     }
     if (lock && lockIsFree(lock)) {
+      // Answered and closed between the two checks: the answer stays on disk.
+      if (existsSync(path)) continue;
       throw new BrokerUnavailableError(
-        `The nx migrate session that started this step ended before its request was answered.`
+        `The nx migrate session that started this step ended before its request was answered. The install or the commit may still have landed; check the working tree and git log.`
       );
     }
     await new Promise((resolve) => setTimeout(resolve, CHILD_POLL_INTERVAL_MS));
   }
+}
+
+function notAccepting(e: unknown): BrokerUnavailableError {
+  return new BrokerUnavailableError(
+    `The nx migrate session that started this step is not accepting its request (${
+      e instanceof Error ? e.message : String(e)
+    }).`
+  );
 }
 
 // A probe that fails says nothing about the parent; keep waiting.
@@ -258,10 +273,11 @@ function settle(result: BrokerResult): BrokerAnswer {
 /**
  * The parent side. Holds one exclusive lock for the session's lifetime so a
  * waiting step can tell a slow parent from a dead one, answers each request
- * once, and removes its own files on close. Requests carrying another
- * session's nonce belong to that session and are never touched. Whether to
- * install or commit comes from the policy the session started with, never
- * from run state, which the agent's sandbox can write.
+ * once, and removes its own requests on close; its answers stay for the steps
+ * still reading them. Requests carrying another session's nonce belong to
+ * that session and are never touched. Whether to install or commit comes from
+ * the policy the session started with, never from run state, which the
+ * agent's sandbox can write.
  */
 export class MigrateCommitBroker {
   readonly nonce = randomBytes(4).toString('hex');
@@ -275,13 +291,28 @@ export class MigrateCommitBroker {
     private readonly reconcileCommand: string,
     private readonly policy: MigrateRunPolicy
   ) {
-    mkdirSync(brokerDir(dir), { recursive: true });
+    switch (handoffsDirState(brokerDir(dir))) {
+      case 'directory':
+        break;
+      case 'missing':
+        // Not recursive: the run dir exists, and a symlink raced in here
+        // fails with EEXIST instead of being followed.
+        mkdirSync(brokerDir(dir));
+        break;
+      case 'other':
+        throw this.notADirectory();
+    }
     this.lock = IS_WASM ? null : new FileLock(lockPath(dir, this.nonce));
     this.lock?.lock();
   }
 
   /** Answers this session's unanswered requests, one at a time. */
   async service(): Promise<void> {
+    // Refused rather than followed: a symlink swapped in would send the reads
+    // and the answers wherever it points, or leave requests unanswered.
+    if (handoffsDirState(brokerDir(this.dir)) !== 'directory') {
+      throw this.notADirectory();
+    }
     const prefix = `${this.nonce}-`;
     const suffix = '.request.json';
     for (const name of readdirSync(brokerDir(this.dir))) {
@@ -370,11 +401,23 @@ export class MigrateCommitBroker {
     this.lock?.unlock();
     // Hygiene only; a file left behind is never read by another session.
     try {
+      if (handoffsDirState(brokerDir(this.dir)) !== 'directory') return;
       for (const name of readdirSync(brokerDir(this.dir))) {
-        if (name.startsWith(this.nonce)) {
+        if (
+          name === `${this.nonce}.lock` ||
+          (name.startsWith(`${this.nonce}-`) && name.endsWith('.request.json'))
+        ) {
           rmSync(join(brokerDir(this.dir), name), { force: true });
         }
       }
     } catch {}
+  }
+
+  private notADirectory(): Error {
+    return new Error(
+      `The migrate run has something other than a directory at ${brokerDir(
+        this.dir
+      )}; remove it and try again.`
+    );
   }
 }
