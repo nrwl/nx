@@ -158,6 +158,12 @@ Cypress.Commands.overwrite('getCookie', (originalFn, name) => originalFn(name));
     'const Fake = class Cypress {};',
     'enum Cypress {}',
     'namespace Cypress { export const Commands = { overwrite() {} }; }',
+    'namespace Cypress { export namespace Commands { export function overwrite() {} } }',
+    'namespace Cypress.Commands { export class Registry {} }',
+    'namespace Cypress { export const enum Mode { Query } }',
+    'namespace Cypress { Object.assign(Cypress, globalThis.fakeCypress); }',
+    'namespace Cypress { if (globalThis.fakeCypress) { globalThis.Cypress = globalThis.fakeCypress; } }',
+    "namespace Cypress { export { Commands } from './fake'; }",
     'function setup(Cypress) {}',
   ])(
     'should leave a file that binds its own Cypress value alone and report it: %s',
@@ -191,6 +197,10 @@ Cypress.Commands.overwrite('getCookie', (originalFn, name) => originalFn(name));
     "import type * as Cypress from './types';",
     "import type Cypress = require('./types');",
     'const { Cypress: local } = globalThis;',
+    'namespace Cypress { export interface Chainable { login(): void } }',
+    'namespace Cypress { export type Mode = "query"; export namespace Commands { export interface Registry {} } }',
+    'namespace Cypress.Commands { export interface Registry {} }',
+    'namespace Cypress { export interface Registry {} import Alias = Cypress.Registry; }',
   ])(
     'should rename overwrites next to a declaration that does not bind a Cypress value: %s',
     async (declaration) => {
