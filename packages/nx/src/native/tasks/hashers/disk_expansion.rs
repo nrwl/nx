@@ -13,10 +13,6 @@ use walkdir::WalkDir;
 use crate::native::glob::{NxGlobSet, build_glob_set};
 use crate::native::walker::{HARDCODED_IGNORE_PATTERNS, TRANSIENT_FILE_GLOBS};
 
-/// Hashed in place of the content of a declared exact path that does not
-/// exist: absence is an observation, so the key flips when the file appears.
-pub(crate) const MISSING_FILE_HASH: &str = "missing";
-
 /// The `(mtime, size)` a file showed when expansion looked at it.
 pub type FileStamp = (u128, u64);
 
@@ -61,8 +57,6 @@ pub struct FilesExpansion {
     /// not stat again, or `None` when the workspace context vouched for the
     /// file, or an index listed it, and the disk was never consulted.
     pub stamps: Vec<Option<FileStamp>>,
-    /// Declared exact paths that do not exist on disk.
-    pub missing: Vec<String>,
 }
 
 /// Expands brace groups whose alternatives are all literal names into the
@@ -419,7 +413,6 @@ pub(crate) fn expand_entries(
     };
 
     let mut found: Vec<(String, Option<FileStamp>)> = Vec::new();
-    let mut missing: Vec<String> = Vec::new();
     for entry in positives {
         let root = &entry.root;
         let remainder = entry.remainder.as_deref();
@@ -430,9 +423,6 @@ pub(crate) fn expand_entries(
         }
         let start = workspace_root.join(root);
         let Ok(metadata) = std::fs::metadata(&start) else {
-            if !has_pattern {
-                missing.push(root.clone());
-            }
             continue;
         };
         if let Some(canonical_root) = &canonical_root {
@@ -492,17 +482,10 @@ pub(crate) fn expand_entries(
     }
 
     found.retain(|(path, _)| !negations.iter().any(|n| n.excludes(path)));
-    missing.retain(|path| !negations.iter().any(|n| n.excludes(path)));
     found.sort_unstable_by(|a, b| a.0.cmp(&b.0));
     found.dedup_by(|a, b| a.0 == b.0);
-    missing.sort_unstable();
-    missing.dedup();
     let (files, stamps) = found.into_iter().unzip();
-    Ok(FilesExpansion {
-        files,
-        stamps,
-        missing,
-    })
+    Ok(FilesExpansion { files, stamps })
 }
 
 /// Every file under `dir` with its stamp, for an index seeding a prefix: the
@@ -689,8 +672,8 @@ pub(crate) mod tests {
         let group = globs(&["{nx,tsconfig.base,missing}.json"]);
         validate_files_globs("web", &group).unwrap();
         let expansion = expand_files(temp.path(), &group).unwrap();
+        // A name that does not exist matches nothing.
         assert_eq!(expansion.files, vec!["nx.json", "tsconfig.base.json"]);
-        assert_eq!(expansion.missing, vec!["missing.json"]);
         // A wildcard alternative stays a glob, walked from the workspace root.
         let walked = expand_files(temp.path(), &globs(&["{nx,*}.json"])).unwrap();
         assert_eq!(walked.files, vec!["nx.json", "tsconfig.base.json"]);
@@ -744,7 +727,6 @@ pub(crate) mod tests {
             expansion.files,
             vec!["dist/gen/a.js", "dist/gen/nested/b.js"]
         );
-        assert!(expansion.missing.is_empty());
     }
 
     #[test]
@@ -810,8 +792,7 @@ pub(crate) mod tests {
                 "apps/web/app/plain/page.tsx"
             ]
         );
-        // The prefix stops before the group, so no exact path is involved.
-        assert!(expand(&["apps/web/app/(absent)/x.json"]).missing.is_empty());
+        assert!(expand(&["apps/web/app/(absent)/x.json"]).files.is_empty());
     }
 
     #[test]
@@ -826,7 +807,6 @@ pub(crate) mod tests {
         .unwrap();
         assert_eq!(expansion.files, vec!["libs/x/tracked.ts"]);
         assert_eq!(expansion.stamps, vec![None]);
-        assert_eq!(expansion.missing, vec!["libs/x/absent.ts"]);
     }
 
     #[test]
@@ -947,10 +927,7 @@ pub(crate) mod tests {
             expand("node_modules/@scope/pkg/package.json").files,
             vec!["node_modules/@scope/pkg/package.json"]
         );
-        assert_eq!(
-            expand("libs/app/@gen/absent.json").missing,
-            vec!["libs/app/@gen/absent.json"]
-        );
+        assert!(expand("libs/app/@gen/absent.json").files.is_empty());
         assert!(validate_files_globs("web", &globs(&["@gen/**"])).is_ok());
     }
 }

@@ -51,11 +51,7 @@ pub fn expand_task_outputs(
         .map(|(file, stamp)| (file.clone(), *stamp))
         .unzip();
     // An output that does not exist is not an input.
-    Ok(FilesExpansion {
-        files,
-        stamps,
-        missing: Vec::new(),
-    })
+    Ok(FilesExpansion { files, stamps })
 }
 
 pub fn hash_task_output(

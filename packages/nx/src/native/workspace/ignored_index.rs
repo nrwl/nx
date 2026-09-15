@@ -16,13 +16,15 @@ use parking_lot::RwLock;
 use tracing::trace;
 
 use crate::native::hasher::hash_file_path;
-use crate::native::tasks::hashers::{FileStamp, MISSING_FILE_HASH, seed_walk, stamp_of};
+use crate::native::tasks::hashers::{FileStamp, seed_walk, stamp_of};
+
+/// Whether the watch delivers events for a workspace-relative path (a
+/// directory when the flag is set).
+pub(crate) type Reaches = Arc<dyn Fn(&str, bool) -> bool + Send + Sync>;
 
 /// What the watch behind an index reaches.
 pub(crate) struct Watch {
-    /// Whether the watch delivers events for a workspace-relative path (a
-    /// directory when the flag is set).
-    pub(crate) reaches: Arc<dyn Fn(&str, bool) -> bool + Send + Sync>,
+    pub(crate) reaches: Reaches,
     /// The root `.nxignore` rules. The watch drops what they match and a walk
     /// does not, so no prefix they could match under is indexed.
     pub(crate) nxignore: Vec<String>,
@@ -373,19 +375,20 @@ impl IgnoredIndex {
     /// says the caller has applied every delivered watch event: only then may
     /// a trusted entry answer without a stat, or a read become trusted. A
     /// stamp the caller took earlier predates this call, so it never makes
-    /// an entry trusted.
+    /// an entry trusted. `None` when the file cannot be read, such as one
+    /// deleted after it was listed.
     pub(crate) fn hash_file(
         &self,
         workspace_root: &Path,
         path: &str,
         stamp: Option<FileStamp>,
         trust: bool,
-    ) -> String {
+    ) -> Option<String> {
         if trust
             && stamp.is_none()
             && let Some(hash) = self.trusted_hash(path)
         {
-            return hash;
+            return Some(hash);
         }
         let generation = self.generation.load(Ordering::Acquire);
         let full_path = workspace_root.join(path);
@@ -404,13 +407,13 @@ impl IgnoredIndex {
         {
             trace!("content hash held for {path}");
             content.trusted = may_trust && unmoved();
-            return content.hash.clone();
+            return Some(content.hash.clone());
         }
         // Taken before the read: a same-size write between the read and a
         // later stamp is then inside the entry's own second, and racy.
         let made_at = now_secs();
         trace!("reading {path}");
-        let hash = hash_file_path(&full_path).unwrap_or_else(|| MISSING_FILE_HASH.to_string());
+        let hash = hash_file_path(&full_path)?;
         if let Some(stamp) = stamp
             && keep
         {
@@ -424,7 +427,7 @@ impl IgnoredIndex {
                 },
             );
         }
-        hash
+        Some(hash)
     }
 
     #[cfg(test)]
@@ -596,7 +599,7 @@ mod tests {
         let first = index.hash_file(temp.path(), "dist/gen/a.js", None, true);
         assert_eq!(
             index.trusted_hash("dist/gen/a.js").as_deref(),
-            Some(first.as_str())
+            first.as_deref()
         );
         // A write with no event behind it is invisible to a trusting caller:
         // that is the contract. One that cannot vouch for the watch checks
@@ -667,13 +670,13 @@ mod tests {
     }
 
     #[test]
-    fn a_missing_file_hashes_as_missing_and_is_not_remembered() {
+    fn a_missing_file_has_no_hash_and_is_not_remembered() {
         let temp = workspace();
         let index = watched();
         index.register(temp.path(), "dist");
         assert_eq!(
             index.hash_file(temp.path(), "dist/gen/absent.js", None, true),
-            MISSING_FILE_HASH
+            None
         );
         assert!(!index.remembered("dist/gen/absent.js"));
     }
@@ -777,7 +780,7 @@ mod tests {
         index.hash_file(temp.path(), "dist/gen/a.js", Some(old), true);
         assert!(index.trusted_hash("dist/gen/a.js").is_none());
         let fresh = index.hash_file(temp.path(), "dist/gen/a.js", None, true);
-        assert_eq!(fresh, index.trusted_hash("dist/gen/a.js").unwrap());
+        assert_eq!(fresh, index.trusted_hash("dist/gen/a.js"));
     }
 
     #[test]

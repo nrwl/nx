@@ -172,14 +172,8 @@ impl HashPlanInspector {
                     globs,
                     &|path| self.tracked().contains(path),
                 )?;
-                // `missing` paths are hashed as a sentinel, so they are real
-                // inputs; report them alongside the files that exist.
                 Ok(HashInputsBuilder {
-                    files: expansion
-                        .files
-                        .into_iter()
-                        .chain(expansion.missing)
-                        .collect(),
+                    files: expansion.files.into_iter().collect(),
                     ..Default::default()
                 })
             }

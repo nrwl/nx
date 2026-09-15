@@ -158,7 +158,7 @@ describe('HashPlanInspector', () => {
       expect(inputs.files).not.toContain('apps/test-app/dist/out.js.map');
     });
 
-    it('reports a declared exact path that is missing', async () => {
+    it('does not report a declared exact path that is missing', async () => {
       const graph: ProjectGraph = JSON.parse(JSON.stringify(projectGraph));
       graph.nodes['test-app'].data.targets.build.inputs = [
         { fileset: '{projectRoot}/dist/absent.js', includeIgnored: true },
@@ -171,8 +171,8 @@ describe('HashPlanInspector', () => {
         target: 'build',
       })['test-app:build'];
 
-      // It hashes as a sentinel, so it is an input even before it exists.
-      expect(inputs.files).toContain('apps/test-app/dist/absent.js');
+      // Not on disk, so not an input until it appears.
+      expect(inputs.files).not.toContain('apps/test-app/dist/absent.js');
     });
   });
 

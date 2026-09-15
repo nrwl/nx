@@ -809,12 +809,7 @@ impl TaskHasher {
                 trace!(parent: &span, "hash_files: {:?}", now.elapsed());
                 let inputs = if collect_inputs {
                     HashInputsBuilder {
-                        files: expansion
-                            .files
-                            .iter()
-                            .chain(expansion.missing.iter())
-                            .cloned()
-                            .collect(),
+                        files: expansion.files.iter().cloned().collect(),
                         ..Default::default()
                     }
                 } else {

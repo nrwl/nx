@@ -468,10 +468,7 @@ export declare const enum EventType {
   rescan = 'rescan'
 }
 
-/**
- * The files an `includeIgnored` fileset group matches on disk, sorted, then
- * the declared exact paths that are missing (they still take part in the hash).
- */
+/** The files an `includeIgnored` fileset group matches on disk, sorted. */
 export declare function expandFilesInput(workspaceRoot: string, globs: Array<string>): Array<string>
 
 export declare function expandOutputs(directory: string, entries: Array<string>): Array<string>
