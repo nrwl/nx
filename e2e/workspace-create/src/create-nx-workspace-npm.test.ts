@@ -11,7 +11,7 @@ import {
 import { typescriptVersion } from '@nx/js/src/utils/versions';
 
 describe('create-nx-workspace --preset=npm', () => {
-  const wsName = uniq('npm');
+  let wsName: string;
 
   let orginalGlobCache;
 
@@ -25,6 +25,8 @@ describe('create-nx-workspace --preset=npm', () => {
   beforeEach(() => {
     // Each case tests one generator in a fresh package-based workspace. Keeping
     // dependencies from earlier cases couples unrelated framework peer ranges.
+    // Cleanup is best-effort, so a leftover directory must not block the next case.
+    wsName = uniq('npm');
     runCreateWorkspace(wsName, {
       preset: 'npm',
       packageManager: getSelectedPackageManager(),
