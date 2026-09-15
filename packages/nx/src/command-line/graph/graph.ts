@@ -1392,10 +1392,10 @@ function expandInputs(
       );
       return;
     }
-    // Disk-backed groups look like files:{project}:[glob,!otherGlob]. They
-    // expand on disk, so they must be matched before the `:` catch-all below
-    // classifies them as external dependencies.
-    const diskBacked = /^files:.*?:\[(.*)\]$/.exec(input);
+    // Disk-backed groups look like files:[glob,!otherGlob]. They expand on
+    // disk, so they must be matched before the `:` catch-all below classifies
+    // them as external dependencies.
+    const diskBacked = /^files:\[(.*)\]$/.exec(input);
     if (diskBacked) {
       filesInputs.push(splitGlobGroup(diskBacked[1]));
       return;

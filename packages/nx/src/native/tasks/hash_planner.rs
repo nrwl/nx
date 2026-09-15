@@ -7,6 +7,7 @@ use crate::native::{
     project_graph::types::ProjectGraph,
     tasks::{inputs::SplitInputs, types::Task},
 };
+use itertools::Itertools;
 use napi::bindgen_prelude::External;
 use rayon::prelude::*;
 use std::collections::{HashMap, HashSet};
@@ -819,28 +820,22 @@ impl HashPlanner {
     ) -> anyhow::Result<Vec<HashInstruction>> {
         // `includeIgnored` filesets hash from disk as one aggregated group, so
         // a negation filters across entries; the rest read the file map.
-        let mut ignored_file_sets: Vec<&str> = Vec::new();
-        let mut project_file_sets: Vec<&str> = Vec::new();
-        let mut workspace_file_sets: Vec<&str> = Vec::new();
-        for input in self_inputs {
-            let Input::FileSet {
-                fileset,
-                include_ignored,
-                ..
-            } = input
-            else {
-                continue;
-            };
-            if *include_ignored {
-                ignored_file_sets.push(fileset);
-            } else if fileset.starts_with("{projectRoot}/")
-                || fileset.starts_with("!{projectRoot}/")
-            {
-                project_file_sets.push(fileset);
-            } else {
-                workspace_file_sets.push(fileset);
-            }
-        }
+        let mut file_sets = self_inputs
+            .iter()
+            .filter_map(|input| match input {
+                Input::FileSet {
+                    fileset,
+                    include_ignored,
+                    ..
+                } => Some((FileSetStore::of(fileset, *include_ignored), *fileset)),
+                _ => None,
+            })
+            .into_group_map();
+        let ignored_file_sets = file_sets.remove(&FileSetStore::Disk).unwrap_or_default();
+        let project_file_sets = file_sets.remove(&FileSetStore::Project).unwrap_or_default();
+        let workspace_file_sets = file_sets
+            .remove(&FileSetStore::Workspace)
+            .unwrap_or_default();
 
         let project_root = &self.project_graph.nodes[project_name].root;
 
@@ -857,7 +852,6 @@ impl HashPlanner {
                         .iter()
                         .map(|f| resolve_tokens(f, project_root, project_name))
                         .collect(),
-                    false,
                 ),
                 HashInstruction::ProjectConfiguration(project_name.to_string()),
                 HashInstruction::TsConfiguration(project_name.to_string()),
@@ -882,11 +876,7 @@ impl HashPlanner {
                 .map(|f| resolve_files_glob(f, project_root, project_name))
                 .collect();
             validate_files_globs(project_name, &resolved)?;
-            vec![HashInstruction::ProjectFileSet(
-                project_name.to_string(),
-                resolved,
-                true,
-            )]
+            vec![HashInstruction::IgnoredFileSet(resolved)]
         };
         let runtime_and_env_inputs = self_inputs.iter().filter_map(|i| match i {
             Input::Runtime(runtime) => Some(HashInstruction::Runtime(runtime.to_string())),
@@ -1008,7 +998,7 @@ fn deferred_tasks(
             for id in ids.iter() {
                 match &*pool.get(*id) {
                     HashInstruction::TaskOutput(_, _) => return true,
-                    HashInstruction::ProjectFileSet(_, globs, true) => disk_roots.extend(
+                    HashInstruction::IgnoredFileSet(globs) => disk_roots.extend(
                         globs
                             .iter()
                             .filter(|glob| !glob.starts_with('!'))
@@ -1087,6 +1077,29 @@ fn paths_overlap(a: &str, b: &str) -> bool {
 }
 
 /// `f` reads the file map, `d` reads the disk (`includeIgnored`).
+/// Where a fileset's files come from.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+enum FileSetStore {
+    /// Read from disk (`includeIgnored`).
+    Disk,
+    /// Filtered from the project's tracked files.
+    Project,
+    /// Filtered from the workspace's tracked files.
+    Workspace,
+}
+
+impl FileSetStore {
+    fn of(fileset: &str, include_ignored: bool) -> Self {
+        if include_ignored {
+            FileSetStore::Disk
+        } else if fileset.starts_with("{projectRoot}/") || fileset.starts_with("!{projectRoot}/") {
+            FileSetStore::Project
+        } else {
+            FileSetStore::Workspace
+        }
+    }
+}
+
 fn fileset_kind(include_ignored: bool) -> char {
     if include_ignored { 'd' } else { 'f' }
 }
@@ -1353,7 +1366,7 @@ mod tests {
             match planner.instruction_pool.get(*id).value() {
                 HashInstruction::ProjectConfiguration(name)
                 | HashInstruction::TsConfiguration(name)
-                | HashInstruction::ProjectFileSet(name, _, _) => assert_eq!(name, "cycle-a"),
+                | HashInstruction::ProjectFileSet(name, _) => assert_eq!(name, "cycle-a"),
                 other => panic!("Unexpected local instruction: {other:?}"),
             }
         }
@@ -1620,23 +1633,16 @@ mod tests {
     #[test]
     fn defers_a_task_that_reads_an_upstream_output() {
         let pool = InstructionPool::new();
-        let disk = |project: &str, glob: &str| {
-            pool.intern(HashInstruction::ProjectFileSet(
-                project.into(),
-                vec![glob.into()],
-                true,
-            ))
+        let disk = |_project: &str, glob: &str| {
+            pool.intern(HashInstruction::IgnoredFileSet(vec![glob.into()]))
         };
         let tracked = pool.intern(HashInstruction::ProjectFileSet(
             "lib".into(),
             vec!["libs/lib/src/**".into()],
-            false,
         ));
-        let group = |project: &str, globs: &[&str]| {
-            pool.intern(HashInstruction::ProjectFileSet(
-                project.into(),
+        let group = |_project: &str, globs: &[&str]| {
+            pool.intern(HashInstruction::IgnoredFileSet(
                 globs.iter().map(|g| g.to_string()).collect(),
-                true,
             ))
         };
         let plans: HashMap<String, Vec<u32>> = [

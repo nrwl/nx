@@ -167,7 +167,7 @@ describe('task planner', () => {
       ]);
 
       expect(plan).toContain(
-        'files:parent:[libs/parent/dist/**/*.js,!libs/parent/dist/**/*.map,.env.generated]'
+        'files:[libs/parent/dist/**/*.js,!libs/parent/dist/**/*.map,.env.generated]'
       );
       // The map-backed fileset is untouched by the flag.
       expect(plan).toContain('parent:libs/parent/**/*');
@@ -180,7 +180,7 @@ describe('task planner', () => {
         ],
       });
 
-      expect(plan).toContain('files:parent:[libs/parent/generated]');
+      expect(plan).toContain('files:[libs/parent/generated]');
     });
 
     it('accepts a root brace group of literal file names', () => {
@@ -191,18 +191,18 @@ describe('task planner', () => {
         },
       ]);
 
-      expect(plan).toContain('files:parent:[{nx,tsconfig.base}.json]');
+      expect(plan).toContain('files:[{nx,tsconfig.base}.json]');
     });
 
     it('plans a glob that walks from the workspace root', () => {
       expect(
         planFor([{ fileset: '{workspaceRoot}/**', includeIgnored: true }])
-      ).toContain('files:parent:[**]');
+      ).toContain('files:[**]');
       expect(
         planFor([
           { fileset: '{workspaceRoot}/{nx,*}.json', includeIgnored: true },
         ])
-      ).toContain('files:parent:[{nx,*}.json]');
+      ).toContain('files:[{nx,*}.json]');
     });
 
     it('rejects a negation with no positive includeIgnored fileset to filter', () => {
@@ -277,14 +277,10 @@ describe('task planner', () => {
         ['b:build', 'a:build'],
       ]) {
         const plans = plansIn(order);
-        expect(plans['a:build']).toContain(
-          'files:shared:[libs/shared/dist/**]'
-        );
+        expect(plans['a:build']).toContain('files:[libs/shared/dist/**]');
         expect(plans['a:build']).not.toContain('shared:libs/shared/dist/**');
         expect(plans['b:build']).toContain('shared:libs/shared/dist/**');
-        expect(plans['b:build']).not.toContain(
-          'files:shared:[libs/shared/dist/**]'
-        );
+        expect(plans['b:build']).not.toContain('files:[libs/shared/dist/**]');
       }
     });
   });

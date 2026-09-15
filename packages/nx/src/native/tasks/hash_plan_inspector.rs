@@ -71,7 +71,8 @@ impl HashPlanInspector {
                 let strings = match instruction {
                     // File-set instructions: resolve to actual file paths
                     HashInstruction::WorkspaceFileSet(_)
-                    | HashInstruction::ProjectFileSet(_, _, _) => {
+                    | HashInstruction::ProjectFileSet(_, _)
+                    | HashInstruction::IgnoredFileSet(_) => {
                         let builder = self
                             .resolve_instruction_inputs(instruction, &project_file_indices_cache)?;
                         builder
@@ -154,7 +155,7 @@ impl HashPlanInspector {
                     ..Default::default()
                 })
             }
-            HashInstruction::ProjectFileSet(project_name, file_sets, false) => {
+            HashInstruction::ProjectFileSet(project_name, file_sets) => {
                 let files = collect_project_file_paths_cached(
                     project_name,
                     file_sets,
@@ -166,7 +167,7 @@ impl HashPlanInspector {
                     ..Default::default()
                 })
             }
-            HashInstruction::ProjectFileSet(_, globs, true) => {
+            HashInstruction::IgnoredFileSet(globs) => {
                 let expansion = expand_files_with(
                     std::path::Path::new(&self.workspace_root),
                     globs,

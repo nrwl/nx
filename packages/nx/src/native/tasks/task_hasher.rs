@@ -339,7 +339,7 @@ impl TaskHasher {
         let mut output_roots: Vec<String> = Vec::new();
         for id in 0..pool.len() as u32 {
             match pool.get(id).value() {
-                HashInstruction::ProjectFileSet(_, globs, true) => prefixes.extend(
+                HashInstruction::IgnoredFileSet(globs) => prefixes.extend(
                     globs
                         .iter()
                         .filter(|g| !g.starts_with('!'))
@@ -580,7 +580,8 @@ impl TaskHasher {
                 HashInstruction::Environment(_) | HashInstruction::Runtime(_) => None,
                 HashInstruction::WorkspaceFileSet(_)
                 | HashInstruction::Cwd(_)
-                | HashInstruction::ProjectFileSet(_, _, _)
+                | HashInstruction::ProjectFileSet(_, _)
+                | HashInstruction::IgnoredFileSet(_)
                 | HashInstruction::ProjectConfiguration(_)
                 | HashInstruction::TsConfiguration(_)
                 | HashInstruction::TaskOutput(_, _)
@@ -779,7 +780,7 @@ impl TaskHasher {
                 trace!(parent: &span, "hash_cwd: {:?}", now.elapsed());
                 (hashed_cwd, empty)
             }
-            HashInstruction::ProjectFileSet(_, globs, true) => {
+            HashInstruction::IgnoredFileSet(globs) => {
                 let workspace_root = Path::new(&self.workspace_root);
                 // The index lists a directory only while nothing has run,
                 // like the file map; afterwards the disk is walked.
@@ -817,7 +818,7 @@ impl TaskHasher {
                 };
                 (hashed, inputs)
             }
-            HashInstruction::ProjectFileSet(project_name, file_sets, false) => {
+            HashInstruction::ProjectFileSet(project_name, file_sets) => {
                 let hashed = hash_project_files_cached(
                     project_name,
                     file_sets,

@@ -190,7 +190,7 @@ describe('getExpandedTaskInputs', () => {
   it('expands a disk-backed group on disk instead of treating it as external', async () => {
     getPlansMock.mockReturnValue({
       'myproj:build': [
-        'files:myproj:[libs/myproj/generated/a.json,!libs/myproj/generated/b.json]',
+        'files:[libs/myproj/generated/a.json,!libs/myproj/generated/b.json]',
         'npm:some-pkg',
       ],
     });
@@ -215,7 +215,7 @@ describe('getExpandedTaskInputs', () => {
   it('keeps a brace group intact when splitting a disk-backed group', async () => {
     getPlansMock.mockReturnValue({
       'myproj:build': [
-        'files:myproj:[{nx,tsconfig.base}.json,libs/myproj/gen/{a,b}/*.ts,!libs/myproj/gen/b/x.ts]',
+        'files:[{nx,tsconfig.base}.json,libs/myproj/gen/{a,b}/*.ts,!libs/myproj/gen/b/x.ts]',
       ],
     });
 
@@ -253,7 +253,7 @@ describe('getExpandedTaskInputs', () => {
 
   it('falls back to a plain split when a brace is unbalanced', async () => {
     getPlansMock.mockReturnValue({
-      'myproj:build': ['files:myproj:[libs/myproj/{a.json,libs/myproj/b.json]'],
+      'myproj:build': ['files:[libs/myproj/{a.json,libs/myproj/b.json]'],
     });
 
     await getExpandedTaskInputs(makeResponse(), new Map(), 'myproj:build');
