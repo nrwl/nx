@@ -15,7 +15,8 @@ import {
   describeMessage,
   parseMessage,
 } from '../../../utils/consume-messages-from-socket';
-import { getPluginResolveConditionNodeArgs } from '../../../plugins/js/utils/typescript';
+import type { WorkspacePackage } from '../../../plugins/js/utils/packages';
+import { getRootTsConfigCustomConditions } from '../../../plugins/js/utils/typescript';
 import { getNxRequirePaths } from '../../../utils/installation-directory';
 import { isSandbox } from '../../../utils/is-sandbox';
 import { logger } from '../../../utils/logger';
@@ -34,6 +35,7 @@ import type {
   ProjectsMetadata,
 } from '../public-api';
 import { resolveNxPlugin } from '../resolve-plugin';
+import { withBuiltEntryResolutionHint } from '../built-entry-resolution-hint';
 import type {
   MessageResult,
   PluginWorkerLoadResult,
@@ -122,6 +124,12 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   private readonly root: string;
   private readonly pluginPath: string;
   private readonly shouldRegisterTSTranspiler: boolean;
+  private readonly isSourcePlugin: boolean;
+  // Current package names and the version the live worker has; a restart
+  // loads the current set.
+  private workspacePackageNames: string[];
+  private workspacePackageNamesVersion = 0;
+  private sentWorkspacePackageNamesVersion = 0;
 
   private lifecycle: PluginLifecycleManager;
   private exitHandler:
@@ -134,11 +142,18 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   static async load(
     plugin: PluginConfiguration,
     root: string,
-    index?: number
+    index?: number,
+    conditions = getRootTsConfigCustomConditions(root)
   ): Promise<IsolatedPlugin> {
     const moduleName = typeof plugin === 'string' ? plugin : plugin.plugin;
-    const { name, pluginPath, shouldRegisterTSTranspiler } =
-      await resolveNxPlugin(moduleName, root, getNxRequirePaths(root));
+    const {
+      name,
+      pluginPath,
+      shouldRegisterTSTranspiler,
+      isSourcePlugin,
+      projectRoot,
+      workspacePackages,
+    } = await resolveNxPlugin(moduleName, root, getNxRequirePaths(root));
 
     const instance = new IsolatedPlugin(
       plugin,
@@ -146,10 +161,25 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       name,
       pluginPath,
       shouldRegisterTSTranspiler,
-      index
+      isSourcePlugin,
+      workspacePackages,
+      index,
+      conditions
     );
 
-    const loadResult = await instance.spawnAndConnect();
+    let loadResult: LoadResultPayload;
+    try {
+      loadResult = await instance.spawnAndConnect();
+    } catch (e) {
+      throw isSourcePlugin
+        ? e
+        : withBuiltEntryResolutionHint(
+            e,
+            { path: pluginPath, projectRoot },
+            root,
+            workspacePackages
+          );
+    }
     instance.setupHooks(loadResult);
     return instance;
   }
@@ -160,17 +190,71 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     name: string,
     pluginPath: string,
     shouldRegisterTSTranspiler: boolean,
-    public readonly index?: number
+    isSourcePlugin: boolean,
+    workspacePackages: WorkspacePackage[],
+    public readonly index?: number,
+    private readonly conditions: string[] = []
   ) {
     this.plugin = plugin;
     this.root = root;
     this.name = name;
     this.pluginPath = pluginPath;
     this.shouldRegisterTSTranspiler = shouldRegisterTSTranspiler;
+    this.isSourcePlugin = isSourcePlugin;
+    this.workspacePackageNames = workspacePackages.map((pkg) => pkg.name);
+  }
+
+  setWorkspacePackageNames(names: string[], version: number): void {
+    this.workspacePackageNames = names;
+    this.workspacePackageNamesVersion = version;
+  }
+
+  // A hook request carries the package names when the worker's set is
+  // behind. The set counts as delivered once that worker answered that
+  // request, so a failed request sends it again.
+  private hookRequest<T extends object>(
+    payload: T
+  ): {
+    payload: T & { workspacePackageNames?: string[] };
+    delivery?: { version: number; worker: ChildProcess | null };
+  } {
+    if (
+      !this.isSourcePlugin ||
+      this.sentWorkspacePackageNamesVersion ===
+        this.workspacePackageNamesVersion
+    ) {
+      return { payload };
+    }
+    return {
+      payload: {
+        ...payload,
+        workspacePackageNames: this.workspacePackageNames,
+      },
+      delivery: {
+        version: this.workspacePackageNamesVersion,
+        worker: this.worker,
+      },
+    };
+  }
+
+  private markWorkspacePackageNamesDelivered(
+    delivery: { version: number; worker: ChildProcess | null } | undefined
+  ): void {
+    if (
+      delivery &&
+      delivery.worker === this.worker &&
+      delivery.version > this.sentWorkspacePackageNamesVersion
+    ) {
+      this.sentWorkspacePackageNamesVersion = delivery.version;
+    }
   }
 
   private async spawnAndConnect(): Promise<LoadResultPayload> {
-    const { worker, socket } = await startPluginWorker(this.name);
+    const { worker, socket } = await startPluginWorker(
+      this.name,
+      this.isSourcePlugin,
+      this.conditions
+    );
     this.worker = worker;
     this.socket = socket;
 
@@ -339,9 +423,12 @@ export class IsolatedPlugin implements LoadedNxPlugin {
           name: this.name,
           pluginPath: this.pluginPath,
           shouldRegisterTSTranspiler: this.shouldRegisterTSTranspiler,
+          isSourcePlugin: this.isSourcePlugin,
+          workspacePackageNames: this.workspacePackageNames,
         },
         tx,
       });
+      this.sentWorkspacePackageNamesVersion = this.workspacePackageNamesVersion;
     });
   }
 
@@ -379,10 +466,9 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       (this as { createNodes: IsolatedPlugin['createNodes'] }).createNodes = [
         loadResult.createNodesPattern,
         wrap('createNodes', async (configFiles, ctx) => {
-          const result = await this.sendRequest('createNodes', {
-            configFiles,
-            context: ctx,
-          });
+          const request = this.hookRequest({ configFiles, context: ctx });
+          const result = await this.sendRequest('createNodes', request.payload);
+          this.markWorkspacePackageNamesDelivered(request.delivery);
           if (result.success === false) {
             throw result.error;
           }
@@ -395,9 +481,12 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       (
         this as { createDependencies: IsolatedPlugin['createDependencies'] }
       ).createDependencies = wrap('createDependencies', async (ctx) => {
-        const result = await this.sendRequest('createDependencies', {
-          context: ctx,
-        });
+        const request = this.hookRequest({ context: ctx });
+        const result = await this.sendRequest(
+          'createDependencies',
+          request.payload
+        );
+        this.markWorkspacePackageNamesDelivered(request.delivery);
         if (result.success === false) {
           throw result.error;
         }
@@ -409,10 +498,12 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       (
         this as { createMetadata: IsolatedPlugin['createMetadata'] }
       ).createMetadata = wrap('createMetadata', async (graph, ctx) => {
-        const result = await this.sendRequest('createMetadata', {
-          graph,
-          context: ctx,
-        });
+        const request = this.hookRequest({ graph, context: ctx });
+        const result = await this.sendRequest(
+          'createMetadata',
+          request.payload
+        );
+        this.markWorkspacePackageNamesDelivered(request.delivery);
         if (result.success === false) {
           throw result.error;
         }
@@ -424,9 +515,12 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       (
         this as { preTasksExecution: IsolatedPlugin['preTasksExecution'] }
       ).preTasksExecution = wrap('preTasksExecution', async (context) => {
-        const result = await this.sendRequest('preTasksExecution', {
-          context,
-        });
+        const request = this.hookRequest({ context });
+        const result = await this.sendRequest(
+          'preTasksExecution',
+          request.payload
+        );
+        this.markWorkspacePackageNamesDelivered(request.delivery);
         if (result.success === false) {
           throw result.error;
         }
@@ -438,9 +532,12 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       (
         this as { postTasksExecution: IsolatedPlugin['postTasksExecution'] }
       ).postTasksExecution = wrap('postTasksExecution', async (context) => {
-        const result = await this.sendRequest('postTasksExecution', {
-          context,
-        });
+        const request = this.hookRequest({ context });
+        const result = await this.sendRequest(
+          'postTasksExecution',
+          request.payload
+        );
+        this.markWorkspacePackageNamesDelivered(request.delivery);
         if (result.success === false) {
           throw result.error;
         }
@@ -595,7 +692,11 @@ export function getPluginWorkerSocketId(): string {
   )}`;
 }
 
-async function startPluginWorker(name: string) {
+async function startPluginWorker(
+  name: string,
+  isSourcePlugin: boolean,
+  conditions: string[]
+) {
   performance.mark(`start-plugin-worker:${name}`);
 
   const isWorkerTypescript = path.extname(__filename) === '.ts';
@@ -628,9 +729,8 @@ async function startPluginWorker(name: string) {
   const worker = spawn(
     process.execPath,
     [
-      // Spawn the worker with the same resolve conditions Nx uses for plugin
-      // entries so the plugin's transitive workspace imports resolve to source.
-      ...getPluginResolveConditionNodeArgs(),
+      // Built workers must not get conditions that select unbuilt source.
+      ...(isSourcePlugin ? conditions.flatMap((c) => ['--conditions', c]) : []),
       // swc transpiles without type-checking: ~7x faster to boot, and this is
       // paid once per worker spawn.
       ...(isWorkerTypescript ? ['--require', '@swc-node/register'] : []),

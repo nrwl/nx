@@ -31,6 +31,26 @@ vi.mock('../resolve-plugin', () => ({
   }),
 }));
 
+vi.mock('child_process', async () => ({
+  ...(await vi.importActual('child_process')),
+  spawn: vi.fn(),
+}));
+
+// Returns something other than what the tests pass, so a spawn that reads the
+// live cache instead of the loaded conditions is caught.
+vi.mock('../../../plugins/js/utils/typescript', () => ({
+  getRootTsConfigCustomConditions: vi.fn(() => ['stale']),
+}));
+
+vi.mock('./messaging', async () => ({
+  ...(await vi.importActual('./messaging')),
+  sendMessageOverSocket: vi.fn(),
+}));
+
+import { spawn } from 'child_process';
+import { resolveNxPlugin } from '../resolve-plugin';
+import { sendMessageOverSocket } from './messaging';
+
 describe('IsolatedPlugin', () => {
   describe('plugin worker socket ids', () => {
     const initialWorkerCount = global.nxPluginWorkerCount;
@@ -102,6 +122,9 @@ describe('IsolatedPlugin', () => {
     // Initialize required state
     plugin._alive = true;
     plugin.pendingCount = 0;
+    plugin.workspacePackageNames = [];
+    plugin.workspacePackageNamesVersion = 0;
+    plugin.sentWorkspacePackageNamesVersion = 0;
     plugin.spawnAndConnectCount = 0;
     plugin.shutdownCount = 0;
 
@@ -334,6 +357,43 @@ describe('IsolatedPlugin', () => {
       await expect(
         connectToWorker(worker, '/mock/socket/path', 'test-plugin')
       ).rejects.toSatisfy((error) => !isPluginWorkerSocketRefusal(error));
+    });
+  });
+
+  describe('spawning the worker', () => {
+    afterEach(() => {
+      vi.mocked(spawn).mockReset();
+      vi.mocked(waitForSocketConnection).mockReset();
+    });
+
+    it('passes the conditions the plugin was loaded with to a source worker', async () => {
+      vi.mocked(resolveNxPlugin).mockResolvedValueOnce({
+        name: 'source-plugin',
+        pluginPath: '/mock/plugin/path',
+        shouldRegisterTSTranspiler: true,
+        isSourcePlugin: true,
+        workspacePackages: [],
+      } as any);
+      const worker = new EventEmitter() as any;
+      worker.pid = 4243;
+      worker.stdout = null;
+      worker.stderr = null;
+      worker.unref = () => {};
+      vi.mocked(spawn).mockReturnValue(worker);
+      vi.mocked(waitForSocketConnection).mockResolvedValue(null);
+
+      await expect(
+        IsolatedPlugin.load('source-plugin', '/mock/root', 0, ['a', 'b'])
+      ).rejects.toThrow('Failed to start plugin worker');
+
+      const args: string[] = vi.mocked(spawn).mock.calls[0][1] as string[];
+      expect(args.slice(0, 4)).toEqual([
+        '--conditions',
+        'a',
+        '--conditions',
+        'b',
+      ]);
+      expect(args).not.toContain('stale');
     });
   });
 
@@ -658,6 +718,208 @@ describe('IsolatedPlugin', () => {
       // Post-task phase
       await plugin.postTasksExecution!({} as any);
       expect(shutdown).toHaveBeenCalledTimes(1); // finally done
+    });
+  });
+
+  describe('workspace package names', () => {
+    it('sends a changed set to a source worker once, on its next hook', async () => {
+      const { plugin, sendRequest } = createTestPlugin(
+        createLoadResult({
+          createNodesPattern: '**/*',
+          hasCreateDependencies: true,
+        })
+      );
+      plugin.isSourcePlugin = true;
+      plugin.workspacePackageNames = ['@proj/a'];
+
+      await plugin.createNodes![1]([], {} as any);
+      expect(sendRequest.mock.calls[0][1]).not.toHaveProperty(
+        'workspacePackageNames'
+      );
+
+      plugin.setWorkspacePackageNames(['@proj/a', '@proj/b'], 1);
+      await plugin.createNodes![1]([], {} as any);
+      expect(sendRequest.mock.calls[1][1].workspacePackageNames).toEqual([
+        '@proj/a',
+        '@proj/b',
+      ]);
+      await plugin.createDependencies!({} as any);
+      expect(sendRequest.mock.calls[2][1]).not.toHaveProperty(
+        'workspacePackageNames'
+      );
+
+      plugin.setWorkspacePackageNames(['@proj/a'], 2);
+      await plugin.createDependencies!({} as any);
+      expect(sendRequest.mock.calls[3][1].workspacePackageNames).toEqual([
+        '@proj/a',
+      ]);
+    });
+
+    it('resends a set whose request failed, even when an older request succeeded meanwhile', async () => {
+      const { plugin, sendRequest } = createTestPlugin(
+        createLoadResult({ createNodesPattern: '**/*' })
+      );
+      plugin.isSourcePlugin = true;
+      const settle: Array<{
+        resolve: (v: unknown) => void;
+        reject: (e: Error) => void;
+      }> = [];
+      sendRequest.mockImplementation(
+        () =>
+          new Promise((resolve, reject) => {
+            settle.push({ resolve, reject });
+          })
+      );
+
+      // The wrappers reach the transport after an alive check.
+      const settled = () => new Promise((resolve) => setImmediate(resolve));
+      plugin.setWorkspacePackageNames(['@proj/a'], 1);
+      const first = plugin.createNodes![1]([], {} as any);
+      await settled();
+      plugin.setWorkspacePackageNames(['@proj/a', '@proj/b'], 2);
+      const second = plugin.createNodes![1]([], {} as any);
+      await settled();
+      expect(sendRequest.mock.calls[0][1].workspacePackageNames).toEqual([
+        '@proj/a',
+      ]);
+      expect(sendRequest.mock.calls[1][1].workspacePackageNames).toEqual([
+        '@proj/a',
+        '@proj/b',
+      ]);
+
+      settle[1].reject(new Error('worker died'));
+      await expect(second).rejects.toThrow('worker died');
+      settle[0].resolve({ success: true, result: [] });
+      await first;
+
+      // The worker answered the first set only; the second goes out again.
+      const third = plugin.createNodes![1]([], {} as any);
+      await settled();
+      expect(sendRequest.mock.calls[2][1].workspacePackageNames).toEqual([
+        '@proj/a',
+        '@proj/b',
+      ]);
+      settle[2].resolve({ success: true, result: [] });
+      await third;
+    });
+
+    it('keeps a set delivered by a load when a later names-free hook resolves', async () => {
+      const { plugin, sendRequest } = createTestPlugin(
+        createLoadResult({ createNodesPattern: '**/*' })
+      );
+      plugin.isSourcePlugin = true;
+      plugin.setWorkspacePackageNames(['@proj/a'], 1);
+      await plugin.createNodes![1]([], {} as any);
+      expect(sendRequest.mock.calls[0][1].workspacePackageNames).toEqual([
+        '@proj/a',
+      ]);
+
+      // A restart's load carried a newer set.
+      plugin.setWorkspacePackageNames(['@proj/a', '@proj/b'], 2);
+      plugin.sentWorkspacePackageNamesVersion = 2;
+      await plugin.createNodes![1]([], {} as any);
+      await plugin.createNodes![1]([], {} as any);
+
+      expect(sendRequest.mock.calls[1][1]).not.toHaveProperty(
+        'workspacePackageNames'
+      );
+      expect(sendRequest.mock.calls[2][1]).not.toHaveProperty(
+        'workspacePackageNames'
+      );
+    });
+
+    it('never sends the set to a built worker', async () => {
+      const { plugin, sendRequest } = createTestPlugin(
+        createLoadResult({ createNodesPattern: '**/*' })
+      );
+      plugin.isSourcePlugin = false;
+      plugin.setWorkspacePackageNames(['@proj/a'], 1);
+
+      await plugin.createNodes![1]([], {} as any);
+
+      expect(sendRequest.mock.calls[0][1]).not.toHaveProperty(
+        'workspacePackageNames'
+      );
+    });
+
+    it('loads a restarted worker with the current set', () => {
+      const plugin: any = Object.create(IsolatedPlugin.prototype);
+      plugin.plugin = 'test-plugin';
+      plugin.name = 'test-plugin';
+      plugin.root = '/mock/root';
+      plugin.pluginPath = '/mock/plugin/path';
+      plugin.isSourcePlugin = true;
+      plugin.socket = {};
+      plugin.worker = { pid: 1 };
+      plugin.txId = 0;
+      plugin.responseHandlers = new Map();
+      plugin.workspacePackageNames = ['@proj/a'];
+      plugin.workspacePackageNamesVersion = 0;
+      plugin.sentWorkspacePackageNamesVersion = 0;
+      vi.mocked(sendMessageOverSocket).mockClear();
+
+      plugin.setWorkspacePackageNames(['@proj/a', '@proj/b'], 3);
+      const loading = plugin.sendLoadMessage();
+
+      const sent = vi.mocked(sendMessageOverSocket).mock.calls[0][1] as any;
+      expect(sent.type).toBe('load');
+      expect(sent.payload.workspacePackageNames).toEqual([
+        '@proj/a',
+        '@proj/b',
+      ]);
+      // The load counts as delivery.
+      expect(plugin.sentWorkspacePackageNamesVersion).toBe(3);
+
+      for (const handler of plugin.responseHandlers.values()) {
+        handler.onMessage({
+          type: 'loadResult',
+          payload: createLoadResult({ createNodesPattern: '**/*' }),
+        });
+      }
+      return expect(loading).resolves.toMatchObject({ name: 'test-plugin' });
+    });
+  });
+
+  describe('load', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    function failLoad(isSourcePlugin: boolean) {
+      const error = Object.assign(
+        new Error("Cannot find module '@proj/util'"),
+        { code: 'MODULE_NOT_FOUND' }
+      );
+      vi.mocked(resolveNxPlugin).mockResolvedValueOnce({
+        name: 'test-plugin',
+        pluginPath: '/mock/root/packages/plugin/dist/index.js',
+        shouldRegisterTSTranspiler: false,
+        isSourcePlugin,
+        projectRoot: 'packages/plugin',
+        workspacePackages: [{ name: '@proj/util', root: 'packages/util' }],
+      });
+      vi.spyOn(
+        IsolatedPlugin.prototype as any,
+        'spawnAndConnect'
+      ).mockRejectedValue(error);
+      return {
+        error,
+        loading: IsolatedPlugin.load('test-plugin', '/mock/root'),
+      };
+    }
+
+    it('adds the built-entry hint when a built plugin misses a workspace sibling', async () => {
+      const { loading } = failLoad(false);
+
+      await expect(loading).rejects.toThrow(
+        /Cannot find module '@proj\/util'[\s\S]*"@proj\/util" was requested from "packages\/plugin\/dist\/index.js"/
+      );
+    });
+
+    it('leaves a source plugin load failure unchanged', async () => {
+      const { error, loading } = failLoad(true);
+
+      await expect(loading).rejects.toBe(error);
     });
   });
 });

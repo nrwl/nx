@@ -118,6 +118,7 @@ async function tryGetModule(
       packageJson['schematics'] ??
       packageJson['builders']
     ) {
+      // Retain the source graph for lazy imports from the cached module.
       const [pluginPromise] = loadNxPlugin(packageJson.name, workspaceRoot);
       return await pluginPromise;
     } else {

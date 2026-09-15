@@ -45,7 +45,8 @@ export function getGeneratorInformation(
       generatorConfig.schema,
       generatorsDir,
       collectionName,
-      projects
+      projects,
+      resolvedCollectionName
     );
     const schema = readJsonFile(schemaPath);
     if (!schema.properties || typeof schema.properties !== 'object') {
@@ -57,7 +58,8 @@ export function getGeneratorInformation(
       generatorConfig.implementation,
       generatorsDir,
       collectionName,
-      projects
+      projects,
+      resolvedCollectionName
     );
     const normalizedGeneratorConfiguration: GeneratorsJsonEntry = {
       ...generatorConfig,

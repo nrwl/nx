@@ -58,18 +58,19 @@ export function getExecutorInformation(
     const key = cacheKey(nodeModule, executor, root);
     if (cachedExecutorInformation[key]) return cachedExecutorInformation[key];
 
-    const { executorsFilePath, executorConfig, isNgCompat } = readExecutorJson(
-      nodeModule,
-      executor,
-      root,
-      projects
-    );
+    const {
+      executorsFilePath,
+      executorConfig,
+      isNgCompat,
+      resolvedNodeModule,
+    } = readExecutorJson(nodeModule, executor, root, projects);
     const executorsDir = dirname(executorsFilePath);
     const schemaPath = resolveSchema(
       executorConfig.schema,
       executorsDir,
       nodeModule,
-      projects
+      projects,
+      resolvedNodeModule
     );
     const schema = normalizeExecutorSchema(readJsonFile(schemaPath));
 
@@ -77,7 +78,8 @@ export function getExecutorInformation(
       executorConfig.implementation,
       executorsDir,
       nodeModule,
-      projects
+      projects,
+      resolvedNodeModule
     );
 
     const batchImplementationFactory = executorConfig.batchImplementation
@@ -85,7 +87,8 @@ export function getExecutorInformation(
           executorConfig.batchImplementation,
           executorsDir,
           nodeModule,
-          projects
+          projects,
+          resolvedNodeModule
         )
       : null;
 
@@ -94,7 +97,8 @@ export function getExecutorInformation(
           executorConfig.hasher,
           executorsDir,
           nodeModule,
-          projects
+          projects,
+          resolvedNodeModule
         )
       : null;
 
@@ -133,6 +137,8 @@ function readExecutorJson(
     hasher?: string;
   };
   isNgCompat: boolean;
+  /** The package the executor was read from after following builder aliases. */
+  resolvedNodeModule: string;
 } {
   const { json: packageJson, path: packageJsonPath } = readPluginPackageJson(
     nodeModule,
@@ -173,5 +179,10 @@ function readExecutorJson(
     ]);
   }
   const isNgCompat = !executorsJson.executors?.[executor];
-  return { executorsFilePath, executorConfig, isNgCompat };
+  return {
+    executorsFilePath,
+    executorConfig,
+    isNgCompat,
+    resolvedNodeModule: nodeModule,
+  };
 }

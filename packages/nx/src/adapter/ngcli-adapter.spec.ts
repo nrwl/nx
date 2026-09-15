@@ -1,6 +1,9 @@
+import type { Mock } from 'vitest';
+import { join } from 'node:path';
 import type { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { createTreeWithEmptyWorkspace } from '../generators/testing-utils/create-tree-with-empty-workspace';
 import { addProjectConfiguration } from '../generators/utils/project-configuration';
+import { TempFs } from '../internal-testing-utils/temp-fs';
 import {
   arrayBufferToString,
   restoreNxTokensInOptions,
@@ -14,6 +17,165 @@ vi.mock('../project-graph/project-graph', async () => ({
     externalNodes: {},
   }),
 }));
+vi.mock('../plugins/js/utils/register', async () => ({
+  ...(await vi.importActual('../plugins/js/utils/register')),
+  registerSourceGraphResolver: vi.fn(() => () => {}),
+}));
+// Resolving a local package registers the plugin transpiler; keep that out of
+// the test worker.
+vi.mock('../project-graph/plugins/transpiler', async () => ({
+  ...(await vi.importActual('../project-graph/plugins/transpiler')),
+  registerPluginTSTranspiler: vi.fn(),
+  pluginTranspilerIsRegistered: () => true,
+}));
+
+describe('getWrappedWorkspaceNodeModulesArchitectHost', () => {
+  let fs: TempFs;
+
+  afterEach(() => {
+    fs?.cleanup();
+  });
+
+  it('registers the source graph of a source-selected builder before handing its path to Architect', async () => {
+    fs = new TempFs('ngcli-adapter-builders');
+    fs.createFilesSync({
+      'package.json': JSON.stringify({
+        name: 'root',
+        workspaces: ['packages/*'],
+      }),
+      'packages/builders/package.json': JSON.stringify({
+        name: '@proj/builders',
+        builders: './builders.json',
+      }),
+      'packages/builders/builders.json': JSON.stringify({
+        builders: {
+          build: { implementation: './src/build', schema: './src/schema.json' },
+        },
+      }),
+      'packages/builders/src/build.ts': 'export default () => {};\n',
+      'packages/builders/src/schema.json': JSON.stringify({ type: 'object' }),
+    });
+    // Fresh module state: local package lookups cache the workspace layout.
+    vi.resetModules();
+    const { setWorkspaceRoot } = await import('../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
+    const { registerSourceGraphResolver } =
+      await import('../plugins/js/utils/register');
+    (registerSourceGraphResolver as Mock).mockClear();
+    const { getWrappedWorkspaceNodeModulesArchitectHost } =
+      await import('./ngcli-adapter');
+    const projects: Record<string, ProjectConfiguration> = {
+      builders: {
+        name: 'builders',
+        root: 'packages/builders',
+        metadata: {
+          js: {
+            packageName: '@proj/builders',
+            packageExports: './dist/index.js',
+            packageMain: 'dist/index.js',
+            isInPackageManagerWorkspaces: true,
+          },
+        } as ProjectConfiguration['metadata'],
+      },
+    };
+
+    const host = await getWrappedWorkspaceNodeModulesArchitectHost(
+      {} as any,
+      fs.tempDir,
+      projects
+    );
+    const info = await host.resolveBuilder('@proj/builders:build');
+
+    const builderPath = join(fs.tempDir, 'packages/builders/src/build.ts');
+    expect(info.import).toBe(builderPath);
+    expect(registerSourceGraphResolver).toHaveBeenCalledWith(
+      builderPath,
+      fs.tempDir,
+      ['@proj/builders']
+    );
+  });
+});
+
+describe('getWrappedWorkspaceNodeModulesArchitectHost aliases', () => {
+  let fs: TempFs;
+
+  afterEach(() => {
+    fs?.cleanup();
+  });
+
+  it('classifies an aliased builder against the package that declares it', async () => {
+    fs = new TempFs('ngcli-adapter-builder-alias');
+    fs.createFilesSync({
+      'package.json': JSON.stringify({
+        name: 'root',
+        workspaces: ['packages/*'],
+      }),
+      'packages/alias/package.json': JSON.stringify({
+        name: '@proj/alias',
+        builders: './builders.json',
+      }),
+      'packages/alias/builders.json': JSON.stringify({
+        builders: { build: '@proj/impl:build' },
+      }),
+      'packages/impl/package.json': JSON.stringify({
+        name: '@proj/impl',
+        builders: './builders.json',
+      }),
+      'packages/impl/builders.json': JSON.stringify({
+        builders: {
+          build: { implementation: './src/build', schema: './src/schema.json' },
+        },
+      }),
+      'packages/impl/src/build.js': 'module.exports = () => {};\n',
+      'packages/impl/src/schema.json': JSON.stringify({ type: 'object' }),
+    });
+    vi.resetModules();
+    const { setWorkspaceRoot } = await import('../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
+    const { registerSourceGraphResolver } =
+      await import('../plugins/js/utils/register');
+    (registerSourceGraphResolver as Mock).mockClear();
+    const { getWrappedWorkspaceNodeModulesArchitectHost } =
+      await import('./ngcli-adapter');
+    const js = (packageName: string) =>
+      ({
+        js: {
+          packageName,
+          packageExports: './dist/index.js',
+          packageMain: 'dist/index.js',
+          isInPackageManagerWorkspaces: true,
+        },
+      }) as ProjectConfiguration['metadata'];
+    const projects: Record<string, ProjectConfiguration> = {
+      alias: {
+        name: 'alias',
+        root: 'packages/alias',
+        metadata: js('@proj/alias'),
+      },
+      impl: {
+        name: 'impl',
+        root: 'packages/impl',
+        sourceRoot: 'packages/impl/src',
+        metadata: js('@proj/impl'),
+      },
+    };
+
+    const host = await getWrappedWorkspaceNodeModulesArchitectHost(
+      {} as any,
+      fs.tempDir,
+      projects
+    );
+    const info = await host.resolveBuilder('@proj/alias:build');
+
+    const builderPath = join(fs.tempDir, 'packages/impl/src/build.js');
+    expect(info.import).toBe(builderPath);
+    expect(registerSourceGraphResolver).toHaveBeenCalledWith(
+      builderPath,
+      fs.tempDir,
+      ['@proj/alias', '@proj/impl']
+    );
+  });
+});
 
 describe('ngcli-adapter', () => {
   it('arrayBufferToString should support large buffers', () => {

@@ -119,7 +119,7 @@ module.exports = () => {
     return {
       __esModule: true,
       ...actual,
-      loadIsolatedNxPlugin: jest.fn((plugin, root, index) => {
+      loadIsolatedNxPlugin: jest.fn((plugin, root, ...rest) => {
         if (root === realWorkspaceRoot) {
           throw new Error(
             '[unit-test-setup] loadIsolatedNxPlugin was called with the real ' +
@@ -132,7 +132,7 @@ module.exports = () => {
               'scripts/unit-test-setup.js.'
           );
         }
-        return actual.loadIsolatedNxPlugin(plugin, root, index);
+        return actual.loadIsolatedNxPlugin(plugin, root, ...rest);
       }),
     };
   });
