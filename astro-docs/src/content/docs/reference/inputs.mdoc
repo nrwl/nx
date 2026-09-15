@@ -135,6 +135,7 @@ Add `includeIgnored: true` to match files on disk, whether Git tracks them or no
 `{projectRoot}` and `{workspaceRoot}` resolve as for any fileset, and every glob must start with one of them.
 Nx checks the matched files on every run, so keep the globs narrow.
 A glob such as `{workspaceRoot}/**` is allowed, but it covers every gitignored file in the workspace, so the task's inputs change whenever any of them does.
+A wide glob also matches files such as `.env` and this task's own outputs, so exclude what you don't mean: `!{workspaceRoot}/**/.env*`.
 A new matching file counts without a configuration change, and a path that names a directory matches everything under it.
 A path can name a file that doesn't exist yet: the cache key changes when the file appears or is removed.
 
@@ -142,7 +143,7 @@ A `!` negation with `includeIgnored: true` filters every `includeIgnored` glob d
 Without the flag it's a normal fileset and doesn't affect them.
 A negation with nothing to filter is a configuration error, and a negation can't be combined with `dependencies: true`.
 
-A glob never walks into `node_modules`, `.git`, `.nx/cache`, `.nx/workspace-data`, or `.yarn/cache` unless it names a path inside one of them.
+A glob never walks into `node_modules`, `.git`, `.nx/cache`, `.nx/workspace-data`, `.yarn/cache`, or the cache and workspace-data directories when `cacheDirectory` or the environment moves them elsewhere in the workspace, unless it names a path inside one of them.
 Symlinks aren't followed, except a symlinked file whose target is inside the workspace, and a glob that resolves outside the workspace is a configuration error.
 
 ### JSON files

@@ -1,3 +1,4 @@
+import { diskWalkSkippedDirectories } from './disk-walk-skipped-directories';
 import type { Target } from '../command-line/run/run';
 import {
   NxJsonConfiguration,
@@ -50,7 +51,8 @@ export class HashPlanInspector {
     this.inspector = new NativeHashPlanInspector(
       externalReferences.allWorkspaceFiles,
       externalReferences.projectFiles,
-      this.workspaceRootPath
+      this.workspaceRootPath,
+      diskWalkSkippedDirectories(this.workspaceRootPath)
     );
   }
 

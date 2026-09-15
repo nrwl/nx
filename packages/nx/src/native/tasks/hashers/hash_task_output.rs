@@ -26,6 +26,7 @@ pub fn expand_task_outputs(
     glob: &str,
     outputs: &[String],
     cache: &FilesExpansionCache,
+    skip_dirs: &[PathBuf],
 ) -> Result<FilesExpansion> {
     let key = format!("outputs:[{}]", outputs.join("\n"));
     let expansion = expand_cached(&key, cache, || {
@@ -39,6 +40,7 @@ pub fn expand_task_outputs(
             &negations,
             &|_| false,
             false,
+            skip_dirs,
             WALK,
         )
     })?;
@@ -60,8 +62,9 @@ pub fn hash_task_output(
     outputs: &[String],
     cache: &FilesExpansionCache,
     index: &IgnoredIndex,
+    skip_dirs: &[PathBuf],
 ) -> Result<TaskOutputHashResult> {
-    let expansion = expand_task_outputs(workspace_root, glob, outputs, cache)?;
+    let expansion = expand_task_outputs(workspace_root, glob, outputs, cache, skip_dirs)?;
     // Written by a task that has run, so never taken on trust.
     let hash = hash_files(workspace_root, &expansion, |_| None, index, false);
     Ok(TaskOutputHashResult {
@@ -75,9 +78,15 @@ pub fn resolve_task_output_files(
     workspace_root: &Path,
     glob: &str,
     outputs: &[String],
+    skip_dirs: &[PathBuf],
 ) -> Result<Vec<String>> {
-    let expansion =
-        expand_task_outputs(workspace_root, glob, outputs, &FilesExpansionCache::new())?;
+    let expansion = expand_task_outputs(
+        workspace_root,
+        glob,
+        outputs,
+        &FilesExpansionCache::new(),
+        skip_dirs,
+    )?;
     Ok(expansion.files)
 }
 
@@ -213,7 +222,7 @@ mod tests {
     }
 
     fn files(temp: &TempDir, glob: &str, outputs: &[&str]) -> Vec<String> {
-        resolve_task_output_files(temp.path(), glob, &strings(outputs)).unwrap()
+        resolve_task_output_files(temp.path(), glob, &strings(outputs), &[]).unwrap()
     }
 
     fn hash(temp: &TempDir, glob: &str, outputs: &[&str], cache: &FilesExpansionCache) -> String {
@@ -227,7 +236,7 @@ mod tests {
         cache: &FilesExpansionCache,
         index: &IgnoredIndex,
     ) -> String {
-        hash_task_output(temp.path(), glob, &strings(outputs), cache, index)
+        hash_task_output(temp.path(), glob, &strings(outputs), cache, index, &[])
             .unwrap()
             .hash
     }
@@ -383,12 +392,13 @@ mod tests {
         ] {
             let entry = |rest: &str| spelling.join(rest).to_string_lossy().to_string();
             assert_eq!(
-                resolve_task_output_files(root, "**/*.js", &[entry("dist/libs/lib")]).unwrap(),
+                resolve_task_output_files(root, "**/*.js", &[entry("dist/libs/lib")], &[]).unwrap(),
                 vec!["dist/libs/lib/index.js"]
             );
             // A glob's tail does not exist; it resolves through its prefix.
             assert_eq!(
-                resolve_task_output_files(root, "**/*.js", &[entry("dist/libs/**/*.js")]).unwrap(),
+                resolve_task_output_files(root, "**/*.js", &[entry("dist/libs/**/*.js")], &[])
+                    .unwrap(),
                 vec!["dist/libs/lib/index.js"]
             );
         }
@@ -404,6 +414,7 @@ mod tests {
             &strings(&["dist/absent", "dist/apps/web"]),
             &cache,
             &IgnoredIndex::new(None),
+            &[],
         )
         .unwrap();
         assert_eq!(with_absent.files, vec!["dist/apps/web/index.js"]);

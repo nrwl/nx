@@ -56,6 +56,7 @@ import { transformProjectGraphForRust } from '../../native/transform-objects';
 import { getAffectedGraphNodes } from '../affected/affected';
 import { readFileMapCache } from '../../project-graph/nx-deps-cache';
 import { filterUsingGlobPatterns } from '../../hasher/task-hasher';
+import { diskWalkSkippedDirectories } from '../../hasher/disk-walk-skipped-directories';
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration/source-maps';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 
@@ -1171,6 +1172,7 @@ async function createExpandedTaskInputResponse(
   const allWorkspaceFiles = await allFileData();
   const response: Record<string, Record<string, string[]>> = {};
 
+  const skippedDirectories = diskWalkSkippedDirectories(workspaceRoot);
   Object.entries(taskGraphClientResponse.plans).forEach(([key, inputs]) => {
     const [project] = key.split(':');
 
@@ -1178,7 +1180,8 @@ async function createExpandedTaskInputResponse(
       inputs,
       depGraphClientResponse.projects.find((p) => p.name === project),
       allWorkspaceFiles,
-      depGraphClientResponse
+      depGraphClientResponse,
+      skippedDirectories
     );
 
     response[key] = expandedInputs;
@@ -1336,7 +1339,8 @@ export async function getExpandedTaskInputs(
       inputs,
       depGraphClientResponse.projects.find((p) => p.name === projectName),
       allWorkspaceFiles,
-      depGraphClientResponse
+      depGraphClientResponse,
+      diskWalkSkippedDirectories(workspaceRoot)
     );
   }
 
@@ -1375,7 +1379,8 @@ function expandInputs(
   inputs: string[],
   project: ProjectGraphProjectNode,
   allWorkspaceFiles: FileData[],
-  depGraphClientResponse: ProjectGraphClientResponse
+  depGraphClientResponse: ProjectGraphClientResponse,
+  skippedDirectories: string[]
 ): Record<string, string[]> {
   const projectNames = depGraphClientResponse.projects.map((p) => p.name);
 
@@ -1425,7 +1430,7 @@ function expandInputs(
     allWorkspaceFiles
   );
   const filesExpanded = filesInputs.flatMap((globs) =>
-    expandFilesInput(workspaceRoot, globs)
+    expandFilesInput(workspaceRoot, globs, skippedDirectories)
   );
 
   const otherInputsExpanded = otherInputs.map((input) => {

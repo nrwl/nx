@@ -9,7 +9,7 @@ use anyhow::Result;
 use rayon::prelude::*;
 use xxhash_rust::xxh3;
 
-use super::disk_expansion::{FilesExpansion, expand_files};
+use super::disk_expansion::{FilesExpansion, expand_files_with_skips, skip_dirs_under};
 use crate::native::workspace::ignored_index::IgnoredIndex;
 
 /// Folds `(path, content hash)` pairs in path order, like a fileset; a file
@@ -54,12 +54,19 @@ pub(crate) fn index_file_map(files: &[crate::native::types::FileData]) -> HashMa
 
 #[napi]
 /// The files an `includeIgnored` fileset group matches on disk, sorted.
-pub fn expand_files_input(workspace_root: String, globs: Vec<String>) -> Result<Vec<String>> {
-    Ok(expand_files(Path::new(&workspace_root), &globs)?.files)
+pub fn expand_files_input(
+    workspace_root: String,
+    globs: Vec<String>,
+    skipped_directories: Option<Vec<String>>,
+) -> Result<Vec<String>> {
+    let root = Path::new(&workspace_root);
+    let skip_dirs = skip_dirs_under(root, &skipped_directories.unwrap_or_default());
+    Ok(expand_files_with_skips(root, &globs, &|_| false, &skip_dirs)?.files)
 }
 
 #[cfg(test)]
 mod tests {
+    use super::super::disk_expansion::expand_files;
     use super::super::disk_expansion::tests::{globs, workspace};
     use super::*;
     use assert_fs::prelude::*;

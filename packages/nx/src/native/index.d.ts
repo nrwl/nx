@@ -78,7 +78,7 @@ export declare class FileLock {
 }
 
 export declare class HashPlanInspector {
-  constructor(allWorkspaceFiles: ExternalObject<Array<FileData>>, projectFileMap: ExternalObject<Record<string, Array<FileData>>>, workspaceRoot: string)
+  constructor(allWorkspaceFiles: ExternalObject<Array<FileData>>, projectFileMap: ExternalObject<Record<string, Array<FileData>>>, workspaceRoot: string, skippedDirectories?: Array<string> | undefined | null)
   /** @deprecated Use `inspectInputs()` instead for structured output. */
   inspect(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>): Record<string, string[]>
   /**
@@ -469,7 +469,7 @@ export declare const enum EventType {
 }
 
 /** The files an `includeIgnored` fileset group matches on disk, sorted. */
-export declare function expandFilesInput(workspaceRoot: string, globs: Array<string>): Array<string>
+export declare function expandFilesInput(workspaceRoot: string, globs: Array<string>, skippedDirectories?: Array<string> | undefined | null): Array<string>
 
 export declare function expandOutputs(directory: string, entries: Array<string>): Array<string>
 
@@ -593,6 +593,12 @@ export interface HashedTask {
 
 export interface HasherOptions {
   selectivelyHashTsConfig: boolean
+  /**
+   * Workspace-relative directories a disk-backed fileset walk never enters:
+   * the Nx cache and workspace-data locations when they sit inside the
+   * workspace. The walker only knows their default spots.
+   */
+  skippedDirectories?: Array<string>
 }
 
 export declare function hashFile(file: string): string | null

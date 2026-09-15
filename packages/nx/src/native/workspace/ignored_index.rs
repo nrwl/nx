@@ -16,7 +16,7 @@ use parking_lot::RwLock;
 use tracing::trace;
 
 use crate::native::hasher::hash_file_path;
-use crate::native::tasks::hashers::{FileStamp, seed_walk, stamp_of};
+use crate::native::tasks::hashers::{FileStamp, is_skippable_dir, seed_walk, stamp_of};
 
 /// Whether the watch delivers events for a workspace-relative path (a
 /// directory when the flag is set).
@@ -73,6 +73,9 @@ pub struct IgnoredIndex {
     /// Content by path, under a listed or kept prefix, or anywhere when
     /// nothing watches.
     contents: DashMap<String, Content>,
+    /// Directories that are never listed or kept, workspace-relative, see
+    /// `skip`.
+    skipped: RwLock<BTreeSet<String>>,
     watch: Option<Watch>,
     canonical_root: OnceLock<Option<PathBuf>>,
     /// Bumped by every change the watch reports under a prefix, so a seed or
@@ -143,6 +146,7 @@ impl IgnoredIndex {
             kept: RwLock::new(BTreeSet::new()),
             members: RwLock::new(BTreeSet::new()),
             contents: DashMap::new(),
+            skipped: RwLock::new(BTreeSet::new()),
             watch,
             canonical_root: OnceLock::new(),
             generation: AtomicU64::new(0),
@@ -151,12 +155,47 @@ impl IgnoredIndex {
 
     /// Whether a listed prefix holds `path`.
     pub(crate) fn covers(&self, path: &str) -> bool {
-        holds(&self.prefixes.read(), path)
+        holds(&self.prefixes.read(), path) && !self.is_skipped(path)
     }
 
     /// Whether content under `path` is kept.
     fn keeps(&self, path: &str) -> bool {
-        self.covers(path) || holds(&self.kept.read(), path)
+        (holds(&self.prefixes.read(), path) || holds(&self.kept.read(), path))
+            && !self.is_skipped(path)
+    }
+
+    /// Adds workspace-relative directories that are never listed or kept: the
+    /// Nx cache and workspace-data locations the hasher is configured with. A
+    /// prefix inside one is refused, so a glob pointing into it is walked.
+    pub(crate) fn skip(&self, dirs: &[String]) {
+        let mut added = Vec::new();
+        {
+            let mut skipped = self.skipped.write();
+            for dir in dirs {
+                let dir = dir.trim_matches('/');
+                if is_skippable_dir(dir) && skipped.insert(dir.to_string()) {
+                    added.push(dir.to_string());
+                }
+            }
+        }
+        for dir in added {
+            self.generation.fetch_add(1, Ordering::AcqRel);
+            self.prefixes.write().retain(|p| !under(p, &dir));
+            self.kept.write().retain(|p| !under(p, &dir));
+            self.remove(&dir);
+        }
+    }
+
+    fn is_skipped(&self, path: &str) -> bool {
+        holds(&self.skipped.read(), path)
+    }
+
+    fn skip_paths(&self, workspace_root: &Path) -> Vec<PathBuf> {
+        self.skipped
+            .read()
+            .iter()
+            .map(|dir| workspace_root.join(dir))
+            .collect()
     }
 
     fn canonical_root(&self, workspace_root: &Path) -> Option<&Path> {
@@ -169,6 +208,9 @@ impl IgnoredIndex {
     fn refusal(&self, prefix: &str) -> Option<&'static str> {
         if prefix.is_empty() {
             return Some("it is the whole workspace");
+        }
+        if self.is_skipped(prefix) {
+            return Some("it is inside a skipped directory");
         }
         match &self.watch {
             Some(watch) if watch.may_miss_under(prefix) => {
@@ -195,7 +237,8 @@ impl IgnoredIndex {
         }
         for _ in 0..3 {
             let generation = self.generation.load(Ordering::Acquire);
-            let Some(seeded) = seed_walk(workspace_root, prefix) else {
+            let Some(seeded) = seed_walk(workspace_root, prefix, &self.skip_paths(workspace_root))
+            else {
                 trace!("not indexing {prefix:?}: it resolves outside the workspace");
                 return false;
             };
@@ -269,7 +312,10 @@ impl IgnoredIndex {
             return;
         };
         if link.is_dir() {
-            if listed && let Some(seeded) = seed_walk(workspace_root, path) {
+            if listed
+                && let Some(seeded) =
+                    seed_walk(workspace_root, path, &self.skip_paths(workspace_root))
+            {
                 self.replace_under(&mut self.members.write(), path, seeded);
             }
             return;
@@ -305,7 +351,9 @@ impl IgnoredIndex {
         self.generation.fetch_add(1, Ordering::AcqRel);
         let prefixes: Vec<String> = self.prefixes.read().iter().cloned().collect();
         for prefix in prefixes {
-            if let Some(seeded) = seed_walk(workspace_root, &prefix) {
+            if let Some(seeded) =
+                seed_walk(workspace_root, &prefix, &self.skip_paths(workspace_root))
+            {
                 self.replace_under(&mut self.members.write(), &prefix, seeded);
             }
         }
@@ -507,6 +555,40 @@ mod tests {
             index.list("dist").unwrap(),
             vec!["dist/gen/a.js", "dist/gen/nested/b.js", "dist/other/c.js"]
         );
+    }
+
+    #[test]
+    fn a_skipped_directory_is_never_listed_kept_or_indexed() {
+        let temp = workspace();
+        temp.child("dist/cache/run.json").write_str("{}").unwrap();
+        let index = watched();
+        assert!(index.register(temp.path(), "dist"));
+        assert!(index.keep("dist/cache/outputs"));
+        assert!(
+            index
+                .list("dist")
+                .unwrap()
+                .contains(&"dist/cache/run.json".to_string())
+        );
+        // Skipping after the fact drops what was already listed.
+        index.skip(&["dist/cache".to_string()]);
+        assert!(index.kept.read().is_empty());
+        let listed = vec!["dist/gen/a.js", "dist/gen/nested/b.js", "dist/other/c.js"];
+        assert_eq!(index.list("dist").unwrap(), listed);
+        temp.child("dist/cache/next.json").write_str("{}").unwrap();
+        index.note_written(temp.path(), "dist/cache/next.json");
+        index.reseed(temp.path());
+        assert_eq!(index.list("dist").unwrap(), listed);
+        // A glob pointing into it is left to a walk, which reads it as-is.
+        assert!(!index.register(temp.path(), "dist/cache"));
+        assert!(index.list("dist/cache").is_none());
+        assert!(!index.keep("dist/cache"));
+        // Nor is a hash kept for a file inside it.
+        index.hash_file(temp.path(), "dist/cache/run.json", None, true);
+        assert!(!index.remembered("dist/cache/run.json"));
+        // A path that names no directory is not a skip.
+        index.skip(&[".".to_string(), "../x".to_string(), String::new()]);
+        assert_eq!(index.skipped.read().len(), 1);
     }
 
     #[test]

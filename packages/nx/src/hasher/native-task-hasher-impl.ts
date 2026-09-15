@@ -17,6 +17,7 @@ import { transformProjectGraphForRust } from '../native/transform-objects';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
 import { readJsonFile } from '../utils/fileutils';
+import { diskWalkSkippedDirectories } from './disk-walk-skipped-directories';
 import { PartialHash, TaskHasherImpl } from './task-hasher';
 
 export class NativeTaskHasherImpl implements TaskHasherImpl {
@@ -73,7 +74,10 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
       Buffer.from(JSON.stringify(tsconfig)),
       paths,
       rootTsConfigPath,
-      options,
+      {
+        ...options,
+        skippedDirectories: diskWalkSkippedDirectories(workspaceRoot),
+      },
       this.ignoredIndexRef
     );
   }

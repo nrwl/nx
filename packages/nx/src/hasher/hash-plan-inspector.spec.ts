@@ -1,3 +1,4 @@
+import { join } from 'path';
 import { HashPlanInspector } from './hash-plan-inspector';
 import { ProjectGraph } from '../config/project-graph';
 import { TempFs } from '../internal-testing-utils/temp-fs';
@@ -156,6 +157,37 @@ describe('HashPlanInspector', () => {
 
       expect(inputs.files).toContain('apps/test-app/dist/out.js');
       expect(inputs.files).not.toContain('apps/test-app/dist/out.js.map');
+    });
+
+    it('leaves out a cache directory configured inside the workspace', async () => {
+      const cacheDirectory = process.env.NX_CACHE_DIRECTORY;
+      process.env.NX_CACHE_DIRECTORY = join(tempFs.tempDir, 'tmp', 'nx-cache');
+      try {
+        await tempFs.createFiles({
+          'tmp/nx-cache/run.json': '{}',
+          'tmp/report.json': '{}',
+        });
+        const graph: ProjectGraph = JSON.parse(JSON.stringify(projectGraph));
+        graph.nodes['test-app'].data.targets.build.inputs = [
+          { fileset: '{workspaceRoot}/tmp/**/*.json', includeIgnored: true },
+        ];
+        const diskInspector = new HashPlanInspector(graph, tempFs.tempDir);
+        await diskInspector.init();
+
+        const inputs = diskInspector.inspectTaskInputs({
+          project: 'test-app',
+          target: 'build',
+        })['test-app:build'];
+
+        expect(inputs.files).toContain('tmp/report.json');
+        expect(inputs.files).not.toContain('tmp/nx-cache/run.json');
+      } finally {
+        if (cacheDirectory === undefined) {
+          delete process.env.NX_CACHE_DIRECTORY;
+        } else {
+          process.env.NX_CACHE_DIRECTORY = cacheDirectory;
+        }
+      }
     });
 
     it('does not report a declared exact path that is missing', async () => {
