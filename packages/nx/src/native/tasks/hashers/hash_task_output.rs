@@ -2,10 +2,9 @@ use std::path::Path;
 
 use anyhow::Result;
 
-use super::hash_ignored_files::{
-    FileStamp, FilesExpansion, FilesExpansionCache, expand_files_cached, hash_files,
-    shared_file_content_cache,
-};
+use super::disk_expansion::{FilesExpansion, FilesExpansionCache, expand_files_cached};
+use super::file_content_cache::{FileStamp, shared_file_content_cache};
+use super::hash_ignored_files::hash_files;
 use crate::native::glob::build_glob_set;
 
 /// Result of hashing task output files, including the matched file paths
