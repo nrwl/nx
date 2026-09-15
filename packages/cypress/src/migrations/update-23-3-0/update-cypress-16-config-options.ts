@@ -7,11 +7,13 @@ import {
 } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/internal';
 import type {
+  Expression,
   Node,
   ObjectLiteralExpression,
   PropertyAssignment,
   PropertyName,
   ShorthandPropertyAssignment,
+  SpreadAssignment,
   StringLiteralLike,
 } from 'typescript';
 import {
@@ -31,15 +33,20 @@ const RENAMED_OPTIONS: Record<string, string> = {
 };
 const FAST_VISIBILITY_OPTION = 'experimentalFastVisibility';
 const VISIBILITY_STRATEGY_OPTION = 'visibilityStrategy';
-const TRIGGER_OPTIONS = [
+const MIGRATE_BY_HAND = `migrate ${[
   ...REMOVED_OPTIONS,
   ...Object.keys(RENAMED_OPTIONS),
   FAST_VISIBILITY_OPTION,
-];
+]
+  .map((option) => `\`${option}\``)
+  .join(', ')} in its source by hand if it sets them`;
 // Cypress reads these options at the top level and inside `e2e`/`component`.
 const TESTING_TYPE_BLOCKS = ['e2e', 'component'];
+// The Nx presets never return one of the options above, so their spreads
+// are not reported as unresolved.
+const NX_PRESET_CALLS = ['nxE2EPreset', 'nxComponentTestingPreset'];
 
-// The property forms with a static name; spreads and methods are left alone.
+// The property forms with a static name; methods are left alone.
 type ConfigProperty = PropertyAssignment | ShorthandPropertyAssignment;
 
 let ts: typeof import('typescript');
@@ -54,26 +61,23 @@ export default async function updateCypress16ConfigOptions(tree: Tree) {
     }
 
     const contents = tree.read(cypressConfigPath, 'utf-8');
-    const mentionedOptions = TRIGGER_OPTIONS.filter((option) =>
-      contents.includes(option)
-    );
-    if (mentionedOptions.length === 0) {
-      continue;
-    }
-
     const config = resolveCypressConfigObject(contents);
     if (!config) {
       unhandled.push(
-        `${cypressConfigPath}: the config object could not be resolved statically; it mentions ${mentionedOptions
-          .map((option) => `\`${option}\``)
-          .join(', ')}, migrate those by hand`
+        `${cypressConfigPath}: the config object could not be resolved statically; ${MIGRATE_BY_HAND}`
       );
       continue;
     }
 
     ts ??= ensureTypescript();
+    const { blocks, unresolvedSpreads } = getOptionBlocks(config);
+    for (const spread of unresolvedSpreads) {
+      unhandled.push(
+        `${cypressConfigPath}: the \`${spread.getText()}\` spread could not be resolved statically; ${MIGRATE_BY_HAND}`
+      );
+    }
     const changes: StringChange[] = [];
-    for (const block of getOptionBlocks(config)) {
+    for (const block of blocks) {
       for (const property of block.properties) {
         if (!isConfigProperty(property)) {
           continue;
@@ -155,30 +159,77 @@ function getRemovalFollowUp(property: ConfigProperty): string | null {
   return null;
 }
 
-// An `e2e`/`component` block held in a variable of the same file is edited
-// in place, so it is collected like an inline one. One variable shared by
-// both blocks is collected once, or its edits would apply twice.
-function getOptionBlocks(
-  config: ObjectLiteralExpression
-): Set<ObjectLiteralExpression> {
-  const blocks = new Set([config]);
+// The option blocks the config is made of: the config object, its `e2e` and
+// `component` blocks, and the same-file objects spread into any of them,
+// each edited in place. `e2e`/`component` are only read at the top level,
+// which the objects spread into the config are part of, so that level is
+// collected first. A spread that resolves to nothing is returned so it can
+// be reported, the Nx preset calls aside.
+function getOptionBlocks(config: ObjectLiteralExpression): {
+  blocks: Set<ObjectLiteralExpression>;
+  unresolvedSpreads: SpreadAssignment[];
+} {
   const sourceFile = config.getSourceFile();
-  for (const property of config.properties) {
-    if (
-      !isConfigProperty(property) ||
-      !TESTING_TYPE_BLOCKS.includes(getPropertyName(property.name))
-    ) {
-      continue;
+  const unresolvedSpreads: SpreadAssignment[] = [];
+
+  // Collects `root` and the objects reachable from it through spreads.
+  // A collected object is not scanned again, so an object shared by
+  // several blocks is edited and reported once.
+  const collect = (
+    root: ObjectLiteralExpression,
+    into: Set<ObjectLiteralExpression>
+  ) => {
+    if (into.has(root)) {
+      return;
     }
-    const block = resolveObjectLiteral(
-      ts.isPropertyAssignment(property) ? property.initializer : property.name,
-      sourceFile
-    );
-    if (block) {
-      blocks.add(block);
+    into.add(root);
+    for (const property of root.properties) {
+      if (
+        !ts.isSpreadAssignment(property) ||
+        isNxPresetCall(property.expression)
+      ) {
+        continue;
+      }
+      const block = resolveObjectLiteral(property.expression, sourceFile);
+      if (block) {
+        collect(block, into);
+      } else {
+        unresolvedSpreads.push(property);
+      }
+    }
+  };
+
+  const topLevel = new Set<ObjectLiteralExpression>();
+  collect(config, topLevel);
+  const blocks = new Set(topLevel);
+  for (const block of topLevel) {
+    for (const property of block.properties) {
+      if (
+        !isConfigProperty(property) ||
+        !TESTING_TYPE_BLOCKS.includes(getPropertyName(property.name))
+      ) {
+        continue;
+      }
+      const nested = resolveObjectLiteral(
+        ts.isPropertyAssignment(property)
+          ? property.initializer
+          : property.name,
+        sourceFile
+      );
+      if (nested) {
+        collect(nested, blocks);
+      }
     }
   }
-  return blocks;
+  return { blocks, unresolvedSpreads };
+}
+
+function isNxPresetCall(expression: Expression): boolean {
+  return (
+    ts.isCallExpression(expression) &&
+    ts.isIdentifier(expression.expression) &&
+    NX_PRESET_CALLS.includes(expression.expression.text)
+  );
 }
 
 function hasProperty(block: ObjectLiteralExpression, name: string): boolean {

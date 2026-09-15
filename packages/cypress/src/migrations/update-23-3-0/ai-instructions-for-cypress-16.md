@@ -2,14 +2,14 @@
 
 ## Overview
 
-Migrate the workspace's Cypress projects from Cypress 15 to 16. Cypress 16 removed `Cypress.env()`, `cy.exec()` and `.end()`, stopped accepting `env` overrides in test configuration, turned the cookie and storage getters into queries, renamed or removed several config options, dropped CoffeeScript support, and requires Node 22, Vite 8 (Vite component testing), Angular 21 (Angular component testing) and Next.js 15.0.4 (Next.js component testing). Chrome, Chromium and Edge now use the native browser network, which changes a few `cy.intercept()` details. Deterministic migrations already handled the config options, the `cypress/angular-zoneless` import and the `Cypress.Commands.overwrite()` renames; verify those, do not redo them. This runbook covers the remaining source changes. Do not change Nx target configuration, the `nxE2EPreset` / `nxComponentTestingPreset` calls, or `webServerCommands`; those keep working on Cypress 16.
+Migrate the workspace's Cypress projects from Cypress 15 to 16. Cypress 16 removed `Cypress.env()`, `cy.exec()` and `.end()`, stopped accepting `env` overrides in test configuration, turned the cookie and storage getters into queries, renamed or removed several config options, dropped CoffeeScript support, and requires Node 22, Vite 8 (Vite component testing), Angular 21 (Angular component testing) and Next.js 15.0.4 (Next.js component testing). Chrome, Chromium and Edge now use the native browser network, which changes a few `cy.intercept()` details. Deterministic migrations already handled the config options in the Cypress config files, the `cypress/angular-zoneless` import and the `Cypress.Commands.overwrite()` renames; verify those, do not redo them. Config options held in another file reach the config through a spread and are handled in Step 9. This runbook covers the remaining source changes. Do not change Nx target configuration, the `nxE2EPreset` / `nxComponentTestingPreset` calls, or `webServerCommands`; those keep working on Cypress 16.
 
 ## Pre-Migration Checklist
 
 1. Confirm `cypress` in `package.json` resolves to 16 or later. If it does not, make no changes and stop.
 2. Confirm Node is 22, 24, or 26+ (`node -v`). Cypress 16 declares `engines` `^22.0.0 || ^24.0.0 || >=26.0.0` and refuses to install on Node 20 or 25.
 3. List the Cypress projects: every project with a `cypress.config.{ts,js,mjs,cjs}` file. Search their spec and support files for the strings in the steps below.
-4. Review `<advisory_context>` from the deterministic migrations: each entry (a non-literal `experimentalFastVisibility`, a removed `execTimeout`, a removed `experimentalSourceRewriting: true`, a renamed `overwriteQuery` callback) is pending work for the matching step.
+4. Review `<advisory_context>` from the deterministic migrations: each entry (a non-literal `experimentalFastVisibility`, a removed `execTimeout`, a removed `experimentalSourceRewriting: true`, an unresolved spread, a renamed `overwriteQuery` callback) is pending work for the matching step.
 
 ## Step 1: Replace `Cypress.env()`
 
@@ -148,7 +148,7 @@ Flag these, and change code only when a test fails:
 - Native browser network in Chrome, Chromium and Edge: `cy.intercept()` no longer reports `req.httpVersion`, request `content-length` or response `content-encoding`; revalidated responses report `200` instead of `304`; `responseTimeout` does not bound response handlers (use a `timeout` on `cy.wait()`); the browser validates the application's own TLS certificate. Rewrite affected assertions to describe the application rather than the transport. Do not set `forceHttp1: true` to make a suite pass; it is deprecated at introduction.
 - `visibilityStrategy` defaults to `'modern'`: assertions that relied on legacy-only visibility semantics (ancestor `overflow` clipping, transform-based hiding, coverage of fixed elements) may change. Rewrite them; keep `visibilityStrategy: 'legacy'` only as a temporary aid.
 - `keystrokeDelay` defaults to `0` instead of `10`. A test that depended on the implicit delay can restore it with `keystrokeDelay: 10` in the Cypress config, `Cypress.Keyboard.defaults({ keystrokeDelay: 10 })`, or `{ delay: 10 }` on the `.type()` call.
-- `manageBrowserMemory` defaults to `true`. The deterministic migration turned `experimentalMemoryManagement: false` into `manageBrowserMemory: false`, so an opt-out survives.
+- `manageBrowserMemory` defaults to `true`. The deterministic migration turned `experimentalMemoryManagement: false` into `manageBrowserMemory: false` in the config file, so an opt-out there survives; one held in another file is handled in Step 9.
 - `experimentalSourceRewriting` is gone. Only an application that pins resources with Subresource Integrity needs `removeSRIAttributes: true` in its place.
 - CoffeeScript is no longer compiled. Convert `.coffee` specs, support files and fixtures to JavaScript or TypeScript.
 
@@ -158,6 +158,10 @@ Flag these, and change code only when a test fails:
 - Vite: Cypress 16 component testing runs on Vite 8 only, and `@cypress/vite-dev-server` 8 declares it as a peer. Bump `vite` and any `@vitejs/*` plugin that still pins an older major. The package update only sees the Vite installed at the workspace root, so check projects that declare their own `vite` in a project-level `package.json`.
 - Next.js: component testing requires Next.js 15.0.4 or later.
 - Electron: the bundled Electron browser is deprecated. Cypress prints a warning; set `defaultBrowser: 'chrome'` (or another installed browser) in the Cypress config, or pass `--browser`, when the warning matters in CI.
+
+## Step 9: Migrate config options held outside the config file
+
+The deterministic migration rewrote `experimentalMemoryManagement`, `experimentalFastVisibility`, `experimentalSourceRewriting`, `allowCypressEnv` and `execTimeout` in each `cypress.config.{ts,js,mjs,cjs}` file, including objects of the same file spread into the config. It cannot follow a spread of an import or a function call. For each spread of that kind in a Cypress config, other than `nxE2EPreset(...)` and `nxComponentTestingPreset(...)`, open the source of the spread object and apply the same changes there: rename `experimentalMemoryManagement` to `manageBrowserMemory` with the same value, replace `experimentalFastVisibility: true` with `visibilityStrategy: 'modern'` and `false` with `visibilityStrategy: 'legacy'`, and delete the three removed options. Search the workspace for the five option names to catch objects the config reaches through more than one file.
 
 ## Post-Migration Validation
 
