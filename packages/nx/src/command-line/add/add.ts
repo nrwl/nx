@@ -10,6 +10,7 @@ import {
   getPackageManagerCommand,
   getPackageManagerVersion,
 } from '../../utils/package-manager';
+import { acknowledgeDeclaredBuildScripts } from '../../utils/acknowledge-build-scripts';
 import { handleErrors } from '../../utils/handle-errors';
 import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
@@ -47,7 +48,7 @@ export function addHandler(options: AddOptions): Promise<number> {
   });
 }
 
-async function installPackage(
+export async function installPackage(
   pkgName: string,
   version: string,
   nxJson: NxJsonConfiguration
@@ -67,9 +68,19 @@ async function installPackage(
 
     // pnpm 11+ fails the install when the plugin's own dependency tree
     // carries unacknowledged build scripts, and the plugin's generators can
-    // only record allowBuilds decisions after this install. Warn and skip
-    // for this one install, like pnpm 10 did.
-    if (pm === 'pnpm' && gte(pmv, '11.0.0')) {
+    // only record allowBuilds decisions after this install. A plugin that
+    // declares them in its package.json keeps the install strict; otherwise
+    // warn and skip for this one install, like pnpm 10 did.
+    if (
+      pm === 'pnpm' &&
+      gte(pmv, '11.0.0') &&
+      !(await acknowledgeDeclaredBuildScripts(
+        workspaceRoot,
+        pm,
+        pkgName,
+        version
+      ))
+    ) {
       command += ' --config.strictDepBuilds=false';
     }
     await new Promise<void>((resolve) =>
