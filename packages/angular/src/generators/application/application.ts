@@ -1,6 +1,10 @@
-import { logShowProjectCommand } from '@nx/devkit/internal';
+import {
+  acknowledgeBuildScripts,
+  logShowProjectCommand,
+} from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
+  detectPackageManager,
   formatFiles,
   GeneratorCallback,
   installPackagesTask,
@@ -14,6 +18,7 @@ import { assertSupportedAngularVersion } from '../../utils/assert-supported-angu
 import { convertToRspack } from '../convert-to-rspack/convert-to-rspack';
 import { angularInitGenerator } from '../init/init';
 import { setupSsr } from '../setup-ssr/setup-ssr';
+import { acknowledgeAngularBuildScripts } from '../utils/acknowledge-build-scripts';
 import { ensureAngularDependencies } from '../utils/ensure-angular-dependencies';
 import { assertNotUsingTsSolutionSetup } from '../utils/validations';
 import {
@@ -126,8 +131,14 @@ export async function applicationGenerator(
     }
     if (options.style === 'less') {
       devDependencies['less'] = packageVersions.lessVersion;
+      // less's postinstall only installs Playwright browsers, which nothing
+      // that consumes less needs.
+      acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+        less: false,
+      });
     }
     if (Object.keys(devDependencies).length) {
+      acknowledgeAngularBuildScripts(tree);
       addDependenciesToPackageJson(tree, {}, devDependencies, undefined, true);
     }
   }

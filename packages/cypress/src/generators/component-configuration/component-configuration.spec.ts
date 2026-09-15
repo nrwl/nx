@@ -11,6 +11,7 @@ import {
   updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { getInstalledCypressMajorVersion } from '../../utils/versions';
 import { componentConfigurationGenerator } from './component-configuration';
@@ -102,6 +103,40 @@ describe('Cypress Component Configuration', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  it('should deny the esbuild build script pulled in by the webpack dev server', async () => {
+    mockedInstalledCypressVersion.mockReturnValue(10);
+
+    await withPnpm(tree, '11.2.2', () =>
+      componentConfigurationGenerator(tree, {
+        project: 'cool-lib',
+        skipFormat: true,
+        bundler: 'webpack',
+        addPlugin: true,
+      })
+    );
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+      /['"]?esbuild['"]?: false/
+    );
+  });
+
+  it('should not record an esbuild decision for the vite dev server', async () => {
+    mockedInstalledCypressVersion.mockReturnValue(10);
+
+    await withPnpm(tree, '11.2.2', () =>
+      componentConfigurationGenerator(tree, {
+        project: 'cool-lib',
+        skipFormat: true,
+        bundler: 'vite',
+        addPlugin: true,
+      })
+    );
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8') ?? '').not.toContain(
+      'esbuild'
+    );
   });
 
   it('should not add the target when @nx/cypress/plugin is registered', async () => {

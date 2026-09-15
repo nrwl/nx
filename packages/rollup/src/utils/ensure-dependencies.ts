@@ -35,6 +35,10 @@ export function ensureDependencies(
         true
       );
     case 'babel':
+      // core-js' install script only prints a funding message.
+      acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+        'core-js': false,
+      });
       return addDependenciesToPackageJson(
         tree,
         {},

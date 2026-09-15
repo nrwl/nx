@@ -5,6 +5,7 @@ import {
   readNxJson,
   type Tree,
 } from '@nx/devkit';
+import { acknowledgeAngularBuildScripts } from '../../generators/utils/acknowledge-build-scripts';
 import { angularDevkitVersion } from '../../utils/versions';
 
 // The `@nx/angular:application` and `@nx/angular:unit-test` executors import
@@ -66,6 +67,8 @@ export default async function (tree: Tree) {
   if (!needsAngularBuild) {
     return;
   }
+
+  acknowledgeAngularBuildScripts(tree);
 
   return addDependenciesToPackageJson(
     tree,
