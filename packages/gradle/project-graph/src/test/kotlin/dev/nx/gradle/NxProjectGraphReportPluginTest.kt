@@ -63,13 +63,29 @@ class NxProjectGraphReportPluginTest {
     val apiADir = File(projectADir, "api").apply { mkdirs() }
     val apiBDir = File(projectBDir, "api").apply { mkdirs() }
     val projectA =
-      ProjectBuilder.builder().withParent(rootProject).withName("a").withProjectDir(projectADir).build()
+        ProjectBuilder.builder()
+            .withParent(rootProject)
+            .withName("a")
+            .withProjectDir(projectADir)
+            .build()
     val projectB =
-      ProjectBuilder.builder().withParent(rootProject).withName("b").withProjectDir(projectBDir).build()
+        ProjectBuilder.builder()
+            .withParent(rootProject)
+            .withName("b")
+            .withProjectDir(projectBDir)
+            .build()
     val apiA =
-      ProjectBuilder.builder().withParent(projectA).withName("api").withProjectDir(apiADir).build()
+        ProjectBuilder.builder()
+            .withParent(projectA)
+            .withName("api")
+            .withProjectDir(apiADir)
+            .build()
     val apiB =
-      ProjectBuilder.builder().withParent(projectB).withName("api").withProjectDir(apiBDir).build()
+        ProjectBuilder.builder()
+            .withParent(projectB)
+            .withName("api")
+            .withProjectDir(apiBDir)
+            .build()
 
     apiA.pluginManager.apply(NxProjectGraphReportPlugin::class.java)
     apiB.pluginManager.apply(NxProjectGraphReportPlugin::class.java)
