@@ -134,6 +134,12 @@ describe('generator output capture', () => {
       expect(flushed).toBe(lines.join('\n'));
     });
 
+    it('returns one record longer than the head whole, without a marker', () => {
+      const record = 'x'.repeat(5000);
+
+      expect(captured(() => console.log(record))).toBe(record);
+    });
+
     it.each([
       ['ASCII lines', () => 'x'.repeat(100), 20_000],
       ['multibyte lines', () => 'é'.repeat(100), 20_000],
