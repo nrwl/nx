@@ -26,7 +26,7 @@ class NxProjectGraphReportPluginTest {
     assertNotNull(task)
 
     assertEquals(project.name, task.projectName.get())
-  assertEquals(project.path, task.projectPath.get())
+    assertEquals(project.path, task.projectPath.get())
     assertEquals("test-hash", task.hash.get())
     assertEquals("/test/workspace", task.workspaceRoot.get())
     assertEquals(project, task.projectRef.get())
