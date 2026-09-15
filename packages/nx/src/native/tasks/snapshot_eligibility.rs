@@ -332,15 +332,23 @@ fn observed_outputs(entry: &TaskIoSnapshot) -> Vec<String> {
         .iter()
         .filter(|glob| {
             !glob.starts_with('!')
-                && expand_literal_braces(glob)
-                    .iter()
-                    .all(|g| !escapes_workspace(g) && !under_ignored_dir(g))
+                && expand_literal_braces(glob).iter().all(|g| {
+                    !escapes_workspace(g)
+                        && !under_ignored_dir(g)
+                        && !g.split(['/', '\\']).any(segment_could_disguise)
+                })
         })
         .cloned()
         .collect();
     outputs.sort();
     outputs.dedup();
     outputs
+}
+
+/// Glob syntax a segment could hide an excluded name behind: a class, an
+/// unexpanded brace group or `?` (`.gi[t]`, `{..,*}`, `node_modul?s`).
+fn segment_could_disguise(segment: &str) -> bool {
+    segment.contains(['[', '{', '?'])
 }
 
 /// Case-insensitive: `.GIT/hooks` restores into `.git` on macOS and Windows.
@@ -581,11 +589,21 @@ mod tests {
                 "apps/web/node_modules/.vite/**".into(),
                 ".nx/cache/1".into(),
                 ".git/index".into(),
+                ".GIT/hooks/x".into(),
+                "{dist,.git}/x".into(),
+                ".gi[t]/**".into(),
+                "node_modul?s/**".into(),
+                "{..,*}/x".into(),
+                "dist/{a,b}.js".into(),
             ],
         };
         assert_eq!(
             observed_outputs(&entry),
-            vec!["apps/web/.next/cache/*", "dist/apps/web/**"]
+            vec![
+                "apps/web/.next/cache/*",
+                "dist/apps/web/**",
+                "dist/{a,b}.js"
+            ]
         );
     }
 
