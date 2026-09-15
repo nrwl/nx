@@ -108,8 +108,7 @@ export function projectRoots(
  * the rest do not, with the same eligibility walk the planner uses, without
  * building a planner (no project-graph transfer). `snapshots` is the fetch
  * result, a commit to read from the database, or omitted to read HEAD's.
- * Returns `null`
- * when snapshots are off. Never fetches, never throws.
+ * Returns `null` when snapshots are off. Never fetches, never throws.
  *
  * The export name and module path are probed by the Nx Cloud client bundle
  * to decide whether core handles snapshots; keep both stable.

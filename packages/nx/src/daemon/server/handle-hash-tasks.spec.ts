@@ -58,7 +58,16 @@ describe('handleHashTasks', () => {
       resolution: { digest: 'new' },
     }));
     await handleHashTasks({ ...base, ioSnapshots: { commit } });
-    expect(hashTasks.mock.lastCall[5]).not.toBe(first);
+    const replaced = hashTasks.mock.lastCall[5];
+    expect(replaced).not.toBe(first);
+    // A different commit is a different handle even when the digests match.
+    mockLoadIoSnapshots.mockImplementationOnce((db, c) => ({
+      commit: c,
+      resolution: { digest: 'new' },
+    }));
+    await handleHashTasks({ ...base, ioSnapshots: { commit: 'def' } });
+    expect(hashTasks.mock.lastCall[5]).toMatchObject({ commit: 'def' });
+    expect(hashTasks.mock.lastCall[5]).not.toBe(replaced);
   });
 
   it('passes nothing when an older client omits the field', async () => {
