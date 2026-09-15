@@ -877,17 +877,11 @@ impl HashPlanner {
         let disk_backed_inputs = if ignored_file_sets.is_empty() {
             vec![]
         } else {
-            if ignored_file_sets.iter().all(|f| f.starts_with('!')) {
-                anyhow::bail!(
-                    "The includeIgnored fileset \"{}\" applied to \"{project_name}\" is a negation with no positive includeIgnored fileset to filter. A negation only filters positive includeIgnored filesets in the same group: declare one for the same project, and note a fileset with `dependencies: true` is hashed on its own for each dependency, so a negation there has nothing to filter.",
-                    ignored_file_sets[0]
-                );
-            }
             let resolved: Vec<String> = ignored_file_sets
                 .iter()
                 .map(|f| resolve_files_glob(f, project_root, project_name))
                 .collect();
-            validate_files_globs(&resolved)?;
+            validate_files_globs(project_name, &resolved)?;
             vec![HashInstruction::ProjectFileSet(
                 project_name.to_string(),
                 resolved,

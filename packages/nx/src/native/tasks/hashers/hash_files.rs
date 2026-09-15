@@ -319,26 +319,36 @@ pub(crate) fn normalize_glob(glob: &str) -> String {
     out
 }
 
-/// Rejects globs that would read outside the workspace or exclude nothing.
+/// Rejects a glob that would read outside the workspace or exclude nothing.
 /// A glob with no leading directory (`**/*`, `*.gen`) is allowed: it walks
 /// from the workspace root, which is slow but not wrong.
-pub(crate) fn validate_files_globs(globs: &[String]) -> Result<()> {
-    for glob in globs {
-        if let Some(body) = glob.strip_prefix('!') {
-            let body = normalize_glob(body);
-            if body.is_empty() {
-                bail!("The includeIgnored fileset \"{glob}\" names nothing to exclude.");
-            }
-            for expanded in expand_literal_braces(&body) {
-                literal_prefix(&expanded)?;
-            }
-            continue;
+pub(crate) fn validate_files_glob(glob: &str) -> Result<()> {
+    if let Some(body) = glob.strip_prefix('!') {
+        let body = normalize_glob(body);
+        if body.is_empty() {
+            bail!("The includeIgnored fileset \"{glob}\" names nothing to exclude.");
         }
-        for expanded in expand_literal_braces(&normalize_glob(glob)) {
+        for expanded in expand_literal_braces(&body) {
             literal_prefix(&expanded)?;
         }
+        return Ok(());
+    }
+    for expanded in expand_literal_braces(&normalize_glob(glob)) {
+        literal_prefix(&expanded)?;
     }
     Ok(())
+}
+
+/// `validate_files_glob` for every entry of a project's group, plus the one
+/// rule that needs the whole group: it must not only exclude.
+pub(crate) fn validate_files_globs(project: &str, globs: &[String]) -> Result<()> {
+    if !globs.is_empty() && globs.iter().all(|glob| glob.starts_with('!')) {
+        bail!(
+            "The includeIgnored fileset \"{}\" applied to \"{project}\" is a negation with no positive includeIgnored fileset to filter. A negation only filters the positive includeIgnored filesets of the same project; a fileset with `dependencies: true` is hashed on its own for each dependency, so a negation there has nothing to filter.",
+            globs[0]
+        );
+    }
+    globs.iter().try_for_each(|glob| validate_files_glob(glob))
 }
 
 /// A `!` entry split at its literal prefix. The prefix is compared as text;
@@ -791,7 +801,7 @@ mod tests {
         temp.child("nx.json").write_str("{}").unwrap();
         temp.child("tsconfig.base.json").write_str("{}").unwrap();
         let group = globs(&["{nx,tsconfig.base,missing}.json"]);
-        validate_files_globs(&group).unwrap();
+        validate_files_globs("web", &group).unwrap();
         let expansion = expand_files(temp.path(), &group).unwrap();
         assert_eq!(expansion.files, vec!["nx.json", "tsconfig.base.json"]);
         assert_eq!(expansion.missing, vec!["missing.json"]);
@@ -1060,11 +1070,11 @@ mod tests {
         // A negation that normalizes to nothing would exclude everything.
         for bare in ["!", "!/", "!//"] {
             let group = globs(&["dist/**", bare]);
-            assert!(validate_files_globs(&group).is_err(), "{bare}");
+            assert!(validate_files_globs("web", &group).is_err(), "{bare}");
             assert!(expand_files(temp.path(), &group).is_err(), "{bare}");
         }
-        assert!(validate_files_globs(&globs(&["dist/**", "!../x"])).is_err());
-        assert!(validate_files_globs(&globs(&["dist/./gen/**"])).is_err());
+        assert!(validate_files_globs("web", &globs(&["dist/**", "!../x"])).is_err());
+        assert!(validate_files_globs("web", &globs(&["dist/./gen/**"])).is_err());
     }
 
     fn hash_group(temp: &TempDir, cache: &FileContentCache, list: &[&str]) -> String {
@@ -1209,15 +1219,30 @@ mod tests {
     }
 
     #[test]
+    fn rejects_a_group_of_only_negations() {
+        let err = validate_files_globs("web", &globs(&["!dist/**/*.map"])).unwrap_err();
+        assert!(
+            err.to_string()
+                .contains("no positive includeIgnored fileset"),
+            "{err}"
+        );
+        assert!(validate_files_globs("web", &globs(&["dist/**", "!dist/**/*.map"])).is_ok());
+    }
+
+    #[test]
     fn rejects_a_dot_slash_prefix() {
-        assert!(validate_files_globs(&globs(&["./dist/**"])).is_err());
+        assert!(validate_files_globs("web", &globs(&["./dist/**"])).is_err());
     }
 
     #[test]
     fn a_glob_with_no_leading_directory_walks_from_the_workspace_root() {
         let temp = workspace();
         temp.child("root.json").write_str("{}").unwrap();
-        validate_files_globs(&globs(&["**/*.js", "*.json", "dist/**/*.gen", "!**/*.map"])).unwrap();
+        validate_files_globs(
+            "web",
+            &globs(&["**/*.js", "*.json", "dist/**/*.gen", "!**/*.map"]),
+        )
+        .unwrap();
         // The hardcoded skips still apply below the root, so node_modules is out.
         assert_eq!(
             expand_files(temp.path(), &globs(&["**/*.js"]))
@@ -1243,7 +1268,7 @@ mod tests {
     #[test]
     fn rejects_paths_that_leave_the_workspace_before_touching_the_disk() {
         for glob in ["../secret", "dist/../../secret", "/etc/passwd", "../**"] {
-            let err = validate_files_globs(&globs(&[glob])).unwrap_err();
+            let err = validate_files_globs("web", &globs(&[glob])).unwrap_err();
             assert!(
                 err.to_string().contains("outside the workspace")
                     || err.to_string().contains("absolute path"),
@@ -1293,6 +1318,6 @@ mod tests {
             expand("libs/app/@gen/absent.json").missing,
             vec!["libs/app/@gen/absent.json"]
         );
-        assert!(validate_files_globs(&globs(&["@gen/**"])).is_ok());
+        assert!(validate_files_globs("web", &globs(&["@gen/**"])).is_ok());
     }
 }
