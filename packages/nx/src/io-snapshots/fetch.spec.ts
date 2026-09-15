@@ -77,6 +77,17 @@ describe('fetchIoSnapshotsForRun', () => {
     expect(cloud.verifyOrUpdateNxCloudClient).not.toHaveBeenCalled();
   });
 
+  it('treats MAX_AGE=0 as always ask, and an invalid MAX_AGE as the default', async () => {
+    native.readIoSnapshotResolution.mockReturnValue(cached(Date.now()));
+    cloud.readIoSnapshots.mockResolvedValue(null);
+    process.env.NX_IO_SNAPSHOTS_MAX_AGE = '0';
+    await fetchIoSnapshotsForRun(nxJson, {});
+    expect(cloud.readIoSnapshots).toHaveBeenCalledTimes(1);
+    process.env.NX_IO_SNAPSHOTS_MAX_AGE = 'soon';
+    await fetchIoSnapshotsForRun(nxJson, {});
+    expect(cloud.readIoSnapshots).toHaveBeenCalledTimes(1);
+  });
+
   it('asks the client with knownUpdatedAt and keeps the cache when unchanged', async () => {
     native.readIoSnapshotResolution.mockReturnValue(cached(0, 7));
     cloud.readIoSnapshots.mockResolvedValue(null);

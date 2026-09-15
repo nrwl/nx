@@ -24,20 +24,23 @@ interface HashTasksPayload {
 
 // An External cannot cross the socket, so the client sends the commit of the
 // set it resolved and the daemon reads that set from the database. Absent
-// (incl. older clients) ⇒ native hashing. One handle per commit while its
-// digest holds, so entries read for one request serve the next.
-const loadedByCommit = new Map<string, IoSnapshots>();
+// (incl. older clients) ⇒ native hashing. The latest handle is kept while its
+// commit and digest hold, so entries read for one request serve the next;
+// a new commit or a re-imported set replaces it, so nothing accumulates.
+let loaded: { commit: string; handle: IoSnapshots } | null = null;
 function loadedIoSnapshots(payload: HashTasksPayload) {
   const commit = payload.ioSnapshots?.commit;
   if (!commit) {
     return undefined;
   }
   const fresh = loadIoSnapshots(getDbConnection(), commit);
-  const known = loadedByCommit.get(commit);
-  if (known && known.resolution?.digest === fresh.resolution?.digest) {
-    return known;
+  if (
+    loaded?.commit === commit &&
+    loaded.handle.resolution?.digest === fresh.resolution?.digest
+  ) {
+    return loaded.handle;
   }
-  loadedByCommit.set(commit, fresh);
+  loaded = { commit, handle: fresh };
   return fresh;
 }
 

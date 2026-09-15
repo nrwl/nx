@@ -148,7 +148,7 @@ describe('buildIoSnapshotOverrides', () => {
     expect(result.resolution.digest).toMatch(/^[0-9a-f]{64}$/);
   });
 
-  it('flattens legacy bucketed entries and skips unknown projects', () => {
+  it('flattens legacy bucketed entries, and withholds one that names a project the graph no longer has', () => {
     writeBundle({
       'web:build': {
         commit: HEAD,
@@ -160,19 +160,40 @@ describe('buildIoSnapshotOverrides', () => {
         outputs: [],
       },
     });
-    const result = buildIoSnapshotOverrides(
+    // A renamed project would otherwise leave its reads out of the plan and
+    // replay a stale hit after an edit under the old root.
+    const withheld = buildIoSnapshotOverrides(
       projectGraph,
       graph('web:build'),
       {}
     );
-    expect(result.used).toEqual(['web:build']);
-    expect(result.diagnostics).toEqual([
+    expect(withheld.used).toEqual([]);
+    expect(withheld.diagnostics).toEqual([
       expect.objectContaining({
         reason: 'unknown-project',
         taskId: 'web:build',
         project: 'gone',
       }),
     ]);
+
+    writeBundle({
+      'web:build': {
+        commit: HEAD,
+        inputs: {
+          projects: { web: ['src/**/*.ts'] },
+          workspace: ['tsconfig.base.json'],
+          taskOutputs: {},
+        },
+        outputs: [],
+      },
+    });
+    const flattened = buildIoSnapshotOverrides(
+      projectGraph,
+      graph('web:build'),
+      {}
+    );
+    expect(flattened.used).toEqual(['web:build']);
+    expect(flattened.diagnostics).toEqual([]);
   });
 
   it('withholds disabled, custom-hasher, dangling, and root-anchored tasks', () => {

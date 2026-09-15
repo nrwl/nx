@@ -11,8 +11,8 @@ import {
 
 /**
  * `ioSnapshots` is this run's fetched bundle (see `fetchIoSnapshotsForRun`);
- * undefined hashes natively. The daemon receives only its directory and
- * loads the same bundle itself.
+ * undefined hashes natively. The daemon receives only its commit and reads
+ * the same set from the database itself.
  */
 export function createTaskHasher(
   projectGraph: ProjectGraph,
