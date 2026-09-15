@@ -1,16 +1,30 @@
 pub(crate) mod bundle;
+#[cfg(not(target_arch = "wasm32"))]
 pub(crate) mod store;
 
-use std::collections::{BTreeMap, HashMap};
+#[cfg(not(target_arch = "wasm32"))]
+use std::collections::BTreeMap;
+use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
+#[cfg(not(target_arch = "wasm32"))]
 use napi::bindgen_prelude::External;
 use serde::{Deserialize, Serialize};
+#[cfg(not(target_arch = "wasm32"))]
 use tracing::debug;
 
+#[cfg(not(target_arch = "wasm32"))]
 use crate::native::utils::time::current_timestamp_millis;
 
+#[cfg(not(target_arch = "wasm32"))]
 const DEFAULT_RETAIN: u32 = 5;
+
+/// The workspace database the entries live in. The wasm build has no
+/// database, so every set is `skipped` there.
+#[cfg(not(target_arch = "wasm32"))]
+type Db = store::Db;
+#[cfg(target_arch = "wasm32")]
+type Db = ();
 
 /// What was resolved for a commit; stored beside its entries.
 #[napi(object)]
@@ -56,7 +70,7 @@ pub struct IoSnapshots {
     reason: Option<String>,
     message: Option<String>,
     resolution: Option<IoSnapshotResolution>,
-    db: Option<store::Db>,
+    db: Option<Db>,
     entries: Mutex<HashMap<String, Option<Arc<bundle::TaskIoSnapshot>>>>,
 }
 
@@ -113,7 +127,13 @@ impl IoSnapshots {
             .filter(|id| !entries.contains_key(*id))
             .collect();
         if !missing.is_empty() {
+            #[cfg(not(target_arch = "wasm32"))]
             let read = store::read_entries(db, &resolution.requested_commit, &missing)?;
+            #[cfg(target_arch = "wasm32")]
+            let read: Vec<(String, bundle::TaskIoSnapshot)> = {
+                let _ = (db, resolution);
+                Vec::new()
+            };
             for id in &missing {
                 entries.insert((*id).to_string(), None);
             }
@@ -143,12 +163,13 @@ impl IoSnapshots {
         }
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     fn resolved(
         status: &str,
         reason: Option<String>,
         message: Option<String>,
         resolution: IoSnapshotResolution,
-        db: store::Db,
+        db: Db,
         entries: HashMap<String, Option<Arc<bundle::TaskIoSnapshot>>>,
     ) -> Self {
         Self {
@@ -172,6 +193,7 @@ pub fn skipped_io_snapshots(reason: String, message: String) -> IoSnapshots {
 /// The stored set for `commit`, without touching the network: `nx show`,
 /// `nx graph` and the daemon load the commit the run resolved. `reason` and
 /// `message` annotate a deliberate reuse, such as `stale-offline`.
+#[cfg(not(target_arch = "wasm32"))]
 #[napi]
 pub fn load_io_snapshots(
     #[napi(ts_arg_type = "ExternalObject<NxDbConnection>")] db: &External<store::Db>,
@@ -198,6 +220,7 @@ pub fn load_io_snapshots(
 
 /// The resolution stored for `commit`, without reading any entries: enough
 /// to decide whether to ask Nx Cloud at all and what `knownUpdatedAt` to send.
+#[cfg(not(target_arch = "wasm32"))]
 #[napi]
 pub fn read_io_snapshot_resolution(
     #[napi(ts_arg_type = "ExternalObject<NxDbConnection>")] db: &External<store::Db>,
@@ -209,6 +232,7 @@ pub fn read_io_snapshot_resolution(
 /// Stores the snapshot set the Nx Cloud client read for `requested_commit`
 /// and returns it as this run's set. Never fails the caller: a payload nx
 /// cannot read or a database it cannot write is reported as `skipped`.
+#[cfg(not(target_arch = "wasm32"))]
 #[napi]
 pub fn import_io_snapshots(
     #[napi(ts_arg_type = "ExternalObject<NxDbConnection>")] db: &External<store::Db>,
@@ -272,7 +296,7 @@ pub fn import_io_snapshots(
     IoSnapshots::resolved("fetched", None, None, resolution, Arc::clone(db), entries)
 }
 
-#[cfg(test)]
+#[cfg(all(test, not(target_arch = "wasm32")))]
 mod tests {
     use super::*;
     use crate::native::db::initialize::initialize_db;
