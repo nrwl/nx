@@ -1,5 +1,4 @@
-import { ChildProcess, spawn, SpawnOptions } from 'child_process';
-import { extname } from 'path';
+import { ChildProcess, spawn } from 'child_process';
 import * as pc from 'picocolors';
 import { logger } from '../../../utils/logger';
 import { output } from '../../../utils/output';
@@ -25,7 +24,12 @@ import {
   HandoffOutcome,
   InvocationContext,
 } from './types';
-import { caretEscape, neutralizePercent, quoteCmdArg } from './windows-cmd';
+import {
+  AdaptedSpawn,
+  adaptSpawnForWindowsShim,
+  WINDOWS_COMMAND_LINE_BUDGET,
+  WINDOWS_COMMAND_LINE_LIMIT,
+} from './windows-cmd';
 
 /**
  * Carries the underlying failure mode into the ambiguous-outcome prompt so the
@@ -153,15 +157,6 @@ export async function runAgentic(
   );
 }
 
-// "The maximum length of the string that you can use at the command prompt is
-// 8191 characters".
-// https://learn.microsoft.com/troubleshoot/windows-client/shell-experience/command-line-string-limitation
-const WINDOWS_COMMAND_LINE_LIMIT = 8191;
-// Deliberate headroom below the documented limit for argument growth.
-const WINDOWS_COMMAND_LINE_RESERVE = 1000;
-export const WINDOWS_COMMAND_LINE_BUDGET =
-  WINDOWS_COMMAND_LINE_LIMIT - WINDOWS_COMMAND_LINE_RESERVE;
-
 /**
  * Builds Windows shim arguments within budget, trying the shorter context
  * before aborting. Rejects overflow to avoid truncated instructions.
@@ -286,80 +281,6 @@ async function resolveFromHandoffOrPrompt(
     };
   }
   return promptAmbiguous(fullCause);
-}
-
-export interface AdaptedSpawn {
-  binary: string;
-  args: string[];
-  options: SpawnOptions;
-  /**
-   * Length of the command line Windows will receive. Set only on the `cmd.exe`
-   * wrapper path.
-   */
-  commandLineLength?: number;
-}
-
-/**
- * Node's `spawn` cannot directly execute `.cmd` / `.bat` shims on Windows;
- * `which` resolves to those when an agent was installed via npm. Wrap them in
- * a `cmd.exe /c` invocation with `windowsVerbatimArguments` so quoting follows
- * the cmd.exe convention rather than Node's default cooking.
- *
- * On non-Windows or for non-shim binaries this is a passthrough.
- */
-export function adaptSpawnForWindowsShim(
-  binary: string,
-  args: readonly string[],
-  options: SpawnOptions
-): AdaptedSpawn {
-  if (process.platform !== 'win32') {
-    return { binary, args: [...args], options };
-  }
-  const ext = extname(binary).toLowerCase();
-  if (ext !== '.cmd' && ext !== '.bat') {
-    return { binary, args: [...args], options };
-  }
-
-  assertNoLineBreaks(binary, args);
-  const cmdLine = [escapeCmdCommand(binary), ...args.map(escapeCmdArg)].join(
-    ' '
-  );
-  const comspec = process.env.comspec || 'cmd.exe';
-  // Both modes are set rather than inherited, since a machine-wide registry
-  // setting can flip either: `/e:on` for the `%cd:~,%` substring, `/v:off` so a
-  // `!` stays literal. The outer quotes stop `cmd.exe /c` stripping the inner
-  // ones around the binary path.
-  const cmdArgs = ['/e:on', '/v:off', '/d', '/s', '/c', `"${cmdLine}"`];
-  return {
-    binary: comspec,
-    args: cmdArgs,
-    options: { ...options, windowsVerbatimArguments: true },
-    // `windowsVerbatimArguments` makes the command line the argv joined by
-    // single spaces, so this is what CreateProcess and then cmd.exe see.
-    commandLineLength: [comspec, ...cmdArgs].join(' ').length,
-  };
-}
-
-/** Rejects line breaks in shim commands to avoid truncated instructions. */
-function assertNoLineBreaks(binary: string, args: readonly string[]): void {
-  const offending = [binary, ...args].find((value) => /[\r\n]/.test(value));
-  if (offending !== undefined) {
-    throw new Error(
-      `Cannot pass a multi-line argument to "${binary}" on Windows: cmd.exe truncates the command line at the line break. Offending argument: ${JSON.stringify(
-        offending.slice(0, 120)
-      )}`
-    );
-  }
-}
-
-function escapeCmdArg(arg: string): string {
-  return neutralizePercent(caretEscape(quoteCmdArg(arg)));
-}
-
-function escapeCmdCommand(arg: string): string {
-  // cmd.exe interprets the command portion through an extra parsing pass;
-  // apply the caret-escape twice so the .cmd shim sees the original.
-  return neutralizePercent(caretEscape(caretEscape(quoteCmdArg(arg))));
 }
 
 async function promptAmbiguous(cause: AmbiguousCause): Promise<HandoffOutcome> {

@@ -1,6 +1,6 @@
-import { ChildProcess, spawn, SpawnOptions } from 'child_process';
+import { ChildProcess, spawn } from 'child_process';
 import { existsSync, mkdirSync, rmSync } from 'fs';
-import { dirname, extname, join, relative, sep } from 'path';
+import { dirname, join, relative, sep } from 'path';
 import { logger } from '../../../../utils/logger';
 import { resetSgrAfterAgent } from '../../migrate-output';
 import {
@@ -21,7 +21,12 @@ import {
 import { handoffsDirState } from '../handoff';
 import { restoreTermiosAfterAgent } from '../terminal-repair';
 import { DetectedInstalledAgent } from '../types';
-import { caretEscape, neutralizePercent, quoteCmdArg } from '../windows-cmd';
+import {
+  AdaptedSpawn,
+  adaptSpawnForWindowsShim,
+  WINDOWS_COMMAND_LINE_BUDGET,
+  WINDOWS_COMMAND_LINE_LIMIT,
+} from '../windows-cmd';
 import { buildMasterInvocation } from './invocations';
 
 export interface SpawnMasterSessionInput {
@@ -114,7 +119,7 @@ export async function spawnMasterSession(
       delete env[name];
     }
     env[BROKER_ENV_VAR] = broker.nonce;
-    const adapted = adaptMasterSpawnForWindowsShim(agent.binary, spec.args, {
+    const adapted = adaptSpawnForWindowsShim(agent.binary, spec.args, {
       stdio: 'inherit',
       cwd: runRoot,
       env,
@@ -299,79 +304,8 @@ function waitForFile(
   });
 }
 
-// "The maximum length of the string that you can use at the command prompt is
-// 8191 characters".
-// https://learn.microsoft.com/troubleshoot/windows-client/shell-experience/command-line-string-limitation
-const WINDOWS_COMMAND_LINE_LIMIT = 8191;
-// Absorbs cmd.exe's own accounting of the string, which cannot be measured
-// from here.
-const WINDOWS_COMMAND_LINE_RESERVE = 1000;
-export const WINDOWS_COMMAND_LINE_BUDGET =
-  WINDOWS_COMMAND_LINE_LIMIT - WINDOWS_COMMAND_LINE_RESERVE;
-
-interface AdaptedMasterSpawn {
-  binary: string;
-  args: string[];
-  options: SpawnOptions;
-  /** Set only when the `cmd.exe` wrapper was applied. */
-  commandLineLength?: number;
-}
-
-/**
- * Node's `spawn` cannot execute the `.cmd` / `.bat` shims an npm install
- * leaves on Windows, so those run through `cmd.exe` with the arguments
- * escaped by hand for it. Elsewhere this is a passthrough.
- */
-export function adaptMasterSpawnForWindowsShim(
-  binary: string,
-  args: readonly string[],
-  options: SpawnOptions
-): AdaptedMasterSpawn {
-  if (process.platform !== 'win32') {
-    return { binary, args: [...args], options };
-  }
-  const ext = extname(binary).toLowerCase();
-  if (ext !== '.cmd' && ext !== '.bat') {
-    return { binary, args: [...args], options };
-  }
-
-  assertNoLineBreaks(binary, args);
-  const cmdLine = [escapeCmdCommand(binary), ...args.map(escapeCmdArg)].join(
-    ' '
-  );
-  const comspec = process.env.comspec || 'cmd.exe';
-  // Both expansion modes are set rather than inherited, because a registry
-  // setting can flip either one: `/e:on` keeps the command extensions the
-  // `%cd:~,%` substring needs, `/v:off` keeps a `!` from opening a `!VAR!`
-  // reference. The outer quotes keep cmd.exe /c from stripping the inner
-  // ones around the binary path.
-  const cmdArgs = ['/e:on', '/v:off', '/d', '/s', '/c', `"${cmdLine}"`];
-  return {
-    binary: comspec,
-    args: cmdArgs,
-    options: { ...options, windowsVerbatimArguments: true },
-    // With `windowsVerbatimArguments` the command line is the argv joined by
-    // single spaces, which is what CreateProcess and then cmd.exe see.
-    commandLineLength: [comspec, ...cmdArgs].join(' ').length,
-  };
-}
-
-// No escaping reproduces a line break on the other side, and cmd.exe truncates
-// the command line at it; refusing beats dispatching the agent on a truncated
-// prompt (CVE-2024-24576 came out of escaping instead).
-function assertNoLineBreaks(binary: string, args: readonly string[]): void {
-  const offending = [binary, ...args].find((value) => /[\r\n]/.test(value));
-  if (offending !== undefined) {
-    throw new Error(
-      `Cannot pass a multi-line argument to "${binary}" on Windows: cmd.exe truncates the command line at the line break. Offending argument: ${JSON.stringify(
-        offending.slice(0, 120)
-      )}`
-    );
-  }
-}
-
 function assertWithinWindowsCommandLineBudget(
-  adapted: AdaptedMasterSpawn,
+  adapted: AdaptedSpawn,
   agent: DetectedInstalledAgent,
   runId: string
 ): void {
@@ -385,13 +319,4 @@ function assertWithinWindowsCommandLineBudget(
     `Launching ${agent.displayName} needs a ${adapted.commandLineLength}-character command line. cmd.exe runs at most ${WINDOWS_COMMAND_LINE_LIMIT} characters, and nx stops at ${WINDOWS_COMMAND_LINE_BUDGET} to leave room for what it cannot measure from here. ` +
       `What varies is the cmd.exe path (${adapted.binary.length} characters), the agent path (${agent.binary.length} characters) and the run id (${runId.length} characters); shorten one of them.`
   );
-}
-
-function escapeCmdArg(arg: string): string {
-  return neutralizePercent(caretEscape(quoteCmdArg(arg)));
-}
-
-// cmd.exe parses the command portion twice, so it is caret-escaped twice.
-function escapeCmdCommand(arg: string): string {
-  return neutralizePercent(caretEscape(caretEscape(quoteCmdArg(arg))));
 }

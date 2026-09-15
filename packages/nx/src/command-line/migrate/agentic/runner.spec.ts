@@ -19,12 +19,9 @@ vi.mock('@clack/prompts', () => ({
 import { execSync, spawn } from 'child_process';
 import { autocomplete } from '@clack/prompts';
 import { output } from '../../../utils/output';
-import {
-  adaptSpawnForWindowsShim,
-  runAgentic,
-  WINDOWS_COMMAND_LINE_BUDGET,
-} from './runner';
+import { runAgentic } from './runner';
 import { AgentDefinition, DetectedInstalledAgent } from './types';
+import { WINDOWS_COMMAND_LINE_BUDGET } from './windows-cmd';
 
 const mockSpawn = spawn as unknown as Mock;
 const mockExecSync = execSync as unknown as Mock;
@@ -752,8 +749,8 @@ describe('runAgentic', () => {
         handoffsDir: workspace,
       });
 
-      // Adapter behavior is covered in detail by the adaptSpawnForWindowsShim
-      // suite below; here we only verify runAgentic actually routes through it.
+      // The adapter itself is covered in windows-cmd.spec.ts; here we only
+      // verify runAgentic actually routes through it.
       const [binary, args] = mockSpawn.mock.calls[0];
       expect(binary).toMatch(/cmd\.exe$/i);
       expect(args.slice(0, 5)).toEqual(['/e:on', '/v:off', '/d', '/s', '/c']);
@@ -858,151 +855,5 @@ describe('runAgentic', () => {
       expect(outcome).toEqual({ kind: 'success', summary: 'ok' });
       expect(mockSpawn.mock.calls[0][1][1]).toContain('x'.repeat(100));
     });
-  });
-});
-
-describe('adaptSpawnForWindowsShim', () => {
-  const originalPlatform = process.platform;
-  const originalComspec = process.env.comspec;
-
-  function setPlatform(value: NodeJS.Platform): void {
-    Object.defineProperty(process, 'platform', {
-      configurable: true,
-      writable: true,
-      value,
-    });
-  }
-
-  afterEach(() => {
-    Object.defineProperty(process, 'platform', {
-      configurable: true,
-      writable: true,
-      value: originalPlatform,
-    });
-    if (originalComspec === undefined) delete process.env.comspec;
-    else process.env.comspec = originalComspec;
-  });
-
-  it('returns inputs untouched for non-shim binaries on Windows', () => {
-    setPlatform('win32');
-    const out = adaptSpawnForWindowsShim('C:\\bin\\claude.exe', ['a'], {});
-    expect(out.binary).toBe('C:\\bin\\claude.exe');
-    expect(out.args).toEqual(['a']);
-    expect(out.options.windowsVerbatimArguments).toBeUndefined();
-  });
-
-  it.each([
-    ['lowercase .cmd', 'C:\\Program Files\\agent\\bin\\claude.cmd'],
-    ['.bat', 'C:\\tools\\agent.bat'],
-    ['uppercase .CMD', 'C:\\bin\\AGENT.CMD'],
-  ])(
-    'wraps %s in cmd.exe /e:on /v:off /d /s /c with windowsVerbatimArguments',
-    (_label, binary) => {
-      setPlatform('win32');
-      process.env.comspec = 'C:\\Windows\\System32\\cmd.exe';
-      const out = adaptSpawnForWindowsShim(binary, ['--flag', 'value'], {
-        stdio: 'inherit',
-        windowsHide: true,
-      });
-      expect(out.binary).toBe('C:\\Windows\\System32\\cmd.exe');
-      expect(out.args.slice(0, 5)).toEqual([
-        '/e:on',
-        '/v:off',
-        '/d',
-        '/s',
-        '/c',
-      ]);
-      expect(out.args[5]).toMatch(/^".*"$/);
-      expect(out.options.windowsVerbatimArguments).toBe(true);
-      // Pre-existing options are preserved.
-      expect(out.options.stdio).toBe('inherit');
-      expect(out.options.windowsHide).toBe(true);
-    }
-  );
-
-  it('quotes args and caret-escapes cmd metacharacters (cross-spawn style)', () => {
-    setPlatform('win32');
-    const out = adaptSpawnForWindowsShim(
-      'C:\\bin\\claude.cmd',
-      ['arg with spaces', 'arg&with&amp', 'plain'],
-      {}
-    );
-    // Each arg is double-quoted, then cmd.exe metacharacters (including the
-    // quotes and the embedded spaces) are caret-escaped — cmd strips the
-    // carets in its first parsing pass, leaving the original argument intact.
-    const cmdLine = out.args[5];
-    expect(cmdLine).toContain('^"arg^ with^ spaces^"');
-    expect(cmdLine).toContain('^"arg^&with^&amp^"');
-    expect(cmdLine).toContain('^"plain^"');
-  });
-
-  // A caret does not escape `%`; see `neutralizePercent`.
-  it('neutralizes % so cmd.exe cannot expand an environment variable', () => {
-    setPlatform('win32');
-    const out = adaptSpawnForWindowsShim(
-      'C:\\bin\\claude.cmd',
-      ['%PATH% is 100% set'],
-      {}
-    );
-    const cmdLine = out.args[5];
-    expect(cmdLine).toContain('^"%%cd:~,%PATH%%cd:~,%^ is^ 100%%cd:~,%^ set^"');
-    expect(cmdLine).not.toContain('^%');
-    // The substring syntax only parses uncareted.
-    expect(cmdLine).not.toContain('%cd:~^,%');
-  });
-
-  it('neutralizes % in the binary path too', () => {
-    setPlatform('win32');
-    const out = adaptSpawnForWindowsShim('C:\\100%\\claude.cmd', [], {});
-    expect(out.args[5]).toContain('100%%cd:~,%');
-  });
-
-  // No escaping reproduces a line break through a `.cmd` shim.
-  it.each([
-    ['a newline', 'line1\nline2'],
-    ['a carriage return', 'line1\rline2'],
-  ])('refuses an argument containing %s', (_label, arg) => {
-    setPlatform('win32');
-    expect(() =>
-      adaptSpawnForWindowsShim('C:\\bin\\claude.cmd', ['--flag', arg], {})
-    ).toThrow('Cannot pass a multi-line argument');
-  });
-
-  it('refuses a binary path containing a line break', () => {
-    setPlatform('win32');
-    expect(() =>
-      adaptSpawnForWindowsShim('C:\\bin\\cla\nude.cmd', [], {})
-    ).toThrow('Cannot pass a multi-line argument');
-  });
-
-  it('passes multi-line arguments through untouched off the shim path', () => {
-    setPlatform('win32');
-    const out = adaptSpawnForWindowsShim(
-      'C:\\bin\\claude.exe',
-      ['line1\nline2'],
-      {}
-    );
-    expect(out.args).toEqual(['line1\nline2']);
-    expect(out.commandLineLength).toBeUndefined();
-  });
-
-  it('reports the command line length cmd.exe will receive', () => {
-    setPlatform('win32');
-    process.env.comspec = 'C:\\Windows\\System32\\cmd.exe';
-    const out = adaptSpawnForWindowsShim('C:\\bin\\claude.cmd', ['a', 'b'], {});
-    // Spelled out rather than recomputed from `out`, which would pass for any
-    // formula the adapter used.
-    const expected =
-      'C:\\Windows\\System32\\cmd.exe /e:on /v:off /d /s /c ' +
-      '"^^^"C:\\bin\\claude.cmd^^^" ^"a^" ^"b^""';
-    expect(out.commandLineLength).toBe(expected.length);
-    expect([out.binary, ...out.args].join(' ')).toBe(expected);
-  });
-
-  it('falls back to "cmd.exe" when comspec is unset', () => {
-    setPlatform('win32');
-    delete process.env.comspec;
-    const out = adaptSpawnForWindowsShim('C:\\x.cmd', [], {});
-    expect(out.binary).toBe('cmd.exe');
   });
 });

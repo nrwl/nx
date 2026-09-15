@@ -39,12 +39,8 @@ vi.mock('../../run/broker', () => ({
 
 import { execSync, spawn } from 'child_process';
 import { DetectedInstalledAgent } from '../types';
-import {
-  adaptMasterSpawnForWindowsShim,
-  spawnMasterSession,
-  SpawnMasterSessionInput,
-  WINDOWS_COMMAND_LINE_BUDGET,
-} from './spawn-master';
+import { WINDOWS_COMMAND_LINE_BUDGET } from '../windows-cmd';
+import { spawnMasterSession, SpawnMasterSessionInput } from './spawn-master';
 
 const mockSpawn = spawn as unknown as Mock;
 const mockExecSync = execSync as unknown as Mock;
@@ -556,17 +552,6 @@ describe('spawnMasterSession', () => {
       expect([binary, ...args].join(' ').length).toBeLessThan(
         WINDOWS_COMMAND_LINE_BUDGET / 2
       );
-    });
-
-    it('neutralizes a literal % in the binary path after caret escaping', () => {
-      const adapted = adaptMasterSpawnForWindowsShim(
-        'C:\\Users\\100%dev\\claude.cmd',
-        ['--prompt', 'go'],
-        { stdio: 'inherit' }
-      );
-
-      expect(adapted.args[5]).toContain('100%%cd:~,%dev');
-      expect(adapted.args[5]).not.toContain('^%');
     });
 
     it.each<[string, Partial<SpawnMasterSessionInput>, () => void]>([
