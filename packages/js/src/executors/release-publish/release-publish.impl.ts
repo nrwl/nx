@@ -224,14 +224,10 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
         windowsHide: true,
       });
 
-      // `npm view`/`bun info` can exit 0 with empty stdout when the package
-      // exists in the registry but has no published versions or dist-tags yet
-      // (observed with GitHub Packages). Treat empty output the same as the
-      // package not existing yet and continue to the publish step, rather than
-      // letting `JSON.parse('')` throw "Unexpected end of JSON input" and get
-      // surfaced as an unexpected dist-tag failure. See nrwl/nx#36358.
-      const resultStr = result.toString().trim();
-      const resultJson = resultStr ? JSON.parse(resultStr) : {};
+      // `npm view`/`bun info` can exit 0 with empty stdout when the package exists in the registry but has
+      // no published versions or dist-tags yet (e.g. GitHub packages). Treat empty output the samme as
+      // package not existing yet and continue to the publish step.
+      const resultJson = JSON.parse(result.toString().trim() || '{}');
       const distTags = resultJson['dist-tags'] || {};
       if (distTags[tag] === currentVersion) {
         console.warn(
