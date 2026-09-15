@@ -5,6 +5,7 @@ import {
   readJson,
   reservePorts,
   runCLIAsync,
+  runCommandAsync,
   runCommandUntil,
   runE2ETests,
   uniq,
@@ -23,6 +24,14 @@ describe('React Module Federation - Webpack SSR', () => {
   });
 
   afterAll(() => cleanupCoreWebpackTest());
+
+  it('should expose the webpack SSR executor to native dynamic imports', async () => {
+    // Jest transforms imports, so use Node to exercise the published CJS barrel
+    // exactly as the React executor does at runtime.
+    await runCommandAsync(
+      `node --input-type=module -e "import { strict as assert } from 'node:assert'; const { ssrDevServerExecutor } = await import('@nx/webpack/internal'); assert.equal(typeof ssrDevServerExecutor, 'function');"`
+    );
+  });
 
   it('should generate host and remote apps with ssr', async () => {
     const shell = uniq('shell');
