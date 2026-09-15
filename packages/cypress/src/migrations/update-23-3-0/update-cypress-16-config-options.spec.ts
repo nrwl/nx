@@ -495,7 +495,145 @@ export default defineConfig(
     const result = await migration(tree);
 
     expect(result.nextSteps).toEqual([
-      'Review the Cypress config option change: apps/app/cypress.config.ts: the config object could not be resolved statically; it mentions `execTimeout`, `experimentalMemoryManagement`, migrate those by hand',
+      'Review the Cypress config option change: apps/app/cypress.config.ts: the config object could not be resolved statically; migrate `experimentalSourceRewriting`, `allowCypressEnv`, `execTimeout`, `experimentalMemoryManagement`, `experimentalFastVisibility` in its source by hand if it sets them',
+    ]);
+    expect(tree.read(configPath, 'utf-8')).toBe(config);
+  });
+
+  it('should migrate an object spread into the config from the same file', async () => {
+    const configPath = addCypressProject(
+      tree,
+      'app',
+      `import { defineConfig } from 'cypress';
+
+const legacy = { experimentalMemoryManagement: false };
+
+export default defineConfig({ ...legacy });
+`
+    );
+
+    const result = await migration(tree);
+
+    expect(result).toBeUndefined();
+    expect(tree.read(configPath, 'utf-8')).toMatchInlineSnapshot(`
+      "import { defineConfig } from 'cypress';
+
+      const legacy = { manageBrowserMemory: false };
+
+      export default defineConfig({ ...legacy });
+      "
+    `);
+  });
+
+  it('should follow spreads into e2e/component blocks and chained spreads once', async () => {
+    const configPath = addCypressProject(
+      tree,
+      'app',
+      `import { defineConfig } from 'cypress';
+
+const base = { experimentalFastVisibility: false };
+const shared = { ...base, execTimeout: 1000 };
+const topLevel = {
+  experimentalMemoryManagement: true,
+  e2e: { ...shared, baseUrl: 'http://localhost:4200' },
+};
+
+export default defineConfig({
+  ...topLevel,
+  component: { ...shared },
+});
+`
+    );
+
+    const result = await migration(tree);
+
+    expect(result.nextSteps).toEqual([
+      'Review the Cypress config option change: apps/app/cypress.config.ts: removed `execTimeout: 1000`; `cy.exec()` is gone, set `taskTimeout` if the replacement `cy.task()` needs more than the 60000ms default',
+    ]);
+    expect(tree.read(configPath, 'utf-8')).toMatchInlineSnapshot(`
+      "import { defineConfig } from 'cypress';
+
+      const base = { visibilityStrategy: 'legacy' };
+      const shared = { ...base };
+      const topLevel = {
+        manageBrowserMemory: true,
+        e2e: { ...shared, baseUrl: 'http://localhost:4200' },
+      };
+
+      export default defineConfig({
+        ...topLevel,
+        component: { ...shared },
+      });
+      "
+    `);
+  });
+
+  it('should report a spread it cannot resolve and leave the Nx preset spreads alone', async () => {
+    const configPath = addCypressProject(
+      tree,
+      'app',
+      `import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+import { defineConfig } from 'cypress';
+import { legacy } from './cypress.shared';
+
+export default defineConfig({
+  experimentalMemoryManagement: true,
+  e2e: {
+    ...nxE2EPreset(__filename, { cypressDir: 'src' }),
+    ...legacy,
+    ...buildOptions(),
+  },
+});
+`
+    );
+
+    const result = await migration(tree);
+
+    expect(result.nextSteps).toEqual([
+      'Review the Cypress config option change: apps/app/cypress.config.ts: the `...legacy` spread could not be resolved statically; migrate `experimentalSourceRewriting`, `allowCypressEnv`, `execTimeout`, `experimentalMemoryManagement`, `experimentalFastVisibility` in its source by hand if it sets them',
+      'Review the Cypress config option change: apps/app/cypress.config.ts: the `...buildOptions()` spread could not be resolved statically; migrate `experimentalSourceRewriting`, `allowCypressEnv`, `execTimeout`, `experimentalMemoryManagement`, `experimentalFastVisibility` in its source by hand if it sets them',
+    ]);
+    expect(result.agentContext).toEqual([
+      'apps/app/cypress.config.ts: the `...legacy` spread could not be resolved statically; migrate `experimentalSourceRewriting`, `allowCypressEnv`, `execTimeout`, `experimentalMemoryManagement`, `experimentalFastVisibility` in its source by hand if it sets them',
+      'apps/app/cypress.config.ts: the `...buildOptions()` spread could not be resolved statically; migrate `experimentalSourceRewriting`, `allowCypressEnv`, `execTimeout`, `experimentalMemoryManagement`, `experimentalFastVisibility` in its source by hand if it sets them',
+    ]);
+    expect(tree.read(configPath, 'utf-8')).toContain(
+      'manageBrowserMemory: true'
+    );
+  });
+
+  it('should follow e2e/component on an object both spread into the config and used as a block', async () => {
+    const configPath = addCypressProject(
+      tree,
+      'app',
+      `import { defineConfig } from 'cypress';
+
+const shared = { component: { experimentalMemoryManagement: false } };
+
+export default defineConfig({ e2e: shared, ...shared });
+`
+    );
+
+    const result = await migration(tree);
+
+    expect(result).toBeUndefined();
+    expect(tree.read(configPath, 'utf-8')).toContain(
+      'component: { manageBrowserMemory: false }'
+    );
+  });
+
+  it('should report an imported spread when the config mentions no option', async () => {
+    const config = `import { defineConfig } from 'cypress';
+import { legacy } from './cypress.shared';
+
+export default defineConfig({ ...legacy });
+`;
+    const configPath = addCypressProject(tree, 'app', config);
+
+    const result = await migration(tree);
+
+    expect(result.nextSteps).toEqual([
+      'Review the Cypress config option change: apps/app/cypress.config.ts: the `...legacy` spread could not be resolved statically; migrate `experimentalSourceRewriting`, `allowCypressEnv`, `execTimeout`, `experimentalMemoryManagement`, `experimentalFastVisibility` in its source by hand if it sets them',
     ]);
     expect(tree.read(configPath, 'utf-8')).toBe(config);
   });
