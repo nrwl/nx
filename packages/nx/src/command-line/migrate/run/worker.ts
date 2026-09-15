@@ -948,8 +948,8 @@ async function commitStepChanges(
   } catch (commitError) {
     // Nothing ran for a stale request, so there is no debt to record.
     if (commitError instanceof BrokerStaleRequestError) throw commitError;
-    // A post-migration install failure leaves the diff uncommitted; record the
-    // debt so only a landed entry can cover it.
+    // The install failed, or the session ended unanswered and the commit may
+    // or may not have landed; record the debt until a landed entry covers it.
     appendCommit(dir, { kind: 'failed', stepIds: [step.id] });
     throw commitError;
   }

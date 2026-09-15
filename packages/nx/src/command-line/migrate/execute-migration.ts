@@ -81,10 +81,9 @@ export function readPackageMigrationConfig(
 }
 
 /**
- * With a `sink`, the package manager runs detached from the terminal (stdin
- * closed, both streams collected) and every message goes to the sink; that is
- * for a caller sharing the terminal with another process. Without one, the
- * install owns the terminal as it always did.
+ * With a `sink`, stdin is ignored and stdout and stderr are collected for a
+ * caller sharing the terminal. On POSIX the child stays in nx's process
+ * group. Without a sink, the install owns the terminal.
  */
 export function runInstall(
   nxWorkspaceRoot?: string,

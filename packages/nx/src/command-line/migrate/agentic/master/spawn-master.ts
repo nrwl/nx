@@ -217,19 +217,25 @@ export async function spawnMasterSession(
     );
   } finally {
     sentinelWatch.abort();
-    // A step killed with the session still gets its commit landed; the lock
-    // is released only once nothing can be waiting on an answer.
+    // With the agent gone, the terminal is restored before the wait: an
+    // agent that left it raw would keep a Ctrl+C from reaching the install
+    // in flight as a signal.
+    const exited = child.exitCode !== null || child.signalCode !== null;
+    if (started && exited) restoreTerminal();
+    // The request in flight settles before the lock is released.
     await brokerDone;
     broker.close();
     process.removeListener('SIGINT', swallowSigint);
-    if (started) {
-      restoreTermiosAfterAgent();
-      resetSgrAfterAgent();
-    }
+    if (started && !exited) restoreTerminal();
   }
   return brokerFailure
     ? { kind: 'broker-failed', error: brokerFailure }
     : { kind: 'exited' };
+}
+
+function restoreTerminal(): void {
+  restoreTermiosAfterAgent();
+  resetSgrAfterAgent();
 }
 
 async function serviceBrokerUntilAborted(

@@ -248,7 +248,7 @@ export interface MigrateRunNoProgress {
 
 // Resolved for the invocation from its flags and the nx.json defaults, never
 // from run state. An agent's sandbox can write run state, so a master session
-// authorizes installs and commits from this.
+// decides installs and commits from this.
 export interface MigrateRunPolicy {
   createCommits: boolean;
   skipInstall: boolean;
