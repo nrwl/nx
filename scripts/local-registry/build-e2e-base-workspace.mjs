@@ -13,10 +13,8 @@
  * instead of running create-nx-workspace. A missing directory is not an error —
  * newProject falls back to its original lazy build.
  *
- * The whole package-manager × preset matrix is built in parallel so no call site
- * has to fall back. pnpm and yarn link node_modules into a store outside the
- * workspace; newProject already reinstalls after copying such a workspace to
- * relink it, so a copied tree only has to be good enough for that reinstall.
+ * The whole package-manager × preset matrix is built, one template at a time, so
+ * no call site has to fall back.
  */
 import { execSync } from 'node:child_process';
 import { cpSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
@@ -142,6 +140,14 @@ function registryEnv(cacheRoot) {
     pnpm_config_registry: registry,
     [`pnpm_config_//${listenAddress}:${port}/:_authToken`]: authToken,
     pnpm_config_minimum_release_age: '0',
+    // yarn and bun ignore the npm_config_ registry; mirrors global-setup.ts.
+    YARN_REGISTRY: registry,
+    YARN_NPM_REGISTRY_SERVER: registry,
+    YARN_UNSAFE_HTTP_WHITELIST: listenAddress,
+    YARN_CACHE_FOLDER: join(cacheRoot, 'yarn'),
+    YARN_ENABLE_GLOBAL_CACHE: 'false',
+    BUN_CONFIG_REGISTRY: registry,
+    BUN_CONFIG_TOKEN: authToken,
   };
 }
 
