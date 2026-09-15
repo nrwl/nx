@@ -6,7 +6,8 @@ vi.mock('../migrate-commits', () => ({
 const mockReadPackageJsonDeps = vi.fn();
 const mockRunInstall = vi.fn();
 const mockLogSkippedInstall = vi.fn();
-vi.mock('../execute-migration', () => ({
+vi.mock('../execute-migration', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../execute-migration')>()),
   readPackageJsonDeps: (...args: unknown[]) => mockReadPackageJsonDeps(...args),
   runInstall: (...args: unknown[]) => mockRunInstall(...args),
   logSkippedPostMigrationInstall: (...args: unknown[]) =>
@@ -48,6 +49,7 @@ import { FileLock } from '../../../native';
 import { logger } from '../../../utils/logger';
 import { output } from '../../../utils/output';
 import type { MigrateOutputSink } from '../deferred-output';
+import { NpmPeerDepsInstallError } from '../execute-migration';
 import {
   BrokerStaleRequestError,
   BrokerUnavailableError,
@@ -592,6 +594,31 @@ describe('migrate commit broker', () => {
       broker.close();
 
       expect(stdout).toBe('npm error E404\n');
+      expect(readRunState(dir).steps[0].installFailed).toBe(true);
+    });
+
+    it('fails the step with the typed peer-conflict error the session reported', async () => {
+      mockRunInstall.mockImplementation(
+        async (_root, _phase, _rerun, sink: MigrateOutputSink) => {
+          sink.raw('npm error code ERESOLVE\n');
+          throw new NpmPeerDepsInstallError();
+        }
+      );
+      const broker = new MigrateCommitBroker(
+        root,
+        dir,
+        'npx nx migrate',
+        POLICY
+      );
+      process.env.NX_MIGRATE_BROKER = broker.nonce;
+
+      const pending = installStepTree(dir, step(), 'install', vi.fn());
+      await sleep(20);
+      await broker.service();
+      await expect(pending).rejects.toBeInstanceOf(NpmPeerDepsInstallError);
+      broker.close();
+
+      expect(stdout).toBe('npm error code ERESOLVE\n');
       expect(readRunState(dir).steps[0].installFailed).toBe(true);
     });
 
