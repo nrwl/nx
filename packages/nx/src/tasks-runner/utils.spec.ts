@@ -1,10 +1,12 @@
 import {
+  createTaskInvocationKey,
   expandDependencyConfigSyntaxSugar,
   expandInitiatingTasksThroughNoop,
   expandWildcardTargetConfiguration,
   getDependencyConfigs,
   getOutputsForTargetAndConfiguration,
   interpolate,
+  taskIdFromInvocationKey,
   transformLegacyOutputs,
   validateOutputs,
 } from './utils';
@@ -1077,3 +1079,51 @@ class GraphBuilder {
     };
   }
 }
+
+describe('task invocation keys', () => {
+  function task(id: string, overrides: Record<string, unknown>): Task {
+    const [project, target, configuration] = id.split(':');
+    return {
+      id,
+      target: { project, target, configuration },
+      overrides,
+      outputs: [],
+      projectRoot: `libs/${project}`,
+    } as any as Task;
+  }
+
+  it('should separate the same task run with different overrides', () => {
+    expect(
+      createTaskInvocationKey(task('app:build', { watch: true }))
+    ).not.toBe(createTaskInvocationKey(task('app:build', { watch: false })));
+  });
+
+  it('should not depend on the order the overrides were written in', () => {
+    expect(createTaskInvocationKey(task('app:build', { a: 1, b: 2 }))).toBe(
+      createTaskInvocationKey(task('app:build', { b: 2, a: 1 }))
+    );
+  });
+
+  it('should ignore the raw argv restatement of the overrides', () => {
+    expect(
+      createTaskInvocationKey(
+        task('app:build', { watch: true, __overrides_unparsed__: ['--watch'] })
+      )
+    ).toBe(
+      createTaskInvocationKey(
+        task('app:build', {
+          watch: true,
+          __overrides_unparsed__: ['--watch=true'],
+        })
+      )
+    );
+  });
+
+  it('should recover the task id for display, including ids containing the separator', () => {
+    for (const id of ['app:build', 'app:build:production', 'a|b:build']) {
+      expect(
+        taskIdFromInvocationKey(createTaskInvocationKey(task(id, {})))
+      ).toBe(id);
+    }
+  });
+});
