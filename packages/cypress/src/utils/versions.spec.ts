@@ -145,13 +145,16 @@ describe('versions', () => {
   });
 
   describe('componentTestingVersions', () => {
-    it('should return the cypress 15 versions for the vite bundler when cypress is not declared and vite is below 8', () => {
-      declareVite(tree, '^7.0.0');
+    it.each(['^7.0.0', '8.0.0-beta.1'])(
+      'should return the cypress 15 versions for the vite bundler when cypress is not declared and vite is %s',
+      (vite) => {
+        declareVite(tree, vite);
 
-      expect(componentTestingVersions(tree, 'vite')).toMatchObject(
-        compatibleVersions[15]
-      );
-    });
+        expect(componentTestingVersions(tree, 'vite')).toMatchObject(
+          compatibleVersions[15]
+        );
+      }
+    );
 
     it.each([
       ['the webpack bundler with vite 7', 'webpack', '^7.0.0'],
@@ -183,13 +186,16 @@ describe('versions', () => {
   });
 
   describe('assertViteSupportsInstalledCypress', () => {
-    it('should reject cypress 16 with a vite below 8', () => {
+    it.each([
+      ['^7.0.0', '7.0.0'],
+      ['8.0.0-beta.1', '8.0.0-beta.1'],
+    ])('should reject cypress 16 with vite %s', (vite, found) => {
       declareCypress(tree, '^16.0.0');
       installCypress(tree, '16.0.0');
-      declareVite(tree, '^7.0.0');
+      declareVite(tree, vite);
 
       expect(() => assertViteSupportsInstalledCypress(tree)).toThrow(
-        'Cypress 16 component testing requires Vite 8. Found Vite 7.0.0. Update Vite to 8 or use Cypress 15.'
+        `Cypress 16 component testing requires Vite 8. Found Vite ${found}. Update Vite to 8 or use Cypress 15.`
       );
     });
 

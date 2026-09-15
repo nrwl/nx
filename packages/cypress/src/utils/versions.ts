@@ -5,7 +5,7 @@ import {
   getSatisfyingInstalledPackageVersion,
 } from '@nx/devkit/internal';
 import { join } from 'path';
-import { coerce, intersects, major, validRange } from 'semver';
+import { coerce, intersects, lt, major, validRange } from 'semver';
 
 export const nxVersion = require(join('@nx/cypress', 'package.json')).version;
 export const minSupportedCypressVersion = '13.0.0';
@@ -146,10 +146,11 @@ export function assertViteSupportsInstalledCypress(tree: Tree): void {
   }
 }
 
-// Cypress 16 component testing rejects an older Vite at runtime.
+// Cypress 16 component testing rejects a Vite below 8. Its dev server
+// package peers `vite ^8.0.0`, which also excludes 8 prereleases.
 function getViteVersionBelowCypress16Floor(tree: Tree): string | null {
   const viteVersion = getResolvedPackageVersion(tree, 'vite');
-  return viteVersion && major(viteVersion) < 8 ? viteVersion : null;
+  return viteVersion && lt(viteVersion, '8.0.0') ? viteVersion : null;
 }
 
 export function assertMinimumCypressVersion(
