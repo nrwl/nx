@@ -9,7 +9,6 @@ import {
   nxVersion,
   typescriptVersion,
 } from '../../utils/versions';
-import { getNpmPackageVersion } from '../utils/get-npm-package-version';
 import { NormalizedSchema } from './new';
 import { join } from 'path';
 import yargsParser from 'yargs-parser';
@@ -251,11 +250,7 @@ function getPresetDependencies({
     default: {
       return {
         dev: {},
-        dependencies: {
-          [preset]:
-            process.env['NX_E2E_PRESET_VERSION'] ??
-            getNpmPackageVersion(preset, presetVersion),
-        },
+        dependencies: { [preset]: presetVersion },
       };
     }
   }

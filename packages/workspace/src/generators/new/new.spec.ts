@@ -10,6 +10,12 @@ import { Preset } from '../utils/presets';
 import { newGenerator, NormalizedSchema } from './new';
 import * as getNpmPackageVersion from './../utils/get-npm-package-version';
 import * as generatePreset from './generate-preset';
+import { packageRegistryView } from 'nx/src/utils/package-manager';
+
+jest.mock('nx/src/utils/package-manager', () => ({
+  ...jest.requireActual('nx/src/utils/package-manager'),
+  packageRegistryView: jest.fn(),
+}));
 
 const DEFAULT_PACKAGE_VERSION = '1.0.0';
 
@@ -282,6 +288,49 @@ describe('new', () => {
           });
         }
       );
+
+      it('should record the build-script decisions a preset declares before the first pnpm install', async () => {
+        jest
+          .mocked(packageRegistryView)
+          .mockResolvedValue(JSON.stringify({ esbuild: false, workerd: true }));
+
+        await newGenerator(tree, {
+          ...defaultOptions,
+          name: 'my-workspace',
+          directory: 'my-workspace',
+          appName: 'app',
+          preset: '3rd-party-package@1.1.2',
+          packageManager: 'pnpm',
+        });
+
+        expect(packageRegistryView).toHaveBeenCalledWith(
+          '3rd-party-package',
+          '1.1.2',
+          ['pnpm.allowBuilds', '--json']
+        );
+        expect(tree.read('my-workspace/pnpm-workspace.yaml', 'utf-8'))
+          .toMatchInlineSnapshot(`
+          "autoInstallPeers: true
+          allowBuilds:
+            nx: true
+            esbuild: false
+            workerd: true
+          "
+        `);
+      });
+
+      it('should not query the registry for a preset when not using pnpm', async () => {
+        await newGenerator(tree, {
+          ...defaultOptions,
+          name: 'my-workspace',
+          directory: 'my-workspace',
+          appName: 'app',
+          preset: '3rd-party-package',
+          packageManager: 'npm',
+        });
+
+        expect(packageRegistryView).not.toHaveBeenCalled();
+      });
     });
   });
 

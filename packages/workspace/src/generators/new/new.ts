@@ -13,7 +13,8 @@ import { Linter, LinterType } from '../../utils/lint';
 import { generateWorkspaceFiles } from './generate-workspace-files';
 import { addPresetDependencies, generatePreset } from './generate-preset';
 import { execSync } from 'child_process';
-import { Agent } from '@nx/devkit/internal';
+import { acknowledgeDeclaredBuildScripts, Agent } from '@nx/devkit/internal';
+import { getNpmPackageVersion } from '../utils/get-npm-package-version';
 
 interface Schema {
   directory: string;
@@ -74,6 +75,17 @@ export async function newGenerator(tree: Tree, opts: Schema) {
   options.nxCloudToken = token;
 
   addPresetDependencies(tree, options);
+  if (options.isCustomPreset && options.presetVersion) {
+    // The preset generator only runs after the install below, so the
+    // decisions it declares for its dependency tree are recorded here.
+    await acknowledgeDeclaredBuildScripts(
+      tree,
+      options.packageManager as PackageManager,
+      options.preset,
+      options.presetVersion,
+      options.directory
+    );
+  }
 
   await formatFiles(tree);
 
@@ -201,6 +213,11 @@ function normalizeOptions(options: Schema): NormalizedSchema {
   normalized.isCustomPreset = !Object.values(Preset).includes(
     options.preset as any
   );
+  if (normalized.isCustomPreset) {
+    normalized.presetVersion =
+      process.env['NX_E2E_PRESET_VERSION'] ??
+      getNpmPackageVersion(normalized.preset, normalized.presetVersion);
+  }
 
   return normalized as NormalizedSchema;
 }

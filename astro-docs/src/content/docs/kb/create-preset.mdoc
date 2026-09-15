@@ -109,3 +109,32 @@ After you have published your plugin to a registry you can now use your preset w
 ```shell
 npx create-nx-workspace my-workspace --preset=my-plugin-name
 ```
+
+## Approve build scripts for pnpm
+
+pnpm 11 and later refuses to install a dependency whose build scripts are neither allowed nor denied. `create-nx-workspace` installs your preset package before your preset generator runs, so the generator can't approve the build scripts of the packages your preset depends on. Declare those decisions in the `pnpm.allowBuilds` field of your plugin's `package.json` instead:
+
+```json {% fileName="package.json" %}
+{
+  "name": "my-plugin-name",
+  "pnpm": {
+    "allowBuilds": {
+      "esbuild": false,
+      "@parcel/watcher": false,
+      "cypress": true
+    }
+  }
+}
+```
+
+Use the same shape pnpm reads from `pnpm-workspace.yaml`: `true` runs a package's build scripts, `false` skips them. When the workspace uses pnpm 11 or later, `create-nx-workspace` reads this field from the registry and records the entries in the new workspace's `pnpm-workspace.yaml` before the first install. `nx add my-plugin-name` reads the same field before installing your plugin into an existing workspace. Decisions the user already recorded are never overwritten.
+
+For packages your generators add later, call `acknowledgeBuildScripts` from `@nx/devkit` before the install task runs:
+
+```typescript
+import { acknowledgeBuildScripts, detectPackageManager } from '@nx/devkit';
+
+acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+  esbuild: false,
+});
+```
