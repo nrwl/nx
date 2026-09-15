@@ -9,8 +9,7 @@ use anyhow::Result;
 use rayon::prelude::*;
 use xxhash_rust::xxh3;
 
-use super::disk_expansion::{FilesExpansion, expand_files};
-use super::file_content_cache::MISSING_FILE_HASH;
+use super::disk_expansion::{FilesExpansion, MISSING_FILE_HASH, expand_files};
 use crate::native::workspace::ignored_index::IgnoredIndex;
 
 /// Folds `(path, content hash)` pairs in path order, like a fileset. `known`

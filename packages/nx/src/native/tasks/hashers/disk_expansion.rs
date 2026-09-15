@@ -1,6 +1,6 @@
 //! Expands an `includeIgnored` fileset group, or a dependency's declared
 //! outputs, into the files on disk: the glob text rules, the walk from each
-//! glob's literal prefix, and the stamps the content cache validates by.
+//! glob's literal prefix, and the stamps the content memo validates by.
 
 use std::path::Path;
 use std::sync::Arc;
@@ -10,12 +10,28 @@ use dashmap::DashMap;
 use rayon::prelude::*;
 use walkdir::WalkDir;
 
-use super::file_content_cache::{FileStamp, WalkRecord, WalkView, path_key, stamp_of};
 use crate::native::glob::{NxGlobSet, build_glob_set};
 use crate::native::walker::HARDCODED_IGNORE_PATTERNS;
 
-/// Expansion per `files:{project}:[...]` instruction, scoped to one `hash_plans` call:
-/// nothing watches gitignored directories, so a longer-lived memo goes stale.
+/// Hashed in place of the content of a declared exact path that does not
+/// exist: absence is an observation, so the key flips when the file appears.
+pub(crate) const MISSING_FILE_HASH: &str = "missing";
+
+/// The `(mtime, size)` a file showed when expansion looked at it.
+pub type FileStamp = (u128, u64);
+
+pub(crate) fn stamp_of(metadata: &std::fs::Metadata) -> FileStamp {
+    let mtime = metadata
+        .modified()
+        .ok()
+        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+        .map(|d| d.as_nanos())
+        .unwrap_or(0);
+    (mtime, metadata.len())
+}
+
+/// Expansion per `files:{project}:[...]` instruction, scoped to one `hash_plans`
+/// call: a group is listed or walked afresh for the next one.
 pub(crate) type FilesExpansionCache = DashMap<String, Arc<FilesExpansion>>;
 
 /// Where the files under a directory come from when not from a walk. Asked
@@ -32,13 +48,10 @@ pub struct FilesExpansion {
     pub files: Vec<String>,
     /// Aligned with `files`: the stamp read while expanding, so hashing does
     /// not stat again, or `None` when the workspace context vouched for the
-    /// file and the disk was never consulted.
+    /// file, or an index listed it, and the disk was never consulted.
     pub stamps: Vec<Option<FileStamp>>,
     /// Declared exact paths that do not exist on disk.
     pub missing: Vec<String>,
-    /// What each walk covered and saw, so the content cache can drop entries
-    /// for files that are gone.
-    pub(crate) walks: Vec<WalkRecord>,
 }
 
 /// Expands brace groups whose alternatives are all literal names into the
@@ -250,27 +263,12 @@ impl Negation {
     }
 }
 
-/// What a walk found, and what it saw or passed over on the way.
-struct Walked {
-    found: Vec<(String, Option<FileStamp>)>,
-    view: WalkView,
-}
-
-enum Visit {
-    /// A file the walk saw; `hit` is set when the pattern accepted it.
-    File {
-        key: u64,
-        hit: Option<(String, Option<FileStamp>)>,
-    },
-    /// A directory the walk did not enter.
-    SkippedDir(String),
-}
-
 /// Files under `start`, workspace-relative, with the stamp read on the way
 /// for anything the context does not vouch for. Top-level subdirectories walk
 /// in parallel. `start` itself is never skipped; its descendants are subject
-/// to the hardcoded ignores, so `node_modules/foo/**` works. With
-/// `canonical_root`, a linked file counts only when its target is inside it.
+/// to the hardcoded ignores, so `node_modules/foo/**` works. Linked
+/// directories are not entered; with `canonical_root`, a linked file counts
+/// only when its target is inside it.
 fn walk_files(
     start: &Path,
     workspace_root: &Path,
@@ -278,7 +276,7 @@ fn walk_files(
     skip: &NxGlobSet,
     accept: &(dyn Fn(&str) -> bool + Sync),
     known: &(dyn Fn(&str) -> bool + Sync),
-) -> Walked {
+) -> Vec<(String, Option<FileStamp>)> {
     let relative_of = |path: &Path| -> Option<String> {
         Some(
             path.strip_prefix(workspace_root)
@@ -288,10 +286,7 @@ fn walk_files(
         )
     };
     let Ok(entries) = std::fs::read_dir(start) else {
-        return Walked {
-            found: Vec::new(),
-            view: WalkView::default(),
-        };
+        return Vec::new();
     };
     let mut leaves = Vec::new();
     let mut dirs = Vec::new();
@@ -302,106 +297,57 @@ fn walk_files(
             Err(_) => {}
         }
     }
-    let visit = |path: &Path, file_type: std::fs::FileType| -> Option<Visit> {
-        let relative = relative_of(path)?;
-        if file_type.is_symlink() {
-            // Links are not followed: a linked directory is another walk's to
-            // read.
-            let target = std::fs::metadata(path).ok()?;
-            if target.is_dir() {
-                return Some(Visit::SkippedDir(relative));
+    let visit =
+        |path: &Path, file_type: std::fs::FileType| -> Option<(String, Option<FileStamp>)> {
+            let relative = relative_of(path)?;
+            if file_type.is_symlink() {
+                let target = std::fs::metadata(path).ok()?;
+                if target.is_dir() || !accept(&relative) {
+                    return None;
+                }
+                if let Some(root) = canonical_root
+                    && !dunce::canonicalize(path).is_ok_and(|t| t.starts_with(root))
+                {
+                    return None;
+                }
+                return Some(if known(&relative) {
+                    (relative, None)
+                } else {
+                    (relative, Some(stamp_of(&target)))
+                });
             }
-            let key = path_key(&relative);
-            if !accept(&relative) {
-                return Some(Visit::File { key, hit: None });
-            }
-            if let Some(root) = canonical_root
-                && !dunce::canonicalize(path).is_ok_and(|t| t.starts_with(root))
-            {
+            if !file_type.is_file() || !accept(&relative) {
                 return None;
             }
-            let hit = if known(&relative) {
-                (relative, None)
-            } else {
-                (relative, Some(stamp_of(&target)))
-            };
-            return Some(Visit::File {
-                key,
-                hit: Some(hit),
-            });
-        }
-        if !file_type.is_file() {
-            return None;
-        }
-        let key = path_key(&relative);
-        if !accept(&relative) {
-            return Some(Visit::File { key, hit: None });
-        }
-        if known(&relative) {
-            return Some(Visit::File {
-                key,
-                hit: Some((relative, None)),
-            });
-        }
-        let metadata = std::fs::metadata(path).ok()?;
-        Some(Visit::File {
-            key,
-            hit: Some((relative, Some(stamp_of(&metadata)))),
-        })
-    };
-    let mut visited: Vec<Visit> = leaves
+            if known(&relative) {
+                return Some((relative, None));
+            }
+            let metadata = std::fs::metadata(path).ok()?;
+            Some((relative, Some(stamp_of(&metadata))))
+        };
+    let mut found: Vec<(String, Option<FileStamp>)> = leaves
         .iter()
         .filter_map(|(path, file_type)| visit(path, *file_type))
         .collect();
-    let nested: Vec<Vec<Visit>> = dirs
+    let nested: Vec<Vec<(String, Option<FileStamp>)>> = dirs
         .par_iter()
         .map(|dir| {
             if skip.is_match(dir) {
-                return relative_of(dir)
-                    .map(Visit::SkippedDir)
-                    .into_iter()
-                    .collect();
+                return Vec::new();
             }
-            let skipped_here = std::cell::RefCell::new(Vec::new());
-            let mut visits: Vec<Visit> = WalkDir::new(dir)
+            WalkDir::new(dir)
                 .follow_links(false)
                 .into_iter()
-                .filter_entry(|entry| {
-                    if skip.is_match(entry.path()) {
-                        skipped_here.borrow_mut().extend(relative_of(entry.path()));
-                        false
-                    } else {
-                        true
-                    }
-                })
+                .filter_entry(|entry| !skip.is_match(entry.path()))
                 .flatten()
                 .filter_map(|entry| visit(entry.path(), entry.file_type()))
-                .collect();
-            visits.extend(skipped_here.into_inner().into_iter().map(Visit::SkippedDir));
-            visits
+                .collect()
         })
         .collect();
     for group in nested {
-        visited.extend(group);
+        found.extend(group);
     }
-    let mut walked = Walked {
-        found: Vec::new(),
-        view: WalkView::default(),
-    };
-    for visit in visited {
-        match visit {
-            Visit::File { key, hit } => {
-                walked.view.seen.insert(key);
-                if let Some(hit) = hit {
-                    walked.found.push(hit);
-                }
-            }
-            Visit::SkippedDir(dir) => {
-                walked.view.skipped.insert(dir);
-            }
-        }
-    }
-    walked
+    found
 }
 
 /// Expands an `includeIgnored` fileset group. `known` says whether the
@@ -462,12 +408,6 @@ pub(crate) fn expand_entries(
 
     let mut found: Vec<(String, Option<FileStamp>)> = Vec::new();
     let mut missing: Vec<String> = Vec::new();
-    let mut walks: Vec<WalkRecord> = Vec::new();
-    let record = |prefix: &str, view: WalkView| WalkRecord {
-        workspace_root: workspace_root.to_path_buf(),
-        prefix: prefix.to_string(),
-        view: Arc::new(view),
-    };
     for entry in positives {
         let root = &entry.root;
         let remainder = entry.remainder.as_deref();
@@ -478,8 +418,6 @@ pub(crate) fn expand_entries(
         }
         let start = workspace_root.join(root);
         let Ok(metadata) = std::fs::metadata(&start) else {
-            // Nothing exists under it any more, so nothing was seen.
-            walks.push(record(root, WalkView::default()));
             if !has_pattern {
                 missing.push(root.clone());
             }
@@ -531,16 +469,14 @@ pub(crate) fn expand_entries(
             );
             continue;
         }
-        let walked = walk_files(
+        found.extend(walk_files(
             &start,
             workspace_root,
             canonical_root.as_deref(),
             &skip,
             &*accept,
             known,
-        );
-        found.extend(walked.found);
-        walks.push(record(root, walked.view));
+        ));
     }
 
     found.retain(|(path, _)| !negations.iter().any(|n| n.excludes(path)));
@@ -554,7 +490,6 @@ pub(crate) fn expand_entries(
         files,
         stamps,
         missing,
-        walks,
     })
 }
 
@@ -585,7 +520,6 @@ pub(crate) fn seed_walk(workspace_root: &Path, dir: &str) -> Option<Vec<(String,
     );
     Some(
         walked
-            .found
             .into_iter()
             .map(|(path, stamp)| (path, stamp.unwrap_or_default()))
             .collect(),
@@ -695,7 +629,6 @@ pub(crate) mod tests {
             vec!["dist/gen/a.js", "dist/gen/phantom.js"]
         );
         assert!(expansion.stamps.iter().all(Option::is_none));
-        assert!(expansion.walks.is_empty());
         // A directory the list does not hold is walked as before.
         let expansion = expand_entries(
             temp.path(),
@@ -707,7 +640,6 @@ pub(crate) mod tests {
         )
         .unwrap();
         assert_eq!(expansion.files, vec!["dist/other/c.js"]);
-        assert_eq!(expansion.walks.len(), 1);
     }
 
     #[test]

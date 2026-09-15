@@ -2,11 +2,11 @@ use std::path::Path;
 
 use anyhow::Result;
 
+use super::disk_expansion::FileStamp;
 use super::disk_expansion::{
     FilesExpansion, FilesExpansionCache, Negation, Positive, WALK, expand_cached, expand_entries,
     literal_prefix,
 };
-use super::file_content_cache::FileStamp;
 use super::hash_ignored_files::hash_files;
 use crate::native::glob::build_glob_set;
 use crate::native::workspace::ignored_index::IgnoredIndex;
@@ -55,7 +55,6 @@ pub fn expand_task_outputs(
         files,
         stamps,
         missing: Vec::new(),
-        walks: expansion.walks.clone(),
     })
 }
 
