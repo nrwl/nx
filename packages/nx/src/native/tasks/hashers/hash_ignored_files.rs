@@ -161,6 +161,7 @@ impl WalkView {
 /// What one walk covered: the prefix (workspace-relative, empty for the
 /// root) and the view that decides which entries under it still stand for a
 /// file.
+#[derive(Clone)]
 pub(crate) struct WalkRecord {
     workspace_root: PathBuf,
     prefix: String,

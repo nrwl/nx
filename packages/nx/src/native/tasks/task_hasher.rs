@@ -16,12 +16,11 @@ use crate::native::{
 };
 use crate::native::{
     tasks::hashers::{
-        CachedTaskOutput, FilesExpansionCache, JsonHashResult, ProjectFileIndicesCache,
-        ProjectFileSetCache, WorkspaceFileIndicesCache, WorkspaceFileSetCache,
-        collect_project_file_paths_cached, collect_workspace_file_paths_cached,
-        expand_files_cached, hash_all_externals, hash_external, hash_files, hash_json_files,
-        hash_project_config, hash_project_files_cached, hash_task_output,
-        hash_tsconfig_selectively, hash_workspace_files_cached, index_file_map,
+        FilesExpansionCache, JsonHashResult, ProjectFileIndicesCache, ProjectFileSetCache,
+        WorkspaceFileIndicesCache, WorkspaceFileSetCache, collect_project_file_paths_cached,
+        collect_workspace_file_paths_cached, expand_files_cached, hash_all_externals,
+        hash_external, hash_files, hash_json_files, hash_project_config, hash_project_files_cached,
+        hash_task_output, hash_tsconfig_selectively, hash_workspace_files_cached, index_file_map,
         shared_file_content_cache,
     },
     types::FileData,
@@ -477,7 +476,6 @@ impl TaskHasher {
     {
         // Per-invocation: these read live disk/exec state (task outputs, shell commands,
         // json file contents) that can change mid-run, so they must not persist.
-        let task_output_cache = DashMap::new();
         let runtime_cache: DashMap<String, String> = DashMap::new();
         let json_file_set_cache: DashMap<String, JsonHashResult> = DashMap::new();
         let files_expansion_cache = FilesExpansionCache::new();
@@ -599,7 +597,6 @@ impl TaskHasher {
                                         project_root_mappings: &project_root_mappings,
                                         sorted_externals: &sorted_externals,
                                         selectively_hash_tsconfig,
-                                        task_output_cache: &task_output_cache,
                                         runtime_cache: &runtime_cache,
                                         project_file_set_cache: &self.project_file_set_cache,
                                         workspace_file_set_cache: &self.workspace_file_set_cache,
@@ -669,7 +666,6 @@ impl TaskHasher {
             project_root_mappings,
             sorted_externals,
             selectively_hash_tsconfig,
-            task_output_cache,
             runtime_cache,
             project_file_set_cache,
             workspace_file_set_cache,
@@ -847,8 +843,14 @@ impl TaskHasher {
                 (ts_hash, inputs)
             }
             HashInstruction::TaskOutput(glob, outputs) => {
-                let result =
-                    hash_task_output(&self.workspace_root, glob, outputs, task_output_cache)?;
+                let result = hash_task_output(
+                    Path::new(&self.workspace_root),
+                    glob,
+                    outputs,
+                    &|path| self.workspace_file_known(path),
+                    |path| self.workspace_file_hash(path),
+                    files_expansion_cache,
+                )?;
                 trace!(parent: &span, "hash_task_output: {:?}", now.elapsed());
                 let inputs = if collect_inputs {
                     HashInputsBuilder {
@@ -942,7 +944,6 @@ struct HashInstructionArgs<'a> {
     project_root_mappings: &'a ProjectRootMappings,
     sorted_externals: &'a [&'a String],
     selectively_hash_tsconfig: bool,
-    task_output_cache: &'a DashMap<String, CachedTaskOutput>,
     runtime_cache: &'a DashMap<String, String>,
     project_file_set_cache: &'a ProjectFileSetCache,
     workspace_file_set_cache: &'a WorkspaceFileSetCache,

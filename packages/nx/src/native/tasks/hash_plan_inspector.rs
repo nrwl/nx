@@ -40,6 +40,17 @@ impl HashPlanInspector {
         }
     }
 
+    /// The same source as TaskHasher::workspace_file_known, so both read a
+    /// plan the same way.
+    fn tracked(&self) -> &HashSet<String> {
+        self.tracked_paths.get_or_init(|| {
+            self.all_workspace_files
+                .iter()
+                .map(|f| f.file.clone())
+                .collect()
+        })
+    }
+
     /// @deprecated Use `inspectInputs()` instead for structured output.
     #[napi(ts_return_type = "Record<string, string[]>")]
     pub fn inspect(
@@ -156,18 +167,10 @@ impl HashPlanInspector {
                 })
             }
             HashInstruction::ProjectFileSet(_, globs, true) => {
-                // The same source as TaskHasher::workspace_file_known, so both
-                // read a plan the same way.
-                let tracked = self.tracked_paths.get_or_init(|| {
-                    self.all_workspace_files
-                        .iter()
-                        .map(|f| f.file.clone())
-                        .collect()
-                });
                 let expansion = expand_files_with(
                     std::path::Path::new(&self.workspace_root),
                     globs,
-                    &|path| tracked.contains(path),
+                    &|path| self.tracked().contains(path),
                 )?;
                 // `missing` paths are hashed as a sentinel, so they are real
                 // inputs; report them alongside the files that exist.
@@ -181,10 +184,14 @@ impl HashPlanInspector {
                 })
             }
             HashInstruction::TaskOutput(glob, dep_outputs) => {
-                let dep_output_files: HashSet<String> =
-                    resolve_task_output_files(&self.workspace_root, glob, dep_outputs)
-                        .map(|files| files.into_iter().collect())
-                        .unwrap_or_else(|_| dep_outputs.iter().cloned().collect());
+                let dep_output_files: HashSet<String> = resolve_task_output_files(
+                    std::path::Path::new(&self.workspace_root),
+                    glob,
+                    dep_outputs,
+                    &|path| self.tracked().contains(path),
+                )
+                .map(|files| files.into_iter().collect())
+                .unwrap_or_else(|_| dep_outputs.iter().cloned().collect());
                 Ok(HashInputsBuilder {
                     dep_outputs: dep_output_files,
                     ..Default::default()
