@@ -336,10 +336,17 @@ export async function getCachedSerializedProjectGraphPromise(
   }
 }
 
+/**
+ * `appliedHashes` is for changes the workspace context has already applied
+ * (a batch from its watcher): the hash of every created or updated file, with
+ * no-op rewrites already dropped. Without it the files are fed to the context
+ * here, which hashes them and drops the no-ops itself.
+ */
 export function scheduleProjectGraphRecomputation(
   createdFiles: string[],
   updatedFiles: string[],
-  deletedFiles: string[]
+  deletedFiles: string[],
+  appliedHashes?: Record<string, string>
 ) {
   ++fileChangeCounter;
 
@@ -349,12 +356,13 @@ export function scheduleProjectGraphRecomputation(
   // nothing all rewrite a file (new inode) the watcher reports as changed
   // even though the bytes are identical. updateFilesInContext updates the
   // workspace context and returns only the files whose content actually
-  // changed. Hashing here — once per watcher batch — rather than inside the
+  // changed. Hashing here — once per batch — rather than inside the
   // recompute keeps it off the stale-retry path, which would otherwise see
   // "no change" after the first pass already updated the context hashes.
   performance.mark('hash-watched-changes-start');
   const changedFileHashes =
-    createdFiles.length > 0 ||
+    appliedHashes ??
+    (createdFiles.length > 0 ||
     updatedFiles.length > 0 ||
     deletedFiles.length > 0
       ? (updateFilesInContext(
@@ -362,7 +370,7 @@ export function scheduleProjectGraphRecomputation(
           [...createdFiles, ...updatedFiles],
           deletedFiles
         ) ?? {})
-      : {};
+      : {});
   performance.mark('hash-watched-changes-end');
   performance.measure(
     'hash changed files from watcher',
@@ -400,11 +408,12 @@ export function scheduleProjectGraphRecomputation(
 }
 
 /**
- * The watcher reported dropped events (a kernel event-queue overflow), so the
- * per-path stream cannot be trusted complete. Recover by re-walking the
- * workspace and diffing it against the context's known files, then feed the
- * synthesized changes through the same collection and notification path a
- * normal watcher batch takes.
+ * Recover from changes that reached the workspace on no reported path: re-walk
+ * it, diff against the context's known files, and feed what differs through
+ * the same collection and notification path a watcher batch takes. The
+ * context's own watcher recovers from its dropped events this way on its own,
+ * and delivers the result as an ordinary batch; this is the entry point for a
+ * caller that learned of a gap some other way.
  *
  * The walk and the diff both happen in the workspace context: it already owns
  * the file map, so diffing there keeps the whole workspace from crossing the

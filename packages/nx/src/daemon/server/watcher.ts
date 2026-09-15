@@ -7,29 +7,64 @@ import {
 import { Server } from 'net';
 import { normalizePath } from '../../utils/path';
 import { getDaemonProcessIdSync, serverProcessJsonPath } from '../cache';
-import type { WatchEvent } from '../../native';
+import type { ChangeBatch, WatchEvent } from '../../native';
 import { openSockets } from './server';
 import { handleImport } from '../../utils/handle-import';
+import {
+  settleWorkspaceContext,
+  setupWorkspaceContext,
+  stopWatchingWorkspaceContext,
+  subscribeToWorkspaceChanges,
+} from '../../utils/workspace-context';
 
 export type FileWatcherCallback = (
   err: Error | string | null,
   changeEvents: WatchEvent[] | null
 ) => Promise<void>;
 
+/**
+ * Hears what the workspace context applied from its watcher: hashes for what
+ * changed, deletes expanded to files, no-op rewrites already dropped.
+ */
+export type WorkspaceChangesCallback = (
+  err: Error | string | null,
+  batch: ChangeBatch | null
+) => Promise<void>;
+
+export interface WorkspaceWatch {
+  stop(): Promise<void>;
+}
+
 // Captured by watchWorkspace so flushPendingWorkspaceChanges can route
-// force-flushed events through the same handling as the async callback.
+// settled batches through the same handling as the subscription.
 // Definite-assignment: dispatchWorkspaceChanges only runs after
 // watchWorkspace has set both, so reading them as non-nullable is safe.
 let activeServer!: Server;
-let workspaceChangesCallback!: FileWatcherCallback;
+let workspaceChangesCallback!: WorkspaceChangesCallback;
+
+export function changedPaths(batch: ChangeBatch): string[] {
+  return [
+    ...batch.createdFiles.map(({ file }) => file),
+    ...batch.updatedFiles.map(({ file }) => file),
+    ...batch.deletedFiles,
+  ];
+}
+
+export function isEmptyBatch(batch: ChangeBatch): boolean {
+  return (
+    batch.createdFiles.length === 0 &&
+    batch.updatedFiles.length === 0 &&
+    batch.deletedFiles.length === 0
+  );
+}
 
 function dispatchWorkspaceChanges(
-  events: WatchEvent[]
+  batch: ChangeBatch
 ): Promise<void> | undefined {
-  if (restartDaemonIfIgnoreFilesChanged(events.map((event) => event.path))) {
+  if (restartDaemonIfIgnoreFilesChanged(changedPaths(batch))) {
     return;
   }
-  return workspaceChangesCallback(null, events);
+  return workspaceChangesCallback(null, batch);
 }
 
 // Mirrors the per-directory ignore files create_filter reads (watch_filterer.rs).
@@ -60,34 +95,43 @@ export function restartDaemonIfIgnoreFilesChanged(paths: string[]): boolean {
   return false;
 }
 
-export async function watchWorkspace(server: Server, cb: FileWatcherCallback) {
-  const { Watcher } = await handleImport('../../native/index.js', __dirname);
-
+/**
+ * Sets up the workspace context with its own watcher and subscribes to the
+ * batches it applies. The context starts watching before it scans, so no
+ * write from here on is invisible to both.
+ */
+export async function watchWorkspace(
+  server: Server,
+  cb: WorkspaceChangesCallback
+): Promise<WorkspaceWatch> {
   activeServer = server;
   workspaceChangesCallback = cb;
-  const watcher = new Watcher(workspaceRoot);
-  watcher.watch((err, events) => {
+  setupWorkspaceContext(workspaceRoot, { watch: true });
+  subscribeToWorkspaceChanges(workspaceRoot, (err, batch) => {
     if (err) {
       return cb(err, null);
     }
-    dispatchWorkspaceChanges(events);
+    dispatchWorkspaceChanges(batch);
   });
 
-  return watcher;
+  return {
+    async stop() {
+      stopWatchingWorkspaceContext();
+    },
+  };
 }
 
 /**
- * Synchronously drain anything the workspace watcher has buffered and feed
- * it through the normal change-handling pipeline. Call this before serving
- * a cached project graph so we never return data that the watcher has
- * already seen invalidated but hasn't flushed yet.
+ * Apply everything the workspace watcher has seen and feed it through the
+ * normal change-handling pipeline. Call this before serving a cached project
+ * graph so we never return data that the watcher has already seen invalidated
+ * but hasn't flushed yet.
  */
 export async function flushPendingWorkspaceChanges() {
-  const watcher = getWatcherInstance();
-  if (!watcher) return;
-  const events = watcher.forceFlushPending();
-  if (events.length === 0) return;
-  await dispatchWorkspaceChanges(events);
+  if (!getWatcherInstance()) return;
+  const batch = settleWorkspaceContext(workspaceRoot);
+  if (isEmptyBatch(batch)) return;
+  await dispatchWorkspaceChanges(batch);
 }
 
 export async function watchOutputFiles(
@@ -130,46 +174,23 @@ export async function watchOutputFiles(
 }
 
 /**
- * NOTE: An event type of "create" will also apply to the case where the user has restored
- * an original version of a file after modifying/deleting it by using git, so we adjust
- * our log language accordingly.
+ * NOTE: A created file may be one the user restored to an earlier version
+ * with git after modifying or deleting it, so the log language allows for it.
  */
-export function convertChangeEventsToLogMessage(
-  changeEvents: WatchEvent[]
-): string {
-  // If only a single file was changed, show the information inline
-  if (changeEvents.length === 1) {
-    const { path, type } = changeEvents[0];
-    let typeLog = 'updated';
-    switch (type) {
-      case 'create':
-        typeLog = 'created or restored';
-        break;
-      case 'update':
-        typeLog = 'modified';
-        break;
-      case 'delete':
-        typeLog = 'deleted';
-        break;
-    }
-    return `${path} was ${typeLog}`;
-  }
+export function convertChangeBatchToLogMessage(batch: ChangeBatch): string {
+  const numCreatedOrRestoredFiles = batch.createdFiles.length;
+  const numModifiedFiles = batch.updatedFiles.length;
+  const numDeletedFiles = batch.deletedFiles.length;
 
-  let numCreatedOrRestoredFiles = 0;
-  let numModifiedFiles = 0;
-  let numDeletedFiles = 0;
-  for (const event of changeEvents) {
-    switch (event.type) {
-      case 'create':
-        numCreatedOrRestoredFiles++;
-        break;
-      case 'update':
-        numModifiedFiles++;
-        break;
-      case 'delete':
-        numDeletedFiles++;
-        break;
+  // If only a single file was changed, show the information inline
+  if (numCreatedOrRestoredFiles + numModifiedFiles + numDeletedFiles === 1) {
+    if (numCreatedOrRestoredFiles) {
+      return `${batch.createdFiles[0].file} was created or restored`;
     }
+    if (numModifiedFiles) {
+      return `${batch.updatedFiles[0].file} was modified`;
+    }
+    return `${batch.deletedFiles[0]} was deleted`;
   }
 
   return `${numCreatedOrRestoredFiles} file(s) created or restored, ${numModifiedFiles} file(s) modified, ${numDeletedFiles} file(s) deleted`;

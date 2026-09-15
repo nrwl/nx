@@ -56,13 +56,10 @@ describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () 
       await import('./file-watching/route-workspace-changes');
 
     const fakeServer = {} as unknown as import('net').Server;
-    const watcher = await watchWorkspace(
-      fakeServer,
-      async (err: unknown, events: { type: string; path: string }[]) => {
-        if (err || !events) return;
-        routeWorkspaceChanges(events);
-      }
-    );
+    const watcher = await watchWorkspace(fakeServer, async (err, batch) => {
+      if (err || !batch) return;
+      routeWorkspaceChanges(batch);
+    });
     storeWatcherInstance(watcher);
 
     try {

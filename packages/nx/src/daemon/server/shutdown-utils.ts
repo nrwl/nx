@@ -4,6 +4,7 @@ import { serverLogger } from '../logger';
 import { serializeResult } from '../socket-utils';
 import { deleteDaemonJsonProcessCache } from '../cache';
 import type { Watcher } from '../../native';
+import type { WorkspaceWatch } from './watcher';
 import {
   DaemonProjectGraphError,
   ProjectGraphError,
@@ -64,9 +65,9 @@ async function startNewDaemonInBackground() {
   serverLogger.log('Started new daemon process in background');
 }
 
-let watcherInstance: Watcher | undefined;
+let watcherInstance: WorkspaceWatch | undefined;
 
-export function storeWatcherInstance(instance: Watcher) {
+export function storeWatcherInstance(instance: WorkspaceWatch) {
   watcherInstance = instance;
 }
 

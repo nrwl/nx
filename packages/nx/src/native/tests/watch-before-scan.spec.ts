@@ -17,9 +17,6 @@ describe('watch-before-scan boot ordering', () => {
 
   beforeEach(() => {
     workspace = realpathSync(mkdtempSync(join(tmpdir(), 'nx-watch-scan-')));
-    // Seed file: FilesWorker's condvar treats an empty file list as
-    // "scan not finished", so allFileData on an empty workspace hangs.
-    writeFileSync(join(workspace, 'seed.txt'), 'x');
     // Cache lives outside the workspace so context bookkeeping files
     // cannot generate watcher events or show up in the scan.
     cacheDir = mkdtempSync(join(tmpdir(), 'nx-watch-scan-cache-'));
