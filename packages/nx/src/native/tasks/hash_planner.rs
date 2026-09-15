@@ -819,30 +819,28 @@ impl HashPlanner {
     ) -> anyhow::Result<Vec<HashInstruction>> {
         // `includeIgnored` filesets hash from disk as one aggregated group, so
         // a negation filters across entries; the rest read the file map.
-        let ignored_file_sets: Vec<&str> = self_inputs
-            .iter()
-            .filter_map(|input| match input {
-                Input::FileSet {
-                    fileset,
-                    include_ignored: true,
-                    ..
-                } => Some(*fileset),
-                _ => None,
-            })
-            .collect();
-        let (project_file_sets, workspace_file_sets): (Vec<&str>, Vec<&str>) = self_inputs
-            .iter()
-            .filter_map(|input| match input {
-                Input::FileSet {
-                    fileset,
-                    include_ignored: false,
-                    ..
-                } => Some(*fileset),
-                _ => None,
-            })
-            .partition(|file_set| {
-                file_set.starts_with("{projectRoot}/") || file_set.starts_with("!{projectRoot}/")
-            });
+        let mut ignored_file_sets: Vec<&str> = Vec::new();
+        let mut project_file_sets: Vec<&str> = Vec::new();
+        let mut workspace_file_sets: Vec<&str> = Vec::new();
+        for input in self_inputs {
+            let Input::FileSet {
+                fileset,
+                include_ignored,
+                ..
+            } = input
+            else {
+                continue;
+            };
+            if *include_ignored {
+                ignored_file_sets.push(fileset);
+            } else if fileset.starts_with("{projectRoot}/")
+                || fileset.starts_with("!{projectRoot}/")
+            {
+                project_file_sets.push(fileset);
+            } else {
+                workspace_file_sets.push(fileset);
+            }
+        }
 
         let project_root = &self.project_graph.nodes[project_name].root;
 
