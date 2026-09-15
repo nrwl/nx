@@ -276,6 +276,13 @@ export declare class WorkspaceContext {
    */
   onChanges(callback: (err: string | null, batch: ChangeBatch) => void): void
   /**
+   * Subscribes to every event the watch delivers, whether or not it
+   * concerns the files: writes under ignored directories included, and
+   * the `rescan` marker when the kernel dropped events. Replaces any
+   * earlier subscriber. Batches applied to the files are `onChanges`.
+   */
+  onWatchEvents(callback: (err: string | null, events: WatchEvent[]) => void): void
+  /**
    * Waits for the kernel→watcher hop to settle and applies everything it
    * delivered, so a write made before the call is in the files. Blocks the
    * caller for up to the settle cap, and through any walk in progress.
@@ -957,6 +964,12 @@ export interface WorkspaceContextOptions {
    * missed. Off by default; ignored on wasm, which has no watcher.
    */
   watch?: boolean
+  /**
+   * Extra globs the watch applies on top of the hardcoded ignores. A
+   * leading `!` admits a hardcoded-ignored path into the event stream
+   * (never into the files), as the daemon does for its own process file.
+   */
+  watchGlobs?: Array<string>
 }
 
 /** Public NAPI error codes that are for Node */

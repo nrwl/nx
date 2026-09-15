@@ -1,7 +1,13 @@
-import { mkdtempSync, realpathSync, rmSync, writeFileSync } from 'fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { ChangeBatch, WorkspaceContext } from '../index';
+import { ChangeBatch, WatchEvent, WorkspaceContext } from '../index';
 
 // A context built with `watch: true` keeps its own files current: nothing
 // tells it about writes, it hears them from the watcher it owns and applies
@@ -109,5 +115,39 @@ describe('WorkspaceContext with its own watcher', () => {
         [...b.createdFiles, ...b.updatedFiles].map((f) => f.file)
       )
     ).not.toContain('a.ts');
+  });
+
+  it('delivers every event to the stream but applies only what a walk would keep', async () => {
+    writeFileSync(join(workspace, '.gitignore'), 'dist/\n');
+    writeFileSync(join(workspace, 'a.ts'), 'a');
+    context = new WorkspaceContext(workspace, cacheDir, { watch: true });
+    expect(names()).toEqual(['.gitignore', 'a.ts']);
+    const scanned = context.changeSeq();
+
+    const stream: WatchEvent[] = [];
+    const applied: ChangeBatch[] = [];
+    context.onWatchEvents((err, events) => {
+      if (!err) stream.push(...events);
+    });
+    context.onChanges((err, batch) => {
+      if (!err) applied.push(batch);
+    });
+
+    writeFileSync(join(workspace, 'dist'), '');
+    rmSync(join(workspace, 'dist'));
+    mkdirSync(join(workspace, 'dist'));
+    writeFileSync(join(workspace, 'dist', 'out.js'), 'x');
+    writeFileSync(join(workspace, 'b.ts'), 'b');
+    await eventually('the stream never carried both writes', () =>
+      ['dist/out.js', 'b.ts'].every((p) => stream.some((e) => e.path === p))
+    );
+    await eventually('the tracked write was never applied', () =>
+      applied.some((b) => b.createdFiles.some((f) => f.file === 'b.ts'))
+    );
+    expect(names()).toEqual(['.gitignore', 'a.ts', 'b.ts']);
+    expect(context.changeSeq()).toBe(scanned + 1);
+    expect(
+      applied.flatMap((b) => b.createdFiles.map((f) => f.file))
+    ).not.toContain('dist/out.js');
   });
 });

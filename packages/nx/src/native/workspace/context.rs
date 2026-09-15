@@ -15,7 +15,9 @@ use crate::native::utils::{Normalize, NxCondvar, NxMutex, gather_stamp, path::ge
 #[cfg(not(target_arch = "wasm32"))]
 use crate::native::watch::types::{EventType, WatchEvent};
 #[cfg(not(target_arch = "wasm32"))]
-use crate::native::watch::{FlushMode, WatchEventCallback, WatchSession, default_watch_globs};
+use crate::native::watch::{
+    FlushMode, WatchEventCallback, WatchSession, create_filter, default_watch_globs,
+};
 #[cfg(not(target_arch = "wasm32"))]
 use crate::native::workspace::files_archive::archive_modified_at;
 use crate::native::workspace::files_archive::{
@@ -45,6 +47,10 @@ pub struct WorkspaceContextOptions {
     /// starts before the scan, so nothing written after construction is
     /// missed. Off by default; ignored on wasm, which has no watcher.
     pub watch: Option<bool>,
+    /// Extra globs the watch applies on top of the hardcoded ignores. A
+    /// leading `!` admits a hardcoded-ignored path into the event stream
+    /// (never into the files), as the daemon does for its own process file.
+    pub watch_globs: Option<Vec<String>>,
 }
 
 #[napi]
@@ -55,7 +61,9 @@ pub struct WorkspaceContext {
     /// initial gather used, keeping the walk incremental.
     cache_dir: String,
     files: FileState,
-    publisher: Publisher,
+    batches: Publisher<ChangeBatch>,
+    #[cfg(not(target_arch = "wasm32"))]
+    events: Publisher<Vec<WatchEvent>>,
     #[cfg(not(target_arch = "wasm32"))]
     watch: Mutex<Option<WatchSession>>,
 }
@@ -433,8 +441,18 @@ enum Phase {
     Ready,
 }
 
+/// Whether a reported write to a workspace-relative path belongs in the
+/// files. A watching context has one: its watch admits more than the files
+/// should hold, so the ignore rules apply here, at the one place a path enters
+/// the files, rather than at the watch. Caller-supplied updates are held to
+/// the same rule, so the files never diverge from what a walk would find. A
+/// context without a watch has none and trusts its callers as before, since
+/// building the rules means walking the workspace for ignore files.
+type Policy = Arc<dyn Fn(&str) -> bool + Send + Sync>;
+
 struct State {
     phase: Phase,
+    policy: Option<Policy>,
     /// Kept through a re-walk so its result can be diffed against it.
     files: Files,
     /// Changes reported during a walk, applied on top of its result. A file
@@ -460,7 +478,7 @@ enum WhenScanning {
 struct FileState(Option<Arc<(NxMutex<State>, NxCondvar)>>);
 
 impl FileState {
-    fn new(workspace_root: &Path) -> Self {
+    fn new(workspace_root: &Path, policy: Option<Policy>) -> Self {
         if !workspace_root.exists() {
             warn!(
                 "workspace root does not exist: {}",
@@ -471,6 +489,7 @@ impl FileState {
         FileState(Some(Arc::new((
             NxMutex::new(State {
                 phase: Phase::Scanning,
+                policy,
                 files: Files::new(),
                 queued: Vec::new(),
                 change_seq: 0,
@@ -685,9 +704,11 @@ fn apply(state: &mut State, workspace_root: &Path, changes: Vec<Change>) -> Outc
         }
     }
 
+    let policy = state.policy.clone();
     let hashed: Vec<(&Change, String)> = changes
         .par_iter()
         .filter(|c| matches!(c.kind, ChangeKind::Created | ChangeKind::Updated))
+        .filter(|c| policy.as_ref().is_none_or(|admits| admits(&c.path)))
         .filter_map(|change| {
             let full_path = workspace_root.join(&change.path);
             let Ok(content) = std::fs::read(&full_path) else {
@@ -719,22 +740,35 @@ fn apply(state: &mut State, workspace_root: &Path, changes: Vec<Change>) -> Outc
     outcomes
 }
 
-/// Where applied batches go. The daemon subscribes once; until then batches
-/// are dropped, and an error is held for the subscriber that arrives.
-pub(crate) type BatchSink =
-    Arc<dyn Fn(std::result::Result<ChangeBatch, String>) + Send + Sync + 'static>;
+/// Where what the context produces goes. The daemon subscribes once; until
+/// then deliveries are dropped, and an error is held for the subscriber that
+/// arrives.
+pub(crate) type Sink<T> = Arc<dyn Fn(std::result::Result<T, String>) + Send + Sync + 'static>;
 
-#[derive(Clone, Default)]
-struct Publisher(Arc<Mutex<PublisherState>>);
+struct Publisher<T>(Arc<Mutex<PublisherState<T>>>);
 
-#[derive(Default)]
-struct PublisherState {
-    sink: Option<BatchSink>,
+impl<T> Clone for Publisher<T> {
+    fn clone(&self) -> Self {
+        Publisher(Arc::clone(&self.0))
+    }
+}
+
+impl<T> Default for Publisher<T> {
+    fn default() -> Self {
+        Publisher(Arc::new(Mutex::new(PublisherState {
+            sink: None,
+            pending_error: None,
+        })))
+    }
+}
+
+struct PublisherState<T> {
+    sink: Option<Sink<T>>,
     pending_error: Option<String>,
 }
 
-impl Publisher {
-    fn publish(&self, result: std::result::Result<ChangeBatch, String>) {
+impl<T> Publisher<T> {
+    fn publish(&self, result: std::result::Result<T, String>) {
         let mut state = self.0.lock();
         match (&state.sink, result) {
             (Some(sink), result) => {
@@ -747,7 +781,7 @@ impl Publisher {
         }
     }
 
-    fn subscribe(&self, sink: BatchSink) {
+    fn subscribe(&self, sink: Sink<T>) {
         let mut state = self.0.lock();
         let held = state.pending_error.take();
         state.sink = Some(Arc::clone(&sink));
@@ -801,31 +835,42 @@ impl WorkspaceContext {
         trust_archive: bool,
     ) -> napi::Result<Self> {
         let workspace_root_path = PathBuf::from(&workspace_root);
-        let files = FileState::new(&workspace_root_path);
-        let publisher = Publisher::default();
+        let batches = Publisher::default();
+        #[cfg(not(target_arch = "wasm32"))]
+        let events = Publisher::default();
 
         #[cfg(not(target_arch = "wasm32"))]
-        let watch = if options.watch.unwrap_or(false) && files.0.is_some() {
+        let (files, watch) = if options.watch.unwrap_or(false) && workspace_root_path.exists() {
+            let failed = |msg| napi::Error::new(napi::Status::GenericFailure, msg);
+            let policy = Self::workspace_policy(&workspace_root_path).map_err(failed)?;
+            let files = FileState::new(&workspace_root_path, Some(policy));
             let session = Self::start_watching(
                 workspace_root.clone(),
                 &workspace_root_path,
                 &cache_dir,
+                options.watch_globs.unwrap_or_default(),
                 &files,
-                &publisher,
+                &batches,
+                &events,
             )
-            .map_err(|msg| napi::Error::new(napi::Status::GenericFailure, msg))?;
-            Some(session)
+            .map_err(failed)?;
+            (files, Some(session))
         } else {
-            None
+            (FileState::new(&workspace_root_path, None), None)
         };
         #[cfg(target_arch = "wasm32")]
-        let _ = options;
+        let files = {
+            let _ = options;
+            FileState::new(&workspace_root_path, None)
+        };
 
         files.scan(&workspace_root_path, cache_dir.clone(), trust_archive);
 
         Ok(WorkspaceContext {
             files,
-            publisher,
+            batches,
+            #[cfg(not(target_arch = "wasm32"))]
+            events,
             workspace_root,
             workspace_root_path,
             cache_dir,
@@ -834,29 +879,57 @@ impl WorkspaceContext {
         })
     }
 
+    /// The ignore rules a walk applies, as a predicate on a workspace-relative
+    /// file path. Built against the canonical root, which is what event paths
+    /// are relative to.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn workspace_policy(workspace_root_path: &Path) -> std::result::Result<Policy, String> {
+        let origin = dunce::canonicalize(workspace_root_path)
+            .unwrap_or_else(|_| workspace_root_path.to_path_buf());
+        let filter = create_filter(&origin.to_string_lossy(), &default_watch_globs(), true)
+            .map_err(|e| format!("failed to build the workspace ignore rules: {e}"))?;
+        Ok(Arc::new(move |path: &str| {
+            filter.admits(&origin.join(path), false)
+        }))
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    /// One watch serves both the files and the raw event stream, so it is
+    /// gated only by the hardcoded ignores, the root `.nxignore` and the
+    /// caller's globs: everything a walk would skip still reaches the stream,
+    /// and the files apply the walk's rules themselves (see `Policy`).
     #[cfg(not(target_arch = "wasm32"))]
     fn start_watching(
         workspace_root: String,
         workspace_root_path: &Path,
         cache_dir: &str,
+        extra_globs: Vec<String>,
         files: &FileState,
-        publisher: &Publisher,
+        batches: &Publisher<ChangeBatch>,
+        events: &Publisher<Vec<WatchEvent>>,
     ) -> std::result::Result<WatchSession, String> {
         let files = files.clone();
-        let publisher = publisher.clone();
+        let batches = batches.clone();
+        let events = events.clone();
         let root = workspace_root_path.to_owned();
         let cache_dir = cache_dir.to_owned();
         let callback: WatchEventCallback = Box::new(move |result| match result {
-            Ok(events) => {
-                let changes = events.into_iter().map(Change::from).collect();
+            Ok(delivered) => {
+                events.publish(Ok(delivered.clone()));
+                let changes = delivered.into_iter().map(Change::from).collect();
                 let batch = files.ingest(&root, &cache_dir, changes, WhenScanning::Queue);
                 if !batch.is_empty() {
-                    publisher.publish(Ok(batch));
+                    batches.publish(Ok(batch));
                 }
             }
-            Err(message) => publisher.publish(Err(message)),
+            Err(message) => {
+                events.publish(Err(message.clone()));
+                batches.publish(Err(message));
+            }
         });
-        WatchSession::start(workspace_root, &default_watch_globs(), true, callback)
+        let mut globs = default_watch_globs();
+        globs.extend(extra_globs);
+        WatchSession::start(workspace_root, &globs, false, callback)
     }
 
     /// Pulls what the watch pipeline holds into the files. Returns the batch
@@ -867,11 +940,12 @@ impl WorkspaceContext {
         let Some(session) = self.watch.lock().clone() else {
             return ChangeBatch::default();
         };
-        let events = session.flush(mode);
-        if events.is_empty() {
+        let delivered = session.flush(mode);
+        if delivered.is_empty() {
             return ChangeBatch::default();
         }
-        let changes = events.into_iter().map(Change::from).collect();
+        self.events.publish(Ok(delivered.clone()));
+        let changes = delivered.into_iter().map(Change::from).collect();
         self.files.ingest(
             &self.workspace_root_path,
             &self.cache_dir,
@@ -887,7 +961,7 @@ impl WorkspaceContext {
         {
             let batch = self.drain(FlushMode::Delivered, WhenScanning::Queue);
             if !batch.is_empty() {
-                self.publisher.publish(Ok(batch));
+                self.batches.publish(Ok(batch));
             }
         }
         self.files.get_files()
@@ -904,18 +978,41 @@ impl WorkspaceContext {
         #[napi(ts_arg_type = "(err: string | null, batch: ChangeBatch) => void")]
         callback: ThreadsafeFunction<ChangeBatch>,
     ) {
-        self.publisher
-            .subscribe(Arc::new(move |result| match result {
-                Ok(batch) => {
-                    callback.call(Ok(batch), ThreadsafeFunctionCallMode::NonBlocking);
-                }
-                Err(message) => {
-                    callback.call(
-                        Err(napi::Error::new(napi::Status::GenericFailure, message)),
-                        ThreadsafeFunctionCallMode::NonBlocking,
-                    );
-                }
-            }));
+        self.batches.subscribe(Arc::new(move |result| match result {
+            Ok(batch) => {
+                callback.call(Ok(batch), ThreadsafeFunctionCallMode::NonBlocking);
+            }
+            Err(message) => {
+                callback.call(
+                    Err(napi::Error::new(napi::Status::GenericFailure, message)),
+                    ThreadsafeFunctionCallMode::NonBlocking,
+                );
+            }
+        }));
+    }
+
+    /// Subscribes to every event the watch delivers, whether or not it
+    /// concerns the files: writes under ignored directories included, and
+    /// the `rescan` marker when the kernel dropped events. Replaces any
+    /// earlier subscriber. Batches applied to the files are `onChanges`.
+    #[cfg(not(target_arch = "wasm32"))]
+    #[napi]
+    pub fn on_watch_events(
+        &self,
+        #[napi(ts_arg_type = "(err: string | null, events: WatchEvent[]) => void")]
+        callback: ThreadsafeFunction<Vec<WatchEvent>>,
+    ) {
+        self.events.subscribe(Arc::new(move |result| match result {
+            Ok(events) => {
+                callback.call(Ok(events), ThreadsafeFunctionCallMode::NonBlocking);
+            }
+            Err(message) => {
+                callback.call(
+                    Err(napi::Error::new(napi::Status::GenericFailure, message)),
+                    ThreadsafeFunctionCallMode::NonBlocking,
+                );
+            }
+        }));
     }
 
     /// Waits for the kernel→watcher hop to settle and applies everything it
@@ -935,7 +1032,8 @@ impl WorkspaceContext {
     #[napi]
     pub fn stop_watching(&self) {
         *self.watch.lock() = None;
-        self.publisher.clear();
+        self.batches.clear();
+        self.events.clear();
     }
 
     /// Bumped once per applied batch that changed anything. Equal values
@@ -956,7 +1054,7 @@ impl WorkspaceContext {
             return false;
         }
         let files = self.files.clone();
-        let publisher = self.publisher.clone();
+        let publisher = self.batches.clone();
         let workspace_root = self.workspace_root_path.clone();
         let cache_dir = self.cache_dir.clone();
         let walk = move || {
@@ -1808,7 +1906,10 @@ mod tests {
         WorkspaceContext::new(
             root.to_string_lossy().to_string(),
             as_string(cache),
-            Some(WorkspaceContextOptions { watch: Some(true) }),
+            Some(WorkspaceContextOptions {
+                watch: Some(true),
+                watch_globs: None,
+            }),
         )
         .unwrap()
     }
@@ -1900,7 +2001,7 @@ mod tests {
 
         let heard: Arc<Mutex<Vec<ChangeBatch>>> = Arc::new(Mutex::new(Vec::new()));
         let sink_heard = Arc::clone(&heard);
-        ctx.publisher.subscribe(Arc::new(move |result| {
+        ctx.batches.subscribe(Arc::new(move |result| {
             sink_heard.lock().push(result.expect("no watcher error"));
         }));
 
@@ -1922,5 +2023,107 @@ mod tests {
         std::thread::sleep(Duration::from_millis(300));
         assert_eq!(heard.lock().len(), heard_so_far);
         assert!(names_of(&ctx).contains(&"c.ts".to_string()));
+    }
+
+    #[test]
+    #[cfg(not(target_arch = "wasm32"))]
+    fn a_gitignored_write_reaches_the_event_stream_but_never_the_files() {
+        let temp = workspace_with(&["a.ts"]);
+        temp.child(".gitignore").write_str("dist/\n").unwrap();
+        let cache = TempDir::new().unwrap();
+        let ctx = watching_context(&temp, &cache);
+        ctx.all_file_data();
+        let scanned = ctx.change_seq();
+
+        let seen: Arc<Mutex<Vec<WatchEvent>>> = Arc::new(Mutex::new(Vec::new()));
+        let sink_seen = Arc::clone(&seen);
+        ctx.events.subscribe(Arc::new(move |result| {
+            sink_seen.lock().extend(result.expect("no watcher error"));
+        }));
+
+        temp.child("dist/out.js").write_str("x").unwrap();
+        wait_until(
+            "the gitignored write never reached the event stream",
+            || seen.lock().iter().any(|e| e.path == "dist/out.js"),
+        );
+        // Everything delivered so far has been through the files' rules.
+        ctx.settle();
+        assert!(!names_of(&ctx).contains(&"dist/out.js".to_string()));
+        assert_eq!(ctx.change_seq(), scanned, "nothing the files hold changed");
+    }
+
+    #[test]
+    #[cfg(not(target_arch = "wasm32"))]
+    fn a_caller_supplied_update_is_held_to_the_same_rule_as_the_watch() {
+        let temp = workspace_with(&["a.ts"]);
+        temp.child(".gitignore").write_str("dist/\n").unwrap();
+        temp.child("dist/out.js").write_str("x").unwrap();
+        let cache = TempDir::new().unwrap();
+
+        let watching = watching_context(&temp, &cache);
+        watching.all_file_data();
+        assert!(
+            watching
+                .incremental_update(vec!["dist/out.js".into()], vec![])
+                .is_empty(),
+            "a watching context refuses what a walk would skip"
+        );
+        assert_eq!(names_of(&watching), vec![".gitignore", "a.ts"]);
+
+        // A context without a watch has no rules of its own (building them
+        // walks the workspace for ignore files) and trusts its caller.
+        let plain = context(&temp, &TempDir::new().unwrap());
+        assert!(
+            plain
+                .incremental_update(vec!["dist/out.js".into()], vec![])
+                .contains_key("dist/out.js")
+        );
+    }
+
+    // FSEvents and ReadDirectoryChangesW watch the whole tree, so the
+    // hardcoded-ignored directory is covered without being registered. The
+    // inotify backend registers directories through the ignore-aware walk and
+    // never sees inside `.nx/workspace-data`; the daemon's process poll is the
+    // backstop there, as it always was.
+    #[test]
+    #[cfg(any(target_os = "macos", target_os = "windows"))]
+    fn a_watch_glob_admits_a_hardcoded_ignored_path_into_the_stream_only() {
+        let temp = workspace_with(&["a.ts"]);
+        let cache = TempDir::new().unwrap();
+        let root = dunce::canonicalize(temp.path()).unwrap();
+        let ctx = WorkspaceContext::new(
+            root.to_string_lossy().to_string(),
+            as_string(&cache),
+            Some(WorkspaceContextOptions {
+                watch: Some(true),
+                watch_globs: Some(vec!["!.nx/workspace-data/d/server-process.json".into()]),
+            }),
+        )
+        .unwrap();
+        ctx.all_file_data();
+
+        let seen: Arc<Mutex<Vec<WatchEvent>>> = Arc::new(Mutex::new(Vec::new()));
+        let sink_seen = Arc::clone(&seen);
+        ctx.events.subscribe(Arc::new(move |result| {
+            sink_seen.lock().extend(result.expect("no watcher error"));
+        }));
+
+        temp.child(".nx/workspace-data/d/server-process.json")
+            .write_str("{}")
+            .unwrap();
+        temp.child(".nx/workspace-data/d/other.dat")
+            .write_str("x")
+            .unwrap();
+        wait_until("the admitted process file never reached the stream", || {
+            seen.lock()
+                .iter()
+                .any(|e| e.path == ".nx/workspace-data/d/server-process.json")
+        });
+        ctx.settle();
+        assert!(
+            !seen.lock().iter().any(|e| e.path.ends_with("other.dat")),
+            "only the admitted path punches through the hardcoded veto"
+        );
+        assert_eq!(names_of(&ctx), vec!["a.ts"], "the stream is not the files");
     }
 }
