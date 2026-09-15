@@ -1126,7 +1126,12 @@ fn local_input_cache_key(dep: &str, input: &Input) -> Option<String> {
 /// replacing with "." to avoid producing invalid paths like `./**/*`.
 fn resolve_tokens(fileset: &str, project_root: &str, project_name: &str) -> String {
     let resolved = if project_root == "." {
-        fileset.replace("{projectRoot}/", "")
+        let stripped = fileset.replace("{projectRoot}/", "");
+        // A trailing token names the root itself: `dist/{projectRoot}` is `dist`.
+        match stripped.strip_suffix("/{projectRoot}") {
+            Some(parent) => parent.to_string(),
+            None => stripped,
+        }
     } else {
         fileset.replace("{projectRoot}", project_root)
     };
@@ -1750,6 +1755,27 @@ mod tests {
                 "web:slashes",
                 "web:test"
             ]
+        );
+    }
+
+    #[test]
+    fn a_trailing_project_root_on_a_root_project_is_the_parent_path() {
+        assert_eq!(
+            resolve_tokens("{workspaceRoot}/dist/{projectRoot}", ".", "root"),
+            "{workspaceRoot}/dist"
+        );
+        assert_eq!(
+            resolve_files_glob("{workspaceRoot}/dist/{projectRoot}", ".", "root"),
+            "dist"
+        );
+        assert_eq!(
+            resolve_files_glob("{workspaceRoot}/dist/{projectRoot}", "apps/web", "web"),
+            "dist/apps/web"
+        );
+        // Nothing but the root: the walker's guard rejects this bare token.
+        assert_eq!(
+            resolve_files_glob("{workspaceRoot}/{projectRoot}", ".", "root"),
+            "{workspaceRoot}"
         );
     }
 

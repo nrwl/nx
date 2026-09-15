@@ -162,6 +162,12 @@ pub(crate) fn normalize_glob(glob: &str) -> String {
 /// A glob with no leading directory (`**/*`, `*.gen`) is allowed: it walks
 /// from the workspace root, which is slow but not wrong.
 pub(crate) fn validate_files_glob(glob: &str) -> Result<()> {
+    let body = glob.strip_prefix('!').unwrap_or(glob);
+    if body.contains("{workspaceRoot}") || body.contains("{projectRoot}") {
+        bail!(
+            "The includeIgnored fileset \"{glob}\" still holds a root token after resolution: a bare root token is not allowed, `{{workspaceRoot}}` must start the glob (after any `!`) followed by `/`, and `{{projectRoot}}` must be a whole segment."
+        );
+    }
     if let Some(body) = glob.strip_prefix('!') {
         let body = normalize_glob(body);
         if body.is_empty() {
@@ -932,6 +938,25 @@ pub(crate) mod tests {
                 .unwrap()
                 .files,
             vec!["dist/gen/a.js", "dist/other/c.js"]
+        );
+    }
+
+    #[test]
+    fn rejects_a_glob_that_still_holds_a_root_token() {
+        for glob in [
+            "{workspaceRoot}**/*.js",
+            "dist/{projectRoot}/x",
+            "{workspaceRoot}",
+            "!{workspaceRoot}**/.env*",
+        ] {
+            let err = validate_files_glob(glob).unwrap_err();
+            assert!(err.to_string().contains("root token"), "{glob}: {err}");
+        }
+        // A bare `{projectRoot}` gets the message's bare-token wording.
+        let err = validate_files_glob("{projectRoot}").unwrap_err();
+        assert!(
+            err.to_string().contains("a bare root token is not allowed"),
+            "{err}"
         );
     }
 
