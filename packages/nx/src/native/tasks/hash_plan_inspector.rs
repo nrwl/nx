@@ -188,7 +188,6 @@ impl HashPlanInspector {
                     std::path::Path::new(&self.workspace_root),
                     glob,
                     dep_outputs,
-                    &|path| self.tracked().contains(path),
                 )
                 .map(|files| files.into_iter().collect())
                 .unwrap_or_else(|_| dep_outputs.iter().cloned().collect());

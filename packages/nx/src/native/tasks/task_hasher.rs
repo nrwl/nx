@@ -843,8 +843,6 @@ impl TaskHasher {
                     Path::new(&self.workspace_root),
                     glob,
                     outputs,
-                    &|path| self.workspace_file_known(path),
-                    |path| self.workspace_file_hash(path),
                     files_expansion_cache,
                 )?;
                 trace!(parent: &span, "hash_task_output: {:?}", now.elapsed());

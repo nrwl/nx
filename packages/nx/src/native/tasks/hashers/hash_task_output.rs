@@ -2,7 +2,9 @@ use std::path::Path;
 
 use anyhow::Result;
 
-use super::disk_expansion::{FilesExpansion, FilesExpansionCache, expand_files_cached};
+use super::disk_expansion::{
+    FilesExpansion, FilesExpansionCache, Negation, Positive, expand_cached, expand_entries,
+};
 use super::file_content_cache::{FileStamp, shared_file_content_cache};
 use super::hash_ignored_files::hash_files;
 use crate::native::glob::build_glob_set;
@@ -14,23 +16,23 @@ pub struct TaskOutputHashResult {
 }
 
 /// The files under a dependency's declared `outputs` that `glob` selects,
-/// read the way an `includeIgnored` fileset is: an entry names a file or
-/// everything under a directory, a glob entry walks from its literal prefix,
-/// and a `!` entry filters. The outputs' expansion is shared by every task
-/// that reads them in one hashing call; `glob` then filters per task.
+/// read from disk the way an `includeIgnored` fileset is, see
+/// `output_entries`. The outputs' expansion is shared by every task that
+/// reads them in one hashing call; `glob` then filters per task.
 pub fn expand_task_outputs(
     workspace_root: &Path,
     glob: &str,
     outputs: &[String],
-    known: &(dyn Fn(&str) -> bool + Sync),
     cache: &FilesExpansionCache,
 ) -> Result<FilesExpansion> {
-    let entries: Vec<String> = outputs
-        .iter()
-        .filter_map(|entry| normalize_output_entry(entry))
-        .collect();
-    let key = format!("outputs:[{}]", entries.join(","));
-    let expansion = expand_files_cached(workspace_root, &key, &entries, cache, known)?;
+    let key = format!("outputs:[{}]", outputs.join("\n"));
+    let expansion = expand_cached(&key, cache, || {
+        let (positives, negations) = output_entries(workspace_root, outputs)?;
+        // Outputs were written by a task that has run: the file map predates
+        // it, so no path is taken as known, and they are read wherever they
+        // point.
+        expand_entries(workspace_root, &positives, &negations, &|_| false, false)
+    })?;
     let selected = build_glob_set(&[glob])?;
     let (files, stamps): (Vec<String>, Vec<Option<FileStamp>>) = expansion
         .files
@@ -52,15 +54,13 @@ pub fn hash_task_output(
     workspace_root: &Path,
     glob: &str,
     outputs: &[String],
-    known: &(dyn Fn(&str) -> bool + Sync),
-    known_hash: impl Fn(&str) -> Option<String> + Sync,
     cache: &FilesExpansionCache,
 ) -> Result<TaskOutputHashResult> {
-    let expansion = expand_task_outputs(workspace_root, glob, outputs, known, cache)?;
+    let expansion = expand_task_outputs(workspace_root, glob, outputs, cache)?;
     let hash = hash_files(
         workspace_root,
         &expansion,
-        known_hash,
+        |_| None,
         shared_file_content_cache(),
     );
     Ok(TaskOutputHashResult {
@@ -74,16 +74,40 @@ pub fn resolve_task_output_files(
     workspace_root: &Path,
     glob: &str,
     outputs: &[String],
-    known: &(dyn Fn(&str) -> bool + Sync),
 ) -> Result<Vec<String>> {
-    let expansion = expand_task_outputs(
-        workspace_root,
-        glob,
-        outputs,
-        known,
-        &FilesExpansionCache::new(),
-    )?;
+    let expansion =
+        expand_task_outputs(workspace_root, glob, outputs, &FilesExpansionCache::new())?;
     Ok(expansion.files)
+}
+
+/// Declared outputs are paths first: an entry that exists is read as written,
+/// whatever characters it has (`.next/server/app/[id]`), and only one that
+/// names nothing on disk is a glob walked from its literal prefix. A `!`
+/// entry filters the rest.
+fn output_entries(
+    workspace_root: &Path,
+    outputs: &[String],
+) -> Result<(Vec<Positive>, Vec<Negation>)> {
+    let mut positives = Vec::new();
+    let mut negations = Vec::new();
+    for entry in outputs {
+        let Some(entry) = normalize_output_entry(entry) else {
+            continue;
+        };
+        let (negated, body) = match entry.strip_prefix('!') {
+            Some(rest) => (true, rest),
+            None => (false, entry.as_str()),
+        };
+        let exists = workspace_root.join(body).exists();
+        match (negated, exists) {
+            (true, true) => negations.push(Negation::exact(body)),
+            (true, false) if !body.is_empty() => negations.push(Negation::parse(body)?),
+            (true, false) => {}
+            (false, true) => positives.push(Positive::exact(body)),
+            (false, false) => positives.push(Positive::parse(body)?),
+        }
+    }
+    Ok((positives, negations))
 }
 
 /// Resolves `.` and `..` lexically: outputs are declared relative to the
@@ -135,7 +159,13 @@ mod tests {
     }
 
     fn files(temp: &TempDir, glob: &str, outputs: &[&str]) -> Vec<String> {
-        resolve_task_output_files(temp.path(), glob, &strings(outputs), &|_| false).unwrap()
+        resolve_task_output_files(temp.path(), glob, &strings(outputs)).unwrap()
+    }
+
+    fn hash(temp: &TempDir, glob: &str, outputs: &[&str], cache: &FilesExpansionCache) -> String {
+        hash_task_output(temp.path(), glob, &strings(outputs), cache)
+            .unwrap()
+            .hash
     }
 
     #[test]
@@ -160,11 +190,78 @@ mod tests {
     }
 
     #[test]
+    fn a_file_under_two_overlapping_outputs_counts_once() {
+        let temp = workspace();
+        assert_eq!(
+            files(&temp, "**/*.js", &["dist", "dist/apps/web"]),
+            vec![
+                "dist/@scope/pkg/index.js",
+                "dist/apps/web/index.js",
+                "dist/libs/lib/index.js"
+            ]
+        );
+        let cache = FilesExpansionCache::new();
+        assert_eq!(
+            hash(&temp, "**/*.js", &["dist", "dist/apps/web"], &cache),
+            hash(&temp, "**/*.js", &["dist"], &cache)
+        );
+    }
+
+    #[test]
     fn keeps_at_in_an_output_prefix() {
         let temp = workspace();
         assert_eq!(
             files(&temp, "**/*.js", &["dist/@scope/pkg/**"]),
             vec!["dist/@scope/pkg/index.js"]
+        );
+    }
+
+    #[test]
+    fn an_output_that_exists_is_read_as_written() {
+        let temp = workspace();
+        temp.child("dist/app/[id]/page.js").write_str("id").unwrap();
+        temp.child("dist/app/(group)/page.js")
+            .write_str("group")
+            .unwrap();
+        assert_eq!(
+            files(&temp, "**/*", &["dist/app/[id]", "dist/app/(group)"]),
+            vec!["dist/app/(group)/page.js", "dist/app/[id]/page.js"]
+        );
+        assert_eq!(
+            files(&temp, "**/*", &["dist/app", "!dist/app/[id]"]),
+            vec!["dist/app/(group)/page.js"]
+        );
+        // Only an entry that names nothing on disk is a glob.
+        assert_eq!(
+            files(&temp, "**/*", &["dist/apps/[wx]eb/index.js"]),
+            vec!["dist/apps/web/index.js"]
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn an_output_is_read_wherever_it_points() {
+        let temp = workspace();
+        let elsewhere = TempDir::new().unwrap();
+        elsewhere.child("out/index.js").write_str("linked").unwrap();
+        elsewhere.child("file.js").write_str("linked file").unwrap();
+        std::os::unix::fs::symlink(
+            elsewhere.path().join("out"),
+            temp.path().join("dist/linked"),
+        )
+        .unwrap();
+        std::os::unix::fs::symlink(
+            elsewhere.path().join("file.js"),
+            temp.path().join("dist/apps/web/linked.js"),
+        )
+        .unwrap();
+        assert_eq!(
+            files(&temp, "**/*.js", &["dist/linked"]),
+            vec!["dist/linked/index.js"]
+        );
+        assert_eq!(
+            files(&temp, "**/*.js", &["dist/apps/web/**"]),
+            vec!["dist/apps/web/index.js", "dist/apps/web/linked.js"]
         );
     }
 
@@ -192,43 +289,42 @@ mod tests {
     fn a_missing_output_is_not_an_input() {
         let temp = workspace();
         let cache = FilesExpansionCache::new();
-        let hash = |outputs: &[&str]| {
-            hash_task_output(
-                temp.path(),
-                "**/*.js",
-                &strings(outputs),
-                &|_| false,
-                |_| None,
-                &cache,
-            )
-            .unwrap()
-        };
-        let with_absent = hash(&["dist/absent", "dist/apps/web"]);
-        let without = hash(&["dist/apps/web"]);
+        let with_absent = hash_task_output(
+            temp.path(),
+            "**/*.js",
+            &strings(&["dist/absent", "dist/apps/web"]),
+            &cache,
+        )
+        .unwrap();
         assert_eq!(with_absent.files, vec!["dist/apps/web/index.js"]);
-        assert_eq!(with_absent.hash, without.hash);
+        assert_eq!(
+            with_absent.hash,
+            hash(&temp, "**/*.js", &["dist/apps/web"], &cache)
+        );
     }
 
     #[test]
     fn the_hash_follows_the_content() {
         let temp = workspace();
         let hash = || {
-            hash_task_output(
-                temp.path(),
+            hash(
+                &temp,
                 "**/*.js",
-                &strings(&["dist/apps/web"]),
-                &|_| false,
-                |_| None,
+                &["dist/apps/web"],
                 &FilesExpansionCache::new(),
             )
-            .unwrap()
-            .hash
         };
         let first = hash();
         assert_eq!(first, hash());
         temp.child("dist/apps/web/index.js")
             .write_str("changed")
             .unwrap();
-        assert_ne!(first, hash());
+        let second = hash();
+        assert_ne!(first, second);
+        // A same-size rewrite in the same instant still counts.
+        temp.child("dist/apps/web/index.js")
+            .write_str("CHANGED")
+            .unwrap();
+        assert_ne!(second, hash());
     }
 }

@@ -163,16 +163,46 @@ pub(crate) fn validate_files_globs(project: &str, globs: &[String]) -> Result<()
     globs.iter().try_for_each(|glob| validate_files_glob(glob))
 }
 
+/// A positive entry: the directory it is read from and the pattern after it,
+/// if any. Without a pattern it names an exact file, or a directory and
+/// everything under it.
+pub(crate) struct Positive {
+    text: String,
+    root: String,
+    remainder: Option<String>,
+}
+
+impl Positive {
+    /// Split at its literal prefix, see `literal_prefix`.
+    pub(crate) fn parse(glob: &str) -> Result<Self> {
+        let (root, remainder) = literal_prefix(glob)?;
+        Ok(Self {
+            text: glob.to_string(),
+            root,
+            remainder: remainder.map(str::to_string),
+        })
+    }
+
+    /// `path` as written, whatever characters it has.
+    pub(crate) fn exact(path: &str) -> Self {
+        Self {
+            text: path.to_string(),
+            root: path.to_string(),
+            remainder: None,
+        }
+    }
+}
+
 /// A `!` entry split at its literal prefix. The prefix is compared as text;
 /// only the remainder is a glob. Without a remainder it names an exact file,
 /// or a directory whose whole contents are excluded.
-struct Negation {
+pub(crate) struct Negation {
     root: String,
     remainder: Option<Arc<NxGlobSet>>,
 }
 
 impl Negation {
-    fn parse(glob: &str) -> Result<Self> {
+    pub(crate) fn parse(glob: &str) -> Result<Self> {
         let normalized = normalize_glob(glob);
         let body = normalized.strip_prefix('!').unwrap_or(&normalized);
         let (root, remainder) = literal_prefix(body)?;
@@ -181,6 +211,14 @@ impl Negation {
         }
         let remainder = remainder.map(|rest| build_glob_set(&[rest])).transpose()?;
         Ok(Self { root, remainder })
+    }
+
+    /// Excludes `path` as written: a file, or a directory and everything under it.
+    pub(crate) fn exact(path: &str) -> Self {
+        Self {
+            root: path.to_string(),
+            remainder: None,
+        }
     }
 
     fn excludes(&self, path: &str) -> bool {
@@ -222,11 +260,12 @@ enum Visit {
 /// Files under `start`, workspace-relative, with the stamp read on the way
 /// for anything the context does not vouch for. Top-level subdirectories walk
 /// in parallel. `start` itself is never skipped; its descendants are subject
-/// to the hardcoded ignores, so `node_modules/foo/**` works.
+/// to the hardcoded ignores, so `node_modules/foo/**` works. With
+/// `canonical_root`, a linked file counts only when its target is inside it.
 fn walk_files(
     start: &Path,
     workspace_root: &Path,
-    canonical_root: &Path,
+    canonical_root: Option<&Path>,
     skip: &NxGlobSet,
     accept: &(dyn Fn(&str) -> bool + Sync),
     known: &(dyn Fn(&str) -> bool + Sync),
@@ -258,8 +297,7 @@ fn walk_files(
         let relative = relative_of(path)?;
         if file_type.is_symlink() {
             // Links are not followed: a linked directory is another walk's to
-            // read, and a linked file counts only when its target is inside
-            // the workspace.
+            // read.
             let target = std::fs::metadata(path).ok()?;
             if target.is_dir() {
                 return Some(Visit::SkippedDir(relative));
@@ -268,7 +306,9 @@ fn walk_files(
             if !accept(&relative) {
                 return Some(Visit::File { key, hit: None });
             }
-            if !dunce::canonicalize(path).is_ok_and(|t| t.starts_with(canonical_root)) {
+            if let Some(root) = canonical_root
+                && !dunce::canonicalize(path).is_ok_and(|t| t.starts_with(root))
+            {
                 return None;
             }
             let hit = if known(&relative) {
@@ -361,30 +401,47 @@ fn walk_files(
 /// Every positive glob is resolved from its literal prefix, then the
 /// negations filter the result. Walks skip the same directories the workspace
 /// walker never enters, but an exact path or a prefix inside one of them is
-/// read as-is.
+/// read as-is. Nothing outside the workspace is read, symlinks included.
 pub fn expand_files_with(
     workspace_root: &Path,
     globs: &[String],
     known: &(dyn Fn(&str) -> bool + Sync),
 ) -> Result<FilesExpansion> {
-    let skip = build_glob_set(HARDCODED_IGNORE_PATTERNS)?;
-    let canonical_root = dunce::canonicalize(workspace_root).with_context(|| {
-        format!(
-            "Cannot resolve the workspace root {}",
-            workspace_root.display()
-        )
-    })?;
     let negations: Vec<Negation> = globs
         .iter()
         .filter(|g| g.starts_with('!'))
         .flat_map(|g| expand_literal_braces(g))
         .map(|g| Negation::parse(&g))
         .collect::<Result<_>>()?;
-    let positives: Vec<String> = globs
+    let positives: Vec<Positive> = globs
         .iter()
         .filter(|g| !g.starts_with('!'))
         .flat_map(|g| expand_literal_braces(&normalize_glob(g)))
-        .collect();
+        .map(|g| Positive::parse(&g))
+        .collect::<Result<_>>()?;
+    expand_entries(workspace_root, &positives, &negations, known, true)
+}
+
+/// `expand_files_with` for entries the caller has already split. Without
+/// `confine`, an entry is read wherever it points, as a declared output is.
+pub(crate) fn expand_entries(
+    workspace_root: &Path,
+    positives: &[Positive],
+    negations: &[Negation],
+    known: &(dyn Fn(&str) -> bool + Sync),
+    confine: bool,
+) -> Result<FilesExpansion> {
+    let skip = build_glob_set(HARDCODED_IGNORE_PATTERNS)?;
+    let canonical_root = if confine {
+        Some(dunce::canonicalize(workspace_root).with_context(|| {
+            format!(
+                "Cannot resolve the workspace root {}",
+                workspace_root.display()
+            )
+        })?)
+    } else {
+        None
+    };
 
     let mut found: Vec<(String, Option<FileStamp>)> = Vec::new();
     let mut missing: Vec<String> = Vec::new();
@@ -394,32 +451,41 @@ pub fn expand_files_with(
         prefix: prefix.to_string(),
         view: Arc::new(view),
     };
-    for glob in &positives {
-        let (root, remainder) = literal_prefix(glob)?;
+    for entry in positives {
+        let root = &entry.root;
+        let remainder = entry.remainder.as_deref();
         let has_pattern = remainder.is_some();
-        if !has_pattern && known(&root) {
-            found.push((root, None));
+        if !has_pattern && known(root) {
+            found.push((root.clone(), None));
             continue;
         }
-        let start = workspace_root.join(&root);
+        let start = workspace_root.join(root);
         let Ok(metadata) = std::fs::metadata(&start) else {
             // Nothing exists under it any more, so nothing was seen.
-            walks.push(record(&root, WalkView::default()));
+            walks.push(record(root, WalkView::default()));
             if !has_pattern {
-                missing.push(root);
+                missing.push(root.clone());
             }
             continue;
         };
-        // Confine the prefix to the workspace after symlink resolution, not
-        // just lexically.
-        let resolved = dunce::canonicalize(&start)
-            .with_context(|| format!("Cannot resolve the includeIgnored fileset \"{glob}\""))?;
-        if !resolved.starts_with(&canonical_root) {
-            bail!("The includeIgnored fileset \"{glob}\" resolves outside the workspace.");
+        if let Some(canonical_root) = &canonical_root {
+            // After symlink resolution, not just lexically.
+            let resolved = dunce::canonicalize(&start).with_context(|| {
+                format!(
+                    "Cannot resolve the includeIgnored fileset \"{}\"",
+                    entry.text
+                )
+            })?;
+            if !resolved.starts_with(canonical_root) {
+                bail!(
+                    "The includeIgnored fileset \"{}\" resolves outside the workspace.",
+                    entry.text
+                );
+            }
         }
         if metadata.is_file() {
             if !has_pattern {
-                found.push((root, Some(stamp_of(&metadata))));
+                found.push((root.clone(), Some(stamp_of(&metadata))));
             }
             continue;
         }
@@ -440,13 +506,13 @@ pub fn expand_files_with(
         let walked = walk_files(
             &start,
             workspace_root,
-            &canonical_root,
+            canonical_root.as_deref(),
             &skip,
             &*accept,
             known,
         );
         found.extend(walked.found);
-        walks.push(record(&root, walked.view));
+        walks.push(record(root, walked.view));
     }
 
     found.retain(|(path, _)| !negations.iter().any(|n| n.excludes(path)));
@@ -477,10 +543,20 @@ pub(crate) fn expand_files_cached(
     cache: &FilesExpansionCache,
     known: &(dyn Fn(&str) -> bool + Sync),
 ) -> Result<Arc<FilesExpansion>> {
+    expand_cached(key, cache, || {
+        expand_files_with(workspace_root, globs, known)
+    })
+}
+
+pub(crate) fn expand_cached(
+    key: &str,
+    cache: &FilesExpansionCache,
+    expand: impl FnOnce() -> Result<FilesExpansion>,
+) -> Result<Arc<FilesExpansion>> {
     if let Some(cached) = cache.get(key) {
         return Ok(Arc::clone(&cached));
     }
-    let expansion = Arc::new(expand_files_with(workspace_root, globs, known)?);
+    let expansion = Arc::new(expand()?);
     cache.insert(key.to_string(), Arc::clone(&expansion));
     Ok(expansion)
 }
