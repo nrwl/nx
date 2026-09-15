@@ -18,13 +18,27 @@ vi.mock('../../../utils/package-manager', () => ({
   getPackageManagerCommand: () => ({ exec: 'npx', install: 'npm install' }),
 }));
 
+const mockLockCtor = vi.fn();
+vi.mock('../../../native', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../../native')>();
+  // A seam before the native constructor runs; the instances stay real.
+  function FileLock(path: string) {
+    mockLockCtor(path);
+    return new actual.FileLock(path);
+  }
+  FileLock.prototype = actual.FileLock.prototype;
+  return { ...actual, FileLock };
+});
+
 import {
   existsSync,
   mkdirSync,
   mkdtempSync,
   readdirSync,
   readFileSync,
+  renameSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
@@ -51,6 +65,7 @@ import {
   type MigrateRunState,
   type MigrateStep,
 } from './run-state';
+import { summarizeError } from './util';
 
 const runId = 'run-1';
 const committed = {
@@ -58,6 +73,12 @@ const committed = {
   sha: 'face0001face0001face0001face0001face0001',
 };
 const POLICY: MigrateRunPolicy = { createCommits: true, skipInstall: false };
+const ANSWER: BrokerResult = {
+  kind: 'commit',
+  result: committed,
+  absorbedStepIds: [],
+  output: [],
+};
 
 function step(overrides: Partial<MigrateStep> = {}): MigrateStep {
   return {
@@ -110,6 +131,7 @@ describe('migrate commit broker', () => {
     }) as typeof process.stdout.write);
     vi.spyOn(logger, 'info').mockImplementation(() => {});
     vi.spyOn(output, 'error').mockImplementation(() => {});
+    mockLockCtor.mockReset();
     mockCommit.mockReset().mockResolvedValue(committed);
     mockReadPackageJsonDeps.mockReset().mockReturnValue('{"deps":2}');
     mockRunInstall.mockReset().mockResolvedValue(undefined);
@@ -255,7 +277,9 @@ describe('migrate commit broker', () => {
       expect(logger.info).toHaveBeenCalledWith(
         pc.dim('- Committed @nx/js:gen.')
       );
-      expect(brokerFiles()).toEqual([]);
+      expect(brokerFiles()).toEqual([
+        `${broker.nonce}-step-1-1-commit.result.json`,
+      ]);
     });
 
     it('lands the commit after a succeeded install, keeping the install output out of the step', async () => {
@@ -316,25 +340,69 @@ describe('migrate commit broker', () => {
       expect(readRunState(dir).steps[0].installFailed).toBe(true);
     });
 
-    it('keeps waiting when the lock probe cannot be built', async () => {
+    it('refuses the request when the lock probe cannot be built, publishing nothing', async () => {
       process.env.NX_MIGRATE_BROKER = 'deadbeef';
       mkdirSync(join(brokerDir(dir), 'deadbeef.lock'), { recursive: true });
-      let settled = false;
 
-      const pending = commitStepTree(dir, step(), [], vi.fn()).finally(() => {
-        settled = true;
-      });
-      await sleep(600);
-      const settledWithoutProbe = settled;
-      await answerRequest('deadbeef', {
-        kind: 'commit',
+      await expect(commitStepTree(dir, step(), [], vi.fn())).rejects.toThrow(
+        'is not accepting its request'
+      );
+      expect(brokerFiles()).toEqual(['deadbeef.lock']);
+    });
+
+    it('answers a repeat from its result when the lock probe cannot be built', async () => {
+      process.env.NX_MIGRATE_BROKER = 'deadbeef';
+      mkdirSync(join(brokerDir(dir), 'deadbeef.lock'), { recursive: true });
+      writeFileSync(
+        join(brokerDir(dir), 'deadbeef-step-1-1-commit.result.json'),
+        JSON.stringify(ANSWER)
+      );
+
+      expect(await commitStepTree(dir, step(), [], vi.fn())).toEqual({
         result: committed,
         absorbedStepIds: [],
-        output: [],
       });
-      await pending;
+      expect(brokerFiles()).toEqual([
+        'deadbeef-step-1-1-commit.result.json',
+        'deadbeef.lock',
+      ]);
+    });
 
-      expect(settledWithoutProbe).toBe(false);
+    it('answers a repeat from a result published while its lock probe failed to build', async () => {
+      process.env.NX_MIGRATE_BROKER = 'deadbeef';
+      mkdirSync(brokerDir(dir), { recursive: true });
+      // The parent answers and closes while the step builds its probe.
+      mockLockCtor.mockImplementation(() => {
+        writeFileSync(
+          join(brokerDir(dir), 'deadbeef-step-1-1-commit.result.json'),
+          JSON.stringify(ANSWER)
+        );
+        throw new Error('EACCES');
+      });
+
+      expect(await commitStepTree(dir, step(), [], vi.fn())).toEqual({
+        result: committed,
+        absorbedStepIds: [],
+      });
+      expect(brokerFiles()).toEqual(['deadbeef-step-1-1-commit.result.json']);
+    });
+
+    it('keeps the answer for a step still reading it when the session closes', async () => {
+      const broker = new MigrateCommitBroker(
+        root,
+        dir,
+        'npx nx migrate',
+        POLICY
+      );
+      process.env.NX_MIGRATE_BROKER = broker.nonce;
+
+      const pending = commitStepTree(dir, step(), [], vi.fn());
+      await sleep(20);
+      await broker.service();
+      broker.close();
+
+      expect(await pending).toEqual({ result: committed, absorbedStepIds: [] });
+      expect(mockCommit).toHaveBeenCalledTimes(1);
     });
 
     it('throws the stale error when the session no longer owns the attempt', async () => {
@@ -380,9 +448,32 @@ describe('migrate commit broker', () => {
     it('gives up once the lock is free without an answer', async () => {
       process.env.NX_MIGRATE_BROKER = 'deadbeef';
 
-      await expect(
-        commitStepTree(dir, step(), [], vi.fn())
-      ).rejects.toBeInstanceOf(BrokerUnavailableError);
+      const error = await commitStepTree(dir, step(), [], vi.fn()).catch(
+        (e) => e
+      );
+
+      expect(error).toBeInstanceOf(BrokerUnavailableError);
+      // What the failed step reports, whole.
+      expect(summarizeError(error)).toBe(
+        'The nx migrate session that started this step ended before its request was answered. The install or the commit may still have landed; check the working tree and git log.'
+      );
+    });
+
+    it('takes an answer published between the poll and the free-lock probe', async () => {
+      process.env.NX_MIGRATE_BROKER = 'deadbeef';
+      // The parent answers and closes while the step probes the lock.
+      vi.spyOn(FileLock.prototype, 'check').mockImplementation(() => {
+        writeFileSync(
+          join(brokerDir(dir), 'deadbeef-step-1-1-commit.result.json'),
+          JSON.stringify(ANSWER)
+        );
+        return false;
+      });
+
+      expect(await commitStepTree(dir, step(), [], vi.fn())).toEqual({
+        result: committed,
+        absorbedStepIds: [],
+      });
     });
 
     it('takes a published answer over a free lock', async () => {
@@ -474,7 +565,9 @@ describe('migrate commit broker', () => {
       expect(readRunState(dir).steps[0].depsHashAtDispense).not.toBe(
         'baseline'
       );
-      expect(brokerFiles()).toEqual([]);
+      expect(brokerFiles()).toEqual([
+        `${broker.nonce}-step-1-1-install.result.json`,
+      ]);
     });
 
     it('fails the step with the install error the session reported', async () => {
@@ -634,7 +727,7 @@ describe('migrate commit broker', () => {
       return join(brokerDir(dir), `${nonce}-step-1-1.result.json`);
     }
 
-    it('holds the session lock from construction until close, then removes its files', () => {
+    it('holds the session lock from construction until close, then removes its requests and lock', () => {
       const broker = new MigrateCommitBroker(
         root,
         dir,
@@ -642,7 +735,8 @@ describe('migrate commit broker', () => {
         POLICY
       );
       const lockPath = join(brokerDir(dir), `${broker.nonce}.lock`);
-      writeRequest(broker.nonce);
+      const answered = writeRequest(broker.nonce);
+      writeFileSync(answered, '{}');
       writeRequest('00000000');
 
       const probe = new FileLock(lockPath);
@@ -652,7 +746,67 @@ describe('migrate commit broker', () => {
       expect(broker.nonce).toMatch(/^[0-9a-f]{8}$/);
       expect(heldDuringSession).toBe(true);
       expect(probe.check()).toBe(false);
-      expect(brokerFiles()).toEqual(['00000000-step-1-1.request.json']);
+      expect(brokerFiles()).toEqual([
+        '00000000-step-1-1.request.json',
+        `${broker.nonce}-step-1-1.result.json`,
+      ]);
+    });
+
+    it.each<[string, () => void]>([
+      ['a symlink', () => symlinkSync(root, brokerDir(dir))],
+      ['a file', () => writeFileSync(brokerDir(dir), '')],
+    ])(
+      'refuses to open when %s stands where the broker directory belongs',
+      (_what, plant) => {
+        plant();
+
+        expect(
+          () => new MigrateCommitBroker(root, dir, 'npx nx migrate', POLICY)
+        ).toThrow(`something other than a directory at ${brokerDir(dir)}`);
+      }
+    );
+
+    it('refuses to answer through a symlink swapped in for the broker directory', async () => {
+      const broker = new MigrateCommitBroker(
+        root,
+        dir,
+        'npx nx migrate',
+        POLICY
+      );
+      writeRequest(broker.nonce);
+      const elsewhere = join(root, 'elsewhere');
+      mkdirSync(elsewhere);
+      renameSync(brokerDir(dir), join(root, 'moved'));
+      symlinkSync(elsewhere, brokerDir(dir));
+
+      await expect(broker.service()).rejects.toThrow(
+        `something other than a directory at ${brokerDir(dir)}`
+      );
+      broker.close();
+
+      expect(mockCommit).not.toHaveBeenCalled();
+    });
+
+    it('releases the lock without cleaning through a symlink swapped in for the broker directory', () => {
+      const broker = new MigrateCommitBroker(
+        root,
+        dir,
+        'npx nx migrate',
+        POLICY
+      );
+      const planted = `${broker.nonce}-step-1-1.request.json`;
+      const elsewhere = join(root, 'elsewhere');
+      mkdirSync(elsewhere);
+      writeFileSync(join(elsewhere, planted), '');
+      const moved = join(root, 'moved');
+      renameSync(brokerDir(dir), moved);
+      symlinkSync(elsewhere, brokerDir(dir));
+      const probe = new FileLock(join(moved, `${broker.nonce}.lock`));
+
+      broker.close();
+
+      expect(probe.check()).toBe(false);
+      expect(readdirSync(elsewhere)).toEqual([planted]);
     });
 
     it('answers a request once, whatever else rewrites it', async () => {

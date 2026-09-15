@@ -37,7 +37,7 @@ vi.mock('../../run/broker', () => ({
   },
 }));
 
-import { spawn } from 'child_process';
+import { execSync, spawn } from 'child_process';
 import { DetectedInstalledAgent } from '../types';
 import {
   adaptMasterSpawnForWindowsShim,
@@ -47,6 +47,7 @@ import {
 } from './spawn-master';
 
 const mockSpawn = spawn as unknown as Mock;
+const mockExecSync = execSync as unknown as Mock;
 
 type FakeChild = EventEmitter & {
   exitCode: number | null;
@@ -323,6 +324,91 @@ describe('spawnMasterSession', () => {
       await spawnMasterSession(input());
 
       expect(mockBrokerClose).toHaveBeenCalledTimes(1);
+    });
+
+    describe('terminal restoration', () => {
+      let originalIsTTY: boolean | undefined;
+
+      beforeEach(() => {
+        setPlatform('linux');
+        originalIsTTY = Object.getOwnPropertyDescriptor(
+          process.stdin,
+          'isTTY'
+        )?.value;
+        Object.defineProperty(process.stdin, 'isTTY', {
+          value: true,
+          configurable: true,
+        });
+        mockExecSync.mockReset();
+      });
+
+      afterEach(() => {
+        Object.defineProperty(process.stdin, 'isTTY', {
+          value: originalIsTTY,
+          configurable: true,
+        });
+      });
+
+      const sttyCalls = () =>
+        mockExecSync.mock.calls.filter(
+          ([cmd]) => cmd === 'stty sane < /dev/tty'
+        ).length;
+
+      it('restores the terminal before waiting on the request in flight once the agent exited', async () => {
+        const child = fakeChild({ exitAfterSpawn: false });
+        mockSpawn.mockImplementation(() => child);
+        let finishInFlight: () => void;
+        const inFlight = new Promise<void>((resolve) => {
+          finishInFlight = resolve;
+        });
+
+        const pending = spawnMasterSession(input());
+        await pollsElapsed(2);
+        mockBrokerService.mockReturnValue(inFlight);
+        await pollsElapsed(2);
+        child.exitCode = 0;
+        child.emit('exit', 0, null);
+        await pollsElapsed(2);
+        const restoredWhileWaiting = sttyCalls();
+        finishInFlight();
+
+        expect(await pending).toEqual({ kind: 'exited' });
+        expect(restoredWhileWaiting).toBe(1);
+        expect(sttyCalls()).toBe(1);
+      });
+
+      it('restores the terminal only after the wait when the agent outlived its close', async () => {
+        const child = fakeChild({ exitAfterSpawn: false });
+        child.kill = vi.fn(() => true);
+        mockSpawn.mockImplementation(() => child);
+        let finishInFlight: () => void;
+        const inFlight = new Promise<void>((resolve) => {
+          finishInFlight = resolve;
+        });
+        const sentinel = join(
+          runRoot,
+          '.nx',
+          'migrate-runs',
+          runId,
+          'handoffs',
+          'session-complete-abcd1234'
+        );
+
+        const pending = spawnMasterSession(input());
+        await pollsElapsed(2);
+        mockBrokerService.mockReturnValue(inFlight);
+        await pollsElapsed(2);
+        writeFileSync(sentinel, '');
+        // SIGINT, SIGKILL and the bounded waits after each.
+        await pollsElapsed(16);
+        const restoredWhileWaiting = sttyCalls();
+        finishInFlight();
+
+        expect(await pending).toEqual({ kind: 'exited' });
+        expect(child.kill).toHaveBeenCalledWith('SIGKILL');
+        expect(restoredWhileWaiting).toBe(0);
+        expect(sttyCalls()).toBe(1);
+      });
     });
   });
 
