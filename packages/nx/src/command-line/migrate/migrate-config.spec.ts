@@ -306,6 +306,22 @@ describe('applyNxJsonMigrateDefaults', () => {
       expect(result.createCommits).toBeUndefined();
       expect(result.commitPrefix).toBeUndefined();
     });
+
+    it('fills the run-migrations overlay for a start-fresh, which starts a new run', () => {
+      const config: NxMigrateConfiguration = {
+        createCommits: true,
+        commitPrefix: 'chore: migrate ',
+        agentic: 'claude-code',
+      };
+      const result = applyNxJsonMigrateDefaults(
+        { runMigrations: 'migrations.json', runId: 'run-1', startFresh: true },
+        config,
+        noEnv
+      );
+      expect(result.createCommits).toBe(true);
+      expect(result.commitPrefix).toBe('chore: migrate ');
+      expect(result.agentic).toBe('claude-code');
+    });
   });
 
   describe('generate-migrations phase', () => {

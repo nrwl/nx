@@ -1048,6 +1048,36 @@ export function getLatestCommitSha(directory?: string): string | null {
  */
 export const GIT_SHA = /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/i;
 
+export type AncestorStatus = 'ancestor' | 'not-ancestor' | 'unknown';
+
+/**
+ * Whether `ancestor` is reachable from `descendant`. 'unknown' means the
+ * answer could not be established (invalid input, not a repository, a commit
+ * git does not know), which is distinct from a verified 'not-ancestor'.
+ */
+export function getAncestorStatus(
+  ancestor: string,
+  descendant: string,
+  directory?: string
+): AncestorStatus {
+  if (!GIT_SHA.test(ancestor) || !GIT_SHA.test(descendant)) {
+    return 'unknown';
+  }
+  try {
+    execSync(`git merge-base --is-ancestor ${ancestor} ${descendant}`, {
+      stdio: 'pipe',
+      windowsHide: true,
+      cwd: directory,
+    });
+    return 'ancestor';
+  } catch (e) {
+    // Exit 1 is git's verified "no"; anything else is a failed probe.
+    return (e as { status?: number })?.status === 1
+      ? 'not-ancestor'
+      : 'unknown';
+  }
+}
+
 /**
  * Whether `ancestor` is reachable from `descendant`, i.e. resetting to
  * `descendant` keeps `ancestor` in history. Returns false when the answer
@@ -1059,17 +1089,5 @@ export function isAncestorCommit(
   descendant: string,
   directory?: string
 ): boolean {
-  if (!GIT_SHA.test(ancestor) || !GIT_SHA.test(descendant)) {
-    return false;
-  }
-  try {
-    execSync(`git merge-base --is-ancestor ${ancestor} ${descendant}`, {
-      stdio: 'pipe',
-      windowsHide: true,
-      cwd: directory,
-    });
-    return true;
-  } catch {
-    return false;
-  }
+  return getAncestorStatus(ancestor, descendant, directory) === 'ancestor';
 }
