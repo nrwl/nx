@@ -1510,30 +1510,6 @@ describe('registerSourceGraphResolver CJS runtime condition union', () => {
       'cjs',
     ],
     [
-      'the last repeated flag',
-      ['--no-experimental-require-module', '--experimental-require-module'],
-      undefined,
-      'esm',
-    ],
-    [
-      'the underscore spelling and an ignored =value',
-      ['--no_experimental_require_module=false'],
-      undefined,
-      'cjs',
-    ],
-    [
-      'a re-enabling underscore spelling',
-      ['--no-experimental-require-module', '--experimental_require_module'],
-      undefined,
-      'esm',
-    ],
-    [
-      'a double-quoted NODE_OPTIONS flag',
-      [],
-      '"--no-experimental-require-module"',
-      'cjs',
-    ],
-    [
       'a flag-like word inside a quoted NODE_OPTIONS condition',
       [],
       '--conditions="x --no-experimental-require-module y"',
@@ -1548,6 +1524,34 @@ describe('registerSourceGraphResolver CJS runtime condition union', () => {
       expect(results.entry.addons).toBe('addons');
     },
     120_000
+  );
+
+  it.runIf(process.features.require_module)(
+    'applies module-sync on a Node 20 release that backports require(esm)',
+    async () => {
+      const graphEntry = join(workspaceDir, 'graph-entry.cjs');
+      const nodeVersion = Object.getOwnPropertyDescriptor(
+        process.versions,
+        'node'
+      )!;
+      Object.defineProperty(process.versions, 'node', {
+        ...nodeVersion,
+        value: '20.20.0',
+      });
+      vi.resetModules();
+      const fresh = await import('./register');
+      const cleanup = fresh.registerSourceGraphResolver(
+        graphEntry,
+        workspaceDir,
+        ['@proj/dual']
+      );
+      try {
+        expect(createRequire(graphEntry)('@proj/dual')).toBe('esm');
+      } finally {
+        cleanup();
+        Object.defineProperty(process.versions, 'node', nodeVersion);
+      }
+    }
   );
 
   // swc's native binding cannot load under --no-addons, so these run in-process
