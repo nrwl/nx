@@ -2,7 +2,7 @@
 //! outputs, into the files on disk: the glob text rules, the walk from each
 //! glob's literal prefix, and the stamps the content memo validates by.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use anyhow::{Context, Result, bail};
@@ -279,9 +279,11 @@ fn walk_files(
     workspace_root: &Path,
     canonical_root: Option<&Path>,
     skip: &NxGlobSet,
+    skip_dirs: &[PathBuf],
     accept: &(dyn Fn(&str) -> bool + Sync),
     known: &(dyn Fn(&str) -> bool + Sync),
 ) -> Vec<(String, Option<FileStamp>)> {
+    let skipped = |dir: &Path| skip.is_match(dir) || skip_dirs.iter().any(|s| s == dir);
     let relative_of = |path: &Path| -> Option<String> {
         Some(
             path.strip_prefix(workspace_root)
@@ -338,13 +340,13 @@ fn walk_files(
     let nested: Vec<Vec<(String, Option<FileStamp>)>> = dirs
         .par_iter()
         .map(|dir| {
-            if skip.is_match(dir) {
+            if skipped(dir) {
                 return Vec::new();
             }
             WalkDir::new(dir)
                 .follow_links(false)
                 .into_iter()
-                .filter_entry(|entry| !skip.is_match(entry.path()))
+                .filter_entry(|entry| !skipped(entry.path()))
                 .flatten()
                 .filter_map(|entry| visit(entry.path(), entry.file_type()))
                 .collect()
@@ -368,8 +370,28 @@ pub fn expand_files_with(
     globs: &[String],
     known: &(dyn Fn(&str) -> bool + Sync),
 ) -> Result<FilesExpansion> {
+    expand_files_with_skips(workspace_root, globs, known, &[])
+}
+
+/// `expand_files_with` that also skips the absolute `skip_dirs`: the Nx cache
+/// and workspace-data locations when configured inside the workspace, which
+/// the hardcoded list only knows at their default spots.
+pub fn expand_files_with_skips(
+    workspace_root: &Path,
+    globs: &[String],
+    known: &(dyn Fn(&str) -> bool + Sync),
+    skip_dirs: &[PathBuf],
+) -> Result<FilesExpansion> {
     let (positives, negations) = parse_group(globs)?;
-    expand_entries(workspace_root, &positives, &negations, known, true, WALK)
+    expand_entries(
+        workspace_root,
+        &positives,
+        &negations,
+        known,
+        true,
+        skip_dirs,
+        WALK,
+    )
 }
 
 /// A group's entries split at their literal prefixes, positives then negations.
@@ -398,6 +420,7 @@ pub(crate) fn expand_entries(
     negations: &[Negation],
     known: &(dyn Fn(&str) -> bool + Sync),
     confine: bool,
+    skip_dirs: &[PathBuf],
     members: Members,
 ) -> Result<FilesExpansion> {
     let skip = walk_skips()?;
@@ -476,6 +499,7 @@ pub(crate) fn expand_entries(
             workspace_root,
             canonical_root.as_deref(),
             &skip,
+            skip_dirs,
             &*accept,
             known,
         ));
@@ -491,7 +515,11 @@ pub(crate) fn expand_entries(
 /// Every file under `dir` with its stamp, for an index seeding a prefix: the
 /// walk an expansion runs, confined to the workspace. Empty when `dir` does
 /// not exist yet; `None` when it resolves outside the workspace.
-pub(crate) fn seed_walk(workspace_root: &Path, dir: &str) -> Option<Vec<(String, FileStamp)>> {
+pub(crate) fn seed_walk(
+    workspace_root: &Path,
+    dir: &str,
+    skip_dirs: &[PathBuf],
+) -> Option<Vec<(String, FileStamp)>> {
     let start = workspace_root.join(dir);
     if std::fs::symlink_metadata(&start).is_err() {
         return Some(Vec::new());
@@ -510,6 +538,7 @@ pub(crate) fn seed_walk(workspace_root: &Path, dir: &str) -> Option<Vec<(String,
         workspace_root,
         Some(&canonical_root),
         &skip,
+        skip_dirs,
         &|_| true,
         &|_| false,
     );
@@ -533,11 +562,20 @@ pub(crate) fn expand_files_cached(
     globs: &[String],
     cache: &FilesExpansionCache,
     known: &(dyn Fn(&str) -> bool + Sync),
+    skip_dirs: &[PathBuf],
     members: Members,
 ) -> Result<Arc<FilesExpansion>> {
     expand_cached(key, cache, || {
         let (positives, negations) = parse_group(globs)?;
-        expand_entries(workspace_root, &positives, &negations, known, true, members)
+        expand_entries(
+            workspace_root,
+            &positives,
+            &negations,
+            known,
+            true,
+            skip_dirs,
+            members,
+        )
     })
 }
 
@@ -615,6 +653,7 @@ pub(crate) mod tests {
             &negations,
             &|_| false,
             true,
+            &[],
             &listed,
         )
         .unwrap();
@@ -631,6 +670,7 @@ pub(crate) mod tests {
             &[],
             &|_| false,
             true,
+            &[],
             &listed,
         )
         .unwrap();
@@ -929,5 +969,28 @@ pub(crate) mod tests {
         );
         assert!(expand("libs/app/@gen/absent.json").files.is_empty());
         assert!(validate_files_globs("web", &globs(&["@gen/**"])).is_ok());
+    }
+
+    #[test]
+    fn skips_the_directories_it_is_told_to() {
+        let temp = workspace();
+        temp.child("tmp/nx-cache/run.json").write_str("{}").unwrap();
+        temp.child("tmp/x.json").write_str("{}").unwrap();
+        let skip = [temp.path().join("tmp/nx-cache")];
+        let walked =
+            expand_files_with_skips(temp.path(), &globs(&["tmp/**/*.json"]), &|_| false, &skip)
+                .unwrap();
+        assert_eq!(walked.files, vec!["tmp/x.json"]);
+        // Pointing straight at it still reads it, like the hardcoded skips.
+        let direct =
+            expand_files_with_skips(temp.path(), &globs(&["tmp/nx-cache/**"]), &|_| false, &skip)
+                .unwrap();
+        assert_eq!(direct.files, vec!["tmp/nx-cache/run.json"]);
+        let seeded: Vec<String> = seed_walk(temp.path(), "tmp", &skip)
+            .unwrap()
+            .into_iter()
+            .map(|(path, _)| path)
+            .collect();
+        assert_eq!(seeded, vec!["tmp/x.json"]);
     }
 }

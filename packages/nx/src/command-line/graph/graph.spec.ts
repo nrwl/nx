@@ -4,6 +4,7 @@ import { expandFilesInput, HashPlanner } from '../../native';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { allFileData } from '../../utils/all-file-data';
+import { diskWalkSkippedDirectories } from '../../hasher/disk-walk-skipped-directories';
 import { getExpandedTaskInputs, ProjectGraphClientResponse } from './graph';
 
 vi.mock('../../native', async (importOriginal) => ({
@@ -28,6 +29,9 @@ vi.mock('../../config/configuration', () => ({
 }));
 vi.mock('../../tasks-runner/create-task-graph', () => ({
   createTaskGraph: vi.fn(),
+}));
+vi.mock('../../hasher/disk-walk-skipped-directories', () => ({
+  diskWalkSkippedDirectories: vi.fn(() => []),
 }));
 vi.mock('../../utils/all-file-data', () => ({
   allFileData: vi.fn(),
@@ -204,12 +208,30 @@ describe('getExpandedTaskInputs', () => {
 
     expect(expandFilesInput as unknown as Mock).toHaveBeenCalledWith(
       expect.any(String),
-      ['libs/myproj/generated/a.json', '!libs/myproj/generated/b.json']
+      ['libs/myproj/generated/a.json', '!libs/myproj/generated/b.json'],
+      []
     );
     expect(result).toEqual({
       general: ['libs/myproj/generated/a.json'],
       external: ['npm:some-pkg'],
     });
+  });
+
+  it('hands the configured skip list to the disk-backed expansion', async () => {
+    (diskWalkSkippedDirectories as unknown as Mock).mockReturnValueOnce([
+      'tmp/nx-cache',
+    ]);
+    getPlansMock.mockReturnValue({
+      'myproj:build': ['files:[tmp/**/*.json]'],
+    });
+
+    await getExpandedTaskInputs(makeResponse(), new Map(), 'myproj:build');
+
+    expect(expandFilesInput as unknown as Mock).toHaveBeenCalledWith(
+      expect.any(String),
+      ['tmp/**/*.json'],
+      ['tmp/nx-cache']
+    );
   });
 
   it('keeps a brace group intact when splitting a disk-backed group', async () => {
@@ -228,7 +250,8 @@ describe('getExpandedTaskInputs', () => {
         '{nx,tsconfig.base}.json',
         'libs/myproj/gen/{a,b}/*.ts',
         '!libs/myproj/gen/b/x.ts',
-      ]
+      ],
+      []
     );
   });
 
@@ -260,7 +283,8 @@ describe('getExpandedTaskInputs', () => {
 
     expect(expandFilesInput as unknown as Mock).toHaveBeenCalledWith(
       expect.any(String),
-      ['libs/myproj/{a.json', 'libs/myproj/b.json']
+      ['libs/myproj/{a.json', 'libs/myproj/b.json'],
+      []
     );
   });
 
