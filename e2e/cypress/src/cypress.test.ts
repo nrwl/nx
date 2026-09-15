@@ -49,7 +49,7 @@ describe('Cypress E2E Test runner', () => {
 
       // Making sure the package.json file contains the Cypress dependency
       const packageJson = readJson('package.json');
-      expect(packageJson.devDependencies['cypress']).toBeTruthy();
+      expect(packageJson.devDependencies['cypress']).toMatch(/^\^16\./);
 
       // Making sure the cypress folders & files are created
       checkFilesExist(`apps/${myapp}-e2e/cypress.config.ts`);
@@ -81,14 +81,15 @@ describe('Cypress E2E Test runner', () => {
         `
 describe('env vars', () => {
   it('should have cli args', () => {
-    assert.equal(Cypress.env('cliArg'), 'i am from the cli args');
+    cy.env(['cliArg']).then(({ cliArg }) => {
+      assert.equal(cliArg, 'i am from the cli args');
+    });
   });
 
   it('should have cypress.env.json vars', () => {
-    assert.equal(
-      Cypress.env('cypressEnvJson'),
-      'i am from the cypress.env.json file'
-    );
+    cy.env(['cypressEnvJson']).then(({ cypressEnvJson }) => {
+      assert.equal(cypressEnvJson, 'i am from the cypress.env.json file');
+    });
   });
 });`
       );
@@ -142,21 +143,21 @@ export default defineConfig({
           `
         describe('env vars', () => {
           it('should not have cli args', () => {
-            assert.equal(Cypress.env('cliArg'), undefined);
+            cy.env(['cliArg']).then(({ cliArg }) => {
+              assert.equal(cliArg, undefined);
+            });
           });
 
           it('should have cypress.env.json vars', () => {
-            assert.equal(
-              Cypress.env('cypressEnvJson'),
-              'i am from the cypress.env.json file'
-            );
+            cy.env(['cypressEnvJson']).then(({ cypressEnvJson }) => {
+              assert.equal(cypressEnvJson, 'i am from the cypress.env.json file');
+            });
           });
 
           it('should have cypress config vars', () => {
-            assert.equal(
-              Cypress.env('fromCyConfig'),
-              'i am from the cypress config file'
-            );
+            cy.env(['fromCyConfig']).then(({ fromCyConfig }) => {
+              assert.equal(fromCyConfig, 'i am from the cypress config file');
+            });
           });
         });`
         );

@@ -1,5 +1,6 @@
 import {
   addDependenciesToPackageJson,
+  detectPackageManager,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -15,13 +16,19 @@ import {
   updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { findTargetDefault, upsertTargetDefault } from '@nx/devkit/internal';
+import {
+  acknowledgeBuildScripts,
+  findTargetDefault,
+  upsertTargetDefault,
+} from '@nx/devkit/internal';
 import { assertNotUsingTsSolutionSetup } from '@nx/js/internal';
 import { assertSupportedCypressVersion } from '../../utils/assert-supported-cypress-version';
 import { warnCypressExecutorGenerating } from '../../utils/deprecation';
 import {
+  assertViteSupportsInstalledCypress,
+  componentTestingVersions,
   getInstalledCypressMajorVersion,
-  versions,
+  getInstalledCypressVersion,
 } from '../../utils/versions';
 import { addBaseCypressSetup } from '../base-setup/base-setup';
 import init from '../init/init';
@@ -49,8 +56,18 @@ export async function componentConfigurationGeneratorInternal(
 
   const tasks: GeneratorCallback[] = [];
   const opts = normalizeOptions(tree, options);
+  if (opts.bundler === 'vite') {
+    assertViteSupportsInstalledCypress(tree);
+  }
 
-  if (!getInstalledCypressMajorVersion(tree)) {
+  // Before init, which pins the latest cypress when none is declared. The
+  // set added here can be an older one that runs on the installed Vite.
+  const isCypressInstalled = !!getInstalledCypressMajorVersion(tree);
+  if (!opts.skipPackageJson) {
+    tasks.push(updateDeps(tree, opts));
+  }
+
+  if (!isCypressInstalled) {
     tasks.push(
       await init(tree, {
         ...opts,
@@ -67,10 +84,6 @@ export async function componentConfigurationGeneratorInternal(
   );
 
   const projectConfig = readProjectConfiguration(tree, opts.project);
-
-  if (!opts.skipPackageJson) {
-    tasks.push(updateDeps(tree, opts));
-  }
 
   addProjectFiles(tree, projectConfig, opts);
   if (!hasPlugin || opts.addExplicitTargets) {
@@ -106,11 +119,17 @@ function normalizeOptions(
 }
 
 function updateDeps(tree: Tree, opts: NormalizeCTOptions) {
-  const pkgVersions = versions(tree);
+  const pkgVersions = componentTestingVersions(tree, opts.bundler);
 
   const devDeps = {
     cypress: pkgVersions.cypressVersion,
   };
+  if (!getInstalledCypressVersion(tree)) {
+    // Same as init: the cypress postinstall downloads the binary it needs.
+    acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+      cypress: true,
+    });
+  }
 
   if (opts.bundler === 'vite') {
     devDeps['@cypress/vite-dev-server'] =
