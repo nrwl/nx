@@ -73,7 +73,12 @@ export declare class FileLock {
   constructor(lockFilePath: string)
   unlock(): void
   check(): boolean
-  wait(): Promise<void>
+  tryLock(): boolean
+  /**
+   * Resolves true when the holder released within `timeout_ms`, false when it
+   * did not. Awaiting this does not block the JS thread.
+   */
+  waitForRelease(timeoutMs: number): Promise<boolean>
   lock(): void
 }
 
@@ -140,6 +145,22 @@ export declare class NxTaskHistory {
   recordTaskRuns(taskRuns: Array<TaskRun>): void
   getFlakyTasks(hashes: Array<string>): Array<string>
   getEstimatedTaskTimings(targets: Array<TaskTarget>): Record<string, number>
+}
+
+export declare class PluginCapabilitiesCache {
+  constructor(db: ExternalObject<NxDbConnection>)
+  /**
+   * Returns only the keys that are present, so the caller can take the
+   * difference and load the rest.
+   */
+  get(keys: Array<string>): Record<string, PluginRecord>
+  /**
+   * Drops the records for `keys`, for a caller that has found one wrong and
+   * cannot write the right one. Leaving it would mean every later run reading
+   * the same wrong answer.
+   */
+  remove(keys: Array<string>): void
+  record(entries: Array<PluginCapabilitiesEntry>): void
 }
 
 /**
@@ -314,6 +335,21 @@ export declare const enum BatchStatus {
   Running = 'Running',
   Success = 'Success',
   Failure = 'Failure'
+}
+
+/**
+ * What a plugin module registers, independent of the options it is configured
+ * with. Every field describes the module's exports, and an entry's options only
+ * reach a plugin as an argument when a hook is called, so one record is valid
+ * for every nx.json entry naming the same module.
+ */
+export interface CachedPluginCapabilities {
+  name: string
+  createNodesPattern?: string
+  hasCreateDependencies: boolean
+  hasCreateMetadata: boolean
+  hasPreTasksExecution: boolean
+  hasPostTasksExecution: boolean
 }
 
 export interface CachedResult {
@@ -689,6 +725,23 @@ export interface PerformanceSummaryPayload {
    * remote-cache CTA); empty when none apply.
    */
   links: Array<Link>
+}
+
+export interface PluginCapabilitiesEntry {
+  key: string
+  record: PluginRecord
+}
+
+/**
+ * A record, which is the capabilities plus what they were derived from. The
+ * files are the non-vendor closure the plugin's load read, newline separated,
+ * and the hash is of their contents at that moment. Empty for a plugin whose
+ * every source is vendored, where the key's version identifies it instead.
+ */
+export interface PluginRecord {
+  capabilities: CachedPluginCapabilities
+  sourceFiles: Array<string>
+  sourceHash: string
 }
 
 /** Process metadata (static, doesn't change during process lifetime) */

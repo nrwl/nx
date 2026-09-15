@@ -6,7 +6,8 @@ import { join } from 'path';
 import { existsSync } from 'fs';
 import { getGlobPatternsOfPlugins } from '../../utils/retrieve-workspace-files';
 import { combineGlobPatterns } from '../../../utils/globs';
-import { getPlugins } from '../../plugins/get-plugins';
+import { getPlugins, peekPluginCapabilities } from '../../plugins/get-plugins';
+import { isDeletedFileChange } from '../../file-utils';
 
 export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
   async (
@@ -17,9 +18,18 @@ export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
     _projectGraph,
     projectDeletionAffectsAllProjects = true
   ): Promise<string[]> => {
+    // A deleted project configuration file is the only thing this locator
+    // answers for, so a change set without a deletion in it has nothing to find
+    // and the patterns it would be matched against are not worth asking the
+    // plugins for.
+    const deleted = touchedFiles.filter((touchedFile) =>
+      touchedFile.getChanges().some(isDeletedFileChange)
+    );
+    if (!deleted.length) {
+      return [];
+    }
+
     const globPattern = await (async () => {
-      // TODO: We need a quicker way to get patterns that should not
-      // require starting up plugin workers
       if (process.env.NX_FORCE_REUSE_CACHED_GRAPH === 'true') {
         return combineGlobPatterns([
           '**/package.json',
@@ -28,14 +38,26 @@ export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
           'package.json',
         ]);
       }
-      const plugins = (await getPlugins(readNxJson(workspaceRoot))).filter(
-        (p) => !!p.createNodes
-      );
+
+      const nxJson = readNxJson(workspaceRoot);
+
+      // Which files a plugin claims is all this locator wants, so a workspace
+      // whose plugins are all on record answers without loading any of them.
+      const recorded = await peekPluginCapabilities(nxJson, workspaceRoot);
+      if (recorded) {
+        return combineGlobPatterns(
+          recorded
+            .map((capabilities) => capabilities.createNodesPattern)
+            .filter((pattern) => !!pattern)
+        );
+      }
+
+      const plugins = (await getPlugins(nxJson)).filter((p) => !!p.createNodes);
       return combineGlobPatterns(getGlobPatternsOfPlugins(plugins));
     })();
 
     const touchedProjects = new Set<string>();
-    for (const touchedFile of touchedFiles) {
+    for (const touchedFile of deleted) {
       const isProjectFile = minimatch(touchedFile.file, globPattern, {
         dot: true,
       });

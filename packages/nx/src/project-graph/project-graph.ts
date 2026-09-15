@@ -271,6 +271,15 @@ async function readCachedGraphAndHydrateFileMap(minimumComputedAt?: number) {
  * Nx uses two layers of caching: the information about explicit dependencies stored on the disk and the information
  * stored in the daemon process. To reset both run: `nx reset`.
  */
+/**
+ * How long a process parks on the graph lock before looking again. The loop
+ * below re-reads the cache and re-checks the lock either way, so this decides
+ * only how often a waiter notices. Bounded rather than open-ended, because a
+ * holder whose own loop is wedged would otherwise hold the waiter's process for
+ * as long as it lives.
+ */
+const GRAPH_LOCK_WAIT_MS = 10_000;
+
 export async function createProjectGraphAsync(
   opts: { exitOnError: boolean; resetDaemonClient?: boolean } = {
     exitOnError: false,
@@ -345,7 +354,7 @@ export async function createProjectGraphAndSourceMapsAsync(
         'Waiting for graph construction in another process to complete'
       );
       const start = Date.now();
-      await lock.wait();
+      await lock.waitForRelease(GRAPH_LOCK_WAIT_MS);
       spinner.cleanup();
 
       // Note: This will currently throw if any of the caches are missing...

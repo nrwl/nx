@@ -118,8 +118,7 @@ async function tryGetModule(
       packageJson['schematics'] ??
       packageJson['builders']
     ) {
-      const [pluginPromise] = loadNxPlugin(packageJson.name, workspaceRoot);
-      return await pluginPromise;
+      return await loadNxPlugin(packageJson.name, workspaceRoot);
     } else {
       return {
         name: packageJson.name,
