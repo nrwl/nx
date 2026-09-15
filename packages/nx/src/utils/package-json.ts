@@ -9,6 +9,7 @@ import { NxJsonConfiguration } from '../config/nx-json';
 import {
   ProjectConfiguration,
   ProjectMetadata,
+  ProjectPackageDependencies,
   TargetConfiguration,
 } from '../config/workspace-json-project-json';
 import type { Tree } from '../generators/tree';
@@ -225,6 +226,7 @@ export type PackageJsonProjectMetadata = {
     packageExports: PackageJson['exports'];
     packageMain: PackageJson['main'];
     isInPackageManagerWorkspaces: boolean;
+    packageDependencies?: ProjectPackageDependencies;
   };
 };
 

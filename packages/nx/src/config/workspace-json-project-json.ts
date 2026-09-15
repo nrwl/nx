@@ -130,6 +130,33 @@ export interface ProjectConfiguration {
   metadata?: ProjectMetadata;
 }
 
+export type PackageDependencyCollection =
+  | 'dependencies'
+  | 'devDependencies'
+  | 'optionalDependencies'
+  | 'peerDependencies';
+
+export interface PackageDependencyEntry {
+  rawSpecifier: string;
+  /**
+   * The resolved workspace package name, which can differ from the manifest
+   * key for workspace:<name>@<range> and npm:<name>[@<range>] aliases.
+   */
+  requestedPackageName: string;
+}
+
+/**
+ * Dependencies from a project's package.json that resolve to workspace
+ * packages by package name and range, keyed by dependency collection and
+ * manifest key. `file:` entries are not included.
+ */
+export type ProjectPackageDependencies = {
+  [collection in PackageDependencyCollection]?: Record<
+    string,
+    PackageDependencyEntry
+  >;
+};
+
 export interface ProjectMetadata {
   [k: string]: any;
 
@@ -156,6 +183,7 @@ export interface ProjectMetadata {
     packageExports?: PackageJson['exports'];
     packageMain?: string;
     isInPackageManagerWorkspaces?: boolean;
+    packageDependencies?: ProjectPackageDependencies;
   };
 }
 

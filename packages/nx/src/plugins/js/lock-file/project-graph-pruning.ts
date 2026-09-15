@@ -10,7 +10,11 @@ import { getCatalogManager } from '../../../utils/catalog';
 import { PackageJson } from '../../../utils/package-json';
 import { PackageManager } from '../../../utils/package-manager';
 import { workspaceRoot } from '../../../utils/workspace-root';
-import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
+import { parseDependencySpecifier } from '../utils/dependency-specifiers';
+import {
+  getWorkspacePackagesFromGraph,
+  resolveWorkspaceDependencyTarget,
+} from '../utils/get-workspace-packages-from-graph';
 import {
   normalizeLocalPathSpec,
   uncontainLocalPathSpec,
@@ -106,6 +110,33 @@ function normalizeDependencies(
             `Could not resolve catalog reference for ${packageName}@${versionRange}.`
           );
         }
+      }
+
+      // workspace: entries bypass lockfile lookup; keep them only when their
+      // requested local package exists.
+      const parsed = parseDependencySpecifier(resolvedVersionRange);
+      if (parsed.protocol === 'workspace') {
+        if (workspacePackages.has(parsed.requestedPackageName ?? packageName)) {
+          combinedDependencies[packageName] = resolvedVersionRange;
+          return;
+        }
+        throw new Error(
+          `Pruned lock file creation failed. "${packageName}": "${resolvedVersionRange}" does not match any workspace package.`
+        );
+      }
+
+      // Keep npm aliases that resolve to local workspace versions; registry
+      // aliases still use lockfile lookup.
+      if (
+        parsed.protocol === 'npm' &&
+        resolveWorkspaceDependencyTarget(
+          packageName,
+          resolvedVersionRange,
+          workspacePackages
+        ) !== null
+      ) {
+        combinedDependencies[packageName] = resolvedVersionRange;
+        return;
       }
 
       if (graph.externalNodes[`npm:${packageName}@${resolvedVersionRange}`]) {
@@ -253,6 +284,31 @@ export function addNodesAndDependencies(
   builder: ProjectGraphBuilder
 ) {
   Object.entries(packageJsonDeps).forEach(([name, version]) => {
+    // Resolve workspace: entries before external nodes so a same-named
+    // registry package cannot shadow the local target.
+    const parsed = parseDependencySpecifier(version);
+    if (parsed.protocol === 'workspace') {
+      const workspaceNode = workspacePackages.get(
+        parsed.requestedPackageName ?? name
+      );
+      if (workspaceNode) {
+        traverseWorkspaceNode(graph, builder, workspaceNode);
+      }
+      return;
+    }
+
+    if (parsed.protocol === 'npm') {
+      const target = resolveWorkspaceDependencyTarget(
+        name,
+        version,
+        workspacePackages
+      );
+      if (target !== null) {
+        traverseWorkspaceNode(graph, builder, workspacePackages.get(target));
+        return;
+      }
+    }
+
     const node =
       graph.externalNodes[`npm:${name}@${version}`] ||
       graph.externalNodes[`npm:${name}`];

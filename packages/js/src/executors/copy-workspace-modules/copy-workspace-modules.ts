@@ -14,6 +14,7 @@ import {
   interpolate,
   movePeerDependencyToDependencies,
   relocatePrunedLocalPathSpec,
+  resolveWorkspaceDependencyTarget,
   warnUnshippableLocalPathSpec,
 } from '@nx/devkit/internal';
 import { type CopyWorkspaceModulesOptions } from './schema';
@@ -193,17 +194,22 @@ function handleWorkspaceModules(
       catalogManager
     );
 
-    // Rewrite sibling workspace-module deps to file: paths and recurse. A peer
-    // is moved into dependencies (pnpm rejects a file: spec under
-    // peerDependencies), dropping its now-orphaned optional/required marker.
+    // Preserve alias keys while targeting resolved module dirs. Move file:
+    // peers to dependencies, removing orphaned peer metadata, because pnpm
+    // rejects them under peerDependencies.
     for (const section of TRANSITIVE_INSTALL_SECTIONS) {
       const deps = copiedPackageJson[section];
       if (!deps) {
         continue;
       }
       for (const depName of Object.keys(deps)) {
-        if (workspaceModules.has(depName)) {
-          const fileSpec = `file:${calculateRelativePath(pkgName, depName)}`;
+        const target = resolveWorkspaceDependencyTarget(
+          depName,
+          deps[depName],
+          workspaceModules
+        );
+        if (target) {
+          const fileSpec = `file:${calculateRelativePath(pkgName, target)}`;
           if (section === 'peerDependencies') {
             movePeerDependencyToDependencies(
               copiedPackageJson,
@@ -214,7 +220,7 @@ function handleWorkspaceModules(
             deps[depName] = fileSpec;
           }
           packageJsonModified = true;
-          processModule(depName);
+          processModule(target);
           continue;
         }
         // A non-workspace file:/link: dep must keep resolving after the module
@@ -265,17 +271,22 @@ function handleWorkspaceModules(
     }
   }
 
-  // Seed from every section the app declares a workspace module in. Copied
-  // modules recurse over production sections only (see processModule).
-  // processModule dedups via processedModules, so a module listed in several
-  // sections is copied once.
+  // Seed app dependencies from every install section. Recurse through copied
+  // modules' production sections, deduplicating resolved targets.
   for (const section of WORKSPACE_MODULE_INSTALL_SECTIONS) {
     const deps = packageJson[section];
     if (!deps) {
       continue;
     }
-    for (const pkgName of Object.keys(deps)) {
-      processModule(pkgName);
+    for (const [pkgName, pkgVersion] of Object.entries(deps)) {
+      const target = resolveWorkspaceDependencyTarget(
+        pkgName,
+        pkgVersion,
+        workspaceModules
+      );
+      if (target) {
+        processModule(target);
+      }
     }
   }
 }
