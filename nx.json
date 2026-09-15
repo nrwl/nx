@@ -71,6 +71,9 @@
         "transitive": true
       },
       {
+        "dependentTasksOutputFiles": "dist/local-registry/proj-backup/**/*"
+      },
+      {
         "json": "{workspaceRoot}/tsconfig.json",
         "fields": ["compilerOptions", "extends", "files", "include"]
       }
@@ -190,6 +193,7 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
+        "@nx/nx-source:populate-e2e-base-workspace",
         "@nx/nx-source:local-registry-e2e"
       ]
     },
@@ -201,6 +205,7 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
+        "@nx/nx-source:populate-e2e-base-workspace",
         "@nx/nx-source:local-registry-e2e"
       ]
     },
@@ -211,6 +216,7 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
+        "@nx/nx-source:populate-e2e-base-workspace",
         "@nx/nx-source:local-registry-e2e"
       ],
       "options": {
@@ -221,6 +227,7 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
+        "@nx/nx-source:populate-e2e-base-workspace",
         "@nx/nx-source:local-registry-e2e"
       ]
     },
