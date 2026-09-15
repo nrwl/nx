@@ -139,6 +139,32 @@ type T = typeof import('cypress/angular-zoneless');
     );
   });
 
+  it.each([
+    [
+      'a .ts file with an angle-bracket type assertion',
+      'apps/app/src/app/app.cy.ts',
+      'const win = <any>window;',
+    ],
+    [
+      'a .tsx file with JSX',
+      'apps/app/src/app/app.cy.tsx',
+      'const el = <div>{window.name}</div>;',
+    ],
+  ])('should rewrite the import in %s', async (_, filePath, prelude) => {
+    tree.write(
+      filePath,
+      `${prelude}
+import { mount } from 'cypress/angular-zoneless';
+`
+    );
+
+    await migration(tree);
+
+    expect(tree.read(filePath, 'utf-8')).toContain(
+      "import { mount } from 'cypress/angular';"
+    );
+  });
+
   it('should leave package.json alone when @cypress/angular-zoneless is not installed', async () => {
     updateJson(tree, 'package.json', (json) => ({
       ...json,

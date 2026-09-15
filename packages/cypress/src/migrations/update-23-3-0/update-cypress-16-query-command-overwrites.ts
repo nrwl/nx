@@ -7,7 +7,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/internal';
-import { ast, query } from '@phenomnomnominal/tsquery';
+import { query } from '@phenomnomnominal/tsquery';
 import type {
   CallExpression,
   ElementAccessExpression,
@@ -15,7 +15,7 @@ import type {
   PropertyAccessExpression,
   StringLiteralLike,
 } from 'typescript';
-import { hasLocalValueBinding } from '../../utils/migrations';
+import { hasLocalValueBinding, parseSourceFile } from '../../utils/migrations';
 
 // Commands that became queries in Cypress 16
 // (packages/driver/src/cy/commands/{cookies,storage}.ts).
@@ -47,7 +47,7 @@ export default async function updateCypress16QueryCommandOverwrites(
       return;
     }
 
-    const sourceFile = ast(originalContent);
+    const sourceFile = parseSourceFile(filePath, originalContent);
     const overwrites = findQueryOverwrites(sourceFile);
     if (overwrites.length === 0) {
       return;

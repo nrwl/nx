@@ -118,6 +118,32 @@ Cypress.Commands[overwrite]('getAllLocalStorage', (originalFn, options) => origi
   });
 
   it.each([
+    [
+      'a .ts file with an angle-bracket type assertion',
+      'apps/app-e2e/src/support/commands.ts',
+      'const win = <any>window;',
+    ],
+    [
+      'a .tsx file with JSX',
+      'apps/app-e2e/src/support/commands.tsx',
+      'const el = <div>{window.name}</div>;',
+    ],
+  ])('should rename overwrites in %s', async (_, filePath, prelude) => {
+    tree.write(
+      filePath,
+      `${prelude}
+Cypress.Commands.overwrite('getCookie', (originalFn, name) => originalFn(name));
+`
+    );
+
+    await migration(tree);
+
+    expect(tree.read(filePath, 'utf-8')).toContain(
+      "Cypress.Commands.overwriteQuery('getCookie'"
+    );
+  });
+
+  it.each([
     "const Cypress = require('./fake-cypress');",
     'let Cypress; Cypress = globalThis.Cypress;',
     'const { Cypress } = globalThis;',
