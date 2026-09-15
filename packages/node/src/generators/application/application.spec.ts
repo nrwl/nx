@@ -752,6 +752,7 @@ describe('app', () => {
     ['express' as const, false],
     ['koa' as const, false],
     ['nest' as const, false],
+    ['fulmine' as const, false],
   ])('--unitTestRunner', (framework, checkSpecFile) => {
     it('should generate test target and spec file by default', async () => {
       await applicationGenerator(tree, {
@@ -773,6 +774,7 @@ describe('app', () => {
     ['express' as const, false],
     ['koa' as const, false],
     ['nest' as const, false],
+    ['fulmine' as const, false],
   ])('debug support', (framework, _) => {
     it('should generate a debug config for vscode by default', async () => {
       await applicationGenerator(tree, {

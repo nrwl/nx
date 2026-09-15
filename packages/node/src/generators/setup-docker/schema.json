@@ -29,6 +29,11 @@
       "description": "The output path for the node application",
       "type": "string"
     },
+    "baseImage": {
+      "description": "The image the Dockerfile starts from",
+      "type": "string",
+      "default": "docker.io/node:lts-alpine"
+    },
     "skipDockerPlugin": {
       "type": "boolean",
       "description": "Skip the @nx/docker plugin and use the legacy docker build target instead.",

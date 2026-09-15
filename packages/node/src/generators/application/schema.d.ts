@@ -33,4 +33,10 @@ export interface Schema {
   keepExistingVersions?: boolean;
 }
 
-export type NodeJsFrameWorks = 'express' | 'koa' | 'fastify' | 'nest' | 'none';
+export type NodeJsFrameWorks =
+  | 'express'
+  | 'koa'
+  | 'fastify'
+  | 'fulmine'
+  | 'nest'
+  | 'none';

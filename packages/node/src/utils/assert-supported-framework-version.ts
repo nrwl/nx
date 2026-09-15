@@ -3,6 +3,7 @@ import { assertSupportedPackageVersion } from '@nx/devkit/internal';
 import {
   minSupportedExpressVersion,
   minSupportedFastifyVersion,
+  minSupportedFulmineVersion,
   minSupportedKoaVersion,
 } from './versions';
 
@@ -18,6 +19,14 @@ export function assertSupportedFastifyVersion(tree: Tree): void {
   assertSupportedPackageVersion(tree, 'fastify', minSupportedFastifyVersion);
 }
 
+export function assertSupportedFulmineVersion(tree: Tree): void {
+  assertSupportedPackageVersion(
+    tree,
+    'fulmine.js',
+    minSupportedFulmineVersion
+  );
+}
+
 export function assertSupportedFrameworkVersion(
   tree: Tree,
   framework: string | undefined
@@ -28,5 +37,7 @@ export function assertSupportedFrameworkVersion(
     assertSupportedKoaVersion(tree);
   } else if (framework === 'fastify') {
     assertSupportedFastifyVersion(tree);
+  } else if (framework === 'fulmine') {
+    assertSupportedFulmineVersion(tree);
   }
 }

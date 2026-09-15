@@ -4,5 +4,6 @@ export interface SetUpDockerOptions {
   buildTarget?: string;
   skipFormat?: boolean;
   outputPath: string;
+  baseImage?: string;
   skipDockerPlugin?: boolean;
 }

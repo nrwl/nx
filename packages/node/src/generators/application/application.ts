@@ -107,6 +107,10 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
         ...options,
         project: options.name,
         skipFormat: true,
+        // uWebSockets.js has no musl build and is fetched from GitHub at install time
+        ...(options.framework === 'fulmine' && {
+          baseImage: 'docker.io/node:lts-trixie',
+        }),
       });
       tasks.push(dockerTask);
     }

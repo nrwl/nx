@@ -7,6 +7,7 @@ import { esbuildVersion } from '@nx/js/internal';
 import {
   expressVersions,
   fastifyVersions,
+  fulmineVersion,
   koaVersions,
   nodeTypesVersions,
   nxVersion,
@@ -42,6 +43,9 @@ export function addProjectDependencies(
     koa: {
       koa: koaPkgVersions.koaVersion,
     },
+    fulmine: {
+      'fulmine.js': fulmineVersion,
+    },
     fastify: {
       fastify: fastifyPkgVersions.fastifyVersion,
       'fastify-plugin': fastifyPkgVersions.fastifyPluginVersion,
@@ -56,6 +60,8 @@ export function addProjectDependencies(
     koa: {
       '@types/koa': koaPkgVersions.koaTypingsVersion,
     },
+    // fulmine.js ships its own types, on top of @types/express
+    fulmine: {},
     fastify: {},
   };
 

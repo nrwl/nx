@@ -78,6 +78,17 @@ export function getInstalledExpressVersion(tree?: Tree): string | null {
   return getDeclaredPackageVersion(tree, 'express');
 }
 
+// fulmine.js — an Express 5 drop-in on uWebSockets.js; its major tracks Express's, so v5 only.
+export const minSupportedFulmineVersion = '5.0.0';
+export const fulmineVersion = '^5.20.0';
+
+export function getInstalledFulmineVersion(tree?: Tree): string | null {
+  if (!tree) {
+    return getInstalledPackageVersion('fulmine.js');
+  }
+  return getDeclaredPackageVersion(tree, 'fulmine.js');
+}
+
 // Koa — no upstream LTS policy; support window v2 + v3 (Rule 2: N & N-1).
 export const minSupportedKoaVersion = '2.0.0';
 export const koaVersion = '^3.1.2';

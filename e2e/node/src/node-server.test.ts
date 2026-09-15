@@ -75,16 +75,19 @@ describe('Node Applications + webpack', () => {
     const expressApp = uniq('expressapp');
     const fastifyApp = uniq('fastifyapp');
     const koaApp = uniq('koaapp');
+    const fulmineApp = uniq('fulmineapp');
     const nestApp = uniq('nest');
     let expressPort: number;
     let fastifyPort: number;
     let koaPort: number;
+    let fulminePort: number;
     let nestPort: number;
 
     beforeAll(async () => {
       expressPort = await reservePort();
       fastifyPort = await reservePort();
       koaPort = await reservePort();
+      fulminePort = await reservePort();
       nestPort = await reservePort();
       runCLI(
         `generate @nx/node:lib libs/${testLib1} --linter=eslint --unitTestRunner=jest --buildable=false`
@@ -102,6 +105,9 @@ describe('Node Applications + webpack', () => {
         `generate @nx/node:app apps/${koaApp} --framework=koa --port=${koaPort} --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
       );
       runCLI(
+        `generate @nx/node:app apps/${fulmineApp} --framework=fulmine --port=${fulminePort} --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
+      );
+      runCLI(
         `generate @nx/node:app apps/${nestApp} --framework=nest --port=${nestPort} --bundler=webpack --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest --verbose`
       );
 
@@ -111,6 +117,8 @@ describe('Node Applications + webpack', () => {
       addLibImport(fastifyApp, testLib2, '@acme/test2');
       addLibImport(koaApp, testLib1);
       addLibImport(koaApp, testLib2, '@acme/test2');
+      addLibImport(fulmineApp, testLib1);
+      addLibImport(fulmineApp, testLib2, '@acme/test2');
 
       addLibImport(nestApp, testLib1);
       addLibImport(nestApp, testLib2, '@acme/test2');
@@ -121,6 +129,7 @@ describe('Node Applications + webpack', () => {
       checkFilesDoNotExist(`apps/${expressApp}/webpack.config.js`);
       checkFilesDoNotExist(`apps/${fastifyApp}/webpack.config.js`);
       checkFilesDoNotExist(`apps/${koaApp}/webpack.config.js`);
+      checkFilesDoNotExist(`apps/${fulmineApp}/webpack.config.js`);
 
       // Uses only webpack
       checkFilesExist(`apps/${nestApp}/webpack.config.js`);
@@ -128,11 +137,13 @@ describe('Node Applications + webpack', () => {
       expect(() => runCLI(`lint ${expressApp}`)).not.toThrow();
       expect(() => runCLI(`lint ${fastifyApp}`)).not.toThrow();
       expect(() => runCLI(`lint ${koaApp}`)).not.toThrow();
+      expect(() => runCLI(`lint ${fulmineApp}`)).not.toThrow();
       expect(() => runCLI(`lint ${nestApp}`)).not.toThrow();
 
       expect(() => runCLI(`lint ${expressApp}-e2e`)).not.toThrow();
       expect(() => runCLI(`lint ${fastifyApp}-e2e`)).not.toThrow();
       expect(() => runCLI(`lint ${koaApp}-e2e`)).not.toThrow();
+      expect(() => runCLI(`lint ${fulmineApp}-e2e`)).not.toThrow();
       expect(() => runCLI(`lint ${nestApp}-e2e`)).not.toThrow();
 
       // Only Fastify generates with unit tests since it supports them without additional libraries.
@@ -164,6 +175,10 @@ describe('Node Applications + webpack', () => {
 
     it('should e2e test koa app', async () => {
       await runE2eTests(koaApp, koaPort);
+    });
+
+    it('should e2e test fulmine app', async () => {
+      await runE2eTests(fulmineApp, fulminePort);
     });
 
     it('should e2e test nest app', async () => {

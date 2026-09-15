@@ -6,7 +6,7 @@
 #<% } else { %>
 # Run the container with `nx docker:run <%= project %> -p 3000:3000`.
 #<% } %>
-FROM docker.io/node:lts-alpine
+FROM <%= baseImage %>
 
 ENV HOST=0.0.0.0
 ENV PORT=3000

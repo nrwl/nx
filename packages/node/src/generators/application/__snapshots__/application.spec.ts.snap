@@ -115,3 +115,33 @@ exports[`app debug support should generate a debug config for vscode by default 
   },
 ]
 `;
+
+exports[`app debug support should generate a debug config for vscode by default 5`] = `
+[
+  {
+    "console": "integratedTerminal",
+    "env": {
+      "NODE_OPTIONS": "--inspect=9229",
+    },
+    "internalConsoleOptions": "neverOpen",
+    "name": "Debug api-fulmine with Nx",
+    "outFiles": [
+      "\${workspaceFolder}/api-fulmine/dist/**/*.(m|c|)js",
+      "!**/node_modules/**",
+    ],
+    "request": "launch",
+    "runtimeArgs": [
+      "nx",
+      "serve",
+      "api-fulmine",
+    ],
+    "runtimeExecutable": "npx",
+    "skipFiles": [
+      "<node_internals>/**",
+    ],
+    "sourceMaps": true,
+    "type": "node",
+  },
+]
+`;
+

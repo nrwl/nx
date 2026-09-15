@@ -94,6 +94,7 @@ async function addDocker(tree: Tree, options: SetUpDockerOptions) {
     sanitizedProjectName,
     skipDockerPlugin: options.skipDockerPlugin,
     packageManager,
+    baseImage: options.baseImage ?? 'docker.io/node:lts-alpine',
   });
 
   return installTask;
