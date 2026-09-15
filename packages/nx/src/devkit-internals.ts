@@ -138,7 +138,10 @@ export {
   getCatalogManager,
   getCatalogDependenciesFromPackageJson,
 } from './utils/catalog';
-export { acknowledgeBuildScripts } from './utils/acknowledge-build-scripts';
+export {
+  acknowledgeBuildScripts,
+  acknowledgeDeclaredBuildScripts,
+} from './utils/acknowledge-build-scripts';
 
 // Exposed for first-party plugins in this repo (imported via @nx/devkit/internal).
 export { default as runCommandsExecutor } from './executors/run-commands/run-commands.impl';
