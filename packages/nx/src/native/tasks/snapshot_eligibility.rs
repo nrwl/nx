@@ -4,7 +4,7 @@ use crate::native::cache::expand_outputs::match_output_paths;
 use crate::native::io_snapshots::bundle::{TaskInputs, TaskIoSnapshot};
 use crate::native::io_snapshots::{IoSnapshotResolution, IoSnapshots};
 use crate::native::tasks::hash_planner::walk_root;
-use crate::native::tasks::hashers::{expand_literal_braces, validate_files_globs};
+use crate::native::tasks::hashers::{expand_literal_braces, validate_files_glob};
 use crate::native::tasks::types::TaskGraph;
 
 /// What the eligibility walk needs from the workspace. Task-level opt-outs
@@ -273,7 +273,7 @@ pub(crate) fn resolve_scoped(
         if let Some(glob) = files
             .iter()
             .filter(|g| !g.starts_with('!') && !is_literal_path(g))
-            .find(|g| validate_files_globs(std::slice::from_ref(*g)).is_err() || walks_from_root(g))
+            .find(|g| validate_files_glob(g).is_err() || walks_from_root(g))
         {
             let mut diagnostic = IoSnapshotDiagnostic::task("root-anchored-glob", task_id);
             diagnostic.glob = Some(glob.clone());
