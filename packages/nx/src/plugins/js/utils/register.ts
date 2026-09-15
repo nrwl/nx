@@ -991,6 +991,14 @@ export function loadTsFile<T = any>(
     return require(filePath) as T;
   }
 
+  // Executors and generators load in processes that never loaded a plugin
+  // (batch workers, forked tasks), so the NodeNext `.js` -> `.ts` resolvers the
+  // plugin loader installs are not there yet. Both are idempotent.
+  ensureCjsResolverPatched();
+  if (preferNodeStripTypes) {
+    ensureNodeNextEsmResolverRegistered();
+  }
+
   if (!preferNodeStripTypes) {
     if (!resolvedTsConfigPath) {
       throw new Error(
