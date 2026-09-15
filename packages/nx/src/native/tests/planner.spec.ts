@@ -1775,6 +1775,35 @@ describe('task planner', () => {
       );
     });
 
+    it("marks a task with the digest of its own entry, so another task's snapshot does not move it", () => {
+      const { planner, taskGraph } = fixture();
+      const marker = (snapshots: ReturnType<typeof snapshotsFor>) =>
+        planner
+          .getPlans(['parent:build'], taskGraph, snapshots)
+          ['parent:build'].find((i) => i.startsWith('io-snapshot:'));
+      const same = marker(
+        snapshotsFor({
+          'parent:build': { inputs: ['libs/parent/filea.ts'] },
+          'child:build': { inputs: ['libs/child/fileb.ts'] },
+        })
+      );
+      const childChanged = marker(
+        snapshotsFor({
+          'parent:build': { inputs: ['libs/parent/filea.ts'] },
+          'child:build': { inputs: ['libs/child/other.ts'] },
+        })
+      );
+      const parentChanged = marker(
+        snapshotsFor({
+          'parent:build': { inputs: ['libs/parent/other.ts'] },
+          'child:build': { inputs: ['libs/child/fileb.ts'] },
+        })
+      );
+      expect(same).toMatch(/^io-snapshot:[0-9a-f]{64}$/);
+      expect(childChanged).toBe(same);
+      expect(parentChanged).not.toBe(same);
+    });
+
     it("keeps a continuous dependency's inputs in the task it serves", () => {
       const { planner, taskGraph } = fixture();
       const plan = planner.getPlans(
