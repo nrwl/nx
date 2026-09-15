@@ -357,24 +357,24 @@ pre {
     --sl-color-text-badge: theme('colors.slate.400');
   }
 
-  starlight-menu-button button {
+  .sl-menu-button {
     color: theme('colors.slate.600');
     background-color: transparent;
     box-shadow: none;
   }
 
-  [data-theme='dark'] starlight-menu-button button {
+  [data-theme='dark'] .sl-menu-button {
     color: theme('colors.slate.200');
     background-color: transparent;
     box-shadow: none;
   }
 
-  starlight-menu-button button[aria-expanded='true'] {
+  .sl-menu-button:has(~ :popover-open) {
     background-color: theme('colors.white');
     box-shadow: none;
   }
 
-  [data-theme='dark'] starlight-menu-button button[aria-expanded='true'] {
+  [data-theme='dark'] .sl-menu-button:has(~ :popover-open) {
     background-color: theme('colors.slate.900');
     box-shadow: none;
   }

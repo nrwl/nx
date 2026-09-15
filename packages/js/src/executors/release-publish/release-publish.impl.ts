@@ -242,7 +242,11 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
         windowsHide: true,
       });
 
-      const resultJson = JSON.parse(result.toString());
+      // `npm view`/`bun info` can exit 0 with empty stdout when the package exists in the registry but has
+      // no published versions or dist-tags yet (e.g. GitHub packages). Treat empty output the same as
+      // package not existing yet and continue to the publish step.
+      const output = result.toString().trim();
+      const resultJson = JSON.parse(output || '{}');
       let distTagVersion: string | undefined;
       let versionExists: boolean;
 
@@ -253,6 +257,8 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
             ? resultJson.versions
             : [resultJson.versions]
         ).includes(currentVersion);
+      } else if (!output) {
+        versionExists = false;
       } else {
         const metadataEntries = Array.isArray(resultJson)
           ? resultJson
