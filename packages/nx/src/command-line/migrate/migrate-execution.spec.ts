@@ -70,6 +70,7 @@ import {
   getImplementationPath,
   parseMigrationReturn,
   readMigrationCollection,
+  runInstall,
   runNxOrAngularMigration,
 } from './migrate';
 
@@ -104,9 +105,11 @@ function writeImplFile(pkgDir: string, relPath: string, source: string): void {
 // child_process.spawn returns an EventEmitter with a `.stderr` stream; tests
 // drive install outcomes by emitting on these directly.
 class FakeChildProcess extends EventEmitter {
+  stdout: EventEmitter | null;
   stderr: EventEmitter | null;
-  constructor(withStderr = false) {
+  constructor(withStderr = false, withStdout = false) {
     super();
+    this.stdout = withStdout ? new EventEmitter() : null;
     this.stderr = withStderr ? new EventEmitter() : null;
   }
 }
@@ -706,6 +709,206 @@ describe('ChangedDepInstaller', () => {
         errorSpy.mockRestore();
       }
     });
+  });
+});
+
+describe('runInstall with an output sink', () => {
+  let tmpRoot: string;
+
+  beforeEach(() => {
+    tmpRoot = mkdtempSync(join(tmpdir(), 'nx-migrate-install-'));
+    writeFileSync(join(tmpRoot, 'package-lock.json'), '{}');
+  });
+
+  afterEach(() => {
+    rmSync(tmpRoot, { recursive: true, force: true });
+  });
+
+  function sink() {
+    const calls: unknown[][] = [];
+    return {
+      calls,
+      notice: (...args: unknown[]) => calls.push(['notice', ...args]),
+      line: (...args: unknown[]) => calls.push(['line', ...args]),
+      raw: (...args: unknown[]) => calls.push(['raw', ...args]),
+    };
+  }
+
+  it('detaches the package manager from the terminal and collects both streams in order', async () => {
+    const child = new FakeChildProcess(true, true);
+    mockSpawn.mockReturnValue(child);
+    const out = sink();
+    const logSpy = vi.spyOn(output, 'log');
+    const stderrSpy = vi.spyOn(process.stderr, 'write');
+
+    const promise = runInstall(tmpRoot, 'post-migration', undefined, out);
+    child.stdout!.emit('data', Buffer.from('added 1 package\n'));
+    child.stderr!.emit('data', Buffer.from('npm warn old\n'));
+    child.emit('close', 0);
+    await promise;
+
+    expect(mockSpawn.mock.calls[0][1]).toMatchObject({
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    expect(out.calls).toEqual([
+      [
+        'notice',
+        'log',
+        {
+          title: expect.stringMatching(
+            /^Running 'npm install .*' to make sure necessary packages are installed$/
+          ),
+        },
+      ],
+      ['raw', 'added 1 package\n'],
+      ['raw', 'npm warn old\n'],
+    ]);
+    expect(logSpy).not.toHaveBeenCalled();
+    expect(stderrSpy).not.toHaveBeenCalled();
+  });
+
+  it('decodes a multi-byte character split across chunks of one stream', async () => {
+    const child = new FakeChildProcess(true, true);
+    mockSpawn.mockReturnValue(child);
+    const out = sink();
+
+    const promise = runInstall(tmpRoot, 'post-migration', undefined, out);
+    const euro = Buffer.from('\u20ac');
+    child.stdout!.emit('data', euro.subarray(0, 1));
+    child.stderr!.emit('data', Buffer.from('warn \u20ac'));
+    child.stdout!.emit('data', euro.subarray(1));
+    child.emit('close', 0);
+    await promise;
+
+    expect(out.calls.filter((call) => call[0] === 'raw')).toEqual([
+      ['raw', ''],
+      ['raw', 'warn \u20ac'],
+      ['raw', '\u20ac'],
+    ]);
+  });
+
+  it('flushes a sequence still incomplete when a stream ends', async () => {
+    const child = new FakeChildProcess(true, true);
+    mockSpawn.mockReturnValue(child);
+    const out = sink();
+
+    const promise = runInstall(tmpRoot, 'post-migration', undefined, out);
+    child.stdout!.emit('data', Buffer.from([0xe2]));
+    child.stdout!.emit('end');
+    child.stderr!.emit('data', Buffer.from([0xe2]));
+    child.stderr!.emit('end');
+    child.emit('close', 1);
+
+    await expect(promise).rejects.toThrow(/^Command failed:/);
+    expect(out.calls.filter((call) => call[0] === 'raw')).toEqual([
+      ['raw', ''],
+      ['raw', '\ufffd'],
+      ['raw', ''],
+      ['raw', '\ufffd'],
+    ]);
+  });
+
+  it('rejects a spawn failure only after both streams ended, so the sink is complete', async () => {
+    const child = new FakeChildProcess(true, true);
+    mockSpawn.mockReturnValue(child);
+    const out = sink();
+    let settled = false;
+
+    const promise = runInstall(tmpRoot, 'post-migration', undefined, out);
+    promise.catch(() => (settled = true));
+    child.emit('error', new Error('spawn /bin/sh EACCES'));
+    child.stdout!.emit('data', Buffer.from([0xe2]));
+    child.stdout!.emit('end');
+    await new Promise((resolve) => setImmediate(resolve));
+    const settledBeforeClose = settled;
+    child.stderr!.emit('end');
+    child.emit('close', -2);
+
+    await expect(promise).rejects.toThrow('spawn /bin/sh EACCES');
+    expect(settledBeforeClose).toBe(false);
+    expect(out.calls.filter((call) => call[0] === 'raw')).toEqual([
+      ['raw', ''],
+      ['raw', '\ufffd'],
+      ['raw', ''],
+    ]);
+  });
+
+  it('does not classify the stderr of a package manager other than npm', async () => {
+    rmSync(join(tmpRoot, 'package-lock.json'));
+    writeFileSync(join(tmpRoot, 'pnpm-lock.yaml'), '');
+    const child = new FakeChildProcess(true, true);
+    mockSpawn.mockReturnValue(child);
+    const out = sink();
+
+    const promise = runInstall(tmpRoot, 'post-migration', undefined, out);
+    child.stderr!.emit('data', Buffer.from('npm ERR! code ERESOLVE\n'));
+    child.emit('close', 1);
+
+    await expect(promise).rejects.toThrow(/^Command failed:/);
+    expect(out.calls).toContainEqual(['raw', 'npm ERR! code ERESOLVE\n']);
+    expect(out.calls.some((call) => call[1] === 'error')).toBe(false);
+  });
+
+  it('still classifies a peer conflict from stderr and sends the guidance to the sink', async () => {
+    const child = new FakeChildProcess(true, true);
+    mockSpawn.mockReturnValue(child);
+    const out = sink();
+    const errorSpy = vi.spyOn(output, 'error');
+
+    const promise = runInstall(
+      tmpRoot,
+      'post-migration',
+      'nx migrate --run-migration=@nx/js:x',
+      out
+    );
+    child.stderr!.emit('data', Buffer.from('npm ERR! code ERESOLVE\n'));
+    child.emit('close', 1);
+
+    await expect(promise).rejects.toMatchObject({
+      name: 'NpmPeerDepsInstallError',
+    });
+    expect(errorSpy).not.toHaveBeenCalled();
+    const guidance = out.calls.find(
+      (call) => call[0] === 'notice' && call[1] === 'error'
+    );
+    expect(guidance[2]).toMatchObject({
+      title:
+        'Some migrations have been applied, but installing the updated dependencies failed',
+      bodyLines: expect.arrayContaining([
+        '   nx migrate --run-migration=@nx/js:x --skip-install',
+      ]),
+    });
+  });
+
+  it('rejects a spawn failure at once without a sink', async () => {
+    const child = new FakeChildProcess(true);
+    mockSpawn.mockReturnValue(child);
+    vi.spyOn(output, 'log').mockImplementation(() => {});
+
+    const promise = runInstall(tmpRoot);
+    child.emit('error', new Error('spawn /bin/sh EACCES'));
+
+    await expect(promise).rejects.toThrow('spawn /bin/sh EACCES');
+  });
+
+  it('keeps the terminal as the default when no sink is given', async () => {
+    const child = new FakeChildProcess(true);
+    mockSpawn.mockReturnValue(child);
+    const logSpy = vi.spyOn(output, 'log').mockImplementation(() => {});
+    const stderrSpy = vi
+      .spyOn(process.stderr, 'write')
+      .mockImplementation(() => true);
+
+    const promise = runInstall(tmpRoot);
+    child.stderr!.emit('data', Buffer.from('npm warn old\n'));
+    child.emit('close', 0);
+    await promise;
+
+    expect(mockSpawn.mock.calls[0][1]).toMatchObject({
+      stdio: ['inherit', 'inherit', 'pipe'],
+    });
+    expect(logSpy).toHaveBeenCalledTimes(1);
+    expect(stderrSpy).toHaveBeenCalledWith(Buffer.from('npm warn old\n'));
   });
 });
 
