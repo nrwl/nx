@@ -184,8 +184,6 @@ describe('plugin state freshness', () => {
     fs.cleanup();
   });
 
-  // Source workers take the root customConditions as process flags at spawn,
-  // so a running compute must restart when they change.
   it('chains an in-flight compute to a successor when the root customConditions change', async () => {
     const tsconfig = (conditions: string[]) =>
       JSON.stringify({ compilerOptions: { customConditions: conditions } });

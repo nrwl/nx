@@ -66,6 +66,7 @@ import { findProjectForPath } from '../../project-graph/utils/find-project-for-p
 import { TempFs } from '../../internal-testing-utils/temp-fs';
 import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { mkdirSync, symlinkSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { join, resolve } from 'node:path';
 
 // ---------------------------------------------------------------------------
@@ -527,6 +528,7 @@ describe('getPluginPathAndName', () => {
       fs = new TempFs('resolve-plugin-relative-js', false);
       fs.createFilesSync({
         'packages/plugin/src/plugin.mjs': '',
+        'packages/plugin/src/plugin.js': '',
         'packages/plugin/src/generated/index.js': '',
         'packages/plugin/dist/plugin.js': '',
         'tools/plugin.mjs': '',
@@ -553,6 +555,39 @@ describe('getPluginPathAndName', () => {
       expect(result.projectRoot).toBe('packages/plugin');
     });
 
+    it('classifies a relative JavaScript plugin under an aliased sourceRoot as source', () => {
+      const alias = join(fs.tempDir, 'alias');
+      symlinkSync(fs.tempDir, alias, 'dir');
+
+      const result = getPluginPathAndName(
+        './packages/plugin/src/plugin.js',
+        [alias],
+        projects,
+        alias
+      );
+
+      expect(result.pluginPath).toBe(
+        join(fs.tempDir, 'packages/plugin/src/plugin.js')
+      );
+      expect(result.isSourcePlugin).toBe(true);
+      expect(result.projectRoot).toBe('packages/plugin');
+    });
+
+    it('retains the output producer under an aliased workspace root', () => {
+      const alias = join(fs.tempDir, 'alias');
+      symlinkSync(fs.tempDir, alias, 'dir');
+
+      const result = getPluginPathAndName(
+        './packages/plugin/src/generated/index.js',
+        [alias],
+        projects,
+        alias
+      );
+
+      expect(result.isSourcePlugin).toBe(false);
+      expect(result.projectRoot).toBe('packages/codegen');
+    });
+
     it('keeps a file under a declared output built, whichever project declares it', () => {
       const own = load('./packages/plugin/dist/plugin.js');
       expect(own.isSourcePlugin).toBe(false);
@@ -563,6 +598,69 @@ describe('getPluginPathAndName', () => {
       expect(generated.isSourcePlugin).toBe(false);
       expect(generated.projectRoot).toBe('packages/codegen');
     });
+
+    it.each([false, true])(
+      'keeps a relative plugin under a symlinked sourceRoot built (preserve symlinks: %s)',
+      (preserveSymlinks) => {
+        fs.createFilesSync({ 'packages/linked/actual/plugin.js': '' });
+        symlinkSync('actual', join(fs.tempDir, 'packages/linked/src'), 'dir');
+        const linkedProjects = {
+          linked: {
+            name: 'linked',
+            root: 'packages/linked',
+            sourceRoot: 'packages/linked/src',
+            targets: {},
+          },
+        };
+        const script = `
+          const fs = require('node:fs');
+          const Module = require('node:module');
+          const resolve = Module._resolveFilename;
+          Module._resolveFilename = function (...args) {
+            const file = resolve.apply(this, args);
+            return typeof file === 'string' && file.includes(require('node:path').sep + 'node_modules' + require('node:path').sep)
+              ? fs.realpathSync(file) : file;
+          };
+          require(${JSON.stringify(require.resolve('@swc-node/register'))});
+          const { getPluginPathAndName } = require(${JSON.stringify(join(__dirname, 'resolve-plugin.ts'))});
+          const result = getPluginPathAndName(
+            './packages/linked/src/plugin.js',
+            [${JSON.stringify(fs.tempDir)}],
+            ${JSON.stringify(linkedProjects)},
+            ${JSON.stringify(fs.tempDir)}
+          );
+          process.stdout.write(JSON.stringify(result));
+        `;
+        const result = JSON.parse(
+          execFileSync(
+            process.execPath,
+            [
+              ...(preserveSymlinks ? ['--preserve-symlinks'] : []),
+              '-e',
+              script,
+            ],
+            {
+              encoding: 'utf8',
+              env: {
+                ...process.env,
+                NX_WORKSPACE_ROOT_PATH: fs.tempDir,
+                NX_WORKSPACE_DATA_DIRECTORY: join(fs.tempDir, '.data'),
+                NX_DAEMON: 'false',
+              },
+            }
+          )
+        );
+        expect(result.isSourcePlugin).toBe(false);
+        expect(result.projectRoot).toBe('packages/linked');
+        expect(result.pluginPath).toBe(
+          join(
+            fs.tempDir,
+            'packages/linked',
+            preserveSymlinks ? 'src/plugin.js' : 'actual/plugin.js'
+          )
+        );
+      }
+    );
 
     it('leaves a bare specifier linked into the workspace on the extension rule', () => {
       mkdirSync(join(fs.tempDir, 'node_modules'), { recursive: true });

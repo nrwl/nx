@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { isSourceEntry } from './entry-provenance';
+import { findDeclaredOutputOwners, isSourceEntry } from './entry-provenance';
+import { symlinkSync } from 'node:fs';
+import { join } from 'node:path';
+import { TempFs } from '../../internal-testing-utils/temp-fs';
 
 import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
@@ -15,6 +18,67 @@ function project(
 }
 
 describe('isSourceEntry', () => {
+  it.each([
+    ['packages/pkg/out', true],
+    ['packages/pkg/out/**/*.js', true],
+    ['packages/pkg/out', false],
+    ['packages/pkg/out/**/*.js', false],
+  ] as const)(
+    'recognizes an absolute output (%s, alias: %s)',
+    (output, aliased) => {
+      const fs = new TempFs('entry-provenance-alias', false);
+      fs.createFilesSync({ 'ws/packages/pkg/out/index.js': '' });
+      const physicalRoot = join(fs.tempDir, 'ws');
+      const alias = join(fs.tempDir, 'alias');
+      symlinkSync(physicalRoot, alias, 'dir');
+      const config = project({
+        sourceRoot: projectRoot,
+        targets: {
+          build: {
+            options: {
+              outputPath: join(aliased ? alias : physicalRoot, output),
+            },
+          },
+        },
+      });
+      const entry = join(physicalRoot, 'packages/pkg/out/index.js');
+      try {
+        expect(isSourceEntry(entry, false, config, alias)).toBe(false);
+        expect(findDeclaredOutputOwners(entry, { pkg: config }, alias)).toEqual(
+          [config]
+        );
+      } finally {
+        fs.cleanup();
+      }
+    }
+  );
+
+  it.each(['parent', 'parent/**/*.js'])(
+    'keeps an entry under an output above the workspace (%s) built with an aliased root',
+    (output) => {
+      const fs = new TempFs('entry-provenance-ancestor-output', false);
+      fs.createFilesSync({ 'parent/ws/packages/pkg/src/index.js': '' });
+      const physicalRoot = join(fs.tempDir, 'parent/ws');
+      const alias = join(fs.tempDir, 'alias');
+      symlinkSync(physicalRoot, alias, 'dir');
+      const config = project({
+        sourceRoot: 'packages/pkg/src',
+        targets: {
+          build: { options: { outputPath: join(fs.tempDir, output) } },
+        },
+      });
+      const entry = join(physicalRoot, 'packages/pkg/src/index.js');
+      try {
+        expect(isSourceEntry(entry, false, config, alias)).toBe(false);
+        expect(findDeclaredOutputOwners(entry, { pkg: config }, alias)).toEqual(
+          [config]
+        );
+      } finally {
+        fs.cleanup();
+      }
+    }
+  );
+
   it('treats a file the conditioned exports select over the default target as source', () => {
     expect(isSourceEntry(file('dist/index.js'), true, project(), root)).toBe(
       true

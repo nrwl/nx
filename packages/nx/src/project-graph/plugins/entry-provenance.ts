@@ -10,6 +10,7 @@ import {
 
 import { getOutputsForTargetAndConfiguration } from '../../tasks-runner/utils';
 import { isGlobPattern } from '../../utils/globs';
+import { toRootSpelling } from './built-entry-resolution-hint';
 
 import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
@@ -34,7 +35,7 @@ export function isSourceEntry(
   }
   return (
     !!project.sourceRoot &&
-    isUnder(entryPath, resolve(root, project.sourceRoot))
+    isUnder(toRootSpelling(entryPath, root), resolve(root, project.sourceRoot))
   );
 }
 
@@ -79,20 +80,27 @@ function containsEntry(
   outputs: string[],
   root: string
 ): boolean {
-  const entry = toPosix(relative(root, entryPath));
+  // Root respelling can move an entry outside an absolute ancestor output.
+  const candidates = [...new Set([toRootSpelling(entryPath, root), entryPath])];
+  const entries = candidates.map((candidate) =>
+    toPosix(relative(root, candidate))
+  );
   return outputs.some((output) => {
     const normalized = normalizeOutput(output, root);
     if (normalized.glob !== undefined) {
       // Outputs expand hidden paths too (native globset has no dot rule).
-      return (
-        minimatch(entry, normalized.glob, { dot: true }) ||
-        minimatch(entry, `${normalized.glob}/**`, { dot: true })
+      return entries.some(
+        (entry) =>
+          minimatch(entry, normalized.glob, { dot: true }) ||
+          minimatch(entry, `${normalized.glob}/**`, { dot: true })
       );
     }
-    const inside = relative(normalized.dir, entryPath);
-    return (
-      inside !== '..' && !inside.startsWith(`..${sep}`) && !isAbsolute(inside)
-    );
+    return candidates.some((candidate) => {
+      const inside = relative(normalized.dir, candidate);
+      return (
+        inside !== '..' && !inside.startsWith(`..${sep}`) && !isAbsolute(inside)
+      );
+    });
   });
 }
 
@@ -115,11 +123,13 @@ function normalizeOutput(
       : /^[A-Za-z]:$/.test(literal)
         ? `${literal}/`
         : literal;
+  const directory = isAbsolute(anchored)
+    ? toRootSpelling(anchored, root)
+    : resolve(root, anchored);
   if (globIndex === -1) {
-    return { dir: resolve(root, anchored) };
+    return { dir: directory };
   }
-  const prefix =
-    anchored === '' ? '' : toPosix(relative(root, resolve(root, anchored)));
+  const prefix = anchored === '' ? '' : toPosix(relative(root, directory));
   return {
     glob: [...(prefix ? [prefix] : []), ...segments.slice(globIndex)].join('/'),
   };
