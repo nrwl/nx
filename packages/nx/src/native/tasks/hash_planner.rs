@@ -367,7 +367,7 @@ impl HashPlanner {
                     // TsConfiguration survives only if the root tsconfig was read.
                     let keep_tsconfig = snapshot.root_tsconfig_read();
                     let own: hashbrown::HashSet<u32> = self
-                        .snapshot_file_instructions(task, &inputs.self_inputs, snapshot, &negations)
+                        .snapshot_file_instructions(task, snapshot, &negations)
                         .into_iter()
                         .map(|(instruction, declared_tail)| {
                             pool.intern_with_declared_tail(instruction, declared_tail)
@@ -609,28 +609,19 @@ impl HashPlanner {
     }
 
     /// The file half of a snapshot-hashed task: the observed reads minus files
-    /// a native instruction models better, as one disk-backed group per owning
-    /// project (reads under no project root belong to the task's own project),
-    /// each carrying only that project's declared negations — a dependency's
-    /// `!{workspaceRoot}/…` never suppresses the task's own reads. Plus the marker.
+    /// a native instruction hashes whole, as one disk-backed group per owning
+    /// project (reads under no project root belong to the project rooted at
+    /// `.`, else to the task's own), each carrying only that project's declared
+    /// negations — a dependency's `!{workspaceRoot}/…` never suppresses the
+    /// task's own reads. Plus the marker.
     fn snapshot_file_instructions(
         &self,
         task: &Task,
-        self_inputs: &[Input],
         snapshot: &SnapshotContext,
         negations: &Negations,
     ) -> Vec<(HashInstruction, u32)> {
         let io = snapshot.io;
         let self_project = task.target.project.as_str();
-        let project_root = &self.project_graph.nodes[self_project].root;
-        // Files a declared `{json}` input covers with field selection.
-        let json_paths: Vec<String> = self_inputs
-            .iter()
-            .filter_map(|input| match input {
-                Input::Json { json, .. } => Some(resolve_tokens(json, project_root, self_project)),
-                _ => None,
-            })
-            .collect();
 
         // The deepest ancestor directory that is a project root wins. A project
         // rooted at "." cannot be prefix-matched, so it is the fallback owner.
@@ -660,7 +651,7 @@ impl HashPlanner {
             .files
             .iter()
             .flat_map(|glob| expand_literal_braces(glob))
-            .filter(|glob| !covered_by_native_instruction(glob, &json_paths))
+            .filter(|glob| !covered_by_native_instruction(glob))
         {
             buckets.entry(owner(&glob)).or_default().push(glob);
         }
@@ -1616,20 +1607,18 @@ fn collect_negations(
     }
 }
 
-/// Whether an observed read is already hashed by a native instruction that
-/// models it better than its raw contents: externals cover node_modules and
-/// lockfiles (the root package.json stays — externals hash resolved versions,
-/// not its scripts); TsConfiguration covers the root tsconfig; JsonFileSet
-/// covers a declared `{json}` file; the always-on fileset covers nx.json,
-/// .gitignore and .nxignore.
-fn covered_by_native_instruction(glob: &str, json_paths: &[String]) -> bool {
+/// Whether an observed read is already hashed whole by a native instruction:
+/// externals cover node_modules and lockfiles (the root package.json stays —
+/// externals hash resolved versions, not its scripts); the always-on fileset
+/// covers nx.json, .gitignore and .nxignore. A declared `{json}` file and the
+/// root tsconfig stay: JsonFileSet hashes only its fields and TsConfiguration
+/// strips `paths`, so an observed read of either must hash the file itself.
+fn covered_by_native_instruction(glob: &str) -> bool {
     let path = glob.strip_prefix('!').unwrap_or(glob);
     path.starts_with("node_modules/")
         || path.contains("/node_modules/")
         || LOCKFILES.contains(&path)
         || ALWAYS_ON_FILES.contains(&path)
-        || ROOT_TSCONFIG_FILES.contains(&path)
-        || json_paths.iter().any(|j| j == path)
 }
 
 /// Resolves `{projectRoot}` and `{projectName}` tokens in a fileset pattern.

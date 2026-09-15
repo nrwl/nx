@@ -59,6 +59,19 @@ pub struct IoSnapshotImportOptions {
     pub retain: Option<u32>,
 }
 
+/// One task's stored entry with its own digest, computed once when read.
+pub(crate) struct StoredEntry {
+    pub entry: bundle::TaskIoSnapshot,
+    pub digest: String,
+}
+
+impl StoredEntry {
+    fn new(entry: bundle::TaskIoSnapshot) -> Self {
+        let digest = entry.digest();
+        Self { entry, digest }
+    }
+}
+
 /// The snapshot set for one commit, plus what resolving it reported. Handed
 /// to the hash planner as-is. Entries are read from the workspace database
 /// per task as they are asked for, and remembered for the handle's lifetime,
@@ -71,7 +84,7 @@ pub struct IoSnapshots {
     message: Option<String>,
     resolution: Option<IoSnapshotResolution>,
     db: Option<Db>,
-    entries: Mutex<HashMap<String, Option<Arc<bundle::TaskIoSnapshot>>>>,
+    entries: Mutex<HashMap<String, Option<Arc<StoredEntry>>>>,
 }
 
 #[napi]
@@ -116,7 +129,7 @@ impl IoSnapshots {
     pub(crate) fn entries_for(
         &self,
         task_ids: &[&str],
-    ) -> anyhow::Result<HashMap<String, Arc<bundle::TaskIoSnapshot>>> {
+    ) -> anyhow::Result<HashMap<String, Arc<StoredEntry>>> {
         let (Some(resolution), Some(db)) = (&self.resolution, &self.db) else {
             return Ok(HashMap::new());
         };
@@ -138,7 +151,7 @@ impl IoSnapshots {
                 entries.insert((*id).to_string(), None);
             }
             for (id, entry) in read {
-                entries.insert(id, Some(Arc::new(entry)));
+                entries.insert(id, Some(Arc::new(StoredEntry::new(entry))));
             }
         }
         Ok(task_ids
@@ -170,7 +183,7 @@ impl IoSnapshots {
         message: Option<String>,
         resolution: IoSnapshotResolution,
         db: Db,
-        entries: HashMap<String, Option<Arc<bundle::TaskIoSnapshot>>>,
+        entries: HashMap<String, Option<Arc<StoredEntry>>>,
     ) -> Self {
         Self {
             status: status.into(),
@@ -291,7 +304,7 @@ pub fn import_io_snapshots(
     let entries = bundle
         .snapshots
         .into_iter()
-        .map(|(id, entry)| (id, Some(Arc::new(entry))))
+        .map(|(id, entry)| (id, Some(Arc::new(StoredEntry::new(entry)))))
         .collect();
     IoSnapshots::resolved("fetched", None, None, resolution, Arc::clone(db), entries)
 }
@@ -348,15 +361,34 @@ mod tests {
         let entries = loaded.entries_for(&["web:build", "gone:build"]).unwrap();
         assert_eq!(entries.len(), 1);
         assert_eq!(
-            entries["web:build"].inputs,
+            entries["web:build"].entry.inputs,
             bundle::TaskInputs::Flat(vec!["apps/web/src/**/*.ts".into()])
         );
-        // A second ask for the same ids does not go back to the database.
-        assert_eq!(loaded.entries.lock().unwrap().len(), 2);
+        assert_eq!(
+            entries["web:build"].digest,
+            entries["web:build"].entry.digest()
+        );
+        // A second ask does not go back to the database: rewrite the commit
+        // without the entry and the handle still answers from memory.
+        store::write(
+            &db,
+            &store::Bundle {
+                resolution: loaded.resolution().unwrap(),
+                snapshots: BTreeMap::new(),
+            },
+            5,
+        )
+        .unwrap();
+        assert!(
+            store::read_entries(&db, "head", &["web:build"])
+                .unwrap()
+                .is_empty()
+        );
         assert_eq!(
             loaded.entries_for(&["web:build", "ui:test"]).unwrap().len(),
-            2
+            1
         );
+        assert_eq!(loaded.entries_for(&["web:build"]).unwrap().len(), 1);
     }
 
     #[test]

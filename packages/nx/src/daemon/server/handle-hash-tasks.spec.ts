@@ -50,14 +50,8 @@ describe('handleHashTasks', () => {
     const first = hashTasks.mock.lastCall[5];
     expect(first).toMatchObject({ commit });
     await handleHashTasksUpfront({ ...base, ioSnapshots: { commit } });
-    expect(hashTasksUpfront).toHaveBeenLastCalledWith(
-      base.tasks,
-      base.taskGraph,
-      base.perTaskEnvs,
-      base.cwd,
-      false,
-      first
-    );
+    // Identity, not shape: the mock returns an equal object on every call.
+    expect(hashTasksUpfront.mock.lastCall[5]).toBe(first);
     // A re-import for the same commit (new digest) replaces the handle.
     mockLoadIoSnapshots.mockImplementationOnce((db, c) => ({
       commit: c,

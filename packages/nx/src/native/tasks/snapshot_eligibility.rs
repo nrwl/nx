@@ -24,8 +24,8 @@ pub(crate) struct EligibilityInputs {
 }
 
 /// A task the hash planner hashes from its snapshot: observed reads as
-/// workspace-relative globs (negations included), and the producer tasks
-/// whose outputs it read — those only order it after them.
+/// workspace-relative globs (negations included), observed writes, and the
+/// digest of its own entry that marks the plan.
 #[derive(Clone, Debug)]
 pub(crate) struct SnapshotTask {
     pub files: Vec<String>,
@@ -180,16 +180,21 @@ pub(crate) fn resolve_scoped(
             diagnostics.push(IoSnapshotDiagnostic::task("custom-hasher", task_id));
             continue;
         }
-        let Some(entry) = entries.get(task_id) else {
+        let Some(stored) = entries.get(task_id) else {
             diagnostics.push(IoSnapshotDiagnostic::task("missing", task_id));
             continue;
         };
+        let entry = &stored.entry;
         if inputs.invalid_files_input.contains(task_id) {
             diagnostics.push(IoSnapshotDiagnostic::task("invalid-files-input", task_id));
             continue;
         }
 
         let mut files: Vec<String> = Vec::new();
+        // A bucket whose project the graph no longer has withholds the whole
+        // task: its reads cannot be placed, and a plan without them would
+        // replay a stale hit after an edit under that project's old root.
+        let mut unknown_project: Option<String> = None;
         let task_outputs: BTreeMap<String, Vec<String>> = match &entry.inputs {
             TaskInputs::Flat(globs) => {
                 files.extend(globs.iter().cloned());
@@ -199,10 +204,8 @@ pub(crate) fn resolve_scoped(
                 // Pre-§2b bundles bucket reads by project with project-relative globs.
                 for (project, globs) in &legacy.projects {
                     let Some(root) = inputs.project_roots.get(project) else {
-                        let mut diagnostic = IoSnapshotDiagnostic::task("unknown-project", task_id);
-                        diagnostic.project = Some(project.clone());
-                        diagnostics.push(diagnostic);
-                        continue;
+                        unknown_project = Some(project.clone());
+                        break;
                     };
                     let prefix = if root == "." {
                         String::new()
@@ -222,6 +225,13 @@ pub(crate) fn resolve_scoped(
                 }
             }
         };
+
+        if let Some(project) = unknown_project {
+            let mut diagnostic = IoSnapshotDiagnostic::task("unknown-project", task_id);
+            diagnostic.project = Some(project);
+            diagnostics.push(diagnostic);
+            continue;
+        }
 
         let mut dangling = None;
         for (producer, paths) in &task_outputs {
@@ -276,7 +286,7 @@ pub(crate) fn resolve_scoped(
             SnapshotTask {
                 files,
                 outputs: observed_outputs(entry),
-                digest: resolution.digest.clone(),
+                digest: stored.digest.clone(),
             },
         );
     }
@@ -321,7 +331,10 @@ fn observed_outputs(entry: &TaskIoSnapshot) -> Vec<String> {
         .outputs
         .iter()
         .filter(|glob| {
-            !glob.starts_with('!') && !escapes_workspace(glob) && !under_ignored_dir(glob)
+            !glob.starts_with('!')
+                && expand_literal_braces(glob)
+                    .iter()
+                    .all(|g| !escapes_workspace(g) && !under_ignored_dir(g))
         })
         .cloned()
         .collect();
@@ -330,9 +343,13 @@ fn observed_outputs(entry: &TaskIoSnapshot) -> Vec<String> {
     outputs
 }
 
+/// Case-insensitive: `.GIT/hooks` restores into `.git` on macOS and Windows.
 fn under_ignored_dir(path: &str) -> bool {
-    path.split(['/', '\\'])
-        .any(|segment| matches!(segment, "node_modules" | ".nx" | ".git"))
+    path.split(['/', '\\']).any(|segment| {
+        ["node_modules", ".nx", ".git"]
+            .iter()
+            .any(|dir| segment.eq_ignore_ascii_case(dir))
+    })
 }
 
 /// Observed outputs per eligible task (same walk as hashing), for the runner
@@ -362,9 +379,6 @@ pub fn io_snapshot_outputs(
     .collect()
 }
 
-/// A glob that would resolve outside the workspace: absolute, drive-lettered,
-/// or carrying a `..` segment. The bundle is server-supplied, so this is the
-/// line that keeps a hostile snapshot from turning hashing into a read oracle.
 /// A glob with no literal leading directory reads from the workspace root.
 fn walks_from_root(glob: &str) -> bool {
     expand_literal_braces(glob)
@@ -393,6 +407,9 @@ fn candidates_under(sorted: &[String], root: &str) -> Vec<String> {
     hits
 }
 
+/// A glob that would resolve outside the workspace: absolute, drive-lettered,
+/// or carrying a `..` segment. The bundle is server-supplied, so this is the
+/// line that keeps a hostile snapshot from turning hashing into a read oracle.
 fn escapes_workspace(glob: &str) -> bool {
     let path = glob.strip_prefix('!').unwrap_or(glob);
     let bytes = path.as_bytes();
@@ -500,7 +517,8 @@ pub fn io_snapshot_deferred_task_ids(
         .tasks
         .keys()
         .filter(|task_id| {
-            entries.get(*task_id).is_some_and(|entry| {
+            entries.get(*task_id).is_some_and(|stored| {
+                let entry = &stored.entry;
                 let mut producers: Vec<String> = entry_task_outputs(entry).into_keys().collect();
                 producers.extend(
                     producers_by_declared_outputs(task_id, &entry_files(entry), &task_graph)

@@ -1848,12 +1848,10 @@ describe('task planner', () => {
           'parent:TsConfig',
           'child:TsConfig',
           'parent:json:libs/parent/package.json[version]',
+          // Both files are hashed whole too: the native instructions cover
+          // only selected fields and a stripped tsconfig.
+          `files:parent:[libs/parent/package.json,tsconfig.base.json,${PARENT_NEG}]`,
         ])
-      );
-      expect(plan).not.toContainEqual(
-        expect.stringMatching(
-          /^files:parent:[^:]+:\[(?!libs\/parent\/generated\])/
-        )
       );
     });
 
