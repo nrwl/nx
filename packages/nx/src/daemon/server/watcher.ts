@@ -122,6 +122,11 @@ export async function watchWorkspace(
     if (err) {
       return cb(err, null);
     }
+    // Delivered changes are applied as this arrives; a read may have applied
+    // them first, which leaves nothing here.
+    if (isEmptyBatch(batch)) {
+      return;
+    }
     dispatchWorkspaceChanges(batch);
   });
 

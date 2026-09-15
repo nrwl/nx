@@ -350,7 +350,6 @@ export function scheduleProjectGraphRecomputation(
   deletedFiles: string[]
 ) {
   if (!createdFiles.length && !updatedFiles.length && !deletedFiles.length) {
-    scheduleAppliedChanges(undefined);
     return;
   }
   // Hashed once here, not inside the recompute, so a stale retry does not see
@@ -382,11 +381,10 @@ export function scheduleProjectGraphRecomputation(
  * created or updated file carries its hash. A batch older than what was
  * already taken in for a path is ignored for that path.
  */
-export function scheduleAppliedChanges(batch: ChangeBatch | undefined) {
+export function scheduleAppliedChanges(batch: ChangeBatch) {
   ++fileChangeCounter;
-  const { createdFiles, updatedFiles, deletedFiles } = batch
-    ? appliedChanges.accept(batch)
-    : { createdFiles: [], updatedFiles: [], deletedFiles: [] };
+  const { createdFiles, updatedFiles, deletedFiles } =
+    appliedChanges.accept(batch);
 
   for (const { file, hash } of [...createdFiles, ...updatedFiles]) {
     collectedDeletedFiles.delete(file);
@@ -412,8 +410,15 @@ export function scheduleAppliedChanges(batch: ChangeBatch | undefined) {
     // a window during which the old compute could falsely pass.
     ++recomputationGeneration;
     kickOffRecompute();
-  } else if (!cachedSerializedProjectGraphPromise) {
-    // First call (initial startup) — no events but we still need a graph.
+  } else {
+    // Nothing changed, but a daemon with no graph yet still needs one.
+    scheduleInitialProjectGraphComputation();
+  }
+}
+
+/** Computes the first project graph, unless one is already on its way. */
+export function scheduleInitialProjectGraphComputation() {
+  if (!cachedSerializedProjectGraphPromise) {
     kickOffRecompute();
   }
 }

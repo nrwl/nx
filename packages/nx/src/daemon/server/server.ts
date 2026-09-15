@@ -145,8 +145,8 @@ import {
   handleOutputsChanges,
 } from './handle-outputs-changes';
 import {
-  scheduleProjectGraphRecomputation,
   registerProjectGraphRecomputationListener,
+  scheduleInitialProjectGraphComputation,
 } from './project-graph-incremental-recomputation';
 import {
   hasRegisteredProjectGraphListenerSockets,
@@ -783,8 +783,7 @@ export async function startServer(): Promise<Server> {
           );
           // register file change listener to invalidate sync generator cache
           registerFileChangeListener(clearSyncGeneratorsCache);
-          // trigger an initial project graph recomputation
-          scheduleProjectGraphRecomputation([], [], []);
+          scheduleInitialProjectGraphComputation();
 
           // Kick off Nx Console check in background to prime the cache
           handleGetNxConsoleStatus().catch(() => {
