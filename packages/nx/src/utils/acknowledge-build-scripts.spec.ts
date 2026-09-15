@@ -3,12 +3,19 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import { createTree } from '../generators/testing-utils/create-tree';
 import type { Tree } from '../generators/tree';
-import { acknowledgeBuildScripts } from './acknowledge-build-scripts';
-import { getPackageManagerVersion } from './package-manager';
+import {
+  acknowledgeBuildScripts,
+  acknowledgeDeclaredBuildScripts,
+} from './acknowledge-build-scripts';
+import {
+  getPackageManagerVersion,
+  packageRegistryView,
+} from './package-manager';
 
 vi.mock('./package-manager', async () => ({
   ...(await vi.importActual('./package-manager')),
   getPackageManagerVersion: vi.fn(),
+  packageRegistryView: vi.fn(),
 }));
 
 describe('acknowledgeBuildScripts', () => {
@@ -227,5 +234,192 @@ describe('acknowledgeBuildScripts', () => {
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
+  });
+
+  it('should record entries in the pnpm-workspace.yaml of a nested directory', () => {
+    tree.delete('package.json');
+    tree.write(
+      'my-workspace/package.json',
+      JSON.stringify({ name: 'proj', packageManager: 'pnpm@11.2.2' })
+    );
+    tree.write(
+      'my-workspace/pnpm-workspace.yaml',
+      'allowBuilds:\n  nx: true\n'
+    );
+
+    acknowledgeBuildScripts(tree, 'pnpm', { esbuild: false }, 'my-workspace');
+
+    expect(tree.exists('pnpm-workspace.yaml')).toBe(false);
+    expect(tree.read('my-workspace/pnpm-workspace.yaml', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "allowBuilds:
+        nx: true
+        esbuild: false
+      "
+    `);
+  });
+});
+
+describe('acknowledgeDeclaredBuildScripts', () => {
+  let tree: Tree;
+
+  beforeEach(() => {
+    vi.mocked(packageRegistryView).mockClear();
+    tree = createTree();
+    tree.write(
+      'package.json',
+      JSON.stringify({ name: 'proj', packageManager: 'pnpm@11.2.2' })
+    );
+    tree.write('pnpm-workspace.yaml', 'allowBuilds:\n  nx: true\n');
+  });
+
+  it('should record the decisions a package declares in its pnpm.allowBuilds field', async () => {
+    vi.mocked(packageRegistryView).mockResolvedValueOnce(
+      JSON.stringify({ esbuild: false, workerd: true })
+    );
+
+    const recorded = await acknowledgeDeclaredBuildScripts(
+      tree,
+      'pnpm',
+      '@org/preset',
+      '1.2.3'
+    );
+
+    expect(recorded).toBe(true);
+    expect(packageRegistryView).toHaveBeenCalledWith('@org/preset', '1.2.3', [
+      'pnpm.allowBuilds',
+      '--json',
+    ]);
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatchInlineSnapshot(`
+      "allowBuilds:
+        nx: true
+        esbuild: false
+        workerd: true
+      "
+    `);
+  });
+
+  it('should use the highest version when a range matches several', async () => {
+    vi.mocked(packageRegistryView).mockResolvedValueOnce(
+      JSON.stringify([{ esbuild: false }, { esbuild: false, workerd: true }])
+    );
+
+    await acknowledgeDeclaredBuildScripts(tree, 'pnpm', '@org/preset', '^1');
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatchInlineSnapshot(`
+      "allowBuilds:
+        nx: true
+        esbuild: false
+        workerd: true
+      "
+    `);
+  });
+
+  it('should ignore declared values that are not booleans', async () => {
+    vi.mocked(packageRegistryView).mockResolvedValueOnce(
+      JSON.stringify({ esbuild: 'yes', workerd: true })
+    );
+
+    await acknowledgeDeclaredBuildScripts(tree, 'pnpm', '@org/preset', '1.0.0');
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatchInlineSnapshot(`
+      "allowBuilds:
+        nx: true
+        workerd: true
+      "
+    `);
+  });
+
+  it('should report nothing recorded when the package declares no decisions', async () => {
+    const original = tree.read('pnpm-workspace.yaml', 'utf-8');
+    vi.mocked(packageRegistryView).mockResolvedValueOnce('');
+
+    const recorded = await acknowledgeDeclaredBuildScripts(
+      tree,
+      'pnpm',
+      '@org/preset',
+      '1.0.0'
+    );
+
+    expect(recorded).toBe(false);
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toBe(original);
+  });
+
+  it('should report nothing recorded when the registry lookup fails', async () => {
+    const original = tree.read('pnpm-workspace.yaml', 'utf-8');
+    vi.mocked(packageRegistryView).mockRejectedValueOnce(
+      new Error('ERR_PNPM_FETCH_404')
+    );
+
+    const recorded = await acknowledgeDeclaredBuildScripts(
+      tree,
+      'pnpm',
+      '@org/preset',
+      './preset.tgz'
+    );
+
+    expect(recorded).toBe(false);
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toBe(original);
+  });
+
+  it('should not query the registry for package managers other than pnpm', async () => {
+    const recorded = await acknowledgeDeclaredBuildScripts(
+      tree,
+      'npm',
+      '@org/preset',
+      '1.0.0'
+    );
+
+    expect(recorded).toBe(false);
+    expect(packageRegistryView).not.toHaveBeenCalled();
+  });
+
+  it('should not query the registry for pnpm < 11', async () => {
+    tree.write(
+      'package.json',
+      JSON.stringify({ name: 'proj', packageManager: 'pnpm@10.28.2' })
+    );
+
+    const recorded = await acknowledgeDeclaredBuildScripts(
+      tree,
+      'pnpm',
+      '@org/preset',
+      '1.0.0'
+    );
+
+    expect(recorded).toBe(false);
+    expect(packageRegistryView).not.toHaveBeenCalled();
+  });
+
+  it('should record into a nested directory', async () => {
+    tree.delete('package.json');
+    tree.delete('pnpm-workspace.yaml');
+    tree.write(
+      'my-workspace/package.json',
+      JSON.stringify({ name: 'proj', packageManager: 'pnpm@11.2.2' })
+    );
+    tree.write(
+      'my-workspace/pnpm-workspace.yaml',
+      'allowBuilds:\n  nx: true\n'
+    );
+    vi.mocked(packageRegistryView).mockResolvedValueOnce(
+      JSON.stringify({ esbuild: false })
+    );
+
+    await acknowledgeDeclaredBuildScripts(
+      tree,
+      'pnpm',
+      '@org/preset',
+      '1.0.0',
+      'my-workspace'
+    );
+
+    expect(tree.read('my-workspace/pnpm-workspace.yaml', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "allowBuilds:
+        nx: true
+        esbuild: false
+      "
+    `);
   });
 });

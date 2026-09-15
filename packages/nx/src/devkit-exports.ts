@@ -105,6 +105,11 @@ export {
 } from './utils/package-manager';
 
 /**
+ * @category Package Manager
+ */
+export { acknowledgeBuildScripts } from './utils/acknowledge-build-scripts';
+
+/**
  * @category Commands
  */
 export type { Target } from './command-line/run/run';
