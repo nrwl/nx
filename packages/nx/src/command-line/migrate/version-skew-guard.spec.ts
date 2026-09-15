@@ -37,6 +37,15 @@ describe('findNewMigrateFlag', () => {
     expect(findNewMigrateFlag(['--step-action=retry'])).toBe('--step-action');
   });
 
+  it('includes the start-fresh flag spellings', () => {
+    expect(NEW_MIGRATE_FLAGS).toContain('--start-fresh');
+    expect(NEW_MIGRATE_FLAGS).toContain('--startFresh');
+    expect(findNewMigrateFlag(['--run-migrations', '--start-fresh'])).toBe(
+      '--start-fresh'
+    );
+    expect(findNewMigrateFlag(['--startFresh'])).toBe('--startFresh');
+  });
+
   it('returns the first matching flag among several args', () => {
     expect(
       findNewMigrateFlag(['--verbose', '--run-id=abc', '--run-migration=x'])
