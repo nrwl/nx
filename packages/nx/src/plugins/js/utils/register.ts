@@ -9,7 +9,6 @@ import {
 } from 'path';
 import { existsSync, readFileSync, realpathSync } from 'fs';
 import { resolve as resolveExports } from 'resolve.exports';
-import { gte } from 'semver';
 import type { TsConfigOptions } from 'ts-node';
 import type { CompilerOptions } from 'typescript';
 import { logger, NX_PREFIX, stripIndent } from '../../../utils/logger';
@@ -858,9 +857,9 @@ let processRequireConditions: string[] | undefined;
 
 /**
  * Reconstructs Node's CJS resolve-hook conditions for the `Module._load`
- * patch: `node-addons` unless `--no-addons`, `module-sync` on Node 22.10+
- * unless `--no-experimental-require-module`, plus user `--conditions`. Node
- * applies `NODE_OPTIONS` before `execArgv`, and the last flag wins.
+ * patch: `node-addons` unless `--no-addons`, `module-sync` when require(esm)
+ * is on, plus user `--conditions`. Node applies `NODE_OPTIONS` before
+ * `execArgv`, and the last flag wins.
  */
 function getProcessRequireConditions(): string[] {
   if (!processRequireConditions) {
@@ -873,9 +872,7 @@ function getProcessRequireConditions(): string[] {
       'node',
       ...(flags.addons ? ['node-addons'] : []),
       ...flags.conditions,
-      ...(flags.requireModule && gte(process.versions.node, '22.10.0')
-        ? ['module-sync']
-        : []),
+      ...(process.features.require_module === true ? ['module-sync'] : []),
     ];
   }
   return processRequireConditions;
@@ -886,13 +883,8 @@ function getProcessRequireConditions(): string[] {
 function getNodeResolveFlags(args: string[]): {
   conditions: string[];
   addons: boolean;
-  requireModule: boolean;
 } {
-  const flags = {
-    conditions: [] as string[],
-    addons: true,
-    requireModule: true,
-  };
+  const flags = { conditions: [] as string[], addons: true };
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     if (arg === '-C') {
@@ -916,11 +908,6 @@ function getNodeResolveFlags(args: string[]): {
       }
     } else if (name === '--addons' || name === '--no-addons') {
       flags.addons = name === '--addons';
-    } else if (
-      name === '--experimental-require-module' ||
-      name === '--no-experimental-require-module'
-    ) {
-      flags.requireModule = name === '--experimental-require-module';
     }
   }
   return flags;
