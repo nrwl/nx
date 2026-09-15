@@ -9,6 +9,7 @@ import { ensureTypescript } from '@nx/js/internal';
 import { posix } from 'path';
 import type {
   Expression,
+  ModuleDeclaration,
   Node,
   ObjectLiteralExpression,
   PropertyAssignment,
@@ -143,7 +144,7 @@ export function parseSourceFile(filePath: string, content: string): SourceFile {
 /**
  * Whether the file binds `name` as a runtime value anywhere: a variable,
  * parameter, destructured element, function or class (declaration or named
- * expression), enum, namespace, or a value import (`import x`,
+ * expression), enum, namespace holding a value, or a value import (`import x`,
  * `import { x }`, `import * as x`, `import x =`).
  * Type-only imports and ambient declarations (`declare ...`, including
  * everything under `declare global`) do not count, so the usual
@@ -168,11 +169,17 @@ export function hasLocalValueBinding(
       ts.isFunctionExpression(node) ||
       ts.isClassDeclaration(node) ||
       ts.isClassExpression(node) ||
-      ts.isEnumDeclaration(node) ||
-      ts.isModuleDeclaration(node)
+      ts.isEnumDeclaration(node)
     ) {
       return (
         !!node.name && ts.isIdentifier(node.name) && node.name.text === name
+      );
+    }
+    if (ts.isModuleDeclaration(node)) {
+      return (
+        ts.isIdentifier(node.name) &&
+        node.name.text === name &&
+        isInstantiatedNamespace(node)
       );
     }
     if (ts.isImportClause(node)) {
@@ -207,4 +214,41 @@ export function hasLocalValueBinding(
   };
 
   return visit(sourceFile);
+}
+
+// Mirrors TypeScript's getModuleInstanceState: a namespace emits a value
+// unless every statement is a type declaration, a non-exported import or
+// such a namespace. Anything else, an expression statement included, and
+// `export { x }` lists and const enums, count as a value.
+function isInstantiatedNamespace(node: ModuleDeclaration): boolean {
+  const body = node.body;
+  if (!body) {
+    return false;
+  }
+  if (ts.isModuleDeclaration(body)) {
+    return isInstantiatedNamespace(body);
+  }
+  if (!ts.isModuleBlock(body)) {
+    return false;
+  }
+  return body.statements.some((statement) => {
+    if (
+      ts.isInterfaceDeclaration(statement) ||
+      ts.isTypeAliasDeclaration(statement)
+    ) {
+      return false;
+    }
+    if (
+      ts.isImportDeclaration(statement) ||
+      ts.isImportEqualsDeclaration(statement)
+    ) {
+      return !!ts
+        .getModifiers(statement)
+        ?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword);
+    }
+    if (ts.isModuleDeclaration(statement)) {
+      return isInstantiatedNamespace(statement);
+    }
+    return true;
+  });
 }
