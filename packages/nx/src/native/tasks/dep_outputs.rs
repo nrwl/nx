@@ -1,24 +1,52 @@
 use crate::native::tasks::types::HashInstruction;
 use crate::native::tasks::types::{Task, TaskGraph};
 use rayon::prelude::*;
-use std::collections::{HashSet, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 use tracing::{debug, trace};
 
 /// Collects all dependent tasks using BFS traversal
 /// Note: Only processes regular dependencies, not continuous_dependencies.
 /// Continuous tasks (like watch/serve) don't produce outputs that need to be hashed.
-fn collect_task_dependencies<'a>(
+pub(super) fn collect_task_dependencies<'a>(
     task_graph: &'a TaskGraph,
     initial_task_id: &str,
     transitive: bool,
 ) -> Vec<&'a Task> {
+    collect_over(
+        task_graph,
+        &task_graph.dependencies,
+        initial_task_id,
+        transitive,
+    )
+}
+
+/// Collects every continuous dependency in the chain: the servers of this
+/// task, their servers, and so on. Cycles and the task itself are skipped.
+pub(super) fn collect_continuous_dependencies<'a>(
+    task_graph: &'a TaskGraph,
+    initial_task_id: &str,
+) -> Vec<&'a Task> {
+    collect_over(
+        task_graph,
+        &task_graph.continuous_dependencies,
+        initial_task_id,
+        true,
+    )
+}
+
+fn collect_over<'a>(
+    task_graph: &'a TaskGraph,
+    edges: &'a HashMap<String, Vec<String>>,
+    initial_task_id: &str,
+    transitive: bool,
+) -> Vec<&'a Task> {
     let mut result = Vec::new();
-    let mut visited = HashSet::new();
+    let mut visited = HashSet::from([initial_task_id]);
     let mut queue = VecDeque::from([initial_task_id]);
 
     while let Some(task_id) = queue.pop_front() {
         // Get dependencies for this task
-        let Some(deps) = task_graph.dependencies.get(task_id) else {
+        let Some(deps) = edges.get(task_id) else {
             continue;
         };
 
@@ -178,6 +206,39 @@ mod tests {
         let ids: Vec<&str> = result.iter().map(|t| t.id.as_str()).collect();
         assert!(ids.contains(&"task2:build"));
         assert!(ids.contains(&"task3:build"));
+    }
+
+    #[test]
+    fn collects_the_chain_of_continuous_dependencies_once_each() {
+        let mut task_graph = TaskGraph {
+            roots: vec![],
+            tasks: HashMap::new(),
+            dependencies: HashMap::new(),
+            continuous_dependencies: HashMap::new(),
+        };
+        for project in ["e2e", "web", "api"] {
+            let task = create_test_task(project, vec![]);
+            task_graph.dependencies.insert(task.id.clone(), vec![]);
+            task_graph.tasks.insert(task.id.clone(), task);
+        }
+        // e2e -> web -> api -> e2e closes a loop back to the served task.
+        task_graph
+            .continuous_dependencies
+            .insert("e2e:build".into(), vec!["web:build".into()]);
+        task_graph
+            .continuous_dependencies
+            .insert("web:build".into(), vec!["api:build".into()]);
+        task_graph
+            .continuous_dependencies
+            .insert("api:build".into(), vec!["e2e:build".into()]);
+
+        let mut ids: Vec<&str> = collect_continuous_dependencies(&task_graph, "e2e:build")
+            .iter()
+            .map(|t| t.id.as_str())
+            .collect();
+        ids.sort();
+        assert_eq!(ids, vec!["api:build", "web:build"]);
+        assert!(collect_task_dependencies(&task_graph, "e2e:build", true).is_empty());
     }
 
     #[test]
