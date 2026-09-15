@@ -183,6 +183,30 @@ describe('createTaskGraph', () => {
     });
   });
 
+  it('should copy the target sandbox configuration onto the task', () => {
+    projectGraph.nodes['app1'].data.targets['test'].sandbox = {
+      enabled: false,
+      ignoredReads: ['tmp/**'],
+      ignoredWrites: ['scratch/**'],
+    };
+
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1', 'lib1'],
+      ['test'],
+      undefined,
+      {}
+    );
+
+    expect(taskGraph.tasks['app1:test'].sandbox).toEqual({
+      enabled: false,
+      ignoredReads: ['tmp/**'],
+      ignoredWrites: ['scratch/**'],
+    });
+    expect(taskGraph.tasks['lib1:test'].sandbox).toBeUndefined();
+  });
+
   it('should return tasks with outputs', () => {
     projectGraph.nodes.app1.data.targets.test.outputs = [
       '{workspaceRoot}/dist/app1',

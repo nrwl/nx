@@ -1,4 +1,4 @@
-import type { JsonInput } from '../native';
+import type { JsonInput, TaskSandboxConfiguration } from '../native';
 import type { PackageJson } from '../utils/package-json';
 import type {
   NxJsonConfiguration,
@@ -174,6 +174,22 @@ export interface TargetMetadata {
   };
 }
 
+/**
+ * Authoring form of a property merged key-by-key: permits the `'...'` spread
+ * token alongside the resolved keys. Merging resolves the token, so it never
+ * appears on the resolved shape.
+ */
+export type Spreadable<T> = T & { '...'?: true };
+
+/**
+ * Configuration for observed-IO sandboxing of a target's tasks.
+ *
+ * The resolved shape rides on each Task instance (`Task['sandbox']`), which is
+ * why it is shared with the native task definition. Authoring additionally
+ * permits `'...'`, which target merging resolves away.
+ */
+export type TargetSandboxConfiguration = Spreadable<TaskSandboxConfiguration>;
+
 export interface TargetDependencyConfig {
   /**
    * A list of projects that have `target`.
@@ -272,6 +288,11 @@ export interface TargetConfiguration<T = any> {
    * Determines if Nx is able to cache a given target.
    */
   cache?: boolean;
+
+  /**
+   * Configures observed-IO sandboxing for tasks of this target.
+   */
+  sandbox?: TargetSandboxConfiguration;
 
   /**
    * Metadata about the target
