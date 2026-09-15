@@ -959,7 +959,8 @@ async function commitStepChanges(
   const entry = commitResultToLedgerEntry(
     commit.result,
     step.id,
-    commit.absorbedStepIds
+    commit.absorbedStepIds,
+    step.attempt
   );
   return entry ? appendCommit(dir, entry) : state;
 }
