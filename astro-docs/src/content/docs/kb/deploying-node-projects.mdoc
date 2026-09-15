@@ -154,10 +154,14 @@ On older versions, `prune-lockfile` emits only the pruned `package.json` and the
 the pnpm-specific guidance below does not apply.
 {% /aside %}
 
-The emitted `pnpm-workspace.yaml` carries build-script approvals (`allowBuilds`),
-`supportedArchitectures`, and any `patchedDependencies`.
-On pnpm 10 and below it carries none of them, because the emitted `package.json` declares them
-instead, but the file still ships so that every run overwrites the last one.
+On pnpm 11 and above, the emitted `pnpm-workspace.yaml` carries build-script approvals
+(`allowBuilds`), `supportedArchitectures`, declared release-age settings (`minimumReleaseAge`,
+`minimumReleaseAgeExclude`, and `minimumReleaseAgeStrict`), and any applicable
+`patchedDependencies`.
+On pnpm 10 and below, the file contains only `packages: []`.
+Nx writes build approvals as `onlyBuiltDependencies` and `neverBuiltDependencies` in the emitted
+`package.json`, along with `supportedArchitectures` and any applicable `patchedDependencies`.
+The workspace file still ships on every run so that it overwrites any stale copy.
 Copied `.patch` files keep their original subpath under `patches/`.
 Resolution-time config such as `pnpm.overrides` is dropped from the emitted manifest, because the
 pruned lockfile already bakes it into its resolutions.
@@ -216,11 +220,9 @@ sees:
 ERR_PNPM_LOCKFILE_CONFIG_MISMATCH  Cannot proceed with the frozen installation. The current "patchedDependencies" configuration doesn't match the value found in the lockfile
 ```
 
-Install that output without the flag.
-The emitted file declares an empty `packages` list, which already stops pnpm from treating a parent
-directory as a workspace.
-A workspace with no approvals, architectures, or patches to carry gets a file holding only that
-empty list, so the flag has nothing to skip there.
+Install pruned outputs without `--ignore-workspace`.
+The emitted `pnpm-workspace.yaml` makes the output its own workspace root, excludes sibling packages
+through `packages: []`, and keeps the emitted install settings active.
 {% /aside %}
 
 Then run:

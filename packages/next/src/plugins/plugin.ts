@@ -170,11 +170,12 @@ async function buildNextTargets(
   );
 
   targets[options.devTargetName] = getDevTargetConfig(
+    namedInputs,
     projectRoot,
     isTsSolutionSetup
   );
 
-  const startTarget = getStartTargetConfig(options, projectRoot);
+  const startTarget = getStartTargetConfig(namedInputs, options, projectRoot);
 
   targets[options.startTargetName] = startTarget;
 
@@ -223,13 +224,18 @@ async function getBuildTargetConfig(
   return targetConfig;
 }
 
-function getDevTargetConfig(projectRoot: string, isTsSolutionSetup: boolean) {
+function getDevTargetConfig(
+  namedInputs: { [inputName: string]: any[] },
+  projectRoot: string,
+  isTsSolutionSetup: boolean
+) {
   const targetConfig: TargetConfiguration = {
     continuous: true,
     command: `next dev`,
     options: {
       cwd: projectRoot,
     },
+    inputs: getInputs(namedInputs),
   };
 
   if (isTsSolutionSetup) {
@@ -239,7 +245,11 @@ function getDevTargetConfig(projectRoot: string, isTsSolutionSetup: boolean) {
   return targetConfig;
 }
 
-function getStartTargetConfig(options: NextPluginOptions, projectRoot: string) {
+function getStartTargetConfig(
+  namedInputs: { [inputName: string]: any[] },
+  options: NextPluginOptions,
+  projectRoot: string
+) {
   const targetConfig: TargetConfiguration = {
     continuous: true,
     command: `next start`,
@@ -247,6 +257,7 @@ function getStartTargetConfig(options: NextPluginOptions, projectRoot: string) {
       cwd: projectRoot,
     },
     dependsOn: [options.buildTargetName],
+    inputs: getInputs(namedInputs),
   };
 
   return targetConfig;

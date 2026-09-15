@@ -277,7 +277,7 @@
     "sass-loader": "catalog:css",
     "semver": "catalog:",
     "shiki": "^4.0.2",
-    "smol-toml": "1.6.1",
+    "smol-toml": "1.7.1",
     "source-map-loader": "^5.0.0",
     "source-map-support": "0.5.19",
     "storybook": "10.5.0",
