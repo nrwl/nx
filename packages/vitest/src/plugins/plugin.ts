@@ -7,6 +7,7 @@ import {
   deriveGroupNameFromTarget,
   globWithWorkspaceContext,
   quoteShellArg,
+  retryOnRequireEsmRace,
 } from '@nx/devkit/internal';
 import {
   CreateDependencies,
@@ -212,39 +213,15 @@ async function buildVitestTargets(
     // do nothing
   }
 
-  // Workaround for race condition with ESM-only Vite plugins (e.g. @vitejs/plugin-vue@6+)
-  // If vite.config.ts is compiled as CJS, then when both require('@vitejs/plugin-vue') and import('@vitejs/plugin-vue')
-  // are pending in the same process, Node will throw an error:
-  // Error [ERR_INTERNAL_ASSERTION]: Cannot require() ES Module @vitejs/plugin-vue/dist/index.js because it is not yet fully loaded.
-  // This may be caused by a race condition if the module is simultaneously dynamically import()-ed via Promise.all().
-  try {
-    const importVuePlugin = () =>
-      new Function('return import("@vitejs/plugin-vue")')();
-    await importVuePlugin();
-  } catch {
-    // Plugin not installed or not needed, ignore
-  }
-
-  // Workaround for race condition with vitest/node on Node 24+
-  // When multiple vitest.config files are processed in parallel, Node can throw:
-  // Error [ERR_INTERNAL_ASSERTION]: Cannot require() ES Module vitest/dist/node.js
-  // because it is not yet fully loaded.
-  // See: https://github.com/nrwl/nx/issues/34028
-  try {
-    const importVitestNode = () =>
-      new Function('return import("vitest/node")')();
-    await importVitestNode();
-  } catch {
-    // vitest/node not available or not needed, ignore
-  }
-
   const { resolveConfig } = await loadViteDynamicImport();
-  const viteBuildConfig = await resolveConfig(
-    {
-      configFile: absoluteConfigFilePath,
-      mode: 'development',
-    },
-    'build'
+  const viteBuildConfig = await retryOnRequireEsmRace(() =>
+    resolveConfig(
+      {
+        configFile: absoluteConfigFilePath,
+        mode: 'development',
+      },
+      'build'
+    )
   );
 
   // A root config that aggregates project configs via `test.projects` is just an
@@ -307,35 +284,37 @@ async function buildVitestTargets(
       // Capture the raw root after user hooks: graph construction and the
       // atom run resolve it against different cwds.
       let configuredViteRoot: string | undefined;
-      const viteServeConfig = await resolveConfig(
-        {
-          configFile: absoluteConfigFilePath,
-          mode: 'test',
-          plugins: [
-            {
-              // Promotes test.root before user hooks as Vitest does, so a
-              // later hook can override it. No options.root: atoms pass no --root.
-              name: 'nx-promote-vitest-root',
-              enforce: 'pre' as const,
-              config(config: { root?: string; test?: { root?: string } }) {
-                if (config.test?.root) {
-                  return { root: config.test.root };
-                }
-              },
-            },
-            {
-              name: 'nx-capture-vitest-root',
-              enforce: 'post' as const,
-              config: {
-                order: 'post' as const,
-                handler(config: { root?: string }) {
-                  configuredViteRoot = config.root;
+      const viteServeConfig = await retryOnRequireEsmRace(() =>
+        resolveConfig(
+          {
+            configFile: absoluteConfigFilePath,
+            mode: 'test',
+            plugins: [
+              {
+                // Promotes test.root before user hooks as Vitest does, so a
+                // later hook can override it. No options.root: atoms pass no --root.
+                name: 'nx-promote-vitest-root',
+                enforce: 'pre' as const,
+                config(config: { root?: string; test?: { root?: string } }) {
+                  if (config.test?.root) {
+                    return { root: config.test.root };
+                  }
                 },
               },
-            },
-          ],
-        },
-        'serve'
+              {
+                name: 'nx-capture-vitest-root',
+                enforce: 'post' as const,
+                config: {
+                  order: 'post' as const,
+                  handler(config: { root?: string }) {
+                    configuredViteRoot = config.root;
+                  },
+                },
+              },
+            ],
+          },
+          'serve'
+        )
       );
       const projectRootRelativeTestPaths =
         await getTestPathsRelativeToProjectRoot(

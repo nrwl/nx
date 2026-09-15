@@ -10,6 +10,7 @@ import {
   registerTsProject,
 } from 'nx/src/devkit-internals';
 import { dirname, extname, join, sep } from 'path';
+import { retryOnRequireEsmRace } from './require-esm-race';
 
 export let dynamicImport = new Function(
   'modulePath',
@@ -21,7 +22,11 @@ export async function loadConfigFile<T extends object = any>(
   tsconfigFileNames?: string[]
 ): Promise<T> {
   const extension = extname(configFilePath);
-  const module = await loadModule(configFilePath, extension, tsconfigFileNames);
+  // Only the require()/import() ESM race is retried; every other error
+  // propagates on the first attempt.
+  const module = await retryOnRequireEsmRace(() =>
+    loadModule(configFilePath, extension, tsconfigFileNames)
+  );
   return module.default ?? module;
 }
 

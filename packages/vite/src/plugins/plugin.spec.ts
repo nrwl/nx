@@ -102,6 +102,34 @@ describe('@nx/vite/plugin', () => {
       `);
     });
 
+    it('should retry the config load when require() of an ESM plugin races an in-flight import()', async () => {
+      const raceError = Object.assign(
+        new Error(
+          'Cannot require() ES Module /x/@vitejs/plugin-react/dist/index.js because it is not yet fully loaded.'
+        ),
+        { code: 'ERR_REQUIRE_ESM_RACE_CONDITION' }
+      );
+      const resolveConfig = jest
+        .fn()
+        .mockRejectedValueOnce(raceError)
+        .mockResolvedValue({});
+      (loadViteDynamicImport as jest.Mock).mockResolvedValue({ resolveConfig });
+      // The targets cache persists on disk across runs and is keyed by the
+      // project's file contents; a fresh config keeps this run from hitting it.
+      tempFs.createFileSync('vite.config.ts', `// ${Date.now()}`);
+
+      const nodes = await createNodesFunction(
+        ['vite.config.ts'],
+        { buildTargetName: 'build-after-retry' },
+        context
+      );
+
+      expect(resolveConfig).toHaveBeenCalledTimes(2);
+      expect(
+        nodes[0]?.[1]?.projects?.['.']?.targets?.['build-after-retry']?.command
+      ).toMatch(/vite/);
+    });
+
     it('should create nodes when rollupOptions contains input', async () => {
       // Don't need index.html if we're setting inputs
       tempFs.removeFileSync('index.html');
