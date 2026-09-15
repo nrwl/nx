@@ -1,47 +1,58 @@
 import * as figures from 'figures';
 import { EventEmitter } from 'events';
+import { PassThrough } from 'stream';
 import { existsSync, readFileSync } from 'fs';
 
-// Replaces the module rather than spying, and gates the failure on a flag so
+// Fails the capture stream on its first write - a full disk. Gated on a flag so
 // every other test here keeps the real fs.
 //
 // A spy would also work, but only through `require('fs')` - NOT through an
 // `import * as fs`, which under this repo's transform is an interop wrapper
 // around the module rather than the module object itself, so mutating it
-// changes nothing `capture()` can see. Measured: namespace spy 0 calls,
-// `require` spy 1, for the same code path. The module mock sidesteps the
+// changes nothing the capture can see. The module mock sidesteps the
 // distinction entirely.
-let mockFailOpenSync = false;
-let mockFailWriteSync = false;
-// Writes a prefix, then fails on the next call - a disk filling mid-chunk.
-let mockPartialWriteBytes: number | null = null;
+let mockFailWriteStream = false;
+// Applies backpressure and never drains, without failing: the shape a slow
+// disk produces, where only an explicit resume can unpause the source.
+let mockBackpressureOnly = false;
+// Backpressure that still writes. `mockBackpressureOnly` drops the bytes, so it
+// cannot show whether a paused source's tail survives the flush.
+let mockBackpressureButWrites = false;
 vi.mock('fs', async () => {
   const actual = require('fs');
-  const enospc = () =>
-    Object.assign(new Error('ENOSPC: no space left on device'), {
-      code: 'ENOSPC',
-    });
   return {
     ...actual,
-    openSync: (...args: unknown[]) => {
-      if (mockFailOpenSync) {
-        throw enospc();
+    createWriteStream: (...args: unknown[]) => {
+      const stream = (actual.createWriteStream as any)(...args);
+      if (mockBackpressureOnly) {
+        stream.write = () => false;
       }
-      return (actual.openSync as any)(...args);
-    },
-    // The likelier real failure: the file opens fine and the disk fills later.
-    writeSync: (...args: unknown[]) => {
-      if (mockFailWriteSync) {
-        throw enospc();
+      if (mockBackpressureButWrites) {
+        const realWrite = stream.write.bind(stream);
+        stream.write = (...writeArgs: unknown[]) => {
+          realWrite(...writeArgs);
+          // Always "full", so every chunk pauses the source.
+          return false;
+        };
       }
-      if (mockPartialWriteBytes !== null) {
-        const n = mockPartialWriteBytes;
-        mockPartialWriteBytes = null;
-        mockFailWriteSync = true;
-        const [fd, buffer, offset] = args as [number, Buffer, number];
-        return (actual.writeSync as any)(fd, buffer, offset, n);
+      if (mockFailWriteStream) {
+        // Never performs the real write: a genuine 'drain' would resume the
+        // source on its own and the test would pass on unfixed code.
+        stream.write = () => {
+          // Asynchronous, like the real thing: the write is accepted and the
+          // failure arrives as an 'error' event afterwards.
+          setImmediate(() =>
+            stream.emit(
+              'error',
+              Object.assign(new Error('ENOSPC: no space left on device'), {
+                code: 'ENOSPC',
+              })
+            )
+          );
+          return false;
+        };
       }
-      return (actual.writeSync as any)(...args);
+      return stream;
     },
   };
 });
@@ -53,11 +64,14 @@ import { BatchProcess } from './batch-process';
 
 function fakeChildProcess() {
   const child = new EventEmitter() as unknown as ChildProcess & {
-    stdout: EventEmitter;
-    stderr: EventEmitter;
+    stdout: PassThrough;
+    stderr: PassThrough;
   };
-  (child as any).stdout = new EventEmitter();
-  (child as any).stderr = new EventEmitter();
+  // Real streams, not bare emitters: the capture pauses the source when the
+  // file's write buffer fills, so a double without `pause`/`resume` would pass
+  // tests that production cannot reach.
+  (child as any).stdout = new PassThrough();
+  (child as any).stderr = new PassThrough();
   return child;
 }
 
@@ -85,6 +99,33 @@ function captureForwarded(cb: () => void): { stdout: string; stderr: string } {
     process.stderr.write = originalStderr;
   }
   return { stdout, stderr };
+}
+
+/**
+ * `withEnvironmentVariables` is synchronous, but a real `stream.write` delivers
+ * its 'data' on a later tick - after the env has been restored, so the capture
+ * would see no grouping. Holds FOLDING_ENV across awaits instead. Deletes
+ * rather than assigning `undefined`, which would restore as the string.
+ */
+function withFoldingEnvAsync<T>(cb: () => Promise<T>): Promise<T> {
+  const prior = {
+    GITHUB_ACTIONS: process.env.GITHUB_ACTIONS,
+    NX_SKIP_LOG_GROUPING: process.env.NX_SKIP_LOG_GROUPING,
+    NX_STREAM_OUTPUT: process.env.NX_STREAM_OUTPUT,
+  };
+  process.env.GITHUB_ACTIONS = 'true';
+  delete process.env.NX_SKIP_LOG_GROUPING;
+  delete process.env.NX_STREAM_OUTPUT;
+  const restore = () => {
+    for (const [key, value] of Object.entries(prior)) {
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
+  };
+  return cb().finally(restore);
 }
 
 const FOLDING_ENV = {
@@ -130,7 +171,7 @@ describe('BatchProcess', () => {
     expect(result.stderr).toEqual('');
   });
 
-  it('captures both streams while folding, so the fold can surface them', () => {
+  it('captures both streams while folding, so the fold can surface them', async () => {
     const child = fakeChildProcess();
 
     const batch = withEnvironmentVariables(FOLDING_ENV, () => {
@@ -144,6 +185,7 @@ describe('BatchProcess', () => {
       return b;
     });
 
+    await batch.flushCapturedOutput();
     const captured = readFileSync(batch.getCapturedOutputPath(), 'utf-8');
     expect(captured).toContain('build log line');
     expect(captured).toContain('OutOfMemoryError');
@@ -167,7 +209,7 @@ describe('BatchProcess', () => {
     expect(batch.getCapturedOutputPath()).toBeUndefined();
   });
 
-  it('captures a batch log without capping it, keeping the head', () => {
+  it('captures a batch log without capping it, keeping the head', async () => {
     const child = fakeChildProcess();
 
     const batch = withEnvironmentVariables(FOLDING_ENV, () => {
@@ -187,6 +229,7 @@ describe('BatchProcess', () => {
       return b;
     });
 
+    await batch.flushCapturedOutput();
     const captured = readFileSync(batch.getCapturedOutputPath(), 'utf-8');
     expect(captured.length).toEqual(3_000_000 + 'FINAL_FATAL'.length);
     // Both the head, where a compiler's first errors land, and the tail, where
@@ -196,7 +239,7 @@ describe('BatchProcess', () => {
     batch.discardCapturedOutput();
   });
 
-  it('holds the captured log on disk rather than in memory', () => {
+  it('holds the captured log on disk rather than in memory', async () => {
     const child = fakeChildProcess();
 
     const batch = withEnvironmentVariables(FOLDING_ENV, () => {
@@ -207,6 +250,7 @@ describe('BatchProcess', () => {
       return b;
     });
 
+    await batch.flushCapturedOutput();
     const path = batch.getCapturedOutputPath();
     expect(path).toBeDefined();
     expect(existsSync(path)).toBe(true);
@@ -271,7 +315,7 @@ describe('BatchProcess', () => {
     expect(seen).toEqual(['out chunk']);
   });
 
-  it('replays a chunk that arrives after the path is handed over', () => {
+  it('drops a chunk that arrives after the flush, without a second file', async () => {
     const child = fakeChildProcess();
 
     const batch = withEnvironmentVariables(FOLDING_ENV, () => {
@@ -283,17 +327,21 @@ describe('BatchProcess', () => {
     });
 
     const path = batch.getCapturedOutputPath();
-    // stdout can deliver past the exit event that getResults() settles on, and
-    // that trailing output is what the fold exists to carry - so it belongs in
-    // the same file, not dropped and not in a second one.
-    withEnvironmentVariables(FOLDING_ENV, () => {
-      captureForwarded(() => {
-        (child as any).stdout.emit('data', Buffer.from('after handover\n'));
-      });
-    });
+    // Production order: both readers flush before touching the path. stdout can
+    // still deliver past the exit event that getResults() settles on, and the
+    // flush has ended the stream by then - so the late chunk is lost. What must
+    // NOT happen is a second file, or the write killing the run.
+    await batch.flushCapturedOutput();
+    expect(() =>
+      withEnvironmentVariables(FOLDING_ENV, () => {
+        captureForwarded(() => {
+          (child as any).stdout.emit('data', Buffer.from('after handover\n'));
+        });
+      })
+    ).not.toThrow();
 
     expect(batch.getCapturedOutputPath()).toEqual(path);
-    expect(readFileSync(path, 'utf-8')).toEqual('during\nafter handover\n');
+    expect(readFileSync(path, 'utf-8')).toEqual('during\n');
     batch.discardCapturedOutput();
     expect(existsSync(path)).toBe(false);
   });
@@ -348,125 +396,193 @@ describe('BatchProcess', () => {
     expect(index).toBeGreaterThan(-1);
     expect(stdout[index - 1]).toEqual('\n');
   });
-  it('keeps the run alive and streams live when the capture cannot be written', () => {
+  it('prints nothing live when the style does not print task output', () => {
     const child = fakeChildProcess();
-    const warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
-    // A stream 'data' handler is not inside any try the orchestrator owns, so a
-    // throw here is an uncaught exception that takes down the whole run,
-    // including every task that already passed. ENOSPC and a read-only data
-    // directory both reach this line.
-    mockFailOpenSync = true;
 
-    try {
-      const result = withEnvironmentVariables(FOLDING_ENV, () => {
-        const b = new BatchProcess(child, '@nx/gradle:batch');
-        const forwarded = captureForwarded(() => {
-          expect(() =>
-            (child as any).stdout.emit('data', Buffer.from('gradle output\n'))
-          ).not.toThrow();
-        });
-        return { b, forwarded };
-      });
-
-      // Degraded, not dead: the bytes go to the terminal instead of the file,
-      // so the capture is what is lost rather than the output or the run.
-      expect(result.forwarded.stdout).toContain('gradle output');
-      expect(result.b.getCapturedOutputPath()).toBeUndefined();
-      expect(warn).toHaveBeenCalledWith(
-        expect.objectContaining({
-          title: expect.stringContaining('@nx/gradle:batch'),
-        })
-      );
-    } finally {
-      mockFailOpenSync = false;
-      warn.mockRestore();
-    }
-  });
-  it('keeps streaming every later chunk after a capture failure, not just the first', () => {
-    const child = fakeChildProcess();
-    const warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
-    mockFailOpenSync = true;
-
-    try {
-      const forwarded = withEnvironmentVariables(FOLDING_ENV, () => {
-        new BatchProcess(child, '@nx/gradle:batch');
+    // No grouping, so this is the branch that forwards live. `summary` reports
+    // each task's log by path, and this class writes to `output` directly from
+    // a stream handler - the life cycle cannot stop it, so it has to be told.
+    const forwarded = withEnvironmentVariables(
+      { GITHUB_ACTIONS: undefined, NX_SKIP_LOG_GROUPING: undefined },
+      () => {
+        new BatchProcess(child, '@nx/js:tsc', false);
         return captureForwarded(() => {
-          (child as any).stdout.emit('data', Buffer.from('first\n'));
-          (child as any).stdout.emit('data', Buffer.from('second\n'));
-          (child as any).stderr.emit('data', Buffer.from('on stderr\n'));
+          (child as any).stdout.emit('data', Buffer.from('worker chatter\n'));
+          (child as any).stderr.emit('data', Buffer.from('worker warning\n'));
         });
-      });
+      }
+    );
 
-      // Latching the discard flag would make every chunk after the first return
-      // early - captured nowhere and printed nowhere.
-      expect(forwarded.stdout).toContain('first');
-      expect(forwarded.stdout).toContain('second');
-      // And a stderr chunk has to stay on stderr rather than being folded into
-      // stdout by a fallback that forgot which stream it came from.
-      expect(forwarded.stderr).toContain('on stderr');
-      expect(forwarded.stdout).not.toContain('on stderr');
-    } finally {
-      mockFailOpenSync = false;
-      warn.mockRestore();
-    }
+    expect(forwarded.stdout).not.toContain('worker chatter');
+    expect(forwarded.stderr).not.toContain('worker warning');
   });
 
-  it('keeps what it already captured when the disk fills mid-batch', () => {
+  it('still prints live when the style does print task output', () => {
+    const child = fakeChildProcess();
+
+    const forwarded = withEnvironmentVariables(
+      { GITHUB_ACTIONS: undefined, NX_SKIP_LOG_GROUPING: undefined },
+      () => {
+        new BatchProcess(child, '@nx/js:tsc');
+        return captureForwarded(() => {
+          (child as any).stdout.emit('data', Buffer.from('worker chatter\n'));
+        });
+      }
+    );
+
+    expect(forwarded.stdout).toContain('worker chatter');
+  });
+  it('captures rather than drops when the style will not print it', async () => {
+    const child = fakeChildProcess();
+
+    // No grouping AND a style that prints nothing. Suppressing the live write
+    // without capturing loses the bytes outright - and a batch worker's crash
+    // output is exactly what no task ever claims, so nothing else holds a copy.
+    const batch = withEnvironmentVariables(
+      { GITHUB_ACTIONS: undefined, NX_SKIP_LOG_GROUPING: undefined },
+      () => {
+        const b = new BatchProcess(child, '@nx/gradle:batch', false);
+        captureForwarded(() => {
+          (child as any).stdout.emit(
+            'data',
+            Buffer.from('why the worker died\n')
+          );
+        });
+        return b;
+      }
+    );
+
+    await batch.flushCapturedOutput();
+    const path = batch.getCapturedOutputPath();
+    expect(path).toBeDefined();
+    expect(readFileSync(path, 'utf-8')).toContain('why the worker died');
+    batch.discardCapturedOutput();
+  });
+
+  it('forwards to the terminal and warns when the capture cannot be written', async () => {
     const child = fakeChildProcess();
     const warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
 
     try {
-      const { batch, forwarded } = withEnvironmentVariables(FOLDING_ENV, () => {
+      mockFailWriteStream = true;
+      const batch = withEnvironmentVariables(FOLDING_ENV, () => {
         const b = new BatchProcess(child, '@nx/gradle:batch');
-        const f = captureForwarded(() => {
-          (child as any).stdout.emit('data', Buffer.from('head of the log\n'));
-          // Opens fine, fills later - so there are already good bytes on disk.
-          mockFailWriteSync = true;
-          (child as any).stdout.emit('data', Buffer.from('tail of the log\n'));
+        captureForwarded(() => {
+          (child as any).stdout.emit('data', Buffer.from('head\n'));
         });
-        return { batch: b, forwarded: f };
+        return b;
       });
-
-      // The head is where a compiler's first non-cascading errors are, so
-      // unlinking the file on failure would discard the most useful part.
       const path = batch.getCapturedOutputPath();
-      expect(path).toBeDefined();
-      expect(readFileSync(path, 'utf-8')).toContain('head of the log');
-      expect(forwarded.stdout).toContain('tail of the log');
+
+      // The failure reaches a stream as an 'error' event, asynchronously, so
+      // wait for the effect rather than a fixed number of turns.
+      await vi.waitFor(() => expect(warn).toHaveBeenCalled());
+
+      // Capture is over, but the batch keeps running - and the bytes are not
+      // optional. A style withholds output on the promise that it is readable
+      // elsewhere; once the file cannot keep that promise, the terminal does.
+      let forwarded = { stdout: '', stderr: '' };
+      expect(() =>
+        withEnvironmentVariables(FOLDING_ENV, () => {
+          forwarded = captureForwarded(() => {
+            (child as any).stdout.emit('data', Buffer.from('after\n'));
+            (child as any).stderr.emit('data', Buffer.from('err after\n'));
+          });
+        })
+      ).not.toThrow();
+      expect(forwarded.stdout).toContain('after');
+      expect(forwarded.stderr).toContain('err after');
+
+      // Once, not per chunk: an unwritable directory fails every write, and
+      // warning on each would bury the output this path exists to save.
+      expect(warn).toHaveBeenCalledTimes(1);
+
+      // What reached the file before the failure is kept, not unlinked: it is
+      // the head of the batch's log. The open is asynchronous, so wait for it.
+      await vi.waitFor(() => expect(existsSync(path)).toBe(true));
       batch.discardCapturedOutput();
     } finally {
-      mockFailWriteSync = false;
+      mockFailWriteStream = false;
       warn.mockRestore();
     }
   });
-  it('does not replay bytes that already reached the file when a write fails partway', () => {
+
+  it('keeps the tail a paused source still holds when the capture is flushed', async () => {
     const child = fakeChildProcess();
-    const warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
-    // The first write lands 5 of the chunk's bytes and the next one fails, so
-    // the file holds a prefix that the fold will replay later.
-    mockPartialWriteBytes = 5;
 
     try {
-      const { batch, forwarded } = withEnvironmentVariables(FOLDING_ENV, () => {
-        const b = new BatchProcess(child, '@nx/gradle:batch');
-        const f = captureForwarded(() => {
-          (child as any).stdout.emit('data', Buffer.from('HEAD:TAIL\n'));
+      mockBackpressureButWrites = true;
+      await withFoldingEnvAsync(async () => {
+        const batch = new BatchProcess(child, '@nx/gradle:batch');
+
+        // Written through the stream rather than emitted as 'data': the tail
+        // has to sit in the source's own buffer while it is paused, which a
+        // synthetic emit bypasses entirely.
+        (child as any).stdout.write('head\n');
+        await new Promise((resolve) => setImmediate(resolve));
+        (child as any).stdout.write('TAIL-AFTER-PAUSE\n');
+
+        await batch.flushCapturedOutput();
+
+        // `resume()` delivers on the next tick and `end()` takes effect in this
+        // one, so without a drain the tail is written to an ended stream and
+        // lost.
+        const captured = readFileSync(batch.getCapturedOutputPath(), 'utf-8');
+        expect(captured).toContain('head');
+        expect(captured).toContain('TAIL-AFTER-PAUSE');
+        batch.discardCapturedOutput();
+      });
+    } finally {
+      mockBackpressureButWrites = false;
+    }
+  });
+  it('lets the worker keep writing when the capture dies mid-backpressure', async () => {
+    const child = fakeChildProcess();
+
+    try {
+      mockFailWriteStream = true;
+      withEnvironmentVariables(FOLDING_ENV, () => {
+        new BatchProcess(child, '@nx/gradle:batch');
+        captureForwarded(() => {
+          // Big enough to exceed the write buffer, so the source is paused
+          // awaiting a 'drain' that a failed stream never emits.
+          (child as any).stdout.emit('data', Buffer.alloc(128 * 1024, 'x'));
         });
-        return { batch: b, forwarded: f };
       });
 
-      // Forwarding the whole chunk would print HEAD: twice - once live now,
-      // once from the fold - so only the unwritten remainder goes out.
-      expect(readFileSync(batch.getCapturedOutputPath(), 'utf-8')).toEqual(
-        'HEAD:'
-      );
-      expect(forwarded.stdout).toContain('TAIL');
-      expect(forwarded.stdout).not.toContain('HEAD:');
+      await new Promise((resolve) => setImmediate(resolve));
+
+      // Left paused, the worker blocks once its stdout pipe fills, never sends
+      // its results, and the run hangs with nothing on screen.
+      expect((child as any).stdout.isPaused()).toBe(false);
+    } finally {
+      mockFailWriteStream = false;
+    }
+  });
+  it('resumes the worker when a paused capture is flushed', async () => {
+    const child = fakeChildProcess();
+
+    try {
+      mockBackpressureOnly = true;
+      const batch = withEnvironmentVariables(FOLDING_ENV, () => {
+        const b = new BatchProcess(child, '@nx/gradle:batch');
+        captureForwarded(() => {
+          (child as any).stdout.emit('data', Buffer.alloc(128 * 1024, 'x'));
+        });
+        return b;
+      });
+      expect((child as any).stdout.isPaused()).toBe(true);
+
+      await batch.flushCapturedOutput();
+
+      // `end()` means the pending 'drain' will never arrive, so without an
+      // explicit resume the worker stays blocked on a full pipe for the rest
+      // of the run - which is the announced-log path, where the file is
+      // deliberately kept and `discardCapturedOutput` never runs.
+      expect((child as any).stdout.isPaused()).toBe(false);
       batch.discardCapturedOutput();
     } finally {
-      mockPartialWriteBytes = null;
-      mockFailWriteSync = false;
-      warn.mockRestore();
+      mockBackpressureOnly = false;
     }
   });
 });
