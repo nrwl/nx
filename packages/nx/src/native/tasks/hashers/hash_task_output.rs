@@ -91,7 +91,7 @@ fn output_entries(
     let mut positives = Vec::new();
     let mut negations = Vec::new();
     for entry in outputs {
-        let Some(entry) = normalize_output_entry(entry) else {
+        let Some(entry) = relative_output_entry(workspace_root, entry) else {
             continue;
         };
         let (negated, body) = match entry.strip_prefix('!') {
@@ -108,6 +108,23 @@ fn output_entries(
         }
     }
     Ok((positives, negations))
+}
+
+/// An absolute entry inside the workspace (`{options.outputPath}` with an
+/// absolute value) is read relative to it, so the files it hashes are named
+/// like any other; one outside the workspace names nothing here, like an
+/// entry that climbs out with `..`.
+fn relative_output_entry(workspace_root: &Path, entry: &str) -> Option<String> {
+    let (bang, body) = match entry.strip_prefix('!') {
+        Some(rest) => ("!", rest),
+        None => ("", entry),
+    };
+    if !Path::new(body).is_absolute() {
+        return normalize_output_entry(entry);
+    }
+    let inside = Path::new(body).strip_prefix(workspace_root).ok()?;
+    let inside = inside.to_string_lossy().replace('\\', "/");
+    normalize_output_entry(&format!("{bang}{inside}"))
 }
 
 /// Resolves `.` and `..` lexically: outputs are declared relative to the
@@ -286,6 +303,26 @@ mod tests {
     }
 
     #[test]
+    fn an_absolute_output_inside_the_workspace_is_read_relative_to_it() {
+        let temp = workspace();
+        let absolute = temp.path().join("dist/libs/lib");
+        assert_eq!(
+            files(&temp, "**/*.js", &[&absolute.to_string_lossy()]),
+            vec!["dist/libs/lib/index.js"]
+        );
+        let excluded = format!("!{}", temp.path().join("dist/libs/**").to_string_lossy());
+        assert_eq!(
+            files(&temp, "**/*.js", &["dist", &excluded]),
+            vec!["dist/@scope/pkg/index.js", "dist/apps/web/index.js"]
+        );
+        // Outside the workspace it names nothing, like `../outside`.
+        let elsewhere = TempDir::new().unwrap();
+        elsewhere.child("out/index.js").write_str("x").unwrap();
+        let outside = elsewhere.path().join("out");
+        assert!(files(&temp, "**/*.js", &[&outside.to_string_lossy()]).is_empty());
+    }
+
+    #[test]
     fn a_missing_output_is_not_an_input() {
         let temp = workspace();
         let cache = FilesExpansionCache::new();
@@ -316,15 +353,27 @@ mod tests {
         };
         let first = hash();
         assert_eq!(first, hash());
+        let file = temp.path().join("dist/apps/web/index.js");
         temp.child("dist/apps/web/index.js")
             .write_str("changed")
             .unwrap();
         let second = hash();
         assert_ne!(first, second);
-        // A same-size rewrite in the same instant still counts.
+        // A same-size rewrite with the same mtime still counts: the entry
+        // was made in the file's own second, so it is never trusted.
+        let instant = std::time::SystemTime::now() + std::time::Duration::from_secs(2);
+        let pin = || {
+            std::fs::File::open(&file)
+                .unwrap()
+                .set_modified(instant)
+                .unwrap();
+        };
+        pin();
+        let pinned = hash();
         temp.child("dist/apps/web/index.js")
             .write_str("CHANGED")
             .unwrap();
-        assert_ne!(second, hash());
+        pin();
+        assert_ne!(pinned, hash());
     }
 }
