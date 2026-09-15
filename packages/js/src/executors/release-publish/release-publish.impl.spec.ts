@@ -38,6 +38,22 @@ describe('release-publish executor', () => {
     typeof readJsonFile
   >;
 
+  function npmViewNotFoundError() {
+    const error: any = new Error('npm view failed');
+    error.stdout = Buffer.from(
+      JSON.stringify({
+        error: {
+          code: 'E404',
+          summary: 'No match found for version 1.0.0',
+        },
+      })
+    );
+    error.stderr = Buffer.from(
+      'npm error code E404\nnpm error 404 No match found for version 1.0.0'
+    );
+    return error;
+  }
+
   beforeEach(() => {
     jest.clearAllMocks();
     mockDetectPackageManager.mockReturnValue('npm');
@@ -94,17 +110,7 @@ describe('release-publish executor', () => {
   describe('already published error handling', () => {
     function mockNpmViewNotFound() {
       mockExecSync.mockImplementationOnce(() => {
-        const error: any = new Error('npm view failed');
-        error.stdout = Buffer.from(
-          JSON.stringify({
-            error: {
-              code: 'E404',
-              summary: 'Not found',
-            },
-          })
-        );
-        error.stderr = Buffer.from('npm ERR! 404 Not Found');
-        throw error;
+        throw npmViewNotFoundError();
       });
     }
 
@@ -211,14 +217,9 @@ describe('release-publish executor', () => {
 
     it('should proceed with publishing when nxReleaseVersionData indicates a new version', async () => {
       mockExecSync
-        .mockReturnValueOnce(
-          Buffer.from(
-            JSON.stringify({
-              versions: ['0.9.0'],
-              'dist-tags': { latest: '0.9.0' },
-            })
-          )
-        ) // npm view
+        .mockImplementationOnce(() => {
+          throw npmViewNotFoundError();
+        })
         .mockReturnValueOnce(Buffer.from('{}') as any); // npm publish
 
       jest.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue({
@@ -253,20 +254,14 @@ describe('release-publish executor', () => {
       const result = await runExecutor(optionsWithVersionData, context);
 
       expect(result.success).toBe(true);
-      // Should have proceeded with npm --version, npm view, and publish
       expect(mockExecSync).toHaveBeenCalledTimes(3);
     });
 
     it('should proceed with publishing when nxReleaseVersionData is not provided', async () => {
       mockExecSync
-        .mockReturnValueOnce(
-          Buffer.from(
-            JSON.stringify({
-              versions: ['0.9.0'],
-              'dist-tags': { latest: '0.9.0' },
-            })
-          )
-        ) // npm view
+        .mockImplementationOnce(() => {
+          throw npmViewNotFoundError();
+        })
         .mockReturnValueOnce(Buffer.from('{}') as any); // npm publish
 
       jest.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue({
@@ -290,8 +285,151 @@ describe('release-publish executor', () => {
       const result = await runExecutor(options, context);
 
       expect(result.success).toBe(true);
-      // Should have proceeded with npm --version, npm view, and publish
       expect(mockExecSync).toHaveBeenCalledTimes(3);
+    });
+  });
+
+  describe('npm metadata lookup', () => {
+    it('queries the current version and requested dist-tag together', async () => {
+      mockExecSync
+        .mockReturnValueOnce(
+          Buffer.from(
+            JSON.stringify({
+              name: '@scope/test-package',
+              version: '1.0.0',
+              'dist-tags[latest]': '0.9.0',
+            })
+          )
+        )
+        .mockReturnValueOnce(Buffer.from(''));
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(true);
+      expect(mockExecSync).toHaveBeenNthCalledWith(
+        2,
+        'npm view @scope/test-package@1.0.0 name version "dist-tags[latest]" --json --"registry=https://registry.npmjs.org/"',
+        expect.anything()
+      );
+      expect(mockExecSync).not.toHaveBeenCalledWith(
+        expect.stringContaining(' versions '),
+        expect.anything()
+      );
+      expect(mockExecSync).toHaveBeenCalledWith(
+        expect.stringContaining('npm dist-tag add'),
+        expect.anything()
+      );
+    });
+
+    it('skips publishing when the requested tag already points to the current version', async () => {
+      mockExecSync.mockReturnValueOnce(
+        Buffer.from(
+          JSON.stringify({
+            name: '@scope/test-package',
+            version: '1.0.0',
+            'dist-tags[latest]': '1.0.0',
+          })
+        )
+      );
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(true);
+      expect(mockExecSync).toHaveBeenCalledTimes(2);
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining('already exists')
+      );
+    });
+
+    it('supports dotted dist-tags and array responses', async () => {
+      mockParseRegistryOptions.mockResolvedValue({
+        registry: 'https://registry.example.com/',
+        tag: 'release.next',
+        registryConfigKey: '@scope:registry',
+      });
+      mockExecSync
+        .mockReturnValueOnce(
+          Buffer.from(
+            JSON.stringify([
+              {
+                name: '@scope/test-package',
+                version: '1.0.0+build.1',
+                'dist-tags[release.next]': '0.9.0',
+              },
+              {
+                name: '@scope/test-package',
+                version: '1.0.0',
+                'dist-tags[release.next]': '0.9.0',
+              },
+            ])
+          )
+        )
+        .mockReturnValueOnce(Buffer.from(''));
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(true);
+      expect(mockExecSync).toHaveBeenNthCalledWith(
+        2,
+        'npm view @scope/test-package@1.0.0 name version "dist-tags[release.next]" --json --"@scope:registry=https://registry.example.com/"',
+        expect.anything()
+      );
+      expect(mockExecSync).toHaveBeenCalledWith(
+        expect.stringContaining('npm dist-tag add'),
+        expect.anything()
+      );
+    });
+
+    it('publishes when npm reports the exact version is missing', async () => {
+      mockExecSync
+        .mockImplementationOnce(() => {
+          throw npmViewNotFoundError();
+        })
+        .mockReturnValueOnce(Buffer.from('{}'));
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(true);
+      expect(mockExecSync).toHaveBeenCalledWith(
+        expect.stringContaining('npm publish'),
+        expect.anything()
+      );
+    });
+
+    it.each([
+      ['non-404 registry error', 'E403', 'npm error 403 Not Found'],
+      ['child process buffer error', 'ENOBUFS', 'npm error code E404'],
+    ])('fails without publishing on %s', async (_name, code, stderr) => {
+      mockExecSync.mockImplementationOnce(() => {
+        const error: any = new Error('npm view failed');
+        error.code = code;
+        error.stdout = Buffer.from(
+          JSON.stringify({ error: { code, summary: 'request failed' } })
+        );
+        error.stderr = Buffer.from(stderr);
+        throw error;
+      });
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(false);
+      expect(mockExecSync).not.toHaveBeenCalledWith(
+        expect.stringContaining('publish'),
+        expect.anything()
+      );
+      expect(mockExecSync).not.toHaveBeenCalledWith(
+        expect.stringContaining('dist-tag add'),
+        expect.anything()
+      );
+    });
+
+    it('fails without publishing when npm returns an unexpected response', async () => {
+      mockExecSync.mockReturnValueOnce(Buffer.from('{"name":"other-package"}'));
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(false);
+      expect(mockExecSync).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -301,8 +439,9 @@ describe('release-publish executor', () => {
         .mockReturnValueOnce(
           Buffer.from(
             JSON.stringify({
-              versions: ['1.0.0'],
-              'dist-tags': { latest: '0.9.0' },
+              name: '@scope/test-package',
+              version: '1.0.0',
+              'dist-tags[latest]': '0.9.0',
             })
           )
         )
