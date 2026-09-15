@@ -89,7 +89,7 @@ export default async function updateCypress16QueryCommandOverwrites(
     nextSteps: [
       ...migrated.map(
         (item) =>
-          `Review the \`Cypress.Commands.overwriteQuery()\` callback in ${item}: it must return a function that computes the query result, not a chainable`
+          `Adapt the \`Cypress.Commands.overwriteQuery()\` callback in ${item}: make it a \`function\` that calls \`originalFn.call(this, ...)\` and returns a function computing the query result, not a chainable`
       ),
       ...shadowedNotes,
     ],

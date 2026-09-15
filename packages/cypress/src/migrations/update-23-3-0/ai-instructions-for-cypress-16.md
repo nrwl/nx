@@ -139,7 +139,7 @@ it('renders on mobile', { viewportWidth: 375 }, () => {
 
 `cy.getCookie()`, `cy.getCookies()`, `cy.getAllCookies()`, `cy.getAllLocalStorage()` and `cy.getAllSessionStorage()` are queries: they retry assertions chained with `.should()` and follow `defaultCommandTimeout` (4000ms) instead of `responseTimeout` (30000ms). A `.then()` callback still runs once and does not retry. Change nothing unless a test fails; then move the assertion from `.then()` onto `.should()` so it retries, or pass `{ timeout }` when a cookie read needs longer than 4 seconds.
 
-The deterministic migration renamed `Cypress.Commands.overwrite()` to `overwriteQuery()` for those five names. Review each renamed callback: it must return a function that computes the result, not a chainable. A callback that only forwards its arguments to `originalFn` is already correct.
+The deterministic migration renamed `Cypress.Commands.overwrite()` to `overwriteQuery()` for those five names. Adapt each renamed callback: make it a `function` expression, call `originalFn.call(this, ...)`, and return a function that computes the result from the subject, not a chainable. Cypress calls both the callback and the original query with the command as `this`, so an arrow callback fails to typecheck (TS2684) and throws at runtime. The paired `adapt-query-command-overwrites` instructions show the rewrites.
 
 ## Step 7: Review behavior changes that need no code by default
 

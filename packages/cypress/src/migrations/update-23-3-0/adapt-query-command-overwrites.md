@@ -17,9 +17,11 @@ Open each listed file and confirm the call reads `Cypress.Commands.overwriteQuer
 
 ## Step 2: Adapt the callback to the query contract
 
-`overwriteQuery` calls the callback with the original query function as the first argument, followed by the arguments the test passed. The callback must return a function. Cypress calls that returned function, possibly many times while retrying, to compute the result. It must not return a chainable, call `cy.*` commands or use `.then()`.
+`overwriteQuery` calls the callback with the command as `this`, the original query function as the first argument, and then the arguments the test passed. The callback must return a function that takes the subject. Cypress calls that returned function, possibly many times while retrying, to compute the result. It must not return a chainable, call `cy.*` commands or use `.then()`.
 
-Leave the callback alone when it only forwards arguments to `originalFn`, because `originalFn(...args)` already returns the inner query function:
+The original query reads `this` as well, so every callback must be a `function` expression that calls `originalFn.call(this, ...)`. An arrow callback, or a plain `originalFn(...)` call, fails to typecheck (TS2684, `QueryFnWithOriginalFn` declares `this: Command`) and throws at runtime. Convert arrow callbacks even when they only forward their arguments:
+
+**Before:**
 
 ```ts
 Cypress.Commands.overwriteQuery('getCookie', (originalFn, name, options) => {
@@ -27,7 +29,18 @@ Cypress.Commands.overwriteQuery('getCookie', (originalFn, name, options) => {
 });
 ```
 
-Rewrite callbacks that post-process the result. Get the inner function from `originalFn`, then return a function that calls it and transforms the value:
+**After:**
+
+```ts
+Cypress.Commands.overwriteQuery(
+  'getCookie',
+  function (originalFn, name, options) {
+    return originalFn.call(this, name, { ...options, log: false });
+  }
+);
+```
+
+Rewrite callbacks that post-process the result. Get the inner function from `originalFn`, then return a function that calls it with the subject and transforms the value:
 
 **Before:**
 
@@ -42,9 +55,10 @@ Cypress.Commands.overwrite('getCookies', (originalFn, options) => {
 **After:**
 
 ```ts
-Cypress.Commands.overwriteQuery('getCookies', (originalFn, options) => {
-  const innerFn = originalFn(options);
-  return () => innerFn().filter((cookie) => cookie.name.startsWith('app.'));
+Cypress.Commands.overwriteQuery('getCookies', function (originalFn, options) {
+  const innerFn = originalFn.call(this, options);
+  return (subject) =>
+    innerFn(subject).filter((cookie) => cookie.name.startsWith('app.'));
 });
 ```
 
