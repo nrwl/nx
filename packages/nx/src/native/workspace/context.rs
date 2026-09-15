@@ -24,6 +24,7 @@ use crate::native::workspace::files_archive::{
     FilesArchive, NxFileHashes, read_files_archive, write_files_archive,
 };
 use crate::native::workspace::files_hashing::{full_files_hash, selective_files_hash};
+use crate::native::workspace::ignored_index::IgnoredIndex;
 use crate::native::workspace::types::{
     FileMap, NxWorkspaceFilesExternals, ProjectFiles, UpdatedWorkspaceFiles,
 };
@@ -61,6 +62,8 @@ pub struct WorkspaceContext {
     /// initial gather used, keeping the walk incremental.
     cache_dir: String,
     files: FileState,
+    /// The directories the hasher reads from disk, kept current by the watch.
+    ignored: Arc<IgnoredIndex>,
     batches: Publisher<ChangeBatch>,
     #[cfg(not(target_arch = "wasm32"))]
     events: Publisher<Vec<WatchEvent>>,
@@ -453,6 +456,8 @@ type Policy = Arc<dyn Fn(&str) -> bool + Send + Sync>;
 struct State {
     phase: Phase,
     policy: Option<Policy>,
+    /// Told of every change under a registered directory, see `apply`.
+    ignored: Arc<IgnoredIndex>,
     /// Kept through a re-walk so its result can be diffed against it.
     files: Files,
     /// Changes reported during a walk, applied on top of its result. A file
@@ -478,7 +483,7 @@ enum WhenScanning {
 struct FileState(Option<Arc<(NxMutex<State>, NxCondvar)>>);
 
 impl FileState {
-    fn new(workspace_root: &Path, policy: Option<Policy>) -> Self {
+    fn new(workspace_root: &Path, policy: Option<Policy>, ignored: Arc<IgnoredIndex>) -> Self {
         if !workspace_root.exists() {
             warn!(
                 "workspace root does not exist: {}",
@@ -490,6 +495,7 @@ impl FileState {
             NxMutex::new(State {
                 phase: Phase::Scanning,
                 policy,
+                ignored,
                 files: Files::new(),
                 queued: Vec::new(),
                 change_seq: 0,
@@ -561,6 +567,9 @@ impl FileState {
         let mut outcomes = if initial {
             Outcomes::new()
         } else {
+            // The watch lost events, or a refresh was asked for: the index
+            // can no longer trust what it heard either.
+            state.ignored.reseed(workspace_root);
             diff_files(&state.files, &fresh)
         };
         state.files = fresh;
@@ -683,6 +692,18 @@ fn seal(state: &mut State, outcomes: Outcomes) -> ChangeBatch {
 /// daemon recompute the project graph for nothing.
 fn apply(state: &mut State, workspace_root: &Path, changes: Vec<Change>) -> Outcomes {
     let mut outcomes = Outcomes::new();
+
+    // The index hears every change under its directories, whatever the
+    // policy says: it holds the files a walk finds there, tracked or not.
+    for change in &changes {
+        match change.kind {
+            ChangeKind::Deleted => state.ignored.note_deleted(&change.path),
+            ChangeKind::Created | ChangeKind::Updated => {
+                state.ignored.note_written(workspace_root, &change.path)
+            }
+            ChangeKind::Rescan => {}
+        }
+    }
 
     for change in changes.iter().filter(|c| c.kind == ChangeKind::Deleted) {
         let key = PathBuf::from(&change.path);
@@ -840,34 +861,50 @@ impl WorkspaceContext {
         let events = Publisher::default();
 
         #[cfg(not(target_arch = "wasm32"))]
-        let (files, watch) = if options.watch.unwrap_or(false) && workspace_root_path.exists() {
+        let (files, ignored, watch) = if options.watch.unwrap_or(false)
+            && workspace_root_path.exists()
+        {
             let failed = |msg| napi::Error::new(napi::Status::GenericFailure, msg);
             let policy = Self::workspace_policy(&workspace_root_path).map_err(failed)?;
-            let files = FileState::new(&workspace_root_path, Some(policy));
+            let extra_globs = options.watch_globs.unwrap_or_default();
+            let ignored = Arc::new(IgnoredIndex::new(Some(
+                Self::watch_gate(&workspace_root_path, &extra_globs).map_err(failed)?,
+            )));
+            let files = FileState::new(&workspace_root_path, Some(policy), Arc::clone(&ignored));
             let session = Self::start_watching(
                 workspace_root.clone(),
                 &workspace_root_path,
                 &cache_dir,
-                options.watch_globs.unwrap_or_default(),
+                extra_globs,
                 &files,
                 &batches,
                 &events,
             )
             .map_err(failed)?;
-            (files, Some(session))
+            (files, ignored, Some(session))
         } else {
-            (FileState::new(&workspace_root_path, None), None)
+            let ignored = Arc::new(IgnoredIndex::new(None));
+            (
+                FileState::new(&workspace_root_path, None, Arc::clone(&ignored)),
+                ignored,
+                None,
+            )
         };
         #[cfg(target_arch = "wasm32")]
-        let files = {
+        let (files, ignored) = {
             let _ = options;
-            FileState::new(&workspace_root_path, None)
+            let ignored = Arc::new(IgnoredIndex::new(None));
+            (
+                FileState::new(&workspace_root_path, None, Arc::clone(&ignored)),
+                ignored,
+            )
         };
 
         files.scan(&workspace_root_path, cache_dir.clone(), trust_archive);
 
         Ok(WorkspaceContext {
             files,
+            ignored,
             batches,
             #[cfg(not(target_arch = "wasm32"))]
             events,
@@ -890,6 +927,25 @@ impl WorkspaceContext {
             .map_err(|e| format!("failed to build the workspace ignore rules: {e}"))?;
         Ok(Arc::new(move |path: &str| {
             filter.admits(&origin.join(path), false)
+        }))
+    }
+
+    /// What the watch delivers, as a predicate on a workspace-relative path:
+    /// the same gate the session runs with, so the index registers only
+    /// directories whose events it will hear.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn watch_gate(
+        workspace_root_path: &Path,
+        extra_globs: &[String],
+    ) -> std::result::Result<crate::native::workspace::ignored_index::Gate, String> {
+        let origin = dunce::canonicalize(workspace_root_path)
+            .unwrap_or_else(|_| workspace_root_path.to_path_buf());
+        let mut globs = default_watch_globs();
+        globs.extend(extra_globs.iter().cloned());
+        let filter = create_filter(&origin.to_string_lossy(), &globs, false)
+            .map_err(|e| format!("failed to build the watch gate: {e}"))?;
+        Ok(Arc::new(move |path: &str, is_dir: bool| {
+            filter.admits(&origin.join(path), is_dir)
         }))
     }
 
@@ -1116,8 +1172,17 @@ impl WorkspaceContext {
         &self,
         project_root_map: HashMap<String, String>,
     ) -> anyhow::Result<NxWorkspaceFiles> {
-        workspace_files::get_files(project_root_map, self.current_files())
-            .map_err(anyhow::Error::from)
+        workspace_files::get_files(
+            project_root_map,
+            self.current_files(),
+            Arc::clone(&self.ignored),
+        )
+        .map_err(anyhow::Error::from)
+    }
+
+    #[cfg(test)]
+    fn ignored_index(&self) -> Arc<IgnoredIndex> {
+        Arc::clone(&self.ignored)
     }
 
     #[napi]
@@ -1327,6 +1392,7 @@ impl WorkspaceContext {
                 project_files: External::new(Arc::new(project_files_map)),
                 global_files: External::new(Arc::new(non_project_files)),
                 all_workspace_files: External::new(Arc::new(self.current_files())),
+                ignored_index: External::new(Arc::clone(&self.ignored)),
             },
         }
     }
@@ -2045,6 +2111,99 @@ mod tests {
         std::thread::sleep(Duration::from_millis(300));
         assert_eq!(heard.lock().len(), heard_so_far);
         assert!(names_of(&ctx).contains(&"c.ts".to_string()));
+    }
+
+    #[test]
+    #[cfg(not(target_arch = "wasm32"))]
+    fn a_registered_directory_follows_the_watch() {
+        let temp = workspace_with(&["a.ts"]);
+        temp.child(".gitignore").write_str("dist/\n").unwrap();
+        let cache = TempDir::new().unwrap();
+        let ctx = watching_context(&temp, &cache);
+        ctx.all_file_data();
+        let root = dunce::canonicalize(temp.path()).unwrap();
+        let index = ctx.ignored_index();
+
+        // Registered before the directory exists: events fill it in.
+        assert!(index.register(&root, "dist"));
+        assert_eq!(index.list("dist").unwrap(), Vec::<String>::new());
+        temp.child("dist/out.js").write_str("x").unwrap();
+        ctx.settle();
+        assert_eq!(index.list("dist").unwrap(), vec!["dist/out.js"]);
+        assert!(!names_of(&ctx).contains(&"dist/out.js".to_string()));
+
+        // A hash is trusted until the watch reports the file again.
+        let first = index.hash_file(&root, "dist/out.js", None);
+        assert!(index.trusted_hash("dist/out.js").is_some());
+        temp.child("dist/out.js").write_str("xx").unwrap();
+        ctx.settle();
+        assert!(index.trusted_hash("dist/out.js").is_none());
+        assert_ne!(first, index.hash_file(&root, "dist/out.js", None));
+
+        // Tracked files under a registered directory are listed too, and
+        // still reach the files.
+        assert!(index.register(&root, "src"));
+        temp.child("src/b.ts").write_str("b").unwrap();
+        ctx.settle();
+        assert_eq!(index.list("src").unwrap(), vec!["src/b.ts"]);
+        assert!(names_of(&ctx).contains(&"src/b.ts".to_string()));
+
+        // Deletes of a file and of a directory.
+        temp.child("dist/sub/x.js").write_str("x").unwrap();
+        ctx.settle();
+        assert_eq!(
+            index.list("dist").unwrap(),
+            vec!["dist/out.js", "dist/sub/x.js"]
+        );
+        std::fs::remove_file(temp.child("dist/out.js").path()).unwrap();
+        std::fs::remove_dir_all(temp.child("dist/sub").path()).unwrap();
+        ctx.settle();
+        assert_eq!(index.list("dist").unwrap(), Vec::<String>::new());
+
+        // The watch never reaches a hardcoded ignore, so it is not indexed.
+        assert!(!index.register(&root, "node_modules/dep"));
+    }
+
+    #[test]
+    #[cfg(not(target_arch = "wasm32"))]
+    fn a_directory_moved_under_a_registered_directory_is_relisted() {
+        let temp = workspace_with(&["a.ts"]);
+        temp.child(".gitignore").write_str("dist/\n").unwrap();
+        temp.child("dist/sub/x.js").write_str("x").unwrap();
+        let cache = TempDir::new().unwrap();
+        let ctx = watching_context(&temp, &cache);
+        ctx.all_file_data();
+        let root = dunce::canonicalize(temp.path()).unwrap();
+        let index = ctx.ignored_index();
+        assert!(index.register(&root, "dist"));
+        assert_eq!(index.list("dist").unwrap(), vec!["dist/sub/x.js"]);
+
+        std::fs::rename(
+            temp.child("dist/sub").path(),
+            temp.child("dist/sub2").path(),
+        )
+        .unwrap();
+        ctx.settle();
+        assert_eq!(index.list("dist").unwrap(), vec!["dist/sub2/x.js"]);
+    }
+
+    #[test]
+    #[cfg(not(target_arch = "wasm32"))]
+    fn a_rescan_relists_the_registered_directories() {
+        let temp = workspace_with(&["a.ts"]);
+        temp.child(".gitignore").write_str("dist/\n").unwrap();
+        temp.child("dist/a.js").write_str("a").unwrap();
+        let cache = TempDir::new().unwrap();
+        let ctx = watching_context(&temp, &cache);
+        ctx.all_file_data();
+        let root = dunce::canonicalize(temp.path()).unwrap();
+        let index = ctx.ignored_index();
+        assert!(index.register(&root, "dist"));
+        // Put the index in the wrong: a member dropped while the file stays.
+        index.note_deleted("dist/a.js");
+        assert_eq!(index.list("dist").unwrap(), Vec::<String>::new());
+        ctx.rescan_and_diff();
+        assert_eq!(index.list("dist").unwrap(), vec!["dist/a.js"]);
     }
 
     #[test]

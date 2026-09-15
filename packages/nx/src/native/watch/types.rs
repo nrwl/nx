@@ -167,9 +167,18 @@ pub(super) fn transform_event_to_watch_events(
         // this is the one branch that genuinely needs metadata per event.
         let metadata = value.metadata_at(0);
 
-        // Skip directory events
+        // A directory created or renamed into place carries files that had
+        // no events of their own, so they are reported from a walk, as a new
+        // folder is on Linux. Any other directory event is noise.
         if meta_is_dir(metadata) {
-            return Ok(vec![]);
+            return if matches!(
+                event_kind,
+                EventKind::Modify(ModifyKind::Metadata(_)) | EventKind::Access(_)
+            ) {
+                Ok(vec![])
+            } else {
+                folder_events(path_ref, origin)
+            };
         }
 
         let event_type = match metadata {
@@ -212,54 +221,69 @@ pub(super) fn transform_event_to_watch_events(
 
     #[cfg(target_os = "windows")]
     {
-        // Skip directory events. is_dir_at reads the kind first, so a
-        // definitive Create(File) skips the stat; the ambiguous Modify(Any)
-        // that Windows delivers for a write still stats. notify's Windows
-        // backend already stat'd to classify the create, so the saved stat
-        // is a de-dup here — the clean elimination lands on Linux.
+        // is_dir_at reads the kind first, so a definitive Create(File) skips
+        // the stat; the ambiguous Modify(Any) that Windows delivers for a
+        // write still stats. notify's Windows backend already stat'd to
+        // classify the create, so the saved stat is a de-dup here — the
+        // clean elimination lands on Linux. A directory created or renamed
+        // into place is reported through its files, as on Linux.
         if value.is_dir_at(0) {
-            return Ok(vec![]);
+            return if matches!(
+                event_kind,
+                EventKind::Create(_) | EventKind::Modify(ModifyKind::Name(_))
+            ) {
+                folder_events(path_ref, origin)
+            } else {
+                Ok(vec![])
+            };
         }
         Ok(create_watch_event_internal(origin, event_kind, path_ref))
     }
 
     #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
     {
-        use crate::native::walker::nx_walker_sync;
-        use ignore::Match;
-        use ignore::gitignore::GitignoreBuilder;
-
         if matches!(event_kind, EventKind::Create(CreateKind::Folder)) {
-            let mut result = vec![];
-
-            let mut gitignore_builder = GitignoreBuilder::new(origin);
-            let origin_path: &Path = origin.as_ref();
-            gitignore_builder.add(origin_path.join(".nxignore"));
-            let ignore = gitignore_builder.build()?;
-
-            for path in nx_walker_sync(path_ref, None) {
-                let path = path_ref.join(path);
-                let is_dir = path.is_dir();
-                if is_dir
-                    || matches!(
-                        ignore.matched_path_or_any_parents(&path, is_dir),
-                        Match::Ignore(_)
-                    )
-                {
-                    continue;
-                }
-
-                result.push(WatchEventInternal {
-                    path: relative_to_origin(&path, origin),
-                    r#type: EventType::create,
-                });
-            }
-
-            Ok(result)
+            folder_events(path_ref, origin)
         } else {
             Ok(create_watch_event_internal(origin, event_kind, path_ref))
         }
     }
+}
+
+/// A `create` for every file under a directory that appeared whole, so
+/// files that had no events of their own are still reported. The root
+/// `.nxignore` applies, as it does to the watch.
+fn folder_events(path_ref: &Path, origin: &str) -> anyhow::Result<Vec<WatchEventInternal>> {
+    use crate::native::walker::nx_walker_sync;
+    use ignore::Match;
+    use ignore::gitignore::GitignoreBuilder;
+
+    let mut result = vec![];
+
+    let mut gitignore_builder = GitignoreBuilder::new(origin);
+    let origin_path: &Path = origin.as_ref();
+    gitignore_builder.add(origin_path.join(".nxignore"));
+    let ignore = gitignore_builder.build()?;
+
+    for path in nx_walker_sync(path_ref, None) {
+        let path = path_ref.join(path);
+        let is_dir = path.is_dir();
+        if is_dir
+            || matches!(
+                ignore.matched_path_or_any_parents(&path, is_dir),
+                Match::Ignore(_)
+            )
+        {
+            continue;
+        }
+
+        result.push(WatchEventInternal {
+            path: relative_to_origin(&path, origin),
+            r#type: EventType::create,
+        });
+    }
+
+    Ok(result)
 }
 
 #[allow(dead_code)]

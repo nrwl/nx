@@ -558,6 +558,40 @@ pub(crate) fn expand_entries(
     })
 }
 
+/// Every file under `dir` with its stamp, for an index seeding a prefix: the
+/// walk an expansion runs, confined to the workspace. Empty when `dir` does
+/// not exist yet; `None` when it resolves outside the workspace.
+pub(crate) fn seed_walk(workspace_root: &Path, dir: &str) -> Option<Vec<(String, FileStamp)>> {
+    let start = workspace_root.join(dir);
+    if std::fs::symlink_metadata(&start).is_err() {
+        return Some(Vec::new());
+    }
+    let canonical_root = dunce::canonicalize(workspace_root).ok()?;
+    let resolved = dunce::canonicalize(&start).ok()?;
+    if !resolved.starts_with(&canonical_root) {
+        return None;
+    }
+    if !resolved.is_dir() {
+        return Some(Vec::new());
+    }
+    let skip = build_glob_set(HARDCODED_IGNORE_PATTERNS).ok()?;
+    let walked = walk_files(
+        &start,
+        workspace_root,
+        Some(&canonical_root),
+        &skip,
+        &|_| true,
+        &|_| false,
+    );
+    Some(
+        walked
+            .found
+            .into_iter()
+            .map(|(path, stamp)| (path, stamp.unwrap_or_default()))
+            .collect(),
+    )
+}
+
 /// `expand_files_with` without a workspace context: every path is checked on
 /// disk.
 pub fn expand_files(workspace_root: &Path, globs: &[String]) -> Result<FilesExpansion> {
@@ -614,6 +648,21 @@ pub(crate) mod tests {
 
     pub(crate) fn globs(list: &[&str]) -> Vec<String> {
         list.iter().map(|s| s.to_string()).collect()
+    }
+
+    #[test]
+    fn walked_files_carry_their_stamp_unless_the_context_knows_them() {
+        let temp = workspace();
+        let expansion = expand_files_with(temp.path(), &globs(&["dist/gen/**/*.js"]), &|path| {
+            path == "dist/gen/a.js"
+        })
+        .unwrap();
+        assert_eq!(
+            expansion.files,
+            vec!["dist/gen/a.js", "dist/gen/nested/b.js"]
+        );
+        assert!(expansion.stamps[0].is_none());
+        assert!(expansion.stamps[1].is_some());
     }
 
     #[test]

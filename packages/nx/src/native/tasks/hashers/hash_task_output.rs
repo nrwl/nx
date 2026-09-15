@@ -4,10 +4,12 @@ use anyhow::Result;
 
 use super::disk_expansion::{
     FilesExpansion, FilesExpansionCache, Negation, Positive, WALK, expand_cached, expand_entries,
+    literal_prefix,
 };
-use super::file_content_cache::{FileStamp, shared_file_content_cache};
+use super::file_content_cache::FileStamp;
 use super::hash_ignored_files::hash_files;
 use crate::native::glob::build_glob_set;
+use crate::native::workspace::ignored_index::IgnoredIndex;
 
 /// Result of hashing task output files, including the matched file paths
 pub struct TaskOutputHashResult {
@@ -62,14 +64,10 @@ pub fn hash_task_output(
     glob: &str,
     outputs: &[String],
     cache: &FilesExpansionCache,
+    index: &IgnoredIndex,
 ) -> Result<TaskOutputHashResult> {
     let expansion = expand_task_outputs(workspace_root, glob, outputs, cache)?;
-    let hash = hash_files(
-        workspace_root,
-        &expansion,
-        |_| None,
-        shared_file_content_cache(),
-    );
+    let hash = hash_files(workspace_root, &expansion, |_| None, index);
     Ok(TaskOutputHashResult {
         hash,
         files: expansion.files,
@@ -85,6 +83,17 @@ pub fn resolve_task_output_files(
     let expansion =
         expand_task_outputs(workspace_root, glob, outputs, &FilesExpansionCache::new())?;
     Ok(expansion.files)
+}
+
+/// The directories a task's declared outputs are read from, for an index to
+/// keep: a glob's literal prefix, an exact path as itself.
+pub(crate) fn output_prefixes(outputs: &[String]) -> Vec<String> {
+    outputs
+        .iter()
+        .filter(|entry| !entry.starts_with('!'))
+        .filter_map(|entry| normalize_output_entry(entry))
+        .filter_map(|entry| literal_prefix(&entry).ok().map(|(root, _)| root))
+        .collect()
 }
 
 /// Declared outputs are paths first: an entry that exists is read as written,
@@ -170,9 +179,15 @@ mod tests {
     }
 
     fn hash(temp: &TempDir, glob: &str, outputs: &[&str], cache: &FilesExpansionCache) -> String {
-        hash_task_output(temp.path(), glob, &strings(outputs), cache)
-            .unwrap()
-            .hash
+        hash_task_output(
+            temp.path(),
+            glob,
+            &strings(outputs),
+            cache,
+            &IgnoredIndex::new(None),
+        )
+        .unwrap()
+        .hash
     }
 
     #[test]
@@ -301,6 +316,7 @@ mod tests {
             "**/*.js",
             &strings(&["dist/absent", "dist/apps/web"]),
             &cache,
+            &IgnoredIndex::new(None),
         )
         .unwrap();
         assert_eq!(with_absent.files, vec!["dist/apps/web/index.js"]);

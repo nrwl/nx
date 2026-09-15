@@ -1110,7 +1110,8 @@ describe('task planner', () => {
           Buffer.from('{}'),
           {},
           undefined,
-          { selectivelyHashTsConfig: false }
+          { selectivelyHashTsConfig: false },
+          files.ignoredIndex
         );
         return hasher.hashPlans(
           reorderedPlanner.getPlansReference(['app:build'], tasks),

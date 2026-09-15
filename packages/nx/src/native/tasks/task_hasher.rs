@@ -16,14 +16,15 @@ use crate::native::{
 };
 use crate::native::{
     tasks::hashers::{
-        FilesExpansionCache, JsonHashResult, ProjectFileIndicesCache, ProjectFileSetCache, WALK,
-        WorkspaceFileIndicesCache, WorkspaceFileSetCache, collect_project_file_paths_cached,
+        FilesExpansionCache, JsonHashResult, Members, ProjectFileIndicesCache, ProjectFileSetCache,
+        WALK, WorkspaceFileIndicesCache, WorkspaceFileSetCache, collect_project_file_paths_cached,
         collect_workspace_file_paths_cached, expand_files_cached, hash_all_externals,
         hash_external, hash_files, hash_json_files, hash_project_config, hash_project_files_cached,
         hash_task_output, hash_tsconfig_selectively, hash_workspace_files_cached, index_file_map,
-        shared_file_content_cache,
+        literal_prefix, normalize_glob, output_prefixes,
     },
     types::FileData,
+    workspace::ignored_index::IgnoredIndex,
     workspace::types::ProjectFiles,
 };
 use dashmap::DashMap;
@@ -258,6 +259,9 @@ fn intern_value(interner: &DashMap<String, Arc<str>>, value: String) -> Arc<str>
 
 #[napi]
 pub struct TaskHasher {
+    /// The context\'s index of the directories hashed from disk, see
+    /// `register_prefixes`.
+    ignored_index: Arc<IgnoredIndex>,
     workspace_root: String,
     project_graph: Arc<ProjectGraph>,
     project_file_map: Arc<HashMap<String, Vec<FileData>>>,
@@ -281,7 +285,7 @@ pub struct TaskHasher {
     all_externals_hash: OnceCell<String>,
     // `includeIgnored` filesets: a path index over the file map so tracked
     // files skip the disk, built only once a plan carries a disk-backed
-    // group. Their content cache is process-wide (shared_file_content_cache).
+    // group. Their content lives in the context's IgnoredIndex.
     workspace_file_index: OnceCell<HashMap<String, u32>>,
 }
 #[napi]
@@ -301,8 +305,12 @@ impl TaskHasher {
         ts_config_paths: HashMap<String, Vec<String>>,
         root_tsconfig_path: Option<String>,
         options: Option<HasherOptions>,
+        #[napi(ts_arg_type = "ExternalObject<IgnoredIndex>")] ignored_index: &External<
+            Arc<IgnoredIndex>,
+        >,
     ) -> Self {
         Self {
+            ignored_index: Arc::clone(ignored_index),
             workspace_root,
             project_graph: Arc::clone(project_graph),
             project_file_map: Arc::clone(project_file_map),
@@ -318,6 +326,40 @@ impl TaskHasher {
             project_file_indices_cache: ProjectFileIndicesCache::new(),
             all_externals_hash: OnceCell::new(),
             workspace_file_index: OnceCell::new(),
+        }
+    }
+
+    /// Hands the index every directory the plans read from disk: each
+    /// includeIgnored glob's literal prefix and each declared output's. The
+    /// index lists a registered directory to the up-front batch and keeps the
+    /// hashes of what is under it; unregistered ones are walked.
+    fn register_prefixes(&self, hash_plans: &HashPlans) {
+        let pool = &hash_plans.pool;
+        let mut prefixes: Vec<String> = Vec::new();
+        for id in 0..pool.len() as u32 {
+            match pool.get(id).value() {
+                HashInstruction::ProjectFileSet(_, globs, true) => prefixes.extend(
+                    globs
+                        .iter()
+                        .filter(|g| !g.starts_with('!'))
+                        .filter_map(|g| {
+                            let glob = normalize_glob(g);
+                            literal_prefix(&glob).ok().map(|(root, _)| root)
+                        }),
+                ),
+                HashInstruction::TaskOutput(_, outputs) => {
+                    prefixes.extend(output_prefixes(outputs))
+                }
+                _ => {}
+            }
+        }
+        // Widest first, so a directory inside another registers as a no-op.
+        prefixes.sort();
+        prefixes.dedup();
+        prefixes.sort_by_key(|p| p.len());
+        let workspace_root = Path::new(&self.workspace_root);
+        for prefix in prefixes {
+            self.ignored_index.register(workspace_root, &prefix);
         }
     }
 
@@ -403,9 +445,9 @@ impl TaskHasher {
             plans,
             deferred: std::collections::HashSet::new(),
         };
-        // Once per run, before any hashing: drop the content cache entries the
-        // last run's walks proved gone.
-        shared_file_content_cache().reconcile();
+        // Once per run, before any hashing: the directories this run reads
+        // from disk are the index's to keep from here on.
+        self.register_prefixes(hash_plans);
         let hashes = self.hash_plans_impl(&upfront, cwd, collect_task_inputs, true, |task_id| {
             per_task_envs
                 .get(task_id)
@@ -733,13 +775,17 @@ impl TaskHasher {
             }
             HashInstruction::ProjectFileSet(_, globs, true) => {
                 let workspace_root = Path::new(&self.workspace_root);
+                // The index lists a directory only while nothing has run,
+                // like the file map; afterwards the disk is walked.
+                let listed = |dir: &str| self.ignored_index.list(dir);
+                let members: Members = if trust_file_map { &listed } else { WALK };
                 let expansion = expand_files_cached(
                     workspace_root,
                     &instruction.to_string(),
                     globs,
                     files_expansion_cache,
                     &|path| trust_file_map && self.workspace_file_known(path),
-                    WALK,
+                    members,
                 )?;
                 let hashed = hash_files(
                     workspace_root,
@@ -751,7 +797,7 @@ impl TaskHasher {
                             None
                         }
                     },
-                    shared_file_content_cache(),
+                    &self.ignored_index,
                 );
                 trace!(parent: &span, "hash_files: {:?}", now.elapsed());
                 let inputs = if collect_inputs {
@@ -858,6 +904,7 @@ impl TaskHasher {
                     glob,
                     outputs,
                     files_expansion_cache,
+                    &self.ignored_index,
                 )?;
                 trace!(parent: &span, "hash_task_output: {:?}", now.elapsed());
                 let inputs = if collect_inputs {

@@ -1,5 +1,5 @@
 //! Hashes an `includeIgnored` fileset group: tracked files from the file
-//! map, the rest through the content cache, folded in path order with the
+//! map, the rest through the context's index, folded in path order with the
 //! declared paths that are missing.
 
 use std::collections::HashMap;
@@ -10,23 +10,24 @@ use rayon::prelude::*;
 use xxhash_rust::xxh3;
 
 use super::disk_expansion::{FilesExpansion, expand_files};
-use super::file_content_cache::{FileContentCache, MISSING_FILE_HASH, hash_file_cached};
+use super::file_content_cache::MISSING_FILE_HASH;
+use crate::native::workspace::ignored_index::IgnoredIndex;
 
 /// Folds `(path, content hash)` pairs in path order, like a fileset. `known`
-/// answers from the workspace file map so tracked files never touch the disk.
+/// answers from the workspace file map so tracked files never touch the disk;
+/// everything else is the index's to answer or read.
 pub(crate) fn hash_files(
     workspace_root: &Path,
     expansion: &FilesExpansion,
     known: impl Fn(&str) -> Option<String> + Sync,
-    cache: &FileContentCache,
+    index: &IgnoredIndex,
 ) -> String {
-    cache.note(workspace_root, expansion);
     let hashes: Vec<String> = expansion
         .files
         .par_iter()
         .zip(expansion.stamps.par_iter())
         .map(|(file, stamp)| {
-            known(file).unwrap_or_else(|| hash_file_cached(workspace_root, file, *stamp, cache))
+            known(file).unwrap_or_else(|| index.hash_file(workspace_root, file, *stamp))
         })
         .collect();
 
@@ -72,20 +73,20 @@ mod tests {
     #[test]
     fn missing_exact_path_is_recorded_and_changes_the_hash_when_it_appears() {
         let temp = workspace();
-        let cache = FileContentCache::new();
+        let index = IgnoredIndex::new(None);
         let input = globs(&["dist/gen/generated.d.ts"]);
 
         let before = expand_files(temp.path(), &input).unwrap();
         assert!(before.files.is_empty());
         assert_eq!(before.missing, vec!["dist/gen/generated.d.ts"]);
-        let hash_before = hash_files(temp.path(), &before, |_| None, &cache);
+        let hash_before = hash_files(temp.path(), &before, |_| None, &index);
 
         temp.child("dist/gen/generated.d.ts")
             .write_str("x")
             .unwrap();
         let after = expand_files(temp.path(), &input).unwrap();
         assert_eq!(after.files, vec!["dist/gen/generated.d.ts"]);
-        let hash_after = hash_files(temp.path(), &after, |_| None, &cache);
+        let hash_after = hash_files(temp.path(), &after, |_| None, &index);
 
         assert_ne!(hash_before, hash_after);
     }
@@ -93,15 +94,15 @@ mod tests {
     #[test]
     fn file_map_hash_wins_over_disk() {
         let temp = workspace();
-        let cache = FileContentCache::new();
+        let index = IgnoredIndex::new(None);
         let expansion = expand_files(temp.path(), &globs(&["dist/gen/a.js"])).unwrap();
 
-        let from_disk = hash_files(temp.path(), &expansion, |_| None, &cache);
+        let from_disk = hash_files(temp.path(), &expansion, |_| None, &index);
         let from_map = hash_files(
             temp.path(),
             &expansion,
             |path| (path == "dist/gen/a.js").then(|| "known".to_string()),
-            &cache,
+            &index,
         );
         assert_ne!(from_disk, from_map);
     }

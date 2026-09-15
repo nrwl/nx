@@ -582,6 +582,7 @@ module.exports.FileLock = nativeBinding.FileLock
 module.exports.HashPlanInspector = nativeBinding.HashPlanInspector
 module.exports.HashPlanner = nativeBinding.HashPlanner
 module.exports.HttpRemoteCache = nativeBinding.HttpRemoteCache
+module.exports.IgnoredIndex = nativeBinding.IgnoredIndex
 module.exports.ImportResult = nativeBinding.ImportResult
 module.exports.NxCache = nativeBinding.NxCache
 module.exports.NxConsolePreferences = nativeBinding.NxConsolePreferences

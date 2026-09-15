@@ -104,6 +104,10 @@ export declare class HttpRemoteCache {
   store(hash: string, cacheDirectory: string, terminalOutput: string, code: number): Promise<boolean>
 }
 
+export declare class IgnoredIndex {
+
+}
+
 export declare class ImportResult {
   file: string
   sourceProject: string
@@ -204,7 +208,7 @@ export declare class TaskDetails {
 }
 
 export declare class TaskHasher {
-  constructor(workspaceRoot: string, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<Record<string, Array<FileData>>>, allWorkspaceFiles: ExternalObject<Array<FileData>>, tsConfig: Buffer, tsConfigPaths: Record<string, Array<string>>, rootTsconfigPath?: string | undefined | null, options?: HasherOptions | undefined | null)
+  constructor(workspaceRoot: string, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<Record<string, Array<FileData>>>, allWorkspaceFiles: ExternalObject<Array<FileData>>, tsConfig: Buffer, tsConfigPaths: Record<string, Array<string>>, rootTsconfigPath: string | undefined | null, options: HasherOptions | undefined | null, ignoredIndex: ExternalObject<IgnoredIndex>)
   /**
    * Hash each task's instructions using the env map keyed by `task.id`.
    * Every task in `hash_plans` must have an entry in `per_task_envs` —
@@ -735,6 +739,7 @@ export interface NxWorkspaceFilesExternals {
   projectFiles: ExternalObject<Record<string, Array<FileData>>>
   globalFiles: ExternalObject<Array<FileData>>
   allWorkspaceFiles: ExternalObject<Array<FileData>>
+  ignoredIndex: ExternalObject<IgnoredIndex>
 }
 
 export declare function parseTaskStatus(stringStatus: string): TaskStatus
