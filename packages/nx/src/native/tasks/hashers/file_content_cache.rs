@@ -180,21 +180,18 @@ pub(crate) fn shared_file_content_cache() -> &'static FileContentCache {
 /// Revalidated by (mtime, size), with git's racy rule: a file modified in
 /// the same second the entry was made could be rewritten to the same size
 /// inside one mtime tick, so such an entry is never trusted (it is rehashed
-/// until a later second remakes it).
+/// until a later second remakes it). On a filesystem with 2 s mtimes, FAT
+/// and exFAT, a rewrite in the next second still slips through, as in git.
 pub(crate) struct CachedFileContent {
     mtime: u128,
     size: u64,
     hash: String,
-    /// Whole seconds since the epoch when the entry was made.
+    /// Whole seconds since the epoch, taken before the content was read.
     made_at: u64,
 }
 
 impl CachedFileContent {
-    fn new((mtime, size): FileStamp, hash: String) -> Self {
-        let made_at = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .map(|d| d.as_secs())
-            .unwrap_or(0);
+    fn new((mtime, size): FileStamp, hash: String, made_at: u64) -> Self {
         Self {
             mtime,
             size,
@@ -206,6 +203,13 @@ impl CachedFileContent {
     fn racy(&self) -> bool {
         (self.mtime / 1_000_000_000) as u64 >= self.made_at
     }
+}
+
+fn now_secs() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0)
 }
 
 /// The `(mtime, size)` a file showed when expansion looked at it.
@@ -233,9 +237,12 @@ pub(crate) fn hash_file_cached(
         trace!("files content cache HIT for {file}");
         return hash;
     }
+    // Taken before the read: a same-size write between the read and a later
+    // stamp is then inside the entry's own second, and racy.
+    let made_at = now_secs();
     let hash = hash_file_path(&path).unwrap_or_else(|| MISSING_FILE_HASH.to_string());
     if let Some(stamp) = stamp {
-        cache.insert(path, CachedFileContent::new(stamp, hash.clone()));
+        cache.insert(path, CachedFileContent::new(stamp, hash.clone(), made_at));
     }
     hash
 }
@@ -286,8 +293,8 @@ mod tests {
 
         // Written and hashed inside one second, then rewritten to the same
         // size with the same mtime: git's racy case. The entry is remade,
-        // never served.
-        let now = std::time::SystemTime::now();
+        // never served. Dated ahead so the second cannot roll over first.
+        let now = std::time::SystemTime::now() + std::time::Duration::from_secs(2);
         temp.child("dist/gen/a.js").write_str("r").unwrap();
         set_modified(&file, now);
         let first = hash_files(temp.path(), &expand(), |_| None, &cache);

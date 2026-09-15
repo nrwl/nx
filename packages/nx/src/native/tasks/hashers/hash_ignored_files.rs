@@ -13,7 +13,8 @@ use super::disk_expansion::{FilesExpansion, expand_files};
 use super::file_content_cache::{FileContentCache, MISSING_FILE_HASH, hash_file_cached};
 
 /// Folds `(path, content hash)` pairs in path order, like a fileset. `known`
-/// answers from the workspace file map so tracked files never touch the disk.
+/// answers from the workspace file map, when the caller trusts it, so those
+/// files are not read; the rest go through the content cache.
 pub(crate) fn hash_files(
     workspace_root: &Path,
     expansion: &FilesExpansion,
