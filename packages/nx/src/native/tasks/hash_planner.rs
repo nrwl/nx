@@ -1618,7 +1618,7 @@ mod tests {
     }
 
     #[test]
-    fn defers_only_a_disk_backed_fileset_that_reaches_an_upstream_output() {
+    fn defers_a_task_that_reads_an_upstream_output() {
         let pool = InstructionPool::new();
         let disk = |project: &str, glob: &str| {
             pool.intern(HashInstruction::ProjectFileSet(

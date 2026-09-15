@@ -354,7 +354,7 @@ impl TaskHasher {
                 anyhow::bail!("hash_plans: missing env entry for task {}", task_id);
             }
         }
-        self.hash_plans_impl(hash_plans, cwd, collect_task_inputs, |task_id| {
+        self.hash_plans_impl(hash_plans, cwd, collect_task_inputs, false, |task_id| {
             per_task_envs
                 .get(task_id)
                 .expect("per-task env presence verified above")
@@ -406,7 +406,7 @@ impl TaskHasher {
         // Once per run, before any hashing: drop the content cache entries the
         // last run's walks proved gone.
         shared_file_content_cache().reconcile();
-        let hashes = self.hash_plans_impl(&upfront, cwd, collect_task_inputs, |task_id| {
+        let hashes = self.hash_plans_impl(&upfront, cwd, collect_task_inputs, true, |task_id| {
             per_task_envs
                 .get(task_id)
                 .expect("per-task env presence verified above")
@@ -453,18 +453,23 @@ impl TaskHasher {
             plans,
             deferred: std::collections::HashSet::new(),
         };
-        self.hash_plans_impl(&subset, cwd, collect_task_inputs, |task_id| {
+        self.hash_plans_impl(&subset, cwd, collect_task_inputs, false, |task_id| {
             per_task_envs
                 .get(task_id)
                 .expect("per-task env presence verified above")
         })
     }
 
+    /// `trust_file_map` lets a disk-backed fileset take the file map's word
+    /// for tracked files. That holds before any task runs; once one has,
+    /// a tracked file it rewrote is stale in the map, so everything reads
+    /// from disk.
     fn hash_plans_impl<'a, F>(
         &self,
         hash_plans: &HashPlans,
         cwd: String,
         collect_task_inputs: Option<bool>,
+        trust_file_map: bool,
         resolve_env: F,
     ) -> anyhow::Result<TaskHashes>
     where
@@ -598,6 +603,7 @@ impl TaskHasher {
                                         workspace_file_set_cache: &self.workspace_file_set_cache,
                                         json_file_set_cache: &json_file_set_cache,
                                         files_expansion_cache: &files_expansion_cache,
+                                        trust_file_map,
                                         cwd: cwd_path,
                                         collect_inputs: should_collect_inputs,
                                     },
@@ -667,6 +673,7 @@ impl TaskHasher {
             workspace_file_set_cache,
             json_file_set_cache,
             files_expansion_cache,
+            trust_file_map,
             cwd,
             collect_inputs,
         }: HashInstructionArgs,
@@ -731,12 +738,18 @@ impl TaskHasher {
                     &instruction.to_string(),
                     globs,
                     files_expansion_cache,
-                    &|path| self.workspace_file_known(path),
+                    &|path| trust_file_map && self.workspace_file_known(path),
                 )?;
                 let hashed = hash_files(
                     workspace_root,
                     &expansion,
-                    |path| self.workspace_file_hash(path),
+                    |path| {
+                        if trust_file_map {
+                            self.workspace_file_hash(path)
+                        } else {
+                            None
+                        }
+                    },
                     shared_file_content_cache(),
                 );
                 trace!(parent: &span, "hash_files: {:?}", now.elapsed());
@@ -943,6 +956,7 @@ struct HashInstructionArgs<'a> {
     workspace_file_set_cache: &'a WorkspaceFileSetCache,
     json_file_set_cache: &'a DashMap<String, JsonHashResult>,
     files_expansion_cache: &'a FilesExpansionCache,
+    trust_file_map: bool,
     cwd: &'a std::path::Path,
     collect_inputs: bool,
 }
