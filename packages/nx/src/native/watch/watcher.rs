@@ -55,7 +55,7 @@ const FORCE_FLUSH_GRACE: Duration = Duration::from_millis(10);
 /// Larger than FORCE_FLUSH_GRACE so inter-event gaps under load aren't mistaken
 /// for the burst ending; only paid while events keep arriving.
 const FORCE_FLUSH_QUIET: Duration = Duration::from_millis(50);
-/// Overall cap, kept under the 500ms reply timeout in `force_flush_pending` so
+/// Overall cap, kept under the 500ms reply timeout in `WatchSession::flush` so
 /// a late reply isn't read as "no changes".
 const FORCE_FLUSH_MAX: Duration = Duration::from_millis(250);
 
@@ -109,7 +109,37 @@ type NotifyResult = std::result::Result<notify::Event, notify::Error>;
 pub(crate) type WatchEventCallback =
     Box<dyn Fn(std::result::Result<Vec<WatchEvent>, String>) + Send + Sync + 'static>;
 
-type ForceFlushReply = Sender<Vec<WatchEvent>>;
+/// How much of the kernel→notify hop a flush waits out before answering.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub(crate) enum FlushMode {
+    /// Only what has already reached the pipeline. Cheap; a write made just
+    /// before the call may still be in flight from the kernel.
+    Delivered,
+    /// Wait for the hop to settle (grace, quiet window, cap) so a write made
+    /// before the call is in the answer.
+    Settled,
+}
+
+struct FlushRequest {
+    mode: FlushMode,
+    reply: Sender<Vec<WatchEvent>>,
+}
+
+/// The globs every workspace watch excludes on top of the ignore files.
+pub(crate) fn default_watch_globs() -> Vec<String> {
+    let mut globs: Vec<String> = HARDCODED_IGNORE_PATTERNS
+        .iter()
+        .map(|p| (*p).to_string())
+        .collect();
+    // Vite/Vitest write timestamp files that we don't want to watch.
+    globs.extend([
+        "vitest.config.ts.timestamp*.mjs".into(),
+        "vite.config.ts.timestamp*.mjs".into(),
+        "vitest.config.mts.timestamp*.mjs".into(),
+        "vite.config.mts.timestamp*.mjs".into(),
+    ]);
+    globs
+}
 
 /// Session config + loop state. Built on the calling thread, then run
 /// by the flush thread.
@@ -436,8 +466,8 @@ impl WatchPipeline {
         (pipeline, notify_tx)
     }
 
-    /// Drives the pipeline until force_flush_rx disconnects.
-    fn run(mut self, force_flush_rx: Receiver<ForceFlushReply>, callback: WatchEventCallback) {
+    /// Drives the pipeline until flush_rx disconnects.
+    fn run(mut self, flush_rx: Receiver<FlushRequest>, callback: WatchEventCallback) {
         loop {
             let idle_wait = self
                 .flush_deadline
@@ -457,14 +487,15 @@ impl WatchPipeline {
                         break;
                     }
                 },
-                recv(force_flush_rx) -> res => match res {
-                    Ok(reply) => {
-                        // Collect concurrent ForceFlush replies so they all
-                        // get the same snapshot; drain pending notify events
-                        // first so the snapshot reflects everything submitted.
-                        let mut replies = vec![reply];
-                        while let Ok(extra) = force_flush_rx.try_recv() {
-                            replies.push(extra);
+                recv(flush_rx) -> res => match res {
+                    Ok(request) => {
+                        // Concurrent requests all get the same snapshot; the
+                        // strongest mode among them decides how long to wait.
+                        let mut mode = request.mode;
+                        let mut replies = vec![request.reply];
+                        while let Ok(extra) = flush_rx.try_recv() {
+                            mode = mode.max(extra.mode);
+                            replies.push(extra.reply);
                         }
                         let mut fatal: Option<String> = None;
 
@@ -474,7 +505,8 @@ impl WatchPipeline {
                         // returns after one short grace; once a burst is in
                         // progress each event restarts the longer
                         // FORCE_FLUSH_QUIET window so a trickle isn't cut
-                        // mid-stream. Bounded by FORCE_FLUSH_MAX.
+                        // mid-stream. Bounded by FORCE_FLUSH_MAX. A Delivered
+                        // flush takes only what is already in the channel.
                         let deadline = handler_started_at + FORCE_FLUSH_MAX;
                         let mut burst_in_progress = self.has_pending();
                         while fatal.is_none() {
@@ -482,34 +514,46 @@ impl WatchPipeline {
                             if now >= deadline {
                                 break;
                             }
-                            let window = if burst_in_progress {
-                                FORCE_FLUSH_QUIET
-                            } else {
-                                FORCE_FLUSH_GRACE
+                            let wait = match mode {
+                                FlushMode::Delivered => Duration::ZERO,
+                                FlushMode::Settled if burst_in_progress => FORCE_FLUSH_QUIET,
+                                FlushMode::Settled => FORCE_FLUSH_GRACE,
                             };
-                            let wait = window.min(deadline - now);
-                            match self.notify_rx.recv_timeout(wait) {
-                                Ok(event) => {
-                                    burst_in_progress = true;
-                                    if let Err(msg) = self.ingest_event(event) {
-                                        fatal = Some(msg);
+                            let wait = wait.min(deadline - now);
+                            // A request arriving mid-wait joins this snapshot
+                            // rather than queueing behind it for a second wait.
+                            select! {
+                                recv(self.notify_rx) -> res => match res {
+                                    Ok(event) => {
+                                        burst_in_progress = true;
+                                        if let Err(msg) = self.ingest_event(event) {
+                                            fatal = Some(msg);
+                                        }
                                     }
-                                }
-                                Err(crossbeam_channel::RecvTimeoutError::Timeout) => break,
-                                Err(crossbeam_channel::RecvTimeoutError::Disconnected) => {
-                                    fatal = Some("watcher channel disconnected".to_string());
-                                }
+                                    Err(_) => {
+                                        fatal = Some("watcher channel disconnected".to_string());
+                                    }
+                                },
+                                recv(flush_rx) -> res => match res {
+                                    Ok(late) => {
+                                        mode = mode.max(late.mode);
+                                        replies.push(late.reply);
+                                    }
+                                    Err(_) => break,
+                                },
+                                default(wait) => break,
                             }
                         }
-                        // A force-flush answers a graph request, so deliver the
-                        // rescan now rather than holding it — the caller needs
-                        // current state.
+                        // A flush answers a read, so deliver the rescan now
+                        // rather than holding it — the caller needs current
+                        // state.
                         let watch_events = self.snapshot_events(true);
                         debug!(
                             count = watch_events.len(),
                             replies = replies.len(),
+                            ?mode,
                             elapsed = ?handler_started_at.elapsed(),
-                            "force-flush END"
+                            "flush END"
                         );
                         for e in &watch_events {
                             debug!("  [{:?}] {}", e.r#type, e.path);
@@ -518,7 +562,7 @@ impl WatchPipeline {
                         for r in replies {
                             match r.send(watch_events.clone()) {
                                 Ok(()) => any_delivered = true,
-                                Err(e) => tracing::warn!(?e, "force-flush reply failed"),
+                                Err(e) => tracing::warn!(?e, "flush reply failed"),
                             }
                         }
                         if any_delivered {
@@ -529,7 +573,7 @@ impl WatchPipeline {
                             break;
                         }
                     }
-                    Err(_) => break, // struct dropped or stop() called
+                    Err(_) => break, // every session handle dropped
                 },
                 default(idle_wait) => {
                     if self.has_pending() {
@@ -575,15 +619,55 @@ impl WatchPipeline {
     }
 }
 
+/// A handle to a running watch pipeline. Cheap to clone; the pipeline thread
+/// runs until the last handle drops, then exits on its next select.
+#[derive(Clone)]
+pub(crate) struct WatchSession {
+    flush_tx: Sender<FlushRequest>,
+}
+
+impl WatchSession {
+    /// Registers the watches and starts the pipeline thread. Watches are live
+    /// when this returns, so a write landing right after is reported.
+    pub(crate) fn start(
+        origin: String,
+        additional_globs: &[String],
+        use_ignore: bool,
+        callback: WatchEventCallback,
+    ) -> std::result::Result<Self, String> {
+        let origin = if cfg!(windows) {
+            origin.replace('/', "\\")
+        } else {
+            origin
+        };
+        let pipeline = WatchPipeline::new(origin.clone(), additional_globs, use_ignore)?;
+        let (flush_tx, flush_rx) = unbounded::<FlushRequest>();
+        std::thread::spawn(move || pipeline.run(flush_rx, callback));
+        debug!(%origin, "watching started");
+        Ok(WatchSession { flush_tx })
+    }
+
+    /// Synchronously drains the accumulator. Events it returns are not
+    /// delivered through the callback. Returns an empty vec if the loop has
+    /// exited or nothing is buffered.
+    pub(crate) fn flush(&self, mode: FlushMode) -> Vec<WatchEvent> {
+        let (reply, reply_rx) = bounded::<Vec<WatchEvent>>(1);
+        if self.flush_tx.send(FlushRequest { mode, reply }).is_err() {
+            return Vec::new();
+        }
+        reply_rx
+            .recv_timeout(Duration::from_millis(500))
+            .unwrap_or_default()
+    }
+}
+
 #[napi]
 pub struct Watcher {
     pub origin: String,
     additional_globs: Vec<String>,
     use_ignore: bool,
-    /// `Mutex<Option>` so `stop()` can drop the sender via `&self`.
-    /// When dropped, the flush loop's force_flush_rx reports
-    /// `Disconnected` on its next select and the loop exits.
-    force_flush_tx: Mutex<Option<Sender<ForceFlushReply>>>,
+    /// `Mutex<Option>` so `stop()` can drop the session via `&self`.
+    session: Mutex<Option<WatchSession>>,
 }
 
 #[napi]
@@ -596,34 +680,16 @@ impl Watcher {
         additional_globs: Option<Vec<String>>,
         use_ignore: Option<bool>,
     ) -> Watcher {
-        let mut globs: Vec<String> = HARDCODED_IGNORE_PATTERNS
-            .iter()
-            .map(|p| (*p).to_string())
-            .collect();
-
-        // Vite/Vitest write timestamp files that we don't want to watch.
-        globs.extend([
-            "vitest.config.ts.timestamp*.mjs".into(),
-            "vite.config.ts.timestamp*.mjs".into(),
-            "vitest.config.mts.timestamp*.mjs".into(),
-            "vite.config.mts.timestamp*.mjs".into(),
-        ]);
-
+        let mut globs = default_watch_globs();
         if let Some(additional_globs) = additional_globs {
             globs.extend(additional_globs);
         }
-
-        let origin = if cfg!(windows) {
-            origin.replace('/', "\\")
-        } else {
-            origin
-        };
 
         Watcher {
             origin,
             additional_globs: globs,
             use_ignore: use_ignore.unwrap_or(true),
-            force_flush_tx: Mutex::new(None),
+            session: Mutex::new(None),
         }
     }
 
@@ -650,43 +716,35 @@ impl Watcher {
     }
 
     pub(crate) fn watch_inner(&mut self, callback: WatchEventCallback) -> Result<()> {
-        let pipeline =
-            WatchPipeline::new(self.origin.clone(), &self.additional_globs, self.use_ignore)
-                .map_err(|msg| Error::new(Status::GenericFailure, msg))?;
-
-        let (force_flush_tx, force_flush_rx) = unbounded::<ForceFlushReply>();
-        *self.force_flush_tx.lock() = Some(force_flush_tx);
-
-        std::thread::spawn(move || pipeline.run(force_flush_rx, callback));
-
-        debug!(origin = %self.origin, "watching started");
+        let session = WatchSession::start(
+            self.origin.clone(),
+            &self.additional_globs,
+            self.use_ignore,
+            callback,
+        )
+        .map_err(|msg| Error::new(Status::GenericFailure, msg))?;
+        *self.session.lock() = Some(session);
         Ok(())
     }
 
     #[napi]
     pub async fn stop(&self) -> Result<()> {
-        *self.force_flush_tx.lock() = None;
+        *self.session.lock() = None;
         debug!(origin = %self.origin, "watching stopped");
         Ok(())
     }
 
-    /// Synchronously drains the accumulator. Used by the daemon before
-    /// serving a cached project graph so events buffered inside the
-    /// IDLE_WINDOW debounce don't go missing. Returns an empty vec if
-    /// the watcher hasn't started, the loop has exited, or no events
-    /// are buffered.
+    /// Synchronously drains the accumulator, waiting out the kernel hop, so
+    /// events buffered inside the IDLE_WINDOW debounce don't go missing.
+    /// Returns an empty vec if the watcher hasn't started, the loop has
+    /// exited, or no events are buffered.
     #[napi]
     pub fn force_flush_pending(&self) -> Vec<WatchEvent> {
-        let tx = match self.force_flush_tx.lock().clone() {
-            Some(tx) => tx,
-            None => return Vec::new(),
-        };
-        let (reply_tx, reply_rx) = bounded::<Vec<WatchEvent>>(1);
-        if tx.send(reply_tx).is_err() {
-            return Vec::new();
-        }
-        reply_rx
-            .recv_timeout(Duration::from_millis(500))
+        // Cloned out so concurrent callers share one snapshot instead of
+        // serializing on the lock through the settle wait.
+        let session = self.session.lock().clone();
+        session
+            .map(|s| s.flush(FlushMode::Settled))
             .unwrap_or_default()
     }
 }
@@ -1266,7 +1324,7 @@ mod tests {
         let canonical = dunce::canonicalize(dir.path()).expect("canonicalize");
         let (pipeline, tx) = WatchPipeline::with_test_channel(canonical.to_str().expect("utf-8"));
 
-        let (ff_tx, ff_rx) = bounded::<ForceFlushReply>(0);
+        let (ff_tx, ff_rx) = bounded::<FlushRequest>(0);
         let captured: Captured = Arc::new(Mutex::new(Vec::new()));
         let cap = captured.clone();
         let handle = std::thread::spawn(move || {
