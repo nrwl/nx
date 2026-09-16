@@ -246,40 +246,43 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
       // no published versions or dist-tags yet (e.g. GitHub packages). Treat empty output the same as
       // package not existing yet and continue to the publish step.
       const output = result.toString().trim();
-      const resultJson = JSON.parse(output || '{}');
       let distTagVersion: string | undefined;
       let versionExists: boolean;
 
-      if (pm === 'bun') {
-        distTagVersion = resultJson['dist-tags']?.[tag];
-        versionExists = (
-          Array.isArray(resultJson.versions)
-            ? resultJson.versions
-            : [resultJson.versions]
-        ).includes(currentVersion);
-      } else if (!output) {
+      if (!output) {
         versionExists = false;
       } else {
-        const metadataEntries = Array.isArray(resultJson)
-          ? resultJson
-          : [resultJson];
-        const currentVersionMetadata = metadataEntries.find(
-          (metadata) =>
-            metadata?.name === packageName &&
-            metadata?.version === currentVersion
-        );
+        const resultJson = JSON.parse(output);
 
-        if (!currentVersionMetadata) {
-          console.error(
-            `Something unexpected went wrong when checking for existing dist-tags. The registry returned metadata that did not match ${packageName}@${currentVersion}.`
+        if (pm === 'bun') {
+          distTagVersion = resultJson['dist-tags']?.[tag];
+          versionExists = (
+            Array.isArray(resultJson.versions)
+              ? resultJson.versions
+              : [resultJson.versions]
+          ).includes(currentVersion);
+        } else {
+          const metadataEntries = Array.isArray(resultJson)
+            ? resultJson
+            : [resultJson];
+          const currentVersionMetadata = metadataEntries.find(
+            (metadata) =>
+              metadata?.name === packageName &&
+              metadata?.version === currentVersion
           );
-          return {
-            success: false,
-          };
-        }
 
-        distTagVersion = currentVersionMetadata[npmViewDistTagField];
-        versionExists = true;
+          if (!currentVersionMetadata) {
+            console.error(
+              `Something unexpected went wrong when checking for existing dist-tags. The registry returned metadata that did not match ${packageName}@${currentVersion}.`
+            );
+            return {
+              success: false,
+            };
+          }
+
+          distTagVersion = currentVersionMetadata[npmViewDistTagField];
+          versionExists = true;
+        }
       }
 
       if (distTagVersion === currentVersion) {
