@@ -63,11 +63,11 @@ fn nxignore_may_match_under(rules: &[String], prefix: &str) -> bool {
 pub struct IgnoredIndex {
     /// Directories whose files are listed, workspace-relative. One inside
     /// another is covered by the outer.
-    prefixes: RwLock<BTreeSet<String>>,
+    tracked: RwLock<BTreeSet<String>>,
     /// Directories whose file hashes are kept but whose files are not listed:
     /// declared outputs, which are always walked after the task that writes
     /// them has run.
-    kept: RwLock<BTreeSet<String>>,
+    listed: RwLock<BTreeSet<String>>,
     /// Every file under a listed prefix, sorted, workspace-relative.
     members: RwLock<BTreeSet<String>>,
     /// Content by path, under a listed or kept prefix, or anywhere when
@@ -139,8 +139,8 @@ impl IgnoredIndex {
     /// An index a watch keeps current, or one with no watch behind it.
     pub(crate) fn new(watch: Option<Watch>) -> Self {
         Self {
-            prefixes: RwLock::new(BTreeSet::new()),
-            kept: RwLock::new(BTreeSet::new()),
+            tracked: RwLock::new(BTreeSet::new()),
+            listed: RwLock::new(BTreeSet::new()),
             members: RwLock::new(BTreeSet::new()),
             contents: DashMap::new(),
             watch,
@@ -149,14 +149,17 @@ impl IgnoredIndex {
         }
     }
 
-    /// Whether a listed prefix holds `path`.
-    pub(crate) fn covers(&self, path: &str) -> bool {
-        holds(&self.prefixes.read(), path)
+    /// Whether a directory that has been walked holds `path`. Only then is
+    /// there a listing to answer from, or a hash safe to serve blind.
+    pub(crate) fn is_listed(&self, path: &str) -> bool {
+        holds(&self.listed.read(), path)
     }
 
-    /// Whether content under `path` is kept.
-    fn keeps(&self, path: &str) -> bool {
-        self.covers(path) || holds(&self.kept.read(), path)
+    /// Whether a tracked directory holds `path`, so its hash is worth keeping.
+    /// A tracked directory is not necessarily walked: nothing walks one until
+    /// a listing is asked for.
+    pub(crate) fn is_tracked(&self, path: &str) -> bool {
+        holds(&self.tracked.read(), path)
     }
 
     fn canonical_root(&self, workspace_root: &Path) -> Option<&Path> {
@@ -178,25 +181,37 @@ impl IgnoredIndex {
         }
     }
 
-    /// Registers `prefix` and lists its files from a walk of
-    /// `workspace_root`. Refused, leaving the caller to walk, for the whole
-    /// workspace, where the watch could miss a change (a hardcoded ignore, a
-    /// root `.nxignore` rule), or when it resolves outside the workspace.
-    /// Under a watch, registering a covered prefix is a no-op; without one it
-    /// is walked again.
-    pub(crate) fn register(&self, workspace_root: &Path, prefix: &str) -> bool {
-        let prefix = prefix.trim_matches('/');
-        if let Some(reason) = self.refusal(prefix) {
-            trace!("not indexing {prefix:?}: {reason}");
+    /// Starts keeping what is under `dir`: its file hashes always, and its
+    /// listing if anyone asks for one. Nothing is walked here. False, leaving
+    /// the caller to walk instead, for the whole workspace, where the watch
+    /// could miss a change (a hardcoded ignore, a root `.nxignore` rule), or
+    /// when `dir` resolves outside the workspace.
+    pub(crate) fn track(&self, workspace_root: &Path, dir: &str) -> bool {
+        let dir = dir.trim_matches('/');
+        if let Some(reason) = self.refusal(dir) {
+            trace!("not tracking {dir:?}: {reason}");
             return false;
         }
-        if self.watch.is_some() && self.covers(prefix) {
-            return true;
+        if seed_walk(workspace_root, dir).is_none() {
+            trace!("not tracking {dir:?}: it resolves outside the workspace");
+            return false;
         }
+        if !self.is_tracked(dir) {
+            let mut tracked = self.tracked.write();
+            tracked.retain(|d| !under(d, dir));
+            tracked.insert(dir.to_string());
+        }
+        true
+    }
+
+    /// Walks `dir` and adopts the result as its listing, so later reads answer
+    /// from it and watch events keep it current. False when the walk could not
+    /// settle: the disk kept moving, or `dir` resolves outside the workspace.
+    fn walk_into_listing(&self, workspace_root: &Path, dir: &str) -> bool {
         for _ in 0..3 {
             let generation = self.generation.load(Ordering::Acquire);
-            let Some(seeded) = seed_walk(workspace_root, prefix) else {
-                trace!("not indexing {prefix:?}: it resolves outside the workspace");
+            let Some(seeded) = seed_walk(workspace_root, dir) else {
+                trace!("not listing {dir:?}: it resolves outside the workspace");
                 return false;
             };
             let mut members = self.members.write();
@@ -204,37 +219,31 @@ impl IgnoredIndex {
                 // The watch moved a file under it while the walk ran; walk again.
                 continue;
             }
-            let mut prefixes = self.prefixes.write();
-            if !holds(&prefixes, prefix) {
+            let mut listed = self.listed.write();
+            if !holds(&listed, dir) {
                 // Anything now covered by the wider prefix is re-listed by the walk.
-                prefixes.retain(|p| !under(p, prefix));
-                prefixes.insert(prefix.to_string());
+                listed.retain(|d| !under(d, dir));
+                listed.insert(dir.to_string());
             }
-            self.replace_under(&mut members, prefix, seeded);
-            trace!("indexed {prefix:?}");
+            self.replace_under(&mut members, dir, seeded);
+            trace!("listed {dir:?}");
             return true;
         }
-        trace!("not indexing {prefix:?}: it kept changing while walked");
+        trace!("not listing {dir:?}: it kept changing while walked");
         false
     }
 
-    /// Keeps the file hashes under `prefix` without listing its files, for a
-    /// directory that is always walked. Refused where `register` would be.
-    pub(crate) fn keep(&self, prefix: &str) -> bool {
-        let prefix = prefix.trim_matches('/');
-        if let Some(reason) = self.refusal(prefix) {
-            trace!("not keeping hashes under {prefix:?}: {reason}");
-            return false;
+    /// The files under `dir`, sorted, when a tracked directory holds it. The
+    /// first ask walks; after that the watch keeps the answer current. `None`
+    /// when nothing tracks `dir`, or the walk could not settle.
+    pub(crate) fn list(&self, workspace_root: &Path, dir: &str) -> Option<Vec<String>> {
+        if !self.is_tracked(dir) {
+            return None;
         }
-        if !self.keeps(prefix) {
-            self.kept.write().insert(prefix.to_string());
-        }
-        true
-    }
-
-    /// The files under `dir`, sorted, when a registered prefix covers it.
-    pub(crate) fn list(&self, dir: &str) -> Option<Vec<String>> {
-        if !self.covers(dir) {
+        // Without a watch nothing keeps a listing current, so every ask walks.
+        if (self.watch.is_none() || !self.is_listed(dir))
+            && !self.walk_into_listing(workspace_root, dir)
+        {
             return None;
         }
         let members = self.members.read();
@@ -254,7 +263,7 @@ impl IgnoredIndex {
     /// workspace is not a member, as a walk would not list it. Any kept hash
     /// for the path stops being trusted.
     pub(crate) fn note_written(&self, workspace_root: &Path, path: &str) {
-        if !self.keeps(path) {
+        if !self.is_tracked(path) {
             return;
         }
         self.generation.fetch_add(1, Ordering::AcqRel);
@@ -262,7 +271,7 @@ impl IgnoredIndex {
         if let Some(mut content) = self.contents.get_mut(path) {
             content.trusted = false;
         }
-        let listed = self.covers(path);
+        let listed = self.is_listed(path);
         let full_path = workspace_root.join(path);
         let Ok(link) = std::fs::symlink_metadata(&full_path) else {
             self.forget(path);
@@ -303,7 +312,7 @@ impl IgnoredIndex {
         let kept: Vec<&str> = paths
             .iter()
             .copied()
-            .filter(|path| self.keeps(path))
+            .filter(|path| self.is_tracked(path))
             .collect();
         if kept.is_empty() {
             return;
@@ -329,16 +338,19 @@ impl IgnoredIndex {
     /// hashes kept under unlisted ones are forgotten.
     pub(crate) fn reseed(&self, workspace_root: &Path) {
         self.generation.fetch_add(1, Ordering::AcqRel);
-        let prefixes: Vec<String> = self.prefixes.read().iter().cloned().collect();
-        for prefix in prefixes {
+        let listed: Vec<String> = self.listed.read().iter().cloned().collect();
+        for prefix in listed {
             if let Some(seeded) = seed_walk(workspace_root, &prefix) {
                 self.replace_under(&mut self.members.write(), &prefix, seeded);
             }
         }
-        let kept: Vec<String> = self.kept.read().iter().cloned().collect();
-        if !kept.is_empty() {
-            self.contents
-                .retain(|path, _| !kept.iter().any(|dir| under(path, dir)) || self.covers(path));
+        let tracked: Vec<String> = self.tracked.read().iter().cloned().collect();
+        if !tracked.is_empty() {
+            // A tracked directory nobody listed has no walk to correct it, so
+            // its hashes go rather than stand on events that may be missing.
+            self.contents.retain(|path, _| {
+                !tracked.iter().any(|dir| under(path, dir)) || self.is_listed(path)
+            });
         }
         for mut content in self.contents.iter_mut() {
             content.trusted = false;
@@ -430,10 +442,10 @@ impl IgnoredIndex {
         let may_trust = trust
             && stamp.is_none()
             && self.watch.is_some()
-            && self.covers(path)
+            && self.is_listed(path)
             && std::fs::symlink_metadata(&full_path).is_ok_and(|m| !m.file_type().is_symlink());
         let stamp = stamp.or_else(|| std::fs::metadata(&full_path).ok().map(|m| stamp_of(&m)));
-        let keep = self.watch.is_none() || self.keeps(path);
+        let keep = self.watch.is_none() || self.is_tracked(path);
         let unmoved = || self.generation.load(Ordering::Acquire) == generation;
         if let Some(stamp) = stamp
             && let Some(mut content) = self.contents.get_mut(path)
@@ -499,24 +511,19 @@ impl IgnoredIndexReader {
         &self.index
     }
 
-    /// See `IgnoredIndex::register`.
-    pub(crate) fn register(&self, workspace_root: &Path, prefix: &str) -> bool {
-        self.index.register(workspace_root, prefix)
+    /// See `IgnoredIndex::track`.
+    pub(crate) fn track(&self, workspace_root: &Path, dir: &str) -> bool {
+        self.index.track(workspace_root, dir)
     }
 
-    /// See `IgnoredIndex::keep`.
-    pub(crate) fn keep(&self, prefix: &str) -> bool {
-        self.index.keep(prefix)
-    }
-
-    /// The files under `dir` once the index has caught up, or `None` when no
-    /// registered directory covers it.
-    pub(crate) fn list(&self, dir: &str) -> Option<Vec<String>> {
-        if !self.index.covers(dir) {
+    /// The files under `dir` once the index has caught up, or `None` when
+    /// nothing tracks it. The first ask walks; see `IgnoredIndex::listing`.
+    pub(crate) fn list(&self, workspace_root: &Path, dir: &str) -> Option<Vec<String>> {
+        if !self.index.is_tracked(dir) {
             return None;
         }
         (self.catch_up)();
-        self.index.list(dir)
+        self.index.list(workspace_root, dir)
     }
 }
 
@@ -565,30 +572,30 @@ mod tests {
     fn a_registered_prefix_lists_what_a_walk_finds_and_nothing_else_is_listed() {
         let temp = workspace();
         let index = watched();
-        assert!(index.register(temp.path(), "dist/gen"));
+        assert!(index.track(temp.path(), "dist/gen"));
         assert_eq!(
-            index.list("dist/gen").unwrap(),
+            index.list(temp.path(), "dist/gen").unwrap(),
             vec!["dist/gen/a.js", "dist/gen/nested/b.js"]
         );
         assert_eq!(
-            index.list("dist/gen/nested").unwrap(),
+            index.list(temp.path(), "dist/gen/nested").unwrap(),
             vec!["dist/gen/nested/b.js"]
         );
-        assert!(index.list("dist/other").is_none());
-        assert!(index.list("dist").is_none());
-        assert!(index.list("").is_none());
+        assert!(index.list(temp.path(), "dist/other").is_none());
+        assert!(index.list(temp.path(), "dist").is_none());
+        assert!(index.list(temp.path(), "").is_none());
     }
 
     #[test]
     fn a_wider_prefix_takes_over_a_narrower_one() {
         let temp = workspace();
         let index = watched();
-        assert!(index.register(temp.path(), "dist/gen"));
-        assert!(index.register(temp.path(), "dist"));
-        assert!(index.register(temp.path(), "dist/other"));
-        assert_eq!(index.prefixes.read().len(), 1);
+        assert!(index.track(temp.path(), "dist/gen"));
+        assert!(index.track(temp.path(), "dist"));
+        assert!(index.track(temp.path(), "dist/other"));
+        assert_eq!(index.tracked.read().len(), 1);
         assert_eq!(
-            index.list("dist").unwrap(),
+            index.list(temp.path(), "dist").unwrap(),
             vec!["dist/gen/a.js", "dist/gen/nested/b.js", "dist/other/c.js"]
         );
     }
@@ -600,13 +607,13 @@ mod tests {
             .write_str("x")
             .unwrap();
         let index = watched();
-        assert!(!index.register(temp.path(), "node_modules/dep"));
-        assert!(index.list("node_modules/dep").is_none());
+        assert!(!index.track(temp.path(), "node_modules/dep"));
+        assert!(index.list(temp.path(), "node_modules/dep").is_none());
         // Without a watch there is no gate: the seed stands for the run.
         let unwatched = IgnoredIndex::new(None);
-        assert!(unwatched.register(temp.path(), "node_modules/dep"));
+        assert!(unwatched.track(temp.path(), "node_modules/dep"));
         assert_eq!(
-            unwatched.list("node_modules/dep").unwrap(),
+            unwatched.list(temp.path(), "node_modules/dep").unwrap(),
             vec!["node_modules/dep/index.js"]
         );
     }
@@ -619,56 +626,61 @@ mod tests {
         elsewhere.child("out/x.js").write_str("x").unwrap();
         std::os::unix::fs::symlink(elsewhere.path().join("out"), temp.path().join("linked"))
             .unwrap();
-        assert!(!watched().register(temp.path(), "linked"));
+        assert!(!watched().track(temp.path(), "linked"));
     }
 
     #[test]
     fn events_keep_the_members_current() {
         let temp = workspace();
         let index = watched();
-        index.register(temp.path(), "dist");
+        index.track(temp.path(), "dist");
         temp.child("dist/gen/new.js").write_str("new").unwrap();
         index.note_written(temp.path(), "dist/gen/new.js");
         std::fs::remove_file(temp.path().join("dist/gen/a.js")).unwrap();
         index.note_deleted("dist/gen/a.js");
         assert_eq!(
-            index.list("dist/gen").unwrap(),
+            index.list(temp.path(), "dist/gen").unwrap(),
             vec!["dist/gen/nested/b.js", "dist/gen/new.js"]
         );
         // A directory reported gone takes everything under it.
         std::fs::remove_dir_all(temp.path().join("dist/gen/nested")).unwrap();
         index.note_deleted("dist/gen/nested");
-        assert_eq!(index.list("dist/gen").unwrap(), vec!["dist/gen/new.js"]);
+        assert_eq!(
+            index.list(temp.path(), "dist/gen").unwrap(),
+            vec!["dist/gen/new.js"]
+        );
         // A directory reported written is re-listed, for files that arrived
         // without events of their own.
         temp.child("dist/moved/x.js").write_str("x").unwrap();
         temp.child("dist/moved/y.js").write_str("y").unwrap();
         index.note_written(temp.path(), "dist/moved");
         assert_eq!(
-            index.list("dist/moved").unwrap(),
+            index.list(temp.path(), "dist/moved").unwrap(),
             vec!["dist/moved/x.js", "dist/moved/y.js"]
         );
         // Outside every prefix, events are not the index's business.
         index.note_written(temp.path(), "src/other.ts");
-        assert!(index.list("src").is_none());
+        assert!(index.list(temp.path(), "src").is_none());
     }
 
     #[test]
     fn a_reseed_lists_what_the_disk_holds_now() {
         let temp = workspace();
         let index = watched();
-        index.register(temp.path(), "dist");
+        index.track(temp.path(), "dist");
+        // Listed first, so the writes below land behind a listing that exists.
+        index.list(temp.path(), "dist").unwrap();
         temp.child("dist/gen/quiet.js").write_str("q").unwrap();
         std::fs::remove_file(temp.path().join("dist/other/c.js")).unwrap();
         assert!(
             !index
-                .list("dist")
+                .list(temp.path(), "dist")
                 .unwrap()
                 .contains(&"dist/gen/quiet.js".to_string())
         );
         index.reseed(temp.path());
         assert_eq!(
-            index.list("dist").unwrap(),
+            index.list(temp.path(), "dist").unwrap(),
             vec!["dist/gen/a.js", "dist/gen/nested/b.js", "dist/gen/quiet.js"]
         );
     }
@@ -677,7 +689,10 @@ mod tests {
     fn a_hash_is_trusted_until_an_event_names_the_file() {
         let temp = workspace();
         let index = watched();
-        index.register(temp.path(), "dist");
+        index.track(temp.path(), "dist");
+        // A hash is trusted only under a listing, and the expansion asks for
+        // one before it hashes anything.
+        index.list(temp.path(), "dist").unwrap();
         let file = temp.path().join("dist/gen/a.js");
         age(&file);
         let first = index.hash_file(temp.path(), "dist/gen/a.js", None, true);
@@ -711,7 +726,7 @@ mod tests {
     fn a_file_kept_without_being_listed_is_never_trusted() {
         let temp = workspace();
         let index = watched();
-        assert!(index.keep("dist"));
+        assert!(index.track(temp.path(), "dist"));
         age(&temp.path().join("dist/gen/a.js"));
 
         assert!(
@@ -731,7 +746,7 @@ mod tests {
     fn a_kept_directory_reported_written_after_it_went_forgets_its_hashes() {
         let temp = workspace();
         let index = watched();
-        assert!(index.keep("dist"));
+        assert!(index.track(temp.path(), "dist"));
         let file = temp.path().join("dist/gen/a.js");
         age(&file);
         let stamp = stamp_of(&std::fs::metadata(&file).unwrap());
@@ -758,7 +773,10 @@ mod tests {
     fn an_untrusted_entry_is_served_by_stamp_but_not_inside_its_own_second() {
         let temp = workspace();
         let index = watched();
-        index.register(temp.path(), "dist");
+        index.track(temp.path(), "dist");
+        // A hash is trusted only under a listing, and the expansion asks for
+        // one before it hashes anything.
+        index.list(temp.path(), "dist").unwrap();
         let file = temp.path().join("dist/gen/a.js");
         age(&file);
         let first = index.hash_file(temp.path(), "dist/gen/a.js", None, true);
@@ -791,7 +809,7 @@ mod tests {
     fn content_outside_every_prefix_is_kept_only_when_nothing_watches() {
         let temp = workspace();
         let index = watched();
-        index.register(temp.path(), "dist");
+        index.track(temp.path(), "dist");
         index.hash_file(temp.path(), "src/index.ts", None, true);
         assert!(!index.remembered("src/index.ts"));
         assert!(index.trusted_hash("src/index.ts").is_none());
@@ -806,7 +824,7 @@ mod tests {
     fn a_missing_file_has_no_hash_and_is_not_remembered() {
         let temp = workspace();
         let index = watched();
-        index.register(temp.path(), "dist");
+        index.track(temp.path(), "dist");
         assert_eq!(
             index.hash_file(temp.path(), "dist/gen/absent.js", None, true),
             None
@@ -821,20 +839,20 @@ mod tests {
         // a file under dist/gen from the watch.
         for rule in ["dist/gen/nested", "/dist", "*.log", "**/cache"] {
             assert!(
-                !watched_with_nxignore(&[rule]).register(temp.path(), "dist/gen"),
+                !watched_with_nxignore(&[rule]).track(temp.path(), "dist/gen"),
                 "{rule} should refuse dist/gen"
             );
         }
         // Elsewhere, negated, or a comment: nothing under dist/gen is hidden.
         let index = watched_with_nxignore(&["src/generated", "!dist/gen", "# dist"]);
-        assert!(index.register(temp.path(), "dist/gen"));
+        assert!(index.track(temp.path(), "dist/gen"));
     }
 
     #[test]
     fn the_whole_workspace_is_never_indexed() {
         let temp = workspace();
-        assert!(!watched().register(temp.path(), ""));
-        assert!(!IgnoredIndex::new(None).register(temp.path(), "/"));
+        assert!(!watched().track(temp.path(), ""));
+        assert!(!IgnoredIndex::new(None).track(temp.path(), "/"));
     }
 
     #[cfg(unix)]
@@ -848,10 +866,10 @@ mod tests {
         )
         .unwrap();
         let index = watched();
-        assert!(index.register(temp.path(), "dist"));
+        assert!(index.track(temp.path(), "dist"));
         assert!(
             index
-                .list("dist")
+                .list(temp.path(), "dist")
                 .unwrap()
                 .contains(&"dist/gen/link.js".to_string())
         );
@@ -874,7 +892,7 @@ mod tests {
         let elsewhere = TempDir::new().unwrap();
         elsewhere.child("secret/id_rsa").write_str("key").unwrap();
         let index = watched();
-        assert!(index.register(temp.path(), "dist"));
+        assert!(index.track(temp.path(), "dist"));
         std::os::unix::fs::symlink(
             elsewhere.path().join("secret/id_rsa"),
             temp.path().join("dist/id_rsa"),
@@ -887,7 +905,7 @@ mod tests {
         )
         .unwrap();
         index.note_written(temp.path(), "dist/lnk");
-        let listed = index.list("dist").unwrap();
+        let listed = index.list(temp.path(), "dist").unwrap();
         assert!(
             !listed
                 .iter()
@@ -899,7 +917,10 @@ mod tests {
     fn a_stamp_from_before_an_event_never_makes_an_entry_trusted() {
         let temp = workspace();
         let index = watched();
-        index.register(temp.path(), "dist");
+        index.track(temp.path(), "dist");
+        // A hash is trusted only under a listing, and the expansion asks for
+        // one before it hashes anything.
+        index.list(temp.path(), "dist").unwrap();
         let file = temp.path().join("dist/gen/a.js");
         age(&file);
         let old = stamp_of(&std::fs::metadata(&file).unwrap());
@@ -917,11 +938,13 @@ mod tests {
     }
 
     #[test]
-    fn kept_output_hashes_are_forgotten_with_their_files() {
+    fn tracked_hashes_are_forgotten_with_their_files() {
         let temp = workspace();
         let index = watched();
-        assert!(index.keep("dist/other"));
-        assert!(index.list("dist/other").is_none());
+        assert!(index.track(temp.path(), "dist/other"));
+        // Tracked but never listed, as a declared output is: its hashes are
+        // kept, and nothing is trusted, because no walk vouched for it.
+        assert!(!index.is_listed("dist/other/c.js"));
         index.hash_file(temp.path(), "dist/other/c.js", None, false);
         assert!(index.remembered("dist/other/c.js"));
         assert!(index.trusted_hash("dist/other/c.js").is_none());
@@ -934,21 +957,23 @@ mod tests {
     }
 
     #[test]
-    fn without_a_watch_registering_again_walks_again() {
+    fn without_a_watch_every_listing_walks_again() {
         let temp = workspace();
         let index = IgnoredIndex::new(None);
-        assert!(index.register(temp.path(), "dist"));
+        assert!(index.track(temp.path(), "dist"));
+        index.list(temp.path(), "dist").unwrap();
         temp.child("dist/gen/late.js").write_str("late").unwrap();
         assert!(
-            !index
-                .list("dist")
+            index
+                .list(temp.path(), "dist")
                 .unwrap()
-                .contains(&"dist/gen/late.js".to_string())
+                .contains(&"dist/gen/late.js".to_string()),
+            "nothing keeps a listing current, so every ask walks"
         );
-        assert!(index.register(temp.path(), "dist/gen"));
+        assert!(index.track(temp.path(), "dist/gen"));
         assert!(
             index
-                .list("dist")
+                .list(temp.path(), "dist")
                 .unwrap()
                 .contains(&"dist/gen/late.js".to_string())
         );

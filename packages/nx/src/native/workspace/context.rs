@@ -2394,11 +2394,11 @@ mod tests {
         let index = ctx.ignored_index();
 
         // Registered before the directory exists: events fill it in.
-        assert!(index.register(&root, "dist"));
-        assert_eq!(index.list("dist").unwrap(), Vec::<String>::new());
+        assert!(index.track(temp.path(), "dist"));
+        assert_eq!(index.list(&root, "dist").unwrap(), Vec::<String>::new());
         temp.child("dist/out.js").write_str("x").unwrap();
         ctx.settle();
-        assert_eq!(index.list("dist").unwrap(), vec!["dist/out.js"]);
+        assert_eq!(index.list(&root, "dist").unwrap(), vec!["dist/out.js"]);
         assert!(!names_of(&ctx).contains(&"dist/out.js".to_string()));
 
         // A hash is trusted until the watch reports the file again.
@@ -2411,26 +2411,26 @@ mod tests {
 
         // Tracked files under a registered directory are listed too, and
         // still reach the files.
-        assert!(index.register(&root, "src"));
+        assert!(index.track(temp.path(), "src"));
         temp.child("src/b.ts").write_str("b").unwrap();
         ctx.settle();
-        assert_eq!(index.list("src").unwrap(), vec!["src/b.ts"]);
+        assert_eq!(index.list(&root, "src").unwrap(), vec!["src/b.ts"]);
         assert!(names_of(&ctx).contains(&"src/b.ts".to_string()));
 
         // Deletes of a file and of a directory.
         temp.child("dist/sub/x.js").write_str("x").unwrap();
         ctx.settle();
         assert_eq!(
-            index.list("dist").unwrap(),
+            index.list(&root, "dist").unwrap(),
             vec!["dist/out.js", "dist/sub/x.js"]
         );
         std::fs::remove_file(temp.child("dist/out.js").path()).unwrap();
         std::fs::remove_dir_all(temp.child("dist/sub").path()).unwrap();
         ctx.settle();
-        assert_eq!(index.list("dist").unwrap(), Vec::<String>::new());
+        assert_eq!(index.list(&root, "dist").unwrap(), Vec::<String>::new());
 
         // The watch never reaches a hardcoded ignore, so it is not indexed.
-        assert!(!index.register(&root, "node_modules/dep"));
+        assert!(!index.track(temp.path(), "node_modules/dep"));
     }
 
     #[test]
@@ -2444,8 +2444,8 @@ mod tests {
         ctx.all_file_data();
         let root = dunce::canonicalize(temp.path()).unwrap();
         let index = ctx.ignored_index();
-        assert!(index.register(&root, "dist"));
-        assert_eq!(index.list("dist").unwrap(), vec!["dist/sub/x.js"]);
+        assert!(index.track(temp.path(), "dist"));
+        assert_eq!(index.list(&root, "dist").unwrap(), vec!["dist/sub/x.js"]);
 
         std::fs::rename(
             temp.child("dist/sub").path(),
@@ -2453,7 +2453,7 @@ mod tests {
         )
         .unwrap();
         ctx.settle();
-        assert_eq!(index.list("dist").unwrap(), vec!["dist/sub2/x.js"]);
+        assert_eq!(index.list(&root, "dist").unwrap(), vec!["dist/sub2/x.js"]);
 
         // Tracked files move with their directory in the files too: the old
         // path leaves as a delete of the directory, the new one arrives
@@ -2483,12 +2483,12 @@ mod tests {
         ctx.all_file_data();
         let root = dunce::canonicalize(temp.path()).unwrap();
         let index = ctx.ignored_index();
-        assert!(index.register(&root, "dist"));
+        assert!(index.track(temp.path(), "dist"));
 
         std::fs::remove_file(temp.child("dist/a.json").path()).unwrap();
         ctx.settle();
         assert_eq!(
-            index.list("dist").unwrap(),
+            index.list(&root, "dist").unwrap(),
             vec!["dist/sub/b.json", "dist/sub/c.json"],
             "after the file delete"
         );
@@ -2500,7 +2500,7 @@ mod tests {
         .unwrap();
         ctx.settle();
         assert_eq!(
-            index.list("dist").unwrap(),
+            index.list(&root, "dist").unwrap(),
             vec!["dist/moved/b.json", "dist/moved/c.json"],
             "after the move away"
         );
@@ -2512,7 +2512,7 @@ mod tests {
         .unwrap();
         ctx.settle();
         assert_eq!(
-            index.list("dist").unwrap(),
+            index.list(&root, "dist").unwrap(),
             vec!["dist/sub/b.json", "dist/sub/c.json"],
             "after the move back"
         );
@@ -2520,7 +2520,7 @@ mod tests {
         std::fs::remove_dir_all(temp.child("dist/sub").path()).unwrap();
         ctx.settle();
         assert_eq!(
-            index.list("dist").unwrap(),
+            index.list(&root, "dist").unwrap(),
             Vec::<String>::new(),
             "after the directory delete"
         );
@@ -2536,13 +2536,13 @@ mod tests {
         ctx.all_file_data();
         let root = dunce::canonicalize(temp.path()).unwrap();
         let reader = ctx.reader();
-        assert!(reader.register(&root, "dist"));
+        assert!(reader.track(&root, "dist"));
 
         // No settle: a listing applies what the watch has delivered itself,
         // so the write shows up within the kernel's hop, not the idle flush.
         temp.child("dist/out.js").write_str("x").unwrap();
         wait_until("a listing never saw the write", || {
-            reader.list("dist").unwrap() == vec!["dist/out.js"]
+            reader.list(&root, "dist").unwrap() == vec!["dist/out.js"]
         });
     }
 
@@ -2556,7 +2556,7 @@ mod tests {
         files_of(&ctx);
         let root = temp.path().to_path_buf();
         let reader = ctx.reader();
-        assert!(reader.register(&root, "dist"));
+        assert!(reader.track(&root, "dist"));
 
         // Nothing watches, so only the walk can find this file.
         temp.child("dist/b.js").write_str("b").unwrap();
@@ -2572,7 +2572,7 @@ mod tests {
 
         let (tx, rx) = std::sync::mpsc::channel();
         let listing = std::thread::spawn(move || {
-            tx.send(reader.list("dist").unwrap()).unwrap();
+            tx.send(reader.list(&root, "dist").unwrap()).unwrap();
         });
         assert!(
             rx.recv_timeout(Duration::from_millis(300)).is_err(),
@@ -2599,9 +2599,9 @@ mod tests {
         let root = dunce::canonicalize(temp.path()).unwrap();
         let reader = ctx.reader();
         // The watch never reports dist/gen, so dist cannot be kept from events.
-        assert!(!reader.register(&root, "dist"));
-        assert!(reader.list("dist").is_none());
-        assert!(reader.register(&root, "src"));
+        assert!(!reader.track(&root, "dist"));
+        assert!(reader.list(&root, "dist").is_none());
+        assert!(reader.track(&root, "src"));
     }
 
     #[test]
@@ -2638,12 +2638,13 @@ mod tests {
         ctx.all_file_data();
         let root = dunce::canonicalize(temp.path()).unwrap();
         let index = ctx.ignored_index();
-        assert!(index.register(&root, "dist"));
+        assert!(index.track(temp.path(), "dist"));
+        assert_eq!(index.list(&root, "dist").unwrap(), vec!["dist/a.js"]);
         // Put the index in the wrong: a member dropped while the file stays.
         index.note_deleted("dist/a.js");
-        assert_eq!(index.list("dist").unwrap(), Vec::<String>::new());
+        assert_eq!(index.list(&root, "dist").unwrap(), Vec::<String>::new());
         ctx.rescan_and_diff();
-        assert_eq!(index.list("dist").unwrap(), vec!["dist/a.js"]);
+        assert_eq!(index.list(&root, "dist").unwrap(), vec!["dist/a.js"]);
     }
 
     #[test]

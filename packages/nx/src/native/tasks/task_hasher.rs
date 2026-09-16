@@ -355,18 +355,14 @@ impl TaskHasher {
                 _ => {}
             }
         }
-        // Widest first, so a directory inside another registers as a no-op.
+        // Widest first, so a directory inside another is absorbed by it.
+        prefixes.extend(output_roots);
         prefixes.sort();
         prefixes.dedup();
         prefixes.sort_by_key(|p| p.len());
         let workspace_root = Path::new(&self.workspace_root);
-        for prefix in prefixes {
-            self.ignored_index.register(workspace_root, &prefix);
-        }
-        output_roots.sort();
-        output_roots.dedup();
-        for root in output_roots {
-            self.ignored_index.keep(&root);
+        for dir in prefixes {
+            self.ignored_index.track(workspace_root, &dir);
         }
     }
 
@@ -785,7 +781,7 @@ impl TaskHasher {
                 let workspace_root = Path::new(&self.workspace_root);
                 // The index lists a directory only while nothing has run,
                 // like the file map; afterwards the disk is walked.
-                let listed = |dir: &str| self.ignored_index.list(dir);
+                let listed = |dir: &str| self.ignored_index.list(workspace_root, dir);
                 let members: Members = if trust_file_map { &listed } else { NO_INDEX };
                 let expansion = expand_files_cached(
                     workspace_root,
