@@ -25,7 +25,7 @@ use tracing::warn;
 use crate::native::affected::dependent_outputs::compute_dependent_output_edges;
 use crate::native::affected::plan_ids::referenced_ids;
 use crate::native::affected::project_paths::{ProjectRoots, normalize_path};
-use crate::native::glob::build_glob_set;
+use crate::native::glob::{build_glob_set, fileset_patterns};
 use crate::native::project_graph::types::ProjectGraph;
 use crate::native::tasks::hashers::globs_from_workspace_globs;
 use crate::native::tasks::types::{HashInstruction, HashPlans, TaskGraph};
@@ -369,7 +369,7 @@ fn instruction_matches(
         if globs.is_empty() || candidates.is_empty() {
             return Ok(false);
         }
-        let glob = build_glob_set(globs)?;
+        let glob = build_glob_set(&fileset_patterns(globs))?;
         Ok(candidates
             .iter()
             .any(|&index| glob.is_match(&changed.files[index])))
@@ -552,6 +552,37 @@ mod tests {
             vec!["a:build"]
         );
         assert!(touched_for(&g, vec![instruction], &["libs/b/src/x.ts"]).is_empty());
+    }
+
+    /// A fileset entry with no glob syntax is the file or everything under it,
+    /// which is how the hasher reads it. Matching the literal alone would leave
+    /// a `{projectRoot}/src` input blind to every file inside `src`.
+    #[test]
+    fn a_glob_free_path_matches_everything_under_it() {
+        let g = graph(&[("a", "libs/a")]);
+        assert_eq!(
+            touched_for(
+                &g,
+                vec![HashInstruction::ProjectFileSet(
+                    "a".into(),
+                    strings(&["libs/a/src"])
+                )],
+                &["libs/a/src/deep/x.ts"]
+            ),
+            vec!["a:build"]
+        );
+        // The negated form excludes the subtree the same way.
+        assert!(
+            touched_for(
+                &g,
+                vec![HashInstruction::ProjectFileSet(
+                    "a".into(),
+                    strings(&["libs/a/**/*", "!libs/a/generated"])
+                )],
+                &["libs/a/generated/x.ts"]
+            )
+            .is_empty()
+        );
     }
 
     /// The whole reason for matching globs instead of resolving file lists: a
