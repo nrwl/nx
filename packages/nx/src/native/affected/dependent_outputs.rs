@@ -92,13 +92,28 @@ pub(crate) fn compute_dependent_output_edges(
         .plans
         .par_iter()
         .map_init(HashSet::new, |seen, (consumer, plan)| {
-            let mut producers: Vec<&str> = plan
+            let declared: Vec<&Vec<String>> = plan
                 .iter()
                 .filter_map(|id| declared_reads.get(id))
-                .filter_map(|outputs| producers_by_outputs.get(outputs.as_slice()))
-                .flatten()
-                .copied()
                 .collect();
+            let mut producers: Vec<&str> = Vec::new();
+            if !declared.is_empty() {
+                // Equality names the producer, but two unrelated tasks can
+                // declare the same outputs, so only one the consumer depends on
+                // counts. `dependencies` alone: that is what the vector was
+                // collected from.
+                let upstream: HashSet<&str> = closure_of(task_graph, consumer, seen, false)
+                    .into_iter()
+                    .collect();
+                producers.extend(
+                    declared
+                        .iter()
+                        .filter_map(|outputs| producers_by_outputs.get(outputs.as_slice()))
+                        .flatten()
+                        .copied()
+                        .filter(|producer| upstream.contains(producer)),
+                );
+            }
 
             // Only an includeIgnored read needs the closure, so a plan without
             // one never pays for the walk.
@@ -108,7 +123,7 @@ pub(crate) fn compute_dependent_output_edges(
                 .flatten()
                 .collect();
             if !reads.is_empty() {
-                for upstream in closure_of(task_graph, consumer, seen) {
+                for upstream in closure_of(task_graph, consumer, seen, true) {
                     if let Some(outputs) = outputs_of.get(upstream) {
                         let claims = reads
                             .iter()
@@ -135,24 +150,31 @@ pub(crate) fn compute_dependent_output_edges(
         .collect()
 }
 
-/// Every task reachable from `from` through `dependencies`, excluding itself
-/// unless a cycle leads back. `continuous_dependencies` are not traversed: a
-/// watch or serve task does not produce the artifacts a hash reads, matching
-/// `collect_task_dependencies`. `seen` is caller-owned so one allocation serves
-/// every consumer on a rayon worker.
+/// Every task reachable from `from`, excluding itself unless a cycle leads
+/// back. `continuous_dependencies` are followed only when asked: a `TaskOutput`
+/// was collected from `dependencies` alone (`collect_task_dependencies`), while
+/// a disk-backed read can reach a served task's outputs, which is the walk the
+/// hasher's deferral makes (`upstream_output_roots`). `seen` is caller-owned so
+/// one allocation serves every consumer on a rayon worker.
 fn closure_of<'a>(
     task_graph: &'a TaskGraph,
     from: &str,
     seen: &mut HashSet<&'a str>,
+    continuous: bool,
 ) -> Vec<&'a str> {
     seen.clear();
     let mut stack: Vec<&str> = vec![from];
     let mut reached = Vec::new();
     while let Some(current) = stack.pop() {
-        let Some(deps) = task_graph.dependencies.get(current) else {
-            continue;
-        };
-        for dep in deps {
+        let edges = [
+            task_graph.dependencies.get(current),
+            if continuous {
+                task_graph.continuous_dependencies.get(current)
+            } else {
+                None
+            },
+        ];
+        for dep in edges.into_iter().flatten().flatten() {
             if seen.insert(dep.as_str()) {
                 reached.push(dep.as_str());
                 stack.push(dep.as_str());
@@ -442,6 +464,49 @@ mod tests {
             )],
         );
         assert!(e.is_empty());
+    }
+
+    /// Instructions are interned per pool, so two producers with the same
+    /// outputs vector share the TaskOutput that embeds it. Only the one the
+    /// consumer depends on is its producer.
+    #[test]
+    fn a_task_output_names_only_the_producer_the_consumer_depends_on() {
+        let e = edges(
+            &[
+                ("ui:build", &["dist/shared"]),
+                ("other:build", &["dist/shared"]),
+                ("app:build", &["dist/app"]),
+            ],
+            &[("app:build", &["ui:build"])],
+            &[("app:build", vec![task_output(&["dist/shared"])])],
+        );
+        assert_eq!(e["app:build"], strings(&["ui:build"]));
+    }
+
+    /// A served task's outputs are read through a continuous dependency, the
+    /// edge the hasher's deferral follows too. A TaskOutput never came from
+    /// one, so it does not cross it.
+    #[test]
+    fn a_disk_backed_read_reaches_a_continuous_dependency() {
+        let mut tg = task_graph(&[("web:serve", &["dist/apps/web"]), ("e2e:e2e", &[])], &[]);
+        tg.continuous_dependencies
+            .insert("e2e:e2e".into(), strings(&["web:serve"]));
+        let p = plans(&[
+            ("e2e:e2e", vec![include_ignored(&["dist/apps/web/**"])]),
+            ("e2e:declared", vec![task_output(&["dist/apps/web"])]),
+        ]);
+        tg.tasks.insert(
+            "e2e:declared".into(),
+            Task {
+                id: "e2e:declared".into(),
+                ..Default::default()
+            },
+        );
+        tg.continuous_dependencies
+            .insert("e2e:declared".into(), strings(&["web:serve"]));
+        let e = compute_dependent_output_edges(&p, &tg);
+        assert_eq!(e["e2e:e2e"], strings(&["web:serve"]));
+        assert!(!e.contains_key("e2e:declared"));
     }
 
     /// Reached through an intermediate, since a read cannot say how deep the
