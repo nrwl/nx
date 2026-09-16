@@ -615,6 +615,59 @@
     }
   },
   "definitions": {
+    "readyWhen": {
+      "description": "How Nx detects that this continuous target is ready. Dependents opt in with \"waitFor\": \"ready\" on their dependsOn entry.",
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "Ready when an HTTP or HTTPS GET, following redirects, ends with a status from 200 to 403"
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535,
+          "description": "Ready when a TCP connection to this port succeeds"
+        },
+        "host": {
+          "type": "string",
+          "description": "Host to connect to with port. By default 127.0.0.1 and ::1 are both tried"
+        },
+        "command": {
+          "type": "string",
+          "description": "Ready when this command, run through the shell at the workspace root, exits with code 0"
+        },
+        "logMatches": {
+          "description": "Ready when every one of these substrings has appeared in the task's output",
+          "oneOf": [
+            { "type": "string" },
+            {
+              "type": "array",
+              "items": { "type": "string" },
+              "minItems": 1
+            }
+          ]
+        },
+        "timeout": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 60000,
+          "description": "Milliseconds to wait for readiness before failing dependents that wait for it"
+        },
+        "interval": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Milliseconds between probe attempts. By default attempts back off from 100 to 1000 milliseconds. Unused by logMatches"
+        }
+      },
+      "oneOf": [
+        { "required": ["url"] },
+        { "required": ["port"] },
+        { "required": ["command"] },
+        { "required": ["logMatches"] }
+      ],
+      "additionalProperties": false
+    },
     "ownersPattern": {
       "type": "object",
       "properties": {
@@ -912,6 +965,9 @@
         "continuous": {
           "$ref": "#/definitions/targetDefaultsConfig/properties/continuous"
         },
+        "readyWhen": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/readyWhen"
+        },
         "parallelism": {
           "$ref": "#/definitions/targetDefaultsConfig/properties/parallelism"
         },
@@ -975,6 +1031,9 @@
           "default": false,
           "description": "Whether this target runs continuously until stopped"
         },
+        "readyWhen": {
+          "$ref": "#/definitions/readyWhen"
+        },
         "parallelism": {
           "type": "boolean",
           "default": true,
@@ -1021,6 +1080,12 @@
                     "description": "Configuration for params handling.",
                     "enum": ["ignore", "forward"],
                     "default": "ignore"
+                  },
+                  "waitFor": {
+                    "type": "string",
+                    "description": "For a continuous dependency, whether to wait until it has started or until it is ready per its readyWhen. Ignored when the dependency is not continuous or has no readyWhen.",
+                    "enum": ["started", "ready"],
+                    "default": "started"
                   }
                 },
                 "oneOf": [

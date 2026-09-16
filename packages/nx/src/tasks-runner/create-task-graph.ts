@@ -1,5 +1,6 @@
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import {
+  getAllTargetNames,
   getDependencyConfigs,
   getOutputs,
   interpolate,
@@ -42,14 +43,7 @@ export class ProcessTasks {
     private readonly projectGraph: ProjectGraph,
     private readonly recordDependencyOverrides = false
   ) {
-    const allTargetNames = new Set<string>();
-    for (const projectName in projectGraph.nodes) {
-      const project = projectGraph.nodes[projectName];
-      for (const targetName in project.data.targets ?? {}) {
-        allTargetNames.add(targetName);
-      }
-    }
-    this.allTargetNames = Array.from(allTargetNames);
+    this.allTargetNames = getAllTargetNames(projectGraph);
   }
 
   processTasks(

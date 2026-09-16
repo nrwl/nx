@@ -15,6 +15,32 @@ pub const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS running_tasks (
     cwd TEXT NOT NULL
 );";
 
+// Created lazily by the service instead of at DB init so existing DBs pick it up
+// without a DB_VERSION bump.
+const READINESS_SCHEMA: &str = "CREATE TABLE IF NOT EXISTS running_task_readiness (
+    task_id TEXT PRIMARY KEY NOT NULL,
+    status INTEGER NOT NULL
+);";
+
+#[napi]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TaskReadiness {
+    Pending,
+    Ready,
+    Failed,
+}
+
+impl TaskReadiness {
+    fn from_db(value: i64) -> anyhow::Result<Self> {
+        match value {
+            0 => Ok(Self::Pending),
+            1 => Ok(Self::Ready),
+            2 => Ok(Self::Failed),
+            other => anyhow::bail!("Unknown task readiness status {}", other),
+        }
+    }
+}
+
 #[napi]
 struct RunningTasksService {
     db: Arc<Mutex<NxDbConnection>>,
@@ -29,6 +55,7 @@ impl RunningTasksService {
             Arc<Mutex<NxDbConnection>>,
         >,
     ) -> anyhow::Result<Self> {
+        db.lock().unwrap().execute_batch(READINESS_SCHEMA)?;
         Ok(Self {
             db: Arc::clone(db),
             added_tasks: Default::default(),
@@ -107,10 +134,18 @@ impl RunningTasksService {
         let cwd = std::env::current_dir()
             .expect("The current working directory does not exist")
             .to_normalized_string();
-        self.db.lock().unwrap().execute(
-            "INSERT OR REPLACE INTO running_tasks (task_id, pid, command, cwd) VALUES (?, ?, ?, ?)",
-            [&task_id, &pid.to_string(), &command_str, &cwd],
-        )?;
+        // Same transaction so a reader never sees a live row with stale readiness
+        self.db.lock().unwrap().transaction(|conn| {
+            conn.execute(
+                "INSERT OR REPLACE INTO running_tasks (task_id, pid, command, cwd) VALUES (?, ?, ?, ?)",
+                [&task_id, &pid.to_string(), &command_str, &cwd],
+            )?;
+            conn.execute(
+                "INSERT OR REPLACE INTO running_task_readiness (task_id, status) VALUES (?, ?)",
+                (&task_id, TaskReadiness::Pending as i64),
+            )?;
+            Ok(())
+        })?;
         debug!("Added {} to running tasks", &task_id);
         self.added_tasks.insert(task_id);
         Ok(())
@@ -118,12 +153,41 @@ impl RunningTasksService {
 
     #[napi]
     pub fn remove_running_task(&self, task_id: String) -> anyhow::Result<()> {
-        self.db
-            .lock()
-            .unwrap()
-            .execute("DELETE FROM running_tasks WHERE task_id = ?", [&task_id])?;
+        self.db.lock().unwrap().transaction(|conn| {
+            conn.execute("DELETE FROM running_tasks WHERE task_id = ?", [&task_id])?;
+            conn.execute(
+                "DELETE FROM running_task_readiness WHERE task_id = ?",
+                [&task_id],
+            )?;
+            Ok(())
+        })?;
         debug!("Removed {} from running tasks", task_id);
         Ok(())
+    }
+
+    /// No-op once the task's row is gone, so a late probe result cannot outlive the task.
+    #[napi]
+    pub fn set_task_readiness(&self, task_id: String, status: TaskReadiness) -> anyhow::Result<()> {
+        self.db.lock().unwrap().execute(
+            "UPDATE running_task_readiness SET status = ? WHERE task_id = ?",
+            (status as i64, &task_id),
+        )?;
+        debug!("Set readiness of {} to {:?}", task_id, status);
+        Ok(())
+    }
+
+    /// `None` when the task is not running or its owner recorded no readiness.
+    #[napi]
+    pub fn get_task_readiness(&self, task_id: String) -> anyhow::Result<Option<TaskReadiness>> {
+        if !self.is_task_running(&task_id)? {
+            return Ok(None);
+        }
+        let status = self.db.lock().unwrap().query_row(
+            "SELECT status FROM running_task_readiness WHERE task_id = ?",
+            [&task_id],
+            |row| row.get::<_, i64>(0),
+        )?;
+        status.map(TaskReadiness::from_db).transpose()
     }
 }
 
@@ -139,8 +203,59 @@ impl Drop for RunningTasksService {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::native::db::initialize::initialize_db;
     use std::env::args_os;
     use std::ffi::OsString;
+
+    fn service() -> (tempfile::TempDir, RunningTasksService) {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let conn = initialize_db(&temp_dir.path().join("test.db")).unwrap();
+        let db = External::new(Arc::new(Mutex::new(conn)));
+        let service = RunningTasksService::new(&db).unwrap();
+        (temp_dir, service)
+    }
+
+    #[test]
+    fn readiness_follows_the_running_row() {
+        let (_dir, mut service) = service();
+        let id = "app:serve".to_string();
+
+        assert_eq!(service.get_task_readiness(id.clone()).unwrap(), None);
+
+        service.add_running_task(id.clone()).unwrap();
+        assert_eq!(
+            service.get_task_readiness(id.clone()).unwrap(),
+            Some(TaskReadiness::Pending)
+        );
+
+        service
+            .set_task_readiness(id.clone(), TaskReadiness::Ready)
+            .unwrap();
+        assert_eq!(
+            service.get_task_readiness(id.clone()).unwrap(),
+            Some(TaskReadiness::Ready)
+        );
+
+        // re-adding (producer restart) resets to pending
+        service.add_running_task(id.clone()).unwrap();
+        assert_eq!(
+            service.get_task_readiness(id.clone()).unwrap(),
+            Some(TaskReadiness::Pending)
+        );
+
+        service.remove_running_task(id.clone()).unwrap();
+        assert_eq!(service.get_task_readiness(id.clone()).unwrap(), None);
+
+        // a late probe result after removal leaves no orphan row
+        service
+            .set_task_readiness(id.clone(), TaskReadiness::Ready)
+            .unwrap();
+        service.add_running_task(id.clone()).unwrap();
+        assert_eq!(
+            service.get_task_readiness(id.clone()).unwrap(),
+            Some(TaskReadiness::Pending)
+        );
+    }
 
     #[test]
     fn test_add_task() {
