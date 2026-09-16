@@ -1165,12 +1165,51 @@ describe('registerSourceGraphResolver CJS path cache isolation', () => {
             development: './src/sub.js',
             default: './dist/sub.js',
           },
+          './feature:one': {
+            development: './src/sub.js',
+            default: './dist/sub.js',
+          },
         },
       }),
+      'workspace/packages/self/src/colon.cjs':
+        "module.exports = require('@proj/self/feature:one');\n",
+      'workspace/packages/self/src/colon.mjs':
+        "import value from '@proj/self/feature:one';\nexport default value;\n",
       'workspace/packages/self/src/index.cjs':
         "module.exports = require('@proj/self/sub');\n",
+      'workspace/packages/self/src/index.mjs':
+        "import value from '@proj/self/sub';\nexport default value;\n",
+      'workspace/packages/self/src/resolve.cjs':
+        "module.exports = require(require.resolve('@proj/self/sub'));\n",
       'workspace/packages/self/src/sub.js': "module.exports = 'self-source';\n",
       'workspace/packages/self/dist/sub.js': "module.exports = 'self-dist';\n",
+      'workspace/packages/fs/package.json': JSON.stringify({
+        name: 'fs',
+        exports: {
+          '.': {
+            development: './src/index.js',
+            default: './dist/index.js',
+          },
+        },
+      }),
+      'workspace/packages/fs/src/entry.cjs':
+        "module.exports = require('fs') === require('node:fs') ? 'builtin' : require('fs');\n",
+      'workspace/packages/fs/src/index.js': "module.exports = 'fs-source';\n",
+      'workspace/packages/fs/dist/index.js': "module.exports = 'fs-dist';\n",
+      'workspace/packages/dot/package.json': JSON.stringify({
+        name: '.',
+        exports: {
+          './actual.cjs': {
+            development: './source.cjs',
+            default: './dist.cjs',
+          },
+        },
+      }),
+      'workspace/packages/dot/entry.mjs':
+        "import value from './actual.cjs';\nexport default value;\n",
+      'workspace/packages/dot/actual.cjs': "module.exports = 'relative';\n",
+      'workspace/packages/dot/source.cjs': "module.exports = 'dot-source';\n",
+      'workspace/packages/dot/dist.cjs': "module.exports = 'dot-dist';\n",
       // A null exports map must fall through to the linked package.
       'workspace/packages/null-exports/package.json': JSON.stringify({
         name: '@proj/null-exports',
@@ -1198,10 +1237,12 @@ describe('registerSourceGraphResolver CJS path cache isolation', () => {
         `}`,
         `const { registerSourceGraphResolver } = require(${JSON.stringify(registerTsPath)});`,
         `const entry = ${JSON.stringify(workspaceDir)} + '/' + process.argv[3];`,
-        `const cleanup = registerSourceGraphResolver(entry, ${JSON.stringify(workspaceDir)}, [process.argv[4]]);`,
-        `const result = require(entry);`,
-        `cleanup();`,
-        `console.log(JSON.stringify(result));`,
+        `const cleanup = registerSourceGraphResolver(entry, ${JSON.stringify(workspaceDir)}, process.argv[4] ? [process.argv[4]] : []);`,
+        `(async () => {`,
+        `  const result = entry.endsWith('.mjs') ? (await import(entry)).default : require(entry);`,
+        `  cleanup();`,
+        `  console.log(JSON.stringify(result));`,
+        `})();`,
       ].join('\n'),
       'run.cjs': [
         `require(${JSON.stringify(swcRegisterPath)}).register({ esModuleInterop: true });`,
@@ -1369,6 +1410,79 @@ describe('registerSourceGraphResolver CJS path cache isolation', () => {
           '@proj/null-exports'
         )
       ).toBe('linked-source');
+    },
+    120_000
+  );
+
+  it.each([
+    ['packages/self/src/index.cjs', 'hooks'],
+    ['packages/self/src/index.cjs', 'no-hooks'],
+    ['packages/self/src/resolve.cjs', 'hooks'],
+    ['packages/self/src/resolve.cjs', 'no-hooks'],
+  ] as const)(
+    'resolves a self-reference of a package outside the graph package names (%s, %s)',
+    (entry, hooks) => {
+      expect(runSelfReference(hooks, entry, '')).toBe('self-source');
+    },
+    120_000
+  );
+
+  it.runIf(registerHooksAvailable)(
+    'resolves an ESM self-reference of a package outside the graph package names',
+    () => {
+      expect(runSelfReference('hooks', 'packages/self/src/index.mjs', '')).toBe(
+        'self-source'
+      );
+    },
+    120_000
+  );
+
+  it.each([
+    ['hooks', ''],
+    ['no-hooks', ''],
+    ['hooks', '@proj/self'],
+    ['no-hooks', '@proj/self'],
+  ] as const)(
+    'resolves a subpath export with a colon (%s, graph names: "%s")',
+    (hooks, packageName) => {
+      expect(
+        runSelfReference(hooks, 'packages/self/src/colon.cjs', packageName)
+      ).toBe('self-source');
+    },
+    120_000
+  );
+
+  it.runIf(registerHooksAvailable).each(['', '@proj/self'])(
+    'resolves an ESM subpath export with a colon (graph names: "%s")',
+    (packageName) => {
+      expect(
+        runSelfReference('hooks', 'packages/self/src/colon.mjs', packageName)
+      ).toBe('self-source');
+    },
+    120_000
+  );
+
+  it.each([
+    ['hooks', ''],
+    ['no-hooks', ''],
+    ['hooks', 'fs'],
+    ['no-hooks', 'fs'],
+  ] as const)(
+    'keeps the builtin when a package has its name (%s, graph names: "%s")',
+    (hooks, packageName) => {
+      expect(
+        runSelfReference(hooks, 'packages/fs/src/entry.cjs', packageName)
+      ).toBe('builtin');
+    },
+    120_000
+  );
+
+  it.runIf(registerHooksAvailable).each(['', '.'])(
+    'keeps a relative ESM import out of a package named "." (graph names: "%s")',
+    (packageName) => {
+      expect(
+        runSelfReference('hooks', 'packages/dot/entry.mjs', packageName)
+      ).toBe('relative');
     },
     120_000
   );

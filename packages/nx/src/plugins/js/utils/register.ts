@@ -8,6 +8,7 @@ import {
   sep,
 } from 'path';
 import { existsSync, readFileSync, realpathSync } from 'fs';
+import { isBuiltin } from 'module';
 import { resolve as resolveExports } from 'resolve.exports';
 import type { TsConfigOptions } from 'ts-node';
 import type { CompilerOptions } from 'typescript';
@@ -596,7 +597,8 @@ function registerSourceGraphHooks(module: typeof import('node:module')): {
     };
   }
 
-  const { pathToFileURL } = require('node:url') as typeof import('node:url');
+  const { fileURLToPath, pathToFileURL } =
+    require('node:url') as typeof import('node:url');
   const hooks = module.registerHooks({
     resolve(specifier, context, nextResolve) {
       const sourceGraph = context.parentURL
@@ -608,7 +610,11 @@ function registerSourceGraphHooks(module: typeof import('node:module')): {
 
       let result: { url: string; shortCircuit?: boolean };
       if (
-        sourceGraph.packageNames.has(getPackageNameFromSpecifier(specifier))
+        isGraphPackageRequest(
+          specifier,
+          fileURLToPath(context.parentURL!),
+          sourceGraph
+        )
       ) {
         // Resolve directly to keep conditioned results out of
         // condition-agnostic CJS caches; fall back with the original context.
@@ -684,7 +690,7 @@ function resolveWorkspaceRequestFromGraph(
     return null;
   }
   const graph = sourceGraphModulePaths.get(parent.filename);
-  if (!graph || !graph.packageNames.has(getPackageNameFromSpecifier(request))) {
+  if (!graph || !isGraphPackageRequest(request, parent.filename, graph)) {
     return null;
   }
   const { pathToFileURL } = require('node:url') as typeof import('node:url');
@@ -762,6 +768,7 @@ export function refreshSourceGraphResolvers(
   getWorkspacePackageNames?: () => string[]
 ): void {
   workspaceManifestCache.clear();
+  packageScopeCache.clear();
   if (sourceGraphs.size === 0) return;
   root = canonicalPath(root);
   const conditions = getRootTsConfigResolveExportsConditions(root);
@@ -949,6 +956,7 @@ const workspaceManifestCache = new Map<
   string,
   { name?: string; exports?: unknown }
 >();
+const packageScopeCache = new Map<string, string | null>();
 
 function readWorkspaceManifest(packageJsonPath: string): {
   name?: string;
@@ -1041,24 +1049,33 @@ function findSelfReferencePackageJson(
   packageName: string,
   fromDir: string
 ): string | null {
-  let dir = fromDir;
-  while (basename(dir) !== 'node_modules') {
-    const candidate = join(dir, 'package.json');
-    if (existsSync(candidate)) {
-      try {
-        const { name, exports } = readWorkspaceManifest(candidate);
-        return name === packageName && exports != null ? candidate : null;
-      } catch {
-        return null;
+  let scope = packageScopeCache.get(fromDir);
+  if (scope === undefined) {
+    scope = null;
+    let dir = fromDir;
+    while (basename(dir) !== 'node_modules') {
+      const candidate = join(dir, 'package.json');
+      if (existsSync(candidate)) {
+        scope = candidate;
+        break;
       }
+      const parent = dirname(dir);
+      if (parent === dir) {
+        break;
+      }
+      dir = parent;
     }
-    const parent = dirname(dir);
-    if (parent === dir) {
-      break;
-    }
-    dir = parent;
+    packageScopeCache.set(fromDir, scope);
   }
-  return null;
+  if (!scope) {
+    return null;
+  }
+  try {
+    const { name, exports } = readWorkspaceManifest(scope);
+    return name === packageName && exports != null ? scope : null;
+  } catch {
+    return null;
+  }
 }
 
 function findNodeModulesPackageJson(
@@ -1111,6 +1128,25 @@ function findPnpPackageJson(
   } catch {
     return null;
   }
+}
+
+function isGraphPackageRequest(
+  specifier: string,
+  parentPath: string,
+  graph: SourceGraph
+): boolean {
+  const packageName = getPackageNameFromSpecifier(specifier);
+  // Manifest names are unvalidated ('.', 'fs'), so only bare non-builtin
+  // specifiers may match one.
+  return (
+    !isBuiltin(specifier) &&
+    !specifier.startsWith('.') &&
+    !specifier.startsWith('/') &&
+    !specifier.startsWith('#') &&
+    !packageName.includes(':') &&
+    (graph.packageNames.has(packageName) ||
+      findSelfReferencePackageJson(packageName, dirname(parentPath)) !== null)
+  );
 }
 
 function getPackageNameFromSpecifier(specifier: string): string {
