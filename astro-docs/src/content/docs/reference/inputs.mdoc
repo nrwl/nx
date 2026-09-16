@@ -137,9 +137,29 @@ A glob such as `{workspaceRoot}/**` is allowed, but it covers every gitignored f
 A new matching file counts without a configuration change.
 A path can name a file that doesn't exist yet: the cache key changes when the file appears or is removed.
 
-A `!` negation with `includeIgnored: true` filters every `includeIgnored` glob declared for the same project.
+A `!` negation with `includeIgnored: true` filters every `includeIgnored` glob resolved with it.
+For a fileset on the project itself, that's the project's other `includeIgnored` globs.
+For one with `dependencies: true`, it's the globs carrying that flag, applied together to each dependency:
+
+```jsonc
+{
+  "inputs": [
+    {
+      "fileset": "{projectRoot}/dist/**",
+      "includeIgnored": true,
+      "dependencies": true,
+    },
+    {
+      "fileset": "!{projectRoot}/dist/**/*.map",
+      "includeIgnored": true,
+      "dependencies": true,
+    },
+  ],
+}
+```
+
 Without the flag it's a normal fileset and doesn't affect them.
-A negation with nothing to filter is a configuration error, and a negation can't be combined with `dependencies: true`.
+A negation with nothing to filter is a configuration error.
 
 A glob never walks into `node_modules`, `.git`, `.nx/cache`, `.nx/workspace-data`, or `.yarn/cache` unless it names a path inside one of them.
 It also skips the timestamp files Vite and Vitest write beside their config, such as `vite.config.ts.timestamp-1700000000000.mjs`.
