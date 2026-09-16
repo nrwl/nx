@@ -9,7 +9,7 @@ use anyhow::Result;
 use rayon::prelude::*;
 use xxhash_rust::xxh3;
 
-use super::disk_expansion::{FilesExpansion, expand_files};
+use super::disk_expansion::{FilesExpansion, Source, expand_globs};
 use crate::native::workspace::ignored_index::IgnoredIndex;
 
 /// Folds `(path, content hash)` pairs in path order, like a fileset; a file
@@ -54,12 +54,18 @@ pub(crate) fn index_file_map(files: &[crate::native::types::FileData]) -> HashMa
 #[napi]
 /// The files an `includeIgnored` fileset group matches on disk, sorted.
 pub fn expand_files_input(workspace_root: String, globs: Vec<String>) -> Result<Vec<String>> {
-    Ok(expand_files(Path::new(&workspace_root), &globs)?.files)
+    let workspace_root = Path::new(&workspace_root);
+    Ok(expand_globs(
+        workspace_root,
+        &globs,
+        &Source::fileset_from_disk(workspace_root),
+    )?
+    .files)
 }
 
 #[cfg(test)]
 mod tests {
-    use super::super::disk_expansion::tests::{globs, workspace};
+    use super::super::disk_expansion::tests::{expand_files, globs, workspace};
     use super::*;
     use assert_fs::prelude::*;
 

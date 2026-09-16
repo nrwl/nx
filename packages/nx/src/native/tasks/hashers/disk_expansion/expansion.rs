@@ -31,8 +31,9 @@ pub(crate) enum Reach {
 /// predicate, the files under it the predicate admits, sorted. `None` when
 /// the directory cannot be read. The index answers this, from a listing it
 /// keeps or from the disk; the expansion never reads a directory itself.
-pub(crate) type FilesUnder<'a> =
-    &'a (dyn Fn(&str, &(dyn Fn(&str) -> bool + Sync)) -> Option<Vec<String>> + Sync);
+pub(crate) type FilesUnderFn<'a> =
+    dyn Fn(&str, &(dyn Fn(&str) -> bool + Sync)) -> Option<Vec<String>> + Sync + 'a;
+pub(crate) type FilesUnder<'a> = &'a FilesUnderFn<'a>;
 
 /// For a caller with no workspace context: every path is checked on disk.
 pub(crate) const NOTHING_KNOWN: &(dyn Fn(&str) -> bool + Sync) = &|_| false;
@@ -44,7 +45,7 @@ pub(crate) struct Source<'a> {
     /// vouches for needs no stat.
     known: &'a (dyn Fn(&str) -> bool + Sync),
     /// What a directory holds, see `FilesUnder`.
-    files_under: FilesUnder<'a>,
+    files_under: Box<FilesUnderFn<'a>>,
     reach: Reach,
 }
 
@@ -58,7 +59,19 @@ impl<'a> Source<'a> {
     ) -> Self {
         Self {
             known,
-            files_under,
+            files_under: Box::new(files_under),
+            reach: Reach::InsideWorkspace,
+        }
+    }
+
+    /// A fileset for a caller with no workspace context: every directory is
+    /// walked and every path checked on disk.
+    pub(crate) fn fileset_from_disk(workspace_root: &'a Path) -> Self {
+        Self {
+            known: NOTHING_KNOWN,
+            files_under: Box::new(move |dir, accept| {
+                files_under(workspace_root, dir, true, accept)
+            }),
             reach: Reach::InsideWorkspace,
         }
     }
@@ -69,7 +82,7 @@ impl<'a> Source<'a> {
     pub(crate) fn declared_outputs(files_under: FilesUnder<'a>) -> Self {
         Self {
             known: NOTHING_KNOWN,
-            files_under,
+            files_under: Box::new(files_under),
             reach: Reach::WhereverItPoints,
         }
     }
@@ -80,27 +93,17 @@ pub struct FilesExpansion {
     pub files: Vec<String>,
 }
 
-/// Expands an `includeIgnored` fileset group. `known` says whether the
-/// workspace context tracks a path: an exact path it knows is a member
-/// without touching the disk, and a walked file it knows needs no stamp.
-/// Every positive glob is resolved from its literal prefix, then the
-/// negations filter the result. Walks skip the same directories the workspace
-/// walker never enters, but an exact path or a prefix inside one of them is
-/// read as-is. Nothing outside the workspace is read, symlinks included.
-pub fn expand_files_with(
+/// Expands a group of globs into the files it names. `source` says what the
+/// expansion may lean on instead of the disk, see `expand_entries`. Every
+/// positive glob is resolved from its literal prefix, then the negations
+/// filter the result.
+pub(crate) fn expand_globs(
     workspace_root: &Path,
     globs: &[String],
-    known: &(dyn Fn(&str) -> bool + Sync),
+    source: &Source,
 ) -> Result<FilesExpansion> {
     let (positives, negations) = parse_group(globs)?;
-    expand_entries(
-        workspace_root,
-        &positives,
-        &negations,
-        &Source::fileset(known, &|dir, accept| {
-            files_under(workspace_root, dir, true, accept)
-        }),
-    )
+    expand_entries(workspace_root, &positives, &negations, source)
 }
 
 /// A group's entries split at their literal prefixes, positives then negations.
@@ -120,11 +123,14 @@ pub(super) fn parse_group(globs: &[String]) -> Result<(Vec<Positive>, Vec<Negati
     Ok((positives, negations))
 }
 
-/// `expand_files_with` for entries the caller has already split. `source`
-/// says which of the two callers this is: a fileset, which may lean on the
+/// Resolves already-split entries into the files they name. `source` says
+/// which of the two callers this is: a fileset, which may lean on the
 /// workspace context and an index and may not read outside the workspace, or
-/// declared outputs, which are read wherever they point. A directory the
-/// source can list is taken from the list; any other is walked.
+/// declared outputs, which are read wherever they point. A path the source
+/// vouches for needs no stat, a walked file it knows needs no stamp, and a
+/// directory it can list is taken from the list; any other is walked. Walks
+/// skip the same directories the workspace walker never enters, but an exact
+/// path or a prefix inside one of them is read as-is.
 pub(crate) fn expand_entries(
     workspace_root: &Path,
     positives: &[Positive],
@@ -207,31 +213,6 @@ pub(crate) fn expand_entries(
     found.sort_unstable();
     found.dedup();
     Ok(FilesExpansion { files: found })
-}
-
-/// `expand_files_with` without a workspace context: every path is checked on
-/// disk.
-pub fn expand_files(workspace_root: &Path, globs: &[String]) -> Result<FilesExpansion> {
-    expand_files_with(workspace_root, globs, NOTHING_KNOWN)
-}
-
-pub(crate) fn expand_files_cached(
-    workspace_root: &Path,
-    key: &str,
-    globs: &[String],
-    cache: &FilesExpansionCache,
-    known: &(dyn Fn(&str) -> bool + Sync),
-    files_under: FilesUnder,
-) -> Result<Arc<FilesExpansion>> {
-    expand_cached(key, cache, || {
-        let (positives, negations) = parse_group(globs)?;
-        expand_entries(
-            workspace_root,
-            &positives,
-            &negations,
-            &Source::fileset(known, files_under),
-        )
-    })
 }
 
 pub(crate) fn expand_cached(

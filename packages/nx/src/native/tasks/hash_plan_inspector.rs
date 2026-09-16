@@ -1,10 +1,11 @@
 use crate::native::tasks::hashers::{
-    ProjectFileIndicesCache, collect_json_input_files, collect_project_file_paths_cached,
-    collect_workspace_file_paths, expand_files_with, resolve_task_output_files,
+    ProjectFileIndicesCache, Source, collect_json_input_files, collect_project_file_paths_cached,
+    collect_workspace_file_paths, expand_globs, resolve_task_output_files,
 };
 use crate::native::tasks::task_hasher::{HashInputs, HashInputsBuilder};
 use crate::native::tasks::types::{HashInstruction, HashPlans};
 use crate::native::types::FileData;
+use crate::native::walker::files_under;
 use hashbrown::HashSet;
 use napi::bindgen_prelude::External;
 use rayon::prelude::*;
@@ -168,10 +169,13 @@ impl HashPlanInspector {
                 })
             }
             HashInstruction::IgnoredFileSet(globs) => {
-                let expansion = expand_files_with(
-                    std::path::Path::new(&self.workspace_root),
+                let workspace_root = std::path::Path::new(&self.workspace_root);
+                let expansion = expand_globs(
+                    workspace_root,
                     globs,
-                    &|path| self.tracked().contains(path),
+                    &Source::fileset(&|path| self.tracked().contains(path), &|dir, accept| {
+                        files_under(workspace_root, dir, true, accept)
+                    }),
                 )?;
                 Ok(HashInputsBuilder {
                     files: expansion.files.into_iter().collect(),

@@ -10,10 +10,10 @@ mod entries;
 mod expansion;
 
 pub(crate) use entries::{Negation, Positive};
+pub use expansion::FilesExpansion;
 pub(crate) use expansion::validate_files_globs;
-pub use expansion::{FilesExpansion, expand_files, expand_files_with};
 pub(crate) use expansion::{
-    FilesExpansionCache, Source, expand_cached, expand_entries, expand_files_cached,
+    FilesExpansionCache, Source, expand_cached, expand_entries, expand_globs,
 };
 #[cfg(test)]
 use expansion::{NOTHING_KNOWN, parse_group, validate_files_glob};
@@ -21,8 +21,35 @@ use expansion::{NOTHING_KNOWN, parse_group, validate_files_glob};
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
+    use crate::native::walker::files_under;
+    use anyhow::Result;
     use assert_fs::TempDir;
     use assert_fs::prelude::*;
+    use std::path::Path;
+
+    /// The disk-backed source, which is what most of these tests expand from.
+    pub(crate) fn expand_files(workspace_root: &Path, globs: &[String]) -> Result<FilesExpansion> {
+        expand_globs(
+            workspace_root,
+            globs,
+            &Source::fileset_from_disk(workspace_root),
+        )
+    }
+
+    /// `expand_files` with a workspace context to lean on.
+    fn expand_files_with(
+        workspace_root: &Path,
+        globs: &[String],
+        known: &(dyn Fn(&str) -> bool + Sync),
+    ) -> Result<FilesExpansion> {
+        expand_globs(
+            workspace_root,
+            globs,
+            &Source::fileset(known, &|dir, accept| {
+                files_under(workspace_root, dir, true, accept)
+            }),
+        )
+    }
 
     pub(crate) fn workspace() -> TempDir {
         let temp = TempDir::new().unwrap();

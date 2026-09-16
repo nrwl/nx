@@ -17,9 +17,9 @@ use crate::native::{
 };
 use crate::native::{
     tasks::hashers::{
-        FilesExpansionCache, JsonHashResult, ProjectFileIndicesCache, ProjectFileSetCache,
+        FilesExpansionCache, JsonHashResult, ProjectFileIndicesCache, ProjectFileSetCache, Source,
         WorkspaceFileIndicesCache, WorkspaceFileSetCache, collect_project_file_paths_cached,
-        collect_workspace_file_paths_cached, expand_files_cached, hash_all_externals,
+        collect_workspace_file_paths_cached, expand_cached, expand_globs, hash_all_externals,
         hash_external, hash_files, hash_json_files, hash_project_config, hash_project_files_cached,
         hash_task_output, hash_tsconfig_selectively, hash_workspace_files_cached, index_file_map,
         output_prefixes,
@@ -786,14 +786,17 @@ impl TaskHasher {
                     self.ignored_index
                         .files_under(workspace_root, dir, trust_file_map, accept)
                 };
-                let expansion = expand_files_cached(
-                    workspace_root,
-                    &instruction.to_string(),
-                    globs,
-                    files_expansion_cache,
-                    &|path| trust_file_map && self.workspace_file_known(path),
-                    &files_under,
-                )?;
+                let expansion =
+                    expand_cached(&instruction.to_string(), files_expansion_cache, || {
+                        expand_globs(
+                            workspace_root,
+                            globs,
+                            &Source::fileset(
+                                &|path| trust_file_map && self.workspace_file_known(path),
+                                &files_under,
+                            ),
+                        )
+                    })?;
                 let hashed = hash_files(
                     workspace_root,
                     &expansion,
