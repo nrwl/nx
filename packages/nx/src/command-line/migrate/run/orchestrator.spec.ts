@@ -104,6 +104,7 @@ import {
 import { BrokerStaleRequestError, BrokerUnavailableError } from './broker';
 import { answered, readRequest } from './test-utils';
 import { computePlanHash } from './run-id';
+import { hasAnyLiveRunActivity } from './state-lock';
 import {
   findActiveRun,
   migrateRunsDir,
@@ -487,12 +488,20 @@ describe('orchestrator', () => {
       });
     });
 
-    it('runs the checkpoint before the run directory exists so its git add -A cannot track run scratch', async () => {
-      let runDirsAtCheckpoint: number | undefined;
+    it('runs the checkpoint before run.json exists, with the run directory reserved and held', async () => {
+      let atCheckpoint:
+        | { active: string | null; dirs: string[]; reserved: boolean }
+        | undefined;
       mockCheckpoint.mockImplementation(() => {
-        runDirsAtCheckpoint = existsSync(migrateRunsDir(root))
-          ? readdirSync(migrateRunsDir(root)).length
-          : 0;
+        const dirs = activeRunDirNames();
+        atCheckpoint = {
+          active: findActiveRun(root).active?.runId ?? null,
+          dirs,
+          reserved:
+            dirs.length === 1 &&
+            !existsSync(join(migrateRunsDir(root), dirs[0], 'run.json')) &&
+            hasAnyLiveRunActivity(join(migrateRunsDir(root), dirs[0])),
+        };
       });
       mockGetWorkingTreeStatus
         .mockReturnValueOnce('dirty')
@@ -511,7 +520,8 @@ describe('orchestrator', () => {
         validate: undefined,
       });
 
-      expect(runDirsAtCheckpoint).toBe(0);
+      expect(atCheckpoint).toMatchObject({ active: null, reserved: true });
+      expect(activeRunDirNames()).toEqual(atCheckpoint.dirs);
     });
 
     it('records no checkpoint entry and skips the commit on a clean tree', async () => {
@@ -616,17 +626,20 @@ describe('orchestrator', () => {
 
     it('reports a run created by a concurrent init instead of creating a competing run', async () => {
       const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      // A dirty tree, so a checkpoint would be attempted if the ordering let
+      // a losing init reach it.
+      mockGetWorkingTreeStatus.mockReturnValue('dirty');
       // Simulate a concurrent init winning the race between this init's
-      // advisory active-run check and its run creation: the checkpoint's tree
-      // probe is the first git side effect on the fresh path, so a competitor
-      // materializing during it postdates the advisory check.
-      mockGetWorkingTreeStatus.mockImplementationOnce(() => {
+      // advisory active-run check and its reservation: the scratch exposure
+      // probe is the last call before the creation lock on the fresh path,
+      // so a competitor materializing during it postdates the advisory check.
+      mockGetPathCommitExposure.mockImplementationOnce(() => {
         setupRun('competitor-run', {
           steps: [migStep('step-1', '@nx/js:a', 'pending')],
           createCommits: true,
           planHash: computePlanHash(migrationsJson),
         });
-        return 'clean';
+        return 'ignored';
       });
 
       await runOrchestratorInit({
@@ -640,6 +653,7 @@ describe('orchestrator', () => {
       });
 
       expect(activeRunDirNames()).toEqual(['competitor-run']);
+      expect(mockCheckpoint).not.toHaveBeenCalled();
       expect(lastBlock()).toMatchObject({
         runId: 'competitor-run',
         action: 'existing-run',
@@ -647,12 +661,13 @@ describe('orchestrator', () => {
     });
 
     it('reports, under the creation lock, the run a concurrent init created with a different plan', async () => {
-      mockGetWorkingTreeStatus.mockImplementationOnce(() => {
+      mockGetWorkingTreeStatus.mockReturnValue('dirty');
+      mockGetPathCommitExposure.mockImplementationOnce(() => {
         setupRun('competitor-run', {
           steps: [migStep('step-1', '@nx/js:a', 'pending')],
           planHash: 'a-different-plan-hash',
         });
-        return 'clean';
+        return 'ignored';
       });
 
       const result = await runOrchestratorInit({
@@ -670,7 +685,122 @@ describe('orchestrator', () => {
         runId: 'competitor-run',
       });
       expect(activeRunDirNames()).toEqual(['competitor-run']);
+      expect(mockCheckpoint).not.toHaveBeenCalled();
       expect(lastBlock().action).toBe('existing-run');
+    });
+
+    it('refuses at once while another process holds a reservation, and proceeds once it is released', async () => {
+      mockGetWorkingTreeStatus.mockReturnValue('dirty');
+      const reservation = join(migrateRunsDir(root), 'reserved-run');
+      mkdirSync(join(reservation, 'activity'), { recursive: true });
+      const holder = new FileLock(
+        join(reservation, 'activity', '999-cafe.lock')
+      );
+      holder.lock();
+      const input = {
+        root,
+        migrationsJson: { migrations: [genMig('@nx/js', 'a')] },
+        createCommits: true,
+        commitPrefix: 'chore: [nx migration] ',
+        skipInstall: false,
+        installedNxVersion: '23.0.0',
+        validate: undefined as boolean | undefined,
+      };
+
+      try {
+        await expect(runOrchestratorInit(input)).rejects.toThrow(
+          'Another nx migrate process is starting a run (.nx/migrate-runs/reserved-run). Wait for it to finish, then re-run the command.'
+        );
+      } finally {
+        holder.unlock();
+      }
+      expect(activeRunDirNames()).toEqual(['reserved-run']);
+      expect(mockCheckpoint).not.toHaveBeenCalled();
+
+      const result = await runOrchestratorInit(input);
+
+      expect(result.kind).toBe('ready');
+      expect(mockCheckpoint).toHaveBeenCalledTimes(1);
+      // The dead reservation is ignored, not removed.
+      expect(activeRunDirNames()).toContain('reserved-run');
+      expect(findActiveRun(root).activeRunIds).toEqual([
+        findActiveRun(root).active.runId,
+      ]);
+    });
+
+    it('refuses while a reservation is held by a real second process', async () => {
+      const reservation = join(migrateRunsDir(root), 'reserved-run');
+      mkdirSync(join(reservation, 'activity'), { recursive: true });
+      const { spawn } =
+        require('child_process') as typeof import('child_process');
+      const child = spawn(
+        process.execPath,
+        [
+          '-e',
+          `const { FileLock } = require(process.argv[1]);
+           const lock = new FileLock(process.argv[2]);
+           lock.lock();
+           process.stdout.write('held');
+           process.stdin.resume();
+           process.stdin.on('end', () => { lock.unlock(); process.exit(0); });`,
+          join(__dirname, '../../../native/native-bindings.js'),
+          join(reservation, 'activity', 'child.lock'),
+        ],
+        { stdio: ['pipe', 'pipe', 'inherit'] }
+      );
+      await new Promise<void>((resolve) => {
+        child.stdout.on('data', (chunk) => {
+          if (String(chunk).includes('held')) resolve();
+        });
+      });
+      const input = {
+        root,
+        migrationsJson: { migrations: [genMig('@nx/js', 'a')] },
+        createCommits: false,
+        commitPrefix: 'chore: [nx migration] ',
+        skipInstall: false,
+        installedNxVersion: '23.0.0',
+        validate: undefined as boolean | undefined,
+      };
+
+      try {
+        await expect(runOrchestratorInit(input)).rejects.toThrow(
+          'Another nx migrate process is starting a run (.nx/migrate-runs/reserved-run).'
+        );
+      } finally {
+        child.stdin.end();
+        await new Promise((resolve) => child.on('exit', resolve));
+      }
+
+      expect((await runOrchestratorInit(input)).kind).toBe('ready');
+    });
+
+    it('cannot continue or reconcile a reserved run', async () => {
+      const reservation = join(migrateRunsDir(root), 'reserved-run');
+      mkdirSync(join(reservation, 'activity'), { recursive: true });
+      writeFileSync(join(reservation, 'plan-0.json'), '{"migrations":[]}');
+      const holder = new FileLock(
+        join(reservation, 'activity', '999-cafe.lock')
+      );
+      holder.lock();
+      const missing =
+        "No migrate run 'reserved-run' was found under .nx/migrate-runs.";
+
+      try {
+        await expect(
+          runOrchestratorReconcile({ root, runId: 'reserved-run' })
+        ).rejects.toThrow(missing);
+        expect(() =>
+          runOrchestratorResume({
+            root,
+            runId: 'reserved-run',
+            policy: { createCommits: false, skipInstall: false },
+          })
+        ).toThrow(missing);
+      } finally {
+        holder.unlock();
+      }
+      expect(parseBlocks()).toHaveLength(0);
     });
 
     describe('resume policy', () => {
@@ -1582,9 +1712,108 @@ describe('orchestrator', () => {
       expect(runDirNames()).toEqual([runId]);
       expect(state.steps[0].status).toBe('pending');
       expect(logged.map((l) => l.title)).toContain(
-        'Deleted the record of migrate run run-1; starting a new run.'
+        'Deleted the record of migrate run run-1.'
       );
       expect(lastBlock()).toMatchObject({ runId, action: 'initialized' });
+    });
+
+    it('refuses start-fresh while another run is active on disk, before deleting the run or committing', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      const older = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+      });
+      const newer = setupRun('run-2', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+      });
+      writeRunState(newer, {
+        ...readRunState(newer),
+        createdAt: '2026-01-02T00:00:00.000Z',
+      });
+      const before = [readRunState(older), readRunState(newer)];
+
+      await expect(
+        runOrchestratorInit(
+          initInput(migrationsJson, {
+            onExistingRun: 'start-fresh',
+            replaceRunId: 'run-2',
+            createCommits: true,
+          })
+        )
+      ).rejects.toThrow(
+        "Not deleting migrate run 'run-2': other migrate runs are active on disk (run-1), and a new run cannot start alongside them. Remove .nx/migrate-runs/<run id> for each one that should not be continued, then re-run the command."
+      );
+
+      expect(runDirNames()).toEqual(['run-1', 'run-2']);
+      expect([readRunState(older), readRunState(newer)]).toEqual(before);
+      expect(mockCheckpoint).not.toHaveBeenCalled();
+      expect(parseBlocks()).toHaveLength(0);
+    });
+
+    it('reports a run created between the start-fresh checks and the creation lock, deleting nothing', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+      });
+      const before = readRunState(dir);
+      // A competing init publishes its run while the user is being asked.
+      const confirmStart = async () => {
+        const competitor = setupRun('run-2', {
+          steps: [migStep('step-1', '@nx/js:a', 'pending')],
+        });
+        writeRunState(competitor, {
+          ...readRunState(competitor),
+          createdAt: '2026-01-02T00:00:00.000Z',
+        });
+        return true;
+      };
+
+      const result = await runOrchestratorInit(
+        initInput(migrationsJson, {
+          onExistingRun: 'start-fresh',
+          confirmStart,
+        })
+      );
+
+      expect(result).toMatchObject({ kind: 'existing-run', runId: 'run-2' });
+      expect(runDirNames()).toEqual(['run-1', 'run-2']);
+      expect(readRunState(dir)).toEqual(before);
+      expect(logged.map((l) => l.title)).not.toContainEqual(
+        expect.stringContaining('Deleted')
+      );
+    });
+
+    it('refuses under the creation lock a worker that took the run during the start confirmation, before any checkpoint commit', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+      });
+      const before = readRunState(dir);
+      mockGetWorkingTreeStatus.mockReturnValue('dirty');
+      const holder = new FileLock(join(dir, 'activity', '999-cafe.lock'));
+      const confirmStart = async () => {
+        holder.lock();
+        return true;
+      };
+
+      try {
+        await expect(
+          runOrchestratorInit(
+            initInput(migrationsJson, {
+              onExistingRun: 'start-fresh',
+              createCommits: true,
+              confirmStart,
+            })
+          )
+        ).rejects.toThrow(
+          "Not deleting migrate run 'run-1': another nx migrate process is acting on it (an agent session, a reconcile, or a step). Wait for it to end, then re-run the command."
+        );
+      } finally {
+        holder.unlock();
+      }
+
+      expect(runDirNames()).toEqual(['run-1']);
+      expect(readRunState(dir)).toEqual(before);
+      expect(mockCheckpoint).not.toHaveBeenCalled();
     });
 
     it('refuses start-fresh while a dispensed worker is still alive, leaving the run untouched', async () => {

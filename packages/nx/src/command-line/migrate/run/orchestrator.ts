@@ -3,6 +3,7 @@ import { createHash } from 'crypto';
 import {
   lstatSync,
   mkdirSync,
+  readdirSync,
   rmSync,
   writeFileSync,
   type BigIntStats,
@@ -60,6 +61,7 @@ import {
   findActiveRun,
   hasRunState,
   readRunState,
+  migrateRunsDir,
   runDir,
   runHandoffsDir,
   writeRunState,
@@ -75,6 +77,7 @@ import {
   TERMINAL_STEP_STATUSES,
 } from './run-state';
 import {
+  hasAnyLiveRunActivity,
   hasLiveRunActivity,
   holdRunActivity,
   registerRunActivity,
@@ -332,8 +335,14 @@ export async function runOrchestratorInit(
   }
   // Held through confirmStart: a concurrent start-fresh must not delete the
   // run this one was told to replace while the user is still being asked.
+  // The delete's refusals run here first so the common ones land before the
+  // prompt and the checkpoint commit; the authoritative pass is the delete's
+  // own, under the creation lock.
   if (active) {
     holdRunActivity(root, active.runId);
+    withRunCreationLock(root, () =>
+      refuseUndeletableRun(root, active.runId, active.state)
+    );
   }
 
   // Dispensed commands interpolate migration ids verbatim, so every init
@@ -389,18 +398,61 @@ export async function runOrchestratorInit(
       INIT_CONTINUE_HINT
     );
   }
-  // Deleted only once every refusal of the replacement is behind: a refused
-  // start would otherwise have thrown away the run with nothing in its place.
-  // Before any commit, so a refused delete leaves no orphan checkpoint.
-  if (active) {
-    deleteRunForStartFresh(root, active.runId);
+  // The check/create boundary runs under the creation lock: without it, two
+  // concurrent inits could both observe no active run above and create
+  // competing runs against the same workspace. A start-fresh deletes the run
+  // it replaces in this same section: released in between, the lock would
+  // let a concurrent init publish a run this one then reports, with the
+  // replaced run already gone and nothing in its place. The section ends
+  // with the new run's directory reserved but not discoverable (no run.json):
+  // the checkpoint below is a git side effect, which stays outside the lock
+  // (a hook that re-entered nx migrate would otherwise wait on this
+  // process), and while it runs nothing may act on either run. The old one
+  // has no record left; the new one is invisible to discovery, to a
+  // `--run-id`, and to a hold, and its reservation turns a competing init
+  // away. The fallback's .gitignore edit above is idempotent.
+  let deleted = false;
+  const reserved = withRunCreationLock(root, () => {
+    refuseLiveReservation(root);
+    const nowActive = findActiveRunForInit(root, active !== null);
+    if (nowActive && nowActive.runId !== active?.runId) {
+      return nowActive;
+    }
+    if (active) {
+      deleted = deleteRunRecord(root, active.runId);
+    }
+    // The snapshot must exist before run.json makes the run discoverable: a
+    // crash in between must not leave an active run without its plan.
+    mkdirSync(dir, { recursive: true });
+    writeJsonFile(join(dir, PLAN_SNAPSHOT_0), migrationsJson);
+    // Held from here until run.json is written below and past it: a run must
+    // never be discoverable, or reserved, without a holder.
+    registerRunActivity(dir);
+    return null;
+  });
+  if (reserved) {
+    // A run created concurrently since the check above. Reported, not
+    // deleted, even under 'start-fresh': that consent covered the run the
+    // user saw, not one that appeared while this init was running.
+    return reportExistingRun(
+      root,
+      reserved.runId,
+      reserved.state,
+      plannedIds,
+      migrationsPath,
+      emitAgentInstructions,
+      active ? undefined : replaceRunId
+    );
   }
-  // Checkpoint pre-existing working-tree state BEFORE the run dir exists, so
-  // the checkpoint's `git add -A` can't track this run's scratch and a clean
-  // tree stays uncommitted (writing run.json would otherwise dirty it and fire
-  // a spurious checkpoint). A crash between here and createRun leaves the
-  // committed changes orphaned but never lost; the next init re-checkpoints a
-  // now-clean tree as a no-op.
+  if (deleted) {
+    removeDeletedRunDir(root, active.runId);
+  }
+  // Checkpoint pre-existing working-tree state BEFORE run.json exists, so a
+  // clean tree stays uncommitted (writing run.json would otherwise dirty it
+  // and fire a spurious checkpoint). A crash between here and createRun
+  // leaves the committed changes orphaned but never lost, and the reserved
+  // directory unlocked, which discovery ignores; the next init re-checkpoints
+  // a now-clean tree as a no-op.
   const checkpoint = createCommits ? checkpointEntry(root, commitPrefix) : null;
   // The preflight checkpoint swallows its own failures, so the tree itself is
   // the only reliable signal: anything still uncommitted here predates every
@@ -434,49 +486,20 @@ export async function runOrchestratorInit(
     ...(checkpointFailed ? { checkpointFailed: true } : {}),
     analytics: { startEmitted: false, completeEmitted: false },
   };
-  // The check/create boundary runs under the creation lock: without it, two
-  // concurrent inits could both observe no active run above and create
-  // competing runs against the same workspace. The git side effects above
-  // stay outside the lock (locked sections must remain synchronous); a losing
-  // init's checkpoint commit is the same orphan shape as the crash window
-  // above, and the fallback's .gitignore edit is idempotent.
-  const winner = withRunCreationLock(root, () => {
-    const nowActive = findActiveRunForInit(root);
-    if (nowActive) {
-      return nowActive;
-    }
-    // The snapshot must exist before run.json makes the run discoverable: a
-    // crash in between must not leave an active run without its plan.
-    mkdirSync(dir, { recursive: true });
-    writeJsonFile(join(dir, PLAN_SNAPSHOT_0), migrationsJson);
-    // The runbook gets the same crash guarantee: a discoverable run always
-    // has the runbook a resume re-emits from disk. 'wx' creates without
-    // following links, so nothing pre-planted at the path can redirect it.
+  // Under the lock again so discovery never sees run.json half-written next
+  // to the reservation's live hold.
+  withRunCreationLock(root, () => {
+    // The runbook gets the snapshot's crash guarantee: a discoverable run
+    // always has the runbook a resume re-emits from disk. 'wx' creates
+    // without following links, so nothing pre-planted at the path can
+    // redirect it.
     writeFileSync(
       join(dir, RUNBOOK_FILE_NAME),
       renderRunbook(runbookContext(root, runId, state)),
       { flag: 'wx' }
     );
     createRun(root, state);
-    // Held before the lock drops: a start-fresh must never find this run
-    // discoverable and unheld.
-    registerRunActivity(dir);
-    return null;
   });
-  if (winner) {
-    // A run created concurrently since the check above. Reported, not
-    // deleted, even under 'start-fresh': that consent covered the run the
-    // user saw, not one that appeared while this init was running.
-    return reportExistingRun(
-      root,
-      winner.runId,
-      winner.state,
-      plannedIds,
-      migrationsPath,
-      emitAgentInstructions,
-      active ? undefined : replaceRunId
-    );
-  }
 
   return finishInit(root, dir, runId, state, 'created', emitAgentInstructions);
 }
@@ -548,6 +571,28 @@ function findActiveRunForInit(
   return active;
 }
 
+// A run directory without run.json but with a live activity lock is an init
+// between reserving the directory and writing run.json: the checkpoint commit
+// is in flight and no run may start alongside it. Refused at once, never
+// waited for: a git hook re-entering nx migrate during that commit would
+// otherwise wait on the process waiting for the hook. An unlocked one is the
+// remains of an init that died, which discovery ignores like any other
+// directory without run.json. Call under the creation lock.
+function refuseLiveReservation(root: string): void {
+  for (const entry of readdirSync(migrateRunsDir(root), {
+    withFileTypes: true,
+  })) {
+    if (!entry.isDirectory()) continue;
+    const dir = join(migrateRunsDir(root), entry.name);
+    if (hasRunState(dir) || !hasAnyLiveRunActivity(dir)) continue;
+    throw new Error(
+      `Another nx migrate process is starting a run (${MIGRATE_RUNS_RELATIVE_DIR}/${singleLine(
+        entry.name
+      )}). Wait for it to finish, then re-run the command.`
+    );
+  }
+}
+
 function startFreshCommand(
   root: string,
   runId: string,
@@ -596,64 +641,77 @@ function reportExistingRun(
   return { kind: 'existing-run', runId, facts };
 }
 
-// Removes an active run's record so a new run can start. Refused while a
-// worker the run dispensed is still alive: deleting under it would strand a
-// migration mid-flight. run.json goes first, under the state lock, so that
-// from then on no reconcile or worker can discover the run and start against
-// a directory that is about to disappear. The rest is removed after the lock
-// is released, and best effort: the lock file stays open in this process
-// until it is collected, and a directory holding an open file cannot be
-// removed on every platform. What is left holds no run.
-function deleteRunForStartFresh(root: string, runId: string): void {
-  const dir = runDir(root, runId);
+// Throws when the run's record must not be deleted: a worker the run
+// dispensed or another nx migrate process is still acting on it, or another
+// run is active alongside it and would be reported in place of the
+// replacement. `state` is the run state the worker check reads.
+function refuseUndeletableRun(
+  root: string,
+  runId: string,
+  state: MigrateRunState
+): void {
   if (IS_WASM) {
     throw new Error(
       `Not deleting migrate run '${runId}': without a native file lock nx cannot tell whether another nx migrate process is acting on it. Make sure none is, remove ${MIGRATE_RUNS_RELATIVE_DIR}/${runId}, then re-run the command.`
     );
   }
-  // Under the creation lock so no process can register itself on the run
-  // between the probe and the delete.
-  const deleted = withRunCreationLock(root, () => {
+  if (hasLiveRunActivity(runDir(root, runId))) {
+    throw new Error(
+      `Not deleting migrate run '${runId}': another nx migrate process is acting on it (an agent session, a reconcile, or a step). Wait for it to end, then re-run the command.`
+    );
+  }
+  const live = state.steps.filter(
+    (s) => s.status === 'running' && s.pid !== undefined && isPidAlive(s.pid)
+  );
+  if (live.length > 0) {
+    throw new Error(
+      `Not deleting migrate run '${runId}': ${live
+        .map((w) => `pid ${w.pid} is still running ${w.id} (${w.migrationId})`)
+        .join('; ')}. ` +
+        `Wait for it to finish, then re-run the command. If that pid is not an nx migrate worker, stop it or remove ${MIGRATE_RUNS_RELATIVE_DIR}/${runId}, then re-run the command.`
+    );
+  }
+  const others = findActiveRun(root).activeRunIds.filter((id) => id !== runId);
+  if (others.length > 0) {
+    throw new Error(
+      `Not deleting migrate run '${runId}': other migrate runs are active on disk (${others.join(
+        ', '
+      )}), and a new run cannot start alongside them. Remove ${MIGRATE_RUNS_RELATIVE_DIR}/<run id> for each one that should not be continued, then re-run the command.`
+    );
+  }
+}
+
+// Removes the run's record so the replacement can be written in the same
+// creation-lock section. run.json goes under the state lock, so that from
+// then on no reconcile or worker can discover the run and start against a
+// directory that is about to disappear. The refusals are repeated here,
+// against fresh state: the preflight pass predates the confirmation prompt
+// and the checkpoint commit. False when the record was already gone.
+function deleteRunRecord(root: string, runId: string): boolean {
+  const dir = runDir(root, runId);
+  return withRunStateLock(dir, () => {
+    if (!hasRunState(dir)) return false;
+    refuseUndeletableRun(root, runId, readRunState(dir));
+    // Released before the file goes: the hold's lock file is open in this
+    // process, and removeDeletedRunDir cannot remove a directory holding an
+    // open file on every platform.
     releaseRunActivity(dir);
-    if (hasLiveRunActivity(dir)) {
-      throw new Error(
-        `Not deleting migrate run '${runId}': another nx migrate process is acting on it (an agent session, a reconcile, or a step). Wait for it to end, then re-run the command.`
-      );
-    }
-    return withRunStateLock(dir, () => {
-      // A concurrent replacement got here first; the creation lock below then
-      // reports its run.
-      if (!hasRunState(dir)) return false;
-      const fresh = readRunState(dir);
-      const live = fresh.steps.filter(
-        (s) =>
-          s.status === 'running' && s.pid !== undefined && isPidAlive(s.pid)
-      );
-      if (live.length > 0) {
-        throw new Error(
-          `Not deleting migrate run '${runId}': ${live
-            .map(
-              (w) => `pid ${w.pid} is still running ${w.id} (${w.migrationId})`
-            )
-            .join('; ')}. ` +
-            `Wait for it to finish, then re-run the command. If that pid is not an nx migrate worker, stop it or remove ${MIGRATE_RUNS_RELATIVE_DIR}/${runId}, then re-run the command.`
-        );
-      }
-      rmSync(join(dir, RUN_STATE_FILE_NAME), { force: true });
-      return true;
-    });
+    rmSync(join(dir, RUN_STATE_FILE_NAME), { force: true });
+    return true;
   });
-  if (!deleted) return;
+}
+
+// The rest of a deleted run's directory, removed outside the locks and best
+// effort: what is left holds no run.
+function removeDeletedRunDir(root: string, runId: string): void {
   try {
-    rmSync(dir, { recursive: true, force: true });
+    rmSync(runDir(root, runId), { recursive: true, force: true });
   } catch (e) {
     warnToAgent({
       title: `Could not remove the rest of ${MIGRATE_RUNS_RELATIVE_DIR}/${runId}: ${summarizeError(e)}. It no longer holds a run; remove it when convenient.`,
     });
   }
-  logToAgent({
-    title: `Deleted the record of migrate run ${runId}; starting a new run.`,
-  });
+  logToAgent({ title: `Deleted the record of migrate run ${runId}.` });
 }
 
 // The continue tail behind runOrchestratorResume: the runbook, checkpoint and
@@ -718,7 +776,7 @@ function announceResume(runId: string, state: MigrateRunState): void {
 }
 
 // Resume-only checkpoint retry, gated on checkpointFailed: a fresh init always
-// evaluates the checkpoint before the run dir exists, so an unflagged run
+// evaluates the checkpoint before run.json exists, so an unflagged run
 // without a checkpoint entry started from a clean tree and there is nothing to
 // capture (retrying there would commit the run's own scratch instead). Skipped
 // once any migration step has advanced (a late checkpoint would absorb an

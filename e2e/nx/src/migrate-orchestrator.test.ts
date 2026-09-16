@@ -1594,7 +1594,7 @@ describe('migrate orchestrator (dark launch)', () => {
 
     const fresh = runInit(` --start-fresh --run-id=${first.runId}`);
     expect(fresh).toContain(
-      `Deleted the record of migrate run ${first.runId}; starting a new run.`
+      `Deleted the record of migrate run ${first.runId}.`
     );
     const freshInit = parseLastDispense(fresh);
     expect(freshInit.action).toBe('initialized');

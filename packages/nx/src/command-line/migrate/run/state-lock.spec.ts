@@ -19,6 +19,8 @@ import {
 } from './run-state';
 import {
   hasLiveRunActivity,
+  registerRunActivity,
+  releaseRunActivity,
   updateRunState,
   withRunCreationLock,
   withRunStateLock,
@@ -169,6 +171,15 @@ describe('state-lock', () => {
   describe('hasLiveRunActivity', () => {
     it('is free when no process ever registered on the run', () => {
       expect(hasLiveRunActivity(dir)).toBe(false);
+    });
+
+    it("ignores this process's own hold", () => {
+      registerRunActivity(dir);
+      try {
+        expect(hasLiveRunActivity(dir)).toBe(false);
+      } finally {
+        releaseRunActivity(dir);
+      }
     });
 
     it('counts an activity directory it cannot list as live', () => {
