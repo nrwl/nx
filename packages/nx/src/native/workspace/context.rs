@@ -24,7 +24,7 @@ use crate::native::workspace::files_archive::{
     FilesArchive, NxFileHashes, read_files_archive, write_files_archive,
 };
 use crate::native::workspace::files_hashing::{full_files_hash, selective_files_hash};
-use crate::native::workspace::ignored_index::{IgnoredIndex, IgnoredIndexReader};
+use crate::native::workspace::ignored_index::{IgnoredIndex, IgnoredIndexReader, RunStage};
 use crate::native::workspace::types::{
     FileMap, NxWorkspaceFilesExternals, ProjectFiles, UpdatedWorkspaceFiles,
 };
@@ -2402,12 +2402,15 @@ mod tests {
         assert!(!names_of(&ctx).contains(&"dist/out.js".to_string()));
 
         // A hash is trusted until the watch reports the file again.
-        let first = index.hash_file(&root, "dist/out.js", None, true);
+        let first = index.hash_file(&root, "dist/out.js", None, RunStage::NothingRan);
         assert!(index.trusted_hash("dist/out.js").is_some());
         temp.child("dist/out.js").write_str("xx").unwrap();
         ctx.settle();
         assert!(index.trusted_hash("dist/out.js").is_none());
-        assert_ne!(first, index.hash_file(&root, "dist/out.js", None, true));
+        assert_ne!(
+            first,
+            index.hash_file(&root, "dist/out.js", None, RunStage::NothingRan)
+        );
 
         // Tracked files under a registered directory are listed too, and
         // still reach the files.

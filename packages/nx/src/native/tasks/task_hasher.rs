@@ -25,7 +25,7 @@ use crate::native::{
         output_prefixes,
     },
     types::FileData,
-    workspace::ignored_index::IgnoredIndexReader,
+    workspace::ignored_index::{IgnoredIndexReader, RunStage},
     workspace::types::ProjectFiles,
 };
 use dashmap::DashMap;
@@ -400,11 +400,17 @@ impl TaskHasher {
                 anyhow::bail!("hash_plans: missing env entry for task {}", task_id);
             }
         }
-        self.hash_plans_impl(hash_plans, cwd, collect_task_inputs, false, |task_id| {
-            per_task_envs
-                .get(task_id)
-                .expect("per-task env presence verified above")
-        })
+        self.hash_plans_impl(
+            hash_plans,
+            cwd,
+            collect_task_inputs,
+            RunStage::ATaskMayHaveWritten,
+            |task_id| {
+                per_task_envs
+                    .get(task_id)
+                    .expect("per-task env presence verified above")
+            },
+        )
     }
 
     /// Like `hash_plans`, but only for the plans the planner did not defer
@@ -452,11 +458,17 @@ impl TaskHasher {
         // Once per run, before any hashing: the directories this run reads
         // from disk are the index's to keep from here on.
         self.register_prefixes(hash_plans);
-        let hashes = self.hash_plans_impl(&upfront, cwd, collect_task_inputs, true, |task_id| {
-            per_task_envs
-                .get(task_id)
-                .expect("per-task env presence verified above")
-        })?;
+        let hashes = self.hash_plans_impl(
+            &upfront,
+            cwd,
+            collect_task_inputs,
+            RunStage::NothingRan,
+            |task_id| {
+                per_task_envs
+                    .get(task_id)
+                    .expect("per-task env presence verified above")
+            },
+        )?;
         debug!(
             "hash_plans_upfront COMPLETED in {:?} - hashed {} of {} plans up front, {} deferred (partition: {:?}, hashing: {:?})",
             function_start.elapsed(),
@@ -499,23 +511,27 @@ impl TaskHasher {
             plans,
             deferred: std::collections::HashSet::new(),
         };
-        self.hash_plans_impl(&subset, cwd, collect_task_inputs, false, |task_id| {
-            per_task_envs
-                .get(task_id)
-                .expect("per-task env presence verified above")
-        })
+        self.hash_plans_impl(
+            &subset,
+            cwd,
+            collect_task_inputs,
+            RunStage::ATaskMayHaveWritten,
+            |task_id| {
+                per_task_envs
+                    .get(task_id)
+                    .expect("per-task env presence verified above")
+            },
+        )
     }
 
-    /// `trust_file_map` lets a disk-backed fileset take the file map's word
-    /// for tracked files. That holds before any task runs; once one has,
-    /// a tracked file it rewrote is stale in the map, so everything reads
-    /// from disk.
+    /// `run_stage` says whether anything has executed yet, which is what
+    /// decides whether the file map and the index may be taken at their word.
     fn hash_plans_impl<'a, F>(
         &self,
         hash_plans: &HashPlans,
         cwd: String,
         collect_task_inputs: Option<bool>,
-        trust_file_map: bool,
+        run_stage: RunStage,
         resolve_env: F,
     ) -> anyhow::Result<TaskHashes>
     where
@@ -650,7 +666,7 @@ impl TaskHasher {
                                         workspace_file_set_cache: &self.workspace_file_set_cache,
                                         json_file_set_cache: &json_file_set_cache,
                                         files_expansion_cache: &files_expansion_cache,
-                                        trust_file_map,
+                                        run_stage,
                                         cwd: cwd_path,
                                         collect_inputs: should_collect_inputs,
                                     },
@@ -720,7 +736,7 @@ impl TaskHasher {
             workspace_file_set_cache,
             json_file_set_cache,
             files_expansion_cache,
-            trust_file_map,
+            run_stage,
             cwd,
             collect_inputs,
         }: HashInstructionArgs,
@@ -784,8 +800,12 @@ impl TaskHasher {
                 // nothing has run, like the file map; afterwards it reads the
                 // disk for us.
                 let files_under = |dir: &str, accept: &(dyn Fn(&str) -> bool + Sync)| {
-                    self.ignored_index
-                        .files_under(workspace_root, dir, trust_file_map, accept)
+                    self.ignored_index.files_under(
+                        workspace_root,
+                        dir,
+                        run_stage.nothing_ran(),
+                        accept,
+                    )
                 };
                 let expansion =
                     expand_cached(&instruction.to_string(), files_expansion_cache, || {
@@ -793,7 +813,7 @@ impl TaskHasher {
                             workspace_root,
                             globs,
                             &Source::fileset(
-                                &|path| trust_file_map && self.workspace_file_known(path),
+                                &|path| run_stage.nothing_ran() && self.workspace_file_known(path),
                                 &files_under,
                             ),
                         )
@@ -802,14 +822,14 @@ impl TaskHasher {
                     workspace_root,
                     &expansion,
                     |path| {
-                        if trust_file_map {
+                        if run_stage.nothing_ran() {
                             self.workspace_file_hash(path)
                         } else {
                             None
                         }
                     },
                     self.ignored_index.index(),
-                    trust_file_map,
+                    run_stage,
                 );
                 trace!(parent: &span, "hash_files: {:?}", now.elapsed());
                 let inputs = if collect_inputs {
@@ -1011,7 +1031,7 @@ struct HashInstructionArgs<'a> {
     workspace_file_set_cache: &'a WorkspaceFileSetCache,
     json_file_set_cache: &'a DashMap<String, JsonHashResult>,
     files_expansion_cache: &'a FilesExpansionCache,
-    trust_file_map: bool,
+    run_stage: RunStage,
     cwd: &'a std::path::Path,
     collect_inputs: bool,
 }

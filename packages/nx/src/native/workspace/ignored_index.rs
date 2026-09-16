@@ -136,6 +136,22 @@ pub(crate) fn stamp_of(metadata: &std::fs::Metadata) -> FileStamp {
     (mtime, metadata.len())
 }
 
+/// Where a hashing call sits in a run. Before anything executes, the file map
+/// and the index are current, so a hash either holds may be taken without
+/// touching the disk. Once a task has run it may have written files the watch
+/// has not reported yet, and only the disk can settle it.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(crate) enum RunStage {
+    NothingRan,
+    ATaskMayHaveWritten,
+}
+
+impl RunStage {
+    pub(crate) fn nothing_ran(self) -> bool {
+        self == RunStage::NothingRan
+    }
+}
+
 /// Whether `path` is `dir` or sits under it. The root (`""`) holds everything.
 fn under(path: &str, dir: &str) -> bool {
     dir.is_empty()
@@ -489,7 +505,7 @@ impl IgnoredIndex {
 
     /// The content hash of `path`, from the entry when its stamp still
     /// matches (`stamp` is the one expansion read, or the file is stat'ed),
-    /// otherwise read from disk and remembered where hashes are kept. `trust`
+    /// otherwise read from disk and remembered where hashes are kept. `stage`
     /// says the caller has applied every delivered watch event: only then may
     /// a trusted entry answer without a stat, or a read become trusted. A
     /// stamp the caller took earlier predates this call, so it never makes
@@ -500,9 +516,9 @@ impl IgnoredIndex {
         workspace_root: &Path,
         path: &str,
         stamp: Option<FileStamp>,
-        trust: bool,
+        stage: RunStage,
     ) -> Option<String> {
-        if trust
+        if stage.nothing_ran()
             && stamp.is_none()
             && let Some(hash) = self.trusted_hash(path)
         {
@@ -510,7 +526,7 @@ impl IgnoredIndex {
         }
         let generation = self.generation.load(Ordering::Acquire);
         let full_path = workspace_root.join(path);
-        let may_trust = trust
+        let may_trust = stage.nothing_ran()
             && stamp.is_none()
             && self.watch.is_some()
             && self.is_listed(path)
@@ -799,7 +815,7 @@ mod tests {
         index.list(temp.path(), "dist").unwrap();
         let file = temp.path().join("dist/gen/a.js");
         age(&file);
-        let first = index.hash_file(temp.path(), "dist/gen/a.js", None, true);
+        let first = index.hash_file(temp.path(), "dist/gen/a.js", None, RunStage::NothingRan);
         assert_eq!(
             index.trusted_hash("dist/gen/a.js").as_deref(),
             first.as_deref()
@@ -809,17 +825,22 @@ mod tests {
         // the stamp and sees it.
         temp.child("dist/gen/a.js").write_str("rewritten").unwrap();
         assert_eq!(
-            index.hash_file(temp.path(), "dist/gen/a.js", None, true),
+            index.hash_file(temp.path(), "dist/gen/a.js", None, RunStage::NothingRan),
             first
         );
         assert_ne!(
-            index.hash_file(temp.path(), "dist/gen/a.js", None, false),
+            index.hash_file(
+                temp.path(),
+                "dist/gen/a.js",
+                None,
+                RunStage::ATaskMayHaveWritten
+            ),
             first
         );
         // An event drops the trust; the next read makes the entry again.
         index.note_written(temp.path(), "dist/gen/a.js");
         assert!(index.trusted_hash("dist/gen/a.js").is_none());
-        let second = index.hash_file(temp.path(), "dist/gen/a.js", None, true);
+        let second = index.hash_file(temp.path(), "dist/gen/a.js", None, RunStage::NothingRan);
         assert_ne!(first, second);
         assert!(index.trusted_hash("dist/gen/a.js").is_some());
     }
@@ -835,7 +856,7 @@ mod tests {
 
         assert!(
             index
-                .hash_file(temp.path(), "dist/gen/a.js", None, true)
+                .hash_file(temp.path(), "dist/gen/a.js", None, RunStage::NothingRan)
                 .is_some()
         );
         assert!(
@@ -854,12 +875,22 @@ mod tests {
         let file = temp.path().join("dist/gen/a.js");
         age(&file);
         let stamp = stamp_of(&std::fs::metadata(&file).unwrap());
-        let hash = index.hash_file(temp.path(), "dist/gen/a.js", None, false);
+        let hash = index.hash_file(
+            temp.path(),
+            "dist/gen/a.js",
+            None,
+            RunStage::ATaskMayHaveWritten,
+        );
         assert!(hash.is_some());
 
         std::fs::remove_dir_all(temp.path().join("dist/gen")).unwrap();
         assert_eq!(
-            index.hash_file(temp.path(), "dist/gen/a.js", Some(stamp), false),
+            index.hash_file(
+                temp.path(),
+                "dist/gen/a.js",
+                Some(stamp),
+                RunStage::ATaskMayHaveWritten
+            ),
             hash,
             "the held hash answers while the index still has it"
         );
@@ -867,7 +898,12 @@ mod tests {
         index.note_written(temp.path(), "dist/gen");
         assert!(
             index
-                .hash_file(temp.path(), "dist/gen/a.js", Some(stamp), false)
+                .hash_file(
+                    temp.path(),
+                    "dist/gen/a.js",
+                    Some(stamp),
+                    RunStage::ATaskMayHaveWritten
+                )
                 .is_none(),
             "swept, so the read falls through to a disk that has nothing"
         );
@@ -883,11 +919,11 @@ mod tests {
         index.list(temp.path(), "dist").unwrap();
         let file = temp.path().join("dist/gen/a.js");
         age(&file);
-        let first = index.hash_file(temp.path(), "dist/gen/a.js", None, true);
+        let first = index.hash_file(temp.path(), "dist/gen/a.js", None, RunStage::NothingRan);
         index.note_written(temp.path(), "dist/gen/a.js");
         // Untouched on disk: the stamp matches, no read, trusted again.
         assert_eq!(
-            index.hash_file(temp.path(), "dist/gen/a.js", None, true),
+            index.hash_file(temp.path(), "dist/gen/a.js", None, RunStage::NothingRan),
             first
         );
         assert!(index.trusted_hash("dist/gen/a.js").is_some());
@@ -899,13 +935,13 @@ mod tests {
         temp.child("dist/gen/a.js").write_str("r").unwrap();
         set_modified(&file, now);
         index.note_written(temp.path(), "dist/gen/a.js");
-        let too_fresh = index.hash_file(temp.path(), "dist/gen/a.js", None, true);
+        let too_fresh = index.hash_file(temp.path(), "dist/gen/a.js", None, RunStage::NothingRan);
         temp.child("dist/gen/a.js").write_str("s").unwrap();
         set_modified(&file, now);
         index.note_written(temp.path(), "dist/gen/a.js");
         assert_ne!(
             too_fresh,
-            index.hash_file(temp.path(), "dist/gen/a.js", None, true)
+            index.hash_file(temp.path(), "dist/gen/a.js", None, RunStage::NothingRan)
         );
     }
 
@@ -914,11 +950,11 @@ mod tests {
         let temp = workspace();
         let index = watched();
         index.track(temp.path(), "dist");
-        index.hash_file(temp.path(), "src/index.ts", None, true);
+        index.hash_file(temp.path(), "src/index.ts", None, RunStage::NothingRan);
         assert!(!index.remembered("src/index.ts"));
         assert!(index.trusted_hash("src/index.ts").is_none());
         let unwatched = IgnoredIndex::new(None);
-        unwatched.hash_file(temp.path(), "src/index.ts", None, true);
+        unwatched.hash_file(temp.path(), "src/index.ts", None, RunStage::NothingRan);
         assert!(unwatched.remembered("src/index.ts"));
         // Never trusted blind without a watch: the stamp is checked each time.
         assert!(unwatched.trusted_hash("src/index.ts").is_none());
@@ -930,7 +966,12 @@ mod tests {
         let index = watched();
         index.track(temp.path(), "dist");
         assert_eq!(
-            index.hash_file(temp.path(), "dist/gen/absent.js", None, true),
+            index.hash_file(
+                temp.path(),
+                "dist/gen/absent.js",
+                None,
+                RunStage::NothingRan
+            ),
             None
         );
         assert!(!index.remembered("dist/gen/absent.js"));
@@ -978,14 +1019,14 @@ mod tests {
                 .contains(&"dist/gen/link.js".to_string())
         );
         age(&temp.path().join("shared/real.js"));
-        let first = index.hash_file(temp.path(), "dist/gen/link.js", None, true);
+        let first = index.hash_file(temp.path(), "dist/gen/link.js", None, RunStage::NothingRan);
         assert!(index.trusted_hash("dist/gen/link.js").is_none());
         // The watch reports the target, which is outside the prefix; the
         // link is re-checked by its stamp and sees the change.
         temp.child("shared/real.js").write_str("two!").unwrap();
         assert_ne!(
             first,
-            index.hash_file(temp.path(), "dist/gen/link.js", None, true)
+            index.hash_file(temp.path(), "dist/gen/link.js", None, RunStage::NothingRan)
         );
     }
 
@@ -1028,16 +1069,26 @@ mod tests {
         let file = temp.path().join("dist/gen/a.js");
         age(&file);
         let old = stamp_of(&std::fs::metadata(&file).unwrap());
-        index.hash_file(temp.path(), "dist/gen/a.js", None, true);
+        index.hash_file(temp.path(), "dist/gen/a.js", None, RunStage::NothingRan);
         temp.child("dist/gen/a.js").write_str("rewritten").unwrap();
         age(&file);
         index.note_written(temp.path(), "dist/gen/a.js");
         // A walker's stamp from before the write matches the old entry: it
         // may answer, but it must not re-arm the trust.
-        index.hash_file(temp.path(), "dist/gen/a.js", Some(old), false);
-        index.hash_file(temp.path(), "dist/gen/a.js", Some(old), true);
+        index.hash_file(
+            temp.path(),
+            "dist/gen/a.js",
+            Some(old),
+            RunStage::ATaskMayHaveWritten,
+        );
+        index.hash_file(
+            temp.path(),
+            "dist/gen/a.js",
+            Some(old),
+            RunStage::NothingRan,
+        );
         assert!(index.trusted_hash("dist/gen/a.js").is_none());
-        let fresh = index.hash_file(temp.path(), "dist/gen/a.js", None, true);
+        let fresh = index.hash_file(temp.path(), "dist/gen/a.js", None, RunStage::NothingRan);
         assert_eq!(fresh, index.trusted_hash("dist/gen/a.js"));
     }
 
@@ -1049,14 +1100,24 @@ mod tests {
         // Tracked but never listed, as a declared output is: its hashes are
         // kept, and nothing is trusted, because no walk vouched for it.
         assert!(!index.is_listed("dist/other/c.js"));
-        index.hash_file(temp.path(), "dist/other/c.js", None, false);
+        index.hash_file(
+            temp.path(),
+            "dist/other/c.js",
+            None,
+            RunStage::ATaskMayHaveWritten,
+        );
         assert!(index.remembered("dist/other/c.js"));
         assert!(index.trusted_hash("dist/other/c.js").is_none());
         std::fs::remove_dir_all(temp.path().join("dist/other")).unwrap();
         index.note_deleted("dist/other");
         assert!(!index.remembered("dist/other/c.js"));
         // Outside every listed or kept prefix, a watching index keeps nothing.
-        index.hash_file(temp.path(), "src/index.ts", None, false);
+        index.hash_file(
+            temp.path(),
+            "src/index.ts",
+            None,
+            RunStage::ATaskMayHaveWritten,
+        );
         assert!(!index.remembered("src/index.ts"));
     }
 

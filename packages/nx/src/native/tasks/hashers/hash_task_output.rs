@@ -7,7 +7,7 @@ use super::disk_expansion::{
 };
 use super::hash_ignored_files::hash_files;
 use crate::native::glob::{build_glob_set, literal_prefix};
-use crate::native::workspace::ignored_index::IgnoredIndex;
+use crate::native::workspace::ignored_index::{IgnoredIndex, RunStage};
 
 /// Result of hashing task output files, including the matched file paths
 pub struct TaskOutputHashResult {
@@ -55,7 +55,13 @@ pub fn hash_task_output(
 ) -> Result<TaskOutputHashResult> {
     let expansion = expand_task_outputs(workspace_root, glob, outputs, cache)?;
     // Written by a task that has run, so never taken on trust.
-    let hash = hash_files(workspace_root, &expansion, |_| None, index, false);
+    let hash = hash_files(
+        workspace_root,
+        &expansion,
+        |_| None,
+        index,
+        RunStage::ATaskMayHaveWritten,
+    );
     Ok(TaskOutputHashResult {
         hash,
         files: expansion.files,
