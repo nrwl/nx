@@ -290,6 +290,7 @@ impl IgnoredIndex {
     }
 
     /// A reported deletion of a file, or of a directory and all under it.
+    #[cfg(test)]
     pub(crate) fn note_deleted(&self, path: &str) {
         self.note_deleted_all(std::slice::from_ref(&path));
     }
@@ -318,6 +319,9 @@ impl IgnoredIndex {
         if !sweep.is_empty() {
             self.contents
                 .retain(|p, _| !sweep.iter().any(|dir| under(p, dir)));
+            // A swept prefix leaves its table behind; the pass is already
+            // linear, so give the capacity back with it.
+            self.contents.shrink_to_fit();
         }
     }
 
@@ -699,6 +703,55 @@ mod tests {
         let second = index.hash_file(temp.path(), "dist/gen/a.js", None, true);
         assert_ne!(first, second);
         assert!(index.trusted_hash("dist/gen/a.js").is_some());
+    }
+
+    // A declared output root is kept without being listed, so a walk never
+    // vouched for what is under it and a held hash cannot be served blind.
+    #[test]
+    fn a_file_kept_without_being_listed_is_never_trusted() {
+        let temp = workspace();
+        let index = watched();
+        assert!(index.keep("dist"));
+        age(&temp.path().join("dist/gen/a.js"));
+
+        assert!(
+            index
+                .hash_file(temp.path(), "dist/gen/a.js", None, true)
+                .is_some()
+        );
+        assert!(
+            index.trusted_hash("dist/gen/a.js").is_none(),
+            "kept is not listed, so the hash is remembered but not trusted"
+        );
+    }
+
+    // Under a kept prefix there are no members to range over, so a directory
+    // reported written after it went holds its hashes only through the sweep.
+    #[test]
+    fn a_kept_directory_reported_written_after_it_went_forgets_its_hashes() {
+        let temp = workspace();
+        let index = watched();
+        assert!(index.keep("dist"));
+        let file = temp.path().join("dist/gen/a.js");
+        age(&file);
+        let stamp = stamp_of(&std::fs::metadata(&file).unwrap());
+        let hash = index.hash_file(temp.path(), "dist/gen/a.js", None, false);
+        assert!(hash.is_some());
+
+        std::fs::remove_dir_all(temp.path().join("dist/gen")).unwrap();
+        assert_eq!(
+            index.hash_file(temp.path(), "dist/gen/a.js", Some(stamp), false),
+            hash,
+            "the held hash answers while the index still has it"
+        );
+
+        index.note_written(temp.path(), "dist/gen");
+        assert!(
+            index
+                .hash_file(temp.path(), "dist/gen/a.js", Some(stamp), false)
+                .is_none(),
+            "swept, so the read falls through to a disk that has nothing"
+        );
     }
 
     #[test]
