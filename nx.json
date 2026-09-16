@@ -497,6 +497,9 @@
         "rule": "./tools/workspace-plugin/dist/src/conformance-rules/relative-image-imports"
       },
       {
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/headings-in-tabs"
+      },
+      {
         "rule": "./tools/workspace-plugin/dist/src/conformance-rules/types-versions-exports-sync"
       },
       {
