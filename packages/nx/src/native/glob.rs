@@ -1,8 +1,12 @@
 pub mod glob_files;
 mod glob_group;
 mod glob_parser;
+mod glob_text;
 pub mod glob_transform;
 
+pub(crate) use crate::native::glob::glob_text::{
+    expand_literal_braces, literal_prefix, normalize_glob,
+};
 use crate::native::glob::glob_transform::convert_glob;
 use dashmap::DashMap;
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};

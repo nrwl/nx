@@ -5,10 +5,9 @@ use anyhow::Result;
 use super::disk_expansion::FileStamp;
 use super::disk_expansion::{
     FilesExpansion, FilesExpansionCache, Negation, Positive, Source, expand_cached, expand_entries,
-    literal_prefix,
 };
 use super::hash_ignored_files::hash_files;
-use crate::native::glob::build_glob_set;
+use crate::native::glob::{build_glob_set, literal_prefix};
 use crate::native::workspace::ignored_index::IgnoredIndex;
 
 /// Result of hashing task output files, including the matched file paths

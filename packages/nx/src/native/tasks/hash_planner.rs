@@ -13,9 +13,8 @@ use rayon::prelude::*;
 use std::collections::{HashMap, HashSet};
 use tracing::trace;
 
-use crate::native::tasks::hashers::{
-    OnceCache, literal_prefix, normalize_glob, validate_files_globs,
-};
+use crate::native::glob::{literal_prefix, normalize_glob};
+use crate::native::tasks::hashers::{OnceCache, validate_files_globs};
 use crate::native::tasks::inputs::{
     expand_single_project_inputs, get_inputs, get_inputs_for_dependency, get_named_inputs,
 };

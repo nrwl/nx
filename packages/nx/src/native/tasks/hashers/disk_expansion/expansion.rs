@@ -8,9 +8,8 @@ use anyhow::{Context, Result, bail};
 use dashmap::DashMap;
 
 use super::entries::{Negation, Positive};
-use super::glob_text::{expand_literal_braces, normalize_glob};
 use super::walk::{FileStamp, stamp_of, walk_files, walk_skips};
-use crate::native::glob::build_glob_set;
+use crate::native::glob::{build_glob_set, expand_literal_braces, literal_prefix, normalize_glob};
 
 /// Expansion per `files:{project}:[...]` instruction, scoped to one `hash_plans`
 /// call: a group is listed or walked afresh for the next one.
@@ -282,4 +281,36 @@ pub(crate) fn expand_cached(
     let expansion = Arc::new(expand()?);
     cache.insert(key.to_string(), Arc::clone(&expansion));
     Ok(expansion)
+}
+
+/// Rejects a glob that would read outside the workspace or exclude nothing.
+/// A glob with no leading directory (`**/*`, `*.gen`) is allowed: it walks
+/// from the workspace root, which is slow but not wrong.
+pub(crate) fn validate_files_glob(glob: &str) -> Result<()> {
+    if let Some(body) = glob.strip_prefix('!') {
+        let body = normalize_glob(body);
+        if body.is_empty() {
+            bail!("The includeIgnored fileset \"{glob}\" names nothing to exclude.");
+        }
+        for expanded in expand_literal_braces(&body) {
+            literal_prefix(&expanded)?;
+        }
+        return Ok(());
+    }
+    for expanded in expand_literal_braces(&normalize_glob(glob)) {
+        literal_prefix(&expanded)?;
+    }
+    Ok(())
+}
+
+/// `validate_files_glob` for every entry of a project's group, plus the one
+/// rule that needs the whole group: it must not only exclude.
+pub(crate) fn validate_files_globs(project: &str, globs: &[String]) -> Result<()> {
+    if !globs.is_empty() && globs.iter().all(|glob| glob.starts_with('!')) {
+        bail!(
+            "The includeIgnored fileset \"{}\" applied to \"{project}\" is a negation with no positive includeIgnored fileset to filter. A negation only filters the positive includeIgnored filesets of the same project; a fileset with `dependencies: true` is hashed on its own for each dependency, so a negation there has nothing to filter.",
+            globs[0]
+        );
+    }
+    globs.iter().try_for_each(|glob| validate_files_glob(glob))
 }

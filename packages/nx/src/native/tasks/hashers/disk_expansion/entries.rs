@@ -5,8 +5,7 @@ use std::sync::Arc;
 
 use anyhow::{Result, bail};
 
-use super::glob_text::{literal_prefix, normalize_glob};
-use crate::native::glob::{NxGlobSet, build_glob_set};
+use crate::native::glob::{NxGlobSet, build_glob_set, literal_prefix, normalize_glob};
 
 /// A positive entry: the directory it is read from and the pattern after it,
 /// if any. Without a pattern it names one file. A declared output is the

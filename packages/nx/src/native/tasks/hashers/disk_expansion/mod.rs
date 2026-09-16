@@ -1,29 +1,25 @@
 //! Expands an `includeIgnored` fileset group, or a dependency's declared
 //! outputs, into the files on disk.
 //!
-//! - `glob_text` is the text layer: what a glob may say, and where the
-//!   literal prefix a walk starts from ends.
-//! - `entries` holds one parsed positive or negation.
+//! - `entries` holds one parsed positive or negation. The glob text rules
+//!   themselves live in `crate::native::glob::glob_text`.
 //! - `walk` reads the disk.
 //! - `expansion` resolves the entries into files, leaning on the workspace
 //!   context or an index wherever it can.
 
 mod entries;
 mod expansion;
-mod glob_text;
 mod walk;
 
 pub(crate) use entries::{Negation, Positive};
+pub(crate) use expansion::validate_files_globs;
 pub use expansion::{FilesExpansion, expand_files, expand_files_with};
 pub(crate) use expansion::{
     FilesExpansionCache, Members, NO_INDEX, Source, expand_cached, expand_entries,
     expand_files_cached,
 };
 #[cfg(test)]
-use expansion::{NOTHING_KNOWN, parse_group};
-#[cfg(test)]
-use glob_text::{expand_literal_braces, validate_files_glob};
-pub(crate) use glob_text::{literal_prefix, normalize_glob, validate_files_globs};
+use expansion::{NOTHING_KNOWN, parse_group, validate_files_glob};
 pub use walk::FileStamp;
 pub(crate) use walk::{seed_walk, stamp_of};
 
@@ -104,33 +100,6 @@ pub(crate) mod tests {
         )
         .unwrap();
         assert_eq!(expansion.files, vec!["dist/other/c.js"]);
-    }
-
-    #[test]
-    fn expands_literal_brace_groups() {
-        assert_eq!(
-            expand_literal_braces("{nx,tsconfig.base}.json"),
-            vec!["nx.json", "tsconfig.base.json"]
-        );
-        assert_eq!(
-            expand_literal_braces("tools/{a,b}/{x,y}.ts"),
-            vec![
-                "tools/a/x.ts",
-                "tools/a/y.ts",
-                "tools/b/x.ts",
-                "tools/b/y.ts"
-            ]
-        );
-        assert_eq!(expand_literal_braces("!{a,b}.md"), vec!["!a.md", "!b.md"]);
-        for unchanged in [
-            "{a,*}.json",
-            "{a,{b,c}}.json",
-            "dist/**",
-            "{a}.json",
-            "{a,b/c}.ts",
-        ] {
-            assert_eq!(expand_literal_braces(unchanged), vec![unchanged]);
-        }
     }
 
     #[test]

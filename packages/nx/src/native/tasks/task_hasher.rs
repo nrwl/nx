@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use hashbrown::HashSet;
 
+use crate::native::glob::{literal_prefix, normalize_glob};
 use crate::native::{
     hasher::hash,
     project_graph::{types::ProjectGraph, utils::create_project_root_mappings},
@@ -21,8 +22,7 @@ use crate::native::{
         collect_project_file_paths_cached, collect_workspace_file_paths_cached,
         expand_files_cached, hash_all_externals, hash_external, hash_files, hash_json_files,
         hash_project_config, hash_project_files_cached, hash_task_output,
-        hash_tsconfig_selectively, hash_workspace_files_cached, index_file_map, literal_prefix,
-        normalize_glob, output_prefixes,
+        hash_tsconfig_selectively, hash_workspace_files_cached, index_file_map, output_prefixes,
     },
     types::FileData,
     workspace::ignored_index::IgnoredIndexReader,
