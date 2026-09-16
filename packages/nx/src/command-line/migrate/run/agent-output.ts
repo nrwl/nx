@@ -94,6 +94,11 @@ export function emitPromptBlock(migrationId: string, payload: object): void {
   );
 }
 
+// For work that belongs to no migration (the final-validation step).
+export function emitStepPromptBlock(stepId: string, payload: object): void {
+  writeBlock('nx_migrate_prompt', [['step', stepId]], blockPayload(payload));
+}
+
 /**
  * Markdown, not JSON: the block carries the runbook file's bytes, so the agent
  * reads what a resume re-emits from disk. Every `<` opening or closing an

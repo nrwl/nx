@@ -92,3 +92,20 @@ export function renderValidationScopeRuleLines(): string[] {
     `- If validation finds blocking issues you cannot resolve within scope: apply every fix you can within scope, then report the unresolved findings to the user and ask how to proceed (see the handoff contract). Do not guess.`,
   ];
 }
+
+// The one place `nx affected --base` is allowed: the pass judges the whole
+// run, so it needs the whole run's delta, not one step's file list.
+export function renderFinalValidationScopeRuleLines(): string[] {
+  return [
+    `- Your job is to validate the workspace after every migration has run: run its lint, build and unit-test tasks, fix what the migrations broke, and report the rest.`,
+    `- Discover targets before running them: \`nx show project <name> --json\` is authoritative, since it includes targets inferred by plugins. Target names vary between workspaces; \`lint\`, \`build\` and \`test\` are the common ones, and an equivalent (\`typecheck\` for a project with no \`build\`, for example) stands in when one is missing. Never run e2e, serve, deploy, publish or release targets.`,
+    `- Run tasks through \`nx affected --base <ref> -t <targets>\` with the base ref the step's instructions name, in full: no sampling, no time budget. \`nx run <project>:<target>\` and \`nx run-many -t <target> -p <projects>\` are fine to rerun a failure. Unscoped \`nx run-many\` is allowed only when the instructions say the base ref is unknown.`,
+    `- Fix only breakage the migrations caused, judged from the run's diff. A failure the diff cannot explain is reported as an issue and left alone; it may predate the run.`,
+    `- Do not refactor, do not update dependencies, do not rewrite tests to pass, and do not rerun migrations. If the migrated workspace cannot run \`nx\` at all, stop and report that to the user instead of repairing the install.`,
+    `- Read-only and artifact-writing inspection commands are permitted: \`nx show\`, \`nx graph --file <path>\`, \`git diff\`, reading files.`,
+    `- Do not run other \`nx\` commands that mutate workspace state (\`nx migrate\`, \`nx reset\`, \`nx format:write\`, generators, etc.).`,
+    `- Do not modify files outside the workspace root.`,
+    `- Do not edit anything under \`${MIGRATE_RUNS_RELATIVE_DIR}\` except the handoff file you are asked to write.`,
+    `- If a failure you cannot resolve within scope blocks the workspace: apply every fix you can, then report the unresolved findings to the user and ask how to proceed (see the handoff contract). Do not guess.`,
+  ];
+}

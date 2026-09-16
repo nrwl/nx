@@ -338,6 +338,78 @@ describe('applyStepEvent', () => {
     });
   });
 
+  describe('parkForFinalValidation', () => {
+    const event: StepEvent = {
+      type: 'parkForFinalValidation',
+      stepId: 'step-1',
+      finishedAt: '2026-01-01T00:02:00.000Z',
+    };
+    function stateWithFinalValidationStep(
+      status: MigrateStepStatus = 'pending'
+    ): MigrateRunState {
+      const base = stateWithStep();
+      return {
+        ...base,
+        steps: [
+          {
+            id: 'step-1',
+            roundIndex: 0,
+            kind: 'final-validation',
+            status,
+            attempt: 1,
+            dispenseCount: 0,
+          },
+        ],
+      };
+    }
+
+    it('parks a pending final-validation step, counting the dispense', () => {
+      const state = stateWithFinalValidationStep();
+
+      const result = applyStepEvent(state, event);
+
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        expect(result.state.steps[0]).toEqual({
+          id: 'step-1',
+          roundIndex: 0,
+          kind: 'final-validation',
+          status: 'awaiting-prompt-outcome',
+          attempt: 1,
+          dispenseCount: 1,
+          finishedAt: '2026-01-01T00:02:00.000Z',
+          awaitingKind: 'final-validation',
+        });
+      }
+    });
+
+    it.each(ALL_STEP_STATUSES.filter((status) => status !== 'pending'))(
+      'rejects from %s, leaving the input unchanged',
+      (status) => {
+        const state = stateWithFinalValidationStep(status);
+        const before = snapshot(state);
+
+        const result = applyStepEvent(state, event);
+
+        expect(result.kind).toBe('error');
+        expect(state).toEqual(before);
+      }
+    );
+
+    it('rejects a migration step, which has a worker to run first', () => {
+      const state = stateWithStep();
+      const before = snapshot(state);
+
+      const result = applyStepEvent(state, event);
+
+      expect(result).toEqual({
+        kind: 'error',
+        reason: expect.stringContaining('migration step'),
+      });
+      expect(state).toEqual(before);
+    });
+  });
+
   describe('foldPromptOutcome', () => {
     it.each([
       ['completed', 'succeeded'],
