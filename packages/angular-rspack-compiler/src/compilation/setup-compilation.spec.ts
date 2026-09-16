@@ -61,6 +61,45 @@ describe('setupCompilation', () => {
     expect(compilerOptions.sourceMap).toBeUndefined();
   });
 
+  // `@angular/build` 22.1 emits raw TypeScript for isolated modules unless
+  // this option asks for the TypeScript emit, and only that emit carries a
+  // sourcemap for every file.
+  it.each([
+    [true, false, false],
+    [true, true, true],
+    [false, false, true],
+    [false, true, true],
+  ])(
+    'should request the TypeScript emit for isolatedModules: %s with sourceMap: %s',
+    async (isolatedModules, sourceMap, expected) => {
+      vi.mocked(loadCompilerCli).mockResolvedValueOnce({
+        readConfiguration: (
+          _tsconfig: string,
+          existingOptions: Record<string, unknown>
+        ) => ({
+          options: { isolatedModules, ...existingOptions, module: 99 },
+          rootNames: ['/root/src/main.ts'],
+        }),
+      } as never);
+
+      const { compilerOptions } = await setupCompilation(
+        { source: { tsconfigPath: '/root/tsconfig.json' } },
+        { ...options, sourceMap }
+      );
+
+      expect(compilerOptions['_useTypeScriptTranspilation']).toBe(expected);
+    }
+  );
+
+  it('should not request the TypeScript emit when using TS project references', async () => {
+    const { compilerOptions } = await setupCompilation(
+      { source: { tsconfigPath: '/root/tsconfig.json' } },
+      { ...options, sourceMap: true, useTsProjectReferences: true }
+    );
+
+    expect(compilerOptions['_useTypeScriptTranspilation']).toBe(false);
+  });
+
   it('should not emit TS sourcemaps when using TS project references', async () => {
     const { compilerOptions } = await setupCompilation(
       { source: { tsconfigPath: '/root/tsconfig.json' } },
