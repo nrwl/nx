@@ -1,10 +1,13 @@
 use std::cell::OnceCell;
+use std::collections::HashMap;
 use std::fs::{self, Metadata};
 use std::io;
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, OnceLock};
 
 use notify::event::{CreateKind, ModifyKind, RemoveKind, RenameMode};
 use notify::{Event, EventKind};
+use parking_lot::RwLock;
 use tracing::trace;
 
 use crate::native::watch::utils::canonicalize_event_paths;
@@ -256,27 +259,55 @@ pub(super) fn transform_event_to_watch_events(
     }
 }
 
+/// The ignore rules `folder_events` applies, built once per workspace root.
+/// The root `.nxignore` is read at first use; a change to it restarts the
+/// daemon, so the rules never go stale under it.
+struct FolderEventRules {
+    nxignore: ignore::gitignore::Gitignore,
+    hardcoded: std::sync::Arc<crate::native::glob::NxGlobSet>,
+}
+
+fn folder_event_rules(origin: &str) -> anyhow::Result<Arc<FolderEventRules>> {
+    use crate::native::glob::build_glob_set;
+    use crate::native::walker::HARDCODED_IGNORE_PATTERNS;
+    use ignore::gitignore::GitignoreBuilder;
+
+    static RULES: OnceLock<RwLock<HashMap<String, Arc<FolderEventRules>>>> = OnceLock::new();
+    let cache = RULES.get_or_init(Default::default);
+    if let Some(rules) = cache.read().get(origin) {
+        return Ok(Arc::clone(rules));
+    }
+
+    let mut builder = GitignoreBuilder::new(origin);
+    let origin_path: &Path = origin.as_ref();
+    builder.add(origin_path.join(".nxignore"));
+    let rules = Arc::new(FolderEventRules {
+        nxignore: builder.build()?,
+        hardcoded: build_glob_set(HARDCODED_IGNORE_PATTERNS)?,
+    });
+    cache.write().insert(origin.to_string(), Arc::clone(&rules));
+    Ok(rules)
+}
+
 /// A `create` for every file under a directory that appeared whole, so
 /// files that had no events of their own are still reported. The root
 /// `.nxignore` and the hardcoded ignores apply, as they do to the watch.
 /// Links are not followed, the directory itself included: a linked directory
 /// moved into the workspace would otherwise report files outside it.
 fn folder_events(path_ref: &Path, origin: &str) -> anyhow::Result<Vec<WatchEventInternal>> {
-    use crate::native::glob::build_glob_set;
-    use crate::native::walker::HARDCODED_IGNORE_PATTERNS;
     use ignore::Match;
-    use ignore::gitignore::GitignoreBuilder;
     use walkdir::WalkDir;
 
     if fs::symlink_metadata(path_ref).map_or(true, |m| !m.is_dir()) {
         return Ok(vec![]);
     }
 
-    let mut gitignore_builder = GitignoreBuilder::new(origin);
-    let origin_path: &Path = origin.as_ref();
-    gitignore_builder.add(origin_path.join(".nxignore"));
-    let ignore = gitignore_builder.build()?;
-    let hardcoded = build_glob_set(HARDCODED_IGNORE_PATTERNS)?;
+    // A checkout creates directories in bursts, and this runs on the watch
+    // thread: rereading .nxignore and recompiling the globs per event would
+    // hold up delivery.
+    let rules = folder_event_rules(origin)?;
+    let ignore = &rules.nxignore;
+    let hardcoded = &rules.hardcoded;
 
     let result = WalkDir::new(path_ref)
         .follow_links(false)

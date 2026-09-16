@@ -378,7 +378,17 @@ export function routeAppliedChanges(batch: ChangeBatch): void {
  */
 export async function flushPendingWorkspaceChanges() {
   if (!isWatchingWorkspaceContext()) return;
-  routeAppliedChanges(settleWorkspaceContext(workspaceRoot));
+  const batch = settleWorkspaceContext(workspaceRoot);
+  // An empty settle must not reach the routing: it would schedule the first
+  // graph computation here rather than where the request handler reports it.
+  if (
+    !batch.createdFiles.length &&
+    !batch.updatedFiles.length &&
+    !batch.deletedFiles.length
+  ) {
+    return;
+  }
+  routeAppliedChanges(batch);
 }
 
 /**

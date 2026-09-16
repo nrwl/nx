@@ -143,6 +143,7 @@ Without the flag it's a normal fileset and doesn't affect them.
 A negation with nothing to filter is a configuration error, and a negation can't be combined with `dependencies: true`.
 
 A glob never walks into `node_modules`, `.git`, `.nx/cache`, `.nx/workspace-data`, or `.yarn/cache` unless it names a path inside one of them.
+It also skips the timestamp files Vite and Vitest write beside their config, such as `vite.config.ts.timestamp-1700000000000.mjs`.
 Symlinks aren't followed, except a symlinked file whose target is inside the workspace, and a glob that resolves outside the workspace is a configuration error.
 
 ### JSON files
