@@ -135,7 +135,7 @@ Add `includeIgnored: true` to match files on disk, whether Git tracks them or no
 `{projectRoot}` and `{workspaceRoot}` resolve as for any fileset, and every glob must start with one of them.
 Nx checks the matched files on every run, so keep the globs narrow.
 A glob such as `{workspaceRoot}/**` is allowed, but it covers every gitignored file in the workspace, so the task's inputs change whenever any of them does.
-A new matching file counts without a configuration change, and a path that names a directory matches everything under it.
+A new matching file counts without a configuration change.
 A path can name a file that doesn't exist yet: the cache key changes when the file appears or is removed.
 
 A `!` negation with `includeIgnored: true` filters every `includeIgnored` glob declared for the same project.

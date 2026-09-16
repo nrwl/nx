@@ -191,12 +191,14 @@ pub(crate) fn validate_files_globs(project: &str, globs: &[String]) -> Result<()
 }
 
 /// A positive entry: the directory it is read from and the pattern after it,
-/// if any. Without a pattern it names an exact file, or a directory and
-/// everything under it.
+/// if any. Without a pattern it names one file. A declared output is the
+/// exception: it names a path, so a directory is everything under it.
 pub(crate) struct Positive {
     text: String,
     root: String,
     remainder: Option<String>,
+    /// A declared output entry rather than a fileset glob.
+    declared_path: bool,
 }
 
 impl Positive {
@@ -207,6 +209,7 @@ impl Positive {
             text: glob.to_string(),
             root,
             remainder: remainder.map(str::to_string),
+            declared_path: false,
         })
     }
 
@@ -216,6 +219,7 @@ impl Positive {
             text: path.to_string(),
             root: path.to_string(),
             remainder: None,
+            declared_path: true,
         }
     }
 }
@@ -446,8 +450,14 @@ pub(crate) fn expand_entries(
             }
             continue;
         }
-        // A directory declared by its exact path means everything under it;
-        // with a pattern, only the remainder after the prefix is matched.
+        // A fileset names files, so a glob that lands on a directory selects
+        // nothing; `{projectRoot}/generated/**/*` is how to ask for what is
+        // under it. A declared output names a path, and a directory output
+        // has always meant everything under it.
+        if !has_pattern && !entry.declared_path {
+            continue;
+        }
+        // With a pattern, only the remainder after the prefix is matched.
         // Excluded files are dropped before they are stat'ed.
         let excluded = |path: &str| negations.iter().any(|n| n.excludes(path));
         let accept: Box<dyn Fn(&str) -> bool + Sync> = if let Some(pattern) = remainder {
@@ -747,10 +757,22 @@ pub(crate) mod tests {
     }
 
     #[test]
-    fn exact_directory_means_everything_under_it() {
+    fn a_fileset_that_lands_on_a_directory_selects_nothing() {
         let temp = workspace();
-        let expansion = expand_files(temp.path(), &globs(&["dist/other"])).unwrap();
-        assert_eq!(expansion.files, vec!["dist/other/c.js"]);
+        assert!(
+            expand_files(temp.path(), &globs(&["dist/other"]))
+                .unwrap()
+                .files
+                .is_empty(),
+            "a fileset names files; a directory is not one"
+        );
+        assert_eq!(
+            expand_files(temp.path(), &globs(&["dist/other/**/*"]))
+                .unwrap()
+                .files,
+            vec!["dist/other/c.js"],
+            "this is how to ask for what is under it"
+        );
     }
 
     #[test]
@@ -817,10 +839,8 @@ pub(crate) mod tests {
             expand(&["dist//gen/**", "!dist//gen//**/*.map"]).files,
             vec!["dist/gen/a.js", "dist/gen/nested/b.js"]
         );
-        assert_eq!(
-            expand(&["dist/gen/"]).files,
-            vec!["dist/gen/a.js", "dist/gen/a.js.map", "dist/gen/nested/b.js"]
-        );
+        // Normalizes to `dist/gen`, a directory, which names no files.
+        assert!(expand(&["dist/gen/"]).files.is_empty());
         // A negation that normalizes to nothing would exclude everything.
         for bare in ["!", "!/", "!//"] {
             let group = globs(&["dist/**", bare]);
@@ -911,10 +931,7 @@ pub(crate) mod tests {
             expand("libs/app/@gen/schema.json").files,
             vec!["libs/app/@gen/schema.json"]
         );
-        assert_eq!(
-            expand("libs/app/@gen").files,
-            vec!["libs/app/@gen/schema.json"]
-        );
+        assert!(expand("libs/app/@gen").files.is_empty());
         assert_eq!(
             expand("libs/app/@gen/**").files,
             vec!["libs/app/@gen/schema.json"]
