@@ -199,11 +199,19 @@ impl IgnoredIndex {
     /// prefix asks for. It is kept like any other, and says so once at debug
     /// level: a listing of it walks everything, where a named directory walks
     /// only itself.
+    /// Whether `dir` resolves outside the workspace. Resolved, not walked: a
+    /// path that will not resolve is treated as inside on purpose, which is
+    /// what lets an output root be kept before its task has written it.
+    fn leaves_the_workspace(&self, workspace_root: &Path, dir: &str) -> bool {
+        dunce::canonicalize(workspace_root.join(dir)).is_ok_and(|resolved| {
+            !self
+                .canonical_root(workspace_root)
+                .is_some_and(|root| resolved.starts_with(root))
+        })
+    }
+
     pub(crate) fn track(&self, workspace_root: &Path, dir: &str) -> bool {
         let dir = dir.trim_matches('/');
-        if self.is_tracked(dir) {
-            return true;
-        }
         if dir.is_empty() && !self.announced_whole_workspace.swap(true, Ordering::AcqRel) {
             debug!(
                 "An includeIgnored fileset names no directory to read from, so it is read \
@@ -219,23 +227,24 @@ impl IgnoredIndex {
         // workspace is a question about one path. A path that will not resolve
         // is treated as inside on purpose, which is what lets an output root
         // be tracked before its task has ever written it.
-        let leaves_the_workspace = || {
-            dunce::canonicalize(workspace_root.join(dir)).is_ok_and(|resolved| {
-                !self
-                    .canonical_root(workspace_root)
-                    .is_some_and(|root| resolved.starts_with(root))
-            })
-        };
         let refused = match &self.watch {
             Some(watch) if watch.may_miss_under(dir) => {
                 Some("the watch does not report everything under it")
             }
-            _ if leaves_the_workspace() => Some("it resolves outside the workspace"),
+            _ if self.leaves_the_workspace(workspace_root, dir) => {
+                Some("it resolves outside the workspace")
+            }
             _ => None,
         };
         if let Some(reason) = refused {
             trace!("not tracking {dir:?}: {reason}");
             return false;
+        }
+        // Asked after the refusals, never before: a tracked ancestor must not
+        // adopt a directory that would have been refused on its own, such as
+        // one whose own path leads out of the workspace.
+        if self.is_tracked(dir) {
+            return true;
         }
         {
             let mut tracked = self.tracked.write();
@@ -256,9 +265,13 @@ impl IgnoredIndex {
                 // a disk that keeps moving reaches it.
                 continue;
             }
+            if self.leaves_the_workspace(workspace_root, dir) {
+                trace!("not listing {dir:?}: it resolves outside the workspace");
+                return false;
+            }
             let generation = self.generation.load(Ordering::Acquire);
             let Some(seeded) = seed_walk(workspace_root, dir) else {
-                trace!("not listing {dir:?}: it resolves outside the workspace");
+                trace!("not listing {dir:?}: it could not be read");
                 return false;
             };
             let mut members = self.members.write();
@@ -981,6 +994,30 @@ mod tests {
         );
         // `/` is the same directory spelled differently.
         assert!(IgnoredIndex::new(None).track(temp.path(), "/"));
+    }
+
+    /// A tracked ancestor must not adopt a directory that would be refused on
+    /// its own. Reached through `dist`, a `dist/cache` linked out of the
+    /// workspace would otherwise be walked into, its outside files listed, and
+    /// their hashes served without a stat that no watch event can ever clear.
+    #[cfg(unix)]
+    #[test]
+    fn a_tracked_ancestor_does_not_adopt_a_directory_leading_outside() {
+        let temp = workspace();
+        let elsewhere = TempDir::new().unwrap();
+        elsewhere.child("shared/out.js").write_str("one").unwrap();
+        std::os::unix::fs::symlink(
+            elsewhere.path().join("shared"),
+            temp.path().join("dist/cache"),
+        )
+        .unwrap();
+        let index = watched();
+
+        assert!(index.track(temp.path(), "dist"));
+        assert!(!index.track(temp.path(), "dist/cache"));
+        assert!(index.list(temp.path(), "dist/cache").is_none());
+        index.hash_file(temp.path(), "dist/cache/out.js", None, RunStage::NothingRan);
+        assert!(index.trusted_hash("dist/cache/out.js").is_none());
     }
 
     #[cfg(unix)]
