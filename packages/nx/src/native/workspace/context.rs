@@ -636,9 +636,6 @@ impl FileState {
         }
     }
 
-    /// Everything sealed since the last call, one outcome per path (its
-    /// latest), under the `seq` of the newest batch it includes. Waits out a
-    /// walk in progress. Empty for a context that does not watch.
     /// Records changes the watch delivered, without touching the disk: during
     /// a walk they queue behind it, otherwise they wait for the next apply.
     /// True when the subscriber should be woken to apply them. Every delivery
@@ -673,6 +670,9 @@ impl FileState {
         outcomes_to_batch(pending, state.change_seq)
     }
 
+    /// Everything sealed since the last call, one outcome per path (its
+    /// latest), under the `seq` of the newest batch it includes. Waits out a
+    /// walk in progress. Empty for a context that does not watch.
     fn take_pending(&self) -> ChangeBatch {
         let Some(sync) = &self.0 else {
             return ChangeBatch::default();
@@ -811,13 +811,15 @@ fn apply(state: &mut State, workspace_root: &Path, changes: Vec<Change>) -> Outc
 
     // The index hears every change under its directories, whatever the
     // policy says: it holds the files a walk finds there, tracked or not.
+    let deleted: Vec<&str> = changes
+        .iter()
+        .filter(|c| c.kind == ChangeKind::Deleted)
+        .map(|c| c.path.as_str())
+        .collect();
+    state.ignored.note_deleted_all(&deleted);
     for change in &changes {
-        match change.kind {
-            ChangeKind::Deleted => state.ignored.note_deleted(&change.path),
-            ChangeKind::Created | ChangeKind::Updated => {
-                state.ignored.note_written(workspace_root, &change.path)
-            }
-            ChangeKind::Rescan => {}
+        if matches!(change.kind, ChangeKind::Created | ChangeKind::Updated) {
+            state.ignored.note_written(workspace_root, &change.path);
         }
     }
 

@@ -265,7 +265,7 @@ impl IgnoredIndex {
         let listed = self.covers(path);
         let full_path = workspace_root.join(path);
         let Ok(link) = std::fs::symlink_metadata(&full_path) else {
-            self.remove(path);
+            self.forget(path);
             return;
         };
         if link.is_dir() {
@@ -280,7 +280,7 @@ impl IgnoredIndex {
                     dunce::canonicalize(&full_path).is_ok_and(|t| t.starts_with(root))
                 });
             if !inside {
-                self.remove(path);
+                self.forget(path);
                 return;
             }
         }
@@ -291,12 +291,34 @@ impl IgnoredIndex {
 
     /// A reported deletion of a file, or of a directory and all under it.
     pub(crate) fn note_deleted(&self, path: &str) {
-        if !self.keeps(path) {
+        self.note_deleted_all(std::slice::from_ref(&path));
+    }
+
+    /// Reported deletions applied together. A kept but unlisted directory
+    /// has no members to range over, so its hashes can only be found by a
+    /// pass over them all; one batch pays for that pass once however many
+    /// such directories it carries.
+    pub(crate) fn note_deleted_all(&self, paths: &[&str]) {
+        let kept: Vec<&str> = paths
+            .iter()
+            .copied()
+            .filter(|path| self.keeps(path))
+            .collect();
+        if kept.is_empty() {
             return;
         }
         self.generation.fetch_add(1, Ordering::AcqRel);
-        trace!("deleted under an indexed directory: {path}");
-        self.remove(path);
+        let mut sweep: Vec<&str> = Vec::new();
+        for path in kept {
+            trace!("deleted under an indexed directory: {path}");
+            if !self.remove(path) {
+                sweep.push(path);
+            }
+        }
+        if !sweep.is_empty() {
+            self.contents
+                .retain(|p, _| !sweep.iter().any(|dir| under(p, dir)));
+        }
     }
 
     /// The watch lost events: every listed prefix is walked again, and the
@@ -319,7 +341,19 @@ impl IgnoredIndex {
         }
     }
 
-    fn remove(&self, path: &str) {
+    /// `remove`, sweeping the kept hashes when nothing was listed under
+    /// `path` — a directory kept without being listed has no members to
+    /// range over.
+    fn forget(&self, path: &str) {
+        if !self.remove(path) {
+            self.contents.retain(|p, _| !under(p, path));
+        }
+    }
+
+    /// Forgets `path` and anything listed under it. False when neither a
+    /// member nor a hash was found, so the caller must sweep the hashes for
+    /// a kept but unlisted directory.
+    fn remove(&self, path: &str) -> bool {
         let mut members = self.members.write();
         let gone: Vec<String> = members
             .range(path.to_string()..)
@@ -331,10 +365,7 @@ impl IgnoredIndex {
             self.contents.remove(p);
         }
         drop(members);
-        if self.contents.remove(path).is_none() && gone.is_empty() {
-            // A kept, unlisted directory: its hashes are not in any order.
-            self.contents.retain(|p, _| !under(p, path));
-        }
+        self.contents.remove(path).is_some() || !gone.is_empty()
     }
 
     /// Makes `seeded` the members under `dir`, forgetting the content of

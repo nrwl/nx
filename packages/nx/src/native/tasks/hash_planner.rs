@@ -1076,7 +1076,6 @@ fn paths_overlap(a: &str, b: &str) -> bool {
         || b.strip_prefix(a).is_some_and(|rest| rest.starts_with('/'))
 }
 
-/// `f` reads the file map, `d` reads the disk (`includeIgnored`).
 /// Where a fileset's files come from.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum FileSetStore {
@@ -1100,6 +1099,8 @@ impl FileSetStore {
     }
 }
 
+/// The cache-key character for a fileset: `f` reads the file map, `d` reads
+/// the disk (`includeIgnored`).
 fn fileset_kind(include_ignored: bool) -> char {
     if include_ignored { 'd' } else { 'f' }
 }
