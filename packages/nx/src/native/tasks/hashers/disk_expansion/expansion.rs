@@ -215,7 +215,7 @@ pub(crate) fn expand_cached(
 }
 
 /// Rejects a glob that would read outside the workspace or exclude nothing.
-/// What a fileset glob may not say. `target_directory` answers only where
+/// What a fileset glob may not say. `partition_glob` answers only where
 /// literal text stops; these are this feature's rules, with its wording.
 fn validate_shape(glob: &str) -> Result<()> {
     if Path::new(glob).is_absolute() || glob.starts_with('/') {

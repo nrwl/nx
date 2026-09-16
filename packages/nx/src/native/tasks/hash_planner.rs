@@ -13,7 +13,7 @@ use rayon::prelude::*;
 use std::collections::{HashMap, HashSet};
 use tracing::trace;
 
-use crate::native::glob::{normalize_glob, target_directory};
+use crate::native::glob::{normalize_glob, partition_glob};
 use crate::native::tasks::hashers::{OnceCache, validate_files_globs};
 use crate::native::tasks::inputs::{
     expand_single_project_inputs, get_inputs, get_inputs_for_dependency_group, get_named_inputs,
@@ -1019,7 +1019,7 @@ fn walk_root(glob: &str) -> String {
     if glob.split('/').any(|segment| segment == "..") {
         return String::new();
     }
-    target_directory(&glob).0
+    partition_glob(&glob).0
 }
 
 /// Walk roots of every output declared by the tasks `task_id` depends on,

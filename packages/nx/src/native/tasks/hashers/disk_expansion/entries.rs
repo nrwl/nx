@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use anyhow::{Result, bail};
 
-use crate::native::glob::{NxGlobSet, build_glob_set, normalize_glob, target_directory};
+use crate::native::glob::{NxGlobSet, build_glob_set, normalize_glob, partition_glob};
 
 /// A positive entry: the directory it is read from and the pattern after it,
 /// if any. Without a pattern it names an exact file, or a directory and
@@ -16,13 +16,10 @@ pub(crate) struct Positive {
 }
 
 impl Positive {
-    /// Split at its literal prefix, see `target_directory`.
+    /// Split at its literal prefix, see `partition_glob`.
     pub(crate) fn parse(glob: &str) -> Result<Self> {
-        let (root, remainder) = target_directory(glob);
-        Ok(Self {
-            root,
-            remainder: remainder.map(str::to_string),
-        })
+        let (root, remainder) = partition_glob(glob);
+        Ok(Self { root, remainder })
     }
 
     /// `path` as written, whatever characters it has.
@@ -46,7 +43,7 @@ impl Negation {
     pub(crate) fn parse(glob: &str) -> Result<Self> {
         let normalized = normalize_glob(glob);
         let body = normalized.strip_prefix('!').unwrap_or(&normalized);
-        let (root, remainder) = target_directory(body);
+        let (root, remainder) = partition_glob(body);
         if root.is_empty() && remainder.is_none() {
             bail!("The includeIgnored fileset \"{glob}\" names nothing to exclude.");
         }

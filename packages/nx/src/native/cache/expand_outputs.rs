@@ -150,22 +150,16 @@ pub fn match_output_paths(entries: Vec<String>, paths: Vec<String>) -> anyhow::R
     Ok(paths.iter().map(|path| glob_set.is_match(path)).collect())
 }
 
-fn partition_globs_into_map(globs: Vec<String>) -> anyhow::Result<HashMap<String, Vec<String>>> {
-    globs
-        .iter()
-        .map(|glob| partition_glob(glob))
-        // Right now we have an iterator where each item is (root: String, patterns: String[]).
-        // We want a singular root, with the patterns mapped to it.
-        .fold(
-            Ok(HashMap::<String, Vec<String>>::new()),
-            |map_result, parsed_glob| {
-                let mut map = map_result?;
-                let (root, patterns) = parsed_glob?;
-                let entry = map.entry(root).or_insert(vec![]);
-                entry.extend(patterns);
-                Ok(map)
-            },
-        )
+/// The globs grouped by the directory each is read from, so one walk serves
+/// every pattern under it. A glob with no pattern contributes only its root.
+fn partition_globs_into_map(globs: Vec<String>) -> HashMap<String, Vec<String>> {
+    let mut map = HashMap::<String, Vec<String>>::new();
+    for glob in globs.iter() {
+        let (root, pattern) = partition_glob(glob);
+        let entry = map.entry(root).or_insert(vec![]);
+        entry.extend(pattern);
+    }
+    map
 }
 
 /// Expands the given outputs into a list of existing files.
@@ -193,7 +187,7 @@ pub fn get_files_for_outputs(
     }
 
     if !globs.is_empty() {
-        let partitioned_globs = partition_globs_into_map(globs)?;
+        let partitioned_globs = partition_globs_into_map(globs);
         for (root, patterns) in partitioned_globs {
             let root_path = directory.join(&root);
             let glob_set = build_glob_set(&patterns)?;

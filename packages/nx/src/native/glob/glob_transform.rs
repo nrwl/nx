@@ -43,29 +43,37 @@ pub(crate) fn expand_literal_braces(glob: &str) -> Vec<String> {
         .collect()
 }
 
-/// The directory a glob is read from, and the pattern left to match under
-/// it, if any. The directory ends at the first segment carrying glob syntax
-/// as the engine reads it: `*`, `?`, `{`, `[`, or a `(` group. What follows
-/// is returned unchanged, so brackets, groups and escapes still mean what
-/// they mean to the engine, which converts them itself.
+/// A glob split into the directory it is read from and the pattern under it.
+/// The directory is literal text, so `dist/@scope` is a directory like any
+/// other. The remainder comes back untouched, with a negation marker
+/// re-attached, and is `None` when the glob is literal to its end: it then
+/// names that path rather than matching under it.
 ///
-/// The one answer to where literal text stops. A glob that leaves the
-/// workspace, or is absolute, is a caller's business rather than this
-/// function's: see `validate_files_glob`.
-pub(crate) fn target_directory(glob: &str) -> (String, Option<&str>) {
+/// A segment counts as a pattern on the characters this dialect treats as
+/// syntax, which over-reads a directory literally named `paren(`: the walk
+/// starts shallower and still matches, only slower. See NXC-5001.
+pub(crate) fn partition_glob(glob: &str) -> (String, Option<String>) {
+    let (negated, body) = match glob.strip_prefix('!') {
+        Some(body) => (true, body),
+        None => (false, glob),
+    };
     let mut literal: Vec<&str> = Vec::new();
     let mut consumed = 0;
     let mut remainder = None;
-    for segment in glob.split('/') {
+    for segment in body.split('/') {
         if segment.contains(['*', '?', '{', '[', '(']) {
-            remainder = Some(&glob[consumed..]);
+            remainder = Some(&body[consumed..]);
             break;
         }
         literal.push(segment);
         consumed += segment.len() + 1;
     }
-    let root = literal.join("/").trim_end_matches('/').to_string();
-    (root, remainder)
+    let directory = literal.join("/").trim_end_matches('/').to_string();
+    let remainder = remainder.map(|rest| match negated {
+        true => format!("!{rest}"),
+        false => rest.to_string(),
+    });
+    (directory, remainder)
 }
 
 /// Collapses repeated and trailing slashes so `dist//gen/` and `dist/gen`
@@ -102,11 +110,11 @@ pub(crate) fn normalize_glob(glob: &str) -> String {
 /// carries a pattern, or ends in `/`, is left alone.
 pub(crate) fn path_or_everything_under(glob: &str) -> Vec<String> {
     let body = glob.strip_prefix('!').unwrap_or(glob);
-    // `target_directory` decides what counts as a pattern, so a directory named
+    // `partition_glob` decides what counts as a pattern, so a directory named
     // `@types` or `+state` is a path here as it is everywhere else. Asking
     // the glob engine instead would call those characters syntax and leave
     // such a directory matching nothing.
-    let has_pattern = target_directory(body).1.is_some();
+    let has_pattern = partition_glob(body).1.is_some();
     if body.is_empty() || body.ends_with('/') || has_pattern {
         return vec![glob.to_string()];
     }
@@ -225,19 +233,6 @@ fn build_segment(
     } else {
         vec![GlobType::Positive(existing.to_string())]
     }
-}
-
-pub fn partition_glob(glob: &str) -> anyhow::Result<(String, Vec<String>)> {
-    // `target_directory` is the one answer to where literal text stops, so a
-    // directory named `@scope` or `g+en` stays part of the directory here too.
-    let (negated, _) = parse_glob(glob)?;
-    let body = glob.strip_prefix('!').unwrap_or(glob);
-    let (directory, remainder) = target_directory(body);
-    let Some(remainder) = remainder else {
-        return Ok((directory, vec![]));
-    };
-    let patterns = convert_glob(&format!("{}{remainder}", if negated { "!" } else { "" }))?;
-    Ok((directory, patterns))
 }
 
 #[cfg(test)]
@@ -413,31 +408,70 @@ mod test {
 
     #[test]
     fn should_partition_glob_with_leading_dirs() {
-        let (leading_dirs, globs) =
-            super::partition_glob("dist/app/**/!(README|LICENSE).(js|ts)").unwrap();
+        let (leading_dirs, rest) = super::partition_glob("dist/app/**/!(README|LICENSE).(js|ts)");
         assert_eq!(leading_dirs, "dist/app");
-        assert_eq!(globs, ["!**/{README,LICENSE}.{js,ts}", "**/*.{js,ts}",]);
+        // The remainder is handed on untouched; `build_glob_set` converts it.
+        assert_eq!(rest.as_deref(), Some("**/!(README|LICENSE).(js|ts)"));
+        assert_eq!(
+            convert_glob(&rest.unwrap()).unwrap(),
+            ["!**/{README,LICENSE}.{js,ts}", "**/*.{js,ts}"]
+        );
     }
 
     #[test]
     fn should_partition_glob_with_leading_dirs_and_simple_patterns() {
-        let (leading_dirs, globs) = super::partition_glob("dist/app/**/*.css").unwrap();
+        let (leading_dirs, rest) = super::partition_glob("dist/app/**/*.css");
         assert_eq!(leading_dirs, "dist/app");
-        assert_eq!(globs, ["**/*.css"]);
+        assert_eq!(rest.as_deref(), Some("**/*.css"));
     }
 
     #[test]
     fn should_partition_glob_with_leading_dirs_dirs_and_patterns() {
-        let (leading_dirs, globs) = super::partition_glob("dist/app/**/js/*.js").unwrap();
+        let (leading_dirs, rest) = super::partition_glob("dist/app/**/js/*.js");
         assert_eq!(leading_dirs, "dist/app");
-        assert_eq!(globs, ["**/js/*.js"]);
+        assert_eq!(rest.as_deref(), Some("**/js/*.js"));
     }
 
     #[test]
     fn should_partition_glob_with_leading_dirs_and_no_patterns() {
-        let (leading_dirs, globs) = super::partition_glob("dist/app/").unwrap();
+        let (leading_dirs, rest) = super::partition_glob("dist/app/");
         assert_eq!(leading_dirs, "dist/app");
-        assert_eq!(globs, [] as [String; 0]);
+        assert_eq!(rest, None);
+    }
+
+    /// A negation keeps its marker on the remainder, so the exclusion still
+    /// reads as one once it reaches the glob engine.
+    #[test]
+    fn a_negated_glob_keeps_its_marker_on_the_remainder() {
+        let (leading_dirs, rest) = super::partition_glob("!dist/app/**/*.map");
+        assert_eq!(leading_dirs, "dist/app");
+        assert_eq!(rest.as_deref(), Some("!**/*.map"));
+        // With nothing to match under it, the directory stands alone.
+        assert_eq!(
+            super::partition_glob("!dist/app"),
+            ("dist/app".into(), None)
+        );
+    }
+
+    /// A directory named with a character the engine would read as syntax is
+    /// still a directory, the one answer every road gets.
+    #[test]
+    fn a_special_character_in_a_directory_name_is_literal() {
+        for (glob, directory) in [
+            ("dist/@scope/pkg/**", "dist/@scope/pkg"),
+            ("libs/+state/**/*.ts", "libs/+state"),
+            ("dist/co,ma/**", "dist/co,ma"),
+            ("dist/pi|pe/*.js", "dist/pi|pe"),
+            ("dist/bra]cket/*.js", "dist/bra]cket"),
+        ] {
+            assert_eq!(super::partition_glob(glob).0, directory, "{glob}");
+        }
+        // With no pattern anywhere, the glob names one path and nothing is
+        // left to match under it.
+        assert_eq!(
+            super::partition_glob("dist/co,ma/x.js"),
+            ("dist/co,ma/x.js".into(), None)
+        );
     }
 
     #[test]
