@@ -157,6 +157,7 @@ vi.doMock(workspaceContextPath, async () => {
       updatedFiles: [],
       deletedFiles: [],
     })),
+    isEmptyBatch: realFn('isEmptyBatch'),
     isWatchingWorkspaceContext: realFn('isWatchingWorkspaceContext'),
     stopWatchingWorkspaceContext: realFn('stopWatchingWorkspaceContext'),
     getFilesInDirectoryUsingContext: guarded(

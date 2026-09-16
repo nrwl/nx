@@ -249,7 +249,8 @@ export function subscribeToWatchEvents(
   return () => eventListeners.delete(listener);
 }
 
-function isEmptyBatch(batch: ChangeBatch): boolean {
+/** Whether a batch carries no change at all. */
+export function isEmptyBatch(batch: ChangeBatch): boolean {
   return (
     batch.createdFiles.length === 0 &&
     batch.updatedFiles.length === 0 &&

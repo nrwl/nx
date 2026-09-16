@@ -39,6 +39,7 @@ import {
 } from '../../project-graph/utils/retrieve-workspace-files';
 import { fileExists } from '../../utils/fileutils';
 import {
+  isEmptyBatch,
   isWatchingWorkspaceContext,
   resetWorkspaceContext,
   settleWorkspaceContext,
@@ -380,11 +381,7 @@ export async function flushPendingWorkspaceChanges() {
   const batch = settleWorkspaceContext(workspaceRoot);
   // An empty settle must not reach the routing: it would schedule the first
   // graph computation here rather than where the request handler reports it.
-  if (
-    !batch.createdFiles.length &&
-    !batch.updatedFiles.length &&
-    !batch.deletedFiles.length
-  ) {
+  if (isEmptyBatch(batch)) {
     return;
   }
   routeAppliedChanges(batch);
@@ -442,7 +439,7 @@ function scheduleAppliedChanges(batch: ChangeBatch) {
     collectedDeletedFiles.set(file, fileChangeCounter);
   }
 
-  if (createdFiles.length || updatedFiles.length || deletedFiles.length) {
+  if (!isEmptyBatch(batch)) {
     const createdFileNames = createdFiles.map(({ file }) => file);
     const updatedFileNames = updatedFiles.map(({ file }) => file);
     notifyFileChangeListeners({
