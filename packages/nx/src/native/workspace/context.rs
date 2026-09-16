@@ -24,6 +24,7 @@ use crate::native::workspace::files_archive::{
     FilesArchive, NxFileHashes, read_files_archive, write_files_archive,
 };
 use crate::native::workspace::files_hashing::{full_files_hash, selective_files_hash};
+use crate::native::workspace::glob_hashing::{hash_glob_groups, needs_scan};
 use crate::native::workspace::ignored_index::{IgnoredIndex, IgnoredIndexReader};
 use crate::native::workspace::types::{
     FileMap, NxWorkspaceFilesExternals, ProjectFiles, UpdatedWorkspaceFiles,
@@ -75,7 +76,7 @@ pub struct WorkspaceContext {
 }
 
 /// Sorted by path, which is the order every reader hands out.
-type Files = BTreeMap<PathBuf, String>;
+pub(super) type Files = BTreeMap<PathBuf, String>;
 
 const NX_FILES_LOCK: &str = "nx_files.lock";
 
@@ -779,26 +780,31 @@ impl FileState {
             .collect()
     }
 
-    fn get_files(&self) -> Vec<FileData> {
-        let Some(sync) = &self.0 else {
-            return vec![];
-        };
+    /// Runs `f` against the files under their lock, once a walk in progress
+    /// has finished. `None` when there are no files to wait for.
+    fn with_files<R>(&self, f: impl FnOnce(&Files) -> R) -> Option<R> {
+        let sync = self.0.as_ref()?;
         let (lock, cvar) = sync.deref();
         trace!("waiting for files to be available");
         let state = lock.lock().expect("Should be able to lock files");
         let state = cvar
             .wait(state, |s| s.phase == Phase::Scanning)
             .expect("Should be able to wait for files");
-        let file_data = state
-            .files
-            .iter()
-            .map(|(path, hash)| FileData {
-                file: path.to_normalized_string(),
-                hash: hash.clone(),
-            })
-            .collect();
         trace!("files are available");
-        file_data
+        Some(f(&state.files))
+    }
+
+    fn get_files(&self) -> Vec<FileData> {
+        self.with_files(|files| {
+            files
+                .iter()
+                .map(|(path, hash)| FileData {
+                    file: path.to_normalized_string(),
+                    hash: hash.clone(),
+                })
+                .collect()
+        })
+        .unwrap_or_default()
     }
 }
 
@@ -1272,6 +1278,17 @@ impl WorkspaceContext {
     /// The files as of now: whatever the watcher has delivered is applied
     /// first, and a subscriber hears about it as it would any other batch.
     fn current_files(&self) -> Vec<FileData> {
+        self.apply_delivered();
+        self.files.get_files()
+    }
+
+    /// `current_files` without the copy: `f` reads the files under their lock.
+    fn with_current_files<R>(&self, f: impl FnOnce(&Files) -> R) -> Option<R> {
+        self.apply_delivered();
+        self.files.with_files(f)
+    }
+
+    fn apply_delivered(&self) {
         #[cfg(not(target_arch = "wasm32"))]
         {
             let batch = self.drain(FlushMode::Delivered, WhenScanning::Queue);
@@ -1279,7 +1296,6 @@ impl WorkspaceContext {
                 self.batches.publish(Ok(self.pending_changes()));
             }
         }
-        self.files.get_files()
     }
 
     /// Bumped once per applied batch that changed anything. Equal values
@@ -1394,20 +1410,20 @@ impl WorkspaceContext {
         &self,
         glob_groups: Vec<Vec<String>>,
     ) -> napi::Result<Vec<String>> {
-        let files = &self.current_files();
-        let hashes = glob_groups
-            .into_iter()
-            .map(|globs| {
-                let globbed_files = glob_files(files, globs, None)?.collect::<Vec<_>>();
-                let mut hasher = xxh3::Xxh3::new();
-                for file in globbed_files {
-                    hasher.update(file.file.as_bytes());
-                    hasher.update(file.hash.as_bytes());
-                }
-                Ok(hasher.digest().to_string())
-            })
-            .collect::<napi::Result<Vec<_>>>()?;
-
+        // Lookups run under the lock; a group that must scan the whole table
+        // works on a copy so the watch is not held up behind it.
+        let hashed = self.with_current_files(|files| {
+            if glob_groups.iter().any(|globs| needs_scan(globs)) {
+                Err(files.clone())
+            } else {
+                Ok(hash_glob_groups(files, &glob_groups))
+            }
+        });
+        let hashes = match hashed {
+            Some(Ok(hashes)) => hashes?,
+            Some(Err(snapshot)) => hash_glob_groups(&snapshot, &glob_groups)?,
+            None => hash_glob_groups(&Files::new(), &glob_groups)?,
+        };
         Ok(hashes)
     }
 
@@ -1417,6 +1433,10 @@ impl WorkspaceContext {
         globs: Vec<String>,
         exclude: Option<Vec<String>>,
     ) -> napi::Result<String> {
+        if exclude.as_ref().is_none_or(|exclude| exclude.is_empty()) {
+            let mut hashes = self.hash_files_matching_globs(vec![globs])?;
+            return Ok(hashes.remove(0));
+        }
         let files = &self.current_files();
         let globbed_files = glob_files(files, globs, exclude)?.collect::<Vec<_>>();
 
