@@ -372,19 +372,6 @@ describe('loading plugins through the capability cache', () => {
       );
     });
 
-    it('says what a runtime that cannot observe a closure needs', async () => {
-      mocks.canObserveModuleClosure.mockReturnValue(false);
-
-      await expect(
-        loadedFromRecordThenReport(
-          { ...CAPABILITIES, hasPostTasksExecution: true },
-          null
-        )
-        // The only thing the user can act on here is the Node version, since
-        // every other process that writes a record needs the same floor.
-      ).rejects.toThrow('Node 22.15');
-    });
-
     it('is left alone when the worker agrees with it', async () => {
       await loadedFromRecordThenReport({ ...CAPABILITIES });
 

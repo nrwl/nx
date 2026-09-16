@@ -108,6 +108,14 @@ describe('getPluginsSeparated', () => {
     resolve({ name: pluginName });
   }
 
+  function failLoading(pluginName: string) {
+    const resolve = pendingPluginLoads.get(pluginName);
+    if (!resolve) {
+      throw new Error(`No pending load for plugin "${pluginName}"`);
+    }
+    resolve(Promise.reject(new Error(`${pluginName} blew up`)) as never);
+  }
+
   function wantedBy(loader: string): string[][] {
     return wantPlugins.mock.calls
       .filter(([which]) => which === loader)
@@ -131,6 +139,25 @@ describe('getPluginsSeparated', () => {
     finishLoading('test-a');
     finishLoading('test-b');
     await Promise.all([superseded, current]);
+  });
+
+  it("does not retract another load's plugins when a superseded load fails", async () => {
+    const superseded = getPluginsSeparated({ plugins: ['test-a'] });
+    await new Promise((resolve) => setImmediate(resolve));
+
+    // nx.json changes, so test-b's load is the one that counts now.
+    const current = getPluginsSeparated({ plugins: ['test-b'] });
+    await new Promise((resolve) => setImmediate(resolve));
+
+    failLoading('test-a');
+    await expect(superseded).rejects.toThrow();
+
+    // The failing load is not the one that declared what is wanted, so
+    // retracting here would sweep the plugins test-b's load is using.
+    expect(wantedBy('specified')).toEqual([['test-a'], ['test-b']]);
+
+    finishLoading('test-b');
+    await current;
   });
 
   it('does not re-declare for two concurrent callers sharing a load', async () => {

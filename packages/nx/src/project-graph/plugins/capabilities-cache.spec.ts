@@ -20,7 +20,15 @@ import {
 } from './capabilities-cache';
 import type { LoadedNxPlugin } from './loaded-nx-plugin';
 
-const state = vi.hoisted(() => ({ nxManifestVersion: '23.0.0' }));
+const state = vi.hoisted(() => ({
+  nxManifestVersion: '23.0.0',
+  canObserveModuleClosure: true,
+}));
+
+// What a runtime below Node 22.15 reports, where nothing can be recorded.
+vi.mock('./isolation/module-closure', () => ({
+  canObserveModuleClosure: () => state.canObserveModuleClosure,
+}));
 
 // Only Nx's own manifest is faked. Everything else, including each plugin's
 // package.json, is read from the temp workspace the test writes.
@@ -42,6 +50,7 @@ describe('computeCapabilityKey', () => {
   beforeEach(() => {
     root = mkdtempSync(join(tmpdir(), 'nx-capability-key-'));
     state.nxManifestVersion = '23.0.0';
+    state.canObserveModuleClosure = true;
   });
 
   function writeInstalledPlugin(version: string): string {
@@ -129,6 +138,16 @@ describe('computeCapabilityKey', () => {
     expect(computeCapabilityKey('@my-org/plugin', pluginPath, root)).toEqual(
       first
     );
+  });
+
+  it('identifies nothing where the runtime could not record it anyway', async () => {
+    const pluginPath = writeInstalledPlugin('1.2.3');
+    state.canObserveModuleClosure = false;
+
+    // Without a key nothing is read, which is what keeps a runtime that can
+    // never write a record from paying for one: no query per command, and no
+    // lock for every process to queue behind.
+    expect(computeCapabilityKey('@acme/plugin', pluginPath, root)).toBeNull();
   });
 
   it('declines an installed package that declares no version', async () => {

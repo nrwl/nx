@@ -346,8 +346,16 @@ export async function createProjectGraphAndSourceMapsAsync(
         'Waiting for graph construction in another process to complete'
       );
       const start = Date.now();
-      await lock.waitForRelease(GRAPH_LOCK_WAIT_MS);
+      const released = await lock.waitForRelease(GRAPH_LOCK_WAIT_MS);
       spinner.cleanup();
+
+      // Still building, so there is nothing yet to read. The read below throws
+      // rather than returning empty when no graph has ever been cached, so a
+      // timeout must go back to waiting instead of being taken for a finished
+      // build.
+      if (!released) {
+        continue;
+      }
 
       // Note: This will currently throw if any of the caches are missing...
       // It would be nice if one of the processes that was waiting for the lock

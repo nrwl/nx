@@ -40,7 +40,6 @@ import {
   resolveModule,
   type ResolvedPluginModule,
 } from './isolation/isolated-plugin';
-import { canObserveModuleClosure } from './isolation/module-closure';
 
 import { isIsolationEnabled } from './isolation/enabled';
 import { sandboxSocketHint } from '../../daemon/sandbox-socket-hint';
@@ -906,9 +905,7 @@ function repairRecord(
     forgetCapabilities(key);
     throw new Error(
       `Nx had stale information about what the "${actual.name}" plugin does, so some of its hooks may not have run. ` +
-        (canObserveModuleClosure()
-          ? 'Nx could not tell which files to watch for this plugin, so it could not record the right answer now. '
-          : `Recording the right answer needs Node 22.15, 23.5 or newer, and this is ${process.version}. `) +
+        'Nx could not tell which files to watch for this plugin, so it could not record the right answer now. ' +
         'The stale record has been cleared, so running this command again will load the plugin and use what it reports.'
     );
   }
@@ -970,10 +967,9 @@ async function loadDefaultNxPlugins(
   }
 
   if (errors.length > 0) {
-    // Nothing usable came of this load, so nothing should be left holding a
-    // worker for it.
-    wantPlugins('default', [], root);
-    loadedDefaultPlugins = undefined;
+    // Dropped so the next call retries rather than re-awaiting a promise that
+    // is permanently rejected. What this load did manage to load is left
+    // declared: the plugins are the same ones the retry will ask for.
     pendingDefaultPluginPromise = undefined;
     const errorMessage = errors
       .map((e) => `  - ${e.pluginName}: ${e.error.message}`)
@@ -1038,8 +1034,11 @@ async function loadSpecifiedNxPlugins(
   }
 
   if (errors.length > 0) {
-    wantPlugins('specified', [], root);
-    forgetSpecifiedPlugins();
+    // Nothing is retracted here. This load may have been superseded while it
+    // ran, in which case the declaration is the newer load's and taking it back
+    // would sweep the plugins that load is using. What this load did manage to
+    // load stays declared until something declares otherwise, which is what the
+    // next load through `getPluginsSeparated` does.
     const errorMessage = errors
       .map((e) => `  - ${e.pluginName}: ${e.error.message}`)
       .join('\n');

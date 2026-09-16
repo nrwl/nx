@@ -17,6 +17,7 @@ import { getNxRequirePaths } from '../../utils/installation-directory';
 import { logger } from '../../utils/logger';
 import { readModulePackageJson } from '../../utils/package-json';
 import { normalizePath } from '../../utils/path';
+import { canObserveModuleClosure } from './isolation/module-closure';
 import { workspaceRoot } from '../../utils/workspace-root';
 import type { LoadedNxPlugin } from './loaded-nx-plugin';
 
@@ -47,7 +48,12 @@ function nxVersion(): string {
 export function isCapabilityCacheEnabled(): boolean {
   // The database is not part of the WASM build, and isolation is disabled
   // there anyway, so there is no worker spawn to save.
-  return !IS_WASM;
+  //
+  // A runtime that cannot report a plugin's module closure can never write a
+  // record, so it would read misses forever while paying for them: a database
+  // query per command, and a lock every process queues behind to load the
+  // plugins none of them can record. `nx report` says so when it is off.
+  return !IS_WASM && canObserveModuleClosure();
 }
 
 /**
