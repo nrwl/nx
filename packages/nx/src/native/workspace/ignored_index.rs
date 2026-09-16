@@ -16,7 +16,7 @@ use parking_lot::RwLock;
 use tracing::trace;
 
 use crate::native::hasher::hash_file_path;
-use crate::native::walker::{FileStamp, files_under, seed_walk, stamp_of};
+use crate::native::walker::{files_under, seed_walk};
 
 /// Whether the watch delivers events for a workspace-relative path (a
 /// directory when the flag is set).
@@ -109,6 +109,20 @@ fn now_secs() -> u64 {
         .duration_since(UNIX_EPOCH)
         .map(|d| d.as_secs())
         .unwrap_or(0)
+}
+
+/// The `(mtime, size)` a file showed when the index last read it. What
+/// says whether a hash it holds still stands.
+pub(crate) type FileStamp = (u128, u64);
+
+pub(crate) fn stamp_of(metadata: &std::fs::Metadata) -> FileStamp {
+    let mtime = metadata
+        .modified()
+        .ok()
+        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+        .map(|d| d.as_nanos())
+        .unwrap_or(0);
+    (mtime, metadata.len())
 }
 
 /// Whether `path` is `dir` or sits under it. The root (`""`) holds everything.

@@ -273,19 +273,6 @@ where
 // with the stamp that says whether a remembered hash still stands.
 // ---------------------------------------------------------------------------
 
-/// The `(mtime, size)` a file showed when expansion looked at it.
-pub type FileStamp = (u128, u64);
-
-pub(crate) fn stamp_of(metadata: &std::fs::Metadata) -> FileStamp {
-    let mtime = metadata
-        .modified()
-        .ok()
-        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
-        .map(|d| d.as_nanos())
-        .unwrap_or(0);
-    (mtime, metadata.len())
-}
-
 /// The transient files the watch never reports. The hardcoded directories
 /// come from `create_walker`, which vetoes them for every walk.
 fn transient_skips() -> Result<Arc<NxGlobSet>> {
