@@ -22,11 +22,6 @@ export default defineConfig({
     ],
   },
   test: {
-    // Imports use native-bindings.js directly through nativeShim, while lazy
-    // requires use native/index.js. Keep both on the same binary: loading a
-    // cached copy too lets Rust external references cross allocator instances
-    // and can segfault when a TaskHasher is garbage-collected.
-    env: { NX_SKIP_NATIVE_FILE_CACHE: 'true' },
     watch: false,
     globals: true,
     environment: 'node',
