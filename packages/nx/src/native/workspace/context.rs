@@ -24,7 +24,7 @@ use crate::native::workspace::files_archive::{
     FilesArchive, NxFileHashes, read_files_archive, write_files_archive,
 };
 use crate::native::workspace::files_hashing::{full_files_hash, selective_files_hash};
-use crate::native::workspace::ignored_index::{IgnoredIndex, IgnoredIndexReader, RunStage};
+use crate::native::workspace::ignored_index::{IgnoredIndex, IgnoredIndexReader};
 use crate::native::workspace::types::{
     FileMap, NxWorkspaceFilesExternals, ProjectFiles, UpdatedWorkspaceFiles,
 };
@@ -1680,6 +1680,7 @@ impl WorkspaceContext {
 mod tests {
     use super::*;
     use crate::native::workspace::files_archive::{NxFileHashed, archive_path};
+    use crate::native::workspace::ignored_index::RunStage;
     use assert_fs::TempDir;
     use assert_fs::prelude::*;
 
