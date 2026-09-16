@@ -181,15 +181,6 @@ impl IgnoredIndex {
             .as_deref()
     }
 
-    /// Starts keeping what is under `dir`: its file hashes always, and its
-    /// listing if anyone asks for one. No directory is walked here. False,
-    /// leaving the caller to walk instead, where the watch could miss a change
-    /// (a hardcoded ignore) or `dir` resolves outside the workspace.
-    ///
-    /// An empty `dir` is the whole workspace, which a glob with no literal
-    /// prefix asks for. It is kept like any other, and says so once at debug
-    /// level: a listing of it walks everything, where a named directory walks
-    /// only itself.
     /// Whether `dir` resolves outside the workspace. Resolved, not walked: a
     /// path that will not resolve is treated as inside on purpose, which is
     /// what lets an output root be kept before its task has written it.
@@ -201,15 +192,18 @@ impl IgnoredIndex {
         })
     }
 
+    /// Starts keeping what is under `dir`: its file hashes always, and its
+    /// listing if anyone asks for one. No directory is walked here. False,
+    /// leaving the caller to walk instead, where the watch could miss a change
+    /// (a hardcoded ignore) or `dir` resolves outside the workspace. Both cost
+    /// only speed: the directory is read every run rather than remembered.
+    ///
+    /// An empty `dir` is the whole workspace, which a glob with no literal
+    /// prefix asks for. It is kept like any other, and says so once at debug
+    /// level: a listing of it walks everything, where a named directory walks
+    /// only itself.
     pub(crate) fn track(&self, workspace_root: &Path, dir: &str) -> bool {
         let dir = dir.trim_matches('/');
-        // Both reasons leave the caller to walk instead, and both cost only
-        // speed: the directory is read every run rather than remembered.
-        //
-        // The second is resolved, not walked — whether `dir` leaves the
-        // workspace is a question about one path. A path that will not resolve
-        // is treated as inside on purpose, which is what lets an output root
-        // be tracked before its task has ever written it.
         let refused = match &self.watch {
             Some(watch) if watch.may_miss_under(dir) => {
                 Some("the watch does not report everything under it")
@@ -509,10 +503,16 @@ impl IgnoredIndex {
         }
         let generation = self.generation.load(Ordering::Acquire);
         let full_path = workspace_root.join(path);
+        // `is_listed` asks whether an ANCESTOR was walked; `members` is what
+        // that walk actually listed. A path the walk left out on purpose — a
+        // linked directory's contents, a hardcoded ignore, a transient skip —
+        // has a listed ancestor and no event will ever name it, so only
+        // membership may be trusted.
         let may_trust = stage.nothing_ran()
             && stamp.is_none()
             && self.watch.is_some()
             && self.is_listed(path)
+            && self.members.read().contains(path)
             && std::fs::symlink_metadata(&full_path).is_ok_and(|m| !m.file_type().is_symlink());
         let stamp = stamp.or_else(|| std::fs::metadata(&full_path).ok().map(|m| stamp_of(&m)));
         let keep = self.watch.is_none() || self.is_tracked(path);
@@ -990,6 +990,41 @@ mod tests {
         );
         // `/` is the same directory spelled differently.
         assert!(IgnoredIndex::new(None).track(temp.path(), "/"));
+    }
+
+    /// A listed ancestor is not membership. A file under a linked-out
+    /// directory has a listed ancestor, was never listed by the walk, and no
+    /// watch event can ever name it — so trusting it would serve a hash that
+    /// nothing can clear.
+    #[cfg(unix)]
+    #[test]
+    fn a_file_the_walk_left_out_is_not_trusted_for_having_a_listed_ancestor() {
+        let temp = workspace();
+        let elsewhere = TempDir::new().unwrap();
+        elsewhere.child("shared/out.js").write_str("one").unwrap();
+        std::os::unix::fs::symlink(
+            elsewhere.path().join("shared"),
+            temp.path().join("dist/cache"),
+        )
+        .unwrap();
+        let index = watched();
+        assert!(index.track(temp.path(), "dist"));
+        assert!(index.list(temp.path(), "dist").is_some());
+
+        let path = "dist/cache/out.js";
+        assert!(index.is_listed(path), "an ancestor is listed");
+        assert!(
+            !index.members.read().contains(path),
+            "the walk never listed it"
+        );
+
+        let first = index.hash_file(temp.path(), path, None, RunStage::NothingRan);
+        assert!(index.trusted_hash(path).is_none());
+        elsewhere.child("shared/out.js").write_str("two!").unwrap();
+        assert_ne!(
+            first,
+            index.hash_file(temp.path(), path, None, RunStage::NothingRan)
+        );
     }
 
     /// A tracked ancestor must not adopt a directory that would be refused on
