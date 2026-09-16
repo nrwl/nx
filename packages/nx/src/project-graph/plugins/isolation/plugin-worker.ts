@@ -44,7 +44,6 @@ performance.measure(
 global.NX_GRAPH_CREATION = true;
 global.NX_PLUGIN_WORKER = true;
 let plugin: LoadedNxPlugin;
-// Replaced at load for a source plugin.
 let refreshSourceGraph: (names?: string[]) => void = () => {};
 
 const socketPath = process.argv[2];
