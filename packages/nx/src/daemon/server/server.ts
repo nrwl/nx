@@ -177,8 +177,8 @@ import {
   setupWorkspaceContext,
   subscribeToWatchEvents,
   subscribeToWorkspaceChanges,
+  type WorkspaceChangesListener,
 } from '../../utils/workspace-context';
-import type { ChangeBatch } from '../../native';
 
 let workspaceWatcherError: Error | undefined;
 
@@ -644,10 +644,7 @@ function lockFileHashChanged(): boolean {
  * we need to recompute the cached serialized project graph so that it is readily
  * available for the next client request to the server.
  */
-const handleWorkspaceChanges = (
-  err: Error | string | null,
-  batch: ChangeBatch | null
-) => {
+const handleWorkspaceChanges: WorkspaceChangesListener = (err, batch) => {
   if (workspaceWatcherError) {
     serverLogger.watcherLog(
       'Skipping handleWorkspaceChanges because of a previously recorded watcher error.'
