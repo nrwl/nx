@@ -3,25 +3,22 @@
 //!
 //! - `entries` holds one parsed positive or negation. The glob text rules
 //!   themselves live in `crate::native::glob::glob_text`.
-//! - `walk` reads the disk.
 //! - `expansion` resolves the entries into files, leaning on the workspace
-//!   context or an index wherever it can.
+//!   context or an index wherever it can, and walking where it cannot.
 
 mod entries;
 mod expansion;
-mod walk;
 
 pub(crate) use entries::{Negation, Positive};
 pub(crate) use expansion::validate_files_globs;
-pub use expansion::{FilesExpansion, expand_files, expand_files_with};
+pub use expansion::{FileStamp, FilesExpansion, expand_files, expand_files_with};
 pub(crate) use expansion::{
     FilesExpansionCache, Members, NO_INDEX, Source, expand_cached, expand_entries,
     expand_files_cached,
 };
 #[cfg(test)]
 use expansion::{NOTHING_KNOWN, parse_group, validate_files_glob};
-pub use walk::FileStamp;
-pub(crate) use walk::{seed_walk, stamp_of};
+pub(crate) use expansion::{seed_walk, stamp_of};
 
 #[cfg(test)]
 pub(crate) mod tests {
