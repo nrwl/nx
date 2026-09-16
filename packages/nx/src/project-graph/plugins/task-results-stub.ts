@@ -1,4 +1,5 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { basename } from 'node:path';
 import type { TaskResult, TaskResults } from '../../tasks-runner/life-cycle';
 import { terminalOutputPathForHash } from '../../tasks-runner/terminal-output-path';
@@ -91,22 +92,29 @@ export function stubTerminalOutputs(
 /**
  * Reads the outputs back. A no-op on a context that was never stubbed, which
  * is every in-process plugin run without the daemon.
+ *
+ * The reads are issued together rather than awaited one at a time: a run has
+ * one file per task, they are independent, and this sits between the tasks
+ * finishing and the first plugin seeing the results - so serializing it would
+ * add up every file's latency in front of that.
  */
-export function rehydrateTerminalOutputs(
+export async function rehydrateTerminalOutputs(
   context: MaybeStubbedPostTasksExecutionContext
-): PostTasksExecutionContext {
+): Promise<PostTasksExecutionContext> {
   if (!isStubbed(context)) {
     return context;
   }
 
   const taskResults: TaskResults = { ...context.taskResults };
-  for (const [id, path] of Object.entries(context.stubbedTerminalOutputs)) {
-    const result = taskResults[id];
-    if (!result) {
-      continue;
-    }
-    taskResults[id] = { ...result, terminalOutput: readTerminalOutput(path) };
-  }
+  const reads = Object.entries(context.stubbedTerminalOutputs)
+    // A stub whose result is gone has nothing to attach the bytes to, so it is
+    // dropped before the read rather than after it.
+    .filter(([id]) => taskResults[id])
+    .map(async ([id, path]) => {
+      const terminalOutput = await readTerminalOutput(path);
+      taskResults[id] = { ...taskResults[id], terminalOutput };
+    });
+  await Promise.all(reads);
 
   const { stubbedTerminalOutputs, ...rehydrated } = {
     ...context,
@@ -141,12 +149,14 @@ function stubbablePath(result: TaskResult): string | null {
  * `undefined` — already a legal value, skipped tasks have it — beats leaving
  * the path, which would have plugins treat a filename as the output.
  */
-function readTerminalOutput(path: string | undefined): string | undefined {
+async function readTerminalOutput(
+  path: string | undefined
+): Promise<string | undefined> {
   if (!path) {
     return undefined;
   }
   try {
-    return readFileSync(path, 'utf-8');
+    return await readFile(path, 'utf-8');
   } catch (e) {
     logger.warn(
       `Nx could not read a task's terminal output from ${path}: ${e.message}`

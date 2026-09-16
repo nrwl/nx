@@ -14,6 +14,37 @@ vi.mock('../../utils/logger', async () => ({
   logger: { warn: vi.fn() },
 }));
 
+// Holds every read until `target` of them are in flight. A serialized
+// implementation can never satisfy it - its first read would wait on a gate
+// that only a later read opens - so the test times out instead of passing
+// slowly. Gated on a flag so every other test here reads normally.
+let mockReadBarrier: {
+  target: number;
+  started: number;
+  open: () => void;
+  gate: Promise<void>;
+} | null = null;
+
+vi.mock('node:fs/promises', async () => {
+  const actual =
+    await vi.importActual<typeof import('node:fs/promises')>(
+      'node:fs/promises'
+    );
+  return {
+    ...actual,
+    readFile: async (...args: Parameters<typeof actual.readFile>) => {
+      if (mockReadBarrier) {
+        mockReadBarrier.started++;
+        if (mockReadBarrier.started >= mockReadBarrier.target) {
+          mockReadBarrier.open();
+        }
+        await mockReadBarrier.gate;
+      }
+      return actual.readFile(...args);
+    },
+  };
+});
+
 import { serialize } from '../../daemon/socket-utils';
 import { logger } from '../../utils/logger';
 import type { PostTasksExecutionContext } from './public-api';
@@ -60,6 +91,11 @@ describe('task results terminal output stubbing', () => {
 
   afterEach(() => {
     rmSync(mockCacheRoot, { recursive: true, force: true });
+    // Cleared here rather than only in the test's `finally`: a timed-out test
+    // does not run that promptly, so a leaked barrier would hang every test
+    // after it and bury the one real failure.
+    mockReadBarrier?.open();
+    mockReadBarrier = null;
   });
 
   function writeOutput(hash: string, contents: string) {
@@ -80,11 +116,11 @@ describe('task results terminal output stubbing', () => {
     });
   });
 
-  it('round trips the exact bytes back', () => {
+  it('round trips the exact bytes back', async () => {
     const output = 'line one\nline two[31m red [0m';
     writeOutput('abc', output);
 
-    const rehydrated = rehydrateTerminalOutputs(
+    const rehydrated = await rehydrateTerminalOutputs(
       stubTerminalOutputs(contextWith({ 'proj:build': result('abc', output) }))
     );
 
@@ -139,7 +175,7 @@ describe('task results terminal output stubbing', () => {
 
   // The daemon stubs, then hands the same context to an isolated plugin, which
   // stubs again before its own send.
-  it('is idempotent, so a second transport can re-stub', () => {
+  it('is idempotent, so a second transport can re-stub', async () => {
     writeOutput('abc', 'the real output');
     const once = stub(
       contextWith({ 'proj:build': result('abc', 'the real output') })
@@ -151,26 +187,27 @@ describe('task results terminal output stubbing', () => {
       'proj:build': join(mockCacheRoot, 'abc'),
     });
     expect(
-      rehydrateTerminalOutputs(twice).taskResults['proj:build'].terminalOutput
+      (await rehydrateTerminalOutputs(twice)).taskResults['proj:build']
+        .terminalOutput
     ).toBe('the real output');
   });
 
-  it('returns an unstubbed context untouched', () => {
+  it('returns an unstubbed context untouched', async () => {
     const context = contextWith({
       'proj:build': result('abc', 'never left the process'),
     });
 
-    expect(rehydrateTerminalOutputs(context)).toBe(context);
+    expect(await rehydrateTerminalOutputs(context)).toBe(context);
   });
 
-  it('reports a missing file as no output rather than handing back the path', () => {
+  it('reports a missing file as no output rather than handing back the path', async () => {
     writeOutput('abc', 'about to vanish');
     const stubbed = stub(
       contextWith({ 'proj:build': result('abc', 'about to vanish') })
     );
     rmSync(join(mockCacheRoot, 'abc'));
 
-    const rehydrated = rehydrateTerminalOutputs(stubbed);
+    const rehydrated = await rehydrateTerminalOutputs(stubbed);
 
     expect(rehydrated.taskResults['proj:build'].terminalOutput).toBeUndefined();
     expect(logger.warn).toHaveBeenCalledWith(
@@ -178,7 +215,7 @@ describe('task results terminal output stubbing', () => {
     );
   });
 
-  it('stubs only the results that have a file, leaving the rest inline', () => {
+  it('stubs only the results that have a file, leaving the rest inline', async () => {
     writeOutput('has-file', 'read me from disk');
     const stubbed = stub(
       contextWith({
@@ -194,13 +231,41 @@ describe('task results terminal output stubbing', () => {
       'inline please'
     );
 
-    const rehydrated = rehydrateTerminalOutputs(stubbed);
+    const rehydrated = await rehydrateTerminalOutputs(stubbed);
     expect(rehydrated.taskResults['proj:build'].terminalOutput).toBe(
       'read me from disk'
     );
     expect(rehydrated.taskResults['proj:test'].terminalOutput).toBe(
       'inline please'
     );
+  });
+
+  // Rehydration sits between the tasks finishing and the first plugin seeing
+  // the results, so serializing one file's latency per task lands in front of
+  // that. The barrier proves they overlap rather than timing them, which would
+  // be a flaky assertion on a loaded machine.
+  it('issues the reads together rather than one after another', async () => {
+    writeOutput('hash-a', 'a');
+    writeOutput('hash-b', 'b');
+    writeOutput('hash-c', 'c');
+    const stubbed = stub(
+      contextWith({
+        'proj:a': result('hash-a', 'a'),
+        'proj:b': result('hash-b', 'b'),
+        'proj:c': result('hash-c', 'c'),
+      })
+    );
+
+    let open!: () => void;
+    const gate = new Promise<void>((resolve) => (open = resolve));
+    mockReadBarrier = { target: 3, started: 0, open, gate };
+
+    const rehydrated = await rehydrateTerminalOutputs(stubbed);
+
+    expect(mockReadBarrier.started).toBe(3);
+    expect(rehydrated.taskResults['proj:a'].terminalOutput).toBe('a');
+    expect(rehydrated.taskResults['proj:b'].terminalOutput).toBe('b');
+    expect(rehydrated.taskResults['proj:c'].terminalOutput).toBe('c');
   });
 
   // The point of holding paths out of band: a transport that stubs and forgets
@@ -224,7 +289,7 @@ describe('task results terminal output stubbing', () => {
   // The daemon stubs for its own send, and the same context is then handed to
   // an isolated plugin. A result that became stubbable in between joins the map
   // rather than staying inline.
-  it('stubs a newly stubbable result on a context that is already stubbed', () => {
+  it('stubs a newly stubbable result on a context that is already stubbed', async () => {
     writeOutput('has-file', 'read me from disk');
     const once = stub(
       contextWith({
@@ -240,7 +305,7 @@ describe('task results terminal output stubbing', () => {
       'proj:build': join(mockCacheRoot, 'has-file'),
       'proj:test': join(mockCacheRoot, 'late-file'),
     });
-    const rehydrated = rehydrateTerminalOutputs(twice);
+    const rehydrated = await rehydrateTerminalOutputs(twice);
     expect(rehydrated.taskResults['proj:build'].terminalOutput).toBe(
       'read me from disk'
     );
@@ -267,9 +332,9 @@ describe('task results terminal output stubbing', () => {
 
   // An empty log is a real result, and `''` is falsy, so it is the value most
   // likely to be dropped by a truthiness check on the way through.
-  it('round trips an empty output rather than losing it', () => {
+  it('round trips an empty output rather than losing it', async () => {
     writeOutput('abc', '');
-    const rehydrated = rehydrateTerminalOutputs(
+    const rehydrated = await rehydrateTerminalOutputs(
       stub(contextWith({ 'proj:build': result('abc', '') }))
     );
 
@@ -279,7 +344,7 @@ describe('task results terminal output stubbing', () => {
   // A hash is whatever the hasher returned, and this one reaches a read. The
   // file has to exist for the assertion to mean anything: a traversal that
   // lands on nothing is refused by the existence check either way.
-  it('does not read outside the cache dir when the hash is a path', () => {
+  it('does not read outside the cache dir when the hash is a path', async () => {
     const outside = join(mockCacheRoot, '..', 'nx-stub-outside-the-cache');
     writeFileSync(outside, 'should never be read');
     try {

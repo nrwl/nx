@@ -185,7 +185,7 @@ export class LoadedNxPlugin {
       ) =>
         plugin.postTasksExecution(
           this.options,
-          rehydrateTerminalOutputs(context)
+          await rehydrateTerminalOutputs(context)
         );
     }
   }
