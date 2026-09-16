@@ -5,7 +5,7 @@ use anyhow::*;
 use tracing::{trace, trace_span};
 
 use super::once_cache::OnceCache;
-use crate::native::glob::build_glob_set;
+use crate::native::glob::{build_glob_set, path_or_everything_under};
 use crate::native::types::FileData;
 
 /// Compute-once cache for project fileset hashes. Holds only the hash, so
@@ -85,7 +85,7 @@ fn collect_project_file_indices(
     file_sets: &[String],
     project_file_map: &HashMap<String, Vec<FileData>>,
 ) -> Result<Vec<u32>> {
-    let glob_set = build_glob_set(file_sets)?;
+    let glob_set = build_glob_set(&fileset_patterns(file_sets))?;
     project_file_map.get(project_name).map_or_else(
         || Err(anyhow!("project {} not found", project_name)),
         |files| {
@@ -137,7 +137,7 @@ pub fn collect_project_files<'a>(
     project_file_map: &'a HashMap<String, Vec<FileData>>,
 ) -> Result<Vec<&'a FileData>> {
     let now = std::time::Instant::now();
-    let glob_set = build_glob_set(file_sets)?;
+    let glob_set = build_glob_set(&fileset_patterns(file_sets))?;
     trace!("build_glob_set for {:?}", now.elapsed());
 
     project_file_map.get(project_name).map_or_else(
@@ -446,4 +446,13 @@ mod tests {
         .unwrap();
         assert_eq!(paths_first, paths_second);
     }
+}
+
+/// Each fileset entry as the patterns it stands for, see
+/// `path_or_everything_under`.
+fn fileset_patterns(file_sets: &[String]) -> Vec<String> {
+    file_sets
+        .iter()
+        .flat_map(|glob| path_or_everything_under(glob))
+        .collect()
 }

@@ -5,7 +5,7 @@ mod glob_text;
 pub mod glob_transform;
 
 pub(crate) use crate::native::glob::glob_text::{
-    expand_literal_braces, literal_prefix, normalize_glob,
+    expand_literal_braces, literal_prefix, normalize_glob, path_or_everything_under,
 };
 use crate::native::glob::glob_transform::convert_glob;
 use dashmap::DashMap;

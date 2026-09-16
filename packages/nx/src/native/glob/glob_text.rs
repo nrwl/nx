@@ -104,9 +104,40 @@ pub(crate) fn normalize_glob(glob: &str) -> String {
     out
 }
 
+/// A fileset entry that names a path with no glob syntax means that file, or
+/// that directory and everything under it, so it becomes both. Which one it
+/// is depends on the disk, and a glob set never looks; matching both costs
+/// one extra pattern and reads the same in either case. An entry that already
+/// carries a pattern, or ends in `/`, is left alone.
+pub(crate) fn path_or_everything_under(glob: &str) -> Vec<String> {
+    use crate::native::glob::contains_glob_pattern;
+
+    let body = glob.strip_prefix('!').unwrap_or(glob);
+    if body.is_empty() || body.ends_with('/') || contains_glob_pattern(body) {
+        return vec![glob.to_string()];
+    }
+    vec![glob.to_string(), format!("{glob}/**")]
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_path_without_glob_syntax_also_means_everything_under_it() {
+        assert_eq!(
+            path_or_everything_under("libs/app/src"),
+            vec!["libs/app/src", "libs/app/src/**"]
+        );
+        assert_eq!(
+            path_or_everything_under("!libs/app/src"),
+            vec!["!libs/app/src", "!libs/app/src/**"],
+            "a negation excludes the directory's contents too"
+        );
+        for untouched in ["libs/app/**/*.ts", "libs/app/src/", "*.json", ""] {
+            assert_eq!(path_or_everything_under(untouched), vec![untouched]);
+        }
+    }
 
     #[test]
     fn expands_literal_brace_groups() {
