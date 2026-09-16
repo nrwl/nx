@@ -138,8 +138,12 @@ A glob such as `{workspaceRoot}/**` is allowed, but it covers every gitignored f
 A new matching file counts without a configuration change.
 A path can name a file that doesn't exist yet: the cache key changes when the file appears or is removed.
 
+A fileset names files, so a glob that resolves to a directory matches nothing.
+To hash what's under a directory, write `{projectRoot}/generated/**/*`.
+
 A `!` negation with `includeIgnored: true` filters every `includeIgnored` glob declared for the same project.
 Without the flag it's a normal fileset and doesn't affect them.
+A negation naming a directory excludes everything under it, unlike a positive glob.
 A negation with nothing to filter is a configuration error, and a negation can't be combined with `dependencies: true`.
 
 A glob never walks into `node_modules`, `.git`, `.nx/cache`, `.nx/workspace-data`, or `.yarn/cache` unless it names a path inside one of them.

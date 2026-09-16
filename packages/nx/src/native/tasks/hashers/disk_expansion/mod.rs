@@ -168,6 +168,16 @@ pub(crate) mod tests {
     fn walks_skip_hardcoded_ignores_but_exact_paths_inside_them_are_read() {
         let temp = workspace();
         let walked = expand_files(temp.path(), &globs(&["dist/**"])).unwrap();
+        // Listed, so the assertion below cannot pass on an empty expansion.
+        assert_eq!(
+            walked.files,
+            vec![
+                "dist/gen/a.js",
+                "dist/gen/a.js.map",
+                "dist/gen/nested/b.js",
+                "dist/other/c.js"
+            ]
+        );
         assert!(
             !walked.files.iter().any(|f| f.contains("node_modules")),
             "{:?}",

@@ -132,9 +132,11 @@ pub(super) fn parse_group(globs: &[String]) -> Result<(Vec<Positive>, Vec<Negati
     Ok((positives, negations))
 }
 
-/// `expand_files_with` for entries the caller has already split. Without
-/// `confine`, an entry is read wherever it points, as a declared output is.
-/// A directory `members` lists is taken from the list; any other is walked.
+/// `expand_files_with` for entries the caller has already split. `source`
+/// says which of the two callers this is: a fileset, which may lean on the
+/// workspace context and an index and may not read outside the workspace, or
+/// declared outputs, which are read wherever they point. A directory the
+/// source can list is taken from the list; any other is walked.
 pub(crate) fn expand_entries(
     workspace_root: &Path,
     positives: &[Positive],

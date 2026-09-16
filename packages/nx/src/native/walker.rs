@@ -170,8 +170,6 @@ fn is_hashable_file(file_type: &std::fs::FileType) -> bool {
     file_type.is_file() || file_type.is_symlink()
 }
 
-/// Hardcoded ignore patterns used by both the walker and the watcher.
-/// These are directories that should never be walked or watched.
 /// Files vite and vitest write and remove while they load a config. The
 /// watch never reports them, so a walk that feeds a hash skips them too.
 pub(crate) const TRANSIENT_FILE_GLOBS: &[&str] = &[
@@ -181,6 +179,7 @@ pub(crate) const TRANSIENT_FILE_GLOBS: &[&str] = &[
     "vite.config.mts.timestamp*.mjs",
 ];
 
+/// Directories the walker and the watcher never enter.
 pub(crate) const HARDCODED_IGNORE_PATTERNS: &[&str] = &[
     "**/node_modules",
     "**/.git",

@@ -1577,10 +1577,18 @@ impl WorkspaceContext {
     }
 
     /// The subset of `paths` the file map holds: what the watch tracks, with
-    /// the ignore rules applied. A path it does not hold is gitignored or
-    /// does not exist.
+    /// the ignore rules applied. A path it does not hold is gitignored, gone,
+    /// or not yet reported. Applies what the watch delivered first, as every
+    /// other read of the files does, so a write already reported counts.
     #[napi]
     pub fn tracked_files(&self, paths: Vec<String>) -> Vec<String> {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let batch = self.drain(FlushMode::Delivered, WhenScanning::Queue);
+            if !batch.is_empty() {
+                self.batches.publish(Ok(self.pending_changes()));
+            }
+        }
         self.files.holds(paths)
     }
 
@@ -2799,6 +2807,37 @@ mod tests {
             "only the admitted path punches through the hardcoded veto"
         );
         assert_eq!(names_of(&ctx), vec!["a.ts"], "the stream is not the files");
+    }
+
+    #[test]
+    fn tracked_files_answers_from_the_files_and_nothing_else() {
+        let temp = workspace_with(&["a.ts", "src/b.ts"]);
+        temp.child(".gitignore").write_str("dist/\n").unwrap();
+        temp.child("dist/out.js").write_str("x").unwrap();
+        let cache = TempDir::new().unwrap();
+        let ctx = watching_context(&temp, &cache);
+        ctx.all_file_data();
+
+        assert_eq!(
+            ctx.tracked_files(vec![
+                "a.ts".into(),
+                "dist/out.js".into(),
+                "src/b.ts".into(),
+                "never.ts".into(),
+            ]),
+            vec!["a.ts".to_string(), "src/b.ts".to_string()],
+            "gitignored and absent paths are not tracked"
+        );
+
+        // A write the watch reports becomes tracked; a delete stops being so.
+        temp.child("src/c.ts").write_str("c").unwrap();
+        wait_until("the new file never reached the files", || {
+            !ctx.tracked_files(vec!["src/c.ts".into()]).is_empty()
+        });
+        std::fs::remove_file(temp.child("src/b.ts").path()).unwrap();
+        wait_until("the delete never reached the files", || {
+            ctx.tracked_files(vec!["src/b.ts".into()]).is_empty()
+        });
     }
 
     #[test]

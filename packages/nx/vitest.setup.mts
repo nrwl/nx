@@ -138,8 +138,8 @@ vi.doMock(workspaceContextPath, async () => {
     getAllFileDataInContext: guarded('getAllFileDataInContext', () =>
       Promise.resolve([])
     ),
-    // Guarded like its siblings: a rescan against the real workspace root would
-    // re-walk this repo. Specs that exercise it point at a TempFs root.
+    // Guarded like its siblings: subscribing against the real workspace root
+    // would start a watch on this repo. Specs point at a TempFs root.
     subscribeToWorkspaceChanges: guarded(
       'subscribeToWorkspaceChanges',
       () => undefined
