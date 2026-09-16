@@ -1,5 +1,6 @@
-//! Reading the disk: what a walk never enters, the walk itself, and the
-//! stamp it reads on the way.
+//! What the expansion does with the disk: it drives the workspace walker
+//! and decides, per entry, whether the file counts and what it is worth
+//! remembering. The traversal itself is `create_walker`'s.
 
 use std::path::Path;
 use std::sync::{Arc, OnceLock};
@@ -42,11 +43,10 @@ fn transient_skips() -> Result<Arc<NxGlobSet>> {
 }
 
 /// Files under `start`, workspace-relative, with the stamp read on the way
-/// for anything the context does not vouch for. Top-level subdirectories walk
-/// in parallel. `start` itself is never skipped; its descendants are subject
-/// to the hardcoded ignores, so `node_modules/foo/**` works. Linked
-/// directories are not entered; with `canonical_root`, a linked file counts
-/// only when its target is inside it.
+/// for anything the context does not vouch for. The walker skips what it
+/// skips for every walk, but never the root it is given, so a glob rooted at
+/// `node_modules` reads it. Linked directories are not entered; with
+/// `canonical_root`, a linked file counts only when its target is inside it.
 pub(super) fn walk_files(
     start: &Path,
     workspace_root: &Path,

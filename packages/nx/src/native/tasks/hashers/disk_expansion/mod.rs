@@ -185,6 +185,21 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn a_glob_rooted_at_a_skipped_directory_still_reads_it() {
+        let temp = workspace();
+        temp.child("node_modules/foo/package.json")
+            .write_str("{}")
+            .unwrap();
+        // The prefix is the skipped directory itself, not a path inside it.
+        assert_eq!(
+            expand_files(temp.path(), &globs(&["node_modules/**/package.json"]))
+                .unwrap()
+                .files,
+            vec!["node_modules/foo/package.json"]
+        );
+    }
+
+    #[test]
     fn a_fileset_that_lands_on_a_directory_selects_nothing() {
         let temp = workspace();
         assert!(
