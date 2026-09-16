@@ -7,6 +7,7 @@ import {
   newProject,
   readJson,
   removeFile,
+  reservePort,
   runCLI,
   runCLIAsync,
   runCommand,
@@ -847,6 +848,144 @@ describe('Nx Running Tests', () => {
 
         checkFilesExist(`one.txt`);
       }, 10000);
+
+      it('should wait for a continuous dependency to be ready when the edge asks for it', async () => {
+        // The marker exists only once the server has printed its ready line,
+        // so the check passes only if Nx waited for that line.
+        updateFile(
+          `libs/${mylib1}/serve.js`,
+          `
+          const { writeFileSync } = require('fs');
+          setTimeout(() => {
+            writeFileSync('ready.txt', '');
+            console.log('server listening');
+          }, 2000);
+          setInterval(() => {}, 1000);
+        `
+        );
+        const check = {
+          command:
+            "node -e \"process.exit(require('fs').existsSync('ready.txt') ? 0 : 1)\"",
+          options: { cwd: `libs/${mylib1}` },
+        };
+        updateJson(`libs/${mylib1}/project.json`, (config) => {
+          config.targets.serve = {
+            command: 'node serve.js',
+            options: { cwd: `libs/${mylib1}` },
+            continuous: true,
+            readyWhen: { logMatches: 'server listening' },
+          };
+          config.targets.check = { ...check, dependsOn: ['serve'] };
+          return config;
+        });
+
+        expect(
+          runCLI(`check ${mylib1} --skip-nx-cache`, { silenceError: true })
+        ).toContain(`Failed tasks:`);
+
+        updateJson(`libs/${mylib1}/project.json`, (config) => {
+          config.targets.check = {
+            ...check,
+            dependsOn: [{ target: 'serve', waitFor: 'ready' }],
+          };
+          return config;
+        });
+
+        const output = runCLI(`check ${mylib1} --skip-nx-cache`);
+        expect(output).toContain(
+          `Waiting for "${mylib1}:serve" to be ready...`
+        );
+        expect(output).toContain(
+          `Successfully ran target check for project ${mylib1}`
+        );
+      }, 60000);
+
+      describe('readyWhen probes', () => {
+        let port: number;
+        let check: object;
+
+        beforeAll(async () => {
+          port = await reservePort();
+          check = {
+            command:
+              "node -e \"process.exit(require('fs').existsSync('ready.txt') ? 0 : 1)\"",
+            options: { cwd: `libs/${mylib1}` },
+            dependsOn: [{ target: 'serve', waitFor: 'ready' }],
+          };
+          updateFile(`libs/${mylib1}/idle.js`, 'setInterval(() => {}, 1000);');
+          // The marker exists only once the server listens, so the check
+          // passes only if Nx waited for the probe.
+          updateFile(
+            `libs/${mylib1}/server.js`,
+            `
+            const { createServer } = require('http');
+            const { writeFileSync } = require('fs');
+            setTimeout(() => {
+              writeFileSync('ready.txt', '');
+              createServer((req, res) => res.end('ok')).listen(${port}, '127.0.0.1');
+            }, 2000);
+          `
+          );
+        });
+
+        it.each([
+          ['url', () => ({ url: `http://localhost:${port}` })],
+          ['port', () => ({ port })],
+          [
+            'command',
+            () => ({
+              command: `node -e "process.exit(require('fs').existsSync('libs/${mylib1}/ready.txt') ? 0 : 1)"`,
+            }),
+          ],
+        ])(
+          'should wait for the %s probe',
+          (_, readyWhen) => {
+            removeFile(`libs/${mylib1}/ready.txt`);
+            updateJson(`libs/${mylib1}/project.json`, (config) => {
+              config.targets.serve = {
+                command: 'node server.js',
+                options: { cwd: `libs/${mylib1}` },
+                continuous: true,
+                readyWhen: readyWhen(),
+              };
+              config.targets.check = check;
+              return config;
+            });
+
+            const output = runCLI(`check ${mylib1} --skip-nx-cache`);
+            expect(output).toContain(
+              `Waiting for "${mylib1}:serve" to be ready...`
+            );
+            expect(output).toContain(
+              `Successfully ran target check for project ${mylib1}`
+            );
+          },
+          60000
+        );
+
+        it('should fail the waiting task when the probe times out', () => {
+          removeFile(`libs/${mylib1}/ready.txt`);
+          updateJson(`libs/${mylib1}/project.json`, (config) => {
+            // idle.js never listens, so the url probe cannot pass
+            config.targets.serve = {
+              command: 'node idle.js',
+              options: { cwd: `libs/${mylib1}` },
+              continuous: true,
+              readyWhen: { url: `http://localhost:${port}`, timeout: 2000 },
+            };
+            config.targets.check = check;
+            return config;
+          });
+
+          const output = runCLI(`check ${mylib1} --skip-nx-cache`, {
+            silenceError: true,
+          });
+          expect(output).toContain(
+            `Task "${mylib1}:serve" did not become ready within 2000ms (readyWhen: url http://localhost:${port}).`
+          );
+          expect(output).toContain('Failed tasks:');
+        }, 60000);
+      });
     });
   });
 
