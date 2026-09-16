@@ -2433,6 +2433,64 @@ mod tests {
         assert!(!names.contains(&"src/sub/t.ts".to_string()));
     }
 
+    // The e2e sequence that failed on CI: a directory under a registered
+    // directory is moved away, moved back, then deleted outright.
+    #[test]
+    #[cfg(not(target_arch = "wasm32"))]
+    fn a_directory_deleted_after_a_round_trip_move_leaves_the_listing() {
+        let temp = workspace_with(&["a.ts"]);
+        temp.child(".gitignore").write_str("dist/\n").unwrap();
+        temp.child("dist/a.json").write_str("a").unwrap();
+        temp.child("dist/sub/b.json").write_str("b").unwrap();
+        temp.child("dist/sub/c.json").write_str("c").unwrap();
+        let cache = TempDir::new().unwrap();
+        let ctx = watching_context(&temp, &cache);
+        ctx.all_file_data();
+        let root = dunce::canonicalize(temp.path()).unwrap();
+        let index = ctx.ignored_index();
+        assert!(index.register(&root, "dist"));
+
+        std::fs::remove_file(temp.child("dist/a.json").path()).unwrap();
+        ctx.settle();
+        assert_eq!(
+            index.list("dist").unwrap(),
+            vec!["dist/sub/b.json", "dist/sub/c.json"],
+            "after the file delete"
+        );
+
+        std::fs::rename(
+            temp.child("dist/sub").path(),
+            temp.child("dist/moved").path(),
+        )
+        .unwrap();
+        ctx.settle();
+        assert_eq!(
+            index.list("dist").unwrap(),
+            vec!["dist/moved/b.json", "dist/moved/c.json"],
+            "after the move away"
+        );
+
+        std::fs::rename(
+            temp.child("dist/moved").path(),
+            temp.child("dist/sub").path(),
+        )
+        .unwrap();
+        ctx.settle();
+        assert_eq!(
+            index.list("dist").unwrap(),
+            vec!["dist/sub/b.json", "dist/sub/c.json"],
+            "after the move back"
+        );
+
+        std::fs::remove_dir_all(temp.child("dist/sub").path()).unwrap();
+        ctx.settle();
+        assert_eq!(
+            index.list("dist").unwrap(),
+            Vec::<String>::new(),
+            "after the directory delete"
+        );
+    }
+
     #[test]
     #[cfg(not(target_arch = "wasm32"))]
     fn a_listing_sees_a_write_nobody_settled() {

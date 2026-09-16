@@ -8,7 +8,6 @@ use std::time::{Duration, Instant, SystemTime};
 
 use crossbeam_channel::{Receiver, Sender, bounded, select, unbounded};
 use notify::{RecursiveMode, Watcher as NotifyWatcher};
-use parking_lot::Mutex;
 use tracing::{debug, trace};
 
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
@@ -291,11 +290,18 @@ impl WatchPipeline {
     #[cfg(not(any(target_os = "macos", target_os = "windows")))]
     fn new_directories_from_event(&self, event: &RawWatchEvent) -> Vec<PathBuf> {
         use crate::native::watch::types::meta_is_dir;
-        use notify::{EventKind, event::CreateKind};
+        use notify::{
+            EventKind,
+            event::{CreateKind, ModifyKind, RenameMode},
+        };
 
+        // A directory moved into place arrives as a rename, and inotify does
+        // not carry the old path's registration over to it.
         if !matches!(
             event.kind(),
-            EventKind::Create(CreateKind::Folder) | EventKind::Create(CreateKind::Any)
+            EventKind::Create(CreateKind::Folder)
+                | EventKind::Create(CreateKind::Any)
+                | EventKind::Modify(ModifyKind::Name(RenameMode::To | RenameMode::Any))
         ) {
             return Vec::new();
         }
