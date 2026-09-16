@@ -37,6 +37,16 @@ export type NormalizedTargetDependencyConfig = TargetDependencyConfig & {
   projects: string[];
 };
 
+export function getAllTargetNames(projectGraph: ProjectGraph): string[] {
+  const names = new Set<string>();
+  for (const node of Object.values(projectGraph.nodes)) {
+    for (const targetName of Object.keys(node.data.targets ?? {})) {
+      names.add(targetName);
+    }
+  }
+  return Array.from(names);
+}
+
 export function getDependencyConfigs(
   { project, target }: { project: string; target: string },
   extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,

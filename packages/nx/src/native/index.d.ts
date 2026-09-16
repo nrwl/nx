@@ -121,6 +121,17 @@ export declare class ImportResult {
   staticImportExpressions: Array<string>
 }
 
+/**
+ * Done once every pattern has appeared in the fed output, in any order.
+ * Keeps the tail of the previous chunk so a match split across two chunks
+ * is still found. Terminal control sequences are ignored, even when a chunk
+ * boundary falls inside one.
+ */
+export declare class LogMatcher {
+  constructor(patterns: Array<string>)
+  feed(chunk: string): boolean
+}
+
 export declare class NxCache {
   cacheDirectory: string
   constructor(workspaceRoot: string, cachePath: string, dbConnection: ExternalObject<NxDbConnection>, linkTaskDetails?: boolean | undefined | null, maxCacheSize?: number | undefined | null)
@@ -220,11 +231,25 @@ export declare class ProcessMetricsCollector {
   subscribe(callback: (err: Error | null, event: MetricsUpdate) => void): void
 }
 
+/**
+ * Retries a probe until it passes, the timeout elapses or `cancel` is called.
+ * A failing attempt is never an error.
+ */
+export declare class ReadinessProbe {
+  constructor(config: ReadinessProbeConfig, cwd: string)
+  wait(): Promise<ProbeOutcome>
+  cancel(): void
+}
+
 export declare class RunningTasksService {
   constructor(db: ExternalObject<NxDbConnection>)
   getRunningTasks(ids: Array<string>): Array<string>
   addRunningTask(taskId: string): void
   removeRunningTask(taskId: string): void
+  /** No-op once the task's row is gone, so a late probe result cannot outlive the task. */
+  setTaskReadiness(taskId: string, status: TaskReadiness): void
+  /** `None` when the task is not running or its owner recorded no readiness. */
+  getTaskReadiness(taskId: string): TaskReadiness | null
 }
 
 export declare class RustPseudoTerminal {
@@ -799,6 +824,12 @@ export interface PerformanceSummaryPayload {
   links: Array<Link>
 }
 
+export declare const enum ProbeOutcome {
+  Ready = 'Ready',
+  TimedOut = 'TimedOut',
+  Cancelled = 'Cancelled'
+}
+
 /** Process metadata (static, doesn't change during process lifetime) */
 export interface ProcessMetadata {
   ppid: number
@@ -829,6 +860,16 @@ export interface ProjectGraph {
   nodes: Record<string, Project>
   dependencies: Record<string, Array<string>>
   externalNodes: Record<string, ExternalNode>
+}
+
+/** One of `url`, `port` or `command` is set. `interval` absent means backoff. */
+export interface ReadinessProbeConfig {
+  url?: string
+  port?: number
+  host?: string
+  command?: string
+  timeout: number
+  interval?: number
 }
 
 export declare function remove(src: string): void
@@ -944,6 +985,12 @@ export interface TaskHashDetails {
   implicitDeps?: Record<string, string>
   /** Hash of the runtime environment which the task was executed */
   runtime?: Record<string, string>
+}
+
+export declare const enum TaskReadiness {
+  Pending = 0,
+  Ready = 1,
+  Failed = 2
 }
 
 /**
