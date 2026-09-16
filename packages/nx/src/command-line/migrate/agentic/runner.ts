@@ -1,4 +1,4 @@
-import { ChildProcess, spawn } from 'child_process';
+import { type ChildProcess, spawn } from 'child_process';
 import * as pc from 'picocolors';
 import { logger } from '../../../utils/logger';
 import { output } from '../../../utils/output';
@@ -7,7 +7,7 @@ import { migrateChoice } from '../safe-prompt';
 import {
   AGENT_GRACEFUL_EXIT_MS,
   closeAgentSession,
-  ExitInfo,
+  type ExitInfo,
   FORCE_KILL_WAIT_MS,
   raceWithTimeout,
   waitForExit,
@@ -25,7 +25,7 @@ import {
   InvocationContext,
 } from './types';
 import {
-  AdaptedSpawn,
+  type AdaptedSpawn,
   adaptSpawnForWindowsShim,
   WINDOWS_COMMAND_LINE_BUDGET,
   WINDOWS_COMMAND_LINE_LIMIT,

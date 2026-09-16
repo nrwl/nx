@@ -1,4 +1,4 @@
-import { ChildProcess, execSync } from 'child_process';
+import { type ChildProcess, execSync } from 'child_process';
 
 // How long to wait for the agent to exit gracefully after sending SIGINT.
 // Long enough for an interactive agent to finish its current render and

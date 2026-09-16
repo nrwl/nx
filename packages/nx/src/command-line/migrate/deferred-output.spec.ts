@@ -3,7 +3,7 @@ import { output } from '../../utils/output';
 import { MAX_GENERATOR_OUTPUT_BYTES } from './agentic/capture-generator-output';
 import {
   DeferredOutputCollector,
-  MigrateOutputSink,
+  type MigrateOutputSink,
   replayDeferredOutput,
   terminalOutput,
 } from './deferred-output';

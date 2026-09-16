@@ -1,4 +1,4 @@
-import { ChildProcess, spawn } from 'child_process';
+import { type ChildProcess, spawn } from 'child_process';
 import { existsSync, mkdirSync, rmSync } from 'fs';
 import { dirname, join, relative, sep } from 'path';
 import { logger } from '../../../../utils/logger';
@@ -6,23 +6,23 @@ import { resetSgrAfterAgent } from '../../migrate-output';
 import {
   BROKER_ENV_VAR,
   MigrateCommitBroker,
-  MigrateRunPolicy,
+  type MigrateRunPolicy,
   runDir,
   runHandoffsDir,
 } from '../../run';
 import {
   AGENT_GRACEFUL_EXIT_MS,
   closeAgentSession,
-  ExitInfo,
+  type ExitInfo,
   FORCE_KILL_WAIT_MS,
   raceWithTimeout,
   waitForExit,
 } from '../close-agent-session';
 import { handoffsDirState } from '../handoff';
 import { restoreTermiosAfterAgent } from '../terminal-repair';
-import { DetectedInstalledAgent } from '../types';
+import type { DetectedInstalledAgent } from '../types';
 import {
-  AdaptedSpawn,
+  type AdaptedSpawn,
   adaptSpawnForWindowsShim,
   WINDOWS_COMMAND_LINE_BUDGET,
   WINDOWS_COMMAND_LINE_LIMIT,

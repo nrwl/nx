@@ -1,5 +1,5 @@
 import { claudeCodeHandoffAllowedTools } from '../definitions';
-import { AgentId, InvocationSpec } from '../types';
+import type { AgentId, InvocationSpec } from '../types';
 
 export interface MasterInvocationContext {
   runId: string;
