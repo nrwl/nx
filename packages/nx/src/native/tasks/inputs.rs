@@ -42,10 +42,53 @@ pub(super) fn get_inputs<'a>(
     split_inputs_into_self_and_deps(inputs, named_inputs)
 }
 
+/// A propagated group resolves against the dependency as one unit, so a
+/// negation filters the positives of the same group. Only `includeIgnored`
+/// filesets are grouped; every other input propagates alone.
+pub(super) fn get_inputs_for_dependency_group<'a>(
+    project: &'a Project,
+    nx_json: &'a NxJson,
+    named_inputs: &[Input<'a>],
+) -> anyhow::Result<Option<SplitInputs<'a>>> {
+    if let [named_input] = named_inputs {
+        return get_inputs_for_dependency(project, nx_json, named_input);
+    }
+
+    let mut self_inputs = Vec::with_capacity(named_inputs.len());
+    let mut deps_inputs = Vec::with_capacity(named_inputs.len());
+    for named_input in named_inputs {
+        let Input::FileSet {
+            fileset,
+            dependencies: true,
+            include_ignored,
+        } = named_input
+        else {
+            return Ok(None);
+        };
+        self_inputs.push(Input::FileSet {
+            fileset: *fileset,
+            dependencies: false,
+            include_ignored: *include_ignored,
+        });
+        deps_inputs.push(Input::FileSet {
+            fileset: *fileset,
+            dependencies: true,
+            include_ignored: *include_ignored,
+        });
+    }
+
+    Ok(Some(SplitInputs {
+        deps_outputs: vec![],
+        deps_inputs,
+        self_inputs,
+        project_inputs: vec![],
+    }))
+}
+
 pub(super) fn get_inputs_for_dependency<'a>(
     project: &'a Project,
     nx_json: &'a NxJson,
-    named_input: &'a Input,
+    named_input: &Input<'a>,
 ) -> anyhow::Result<Option<SplitInputs<'a>>> {
     match named_input {
         Input::Inputs { input, .. } => {
@@ -55,7 +98,7 @@ pub(super) fn get_inputs_for_dependency<'a>(
                     .into_iter()
                     .partition(|i| !(matches!(i, Input::DepsOutputs { .. })));
             let deps_inputs = vec![Input::Inputs {
-                input,
+                input: *input,
                 dependencies: true,
             }];
 
@@ -74,12 +117,12 @@ pub(super) fn get_inputs_for_dependency<'a>(
             // For dependency filesets, we apply the same fileset to the dependency
             // and continue recursively with the same pattern
             let self_inputs = vec![Input::FileSet {
-                fileset,
+                fileset: *fileset,
                 dependencies: false,
                 include_ignored: *include_ignored,
             }];
             let deps_inputs = vec![Input::FileSet {
-                fileset,
+                fileset: *fileset,
                 dependencies: true,
                 include_ignored: *include_ignored,
             }];

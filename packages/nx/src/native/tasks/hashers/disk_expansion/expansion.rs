@@ -255,7 +255,7 @@ pub(crate) fn validate_files_glob(glob: &str) -> Result<()> {
 pub(crate) fn validate_files_globs(project: &str, globs: &[String]) -> Result<()> {
     if !globs.is_empty() && globs.iter().all(|glob| glob.starts_with('!')) {
         bail!(
-            "The includeIgnored fileset \"{}\" applied to \"{project}\" is a negation with no positive includeIgnored fileset to filter. A negation only filters the positive includeIgnored filesets of the same project; a fileset with `dependencies: true` is hashed on its own for each dependency, so a negation there has nothing to filter.",
+            "The includeIgnored fileset \"{}\" applied to \"{project}\" is a negation with no positive includeIgnored fileset to filter. A negation only filters the positive includeIgnored filesets resolved with it: the project's own, or the `dependencies: true` group it is propagated to each dependency with.",
             globs[0]
         );
     }

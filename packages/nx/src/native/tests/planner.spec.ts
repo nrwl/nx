@@ -259,6 +259,91 @@ describe('task planner', () => {
         new HashPlanner({} as any, ref).getPlans(order, taskGraph);
     }
 
+    it('resolves a dependency includeIgnored group so a negation filters it', () => {
+      const plans = twoConsumersOfShared(
+        [
+          {
+            fileset: '{projectRoot}/dist/**',
+            dependencies: true,
+            includeIgnored: true,
+          },
+          {
+            fileset: '!{projectRoot}/dist/**/*.map',
+            dependencies: true,
+            includeIgnored: true,
+          },
+        ],
+        ['default']
+      )(['a:build', 'b:build']);
+
+      expect(plans['a:build']).toContain(
+        'files:[libs/shared/dist/**,!libs/shared/dist/**/*.map]'
+      );
+    });
+
+    it('rejects a dependency group that is only negations', () => {
+      expect(() =>
+        twoConsumersOfShared(
+          [
+            {
+              fileset: '!{projectRoot}/dist/**/*.map',
+              dependencies: true,
+              includeIgnored: true,
+            },
+            {
+              fileset: '!{projectRoot}/dist/**/*.d.ts',
+              dependencies: true,
+              includeIgnored: true,
+            },
+          ],
+          ['default']
+        )(['a:build'])
+      ).toThrow(/no positive includeIgnored fileset/);
+    });
+
+    it('keys the dependency memo on the whole group', () => {
+      const plansIn = twoConsumersOfShared(
+        [
+          {
+            fileset: '{projectRoot}/dist/**',
+            dependencies: true,
+            includeIgnored: true,
+          },
+          {
+            fileset: '!{projectRoot}/dist/**/*.map',
+            dependencies: true,
+            includeIgnored: true,
+          },
+        ],
+        [
+          {
+            fileset: '{projectRoot}/dist/**',
+            dependencies: true,
+            includeIgnored: true,
+          },
+          {
+            fileset: '!{projectRoot}/dist/**/*.d.ts',
+            dependencies: true,
+            includeIgnored: true,
+          },
+        ]
+      );
+
+      // Whichever task is planned first must not hand its group to the other.
+      for (const order of [
+        ['a:build', 'b:build'],
+        ['b:build', 'a:build'],
+      ]) {
+        const plans = plansIn(order);
+        expect(plans['a:build']).toContain(
+          'files:[libs/shared/dist/**,!libs/shared/dist/**/*.map]'
+        );
+        expect(plans['b:build']).toContain(
+          'files:[libs/shared/dist/**,!libs/shared/dist/**/*.d.ts]'
+        );
+      }
+    });
+
     it('keys the dependency subtree memo on the backing store', () => {
       const plansIn = twoConsumersOfShared(
         [
