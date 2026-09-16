@@ -222,7 +222,7 @@ pub(crate) mod tests {
     }
 
     #[test]
-    fn expands_from_the_target_directory_and_applies_negations() {
+    fn expands_from_the_partitioned_directory_and_applies_negations() {
         let temp = workspace();
         let expansion = expand_files(
             temp.path(),
