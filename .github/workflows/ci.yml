@@ -38,6 +38,9 @@ jobs:
       NX_ALLOW_NON_CACHEABLE_DTE: 'true'
       NX_CLOUD_EXPERIMENTAL_POLLING: 'true'
       NX_CLOUD_CONTINUOUS_ASSIGNMENT: 'true'
+      NX_FIX_CI_EXPERIMENTAL: 'true'
+      NX_FIX_CI_TRACING: 'true'
+      NX_FIX_CI_STABLE_OUTPUT_SCHEMA: 'true'
 
     steps:
       - name: Checkout
