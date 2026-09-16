@@ -12,8 +12,9 @@ import {
   currentProjectGraph,
   getRecomputationGeneration,
   invalidateGraphCache,
-  isKnownWorkspaceFile,
 } from './project-graph-incremental-recomputation';
+import { workspaceRoot } from '../../utils/workspace-root';
+import { trackedFilesInContext } from '../../utils/workspace-context';
 import type { WatchEvent } from '../../native';
 
 let outputsWatcherError: Error | undefined;
@@ -96,8 +97,9 @@ export const handleOutputsChanges = async (
         unclassified.map((event) => event.path),
         generation
       );
-      const knownInvalidating = invalidating.filter((path) =>
-        isKnownWorkspaceFile(path)
+      const knownInvalidating = trackedFilesInContext(
+        workspaceRoot,
+        invalidating
       );
       queuePendingDotEnvEvents(knownInvalidating, generation);
       if (knownInvalidating.length < invalidating.length) {

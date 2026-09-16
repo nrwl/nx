@@ -164,6 +164,18 @@ export async function updateContextWithChangedFiles(
   }
 }
 
+/**
+ * The subset of `paths` the workspace file map holds: what the watch tracks,
+ * with the ignore rules applied.
+ */
+export function trackedFilesInContext(
+  workspaceRoot: string,
+  paths: string[]
+): string[] {
+  ensureContextAvailable(workspaceRoot);
+  return workspaceContext?.trackedFiles(paths) ?? [];
+}
+
 export function updateFilesInContext(
   workspaceRoot: string,
   updatedFiles: string[],

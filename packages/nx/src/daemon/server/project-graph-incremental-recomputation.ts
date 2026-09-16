@@ -576,38 +576,6 @@ export function getRecomputationGeneration(): number {
   return recomputationGeneration;
 }
 
-// isKnownWorkspaceFile's membership set, derived lazily from the map object it
-// was built from; every `fileMapWithFiles` write clears it, so a replaced map
-// generation is not retained through the memo.
-let knownWorkspaceFiles: Set<string> | undefined;
-let knownWorkspaceFilesSource: typeof fileMapWithFiles;
-
-/**
- * Whether the ignore-filtered workspace file map knows `path`. The workspace
- * watcher applies the same ignore rules, so a change to a known file also
- * reaches scheduleProjectGraphRecomputation; an unknown file is either
- * ignored, or created since the last recompute committed.
- */
-export function isKnownWorkspaceFile(path: string): boolean {
-  if (!fileMapWithFiles) {
-    return false;
-  }
-  if (knownWorkspaceFilesSource !== fileMapWithFiles) {
-    const { projectFileMap, nonProjectFiles } = fileMapWithFiles.fileMap;
-    knownWorkspaceFiles = new Set<string>();
-    for (const { file } of nonProjectFiles) {
-      knownWorkspaceFiles.add(file);
-    }
-    for (const files of Object.values(projectFileMap)) {
-      for (const { file } of files) {
-        knownWorkspaceFiles.add(file);
-      }
-    }
-    knownWorkspaceFilesSource = fileMapWithFiles;
-  }
-  return knownWorkspaceFiles.has(path);
-}
-
 async function processFilesAndCreateAndSerializeProjectGraph(
   separatedPlugins: SeparatedPlugins
 ): Promise<SerializedProjectGraph> {
@@ -697,8 +665,6 @@ async function processFilesAndCreateAndSerializeProjectGraph(
     // chainToLatest above without touching `fileMapWithFiles`, so they
     // can't clobber a newer compute's write.
     fileMapWithFiles = fileMapUpdate.fileMap;
-    knownWorkspaceFiles = undefined;
-    knownWorkspaceFilesSource = undefined;
     storedWorkspaceConfigHash = fileMapUpdate.configHash;
     if (fileMapUpdate.knownExternalNodes) {
       knownExternalNodes = fileMapUpdate.knownExternalNodes;
@@ -927,8 +893,6 @@ async function resetInternalState() {
   servedGraphState = null;
   servedGraphCandidate = null;
   fileMapWithFiles = undefined;
-  knownWorkspaceFiles = undefined;
-  knownWorkspaceFilesSource = undefined;
   currentProjectFileMapCache = undefined;
   currentProjectGraph = undefined;
   currentSourceMaps = undefined;

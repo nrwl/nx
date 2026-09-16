@@ -761,6 +761,23 @@ impl FileState {
         seal(&mut state, outcomes)
     }
 
+    /// The subset of `paths` the files hold, in the order given. One lookup
+    /// each, so a batch never copies the map.
+    fn holds(&self, paths: Vec<String>) -> Vec<String> {
+        let Some(sync) = &self.0 else {
+            return vec![];
+        };
+        let (lock, cvar) = sync.deref();
+        let state = lock.lock().expect("Should be able to lock files");
+        let state = cvar
+            .wait(state, |s| s.phase == Phase::Scanning)
+            .expect("Should be able to wait for files");
+        paths
+            .into_iter()
+            .filter(|path| state.files.contains_key(Path::new(path)))
+            .collect()
+    }
+
     fn get_files(&self) -> Vec<FileData> {
         let Some(sync) = &self.0 else {
             return vec![];
@@ -1557,6 +1574,14 @@ impl WorkspaceContext {
             vec![Change::rescan()],
             WhenScanning::Wait,
         )
+    }
+
+    /// The subset of `paths` the file map holds: what the watch tracks, with
+    /// the ignore rules applied. A path it does not hold is gitignored or
+    /// does not exist.
+    #[napi]
+    pub fn tracked_files(&self, paths: Vec<String>) -> Vec<String> {
+        self.files.holds(paths)
     }
 
     #[napi]

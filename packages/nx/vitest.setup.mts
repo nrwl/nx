@@ -164,6 +164,7 @@ vi.doMock(workspaceContextPath, async () => {
       () => Promise.resolve([])
     ),
     updateContextWithChangedFiles: realFn('updateContextWithChangedFiles'),
+    trackedFilesInContext: guarded('trackedFilesInContext', () => []),
     updateFilesInContext: realFn('updateFilesInContext'),
     updateProjectFiles: realFn('updateProjectFiles'),
     resetWorkspaceContext: realFn('resetWorkspaceContext'),

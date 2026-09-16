@@ -306,6 +306,12 @@ export declare class WorkspaceContext {
    * its normal recomputation path; subscribers do not see them.
    */
   rescanAndDiff(): ChangeBatch
+  /**
+   * The subset of `paths` the file map holds: what the watch tracks, with
+   * the ignore rules applied. A path it does not hold is gitignored or
+   * does not exist.
+   */
+  trackedFiles(paths: Array<string>): Array<string>
   getFilesInDirectory(directory: string): Array<string>
   /**
    * Subscribes to the context's changes: the callback is called whenever
