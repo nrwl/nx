@@ -136,22 +136,13 @@ fn under(path: &str, dir: &str) -> bool {
 }
 
 /// Whether `set` holds `path` or one of its ancestors: one lookup per level.
-/// The empty string is the workspace root, an ancestor of everything, so it
-/// is the last level tried rather than a name no path ever reaches.
+/// `Path::ancestors` ends a relative path at `""`, which is the workspace
+/// root and an ancestor of everything, so the root needs no case of its own.
 fn holds(set: &BTreeSet<String>, path: &str) -> bool {
-    if set.is_empty() {
-        return false;
-    }
-    let mut current = path;
-    loop {
-        if set.contains(current) {
-            return true;
-        }
-        match current.rfind('/') {
-            Some(i) => current = &current[..i],
-            None => return !current.is_empty() && set.contains(""),
-        }
-    }
+    !set.is_empty()
+        && Path::new(path)
+            .ancestors()
+            .any(|ancestor| ancestor.to_str().is_some_and(|level| set.contains(level)))
 }
 
 impl IgnoredIndex {
