@@ -13,7 +13,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use dashmap::DashMap;
 use parking_lot::RwLock;
-use tracing::{trace, warn};
+use tracing::{debug, trace};
 
 use crate::native::hasher::hash_file_path;
 use crate::native::walker::{PathPredicate, files_under, seed_walk};
@@ -196,15 +196,16 @@ impl IgnoredIndex {
     /// (a hardcoded ignore) or `dir` resolves outside the workspace.
     ///
     /// An empty `dir` is the whole workspace, which a glob with no literal
-    /// prefix asks for. It is kept like any other, and says so once: a listing
-    /// of it walks everything, where a named directory walks only itself.
+    /// prefix asks for. It is kept like any other, and says so once at debug
+    /// level: a listing of it walks everything, where a named directory walks
+    /// only itself.
     pub(crate) fn track(&self, workspace_root: &Path, dir: &str) -> bool {
         let dir = dir.trim_matches('/');
         if self.is_tracked(dir) {
             return true;
         }
         if dir.is_empty() && !self.announced_whole_workspace.swap(true, Ordering::AcqRel) {
-            warn!(
+            debug!(
                 "An includeIgnored fileset names no directory to read from, so it is read \
                  from the workspace root: its first listing walks the whole workspace and \
                  then holds every file in it. Give the fileset a directory, such as \
