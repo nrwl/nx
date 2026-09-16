@@ -101,18 +101,19 @@ pub(crate) fn expand_globs(
 /// negations. Each brace group becomes one entry per alternative first, so
 /// what a parser sees never holds a `{a,b}`.
 pub(super) fn parse_group(globs: &[String]) -> Result<(Vec<Positive>, Vec<Negation>)> {
-    let entries = |negated: bool| {
-        globs
-            .iter()
-            .filter(move |glob| glob.starts_with('!') == negated)
-            .flat_map(|glob| expand_literal_braces(glob))
-    };
-    let positives = entries(false)
-        .map(|glob| Positive::parse(&glob))
-        .collect::<Result<_>>()?;
-    let negations = entries(true)
-        .map(|glob| Negation::parse(&glob))
-        .collect::<Result<_>>()?;
+    let mut positives = Vec::new();
+    let mut negations = Vec::new();
+    for glob in globs {
+        // Decided before the braces expand, so an alternative that begins
+        // with `!` cannot turn a positive entry into an exclusion.
+        let negated = glob.starts_with('!');
+        for entry in expand_literal_braces(glob) {
+            match negated {
+                true => negations.push(Negation::parse(&entry)?),
+                false => positives.push(Positive::parse(&entry)?),
+            }
+        }
+    }
     Ok((positives, negations))
 }
 
