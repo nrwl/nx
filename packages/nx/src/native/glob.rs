@@ -149,13 +149,11 @@ pub(crate) fn build_glob_set<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Resu
         .iter()
         .flat_map(|s| potential_glob_split(s.as_ref()))
         .map(|glob| {
-            // Decide on the pattern without its negation marker. A leading `!`
-            // marks the whole glob as an exclusion — it is not extglob syntax —
-            // and convert_glob strips bare `@`, `+` and `?` out of anything it
-            // touches (see special_char_with_no_group, which `+spec.ts`-style
-            // patterns rely on). Routing a plain exclusion through it purely
-            // because of that leading `!` silently rewrote `!dist/@scope/pkg`
-            // to `!dist/scope/pkg`, so the exclusion matched nothing.
+            // Convert only what needs it: `convert_glob` truncates a glob at
+            // a special character that begins no group, so `a/?/b` comes back
+            // as `a` (NXC-5001). Deciding on the pattern without its negation
+            // marker keeps a plain exclusion off that road — a leading `!`
+            // marks the whole glob as an exclusion, not extglob syntax.
             let pattern = glob.strip_prefix('!').unwrap_or(glob);
             if pattern.contains('!')
                 || pattern.contains('|')
