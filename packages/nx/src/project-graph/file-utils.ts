@@ -64,6 +64,16 @@ const TEXT_LOCK_FILES = new Set([
 ]);
 const BINARY_LOCK_FILES = new Set(['bun.lockb']);
 
+/**
+ * Whether a touched file was deleted. Git reports the path either way, so what
+ * marks a deletion is that the path is no longer there, and this is the test the
+ * change sets below are built from. A caller that only needs this must not reach
+ * for `getChanges()`, which computes it first and then does a great deal more.
+ */
+export function isDeletedFile(file: string): boolean {
+  return !existsSync(join(workspaceRoot, file));
+}
+
 export function calculateFileChanges(
   files: string[],
   nxArgs?: NxArgs,
@@ -81,7 +91,7 @@ export function calculateFileChanges(
     return {
       file: f,
       getChanges: (): Change[] => {
-        if (!existsSync(join(workspaceRoot, f))) {
+        if (isDeletedFile(f)) {
           return [new DeletedFileChange()];
         }
 

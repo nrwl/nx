@@ -5,7 +5,7 @@ import { workspaceRoot } from '../../../utils/workspace-root';
 import { getGlobPatternsOfPlugins } from '../../utils/retrieve-workspace-files';
 import { combineGlobPatterns } from '../../../utils/globs';
 import { getPlugins, peekPluginCapabilities } from '../../plugins/get-plugins';
-import { isDeletedFileChange } from '../../file-utils';
+import { isDeletedFile } from '../../file-utils';
 
 export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
   async (
@@ -20,8 +20,13 @@ export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
     // answers for, so a change set without a deletion in it has nothing to find
     // and the patterns it would be matched against are not worth asking the
     // plugins for.
+    //
+    // Asked of each path rather than of its changes: `getChanges` answers this
+    // first and then, for a json or lock file that is still there, reads it at
+    // two revisions and parses both. Every other locator evaluates that for one
+    // file; this one would evaluate it for all of them.
     const deleted = touchedFiles.filter((touchedFile) =>
-      touchedFile.getChanges().some(isDeletedFileChange)
+      isDeletedFile(touchedFile.file)
     );
     if (!deleted.length) {
       return [];

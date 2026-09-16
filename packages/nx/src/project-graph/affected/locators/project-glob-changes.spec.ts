@@ -1,10 +1,37 @@
 import { ProjectGraphProjectNode } from '../../../config/project-graph';
-import { DeletedFileChange, WholeFileChange } from '../../file-utils';
+import { DeletedFileChange } from '../../file-utils';
 import { getTouchedProjectsFromProjectGlobChanges } from './project-glob-changes';
 const mocks = vi.hoisted(() => ({
   peekPluginCapabilities: vi.fn(),
   getPlugins: vi.fn(),
+  deleted: new Set<string>(),
 }));
+
+// The locator asks whether each touched path is still there, which is what the
+// change sets are built from too.
+vi.mock('../../file-utils', async () => ({
+  ...(await vi.importActual<typeof import('../../file-utils')>(
+    '../../file-utils'
+  )),
+  isDeletedFile: (file: string) => mocks.deleted.has(file),
+}));
+
+function deletedFile(file: string) {
+  mocks.deleted.add(file);
+  return { file, getChanges: () => [new DeletedFileChange()] };
+}
+
+function modifiedFile(file: string) {
+  return {
+    file,
+    getChanges: () => {
+      // Evaluating a change set for a file that still exists reads it at two
+      // revisions and parses both. Every other locator pays that for one file;
+      // this one would pay it for every touched file.
+      throw new Error(`getChanges() was called for ${file}`);
+    },
+  };
+}
 
 vi.mock('../../../project-graph/plugins/get-plugins', async () => ({
   ...(await vi.importActual('../../../project-graph/plugins/get-plugins')),
@@ -13,6 +40,7 @@ vi.mock('../../../project-graph/plugins/get-plugins', async () => ({
 }));
 
 beforeEach(() => {
+  mocks.deleted.clear();
   // No record for some plugin, so the locator loads them. The recorded case
   // has its own test below.
   mocks.peekPluginCapabilities.mockReset();
@@ -39,12 +67,7 @@ describe('getTouchedProjectsFromProjectGlobChanges', () => {
       proj3: makeProjectGraphNode('proj3'),
     };
     const result = await getTouchedProjectsFromProjectGlobChanges(
-      [
-        {
-          file: 'libs/proj1/project.json',
-          getChanges: () => [new DeletedFileChange()],
-        },
-      ],
+      [deletedFile('libs/proj1/project.json')],
       nodes,
       {
         plugins: [],
@@ -65,12 +88,7 @@ describe('getTouchedProjectsFromProjectGlobChanges', () => {
       proj3: makeProjectGraphNode('proj3'),
     };
     const result = await getTouchedProjectsFromProjectGlobChanges(
-      [
-        {
-          file: 'libs/removed/project.json',
-          getChanges: () => [new DeletedFileChange()],
-        },
-      ],
+      [deletedFile('libs/removed/project.json')],
       nodes,
       {
         plugins: [],
@@ -89,12 +107,7 @@ describe('getTouchedProjectsFromProjectGlobChanges', () => {
     const nodes = { proj1: makeProjectGraphNode('proj1') };
 
     const result = await getTouchedProjectsFromProjectGlobChanges(
-      [
-        {
-          file: 'libs/proj1/project.json',
-          getChanges: () => [new WholeFileChange()],
-        },
-      ],
+      [modifiedFile('libs/proj1/project.json')],
       nodes,
       { plugins: [] },
       {},
@@ -135,12 +148,7 @@ describe('getTouchedProjectsFromProjectGlobChanges', () => {
     };
 
     const result = await getTouchedProjectsFromProjectGlobChanges(
-      [
-        {
-          file: 'libs/proj1/project.json',
-          getChanges: () => [new DeletedFileChange()],
-        },
-      ],
+      [deletedFile('libs/proj1/project.json')],
       nodes,
       { plugins: [] },
       {},
