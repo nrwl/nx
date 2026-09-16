@@ -110,10 +110,13 @@ pub(crate) fn normalize_glob(glob: &str) -> String {
 /// one extra pattern and reads the same in either case. An entry that already
 /// carries a pattern, or ends in `/`, is left alone.
 pub(crate) fn path_or_everything_under(glob: &str) -> Vec<String> {
-    use crate::native::glob::contains_glob_pattern;
-
     let body = glob.strip_prefix('!').unwrap_or(glob);
-    if body.is_empty() || body.ends_with('/') || contains_glob_pattern(body) {
+    // `literal_prefix` decides what counts as a pattern, so a directory named
+    // `@types` or `+state` is a path here as it is everywhere else. Asking
+    // the glob engine instead would call those characters syntax and leave
+    // such a directory matching nothing.
+    let has_pattern = literal_prefix(body).is_ok_and(|(_, rest)| rest.is_some());
+    if body.is_empty() || body.ends_with('/') || has_pattern {
         return vec![glob.to_string()];
     }
     vec![glob.to_string(), format!("{glob}/**")]

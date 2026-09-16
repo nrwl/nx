@@ -61,23 +61,29 @@ fn nxignore_may_match_under(rules: &[String], prefix: &str) -> bool {
 }
 
 pub struct IgnoredIndex {
-    /// Directories whose files are listed, workspace-relative. One inside
-    /// another is covered by the outer.
+    /// Directories being kept, workspace-relative: their file hashes are
+    /// remembered, and their files listed if anything asks. One inside
+    /// another is absorbed by the outer.
     tracked: RwLock<BTreeSet<String>>,
-    /// Directories whose file hashes are kept but whose files are not listed:
-    /// declared outputs, which are always walked after the task that writes
-    /// them has run.
+    /// The tracked directories that have been walked. Only under one of these
+    /// is there a listing to answer from, or a hash that may be served
+    /// without a stat. A declared output is tracked and never listed, since
+    /// nothing asks one for its files.
     listed: RwLock<BTreeSet<String>>,
-    /// Every file under a listed prefix, sorted, workspace-relative.
+    /// Every file under a listed directory, sorted, workspace-relative.
     members: RwLock<BTreeSet<String>>,
-    /// Content by path, under a listed or kept prefix, or anywhere when
-    /// nothing watches.
+    /// Content by path, under a tracked directory, or anywhere when nothing
+    /// watches.
     contents: DashMap<String, Content>,
     watch: Option<Watch>,
     canonical_root: OnceLock<Option<PathBuf>>,
     /// Bumped by every change the watch reports under a prefix, so a seed or
     /// a read can tell whether something moved while it ran.
     generation: AtomicU64,
+    /// Test seam: makes every walk fail to settle, which is otherwise only
+    /// reachable by racing the disk against the walk.
+    #[cfg(test)]
+    never_settles: std::sync::atomic::AtomicBool,
 }
 
 /// A file's hash and the (mtime, size) it was read at. A `trusted` entry
@@ -165,6 +171,8 @@ impl IgnoredIndex {
             watch,
             canonical_root: OnceLock::new(),
             generation: AtomicU64::new(0),
+            #[cfg(test)]
+            never_settles: std::sync::atomic::AtomicBool::new(false),
         }
     }
 
@@ -201,21 +209,31 @@ impl IgnoredIndex {
     }
 
     /// Starts keeping what is under `dir`: its file hashes always, and its
-    /// listing if anyone asks for one. Nothing is walked here. False, leaving
+    /// listing if anyone asks for one. No directory is walked here. False, leaving
     /// the caller to walk instead, for the whole workspace, where the watch
     /// could miss a change (a hardcoded ignore, a root `.nxignore` rule), or
     /// when `dir` resolves outside the workspace.
     pub(crate) fn track(&self, workspace_root: &Path, dir: &str) -> bool {
         let dir = dir.trim_matches('/');
+        if self.is_tracked(dir) {
+            return true;
+        }
         if let Some(reason) = self.refusal(dir) {
             trace!("not tracking {dir:?}: {reason}");
             return false;
         }
-        if seed_walk(workspace_root, dir).is_none() {
+        // Resolved, not walked: whether `dir` leaves the workspace is a
+        // question about one path. A directory that does not exist yet, an
+        // output root before its task runs, is not outside it.
+        if let Ok(resolved) = dunce::canonicalize(workspace_root.join(dir))
+            && !self
+                .canonical_root(workspace_root)
+                .is_some_and(|root| resolved.starts_with(root))
+        {
             trace!("not tracking {dir:?}: it resolves outside the workspace");
             return false;
         }
-        if !self.is_tracked(dir) {
+        {
             let mut tracked = self.tracked.write();
             tracked.retain(|d| !under(d, dir));
             tracked.insert(dir.to_string());
@@ -227,6 +245,10 @@ impl IgnoredIndex {
     /// from it and watch events keep it current. False when the walk could not
     /// settle: the disk kept moving, or `dir` resolves outside the workspace.
     fn walk_into_listing(&self, workspace_root: &Path, dir: &str) -> bool {
+        #[cfg(test)]
+        if self.never_settles.load(Ordering::Acquire) {
+            return false;
+        }
         for _ in 0..3 {
             let generation = self.generation.load(Ordering::Acquire);
             let Some(seeded) = seed_walk(workspace_root, dir) else {
@@ -275,8 +297,9 @@ impl IgnoredIndex {
         )
     }
 
-    /// The files under `dir` that `accept` admits, workspace-relative and
-    /// sorted. The one way anything asks what a directory holds. With
+    /// The files under `dir` that `accept` admits, workspace-relative and in
+    /// no particular order. The one way anything asks what a directory holds.
+    /// With
     /// `cached`, a tracked directory answers from its listing, walking the
     /// first time and keeping it current from events after. Otherwise, and
     /// for a directory nothing tracks, the disk is read and not remembered.
@@ -289,8 +312,13 @@ impl IgnoredIndex {
         accept: &(dyn Fn(&str) -> bool + Sync),
     ) -> Option<Vec<String>> {
         if cached && self.is_tracked(dir) {
-            let listed = self.list(workspace_root, dir)?;
-            return Some(listed.into_iter().filter(|path| accept(path)).collect());
+            // A listing that cannot settle, because the disk kept moving
+            // under the walk, must not read as an empty directory: fall
+            // through and read it the way an untracked one is read.
+            if let Some(listed) = self.list(workspace_root, dir) {
+                return Some(listed.into_iter().filter(|path| accept(path)).collect());
+            }
+            trace!("no listing for {dir:?}; reading it from disk instead");
         }
         files_under(workspace_root, dir, true, accept)
     }
@@ -699,6 +727,35 @@ mod tests {
         // Outside every prefix, events are not the index's business.
         index.note_written(temp.path(), "src/other.ts");
         assert!(index.list(temp.path(), "src").is_none());
+    }
+
+    // A walk that cannot settle used to leave the caller with nothing, which
+    // reads as an empty directory and hashes as if the files were gone.
+    #[test]
+    fn a_listing_that_cannot_settle_still_reads_the_disk() {
+        let temp = workspace();
+        let index = watched();
+        assert!(index.track(temp.path(), "dist"));
+        index
+            .never_settles
+            .store(true, std::sync::atomic::Ordering::Release);
+
+        assert!(index.list(temp.path(), "dist").is_none());
+        assert_eq!(
+            {
+                let mut found = index
+                    .files_under(temp.path(), "dist", true, &|path| path.ends_with(".js"))
+                    .unwrap();
+                found.sort();
+                found
+            },
+            {
+                let mut expected = vec!["dist/other/c.js", "dist/gen/a.js", "dist/gen/nested/b.js"];
+                expected.sort();
+                expected
+            },
+            "the files are read whether or not a listing settled"
+        );
     }
 
     #[test]

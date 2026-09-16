@@ -330,10 +330,11 @@ impl TaskHasher {
         }
     }
 
-    /// Hands the index the directories the plans read from disk. Each
-    /// includeIgnored glob's literal prefix is listed to the up-front batch;
-    /// a declared output's directory, always walked after its task runs, only
-    /// has its file hashes kept. Anything refused is walked.
+    /// Hands the index the directories the plans read from disk: the literal
+    /// prefix of every includeIgnored glob, and every declared output root.
+    /// The index remembers hashes under all of them and lists the ones
+    /// something asks to list, which is the filesets and not the outputs.
+    /// Anything it refuses is read from disk instead.
     fn register_prefixes(&self, hash_plans: &HashPlans) {
         let pool = &hash_plans.pool;
         let mut prefixes: Vec<String> = Vec::new();

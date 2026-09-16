@@ -380,6 +380,9 @@ pub(crate) fn files_under(
     walk_files(&start, workspace_root, canonical_root.as_deref(), accept).ok()
 }
 
+/// Every file under `dir`, for the index adopting it as a listing. A
+/// directory that does not exist yet is empty rather than missing, so
+/// tracking one before its task writes it is not an error.
 pub(crate) fn seed_walk(workspace_root: &Path, dir: &str) -> Option<Vec<String>> {
     if std::fs::symlink_metadata(workspace_root.join(dir)).is_err() {
         return Some(Vec::new());

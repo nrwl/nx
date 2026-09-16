@@ -172,44 +172,55 @@ mod tests {
         use assert_fs::prelude::*;
 
         let temp = TempDir::new().unwrap();
-        for file in [
+        // `@`, `+` and `,` are ordinary characters in a path. A directory
+        // named with one used to expand on the disk road and match nothing on
+        // the file map road, because the two disagreed on what a pattern is.
+        let files = [
             "libs/x/src/a.ts",
             "libs/x/src/nested/b.ts",
+            "libs/x/src/@types/c.d.ts",
+            "libs/x/src/+state/d.ts",
+            "libs/x/src/co,ma/e.ts",
             "libs/x/other.ts",
-        ] {
+        ];
+        for file in files {
             temp.child(file).write_str(file).unwrap();
         }
         let mut file_map = HashMap::new();
         file_map.insert(
             "x".to_string(),
-            [
-                "libs/x/src/a.ts",
-                "libs/x/src/nested/b.ts",
-                "libs/x/other.ts",
-            ]
-            .iter()
-            .map(|file| FileData {
-                file: (*file).into(),
-                hash: Default::default(),
-            })
-            .collect::<Vec<_>>(),
+            files
+                .iter()
+                .map(|file| FileData {
+                    file: (*file).into(),
+                    hash: Default::default(),
+                })
+                .collect::<Vec<_>>(),
         );
 
-        for entry in [
-            "libs/x/src",
-            "libs/x/src/",
-            "libs/x/src/**/*",
-            "libs/x/other.ts",
-        ] {
-            let entries = &[entry.to_string()];
-            let mut tracked: Vec<String> = collect_project_files("x", entries, &file_map)
+        let groups: &[&[&str]] = &[
+            &["libs/x/src"],
+            &["libs/x/src/"],
+            &["libs/x/src/**/*"],
+            &["libs/x/other.ts"],
+            &["libs/x/src/@types"],
+            &["libs/x/src/+state"],
+            &["libs/x/src/co,ma"],
+            // A negation naming a directory has to drop the same files.
+            &["libs/x/src", "!libs/x/src/@types"],
+            &["libs/x/src", "!libs/x/src/nested"],
+        ];
+        for group in groups {
+            let entries: Vec<String> = group.iter().map(|g| (*g).to_string()).collect();
+            let mut tracked: Vec<String> = collect_project_files("x", &entries, &file_map)
                 .unwrap()
                 .into_iter()
                 .map(|data| data.file.clone())
                 .collect();
             tracked.sort();
-            let from_disk = expand_files(temp.path(), entries).unwrap().files;
-            assert_eq!(tracked, from_disk, "{entry}");
+            let from_disk = expand_files(temp.path(), &entries).unwrap().files;
+            assert_eq!(tracked, from_disk, "{group:?}");
+            assert!(!tracked.is_empty(), "{group:?} matched nothing at all");
         }
     }
 
