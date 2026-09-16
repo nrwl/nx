@@ -250,6 +250,17 @@ async function readCachedGraphAndHydrateFileMap(minimumComputedAt?: number) {
 }
 
 /**
+ * How long a process waits for another one's graph before building its own.
+ *
+ * Long, because a real build on a large workspace takes minutes and the cost of
+ * giving up too early is a second process doing all of that work again. Bounded,
+ * because a holder that is suspended, stalled on its filesystem, or wedged in a
+ * plugin whose module-level code blocks never releases, and waiting on one
+ * forever is a checkout where no command returns and nothing says why.
+ */
+const MAX_WAIT_FOR_GRAPH_LOCK = 5 * 60 * 1000;
+
+/**
  * Computes and returns a ProjectGraph.
  *
  * Nx will compute the graph either in a daemon process or in the current process.
@@ -270,17 +281,6 @@ async function readCachedGraphAndHydrateFileMap(minimumComputedAt?: number) {
  * Nx uses two layers of caching: the information about explicit dependencies stored on the disk and the information
  * stored in the daemon process. To reset both run: `nx reset`.
  */
-/**
- * How long a process waits for another one's graph before building its own.
- *
- * Long, because a real build on a large workspace takes minutes and the cost of
- * giving up too early is a second process doing all of that work again. Bounded,
- * because a holder that is suspended, stalled on its filesystem, or wedged in a
- * plugin whose module-level code blocks never releases, and waiting on one
- * forever is a checkout where no command returns and nothing says why.
- */
-const MAX_WAIT_FOR_GRAPH_LOCK = 5 * 60 * 1000;
-
 export async function createProjectGraphAsync(
   opts: { exitOnError: boolean; resetDaemonClient?: boolean } = {
     exitOnError: false,
@@ -414,6 +414,13 @@ export async function createProjectGraphAndSourceMapsAsync(
       locked = lock.check();
     }
     if (!holderOutlastedBudget) {
+      // Check-then-act, and `lock()` blocks the thread with no ceiling of its
+      // own: a process that takes the lock between the check above and this call
+      // stalls this one for as long as it holds it. The budget bounds the WAIT,
+      // not the ACQUIRE. Closing it means looping back to the wait above on a
+      // failed `tryLock`, so the loser reads the winner's graph instead of
+      // building a second one, which is a change to who builds rather than to
+      // how long anyone waits.
       lock?.lock();
     }
     try {

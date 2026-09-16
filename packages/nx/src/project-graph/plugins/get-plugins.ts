@@ -61,13 +61,13 @@ let cachedSeparatedPlugins: SeparatedPlugins;
 let pendingPluginsPromise: Promise<LoadedNxPlugin[]> | undefined;
 
 /**
- * Lets go of every plugin this process has loaded, which is what a reload does
- * before it loads the next set.
+ * Drops what this module remembers about the specified plugins, so the next
+ * call loads them again rather than reusing a set or a promise that describes
+ * the previous configuration.
  *
- * Everything, rather than the set being replaced: the plugins live in one map in
- * the isolation layer, and that map is what knows which workers exist. A set
- * whose workers were still forking used to leave them behind, because the only
- * thing that could have stopped them was a release the next load overwrote.
+ * The plugins themselves are not touched here. They are put down by the load
+ * that follows, which says which ones it wants, and a plugin the new
+ * configuration still names is kept rather than reloaded.
  */
 function forgetSpecifiedPlugins(): void {
   if (pluginTranspilerIsRegistered()) {
@@ -452,14 +452,6 @@ async function loadPlugins(
 }
 
 /**
- * Wires every plugin whose capabilities some process has already recorded, and
- * loads the rest while holding a lock, so that reading a given plugin's
- * capabilities never costs more than one process loading it.
- *
- * A plugin wired from a record has no worker until a hook is called, which is
- * what the callers that only read `createNodes[0]` or a `has*` flag rely on.
- */
-/**
  * Identifies each plugin's module. The resolution is kept on the load so that a
  * plugin this process goes on to load is not resolved a second time.
  */
@@ -491,15 +483,6 @@ async function resolveCapabilityKeys(
 }
 
 /**
- * What the records say about every plugin the workspace configures, or null
- * when any of them has no record. Null means the answer can only come from
- * loading them, which is what callers did before the records existed.
- *
- * Neither outcome loads a plugin or starts a worker, so a caller that only
- * needs to know whether a hook exists anywhere can ask before committing to a
- * load it may not need.
- */
-/**
  * One command asks the question up to three times, and each answer costs a
  * module resolution per plugin plus a closure hash for the workspace-local ones.
  * Held for processes that are not the daemon, which is the same lifetime
@@ -516,6 +499,14 @@ async function resolveCapabilityKeys(
  */
 let peeked: { key: string; capabilities: PluginCapabilities[] } | undefined;
 
+/**
+ * What every plugin the workspace configures registers, or null when that
+ * cannot be established.
+ *
+ * A plugin with a record is answered from it. The rest are loaded, recorded and
+ * put back down, so a caller that only needs to know whether a hook exists
+ * anywhere pays for the plugins nothing knows about rather than for all of them.
+ */
 export async function peekPluginCapabilities(
   nxJson: NxJsonConfiguration,
   root = workspaceRoot
@@ -632,6 +623,14 @@ async function loadForCapabilities(
   recordCapabilities(entries.filter((entry) => !!entry));
 }
 
+/**
+ * Wires every plugin whose capabilities some process has already recorded, and
+ * loads the rest while holding a lock, so that reading a given plugin's
+ * capabilities never costs more than one process loading it.
+ *
+ * A plugin wired from a record has no worker until a hook is called, which is
+ * what the callers that only read `createNodes[0]` or a `has*` flag rely on.
+ */
 async function useCapabilityCache(
   loads: PluginLoad[],
   root: string

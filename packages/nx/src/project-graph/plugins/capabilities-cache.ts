@@ -151,11 +151,9 @@ export function recordIsFresh(record: PluginRecord, root: string): boolean {
 }
 
 /**
- * Hashes a closure in the order it was recorded, so the comparison does not
- * depend on the order a runtime happened to load it in.
- */
-/**
- * The hash of a closure, or null when it cannot be hashed.
+ * The hash of a closure, or null when it cannot be hashed. Hashed in the order
+ * it was recorded, so the comparison does not depend on the order a runtime
+ * happened to load it in.
  *
  * Both halves of that matter. `hashFile` returns null for a path it cannot read,
  * and a directory, an unreadable file and a dangling symlink all take that
