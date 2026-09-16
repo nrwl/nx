@@ -17,41 +17,16 @@ use crate::native::walker::{PathPredicate, files_under};
 /// call: a group is listed or walked afresh for the next one.
 pub(crate) type FilesExpansionCache = DashMap<String, Arc<FilesExpansion>>;
 
-/// Something that can say what a directory holds. The ignored index answers
-/// from a listing it keeps or from the disk; the walker always reads the
-/// disk. The expansion never reads a directory itself, it asks one of these.
-pub(crate) trait DirectoryFiles: Sync {
-    /// The files under `dir` that `accept` admits, workspace-relative.
-    /// `None` when the directory cannot be read at all. `accept` is passed
-    /// so the answer can be filtered while it is gathered, not afterwards.
-    fn files_under(&self, dir: &str, accept: PathPredicate) -> Option<Vec<String>>;
-}
-
-impl DirectoryFiles for &dyn DirectoryFiles {
-    fn files_under(&self, dir: &str, accept: PathPredicate) -> Option<Vec<String>> {
-        (**self).files_under(dir, accept)
-    }
-}
+/// What a directory holds, asked of whoever knows: the ignored index answers
+/// from a listing it keeps or from the disk, a caller without one reads the
+/// disk. `accept` is passed in so the answer is filtered as it is gathered.
+/// `None` when the directory cannot be read at all.
+pub(crate) type DirectoryFiles<'a> =
+    Box<dyn Fn(&str, PathPredicate) -> Option<Vec<String>> + Sync + 'a>;
 
 /// Reads the disk every time, for a caller with no index behind it.
-pub(crate) struct DiskFiles<'a> {
-    pub workspace_root: &'a Path,
-}
-
-impl DirectoryFiles for DiskFiles<'_> {
-    fn files_under(&self, dir: &str, accept: PathPredicate) -> Option<Vec<String>> {
-        files_under(self.workspace_root, dir, accept)
-    }
-}
-
-/// So a caller can pass a closure where a named type would be ceremony.
-impl<F> DirectoryFiles for F
-where
-    F: Fn(&str, PathPredicate) -> Option<Vec<String>> + Sync,
-{
-    fn files_under(&self, dir: &str, accept: PathPredicate) -> Option<Vec<String>> {
-        self(dir, accept)
-    }
+fn disk_files(workspace_root: &Path) -> DirectoryFiles<'_> {
+    Box::new(move |dir, accept| files_under(workspace_root, dir, accept))
 }
 
 /// For a caller with no workspace context: every path is checked on disk.
@@ -65,13 +40,16 @@ pub(crate) struct Source<'a> {
     /// vouches for needs no stat.
     known: PathPredicate<'a>,
     /// What a directory holds, see `DirectoryFiles`.
-    files_under: Box<dyn DirectoryFiles + 'a>,
+    files_under: DirectoryFiles<'a>,
 }
 
 impl<'a> Source<'a> {
     /// An `includeIgnored` fileset. It is hashed alongside tracked files, so
     /// the context can vouch for a path.
-    pub(crate) fn fileset(known: PathPredicate<'a>, files_under: &'a dyn DirectoryFiles) -> Self {
+    pub(crate) fn fileset(
+        known: PathPredicate<'a>,
+        files_under: impl Fn(&str, PathPredicate) -> Option<Vec<String>> + Sync + 'a,
+    ) -> Self {
         Self {
             known,
             files_under: Box::new(files_under),
@@ -82,7 +60,7 @@ impl<'a> Source<'a> {
     pub(crate) fn fileset_reading_disk(known: PathPredicate<'a>, workspace_root: &'a Path) -> Self {
         Self {
             known,
-            files_under: Box::new(DiskFiles { workspace_root }),
+            files_under: disk_files(workspace_root),
         }
     }
 
@@ -96,7 +74,7 @@ impl<'a> Source<'a> {
     pub(crate) fn declared_outputs(workspace_root: &'a Path) -> Self {
         Self {
             known: NOTHING_KNOWN,
-            files_under: Box::new(DiskFiles { workspace_root }),
+            files_under: disk_files(workspace_root),
         }
     }
 }
@@ -138,12 +116,12 @@ pub(super) fn parse_group(globs: &[String]) -> Result<(Vec<Positive>, Vec<Negati
 
 /// Resolves already-split entries into the files they name. `source` says
 /// which of the two callers this is: a fileset, which may lean on the
-/// workspace context and an index and may not read outside the workspace, or
-/// declared outputs, which are read wherever they point. A path the source
-/// vouches for needs no stat, a walked file it knows needs no stamp, and a
-/// directory it can list is taken from the list; any other is walked. Walks
-/// skip the same directories the workspace walker never enters, but an exact
-/// path or a prefix inside one of them is read as-is.
+/// workspace context and an index, or declared outputs, which are taken
+/// straight from disk. A path the source vouches for needs no stat, a walked
+/// file it knows needs no stamp, and a directory it can list is taken from
+/// the list; any other is walked. Walks skip the same directories the
+/// workspace walker never enters, but an exact path or a prefix inside one of
+/// them is read as-is.
 pub(crate) fn expand_entries(
     workspace_root: &Path,
     positives: &[Positive],
@@ -186,7 +164,7 @@ pub(crate) fn expand_entries(
         } else {
             Box::new(move |path: &str| !excluded(path))
         };
-        if let Some(under) = files_under.files_under(root, &*accept) {
+        if let Some(under) = files_under(root, &*accept) {
             // Filtered again: a source is asked to apply `accept` so it can
             // skip work, not trusted to have done it.
             found.extend(under.into_iter().filter(|path| accept(path)));
