@@ -251,24 +251,6 @@ export declare class TaskInvocationTracker {
   cleanupStale(): void
 }
 
-export declare class Watcher {
-  origin: string
-  /**
-   * Always applies HARDCODED_IGNORE_PATTERNS plus watcher-specific
-   * patterns (vite/vitest timestamp files), regardless of `use_ignore`.
-   */
-  constructor(origin: string, additionalGlobs?: Array<string> | undefined | null, useIgnore?: boolean | undefined | null)
-  watch(callbackTsfn: (err: string | null, events: WatchEvent[]) => void): void
-  stop(): Promise<void>
-  /**
-   * Synchronously drains the accumulator, waiting out the kernel hop, so
-   * events buffered inside the IDLE_WINDOW debounce don't go missing.
-   * Returns an empty vec if the watcher hasn't started, the loop has
-   * exited, or no events are buffered.
-   */
-  forceFlushPending(): Array<WatchEvent>
-}
-
 export declare class WorkspaceContext {
   workspaceRoot: string
   constructor(workspaceRoot: string, cacheDir: string, options?: WorkspaceContextOptions | undefined | null)
