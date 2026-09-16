@@ -1,4 +1,4 @@
-import type { Mock } from 'vitest';
+import { onTestFinished, type Mock } from 'vitest';
 import { createSerializableError } from '../../utils/serializable-error';
 import { reasonToError } from './get-plugins';
 
@@ -232,31 +232,43 @@ describe('getPluginsSeparated', () => {
     expect(loadsOf('test-a')).toBe(2);
   });
 
-  it('starts isolated plugin workers with the changed root customConditions', async () => {
-    const { isIsolationEnabled } = await import('./isolation/enabled');
-    const { loadIsolatedNxPlugin } = await import('./isolation');
-    const { getRootTsConfigCustomConditions } =
-      await import('../../plugins/js/utils/typescript');
-    vi.mocked(isIsolationEnabled).mockReturnValue(true);
-    vi.mocked(loadIsolatedNxPlugin).mockImplementation(async (plugin) => [
-      Promise.resolve({
-        name: typeof plugin === 'string' ? plugin : (plugin as any).plugin,
-      } as any),
-      () => {},
-    ]);
-    (getRootTsConfigCustomConditions as Mock).mockReturnValue(['@proj/source']);
-    await getPluginsSeparated({ plugins: ['test-a'] }, '/workspace');
+  // The worker adds any fallback itself, so the plugin state keeps the raw list.
+  it.each([true, false])(
+    'starts isolated plugin workers with the changed root customConditions (module.registerHooks: %s)',
+    async (hasRegisterHooks) => {
+      const nodeModule = require('node:module') as { registerHooks?: unknown };
+      const registerHooks = nodeModule.registerHooks;
+      nodeModule.registerHooks = hasRegisterHooks ? () => {} : undefined;
+      onTestFinished(() => {
+        nodeModule.registerHooks = registerHooks;
+      });
+      const { isIsolationEnabled } = await import('./isolation/enabled');
+      const { loadIsolatedNxPlugin } = await import('./isolation');
+      const { getRootTsConfigCustomConditions } =
+        await import('../../plugins/js/utils/typescript');
+      vi.mocked(isIsolationEnabled).mockReturnValue(true);
+      vi.mocked(loadIsolatedNxPlugin).mockImplementation(async (plugin) => [
+        Promise.resolve({
+          name: typeof plugin === 'string' ? plugin : (plugin as any).plugin,
+        } as any),
+        () => {},
+      ]);
+      (getRootTsConfigCustomConditions as Mock).mockReturnValue([
+        '@proj/source',
+      ]);
+      await getPluginsSeparated({ plugins: ['test-a'] }, '/workspace');
 
-    (getRootTsConfigCustomConditions as Mock).mockReturnValue(['@proj/src']);
-    await getPluginsSeparated({ plugins: ['test-a'] }, '/workspace');
+      (getRootTsConfigCustomConditions as Mock).mockReturnValue(['@proj/src']);
+      await getPluginsSeparated({ plugins: ['test-a'] }, '/workspace');
 
-    expect(loadIsolatedNxPlugin).toHaveBeenLastCalledWith(
-      'test-a',
-      '/workspace',
-      0,
-      ['@proj/src']
-    );
-  });
+      expect(loadIsolatedNxPlugin).toHaveBeenLastCalledWith(
+        'test-a',
+        '/workspace',
+        0,
+        ['@proj/src']
+      );
+    }
+  );
 
   it('does not rebuild the local-plugin resolution snapshot on a cache hit', async () => {
     const { resetResolvePluginCache } = await import('./resolve-plugin');

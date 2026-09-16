@@ -38,8 +38,13 @@ vi.mock('child_process', async () => ({
 
 // Returns something other than what the tests pass, so a spawn that reads the
 // live cache instead of the loaded conditions is caught.
-vi.mock('../../../plugins/js/utils/typescript', () => ({
+vi.mock('../../../plugins/js/utils/typescript', async () => ({
   getRootTsConfigCustomConditions: vi.fn(() => ['stale']),
+  withDevelopmentCondition: (
+    await vi.importActual<
+      typeof import('../../../plugins/js/utils/typescript')
+    >('../../../plugins/js/utils/typescript')
+  ).withDevelopmentCondition,
 }));
 
 vi.mock('./messaging', async () => ({
@@ -361,17 +366,26 @@ describe('IsolatedPlugin', () => {
   });
 
   describe('spawning the worker', () => {
+    const nodeModule = require('node:module') as { registerHooks?: unknown };
+    const registerHooks = nodeModule.registerHooks;
+
     afterEach(() => {
+      nodeModule.registerHooks = registerHooks;
       vi.mocked(spawn).mockReset();
       vi.mocked(waitForSocketConnection).mockReset();
     });
 
-    it('passes the conditions the plugin was loaded with to a source worker', async () => {
+    async function spawnConditions(
+      isSourcePlugin: boolean,
+      conditions: string[],
+      hasRegisterHooks: boolean
+    ): Promise<string[]> {
+      nodeModule.registerHooks = hasRegisterHooks ? () => {} : undefined;
       vi.mocked(resolveNxPlugin).mockResolvedValueOnce({
-        name: 'source-plugin',
+        name: 'plugin',
         pluginPath: '/mock/plugin/path',
         shouldRegisterTSTranspiler: true,
-        isSourcePlugin: true,
+        isSourcePlugin,
         workspacePackages: [],
       } as any);
       const worker = new EventEmitter() as any;
@@ -383,18 +397,39 @@ describe('IsolatedPlugin', () => {
       vi.mocked(waitForSocketConnection).mockResolvedValue(null);
 
       await expect(
-        IsolatedPlugin.load('source-plugin', '/mock/root', 0, ['a', 'b'])
+        IsolatedPlugin.load('plugin', '/mock/root', 0, conditions)
       ).rejects.toThrow('Failed to start plugin worker');
 
-      const args: string[] = vi.mocked(spawn).mock.calls[0][1] as string[];
-      expect(args.slice(0, 4)).toEqual([
-        '--conditions',
-        'a',
-        '--conditions',
-        'b',
-      ]);
-      expect(args).not.toContain('stale');
+      const args = vi.mocked(spawn).mock.calls[0][1] as string[];
+      return args.filter((_, i) => args[i - 1] === '--conditions');
+    }
+
+    it('passes the conditions the plugin was loaded with to a source worker', async () => {
+      expect(await spawnConditions(true, ['a', 'b'], true)).toEqual(['a', 'b']);
     });
+
+    it('adds the development fallback to a source worker without module.registerHooks', async () => {
+      expect(await spawnConditions(true, ['a'], false)).toEqual([
+        'a',
+        'development',
+      ]);
+    });
+
+    it('does not repeat a configured development condition', async () => {
+      expect(await spawnConditions(true, ['development', 'a'], false)).toEqual([
+        'development',
+        'a',
+      ]);
+    });
+
+    it.each([true, false])(
+      'passes no conditions to a built worker (module.registerHooks: %s)',
+      async (hasRegisterHooks) => {
+        expect(await spawnConditions(false, ['a'], hasRegisterHooks)).toEqual(
+          []
+        );
+      }
+    );
   });
 
   describe('lifecycle integration', () => {

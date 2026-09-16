@@ -162,7 +162,10 @@ export function clearRootTsConfigCustomConditionsCache(): void {
 export function getRootTsConfigResolveExportsConditions(
   root: string = workspaceRoot
 ): string[] {
-  const conditions = getRootTsConfigCustomConditions(root);
+  return withDevelopmentCondition(getRootTsConfigCustomConditions(root));
+}
+
+export function withDevelopmentCondition(conditions: string[]): string[] {
   return conditions.includes('development')
     ? conditions
     : [...conditions, 'development'];

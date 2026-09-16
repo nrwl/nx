@@ -16,7 +16,10 @@ import {
   parseMessage,
 } from '../../../utils/consume-messages-from-socket';
 import type { WorkspacePackage } from '../../../plugins/js/utils/packages';
-import { getRootTsConfigCustomConditions } from '../../../plugins/js/utils/typescript';
+import {
+  getRootTsConfigCustomConditions,
+  withDevelopmentCondition,
+} from '../../../plugins/js/utils/typescript';
 import { getNxRequirePaths } from '../../../utils/installation-directory';
 import { isSandbox } from '../../../utils/is-sandbox';
 import { logger } from '../../../utils/logger';
@@ -692,6 +695,17 @@ export function getPluginWorkerSocketId(): string {
   )}`;
 }
 
+// The `development` fallback is a flag only where the worker cannot scope ESM
+// imports; as a flag it also selects third-party `development` exports.
+function getSourceWorkerConditions(conditions: string[]): string[] {
+  const { registerHooks } = require('node:module') as {
+    registerHooks?: unknown;
+  };
+  return typeof registerHooks === 'function'
+    ? conditions
+    : withDevelopmentCondition(conditions);
+}
+
 async function startPluginWorker(
   name: string,
   isSourcePlugin: boolean,
@@ -730,7 +744,12 @@ async function startPluginWorker(
     process.execPath,
     [
       // Built workers must not get conditions that select unbuilt source.
-      ...(isSourcePlugin ? conditions.flatMap((c) => ['--conditions', c]) : []),
+      ...(isSourcePlugin
+        ? getSourceWorkerConditions(conditions).flatMap((c) => [
+            '--conditions',
+            c,
+          ])
+        : []),
       // swc transpiles without type-checking: ~7x faster to boot, and this is
       // paid once per worker spawn.
       ...(isWorkerTypescript ? ['--require', '@swc-node/register'] : []),
