@@ -1294,6 +1294,10 @@ impl WorkspaceContext {
     /// include writes made since the last walk. Does nothing while a walk is
     /// in progress. Await `ready()` before reading. What the walk finds
     /// changed goes to the subscriber.
+    ///
+    /// For a graph built without the daemon, where nothing watches: see
+    /// `refreshWorkspaceContext`, called by
+    /// `buildProjectGraphAndSourceMapsWithoutDaemon`.
     #[napi]
     pub fn refresh(&self) -> bool {
         if !self.files.begin_walk() {
@@ -2659,7 +2663,7 @@ mod tests {
         assert!(index.track(temp.path(), "dist"));
         assert_eq!(index.list(&root, "dist").unwrap(), vec!["dist/a.js"]);
         // Put the index in the wrong: a member dropped while the file stays.
-        index.note_deleted("dist/a.js");
+        index.note_deleted_all(&["dist/a.js"]);
         assert_eq!(index.list(&root, "dist").unwrap(), Vec::<String>::new());
         ctx.rescan_and_diff();
         assert_eq!(index.list(&root, "dist").unwrap(), vec!["dist/a.js"]);

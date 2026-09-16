@@ -140,13 +140,19 @@ pub(crate) fn expand_entries(
         files_under,
     } = source;
 
+    // One question asked at every place a path joins `found`, so no entry
+    // reaches the result without it.
+    let excluded = |path: &str| negations.iter().any(|n| n.excludes(path));
+
     let mut found: Vec<String> = Vec::new();
     for entry in positives {
         let root = &entry.root;
         let remainder = entry.remainder.as_deref();
         let has_pattern = remainder.is_some();
         if !has_pattern && tracked_file(root) {
-            found.push(root.clone());
+            if !excluded(root) {
+                found.push(root.clone());
+            }
             continue;
         }
         let start = workspace_root.join(root);
@@ -154,7 +160,7 @@ pub(crate) fn expand_entries(
             continue;
         };
         if metadata.is_file() {
-            if !has_pattern {
+            if !has_pattern && !excluded(root) {
                 found.push(root.clone());
             }
             continue;
@@ -163,7 +169,6 @@ pub(crate) fn expand_entries(
         // same in a fileset as in a declared output; with a pattern, only the
         // remainder after the prefix is matched.
         // Excluded files are dropped before they are stat'ed.
-        let excluded = |path: &str| negations.iter().any(|n| n.excludes(path));
         let accept: Box<dyn Fn(&str) -> bool + Sync> = if let Some(pattern) = remainder {
             // An empty root is the workspace root: the whole path is matched.
             let prefix_len = if root.is_empty() { 0 } else { root.len() + 1 };
@@ -181,9 +186,8 @@ pub(crate) fn expand_entries(
         }
     }
 
-    // `accept` already filtered what the walk produced; this catches the
-    // entries taken without it, an exact file and anything an index listed.
-    found.retain(|path| !negations.iter().any(|n| n.excludes(path)));
+    // Sorted and deduped rather than gathered into a set: one pass at the end
+    // beats a tree insert per path, and two entries may name the same file.
     found.sort_unstable();
     found.dedup();
     Ok(FilesExpansion { files: found })

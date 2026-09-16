@@ -390,6 +390,10 @@ export async function flushPendingWorkspaceChanges() {
 /**
  * Applies changes a caller learned of on its own to the workspace context,
  * then schedules the recomputation as for a batch the context applied.
+ *
+ * The caller is a sync generator, whose writes the watch would report anyway;
+ * this makes them visible before the generator returns rather than by the next
+ * settle. Whether that guarantee is still needed is NXC-4996.
  */
 export function scheduleProjectGraphRecomputation(
   createdFiles: string[],

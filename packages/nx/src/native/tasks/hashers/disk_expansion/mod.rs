@@ -221,6 +221,46 @@ pub(crate) mod tests {
         );
     }
 
+    /// A negation applies to an entry that names one file as much as to a
+    /// walked one, whether the file is found on disk or vouched for by the
+    /// context. Nothing joins the result without being asked.
+    #[test]
+    fn a_negation_excludes_an_exact_path_entry_too() {
+        let temp = workspace();
+        let group = globs(&["dist/gen/a.js", "dist/other/c.js", "!dist/gen/a.js"]);
+        assert_eq!(
+            expand_files(temp.path(), &group).unwrap().files,
+            vec!["dist/other/c.js"]
+        );
+        // The same when the context vouches for it, so no stat is taken.
+        let known: PathPredicate = &|path| path == "dist/gen/a.js";
+        assert_eq!(
+            expand_files_with(temp.path(), &group, known).unwrap().files,
+            vec!["dist/other/c.js"]
+        );
+    }
+
+    /// Negations apply to the whole group however it is ordered, the same way
+    /// `NxGlobSetBuilder` sorts a regular fileset's patterns and keeps its
+    /// exclusions in a set of their own.
+    #[test]
+    fn the_order_of_a_negation_in_the_group_does_not_matter() {
+        let temp = workspace();
+        let first = expand_files(
+            temp.path(),
+            &globs(&["!dist/gen/**/*.map", "dist/gen/**/*"]),
+        )
+        .unwrap();
+        let last = expand_files(
+            temp.path(),
+            &globs(&["dist/gen/**/*", "!dist/gen/**/*.map"]),
+        )
+        .unwrap();
+        assert_eq!(first.files, last.files);
+        assert!(!first.files.iter().any(|f| f.ends_with(".map")));
+        assert!(first.files.contains(&"dist/gen/a.js".to_string()));
+    }
+
     #[test]
     fn expands_from_the_partitioned_directory_and_applies_negations() {
         let temp = workspace();

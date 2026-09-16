@@ -368,12 +368,6 @@ impl IgnoredIndex {
         }
     }
 
-    /// A reported deletion of a file, or of a directory and all under it.
-    #[cfg(test)]
-    pub(crate) fn note_deleted(&self, path: &str) {
-        self.note_deleted_all(std::slice::from_ref(&path));
-    }
-
     /// Reported deletions applied together. A kept but unlisted directory
     /// has no members to range over, so its hashes can only be found by a
     /// pass over them all; one batch pays for that pass once however many
@@ -703,14 +697,14 @@ mod tests {
         temp.child("dist/gen/new.js").write_str("new").unwrap();
         index.note_written(temp.path(), "dist/gen/new.js");
         std::fs::remove_file(temp.path().join("dist/gen/a.js")).unwrap();
-        index.note_deleted("dist/gen/a.js");
+        index.note_deleted_all(&["dist/gen/a.js"]);
         assert_eq!(
             index.list(temp.path(), "dist/gen").unwrap(),
             vec!["dist/gen/nested/b.js", "dist/gen/new.js"]
         );
         // A directory reported gone takes everything under it.
         std::fs::remove_dir_all(temp.path().join("dist/gen/nested")).unwrap();
-        index.note_deleted("dist/gen/nested");
+        index.note_deleted_all(&["dist/gen/nested"]);
         assert_eq!(
             index.list(temp.path(), "dist/gen").unwrap(),
             vec!["dist/gen/new.js"]
@@ -1096,7 +1090,7 @@ mod tests {
         assert!(index.remembered("dist/other/c.js"));
         assert!(index.trusted_hash("dist/other/c.js").is_none());
         std::fs::remove_dir_all(temp.path().join("dist/other")).unwrap();
-        index.note_deleted("dist/other");
+        index.note_deleted_all(&["dist/other"]);
         assert!(!index.remembered("dist/other/c.js"));
         // Outside every listed or kept prefix, a watching index keeps nothing.
         index.hash_file(
