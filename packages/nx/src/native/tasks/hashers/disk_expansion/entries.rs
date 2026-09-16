@@ -18,7 +18,7 @@ pub(crate) struct Positive {
 impl Positive {
     /// Split at its literal prefix, see `partition_glob`.
     pub(crate) fn parse(glob: &str) -> Result<Self> {
-        let (root, remainder) = partition_glob(glob);
+        let (root, remainder) = partition_glob(&normalize_glob(glob));
         Ok(Self { root, remainder })
     }
 

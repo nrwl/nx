@@ -97,19 +97,21 @@ pub(crate) fn expand_globs(
     expand_entries(workspace_root, &positives, &negations, source)
 }
 
-/// A group's entries split at their literal prefixes, positives then negations.
+/// A group's entries split at their literal prefixes, positives then
+/// negations. Each brace group becomes one entry per alternative first, so
+/// what a parser sees never holds a `{a,b}`.
 pub(super) fn parse_group(globs: &[String]) -> Result<(Vec<Positive>, Vec<Negation>)> {
-    let (negated, plain): (Vec<&String>, Vec<&String>) =
-        globs.iter().partition(|g| g.starts_with('!'));
-    let negations = negated
-        .into_iter()
-        .flat_map(|g| expand_literal_braces(g))
-        .map(|g| Negation::parse(&g))
+    let entries = |negated: bool| {
+        globs
+            .iter()
+            .filter(move |glob| glob.starts_with('!') == negated)
+            .flat_map(|glob| expand_literal_braces(glob))
+    };
+    let positives = entries(false)
+        .map(|glob| Positive::parse(&glob))
         .collect::<Result<_>>()?;
-    let positives = plain
-        .into_iter()
-        .flat_map(|g| expand_literal_braces(&normalize_glob(g)))
-        .map(|g| Positive::parse(&g))
+    let negations = entries(true)
+        .map(|glob| Negation::parse(&glob))
         .collect::<Result<_>>()?;
     Ok((positives, negations))
 }
