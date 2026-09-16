@@ -89,7 +89,7 @@ export function updateRunState(
 // The activity locks this process holds, one per run dir. Each is held until
 // the process exits (the kernel releases it) or until this process deletes
 // the run itself.
-const heldActivity = new Map<string, FileLock>();
+const heldActivity = new Map<string, { lock: FileLock; name: string }>();
 
 /**
  * Marks this process as acting on the run for the rest of its lifetime, so a
@@ -121,33 +121,43 @@ export function holdRunActivity(root: string, runId: string): void {
  */
 export function registerRunActivity(dir: string): void {
   if (IS_WASM || heldActivity.has(dir)) return;
-  const lock = new FileLock(
-    join(
-      dir,
-      ACTIVITY_DIR_NAME,
-      `${process.pid}-${randomBytes(4).toString('hex')}.lock`
-    )
-  );
+  const name = `${process.pid}-${randomBytes(4).toString('hex')}.lock`;
+  const lock = new FileLock(join(dir, ACTIVITY_DIR_NAME, name));
   lock.lock();
-  heldActivity.set(dir, lock);
+  heldActivity.set(dir, { lock, name });
 }
 
 // Drops this process's own hold. A process deleting a run is not mid-operation
 // on it (entry points are synchronous and never nest), so its own hold says
 // nothing about work in flight.
 export function releaseRunActivity(dir: string): void {
-  const lock = heldActivity.get(dir);
-  if (lock === undefined) return;
-  lock.unlock();
+  const held = heldActivity.get(dir);
+  if (held === undefined) return;
+  held.lock.unlock();
   heldActivity.delete(dir);
 }
 
 /**
- * Whether a live process holds an activity lock on the run. Files left by
- * dead holders are unlocked and count as free. Fails closed: a probe that
- * cannot be built or checked counts as live. Call under the creation lock.
+ * Whether another live process holds an activity lock on the run. This
+ * process's own hold is skipped for the reason releaseRunActivity gives.
+ * Files left by dead holders are unlocked and count as free. Fails closed: a
+ * probe that cannot be built or checked counts as live. Call under the
+ * creation lock.
  */
 export function hasLiveRunActivity(dir: string): boolean {
+  return hasLiveActivity(dir, heldActivity.get(dir)?.name);
+}
+
+/**
+ * hasLiveRunActivity counting this process's own hold too: for the init
+ * discovery that treats a held directory without run.json as a run being
+ * started, whichever process is starting it.
+ */
+export function hasAnyLiveRunActivity(dir: string): boolean {
+  return hasLiveActivity(dir, undefined);
+}
+
+function hasLiveActivity(dir: string, skip: string | undefined): boolean {
   let names: string[];
   try {
     names = readdirSync(join(dir, ACTIVITY_DIR_NAME));
@@ -156,6 +166,7 @@ export function hasLiveRunActivity(dir: string): boolean {
     return true;
   }
   for (const name of names) {
+    if (name === skip) continue;
     try {
       if (new FileLock(join(dir, ACTIVITY_DIR_NAME, name)).check()) {
         return true;
