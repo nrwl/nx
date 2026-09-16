@@ -78,13 +78,13 @@ import {
 } from 'fs';
 import { createHash } from 'crypto';
 import { tmpdir } from 'os';
-import { FileLock } from '../../../native';
 import { basename, dirname, join } from 'path';
 import { output } from '../../../utils/output';
 import { nxVersion } from '../../../utils/versions';
 import { runStepHandoffPath } from '../agentic/handoff';
 import { runOrchestratorInit, runOrchestratorReconcile } from './orchestrator';
 import { BrokerStaleRequestError, BrokerUnavailableError } from './broker';
+import { answered, readRequest } from './test-utils';
 import { computePlanHash } from './run-id';
 import {
   findActiveRun,
@@ -5560,58 +5560,13 @@ describe('orchestrator', () => {
       delete process.env.NX_MIGRATE_BROKER;
     });
 
-    // Holds the session lock as a live parent would, answers whichever request
-    // the run under test publishes, then settles with it.
-    async function answered<T>(
-      dir: string,
-      result: object,
-      start: () => Promise<T>
-    ): Promise<T> {
-      const brokerDir = join(dir, 'broker');
-      mkdirSync(brokerDir, { recursive: true });
-      const lock = new FileLock(join(brokerDir, `${nonce}.lock`));
-      lock.lock();
-      const pending = start();
-      let settled = false;
-      const watched = pending.then(
-        () => (settled = true),
-        () => (settled = true)
-      );
-      try {
-        for (let i = 0; i < 500 && !settled; i++) {
-          const request = readdirSync(brokerDir).find((f) =>
-            f.endsWith('.request.json')
-          );
-          if (request) {
-            writeFileSync(
-              join(brokerDir, request.replace('.request.json', '.result.json')),
-              JSON.stringify(result)
-            );
-            break;
-          }
-          await new Promise((resolve) => setTimeout(resolve, 10));
-        }
-      } finally {
-        lock.unlock();
-      }
-      await watched;
-      return pending;
-    }
-
-    function readRequest(dir: string): object {
-      const brokerDir = join(dir, 'broker');
-      const request = readdirSync(brokerDir).find((f) =>
-        f.endsWith('.request.json')
-      );
-      return JSON.parse(readFileSync(join(brokerDir, request), 'utf8'));
-    }
-
     it('folds a completed prompt with the commit the session landed', async () => {
       const dir = await parkedPromptStep({ createCommits: true });
       writeHandoff(dir, '@nx/js', 'p', { status: 'success', summary: 'done' });
 
       await answered(
         dir,
+        nonce,
         {
           kind: 'commit',
           result: {
@@ -5641,7 +5596,7 @@ describe('orchestrator', () => {
       writeHandoff(dir, '@nx/js', 'p', { status: 'success', summary: 'done' });
 
       await expect(
-        answered(dir, { kind: 'stale' }, () =>
+        answered(dir, nonce, { kind: 'stale' }, () =>
           runOrchestratorReconcile({ root, runId: 'run-1' })
         )
       ).rejects.toBeInstanceOf(BrokerStaleRequestError);
@@ -5663,7 +5618,7 @@ describe('orchestrator', () => {
         plan: [genMig('@nx/js', 'gen')],
       });
 
-      await answered(dir, { kind: 'installed', output: [] }, () =>
+      await answered(dir, nonce, { kind: 'installed', output: [] }, () =>
         runOrchestratorReconcile({ root, runId: 'run-1', stepAction: 'skip' })
       );
 

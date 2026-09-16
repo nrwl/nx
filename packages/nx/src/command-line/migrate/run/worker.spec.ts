@@ -161,13 +161,11 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
-  readdirSync,
   readFileSync,
   rmSync,
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
-import { FileLock } from '../../../native';
 import { join } from 'path';
 import { logger } from '../../../utils/logger';
 import { output } from '../../../utils/output';
@@ -190,6 +188,7 @@ import {
 import { applyStepEvent } from './state-machine';
 import { depsHash } from './util';
 import { BrokerStaleRequestError, BrokerUnavailableError } from './broker';
+import { answered, readRequest } from './test-utils';
 
 const RUN_NEXT_FIRST =
   'Run the dispensed "next" command first: its response restates this work and names the handoff file to write.';
@@ -2557,52 +2556,6 @@ describe('runSingleMigrationWorker', () => {
       });
     }
 
-    // Holds the session lock as a live parent would, answers whichever request
-    // the run under test publishes, then settles with it.
-    async function answered<T>(
-      dir: string,
-      result: object,
-      start: () => Promise<T>
-    ): Promise<T> {
-      const brokerDir = join(dir, 'broker');
-      mkdirSync(brokerDir, { recursive: true });
-      const lock = new FileLock(join(brokerDir, `${nonce}.lock`));
-      lock.lock();
-      const pending = start();
-      let settled = false;
-      const watched = pending.then(
-        () => (settled = true),
-        () => (settled = true)
-      );
-      try {
-        for (let i = 0; i < 500 && !settled; i++) {
-          const request = readdirSync(brokerDir).find((f) =>
-            f.endsWith('.request.json')
-          );
-          if (request) {
-            writeFileSync(
-              join(brokerDir, request.replace('.request.json', '.result.json')),
-              JSON.stringify(result)
-            );
-            break;
-          }
-          await new Promise((resolve) => setTimeout(resolve, 10));
-        }
-      } finally {
-        lock.unlock();
-      }
-      await watched;
-      return pending;
-    }
-
-    function readRequest(dir: string): object {
-      const brokerDir = join(dir, 'broker');
-      const request = readdirSync(brokerDir).find((f) =>
-        f.endsWith('.request.json')
-      );
-      return JSON.parse(readFileSync(join(brokerDir, request), 'utf8'));
-    }
-
     const run = () =>
       runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'));
 
@@ -2611,6 +2564,7 @@ describe('runSingleMigrationWorker', () => {
 
       await answered(
         dir,
+        nonce,
         {
           kind: 'commit',
           result: committed,
@@ -2639,6 +2593,7 @@ describe('runSingleMigrationWorker', () => {
       await expect(
         answered(
           dir,
+          nonce,
           {
             kind: 'install-failed',
             message: 'registry unreachable',
@@ -2659,7 +2614,7 @@ describe('runSingleMigrationWorker', () => {
       const dir = committingRun();
 
       await expect(
-        answered(dir, { kind: 'stale' }, run)
+        answered(dir, nonce, { kind: 'stale' }, run)
       ).rejects.toBeInstanceOf(BrokerStaleRequestError);
 
       const state = readRunState(dir);
@@ -2681,7 +2636,7 @@ describe('runSingleMigrationWorker', () => {
     it('installs through the session before handing validation to the agent', async () => {
       const dir = validatingRun();
 
-      await answered(dir, { kind: 'installed', output: [] }, run);
+      await answered(dir, nonce, { kind: 'installed', output: [] }, run);
 
       expect(mockInstallDepsIfChanged).not.toHaveBeenCalled();
       expect(mockCommit).not.toHaveBeenCalled();
@@ -2701,6 +2656,7 @@ describe('runSingleMigrationWorker', () => {
       await expect(
         answered(
           dir,
+          nonce,
           {
             kind: 'install-failed',
             message: 'registry unreachable',
@@ -2724,7 +2680,7 @@ describe('runSingleMigrationWorker', () => {
         depsHashAtDispense: 'baseline-from-an-earlier-dispense',
       });
 
-      await answered(dir, { kind: 'installed', output: [] }, run);
+      await answered(dir, nonce, { kind: 'installed', output: [] }, run);
 
       expect(mockRunInstall).not.toHaveBeenCalled();
       expect(mockRunMigration).not.toHaveBeenCalled();
