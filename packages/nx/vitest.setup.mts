@@ -140,12 +140,6 @@ vi.doMock(workspaceContextPath, async () => {
     ),
     // Guarded like its siblings: a rescan against the real workspace root would
     // re-walk this repo. Specs that exercise it point at a TempFs root.
-    rescanAndDiffInContext: guarded('rescanAndDiffInContext', () => ({
-      seq: 0,
-      createdFiles: [],
-      updatedFiles: [],
-      deletedFiles: [],
-    })),
     subscribeToWorkspaceChanges: guarded(
       'subscribeToWorkspaceChanges',
       () => undefined

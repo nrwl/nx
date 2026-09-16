@@ -40,7 +40,6 @@ import {
 import { fileExists } from '../../utils/fileutils';
 import {
   isWatchingWorkspaceContext,
-  rescanAndDiffInContext,
   resetWorkspaceContext,
   settleWorkspaceContext,
   takeAppliedWorkspaceChanges,
@@ -469,54 +468,6 @@ export function scheduleInitialProjectGraphComputation() {
   if (!cachedSerializedProjectGraphPromise) {
     kickOffRecompute();
   }
-}
-
-/**
- * Recover from changes that reached the workspace on no reported path: re-walk
- * it, diff against the context's known files, and feed what differs through
- * the same path a watcher batch takes. The context's own watch recovers from
- * its dropped events without this; it is for a caller that learned of a gap
- * some other way.
- */
-export async function handleWatcherRescan(): Promise<void> {
-  performance.mark('watcher-rescan-start');
-  const recovered = rescanAndDiffInContext(workspaceRoot);
-  const batch = isWatchingWorkspaceContext()
-    ? takeAppliedWorkspaceChanges(workspaceRoot)
-    : recovered;
-  performance.mark('watcher-rescan-end');
-  performance.measure(
-    're-walk workspace after watcher rescan',
-    'watcher-rescan-start',
-    'watcher-rescan-end'
-  );
-  const { createdFiles, updatedFiles, deletedFiles } = batch;
-
-  // An overflow can drop an ignore-file edit outright, and the re-walk is
-  // where it resurfaces, so restart here too: the fresh daemon rebuilds the
-  // watch's rules from the current ignore files.
-  if (restartDaemonIfIgnoreFilesChanged(changedPaths(batch))) {
-    serverLogger.watcherLog(
-      'Rescan recovered an ignore-file change; restarting the daemon to reload ignore rules.'
-    );
-    return;
-  }
-
-  if (
-    createdFiles.length === 0 &&
-    updatedFiles.length === 0 &&
-    deletedFiles.length === 0
-  ) {
-    serverLogger.watcherLog(
-      'Rescan re-walk found no differences; keeping the cached graph.'
-    );
-    return;
-  }
-  serverLogger.watcherLog(
-    `Rescan re-walk recovered ${createdFiles.length} created, ` +
-      `${updatedFiles.length} updated and ${deletedFiles.length} deleted file(s).`
-  );
-  scheduleAppliedChanges(batch);
 }
 
 export function registerProjectGraphRecomputationListener(

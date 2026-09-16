@@ -182,20 +182,6 @@ export async function getAllFileDataInContext(workspaceRoot: string) {
 }
 
 /**
- * Re-walk the workspace and report what changed against the files the context
- * is holding, adopting the fresh files. For a caller that learned on its own
- * that reported changes were incomplete; the context's own watcher recovers
- * from its dropped events without help.
- *
- * Daemon-only: it mutates the context in place, which is safe only where the
- * context is the single source of truth for watched state.
- */
-export function rescanAndDiffInContext(workspaceRoot: string): ChangeBatch {
-  ensureContextAvailable(workspaceRoot);
-  return workspaceContext.rescanAndDiff();
-}
-
-/**
  * Listens for the changes a watching context applies: each change reaches the
  * listeners once, here or in `settleWorkspaceContext`, whichever takes it
  * first. Any number of listeners may listen. Returns a function that stops
