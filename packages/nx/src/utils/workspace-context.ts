@@ -11,12 +11,11 @@ import { isOnDaemon } from '../daemon/is-on-daemon';
 import { daemonClient } from '../daemon/client/client';
 import { handleImport } from './handle-import';
 
-export type WorkspaceChangesListener = (
-  err: string | null,
-  batch: ChangeBatch | null
-) => void;
-/** The shape the native watch calls back with, taken from the binding so it
- * cannot drift from it. */
+/** The shapes the native watch calls back with, taken from the binding so
+ * they cannot drift from it. */
+export type WorkspaceChangesListener = Parameters<
+  WorkspaceContext['onChanges']
+>[0];
 export type WatchEventsListener = Parameters<
   WorkspaceContext['onWatchEvents']
 >[0];
