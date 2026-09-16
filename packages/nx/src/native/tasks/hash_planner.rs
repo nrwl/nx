@@ -13,7 +13,7 @@ use rayon::prelude::*;
 use std::collections::{HashMap, HashSet};
 use tracing::trace;
 
-use crate::native::glob::{literal_prefix, normalize_glob};
+use crate::native::glob::{normalize_glob, target_directory};
 use crate::native::tasks::hashers::{OnceCache, validate_files_globs};
 use crate::native::tasks::inputs::{
     expand_single_project_inputs, get_inputs, get_inputs_for_dependency_group, get_named_inputs,
@@ -1015,7 +1015,7 @@ fn walk_root(glob: &str) -> String {
     // Legacy default outputs are spelled `./dist` and `dist/.`.
     let glob = glob.strip_prefix("./").unwrap_or(glob);
     let glob = glob.strip_suffix("/.").unwrap_or(glob);
-    literal_prefix(&normalize_glob(glob))
+    target_directory(&normalize_glob(glob))
         .map(|(root, _)| root)
         .unwrap_or_default()
 }

@@ -6,7 +6,7 @@ use super::disk_expansion::{
     FilesExpansion, FilesExpansionCache, Negation, Positive, Source, expand_cached, expand_entries,
 };
 use super::hash_ignored_files::hash_files;
-use crate::native::glob::{build_glob_set, literal_prefix};
+use crate::native::glob::{build_glob_set, target_directory};
 use crate::native::workspace::ignored_index::{IgnoredIndex, RunStage};
 
 /// Result of hashing task output files, including the matched file paths
@@ -86,7 +86,7 @@ pub(crate) fn output_prefixes(outputs: &[String]) -> Vec<String> {
         .iter()
         .filter(|entry| !entry.starts_with('!'))
         .filter_map(|entry| normalize_output_entry(entry))
-        .filter_map(|entry| literal_prefix(&entry).ok().map(|(root, _)| root))
+        .filter_map(|entry| target_directory(&entry).ok().map(|(root, _)| root))
         .collect()
 }
 

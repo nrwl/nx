@@ -41,14 +41,17 @@ pub(crate) fn expand_literal_braces(glob: &str) -> Vec<String> {
         .collect()
 }
 
-/// The literal directory a glob is walked from, and the pattern after it,
-/// if any. The prefix ends at the first segment with glob syntax as the
-/// engine reads it: `*`, `?`, `{`, `[`, or a `(` group. What follows reaches
-/// the engine unchanged, so brackets, groups, and escapes mean exactly what
-/// they mean in any other fileset. `@` and `+` are ordinary characters both
-/// here and in the engine (`node_modules/@scope/pkg`, `g+en`), which is why
-/// `partition_glob`, which strips them, is not used.
-pub(crate) fn literal_prefix(glob: &str) -> Result<(String, Option<&str>)> {
+/// The directory a glob is read from, and the pattern left to match under
+/// it, if any. The directory ends at the first segment carrying glob syntax
+/// as the engine reads it: `*`, `?`, `{`, `[`, or a `(` group. What follows
+/// reaches the engine unchanged, so brackets, groups, and escapes mean
+/// exactly what they mean in any other fileset. `@` and `+` are ordinary
+/// characters here, as they are in a path.
+///
+/// `partition_glob` answers almost the same question and is not used: it
+/// classifies a segment containing `@` or `+` as a pattern, and loses parts
+/// of one containing a `(` group.
+pub(crate) fn target_directory(glob: &str) -> Result<(String, Option<&str>)> {
     if Path::new(glob).is_absolute() || glob.starts_with('/') {
         bail!(
             "The includeIgnored fileset \"{glob}\" is an absolute path; globs are workspace-relative."
@@ -111,11 +114,11 @@ pub(crate) fn normalize_glob(glob: &str) -> String {
 /// carries a pattern, or ends in `/`, is left alone.
 pub(crate) fn path_or_everything_under(glob: &str) -> Vec<String> {
     let body = glob.strip_prefix('!').unwrap_or(glob);
-    // `literal_prefix` decides what counts as a pattern, so a directory named
+    // `target_directory` decides what counts as a pattern, so a directory named
     // `@types` or `+state` is a path here as it is everywhere else. Asking
     // the glob engine instead would call those characters syntax and leave
     // such a directory matching nothing.
-    let has_pattern = literal_prefix(body).is_ok_and(|(_, rest)| rest.is_some());
+    let has_pattern = target_directory(body).is_ok_and(|(_, rest)| rest.is_some());
     if body.is_empty() || body.ends_with('/') || has_pattern {
         return vec![glob.to_string()];
     }

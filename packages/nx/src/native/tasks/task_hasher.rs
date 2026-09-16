@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use hashbrown::HashSet;
 
-use crate::native::glob::{literal_prefix, normalize_glob};
+use crate::native::glob::{normalize_glob, target_directory};
 use crate::native::{
     hasher::hash,
     project_graph::{types::ProjectGraph, utils::create_project_root_mappings},
@@ -348,7 +348,7 @@ impl TaskHasher {
                         .filter(|g| !g.starts_with('!'))
                         .filter_map(|g| {
                             let glob = normalize_glob(g);
-                            literal_prefix(&glob).ok().map(|(root, _)| root)
+                            target_directory(&glob).ok().map(|(root, _)| root)
                         }),
                 ),
                 HashInstruction::TaskOutput(_, outputs) => {

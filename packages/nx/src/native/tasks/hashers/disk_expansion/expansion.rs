@@ -10,7 +10,9 @@ use anyhow::{Context, Result, bail};
 use dashmap::DashMap;
 
 use super::entries::{Negation, Positive};
-use crate::native::glob::{build_glob_set, expand_literal_braces, literal_prefix, normalize_glob};
+use crate::native::glob::{
+    build_glob_set, expand_literal_braces, normalize_glob, target_directory,
+};
 use crate::native::walker::{PathPredicate, files_under};
 
 /// Expansion per `files:{project}:[...]` instruction, scoped to one `hash_plans`
@@ -282,12 +284,12 @@ pub(crate) fn validate_files_glob(glob: &str) -> Result<()> {
             bail!("The includeIgnored fileset \"{glob}\" names nothing to exclude.");
         }
         for expanded in expand_literal_braces(&body) {
-            literal_prefix(&expanded)?;
+            target_directory(&expanded)?;
         }
         return Ok(());
     }
     for expanded in expand_literal_braces(&normalize_glob(glob)) {
-        literal_prefix(&expanded)?;
+        target_directory(&expanded)?;
     }
     Ok(())
 }
