@@ -136,6 +136,7 @@ import {
   assertCommitPrefixHasCommits,
 } from './migrate-config';
 import type { ResolvedAgentic } from './agentic/types';
+import type { RunOrchestratorInitInput } from './run';
 import {
   commitCheckpointBeforeMigrations,
   commitMigrationIfRequested,
@@ -3263,6 +3264,22 @@ async function runMigrations(
 
   const migrationsJson = readJsonFile(join(root, opts.runMigrations));
   const migrations: PlannedMigration[] = migrationsJson.migrations;
+  // Defer the nx package lookup until an orchestrated branch needs this payload.
+  const orchestratorInitInput = (
+    createCommits: boolean
+  ): Omit<RunOrchestratorInitInput, 'emitAgentInstructions'> => ({
+    root,
+    migrationsJson,
+    createCommits,
+    commitPrefix,
+    // The flag only, never NX_MIGRATE_SKIP_INSTALL: the wrapper's local
+    // re-exec sets that env var for its own hop, and it says nothing about
+    // what the user asked for.
+    skipInstall: shouldSkipInstall,
+    installedNxVersion: readModulePackageJson('nx', getNxRequirePaths(root))
+      .packageJson.version,
+    validate: opts.validate,
+  });
 
   // An outer agent drives the loop, so hand off to the orchestrator instead of
   // the classic loop: init either starts a fresh run or resumes an already-
@@ -3306,23 +3323,9 @@ async function runMigrations(
         return;
       }
     }
-    const { packageJson: orchestratorNxPackageJson } = readModulePackageJson(
-      'nx',
-      getNxRequirePaths(root)
-    );
+    const init = orchestratorInitInput(effectiveCreateCommits);
     const { runOrchestratorInit } = require('./run') as typeof import('./run');
-    await runOrchestratorInit({
-      root,
-      migrationsJson,
-      createCommits: effectiveCreateCommits,
-      commitPrefix,
-      // The flag only, never NX_MIGRATE_SKIP_INSTALL: the wrapper's local
-      // re-exec sets that env var for its own hop, and it says nothing about
-      // what the user asked for.
-      skipInstall: shouldSkipInstall,
-      installedNxVersion: orchestratorNxPackageJson.version,
-      validate: opts.validate,
-    });
+    await runOrchestratorInit(init);
     return;
   }
 
@@ -3379,22 +3382,10 @@ async function runMigrations(
     process.env.NX_MIGRATE_ORCHESTRATOR === 'true' &&
     !IS_WASM
   ) {
-    const { packageJson: nxPackageJson } = readModulePackageJson(
-      'nx',
-      getNxRequirePaths(root)
-    );
+    const init = orchestratorInitInput(effectiveCreateCommits);
     const { runMasterSession } =
       require('./agentic/master/run-master-session') as typeof import('./agentic/master/run-master-session');
-    return await runMasterSession({
-      root,
-      migrationsJson,
-      createCommits: effectiveCreateCommits,
-      commitPrefix,
-      skipInstall: shouldSkipInstall,
-      installedNxVersion: nxPackageJson.version,
-      validate: opts.validate,
-      agent: agentic.selectedAgent,
-    });
+    return await runMasterSession({ ...init, agent: agentic.selectedAgent });
   }
 
   const shouldRunValidation = resolveShouldRunValidation({
