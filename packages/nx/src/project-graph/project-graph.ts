@@ -115,7 +115,14 @@ export function readProjectsConfigurationFromProjectGraph(
   };
 }
 
-export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
+export async function buildProjectGraphAndSourceMapsWithoutDaemon(
+  // The graph cache is written by whoever holds the graph lock. A process that
+  // gave up waiting for the holder computes the graph for itself alone: writing
+  // from outside the lock would race the holder still in there, and the three
+  // cache files are renamed into place one at a time, so two writers can leave a
+  // graph and the source maps that explain it describing different runs.
+  { writeGraphCache }: { writeGraphCache: boolean } = { writeGraphCache: true }
+) {
   preventRecursionInGraphConstruction();
 
   global.NX_GRAPH_CREATION = true;
@@ -192,7 +199,7 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
     ...(projectGraphError?.errors ?? []),
   ];
 
-  if (cacheEnabled) {
+  if (cacheEnabled && writeGraphCache) {
     writeCache(projectFileMapCache, projectGraph, sourceMaps, errors);
   }
 
@@ -410,7 +417,9 @@ export async function createProjectGraphAndSourceMapsAsync(
       lock?.lock();
     }
     try {
-      const res = await buildProjectGraphAndSourceMapsWithoutDaemon();
+      const res = await buildProjectGraphAndSourceMapsWithoutDaemon({
+        writeGraphCache: !holderOutlastedBudget,
+      });
       performance.measure(
         'createProjectGraphAsync >> retrieve-project-configurations',
         'retrieve-project-configurations:start',

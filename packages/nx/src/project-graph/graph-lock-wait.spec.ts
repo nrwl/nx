@@ -9,12 +9,14 @@ const state = vi.hoisted(() => ({
   reads: 0,
   acquires: 0,
   builds: 0,
+  writes: 0,
 }));
 
 vi.mock('../native', () => ({
   IS_WASM: false,
   FileLock: class {
-    locked = true;
+    // What `new FileLock()` reports: whether anyone held it at that moment.
+    locked = state.locked;
     check = () => state.locked;
     lock = () => {
       state.acquires++;
@@ -44,7 +46,9 @@ vi.mock('./nx-deps-cache', () => ({
   },
   readSourceMapsCache: () => ({}),
   readFileMapCache: () => null,
-  writeCache: vi.fn(),
+  writeCache: () => {
+    state.writes++;
+  },
 }));
 vi.mock('./utils/retrieve-workspace-files', () => ({
   retrieveWorkspaceFiles: async () => ({ fileMap: {}, rustReferences: {} }),
@@ -88,6 +92,7 @@ describe('waiting on the graph lock', () => {
     state.reads = 0;
     state.acquires = 0;
     state.builds = 0;
+    state.writes = 0;
   });
 
   it('reads the graph the holder wrote, once it has released', async () => {
@@ -116,5 +121,20 @@ describe('waiting on the graph lock', () => {
     // that gave up on the wait cannot then queue for it.
     expect(state.acquires).toBe(0);
     expect(state.builds).toBe(1);
+    // The cache belongs to whoever holds the lock. Two writers rename three
+    // files into place one at a time, so writing from out here could leave a
+    // graph and the source maps that explain it describing different runs.
+    expect(state.writes).toBe(0);
+  });
+
+  it('writes the cache when it built the graph under the lock', async () => {
+    // Free by the time this process looks, so it is the holder.
+    state.locked = false;
+
+    await createProjectGraphAndSourceMapsAsync();
+
+    expect(state.acquires).toBe(1);
+    expect(state.builds).toBe(1);
+    expect(state.writes).toBe(1);
   });
 });
