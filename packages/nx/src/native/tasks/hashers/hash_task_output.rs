@@ -472,5 +472,4 @@ mod tests {
             vec!["dist/linked/index.js"]
         );
     }
-
 }

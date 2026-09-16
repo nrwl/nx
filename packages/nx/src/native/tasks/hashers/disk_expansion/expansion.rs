@@ -6,7 +6,7 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use anyhow::{Context, Result, bail};
+use anyhow::{Result, bail};
 use dashmap::DashMap;
 
 use super::entries::{Negation, Positive};
@@ -16,18 +16,6 @@ use crate::native::walker::{PathPredicate, files_under};
 /// Expansion per `files:{project}:[...]` instruction, scoped to one `hash_plans`
 /// call: a group is listed or walked afresh for the next one.
 pub(crate) type FilesExpansionCache = DashMap<String, Arc<FilesExpansion>>;
-
-/// Whether a symlink may lead out of the workspace. The path itself must be
-/// inside it either way: an entry that resolves outside names nothing.
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub(crate) enum Links {
-    /// A fileset: a link leading out is skipped, and an entry whose own path
-    /// resolves outside is an error naming the fileset.
-    StayInside,
-    /// A declared output: `dist` may be a link into a build cache, and those
-    /// files are still what the task produced.
-    MayLeadOut,
-}
 
 /// Something that can say what a directory holds. The ignored index answers
 /// from a listing it keeps or from the disk; the walker always reads the
@@ -48,17 +36,11 @@ impl DirectoryFiles for &dyn DirectoryFiles {
 /// Reads the disk every time, for a caller with no index behind it.
 pub(crate) struct DiskFiles<'a> {
     pub workspace_root: &'a Path,
-    pub links: Links,
 }
 
 impl DirectoryFiles for DiskFiles<'_> {
     fn files_under(&self, dir: &str, accept: PathPredicate) -> Option<Vec<String>> {
-        files_under(
-            self.workspace_root,
-            dir,
-            self.links == Links::StayInside,
-            accept,
-        )
+        files_under(self.workspace_root, dir, accept)
     }
 }
 
@@ -75,26 +57,24 @@ where
 /// For a caller with no workspace context: every path is checked on disk.
 pub(crate) const NOTHING_KNOWN: PathPredicate<'static> = &|_| false;
 
-/// What an expansion may lean on instead of the disk, and how far it may
-/// reach. The two callers differ only here.
+/// What an expansion may lean on instead of the disk. The two callers differ
+/// only here. Either way a path is read wherever it points: a `dist` linked
+/// into a build cache holds the files a task wrote.
 pub(crate) struct Source<'a> {
     /// Whether the workspace context already tracks a path. A path it
     /// vouches for needs no stat.
     known: PathPredicate<'a>,
     /// What a directory holds, see `DirectoryFiles`.
     files_under: Box<dyn DirectoryFiles + 'a>,
-    links: Links,
 }
 
 impl<'a> Source<'a> {
     /// An `includeIgnored` fileset. It is hashed alongside tracked files, so
-    /// the context can vouch for a path, and it may not read outside the
-    /// workspace.
+    /// the context can vouch for a path.
     pub(crate) fn fileset(known: PathPredicate<'a>, files_under: &'a dyn DirectoryFiles) -> Self {
         Self {
             known,
             files_under: Box::new(files_under),
-            links: Links::StayInside,
         }
     }
 
@@ -102,11 +82,7 @@ impl<'a> Source<'a> {
     pub(crate) fn fileset_reading_disk(known: PathPredicate<'a>, workspace_root: &'a Path) -> Self {
         Self {
             known,
-            files_under: Box::new(DiskFiles {
-                workspace_root,
-                links: Links::StayInside,
-            }),
-            links: Links::StayInside,
+            files_under: Box::new(DiskFiles { workspace_root }),
         }
     }
 
@@ -116,16 +92,11 @@ impl<'a> Source<'a> {
     }
 
     /// A dependency's declared outputs. They were written by a task that has
-    /// run, so the file map predates them and nothing is taken as known, and
-    /// they are read wherever they point.
+    /// run, so the file map predates them and nothing is taken as known.
     pub(crate) fn declared_outputs(workspace_root: &'a Path) -> Self {
         Self {
             known: NOTHING_KNOWN,
-            files_under: Box::new(DiskFiles {
-                workspace_root,
-                links: Links::MayLeadOut,
-            }),
-            links: Links::MayLeadOut,
+            files_under: Box::new(DiskFiles { workspace_root }),
         }
     }
 }
@@ -179,21 +150,7 @@ pub(crate) fn expand_entries(
     negations: &[Negation],
     source: &Source,
 ) -> Result<FilesExpansion> {
-    let Source {
-        known,
-        files_under,
-        links,
-    } = source;
-    let canonical_root = if *links == Links::StayInside {
-        Some(dunce::canonicalize(workspace_root).with_context(|| {
-            format!(
-                "Cannot resolve the workspace root {}",
-                workspace_root.display()
-            )
-        })?)
-    } else {
-        None
-    };
+    let Source { known, files_under } = source;
 
     let mut found: Vec<String> = Vec::new();
     for entry in positives {
@@ -208,21 +165,6 @@ pub(crate) fn expand_entries(
         let Ok(metadata) = std::fs::metadata(&start) else {
             continue;
         };
-        if let Some(canonical_root) = &canonical_root {
-            // After symlink resolution, not just lexically.
-            let resolved = dunce::canonicalize(&start).with_context(|| {
-                format!(
-                    "Cannot resolve the includeIgnored fileset \"{}\"",
-                    entry.text
-                )
-            })?;
-            if !resolved.starts_with(canonical_root) {
-                bail!(
-                    "The includeIgnored fileset \"{}\" resolves outside the workspace.",
-                    entry.text
-                );
-            }
-        }
         if metadata.is_file() {
             if !has_pattern {
                 found.push(root.clone());

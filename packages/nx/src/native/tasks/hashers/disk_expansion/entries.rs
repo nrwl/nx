@@ -11,7 +11,6 @@ use crate::native::glob::{NxGlobSet, build_glob_set, normalize_glob, target_dire
 /// if any. Without a pattern it names an exact file, or a directory and
 /// everything under it.
 pub(crate) struct Positive {
-    pub(super) text: String,
     pub(super) root: String,
     pub(super) remainder: Option<String>,
 }
@@ -21,7 +20,6 @@ impl Positive {
     pub(crate) fn parse(glob: &str) -> Result<Self> {
         let (root, remainder) = target_directory(glob);
         Ok(Self {
-            text: glob.to_string(),
             root,
             remainder: remainder.map(str::to_string),
         })
@@ -30,7 +28,6 @@ impl Positive {
     /// `path` as written, whatever characters it has.
     pub(crate) fn exact(path: &str) -> Self {
         Self {
-            text: path.to_string(),
             root: path.to_string(),
             remainder: None,
         }

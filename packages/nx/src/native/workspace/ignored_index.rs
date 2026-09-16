@@ -344,7 +344,7 @@ impl IgnoredIndex {
             }
             trace!("no listing for {dir:?}; reading it from disk instead");
         }
-        files_under(workspace_root, dir, true, accept)
+        files_under(workspace_root, dir, accept)
     }
 
     /// A reported write or creation. Under a listed prefix a file becomes a
@@ -374,15 +374,14 @@ impl IgnoredIndex {
             }
             return;
         }
-        if link.file_type().is_symlink() {
-            let inside = std::fs::metadata(&full_path).is_ok_and(|target| !target.is_dir())
-                && self.canonical_root(workspace_root).is_some_and(|root| {
-                    dunce::canonicalize(&full_path).is_ok_and(|t| t.starts_with(root))
-                });
-            if !inside {
-                self.forget(path);
-                return;
-            }
+        // A linked directory is no more a member than a walk enters one; a
+        // linked file is, wherever it points. Never trusted either way, see
+        // `trusted_hash`.
+        if link.file_type().is_symlink()
+            && !std::fs::metadata(&full_path).is_ok_and(|target| !target.is_dir())
+        {
+            self.forget(path);
+            return;
         }
         if listed {
             self.members.write().insert(path.to_string());
@@ -1029,32 +1028,32 @@ mod tests {
         );
     }
 
+    /// The listing must hold what a walk of the same directory would, or the
+    /// two roads disagree: a linked file is a member wherever it points, a
+    /// linked directory is not one.
     #[cfg(unix)]
     #[test]
-    fn a_linked_file_or_directory_leading_outside_is_not_a_member() {
+    fn a_linked_file_leading_outside_is_a_member_but_a_linked_directory_is_not() {
         let temp = workspace();
         let elsewhere = TempDir::new().unwrap();
-        elsewhere.child("secret/id_rsa").write_str("key").unwrap();
+        elsewhere.child("built/out.js").write_str("out").unwrap();
         let index = watched();
         assert!(index.track(temp.path(), "dist"));
         std::os::unix::fs::symlink(
-            elsewhere.path().join("secret/id_rsa"),
-            temp.path().join("dist/id_rsa"),
+            elsewhere.path().join("built/out.js"),
+            temp.path().join("dist/linked.js"),
         )
         .unwrap();
-        index.note_written(temp.path(), "dist/id_rsa");
-        std::os::unix::fs::symlink(
-            elsewhere.path().join("secret"),
-            temp.path().join("dist/lnk"),
-        )
-        .unwrap();
+        index.note_written(temp.path(), "dist/linked.js");
+        std::os::unix::fs::symlink(elsewhere.path().join("built"), temp.path().join("dist/lnk"))
+            .unwrap();
         index.note_written(temp.path(), "dist/lnk");
+
         let listed = index.list(temp.path(), "dist").unwrap();
-        assert!(
-            !listed
-                .iter()
-                .any(|p| p.contains("id_rsa") || p.contains("lnk"))
-        );
+        assert!(listed.contains(&"dist/linked.js".to_string()), "{listed:?}");
+        assert!(!listed.iter().any(|p| p.contains("lnk")), "{listed:?}");
+        // Outside the watch, so it is re-stamped rather than served blind.
+        assert!(index.trusted_hash("dist/linked.js").is_none());
     }
 
     #[test]

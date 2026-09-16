@@ -291,12 +291,11 @@ fn transient_skips() -> Result<Arc<NxGlobSet>> {
 /// Files under `start`, workspace-relative, with the stamp read on the way
 /// for anything the context does not vouch for. The walker skips what it
 /// skips for every walk, but never the root it is given, so a glob rooted at
-/// `node_modules` reads it. Linked directories are not entered; with
-/// `canonical_root`, a linked file counts only when its target is inside it.
+/// `node_modules` reads it. A linked file is read where it points; a linked
+/// directory is not entered.
 pub(crate) fn walk_files(
     start: &Path,
     workspace_root: &Path,
-    canonical_root: Option<&Path>,
     accept: PathPredicate,
 ) -> Result<Vec<String>> {
     let relative_of = |path: &Path| -> Option<String> {
@@ -311,14 +310,9 @@ pub(crate) fn walk_files(
         let relative = relative_of(path)?;
         if file_type.is_symlink() {
             // Read where a linked file points, but never enter a linked
-            // directory, and with a root to hold to, never leave it.
+            // directory.
             let target = std::fs::metadata(path).ok()?;
             if target.is_dir() || !accept(&relative) {
-                return None;
-            }
-            if let Some(root) = canonical_root
-                && !dunce::canonicalize(path).is_ok_and(|t| t.starts_with(root))
-            {
                 return None;
             }
             return Some(relative);
@@ -347,9 +341,6 @@ pub(crate) fn walk_files(
     Ok(found.into_inner())
 }
 
-/// Every file under `dir` with its stamp, for an index seeding a prefix: the
-/// walk an expansion runs, confined to the workspace. Empty when `dir` does
-/// not exist yet; `None` when it resolves outside the workspace.
 /// A question asked about one path: does this glob admit it, does the
 /// workspace context already track it. Borrowed and shared across the walk's
 /// threads, so it is always behind a reference and `Sync`.
@@ -358,31 +349,19 @@ pub(crate) type PathPredicate<'a> = &'a (dyn Fn(&str) -> bool + Sync);
 /// The files under `dir` that `accept` admits, workspace-relative, read from
 /// disk. The one implementation of "what does this directory hold"; the
 /// ignored index caches on top of it, and everything else calls it directly.
-/// With `confine`, a `dir` resolving outside the workspace is `None` and a
-/// linked file leading out is skipped; a declared output is read wherever it
-/// points. `None` also when `dir` cannot be read at all. The order is the
-/// walk's, not sorted.
+/// A path is read wherever it points, so an entry or a linked file may lead
+/// out of the workspace. `None` when `dir` cannot be read at all. The order
+/// is the walk's, not sorted.
 pub(crate) fn files_under(
     workspace_root: &Path,
     dir: &str,
-    confine: bool,
     accept: PathPredicate,
 ) -> Option<Vec<String>> {
     let start = workspace_root.join(dir);
-    let resolved = dunce::canonicalize(&start).ok()?;
-    let canonical_root = if confine {
-        let root = dunce::canonicalize(workspace_root).ok()?;
-        if !resolved.starts_with(&root) {
-            return None;
-        }
-        Some(root)
-    } else {
-        None
-    };
-    if !resolved.is_dir() {
+    if !dunce::canonicalize(&start).ok()?.is_dir() {
         return Some(Vec::new());
     }
-    walk_files(&start, workspace_root, canonical_root.as_deref(), accept).ok()
+    walk_files(&start, workspace_root, accept).ok()
 }
 
 /// Every file under `dir`, for the index adopting it as a listing. A
@@ -392,7 +371,7 @@ pub(crate) fn seed_walk(workspace_root: &Path, dir: &str) -> Option<Vec<String>>
     if std::fs::symlink_metadata(workspace_root.join(dir)).is_err() {
         return Some(Vec::new());
     }
-    files_under(workspace_root, dir, true, &|_| true)
+    files_under(workspace_root, dir, &|_| true)
 }
 
 #[cfg(test)]

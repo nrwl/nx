@@ -159,37 +159,66 @@ pub(crate) mod tests {
         assert_eq!(nested.files, vec!["dist/gen/a.js", "dist/gen/nested/b.js"]);
     }
 
+    /// A glob that says it leaves the workspace is refused when the plan is
+    /// built, before anything reads the disk. A link is not refused: it does
+    /// not say so, see `a_link_is_read_where_it_points`.
     #[test]
-    fn refuses_a_prefix_that_leaves_the_workspace() {
-        let temp = workspace();
-        let outside = temp.path().parent().unwrap().join("outside-secret.txt");
-        std::fs::write(&outside, "secret").unwrap();
-        let err = match expand_files(temp.path(), &globs(&["../outside-secret.txt"])) {
+    fn refuses_a_glob_that_says_it_leaves_the_workspace() {
+        let err = match validate_files_glob("../outside-secret.txt") {
             Err(err) => err,
-            Ok(_) => panic!("a prefix outside the workspace must be refused"),
+            Ok(_) => panic!("a glob that leaves the workspace must be refused"),
         };
         assert!(err.to_string().contains("outside the workspace"), "{err}");
-        assert!(expand_files(temp.path(), &globs(&["../**"])).is_err());
-        std::fs::remove_file(outside).unwrap();
+        assert!(validate_files_glob("../**").is_err());
+        assert!(validate_files_glob("/etc/passwd").is_err());
+        assert!(validate_files_glob("!../**").is_err());
     }
 
+    /// A fileset reads a path wherever it points, the same as a declared
+    /// output: `dist` is often a link into a build cache. A linked directory
+    /// is still not walked into, which is what the glob case pins.
     #[cfg(unix)]
     #[test]
-    fn skips_symlinks_whose_target_leaves_the_workspace() {
+    fn a_link_is_read_where_it_points() {
         let temp = workspace();
-        let outside = temp.path().parent().unwrap().join("outside-linked.js");
-        std::fs::write(&outside, "secret").unwrap();
-        std::os::unix::fs::symlink(&outside, temp.path().join("dist/gen/escape.js")).unwrap();
+        let elsewhere = TempDir::new().unwrap();
+        elsewhere.child("linked.js").write_str("out").unwrap();
+        elsewhere.child("tree/deep.js").write_str("deep").unwrap();
         std::os::unix::fs::symlink(
-            temp.path().join("dist/other/c.js"),
-            temp.path().join("dist/gen/inside.js"),
+            elsewhere.path().join("linked.js"),
+            temp.path().join("dist/gen/escape.js"),
         )
         .unwrap();
+        std::os::unix::fs::symlink(
+            elsewhere.path().join("tree"),
+            temp.path().join("dist/gen/tree"),
+        )
+        .unwrap();
+
         let expansion = expand_files(temp.path(), &globs(&["dist/gen/*.js"])).unwrap();
-        assert_eq!(expansion.files, vec!["dist/gen/a.js", "dist/gen/inside.js"]);
-        // An exact path that is itself a link out of the workspace is refused.
-        assert!(expand_files(temp.path(), &globs(&["dist/gen/escape.js"])).is_err());
-        std::fs::remove_file(outside).unwrap();
+        assert_eq!(expansion.files, vec!["dist/gen/a.js", "dist/gen/escape.js"]);
+        // Named exactly, a link out is read rather than refused.
+        assert_eq!(
+            expand_files(temp.path(), &globs(&["dist/gen/escape.js"]))
+                .unwrap()
+                .files,
+            vec!["dist/gen/escape.js"]
+        );
+        // A linked directory named exactly is read where it points.
+        assert_eq!(
+            expand_files(temp.path(), &globs(&["dist/gen/tree"]))
+                .unwrap()
+                .files,
+            vec!["dist/gen/tree/deep.js"]
+        );
+        // A walk still does not descend into one.
+        assert!(
+            !expand_files(temp.path(), &globs(&["dist/**"]))
+                .unwrap()
+                .files
+                .iter()
+                .any(|f| f.contains("tree/"))
+        );
     }
 
     #[test]
