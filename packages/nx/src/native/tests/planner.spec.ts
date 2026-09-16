@@ -1031,6 +1031,57 @@ describe('task planner', () => {
     );
   });
 
+  it.each([
+    ['{projectRoot}', /"\{projectRoot\}" is an invalid fileset/],
+    ['{workspaceRoot}', /"\{workspaceRoot\}" is an invalid fileset/],
+    [
+      '{workspaceRoot}**/*.js',
+      /"\{workspaceRoot\}\*\*\/\*\.js" is an invalid fileset/,
+    ],
+    [
+      '{projectRoot}/../shared/**',
+      /"\{projectRoot\}\/\.\.\/shared\/\*\*" is an invalid fileset/,
+    ],
+    [
+      '^{projectRoot}src/**',
+      /"\{projectRoot\}src\/\*\*" is an invalid fileset/,
+    ],
+    [
+      { fileset: 'src/**', dependencies: true },
+      /"src\/\*\*" is an invalid fileset/,
+    ],
+  ])('rejects %s at plan time, naming the entry', (input, message) => {
+    const builder = new ProjectGraphBuilder(undefined, {
+      parent: [{ file: 'libs/parent/file.ts', hash: 'ts.hash' }],
+    });
+    builder.addNode({
+      name: 'parent',
+      type: 'lib',
+      data: {
+        root: 'libs/parent',
+        targets: {
+          build: { inputs: [input as any], executor: 'nx:run-commands' },
+        },
+      },
+    });
+    const projectGraph = builder.getUpdatedProjectGraph();
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['parent'],
+      ['build'],
+      undefined,
+      {}
+    );
+    const planner = new HashPlanner(
+      {} as any,
+      transferProjectGraph(transformProjectGraphForRust(projectGraph))
+    );
+    expect(() => planner.getPlans(['parent:build'], taskGraph)).toThrow(
+      message
+    );
+  });
+
   describe('dependentTasksOutputFiles', () => {
     it('should depend on dependent tasks output files', async () => {
       const projectFileMap = {
