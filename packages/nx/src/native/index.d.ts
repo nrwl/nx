@@ -967,11 +967,12 @@ export interface WorkspaceContextOptions {
    */
   watch?: boolean
   /**
-   * Extra globs the watch applies on top of the hardcoded ignores. A
-   * leading `!` admits a hardcoded-ignored path into the event stream
-   * (never into the files), as the daemon does for its own process file.
+   * Paths the watch reports even though a hardcoded ignore covers them,
+   * as the daemon does for its own process file. They reach the event
+   * stream only, never the files: the workspace ignore rules still decide
+   * what enters those.
    */
-  watchGlobs?: Array<string>
+  alwaysWatch?: Array<string>
 }
 
 /** Public NAPI error codes that are for Node */

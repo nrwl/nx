@@ -16,7 +16,7 @@ use crate::native::utils::{Normalize, NxCondvar, NxMutex, gather_stamp, path::ge
 use crate::native::watch::types::{EventType, WatchEvent};
 #[cfg(not(target_arch = "wasm32"))]
 use crate::native::watch::{
-    FlushMode, WatchEventCallback, WatchSession, create_filter, default_watch_globs,
+    FlushMode, WatchEventCallback, WatchSession, create_filter, default_watch_ignores,
 };
 #[cfg(not(target_arch = "wasm32"))]
 use crate::native::workspace::files_archive::archive_modified_at;
@@ -48,10 +48,11 @@ pub struct WorkspaceContextOptions {
     /// starts before the scan, so nothing written after construction is
     /// missed. Off by default; ignored on wasm, which has no watcher.
     pub watch: Option<bool>,
-    /// Extra globs the watch applies on top of the hardcoded ignores. A
-    /// leading `!` admits a hardcoded-ignored path into the event stream
-    /// (never into the files), as the daemon does for its own process file.
-    pub watch_globs: Option<Vec<String>>,
+    /// Paths the watch reports even though a hardcoded ignore covers them,
+    /// as the daemon does for its own process file. They reach the event
+    /// stream only, never the files: the workspace ignore rules still decide
+    /// what enters those.
+    pub always_watch: Option<Vec<String>>,
 }
 
 #[napi]
@@ -1078,7 +1079,14 @@ impl WorkspaceContext {
         {
             let failed = |msg| napi::Error::new(napi::Status::GenericFailure, msg);
             let policy = Self::workspace_policy(&workspace_root_path).map_err(failed)?;
-            let extra_globs = options.watch_globs.unwrap_or_default();
+            // A watch glob set is a list of ignores, so admitting a path is
+            // a negation in it.
+            let extra_globs: Vec<String> = options
+                .always_watch
+                .unwrap_or_default()
+                .iter()
+                .map(|path| format!("!{path}"))
+                .collect();
             let ignored = Arc::new(IgnoredIndex::new(Some(
                 Self::index_watch(&workspace_root_path, &extra_globs).map_err(failed)?,
             )));
@@ -1140,7 +1148,7 @@ impl WorkspaceContext {
     fn workspace_policy(workspace_root_path: &Path) -> std::result::Result<Policy, String> {
         let origin = dunce::canonicalize(workspace_root_path)
             .unwrap_or_else(|_| workspace_root_path.to_path_buf());
-        let filter = create_filter(&origin.to_string_lossy(), &default_watch_globs(), true)
+        let filter = create_filter(&origin.to_string_lossy(), &default_watch_ignores(), true)
             .map_err(|e| format!("failed to build the workspace ignore rules: {e}"))?;
         Ok(Arc::new(move |path: &str| {
             filter.admits(&origin.join(path), false)
@@ -1157,7 +1165,7 @@ impl WorkspaceContext {
     ) -> std::result::Result<crate::native::workspace::ignored_index::Watch, String> {
         let origin = dunce::canonicalize(workspace_root_path)
             .unwrap_or_else(|_| workspace_root_path.to_path_buf());
-        let mut globs = default_watch_globs();
+        let mut globs = default_watch_ignores();
         globs.extend(extra_globs.iter().cloned());
         let filter = create_filter(&origin.to_string_lossy(), &globs, false)
             .map_err(|e| format!("failed to build the watch gate: {e}"))?;
@@ -1206,7 +1214,7 @@ impl WorkspaceContext {
                 batches.publish(Err(message));
             }
         });
-        let mut globs = default_watch_globs();
+        let mut globs = default_watch_ignores();
         globs.extend(extra_globs);
         WatchSession::start(workspace_root, &globs, false, callback)
     }
@@ -2259,7 +2267,7 @@ mod tests {
             as_string(cache),
             Some(WorkspaceContextOptions {
                 watch: Some(true),
-                watch_globs: None,
+                always_watch: None,
             }),
         )
         .unwrap()
@@ -2792,7 +2800,7 @@ mod tests {
             as_string(&cache),
             Some(WorkspaceContextOptions {
                 watch: Some(true),
-                watch_globs: Some(vec!["!.nx/workspace-data/d/server-process.json".into()]),
+                always_watch: Some(vec![".nx/workspace-data/d/server-process.json".into()]),
             }),
         )
         .unwrap();

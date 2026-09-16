@@ -686,7 +686,7 @@ export async function startServer(): Promise<Server> {
     registerDaemonForRestartChecks(server, openSockets);
     setupWorkspaceContext(workspaceRoot, {
       watch: true,
-      watchGlobs: [`!${relativeServerProcess}`],
+      alwaysWatch: [relativeServerProcess],
     });
     subscribeToWorkspaceChanges(workspaceRoot, handleWorkspaceChanges);
     serverLogger.watcherLog(

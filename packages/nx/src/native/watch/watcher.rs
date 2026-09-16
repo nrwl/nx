@@ -122,8 +122,9 @@ struct FlushRequest {
     reply: Sender<Vec<WatchEvent>>,
 }
 
-/// The globs every workspace watch excludes on top of the ignore files.
-pub(crate) fn default_watch_globs() -> Vec<String> {
+/// The ignore globs every workspace watch applies on top of the ignore
+/// files. A `!` entry admits a path back, see `always_watch`.
+pub(crate) fn default_watch_ignores() -> Vec<String> {
     let mut globs: Vec<String> = HARDCODED_IGNORE_PATTERNS
         .iter()
         .map(|p| (*p).to_string())
@@ -691,7 +692,7 @@ mod tests {
         // Gitignore off, so the platform's tmp tree cannot influence the test.
         let w = WatchSession::start(
             canonical.to_str().expect("utf-8 path").to_string(),
-            &default_watch_globs(),
+            &default_watch_ignores(),
             false,
             callback,
         )
@@ -1062,7 +1063,7 @@ mod tests {
         });
         let w = WatchSession::start(
             link.to_str().expect("utf-8").to_string(),
-            &default_watch_globs(),
+            &default_watch_ignores(),
             false,
             callback,
         )
@@ -1645,7 +1646,7 @@ mod tests {
         });
         let watcher = WatchSession::start(
             canonical.to_str().expect("utf-8 path").to_string(),
-            &default_watch_globs(),
+            &default_watch_ignores(),
             false,
             callback,
         )
