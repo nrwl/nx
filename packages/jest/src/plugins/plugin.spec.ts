@@ -471,6 +471,74 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
     }
   );
 
+  function getTestOutputs(results: any, projectRoot: string) {
+    return results[0][1].projects[projectRoot].targets['test'].outputs;
+  }
+
+  it('should resolve a relative coverageDirectory for a root project', async () => {
+    await tempFs.createFiles({
+      'package.json': '{"nx":{}}',
+      'jest.config.js': `module.exports = {}`,
+      'src/unit.spec.ts': '',
+    });
+    mockJestConfig(
+      { coverageDirectory: './coverage' },
+      context,
+      'jest.config.js'
+    );
+
+    const results = await createNodesFunction(
+      ['jest.config.js'],
+      { targetName: 'test', disableJestRuntime },
+      context
+    );
+
+    expect(getTestOutputs(results, '.')).toEqual(['{projectRoot}/coverage']);
+  });
+
+  it('should resolve a <rootDir> token in coverageDirectory', async () => {
+    mockJestConfig({ coverageDirectory: '<rootDir>/coverage' }, context);
+
+    const results = await createNodesFunction(
+      ['proj/jest.config.js'],
+      { targetName: 'test', disableJestRuntime },
+      context
+    );
+
+    expect(getTestOutputs(results, 'proj')).toEqual(['{projectRoot}/coverage']);
+  });
+
+  it('should keep an absolute coverageDirectory outside the project', async () => {
+    mockJestConfig(
+      { coverageDirectory: join(tempFs.tempDir, 'coverage') },
+      context
+    );
+
+    const results = await createNodesFunction(
+      ['proj/jest.config.js'],
+      { targetName: 'test', disableJestRuntime },
+      context
+    );
+
+    expect(getTestOutputs(results, 'proj')).toEqual([
+      '{workspaceRoot}/coverage',
+    ]);
+  });
+
+  it('should resolve coverageDirectory against a rootDir override', async () => {
+    mockJestConfig({ rootDir: '..', coverageDirectory: 'coverage' }, context);
+
+    const results = await createNodesFunction(
+      ['proj/jest.config.js'],
+      { targetName: 'test', disableJestRuntime },
+      context
+    );
+
+    expect(getTestOutputs(results, 'proj')).toEqual([
+      '{workspaceRoot}/coverage',
+    ]);
+  });
+
   describe('ciGroupName', () => {
     it('should name atomized tasks group using provided group name', async () => {
       mockJestConfig(
@@ -1681,8 +1749,12 @@ describe('@nx/jest/plugin config file inputs', () => {
   });
 });
 
-function mockJestConfig(config: any, context: CreateNodesContext) {
-  jest.mock(join(context.workspaceRoot, 'proj/jest.config.js'), () => config, {
+function mockJestConfig(
+  config: any,
+  context: CreateNodesContext,
+  configPath = 'proj/jest.config.js'
+) {
+  jest.mock(join(context.workspaceRoot, configPath), () => config, {
     virtual: true,
   });
 }

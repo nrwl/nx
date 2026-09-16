@@ -358,8 +358,13 @@ async function buildJestTargets(
   if (disableJestRuntime) {
     const outputs = (target.outputs = getOutputs(
       projectRoot,
+      // Mirrors jest-config `normalize`: resolve against rootDir after the
+      // `<rootDir>` token, leaving an absolute path untouched.
       rawConfig.coverageDirectory
-        ? join(context.workspaceRoot, projectRoot, rawConfig.coverageDirectory)
+        ? resolve(
+            rootDir,
+            replaceRootDirInPath(rootDir, rawConfig.coverageDirectory)
+          )
         : undefined,
       undefined,
       context
@@ -481,7 +486,8 @@ async function buildJestTargets(
           _: [],
           $0: undefined,
         },
-        rawConfig,
+        // Jest resolves a relative rootDir only when it reads the file itself.
+        rawConfig.rootDir ? { ...rawConfig, rootDir } : rawConfig,
         undefined,
         dirname(absConfigFilePath)
       );
@@ -913,9 +919,9 @@ function getOutputs(
       path
     );
     if (relativePath.startsWith('..')) {
-      return join('{workspaceRoot}', join(projectRoot, relativePath));
+      return joinPathFragments('{workspaceRoot}', projectRoot, relativePath);
     } else {
-      return join('{projectRoot}', relativePath);
+      return joinPathFragments('{projectRoot}', relativePath);
     }
   }
 
