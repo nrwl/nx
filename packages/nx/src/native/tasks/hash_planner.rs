@@ -1009,15 +1009,17 @@ fn deferred_tasks(
 }
 
 /// The directory a glob reads from, spelled the way expansion reads it. A
-/// glob the prefix parser rejects reads as the workspace root, so a doubtful
-/// case errs toward deferring.
+/// A glob with no literal prefix, or one that climbs out of the workspace,
+/// reads as the workspace root, so a doubtful case errs toward deferring.
 fn walk_root(glob: &str) -> String {
     // Legacy default outputs are spelled `./dist` and `dist/.`.
     let glob = glob.strip_prefix("./").unwrap_or(glob);
     let glob = glob.strip_suffix("/.").unwrap_or(glob);
-    target_directory(&normalize_glob(glob))
-        .map(|(root, _)| root)
-        .unwrap_or_default()
+    let glob = normalize_glob(glob);
+    if glob.split('/').any(|segment| segment == "..") {
+        return String::new();
+    }
+    target_directory(&glob).0
 }
 
 /// Walk roots of every output declared by the tasks `task_id` depends on,

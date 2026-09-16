@@ -1,7 +1,6 @@
-use super::contains_glob_pattern;
+use super::target_directory;
 use crate::native::glob::glob_group::GlobGroup;
 use crate::native::glob::glob_parser::parse_glob;
-use itertools::Either::{Left, Right};
 use itertools::Itertools;
 use std::collections::HashSet;
 
@@ -120,26 +119,16 @@ fn build_segment(
 }
 
 pub fn partition_glob(glob: &str) -> anyhow::Result<(String, Vec<String>)> {
-    let (negated, groups) = parse_glob(glob)?;
-    // Partition glob into leading directories and patterns that should be matched
-    let mut has_patterns = false;
-    let (leading_dir_segments, pattern_segments): (Vec<String>, _) = groups
-        .into_iter()
-        .filter(|group| !group.is_empty())
-        .partition_map(|group| match &group[0] {
-            GlobGroup::NonSpecial(value) if !contains_glob_pattern(&value) && !has_patterns => {
-                Left(value.to_string())
-            }
-            _ => {
-                has_patterns = true;
-                Right(group)
-            }
-        });
-
-    Ok((
-        leading_dir_segments.join("/"),
-        convert_glob_segments(negated, pattern_segments),
-    ))
+    // `target_directory` is the one answer to where literal text stops, so a
+    // directory named `@scope` or `g+en` stays part of the directory here too.
+    let (negated, _) = parse_glob(glob)?;
+    let body = glob.strip_prefix('!').unwrap_or(glob);
+    let (directory, remainder) = target_directory(body);
+    let Some(remainder) = remainder else {
+        return Ok((directory, vec![]));
+    };
+    let patterns = convert_glob(&format!("{}{remainder}", if negated { "!" } else { "" }))?;
+    Ok((directory, patterns))
 }
 
 #[cfg(test)]

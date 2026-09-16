@@ -10,9 +10,7 @@ use anyhow::{Context, Result, bail};
 use dashmap::DashMap;
 
 use super::entries::{Negation, Positive};
-use crate::native::glob::{
-    build_glob_set, expand_literal_braces, normalize_glob, target_directory,
-};
+use crate::native::glob::{build_glob_set, expand_literal_braces, normalize_glob};
 use crate::native::walker::{PathPredicate, files_under};
 
 /// Expansion per `files:{project}:[...]` instruction, scoped to one `hash_plans`
@@ -275,6 +273,27 @@ pub(crate) fn expand_cached(
 }
 
 /// Rejects a glob that would read outside the workspace or exclude nothing.
+/// What a fileset glob may not say. `target_directory` answers only where
+/// literal text stops; these are this feature's rules, with its wording.
+fn validate_shape(glob: &str) -> Result<()> {
+    if Path::new(glob).is_absolute() || glob.starts_with('/') {
+        bail!(
+            "The includeIgnored fileset \"{glob}\" is an absolute path; globs are workspace-relative."
+        );
+    }
+    for segment in glob.split('/') {
+        if segment == ".." {
+            bail!("The includeIgnored fileset \"{glob}\" points outside the workspace.");
+        }
+        if segment == "." {
+            bail!(
+                "The includeIgnored fileset \"{glob}\" has a `.` segment; write it relative to the workspace root without `./`."
+            );
+        }
+    }
+    Ok(())
+}
+
 /// A glob with no leading directory (`**/*`, `*.gen`) is allowed: it walks
 /// from the workspace root, which is slow but not wrong.
 pub(crate) fn validate_files_glob(glob: &str) -> Result<()> {
@@ -284,12 +303,12 @@ pub(crate) fn validate_files_glob(glob: &str) -> Result<()> {
             bail!("The includeIgnored fileset \"{glob}\" names nothing to exclude.");
         }
         for expanded in expand_literal_braces(&body) {
-            target_directory(&expanded)?;
+            validate_shape(&expanded)?;
         }
         return Ok(());
     }
     for expanded in expand_literal_braces(&normalize_glob(glob)) {
-        target_directory(&expanded)?;
+        validate_shape(&expanded)?;
     }
     Ok(())
 }

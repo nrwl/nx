@@ -1,10 +1,6 @@
 //! Reading glob text without matching anything: brace groups, the literal
 //! directory prefix a walk can start from, and slash normalization.
 
-use std::path::Path;
-
-use anyhow::{Result, bail};
-
 /// Expands brace groups whose alternatives are all literal names into the
 /// exact paths they stand for (`{nx,tsconfig.base}.json` → `nx.json`,
 /// `tsconfig.base.json`; several groups multiply out). A group with a wildcard
@@ -44,31 +40,17 @@ pub(crate) fn expand_literal_braces(glob: &str) -> Vec<String> {
 /// The directory a glob is read from, and the pattern left to match under
 /// it, if any. The directory ends at the first segment carrying glob syntax
 /// as the engine reads it: `*`, `?`, `{`, `[`, or a `(` group. What follows
-/// reaches the engine unchanged, so brackets, groups, and escapes mean
-/// exactly what they mean in any other fileset. `@` and `+` are ordinary
-/// characters here, as they are in a path.
+/// is returned unchanged, so brackets, groups and escapes still mean what
+/// they mean to the engine, which converts them itself.
 ///
-/// `partition_glob` answers almost the same question and is not used: it
-/// classifies a segment containing `@` or `+` as a pattern, and loses parts
-/// of one containing a `(` group.
-pub(crate) fn target_directory(glob: &str) -> Result<(String, Option<&str>)> {
-    if Path::new(glob).is_absolute() || glob.starts_with('/') {
-        bail!(
-            "The includeIgnored fileset \"{glob}\" is an absolute path; globs are workspace-relative."
-        );
-    }
+/// The one answer to where literal text stops. A glob that leaves the
+/// workspace, or is absolute, is a caller's business rather than this
+/// function's: see `validate_files_glob`.
+pub(crate) fn target_directory(glob: &str) -> (String, Option<&str>) {
     let mut literal: Vec<&str> = Vec::new();
     let mut consumed = 0;
     let mut remainder = None;
     for segment in glob.split('/') {
-        if segment == ".." {
-            bail!("The includeIgnored fileset \"{glob}\" points outside the workspace.");
-        }
-        if segment == "." {
-            bail!(
-                "The includeIgnored fileset \"{glob}\" has a `.` segment; write it relative to the workspace root without `./`."
-            );
-        }
         if segment.contains(['*', '?', '{', '[', '(']) {
             remainder = Some(&glob[consumed..]);
             break;
@@ -77,7 +59,7 @@ pub(crate) fn target_directory(glob: &str) -> Result<(String, Option<&str>)> {
         consumed += segment.len() + 1;
     }
     let root = literal.join("/").trim_end_matches('/').to_string();
-    Ok((root, remainder))
+    (root, remainder)
 }
 
 /// Collapses repeated and trailing slashes so `dist//gen/` and `dist/gen`
@@ -118,7 +100,7 @@ pub(crate) fn path_or_everything_under(glob: &str) -> Vec<String> {
     // `@types` or `+state` is a path here as it is everywhere else. Asking
     // the glob engine instead would call those characters syntax and leave
     // such a directory matching nothing.
-    let has_pattern = target_directory(body).is_ok_and(|(_, rest)| rest.is_some());
+    let has_pattern = target_directory(body).1.is_some();
     if body.is_empty() || body.ends_with('/') || has_pattern {
         return vec![glob.to_string()];
     }

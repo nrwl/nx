@@ -348,7 +348,7 @@ impl TaskHasher {
                         .filter(|g| !g.starts_with('!'))
                         .filter_map(|g| {
                             let glob = normalize_glob(g);
-                            target_directory(&glob).ok().map(|(root, _)| root)
+                            Some(target_directory(&glob).0)
                         }),
                 ),
                 HashInstruction::TaskOutput(_, outputs) => {

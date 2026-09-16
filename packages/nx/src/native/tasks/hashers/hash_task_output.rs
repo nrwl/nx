@@ -86,7 +86,7 @@ pub(crate) fn output_prefixes(outputs: &[String]) -> Vec<String> {
         .iter()
         .filter(|entry| !entry.starts_with('!'))
         .filter_map(|entry| normalize_output_entry(entry))
-        .filter_map(|entry| target_directory(&entry).ok().map(|(root, _)| root))
+        .map(|entry| target_directory(&entry).0)
         .collect()
 }
 

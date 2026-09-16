@@ -19,7 +19,7 @@ pub(crate) struct Positive {
 impl Positive {
     /// Split at its literal prefix, see `target_directory`.
     pub(crate) fn parse(glob: &str) -> Result<Self> {
-        let (root, remainder) = target_directory(glob)?;
+        let (root, remainder) = target_directory(glob);
         Ok(Self {
             text: glob.to_string(),
             root,
@@ -49,7 +49,7 @@ impl Negation {
     pub(crate) fn parse(glob: &str) -> Result<Self> {
         let normalized = normalize_glob(glob);
         let body = normalized.strip_prefix('!').unwrap_or(&normalized);
-        let (root, remainder) = target_directory(body)?;
+        let (root, remainder) = target_directory(body);
         if root.is_empty() && remainder.is_none() {
             bail!("The includeIgnored fileset \"{glob}\" names nothing to exclude.");
         }
