@@ -103,7 +103,7 @@ export function getImplementationFactory<T>(
       if (isSource) {
         throw e;
       }
-      const metadata = getWorkspacePackagesMetadata(projects);
+      const metadata = getPackagesMetadata(projects);
       throw withBuiltEntryResolutionHint(
         e,
         {
@@ -160,7 +160,7 @@ export function resolveImplementationWithSourceGraph(
     registerSourceGraphResolver(
       resolved.path,
       workspaceRoot,
-      getWorkspacePackagesMetadata(projects).packageManagerWorkspacePackageNames
+      getPackagesMetadata(projects).packageManagerWorkspacePackageNames
     );
   }
   return resolved;
@@ -271,9 +271,8 @@ function getEntryProject(
   directory: string,
   projects: Record<string, ProjectConfiguration>
 ): ProjectConfiguration | null {
-  packageMetadata ??= getWorkspacePackagesMetadata(projects);
   return (
-    packageMetadata.packageToProjectMap[entryPackageName] ??
+    getPackagesMetadata(projects).packageToProjectMap[entryPackageName] ??
     getProjectForDirectory(directory, projects)
   );
 }
@@ -283,6 +282,20 @@ const projectRootMappings = new WeakMap<
   Record<string, ProjectConfiguration>,
   Map<string, string>
 >();
+const packagesMetadata = new WeakMap<
+  Record<string, ProjectConfiguration>,
+  ReturnType<typeof getWorkspacePackagesMetadata<ProjectConfiguration>>
+>();
+
+function getPackagesMetadata(projects: Record<string, ProjectConfiguration>) {
+  let metadata = packagesMetadata.get(projects);
+  if (!metadata) {
+    metadata = getWorkspacePackagesMetadata(projects);
+    packagesMetadata.set(projects, metadata);
+  }
+  return metadata;
+}
+
 function getProjectForDirectory(
   directory: string,
   projects: Record<string, ProjectConfiguration>
@@ -324,9 +337,6 @@ function readJsPackageMetadata(
   }
 }
 
-let packageMetadata: ReturnType<
-  typeof getWorkspacePackagesMetadata<ProjectConfiguration>
->;
 function tryResolveFromSource(
   path: string,
   directory: string,
@@ -334,8 +344,8 @@ function tryResolveFromSource(
   projects: Record<string, ProjectConfiguration>,
   entryProject: ProjectConfiguration | null
 ): { path: string; isSource: boolean } | null {
-  packageMetadata ??= getWorkspacePackagesMetadata(projects);
-  let localProject = packageMetadata.packageToProjectMap[packageName];
+  let localProject =
+    getPackagesMetadata(projects).packageToProjectMap[packageName];
   // The `packageName` might be a path to the collection rather than an actual
   // package name (e.g. when a generator/executor collection is referenced by
   // path). In that case, `directory` points inside the local project, so we

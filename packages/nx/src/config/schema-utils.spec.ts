@@ -4,7 +4,6 @@ vi.mock('../plugins/js/utils/register', () => ({
   requireWithTsconfigFallback: vi.fn(),
 }));
 
-// schema-utils retains this metadata object, so tests must mutate it in place.
 const packagesMetadata = vi.hoisted(() => ({
   packageToProjectMap: {} as Record<string, ProjectConfiguration>,
   packageManagerWorkspacePackageNames: [] as string[],
@@ -322,41 +321,70 @@ describe('getImplementationFactory', () => {
     }
   });
 
-  it('loads a JavaScript file guessed under src as source only when sourceRoot covers it', () => {
-    const fs = new TempFs('schema-utils-guessed-source');
-    const directory = join(fs.tempDir, 'packages/plugin');
-    mkdirSync(join(directory, 'src'), { recursive: true });
-    writeFileSync(join(directory, 'src/generator.js'), '');
-    const project = {
-      name: 'plugin',
-      root: 'packages/plugin',
-      targets: {},
-      metadata: { js: { packageName: '@proj/plugin', packageExports: {} } },
-    } as ProjectConfiguration;
-    packagesMetadata.packageToProjectMap['@proj/plugin'] = project;
-    vi.mocked(registerSourceGraphResolver).mockClear();
-    vi.mocked(requireWithTsconfigFallback).mockReturnValue({});
-    const originalRoot = workspaceRoot;
-    setWorkspaceRoot(fs.tempDir);
-    try {
-      getImplementationFactory('./dist/generator', directory, '@proj/plugin', {
-        plugin: project,
-      })();
-      expect(registerSourceGraphResolver).not.toHaveBeenCalled();
-
-      project.sourceRoot = 'packages/plugin/src';
-      getImplementationFactory('./dist/generator', directory, '@proj/plugin', {
-        plugin: project,
-      })();
-      expect(registerSourceGraphResolver).toHaveBeenCalledWith(
-        join(directory, 'src/generator.js'),
-        fs.tempDir,
-        []
+  it.each([
+    [undefined, 'packages/plugin/src'],
+    ['packages/plugin/src', undefined],
+  ])(
+    'loads a JavaScript file guessed under src as source only when the current sourceRoot covers it (%s, then %s)',
+    async (firstSourceRoot, secondSourceRoot) => {
+      const fs = new TempFs('schema-utils-guessed-source');
+      const directory = join(fs.tempDir, 'packages/plugin');
+      mkdirSync(join(directory, 'src'), { recursive: true });
+      writeFileSync(join(directory, 'src/generator.js'), '');
+      // A fresh module and the real metadata, so each snapshot is read anew.
+      vi.resetModules();
+      const packages = await import('../plugins/js/utils/packages');
+      vi.mocked(packages.getWorkspacePackagesMetadata).mockImplementation(
+        (
+          await vi.importActual<typeof import('../plugins/js/utils/packages')>(
+            '../plugins/js/utils/packages'
+          )
+        ).getWorkspacePackagesMetadata
       );
-    } finally {
-      setWorkspaceRoot(originalRoot);
-      delete packagesMetadata.packageToProjectMap['@proj/plugin'];
-      fs.cleanup();
+      const register = await import('../plugins/js/utils/register');
+      vi.mocked(register.requireWithTsconfigFallback).mockReturnValue({});
+      const workspaceRootModule = await import('../utils/workspace-root');
+      const schemaUtils = await import('./schema-utils');
+      const originalRoot = workspaceRootModule.workspaceRoot;
+      workspaceRootModule.setWorkspaceRoot(fs.tempDir);
+      const registrationsFor = (sourceRoot: string | undefined) => {
+        vi.mocked(register.registerSourceGraphResolver).mockClear();
+        schemaUtils.getImplementationFactory(
+          './dist/generator',
+          directory,
+          '@proj/plugin',
+          {
+            plugin: {
+              name: 'plugin',
+              root: 'packages/plugin',
+              sourceRoot,
+              targets: {},
+              metadata: {
+                js: { packageName: '@proj/plugin', packageExports: {} },
+              },
+            } as ProjectConfiguration,
+          }
+        )();
+        return vi.mocked(register.registerSourceGraphResolver).mock.calls;
+      };
+      const expected = (sourceRoot: string | undefined) =>
+        sourceRoot
+          ? [[join(directory, 'src/generator.js'), fs.tempDir, []]]
+          : [];
+      try {
+        expect(registrationsFor(firstSourceRoot)).toEqual(
+          expected(firstSourceRoot)
+        );
+        expect(registrationsFor(secondSourceRoot)).toEqual(
+          expected(secondSourceRoot)
+        );
+      } finally {
+        workspaceRootModule.setWorkspaceRoot(originalRoot);
+        vi.mocked(packages.getWorkspacePackagesMetadata).mockImplementation(
+          () => packagesMetadata
+        );
+        fs.cleanup();
+      }
     }
-  });
+  );
 });
