@@ -1,4 +1,4 @@
-import { createAsyncIterable } from '@nx/devkit/internal';
+import { createAsyncIterable, createCliOptions } from '@nx/devkit/internal';
 import {
   ExecutorContext,
   parseTargetString,
@@ -13,7 +13,6 @@ import {
 } from '../../utils/types';
 import { fork } from 'child_process';
 import customServer from './custom-server.impl';
-import { createCliOptions } from '../../utils/create-cli-options';
 import { waitForPortOpen } from '@nx/web/internal';
 import { getInstalledNextVersionRuntime } from '../../utils/runtime-version-utils';
 import { warnNextServerExecutorDeprecation } from '../../utils/deprecation';
