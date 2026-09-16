@@ -801,7 +801,7 @@ export function readRunState(runDirPath: string): MigrateRunState {
         ? `Nx ${singleLine(parsed.nxVersion)}`
         : 'a newer version of Nx';
     throw new NewerRunStateFormatError(
-      `This migrate run was created with ${createdBy} (run state format v${parsed.formatVersion}), which is newer than the Nx version currently running, ${nxVersion} (run state format v${CURRENT_RUN_STATE_FORMAT_VERSION}). Re-run your migrate command with ${createdBy} or later to resume this run.`
+      `This migrate run was created with ${createdBy} (run state format v${parsed.formatVersion}), which is newer than the Nx version currently running, ${nxVersion} (run state format v${CURRENT_RUN_STATE_FORMAT_VERSION}). Re-run your migrate command with ${createdBy} or later.`
     );
   }
   if (
