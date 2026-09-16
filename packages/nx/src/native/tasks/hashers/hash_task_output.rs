@@ -450,4 +450,27 @@ mod tests {
         pin();
         assert_ne!(pinned, hash());
     }
+
+    /// The index refuses an output root that resolves outside the workspace,
+    /// and the expansion reads it anyway. Both roads must agree on the files;
+    /// only the remembering differs.
+    #[cfg(unix)]
+    #[test]
+    fn an_output_root_linking_out_of_the_workspace_is_read_but_never_tracked() {
+        let temp = workspace();
+        let elsewhere = TempDir::new().unwrap();
+        elsewhere.child("web/index.js").write_str("built").unwrap();
+        std::os::unix::fs::symlink(
+            elsewhere.path().join("web"),
+            temp.path().join("dist/linked"),
+        )
+        .unwrap();
+
+        assert!(!IgnoredIndex::new(None).track(temp.path(), "dist/linked"));
+        assert_eq!(
+            files(&temp, "**/*.js", &["dist/linked"]),
+            vec!["dist/linked/index.js"]
+        );
+    }
+
 }
