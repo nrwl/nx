@@ -2,8 +2,6 @@ import { TouchedProjectLocator } from '../affected-project-graph-models';
 import { minimatch } from 'minimatch';
 import { readNxJson } from '../../../config/nx-json';
 import { workspaceRoot } from '../../../utils/workspace-root';
-import { join } from 'path';
-import { existsSync } from 'fs';
 import { getGlobPatternsOfPlugins } from '../../utils/retrieve-workspace-files';
 import { combineGlobPatterns } from '../../../utils/globs';
 import { getPlugins, peekPluginCapabilities } from '../../plugins/get-plugins';
@@ -56,25 +54,14 @@ export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
       return combineGlobPatterns(getGlobPatternsOfPlugins(plugins));
     })();
 
-    const touchedProjects = new Set<string>();
-    for (const touchedFile of deleted) {
-      const isProjectFile = minimatch(touchedFile.file, globPattern, {
-        dot: true,
-      });
-      if (isProjectFile) {
-        // If the file no longer exists on disk, then it was deleted
-        if (!existsSync(join(workspaceRoot, touchedFile.file))) {
-          // If any project has been deleted, we must assume all projects were affected
-          if (projectDeletionAffectsAllProjects) {
-            return Object.keys(projectGraphNodes);
-          }
-          continue;
-        }
+    const configDeleted = deleted.some((touchedFile) =>
+      minimatch(touchedFile.file, globPattern, { dot: true })
+    );
 
-        // Modified project config files are under a project's root, and implicitly
-        // mark it as affected. Thus, we don't need to handle it here.
-      }
-    }
-
-    return Array.from(touchedProjects);
+    // If any project has been deleted, we must assume all projects were
+    // affected. A modified project configuration is under its own project's
+    // root, which marks that project affected without this locator.
+    return configDeleted && projectDeletionAffectsAllProjects
+      ? Object.keys(projectGraphNodes)
+      : [];
   };
