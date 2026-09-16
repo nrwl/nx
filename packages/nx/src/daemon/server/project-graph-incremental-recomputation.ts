@@ -63,6 +63,7 @@ import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
 import { notifyProjectGraphListenerSockets } from './project-graph-listener-sockets';
 import {
   changedPaths,
+  fileNames,
   restartDaemonIfIgnoreFilesChanged,
 } from './restart-checks';
 import { serverLogger } from '../logger';
@@ -356,15 +357,14 @@ function summarize(files: string[]): string {
  * an ignore file changed, otherwise schedules the recomputation.
  */
 export function routeAppliedChanges(batch: ChangeBatch): void {
-  const paths = changedPaths(batch);
-  if (paths.length && restartDaemonIfIgnoreFilesChanged(paths)) {
-    return;
-  }
-  if (paths.length) {
+  if (!isEmptyBatch(batch)) {
+    if (restartDaemonIfIgnoreFilesChanged(changedPaths(batch))) {
+      return;
+    }
     serverLogger.watcherLog(
       `File changes detected (seq ${batch.seq}):\n` +
-        `Created:\n${summarize(batch.createdFiles.map(({ file }) => file))}\n` +
-        `Updated:\n${summarize(batch.updatedFiles.map(({ file }) => file))}\n` +
+        `Created:\n${summarize(fileNames(batch.createdFiles))}\n` +
+        `Updated:\n${summarize(fileNames(batch.updatedFiles))}\n` +
         `Deleted:\n${summarize(batch.deletedFiles)}`
     );
   }
@@ -440,8 +440,8 @@ function scheduleAppliedChanges(batch: ChangeBatch) {
   }
 
   if (!isEmptyBatch(batch)) {
-    const createdFileNames = createdFiles.map(({ file }) => file);
-    const updatedFileNames = updatedFiles.map(({ file }) => file);
+    const createdFileNames = fileNames(createdFiles);
+    const updatedFileNames = fileNames(updatedFiles);
     notifyFileChangeListeners({
       createdFiles: createdFileNames,
       updatedFiles: updatedFileNames,

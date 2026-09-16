@@ -1,6 +1,6 @@
 import type { Server, Socket } from 'net';
 import { relative } from 'path';
-import type { ChangeBatch, WatchEvent } from '../../native';
+import type { ChangeBatch, FileData, WatchEvent } from '../../native';
 import { normalizePath } from '../../utils/path';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { getDaemonProcessIdSync, serverProcessJsonPath } from '../cache';
@@ -26,10 +26,15 @@ export const relativeServerProcess = normalizePath(
   relative(workspaceRoot, serverProcessJsonPath)
 );
 
+/** The paths out of a list of files and their hashes. */
+export function fileNames(files: FileData[]): string[] {
+  return files.map(({ file }) => file);
+}
+
 export function changedPaths(batch: ChangeBatch): string[] {
   return [
-    ...batch.createdFiles.map(({ file }) => file),
-    ...batch.updatedFiles.map(({ file }) => file),
+    ...fileNames(batch.createdFiles),
+    ...fileNames(batch.updatedFiles),
     ...batch.deletedFiles,
   ];
 }
