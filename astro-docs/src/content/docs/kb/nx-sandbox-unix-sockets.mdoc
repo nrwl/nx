@@ -155,7 +155,9 @@ The [Nx daemon](/docs/reference/nx-daemon) keeps a persistent process running to
 NX_ISOLATE_PLUGINS=false nx <command>
 ```
 
-[Plugin isolation](/docs/concepts/mental-model#inferred-tasks) runs each plugin in a separate forked process to prevent conflicts between multiple TypeScript compilers, module-level caches, and global state. Disabling it runs all plugins in the main process, which can cause issues in workspaces with plugins that have conflicting dependencies. In-process plugins also keep their loaded modules, so after changing the root tsconfig `customConditions` run `nx reset`, then rerun the command to start a fresh daemon.
+[Plugin isolation](/docs/concepts/mental-model#inferred-tasks) runs each plugin in a separate forked process to prevent conflicts between multiple TypeScript compilers, module-level caches, and global state. Disabling it runs all plugins in the main process, which can cause issues in workspaces with plugins that have conflicting dependencies.
+In-process plugins also keep their loaded modules, so after changing the root tsconfig
+`customConditions` run `nx reset`, then rerun the command to start a fresh daemon.
 
 {% aside type="caution" title="Workarounds are not recommended for regular use" %}
 Both environment variables work around the symptom rather than fixing the root cause. Allowlisting the Nx socket root is the proper fix and doesn't sacrifice any Nx functionality.
