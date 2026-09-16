@@ -20,6 +20,7 @@ import {
   RunningTasksService,
   TaskDetails,
   TaskInvocationTracker,
+  TaskReadiness,
 } from '../native';
 import { NxArgs } from '../utils/command-line-utils';
 import { getLocalDbConnection } from '../utils/db-connection';
@@ -47,6 +48,15 @@ import { ForkedProcessTaskRunner } from './forked-process-task-runner';
 import { isTuiEnabled } from './is-tui-enabled';
 import { TaskMetadata, TaskResult } from './life-cycle';
 import { PseudoTtyProcess } from './pseudo-terminal';
+import { waitForReadiness } from './readiness/probes';
+import {
+  getReadyProducerIds,
+  normalizeReadyWhen,
+  notReadyError,
+  readinessFailedElsewhereError,
+  readinessTimeoutError,
+  type NormalizedReadyWhen,
+} from './readiness/ready-when';
 import { BatchProcess } from './running-tasks/batch-process';
 import { NoopChildProcess } from './running-tasks/noop-child-process';
 import { getColor, writePrefixedLines } from './running-tasks/output-prefix';
@@ -85,6 +95,36 @@ function resolveBatchTaskStatus(result: {
   status?: TaskStatus;
 }): TaskStatus {
   return result.status ?? (result.success ? 'success' : 'failure');
+}
+
+const READINESS_ROW_POLL_INTERVAL = 100;
+
+interface ReadinessState {
+  promise: Promise<void>;
+  resolve: () => void;
+  reject: (error: Error) => void;
+  settled: boolean;
+  abort: AbortController;
+}
+
+function createReadinessState(): ReadinessState {
+  const state = {
+    settled: false,
+    abort: new AbortController(),
+  } as ReadinessState;
+  state.promise = new Promise<void>((resolve, reject) => {
+    state.resolve = () => {
+      state.settled = true;
+      resolve();
+    };
+    state.reject = (error) => {
+      state.settled = true;
+      reject(error);
+    };
+  });
+  // A producer with no waiter still settles; that must not be unhandled
+  state.promise.catch(() => {});
+  return state;
 }
 
 export class TaskOrchestrator {
@@ -181,6 +221,9 @@ export class TaskOrchestrator {
   >();
   private discreteTaskExitHandled = new Map<string, Promise<void>>();
   private continuousTaskExitHandled = new Map<string, Promise<void>>();
+  // Keyed by producer id. Settled by its probe when this process owns it, by
+  // the readiness row poll when another process does.
+  private readiness = new Map<string, ReadinessState>();
   private cleanupPromise: Promise<void> | null = null;
   private signalHandlers: Array<[NodeJS.Signals, () => void]> = [];
   // endregion internal state
@@ -1254,6 +1297,38 @@ export class TaskOrchestrator {
     // Wait for task to be processed
     const taskSpecificEnv = await this.processedTasks.get(task.id);
 
+    const waitError: Error | null = await this.waitForReadyDependencies(
+      task
+    ).then(
+      () => null,
+      (e) => e
+    );
+    // Skipped by a failed dependency's propagation while waiting
+    if (this.completedTasks.has(task.id)) {
+      return {
+        task,
+        code: 1,
+        status: this.completedTasks.get(task.id),
+        terminalOutput: '',
+      };
+    }
+    if (waitError) {
+      // Lifecycles pair endTasks with startTasks, so start it before failing it
+      await this.preRunSteps([task], { groupId });
+      await this.handleDiscreteWorkerFailure(
+        doNotSkipCache,
+        task,
+        groupId,
+        waitError
+      );
+      return {
+        task,
+        code: 1,
+        status: 'failure',
+        terminalOutput: waitError.message,
+      };
+    }
+
     await this.preRunSteps([task], { groupId });
 
     const pipeOutput = await this.pipeOutputCapture(task);
@@ -1538,6 +1613,14 @@ export class TaskOrchestrator {
         this.runningTasksService,
         task.id
       );
+      const readyWhen = this.getReadyWhen(task);
+      if (readyWhen) {
+        const state = this.armReadiness(task.id);
+        this.pollReadinessRow(task, readyWhen, state.abort.signal).then(
+          state.resolve,
+          state.reject
+        );
+      }
 
       this.runningContinuousTasks.set(task.id, {
         runningTask,
@@ -1556,11 +1639,23 @@ export class TaskOrchestrator {
 
       // task is already running by another process, we schedule the next tasks
       // and release the threads
+      this.tasksSchedule.markContinuousTaskStarted(task.id);
       await this.scheduleNextTasksAndReleaseThreads();
       return runningTask;
     }
 
     const taskSpecificEnv = await this.processedTasks.get(task.id);
+    let readyWhen: NormalizedReadyWhen | null;
+    try {
+      readyWhen = this.getReadyWhen(task);
+      await this.waitForReadyDependencies(task);
+    } catch (e) {
+      return this.failContinuousTaskBeforeStart(task, groupId, e);
+    }
+    // Skipped by a failed dependency's propagation while waiting
+    if (this.completedTasks.has(task.id)) {
+      return new NoopChildProcess({ code: 1, terminalOutput: '' });
+    }
     await this.preRunSteps([task], { groupId });
 
     const pipeOutput = await this.pipeOutputCapture(task);
@@ -1598,6 +1693,10 @@ export class TaskOrchestrator {
       pipeOutput
     );
     this.runningTasksService?.addRunningTask(task.id);
+    this.tasksSchedule.markContinuousTaskStarted(task.id);
+    if (readyWhen) {
+      this.startReadinessProbe(task, readyWhen, childProcess);
+    }
     this.runningContinuousTasks.set(task.id, {
       runningTask: childProcess,
       groupId,
@@ -1618,6 +1717,184 @@ export class TaskOrchestrator {
   }
 
   // endregion Single Task
+
+  // region Readiness
+  private getReadyWhen(task: Task): NormalizedReadyWhen | null {
+    if (!task.continuous) {
+      return null;
+    }
+    const readyWhen =
+      this.projectGraph.nodes[task.target.project]?.data?.targets?.[
+        task.target.target
+      ]?.readyWhen;
+    return readyWhen == null ? null : normalizeReadyWhen(readyWhen, task.id);
+  }
+
+  private async waitForReadyDependencies(task: Task): Promise<void> {
+    const producerIds = getReadyProducerIds(
+      task,
+      this.fullTaskGraph,
+      this.projectGraph
+    );
+    for (const producerId of producerIds) {
+      const producer = this.fullTaskGraph.tasks[producerId];
+      const readyWhen = this.getReadyWhen(producer);
+      if (!readyWhen) {
+        if (process.env.NX_VERBOSE_LOGGING === 'true') {
+          console.log(
+            `Task "${producer.id}" declares no "readyWhen", so "${task.id}" runs once it has started.`
+          );
+        }
+        continue;
+      }
+      // Run or shared by this process: its probe or row poll settles the
+      // deferred. Otherwise another process owns it (an Nx Cloud agent worker
+      // runs with a flat task graph) and the row is the only signal.
+      if (this.taskGraph.tasks[producerId]) {
+        const state = this.readinessOf(producerId);
+        if (!state.settled) {
+          this.logWaitingForReady(producer);
+        }
+        await state.promise;
+      } else {
+        this.logWaitingForReady(producer);
+        await this.pollReadinessRow(producer, readyWhen);
+      }
+    }
+  }
+
+  private logWaitingForReady(producer: Task) {
+    if (!this.tuiEnabled) {
+      console.log(`Waiting for "${producer.id}" to be ready...`);
+    }
+  }
+
+  // Resolves when the row is absent from the start: the producer is not
+  // managed by an Nx process this one can see, so there is nothing to wait
+  // for. A row that disappears mid-wait means the producer exited.
+  private async pollReadinessRow(
+    producer: Task,
+    readyWhen: NormalizedReadyWhen,
+    signal?: AbortSignal
+  ): Promise<void> {
+    const deadline = Date.now() + readyWhen.timeout;
+    let seenRow = false;
+    while (true) {
+      if (signal?.aborted) {
+        throw notReadyError(producer.id, 'exited');
+      }
+      if (this.stopRequested || this.bailed) {
+        throw notReadyError(producer.id, 'was stopped');
+      }
+      const status =
+        this.runningTasksService?.getTaskReadiness(producer.id) ?? null;
+      if (status === null) {
+        if (seenRow) {
+          throw notReadyError(producer.id, 'exited');
+        }
+        return;
+      }
+      seenRow = true;
+      if (status === TaskReadiness.Ready) {
+        return;
+      }
+      if (status === TaskReadiness.Failed) {
+        throw readinessFailedElsewhereError(producer.id);
+      }
+      if (Date.now() >= deadline) {
+        throw readinessTimeoutError(producer.id, readyWhen);
+      }
+      await new Promise((resolve) =>
+        setTimeout(resolve, READINESS_ROW_POLL_INTERVAL)
+      );
+    }
+  }
+
+  private startReadinessProbe(
+    task: Task,
+    readyWhen: NormalizedReadyWhen,
+    runningTask: RunningTask
+  ) {
+    const state = this.armReadiness(task.id);
+    waitForReadiness(readyWhen, {
+      taskId: task.id,
+      runningTask,
+      cwd: workspaceRoot,
+      signal: state.abort.signal,
+    }).then(
+      () => {
+        if (state.settled) return;
+        this.recordReadiness(task, TaskReadiness.Ready);
+        state.resolve();
+      },
+      (e) => {
+        if (state.settled) return;
+        this.recordReadiness(task, TaskReadiness.Failed);
+        if (process.env.NX_VERBOSE_LOGGING === 'true') {
+          console.error(e?.message ?? e);
+        }
+        state.reject(e);
+      }
+    );
+  }
+
+  // The probe's verdict stands for local waiters even when the row for
+  // other processes cannot be written
+  private recordReadiness(task: Task, status: TaskReadiness) {
+    try {
+      this.runningTasksService?.setTaskReadiness(task.id, status);
+    } catch (e) {
+      if (process.env.NX_VERBOSE_LOGGING === 'true') {
+        console.error(`Failed to record readiness of "${task.id}":`, e);
+      }
+    }
+  }
+
+  private readinessOf(taskId: string): ReadinessState {
+    return this.readiness.get(taskId) ?? this.armReadiness(taskId);
+  }
+
+  // Replaces a state settled by an earlier run so a restart re-arms it
+  private armReadiness(taskId: string): ReadinessState {
+    let state = this.readiness.get(taskId);
+    if (!state || state.settled) {
+      state = createReadinessState();
+      this.readiness.set(taskId, state);
+    }
+    return state;
+  }
+
+  private abortReadiness(
+    taskId: string,
+    reason: 'exited' | 'was stopped' | 'failed'
+  ) {
+    const state = this.readiness.get(taskId);
+    if (!state || state.settled) return;
+    state.abort.abort();
+    state.reject(notReadyError(taskId, reason));
+  }
+
+  private abortAllReadiness() {
+    for (const taskId of this.readiness.keys()) {
+      this.abortReadiness(taskId, 'was stopped');
+    }
+  }
+
+  private async failContinuousTaskBeforeStart(
+    task: Task,
+    groupId: number,
+    e: any
+  ): Promise<RunningTask> {
+    this.abortReadiness(task.id, 'failed');
+    // Already skipped by a failed dependency's propagation
+    if (!this.completedTasks.has(task.id)) {
+      // Lifecycles pair endTasks with startTasks, so start it before failing it
+      await this.preRunSteps([task], { groupId });
+      await this.handleDiscreteWorkerFailure(false, task, groupId, e);
+    }
+    return new NoopChildProcess({ code: 1, terminalOutput: e?.message ?? '' });
+  }
+  // endregion Readiness
 
   // region Lifecycle
   private async preRunSteps(tasks: Task[], metadata: TaskMetadata) {
@@ -1799,6 +2076,7 @@ export class TaskOrchestrator {
           // mark the execution as bailed which will stop all further execution
           // only the tasks that are currently running will finish
           this.bailed = true;
+          this.abortAllReadiness();
         } else {
           // Collect reverse deps to skip
           for (const depTaskId of this.reverseTaskDeps[task.id]) {
@@ -1832,6 +2110,11 @@ export class TaskOrchestrator {
   private async pipeOutputCapture(task: Task) {
     try {
       if (process.env.NX_NATIVE_COMMAND_RUNNER !== 'false') {
+        return true;
+      }
+
+      // The log probe reads the captured output
+      if (this.getReadyWhen(task)?.kind === 'logMatches') {
         return true;
       }
 
@@ -1967,6 +2250,7 @@ export class TaskOrchestrator {
     if (ownsRunningTasksService) {
       this.runningTasksService?.removeRunningTask(task.id);
     }
+    this.abortReadiness(task.id, 'exited');
 
     task.endTime = Date.now();
     if (reason === 'fulfilled') {
@@ -1996,6 +2280,9 @@ export class TaskOrchestrator {
   }
 
   private async performCleanup() {
+    // Waiters must not sit out a probe once the run is stopping
+    this.abortAllReadiness();
+
     // Mark all running tasks for intentional stop
     const reason = this.stopRequested ? 'interrupted' : 'fulfilled';
     for (const entry of this.runningContinuousTasks.values()) {

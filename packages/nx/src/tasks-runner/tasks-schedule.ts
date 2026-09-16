@@ -11,6 +11,7 @@ import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { findAllProjectNodeDependencies } from '../utils/project-graph-utils';
 import { reverse } from '../project-graph/operators';
 import { TaskHistory, getTaskHistory } from '../utils/task-history';
+import { getReadyProducerIds } from './readiness/ready-when';
 
 export interface Batch {
   id: string;
@@ -27,6 +28,9 @@ export class TasksSchedule {
   private scheduledBatches: Batch[] = [];
   private scheduledTasks: string[] = [];
   private runningTasks = new Set<string>();
+  // Continuous tasks queued but not spawned: they wait for a dependency to
+  // be ready first, so their own dependents must not be released yet
+  private pendingStart = new Set<string>();
   private completedTasks = new Set<string>();
   private scheduleRequestsExecutionChain = Promise.resolve();
   private estimatedTaskTimings: Record<string, number> = {};
@@ -64,6 +68,10 @@ export class TasksSchedule {
     await this.scheduleRequestsExecutionChain;
   }
 
+  public markContinuousTaskStarted(taskId: string) {
+    this.pendingStart.delete(taskId);
+  }
+
   public hasTasks() {
     return (
       this.scheduledBatches.length +
@@ -77,6 +85,7 @@ export class TasksSchedule {
     for (const taskId of taskIds) {
       this.completedTasks.add(taskId);
       this.runningTasks.delete(taskId);
+      this.pendingStart.delete(taskId);
       delete this.reverseTaskDeps[taskId];
     }
     const removedSet = new Set(taskIds);
@@ -161,6 +170,10 @@ export class TasksSchedule {
     for (const taskId of taskIds) {
       this.scheduledTasks.push(taskId);
       this.runningTasks.add(taskId);
+      const task = this.taskGraph.tasks[taskId];
+      if (task.continuous && this.waitsForReadiness(task)) {
+        this.pendingStart.add(taskId);
+      }
     }
     this.sortScheduledTasks();
   }
@@ -258,6 +271,12 @@ export class TasksSchedule {
       return;
     }
 
+    // The coordinator loop awaits a batch inline, so a readiness wait inside
+    // one would stall every other task.
+    if (this.waitsForReadiness(task)) {
+      return;
+    }
+
     const { batchImplementationFactory, preferBatch } = getExecutorForTask(
       task,
       this.projects
@@ -315,6 +334,12 @@ export class TasksSchedule {
     }
   }
 
+  private waitsForReadiness(task: Task): boolean {
+    return (
+      getReadyProducerIds(task, this.taskGraph, this.projectGraph).length > 0
+    );
+  }
+
   private canBatchTaskBeScheduled(
     task: Task,
     batchTaskGraph: TaskGraph | undefined
@@ -325,7 +350,14 @@ export class TasksSchedule {
       task.parallelism !== false &&
       this.taskGraph.dependencies[task.id].every(
         (id) => this.completedTasks.has(id) || !!batchTaskGraph?.tasks[id]
-      )
+      ) &&
+      this.hasContinuousDependenciesStarted(task.id)
+    );
+  }
+
+  private hasContinuousDependenciesStarted(taskId: string): boolean {
+    return this.taskGraph.continuousDependencies[taskId].every(
+      (id) => this.runningTasks.has(id) && !this.pendingStart.has(id)
     );
   }
 
@@ -334,9 +366,7 @@ export class TasksSchedule {
       (id) => this.completedTasks.has(id)
     );
     const hasContinuousDependenciesStarted =
-      this.taskGraph.continuousDependencies[taskId].every((id) =>
-        this.runningTasks.has(id)
-      );
+      this.hasContinuousDependenciesStarted(taskId);
 
     // if dependencies have not completed, cannot schedule
     if (!hasDependenciesCompleted || !hasContinuousDependenciesStarted) {

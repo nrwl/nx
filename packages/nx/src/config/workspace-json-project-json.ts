@@ -174,6 +174,58 @@ export interface TargetMetadata {
   };
 }
 
+export interface ReadyWhenOptions {
+  /**
+   * Milliseconds to wait for readiness before failing dependents that wait
+   * for it. Default is 60000.
+   */
+  timeout?: number;
+
+  /**
+   * Milliseconds between probe attempts. By default attempts back off from
+   * 100 to 1000 milliseconds. Unused by `logMatches`.
+   */
+  interval?: number;
+}
+
+/**
+ * Readiness probe of a continuous target. Exactly one of `url`, `port`,
+ * `command` or `logMatches` must be set.
+ */
+export type ReadyWhen =
+  | ({
+      /**
+       * Ready when an HTTP or HTTPS GET, following redirects, ends with a
+       * status from 200 to 403.
+       */
+      url: string;
+    } & ReadyWhenOptions)
+  | ({
+      /**
+       * Ready when a TCP connection to the port succeeds.
+       */
+      port: number;
+
+      /**
+       * Host to connect to. By default 127.0.0.1 and ::1 are both tried.
+       */
+      host?: string;
+    } & ReadyWhenOptions)
+  | ({
+      /**
+       * Ready when the command, run through the shell at the workspace root,
+       * exits with code 0.
+       */
+      command: string;
+    } & ReadyWhenOptions)
+  | ({
+      /**
+       * Ready when every one of these substrings has appeared in the task's
+       * output.
+       */
+      logMatches: string | string[];
+    } & ReadyWhenOptions);
+
 export interface TargetDependencyConfig {
   /**
    * A list of projects that have `target`.
@@ -202,6 +254,13 @@ export interface TargetDependencyConfig {
    * Whether to forward task options to the dependency target.
    */
   options?: 'ignore' | 'forward';
+
+  /**
+   * When the dependency is a continuous task, whether this target waits for
+   * it to have started (default) or to be ready per its `readyWhen`.
+   * Ignored when the dependency is not continuous or declares no `readyWhen`.
+   */
+  waitFor?: 'started' | 'ready';
 }
 
 // TODO: import the remaining variants from '../native' so the TS types stay
@@ -288,6 +347,14 @@ export interface TargetConfiguration<T = any> {
    * Whether this target runs continuously
    */
   continuous?: boolean;
+
+  /**
+   * How Nx detects that this continuous target is ready. A string is a
+   * shorthand for `{ logMatches: string }`. Only honored when `continuous`
+   * is true; dependents opt in with `waitFor: 'ready'` on their `dependsOn`
+   * entry.
+   */
+  readyWhen?: ReadyWhen;
 
   /**
    * List of generators to run before the target to ensure the workspace
