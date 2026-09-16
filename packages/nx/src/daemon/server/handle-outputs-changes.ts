@@ -4,8 +4,8 @@ import {
   queuePendingDotEnvEvents,
 } from './dotenv-graph-changes';
 import {
-  clearRecordedOutputsHashes,
   disableOutputsTracking,
+  markRecordedOutputsHashesUnverified,
   processFileChangesInOutputs,
 } from './outputs-tracking';
 import {
@@ -59,12 +59,13 @@ export const handleOutputsChanges: FileWatcherCallback = async (
 
     if (changeEvents.some((event) => event.type === 'rescan')) {
       // Dropped events cannot be classified: any recorded output hash and any
-      // gitignored dotenv file may have changed unseen. Start the tracker
-      // over and invalidate the graph rather than trust either.
+      // gitignored dotenv file may have changed unseen. Verify the recorded
+      // hashes against the files before trusting them again, and invalidate
+      // the graph rather than trust it.
       serverLogger.watcherLog(
-        'The outputs watcher reported dropped events; clearing recorded output hashes and invalidating the graph cache.'
+        'The outputs watcher reported dropped events; recorded output hashes will be verified against the files on disk, and the graph cache is invalidated.'
       );
-      clearRecordedOutputsHashes();
+      markRecordedOutputsHashesUnverified();
       invalidateGraphCache();
       return;
     }

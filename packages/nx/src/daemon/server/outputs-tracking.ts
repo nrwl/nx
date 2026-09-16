@@ -10,9 +10,19 @@ const dirsContainingOutputs = {} as { [dir: string]: Set<string> };
 const recordedHashes = {} as { [output: string]: string };
 const timestamps = {} as { [output: string]: number };
 const numberOfExpandedOutputs = {} as { [hash: string]: number };
+/** Files found under the outputs when the hash was recorded, per hash. */
+const numberOfFiles = {} as { [hash: string]: number };
+/** Hashes recorded before a watcher rescan; verified on their next check. */
+const unverifiedHashes = new Set<string>();
 
-export function _recordOutputsHash(outputs: string[], hash: string) {
+export function _recordOutputsHash(
+  outputs: string[],
+  hash: string,
+  fileCount: number = outputs.length
+) {
   numberOfExpandedOutputs[hash] = outputs.length;
+  numberOfFiles[hash] = fileCount;
+  unverifiedHashes.delete(hash);
   for (const output of outputs) {
     recordedHashes[output] = hash;
     timestamps[output] = new Date().getTime();
@@ -120,11 +130,19 @@ export function outputsHashesMatchBatch(
     const expandedBatch = getFilesForOutputsBatch(workspaceRoot, outputsBatch);
 
     for (let j = 0; j < needsScan.length; j++) {
+      const { hash } = entries[needsScan[j]];
       const expanded = collapseExpandedOutputs(expandedBatch[j]);
-      results[needsScan[j]] = _outputsHashesMatch(
-        expanded,
-        entries[needsScan[j]].hash
-      );
+      let matches = _outputsHashesMatch(expanded, hash);
+      if (matches && unverifiedHashes.has(hash)) {
+        matches = _verifyRecordedOutputs(expandedBatch[j], expanded, hash);
+        if (!matches) {
+          for (const output of expanded) {
+            recordedHashes[output] = undefined;
+          }
+        }
+        unverifiedHashes.delete(hash);
+      }
+      results[needsScan[j]] = matches;
     }
   }
 
@@ -146,25 +164,81 @@ export function recordOutputsHashBatch(
 
   for (let i = 0; i < entries.length; i++) {
     const expanded = collapseExpandedOutputs(expandedBatch[i]);
-    _recordOutputsHash(expanded, entries[i].hash);
+    _recordOutputsHash(expanded, entries[i].hash, expandedBatch[i].length);
+  }
+  _forgetUnreferencedHashes();
+}
+
+/**
+ * Drop the per-hash records of hashes no output refers to any more. A record
+ * for an output replaces the previous hash of that output, so a changed input
+ * leaves behind a hash nothing can match; clearing on rescan used to be the
+ * only thing that ever removed them.
+ */
+export function _forgetUnreferencedHashes() {
+  const live = new Set(Object.values(recordedHashes));
+  for (const store of [numberOfExpandedOutputs, numberOfFiles]) {
+    for (const hash of Object.keys(store)) {
+      if (!live.has(hash)) {
+        delete store[hash];
+      }
+    }
+  }
+  for (const hash of unverifiedHashes) {
+    if (!live.has(hash)) {
+      unverifiedHashes.delete(hash);
+    }
   }
 }
 
 /**
- * One-shot reset for a watcher rescan: recorded hashes may describe outputs
- * whose change events were dropped, so none can be trusted. Unlike
- * `disableOutputsTracking` the tracker keeps running; it just starts over.
+ * True if the files under the recorded outputs still match the record: the
+ * same number of files, and no file or directory up to the recorded output
+ * written after the record.
  */
-export function clearRecordedOutputsHashes() {
-  for (const store of [
-    dirsContainingOutputs,
-    recordedHashes,
-    timestamps,
-    numberOfExpandedOutputs,
-  ]) {
-    for (const key of Object.keys(store)) {
-      delete store[key];
+export function _verifyRecordedOutputs(
+  files: string[],
+  outputs: string[],
+  hash: string
+) {
+  if (files.length !== numberOfFiles[hash]) {
+    return false;
+  }
+  const roots = new Set(outputs);
+  const recordedAt = Math.min(...outputs.map((output) => timestamps[output]));
+  if (Number.isNaN(recordedAt)) {
+    return false;
+  }
+  const dirs = new Set<string>();
+  for (const file of files) {
+    if (lastModified(file) > recordedAt) {
+      return false;
     }
+    let dir = file;
+    while (!roots.has(dir) && dir !== dirname(dir)) {
+      dir = dirname(dir);
+      if (dirs.has(dir)) {
+        break;
+      }
+      dirs.add(dir);
+    }
+  }
+  for (const dir of dirs) {
+    if (lastModified(dir) > recordedAt) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Events were dropped, so every recorded hash is verified against the files
+ * on its next check instead of being cleared. Hashes recorded afterwards are
+ * trusted as usual, and the tracker keeps running.
+ */
+export function markRecordedOutputsHashesUnverified() {
+  for (const hash of Object.keys(numberOfExpandedOutputs)) {
+    unverifiedHashes.add(hash);
   }
 }
 

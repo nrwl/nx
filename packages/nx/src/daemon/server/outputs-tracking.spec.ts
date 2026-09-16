@@ -4,9 +4,13 @@ import { join } from 'path';
 import { EventType } from '../../native';
 import { setWorkspaceRoot } from '../../utils/workspace-root';
 import {
+  _forgetUnreferencedHashes,
   _outputsHashesMatch,
   _recordOutputsHash,
+  markRecordedOutputsHashesUnverified,
+  outputsHashesMatchBatch,
   processFileChangesInOutputs,
+  recordOutputsHashBatch,
 } from './outputs-tracking';
 
 // The tracker stats paths under the workspace root; point it at a scratch
@@ -137,5 +141,130 @@ describe('outputs tracking dates change events by mtime', () => {
     setModified(output, Date.now() + 5000);
     processFileChangesInOutputs([{ path: file, type: EventType.delete }]);
     expect(_outputsHashesMatch([output], '123')).toBe(false);
+  });
+});
+
+describe('outputs tracking after a watcher rescan', () => {
+  let tempDir: string;
+  let output: string;
+  let file: string;
+
+  beforeEach(() => {
+    tempDir = `run-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    output = `${tempDir}/app1`;
+    file = `${output}/lib/main.js`;
+    mkdirSync(join(workspaceRoot, output, 'lib'), { recursive: true });
+    writeFileSync(join(workspaceRoot, file), 'built');
+    setModified(file, Date.now() - 10000);
+    setModified(`${output}/lib`, Date.now() - 10000);
+    setModified(output, Date.now() - 10000);
+  });
+
+  afterEach(() => {
+    rmSync(join(workspaceRoot, tempDir), { recursive: true, force: true });
+  });
+
+  it('should keep a hash whose outputs were not written after the record', () => {
+    recordOutputsHashBatch([{ outputs: [output], hash: '123' }]);
+    markRecordedOutputsHashesUnverified();
+    expect(
+      outputsHashesMatchBatch([{ outputs: [output], hash: '123' }])
+    ).toEqual([true]);
+  });
+
+  it('should drop a hash when a file under the outputs was written after the record', () => {
+    recordOutputsHashBatch([{ outputs: [output], hash: '123' }]);
+    setModified(file, Date.now() + 5000);
+    markRecordedOutputsHashesUnverified();
+    expect(
+      outputsHashesMatchBatch([{ outputs: [output], hash: '123' }])
+    ).toEqual([false]);
+    expect(
+      outputsHashesMatchBatch([{ outputs: [output], hash: '123' }])
+    ).toEqual([false]);
+  });
+
+  it('should drop a hash when a directory under the outputs was written after the record', () => {
+    // Enough files for the record to collapse to the directory, so a file
+    // removed unseen is only visible through the directory's mtime.
+    const files = ['a.js', 'b.js', 'c.js', 'd.js'].map((name) => {
+      const path = `${output}/lib/${name}`;
+      writeFileSync(join(workspaceRoot, path), 'built');
+      setModified(path, Date.now() - 10000);
+      return path;
+    });
+    setModified(`${output}/lib`, Date.now() - 10000);
+    recordOutputsHashBatch([{ outputs: [output], hash: '123' }]);
+    markRecordedOutputsHashesUnverified();
+    expect(
+      outputsHashesMatchBatch([{ outputs: [output], hash: '123' }])
+    ).toEqual([true]);
+    setModified(`${output}/lib`, Date.now() + 5000);
+    markRecordedOutputsHashesUnverified();
+    expect(
+      outputsHashesMatchBatch([{ outputs: [output], hash: '123' }])
+    ).toEqual([false]);
+  });
+
+  it('should trust a hash recorded after the rescan', () => {
+    markRecordedOutputsHashesUnverified();
+    recordOutputsHashBatch([{ outputs: [output], hash: '123' }]);
+    setModified(file, Date.now() + 5000);
+    expect(
+      outputsHashesMatchBatch([{ outputs: [output], hash: '123' }])
+    ).toEqual([true]);
+  });
+
+  it('should drop a hash when the last file in a subdirectory was removed unseen', () => {
+    // Enough files for the record to collapse to a directory, and one file
+    // alone in a subdirectory. Removing it leaves no file to lead the walk to
+    // the subdirectory and no other directory's mtime changes, so only the
+    // file count can tell.
+    for (const name of ['a.js', 'b.js', 'c.js', 'd.js']) {
+      writeFileSync(join(workspaceRoot, `${output}/lib/${name}`), 'built');
+      setModified(`${output}/lib/${name}`, Date.now() - 10000);
+    }
+    mkdirSync(join(workspaceRoot, `${output}/lib/sub`));
+    writeFileSync(join(workspaceRoot, `${output}/lib/sub/only.js`), 'built');
+    for (const path of [
+      `${output}/lib/sub/only.js`,
+      `${output}/lib/sub`,
+      `${output}/lib`,
+    ]) {
+      setModified(path, Date.now() - 10000);
+    }
+    recordOutputsHashBatch([{ outputs: [output], hash: '123' }]);
+    rmSync(join(workspaceRoot, `${output}/lib/sub/only.js`));
+    setModified(`${output}/lib/sub`, Date.now() - 10000);
+    markRecordedOutputsHashesUnverified();
+    expect(
+      outputsHashesMatchBatch([{ outputs: [output], hash: '123' }])
+    ).toEqual([false]);
+  });
+
+  it('should forget the records of a hash once its outputs are recorded under another', () => {
+    recordOutputsHashBatch([{ outputs: [output], hash: '123' }]);
+    markRecordedOutputsHashesUnverified();
+    recordOutputsHashBatch([{ outputs: [output], hash: '456' }]);
+    expect(
+      outputsHashesMatchBatch([{ outputs: [output], hash: '123' }])
+    ).toEqual([false]);
+    expect(
+      outputsHashesMatchBatch([{ outputs: [output], hash: '456' }])
+    ).toEqual([true]);
+    _forgetUnreferencedHashes();
+    expect(_outputsHashesMatch([`${output}/lib/main.js`], '123')).toBe(false);
+  });
+
+  it('should verify a hash once', () => {
+    recordOutputsHashBatch([{ outputs: [output], hash: '123' }]);
+    markRecordedOutputsHashesUnverified();
+    expect(
+      outputsHashesMatchBatch([{ outputs: [output], hash: '123' }])
+    ).toEqual([true]);
+    setModified(file, Date.now() + 5000);
+    expect(
+      outputsHashesMatchBatch([{ outputs: [output], hash: '123' }])
+    ).toEqual([true]);
   });
 });
