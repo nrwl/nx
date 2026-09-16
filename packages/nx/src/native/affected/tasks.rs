@@ -382,7 +382,7 @@ fn instruction_matches(
         HashInstruction::ProjectFileSet(project, file_sets) => {
             any_matching(file_sets, Some(project))
         }
-        // Unscoped: the hasher's disk arm discards the project and expands
+        // Unscoped: the globs carry no project and the hasher expands them
         // workspace-wide. A changed file is tracked by definition, so a match is
         // the tracked case; untracked paths are handled by propagation.
         HashInstruction::IgnoredFileSet(globs) => any_matching(globs, None),
@@ -686,9 +686,9 @@ mod tests {
         );
     }
 
-    /// The hasher expands a disk-backed fileset workspace-wide and never reads
-    /// the project off it, so matching it inside that project would under-select
-    /// every read of another project's generated output.
+    /// The hasher expands a disk-backed fileset workspace-wide, so scoping the
+    /// match to the declaring project would under-select every read of another
+    /// project's generated output.
     #[test]
     fn a_disk_backed_fileset_matches_outside_its_own_project() {
         let g = graph(&[("a", "libs/a"), ("b", "libs/b")]);
