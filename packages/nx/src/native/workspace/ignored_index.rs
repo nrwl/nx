@@ -190,16 +190,6 @@ impl IgnoredIndex {
             .as_deref()
     }
 
-    /// Why `prefix` cannot be kept current from events, if it cannot.
-    fn refusal(&self, prefix: &str) -> Option<&'static str> {
-        match &self.watch {
-            Some(watch) if watch.may_miss_under(prefix) => {
-                Some("the watch does not report everything under it")
-            }
-            _ => None,
-        }
-    }
-
     /// Starts keeping what is under `dir`: its file hashes always, and its
     /// listing if anyone asks for one. No directory is walked here. False,
     /// leaving the caller to walk instead, where the watch could miss a change
@@ -220,25 +210,29 @@ impl IgnoredIndex {
                  Give the fileset a directory, such as {{projectRoot}}/dist/**, to narrow it."
             );
         }
-        if let Some(reason) = self.refusal(dir) {
-            trace!("not tracking {dir:?}: {reason}");
-            return false;
-        }
-        // Resolved, not walked: whether `dir` leaves the workspace is a
-        // question about one path. A path that will not resolve is treated as
-        // inside on purpose, which is what lets an output root be tracked
-        // before its task has ever written it.
+        // Both reasons leave the caller to walk instead, and both cost only
+        // speed: the directory is read every run rather than remembered.
         //
-        // A declared output that does resolve outside the workspace is
-        // refused here deliberately. It is rare, and the only consequence is
-        // that its hashes are not remembered and it is read again each run;
-        // it is never wrongly trusted.
-        if let Ok(resolved) = dunce::canonicalize(workspace_root.join(dir))
-            && !self
-                .canonical_root(workspace_root)
-                .is_some_and(|root| resolved.starts_with(root))
-        {
-            trace!("not tracking {dir:?}: it resolves outside the workspace");
+        // The second is resolved, not walked — whether `dir` leaves the
+        // workspace is a question about one path. A path that will not resolve
+        // is treated as inside on purpose, which is what lets an output root
+        // be tracked before its task has ever written it.
+        let leaves_the_workspace = || {
+            dunce::canonicalize(workspace_root.join(dir)).is_ok_and(|resolved| {
+                !self
+                    .canonical_root(workspace_root)
+                    .is_some_and(|root| resolved.starts_with(root))
+            })
+        };
+        let refused = match &self.watch {
+            Some(watch) if watch.may_miss_under(dir) => {
+                Some("the watch does not report everything under it")
+            }
+            _ if leaves_the_workspace() => Some("it resolves outside the workspace"),
+            _ => None,
+        };
+        if let Some(reason) = refused {
+            trace!("not tracking {dir:?}: {reason}");
             return false;
         }
         {
