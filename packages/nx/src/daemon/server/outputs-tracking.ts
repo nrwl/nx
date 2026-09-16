@@ -1,4 +1,5 @@
-import { dirname } from 'path';
+import { lstatSync } from 'fs';
+import { dirname, join } from 'path';
 import { WatchEvent, getFilesForOutputsBatch } from '../../native';
 import { collapseExpandedOutputs } from '../../utils/collapse-expanded-outputs';
 import { workspaceRoot } from '../../utils/workspace-root';
@@ -40,21 +41,38 @@ export function _outputsHashesMatch(outputs: string[], hash: string) {
   return true;
 }
 
-export function processFileChangesInOutputs(
-  changeEvents: WatchEvent[],
-  now: number = undefined
-) {
-  if (!now) {
-    now = new Date().getTime();
+/**
+ * When the path was last written. A path that no longer exists is dated by
+ * its nearest existing ancestor, whose mtime moved when the entry was removed.
+ * Infinity if nothing up to the workspace root can be read.
+ */
+function lastModified(path: string): number {
+  let current = path;
+  while (true) {
+    try {
+      return lstatSync(join(workspaceRoot, current)).mtimeMs;
+    } catch (e) {
+      if (e?.code !== 'ENOENT' || current === dirname(current)) {
+        return Infinity;
+      }
+      current = dirname(current);
+    }
   }
+}
+
+export function processFileChangesInOutputs(changeEvents: WatchEvent[]) {
   for (let e of changeEvents) {
     let current = e.path;
 
     // the path is either an output itself or a parent
     if (dirsContainingOutputs[current]) {
+      let modified: number;
       dirsContainingOutputs[current].forEach((output) => {
-        if (now - timestamps[output] > 2000) {
-          recordedHashes[output] = undefined;
+        if (recordedHashes[output]) {
+          modified ??= lastModified(current);
+          if (modified > timestamps[output]) {
+            recordedHashes[output] = undefined;
+          }
         }
       });
       continue;
@@ -62,8 +80,10 @@ export function processFileChangesInOutputs(
 
     // the path is a child of some output or unrelated
     while (current != dirname(current)) {
-      if (recordedHashes[current] && now - timestamps[current] > 2000) {
-        recordedHashes[current] = undefined;
+      if (recordedHashes[current]) {
+        if (lastModified(e.path) > timestamps[current]) {
+          recordedHashes[current] = undefined;
+        }
         break;
       }
       current = dirname(current);
