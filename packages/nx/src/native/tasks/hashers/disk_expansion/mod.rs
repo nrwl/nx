@@ -81,6 +81,26 @@ pub(crate) mod tests {
         assert_eq!(expansion.files, vec!["dist/gen/absent.js"]);
     }
 
+    // A source applies `accept` so it can skip work, not because the loop
+    // trusts it to. One that over-selects must not widen the result.
+    #[test]
+    fn a_source_that_ignores_the_filter_cannot_widen_the_result() {
+        let temp = workspace();
+        let everything = |dir: &str, _accept: &(dyn Fn(&str) -> bool + Sync)| {
+            (dir == "dist/gen").then(|| globs(&["dist/gen/a.js", "dist/gen/a.js.map"]))
+        };
+        let group = globs(&["dist/gen/**/*.js"]);
+        let (positives, negations) = parse_group(&group).unwrap();
+        let expansion = expand_entries(
+            temp.path(),
+            &positives,
+            &negations,
+            &Source::fileset(NOTHING_KNOWN, &everything),
+        )
+        .unwrap();
+        assert_eq!(expansion.files, vec!["dist/gen/a.js"]);
+    }
+
     #[test]
     fn a_directory_is_whatever_the_source_says_it_holds() {
         let temp = workspace();

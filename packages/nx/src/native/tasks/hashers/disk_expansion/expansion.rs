@@ -203,7 +203,9 @@ pub(crate) fn expand_entries(
             Box::new(move |path: &str| !excluded(path))
         };
         if let Some(under) = files_under(root, &*accept) {
-            found.extend(under);
+            // Filtered again: a source is asked to apply `accept` so it can
+            // skip work, not trusted to have done it.
+            found.extend(under.into_iter().filter(|path| accept(path)));
         }
     }
 

@@ -223,8 +223,14 @@ impl IgnoredIndex {
             return false;
         }
         // Resolved, not walked: whether `dir` leaves the workspace is a
-        // question about one path. A directory that does not exist yet, an
-        // output root before its task runs, is not outside it.
+        // question about one path. A path that will not resolve is treated as
+        // inside on purpose, which is what lets an output root be tracked
+        // before its task has ever written it.
+        //
+        // A declared output that does resolve outside the workspace is
+        // refused here deliberately. It is rare, and the only consequence is
+        // that its hashes are not remembered and it is read again each run;
+        // it is never wrongly trusted.
         if let Ok(resolved) = dunce::canonicalize(workspace_root.join(dir))
             && !self
                 .canonical_root(workspace_root)
@@ -1065,13 +1071,9 @@ mod tests {
                 .contains(&"dist/gen/late.js".to_string()),
             "nothing keeps a listing current, so every ask walks"
         );
+        // A narrower directory is absorbed rather than listed on its own.
         assert!(index.track(temp.path(), "dist/gen"));
-        assert!(
-            index
-                .list(temp.path(), "dist")
-                .unwrap()
-                .contains(&"dist/gen/late.js".to_string())
-        );
+        assert_eq!(index.tracked.read().len(), 1);
     }
 
     #[test]
