@@ -34,7 +34,8 @@ export function assertCypressComponentTestingSupport(tree: Tree): void {
  *
  * A satisfying install decides. Without one, only a range capped below the
  * floor fails: `^15.17.0` installs 15.20.1+, so its lower bound cannot be
- * compared. Dist tags (`latest`, `next`) are not ranges and are not gated.
+ * compared. Declarations that are not ranges (`latest`, `file:`) are not
+ * gated.
  * When Cypress is not declared, the generators install `cypressVersion`.
  */
 export function findCypressBelow(tree: Tree, floor: string): string | null {

@@ -153,19 +153,19 @@ describe('assertCypressComponentTestingSupport', () => {
     }
   );
 
-  it.each(['latest', 'next'])(
+  it.each(['latest', 'next', 'file:../cypress'])(
     'does not throw when Cypress is `%s` and not installed',
-    (distTag) => {
-      setVersions({ '@angular/core': '~22.1.0', cypress: distTag });
+    (declared) => {
+      setVersions({ '@angular/core': '~22.1.0', cypress: declared });
 
       expect(() => assertCypressComponentTestingSupport(tree)).not.toThrow();
     }
   );
 
-  it.each(['latest', 'next'])(
+  it.each(['latest', 'next', 'file:../cypress'])(
     'throws when Cypress is `%s` and the installed version is below 15.20.1',
-    (distTag) => {
-      setVersions({ '@angular/core': '~22.1.0', cypress: distTag });
+    (declared) => {
+      setVersions({ '@angular/core': '~22.1.0', cypress: declared });
       installCypress('15.17.0');
 
       expect(() => assertCypressComponentTestingSupport(tree)).toThrow(
@@ -174,10 +174,10 @@ describe('assertCypressComponentTestingSupport', () => {
     }
   );
 
-  it.each(['latest', 'next'])(
+  it.each(['latest', 'next', 'file:../cypress'])(
     'does not throw when Cypress is `%s` and the installed version meets 15.20.1',
-    (distTag) => {
-      setVersions({ '@angular/core': '~22.1.0', cypress: distTag });
+    (declared) => {
+      setVersions({ '@angular/core': '~22.1.0', cypress: declared });
       installCypress('16.0.0');
 
       expect(() => assertCypressComponentTestingSupport(tree)).not.toThrow();

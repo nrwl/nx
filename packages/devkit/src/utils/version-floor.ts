@@ -49,7 +49,8 @@ export function throwForUnsupportedVersion(
  * Resolution order:
  * - When the installed version satisfies the declared range, the installed
  *   version decides. This resolves open ranges (e.g. `>=4.8.4 <6.1.0`) to
- *   what is actually installed.
+ *   what is actually installed. An install behind a declaration that is not a
+ *   range (e.g. `file:../pkg`) decides as well.
  * - An exact declared version is compared to the floor directly.
  * - A declared range that cannot reach the floor throws as unsupported. A
  *   range that straddles the floor cannot be judged without an installed
@@ -128,8 +129,9 @@ export function assertSupportedPackageVersion(
  * Resolution order:
  * - When the installed version satisfies the declared range, the installed
  *   version decides. This resolves open ranges (e.g. `>=15.0.0 <17.0.0`) to
- *   what is actually installed. A dist tag (`latest`, `next`) resolved to
- *   the installed version, so that version decides as well.
+ *   what is actually installed. A declaration that is not a range (`latest`,
+ *   `file:../pkg`) resolved to the installed version, so that version decides
+ *   as well.
  * - Otherwise the declared range's floor (`semver.minVersion`, a prerelease
  *   when the range starts at one). This is the fresh-workspace path (nothing
  *   installed yet) and the case where a generator is mid-flight re-pinning
@@ -169,9 +171,11 @@ export function getResolvedPackageVersion(
 /**
  * Returns the installed version of a package when it satisfies the declared
  * range, `null` when nothing is installed or the install does not match the
- * declaration. A dist tag (`latest`, `next`) admits whatever is installed:
- * the tag resolved to that version. Use it to gate on what actually runs
- * while keeping the declared-range fallback for the fresh-install path.
+ * declaration. An `npm:<name>@<range>` alias is matched against its range. A
+ * declaration without a range, such as a dist tag (`latest`) or a `file:`,
+ * `link:` or `workspace:` specifier, admits whatever is installed: it has no
+ * version to compare. Use it to gate on what actually runs while keeping the
+ * declared-range fallback for the fresh-install path.
  */
 export function getSatisfyingInstalledPackageVersion(
   tree: Tree,
@@ -184,15 +188,27 @@ export function getSatisfyingInstalledPackageVersion(
   if (!installed) {
     return null;
   }
-  if (isNonSemverDistTag(declared)) {
+  const range = getNpmAliasRange(declared) ?? declared;
+  if (!validRange(range)) {
     return installed;
   }
   // An installed prerelease can match the declared range in either form:
   // raw (a same-tuple prerelease comparator) or as its release version.
   const release = coerce(installed)?.version ?? installed;
-  return satisfies(installed, declared) || satisfies(release, declared)
+  return satisfies(installed, range) || satisfies(release, range)
     ? installed
     : null;
+}
+
+// The range follows the last `@`. In `npm:@scope/pkg` that `@` starts the
+// scope, so there is no range.
+function getNpmAliasRange(declared: string): string | null {
+  const prefix = 'npm:';
+  if (!declared.startsWith(prefix)) {
+    return null;
+  }
+  const at = declared.lastIndexOf('@');
+  return at > prefix.length ? declared.slice(at + 1) : null;
 }
 
 /**

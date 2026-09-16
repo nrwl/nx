@@ -24,9 +24,17 @@ function declareDevDependency(tree: Tree, name: string, version: string): void {
 }
 
 function installCypress(tree: Tree, version: string): void {
+  installPackage(tree, 'cypress', version);
+}
+
+function installVite(tree: Tree, version: string): void {
+  installPackage(tree, 'vite', version);
+}
+
+function installPackage(tree: Tree, name: string, version: string): void {
   tree.write(
-    'node_modules/cypress/package.json',
-    JSON.stringify({ name: 'cypress', version })
+    `node_modules/${name}/package.json`,
+    JSON.stringify({ name, version })
   );
 }
 
@@ -97,15 +105,22 @@ describe('versions', () => {
     expect(versions(tree).cypressVersion).toBe(cypressVersion);
   });
 
-  it.each(['latest', 'next'])(
+  it.each(['latest', 'next', 'file:../cypress'])(
     'should use the installed cypress version when cypress is declared as %s',
-    (distTag) => {
-      declareCypress(tree, distTag);
+    (declared) => {
+      declareCypress(tree, declared);
       installCypress(tree, '15.20.1');
 
       expect(versions(tree)).toMatchObject(compatibleVersions[15]);
     }
   );
+
+  it('should follow the range an npm alias declares over a stale installed cypress', () => {
+    declareCypress(tree, 'npm:cypress@^16.0.0');
+    installCypress(tree, '15.20.1');
+
+    expect(versions(tree).cypressVersion).toBe(cypressVersion);
+  });
 
   it('should keep the installed cypress version when it is the floor of a range spanning majors', () => {
     declareCypress(tree, '>=15.20.1 <17');
@@ -156,6 +171,15 @@ describe('versions', () => {
       }
     );
 
+    it('should return the cypress 15 versions for the vite bundler when an installed vite 7 is declared as a path', () => {
+      declareVite(tree, 'file:../vite');
+      installVite(tree, '7.1.0');
+
+      expect(componentTestingVersions(tree, 'vite')).toMatchObject(
+        compatibleVersions[15]
+      );
+    });
+
     it.each([
       ['the webpack bundler with vite 7', 'webpack', '^7.0.0'],
       ['no bundler with vite 7', undefined, '^7.0.0'],
@@ -196,6 +220,17 @@ describe('versions', () => {
 
       expect(() => assertViteSupportsInstalledCypress(tree)).toThrow(
         `Cypress 16 component testing requires Vite 8. Found Vite ${found}. Update Vite to 8 or use Cypress 15.`
+      );
+    });
+
+    it('should reject cypress 16 with an installed vite 7 declared as a path', () => {
+      declareCypress(tree, '^16.0.0');
+      installCypress(tree, '16.0.0');
+      declareVite(tree, 'file:../vite');
+      installVite(tree, '7.1.0');
+
+      expect(() => assertViteSupportsInstalledCypress(tree)).toThrow(
+        'Cypress 16 component testing requires Vite 8. Found Vite 7.1.0. Update Vite to 8 or use Cypress 15.'
       );
     });
 
