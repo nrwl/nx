@@ -181,6 +181,9 @@ mod tests {
             "libs/x/src/@types/c.d.ts",
             "libs/x/src/+state/d.ts",
             "libs/x/src/co,ma/e.ts",
+            "libs/x/src/bra]cket/f.ts",
+            "libs/x/src/paren)/g.ts",
+            "libs/x/src/pi|pe/h.ts",
             "libs/x/other.ts",
         ];
         for file in files {
@@ -206,6 +209,9 @@ mod tests {
             &["libs/x/src/@types"],
             &["libs/x/src/+state"],
             &["libs/x/src/co,ma"],
+            &["libs/x/src/bra]cket"],
+            &["libs/x/src/paren)"],
+            &["libs/x/src/pi|pe"],
             // A negation naming a directory has to drop the same files.
             &["libs/x/src", "!libs/x/src/@types"],
             &["libs/x/src", "!libs/x/src/nested"],
@@ -221,6 +227,25 @@ mod tests {
             let from_disk = expand_files(temp.path(), &entries).unwrap().files;
             assert_eq!(tracked, from_disk, "{group:?}");
             assert!(!tracked.is_empty(), "{group:?} matched nothing at all");
+        }
+
+        // A path that is not there matches nothing on either road, rather
+        // than one road inventing an entry for it.
+        for missing in ["libs/x/src/absent", "libs/x/absent.ts"] {
+            let entries = vec![missing.to_string()];
+            assert!(
+                collect_project_files("x", &entries, &file_map)
+                    .unwrap()
+                    .is_empty(),
+                "{missing}"
+            );
+            assert!(
+                expand_files(temp.path(), &entries)
+                    .unwrap()
+                    .files
+                    .is_empty(),
+                "{missing}"
+            );
         }
     }
 

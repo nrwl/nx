@@ -14,8 +14,10 @@ import {
   invalidateGraphCache,
 } from './project-graph-incremental-recomputation';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { trackedFilesInContext } from '../../utils/workspace-context';
-import type { WatchEvent } from '../../native';
+import {
+  trackedFilesInContext,
+  type WatchEventsListener,
+} from '../../utils/workspace-context';
 
 let outputsWatcherError: Error | undefined;
 let outputsWatcherTerminalError: Error | undefined;
@@ -31,10 +33,10 @@ export function getOutputsWatcherTerminalError(): Error | undefined {
   return outputsWatcherTerminalError;
 }
 
-export const handleOutputsChanges = async (
-  err: Error | string | null,
-  changeEvents: WatchEvent[] | null
-): Promise<void> => {
+export const handleOutputsChanges: WatchEventsListener = async (
+  err,
+  changeEvents
+) => {
   try {
     if (err || !changeEvents || !changeEvents.length) {
       let error = typeof err === 'string' ? new Error(err) : err;

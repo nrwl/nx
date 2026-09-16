@@ -15,10 +15,11 @@ export type WorkspaceChangesListener = (
   err: string | null,
   batch: ChangeBatch | null
 ) => void;
-export type WatchEventsListener = (
-  err: string | null,
-  events: WatchEvent[] | null
-) => void;
+/** The shape the native watch calls back with, taken from the binding so it
+ * cannot drift from it. */
+export type WatchEventsListener = Parameters<
+  WorkspaceContext['onWatchEvents']
+>[0];
 
 let workspaceContext: WorkspaceContext | undefined;
 let filesReady: Promise<void> | undefined;

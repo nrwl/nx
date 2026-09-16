@@ -269,8 +269,7 @@ where
 
 // ---------------------------------------------------------------------------
 // Reading a directory's files, for the hashers and for the ignored index.
-// Both need the same thing: every file under a directory, workspace-relative,
-// with the stamp that says whether a remembered hash still stands.
+// Both want the same thing: every file under a directory, workspace-relative.
 // ---------------------------------------------------------------------------
 
 /// The transient files the watch never reports. The hardcoded directories
@@ -356,7 +355,8 @@ pub(crate) fn walk_files(
 /// ignored index caches on top of it, and everything else calls it directly.
 /// With `confine`, a `dir` resolving outside the workspace is `None` and a
 /// linked file leading out is skipped; a declared output is read wherever it
-/// points. `None` also when `dir` cannot be read at all.
+/// points. `None` also when `dir` cannot be read at all. The order is the
+/// walk's, not sorted.
 pub(crate) fn files_under(
     workspace_root: &Path,
     dir: &str,

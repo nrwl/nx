@@ -251,11 +251,14 @@ impl IgnoredIndex {
     /// from it and watch events keep it current. False when the walk could not
     /// settle: the disk kept moving, or `dir` resolves outside the workspace.
     fn walk_into_listing(&self, workspace_root: &Path, dir: &str) -> bool {
-        #[cfg(test)]
-        if self.never_settles.load(Ordering::Acquire) {
-            return false;
-        }
-        for _ in 0..3 {
+        for attempt in 0..3 {
+            #[cfg(test)]
+            if self.never_settles.load(Ordering::Acquire) {
+                // Fail every attempt, so the give-up path is reached the way
+                // a disk that keeps moving reaches it.
+                let _ = attempt;
+                continue;
+            }
             let generation = self.generation.load(Ordering::Acquire);
             let Some(seeded) = seed_walk(workspace_root, dir) else {
                 trace!("not listing {dir:?}: it resolves outside the workspace");
