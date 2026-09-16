@@ -444,9 +444,7 @@ To understand why knowing the last successful build is important for the affecte
 
 To understand why knowing the last successful build is important for the affected command, check out the [in-depth explanation in Orb's docs](https://github.com/nrwl/nx-orb#background).
 
-### Using CircleCI in a private repository
-
-To use the [Nx Orb](https://github.com/nrwl/nx-orb) with a private repository on your main branch, you need to grant the orb access to your CircleCI API. Create an environment variable called `CIRCLE_API_TOKEN` in the context of the project.
+If your repository is private, you need to grant the orb access to your CircleCI API. Create an environment variable called `CIRCLE_API_TOKEN` in the context of the project.
 
 {% aside type="caution" title="Caution" %}
 It should be a user token, not the project token.
