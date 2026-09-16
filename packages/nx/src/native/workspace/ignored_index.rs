@@ -13,7 +13,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use dashmap::DashMap;
 use parking_lot::RwLock;
-use tracing::trace;
+use tracing::{trace, warn};
 
 use crate::native::hasher::hash_file_path;
 use crate::native::walker::{PathPredicate, files_under, seed_walk};
@@ -50,6 +50,8 @@ pub struct IgnoredIndex {
     /// watches.
     contents: DashMap<String, Content>,
     watch: Option<Watch>,
+    /// So the whole-workspace warning is said once, not once per group.
+    announced_whole_workspace: std::sync::atomic::AtomicBool,
     canonical_root: OnceLock<Option<PathBuf>>,
     /// Bumped by every change the watch reports under a prefix, so a seed or
     /// a read can tell whether something moved while it ran.
@@ -134,6 +136,8 @@ fn under(path: &str, dir: &str) -> bool {
 }
 
 /// Whether `set` holds `path` or one of its ancestors: one lookup per level.
+/// The empty string is the workspace root, an ancestor of everything, so it
+/// is the last level tried rather than a name no path ever reaches.
 fn holds(set: &BTreeSet<String>, path: &str) -> bool {
     if set.is_empty() {
         return false;
@@ -145,7 +149,7 @@ fn holds(set: &BTreeSet<String>, path: &str) -> bool {
         }
         match current.rfind('/') {
             Some(i) => current = &current[..i],
-            None => return false,
+            None => return !current.is_empty() && set.contains(""),
         }
     }
 }
@@ -159,6 +163,7 @@ impl IgnoredIndex {
             members: RwLock::new(BTreeSet::new()),
             contents: DashMap::new(),
             watch,
+            announced_whole_workspace: std::sync::atomic::AtomicBool::new(false),
             canonical_root: OnceLock::new(),
             generation: AtomicU64::new(0),
             #[cfg(test)]
@@ -187,9 +192,6 @@ impl IgnoredIndex {
 
     /// Why `prefix` cannot be kept current from events, if it cannot.
     fn refusal(&self, prefix: &str) -> Option<&'static str> {
-        if prefix.is_empty() {
-            return Some("it is the whole workspace");
-        }
         match &self.watch {
             Some(watch) if watch.may_miss_under(prefix) => {
                 Some("the watch does not report everything under it")
@@ -199,14 +201,24 @@ impl IgnoredIndex {
     }
 
     /// Starts keeping what is under `dir`: its file hashes always, and its
-    /// listing if anyone asks for one. No directory is walked here. False, leaving
-    /// the caller to walk instead, for the whole workspace, where the watch
-    /// could miss a change (a hardcoded ignore), or
-    /// when `dir` resolves outside the workspace.
+    /// listing if anyone asks for one. No directory is walked here. False,
+    /// leaving the caller to walk instead, where the watch could miss a change
+    /// (a hardcoded ignore) or `dir` resolves outside the workspace.
+    ///
+    /// An empty `dir` is the whole workspace, which a glob with no literal
+    /// prefix asks for. It is kept like any other, and says so once: every
+    /// ignored file the run hashes is then held for the daemon's lifetime.
     pub(crate) fn track(&self, workspace_root: &Path, dir: &str) -> bool {
         let dir = dir.trim_matches('/');
         if self.is_tracked(dir) {
             return true;
+        }
+        if dir.is_empty() && !self.announced_whole_workspace.swap(true, Ordering::AcqRel) {
+            warn!(
+                "An includeIgnored fileset names no directory to read from, so the whole \
+                 workspace is indexed and every ignored file it hashes is kept in memory. \
+                 Give the fileset a directory, such as {{projectRoot}}/dist/**, to narrow it."
+            );
         }
         if let Some(reason) = self.refusal(dir) {
             trace!("not tracking {dir:?}: {reason}");
@@ -957,11 +969,28 @@ mod tests {
         assert!(index.track(temp.path(), "dist/other"));
     }
 
+    /// A glob with no literal prefix reads from the workspace root, and is
+    /// kept like any other directory. It absorbs every other tracked prefix,
+    /// since everything is under it.
     #[test]
-    fn the_whole_workspace_is_never_indexed() {
+    fn the_whole_workspace_is_indexed_and_absorbs_the_rest() {
         let temp = workspace();
-        assert!(!watched().track(temp.path(), ""));
-        assert!(!IgnoredIndex::new(None).track(temp.path(), "/"));
+        let index = watched();
+        assert!(index.track(temp.path(), "dist/gen"));
+        assert!(index.track(temp.path(), ""));
+        assert!(index.is_tracked("dist/gen"));
+        assert!(index.is_tracked("src/index.ts"));
+        assert_eq!(
+            index.list(temp.path(), "").unwrap(),
+            vec![
+                "dist/gen/a.js",
+                "dist/gen/nested/b.js",
+                "dist/other/c.js",
+                "src/index.ts"
+            ]
+        );
+        // `/` is the same directory spelled differently.
+        assert!(IgnoredIndex::new(None).track(temp.path(), "/"));
     }
 
     #[cfg(unix)]
