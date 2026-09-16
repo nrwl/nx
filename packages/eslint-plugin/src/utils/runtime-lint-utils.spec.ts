@@ -399,6 +399,26 @@ describe('is terminal run', () => {
     expect(isTerminalRun()).toBe(true);
   });
 
+  it('is a terminal run inside an ESLint concurrency worker on Mac', () => {
+    // ESLint's `--concurrency` lints in worker threads. Node sets a worker's
+    // argv[1] to the worker script, so the eslint binary is not what is seen
+    // here. Workers are started per `lintFiles()` call and end with it, so the
+    // project graph memo cannot outlive a single lint run.
+    mockProcessArgv([
+      '/Users/user/.nvm/versions/node/v22.12.0/bin/node',
+      '/Users/user/my-repo/node_modules/eslint/lib/eslint/worker.js',
+    ]);
+    expect(isTerminalRun()).toBe(true);
+  });
+
+  it('is a terminal run inside an ESLint concurrency worker on Windows', () => {
+    mockProcessArgv([
+      'C:\\Program Files\\nodejs\\node.exe',
+      'C:\\dev\\my-repo\\node_modules\\eslint\\lib\\eslint\\worker.js',
+    ]);
+    expect(isTerminalRun()).toBe(true);
+  });
+
   it('is a terminal run when the command is started from the node module oxlint', () => {
     // `@nx/oxlint`'s boundaries bridge. Without this the graph memo never takes
     // and every linted file re-reads the whole project graph.
