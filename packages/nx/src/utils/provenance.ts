@@ -30,8 +30,8 @@ export async function ensurePackageHasProvenance(
       '--silent',
     ]);
     const parsed = JSON.parse(result);
-    // `npm view <pkg>@<spec> --json` returns a bare object on npm <= 11 but an
-    // array on npm 12 and pnpm, even for a single resolved version. A version
+    // `npm view <pkg>@<spec> --json` returns a bare object on npm <= 11 and
+    // pnpm but an array on npm 12, even for a single resolved version. A version
     // range matches several versions and the registry lists all of them
     // (including deprecated ones the installer skips), so we cannot tell which
     // one will actually be installed; refuse rather than verify the wrong
