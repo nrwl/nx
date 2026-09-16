@@ -927,9 +927,10 @@ mod tests {
     }
 
     #[test]
-    fn the_root_nxignore_applies_even_when_git_ignores_are_off() {
-        // .nxignore is nx's own opt-out, not a git source, so use_ignore=false
-        // must not disable it. Folding it into git_ignores could have lost this.
+    fn the_root_nxignore_does_not_gate_the_stream_when_git_ignores_are_off() {
+        // The stream carries what the workspace rules would drop, so the
+        // ignored index — whose walk reads `.nxignore`d files — hears their
+        // changes. The file map and `nx watch` apply those rules downstream.
         use notify::EventKind;
         use notify::event::CreateKind;
 
@@ -937,13 +938,17 @@ mod tests {
         let origin = dunce::canonicalize(dir.path()).expect("canonicalize");
         fs::write(origin.join(".nxignore"), "scratch.tmp\n").expect("write .nxignore");
 
-        let filterer = watch_filterer::create_filter(origin.to_str().expect("utf-8"), &[], false)
-            .expect("filter");
         let event = RawWatchEvent::new(
             notify::Event::new(EventKind::Create(CreateKind::File))
                 .add_path(origin.join("scratch.tmp")),
         );
-        assert!(!filterer.check_event(&event));
+        let reporting = watch_filterer::create_filter(origin.to_str().expect("utf-8"), &[], false)
+            .expect("filter");
+        assert!(reporting.check_event(&event));
+        // With the git sources on, it ranks among them as it always did.
+        let walking = watch_filterer::create_filter(origin.to_str().expect("utf-8"), &[], true)
+            .expect("filter");
+        assert!(!walking.check_event(&event));
     }
 
     #[test]

@@ -1169,14 +1169,9 @@ impl WorkspaceContext {
         globs.extend(extra_globs.iter().cloned());
         let filter = create_filter(&origin.to_string_lossy(), &globs, false)
             .map_err(|e| format!("failed to build the watch gate: {e}"))?;
-        // An .nxignore edit restarts the daemon, so reading it once holds.
-        let nxignore = std::fs::read_to_string(origin.join(".nxignore"))
-            .map(|text| text.lines().map(str::to_string).collect())
-            .unwrap_or_default();
         Ok(crate::native::workspace::ignored_index::Watch {
             // Only ever asked about a prefix, which is a directory.
             delivers_under: Arc::new(move |path: &str| filter.admits(&origin.join(path), true)),
-            nxignore,
         })
     }
 
@@ -2603,7 +2598,11 @@ mod tests {
 
     #[test]
     #[cfg(not(target_arch = "wasm32"))]
-    fn a_directory_with_a_root_nxignore_rule_under_it_is_walked_not_indexed() {
+    /// A root `.nxignore` rule no longer gates the event stream, so a
+    /// directory under one is indexed like any other. The walk reads
+    /// `.nxignore`d files, and now the watch reports their changes too, so
+    /// the listing can be kept current.
+    fn a_directory_with_a_root_nxignore_rule_under_it_is_indexed() {
         let temp = workspace_with(&["a.ts"]);
         temp.child(".gitignore").write_str("dist/\n").unwrap();
         temp.child(".nxignore").write_str("dist/gen\n").unwrap();
@@ -2613,14 +2612,13 @@ mod tests {
         ctx.all_file_data();
         let root = dunce::canonicalize(temp.path()).unwrap();
         let reader = ctx.reader();
-        // The watch never reports dist/gen, so dist cannot be kept from events.
-        assert!(!reader.track(&root, "dist"));
-        // Refused for caching, still answered: the disk is read and not kept.
+        assert!(reader.track(&root, "dist"));
         assert_eq!(
             reader.files_under(&root, "dist", true, &|_| true).unwrap(),
             vec!["dist/gen/x.js"]
         );
-        assert!(!reader.index().is_tracked("dist/gen/x.js"));
+        // The file map still applies the rule: it is an input, not a source.
+        assert!(!names_of(&ctx).contains(&"dist/gen/x.js".to_string()));
         assert!(reader.track(&root, "src"));
     }
 

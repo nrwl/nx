@@ -25,39 +25,13 @@ pub(crate) type DeliversUnder = Arc<dyn Fn(&str) -> bool + Send + Sync>;
 /// directories it can keep current and which it must refuse.
 pub(crate) struct Watch {
     pub(crate) delivers_under: DeliversUnder,
-    /// The root `.nxignore` rules. The watch drops what they match and a walk
-    /// does not, so no prefix they could match under is indexed.
-    pub(crate) nxignore: Vec<String>,
 }
 
 impl Watch {
     /// Whether the watch could miss events somewhere under `prefix`.
     fn may_miss_under(&self, prefix: &str) -> bool {
-        !(self.delivers_under)(prefix) || nxignore_may_match_under(&self.nxignore, prefix)
+        !(self.delivers_under)(prefix)
     }
-}
-
-/// Whether a gitignore-style rule could match `prefix` or a path under it. A
-/// rule with no slash before its end matches at any depth; an anchored one
-/// only where its literal leading directories meet `prefix`.
-fn nxignore_may_match_under(rules: &[String], prefix: &str) -> bool {
-    rules.iter().any(|line| {
-        let rule = line.trim();
-        if rule.is_empty() || rule.starts_with('#') || rule.starts_with('!') {
-            return false;
-        }
-        let rule = rule.trim_end_matches('/');
-        if !rule.contains('/') {
-            return true;
-        }
-        let rule = rule.trim_start_matches('/');
-        let literal: Vec<&str> = rule
-            .split('/')
-            .take_while(|segment| !segment.contains(['*', '?', '[', '{']))
-            .collect();
-        let literal = literal.join("/");
-        under(&literal, prefix) || under(prefix, &literal)
-    })
 }
 
 pub struct IgnoredIndex {
@@ -227,7 +201,7 @@ impl IgnoredIndex {
     /// Starts keeping what is under `dir`: its file hashes always, and its
     /// listing if anyone asks for one. No directory is walked here. False, leaving
     /// the caller to walk instead, for the whole workspace, where the watch
-    /// could miss a change (a hardcoded ignore, a root `.nxignore` rule), or
+    /// could miss a change (a hardcoded ignore), or
     /// when `dir` resolves outside the workspace.
     pub(crate) fn track(&self, workspace_root: &Path, dir: &str) -> bool {
         let dir = dir.trim_matches('/');
@@ -636,14 +610,11 @@ mod tests {
     }
 
     fn watched() -> IgnoredIndex {
-        watched_with_nxignore(&[])
+        watched_with(Arc::new(|path: &str| !path.starts_with("node_modules")))
     }
 
-    fn watched_with_nxignore(rules: &[&str]) -> IgnoredIndex {
-        IgnoredIndex::new(Some(Watch {
-            delivers_under: Arc::new(|path: &str| !path.starts_with("node_modules")),
-            nxignore: rules.iter().map(|r| r.to_string()).collect(),
-        }))
+    fn watched_with(delivers_under: DeliversUnder) -> IgnoredIndex {
+        IgnoredIndex::new(Some(Watch { delivers_under }))
     }
 
     fn set_modified(file: &Path, time: SystemTime) {
@@ -975,20 +946,15 @@ mod tests {
         assert!(!index.remembered("dist/gen/absent.js"));
     }
 
+    /// A directory the watch does not report on cannot be kept current, so it
+    /// is walked every run instead of indexed. The root `.nxignore` no longer
+    /// gates the stream, so it is not one of these.
     #[test]
-    fn a_prefix_a_root_nxignore_rule_could_hide_under_is_refused() {
+    fn a_prefix_the_watch_does_not_report_on_is_refused() {
         let temp = workspace();
-        // Anchored under the prefix, above it, and unanchored: all could hide
-        // a file under dist/gen from the watch.
-        for rule in ["dist/gen/nested", "/dist", "*.log", "**/cache"] {
-            assert!(
-                !watched_with_nxignore(&[rule]).track(temp.path(), "dist/gen"),
-                "{rule} should refuse dist/gen"
-            );
-        }
-        // Elsewhere, negated, or a comment: nothing under dist/gen is hidden.
-        let index = watched_with_nxignore(&["src/generated", "!dist/gen", "# dist"]);
-        assert!(index.track(temp.path(), "dist/gen"));
+        let index = watched_with(Arc::new(|path: &str| !path.starts_with("dist/gen")));
+        assert!(!index.track(temp.path(), "dist/gen"));
+        assert!(index.track(temp.path(), "dist/other"));
     }
 
     #[test]

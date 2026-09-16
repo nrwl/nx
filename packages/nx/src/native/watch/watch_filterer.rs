@@ -259,11 +259,13 @@ pub(crate) fn create_filter(
         Some(builder.build()?)
     };
 
-    // The root `.nxignore` applies whether or not `use_ignore` is set — it is
-    // nx's own opt-out, not a git source. It joins git_ignores at the .nxignore
-    // rank rather than above everything, so a nested .nxignore beats it the way
-    // it does in the walk.
-    if let Some(nxignore_path) = get_nx_ignore(origin) {
+    // The root `.nxignore` ranks among the git sources rather than applying
+    // unconditionally: the stream is gated only by the hardcoded ignores and
+    // nx's own scoping, and each consumer applies the workspace rules itself
+    // (the file map through its policy, `nx watch` through the batches it is
+    // fed). Gating the stream on it would hide changes from the ignored index,
+    // whose walk reads `.nxignore`d files.
+    if use_ignore && let Some(nxignore_path) = get_nx_ignore(origin) {
         let (gitignore, err) = Gitignore::new(&nxignore_path);
         if let Some(err) = err {
             trace!(
