@@ -213,6 +213,10 @@ function applyNxIndependentConfig(
                 // this needs to be false to allow toplevel variables to be used in the global scope
                 // important especially for module-federation which operates as such
                 module: false,
+                // Keeps SWC from hoisting a callback passed in a class field
+                // initializer into one binding shared by all instances:
+                // https://github.com/swc-project/swc/issues/12380
+                compress: { inline: 0, reduce_funcs: false },
                 mangle: {
                   keep_classnames: true,
                 },
