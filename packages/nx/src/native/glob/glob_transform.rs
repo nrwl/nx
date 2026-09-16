@@ -235,36 +235,35 @@ mod test {
     }
 
     #[test]
-    fn should_convert_globs_with_invalid_groups() {
-        let globs = convert_glob("libs/**/?(*.)+spec.ts?(.snap)").unwrap();
+    fn a_special_character_that_begins_no_group_is_literal() {
+        // `+`, `@` and `?` only introduce a group when a `(` follows. On
+        // their own they are a literal `+`, a literal `@`, and the
+        // single-character wildcard.
         assert_eq!(
-            globs,
+            convert_glob("libs/**/?(*.)+spec.ts?(.snap)").unwrap(),
             [
-                "libs/**/*.spec.ts",
-                "libs/**/*.spec.ts.snap",
-                "libs/**/spec.ts",
-                "libs/**/spec.ts.snap"
+                "libs/**/*.+spec.ts",
+                "libs/**/*.+spec.ts.snap",
+                "libs/**/+spec.ts",
+                "libs/**/+spec.ts.snap"
             ]
         );
-
-        let globs = convert_glob("libs/**/?(*.)@spec.ts?(.snap)").unwrap();
         assert_eq!(
-            globs,
+            convert_glob("libs/**/?(*.)@spec.ts?(.snap)").unwrap(),
             [
-                "libs/**/*.spec.ts",
-                "libs/**/*.spec.ts.snap",
-                "libs/**/spec.ts",
-                "libs/**/spec.ts.snap"
+                "libs/**/*.@spec.ts",
+                "libs/**/*.@spec.ts.snap",
+                "libs/**/@spec.ts",
+                "libs/**/@spec.ts.snap"
             ]
         );
-        let globs = convert_glob("libs/**/?(*.)?spec.ts?(.snap)").unwrap();
         assert_eq!(
-            globs,
+            convert_glob("libs/**/?(*.)?spec.ts?(.snap)").unwrap(),
             [
-                "libs/**/*.spec.ts",
-                "libs/**/*.spec.ts.snap",
-                "libs/**/spec.ts",
-                "libs/**/spec.ts.snap"
+                "libs/**/*.?spec.ts",
+                "libs/**/*.?spec.ts.snap",
+                "libs/**/?spec.ts",
+                "libs/**/?spec.ts.snap"
             ]
         );
     }

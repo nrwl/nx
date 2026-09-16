@@ -219,10 +219,19 @@ mod test {
         let glob_set = build_glob_set(&["dist/**", "!dist/libs/a+b/.cache/**"]).unwrap();
         assert!(!glob_set.is_match("dist/libs/a+b/.cache/x"));
 
-        // Extglob exclusions still convert exactly as before — nx's own default
-        // inputs rely on `+spec.ts` collapsing to `spec.ts`.
+        // A `+` that begins no group is a literal `+`, so this excludes
+        // `b.+spec.ts` and not `b.spec.ts`. The shipped default inputs write
+        // the group out, `+(spec|test)`, and are unaffected.
         let glob_set = build_glob_set(&["libs/**/*", "!libs/**/?(*.)+spec.ts?(.snap)"]).unwrap();
+        assert!(!glob_set.is_match("libs/a/b.+spec.ts"));
+        assert!(glob_set.is_match("libs/a/b.spec.ts"));
+        assert!(glob_set.is_match("libs/a/b.ts"));
+
+        // The well-formed default still excludes what it always did.
+        let glob_set =
+            build_glob_set(&["libs/**/*", "!libs/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)"]).unwrap();
         assert!(!glob_set.is_match("libs/a/b.spec.ts"));
+        assert!(!glob_set.is_match("libs/a/b.test.tsx"));
         assert!(glob_set.is_match("libs/a/b.ts"));
     }
 
@@ -505,7 +514,7 @@ mod test {
     }
 
     #[test]
-    fn should_handle_invalid_group_globs() {
+    fn a_malformed_extglob_is_read_literally() {
         let glob_set = build_glob_set(&[
             "libs/**/*",
             "!libs/**/?(*.)+spec.ts?(.snap)",
@@ -517,6 +526,9 @@ mod test {
         .unwrap();
 
         assert!(glob_set.is_match("libs/src/index.ts"));
-        assert!(!glob_set.is_match("libs/src/index.spec.ts"));
+        // `+spec.ts` names a file called that, and no longer stands in for
+        // `spec.ts`, so a real spec file is not excluded by it.
+        assert!(glob_set.is_match("libs/src/index.spec.ts"));
+        assert!(!glob_set.is_match("libs/src/index.+spec.ts"));
     }
 }
