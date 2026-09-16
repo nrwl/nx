@@ -4,7 +4,7 @@ use anyhow::Result;
 
 use super::disk_expansion::FileStamp;
 use super::disk_expansion::{
-    FilesExpansion, FilesExpansionCache, Negation, Positive, WALK, expand_cached, expand_entries,
+    FilesExpansion, FilesExpansionCache, Negation, Positive, Source, expand_cached, expand_entries,
     literal_prefix,
 };
 use super::hash_ignored_files::hash_files;
@@ -30,16 +30,11 @@ pub fn expand_task_outputs(
     let key = format!("outputs:[{}]", outputs.join("\n"));
     let expansion = expand_cached(&key, cache, || {
         let (positives, negations) = output_entries(workspace_root, outputs)?;
-        // Outputs were written by a task that has run: the file map predates
-        // it, so no path is taken as known, and they are read wherever they
-        // point.
         expand_entries(
             workspace_root,
             &positives,
             &negations,
-            &|_| false,
-            false,
-            WALK,
+            &Source::declared_outputs(),
         )
     })?;
     let selected = build_glob_set(&[glob])?;
