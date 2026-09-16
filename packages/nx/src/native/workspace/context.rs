@@ -1609,7 +1609,9 @@ impl WorkspaceContext {
     #[napi]
     pub fn on_changes(
         &self,
-        #[napi(ts_arg_type = "(err: string | null, batch: ChangeBatch) => void")]
+        // napi calls the callback with one argument on failure, a JsError,
+        // so a watch error arrives as (Error, undefined).
+        #[napi(ts_arg_type = "(err: Error | null, batch: ChangeBatch | null) => void")]
         callback: ThreadsafeFunction<PendingChanges>,
     ) {
         self.batches.subscribe(Arc::new(move |result| match result {
@@ -1632,7 +1634,8 @@ impl WorkspaceContext {
     #[napi]
     pub fn on_watch_events(
         &self,
-        #[napi(ts_arg_type = "(err: string | null, events: WatchEvent[]) => void")]
+        // See `on_changes`: a failure arrives as (Error, undefined).
+        #[napi(ts_arg_type = "(err: Error | null, events: WatchEvent[] | null) => void")]
         callback: ThreadsafeFunction<Vec<WatchEvent>>,
     ) {
         self.events.subscribe(Arc::new(move |result| match result {

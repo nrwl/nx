@@ -259,6 +259,138 @@ describe('task planner', () => {
         new HashPlanner({} as any, ref).getPlans(order, taskGraph);
     }
 
+    // A chain, so the group has to be handed on: a depends on shared, which
+    // depends on core. Depth one never exercises the re-propagation.
+    function chainOfThree(aInputs: any[]) {
+      const builder = new ProjectGraphBuilder();
+      for (const [name, root] of [
+        ['a', 'libs/a'],
+        ['shared', 'libs/shared'],
+        ['core', 'libs/core'],
+      ]) {
+        builder.addNode({
+          name,
+          type: 'lib',
+          data: {
+            root,
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                ...(name === 'a' ? { inputs: aInputs } : {}),
+              },
+            },
+          },
+        });
+      }
+      builder.addImplicitDependency('a', 'shared');
+      builder.addImplicitDependency('shared', 'core');
+      const projectGraph = builder.getUpdatedProjectGraph();
+      const taskGraph = createTaskGraph(
+        projectGraph,
+        {},
+        ['a'],
+        ['build'],
+        undefined,
+        {},
+        false
+      );
+      const ref = transferProjectGraph(
+        transformProjectGraphForRust(projectGraph)
+      );
+      return new HashPlanner({} as any, ref).getPlans(['a:build'], taskGraph);
+    }
+
+    const ignoredDepGroup = [
+      {
+        fileset: '{projectRoot}/dist/**',
+        includeIgnored: true,
+        dependencies: true,
+      },
+      {
+        fileset: '!{projectRoot}/dist/**/*.map',
+        includeIgnored: true,
+        dependencies: true,
+      },
+    ];
+
+    it('hands the group on to a dependency of a dependency', () => {
+      const plans = chainOfThree(ignoredDepGroup);
+      // Both dependencies get the whole group, each rooted at its own project.
+      expect(plans['a:build']).toContain(
+        'files:[libs/shared/dist/**,!libs/shared/dist/**/*.map]'
+      );
+      expect(plans['a:build']).toContain(
+        'files:[libs/core/dist/**,!libs/core/dist/**/*.map]'
+      );
+      // The negation never leaks across projects.
+      expect(plans['a:build']).not.toContain('files:[libs/core/dist/**]');
+      expect(plans['a:build']).not.toContain('files:[libs/shared/dist/**]');
+    });
+
+    // The group is resolved before the other inputs and shares one cycle
+    // scope. Without rolling that scope back, a sibling input finds the
+    // dependencies already visited and silently contributes nothing.
+    it('leaves the dependencies for the inputs that follow the group', () => {
+      const plans = chainOfThree([
+        ...ignoredDepGroup,
+        { fileset: '{projectRoot}/src/**/*.ts', dependencies: true },
+      ]);
+      expect(plans['a:build']).toContain(
+        'files:[libs/shared/dist/**,!libs/shared/dist/**/*.map]'
+      );
+      const plan = plans['a:build'] as string[];
+      expect(plan.filter((i) => i.includes('src/**/*.ts')).sort()).toEqual([
+        'core:libs/core/src/**/*.ts',
+        'shared:libs/shared/src/**/*.ts',
+      ]);
+    });
+
+    it('hands the group on around a cycle without duplicating it', () => {
+      const builder = new ProjectGraphBuilder();
+      for (const [name, root] of [
+        ['a', 'libs/a'],
+        ['b', 'libs/b'],
+      ]) {
+        builder.addNode({
+          name,
+          type: 'lib',
+          data: {
+            root,
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                ...(name === 'a' ? { inputs: ignoredDepGroup } : {}),
+              },
+            },
+          },
+        });
+      }
+      builder.addImplicitDependency('a', 'b');
+      builder.addImplicitDependency('b', 'a');
+      const projectGraph = builder.getUpdatedProjectGraph();
+      const taskGraph = createTaskGraph(
+        projectGraph,
+        {},
+        ['a'],
+        ['build'],
+        undefined,
+        {},
+        false
+      );
+      const ref = transferProjectGraph(
+        transformProjectGraphForRust(projectGraph)
+      );
+      const plans = new HashPlanner({} as any, ref).getPlans(
+        ['a:build'],
+        taskGraph
+      );
+      const group = 'files:[libs/b/dist/**,!libs/b/dist/**/*.map]';
+      expect(plans['a:build']).toContain(group);
+      expect(plans['a:build'].filter((i: string) => i === group)).toHaveLength(
+        1
+      );
+    });
+
     it('resolves a dependency includeIgnored group so a negation filters it', () => {
       const plans = twoConsumersOfShared(
         [

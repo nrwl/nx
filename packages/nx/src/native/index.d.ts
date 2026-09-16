@@ -319,14 +319,14 @@ export declare class WorkspaceContext {
    * something was applied or delivered, with everything not yet taken by
    * it or by `settle`. Replaces any earlier subscriber.
    */
-  onChanges(callback: (err: string | null, batch: ChangeBatch) => void): void
+  onChanges(callback: (err: Error | null, batch: ChangeBatch | null) => void): void
   /**
    * Subscribes to every event the watch delivers, whether or not it
    * concerns the files: writes under ignored directories included, and
    * the `rescan` marker when the kernel dropped events. Replaces any
    * earlier subscriber. Batches applied to the files are `onChanges`.
    */
-  onWatchEvents(callback: (err: string | null, events: WatchEvent[]) => void): void
+  onWatchEvents(callback: (err: Error | null, events: WatchEvent[] | null) => void): void
   /**
    * Applies everything the watch has delivered, waiting out the kernel hop,
    * then takes every change applied and not yet taken, one entry per path
