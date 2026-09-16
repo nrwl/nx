@@ -92,17 +92,18 @@ See [Remote Caching](/docs/features/ci-features/remote-cache) for details on the
 
 Use `nx affected` to run tasks only for projects impacted by the PR's changes:
 
-```yaml {% meta="{5}" %}
+```yaml {% meta="{5-6}" %}
 # .github/workflows/ci.yml
 - uses: actions/checkout@v7
   with:
     fetch-depth: 0
+- uses: nrwl/nx-set-shas@v5
 - run: npx nx affected -t lint test build
 ```
 
-Nx uses `NX_BASE` and `NX_HEAD` to determine the comparison range. `fetch-depth: 0` gives Nx access to the full git history. On a PR, Nx compares the branch against `main` (or whatever `defaultBase` is set to in `nx.json`). On a push to `main`, it compares against the previous commit.
+The [`nrwl/nx-set-shas`](https://github.com/nrwl/nx-set-shas) action uses the GitHub API to find the last successful workflow run on `main` and sets `NX_BASE` and `NX_HEAD`, the environment variables Nx reads to determine the comparison range, so `nx affected` needs no extra flags. `fetch-depth: 0` is required. Without the full Git history, there is no base commit to compare against.
 
-See [Affected](/docs/features/ci-features/affected) for more information.
+See [Affected](/docs/features/ci-features/affected) for more information. On CircleCI the [Nx Orb](https://github.com/nrwl/nx-orb)'s `nx/set-shas` does the same, and [Setting up CI for Nx Cloud](/docs/kb/setup-ci#get-the-commit-of-the-last-successful-build) covers the other providers.
 
 ## Distributing tasks across machines
 
@@ -189,6 +190,10 @@ jobs:
           cache: 'npm'
 
       - run: npm ci
+
+      # Sets NX_BASE and NX_HEAD from the last successful run on main,
+      # so `nx affected` below compares against that instead of a fixed ref.
+      - uses: nrwl/nx-set-shas@v5
 
       # Runs lint, test, and build only for projects affected by this change.
       # Nx Cloud distributes these tasks across the agents started above.
