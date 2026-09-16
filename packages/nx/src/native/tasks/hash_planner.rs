@@ -1169,8 +1169,10 @@ fn is_ignored_dep_fileset(input: &Input) -> bool {
 }
 
 /// The `includeIgnored` filesets a project propagates to its dependencies.
+/// Every member carries both flags, which is what lets `grouped_cache_key`
+/// key a group on its globs and kinds without two groups colliding.
 fn ignored_dep_fileset_group<'a>(inputs: &[Input<'a>]) -> Vec<Input<'a>> {
-    inputs
+    let group: Vec<Input<'a>> = inputs
         .iter()
         .filter_map(|input| match input {
             Input::FileSet {
@@ -1184,7 +1186,12 @@ fn ignored_dep_fileset_group<'a>(inputs: &[Input<'a>]) -> Vec<Input<'a>> {
             }),
             _ => None,
         })
-        .collect()
+        .collect();
+    debug_assert!(
+        group.iter().all(is_ignored_dep_fileset),
+        "a propagated group holds only includeIgnored dependency filesets"
+    );
+    group
 }
 
 /// Whether an input reaches the dependency unchanged, so its expansion is

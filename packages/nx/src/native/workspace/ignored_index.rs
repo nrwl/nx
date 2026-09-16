@@ -212,14 +212,6 @@ impl IgnoredIndex {
 
     pub(crate) fn track(&self, workspace_root: &Path, dir: &str) -> bool {
         let dir = dir.trim_matches('/');
-        if dir.is_empty() && !self.announced_whole_workspace.swap(true, Ordering::AcqRel) {
-            debug!(
-                "An includeIgnored fileset names no directory to read from, so it is read \
-                 from the workspace root: its first listing walks the whole workspace and \
-                 then holds every file in it. Give the fileset a directory, such as \
-                 {{projectRoot}}/dist/**, to walk and hold only that."
-            );
-        }
         // Both reasons leave the caller to walk instead, and both cost only
         // speed: the directory is read every run rather than remembered.
         //
@@ -239,6 +231,14 @@ impl IgnoredIndex {
         if let Some(reason) = refused {
             trace!("not tracking {dir:?}: {reason}");
             return false;
+        }
+        if dir.is_empty() && !self.announced_whole_workspace.swap(true, Ordering::AcqRel) {
+            debug!(
+                "An includeIgnored fileset names no directory to read from, so it is read \
+                 from the workspace root: its first listing walks the whole workspace and \
+                 then holds every file in it. Give the fileset a directory, such as \
+                 {{projectRoot}}/dist/**, to walk and hold only that."
+            );
         }
         // Asked after the refusals, never before: a tracked ancestor must not
         // adopt a directory that would have been refused on its own, such as
@@ -364,7 +364,12 @@ impl IgnoredIndex {
             return;
         };
         if link.is_dir() {
-            if listed && let Some(seeded) = seed_walk(workspace_root, path) {
+            // Re-walk the directory the event names, never the workspace: a
+            // root event would re-walk everything on every report.
+            if listed
+                && !path.is_empty()
+                && let Some(seeded) = seed_walk(workspace_root, path)
+            {
                 self.replace_under(&mut self.members.write(), path, seeded);
             }
             return;
