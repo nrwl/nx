@@ -18,11 +18,11 @@ use crate::native::{
 use crate::native::{
     tasks::hashers::{
         FilesExpansionCache, JsonHashResult, ProjectFileIndicesCache, ProjectFileSetCache, Source,
-        WorkspaceFileIndicesCache, WorkspaceFileSetCache, collect_project_file_paths_cached,
-        collect_workspace_file_paths_cached, expand_cached, expand_globs, hash_all_externals,
-        hash_external, hash_files, hash_json_files, hash_project_config, hash_project_files_cached,
-        hash_task_output, hash_tsconfig_selectively, hash_workspace_files_cached, index_file_map,
-        output_prefixes,
+        WorkspaceFileIndex, WorkspaceFileIndicesCache, WorkspaceFileSetCache,
+        collect_project_file_paths_cached, collect_workspace_file_paths_cached, expand_cached,
+        expand_globs, hash_all_externals, hash_external, hash_files, hash_json_files,
+        hash_project_config, hash_project_files_cached, hash_task_output,
+        hash_tsconfig_selectively, hash_workspace_files_cached, output_prefixes,
     },
     types::FileData,
     walker::PathPredicate,
@@ -288,7 +288,7 @@ pub struct TaskHasher {
     // `includeIgnored` filesets: a path index over the file map so tracked
     // files skip the disk, built only once a plan carries a disk-backed
     // group. Their content lives in the context's IgnoredIndex.
-    workspace_file_index: OnceCell<HashMap<String, u32>>,
+    workspace_file_index: WorkspaceFileIndex,
 }
 #[napi]
 impl TaskHasher {
@@ -327,7 +327,7 @@ impl TaskHasher {
             workspace_file_indices_cache: WorkspaceFileIndicesCache::new(),
             project_file_indices_cache: ProjectFileIndicesCache::new(),
             all_externals_hash: OnceCell::new(),
-            workspace_file_index: OnceCell::new(),
+            workspace_file_index: WorkspaceFileIndex::new(Arc::clone(&all_workspace_files)),
         }
     }
 
@@ -369,16 +369,11 @@ impl TaskHasher {
     }
 
     fn workspace_tracks_file(&self, path: &str) -> bool {
-        self.workspace_file_index
-            .get_or_init(|| index_file_map(&self.all_workspace_files))
-            .contains_key(path)
+        self.workspace_file_index.tracks(path)
     }
 
     fn workspace_file_hash(&self, path: &str) -> Option<String> {
-        self.workspace_file_index
-            .get_or_init(|| index_file_map(&self.all_workspace_files))
-            .get(path)
-            .map(|&i| self.all_workspace_files[i as usize].hash.clone())
+        self.workspace_file_index.hash_of(path)
     }
 
     /// Hash each task's instructions using the env map keyed by `task.id`.

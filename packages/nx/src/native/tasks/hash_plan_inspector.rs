@@ -1,6 +1,7 @@
 use crate::native::tasks::hashers::{
-    ProjectFileIndicesCache, Source, collect_ignored_file_paths, collect_json_input_files,
-    collect_project_file_paths_cached, collect_workspace_file_paths, resolve_task_output_files,
+    ProjectFileIndicesCache, Source, WorkspaceFileIndex, collect_ignored_file_paths,
+    collect_json_input_files, collect_project_file_paths_cached, collect_workspace_file_paths,
+    resolve_task_output_files,
 };
 use crate::native::tasks::task_hasher::{HashInputs, HashInputsBuilder};
 use crate::native::tasks::types::{HashInstruction, HashPlans};
@@ -18,7 +19,7 @@ pub struct HashPlanInspector {
     workspace_root: String,
     // Paths the workspace context tracks, so disk-backed groups resolve the
     // same way here as in the hasher. Built on first use.
-    tracked_paths: std::sync::OnceLock<HashSet<String>>,
+    tracked: WorkspaceFileIndex,
 }
 
 #[napi]
@@ -36,19 +37,8 @@ impl HashPlanInspector {
             all_workspace_files: Arc::clone(all_workspace_files),
             project_file_map: Arc::clone(project_file_map),
             workspace_root,
-            tracked_paths: std::sync::OnceLock::new(),
+            tracked: WorkspaceFileIndex::new(Arc::clone(all_workspace_files)),
         }
-    }
-
-    /// The same source as TaskHasher::workspace_tracks_file, so both read a
-    /// plan the same way.
-    fn tracked(&self) -> &HashSet<String> {
-        self.tracked_paths.get_or_init(|| {
-            self.all_workspace_files
-                .iter()
-                .map(|f| f.file.clone())
-                .collect()
-        })
     }
 
     /// @deprecated Use `inspectInputs()` instead for structured output.
@@ -173,7 +163,7 @@ impl HashPlanInspector {
                     workspace_root,
                     globs,
                     &Source::fileset_reading_disk(
-                        &|path| self.tracked().contains(path),
+                        &|path| self.tracked.tracks(path),
                         workspace_root,
                     ),
                 )?;

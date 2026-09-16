@@ -4,12 +4,14 @@
 
 use std::collections::HashMap;
 use std::path::Path;
+use std::sync::{Arc, OnceLock};
 
 use anyhow::Result;
 use rayon::prelude::*;
 use xxhash_rust::xxh3;
 
 use super::disk_expansion::{FilesExpansion, Source, expand_globs};
+use crate::native::types::FileData;
 use crate::native::workspace::ignored_index::{IgnoredIndex, RunStage};
 
 /// Folds `(path, content hash)` pairs in path order, like a fileset; a file
@@ -41,13 +43,43 @@ pub(crate) fn hash_files(
     hasher.digest().to_string()
 }
 
-/// Index of the workspace file map by path, built once per hasher on first use.
-pub(crate) fn index_file_map(files: &[crate::native::types::FileData]) -> HashMap<String, u32> {
-    files
-        .iter()
-        .enumerate()
-        .map(|(i, f)| (f.file.clone(), i as u32))
-        .collect()
+/// The workspace file map indexed by path, built on first use and shared by
+/// everyone who asks a plan what the workspace already tracks. Holding the
+/// index rather than a set of names means a hash costs no second lookup.
+pub(crate) struct WorkspaceFileIndex {
+    files: Arc<Vec<FileData>>,
+    by_path: OnceLock<HashMap<String, u32>>,
+}
+
+impl WorkspaceFileIndex {
+    pub(crate) fn new(files: Arc<Vec<FileData>>) -> Self {
+        Self {
+            files,
+            by_path: OnceLock::new(),
+        }
+    }
+
+    fn by_path(&self) -> &HashMap<String, u32> {
+        self.by_path.get_or_init(|| {
+            self.files
+                .iter()
+                .enumerate()
+                .map(|(i, f)| (f.file.clone(), i as u32))
+                .collect()
+        })
+    }
+
+    /// Whether the file map holds this exact path, so it needs no stat.
+    pub(crate) fn tracks(&self, path: &str) -> bool {
+        self.by_path().contains_key(path)
+    }
+
+    /// The hash the file map already holds for `path`.
+    pub(crate) fn hash_of(&self, path: &str) -> Option<String> {
+        self.by_path()
+            .get(path)
+            .map(|&i| self.files[i as usize].hash.clone())
+    }
 }
 
 /// The matched file paths of an `includeIgnored` fileset group, sorted, the
