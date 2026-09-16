@@ -72,7 +72,7 @@ describe('headings-in-tabs', () => {
     ).toEqual([]);
   });
 
-  it('should ignore headings inside tags that render their children as text', () => {
+  it('should ignore headings inside llm_copy_prompt', () => {
     expect(
       check(
         [

@@ -5,9 +5,9 @@ import {
 
 const DOCS_PROJECT_NAME = 'astro-docs';
 
-// These tags flatten their children into a plain string, so a heading nested in
-// one never reaches the DOM and never lands in the table of contents.
-const TEXT_ONLY_TAGS = ['llm_copy_prompt', 'llm_only'];
+// llm_copy_prompt flattens its children into a plain string, so a `##` line in
+// one is prompt text that never renders as a heading.
+const PROMPT_TAG = 'llm_copy_prompt';
 
 export default createConformanceRule({
   name: 'headings-in-tabs',
@@ -57,7 +57,7 @@ export function checkHeadingsInTabs(
 
   let inCodeBlock = false;
   let tabsDepth = 0;
-  let textOnlyDepth = 0;
+  let promptDepth = 0;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
@@ -78,16 +78,16 @@ export function checkHeadingsInTabs(
       tabsDepth--;
       continue;
     }
-    if (TEXT_ONLY_TAGS.some((tag) => isOpeningTag(line, tag))) {
-      textOnlyDepth++;
+    if (isOpeningTag(line, PROMPT_TAG)) {
+      promptDepth++;
       continue;
     }
-    if (TEXT_ONLY_TAGS.some((tag) => isClosingTag(line, tag))) {
-      textOnlyDepth--;
+    if (isClosingTag(line, PROMPT_TAG)) {
+      promptDepth--;
       continue;
     }
 
-    if (tabsDepth <= 0 || textOnlyDepth > 0) {
+    if (tabsDepth <= 0 || promptDepth > 0) {
       continue;
     }
     const heading = line.match(/^#{1,6}\s+(\S.*)$/);
