@@ -21,6 +21,7 @@ use expansion::{NOTHING_KNOWN, parse_group, validate_files_glob};
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
+    use crate::native::walker::PathPredicate;
     use anyhow::Result;
     use assert_fs::TempDir;
     use assert_fs::prelude::*;
@@ -39,7 +40,7 @@ pub(crate) mod tests {
     fn expand_files_with(
         workspace_root: &Path,
         globs: &[String],
-        known: &(dyn Fn(&str) -> bool + Sync),
+        known: PathPredicate,
     ) -> Result<FilesExpansion> {
         expand_globs(
             workspace_root,
@@ -83,7 +84,7 @@ pub(crate) mod tests {
     #[test]
     fn a_source_that_ignores_the_filter_cannot_widen_the_result() {
         let temp = workspace();
-        let everything = |dir: &str, _accept: &(dyn Fn(&str) -> bool + Sync)| {
+        let everything = |dir: &str, _accept: PathPredicate| {
             (dir == "dist/gen").then(|| globs(&["dist/gen/a.js", "dist/gen/a.js.map"]))
         };
         let group = globs(&["dist/gen/**/*.js"]);
@@ -102,7 +103,7 @@ pub(crate) mod tests {
     fn a_directory_is_whatever_the_source_says_it_holds() {
         let temp = workspace();
         // A phantom the disk does not have, to prove the source is believed.
-        let listed = |dir: &str, accept: &(dyn Fn(&str) -> bool + Sync)| {
+        let listed = |dir: &str, accept: PathPredicate| {
             (dir == "dist/gen").then(|| {
                 globs(&[
                     "dist/gen/a.js",

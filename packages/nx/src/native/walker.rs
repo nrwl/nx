@@ -297,7 +297,7 @@ pub(crate) fn walk_files(
     start: &Path,
     workspace_root: &Path,
     canonical_root: Option<&Path>,
-    accept: &(dyn Fn(&str) -> bool + Sync),
+    accept: PathPredicate,
 ) -> Result<Vec<String>> {
     let relative_of = |path: &Path| -> Option<String> {
         Some(
@@ -350,6 +350,11 @@ pub(crate) fn walk_files(
 /// Every file under `dir` with its stamp, for an index seeding a prefix: the
 /// walk an expansion runs, confined to the workspace. Empty when `dir` does
 /// not exist yet; `None` when it resolves outside the workspace.
+/// A question asked about one path: does this glob admit it, does the
+/// workspace context already track it. Borrowed and shared across the walk's
+/// threads, so it is always behind a reference and `Sync`.
+pub(crate) type PathPredicate<'a> = &'a (dyn Fn(&str) -> bool + Sync);
+
 /// The files under `dir` that `accept` admits, workspace-relative, read from
 /// disk. The one implementation of "what does this directory hold"; the
 /// ignored index caches on top of it, and everything else calls it directly.
@@ -361,7 +366,7 @@ pub(crate) fn files_under(
     workspace_root: &Path,
     dir: &str,
     confine: bool,
-    accept: &(dyn Fn(&str) -> bool + Sync),
+    accept: PathPredicate,
 ) -> Option<Vec<String>> {
     let start = workspace_root.join(dir);
     let resolved = dunce::canonicalize(&start).ok()?;

@@ -16,7 +16,7 @@ use parking_lot::RwLock;
 use tracing::trace;
 
 use crate::native::hasher::hash_file_path;
-use crate::native::walker::{files_under, seed_walk};
+use crate::native::walker::{PathPredicate, files_under, seed_walk};
 
 /// Whether the watch delivers events for a workspace-relative path (a
 /// directory when the flag is set).
@@ -334,7 +334,7 @@ impl IgnoredIndex {
         workspace_root: &Path,
         dir: &str,
         cached: bool,
-        accept: &(dyn Fn(&str) -> bool + Sync),
+        accept: PathPredicate,
     ) -> Option<Vec<String>> {
         if cached && self.is_tracked(dir) {
             // A listing that cannot settle, because the disk kept moving
@@ -611,7 +611,7 @@ impl IgnoredIndexReader {
         workspace_root: &Path,
         dir: &str,
         cached: bool,
-        accept: &(dyn Fn(&str) -> bool + Sync),
+        accept: PathPredicate,
     ) -> Option<Vec<String>> {
         (self.catch_up)();
         self.index.files_under(workspace_root, dir, cached, accept)

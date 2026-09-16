@@ -25,6 +25,7 @@ use crate::native::{
         output_prefixes,
     },
     types::FileData,
+    walker::PathPredicate,
     workspace::ignored_index::{IgnoredIndexReader, RunStage},
     workspace::types::ProjectFiles,
 };
@@ -799,7 +800,7 @@ impl TaskHasher {
                 // The index answers from a listing it keeps only while
                 // nothing has run, like the file map; afterwards it reads the
                 // disk for us.
-                let files_under = |dir: &str, accept: &(dyn Fn(&str) -> bool + Sync)| {
+                let files_under = |dir: &str, accept: PathPredicate| {
                     self.ignored_index.files_under(
                         workspace_root,
                         dir,

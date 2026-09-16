@@ -11,7 +11,7 @@ use dashmap::DashMap;
 
 use super::entries::{Negation, Positive};
 use crate::native::glob::{build_glob_set, expand_literal_braces, literal_prefix, normalize_glob};
-use crate::native::walker::files_under;
+use crate::native::walker::{PathPredicate, files_under};
 
 /// Expansion per `files:{project}:[...]` instruction, scoped to one `hash_plans`
 /// call: a group is listed or walked afresh for the next one.
@@ -36,16 +36,11 @@ pub(crate) trait DirectoryFiles: Sync {
     /// The files under `dir` that `accept` admits, workspace-relative.
     /// `None` when the directory cannot be read at all. `accept` is passed
     /// so the answer can be filtered while it is gathered, not afterwards.
-    fn files_under(&self, dir: &str, accept: &(dyn Fn(&str) -> bool + Sync))
-    -> Option<Vec<String>>;
+    fn files_under(&self, dir: &str, accept: PathPredicate) -> Option<Vec<String>>;
 }
 
 impl DirectoryFiles for &dyn DirectoryFiles {
-    fn files_under(
-        &self,
-        dir: &str,
-        accept: &(dyn Fn(&str) -> bool + Sync),
-    ) -> Option<Vec<String>> {
+    fn files_under(&self, dir: &str, accept: PathPredicate) -> Option<Vec<String>> {
         (**self).files_under(dir, accept)
     }
 }
@@ -57,11 +52,7 @@ pub(crate) struct DiskFiles<'a> {
 }
 
 impl DirectoryFiles for DiskFiles<'_> {
-    fn files_under(
-        &self,
-        dir: &str,
-        accept: &(dyn Fn(&str) -> bool + Sync),
-    ) -> Option<Vec<String>> {
+    fn files_under(&self, dir: &str, accept: PathPredicate) -> Option<Vec<String>> {
         files_under(
             self.workspace_root,
             dir,
@@ -74,26 +65,22 @@ impl DirectoryFiles for DiskFiles<'_> {
 /// So a caller can pass a closure where a named type would be ceremony.
 impl<F> DirectoryFiles for F
 where
-    F: Fn(&str, &(dyn Fn(&str) -> bool + Sync)) -> Option<Vec<String>> + Sync,
+    F: Fn(&str, PathPredicate) -> Option<Vec<String>> + Sync,
 {
-    fn files_under(
-        &self,
-        dir: &str,
-        accept: &(dyn Fn(&str) -> bool + Sync),
-    ) -> Option<Vec<String>> {
+    fn files_under(&self, dir: &str, accept: PathPredicate) -> Option<Vec<String>> {
         self(dir, accept)
     }
 }
 
 /// For a caller with no workspace context: every path is checked on disk.
-pub(crate) const NOTHING_KNOWN: &(dyn Fn(&str) -> bool + Sync) = &|_| false;
+pub(crate) const NOTHING_KNOWN: PathPredicate<'static> = &|_| false;
 
 /// What an expansion may lean on instead of the disk, and how far it may
 /// reach. The two callers differ only here.
 pub(crate) struct Source<'a> {
     /// Whether the workspace context already tracks a path. A path it
     /// vouches for needs no stat.
-    known: &'a (dyn Fn(&str) -> bool + Sync),
+    known: PathPredicate<'a>,
     /// What a directory holds, see `DirectoryFiles`.
     files_under: Box<dyn DirectoryFiles + 'a>,
     links: Links,
@@ -103,10 +90,7 @@ impl<'a> Source<'a> {
     /// An `includeIgnored` fileset. It is hashed alongside tracked files, so
     /// the context can vouch for a path, and it may not read outside the
     /// workspace.
-    pub(crate) fn fileset(
-        known: &'a (dyn Fn(&str) -> bool + Sync),
-        files_under: &'a dyn DirectoryFiles,
-    ) -> Self {
+    pub(crate) fn fileset(known: PathPredicate<'a>, files_under: &'a dyn DirectoryFiles) -> Self {
         Self {
             known,
             files_under: Box::new(files_under),
@@ -115,10 +99,7 @@ impl<'a> Source<'a> {
     }
 
     /// A fileset read straight from disk, with no index to ask.
-    pub(crate) fn fileset_reading_disk(
-        known: &'a (dyn Fn(&str) -> bool + Sync),
-        workspace_root: &'a Path,
-    ) -> Self {
+    pub(crate) fn fileset_reading_disk(known: PathPredicate<'a>, workspace_root: &'a Path) -> Self {
         Self {
             known,
             files_under: Box::new(DiskFiles {
