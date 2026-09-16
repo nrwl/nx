@@ -25,27 +25,28 @@ describe('Cypress migrations', () => {
     // Mirrors how nx gates a group: every requirement must be satisfied by
     // the version the package lands on, prereleases included, and no
     // incompatibility may be. An absent package fails a requirement and
-    // matches no incompatibility. `installed` is what resolves from the root
+    // matches no incompatibility. `versions` holds those landing versions: a
+    // pending update's version, otherwise what resolves from the root
     // node_modules, so a hoisted transitive package counts.
     const satisfied = (
       ranges: Record<string, string>,
-      installed: Record<string, string>,
+      versions: Record<string, string>,
       pkg: string
     ) =>
-      !!installed[pkg] &&
-      satisfies(installed[pkg], ranges[pkg], { includePrerelease: true });
+      !!versions[pkg] &&
+      satisfies(versions[pkg], ranges[pkg], { includePrerelease: true });
     const applies = (
       group: {
         requires: Record<string, string>;
         incompatibleWith?: Record<string, string>;
       },
-      installed: Record<string, string>
+      versions: Record<string, string>
     ) =>
       Object.keys(group.requires).every((pkg) =>
-        satisfied(group.requires, installed, pkg)
+        satisfied(group.requires, versions, pkg)
       ) &&
       !Object.keys(group.incompatibleWith ?? {}).some((pkg) =>
-        satisfied(group.incompatibleWith, installed, pkg)
+        satisfied(group.incompatibleWith, versions, pkg)
       );
 
     it('should move Cypress 15 to 16 with the matching dev servers', () => {
