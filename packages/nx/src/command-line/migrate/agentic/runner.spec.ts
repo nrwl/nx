@@ -53,7 +53,7 @@ type FakeChild = EventEmitter & {
   exitCode: number | null;
   signalCode: NodeJS.Signals | null;
   killed: boolean;
-  kill: Mock<boolean, [NodeJS.Signals?]>;
+  kill: Mock<(signal?: NodeJS.Signals) => boolean>;
 };
 
 function fakeChild(

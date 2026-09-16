@@ -13,7 +13,7 @@ type FakeChild = EventEmitter & {
   pid?: number;
   exitCode: number | null;
   signalCode: NodeJS.Signals | null;
-  kill: Mock<boolean, [NodeJS.Signals?]>;
+  kill: Mock<(signal?: NodeJS.Signals) => boolean>;
 };
 
 function fakeChild(exitOnSignal: NodeJS.Signals[] = ['SIGINT']): FakeChild {
