@@ -206,9 +206,9 @@ pub(crate) fn expand_cached(
     Ok(expansion)
 }
 
-/// Rejects a glob that would read outside the workspace or exclude nothing.
-/// What a fileset glob may not say. `partition_glob` answers only where
-/// literal text stops; these are this feature's rules, with its wording.
+/// What a fileset glob may not say: an absolute path, a `..` that climbs out,
+/// or a `.` segment. `partition_glob` answers only where literal text stops;
+/// these are this feature's rules, with its wording.
 fn validate_shape(glob: &str) -> Result<()> {
     if Path::new(glob).is_absolute() || glob.starts_with('/') {
         bail!(
@@ -228,8 +228,10 @@ fn validate_shape(glob: &str) -> Result<()> {
     Ok(())
 }
 
-/// A glob with no leading directory (`**/*`, `*.gen`) is allowed: it walks
-/// from the workspace root, which is slow but not wrong.
+/// Rejects a glob that says it reads outside the workspace, or a negation
+/// that excludes nothing, before anything reads the disk. A glob with no
+/// leading directory (`**/*`, `*.gen`) is allowed: it reads from the
+/// workspace root, which is slow but not wrong.
 pub(crate) fn validate_files_glob(glob: &str) -> Result<()> {
     if let Some(body) = glob.strip_prefix('!') {
         let body = normalize_glob(body);

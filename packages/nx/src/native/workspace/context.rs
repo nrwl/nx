@@ -1176,9 +1176,9 @@ impl WorkspaceContext {
     }
 
     /// One watch serves both the files and the raw event stream, so it is
-    /// gated only by the hardcoded ignores, the root `.nxignore` and the
-    /// caller's globs: everything a walk would skip still reaches the stream,
-    /// and the files apply the walk's rules themselves (see `Policy`).
+    /// gated only by the hardcoded ignores and the caller's globs: everything
+    /// a walk would skip still reaches the stream, and the files apply the
+    /// walk's rules themselves (see `Policy`).
     #[cfg(not(target_arch = "wasm32"))]
     fn start_watching(
         workspace_root: String,

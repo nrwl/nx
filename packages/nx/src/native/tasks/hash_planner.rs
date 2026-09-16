@@ -1009,7 +1009,7 @@ fn deferred_tasks(
 }
 
 /// The directory a glob reads from, spelled the way expansion reads it. A
-/// A glob with no literal prefix, or one that climbs out of the workspace,
+/// glob with no literal prefix, or one that climbs out of the workspace,
 /// reads as the workspace root, so a doubtful case errs toward deferring.
 fn walk_root(glob: &str) -> String {
     // Legacy default outputs are spelled `./dist` and `dist/.`.
@@ -1137,8 +1137,10 @@ fn group_cache_key(dep: &str, inputs: &[Input]) -> String {
 }
 
 /// Group order is part of the key: it is the order the globs are hashed in.
-/// So is each member's kind — a group may mix an `includeIgnored` fileset with
-/// a plain one, and the same globs then stand for different instructions.
+/// So is each member's kind. Every producer today filters to `includeIgnored`
+/// filesets before a group is keyed, so a mixed group cannot be built; keying
+/// on the globs alone would make one reachable the moment that stops holding,
+/// and two groups differing only in kind would share a memo entry.
 fn grouped_cache_key(dep: &str, group: &[Input]) -> String {
     let globs = group
         .iter()

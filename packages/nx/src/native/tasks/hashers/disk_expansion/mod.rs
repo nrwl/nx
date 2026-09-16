@@ -261,6 +261,27 @@ pub(crate) mod tests {
         assert!(first.files.contains(&"dist/gen/a.js".to_string()));
     }
 
+    /// A fileset reads its root wherever it points, so a link aimed at an
+    /// ancestor is a loop on paper. The walk never enters a link it meets, so
+    /// the root is resolved once and the walk is one pass over the target.
+    #[cfg(unix)]
+    #[test]
+    fn a_link_pointing_at_its_own_workspace_does_not_recurse() {
+        let temp = workspace();
+        std::os::unix::fs::symlink(temp.path(), temp.path().join("dist/loop")).unwrap();
+        let expansion = expand_files(temp.path(), &globs(&["dist/loop"])).unwrap();
+        // One level: the dist/loop found inside is a link, recorded not entered.
+        assert_eq!(
+            expansion.files,
+            vec![
+                "dist/loop/dist/gen/a.js",
+                "dist/loop/dist/gen/a.js.map",
+                "dist/loop/dist/gen/nested/b.js",
+                "dist/loop/dist/other/c.js",
+            ]
+        );
+    }
+
     #[test]
     fn expands_from_the_partitioned_directory_and_applies_negations() {
         let temp = workspace();

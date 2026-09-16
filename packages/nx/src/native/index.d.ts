@@ -270,6 +270,10 @@ export declare class WorkspaceContext {
    * include writes made since the last walk. Does nothing while a walk is
    * in progress. Await `ready()` before reading. What the walk finds
    * changed goes to the subscriber.
+   *
+   * For a graph built without the daemon, where nothing watches: see
+   * `refreshWorkspaceContext`, called by
+   * `buildProjectGraphAndSourceMapsWithoutDaemon`.
    */
   refresh(): boolean
   /**
