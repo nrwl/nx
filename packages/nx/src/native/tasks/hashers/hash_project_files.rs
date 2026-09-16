@@ -161,6 +161,58 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
 
+    // The rule that a path with no glob pattern means that file, or that
+    // directory and everything under it, is implemented twice: here against
+    // the file map, and in the expansion against the disk. Neither knows
+    // about the other, so this is what stops them drifting apart.
+    #[test]
+    fn a_directory_entry_means_the_same_on_both_roads() {
+        use crate::native::tasks::hashers::disk_expansion::tests::expand_files;
+        use assert_fs::TempDir;
+        use assert_fs::prelude::*;
+
+        let temp = TempDir::new().unwrap();
+        for file in [
+            "libs/x/src/a.ts",
+            "libs/x/src/nested/b.ts",
+            "libs/x/other.ts",
+        ] {
+            temp.child(file).write_str(file).unwrap();
+        }
+        let mut file_map = HashMap::new();
+        file_map.insert(
+            "x".to_string(),
+            [
+                "libs/x/src/a.ts",
+                "libs/x/src/nested/b.ts",
+                "libs/x/other.ts",
+            ]
+            .iter()
+            .map(|file| FileData {
+                file: (*file).into(),
+                hash: Default::default(),
+            })
+            .collect::<Vec<_>>(),
+        );
+
+        for entry in [
+            "libs/x/src",
+            "libs/x/src/",
+            "libs/x/src/**/*",
+            "libs/x/other.ts",
+        ] {
+            let entries = &[entry.to_string()];
+            let mut tracked: Vec<String> = collect_project_files("x", entries, &file_map)
+                .unwrap()
+                .into_iter()
+                .map(|data| data.file.clone())
+                .collect();
+            tracked.sort();
+            let from_disk = expand_files(temp.path(), entries).unwrap().files;
+            assert_eq!(tracked, from_disk, "{entry}");
+        }
+    }
+
     #[test]
     fn test_collect_files() {
         let proj_name = "test_project";
