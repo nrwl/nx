@@ -6,6 +6,7 @@ import { terminalLink } from './terminal-link';
 import * as pc from 'picocolors';
 
 export const NX_CLOUD_URL = 'https://nx.dev/nx-cloud';
+export const NX_CLOUD_DEMO_URL = 'https://cloud.nx.app/demo/intro';
 
 /**
  * Clickable Nx Cloud marketing link for cloud prompt footers. The visible text
@@ -15,8 +16,19 @@ export const NX_CLOUD_URL = 'https://nx.dev/nx-cloud';
  * different commands.
  */
 export function nxCloudHyperlink(utmContent: string): string {
-  const tracked = `${NX_CLOUD_URL}?utm_source=nx-cli&utm_medium=cli&utm_campaign=nx-cloud-connect&utm_content=${utmContent}`;
-  return terminalLink(NX_CLOUD_URL, tracked);
+  return trackedHyperlink(NX_CLOUD_URL, utmContent);
+}
+
+/** Same as `nxCloudHyperlink`, pointing at the Nx Cloud demo (CLOUD-4640). */
+export function nxCloudDemoHyperlink(utmContent: string): string {
+  return trackedHyperlink(NX_CLOUD_DEMO_URL, utmContent);
+}
+
+function trackedHyperlink(url: string, utmContent: string): string {
+  return terminalLink(
+    url,
+    `${url}?utm_source=nx-cli&utm_medium=cli&utm_campaign=nx-cloud-connect&utm_content=${utmContent}`
+  );
 }
 
 /**

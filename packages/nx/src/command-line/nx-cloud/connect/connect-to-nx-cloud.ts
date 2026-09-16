@@ -19,6 +19,7 @@ import {
   MessageOptionKey,
   recordStat,
   messages,
+  nxCloudDemoHyperlink,
   nxCloudHyperlink,
 } from '../../../utils/ab-testing';
 import { nxVersion } from '../../../utils/versions';
@@ -313,7 +314,11 @@ async function nxCloudPrompt(
   const { message, choices, initial, footer, hint } = messages.getPrompt(key);
 
   // No separate footer/hint slot, so both are folded into the message.
-  const suffix = [hint, footer && `${footer} ${nxCloudHyperlink(utmContent)}`]
+  const suffix = [
+    hint,
+    footer && `${footer} ${nxCloudHyperlink(utmContent)}`,
+    `See it in action: ${nxCloudDemoHyperlink(utmContent)}`,
+  ]
     .filter(Boolean)
     .map((t) => pc.dim(t));
 
