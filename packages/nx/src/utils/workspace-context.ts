@@ -1,14 +1,39 @@
-import type { NxWorkspaceFilesExternals, WorkspaceContext } from '../native';
+import type {
+  ChangeBatch,
+  NxWorkspaceFilesExternals,
+  WatchEvent,
+  WorkspaceContext,
+  WorkspaceContextOptions,
+} from '../native';
 import { performance } from 'perf_hooks';
 import { workspaceDataDirectoryForWorkspace } from './cache-directory';
 import { isOnDaemon } from '../daemon/is-on-daemon';
 import { daemonClient } from '../daemon/client/client';
 import { handleImport } from './handle-import';
 
+export type WorkspaceChangesListener = (
+  err: string | null,
+  batch: ChangeBatch | null
+) => void;
+export type WatchEventsListener = (
+  err: string | null,
+  events: WatchEvent[] | null
+) => void;
+
 let workspaceContext: WorkspaceContext | undefined;
 let filesReady: Promise<void> | undefined;
+// Survive a reset: the daemon tears its context down and lets the next read
+// recreate it, and that context must watch and report like the one before.
+let contextOptions: WorkspaceContextOptions | undefined;
+let contextRoot: string | undefined;
+let contextGeneration = 0;
+const changeListeners = new Set<WorkspaceChangesListener>();
+const eventListeners = new Set<WatchEventsListener>();
 
-export function setupWorkspaceContext(workspaceRoot: string) {
+export function setupWorkspaceContext(
+  workspaceRoot: string,
+  options?: WorkspaceContextOptions
+) {
   const { WorkspaceContext } =
     require('../native') as typeof import('../native');
   performance.mark('workspace-context');
@@ -16,9 +41,15 @@ export function setupWorkspaceContext(workspaceRoot: string) {
   // A plugin worker is only asked for files after its host finished walking
   // and wrote the archive, so it loads that rather than walking again.
   workspaceContext = (global as any).NX_PLUGIN_WORKER
-    ? WorkspaceContext.fromArchive(workspaceRoot, cacheDir)
-    : new WorkspaceContext(workspaceRoot, cacheDir);
+    ? WorkspaceContext.fromArchive(workspaceRoot, cacheDir, options)
+    : new WorkspaceContext(workspaceRoot, cacheDir, options);
+  contextOptions = options;
+  contextRoot = workspaceRoot;
+  contextGeneration++;
   filesReady = undefined;
+  if (options?.watch) {
+    attachSubscribers();
+  }
   performance.mark('workspace-context:end');
   performance.measure(
     'workspace context init',
@@ -151,16 +182,107 @@ export async function getAllFileDataInContext(workspaceRoot: string) {
 }
 
 /**
- * Re-walk the workspace and report what changed against the map the context is
- * holding, adopting the fresh map. Used to recover after the kernel dropped
- * watch events, so the per-path stream cannot be trusted complete.
+ * Re-walk the workspace and report what changed against the files the context
+ * is holding, adopting the fresh files. For a caller that learned on its own
+ * that reported changes were incomplete; the context's own watcher recovers
+ * from its dropped events without help.
  *
  * Daemon-only: it mutates the context in place, which is safe only where the
  * context is the single source of truth for watched state.
  */
-export function rescanAndDiffInContext(workspaceRoot: string) {
+export function rescanAndDiffInContext(workspaceRoot: string): ChangeBatch {
   ensureContextAvailable(workspaceRoot);
   return workspaceContext.rescanAndDiff();
+}
+
+/**
+ * Listens for the changes a watching context applies: each change reaches the
+ * listeners once, here or in `settleWorkspaceContext`, whichever takes it
+ * first. Any number of listeners may listen. Returns a function that stops
+ * this one.
+ */
+export function subscribeToWorkspaceChanges(
+  workspaceRoot: string,
+  listener: WorkspaceChangesListener
+): () => void {
+  changeListeners.add(listener);
+  ensureContextAvailable(workspaceRoot);
+  attachSubscribers();
+  return () => changeListeners.delete(listener);
+}
+
+/**
+ * Applies every change the watcher has delivered, waiting out the kernel hop,
+ * and takes every change applied and not yet handed out. Empty when the
+ * context is not watching.
+ */
+export function settleWorkspaceContext(workspaceRoot: string): ChangeBatch {
+  ensureContextAvailable(workspaceRoot);
+  return workspaceContext.settle();
+}
+
+/**
+ * Takes every change applied and not yet handed out, without waiting for the
+ * watcher: for a caller that has just applied changes itself.
+ */
+export function takeAppliedWorkspaceChanges(
+  workspaceRoot: string
+): ChangeBatch {
+  ensureContextAvailable(workspaceRoot);
+  return workspaceContext.takeAppliedChanges();
+}
+
+export function isWatchingWorkspaceContext(): boolean {
+  return !!contextOptions?.watch;
+}
+
+/**
+ * Listens for every event the context's watch delivers, including writes
+ * under ignored directories and the `rescan` marker. Any number of listeners
+ * may listen. Returns a function that stops this one.
+ */
+export function subscribeToWatchEvents(
+  workspaceRoot: string,
+  listener: WatchEventsListener
+): () => void {
+  eventListeners.add(listener);
+  ensureContextAvailable(workspaceRoot);
+  attachSubscribers();
+  return () => eventListeners.delete(listener);
+}
+
+function isEmptyBatch(batch: ChangeBatch): boolean {
+  return (
+    batch.createdFiles.length === 0 &&
+    batch.updatedFiles.length === 0 &&
+    batch.deletedFiles.length === 0
+  );
+}
+
+/**
+ * The native context takes one subscriber per stream; it fans out here. A
+ * delivery a replaced context had already queued does not reach listeners as
+ * if it came from the current one.
+ */
+function attachSubscribers() {
+  if (!workspaceContext || !contextOptions?.watch) return;
+  const generation = contextGeneration;
+  const current = () => generation === contextGeneration;
+  workspaceContext.onChanges((err, batch) => {
+    if (!current() || (!err && (!batch || isEmptyBatch(batch)))) return;
+    for (const listener of changeListeners) listener(err, batch);
+  });
+  workspaceContext.onWatchEvents((err, events) => {
+    if (!current()) return;
+    for (const listener of eventListeners) listener(err, events);
+  });
+}
+
+export function stopWatchingWorkspaceContext() {
+  changeListeners.clear();
+  eventListeners.clear();
+  contextOptions = undefined;
+  workspaceContext?.stopWatching();
 }
 
 export async function getFilesInDirectoryUsingContext(
@@ -223,11 +345,17 @@ export function refreshWorkspaceContext(workspaceRoot: string) {
 
 function ensureContextAvailable(workspaceRoot: string) {
   if (!workspaceContext || workspaceContext?.workspaceRoot !== workspaceRoot) {
-    setupWorkspaceContext(workspaceRoot);
+    setupWorkspaceContext(workspaceRoot, contextOptions);
   }
 }
 
 export function resetWorkspaceContext() {
+  workspaceContext?.stopWatching?.();
   workspaceContext = undefined;
   filesReady = undefined;
+  // A watching context is the daemon's only watch; left for the next read to
+  // re-create, output and dotenv events in between would be lost.
+  if (contextOptions?.watch && contextRoot) {
+    setupWorkspaceContext(contextRoot, contextOptions);
+  }
 }

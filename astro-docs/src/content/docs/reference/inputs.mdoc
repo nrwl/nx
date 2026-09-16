@@ -78,8 +78,10 @@ These tokens behave differently when dealing with nested projects:
 
 For example, in a structure like `packages/parent/nested-child/`, using `{projectRoot}/**/*` for the `parent` project will exclude files from `nested-child`, while `{workspaceRoot}/packages/parent/**/*` will include them.
 
-{% aside type="tip" title="Gitignored Files Are Excluded" %}
-Files listed in `.gitignore` are automatically excluded from inputs. Nx will not consider gitignored files when computing the hash for tasks; therefore, changes to ignored files will not invalidate the cache.
+{% aside type="tip" title="Gitignored files are excluded by default" %}
+Nx leaves files listed in `.gitignore` out of a task's inputs, so a change to one of them doesn't invalidate the cache.
+To include such files anyway, add `includeIgnored: true` to the fileset.
+See [gitignored files](#gitignored-files).
 {% /aside %}
 
 Prefixing a source file input with `!` will exclude the files matching the pattern from the set of files used to calculate the hash.
@@ -107,6 +109,41 @@ By default, Nx will use all files in a project as well as all files in the proje
 This may cause Nx to rerun some tasks even when files irrelevant to the task have changed but it ensures that by default, Nx always re-runs the task when it should.
 
 To get a better idea of how to use inputs, you can browse some [common input sets](/docs/kb/configure-inputs#common-inputs).
+
+### Gitignored files
+
+A fileset only sees files that `.gitignore` and `.nxignore` don't exclude.
+A gitignored or generated file, such as a downloaded schema or a generated client, can't be an input that way.
+Add `includeIgnored: true` to match files on disk, whether Git tracks them or not:
+
+```jsonc
+{
+  "inputs": [
+    { "fileset": "{projectRoot}/generated/**/*.json", "includeIgnored": true },
+    {
+      "fileset": "!{projectRoot}/generated/**/*.local.json",
+      "includeIgnored": true,
+    },
+    {
+      "fileset": "{workspaceRoot}/openapi.generated.json",
+      "includeIgnored": true,
+    },
+  ],
+}
+```
+
+`{projectRoot}` and `{workspaceRoot}` resolve as for any fileset, and every glob must start with one of them.
+Nx checks the matched files on every run, so keep the globs narrow.
+A glob such as `{workspaceRoot}/**` is allowed, but it covers every gitignored file in the workspace, so the task's inputs change whenever any of them does.
+A new matching file counts without a configuration change, and a path that names a directory matches everything under it.
+A path can name a file that doesn't exist yet: the cache key changes when the file appears or is removed.
+
+A `!` negation with `includeIgnored: true` filters every `includeIgnored` glob declared for the same project.
+Without the flag it's a normal fileset and doesn't affect them.
+A negation with nothing to filter is a configuration error, and a negation can't be combined with `dependencies: true`.
+
+A glob never walks into `node_modules`, `.git`, `.nx/cache`, `.nx/workspace-data`, or `.yarn/cache` unless it names a path inside one of them.
+Symlinks aren't followed, except a symlinked file whose target is inside the workspace, and a glob that resolves outside the workspace is a configuration error.
 
 ### JSON files
 

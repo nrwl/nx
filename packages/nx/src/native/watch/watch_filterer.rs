@@ -33,6 +33,12 @@ pub struct WatchFilterer {
 }
 
 impl WatchFilterer {
+    /// Whether the policy admits `path` (absolute, under the origin) as a file
+    /// or a directory, independent of any event.
+    pub(crate) fn admits(&self, path: &std::path::Path, is_dir: bool) -> bool {
+        self.filter_path(path, is_dir)
+    }
+
     fn filter_path(&self, path: &std::path::Path, is_dir: bool) -> bool {
         let path = dunce::simplified(path);
 
@@ -99,7 +105,7 @@ impl WatchFilterer {
     }
 
     /// Check whether a watch event should be passed through.
-    pub fn check_event(&self, event: &RawWatchEvent) -> bool {
+    pub(super) fn check_event(&self, event: &RawWatchEvent) -> bool {
         trace!(event = ?event.event, "checking if event is valid");
 
         // Check event kind — only allow file-relevant event types.
@@ -149,7 +155,7 @@ impl WatchFilterer {
     }
 }
 
-pub(super) fn create_filter(
+pub(crate) fn create_filter(
     origin: &str,
     additional_globs: &[String],
     use_ignore: bool,

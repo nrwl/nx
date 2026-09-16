@@ -104,6 +104,14 @@ export declare class HttpRemoteCache {
   store(hash: string, cacheDirectory: string, terminalOutput: string, code: number): Promise<boolean>
 }
 
+/**
+ * The hasher's handle on an index: lists only after catching up with the
+ * watch behind it.
+ */
+export declare class IgnoredIndexReader {
+
+}
+
 export declare class ImportResult {
   file: string
   sourceProject: string
@@ -204,7 +212,7 @@ export declare class TaskDetails {
 }
 
 export declare class TaskHasher {
-  constructor(workspaceRoot: string, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<Record<string, Array<FileData>>>, allWorkspaceFiles: ExternalObject<Array<FileData>>, tsConfig: Buffer, tsConfigPaths: Record<string, Array<string>>, rootTsconfigPath?: string | undefined | null, options?: HasherOptions | undefined | null)
+  constructor(workspaceRoot: string, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<Record<string, Array<FileData>>>, allWorkspaceFiles: ExternalObject<Array<FileData>>, tsConfig: Buffer, tsConfigPaths: Record<string, Array<string>>, rootTsconfigPath: string | undefined | null, options: HasherOptions | undefined | null, ignoredIndex: ExternalObject<IgnoredIndexReader>)
   /**
    * Hash each task's instructions using the env map keyed by `task.id`.
    * Every task in `hash_plans` must have an entry in `per_task_envs` —
@@ -215,9 +223,12 @@ export declare class TaskHasher {
    */
   hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, perTaskEnvs: Record<string, Record<string, string>>, cwd: string, collectTaskInputs?: boolean | undefined | null): Record<string, HashDetails>
   /**
-   * Like `hash_plans`, but only for the plans that hold no output of another
-   * task. The rest are left out and hash once those tasks have run; their
-   * ids are absent from the result and need no entry in `per_task_envs`.
+   * Like `hash_plans`, but only for the plans the planner did not defer
+   * (`HashPlans::deferred`: a task that reads another task's outputs, or a
+   * disk-backed fileset whose directory contains, or sits inside, an
+   * upstream task's output). The rest are left out and hash once those
+   * tasks have run; their ids are absent from the result and need no entry
+   * in `per_task_envs`.
    */
   hashPlansUpfront(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, perTaskEnvs: Record<string, Record<string, string>>, cwd: string, collectTaskInputs?: boolean | undefined | null): Record<string, HashDetails>
   /**
@@ -240,37 +251,25 @@ export declare class TaskInvocationTracker {
   cleanupStale(): void
 }
 
-export declare class Watcher {
-  origin: string
-  /**
-   * Always applies HARDCODED_IGNORE_PATTERNS plus watcher-specific
-   * patterns (vite/vitest timestamp files), regardless of `use_ignore`.
-   */
-  constructor(origin: string, additionalGlobs?: Array<string> | undefined | null, useIgnore?: boolean | undefined | null)
-  watch(callbackTsfn: (err: string | null, events: WatchEvent[]) => void): void
-  stop(): Promise<void>
-  /**
-   * Synchronously drains the accumulator. Used by the daemon before
-   * serving a cached project graph so events buffered inside the
-   * IDLE_WINDOW debounce don't go missing. Returns an empty vec if
-   * the watcher hasn't started, the loop has exited, or no events
-   * are buffered.
-   */
-  forceFlushPending(): Array<WatchEvent>
-}
-
 export declare class WorkspaceContext {
   workspaceRoot: string
-  constructor(workspaceRoot: string, cacheDir: string)
+  constructor(workspaceRoot: string, cacheDir: string, options?: WorkspaceContextOptions | undefined | null)
   /**
    * Loads the files the last walk recorded instead of walking. For a
    * process whose host already walked, such as a plugin worker.
    */
-  static fromArchive(workspaceRoot: string, cacheDir: string): WorkspaceContext
+  static fromArchive(workspaceRoot: string, cacheDir: string, options?: WorkspaceContextOptions | undefined | null): WorkspaceContext
+  /**
+   * Bumped once per applied batch that changed anything. Equal values
+   * mean equal files, so a consumer that remembers the value it computed
+   * from can skip recomputing.
+   */
+  changeSeq(): number
   /**
    * Walks the workspace again into this context, so it and the archive
    * include writes made since the last walk. Does nothing while a walk is
-   * in progress. Await `ready()` before reading.
+   * in progress. Await `ready()` before reading. What the walk finds
+   * changed goes to the subscriber.
    */
   refresh(): boolean
   /**
@@ -292,17 +291,53 @@ export declare class WorkspaceContext {
   multiGlob(globs: Array<string>, exclude?: Array<string> | undefined | null): Array<Array<string>>
   hashFilesMatchingGlobs(globGroups: Array<Array<string>>): Array<string>
   hashFilesMatchingGlob(globs: Array<string>, exclude?: Array<string> | undefined | null): string
-  incrementalUpdate(updatedFiles: Array<string>, deletedFiles: Array<string>): Record<string, string>
+  /**
+   * Applies changes a caller learned of on its own. Waits through a walk in
+   * progress so the answer reflects them. Returns what really changed; the
+   * batch is not published to subscribers.
+   */
+  incrementalUpdate(updatedFiles: Array<string>, deletedFiles: Array<string>): ChangeBatch
   updateProjectFiles(projectRootMappings: Record<string, string>, projectFiles: ExternalObject<Record<string, Array<FileData>>>, globalFiles: ExternalObject<Array<FileData>>, updatedFiles: Record<string, string>, deletedFiles: Array<string>): UpdatedWorkspaceFiles
   allFileData(): Array<FileData>
   /**
    * Recover from dropped watch events: re-walk, and report what changed
-   * against the map this context was holding. The fresh map is adopted, so
-   * the caller only has to feed the returned changes through its normal
-   * recomputation path.
+   * against the files this context was holding. The fresh files are
+   * adopted, so the caller only has to feed the returned changes through
+   * its normal recomputation path; subscribers do not see them.
    */
-  rescanAndDiff(): RescanDiff
+  rescanAndDiff(): ChangeBatch
   getFilesInDirectory(directory: string): Array<string>
+  /**
+   * Subscribes to the context's changes: the callback is called whenever
+   * something was applied or delivered, with everything not yet taken by
+   * it or by `settle`. Replaces any earlier subscriber.
+   */
+  onChanges(callback: (err: string | null, batch: ChangeBatch) => void): void
+  /**
+   * Subscribes to every event the watch delivers, whether or not it
+   * concerns the files: writes under ignored directories included, and
+   * the `rescan` marker when the kernel dropped events. Replaces any
+   * earlier subscriber. Batches applied to the files are `onChanges`.
+   */
+  onWatchEvents(callback: (err: string | null, events: WatchEvent[]) => void): void
+  /**
+   * Applies everything the watch has delivered, waiting out the kernel hop,
+   * then takes every change applied and not yet taken, one entry per path
+   * at its latest state. The change subscriber takes from the same place,
+   * so no change is handed out twice.
+   */
+  settle(): ChangeBatch
+  /**
+   * Takes every change applied and not yet taken, without waiting for the
+   * watch: for a caller that just applied changes itself, through
+   * `incrementalUpdate` or `rescanAndDiff`.
+   */
+  takeAppliedChanges(): ChangeBatch
+  /**
+   * Stops the watcher and forgets the subscribers. The files stay as they
+   * were; reads no longer pull anything in.
+   */
+  stopWatching(): void
 }
 
 export interface BatchInfo {
@@ -335,6 +370,20 @@ export interface CacheStat {
 export declare function canInstallNxConsole(): Promise<boolean>
 
 export declare function canInstallNxConsoleForEditor(editor: SupportedEditor): Promise<boolean>
+
+/**
+ * What one application of changes did to the files. `seq` is the context's
+ * change sequence afterwards; it is unchanged, and the lists empty, when
+ * nothing the batch reported was really different. A path can reach a
+ * consumer in more than one batch (see `settle`): the one with the higher
+ * `seq` holds its later state.
+ */
+export interface ChangeBatch {
+  seq: number
+  createdFiles: Array<FileData>
+  updatedFiles: Array<FileData>
+  deletedFiles: Array<string>
+}
 
 export declare function closeDbConnection(connection: ExternalObject<NxDbConnection>): void
 
@@ -403,6 +452,9 @@ export declare const enum EventType {
   rescan = 'rescan'
 }
 
+/** The files an `includeIgnored` fileset group matches on disk, sorted. */
+export declare function expandFilesInput(workspaceRoot: string, globs: Array<string>): Array<string>
+
 export declare function expandOutputs(directory: string, entries: Array<string>): Array<string>
 
 export interface ExternalDependenciesInput {
@@ -428,6 +480,11 @@ export interface FileMap {
 export interface FileSetInput {
   fileset: string
   dependencies?: boolean
+  /**
+   * Hash the glob straight from disk (so gitignored/generated files count)
+   * instead of the workspace file map.
+   */
+  includeIgnored?: boolean
 }
 
 export declare function findImports(projectFileMap: Record<string, Array<string>>): Array<ImportResult>
@@ -667,6 +724,7 @@ export interface NxWorkspaceFilesExternals {
   projectFiles: ExternalObject<Record<string, Array<FileData>>>
   globalFiles: ExternalObject<Array<FileData>>
   allWorkspaceFiles: ExternalObject<Array<FileData>>
+  ignoredIndex: ExternalObject<IgnoredIndexReader>
 }
 
 export declare function parseTaskStatus(stringStatus: string): TaskStatus
@@ -724,13 +782,6 @@ export interface ProjectGraph {
 }
 
 export declare function remove(src: string): void
-
-/** What a rescan re-walk found had changed while the watcher was not being told. */
-export interface RescanDiff {
-  createdFiles: Array<FileData>
-  updatedFiles: Array<FileData>
-  deletedFiles: Array<string>
-}
 
 export declare function restoreTerminal(): void
 
@@ -899,6 +950,21 @@ export interface WatchEvent {
 
 export interface WorkingDirectoryInput {
   workingDirectory: string
+}
+
+export interface WorkspaceContextOptions {
+  /**
+   * Keep the files current from a watcher the context owns. Watching
+   * starts before the scan, so nothing written after construction is
+   * missed. Off by default; ignored on wasm, which has no watcher.
+   */
+  watch?: boolean
+  /**
+   * Extra globs the watch applies on top of the hardcoded ignores. A
+   * leading `!` admits a hardcoded-ignored path into the event stream
+   * (never into the files), as the daemon does for its own process file.
+   */
+  watchGlobs?: Array<string>
 }
 
 /** Public NAPI error codes that are for Node */

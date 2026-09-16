@@ -171,6 +171,15 @@ fn is_hashable_file(file_type: &std::fs::FileType) -> bool {
 
 /// Hardcoded ignore patterns used by both the walker and the watcher.
 /// These are directories that should never be walked or watched.
+/// Files vite and vitest write and remove while they load a config. The
+/// watch never reports them, so a walk that feeds a hash skips them too.
+pub(crate) const TRANSIENT_FILE_GLOBS: &[&str] = &[
+    "vitest.config.ts.timestamp*.mjs",
+    "vite.config.ts.timestamp*.mjs",
+    "vitest.config.mts.timestamp*.mjs",
+    "vite.config.mts.timestamp*.mjs",
+];
+
 pub(crate) const HARDCODED_IGNORE_PATTERNS: &[&str] = &[
     "**/node_modules",
     "**/.git",

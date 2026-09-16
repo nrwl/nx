@@ -100,9 +100,9 @@ vi.doMock(workspaceContextPath, async () => {
       return actual[name](root, ...rest);
     };
   return {
-    setupWorkspaceContext: (root: string) => {
+    setupWorkspaceContext: (root: string, ...rest: any[]) => {
       if (root === realWorkspaceRoot) return;
-      return actual.setupWorkspaceContext(root);
+      return actual.setupWorkspaceContext(root, ...rest);
     },
     refreshWorkspaceContext: guarded(
       'refreshWorkspaceContext',
@@ -141,10 +141,30 @@ vi.doMock(workspaceContextPath, async () => {
     // Guarded like its siblings: a rescan against the real workspace root would
     // re-walk this repo. Specs that exercise it point at a TempFs root.
     rescanAndDiffInContext: guarded('rescanAndDiffInContext', () => ({
+      seq: 0,
       createdFiles: [],
       updatedFiles: [],
       deletedFiles: [],
     })),
+    subscribeToWorkspaceChanges: guarded(
+      'subscribeToWorkspaceChanges',
+      () => undefined
+    ),
+    subscribeToWatchEvents: guarded('subscribeToWatchEvents', () => undefined),
+    settleWorkspaceContext: guarded('settleWorkspaceContext', () => ({
+      seq: 0,
+      createdFiles: [],
+      updatedFiles: [],
+      deletedFiles: [],
+    })),
+    takeAppliedWorkspaceChanges: guarded('takeAppliedWorkspaceChanges', () => ({
+      seq: 0,
+      createdFiles: [],
+      updatedFiles: [],
+      deletedFiles: [],
+    })),
+    isWatchingWorkspaceContext: realFn('isWatchingWorkspaceContext'),
+    stopWatchingWorkspaceContext: realFn('stopWatchingWorkspaceContext'),
     getFilesInDirectoryUsingContext: guarded(
       'getFilesInDirectoryUsingContext',
       () => Promise.resolve([])
@@ -160,13 +180,17 @@ const nativePath = nxSrcPath('native');
 vi.doMock(nativePath, async () => {
   const actual = await vi.importActual<any>(nativePath);
   const RealWorkspaceContext = actual.WorkspaceContext;
-  function GuardedWorkspaceContext(root: string, cacheDir: string) {
+  function GuardedWorkspaceContext(
+    root: string,
+    cacheDir: string,
+    ...rest: any[]
+  ) {
     if (root === realWorkspaceRoot) {
       throw new Error(
         '[vitest-setup] WorkspaceContext constructed with the real workspace root'
       );
     }
-    return new RealWorkspaceContext(root, cacheDir);
+    return new RealWorkspaceContext(root, cacheDir, ...rest);
   }
   GuardedWorkspaceContext.prototype = RealWorkspaceContext.prototype;
   const guardDirArg = (fn: any, fallback: any) =>

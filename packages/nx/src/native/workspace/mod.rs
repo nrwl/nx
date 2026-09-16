@@ -8,6 +8,7 @@ pub mod context;
 mod errors;
 mod files_archive;
 mod files_hashing;
+pub mod ignored_index;
 pub mod types;
 pub mod workspace_files;
 
@@ -26,5 +27,6 @@ pub fn __test_only_transfer_file_map(
         project_files: External::new(Arc::new(project_files)),
         global_files: External::new(Arc::new(non_project_files)),
         all_workspace_files: External::new(Arc::new(all_workspace_files)),
+        ignored_index: External::new(Arc::new(ignored_index::IgnoredIndexReader::unwatched())),
     }
 }
