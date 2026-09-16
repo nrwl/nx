@@ -45,6 +45,13 @@ export interface AdaptedSpawn {
   commandLineLength?: number;
 }
 
+export function withinCommandLineBudget(adapted: AdaptedSpawn): boolean {
+  return (
+    adapted.commandLineLength === undefined ||
+    adapted.commandLineLength <= WINDOWS_COMMAND_LINE_BUDGET
+  );
+}
+
 /**
  * Node's `spawn` cannot directly execute `.cmd` / `.bat` shims on Windows;
  * `which` resolves to those when an agent was installed via npm. Wrap them in

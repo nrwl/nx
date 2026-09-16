@@ -29,6 +29,7 @@ import {
   adaptSpawnForWindowsShim,
   WINDOWS_COMMAND_LINE_BUDGET,
   WINDOWS_COMMAND_LINE_LIMIT,
+  withinCommandLineBudget,
 } from './windows-cmd';
 
 /**
@@ -206,13 +207,6 @@ function adaptWithinCommandLineBudget(
   });
   throw new Error(
     `Cannot start ${detected.displayName}: the command line exceeds the Windows limit.`
-  );
-}
-
-function withinCommandLineBudget(adapted: AdaptedSpawn): boolean {
-  return (
-    adapted.commandLineLength === undefined ||
-    adapted.commandLineLength <= WINDOWS_COMMAND_LINE_BUDGET
   );
 }
 

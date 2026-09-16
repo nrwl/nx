@@ -26,6 +26,7 @@ import {
   adaptSpawnForWindowsShim,
   WINDOWS_COMMAND_LINE_BUDGET,
   WINDOWS_COMMAND_LINE_LIMIT,
+  withinCommandLineBudget,
 } from '../windows-cmd';
 import { buildMasterInvocation } from './invocations';
 
@@ -303,10 +304,7 @@ function assertWithinWindowsCommandLineBudget(
   agent: DetectedInstalledAgent,
   runId: string
 ): void {
-  if (
-    adapted.commandLineLength === undefined ||
-    adapted.commandLineLength <= WINDOWS_COMMAND_LINE_BUDGET
-  ) {
+  if (withinCommandLineBudget(adapted)) {
     return;
   }
   throw new Error(
