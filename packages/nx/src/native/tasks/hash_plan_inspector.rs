@@ -5,7 +5,6 @@ use crate::native::tasks::hashers::{
 use crate::native::tasks::task_hasher::{HashInputs, HashInputsBuilder};
 use crate::native::tasks::types::{HashInstruction, HashPlans};
 use crate::native::types::FileData;
-use crate::native::walker::files_under;
 use hashbrown::HashSet;
 use napi::bindgen_prelude::External;
 use rayon::prelude::*;
@@ -173,9 +172,10 @@ impl HashPlanInspector {
                 let expansion = expand_globs(
                     workspace_root,
                     globs,
-                    &Source::fileset(&|path| self.tracked().contains(path), &|dir, accept| {
-                        files_under(workspace_root, dir, true, accept)
-                    }),
+                    &Source::fileset_reading_disk(
+                        &|path| self.tracked().contains(path),
+                        workspace_root,
+                    ),
                 )?;
                 Ok(HashInputsBuilder {
                     files: expansion.files.into_iter().collect(),

@@ -27,13 +27,57 @@ pub(crate) enum Reach {
     WhereverItPoints,
 }
 
-/// Asks what a directory holds: given a workspace-relative directory and a
-/// predicate, the files under it the predicate admits, sorted. `None` when
-/// the directory cannot be read. The index answers this, from a listing it
-/// keeps or from the disk; the expansion never reads a directory itself.
-pub(crate) type FilesUnderFn<'a> =
-    dyn Fn(&str, &(dyn Fn(&str) -> bool + Sync)) -> Option<Vec<String>> + Sync + 'a;
-pub(crate) type FilesUnder<'a> = &'a FilesUnderFn<'a>;
+/// Something that can say what a directory holds. The ignored index answers
+/// from a listing it keeps or from the disk; the walker always reads the
+/// disk. The expansion never reads a directory itself, it asks one of these.
+pub(crate) trait DirectoryFiles: Sync {
+    /// The files under `dir` that `accept` admits, workspace-relative.
+    /// `None` when the directory cannot be read at all. `accept` is passed
+    /// so the answer can be filtered while it is gathered, not afterwards.
+    fn files_under(&self, dir: &str, accept: &(dyn Fn(&str) -> bool + Sync))
+    -> Option<Vec<String>>;
+}
+
+impl DirectoryFiles for &dyn DirectoryFiles {
+    fn files_under(
+        &self,
+        dir: &str,
+        accept: &(dyn Fn(&str) -> bool + Sync),
+    ) -> Option<Vec<String>> {
+        (**self).files_under(dir, accept)
+    }
+}
+
+/// Reads the disk every time, for a caller with no index behind it.
+pub(crate) struct DiskFiles<'a> {
+    pub workspace_root: &'a Path,
+    /// False for a declared output, which may point outside the workspace.
+    pub confine: bool,
+}
+
+impl DirectoryFiles for DiskFiles<'_> {
+    fn files_under(
+        &self,
+        dir: &str,
+        accept: &(dyn Fn(&str) -> bool + Sync),
+    ) -> Option<Vec<String>> {
+        files_under(self.workspace_root, dir, self.confine, accept)
+    }
+}
+
+/// So a caller can pass a closure where a named type would be ceremony.
+impl<F> DirectoryFiles for F
+where
+    F: Fn(&str, &(dyn Fn(&str) -> bool + Sync)) -> Option<Vec<String>> + Sync,
+{
+    fn files_under(
+        &self,
+        dir: &str,
+        accept: &(dyn Fn(&str) -> bool + Sync),
+    ) -> Option<Vec<String>> {
+        self(dir, accept)
+    }
+}
 
 /// For a caller with no workspace context: every path is checked on disk.
 pub(crate) const NOTHING_KNOWN: &(dyn Fn(&str) -> bool + Sync) = &|_| false;
@@ -44,8 +88,8 @@ pub(crate) struct Source<'a> {
     /// Whether the workspace context already tracks a path. A path it
     /// vouches for needs no stat.
     known: &'a (dyn Fn(&str) -> bool + Sync),
-    /// What a directory holds, see `FilesUnder`.
-    files_under: Box<FilesUnderFn<'a>>,
+    /// What a directory holds, see `DirectoryFiles`.
+    files_under: Box<dyn DirectoryFiles + 'a>,
     reach: Reach,
 }
 
@@ -55,7 +99,7 @@ impl<'a> Source<'a> {
     /// workspace.
     pub(crate) fn fileset(
         known: &'a (dyn Fn(&str) -> bool + Sync),
-        files_under: FilesUnder<'a>,
+        files_under: &'a dyn DirectoryFiles,
     ) -> Self {
         Self {
             known,
@@ -64,25 +108,36 @@ impl<'a> Source<'a> {
         }
     }
 
-    /// A fileset for a caller with no workspace context: every directory is
-    /// walked and every path checked on disk.
-    pub(crate) fn fileset_from_disk(workspace_root: &'a Path) -> Self {
+    /// A fileset read straight from disk, with no index to ask.
+    pub(crate) fn fileset_reading_disk(
+        known: &'a (dyn Fn(&str) -> bool + Sync),
+        workspace_root: &'a Path,
+    ) -> Self {
         Self {
-            known: NOTHING_KNOWN,
-            files_under: Box::new(move |dir, accept| {
-                files_under(workspace_root, dir, true, accept)
+            known,
+            files_under: Box::new(DiskFiles {
+                workspace_root,
+                confine: true,
             }),
             reach: Reach::InsideWorkspace,
         }
     }
 
+    /// The same, for a caller with no workspace context either.
+    pub(crate) fn fileset_from_disk(workspace_root: &'a Path) -> Self {
+        Self::fileset_reading_disk(NOTHING_KNOWN, workspace_root)
+    }
+
     /// A dependency's declared outputs. They were written by a task that has
     /// run, so the file map predates them and nothing is taken as known, and
     /// they are read wherever they point.
-    pub(crate) fn declared_outputs(files_under: FilesUnder<'a>) -> Self {
+    pub(crate) fn declared_outputs(workspace_root: &'a Path) -> Self {
         Self {
             known: NOTHING_KNOWN,
-            files_under: Box::new(files_under),
+            files_under: Box::new(DiskFiles {
+                workspace_root,
+                confine: false,
+            }),
             reach: Reach::WhereverItPoints,
         }
     }
@@ -202,7 +257,7 @@ pub(crate) fn expand_entries(
         } else {
             Box::new(move |path: &str| !excluded(path))
         };
-        if let Some(under) = files_under(root, &*accept) {
+        if let Some(under) = files_under.files_under(root, &*accept) {
             // Filtered again: a source is asked to apply `accept` so it can
             // skip work, not trusted to have done it.
             found.extend(under.into_iter().filter(|path| accept(path)));

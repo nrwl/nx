@@ -21,7 +21,6 @@ use expansion::{NOTHING_KNOWN, parse_group, validate_files_glob};
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
-    use crate::native::walker::files_under;
     use anyhow::Result;
     use assert_fs::TempDir;
     use assert_fs::prelude::*;
@@ -45,9 +44,7 @@ pub(crate) mod tests {
         expand_globs(
             workspace_root,
             globs,
-            &Source::fileset(known, &|dir, accept| {
-                files_under(workspace_root, dir, true, accept)
-            }),
+            &Source::fileset_reading_disk(known, workspace_root),
         )
     }
 

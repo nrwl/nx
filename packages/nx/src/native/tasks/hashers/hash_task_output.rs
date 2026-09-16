@@ -7,7 +7,6 @@ use super::disk_expansion::{
 };
 use super::hash_ignored_files::hash_files;
 use crate::native::glob::{build_glob_set, literal_prefix};
-use crate::native::walker::files_under;
 use crate::native::workspace::ignored_index::IgnoredIndex;
 
 /// Result of hashing task output files, including the matched file paths
@@ -33,9 +32,7 @@ pub fn expand_task_outputs(
             workspace_root,
             &positives,
             &negations,
-            &Source::declared_outputs(&|dir, accept| {
-                files_under(workspace_root, dir, false, accept)
-            }),
+            &Source::declared_outputs(workspace_root),
         )
     })?;
     let selected = build_glob_set(&[glob])?;
