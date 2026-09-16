@@ -568,6 +568,71 @@ mod tests {
         assert!(e.is_empty());
     }
 
+    /// The producer lookup rests on a TaskOutput embedding the producer's own
+    /// `outputs`, untransformed. Planned through the planner rather than built
+    /// by hand, so a transform added on the way into the instruction fails here
+    /// instead of silently unlinking every producer.
+    #[test]
+    fn a_planned_task_output_still_names_its_producer() {
+        use crate::native::project_graph::types::{Project, ProjectGraph, Target};
+        use crate::native::tasks::hash_planner::HashPlanner;
+        use crate::native::types::{DepsOutputsInput, NxJson};
+        use napi::bindgen_prelude::{Either9, External};
+
+        let target = |reads_outputs: bool| Target {
+            executor: None,
+            inputs: reads_outputs.then(|| {
+                vec![Either9::G(DepsOutputsInput {
+                    dependent_tasks_output_files: "**/*.js".into(),
+                    transitive: Some(false),
+                })]
+            }),
+            outputs: None,
+            options: None,
+            configurations: None,
+            parallelism: None,
+        };
+        let project = |root: &str, reads_outputs: bool| Project {
+            root: root.into(),
+            named_inputs: None,
+            tags: None,
+            targets: HashMap::from([("build".to_string(), target(reads_outputs))]),
+        };
+        let graph = ProjectGraph {
+            nodes: HashMap::from([
+                ("app".to_string(), project("apps/app", true)),
+                ("ui".to_string(), project("libs/ui", false)),
+            ]),
+            dependencies: HashMap::from([
+                ("app".to_string(), vec!["ui".to_string()]),
+                ("ui".to_string(), vec![]),
+            ]),
+            external_nodes: HashMap::new(),
+        };
+        let graph_of_tasks = || {
+            let app = Task::new("app", "build").with_outputs(strings(&["dist/apps/app"]));
+            let ui = Task::new("ui", "build").with_outputs(strings(&["dist/libs/ui"]));
+            TaskGraph {
+                roots: vec![app.id.clone()],
+                dependencies: HashMap::from([
+                    (app.id.clone(), vec![ui.id.clone()]),
+                    (ui.id.clone(), vec![]),
+                ]),
+                continuous_dependencies: HashMap::new(),
+                tasks: HashMap::from([(app.id.clone(), app), (ui.id.clone(), ui)]),
+            }
+        };
+        let planner = HashPlanner::new(
+            NxJson { named_inputs: None },
+            &External::new(Arc::new(graph)),
+        );
+        let plans = planner
+            .get_plans_internal(vec!["app:build", "ui:build"], graph_of_tasks())
+            .unwrap();
+        let e = compute_dependent_output_edges(&plans, &graph_of_tasks());
+        assert_eq!(e["app:build"], strings(&["ui:build"]));
+    }
+
     #[test]
     fn a_plan_reading_only_its_own_sources_has_no_edges() {
         let e = edges(
