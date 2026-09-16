@@ -40,7 +40,7 @@ impl HashPlanInspector {
         }
     }
 
-    /// The same source as TaskHasher::workspace_file_known, so both read a
+    /// The same source as TaskHasher::workspace_tracks_file, so both read a
     /// plan the same way.
     fn tracked(&self) -> &HashSet<String> {
         self.tracked_paths.get_or_init(|| {

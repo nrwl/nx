@@ -30,15 +30,16 @@ fn disk_files(workspace_root: &Path) -> DirectoryFiles<'_> {
 }
 
 /// For a caller with no workspace context: every path is checked on disk.
-pub(crate) const NOTHING_KNOWN: PathPredicate<'static> = &|_| false;
+pub(crate) const NOTHING_TRACKED: PathPredicate<'static> = &|_| false;
 
 /// What an expansion may lean on instead of the disk. The two callers differ
 /// only here. Either way a path is read wherever it points: a `dist` linked
 /// into a build cache holds the files a task wrote.
 pub(crate) struct Source<'a> {
-    /// Whether the workspace context already tracks a path. A path it
-    /// vouches for needs no stat.
-    known: PathPredicate<'a>,
+    /// Whether the file map already holds this exact path as a file, so it
+    /// needs no stat. A directory never answers yes: the file map holds only
+    /// files.
+    tracked_file: PathPredicate<'a>,
     /// What a directory holds, see `DirectoryFiles`.
     files_under: DirectoryFiles<'a>,
 }
@@ -47,33 +48,36 @@ impl<'a> Source<'a> {
     /// An `includeIgnored` fileset. It is hashed alongside tracked files, so
     /// the context can vouch for a path.
     pub(crate) fn fileset(
-        known: PathPredicate<'a>,
+        tracked_file: PathPredicate<'a>,
         files_under: impl Fn(&str, PathPredicate) -> Option<Vec<String>> + Sync + 'a,
     ) -> Self {
         Self {
-            known,
+            tracked_file,
             files_under: Box::new(files_under),
         }
     }
 
     /// A fileset read straight from disk, with no index to ask.
-    pub(crate) fn fileset_reading_disk(known: PathPredicate<'a>, workspace_root: &'a Path) -> Self {
+    pub(crate) fn fileset_reading_disk(
+        tracked_file: PathPredicate<'a>,
+        workspace_root: &'a Path,
+    ) -> Self {
         Self {
-            known,
+            tracked_file,
             files_under: disk_files(workspace_root),
         }
     }
 
     /// The same, for a caller with no workspace context either.
     pub(crate) fn fileset_from_disk(workspace_root: &'a Path) -> Self {
-        Self::fileset_reading_disk(NOTHING_KNOWN, workspace_root)
+        Self::fileset_reading_disk(NOTHING_TRACKED, workspace_root)
     }
 
     /// A dependency's declared outputs. They were written by a task that has
-    /// run, so the file map predates them and nothing is taken as known.
+    /// run, so the file map predates them and nothing is taken on trust.
     pub(crate) fn declared_outputs(workspace_root: &'a Path) -> Self {
         Self {
-            known: NOTHING_KNOWN,
+            tracked_file: NOTHING_TRACKED,
             files_under: disk_files(workspace_root),
         }
     }
@@ -120,9 +124,9 @@ pub(super) fn parse_group(globs: &[String]) -> Result<(Vec<Positive>, Vec<Negati
 /// Resolves already-split entries into the files they name. `source` says
 /// which of the two callers this is: a fileset, which may lean on the
 /// workspace context and an index, or declared outputs, which are taken
-/// straight from disk. A path the source vouches for needs no stat, a walked
-/// file it knows needs no stamp, and a directory it can list is taken from
-/// the list; any other is walked. Walks skip the same directories the
+/// straight from disk. The source shortens two steps here: `tracked_file`
+/// skips the stat on an exact path, and `files_under` may answer a directory
+/// from a listing instead of walking it. Walks skip the same directories the
 /// workspace walker never enters, but an exact path or a prefix inside one of
 /// them is read as-is.
 pub(crate) fn expand_entries(
@@ -131,14 +135,17 @@ pub(crate) fn expand_entries(
     negations: &[Negation],
     source: &Source,
 ) -> Result<FilesExpansion> {
-    let Source { known, files_under } = source;
+    let Source {
+        tracked_file,
+        files_under,
+    } = source;
 
     let mut found: Vec<String> = Vec::new();
     for entry in positives {
         let root = &entry.root;
         let remainder = entry.remainder.as_deref();
         let has_pattern = remainder.is_some();
-        if !has_pattern && known(root) {
+        if !has_pattern && tracked_file(root) {
             found.push(root.clone());
             continue;
         }

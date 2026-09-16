@@ -16,7 +16,7 @@ pub(crate) use expansion::{
     FilesExpansionCache, Source, expand_cached, expand_entries, expand_globs,
 };
 #[cfg(test)]
-use expansion::{NOTHING_KNOWN, parse_group, validate_files_glob};
+use expansion::{NOTHING_TRACKED, parse_group, validate_files_glob};
 
 #[cfg(test)]
 pub(crate) mod tests {
@@ -40,12 +40,12 @@ pub(crate) mod tests {
     fn expand_files_with(
         workspace_root: &Path,
         globs: &[String],
-        known: PathPredicate,
+        tracked_file: PathPredicate,
     ) -> Result<FilesExpansion> {
         expand_globs(
             workspace_root,
             globs,
-            &Source::fileset_reading_disk(known, workspace_root),
+            &Source::fileset_reading_disk(tracked_file, workspace_root),
         )
     }
 
@@ -71,7 +71,7 @@ pub(crate) mod tests {
     #[test]
     fn a_path_the_context_knows_is_taken_without_reading_the_disk() {
         let temp = workspace();
-        // The known path exists only in the caller's word for it.
+        // The tracked path exists only in the caller's word for it.
         let expansion = expand_files_with(temp.path(), &globs(&["dist/gen/absent.js"]), &|path| {
             path == "dist/gen/absent.js"
         })
@@ -93,7 +93,7 @@ pub(crate) mod tests {
             temp.path(),
             &positives,
             &negations,
-            &Source::fileset(NOTHING_KNOWN, &everything),
+            &Source::fileset(NOTHING_TRACKED, &everything),
         )
         .unwrap();
         assert_eq!(expansion.files, vec!["dist/gen/a.js"]);
@@ -122,7 +122,7 @@ pub(crate) mod tests {
             temp.path(),
             &positives,
             &negations,
-            &Source::fileset(NOTHING_KNOWN, &listed),
+            &Source::fileset(NOTHING_TRACKED, &listed),
         )
         .unwrap();
         // The pattern and the negation apply to what the source returned.
@@ -135,7 +135,7 @@ pub(crate) mod tests {
             temp.path(),
             &parse_group(&globs(&["dist/other/**"])).unwrap().0,
             &[],
-            &Source::fileset(NOTHING_KNOWN, &listed),
+            &Source::fileset(NOTHING_TRACKED, &listed),
         )
         .unwrap();
         assert!(expansion.files.is_empty());

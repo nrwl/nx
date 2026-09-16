@@ -368,7 +368,7 @@ impl TaskHasher {
         }
     }
 
-    fn workspace_file_known(&self, path: &str) -> bool {
+    fn workspace_tracks_file(&self, path: &str) -> bool {
         self.workspace_file_index
             .get_or_init(|| index_file_map(&self.all_workspace_files))
             .contains_key(path)
@@ -814,7 +814,7 @@ impl TaskHasher {
                             workspace_root,
                             globs,
                             &Source::fileset(
-                                &|path| run_stage.nothing_ran() && self.workspace_file_known(path),
+                                &|path| run_stage.nothing_ran() && self.workspace_tracks_file(path),
                                 &files_under,
                             ),
                         )
