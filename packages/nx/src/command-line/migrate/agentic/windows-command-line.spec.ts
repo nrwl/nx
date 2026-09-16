@@ -26,7 +26,7 @@ import {
   buildMinimalSystemContext,
   buildSystemPrompt,
 } from './prompts/system-prompt';
-import { AgentDefinition, InvocationContext } from './types';
+import type { AgentDefinition, InvocationContext } from './types';
 import {
   adaptSpawnForWindowsShim,
   WINDOWS_COMMAND_LINE_BUDGET,

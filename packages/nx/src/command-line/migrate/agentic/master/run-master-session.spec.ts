@@ -26,8 +26,11 @@ vi.mock('../../migrate-analytics', () => ({
 
 import { join } from 'path';
 import { output } from '../../../../utils/output';
-import { MigrateRunState } from '../../run/run-state';
-import { runMasterSession, RunMasterSessionInput } from './run-master-session';
+import type { MigrateRunState } from '../../run/run-state';
+import {
+  runMasterSession,
+  type RunMasterSessionInput,
+} from './run-master-session';
 
 const root = '/workspace';
 const runId = '20260715T101530-3f9a1c02';

@@ -1,4 +1,4 @@
-import { SpawnOptions } from 'child_process';
+import type { SpawnOptions } from 'child_process';
 import { extname } from 'path';
 
 // Backslash-escape embedded quotes per MS C runtime convention, then wrap in

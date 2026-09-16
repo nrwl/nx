@@ -5,13 +5,13 @@ import {
 } from '../../migrate-analytics';
 import {
   completionWarnings,
-  MigrateRunState,
+  type MigrateRunState,
   readRunState,
   runDir,
   runOrchestratorInit,
-  RunOrchestratorInitInput,
+  type RunOrchestratorInitInput,
 } from '../../run';
-import { DetectedInstalledAgent } from '../types';
+import type { DetectedInstalledAgent } from '../types';
 import { spawnMasterSession } from './spawn-master';
 
 export interface RunMasterSessionInput extends Omit<

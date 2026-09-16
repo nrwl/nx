@@ -38,9 +38,12 @@ vi.mock('../../run/broker', () => ({
 }));
 
 import { execSync, spawn } from 'child_process';
-import { DetectedInstalledAgent } from '../types';
+import type { DetectedInstalledAgent } from '../types';
 import { WINDOWS_COMMAND_LINE_BUDGET } from '../windows-cmd';
-import { spawnMasterSession, SpawnMasterSessionInput } from './spawn-master';
+import {
+  spawnMasterSession,
+  type SpawnMasterSessionInput,
+} from './spawn-master';
 
 const mockSpawn = spawn as unknown as Mock;
 const mockExecSync = execSync as unknown as Mock;

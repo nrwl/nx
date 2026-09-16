@@ -2,7 +2,7 @@ import {
   buildMasterInvocation,
   masterBootstrapPrompt,
   masterInvariant,
-  MasterInvocationContext,
+  type MasterInvocationContext,
 } from './invocations';
 
 const runId = '20260715T101530-3f9a1c02';
