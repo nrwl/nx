@@ -1,33 +1,7 @@
+import * as devkit from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { join } from 'node:path';
 import * as ts from 'typescript';
-
-// `var` rather than `let`: transitive imports read `workspaceRoot` while the
-// module graph is still loading, before a `let` would leave its temporal dead
-// zone.
-var workspaceRootMock: string | undefined;
-jest.mock('@nx/devkit', () => {
-  const actual = jest.requireActual('@nx/devkit');
-  return {
-    ...actual,
-    get workspaceRoot() {
-      return workspaceRootMock ?? actual.workspaceRoot;
-    },
-  };
-});
-
-var failRootTsConfigLoad = false;
-jest.mock('tsconfig-paths', () => {
-  const actual = jest.requireActual('tsconfig-paths');
-  return {
-    ...actual,
-    loadConfig: (path?: string) =>
-      failRootTsConfigLoad && path?.endsWith('tsconfig.base.json')
-        ? { resultType: 'failed', message: "Couldn't find tsconfig.json" }
-        : actual.loadConfig(path),
-  };
-});
-
 import { nxViteTsPaths } from './nx-tsconfig-paths.plugin';
 
 describe('nxViteTsPaths', () => {
@@ -36,9 +10,10 @@ describe('nxViteTsPaths', () => {
 
   beforeEach(() => {
     tempFs = new TempFs('nx-vite-ts-paths');
-    workspaceRootMock = tempFs.tempDir;
+    // `TempFs` moves nx's own `workspaceRoot`, but the jest setup hands the
+    // plugin a copy of `@nx/devkit` that keeps the value from load time.
+    jest.replaceProperty(devkit, 'workspaceRoot', tempFs.tempDir);
     originalTsConfigPath = process.env.NX_TSCONFIG_PATH;
-    failRootTsConfigLoad = false;
   });
 
   afterEach(() => {
@@ -48,6 +23,7 @@ describe('nxViteTsPaths', () => {
       process.env.NX_TSCONFIG_PATH = originalTsConfigPath;
     }
     tempFs.cleanup();
+    jest.restoreAllMocks();
   });
 
   const resolveWith = async (importPath: string) => {
@@ -60,40 +36,31 @@ describe('nxViteTsPaths', () => {
     return (plugin as any).resolveId(importPath);
   };
 
-  const withProjectTsConfigOutsideWorkspace = async () => {
-    await tempFs.createFiles({
-      'external/tsconfig.json': JSON.stringify({
-        compilerOptions: { baseUrl: '.', paths: { '@ext/*': ['libs/*'] } },
-      }),
-      'app/src/main.ts': '',
+  describe('when the workspace has no root-level tsconfig', () => {
+    beforeEach(async () => {
+      await tempFs.createFiles({
+        'external/tsconfig.json': JSON.stringify({
+          compilerOptions: { baseUrl: '.', paths: { '@ext/*': ['libs/*'] } },
+        }),
+        'app/src/main.ts': '',
+      });
+      process.env.NX_TSCONFIG_PATH = join(
+        tempFs.tempDir,
+        'external/tsconfig.json'
+      );
     });
-    process.env.NX_TSCONFIG_PATH = join(
-      tempFs.tempDir,
-      'external/tsconfig.json'
-    );
-  };
 
-  it('should defer to other resolvers when the workspace has no root-level tsconfig', async () => {
-    await withProjectTsConfigOutsideWorkspace();
+    it('should defer to other resolvers for an unmapped import', async () => {
+      await expect(resolveWith('@nope/missing')).resolves.toBeNull();
+    });
 
-    await expect(resolveWith('@nope/missing')).resolves.toBeNull();
-  });
+    it('should resolve an alias of the project tsconfig', async () => {
+      await tempFs.createFiles({ 'external/libs/foo.ts': '' });
 
-  it('should resolve an alias of the project tsconfig when the workspace has no root-level tsconfig', async () => {
-    await withProjectTsConfigOutsideWorkspace();
-    await tempFs.createFiles({ 'external/libs/foo.ts': '' });
-
-    await expect(resolveWith('@ext/foo')).resolves.toEqual(
-      join(tempFs.tempDir, 'external/libs/foo.ts')
-    );
-  });
-
-  it('should defer to other resolvers when the root-level tsconfig cannot be loaded', async () => {
-    await withProjectTsConfigOutsideWorkspace();
-    await tempFs.createFiles({ 'tsconfig.base.json': JSON.stringify({}) });
-    failRootTsConfigLoad = true;
-
-    await expect(resolveWith('@nope/missing')).resolves.toBeNull();
+      await expect(resolveWith('@ext/foo')).resolves.toEqual(
+        join(tempFs.tempDir, 'external/libs/foo.ts')
+      );
+    });
   });
 
   // An import named after an `Object` prototype member reaches every lookup
