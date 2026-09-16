@@ -8,14 +8,12 @@ use anyhow::{Result, bail};
 use crate::native::glob::{NxGlobSet, build_glob_set, literal_prefix, normalize_glob};
 
 /// A positive entry: the directory it is read from and the pattern after it,
-/// if any. Without a pattern it names one file. A declared output is the
-/// exception: it names a path, so a directory is everything under it.
+/// if any. Without a pattern it names an exact file, or a directory and
+/// everything under it.
 pub(crate) struct Positive {
     pub(super) text: String,
     pub(super) root: String,
     pub(super) remainder: Option<String>,
-    /// A declared output entry rather than a fileset glob.
-    pub(super) declared_path: bool,
 }
 
 impl Positive {
@@ -26,7 +24,6 @@ impl Positive {
             text: glob.to_string(),
             root,
             remainder: remainder.map(str::to_string),
-            declared_path: false,
         })
     }
 
@@ -36,7 +33,6 @@ impl Positive {
             text: path.to_string(),
             root: path.to_string(),
             remainder: None,
-            declared_path: true,
         }
     }
 }

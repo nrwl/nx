@@ -199,14 +199,9 @@ pub(crate) fn expand_entries(
             }
             continue;
         }
-        // A fileset names files, so a glob that lands on a directory selects
-        // nothing; `{projectRoot}/generated/**/*` is how to ask for what is
-        // under it. A declared output names a path, and a directory output
-        // has always meant everything under it.
-        if !has_pattern && !entry.declared_path {
-            continue;
-        }
-        // With a pattern, only the remainder after the prefix is matched.
+        // A directory named by its exact path means everything under it, the
+        // same in a fileset as in a declared output; with a pattern, only the
+        // remainder after the prefix is matched.
         // Excluded files are dropped before they are stat'ed.
         let excluded = |path: &str| negations.iter().any(|n| n.excludes(path));
         let accept: Box<dyn Fn(&str) -> bool + Sync> = if let Some(pattern) = remainder {

@@ -207,21 +207,21 @@ pub(crate) mod tests {
     }
 
     #[test]
-    fn a_fileset_that_lands_on_a_directory_selects_nothing() {
+    fn an_exact_directory_means_everything_under_it() {
         let temp = workspace();
-        assert!(
+        // The same rule a declared output follows, and what a negation
+        // naming a directory already excluded.
+        assert_eq!(
             expand_files(temp.path(), &globs(&["dist/other"]))
                 .unwrap()
-                .files
-                .is_empty(),
-            "a fileset names files; a directory is not one"
+                .files,
+            vec!["dist/other/c.js"]
         );
         assert_eq!(
             expand_files(temp.path(), &globs(&["dist/other/**/*"]))
                 .unwrap()
                 .files,
-            vec!["dist/other/c.js"],
-            "this is how to ask for what is under it"
+            vec!["dist/other/c.js"]
         );
     }
 
@@ -289,8 +289,10 @@ pub(crate) mod tests {
             expand(&["dist//gen/**", "!dist//gen//**/*.map"]).files,
             vec!["dist/gen/a.js", "dist/gen/nested/b.js"]
         );
-        // Normalizes to `dist/gen`, a directory, which names no files.
-        assert!(expand(&["dist/gen/"]).files.is_empty());
+        assert_eq!(
+            expand(&["dist/gen/"]).files,
+            vec!["dist/gen/a.js", "dist/gen/a.js.map", "dist/gen/nested/b.js"]
+        );
         // A negation that normalizes to nothing would exclude everything.
         for bare in ["!", "!/", "!//"] {
             let group = globs(&["dist/**", bare]);
@@ -381,7 +383,10 @@ pub(crate) mod tests {
             expand("libs/app/@gen/schema.json").files,
             vec!["libs/app/@gen/schema.json"]
         );
-        assert!(expand("libs/app/@gen").files.is_empty());
+        assert_eq!(
+            expand("libs/app/@gen").files,
+            vec!["libs/app/@gen/schema.json"]
+        );
         assert_eq!(
             expand("libs/app/@gen/**").files,
             vec!["libs/app/@gen/schema.json"]
