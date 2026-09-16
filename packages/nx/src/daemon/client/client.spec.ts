@@ -457,3 +457,45 @@ describe('startInBackground', () => {
     expect((error as any).internalDaemonError).toBe(true);
   });
 });
+
+describe('hashTasks', () => {
+  it('sends the daemon a graph without run results', async () => {
+    const { DaemonClient } = await import('./client');
+    // The prototype alone: hashTasks touches nothing the constructor sets up.
+    const client = Object.create(DaemonClient.prototype);
+    const send = vi
+      .spyOn(client, 'sendToDaemonViaQueue')
+      .mockResolvedValue([] as never);
+    const task = {
+      id: 'a:build',
+      target: { project: 'a', target: 'build' },
+      overrides: {},
+      outputs: [],
+      hash: 'h',
+      hashDetails: { command: 'build', nodes: {} },
+      startTime: 1,
+      endTime: 2,
+      terminalOutput: 'out',
+    } as any;
+    const taskGraph = {
+      roots: ['a:build'],
+      tasks: { 'a:build': task },
+      dependencies: {},
+      continuousDependencies: {},
+    } as any;
+    await client.hashTasks({}, [task], taskGraph, {}, '/w');
+    const message = send.mock.calls[0][0] as any;
+    // Exact on purpose: a new Task field lands here and forces a decision on
+    // whether the daemon should see it. Widening this to "field X is absent"
+    // would let it ride along unnoticed.
+    for (const sent of [message.tasks[0], message.taskGraph.tasks['a:build']]) {
+      expect(Object.keys(sent).sort()).toEqual([
+        'id',
+        'outputs',
+        'overrides',
+        'target',
+      ]);
+    }
+    expect(task.hashDetails).toBeDefined();
+  });
+});
