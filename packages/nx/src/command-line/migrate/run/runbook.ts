@@ -4,6 +4,7 @@
 
 import {
   renderAuthorScopeRuleLines,
+  renderFinalValidationScopeRuleLines,
   renderHandoffShapeLines,
   renderNxInvocationNote,
   renderValidationScopeRuleLines,
@@ -28,6 +29,7 @@ export interface RunbookContext {
   reconcileCommand: string;
   createCommits: boolean;
   validate: boolean;
+  finalValidation: boolean;
 }
 
 /**
@@ -117,6 +119,16 @@ export function renderRunbook(ctx: RunbookContext): string {
       `  a validation pass over the generator's changes. Scope rules for that`,
       `  work:`,
       ...renderValidationScopeRuleLines().map((line) => `  ${line}`),
+      NX_JSON_MIGRATE_RULE
+    );
+  }
+  if (ctx.finalValidation) {
+    lines.push(
+      `- The run's last step is a validation pass over the whole workspace,`,
+      `  dispensed once every migration step is done. Its \`nx_migrate_prompt\``,
+      `  block points at an instructions file; that file names the base ref its`,
+      `  \`nx affected\` runs use. Scope rules for that work:`,
+      ...renderFinalValidationScopeRuleLines().map((line) => `  ${line}`),
       NX_JSON_MIGRATE_RULE
     );
   }
@@ -218,8 +230,8 @@ export function renderRunbook(ctx: RunbookContext): string {
     `  in this same piece of work, and \`"deferred-final"\` when no later`,
     `  migration step should pick it up; it is carried to the completion`,
     `  report instead.`,
-    `- \`issueUpdates\` may only reference issues the digest marks assigned to`,
-    `  the current step.`,
+    `- \`issueUpdates\` may only reference issues the digest marks assigned or`,
+    `  deferred to the current step.`,
     `- Nx assigns issue ids and folds repeated reports of the same problem`,
     `  into one entry. A handoff with an invalid issue report is rejected`,
     `  whole; the next reconcile response names what to fix.`,

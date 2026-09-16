@@ -23,11 +23,7 @@ import {
 } from './run-state';
 
 export { issueFingerprint };
-import {
-  finalValidationUnsupported,
-  splitMigrationId,
-  unresolvedFailureDetail,
-} from './state-machine';
+import { splitMigrationId, unresolvedFailureDetail } from './state-machine';
 
 // Reserves summary space for the attempt count and the failure.
 const MAX_UNRESOLVED_ID_CHARS = 200;
@@ -303,7 +299,7 @@ function parseIssueUpdate(
       value.id
     )}, which is not an issue nx has recorded for this run`;
   }
-  if (issue.claimedByStepId !== reportingStep.id) {
+  if (!canUpdateIssue(issue, reportingStep)) {
     return `${label} references ${issue.id}, which is not assigned to this step; only issues the dispensed digest marks assigned to the current step can be updated`;
   }
   const disposition = value.disposition;
@@ -322,6 +318,25 @@ function parseIssueUpdate(
     disposition,
     ...(note !== undefined ? { note: note as string } : {}),
   };
+}
+
+// Claims serialize the migration steps that could fix an issue. The final
+// validation pass runs alone after all of them, so it takes every issue still
+// open instead: by then any it could claim has been deferred to it.
+function canUpdateIssue(
+  issue: MigrateRunIssue,
+  reportingStep: MigrateStep
+): boolean {
+  switch (reportingStep.kind) {
+    case 'migration':
+      return issue.claimedByStepId === reportingStep.id;
+    case 'final-validation':
+      return issue.disposition !== 'resolved';
+    default: {
+      const exhaustive: never = reportingStep;
+      throw new Error(`Unrecognized step: ${JSON.stringify(exhaustive)}`);
+    }
+  }
 }
 
 // A bare identifier matches the whole package name, scoped names included:
@@ -378,7 +393,8 @@ export function mintUnresolvedIssue(
       subject = `Migration ${abbreviatedMigrationId(step.migrationId)}`;
       break;
     case 'final-validation':
-      throw finalValidationUnsupported(step);
+      subject = 'The final validation pass';
+      break;
     default: {
       const exhaustive: never = step;
       throw new Error(`Unrecognized step: ${JSON.stringify(exhaustive)}`);
@@ -985,21 +1001,38 @@ export function renderIssueDigestLines(
 ): string[] {
   const unresolved = unresolvedIssues(state);
   if (unresolved.length === 0) return [];
-  const assigned = unresolved.filter(
-    (i) => i.disposition === 'recorded' && i.claimedByStepId === currentStepId
-  );
-  const entries = [
-    ...assigned.map((i) => digestEntry(i, 'assigned to this step')),
-    ...unresolved
-      .filter(
+  const currentStep = state.steps.find((s) => s.id === currentStepId);
+  // Deferred issues are the pass's own work; every other step reads them as
+  // out of reach.
+  const passDispense = currentStep?.kind === 'final-validation';
+  const assigned = passDispense
+    ? unresolved
+    : unresolved.filter(
         (i) =>
-          i.disposition === 'recorded' && i.claimedByStepId !== currentStepId
+          i.disposition === 'recorded' && i.claimedByStepId === currentStepId
+      );
+  const entries = passDispense
+    ? assigned.map((i) =>
+        digestEntry(
+          i,
+          i.disposition === 'deferred-final'
+            ? 'deferred to this step'
+            : 'assigned to this step'
+        )
       )
-      .map((i) => digestEntry(i, 'recorded')),
-    ...unresolved
-      .filter((i) => i.disposition === 'deferred-final')
-      .map((i) => digestEntry(i, 'deferred past the migration steps')),
-  ];
+    : [
+        ...assigned.map((i) => digestEntry(i, 'assigned to this step')),
+        ...unresolved
+          .filter(
+            (i) =>
+              i.disposition === 'recorded' &&
+              i.claimedByStepId !== currentStepId
+          )
+          .map((i) => digestEntry(i, 'recorded')),
+        ...unresolved
+          .filter((i) => i.disposition === 'deferred-final')
+          .map((i) => digestEntry(i, 'deferred past the migration steps')),
+      ];
   const fixedLines = [
     ``,
     stepDigestHeading(runId),

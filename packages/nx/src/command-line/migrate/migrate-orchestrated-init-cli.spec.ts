@@ -489,6 +489,7 @@ describe('migrate() orchestrated init dispatch', () => {
         skipInstall: false,
         installedNxVersion: '23.0.0',
         validate: undefined,
+        finalValidation: undefined,
         agent: selectedAgent,
         interactive: undefined,
         runId: undefined,
@@ -600,5 +601,27 @@ describe('migrate() orchestrated init dispatch', () => {
 
     // Raw flag value on purpose: the run records the resolved policy itself.
     expect(mockRunOrchestratorInit.mock.calls[0][0].validate).toBe(validate);
+  });
+
+  it.each<[string, boolean | undefined, string[]]>([
+    [
+      'forwards --final-validation=false to the run',
+      false,
+      ['--no-final-validation'],
+    ],
+    [
+      'leaves the final-validation policy unset when the flag is omitted',
+      undefined,
+      [],
+    ],
+  ])('%s', async (_label, finalValidation, extraArgs) => {
+    await migrate(root, runMigrationsArgs({ finalValidation }), [
+      '--run-migrations',
+      ...extraArgs,
+    ]);
+
+    expect(mockRunOrchestratorInit.mock.calls[0][0].finalValidation).toBe(
+      finalValidation
+    );
   });
 });
