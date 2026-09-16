@@ -506,6 +506,35 @@ mod test {
     }
 
     #[test]
+    fn should_get_files_for_scoped_output_glob() {
+        let temp = TempDir::new().unwrap();
+        temp.child("packages/@acme/producer/dist/index.d.mts")
+            .touch()
+            .unwrap();
+        temp.child("packages/@acme/producer/dist/nested/example.d.ts")
+            .touch()
+            .unwrap();
+        temp.child("packages/@acme/producer/dist/nested/example.js")
+            .touch()
+            .unwrap();
+
+        let entries = vec!["packages/@acme/producer/dist/**/*.{d.ts,d.cts,d.mts}".to_string()];
+        let mut hashed_outputs = get_files_for_outputs(temp.path(), entries.clone()).unwrap();
+        let mut expanded_outputs = expand_outputs(temp.display().to_string(), entries).unwrap();
+        hashed_outputs.sort();
+        expanded_outputs.sort();
+
+        assert_eq!(
+            hashed_outputs,
+            vec![
+                "packages/@acme/producer/dist/index.d.mts",
+                "packages/@acme/producer/dist/nested/example.d.ts",
+            ]
+        );
+        assert_eq!(hashed_outputs, expanded_outputs);
+    }
+
+    #[test]
     #[cfg(unix)]
     fn should_expand_outputs_with_symlinks_and_globs() {
         // Reproduces https://github.com/nrwl/nx/issues/34013
