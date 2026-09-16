@@ -1174,9 +1174,8 @@ impl WorkspaceContext {
             .map(|text| text.lines().map(str::to_string).collect())
             .unwrap_or_default();
         Ok(crate::native::workspace::ignored_index::Watch {
-            reaches: Arc::new(move |path: &str, is_dir: bool| {
-                filter.admits(&origin.join(path), is_dir)
-            }),
+            // Only ever asked about a prefix, which is a directory.
+            delivers_under: Arc::new(move |path: &str| filter.admits(&origin.join(path), true)),
             nxignore,
         })
     }

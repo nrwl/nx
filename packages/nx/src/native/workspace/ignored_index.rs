@@ -18,13 +18,13 @@ use tracing::trace;
 use crate::native::hasher::hash_file_path;
 use crate::native::walker::{PathPredicate, files_under, seed_walk};
 
-/// Whether the watch delivers events for a workspace-relative path (a
-/// directory when the flag is set).
-pub(crate) type Reaches = Arc<dyn Fn(&str, bool) -> bool + Send + Sync>;
+/// Whether the watch delivers events for a workspace-relative directory.
+pub(crate) type DeliversUnder = Arc<dyn Fn(&str) -> bool + Send + Sync>;
 
-/// What the watch behind an index reaches.
+/// What the watch behind an index reports, so the index knows which
+/// directories it can keep current and which it must refuse.
 pub(crate) struct Watch {
-    pub(crate) reaches: Reaches,
+    pub(crate) delivers_under: DeliversUnder,
     /// The root `.nxignore` rules. The watch drops what they match and a walk
     /// does not, so no prefix they could match under is indexed.
     pub(crate) nxignore: Vec<String>,
@@ -33,7 +33,7 @@ pub(crate) struct Watch {
 impl Watch {
     /// Whether the watch could miss events somewhere under `prefix`.
     fn may_miss_under(&self, prefix: &str) -> bool {
-        !(self.reaches)(prefix, true) || nxignore_may_match_under(&self.nxignore, prefix)
+        !(self.delivers_under)(prefix) || nxignore_may_match_under(&self.nxignore, prefix)
     }
 }
 
@@ -641,7 +641,7 @@ mod tests {
 
     fn watched_with_nxignore(rules: &[&str]) -> IgnoredIndex {
         IgnoredIndex::new(Some(Watch {
-            reaches: Arc::new(|path: &str, _| !path.starts_with("node_modules")),
+            delivers_under: Arc::new(|path: &str| !path.starts_with("node_modules")),
             nxignore: rules.iter().map(|r| r.to_string()).collect(),
         }))
     }
