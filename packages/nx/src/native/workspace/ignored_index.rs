@@ -84,11 +84,12 @@ pub struct IgnoredIndex {
 /// answers without a stat: it is set only when a caller that has applied
 /// every delivered event read the file with no event arriving meanwhile, and
 /// cleared by any event for the path. An untrusted entry is stat'ed and
-/// revalidated by the stamp, with git's racy rule (an entry made in the same
-/// second as the file's mtime could hide a same-size rewrite, so it is never
-/// served by stamp until a later second remakes it; on a filesystem with 2 s
-/// mtimes, FAT and exFAT, a rewrite in the next second still slips through,
-/// as it does for git). A symlinked file is never trusted: the watch reports
+/// revalidated by the stamp, unless the stamp is too fresh to prove anything
+/// (an entry made in the same second as the file's mtime could hide a
+/// same-size rewrite, so it is never served by stamp until a later second
+/// remakes it; on a filesystem with 2 s mtimes, FAT and exFAT, a rewrite in
+/// the next second still slips through, as it does for git, which solves the
+/// same problem the same way). A symlinked file is never trusted: the watch reports
 /// changes to its target, not to the link.
 struct Content {
     stamp: FileStamp,
@@ -99,7 +100,11 @@ struct Content {
 }
 
 impl Content {
-    fn racy(&self) -> bool {
+    /// Whether the stamp is too fresh to prove the file is unchanged: it was
+    /// modified in the second this entry was made, or later, and mtimes are
+    /// only whole seconds on many filesystems, so a same-size rewrite inside
+    /// that second would leave the stamp looking untouched.
+    fn stamp_too_fresh(&self) -> bool {
         (self.stamp.0 / 1_000_000_000) as u64 >= self.made_at
     }
 }
@@ -479,14 +484,14 @@ impl IgnoredIndex {
         if let Some(stamp) = stamp
             && let Some(mut content) = self.contents.get_mut(path)
             && content.stamp == stamp
-            && !content.racy()
+            && !content.stamp_too_fresh()
         {
             trace!("content hash held for {path}");
             content.trusted = may_trust && unmoved();
             return Some(content.hash.clone());
         }
         // Taken before the read: a same-size write between the read and a
-        // later stamp is then inside the entry's own second, and racy.
+        // later stamp is then inside the entry's own second, and too fresh.
         let made_at = now_secs();
         trace!("reading {path}");
         let hash = hash_file_path(&full_path)?;
@@ -828,12 +833,12 @@ mod tests {
         temp.child("dist/gen/a.js").write_str("r").unwrap();
         set_modified(&file, now);
         index.note_written(temp.path(), "dist/gen/a.js");
-        let racy = index.hash_file(temp.path(), "dist/gen/a.js", None, true);
+        let too_fresh = index.hash_file(temp.path(), "dist/gen/a.js", None, true);
         temp.child("dist/gen/a.js").write_str("s").unwrap();
         set_modified(&file, now);
         index.note_written(temp.path(), "dist/gen/a.js");
         assert_ne!(
-            racy,
+            too_fresh,
             index.hash_file(temp.path(), "dist/gen/a.js", None, true)
         );
     }

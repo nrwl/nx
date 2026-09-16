@@ -431,7 +431,7 @@ mod tests {
         let second = hash();
         assert_ne!(first, second);
         // A same-size rewrite with the same mtime still counts: the pinned
-        // mtime is not before the entry's second, so the entry is racy.
+        // mtime is not before the entry's second, so the stamp is too fresh.
         let instant = std::time::SystemTime::now() + std::time::Duration::from_secs(2);
         let pin = || {
             std::fs::File::open(&file)
