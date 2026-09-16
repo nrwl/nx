@@ -11,8 +11,9 @@ import {
 import { HANDOFFS_DIR_NAME, MIGRATE_RUNS_RELATIVE_DIR } from '../agentic/types';
 import { singleLine } from '../text';
 
-// A resume without a commit flag takes its policy from nx.json and refuses
-// the run when it differs from the recorded one.
+// No command of a run reads the section (a --run-id invocation skips the
+// nx.json overlay), but the next init does: an edit mid-run changes what a
+// start-fresh or a later run does.
 const NX_JSON_MIGRATE_RULE = `  - Do not edit the \`migrate\` section of nx.json.`;
 
 export const RUNBOOK_FILE_NAME = 'RUNBOOK.md';

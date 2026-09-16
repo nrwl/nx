@@ -731,8 +731,8 @@ function resumeRun(
   ) {
     throw new Error(
       `Nx did not resume the active migrate run because its recorded install and commit policy differs from this invocation's. ` +
-        `Nx takes that policy from --create-commits and --skip-install, and from nx.json "migrate.createCommits" when the commit flag is omitted. ` +
-        `Re-run with explicit flags for the policy run '${runId}' started with, or run ${startFreshCommand(root, runId)} to abandon it.`
+        `Nx takes that policy from --create-commits and --skip-install on the command line. ` +
+        `Re-run with the flags run '${runId}' recorded (its report shows them). To start fresh, re-run with --start-fresh --run-id=${runId}, keeping the same --run-migrations[=<path>] argument used to start the run.`
     );
   }
   const dir = runDir(root, runId);
@@ -944,7 +944,7 @@ function ensureRunbook(
       `The runbook for run '${runId}' is missing from ${MIGRATE_RUNS_RELATIVE_DIR}/${runId}, and this nx (${nxVersion}) cannot re-render the one nx ${singleLine(
         state.nxVersion
       )} wrote.`,
-      `Restore the file (or, if the run was created before runbooks existed, re-run with the nx version that created it), or start a new run with \`${startFreshCommand(root, runId)}\`.`,
+      `Restore the file (or, if the run was created before runbooks existed, re-run with the nx version that created it). To start fresh, re-run with --start-fresh --run-id=${runId}, keeping the same --run-migrations[=<path>] argument used to start the run.`,
     ];
     warnToAgent({ title: reason[0], bodyLines: [reason[1]] });
     emitStepBlock(runId, '-', 'error', {
