@@ -154,6 +154,7 @@ module.exports.installNxConsole = __napiModule.exports.installNxConsole
 module.exports.IS_WASM = __napiModule.exports.IS_WASM
 module.exports.isAiAgent = __napiModule.exports.isAiAgent
 module.exports.logDebug = __napiModule.exports.logDebug
+module.exports.openUrl = __napiModule.exports.openUrl
 module.exports.remove = __napiModule.exports.remove
 module.exports.testOnlyTransferFileMap = __napiModule.exports.testOnlyTransferFileMap
 module.exports.transferProjectGraph = __napiModule.exports.transferProjectGraph
