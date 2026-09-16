@@ -771,6 +771,8 @@ describe('run-state', () => {
         checkpointFailed: true,
         skipInstall: true,
         validate: false,
+        finalValidation: false,
+        gitRefAtInit: 'abc0'.repeat(10),
         runbookPath: 'RUNBOOK.md',
         branch: 'feature/upgrade',
         issues: [
@@ -936,6 +938,23 @@ describe('run-state', () => {
       );
 
       expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+    });
+
+    it('refuses a non-boolean finalValidation and a gitRefAtInit that is not a sha', () => {
+      const dir = join(root, 'run-1');
+      mkdirSync(dir, { recursive: true });
+      for (const overrides of [
+        { finalValidation: 'yes' },
+        // The ref is interpolated into a command the agent runs verbatim.
+        { gitRefAtInit: 'HEAD; touch pwned' },
+      ]) {
+        writeFileSync(
+          join(dir, 'run.json'),
+          JSON.stringify(buildState(overrides as never))
+        );
+
+        expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+      }
     });
 
     it('refuses a runbookPath that is not the file name Nx writes', () => {

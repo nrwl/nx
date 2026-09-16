@@ -38,6 +38,9 @@ export type StepEvent =
       finishedAt: string;
       awaitingKind: MigrateStepAwaitingKind;
     }
+  // A final-validation step has no worker: it is handed to the agent straight
+  // from 'pending', so the dispense and the park are one transition.
+  | { type: 'parkForFinalValidation'; stepId: string; finishedAt: string }
   // `foldPromptOutcome` and `markDied` carry the attempt they were observed
   // on. Both are written after an unlocked read, and both source statuses
   // recur across attempts, so the status alone cannot say which attempt the
@@ -137,6 +140,22 @@ export function applyStepEvent(
         status: 'awaiting-prompt-outcome',
         finishedAt: event.finishedAt,
         awaitingKind: event.awaitingKind,
+      });
+
+    case 'parkForFinalValidation':
+      if (step.kind !== 'final-validation') {
+        return {
+          kind: 'error',
+          reason: `Cannot apply '${event.type}' to step '${step.id}': it is a ${step.kind} step.`,
+        };
+      }
+      if (step.status !== 'pending') return illegal(step, event.type);
+      return commit(state, index, {
+        ...step,
+        status: 'awaiting-prompt-outcome',
+        dispenseCount: step.dispenseCount + 1,
+        finishedAt: event.finishedAt,
+        awaitingKind: 'final-validation',
       });
 
     case 'markGeneratorCompleted':
@@ -426,6 +445,9 @@ export function completionSummaryLines(state: MigrateRunState): string[] {
 // history does not read a partial result as the migration applied.
 export type CommitAction = 'adopt' | 'unresolved';
 
+// Takes the migration name's place after the commit prefix.
+const FINAL_VALIDATION_COMMIT_NAME = 'final validation';
+
 export function commitNameForStep(
   step: MigrateStep,
   commitAs?: CommitAction
@@ -436,10 +458,11 @@ export function commitNameForStep(
       name = splitMigrationId(step.migrationId).name;
       break;
     case 'final-validation':
-      throw finalValidationUnsupported(step);
+      name = FINAL_VALIDATION_COMMIT_NAME;
+      break;
     default: {
       const exhaustive: never = step;
-      return exhaustive;
+      throw new Error(`Unhandled step kind '${exhaustive}'.`);
     }
   }
   return commitAs === 'unresolved' ? `${name} (unresolved)` : name;
@@ -552,7 +575,7 @@ function stepKindFields(step: MigrateStep): MigrateStepKindFields {
       return { kind: 'final-validation' };
     default: {
       const exhaustive: never = step;
-      return exhaustive;
+      throw new Error(`Unhandled step kind '${exhaustive}'.`);
     }
   }
 }
@@ -563,20 +586,12 @@ export function stepLabel(step: MigrateStep): string {
     case 'migration':
       return step.migrationId;
     case 'final-validation':
-      return 'the final-validation step';
+      return 'the final validation pass';
     default: {
       const exhaustive: never = step;
-      return exhaustive;
+      throw new Error(`Unhandled step kind '${exhaustive}'.`);
     }
   }
-}
-
-// A run can only hold one through a hand-edited run.json; it fails closed
-// rather than being run as a migration.
-export function finalValidationUnsupported(step: MigrateStep): Error {
-  return new Error(
-    `Step '${step.id}' is a final-validation step, which this version of Nx cannot run.`
-  );
 }
 
 // '<package>:<name>' splits on the first ':', leaving names that contain a ':'

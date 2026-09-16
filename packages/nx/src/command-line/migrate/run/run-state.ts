@@ -104,6 +104,7 @@ export type PromptOutcomeStatus = (typeof PROMPT_OUTCOME_STATUSES)[number];
 const MIGRATE_STEP_AWAITING_KINDS = [
   'migration-prompt',
   'generator-validation',
+  'final-validation',
 ] as const;
 export type MigrateStepAwaitingKind =
   (typeof MIGRATE_STEP_AWAITING_KINDS)[number];
@@ -292,6 +293,14 @@ export interface MigrateRunState {
   // Whether generator changes get a validation pass dispensed over them,
   // captured like the install policy above.
   validate?: boolean;
+  // Whether the run ends with a validation pass over the whole workspace,
+  // captured the same way. Absent (a run created before the field existed)
+  // means on.
+  finalValidation?: boolean;
+  // HEAD when the run started, after the checkpoint commit when one landed:
+  // the base every whole-run diff is taken against. Absent when the probe
+  // failed, or on a run created before the field existed.
+  gitRefAtInit?: string;
   // A bare file name despite the field name; it is joined to the run directory.
   runbookPath?: string;
   // The branch checked out when the run started; absent on a detached HEAD or
@@ -479,7 +488,7 @@ function isStepKindShape(value: Record<string, unknown>): boolean {
       return value.migrationId === undefined;
     default: {
       const exhaustive: never = kind;
-      return exhaustive;
+      throw new Error(`Unhandled step kind '${exhaustive}'.`);
     }
   }
 }
@@ -693,6 +702,8 @@ function hasValidRunStateShape(parsed: Record<string, unknown>): boolean {
     isOptionalBoolean(parsed.checkpointFailed) &&
     isOptionalBoolean(parsed.skipInstall) &&
     isOptionalBoolean(parsed.validate) &&
+    isOptionalBoolean(parsed.finalValidation) &&
+    isOptionalSha(parsed.gitRefAtInit) &&
     isOptionalMatching(RUNBOOK_NAME, parsed.runbookPath) &&
     isOptionalString(parsed.branch) &&
     (parsed.rounds as unknown[]).every(isRoundShape) &&

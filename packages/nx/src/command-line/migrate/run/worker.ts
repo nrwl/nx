@@ -1232,7 +1232,7 @@ function implPayload(impl: GeneratorImpl): Record<string, unknown> {
 // this attempt because the dispense reads only the current attempt's file.
 function reemitCarriedAgentWork(
   migrationId: string,
-  kind: MigrateStepAwaitingKind,
+  kind: Exclude<MigrateStepAwaitingKind, 'final-validation'>,
   payloadPath: string,
   payload: Record<string, unknown>
 ): void {
