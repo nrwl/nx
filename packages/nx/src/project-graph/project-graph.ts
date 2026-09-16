@@ -264,13 +264,15 @@ async function readCachedGraphAndHydrateFileMap(minimumComputedAt?: number) {
  * stored in the daemon process. To reset both run: `nx reset`.
  */
 /**
- * How long a process parks on the graph lock before looking again. The loop
- * below re-reads the cache and re-checks the lock either way, so this decides
- * only how often a waiter notices. Bounded rather than open-ended, because a
- * holder whose own loop is wedged would otherwise hold the waiter's process for
- * as long as it lives.
+ * How long a process waits for another one's graph before building its own.
+ *
+ * Long, because a real build on a large workspace takes minutes and the cost of
+ * giving up too early is a second process doing all of that work again. Bounded,
+ * because a holder that is suspended, stalled on its filesystem, or wedged in a
+ * plugin whose module-level code blocks never releases, and waiting on one
+ * forever is a checkout where no command returns and nothing says why.
  */
-const GRAPH_LOCK_WAIT_MS = 10_000;
+const MAX_WAIT_FOR_GRAPH_LOCK = 5 * 60 * 1000;
 
 export async function createProjectGraphAsync(
   opts: { exitOnError: boolean; resetDaemonClient?: boolean } = {
@@ -337,6 +339,12 @@ export async function createProjectGraphAndSourceMapsAsync(
     const lock = !IS_WASM
       ? new FileLock(join(workspaceDataDirectory, 'project-graph.lock'))
       : null;
+    const deadline = Date.now() + MAX_WAIT_FOR_GRAPH_LOCK;
+    // Set when the holder outlasts the budget. This process then builds the
+    // graph without the lock, which is what it would have done had it never
+    // found one held, rather than reading a cache the holder has not written or
+    // blocking on an acquire that will not be granted.
+    let holderOutlastedBudget = false;
     let locked = lock?.locked;
     while (locked) {
       logger.verbose(
@@ -346,15 +354,21 @@ export async function createProjectGraphAndSourceMapsAsync(
         'Waiting for graph construction in another process to complete'
       );
       const start = Date.now();
-      const released = await lock.waitForRelease(GRAPH_LOCK_WAIT_MS);
+      const remaining = deadline - Date.now();
+      const released = remaining > 0 && (await lock.waitForRelease(remaining));
       spinner.cleanup();
 
-      // Still building, so there is nothing yet to read. The read below throws
-      // rather than returning empty when no graph has ever been cached, so a
-      // timeout must go back to waiting instead of being taken for a finished
-      // build.
       if (!released) {
-        continue;
+        // Nothing has been written to read: the read below throws rather than
+        // returning empty when no graph has ever been cached, and treating a
+        // timeout as a finished build is what made that throw reachable.
+        logger.verbose(
+          `Another process has held the project graph lock for over ${
+            MAX_WAIT_FOR_GRAPH_LOCK / 1000
+          }s. Building the graph in this process as well.`
+        );
+        holderOutlastedBudget = true;
+        break;
       }
 
       // Note: This will currently throw if any of the caches are missing...
@@ -392,7 +406,9 @@ export async function createProjectGraphAndSourceMapsAsync(
       }
       locked = lock.check();
     }
-    lock?.lock();
+    if (!holderOutlastedBudget) {
+      lock?.lock();
+    }
     try {
       const res = await buildProjectGraphAndSourceMapsWithoutDaemon();
       performance.measure(
@@ -427,7 +443,9 @@ export async function createProjectGraphAndSourceMapsAsync(
     } catch (e) {
       handleProjectGraphError(opts, e);
     } finally {
-      lock?.unlock();
+      if (!holderOutlastedBudget) {
+        lock?.unlock();
+      }
     }
   } else {
     try {
