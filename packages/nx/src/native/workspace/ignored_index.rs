@@ -16,7 +16,7 @@ use parking_lot::RwLock;
 use tracing::trace;
 
 use crate::native::hasher::hash_file_path;
-use crate::native::tasks::hashers::{FileStamp, seed_walk, stamp_of};
+use crate::native::walker::{FileStamp, files_under, seed_walk, stamp_of};
 
 /// Whether the watch delivers events for a workspace-relative path (a
 /// directory when the flag is set).
@@ -256,6 +256,26 @@ impl IgnoredIndex {
         )
     }
 
+    /// The files under `dir` that `accept` admits, workspace-relative and
+    /// sorted. The one way anything asks what a directory holds. With
+    /// `cached`, a tracked directory answers from its listing, walking the
+    /// first time and keeping it current from events after. Otherwise, and
+    /// for a directory nothing tracks, the disk is read and not remembered.
+    /// `None` only when `dir` cannot be read at all.
+    pub(crate) fn files_under(
+        &self,
+        workspace_root: &Path,
+        dir: &str,
+        cached: bool,
+        accept: &(dyn Fn(&str) -> bool + Sync),
+    ) -> Option<Vec<String>> {
+        if cached && self.is_tracked(dir) {
+            let listed = self.list(workspace_root, dir)?;
+            return Some(listed.into_iter().filter(|path| accept(path)).collect());
+        }
+        files_under(workspace_root, dir, true, accept)
+    }
+
     /// A reported write or creation. Under a listed prefix a file becomes a
     /// member and a directory is re-listed from a walk, since its files may
     /// have arrived without events of their own. A path that is gone, a
@@ -387,18 +407,13 @@ impl IgnoredIndex {
     /// Makes `seeded` the members under `dir`, forgetting the content of
     /// what is no longer there. A file the seed saw again is left as it
     /// was: its stamp still decides whether the hash stands.
-    fn replace_under(
-        &self,
-        members: &mut BTreeSet<String>,
-        dir: &str,
-        seeded: Vec<(String, FileStamp)>,
-    ) {
+    fn replace_under(&self, members: &mut BTreeSet<String>, dir: &str, seeded: Vec<String>) {
         let before: Vec<String> = members
             .range(dir.to_string()..)
             .take_while(|p| under(p, dir))
             .cloned()
             .collect();
-        let fresh: BTreeSet<String> = seeded.into_iter().map(|(path, _)| path).collect();
+        let fresh: BTreeSet<String> = seeded.into_iter().collect();
         for path in &before {
             if !fresh.contains(path) {
                 members.remove(path);
@@ -516,14 +531,18 @@ impl IgnoredIndexReader {
         self.index.track(workspace_root, dir)
     }
 
-    /// The files under `dir` once the index has caught up, or `None` when
-    /// nothing tracks it. The first ask walks; see `IgnoredIndex::listing`.
-    pub(crate) fn list(&self, workspace_root: &Path, dir: &str) -> Option<Vec<String>> {
-        if !self.index.is_tracked(dir) {
-            return None;
-        }
+    /// The files under `dir` that `accept` admits, once the index has applied
+    /// what the watch delivered, so an answer never predates a reported write.
+    /// See `IgnoredIndex::files_under`.
+    pub(crate) fn files_under(
+        &self,
+        workspace_root: &Path,
+        dir: &str,
+        cached: bool,
+        accept: &(dyn Fn(&str) -> bool + Sync),
+    ) -> Option<Vec<String>> {
         (self.catch_up)();
-        self.index.list(workspace_root, dir)
+        self.index.files_under(workspace_root, dir, cached, accept)
     }
 }
 

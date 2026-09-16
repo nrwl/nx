@@ -4,18 +4,14 @@
 //! what is here is the per-entry decision and the stamp it reads.
 
 use std::path::Path;
-use std::sync::{Arc, OnceLock};
+use std::sync::Arc;
 
 use anyhow::{Context, Result, bail};
 use dashmap::DashMap;
-use ignore::WalkState;
-use parking_lot::Mutex;
 
 use super::entries::{Negation, Positive};
-use crate::native::glob::{
-    NxGlobSet, build_glob_set, expand_literal_braces, literal_prefix, normalize_glob,
-};
-use crate::native::walker::{TRANSIENT_FILE_GLOBS, create_walker_vetoing};
+use crate::native::glob::{build_glob_set, expand_literal_braces, literal_prefix, normalize_glob};
+use crate::native::walker::files_under;
 
 /// Expansion per `files:{project}:[...]` instruction, scoped to one `hash_plans`
 /// call: a group is listed or walked afresh for the next one.
@@ -31,14 +27,12 @@ pub(crate) enum Reach {
     WhereverItPoints,
 }
 
-/// Where the files under a directory come from when not from a walk. Asked
-/// with a workspace-relative directory (empty for the root); `Some` is its
-/// files, sorted and workspace-relative, from an index the caller keeps
-/// current; `None` walks the disk.
-pub(crate) type Members<'a> = &'a (dyn Fn(&str) -> Option<Vec<String>> + Sync);
-
-/// For a caller with no index: every directory is walked.
-pub(crate) const NO_INDEX: Members<'static> = &|_| None;
+/// Asks what a directory holds: given a workspace-relative directory and a
+/// predicate, the files under it the predicate admits, sorted. `None` when
+/// the directory cannot be read. The index answers this, from a listing it
+/// keeps or from the disk; the expansion never reads a directory itself.
+pub(crate) type FilesUnder<'a> =
+    &'a (dyn Fn(&str, &(dyn Fn(&str) -> bool + Sync)) -> Option<Vec<String>> + Sync);
 
 /// For a caller with no workspace context: every path is checked on disk.
 pub(crate) const NOTHING_KNOWN: &(dyn Fn(&str) -> bool + Sync) = &|_| false;
@@ -49,8 +43,8 @@ pub(crate) struct Source<'a> {
     /// Whether the workspace context already tracks a path. A path it
     /// vouches for needs no stat.
     known: &'a (dyn Fn(&str) -> bool + Sync),
-    /// An index that can list a directory in place of a walk.
-    members: Members<'a>,
+    /// What a directory holds, see `FilesUnder`.
+    files_under: FilesUnder<'a>,
     reach: Reach,
 }
 
@@ -58,10 +52,13 @@ impl<'a> Source<'a> {
     /// An `includeIgnored` fileset. It is hashed alongside tracked files, so
     /// the context can vouch for a path, and it may not read outside the
     /// workspace.
-    pub(crate) fn fileset(known: &'a (dyn Fn(&str) -> bool + Sync), members: Members<'a>) -> Self {
+    pub(crate) fn fileset(
+        known: &'a (dyn Fn(&str) -> bool + Sync),
+        files_under: FilesUnder<'a>,
+    ) -> Self {
         Self {
             known,
-            members,
+            files_under,
             reach: Reach::InsideWorkspace,
         }
     }
@@ -69,29 +66,18 @@ impl<'a> Source<'a> {
     /// A dependency's declared outputs. They were written by a task that has
     /// run, so the file map predates them and nothing is taken as known, and
     /// they are read wherever they point.
-    pub(crate) fn declared_outputs() -> Self {
+    pub(crate) fn declared_outputs(files_under: FilesUnder<'a>) -> Self {
         Self {
             known: NOTHING_KNOWN,
-            members: NO_INDEX,
+            files_under,
             reach: Reach::WhereverItPoints,
         }
     }
 }
 
-/// A matched file and the stamp read for it. `None` when nothing stat'ed it:
-/// the workspace context vouched for the path, or an index listed it.
-pub(crate) struct Found {
-    pub path: String,
-    pub stamp: Option<FileStamp>,
-}
-
 pub struct FilesExpansion {
     /// Existing files matched by the group, sorted, workspace-relative.
     pub files: Vec<String>,
-    /// Aligned with `files`: the stamp read while expanding, so hashing does
-    /// not stat again, or `None` when the workspace context vouched for the
-    /// file, or an index listed it, and the disk was never consulted.
-    pub stamps: Vec<Option<FileStamp>>,
 }
 
 /// Expands an `includeIgnored` fileset group. `known` says whether the
@@ -111,7 +97,9 @@ pub fn expand_files_with(
         workspace_root,
         &positives,
         &negations,
-        &Source::fileset(known, NO_INDEX),
+        &Source::fileset(known, &|dir, accept| {
+            files_under(workspace_root, dir, true, accept)
+        }),
     )
 }
 
@@ -145,7 +133,7 @@ pub(crate) fn expand_entries(
 ) -> Result<FilesExpansion> {
     let Source {
         known,
-        members,
+        files_under,
         reach,
     } = source;
     let canonical_root = if *reach == Reach::InsideWorkspace {
@@ -159,16 +147,13 @@ pub(crate) fn expand_entries(
         None
     };
 
-    let mut found: Vec<Found> = Vec::new();
+    let mut found: Vec<String> = Vec::new();
     for entry in positives {
         let root = &entry.root;
         let remainder = entry.remainder.as_deref();
         let has_pattern = remainder.is_some();
         if !has_pattern && known(root) {
-            found.push(Found {
-                path: root.clone(),
-                stamp: None,
-            });
+            found.push(root.clone());
             continue;
         }
         let start = workspace_root.join(root);
@@ -192,10 +177,7 @@ pub(crate) fn expand_entries(
         }
         if metadata.is_file() {
             if !has_pattern {
-                found.push(Found {
-                    path: root.clone(),
-                    stamp: Some(stamp_of(&metadata)),
-                });
+                found.push(root.clone());
             }
             continue;
         }
@@ -214,36 +196,17 @@ pub(crate) fn expand_entries(
         } else {
             Box::new(move |path: &str| !excluded(path))
         };
-        if let Some(listed) = members(root) {
-            // Listed files carry no stamp: the index that listed them is
-            // asked for their content, or they are stat'ed when hashed.
-            found.extend(
-                listed
-                    .into_iter()
-                    .filter(|path| accept(path))
-                    .map(|path| Found { path, stamp: None }),
-            );
-            continue;
+        if let Some(under) = files_under(root, &*accept) {
+            found.extend(under);
         }
-        found.extend(walk_files(
-            &start,
-            workspace_root,
-            canonical_root.as_deref(),
-            &*accept,
-            known,
-        )?);
     }
 
     // `accept` already filtered what the walk produced; this catches the
     // entries taken without it, an exact file and anything an index listed.
-    found.retain(|found| !negations.iter().any(|n| n.excludes(&found.path)));
-    found.sort_unstable_by(|a, b| a.path.cmp(&b.path));
-    found.dedup_by(|a, b| a.path == b.path);
-    let (files, stamps) = found
-        .into_iter()
-        .map(|found| (found.path, found.stamp))
-        .unzip();
-    Ok(FilesExpansion { files, stamps })
+    found.retain(|path| !negations.iter().any(|n| n.excludes(path)));
+    found.sort_unstable();
+    found.dedup();
+    Ok(FilesExpansion { files: found })
 }
 
 /// `expand_files_with` without a workspace context: every path is checked on
@@ -258,7 +221,7 @@ pub(crate) fn expand_files_cached(
     globs: &[String],
     cache: &FilesExpansionCache,
     known: &(dyn Fn(&str) -> bool + Sync),
-    members: Members,
+    files_under: FilesUnder,
 ) -> Result<Arc<FilesExpansion>> {
     expand_cached(key, cache, || {
         let (positives, negations) = parse_group(globs)?;
@@ -266,7 +229,7 @@ pub(crate) fn expand_files_cached(
             workspace_root,
             &positives,
             &negations,
-            &Source::fileset(known, members),
+            &Source::fileset(known, files_under),
         )
     })
 }
@@ -314,139 +277,4 @@ pub(crate) fn validate_files_globs(project: &str, globs: &[String]) -> Result<()
         );
     }
     globs.iter().try_for_each(|glob| validate_files_glob(glob))
-}
-
-/// The `(mtime, size)` a file showed when expansion looked at it.
-pub type FileStamp = (u128, u64);
-
-pub(crate) fn stamp_of(metadata: &std::fs::Metadata) -> FileStamp {
-    let mtime = metadata
-        .modified()
-        .ok()
-        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
-        .map(|d| d.as_nanos())
-        .unwrap_or(0);
-    (mtime, metadata.len())
-}
-
-/// The transient files the watch never reports. The hardcoded directories
-/// come from `create_walker`, which vetoes them for every walk.
-fn transient_skips() -> Result<Arc<NxGlobSet>> {
-    static SKIPS: OnceLock<Option<Arc<NxGlobSet>>> = OnceLock::new();
-    SKIPS
-        .get_or_init(|| {
-            let patterns: Vec<String> = TRANSIENT_FILE_GLOBS
-                .iter()
-                .map(|g| format!("**/{g}"))
-                .collect();
-            build_glob_set(&patterns).ok()
-        })
-        .clone()
-        .context("the transient-file globs always build")
-}
-
-/// Files under `start`, workspace-relative, with the stamp read on the way
-/// for anything the context does not vouch for. The walker skips what it
-/// skips for every walk, but never the root it is given, so a glob rooted at
-/// `node_modules` reads it. Linked directories are not entered; with
-/// `canonical_root`, a linked file counts only when its target is inside it.
-fn walk_files(
-    start: &Path,
-    workspace_root: &Path,
-    canonical_root: Option<&Path>,
-    accept: &(dyn Fn(&str) -> bool + Sync),
-    known: &(dyn Fn(&str) -> bool + Sync),
-) -> Result<Vec<Found>> {
-    let relative_of = |path: &Path| -> Option<String> {
-        Some(
-            path.strip_prefix(workspace_root)
-                .ok()?
-                .to_string_lossy()
-                .replace('\\', "/"),
-        )
-    };
-    let visit = |path: &Path, file_type: std::fs::FileType| -> Option<Found> {
-        let relative = relative_of(path)?;
-        if file_type.is_symlink() {
-            // Read where a linked file points, but never enter a linked
-            // directory, and with a root to hold to, never leave it.
-            let target = std::fs::metadata(path).ok()?;
-            if target.is_dir() || !accept(&relative) {
-                return None;
-            }
-            if let Some(root) = canonical_root
-                && !dunce::canonicalize(path).is_ok_and(|t| t.starts_with(root))
-            {
-                return None;
-            }
-            let stamp = (!known(&relative)).then(|| stamp_of(&target));
-            return Some(Found {
-                path: relative,
-                stamp,
-            });
-        }
-        if !file_type.is_file() || !accept(&relative) {
-            return None;
-        }
-        if known(&relative) {
-            return Some(Found {
-                path: relative,
-                stamp: None,
-            });
-        }
-        let metadata = std::fs::metadata(path).ok()?;
-        Some(Found {
-            path: relative,
-            stamp: Some(stamp_of(&metadata)),
-        })
-    };
-
-    let found = Mutex::new(Vec::new());
-    create_walker_vetoing(start, false, Some(transient_skips()?))
-        .follow_links(false)
-        .build_parallel()
-        .run(|| {
-            Box::new(|entry| {
-                if let Ok(entry) = entry
-                    && let Some(file_type) = entry.file_type()
-                    && let Some(one) = visit(entry.path(), file_type)
-                {
-                    found.lock().push(one);
-                }
-                WalkState::Continue
-            })
-        });
-    Ok(found.into_inner())
-}
-
-/// Every file under `dir` with its stamp, for an index seeding a prefix: the
-/// walk an expansion runs, confined to the workspace. Empty when `dir` does
-/// not exist yet; `None` when it resolves outside the workspace.
-pub(crate) fn seed_walk(workspace_root: &Path, dir: &str) -> Option<Vec<(String, FileStamp)>> {
-    let start = workspace_root.join(dir);
-    if std::fs::symlink_metadata(&start).is_err() {
-        return Some(Vec::new());
-    }
-    let canonical_root = dunce::canonicalize(workspace_root).ok()?;
-    let resolved = dunce::canonicalize(&start).ok()?;
-    if !resolved.starts_with(&canonical_root) {
-        return None;
-    }
-    if !resolved.is_dir() {
-        return Some(Vec::new());
-    }
-    let walked = walk_files(
-        &start,
-        workspace_root,
-        Some(&canonical_root),
-        &|_| true,
-        &|_| false,
-    )
-    .ok()?;
-    Some(
-        walked
-            .into_iter()
-            .map(|found| (found.path, found.stamp.unwrap_or_default()))
-            .collect(),
-    )
 }

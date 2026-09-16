@@ -2,12 +2,12 @@ use std::path::{Path, PathBuf};
 
 use anyhow::Result;
 
-use super::disk_expansion::FileStamp;
 use super::disk_expansion::{
     FilesExpansion, FilesExpansionCache, Negation, Positive, Source, expand_cached, expand_entries,
 };
 use super::hash_ignored_files::hash_files;
 use crate::native::glob::{build_glob_set, literal_prefix};
+use crate::native::walker::files_under;
 use crate::native::workspace::ignored_index::IgnoredIndex;
 
 /// Result of hashing task output files, including the matched file paths
@@ -33,19 +33,20 @@ pub fn expand_task_outputs(
             workspace_root,
             &positives,
             &negations,
-            &Source::declared_outputs(),
+            &Source::declared_outputs(&|dir, accept| {
+                files_under(workspace_root, dir, false, accept)
+            }),
         )
     })?;
     let selected = build_glob_set(&[glob])?;
-    let (files, stamps): (Vec<String>, Vec<Option<FileStamp>>) = expansion
+    let files: Vec<String> = expansion
         .files
         .iter()
-        .zip(&expansion.stamps)
-        .filter(|(file, _)| selected.is_match(file))
-        .map(|(file, stamp)| (file.clone(), *stamp))
-        .unzip();
+        .filter(|file| selected.is_match(file))
+        .cloned()
+        .collect();
     // An output that does not exist is not an input.
-    Ok(FilesExpansion { files, stamps })
+    Ok(FilesExpansion { files })
 }
 
 pub fn hash_task_output(

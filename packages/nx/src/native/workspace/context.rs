@@ -2542,7 +2542,7 @@ mod tests {
         // so the write shows up within the kernel's hop, not the idle flush.
         temp.child("dist/out.js").write_str("x").unwrap();
         wait_until("a listing never saw the write", || {
-            reader.list(&root, "dist").unwrap() == vec!["dist/out.js"]
+            reader.files_under(&root, "dist", true, &|_| true).unwrap() == vec!["dist/out.js"]
         });
     }
 
@@ -2572,7 +2572,8 @@ mod tests {
 
         let (tx, rx) = std::sync::mpsc::channel();
         let listing = std::thread::spawn(move || {
-            tx.send(reader.list(&root, "dist").unwrap()).unwrap();
+            tx.send(reader.files_under(&root, "dist", true, &|_| true).unwrap())
+                .unwrap();
         });
         assert!(
             rx.recv_timeout(Duration::from_millis(300)).is_err(),
@@ -2600,7 +2601,12 @@ mod tests {
         let reader = ctx.reader();
         // The watch never reports dist/gen, so dist cannot be kept from events.
         assert!(!reader.track(&root, "dist"));
-        assert!(reader.list(&root, "dist").is_none());
+        // Refused for caching, still answered: the disk is read and not kept.
+        assert_eq!(
+            reader.files_under(&root, "dist", true, &|_| true).unwrap(),
+            vec!["dist/gen/x.js"]
+        );
+        assert!(!reader.index().is_tracked("dist/gen/x.js"));
         assert!(reader.track(&root, "src"));
     }
 

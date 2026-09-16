@@ -27,9 +27,8 @@ pub(crate) fn hash_files(
     let hashes: Vec<Option<String>> = expansion
         .files
         .par_iter()
-        .zip(expansion.stamps.par_iter())
-        .map(|(file, stamp)| {
-            known(file).or_else(|| index.hash_file(workspace_root, file, *stamp, trust_index))
+        .map(|file| {
+            known(file).or_else(|| index.hash_file(workspace_root, file, None, trust_index))
         })
         .collect();
 

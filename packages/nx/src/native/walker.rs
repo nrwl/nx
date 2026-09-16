@@ -1,7 +1,10 @@
-use ignore::WalkBuilder;
+use ignore::{WalkBuilder, WalkState};
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
+
+use anyhow::{Context, Result};
+use parking_lot::Mutex;
 
 use crate::native::glob::{NxGlobSet, build_glob_set};
 
@@ -262,6 +265,139 @@ where
                 .is_none_or(|set| !set.is_match(path.as_ref()))
     });
     walker
+}
+
+// ---------------------------------------------------------------------------
+// Reading a directory's files, for the hashers and for the ignored index.
+// Both need the same thing: every file under a directory, workspace-relative,
+// with the stamp that says whether a remembered hash still stands.
+// ---------------------------------------------------------------------------
+
+/// The `(mtime, size)` a file showed when expansion looked at it.
+pub type FileStamp = (u128, u64);
+
+pub(crate) fn stamp_of(metadata: &std::fs::Metadata) -> FileStamp {
+    let mtime = metadata
+        .modified()
+        .ok()
+        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+        .map(|d| d.as_nanos())
+        .unwrap_or(0);
+    (mtime, metadata.len())
+}
+
+/// The transient files the watch never reports. The hardcoded directories
+/// come from `create_walker`, which vetoes them for every walk.
+fn transient_skips() -> Result<Arc<NxGlobSet>> {
+    static SKIPS: OnceLock<Option<Arc<NxGlobSet>>> = OnceLock::new();
+    SKIPS
+        .get_or_init(|| {
+            let patterns: Vec<String> = TRANSIENT_FILE_GLOBS
+                .iter()
+                .map(|g| format!("**/{g}"))
+                .collect();
+            build_glob_set(&patterns).ok()
+        })
+        .clone()
+        .context("the transient-file globs always build")
+}
+
+/// Files under `start`, workspace-relative, with the stamp read on the way
+/// for anything the context does not vouch for. The walker skips what it
+/// skips for every walk, but never the root it is given, so a glob rooted at
+/// `node_modules` reads it. Linked directories are not entered; with
+/// `canonical_root`, a linked file counts only when its target is inside it.
+pub(crate) fn walk_files(
+    start: &Path,
+    workspace_root: &Path,
+    canonical_root: Option<&Path>,
+    accept: &(dyn Fn(&str) -> bool + Sync),
+) -> Result<Vec<String>> {
+    let relative_of = |path: &Path| -> Option<String> {
+        Some(
+            path.strip_prefix(workspace_root)
+                .ok()?
+                .to_string_lossy()
+                .replace('\\', "/"),
+        )
+    };
+    let visit = |path: &Path, file_type: std::fs::FileType| -> Option<String> {
+        let relative = relative_of(path)?;
+        if file_type.is_symlink() {
+            // Read where a linked file points, but never enter a linked
+            // directory, and with a root to hold to, never leave it.
+            let target = std::fs::metadata(path).ok()?;
+            if target.is_dir() || !accept(&relative) {
+                return None;
+            }
+            if let Some(root) = canonical_root
+                && !dunce::canonicalize(path).is_ok_and(|t| t.starts_with(root))
+            {
+                return None;
+            }
+            return Some(relative);
+        }
+        if !file_type.is_file() || !accept(&relative) {
+            return None;
+        }
+        Some(relative)
+    };
+
+    let found = Mutex::new(Vec::new());
+    create_walker_vetoing(start, false, Some(transient_skips()?))
+        .follow_links(false)
+        .build_parallel()
+        .run(|| {
+            Box::new(|entry| {
+                if let Ok(entry) = entry
+                    && let Some(file_type) = entry.file_type()
+                    && let Some(one) = visit(entry.path(), file_type)
+                {
+                    found.lock().push(one);
+                }
+                WalkState::Continue
+            })
+        });
+    Ok(found.into_inner())
+}
+
+/// Every file under `dir` with its stamp, for an index seeding a prefix: the
+/// walk an expansion runs, confined to the workspace. Empty when `dir` does
+/// not exist yet; `None` when it resolves outside the workspace.
+/// The files under `dir` that `accept` admits, workspace-relative, read from
+/// disk. The one implementation of "what does this directory hold"; the
+/// ignored index caches on top of it, and everything else calls it directly.
+/// With `confine`, a `dir` resolving outside the workspace is `None` and a
+/// linked file leading out is skipped; a declared output is read wherever it
+/// points. `None` also when `dir` cannot be read at all.
+pub(crate) fn files_under(
+    workspace_root: &Path,
+    dir: &str,
+    confine: bool,
+    accept: &(dyn Fn(&str) -> bool + Sync),
+) -> Option<Vec<String>> {
+    let start = workspace_root.join(dir);
+    let resolved = dunce::canonicalize(&start).ok()?;
+    let canonical_root = if confine {
+        let root = dunce::canonicalize(workspace_root).ok()?;
+        if !resolved.starts_with(&root) {
+            return None;
+        }
+        Some(root)
+    } else {
+        None
+    };
+    if !resolved.is_dir() {
+        return Some(Vec::new());
+    }
+    walk_files(&start, workspace_root, canonical_root.as_deref(), accept).ok()
+}
+
+pub(crate) fn seed_walk(workspace_root: &Path, dir: &str) -> Option<Vec<String>> {
+    if std::fs::symlink_metadata(workspace_root.join(dir)).is_err() {
+        return Some(Vec::new());
+    }
+    files_under(workspace_root, dir, true, &|_| true)
 }
 
 #[cfg(test)]

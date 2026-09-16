@@ -17,12 +17,12 @@ use crate::native::{
 };
 use crate::native::{
     tasks::hashers::{
-        FilesExpansionCache, JsonHashResult, Members, NO_INDEX, ProjectFileIndicesCache,
-        ProjectFileSetCache, WorkspaceFileIndicesCache, WorkspaceFileSetCache,
-        collect_project_file_paths_cached, collect_workspace_file_paths_cached,
-        expand_files_cached, hash_all_externals, hash_external, hash_files, hash_json_files,
-        hash_project_config, hash_project_files_cached, hash_task_output,
-        hash_tsconfig_selectively, hash_workspace_files_cached, index_file_map, output_prefixes,
+        FilesExpansionCache, JsonHashResult, ProjectFileIndicesCache, ProjectFileSetCache,
+        WorkspaceFileIndicesCache, WorkspaceFileSetCache, collect_project_file_paths_cached,
+        collect_workspace_file_paths_cached, expand_files_cached, hash_all_externals,
+        hash_external, hash_files, hash_json_files, hash_project_config, hash_project_files_cached,
+        hash_task_output, hash_tsconfig_selectively, hash_workspace_files_cached, index_file_map,
+        output_prefixes,
     },
     types::FileData,
     workspace::ignored_index::IgnoredIndexReader,
@@ -779,17 +779,20 @@ impl TaskHasher {
             }
             HashInstruction::IgnoredFileSet(globs) => {
                 let workspace_root = Path::new(&self.workspace_root);
-                // The index lists a directory only while nothing has run,
-                // like the file map; afterwards the disk is walked.
-                let listed = |dir: &str| self.ignored_index.list(workspace_root, dir);
-                let members: Members = if trust_file_map { &listed } else { NO_INDEX };
+                // The index answers from a listing it keeps only while
+                // nothing has run, like the file map; afterwards it reads the
+                // disk for us.
+                let files_under = |dir: &str, accept: &(dyn Fn(&str) -> bool + Sync)| {
+                    self.ignored_index
+                        .files_under(workspace_root, dir, trust_file_map, accept)
+                };
                 let expansion = expand_files_cached(
                     workspace_root,
                     &instruction.to_string(),
                     globs,
                     files_expansion_cache,
                     &|path| trust_file_map && self.workspace_file_known(path),
-                    members,
+                    &files_under,
                 )?;
                 let hashed = hash_files(
                     workspace_root,

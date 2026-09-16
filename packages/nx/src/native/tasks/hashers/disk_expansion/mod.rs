@@ -11,14 +11,12 @@ mod expansion;
 
 pub(crate) use entries::{Negation, Positive};
 pub(crate) use expansion::validate_files_globs;
-pub use expansion::{FileStamp, FilesExpansion, expand_files, expand_files_with};
+pub use expansion::{FilesExpansion, expand_files, expand_files_with};
 pub(crate) use expansion::{
-    FilesExpansionCache, Members, NO_INDEX, Source, expand_cached, expand_entries,
-    expand_files_cached,
+    FilesExpansionCache, Source, expand_cached, expand_entries, expand_files_cached,
 };
 #[cfg(test)]
 use expansion::{NOTHING_KNOWN, parse_group, validate_files_glob};
-pub(crate) use expansion::{seed_walk, stamp_of};
 
 #[cfg(test)]
 pub(crate) mod tests {
@@ -46,24 +44,21 @@ pub(crate) mod tests {
     }
 
     #[test]
-    fn walked_files_carry_their_stamp_unless_the_context_knows_them() {
+    fn a_path_the_context_knows_is_taken_without_reading_the_disk() {
         let temp = workspace();
-        let expansion = expand_files_with(temp.path(), &globs(&["dist/gen/**/*.js"]), &|path| {
-            path == "dist/gen/a.js"
+        // The known path exists only in the caller's word for it.
+        let expansion = expand_files_with(temp.path(), &globs(&["dist/gen/absent.js"]), &|path| {
+            path == "dist/gen/absent.js"
         })
         .unwrap();
-        assert_eq!(
-            expansion.files,
-            vec!["dist/gen/a.js", "dist/gen/nested/b.js"]
-        );
-        assert!(expansion.stamps[0].is_none());
-        assert!(expansion.stamps[1].is_some());
+        assert_eq!(expansion.files, vec!["dist/gen/absent.js"]);
     }
 
     #[test]
-    fn a_directory_the_members_list_is_taken_from_the_list_not_the_disk() {
+    fn a_directory_is_whatever_the_source_says_it_holds() {
         let temp = workspace();
-        let listed = |dir: &str| {
+        // A phantom the disk does not have, to prove the source is believed.
+        let listed = |dir: &str, accept: &(dyn Fn(&str) -> bool + Sync)| {
             (dir == "dist/gen").then(|| {
                 globs(&[
                     "dist/gen/a.js",
@@ -71,6 +66,9 @@ pub(crate) mod tests {
                     "dist/gen/nested/b.js",
                     "dist/gen/phantom.js",
                 ])
+                .into_iter()
+                .filter(|path| accept(path))
+                .collect()
             })
         };
         let group = globs(&["dist/gen/**/*.js", "!dist/gen/nested/**"]);
@@ -82,13 +80,12 @@ pub(crate) mod tests {
             &Source::fileset(NOTHING_KNOWN, &listed),
         )
         .unwrap();
-        // The pattern and the negation apply to the list; nothing is stat'ed.
+        // The pattern and the negation apply to what the source returned.
         assert_eq!(
             expansion.files,
             vec!["dist/gen/a.js", "dist/gen/phantom.js"]
         );
-        assert!(expansion.stamps.iter().all(Option::is_none));
-        // A directory the list does not hold is walked as before.
+        // A directory the source has nothing for contributes nothing.
         let expansion = expand_entries(
             temp.path(),
             &parse_group(&globs(&["dist/other/**"])).unwrap().0,
@@ -96,7 +93,7 @@ pub(crate) mod tests {
             &Source::fileset(NOTHING_KNOWN, &listed),
         )
         .unwrap();
-        assert_eq!(expansion.files, vec!["dist/other/c.js"]);
+        assert!(expansion.files.is_empty());
     }
 
     #[test]
@@ -278,7 +275,6 @@ pub(crate) mod tests {
         )
         .unwrap();
         assert_eq!(expansion.files, vec!["libs/x/tracked.ts"]);
-        assert_eq!(expansion.stamps, vec![None]);
     }
 
     #[test]
