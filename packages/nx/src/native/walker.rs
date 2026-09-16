@@ -1,8 +1,9 @@
 use ignore::WalkBuilder;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
-use crate::native::glob::build_glob_set;
+use crate::native::glob::{NxGlobSet, build_glob_set};
 
 use crate::native::utils::{Normalize, get_mod_time, git::parent_gitignore_files};
 use walkdir::WalkDir;
@@ -206,6 +207,20 @@ pub(crate) fn create_walker<P>(directory: P, use_ignores: bool) -> WalkBuilder
 where
     P: AsRef<Path>,
 {
+    create_walker_vetoing(directory, use_ignores, None)
+}
+
+/// `create_walker` with `extra` vetoed on top of the hardcoded ignores. The
+/// ignore crate keeps one filter predicate, so a caller that needs more has
+/// to have them composed here rather than add its own.
+pub(crate) fn create_walker_vetoing<P>(
+    directory: P,
+    use_ignores: bool,
+    extra: Option<Arc<NxGlobSet>>,
+) -> WalkBuilder
+where
+    P: AsRef<Path>,
+{
     let directory: PathBuf = directory.as_ref().into();
 
     let ignore_glob_set =
@@ -243,6 +258,9 @@ where
     walker.filter_entry(move |entry| {
         let path = entry.path().to_string_lossy();
         !ignore_glob_set.is_match(path.as_ref())
+            && extra
+                .as_ref()
+                .is_none_or(|set| !set.is_match(path.as_ref()))
     });
     walker
 }

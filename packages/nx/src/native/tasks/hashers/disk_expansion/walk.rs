@@ -2,15 +2,15 @@
 //! stamp it reads on the way.
 
 use std::path::Path;
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
-use anyhow::Result;
-use rayon::prelude::*;
-use walkdir::WalkDir;
+use anyhow::{Context, Result};
+use ignore::WalkState;
+use parking_lot::Mutex;
 
 use super::expansion::Found;
 use crate::native::glob::{NxGlobSet, build_glob_set};
-use crate::native::walker::{HARDCODED_IGNORE_PATTERNS, TRANSIENT_FILE_GLOBS};
+use crate::native::walker::{TRANSIENT_FILE_GLOBS, create_walker_vetoing};
 
 /// The `(mtime, size)` a file showed when expansion looked at it.
 pub type FileStamp = (u128, u64);
@@ -25,15 +25,20 @@ pub(crate) fn stamp_of(metadata: &std::fs::Metadata) -> FileStamp {
     (mtime, metadata.len())
 }
 
-/// What a walk never enters or lists: the hardcoded directories, and the
-/// transient files the watch never reports.
-pub(super) fn walk_skips() -> Result<Arc<NxGlobSet>> {
-    let patterns: Vec<String> = HARDCODED_IGNORE_PATTERNS
-        .iter()
-        .map(|p| (*p).to_string())
-        .chain(TRANSIENT_FILE_GLOBS.iter().map(|g| format!("**/{g}")))
-        .collect();
-    build_glob_set(&patterns)
+/// The transient files the watch never reports. The hardcoded directories
+/// come from `create_walker`, which vetoes them for every walk.
+fn transient_skips() -> Result<Arc<NxGlobSet>> {
+    static SKIPS: OnceLock<Option<Arc<NxGlobSet>>> = OnceLock::new();
+    SKIPS
+        .get_or_init(|| {
+            let patterns: Vec<String> = TRANSIENT_FILE_GLOBS
+                .iter()
+                .map(|g| format!("**/{g}"))
+                .collect();
+            build_glob_set(&patterns).ok()
+        })
+        .clone()
+        .context("the transient-file globs always build")
 }
 
 /// Files under `start`, workspace-relative, with the stamp read on the way
@@ -46,10 +51,9 @@ pub(super) fn walk_files(
     start: &Path,
     workspace_root: &Path,
     canonical_root: Option<&Path>,
-    skip: &NxGlobSet,
     accept: &(dyn Fn(&str) -> bool + Sync),
     known: &(dyn Fn(&str) -> bool + Sync),
-) -> Vec<Found> {
+) -> Result<Vec<Found>> {
     let relative_of = |path: &Path| -> Option<String> {
         Some(
             path.strip_prefix(workspace_root)
@@ -58,21 +62,11 @@ pub(super) fn walk_files(
                 .replace('\\', "/"),
         )
     };
-    let Ok(entries) = std::fs::read_dir(start) else {
-        return Vec::new();
-    };
-    let mut leaves = Vec::new();
-    let mut dirs = Vec::new();
-    for entry in entries.flatten() {
-        match entry.file_type() {
-            Ok(file_type) if file_type.is_dir() => dirs.push(entry.path()),
-            Ok(file_type) => leaves.push((entry.path(), file_type)),
-            Err(_) => {}
-        }
-    }
     let visit = |path: &Path, file_type: std::fs::FileType| -> Option<Found> {
         let relative = relative_of(path)?;
         if file_type.is_symlink() {
+            // Read where a linked file points, but never enter a linked
+            // directory, and with a root to hold to, never leave it.
             let target = std::fs::metadata(path).ok()?;
             if target.is_dir() || !accept(&relative) {
                 return None;
@@ -103,30 +97,23 @@ pub(super) fn walk_files(
             stamp: Some(stamp_of(&metadata)),
         })
     };
-    let mut found: Vec<Found> = leaves
-        .iter()
-        .filter(|(path, _)| !skip.is_match(path))
-        .filter_map(|(path, file_type)| visit(path, *file_type))
-        .collect();
-    let nested: Vec<Vec<Found>> = dirs
-        .par_iter()
-        .map(|dir| {
-            if skip.is_match(dir) {
-                return Vec::new();
-            }
-            WalkDir::new(dir)
-                .follow_links(false)
-                .into_iter()
-                .filter_entry(|entry| !skip.is_match(entry.path()))
-                .flatten()
-                .filter_map(|entry| visit(entry.path(), entry.file_type()))
-                .collect()
-        })
-        .collect();
-    for group in nested {
-        found.extend(group);
-    }
-    found
+
+    let found = Mutex::new(Vec::new());
+    create_walker_vetoing(start, false, Some(transient_skips()?))
+        .follow_links(false)
+        .build_parallel()
+        .run(|| {
+            Box::new(|entry| {
+                if let Ok(entry) = entry
+                    && let Some(file_type) = entry.file_type()
+                    && let Some(one) = visit(entry.path(), file_type)
+                {
+                    found.lock().push(one);
+                }
+                WalkState::Continue
+            })
+        });
+    Ok(found.into_inner())
 }
 
 /// Every file under `dir` with its stamp, for an index seeding a prefix: the
@@ -145,15 +132,14 @@ pub(crate) fn seed_walk(workspace_root: &Path, dir: &str) -> Option<Vec<(String,
     if !resolved.is_dir() {
         return Some(Vec::new());
     }
-    let skip = walk_skips().ok()?;
     let walked = walk_files(
         &start,
         workspace_root,
         Some(&canonical_root),
-        &skip,
         &|_| true,
         &|_| false,
-    );
+    )
+    .ok()?;
     Some(
         walked
             .into_iter()

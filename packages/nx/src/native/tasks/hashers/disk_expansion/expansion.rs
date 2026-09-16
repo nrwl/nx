@@ -8,7 +8,7 @@ use anyhow::{Context, Result, bail};
 use dashmap::DashMap;
 
 use super::entries::{Negation, Positive};
-use super::walk::{FileStamp, stamp_of, walk_files, walk_skips};
+use super::walk::{FileStamp, stamp_of, walk_files};
 use crate::native::glob::{build_glob_set, expand_literal_braces, literal_prefix, normalize_glob};
 
 /// Expansion per `files:{project}:[...]` instruction, scoped to one `hash_plans`
@@ -140,7 +140,6 @@ pub(crate) fn expand_entries(
         members,
         reach,
     } = source;
-    let skip = walk_skips()?;
     let canonical_root = if *reach == Reach::InsideWorkspace {
         Some(dunce::canonicalize(workspace_root).with_context(|| {
             format!(
@@ -227,10 +226,9 @@ pub(crate) fn expand_entries(
             &start,
             workspace_root,
             canonical_root.as_deref(),
-            &skip,
             &*accept,
             known,
-        ));
+        )?);
     }
 
     // `accept` already filtered what the walk produced; this catches the
