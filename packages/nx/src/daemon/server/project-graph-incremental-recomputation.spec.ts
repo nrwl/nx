@@ -7,6 +7,7 @@ import {
 } from 'node:fs';
 import { join } from 'node:path';
 
+import type { ProjectGraph } from '../../config/project-graph';
 import { TempFs } from '../../internal-testing-utils/temp-fs';
 
 import type { TestContext } from 'vitest';
@@ -26,6 +27,38 @@ const waitForIn = ({ task }: TestContext) => {
     }
   };
 };
+
+// Parks the first config retrieval until released. Each retrieval adds a
+// project named after its call, so a graph shows which computation built it.
+function gateFirstRetrieval() {
+  let release: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let calls = 0;
+  vi.doMock('../../project-graph/utils/retrieve-workspace-files', async () => {
+    const actual = (await vi.importActual(
+      '../../project-graph/utils/retrieve-workspace-files'
+    )) as any;
+    return {
+      ...actual,
+      retrieveProjectConfigurations: async (...args: unknown[]) => {
+        const call = ++calls;
+        if (call === 1) {
+          await gate;
+        }
+        const marker = `retrieval-${call}`;
+        const result = await actual.retrieveProjectConfigurations(...args);
+        result.projects[marker] = { root: marker, name: marker };
+        return result;
+      },
+    };
+  });
+  return { release: () => release(), started: () => calls > 0 };
+}
+
+const retrievalMarkers = (graph: ProjectGraph) =>
+  Object.keys(graph.nodes).filter((name) => name.startsWith('retrieval-'));
 
 // Loading the module under test pulls in the daemon server (via ./watcher),
 // which registers a process-global PerformanceObserver. That observer outlives
@@ -128,48 +161,31 @@ describe('invalidateGraphCache', () => {
 
     // Park the first compute inside its config retrieval, after it claimed
     // its generation — the window an env-carrying client message can land
-    // in. The mock controls timing, not logic; the real retrieval runs.
-    let releaseFirstRetrieve: () => void;
-    const firstRetrieveGate = new Promise<void>((resolve) => {
-      releaseFirstRetrieve = resolve;
-    });
-    let retrieveCallCount = 0;
-    vi.doMock(
-      '../../project-graph/utils/retrieve-workspace-files',
-      async () => {
-        const actual = (await vi.importActual(
-          '../../project-graph/utils/retrieve-workspace-files'
-        )) as any;
-        return {
-          ...actual,
-          retrieveProjectConfigurations: async (...args: unknown[]) => {
-            retrieveCallCount++;
-            if (retrieveCallCount === 1) {
-              await firstRetrieveGate;
-            }
-            return actual.retrieveProjectConfigurations(...args);
-          },
-        };
-      }
+    // in.
+    const retrieval = gateFirstRetrieval();
+
+    const {
+      getCachedSerializedProjectGraphPromise,
+      invalidateGraphCache,
+      registerProjectGraphRecomputationListener,
+    } = await import('./project-graph-incremental-recomputation');
+    const published: string[][] = [];
+    registerProjectGraphRecomputationListener((graph) =>
+      published.push(retrievalMarkers(graph))
     );
 
-    const { getCachedSerializedProjectGraphPromise, invalidateGraphCache } =
-      await import('./project-graph-incremental-recomputation');
-
     const first = getCachedSerializedProjectGraphPromise();
-    while (retrieveCallCount === 0) {
+    while (!retrieval.started()) {
       await new Promise((r) => setImmediate(r));
     }
 
     invalidateGraphCache();
-    releaseFirstRetrieve!();
+    retrieval.release();
 
     const result = await first;
     expect(result.error).toBeNull();
-    expect(result.projectGraph).toBeDefined();
-    // The successor's retrieval, proving the parked compute discarded its
-    // own result and chained instead of committing.
-    expect(retrieveCallCount).toBeGreaterThanOrEqual(2);
+    expect(retrievalMarkers(result.projectGraph)).toEqual(['retrieval-2']);
+    expect(published).toEqual([['retrieval-2']]);
   });
 });
 
@@ -198,35 +214,19 @@ describe('plugin state freshness', () => {
     const { setWorkspaceRoot } = await import('../../utils/workspace-root');
     setWorkspaceRoot(fs.tempDir);
 
-    let releaseFirstRetrieve: () => void;
-    const firstRetrieveGate = new Promise<void>((resolve) => {
-      releaseFirstRetrieve = resolve;
-    });
-    let retrieveCallCount = 0;
-    vi.doMock(
-      '../../project-graph/utils/retrieve-workspace-files',
-      async () => {
-        const actual = (await vi.importActual(
-          '../../project-graph/utils/retrieve-workspace-files'
-        )) as any;
-        return {
-          ...actual,
-          retrieveProjectConfigurations: async (...args: unknown[]) => {
-            retrieveCallCount++;
-            if (retrieveCallCount === 1) {
-              await firstRetrieveGate;
-            }
-            return actual.retrieveProjectConfigurations(...args);
-          },
-        };
-      }
+    const retrieval = gateFirstRetrieval();
+
+    const {
+      getCachedSerializedProjectGraphPromise,
+      registerProjectGraphRecomputationListener,
+    } = await import('./project-graph-incremental-recomputation');
+    const published: string[][] = [];
+    registerProjectGraphRecomputationListener((graph) =>
+      published.push(retrievalMarkers(graph))
     );
 
-    const { getCachedSerializedProjectGraphPromise } =
-      await import('./project-graph-incremental-recomputation');
-
     const first = getCachedSerializedProjectGraphPromise();
-    while (retrieveCallCount === 0) {
+    while (!retrieval.started()) {
       await new Promise((r) => setImmediate(r));
     }
 
@@ -234,12 +234,12 @@ describe('plugin state freshness', () => {
       join(fs.tempDir, 'tsconfig.base.json'),
       tsconfig(['@proj/src'])
     );
-    releaseFirstRetrieve!();
+    retrieval.release();
 
     const result = await first;
     expect(result.error).toBeNull();
-    expect(result.projectGraph).toBeDefined();
-    expect(retrieveCallCount).toBeGreaterThanOrEqual(2);
+    expect(retrievalMarkers(result.projectGraph)).toEqual(['retrieval-2']);
+    expect(published).toEqual([['retrieval-2']]);
   });
 });
 
