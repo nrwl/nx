@@ -1419,4 +1419,242 @@ describe('TasksSchedule', () => {
       expect(task).toBeDefined();
     });
   });
+
+  describe('tasks waiting for a continuous dependency to be ready', () => {
+    let original: string | undefined;
+    let taskSchedule: TasksSchedule;
+
+    beforeEach(async () => {
+      original = process.env['NX_BATCH_MODE'];
+      process.env['NX_BATCH_MODE'] = 'true';
+
+      const taskGraph: TaskGraph = {
+        tasks: {
+          'app1:build': createMockTask('app1:build'),
+          'lib1:build': createMockTask('lib1:build'),
+          'app1:serve': createMockTask('app1:serve', true, true),
+        },
+        dependencies: {
+          'app1:build': [],
+          'lib1:build': [],
+          'app1:serve': [],
+        },
+        continuousDependencies: {
+          'app1:build': ['app1:serve'],
+          'lib1:build': [],
+          'app1:serve': [],
+        },
+        roots: ['lib1:build', 'app1:serve'],
+      };
+      vi.spyOn(nxJsonUtils, 'readNxJson').mockReturnValue({});
+      vi.spyOn(executorUtils, 'getExecutorInformation').mockImplementation(
+        (_module, executor) => ({
+          schema: { version: 2, properties: {} },
+          implementationFactory: vi.fn(),
+          batchImplementationFactory:
+            executor === 'build' ? vi.fn() : undefined,
+          isNgCompat: true,
+          isNxExecutor: true,
+        })
+      );
+      const projectGraph: ProjectGraph = {
+        nodes: {
+          app1: {
+            name: 'app1',
+            type: 'app',
+            data: {
+              root: 'app1',
+              targets: {
+                build: {
+                  executor: 'awesome-executors:build',
+                  dependsOn: [
+                    { projects: ['app1'], target: 'serve', waitFor: 'ready' },
+                  ],
+                },
+                serve: {
+                  executor: 'awesome-executors:serve',
+                  continuous: true,
+                  readyWhen: 'ready',
+                },
+              },
+            },
+          },
+          lib1: {
+            name: 'lib1',
+            type: 'lib',
+            data: {
+              root: 'lib1',
+              targets: { build: { executor: 'awesome-executors:build' } },
+            },
+          },
+        } as any,
+        dependencies: { app1: [], lib1: [] },
+        externalNodes: {},
+        version: '5',
+      };
+      taskHistory.getEstimatedTaskTimings.mockReturnValue({});
+      taskSchedule = new TasksSchedule(
+        projectGraph,
+        readProjectsConfigurationFromProjectGraph(projectGraph).projects,
+        taskGraph,
+        { lifeCycle }
+      );
+      await taskSchedule.init();
+    });
+
+    afterEach(() => {
+      process.env['NX_BATCH_MODE'] = original;
+    });
+
+    async function createChainSchedule(e2eExecutor = 'awesome-executors:e2e') {
+      const taskGraph: TaskGraph = {
+        tasks: {
+          'db:up': createMockTask('db:up', true, true),
+          'api:serve': createMockTask('api:serve', true, true),
+          'e2e:e2e': createMockTask('e2e:e2e'),
+        },
+        dependencies: { 'db:up': [], 'api:serve': [], 'e2e:e2e': [] },
+        continuousDependencies: {
+          'db:up': [],
+          'api:serve': ['db:up'],
+          'e2e:e2e': ['api:serve'],
+        },
+        roots: ['db:up'],
+      };
+      const projectGraph: ProjectGraph = {
+        nodes: {
+          db: {
+            name: 'db',
+            type: 'app',
+            data: {
+              root: 'db',
+              targets: {
+                up: {
+                  executor: 'awesome-executors:up',
+                  continuous: true,
+                  readyWhen: 'ready',
+                },
+              },
+            },
+          },
+          api: {
+            name: 'api',
+            type: 'app',
+            data: {
+              root: 'api',
+              targets: {
+                serve: {
+                  executor: 'awesome-executors:serve',
+                  continuous: true,
+                  dependsOn: [
+                    { projects: ['db'], target: 'up', waitFor: 'ready' },
+                  ],
+                },
+              },
+            },
+          },
+          e2e: {
+            name: 'e2e',
+            type: 'app',
+            data: {
+              root: 'e2e',
+              targets: {
+                e2e: {
+                  executor: e2eExecutor,
+                  dependsOn: [{ projects: ['api'], target: 'serve' }],
+                },
+              },
+            },
+          },
+        } as any,
+        dependencies: { db: [], api: [], e2e: [] },
+        externalNodes: {},
+        version: '5',
+      };
+      const taskSchedule = new TasksSchedule(
+        projectGraph,
+        readProjectsConfigurationFromProjectGraph(projectGraph).projects,
+        taskGraph,
+        { lifeCycle }
+      );
+      await taskSchedule.init();
+      return { taskSchedule };
+    }
+
+    it('holds back the dependents of such a task until it has started', async () => {
+      const { taskSchedule } = await createChainSchedule();
+      await taskSchedule.scheduleNextTasks();
+      expect(taskSchedule.nextTask()?.id).toBe('db:up');
+      await taskSchedule.scheduleNextTasks();
+      expect(taskSchedule.nextTask()?.id).toBe('api:serve');
+
+      // api:serve is queued but waits for db:up, so e2e:e2e is not released
+      await taskSchedule.scheduleNextTasks();
+      expect(taskSchedule.nextTask()).toBeNull();
+
+      taskSchedule.markContinuousTaskStarted('api:serve');
+      await taskSchedule.scheduleNextTasks();
+      expect(taskSchedule.nextTask()?.id).toBe('e2e:e2e');
+
+      // A dependent of a task that failed before starting stays unreleased,
+      // left to the orchestrator's skip propagation
+      taskSchedule.complete(['e2e:e2e', 'api:serve']);
+      expect(taskSchedule.hasTasks()).toBe(false);
+    });
+
+    it('holds back a batchable dependent of such a task until it has started', async () => {
+      // The build executor is the one the harness gives a batch implementation
+      const { taskSchedule } = await createChainSchedule(
+        'awesome-executors:build'
+      );
+      await taskSchedule.scheduleNextTasks();
+      taskSchedule.nextTask();
+      await taskSchedule.scheduleNextTasks();
+      taskSchedule.nextTask();
+
+      await taskSchedule.scheduleNextTasks();
+      expect(taskSchedule.nextBatch()).toBeNull();
+      expect(taskSchedule.nextTask()).toBeNull();
+
+      taskSchedule.markContinuousTaskStarted('api:serve');
+      await taskSchedule.scheduleNextTasks();
+      expect(taskSchedule.nextBatch()).toMatchObject({
+        taskGraph: { tasks: { 'e2e:e2e': expect.anything() } },
+      });
+    });
+
+    it('never releases the dependents of such a task when it fails before starting', async () => {
+      const { taskSchedule } = await createChainSchedule();
+      await taskSchedule.scheduleNextTasks();
+      taskSchedule.nextTask();
+      await taskSchedule.scheduleNextTasks();
+      taskSchedule.nextTask();
+
+      taskSchedule.complete(['api:serve']);
+      await taskSchedule.scheduleNextTasks();
+      expect(taskSchedule.nextTask()).toBeNull();
+      expect(taskSchedule.getIncompleteTasks().map((t) => t.id)).toEqual([
+        'db:up',
+        'e2e:e2e',
+      ]);
+    });
+
+    it('keeps such a task out of batches', async () => {
+      await taskSchedule.scheduleNextTasks();
+
+      expect(taskSchedule.nextBatch()).toMatchObject({
+        executorName: 'awesome-executors:build',
+        taskGraph: { tasks: { 'lib1:build': expect.anything() } },
+      });
+      expect(taskSchedule.nextBatch()).toBeNull();
+      expect(taskSchedule.nextTask((t) => t.continuous)?.id).toBe('app1:serve');
+
+      // Runs on its own once its continuous dependency is running
+      await taskSchedule.scheduleNextTasks();
+      expect(taskSchedule.nextBatch()).toBeNull();
+      expect(taskSchedule.nextTask((t) => !t.continuous)?.id).toBe(
+        'app1:build'
+      );
+    });
+  });
 });
