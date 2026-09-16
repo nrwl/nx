@@ -50,16 +50,26 @@ pub(crate) fn index_file_map(files: &[crate::native::types::FileData]) -> HashMa
         .collect()
 }
 
+/// The matched file paths of an `includeIgnored` fileset group, sorted, the
+/// same order hashing folds them. `source` says what may be leaned on instead
+/// of the disk; see `Source`.
+pub(crate) fn collect_ignored_file_paths(
+    workspace_root: &Path,
+    globs: &[String],
+    source: &Source,
+) -> Result<Vec<String>> {
+    Ok(expand_globs(workspace_root, globs, source)?.files)
+}
+
 #[napi]
 /// The files an `includeIgnored` fileset group matches on disk, sorted.
 pub fn expand_files_input(workspace_root: String, globs: Vec<String>) -> Result<Vec<String>> {
     let workspace_root = Path::new(&workspace_root);
-    Ok(expand_globs(
+    collect_ignored_file_paths(
         workspace_root,
         &globs,
         &Source::fileset_from_disk(workspace_root),
-    )?
-    .files)
+    )
 }
 
 #[cfg(test)]

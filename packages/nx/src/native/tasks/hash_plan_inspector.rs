@@ -1,6 +1,6 @@
 use crate::native::tasks::hashers::{
-    ProjectFileIndicesCache, Source, collect_json_input_files, collect_project_file_paths_cached,
-    collect_workspace_file_paths, expand_globs, resolve_task_output_files,
+    ProjectFileIndicesCache, Source, collect_ignored_file_paths, collect_json_input_files,
+    collect_project_file_paths_cached, collect_workspace_file_paths, resolve_task_output_files,
 };
 use crate::native::tasks::task_hasher::{HashInputs, HashInputsBuilder};
 use crate::native::tasks::types::{HashInstruction, HashPlans};
@@ -169,7 +169,7 @@ impl HashPlanInspector {
             }
             HashInstruction::IgnoredFileSet(globs) => {
                 let workspace_root = std::path::Path::new(&self.workspace_root);
-                let expansion = expand_globs(
+                let files = collect_ignored_file_paths(
                     workspace_root,
                     globs,
                     &Source::fileset_reading_disk(
@@ -178,7 +178,7 @@ impl HashPlanInspector {
                     ),
                 )?;
                 Ok(HashInputsBuilder {
-                    files: expansion.files.into_iter().collect(),
+                    files: files.into_iter().collect(),
                     ..Default::default()
                 })
             }
