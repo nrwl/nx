@@ -46,8 +46,14 @@ pub(super) fn get_inputs<'a>(
 /// negation filters the positives of the same group. Only `includeIgnored`
 /// filesets are grouped; every other input propagates alone.
 /// The self and dependency halves of a propagated group, or `None` when the
-/// group holds anything that does not reach a dependency. An empty group is
-/// `Some` with nothing in either half: it propagates, and propagates nothing.
+/// group holds anything that does not reach a dependency.
+///
+/// An empty slice yields empty halves rather than `None`, and both callers
+/// treat that the same way they treat `None` today. Do not "fix" it to return
+/// `None`: the two callers read `None` differently — `memoized_dep_subtree`
+/// takes it as a settled empty subtree (`needs_legacy: false`), while the
+/// local-inputs memo takes it as a shape it cannot cache (`needs_legacy:
+/// true`). Changing the return value would move one of them.
 pub(super) fn get_inputs_for_dependency_group<'a>(
     project: &'a Project,
     nx_json: &'a NxJson,
