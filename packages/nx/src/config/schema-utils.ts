@@ -1,12 +1,19 @@
 import { existsSync } from 'fs';
-import { join, relative } from 'path';
+import { extname, join, relative } from 'path';
 import { resolve as resolveExports } from 'resolve.exports';
 import {
   loadTsFile,
+  registerSourceGraphResolver,
   requireWithTsconfigFallback,
 } from '../plugins/js/utils/register';
 import { getWorkspacePackagesMetadata } from '../plugins/js/utils/packages';
 import { getRootTsConfigResolveExportsConditions } from '../plugins/js/utils/typescript';
+import {
+  isWorkspaceLocalResolution,
+  toRootSpelling,
+  withBuiltEntryResolutionHint,
+} from '../project-graph/plugins/built-entry-resolution-hint';
+import { isSourceEntry } from '../project-graph/plugins/entry-provenance';
 import {
   createProjectRootMappingsFromProjectConfigurations,
   findProjectForPath,
@@ -60,31 +67,53 @@ export class ImplementationResolutionError extends Error {
  * This function is used to get the implementation factory of an executor or generator.
  * @param implementation path to the implementation
  * @param directory path to the directory
+ * @param entryPackageName the package the collection was read from after
+ * following `extends` or builder aliases; its project classifies the entry
+ * and names it in load errors
  * @returns a function that returns the implementation
  */
 export function getImplementationFactory<T>(
   implementation: string,
   directory: string,
   packageName: string,
-  projects: Record<string, ProjectConfiguration>
+  projects: Record<string, ProjectConfiguration>,
+  entryPackageName = packageName
 ): () => T {
   const [implementationModulePath, implementationExportName] =
     implementation.split('#');
   return () => {
-    const modulePath = resolveImplementation(
+    const { path: modulePath, isSource } = resolveImplementationWithSourceGraph(
       implementationModulePath,
       directory,
       packageName,
-      projects
+      projects,
+      entryPackageName
     );
     // Route .ts entrypoints through loadTsFile so the native-strip ->
     // swc/ts-node fallback chain runs. Plain require() bypasses the matcher
     // set and bubbles errors like extensionless `./schema` imports (strict
     // ESM resolution failures) straight to the CLI. JS entrypoints use
     // requireWithTsconfigFallback so workspace-alias imports still resolve.
-    const module = /\.[cm]?ts$/.test(modulePath)
-      ? loadTsFile(modulePath)
-      : requireWithTsconfigFallback(modulePath);
+    let module: any;
+    try {
+      module = /\.[cm]?ts$/.test(modulePath)
+        ? loadTsFile(modulePath)
+        : requireWithTsconfigFallback(modulePath);
+    } catch (e) {
+      if (isSource) {
+        throw e;
+      }
+      const metadata = getPackagesMetadata(projects);
+      throw withBuiltEntryResolutionHint(
+        e,
+        {
+          path: modulePath,
+          projectRoot: metadata.packageToProjectMap[entryPackageName]?.root,
+        },
+        workspaceRoot,
+        metadata.packageManagerWorkspacePackages
+      );
+    }
     return implementationExportName
       ? module[implementationExportName]
       : (module.default ?? module);
@@ -103,9 +132,53 @@ export function resolveImplementation(
   packageName: string,
   projects: Record<string, ProjectConfiguration>
 ): string {
+  return resolveImplementationWithMetadata(
+    implementationModulePath,
+    directory,
+    packageName,
+    projects
+  ).path;
+}
+
+export function resolveImplementationWithSourceGraph(
+  implementationModulePath: string,
+  directory: string,
+  packageName: string,
+  projects: Record<string, ProjectConfiguration>,
+  entryPackageName = packageName
+): { path: string; isSource: boolean } {
+  const resolved = resolveImplementationWithMetadata(
+    implementationModulePath,
+    directory,
+    packageName,
+    projects,
+    entryPackageName
+  );
+  if (resolved.isSource) {
+    // Loaded entries have no unload lifecycle, so the per-entry resolver
+    // stays for the process lifetime.
+    registerSourceGraphResolver(
+      resolved.path,
+      workspaceRoot,
+      getPackagesMetadata(projects).packageManagerWorkspacePackageNames
+    );
+  }
+  return resolved;
+}
+
+function resolveImplementationWithMetadata(
+  implementationModulePath: string,
+  directory: string,
+  packageName: string,
+  projects: Record<string, ProjectConfiguration>,
+  entryPackageName = packageName
+): { path: string; isSource: boolean } {
   const validImplementations = ['', '.js', '.ts'].map(
     (x) => implementationModulePath + x
   );
+  const entryProject = directory.includes('node_modules')
+    ? null
+    : getEntryProject(entryPackageName, directory, projects);
 
   if (!directory.includes('node_modules')) {
     // It might be a local plugin where the implementation path points to the
@@ -116,7 +189,8 @@ export function resolveImplementation(
         maybeImplementation,
         directory,
         packageName,
-        projects
+        projects,
+        entryProject
       );
       if (maybeImplementationFromSource) {
         return maybeImplementationFromSource;
@@ -125,26 +199,41 @@ export function resolveImplementation(
   }
 
   for (const maybeImplementation of validImplementations) {
-    const maybeImplementationPath = join(directory, maybeImplementation);
-    if (existsSync(maybeImplementationPath)) {
-      return maybeImplementationPath;
+    let resolvedPath = join(directory, maybeImplementation);
+    if (!existsSync(resolvedPath)) {
+      try {
+        resolvedPath = require.resolve(maybeImplementation, {
+          paths: [directory],
+        });
+      } catch {
+        continue;
+      }
     }
-
-    try {
-      return require.resolve(maybeImplementation, {
-        paths: [directory],
-      });
-    } catch {}
+    return {
+      path: resolvedPath,
+      isSource:
+        entryProject && isWorkspaceLocalResolution(resolvedPath, workspaceRoot)
+          ? isSourceEntry(resolvedPath, false, entryProject, workspaceRoot)
+          : isWorkspaceLocalTsImplementation(resolvedPath),
+    };
   }
 
   throw new ImplementationResolutionError(implementationModulePath, directory);
+}
+
+function isWorkspaceLocalTsImplementation(modulePath: string): boolean {
+  return (
+    /\.(?:[cm]?ts|tsx)$/.test(extname(modulePath)) &&
+    isWorkspaceLocalResolution(modulePath, workspaceRoot)
+  );
 }
 
 export function resolveSchema(
   schemaPath: string,
   directory: string,
   packageName: string,
-  projects: Record<string, ProjectConfiguration>
+  projects: Record<string, ProjectConfiguration>,
+  entryPackageName = packageName
 ): string {
   if (!directory.includes('node_modules')) {
     // It might be a local plugin where the schema path points to the outputs
@@ -154,10 +243,11 @@ export function resolveSchema(
       schemaPath,
       directory,
       packageName,
-      projects
+      projects,
+      getEntryProject(entryPackageName, directory, projects)
     );
     if (schemaPathFromSource) {
-      return schemaPathFromSource;
+      return schemaPathFromSource.path;
     }
   }
 
@@ -175,16 +265,49 @@ export function resolveSchema(
   }
 }
 
-let projectRootMappings: Map<string, string>;
+// A path-referenced collection has no package name; its directory locates it.
+function getEntryProject(
+  entryPackageName: string,
+  directory: string,
+  projects: Record<string, ProjectConfiguration>
+): ProjectConfiguration | null {
+  return (
+    getPackagesMetadata(projects).packageToProjectMap[entryPackageName] ??
+    getProjectForDirectory(directory, projects)
+  );
+}
+
+// Keyed by the project snapshot: a daemon sees many.
+const projectRootMappings = new WeakMap<
+  Record<string, ProjectConfiguration>,
+  Map<string, string>
+>();
+const packagesMetadata = new WeakMap<
+  Record<string, ProjectConfiguration>,
+  ReturnType<typeof getWorkspacePackagesMetadata<ProjectConfiguration>>
+>();
+
+function getPackagesMetadata(projects: Record<string, ProjectConfiguration>) {
+  let metadata = packagesMetadata.get(projects);
+  if (!metadata) {
+    metadata = getWorkspacePackagesMetadata(projects);
+    packagesMetadata.set(projects, metadata);
+  }
+  return metadata;
+}
+
 function getProjectForDirectory(
   directory: string,
   projects: Record<string, ProjectConfiguration>
 ): ProjectConfiguration | null {
-  projectRootMappings ??=
-    createProjectRootMappingsFromProjectConfigurations(projects);
+  let mappings = projectRootMappings.get(projects);
+  if (!mappings) {
+    mappings = createProjectRootMappingsFromProjectConfigurations(projects);
+    projectRootMappings.set(projects, mappings);
+  }
   const projectName = findProjectForPath(
-    relative(workspaceRoot, directory),
-    projectRootMappings
+    relative(workspaceRoot, toRootSpelling(directory, workspaceRoot)),
+    mappings
   );
   return projectName ? projects[projectName] : null;
 }
@@ -214,17 +337,15 @@ function readJsPackageMetadata(
   }
 }
 
-let packageMetadata: ReturnType<
-  typeof getWorkspacePackagesMetadata<ProjectConfiguration>
->;
 function tryResolveFromSource(
   path: string,
   directory: string,
   packageName: string,
-  projects: Record<string, ProjectConfiguration>
-): string | null {
-  packageMetadata ??= getWorkspacePackagesMetadata(projects);
-  let localProject = packageMetadata.packageToProjectMap[packageName];
+  projects: Record<string, ProjectConfiguration>,
+  entryProject: ProjectConfiguration | null
+): { path: string; isSource: boolean } | null {
+  let localProject =
+    getPackagesMetadata(projects).packageToProjectMap[packageName];
   // The `packageName` might be a path to the collection rather than an actual
   // package name (e.g. when a generator/executor collection is referenced by
   // path). In that case, `directory` points inside the local project, so we
@@ -233,6 +354,9 @@ function tryResolveFromSource(
   if (!localProject) {
     return null;
   }
+  // The requested package's exports select the file; the declaring project
+  // classifies it, since an alias or `extends` reads another package's files.
+  const classifyingProject = entryProject ?? localProject;
   const js =
     (localProject.metadata as PackageJsonProjectMetadata)?.js ??
     readJsPackageMetadata(localProject);
@@ -247,9 +371,27 @@ function tryResolveFromSource(
       conditions: getRootTsConfigResolveExportsConditions(),
     });
     if (fromExports && fromExports.length) {
+      let defaultMatches: string[] | void;
+      try {
+        defaultMatches = resolveExports({ name, exports }, path, {
+          conditions: [],
+        });
+      } catch {}
+      const defaultMatch = (defaultMatches || []).find((m) =>
+        existsSync(join(directory, m))
+      );
       for (const exportPath of fromExports) {
-        if (existsSync(join(directory, exportPath))) {
-          return join(directory, exportPath);
+        const candidate = join(directory, exportPath);
+        if (existsSync(candidate)) {
+          return {
+            path: candidate,
+            isSource: isSourceEntry(
+              candidate,
+              defaultMatch !== exportPath,
+              classifyingProject,
+              workspaceRoot
+            ),
+          };
         }
       }
     }
@@ -271,7 +413,15 @@ function tryResolveFromSource(
 
     for (const possiblePath of possiblePaths) {
       if (existsSync(possiblePath)) {
-        return possiblePath;
+        return {
+          path: possiblePath,
+          isSource: isSourceEntry(
+            possiblePath,
+            false,
+            classifyingProject,
+            workspaceRoot
+          ),
+        };
       }
     }
   }

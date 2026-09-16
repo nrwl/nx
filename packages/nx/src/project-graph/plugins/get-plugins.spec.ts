@@ -1,10 +1,10 @@
-import type { Mock } from 'vitest';
+import { onTestFinished, type Mock } from 'vitest';
 import { createSerializableError } from '../../utils/serializable-error';
 import { reasonToError } from './get-plugins';
 
 // Isolation off so loadingMethod() routes to loadNxPlugin, which we mock.
 vi.mock('./isolation/enabled', () => ({
-  isIsolationEnabled: () => false,
+  isIsolationEnabled: vi.fn(() => false),
 }));
 vi.mock('./isolation', () => ({
   loadIsolatedNxPlugin: vi.fn(),
@@ -20,6 +20,13 @@ vi.mock('./in-process-loader', () => ({
 // assert that wiring without touching the real filesystem-backed resolver.
 vi.mock('./resolve-plugin', () => ({
   resetResolvePluginCache: vi.fn(),
+}));
+vi.mock('../../plugins/js/utils/register', () => ({
+  refreshSourceGraphResolvers: vi.fn(),
+}));
+vi.mock('../../plugins/js/utils/typescript', async () => ({
+  ...(await vi.importActual('../../plugins/js/utils/typescript')),
+  getRootTsConfigCustomConditions: vi.fn(() => []),
 }));
 
 describe('reasonToError', () => {
@@ -67,15 +74,19 @@ describe('getPluginsSeparated', () => {
     // Fresh module state per test — getPluginsSeparated caches at module
     // level, so a stale cache would mask the behavior under test.
     vi.resetModules();
+    const { isIsolationEnabled } = await import('./isolation/enabled');
+    vi.mocked(isIsolationEnabled).mockReturnValue(false);
     pendingPluginLoads = new Map();
 
     ({ loadNxPlugin } = await import('./in-process-loader'));
     // Unlike jest, resetModules does not re-run vi.mock factories, so the
     // mock fns persist across tests — clear their recorded calls.
     loadNxPlugin.mockClear();
-    (
-      (await import('./resolve-plugin')).resetResolvePluginCache as Mock
-    ).mockClear();
+    const { resetResolvePluginCache } = await import('./resolve-plugin');
+    (resetResolvePluginCache as Mock).mockClear();
+    const { refreshSourceGraphResolvers } =
+      await import('../../plugins/js/utils/register');
+    (refreshSourceGraphResolvers as Mock).mockClear();
     loadNxPlugin.mockImplementation((plugin: unknown) => {
       const name = typeof plugin === 'string' ? plugin : (plugin as any).plugin;
       // Default plugins load from absolute paths — resolve them immediately.
@@ -182,5 +193,94 @@ describe('getPluginsSeparated', () => {
       const plugins = await getPluginsIfLoadedOrLoading();
       expect(plugins.map((p) => p.name)).toContain('test-a');
     });
+  });
+
+  it('refreshes source graph conditions when returning cached plugins', async () => {
+    const { refreshSourceGraphResolvers } =
+      await import('../../plugins/js/utils/register');
+    const load = getPluginsSeparated({ plugins: ['test-a'] }, '/workspace');
+    finishLoading('test-a');
+    await load;
+
+    (refreshSourceGraphResolvers as Mock).mockClear();
+    await getPluginsSeparated({ plugins: ['test-a'] }, '/workspace');
+
+    expect(refreshSourceGraphResolvers).toHaveBeenCalledTimes(1);
+    expect(refreshSourceGraphResolvers).toHaveBeenCalledWith('/workspace');
+  });
+
+  it('cleans up and loads the plugin set again when the root customConditions change', async () => {
+    const { getRootTsConfigCustomConditions } =
+      await import('../../plugins/js/utils/typescript');
+    const cleanup = vi.fn();
+    loadNxPlugin.mockImplementation((plugin: unknown) => [
+      Promise.resolve({
+        name: typeof plugin === 'string' ? plugin : (plugin as any).plugin,
+      }),
+      cleanup,
+    ]);
+    const loadsOf = (name: string) =>
+      loadNxPlugin.mock.calls.filter(([plugin]) => plugin === name).length;
+    (getRootTsConfigCustomConditions as Mock).mockReturnValue(['@proj/source']);
+    await getPluginsSeparated({ plugins: ['test-a'] }, '/workspace');
+    expect(loadsOf('test-a')).toBe(1);
+
+    (getRootTsConfigCustomConditions as Mock).mockReturnValue(['@proj/src']);
+    await getPluginsSeparated({ plugins: ['test-a'] }, '/workspace');
+
+    expect(cleanup).toHaveBeenCalled();
+    expect(loadsOf('test-a')).toBe(2);
+  });
+
+  // The worker adds any fallback itself, so the plugin state keeps the raw list.
+  it.each([true, false])(
+    'starts isolated plugin workers with the changed root customConditions (module.registerHooks: %s)',
+    async (hasRegisterHooks) => {
+      const nodeModule = require('node:module') as { registerHooks?: unknown };
+      const registerHooks = nodeModule.registerHooks;
+      nodeModule.registerHooks = hasRegisterHooks ? () => {} : undefined;
+      onTestFinished(() => {
+        nodeModule.registerHooks = registerHooks;
+      });
+      const { isIsolationEnabled } = await import('./isolation/enabled');
+      const { loadIsolatedNxPlugin } = await import('./isolation');
+      const { getRootTsConfigCustomConditions } =
+        await import('../../plugins/js/utils/typescript');
+      vi.mocked(isIsolationEnabled).mockReturnValue(true);
+      vi.mocked(loadIsolatedNxPlugin).mockImplementation(async (plugin) => [
+        Promise.resolve({
+          name: typeof plugin === 'string' ? plugin : (plugin as any).plugin,
+        } as any),
+        () => {},
+      ]);
+      (getRootTsConfigCustomConditions as Mock).mockReturnValue([
+        '@proj/source',
+      ]);
+      await getPluginsSeparated({ plugins: ['test-a'] }, '/workspace');
+
+      (getRootTsConfigCustomConditions as Mock).mockReturnValue(['@proj/src']);
+      await getPluginsSeparated({ plugins: ['test-a'] }, '/workspace');
+
+      expect(loadIsolatedNxPlugin).toHaveBeenLastCalledWith(
+        'test-a',
+        '/workspace',
+        0,
+        ['@proj/src']
+      );
+    }
+  );
+
+  it('does not rebuild the local-plugin resolution snapshot on a cache hit', async () => {
+    const { resetResolvePluginCache } = await import('./resolve-plugin');
+    const load = getPluginsSeparated({ plugins: ['test-a'] });
+    finishLoading('test-a');
+    await load;
+
+    (resetResolvePluginCache as Mock).mockClear();
+    await getPluginsSeparated({ plugins: ['test-a'] });
+
+    // Cache hits must not re-scan local plugins; recompute sites refresh
+    // source-graph package names.
+    expect(resetResolvePluginCache).not.toHaveBeenCalled();
   });
 });

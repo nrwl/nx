@@ -44,6 +44,7 @@ performance.measure(
 global.NX_GRAPH_CREATION = true;
 global.NX_PLUGIN_WORKER = true;
 let plugin: LoadedNxPlugin;
+let refreshSourceGraph: (names?: string[]) => void = () => {};
 
 const socketPath = process.argv[2];
 const expectedPluginName = process.argv[3];
@@ -129,6 +130,8 @@ const server = createServer((socket) => {
             name,
             pluginPath,
             shouldRegisterTSTranspiler,
+            isSourcePlugin,
+            workspacePackageNames,
           }) => {
             loadErrorTimeout?.clear();
             process.chdir(root);
@@ -136,6 +139,25 @@ const server = createServer((socket) => {
               const { loadResolvedNxPluginAsync } = await Promise.resolve(
                 require(require.resolve('../load-resolved-plugin'))
               );
+
+              // Keep the graph until worker exit; a conditions change reloads
+              // the worker.
+              if (isSourcePlugin) {
+                refreshSourceGraph = (names) =>
+                  (
+                    require('../../../plugins/js/utils/register') as typeof import('../../../plugins/js/utils/register')
+                  ).refreshSourceGraphResolvers(
+                    root,
+                    names ? () => names : undefined
+                  );
+                (
+                  require('../../../plugins/js/utils/register') as typeof import('../../../plugins/js/utils/register')
+                ).registerSourceGraphResolver(
+                  pluginPath,
+                  root,
+                  workspacePackageNames
+                );
+              }
 
               // Register the ts-transpiler if we are pointing to a
               // plain ts file that's not part of a plugin project
@@ -172,28 +194,39 @@ const server = createServer((socket) => {
               };
             });
           },
-          createNodes: async ({ configFiles, context }) =>
+          createNodes: async ({
+            configFiles,
+            context,
+            workspacePackageNames,
+          }) =>
             withErrorHandling(async () => {
+              refreshSourceGraph(workspacePackageNames);
               const result = await plugin.createNodes[1](configFiles, context);
               return { result, success: true as const };
             }),
-          createDependencies: async ({ context }) =>
+          createDependencies: async ({ context, workspacePackageNames }) =>
             withErrorHandling(async () => {
+              refreshSourceGraph(workspacePackageNames);
               const result = await plugin.createDependencies(context);
               return { dependencies: result, success: true as const };
             }),
-          createMetadata: async ({ graph, context }) =>
+          createMetadata: async ({ graph, context, workspacePackageNames }) =>
             withErrorHandling(async () => {
+              refreshSourceGraph(workspacePackageNames);
               const result = await plugin.createMetadata(graph, context);
               return { metadata: result, success: true as const };
             }),
-          preTasksExecution: async ({ context }) =>
+          preTasksExecution: async ({ context, workspacePackageNames }) =>
             withErrorHandling(async () => {
+              refreshSourceGraph(workspacePackageNames);
               const mutations = await plugin.preTasksExecution?.(context);
               return { success: true as const, mutations };
             }),
-          postTasksExecution: async ({ context }) =>
-            withErrorHandling(() => plugin.postTasksExecution?.(context)),
+          postTasksExecution: async ({ context, workspacePackageNames }) =>
+            withErrorHandling(() => {
+              refreshSourceGraph(workspacePackageNames);
+              return plugin.postTasksExecution?.(context);
+            }),
           setWorkerEnv: (env) =>
             withErrorHandling(() => {
               applyDaemonEnvFromClient(env);

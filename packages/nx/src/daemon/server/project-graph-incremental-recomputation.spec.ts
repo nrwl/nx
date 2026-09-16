@@ -7,6 +7,7 @@ import {
 } from 'node:fs';
 import { join } from 'node:path';
 
+import type { ProjectGraph } from '../../config/project-graph';
 import { TempFs } from '../../internal-testing-utils/temp-fs';
 
 import type { TestContext } from 'vitest';
@@ -26,6 +27,38 @@ const waitForIn = ({ task }: TestContext) => {
     }
   };
 };
+
+// Parks the first config retrieval until released. Each retrieval adds a
+// project named after its call, so a graph shows which computation built it.
+function gateFirstRetrieval() {
+  let release: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let calls = 0;
+  vi.doMock('../../project-graph/utils/retrieve-workspace-files', async () => {
+    const actual = (await vi.importActual(
+      '../../project-graph/utils/retrieve-workspace-files'
+    )) as any;
+    return {
+      ...actual,
+      retrieveProjectConfigurations: async (...args: unknown[]) => {
+        const call = ++calls;
+        if (call === 1) {
+          await gate;
+        }
+        const marker = `retrieval-${call}`;
+        const result = await actual.retrieveProjectConfigurations(...args);
+        result.projects[marker] = { root: marker, name: marker };
+        return result;
+      },
+    };
+  });
+  return { release: () => release(), started: () => calls > 0 };
+}
+
+const retrievalMarkers = (graph: ProjectGraph) =>
+  Object.keys(graph.nodes).filter((name) => name.startsWith('retrieval-'));
 
 // Loading the module under test pulls in the daemon server (via ./watcher),
 // which registers a process-global PerformanceObserver. That observer outlives
@@ -128,12 +161,138 @@ describe('invalidateGraphCache', () => {
 
     // Park the first compute inside its config retrieval, after it claimed
     // its generation — the window an env-carrying client message can land
-    // in. The mock controls timing, not logic; the real retrieval runs.
-    let releaseFirstRetrieve: () => void;
-    const firstRetrieveGate = new Promise<void>((resolve) => {
-      releaseFirstRetrieve = resolve;
+    // in.
+    const retrieval = gateFirstRetrieval();
+
+    const {
+      getCachedSerializedProjectGraphPromise,
+      invalidateGraphCache,
+      registerProjectGraphRecomputationListener,
+    } = await import('./project-graph-incremental-recomputation');
+    const published: string[][] = [];
+    registerProjectGraphRecomputationListener((graph) =>
+      published.push(retrievalMarkers(graph))
+    );
+
+    const first = getCachedSerializedProjectGraphPromise();
+    while (!retrieval.started()) {
+      await new Promise((r) => setImmediate(r));
+    }
+
+    invalidateGraphCache();
+    retrieval.release();
+
+    const result = await first;
+    expect(result.error).toBeNull();
+    expect(retrievalMarkers(result.projectGraph)).toEqual(['retrieval-2']);
+    expect(published).toEqual([['retrieval-2']]);
+  });
+});
+
+describe('plugin state freshness', () => {
+  let fs: TempFs;
+
+  beforeEach(() => {
+    fs = new TempFs('pgir-plugin-state');
+  });
+
+  afterEach(() => {
+    fs.cleanup();
+  });
+
+  it('chains an in-flight compute to a successor when the root customConditions change', async () => {
+    const tsconfig = (conditions: string[]) =>
+      JSON.stringify({ compilerOptions: { customConditions: conditions } });
+    fs.createFilesSync({
+      'nx.json': JSON.stringify({}),
+      'package.json': JSON.stringify({ name: 'root' }),
+      'tsconfig.base.json': tsconfig(['@proj/source']),
     });
-    let retrieveCallCount = 0;
+
+    vi.resetModules();
+    vi.doUnmock('../../project-graph/plugins/get-plugins');
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
+
+    const retrieval = gateFirstRetrieval();
+
+    const {
+      getCachedSerializedProjectGraphPromise,
+      registerProjectGraphRecomputationListener,
+    } = await import('./project-graph-incremental-recomputation');
+    const published: string[][] = [];
+    registerProjectGraphRecomputationListener((graph) =>
+      published.push(retrievalMarkers(graph))
+    );
+
+    const first = getCachedSerializedProjectGraphPromise();
+    while (!retrieval.started()) {
+      await new Promise((r) => setImmediate(r));
+    }
+
+    writeFileSync(
+      join(fs.tempDir, 'tsconfig.base.json'),
+      tsconfig(['@proj/src'])
+    );
+    retrieval.release();
+
+    const result = await first;
+    expect(result.error).toBeNull();
+    expect(retrievalMarkers(result.projectGraph)).toEqual(['retrieval-2']);
+    expect(published).toEqual([['retrieval-2']]);
+  });
+});
+
+describe('workspace package names', () => {
+  let fs: TempFs;
+
+  beforeEach(() => {
+    fs = new TempFs('pgir-package-names');
+  });
+
+  afterEach(() => {
+    fs.cleanup();
+  });
+
+  // A source graph resolves a workspace import only for a package it knows,
+  // so an added package has to reach the graphs before the hooks that may
+  // import it, and it has to survive a hook that fails.
+  it('publishes an added package to the source graphs before the hooks run and keeps it after a failed hook', async () => {
+    fs.createFilesSync({
+      'nx.json': JSON.stringify({}),
+      'package.json': JSON.stringify({
+        name: 'root',
+        workspaces: ['packages/*'],
+      }),
+      'packages/a/package.json': JSON.stringify({ name: '@proj/a' }),
+    });
+
+    vi.resetModules();
+    vi.doUnmock('../../project-graph/plugins/get-plugins');
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
+
+    // One sequence for both spies so the order of publication and hooks is
+    // observable.
+    let seq = 0;
+    const refreshes: Array<{ seq: number; names?: string[] }> = [];
+    const retrievals: number[] = [];
+    let failRetrieval = false;
+    vi.doMock('../../plugins/js/utils/register', async () => {
+      const actual = (await vi.importActual(
+        '../../plugins/js/utils/register'
+      )) as any;
+      return {
+        ...actual,
+        refreshSourceGraphResolvers: (
+          root: string,
+          getNames?: () => string[]
+        ) => {
+          refreshes.push({ seq: ++seq, names: getNames?.() });
+          return actual.refreshSourceGraphResolvers(root, getNames);
+        },
+      };
+    });
     vi.doMock(
       '../../project-graph/utils/retrieve-workspace-files',
       async () => {
@@ -143,9 +302,9 @@ describe('invalidateGraphCache', () => {
         return {
           ...actual,
           retrieveProjectConfigurations: async (...args: unknown[]) => {
-            retrieveCallCount++;
-            if (retrieveCallCount === 1) {
-              await firstRetrieveGate;
+            retrievals.push(++seq);
+            if (failRetrieval) {
+              throw new Error('hook failed');
             }
             return actual.retrieveProjectConfigurations(...args);
           },
@@ -153,23 +312,42 @@ describe('invalidateGraphCache', () => {
       }
     );
 
-    const { getCachedSerializedProjectGraphPromise, invalidateGraphCache } =
-      await import('./project-graph-incremental-recomputation');
+    const {
+      getCachedSerializedProjectGraphPromise,
+      scheduleProjectGraphRecomputation,
+    } = await import('./project-graph-incremental-recomputation');
 
-    const first = getCachedSerializedProjectGraphPromise();
-    while (retrieveCallCount === 0) {
-      await new Promise((r) => setImmediate(r));
-    }
+    expect((await getCachedSerializedProjectGraphPromise()).error).toBeNull();
 
-    invalidateGraphCache();
-    releaseFirstRetrieve!();
+    fs.createFileSync(
+      'packages/b/package.json',
+      JSON.stringify({ name: '@proj/b' })
+    );
+    failRetrieval = true;
+    scheduleProjectGraphRecomputation(['packages/b/package.json'], [], []);
+    const failed = await getCachedSerializedProjectGraphPromise();
+    expect(failed.error?.message).toBe('hook failed');
+    const failedRetrievals = retrievals.length;
+    expect(failedRetrievals).toBeGreaterThan(1);
 
-    const result = await first;
-    expect(result.error).toBeNull();
-    expect(result.projectGraph).toBeDefined();
-    // The successor's retrieval, proving the parked compute discarded its
-    // own result and chained instead of committing.
-    expect(retrieveCallCount).toBeGreaterThanOrEqual(2);
+    const between = (from: number, to: number) =>
+      refreshes.filter((r) => r.seq > from && r.seq < to);
+    expect(
+      between(retrievals[0], retrievals[1]).map((r) => r.names)
+    ).toContainEqual(['@proj/a', '@proj/b']);
+
+    failRetrieval = false;
+    fs.createFileSync('packages/a/index.js', '');
+    scheduleProjectGraphRecomputation(['packages/a/index.js'], [], []);
+    expect((await getCachedSerializedProjectGraphPromise()).error).toBeNull();
+
+    // The set outlived the failures: nothing was republished or rescanned.
+    const afterFailure = between(
+      retrievals[failedRetrievals - 1],
+      retrievals[retrievals.length - 1]
+    );
+    expect(afterFailure.length).toBeGreaterThan(0);
+    expect(afterFailure.every((r) => r.names === undefined)).toBe(true);
   });
 });
 

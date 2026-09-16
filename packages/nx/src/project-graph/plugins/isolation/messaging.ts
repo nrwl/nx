@@ -40,6 +40,8 @@ type PluginMessageDefs = DefineMessages<{
       name: string;
       pluginPath: string;
       shouldRegisterTSTranspiler: boolean;
+      isSourcePlugin: boolean;
+      workspacePackageNames: string[];
     };
     result:
       | {
@@ -64,6 +66,7 @@ type PluginMessageDefs = DefineMessages<{
     payload: {
       configFiles: string[];
       context: CreateNodesContext;
+      workspacePackageNames?: string[];
     };
     result:
       | {
@@ -79,6 +82,7 @@ type PluginMessageDefs = DefineMessages<{
   createDependencies: {
     payload: {
       context: CreateDependenciesContext;
+      workspacePackageNames?: string[];
     };
     result:
       | {
@@ -97,6 +101,7 @@ type PluginMessageDefs = DefineMessages<{
     payload: {
       graph: ProjectGraph;
       context: CreateMetadataContext;
+      workspacePackageNames?: string[];
     };
     result:
       | {
@@ -112,6 +117,7 @@ type PluginMessageDefs = DefineMessages<{
   preTasksExecution: {
     payload: {
       context: PreTasksExecutionContext;
+      workspacePackageNames?: string[];
     };
     result:
       | {
@@ -127,6 +133,7 @@ type PluginMessageDefs = DefineMessages<{
   postTasksExecution: {
     payload: {
       context: PostTasksExecutionContext;
+      workspacePackageNames?: string[];
     };
     result:
       | {

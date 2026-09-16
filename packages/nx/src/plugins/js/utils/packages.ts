@@ -3,6 +3,12 @@ import type { ProjectGraphProjectNode } from '../../../config/project-graph';
 import type { ProjectConfiguration } from '../../../config/workspace-json-project-json';
 import type { PackageJsonProjectMetadata } from '../../../utils/package-json';
 
+export interface WorkspacePackage {
+  name: string;
+  /** Project root, relative to the workspace root. */
+  root: string;
+}
+
 export function getWorkspacePackagesMetadata<
   T extends ProjectGraphProjectNode | ProjectConfiguration,
 >(
@@ -11,10 +17,14 @@ export function getWorkspacePackagesMetadata<
   entryPointsToProjectMap: Record<string, T>;
   wildcardEntryPointsToProjectMap: Record<string, T>;
   packageToProjectMap: Record<string, T>;
+  packageManagerWorkspacePackageNames: string[];
+  packageManagerWorkspacePackages: WorkspacePackage[];
 } {
   const entryPointsToProjectMap: Record<string, T> = {};
   const wildcardEntryPointsToProjectMap: Record<string, T> = {};
   const packageToProjectMap: Record<string, T> = {};
+  const packageManagerWorkspacePackageNames: string[] = [];
+  const packageManagerWorkspacePackages: WorkspacePackage[] = [];
   for (const project of Object.values(projects)) {
     const metadata = (
       'data' in project ? project.data.metadata : project.metadata
@@ -38,6 +48,12 @@ export function getWorkspacePackagesMetadata<
       // resolution
       continue;
     }
+
+    packageManagerWorkspacePackageNames.push(packageName);
+    packageManagerWorkspacePackages.push({
+      name: packageName,
+      root: 'data' in project ? project.data.root : project.root,
+    });
 
     if (packageExports) {
       if (typeof packageExports === 'string') {
@@ -77,6 +93,8 @@ export function getWorkspacePackagesMetadata<
     entryPointsToProjectMap,
     wildcardEntryPointsToProjectMap,
     packageToProjectMap,
+    packageManagerWorkspacePackageNames,
+    packageManagerWorkspacePackages,
   };
 }
 

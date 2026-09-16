@@ -73,6 +73,13 @@ export class LoadedNxPlugin {
    */
   setWorkerEnv?(env: Record<string, string>): Promise<void>;
 
+  /**
+   * Records the current package-manager workspace package names. Only
+   * meaningful for isolated source plugins, whose worker gets the set on its
+   * next hook; in-process plugins share the daemon's source graphs.
+   */
+  setWorkspacePackageNames?(names: string[], version: number): void;
+
   constructor(
     plugin: NxPlugin,
     pluginDefinition: PluginConfiguration,

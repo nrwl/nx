@@ -1,0 +1,390 @@
+vi.mock('../plugins/js/utils/register', () => ({
+  loadTsFile: vi.fn(() => ({ default: 'loaded' })),
+  registerSourceGraphResolver: vi.fn(),
+  requireWithTsconfigFallback: vi.fn(),
+}));
+
+const packagesMetadata = vi.hoisted(() => ({
+  packageToProjectMap: {} as Record<string, ProjectConfiguration>,
+  packageManagerWorkspacePackageNames: [] as string[],
+  packageManagerWorkspacePackages: [] as { name: string; root: string }[],
+}));
+vi.mock('../plugins/js/utils/packages', () => ({
+  getWorkspacePackagesMetadata: vi.fn(() => packagesMetadata),
+}));
+
+import { mkdirSync, realpathSync, symlinkSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { TempFs } from '../internal-testing-utils/temp-fs';
+import { readGeneratorsJson } from '../command-line/generate/generator-utils';
+import {
+  registerSourceGraphResolver,
+  requireWithTsconfigFallback,
+} from '../plugins/js/utils/register';
+import { setWorkspaceRoot, workspaceRoot } from '../utils/workspace-root';
+import { getImplementationFactory } from './schema-utils';
+import type { ProjectConfiguration } from './workspace-json-project-json';
+
+describe('getImplementationFactory', () => {
+  it('registers workspace-local TypeScript implementations as source', () => {
+    const directory = join(workspaceRoot, 'packages/nx/src');
+
+    getImplementationFactory(
+      './project-graph/plugins/resolve-plugin',
+      directory,
+      'local-plugin',
+      {}
+    )();
+
+    expect(registerSourceGraphResolver).toHaveBeenCalledWith(
+      join(directory, 'project-graph/plugins/resolve-plugin.ts'),
+      workspaceRoot,
+      []
+    );
+  });
+
+  it('registers a realpath-resolved implementation when the workspace root is an alias', () => {
+    const fs = new TempFs('schema-utils-alias-root');
+    const real = realpathSync(fs.tempDir);
+    const alias = join(fs.tempDir, 'alias');
+    const directory = join(real, 'ws/packages/plugin/src');
+    mkdirSync(directory, { recursive: true });
+    writeFileSync(join(directory, 'impl.ts'), '');
+    symlinkSync(join(real, 'ws'), alias, 'dir');
+    const originalRoot = workspaceRoot;
+    setWorkspaceRoot(alias);
+    try {
+      getImplementationFactory('./impl', directory, 'local-plugin', {})();
+
+      expect(registerSourceGraphResolver).toHaveBeenCalledWith(
+        join(directory, 'impl.ts'),
+        alias,
+        []
+      );
+    } finally {
+      setWorkspaceRoot(originalRoot);
+      fs.cleanup();
+    }
+  });
+
+  it('registers a JavaScript implementation from a JSON collection with an aliased workspace root', () => {
+    const fs = new TempFs('schema-utils-js-alias-root', false);
+    fs.createFilesSync({
+      'ws/packages/plugin/generators.json': JSON.stringify({
+        generators: { probe: { implementation: './src/impl.js' } },
+      }),
+      'ws/packages/plugin/src/impl.js': '',
+    });
+    const alias = join(fs.tempDir, 'alias');
+    symlinkSync(join(fs.tempDir, 'ws'), alias, 'dir');
+    const { generatorsFilePath: collection } = readGeneratorsJson(
+      join(alias, 'packages/plugin/generators.json'),
+      'probe',
+      alias,
+      {}
+    );
+    const originalRoot = workspaceRoot;
+    setWorkspaceRoot(alias);
+    vi.mocked(registerSourceGraphResolver).mockClear();
+    vi.mocked(requireWithTsconfigFallback).mockReturnValue({});
+    try {
+      getImplementationFactory(
+        './src/impl.js',
+        dirname(collection),
+        './packages/plugin/generators.json',
+        {
+          plugin: {
+            name: 'plugin',
+            root: 'packages/plugin',
+            sourceRoot: 'packages/plugin/src',
+            targets: {},
+          },
+        }
+      )();
+
+      expect(registerSourceGraphResolver).toHaveBeenCalledWith(
+        join(fs.tempDir, 'ws/packages/plugin/src/impl.js'),
+        alias,
+        []
+      );
+    } finally {
+      setWorkspaceRoot(originalRoot);
+      fs.cleanup();
+    }
+  });
+
+  it.each([
+    {
+      kind: 'source symlink',
+      implementation: './src/plugin.js',
+      link: 'src',
+      sourceRoot: 'packages/plugin/src',
+      source: true,
+    },
+    {
+      kind: 'output symlink',
+      implementation: './out/plugin.js',
+      link: 'out',
+      sourceRoot: 'packages/plugin',
+      source: false,
+    },
+    {
+      kind: 'extensionless file',
+      implementation: './src/impl',
+      link: undefined,
+      sourceRoot: 'packages/plugin/src',
+      source: true,
+    },
+  ])(
+    'classifies $kind using its project',
+    ({ implementation, link, sourceRoot, source }) => {
+      const fs = new TempFs('schema-utils-entry-spelling', false);
+      fs.createFilesSync({ 'packages/plugin/actual/plugin.js': '' });
+      if (link) {
+        symlinkSync('actual', join(fs.tempDir, 'packages/plugin', link), 'dir');
+      } else {
+        fs.createFilesSync({ 'packages/plugin/src/impl.js': '' });
+      }
+      const originalRoot = workspaceRoot;
+      setWorkspaceRoot(fs.tempDir);
+      vi.mocked(registerSourceGraphResolver).mockClear();
+      vi.mocked(requireWithTsconfigFallback).mockReturnValue({});
+      try {
+        getImplementationFactory(
+          implementation,
+          join(fs.tempDir, 'packages/plugin'),
+          './generators.json',
+          {
+            plugin: {
+              name: 'plugin',
+              root: 'packages/plugin',
+              sourceRoot,
+              targets: { build: { outputs: ['{projectRoot}/out'] } },
+            },
+          }
+        )();
+        if (source) {
+          expect(registerSourceGraphResolver).toHaveBeenCalledWith(
+            join(
+              fs.tempDir,
+              'packages/plugin',
+              link ? implementation : './src/impl.js'
+            ),
+            fs.tempDir,
+            []
+          );
+        } else {
+          expect(registerSourceGraphResolver).not.toHaveBeenCalled();
+        }
+      } finally {
+        setWorkspaceRoot(originalRoot);
+        fs.cleanup();
+      }
+    }
+  );
+
+  it('loads a default-only built exports target as built and hints at the missing sibling output', () => {
+    const fs = new TempFs('schema-utils-built-exports');
+    const directory = join(fs.tempDir, 'packages/plugin');
+    mkdirSync(join(directory, 'dist'), { recursive: true });
+    writeFileSync(join(directory, 'dist/generator.js'), '');
+    const project = {
+      name: 'plugin',
+      root: 'packages/plugin',
+      targets: {},
+      metadata: {
+        js: {
+          packageName: '@proj/plugin',
+          packageExports: { './generator': { default: './dist/generator.js' } },
+        },
+      },
+    } as ProjectConfiguration;
+    packagesMetadata.packageToProjectMap['@proj/plugin'] = project;
+    packagesMetadata.packageManagerWorkspacePackageNames.push('@proj/sibling');
+    packagesMetadata.packageManagerWorkspacePackages.push({
+      name: '@proj/sibling',
+      root: 'packages/sibling',
+    });
+    const notFound = Object.assign(
+      new Error("Cannot find module '@proj/sibling'"),
+      { code: 'MODULE_NOT_FOUND' }
+    );
+    vi.mocked(requireWithTsconfigFallback).mockImplementationOnce(() => {
+      throw notFound;
+    });
+    vi.mocked(registerSourceGraphResolver).mockClear();
+    const originalRoot = workspaceRoot;
+    setWorkspaceRoot(fs.tempDir);
+    try {
+      const factory = getImplementationFactory(
+        './generator',
+        directory,
+        '@proj/plugin',
+        { plugin: project }
+      );
+
+      expect(factory).toThrow(
+        '"@proj/sibling" was requested from "packages/plugin/dist/generator.js"'
+      );
+      expect(registerSourceGraphResolver).not.toHaveBeenCalled();
+      expect(requireWithTsconfigFallback).toHaveBeenCalledWith(
+        join(directory, 'dist/generator.js')
+      );
+    } finally {
+      setWorkspaceRoot(originalRoot);
+      delete packagesMetadata.packageToProjectMap['@proj/plugin'];
+      packagesMetadata.packageManagerWorkspacePackageNames.length = 0;
+      packagesMetadata.packageManagerWorkspacePackages.length = 0;
+      fs.cleanup();
+    }
+  });
+
+  it('classifies an aliased implementation against the package that declares it', () => {
+    const fs = new TempFs('schema-utils-alias-source');
+    const directory = join(fs.tempDir, 'packages/impl');
+    mkdirSync(join(directory, 'src'), { recursive: true });
+    writeFileSync(join(directory, 'src/build.js'), '');
+    const alias = {
+      name: 'alias',
+      root: 'packages/alias',
+      targets: {},
+      metadata: { js: { packageName: '@proj/alias', packageExports: {} } },
+    } as ProjectConfiguration;
+    const impl = {
+      name: 'impl',
+      root: 'packages/impl',
+      sourceRoot: 'packages/impl/src',
+      targets: {},
+      metadata: { js: { packageName: '@proj/impl', packageExports: {} } },
+    } as ProjectConfiguration;
+    packagesMetadata.packageToProjectMap['@proj/alias'] = alias;
+    packagesMetadata.packageToProjectMap['@proj/impl'] = impl;
+    vi.mocked(registerSourceGraphResolver).mockClear();
+    vi.mocked(requireWithTsconfigFallback).mockReturnValue({});
+    const originalRoot = workspaceRoot;
+    setWorkspaceRoot(fs.tempDir);
+    try {
+      const projects = { alias, impl };
+      // Requested as the alias, read from the declaring package.
+      getImplementationFactory(
+        './dist/build',
+        directory,
+        '@proj/alias',
+        projects
+      )();
+      expect(registerSourceGraphResolver).not.toHaveBeenCalled();
+
+      getImplementationFactory(
+        './dist/build',
+        directory,
+        '@proj/alias',
+        projects,
+        '@proj/impl'
+      )();
+      expect(registerSourceGraphResolver).toHaveBeenCalledWith(
+        join(directory, 'src/build.js'),
+        fs.tempDir,
+        []
+      );
+    } finally {
+      setWorkspaceRoot(originalRoot);
+      delete packagesMetadata.packageToProjectMap['@proj/alias'];
+      delete packagesMetadata.packageToProjectMap['@proj/impl'];
+      fs.cleanup();
+    }
+  });
+
+  it('keeps an installed TypeScript implementation built even under a root project', () => {
+    const fs = new TempFs('schema-utils-installed-ts');
+    const directory = join(fs.tempDir, 'node_modules/pkg');
+    mkdirSync(directory, { recursive: true });
+    writeFileSync(join(directory, 'impl.ts'), '');
+    const root = {
+      name: 'root',
+      root: '.',
+      targets: {},
+      metadata: { js: { packageName: 'root', packageExports: {} } },
+    } as ProjectConfiguration;
+    packagesMetadata.packageToProjectMap['root'] = root;
+    vi.mocked(registerSourceGraphResolver).mockClear();
+    vi.mocked(requireWithTsconfigFallback).mockReturnValue({});
+    const originalRoot = workspaceRoot;
+    setWorkspaceRoot(fs.tempDir);
+    try {
+      getImplementationFactory('./impl', directory, 'pkg', { root })();
+
+      expect(registerSourceGraphResolver).not.toHaveBeenCalled();
+    } finally {
+      setWorkspaceRoot(originalRoot);
+      delete packagesMetadata.packageToProjectMap['root'];
+      fs.cleanup();
+    }
+  });
+
+  it.each([
+    [undefined, 'packages/plugin/src'],
+    ['packages/plugin/src', undefined],
+  ])(
+    'loads a JavaScript file guessed under src as source only when the current sourceRoot covers it (%s, then %s)',
+    async (firstSourceRoot, secondSourceRoot) => {
+      const fs = new TempFs('schema-utils-guessed-source');
+      const directory = join(fs.tempDir, 'packages/plugin');
+      mkdirSync(join(directory, 'src'), { recursive: true });
+      writeFileSync(join(directory, 'src/generator.js'), '');
+      // A fresh module and the real metadata, so each snapshot is read anew.
+      vi.resetModules();
+      const packages = await import('../plugins/js/utils/packages');
+      vi.mocked(packages.getWorkspacePackagesMetadata).mockImplementation(
+        (
+          await vi.importActual<typeof import('../plugins/js/utils/packages')>(
+            '../plugins/js/utils/packages'
+          )
+        ).getWorkspacePackagesMetadata
+      );
+      const register = await import('../plugins/js/utils/register');
+      vi.mocked(register.requireWithTsconfigFallback).mockReturnValue({});
+      const workspaceRootModule = await import('../utils/workspace-root');
+      const schemaUtils = await import('./schema-utils');
+      const originalRoot = workspaceRootModule.workspaceRoot;
+      workspaceRootModule.setWorkspaceRoot(fs.tempDir);
+      const registrationsFor = (sourceRoot: string | undefined) => {
+        vi.mocked(register.registerSourceGraphResolver).mockClear();
+        schemaUtils.getImplementationFactory(
+          './dist/generator',
+          directory,
+          '@proj/plugin',
+          {
+            plugin: {
+              name: 'plugin',
+              root: 'packages/plugin',
+              sourceRoot,
+              targets: {},
+              metadata: {
+                js: { packageName: '@proj/plugin', packageExports: {} },
+              },
+            } as ProjectConfiguration,
+          }
+        )();
+        return vi.mocked(register.registerSourceGraphResolver).mock.calls;
+      };
+      const expected = (sourceRoot: string | undefined) =>
+        sourceRoot
+          ? [[join(directory, 'src/generator.js'), fs.tempDir, []]]
+          : [];
+      try {
+        expect(registrationsFor(firstSourceRoot)).toEqual(
+          expected(firstSourceRoot)
+        );
+        expect(registrationsFor(secondSourceRoot)).toEqual(
+          expected(secondSourceRoot)
+        );
+      } finally {
+        workspaceRootModule.setWorkspaceRoot(originalRoot);
+        vi.mocked(packages.getWorkspacePackagesMetadata).mockImplementation(
+          () => packagesMetadata
+        );
+        fs.cleanup();
+      }
+    }
+  );
+});
