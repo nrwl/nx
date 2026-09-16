@@ -2,7 +2,7 @@
 //! outputs, into the files on disk.
 //!
 //! - `entries` holds one parsed positive or negation. The glob text rules
-//!   themselves live in `crate::native::glob::glob_text`.
+//!   themselves live in `crate::native::glob::glob_transform`.
 //! - `expansion` resolves the entries into files, leaning on the workspace
 //!   context or an index wherever it can, and walking where it cannot.
 

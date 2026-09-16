@@ -1,13 +1,12 @@
 pub mod glob_files;
 mod glob_group;
 mod glob_parser;
-mod glob_text;
 pub mod glob_transform;
 
-pub(crate) use crate::native::glob::glob_text::{
+use crate::native::glob::glob_transform::convert_glob;
+pub(crate) use crate::native::glob::glob_transform::{
     expand_literal_braces, normalize_glob, path_or_everything_under, target_directory,
 };
-use crate::native::glob::glob_transform::convert_glob;
 use dashmap::DashMap;
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
 use std::fmt::Debug;
