@@ -17,14 +17,16 @@ use crate::native::walker::files_under;
 /// call: a group is listed or walked afresh for the next one.
 pub(crate) type FilesExpansionCache = DashMap<String, Arc<FilesExpansion>>;
 
-/// How far an entry may reach out of the workspace.
+/// Whether a symlink may lead out of the workspace. The path itself must be
+/// inside it either way: an entry that resolves outside names nothing.
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub(crate) enum Reach {
-    /// A fileset: a path that resolves outside the workspace is an error, and
-    /// a linked file is read only when its target is inside.
-    InsideWorkspace,
-    /// A declared output: read wherever it points.
-    WhereverItPoints,
+pub(crate) enum Links {
+    /// A fileset: a link leading out is skipped, and an entry whose own path
+    /// resolves outside is an error naming the fileset.
+    StayInside,
+    /// A declared output: `dist` may be a link into a build cache, and those
+    /// files are still what the task produced.
+    MayLeadOut,
 }
 
 /// Something that can say what a directory holds. The ignored index answers
@@ -51,8 +53,7 @@ impl DirectoryFiles for &dyn DirectoryFiles {
 /// Reads the disk every time, for a caller with no index behind it.
 pub(crate) struct DiskFiles<'a> {
     pub workspace_root: &'a Path,
-    /// False for a declared output, which may point outside the workspace.
-    pub confine: bool,
+    pub links: Links,
 }
 
 impl DirectoryFiles for DiskFiles<'_> {
@@ -61,7 +62,12 @@ impl DirectoryFiles for DiskFiles<'_> {
         dir: &str,
         accept: &(dyn Fn(&str) -> bool + Sync),
     ) -> Option<Vec<String>> {
-        files_under(self.workspace_root, dir, self.confine, accept)
+        files_under(
+            self.workspace_root,
+            dir,
+            self.links == Links::StayInside,
+            accept,
+        )
     }
 }
 
@@ -90,7 +96,7 @@ pub(crate) struct Source<'a> {
     known: &'a (dyn Fn(&str) -> bool + Sync),
     /// What a directory holds, see `DirectoryFiles`.
     files_under: Box<dyn DirectoryFiles + 'a>,
-    reach: Reach,
+    links: Links,
 }
 
 impl<'a> Source<'a> {
@@ -104,7 +110,7 @@ impl<'a> Source<'a> {
         Self {
             known,
             files_under: Box::new(files_under),
-            reach: Reach::InsideWorkspace,
+            links: Links::StayInside,
         }
     }
 
@@ -117,9 +123,9 @@ impl<'a> Source<'a> {
             known,
             files_under: Box::new(DiskFiles {
                 workspace_root,
-                confine: true,
+                links: Links::StayInside,
             }),
-            reach: Reach::InsideWorkspace,
+            links: Links::StayInside,
         }
     }
 
@@ -136,9 +142,9 @@ impl<'a> Source<'a> {
             known: NOTHING_KNOWN,
             files_under: Box::new(DiskFiles {
                 workspace_root,
-                confine: false,
+                links: Links::MayLeadOut,
             }),
-            reach: Reach::WhereverItPoints,
+            links: Links::MayLeadOut,
         }
     }
 }
@@ -163,15 +169,15 @@ pub(crate) fn expand_globs(
 
 /// A group's entries split at their literal prefixes, positives then negations.
 pub(super) fn parse_group(globs: &[String]) -> Result<(Vec<Positive>, Vec<Negation>)> {
-    let negations: Vec<Negation> = globs
-        .iter()
-        .filter(|g| g.starts_with('!'))
+    let (negated, plain): (Vec<&String>, Vec<&String>) =
+        globs.iter().partition(|g| g.starts_with('!'));
+    let negations = negated
+        .into_iter()
         .flat_map(|g| expand_literal_braces(g))
         .map(|g| Negation::parse(&g))
         .collect::<Result<_>>()?;
-    let positives: Vec<Positive> = globs
-        .iter()
-        .filter(|g| !g.starts_with('!'))
+    let positives = plain
+        .into_iter()
         .flat_map(|g| expand_literal_braces(&normalize_glob(g)))
         .map(|g| Positive::parse(&g))
         .collect::<Result<_>>()?;
@@ -195,9 +201,9 @@ pub(crate) fn expand_entries(
     let Source {
         known,
         files_under,
-        reach,
+        links,
     } = source;
-    let canonical_root = if *reach == Reach::InsideWorkspace {
+    let canonical_root = if *links == Links::StayInside {
         Some(dunce::canonicalize(workspace_root).with_context(|| {
             format!(
                 "Cannot resolve the workspace root {}",
