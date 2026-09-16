@@ -5,8 +5,10 @@ import {
 
 const DOCS_PROJECT_NAME = 'astro-docs';
 
-// llm_copy_prompt flattens its children into a plain string, so a `##` line in
-// one is prompt text that never renders as a heading.
+// Nesting runs tabs > llm_copy_prompt > heading, not the reverse. The tag
+// flattens its children into a prompt string, so `##` lines inside one are
+// prompt text and never render as headings.
+// Live case: features/CI Features/distribute-task-execution.mdoc.
 const PROMPT_TAG = 'llm_copy_prompt';
 
 export default createConformanceRule({
