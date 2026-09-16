@@ -103,6 +103,11 @@ describe('run-state', () => {
       expect(() => readRunState(dir)).toThrow(
         new RegExp(nxVersion.replace(/\./g, '\\.'))
       );
+      // Which command threw decides what a rerun does (init reports the run,
+      // a --run-id command acts on it), so the tail promises neither.
+      expect(() => readRunState(dir)).toThrow(
+        /Re-run your migrate command with Nx 123\.4\.5 or later\.$/
+      );
     });
 
     it('refuses a newer formatVersion even when the shape no longer validates', () => {

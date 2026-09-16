@@ -818,9 +818,23 @@ describe('orchestrator', () => {
 
     describe('resume policy', () => {
       // run.json is writable from an agent's sandbox, so a resume proceeds
-      // only when the stored flags match what this invocation resolved.
+      // only when the stored flags match what this invocation resolved. The
+      // generated continue command carries no migrations path and run.json
+      // records none, so a run started from a custom file cannot be told
+      // apart here: the refusal must not print a default-path command.
       const MISMATCH =
-        /recorded install and commit policy differs from this invocation.*or run npx nx migrate --run-migrations --start-fresh --run-id=run-1 to abandon it/;
+        /recorded install and commit policy differs from this invocation.*To start fresh, re-run with --start-fresh --run-id=run-1, keeping the same --run-migrations\[=<path>\] argument used to start the run/;
+      const expectMismatch = (resume: () => unknown): void => {
+        let message: string | undefined;
+        try {
+          resume();
+        } catch (e) {
+          message = (e as Error).message;
+        }
+        expect(message).toMatch(MISMATCH);
+        expect(message).not.toContain('nx.json');
+        expect(message).not.toContain('nx migrate --run-migrations');
+      };
       const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
 
       it.each<
@@ -854,9 +868,9 @@ describe('orchestrator', () => {
         });
         const before = readRunState(dir);
 
-        expect(() =>
+        expectMismatch(() =>
           runOrchestratorResume({ root, runId: 'run-1', policy })
-        ).toThrow(MISMATCH);
+        );
 
         expect(readRunState(dir)).toEqual(before);
         expect(mockInit).not.toHaveBeenCalled();
@@ -873,13 +887,13 @@ describe('orchestrator', () => {
         });
         const before = readRunState(dir);
 
-        expect(() =>
+        expectMismatch(() =>
           runOrchestratorResume({
             root,
             runId: 'run-1',
             policy: { createCommits: false, skipInstall: false },
           })
-        ).toThrow(MISMATCH);
+        );
 
         expect(mockCheckpoint).not.toHaveBeenCalled();
         expect(mockGetPathCommitExposure).not.toHaveBeenCalled();
@@ -2478,7 +2492,10 @@ describe('orchestrator', () => {
         'cannot re-render the one nx 1.0.0 wrote'
       );
       expect(block.payload.instructions).toContain(
-        'or start a new run with `npx nx migrate --run-migrations --start-fresh --run-id=run-1`'
+        'To start fresh, re-run with --start-fresh --run-id=run-1, keeping the same --run-migrations[=<path>] argument used to start the run.'
+      );
+      expect(block.payload.instructions).not.toContain(
+        'nx migrate --run-migrations'
       );
       expect(block.payload.instructions).not.toContain('abandon');
       expect(existsSync(join(dir, 'RUNBOOK.md'))).toBe(false);
@@ -3087,6 +3104,14 @@ describe('orchestrator', () => {
       expect(block.action).toBe('error');
       expect(block.payload.instructions).toContain(
         'cannot re-render the one nx 1.0.0 wrote'
+      );
+      // A bare --run-id reconcile knows no migrations path, so the recovery
+      // is prose that keeps the user's own argument, never a default-path command.
+      expect(block.payload.instructions).toContain(
+        'To start fresh, re-run with --start-fresh --run-id=run-1, keeping the same --run-migrations[=<path>] argument used to start the run.'
+      );
+      expect(block.payload.instructions).not.toContain(
+        'nx migrate --run-migrations'
       );
       expect(readRunState(dir).steps[0].status).toBe('pending');
     });
