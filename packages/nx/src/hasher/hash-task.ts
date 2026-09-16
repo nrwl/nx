@@ -41,34 +41,38 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     })
   );
 
-  const tasksToHash = tasksWithHashers
-    .filter(({ task, customHasher }) => {
-      // If a task has a custom hasher, it might depend on the outputs of other tasks
-      if (customHasher) {
-        return false;
-      }
-
-      return !(
-        taskGraph.dependencies[task.id].length > 0 &&
-        getInputs(task, projectGraph, nxJson).depsOutputs.length > 0
-      );
-    })
+  // Custom hashers can read other tasks' outputs, so they hash at run time,
+  // and so does a task whose own inputs read them. The hasher still decides
+  // for the rest: outputs also arrive through a dependency's named input or
+  // a continuous server, which only planning reveals.
+  const candidates = tasksWithHashers
+    .filter(
+      ({ task, customHasher }) =>
+        !customHasher &&
+        !readsDependencyOutputs(task, taskGraph, projectGraph, nxJson)
+    )
     .map((t) => t.task);
 
   const perTaskEnvs: Record<string, NodeJS.ProcessEnv> = {};
-  for (const task of tasksToHash) {
+  for (const task of candidates) {
     perTaskEnvs[task.id] = getTaskSpecificEnv(task, projectGraph);
   }
-  const hashes = await hasher.hashTasks(tasksToHash, taskGraph, perTaskEnvs);
+  const hashes = await hasher.hashTasksUpfront(
+    candidates,
+    taskGraph,
+    perTaskEnvs
+  );
+  const tasksToHash = candidates.filter((task) => task.id in hashes);
   const ioService = getTaskIOService();
   const hasInputSubscribers = ioService.hasTaskInputSubscribers();
-  for (let i = 0; i < tasksToHash.length; i++) {
-    tasksToHash[i].hash = hashes[i].value;
-    tasksToHash[i].hashDetails = hashes[i].details;
+  for (const task of tasksToHash) {
+    const hash = hashes[task.id];
+    task.hash = hash.value;
+    task.hashDetails = hash.details;
 
     // Notify TaskIOService of hash inputs
-    if (hasInputSubscribers && hashes[i].inputs) {
-      ioService.notifyTaskInputs(tasksToHash[i].id, hashes[i].inputs);
+    if (hasInputSubscribers && hash.inputs) {
+      ioService.notifyTaskInputs(task.id, hash.inputs);
     }
   }
   if (tasksDetails?.recordTaskDetails) {
@@ -87,6 +91,18 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     'hashMultipleTasks',
     'hashMultipleTasks:start',
     'hashMultipleTasks:end'
+  );
+}
+
+function readsDependencyOutputs(
+  task: Task,
+  taskGraph: TaskGraph,
+  projectGraph: ProjectGraph,
+  nxJson: NxJsonConfiguration
+): boolean {
+  return (
+    taskGraph.dependencies[task.id]?.length > 0 &&
+    getInputs(task, projectGraph, nxJson).depsOutputs.length > 0
   );
 }
 

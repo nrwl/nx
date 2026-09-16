@@ -38,6 +38,7 @@ import {
 } from '../../project-graph/utils/retrieve-workspace-files';
 import { fileExists } from '../../utils/fileutils';
 import {
+  rescanAndDiffInContext,
   resetWorkspaceContext,
   updateFilesInContext,
 } from '../../utils/workspace-context';
@@ -56,7 +57,10 @@ import {
 import { notifyFileChangeListeners } from './file-watching/file-change-events';
 import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
 import { notifyProjectGraphListenerSockets } from './project-graph-listener-sockets';
-import { flushPendingWorkspaceChanges } from './watcher';
+import {
+  flushPendingWorkspaceChanges,
+  restartDaemonIfIgnoreFilesChanged,
+} from './watcher';
 import { serverLogger } from '../logger';
 
 interface SerializedProjectGraph {
@@ -393,6 +397,83 @@ export function scheduleProjectGraphRecomputation(
       kickOffRecompute();
     }
   }
+}
+
+/**
+ * The watcher reported dropped events (a kernel event-queue overflow), so the
+ * per-path stream cannot be trusted complete. Recover by re-walking the
+ * workspace and diffing it against the context's known files, then feed the
+ * synthesized changes through the same collection and notification path a
+ * normal watcher batch takes.
+ *
+ * The walk and the diff both happen in the workspace context: it already owns
+ * the file map, so diffing there keeps the whole workspace from crossing the
+ * napi boundary twice per recovery, and lets the context re-gather in place
+ * instead of being torn down and rebuilt.
+ */
+export async function handleWatcherRescan(): Promise<void> {
+  performance.mark('watcher-rescan-start');
+  const { createdFiles, updatedFiles, deletedFiles } =
+    rescanAndDiffInContext(workspaceRoot);
+  performance.mark('watcher-rescan-end');
+  performance.measure(
+    're-walk workspace after watcher rescan',
+    'watcher-rescan-start',
+    'watcher-rescan-end'
+  );
+
+  // An overflow can drop an ignore-file edit outright, so dispatchWorkspaceChanges
+  // never sees it and the native filterer keeps stale ignore rules. The re-walk
+  // is where it resurfaces, so restart here too — the fresh daemon rebuilds the
+  // filterer from the current ignore files.
+  if (
+    restartDaemonIfIgnoreFilesChanged([
+      ...createdFiles.map(({ file }) => file),
+      ...updatedFiles.map(({ file }) => file),
+      ...deletedFiles,
+    ])
+  ) {
+    serverLogger.watcherLog(
+      'Rescan recovered an ignore-file change; restarting the daemon to reload ignore rules.'
+    );
+    return;
+  }
+
+  if (
+    createdFiles.length === 0 &&
+    updatedFiles.length === 0 &&
+    deletedFiles.length === 0
+  ) {
+    serverLogger.watcherLog(
+      'Rescan re-walk found no differences; keeping the cached graph.'
+    );
+    return;
+  }
+  serverLogger.watcherLog(
+    `Rescan re-walk recovered ${createdFiles.length} created, ` +
+      `${updatedFiles.length} updated and ${deletedFiles.length} deleted file(s).`
+  );
+
+  ++fileChangeCounter;
+  for (const { file, hash } of [...createdFiles, ...updatedFiles]) {
+    collectedDeletedFiles.delete(file);
+    collectedUpdatedFiles.set(file, { version: fileChangeCounter, hash });
+  }
+  for (const file of deletedFiles) {
+    collectedUpdatedFiles.delete(file);
+    collectedDeletedFiles.set(file, fileChangeCounter);
+  }
+
+  const createdFileNames = createdFiles.map(({ file }) => file);
+  const updatedFileNames = updatedFiles.map(({ file }) => file);
+  notifyFileChangeListeners({
+    createdFiles: createdFileNames,
+    updatedFiles: updatedFileNames,
+    deletedFiles,
+  });
+  notifyFileWatcherSockets(createdFileNames, updatedFileNames, deletedFiles);
+  ++recomputationGeneration;
+  kickOffRecompute();
 }
 
 export function registerProjectGraphRecomputationListener(

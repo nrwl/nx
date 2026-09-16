@@ -2,19 +2,13 @@ const TERMINAL_SIZE = getMaxArgLength();
 
 export function chunkify(
   target: string[],
-  maxChunkLength: number = TERMINAL_SIZE - 500,
-  /**
-   * How long each entry will be once it reaches the command line. Callers that
-   * quote or escape afterwards pass that transformation's length here, so the
-   * chunk is sized against what is actually spawned rather than the raw string.
-   */
-  measure: (item: string) => number = (item) => item.length
+  maxChunkLength: number = TERMINAL_SIZE - 500
 ): string[][] {
   const chunks = [];
   let currentChunk = [];
   let currentChunkLength = 0;
   for (const file of target) {
-    const length = measure(file);
+    const length = file.length;
     if (
       // Prevent empty chunk if first file path is longer than maxChunkLength
       currentChunk.length &&

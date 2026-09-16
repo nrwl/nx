@@ -41,6 +41,15 @@ exports[`@nx/remix/plugin Remix Classic Compiler non-root project should create 
             "dev": {
               "command": "remix dev --manual",
               "continuous": true,
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "@remix-run/dev",
+                  ],
+                },
+              ],
               "options": {
                 "cwd": "my-app",
               },
@@ -51,6 +60,15 @@ exports[`@nx/remix/plugin Remix Classic Compiler non-root project should create 
               "dependsOn": [
                 "build",
               ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "@remix-run/dev",
+                  ],
+                },
+              ],
               "options": {
                 "cwd": "my-app",
               },
@@ -60,6 +78,15 @@ exports[`@nx/remix/plugin Remix Classic Compiler non-root project should create 
               "continuous": true,
               "dependsOn": [
                 "build",
+              ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "@remix-run/dev",
+                  ],
+                },
               ],
               "options": {
                 "cwd": "my-app",
@@ -151,6 +178,15 @@ exports[`@nx/remix/plugin Remix Classic Compiler non-root project should infer w
             "dev": {
               "command": "remix dev --manual",
               "continuous": true,
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "@remix-run/dev",
+                  ],
+                },
+              ],
               "options": {
                 "cwd": "my-app",
               },
@@ -161,6 +197,15 @@ exports[`@nx/remix/plugin Remix Classic Compiler non-root project should infer w
               "dependsOn": [
                 "build",
               ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "@remix-run/dev",
+                  ],
+                },
+              ],
               "options": {
                 "cwd": "my-app",
               },
@@ -170,6 +215,15 @@ exports[`@nx/remix/plugin Remix Classic Compiler non-root project should infer w
               "continuous": true,
               "dependsOn": [
                 "build",
+              ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "@remix-run/dev",
+                  ],
+                },
               ],
               "options": {
                 "cwd": "my-app",
@@ -256,6 +310,15 @@ exports[`@nx/remix/plugin Remix Classic Compiler root project should create node
             "dev": {
               "command": "remix dev --manual",
               "continuous": true,
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "@remix-run/dev",
+                  ],
+                },
+              ],
               "options": {
                 "cwd": ".",
               },
@@ -266,6 +329,15 @@ exports[`@nx/remix/plugin Remix Classic Compiler root project should create node
               "dependsOn": [
                 "build",
               ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "@remix-run/dev",
+                  ],
+                },
+              ],
               "options": {
                 "cwd": ".",
               },
@@ -275,6 +347,15 @@ exports[`@nx/remix/plugin Remix Classic Compiler root project should create node
               "continuous": true,
               "dependsOn": [
                 "build",
+              ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "@remix-run/dev",
+                  ],
+                },
               ],
               "options": {
                 "cwd": ".",
@@ -358,6 +439,15 @@ exports[`@nx/remix/plugin Remix Vite Compiler non-root project should create nod
             "dev": {
               "command": "remix vite:dev",
               "continuous": true,
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "@remix-run/dev",
+                  ],
+                },
+              ],
               "options": {
                 "cwd": "my-app",
               },
@@ -368,6 +458,15 @@ exports[`@nx/remix/plugin Remix Vite Compiler non-root project should create nod
               "dependsOn": [
                 "build",
               ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "@remix-run/dev",
+                  ],
+                },
+              ],
               "options": {
                 "cwd": "my-app",
               },
@@ -377,6 +476,15 @@ exports[`@nx/remix/plugin Remix Vite Compiler non-root project should create nod
               "continuous": true,
               "dependsOn": [
                 "build",
+              ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "@remix-run/dev",
+                  ],
+                },
               ],
               "options": {
                 "cwd": "my-app",
@@ -462,6 +570,15 @@ exports[`@nx/remix/plugin Remix Vite Compiler root project should create nodes 1
             "dev": {
               "command": "remix vite:dev",
               "continuous": true,
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "@remix-run/dev",
+                  ],
+                },
+              ],
               "options": {
                 "cwd": ".",
               },
@@ -472,6 +589,15 @@ exports[`@nx/remix/plugin Remix Vite Compiler root project should create nodes 1
               "dependsOn": [
                 "build",
               ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "@remix-run/dev",
+                  ],
+                },
+              ],
               "options": {
                 "cwd": ".",
               },
@@ -481,6 +607,15 @@ exports[`@nx/remix/plugin Remix Vite Compiler root project should create nodes 1
               "continuous": true,
               "dependsOn": [
                 "build",
+              ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "@remix-run/dev",
+                  ],
+                },
               ],
               "options": {
                 "cwd": ".",

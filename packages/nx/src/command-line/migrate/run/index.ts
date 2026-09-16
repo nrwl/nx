@@ -13,12 +13,16 @@ export type {
   MigrateRunRound,
   MigrateStepStatus,
   PromptOutcomeStatus,
+  MigrateStepAwaitingKind,
   MigrateStepOutcome,
   MigrateStepPromptOutcome,
   MigrateStep,
   MigrateCommitKind,
   MigrateCommitLedgerEntry,
+  MigrateIssueDisposition,
+  MigrateRunIssue,
   MigrateRunAnalytics,
+  MigrateRunNoProgress,
   MigrateRunState,
 } from './run-state';
 

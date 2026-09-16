@@ -26,18 +26,38 @@ let workspaceChangesCallback!: FileWatcherCallback;
 function dispatchWorkspaceChanges(
   events: WatchEvent[]
 ): Promise<void> | undefined {
-  for (const event of events) {
-    if (event.path.endsWith('.gitignore') || event.path === '.nxignore') {
-      // If the ignore files themselves have changed we need to dynamically
-      // update our cached ignoreGlobs
+  if (restartDaemonIfIgnoreFilesChanged(events.map((event) => event.path))) {
+    return;
+  }
+  return workspaceChangesCallback(null, events);
+}
+
+// Mirrors the per-directory ignore files create_filter reads (watch_filterer.rs).
+// The sources it honours that cannot trigger a restart from here — because they
+// are never watched — only take effect on the next daemon start: .git/info/exclude
+// (under the hardcoded-ignored .git), the global core.excludesFile (outside the
+// tree), and parent .gitignore files above the workspace root.
+const IGNORE_FILE_NAMES = ['.gitignore', '.nxignore'];
+
+/**
+ * The native filterer's ignore rules are fixed when the watcher starts, so an
+ * ignore-file edit needs a daemon restart to take effect. Exposed so the rescan
+ * recovery can restart too: an overflow can drop the ignore-file event that
+ * dispatchWorkspaceChanges would have caught, and only the re-walk finds it.
+ */
+export function restartDaemonIfIgnoreFilesChanged(paths: string[]): boolean {
+  for (const path of paths) {
+    const basename = path.slice(path.lastIndexOf('/') + 1);
+    if (IGNORE_FILE_NAMES.includes(basename)) {
       handleServerProcessTermination({
         server: activeServer,
         reason: 'Stopping the daemon the set of ignored files changed (native)',
         sockets: openSockets,
       });
+      return true;
     }
   }
-  return workspaceChangesCallback(null, events);
+  return false;
 }
 
 export async function watchWorkspace(server: Server, cb: FileWatcherCallback) {

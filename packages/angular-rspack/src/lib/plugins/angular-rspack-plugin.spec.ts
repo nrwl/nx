@@ -368,6 +368,118 @@ describe('AngularRspackPlugin', () => {
     expect(compilation.errors).toHaveLength(0);
   });
 
+  it('should also silently run semantic diagnostics when type checking is skipped, to keep the incremental compilation state warm', async () => {
+    const diagnoseFiles = vi.fn().mockResolvedValue({});
+    setupCompilationMock.mockResolvedValue({
+      angularCompilation: { diagnoseFiles },
+      collectedStylesheetAssets: [],
+    });
+    const compiler = createFakeCompiler();
+    const plugin = new AngularRspackPlugin({
+      ...options,
+      skipTypeChecking: true,
+    } as never);
+    plugin.apply(compiler as never);
+
+    await runBuildStart(compiler);
+
+    // DiagnosticModes.All & ~DiagnosticModes.Semantic === 7 & ~4 === 3
+    expect(diagnoseFiles).toHaveBeenCalledWith(3);
+    // DiagnosticModes.Semantic === 4
+    expect(diagnoseFiles).toHaveBeenCalledWith(4);
+    expect(diagnoseFiles).toHaveBeenCalledTimes(2);
+  });
+
+  it('should discard errors and warnings from the silent semantic warm-up pass', async () => {
+    const diagnoseFiles = vi.fn().mockImplementation((modes: number) =>
+      // DiagnosticModes.Semantic === 4
+      modes === 4
+        ? Promise.resolve({
+            errors: [{ text: 'semantic error' }],
+            warnings: [{ text: 'semantic warning' }],
+          })
+        : Promise.resolve({})
+    );
+    setupCompilationMock.mockResolvedValue({
+      angularCompilation: { diagnoseFiles },
+      collectedStylesheetAssets: [],
+    });
+    const compiler = createFakeCompiler();
+    const plugin = new AngularRspackPlugin({
+      ...options,
+      skipTypeChecking: true,
+    } as never);
+    plugin.apply(compiler as never);
+
+    await runBuildStart(compiler);
+
+    const compilation = createFakeCompilation(compiler);
+    await fireAsyncTaps(compiler.hooks.emit, compilation);
+
+    expect(compilation.errors).toHaveLength(0);
+    expect(compilation.warnings).toHaveLength(0);
+  });
+
+  it('should not fail or hang the build when the silent semantic warm-up pass rejects', async () => {
+    const diagnoseFiles = vi.fn().mockImplementation((modes: number) =>
+      // DiagnosticModes.Semantic === 4
+      modes === 4
+        ? Promise.reject(new Error('semantic warm-up crashed'))
+        : Promise.resolve({})
+    );
+    setupCompilationMock.mockResolvedValue({
+      angularCompilation: { diagnoseFiles },
+      collectedStylesheetAssets: [],
+    });
+    const compiler = createFakeCompiler();
+    const plugin = new AngularRspackPlugin({
+      ...options,
+      skipTypeChecking: true,
+    } as never);
+    plugin.apply(compiler as never);
+
+    await runBuildStart(compiler);
+
+    const compilation = createFakeCompilation(compiler);
+    // emit must resolve (the callback fires) rather than leak the rejection
+    await fireAsyncTaps(compiler.hooks.emit, compilation);
+
+    expect(compilation.errors).toHaveLength(0);
+  });
+
+  it('should start the silent semantic warm-up pass without waiting for the surfaced diagnostics to resolve first', async () => {
+    let resolveSurfaced: (value: unknown) => void = () => undefined;
+    const diagnoseFiles = vi.fn().mockImplementation((modes: number) =>
+      // DiagnosticModes.All & ~DiagnosticModes.Semantic === 3
+      modes === 3
+        ? new Promise((resolve) => {
+            resolveSurfaced = resolve;
+          })
+        : Promise.resolve({})
+    );
+    setupCompilationMock.mockResolvedValue({
+      angularCompilation: { diagnoseFiles },
+      collectedStylesheetAssets: [],
+    });
+    const compiler = createFakeCompiler();
+    const plugin = new AngularRspackPlugin({
+      ...options,
+      skipTypeChecking: true,
+    } as never);
+    plugin.apply(compiler as never);
+
+    // Keep surfaced diagnostics pending while both build-start hooks settle.
+    await fireAsyncTaps(compiler.hooks.beforeRun, compiler);
+    await fireAsyncTaps(compiler.hooks.beforeCompile, {});
+
+    // both calls were already started - the semantic warm-up was not
+    // gated behind the surfaced diagnostics call resolving first
+    expect(diagnoseFiles).toHaveBeenCalledWith(3);
+    expect(diagnoseFiles).toHaveBeenCalledWith(4);
+
+    resolveSurfaced({});
+  });
+
   it('should not throw from afterDone when the run failed before producing stats', async () => {
     const compiler = applyPlugin();
 

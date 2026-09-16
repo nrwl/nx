@@ -12,14 +12,18 @@ export type { AgentId };
 export const MIGRATE_RUNS_RELATIVE_DIR = '.nx/migrate-runs';
 
 /**
- * The one subtree of a run directory an agent writes: its handoff files.
- * Everything beside it is state Nx owns and reads back, the orchestrator's
- * run state and plan snapshots included, so the pre-authorized write scope
- * stops at this segment. Package names make up the rest of a handoff path,
- * so without it they would occupy the run directory's top level and leave Nx
- * no name it could add there safely.
+ * The one subtree of a run directory an agent writes; everything beside it is
+ * state Nx owns, so the pre-authorized write scope stops here. Handoff names
+ * derive from step ids or package and migration names, so flattening them into
+ * the run dir would leave Nx no name it could safely add.
  */
 export const HANDOFFS_DIR_NAME = 'handoffs';
+
+/**
+ * Sibling subtree holding the per-step prompt files Nx writes for the agent
+ * to read. They stay out of `handoffs/`, which is the agent's to write.
+ */
+export const PROMPTS_DIR_NAME = 'prompts';
 
 /**
  * Composite identity of the v23 migration that adds `.nx/migrate-runs` to
@@ -61,10 +65,22 @@ export interface DetectedInstalledAgent {
  * Inputs the runner provides when asking an agent definition to build its
  * spawn arguments. Kept minimal — agent-specific quirks (e.g. transient agent
  * name for OpenCode) are encoded inside the definition, not here.
+ *
+ * Both prompts are written to disk (see `instruction-files.ts`) and reached
+ * through `systemPromptFilePath` / `instructionsPointer`. The inline fields
+ * below are the exception, for agents that cannot be pointed at a file.
  */
 export interface InvocationContext {
-  systemContext: string;
-  userPrompt: string;
+  /** Absolute path of the file holding the step's system prompt. */
+  systemPromptFilePath: string;
+  /** Verbatim system prompt, only for a step with no file-loading path. */
+  systemPrompt: string;
+  /** Single-line command-line text pointing the agent at its instructions. */
+  instructionsPointer: string;
+  /** Inline handoff contract and pointer to `systemPromptFilePath`. */
+  inlineSystemContext: string;
+  /** Shorter `inlineSystemContext`, substituted on Windows shim overflow. */
+  inlineSystemContextFallback: string;
   workspaceRoot: string;
   /**
    * Name of the run directory under `MIGRATE_RUNS_RELATIVE_DIR` holding this

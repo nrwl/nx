@@ -70,6 +70,24 @@ describe('Angular Module Federation - SSR', () => {
       });
     });
 
+    // the generated server configures its own allowed hosts, so it renders
+    // without the NG_ALLOWED_HOSTS the dev server would otherwise inject
+    const staticServerProcess = await runCommandUntil(
+      `static-server ${remote1}`,
+      (output) =>
+        output.includes(
+          `Node Express server listening on http://localhost:${remote1Port}`
+        ),
+      { timeout: 120000 }
+    );
+    try {
+      const response = await fetch(`http://127.0.0.1:${remote1Port}/`);
+      expect(response.status).toBe(200);
+      expect(await response.text()).toContain('ng-server-context');
+    } finally {
+      await killProcessAndPorts(staticServerProcess.pid, remote1Port);
+    }
+
     const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
     updateFile(
