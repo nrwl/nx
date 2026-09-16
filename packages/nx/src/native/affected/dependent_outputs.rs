@@ -14,12 +14,12 @@
 //! path analysis, and no dependency walk: the instruction exists only because the
 //! producer was already a dependency.
 //!
-//! A disk-backed `IgnoredFileSet(globs)` comes from an `includeIgnored`
-//! fileset. I/O tracing turns an observed read of a generated artifact into one
-//! of these, which can preclude the explicit input entirely, so a plan can read a
-//! dependency's output with no `TaskOutput` anywhere in it. Its project names the
-//! owner of the read paths rather than the task producing them, so each pattern
-//! is compared to declared outputs, over the consumer's dependency closure: by
+//! An `IgnoredFileSet(globs)` comes from an `includeIgnored` fileset. I/O
+//! tracing turns an observed read of a generated artifact into one of these,
+//! which can preclude the explicit input entirely, so a plan can read a
+//! dependency's output with no `TaskOutput` anywhere in it. It carries no
+//! project and names no producer, so each pattern is compared to declared
+//! outputs, over the consumer's dependency closure: by
 //! directory containment when the read names one, and by what the glob can
 //! match when it leads with a wildcard. That walk runs only for tasks carrying
 //! a read.
@@ -328,8 +328,7 @@ mod tests {
         HashInstruction::TaskOutput("**/*.js".into(), strings(outputs))
     }
 
-    /// A disk-backed fileset. Its project is inert here: the hasher expands
-    /// these workspace-wide, so only the globs are read.
+    /// A disk-backed fileset: workspace-relative globs with no project.
     fn include_ignored(globs: &[&str]) -> HashInstruction {
         HashInstruction::IgnoredFileSet(strings(globs))
     }
