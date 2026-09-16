@@ -10,11 +10,11 @@
 // a duplicate request from landing twice.
 
 import { randomBytes } from 'crypto';
-import { existsSync, mkdirSync, readdirSync, rmSync } from 'fs';
+import { existsSync, readdirSync, rmSync } from 'fs';
 import { join } from 'path';
 import { FileLock, IS_WASM } from '../../../native';
 import { readJsonFile, writeJsonFile } from '../../../utils/fileutils';
-import { handoffsDirState } from '../agentic/handoff';
+import { ensureRunSubdir, handoffsDirState } from '../agentic/handoff';
 import {
   DeferredOutputCollector,
   replayDeferredOutput,
@@ -300,17 +300,7 @@ export class MigrateCommitBroker {
     private readonly reconcileCommand: string,
     private readonly policy: MigrateRunPolicy
   ) {
-    switch (handoffsDirState(brokerDir(dir))) {
-      case 'directory':
-        break;
-      case 'missing':
-        // Not recursive: the run dir exists, and a symlink raced in here
-        // fails with EEXIST instead of being followed.
-        mkdirSync(brokerDir(dir));
-        break;
-      case 'other':
-        throw this.notADirectory();
-    }
+    ensureRunSubdir(brokerDir(dir), () => this.notADirectory());
     this.lock = IS_WASM ? null : new FileLock(lockPath(dir, this.nonce));
     this.lock?.lock();
   }

@@ -1,5 +1,5 @@
 import { type ChildProcess, spawn } from 'child_process';
-import { existsSync, mkdirSync, rmSync } from 'fs';
+import { existsSync, rmSync } from 'fs';
 import { dirname, join, relative, sep } from 'path';
 import { logger } from '../../../../utils/logger';
 import { resetSgrAfterAgent } from '../../migrate-output';
@@ -18,7 +18,7 @@ import {
   raceWithTimeout,
   waitForExit,
 } from '../close-agent-session';
-import { handoffsDirState } from '../handoff';
+import { ensureRunSubdir } from '../handoff';
 import { restoreTermiosAfterAgent } from '../terminal-repair';
 import type { DetectedInstalledAgent } from '../types';
 import {
@@ -130,19 +130,13 @@ export async function spawnMasterSession(
     // its place: a symlink would send the agent's write and the poll below
     // elsewhere.
     const handoffsDir = dirname(sentinelPath);
-    switch (handoffsDirState(handoffsDir)) {
-      case 'directory':
-        break;
-      case 'missing':
-        // Not recursive: the run dir exists, and a symlink raced in here
-        // fails with EEXIST instead of being followed.
-        mkdirSync(handoffsDir);
-        break;
-      case 'other':
-        throw new Error(
+    ensureRunSubdir(
+      handoffsDir,
+      () =>
+        new Error(
           `Migrate run ${runId} has something other than a directory at ${handoffsDir}; remove it and try again.`
-        );
-    }
+        )
+    );
     // Local alias so `@nx/workspace-require-windows-hide` can track the
     // options as an Identifier.
     const spawnOptions = adapted.options;
