@@ -155,6 +155,7 @@ For one with `dependencies: true`, it's the globs carrying that flag, applied to
 }
 ```
 
+The group reaches every dependency in the chain, not only the direct ones: each dependency applies it and passes it on.
 Without the flag it's a normal fileset and doesn't affect them.
 A negation with nothing to filter is a configuration error.
 

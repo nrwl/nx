@@ -1137,12 +1137,18 @@ fn group_cache_key(dep: &str, inputs: &[Input]) -> String {
 }
 
 /// Group order is part of the key: it is the order the globs are hashed in.
+/// So is each member's kind — a group may mix an `includeIgnored` fileset with
+/// a plain one, and the same globs then stand for different instructions.
 fn grouped_cache_key(dep: &str, group: &[Input]) -> String {
     let globs = group
         .iter()
         .map(|input| match input {
-            Input::FileSet { fileset, .. } => *fileset,
-            _ => "",
+            Input::FileSet {
+                fileset,
+                include_ignored,
+                ..
+            } => format!("{}{fileset}", fileset_kind(*include_ignored)),
+            _ => String::new(),
         })
         .collect::<Vec<_>>()
         .join("\0");
@@ -1520,6 +1526,26 @@ mod tests {
             .is_none()
         );
         assert!(local_input_cache_key("a", &[Input::String("default")]).is_none());
+    }
+
+    /// A group may mix kinds, and the same globs then mean different
+    /// instructions. Keying on the globs alone let one group's subtree be
+    /// reused for the other's.
+    #[test]
+    fn a_group_key_separates_members_by_kind() {
+        let fs = |fileset, include_ignored| Input::FileSet {
+            fileset,
+            dependencies: true,
+            include_ignored,
+        };
+        assert_ne!(
+            group_cache_key("p", &[fs("x", true), fs("y", false)]),
+            group_cache_key("p", &[fs("x", false), fs("y", true)])
+        );
+        assert_ne!(
+            group_cache_key("p", &[fs("x", true), fs("y", true)]),
+            group_cache_key("p", &[fs("x", false), fs("y", false)])
+        );
     }
 
     #[test]

@@ -45,6 +45,9 @@ pub(super) fn get_inputs<'a>(
 /// A propagated group resolves against the dependency as one unit, so a
 /// negation filters the positives of the same group. Only `includeIgnored`
 /// filesets are grouped; every other input propagates alone.
+/// The self and dependency halves of a propagated group, or `None` when the
+/// group holds anything that does not reach a dependency. An empty group is
+/// `Some` with nothing in either half: it propagates, and propagates nothing.
 pub(super) fn get_inputs_for_dependency_group<'a>(
     project: &'a Project,
     nx_json: &'a NxJson,
