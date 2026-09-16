@@ -164,6 +164,27 @@ export function handoffsDirState(
 }
 
 /**
+ * Non-recursive mkdir: the run dir exists, and a symlink created after the
+ * missing-path check fails with EEXIST instead of being followed.
+ */
+export function ensureRunSubdir(dir: string, notADirectory: () => Error): void {
+  const state = handoffsDirState(dir);
+  switch (state) {
+    case 'directory':
+      return;
+    case 'missing':
+      mkdirSync(dir);
+      return;
+    case 'other':
+      throw notADirectory();
+    default: {
+      const unhandled: never = state;
+      throw new Error(`Unhandled directory state: ${unhandled}`);
+    }
+  }
+}
+
+/**
  * Reads the file `stat` describes, refusing a symlink swapped in after the
  * caller's lstat: O_NOFOLLOW fails the open with ELOOP, and O_NONBLOCK keeps a
  * planted FIFO from blocking it. Windows has neither flag, so there the inode
