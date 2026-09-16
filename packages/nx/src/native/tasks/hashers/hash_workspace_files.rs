@@ -4,7 +4,7 @@ use rayon::prelude::*;
 
 use super::once_cache::OnceCache;
 use crate::native::glob::glob_files::glob_files;
-use crate::native::glob::{build_glob_set, path_or_everything_under};
+use crate::native::glob::{build_glob_set, fileset_patterns};
 use crate::native::hasher::hash;
 use crate::native::types::FileData;
 use anyhow::*;
@@ -383,13 +383,4 @@ mod test {
         .unwrap();
         assert_eq!(paths_first, paths_second);
     }
-}
-
-/// Each fileset entry as the patterns it stands for, see
-/// `path_or_everything_under`.
-fn fileset_patterns(globs: &[String]) -> Vec<String> {
-    globs
-        .iter()
-        .flat_map(|glob| path_or_everything_under(glob))
-        .collect()
 }

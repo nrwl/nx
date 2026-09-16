@@ -121,6 +121,15 @@ pub(crate) fn path_or_everything_under(glob: &str) -> Vec<String> {
     vec![glob.to_string(), format!("{glob}/**")]
 }
 
+/// Every fileset glob read as a path or a pattern, ready for `build_glob_set`.
+/// See `path_or_everything_under` for what a pattern-less entry names.
+pub(crate) fn fileset_patterns(globs: &[String]) -> Vec<String> {
+    globs
+        .iter()
+        .flat_map(|glob| path_or_everything_under(glob))
+        .collect()
+}
+
 #[derive(Debug)]
 enum GlobType {
     Negative(String),

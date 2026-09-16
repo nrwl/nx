@@ -5,7 +5,7 @@ use anyhow::*;
 use tracing::{trace, trace_span};
 
 use super::once_cache::OnceCache;
-use crate::native::glob::{build_glob_set, path_or_everything_under};
+use crate::native::glob::{build_glob_set, fileset_patterns};
 use crate::native::types::FileData;
 
 /// Compute-once cache for project fileset hashes. Holds only the hash, so
@@ -534,13 +534,4 @@ mod tests {
         .unwrap();
         assert_eq!(paths_first, paths_second);
     }
-}
-
-/// Each fileset entry as the patterns it stands for, see
-/// `path_or_everything_under`.
-fn fileset_patterns(file_sets: &[String]) -> Vec<String> {
-    file_sets
-        .iter()
-        .flat_map(|glob| path_or_everything_under(glob))
-        .collect()
 }
