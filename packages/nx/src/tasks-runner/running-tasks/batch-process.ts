@@ -55,6 +55,8 @@ export class BatchProcess {
   private capturedOutputFailed = false;
   /** Set once the failure has been reported, so it is said once per batch. */
   private capturedOutputWarned = false;
+  /** Set before `end()`: a write after it would destroy the unflushed tail. */
+  private capturedOutputClosing = false;
   private static captureSeq = 0;
   /** Turns `flushCapturedOutput` waits for a resumed source to empty. */
   private static readonly MAX_DRAIN_TURNS = 100;
@@ -188,9 +190,8 @@ export class BatchProcess {
   }
 
   private capture(chunk: string | Buffer, source?: Readable | null) {
-    // A released capture drops the chunk. The renderer has already read the
-    // file, so there is nothing left for these bytes to reach.
-    if (this.capturedOutputDiscarded) {
+    // A closed or released capture drops the chunk; see `getCapturedOutputPath`.
+    if (this.capturedOutputDiscarded || this.capturedOutputClosing) {
       return;
     }
     // A failed one does not. The style withheld these bytes on the promise that
@@ -322,6 +323,9 @@ export class BatchProcess {
     ) {
       await new Promise<void>((resolve) => setImmediate(resolve));
     }
+    this.capturedOutputClosing = true;
+    // The loop's own writes can re-pause a source.
+    this.resumeCapturedSources();
     const stream = this.capturedOutputStream;
     if (!stream || stream.destroyed || stream.writableEnded) {
       return;

@@ -530,6 +530,8 @@ describe('BatchProcess', () => {
         const captured = readFileSync(batch.getCapturedOutputPath(), 'utf-8');
         expect(captured).toContain('head');
         expect(captured).toContain('TAIL-AFTER-PAUSE');
+        // Writing the tail re-paused the source, and an ended stream never drains.
+        expect((child as any).stdout.isPaused()).toBe(false);
         batch.discardCapturedOutput();
       });
     } finally {
@@ -583,6 +585,39 @@ describe('BatchProcess', () => {
       batch.discardCapturedOutput();
     } finally {
       mockBackpressureOnly = false;
+    }
+  });
+
+  it('keeps the log intact when a chunk arrives while the capture is closing', async () => {
+    const child = fakeChildProcess();
+    const warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
+
+    try {
+      const batch = withEnvironmentVariables(FOLDING_ENV, () => {
+        const b = new BatchProcess(child, '@nx/gradle:batch');
+        captureForwarded(() => {
+          (child as any).stdout.emit('data', Buffer.from('during\n'));
+        });
+        return b;
+      });
+
+      // Not awaited: the chunk lands between `end()` and 'finish', where a
+      // write destroys the stream along with everything still buffered.
+      const flushed = batch.flushCapturedOutput();
+      withEnvironmentVariables(FOLDING_ENV, () => {
+        captureForwarded(() => {
+          (child as any).stdout.emit('data', Buffer.from('late\n'));
+        });
+      });
+      await flushed;
+
+      expect(readFileSync(batch.getCapturedOutputPath(), 'utf-8')).toEqual(
+        'during\n'
+      );
+      expect(warn).not.toHaveBeenCalled();
+      batch.discardCapturedOutput();
+    } finally {
+      warn.mockRestore();
     }
   });
 });
