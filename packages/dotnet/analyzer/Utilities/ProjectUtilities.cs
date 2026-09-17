@@ -58,6 +58,37 @@ public static class ProjectUtilities
         return msbuildProjectName;
     }
 
+    public static List<string> GetCommonNxTags(IEnumerable<ProjectInstance> projects)
+    {
+        HashSet<string>? commonTags = null;
+
+        foreach (var project in projects)
+        {
+            var projectTags = new HashSet<string>(StringComparer.Ordinal);
+            projectTags.UnionWith(SplitMsBuildList(project.GetPropertyValue("NxTags")));
+            projectTags.UnionWith(
+                project
+                    .GetItems("NxTag")
+                    .SelectMany(item => SplitMsBuildList(item.EvaluatedInclude)));
+
+            if (commonTags is null)
+            {
+                commonTags = projectTags;
+            }
+            else
+            {
+                commonTags.IntersectWith(projectTags);
+            }
+        }
+
+        return commonTags?
+            .OrderBy(tag => tag, StringComparer.Ordinal)
+            .ToList() ?? new List<string>();
+    }
+
+    private static IEnumerable<string> SplitMsBuildList(string value) =>
+        value.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+
     /// <summary>
     /// Directory.Build.props/.targets are auto-imported by Microsoft.Common.props/.targets, walking
     /// up from the project to the first ancestor that defines them. Directory.Build.rsp is read by
