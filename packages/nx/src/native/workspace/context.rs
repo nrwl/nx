@@ -781,7 +781,7 @@ impl FileState {
     }
 
     /// Runs `f` against the files under their lock, once a walk in progress
-    /// has finished. `None` when there are no files to wait for.
+    /// has finished. `None` when the workspace root does not exist.
     fn with_files<R>(&self, f: impl FnOnce(&Files) -> R) -> Option<R> {
         let sync = self.0.as_ref()?;
         let (lock, cvar) = sync.deref();

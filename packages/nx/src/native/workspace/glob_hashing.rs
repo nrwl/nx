@@ -44,7 +44,8 @@ fn classify(glob: &str) -> Option<Lookup> {
     plain(&glob).then(|| Lookup::Literal(glob.into_owned()))
 }
 
-/// Whether any glob in the group can only be resolved by scanning the table.
+/// Whether the group must scan the table: it is empty, or a glob in it is
+/// not a prefix or literal lookup.
 pub(super) fn needs_scan(globs: &[String]) -> bool {
     globs.is_empty() || globs.iter().any(|glob| classify(glob).is_none())
 }
@@ -61,8 +62,8 @@ fn prefix_entries<'a>(files: &'a Files, dir: &str, into: &mut Vec<Entry<'a>>) {
     into.extend(below.take_while(|(path, _)| path.starts_with(dir)));
 }
 
-/// The union of the group's matches in table order, or `None` when a glob
-/// needs the scanning path.
+/// The union of the group's matches in table order, or `None` when the group
+/// must scan (see `needs_scan`).
 fn lookup_entries<'a>(files: &'a Files, globs: &[String]) -> Option<Vec<Entry<'a>>> {
     if globs.is_empty() {
         return None;
