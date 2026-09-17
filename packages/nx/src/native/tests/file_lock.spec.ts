@@ -52,11 +52,13 @@ describe('FileLock', () => {
       .waitForRelease(10_000)
       .then((released) => `released:${released}`);
 
-    // Raced rather than timed, so the assertion cannot pass on a wait that
-    // settled at once.
-    expect(await Promise.race([waiting, Promise.resolve('sentinel')])).toBe(
-      'sentinel'
+    // Raced against a timer rather than a resolved promise. `waitForRelease`
+    // is a Rust async task, so it settles on a macrotask and an already
+    // resolved promise would win this race whether it waited or not.
+    const sentinel = new Promise((resolve) =>
+      setTimeout(() => resolve('sentinel'), 50)
     );
+    expect(await Promise.race([waiting, sentinel])).toBe('sentinel');
 
     holder.unlock();
     expect(await waiting).toBe('released:true');

@@ -443,7 +443,7 @@ describe('loading plugins through the capability cache', () => {
       if (plugin === 'test-plugin') {
         throw new Error('boom');
       }
-      return [Promise.resolve({ name: String(plugin) }), () => {}];
+      return { name: String(plugin) };
     });
 
     await expect(
