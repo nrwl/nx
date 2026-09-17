@@ -175,13 +175,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   { typecheck: { targetName: 'check-lib' } }
                 ),
               ])
-            : Promise.all([
-                invokeCreateNodesOnMatchingFiles(
-                  ['apps/my-app/tsconfig.json', 'libs/my-lib/tsconfig.json'],
-                  context,
-                  {}
-                ),
-              ]);
+            : invokeCreateNodesOnMatchingFiles(
+                ['apps/my-app/tsconfig.json', 'libs/my-lib/tsconfig.json'],
+                context,
+                {}
+              ).then((result) => [result]);
 
         const coldResults = await run();
         expect(
