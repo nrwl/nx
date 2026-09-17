@@ -762,6 +762,41 @@ describe('utils', () => {
       ]);
     });
 
+    it('should resolve a target name that only looks like a glob pattern', () => {
+      const allTargets = [
+        'test-ci',
+        'test-ci--plain.test.ts',
+        'test-ci--src/app/[id]/page.test.ts',
+      ];
+
+      const results = expandWildcardTargetConfiguration(
+        {
+          target: 'test-ci--src/app/[id]/page.test.ts',
+          projects: ['a'],
+        },
+        allTargets
+      );
+
+      expect(results).toEqual([
+        {
+          target: 'test-ci--src/app/[id]/page.test.ts',
+          projects: ['a'],
+        },
+      ]);
+    });
+
+    it('should expand to nothing when a glob pattern matches no target', () => {
+      const results = expandWildcardTargetConfiguration(
+        {
+          target: 'build*',
+          projects: ['a'],
+        },
+        ['test', 'lint']
+      );
+
+      expect(results).toEqual([]);
+    });
+
     it('should preserve params and options when expanding wildcards', () => {
       const allTargets = ['build', 'build:test', 'build:prod'];
       const results = expandWildcardTargetConfiguration(
