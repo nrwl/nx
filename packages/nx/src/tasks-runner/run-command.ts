@@ -29,7 +29,7 @@ import { isCI } from '../utils/is-ci';
 import { isNxCloudDisabled, isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { getBundleInstallDefaultLocation } from '../nx-cloud/update-manager';
 import { logger } from '../utils/logger';
-import { fetchIoSnapshotsForRun } from '../io-snapshots/fetch';
+import { resolveIoSnapshotsForRun } from '../io-snapshots/resolve';
 import { applyIoSnapshotOutputs } from '../io-snapshots/outputs';
 import { buildIoSnapshotOverrides } from '../io-snapshots/overrides';
 import { formatIoSnapshotSummary } from '../io-snapshots/report';
@@ -1011,7 +1011,7 @@ export async function invokeTasksRunner({
 
   // Must precede hashing: the bundle is the snapshot source for task hashes,
   // and observed outputs join the task outputs the hasher and cache see.
-  const ioSnapshots = await fetchIoSnapshotsForRun(nxJson, runnerOptions);
+  const ioSnapshots = await resolveIoSnapshotsForRun(nxJson, runnerOptions);
   if (ioSnapshots) {
     applyIoSnapshotOutputs(projectGraph, taskGraph, ioSnapshots);
   }
@@ -1231,7 +1231,7 @@ function loadTasksRunner(modulePath: string): TasksRunner {
 }
 
 function reportIoSnapshots(
-  ioSnapshots: Awaited<ReturnType<typeof fetchIoSnapshotsForRun>>,
+  ioSnapshots: Awaited<ReturnType<typeof resolveIoSnapshotsForRun>>,
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
   nxJson: NxJsonConfiguration,

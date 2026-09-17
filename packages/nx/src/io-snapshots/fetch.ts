@@ -30,6 +30,16 @@ export interface IoSnapshotCloudOptions {
 }
 
 /** The Nx Cloud client's `readIoSnapshots` contract, as far as nx uses it. */
+/**
+ * The environment the decision is made in. The daemon has its own
+ * `process.env`, older than this run, so the run's values travel with the
+ * request instead.
+ */
+export interface IoSnapshotEnv {
+  NX_IO_SNAPSHOTS?: string;
+  NX_IO_SNAPSHOTS_MAX_AGE?: string;
+}
+
 export interface ReadIoSnapshotsOptions {
   workspaceRoot?: string;
   nxCloudOptions?: IoSnapshotCloudOptions;
@@ -58,11 +68,12 @@ export interface ReadIoSnapshotsResult {
  */
 export function isIoSnapshotFetchEnabled(
   nxJson: NxJsonConfiguration,
-  runnerOptions: IoSnapshotCloudOptions = {}
+  runnerOptions: IoSnapshotCloudOptions = {},
+  env: IoSnapshotEnv = process.env
 ): boolean {
   // A disabled Cloud wins over everything, including the debug override.
   if (isNxCloudDisabled(nxJson) || runnerOptions.cloud === false) return false;
-  const override = process.env.NX_IO_SNAPSHOTS;
+  const override = env.NX_IO_SNAPSHOTS;
   if (override === 'false') return false;
   return override === 'true' || isNxCloudUsed(nxJson);
 }
@@ -80,6 +91,16 @@ export function ioSnapshotOptionsFromNxJson(
     accessToken: runner.accessToken ?? nxJson.nxCloudAccessToken,
     nxCloudId: runner.nxCloudId ?? nxJson.nxCloudId,
     url: runner.url ?? nxJson.nxCloudUrl,
+  };
+}
+
+/** The subset of this run's environment the decision and the max age read. */
+export function ioSnapshotEnv(
+  env: NodeJS.ProcessEnv = process.env
+): IoSnapshotEnv {
+  return {
+    NX_IO_SNAPSHOTS: env.NX_IO_SNAPSHOTS,
+    NX_IO_SNAPSHOTS_MAX_AGE: env.NX_IO_SNAPSHOTS_MAX_AGE,
   };
 }
 
@@ -104,25 +125,25 @@ const WARNED_REASONS = new Set([
  */
 export async function fetchIoSnapshotsForRun(
   nxJson: NxJsonConfiguration,
-  runnerOptions: IoSnapshotCloudOptions
+  runnerOptions: IoSnapshotCloudOptions,
+  env: IoSnapshotEnv = process.env
 ): Promise<IoSnapshots | null> {
-  if (!isIoSnapshotFetchEnabled(nxJson, runnerOptions)) {
+  if (!isIoSnapshotFetchEnabled(nxJson, runnerOptions, env)) {
     return null;
   }
   const head = getLatestCommitSha();
   if (!head) {
-    return report(
+    return reportIoSnapshotResolution(
       skippedIoSnapshots('not-a-git-repo', 'Could not resolve HEAD')
     );
   }
   const db = getDbConnection();
   const cached = readIoSnapshotResolution(db, head);
-  const maxAge =
-    parseMaxAge(process.env.NX_IO_SNAPSHOTS_MAX_AGE) ?? DEFAULT_MAX_AGE_MS;
+  const maxAge = parseMaxAge(env.NX_IO_SNAPSHOTS_MAX_AGE) ?? DEFAULT_MAX_AGE_MS;
   if (cached && maxAge > 0 && Date.now() - cached.fetchedAt <= maxAge) {
     const fresh = loadIoSnapshots(db, head);
     if (fresh.status !== 'skipped') {
-      return report(fresh);
+      return reportIoSnapshotResolution(fresh);
     }
   }
 
@@ -132,7 +153,7 @@ export async function fetchIoSnapshotsForRun(
   try {
     const client = await loadCloudClient(runnerOptions);
     if (typeof client.readIoSnapshots !== 'function') {
-      return report(
+      return reportIoSnapshotResolution(
         skippedIoSnapshots(
           'unsupported-client',
           'The installed Nx Cloud client does not expose I/O snapshots; update nx-cloud'
@@ -141,7 +162,9 @@ export async function fetchIoSnapshotsForRun(
     }
     read = client.readIoSnapshots;
   } catch (e) {
-    return report(skippedIoSnapshots('no-cloud-client', errorMessage(e)));
+    return reportIoSnapshotResolution(
+      skippedIoSnapshots('no-cloud-client', errorMessage(e))
+    );
   }
 
   try {
@@ -153,9 +176,9 @@ export async function fetchIoSnapshotsForRun(
     });
     if (result === null) {
       // Unchanged since the cached set: the bundle on disk is still current.
-      return report(loadIoSnapshots(db, head));
+      return reportIoSnapshotResolution(loadIoSnapshots(db, head));
     }
-    return report(
+    return reportIoSnapshotResolution(
       importIoSnapshots(db, {
         requestedCommit: head,
         commits: result.commits,
@@ -169,10 +192,12 @@ export async function fetchIoSnapshotsForRun(
     if (cached) {
       const stale = loadIoSnapshots(db, head, 'stale-offline', errorMessage(e));
       if (stale.status !== 'skipped') {
-        return report(stale);
+        return reportIoSnapshotResolution(stale);
       }
     }
-    return report(skippedIoSnapshots(reason, errorMessage(e)));
+    return reportIoSnapshotResolution(
+      skippedIoSnapshots(reason, errorMessage(e))
+    );
   }
 }
 
@@ -210,7 +235,8 @@ function parseMaxAge(value: string | undefined): number | undefined {
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
 }
 
-function report(result: IoSnapshots): IoSnapshots {
+/** Warns or logs what a resolution came to; also used by the daemon path. */
+export function reportIoSnapshotResolution(result: IoSnapshots): IoSnapshots {
   if (result.status === 'skipped') {
     if (WARNED_REASONS.has(result.reason)) {
       output.warn({
