@@ -160,13 +160,14 @@ pub(crate) mod tests {
     }
 
     /// A glob that says it leaves the workspace is refused when the plan is
-    /// built, before anything reads the disk. A link is not refused: it does
-    /// not say so, see `a_link_is_read_where_it_points`.
+    /// built, before anything reads the disk. What the glob SAYS is the rule:
+    /// `dist/a/../b` stays inside and is refused, a link may leave and is not,
+    /// see `a_link_is_read_where_it_points`.
     #[test]
     fn refuses_a_glob_that_says_it_leaves_the_workspace() {
         let err = match validate_files_glob("../outside-secret.txt") {
             Err(err) => err,
-            Ok(_) => panic!("a glob that leaves the workspace must be refused"),
+            Ok(_) => panic!("a glob that says it leaves the workspace must be refused"),
         };
         assert!(err.to_string().contains("`..` segment"), "{err}");
         assert!(validate_files_glob("../**").is_err());
@@ -505,7 +506,7 @@ pub(crate) mod tests {
     }
 
     #[test]
-    fn rejects_paths_that_leave_the_workspace_before_touching_the_disk() {
+    fn rejects_a_glob_that_says_it_leaves_the_workspace_before_touching_the_disk() {
         // `dist/a/../b` stays inside, and is refused all the same: the rule is
         // about what the glob says, not where it would land.
         for glob in [
