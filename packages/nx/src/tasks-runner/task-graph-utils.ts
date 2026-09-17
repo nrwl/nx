@@ -262,6 +262,17 @@ export function collectUpstreamTaskIds(
   return [...collected];
 }
 
+/** The subset of `collectUpstreamTaskIds` that declares outputs. */
+export function collectUpstreamTaskIdsWithOutputs(
+  taskGraph: TaskGraph,
+  rootTaskId: string,
+  transitive: boolean
+): string[] {
+  return collectUpstreamTaskIds(taskGraph, rootTaskId, transitive).filter(
+    (id) => taskGraph.tasks[id]?.outputs.length > 0
+  );
+}
+
 export function getLeafTasks(taskGraph: TaskGraph): Set<string> {
   const reversed = reverseTaskGraph(taskGraph);
   const leafTasks = new Set<string>();

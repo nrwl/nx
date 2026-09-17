@@ -11,7 +11,10 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { DaemonClient } from '../daemon/client/client';
 import { runCommands } from '../executors/run-commands/run-commands.impl';
 import { getTaskDetails, hashTask, hashTasks } from '../hasher/hash-task';
-import { walkTaskGraph } from './task-graph-utils';
+import {
+  collectUpstreamTaskIdsWithOutputs,
+  walkTaskGraph,
+} from './task-graph-utils';
 import {
   getDependenciesWithOutputsToHash,
   TaskHasher,
@@ -165,6 +168,7 @@ export class TaskOrchestrator {
   private cacheMissedHashes = new Set<string>();
 
   private completedTasks = new Map<string, TaskStatus>();
+  private upstreamTaskIdsWithOutputs = new Map<string, string[]>();
   private waitingForTasks: Function[] = [];
   private pendingDiscreteWorkers = new Set<Promise<TaskResult | void>>();
 
@@ -346,12 +350,9 @@ export class TaskOrchestrator {
           .filter(
             (t) =>
               !t.hash &&
-              getDependenciesWithOutputsToHash(
-                t,
-                this.taskGraph,
-                this.projectGraph,
-                this.nxJson
-              ).every((depId) => this.completedTasks.has(depId))
+              this.getUpstreamTaskIdsWithOutputs(t.id).every((depId) =>
+                this.completedTasks.has(depId)
+              )
           );
         if (unhashed.length > 0) {
           const perTaskEnvs: Record<string, NodeJS.ProcessEnv> = {};
@@ -2066,6 +2067,16 @@ export class TaskOrchestrator {
   //endregion Lifecycle
 
   // region utils
+  // Only a declared output can reach the hash of a task the up-front batch
+  // left out, so hashing it waits for the upstream tasks that declare one.
+  private getUpstreamTaskIdsWithOutputs(taskId: string): string[] {
+    let ids = this.upstreamTaskIdsWithOutputs.get(taskId);
+    if (!ids) {
+      ids = collectUpstreamTaskIdsWithOutputs(this.taskGraph, taskId, true);
+      this.upstreamTaskIdsWithOutputs.set(taskId, ids);
+    }
+    return ids;
+  }
 
   private async pipeOutputCapture(task: Task) {
     try {
