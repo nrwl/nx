@@ -43,7 +43,7 @@ vi.mock('../native', () => ({
       const released = state.releases.shift() ?? true;
       if (!released) {
         // What the native wait rejects with once the budget is gone.
-        throw Object.assign(new Error('timed out'), { code: 'Cancelled' });
+        throw Object.assign(new Error('timed out'), { code: 'Timeout' });
       }
       state.locked = false;
       // Whoever held it wrote the graph before letting go.

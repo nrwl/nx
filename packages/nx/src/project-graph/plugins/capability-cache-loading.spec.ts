@@ -271,7 +271,7 @@ describe('loading plugins through the capability cache', () => {
         // The wait consumed the whole remaining budget, then rejected as the
         // native one does.
         now += ms;
-        throw Object.assign(new Error('timed out'), { code: 'Cancelled' });
+        throw Object.assign(new Error('timed out'), { code: 'Timeout' });
       });
 
       await getPluginsSeparated({ plugins: ['test-plugin'] });

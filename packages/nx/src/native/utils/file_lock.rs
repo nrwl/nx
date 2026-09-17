@@ -77,11 +77,15 @@ fn wait_for_release(lock_file_path: &str, timeout: Duration) -> std::io::Result<
 #[cfg(not(target_arch = "wasm32"))]
 const TIMEOUT_CODE: &str = "Timeout";
 
-/// A JS `Error` carrying `TIMEOUT_CODE`, or napi's nearest status when the error
-/// object cannot be built.
+/// A JS `Error` carrying `TIMEOUT_CODE`.
 ///
 /// Built through `create_error` so it is a real `Error` with a stack, then given
 /// the code, then handed back as the value the promise rejects with.
+///
+/// Where that object cannot be built at all, the rejection goes out as an
+/// ordinary failure rather than under a second code meaning the same thing: a
+/// caller reads one code for a timeout, and anything else is the lock failing.
+/// The message still says what happened.
 #[cfg(not(target_arch = "wasm32"))]
 fn timeout_error(env: &Env, lock_file_path: &str, timeout_ms: u32) -> napi::Error {
     let message =
@@ -94,9 +98,7 @@ fn timeout_error(env: &Env, lock_file_path: &str, timeout_ms: u32) -> napi::Erro
         });
     match built {
         Ok(error) => napi::Error::from(error),
-        // The timeout still has to reach the caller, so it goes as the status
-        // that says the wait did not finish on its own terms.
-        Err(_) => napi::Error::new(Status::Cancelled, message),
+        Err(_) => napi::Error::new(Status::GenericFailure, message),
     }
 }
 
@@ -248,7 +250,7 @@ impl FileLock {
     ///
     /// Rejects with `code: 'Timeout'` when `timeout_ms` passes with the lock
     /// still held — the one outcome a caller must not skip past, which is why it
-    /// is not a value that can be dropped. Any other rejection is the filesystem
+    /// is not a value that can be dropped. Any other rejection is the lock
     /// failing, and means what it says.
     ///
     /// A free lock is not this handle holding it: pair this with `tryLock`,

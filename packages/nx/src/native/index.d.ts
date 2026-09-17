@@ -88,7 +88,7 @@ export declare class FileLock {
    *
    * Rejects with `code: 'Timeout'` when `timeout_ms` passes with the lock
    * still held — the one outcome a caller must not skip past, which is why it
-   * is not a value that can be dropped. Any other rejection is the filesystem
+   * is not a value that can be dropped. Any other rejection is the lock
    * failing, and means what it says.
    *
    * A free lock is not this handle holding it: pair this with `tryLock`,
