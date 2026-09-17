@@ -76,16 +76,6 @@ export function getCache(options: DefaultTasksRunnerOptions): DbCache | Cache {
 }
 
 /**
- * Where a task's terminal output lives on disk, for callers that have a hash but
- * no cache instance. Mirrors the native layout (`get_task_outputs_path_internal`
- * in cache.rs) and the legacy cache's `terminalOutputsDir`; both resolve
- * `<cacheDir>/terminalOutputs/<hash>`.
- */
-export function terminalOutputPathForHash(hash: string): string {
-  return join(cacheDir, 'terminalOutputs', hash);
-}
-
-/**
  * Collects the batch worker logs written by `batchOutputPathForKey`.
  *
  * Guarded rather than called straight through: `cache.rs` is
