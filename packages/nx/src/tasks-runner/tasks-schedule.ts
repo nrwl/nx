@@ -11,13 +11,27 @@ import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { findAllProjectNodeDependencies } from '../utils/project-graph-utils';
 import { reverse } from '../project-graph/operators';
 import { TaskHistory, getTaskHistory } from '../utils/task-history';
-import { getReadyProducerIds } from './readiness/ready-when';
+import { TaskReadiness } from '../native';
+import {
+  getReadyProducerIds,
+  getReadyWhenConfig,
+} from './readiness/ready-when';
 
 export interface Batch {
   id: string;
   executorName: string;
   taskGraph: TaskGraph;
 }
+
+export interface TasksScheduleHooks {
+  // Readiness of a producer outside this schedule's task graph (an Nx Cloud
+  // agent worker runs one task with a flat graph): null when it has no row
+  readinessElsewhere?: (producerId: string) => TaskReadiness | null;
+  // A task was held back because this producer is not ready yet
+  onReadinessHold?: (producerId: string) => void;
+}
+
+type ProducerReadiness = 'ready' | 'failed' | 'pending' | 'unknown';
 
 export class TasksSchedule {
   private notScheduledTaskGraph = this.taskGraph;
@@ -32,6 +46,11 @@ export class TasksSchedule {
   // be ready first, so their own dependents must not be released yet
   private pendingStart = new Set<string>();
   private completedTasks = new Set<string>();
+  private readiness = new Map<string, 'ready' | 'failed'>();
+  private readyProducers = new Map<
+    string,
+    { all: string[]; probed: string[] }
+  >();
   private scheduleRequestsExecutionChain = Promise.resolve();
   private estimatedTaskTimings: Record<string, number> = {};
   private projectDependencies: Record<string, number> = {};
@@ -41,7 +60,9 @@ export class TasksSchedule {
     private readonly projectGraph: ProjectGraph,
     private readonly projects: Record<string, ProjectConfiguration>,
     private readonly taskGraph: TaskGraph,
-    private readonly options: DefaultTasksRunnerOptions
+    private readonly options: DefaultTasksRunnerOptions,
+    private readonly fullTaskGraph: TaskGraph = taskGraph,
+    private readonly hooks: TasksScheduleHooks = {}
   ) {}
 
   public async init() {
@@ -72,6 +93,18 @@ export class TasksSchedule {
     this.pendingStart.delete(taskId);
   }
 
+  public markReady(taskId: string) {
+    this.readiness.set(taskId, 'ready');
+  }
+
+  public markReadinessFailed(taskId: string) {
+    this.readiness.set(taskId, 'failed');
+  }
+
+  public markReadinessPending(taskId: string) {
+    this.readiness.delete(taskId);
+  }
+
   public hasTasks() {
     return (
       this.scheduledBatches.length +
@@ -86,6 +119,7 @@ export class TasksSchedule {
       this.completedTasks.add(taskId);
       this.runningTasks.delete(taskId);
       this.pendingStart.delete(taskId);
+      this.readiness.delete(taskId);
       delete this.reverseTaskDeps[taskId];
     }
     const removedSet = new Set(taskIds);
@@ -108,21 +142,26 @@ export class TasksSchedule {
     };
   }
 
+  // A task whose producer is not ready yet is skipped in place: it keeps its
+  // position and never blocks the tasks behind it. Only a producer of this
+  // task graph holds it; the run itself waits on one run elsewhere.
   public nextTask(filter?: (task: Task) => boolean) {
-    if (this.scheduledTasks.length === 0) {
-      return null;
+    for (let i = 0; i < this.scheduledTasks.length; i++) {
+      const task = this.taskGraph.tasks[this.scheduledTasks[i]];
+      if (filter && !filter(task)) {
+        continue;
+      }
+      const pendingProducer = this.readyProducersOf(task).probed.find(
+        (id) => this.taskGraph.tasks[id] && !this.readiness.has(id)
+      );
+      if (pendingProducer) {
+        this.hooks.onReadinessHold?.(pendingProducer);
+        continue;
+      }
+      this.scheduledTasks.splice(i, 1);
+      return task;
     }
-    if (!filter) {
-      return this.taskGraph.tasks[this.scheduledTasks.shift()];
-    }
-    const idx = this.scheduledTasks.findIndex((id) =>
-      filter(this.taskGraph.tasks[id])
-    );
-    if (idx === -1) {
-      return null;
-    }
-    const [taskId] = this.scheduledTasks.splice(idx, 1);
-    return this.taskGraph.tasks[taskId];
+    return null;
   }
 
   public nextBatch(): Batch {
@@ -171,7 +210,7 @@ export class TasksSchedule {
       this.scheduledTasks.push(taskId);
       this.runningTasks.add(taskId);
       const task = this.taskGraph.tasks[taskId];
-      if (task.continuous && this.waitsForReadiness(task)) {
+      if (task.continuous && this.readyProducersOf(task).all.length > 0) {
         this.pendingStart.add(taskId);
       }
     }
@@ -222,6 +261,7 @@ export class TasksSchedule {
 
   private async scheduleBatches() {
     const batchMap: Record<string, TaskGraph> = {};
+    const elsewhere = new Map<string, ProducerReadiness>();
     for (const root of this.notScheduledTaskGraph.roots) {
       const rootTask = this.notScheduledTaskGraph.tasks[root];
       const executorName = getExecutorNameForTask(rootTask, this.projectGraph);
@@ -230,7 +270,8 @@ export class TasksSchedule {
         rootTask,
         executorName,
         true,
-        new Set<string>()
+        new Set<string>(),
+        elsewhere
       );
     }
     for (const [executorName, taskGraph] of Object.entries(batchMap)) {
@@ -260,7 +301,8 @@ export class TasksSchedule {
     task: Task,
     rootExecutorName: string,
     isRoot: boolean,
-    visitedInBatch: Set<string>
+    visitedInBatch: Set<string>,
+    elsewhere: Map<string, ProducerReadiness>
   ): Promise<void> {
     // Skip if already processed in this batch - prevents redundant traversals
     if (visitedInBatch.has(task.id)) {
@@ -271,9 +313,16 @@ export class TasksSchedule {
       return;
     }
 
-    // The coordinator loop awaits a batch inline, so a readiness wait inside
-    // one would stall every other task.
-    if (this.waitsForReadiness(task)) {
+    // A batch never waits: only a task whose producers are all ready joins
+    // one. A continuous consumer is started on its own so its dependents are
+    // released once it has started.
+    const producers = this.readyProducersOf(task);
+    if (
+      (task.continuous && producers.all.length > 0) ||
+      producers.probed.some(
+        (id) => this.producerReadiness(id, elsewhere) !== 'ready'
+      )
+    ) {
       return;
     }
 
@@ -329,15 +378,48 @@ export class TasksSchedule {
         depTask,
         rootExecutorName,
         false,
-        visitedInBatch
+        visitedInBatch,
+        elsewhere
       );
     }
   }
 
-  private waitsForReadiness(task: Task): boolean {
-    return (
-      getReadyProducerIds(task, this.taskGraph, this.projectGraph).length > 0
-    );
+  // Producers this task waits on, and those among them that declare a probe.
+  // Read from the full graph: an agent worker's own graph has no edges.
+  private readyProducersOf(task: Task) {
+    let producers = this.readyProducers.get(task.id);
+    if (!producers) {
+      const all = getReadyProducerIds(
+        task,
+        this.fullTaskGraph,
+        this.projectGraph
+      );
+      const probed = all.filter(
+        (id) =>
+          getReadyWhenConfig(this.fullTaskGraph.tasks[id], this.projectGraph) !=
+          null
+      );
+      producers = { all, probed };
+      this.readyProducers.set(task.id, producers);
+    }
+    return producers;
+  }
+
+  private producerReadiness(
+    producerId: string,
+    elsewhere: Map<string, ProducerReadiness>
+  ): ProducerReadiness {
+    if (this.taskGraph.tasks[producerId]) {
+      return this.readiness.get(producerId) ?? 'pending';
+    }
+    let status = elsewhere.get(producerId);
+    if (!status) {
+      status = fromReadinessRow(
+        this.hooks.readinessElsewhere?.(producerId) ?? null
+      );
+      elsewhere.set(producerId, status);
+    }
+    return status;
   }
 
   private canBatchTaskBeScheduled(
@@ -394,5 +476,18 @@ export class TasksSchedule {
 
   public getEstimatedTaskTimings(): Record<string, number> {
     return this.estimatedTaskTimings;
+  }
+}
+
+function fromReadinessRow(row: TaskReadiness | null): ProducerReadiness {
+  switch (row) {
+    case null:
+      return 'unknown';
+    case TaskReadiness.Pending:
+      return 'pending';
+    case TaskReadiness.Ready:
+      return 'ready';
+    case TaskReadiness.Failed:
+      return 'failed';
   }
 }
