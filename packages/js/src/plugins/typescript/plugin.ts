@@ -240,10 +240,9 @@ function getConfigContext(
   workspaceRoot: string,
   cache: InvocationCache
 ): ConfigContext {
-  const absolutePath =
-    configPath.startsWith('/') || configPath.startsWith(workspaceRoot)
-      ? normalize(configPath)
-      : join(workspaceRoot, configPath);
+  const absolutePath = isAbsolute(configPath)
+    ? normalize(configPath)
+    : join(workspaceRoot, configPath);
 
   let context = cache.configContexts.get(absolutePath);
   if (context) {
