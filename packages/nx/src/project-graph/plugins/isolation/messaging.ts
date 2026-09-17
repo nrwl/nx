@@ -62,10 +62,6 @@ type PluginMessageDefs = DefineMessages<{
            * and its sources are identical either way.
            */
           envReads: EnvReads | null;
-          /**
-           * Hook exports the module declares and leaves undefined, which says it
-           * decided them rather than simply not having them.
-           */
           createNodesPattern: string;
           hasCreateDependencies: boolean;
           hasProcessProjectGraph: boolean;
