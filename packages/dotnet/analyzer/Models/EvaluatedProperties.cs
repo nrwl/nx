@@ -83,11 +83,26 @@ public sealed class EvaluatedProperties
     // Interpreted values. Each derives from a raw member above or, like
     // IsTestProject, carries the MSBuild name itself; either way the name comes
     // from a `nameof`.
-    public bool IsTestProject => Get(nameof(IsTestProject)) == "true";
-    public bool UsesArtifactsOutput =>
-        string.Equals(UseArtifactsOutput, "true", StringComparison.OrdinalIgnoreCase);
+    public bool IsTestProject => IsTrue(nameof(IsTestProject));
+
+    /// <summary>
+    /// Microsoft.Testing.Platform's marker for a runner project. Some runners
+    /// set it and leave <see cref="IsTestProject"/> unset, so neither property
+    /// implies the other. MTP imports its targets from a restored package, so
+    /// the value exists only once the project has been restored.
+    /// </summary>
+    public bool IsTestingPlatformApplication => IsTrue(nameof(IsTestingPlatformApplication));
+
+    public bool UsesArtifactsOutput => IsTrue(nameof(UseArtifactsOutput));
     public bool IsExecutable =>
         string.Equals(OutputType, "Exe", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// MSBuild compares booleans case-insensitively, so a project that writes
+    /// <c>True</c> means the same thing as one that writes <c>true</c>.
+    /// </summary>
+    private bool IsTrue(string name) =>
+        string.Equals(Get(name), "true", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
     /// The directory NuGet writes its restore-generated imports into.
