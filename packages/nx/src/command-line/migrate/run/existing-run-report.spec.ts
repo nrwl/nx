@@ -59,12 +59,46 @@ describe('renderExistingRunReport', () => {
       'To continue the run: npx nx migrate --run-id=run-1'
     );
     expect(bodyLines).toContainEqual(
-      'To start fresh (deletes the run record, then runs the whole plan again): re-run this command with --start-fresh --run-id=run-1, keeping the --run-migrations argument; that path cannot be rendered as a command for this shell'
+      'To start fresh (deletes the run record, then runs the whole plan again): re-run this command with --start-fresh --run-id=run-1, keeping the --run-migrations argument, which names tools\\my migrations.json; that path cannot be rendered as a command for this shell'
     );
     expect(bodyLines).not.toContainEqual(
       expect.stringContaining('nx migrate --run-migrations')
     );
   });
+
+  it('names a migrations file with a line break JSON-escaped, so the break is shown rather than collapsed', () => {
+    const { bodyLines } = renderExistingRunReport(facts, {
+      continueCommand: 'npx nx migrate --run-id=run-1',
+      startFresh: { migrationsPath: 'tools\\my\nmigrations.json' },
+    });
+
+    expect(bodyLines).toContainEqual(
+      'To start fresh (deletes the run record, then runs the whole plan again): re-run this command with --start-fresh --run-id=run-1, keeping the --run-migrations argument, which names "tools\\\\my\\nmigrations.json"; that path cannot be rendered as a command for this shell'
+    );
+    expect(bodyLines).not.toContainEqual(
+      expect.stringContaining('tools\\my migrations.json')
+    );
+  });
+
+  // JSON.stringify escapes only the ASCII terminators; the other three would
+  // reach singleLine literal and come out as spaces.
+  it.each(['000a', '000d', '000b', '000c', '0085', '2028', '2029'])(
+    'names a migrations file with U+%s so the displayed path parses back to the original',
+    (hex) => {
+      const migrationsPath = `tools/my${String.fromCharCode(
+        parseInt(hex, 16)
+      )}migrations.json`;
+      const { bodyLines } = renderExistingRunReport(facts, {
+        continueCommand: 'npx nx migrate --run-id=run-1',
+        startFresh: { migrationsPath },
+      });
+
+      const line = bodyLines.find((l) => l.startsWith('To start fresh'));
+      const displayed = line.match(/which names (".*"); that path/)[1];
+      expect(displayed).not.toMatch(/[\r\n\u000b\u000c\u0085\u2028\u2029]/);
+      expect(JSON.parse(displayed)).toBe(migrationsPath);
+    }
+  );
 
   it('leads with the run a start-fresh named when the newest active run is another', () => {
     const { bodyLines } = renderExistingRunReport({

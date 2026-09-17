@@ -9,7 +9,7 @@ import {
   getLatestCommitSha,
   type AncestorStatus,
 } from '../../../utils/git-utils';
-import { formatAge, singleLine } from '../text';
+import { formatAge, hasLineBreak, singleLine } from '../text';
 import {
   findActiveRun,
   NewerRunStateFormatError,
@@ -154,7 +154,7 @@ function otherActiveRuns(root: string, runId: string): string[] | 'unknown' {
 export interface ExistingRunCommands {
   continueCommand: string;
   // A path that cannot be rendered as executable text for this shell is named
-  // in prose instead of a command (see runMigrationsFlag).
+  // in prose instead of a command (see runMigrationsFlag and displayPath).
   startFresh: { command: string } | { migrationsPath: string };
 }
 
@@ -221,7 +221,9 @@ export function renderExistingRunReport(
       `To start fresh (deletes the run record, then runs the whole plan again): ${
         'command' in commands.startFresh
           ? commands.startFresh.command
-          : `re-run this command with --start-fresh --run-id=${facts.runId}, keeping the --run-migrations argument; that path cannot be rendered as a command for this shell`
+          : `re-run this command with --start-fresh --run-id=${facts.runId}, keeping the --run-migrations argument, which names ${displayPath(
+              commands.startFresh.migrationsPath
+            )}; that path cannot be rendered as a command for this shell`
       }`
     );
   }
@@ -229,6 +231,20 @@ export function renderExistingRunReport(
     title: `A migrate run is already active: ${facts.runId}`,
     bodyLines: lines.map(singleLine),
   };
+}
+
+// Prose, not a command, so a path goes out verbatim. A path with a line break
+// goes out JSON-escaped: singleLine below would otherwise turn the break into
+// a space and name a different path. JSON.stringify leaves U+0085, U+2028 and
+// U+2029 literal, so those are escaped by hand.
+function displayPath(migrationsPath: string): string {
+  if (!hasLineBreak(migrationsPath)) {
+    return migrationsPath;
+  }
+  return JSON.stringify(migrationsPath).replace(
+    /[\u0085\u2028\u2029]/g,
+    (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`
+  );
 }
 
 // A null probe is 'unknown' on both sides: getGitCurrentBranch folds a

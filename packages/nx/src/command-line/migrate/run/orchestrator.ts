@@ -1,6 +1,7 @@
 import { execSync } from 'child_process';
 import { createHash } from 'crypto';
 import {
+  existsSync,
   lstatSync,
   mkdirSync,
   readdirSync,
@@ -353,14 +354,21 @@ export async function runOrchestratorInit(
   }
   // Held through confirmStart: a concurrent start-fresh must not delete the
   // run this one was told to replace while the user is still being asked.
-  // The delete's refusals run here first so the common ones land before the
-  // prompt and the checkpoint commit; the authoritative pass is the delete's
-  // own, under the creation lock.
+  // The refusals run here first so the common ones land before the prompt,
+  // the .gitignore fallback and the checkpoint commit; the authoritative pass
+  // is the one under the creation lock at the check/create boundary below.
+  // Without the scratch dir there is nothing to refuse, and taking the lock
+  // would create it before the user has agreed to start.
   if (active) {
     holdRunActivity(root, active.runId);
-    withRunCreationLock(root, () =>
-      refuseUndeletableRun(root, active.runId, active.state)
-    );
+  }
+  if (existsSync(migrateRunsDir(root))) {
+    withRunCreationLock(root, () => {
+      refuseLiveReservation(root);
+      if (active) {
+        refuseUndeletableRun(root, active.runId, active.state);
+      }
+    });
   }
 
   // Dispensed commands interpolate migration ids verbatim, so every init
