@@ -1,6 +1,12 @@
-//! Hashes an `includeIgnored` fileset group: tracked files from the file
-//! map, the rest through the context's index, folded in path order with the
-//! declared paths that are missing.
+//! An `includeIgnored` fileset group: the files it matches, and their hash.
+//!
+//! `hash_files` folds a group in path order — tracked files from the file
+//! map, the rest through the context's index, a declared path that is missing
+//! contributing nothing. `collect_ignored_file_paths` is the same expansion
+//! without the hashing, for a caller that wants only the list.
+//!
+//! `WorkspaceFileIndex` is here because the index over the file map was, and
+//! is about the workspace rather than about ignored files; see NXC-5006.
 
 use std::collections::HashMap;
 use std::path::Path;
