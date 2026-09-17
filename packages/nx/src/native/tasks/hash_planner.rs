@@ -1137,11 +1137,18 @@ fn group_cache_key(dep: &str, inputs: &[Input]) -> String {
 }
 
 /// Group order is part of the key: it is the order the globs are hashed in.
-/// So is each member's kind. Every producer today filters to `includeIgnored`
-/// filesets before a group is keyed, so a mixed group cannot be built; keying
-/// on the globs alone would make one reachable the moment that stops holding,
-/// and two groups differing only in kind would share a memo entry.
+/// Each member's kind is in it too, which the assert below makes unreachable
+/// variation today — every keyed group is all `includeIgnored`. It is carried
+/// so that relaxing the assert cannot silently give two groups one memo
+/// entry; until then the assert is what holds, and the kind is the belt.
 fn grouped_cache_key(dep: &str, group: &[Input]) -> String {
+    // Asserted where the group is used, not where it is built: the builder
+    // constructs both flags itself, so it cannot fail. This is the claim the
+    // key rests on — every member is an `includeIgnored` dependency fileset.
+    debug_assert!(
+        group.iter().all(is_ignored_dep_fileset),
+        "a keyed group holds only includeIgnored dependency filesets"
+    );
     let globs = group
         .iter()
         .map(|input| match input {
@@ -1172,7 +1179,7 @@ fn is_ignored_dep_fileset(input: &Input) -> bool {
 /// Every member carries both flags, which is what lets `grouped_cache_key`
 /// key a group on its globs and kinds without two groups colliding.
 fn ignored_dep_fileset_group<'a>(inputs: &[Input<'a>]) -> Vec<Input<'a>> {
-    let group: Vec<Input<'a>> = inputs
+    inputs
         .iter()
         .filter_map(|input| match input {
             Input::FileSet {
@@ -1186,12 +1193,7 @@ fn ignored_dep_fileset_group<'a>(inputs: &[Input<'a>]) -> Vec<Input<'a>> {
             }),
             _ => None,
         })
-        .collect();
-    debug_assert!(
-        group.iter().all(is_ignored_dep_fileset),
-        "a propagated group holds only includeIgnored dependency filesets"
-    );
-    group
+        .collect()
 }
 
 /// Whether an input reaches the dependency unchanged, so its expansion is
@@ -1535,26 +1537,6 @@ mod tests {
             .is_none()
         );
         assert!(local_input_cache_key("a", &[Input::String("default")]).is_none());
-    }
-
-    /// A group may mix kinds, and the same globs then mean different
-    /// instructions. Keying on the globs alone let one group's subtree be
-    /// reused for the other's.
-    #[test]
-    fn a_group_key_separates_members_by_kind() {
-        let fs = |fileset, include_ignored| Input::FileSet {
-            fileset,
-            dependencies: true,
-            include_ignored,
-        };
-        assert_ne!(
-            group_cache_key("p", &[fs("x", true), fs("y", false)]),
-            group_cache_key("p", &[fs("x", false), fs("y", true)])
-        );
-        assert_ne!(
-            group_cache_key("p", &[fs("x", true), fs("y", true)]),
-            group_cache_key("p", &[fs("x", false), fs("y", false)])
-        );
     }
 
     #[test]

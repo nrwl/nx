@@ -261,6 +261,29 @@ pub(crate) mod tests {
         assert!(first.files.contains(&"dist/gen/a.js".to_string()));
     }
 
+    /// The walk follows the root it is given and no link it meets after. That
+    /// is the whole bound on how far a fileset reads: one tree, not a chain.
+    #[cfg(unix)]
+    #[test]
+    fn a_walk_follows_its_root_link_but_no_link_it_finds() {
+        let temp = workspace();
+        let first = TempDir::new().unwrap();
+        let second = TempDir::new().unwrap();
+        first.child("here.js").write_str("here").unwrap();
+        second.child("further.js").write_str("further").unwrap();
+        // The root link the fileset names, and a link waiting inside it.
+        std::os::unix::fs::symlink(first.path(), temp.path().join("dist/linked")).unwrap();
+        std::os::unix::fs::symlink(second.path(), first.path().join("onward")).unwrap();
+
+        let expansion = expand_files(temp.path(), &globs(&["dist/linked"])).unwrap();
+        assert_eq!(expansion.files, vec!["dist/linked/here.js"]);
+        assert!(
+            !expansion.files.iter().any(|f| f.contains("further")),
+            "the walk entered a link it found: {:?}",
+            expansion.files
+        );
+    }
+
     /// A fileset reads its root wherever it points, so a link aimed at an
     /// ancestor is a loop on paper. The walk never enters a link it meets, so
     /// the root is resolved once and the walk is one pass over the target.
