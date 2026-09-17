@@ -1,3 +1,7 @@
+import type { EnvReads } from './isolation/env-reads';
+
+/** A load that read nothing, which is most of them. */
+const NO_ENV_READS: EnvReads = { keys: [], hash: 'nothing-read' };
 import type { Mock } from 'vitest';
 
 import type { PluginCapabilities } from './capabilities-cache';
@@ -126,7 +130,7 @@ describe('loading plugins through the capability cache', () => {
         createNodes: ['**/*.config.ts', async () => []],
         createDependencies: async () => [],
         sourceFiles: [`/resolved/${label}`],
-        envReads: {},
+        envReads: NO_ENV_READS,
         dispose: vi.fn(),
       };
     });
@@ -153,7 +157,7 @@ describe('loading plugins through the capability cache', () => {
         createNodes: ['**/*.config.ts', async () => []],
         createDependencies: async () => [],
         sourceFiles: [`/resolved/${label}`],
-        envReads: {},
+        envReads: NO_ENV_READS,
       };
     });
     useIsolatedNxPluginCapabilities.mockReset();
@@ -284,7 +288,7 @@ describe('loading plugins through the capability cache', () => {
         name: label,
         createNodes: [`**/${label}.config.ts`, async () => []],
         sourceFiles: [`/resolved/${label}`],
-        envReads: {},
+        envReads: NO_ENV_READS,
       };
     });
 
@@ -309,7 +313,7 @@ describe('loading plugins through the capability cache', () => {
     loadIsolatedNxPlugin.mockImplementation(async (plugin: unknown) => ({
       name: typeof plugin === 'string' ? plugin : (plugin as any).plugin,
       sourceFiles: ['/resolved/test-plugin'],
-      envReads: {},
+      envReads: NO_ENV_READS,
       hooksExportedAsUndefined: [],
     }));
 
@@ -326,7 +330,7 @@ describe('loading plugins through the capability cache', () => {
       name: typeof plugin === 'string' ? plugin : (plugin as any).plugin,
       sourceFiles: ['/resolved/test-plugin'],
       // Read no environment, yet exported the key and left it undefined.
-      envReads: {},
+      envReads: NO_ENV_READS,
       hooksExportedAsUndefined: ['createNodes'],
     }));
 
@@ -341,7 +345,7 @@ describe('loading plugins through the capability cache', () => {
     loadIsolatedNxPlugin.mockImplementation(async (plugin: unknown) => ({
       name: typeof plugin === 'string' ? plugin : (plugin as any).plugin,
       sourceFiles: ['/resolved/test-plugin'],
-      envReads: { NX_DOTNET_DISABLE: 'true' },
+      envReads: { keys: ['NX_DOTNET_DISABLE'], hash: 'dotnet-disable-set' },
       hooksExportedAsUndefined: ['createNodes', 'createDependencies'],
     }));
 
@@ -369,8 +373,8 @@ describe('loading plugins through the capability cache', () => {
       actual: PluginCapabilities,
       observed: {
         sourceFiles: string[] | null;
-        envReads: Record<string, string | null> | null;
-      } = { sourceFiles: ['/resolved/test-plugin'], envReads: {} }
+        envReads: EnvReads | null;
+      } = { sourceFiles: ['/resolved/test-plugin'], envReads: NO_ENV_READS }
     ) {
       everythingRecorded = true;
       await getPluginsSeparated({ plugins: ['test-plugin'] });
@@ -412,7 +416,7 @@ describe('loading plugins through the capability cache', () => {
       await expect(
         loadedFromRecordThenReport(
           { ...CAPABILITIES, hasPostTasksExecution: true },
-          { sourceFiles: null, envReads: {} }
+          { sourceFiles: null, envReads: NO_ENV_READS }
         )
       ).rejects.toThrow('The stale record has been cleared');
 

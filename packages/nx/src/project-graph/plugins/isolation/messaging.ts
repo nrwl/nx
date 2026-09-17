@@ -1,5 +1,6 @@
 import type { Serializable } from 'child_process';
 import type { Socket } from 'net';
+import type { EnvReads } from './env-reads';
 import type { PluginConfiguration } from '../../../config/nx-json';
 import type { ProjectGraph } from '../../../config/project-graph';
 import { sendMessage } from '../../../daemon/socket-utils';
@@ -60,7 +61,7 @@ type PluginMessageDefs = DefineMessages<{
            * cannot show: `@nx/dotnet` exports no hooks under NX_DOTNET_DISABLE
            * and its sources are identical either way.
            */
-          envReads: Record<string, string | null> | null;
+          envReads: EnvReads | null;
           /**
            * Hook exports the module declares and leaves undefined, which says it
            * decided them rather than simply not having them.

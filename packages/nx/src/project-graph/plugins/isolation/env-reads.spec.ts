@@ -1,9 +1,9 @@
-import { hashEnvValue, withEnvReads } from './env-reads';
+import { hashEnvReads, withEnvReads } from './env-reads';
 
 describe('withEnvReads', () => {
   const base = { SET: 'yes' } as NodeJS.ProcessEnv;
 
-  it('reports the keys the load read, and whether they were set', async () => {
+  it('reports the keys the load read', async () => {
     const { result, envReads } = await withEnvReads(async () => {
       process.env.SET;
       process.env.UNSET;
@@ -11,27 +11,60 @@ describe('withEnvReads', () => {
     }, base);
 
     expect(result).toBe('loaded');
-    // Absence is part of the answer: a plugin that checks for a variable nobody
-    // set behaves differently once somebody sets it. Values are hashed, because
-    // a load reads whatever its dependencies read and one of those, measured, is
-    // `NX_CLOUD_ACCESS_TOKEN`.
-    expect(envReads).toEqual({ SET: hashEnvValue('yes'), UNSET: null });
-    expect(envReads.SET).not.toContain('yes');
+    expect(envReads.keys).toEqual(['SET', 'UNSET']);
+    expect(envReads.hash).toBe(hashEnvReads(['SET', 'UNSET'], base));
+  });
+
+  it('keeps the values out of what it stores', async () => {
+    // A load reads whatever its dependencies read, and one of those, measured
+    // on this repository, is `NX_CLOUD_ACCESS_TOKEN`. One hash over the whole
+    // set also means no single value can be brute forced on its own.
+    const { envReads } = await withEnvReads(
+      async () => {
+        process.env.TOKEN;
+        return null;
+      },
+      { TOKEN: 'sekrit' } as NodeJS.ProcessEnv
+    );
+
+    expect(JSON.stringify(envReads)).not.toContain('sekrit');
+  });
+
+  it('changes when any one value changes', async () => {
+    const read = async (env: NodeJS.ProcessEnv) =>
+      (
+        await withEnvReads(async () => {
+          process.env.A;
+          process.env.B;
+          return null;
+        }, env)
+      ).envReads.hash;
+
+    const original = await read({ A: '1', B: '2' } as NodeJS.ProcessEnv);
+
+    expect(await read({ A: '1', B: '2' } as NodeJS.ProcessEnv)).toBe(original);
+    expect(await read({ A: '9', B: '2' } as NodeJS.ProcessEnv)).not.toBe(
+      original
+    );
+    expect(await read({ A: '1', B: '9' } as NodeJS.ProcessEnv)).not.toBe(
+      original
+    );
+    // Each value is hashed against its own key, so swapping two of them is a
+    // change rather than a wash.
+    expect(await read({ A: '2', B: '1' } as NodeJS.ProcessEnv)).not.toBe(
+      original
+    );
   });
 
   it('keeps an unset variable distinct from one whose value says undefined', async () => {
-    const { envReads } = await withEnvReads(
-      async () => {
-        process.env.SAYS_UNDEFINED;
-        process.env.NOT_THERE;
-        return null;
-      },
-      { SAYS_UNDEFINED: 'undefined' } as NodeJS.ProcessEnv
-    );
+    // Absence is part of the answer. `@nx/dotnet` exports no hooks when
+    // `NX_DOTNET_DISABLE` is set, and its files are identical either way.
+    const unset = hashEnvReads(['X'], {} as NodeJS.ProcessEnv);
 
-    expect(envReads.SAYS_UNDEFINED).toBe(hashEnvValue('undefined'));
-    expect(envReads.NOT_THERE).toBeNull();
-    expect(envReads.SAYS_UNDEFINED).not.toBeNull();
+    expect(unset).not.toBe(
+      hashEnvReads(['X'], { X: 'undefined' } as NodeJS.ProcessEnv)
+    );
+    expect(unset).not.toBe(hashEnvReads(['X'], { X: '' } as NodeJS.ProcessEnv));
   });
 
   it('leaves out the variables that say how the process was started', async () => {
@@ -47,7 +80,7 @@ describe('withEnvReads', () => {
 
     // Recording those would invalidate every record on the next command run
     // from another directory or through another binary.
-    expect(Object.keys(envReads)).toEqual(['NX_DOTNET_DISABLE']);
+    expect(envReads.keys).toEqual(['NX_DOTNET_DISABLE']);
   });
 
   it('counts an `in` check as a read', async () => {
@@ -56,7 +89,7 @@ describe('withEnvReads', () => {
       return null;
     }, base);
 
-    expect(envReads).toEqual({ UNSET: null });
+    expect(envReads.keys).toEqual(['UNSET']);
   });
 
   it('reports nothing observable when the load takes the whole environment', async () => {
@@ -88,6 +121,6 @@ describe('withEnvReads', () => {
     const { envReads } = await withEnvReads(async () => null, base);
     // Nothing read during the second load, so the first load's proxy is not
     // still recording into it.
-    expect(envReads).toEqual({});
+    expect(envReads.keys).toEqual([]);
   });
 });

@@ -1,3 +1,4 @@
+import type { EnvReads } from './env-reads';
 import { ChildProcess, spawn } from 'child_process';
 import { randomBytes } from 'crypto';
 import { Socket } from 'net';
@@ -221,7 +222,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
    * Recorded beside the closure, and for the same reason: it is an input to what
    * the plugin registers that the plugin's own files do not show.
    */
-  envReads: Record<string, string | null> | null = null;
+  envReads: EnvReads | null = null;
 
   /** Hook exports the module declared and left undefined. */
   hooksExportedAsUndefined: string[] = [];

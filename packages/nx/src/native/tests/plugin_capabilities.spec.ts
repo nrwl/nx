@@ -132,7 +132,10 @@ describe('PluginCapabilitiesCache', () => {
   });
 
   it('round-trips the environment the load read', () => {
-    const envReads = JSON.stringify({ NX_DOTNET_DISABLE: 'true', HOME: null });
+    const envReads = JSON.stringify({
+      keys: ['NX_DOTNET_DISABLE', 'HOME'],
+      hash: 'combined',
+    });
     cache.record([
       { key: 'key-env', record: recordFor(capabilities, [], envReads) },
     ]);

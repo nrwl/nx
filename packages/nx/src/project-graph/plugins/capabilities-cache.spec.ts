@@ -1,3 +1,4 @@
+import { hashEnvReads } from './isolation/env-reads';
 import {
   chmodSync,
   mkdirSync,
@@ -208,37 +209,74 @@ describe('recordIsFresh', () => {
     envReads,
   });
 
+  /** What the load would have written, given the environment right now. */
+  const asRead = (...keys: string[]) =>
+    JSON.stringify({ keys, hash: hashEnvReads(keys) });
+
   afterEach(() => {
     delete process.env.NX_DOTNET_DISABLE;
   });
 
   it('accepts a record whose environment still reads the same', () => {
-    expect(recordIsFresh(record('{"NX_DOTNET_DISABLE":null}'), root())).toBe(
+    expect(recordIsFresh(record(asRead('NX_DOTNET_DISABLE')), root())).toBe(
       true
     );
   });
 
   it('rejects one where a key the load read has since been set', () => {
+    const read = asRead('NX_DOTNET_DISABLE');
     process.env.NX_DOTNET_DISABLE = 'true';
 
     // The whole `@nx/dotnet` case: it exports no hooks under this variable, and
     // its files are identical either way, so nothing else here could tell.
-    expect(recordIsFresh(record('{"NX_DOTNET_DISABLE":null}'), root())).toBe(
-      false
-    );
+    expect(recordIsFresh(record(read), root())).toBe(false);
   });
 
   it('rejects one where a key the load read has since been unset', () => {
-    expect(recordIsFresh(record('{"NX_DOTNET_DISABLE":"true"}'), root())).toBe(
-      false
-    );
+    process.env.NX_DOTNET_DISABLE = 'true';
+    const read = asRead('NX_DOTNET_DISABLE');
+    delete process.env.NX_DOTNET_DISABLE;
+
+    expect(recordIsFresh(record(read), root())).toBe(false);
+  });
+
+  it('rejects one where a key the load read has since changed value', () => {
+    process.env.NX_DOTNET_DISABLE = 'true';
+    const read = asRead('NX_DOTNET_DISABLE');
+    process.env.NX_DOTNET_DISABLE = 'false';
+
+    expect(recordIsFresh(record(read), root())).toBe(false);
   });
 
   it('ignores variables the load never read', () => {
     process.env.NX_DOTNET_DISABLE = 'true';
 
     // Otherwise every unrelated variable would invalidate every record.
-    expect(recordIsFresh(record('{}'), root())).toBe(true);
+    expect(recordIsFresh(record(asRead()), root())).toBe(true);
+  });
+
+  it('rejects a record whose key list was swapped for one reading the same', () => {
+    process.env.NX_DOTNET_DISABLE = 'true';
+    const read = JSON.parse(asRead('NX_DOTNET_DISABLE'));
+    process.env.SOMETHING_ELSE = 'true';
+
+    // Each value is hashed against its own name, so a row edited to claim it
+    // depends on a different variable holding the same value does not verify.
+    // A record is checked against its own key list, so nothing else would
+    // notice.
+    expect(
+      recordIsFresh(
+        record(JSON.stringify({ ...read, keys: ['SOMETHING_ELSE'] })),
+        root()
+      )
+    ).toBe(false);
+    delete process.env.SOMETHING_ELSE;
+  });
+
+  it('rejects a record whose environment cannot be read back', () => {
+    // Nothing writes this, so it means the row was damaged. Reloading the
+    // plugin costs a load; trusting it costs correctness.
+    expect(recordIsFresh(record('not json'), root())).toBe(false);
   });
 });
 

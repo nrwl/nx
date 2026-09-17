@@ -788,7 +788,7 @@ function recordFor(
   }
 
   const declaredUndefined = observed.hooksExportedAsUndefined ?? [];
-  if (declaredUndefined.length && !Object.keys(observed.envReads).length) {
+  if (declaredUndefined.length && !observed.envReads.keys.length) {
     // The module exports these and leaves them undefined, so it decided not to
     // register them, and it read no environment, so whatever it decided from is
     // something this cannot watch: the contents of a file it read itself, the

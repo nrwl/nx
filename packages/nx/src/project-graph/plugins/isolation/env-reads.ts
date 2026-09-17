@@ -1,22 +1,35 @@
 import { hashArray } from '../../../native';
 
 /**
- * What a load read from the environment: a hash of each value it saw, with null
- * for a key that was not set.
+ * What a load read from the environment: which variables, and one hash over all
+ * of their values together.
  *
- * Hashed rather than kept, because a read is only ever compared for equality and
- * because a load reads whatever its dependencies read. Measured on this
- * repository, loading `@nx/js`'s TypeScript plugin reads 44 variables, among
- * them `NX_CLOUD_ACCESS_TOKEN`, and a record goes to a database on disk.
+ * Neither the values nor a hash of any single value. A load reads whatever its
+ * dependencies read, and measured on this repository, loading `@nx/js`'s
+ * TypeScript plugin reads 44 variables, among them `NX_CLOUD_ACCESS_TOKEN`. A
+ * record goes to a database under `~/.nx`, which `ensureOwnedPrivateDir` keeps
+ * at 0700, but that database is also what people attach to a support request.
+ * One hash over the whole set cannot be worked backwards a value at a time,
+ * where a hash per variable could be, for a short one. The names are kept, since
+ * a read has to know what to look at again and a name is not the secret.
  */
-export type EnvReads = Record<string, string | null>;
+export type EnvReads = { keys: string[]; hash: string };
 
 /** Keys that say how a process was started rather than what it should do. */
 const INVOCATION_KEYS = new Set(['_', 'PWD', 'OLDPWD', 'SHLVL']);
 
+/**
+ * Stands in for a variable nobody set. Not a value any environment can hold, so
+ * unset stays distinct from a variable whose value is the string "undefined".
+ */
+const UNSET = '\u0000<unset>';
+
 /** Exported so a read hashes what it compares the way the record was written. */
-export function hashEnvValue(value: string | undefined): string {
-  return hashArray([value ?? '']);
+export function hashEnvReads(
+  keys: string[],
+  env: NodeJS.ProcessEnv = process.env
+): string {
+  return hashArray(keys.flatMap((key) => [key, key in env ? env[key] : UNSET]));
 }
 
 /**
@@ -34,19 +47,19 @@ export async function withEnvReads<T>(
   load: () => Promise<T>,
   env: NodeJS.ProcessEnv = process.env
 ): Promise<{ result: T; envReads: EnvReads | null }> {
-  const read: EnvReads = {};
+  const read = new Set<string>();
   let bounded = true;
 
   const observed = new Proxy(env, {
     get(target, key) {
       if (typeof key === 'string') {
-        record(read, target, key);
+        record(read, key);
       }
       return target[key as string];
     },
     has(target, key) {
       if (typeof key === 'string') {
-        record(read, target, key);
+        record(read, key);
       }
       return key in target;
     },
@@ -63,31 +76,31 @@ export async function withEnvReads<T>(
   install(observed);
   try {
     const result = await load();
-    return { result, envReads: bounded ? read : null };
+    const keys = [...read];
+    return {
+      result,
+      envReads: bounded ? { keys, hash: hashEnvReads(keys, env) } : null,
+    };
   } finally {
     install(env);
   }
 }
 
-function record(read: EnvReads, env: NodeJS.ProcessEnv, key: string): void {
+function record(read: Set<string>, key: string): void {
   // Left out rather than recorded: these say which binary ran and from where,
   // they differ between two invocations that should share a record, and nothing
   // decides what it registers from them. Recording one would invalidate every
   // record on the next command run a different way.
-  if (INVOCATION_KEYS.has(key) || key in read) {
+  if (INVOCATION_KEYS.has(key)) {
     return;
   }
-
-  // Absence is part of the answer: `NX_DOTNET_DISABLE` is unset in the run that
-  // records a working plugin, and setting it later has to invalidate that. Null
-  // says unset and no hash can produce it, so a variable whose value is the
-  // string "undefined" stays distinct from one nobody set.
-  read[key] = key in env ? hashEnvValue(env[key]) : null;
+  read.add(key);
 }
 
 function install(env: NodeJS.ProcessEnv): void {
-  // Assigning `process.env` copies properties into the real environment rather
-  // than replacing the object, so the proxy has to go on the property itself.
+  // Set on the property rather than assigned. Assignment installs a proxy too,
+  // and this makes putting the real environment back the same operation as
+  // putting the proxy in.
   Object.defineProperty(process, 'env', {
     value: env,
     configurable: true,

@@ -106,7 +106,7 @@ describe('IsolatedPlugin', () => {
     return {
       name: 'test-plugin',
       sourceFiles: [],
-      envReads: {},
+      envReads: { keys: [], hash: 'nothing-read' },
       hooksExportedAsUndefined: [],
       createNodesPattern: hooks.createNodesPattern ?? '',
       hasCreateDependencies: hooks.hasCreateDependencies ?? false,

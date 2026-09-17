@@ -19,7 +19,7 @@ import { logger } from '../../utils/logger';
 import { readModulePackageJson } from '../../utils/package-json';
 import { normalizePath } from '../../utils/path';
 import { canObserveModuleClosure } from './isolation/module-closure';
-import { hashEnvValue } from './isolation/env-reads';
+import { hashEnvReads, type EnvReads } from './isolation/env-reads';
 import { workspaceRoot } from '../../utils/workspace-root';
 import type { LoadedNxPlugin } from './loaded-nx-plugin';
 
@@ -36,7 +36,7 @@ export type PluginCapabilities = CachedPluginCapabilities;
  */
 export type ObservedLoad = {
   sourceFiles: string[] | null;
-  envReads: Record<string, string | null> | null;
+  envReads: EnvReads | null;
   /** Hook exports the module declared and left undefined. */
   hooksExportedAsUndefined?: string[];
 };
@@ -181,23 +181,28 @@ export function recordIsFresh(record: PluginRecord, root: string): boolean {
  * exports no hooks at all and its files are identical either way.
  */
 function envIsUnchanged(record: PluginRecord): boolean {
-  let read: Record<string, string | null>;
+  let read: EnvReads;
   try {
-    read = JSON.parse(record.envReads || '{}');
+    read = JSON.parse(record.envReads);
   } catch {
     return false;
   }
 
-  for (const [key, value] of Object.entries(read)) {
-    const now = key in process.env ? hashEnvValue(process.env[key]) : null;
-    if (now !== value) {
-      logger.verbose(
-        `${key} changed since "${record.capabilities.name}" was recorded; loading it again`
-      );
-      return false;
-    }
+  if (!read?.keys?.length) {
+    return true;
   }
-  return true;
+
+  if (hashEnvReads(read.keys) === read.hash) {
+    return true;
+  }
+
+  // The names rather than which one changed, since one hash covers them all.
+  logger.verbose(
+    `${read.keys.join(', ')} changed since "${
+      record.capabilities.name
+    }" was recorded; loading it again`
+  );
+  return false;
 }
 
 /**
