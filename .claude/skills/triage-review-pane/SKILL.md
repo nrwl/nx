@@ -23,6 +23,11 @@ the watcher so their decisions come back to you as notifications instead of you 
 Nothing staged means nothing to open. Say so and stop — an empty TUI is a worse answer than a
 sentence.
 
+The TUI itself runs under **Bun**, not Node: opentui reaches the terminal through Bun's FFI, and the
+Node build of it refuses to start. `triage review` checks for `bun` up front and prints the install
+line, so you do not need to check separately — but if the user has no Bun, that is the error they
+will see, and `curl -fsSL https://bun.sh/install | bash` is the fix.
+
 ## 2. Detect the multiplexer
 
 ```bash
