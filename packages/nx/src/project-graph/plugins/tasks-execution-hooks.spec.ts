@@ -96,7 +96,7 @@ describe('task execution hooks', () => {
       expect(mocks.daemonRunPreTasksExecution).toHaveBeenCalled();
     });
 
-    it('runs the hook when any plugin has no record', async () => {
+    it('runs the hook when the records cannot answer', async () => {
       mocks.peekPluginCapabilities.mockResolvedValue(null);
 
       await runPreTasksExecution(preTasksContext());
@@ -138,7 +138,7 @@ describe('task execution hooks', () => {
       );
     });
 
-    it('sends them when any plugin has no record', async () => {
+    it('sends them when the records cannot answer', async () => {
       mocks.peekPluginCapabilities.mockResolvedValue(null);
 
       await runPostTasksExecution(postTasksContext());

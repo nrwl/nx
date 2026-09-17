@@ -341,7 +341,15 @@ describe('loading plugins through the capability cache', () => {
     // are identical either way, so the variable on the record is the only
     // thing that invalidates it.
     expect(mocks.recordCapabilities).toHaveBeenCalledWith([
-      expect.objectContaining({ key: 'key:/resolved/test-plugin' }),
+      expect.objectContaining({
+        key: 'key:/resolved/test-plugin',
+        record: expect.objectContaining({
+          envReads: JSON.stringify({
+            keys: ['NX_DOTNET_DISABLE'],
+            hash: 'dotnet-disable-set',
+          }),
+        }),
+      }),
     ]);
   });
 
@@ -423,6 +431,31 @@ describe('loading plugins through the capability cache', () => {
 
       expect(mocks.recordCapabilities).not.toHaveBeenCalled();
       expect(mocks.warn).not.toHaveBeenCalled();
+    });
+
+    it('is no longer what a later peek in the same command answers from', async () => {
+      // The gates peek twice per command, before and after the tasks, and the
+      // first answer is held. Keeping it past a repair would answer the second
+      // gate from the record this one just proved wrong, so the hook it hid
+      // would be skipped again in the very command that discovered it.
+      await peekPluginCapabilities({ plugins: ['test-plugin'] });
+      await loadedFromRecordThenReport({
+        ...CAPABILITIES,
+        hasPostTasksExecution: true,
+      });
+
+      // What the corrected record now says, which is what a second peek has to
+      // go back and read.
+      mocks.readValidRecords.mockImplementation((keys: string[]) => {
+        const found = new Map<string, PluginCapabilities>();
+        for (const key of keys) {
+          found.set(key, { ...CAPABILITIES, hasPostTasksExecution: true });
+        }
+        return found;
+      });
+      const peeked = await peekPluginCapabilities({ plugins: ['test-plugin'] });
+
+      expect(peeked[0].hasPostTasksExecution).toBe(true);
     });
   });
 

@@ -117,20 +117,42 @@ describe('getTouchedProjectsFromProjectGlobChanges', () => {
   });
 
   it('ignores a plugin that registers no createNodes', async () => {
+    // The only plugin, so nothing else contributes a pattern: whatever this
+    // locator matches against is what an absent `createNodesPattern` turned
+    // into. Dropped rather than combined, or the literal `undefined` becomes a
+    // pattern of its own and a file by that name deletes the whole workspace.
+    mocks.capabilitiesOfConfiguredPlugins.mockResolvedValue([
+      {
+        name: 'inert',
+        createNodesPattern: undefined,
+        hasCreateDependencies: true,
+        hasCreateMetadata: false,
+        hasPreTasksExecution: false,
+        hasPostTasksExecution: false,
+      },
+    ]);
+    const nodes = {
+      proj1: makeProjectGraphNode('proj1'),
+      proj2: makeProjectGraphNode('proj2'),
+    };
+
+    const result = await getTouchedProjectsFromProjectGlobChanges(
+      [deletedFile('undefined')],
+      nodes,
+      { plugins: [] },
+      {},
+      { nodes, dependencies: {} }
+    );
+
+    expect(result).toEqual([]);
+  });
+
+  it('matches against the patterns on record', async () => {
     mocks.capabilitiesOfConfiguredPlugins.mockResolvedValue([
       {
         name: 'test',
         createNodesPattern: '**/project.json',
         hasCreateDependencies: false,
-        hasCreateMetadata: false,
-        hasPreTasksExecution: false,
-        hasPostTasksExecution: false,
-      },
-      {
-        // Contributes no pattern, so it must not widen what matches.
-        name: 'inert',
-        createNodesPattern: undefined,
-        hasCreateDependencies: true,
         hasCreateMetadata: false,
         hasPreTasksExecution: false,
         hasPostTasksExecution: false,

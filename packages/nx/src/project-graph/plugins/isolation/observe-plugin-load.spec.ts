@@ -32,10 +32,30 @@ describe('observePluginLoad', () => {
     const specifiers = nxModulesWarmedBeforeObserving();
     expect(specifiers.length).toBeGreaterThan(0);
 
+    // Split by who can answer for them. A child process resolving `nx/src/*`
+    // from inside `packages/nx` answers through this package's own `exports`,
+    // which point at `dist` and so demand a build this spec has no reason to
+    // need; in here the test resolver answers for the source tree. The
+    // `@nx/devkit` entries are the other way round, which is what the child is
+    // for.
+    const [inThisProcess, inAChildProcess] = specifiers.reduce(
+      ([ours, theirs], specifier) =>
+        specifier.startsWith('nx/')
+          ? [[...ours, specifier], theirs]
+          : [ours, [...theirs, specifier]],
+      [[], []] as [string[], string[]]
+    );
+    expect(inThisProcess.length).toBeGreaterThan(0);
+    expect(inAChildProcess.length).toBeGreaterThan(0);
+
+    for (const specifier of inThisProcess) {
+      expect(() => require.resolve(specifier)).not.toThrow();
+    }
+
     const script = `
       const { createRequire } = require('module');
       const from = createRequire(${JSON.stringify(__filename)});
-      for (const s of ${JSON.stringify(specifiers)}) from.resolve(s);
+      for (const s of ${JSON.stringify(inAChildProcess)}) from.resolve(s);
     `;
     expect(() =>
       execFileSync(process.execPath, ['-e', script], { stdio: 'pipe' })
