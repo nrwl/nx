@@ -795,7 +795,7 @@ impl TaskHasher {
                 // The index answers from a listing it keeps only while
                 // nothing has run, like the file map; afterwards it reads the
                 // disk for us.
-                let files_under = |dir: &str, accept: PathPredicate| {
+                let list_directory = |dir: &str, accept: PathPredicate| {
                     self.ignored_index.files_under(
                         workspace_root,
                         dir,
@@ -810,7 +810,7 @@ impl TaskHasher {
                             globs,
                             &Source::fileset(
                                 &|path| run_stage.nothing_ran() && self.workspace_tracks_file(path),
-                                &files_under,
+                                &list_directory,
                             ),
                         )
                     })?;

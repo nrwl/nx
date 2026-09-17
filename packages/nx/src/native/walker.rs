@@ -352,7 +352,7 @@ pub(crate) type PathPredicate<'a> = &'a (dyn Fn(&str) -> bool + Sync);
 /// A path is read wherever it points, so an entry or a linked file may lead
 /// out of the workspace. `None` when `dir` cannot be read at all. The order
 /// is the walk's, not sorted.
-pub(crate) fn files_under(
+pub(crate) fn read_directory(
     workspace_root: &Path,
     dir: &str,
     accept: PathPredicate,
@@ -371,7 +371,7 @@ pub(crate) fn seed_walk(workspace_root: &Path, dir: &str) -> Option<Vec<String>>
     if std::fs::symlink_metadata(workspace_root.join(dir)).is_err() {
         return Some(Vec::new());
     }
-    files_under(workspace_root, dir, &|_| true)
+    read_directory(workspace_root, dir, &|_| true)
 }
 
 #[cfg(test)]

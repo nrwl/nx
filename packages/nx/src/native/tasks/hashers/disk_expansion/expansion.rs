@@ -11,22 +11,22 @@ use dashmap::DashMap;
 
 use super::entries::{Negation, Positive};
 use crate::native::glob::{build_glob_set, expand_literal_braces, normalize_glob};
-use crate::native::walker::{PathPredicate, files_under};
+use crate::native::walker::{PathPredicate, read_directory};
 
 /// Expansion per `files:{project}:[...]` instruction, scoped to one `hash_plans`
 /// call: a group is listed or walked afresh for the next one.
 pub(crate) type FilesExpansionCache = DashMap<String, Arc<FilesExpansion>>;
 
-/// What a directory holds, asked of whoever knows: the ignored index answers
-/// from a listing it keeps or from the disk, a caller without one reads the
-/// disk. `accept` is passed in so the answer is filtered as it is gathered.
-/// `None` when the directory cannot be read at all.
-pub(crate) type DirectoryFiles<'a> =
+/// Lists a directory, asked of whoever knows: the ignored index answers from
+/// a listing it keeps or from the disk, a caller without one reads the disk.
+/// `accept` is passed in so the answer is filtered as it is gathered. `None`
+/// when the directory cannot be read at all.
+pub(crate) type ListDirectory<'a> =
     Box<dyn Fn(&str, PathPredicate) -> Option<Vec<String>> + Sync + 'a>;
 
 /// Reads the disk every time, for a caller with no index behind it.
-fn disk_files(workspace_root: &Path) -> DirectoryFiles<'_> {
-    Box::new(move |dir, accept| files_under(workspace_root, dir, accept))
+fn disk_files(workspace_root: &Path) -> ListDirectory<'_> {
+    Box::new(move |dir, accept| read_directory(workspace_root, dir, accept))
 }
 
 /// For a caller with no workspace context: every path is checked on disk.
@@ -40,8 +40,8 @@ pub(crate) struct Source<'a> {
     /// needs no stat. A directory never answers yes: the file map holds only
     /// files.
     tracked_file: PathPredicate<'a>,
-    /// What a directory holds, see `DirectoryFiles`.
-    files_under: DirectoryFiles<'a>,
+    /// How a directory is listed, see `ListDirectory`.
+    list_directory: ListDirectory<'a>,
 }
 
 impl<'a> Source<'a> {
@@ -49,11 +49,11 @@ impl<'a> Source<'a> {
     /// the context can vouch for a path.
     pub(crate) fn fileset(
         tracked_file: PathPredicate<'a>,
-        files_under: impl Fn(&str, PathPredicate) -> Option<Vec<String>> + Sync + 'a,
+        list_directory: impl Fn(&str, PathPredicate) -> Option<Vec<String>> + Sync + 'a,
     ) -> Self {
         Self {
             tracked_file,
-            files_under: Box::new(files_under),
+            list_directory: Box::new(list_directory),
         }
     }
 
@@ -64,7 +64,7 @@ impl<'a> Source<'a> {
     ) -> Self {
         Self {
             tracked_file,
-            files_under: disk_files(workspace_root),
+            list_directory: disk_files(workspace_root),
         }
     }
 
@@ -78,7 +78,7 @@ impl<'a> Source<'a> {
     pub(crate) fn declared_outputs(workspace_root: &'a Path) -> Self {
         Self {
             tracked_file: NOTHING_TRACKED,
-            files_under: disk_files(workspace_root),
+            list_directory: disk_files(workspace_root),
         }
     }
 }
@@ -125,8 +125,8 @@ pub(super) fn parse_group(globs: &[String]) -> Result<(Vec<Positive>, Vec<Negati
 /// which of the two callers this is: a fileset, which may lean on the
 /// workspace context and an index, or declared outputs, which are taken
 /// straight from disk. The source shortens two steps here: `tracked_file`
-/// skips the stat on an exact path, and `files_under` may answer a directory
-/// from a listing instead of walking it. Walks skip the same directories the
+/// skips the stat on an exact path, and `list_directory` may answer from a
+/// listing instead of walking. Walks skip the same directories the
 /// workspace walker never enters, but an exact path or a prefix inside one of
 /// them is read as-is.
 pub(crate) fn expand_entries(
@@ -137,7 +137,7 @@ pub(crate) fn expand_entries(
 ) -> Result<FilesExpansion> {
     let Source {
         tracked_file,
-        files_under,
+        list_directory,
     } = source;
 
     // One question asked at every place a path joins `found`, so no entry
@@ -179,7 +179,7 @@ pub(crate) fn expand_entries(
         } else {
             Box::new(move |path: &str| !excluded(path))
         };
-        if let Some(under) = files_under(root, &*accept) {
+        if let Some(under) = list_directory(root, &*accept) {
             // Filtered again: a source is asked to apply `accept` so it can
             // skip work, not trusted to have done it.
             found.extend(under.into_iter().filter(|path| accept(path)));

@@ -16,7 +16,7 @@ use parking_lot::RwLock;
 use tracing::{debug, trace};
 
 use crate::native::hasher::hash_file_path;
-use crate::native::walker::{PathPredicate, files_under, seed_walk};
+use crate::native::walker::{PathPredicate, read_directory, seed_walk};
 
 /// Whether the watch delivers events for a workspace-relative directory.
 pub(crate) type DeliversUnder = Arc<dyn Fn(&str) -> bool + Send + Sync>;
@@ -324,7 +324,7 @@ impl IgnoredIndex {
             }
             trace!("no listing for {dir:?}; reading it from disk instead");
         }
-        files_under(workspace_root, dir, accept)
+        read_directory(workspace_root, dir, accept)
     }
 
     /// A reported write or creation. Under a listed prefix a file becomes a
