@@ -1051,6 +1051,64 @@ describe('expandInitiatingTasksThroughNoop', () => {
       'Task "other:build" references project "other", which does not exist in the project graph.'
     );
   });
+  describe('negated outputs', () => {
+    const node = {
+      name: 'proj',
+      type: 'lib' as const,
+      data: {
+        root: 'apps/proj',
+        targets: {
+          build: {
+            outputs: [
+              '{workspaceRoot}/dist/obj/proj',
+              '!{workspaceRoot}/dist/obj/proj/project.assets.json',
+              '{projectRoot}/obj',
+              '!{projectRoot}/obj/*.nuget.g.props',
+            ],
+          },
+        },
+      },
+    };
+
+    it('should interpolate a negated {workspaceRoot} output instead of rejecting it', () => {
+      expect(
+        getOutputsForTargetAndConfiguration(
+          { project: 'proj', target: 'build' },
+          {},
+          node
+        )
+      ).toEqual([
+        'dist/obj/proj',
+        '!dist/obj/proj/project.assets.json',
+        'apps/proj/obj',
+        '!apps/proj/obj/*.nuget.g.props',
+      ]);
+    });
+
+    it('should keep the negation on a root project, where {projectRoot} interpolates to nothing', () => {
+      expect(
+        getOutputsForTargetAndConfiguration(
+          { project: 'root', target: 'build' },
+          {},
+          {
+            name: 'root',
+            type: 'lib' as const,
+            data: {
+              root: '.',
+              targets: {
+                build: {
+                  outputs: [
+                    '{projectRoot}/obj',
+                    '!{projectRoot}/obj/project.assets.json',
+                  ],
+                },
+              },
+            },
+          }
+        )
+      ).toEqual(['obj', '!obj/project.assets.json']);
+    });
+  });
 });
 
 class GraphBuilder {
