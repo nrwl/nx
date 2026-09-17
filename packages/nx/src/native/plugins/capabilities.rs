@@ -35,13 +35,6 @@ pub const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS plugin_capabilities (
     created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );";
 
-/// Adds a column to a table an earlier build of this branch already created.
-/// `IF NOT EXISTS` leaves that table alone, so without this a developer who ran
-/// the branch before would read a column that is not there and lose the cache
-/// for good. Released versions have no such table and create it complete.
-const MIGRATIONS: &[&str] =
-    &["ALTER TABLE plugin_capabilities ADD COLUMN env_reads TEXT NOT NULL DEFAULT '{}'"];
-
 /// How long a record outlives the run that wrote it.
 ///
 /// `created_at` is set when a record is written and not touched when one is
@@ -106,10 +99,6 @@ impl PluginCapabilitiesCache {
         {
             let db = cache.db.lock().unwrap();
             db.execute_batch(SCHEMA)?;
-            for migration in MIGRATIONS {
-                // Already applied, or the table was created complete.
-                let _ = db.execute_batch(migration);
-            }
         }
         Ok(cache)
     }

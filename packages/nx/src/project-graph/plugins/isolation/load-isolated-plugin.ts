@@ -22,8 +22,14 @@ const loadedPlugins: Map<string, Promise<IsolatedPlugin>> = (global[
  * Kept per loader because the plugins nx.json names and the ones Nx configures
  * itself are loaded by separate callers, often at once, and neither knows the
  * other's half. What a sweep keeps is the union.
+ *
+ * Global for the same reason the map above is. The two share a fate: a sweep
+ * reads every loaded plugin and keeps the ones some loader wants, so a copy of
+ * Nx whose wants were invisible here would put down the other copy's workers
+ * mid-command.
  */
-const wantedBy = new Map<string, Set<string>>();
+const wantedBy: Map<string, Set<string>> = (global['nxWantedPlugins'] ??=
+  new Map());
 
 /**
  * Declares the plugins a loader wants and puts down everything no loader wants

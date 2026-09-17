@@ -1,5 +1,5 @@
 import * as pc from 'picocolors';
-import { canObserveModuleClosure } from '../../project-graph/plugins/isolation/module-closure';
+import { capabilityCacheDisabledReason } from '../../project-graph/plugins/get-plugins';
 import { output } from '../../utils/output';
 import { join, sep } from 'path';
 import { homedir } from 'os';
@@ -99,14 +99,14 @@ export async function reportHandler() {
     // Reported only when it is off, and with the reason. This is the output
     // people paste into an issue, so "why did this change nothing for us"
     // arrives answered rather than needing a verbose re-run.
-    ...(canObserveModuleClosure()
-      ? []
-      : [
+    ...(capabilityCacheDisabledReason()
+      ? [
           [
             'Plugin capability cache',
-            'Disabled, needs Node 22.15, 23.5 or newer',
+            `Disabled, ${capabilityCacheDisabledReason()}`,
           ],
-        ]),
+        ]
+      : []),
     ['Native Target', nativeTarget ?? 'Unavailable'],
     [pm, pmVersion],
     [

@@ -67,9 +67,10 @@ export function isCapabilityCacheEnabled(): boolean {
   // there anyway, so there is no worker spawn to save.
   //
   // A runtime that cannot report a plugin's module closure can never write a
-  // record, so it would read misses forever while paying for them: a database
-  // query per command, and a lock every process queues behind to load the
-  // plugins none of them can record. `nx report` says so when it is off.
+  // record, so it would read misses forever while paying for them, with a
+  // database query per command and a lock every process queues behind to load
+  // the plugins none of them can record. `nx report` says so when this is the
+  // reason the cache is off.
   return !IS_WASM && canObserveModuleClosure();
 }
 
@@ -147,13 +148,15 @@ export function readValidRecords(
  * contributed, and cannot start contributing without an edit to a module inside
  * it, because becoming imported means editing an importer.
  *
- * Three things sit outside that, and none is closed by this. A plugin that reads
+ * The environment the load read is checked too, by `envIsUnchanged` below.
+ *
+ * Three things sit outside both, and none is closed by this. A plugin that reads
  * a non-module file at load time, `readFileSync` of a JSON rather than `require`
- * of it, since the loader sees modules and not reads. A plugin whose exports
- * depend on the environment rather than on any file. And a bare specifier whose
- * resolution moves because a package was installed nearer to it, which leaves
- * every recorded file present and unchanged. The invariant is exact over the
- * module graph and silent about inputs that are not files.
+ * of it, since the loader sees modules and not reads. A variable read by a
+ * module the worker had already loaded before the plugin's load began, which
+ * the proxy never sees. And a bare specifier whose resolution moves because a
+ * package was installed nearer to it, which leaves every recorded file present
+ * and unchanged.
  *
  * A record with no files came from a plugin whose every source is vendored, and
  * its key's version identifies it.

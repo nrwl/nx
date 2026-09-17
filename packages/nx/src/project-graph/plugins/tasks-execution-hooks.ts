@@ -94,9 +94,8 @@ export async function runPostTasksExecution(
 ) {
   const nxJson = readNxJson(workspaceRoot);
 
-  // Checked before the daemon branch, because `context` carries every task's
-  // result including its terminal output, and that is what would cross the
-  // socket to reach plugins that do not want it.
+  // Checked before the daemon branch, so a workspace whose plugins register no
+  // postTasksExecution skips both the plugin load and the daemon round trip.
   if (await noPluginRegisters('hasPostTasksExecution', nxJson, workspaceRoot)) {
     return;
   }

@@ -1,11 +1,15 @@
 import type { Mock } from 'vitest';
 
-vi.mock('./isolated-plugin', () => ({
+// Hoisted so the same mock survives `vi.resetModules()`, which the two-copies
+// test below needs: a second module instance has to see the same instances.
+const mocked = vi.hoisted(() => ({
   IsolatedPlugin: {
     load: vi.fn(),
     fromCapabilities: vi.fn(),
   },
 }));
+
+vi.mock('./isolated-plugin', () => mocked);
 
 import { IsolatedPlugin } from './isolated-plugin';
 import {
@@ -204,5 +208,26 @@ describe('the plugins a process has loaded', () => {
     // must not turn it into an unhandled one.
     expect(() => disposeIsolatedPlugins()).not.toThrow();
     await Promise.resolve();
+  });
+
+  it('leaves the plugins another copy of Nx wanted alone', async () => {
+    wantPlugins('specified', [{ plugin: 'a' }], '/root');
+    await loadIsolatedNxPlugin('a', '/root');
+
+    // A second copy of Nx in this process. It shares `global`, so it sees the
+    // first copy's workers, and it loads plugins under its own loader name.
+    // The query suffix is what makes it a second instance: a plain re-import
+    // of a path this file already imported hands back the same module, even
+    // after `vi.resetModules()`, and the test then proves nothing.
+    const second: typeof import('./load-isolated-plugin') =
+      await import('./load-isolated-plugin?second-copy-of-nx');
+    expect(second.wantPlugins).not.toBe(wantPlugins);
+    second.wantPlugins('default', [{ plugin: 'b' }], '/root');
+    await second.loadIsolatedNxPlugin('b', '/root');
+
+    // Its sweep reads every loaded plugin, so wants it could not see would read
+    // as nobody's and put the other copy's worker down mid-command.
+    expect(instances.get('a').dispose).not.toHaveBeenCalled();
+    expect(instances.get('b').dispose).not.toHaveBeenCalled();
   });
 });

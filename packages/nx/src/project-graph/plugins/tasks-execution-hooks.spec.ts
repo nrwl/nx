@@ -120,8 +120,8 @@ describe('task execution hooks', () => {
 
       await runPostTasksExecution(postTasksContext());
 
-      // The context carries every task's result and terminal output, so not
-      // sending it is the saving, not just the skipped hook.
+      // Skipping the daemon round trip is part of the saving, not just the
+      // skipped hook.
       expect(mocks.daemonRunPostTasksExecution).not.toHaveBeenCalled();
       expect(mocks.getPlugins).not.toHaveBeenCalled();
     });
