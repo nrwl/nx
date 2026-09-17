@@ -198,27 +198,47 @@ console.log('staleness');
   const store = require('./review');
   const at = 'ac79d3b0aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
   const moved = '11ded7cdbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
-  check('an unmoved head shows the sha alone', store.reviewedAt({ head_sha: at, current_head: at }), 'ac79d3b0');
+  check(
+    'an unmoved head shows the sha alone',
+    store.reviewedAt({ head_sha: at, current_head: at }),
+    'ac79d3b0'
+  );
   // The case the tree comparison could not answer: a rebase changes the tree even
   // when the PR's own change is identical, so only patch-ids settle it.
   check(
     'a rebase that kept the same change is not flagged',
-    store.reviewedAt({ head_sha: at, current_head: moved, head_change: 'rebased-same' }),
+    store.reviewedAt({
+      head_sha: at,
+      current_head: moved,
+      head_change: 'rebased-same',
+    }),
     'ac79d3b0 = rebased, same'
   );
   check(
     'a head that moved with no file change is not flagged',
-    store.reviewedAt({ head_sha: at, current_head: moved, head_change: 'none' }),
+    store.reviewedAt({
+      head_sha: at,
+      current_head: moved,
+      head_change: 'none',
+    }),
     'ac79d3b0 = no change'
   );
   check(
     'a plain advance shows its counts',
-    store.reviewedAt({ head_sha: at, current_head: moved, head_change: '+250/-32' }),
+    store.reviewedAt({
+      head_sha: at,
+      current_head: moved,
+      head_change: '+250/-32',
+    }),
     'ac79d3b0 ⟳ +250/-32'
   );
   check(
     'a rebase that changed the PR shows both facts',
-    store.reviewedAt({ head_sha: at, current_head: moved, head_change: 'rebased +30/-19' }),
+    store.reviewedAt({
+      head_sha: at,
+      current_head: moved,
+      head_change: 'rebased +30/-19',
+    }),
     'ac79d3b0 ⟳ rebased +30/-19'
   );
   check(
@@ -240,7 +260,11 @@ console.log('handoff');
   check('carries the branch', /Branch:  my\/branch/.test(out), true);
   check('carries the draft path', out.includes(path.join(dir, '90.md')), true);
   check('states the drift', /⟳ \+5\/-2/.test(out), true);
-  check('warns that the PR moved', /has moved since the review/.test(out), true);
+  check(
+    'warns that the PR moved',
+    /has moved since the review/.test(out),
+    true
+  );
   fs.writeFileSync(
     path.join(dir, '91.md'),
     '---\npr: 91\ntitle: t\nhead_sha: aaaaaaaaaaaa\ncurrent_head: aaaaaaaaaaaa\nverdict: lgtm\nattempt: 1\nposted_at:\n---\n\nbody\n'
