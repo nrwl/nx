@@ -206,9 +206,10 @@ pub(crate) fn expand_cached(
     Ok(expansion)
 }
 
-/// What a fileset glob may not say: an absolute path, a `..` that climbs out,
-/// or a `.` segment. `partition_glob` answers only where literal text stops;
-/// these are this feature's rules, with its wording.
+/// What a fileset glob may not say: an absolute path, any `..` segment even
+/// one that stays inside (`dist/a/../b`), or any `.` segment. `partition_glob`
+/// answers only where literal text stops; these are this feature's rules,
+/// with its wording.
 fn validate_shape(glob: &str) -> Result<()> {
     if Path::new(glob).is_absolute() || glob.starts_with('/') {
         bail!(

@@ -1200,4 +1200,36 @@ mod tests {
         assert!(!holds(&set, "dist/apps-other/index.js"));
         assert!(!holds(&set, "dist"));
     }
+
+    /// The shapes `holds` is given, and the two it is never given. Paths
+    /// reach it trimmed by `partition_glob` and shape-checked by
+    /// `validate_shape`, so a trailing slash and a leading slash cannot
+    /// arrive; both are pinned as the answers they would get, not as answers
+    /// anything relies on.
+    #[test]
+    fn what_holds_answers_for_each_shape_of_path() {
+        let set = |entries: &[&str]| -> BTreeSet<String> {
+            entries.iter().map(|e| e.to_string()).collect()
+        };
+        let root = set(&[""]);
+        let named = set(&["a/b"]);
+
+        // The empty prefix is the workspace root, an ancestor of everything.
+        assert!(holds(&root, "a/b/c"));
+        assert!(holds(&root, "a"));
+        assert!(holds(&root, ""));
+        // A named directory covers itself and what is under it, nothing else.
+        assert!(holds(&named, "a/b"));
+        assert!(holds(&named, "a/b/c"));
+        assert!(!holds(&named, "a"));
+        assert!(!holds(&named, ""));
+        assert!(!holds(&named, "a/bc"));
+        // An empty set answers nothing, whatever the path.
+        assert!(!holds(&BTreeSet::new(), "a/b"));
+        assert!(!holds(&BTreeSet::new(), ""));
+        // Never reached: `partition_glob` trims a trailing slash, and
+        // `validate_shape` rejects an absolute glob before anything asks.
+        assert!(!holds(&named, "a/b/"));
+        assert!(!holds(&root, "/a/b"));
+    }
 }
