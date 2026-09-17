@@ -1,7 +1,6 @@
 import type { PackageJson } from 'nx/src/utils/package-json';
 
 import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-configuration-utils';
-import yargs from 'yargs-parser';
 
 import {
   CreateNodes,
@@ -20,6 +19,12 @@ import {
   LoadedNxPlugin,
   retrieveProjectConfigurations,
 } from 'nx/src/devkit-internals';
+
+// yargs-parser is ESM-only; a top-level require would reach every jest run that imports @nx/devkit/internal.
+function yargs(...args: Parameters<typeof import('yargs-parser').default>) {
+  const parse: typeof import('yargs-parser').default = require('yargs-parser');
+  return parse(...args);
+}
 
 /**
  * Iterates through various forms of plugin options to find the one which does not conflict with the current graph
