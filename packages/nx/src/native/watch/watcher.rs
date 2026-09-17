@@ -7,17 +7,14 @@ use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime};
 
 use crossbeam_channel::{Receiver, Sender, bounded, select, unbounded};
-use napi::bindgen_prelude::*;
-use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode};
 use notify::{RecursiveMode, Watcher as NotifyWatcher};
-use parking_lot::Mutex;
 use tracing::{debug, trace};
 
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
 use crate::native::glob::{NxGlobSet, build_glob_set};
-use crate::native::walker::HARDCODED_IGNORE_PATTERNS;
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
 use crate::native::walker::create_walker;
+use crate::native::walker::{HARDCODED_IGNORE_PATTERNS, TRANSIENT_FILE_GLOBS};
 use crate::native::watch::types::{
     EventType, RawWatchEvent, WatchEvent, WatchEventInternal, transform_event_to_watch_events,
 };
@@ -55,7 +52,7 @@ const FORCE_FLUSH_GRACE: Duration = Duration::from_millis(10);
 /// Larger than FORCE_FLUSH_GRACE so inter-event gaps under load aren't mistaken
 /// for the burst ending; only paid while events keep arriving.
 const FORCE_FLUSH_QUIET: Duration = Duration::from_millis(50);
-/// Overall cap, kept under the 500ms reply timeout in `force_flush_pending` so
+/// Overall cap, kept under the 500ms reply timeout in `WatchSession::flush` so
 /// a late reply isn't read as "no changes".
 const FORCE_FLUSH_MAX: Duration = Duration::from_millis(250);
 
@@ -109,7 +106,33 @@ type NotifyResult = std::result::Result<notify::Event, notify::Error>;
 pub(crate) type WatchEventCallback =
     Box<dyn Fn(std::result::Result<Vec<WatchEvent>, String>) + Send + Sync + 'static>;
 
-type ForceFlushReply = Sender<Vec<WatchEvent>>;
+/// How much of the kernel→notify hop a flush waits out before answering.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub(crate) enum FlushMode {
+    /// Only what has already reached the pipeline. Cheap; a write made just
+    /// before the call may still be in flight from the kernel.
+    Delivered,
+    /// Wait for the hop to settle (grace, quiet window, cap) so a write made
+    /// before the call is in the answer.
+    Settled,
+}
+
+struct FlushRequest {
+    mode: FlushMode,
+    reply: Sender<Vec<WatchEvent>>,
+}
+
+/// The ignore globs every workspace watch applies on top of the ignore
+/// files. A `!` entry admits a path back, see `always_watch`.
+pub(crate) fn default_watch_ignores() -> Vec<String> {
+    let mut globs: Vec<String> = HARDCODED_IGNORE_PATTERNS
+        .iter()
+        .map(|p| (*p).to_string())
+        .collect();
+    // Vite/Vitest write timestamp files that we don't want to watch.
+    globs.extend(TRANSIENT_FILE_GLOBS.iter().map(|g| (*g).to_string()));
+    globs
+}
 
 /// Session config + loop state. Built on the calling thread, then run
 /// by the flush thread.
@@ -268,11 +291,18 @@ impl WatchPipeline {
     #[cfg(not(any(target_os = "macos", target_os = "windows")))]
     fn new_directories_from_event(&self, event: &RawWatchEvent) -> Vec<PathBuf> {
         use crate::native::watch::types::meta_is_dir;
-        use notify::{EventKind, event::CreateKind};
+        use notify::{
+            EventKind,
+            event::{CreateKind, ModifyKind, RenameMode},
+        };
 
+        // A directory moved into place arrives as a rename, and inotify does
+        // not carry the old path's registration over to it.
         if !matches!(
             event.kind(),
-            EventKind::Create(CreateKind::Folder) | EventKind::Create(CreateKind::Any)
+            EventKind::Create(CreateKind::Folder)
+                | EventKind::Create(CreateKind::Any)
+                | EventKind::Modify(ModifyKind::Name(RenameMode::To | RenameMode::Any))
         ) {
             return Vec::new();
         }
@@ -436,8 +466,8 @@ impl WatchPipeline {
         (pipeline, notify_tx)
     }
 
-    /// Drives the pipeline until force_flush_rx disconnects.
-    fn run(mut self, force_flush_rx: Receiver<ForceFlushReply>, callback: WatchEventCallback) {
+    /// Drives the pipeline until flush_rx disconnects.
+    fn run(mut self, flush_rx: Receiver<FlushRequest>, callback: WatchEventCallback) {
         loop {
             let idle_wait = self
                 .flush_deadline
@@ -457,14 +487,15 @@ impl WatchPipeline {
                         break;
                     }
                 },
-                recv(force_flush_rx) -> res => match res {
-                    Ok(reply) => {
-                        // Collect concurrent ForceFlush replies so they all
-                        // get the same snapshot; drain pending notify events
-                        // first so the snapshot reflects everything submitted.
-                        let mut replies = vec![reply];
-                        while let Ok(extra) = force_flush_rx.try_recv() {
-                            replies.push(extra);
+                recv(flush_rx) -> res => match res {
+                    Ok(request) => {
+                        // Concurrent requests all get the same snapshot; the
+                        // strongest mode among them decides how long to wait.
+                        let mut mode = request.mode;
+                        let mut replies = vec![request.reply];
+                        while let Ok(extra) = flush_rx.try_recv() {
+                            mode = mode.max(extra.mode);
+                            replies.push(extra.reply);
                         }
                         let mut fatal: Option<String> = None;
 
@@ -474,7 +505,8 @@ impl WatchPipeline {
                         // returns after one short grace; once a burst is in
                         // progress each event restarts the longer
                         // FORCE_FLUSH_QUIET window so a trickle isn't cut
-                        // mid-stream. Bounded by FORCE_FLUSH_MAX.
+                        // mid-stream. Bounded by FORCE_FLUSH_MAX. A Delivered
+                        // flush takes only what is already in the channel.
                         let deadline = handler_started_at + FORCE_FLUSH_MAX;
                         let mut burst_in_progress = self.has_pending();
                         while fatal.is_none() {
@@ -482,34 +514,46 @@ impl WatchPipeline {
                             if now >= deadline {
                                 break;
                             }
-                            let window = if burst_in_progress {
-                                FORCE_FLUSH_QUIET
-                            } else {
-                                FORCE_FLUSH_GRACE
+                            let wait = match mode {
+                                FlushMode::Delivered => Duration::ZERO,
+                                FlushMode::Settled if burst_in_progress => FORCE_FLUSH_QUIET,
+                                FlushMode::Settled => FORCE_FLUSH_GRACE,
                             };
-                            let wait = window.min(deadline - now);
-                            match self.notify_rx.recv_timeout(wait) {
-                                Ok(event) => {
-                                    burst_in_progress = true;
-                                    if let Err(msg) = self.ingest_event(event) {
-                                        fatal = Some(msg);
+                            let wait = wait.min(deadline - now);
+                            // A request arriving mid-wait joins this snapshot
+                            // rather than queueing behind it for a second wait.
+                            select! {
+                                recv(self.notify_rx) -> res => match res {
+                                    Ok(event) => {
+                                        burst_in_progress = true;
+                                        if let Err(msg) = self.ingest_event(event) {
+                                            fatal = Some(msg);
+                                        }
                                     }
-                                }
-                                Err(crossbeam_channel::RecvTimeoutError::Timeout) => break,
-                                Err(crossbeam_channel::RecvTimeoutError::Disconnected) => {
-                                    fatal = Some("watcher channel disconnected".to_string());
-                                }
+                                    Err(_) => {
+                                        fatal = Some("watcher channel disconnected".to_string());
+                                    }
+                                },
+                                recv(flush_rx) -> res => match res {
+                                    Ok(late) => {
+                                        mode = mode.max(late.mode);
+                                        replies.push(late.reply);
+                                    }
+                                    Err(_) => break,
+                                },
+                                default(wait) => break,
                             }
                         }
-                        // A force-flush answers a graph request, so deliver the
-                        // rescan now rather than holding it — the caller needs
-                        // current state.
+                        // A flush answers a read, so deliver the rescan now
+                        // rather than holding it — the caller needs current
+                        // state.
                         let watch_events = self.snapshot_events(true);
                         debug!(
                             count = watch_events.len(),
                             replies = replies.len(),
+                            ?mode,
                             elapsed = ?handler_started_at.elapsed(),
-                            "force-flush END"
+                            "flush END"
                         );
                         for e in &watch_events {
                             debug!("  [{:?}] {}", e.r#type, e.path);
@@ -518,7 +562,7 @@ impl WatchPipeline {
                         for r in replies {
                             match r.send(watch_events.clone()) {
                                 Ok(()) => any_delivered = true,
-                                Err(e) => tracing::warn!(?e, "force-flush reply failed"),
+                                Err(e) => tracing::warn!(?e, "flush reply failed"),
                             }
                         }
                         if any_delivered {
@@ -529,7 +573,7 @@ impl WatchPipeline {
                             break;
                         }
                     }
-                    Err(_) => break, // struct dropped or stop() called
+                    Err(_) => break, // every session handle dropped
                 },
                 default(idle_wait) => {
                     if self.has_pending() {
@@ -575,114 +619,40 @@ impl WatchPipeline {
     }
 }
 
-#[napi]
-pub struct Watcher {
-    pub origin: String,
-    additional_globs: Vec<String>,
-    use_ignore: bool,
-    /// `Mutex<Option>` so `stop()` can drop the sender via `&self`.
-    /// When dropped, the flush loop's force_flush_rx reports
-    /// `Disconnected` on its next select and the loop exits.
-    force_flush_tx: Mutex<Option<Sender<ForceFlushReply>>>,
+/// A handle to a running watch pipeline. Cheap to clone; the pipeline thread
+/// runs until the last handle drops, then exits on its next select.
+#[derive(Clone)]
+pub(crate) struct WatchSession {
+    flush_tx: Sender<FlushRequest>,
 }
 
-#[napi]
-impl Watcher {
-    /// Always applies HARDCODED_IGNORE_PATTERNS plus watcher-specific
-    /// patterns (vite/vitest timestamp files), regardless of `use_ignore`.
-    #[napi(constructor)]
-    pub fn new(
+impl WatchSession {
+    /// Registers the watches and starts the pipeline thread. Watches are live
+    /// when this returns, so a write landing right after is reported.
+    pub(crate) fn start(
         origin: String,
-        additional_globs: Option<Vec<String>>,
-        use_ignore: Option<bool>,
-    ) -> Watcher {
-        let mut globs: Vec<String> = HARDCODED_IGNORE_PATTERNS
-            .iter()
-            .map(|p| (*p).to_string())
-            .collect();
-
-        // Vite/Vitest write timestamp files that we don't want to watch.
-        globs.extend([
-            "vitest.config.ts.timestamp*.mjs".into(),
-            "vite.config.ts.timestamp*.mjs".into(),
-            "vitest.config.mts.timestamp*.mjs".into(),
-            "vite.config.mts.timestamp*.mjs".into(),
-        ]);
-
-        if let Some(additional_globs) = additional_globs {
-            globs.extend(additional_globs);
-        }
-
+        additional_globs: &[String],
+        use_ignore: bool,
+        callback: WatchEventCallback,
+    ) -> std::result::Result<Self, String> {
         let origin = if cfg!(windows) {
             origin.replace('/', "\\")
         } else {
             origin
         };
-
-        Watcher {
-            origin,
-            additional_globs: globs,
-            use_ignore: use_ignore.unwrap_or(true),
-            force_flush_tx: Mutex::new(None),
-        }
+        let pipeline = WatchPipeline::new(origin.clone(), additional_globs, use_ignore)?;
+        let (flush_tx, flush_rx) = unbounded::<FlushRequest>();
+        std::thread::spawn(move || pipeline.run(flush_rx, callback));
+        debug!(%origin, "watching started");
+        Ok(WatchSession { flush_tx })
     }
 
-    #[napi]
-    pub fn watch(
-        &mut self,
-        #[napi(ts_arg_type = "(err: string | null, events: WatchEvent[]) => void")]
-        callback_tsfn: ThreadsafeFunction<Vec<WatchEvent>>,
-    ) -> Result<()> {
-        // Adapt the napi ThreadsafeFunction to the generic callback the
-        // loop uses, so the loop is testable without a JS runtime.
-        let callback: WatchEventCallback = Box::new(move |res| match res {
-            Ok(events) => {
-                callback_tsfn.call(Ok(events), ThreadsafeFunctionCallMode::NonBlocking);
-            }
-            Err(msg) => {
-                callback_tsfn.call(
-                    Err(Error::new(Status::GenericFailure, msg)),
-                    ThreadsafeFunctionCallMode::NonBlocking,
-                );
-            }
-        });
-        self.watch_inner(callback)
-    }
-
-    pub(crate) fn watch_inner(&mut self, callback: WatchEventCallback) -> Result<()> {
-        let pipeline =
-            WatchPipeline::new(self.origin.clone(), &self.additional_globs, self.use_ignore)
-                .map_err(|msg| Error::new(Status::GenericFailure, msg))?;
-
-        let (force_flush_tx, force_flush_rx) = unbounded::<ForceFlushReply>();
-        *self.force_flush_tx.lock() = Some(force_flush_tx);
-
-        std::thread::spawn(move || pipeline.run(force_flush_rx, callback));
-
-        debug!(origin = %self.origin, "watching started");
-        Ok(())
-    }
-
-    #[napi]
-    pub async fn stop(&self) -> Result<()> {
-        *self.force_flush_tx.lock() = None;
-        debug!(origin = %self.origin, "watching stopped");
-        Ok(())
-    }
-
-    /// Synchronously drains the accumulator. Used by the daemon before
-    /// serving a cached project graph so events buffered inside the
-    /// IDLE_WINDOW debounce don't go missing. Returns an empty vec if
-    /// the watcher hasn't started, the loop has exited, or no events
-    /// are buffered.
-    #[napi]
-    pub fn force_flush_pending(&self) -> Vec<WatchEvent> {
-        let tx = match self.force_flush_tx.lock().clone() {
-            Some(tx) => tx,
-            None => return Vec::new(),
-        };
-        let (reply_tx, reply_rx) = bounded::<Vec<WatchEvent>>(1);
-        if tx.send(reply_tx).is_err() {
+    /// Synchronously drains the accumulator. Events it returns are not
+    /// delivered through the callback. Returns an empty vec if the loop has
+    /// exited or nothing is buffered.
+    pub(crate) fn flush(&self, mode: FlushMode) -> Vec<WatchEvent> {
+        let (reply, reply_rx) = bounded::<Vec<WatchEvent>>(1);
+        if self.flush_tx.send(FlushRequest { mode, reply }).is_err() {
             return Vec::new();
         }
         reply_rx
@@ -700,24 +670,18 @@ mod tests {
     use std::time::Duration;
     use tempfile::tempdir;
 
-    // Tests drive the public Watcher API end-to-end with real fs ops
-    // through `watch_inner` (the non-napi inner of `watch`). The
+    // Tests drive a real watch session end-to-end with real fs ops. The
     // callback appends every emitted batch into a shared Vec.
 
     type Captured = Arc<Mutex<Vec<WatchEvent>>>;
 
-    fn start_watcher(dir: &Path) -> (Watcher, Captured) {
+    fn start_watcher(dir: &Path) -> (WatchSession, Captured) {
         // Canonicalize: on macOS `/tmp` symlinks to `/private/tmp`, so
         // events arrive with the canonical prefix while origin would
         // not. The filterer's `path.starts_with(origin)` check needs
         // them to agree. dunce, not std: std returns a `\\?\` verbatim
         // path on Windows, which no workspace root ever has.
         let canonical = dunce::canonicalize(dir).expect("canonicalize tempdir");
-        let mut w = Watcher::new(
-            canonical.to_str().expect("utf-8 path").to_string(),
-            None,
-            Some(false), // disable gitignore so the platform's tmp tree can't influence the test
-        );
         let captured: Captured = Arc::new(Mutex::new(Vec::new()));
         let captured_for_cb = captured.clone();
         let callback: WatchEventCallback = Box::new(move |res| {
@@ -725,7 +689,14 @@ mod tests {
                 captured_for_cb.lock().unwrap().extend(events);
             }
         });
-        w.watch_inner(callback).expect("start watch");
+        // Gitignore off, so the platform's tmp tree cannot influence the test.
+        let w = WatchSession::start(
+            canonical.to_str().expect("utf-8 path").to_string(),
+            &default_watch_ignores(),
+            false,
+            callback,
+        )
+        .expect("start watch");
         // Drop any startup events FSEvents leaks from before the watch began.
         std::thread::sleep(Duration::from_millis(300));
         captured.lock().unwrap().clear();
@@ -746,10 +717,10 @@ mod tests {
     /// Poll both delivery paths until `path` shows up. Force-flush and the
     /// idle-window callback race, and force-flush resets the accumulator, so
     /// an event is reported through exactly one of them.
-    fn wait_for_path(watcher: &Watcher, captured: &Captured, path: &str, msg: &str) {
+    fn wait_for_path(watcher: &WatchSession, captured: &Captured, path: &str, msg: &str) {
         let deadline = Instant::now() + Duration::from_secs(2);
         loop {
-            let flushed = watcher.force_flush_pending();
+            let flushed = watcher.flush(FlushMode::Settled);
             let seen = flushed.iter().any(|e| e.path == path)
                 || captured.lock().unwrap().iter().any(|e| e.path == path);
             if seen {
@@ -956,9 +927,10 @@ mod tests {
     }
 
     #[test]
-    fn the_root_nxignore_applies_even_when_git_ignores_are_off() {
-        // .nxignore is nx's own opt-out, not a git source, so use_ignore=false
-        // must not disable it. Folding it into git_ignores could have lost this.
+    fn the_root_nxignore_does_not_gate_the_stream_when_git_ignores_are_off() {
+        // The stream carries what the workspace rules would drop, so the
+        // ignored index — whose walk reads `.nxignore`d files — hears their
+        // changes. The file map and `nx watch` apply those rules downstream.
         use notify::EventKind;
         use notify::event::CreateKind;
 
@@ -966,13 +938,17 @@ mod tests {
         let origin = dunce::canonicalize(dir.path()).expect("canonicalize");
         fs::write(origin.join(".nxignore"), "scratch.tmp\n").expect("write .nxignore");
 
-        let filterer = watch_filterer::create_filter(origin.to_str().expect("utf-8"), &[], false)
-            .expect("filter");
         let event = RawWatchEvent::new(
             notify::Event::new(EventKind::Create(CreateKind::File))
                 .add_path(origin.join("scratch.tmp")),
         );
-        assert!(!filterer.check_event(&event));
+        let reporting = watch_filterer::create_filter(origin.to_str().expect("utf-8"), &[], false)
+            .expect("filter");
+        assert!(reporting.check_event(&event));
+        // With the git sources on, it ranks among them as it always did.
+        let walking = watch_filterer::create_filter(origin.to_str().expect("utf-8"), &[], true)
+            .expect("filter");
+        assert!(!walking.check_event(&event));
     }
 
     #[test]
@@ -1083,7 +1059,6 @@ mod tests {
         }
 
         // Start on the SYMLINK, non-canonical, as NX_WORKSPACE_ROOT_PATH may be.
-        let mut w = Watcher::new(link.to_str().expect("utf-8").to_string(), None, Some(false));
         let captured: Captured = Arc::new(Mutex::new(Vec::new()));
         let captured_for_cb = captured.clone();
         let callback: WatchEventCallback = Box::new(move |res| {
@@ -1091,7 +1066,13 @@ mod tests {
                 captured_for_cb.lock().unwrap().extend(events);
             }
         });
-        w.watch_inner(callback).expect("start watch");
+        let w = WatchSession::start(
+            link.to_str().expect("utf-8").to_string(),
+            &default_watch_ignores(),
+            false,
+            callback,
+        )
+        .expect("start watch");
         std::thread::sleep(Duration::from_millis(300));
         captured.lock().unwrap().clear();
 
@@ -1103,7 +1084,7 @@ mod tests {
         let deadline = Instant::now() + Duration::from_secs(2);
         loop {
             let norm = |p: &str| p.replace('\\', "/");
-            let flushed = w.force_flush_pending();
+            let flushed = w.flush(FlushMode::Settled);
             let seen = flushed.iter().any(|e| norm(&e.path) == "src/x.ts")
                 || captured
                     .lock()
@@ -1266,7 +1247,7 @@ mod tests {
         let canonical = dunce::canonicalize(dir.path()).expect("canonicalize");
         let (pipeline, tx) = WatchPipeline::with_test_channel(canonical.to_str().expect("utf-8"));
 
-        let (ff_tx, ff_rx) = bounded::<ForceFlushReply>(0);
+        let (ff_tx, ff_rx) = bounded::<FlushRequest>(0);
         let captured: Captured = Arc::new(Mutex::new(Vec::new()));
         let cap = captured.clone();
         let handle = std::thread::spawn(move || {
@@ -1582,10 +1563,10 @@ mod tests {
     }
 
     #[test]
-    fn concurrent_force_flush_pending_callers_do_not_time_out() {
-        // Regression: pre-fix the loop dropped "extra" ForceFlush
-        // replies, so concurrent callers blocked on the 500 ms
-        // recv_timeout. Now every queued reply gets the same snapshot.
+    fn concurrent_flush_callers_do_not_time_out() {
+        // Regression: pre-fix the loop dropped "extra" flush replies, so
+        // concurrent callers blocked on the 500 ms recv_timeout. Now every
+        // queued reply gets the same snapshot.
         let dir = tempdir().expect("tempdir");
         let (watcher, _captured) = start_watcher(dir.path());
         let watcher = Arc::new(watcher);
@@ -1594,7 +1575,7 @@ mod tests {
         let mut handles = Vec::new();
         for _ in 0..8 {
             let w = watcher.clone();
-            handles.push(std::thread::spawn(move || w.force_flush_pending()));
+            handles.push(std::thread::spawn(move || w.flush(FlushMode::Settled)));
         }
         let results: Vec<Vec<WatchEvent>> =
             handles.into_iter().map(|h| h.join().unwrap()).collect();
@@ -1603,7 +1584,7 @@ mod tests {
         assert_eq!(results.len(), 8);
         assert!(
             elapsed < Duration::from_millis(250),
-            "concurrent force_flush_pending took {elapsed:?} — likely caller(s) hit the 500ms timeout"
+            "concurrent flushes took {elapsed:?} — likely caller(s) hit the 500ms timeout"
         );
     }
 
@@ -1635,7 +1616,7 @@ mod tests {
     }
 
     #[test]
-    fn force_flush_pending_captures_in_flight_writes() {
+    fn a_flush_captures_in_flight_writes() {
         // Write + immediate flush, hammered to surface the race.
         let dir = tempdir().expect("tempdir");
         let target = dir.path().join("nx.json");
@@ -1645,7 +1626,7 @@ mod tests {
 
         for i in 0..20 {
             fs::write(&target, format!("v{i}")).expect("rewrite");
-            let events = watcher.force_flush_pending();
+            let events = watcher.flush(FlushMode::Settled);
             assert!(
                 events.iter().any(|e| e.path == "nx.json"),
                 "iteration {i}: missed nx.json event — got {events:?}"
@@ -1661,11 +1642,6 @@ mod tests {
         // start_watcher() is not used because it sleeps after registration.
         let dir = tempdir().expect("tempdir");
         let canonical = dunce::canonicalize(dir.path()).expect("canonicalize tempdir");
-        let mut watcher = Watcher::new(
-            canonical.to_str().expect("utf-8 path").to_string(),
-            None,
-            Some(false),
-        );
         let captured: Captured = Arc::new(Mutex::new(Vec::new()));
         let captured_for_cb = captured.clone();
         let callback: WatchEventCallback = Box::new(move |res| {
@@ -1673,7 +1649,13 @@ mod tests {
                 captured_for_cb.lock().unwrap().extend(events);
             }
         });
-        watcher.watch_inner(callback).expect("start watch");
+        let watcher = WatchSession::start(
+            canonical.to_str().expect("utf-8 path").to_string(),
+            &default_watch_ignores(),
+            false,
+            callback,
+        )
+        .expect("start watch");
 
         fs::write(canonical.join("boot.txt"), "x").expect("write");
 
@@ -1686,8 +1668,8 @@ mod tests {
     }
 
     #[test]
-    fn force_flush_pending_captures_trickling_burst() {
-        // Regression: force-flush used to drain only already-arrived events,
+    fn a_flush_captures_a_trickling_burst() {
+        // Regression: a flush used to drain only already-arrived events,
         // cutting a burst delivered with gaps mid-stream and serving a stale
         // graph. Writes are spaced 20ms apart — past the 10ms Linux grace but
         // under FORCE_FLUSH_QUIET — so the last write must still be captured.
@@ -1704,7 +1686,7 @@ mod tests {
 
         // Flush while writes are still trickling in.
         std::thread::sleep(Duration::from_millis(5));
-        let events = watcher.force_flush_pending();
+        let events = watcher.flush(FlushMode::Settled);
         writer.join().unwrap();
 
         assert!(

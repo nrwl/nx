@@ -3,8 +3,8 @@ use std::sync::Arc;
 use rayon::prelude::*;
 
 use super::once_cache::OnceCache;
-use crate::native::glob::build_glob_set;
 use crate::native::glob::glob_files::glob_files;
+use crate::native::glob::{build_glob_set, fileset_patterns};
 use crate::native::hasher::hash;
 use crate::native::types::FileData;
 use anyhow::*;
@@ -78,7 +78,7 @@ pub fn hash_workspace_files(
         return Ok(hash(b""));
     }
 
-    let glob = build_glob_set(&globs)?;
+    let glob = build_glob_set(&fileset_patterns(&globs))?;
 
     let mut hasher = xxhash_rust::xxh3::Xxh3::new();
 
@@ -120,7 +120,7 @@ pub fn collect_workspace_file_paths(
         return Ok(vec![]);
     }
 
-    let glob = build_glob_set(&globs)?;
+    let glob = build_glob_set(&fileset_patterns(&globs))?;
 
     Ok(all_workspace_files
         .iter()
@@ -141,7 +141,7 @@ fn collect_workspace_file_indices(
         return Ok(vec![]);
     }
 
-    let glob = build_glob_set(&globs)?;
+    let glob = build_glob_set(&fileset_patterns(&globs))?;
 
     Ok(all_workspace_files
         .iter()

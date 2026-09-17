@@ -1,10 +1,13 @@
 use std::cell::OnceCell;
+use std::collections::HashMap;
 use std::fs::{self, Metadata};
 use std::io;
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, OnceLock};
 
 use notify::event::{CreateKind, ModifyKind, RemoveKind, RenameMode};
 use notify::{Event, EventKind};
+use parking_lot::RwLock;
 use tracing::trace;
 
 use crate::native::watch::utils::canonicalize_event_paths;
@@ -167,9 +170,18 @@ pub(super) fn transform_event_to_watch_events(
         // this is the one branch that genuinely needs metadata per event.
         let metadata = value.metadata_at(0);
 
-        // Skip directory events
+        // A directory created or renamed into place carries files that had
+        // no events of their own, so they are reported from a walk, as a new
+        // folder is on Linux. Any other directory event is noise.
         if meta_is_dir(metadata) {
-            return Ok(vec![]);
+            return if matches!(
+                event_kind,
+                EventKind::Modify(ModifyKind::Metadata(_)) | EventKind::Access(_)
+            ) {
+                Ok(vec![])
+            } else {
+                folder_events(path_ref, origin)
+            };
         }
 
         let event_type = match metadata {
@@ -212,54 +224,111 @@ pub(super) fn transform_event_to_watch_events(
 
     #[cfg(target_os = "windows")]
     {
-        // Skip directory events. is_dir_at reads the kind first, so a
-        // definitive Create(File) skips the stat; the ambiguous Modify(Any)
-        // that Windows delivers for a write still stats. notify's Windows
-        // backend already stat'd to classify the create, so the saved stat
-        // is a de-dup here — the clean elimination lands on Linux.
+        // is_dir_at reads the kind first, so a definitive Create(File) skips
+        // the stat; the ambiguous Modify(Any) that Windows delivers for a
+        // write still stats. notify's Windows backend already stat'd to
+        // classify the create, so the saved stat is a de-dup here — the
+        // clean elimination lands on Linux. A directory created or renamed
+        // into place is reported through its files, as on Linux.
         if value.is_dir_at(0) {
-            return Ok(vec![]);
+            return if matches!(
+                event_kind,
+                EventKind::Create(_) | EventKind::Modify(ModifyKind::Name(_))
+            ) {
+                folder_events(path_ref, origin)
+            } else {
+                Ok(vec![])
+            };
         }
         Ok(create_watch_event_internal(origin, event_kind, path_ref))
     }
 
     #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
     {
-        use crate::native::walker::nx_walker_sync;
-        use ignore::Match;
-        use ignore::gitignore::GitignoreBuilder;
-
-        if matches!(event_kind, EventKind::Create(CreateKind::Folder)) {
-            let mut result = vec![];
-
-            let mut gitignore_builder = GitignoreBuilder::new(origin);
-            let origin_path: &Path = origin.as_ref();
-            gitignore_builder.add(origin_path.join(".nxignore"));
-            let ignore = gitignore_builder.build()?;
-
-            for path in nx_walker_sync(path_ref, None) {
-                let path = path_ref.join(path);
-                let is_dir = path.is_dir();
-                if is_dir
-                    || matches!(
-                        ignore.matched_path_or_any_parents(&path, is_dir),
-                        Match::Ignore(_)
-                    )
-                {
-                    continue;
-                }
-
-                result.push(WatchEventInternal {
-                    path: relative_to_origin(&path, origin),
-                    r#type: EventType::create,
-                });
-            }
-
-            Ok(result)
+        // A directory moved into place arrives as a rename, not a creation,
+        // and inotify reports nothing for the files inside it.
+        let moved_in_dir = matches!(
+            event_kind,
+            EventKind::Modify(ModifyKind::Name(RenameMode::To))
+        ) && fs::symlink_metadata(path_ref).is_ok_and(|m| m.is_dir());
+        if matches!(event_kind, EventKind::Create(CreateKind::Folder)) || moved_in_dir {
+            folder_events(path_ref, origin)
         } else {
             Ok(create_watch_event_internal(origin, event_kind, path_ref))
         }
     }
+}
+
+/// The ignore rules `folder_events` applies, built once per workspace root.
+/// The root `.nxignore` is read at first use; a change to it restarts the
+/// daemon, so the rules never go stale under it.
+struct FolderEventRules {
+    nxignore: ignore::gitignore::Gitignore,
+    hardcoded: std::sync::Arc<crate::native::glob::NxGlobSet>,
+}
+
+fn folder_event_rules(origin: &str) -> anyhow::Result<Arc<FolderEventRules>> {
+    use crate::native::glob::build_glob_set;
+    use crate::native::walker::HARDCODED_IGNORE_PATTERNS;
+    use ignore::gitignore::GitignoreBuilder;
+
+    static RULES: OnceLock<RwLock<HashMap<String, Arc<FolderEventRules>>>> = OnceLock::new();
+    let cache = RULES.get_or_init(Default::default);
+    if let Some(rules) = cache.read().get(origin) {
+        return Ok(Arc::clone(rules));
+    }
+
+    let mut builder = GitignoreBuilder::new(origin);
+    let origin_path: &Path = origin.as_ref();
+    builder.add(origin_path.join(".nxignore"));
+    let rules = Arc::new(FolderEventRules {
+        nxignore: builder.build()?,
+        hardcoded: build_glob_set(HARDCODED_IGNORE_PATTERNS)?,
+    });
+    cache.write().insert(origin.to_string(), Arc::clone(&rules));
+    Ok(rules)
+}
+
+/// A `create` for every file under a directory that appeared whole, so
+/// files that had no events of their own are still reported. The root
+/// `.nxignore` and the hardcoded ignores apply, as they do to the watch.
+/// Links are not followed, the directory itself included: a linked directory
+/// moved into the workspace would otherwise report files outside it.
+fn folder_events(path_ref: &Path, origin: &str) -> anyhow::Result<Vec<WatchEventInternal>> {
+    use ignore::Match;
+    use walkdir::WalkDir;
+
+    if fs::symlink_metadata(path_ref).map_or(true, |m| !m.is_dir()) {
+        return Ok(vec![]);
+    }
+
+    // A checkout creates directories in bursts, and this runs on the watch
+    // thread: rereading .nxignore and recompiling the globs per event would
+    // hold up delivery.
+    let rules = folder_event_rules(origin)?;
+    let ignore = &rules.nxignore;
+    let hardcoded = &rules.hardcoded;
+
+    let result = WalkDir::new(path_ref)
+        .follow_links(false)
+        .follow_root_links(false)
+        .into_iter()
+        .filter_entry(|entry| !hardcoded.is_match(entry.path()))
+        .flatten()
+        .filter(|entry| !entry.file_type().is_dir())
+        .filter(|entry| {
+            !matches!(
+                ignore.matched_path_or_any_parents(entry.path(), false),
+                Match::Ignore(_)
+            )
+        })
+        .map(|entry| WatchEventInternal {
+            path: relative_to_origin(entry.path(), origin),
+            r#type: EventType::create,
+        })
+        .collect();
+
+    Ok(result)
 }
 
 #[allow(dead_code)]
