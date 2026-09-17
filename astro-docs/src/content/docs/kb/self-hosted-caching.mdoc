@@ -187,6 +187,15 @@ To use your custom caching server, set the `NX_SELF_HOSTED_REMOTE_CACHE_SERVER` 
 
 - `NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN`: The authentication token to access the cache server.
 - `NODE_TLS_REJECT_UNAUTHORIZED`: Set to `0` to disable TLS certificate validation.
+- `NX_DISABLE_REMOTE_CACHE_WRITES`: Set to `true` to read from the cache server without writing to it.
+
+### Read-only runs
+
+Set `NX_DISABLE_REMOTE_CACHE_WRITES=true`, or pass `--skip-remote-cache-writes`, to read from the cache server without writing to it. Nx sends no `PUT` requests, still replays remote cache hits, and still caches results locally. Use it for runs that shouldn't influence what other runs replay, such as builds of untrusted contributions. Nx warns once per run when writes are disabled and a cache server is configured.
+
+The setting is client-side, so it works regardless of what your token is allowed to do. A read-only token reaches the same end state from the server side, but only after Nx has built and uploaded the tarball. The server answers `403`, Nx carries on without an error, and the upload was wasted.
+
+To turn the remote cache off in both directions, use [`NX_DISABLE_REMOTE_CACHE`](/docs/reference/environment-variables) or `--skip-remote-cache`.
 
 ### Migrating from custom tasks runners
 

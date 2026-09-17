@@ -101,6 +101,7 @@ export interface DefaultTasksRunnerOptions {
   captureStderr?: boolean;
   skipNxCache?: boolean;
   skipRemoteCache?: boolean;
+  skipRemoteCacheWrites?: boolean;
   batch?: boolean;
 }
 

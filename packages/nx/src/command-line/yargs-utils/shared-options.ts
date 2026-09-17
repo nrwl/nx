@@ -38,6 +38,7 @@ export interface RunOptions {
   nxIgnoreCycles: boolean;
   skipNxCache: boolean;
   skipRemoteCache: boolean;
+  skipRemoteCacheWrites: boolean;
   cloud: boolean;
   dte: boolean;
   batch: boolean;
@@ -137,6 +138,12 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
       describe: 'Disables the remote cache.',
       default: false,
       alias: 'disableRemoteCache',
+    })
+    .options('skipRemoteCacheWrites', {
+      type: 'boolean',
+      describe: 'Reads from the remote cache, but does not write to it.',
+      default: false,
+      alias: 'disableRemoteCacheWrites',
     })
     .options('excludeTaskDependencies', {
       describe: 'Skips running dependent tasks first.',

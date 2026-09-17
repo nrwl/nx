@@ -4,6 +4,10 @@ const http = require('http');
 
 const inMemoryCache = {};
 
+// Counts PUTs that reached the server, so a test can assert that a run wrote
+// nothing at all rather than inferring it from a later cache miss.
+let putCount = 0;
+
 // IMPORTANT: This implementation serves only as a test fixture
 // and is not intended for production use. It is a simple in-memory cache server.
 // If one was to wish to use something like this in production, the following
@@ -16,6 +20,15 @@ const server = http.createServer((req, res) => {
   const url = req.url;
   const parts = url?.split('/');
   const hash = parts?.[parts.length - 1];
+
+  // Fixture introspection, not part of the cache protocol, so it sits ahead of
+  // the auth check and needs no token.
+  if (req.method === 'GET' && url === '/__stats') {
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({ putCount }));
+    return;
+  }
 
   const auth = req.headers.authorization;
   if (auth !== 'Bearer test-token') {
@@ -55,6 +68,7 @@ const server = http.createServer((req, res) => {
       inMemoryCache[hash] = newBuffer;
     });
     req.on('end', () => {
+      putCount += 1;
       console.log('Stored in memory cache:', hash);
       res.statusCode = 200;
       res.end('OK');

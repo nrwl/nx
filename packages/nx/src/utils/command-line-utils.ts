@@ -39,6 +39,7 @@ export interface NxArgs {
   graph?: string | boolean;
   skipNxCache?: boolean;
   skipRemoteCache?: boolean;
+  skipRemoteCacheWrites?: boolean;
   /**
    * The style the user named - CLI flag or `NX_DEFAULT_OUTPUT_STYLE`. Left
    * undefined when they named none, and that absence is load-bearing: it is how
@@ -214,6 +215,12 @@ export function splitArgsIntoNxArgsAndOverrides(
     nxArgs.skipRemoteCache =
       process.env.NX_DISABLE_REMOTE_CACHE === 'true' ||
       process.env.NX_SKIP_REMOTE_CACHE === 'true';
+  }
+
+  if (!nxArgs.skipRemoteCacheWrites) {
+    nxArgs.skipRemoteCacheWrites =
+      process.env.NX_DISABLE_REMOTE_CACHE_WRITES === 'true' ||
+      process.env.NX_SKIP_REMOTE_CACHE_WRITES === 'true';
   }
 
   normalizeNxArgsRunner(nxArgs, nxJson, options);
