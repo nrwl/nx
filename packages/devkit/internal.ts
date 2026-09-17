@@ -103,6 +103,10 @@ export {
   calculateHashesForCreateNodes,
 } from './src/utils/calculate-hash-for-create-nodes';
 export { loadConfigFile, clearRequireCache } from './src/utils/config-utils';
+export {
+  isRequireEsmRaceError,
+  retryOnRequireEsmRace,
+} from './src/utils/require-esm-race';
 export { findPluginForConfigFile } from './src/utils/find-plugin-for-config-file';
 export { getNamedInputs } from './src/utils/get-named-inputs';
 export { logShowProjectCommand } from './src/utils/log-show-project-command';
