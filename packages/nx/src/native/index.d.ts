@@ -86,7 +86,7 @@ export declare class FileLock {
    * the holder let go while this waited. Awaiting it does not block the JS
    * thread.
    *
-   * Rejects with `code: 'Cancelled'` when `timeout_ms` passes with the lock
+   * Rejects with `code: 'Timeout'` when `timeout_ms` passes with the lock
    * still held — the one outcome a caller must not skip past, which is why it
    * is not a value that can be dropped. Any other rejection is the filesystem
    * failing, and means what it says.

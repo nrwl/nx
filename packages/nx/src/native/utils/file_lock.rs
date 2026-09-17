@@ -68,6 +68,38 @@ fn wait_for_release(lock_file_path: &str, timeout: Duration) -> std::io::Result<
     }
 }
 
+/// What `waitUntilFree` rejects with when the budget runs out, as the `code` a
+/// caller reads.
+///
+/// Its own word rather than one of napi's statuses: the closest of those is
+/// `Cancelled`, which says that something stopped the wait, where nothing did —
+/// the holder simply never let go.
+#[cfg(not(target_arch = "wasm32"))]
+const TIMEOUT_CODE: &str = "Timeout";
+
+/// A JS `Error` carrying `TIMEOUT_CODE`, or napi's nearest status when the error
+/// object cannot be built.
+///
+/// Built through `create_error` so it is a real `Error` with a stack, then given
+/// the code, then handed back as the value the promise rejects with.
+#[cfg(not(target_arch = "wasm32"))]
+fn timeout_error(env: &Env, lock_file_path: &str, timeout_ms: u32) -> napi::Error {
+    let message =
+        format!("Timed out after {timeout_ms}ms waiting for the lock on {lock_file_path}");
+    let built = env
+        .create_error(napi::Error::new(Status::GenericFailure, message.clone()))
+        .and_then(|mut error| {
+            error.set_named_property("code", TIMEOUT_CODE)?;
+            error.into_unknown(env)
+        });
+    match built {
+        Ok(error) => napi::Error::from(error),
+        // The timeout still has to reach the caller, so it goes as the status
+        // that says the wait did not finish on its own terms.
+        Err(_) => napi::Error::new(Status::Cancelled, message),
+    }
+}
+
 /// Contention reports as `WouldBlock` on some platforms and as the raw OS error
 /// on others, and neither means the lock file is unusable.
 #[cfg(not(target_arch = "wasm32"))]
@@ -124,7 +156,7 @@ pub struct FileLock {
 ///   writeToCache()
 ///   lock.unlock()
 /// } else {
-///   await lock.waitUntilFree(timeoutMs)  // rejects with code 'Cancelled' on timeout
+///   await lock.waitUntilFree(timeoutMs)  // rejects with code 'Timeout' on timeout
 ///   readFromCache()
 /// }
 ///
@@ -214,7 +246,7 @@ impl FileLock {
     /// the holder let go while this waited. Awaiting it does not block the JS
     /// thread.
     ///
-    /// Rejects with `code: 'Cancelled'` when `timeout_ms` passes with the lock
+    /// Rejects with `code: 'Timeout'` when `timeout_ms` passes with the lock
     /// still held — the one outcome a caller must not skip past, which is why it
     /// is not a value that can be dropped. Any other rejection is the filesystem
     /// failing, and means what it says.
@@ -230,18 +262,19 @@ impl FileLock {
         let lock_file_path = self.lock_file_path.clone();
         let timeout = Duration::from_millis(timeout_ms as u64);
         let timed_out_on = self.lock_file_path.clone();
-        let promise = env.spawn_future(async move {
-            if wait_for_release_async(lock_file_path, timeout).await? {
-                Ok(())
-            } else {
-                Err(napi::Error::new(
-                    Status::Cancelled,
-                    format!(
-                        "Timed out after {timeout_ms}ms waiting for the lock on {timed_out_on} to be released"
-                    ),
-                ))
-            }
-        })?;
+        // Settled on the JS thread rather than off it, which is what lets the
+        // rejection be an error object of this module's own making: napi builds
+        // one from a `Status`, and no status says "timed out".
+        let promise = env.spawn_future_with_callback(
+            async move { Ok(wait_for_release_async(lock_file_path, timeout).await?) },
+            move |env, came_free: bool| {
+                if came_free {
+                    Ok(())
+                } else {
+                    Err(timeout_error(env, &timed_out_on, timeout_ms))
+                }
+            },
+        )?;
         // SAFETY: PromiseRaw's inner napi_value is GC-managed by V8 and remains
         // valid beyond this stack frame.
         Ok(unsafe { std::mem::transmute(promise) })

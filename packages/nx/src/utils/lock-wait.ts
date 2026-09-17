@@ -2,12 +2,12 @@
  * Whether a rejection from `FileLock.waitUntilFree` is its timeout rather than a
  * filesystem failure.
  *
- * The code is napi's `Cancelled`, which is what a native rejection carries when
- * the wait gives up: the async boundary can only report the statuses napi
- * defines, so this reads the one it uses rather than a code of Nx's own.
- * Anything else that rejects is the lock file failing and is not ours to
- * swallow.
+ * `'Timeout'` is the lock's own code, set on the error it rejects with.
+ * `'Cancelled'` is the fallback it uses where the error object could not be
+ * built, and means the same thing. Anything else that rejects is the lock file
+ * failing and is not ours to swallow.
  */
 export function isLockWaitTimeout(e: unknown): boolean {
-  return (e as { code?: string })?.code === 'Cancelled';
+  const code = (e as { code?: string })?.code;
+  return code === 'Timeout' || code === 'Cancelled';
 }
