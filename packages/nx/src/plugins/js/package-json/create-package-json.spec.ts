@@ -1086,6 +1086,104 @@ describe('createPackageJson', () => {
       expect(result).not.toHaveProperty('overrides');
     });
 
+    it('should keep an npm override that only constrains the dependencies of a direct dependency', () => {
+      spies.push(
+        jest
+          .spyOn(fs, 'existsSync')
+          .mockImplementation(
+            (path) =>
+              path === 'libs/lib1/package.json' || path === 'package.json'
+          )
+      );
+      spies.push(
+        jest
+          .spyOn(fileutilsModule, 'readJsonFile')
+          .mockImplementation((path) => {
+            if (path === 'package.json') {
+              return {
+                ...rootPackageJson(),
+                overrides: {
+                  // `typescript` is a direct dependency of the generated
+                  // package.json, but this sets no version for `typescript`
+                  // itself, so npm accepts it and it is what makes a
+                  // conflicting peer requirement resolvable in the dist.
+                  typescript: { foo: '1.0.0' },
+                },
+              };
+            }
+            if (path === 'libs/lib1/package.json') {
+              return projectPackageJson();
+            }
+          })
+      );
+
+      expect(
+        createPackageJson('lib1', graph, {
+          root: '',
+        })
+      ).toEqual({
+        dependencies: {
+          random: '1.0.0',
+          typescript: '^4.8.4',
+        },
+        name: 'other-name',
+        version: '1.2.3',
+        overrides: {
+          typescript: { foo: '1.0.0' },
+        },
+      });
+    });
+
+    it('should drop an npm override that pins a direct dependency through a "." key', () => {
+      spies.push(
+        jest
+          .spyOn(fs, 'existsSync')
+          .mockImplementation(
+            (path) =>
+              path === 'libs/lib1/package.json' || path === 'package.json'
+          )
+      );
+      spies.push(
+        jest
+          .spyOn(fileutilsModule, 'readJsonFile')
+          .mockImplementation((path) => {
+            if (path === 'package.json') {
+              return {
+                ...rootPackageJson(),
+                overrides: {
+                  // `.` sets the version of `typescript` itself, which npm
+                  // rejects with EOVERRIDE against the direct dependency.
+                  typescript: { '.': '5.0.0', foo: '1.0.0' },
+                  // transitive-only, in either form - must be carried through.
+                  foo: '1.0.0',
+                  bar: { '.': '2.0.0' },
+                },
+              };
+            }
+            if (path === 'libs/lib1/package.json') {
+              return projectPackageJson();
+            }
+          })
+      );
+
+      expect(
+        createPackageJson('lib1', graph, {
+          root: '',
+        })
+      ).toEqual({
+        dependencies: {
+          random: '1.0.0',
+          typescript: '^4.8.4',
+        },
+        name: 'other-name',
+        version: '1.2.3',
+        overrides: {
+          foo: '1.0.0',
+          bar: { '.': '2.0.0' },
+        },
+      });
+    });
+
     it('should add resolutions (yarn)', () => {
       spies.push(
         vi
