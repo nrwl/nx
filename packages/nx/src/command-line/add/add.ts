@@ -1,5 +1,6 @@
 import { exec } from 'child_process';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync, rmSync, writeFileSync } from 'fs';
+import { join } from 'path';
 import { readNxJson, type NxJsonConfiguration } from '../../config/nx-json';
 import { runNxAsync } from '../../utils/child-process';
 import { writeJsonFile } from '../../utils/fileutils';
@@ -71,17 +72,21 @@ export async function installPackage(
     // only record allowBuilds decisions after this install. A plugin that
     // declares them in its package.json keeps the install strict; otherwise
     // warn and skip for this one install, like pnpm 10 did.
-    if (
-      pm === 'pnpm' &&
-      gte(pmv, '11.0.0') &&
-      !(await acknowledgeDeclaredBuildScripts(
-        workspaceRoot,
-        pm,
-        pkgName,
-        version
-      ))
-    ) {
-      command += ' --config.strictDepBuilds=false';
+    let restorePnpmWorkspace: (() => void) | undefined;
+    if (pm === 'pnpm' && gte(pmv, '11.0.0')) {
+      restorePnpmWorkspace = snapshotFile(
+        join(workspaceRoot, 'pnpm-workspace.yaml')
+      );
+      if (
+        !(await acknowledgeDeclaredBuildScripts(
+          workspaceRoot,
+          pm,
+          pkgName,
+          version
+        ))
+      ) {
+        command += ' --config.strictDepBuilds=false';
+      }
     }
     await new Promise<void>((resolve) =>
       exec(
@@ -100,6 +105,9 @@ export async function installPackage(
             output.error({
               title: `Failed to install ${pkgName}. Please check the error above for more details.`,
             });
+            // The decisions the plugin declared were recorded for a plugin
+            // that never installed; put the file back.
+            restorePnpmWorkspace?.();
             process.exit(1);
           }
 
@@ -133,6 +141,14 @@ export async function installPackage(
   }
 
   spinner.succeed();
+}
+
+function snapshotFile(path: string): () => void {
+  const before = existsSync(path) ? readFileSync(path, 'utf-8') : null;
+  return () =>
+    before === null
+      ? rmSync(path, { force: true })
+      : writeFileSync(path, before);
 }
 
 async function initializePlugin(
