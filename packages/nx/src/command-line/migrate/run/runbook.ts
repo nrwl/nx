@@ -11,9 +11,9 @@ import {
 import { HANDOFFS_DIR_NAME, MIGRATE_RUNS_RELATIVE_DIR } from '../agentic/types';
 import { singleLine } from '../text';
 
-// No command of a run reads the section (a --run-id invocation skips the
-// nx.json overlay), but the next init does: an edit mid-run changes what a
-// start-fresh or a later run does.
+// A run's reconciles and workers skip the nx.json overlay and a continue takes
+// only `agentic` from it, but the next init reads the whole section: an edit
+// mid-run changes what a start-fresh or a later run does.
 const NX_JSON_MIGRATE_RULE = `  - Do not edit the \`migrate\` section of nx.json.`;
 
 export const RUNBOOK_FILE_NAME = 'RUNBOOK.md';
