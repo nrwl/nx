@@ -42,11 +42,10 @@ pub(super) fn get_inputs<'a>(
     split_inputs_into_self_and_deps(inputs, named_inputs)
 }
 
-/// A propagated group resolves against the dependency as one unit, so a
-/// negation filters the positives of the same group. Only `includeIgnored`
-/// filesets are grouped; every other input propagates alone.
 /// The self and dependency halves of a propagated group, or `None` when the
-/// group holds anything that does not reach a dependency.
+/// group holds anything but `dependencies: true` filesets — those are the
+/// only inputs that resolve against a dependency as one unit, which is what
+/// lets a negation filter the positives beside it rather than alone.
 ///
 /// An empty slice yields empty halves rather than `None`, and both callers
 /// treat that the same way they treat `None` today. Do not "fix" it to return
