@@ -75,26 +75,36 @@ fn is_contended(e: &std::io::Error) -> bool {
         || e.raw_os_error() == fs4::lock_contended_error().raw_os_error()
 }
 
-/// Waits for whoever holds a lock to release it, on a libuv thread rather than
-/// the JS one, so awaiting it leaves the event loop free to run timers, service
-/// sockets and handle signals.
+/// Whether the lock was released within `timeout`, waited for on the async
+/// runtime rather than on a thread.
+///
+/// The sleep is the runtime's, not the OS's, so waiting occupies no thread while
+/// it waits. An `AsyncTask` would have used a libuv worker, of which there are
+/// four by default, and this wait can run for minutes: two of them are enough to
+/// starve the same process's own filesystem work.
 #[cfg(not(target_arch = "wasm32"))]
-pub struct WaitForRelease {
+async fn wait_for_release_async(
     lock_file_path: String,
     timeout: Duration,
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-impl Task for WaitForRelease {
-    type Output = bool;
-    type JsValue = bool;
-
-    fn compute(&mut self) -> napi::Result<bool> {
-        Ok(wait_for_release(&self.lock_file_path, self.timeout)?)
-    }
-
-    fn resolve(&mut self, _env: Env, output: bool) -> napi::Result<bool> {
-        Ok(output)
+) -> std::io::Result<bool> {
+    let file = open_lock_file(&lock_file_path)?;
+    let deadline = Instant::now() + timeout;
+    loop {
+        match fs4::fs_std::FileExt::try_lock_shared(&file) {
+            Ok(()) => {
+                fs4::fs_std::FileExt::unlock(&file)?;
+                return Ok(true);
+            }
+            Err(e) if is_contended(&e) => {}
+            Err(e) => return Err(e),
+        }
+        let remaining = deadline.saturating_duration_since(Instant::now());
+        if remaining.is_zero() {
+            return Ok(false);
+        }
+        // Never past the deadline, so the caller's ceiling is the ceiling rather
+        // than the ceiling plus one interval.
+        tokio::time::sleep(LOCK_POLL_INTERVAL.min(remaining)).await;
     }
 }
 
@@ -202,11 +212,20 @@ impl FileLock {
     /// Resolves true when the holder released within `timeout_ms`, false when it
     /// did not. Awaiting this does not block the JS thread.
     #[napi(ts_return_type = "Promise<boolean>")]
-    pub fn wait_for_release(&self, timeout_ms: u32) -> AsyncTask<WaitForRelease> {
-        AsyncTask::new(WaitForRelease {
-            lock_file_path: self.lock_file_path.clone(),
-            timeout: Duration::from_millis(timeout_ms as u64),
-        })
+    pub fn wait_for_release(
+        &self,
+        env: Env,
+        timeout_ms: u32,
+    ) -> napi::Result<PromiseRaw<'static, bool>> {
+        let lock_file_path = self.lock_file_path.clone();
+        let timeout = Duration::from_millis(timeout_ms as u64);
+        let promise =
+            env.spawn_future(
+                async move { Ok(wait_for_release_async(lock_file_path, timeout).await?) },
+            )?;
+        // SAFETY: PromiseRaw's inner napi_value is GC-managed by V8 and remains
+        // valid beyond this stack frame.
+        Ok(unsafe { std::mem::transmute(promise) })
     }
 
     #[napi]

@@ -828,10 +828,10 @@ export interface PluginCapabilitiesEntry {
 }
 
 /**
- * A record, which is the capabilities plus what they were derived from. The
- * files are the non-vendor closure the plugin's load read, newline separated,
- * and the hash is of their contents at that moment. Empty for a plugin whose
- * every source is vendored, where the key's version identifies it instead.
+ * A record, which is the capabilities plus what they were derived from: the
+ * non-vendor files the plugin's load read and the hash of their contents at
+ * that moment. How the two are stored is on `SCHEMA` above, with why they are
+ * empty rather than null for a plugin whose every source is vendored.
  */
 export interface PluginRecord {
   capabilities: CachedPluginCapabilities
