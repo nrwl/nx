@@ -47,7 +47,7 @@ public class TargetBuilderOutputPathsTests
             workspaceRoot: WorkspaceRoot,
             options: new PluginOptions(),
             nxJson: null,
-            directoryBuildInputs: directoryBuildInputs ?? new List<string>());
+            directoryBuildInputs: directoryBuildInputs ?? new List<string>()).Targets;
 
     /// <summary>
     /// The properties MSBuild actually evaluates for a project under the
