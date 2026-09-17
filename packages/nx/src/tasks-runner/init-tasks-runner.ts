@@ -76,7 +76,11 @@ async function createOrchestrator(
     nxArgs,
     false,
     daemonClient,
-    undefined,
+    // No argv on this path, so the output-style middleware never ran and both
+    // fields are unset - this always renders `static-failures-only`. `nx.json`'s
+    // `outputStyle` does not reach them; it merges under its own name.
+    nxArgs.specifiedOutputStyle,
+    nxArgs.resolvedOutputStyle ?? 'static-failures-only',
     fullTaskGraph
   );
 

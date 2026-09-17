@@ -12,6 +12,7 @@ import {
   CachedResult as NativeCacheResult,
   NxCache,
   getDefaultMaxCacheSize,
+  sweepBatchOutputs as nativeSweepBatchOutputs,
 } from '../native';
 import {
   NxCloudClientUnavailableError,
@@ -72,6 +73,42 @@ export function getCache(options: DefaultTasksRunnerOptions): DbCache | Cache {
         skipRemoteCache: options.skipRemoteCache,
       })
     : new Cache(options);
+}
+
+/**
+ * Where a task's terminal output lives on disk, for callers that have a hash but
+ * no cache instance. Mirrors the native layout (`get_task_outputs_path_internal`
+ * in cache.rs) and the legacy cache's `terminalOutputsDir`; both resolve
+ * `<cacheDir>/terminalOutputs/<hash>`.
+ */
+export function terminalOutputPathForHash(hash: string): string {
+  return join(cacheDir, 'terminalOutputs', hash);
+}
+
+/**
+ * Collects the batch worker logs written by `batchOutputPathForKey`.
+ *
+ * Guarded rather than called straight through: `cache.rs` is
+ * `#[cfg(not(target_arch = "wasm32"))]`, so this export does not exist in the
+ * WASM binding and calling it there is a `TypeError`. Every other native cache
+ * entry point is kept off that path by `dbCacheEnabled()`; this one is a free
+ * function, so it needs its own guard. The logs are collected on the next
+ * non-WASM run.
+ */
+export function sweepBatchOutputs(): void {
+  if (IS_WASM) {
+    return;
+  }
+  nativeSweepBatchOutputs(cacheDir);
+}
+
+/**
+ * Where a batch worker's own log lives. Mirrors `batch_outputs_path` in
+ * cache.rs, which is what sweeps the directory — the same mirroring
+ * `terminalOutputPathForHash` does for `get_task_outputs_path_internal`.
+ */
+export function batchOutputPathForKey(key: string): string {
+  return join(cacheDir, 'batchOutputs', `${key}.log`);
 }
 
 export class DbCache {
@@ -234,6 +271,16 @@ export class DbCache {
         );
       }
     });
+  }
+
+  /**
+   * Register terminal outputs that were written outside of `put` — uncacheable
+   * tasks, and cacheable ones run with `--skip-nx-cache`. `removeOldCacheRecords`
+   * only collects hashes it finds in the database, so without this the files
+   * would never be cleaned up.
+   */
+  recordTerminalOutputs(records: { hash: string; size: number }[]) {
+    this.cache.recordTerminalOutputs(records);
   }
 
   copyFilesFromCache(_: string, cachedResult: CachedResult, outputs: string[]) {
@@ -546,6 +593,12 @@ export class Cache {
   temporaryOutputPath(task: Task) {
     return join(this.terminalOutputsDir, task.hash);
   }
+
+  /**
+   * No-op: the legacy cache has no database to record against, and its
+   * collection is directory-based rather than driven by cache records.
+   */
+  recordTerminalOutputs(_records: { hash: string; size: number }[]) {}
 
   private async expandOutputsInWorkspace(outputs: string[]) {
     return this._expandOutputs(outputs, workspaceRoot);
