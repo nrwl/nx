@@ -54,7 +54,7 @@ describe('shutdown-utils', () => {
   let tempDir: string;
 
   const server = { close: (cb: () => void) => cb() } as any;
-  const socket = { write: (_: string, cb: () => void) => cb() } as any;
+  const socket = { write: (_: unknown, cb?: () => void) => cb?.() } as any;
 
   beforeEach(async () => {
     // Both shutdown-utils and latest-nx keep module-level state (the in-flight
