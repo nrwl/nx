@@ -1,19 +1,36 @@
 use super::project_paths::{ProjectRoots, normalize_path};
+use super::{KIND_PROJECT_FILE, TouchedProject};
 use crate::native::project_graph::types::ProjectGraph;
 
 /// Maps each changed file to the project that owns it.
-pub(super) fn touched_projects(graph: &ProjectGraph, touched_files: &[String]) -> Vec<String> {
+pub(super) fn touched_projects(
+    graph: &ProjectGraph,
+    touched_files: &[String],
+) -> Vec<TouchedProject> {
     let roots = ProjectRoots::new(graph);
     touched_files
         .iter()
-        .filter_map(|file| roots.owner_of(&normalize_path(file)).map(String::from))
+        .filter_map(|file| {
+            let project = roots.owner_of(&normalize_path(file))?;
+            Some(TouchedProject {
+                project: project.to_string(),
+                kind: KIND_PROJECT_FILE.to_string(),
+                file: Some(file.clone()),
+                pattern: None,
+                package: None,
+            })
+        })
         .collect()
 }
 
 #[cfg(test)]
 mod tests {
-    use super::super::test_support::{files, graph, project};
+    use super::super::test_support::{files, graph, names, project};
     use super::*;
+
+    fn touched_projects(graph: &ProjectGraph, touched_files: &[String]) -> Vec<String> {
+        names(super::touched_projects(graph, touched_files))
+    }
 
     /// Unsorted: `touched_projects` emits one entry per changed file, in input
     /// order, and downstream dedupes.
@@ -85,5 +102,15 @@ mod tests {
     fn finds_a_project_whose_root_is_empty() {
         let g = graph(vec![("root", project(""))]);
         assert_eq!(touched_projects(&g, &files(&["README.md"])), vec!["root"]);
+    }
+
+    #[test]
+    fn a_file_names_the_project_that_owns_it() {
+        let g = graph(vec![("a", project("libs/a"))]);
+        let touched = super::touched_projects(&g, &files(&["libs/a/index.ts"]));
+        assert_eq!(touched.len(), 1);
+        assert_eq!(touched[0].kind, KIND_PROJECT_FILE);
+        assert_eq!(touched[0].file.as_deref(), Some("libs/a/index.ts"));
+        assert_eq!(touched[0].pattern, None);
     }
 }

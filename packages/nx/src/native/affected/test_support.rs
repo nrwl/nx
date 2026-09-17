@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use super::TouchedProject;
 use crate::native::project_graph::types::{Project, ProjectGraph};
 
 pub(super) fn project(root: &str) -> Project {
@@ -22,4 +23,10 @@ pub(super) fn graph(projects: Vec<(&str, Project)>) -> ProjectGraph {
 
 pub(super) fn files(paths: &[&str]) -> Vec<String> {
     paths.iter().map(|p| p.to_string()).collect()
+}
+
+/// The locator tests assert *which* projects are marked, so each shadows its
+/// locator with a wrapper through this. Reasons get their own tests.
+pub(super) fn names(touched: Vec<TouchedProject>) -> Vec<String> {
+    touched.into_iter().map(|t| t.project).collect()
 }

@@ -1,9 +1,11 @@
 use napi::bindgen_prelude::*;
 use std::borrow::Cow;
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use tracing::warn;
 
-use super::all_project_names;
+use super::{
+    KIND_IMPLICIT_DEPENDENCY, KIND_WORKSPACE_CONFIGURATION, TouchedProject, all_projects_touched_by,
+};
 use crate::native::glob::build_glob_set;
 use crate::native::project_graph::types::{Project, ProjectGraph, Target};
 use crate::native::types::{JsInputs, NxJson};
@@ -20,10 +22,11 @@ pub(super) fn implicitly_touched_projects(
     graph: &ProjectGraph,
     nx_json: &NxJson,
     touched_files: &[String],
-) -> Result<Vec<String>> {
-    // BTreeMap so the pattern scan is reproducible. Order does not change the
-    // result either way: an `AllProjects` hit returns every project whenever it
-    // is reached, and the rest accumulate into a set.
+) -> Result<Vec<TouchedProject>> {
+    // BTreeMap so the pattern scan is reproducible. An `AllProjects` hit returns
+    // every project whenever it is reached, and the rest accumulate per project
+    // in scan order, so this is what makes the reported reasons deterministic
+    // rather than merely making the set of projects deterministic.
     let mut implicits: std::collections::BTreeMap<&str, Implicit> = Default::default();
     implicits.insert("nx.json", Implicit::AllProjects);
 
@@ -52,7 +55,9 @@ pub(super) fn implicitly_touched_projects(
         }
     }
 
-    let mut touched: BTreeSet<&str> = BTreeSet::new();
+    // Keyed by project so a project matched by several filesets reports each,
+    // rather than the first one to fire.
+    let mut touched: BTreeMap<&str, Vec<(&str, &String)>> = BTreeMap::new();
     for (pattern, implicit) in &implicits {
         // An unparseable fileset matches nothing. Minimatch read it as literal
         // text, so at base `{workspaceRoot}/config/[dev.json` marked its project
@@ -63,16 +68,40 @@ pub(super) fn implicitly_touched_projects(
             warn!("ignoring unparseable input fileset: {{workspaceRoot}}/{pattern}");
             continue;
         };
-        if !touched_files.iter().any(|file| glob.is_match(file)) {
+        let Some(matched) = touched_files.iter().find(|file| glob.is_match(file)) else {
             continue;
-        }
+        };
         match implicit {
-            Implicit::AllProjects => return Ok(all_project_names(graph)),
-            Implicit::Projects(projects) => touched.extend(projects.iter().copied()),
+            Implicit::AllProjects => {
+                return Ok(all_projects_touched_by(
+                    graph,
+                    KIND_WORKSPACE_CONFIGURATION,
+                    Some(matched),
+                    Some(pattern),
+                ));
+            }
+            Implicit::Projects(projects) => {
+                for project in projects {
+                    touched.entry(project).or_default().push((pattern, matched));
+                }
+            }
         }
     }
 
-    Ok(touched.into_iter().map(String::from).collect())
+    Ok(touched
+        .into_iter()
+        .flat_map(|(project, matches)| {
+            matches
+                .into_iter()
+                .map(move |(pattern, file)| TouchedProject {
+                    project: project.to_string(),
+                    kind: KIND_IMPLICIT_DEPENDENCY.to_string(),
+                    file: Some(file.clone()),
+                    pattern: Some(pattern.to_string()),
+                    package: None,
+                })
+        })
+        .collect())
 }
 
 type NamedInputs<'a> = HashMap<&'a str, &'a Vec<JsInputs>>;
@@ -152,8 +181,20 @@ fn collect_filesets<'a>(
 
 #[cfg(test)]
 mod tests {
-    use super::super::test_support::{files, graph, project};
+    use super::super::test_support::{files, graph, names, project};
     use super::*;
+
+    fn implicitly_touched_projects(
+        graph: &ProjectGraph,
+        nx_json: &NxJson,
+        touched_files: &[String],
+    ) -> Result<Vec<String>> {
+        Ok(names(super::implicitly_touched_projects(
+            graph,
+            nx_json,
+            touched_files,
+        )?))
+    }
 
     fn string_inputs(values: &[&str]) -> Vec<JsInputs> {
         values.iter().map(|v| Either9::B(v.to_string())).collect()
@@ -345,5 +386,42 @@ mod tests {
                 .unwrap(),
             vec!["a"]
         );
+    }
+
+    /// An implicit hit reports the fileset that matched, since that is the
+    /// configuration the reader has to go and look at.
+    #[test]
+    fn an_implicit_hit_names_the_fileset_and_the_file() {
+        let mut a = project("a");
+        a.targets = HashMap::from([("build".to_string(), target_with_inputs(&["files"]))]);
+        let g = graph(vec![("a", a)]);
+        let touched = super::implicitly_touched_projects(
+            &g,
+            &nx_json_with_files_named_input(),
+            &files(&["a.txt"]),
+        )
+        .unwrap();
+        assert!(!touched.is_empty());
+        assert_eq!(touched[0].kind, KIND_IMPLICIT_DEPENDENCY);
+        assert_eq!(touched[0].file.as_deref(), Some("a.txt"));
+        assert!(touched[0].pattern.is_some());
+    }
+
+    /// nx.json marks everything, and every entry carries the same reason so
+    /// no project is left unexplained.
+    #[test]
+    fn changing_nx_json_explains_every_project() {
+        let g = graph(vec![("a", project("a")), ("b", project("b"))]);
+        let touched = super::implicitly_touched_projects(
+            &g,
+            &NxJson { named_inputs: None },
+            &files(&["nx.json"]),
+        )
+        .unwrap();
+        assert_eq!(touched.len(), 2);
+        for entry in &touched {
+            assert_eq!(entry.kind, KIND_WORKSPACE_CONFIGURATION);
+            assert_eq!(entry.file.as_deref(), Some("nx.json"));
+        }
     }
 }
