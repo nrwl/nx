@@ -1,3 +1,4 @@
+import { createRequire } from 'node:module';
 import { type EnvReads, withEnvReads } from './env-reads';
 import { withModuleClosure } from './module-closure';
 
@@ -14,23 +15,39 @@ import { withModuleClosure } from './module-closure';
  * machines.
  *
  * Settling them first leaves only what the plugin's own code read. The same
- * measurement reports 2 variables afterwards. Both entries are barrels, so this
- * is the surface rather than a list of the modules that happen to read today.
+ * measurement reports 1 variable afterwards.
+ *
+ * What a plugin imports, rather than where Nx keeps it. `@nx/devkit` re-exports
+ * `nx/src/devkit-exports` and reads the environment on its own account as well,
+ * so naming the inner path alone leaves the wrapper cold. Both are barrels, so
+ * this is the surface rather than a list of the modules that happen to read
+ * today. A plugin that reaches for Nx without `@nx/devkit` is why the inner
+ * paths are here too.
  */
 const WARM: readonly string[] = [
-  '../../../devkit-exports',
-  '../../../devkit-internals',
+  '@nx/devkit',
+  '@nx/devkit/internal',
+  'nx/src/devkit-exports',
+  'nx/src/devkit-internals',
 ];
 
 /**
+ * Resolved from the plugin rather than from here, so what is settled is the copy
+ * the plugin is about to import. Resolving from Nx's own directory finds the
+ * same files in a flat layout and reaches them only by walking up to the
+ * workspace root, which a plugin with its own `node_modules` does not share.
+ * Settling a copy the plugin never loads would leave every read on the record.
+ *
  * A specifier that fails to resolve is a warming gap and not a broken load, so
- * it costs records their longevity rather than failing the command. Anything
- * still unwarmed reads as the plugin's own and only ever means an extra load.
+ * it costs records their longevity rather than failing the command. A plugin
+ * that cannot resolve Nx will not import it either. Anything still unwarmed
+ * reads as the plugin's own and only ever means an extra load.
  */
-function warmNxModules(specifiers: readonly string[]): void {
+function warmNxModules(specifiers: readonly string[], from: string): void {
+  const resolveFromPlugin = createRequire(from);
   for (const specifier of specifiers) {
     try {
-      require(specifier);
+      require(resolveFromPlugin.resolve(specifier));
     } catch {}
   }
 }
@@ -47,13 +64,14 @@ function warmNxModules(specifiers: readonly string[]): void {
  */
 export async function observePluginLoad<T>(
   load: () => Promise<T>,
+  pluginPath: string,
   specifiers: readonly string[] = WARM
 ): Promise<{
   result: T;
   sourceFiles: string[] | null;
   envReads: EnvReads | null;
 }> {
-  warmNxModules(specifiers);
+  warmNxModules(specifiers, pluginPath);
 
   const { result, envReads } = await withEnvReads(() =>
     withModuleClosure(load)

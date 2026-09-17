@@ -151,7 +151,8 @@ const server = createServer((socket) => {
                     pluginConfiguration,
                     pluginPath,
                     name
-                  )
+                  ),
+                pluginPath
               );
               plugin = result;
               logger.verbose(
