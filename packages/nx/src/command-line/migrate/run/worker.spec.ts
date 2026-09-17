@@ -1090,6 +1090,22 @@ describe('runSingleMigrationWorker', () => {
       expect(new FileLock(join(dir, 'activity', names[0])).check()).toBe(true);
     });
 
+    it('holds the run before it reads the plan', async () => {
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'dispensed')],
+        migrations: [genMig('@nx/js', 'gen')],
+      });
+      rmSync(join(dir, 'plan-0.json'));
+
+      await expect(
+        runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'))
+      ).rejects.toThrow("The plan snapshot 'plan-0.json' for migrate run");
+
+      const names = readdirSync(join(dir, 'activity'));
+      expect(names).toHaveLength(1);
+      expect(new FileLock(join(dir, 'activity', names[0])).check()).toBe(true);
+    });
+
     it('records a generator migration: dispensed -> running -> succeeded with an outcome', async () => {
       mockRunMigration.mockResolvedValue({
         changes: changeList(),
@@ -2859,6 +2875,7 @@ describe('runSingleMigrationWorker', () => {
       ).rejects.toThrow(
         /No migrate run 'missing' was found under \.nx\/migrate-runs/
       );
+      expect(existsSync(runDir(root, 'missing'))).toBe(false);
     });
 
     it('errors the same way for a directory that holds no run', async () => {
