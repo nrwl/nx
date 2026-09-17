@@ -20,10 +20,11 @@ vi.mock('../../../config/nx-json', async () => ({
 
 // Mock getPlugins to return an empty array, avoiding plugin worker spawning
 // while still allowing filterAffected to run its real logic
-vi.mock('../../../project-graph/plugins/get-plugins', () => ({
+vi.mock('../../../project-graph/plugins/get-plugins', async () => ({
+  ...(await vi.importActual('../../../project-graph/plugins/get-plugins')),
   getPlugins: vi.fn().mockResolvedValue([]),
-  // No records, so the affected locators fall through to `getPlugins`.
-  peekPluginCapabilities: vi.fn().mockResolvedValue(null),
+  // What the affected locators ask; no plugins here, so no patterns.
+  capabilitiesOfConfiguredPlugins: vi.fn().mockResolvedValue([]),
 }));
 
 import { createVersionConfig } from './test/test-utils';
