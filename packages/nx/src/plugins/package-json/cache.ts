@@ -12,21 +12,27 @@ export interface CachedPackageJsonProject {
 export class PackageJsonConfigurationCache {
   private changed = false;
   private readonly usedKeys = new Set<string>();
-  private readonly cachedEntries: Record<string, CachedPackageJsonProject>;
+  private readonly cachedEntries: Record<
+    string,
+    CachedPackageJsonProject | ProjectConfiguration
+  >;
   private entryCount: number;
 
   constructor(private readonly packageJsonCachePath: string) {
-    this.cachedEntries =
-      readPluginCache<CachedPackageJsonProject>(packageJsonCachePath).entries;
+    this.cachedEntries = readPluginCache<
+      CachedPackageJsonProject | ProjectConfiguration
+    >(packageJsonCachePath).entries;
     this.entryCount = Object.keys(this.cachedEntries).length;
   }
 
   get(key: string): CachedPackageJsonProject | undefined {
     const value = this.cachedEntries[key];
-    if (value !== undefined) {
+    // Public cache writes contain projects without inference validation metadata.
+    if (value !== undefined && !('root' in value)) {
       this.usedKeys.add(key);
+      return value;
     }
-    return value;
+    return undefined;
   }
 
   set(key: string, value: CachedPackageJsonProject): void {

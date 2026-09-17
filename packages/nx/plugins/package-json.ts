@@ -8,24 +8,41 @@ import {
 } from '../src/plugins/package-json';
 import { join } from 'node:path';
 import { readJsonFile } from '../src/utils/fileutils';
+import type { ProjectConfiguration } from '../src/config/workspace-json-project-json';
+import { workspaceDataDirectory } from '../src/utils/cache-directory';
+import { PluginCache, readPluginCache } from '../src/utils/plugin-cache-utils';
 import {
   detectPackageManager,
   getPackageManagerCommand,
 } from '../src/utils/package-manager';
 import {
-  PackageJsonConfigurationCache,
-  readPackageJsonConfigurationCache,
+  type CachedPackageJsonProject,
+  readPackageJsonConfigurationCache as readInferenceCache,
 } from '../src/plugins/package-json/cache';
 
-export type { PackageJsonConfigurationCache };
-export { readPackageJsonConfigurationCache };
+export type PackageJsonConfigurationCache = PluginCache<ProjectConfiguration>;
+
+const cacheFileName = 'all-package-jsons.hash';
+
+export function readPackageJsonConfigurationCache(): PackageJsonConfigurationCache {
+  const cachePath = join(workspaceDataDirectory, cacheFileName);
+  const { entries, accessOrder } = readPluginCache<
+    CachedPackageJsonProject | ProjectConfiguration
+  >(cachePath);
+  const projects: Record<string, ProjectConfiguration> = {};
+  for (const key of Object.keys(entries)) {
+    const entry = entries[key];
+    projects[key] = 'root' in entry ? entry : entry.project;
+  }
+  return new PluginCache(cachePath, projects, accessOrder);
+}
 
 const plugin: NxPlugin = {
   name: 'nx-all-package-jsons-plugin',
   createNodes: [
     '*/**/package.json',
     async (configFiles, options, context) => {
-      const cache = readPackageJsonConfigurationCache('all-package-jsons.hash');
+      const cache = readInferenceCache(cacheFileName);
 
       const patterns = buildPackageJsonPatterns(context.workspaceRoot, (f) =>
         readJsonFile(join(context.workspaceRoot, f))
@@ -67,6 +84,8 @@ const plugin: NxPlugin = {
     },
   ],
 };
+
+export const createNodes = plugin.createNodes;
 
 module.exports = plugin;
 module.exports.readPackageJsonConfigurationCache =

@@ -13,6 +13,7 @@ import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 import { getFileHashesInContext } from '../../utils/workspace-context';
 import { hasNxJsPlugin } from '../../utils/has-nx-js-plugin';
 import { PackageJsonConfigurationCache } from './cache';
+import { PluginCache } from '../../utils/plugin-cache-utils';
 
 vi.mock('../../utils/workspace-context', () => ({
   getFileHashesInContext: vi.fn().mockResolvedValue([]),
@@ -52,6 +53,7 @@ describe('nx package.json workspaces plugin', () => {
   });
 
   afterEach(() => {
+    vi.restoreAllMocks();
     vol.reset();
   });
 
@@ -329,6 +331,7 @@ describe('nx package.json workspaces plugin', () => {
       );
 
     it('reuses a project until its package.json hash changes', async () => {
+      const writeCache = vi.spyOn(PluginCache.prototype, 'writeToDisk');
       vol.fromJSON(
         {
           'package.json': JSON.stringify({
@@ -348,6 +351,8 @@ describe('nx package.json workspaces plugin', () => {
       const first = await runPlugin({}, ['packages/a/package.json']);
       expect(existsSync(packageJsonCachePath)).toBe(true);
       expect(first.targets.test.metadata.scriptContent).toBe('old-command');
+      expect(writeCache).toHaveBeenCalledOnce();
+      writeCache.mockClear();
 
       vol.writeFileSync(
         '/root/packages/a/package.json',
@@ -359,10 +364,12 @@ describe('nx package.json workspaces plugin', () => {
       );
       const cached = await runPlugin({}, ['packages/a/package.json']);
       expect(cached.targets.test.metadata.scriptContent).toBe('old-command');
+      expect(writeCache).not.toHaveBeenCalled();
 
       vi.mocked(getFileHashesInContext).mockResolvedValue(['package-v2', null]);
       const updated = await runPlugin({}, ['packages/a/package.json']);
       expect(updated.targets.test.metadata.scriptContent).toBe('new-command');
+      expect(writeCache).toHaveBeenCalledOnce();
       const persistedCache = JSON.parse(
         vol.readFileSync(packageJsonCachePath, 'utf8').toString()
       );
