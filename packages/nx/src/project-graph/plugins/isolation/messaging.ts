@@ -66,7 +66,6 @@ type PluginMessageDefs = DefineMessages<{
            * Hook exports the module declares and leaves undefined, which says it
            * decided them rather than simply not having them.
            */
-          hooksExportedAsUndefined: string[];
           createNodesPattern: string;
           hasCreateDependencies: boolean;
           hasProcessProjectGraph: boolean;

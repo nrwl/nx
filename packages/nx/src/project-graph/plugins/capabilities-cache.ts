@@ -37,8 +37,6 @@ export type PluginCapabilities = CachedPluginCapabilities;
 export type ObservedLoad = {
   sourceFiles: string[] | null;
   envReads: EnvReads | null;
-  /** Hook exports the module declared and left undefined. */
-  hooksExportedAsUndefined?: string[];
 };
 
 const LOCK_FILE_NAME = 'plugin-capabilities.lock';

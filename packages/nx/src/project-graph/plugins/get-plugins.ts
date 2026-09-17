@@ -748,7 +748,6 @@ async function loadAndRecord(loads: PluginLoad[], root: string): Promise<void> {
         noteObservedLoad(loaded, {
           sourceFiles: reported.sourceFiles ?? null,
           envReads: reported.envReads ?? null,
-          hooksExportedAsUndefined: reported.hooksExportedAsUndefined ?? [],
         });
       } catch (e) {
         // Rethrown by the caller, so the failure reaches the same error
@@ -810,21 +809,6 @@ function recordFor(
     // what it depends on and any record of it could be wrong on the next run.
     logger.verbose(
       `"${capabilities.name}" read its whole environment while loading, so its capabilities were not recorded.`
-    );
-    return null;
-  }
-
-  const declaredUndefined = observed.hooksExportedAsUndefined ?? [];
-  if (declaredUndefined.length && !observed.envReads.keys.length) {
-    // The module exports these and leaves them undefined, so it decided not to
-    // register them, and it read no environment, so whatever it decided from is
-    // something this cannot watch: the contents of a file it read itself, the
-    // platform, something it probed. A plugin that simply does not have a hook
-    // does not export the key at all, and records fine.
-    logger.verbose(
-      `"${capabilities.name}" turned off ${declaredUndefined.join(
-        ', '
-      )} for a reason Nx cannot see, so its capabilities were not recorded.`
     );
     return null;
   }

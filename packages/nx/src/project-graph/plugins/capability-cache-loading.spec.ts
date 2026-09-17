@@ -318,7 +318,6 @@ describe('loading plugins through the capability cache', () => {
       name: typeof plugin === 'string' ? plugin : (plugin as any).plugin,
       sourceFiles: ['/resolved/test-plugin'],
       envReads: NO_ENV_READS,
-      hooksExportedAsUndefined: [],
     }));
 
     await getPluginsSeparated({ plugins: ['test-plugin'] });
@@ -329,33 +328,18 @@ describe('loading plugins through the capability cache', () => {
     ]);
   });
 
-  it('records nothing for a plugin that turned a hook off for an invisible reason', async () => {
-    loadIsolatedNxPlugin.mockImplementation(async (plugin: unknown) => ({
-      name: typeof plugin === 'string' ? plugin : (plugin as any).plugin,
-      sourceFiles: ['/resolved/test-plugin'],
-      // Read no environment, yet exported the key and left it undefined.
-      envReads: NO_ENV_READS,
-      hooksExportedAsUndefined: ['createNodes'],
-    }));
-
-    await getPluginsSeparated({ plugins: ['test-plugin'] });
-
-    // It decided not to register that hook, from something neither its files
-    // nor its environment show, so nothing here could tell when it changes.
-    expect(mocks.recordCapabilities).toHaveBeenCalledWith([]);
-  });
-
-  it('records one that turned a hook off from a variable it read', async () => {
+  it('records the variable a plugin read while deciding what to register', async () => {
     loadIsolatedNxPlugin.mockImplementation(async (plugin: unknown) => ({
       name: typeof plugin === 'string' ? plugin : (plugin as any).plugin,
       sourceFiles: ['/resolved/test-plugin'],
       envReads: { keys: ['NX_DOTNET_DISABLE'], hash: 'dotnet-disable-set' },
-      hooksExportedAsUndefined: ['createNodes', 'createDependencies'],
     }));
 
     await getPluginsSeparated({ plugins: ['test-plugin'] });
 
-    // The variable is on the record, so setting or clearing it invalidates it.
+    // `@nx/dotnet` exports no hooks under `NX_DOTNET_DISABLE` and its files
+    // are identical either way, so the variable on the record is the only
+    // thing that invalidates it.
     expect(mocks.recordCapabilities).toHaveBeenCalledWith([
       expect.objectContaining({ key: 'key:/resolved/test-plugin' }),
     ]);

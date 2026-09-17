@@ -107,7 +107,6 @@ describe('IsolatedPlugin', () => {
       name: 'test-plugin',
       sourceFiles: [],
       envReads: { keys: [], hash: 'nothing-read' },
-      hooksExportedAsUndefined: [],
       createNodesPattern: hooks.createNodesPattern ?? '',
       hasCreateDependencies: hooks.hasCreateDependencies ?? false,
       hasProcessProjectGraph: false,

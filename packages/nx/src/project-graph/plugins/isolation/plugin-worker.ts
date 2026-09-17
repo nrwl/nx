@@ -160,10 +160,6 @@ const server = createServer((socket) => {
               return {
                 sourceFiles,
                 envReads,
-                // Read off the module by `LoadedNxPlugin`, which is the last
-                // point where a hook the module declared and left undefined is
-                // still distinguishable from one it never had.
-                hooksExportedAsUndefined: plugin.hooksExportedAsUndefined,
                 name: plugin.name,
                 include: plugin.include,
                 exclude: plugin.exclude,

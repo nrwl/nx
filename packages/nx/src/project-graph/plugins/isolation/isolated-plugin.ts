@@ -198,7 +198,6 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       );
       instance.sourceFiles = loadResult.sourceFiles;
       instance.envReads = loadResult.envReads;
-      instance.hooksExportedAsUndefined = loadResult.hooksExportedAsUndefined;
       return instance;
     } catch (e) {
       // The worker is running whenever the failure was a timeout rather than an
@@ -225,7 +224,6 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   envReads: EnvReads | null = null;
 
   /** Hook exports the module declared and left undefined. */
-  hooksExportedAsUndefined: string[] = [];
 
   /**
    * Wires the plugin's hooks from a previous load's capabilities, without a
@@ -389,12 +387,10 @@ export class IsolatedPlugin implements LoadedNxPlugin {
 
     this.sourceFiles = loadResult.sourceFiles;
     this.envReads = loadResult.envReads;
-    this.hooksExportedAsUndefined = loadResult.hooksExportedAsUndefined;
 
     this.reportLoaded(capabilitiesFromLoadResult(loadResult), {
       sourceFiles: loadResult.sourceFiles,
       envReads: loadResult.envReads,
-      hooksExportedAsUndefined: loadResult.hooksExportedAsUndefined,
     });
   }
 
@@ -408,7 +404,6 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     observed: ObservedLoad = {
       sourceFiles: null,
       envReads: null,
-      hooksExportedAsUndefined: [],
     }
   ): void {
     const onLoaded = this.onLoaded;
