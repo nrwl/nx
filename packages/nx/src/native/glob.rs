@@ -4,6 +4,9 @@ mod glob_parser;
 pub mod glob_transform;
 
 use crate::native::glob::glob_transform::convert_glob;
+pub(crate) use crate::native::glob::glob_transform::{
+    expand_literal_braces, fileset_patterns, normalize_glob, partition_glob,
+};
 use dashmap::DashMap;
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
 use std::fmt::Debug;
@@ -146,13 +149,12 @@ pub(crate) fn build_glob_set<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Resu
         .iter()
         .flat_map(|s| potential_glob_split(s.as_ref()))
         .map(|glob| {
-            // Decide on the pattern without its negation marker. A leading `!`
-            // marks the whole glob as an exclusion — it is not extglob syntax —
-            // and convert_glob strips bare `@`, `+` and `?` out of anything it
-            // touches (see special_char_with_no_group, which `+spec.ts`-style
-            // patterns rely on). Routing a plain exclusion through it purely
-            // because of that leading `!` silently rewrote `!dist/@scope/pkg`
-            // to `!dist/scope/pkg`, so the exclusion matched nothing.
+            // Convert only what needs it: `convert_glob` truncates a glob at
+            // a special character that begins no group, so `!dist/?/x` would
+            // come back as `dist` (NXC-5001). Deciding on the pattern without
+            // its negation marker is what keeps it off that road — a leading
+            // `!` marks the whole glob as an exclusion, not extglob syntax,
+            // and the pattern beneath it holds nothing needing conversion.
             let pattern = glob.strip_prefix('!').unwrap_or(glob);
             if pattern.contains('!')
                 || pattern.contains('|')
@@ -215,10 +217,19 @@ mod test {
         let glob_set = build_glob_set(&["dist/**", "!dist/libs/a+b/.cache/**"]).unwrap();
         assert!(!glob_set.is_match("dist/libs/a+b/.cache/x"));
 
-        // Extglob exclusions still convert exactly as before — nx's own default
-        // inputs rely on `+spec.ts` collapsing to `spec.ts`.
+        // A `+` that begins no group is a literal `+`, so this excludes
+        // `b.+spec.ts` and not `b.spec.ts`. The shipped default inputs write
+        // the group out, `+(spec|test)`, and are unaffected.
         let glob_set = build_glob_set(&["libs/**/*", "!libs/**/?(*.)+spec.ts?(.snap)"]).unwrap();
+        assert!(!glob_set.is_match("libs/a/b.+spec.ts"));
+        assert!(glob_set.is_match("libs/a/b.spec.ts"));
+        assert!(glob_set.is_match("libs/a/b.ts"));
+
+        // The well-formed default still excludes what it always did.
+        let glob_set =
+            build_glob_set(&["libs/**/*", "!libs/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)"]).unwrap();
         assert!(!glob_set.is_match("libs/a/b.spec.ts"));
+        assert!(!glob_set.is_match("libs/a/b.test.tsx"));
         assert!(glob_set.is_match("libs/a/b.ts"));
     }
 
@@ -501,7 +512,7 @@ mod test {
     }
 
     #[test]
-    fn should_handle_invalid_group_globs() {
+    fn a_malformed_extglob_is_read_literally() {
         let glob_set = build_glob_set(&[
             "libs/**/*",
             "!libs/**/?(*.)+spec.ts?(.snap)",
@@ -513,6 +524,9 @@ mod test {
         .unwrap();
 
         assert!(glob_set.is_match("libs/src/index.ts"));
-        assert!(!glob_set.is_match("libs/src/index.spec.ts"));
+        // `+spec.ts` names a file called that, and no longer stands in for
+        // `spec.ts`, so a real spec file is not excluded by it.
+        assert!(glob_set.is_match("libs/src/index.spec.ts"));
+        assert!(!glob_set.is_match("libs/src/index.+spec.ts"));
     }
 }

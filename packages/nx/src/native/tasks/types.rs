@@ -157,7 +157,13 @@ pub enum HashInstruction {
     Runtime(String),
     Environment(String),
     Cwd(CwdMode),
+    /// Globs filtered against one project's tracked files.
     ProjectFileSet(String, Vec<String>),
+    /// A project's `includeIgnored` globs, workspace-relative and expanded
+    /// against the disk so gitignored and generated files count. The project
+    /// is not part of it: the same globs read the same files wherever they
+    /// were declared.
+    IgnoredFileSet(Vec<String>),
     ProjectConfiguration(String),
     TsConfiguration(String),
     TaskOutput(String, Vec<String>),
@@ -228,6 +234,10 @@ impl InstructionPool {
 pub struct HashPlans {
     pub pool: Arc<InstructionPool>,
     pub plans: HashMap<String, Vec<u32>>,
+    /// Tasks the up-front batch leaves out: the directory a disk-backed
+    /// fileset of theirs reads from contains, or sits inside, an output a
+    /// task they depend on declares.
+    pub deferred: std::collections::HashSet<String>,
 }
 
 impl ToNapiValue for HashInstruction {
@@ -274,6 +284,7 @@ impl fmt::Display for HashInstruction {
                 HashInstruction::ProjectFileSet(project_name, file_set) => {
                     format!("{project_name}:{}", file_set.join(","))
                 }
+                HashInstruction::IgnoredFileSet(globs) => format!("files:[{}]", globs.join(",")),
                 HashInstruction::WorkspaceFileSet(file_set) =>
                     format!("workspace:[{}]", file_set.join(",")),
                 HashInstruction::Runtime(runtime) => format!("runtime:{}", runtime),
@@ -327,6 +338,31 @@ mod tests {
         assert_eq!(&*key, instruction.to_string());
         // Every call hands out the same allocation, not a fresh string.
         assert!(Arc::ptr_eq(&key, &pool.key(id)));
+    }
+
+    #[test]
+    fn disk_backed_display_lists_globs_in_declared_order() {
+        let instruction = HashInstruction::IgnoredFileSet(vec![
+            "libs/ui/dist/**/*.js".into(),
+            "!libs/ui/dist/**/*.map".into(),
+        ]);
+        assert_eq!(
+            instruction.to_string(),
+            "files:[libs/ui/dist/**/*.js,!libs/ui/dist/**/*.map]"
+        );
+    }
+
+    #[test]
+    fn the_two_backing_stores_never_share_a_pool_key() {
+        let globs = vec!["libs/ui/**/*.ts".to_string()];
+        assert_ne!(
+            HashInstruction::ProjectFileSet("ui".into(), globs.clone()).to_string(),
+            HashInstruction::IgnoredFileSet(globs.clone()).to_string()
+        );
+        assert_ne!(
+            HashInstruction::WorkspaceFileSet(globs.clone()).to_string(),
+            HashInstruction::IgnoredFileSet(globs).to_string()
+        );
     }
 
     #[test]
