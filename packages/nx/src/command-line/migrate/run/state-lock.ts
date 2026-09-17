@@ -127,9 +127,9 @@ export function registerRunActivity(dir: string): void {
   heldActivity.set(dir, { lock, name });
 }
 
-// Drops this process's own hold. A process deleting a run is not mid-operation
-// on it (entry points are synchronous and never nest), so its own hold says
-// nothing about work in flight.
+// Drops this process's own hold. A deleting init may already hold the run
+// from an earlier report or its own start-fresh preflight. That hold is the
+// deletion caller, not competing work.
 export function releaseRunActivity(dir: string): void {
   const held = heldActivity.get(dir);
   if (held === undefined) return;

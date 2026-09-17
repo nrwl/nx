@@ -1,4 +1,4 @@
-// Internal to run/: deliberately not re-exported from ./index.
+// Internal to run/ except pmExecPrefix, which ./index re-exports.
 
 import { createHash } from 'crypto';
 import { needsShellQuoting, quoteShellArg } from '../../../utils/shell-quoting';
