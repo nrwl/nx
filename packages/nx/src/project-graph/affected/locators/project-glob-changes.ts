@@ -2,9 +2,8 @@ import { TouchedProjectLocator } from '../affected-project-graph-models';
 import { minimatch } from 'minimatch';
 import { readNxJson } from '../../../config/nx-json';
 import { workspaceRoot } from '../../../utils/workspace-root';
-import { getGlobPatternsOfPlugins } from '../../utils/retrieve-workspace-files';
 import { combineGlobPatterns } from '../../../utils/globs';
-import { getPlugins, peekPluginCapabilities } from '../../plugins/get-plugins';
+import { capabilitiesOfConfiguredPlugins } from '../../plugins/get-plugins';
 import { isDeletedFile } from '../../file-utils';
 
 export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
@@ -45,24 +44,18 @@ export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
       const nxJson = readNxJson(workspaceRoot);
 
       // Which files a plugin claims is all this locator wants, so a workspace
-      // whose plugins are on record answers without loading any of them. An
-      // empty record set is not a miss: this loads whatever nothing has
-      // recorded, writes the records and puts those plugins back down.
-      const recorded = await peekPluginCapabilities(nxJson, workspaceRoot);
-      if (recorded) {
-        return combineGlobPatterns(
-          recorded
-            .map((capabilities) => capabilities.createNodesPattern)
-            .filter((pattern) => !!pattern)
-        );
-      }
-
-      // Null says no record could be kept, rather than that none was found:
-      // this runtime cannot observe what a load reads, or a plugin could not be
-      // keyed or loaded at all. Loading here is what every version did before
-      // the records existed, and it is where a plugin that failed reports it.
-      const plugins = (await getPlugins(nxJson)).filter((p) => !!p.createNodes);
-      return combineGlobPatterns(getGlobPatternsOfPlugins(plugins));
+      // whose plugins are on record answers without loading any of them. A
+      // plugin nothing has recorded is loaded once to record it, and a runtime
+      // that can keep no records at all loads them the ordinary way.
+      const capabilities = await capabilitiesOfConfiguredPlugins(
+        nxJson,
+        workspaceRoot
+      );
+      return combineGlobPatterns(
+        capabilities
+          .map((capability) => capability.createNodesPattern)
+          .filter((pattern) => !!pattern)
+      );
     })();
 
     const configDeleted = deleted.some((touchedFile) =>

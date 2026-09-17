@@ -2,8 +2,7 @@ import { ProjectGraphProjectNode } from '../../../config/project-graph';
 import { DeletedFileChange } from '../../file-utils';
 import { getTouchedProjectsFromProjectGlobChanges } from './project-glob-changes';
 const mocks = vi.hoisted(() => ({
-  peekPluginCapabilities: vi.fn(),
-  getPlugins: vi.fn(),
+  capabilitiesOfConfiguredPlugins: vi.fn(),
   deleted: new Set<string>(),
 }));
 
@@ -35,27 +34,22 @@ function modifiedFile(file: string) {
 
 vi.mock('../../../project-graph/plugins/get-plugins', async () => ({
   ...(await vi.importActual('../../../project-graph/plugins/get-plugins')),
-  peekPluginCapabilities: mocks.peekPluginCapabilities,
-  getPlugins: mocks.getPlugins,
+  capabilitiesOfConfiguredPlugins: mocks.capabilitiesOfConfiguredPlugins,
 }));
 
 beforeEach(() => {
   mocks.deleted.clear();
-  // Null is "no record could be kept", which is the only way this locator
-  // loads anything. A cold cache is not that: peeking would load and record
-  // the plugins itself. The recorded case has its own test below.
-  mocks.peekPluginCapabilities.mockReset();
-  mocks.peekPluginCapabilities.mockResolvedValue(null);
-  mocks.getPlugins.mockReset();
-  mocks.getPlugins.mockResolvedValue([
+  // Where those capabilities came from, records or a load, is settled inside
+  // `capabilitiesOfConfiguredPlugins` and is its spec's business.
+  mocks.capabilitiesOfConfiguredPlugins.mockReset();
+  mocks.capabilitiesOfConfiguredPlugins.mockResolvedValue([
     {
       name: 'test',
-      createNodes: [
-        '**/project.json',
-        async () => {
-          return [];
-        },
-      ],
+      createNodesPattern: '**/project.json',
+      hasCreateDependencies: false,
+      hasCreateMetadata: false,
+      hasPreTasksExecution: false,
+      hasPostTasksExecution: false,
     },
   ]);
 });
@@ -119,12 +113,11 @@ describe('getTouchedProjectsFromProjectGlobChanges', () => {
     // so this locator has nothing to add, and the patterns it would match
     // against cost a plugin load to work out.
     expect(result).toEqual([]);
-    expect(mocks.peekPluginCapabilities).not.toHaveBeenCalled();
-    expect(mocks.getPlugins).not.toHaveBeenCalled();
+    expect(mocks.capabilitiesOfConfiguredPlugins).not.toHaveBeenCalled();
   });
 
-  it('matches against the patterns on record, without loading a plugin', async () => {
-    mocks.peekPluginCapabilities.mockResolvedValue([
+  it('ignores a plugin that registers no createNodes', async () => {
+    mocks.capabilitiesOfConfiguredPlugins.mockResolvedValue([
       {
         name: 'test',
         createNodesPattern: '**/project.json',
@@ -134,7 +127,7 @@ describe('getTouchedProjectsFromProjectGlobChanges', () => {
         hasPostTasksExecution: false,
       },
       {
-        // Registers no createNodes, so it contributes no pattern.
+        // Contributes no pattern, so it must not widen what matches.
         name: 'inert',
         createNodesPattern: undefined,
         hasCreateDependencies: true,
@@ -156,10 +149,7 @@ describe('getTouchedProjectsFromProjectGlobChanges', () => {
       { nodes, dependencies: {} }
     );
 
-    // The deleted config file matched the recorded pattern, which is what
-    // triggers the conservative fallback.
     expect(result).toEqual(['proj1', 'proj2']);
-    expect(mocks.getPlugins).not.toHaveBeenCalled();
   });
 });
 

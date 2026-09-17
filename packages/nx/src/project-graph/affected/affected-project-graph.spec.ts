@@ -5,17 +5,17 @@ import { filterAffected } from './affected-project-graph';
 vi.mock('../plugins/get-plugins', async () => ({
   ...(await vi.importActual('../plugins/get-plugins')),
   // Stubbed rather than left actual: the real one resolves this workspace's
-  // plugins and hashes their sources, which a unit test should not do.
-  peekPluginCapabilities: async () => null,
-  getPlugins: async () => [
+  // plugins and hashes their sources, which a unit test should not do. Stubbed
+  // here rather than at `peekPluginCapabilities`, which it reaches directly
+  // rather than through this namespace.
+  capabilitiesOfConfiguredPlugins: async () => [
     {
       name: 'test',
-      createNodes: [
-        '**/project.json',
-        async () => {
-          return [];
-        },
-      ],
+      createNodesPattern: '**/project.json',
+      hasCreateDependencies: false,
+      hasCreateMetadata: false,
+      hasPreTasksExecution: false,
+      hasPostTasksExecution: false,
     },
   ],
 }));

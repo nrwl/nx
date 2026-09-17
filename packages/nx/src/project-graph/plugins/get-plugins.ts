@@ -490,6 +490,32 @@ export async function peekPluginCapabilities(
 }
 
 /**
+ * What every configured plugin registers, answered either way.
+ *
+ * `peekPluginCapabilities` says null when no record can be kept at all, which a
+ * caller that needs the answer regardless would have to turn into a load
+ * itself. This is that load, so the answer has one shape and the fallback has
+ * one home.
+ *
+ * Not what the hook gates want. Those ask whether the records *prove* nothing
+ * registers a hook, and the honest answer when there are no records is "cannot
+ * tell", which lets the daemon load them on the side that was going to load
+ * them anyway. Loading here to answer that would put the whole plugin set back
+ * in the client, which is what the records exist to avoid.
+ */
+export async function capabilitiesOfConfiguredPlugins(
+  nxJson: NxJsonConfiguration,
+  root = workspaceRoot
+): Promise<PluginCapabilities[]> {
+  const recorded = await peekPluginCapabilities(nxJson, root);
+  if (recorded) {
+    return recorded;
+  }
+
+  return (await getPlugins(nxJson, root)).map(capabilitiesOfLoadedPlugin);
+}
+
+/**
  * Fills in the capabilities every load has a record for, and returns the rest.
  */
 function withRecordedCapabilities(
