@@ -32,22 +32,35 @@ Failing that, stop and say so. This driver creates herdr tabs; there is no fallb
 
 ## Run it
 
-A batch outlives a foreground call, so give the driver its own tab:
+The driver needs herdr to create tabs for its CHILDREN. It does not need one for itself, and
+giving it one costs a tab that then has to be closed by hand. Launch it as a detached
+background process with its output on disk:
 
 ```bash
-herdr tab create --workspace "$HERDR_WORKSPACE_ID" --cwd "$PWD" --label review-many-prs --no-focus
-herdr pane run <root_pane_id> "npx tsx .claude/skills/review-many-prs/scripts/review-many-prs.ts 36815 36806 36789"
+stamp=$(date +%Y%m%d-%H%M%S)
+log=~/.nx-pr-reviews/.driver-$stamp.log
+mkdir -p ~/.nx-pr-reviews
+npx tsx .claude/skills/review-many-prs/scripts/review-many-prs.ts 36815 36806 36789 > "$log" 2>&1
 ```
 
-Read the pane id from `.result.root_pane.pane_id`. Report that pane id to the user, then get
-out of the way — do not poll it. If no `review watch` is running yet, start ONE and leave it
-running for the session; do not start another per batch.
+Run that through whatever your harness uses to background a long command (in Claude Code,
+Bash with `run_in_background`), so the batch outlives the call that started it and you are
+re-invoked when it exits. Report the log path to the user, then get out of the way. Do not
+poll it. The driver's own progress is not the thing worth watching, the records are.
+
+The stamp you compute is the same shape as the driver's internal batch id, and because both
+come from local time at start they line up, so `.driver-<batch>.log` names the batch it
+belongs to. That is a convenience, not a contract. Nothing reads the filename.
+
+If no `review watch` is running yet, start ONE and leave it running for the session; do not
+start another per batch.
 
 For a quick sanity check first, `--dry-run` resolves heads and prints the plan without
-launching anything.
+launching anything. Run that one in the foreground.
 
 Arguments are PR URLs, `#36815`, or bare numbers, in any mix. A non-`nrwl/nx` URL is a hard
-error: `/review-pr` only reviews that repo.
+error: `/review-pr` only reviews that repo. Drafts are skipped unless you pass
+`--include-drafts`.
 
 The pool and the argument parser have unit tests:
 
