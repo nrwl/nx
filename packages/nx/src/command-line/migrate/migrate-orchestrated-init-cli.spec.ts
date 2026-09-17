@@ -6,6 +6,7 @@
 const mockRunOrchestratorInit = vi.fn();
 const mockRunOrchestratorResume = vi.fn();
 const mockReadLatestPlanSnapshot = vi.fn();
+const mockHoldRunToContinue = vi.fn();
 // migrate.ts lazy-requires ./run (CJS channel), which vi.mock cannot
 // intercept; replace the module in the require channel instead.
 import { mockCjsModule } from '../../internal-testing-utils/cjs-mock';
@@ -17,6 +18,7 @@ mockCjsModule(import.meta.url, './run', {
     mockRunOrchestratorResume(...args),
   readLatestPlanSnapshot: (...args: unknown[]) =>
     mockReadLatestPlanSnapshot(...args),
+  holdRunToContinue: (...args: unknown[]) => mockHoldRunToContinue(...args),
 });
 const mockRunMasterSession = vi.fn();
 mockCjsModule(import.meta.url, './agentic/master/run-master-session', {
@@ -71,6 +73,12 @@ vi.mock('../../utils/git-utils', async () => ({
   isGitRepository: (...args: unknown[]) => mockIsGitRepository(...args),
   getGitCurrentBranch: (...args: unknown[]) => mockGetGitCurrentBranch(...args),
   getGitRemoteNames: (...args: unknown[]) => mockGetGitRemoteNames(),
+}));
+
+const mockRunInstall = vi.fn();
+vi.mock('./execute-migration', async () => ({
+  ...(await vi.importActual('./execute-migration')),
+  runInstall: (...args: unknown[]) => mockRunInstall(...args),
 }));
 
 const mockReadNxJson = vi.fn();
@@ -134,6 +142,8 @@ describe('migrate() orchestrated init dispatch', () => {
     mockRunOrchestratorInit.mockReset().mockResolvedValue(undefined);
     mockRunOrchestratorResume.mockReset().mockReturnValue(undefined);
     mockReadLatestPlanSnapshot.mockReset().mockReturnValue({ migrations: [] });
+    mockHoldRunToContinue.mockReset();
+    mockRunInstall.mockReset().mockResolvedValue(undefined);
     mockRunMasterSession.mockReset().mockResolvedValue(undefined);
     mockResolveAgentic.mockReset().mockResolvedValue({ kind: 'disabled' });
     mockReportRunStart.mockReset();
@@ -303,6 +313,50 @@ describe('migrate() orchestrated init dispatch', () => {
       policy: { createCommits: true, skipInstall: false },
     });
     expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
+  });
+
+  it('holds the run a continue names before the preflight install', async () => {
+    const order: string[] = [];
+    mockHoldRunToContinue.mockImplementation(() => {
+      order.push('hold');
+    });
+    mockRunInstall.mockImplementation(async () => {
+      order.push('install');
+    });
+
+    await migrate(
+      root,
+      runMigrationsArgs({ runId: 'run-1', agentic: 'claude-code' }),
+      ['--run-migrations', '--agentic=claude-code', '--run-id=run-1']
+    );
+
+    expect(mockHoldRunToContinue).toHaveBeenCalledWith(root, 'run-1');
+    expect(order).toEqual(['hold', 'install']);
+  });
+
+  it('holds no run for a start-fresh, which deletes the one it names', async () => {
+    await migrate(
+      root,
+      runMigrationsArgs({ runId: 'run-1', startFresh: true }),
+      ['--run-migrations', '--start-fresh', '--run-id=run-1']
+    );
+
+    expect(mockHoldRunToContinue).not.toHaveBeenCalled();
+  });
+
+  it('continues with the agent nx.json names when --agentic is not passed', async () => {
+    mockReadNxJson.mockReturnValue({ migrate: { agentic: 'claude-code' } });
+
+    await migrate(root, runMigrationsArgs({ runId: 'run-1' }), [
+      '--run-migrations',
+      '--run-id=run-1',
+    ]);
+
+    expect(mockRunOrchestratorResume).toHaveBeenCalledWith({
+      root,
+      runId: 'run-1',
+      policy: { createCommits: true, skipInstall: false },
+    });
   });
 
   it('replaces the run --start-fresh --run-id names through init, on the workspace plan', async () => {

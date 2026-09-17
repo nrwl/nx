@@ -97,6 +97,7 @@ import { output } from '../../../utils/output';
 import { nxVersion } from '../../../utils/versions';
 import { runStepHandoffPath } from '../agentic/handoff';
 import {
+  holdRunToContinue,
   runOrchestratorInit,
   runOrchestratorReconcile,
   runOrchestratorResume,
@@ -489,14 +490,26 @@ describe('orchestrator', () => {
     });
 
     it('runs the checkpoint before run.json exists, with the run directory reserved and held', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
       let atCheckpoint:
-        | { active: string | null; dirs: string[]; reserved: boolean }
+        | {
+            active: string | null;
+            dirs: string[];
+            plan: unknown;
+            reserved: boolean;
+          }
         | undefined;
       mockCheckpoint.mockImplementation(() => {
         const dirs = activeRunDirNames();
         atCheckpoint = {
           active: findActiveRun(root).active?.runId ?? null,
           dirs,
+          plan: JSON.parse(
+            readFileSync(
+              join(migrateRunsDir(root), dirs[0], 'plan-0.json'),
+              'utf-8'
+            )
+          ),
           reserved:
             dirs.length === 1 &&
             !existsSync(join(migrateRunsDir(root), dirs[0], 'run.json')) &&
@@ -512,7 +525,7 @@ describe('orchestrator', () => {
 
       await runOrchestratorInit({
         root,
-        migrationsJson: { migrations: [genMig('@nx/js', 'a')] },
+        migrationsJson,
         createCommits: true,
         commitPrefix: 'chore: [nx migration] ',
         skipInstall: false,
@@ -520,7 +533,11 @@ describe('orchestrator', () => {
         validate: undefined,
       });
 
-      expect(atCheckpoint).toMatchObject({ active: null, reserved: true });
+      expect(atCheckpoint).toMatchObject({
+        active: null,
+        plan: migrationsJson,
+        reserved: true,
+      });
       expect(activeRunDirNames()).toEqual(atCheckpoint.dirs);
     });
 
@@ -2169,6 +2186,49 @@ describe('orchestrator', () => {
       expect(
         new FileLock(join(runDir(root, runId), 'activity', names[0])).check()
       ).toBe(true);
+    });
+
+    it('holds a run to continue so that a second process sees it held', async () => {
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+      });
+
+      expect(holdRunToContinue(root, 'run-1').status).toBe('active');
+
+      const names = readdirSync(join(dir, 'activity'));
+      expect(names).toHaveLength(1);
+      // Probed from another process: this one skips its own hold when it
+      // decides whether a run is free to delete.
+      const { execFileSync } =
+        require('child_process') as typeof import('child_process');
+      const held = execFileSync(
+        process.execPath,
+        [
+          '-e',
+          `const { FileLock } = require(process.argv[1]);
+           process.stdout.write(String(new FileLock(process.argv[2]).check()));`,
+          join(__dirname, '../../../native/native-bindings.js'),
+          join(dir, 'activity', names[0]),
+        ],
+        { encoding: 'utf-8' }
+      );
+      expect(held).toBe('true');
+    });
+
+    it('holds nothing for an id that names no run or a finished one', async () => {
+      const dir = setupRun('run-0', {
+        steps: [migStep('step-1', '@nx/js:a', 'succeeded')],
+        status: 'completed',
+      });
+
+      expect(() => holdRunToContinue(root, 'missing')).toThrow(
+        "No migrate run 'missing' was found under .nx/migrate-runs."
+      );
+      expect(() => holdRunToContinue(root, 'run-0')).toThrow(
+        "Migrate run 'run-0' is already complete; there is nothing to continue."
+      );
+      expect(existsSync(join(dir, 'activity'))).toBe(false);
+      expect(existsSync(runDir(root, 'missing'))).toBe(false);
     });
 
     it('refuses to resume an id that names no run or a finished one', async () => {

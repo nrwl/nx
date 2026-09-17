@@ -1312,8 +1312,8 @@ export async function parseMigrationsOptions(
 > {
   // A run recorded or reconciled via `--run-id` is driven by the outer agent;
   // spawning another agent from it would double-drive the run. Only the
-  // explicit "on" values conflict; the nx.json default is ignored for
-  // `--run-id` invocations instead. The `--run-migrations` shape is the
+  // explicit "on" values conflict; the nx.json default is not applied to
+  // those invocations instead. The `--run-migrations` shape is the
   // exception: there `--run-id` names the run a new agent session continues,
   // or the one a `--start-fresh` replaces.
   if (
@@ -3290,6 +3290,17 @@ async function runMigrations(
   commitPrefix: string,
   shouldSkipInstall = false
 ) {
+  if (
+    opts.runId !== undefined &&
+    opts.startFresh !== true &&
+    process.env.NX_MIGRATE_ORCHESTRATOR === 'true'
+  ) {
+    // Before the install: a concurrent start-fresh must not delete the run
+    // this command is about to continue.
+    const { holdRunToContinue } = require('./run') as typeof import('./run');
+    holdRunToContinue(root, opts.runId);
+  }
+
   if (!shouldSkipInstall && !process.env.NX_MIGRATE_SKIP_INSTALL) {
     await runInstall();
   }

@@ -49,6 +49,7 @@ export type { RunSingleMigrationWorkerInput } from './worker';
 
 export {
   completionWarnings,
+  holdRunToContinue,
   runOrchestratorInit,
   runOrchestratorReconcile,
   runOrchestratorResume,
