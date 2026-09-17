@@ -675,10 +675,7 @@ impl HashPlanner {
             // the split survives into the display.
             let declared_tail = declared_negations.len() as u32;
             group.extend(declared_negations);
-            instructions.push((
-                HashInstruction::ProjectFileSet(project.to_string(), group, true),
-                declared_tail,
-            ));
+            instructions.push((HashInstruction::IgnoredFileSet(group), declared_tail));
         }
         instructions.push((io_snapshot_marker(&io.digest), 0));
         instructions
@@ -1097,6 +1094,7 @@ impl HashPlanner {
                 project_deps,
                 external_deps_mapped,
                 visited,
+                negations.as_deref_mut(),
             )?);
             visited.rollback_to(scope);
         }
@@ -1322,11 +1320,7 @@ impl HashPlanner {
             })
             .collect();
         if !ignored.is_empty() {
-            instructions.push(HashInstruction::ProjectFileSet(
-                project_name.to_string(),
-                ignored,
-                true,
-            ));
+            instructions.push(HashInstruction::IgnoredFileSet(ignored));
         }
         instructions.extend(self.runtime_env_cwd_json_inputs(
             project_name,

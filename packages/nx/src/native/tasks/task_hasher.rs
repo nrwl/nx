@@ -13,7 +13,7 @@ use crate::native::{
     types::{NapiDashMap, SharedStr, SharedStrMap},
 };
 use crate::native::{
-    project_graph::utils::ProjectRootMappings,
+    project_graph::utils::{ProjectRootMappings, find_project_for_path},
     tasks::hashers::{hash_cwd, hash_env, hash_runtime},
 };
 use crate::native::{
@@ -85,36 +85,43 @@ impl InputSource {
 pub(crate) fn input_source(
     instruction: &HashInstruction,
     task_project: &str,
+    project_roots: &ProjectRootMappings,
     snapshot_backed: bool,
 ) -> InputSource {
+    let own_or_dependency = |project: Option<&str>| match project {
+        Some(project) if project != task_project => InputSource::Dependency,
+        _ => InputSource::Target,
+    };
     match instruction {
-        HashInstruction::ProjectFileSet(project, _, _) => {
-            if snapshot_backed {
-                InputSource::Snapshot
-            } else if project == task_project {
-                InputSource::Target
-            } else {
-                InputSource::Dependency
-            }
+        HashInstruction::WorkspaceFileSet(file_sets)
+            if file_sets.iter().eq(ALWAYS_ON_WORKSPACE_FILES.iter()) =>
+        {
+            InputSource::Native
         }
-        HashInstruction::WorkspaceFileSet(file_sets) => {
-            if file_sets.iter().eq(ALWAYS_ON_WORKSPACE_FILES.iter()) {
-                InputSource::Native
-            } else if snapshot_backed {
-                InputSource::Snapshot
-            } else {
-                InputSource::Target
-            }
-        }
-        HashInstruction::TaskOutput(_, _) => {
-            if snapshot_backed {
-                InputSource::Snapshot
-            } else {
-                InputSource::Dependency
-            }
-        }
+        _ if snapshot_backed && is_file_bearing(instruction) => InputSource::Snapshot,
+        HashInstruction::ProjectFileSet(project, _) => own_or_dependency(Some(project)),
+        // Carries no project: its first positive glob's directory names the
+        // owner, and a group under no project root counts as the task's own.
+        HashInstruction::IgnoredFileSet(globs) => own_or_dependency(
+            globs
+                .iter()
+                .find(|glob| !glob.starts_with('!'))
+                .and_then(|glob| find_project_for_path(partition_glob(glob).0, project_roots)),
+        ),
+        HashInstruction::WorkspaceFileSet(_) => InputSource::Target,
+        HashInstruction::TaskOutput(_, _) => InputSource::Dependency,
         _ => InputSource::Native,
     }
+}
+
+fn is_file_bearing(instruction: &HashInstruction) -> bool {
+    matches!(
+        instruction,
+        HashInstruction::WorkspaceFileSet(_)
+            | HashInstruction::ProjectFileSet(..)
+            | HashInstruction::IgnoredFileSet(_)
+            | HashInstruction::TaskOutput(..)
+    )
 }
 
 /// True when the plan carries an io-snapshot marker.
@@ -785,6 +792,7 @@ impl TaskHasher {
                                     task_inputs.extend(inputs.tag(input_source(
                                         instruction_ref.value(),
                                         task_project(task_id),
+                                        &project_root_mappings,
                                         snapshot_backed,
                                     )));
                                 }
@@ -921,17 +929,16 @@ impl TaskHasher {
                         accept,
                     )
                 };
-                let expansion =
-                    expand_cached(label, files_expansion_cache, || {
-                        expand_globs(
-                            workspace_root,
-                            globs,
-                            &Source::fileset(
-                                &|path| run_stage.nothing_ran() && self.workspace_tracks_file(path),
-                                &list_directory,
-                            ),
-                        )
-                    })?;
+                let expansion = expand_cached(label, files_expansion_cache, || {
+                    expand_globs(
+                        workspace_root,
+                        globs,
+                        &Source::fileset(
+                            &|path| run_stage.nothing_ran() && self.workspace_tracks_file(path),
+                            &list_directory,
+                        ),
+                    )
+                })?;
                 let hashed = hash_files(
                     workspace_root,
                     &expansion,
@@ -1164,6 +1171,37 @@ struct HashInstructionArgs<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn an_ignored_file_set_belongs_to_the_project_its_first_positive_glob_reads_from() {
+        let roots: ProjectRootMappings = [
+            ("apps/web".to_string(), "web".to_string()),
+            ("libs/ui".to_string(), "ui".to_string()),
+        ]
+        .into();
+        let source = |globs: &[&str], snapshot_backed| {
+            let set =
+                HashInstruction::IgnoredFileSet(globs.iter().map(|g| g.to_string()).collect());
+            input_source(&set, "web", &roots, snapshot_backed)
+        };
+        assert_eq!(source(&["apps/web/dist/**"], false), InputSource::Target);
+        assert_eq!(
+            source(&["!apps/web/x", "libs/ui/gen/**"], false),
+            InputSource::Dependency
+        );
+        assert_eq!(source(&["{a,b}.gen"], false), InputSource::Target);
+        assert_eq!(source(&["libs/ui/gen/**"], true), InputSource::Snapshot);
+        let always_on = HashInstruction::WorkspaceFileSet(
+            ALWAYS_ON_WORKSPACE_FILES
+                .iter()
+                .map(|f| f.to_string())
+                .collect(),
+        );
+        assert_eq!(
+            input_source(&always_on, "web", &roots, true),
+            InputSource::Native
+        );
+    }
 
     #[test]
     fn ranked_assembly_matches_map_order_and_duplicate_resolution() {
