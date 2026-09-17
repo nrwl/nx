@@ -41,8 +41,9 @@ vi.mock('../../../project-graph/plugins/get-plugins', async () => ({
 
 beforeEach(() => {
   mocks.deleted.clear();
-  // No record for some plugin, so the locator loads them. The recorded case
-  // has its own test below.
+  // Null is "no record could be kept", which is the only way this locator
+  // loads anything. A cold cache is not that: peeking would load and record
+  // the plugins itself. The recorded case has its own test below.
   mocks.peekPluginCapabilities.mockReset();
   mocks.peekPluginCapabilities.mockResolvedValue(null);
   mocks.getPlugins.mockReset();

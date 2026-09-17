@@ -45,7 +45,9 @@ export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
       const nxJson = readNxJson(workspaceRoot);
 
       // Which files a plugin claims is all this locator wants, so a workspace
-      // whose plugins are all on record answers without loading any of them.
+      // whose plugins are on record answers without loading any of them. An
+      // empty record set is not a miss: this loads whatever nothing has
+      // recorded, writes the records and puts those plugins back down.
       const recorded = await peekPluginCapabilities(nxJson, workspaceRoot);
       if (recorded) {
         return combineGlobPatterns(
@@ -55,6 +57,10 @@ export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
         );
       }
 
+      // Null says no record could be kept, rather than that none was found:
+      // this runtime cannot observe what a load reads, or a plugin could not be
+      // keyed or loaded at all. Loading here is what every version did before
+      // the records existed, and it is where a plugin that failed reports it.
       const plugins = (await getPlugins(nxJson)).filter((p) => !!p.createNodes);
       return combineGlobPatterns(getGlobPatternsOfPlugins(plugins));
     })();
