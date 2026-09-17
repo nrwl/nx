@@ -14,7 +14,6 @@ import {
 } from '../../utils/consume-messages-from-socket';
 import '../../utils/perf-logging';
 import { nxVersion } from '../../utils/versions';
-import { setupWorkspaceContext } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache';
 import { isNxVersionMismatch } from '../is-nx-version-mismatch';
@@ -98,7 +97,6 @@ import {
   serializeWithFallback,
 } from '../socket-utils';
 import { registerFileChangeListener } from './file-watching/file-change-events';
-import { routeWorkspaceChanges } from './file-watching/route-workspace-changes';
 import {
   hasRegisteredFileWatcherSockets,
   notifyFileWatcherSocketsOfError,
@@ -146,18 +144,21 @@ import {
   handleOutputsChanges,
 } from './handle-outputs-changes';
 import {
-  handleWatcherRescan,
-  scheduleProjectGraphRecomputation,
   registerProjectGraphRecomputationListener,
+  routeAppliedChanges,
+  scheduleInitialProjectGraphComputation,
 } from './project-graph-incremental-recomputation';
+import {
+  registerDaemonForRestartChecks,
+  relativeServerProcess,
+  stopDaemonIfReplaced,
+} from './restart-checks';
 import {
   hasRegisteredProjectGraphListenerSockets,
   registeredProjectGraphListenerSockets,
   removeRegisteredProjectGraphListenerSocket,
 } from './project-graph-listener-sockets';
 import {
-  getOutputWatcherInstance,
-  getWatcherInstance,
   handleServerProcessTermination,
   handleServerProcessTerminationWithRestart,
   resetInactivityTimeout,
@@ -165,19 +166,19 @@ import {
   respondWithError,
   respondWithErrorAndExit,
   SERVER_INACTIVITY_TIMEOUT_MS,
-  storeOutputWatcherInstance,
-  storeWatcherInstance,
 } from './shutdown-utils';
 import {
   clearSyncGeneratorsCache,
   collectAndScheduleSyncGenerators,
 } from './sync-generators';
+
 import {
-  convertChangeEventsToLogMessage,
-  FileWatcherCallback,
-  watchOutputFiles,
-  watchWorkspace,
-} from './watcher';
+  isWatchingWorkspaceContext,
+  setupWorkspaceContext,
+  subscribeToWatchEvents,
+  subscribeToWorkspaceChanges,
+  type WorkspaceChangesListener,
+} from '../../utils/workspace-context';
 
 let workspaceWatcherError: Error | undefined;
 
@@ -643,10 +644,7 @@ function lockFileHashChanged(): boolean {
  * we need to recompute the cached serialized project graph so that it is readily
  * available for the next client request to the server.
  */
-const handleWorkspaceChanges: FileWatcherCallback = async (
-  err,
-  changeEvents
-) => {
+const handleWorkspaceChanges: WorkspaceChangesListener = (err, batch) => {
   if (workspaceWatcherError) {
     serverLogger.watcherLog(
       'Skipping handleWorkspaceChanges because of a previously recorded watcher error.'
@@ -669,16 +667,7 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
       return;
     }
 
-    if (changeEvents.some((event) => event.type === 'rescan')) {
-      serverLogger.watcherLog(
-        'The watcher reported dropped events; re-walking the workspace to recover the missed changes.'
-      );
-      await handleWatcherRescan();
-      return;
-    }
-
-    serverLogger.watcherLog(convertChangeEventsToLogMessage(changeEvents));
-    routeWorkspaceChanges(changeEvents);
+    routeAppliedChanges(batch);
   } catch (err) {
     serverLogger.watcherLog(`Unexpected workspace error`, err.message);
     console.error(err);
@@ -688,17 +677,19 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
 };
 
 export async function startServer(): Promise<Server> {
-  // Watch before scan: a file written during boot must be visible to the
-  // watcher or the scan below. Scan-first left a blind window where such
-  // files stayed invisible to both until an unrelated change arrived.
-  if (!getWatcherInstance()) {
-    storeWatcherInstance(await watchWorkspace(server, handleWorkspaceChanges));
+  // The workspace context owns the daemon's one watch and starts it before
+  // it scans, so a file written during boot is visible to one or the other.
+  if (!isWatchingWorkspaceContext()) {
+    registerDaemonForRestartChecks(server, openSockets);
+    setupWorkspaceContext(workspaceRoot, {
+      watch: true,
+      alwaysWatch: [relativeServerProcess],
+    });
+    subscribeToWorkspaceChanges(workspaceRoot, handleWorkspaceChanges);
     serverLogger.watcherLog(
       `Subscribed to changes within: ${workspaceRoot} (native)`
     );
   }
-
-  setupWorkspaceContext(workspaceRoot);
 
   // Initialize analytics for daemon process
   await startAnalytics();
@@ -789,11 +780,16 @@ export async function startServer(): Promise<Server> {
           // this triggers the storage of the lock file hash
           daemonIsOutdated();
 
-          if (!getOutputWatcherInstance()) {
-            storeOutputWatcherInstance(
-              await watchOutputFiles(server, handleOutputsChanges)
-            );
-          }
+          // Every event the watch delivers, gitignored outputs and dotenv
+          // files included.
+          subscribeToWatchEvents(workspaceRoot, (err, events) => {
+            if (!err && events && stopDaemonIfReplaced(events)) {
+              return;
+            }
+            if (err || events?.length) {
+              handleOutputsChanges(err, events);
+            }
+          });
 
           // listen for project graph recomputation events to collect and schedule sync generators
           registerProjectGraphRecomputationListener(
@@ -801,8 +797,7 @@ export async function startServer(): Promise<Server> {
           );
           // register file change listener to invalidate sync generator cache
           registerFileChangeListener(clearSyncGeneratorsCache);
-          // trigger an initial project graph recomputation
-          scheduleProjectGraphRecomputation([], [], []);
+          scheduleInitialProjectGraphComputation();
 
           // Kick off Nx Console check in background to prime the cache
           handleGetNxConsoleStatus().catch(() => {
@@ -816,7 +811,7 @@ export async function startServer(): Promise<Server> {
 
           return resolve(server);
         } catch (err) {
-          await handleWorkspaceChanges(err, []);
+          await handleWorkspaceChanges(err, null);
         }
       });
     } catch (err) {

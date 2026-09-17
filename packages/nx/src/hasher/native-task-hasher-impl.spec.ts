@@ -1599,4 +1599,153 @@ describe('native task hasher', () => {
     await impl.hashTask(overridden.tasks['app:serve'], overridden, {});
     expect(planning.calls).toBe(2);
   });
+
+  it('hashes a disk-backed fileset up front unless it reaches a dependency output', async () => {
+    await tempFs.createFiles({
+      'libs/gen/project.json': JSON.stringify({ name: 'gen' }),
+      'libs/gen/index.ts': 'gen',
+      'libs/plain/project.json': JSON.stringify({ name: 'plain' }),
+      'libs/plain/index.ts': 'plain',
+    });
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/gen': 'gen',
+      'libs/plain': 'plain',
+    });
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      workspaceFiles.fileMap.projectFileMap
+    );
+    // gen:compile reads what gen:codegen writes, so it waits for it.
+    // plain:compile reads a generated file no task in the run produces.
+    builder.addNode({
+      name: 'gen',
+      type: 'lib',
+      data: {
+        root: 'libs/gen',
+        targets: {
+          codegen: {
+            executor: 'nx:run-commands',
+            outputs: ['{projectRoot}/generated'],
+          },
+          compile: {
+            executor: 'nx:run-commands',
+            dependsOn: ['codegen'],
+            inputs: [
+              'default',
+              { fileset: '{projectRoot}/generated/**/*', includeIgnored: true },
+            ],
+          },
+        },
+      },
+    });
+    builder.addNode({
+      name: 'plain',
+      type: 'lib',
+      data: {
+        root: 'libs/plain',
+        targets: {
+          compile: {
+            executor: 'nx:run-commands',
+            inputs: [
+              'default',
+              { fileset: '{projectRoot}/.env.generated', includeIgnored: true },
+            ],
+          },
+        },
+      },
+    });
+    const projectGraph = builder.getUpdatedProjectGraph();
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['gen', 'plain'],
+      ['compile'],
+      undefined,
+      {}
+    );
+    const tasks = Object.values(taskGraph.tasks);
+    expect(tasks.map((t) => t.id).sort()).toEqual([
+      'gen:codegen',
+      'gen:compile',
+      'plain:compile',
+    ]);
+    const hashes = await new NativeTaskHasherImpl(
+      tempFs.tempDir,
+      nxJson,
+      projectGraph,
+      workspaceFiles.rustReferences,
+      { selectivelyHashTsConfig: false }
+    ).hashTasksUpfront(
+      tasks,
+      taskGraph,
+      Object.fromEntries(tasks.map((t) => [t.id, {}]))
+    );
+
+    expect(Object.keys(hashes).sort()).toEqual([
+      'gen:codegen',
+      'plain:compile',
+    ]);
+  });
+
+  it("takes the file map's word for a tracked includeIgnored file only up front", async () => {
+    await tempFs.createFiles({
+      'libs/gen/project.json': JSON.stringify({ name: 'gen' }),
+      'libs/gen/generated/tracked.ts': 'before',
+    });
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/gen': 'gen',
+    });
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      workspaceFiles.fileMap.projectFileMap
+    );
+    builder.addNode({
+      name: 'gen',
+      type: 'lib',
+      data: {
+        root: 'libs/gen',
+        targets: {
+          compile: {
+            executor: 'nx:run-commands',
+            inputs: [
+              { fileset: '{projectRoot}/generated/**/*', includeIgnored: true },
+            ],
+          },
+        },
+      },
+    });
+    const projectGraph = builder.getUpdatedProjectGraph();
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['gen'],
+      ['compile'],
+      undefined,
+      {}
+    );
+    const tasks = Object.values(taskGraph.tasks);
+    const envs = Object.fromEntries(tasks.map((t) => [t.id, {}]));
+    const impl = new NativeTaskHasherImpl(
+      tempFs.tempDir,
+      nxJson,
+      projectGraph,
+      workspaceFiles.rustReferences,
+      { selectivelyHashTsConfig: false }
+    );
+    const upfront = (await impl.hashTasksUpfront(tasks, taskGraph, envs))[
+      'gen:compile'
+    ].value;
+    const [same] = await impl.hashTasks(tasks, taskGraph, envs);
+    expect(same.value).toEqual(upfront);
+
+    // A task rewrote the tracked file; the file map was not told. Hashing
+    // after that reads the disk, the up-front batch still trusts the map.
+    await tempFs.writeFile('libs/gen/generated/tracked.ts', 'after');
+    const [reread] = await impl.hashTasks(tasks, taskGraph, envs);
+    expect(reread.value).not.toEqual(upfront);
+    const again = (await impl.hashTasksUpfront(tasks, taskGraph, envs))[
+      'gen:compile'
+    ].value;
+    expect(again).toEqual(upfront);
+  });
 });

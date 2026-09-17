@@ -64,7 +64,7 @@ describe('ensurePackageHasProvenance', () => {
     expect(global.fetch).toHaveBeenCalledWith(`${attestationUrl}-1.0.0`);
   });
 
-  it('locates the attestation URL when npm 12 / pnpm wrap a single version in an array', async () => {
+  it('locates the attestation URL when npm 12 wraps a single version in an array', async () => {
     packageRegistryViewSpy.mockResolvedValue(
       JSON.stringify([packument('1.0.0')])
     );

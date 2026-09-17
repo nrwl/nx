@@ -7,14 +7,16 @@ use crate::native::{
     project_graph::types::ProjectGraph,
     tasks::{inputs::SplitInputs, types::Task},
 };
+use itertools::Itertools;
 use napi::bindgen_prelude::External;
 use rayon::prelude::*;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use tracing::trace;
 
-use crate::native::tasks::hashers::OnceCache;
+use crate::native::glob::{normalize_glob, partition_glob};
+use crate::native::tasks::hashers::{OnceCache, validate_files_globs};
 use crate::native::tasks::inputs::{
-    expand_single_project_inputs, get_inputs, get_inputs_for_dependency, get_named_inputs,
+    expand_single_project_inputs, get_inputs, get_inputs_for_dependency_group, get_named_inputs,
 };
 use crate::native::tasks::utils;
 use crate::native::utils::find_matching_projects;
@@ -275,9 +277,13 @@ impl HashPlanner {
             );
         }
 
-        result.map(|plans| HashPlans {
-            pool: Arc::clone(&self.instruction_pool),
-            plans,
+        result.map(|plans| {
+            let deferred = deferred_tasks(&plans, pool, &task_graph);
+            HashPlans {
+                pool: Arc::clone(&self.instruction_pool),
+                plans,
+                deferred,
+            }
         })
     }
 
@@ -445,7 +451,7 @@ impl HashPlanner {
         let project_deps = &self.project_graph.dependencies[project_name];
 
         let mut ids: Vec<u32> = self
-            .gather_self_inputs(project_name, &inputs.self_inputs)
+            .gather_self_inputs(project_name, &inputs.self_inputs)?
             .into_iter()
             .chain(self.gather_dependency_outputs(task, task_graph, &inputs.deps_outputs)?)
             .chain(self.gather_project_inputs(&inputs.project_inputs)?)
@@ -537,31 +543,23 @@ impl HashPlanner {
     fn memoized_dep_subtree(
         &self,
         dep: &str,
-        input: &Input,
+        inputs: &[Input],
         external_deps_mapped: &HashMap<String, Vec<String>>,
     ) -> anyhow::Result<Arc<SubtreeResult>> {
-        let cache_key = match input {
-            Input::Inputs { input, .. } => prefixed_cache_key(dep, 'i', input),
-            // Only `dependencies: true` filesets reach here, since that is what
-            // get_inputs_for_dependency puts in deps_inputs.
-            Input::FileSet { fileset, .. } => prefixed_cache_key(dep, 'f', fileset),
-            // Other input kinds never reach dependencies (get_inputs_for_dependency
-            // returns None for them), so they share one empty entry per project.
-            _ => prefixed_cache_key(dep, 'n', ""),
-        };
+        let cache_key = group_cache_key(dep, inputs);
         self.subtree_memo.get_or_try_init(cache_key, || {
-            self.compute_dep_subtree(dep, input, external_deps_mapped)
+            self.compute_dep_subtree(dep, inputs, external_deps_mapped)
         })
     }
 
     fn compute_dep_subtree(
         &self,
         dep: &str,
-        input: &Input,
+        inputs: &[Input],
         external_deps_mapped: &HashMap<String, Vec<String>>,
     ) -> anyhow::Result<SubtreeResult> {
         let Some(dep_inputs) =
-            get_inputs_for_dependency(&self.project_graph.nodes[dep], &self.nx_json, input)?
+            get_inputs_for_dependency_group(&self.project_graph.nodes[dep], &self.nx_json, inputs)?
         else {
             return Ok(SubtreeResult {
                 ids: vec![],
@@ -569,13 +567,13 @@ impl HashPlanner {
             });
         };
 
-        // Deps-outputs resolution depends on the root task; a propagation shape
-        // other than the canonical single input is unexpected — both fall back.
+        // Deps-outputs resolution depends on the root task; a propagation that
+        // does not carry the group forward is unexpected — both fall back.
         let mut needs_legacy =
-            !dep_inputs.deps_outputs.is_empty() || dep_inputs.deps_inputs.len() != 1;
+            !dep_inputs.deps_outputs.is_empty() || dep_inputs.deps_inputs.len() != inputs.len();
         let pool = &self.instruction_pool;
         let mut ids: InstructionIdSet = self
-            .gather_self_inputs(dep, &dep_inputs.self_inputs)
+            .gather_self_inputs(dep, &dep_inputs.self_inputs)?
             .into_iter()
             .map(|instruction| pool.intern(instruction))
             .collect();
@@ -583,11 +581,14 @@ impl HashPlanner {
         // Deduplicate borrowed names before allocating or interning instructions.
         // Keep each memo entry self-contained so cache hits retain its externals.
         let mut external_inputs = hashbrown::HashSet::new();
-        if let Some(child_input) = dep_inputs.deps_inputs.first() {
+        if !dep_inputs.deps_inputs.is_empty() {
             for child in &self.project_graph.dependencies[dep] {
                 if self.project_graph.nodes.contains_key(child) {
-                    let sub =
-                        self.memoized_dep_subtree(child, child_input, external_deps_mapped)?;
+                    let sub = self.memoized_dep_subtree(
+                        child,
+                        &dep_inputs.deps_inputs,
+                        external_deps_mapped,
+                    )?;
                     needs_legacy |= sub.needs_legacy;
                     ids.extend(sub.ids.iter().copied());
                 } else if let Some(external_deps) = external_deps_mapped.get(child) {
@@ -610,18 +611,18 @@ impl HashPlanner {
     fn local_dependency_inputs(
         &self,
         dep: &str,
-        input: &Input,
+        group: &[Input],
     ) -> anyhow::Result<Option<Arc<LocalDependencyInputs>>> {
-        let Some(key) = local_input_cache_key(dep, input) else {
+        let Some(key) = local_input_cache_key(dep, group) else {
             return Ok(None);
         };
         self.local_inputs_memo
             .get_or_init(OnceCache::new)
             .get_or_try_init(key, || {
-                let Some(inputs) = get_inputs_for_dependency(
+                let Some(inputs) = get_inputs_for_dependency_group(
                     &self.project_graph.nodes[dep],
                     &self.nx_json,
-                    input,
+                    group,
                 )?
                 else {
                     return Ok(LocalDependencyInputs {
@@ -633,37 +634,18 @@ impl HashPlanner {
                 // output resolution and unexpected propagation shapes keep their
                 // original path. The initializer never follows project edges,
                 // so cyclic graphs cannot introduce recursive cache waits.
-                let same_propagation = match (input, inputs.deps_inputs.as_slice()) {
-                    (
-                        Input::Inputs { input: before, .. },
-                        [
-                            Input::Inputs {
-                                input: after,
-                                dependencies: true,
-                            },
-                        ],
-                    ) => before == after,
-                    (
-                        Input::FileSet {
-                            fileset: before,
-                            dependencies: true,
-                        },
-                        [
-                            Input::FileSet {
-                                fileset: after,
-                                dependencies: true,
-                            },
-                        ],
-                    ) => before == after,
-                    _ => false,
-                };
+                let same_propagation = group.len() == inputs.deps_inputs.len()
+                    && group
+                        .iter()
+                        .zip(inputs.deps_inputs.iter())
+                        .all(|(before, after)| propagates_unchanged(before, after));
                 let needs_legacy = !same_propagation
                     || !inputs.deps_outputs.is_empty()
                     || !inputs.project_inputs.is_empty();
                 let ids = if needs_legacy {
                     vec![]
                 } else {
-                    self.gather_self_inputs(dep, &inputs.self_inputs)
+                    self.gather_self_inputs(dep, &inputs.self_inputs)?
                         .into_iter()
                         .map(|instruction| self.instruction_pool.intern(instruction))
                         .collect()
@@ -686,7 +668,7 @@ impl HashPlanner {
         if inputs.len() == 1 {
             return self.gather_dependency_input(
                 task,
-                &inputs[0],
+                inputs,
                 task_graph,
                 project_deps,
                 external_deps_mapped,
@@ -696,14 +678,33 @@ impl HashPlanner {
 
         let mut deps_inputs = InstructionIdSet::default();
 
-        for input in inputs {
-            // Dependency inputs are independent. Scope cycle detection to each
-            // input so sibling inputs all apply to the same dependency, rolling
-            // this input's visits back instead of cloning the set.
+        // Scope cycle detection to each propagated unit so siblings all apply to
+        // the same dependency, rolling its visits back instead of cloning the
+        // set. The `includeIgnored` filesets are one unit: they resolve together
+        // against each dependency, so a negation filters that group's positives.
+        let ignored_group = ignored_dep_fileset_group(inputs);
+        let group_first = ignored_group.len() > 1;
+        if group_first {
             let scope = visited.scope_start();
             deps_inputs.extend(self.gather_dependency_input(
                 task,
-                input,
+                &ignored_group,
+                task_graph,
+                project_deps,
+                external_deps_mapped,
+                visited,
+            )?);
+            visited.rollback_to(scope);
+        }
+
+        for input in inputs {
+            if group_first && is_ignored_dep_fileset(input) {
+                continue;
+            }
+            let scope = visited.scope_start();
+            deps_inputs.extend(self.gather_dependency_input(
+                task,
+                std::slice::from_ref(input),
                 task_graph,
                 project_deps,
                 external_deps_mapped,
@@ -718,7 +719,7 @@ impl HashPlanner {
     fn gather_dependency_input<'a>(
         &'a self,
         task: &Task,
-        input: &Input,
+        inputs: &[Input],
         task_graph: &TaskGraph,
         project_deps: &'a [String],
         external_deps_mapped: &'a HashMap<String, Vec<String>>,
@@ -750,7 +751,7 @@ impl HashPlanner {
 
             if self.project_graph.nodes.contains_key(dep) {
                 if self.dependency_memo_enabled(dep) {
-                    let sub = self.memoized_dep_subtree(dep, input, external_deps_mapped)?;
+                    let sub = self.memoized_dep_subtree(dep, inputs, external_deps_mapped)?;
                     if !sub.needs_legacy {
                         // Shared closures are unioned by id before allocation,
                         // without changing the per-input visitation rules.
@@ -758,7 +759,7 @@ impl HashPlanner {
                         continue;
                     }
                 }
-                if let Some(local) = self.local_dependency_inputs(dep, input)? {
+                if let Some(local) = self.local_dependency_inputs(dep, inputs)? {
                     if !local.needs_legacy {
                         deps_inputs.extend(local.ids.iter().copied());
                         parents.push(children);
@@ -766,10 +767,10 @@ impl HashPlanner {
                         continue;
                     }
                 }
-                let Some(dep_inputs) = get_inputs_for_dependency(
+                let Some(dep_inputs) = get_inputs_for_dependency_group(
                     &self.project_graph.nodes[dep],
                     &self.nx_json,
-                    input,
+                    inputs,
                 )?
                 else {
                     continue;
@@ -803,16 +804,25 @@ impl HashPlanner {
         &self,
         project_name: &str,
         self_inputs: &[Input],
-    ) -> Vec<HashInstruction> {
-        let (project_file_sets, workspace_file_sets): (Vec<&str>, Vec<&str>) = self_inputs
+    ) -> anyhow::Result<Vec<HashInstruction>> {
+        // `includeIgnored` filesets hash from disk as one aggregated group, so
+        // a negation filters across entries; the rest read the file map.
+        let mut file_sets = self_inputs
             .iter()
             .filter_map(|input| match input {
-                Input::FileSet { fileset, .. } => Some(*fileset),
+                Input::FileSet {
+                    fileset,
+                    include_ignored,
+                    ..
+                } => Some((FileSetStore::of(fileset, *include_ignored), *fileset)),
                 _ => None,
             })
-            .partition(|file_set| {
-                file_set.starts_with("{projectRoot}/") || file_set.starts_with("!{projectRoot}/")
-            });
+            .into_group_map();
+        let ignored_file_sets = file_sets.remove(&FileSetStore::Disk).unwrap_or_default();
+        let project_file_sets = file_sets.remove(&FileSetStore::Project).unwrap_or_default();
+        let workspace_file_sets = file_sets
+            .remove(&FileSetStore::Workspace)
+            .unwrap_or_default();
 
         let project_root = &self.project_graph.nodes[project_name].root;
 
@@ -845,6 +855,16 @@ impl HashPlanner {
                     .collect(),
             )]
         };
+        let disk_backed_inputs = if ignored_file_sets.is_empty() {
+            vec![]
+        } else {
+            let resolved: Vec<String> = ignored_file_sets
+                .iter()
+                .map(|f| resolve_files_glob(f, project_root, project_name))
+                .collect();
+            validate_files_globs(project_name, &resolved)?;
+            vec![HashInstruction::IgnoredFileSet(resolved)]
+        };
         let runtime_and_env_inputs = self_inputs.iter().filter_map(|i| match i {
             Input::Runtime(runtime) => Some(HashInstruction::Runtime(runtime.to_string())),
             Input::Environment(env) => Some(HashInstruction::Environment(env.to_string())),
@@ -875,11 +895,12 @@ impl HashPlanner {
             _ => None,
         });
 
-        project_inputs
+        Ok(project_inputs
             .into_iter()
             .chain(workspace_file_set_inputs)
+            .chain(disk_backed_inputs)
             .chain(runtime_and_env_inputs)
-            .collect()
+            .collect())
     }
 
     fn gather_dependency_outputs(
@@ -933,7 +954,7 @@ impl HashPlanner {
                     }],
                     &named_inputs,
                 )?;
-                result.extend(self.gather_self_inputs(project, &expanded_input))
+                result.extend(self.gather_self_inputs(project, &expanded_input)?)
             }
         }
         Ok(result)
@@ -946,15 +967,264 @@ fn prefixed_cache_key(dep: &str, kind: char, rest: &str) -> String {
     format!("{}:{dep}{kind}{rest}", dep.len())
 }
 
+/// Tasks the up-front batch must leave out because they read what a task
+/// they depend on, directly or through the chain, writes: any task with a
+/// `dependentTasksOutputFiles` instruction, and any task with a disk-backed
+/// fileset that reads from a directory containing, or sitting inside, an
+/// output an upstream task declares. Any other disk-backed fileset hashes up
+/// front like a tracked one.
+fn deferred_tasks(
+    plans: &HashMap<String, Vec<u32>>,
+    pool: &InstructionPool,
+    task_graph: &TaskGraph,
+) -> HashSet<String> {
+    plans
+        .par_iter()
+        .filter(|(task_id, ids)| {
+            let mut disk_roots: Vec<String> = Vec::new();
+            for id in ids.iter() {
+                match &*pool.get(*id) {
+                    HashInstruction::TaskOutput(_, _) => return true,
+                    HashInstruction::IgnoredFileSet(globs) => disk_roots.extend(
+                        globs
+                            .iter()
+                            .filter(|glob| !glob.starts_with('!'))
+                            .map(|glob| walk_root(glob)),
+                    ),
+                    _ => {}
+                }
+            }
+            if disk_roots.is_empty() {
+                return false;
+            }
+            let output_roots = upstream_output_roots(task_graph, task_id);
+            disk_roots.iter().any(|disk| {
+                output_roots
+                    .iter()
+                    .any(|output| paths_overlap(disk, output))
+            })
+        })
+        .map(|(task_id, _)| task_id.clone())
+        .collect()
+}
+
+/// The directory a glob reads from, spelled the way expansion reads it. A
+/// glob with no literal prefix, or one that climbs out of the workspace,
+/// reads as the workspace root, so a doubtful case errs toward deferring.
+fn walk_root(glob: &str) -> String {
+    // Legacy default outputs are spelled `./dist` and `dist/.`.
+    let glob = glob.strip_prefix("./").unwrap_or(glob);
+    let glob = glob.strip_suffix("/.").unwrap_or(glob);
+    let glob = normalize_glob(glob);
+    if glob.split('/').any(|segment| segment == "..") {
+        return String::new();
+    }
+    partition_glob(&glob).0
+}
+
+/// Walk roots of every output declared by the tasks `task_id` depends on,
+/// directly or through the chain, continuous dependencies included.
+fn upstream_output_roots(task_graph: &TaskGraph, task_id: &str) -> Vec<String> {
+    let dependencies_of = |id: &str| {
+        [
+            task_graph.dependencies.get(id),
+            task_graph.continuous_dependencies.get(id),
+        ]
+        .into_iter()
+        .flatten()
+        .flat_map(|deps| deps.iter().map(String::as_str))
+        .collect::<Vec<&str>>()
+    };
+    let mut roots = Vec::new();
+    let mut visited: HashSet<&str> = HashSet::new();
+    let mut stack = dependencies_of(task_id);
+    while let Some(id) = stack.pop() {
+        if !visited.insert(id) {
+            continue;
+        }
+        if let Some(task) = task_graph.tasks.get(id) {
+            roots.extend(
+                task.outputs
+                    .iter()
+                    .filter(|output| !output.starts_with('!'))
+                    .map(|output| walk_root(output)),
+            );
+        }
+        stack.extend(dependencies_of(id));
+    }
+    roots
+}
+
+/// Whether one path is the other or lies inside it. The workspace root, the
+/// empty string, holds everything.
+fn paths_overlap(a: &str, b: &str) -> bool {
+    a.is_empty()
+        || b.is_empty()
+        || a == b
+        || a.strip_prefix(b).is_some_and(|rest| rest.starts_with('/'))
+        || b.strip_prefix(a).is_some_and(|rest| rest.starts_with('/'))
+}
+
+/// Where a fileset's files come from.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+enum FileSetStore {
+    /// Read from disk (`includeIgnored`).
+    Disk,
+    /// Filtered from the project's tracked files.
+    Project,
+    /// Filtered from the workspace's tracked files.
+    Workspace,
+}
+
+impl FileSetStore {
+    fn of(fileset: &str, include_ignored: bool) -> Self {
+        if include_ignored {
+            FileSetStore::Disk
+        } else if fileset.starts_with("{projectRoot}/") || fileset.starts_with("!{projectRoot}/") {
+            FileSetStore::Project
+        } else {
+            FileSetStore::Workspace
+        }
+    }
+}
+
+/// The cache-key character for a fileset: `f` reads the file map, `d` reads
+/// the disk (`includeIgnored`).
+fn fileset_kind(include_ignored: bool) -> char {
+    if include_ignored { 'd' } else { 'f' }
+}
+
 /// Unsupported kinds are uncached.
-fn local_input_cache_key(dep: &str, input: &Input) -> Option<String> {
-    match input {
-        Input::Inputs { input, .. } => Some(prefixed_cache_key(dep, 'i', input)),
-        Input::FileSet {
+fn local_input_cache_key(dep: &str, group: &[Input]) -> Option<String> {
+    match group {
+        [Input::Inputs { input, .. }] => Some(prefixed_cache_key(dep, 'i', input)),
+        [
+            Input::FileSet {
+                fileset,
+                dependencies: true,
+                include_ignored,
+            },
+        ] => Some(prefixed_cache_key(
+            dep,
+            fileset_kind(*include_ignored),
             fileset,
+        )),
+        [_] | [] => None,
+        _ => {
+            debug_assert!(
+                group.iter().all(is_ignored_dep_fileset),
+                "a group reaching the key holds only includeIgnored dependency filesets"
+            );
+            Some(grouped_cache_key(dep, group))
+        }
+    }
+}
+
+/// One key per propagated group. A group holds more than one input, so its
+/// kind never collides with a single input's key.
+fn group_cache_key(dep: &str, inputs: &[Input]) -> String {
+    match inputs {
+        // Only `dependencies: true` filesets reach here, since that is what
+        // get_inputs_for_dependency puts in deps_inputs. The kind keeps the
+        // two backing stores apart: the same glob is a different subtree.
+        [Input::Inputs { input, .. }] => prefixed_cache_key(dep, 'i', input),
+        [
+            Input::FileSet {
+                fileset,
+                include_ignored,
+                ..
+            },
+        ] => prefixed_cache_key(dep, fileset_kind(*include_ignored), fileset),
+        // Other input kinds never reach dependencies (get_inputs_for_dependency
+        // returns None for them), so they share one empty entry per project.
+        [_] | [] => prefixed_cache_key(dep, 'n', ""),
+        _ => {
+            debug_assert!(
+                inputs.iter().all(is_ignored_dep_fileset),
+                "a group reaching the key holds only includeIgnored dependency filesets"
+            );
+            grouped_cache_key(dep, inputs)
+        }
+    }
+}
+
+/// Group order is part of the key: it is the order the globs are hashed in.
+/// So is each member's kind, so two groups naming the same filesets cannot
+/// share a memo entry. No caller builds a mixed group today — each arm that
+/// reaches here debug-asserts it — but the kind is in the key regardless,
+/// since a debug assert is compiled out of the binary that ships.
+fn grouped_cache_key(dep: &str, group: &[Input]) -> String {
+    let globs = group
+        .iter()
+        .map(|input| match input {
+            Input::FileSet {
+                fileset,
+                include_ignored,
+                ..
+            } => format!("{}{fileset}", fileset_kind(*include_ignored)),
+            _ => String::new(),
+        })
+        .collect::<Vec<_>>()
+        .join("\0");
+    prefixed_cache_key(dep, 'g', &globs)
+}
+
+fn is_ignored_dep_fileset(input: &Input) -> bool {
+    matches!(
+        input,
+        Input::FileSet {
             dependencies: true,
-        } => Some(prefixed_cache_key(dep, 'f', fileset)),
-        _ => None,
+            include_ignored: true,
+            ..
+        }
+    )
+}
+
+/// The `includeIgnored` filesets a project propagates to its dependencies.
+/// Every member carries both flags, which is what lets `grouped_cache_key`
+/// key a group on its globs and kinds without two groups colliding.
+fn ignored_dep_fileset_group<'a>(inputs: &[Input<'a>]) -> Vec<Input<'a>> {
+    inputs
+        .iter()
+        .filter_map(|input| match input {
+            Input::FileSet {
+                fileset,
+                dependencies: true,
+                include_ignored: true,
+            } => Some(Input::FileSet {
+                fileset: *fileset,
+                dependencies: true,
+                include_ignored: true,
+            }),
+            _ => None,
+        })
+        .collect()
+}
+
+/// Whether an input reaches the dependency unchanged, so its expansion is
+/// task-independent and cacheable.
+fn propagates_unchanged(before: &Input, after: &Input) -> bool {
+    match (before, after) {
+        (
+            Input::Inputs { input: before, .. },
+            Input::Inputs {
+                input: after,
+                dependencies: true,
+            },
+        ) => before == after,
+        (
+            Input::FileSet {
+                fileset: before,
+                dependencies: true,
+                include_ignored: before_ignored,
+            },
+            Input::FileSet {
+                fileset: after,
+                dependencies: true,
+                include_ignored: after_ignored,
+            },
+        ) => before == after && before_ignored == after_ignored,
+        _ => false,
     }
 }
 
@@ -973,6 +1243,19 @@ fn resolve_tokens(fileset: &str, project_root: &str, project_name: &str) -> Stri
         resolved.replace("{projectName}", project_name)
     } else {
         resolved
+    }
+}
+
+/// Disk-backed globs are workspace-relative once resolved: `{workspaceRoot}/`
+/// is a no-op prefix here, unlike map-backed filesets where the hasher strips it.
+fn resolve_files_glob(glob: &str, project_root: &str, project_name: &str) -> String {
+    let resolved = resolve_tokens(glob, project_root, project_name);
+    match resolved.strip_prefix("!{workspaceRoot}/") {
+        Some(rest) => format!("!{rest}"),
+        None => resolved
+            .strip_prefix("{workspaceRoot}/")
+            .map(str::to_string)
+            .unwrap_or(resolved),
     }
 }
 
@@ -1107,12 +1390,15 @@ mod tests {
                         dependencies: true,
                     };
                     local_cache
-                        .get_or_try_init(local_input_cache_key(name, &input).unwrap(), || {
-                            Ok::<_, ()>(LocalDependencyInputs {
-                                ids: vec![],
-                                needs_legacy: true,
-                            })
-                        })
+                        .get_or_try_init(
+                            local_input_cache_key(name, std::slice::from_ref(&input)).unwrap(),
+                            || {
+                                Ok::<_, ()>(LocalDependencyInputs {
+                                    ids: vec![],
+                                    needs_legacy: true,
+                                })
+                            },
+                        )
                         .unwrap();
                 }
             }
@@ -1176,11 +1462,11 @@ mod tests {
             dependencies: true,
         };
         let first = planner
-            .local_dependency_inputs("cycle-a", &input)
+            .local_dependency_inputs("cycle-a", std::slice::from_ref(&input))
             .unwrap()
             .unwrap();
         let second = planner
-            .local_dependency_inputs("cycle-a", &input)
+            .local_dependency_inputs("cycle-a", std::slice::from_ref(&input))
             .unwrap()
             .unwrap();
         assert!(Arc::ptr_eq(&first, &second));
@@ -1197,7 +1483,7 @@ mod tests {
         assert_eq!(planner.local_inputs_memo.get().unwrap().len(), 1);
         assert_eq!(planner.subtree_memo.len(), 0);
         let output = planner
-            .local_dependency_inputs("leaf", &input)
+            .local_dependency_inputs("leaf", std::slice::from_ref(&input))
             .unwrap()
             .unwrap();
         assert!(output.needs_legacy);
@@ -1211,30 +1497,97 @@ mod tests {
             dependencies: true,
         };
         assert_ne!(
-            local_input_cache_key("a", &named("b\0i\0c")),
-            local_input_cache_key("a\0i\0b", &named("c"))
+            local_input_cache_key("a", &[named("b\0i\0c")]),
+            local_input_cache_key("a\0i\0b", &[named("c")])
         );
         assert_ne!(
-            local_input_cache_key("a", &named("{projectRoot}/file")),
+            local_input_cache_key("a", &[named("{projectRoot}/file")]),
             local_input_cache_key(
                 "a",
-                &Input::FileSet {
+                &[Input::FileSet {
                     fileset: "{projectRoot}/file",
-                    dependencies: true
-                }
+                    dependencies: true,
+                    include_ignored: false,
+                }]
+            )
+        );
+        // The two backing stores are different subtrees for the same glob.
+        assert_ne!(
+            local_input_cache_key(
+                "a",
+                &[Input::FileSet {
+                    fileset: "{projectRoot}/file",
+                    dependencies: true,
+                    include_ignored: false,
+                }]
+            ),
+            local_input_cache_key(
+                "a",
+                &[Input::FileSet {
+                    fileset: "{projectRoot}/file",
+                    dependencies: true,
+                    include_ignored: true,
+                }]
             )
         );
         assert!(
             local_input_cache_key(
                 "a",
-                &Input::FileSet {
+                &[Input::FileSet {
                     fileset: "{projectRoot}/file",
-                    dependencies: false
-                }
+                    dependencies: false,
+                    include_ignored: false,
+                }]
             )
             .is_none()
         );
-        assert!(local_input_cache_key("a", &Input::String("default")).is_none());
+        assert!(local_input_cache_key("a", &[Input::String("default")]).is_none());
+    }
+
+    /// The key carries each member's kind, not only its globs, so two groups
+    /// naming the same filesets cannot share a memo entry. Callers do not
+    /// build a mixed group — the arms into the key debug-assert it — and this
+    /// pins the key itself, which is what still stands in a release binary.
+    #[test]
+    fn a_group_key_separates_members_by_kind() {
+        let fs = |fileset, include_ignored| Input::FileSet {
+            fileset,
+            dependencies: true,
+            include_ignored,
+        };
+        assert_ne!(
+            grouped_cache_key("p", &[fs("x", true), fs("y", false)]),
+            grouped_cache_key("p", &[fs("x", false), fs("y", true)])
+        );
+        assert_ne!(
+            grouped_cache_key("p", &[fs("x", true), fs("y", true)]),
+            grouped_cache_key("p", &[fs("x", false), fs("y", false)])
+        );
+    }
+
+    #[test]
+    fn group_keys_are_distinct_from_each_other_and_from_single_inputs() {
+        let ignored = |fileset| Input::FileSet {
+            fileset,
+            dependencies: true,
+            include_ignored: true,
+        };
+        let group = |globs: &[&'static str]| {
+            let group: Vec<_> = globs.iter().map(|glob| ignored(glob)).collect();
+            (
+                group_cache_key("a", &group),
+                local_input_cache_key("a", &group),
+            )
+        };
+        assert_ne!(group(&["x", "!y"]), group(&["x", "!z"]));
+        // Order is part of the key: it is the order the globs are hashed in.
+        assert_ne!(group(&["x", "!y"]), group(&["!y", "x"]));
+        // A joined group cannot be read as one glob holding the separator.
+        assert_ne!(group(&["x", "!y"]), group(&["x\0!y", "x"]));
+        assert_ne!(
+            group(&["x", "!y"]).0,
+            group_cache_key("a", &[ignored("x\0!y")])
+        );
     }
 
     #[test]
@@ -1311,10 +1664,10 @@ mod tests {
         let subtree = planner
             .memoized_dep_subtree(
                 "app",
-                &Input::Inputs {
+                &[Input::Inputs {
                     input: "default",
                     dependencies: true,
-                },
+                }],
                 &HashMap::new(),
             )
             .unwrap();
@@ -1431,5 +1784,138 @@ mod tests {
             plan.len(),
             plan.capacity()
         );
+    }
+
+    #[test]
+    fn defers_a_task_that_reads_an_upstream_output() {
+        let pool = InstructionPool::new();
+        let disk = |_project: &str, glob: &str| {
+            pool.intern(HashInstruction::IgnoredFileSet(vec![glob.into()]))
+        };
+        let tracked = pool.intern(HashInstruction::ProjectFileSet(
+            "lib".into(),
+            vec!["libs/lib/src/**".into()],
+        ));
+        let group = |_project: &str, globs: &[&str]| {
+            pool.intern(HashInstruction::IgnoredFileSet(
+                globs.iter().map(|g| g.to_string()).collect(),
+            ))
+        };
+        let plans: HashMap<String, Vec<u32>> = [
+            ("web:build", vec![disk("web", "apps/web/generated/**/*.ts")]),
+            ("web:lint", vec![disk("web", "apps/web/.env.generated")]),
+            ("web:test", vec![disk("web", "dist/**")]),
+            ("web:bracket", vec![disk("web", "apps/web/[dir]/**")]),
+            ("web:slashes", vec![disk("web", "apps/web//generated/**")]),
+            (
+                "web:negated",
+                vec![group("web", &["apps/web/.env.generated", "!dist/**"])],
+            ),
+            ("web:dot", vec![disk("web", "apps/web/.env.generated")]),
+            ("web:dotdist", vec![disk("web", "dist/legacy/**")]),
+            ("web:outside", vec![disk("web", "apps/web/.env.generated")]),
+            ("web:outslash", vec![disk("web", "dist/apps/web/**")]),
+            ("lib:build", vec![tracked]),
+            (
+                "web:e2e",
+                vec![pool.intern(HashInstruction::TaskOutput(
+                    "**/*.js".into(),
+                    vec!["apps/web/dist".into()],
+                ))],
+            ),
+        ]
+        .into_iter()
+        .map(|(id, ids)| (id.to_string(), ids))
+        .collect();
+        let strings = |list: &[&str]| list.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+        let tasks: HashMap<String, Task> = [
+            ("web:build", vec![]),
+            ("web:lint", vec![]),
+            ("web:test", vec![]),
+            ("web:bracket", vec![]),
+            ("web:slashes", vec![]),
+            ("web:negated", vec![]),
+            ("web:dot", vec![]),
+            ("web:dotdist", vec![]),
+            ("web:outside", vec![]),
+            ("web:outslash", vec![]),
+            ("web:e2e", vec![]),
+            ("web:codegen", vec!["apps/web/generated"]),
+            ("web:serve", vec!["apps/web/d"]),
+            (
+                "lib:build",
+                vec!["dist/libs/lib", "!apps/web/.env.generated"],
+            ),
+            ("lib:dot", vec!["./dist"]),
+            ("lib:outside", vec!["../outside"]),
+            ("lib:outslash", vec!["dist//apps/web"]),
+        ]
+        .into_iter()
+        .map(|(id, outputs)| {
+            let (project, target) = id.split_once(':').unwrap();
+            (
+                id.to_string(),
+                Task::new(project, target).with_outputs(strings(&outputs)),
+            )
+        })
+        .collect();
+        let edges = |list: &[(&str, &[&str])]| {
+            list.iter()
+                .map(|(id, deps)| (id.to_string(), strings(deps)))
+                .collect::<HashMap<String, Vec<String>>>()
+        };
+        let task_graph = TaskGraph {
+            roots: vec![],
+            tasks,
+            dependencies: edges(&[
+                ("web:build", &["web:codegen", "lib:build"]),
+                ("web:lint", &["lib:build"]),
+                ("web:test", &["web:build"]),
+                ("web:slashes", &["web:codegen"]),
+                ("web:negated", &["lib:build"]),
+                ("web:dot", &["lib:dot"]),
+                ("web:dotdist", &["lib:dot"]),
+                ("web:outside", &["lib:outside"]),
+                ("web:outslash", &["lib:outslash"]),
+            ]),
+            continuous_dependencies: edges(&[("web:bracket", &["web:serve"])]),
+        };
+
+        let mut deferred: Vec<String> = deferred_tasks(&plans, &pool, &task_graph)
+            .into_iter()
+            .collect();
+        deferred.sort();
+        // web:build reads its codegen's output; web:test's `dist/**` holds
+        // lib:build's `dist/libs/lib` two steps up; web:bracket's `[dir]`
+        // counts as a wildcard, so `apps/web` meets the served `apps/web/d`;
+        // `//` on either side reads as one slash; a legacy `./dist` output
+        // is `dist`, so it holds `dist/legacy` but not `apps/web`; an output
+        // the parser rejects (`../outside`) counts as the workspace root.
+        // web:lint reads a file no upstream task writes, and a `!` entry on
+        // either side is neither a read nor a write. web:e2e reads dependent
+        // task outputs, which always wait.
+        assert_eq!(
+            deferred,
+            vec![
+                "web:bracket",
+                "web:build",
+                "web:dotdist",
+                "web:e2e",
+                "web:outside",
+                "web:outslash",
+                "web:slashes",
+                "web:test"
+            ]
+        );
+    }
+
+    #[test]
+    fn paths_overlap_when_one_holds_the_other() {
+        assert!(paths_overlap("dist", "dist/libs/lib"));
+        assert!(paths_overlap("dist/libs/lib", "dist"));
+        assert!(paths_overlap("dist", "dist"));
+        assert!(paths_overlap("", "anything"));
+        assert!(!paths_overlap("dist", "distribution"));
+        assert!(!paths_overlap("apps/web/dist", "apps/webapp"));
     }
 }

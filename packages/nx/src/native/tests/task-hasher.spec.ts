@@ -78,7 +78,8 @@ describe('task hash result conversion and assembly', () => {
       Buffer.from('{}'),
       {},
       undefined,
-      { selectivelyHashTsConfig: false }
+      { selectivelyHashTsConfig: false },
+      files.ignoredIndex
     );
     const ids = Object.keys(tasks.tasks);
     const envs = Object.fromEntries(

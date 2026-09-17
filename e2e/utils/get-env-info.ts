@@ -188,6 +188,16 @@ export function getStrippedEnvironmentVariables(cwd: string = tmpProjPath()) {
       // Remove AI agent detection env vars to prevent the test runner's
       // environment (e.g., running inside Claude Code) from leaking into
       // e2e test subprocesses. Tests that need these pass them explicitly.
+      //
+      // Every variable `is_ai_agent` reads must be here, or a run started from
+      // that agent resolves to `--output-style=summary`, which prints no task
+      // output and no `Successfully ran target` line — the string ~96 e2e files
+      // assert on. This list has fallen behind `ai.rs` twice as it gained
+      // detectors, so check it rather than trusting it:
+      //   grep -o 'env::var("[^"]*"' packages/nx/src/native/utils/ai.rs
+      // PAGER is deliberately absent: Cursor needs it alongside CURSOR_TRACE_ID
+      // and COMPOSER_NO_INTERACTION, which are both stripped. NX_DAEMON_PROCESS
+      // is already dropped by the NX_ rule above.
       const aiAgentEnvVars = [
         'CLAUDECODE',
         'CLAUDE_CODE',
@@ -196,6 +206,10 @@ export function getStrippedEnvironmentVariables(cwd: string = tmpProjPath()) {
         'CURSOR_TRACE_ID',
         'COMPOSER_NO_INTERACTION',
         'REPL_ID',
+        'VSCODE_AGENT',
+        'CODEX_THREAD_ID',
+        'COPILOT_CLI',
+        'SUPERSET_AGENT_ID',
       ];
       if (aiAgentEnvVars.includes(key)) {
         return false;
