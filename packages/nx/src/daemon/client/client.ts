@@ -15,6 +15,7 @@ import { readNxJson } from '../../config/configuration';
 import { hasNxJson, NxJsonConfiguration } from '../../config/nx-json';
 import { FileData, ProjectGraph } from '../../config/project-graph';
 import { Task, TaskGraph } from '../../config/task-graph';
+import { pruneTaskGraph } from '../../tasks-runner/prune-task-graph';
 import { Hash } from '../../hasher/task-hasher';
 import { IS_WASM, NxWorkspaceFiles, TaskRun, TaskTarget } from '../../native';
 import {
@@ -186,22 +187,8 @@ function withoutTaskResults(
   tasks: Task[],
   taskGraph: TaskGraph
 ): { tasks: Task[]; taskGraph: TaskGraph } {
-  const trimmedTasks: Record<string, Task> = {};
-  for (const [id, t] of Object.entries(taskGraph.tasks)) {
-    const {
-      hash,
-      hashDetails,
-      startTime,
-      endTime,
-      terminalOutput,
-      ...strippedTask
-    } = t as Task & { terminalOutput?: string };
-    trimmedTasks[id] = strippedTask as Task;
-  }
-  return {
-    tasks: tasks.map((t) => trimmedTasks[t.id]),
-    taskGraph: { ...taskGraph, tasks: trimmedTasks },
-  };
+  const pruned = pruneTaskGraph(taskGraph);
+  return { tasks: tasks.map((t) => pruned.tasks[t.id]), taskGraph: pruned };
 }
 
 export class DaemonClient {

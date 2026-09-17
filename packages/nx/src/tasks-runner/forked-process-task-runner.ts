@@ -5,6 +5,7 @@ import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 
 import { output } from '../utils/output';
+import { pruneTaskGraph } from './prune-task-graph';
 import { stripIndents } from '../utils/strip-indents';
 import { BatchMessageType } from './batch/batch-messages';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
@@ -94,8 +95,8 @@ export class ForkedProcessTaskRunner {
       type: BatchMessageType.RunTasks,
       executorName,
       projectGraph,
-      batchTaskGraph,
-      fullTaskGraph,
+      batchTaskGraph: pruneTaskGraph(batchTaskGraph),
+      fullTaskGraph: pruneTaskGraph(fullTaskGraph),
     });
 
     return cp;
@@ -240,7 +241,7 @@ export class ForkedProcessTaskRunner {
     p.send({
       targetDescription: task.target,
       overrides: task.overrides,
-      taskGraph,
+      taskGraph: pruneTaskGraph(taskGraph),
       isVerbose: this.verbose,
     });
     this.processes.add(p);
@@ -301,7 +302,7 @@ export class ForkedProcessTaskRunner {
       p.send({
         targetDescription: task.target,
         overrides: task.overrides,
-        taskGraph,
+        taskGraph: pruneTaskGraph(taskGraph),
         isVerbose: this.verbose,
       });
 
@@ -371,7 +372,7 @@ export class ForkedProcessTaskRunner {
       p.send({
         targetDescription: task.target,
         overrides: task.overrides,
-        taskGraph,
+        taskGraph: pruneTaskGraph(taskGraph),
         isVerbose: this.verbose,
       });
 
