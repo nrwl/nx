@@ -333,12 +333,12 @@ enum InstructionKind {
 impl InstructionKind {
     fn of(instruction: &HashInstruction) -> Self {
         match instruction {
-            HashInstruction::ProjectFileSet(_, _, false) | HashInstruction::WorkspaceFileSet(_) => {
+            HashInstruction::ProjectFileSet(..) | HashInstruction::WorkspaceFileSet(_) => {
                 Self::FileSet
             }
             // Disk-backed groups are the snapshot's own reads, or declared
             // `includeIgnored` inputs; neither is replaced by a snapshot.
-            HashInstruction::ProjectFileSet(_, _, true) => Self::Other,
+            HashInstruction::IgnoredFileSet(_) => Self::Other,
             HashInstruction::TsConfiguration(_) => Self::TsConfiguration,
             _ => Self::Other,
         }
@@ -365,11 +365,9 @@ impl HashInstruction {
     /// large disk-backed group folds to a count and a digest of its paths.
     pub fn label(&self) -> String {
         match self {
-            HashInstruction::ProjectFileSet(project, globs, true)
-                if globs.len() > COMPACT_FILES_LABEL_ABOVE =>
-            {
+            HashInstruction::IgnoredFileSet(globs) if globs.len() > COMPACT_FILES_LABEL_ABOVE => {
                 let digest = crate::native::hasher::hash(globs.join(",").as_bytes());
-                format!("files:{project}:[{} paths #{digest}]", globs.len())
+                format!("files:[{} paths #{digest}]", globs.len())
             }
             _ => self.to_string(),
         }
@@ -467,18 +465,17 @@ mod tests {
 
     #[test]
     fn label_folds_a_large_disk_backed_group_and_keeps_small_ones_verbatim() {
-        let small =
-            HashInstruction::ProjectFileSet("p".into(), vec!["a".into(), "!b".into()], true);
+        let small = HashInstruction::IgnoredFileSet(vec!["a".into(), "!b".into()]);
         assert_eq!(small.label(), small.to_string());
         let globs: Vec<String> = (0..20).map(|i| format!("libs/p/f{i}.ts")).collect();
-        let big = HashInstruction::ProjectFileSet("p".into(), globs.clone(), true);
+        let big = HashInstruction::IgnoredFileSet(globs.clone());
         let label = big.label();
-        assert!(label.starts_with("files:p:[20 paths #"), "{label}");
+        assert!(label.starts_with("files:[20 paths #"), "{label}");
         let mut changed = globs.clone();
         changed[3] = "libs/p/other.ts".into();
-        let relabeled = HashInstruction::ProjectFileSet("p".into(), changed, true).label();
+        let relabeled = HashInstruction::IgnoredFileSet(changed).label();
         assert_ne!(label, relabeled);
-        let tracked = HashInstruction::ProjectFileSet("p".into(), globs, false);
+        let tracked = HashInstruction::ProjectFileSet("p".into(), globs);
         assert_eq!(tracked.label(), tracked.to_string());
         let pool = InstructionPool::new();
         let id = pool.intern(big.clone());
@@ -499,14 +496,9 @@ mod tests {
         let fileset = pool.intern(HashInstruction::ProjectFileSet(
             "p".into(),
             vec!["p/**/*".into()],
-            false,
         ));
         let group = pool.intern_with_declared_tail(
-            HashInstruction::ProjectFileSet(
-                "p".into(),
-                vec!["p/a.ts".into(), "!p/**/*.spec.ts".into()],
-                true,
-            ),
+            HashInstruction::IgnoredFileSet(vec!["p/a.ts".into(), "!p/**/*.spec.ts".into()]),
             1,
         );
         assert!(pool.replaced_by_snapshot(fileset, true));

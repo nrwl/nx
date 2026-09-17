@@ -1,10 +1,11 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 
 use crate::native::cache::expand_outputs::match_output_paths;
+use crate::native::glob::expand_literal_braces;
 use crate::native::io_snapshots::bundle::{TaskInputs, TaskIoSnapshot};
 use crate::native::io_snapshots::{IoSnapshotResolution, IoSnapshots};
 use crate::native::tasks::hash_planner::walk_root;
-use crate::native::tasks::hashers::{expand_literal_braces, validate_files_glob};
+use crate::native::tasks::hashers::validate_files_glob;
 use crate::native::tasks::types::TaskGraph;
 
 /// What the eligibility walk needs from the workspace. Task-level opt-outs
