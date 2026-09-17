@@ -198,14 +198,14 @@ export function createNodeFromPackageJson(
   cache: PackageJsonConfigurationCache,
   isInPackageManagerWorkspaces: boolean,
   sharedInputs: SharedPackageJsonInputs,
-  configurationHashes?: PackageJsonConfigurationHashes,
-  siblingProjectJson?: ProjectConfiguration | null
+  configurationHashes?: PackageJsonConfigurationHashes
 ) {
   const projectRoot = dirname(pkgJsonPath);
   let hasNxJsPluginInstalled: boolean | undefined;
   const resolveNxJsPlugin = () =>
     (hasNxJsPluginInstalled ??= hasNxJsPlugin(projectRoot, workspaceRoot));
   let json: PackageJson;
+  let siblingProjectJson: ProjectConfiguration | null | undefined;
 
   let configurationInputs: object;
   if (configurationHashes) {
@@ -219,11 +219,9 @@ export function createNodeFromPackageJson(
     }
   } else {
     json = readJsonFile(join(workspaceRoot, pkgJsonPath));
-    if (siblingProjectJson === undefined) {
-      siblingProjectJson = tryReadJson(
-        join(workspaceRoot, projectRoot, 'project.json')
-      );
-    }
+    siblingProjectJson = tryReadJson(
+      join(workspaceRoot, projectRoot, 'project.json')
+    );
     configurationInputs = {
       packageJson: json,
       siblingProjectJson,

@@ -208,6 +208,9 @@ module.exports = () => {
       getAllFileDataInContext: guarded('getAllFileDataInContext', () =>
         Promise.resolve([])
       ),
+      getFileHashesInContext: guarded('getFileHashesInContext', () =>
+        Promise.resolve([])
+      ),
       getFilesInDirectoryUsingContext: guarded(
         'getFilesInDirectoryUsingContext',
         () => Promise.resolve([])
