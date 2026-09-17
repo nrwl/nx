@@ -1,8 +1,10 @@
 use std::collections::BTreeMap;
+use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
 use anyhow::{Context, Result};
-use rusqlite::{ToSql, params};
+use rusqlite::params;
+use rusqlite::types::Value;
 use sha2::{Digest, Sha256};
 
 use super::IoSnapshotResolution;
@@ -33,9 +35,6 @@ CREATE TABLE IF NOT EXISTS io_snapshot_tasks (
     PRIMARY KEY (commit_sha, task_id)
 ) WITHOUT ROWID;
 ";
-
-/// Entries per `IN (...)` list; SQLite's default parameter limit is 999.
-const READ_CHUNK: usize = 500;
 
 /// Deterministic identity of the snapshot content, independent of which
 /// commit it was requested for.
@@ -146,33 +145,29 @@ pub fn read_entries(
     commit: &str,
     task_ids: &[&str],
 ) -> Result<Vec<(String, TaskIoSnapshot)>> {
-    let mut entries = Vec::new();
-    let db = db.lock().unwrap();
-    for chunk in task_ids.chunks(READ_CHUNK) {
-        let placeholders = (0..chunk.len())
-            .map(|i| format!("?{}", i + 2))
-            .collect::<Vec<_>>()
-            .join(",");
-        let sql = format!(
-            "SELECT task_id, entry FROM io_snapshot_tasks \
-             WHERE commit_sha = ?1 AND task_id IN ({placeholders})"
-        );
-        let mut args: Vec<&dyn ToSql> = Vec::with_capacity(chunk.len() + 1);
-        args.push(&commit);
-        args.extend(chunk.iter().map(|id| id as &dyn ToSql));
-        let rows: Vec<(String, String)> =
-            match db.query_map(&sql, args.as_slice(), |row| Ok((row.get(0)?, row.get(1)?))) {
-                Ok(rows) => rows,
-                Err(err) if absent_table(&err) => return Ok(entries),
-                Err(err) => return Err(err),
-            };
-        for (task_id, json) in rows {
+    let ids = Rc::new(
+        task_ids
+            .iter()
+            .map(|id| Value::from(id.to_string()))
+            .collect::<Vec<Value>>(),
+    );
+    let rows: Vec<(String, String)> = match db.lock().unwrap().query_map(
+        "SELECT task_id, entry FROM io_snapshot_tasks \
+         WHERE commit_sha = ?1 AND task_id IN rarray(?2)",
+        (commit, ids),
+        |row| Ok((row.get(0)?, row.get(1)?)),
+    ) {
+        Ok(rows) => rows,
+        Err(err) if absent_table(&err) => return Ok(Vec::new()),
+        Err(err) => return Err(err),
+    };
+    rows.into_iter()
+        .map(|(task_id, json)| {
             let entry = serde_json::from_str(&json)
                 .with_context(|| format!("parsing the stored snapshot of {task_id}"))?;
-            entries.push((task_id, entry));
-        }
-    }
-    Ok(entries)
+            Ok((task_id, entry))
+        })
+        .collect()
 }
 
 #[cfg(test)]
@@ -250,11 +245,11 @@ mod tests {
     }
 
     #[test]
-    fn reads_in_chunks_beyond_the_parameter_limit() {
+    fn reads_more_ids_than_sqlite_allows_parameters_in_one_query() {
         let (_dir, db) = temp_db();
-        let ids: Vec<String> = (0..1200).map(|i| format!("p{i}:build")).collect();
+        let ids: Vec<String> = (0..40_000).map(|i| format!("p{i}:build")).collect();
         let refs: Vec<&str> = ids.iter().map(String::as_str).collect();
         write(&db, &bundle("c1", 1, &refs), 5).unwrap();
-        assert_eq!(read_entries(&db, "c1", &refs).unwrap().len(), 1200);
+        assert_eq!(read_entries(&db, "c1", &refs).unwrap().len(), 40_000);
     }
 }
