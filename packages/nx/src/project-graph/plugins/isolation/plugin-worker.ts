@@ -145,14 +145,14 @@ const server = createServer((socket) => {
               }
               const { withModuleClosure } =
                 require('./module-closure') as typeof import('./module-closure');
-              const { withEnvReads } =
-                require('./env-reads') as typeof import('./env-reads');
+              const { observePluginLoad } =
+                require('./warm-nx-modules') as typeof import('./warm-nx-modules');
               // Nested so one load is watched by both: what it registers depends
               // on the files it read and on the environment it read them in.
               const {
                 result: { result, sourceFiles },
                 envReads,
-              } = await withEnvReads(() =>
+              } = await observePluginLoad(() =>
                 withModuleClosure(() =>
                   loadResolvedNxPluginAsync(
                     pluginConfiguration,
