@@ -381,6 +381,9 @@ export async function downloadAndExtractClientBundle(
       'Another process is downloading the client bundle, waiting for it to complete'
     );
     await lock.wait();
+    // The holder may be running from a bundle whose record predates this call,
+    // so the wait alone makes the install contended.
+    contended = true;
     const installedBundle = bundleInstalledSince(recordBeforeContending);
     if (installedBundle) {
       if (installedBundle.version === version) {
@@ -390,9 +393,6 @@ export async function downloadAndExtractClientBundle(
         );
         return installedBundle;
       }
-      // A different version means that process is running from a bundle this
-      // one must not delete.
-      contended = true;
       debugLog(
         'Another process installed a different bundle: ',
         installedBundle.version
@@ -526,11 +526,12 @@ async function downloadAndExtractBundle(
 
           stream.resume();
         } else {
-          // Any other entry type still has to advance the stream. Calling
-          // neither next() nor resume() stalls tar-stream, and this process is
-          // holding the download lock while it stalls.
-          stream.resume();
-          next();
+          // Skipping the entry would publish an incomplete bundle.
+          extract.destroy(
+            new Error(
+              `Unsupported ${headers.type} entry in Nx Cloud client bundle: ${headers.name}`
+            )
+          );
         }
       });
 
@@ -562,9 +563,8 @@ async function downloadAndExtractBundle(
     throw e;
   }
 
-  // On a contended install another process just installed — and is running
-  // from — an older bundle; leave it on disk and let a later uncontended
-  // install clean it up.
+  // On a contended install another process may be running from a bundle on
+  // disk, so leave it for a later uncontended install to clean up.
   if (!contended) {
     removeOldClientBundles(version);
   }
