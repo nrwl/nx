@@ -210,7 +210,11 @@ export function handleProjectGraphError(opts: { exitOnError: boolean }, e) {
 
       const bodyLines = isVerbose
         ? [e.stack]
-        : ['Pass --verbose to see the stacktraces.'];
+        : [
+            ...e.getErrors().map((error) => error.message),
+            '',
+            'Pass --verbose to see the stacktraces.',
+          ];
 
       output.error({
         title,
