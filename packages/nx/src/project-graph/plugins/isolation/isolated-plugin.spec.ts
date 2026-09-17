@@ -1,6 +1,8 @@
 import { EventEmitter } from 'events';
 import { SOCKET_REFUSED_EXIT_CODE } from '../../../utils/socket-refused-exit-code';
 import { waitForSocketConnection } from '../../../utils/wait-for-socket-connection';
+import * as fallback from './fallback';
+import { resetIsolationFallbackForTesting } from './fallback';
 import {
   connectToWorker,
   describeWorkerExit,
@@ -30,6 +32,29 @@ vi.mock('../resolve-plugin', () => ({
     shouldRegisterTSTranspiler: false,
   }),
 }));
+
+/** What the host builds when the worker exits with the socket-refused code. */
+function socketRefusal(): Error {
+  const e = new Error('Plugin worker exited before the connection');
+  e[Symbol.for('nx.pluginWorkerStartupFailure')] = true;
+  e[Symbol.for('nx.pluginWorkerSocketRefused')] = true;
+  return e;
+}
+
+const resolvedModule = {
+  name: 'test-plugin',
+  pluginPath: '/mock/plugin/path',
+  shouldRegisterTSTranspiler: false,
+};
+
+const recordedCapabilities = {
+  name: 'test-plugin',
+  createNodesPattern: undefined,
+  hasCreateDependencies: false,
+  hasCreateMetadata: false,
+  hasPreTasksExecution: false,
+  hasPostTasksExecution: false,
+};
 
 describe('IsolatedPlugin', () => {
   describe('plugin worker socket ids', () => {
@@ -491,6 +516,62 @@ describe('IsolatedPlugin', () => {
 
       // Now should shutdown
       expect(shutdown).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('a worker that cannot be started', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+      resetIsolationFallbackForTesting();
+    });
+
+    function refuseTheWorker() {
+      vi.spyOn(fallback, 'pluginWithoutWorker');
+      vi.spyOn(
+        IsolatedPlugin.prototype as any,
+        'spawnAndConnect'
+      ).mockRejectedValue(socketRefusal());
+    }
+
+    it('runs the plugin here when the first hook call is refused', async () => {
+      // The record was warm, so no worker was started at load time and the
+      // sandbox refuses the socket here instead. Before this, the refusal came
+      // out of the hook and the command failed, but only when the cache was
+      // populated.
+      const createNodes = vi.fn().mockResolvedValue([]);
+      vi.spyOn(fallback, 'pluginWithoutWorker').mockResolvedValue({
+        name: 'test-plugin',
+        createNodes: ['**/*.config.ts', createNodes],
+      } as any);
+      refuseTheWorker();
+
+      const plugin = IsolatedPlugin.fromCapabilities(
+        'test-plugin',
+        '/root',
+        resolvedModule,
+        { ...recordedCapabilities, createNodesPattern: '**/*.config.ts' }
+      );
+
+      await expect(
+        plugin.createNodes![1](['a.config.ts'], {} as any)
+      ).resolves.toEqual([]);
+      expect(createNodes).toHaveBeenCalled();
+    });
+
+    it('still reports a refusal nothing says to degrade for', async () => {
+      vi.spyOn(fallback, 'pluginWithoutWorker').mockResolvedValue(null);
+      refuseTheWorker();
+
+      const plugin = IsolatedPlugin.fromCapabilities(
+        'test-plugin',
+        '/root',
+        resolvedModule,
+        { ...recordedCapabilities, createNodesPattern: '**/*.config.ts' }
+      );
+
+      await expect(plugin.createNodes![1]([], {} as any)).rejects.toSatisfy(
+        isPluginWorkerSocketRefusal
+      );
     });
   });
 

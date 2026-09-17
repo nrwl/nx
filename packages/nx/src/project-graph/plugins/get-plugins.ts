@@ -44,6 +44,9 @@ import {
 } from './isolation/isolated-plugin';
 
 import { isIsolationEnabled } from './isolation/enabled';
+import { isolationRefused, pluginWithoutWorker } from './isolation/fallback';
+
+export { resetIsolationFallbackForTesting } from './isolation/fallback';
 import { sandboxSocketHint } from '../../daemon/sandbox-socket-hint';
 import { isSandbox } from '../../utils/is-sandbox';
 import { isAiAgent } from '../../native';
@@ -92,49 +95,13 @@ export interface SeparatedPlugins {
   defaultPlugins: LoadedNxPlugin[];
 }
 
-/**
- * Set once a worker has been refused in this process, and read by every later
- * plugin: nothing about a second attempt can succeed once the first has been
- * refused for a reason that belongs to the sandbox.
- *
- * It does not stop the spawns of the plugins already in flight. Callers load
- * plugins concurrently, so all of them are past the entry check before the
- * first worker dies; what the latch guarantees is that the advice is printed
- * once rather than once per plugin, and that anything loaded after the refusal
- * skips the worker entirely.
- *
- * Process-scoped rather than persisted: the refusal describes the environment
- * Nx is running in, so it must not follow the workspace into a plain terminal.
- */
-let isolationRefusedInThisProcess = false;
-
-/** Exported for tests: the fallback latch is process-scoped by design. */
-export function resetIsolationFallbackForTesting() {
-  isolationRefusedInThisProcess = false;
-}
-
-/**
- * Loads a plugin in a worker, falling back to this process when the worker's
- * socket was refused.
- *
- * Isolation is preferred: it is what keeps two plugins with conflicting
- * TypeScript versions or module-level state apart. But a sandbox that has not
- * been told about the Nx socket root refuses the worker's socket, and failing
- * the whole command over that is worse than running the plugins here. The
- * fallback is narrow on purpose. It needs a failure to start or reach the
- * worker, plus either a detectable sandbox or the worker's own EPERM/EACCES
- * exit code under an AI agent — the second arm is what covers an agent whose
- * sandbox sets no variable `isSandbox()` reads. A plugin that loaded and then
- * threw is rethrown, because rerunning it in-process would bury its actual
- * error.
- */
 export const loadingMethod = async (
   plugin: PluginConfiguration,
   root: string,
   index?: number,
   resolved?: ResolvedPluginModule
 ): Promise<LoadedNxPlugin> => {
-  if (!isIsolationEnabled() || isolationRefusedInThisProcess) {
+  if (!isIsolationEnabled() || isolationRefused()) {
     return loadNxPlugin(plugin, root, index);
   }
 
@@ -143,45 +110,11 @@ export const loadingMethod = async (
   try {
     return await loadIsolatedNxPlugin(plugin, root, index, resolved);
   } catch (e) {
-    // Proof, kept separate from policy. The errno the worker saw is what makes
-    // the message certain; whether that errno is also grounds for degrading is a
-    // different question, and conflating them made the warning assert a sandbox
-    // for agents the hint itself declines to name.
-    const provenRefusal = isPluginWorkerSocketRefusal(e);
-    // An agent is required alongside the errno, so a refusal on an ordinary
-    // workstation still surfaces rather than silently losing isolation.
-    if (
-      !isPluginWorkerStartupFailure(e) ||
-      !((provenRefusal && isAiAgent()) || isSandbox())
-    ) {
+    const inProcess = await pluginWithoutWorker(e, plugin, root, index);
+    if (!inProcess) {
       throw e;
     }
-
-    // Read and set in one synchronous step. Concurrently loaded plugins each
-    // arrive here with their own failure, so testing the latch after setting it
-    // is what keeps the advice to one copy.
-    const alreadyRefused = isolationRefusedInThisProcess;
-    isolationRefusedInThisProcess = true;
-    if (!alreadyRefused) {
-      output.warn({
-        // Names what Nx observed, not what it infers. `isAiAgent()` is broader
-        // than the agents `sandboxSpecificRemedy` will name a setting for, so a
-        // title asserting a sandbox could sit above a body that deliberately
-        // does not.
-        title: provenRefusal
-          ? 'Nx was denied permission to create a plugin worker socket. Running plugins in the main process instead.'
-          : 'Could not start a plugin worker. Running plugins in the main process instead.',
-        bodyLines: [
-          'Plugins that expect isolation may misbehave, and this is slower than a worker.',
-          // `certain` on the errno alone. Reaching here via `isSandbox()` proves
-          // only that a worker died before it connected, which denied permission
-          // explains but so does an OOM kill or a broken install.
-          ...sandboxSocketHint({ certain: provenRefusal }),
-        ],
-      });
-    }
-
-    return loadNxPlugin(plugin, root, index);
+    return inProcess;
   }
 };
 
@@ -394,9 +327,7 @@ function pluginLabel(plugin: PluginConfiguration): string {
  */
 function capabilityCacheApplies(): boolean {
   return (
-    isIsolationEnabled() &&
-    !isolationRefusedInThisProcess &&
-    isCapabilityCacheEnabled()
+    isIsolationEnabled() && !isolationRefused() && isCapabilityCacheEnabled()
   );
 }
 

@@ -26,6 +26,7 @@ import { workspaceRoot } from '../../../utils/workspace-root';
 import type { RawProjectGraphDependency } from '../../project-graph-builder';
 import type { ObservedLoad, PluginCapabilities } from '../capabilities-cache';
 import { LoadedNxPlugin } from '../loaded-nx-plugin';
+import { pluginWithoutWorker } from './fallback';
 import type {
   CreateDependenciesContext,
   CreateMetadataContext,
@@ -132,6 +133,12 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   ) => Promise<void>;
 
   // Worker state
+  /**
+   * Set when a worker could not be started for a reason that says to run the
+   * plugin here instead. Every hook goes to it once it is, and the worker is
+   * not tried again.
+   */
+  private inProcess?: LoadedNxPlugin;
   private worker: ChildProcess | null = null;
   private socket: Socket | null = null;
   private _alive = false;
@@ -336,7 +343,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
    * so that only one worker is ever spawned at a time.
    */
   private async ensureAlive(): Promise<void> {
-    if (this._alive) {
+    if (this.inProcess || this._alive) {
       return;
     }
 
@@ -350,20 +357,63 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       });
     }
 
-    const loadResult = await this._connectPromise;
+    let loadResult: LoadResultPayload;
+    try {
+      loadResult = await this._connectPromise;
+    } catch (e) {
+      // A plugin wired from a record starts its worker here rather than at the
+      // load, so this is where a sandbox that denies the socket is met, and the
+      // same answer applies: run the plugin in this process rather than fail a
+      // command that would have worked without a record.
+      const inProcess = await pluginWithoutWorker(
+        e,
+        this.plugin,
+        this.root,
+        this.index
+      );
+      if (!inProcess) {
+        throw e;
+      }
+      this.inProcess = inProcess;
+      this.reportLoaded({
+        name: inProcess.name,
+        createNodesPattern: inProcess.createNodes?.[0],
+        hasCreateDependencies: !!inProcess.createDependencies,
+        hasCreateMetadata: !!inProcess.createMetadata,
+        hasPreTasksExecution: !!inProcess.preTasksExecution,
+        hasPostTasksExecution: !!inProcess.postTasksExecution,
+      });
+      return;
+    }
 
     this.sourceFiles = loadResult.sourceFiles;
     this.envReads = loadResult.envReads;
     this.hooksExportedAsUndefined = loadResult.hooksExportedAsUndefined;
 
+    this.reportLoaded(capabilitiesFromLoadResult(loadResult), {
+      sourceFiles: loadResult.sourceFiles,
+      envReads: loadResult.envReads,
+      hooksExportedAsUndefined: loadResult.hooksExportedAsUndefined,
+    });
+  }
+
+  /**
+   * Tells whoever wired this from a record what the plugin really registers.
+   * Nothing was observed about an in-process load, so a record that disagrees
+   * with one is cleared rather than corrected.
+   */
+  private reportLoaded(
+    actual: PluginCapabilities,
+    observed: ObservedLoad = {
+      sourceFiles: null,
+      envReads: null,
+      hooksExportedAsUndefined: [],
+    }
+  ): void {
     const onLoaded = this.onLoaded;
     if (onLoaded) {
       this.onLoaded = undefined;
-      onLoaded(capabilitiesFromLoadResult(loadResult), {
-        sourceFiles: loadResult.sourceFiles,
-        envReads: loadResult.envReads,
-        hooksExportedAsUndefined: loadResult.hooksExportedAsUndefined,
-      });
+      onLoaded(actual, observed);
     }
   }
 
@@ -495,6 +545,9 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       (this as { createNodes: IsolatedPlugin['createNodes'] }).createNodes = [
         capabilities.createNodesPattern,
         wrap('createNodes', async (configFiles, ctx) => {
+          if (this.inProcess) {
+            return this.inProcess.createNodes[1](configFiles, ctx);
+          }
           const result = await this.sendRequest('createNodes', {
             configFiles,
             context: ctx,
@@ -511,6 +564,9 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       (
         this as { createDependencies: IsolatedPlugin['createDependencies'] }
       ).createDependencies = wrap('createDependencies', async (ctx) => {
+        if (this.inProcess) {
+          return this.inProcess.createDependencies(ctx);
+        }
         const result = await this.sendRequest('createDependencies', {
           context: ctx,
         });
@@ -525,6 +581,9 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       (
         this as { createMetadata: IsolatedPlugin['createMetadata'] }
       ).createMetadata = wrap('createMetadata', async (graph, ctx) => {
+        if (this.inProcess) {
+          return this.inProcess.createMetadata(graph, ctx);
+        }
         const result = await this.sendRequest('createMetadata', {
           graph,
           context: ctx,
@@ -540,6 +599,9 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       (
         this as { preTasksExecution: IsolatedPlugin['preTasksExecution'] }
       ).preTasksExecution = wrap('preTasksExecution', async (context) => {
+        if (this.inProcess) {
+          return this.inProcess.preTasksExecution(context);
+        }
         const result = await this.sendRequest('preTasksExecution', {
           context,
         });
@@ -554,6 +616,9 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       (
         this as { postTasksExecution: IsolatedPlugin['postTasksExecution'] }
       ).postTasksExecution = wrap('postTasksExecution', async (context) => {
+        if (this.inProcess) {
+          return this.inProcess.postTasksExecution(context);
+        }
         const result = await this.sendRequest('postTasksExecution', {
           context: stubTerminalOutputs(context),
         });
