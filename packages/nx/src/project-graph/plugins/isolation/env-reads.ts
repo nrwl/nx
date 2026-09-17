@@ -1,5 +1,23 @@
-/** What a load read from the environment, by key, with null for a key that was not set. */
+import { hashArray } from '../../../native';
+
+/**
+ * What a load read from the environment: a hash of each value it saw, with null
+ * for a key that was not set.
+ *
+ * Hashed rather than kept, because a read is only ever compared for equality and
+ * because a load reads whatever its dependencies read. Measured on this
+ * repository, loading `@nx/js`'s TypeScript plugin reads 44 variables, among
+ * them `NX_CLOUD_ACCESS_TOKEN`, and a record goes to a database on disk.
+ */
 export type EnvReads = Record<string, string | null>;
+
+/** Keys that say how a process was started rather than what it should do. */
+const INVOCATION_KEYS = new Set(['_', 'PWD', 'OLDPWD', 'SHLVL']);
+
+/** Exported so a read hashes what it compares the way the record was written. */
+export function hashEnvValue(value: string | undefined): string {
+  return hashArray([value ?? '']);
+}
 
 /**
  * The environment a plugin's load read, or null when what it read cannot be
@@ -52,9 +70,19 @@ export async function withEnvReads<T>(
 }
 
 function record(read: EnvReads, env: NodeJS.ProcessEnv, key: string): void {
+  // Left out rather than recorded: these say which binary ran and from where,
+  // they differ between two invocations that should share a record, and nothing
+  // decides what it registers from them. Recording one would invalidate every
+  // record on the next command run a different way.
+  if (INVOCATION_KEYS.has(key) || key in read) {
+    return;
+  }
+
   // Absence is part of the answer: `NX_DOTNET_DISABLE` is unset in the run that
-  // records a working plugin, and setting it later has to invalidate that.
-  read[key] ??= key in env ? env[key] : null;
+  // records a working plugin, and setting it later has to invalidate that. Null
+  // says unset and no hash can produce it, so a variable whose value is the
+  // string "undefined" stays distinct from one nobody set.
+  read[key] = key in env ? hashEnvValue(env[key]) : null;
 }
 
 function install(env: NodeJS.ProcessEnv): void {

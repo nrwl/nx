@@ -19,6 +19,7 @@ import { logger } from '../../utils/logger';
 import { readModulePackageJson } from '../../utils/package-json';
 import { normalizePath } from '../../utils/path';
 import { canObserveModuleClosure } from './isolation/module-closure';
+import { hashEnvValue } from './isolation/env-reads';
 import { workspaceRoot } from '../../utils/workspace-root';
 import type { LoadedNxPlugin } from './loaded-nx-plugin';
 
@@ -188,7 +189,7 @@ function envIsUnchanged(record: PluginRecord): boolean {
   }
 
   for (const [key, value] of Object.entries(read)) {
-    const now = key in process.env ? process.env[key] : null;
+    const now = key in process.env ? hashEnvValue(process.env[key]) : null;
     if (now !== value) {
       logger.verbose(
         `${key} changed since "${record.capabilities.name}" was recorded; loading it again`

@@ -1,4 +1,4 @@
-import { withEnvReads } from './env-reads';
+import { hashEnvValue, withEnvReads } from './env-reads';
 
 describe('withEnvReads', () => {
   const base = { SET: 'yes' } as NodeJS.ProcessEnv;
@@ -12,8 +12,42 @@ describe('withEnvReads', () => {
 
     expect(result).toBe('loaded');
     // Absence is part of the answer: a plugin that checks for a variable nobody
-    // set behaves differently once somebody sets it.
-    expect(envReads).toEqual({ SET: 'yes', UNSET: null });
+    // set behaves differently once somebody sets it. Values are hashed, because
+    // a load reads whatever its dependencies read and one of those, measured, is
+    // `NX_CLOUD_ACCESS_TOKEN`.
+    expect(envReads).toEqual({ SET: hashEnvValue('yes'), UNSET: null });
+    expect(envReads.SET).not.toContain('yes');
+  });
+
+  it('keeps an unset variable distinct from one whose value says undefined', async () => {
+    const { envReads } = await withEnvReads(
+      async () => {
+        process.env.SAYS_UNDEFINED;
+        process.env.NOT_THERE;
+        return null;
+      },
+      { SAYS_UNDEFINED: 'undefined' } as NodeJS.ProcessEnv
+    );
+
+    expect(envReads.SAYS_UNDEFINED).toBe(hashEnvValue('undefined'));
+    expect(envReads.NOT_THERE).toBeNull();
+    expect(envReads.SAYS_UNDEFINED).not.toBeNull();
+  });
+
+  it('leaves out the variables that say how the process was started', async () => {
+    const { envReads } = await withEnvReads(
+      async () => {
+        process.env._;
+        process.env.PWD;
+        process.env.NX_DOTNET_DISABLE;
+        return null;
+      },
+      { _: '/usr/bin/node', PWD: '/ws' } as NodeJS.ProcessEnv
+    );
+
+    // Recording those would invalidate every record on the next command run
+    // from another directory or through another binary.
+    expect(Object.keys(envReads)).toEqual(['NX_DOTNET_DISABLE']);
   });
 
   it('counts an `in` check as a read', async () => {
