@@ -22,11 +22,6 @@ import {
   type MaybeStubbedPostTasksExecutionContext,
 } from './task-results-stub';
 
-/**
- * NOTE: Avoid using `import type` with this class. It causes issues with
- * jest's module resolution when running tests in projects that import
- * the devkit-internals
- */
 /** The exports a capability record is made of. */
 const HOOK_EXPORTS = [
   'createNodes',
@@ -37,6 +32,11 @@ const HOOK_EXPORTS = [
   'postTasksExecution',
 ] as const;
 
+/**
+ * NOTE: Avoid using `import type` with this class. It causes issues with
+ * jest's module resolution when running tests in projects that import
+ * the devkit-internals
+ */
 export class LoadedNxPlugin {
   readonly name: string;
   readonly createNodes?: [
