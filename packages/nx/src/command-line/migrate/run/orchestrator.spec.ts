@@ -704,20 +704,30 @@ describe('orchestrator', () => {
 
     it('refuses at once while another process holds a reservation, and proceeds once it is released', async () => {
       mockGetWorkingTreeStatus.mockReturnValue('dirty');
+      // The plan carries the ignore migration and .gitignore lacks the entry,
+      // so the fallback would write it if init got that far.
+      writeFileSync(join(root, '.gitignore'), 'node_modules\n');
       const reservation = join(migrateRunsDir(root), 'reserved-run');
       mkdirSync(join(reservation, 'activity'), { recursive: true });
       const holder = new FileLock(
         join(reservation, 'activity', '999-cafe.lock')
       );
       holder.lock();
+      const confirmStart = vi.fn().mockResolvedValue(true);
       const input = {
         root,
-        migrationsJson: { migrations: [genMig('@nx/js', 'a')] },
+        migrationsJson: {
+          migrations: [
+            genMig('nx', '23-0-0-add-migrate-runs-to-git-ignore', '23.0.0'),
+            genMig('@nx/js', 'a'),
+          ],
+        },
         createCommits: true,
         commitPrefix: 'chore: [nx migration] ',
         skipInstall: false,
         installedNxVersion: '23.0.0',
         validate: undefined as boolean | undefined,
+        confirmStart,
       };
 
       try {
@@ -727,6 +737,14 @@ describe('orchestrator', () => {
       } finally {
         holder.unlock();
       }
+      // Refused before the prompt and before any preparation: the scratch
+      // probe is the first step past the prompt, and the fallback would have
+      // edited .gitignore.
+      expect(confirmStart).not.toHaveBeenCalled();
+      expect(mockGetPathCommitExposure).not.toHaveBeenCalled();
+      expect(readFileSync(join(root, '.gitignore'), 'utf-8')).toBe(
+        'node_modules\n'
+      );
       expect(activeRunDirNames()).toEqual(['reserved-run']);
       expect(mockCheckpoint).not.toHaveBeenCalled();
 
@@ -1254,7 +1272,7 @@ describe('orchestrator', () => {
         `To continue the run: npx nx migrate --run-id=${runId}`
       );
       expect(instructions).toContain(
-        `To start fresh (deletes the run record, then runs the whole plan again): re-run this command with --start-fresh --run-id=${runId}, keeping the --run-migrations argument; that path cannot be rendered as a command for this shell`
+        `To start fresh (deletes the run record, then runs the whole plan again): re-run this command with --start-fresh --run-id=${runId}, keeping the --run-migrations argument, which names tools/my migrations.json; that path cannot be rendered as a command for this shell`
       );
       expect(instructions).not.toContain('--run-migrations=');
     });
