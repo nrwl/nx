@@ -25,7 +25,7 @@ const mocks = vi.hoisted(() => ({
   warn: vi.fn(),
   lock: {
     tryLock: vi.fn(() => true),
-    waitForRelease: vi.fn((_timeoutMs: number) => Promise.resolve(true)),
+    waitUntilFree: vi.fn((_timeoutMs: number) => Promise.resolve()),
     unlock: vi.fn(),
   },
 }));
@@ -144,8 +144,8 @@ describe('loading plugins through the capability cache', () => {
     mocks.lock.tryLock.mockReset();
     mocks.lock.tryLock.mockReturnValue(true);
     mocks.lock.unlock.mockReset();
-    mocks.lock.waitForRelease.mockReset();
-    mocks.lock.waitForRelease.mockResolvedValue(true);
+    mocks.lock.waitUntilFree.mockReset();
+    mocks.lock.waitUntilFree.mockResolvedValue(undefined);
 
     ({ loadIsolatedNxPlugin, useIsolatedNxPluginCapabilities } =
       (await import('./isolation')) as any);
@@ -225,15 +225,14 @@ describe('loading plugins through the capability cache', () => {
 
   it('waits for the process that is already loading rather than loading too', async () => {
     mocks.lock.tryLock.mockReturnValue(false);
-    mocks.lock.waitForRelease.mockImplementation(async () => {
+    mocks.lock.waitUntilFree.mockImplementation(async () => {
       // The holder finishes while this process waits.
       everythingRecorded = true;
-      return true;
     });
 
     await getPluginsSeparated({ plugins: ['test-plugin'] });
 
-    expect(mocks.lock.waitForRelease).toHaveBeenCalled();
+    expect(mocks.lock.waitUntilFree).toHaveBeenCalled();
     expect(loadIsolatedNxPlugin).not.toHaveBeenCalled();
     // Never acquired, so nothing to release.
     expect(mocks.lock.unlock).not.toHaveBeenCalled();
@@ -261,7 +260,7 @@ describe('loading plugins through the capability cache', () => {
       // Held for the whole test, and every wait times out having seen nothing
       // recorded.
       mocks.lock.tryLock.mockReturnValue(false);
-      mocks.lock.waitForRelease.mockImplementation(async (ms: number) => {
+      mocks.lock.waitUntilFree.mockImplementation(async (ms: number) => {
         // Fails loudly rather than spinning, so losing the budget shows up as
         // one named test instead of a killed worker.
         if (++waits > 4) {
@@ -269,14 +268,15 @@ describe('loading plugins through the capability cache', () => {
         }
         expect(ms).toBeGreaterThan(0);
         expect(ms).toBeLessThanOrEqual(60_000);
-        // The wait consumed the whole remaining budget.
+        // The wait consumed the whole remaining budget, then rejected as the
+        // native one does.
         now += ms;
-        return false;
+        throw Object.assign(new Error('timed out'), { code: 'Cancelled' });
       });
 
       await getPluginsSeparated({ plugins: ['test-plugin'] });
 
-      expect(mocks.lock.waitForRelease).toHaveBeenCalled();
+      expect(mocks.lock.waitUntilFree).toHaveBeenCalled();
       expect(loadsOf('test-plugin')).toHaveLength(1);
       expect(mocks.lock.unlock).not.toHaveBeenCalled();
     } finally {

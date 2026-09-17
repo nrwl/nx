@@ -20,6 +20,7 @@ import { FileLock, IS_WASM } from '../native';
 import { workspaceDataDirectory } from '../utils/cache-directory';
 import { getCallSites } from '../utils/call-sites';
 import { DelayedSpinner } from '../utils/delayed-spinner';
+import { isLockWaitTimeout } from '../utils/lock-wait';
 import { fileExists } from '../utils/fileutils';
 import { isSandbox } from '../utils/is-sandbox';
 import { logger } from '../utils/logger';
@@ -261,6 +262,34 @@ async function readCachedGraphAndHydrateFileMap(minimumComputedAt?: number) {
 const MAX_WAIT_FOR_GRAPH_LOCK = 5 * 60 * 1000;
 
 /**
+ * Whether the lock came free within the budget, with the spinner that says what
+ * this process is waiting on.
+ */
+async function graphLockCameFree(
+  lock: FileLock,
+  timeoutMs: number
+): Promise<boolean> {
+  logger.verbose(
+    'Waiting for graph construction in another process to complete'
+  );
+  const spinner = new DelayedSpinner(
+    'Waiting for graph construction in another process to complete'
+  );
+  try {
+    await lock.waitUntilFree(timeoutMs);
+    return true;
+  } catch (e) {
+    // The lock file itself failing is not this function's to answer for.
+    if (!isLockWaitTimeout(e)) {
+      throw e;
+    }
+    return false;
+  } finally {
+    spinner.cleanup();
+  }
+}
+
+/**
  * Computes and returns a ProjectGraph.
  *
  * Nx will compute the graph either in a daemon process or in the current process.
@@ -365,27 +394,11 @@ export async function createProjectGraphAndSourceMapsAsync(
       }
 
       const remaining = deadline - Date.now();
-      if (remaining <= 0) {
-        logger.verbose(
-          `Another process has held the project graph lock for over ${
-            MAX_WAIT_FOR_GRAPH_LOCK / 1000
-          }s. Building the graph in this process as well.`
-        );
-        holderOutlastedBudget = true;
-        break;
-      }
-
-      logger.verbose(
-        'Waiting for graph construction in another process to complete'
-      );
-      const spinner = new DelayedSpinner(
-        'Waiting for graph construction in another process to complete'
-      );
       const start = Date.now();
-      const released = await lock.waitForRelease(remaining);
-      spinner.cleanup();
+      const cameFree =
+        remaining > 0 && (await graphLockCameFree(lock, remaining));
 
-      if (!released) {
+      if (!cameFree) {
         // Nothing has been written to read: the read below throws rather than
         // returning empty when no graph has ever been cached, and treating a
         // timeout as a finished build is what made that throw reachable.

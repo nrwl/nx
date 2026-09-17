@@ -21,14 +21,15 @@ function moduleReading(key: string): string {
 }
 
 describe('observePluginLoad', () => {
-  it('resolves every module it warms, from where a plugin would', () => {
+  it('resolves every module it warms', () => {
     // A rename would leave the warm silently doing nothing, and the only sign
     // would be records that stop surviving between two commands.
     //
-    // Resolved in a real Node process rather than here. This repository's test
-    // resolver answers for the `@nx/nx-source` condition and points `@nx/devkit`
-    // at a TypeScript entry that only exists in the source tree, which is not
-    // the lookup a plugin worker performs.
+    // The `@nx/devkit` entries are resolved in a real Node process rather than
+    // here, because this repository's test resolver answers for the
+    // `@nx/nx-source` condition and points them at TypeScript entries that only
+    // exist in the source tree, which is not the lookup a plugin worker
+    // performs. The `nx/*` entries are the other way round; see below.
     const specifiers = nxModulesWarmedBeforeObserving();
     expect(specifiers.length).toBeGreaterThan(0);
 

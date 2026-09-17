@@ -77,15 +77,24 @@ export declare class FileLock {
    * Takes the lock without blocking, and says whether this handle got it.
    *
    * A false return means someone else holds it. Pair it with
-   * `waitForRelease` to wait for them, rather than `lock`, which is
+   * `waitUntilFree` to wait for them, rather than `lock`, which is
    * synchronous and freezes this process's event loop until they are done.
    */
   tryLock(): boolean
   /**
-   * Resolves true when the holder released within `timeout_ms`, false when it
-   * did not. Awaiting this does not block the JS thread.
+   * Resolves once nothing holds the lock, whether it was free all along or
+   * the holder let go while this waited. Awaiting it does not block the JS
+   * thread.
+   *
+   * Rejects with `code: 'Cancelled'` when `timeout_ms` passes with the lock
+   * still held — the one outcome a caller must not skip past, which is why it
+   * is not a value that can be dropped. Any other rejection is the filesystem
+   * failing, and means what it says.
+   *
+   * A free lock is not this handle holding it: pair this with `tryLock`,
+   * which may still lose to whoever else was waiting.
    */
-  waitForRelease(timeoutMs: number): Promise<boolean>
+  waitUntilFree(timeoutMs: number): Promise<void>
   lock(): void
 }
 

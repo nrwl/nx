@@ -38,15 +38,16 @@ vi.mock('../native', () => ({
       state.acquires++;
       return true;
     };
-    waitForRelease = async () => {
+    waitUntilFree = async (): Promise<void> => {
       state.waits++;
       const released = state.releases.shift() ?? true;
-      if (released) {
-        state.locked = false;
-        // Whoever held it wrote the graph before letting go.
-        state.cachedGraph = { nodes: {}, dependencies: {} };
+      if (!released) {
+        // What the native wait rejects with once the budget is gone.
+        throw Object.assign(new Error('timed out'), { code: 'Cancelled' });
       }
-      return released;
+      state.locked = false;
+      // Whoever held it wrote the graph before letting go.
+      state.cachedGraph = { nodes: {}, dependencies: {} };
     };
   },
 }));

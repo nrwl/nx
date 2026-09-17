@@ -37,6 +37,7 @@ import { isDaemonEnabled } from '../../daemon/client/client';
 import { serverLogger } from '../../daemon/logger';
 import { DelayedSpinner } from '../../utils/delayed-spinner';
 import { logger } from '../../utils/logger';
+import { isLockWaitTimeout } from '../../utils/lock-wait';
 import {
   IsolatedPlugin,
   resolveModule,
@@ -278,7 +279,10 @@ export function getPluginsIfLoadedOrLoading():
 }
 
 export function cleanupPlugins() {
-  peeked = undefined;
+  forgetPeekedCapabilities();
+  // Nothing this process queued is still wanted, and a turn that never came up
+  // would otherwise hold every later caller behind a load nobody is waiting on.
+  capabilityLoadQueue = Promise.resolve();
   disposeIsolatedPlugins();
   forgetSpecifiedPlugins();
   loadedDefaultPlugins = undefined;
@@ -434,12 +438,32 @@ async function resolveCapabilityKeys(
 let peeked: { key: string; capabilities: PluginCapabilities[] } | undefined;
 
 /**
+ * Bumped whenever a record is corrected or dropped, and captured by a peek
+ * before it reads anything.
+ *
+ * Clearing the memo is not enough on its own: a peek reads the records and only
+ * assigns the memo several awaits later, so a correction landing in between
+ * would be undone by the answer that predates it.
+ */
+let peekedGeneration = 0;
+
+/** Drops the held answer, and any in-flight one that predates this call. */
+function forgetPeekedCapabilities(): void {
+  peeked = undefined;
+  peekedGeneration++;
+}
+
+/**
  * What every plugin the workspace configures registers, or null when that
  * cannot be established.
  *
- * A plugin with a record is answered from it. The rest are loaded, recorded and
- * put back down, so a caller that only needs to know whether a hook exists
- * anywhere pays for the plugins nothing knows about rather than for all of them.
+ * A plugin with a record is answered from it. What happens to the rest depends
+ * on whether this process is the one that loads plugins at all. On the daemon,
+ * or with no daemon, they are loaded, recorded and put back down, so a caller
+ * that only needs to know whether a hook exists anywhere pays for the plugins
+ * nothing knows about rather than for all of them. A client with a daemon loads
+ * nothing and answers null instead, because the daemon it is about to ask is
+ * where that load belongs; the records it reads are the ones the daemon wrote.
  */
 export async function peekPluginCapabilities(
   nxJson: NxJsonConfiguration,
@@ -453,6 +477,7 @@ export async function peekPluginCapabilities(
   if (!isOnDaemon() && peeked?.key === memoKey) {
     return peeked.capabilities;
   }
+  const generation = peekedGeneration;
 
   const configurations = [
     ...(nxJson.plugins ?? []),
@@ -498,7 +523,9 @@ export async function peekPluginCapabilities(
   }
 
   const capabilities = loads.map((load) => load.capabilities);
-  if (!isOnDaemon()) {
+  // Answered from records a correction has since replaced, so it is this
+  // answer that is stale, not the memo it would overwrite.
+  if (!isOnDaemon() && peekedGeneration === generation) {
     peeked = { key: memoKey, capabilities };
   }
   return capabilities;
@@ -507,10 +534,11 @@ export async function peekPluginCapabilities(
 /**
  * What every configured plugin registers, answered either way.
  *
- * `peekPluginCapabilities` says null when no record can be kept at all, which a
- * caller that needs the answer regardless would have to turn into a load
- * itself. This is that load, so the answer has one shape and the fallback has
- * one home.
+ * `peekPluginCapabilities` says null when it cannot answer from records — no
+ * record can be kept at all, or this is a client leaving the load to its daemon
+ * — which a caller that needs the answer regardless would have to turn into a
+ * load itself. This is that load, so the answer has one shape and the fallback
+ * has one home.
  *
  * Not what the hook gates want. Those ask whether the records *prove* nothing
  * registers a hook, and the honest answer when there are no records is "cannot
@@ -635,8 +663,10 @@ async function useCapabilityCache(
  * A file lock is held by an open file description rather than by a process, so
  * the specified and default loaders, which run concurrently, would contend with
  * each other through two handles on one file: one would wait for the other and
- * be told a different process was loading. Queuing here makes the file lock mean
- * what its name says, and the two loaders load together rather than in turn.
+ * be told a different process was loading. They still take their turns, as they
+ * did through the lock, but the waiter neither opens the lock file nor spends
+ * the budget meant for another process, and nobody is told to wait for a process
+ * that does not exist.
  */
 let capabilityLoadQueue: Promise<void> = Promise.resolve();
 
@@ -697,12 +727,25 @@ async function loadWhatIsMissingExclusively(
           spinner ??= new DelayedSpinner(
             'Waiting for another process to finish loading Nx plugins'
           );
-          // Waited on a libuv thread, so the event loop stays free to run
-          // timers, serve clients and handle signals, and with a ceiling, so a
+          // Waited on the native async runtime, so neither the event loop nor
+          // a libuv worker is held while it waits, and with a ceiling, so a
           // holder whose own loop is blocked cannot hold this process for as
           // long as it lives. The loop re-reads the records and re-checks the
           // budget either way.
-          await lock.waitForRelease(remaining);
+          try {
+            await lock.waitUntilFree(remaining);
+          } catch (e) {
+            // A timeout is the budget doing its job, and the check above ends
+            // the wait on the next turn. The lock file itself failing is not
+            // worth failing a load over either: this process goes on to load
+            // what it needs, which is what it would have done with no cache.
+            if (!isLockWaitTimeout(e)) {
+              logger.verbose(
+                'Could not wait on the plugin capabilities lock',
+                e
+              );
+            }
+          }
           continue;
         }
 
@@ -917,7 +960,7 @@ function repairRecord(
   // The memo was taken from the record this just proved wrong, and a later gate
   // in this same command would otherwise be answered from it rather than from
   // what the worker reported.
-  peeked = undefined;
+  forgetPeekedCapabilities();
   // Null is not none. An unobservable closure or environment coerced to an
   // empty one would write a record that `recordIsFresh` accepts without checking
   // anything, so nothing later could invalidate it, and a self-correcting hole

@@ -1,3 +1,4 @@
+use napi::Status;
 #[cfg(not(target_arch = "wasm32"))]
 use napi::bindgen_prelude::*;
 use std::fs;
@@ -75,8 +76,8 @@ fn is_contended(e: &std::io::Error) -> bool {
         || e.raw_os_error() == fs4::lock_contended_error().raw_os_error()
 }
 
-/// Whether the lock was released within `timeout`, waited for on the async
-/// runtime rather than on a thread.
+/// Whether the lock was free within `timeout`, waited for on the async runtime
+/// rather than on a thread.
 ///
 /// The sleep is the runtime's, not the OS's, so waiting occupies no thread while
 /// it waits. An `AsyncTask` would have used a libuv worker, of which there are
@@ -123,7 +124,7 @@ pub struct FileLock {
 ///   writeToCache()
 ///   lock.unlock()
 /// } else {
-///   await lock.waitForRelease(timeoutMs)
+///   await lock.waitUntilFree(timeoutMs)  // rejects with code 'Cancelled' on timeout
 ///   readFromCache()
 /// }
 ///
@@ -202,27 +203,45 @@ impl FileLock {
     /// Takes the lock without blocking, and says whether this handle got it.
     ///
     /// A false return means someone else holds it. Pair it with
-    /// `waitForRelease` to wait for them, rather than `lock`, which is
+    /// `waitUntilFree` to wait for them, rather than `lock`, which is
     /// synchronous and freezes this process's event loop until they are done.
     #[napi(js_name = "tryLock")]
     pub fn try_lock_js(&mut self) -> napi::Result<bool> {
         Ok(self.try_lock()?)
     }
 
-    /// Resolves true when the holder released within `timeout_ms`, false when it
-    /// did not. Awaiting this does not block the JS thread.
-    #[napi(ts_return_type = "Promise<boolean>")]
-    pub fn wait_for_release(
+    /// Resolves once nothing holds the lock, whether it was free all along or
+    /// the holder let go while this waited. Awaiting it does not block the JS
+    /// thread.
+    ///
+    /// Rejects with `code: 'Cancelled'` when `timeout_ms` passes with the lock
+    /// still held — the one outcome a caller must not skip past, which is why it
+    /// is not a value that can be dropped. Any other rejection is the filesystem
+    /// failing, and means what it says.
+    ///
+    /// A free lock is not this handle holding it: pair this with `tryLock`,
+    /// which may still lose to whoever else was waiting.
+    #[napi(ts_return_type = "Promise<void>")]
+    pub fn wait_until_free(
         &self,
         env: Env,
         timeout_ms: u32,
-    ) -> napi::Result<PromiseRaw<'static, bool>> {
+    ) -> napi::Result<PromiseRaw<'static, ()>> {
         let lock_file_path = self.lock_file_path.clone();
         let timeout = Duration::from_millis(timeout_ms as u64);
-        let promise =
-            env.spawn_future(
-                async move { Ok(wait_for_release_async(lock_file_path, timeout).await?) },
-            )?;
+        let timed_out_on = self.lock_file_path.clone();
+        let promise = env.spawn_future(async move {
+            if wait_for_release_async(lock_file_path, timeout).await? {
+                Ok(())
+            } else {
+                Err(napi::Error::new(
+                    Status::Cancelled,
+                    format!(
+                        "Timed out after {timeout_ms}ms waiting for the lock on {timed_out_on} to be released"
+                    ),
+                ))
+            }
+        })?;
         // SAFETY: PromiseRaw's inner napi_value is GC-managed by V8 and remains
         // valid beyond this stack frame.
         Ok(unsafe { std::mem::transmute(promise) })
@@ -236,7 +255,8 @@ impl FileLock {
     }
 
     /// Blocks the calling thread until the current holder releases or `timeout`
-    /// passes, and says which. For Rust callers without a napi `Env`; from JS,
+    /// passes, and says which, as a boolean this time: a Rust caller cannot drop
+    /// the result by accident. For callers without a napi `Env`; from JS,
     /// `wait_for_release` is the same wait without blocking the thread.
     pub fn wait_blocking(&self, timeout: Duration) -> std::io::Result<bool> {
         wait_for_release(&self.lock_file_path, timeout)

@@ -1,5 +1,5 @@
 import { hashArray } from '../../../native';
-import { isExcludedEnvVar } from '../../../daemon/client/daemon-environment';
+import { isEnvVarOutsideARecord } from '../../../daemon/client/daemon-environment';
 
 /**
  * What a load read from the environment: which variables, and one hash over all
@@ -31,7 +31,7 @@ export type EnvReads = { keys: string[]; hash: string };
  * loads, which is the same backstop the other blind spots rest on.
  */
 function isRecordableEnvKey(key: string): boolean {
-  return !isExcludedEnvVar(key);
+  return !isEnvVarOutsideARecord(key);
 }
 
 /**

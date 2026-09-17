@@ -2,6 +2,7 @@ import { join } from 'path';
 
 import { TempFs } from '../../internal-testing-utils/temp-fs';
 import { FileLock } from '../index';
+import { isLockWaitTimeout } from '../../utils/lock-wait';
 
 describe('FileLock', () => {
   let tempFs: TempFs;
@@ -44,15 +45,15 @@ describe('FileLock', () => {
     }
   });
 
-  it('resolves `waitForRelease` true once the holder releases', async () => {
+  it('resolves `waitUntilFree` once the holder releases', async () => {
     const holder = new FileLock(lockPath);
     holder.lock();
 
     const waiting = new FileLock(lockPath)
-      .waitForRelease(10_000)
-      .then((released) => `released:${released}`);
+      .waitUntilFree(10_000)
+      .then(() => 'free');
 
-    // Raced against a timer rather than a resolved promise. `waitForRelease`
+    // Raced against a timer rather than a resolved promise. `waitUntilFree`
     // is a Rust async task, so it settles on a macrotask and an already
     // resolved promise would win this race whether it waited or not.
     const sentinel = new Promise((resolve) =>
@@ -61,30 +62,34 @@ describe('FileLock', () => {
     expect(await Promise.race([waiting, sentinel])).toBe('sentinel');
 
     holder.unlock();
-    expect(await waiting).toBe('released:true');
+    expect(await waiting).toBe('free');
   });
 
-  it('gives up on `waitForRelease` rather than waiting on a holder forever', async () => {
+  it('rejects `waitUntilFree` rather than waiting on a holder forever', async () => {
     const holder = new FileLock(lockPath);
     holder.lock();
 
     try {
       const started = Date.now();
-      expect(await new FileLock(lockPath).waitForRelease(200)).toBe(false);
+      // Rejected rather than returned, so a caller cannot read past a timeout
+      // the way one read past a falsy result and then read a cache nobody wrote.
+      await expect(new FileLock(lockPath).waitUntilFree(200)).rejects.toSatisfy(
+        isLockWaitTimeout
+      );
       expect(Date.now() - started).toBeGreaterThanOrEqual(190);
     } finally {
       holder.unlock();
     }
   });
 
-  it('leaves the JS thread free while `waitForRelease` is pending', async () => {
+  it('leaves the JS thread free while `waitUntilFree` is pending', async () => {
     const holder = new FileLock(lockPath);
     holder.lock();
 
     try {
       let ticks = 0;
       const ticking = setInterval(() => ticks++, 10);
-      await new FileLock(lockPath).waitForRelease(150);
+      await new FileLock(lockPath).waitUntilFree(150).catch(() => {});
       clearInterval(ticking);
 
       // The blocking `lock()` would have frozen these timers for the whole wait,
@@ -101,7 +106,7 @@ describe('FileLock', () => {
     holder.unlock();
 
     const observer = new FileLock(lockPath);
-    expect(await observer.waitForRelease(200)).toBe(true);
+    await expect(observer.waitUntilFree(200)).resolves.toBeUndefined();
 
     // Free afterwards: a wait that held what it waited for would deadlock the
     // next acquire in the same process.

@@ -245,12 +245,25 @@ const DAEMON_ENV_PREFIX_EXCLUSION_OVERRIDES = new Set([
 ]);
 
 /**
+ * Whether a variable cannot be part of what a process records about a plugin.
+ *
+ * The exclusions, plus the settings the daemon pins on itself: those are set in
+ * a daemon plugin worker and typically unset in a daemonless one, so a record
+ * naming one could not hold across the two. `hashDaemonClientEnv` skips them for
+ * the same reason.
+ *
  * Exported for the plugin capability cache, which records the variables a
  * plugin's load read and must not rest on one the daemon strips: a worker
  * inherits its host's environment, so a record written on the daemon and read
  * in a client would disagree about every excluded variable.
  */
-export function isExcludedEnvVar(key: string): boolean {
+export function isEnvVarOutsideARecord(key: string): boolean {
+  return (
+    isExcludedEnvVar(key) || Object.hasOwn(DAEMON_ENV_REQUIRED_SETTINGS, key)
+  );
+}
+
+function isExcludedEnvVar(key: string): boolean {
   if (
     DAEMON_ENV_VARS_EXCLUSIONS.has(key) ||
     DAEMON_ENV_PATTERN_EXCLUSIONS.some((pattern) => pattern.test(key))

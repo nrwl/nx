@@ -78,7 +78,9 @@ export async function resolveNxPlugin(
     ) {
       // The walk is a multi-glob and a pass over every project file, so a caller
       // that only wants an answer it can get cheaply says so and takes the miss.
-      if (withoutProjectWalk) {
+      // Already walked is not a walk: this process paid for it once and the
+      // result is what the resolution below reads.
+      if (withoutProjectWalk && !projectsWithoutInference) {
         throw new ProjectWalkRequiredError(moduleName);
       }
       projectsWithoutInferencePromise ??=
