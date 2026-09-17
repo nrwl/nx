@@ -61,7 +61,7 @@
     "ts-loader": "^9.3.1",
     "tsconfig-paths-webpack-plugin": "4.2.0",
     "tslib": "catalog:typescript",
-    "webpack": "^5.101.3",
+    "webpack": ">=5.101.3 <5.111.0",
     "webpack-dev-server": "^5.2.1",
     "webpack-node-externals": "^3.0.0",
     "webpack-subresource-integrity": "^5.1.0",
