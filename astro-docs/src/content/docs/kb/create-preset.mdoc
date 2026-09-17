@@ -128,7 +128,7 @@ pnpm 11 and later refuses to install a dependency whose build scripts are neithe
 }
 ```
 
-Use the same shape pnpm reads from `pnpm-workspace.yaml`: `true` runs a package's build scripts, `false` skips them. When the workspace uses pnpm 11 or later, `create-nx-workspace` reads this field from the registry and records the entries in the new workspace's `pnpm-workspace.yaml` before the first install. `nx add my-plugin-name` reads the same field before installing your plugin into an existing workspace. Decisions the user already recorded are never overwritten.
+Use the same shape pnpm reads from `pnpm-workspace.yaml`: `true` runs a package's build scripts, `false` skips them. When the workspace uses pnpm 11 or later, `create-nx-workspace` reads this field from the registry and records the entries in the new workspace's `pnpm-workspace.yaml` before the first install. `nx add my-plugin-name` reads the same field before installing your plugin into an existing workspace and prints every entry it records. Decisions the user already recorded are never overwritten.
 
 For packages your generators add later, call `acknowledgeBuildScripts` from `@nx/devkit` before the install task runs:
 

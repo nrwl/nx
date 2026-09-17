@@ -11,6 +11,7 @@ import {
   getPackageManagerVersion,
   packageRegistryView,
 } from './package-manager';
+import { output } from './output';
 
 vi.mock('./package-manager', async () => ({
   ...(await vi.importActual('./package-manager')),
@@ -297,6 +298,77 @@ describe('acknowledgeDeclaredBuildScripts', () => {
         workerd: true
       "
     `);
+  });
+
+  it('should report the entries it recorded', async () => {
+    const note = vi.spyOn(output, 'note').mockImplementation(() => {});
+    vi.mocked(packageRegistryView).mockResolvedValueOnce(
+      JSON.stringify({ esbuild: false, workerd: true })
+    );
+
+    await acknowledgeDeclaredBuildScripts(tree, 'pnpm', '@org/preset', '1.2.3');
+
+    expect(note).toHaveBeenCalledWith({
+      title:
+        'Recorded the build-script decisions @org/preset@1.2.3 declares in pnpm-workspace.yaml',
+      bodyLines: ['esbuild: false', 'workerd: true'],
+    });
+    note.mockRestore();
+  });
+
+  it('should not report entries the user had already decided', async () => {
+    tree.write(
+      'pnpm-workspace.yaml',
+      'allowBuilds:\n  nx: true\n  workerd: false\n'
+    );
+    const note = vi.spyOn(output, 'note').mockImplementation(() => {});
+    vi.mocked(packageRegistryView).mockResolvedValueOnce(
+      JSON.stringify({ esbuild: false, workerd: true })
+    );
+
+    const recorded = await acknowledgeDeclaredBuildScripts(
+      tree,
+      'pnpm',
+      '@org/preset',
+      '1.2.3'
+    );
+
+    expect(recorded).toBe(true);
+    expect(note).toHaveBeenCalledWith({
+      title:
+        'Recorded the build-script decisions @org/preset@1.2.3 declares in pnpm-workspace.yaml',
+      bodyLines: ['esbuild: false'],
+    });
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatchInlineSnapshot(`
+      "allowBuilds:
+        nx: true
+        workerd: false
+        esbuild: false
+      "
+    `);
+    note.mockRestore();
+  });
+
+  it('should stay silent when the user had already decided every declared entry', async () => {
+    tree.write(
+      'pnpm-workspace.yaml',
+      'allowBuilds:\n  nx: true\n  esbuild: false\n'
+    );
+    const note = vi.spyOn(output, 'note').mockImplementation(() => {});
+    vi.mocked(packageRegistryView).mockResolvedValueOnce(
+      JSON.stringify({ esbuild: true })
+    );
+
+    const recorded = await acknowledgeDeclaredBuildScripts(
+      tree,
+      'pnpm',
+      '@org/preset',
+      '1.2.3'
+    );
+
+    expect(recorded).toBe(true);
+    expect(note).not.toHaveBeenCalled();
+    note.mockRestore();
   });
 
   it('should use the highest version when a range matches several', async () => {

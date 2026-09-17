@@ -11,6 +11,7 @@ import {
 } from './package-manager';
 import { readJsonFile } from './fileutils';
 import { parseJson } from './json';
+import { output } from './output';
 
 const PNPM_WORKSPACE_FILE = 'pnpm-workspace.yaml';
 
@@ -63,9 +64,12 @@ export function acknowledgeBuildScripts(
  * package.json, the same shape pnpm reads from a workspace root; pnpm ignores
  * the field on dependencies, so it is read from the registry here.
  *
- * Resolves to whether any decision was recorded. Nothing is recorded for
- * package managers other than pnpm, pnpm < 11, packages that declare nothing,
- * and specs the registry cannot answer, such as a tarball path.
+ * A `true` entry lets pnpm run that package's install scripts on every later
+ * install, so the entries recorded here are printed for the user to see.
+ *
+ * Resolves to whether the package declared any decision. Nothing is recorded
+ * for package managers other than pnpm, pnpm < 11, packages that declare
+ * nothing, and specs the registry cannot answer, such as a tarball path.
  */
 export async function acknowledgeDeclaredBuildScripts(
   treeOrRoot: Tree | string,
@@ -86,7 +90,15 @@ export async function acknowledgeDeclaredBuildScripts(
   if (Object.keys(entries).length === 0) {
     return false;
   }
-  acknowledgePnpmBuildScripts(host, entries);
+  const recorded = acknowledgePnpmBuildScripts(host, entries);
+  if (Object.keys(recorded).length > 0) {
+    output.note({
+      title: `Recorded the build-script decisions ${packageName}@${version} declares in ${PNPM_WORKSPACE_FILE}`,
+      bodyLines: Object.entries(recorded).map(
+        ([pkg, allowed]) => `${pkg}: ${allowed}`
+      ),
+    });
+  }
   return true;
 }
 
@@ -121,6 +133,7 @@ async function readDeclaredBuildScripts(
 /**
  * Records `allowBuilds` decisions in pnpm-workspace.yaml, creating the file
  * when missing (mirroring `pnpm approve-builds` in single-package repos).
+ * Returns the entries it wrote.
  *
  * Comment-preserving. Existing entries are never overwritten, so user
  * decisions always win. pnpm < 11 warns instead of erroring and does not read
@@ -129,7 +142,7 @@ async function readDeclaredBuildScripts(
 function acknowledgePnpmBuildScripts(
   host: Host,
   entries: Record<string, boolean>
-): void {
+): Record<string, boolean> {
   const parsed = parseDocument(
     host.exists(PNPM_WORKSPACE_FILE) ? host.read(PNPM_WORKSPACE_FILE) : ''
   );
@@ -142,22 +155,23 @@ function acknowledgePnpmBuildScripts(
     parsed.errors.length > 0 ||
     (parsed.contents != null && !(parsed.contents instanceof YAMLMap))
   ) {
-    return;
+    return {};
   }
 
-  let changed = false;
+  const recorded: Record<string, boolean> = {};
   for (const [pkg, allowed] of Object.entries(entries)) {
     // Only a real boolean is a user decision. pnpm's non-strict installs stub
     // undecided packages with a placeholder string ("set this to true or
     // false"), which would fail the next strict install if left in place.
     if (typeof parsed.getIn(['allowBuilds', pkg]) !== 'boolean') {
       parsed.setIn(['allowBuilds', pkg], allowed);
-      changed = true;
+      recorded[pkg] = allowed;
     }
   }
-  if (changed) {
+  if (Object.keys(recorded).length > 0) {
     host.write(PNPM_WORKSPACE_FILE, parsed.toString());
   }
+  return recorded;
 }
 
 interface Host {
