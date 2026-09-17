@@ -14,7 +14,7 @@ Cypress.Commands.overwrite('getCookie', (originalFn, name, options) => {
 });
 ```
 
-##### After
+##### After the automatic rename (the callback still needs adapting)
 
 ```ts title="apps/myapp-e2e/src/support/commands.ts"
 Cypress.Commands.overwriteQuery('getCookie', (originalFn, name, options) => {
