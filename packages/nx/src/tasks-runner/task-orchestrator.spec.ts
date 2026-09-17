@@ -1322,6 +1322,55 @@ describe('TaskOrchestrator', () => {
     });
   });
 
+  describe('task invocation tracking', () => {
+    const task = {
+      id: 'app:build',
+      target: { project: 'app', target: 'build' },
+      overrides: {},
+    } as Task;
+
+    function createOrchestrator(tracker: {
+      registerTask: () => unknown;
+      unregisterTask: () => void;
+    }) {
+      const orchestrator: any = Object.create(TaskOrchestrator.prototype);
+      orchestrator.taskInvocationTracker = tracker;
+      orchestrator.registeredInvocations = new Set();
+      return orchestrator;
+    }
+
+    it('should not unregister an invocation whose registration failed', () => {
+      const tracker = {
+        registerTask: vi.fn(() => {
+          throw new Error('database is locked');
+        }),
+        unregisterTask: vi.fn(() => {
+          throw new Error('database is locked');
+        }),
+      };
+      const orchestrator = createOrchestrator(tracker);
+
+      orchestrator.detectTaskInvocationLoop(task);
+      expect(() => orchestrator.releaseTaskInvocation(task)).not.toThrow();
+      expect(tracker.unregisterTask).not.toHaveBeenCalled();
+    });
+
+    it('should not fail the task when unregistering throws', () => {
+      const tracker = {
+        registerTask: vi.fn(() => null),
+        unregisterTask: vi.fn(() => {
+          throw new Error('database is locked');
+        }),
+      };
+      const orchestrator = createOrchestrator(tracker);
+
+      orchestrator.detectTaskInvocationLoop(task);
+      expect(() => orchestrator.releaseTaskInvocation(task)).not.toThrow();
+      expect(tracker.unregisterTask).toHaveBeenCalledTimes(1);
+      expect(orchestrator.registeredInvocations.size).toBe(0);
+    });
+  });
+
   describe('process listener lifecycle', () => {
     it('should remove on dispose() every process listener registered by setupSignalHandlers', async () => {
       const orchestrator: any = Object.create(TaskOrchestrator.prototype);
