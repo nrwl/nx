@@ -83,6 +83,24 @@ describe('withEnvReads', () => {
     expect(envReads.keys).toEqual(['NX_DOTNET_DISABLE']);
   });
 
+  it('leaves out the variables Nx writes for itself', async () => {
+    const { envReads } = await withEnvReads(
+      async () => {
+        process.env.NX_TUI;
+        process.env.NX_VERBOSE_LOGGING;
+        process.env.NX_DOTNET_DISABLE;
+        return null;
+      },
+      { NX_TUI: 'true' } as NodeJS.ProcessEnv
+    );
+
+    // Nx decides `NX_TUI` per command from the arguments and the terminal, and
+    // `@nx/eslint`'s and `@nx/jest`'s loads both read it without asking, by
+    // reaching `is-tui-enabled.ts`. Recording it would miss every record on the
+    // next command of a different shape.
+    expect(envReads.keys).toEqual(['NX_DOTNET_DISABLE']);
+  });
+
   it('counts an `in` check as a read', async () => {
     const { envReads } = await withEnvReads(async () => {
       'UNSET' in process.env;

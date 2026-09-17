@@ -19,6 +19,42 @@ export type EnvReads = { keys: string[]; hash: string };
 const INVOCATION_KEYS = new Set(['_', 'PWD', 'OLDPWD', 'SHLVL']);
 
 /**
+ * Keys Nx writes into its own environment while running a command.
+ *
+ * These are Nx's state, not the workspace's input. Nx decides each one per
+ * command from the arguments and the terminal, so `nx build app` and
+ * `nx run-many -t build` disagree about `NX_TUI` on a TTY. A plugin reads them
+ * without asking: `@nx/eslint`'s and `@nx/jest`'s loads both reach
+ * `is-tui-enabled.ts`, which takes `NX_TUI` at module scope. Recording one
+ * would invalidate every record on the next command of a different shape.
+ *
+ * Kept in step with the code by `env-reads-self-set.spec.ts`, which fails when
+ * Nx starts writing a key nobody has classified.
+ */
+const SELF_SET_KEYS = new Set([
+  'NX_ANALYTICS_SESSION_ID',
+  'NX_CLI_SET',
+  'NX_DAEMON_PROCESS',
+  'NX_DRY_RUN',
+  'NX_GENERATE_QUIET',
+  'NX_INTERACTIVE',
+  'NX_LOAD_DOT_ENV_FILES',
+  'NX_PREFIX_OUTPUT',
+  'NX_RELEASE_INTERNAL_SUPPRESS_FILTER_LOG',
+  'NX_RUNNING_NX_IMPORT',
+  'NX_RUNNING_NX_INIT',
+  'NX_STREAM_OUTPUT',
+  'NX_TUI',
+  'NX_TUI_AUTO_EXIT',
+  'NX_VERBOSE_LOGGING',
+]);
+
+/** Exported for the spec that keeps the set in step with Nx's own writes. */
+export function isSelfSet(key: string): boolean {
+  return SELF_SET_KEYS.has(key);
+}
+
+/**
  * Stands in for a variable nobody set. Not a value any environment can hold, so
  * unset stays distinct from a variable whose value is the string "undefined".
  */
@@ -87,11 +123,10 @@ export async function withEnvReads<T>(
 }
 
 function record(read: Set<string>, key: string): void {
-  // Left out rather than recorded: these say which binary ran and from where,
-  // they differ between two invocations that should share a record, and nothing
-  // decides what it registers from them. Recording one would invalidate every
-  // record on the next command run a different way.
-  if (INVOCATION_KEYS.has(key)) {
+  // Left out rather than recorded, for the same reason in both cases: the value
+  // differs between two invocations that should share a record, and nothing a
+  // plugin registers is decided from it.
+  if (INVOCATION_KEYS.has(key) || SELF_SET_KEYS.has(key)) {
     return;
   }
   read.add(key);
