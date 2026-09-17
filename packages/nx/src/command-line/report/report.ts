@@ -1,5 +1,4 @@
 import * as pc from 'picocolors';
-import { capabilityCacheDisabledReason } from '../../project-graph/plugins/get-plugins';
 import { output } from '../../utils/output';
 import { join, sep } from 'path';
 import { homedir } from 'os';
@@ -96,17 +95,6 @@ export async function reportHandler() {
   const fields = [
     ['Node', process.versions.node],
     ['OS', `${process.platform}-${process.arch}`],
-    // Reported only when it is off, and with the reason. This is the output
-    // people paste into an issue, so "why did this change nothing for us"
-    // arrives answered rather than needing a verbose re-run.
-    ...(capabilityCacheDisabledReason()
-      ? [
-          [
-            'Plugin capability cache',
-            `Disabled, ${capabilityCacheDisabledReason()}`,
-          ],
-        ]
-      : []),
     ['Native Target', nativeTarget ?? 'Unavailable'],
     [pm, pmVersion],
     [

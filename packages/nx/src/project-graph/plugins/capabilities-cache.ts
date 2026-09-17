@@ -69,8 +69,7 @@ export function isCapabilityCacheEnabled(): boolean {
   // A runtime that cannot report a plugin's module closure can never write a
   // record, so it would read misses forever while paying for them, with a
   // database query per command and a lock every process queues behind to load
-  // the plugins none of them can record. `nx report` says so when this is the
-  // reason the cache is off.
+  // the plugins none of them can record.
   return !IS_WASM && canObserveModuleClosure();
 }
 

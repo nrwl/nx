@@ -43,7 +43,6 @@ import {
   type ResolvedPluginModule,
 } from './isolation/isolated-plugin';
 
-import { IS_WASM } from '../../native';
 import { isIsolationEnabled } from './isolation/enabled';
 import { isolationRefused, pluginWithoutWorker } from './isolation/fallback';
 
@@ -323,32 +322,14 @@ function pluginLabel(plugin: PluginConfiguration): string {
 }
 
 /**
- * Why the capability cache is doing nothing this run, or null when it is on.
- *
- * Phrased for `nx report`, which is where someone asking "why did this change
- * nothing for us" looks. It shares the predicate with `capabilityCacheApplies`
- * below rather than restating it, so the report cannot drift from the gate.
+ * Records are only ever written by the isolated path, so a process running
+ * plugins in its own process neither writes nor reads them. It has no worker to
+ * skip, and loading a plugin there is a `require` rather than a spawn.
  */
-export function capabilityCacheDisabledReason(): string | null {
-  // Records are only ever written by the isolated path, so a process running
-  // plugins in its own process neither writes nor reads them. It has no worker
-  // to skip, and loading a plugin there is a `require` rather than a spawn.
-  if (!isIsolationEnabled()) {
-    return IS_WASM
-      ? 'plugin isolation is off in the WebAssembly build'
-      : 'plugin isolation is off';
-  }
-  if (isolationRefused()) {
-    return 'a plugin worker could not start, so this run is unisolated';
-  }
-  if (!isCapabilityCacheEnabled()) {
-    return 'needs Node 22.15, 23.5 or newer';
-  }
-  return null;
-}
-
 function capabilityCacheApplies(): boolean {
-  return capabilityCacheDisabledReason() === null;
+  return (
+    isIsolationEnabled() && !isolationRefused() && isCapabilityCacheEnabled()
+  );
 }
 
 /**
