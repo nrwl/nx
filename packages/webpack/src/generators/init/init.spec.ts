@@ -23,6 +23,7 @@ describe('webpackInitGenerator', () => {
       dependencies: {},
       devDependencies: {
         '@nx/webpack': expect.any(String),
+        webpack: expect.any(String),
         '@nx/web': expect.any(String),
         'webpack-cli': expect.any(String),
       },

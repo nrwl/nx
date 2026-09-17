@@ -35,7 +35,7 @@
     "http-proxy-middleware": "^3.0.5",
     "picocolors": "catalog:",
     "tslib": "catalog:typescript",
-    "webpack": "^5.101.3"
+    "webpack": ">=5.101.3 <5.111.0"
   },
   "devDependencies": {
     "nx": "workspace:*"

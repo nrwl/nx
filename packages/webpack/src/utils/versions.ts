@@ -3,6 +3,8 @@ export const nxVersion = require('../../package.json').version;
 export const swcLoaderVersion = '0.1.15';
 export const tsLibVersion = '^2.3.0';
 
+// Capped: 5.111.0 breaks MF builds (webpack/webpack#22034). Lift once @module-federation/enhanced fixes it.
+export const webpackVersion = '~5.110.0';
 export const webpackCliVersion = '^5.1.4';
 
 // React apps

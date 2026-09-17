@@ -22,6 +22,7 @@ describe('webpackInitGenerator (legacy)', () => {
       devDependencies: {
         '@nx/web': expect.any(String),
         '@nx/webpack': expect.any(String),
+        webpack: expect.any(String),
       },
     });
   });

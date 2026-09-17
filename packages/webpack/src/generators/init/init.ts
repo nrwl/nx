@@ -8,7 +8,11 @@ import {
 } from '@nx/devkit';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { createNodesV2 } from '../../plugins/plugin';
-import { nxVersion, webpackCliVersion } from '../../utils/versions';
+import {
+  nxVersion,
+  webpackCliVersion,
+  webpackVersion,
+} from '../../utils/versions';
 import { Schema } from './schema';
 
 export function webpackInitGenerator(tree: Tree, schema: Schema) {
@@ -77,6 +81,7 @@ export async function webpackInitGeneratorInternal(tree: Tree, schema: Schema) {
     const devDependencies = {
       '@nx/webpack': nxVersion,
       '@nx/web': nxVersion,
+      webpack: webpackVersion,
     };
 
     if (schema.addPlugin) {
