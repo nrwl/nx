@@ -11,6 +11,8 @@ vi.mock('../../native', () => ({
 }));
 vi.mock('../../utils/db-connection', () => ({ getDbConnection: () => 'db' }));
 
+import { serializeWithFallback } from '../socket-utils';
+import { parseMessage } from '../../utils/consume-messages-from-socket';
 import { handleResolveIoSnapshots } from './handle-resolve-io-snapshots';
 import { ioSnapshotsForCommit } from './io-snapshots-state';
 
@@ -18,7 +20,7 @@ describe('handleResolveIoSnapshots', () => {
   const payload = {
     type: 'RESOLVE_IO_SNAPSHOTS' as const,
     runnerOptions: { accessToken: 't' },
-    env: { NX_IO_SNAPSHOTS_MAX_AGE: '123' },
+    ioSnapshotEnv: { NX_IO_SNAPSHOTS_MAX_AGE: '123' },
   };
 
   beforeEach(() => vi.clearAllMocks());
@@ -37,13 +39,36 @@ describe('handleResolveIoSnapshots', () => {
       { accessToken: 't' },
       { NX_IO_SNAPSHOTS_MAX_AGE: '123' }
     );
-    expect(JSON.parse(response)).toEqual({
+    expect(response).toEqual({
       status: 'fetched',
       reason: '',
       message: '',
       commit: 'head',
     });
   });
+
+  // The client does not parse what the socket already parsed, so the response
+  // must survive one encode and one decode — a stringified one arrives as a
+  // string and every caller of it throws.
+  it.each(['json', 'v8'] as const)(
+    'survives the %s socket round trip as an object',
+    async (mode) => {
+      fetchIoSnapshotsForRun.mockResolvedValue({
+        status: 'fetched',
+        reason: '',
+        message: '',
+        commit: 'head',
+        resolution: { digest: 'd' },
+      });
+      const { response } = await handleResolveIoSnapshots(payload);
+      expect(parseMessage(serializeWithFallback(response, mode))).toEqual({
+        status: 'fetched',
+        reason: '',
+        message: '',
+        commit: 'head',
+      });
+    }
+  );
 
   it('hands hashing the handle it just fetched instead of loading again', async () => {
     const handle = {
@@ -60,6 +85,12 @@ describe('handleResolveIoSnapshots', () => {
     });
     await handleResolveIoSnapshots(payload);
     expect(ioSnapshotsForCommit('head')).toBe(handle);
+  });
+
+  // `handleClientEnv` reflects a message's `env` onto the daemon's whole
+  // process env, deleting every key the message leaves out.
+  it('carries the run env under a name the daemon does not reflect', () => {
+    expect(Object.keys(payload)).not.toContain('env');
   });
 
   it('reports nothing stored when snapshots are off for the workspace', async () => {

@@ -388,14 +388,17 @@ export class DaemonClient {
    */
   async resolveIoSnapshots(
     runnerOptions: any,
-    env: { NX_IO_SNAPSHOTS?: string; NX_IO_SNAPSHOTS_MAX_AGE?: string }
+    ioSnapshotEnv: {
+      NX_IO_SNAPSHOTS?: string;
+      NX_IO_SNAPSHOTS_MAX_AGE?: string;
+    }
   ): Promise<ResolvedIoSnapshots> {
-    const response = await this.sendToDaemonViaQueue({
+    // The socket layer parses the response; parsing it again throws.
+    return this.sendToDaemonViaQueue({
       type: RESOLVE_IO_SNAPSHOTS,
       runnerOptions,
-      env,
+      ioSnapshotEnv,
     });
-    return JSON.parse(response);
   }
 
   hashTasks(
