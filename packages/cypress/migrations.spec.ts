@@ -22,9 +22,11 @@ describe('Cypress migrations', () => {
       alwaysAddToPackageJson: false,
     };
 
-    // Mirrors how nx gates a group: every requirement must be satisfied by
-    // the version the package lands on, prereleases included, and no
-    // incompatibility may be. An absent package fails a requirement and
+    // Mirrors `Migrator.areRequirementsMet` and
+    // `areIncompatiblePackagesPresent` in
+    // packages/nx/src/command-line/migrate/migrate.ts: every requirement must
+    // be satisfied by the version the package lands on, prereleases included,
+    // and no incompatibility may be. An absent package fails a requirement and
     // matches no incompatibility. `versions` holds those landing versions: a
     // pending update's version, otherwise what resolves from the root
     // node_modules, so a hoisted transitive package counts.
