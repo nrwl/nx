@@ -2,8 +2,7 @@ import { Task, TaskGraph } from '../../config/task-graph';
 import { getCachedSerializedProjectGraphPromise } from './project-graph-incremental-recomputation';
 import { InProcessTaskHasher } from '../../hasher/task-hasher';
 import { readNxJson } from '../../config/configuration';
-import { loadIoSnapshots, type IoSnapshots } from '../../native';
-import { getDbConnection } from '../../utils/db-connection';
+import { ioSnapshotsForCommit } from './io-snapshots-state';
 
 /**
  * We use this not to recreated hasher for every hash operation
@@ -20,28 +19,6 @@ interface HashTasksPayload {
   cwd: string;
   collectInputs?: boolean;
   ioSnapshots?: { commit?: string };
-}
-
-// An External cannot cross the socket, so the client sends the commit of the
-// set it resolved and the daemon reads that set from the database. Absent
-// (incl. older clients) ⇒ native hashing. The latest handle is kept while its
-// commit and digest hold, so entries read for one request serve the next;
-// a new commit or a re-imported set replaces it, so nothing accumulates.
-let loaded: { commit: string; handle: IoSnapshots } | null = null;
-function loadedIoSnapshots(payload: HashTasksPayload) {
-  const commit = payload.ioSnapshots?.commit;
-  if (!commit) {
-    return undefined;
-  }
-  const fresh = loadIoSnapshots(getDbConnection(), commit);
-  if (
-    loaded?.commit === commit &&
-    loaded.handle.resolution?.digest === fresh.resolution?.digest
-  ) {
-    return loaded.handle;
-  }
-  loaded = { commit, handle: fresh };
-  return fresh;
 }
 
 async function getHasher(runnerOptions: any): Promise<InProcessTaskHasher> {
@@ -74,7 +51,7 @@ export async function handleHashTasks(payload: HashTasksPayload) {
     payload.perTaskEnvs,
     payload.cwd,
     payload.collectInputs,
-    loadedIoSnapshots(payload)
+    ioSnapshotsForCommit(payload.ioSnapshots?.commit)
   );
   return {
     response,
@@ -90,7 +67,7 @@ export async function handleHashTasksUpfront(payload: HashTasksPayload) {
     payload.perTaskEnvs,
     payload.cwd,
     payload.collectInputs,
-    loadedIoSnapshots(payload)
+    ioSnapshotsForCommit(payload.ioSnapshots?.commit)
   );
   return {
     response,

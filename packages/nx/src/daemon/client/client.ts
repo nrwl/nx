@@ -15,6 +15,10 @@ import { readNxJson } from '../../config/configuration';
 import { hasNxJson, NxJsonConfiguration } from '../../config/nx-json';
 import { FileData, ProjectGraph } from '../../config/project-graph';
 import { Task, TaskGraph } from '../../config/task-graph';
+import {
+  RESOLVE_IO_SNAPSHOTS,
+  type ResolvedIoSnapshots,
+} from '../message-types/resolve-io-snapshots';
 import { pruneTaskGraph } from '../../tasks-runner/prune-task-graph';
 import { Hash } from '../../hasher/task-hasher';
 import { IS_WASM, NxWorkspaceFiles, TaskRun, TaskTarget } from '../../native';
@@ -377,6 +381,23 @@ export class DaemonClient {
     return await this.sendToDaemonViaQueue({ type: 'REQUEST_FILE_DATA' });
   }
 
+  /**
+   * Asks the daemon to fetch and store this run's I/O snapshot set. The run's
+   * env travels with the request, since the daemon's own predates it. Both
+   * processes then read the stored set back by commit.
+   */
+  async resolveIoSnapshots(
+    runnerOptions: any,
+    env: { NX_IO_SNAPSHOTS?: string; NX_IO_SNAPSHOTS_MAX_AGE?: string }
+  ): Promise<ResolvedIoSnapshots> {
+    const response = await this.sendToDaemonViaQueue({
+      type: RESOLVE_IO_SNAPSHOTS,
+      runnerOptions,
+      env,
+    });
+    return JSON.parse(response);
+  }
+
   hashTasks(
     runnerOptions: any,
     tasks: Task[],
@@ -393,8 +414,8 @@ export class DaemonClient {
       ...withoutTaskResults(tasks, taskGraph),
       cwd,
       collectInputs,
-      // The daemon has its own process.env, so the client decides: the commit
-      // of the stored set travels with each request; absent means native hashing.
+      // An External cannot cross the socket: the commit names the stored set
+      // to hash from. Absent (incl. an older client) means native hashing.
       ioSnapshots,
     });
   }
