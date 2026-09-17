@@ -5,7 +5,6 @@ import { detectFormatter } from '../../../utils/formatters';
 import { writeWithOxfmt } from '../../../utils/formatters/oxfmt';
 import {
   filterToPrettierSupportedFiles,
-  quoteForShell,
   writeWithPrettier,
 } from '../../../utils/formatters/prettier';
 import { output } from '../../../utils/output';
@@ -86,8 +85,7 @@ export async function formatInitWrites(
   // already finished.
   //
   // Chunked as `nx format` chunks: the Angular flow records a `project.json`
-  // per project. The prettier path is sized against its quoted length; oxfmt
-  // goes through execFile and gets raw paths.
+  // per project.
   let formatter: ReturnType<typeof detectFormatter> = null;
   try {
     formatter = detectFormatter(repoRoot);
@@ -106,11 +104,7 @@ export async function formatInitWrites(
       // batch, but exits 2 on one unsupported file, which would end a
       // successful init with a spurious warning and prettier's own stderr.
       const supported = await filterToPrettierSupportedFiles(files);
-      for (const chunk of chunkify(
-        supported,
-        undefined,
-        (pattern) => quoteForShell(pattern).length
-      )) {
+      for (const chunk of chunkify(supported)) {
         if (chunk.length) {
           writeWithPrettier(chunk, repoRoot);
         }

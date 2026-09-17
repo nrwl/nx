@@ -1,100 +1,96 @@
-import { ProjectGraph } from '../config/project-graph';
-import { Task, TaskGraph } from '../config/task-graph';
 import { hashTasksThatDoNotDependOnOutputsOfOtherTasks } from './hash-task';
+import type { Hash, TaskHasher } from './task-hasher';
+import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
+import { createTaskGraph } from '../tasks-runner/create-task-graph';
 
-vi.mock('../tasks-runner/task-env', async () => ({
-  ...(await vi.importActual('../tasks-runner/task-env')),
-  getTaskSpecificEnv: vi.fn(() => process.env),
+vi.mock('../tasks-runner/utils', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../tasks-runner/utils')>()),
+  getCustomHasher: (task: { target: { target: string } }) =>
+    task.target.target === 'custom' ? () => null : null,
 }));
-
-vi.mock('../tasks-runner/utils', async () => ({
-  ...(await vi.importActual('../tasks-runner/utils')),
-  getCustomHasher: vi.fn(() => null),
+// The real implementation reads the workspace's .env files.
+vi.mock('../tasks-runner/task-env', () => ({
+  getTaskSpecificEnv: () => ({}),
 }));
 
 describe('hashTasksThatDoNotDependOnOutputsOfOtherTasks', () => {
-  function createTask(id: string, outputs: string[]): Task {
-    const [project, target] = id.split(':');
-    return {
-      id,
-      target: { project, target },
-      overrides: {},
-      outputs,
-      projectRoot: project,
-      cache: true,
-      parallelism: true,
-    } as Task;
-  }
-
-  const projectGraph = {
-    nodes: {
-      app: {
-        name: 'app',
-        type: 'app',
-        data: {
-          root: 'app',
-          targets: {
-            build: {
-              inputs: [
-                { dependentTasksOutputFiles: '**/*.d.ts', transitive: true },
-              ],
-            },
-          },
-        },
-      },
-      lib: {
-        name: 'lib',
-        type: 'lib',
-        data: { root: 'lib', targets: { build: {} } },
-      },
-      tool: {
-        name: 'tool',
-        type: 'lib',
-        data: { root: 'tool', targets: { install: {} } },
-      },
+  const nxJson = {
+    namedInputs: {
+      default: ['{projectRoot}/**/*'],
+      production: ['default', { dependentTasksOutputFiles: '**/*.d.ts' }],
     },
-    dependencies: { app: [], lib: [], tool: [] },
-    externalNodes: {},
-  } as unknown as ProjectGraph;
-
-  function hashedIds(taskGraph: TaskGraph) {
-    const hasher = {
-      hashTasks: vi.fn(async (tasks: Task[]) =>
-        tasks.map((t) => ({ value: `${t.id}|hash`, details: {} }))
-      ),
-    };
-    return hashTasksThatDoNotDependOnOutputsOfOtherTasks(
-      hasher as any,
-      projectGraph,
-      taskGraph,
-      {},
-      null
-    ).then(() => hasher.hashTasks.mock.calls[0][0].map((t: Task) => t.id));
-  }
-
-  it('defers a task whose dep outputs feed its hash', async () => {
-    const taskGraph: TaskGraph = {
-      roots: ['lib:build'],
-      tasks: {
-        'app:build': createTask('app:build', ['dist/app']),
-        'lib:build': createTask('lib:build', ['dist/lib']),
-      },
-      dependencies: { 'app:build': ['lib:build'], 'lib:build': [] },
-      continuousDependencies: { 'app:build': [], 'lib:build': [] },
-    };
-    expect(await hashedIds(taskGraph)).toEqual(['lib:build']);
+  } as any;
+  const hashOf = (id: string): Hash => ({
+    value: `hash-${id}`,
+    details: {} as any,
   });
 
-  it('hashes a task up front when its only deps declare no outputs', async () => {
-    const taskGraph: TaskGraph = {
-      roots: ['tool:install'],
-      tasks: {
-        'app:build': createTask('app:build', ['dist/app']),
-        'tool:install': createTask('tool:install', []),
+  function graph() {
+    const builder = new ProjectGraphBuilder();
+    builder.addNode({
+      name: 'app',
+      type: 'app',
+      data: {
+        root: 'apps/app',
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+            outputs: ['{workspaceRoot}/dist/apps/app'],
+          },
+          e2e: {
+            executor: 'nx:run-commands',
+            dependsOn: ['build'],
+            inputs: [
+              '{projectRoot}/**/*',
+              { dependentTasksOutputFiles: '**/*.d.ts' },
+            ],
+          },
+          // Reads outputs only through its dependency's `production`, which
+          // this side never expands.
+          test: {
+            executor: 'nx:run-commands',
+            dependsOn: ['build'],
+            inputs: ['^production'],
+          },
+          custom: { executor: 'nx:run-commands' },
+        },
       },
-      dependencies: { 'app:build': ['tool:install'], 'tool:install': [] },
-      continuousDependencies: { 'app:build': [], 'tool:install': [] },
-    };
-    expect(await hashedIds(taskGraph)).toEqual(['app:build', 'tool:install']);
+    });
+    const projectGraph = builder.getUpdatedProjectGraph();
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['app'],
+      ['build', 'e2e', 'test', 'custom'],
+      undefined,
+      {}
+    );
+    return { projectGraph, taskGraph };
+  }
+
+  it('offers only tasks that might hash up front and assigns what the hasher returns', async () => {
+    const { projectGraph, taskGraph } = graph();
+    const hashTasksUpfront = vi.fn(async (tasks: { id: string }[]) => ({
+      'app:build': hashOf('app:build'),
+    }));
+    await hashTasksThatDoNotDependOnOutputsOfOtherTasks(
+      { hashTasksUpfront } as unknown as TaskHasher,
+      projectGraph,
+      taskGraph,
+      nxJson,
+      null
+    );
+
+    // app:e2e reads outputs through its own inputs, so it is never planned
+    // up front; app:test's outputs hide behind ^production, so the hasher
+    // must see it to defer it.
+    expect(hashTasksUpfront.mock.calls[0][0].map((t) => t.id).sort()).toEqual([
+      'app:build',
+      'app:test',
+    ]);
+    expect(taskGraph.tasks['app:build'].hash).toBe('hash-app:build');
+    expect(taskGraph.tasks['app:e2e'].hash).toBeUndefined();
+    expect(taskGraph.tasks['app:test'].hash).toBeUndefined();
+    expect(taskGraph.tasks['app:custom'].hash).toBeUndefined();
   });
 });

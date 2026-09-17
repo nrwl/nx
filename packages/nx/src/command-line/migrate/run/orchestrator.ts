@@ -1,7 +1,15 @@
 import { execSync } from 'child_process';
-import { existsSync, mkdirSync, rmSync } from 'fs';
-import { dirname, join } from 'path';
-import { writeJsonFile } from '../../../utils/fileutils';
+import { createHash } from 'crypto';
+import {
+  lstatSync,
+  mkdirSync,
+  rmSync,
+  writeFileSync,
+  type BigIntStats,
+} from 'fs';
+import { join } from 'path';
+import { readJsonFile, writeJsonFile } from '../../../utils/fileutils';
+import { publishFileAtomically } from './atomic-write';
 import {
   getGitRepositoryStatus,
   getLatestCommitSha,
@@ -12,11 +20,16 @@ import {
 } from '../../../utils/git-utils';
 import { nxVersion } from '../../../utils/versions';
 import {
-  stepHandoffPath,
+  handoffsDirState,
+  runStepHandoffPath,
   readHandoffWithReason,
+  readInspectedFile,
   type HandoffReadFailureReason,
+  type HandoffReadResult,
 } from '../agentic/handoff';
+import { resolveFormatCommand } from '../agentic/format-command';
 import { applyAgenticHandoffGitignoreFallback } from '../agentic/handoff-gitignore';
+import { renderHandoffShapeInline } from '../agentic/prompts/fragments';
 import { MIGRATE_RUNS_RELATIVE_DIR, type HandoffFile } from '../agentic/types';
 import {
   commitCheckpointBeforeMigrations,
@@ -35,15 +48,22 @@ import {
   hasRunState,
   readRunState,
   runDir,
+  runHandoffsDir,
+  writeRunState,
   CURRENT_RUN_STATE_FORMAT_VERSION,
   SHELL_SAFE_VALUE,
   type MigrateCommitLedgerEntry,
+  type MigrateRunNoProgress,
   type MigrateRunState,
   type MigrateStep,
   type MigrateStepPromptOutcome,
-  type MigrateStepStatus,
+  TERMINAL_STEP_STATUSES,
 } from './run-state';
-import { updateRunState, withRunCreationLock } from './state-lock';
+import {
+  updateRunState,
+  withRunCreationLock,
+  withRunStateLock,
+} from './state-lock';
 import {
   applyStepEvent,
   commitResultToLedgerEntry,
@@ -73,11 +93,37 @@ import {
 } from './util';
 import { singleLine } from '../text';
 import {
+  emitPromptBlock,
+  emitRunbookBlock,
   emitStepBlock,
   logToAgent,
   safeLines,
   warnToAgent,
 } from './agent-output';
+import {
+  agentWorkPayloadPath,
+  readAgentWorkPayload,
+  removeAgentWorkPayloads,
+} from './agent-work-payload';
+import {
+  applyReportedIssues,
+  archiveIssues,
+  attachIssueIdsToCommitEntry,
+  claimIssuesForStep,
+  applicationArchivesIntact,
+  parseHandoffIssues,
+  renderIssueDigestLines,
+  renderUnresolvedIssueLines,
+  reopenResolutionsForStep,
+  settleUnclaimableIssues,
+  type IssueArchiveUpdate,
+} from './issues';
+import {
+  renderRunbook,
+  RUNBOOK_FILE_NAME,
+  type RunbookContext,
+} from './runbook';
+import { detectPackageManager } from '../../../utils/package-manager';
 
 // The dark migrate orchestrator: drives a durable run one dispense at a time.
 // An outer AI agent runs each dispensed command and re-invokes `nx migrate
@@ -87,9 +133,15 @@ const PLAN_SNAPSHOT_0 = 'plan-0.json';
 // A running worker older than this may be hung; the still-running dispense
 // escalates so the agent can verify or kill it.
 const HANG_THRESHOLD_MS = 15 * 60 * 1000;
-
-// Steps in these statuses are done; every other status needs a dispense.
-const TERMINAL_STATUSES = new Set<MigrateStepStatus>(['succeeded', 'skipped']);
+// Identical responses in a row before the dispense escalates to a
+// 'no-progress' action. A still-running worker is exempt until the hang
+// threshold: waiting on a live worker is not looping.
+const NO_PROGRESS_THRESHOLD = 3;
+// Rearms of one step before its failed/died dispense escalates: the retry
+// guidance flips against retrying and the preselected `next` is withheld, so
+// an agent that follows `next` blindly cannot retry forever. An explicit
+// retry is still honored; the cap never refuses.
+const REARM_ESCALATION_CAP = 3;
 
 export interface RunOrchestratorInitInput {
   root: string;
@@ -102,6 +154,7 @@ export interface RunOrchestratorInitInput {
   skipInstall: boolean;
   // Workspace-local nx version; the v23 cutoff for the .gitignore fallback.
   installedNxVersion: string;
+  validate: boolean | undefined;
 }
 
 export interface RunOrchestratorReconcileInput {
@@ -171,6 +224,7 @@ export async function runOrchestratorInit(
     commitPrefix,
     skipInstall,
     installedNxVersion,
+    validate,
   } = input;
   const planHash = computePlanHash(migrationsJson);
 
@@ -263,6 +317,8 @@ export async function runOrchestratorInit(
     createCommits,
     commitPrefix,
     ...(skipInstall ? { skipInstall: true } : {}),
+    validate: validate !== false,
+    runbookPath: RUNBOOK_FILE_NAME,
     rounds: [
       {
         index: 0,
@@ -290,6 +346,14 @@ export async function runOrchestratorInit(
     // crash in between must not leave an active run without its plan.
     mkdirSync(dir, { recursive: true });
     writeJsonFile(join(dir, PLAN_SNAPSHOT_0), migrationsJson);
+    // The runbook gets the same crash guarantee: a discoverable run always
+    // has the runbook a resume re-emits from disk. 'wx' creates without
+    // following links, so nothing pre-planted at the path can redirect it.
+    writeFileSync(
+      join(dir, RUNBOOK_FILE_NAME),
+      renderRunbook(runbookContext(root, runId, state)),
+      { flag: 'wx' }
+    );
     createRun(root, state);
     return null;
   });
@@ -298,7 +362,7 @@ export async function runOrchestratorInit(
     return;
   }
 
-  finishInit(root, dir, runId, state);
+  finishInit(root, dir, runId, state, 'created');
 }
 
 // Reads the newest active run, refusing one whose plan differs from the
@@ -358,16 +422,20 @@ function resumeRun(root: string, runId: string, state: MigrateRunState): void {
   if (state.createCommits) {
     assertScratchDirSafeForCommits(root, continueRunHint(runId));
   }
+  // Read, repair, or refuse the runbook before the checkpoint retry and the
+  // analytics watermark: an invocation that cannot provide the run's
+  // contract must not first change git history or durable run state.
+  const runbook = ensureRunbook(root, dir, runId, state);
+  if (runbook === null) {
+    return;
+  }
   // A run flagged checkpointFailed gets one more chance to capture the
   // pre-existing tree state before its first migration commit absorbs it.
   const resumed = ensureCheckpoint(root, dir, state);
   announceResume(runId, resumed);
-  finishInit(root, dir, runId, resumed);
+  finishInit(root, dir, runId, resumed, 'resumed', runbook);
 }
 
-// The dispense that follows says nothing about the steps already behind it, so
-// a resumed run is otherwise indistinguishable from a fresh one that happens
-// to start partway down the plan.
 function announceResume(runId: string, state: MigrateRunState): void {
   const applied = state.steps.filter((s) => s.status === 'succeeded').length;
   const skipped = state.steps.filter((s) => s.status === 'skipped').length;
@@ -447,13 +515,18 @@ function checkpointEntry(
   return null;
 }
 
-// Shared tail of a fresh and a resumed init: emit the init analytics once per
-// run (watermark-guarded) and emit the current dispense.
+// No migration step is dispensed here: the agent reads the runbook first and
+// asks for the run's current step by reconciling, so the contract always lands
+// before the first command does.
 function finishInit(
   root: string,
   dir: string,
   runId: string,
-  state: MigrateRunState
+  state: MigrateRunState,
+  origin: 'created' | 'resumed',
+  // The runbook bytes when the caller already ensured them (the resume path,
+  // which must fail before its git and state side effects).
+  runbook?: string
 ): void {
   let current = state;
   if (!current.analytics.startEmitted) {
@@ -475,7 +548,123 @@ function finishInit(
       });
     }
   }
-  advanceAndDispense(root, dir, runId, current);
+  const content = runbook ?? ensureRunbook(root, dir, runId, current);
+  if (content === null) {
+    return;
+  }
+  emitRunbookBlock(runId, content);
+  const instructionLines = [
+    `Nx ${origin} migrate run ${runId}. No migration step ran in this response.`,
+    `Read the runbook above; it is the contract for driving this run. Then run the "next" command to get the run's current step.`,
+    ...runbookFooterLines(root, runId),
+  ];
+  const lines = safeLines(instructionLines);
+  logToAgent({ title: `nx migrate: run ${origin}`, bodyLines: lines });
+  emitStepBlock(runId, '-', 'initialized', {
+    next: reconcileCommand(root, runId),
+    instructions: lines.join('\n'),
+  });
+}
+
+// A missing runbook is re-rendered only by the nx version that created the
+// run: its content is version-locked, and a different nx re-rendering it would
+// silently hand the agent a contract the run was not created under. Returns
+// null after emitting the exit-0 refusal instead.
+function ensureRunbook(
+  root: string,
+  dir: string,
+  runId: string,
+  state: MigrateRunState
+): string | null {
+  const filePath = join(dir, state.runbookPath ?? RUNBOOK_FILE_NAME);
+  const stat = lstatRunbook(filePath);
+  if (stat?.isFile()) {
+    // The read is the proof the entry is usable: read errors (an unreadable
+    // mode, an I/O failure) propagate rather than letting an unreadable
+    // runbook pass the guard.
+    return readInspectedFile(
+      filePath,
+      stat,
+      `${MIGRATE_RUNS_RELATIVE_DIR}/${runId}/${RUNBOOK_FILE_NAME} was replaced while being read; ${continueRunHint(
+        runId
+      )}`
+    );
+  }
+  if (stat) {
+    // A directory here is a corrupted run dir; erasing its contents as a side
+    // effect of a reconcile is not this code's call to make.
+    if (stat.isDirectory()) {
+      throw new Error(
+        `${MIGRATE_RUNS_RELATIVE_DIR}/${runId}/${RUNBOOK_FILE_NAME} is a directory, not the runbook file nx wrote there. Remove it, then ${continueRunHint(
+          runId
+        )}`
+      );
+    }
+    // Any other non-regular entry (a symlink most likely) is cleared before the
+    // rename publish below: POSIX rename replaces it in place, but not every
+    // platform guarantees that, and a removal failure must propagate rather
+    // than leave the entry standing.
+    rmSync(filePath, { force: true });
+  }
+  if (state.nxVersion !== nxVersion) {
+    const reason = [
+      `The runbook for run '${runId}' is missing from ${MIGRATE_RUNS_RELATIVE_DIR}/${runId}, and this nx (${nxVersion}) cannot re-render the one nx ${singleLine(
+        state.nxVersion
+      )} wrote.`,
+      `Restore the file (or, if the run was created before runbooks existed, re-run with the nx version that created it), or remove ${MIGRATE_RUNS_RELATIVE_DIR}/${runId} to abandon the run (migrations it already applied remain applied).`,
+    ];
+    warnToAgent({ title: reason[0], bodyLines: [reason[1]] });
+    emitStepBlock(runId, '-', 'error', {
+      instructions: reason.join('\n'),
+    });
+    return null;
+  }
+  const content = renderRunbook(runbookContext(root, runId, state));
+  // A crashed repair leaves the path missing rather than truncated. 'wx'
+  // creates without following links, so anything planted at the temp name
+  // fails the repair instead of redirecting it.
+  publishFileAtomically(filePath, (tmpPath) =>
+    writeFileSync(tmpPath, content, { flag: 'wx' })
+  );
+  updateRunState(dir, (fresh) =>
+    fresh.runbookPath ? null : { ...fresh, runbookPath: RUNBOOK_FILE_NAME }
+  );
+  warnToAgent({
+    title: `The runbook for run '${runId}' was missing; it has been re-rendered.`,
+  });
+  return content;
+}
+
+// lstat that treats only a missing entry as null; other inspection failures
+// (permissions, I/O) propagate rather than masquerading as "missing". Bigint
+// stats so the inode identity compared above cannot lose precision.
+function lstatRunbook(filePath: string): BigIntStats | null {
+  try {
+    return lstatSync(filePath, { bigint: true });
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException)?.code === 'ENOENT') {
+      return null;
+    }
+    throw e;
+  }
+}
+
+function runbookContext(
+  root: string,
+  runId: string,
+  state: MigrateRunState
+): RunbookContext {
+  return {
+    runId,
+    packageManager: detectPackageManager(root),
+    nxInvocation: `${pmExecPrefix(root)} nx`,
+    pmExec: pmExecPrefix(root),
+    reconcileCommand: reconcileCommand(root, runId),
+    createCommits: state.createCommits,
+    // The same `!== false` read the flag itself gets, so a run recorded
+    // without the field renders validation on.
+    validate: state.validate !== false,
+  };
 }
 
 export async function runOrchestratorReconcile(
@@ -502,6 +691,20 @@ export async function runOrchestratorReconcile(
   // can itself commit a settled prompt step.
   if (state.createCommits) {
     assertScratchDirSafeForCommits(root, continueRunHint(runId));
+  }
+
+  // The runbook is the run's persisted contract; read, repair, or refuse it
+  // before any fold or dispense, so the run can never advance while the
+  // contract is unavailable. A completed run, and an active run whose steps are
+  // all terminal, are exempt: no work can advance, the only thing left is the
+  // self-contained terminal response, and hiding it behind a missing contract
+  // would leave the run active forever.
+  if (
+    state.status !== 'completed' &&
+    firstActionableStep(state) !== undefined &&
+    ensureRunbook(root, dir, runId, state) === null
+  ) {
+    return;
   }
 
   // (a) fold handoffs into prompt outcomes (committing completed ones).
@@ -552,7 +755,24 @@ export async function runOrchestratorReconcile(
     // new attempt. Losing the handoff without the rearm is safe: the step is
     // still failed/died and the agent re-issues the action.
     if (stepAction === 'retry' || stepAction === 'retry-clean') {
-      removeHandoff(dir, target.migrationId);
+      removeHandoff(dir, target.id);
+      // A reset-backed retry that dropped the generator marker reruns the
+      // generator, so payloads stored by earlier attempts describe a run
+      // whose tree was reset away; remove them. Hygiene, not the correctness
+      // boundary: the lineage bound persisted with the next marker
+      // (generatorCompletedAtAttempt) is what keeps a later retry from
+      // re-handing a copy this best-effort removal missed. A plain retry
+      // keeps the files: its lineage is unbroken, and a retained retry
+      // re-hands the newest copy. Removed with the handoff, before the rearm
+      // is persisted: losing them without the rearm only costs a later
+      // emission its stored copy.
+      if (
+        stepAction === 'retry-clean' &&
+        result.state.steps.find((s) => s.id === target.id)
+          .generatorCompleted !== true
+      ) {
+        removeAgentWorkPayloads(dir, target.id, target.attempt);
+      }
     }
     // Re-validate the transition against the fresh disk state: if a concurrent
     // reconcile already resolved this step, surface the state machine's own
@@ -561,6 +781,7 @@ export async function runOrchestratorReconcile(
     // against `state`, and a step that was re-armed and failed again in
     // between is a different attempt those checks never saw.
     let freshRejection: string | undefined;
+    let reopenedIssueUpdates: IssueArchiveUpdate[] = [];
     const written = updateRunState(dir, (fresh) => {
       const reapplied = applyStepEvent(fresh, {
         type: 'stepAction',
@@ -572,10 +793,23 @@ export async function runOrchestratorReconcile(
         freshRejection = reapplied.reason;
         return null;
       }
+      // The reset this action requires discarded the failed attempt's tree,
+      // so resolutions that attempt claimed and no landed commit carries are
+      // reverted with the rearm, in the same write.
+      let rearmed = reapplied.state;
+      if (stepAction === 'retry-clean') {
+        const reopened = reopenResolutionsForStep(rearmed, target.id);
+        rearmed = reopened.state;
+        reopenedIssueUpdates = reopened.updates;
+      }
       const next = installFailed
-        ? markInstallFailed(reapplied.state, target.id)
-        : reapplied.state;
-      return entry ? appendCommit(next, entry) : next;
+        ? markInstallFailed(rearmed, target.id)
+        : rearmed;
+      // An adopted commit absorbs uncovered failed steps the same way a fold
+      // commit does, so it carries their resolved issues too.
+      return entry
+        ? appendCommit(next, attachIssueIdsToCommitEntry(next, entry))
+        : next;
     });
     if (freshRejection) {
       emitError(
@@ -587,10 +821,34 @@ export async function runOrchestratorReconcile(
       );
       return;
     }
+    if (reopenedIssueUpdates.length > 0) {
+      // Best-effort: run.json records the reverted dispositions and stays
+      // authoritative, so a failed append loses only the archive's trail record
+      // of the revert. The sink survives a throw: a shell rebuilt before the
+      // failure is durable and reads healthy on retry, so this pass must warn
+      // it.
+      const revertApplication = {
+        state: written,
+        newIssues: [],
+        updates: reopenedIssueUpdates,
+      };
+      const revertReconstructedIds: string[] = [];
+      try {
+        archiveIssues(dir, revertApplication, revertReconstructedIds);
+      } catch (e) {
+        warnToAgent({
+          title: `The reverted issue resolutions for ${target.migrationId} could not be archived (${summarizeError(e)}).`,
+          bodyLines: [
+            `run.json stays authoritative for the dispositions; the archived files under the run's issues directory miss the revert records, so their last entries may still read resolved.`,
+          ],
+        });
+      }
+      warnReconstructedArchives(revertReconstructedIds);
+    }
     state = written;
   }
   // (d) choose and emit the next dispense.
-  advanceAndDispense(root, dir, runId, state);
+  advanceAndDispense(root, dir, runId);
 }
 
 function buildSteps(sortedMigrations: PlannedMigration[]): MigrateStep[] {
@@ -607,6 +865,18 @@ function buildSteps(sortedMigrations: PlannedMigration[]): MigrateStep[] {
 
 // --- reconcile phases -------------------------------------------------------
 
+// The runbook points every later consumer at issues/<id>.json for the full
+// details, so a rebuild from run-state fields (the reported detail is gone
+// with the lost file) must not stay silent.
+function warnReconstructedArchives(issueIds: string[]): void {
+  if (issueIds.length === 0) return;
+  warnToAgent({
+    title: `The archived details for ${issueIds.join(
+      ', '
+    )} were missing or unreadable and were rebuilt from the run state; the originally reported detail is lost.`,
+  });
+}
+
 async function foldHandoffs(
   root: string,
   dir: string,
@@ -619,15 +889,69 @@ async function foldHandoffs(
   for (const { id } of state.steps) {
     const step = current.steps.find((s) => s.id === id);
     if (step.status !== 'awaiting-prompt-outcome') continue;
-    const result = readHandoffWithReason(
-      handoffPath(dir, splitMigrationId(step.migrationId))
-    );
+    const result = readStepHandoff(dir, step.id);
     if (!result.ok) continue; // still awaiting; the dispense asks to settle it
-    const promptOutcome = handoffToPromptOutcome(result.handoff);
-    // The commit and the install are side effects, so they happen before the
-    // fold, outside the lock; the transition and its ledger entry then land in
-    // one fresh-state write. A crash cannot leave the step settled with its
-    // commit forgotten.
+    let promptOutcome = handoffToPromptOutcome(result.handoff);
+    // A skipped handoff completes a step whose generator changed the tree.
+    // Prompt-only and no-op hybrid steps remain skipped so they cannot commit
+    // unrelated pending diffs.
+    if (generatorChangesApplied(step) && promptOutcome.status === 'skipped') {
+      promptOutcome = { ...promptOutcome, status: 'completed' };
+    }
+    // Archive under the lock before committing or marking the step terminal.
+    // Failure leaves the handoff retryable instead of landing an unrecorded
+    // commit or a ledger entry without detail; replayed archive writes are
+    // idempotent.
+    let ready = false;
+    let archiveError: unknown = null;
+    const reconstructedIssueIds: string[] = [];
+    withRunStateLock(dir, () => {
+      const fresh = readRunState(dir);
+      const applied = applyStepEvent(fresh, {
+        type: 'foldPromptOutcome',
+        stepId: step.id,
+        attempt: step.attempt,
+        promptOutcome,
+      });
+      if (applied.kind === 'error') return;
+      const issues = parseHandoffIssues(result.handoff.extras, fresh, step);
+      if (issues.ok !== true) return;
+      try {
+        // The sink survives a throw: a shell rebuilt before the failure is
+        // durable and reads healthy on the retry, so only this pass can
+        // warn that its original detail is gone.
+        archiveIssues(
+          dir,
+          applyReportedIssues(
+            applied.state,
+            step,
+            issues.issues,
+            issues.updates
+          ),
+          reconstructedIssueIds
+        );
+      } catch (e) {
+        archiveError = e;
+        return;
+      }
+      ready = true;
+    });
+    warnReconstructedArchives(reconstructedIssueIds);
+    if (archiveError !== null) {
+      warnToAgent({
+        title: `The issue details reported by ${
+          step.migrationId
+        } could not be archived (${summarizeError(archiveError)}).`,
+        bodyLines: [
+          `The step's outcome was not folded; fix the underlying problem, then run the reconcile again.`,
+        ],
+      });
+    }
+    if (!ready) continue;
+    // Phase 2: the commit and the install are side effects, so they happen
+    // outside the lock; the transition, the issue application, and the
+    // ledger entry then land in one fresh-state write. A crash cannot leave
+    // the step settled with its commit forgotten.
     const { entry, installFailed } = await foldLedgerEntry(
       root,
       dir,
@@ -635,31 +959,111 @@ async function foldHandoffs(
       step,
       promptOutcome
     );
-    // The fold re-validates against fresh disk state, on the attempt this
+    // The write re-validates against fresh disk state, on the attempt this
     // handoff was read for. That window is wide (a git commit plus a package
     // install), and 'awaiting-prompt-outcome' recurs, so without the attempt
     // check a concurrent reconcile's retry could take this outcome as its own.
     // A dropped fold is equivalent to the crash-refold window: the commit
     // landed but the ledger misses it.
+    // Written through the lock directly so the issue application is re-archived
+    // on the state the write actually lands on: a claim assigned between the
+    // phases can add an update record phase 1 never saw.
     let folded = false;
-    current = updateRunState(dir, (fresh) => {
+    let updateArchiveError: unknown = null;
+    let detailArchiveError: unknown = null;
+    let archivesDegraded = false;
+    const refoldReconstructedIds: string[] = [];
+    current = withRunStateLock(dir, () => {
+      const fresh = readRunState(dir);
       const applied = applyStepEvent(fresh, {
         type: 'foldPromptOutcome',
         stepId: step.id,
         attempt: step.attempt,
         promptOutcome,
       });
-      if (applied.kind === 'error') return null;
+      if (applied.kind === 'error') return fresh;
+      const issues = parseHandoffIssues(result.handoff.extras, fresh, step);
+      if (issues.ok !== true) return fresh;
+      const application = applyReportedIssues(
+        applied.state,
+        step,
+        issues.issues,
+        issues.updates
+      );
+      try {
+        // Phase 1 wrote these files, so a reconstruction here means one
+        // vanished between the phases; the ids surface that loss. The sink
+        // survives a throw, so a shell rebuilt before a later batch failed
+        // still gets warned.
+        archiveIssues(dir, application, refoldReconstructedIds);
+      } catch (e) {
+        // A landed commit outranks the drop: refolding would re-attempt
+        // its commit against a clean tree as no-changes and lose the entry
+        // for good. Phase 1 already archived this handoff's records durably
+        // once; the fold proceeds and the loss is warned.
+        const intact = applicationArchivesIntact(dir, application);
+        if (entry?.kind !== 'landed' && intact !== true) {
+          detailArchiveError = e;
+          return fresh;
+        }
+        updateArchiveError = e;
+        archivesDegraded = intact !== true;
+      }
       folded = true;
       const next = installFailed
-        ? markInstallFailed(applied.state, step.id)
-        : applied.state;
-      return entry ? appendCommit(next, entry) : next;
+        ? markInstallFailed(application.state, step.id)
+        : application.state;
+      // A landed commit carries the fixes of every issue resolved by a step it
+      // names: the folding step's own resolutions, and those of absorbed steps
+      // whose failed commit attempts left them unattached.
+      const written = entry
+        ? appendCommit(next, attachIssueIdsToCommitEntry(next, entry))
+        : next;
+      writeRunState(dir, written);
+      return written;
     });
-    // Only the handoff this fold consumed is removed. A rejected fold leaves
-    // it in place: it belongs to whichever attempt is on disk now, and that
-    // attempt's own reconcile still has to read it.
-    if (folded) removeHandoff(dir, step.migrationId);
+    warnReconstructedArchives(refoldReconstructedIds);
+    if (detailArchiveError !== null) {
+      warnToAgent({
+        title: `The issue details reported by ${
+          step.migrationId
+        } could not be archived (${summarizeError(detailArchiveError)}).`,
+        bodyLines: [
+          `The step's outcome was not folded; fix the underlying problem, then run the reconcile again.`,
+        ],
+      });
+    }
+    if (updateArchiveError !== null) {
+      warnToAgent(
+        archivesDegraded
+          ? {
+              title: `Some issue transition records for ${
+                step.migrationId
+              } could not be archived (${summarizeError(updateArchiveError)}).`,
+              bodyLines: [
+                `run.json stays authoritative for the dispositions; the archived files under the run's issues directory are missing or incomplete for this fold's issues, and its landed commit takes precedence over retrying the archive.`,
+              ],
+            }
+          : {
+              title: `Re-archiving the issue records for ${
+                step.migrationId
+              } failed (${summarizeError(updateArchiveError)}).`,
+              bodyLines: [
+                `Nothing was lost: the fold's records were verified on disk and recorded in run.json. The failed write may point at a disk problem worth checking.`,
+              ],
+            }
+      );
+    }
+    // A rejected fold leaves the handoff in place: it belongs to whichever
+    // attempt is on disk now, and that attempt's own reconcile still has to
+    // read it. The stored agent-work payloads go with a terminal outcome; a
+    // failed fold keeps them, since a retry re-hands the newest surviving copy.
+    if (folded) {
+      removeHandoff(dir, step.id);
+      if (promptOutcome.status !== 'failed') {
+        removeAgentWorkPayloads(dir, step.id, step.attempt);
+      }
+    }
   }
   return current;
 }
@@ -943,40 +1347,51 @@ async function commitForStep(
 
 // --- dispense ---------------------------------------------------------------
 
-function advanceAndDispense(
-  root: string,
-  dir: string,
-  runId: string,
-  state: MigrateRunState
-): void {
+function advanceAndDispense(root: string, dir: string, runId: string): void {
+  // Demote recorded issues no remaining step can claim before anything is
+  // rendered. Done here, at the single choke point every dispense, retry
+  // prompt, and completion goes through, on a fresh locked read: a step
+  // turned terminal by a concurrent reconcile or worker since the caller's
+  // read must not leave an unclaimable issue labeled recorded in a digest
+  // or the completion report.
+  const state = updateRunState(dir, (fresh) => {
+    const settled = settleUnclaimableIssues(fresh);
+    return settled === fresh ? null : settled;
+  });
   const step = firstActionableStep(state);
   if (!step) {
     completeRun(root, dir, runId, state);
     return;
   }
+  // Track the response streak before emitting: a crash in between costs at
+  // most a count one ahead of what was emitted, and the escalation is
+  // advisory. Only the step responses below count: the completion response
+  // above repeats by design, and a rejected --step-action ends the reconcile
+  // before reaching here, already naming its own fix.
+  const noProgress = trackNoProgress(dir, step);
   switch (step.status) {
     case 'pending':
-      dispenseNextStep(root, dir, runId, state, step);
+      dispenseNextStep(root, dir, runId, state, step, noProgress);
       break;
     case 'dispensed':
       // Re-entry before the worker advanced the step; re-emit its command.
-      emitNextStep(root, runId, step);
+      emitNextStep(root, runId, state, step, noProgress);
       break;
     case 'failed':
-      emitRetryFailed(root, runId, state, step);
+      emitRetryFailed(root, runId, state, step, noProgress);
       break;
     case 'died':
-      emitDied(root, runId, state, step);
+      emitDied(root, runId, state, step, noProgress);
       break;
     case 'running':
-      emitStillRunning(root, runId, step);
+      emitStillRunning(root, runId, step, noProgress);
       break;
     case 'awaiting-prompt-outcome':
-      emitAwaitPrompt(root, dir, runId, step);
+      emitAwaitPrompt(root, dir, runId, step, noProgress);
       break;
     case 'succeeded':
     case 'skipped':
-      // firstActionableStep already excludes these via TERMINAL_STATUSES;
+      // firstActionableStep already excludes these via TERMINAL_STEP_STATUSES;
       // landing here means an already-terminal step slipped through
       // unclassified rather than being left to stall the run silently.
       throw new Error(
@@ -994,7 +1409,50 @@ function advanceAndDispense(
 }
 
 function firstActionableStep(state: MigrateRunState): MigrateStep | undefined {
-  return state.steps.find((s) => !TERMINAL_STATUSES.has(s.status));
+  return state.steps.find((s) => !TERMINAL_STEP_STATUSES.has(s.status));
+}
+
+// The fingerprint digests the whole persisted state (minus the streak itself),
+// so any durable change resets the count with no per-field enumeration to fall
+// out of date. A response whose own production writes state after the streak
+// is tracked fingerprints the pre-write state, so its first repeat resets
+// rather than increments.
+function responseFingerprint(state: MigrateRunState): string {
+  return createHash('sha256')
+    .update(JSON.stringify({ ...state, noProgress: undefined }))
+    .digest('hex');
+}
+
+// A young, parseably-started worker neither increments nor resets the
+// actionable-response streak. Unproven age counts normally.
+function trackNoProgress(
+  dir: string,
+  step: MigrateStep
+): MigrateRunNoProgress | null {
+  if (step.status === 'running') {
+    const startedAt = step.startedAt ? Date.parse(step.startedAt) : NaN;
+    if (
+      Number.isFinite(startedAt) &&
+      Date.now() - startedAt < HANG_THRESHOLD_MS
+    ) {
+      return null;
+    }
+  }
+  let streak: MigrateRunNoProgress;
+  updateRunState(dir, (fresh) => {
+    const fingerprint = responseFingerprint(fresh);
+    const prev = fresh.noProgress;
+    streak =
+      prev && prev.fingerprint === fingerprint
+        ? { ...prev, consecutiveCount: prev.consecutiveCount + 1 }
+        : {
+            fingerprint,
+            consecutiveCount: 1,
+            firstSeenAt: new Date().toISOString(),
+          };
+    return { ...fresh, noProgress: streak };
+  });
+  return streak.consecutiveCount >= NO_PROGRESS_THRESHOLD ? streak : null;
 }
 
 function dispenseNextStep(
@@ -1002,7 +1460,8 @@ function dispenseNextStep(
   dir: string,
   runId: string,
   state: MigrateRunState,
-  step: MigrateStep
+  step: MigrateStep,
+  noProgress: MigrateRunNoProgress | null
 ): void {
   // Read the pre-migration baselines (git and package.json reads) before the
   // lock; the dispense transition and the baselines then apply to the fresh
@@ -1030,32 +1489,49 @@ function dispenseNextStep(
   if (advancedElsewhere) {
     // Terminates: step statuses only advance, so each re-entry observes
     // strictly later state and lands in a non-pending branch of the dispatch.
-    advanceAndDispense(root, dir, runId, current);
+    advanceAndDispense(root, dir, runId);
     return;
   }
   emitNextStep(
     root,
     runId,
-    current.steps.find((s) => s.id === step.id)
+    current,
+    current.steps.find((s) => s.id === step.id),
+    noProgress
   );
 }
 
-function emitNextStep(root: string, runId: string, step: MigrateStep): void {
+function emitNextStep(
+  root: string,
+  runId: string,
+  state: MigrateRunState,
+  step: MigrateStep,
+  noProgress: MigrateRunNoProgress | null
+): void {
   const migrationId = step.migrationId;
-  emit(runId, step, 'next-step', {
-    command: workerCommand(root, migrationId, runId),
-    next: reconcileCommand(root, runId),
-    instructionLines: [
-      `Apply migration ${migrationId} by running the command below, then run the "next" command to record the outcome and get the next step.`,
-    ],
-  });
+  emit(
+    root,
+    runId,
+    step,
+    'next-step',
+    {
+      command: workerCommand(root, migrationId, runId),
+      next: reconcileCommand(root, runId),
+      instructionLines: [
+        `Apply migration ${migrationId} by running the command below, then run the "next" command to record the outcome and get the next step.`,
+        ...renderIssueDigestLines(state, step.id, runId),
+      ],
+    },
+    noProgress
+  );
 }
 
 function emitRetryFailed(
   root: string,
   runId: string,
   state: MigrateRunState,
-  step: MigrateStep
+  step: MigrateStep,
+  noProgress: MigrateRunNoProgress | null
 ): void {
   const migrationId = step.migrationId;
   // A worker failure records its summary on the outcome; a prompt the agent
@@ -1066,18 +1542,21 @@ function emitRetryFailed(
   const cleanRetry = canOfferCleanRetry(root, state, step, head);
   // A failure recorded before the generator marker can still have written to
   // the tree (a direct fs or exec side effect, or a crash mid-flush); a
-  // marker means only the install and commit are left, so plain retry is
-  // safe outright. So is retrying a step with no generator half to rerun.
+  // marker means only the handed-back half (a prompt or a validation pass)
+  // or the install and commit are left, so plain retry is safe outright. So
+  // is retrying a step with no generator half to rerun.
   const pending = generatorPending(step);
   const retrySafety: PreMarkerRetrySafety = pending
     ? assessPreMarkerRetry(root, step)
     : { kind: 'safe' };
+  const capReached = rearmCapReached(step);
   const lines = [
     `Migration ${migrationId} failed${summary ? `: ${summary}` : ''}.`,
     `  started from: ${step.gitRefBefore ?? '(unknown)'}`,
     `  current HEAD: ${head ?? '(unknown)'}`,
     `  working tree: ${tree === null ? '(unknown)' : tree ? `\n${tree}` : '(clean)'}`,
     ``,
+    ...(capReached ? [rearmCapLine(step), ``] : []),
     `Decide how to proceed and re-run reconcile with one of:`,
     retryOptionLine(retrySafety, reconcileCommand(root, runId, 'retry')),
   ];
@@ -1099,11 +1578,37 @@ function emitRetryFailed(
   // A step whose generator may still run gets no `next`, whichever retry the
   // checks above would accept: git can vouch for the tracked tree only, and
   // an agent that follows `next` blindly must not rerun a generator over
-  // writes nothing here could see. Choosing a retry has to be explicit.
-  emit(runId, step, 'retry-failed', {
-    ...(pending ? {} : { next: reconcileCommand(root, runId, 'retry') }),
-    instructionLines: lines,
-  });
+  // writes nothing here could see. Choosing a retry has to be explicit. The
+  // rearm cap withholds it too: each rearm resets the response streak, so a
+  // blindly-followed retry `next` would loop past every escalation.
+  emit(
+    root,
+    runId,
+    step,
+    'retry-failed',
+    {
+      ...(pending || capReached
+        ? {}
+        : { next: reconcileCommand(root, runId, 'retry') }),
+      instructionLines: lines,
+    },
+    noProgress
+  );
+}
+
+// Whether the step has used up its rearms: attempts beyond the first are all
+// rearms, whichever retry action produced them.
+function rearmCapReached(step: MigrateStep): boolean {
+  return step.attempt - 1 >= REARM_ESCALATION_CAP;
+}
+
+// No availability promise: which retry forms remain is the option list's to
+// say (a pre-marker death may offer none), and the cap itself withholds only
+// the preselected continuation.
+function rearmCapLine(step: MigrateStep): string {
+  return `This migration has already been retried ${
+    step.attempt - 1
+  } times without completing. Repeating an unchanged retry is unlikely to end differently: fix the underlying problem first, choose one of the non-retry options below, or ask the user how to proceed.`;
 }
 
 // Whether the step's generator half may still have to run: it exists and no
@@ -1114,6 +1619,14 @@ function emitRetryFailed(
 // kind was persisted counts as having one.
 function generatorPending(step: MigrateStep): boolean {
   return step.generatorCompleted !== true && step.hasGenerator !== false;
+}
+
+// Absent generatorMadeChanges (a marker an older nx wrote) counts as applied,
+// keeping that version's fold behavior.
+function generatorChangesApplied(step: MigrateStep): boolean {
+  return (
+    step.generatorCompleted === true && step.generatorMadeChanges !== false
+  );
 }
 
 // Appended to the failed and died dispenses of a step whose generator may rerun.
@@ -1153,6 +1666,8 @@ function retryOptionLine(
 // records dirty, a run created before that field existed carries nothing to
 // check, and an unreadable HEAD is no ref at all, so none of the three can be
 // read as a restore point that exists.
+// The debt check is run-wide: a clean retry resets and cleans the whole tree,
+// which would discard every other failed step's uncommitted work as well.
 function canOfferCleanRetry(
   root: string,
   state: MigrateRunState,
@@ -1268,23 +1783,23 @@ function emitDied(
   root: string,
   runId: string,
   state: MigrateRunState,
-  step: MigrateStep
+  step: MigrateStep,
+  noProgress: MigrateRunNoProgress | null
 ): void {
   const migrationId = step.migrationId;
   const ref = step.gitRefBefore;
   const head = getLatestCommitSha(root);
   const tree = dirtyTreeSummary(root);
   const cleanRetry = canOfferCleanRetry(root, state, step, head);
-  // The generator half is recorded (or the step never had one), so a retry
-  // that keeps the tree as it stands has the rest of the step left to run: a
-  // prompt, or the install and commit its worker never reached.
   const resume = !generatorPending(step);
+  const capReached = rearmCapReached(step);
   const lines = [
     `The worker for ${migrationId} died; its process is gone.`,
     `  started from: ${ref ?? '(unknown)'}`,
     `  current HEAD: ${head ?? '(unknown)'}`,
     `  working tree: ${tree === null ? '(unknown)' : tree ? `\n${tree}` : '(clean)'}`,
     ``,
+    ...(capReached ? [rearmCapLine(step), ``] : []),
   ];
   const options: string[] = [];
   if (resume) {
@@ -1335,22 +1850,33 @@ function emitDied(
   if (!resume) {
     lines.push(UNVERIFIABLE_WRITES_LINE);
   }
-  // `retry` is preselected wherever it is legal: it is the only resolution
-  // that neither discards work nor records a result the run never produced.
-  // While the generator may still run there is no `next` at all: a reset
-  // cannot be verified against writes git does not see, and adopting records
-  // a result nothing checked, so an agent that follows `next` blindly must
-  // land on neither.
-  emit(runId, step, 'died', {
-    ...(resume ? { next: reconcileCommand(root, runId, 'retry') } : {}),
-    instructionLines: lines,
-  });
+  // `retry` is preselected wherever it is legal: it is the only resolution that
+  // neither discards work nor records a result the run never produced. While
+  // the generator may still run there is no `next` at all: a reset cannot be
+  // verified against writes git does not see, and adopting records a result
+  // nothing checked, so an agent that follows `next` blindly must land on
+  // neither. The rearm cap withholds it for the same reason as in
+  // emitRetryFailed.
+  emit(
+    root,
+    runId,
+    step,
+    'died',
+    {
+      ...(resume && !capReached
+        ? { next: reconcileCommand(root, runId, 'retry') }
+        : {}),
+      instructionLines: lines,
+    },
+    noProgress
+  );
 }
 
 function emitStillRunning(
   root: string,
   runId: string,
-  step: MigrateStep
+  step: MigrateStep,
+  noProgress: MigrateRunNoProgress | null
 ): void {
   const migrationId = step.migrationId;
   const ageMs = step.startedAt ? Date.now() - Date.parse(step.startedAt) : 0;
@@ -1364,56 +1890,198 @@ function emitStillRunning(
       )} minutes and may be hung. Verify pid ${step.pid}; either keep waiting, or kill it so the next reconcile can classify it as died.`
     );
   }
-  emit(runId, step, 'still-running', {
-    next: reconcileCommand(root, runId),
-    instructionLines: lines,
-  });
+  emit(
+    root,
+    runId,
+    step,
+    'still-running',
+    {
+      next: reconcileCommand(root, runId),
+      instructionLines: lines,
+    },
+    noProgress
+  );
 }
 
 function emitAwaitPrompt(
   root: string,
   dir: string,
   runId: string,
-  step: MigrateStep
+  step: MigrateStep,
+  noProgress: MigrateRunNoProgress | null
 ): void {
   const migrationId = step.migrationId;
-  const { package: pkg, name } = splitMigrationId(migrationId);
-  const filePath = handoffPath(dir, { package: pkg, name });
-  // The package id becomes real path segments, so handing over the path
-  // without its directory is what would force the agent to `mkdir -p`. Same
-  // reason the classic runner pre-creates it in run-step.ts.
-  mkdirSync(dirname(filePath), { recursive: true });
-  const lines = [
-    `Migration ${migrationId} is a prompt-based migration awaiting your outcome.`,
-    `Apply the prompt (see the worker's earlier <nx_migrate_prompt> block), then write the handoff file and run the "next" command.`,
+  const filePath = runStepHandoffPath(dir, step.id);
+  // Recreated if the agent removed it, so the handed-over path always has its
+  // parent (an agent that has to `mkdir -p` pays a permission prompt).
+  const handoffsDir = runHandoffsDir(dir);
+  const handoffsDirIs = handoffsDirState(handoffsDir);
+  if (handoffsDirIs === 'missing') {
+    mkdirSync(handoffsDir, { recursive: true });
+  }
+  // Claim only while fresh state still awaits this handoff. Steps that never
+  // park cannot report updates; serial dispensing fixes order, and stale
+  // attempts redispatch.
+  let advancedElsewhere = false;
+  const claimed = updateRunState(dir, (fresh) => {
+    const freshStep = fresh.steps.find((s) => s.id === step.id);
+    if (
+      freshStep?.status !== 'awaiting-prompt-outcome' ||
+      freshStep.attempt !== step.attempt
+    ) {
+      advancedElsewhere = true;
+      return null;
+    }
+    const next = claimIssuesForStep(fresh, step.id, runId);
+    return next === fresh ? null : next;
+  });
+  if (advancedElsewhere) {
+    // Terminates like dispenseNextStep's redispatch: step state only
+    // advances, so each re-entry observes strictly later state.
+    advanceAndDispense(root, dir, runId);
+    return;
+  }
+  const validating = step.awaitingKind === 'generator-validation';
+  // The plan's prompt path is the ground truth for a prompt park: a stored copy
+  // naming different instructions is rejected against it.
+  const planPrompt = validating
+    ? null
+    : planPromptPath(dir, claimed, migrationId);
+  // Re-emit the payload the worker stored when it parked the step, so a
+  // session that lost the original block gets the work restated. An awaiting
+  // step offers no retry action, so a dispense that only pointed backward
+  // could stall a valid run forever; only a plan that cannot name the prompt
+  // falls back to that pointer.
+  const payload =
+    readAgentWorkPayload(agentWorkPayloadPath(dir, step.id, step.attempt), {
+      migrationId,
+      kind: validating ? 'generator-validation' : 'migration-prompt',
+      ...(planPrompt === null ? {} : { promptPath: planPrompt }),
+    }) ??
+    (validating
+      ? { migrationId, kind: 'generator-validation' }
+      : planPrompt === null
+        ? null
+        : { migrationId, prompt: planPrompt });
+  if (payload) {
+    emitPromptBlock(migrationId, payload);
+  }
+  const blockRef = payload
+    ? 'the <nx_migrate_prompt> block above'
+    : "the worker's earlier <nx_migrate_prompt> block";
+  const lines = validating
+    ? [
+        `Migration ${migrationId} ran its generator; its changes are awaiting your validation.`,
+        `Validate them (see ${blockRef} and the runbook's validation scope rules), then write the handoff file and run the "next" command.`,
+      ]
+    : [
+        `Migration ${migrationId} is a prompt-based migration awaiting your outcome.`,
+        `Apply the prompt (see ${blockRef}), then write the handoff file and run the "next" command.`,
+        // Resolved per dispense: an earlier step may have changed the formatter
+        // since the runbook was written.
+        `Format command: ${
+          resolveFormatCommand(root, pmExecPrefix(root)) ??
+          'none (no configured formatter is installed)'
+        }`,
+      ];
+  lines.push(
     `Handoff file: ${filePath}`,
-    `Handoff JSON: { "status": "success" | "failed", "summary": "<what you did>" }. To mark the prompt not applicable, use "status": "success" with "outcome": "skipped".`,
-  ];
+    // The skipped outcome is offered only while nothing of the migration is in
+    // the tree: once a generator's changes are applied, the fold treats a
+    // skipped handoff as completed anyway.
+    validating
+      ? `Handoff JSON: ${renderHandoffShapeInline('what you verified')}. If validation does not apply here, use "status": "success" and say so in the summary.`
+      : generatorChangesApplied(step)
+        ? `Handoff JSON: ${renderHandoffShapeInline('what you did')}. If the prompt does not apply here, use "status": "success" and say so in the summary; the migration's generator changes are already applied.`
+        : `Handoff JSON: ${renderHandoffShapeInline('what you did')}. To mark the prompt not applicable, use "status": "success" with "outcome": "skipped".`
+  );
+  lines.push(...renderIssueDigestLines(claimed, step.id, runId));
   // A handoff that exists but can't be read/parsed/validated is a rejection,
   // not a still-awaited outcome. Naming why stops the run from re-emitting the
   // same await forever while the agent leaves the bad file in place.
-  const rejection = describeRejectedHandoff(filePath);
+  // A non-directory in the handoffs dir's place is never read through, so a
+  // rewritten handoff cannot cure it: name the replacement instead.
+  const rejection =
+    handoffsDirIs === 'other'
+      ? [
+          `${handoffsDir} is not a directory, so no handoff can be read from it. Replace it with a directory, then write the handoff file and run the "next" command.`,
+        ]
+      : describeRejectedHandoff(dir, claimed, step);
   if (rejection.length > 0) {
     lines.push('', ...rejection);
   }
-  emit(runId, step, 'await-prompt', {
-    next: reconcileCommand(root, runId),
-    instructionLines: lines,
-  });
+  emit(
+    root,
+    runId,
+    step,
+    'await-prompt',
+    {
+      next: reconcileCommand(root, runId),
+      instructionLines: lines,
+    },
+    noProgress
+  );
 }
 
-// Empty unless a handoff file is present but unusable; wording mirrors the
-// classic runner's ambiguous-outcome cause lines.
-function describeRejectedHandoff(handoffPath: string): string[] {
-  const result = readHandoffWithReason(handoffPath);
-  if (result.ok) return [];
+// The prompt path the run's latest plan snapshot records for the migration.
+// Every failure lands on null, damaged-but-parseable snapshots included: this
+// runs while re-handing an awaiting step's work, and throwing here would keep
+// the run from re-dispensing that work at all. The snapshot name is validated
+// as a bare `plan-<round>.json` at state read, so the join cannot leave the run
+// directory.
+function planPromptPath(
+  dir: string,
+  state: MigrateRunState,
+  migrationId: string
+): string | null {
+  const round = latestRound(state);
+  if (!round) return null;
+  let migrations: unknown;
+  try {
+    migrations = readJsonFile<{ migrations?: unknown }>(
+      join(dir, round.planSnapshot)
+    ).migrations;
+  } catch {
+    return null;
+  }
+  if (!Array.isArray(migrations)) return null;
+  for (const entry of migrations) {
+    if (typeof entry !== 'object' || entry === null) continue;
+    const migration = entry as PlannedMigration;
+    if (`${migration.package}:${migration.name}` !== migrationId) continue;
+    return typeof migration.prompt === 'string' ? migration.prompt : null;
+  }
+  return null;
+}
+
+// Wording mirrors the classic runner's ambiguous-outcome cause lines. A
+// readable handoff whose issue report is invalid is a rejection too: the fold
+// refused to consume it, and only this response can tell the agent why.
+function describeRejectedHandoff(
+  dir: string,
+  state: MigrateRunState,
+  step: MigrateStep
+): string[] {
+  const result = readStepHandoff(dir, step.id);
+  const followUp = 'Rewrite the handoff file, then run the "next" command.';
+  if (result.ok === true) {
+    const issues = parseHandoffIssues(result.handoff.extras, state, step);
+    if (issues.ok !== true) {
+      return [
+        `The handoff file was rejected: ${
+          (issues as { ok: false; reason: string }).reason
+        }.`,
+        followUp,
+      ];
+    }
+    return [];
+  }
   const { reason, detail } = result as {
     ok: false;
     reason: HandoffReadFailureReason;
     detail?: string;
   };
   if (reason === 'missing') return [];
-  const followUp = 'Rewrite the handoff file, then run the "next" command.';
   switch (reason) {
     case 'read-error':
       return [
@@ -1446,13 +2114,17 @@ function describeRejectedHandoff(handoffPath: string): string[] {
 // exit would tell the driving agent that reconcile itself crashed, and it
 // would stop reading for the correction it is being handed.
 function emitError(root: string, runId: string, reason: string): void {
+  // A rejected action is an active response like any dispense, so it carries
+  // the runbook footer: the master receiving it may have just lost its
+  // context. One sanitized array feeds both outputs, as in emit().
+  const lines = safeLines([reason, ...runbookFooterLines(root, runId)]);
   warnToAgent({
     title: 'The requested --step-action could not be applied.',
-    bodyLines: [reason],
+    bodyLines: lines,
   });
   emitStepBlock(runId, '-', 'error', {
     next: reconcileCommand(root, runId),
-    instructions: reason,
+    instructions: lines.join('\n'),
   });
   reportMigrateOrchestratorDispense({ action: 'error', attempt: 0 });
 }
@@ -1519,12 +2191,17 @@ function completeRun(
   if (installLine) {
     warnToAgent({ title: installLine });
   }
+  const issueLines = renderUnresolvedIssueLines(current, runId);
+  if (issueLines.length > 0) {
+    warnToAgent({ title: issueLines[0], bodyLines: issueLines.slice(1) });
+  }
   const instructionLines = [
     `Migrate run ${runId} is complete.`,
     `  applied: ${completed}`,
     `  skipped: ${skipped}`,
     ...(commitDebt ? [debtLine] : []),
     ...(installLine ? [installLine] : []),
+    ...issueLines,
   ];
   logToAgent({ title: 'nx migrate: complete', bodyLines: instructionLines });
   emitStepBlock(runId, '-', 'complete', {
@@ -1545,21 +2222,68 @@ interface DispensePayload {
 }
 
 function emit(
+  root: string,
   runId: string,
   step: MigrateStep,
   action: string,
-  payload: DispensePayload
+  payload: DispensePayload,
+  noProgress: MigrateRunNoProgress | null
 ): void {
+  // At the escalation threshold the whole response becomes the 'no-progress'
+  // action, with the step's own instructions kept below so acting on them stays
+  // possible. Never a step status: nothing durable changed, and a status would
+  // have to be walked back once the agent acts.
+  const escalated = noProgress !== null;
+  const effectiveAction = escalated ? 'no-progress' : action;
   const { instructionLines, ...rest } = payload;
+  const allLines = escalated
+    ? [...noProgressLines(step, noProgress), ...(instructionLines ?? [])]
+    : instructionLines;
+  const withFooter = allLines
+    ? [...allLines, ...runbookFooterLines(root, runId)]
+    : undefined;
   // One sanitized array feeds both, so the block payload says exactly what the
   // human echo said.
-  const lines = instructionLines ? safeLines(instructionLines) : undefined;
-  logToAgent({ title: `nx migrate: ${action}`, bodyLines: lines });
-  emitStepBlock(runId, step.id, action, {
+  const lines = withFooter ? safeLines(withFooter) : undefined;
+  logToAgent({ title: `nx migrate: ${effectiveAction}`, bodyLines: lines });
+  emitStepBlock(runId, step.id, effectiveAction, {
     ...rest,
     ...(lines ? { instructions: lines.join('\n') } : {}),
   });
-  reportMigrateOrchestratorDispense({ action, attempt: step.attempt });
+  reportMigrateOrchestratorDispense({
+    action: effectiveAction,
+    attempt: step.attempt,
+  });
+}
+
+function noProgressLines(
+  step: MigrateStep,
+  streak: MigrateRunNoProgress
+): string[] {
+  return [
+    `No progress: this is response ${streak.consecutiveCount} in a row for migration ${step.migrationId} with no change in the run's recorded state since ${streak.firstSeenAt}.`,
+    `Re-running the reconcile command changes nothing on its own; act on the instructions below. If something is blocking you from acting on them, stop looping and report the blocker to the user.`,
+    ``,
+  ];
+}
+
+// Append the runbook path to init, active and rejected responses so a
+// compacted, truncated or restarted session can recover the contract. Missing
+// or non-regular runbooks stand alone.
+function runbookFooterLines(root: string, runId: string): string[] {
+  if (
+    lstatRunbook(join(runDir(root, runId), RUNBOOK_FILE_NAME))?.isFile() !==
+    true
+  ) {
+    return [];
+  }
+  return [
+    ``,
+    `Runbook: ${MIGRATE_RUNS_RELATIVE_DIR}/${runId}/${RUNBOOK_FILE_NAME}. After a compaction or restart, re-read it and run \`${reconcileCommand(
+      root,
+      runId
+    )}\`; never infer the run's progress from memory.`,
+  ];
 }
 
 // Raw argv is forwarded verbatim across the wrapper hops, so every flag is a
@@ -1649,15 +2373,27 @@ function applyEventOrThrow(
   return result.state;
 }
 
-function handoffPath(
-  dir: string,
-  migration: { package: string; name: string }
-): string {
-  return stepHandoffPath(dir, migration);
+function readStepHandoff(dir: string, stepId: string): HandoffReadResult {
+  return readHandoffWithReason(
+    runStepHandoffPath(dir, stepId),
+    runHandoffsDir(dir)
+  );
 }
 
-function removeHandoff(dir: string, migrationId: string): void {
-  rmSync(handoffPath(dir, splitMigrationId(migrationId)), { force: true });
+// Probe-time guard: a handoffs dir the agent swapped for a symlink into a
+// directory holding a file of the step's fixed name would otherwise have the
+// orchestrator delete that file. A swap between the probe and the rm is not
+// caught. A probe failure skips the rm too; the next read reports it.
+function removeHandoff(dir: string, stepId: string): void {
+  let state: ReturnType<typeof handoffsDirState>;
+  try {
+    state = handoffsDirState(runHandoffsDir(dir));
+  } catch {
+    return;
+  }
+  if (state === 'directory') {
+    rmSync(runStepHandoffPath(dir, stepId), { force: true });
+  }
 }
 
 // null means the probe itself failed; the death dispense renders that as

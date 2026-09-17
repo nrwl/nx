@@ -85,10 +85,13 @@ export { addPlugin } from './src/utils/add-plugin';
 export {
   getDeclaredPackageVersion,
   getInstalledPackageVersion,
+  getInstalledPackageVersionFromTree,
 } from './src/utils/installed-version';
 export {
   assertSupportedInstalledPackageVersion,
   assertSupportedPackageVersion,
+  getResolvedPackageVersion,
+  getSatisfyingInstalledPackageVersion,
 } from './src/utils/version-floor';
 export {
   createAsyncIterable,

@@ -31,6 +31,7 @@ import {
   commitCheckpointBeforeMigrations,
   commitMigrationIfRequested,
   confirmMigrationCommitsOnDefaultBranch,
+  currentBranchIfDefault,
 } from './migrate-commits';
 import { migrateConfirm } from './safe-prompt';
 
@@ -413,5 +414,32 @@ describe('confirmMigrationCommitsOnDefaultBranch', () => {
     expect(mockLog.mock.calls[0][0].title).toContain(
       "Skipped running the migration to avoid committing to the default branch 'main'."
     );
+  });
+});
+
+describe('currentBranchIfDefault', () => {
+  it.each<[string, string | null, string, string]>([
+    ['the default branch', 'main', 'main', 'main'],
+    [
+      'the default branch behind an origin/ base ref',
+      'main',
+      'origin/main',
+      'main',
+    ],
+  ])('names %s', (_label, current, base, expected) => {
+    mockReadNxJson.mockReturnValue({ defaultBase: base });
+    mockCurrentBranch.mockReturnValue(current);
+
+    expect(currentBranchIfDefault('/workspace')).toBe(expected);
+  });
+
+  it.each<[string, string | null]>([
+    ['another branch', 'feat/migrate'],
+    ['a detached HEAD', null],
+  ])('returns null on %s', (_label, current) => {
+    mockReadNxJson.mockReturnValue({ defaultBase: 'main' });
+    mockCurrentBranch.mockReturnValue(current);
+
+    expect(currentBranchIfDefault('/workspace')).toBeNull();
   });
 });

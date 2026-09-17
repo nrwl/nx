@@ -58,7 +58,8 @@ export function toScrapedData(
   return data;
 }
 
-export function getSinceDate(prevDate?: Date, referenceDate = now): Date {
+export function getSinceDate(prevDate?: Date, referenceDate?: Date): Date {
+  referenceDate ??= now;
   const firstOfPrevMonth = new Date(
     referenceDate.getFullYear(),
     referenceDate.getMonth() - 1,

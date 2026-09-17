@@ -12,7 +12,7 @@ public static partial class TargetBuilder
         string projectName,
         string fileName,
         List<PackageReference> packageRefs,
-        Dictionary<string, string> properties,
+        EvaluatedProperties properties,
         string projectDirectory,
         string workspaceRoot,
         PluginOptions options,
@@ -41,13 +41,17 @@ public static partial class TargetBuilder
             [
                 "default",
                 $"^{productionInput}",
-                "{workspaceRoot}/.editorconfig",
                 new { workingDirectory = "absolute" },
                 new { dependentTasksOutputFiles = "**/*" },
+                new { env = "NUGET_PACKAGES" },
                 // new { externalDependencies = externalDeps }
                 .. directoryBuildInputs
             ],
-            Outputs = testResultsDir is null ? [] : [testResultsDir],
+            // The option is resolved by dotnet against the project directory (cwd), so the
+            // output carries the same prefix. Nx drops the entry while the option is unset.
+            Outputs = new[] { testResultsDir, "{projectRoot}/{options.results-directory}" }
+                .Where(p => p is not null)
+                .ToArray()!,
             Metadata = new TargetMetadata
             {
                 Description = "Run .NET tests",

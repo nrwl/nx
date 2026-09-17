@@ -905,6 +905,16 @@ export async function packageRegistryView(
 }
 
 /**
+ * Parses `npm view --json` output. npm 12 wraps the result in an array even
+ * when a single version matches; npm <= 11 and pnpm print the bare value. A
+ * multi-version match (range spec) stays an array.
+ */
+export function parseRegistryViewJson<T = unknown>(raw: string): T {
+  const parsed = JSON.parse(raw);
+  return Array.isArray(parsed) && parsed.length === 1 ? parsed[0] : parsed;
+}
+
+/**
  * Only `npm pack` supports downloading a tarball of a specified remote
  * package. `yarn` packs the active workspace, `pnpm pack` only packs
  * the local project, and `bun` doesn't support pack.

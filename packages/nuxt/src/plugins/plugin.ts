@@ -143,9 +143,12 @@ async function buildNuxtTargets(
     projectRoot
   );
 
-  targets[options.serveTargetName] = serveTarget(projectRoot);
+  targets[options.serveTargetName] = serveTarget(projectRoot, namedInputs);
 
-  targets[options.serveStaticTargetName] = serveStaticTarget(options);
+  targets[options.serveStaticTargetName] = serveStaticTarget(
+    options,
+    namedInputs
+  );
 
   targets[options.buildStaticTargetName] = buildStaticTarget(
     options.buildStaticTargetName,
@@ -178,35 +181,48 @@ function buildTarget(
     options: { cwd: projectRoot },
     cache: true,
     dependsOn: [`^${buildTargetName}`],
-    inputs: [
-      ...('production' in namedInputs
-        ? ['production', '^production']
-        : ['default', '^default']),
-
-      {
-        externalDependencies: ['nuxt'],
-      },
-    ],
+    inputs: buildInputs(namedInputs),
     outputs: buildOutputs,
   };
 }
 
-function serveTarget(projectRoot: string) {
+function buildInputs(namedInputs: {
+  [inputName: string]: any[];
+}): TargetConfiguration['inputs'] {
+  return [
+    ...('production' in namedInputs
+      ? ['production', '^production']
+      : ['default', '^default']),
+    {
+      externalDependencies: ['nuxt'],
+    },
+  ];
+}
+
+function serveTarget(
+  projectRoot: string,
+  namedInputs: { [inputName: string]: any[] }
+) {
   const targetConfig: TargetConfiguration = {
     command: `nuxt dev`,
     options: {
       cwd: projectRoot,
     },
     continuous: true,
+    inputs: buildInputs(namedInputs),
   };
 
   return targetConfig;
 }
 
-function serveStaticTarget(options: NuxtPluginOptions) {
+function serveStaticTarget(
+  options: NuxtPluginOptions,
+  namedInputs: { [inputName: string]: any[] }
+) {
   const targetConfig: TargetConfiguration = {
     dependsOn: [`${options.buildStaticTargetName}`],
     continuous: true,
+    inputs: buildInputs(namedInputs),
     executor: '@nx/web:file-server',
     options: {
       buildTarget: `${options.buildStaticTargetName}`,

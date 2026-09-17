@@ -104,6 +104,7 @@ const SIMPLE_CASES: {
       type: 'awaitPromptOutcome',
       stepId,
       finishedAt: '2026-01-01T00:02:00.000Z',
+      awaitingKind: 'migration-prompt',
     }),
     legalFrom: 'running',
     expectedStatus: 'awaiting-prompt-outcome',
@@ -203,14 +204,92 @@ describe('applyStepEvent', () => {
       const result = applyStepEvent(state, {
         type: 'markGeneratorCompleted',
         stepId: 'step-1',
+        agenticWaived: false,
+        validationOwed: false,
+        madeChanges: true,
       });
 
       expect(result.kind).toBe('ok');
       if (result.kind === 'ok') {
         expect(result.state.steps[0].generatorCompleted).toBe(true);
+        // A false waiver leaves no field behind rather than writing `false`.
+        expect(result.state.steps[0].agenticWaived).toBeUndefined();
+        // Unlike the waiver, this is written either way: absent is reserved
+        // for markers an older nx wrote.
+        expect(result.state.steps[0].generatorMadeChanges).toBe(true);
         // The worker still has its commit to attempt; the step only leaves
         // 'running' when that resolves.
         expect(result.state.steps[0].status).toBe('running');
+      }
+    });
+
+    it('records the attempt the marker was written on as the payload lineage boundary', () => {
+      const state = stateWithStep({ status: 'running', attempt: 3 });
+
+      const result = applyStepEvent(state, {
+        type: 'markGeneratorCompleted',
+        stepId: 'step-1',
+        agenticWaived: false,
+        validationOwed: false,
+        madeChanges: true,
+      });
+
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        expect(result.state.steps[0].generatorCompletedAtAttempt).toBe(3);
+      }
+    });
+
+    it('records an explicit false when the generator made no changes', () => {
+      const state = stateWithStep({ status: 'running' });
+
+      const result = applyStepEvent(state, {
+        type: 'markGeneratorCompleted',
+        stepId: 'step-1',
+        agenticWaived: false,
+        validationOwed: false,
+        madeChanges: false,
+      });
+
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        expect(result.state.steps[0].generatorMadeChanges).toBe(false);
+      }
+    });
+
+    it('records the waiver alongside the marker', () => {
+      const state = stateWithStep({ status: 'running' });
+
+      const result = applyStepEvent(state, {
+        type: 'markGeneratorCompleted',
+        stepId: 'step-1',
+        agenticWaived: true,
+        validationOwed: false,
+        madeChanges: true,
+      });
+
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        expect(result.state.steps[0].generatorCompleted).toBe(true);
+        expect(result.state.steps[0].agenticWaived).toBe(true);
+      }
+    });
+
+    it('records the owed validation alongside the marker', () => {
+      const state = stateWithStep({ status: 'running' });
+
+      const result = applyStepEvent(state, {
+        type: 'markGeneratorCompleted',
+        stepId: 'step-1',
+        agenticWaived: false,
+        validationOwed: true,
+        madeChanges: true,
+      });
+
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        expect(result.state.steps[0].generatorCompleted).toBe(true);
+        expect(result.state.steps[0].validationOwed).toBe(true);
       }
     });
 
@@ -223,6 +302,9 @@ describe('applyStepEvent', () => {
         const result = applyStepEvent(state, {
           type: 'markGeneratorCompleted',
           stepId: 'step-1',
+          agenticWaived: false,
+          validationOwed: false,
+          madeChanges: true,
         });
 
         expect(result.kind).toBe('error');
@@ -237,6 +319,7 @@ describe('applyStepEvent', () => {
         type: 'awaitPromptOutcome',
         stepId: 'step-1',
         finishedAt: '2026-01-01T00:02:00.000Z',
+        awaitingKind: 'migration-prompt',
       });
 
       expect(result.kind).toBe('ok');
@@ -443,6 +526,65 @@ describe('applyStepEvent', () => {
       expect(result.kind).toBe('ok');
       if (result.kind === 'ok') {
         expect(result.state.steps[0].generatorCompleted).toBe(true);
+      }
+    });
+
+    it('carries the waiver, the owed validation, and the change record with the marker across a rearm', () => {
+      const state = stateWithStep({
+        status: 'failed',
+        generatorCompleted: true,
+        generatorCompletedAtAttempt: 1,
+        agenticWaived: true,
+        validationOwed: true,
+        generatorMadeChanges: false,
+      });
+
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        attempt: 1,
+        action: 'retry',
+      });
+
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        expect(result.state.steps[0].agenticWaived).toBe(true);
+        expect(result.state.steps[0].validationOwed).toBe(true);
+        // Carried as-is, false included: an explicit false is what lets the
+        // retry skip the no-op commit.
+        expect(result.state.steps[0].generatorMadeChanges).toBe(false);
+        // The lineage boundary describes the marker, not the attempt, so a
+        // retained retry keeps it.
+        expect(result.state.steps[0].generatorCompletedAtAttempt).toBe(1);
+      }
+    });
+
+    it('drops the waiver, the owed validation, and the change record with the marker when a clean retry discards the generator changes', () => {
+      const state = stateWithStep({
+        status: 'failed',
+        generatorCompleted: true,
+        generatorCompletedAtAttempt: 1,
+        agenticWaived: true,
+        validationOwed: true,
+        generatorMadeChanges: true,
+      });
+
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        attempt: 1,
+        action: 'retry-clean',
+      });
+
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        expect(result.state.steps[0].generatorCompleted).toBeUndefined();
+        expect(
+          result.state.steps[0].generatorCompletedAtAttempt
+        ).toBeUndefined();
+        expect(result.state.steps[0].agenticWaived).toBeUndefined();
+        expect(result.state.steps[0].validationOwed).toBeUndefined();
+        expect(result.state.steps[0].generatorMadeChanges).toBeUndefined();
       }
     });
 
@@ -702,6 +844,9 @@ describe('applyStepEvent', () => {
       const marked = applyStepEvent(state, {
         type: 'markGeneratorCompleted',
         stepId: 'step-1',
+        agenticWaived: false,
+        validationOwed: false,
+        madeChanges: true,
       });
       expect(marked.kind).toBe('ok');
       if (marked.kind !== 'ok') return;
@@ -716,6 +861,7 @@ describe('applyStepEvent', () => {
         type: 'awaitPromptOutcome',
         stepId: 'step-1',
         finishedAt: '2026-01-01T00:00:00.000Z',
+        awaitingKind: 'migration-prompt',
       });
       expect(park.kind).toBe('ok');
       if (park.kind !== 'ok') return;

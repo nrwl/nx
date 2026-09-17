@@ -14,6 +14,10 @@ import { terminalLink } from '../terminal-link';
 import type { BannerVariant, CompletionMessageKey } from './messages';
 
 export const NX_CLOUD_URL = 'https://nx.dev/nx-cloud';
+export const NX_CLOUD_DEMO_URL = 'https://cloud.nx.app/demo/intro';
+
+const UTM_QUERY =
+  '?utm_source=nx-cli&utm_medium=cli&utm_campaign=nx-cloud-connect&utm_content=create-nx-workspace';
 
 /**
  * Clickable Nx Cloud marketing link for cloud prompt footers. Every
@@ -24,7 +28,13 @@ export const NX_CLOUD_URL = 'https://nx.dev/nx-cloud';
  */
 export const NX_CLOUD_HYPERLINK = terminalLink(
   NX_CLOUD_URL,
-  `${NX_CLOUD_URL}?utm_source=nx-cli&utm_medium=cli&utm_campaign=nx-cloud-connect&utm_content=create-nx-workspace`
+  `${NX_CLOUD_URL}${UTM_QUERY}`
+);
+
+/** Same as `NX_CLOUD_HYPERLINK`, pointing at the Nx Cloud demo (CLOUD-4640). */
+export const NX_CLOUD_DEMO_HYPERLINK = terminalLink(
+  NX_CLOUD_DEMO_URL,
+  `${NX_CLOUD_DEMO_URL}${UTM_QUERY}`
 );
 
 // Flow variant controls both tracking and banner display (CLOUD-4235)
@@ -196,7 +206,7 @@ const messageOptions: Record<string, MessageData[]> = {
         { value: 'circleci', name: 'Circle CI\n' },
         { value: 'skip', name: 'Do it later' },
       ],
-      footer: `\nSelf-healing CI, remote caching, and task distribution are provided by Nx Cloud: ${NX_CLOUD_HYPERLINK}`,
+      footer: `\nSelf-healing CI, remote caching, and task distribution are provided by Nx Cloud: ${NX_CLOUD_HYPERLINK}\nSee it in action: ${NX_CLOUD_DEMO_HYPERLINK}`,
       fallback: { value: 'skip', key: 'setupNxCloud' },
       completionMessage: 'ci-setup',
     },
@@ -214,7 +224,7 @@ const messageOptions: Record<string, MessageData[]> = {
         { value: 'yes', name: 'Yes' },
         { value: 'skip', name: 'Skip' },
       ],
-      footer: `\nAutomatically fix broken PRs, 70% faster CI: ${NX_CLOUD_HYPERLINK}`,
+      footer: `\nAutomatically fix broken PRs, 70% faster CI: ${NX_CLOUD_HYPERLINK}\nSee it in action: ${NX_CLOUD_DEMO_HYPERLINK}`,
       fallback: undefined,
       completionMessage: 'platform-setup',
     },
@@ -232,7 +242,7 @@ const messageOptions: Record<string, MessageData[]> = {
         { value: 'skip', name: 'Skip for now' },
         { value: 'never', name: chalk.dim("No, don't ask again") },
       ],
-      footer: `\nFree for small teams. Remote caching and task distribution. 2-minute setup: ${NX_CLOUD_HYPERLINK}`,
+      footer: `\nFree for small teams. Remote caching and task distribution. 2-minute setup: ${NX_CLOUD_HYPERLINK}\nSee it in action: ${NX_CLOUD_DEMO_HYPERLINK}`,
       fallback: undefined,
       completionMessage: 'platform-setup',
     },

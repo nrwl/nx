@@ -5,6 +5,7 @@ vi.mock('../logger', () => ({
   serverLogger: { watcherLog: vi.fn() },
 }));
 vi.mock('./outputs-tracking', () => ({
+  clearRecordedOutputsHashes: vi.fn(),
   disableOutputsTracking: vi.fn(),
   processFileChangesInOutputs: vi.fn(),
 }));
@@ -12,7 +13,9 @@ vi.mock('./project-graph-incremental-recomputation', () => ({
   currentProjectGraph: undefined,
   getRecomputationGeneration: vi.fn(() => 7),
   invalidateGraphCache: vi.fn(),
-  isKnownWorkspaceFile: vi.fn(() => true),
+}));
+vi.mock('../../utils/workspace-context', () => ({
+  trackedFilesInContext: vi.fn(() => []),
 }));
 vi.mock('./dotenv-graph-changes', () => ({
   classifyDotEnvChanges: vi.fn(() => ({
@@ -26,13 +29,14 @@ describe('handleOutputsChanges', () => {
   let handleOutputsChanges: typeof import('./handle-outputs-changes').handleOutputsChanges;
   let getOutputsWatcherTerminalError: typeof import('./handle-outputs-changes').getOutputsWatcherTerminalError;
   let outputsTracking: {
+    clearRecordedOutputsHashes: Mock;
     disableOutputsTracking: Mock;
     processFileChangesInOutputs: Mock;
   };
   let recomputation: {
     invalidateGraphCache: Mock;
-    isKnownWorkspaceFile: Mock;
   };
+  let context: { trackedFilesInContext: Mock };
   let dotenvChanges: {
     classifyDotEnvChanges: Mock;
     queuePendingDotEnvEvents: Mock;
@@ -53,11 +57,24 @@ describe('handleOutputsChanges', () => {
     recomputation =
       (await import('./project-graph-incremental-recomputation')) as any;
     dotenvChanges = (await import('./dotenv-graph-changes')) as any;
+    context = (await import('../../utils/workspace-context')) as any;
     consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
     consoleError.mockRestore();
+  });
+
+  it('starts the tracker over and invalidates the graph on a rescan, without processing per-path events', async () => {
+    await handleOutputsChanges(null, [{ path: '', type: EventType.rescan }]);
+
+    expect(outputsTracking.clearRecordedOutputsHashes).toHaveBeenCalled();
+    expect(recomputation.invalidateGraphCache).toHaveBeenCalled();
+    expect(outputsTracking.processFileChangesInOutputs).not.toHaveBeenCalled();
+    expect(dotenvChanges.classifyDotEnvChanges).not.toHaveBeenCalled();
+    // A rescan is recoverable: the watch stream is still alive.
+    expect(getOutputsWatcherTerminalError()).toBeUndefined();
+    expect(outputsTracking.disableOutputsTracking).not.toHaveBeenCalled();
   });
 
   it('records a native watcher error as terminal, preserving its message, and disables outputs tracking', async () => {
@@ -94,7 +111,7 @@ describe('handleOutputsChanges', () => {
       invalidating: ['.env.e2e'],
       unclassified: [],
     });
-    recomputation.isKnownWorkspaceFile.mockReturnValue(false);
+    context.trackedFilesInContext.mockReturnValue([]);
     await handleOutputsChanges(null, events);
 
     expect(recomputation.invalidateGraphCache).toHaveBeenCalled();
@@ -130,7 +147,7 @@ describe('handleOutputsChanges', () => {
       invalidating: ['libs/foo/.env.e2e'],
       unclassified: [],
     });
-    recomputation.isKnownWorkspaceFile.mockReturnValue(true);
+    context.trackedFilesInContext.mockReturnValue(['libs/foo/.env.e2e']);
     await handleOutputsChanges(null, events);
 
     expect(dotenvChanges.queuePendingDotEnvEvents).toHaveBeenCalledWith(

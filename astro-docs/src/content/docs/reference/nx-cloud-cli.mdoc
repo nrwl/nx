@@ -473,7 +473,7 @@ include one or more targets from each command.
 {% tabs %}
 {% tabitem label="Serial command execution" %}
 
-#### Incorrect example:
+This example is incorrect:
 
 ```yaml
 - run: npx nx-cloud start-ci-run --stop-agents-after=build
@@ -486,7 +486,7 @@ Nx Cloud will only look for the presence of a `build` target before determining 
 both `lint` and `test` will only run after `build` is complete, your pipeline would end before all intended work is
 executed.
 
-#### Corrected example:
+Use this instead:
 
 ```yaml
 - run: npx nx-cloud start-ci-run --stop-agents-after=lint,test,build
@@ -498,7 +498,7 @@ executed.
 {% /tabitem %}
 {% tabitem label="Parallel command execution" %}
 
-#### Incorrect example:
+This example is incorrect:
 
 ```yaml
 - run: npx nx-cloud start-ci-run --stop-agents-after=test
@@ -509,7 +509,7 @@ At first glance, this example may appear correct. However, since all the command
 be possible that your `test` command results in full cache hits and finishes faster than the `build` and `lint` commands.
 In this case, Nx Cloud will stop your pipeline, leaving work incomplete for both the `build` and `lint` commands.
 
-#### Corrected example:
+Use this instead:
 
 ```yaml
 - run: npx nx-cloud start-ci-run --stop-agents-after=lint,test,build

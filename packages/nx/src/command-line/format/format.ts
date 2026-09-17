@@ -17,33 +17,21 @@ import {
   splitArgsIntoNxArgsAndOverrides,
 } from '../../utils/command-line-utils';
 import { fileExists, readJsonFile, writeJsonFile } from '../../utils/fileutils';
-import { detectFormatter, type FormatterType } from '../../utils/formatters';
 import {
-  checkWithOxfmt,
-  getOxfmtBinPath,
-  writeWithOxfmt,
-} from '../../utils/formatters/oxfmt';
+  detectFormatter,
+  type FormatterType,
+  resolveFormatterBin,
+} from '../../utils/formatters';
+import { checkWithOxfmt, writeWithOxfmt } from '../../utils/formatters/oxfmt';
 import {
   checkWithPrettier,
   filterToPrettierSupportedFiles,
-  getPrettierPath,
-  quoteForShell,
   writeWithPrettier,
 } from '../../utils/formatters/prettier';
 import { getIgnoreObject } from '../../utils/ignore';
 import { sortObjectByKeys } from '../../utils/object-sort';
 import { output } from '../../utils/output';
 import { workspaceRoot } from '../../utils/workspace-root';
-
-/**
- * A table, not a `switch`: this lookup sits inside a `try` whose `catch`
- * reports "configured but not installed", and a `never` arm would throw into
- * that catch and be misreported. A missing member is a compile error here.
- */
-const resolveFormatterBin = {
-  oxfmt: getOxfmtBinPath,
-  prettier: getPrettierPath,
-} satisfies Record<FormatterType, () => string>;
 
 export async function format(
   command: 'check' | 'write',
@@ -82,24 +70,13 @@ export async function format(
     readNxJson()
   );
 
-  // Patterns are kept raw here. Prettier is invoked through a shell so it
-  // quotes them at the call site; oxfmt is invoked with execFile and needs
-  // the unquoted paths.
   const patterns = await getPatterns(formatterType, {
     ...args,
     ...nxArgs,
   } as any);
 
   // Chunkify the patterns array to prevent crashing the windows terminal.
-  // The prettier path quotes each pattern on its way to the shell, so size the
-  // chunks against that; oxfmt goes through execFile and gets them raw.
-  const chunkList: string[][] = chunkify(
-    patterns,
-    undefined,
-    formatterType === 'prettier'
-      ? (pattern) => quoteForShell(pattern).length
-      : undefined
-  );
+  const chunkList: string[][] = chunkify(patterns);
 
   switch (command) {
     case 'write':

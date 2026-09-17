@@ -307,19 +307,26 @@ async function runPublishOnProjects(
    * NOTE: Force TUI to be disabled for now.
    */
   process.env.NX_TUI = 'false';
+  const publishOutputStyle = (args as any).specifiedOutputStyle ?? 'static';
   const { taskResults } = await runCommandForTasks(
     projectsWithTarget,
     projectGraph,
     { nxJson },
     {
       targets: [requiredTargetName],
+      ...(args as any),
       // Everything this command reports — the registry, the tag, the
       // package.json diff, the dry-run summary — is printed from inside the
       // task, so the failures-only default would swallow all of it (under
-      // --dry-run every task succeeds by definition). An explicit
-      // --output-style still wins, since it comes in through the spread.
-      outputStyle: 'static',
-      ...(args as any),
+      // --dry-run every task succeeds by definition). Set after the spread and
+      // on all three fields: the middleware always writes `resolvedOutputStyle`,
+      // so a value placed before it would be overwritten on every run, and the
+      // renderer reads the new fields rather than the deprecated one. A style
+      // the user actually named still wins, which is what `specifiedOutputStyle`
+      // being set means.
+      outputStyle: publishOutputStyle,
+      specifiedOutputStyle: publishOutputStyle,
+      resolvedOutputStyle: publishOutputStyle,
       // It is possible for workspaces to have circular dependencies between packages and still release them to a registry
       nxIgnoreCycles: true,
     },

@@ -4,16 +4,27 @@ import {
   ContextReplacementPlugin,
   DefinePlugin,
 } from '@rspack/core';
-import { resolve } from 'path';
+import { posix, relative, resolve, sep } from 'path';
 import type {
   I18nOptions,
   NormalizedAngularRspackPluginOptions,
+  NormalizedDevServerOptions,
 } from '../../models';
 import { NgRspackPlugin } from '../../plugins/ng-rspack';
 import type { AngularRspackPlugin } from '../../plugins/angular-rspack-plugin';
 import type { SharedLicenseInputs } from '../../plugins/extract-licenses-plugin';
+import {
+  ENGINE_MANIFEST_VIRTUAL_NAME,
+  generateEngineManifestSource,
+  type EngineWiringOptions,
+} from '../../plugins/loaders/engine-manifest';
+import { type PlatformServerExportsLoaderOptions } from '../../plugins/loaders/platform-server-exports.loader';
+import { EngineManifestPlugin } from '../../plugins/engine-manifest-plugin';
 import { PrerenderPlugin } from '../../plugins/prerender-plugin';
-import { isPackageInstalled } from '../../utils/misc-helpers';
+import {
+  getInstalledPackageVersionFromRoot,
+  isPackageInstalled,
+} from '../../utils/misc-helpers';
 import { getDevServerConfig } from './dev-server-config-utils';
 import { getOptimization } from './optimization-config';
 import { getSwcTranspilationRules } from './swc-transpilation';
@@ -29,6 +40,78 @@ export async function getServerConfig(
 ): Promise<Configuration> {
   const isDevServer = isServeMode();
   const { root } = normalizedOptions;
+
+  const angularSSRInstalled = isPackageInstalled(root, '@angular/ssr');
+  if (normalizedOptions.outputMode && !angularSSRInstalled) {
+    throw new Error(
+      'The "outputMode" option requires the "@angular/ssr" package to be installed.'
+    );
+  }
+  if (angularSSRInstalled && i18n.shouldInline) {
+    // outputMode with locale inlining is rejected during normalization, so
+    // this only fires for SSR builds without an output mode.
+    console.warn(
+      'Locale inlining ("localize") disables the "@angular/ssr" application engine wiring: the engine manifests are not registered, so a server entry using the application engine APIs will fail at startup.'
+    );
+  }
+  // Locale inlining is not wired up: the engine manifests would need
+  // per-locale entry points, which the inlining pipeline does not produce.
+  const engineWiring: EngineWiringOptions | undefined =
+    angularSSRInstalled && !i18n.shouldInline
+      ? {
+          mainServerEntry: resolve(root, normalizedOptions.server),
+          baseHref: normalizedOptions.baseHref ?? '/',
+          locale: i18n.hasDefinedSourceLocale ? i18n.sourceLocale : undefined,
+          inlineCriticalCss:
+            !!normalizedOptions.optimization.styles.inlineCritical,
+          // Baked into the emitted bundle; posix separators keep it valid
+          // when the build and the server run on different platforms.
+          browserOutputRelativePath: relative(
+            normalizedOptions.outputPath.server,
+            normalizedOptions.outputPath.browser
+          )
+            .split(sep)
+            .join(posix.sep),
+          indexOutputName: normalizedOptions.index?.output,
+          supportedLocales: { [i18n.sourceLocale]: '' },
+          // An empty allowlist matches no host: from @angular/ssr 22 the
+          // engine rejects every request, and the earlier versions that
+          // validate fall back to CSR. Serving must allow the dev-server
+          // hosts instead of the production allowlist.
+          allowedHosts: isDevServer
+            ? getServeModeAllowedHosts(normalizedOptions.devServer)
+            : (normalizedOptions.security?.allowedHosts ?? []),
+          ...(isDevServer &&
+          devServerDisablesHostCheck(normalizedOptions.devServer)
+            ? { disableHostCheck: true }
+            : {}),
+        }
+      : undefined;
+  if (engineWiring?.disableHostCheck) {
+    warnIfEngineHostCheckNotDisableable(root);
+  }
+  let engineManifestPlugin: EngineManifestPlugin | undefined;
+  // Virtual modules require rspack 1.5, probed on the workspace's own
+  // @rspack/core: the copy that runs the build, which can differ from this
+  // package's. Older versions inline the manifest registration into the
+  // entry instead, where it only runs before the user entry's own
+  // statements, not before its imports.
+  if (engineWiring && installedRspackSupportsVirtualModules(root)) {
+    engineWiring.manifestModuleRequest = resolve(
+      root,
+      ENGINE_MANIFEST_VIRTUAL_NAME
+    );
+    engineManifestPlugin = new EngineManifestPlugin(
+      engineWiring.manifestModuleRequest,
+      generateEngineManifestSource(engineWiring)
+    );
+  }
+  const platformServerExportsLoaderOptions: PlatformServerExportsLoaderOptions =
+    {
+      angularSSRInstalled,
+      isZoneJsInstalled: isPackageInstalled(root, 'zone.js'),
+      ...(engineWiring ? { engineWiring } : {}),
+    };
 
   return {
     ...defaultConfig,
@@ -73,16 +156,14 @@ export async function getServerConfig(
           include: [
             resolve(root, (normalizedOptions.ssr as { entry: string }).entry),
           ],
-          options: {
-            angularSSRInstalled: isPackageInstalled(root, '@angular/ssr'),
-            isZoneJsInstalled: isPackageInstalled(root, 'zone.js'),
-          },
+          options: platformServerExportsLoaderOptions,
         },
         ...(defaultConfig.module?.rules ?? []),
       ],
     },
     plugins: [
       ...(defaultConfig.plugins ?? []),
+      ...(engineManifestPlugin ? [engineManifestPlugin] : []),
       // Fixes Critical dependency: the request of a dependency is an expression
       new ContextReplacementPlugin(/@?hapi|express[\\/]/),
       // rspack inlines `import.meta.url` as the source file's URL, breaking
@@ -102,4 +183,80 @@ export async function getServerConfig(
         : []),
     ],
   };
+}
+
+// TODO(v24): drop the probe and the loader's inline fallback once
+// @rspack/core v1 is out of the support window.
+function installedRspackSupportsVirtualModules(root: string): boolean {
+  const version = getInstalledPackageVersionFromRoot(root, '@rspack/core');
+  if (!version) {
+    return false;
+  }
+  const [major, minor] = version.split('.').map((part) => parseInt(part, 10));
+  return major > 1 || (major === 1 && minor >= 5);
+}
+
+/**
+ * The hosts the application engine accepts while serving. The forked server
+ * process is browsed directly, so the engine check is the only host check on
+ * the SSR dev path.
+ */
+function getServeModeAllowedHosts(
+  devServer: NormalizedDevServerOptions
+): string[] {
+  // Kept even when the host check is disabled: the versions that cannot
+  // disable it still validate against this list.
+  const allowedHosts = Array.isArray(devServer.allowedHosts)
+    ? // The dev server matches a leading-dot entry against the apex and
+      // its subdomains; the engine's '*.' form only matches subdomains,
+      // so emit both.
+      devServer.allowedHosts.flatMap((host) =>
+        host.startsWith('.') ? [host.slice(1), `*${host}`] : [host]
+      )
+    : [];
+  return Array.from(
+    new Set([
+      ...allowedHosts,
+      // The engine matcher has no implicit local set; seed the hosts the dev
+      // server accepts implicitly. Other IP literals cannot be enumerated;
+      // NG_ALLOWED_HOSTS covers those.
+      'localhost',
+      '*.localhost',
+      '127.0.0.1',
+      '[::1]',
+      // The engine matches against the request URL hostname, which brackets
+      // IPv6 literals: a `::` bind address arrives as `[::]`.
+      devServer.host.includes(':') && !devServer.host.startsWith('[')
+        ? `[${devServer.host}]`
+        : devServer.host,
+    ])
+  );
+}
+
+function devServerDisablesHostCheck(
+  devServer: NormalizedDevServerOptions
+): boolean {
+  return !!devServer.disableHostCheck || devServer.allowedHosts === true;
+}
+
+// Host validation exists from @angular/ssr 20.3.17 / 21.1.5 / 21.2.0, but
+// the engine can only skip it from 20.3.25 / 21.2.1
+// (`ɵdisableAllowedHostsCheck`): in between, no mechanism disables the check.
+function warnIfEngineHostCheckNotDisableable(root: string): void {
+  const version = getInstalledPackageVersionFromRoot(root, '@angular/ssr');
+  if (!version) {
+    return;
+  }
+  const [major, minor, patch] = version
+    .split('.')
+    .map((part) => parseInt(part, 10));
+  const cannotDisable =
+    (major === 20 && minor === 3 && patch >= 17 && patch < 25) ||
+    (major === 21 && minor === 1 && patch >= 5) ||
+    (major === 21 && minor === 2 && patch === 0);
+  if (cannotDisable) {
+    console.warn(
+      `The dev-server host check is disabled, but the installed "@angular/ssr" version (${version}) cannot disable the application engine host validation. Requests from hosts other than the dev-server host, the local hosts, those listed in "devServer.allowedHosts" and, when using AngularNodeAppEngine, those in "NG_ALLOWED_HOSTS" are rejected with a 400 response. Upgrade "@angular/ssr" to version 21.2.1 or greater, or 20.3.25 or greater within 20.3, to fully disable the check.`
+    );
+  }
 }
