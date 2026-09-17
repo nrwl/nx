@@ -13,9 +13,9 @@ export function rememberIoSnapshots(handle: IoSnapshots): void {
 }
 
 /**
- * The handle for `commit`, reusing the one in hand while its digest holds.
- * A hash request names the commit it resolved; the set itself lives in the
- * database, which both processes read.
+ * The handle for `commit`. Loading reads the one commit row to compare
+ * digests, so a re-imported set is never served stale; the handle in hand is
+ * kept when they match, which is what preserves the entries it has read.
  */
 export function ioSnapshotsForCommit(
   commit: string | undefined

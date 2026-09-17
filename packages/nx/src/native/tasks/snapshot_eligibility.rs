@@ -1,7 +1,7 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 
 use crate::native::cache::expand_outputs::match_output_paths;
-use crate::native::glob::expand_literal_braces;
+use crate::native::glob::{NxGlobSetBuilder, expand_literal_braces};
 use crate::native::io_snapshots::bundle::{TaskInputs, TaskIoSnapshot};
 use crate::native::io_snapshots::{IoSnapshotResolution, IoSnapshots};
 use crate::native::tasks::hash_planner::walk_root;
@@ -346,16 +346,30 @@ fn observed_outputs(entry: &TaskIoSnapshot) -> Vec<String> {
     outputs
 }
 
-/// Glob syntax a segment could hide an excluded name behind: a class, an
-/// unexpanded brace group or `?` (`.gi[t]`, `{..,*}`, `node_modul?s`).
+/// Whether a segment could hide an excluded name behind glob syntax: a class,
+/// an unexpanded brace group, `?`, or a partial `*` (`.gi[t]`, `{..,*}`,
+/// `node_modul?s`, `node_modul*s`). A bare `*` or `**` is a plain wildcard
+/// rather than a disguise, so `under_ignored_dir` judges those instead.
 fn segment_could_disguise(segment: &str) -> bool {
-    segment.contains(['[', '{', '?'])
+    if segment.contains(['[', '{', '?']) {
+        return true;
+    }
+    if !segment.contains('*') || segment.trim_matches('*').is_empty() {
+        return false;
+    }
+    NxGlobSetBuilder::new(&[segment.to_string()])
+        .and_then(|builder| builder.build())
+        .map(|set| IGNORED_DIRS.iter().any(|dir| set.is_match(dir)))
+        // A segment the glob engine rejects is not a name this can clear.
+        .unwrap_or(true)
 }
+
+const IGNORED_DIRS: [&str; 3] = ["node_modules", ".nx", ".git"];
 
 /// Case-insensitive: `.GIT/hooks` restores into `.git` on macOS and Windows.
 fn under_ignored_dir(path: &str) -> bool {
     path.split(['/', '\\']).any(|segment| {
-        ["node_modules", ".nx", ".git"]
+        IGNORED_DIRS
             .iter()
             .any(|dir| segment.eq_ignore_ascii_case(dir))
     })
@@ -594,14 +608,20 @@ mod tests {
                 "{dist,.git}/x".into(),
                 ".gi[t]/**".into(),
                 "node_modul?s/**".into(),
+                // A partial `*` hides the name from the plain-text check.
+                "node_modul*s/**".into(),
+                "apps/*odules/x".into(),
                 "{..,*}/x".into(),
                 "dist/{a,b}.js".into(),
+                // A plain wildcard is not a disguise and stays.
+                "dist/*.js".into(),
             ],
         };
         assert_eq!(
             observed_outputs(&entry),
             vec![
                 "apps/web/.next/cache/*",
+                "dist/*.js",
                 "dist/apps/web/**",
                 "dist/{a,b}.js"
             ]

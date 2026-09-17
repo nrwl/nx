@@ -20,7 +20,7 @@ export async function handleResolveIoSnapshots(
   const resolved = await fetchIoSnapshotsForRun(
     readNxJson(),
     (payload.runnerOptions ?? {}) as IoSnapshotCloudOptions,
-    payload.env ?? {}
+    payload.ioSnapshotEnv ?? {}
   );
   const response: ResolvedIoSnapshots = resolved
     ? {
@@ -33,8 +33,7 @@ export async function handleResolveIoSnapshots(
   if (resolved) {
     rememberIoSnapshots(resolved);
   }
-  return {
-    response: JSON.stringify(response),
-    description: 'handleResolveIoSnapshots',
-  };
+  // An object, not a string: `handleResult` sends a string body raw, which
+  // the client then parses — a stringified response arrives double-encoded.
+  return { response, description: 'handleResolveIoSnapshots' };
 }
