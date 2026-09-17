@@ -73,6 +73,13 @@ export declare class FileLock {
   constructor(lockFilePath: string)
   unlock(): void
   check(): boolean
+  /**
+   * Takes the lock without blocking, and says whether this handle got it.
+   *
+   * A false return means someone else holds it. Pair it with
+   * `waitForRelease` to wait for them, rather than `lock`, which is
+   * synchronous and freezes this process's event loop until they are done.
+   */
   tryLock(): boolean
   /**
    * Resolves true when the holder released within `timeout_ms`, false when it

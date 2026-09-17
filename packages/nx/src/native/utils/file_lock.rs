@@ -189,6 +189,11 @@ impl FileLock {
         }
     }
 
+    /// Takes the lock without blocking, and says whether this handle got it.
+    ///
+    /// A false return means someone else holds it. Pair it with
+    /// `waitForRelease` to wait for them, rather than `lock`, which is
+    /// synchronous and freezes this process's event loop until they are done.
     #[napi(js_name = "tryLock")]
     pub fn try_lock_js(&mut self) -> napi::Result<bool> {
         Ok(self.try_lock()?)
