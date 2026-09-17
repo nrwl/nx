@@ -307,6 +307,33 @@ describe('applyNxJsonMigrateDefaults', () => {
       expect(result.commitPrefix).toBeUndefined();
     });
 
+    it('fills agentic only for a continue (--run-migrations with --run-id): the run owns the rest', () => {
+      const config: NxMigrateConfiguration = {
+        createCommits: true,
+        commitPrefix: 'chore: migrate ',
+        agentic: 'claude-code',
+        validate: false,
+      };
+      const result = applyNxJsonMigrateDefaults(
+        { runMigrations: '', runId: 'run-1' },
+        config,
+        noEnv
+      );
+      expect(result.agentic).toBe('claude-code');
+      expect(result.createCommits).toBeUndefined();
+      expect(result.commitPrefix).toBeUndefined();
+      expect(result.validate).toBeUndefined();
+    });
+
+    it('keeps an explicit --agentic on a continue over the nx.json one', () => {
+      const result = applyNxJsonMigrateDefaults(
+        { runMigrations: '', runId: 'run-1', agentic: 'codex' },
+        { agentic: 'claude-code' },
+        noEnv
+      );
+      expect(result.agentic).toBe('codex');
+    });
+
     it('fills the run-migrations overlay for a start-fresh, which starts a new run', () => {
       const config: NxMigrateConfiguration = {
         createCommits: true,

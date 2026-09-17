@@ -538,6 +538,20 @@ export function runOrchestratorResume(
   input: RunOrchestratorResumeInput
 ): OrchestratorInitResult {
   const { root, runId, policy, emitAgentInstructions = true } = input;
+  const state = holdRunToContinue(root, runId);
+  return resumeRun(root, runId, state, policy, emitAgentInstructions);
+}
+
+/**
+ * Holds the active run `runId` names and returns its state. A continue calls
+ * this before its first await: a concurrent start-fresh must not delete the
+ * run while the command installs or selects an agent. Throws when the id
+ * names no run or a finished one.
+ */
+export function holdRunToContinue(
+  root: string,
+  runId: string
+): MigrateRunState {
   if (!RUN_ID_SAFE.test(runId)) {
     throw new Error(`Invalid run id '${runId}'.`);
   }
@@ -554,7 +568,7 @@ export function runOrchestratorResume(
     );
   }
   holdRunActivity(root, runId);
-  return resumeRun(root, runId, state, policy, emitAgentInstructions);
+  return state;
 }
 
 // Reads the newest active run; null when no run is active. Uninterpretable
