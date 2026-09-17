@@ -143,6 +143,24 @@ describe('computeCapabilityKey', () => {
     );
   });
 
+  it('identifies a plugin given by path, which is how Nx names its own', async () => {
+    // `getDefaultPlugins` returns absolute paths inside the installed `nx`, and
+    // reading a package name out of one gives an empty string. Declining them
+    // would return null for every default plugin, and a peek needs all of them,
+    // so the fast paths would never run in an installed workspace.
+    const pluginPath = writeInstalledPlugin('1.2.3');
+
+    expect(computeCapabilityKey(pluginPath, pluginPath, root)).not.toBeNull();
+  });
+
+  it('gives a plugin given by path a new key when its package is upgraded', () => {
+    const before = writeInstalledPlugin('1.2.3');
+    const first = computeCapabilityKey(before, before, root);
+    const after = writeInstalledPlugin('1.2.4');
+
+    expect(computeCapabilityKey(after, after, root)).not.toEqual(first);
+  });
+
   it('identifies nothing where the runtime could not record it anyway', async () => {
     const pluginPath = writeInstalledPlugin('1.2.3');
     state.canObserveModuleClosure = false;

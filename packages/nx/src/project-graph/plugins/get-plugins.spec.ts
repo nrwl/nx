@@ -119,7 +119,7 @@ describe('getPluginsSeparated', () => {
   function wantedBy(loader: string): string[][] {
     return wantPlugins.mock.calls
       .filter(([which]) => which === loader)
-      .map(([, plugins]) => plugins);
+      .map(([, loads]) => loads.map(({ plugin }) => plugin));
   }
 
   it('says which plugins it wants before each load of the specified set', async () => {

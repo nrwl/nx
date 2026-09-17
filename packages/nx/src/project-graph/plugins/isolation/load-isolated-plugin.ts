@@ -40,12 +40,14 @@ const wantedBy = new Map<string, Set<string>>();
  */
 export function wantPlugins(
   loader: string,
-  plugins: PluginConfiguration[],
+  plugins: Array<{ plugin: PluginConfiguration; index?: number }>,
   root: string
 ): void {
   wantedBy.set(
     loader,
-    new Set(plugins.map((plugin) => getCacheKey(plugin, root)))
+    new Set(
+      plugins.map(({ plugin, index }) => getCacheKey(plugin, root, index))
+    )
   );
   sweep();
 }
@@ -62,7 +64,7 @@ export function loadIsolatedNxPlugin(
   index?: number,
   resolved?: ResolvedPluginModule
 ): Promise<LoadedNxPlugin> {
-  const cacheKey = getCacheKey(plugin, root);
+  const cacheKey = getCacheKey(plugin, root, index);
 
   return (
     loadedPlugins.get(cacheKey) ??
@@ -82,7 +84,7 @@ export function useIsolatedNxPluginCapabilities(
   index?: number,
   onLoaded?: (actual: PluginCapabilities, observed: ObservedLoad) => void
 ): Promise<LoadedNxPlugin> {
-  const cacheKey = getCacheKey(plugin, root);
+  const cacheKey = getCacheKey(plugin, root, index);
 
   return (
     loadedPlugins.get(cacheKey) ??
@@ -153,8 +155,19 @@ function isWanted(cacheKey: string): boolean {
   return false;
 }
 
-function getCacheKey(plugin: PluginConfiguration, root: string): string {
-  return JSON.stringify({ plugin, root });
+/**
+ * The position is part of this because it is part of the instance: a plugin
+ * carries the index of the nx.json entry it came from, and that index is what
+ * `checkCompatibleWithPlugins` writes an exclusion into and what a plugin error
+ * names. Keeping an instance whose configuration is unchanged but whose position
+ * moved would point both at the wrong entry.
+ */
+function getCacheKey(
+  plugin: PluginConfiguration,
+  root: string,
+  index?: number
+): string {
+  return JSON.stringify({ plugin, root, index });
 }
 
 /** Drops the entry, unless a later load has already replaced it. */

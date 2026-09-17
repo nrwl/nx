@@ -341,13 +341,13 @@ async function loadPlugins(
   root: string,
   assignIndexes: boolean
 ): Promise<PromiseSettledResult<LoadedNxPlugin>[]> {
-  wantPlugins(loader, pluginConfigurations, root);
-
   const loads: PluginLoad[] = pluginConfigurations.map((plugin, index) => ({
     plugin,
     index: assignIndexes ? index : undefined,
     key: null,
   }));
+
+  wantPlugins(loader, loads, root);
 
   // Gated synchronously: with no cache to consult, the loads must start in
   // this tick, as they did before the cache existed.

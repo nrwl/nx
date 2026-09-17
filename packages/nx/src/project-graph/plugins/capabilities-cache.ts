@@ -1,4 +1,5 @@
-import { isAbsolute, join, relative, sep } from 'node:path';
+import { basename, dirname, isAbsolute, join, relative, sep } from 'node:path';
+import { existsSync } from 'node:fs';
 
 import {
   type CachedPluginCapabilities,
@@ -340,7 +341,7 @@ export function computeCapabilityKey(
   try {
     const id = pluginId(pluginPath, root);
     if (isInstalled(pluginPath)) {
-      const version = readInstalledVersion(moduleName, root);
+      const version = readInstalledVersion(moduleName, pluginPath, root);
       return version
         ? hashArray(['installed', nxVersion(), id, version])
         : null;
@@ -376,12 +377,57 @@ function isInstalled(pluginPath: string): boolean {
  * Resolved from the name the nx.json entry uses, through the paths the loader
  * resolves plugins with, so this reads the manifest of the copy that loads.
  */
-function readInstalledVersion(moduleName: string, root: string): string | null {
-  const { packageJson } = readModulePackageJson(
-    getPackageNameFromImportPath(moduleName),
-    getNxRequirePaths(root)
-  );
-  return packageJson.version
+function readInstalledVersion(
+  moduleName: string,
+  pluginPath: string,
+  root: string
+): string | null {
+  const packageJson = isPath(moduleName)
+    ? // A path names no package, so the package is whichever one owns the file.
+      // Nx's own default plugins are absolute paths inside the installed `nx`,
+      // and reading a package name out of one gives an empty string.
+      owningPackageJson(pluginPath)
+    : // A bare specifier resolves through the paths the loader resolves plugins
+      // with, so this reads the manifest of the copy that loads.
+      readModulePackageJson(
+        getPackageNameFromImportPath(moduleName),
+        getNxRequirePaths(root)
+      ).packageJson;
+
+  return packageJson?.version
     ? `${packageJson.name ?? ''}@${packageJson.version}`
     : null;
+}
+
+function isPath(moduleName: string): boolean {
+  return (
+    isAbsolute(moduleName) ||
+    moduleName.startsWith('./') ||
+    moduleName.startsWith('../')
+  );
+}
+
+/**
+ * The manifest of the package a file belongs to.
+ *
+ * The walk stops at the `node_modules` holding that package, so a package with
+ * no version is declined rather than taking the version of whatever sits above
+ * it, which would be the workspace's own.
+ */
+function owningPackageJson(
+  pluginPath: string
+): { name?: string; version?: string } | null {
+  // Starts at the resolved path itself, which is a directory when Node was left
+  // to resolve the package's own `main`.
+  let dir = pluginPath;
+  let previous: string | undefined;
+  while (dir !== previous && basename(dir) !== 'node_modules') {
+    const packageJsonPath = join(dir, 'package.json');
+    if (existsSync(packageJsonPath)) {
+      return readJsonFile(packageJsonPath);
+    }
+    previous = dir;
+    dir = dirname(dir);
+  }
+  return null;
 }
