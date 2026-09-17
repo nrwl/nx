@@ -64,22 +64,25 @@ const { randomUUID } = require('crypto');
 const [installDir, version, holdMs, mode] = process.argv.slice(3);
 const lockPath = path.join(installDir, '.state', 'download.lock');
 
+function install() {
+  const dir = path.join(installDir, version);
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, 'index.js'), 'peer bundle', 'utf-8');
+  // Recorded only on completion, exactly as the code under test does.
+  fs.writeFileSync(
+    path.join(installDir, '.state', 'download.record'),
+    version + ' ' + randomUUID(),
+    'utf-8'
+  );
+}
+
 const lock = new FileLock(lockPath);
 lock.lock();
+if (mode === 'installed') install();
 fs.writeFileSync(path.join(installDir, 'peer-holds.flag'), '', 'utf-8');
 
 setTimeout(() => {
-  if (mode === 'install') {
-    const dir = path.join(installDir, version);
-    fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(path.join(dir, 'index.js'), 'peer bundle', 'utf-8');
-    // Recorded only on completion, exactly as the code under test does.
-    fs.writeFileSync(
-      path.join(installDir, '.state', 'download.record'),
-      version + ' ' + randomUUID(),
-      'utf-8'
-    );
-  }
+  if (mode === 'install') install();
   lock.unlock();
 }, Number(holdMs));
 `;
@@ -486,23 +489,22 @@ describe('update-manager bundle download', () => {
     ).toBe('good');
   });
 
-  it('does not stall on a tar entry that is neither a file nor a directory', async () => {
-    // The entry handler must always advance the stream. A symlink entry that
-    // calls neither next() nor resume() stalls tar-stream forever, and the
-    // caller is holding the download lock while it does.
+  it('rejects a tar entry that is neither a file nor a directory', async () => {
     const pack = tar.pack();
     pack.entry({ name: 'index.js' }, 'module.exports = {};');
     pack.entry({ name: 'link', type: 'symlink', linkname: 'index.js' });
     pack.entry({ name: 'after.js' }, 'module.exports = 1;');
     pack.finalize();
 
-    const installed = await updateManager.downloadAndExtractClientBundle(
-      axiosServing(pack.pipe(createGzip())),
-      '2608.30.0002',
-      'https://example.com/bundle.tar.gz'
-    );
+    await expect(
+      updateManager.downloadAndExtractClientBundle(
+        axiosServing(pack.pipe(createGzip())),
+        '2608.30.0002',
+        'https://example.com/bundle.tar.gz'
+      )
+    ).rejects.toThrow('Unsupported symlink entry');
 
-    expect(existsSync(join(installed.fullPath, 'after.js'))).toBe(true);
+    expect(readdirSync(installDir).filter((f) => f !== '.state')).toEqual([]);
   });
 
   it('rejects rather than hanging when the response body is not a valid archive', async () => {
@@ -598,7 +600,11 @@ describe('update-manager download lock', () => {
   async function startPeer(options: {
     version: string;
     holdMs: number;
-    installs: boolean;
+    /**
+     * `install` installs just before releasing the lock, `installed` installs
+     * before the caller starts waiting, and `fail` never installs.
+     */
+    mode: 'install' | 'installed' | 'fail';
   }): Promise<void> {
     const script = join(workspace, 'peer.js');
     writeFileSync(script, PEER_SOURCE, 'utf-8');
@@ -611,7 +617,7 @@ describe('update-manager download lock', () => {
           installDir,
           options.version,
           String(options.holdMs),
-          options.installs ? 'install' : 'fail',
+          options.mode,
         ],
         { stdio: 'ignore' }
       )
@@ -624,7 +630,7 @@ describe('update-manager download lock', () => {
 
   it('adopts the bundle a peer installed at the version it was asked for', async () => {
     const axios = axiosServing(bundleTarball({ 'index.js': 'mine' }));
-    await startPeer({ version: '2608.30.0002', holdMs: 300, installs: true });
+    await startPeer({ version: '2608.30.0002', holdMs: 300, mode: 'install' });
 
     const installed = await updateManager.downloadAndExtractClientBundle(
       axios,
@@ -643,7 +649,7 @@ describe('update-manager download lock', () => {
     // Including when the peer's is HIGHER: the server asked this process for
     // 2608.30.0002, and a rollback is exactly that case.
     const axios = axiosServing(bundleTarball({ 'index.js': 'mine' }));
-    await startPeer({ version: '2608.31.0001', holdMs: 300, installs: true });
+    await startPeer({ version: '2608.31.0001', holdMs: 300, mode: 'install' });
 
     const installed = await updateManager.downloadAndExtractClientBundle(
       axios,
@@ -659,7 +665,7 @@ describe('update-manager download lock', () => {
   it('leaves the peer bundle in place on a contended install', async () => {
     // The peer is still running from 2608.29.0001; deleting it would break
     // that process's lazy requires. This is the original defect.
-    await startPeer({ version: '2608.29.0001', holdMs: 300, installs: true });
+    await startPeer({ version: '2608.29.0001', holdMs: 300, mode: 'install' });
 
     await updateManager.downloadAndExtractClientBundle(
       axiosServing(bundleTarball({ 'index.js': 'mine' })),
@@ -673,6 +679,25 @@ describe('update-manager download lock', () => {
     ).toBe('peer bundle');
   });
 
+  it('leaves the peer bundle in place when its record predates the wait', async () => {
+    // The peer has recorded its install but still holds the lock, so the
+    // record this process reads before waiting never changes.
+    await startPeer({
+      version: '2608.29.0001',
+      holdMs: 300,
+      mode: 'installed',
+    });
+
+    const installed = await updateManager.downloadAndExtractClientBundle(
+      axiosServing(bundleTarball({ 'index.js': 'mine' })),
+      '2608.30.0002',
+      'https://example.com/bundle.tar.gz'
+    );
+
+    expect(installed.version).toBe('2608.30.0002');
+    expect(bundleDirs()).toEqual(['2608.29.0001', '2608.30.0002']);
+  });
+
   it('does not adopt a pre-existing directory the peer never installed', async () => {
     // recordedBundle() proves a directory named for the recorded version
     // exists, not that the holder created it; bundleInstalledSince() is what
@@ -684,7 +709,7 @@ describe('update-manager download lock', () => {
     writeFileSync(join(installDir, '2608.30.0002', 'index.js'), 'CORRUPT');
 
     const axios = axiosServing(bundleTarball({ 'index.js': 'good' }));
-    await startPeer({ version: '2608.30.0002', holdMs: 300, installs: false });
+    await startPeer({ version: '2608.30.0002', holdMs: 300, mode: 'fail' });
 
     const installed = await updateManager.downloadAndExtractClientBundle(
       axios,
@@ -701,7 +726,7 @@ describe('update-manager download lock', () => {
   it('takes over the download when the peer released the lock without installing', async () => {
     mkdirSync(join(installDir, '2608.28.0001'), { recursive: true });
     const axios = axiosServing(bundleTarball({ 'index.js': 'mine' }));
-    await startPeer({ version: '2608.31.0001', holdMs: 300, installs: false });
+    await startPeer({ version: '2608.31.0001', holdMs: 300, mode: 'fail' });
 
     const installed = await updateManager.downloadAndExtractClientBundle(
       axios,
@@ -711,13 +736,13 @@ describe('update-manager download lock', () => {
 
     expect(installed.version).toBe('2608.30.0002');
     expect(axios.get).toHaveBeenCalledOnce();
-    // Uncontended, so the stale bundle is cleaned up as usual.
-    expect(bundleDirs()).toEqual(['2608.30.0002']);
+    // The peer may still be running from the old bundle, so it stays.
+    expect(bundleDirs()).toEqual(['2608.28.0001', '2608.30.0002']);
   });
 
   it('waits for the peer rather than racing it', async () => {
     const axios = axiosServing(bundleTarball({ 'index.js': 'mine' }));
-    await startPeer({ version: '2608.31.0001', holdMs: 600, installs: true });
+    await startPeer({ version: '2608.31.0001', holdMs: 600, mode: 'install' });
 
     const start = Date.now();
     await updateManager.downloadAndExtractClientBundle(
