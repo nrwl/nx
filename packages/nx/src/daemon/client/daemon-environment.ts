@@ -244,7 +244,13 @@ const DAEMON_ENV_PREFIX_EXCLUSION_OVERRIDES = new Set([
   'NX_CLOUD_AUTH_TOKEN',
 ]);
 
-function isExcludedEnvVar(key: string): boolean {
+/**
+ * Exported for the plugin capability cache, which records the variables a
+ * plugin's load read and must not rest on one the daemon strips: a worker
+ * inherits its host's environment, so a record written on the daemon and read
+ * in a client would disagree about every excluded variable.
+ */
+export function isExcludedEnvVar(key: string): boolean {
   if (
     DAEMON_ENV_VARS_EXCLUSIONS.has(key) ||
     DAEMON_ENV_PATTERN_EXCLUSIONS.some((pattern) => pattern.test(key))

@@ -1,4 +1,5 @@
 import { hashArray } from '../../../native';
+import { isExcludedEnvVar } from '../../../daemon/client/daemon-environment';
 
 /**
  * What a load read from the environment: which variables, and one hash over all
@@ -15,8 +16,23 @@ import { hashArray } from '../../../native';
  */
 export type EnvReads = { keys: string[]; hash: string };
 
-/** Keys that say how a process was started rather than what it should do. */
-const INVOCATION_KEYS = new Set(['_', 'PWD', 'OLDPWD', 'SHLVL']);
+/**
+ * Whether a variable is one a record must not rest on.
+ *
+ * The daemon's own list, rather than a second one. A plugin worker inherits the
+ * environment of whichever process spawned it, and the daemon's is `process.env`
+ * minus these, so a record written by a daemon worker and read by a CLI client
+ * would disagree about every one of them and could never hold. Nx already states
+ * that these cannot affect the project graph, and what a plugin registers is
+ * graph input, so the claim is the same one.
+ *
+ * The trade is that a plugin branching on one of them records an answer that
+ * nothing here invalidates. `repairRecord` corrects it the next time a worker
+ * loads, which is the same backstop the other blind spots rest on.
+ */
+function isRecordableEnvKey(key: string): boolean {
+  return !isExcludedEnvVar(key);
+}
 
 /**
  * Stands in for a variable nobody set. Not a value any environment can hold, so
@@ -93,10 +109,7 @@ export async function withEnvReads<T>(
 }
 
 function record(read: Set<string>, key: string): void {
-  // Left out rather than recorded: these say which binary ran and from where,
-  // they differ between two invocations that should share a record, and nothing
-  // a plugin registers is decided from them.
-  if (INVOCATION_KEYS.has(key)) {
+  if (!isRecordableEnvKey(key)) {
     return;
   }
   read.add(key);
