@@ -57,6 +57,30 @@ describe('filterAffected()', () => {
     expect(result.nodes).toEqual({});
   });
 
+  /**
+   * The chain the deletion fallback rests on: the plugins' createNodes globs
+   * come from getProjectGlobPatterns, Rust matches the deleted path against
+   * them, and every project comes back.
+   */
+  it('marks every project affected when a project config is deleted', async () => {
+    const result = await filterAffected(
+      projectGraph,
+      [
+        {
+          file: 'libs/retired/project.json',
+          getChanges: () => [new DeletedFileChange()],
+        },
+      ],
+      nxJson,
+      {}
+    );
+
+    expect(Object.keys(result.nodes).sort()).toEqual([
+      'current-a',
+      'current-b',
+    ]);
+  });
+
   it('still runs other locators when the deletion fallback is disabled', async () => {
     const result = await filterAffected(
       projectGraph,
