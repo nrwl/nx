@@ -526,6 +526,16 @@ export class TaskOrchestrator {
     process.exit(1);
   }
 
+  private releaseTaskInvocation(task: Task): void {
+    const invocationKey = createTaskInvocationKey(task);
+    if (!this.registeredInvocations.delete(invocationKey)) return;
+    try {
+      this.taskInvocationTracker?.unregisterTask(process.pid, invocationKey);
+    } catch {
+      // Diagnostic only, like registration. A leftover row is swept as stale.
+    }
+  }
+
   // endregion Processing Scheduled Tasks
 
   // region Applying Cache
@@ -2046,9 +2056,7 @@ export class TaskOrchestrator {
       if (this.completedTasks.has(task.id)) continue;
 
       this.completedTasks.set(task.id, status);
-      const invocationKey = createTaskInvocationKey(task);
-      this.taskInvocationTracker?.unregisterTask(process.pid, invocationKey);
-      this.registeredInvocations.delete(invocationKey);
+      this.releaseTaskInvocation(task);
 
       if (this.tuiEnabled) {
         this.options.lifeCycle.setTaskStatus(

@@ -204,6 +204,10 @@ export declare class RunningTasksService {
   constructor(db: ExternalObject<NxDbConnection>)
   getRunningTasks(ids: Array<string>): Array<string>
   addRunningTask(taskId: string): void
+  /**
+   * Release this process's claim on a task. A row another process has since
+   * taken over is left in place.
+   */
   removeRunningTask(taskId: string): void
 }
 
@@ -265,11 +269,10 @@ export declare class TaskInvocationTracker {
   /**
    * Register a task as invoked by the process identified by `pid`.
    *
-   * Returns `Some(chain)` when an ancestor process is already running this
-   * task — a genuine loop — where `chain` is every task invoked along the
-   * ancestry path, outermost first. Returns `None` when the task was
-   * registered successfully, including when a *sibling* process is already
-   * running it.
+   * Returns the invocation chain when an ancestor process is already running
+   * this task, which is a genuine loop. The chain lists every task invoked
+   * along the ancestry path, outermost first. Returns `null` when the task
+   * was registered, including when a *sibling* process is already running it.
    */
   registerTask(pid: number, taskId: string): Array<InvocationRecord> | null
   /**

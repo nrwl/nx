@@ -703,7 +703,6 @@ export function createTaskInvocationKey(task: Task): string {
   return `${task.id}${INVOCATION_KEY_SEPARATOR}${hashObject(overrides)}`;
 }
 
-/** Recovers the displayable task id from {@link createTaskInvocationKey}. */
 export function taskIdFromInvocationKey(key: string): string {
   const separator = key.lastIndexOf(INVOCATION_KEY_SEPARATOR);
   return separator === -1 ? key : key.slice(0, separator);

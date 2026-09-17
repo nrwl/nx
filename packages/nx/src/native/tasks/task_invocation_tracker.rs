@@ -58,11 +58,10 @@ impl TaskInvocationTracker {
 
     /// Register a task as invoked by the process identified by `pid`.
     ///
-    /// Returns `Some(chain)` when an ancestor process is already running this
-    /// task — a genuine loop — where `chain` is every task invoked along the
-    /// ancestry path, outermost first. Returns `None` when the task was
-    /// registered successfully, including when a *sibling* process is already
-    /// running it.
+    /// Returns the invocation chain when an ancestor process is already running
+    /// this task, which is a genuine loop. The chain lists every task invoked
+    /// along the ancestry path, outermost first. Returns `null` when the task
+    /// was registered, including when a *sibling* process is already running it.
     #[napi]
     pub fn register_task(
         &self,
