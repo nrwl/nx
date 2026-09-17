@@ -32,8 +32,17 @@ describe('PluginCapabilitiesCache', () => {
     rmSync(join(__dirname, dbOutputFolder), { recursive: true, force: true });
   });
 
-  function recordFor(caps = capabilities, sourceFiles = ['libs/p/index.js']) {
-    return { capabilities: caps, sourceFiles, sourceHash: 'hash-of-sources' };
+  function recordFor(
+    caps = capabilities,
+    sourceFiles = ['libs/p/index.js'],
+    envReads = '{}'
+  ) {
+    return {
+      capabilities: caps,
+      sourceFiles,
+      sourceHash: 'hash-of-sources',
+      envReads,
+    };
   }
 
   it('returns what was recorded, sources and all', () => {
@@ -120,6 +129,17 @@ describe('PluginCapabilitiesCache', () => {
     ]);
 
     expect(cache.get(['key-a'])['key-a'].capabilities).toEqual(updated);
+  });
+
+  it('round-trips the environment the load read', () => {
+    const envReads = JSON.stringify({ NX_DOTNET_DISABLE: 'true', HOME: null });
+    cache.record([
+      { key: 'key-env', record: recordFor(capabilities, [], envReads) },
+    ]);
+
+    // Opaque to the database: the comparison against the current environment is
+    // the caller's, so this only has to come back exactly as it went in.
+    expect(cache.get(['key-env'])['key-env'].envReads).toBe(envReads);
   });
 
   it('drops a record so the next run asks the plugin instead', () => {

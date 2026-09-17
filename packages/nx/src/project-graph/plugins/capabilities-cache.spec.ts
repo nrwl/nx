@@ -20,6 +20,9 @@ import {
 } from './capabilities-cache';
 import type { LoadedNxPlugin } from './loaded-nx-plugin';
 
+/** No files to hash, so the root only has to be a string. */
+const root = () => '/ws';
+
 const state = vi.hoisted(() => ({
   nxManifestVersion: '23.0.0',
   canObserveModuleClosure: true,
@@ -169,6 +172,55 @@ describe('computeCapabilityKey', () => {
     expect(
       computeCapabilityKey('@acme/unversioned', pluginPath, root)
     ).toBeNull();
+  });
+});
+
+describe('recordIsFresh', () => {
+  const record = (envReads: string, sourceFiles: string[] = []) => ({
+    capabilities: {
+      name: '@nx/dotnet [disabled]',
+      createNodesPattern: undefined,
+      hasCreateDependencies: false,
+      hasCreateMetadata: false,
+      hasPreTasksExecution: false,
+      hasPostTasksExecution: false,
+    },
+    sourceFiles,
+    sourceHash: '',
+    envReads,
+  });
+
+  afterEach(() => {
+    delete process.env.NX_DOTNET_DISABLE;
+  });
+
+  it('accepts a record whose environment still reads the same', () => {
+    expect(recordIsFresh(record('{"NX_DOTNET_DISABLE":null}'), root())).toBe(
+      true
+    );
+  });
+
+  it('rejects one where a key the load read has since been set', () => {
+    process.env.NX_DOTNET_DISABLE = 'true';
+
+    // The whole `@nx/dotnet` case: it exports no hooks under this variable, and
+    // its files are identical either way, so nothing else here could tell.
+    expect(recordIsFresh(record('{"NX_DOTNET_DISABLE":null}'), root())).toBe(
+      false
+    );
+  });
+
+  it('rejects one where a key the load read has since been unset', () => {
+    expect(recordIsFresh(record('{"NX_DOTNET_DISABLE":"true"}'), root())).toBe(
+      false
+    );
+  });
+
+  it('ignores variables the load never read', () => {
+    process.env.NX_DOTNET_DISABLE = 'true';
+
+    // Otherwise every unrelated variable would invalidate every record.
+    expect(recordIsFresh(record('{}'), root())).toBe(true);
   });
 });
 

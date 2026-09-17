@@ -1,6 +1,6 @@
 import { PluginConfiguration } from '../../../config/nx-json';
 
-import type { PluginCapabilities } from '../capabilities-cache';
+import type { ObservedLoad, PluginCapabilities } from '../capabilities-cache';
 import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 
 import { IsolatedPlugin, type ResolvedPluginModule } from './isolated-plugin';
@@ -80,7 +80,7 @@ export function useIsolatedNxPluginCapabilities(
   resolved: ResolvedPluginModule,
   capabilities: PluginCapabilities,
   index?: number,
-  onLoaded?: (actual: PluginCapabilities, sourceFiles: string[] | null) => void
+  onLoaded?: (actual: PluginCapabilities, observed: ObservedLoad) => void
 ): Promise<LoadedNxPlugin> {
   const cacheKey = getCacheKey(plugin, root);
 

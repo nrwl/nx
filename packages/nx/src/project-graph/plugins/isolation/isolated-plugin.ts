@@ -24,7 +24,7 @@ import { stubTerminalOutputs } from '../task-results-stub';
 import { waitForSocketConnection } from '../../../utils/wait-for-socket-connection';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import type { RawProjectGraphDependency } from '../../project-graph-builder';
-import type { PluginCapabilities } from '../capabilities-cache';
+import type { ObservedLoad, PluginCapabilities } from '../capabilities-cache';
 import { LoadedNxPlugin } from '../loaded-nx-plugin';
 import type {
   CreateDependenciesContext,
@@ -159,7 +159,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   /** Set only for an instance wired from a cached record. Called once. */
   private onLoaded?: (
     actual: PluginCapabilities,
-    sourceFiles: string[] | null
+    observed: ObservedLoad
   ) => void;
   private exitHandler:
     | ((code: number | null, signal: NodeJS.Signals | null) => void)
@@ -189,6 +189,8 @@ export class IsolatedPlugin implements LoadedNxPlugin {
         loadResult.exclude
       );
       instance.sourceFiles = loadResult.sourceFiles;
+      instance.envReads = loadResult.envReads;
+      instance.hooksExportedAsUndefined = loadResult.hooksExportedAsUndefined;
       return instance;
     } catch (e) {
       // The worker is running whenever the failure was a timeout rather than an
@@ -208,6 +210,16 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   sourceFiles: string[] | null = null;
 
   /**
+   * The environment the worker's load read, or null when it read all of it.
+   * Recorded beside the closure, and for the same reason: it is an input to what
+   * the plugin registers that the plugin's own files do not show.
+   */
+  envReads: Record<string, string | null> | null = null;
+
+  /** Hook exports the module declared and left undefined. */
+  hooksExportedAsUndefined: string[] = [];
+
+  /**
    * Wires the plugin's hooks from a previous load's capabilities, without a
    * worker. The worker spawns on the first hook call, through the same
    * `ensureAlive` path a shut-down worker takes, so a caller that only reads
@@ -222,10 +234,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     resolved: ResolvedPluginModule,
     capabilities: PluginCapabilities,
     index?: number,
-    onLoaded?: (
-      actual: PluginCapabilities,
-      sourceFiles: string[] | null
-    ) => void
+    onLoaded?: (actual: PluginCapabilities, observed: ObservedLoad) => void
   ): IsolatedPlugin {
     const instance = new IsolatedPlugin(plugin, root, resolved, index);
     instance.onLoaded = onLoaded;
@@ -344,11 +353,17 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     const loadResult = await this._connectPromise;
 
     this.sourceFiles = loadResult.sourceFiles;
+    this.envReads = loadResult.envReads;
+    this.hooksExportedAsUndefined = loadResult.hooksExportedAsUndefined;
 
     const onLoaded = this.onLoaded;
     if (onLoaded) {
       this.onLoaded = undefined;
-      onLoaded(capabilitiesFromLoadResult(loadResult), loadResult.sourceFiles);
+      onLoaded(capabilitiesFromLoadResult(loadResult), {
+        sourceFiles: loadResult.sourceFiles,
+        envReads: loadResult.envReads,
+        hooksExportedAsUndefined: loadResult.hooksExportedAsUndefined,
+      });
     }
   }
 

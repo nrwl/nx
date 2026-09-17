@@ -126,6 +126,7 @@ describe('loading plugins through the capability cache', () => {
         createNodes: ['**/*.config.ts', async () => []],
         createDependencies: async () => [],
         sourceFiles: [`/resolved/${label}`],
+        envReads: {},
         dispose: vi.fn(),
       };
     });
@@ -152,6 +153,7 @@ describe('loading plugins through the capability cache', () => {
         createNodes: ['**/*.config.ts', async () => []],
         createDependencies: async () => [],
         sourceFiles: [`/resolved/${label}`],
+        envReads: {},
       };
     });
     useIsolatedNxPluginCapabilities.mockReset();
@@ -282,6 +284,7 @@ describe('loading plugins through the capability cache', () => {
         name: label,
         createNodes: [`**/${label}.config.ts`, async () => []],
         sourceFiles: [`/resolved/${label}`],
+        envReads: {},
       };
     });
 
@@ -302,6 +305,54 @@ describe('loading plugins through the capability cache', () => {
     );
   });
 
+  it('records a plugin that simply has no hooks', async () => {
+    loadIsolatedNxPlugin.mockImplementation(async (plugin: unknown) => ({
+      name: typeof plugin === 'string' ? plugin : (plugin as any).plugin,
+      sourceFiles: ['/resolved/test-plugin'],
+      envReads: {},
+      hooksExportedAsUndefined: [],
+    }));
+
+    await getPluginsSeparated({ plugins: ['test-plugin'] });
+
+    // The case worth caching most: there is no reason to ever load this again.
+    expect(mocks.recordCapabilities).toHaveBeenCalledWith([
+      expect.objectContaining({ key: 'key:/resolved/test-plugin' }),
+    ]);
+  });
+
+  it('records nothing for a plugin that turned a hook off for an invisible reason', async () => {
+    loadIsolatedNxPlugin.mockImplementation(async (plugin: unknown) => ({
+      name: typeof plugin === 'string' ? plugin : (plugin as any).plugin,
+      sourceFiles: ['/resolved/test-plugin'],
+      // Read no environment, yet exported the key and left it undefined.
+      envReads: {},
+      hooksExportedAsUndefined: ['createNodes'],
+    }));
+
+    await getPluginsSeparated({ plugins: ['test-plugin'] });
+
+    // It decided not to register that hook, from something neither its files
+    // nor its environment show, so nothing here could tell when it changes.
+    expect(mocks.recordCapabilities).toHaveBeenCalledWith([]);
+  });
+
+  it('records one that turned a hook off from a variable it read', async () => {
+    loadIsolatedNxPlugin.mockImplementation(async (plugin: unknown) => ({
+      name: typeof plugin === 'string' ? plugin : (plugin as any).plugin,
+      sourceFiles: ['/resolved/test-plugin'],
+      envReads: { NX_DOTNET_DISABLE: 'true' },
+      hooksExportedAsUndefined: ['createNodes', 'createDependencies'],
+    }));
+
+    await getPluginsSeparated({ plugins: ['test-plugin'] });
+
+    // The variable is on the record, so setting or clearing it invalidates it.
+    expect(mocks.recordCapabilities).toHaveBeenCalledWith([
+      expect.objectContaining({ key: 'key:/resolved/test-plugin' }),
+    ]);
+  });
+
   it('records nothing for a plugin whose closure cannot be stored', async () => {
     // A closure reaching outside the workspace, which two checkouts sharing a
     // database could not validate against their own files.
@@ -316,7 +367,10 @@ describe('loading plugins through the capability cache', () => {
   describe('a record the key failed to invalidate', () => {
     async function loadedFromRecordThenReport(
       actual: PluginCapabilities,
-      sourceFiles: string[] | null = ['/resolved/test-plugin']
+      observed: {
+        sourceFiles: string[] | null;
+        envReads: Record<string, string | null> | null;
+      } = { sourceFiles: ['/resolved/test-plugin'], envReads: {} }
     ) {
       everythingRecorded = true;
       await getPluginsSeparated({ plugins: ['test-plugin'] });
@@ -326,7 +380,7 @@ describe('loading plugins through the capability cache', () => {
           ([plugin]) => plugin === 'test-plugin'
         );
       mocks.recordCapabilities.mockClear();
-      onLoaded(actual, sourceFiles);
+      onLoaded(actual, observed);
     }
 
     it('is replaced by what the worker reported', async () => {
@@ -358,7 +412,7 @@ describe('loading plugins through the capability cache', () => {
       await expect(
         loadedFromRecordThenReport(
           { ...CAPABILITIES, hasPostTasksExecution: true },
-          null
+          { sourceFiles: null, envReads: {} }
         )
       ).rejects.toThrow('The stale record has been cleared');
 

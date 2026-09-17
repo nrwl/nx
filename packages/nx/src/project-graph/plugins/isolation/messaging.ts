@@ -53,6 +53,19 @@ type PluginMessageDefs = DefineMessages<{
            * answer it recorded earlier still holds.
            */
           sourceFiles: string[] | null;
+          /**
+           * The environment this load read, by key, or null when it took the
+           * whole environment and so cannot be described by part of it. The
+           * other input to what a plugin registers, and the one its files
+           * cannot show: `@nx/dotnet` exports no hooks under NX_DOTNET_DISABLE
+           * and its sources are identical either way.
+           */
+          envReads: Record<string, string | null> | null;
+          /**
+           * Hook exports the module declares and leaves undefined, which says it
+           * decided them rather than simply not having them.
+           */
+          hooksExportedAsUndefined: string[];
           createNodesPattern: string;
           hasCreateDependencies: boolean;
           hasProcessProjectGraph: boolean;

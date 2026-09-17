@@ -830,6 +830,11 @@ export interface PluginRecord {
   capabilities: CachedPluginCapabilities
   sourceFiles: Array<string>
   sourceHash: string
+  /**
+   * The environment the load read, as the caller encoded it. Opaque here: it
+   * is compared against the current environment on the JavaScript side.
+   */
+  envReads: string
 }
 
 /** Process metadata (static, doesn't change during process lifetime) */

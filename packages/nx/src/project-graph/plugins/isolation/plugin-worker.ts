@@ -64,6 +64,16 @@ if (!socketPath || !expectedPluginName || !hostWorkspaceRoot) {
   process.exit(1);
 }
 
+/** The exports a capability record is made of, for the undefined-versus-absent check. */
+const HOOK_EXPORTS = [
+  'createNodes',
+  'createNodesV2',
+  'createDependencies',
+  'createMetadata',
+  'preTasksExecution',
+  'postTasksExecution',
+] as const;
+
 const CONNECT_TIMEOUT_MS = 30_000;
 // Runs in this worker's own loop from the moment it accepts, while the host is
 // loading every plugin at once and may sit in a synchronous workspace walk for
@@ -145,8 +155,21 @@ const server = createServer((socket) => {
               }
               const { withModuleClosure } =
                 require('./module-closure') as typeof import('./module-closure');
-              const { result, sourceFiles } = await withModuleClosure(() =>
-                loadResolvedNxPluginAsync(pluginConfiguration, pluginPath, name)
+              const { withEnvReads } =
+                require('./env-reads') as typeof import('./env-reads');
+              // Nested so one load is watched by both: what it registers depends
+              // on the files it read and on the environment it read them in.
+              const {
+                result: { result, sourceFiles },
+                envReads,
+              } = await withEnvReads(() =>
+                withModuleClosure(() =>
+                  loadResolvedNxPluginAsync(
+                    pluginConfiguration,
+                    pluginPath,
+                    name
+                  )
+                )
               );
               plugin = result;
               logger.verbose(
@@ -154,6 +177,14 @@ const server = createServer((socket) => {
               );
               return {
                 sourceFiles,
+                envReads,
+                // A key that is there and undefined was computed: the module
+                // wrote `export const createNodes = disabled ? undefined : ...`
+                // rather than never exporting it. The two are the same to every
+                // other reader and they are not the same to a cache.
+                hooksExportedAsUndefined: HOOK_EXPORTS.filter(
+                  (hook) => hook in plugin && !plugin[hook]
+                ),
                 name: plugin.name,
                 include: plugin.include,
                 exclude: plugin.exclude,

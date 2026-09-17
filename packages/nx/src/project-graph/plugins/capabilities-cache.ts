@@ -28,6 +28,17 @@ import type { LoadedNxPlugin } from './loaded-nx-plugin';
  */
 export type PluginCapabilities = CachedPluginCapabilities;
 
+/**
+ * What a load read, which is what a record is checked against. Either half is
+ * null when it could not be bounded, and a record needs both.
+ */
+export type ObservedLoad = {
+  sourceFiles: string[] | null;
+  envReads: Record<string, string | null> | null;
+  /** Hook exports the module declared and left undefined. */
+  hooksExportedAsUndefined?: string[];
+};
+
 const LOCK_FILE_NAME = 'plugin-capabilities.lock';
 
 /**
@@ -142,12 +153,45 @@ export function readValidRecords(
  * its key's version identifies it.
  */
 export function recordIsFresh(record: PluginRecord, root: string): boolean {
+  if (!envIsUnchanged(record)) {
+    return false;
+  }
+
   if (!record.sourceFiles.length) {
     return true;
   }
 
   const current = hashSourceFiles(record.sourceFiles, root);
   return current !== null && current === record.sourceHash;
+}
+
+/**
+ * Whether the environment this load read still says what it said then.
+ *
+ * Only the keys the load actually read, so a record survives every unrelated
+ * variable and is invalidated by exactly the ones that could have changed the
+ * answer. A key read when it was unset is recorded as unset, and setting it
+ * later is a change: that is the `NX_DOTNET_DISABLE` case, where a plugin
+ * exports no hooks at all and its files are identical either way.
+ */
+function envIsUnchanged(record: PluginRecord): boolean {
+  let read: Record<string, string | null>;
+  try {
+    read = JSON.parse(record.envReads || '{}');
+  } catch {
+    return false;
+  }
+
+  for (const [key, value] of Object.entries(read)) {
+    const now = key in process.env ? process.env[key] : null;
+    if (now !== value) {
+      logger.verbose(
+        `${key} changed since "${record.capabilities.name}" was recorded; loading it again`
+      );
+      return false;
+    }
+  }
+  return true;
 }
 
 /**

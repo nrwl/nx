@@ -28,7 +28,9 @@ import {
   recordCapabilities,
   storableSourceFiles,
   sameCapabilities,
+  type ObservedLoad,
 } from './capabilities-cache';
+import type { PluginRecord } from '../../native';
 import { isOnDaemon } from '../../daemon/is-on-daemon';
 import { serverLogger } from '../../daemon/logger';
 import { DelayedSpinner } from '../../utils/delayed-spinner';
@@ -613,7 +615,7 @@ async function loadForCapabilities(
       );
       try {
         load.capabilities = capabilitiesOfLoadedPlugin(plugin);
-        return recordFor(load.key, plugin, plugin.sourceFiles, root);
+        return recordFor(load.key, load.capabilities, plugin, root);
       } finally {
         plugin.dispose();
       }
@@ -747,8 +749,8 @@ function wireRecordedCapabilities(
       load.resolved,
       capabilities,
       load.index,
-      (actual, sourceFiles) =>
-        repairRecord(load.key, root, capabilities, actual, sourceFiles)
+      (actual, observed) =>
+        repairRecord(load.key, root, capabilities, actual, observed)
     );
   }
   return missing;
@@ -758,13 +760,13 @@ function wireRecordedCapabilities(
  * What the worker reported about the load it just did. Absent for an in-process
  * load, which this cache does not record.
  */
-const observedClosures = new WeakMap<LoadedNxPlugin, string[] | null>();
+const observedLoads = new WeakMap<LoadedNxPlugin, ObservedLoad>();
 
-export function noteObservedClosure(
+export function noteObservedLoad(
   plugin: LoadedNxPlugin,
-  sourceFiles: string[] | null
+  observed: ObservedLoad
 ): void {
-  observedClosures.set(plugin, sourceFiles);
+  observedLoads.set(plugin, observed);
 }
 
 async function loadAndRecord(loads: PluginLoad[], root: string): Promise<void> {
@@ -781,13 +783,15 @@ async function loadAndRecord(loads: PluginLoad[], root: string): Promise<void> {
           load.index,
           load.resolved
         );
-        // The closure the worker observed travels with the instance, so the
-        // record is written from what actually ran rather than from a guess.
+        // What the worker observed travels with the instance, so the record is
+        // written from what actually ran rather than from a guess.
         const loaded = await load.loaded;
-        noteObservedClosure(
-          loaded,
-          (loaded as { sourceFiles?: string[] | null }).sourceFiles ?? null
-        );
+        const reported = loaded as Partial<ObservedLoad>;
+        noteObservedLoad(loaded, {
+          sourceFiles: reported.sourceFiles ?? null,
+          envReads: reported.envReads ?? null,
+          hooksExportedAsUndefined: reported.hooksExportedAsUndefined ?? [],
+        });
       } catch (e) {
         // Rethrown by the caller, so the failure reaches the same error
         // aggregation an uncached load would have reached.
@@ -806,8 +810,8 @@ async function loadAndRecord(loads: PluginLoad[], root: string): Promise<void> {
     }
     const entry = recordFor(
       loads[i].key,
-      result.value,
-      observedClosures.get(result.value) ?? null,
+      capabilitiesOfLoadedPlugin(result.value),
+      observedLoads.get(result.value) ?? { sourceFiles: null, envReads: null },
       root
     );
     if (entry) {
@@ -818,14 +822,7 @@ async function loadAndRecord(loads: PluginLoad[], root: string): Promise<void> {
   recordCapabilities(entries);
 }
 
-type PluginCapabilitiesEntry = {
-  key: string;
-  record: {
-    capabilities: PluginCapabilities;
-    sourceFiles: string[];
-    sourceHash: string;
-  };
-};
+type PluginCapabilitiesEntry = { key: string; record: PluginRecord };
 
 /**
  * The record to write for a plugin that has just loaded, or null when there is
@@ -837,20 +834,44 @@ type PluginCapabilitiesEntry = {
  */
 function recordFor(
   key: string,
-  plugin: LoadedNxPlugin,
-  observed: string[] | null,
+  capabilities: PluginCapabilities,
+  observed: ObservedLoad,
   root: string
 ): PluginCapabilitiesEntry | null {
-  if (observed === null) {
+  if (observed.sourceFiles === null) {
     // Said out loud, because the alternative is a workspace where this cache
     // silently does nothing and no one can tell why.
     logger.verbose(
-      `Nx could not observe which files "${plugin.name}" read while loading, so its capabilities were not recorded. Observing them needs Node 22.15, 23.5 or newer.`
+      `Nx could not observe which files "${capabilities.name}" read while loading, so its capabilities were not recorded. Observing them needs Node 22.15, 23.5 or newer.`
     );
     return null;
   }
 
-  const sourceFiles = storableSourceFiles(observed, root);
+  if (observed.envReads === null) {
+    // The load took the whole environment, so no list of variables describes
+    // what it depends on and any record of it could be wrong on the next run.
+    logger.verbose(
+      `"${capabilities.name}" read its whole environment while loading, so its capabilities were not recorded.`
+    );
+    return null;
+  }
+
+  const declaredUndefined = observed.hooksExportedAsUndefined ?? [];
+  if (declaredUndefined.length && !Object.keys(observed.envReads).length) {
+    // The module exports these and leaves them undefined, so it decided not to
+    // register them, and it read no environment, so whatever it decided from is
+    // something this cannot watch: the contents of a file it read itself, the
+    // platform, something it probed. A plugin that simply does not have a hook
+    // does not export the key at all, and records fine.
+    logger.verbose(
+      `"${capabilities.name}" turned off ${declaredUndefined.join(
+        ', '
+      )} for a reason Nx cannot see, so its capabilities were not recorded.`
+    );
+    return null;
+  }
+
+  const sourceFiles = storableSourceFiles(observed.sourceFiles, root);
   if (sourceFiles === null) {
     return null;
   }
@@ -862,9 +883,10 @@ function recordFor(
   return {
     key,
     record: {
-      capabilities: capabilitiesOfLoadedPlugin(plugin),
+      capabilities,
       sourceFiles,
       sourceHash,
+      envReads: JSON.stringify(observed.envReads),
     },
   };
 }
@@ -883,20 +905,18 @@ function repairRecord(
   root: string,
   recorded: PluginCapabilities,
   actual: PluginCapabilities,
-  sourceFiles: string[] | null
+  observed: ObservedLoad
 ): void {
   if (sameCapabilities(recorded, actual)) {
     return;
   }
-  // Null is not none. An unobservable closure coerced to an empty one would
-  // write a record that `recordIsFresh` accepts without hashing anything, so no
-  // later edit on any runtime could invalidate it, and a self-correcting hole
+  // Null is not none. An unobservable closure or environment coerced to an
+  // empty one would write a record that `recordIsFresh` accepts without checking
+  // anything, so nothing later could invalidate it, and a self-correcting hole
   // would become a permanent one.
-  const observed =
-    sourceFiles === null ? null : storableSourceFiles(sourceFiles, root);
-  const sourceHash = observed === null ? null : hashSourceFiles(observed, root);
+  const corrected = recordFor(key, actual, observed, root);
 
-  if (observed === null || sourceHash === null) {
+  if (!corrected) {
     // Nothing to write in its place, so the wrong record goes. Thrown rather
     // than warned: a hook this record hid has already been skipped, so the
     // command's answer is wrong, and with the record gone the next run loads
@@ -904,17 +924,12 @@ function repairRecord(
     forgetCapabilities(key);
     throw new Error(
       `Nx had stale information about what the "${actual.name}" plugin does, so some of its hooks may not have run. ` +
-        'Nx could not tell which files to watch for this plugin, so it could not record the right answer now. ' +
+        'Nx could not tell what to watch for this plugin, so it could not record the right answer now. ' +
         'The stale record has been cleared, so running this command again will load the plugin and use what it reports.'
     );
   }
 
-  recordCapabilities([
-    {
-      key,
-      record: { capabilities: actual, sourceFiles: observed, sourceHash },
-    },
-  ]);
+  recordCapabilities([corrected]);
 
   const title = `Nx had stale information about what the "${actual.name}" plugin does.`;
   const detail =

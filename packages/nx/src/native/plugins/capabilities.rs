@@ -31,8 +31,16 @@ pub const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS plugin_capabilities (
     has_post_tasks_execution   INTEGER NOT NULL,
     source_files   TEXT NOT NULL,
     source_hash   TEXT NOT NULL,
+    env_reads   TEXT NOT NULL DEFAULT '{}',
     created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );";
+
+/// Adds a column to a table an earlier build of this branch already created.
+/// `IF NOT EXISTS` leaves that table alone, so without this a developer who ran
+/// the branch before would read a column that is not there and lose the cache
+/// for good. Released versions have no such table and create it complete.
+const MIGRATIONS: &[&str] =
+    &["ALTER TABLE plugin_capabilities ADD COLUMN env_reads TEXT NOT NULL DEFAULT '{}'"];
 
 /// How long a record outlives the run that wrote it.
 ///
@@ -69,6 +77,9 @@ pub struct PluginRecord {
     pub capabilities: CachedPluginCapabilities,
     pub source_files: Vec<String>,
     pub source_hash: String,
+    /// The environment the load read, as the caller encoded it. Opaque here: it
+    /// is compared against the current environment on the JavaScript side.
+    pub env_reads: String,
 }
 
 #[napi(object)]
@@ -92,7 +103,14 @@ impl PluginCapabilitiesCache {
         >,
     ) -> anyhow::Result<Self> {
         let cache = Self { db: Arc::clone(db) };
-        cache.db.lock().unwrap().execute_batch(SCHEMA)?;
+        {
+            let db = cache.db.lock().unwrap();
+            db.execute_batch(SCHEMA)?;
+            for migration in MIGRATIONS {
+                // Already applied, or the table was created complete.
+                let _ = db.execute_batch(migration);
+            }
+        }
         Ok(cache)
     }
 
@@ -106,7 +124,8 @@ impl PluginCapabilitiesCache {
 
         let sql = format!(
             "SELECT key, name, create_nodes_pattern, has_create_dependencies, has_create_metadata,
-                    has_pre_tasks_execution, has_post_tasks_execution, source_files, source_hash
+                    has_pre_tasks_execution, has_post_tasks_execution, source_files, source_hash,
+                    env_reads
              FROM plugin_capabilities WHERE key IN ({})",
             placeholders(keys.len())
         );
@@ -133,6 +152,7 @@ impl PluginCapabilitiesCache {
                             files.lines().map(|l| l.to_string()).collect()
                         },
                         source_hash: row.get(8)?,
+                        env_reads: row.get(9)?,
                     },
                 ))
             },
@@ -179,7 +199,7 @@ impl PluginCapabilitiesCache {
             "INSERT INTO plugin_capabilities (key, name, create_nodes_pattern,
                     has_create_dependencies, has_create_metadata,
                     has_pre_tasks_execution, has_post_tasks_execution,
-                    source_files, source_hash)
+                    source_files, source_hash, env_reads)
              VALUES {}
              ON CONFLICT(key) DO UPDATE SET
                     name = excluded.name,
@@ -190,11 +210,12 @@ impl PluginCapabilitiesCache {
                     has_post_tasks_execution = excluded.has_post_tasks_execution,
                     source_files = excluded.source_files,
                     source_hash = excluded.source_hash,
+                    env_reads = excluded.env_reads,
                     created_at = CURRENT_TIMESTAMP",
-            vec!["(?, ?, ?, ?, ?, ?, ?, ?, ?)"; rows.len()].join(", ")
+            vec!["(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"; rows.len()].join(", ")
         );
 
-        let mut values: Vec<Box<dyn rusqlite::ToSql>> = Vec::with_capacity(rows.len() * 9);
+        let mut values: Vec<Box<dyn rusqlite::ToSql>> = Vec::with_capacity(rows.len() * 10);
         for (key, record) in rows {
             let capabilities = &record.capabilities;
             values.push(Box::new(key.clone()));
@@ -206,6 +227,7 @@ impl PluginCapabilitiesCache {
             values.push(Box::new(capabilities.has_post_tasks_execution));
             values.push(Box::new(record.source_files.join("\n")));
             values.push(Box::new(record.source_hash.clone()));
+            values.push(Box::new(record.env_reads.clone()));
         }
 
         self.db.lock().unwrap().transaction(|conn| {
