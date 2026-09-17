@@ -16,6 +16,7 @@ import {
   wantPlugins,
 } from './isolation';
 import { resetResolvePluginCache } from './resolve-plugin';
+import { canObserveModuleClosure } from './isolation/module-closure';
 import {
   capabilitiesOfLoadedPlugin,
   computeCapabilityKey,
@@ -32,13 +33,12 @@ import {
 } from './capabilities-cache';
 import type { PluginRecord } from '../../native';
 import { isOnDaemon } from '../../daemon/is-on-daemon';
+import { isDaemonEnabled } from '../../daemon/client/client';
 import { serverLogger } from '../../daemon/logger';
 import { DelayedSpinner } from '../../utils/delayed-spinner';
 import { logger } from '../../utils/logger';
 import {
   IsolatedPlugin,
-  isPluginWorkerSocketRefusal,
-  isPluginWorkerStartupFailure,
   resolveModule,
   type ResolvedPluginModule,
 } from './isolation/isolated-plugin';
@@ -47,9 +47,6 @@ import { isIsolationEnabled } from './isolation/enabled';
 import { isolationRefused, pluginWithoutWorker } from './isolation/fallback';
 
 export { resetIsolationFallbackForTesting } from './isolation/fallback';
-import { sandboxSocketHint } from '../../daemon/sandbox-socket-hint';
-import { isSandbox } from '../../utils/is-sandbox';
-import { isAiAgent } from '../../native';
 import { output } from '../../utils/output';
 import { ProgressTopics } from '../../utils/progress-topics';
 import type { LoadedNxPlugin } from './loaded-nx-plugin';
@@ -391,12 +388,15 @@ async function loadPlugins(
  */
 async function resolveCapabilityKeys(
   loads: PluginLoad[],
-  root: string
+  root: string,
+  { withoutProjectWalk = false }: { withoutProjectWalk?: boolean } = {}
 ): Promise<void> {
   await Promise.all(
     loads.map(async (load) => {
       try {
-        load.resolved = await resolveModule(load.plugin, root);
+        load.resolved = await resolveModule(load.plugin, root, {
+          withoutProjectWalk,
+        });
         load.key = computeCapabilityKey(
           pluginLabel(load.plugin),
           load.resolved.pluginPath,
@@ -462,7 +462,18 @@ export async function peekPluginCapabilities(
     plugin,
     key: null,
   }));
-  await resolveCapabilityKeys(loads, root);
+
+  // A client with a daemon answers from records or not at all. Loading here
+  // would put the plugin set back in the process the records exist to keep it
+  // out of, and the daemon is about to load them anyway; the same goes for the
+  // workspace walk that resolving a local plugin needs, which is why the
+  // resolution is asked for without it. Either shortfall reads as "cannot
+  // tell", which is what the callers already do with null.
+  const answersHere = isOnDaemon() || !isDaemonEnabled();
+
+  await resolveCapabilityKeys(loads, root, {
+    withoutProjectWalk: !answersHere,
+  });
 
   // Nothing to key a record on, so there is no answer to complete and no point
   // loading anything here: the caller's own load reports the failure.
@@ -471,10 +482,14 @@ export async function peekPluginCapabilities(
   }
 
   try {
-    await loadWhatIsMissing(
-      () => withRecordedCapabilities(loads, root),
-      (missing) => loadForCapabilities(missing, root)
-    );
+    if (answersHere) {
+      await loadWhatIsMissing(
+        () => withRecordedCapabilities(loads, root),
+        (missing) => loadForCapabilities(missing, root)
+      );
+    } else if (withRecordedCapabilities(loads, root).length) {
+      return null;
+    }
   } catch (e) {
     // Left to the caller's load, which reports a plugin failure with the name
     // and the context the caller expects.
@@ -573,7 +588,12 @@ async function loadForCapabilities(
       );
       try {
         load.capabilities = capabilitiesOfLoadedPlugin(plugin);
-        return recordFor(load.key, load.capabilities, plugin, root);
+        return recordFor(
+          load.key,
+          load.capabilities,
+          { sourceFiles: plugin.sourceFiles, envReads: plugin.envReads },
+          root
+        );
       } finally {
         plugin.dispose();
       }
@@ -609,6 +629,18 @@ async function useCapabilityCache(
 }
 
 /**
+ * Serializes this process's own callers before any of them reaches the file
+ * lock.
+ *
+ * A file lock is held by an open file description rather than by a process, so
+ * the specified and default loaders, which run concurrently, would contend with
+ * each other through two handles on one file: one would wait for the other and
+ * be told a different process was loading. Queuing here makes the file lock mean
+ * what its name says, and the two loaders load together rather than in turn.
+ */
+let capabilityLoadQueue: Promise<void> = Promise.resolve();
+
+/**
  * Loads whatever `stillMissing` reports, with one process doing it rather than
  * all of them.
  *
@@ -616,7 +648,30 @@ async function useCapabilityCache(
  * around: a waiter that gets in reads what the holder recorded while it waited,
  * and usually then has nothing left to load.
  */
-async function loadWhatIsMissing(
+function loadWhatIsMissing(
+  stillMissing: () => PluginLoad[],
+  load: (missing: PluginLoad[]) => Promise<void>
+): Promise<void> {
+  // Nothing missing, so nothing to queue behind: the common warm path neither
+  // waits for another caller nor opens the lock file.
+  if (!stillMissing().length) {
+    return Promise.resolve();
+  }
+
+  const run = capabilityLoadQueue.then(
+    () => loadWhatIsMissingExclusively(stillMissing, load),
+    () => loadWhatIsMissingExclusively(stillMissing, load)
+  );
+  // The queue tracks completion rather than outcome, so one caller's failure
+  // does not reject the next one's turn.
+  capabilityLoadQueue = run.then(
+    () => undefined,
+    () => undefined
+  );
+  return run;
+}
+
+async function loadWhatIsMissingExclusively(
   stillMissing: () => PluginLoad[],
   load: (missing: PluginLoad[]) => Promise<void>
 ): Promise<void> {
@@ -797,9 +852,15 @@ function recordFor(
 ): PluginCapabilitiesEntry | null {
   if (observed.sourceFiles === null) {
     // Said out loud, because the alternative is a workspace where this cache
-    // silently does nothing and no one can tell why.
+    // silently does nothing and no one can tell why. Which reason it is decides
+    // what the reader should do about it, and only one of them is a Node
+    // version: a plugin that fell back to this process was never observed at
+    // all, whatever the runtime supports.
+    const reason = !canObserveModuleClosure()
+      ? 'Observing them needs Node 22.15, 23.5 or newer.'
+      : 'It was loaded in this process rather than in a plugin worker, where nothing observes the load.';
     logger.verbose(
-      `Nx could not observe which files "${capabilities.name}" read while loading, so its capabilities were not recorded. Observing them needs Node 22.15, 23.5 or newer.`
+      `Nx could not observe which files "${capabilities.name}" read while loading, so its capabilities were not recorded. ${reason}`
     );
     return null;
   }
@@ -852,6 +913,11 @@ function repairRecord(
   if (sameCapabilities(recorded, actual)) {
     return;
   }
+
+  // The memo was taken from the record this just proved wrong, and a later gate
+  // in this same command would otherwise be answered from it rather than from
+  // what the worker reported.
+  peeked = undefined;
   // Null is not none. An unobservable closure or environment coerced to an
   // empty one would write a record that `recordIsFresh` accepts without checking
   // anything, so nothing later could invalidate it, and a self-correcting hole

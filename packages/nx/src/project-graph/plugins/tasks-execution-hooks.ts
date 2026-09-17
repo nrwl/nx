@@ -12,8 +12,9 @@ import type { PluginCapabilities } from './capabilities-cache';
 
 /**
  * True when the records prove that no plugin registers `hook`. False when one
- * does, and false when any plugin has no record, since then only loading can
- * tell.
+ * does, and false when that cannot be established at all: no usable key, a load
+ * that failed, or a client that holds no record for some plugin and leaves the
+ * loading to the daemon it is about to ask anyway.
  */
 async function noPluginRegisters(
   hook: keyof Pick<
