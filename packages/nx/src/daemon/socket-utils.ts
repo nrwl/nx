@@ -1,13 +1,10 @@
 import { unlinkSync } from 'fs';
 import type { Socket } from 'net';
-import { platform, tmpdir } from 'os';
-import { dirname, join, resolve } from 'path';
+import { platform } from 'os';
 import {
-  getDaemonSocketDir,
-  getPluginSocketDir,
-  getRefusedConfiguredSocketDir,
-  getSocketDir,
-  getSocketDirFallbackCause,
+  getDaemonSocketPath,
+  getForkedProcessSocketPath,
+  getPluginSocketPath,
 } from './tmp-dir';
 import { createSerializableError } from '../utils/serializable-error';
 import { isV8SerializerEnabled } from './is-v8-serializer-enabled';
@@ -17,72 +14,23 @@ import { writeMessage } from '../utils/consume-messages-from-socket';
 export const isWindows = platform() === 'win32';
 
 /**
- * For IPC with the daemon server we use unix sockets or windows named pipes, depending on the user's operating system.
+ * For IPC with the daemon server we use unix sockets or windows named pipes,
+ * depending on the user's operating system.
  *
- * See https://nodejs.org/dist/latest-v14.x/docs/api/net.html#net_identifying_paths_for_ipc_connections for a full breakdown
- * of OS differences between Unix domain sockets and named pipes.
+ * The paths themselves — the directory, the file name, the named-pipe form, and
+ * the length budget — are all decided in `native/utils/socket_path.rs`, so that
+ * Nx and Nx Console cannot disagree about where a socket lives.
+ *
+ * See https://nodejs.org/dist/latest-v14.x/docs/api/net.html#net_identifying_paths_for_ipc_connections
+ * for a full breakdown of OS differences between Unix domain sockets and named
+ * pipes.
  */
-export const getFullOsSocketPath = () => {
-  const path = resolve(getDaemonSocketDir());
+export const getFullOsSocketPath = () => getDaemonSocketPath();
 
-  assertValidSocketPath(path);
+export const getForkedProcessOsSocketPath = (id: string) =>
+  getForkedProcessSocketPath(id);
 
-  return isWindows ? '\\\\.\\pipe\\nx\\' + path : path;
-};
-
-export const getForkedProcessOsSocketPath = (id: string) => {
-  let path = resolve(join(getSocketDir(), 'fp' + id + '.sock'));
-
-  assertValidSocketPath(path);
-
-  return isWindows ? '\\\\.\\pipe\\nx\\' + path : path;
-};
-
-export const getPluginOsSocketPath = (id: string) => {
-  let path = resolve(join(getPluginSocketDir(), getPluginSocketFileName(id)));
-
-  assertValidSocketPath(path);
-
-  return isWindows ? '\\\\.\\pipe\\nx\\' + path : path;
-};
-
-export function getPluginSocketFileName(id: string): string {
-  return `p${id}.sock`;
-}
-
-function assertValidSocketPath(path: string) {
-  if (path.length > 95) {
-    const fallbackCause = getSocketDirFallbackCause();
-    const refusedConfiguredSocketDir = getRefusedConfiguredSocketDir();
-    throw new Error(
-      [
-        'Attempted to open socket that exceeds the maximum socket length.',
-        ...(fallbackCause === undefined
-          ? []
-          : [
-              `Nx fell back to ${dirname(
-                path
-              )} because the default socket directory could not be used.`,
-              'Run the command with --verbose to see why the default directory was rejected.',
-            ]),
-        '',
-        ...(refusedConfiguredSocketDir === undefined
-          ? [
-              `Set NX_SOCKET_DIR to a shorter path (e.g. ${
-                isWindows ? '%TMP%/nx-tmp' : '/tmp/nx-tmp'
-              }) to avoid this issue.`,
-            ]
-          : [
-              // Saying "set a shorter path" here would be advice they already
-              // followed: they set one, and it was refused for another reason.
-              `The directory set in NX_SOCKET_DIR (${refusedConfiguredSocketDir}) could not be used — see the warning above — so Nx fell back to a longer path.`,
-              'Point NX_SOCKET_DIR at a short directory your user owns.',
-            ]),
-      ].join('\n'),
-      fallbackCause === undefined ? undefined : { cause: fallbackCause }
-    );
-  }
-}
+export const getPluginOsSocketPath = (id: string) => getPluginSocketPath(id);
 
 export function killSocketOrPath(): void {
   try {
