@@ -143,23 +143,15 @@ const server = createServer((socket) => {
                   require('../transpiler') as typeof import('../transpiler')
                 ).registerPluginTSTranspiler();
               }
-              const { withModuleClosure } =
-                require('./module-closure') as typeof import('./module-closure');
               const { observePluginLoad } =
-                require('./warm-nx-modules') as typeof import('./warm-nx-modules');
-              // Nested so one load is watched by both: what it registers depends
-              // on the files it read and on the environment it read them in.
-              const {
-                result: { result, sourceFiles },
-                envReads,
-              } = await observePluginLoad(() =>
-                withModuleClosure(() =>
+                require('./observe-plugin-load') as typeof import('./observe-plugin-load');
+              const { result, sourceFiles, envReads } = await observePluginLoad(
+                () =>
                   loadResolvedNxPluginAsync(
                     pluginConfiguration,
                     pluginPath,
                     name
                   )
-                )
               );
               plugin = result;
               logger.verbose(

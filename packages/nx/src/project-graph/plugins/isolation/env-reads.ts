@@ -39,8 +39,8 @@ export function hashEnvReads(
  * Only what the plugin's own load reads. Nx's modules read the environment at
  * import time too, for its terminal, its cloud client and its CI detection, and
  * a plugin importing one of those would otherwise be recorded against every
- * variable Nx cares about. `warmNxModules` in the worker settles that before
- * this starts.
+ * variable Nx cares about. `observePluginLoad` settles that before this
+ * starts.
  *
  * What a plugin registers is decided while it loads, and the environment is the
  * other input to that besides its own source. `@nx/dotnet` exports no hooks at

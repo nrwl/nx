@@ -1,4 +1,5 @@
-import { withEnvReads } from './env-reads';
+import { type EnvReads, withEnvReads } from './env-reads';
+import { withModuleClosure } from './module-closure';
 
 /**
  * Nx's own surface, loaded before a plugin's load is observed.
@@ -35,17 +36,29 @@ function warmNxModules(specifiers: readonly string[]): void {
 }
 
 /**
- * Observes a plugin's load, warming Nx first.
+ * Everything a record is checked against: the files the load read and the
+ * environment it read them in.
  *
- * One call rather than two, because the order is the whole point and a caller
- * that warmed afterwards would look right and record everything.
+ * One call rather than three, because the order is the whole mechanism and
+ * nothing at the call site would show it was wrong. Nx is settled first, so its
+ * own import-time reads are not the plugin's. The load is then watched by both
+ * observers at once, since what a plugin registers depends on the files it read
+ * and on the environment it read them in.
  */
-export function observePluginLoad<T>(
+export async function observePluginLoad<T>(
   load: () => Promise<T>,
   specifiers: readonly string[] = WARM
-): ReturnType<typeof withEnvReads<T>> {
+): Promise<{
+  result: T;
+  sourceFiles: string[] | null;
+  envReads: EnvReads | null;
+}> {
   warmNxModules(specifiers);
-  return withEnvReads(load);
+
+  const { result, envReads } = await withEnvReads(() =>
+    withModuleClosure(load)
+  );
+  return { result: result.result, sourceFiles: result.sourceFiles, envReads };
 }
 
 /** Exported so a spec can check the specifiers still resolve. */
