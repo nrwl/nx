@@ -33,6 +33,7 @@ import {
 } from './build-project-graph';
 import {
   AggregateProjectGraphError,
+  formatProjectGraphError,
   isAggregateProjectGraphError,
   ProjectConfigurationsError,
   ProjectGraphError,
@@ -206,16 +207,7 @@ export function handleProjectGraphError(opts: { exitOnError: boolean }, e) {
   if (opts.exitOnError) {
     const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
     if (e instanceof ProjectGraphError) {
-      let title = e.message;
-
-      const bodyLines = isVerbose
-        ? [e.stack]
-        : ['Pass --verbose to see the stacktraces.'];
-
-      output.error({
-        title,
-        bodyLines: bodyLines,
-      });
+      output.error(formatProjectGraphError(e, isVerbose));
     } else if (typeof e.message === 'string') {
       const lines = e.message.split('\n');
       output.error({
