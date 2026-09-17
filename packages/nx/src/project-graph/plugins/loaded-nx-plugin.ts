@@ -27,6 +27,16 @@ import {
  * jest's module resolution when running tests in projects that import
  * the devkit-internals
  */
+/** The exports a capability record is made of. */
+const HOOK_EXPORTS = [
+  'createNodes',
+  'createNodesV2',
+  'createDependencies',
+  'createMetadata',
+  'preTasksExecution',
+  'postTasksExecution',
+] as const;
+
 export class LoadedNxPlugin {
   readonly name: string;
   readonly createNodes?: [
@@ -59,6 +69,15 @@ export class LoadedNxPlugin {
   readonly exclude?: string[];
 
   /**
+   * Hook exports the module declared and left undefined, which is not the same
+   * as never having them: `export const createNodes = disabled ? undefined : x`
+   * says the module decided, and the capability cache has to know that it did.
+   * Read from the module here because this class only takes on a hook it can
+   * call, so by the time anything else looks, the two are indistinguishable.
+   */
+  readonly hooksExportedAsUndefined?: string[];
+
+  /**
    * Notifies the plugin that a phase was aborted mid-flight.
    * Overridden by IsolatedPlugin to reset lifecycle phase tracking so
    * the worker can still shut down properly.
@@ -82,6 +101,9 @@ export class LoadedNxPlugin {
     public readonly index?: number
   ) {
     this.name = plugin.name;
+    this.hooksExportedAsUndefined = HOOK_EXPORTS.filter(
+      (hook) => hook in plugin && !plugin[hook]
+    );
     if (typeof pluginDefinition !== 'string') {
       this.options = pluginDefinition.options;
       this.include = pluginDefinition.include;
