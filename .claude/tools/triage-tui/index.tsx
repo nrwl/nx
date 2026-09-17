@@ -1187,14 +1187,24 @@ function App() {
     // so that quitting always goes through the same path that leaves the screen
     // before printing the summary.
     if (k.name === 'q' || (k.ctrl && k.name === 'c')) quit();
-    else if (k.name === 'j' || k.name === 'down') { setDetailOffset(0); moveBy(1); }
-    else if (k.name === 'k' || k.name === 'up') { setDetailOffset(0); moveBy(-1); }
-    else if (k.ctrl && k.name === 'd')
-      setDetailOffset((o) => Math.min(maxOffset, o + Math.max(1, Math.floor(contentH / 2))));
+    else if (k.name === 'j' || k.name === 'down') {
+      setDetailOffset(0);
+      moveBy(1);
+    } else if (k.name === 'k' || k.name === 'up') {
+      setDetailOffset(0);
+      moveBy(-1);
+    } else if (k.ctrl && k.name === 'd')
+      setDetailOffset((o) =>
+        Math.min(maxOffset, o + Math.max(1, Math.floor(contentH / 2)))
+      );
     else if (k.ctrl && k.name === 'u')
-      setDetailOffset((o) => Math.max(0, o - Math.max(1, Math.floor(contentH / 2))));
-    else if (k.name === 'pagedown') setDetailOffset((o) => Math.min(maxOffset, o + contentH));
-    else if (k.name === 'pageup') setDetailOffset((o) => Math.max(0, o - contentH));
+      setDetailOffset((o) =>
+        Math.max(0, o - Math.max(1, Math.floor(contentH / 2)))
+      );
+    else if (k.name === 'pagedown')
+      setDetailOffset((o) => Math.min(maxOffset, o + contentH));
+    else if (k.name === 'pageup')
+      setDetailOffset((o) => Math.max(0, o - contentH));
     // A record can run to a couple of thousand lines, so paging to the end is not
     // a reasonable way to reach it.
     else if (k.sequence === 'G' || k.name === 'end') setDetailOffset(maxOffset);
