@@ -256,6 +256,8 @@ describe(getTaskSpecificEnv.name, () => {
 
   beforeEach(() => {
     process.env = { ...originalEnv };
+    // Running under `nx test` inherits 'true', which reloads the root .env.
+    delete process.env.NX_LOAD_DOT_ENV_FILES;
     tempDir = mkdtempSync(join(tmpdir(), 'nx-task-env-'));
     setWorkspaceRoot(tempDir);
   });
