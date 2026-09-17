@@ -99,10 +99,11 @@ export interface ResolvedPluginModule {
 
 export function resolveModule(
   plugin: PluginConfiguration,
-  root: string
+  root: string,
+  opts?: { withoutProjectWalk?: boolean }
 ): Promise<ResolvedPluginModule> {
   const moduleName = typeof plugin === 'string' ? plugin : plugin.plugin;
-  return resolveNxPlugin(moduleName, root, getNxRequirePaths(root));
+  return resolveNxPlugin(moduleName, root, getNxRequirePaths(root), opts);
 }
 
 export class IsolatedPlugin implements LoadedNxPlugin {
@@ -222,8 +223,6 @@ export class IsolatedPlugin implements LoadedNxPlugin {
    * the plugin registers that the plugin's own files do not show.
    */
   envReads: EnvReads | null = null;
-
-  /** Hook exports the module declared and left undefined. */
 
   /**
    * Wires the plugin's hooks from a previous load's capabilities, without a
