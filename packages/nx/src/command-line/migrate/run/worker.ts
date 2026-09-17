@@ -225,6 +225,9 @@ function readMigrationsSource(
         `No migrate run '${runId}' was found under ${MIGRATE_RUNS_RELATIVE_DIR}.`
       );
     }
+    // Before the state and plan reads: a concurrent start-fresh must not
+    // delete the run while this worker resolves its migration.
+    holdRunActivity(root, runId);
     // Version refusal (NewerRunStateFormatError) propagates.
     const state = readRunState(dir);
     const round = latestRound(state);
@@ -557,7 +560,6 @@ async function runRecorded(
   const dir = runDir(root, runId);
   // Version refusal (NewerRunStateFormatError) propagates.
   let state = readRunState(dir);
-  holdRunActivity(root, runId);
 
   // A recorded run never resolves the agentic flow: the outer agent drives it,
   // and the dispensed command is part of the orchestrated protocol whoever

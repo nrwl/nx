@@ -714,9 +714,7 @@ function deleteRunRecord(root: string, runId: string): boolean {
   return withRunStateLock(dir, () => {
     if (!hasRunState(dir)) return false;
     refuseUndeletableRun(root, runId, readRunState(dir));
-    // Released before the file goes: the hold's lock file is open in this
-    // process, and removeDeletedRunDir cannot remove a directory holding an
-    // open file on every platform.
+    // The hold's lock file is inside the directory removeDeletedRunDir removes.
     releaseRunActivity(dir);
     rmSync(join(dir, RUN_STATE_FILE_NAME), { force: true });
     return true;
