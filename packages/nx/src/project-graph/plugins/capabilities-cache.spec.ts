@@ -310,6 +310,8 @@ describe('recordIsFresh', () => {
       capabilities: {} as PluginCapabilities,
       sourceFiles,
       sourceHash,
+      // These tests are about the closure; the environment has its own.
+      envReads: '{}',
     };
   }
 
@@ -407,6 +409,7 @@ describe('recordIsFresh', () => {
       recordIsFresh(
         {
           capabilities: {} as PluginCapabilities,
+          envReads: '{}',
           sourceFiles: [],
           sourceHash: record.sourceHash,
         },
@@ -478,6 +481,7 @@ describe('recordIsFresh', () => {
       recordIsFresh(
         {
           capabilities: {} as PluginCapabilities,
+          envReads: '{}',
           sourceFiles: [],
           sourceHash: '',
         },

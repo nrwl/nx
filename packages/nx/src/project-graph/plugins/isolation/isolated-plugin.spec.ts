@@ -105,6 +105,9 @@ describe('IsolatedPlugin', () => {
   ): LoadResultPayload {
     return {
       name: 'test-plugin',
+      sourceFiles: [],
+      envReads: {},
+      hooksExportedAsUndefined: [],
       createNodesPattern: hooks.createNodesPattern ?? '',
       hasCreateDependencies: hooks.hasCreateDependencies ?? false,
       hasProcessProjectGraph: false,

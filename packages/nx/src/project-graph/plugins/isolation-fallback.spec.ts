@@ -167,7 +167,7 @@ describe('falling back on the worker errno rather than the environment', () => {
     mockIsAiAgent.mockReturnValue(true);
     mockIsolated.mockReturnValue(isolatedRejecting(socketRefusal()));
 
-    const plugin = await loadingMethod({ plugin: 'p' } as any, '/root', 0, 0);
+    const plugin = await loadingMethod({ plugin: 'p' } as any, '/root', 0);
 
     expect(plugin).toBe('in-process');
   });
@@ -180,7 +180,7 @@ describe('falling back on the worker errno rather than the environment', () => {
     mockIsolated.mockReturnValue(isolatedRejecting(socketRefusal()));
 
     await expect(
-      loadingMethod({ plugin: 'p' } as any, '/root', 0).then(([p]) => p)
+      loadingMethod({ plugin: 'p' } as any, '/root', 0)
     ).rejects.toThrow('Plugin worker exited');
   });
 
@@ -191,7 +191,7 @@ describe('falling back on the worker errno rather than the environment', () => {
     mockIsolated.mockReturnValue(isolatedRejecting(startupFailure()));
 
     await expect(
-      loadingMethod({ plugin: 'p' } as any, '/root', 0).then(([p]) => p)
+      loadingMethod({ plugin: 'p' } as any, '/root', 0)
     ).rejects.toThrow('Plugin worker exited');
   });
 
@@ -200,7 +200,7 @@ describe('falling back on the worker errno rather than the environment', () => {
     mockIsAiAgent.mockReturnValue(false);
     mockIsolated.mockReturnValue(isolatedRejecting(startupFailure()));
 
-    const plugin = await loadingMethod({ plugin: 'p' } as any, '/root', 0, 0);
+    const plugin = await loadingMethod({ plugin: 'p' } as any, '/root', 0);
 
     expect(plugin).toBe('in-process');
   });
@@ -212,7 +212,7 @@ describe('falling back on the worker errno rather than the environment', () => {
     mockIsAiAgent.mockReturnValue(false);
     mockIsolated.mockReturnValue(isolatedRejecting(socketRefusal()));
 
-    await loadingMethod({ plugin: 'p' } as any, '/root', 0, 0);
+    await loadingMethod({ plugin: 'p' } as any, '/root', 0);
 
     expect(mockHint).toHaveBeenCalledWith({ certain: true });
   });
@@ -222,7 +222,7 @@ describe('falling back on the worker errno rather than the environment', () => {
     mockIsAiAgent.mockReturnValue(false);
     mockIsolated.mockReturnValue(isolatedRejecting(startupFailure()));
 
-    await loadingMethod({ plugin: 'p' } as any, '/root', 0, 0);
+    await loadingMethod({ plugin: 'p' } as any, '/root', 0);
 
     expect(mockHint).toHaveBeenCalledWith({ certain: false });
   });
@@ -236,7 +236,7 @@ describe('falling back on the worker errno rather than the environment', () => {
     mockIsAiAgent.mockReturnValue(true);
     mockIsolated.mockReturnValue(isolatedRejecting(socketRefusal()));
 
-    await loadingMethod({ plugin: 'p' } as any, '/root', 0, 0);
+    await loadingMethod({ plugin: 'p' } as any, '/root', 0);
 
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn.mock.calls[0][0].title).not.toContain('sandbox');

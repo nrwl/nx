@@ -21,7 +21,7 @@ const mocks = vi.hoisted(() => ({
   warn: vi.fn(),
   lock: {
     tryLock: vi.fn(() => true),
-    waitForRelease: vi.fn(() => Promise.resolve(true)),
+    waitForRelease: vi.fn((_timeoutMs: number) => Promise.resolve(true)),
     unlock: vi.fn(),
   },
 }));

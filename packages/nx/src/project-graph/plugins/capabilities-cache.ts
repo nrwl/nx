@@ -51,9 +51,13 @@ const LOCK_FILE_NAME = 'plugin-capabilities.lock';
  */
 let runningNxVersion: string | undefined;
 function nxVersion(): string {
-  runningNxVersion ??= readJsonFile<{ version?: string }>(
-    join(__dirname, '../../../package.json')
-  ).version;
+  // Found by walking up from this file rather than by counting directories: the
+  // published package puts this module under `dist/`, one level deeper than the
+  // repository does, so a fixed number of `..` is right in one layout and points
+  // at a file that does not exist in the other. Walking also keeps this the
+  // manifest of the Nx that is running, where `require('nx/package.json')`
+  // would resolve to whichever Nx the module graph finds first.
+  runningNxVersion ??= owningPackageJson(__dirname)?.version;
   return runningNxVersion ?? '';
 }
 
