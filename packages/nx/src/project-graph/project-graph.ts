@@ -20,7 +20,7 @@ import { FileLock, IS_WASM } from '../native';
 import { workspaceDataDirectory } from '../utils/cache-directory';
 import { getCallSites } from '../utils/call-sites';
 import { DelayedSpinner } from '../utils/delayed-spinner';
-import { isLockWaitTimeout } from '../utils/lock-wait';
+import { isLockWaitTimeout } from '../utils/file-lock';
 import { fileExists } from '../utils/fileutils';
 import { isSandbox } from '../utils/is-sandbox';
 import { logger } from '../utils/logger';

@@ -2,7 +2,7 @@ import { join } from 'path';
 
 import { TempFs } from '../../internal-testing-utils/temp-fs';
 import { FileLock } from '../index';
-import { isLockWaitTimeout } from '../../utils/lock-wait';
+import { isLockWaitTimeout } from '../../utils/file-lock';
 
 describe('FileLock', () => {
   let tempFs: TempFs;

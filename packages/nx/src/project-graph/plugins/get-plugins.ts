@@ -37,7 +37,7 @@ import { isDaemonEnabled } from '../../daemon/client/client';
 import { serverLogger } from '../../daemon/logger';
 import { DelayedSpinner } from '../../utils/delayed-spinner';
 import { logger } from '../../utils/logger';
-import { isLockWaitTimeout } from '../../utils/lock-wait';
+import { isLockWaitTimeout } from '../../utils/file-lock';
 import {
   IsolatedPlugin,
   resolveModule,
