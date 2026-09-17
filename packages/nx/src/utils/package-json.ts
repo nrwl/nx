@@ -270,7 +270,8 @@ export function readTargetsFromPackageJson(
   nxJson: NxJsonConfiguration,
   projectRoot: string,
   workspaceRoot: string,
-  packageManagerCommand: PackageManagerCommands
+  packageManagerCommand: PackageManagerCommands,
+  resolveNxJsPlugin = () => hasNxJsPlugin(projectRoot, workspaceRoot)
 ) {
   const { scripts, nx, private: isPrivate } = packageJson ?? {};
   const res: Record<string, TargetConfiguration> = {};
@@ -298,11 +299,7 @@ export function readTargetsFromPackageJson(
    * Any targetDefaults for the nx-release-publish target set by the user should
    * be merged with the implicit target.
    */
-  if (
-    !isPrivate &&
-    !res['nx-release-publish'] &&
-    hasNxJsPlugin(projectRoot, workspaceRoot)
-  ) {
+  if (!isPrivate && !res['nx-release-publish'] && resolveNxJsPlugin()) {
     // No project/plugin context here, so only catch-all entries of a
     // `targetDefaults` value apply (the reader resolves both the object and
     // array value forms).

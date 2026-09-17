@@ -1,12 +1,16 @@
 import { Minimatch } from 'minimatch';
 import { existsSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 
-import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
+import { NxJsonConfiguration } from '../../config/nx-json';
 import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { toProjectName } from '../../config/to-project-name';
+import { hashObject } from '../../hasher/file-hasher';
+import { createNodesFromFiles, CreateNodes } from '../../project-graph/plugins';
+import { readTargetDefaultsForTarget } from '../../project-graph/utils/project-configuration-utils';
 import { readJsonFile, readYamlFile } from '../../utils/fileutils';
 import { combineGlobPatterns } from '../../utils/globs';
+import { hasNxJsPlugin } from '../../utils/has-nx-js-plugin';
 import { NX_PREFIX } from '../../utils/logger';
 import { output } from '../../utils/output';
 import {
@@ -22,13 +26,11 @@ import {
 } from '../../utils/package-manager';
 import { joinPathFragments } from '../../utils/path';
 import { nxVersion } from '../../utils/versions';
-import { createNodesFromFiles, CreateNodes } from '../../project-graph/plugins';
-import { basename } from 'path';
-import { hashObject } from '../../hasher/file-hasher';
+import { getFileHashesInContext } from '../../utils/workspace-context';
 import {
   PackageJsonConfigurationCache,
   readPackageJsonConfigurationCache,
-} from '../../../plugins/package-json';
+} from './cache';
 
 const globPatterns = combineGlobPatterns(
   'package.json',
@@ -39,7 +41,7 @@ const globPatterns = combineGlobPatterns(
 
 export const createNodes: CreateNodes = [
   globPatterns,
-  (configFiles, _, context) => {
+  async (configFiles, _, context) => {
     const { packageJsons, projectJsonRoots } = splitConfigFiles(configFiles);
 
     const readJson = (f) => readJsonFile(join(context.workspaceRoot, f));
@@ -58,6 +60,15 @@ export const createNodes: CreateNodes = [
     const isNextToProjectJson = (packageJsonPath: string) => {
       return projectJsonRoots.has(dirname(packageJsonPath));
     };
+    const packageManagerWorkspaceMembership: boolean[] = [];
+    const includedPackageJsons = packageJsons.filter((path) => {
+      const isInWorkspace = isInPackageJsonWorkspaces(path);
+      if (isInWorkspace || isNextToProjectJson(path)) {
+        packageManagerWorkspaceMembership.push(isInWorkspace);
+        return true;
+      }
+      return false;
+    });
 
     const cache = readPackageJsonConfigurationCache();
 
@@ -65,31 +76,33 @@ export const createNodes: CreateNodes = [
       detectPackageManager(context.workspaceRoot),
       context.workspaceRoot
     );
+    const sharedInputs = createSharedPackageJsonInputs(
+      context.nxJsonConfiguration,
+      packageManagerCommand
+    );
+    const configurationHashes = await getPackageJsonConfigurationHashes(
+      context.workspaceRoot,
+      includedPackageJsons
+    );
 
-    return createNodesFromFiles(
-      (packageJsonPath, options, context) => {
-        const isInPackageManagerWorkspaces =
-          isInPackageJsonWorkspaces(packageJsonPath);
-        if (
-          !isInPackageManagerWorkspaces &&
-          !isNextToProjectJson(packageJsonPath)
-        ) {
-          // Skip if package.json is not part of the package.json workspaces and not next to a project.json.
-          return null;
-        }
-
+    const result = await createNodesFromFiles(
+      (packageJsonPath, options, context, index) => {
         return createNodeFromPackageJson(
           packageJsonPath,
           context.workspaceRoot,
           cache,
-          isInPackageManagerWorkspaces,
-          packageManagerCommand
+          packageManagerWorkspaceMembership[index],
+          sharedInputs,
+          configurationHashes[index]
         );
       },
-      packageJsons,
+      includedPackageJsons,
       _,
       context
     );
+
+    cache.writeToDiskIfChanged();
+    return result;
   },
 ];
 
@@ -184,42 +197,158 @@ export function createNodeFromPackageJson(
   workspaceRoot: string,
   cache: PackageJsonConfigurationCache,
   isInPackageManagerWorkspaces: boolean,
-  packageManagerCommand: PackageManagerCommands
+  sharedInputs: SharedPackageJsonInputs,
+  configurationHashes?: PackageJsonConfigurationHashes,
+  siblingProjectJson?: ProjectConfiguration | null
 ) {
-  const json: PackageJson = readJsonFile(join(workspaceRoot, pkgJsonPath));
-
   const projectRoot = dirname(pkgJsonPath);
+  let hasNxJsPluginInstalled: boolean | undefined;
+  const resolveNxJsPlugin = () =>
+    (hasNxJsPluginInstalled ??= hasNxJsPlugin(projectRoot, workspaceRoot));
+  let json: PackageJson;
+
+  let configurationInputs: object;
+  if (configurationHashes) {
+    configurationInputs = configurationHashes;
+    if (configurationHashes.siblingProjectJsonHash === null) {
+      // Ignored files are absent from the index but still affect script inference.
+      siblingProjectJson = tryReadJson(
+        join(workspaceRoot, projectRoot, 'project.json')
+      );
+      configurationInputs = { ...configurationHashes, siblingProjectJson };
+    }
+  } else {
+    json = readJsonFile(join(workspaceRoot, pkgJsonPath));
+    if (siblingProjectJson === undefined) {
+      siblingProjectJson = tryReadJson(
+        join(workspaceRoot, projectRoot, 'project.json')
+      );
+    }
+    configurationInputs = {
+      packageJson: json,
+      siblingProjectJson,
+    };
+  }
 
   const hash = hashObject({
-    ...json,
+    ...configurationInputs,
     root: projectRoot,
     isInPackageManagerWorkspaces,
-    nxVersion,
+    sharedInputHash: sharedInputs.hash,
   });
 
   const cached = cache.get(hash);
-  if (cached) {
+  if (
+    cached &&
+    (cached.hasNxJsPlugin === undefined ||
+      cached.hasNxJsPlugin === resolveNxJsPlugin()) &&
+    (!cached.hasNxJsPlugin ||
+      cached.releaseTargetDefaultsHash ===
+        sharedInputs.releaseTargetDefaultsHash)
+  ) {
     return {
       projects: {
-        [cached.root]: cached,
+        [cached.project.root]: cached.project,
       },
     };
+  }
+
+  json ??= readJsonFile(join(workspaceRoot, pkgJsonPath));
+  if (siblingProjectJson === undefined) {
+    siblingProjectJson = tryReadJson(
+      join(workspaceRoot, projectRoot, 'project.json')
+    );
   }
 
   const project = buildProjectConfigurationFromPackageJson(
     json,
     workspaceRoot,
     pkgJsonPath,
-    readNxJson(workspaceRoot),
+    sharedInputs.nxJson,
     isInPackageManagerWorkspaces,
-    packageManagerCommand
+    sharedInputs.packageManagerCommand,
+    siblingProjectJson,
+    resolveNxJsPlugin
   );
 
-  cache.set(hash, project);
+  cache.set(hash, {
+    project,
+    hasNxJsPlugin: hasNxJsPluginInstalled,
+    releaseTargetDefaultsHash: hasNxJsPluginInstalled
+      ? sharedInputs.releaseTargetDefaultsHash
+      : undefined,
+  });
   return {
     projects: {
       [project.root]: project,
     },
+  };
+}
+
+export async function getPackageJsonConfigurationHashes(
+  workspaceRoot: string,
+  packageJsonPaths: readonly string[]
+): Promise<Array<PackageJsonConfigurationHashes | undefined>> {
+  if (packageJsonPaths.length === 0) {
+    return [];
+  }
+  const wantedPaths: string[] = [];
+  for (const packageJsonPath of packageJsonPaths) {
+    wantedPaths.push(
+      packageJsonPath,
+      joinPathFragments(dirname(packageJsonPath), 'project.json')
+    );
+  }
+
+  const fileHashes = await getFileHashesInContext(workspaceRoot, wantedPaths);
+
+  return packageJsonPaths.map((_, index) => {
+    const packageJsonHash = fileHashes[index * 2];
+    if (!packageJsonHash) {
+      return undefined;
+    }
+
+    return {
+      packageJsonHash,
+      siblingProjectJsonHash: fileHashes[index * 2 + 1] ?? null,
+    };
+  });
+}
+
+export type PackageJsonConfigurationHashes = {
+  packageJsonHash: string;
+  siblingProjectJsonHash: string | null;
+};
+
+export type SharedPackageJsonInputs = {
+  hash: string;
+  releaseTargetDefaultsHash: string;
+  nxJson: NxJsonConfiguration;
+  packageManagerCommand: PackageManagerCommands;
+};
+
+export function createSharedPackageJsonInputs(
+  nxJson: NxJsonConfiguration,
+  packageManagerCommand: PackageManagerCommands
+): SharedPackageJsonInputs {
+  return {
+    hash: hashObject({
+      nxJson: {
+        workspaceLayout: nxJson.workspaceLayout,
+      },
+      nxVersion,
+      cacheVersion: 2,
+      packageManagerRunCommand: packageManagerCommand.run('{script}'),
+    }),
+    releaseTargetDefaultsHash: hashObject({
+      defaults: readTargetDefaultsForTarget(
+        'nx-release-publish',
+        nxJson.targetDefaults,
+        '@nx/js:release-publish'
+      ),
+    }),
+    nxJson,
+    packageManagerCommand,
   };
 }
 
@@ -229,14 +358,14 @@ export function buildProjectConfigurationFromPackageJson(
   packageJsonPath: string,
   nxJson: NxJsonConfiguration,
   isInPackageManagerWorkspaces: boolean,
-  packageManagerCommand: PackageManagerCommands
+  packageManagerCommand: PackageManagerCommands,
+  siblingProjectJson: ProjectConfiguration | null = tryReadJson(
+    join(workspaceRoot, dirname(packageJsonPath), 'project.json')
+  ),
+  resolveNxJsPlugin?: () => boolean
 ): ProjectConfiguration & { name: string } {
   const normalizedPath = packageJsonPath.split('\\').join('/');
   const projectRoot = dirname(normalizedPath);
-
-  const siblingProjectJson = tryReadJson<ProjectConfiguration>(
-    join(workspaceRoot, projectRoot, 'project.json')
-  );
 
   if (siblingProjectJson) {
     for (const target of Object.keys(siblingProjectJson?.targets ?? {})) {
@@ -270,7 +399,8 @@ export function buildProjectConfigurationFromPackageJson(
       nxJson,
       projectRoot,
       workspaceRoot,
-      packageManagerCommand
+      packageManagerCommand,
+      resolveNxJsPlugin
     ),
     tags: getTagsFromPackageJson(packageJson),
     metadata: getMetadataFromPackageJson(

@@ -1,43 +1,31 @@
 import { createNodesFromFiles, NxPlugin } from '../src/project-graph/plugins';
-import { workspaceRoot } from '../src/utils/workspace-root';
 import {
   buildPackageJsonWorkspacesMatcher,
   buildPackageJsonPatterns,
+  createSharedPackageJsonInputs,
   createNodeFromPackageJson,
+  getPackageJsonConfigurationHashes,
 } from '../src/plugins/package-json';
-import { workspaceDataDirectory } from '../src/utils/cache-directory';
-import { join } from 'path';
-import { ProjectConfiguration } from '../src/config/workspace-json-project-json';
+import { join } from 'node:path';
 import { readJsonFile } from '../src/utils/fileutils';
-import { PluginCache } from '../src/utils/plugin-cache-utils';
 import {
   detectPackageManager,
   getPackageManagerCommand,
 } from '../src/utils/package-manager';
+import {
+  PackageJsonConfigurationCache,
+  readPackageJsonConfigurationCache,
+} from '../src/plugins/package-json/cache';
 
-export type PackageJsonConfigurationCache = PluginCache<ProjectConfiguration>;
-
-const cachePath = join(workspaceDataDirectory, 'package-json.hash');
-
-let packageJsonPluginCache: PluginCache<ProjectConfiguration> | null = null;
-
-export function readPackageJsonConfigurationCache(): PackageJsonConfigurationCache {
-  packageJsonPluginCache = new PluginCache<ProjectConfiguration>(cachePath);
-  return packageJsonPluginCache;
-}
-
-function writeCache() {
-  if (packageJsonPluginCache) {
-    packageJsonPluginCache.writeToDisk();
-  }
-}
+export type { PackageJsonConfigurationCache };
+export { readPackageJsonConfigurationCache };
 
 const plugin: NxPlugin = {
   name: 'nx-all-package-jsons-plugin',
   createNodes: [
     '*/**/package.json',
-    (configFiles, options, context) => {
-      const cache = readPackageJsonConfigurationCache();
+    async (configFiles, options, context) => {
+      const cache = readPackageJsonConfigurationCache('all-package-jsons.hash');
 
       const patterns = buildPackageJsonPatterns(context.workspaceRoot, (f) =>
         readJsonFile(join(context.workspaceRoot, f))
@@ -49,22 +37,31 @@ const plugin: NxPlugin = {
         detectPackageManager(context.workspaceRoot),
         context.workspaceRoot
       );
+      const sharedInputs = createSharedPackageJsonInputs(
+        context.nxJsonConfiguration,
+        packageManagerCommand
+      );
+      const configurationHashes = await getPackageJsonConfigurationHashes(
+        context.workspaceRoot,
+        configFiles
+      );
 
-      const result = createNodesFromFiles(
-        (packageJsonPath) =>
+      const result = await createNodesFromFiles(
+        (packageJsonPath, _, __, index) =>
           createNodeFromPackageJson(
             packageJsonPath,
-            workspaceRoot,
+            context.workspaceRoot,
             cache,
             isInPackageJsonWorkspaces(packageJsonPath),
-            packageManagerCommand
+            sharedInputs,
+            configurationHashes[index]
           ),
         configFiles,
         options,
         context
       );
 
-      writeCache();
+      cache.writeToDiskIfChanged();
 
       return result;
     },
