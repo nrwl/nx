@@ -51,6 +51,7 @@ import { PseudoTtyProcess } from './pseudo-terminal';
 import { waitForReadiness } from './readiness/probes';
 import {
   getReadyProducerIds,
+  getReadyWhenConfig,
   normalizeReadyWhen,
   notReadyError,
   readinessFailedElsewhereError,
@@ -107,19 +108,25 @@ interface ReadinessState {
   abort: AbortController;
 }
 
-function createReadinessState(): ReadinessState {
+function createReadinessState(
+  onSettled: (outcome: 'ready' | 'failed') => void
+): ReadinessState {
   const state = {
     settled: false,
     abort: new AbortController(),
   } as ReadinessState;
   state.promise = new Promise<void>((resolve, reject) => {
     state.resolve = () => {
+      if (state.settled) return;
       state.settled = true;
       resolve();
+      onSettled('ready');
     };
     state.reject = (error) => {
+      if (state.settled) return;
       state.settled = true;
       reject(error);
+      onSettled('failed');
     };
   });
   // A producer with no waiter still settles; that must not be unhandled
@@ -158,7 +165,13 @@ export class TaskOrchestrator {
     this.projectGraph,
     this.projects,
     this.taskGraph,
-    this.options
+    this.options,
+    this.fullTaskGraph,
+    {
+      readinessElsewhere: (producerId) =>
+        this.runningTasksService?.getTaskReadiness(producerId) ?? null,
+      onReadinessHold: (producerId) => this.onReadinessHold(producerId),
+    }
   );
 
   // region internal state
@@ -224,6 +237,7 @@ export class TaskOrchestrator {
   // Keyed by producer id. Settled by its probe when this process owns it, by
   // the readiness row poll when another process does.
   private readiness = new Map<string, ReadinessState>();
+  private waitingLogged = new Set<string>();
   private cleanupPromise: Promise<void> | null = null;
   private signalHandlers: Array<[NodeJS.Signals, () => void]> = [];
   // endregion internal state
@@ -795,10 +809,9 @@ export class TaskOrchestrator {
     const { cachedResults, needsRehashAfterExecution } =
       await this.applyBatchCachedResults(batch, doNotSkipCache, groupId);
 
-    // Schedule and start non-cached tasks (cached tasks were already
-    // started and completed inside applyBatchCachedResults)
-    const cachedTaskIds = new Set(cachedResults.map((r) => r.task.id));
-    const nonCachedTasks = tasks.filter((t) => !cachedTaskIds.has(t.id));
+    // Cached tasks were started and completed inside applyBatchCachedResults;
+    // a member skipped meanwhile (a dependency failed) must not run either
+    const nonCachedTasks = tasks.filter((t) => !this.completedTasks.has(t.id));
     if (nonCachedTasks.length > 0) {
       await Promise.all(
         nonCachedTasks.map((task) => this.options.lifeCycle.scheduleTask(task))
@@ -807,11 +820,13 @@ export class TaskOrchestrator {
     }
 
     // Phase 2: Run non-cached tasks, then re-hash depsOutputs tasks
-    const taskIdsToSkip = cachedResults.map((r) => r.task.id);
     let batchResults: TaskResult[] = [];
 
-    if (taskIdsToSkip.length < tasks.length) {
-      const runGraph = removeTasksFromTaskGraph(batch.taskGraph, taskIdsToSkip);
+    if (nonCachedTasks.length > 0) {
+      const runGraph = removeTasksFromTaskGraph(
+        batch.taskGraph,
+        tasks.filter((t) => !nonCachedTasks.includes(t)).map((t) => t.id)
+      );
 
       for (const task of Object.values(runGraph.tasks)) {
         this.detectTaskInvocationLoop(task);
@@ -1251,8 +1266,7 @@ export class TaskOrchestrator {
         // Wake coordinator — the delete above may satisfy the exit condition
         // (pendingDiscreteWorkers.size === 0) that was missed when
         // scheduleNextTasksAndReleaseThreads fired earlier.
-        this.waitingForTasks.forEach((f) => f(null));
-        this.waitingForTasks.length = 0;
+        this.releaseThreads();
       });
     this.pendingDiscreteWorkers.add(worker);
   }
@@ -1617,8 +1631,12 @@ export class TaskOrchestrator {
       if (readyWhen) {
         const state = this.armReadiness(task.id);
         this.pollReadinessRow(task, readyWhen, state.abort.signal).then(
-          state.resolve,
-          state.reject
+          () => {
+            if (!state.abort.signal.aborted) state.resolve();
+          },
+          (e) => {
+            if (!state.abort.signal.aborted) state.reject(e);
+          }
         );
       }
 
@@ -1720,13 +1738,7 @@ export class TaskOrchestrator {
 
   // region Readiness
   private getReadyWhen(task: Task): NormalizedReadyWhen | null {
-    if (!task.continuous) {
-      return null;
-    }
-    const readyWhen =
-      this.projectGraph.nodes[task.target.project]?.data?.targets?.[
-        task.target.target
-      ]?.readyWhen;
+    const readyWhen = getReadyWhenConfig(task, this.projectGraph);
     return readyWhen == null ? null : normalizeReadyWhen(readyWhen, task.id);
   }
 
@@ -1748,18 +1760,22 @@ export class TaskOrchestrator {
         continue;
       }
       // Run or shared by this process: its probe or row poll settles the
-      // deferred. Otherwise another process owns it (an Nx Cloud agent worker
-      // runs with a flat task graph) and the row is the only signal.
+      // deferred, and dispatch already held this task until then. Otherwise
+      // another process owns it (an Nx Cloud agent worker runs with a flat
+      // task graph) and the row is the only signal.
       if (this.taskGraph.tasks[producerId]) {
-        const state = this.readinessOf(producerId);
-        if (!state.settled) {
-          this.logWaitingForReady(producer);
-        }
-        await state.promise;
+        await this.readinessOf(producerId).promise;
       } else {
         this.logWaitingForReady(producer);
         await this.pollReadinessRow(producer, readyWhen);
       }
+    }
+  }
+
+  private onReadinessHold(producerId: string) {
+    if (!this.waitingLogged.has(producerId)) {
+      this.waitingLogged.add(producerId);
+      this.logWaitingForReady(this.fullTaskGraph.tasks[producerId]);
     }
   }
 
@@ -1823,12 +1839,12 @@ export class TaskOrchestrator {
       signal: state.abort.signal,
     }).then(
       () => {
-        if (state.settled) return;
+        if (state.abort.signal.aborted) return;
         this.recordReadiness(task, TaskReadiness.Ready);
         state.resolve();
       },
       (e) => {
-        if (state.settled) return;
+        if (state.abort.signal.aborted) return;
         this.recordReadiness(task, TaskReadiness.Failed);
         if (process.env.NX_VERBOSE_LOGGING === 'true') {
           console.error(e?.message ?? e);
@@ -1858,12 +1874,22 @@ export class TaskOrchestrator {
   private armReadiness(taskId: string): ReadinessState {
     let state = this.readiness.get(taskId);
     if (!state || state.settled) {
-      state = createReadinessState();
+      this.tasksSchedule.markReadinessPending(taskId);
+      // Mark before waking so the woken loops dispatch the held dependents
+      state = createReadinessState((outcome) => {
+        if (outcome === 'ready') {
+          this.tasksSchedule.markReady(taskId);
+        } else {
+          this.tasksSchedule.markReadinessFailed(taskId);
+        }
+        this.releaseThreads();
+      });
       this.readiness.set(taskId, state);
     }
     return state;
   }
 
+  // Also rejects a state whose probe was stopped earlier by aborting its signal
   private abortReadiness(
     taskId: string,
     reason: 'exited' | 'was stopped' | 'failed'
@@ -1980,14 +2006,15 @@ export class TaskOrchestrator {
 
   private async scheduleNextTasksAndReleaseThreads() {
     if (this.stopRequested) {
-      this.waitingForTasks.forEach((f) => f(null));
-      this.waitingForTasks.length = 0;
+      this.releaseThreads();
       return;
     }
 
     await this.tasksSchedule.scheduleNextTasks();
+    this.releaseThreads();
+  }
 
-    // release blocked threads
+  private releaseThreads() {
     this.waitingForTasks.forEach((f) => f(null));
     this.waitingForTasks.length = 0;
   }
@@ -2250,7 +2277,9 @@ export class TaskOrchestrator {
     if (ownsRunningTasksService) {
       this.runningTasksService?.removeRunningTask(task.id);
     }
-    this.abortReadiness(task.id, 'exited');
+    // A probe that does not need the child (url, port, command) could still
+    // pass during completion and release dependents of an exited producer
+    this.readiness.get(task.id)?.abort.abort();
 
     task.endTime = Date.now();
     if (reason === 'fulfilled') {
@@ -2269,6 +2298,11 @@ export class TaskOrchestrator {
     } else {
       await this.complete([{ task, status: 'stopped' }], groupId);
     }
+    // After the skip propagation above, so a waiter is reported as skipped
+    // rather than as failed
+    this.abortReadiness(task.id, 'exited');
+    // Skipped dependents leave nothing in flight to wake the loops
+    this.releaseThreads();
   }
 
   private async cleanup() {
