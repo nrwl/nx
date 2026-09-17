@@ -799,7 +799,9 @@ console.log('Build complete');
   ) {
     const matchingProjects = [];
     const lines = actualOutput.split('\n');
-    lines.forEach((s) => {
+    lines.forEach((line) => {
+      // GitHub log groups prefix the task header with a cache-status icon.
+      const s = line.replace(/^(?:::group::|##\[group\])[^>]*(?=> nx run)/, '');
       if (s.trimStart().startsWith(`> nx run`)) {
         const projectName = s
           .trimStart()

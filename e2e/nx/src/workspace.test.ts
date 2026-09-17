@@ -22,7 +22,15 @@ let proj: string;
 describe('@nx/workspace:infer-targets', () => {
   beforeEach(() => {
     proj = newProject({
-      packages: ['@nx/playwright', '@nx/remix', '@nx/eslint', '@nx/jest'],
+      packages: [
+        '@nx/workspace',
+        '@nx/playwright',
+        '@nx/remix',
+        '@nx/eslint',
+        '@nx/jest',
+      ],
+      // These conversion fixtures exercise Remix, which still requires TS 5.
+      typescriptVersion: '~5.9.2',
     });
   });
 
@@ -161,6 +169,7 @@ describe('@nx/workspace:convert-to-monorepo', () => {
   beforeEach(() => {
     proj = newProject({
       packages: [
+        '@nx/workspace',
         '@nx/eslint',
         '@nx/js',
         '@nx/playwright',
@@ -199,6 +208,11 @@ describe('@nx/workspace:convert-to-monorepo', () => {
 describe('Workspace Tests', () => {
   beforeAll(() => {
     proj = newProject({ packages: ['@nx/workspace', '@nx/js', '@nx/jest'] });
+    // Move/remove tests below exercise project.json and tsconfig path mappings,
+    // not the TS solution layout inferred for a bare package-based workspace.
+    runCLI('generate @nx/js:init --addTsConfigBase --skipFormat', {
+      env: { NX_ADD_PLUGINS: 'false' },
+    });
   });
 
   afterAll(() => cleanupProject());

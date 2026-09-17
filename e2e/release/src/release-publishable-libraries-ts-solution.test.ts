@@ -1,6 +1,7 @@
 import {
   normalizePerformanceReport,
   cleanupProject,
+  getSelectedPackageManager,
   newProject,
   runCLI,
   runCommandAsync,
@@ -9,6 +10,7 @@ import {
 } from '@nx/e2e-utils';
 import { emptydirSync } from 'fs-extra';
 import { execSync } from 'node:child_process';
+import { configureModernYarn } from './utils';
 
 expect.addSnapshotSerializer({
   serialize(str: string) {
@@ -63,6 +65,11 @@ describe('release publishable libraries in workspace with ts solution setup', ()
       ],
       preset: 'ts',
     });
+
+    if (getSelectedPackageManager() === 'yarn') {
+      await configureModernYarn();
+      await runCommandAsync('yarn install');
+    }
 
     // Normalize git committer information so it is deterministic in snapshots
     await runCommandAsync(`git config user.email "test@test.com"`);
