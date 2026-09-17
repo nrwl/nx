@@ -806,6 +806,23 @@ impl FileState {
         })
         .unwrap_or_default()
     }
+
+    /// The hashes for `paths`, in the order given. One lookup each, so a batch
+    /// never copies the full file map.
+    fn get_file_hashes(&self, paths: Vec<String>) -> Vec<Option<String>> {
+        let Some(sync) = &self.0 else {
+            return vec![None; paths.len()];
+        };
+        let (lock, cvar) = sync.deref();
+        let state = lock.lock().expect("Should be able to lock files");
+        let state = cvar
+            .wait(state, |s| s.phase == Phase::Scanning)
+            .expect("Should be able to wait for files");
+        paths
+            .into_iter()
+            .map(|path| state.files.get(Path::new(&path)).cloned())
+            .collect()
+    }
 }
 
 /// Bumps the sequence when anything changed and turns the outcomes into the
@@ -1588,6 +1605,18 @@ impl WorkspaceContext {
         self.current_files()
     }
 
+    #[napi]
+    pub fn get_file_hashes(&self, files: Vec<String>) -> Vec<Option<String>> {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let batch = self.drain(FlushMode::Delivered, WhenScanning::Queue);
+            if !batch.is_empty() {
+                self.batches.publish(Ok(self.pending_changes()));
+            }
+        }
+        self.files.get_file_hashes(files)
+    }
+
     /// Recover from dropped watch events: re-walk, and report what changed
     /// against the files this context was holding. The fresh files are
     /// adopted, so the caller only has to feed the returned changes through
@@ -2153,6 +2182,22 @@ mod tests {
                 "multi_glob group {i} must be sorted regardless of file creation order"
             );
         }
+    }
+
+    #[test]
+    fn get_file_hashes_returns_only_requested_existing_files() {
+        let temp = workspace_with(&["a.ts", "src/b.ts", "src/c.ts"]);
+        let cache = TempDir::new().unwrap();
+        let ctx = context(&temp, &cache);
+        let all_hashes: HashMap<_, _> = files_of(&ctx).into_iter().collect();
+
+        let hashes =
+            ctx.get_file_hashes(vec!["src/c.ts".into(), "missing.ts".into(), "a.ts".into()]);
+
+        assert_eq!(hashes.len(), 3);
+        assert_eq!(hashes[0].as_ref(), all_hashes.get("src/c.ts"));
+        assert!(hashes[1].is_none());
+        assert_eq!(hashes[2].as_ref(), all_hashes.get("a.ts"));
     }
 
     /// Restoring a cached task output rewrites a file with identical bytes

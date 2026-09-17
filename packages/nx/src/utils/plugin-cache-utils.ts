@@ -49,9 +49,9 @@ export class PluginCache<T> {
       this.accessOrder =
         accessOrder instanceof Set ? accessOrder : new Set(accessOrder ?? []);
     } else {
-      const loaded = loadFromDisk<T>(cachePath);
+      const loaded = readPluginCache<T>(cachePath);
       this.entries = loaded.entries;
-      this.accessOrder = loaded.accessOrder;
+      this.accessOrder = new Set(loaded.accessOrder);
     }
   }
 
@@ -181,13 +181,10 @@ export class PluginCache<T> {
  * otherwise returns an empty cache (no backward compat — stale caches
  * are simply discarded).
  */
-function loadFromDisk<T>(cachePath: string): {
-  entries: Record<string, T>;
-  accessOrder: Set<string>;
-} {
+export function readPluginCache<T>(cachePath: string): PluginCacheData<T> {
   const empty = {
     entries: {} as Record<string, T>,
-    accessOrder: new Set<string>(),
+    accessOrder: [] as string[],
   };
   try {
     if (
@@ -206,7 +203,7 @@ function loadFromDisk<T>(cachePath: string): {
       'accessOrder' in raw &&
       Array.isArray(raw.accessOrder)
     ) {
-      return { entries: raw.entries, accessOrder: new Set(raw.accessOrder) };
+      return raw;
     }
 
     return empty;

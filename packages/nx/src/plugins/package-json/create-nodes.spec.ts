@@ -1,10 +1,25 @@
 import '../../internal-testing-utils/mock-fs';
 
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { vol } from 'memfs';
-import { createNodeFromPackageJson, createNodes } from './create-nodes';
+import {
+  createNodeFromPackageJson,
+  createNodes,
+  createSharedPackageJsonInputs,
+} from './create-nodes';
 import { workspaceDataDirectory } from '../../utils/cache-directory';
-import { PluginCache } from '../../utils/plugin-cache-utils';
+import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
+import { getFileHashesInContext } from '../../utils/workspace-context';
+import { hasNxJsPlugin } from '../../utils/has-nx-js-plugin';
+import { PackageJsonConfigurationCache } from './cache';
+
+vi.mock('../../utils/workspace-context', () => ({
+  getFileHashesInContext: vi.fn().mockResolvedValue([]),
+}));
+vi.mock('../../utils/has-nx-js-plugin', () => ({
+  hasNxJsPlugin: vi.fn().mockReturnValue(true),
+}));
 
 const packageJsonCachePath = join(workspaceDataDirectory, 'package-json.hash');
 
@@ -18,15 +33,87 @@ describe('nx package.json workspaces plugin', () => {
     run: (script: string) => `npm run ${script}`,
   } as any;
 
+  const createNode = (packageJsonPath: string) =>
+    createNodeFromPackageJson(
+      packageJsonPath,
+      '/root',
+      new PackageJsonConfigurationCache(packageJsonCachePath),
+      false,
+      createSharedPackageJsonInputs(readNxJson('/root'), packageManagerCommand)
+    );
+
   beforeEach(() => {
     // Ensure deterministic package manager detection: without a lockfile the
     // detector falls back to npm_config_user_agent, which makes test output
     // depend on whoever invoked the test runner (npm vs pnpm vs yarn).
     vol.fromJSON({ 'package-lock.json': '{}' }, '/root');
+    vi.mocked(getFileHashesInContext).mockReset().mockResolvedValue([]);
+    vi.mocked(hasNxJsPlugin).mockReset().mockReturnValue(true);
   });
 
   afterEach(() => {
     vol.reset();
+  });
+
+  it('hashes only eligible packages and preserves their input order', async () => {
+    vol.fromJSON(
+      {
+        'package.json': JSON.stringify({ workspaces: ['packages/a'] }),
+        'packages/excluded/package.json': '{}',
+        'packages/b/package.json': JSON.stringify({ name: 'b', private: true }),
+        'packages/b/project.json': '{}',
+        'packages/a/package.json': JSON.stringify({ name: 'a', private: true }),
+      },
+      '/root'
+    );
+    const results = await createNodes[1](
+      [
+        'packages/excluded/package.json',
+        'packages/b/package.json',
+        'packages/b/project.json',
+        'packages/a/package.json',
+      ],
+      undefined,
+      context
+    );
+
+    expect(getFileHashesInContext).toHaveBeenCalledExactlyOnceWith('/root', [
+      'packages/b/package.json',
+      'packages/b/project.json',
+      'packages/a/package.json',
+      'packages/a/project.json',
+    ]);
+    expect(results.map(([file]) => file)).toEqual([
+      'packages/b/package.json',
+      'packages/a/package.json',
+    ]);
+    expect(
+      results[0][1].projects['packages/b'].metadata.js
+        .isInPackageManagerWorkspaces
+    ).toBe(false);
+    expect(
+      results[1][1].projects['packages/a'].metadata.js
+        .isInPackageManagerWorkspaces
+    ).toBe(true);
+  });
+
+  it('skips native hash lookup when there are no eligible packages', async () => {
+    vol.fromJSON(
+      {
+        'package.json': '{}',
+        'packages/excluded/package.json': '{}',
+      },
+      '/root'
+    );
+
+    expect(
+      await createNodes[1](
+        ['packages/excluded/package.json'],
+        undefined,
+        context
+      )
+    ).toEqual([]);
+    expect(getFileHashesInContext).not.toHaveBeenCalled();
   });
 
   it('should build projects from package.json files', () => {
@@ -63,15 +150,7 @@ describe('nx package.json workspaces plugin', () => {
       '/root'
     );
 
-    expect(
-      createNodeFromPackageJson(
-        'package.json',
-        '/root',
-        new PluginCache(packageJsonCachePath),
-        false,
-        packageManagerCommand
-      )
-    ).toMatchInlineSnapshot(`
+    expect(createNode('package.json')).toMatchInlineSnapshot(`
       {
         "projects": {
           ".": {
@@ -118,15 +197,7 @@ describe('nx package.json workspaces plugin', () => {
         },
       }
     `);
-    expect(
-      createNodeFromPackageJson(
-        'packages/lib-a/package.json',
-        '/root',
-        new PluginCache(packageJsonCachePath),
-        false,
-        packageManagerCommand
-      )
-    ).toMatchInlineSnapshot(`
+    expect(createNode('packages/lib-a/package.json')).toMatchInlineSnapshot(`
       {
         "projects": {
           "packages/lib-a": {
@@ -173,15 +244,7 @@ describe('nx package.json workspaces plugin', () => {
         },
       }
     `);
-    expect(
-      createNodeFromPackageJson(
-        'packages/lib-b/package.json',
-        '/root',
-        new PluginCache(packageJsonCachePath),
-        false,
-        packageManagerCommand
-      )
-    ).toMatchInlineSnapshot(`
+    expect(createNode('packages/lib-b/package.json')).toMatchInlineSnapshot(`
       {
         "projects": {
           "packages/lib-b": {
@@ -249,6 +312,328 @@ describe('nx package.json workspaces plugin', () => {
         },
       }
     `);
+  });
+
+  describe('persisted cache', () => {
+    const getProject = (result, root = 'packages/a') =>
+      result[0][1].projects[root];
+    const runPlugin = async (
+      nxJsonConfiguration: NxJsonConfiguration = {},
+      configFiles = ['packages/a/package.json', 'packages/a/project.json']
+    ) =>
+      getProject(
+        await createNodes[1](configFiles, undefined, {
+          ...context,
+          nxJsonConfiguration,
+        })
+      );
+
+    it('reuses a project until its package.json hash changes', async () => {
+      vol.fromJSON(
+        {
+          'package.json': JSON.stringify({
+            name: 'repo',
+            workspaces: ['packages/*'],
+          }),
+          'packages/a/package.json': JSON.stringify({
+            name: 'a',
+            private: true,
+            scripts: { test: 'old-command' },
+          }),
+        },
+        '/root'
+      );
+      vi.mocked(getFileHashesInContext).mockResolvedValue(['package-v1', null]);
+
+      const first = await runPlugin({}, ['packages/a/package.json']);
+      expect(existsSync(packageJsonCachePath)).toBe(true);
+      expect(first.targets.test.metadata.scriptContent).toBe('old-command');
+
+      vol.writeFileSync(
+        '/root/packages/a/package.json',
+        JSON.stringify({
+          name: 'a',
+          private: true,
+          scripts: { test: 'new-command' },
+        })
+      );
+      const cached = await runPlugin({}, ['packages/a/package.json']);
+      expect(cached.targets.test.metadata.scriptContent).toBe('old-command');
+
+      vi.mocked(getFileHashesInContext).mockResolvedValue(['package-v2', null]);
+      const updated = await runPlugin({}, ['packages/a/package.json']);
+      expect(updated.targets.test.metadata.scriptContent).toBe('new-command');
+      const persistedCache = JSON.parse(
+        vol.readFileSync(packageJsonCachePath, 'utf8').toString()
+      );
+      expect(Object.keys(persistedCache.entries)).toHaveLength(1);
+    });
+
+    it('invalidates a project when its sibling project.json changes', async () => {
+      vol.fromJSON(
+        {
+          'package.json': JSON.stringify({ name: 'repo' }),
+          'packages/a/package.json': JSON.stringify({
+            name: 'a',
+            private: true,
+            scripts: { test: 'vitest' },
+          }),
+          'packages/a/project.json': JSON.stringify({ targets: {} }),
+        },
+        '/root'
+      );
+      vi.mocked(getFileHashesInContext).mockResolvedValue([
+        'package-v1',
+        'project-v1',
+      ]);
+
+      const first = await runPlugin();
+      expect(first.targets.test).toBeDefined();
+
+      vol.writeFileSync(
+        '/root/packages/a/project.json',
+        JSON.stringify({
+          targets: { test: { executor: 'nx:noop' } },
+        })
+      );
+      const cached = await runPlugin();
+      expect(cached.targets.test).toBeDefined();
+
+      vi.mocked(getFileHashesInContext).mockResolvedValue([
+        'package-v1',
+        'project-v2',
+      ]);
+      const updated = await runPlugin();
+      expect(updated.targets.test).toBeUndefined();
+    });
+
+    it('invalidates a project when nx.json inputs change', async () => {
+      vol.fromJSON(
+        {
+          'package.json': JSON.stringify({ name: 'repo' }),
+          'packages/a/package.json': JSON.stringify({
+            name: 'a',
+          }),
+          'packages/a/project.json': '{}',
+        },
+        '/root'
+      );
+      vi.mocked(getFileHashesInContext).mockResolvedValue([
+        'package-v1',
+        'project-v1',
+      ]);
+
+      const first = await runPlugin();
+      expect(first.projectType).toBeUndefined();
+
+      const updated = await runPlugin({
+        workspaceLayout: { appsDir: 'apps', libsDir: 'packages' },
+      });
+      expect(updated.projectType).toBe('library');
+
+      const updatedTargetDefaults = await runPlugin({
+        workspaceLayout: { appsDir: 'apps', libsDir: 'packages' },
+        targetDefaults: {
+          'nx-release-publish': { dependsOn: ['build'] },
+        },
+      });
+      expect(
+        updatedTargetDefaults.targets['nx-release-publish'].dependsOn
+      ).toEqual(['^nx-release-publish', 'build']);
+    });
+
+    it('invalidates a project when the package manager changes', async () => {
+      vol.fromJSON(
+        {
+          'package.json': JSON.stringify({ name: 'repo' }),
+          'packages/a/package.json': JSON.stringify({
+            name: 'a',
+            private: true,
+            scripts: { test: 'vitest' },
+          }),
+          'packages/a/project.json': '{}',
+        },
+        '/root'
+      );
+      vi.mocked(getFileHashesInContext).mockResolvedValue([
+        'package-v1',
+        'project-v1',
+      ]);
+
+      const first = await runPlugin();
+      expect(first.targets.test.metadata.runCommand).toBe('npm run test');
+
+      vol.unlinkSync('/root/package-lock.json');
+      vol.writeFileSync('/root/pnpm-lock.yaml', 'lockfileVersion: 9');
+      const updated = await runPlugin();
+      expect(updated.targets.test.metadata.runCommand).toBe('pnpm run test');
+    });
+
+    it('reads unindexed sibling files and invalidates after their creation, edits, and deletion', async () => {
+      vol.fromJSON(
+        {
+          'package.json': JSON.stringify({
+            name: 'repo',
+            workspaces: ['packages/*'],
+          }),
+          'packages/a/package.json': JSON.stringify({
+            name: 'a',
+            private: true,
+            scripts: { test: 'vitest' },
+          }),
+        },
+        '/root'
+      );
+      vi.mocked(getFileHashesInContext).mockResolvedValue(['package-v1', null]);
+      const run = () => runPlugin({}, ['packages/a/package.json']);
+      expect((await run()).targets.test).toBeDefined();
+      vol.writeFileSync(
+        '/root/packages/a/project.json',
+        JSON.stringify({ targets: { test: { executor: 'nx:noop' } } })
+      );
+      expect((await run()).targets.test).toBeUndefined();
+      expect((await run()).targets.test).toBeUndefined();
+      vol.writeFileSync('/root/packages/a/project.json', '{}');
+      expect((await run()).targets.test).toBeDefined();
+      vol.unlinkSync('/root/packages/a/project.json');
+      expect((await run()).targets.test).toBeDefined();
+    });
+
+    it('does not resolve @nx/js for private packages on cold or warm runs', async () => {
+      vol.fromJSON(
+        {
+          'package.json': JSON.stringify({ name: 'repo' }),
+          'packages/a/package.json': JSON.stringify({
+            name: 'a',
+            private: true,
+          }),
+          'packages/a/project.json': '{}',
+        },
+        '/root'
+      );
+      vi.mocked(getFileHashesInContext).mockResolvedValue([
+        'package-v1',
+        'project-v1',
+      ]);
+      await runPlugin();
+      await runPlugin();
+      expect(hasNxJsPlugin).not.toHaveBeenCalled();
+    });
+
+    it('retains cached results after unrelated target defaults change', async () => {
+      vol.fromJSON(
+        {
+          'package.json': JSON.stringify({ name: 'repo' }),
+          'packages/a/package.json': JSON.stringify({
+            name: 'a',
+            private: true,
+          }),
+          'packages/a/project.json': '{}',
+        },
+        '/root'
+      );
+      vi.mocked(getFileHashesInContext).mockResolvedValue([
+        'package-v1',
+        'project-v1',
+      ]);
+      await runPlugin();
+      const before = vol.readFileSync(packageJsonCachePath, 'utf8');
+      await runPlugin({ targetDefaults: { test: { cache: true } } });
+      expect(vol.readFileSync(packageJsonCachePath, 'utf8')).toEqual(before);
+      await runPlugin({
+        targetDefaults: { 'nx-release-publish': { dependsOn: ['build'] } },
+      });
+      expect(vol.readFileSync(packageJsonCachePath, 'utf8')).toEqual(before);
+    });
+
+    it('does not resolve @nx/js when the package supplies a release target', async () => {
+      vol.fromJSON(
+        {
+          'package.json': JSON.stringify({ name: 'repo' }),
+          'packages/a/package.json': JSON.stringify({
+            name: 'a',
+            nx: { targets: { 'nx-release-publish': { executor: 'nx:noop' } } },
+          }),
+          'packages/a/project.json': '{}',
+        },
+        '/root'
+      );
+      vi.mocked(getFileHashesInContext).mockResolvedValue([
+        'package-v1',
+        'project-v1',
+      ]);
+      expect((await runPlugin()).targets['nx-release-publish'].executor).toBe(
+        'nx:noop'
+      );
+      await runPlugin();
+      expect(hasNxJsPlugin).not.toHaveBeenCalled();
+    });
+
+    it('does not substitute root @nx/js resolution for project resolution', async () => {
+      vol.fromJSON(
+        {
+          'package.json': JSON.stringify({ name: 'repo' }),
+          'packages/a/package.json': JSON.stringify({ name: 'a' }),
+          'packages/a/project.json': '{}',
+        },
+        '/root'
+      );
+      vi.mocked(getFileHashesInContext).mockResolvedValue([
+        'package-v1',
+        'project-v1',
+      ]);
+      vi.mocked(hasNxJsPlugin).mockImplementation((root) => root === '/root');
+      expect((await runPlugin()).targets['nx-release-publish']).toBeUndefined();
+      expect((await runPlugin()).targets['nx-release-publish']).toBeUndefined();
+      expect(hasNxJsPlugin).toHaveBeenCalledWith('packages/a', '/root');
+    });
+
+    it('invalidates a project when @nx/js availability changes', () => {
+      vol.fromJSON(
+        {
+          'packages/a/package.json': JSON.stringify({ name: 'a' }),
+        },
+        '/root'
+      );
+      vi.mocked(hasNxJsPlugin).mockReturnValue(true);
+      const sharedInputs = createSharedPackageJsonInputs(
+        {},
+        packageManagerCommand
+      );
+
+      const cache = new PackageJsonConfigurationCache(packageJsonCachePath);
+      const first = createNodeFromPackageJson(
+        'packages/a/package.json',
+        '/root',
+        cache,
+        false,
+        sharedInputs,
+        {
+          packageJsonHash: 'package-v1',
+          siblingProjectJsonHash: null,
+        }
+      );
+      expect(
+        first.projects['packages/a'].targets['nx-release-publish']
+      ).toBeDefined();
+      cache.writeToDiskIfChanged();
+
+      vi.mocked(hasNxJsPlugin).mockReturnValue(false);
+      const updated = createNodeFromPackageJson(
+        'packages/a/package.json',
+        '/root',
+        new PackageJsonConfigurationCache(packageJsonCachePath),
+        false,
+        sharedInputs,
+        {
+          packageJsonHash: 'package-v1',
+          siblingProjectJsonHash: null,
+        }
+      );
+      expect(
+        updated.projects['packages/a'].targets['nx-release-publish']
+      ).toBeUndefined();
+    });
   });
 
   describe('negative patterns', () => {
@@ -807,23 +1192,12 @@ describe('nx package.json workspaces plugin', () => {
     );
 
     expect(
-      createNodeFromPackageJson(
-        'apps/myapp/package.json',
-        '/root',
-        new PluginCache(packageJsonCachePath),
-        false,
-        packageManagerCommand
-      ).projects['apps/myapp'].projectType
+      createNode('apps/myapp/package.json').projects['apps/myapp'].projectType
     ).toEqual('application');
 
     expect(
-      createNodeFromPackageJson(
-        'packages/mylib/package.json',
-        '/root',
-        new PluginCache(packageJsonCachePath),
-        false,
-        packageManagerCommand
-      ).projects['packages/mylib'].projectType
+      createNode('packages/mylib/package.json').projects['packages/mylib']
+        .projectType
     ).toEqual('library');
   });
 
@@ -844,15 +1218,9 @@ describe('nx package.json workspaces plugin', () => {
       '/root'
     );
 
-    expect(
-      createNodeFromPackageJson(
-        'package.json',
-        '/root',
-        new PluginCache(packageJsonCachePath),
-        false,
-        packageManagerCommand
-      ).projects['.'].projectType
-    ).toEqual('library');
+    expect(createNode('package.json').projects['.'].projectType).toEqual(
+      'library'
+    );
   });
 
   it('should infer library project type if only libsDir is set', () => {
@@ -876,22 +1244,11 @@ describe('nx package.json workspaces plugin', () => {
     );
 
     expect(
-      createNodeFromPackageJson(
-        'packages/mylib/package.json',
-        '/root',
-        new PluginCache(packageJsonCachePath),
-        false,
-        packageManagerCommand
-      ).projects['packages/mylib'].projectType
+      createNode('packages/mylib/package.json').projects['packages/mylib']
+        .projectType
     ).toEqual('library');
     expect(
-      createNodeFromPackageJson(
-        'example/package.json',
-        '/root',
-        new PluginCache(packageJsonCachePath),
-        false,
-        packageManagerCommand
-      ).projects['example'].projectType
+      createNode('example/package.json').projects['example'].projectType
     ).toBeUndefined();
   });
 

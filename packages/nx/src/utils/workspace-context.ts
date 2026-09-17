@@ -192,6 +192,29 @@ export async function getAllFileDataInContext(workspaceRoot: string) {
   return daemonClient.getWorkspaceContextFileData();
 }
 
+export async function getFileHashesInContext(
+  workspaceRoot: string,
+  files: string[]
+): Promise<Array<string | null | undefined>> {
+  if (
+    workspaceRoot === '/virtual' ||
+    (global as any).NX_PLUGIN_WORKER ||
+    isOnDaemon() ||
+    !daemonClient.enabled()
+  ) {
+    await ensureFilesReady(workspaceRoot);
+    return workspaceContext.getFileHashes(files);
+  }
+
+  const fileHashes = new Map(
+    (await daemonClient.getWorkspaceContextFileData()).map(({ file, hash }) => [
+      file,
+      hash,
+    ])
+  );
+  return files.map((file) => fileHashes.get(file) ?? null);
+}
+
 /**
  * Listens for the changes a watching context applies: each change reaches the
  * listeners once, here or in `settleWorkspaceContext`, whichever takes it
