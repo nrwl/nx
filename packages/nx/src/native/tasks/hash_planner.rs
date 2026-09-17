@@ -1110,7 +1110,13 @@ fn local_input_cache_key(dep: &str, group: &[Input]) -> Option<String> {
             fileset,
         )),
         [_] | [] => None,
-        _ => Some(grouped_cache_key(dep, group)),
+        _ => {
+            debug_assert!(
+                group.iter().all(is_ignored_dep_fileset),
+                "a group reaching the key holds only includeIgnored dependency filesets"
+            );
+            Some(grouped_cache_key(dep, group))
+        }
     }
 }
 
@@ -1132,23 +1138,22 @@ fn group_cache_key(dep: &str, inputs: &[Input]) -> String {
         // Other input kinds never reach dependencies (get_inputs_for_dependency
         // returns None for them), so they share one empty entry per project.
         [_] | [] => prefixed_cache_key(dep, 'n', ""),
-        _ => grouped_cache_key(dep, inputs),
+        _ => {
+            debug_assert!(
+                inputs.iter().all(is_ignored_dep_fileset),
+                "a group reaching the key holds only includeIgnored dependency filesets"
+            );
+            grouped_cache_key(dep, inputs)
+        }
     }
 }
 
 /// Group order is part of the key: it is the order the globs are hashed in.
-/// Each member's kind is in it too, which the assert below makes unreachable
-/// variation today — every keyed group is all `includeIgnored`. It is carried
-/// so that relaxing the assert cannot silently give two groups one memo
-/// entry; until then the assert is what holds, and the kind is the belt.
+/// So is each member's kind, so two groups naming the same filesets cannot
+/// share a memo entry. No caller builds a mixed group today — each arm that
+/// reaches here debug-asserts it — but the kind is in the key regardless,
+/// since a debug assert is compiled out of the binary that ships.
 fn grouped_cache_key(dep: &str, group: &[Input]) -> String {
-    // Asserted where the group is used, not where it is built: the builder
-    // constructs both flags itself, so it cannot fail. This is the claim the
-    // key rests on — every member is an `includeIgnored` dependency fileset.
-    debug_assert!(
-        group.iter().all(is_ignored_dep_fileset),
-        "a keyed group holds only includeIgnored dependency filesets"
-    );
     let globs = group
         .iter()
         .map(|input| match input {
@@ -1537,6 +1542,27 @@ mod tests {
             .is_none()
         );
         assert!(local_input_cache_key("a", &[Input::String("default")]).is_none());
+    }
+
+    /// The key carries each member's kind, not only its globs, so two groups
+    /// naming the same filesets cannot share a memo entry. Callers do not
+    /// build a mixed group — the arms into the key debug-assert it — and this
+    /// pins the key itself, which is what still stands in a release binary.
+    #[test]
+    fn a_group_key_separates_members_by_kind() {
+        let fs = |fileset, include_ignored| Input::FileSet {
+            fileset,
+            dependencies: true,
+            include_ignored,
+        };
+        assert_ne!(
+            grouped_cache_key("p", &[fs("x", true), fs("y", false)]),
+            grouped_cache_key("p", &[fs("x", false), fs("y", true)])
+        );
+        assert_ne!(
+            grouped_cache_key("p", &[fs("x", true), fs("y", true)]),
+            grouped_cache_key("p", &[fs("x", false), fs("y", false)])
+        );
     }
 
     #[test]

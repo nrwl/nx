@@ -168,7 +168,7 @@ pub(crate) mod tests {
             Err(err) => err,
             Ok(_) => panic!("a glob that leaves the workspace must be refused"),
         };
-        assert!(err.to_string().contains("outside the workspace"), "{err}");
+        assert!(err.to_string().contains("`..` segment"), "{err}");
         assert!(validate_files_glob("../**").is_err());
         assert!(validate_files_glob("/etc/passwd").is_err());
         assert!(validate_files_glob("!../**").is_err());
@@ -506,10 +506,18 @@ pub(crate) mod tests {
 
     #[test]
     fn rejects_paths_that_leave_the_workspace_before_touching_the_disk() {
-        for glob in ["../secret", "dist/../../secret", "/etc/passwd", "../**"] {
+        // `dist/a/../b` stays inside, and is refused all the same: the rule is
+        // about what the glob says, not where it would land.
+        for glob in [
+            "../secret",
+            "dist/../../secret",
+            "dist/a/../b",
+            "/etc/passwd",
+            "../**",
+        ] {
             let err = validate_files_globs("web", &globs(&[glob])).unwrap_err();
             assert!(
-                err.to_string().contains("outside the workspace")
+                err.to_string().contains("`..` segment")
                     || err.to_string().contains("absolute path"),
                 "{glob}: {err}"
             );

@@ -218,7 +218,9 @@ fn validate_shape(glob: &str) -> Result<()> {
     }
     for segment in glob.split('/') {
         if segment == ".." {
-            bail!("The includeIgnored fileset \"{glob}\" points outside the workspace.");
+            bail!(
+                "The includeIgnored fileset \"{glob}\" has a `..` segment; write it relative to the workspace root without `..`."
+            );
         }
         if segment == "." {
             bail!(
