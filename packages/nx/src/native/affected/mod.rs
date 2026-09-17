@@ -149,9 +149,11 @@ fn implicitly_touched_projects(
 
     let mut touched: BTreeSet<&str> = BTreeSet::new();
     for (pattern, implicit) in &implicits {
-        // An unparseable fileset matches nothing, as it did under minimatch.
-        // Aborting the whole command over one malformed pattern would be a new
-        // failure mode on a path that never reaches the hasher.
+        // An unparseable fileset matches nothing. Minimatch read it as literal
+        // text, so at base `{workspaceRoot}/config/[dev.json` marked its project
+        // affected by that exact file; the hasher rejects the same glob, so no
+        // task hashing it ever ran. Aborting the whole command over one
+        // malformed pattern would be a new failure mode.
         let Ok(glob) = build_glob_set(&[*pattern]) else {
             warn!("ignoring unparseable input fileset: {{workspaceRoot}}/{pattern}");
             continue;
@@ -266,18 +268,31 @@ fn projects_from_project_glob_changes(
     if options.project_glob_patterns.is_empty() {
         return Ok(Vec::new());
     }
-    let Ok(glob) = build_glob_set(&options.project_glob_patterns) else {
-        warn!("ignoring unparseable plugin createNodes globs, no project config change detected");
-        return Ok(Vec::new());
-    };
+    // One set per plugin, so a glob one plugin cannot parse leaves the others'
+    // deletion detection in place.
+    let globs: Vec<_> = options
+        .project_glob_patterns
+        .iter()
+        .filter_map(
+            |pattern| match build_glob_set(std::slice::from_ref(pattern)) {
+                Ok(glob) => Some(glob),
+                Err(_) => {
+                    warn!("ignoring unparseable plugin createNodes glob: {pattern}");
+                    None
+                }
+            },
+        )
+        .collect();
     let workspace_root = Path::new(&options.workspace_root);
 
-    // Raw, not normalized: the TypeScript this replaced matched and stat'd the
-    // path exactly as given. Normalizing here would make a Windows path absolute
-    // after the drive letter is stripped, and `Path::join` drops the base on an
-    // absolute component, so the probe would stat outside the workspace.
+    // Raw, not normalized, to match the TypeScript this replaced, which globbed
+    // and stat'd the path exactly as given. This is parity, not containment:
+    // `Path::join` drops the base on an absolute component, so a raw absolute
+    // path still stats outside the workspace, and `..` escapes by ordinary
+    // resolution. The probe only decides whether the file exists, and a path
+    // that leaves the workspace was never a project config anyway.
     for file in touched_files {
-        if !glob.is_match(file) {
+        if !globs.iter().any(|glob| glob.is_match(file)) {
             continue;
         }
         if workspace_root.join(file).exists() {
@@ -522,9 +537,9 @@ mod tests {
         );
     }
 
-    /// Asserted unsorted: `nx show projects --affected --json` surfaces this list
+    /// Asserted sorted: `nx show projects --affected --json` surfaces this list
     /// directly, and `ProjectGraph.nodes` is a `HashMap`, so without the sort the
-    /// same set comes back in a different order every run.
+    /// same set would come back in a different order every run.
     #[test]
     fn returns_every_project_when_nx_json_is_touched() {
         let g = graph(vec![
@@ -543,8 +558,9 @@ mod tests {
         );
     }
 
-    /// A malformed fileset matched nothing under minimatch; it must not abort the
-    /// command now.
+    /// A malformed fileset is skipped with a warning rather than aborting the
+    /// command. Minimatch read it as literal text, so this is the one narrowing
+    /// the PR body lists: at base the exact file marked the project affected.
     #[test]
     fn an_unparseable_fileset_is_ignored_rather_than_fatal() {
         let mut a = project("a");
@@ -595,7 +611,7 @@ mod tests {
         }
     }
 
-    /// Asserted unsorted, for the same reason as the `nx.json` case.
+    /// Asserted sorted, for the same reason as the `nx.json` case.
     #[test]
     fn a_deleted_project_config_affects_every_project() {
         let g = graph(vec![
@@ -631,11 +647,12 @@ mod tests {
         );
     }
 
-    /// The deletion probe must not escape the workspace root. Normalizing the
-    /// path first would strip `C:` and leave an absolute `/…`, which `Path::join`
-    /// resolves *outside* the root — unlike Node's `path.join`, which the TS used.
+    /// The path is matched as given, so a Windows-style path never matches a
+    /// plugin glob and the probe never reaches the disk for it. Normalizing it
+    /// first would strip `C:` and match `/etc/project.json`, which `Path::join`
+    /// then stats outside the root.
     #[test]
-    fn the_deletion_probe_never_escapes_the_workspace_root() {
+    fn a_windows_style_path_matches_no_plugin_glob() {
         let g = graph(vec![("proj1", project("libs/proj1"))]);
         assert!(
             projects_from_project_glob_changes(
@@ -645,6 +662,26 @@ mod tests {
             )
             .unwrap()
             .is_empty()
+        );
+    }
+
+    /// One plugin's glob failing to parse must not switch deletion detection
+    /// off for every other plugin.
+    #[test]
+    fn an_unparseable_plugin_glob_does_not_disable_the_others() {
+        let g = graph(vec![("proj1", project("libs/proj1"))]);
+        let options = AffectedOptions {
+            project_glob_patterns: vec!["[bad".to_string(), "**/project.json".to_string()],
+            ..glob_options(true)
+        };
+        assert_eq!(
+            projects_from_project_glob_changes(
+                &g,
+                &files(&["libs/removed/project.json"]),
+                &options
+            )
+            .unwrap(),
+            vec!["proj1"]
         );
     }
 
