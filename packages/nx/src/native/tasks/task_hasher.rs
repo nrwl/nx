@@ -101,7 +101,9 @@ pub(crate) fn input_source(
         _ if snapshot_backed && is_file_bearing(instruction) => InputSource::Snapshot,
         HashInstruction::ProjectFileSet(project, _) => own_or_dependency(Some(project)),
         // Carries no project: its first positive glob's directory names the
-        // owner, and a group under no project root counts as the task's own.
+        // owner, which a root project makes a dependency of every other task.
+        // Only feeds `sources`, never a hash, so the order of a group whose
+        // globs span projects decides the label.
         HashInstruction::IgnoredFileSet(globs) => own_or_dependency(
             globs
                 .iter()

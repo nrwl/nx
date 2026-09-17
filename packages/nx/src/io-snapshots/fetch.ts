@@ -29,7 +29,6 @@ export interface IoSnapshotCloudOptions {
   cloud?: boolean;
 }
 
-/** The Nx Cloud client's `readIoSnapshots` contract, as far as nx uses it. */
 /**
  * The environment the decision is made in. The daemon has its own
  * `process.env`, older than this run, so the run's values travel with the
@@ -40,6 +39,7 @@ export interface IoSnapshotEnv {
   NX_IO_SNAPSHOTS_MAX_AGE?: string;
 }
 
+/** The Nx Cloud client's `readIoSnapshots` contract, as far as nx uses it. */
 export interface ReadIoSnapshotsOptions {
   workspaceRoot?: string;
   nxCloudOptions?: IoSnapshotCloudOptions;

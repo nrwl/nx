@@ -119,9 +119,13 @@ pub fn write(db: &Db, bundle: &Bundle, retain: usize) -> Result<()> {
     })
 }
 
-/// A query against a table no import has created yet reads as empty.
+/// A query against a table no import has created yet reads as empty. Named
+/// exactly, so a missing `rarray` ("no such table function") still errors.
 fn absent_table(err: &anyhow::Error) -> bool {
-    err.to_string().contains("no such table")
+    let message = err.to_string();
+    ["io_snapshot_bundles", "io_snapshot_tasks"]
+        .iter()
+        .any(|table| message.contains(&format!("no such table: {table}")))
 }
 
 pub fn read_resolution(db: &Db, commit: &str) -> Result<Option<IoSnapshotResolution>> {
@@ -242,6 +246,16 @@ mod tests {
         write(&db, &bundle("c1", 2, &["a:build"]), 5).unwrap();
         assert!(read_entries(&db, "c1", &["b:build"]).unwrap().is_empty());
         assert_eq!(read_entries(&db, "c1", &["a:build"]).unwrap().len(), 1);
+    }
+
+    #[test]
+    fn reads_no_ids_and_one_id() {
+        let (_dir, db) = temp_db();
+        write(&db, &bundle("c1", 1, &["a:build", "b:build"]), 5).unwrap();
+        assert!(read_entries(&db, "c1", &[]).unwrap().is_empty());
+        let one = read_entries(&db, "c1", &["b:build"]).unwrap();
+        assert_eq!(one.len(), 1);
+        assert_eq!(one[0].0, "b:build");
     }
 
     #[test]
