@@ -154,15 +154,26 @@ fn changed_project_configs(
     if options.project_glob_patterns.is_empty() {
         return (Vec::new(), Vec::new());
     }
-    let Ok(glob) = build_glob_set(&options.project_glob_patterns) else {
-        warn!("ignoring unparseable plugin createNodes globs, no project config change detected");
-        return (Vec::new(), Vec::new());
-    };
+    // One set per plugin, so a glob one plugin cannot parse leaves the others'
+    // configs detected.
+    let globs: Vec<_> = options
+        .project_glob_patterns
+        .iter()
+        .filter_map(
+            |pattern| match build_glob_set(std::slice::from_ref(pattern)) {
+                Ok(glob) => Some(glob),
+                Err(_) => {
+                    warn!("ignoring unparseable plugin createNodes glob: {pattern}");
+                    None
+                }
+            },
+        )
+        .collect();
     let workspace_root = Path::new(&options.workspace_root);
     let mut configs = Vec::new();
     let mut deleted = Vec::new();
     for file in changed_files {
-        if !glob.is_match(file) {
+        if !globs.iter().any(|glob| glob.is_match(file)) {
             continue;
         }
         if workspace_root.join(file).exists() {
@@ -828,6 +839,28 @@ mod tests {
         .unwrap();
         assert_eq!(s.affected, strings(&["b:build"]));
         assert!(s.deleted_project_configs.is_empty());
+    }
+
+    /// One plugin's glob failing to parse must not switch config detection off
+    /// for every other plugin.
+    #[test]
+    fn an_unparseable_plugin_glob_does_not_disable_the_others() {
+        let g = graph(&[("a", "libs/a")]);
+        let p = plans("a:build", vec![]);
+        let tg = task_graph(&[("a:build", &[])], &[]);
+        let options = AffectedTasksOptions {
+            project_glob_patterns: strings(&["[bad", "**/project.json"]),
+            ..options(&[])
+        };
+        let s = compute_affected_task_selection(
+            &g,
+            &p,
+            &tg,
+            &strings(&["libs/removed/project.json"]),
+            &options,
+        )
+        .unwrap();
+        assert_eq!(s.affected, strings(&["a:build"]));
     }
 
     /// The project a deleted config described is gone from the graph, so no
