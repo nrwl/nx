@@ -349,11 +349,32 @@ export async function createProjectGraphAndSourceMapsAsync(
     const deadline = Date.now() + MAX_WAIT_FOR_GRAPH_LOCK;
     // Set when the holder outlasts the budget. This process then builds the
     // graph without the lock, which is what it would have done had it never
-    // found one held, rather than reading a cache the holder has not written or
-    // blocking on an acquire that will not be granted.
+    // found one held, rather than reading a cache the holder has not written.
     let holderOutlastedBudget = false;
-    let locked = lock?.locked;
-    while (locked) {
+    let holdingLock = false;
+
+    // `tryLock` is the check and the acquire in one step, which is what keeps a
+    // process that takes the lock between the two from stalling this one on a
+    // blocking acquire. Losing it means waiting for the winner and reading what
+    // it wrote, rather than blocking and then building a second graph. Same
+    // shape as `acquire_files` in the native workspace context.
+    while (lock) {
+      if (lock.tryLock()) {
+        holdingLock = true;
+        break;
+      }
+
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) {
+        logger.verbose(
+          `Another process has held the project graph lock for over ${
+            MAX_WAIT_FOR_GRAPH_LOCK / 1000
+          }s. Building the graph in this process as well.`
+        );
+        holderOutlastedBudget = true;
+        break;
+      }
+
       logger.verbose(
         'Waiting for graph construction in another process to complete'
       );
@@ -361,8 +382,7 @@ export async function createProjectGraphAndSourceMapsAsync(
         'Waiting for graph construction in another process to complete'
       );
       const start = Date.now();
-      const remaining = deadline - Date.now();
-      const released = remaining > 0 && (await lock.waitForRelease(remaining));
+      const released = await lock.waitForRelease(remaining);
       spinner.cleanup();
 
       if (!released) {
@@ -405,23 +425,11 @@ export async function createProjectGraphAndSourceMapsAsync(
       } catch (e) {
         // If the error is that the cached graph is stale after unlock,
         // the process that was working on the graph must have been canceled,
-        // so we will fall through to the normal flow to ensure
-        // its created by one of the processes that was waiting
+        // so we will fall through and try to become the one that builds it.
         if (!(e instanceof StaleProjectGraphCacheError)) {
           throw e;
         }
       }
-      locked = lock.check();
-    }
-    if (!holderOutlastedBudget) {
-      // Check-then-act, and `lock()` blocks the thread with no ceiling of its
-      // own: a process that takes the lock between the check above and this call
-      // stalls this one for as long as it holds it. The budget bounds the WAIT,
-      // not the ACQUIRE. Closing it means looping back to the wait above on a
-      // failed `tryLock`, so the loser reads the winner's graph instead of
-      // building a second one, which is a change to who builds rather than to
-      // how long anyone waits.
-      lock?.lock();
     }
     try {
       const res = await buildProjectGraphAndSourceMapsWithoutDaemon({
@@ -459,8 +467,8 @@ export async function createProjectGraphAndSourceMapsAsync(
     } catch (e) {
       handleProjectGraphError(opts, e);
     } finally {
-      if (!holderOutlastedBudget) {
-        lock?.unlock();
+      if (holdingLock) {
+        lock.unlock();
       }
     }
   } else {

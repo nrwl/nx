@@ -8,6 +8,9 @@ const state = vi.hoisted(() => ({
   waits: 0,
   reads: 0,
   acquires: 0,
+  tryLocks: 0,
+  /** How many acquire attempts lose the race before one wins. */
+  failedAcquires: 0,
   builds: 0,
   writes: 0,
 }));
@@ -15,13 +18,26 @@ const state = vi.hoisted(() => ({
 vi.mock('../native', () => ({
   IS_WASM: false,
   FileLock: class {
-    // What `new FileLock()` reports: whether anyone held it at that moment.
     locked = state.locked;
     check = () => state.locked;
-    lock = () => {
-      state.acquires++;
+    unlock = () => {
+      state.locked = false;
     };
-    unlock = () => {};
+    tryLock = () => {
+      state.tryLocks++;
+      // Someone else got there between this process looking and acquiring.
+      if (state.failedAcquires > 0) {
+        state.failedAcquires--;
+        state.locked = true;
+        return false;
+      }
+      if (state.locked) {
+        return false;
+      }
+      state.locked = true;
+      state.acquires++;
+      return true;
+    };
     waitForRelease = async () => {
       state.waits++;
       const released = state.releases.shift() ?? true;
@@ -91,6 +107,8 @@ describe('waiting on the graph lock', () => {
     state.waits = 0;
     state.reads = 0;
     state.acquires = 0;
+    state.tryLocks = 0;
+    state.failedAcquires = 0;
     state.builds = 0;
     state.writes = 0;
   });
@@ -125,6 +143,24 @@ describe('waiting on the graph lock', () => {
     // files into place one at a time, so writing from out here could leave a
     // graph and the source maps that explain it describing different runs.
     expect(state.writes).toBe(0);
+  });
+
+  it('waits for the winner rather than building a second graph', async () => {
+    // Free when this process looked, taken by someone else before it could
+    // acquire. The old check-then-act lost that race silently: it blocked on
+    // `lock()` until the winner released and then built a second graph anyway.
+    state.locked = false;
+    state.failedAcquires = 1;
+
+    const { projectGraph } = await createProjectGraphAndSourceMapsAsync();
+
+    expect(projectGraph).toEqual({ nodes: {}, dependencies: {} });
+    expect(state.tryLocks).toBe(1);
+    // It waited for the winner and read what the winner wrote.
+    expect(state.waits).toBe(1);
+    expect(state.reads).toBe(1);
+    expect(state.builds).toBe(0);
+    expect(state.acquires).toBe(0);
   });
 
   it('writes the cache when it built the graph under the lock', async () => {
