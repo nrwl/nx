@@ -237,7 +237,7 @@ export type OrchestratorInitResult =
   // The exit-0 refusal: the runbook is missing and another nx wrote the run,
   // or the caller's confirmStart declined.
   | { kind: 'refused' }
-  // The exit-0 report: a run is already active and nothing was started.
+  // The report: a run is already active and nothing was started.
   | { kind: 'existing-run'; runId: string; facts: ExistingRunFacts };
 
 export interface RunOrchestratorResumeInput {
@@ -627,11 +627,11 @@ function startFreshCommand(
   return `${pmExecPrefix(root)} nx migrate ${runMigrationsFlag} --start-fresh --run-id=${runId}`;
 }
 
-// The exit-0 report for an init that found a run already active. On the
-// agent path the report and both ways forward go to stdout, in a block of
-// its own kind: an `error` block would read as a crash, and this is a
-// decision for the user. Held before the facts are read: a concurrent
-// start-fresh must not delete the run under the report or the prompt after it.
+// The report for an init that found a run already active. On the agent path
+// the report and both ways forward go to stdout, in a block of its own kind:
+// an `error` block would read as a crash, and this is a decision for the
+// user. Held before the facts are read: a concurrent start-fresh must not
+// delete the run under the report or the prompt after it.
 function reportExistingRun(
   root: string,
   runId: string,
