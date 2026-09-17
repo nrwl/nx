@@ -1,4 +1,5 @@
 import {
+  formatErrorStackAndCause,
   formatProjectGraphError,
   type ProjectConfigurationsError,
   type ProjectGraphError,
@@ -42,7 +43,7 @@ export async function handleErrors(
       const lines = (err.message ? err.message : err.toString()).split('\n');
       const bodyLines: string[] = lines.slice(1);
       if (isVerbose) {
-        bodyLines.push(...formatErrorStackAndCause(err, isVerbose));
+        bodyLines.push(formatErrorStackAndCause(err));
       } else if (err.stack) {
         bodyLines.push('Pass --verbose to see the stacktrace.');
       }
@@ -59,21 +60,4 @@ export async function handleErrors(
     }
     return 1;
   }
-}
-
-function formatErrorStackAndCause<T extends Error>(
-  error: T,
-  verbose: boolean
-): string[] {
-  return [
-    verbose ? error.stack || error.message : error.message,
-    ...(error.cause && typeof error.cause === 'object'
-      ? [
-          'Caused by:',
-          verbose && 'stack' in error.cause
-            ? error.cause.stack.toString()
-            : error.cause.toString(),
-        ]
-      : []),
-  ];
 }

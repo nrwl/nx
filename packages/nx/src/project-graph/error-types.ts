@@ -648,13 +648,29 @@ function indentString(str: string, indent: number): string {
   );
 }
 
-function formatErrorStackAndCause(error: Error): string {
-  const cause =
-    error.cause && error.cause instanceof Error ? error.cause : null;
+export function formatErrorStackAndCause(error: Error): string {
+  const cause = describeCause(error.cause);
   return (
     (error.stack ?? error.message) +
-    (cause
-      ? `\nCaused by: \n${indentString(cause.stack ?? cause.message, 2)}`
-      : '')
+    (cause ? `\nCaused by: \n${indentString(cause, 2)}` : '')
   );
+}
+
+function describeCause(cause: unknown): string | null {
+  if (!cause) {
+    return null;
+  }
+  if (cause instanceof Error) {
+    return cause.stack ?? cause.message;
+  }
+  if (typeof cause === 'object') {
+    const { stack, message } = cause as { stack?: unknown; message?: unknown };
+    if (typeof stack === 'string') {
+      return stack;
+    }
+    if (typeof message === 'string') {
+      return message;
+    }
+  }
+  return String(cause);
 }
