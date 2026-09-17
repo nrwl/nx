@@ -15,8 +15,10 @@
     "@rspack/cli": "<%= versions.rspackCliVersion %>",
     "@rspack/core": "<%= versions.rspackCoreVersion %>",
     "@rspack/dev-server": "<%= versions.rspackDevServerVersion %>",
+    "@rspack/plugin-react-refresh": "<%= versions.rspackPluginReactRefreshVersion %>",
     "@types/react": "<%= versions.typesReactVersion %>",
     "@types/react-dom": "<%= versions.typesReactDomVersion %>",
+    "react-refresh": "<%= versions.reactRefreshVersion %>",
     "typescript": "<%= versions.typescriptVersion %>"
   }
 }
