@@ -39,24 +39,10 @@ let projectsWithoutInferencePromise: Promise<
   typeof projectsWithoutInference
 > | null = null;
 
-/**
- * Thrown where a resolution would have to read the workspace's projects and the
- * caller asked for one that would not. Caught by that caller, which treats it as
- * "not resolvable here" rather than as a plugin failure.
- */
-export class ProjectWalkRequiredError extends Error {
-  constructor(moduleName: string) {
-    super(
-      `Resolving "${moduleName}" needs the workspace's projects, which this caller asked to do without.`
-    );
-  }
-}
-
 export async function resolveNxPlugin(
   moduleName: string,
   root: string,
-  paths: string[],
-  { withoutProjectWalk = false }: { withoutProjectWalk?: boolean } = {}
+  paths: string[]
 ) {
   // Default plugins (see `getDefaultPlugins` in `get-plugins.ts`) are passed
   // as absolute file paths to compiled bundles inside `nx` itself; they are
@@ -76,13 +62,6 @@ export async function resolveNxPlugin(
       !resolvedFromNode ||
       isWorkspaceLocalResolution(resolvedFromNode, root)
     ) {
-      // The walk is a multi-glob and a pass over every project file, so a caller
-      // that only wants an answer it can get cheaply says so and takes the miss.
-      // Already walked is not a walk: this process paid for it once and the
-      // result is what the resolution below reads.
-      if (withoutProjectWalk && !projectsWithoutInference) {
-        throw new ProjectWalkRequiredError(moduleName);
-      }
       projectsWithoutInferencePromise ??=
         retrieveProjectConfigurationsWithoutPluginInference(root);
       projectsWithoutInference ??= await projectsWithoutInferencePromise;

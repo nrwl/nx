@@ -99,11 +99,10 @@ export interface ResolvedPluginModule {
 
 export function resolveModule(
   plugin: PluginConfiguration,
-  root: string,
-  opts?: { withoutProjectWalk?: boolean }
+  root: string
 ): Promise<ResolvedPluginModule> {
   const moduleName = typeof plugin === 'string' ? plugin : plugin.plugin;
-  return resolveNxPlugin(moduleName, root, getNxRequirePaths(root), opts);
+  return resolveNxPlugin(moduleName, root, getNxRequirePaths(root));
 }
 
 export class IsolatedPlugin implements LoadedNxPlugin {

@@ -13,6 +13,7 @@ import { dirname, join } from 'node:path';
 import {
   capabilitiesOfLoadedPlugin,
   computeCapabilityKey,
+  computeCapabilityKeyBeforeResolving,
   hashSourceFiles,
   recordIsFresh,
   storableSourceFiles,
@@ -129,6 +130,92 @@ describe('computeCapabilityKey', () => {
     expect(computeCapabilityKey('@acme/plugin', pluginPath, root)).not.toEqual(
       computeCapabilityKey('@acme/plugin/src/other', otherEntryPoint, root)
     );
+  });
+
+  describe('keyed before the plugin is resolved', () => {
+    // The two have to agree, or a record written by whoever loaded the plugin
+    // is never found by whoever only reads: one side keys what it resolved, the
+    // other keys what `nx.json` names, and both are asking "which plugin".
+    /** Resolvable by name, which `writeInstalledPlugin` deliberately is not. */
+    function writeResolvableInstalledPlugin(): string {
+      const packageRoot = join(root, 'node_modules', '@acme', 'resolvable');
+      mkdirSync(join(packageRoot, 'src'), { recursive: true });
+      writeFileSync(
+        join(packageRoot, 'package.json'),
+        JSON.stringify({
+          name: '@acme/resolvable',
+          version: '1.2.3',
+          main: 'src/index.js',
+        })
+      );
+      const pluginPath = join(packageRoot, 'src', 'index.js');
+      writeFileSync(pluginPath, 'module.exports = {};');
+      return pluginPath;
+    }
+
+    it('matches the resolved key for an installed package', async () => {
+      const pluginPath = writeResolvableInstalledPlugin();
+
+      expect(
+        computeCapabilityKeyBeforeResolving('@acme/resolvable', root)
+      ).toEqual(computeCapabilityKey('@acme/resolvable', pluginPath, root));
+    });
+
+    it('keys a package it cannot resolve as a local one, which only costs the record a miss', async () => {
+      // No `main`, so `require.resolve` cannot answer for it where the loader,
+      // which reads the package's own manifest, can. Keying it by name is wrong
+      // about where it lives but right about which plugin it is, and the worst
+      // of it is that this process finds no record and leaves the question to
+      // whoever loads.
+      const pluginPath = writeInstalledPlugin('1.2.3');
+
+      expect(
+        computeCapabilityKeyBeforeResolving('@acme/plugin', root)
+      ).not.toEqual(computeCapabilityKey('@acme/plugin', pluginPath, root));
+    });
+
+    it('matches the resolved key for a plugin named by a relative path', async () => {
+      const pluginPath = writeLocalPlugin();
+
+      expect(
+        computeCapabilityKeyBeforeResolving('./tools/my-plugin', root)
+      ).toEqual(computeCapabilityKey('./tools/my-plugin', pluginPath, root));
+    });
+
+    it('matches the resolved key for a workspace plugin named by package', async () => {
+      const pluginPath = writeLocalPlugin();
+
+      // Resolvable only through the workspace's projects, which is the case
+      // that costs the walk and the reason this path exists.
+      expect(
+        computeCapabilityKeyBeforeResolving('@my-org/plugin', root)
+      ).toEqual(computeCapabilityKey('@my-org/plugin', pluginPath, root));
+    });
+
+    it('matches the resolved key for an absolute path, as Nx names its own plugins', async () => {
+      const pluginPath = writeInstalledPlugin('1.2.3');
+
+      expect(computeCapabilityKeyBeforeResolving(pluginPath, root)).toEqual(
+        computeCapabilityKey(pluginPath, pluginPath, root)
+      );
+    });
+
+    it('declines a directory, whose `main` only a resolution knows', async () => {
+      writeLocalPlugin();
+
+      expect(
+        computeCapabilityKeyBeforeResolving(
+          join(root, 'tools', 'my-plugin'),
+          root
+        )
+      ).toBeNull();
+    });
+
+    it('tells two differently named plugins apart', async () => {
+      expect(
+        computeCapabilityKeyBeforeResolving('./tools/a', root)
+      ).not.toEqual(computeCapabilityKeyBeforeResolving('./tools/b', root));
+    });
   });
 
   it('identifies a local plugin without reading its contents', async () => {

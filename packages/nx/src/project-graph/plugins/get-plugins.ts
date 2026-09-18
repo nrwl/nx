@@ -20,6 +20,7 @@ import { canObserveModuleClosure } from './isolation/module-closure';
 import {
   capabilitiesOfLoadedPlugin,
   computeCapabilityKey,
+  computeCapabilityKeyBeforeResolving,
   createCapabilitiesLock,
   forgetCapabilities,
   hashSourceFiles,
@@ -392,15 +393,12 @@ async function loadPlugins(
  */
 async function resolveCapabilityKeys(
   loads: PluginLoad[],
-  root: string,
-  { withoutProjectWalk = false }: { withoutProjectWalk?: boolean } = {}
+  root: string
 ): Promise<void> {
   await Promise.all(
     loads.map(async (load) => {
       try {
-        load.resolved = await resolveModule(load.plugin, root, {
-          withoutProjectWalk,
-        });
+        load.resolved = await resolveModule(load.plugin, root);
         load.key = computeCapabilityKey(
           pluginLabel(load.plugin),
           load.resolved.pluginPath,
@@ -490,15 +488,23 @@ export async function peekPluginCapabilities(
 
   // A client with a daemon answers from records or not at all. Loading here
   // would put the plugin set back in the process the records exist to keep it
-  // out of, and the daemon is about to load them anyway; the same goes for the
-  // workspace walk that resolving a local plugin needs, which is why the
-  // resolution is asked for without it. Either shortfall reads as "cannot
-  // tell", which is what the callers already do with null.
+  // out of, and the daemon is about to load them anyway. Not loading reads as
+  // "cannot tell", which is what the callers already do with null.
   const answersHere = isOnDaemon() || !isDaemonEnabled();
 
-  await resolveCapabilityKeys(loads, root, {
-    withoutProjectWalk: !answersHere,
-  });
+  if (answersHere) {
+    await resolveCapabilityKeys(loads, root);
+  } else {
+    // Keyed without resolving: a plugin that is not an installed package
+    // resolves by reading every project configuration, which is more than the
+    // load this is trying to save.
+    for (const load of loads) {
+      load.key = computeCapabilityKeyBeforeResolving(
+        pluginLabel(load.plugin),
+        root
+      );
+    }
+  }
 
   // Nothing to key a record on, so there is no answer to complete and no point
   // loading anything here: the caller's own load reports the failure.

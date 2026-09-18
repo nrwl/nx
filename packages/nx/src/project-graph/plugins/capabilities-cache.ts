@@ -1,4 +1,12 @@
-import { basename, dirname, isAbsolute, join, relative, sep } from 'node:path';
+import {
+  basename,
+  dirname,
+  extname,
+  isAbsolute,
+  join,
+  relative,
+  sep,
+} from 'node:path';
 import { existsSync } from 'node:fs';
 
 import {
@@ -342,23 +350,106 @@ export function sameCapabilities(
  */
 export function computeCapabilityKey(
   moduleName: string,
-  pluginPath: string,
+  pluginPath: string | null,
   root: string
 ): string | null {
   if (!isCapabilityCacheEnabled()) {
     return null;
   }
   try {
-    const id = pluginId(pluginPath, root);
-    if (isInstalled(pluginPath)) {
+    if (pluginPath && isInstalled(pluginPath)) {
       const version = readInstalledVersion(moduleName, pluginPath, root);
       return version
-        ? hashArray(['installed', nxVersion(), id, version])
+        ? hashArray([
+            'installed',
+            nxVersion(),
+            pluginId(pluginPath, root),
+            version,
+          ])
         : null;
     }
-    return hashArray(['local', nxVersion(), id]);
+    return hashArray(['local', nxVersion(), localId(moduleName, root)]);
   } catch (e) {
-    logger.verbose(`Could not identify the plugin at ${pluginPath}`, e);
+    logger.verbose(
+      `Could not identify the plugin "${moduleName}"${
+        pluginPath ? ` at ${pluginPath}` : ''
+      }`,
+      e
+    );
+    return null;
+  }
+}
+
+/**
+ * Identifies a plugin that is not an installed package by what `nx.json` names,
+ * rather than by where that name resolves.
+ *
+ * Resolving one reads every project configuration, since where it lives is a
+ * question about the workspace's projects. Reading a record has no business
+ * paying for that, and does not have to: the record carries the files the load
+ * read, so a name that starts resolving somewhere else fails the hash and is
+ * reloaded. The key only has to be stable and unambiguous, which a name in
+ * `nx.json` already is.
+ *
+ * Two entries naming one plugin differently keep two records of it, which costs
+ * a load each and says the same thing.
+ */
+function localId(moduleName: string, root: string): string {
+  if (!isAbsolute(moduleName)) {
+    return normalizePath(moduleName);
+  }
+  const relativePath = relative(root, moduleName);
+  return normalizePath(
+    relativePath.startsWith('..') ? moduleName : relativePath
+  );
+}
+
+/**
+ * The key for a plugin, worked out without resolving it where that would cost
+ * the workspace walk.
+ *
+ * An installed package answers from `require.resolve`, which reads no projects.
+ * Anything else is keyed by name. Both agree with what {@link computeCapabilityKey}
+ * returns once the plugin has been resolved, which is what lets a record written
+ * by the process that loaded it be found by one that only wants to read it.
+ */
+export function computeCapabilityKeyBeforeResolving(
+  moduleName: string,
+  root: string
+): string | null {
+  if (!isCapabilityCacheEnabled()) {
+    return null;
+  }
+  try {
+    // An absolute path to a file is already the resolution, which is how Nx
+    // passes its own default plugins. A directory is not: its `main` decides,
+    // and reading that is the walk this exists to skip.
+    if (isAbsolute(moduleName)) {
+      return extname(moduleName)
+        ? computeCapabilityKey(moduleName, moduleName, root)
+        : null;
+    }
+    if (!isPath(moduleName)) {
+      const installedPath = resolveInstalled(moduleName, root);
+      if (installedPath) {
+        return computeCapabilityKey(moduleName, installedPath, root);
+      }
+    }
+    return computeCapabilityKey(moduleName, null, root);
+  } catch (e) {
+    logger.verbose(`Could not identify the plugin "${moduleName}"`, e);
+    return null;
+  }
+}
+
+/** Where an installed package resolves to, or null for anything else. */
+function resolveInstalled(moduleName: string, root: string): string | null {
+  try {
+    const resolved = require.resolve(moduleName, {
+      paths: getNxRequirePaths(root),
+    });
+    return isInstalled(resolved) ? resolved : null;
+  } catch {
     return null;
   }
 }
