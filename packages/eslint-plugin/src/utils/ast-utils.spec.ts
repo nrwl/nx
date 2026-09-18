@@ -1,7 +1,10 @@
 import '@nx/devkit/internal-testing-utils/mock-fs';
 
 import { vol } from 'memfs';
-import { getRelativeImportPath } from './ast-utils';
+import {
+  getBarrelEntryPointByImportScope,
+  getRelativeImportPath,
+} from './ast-utils';
 
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual<any>('@nx/devkit'),
@@ -50,6 +53,32 @@ describe('ast-utils', () => {
         '/root/libs/mylib/src/index.ts'
       );
       expect(result).toBe('/root/libs/mylib/src/index.ts');
+    });
+  });
+
+  describe('getBarrelEntryPointByImportScope', () => {
+    it('should read paths from a root tsconfig.json when tsconfig.base.json does not exist', () => {
+      vol.fromJSON(
+        {
+          './libs/mylib/src/index.ts': 'export class MyClass {}',
+          './tsconfig.json': JSON.stringify({
+            compilerOptions: {
+              paths: {
+                '@acme/mylib': ['libs/mylib/src/index.ts'],
+              },
+            },
+          }),
+        },
+        '/root'
+      );
+
+      const result = getBarrelEntryPointByImportScope('@acme/mylib');
+      expect(result).toEqual(['libs/mylib/src/index.ts']);
+    });
+
+    it('should return an empty array when neither tsconfig file exists', () => {
+      const result = getBarrelEntryPointByImportScope('@acme/mylib');
+      expect(result).toEqual([]);
     });
   });
 });
