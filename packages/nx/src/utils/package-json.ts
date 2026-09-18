@@ -504,6 +504,9 @@ function preparePackageInstallation(
     env: {
       ...process.env,
       YARN_ENABLE_SCRIPTS: 'false',
+      ...(packageManager === 'pnpm'
+        ? { pnpm_config_auto_install_peers: 'false' }
+        : {}),
     },
   } as const;
 
