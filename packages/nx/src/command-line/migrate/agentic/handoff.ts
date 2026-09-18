@@ -89,7 +89,7 @@ const STEP_NAME_PREFIX_MAX_BYTES = 64;
 
 // Cuts on code points so a multibyte character is never split, and counts
 // UTF-8 bytes because the filesystem limit is per byte, not per character.
-function truncateUtf8(value: string, maxBytes: number): string {
+export function truncateUtf8(value: string, maxBytes: number): string {
   let out = '';
   let used = 0;
   for (const ch of value) {
@@ -160,6 +160,27 @@ export function handoffsDirState(
   } catch (err) {
     if ((err as NodeJS.ErrnoException)?.code === 'ENOENT') return 'missing';
     throw err;
+  }
+}
+
+/**
+ * Non-recursive mkdir: the run dir exists, and a symlink created after the
+ * missing-path check fails with EEXIST instead of being followed.
+ */
+export function ensureRunSubdir(dir: string, notADirectory: () => Error): void {
+  const state = handoffsDirState(dir);
+  switch (state) {
+    case 'directory':
+      return;
+    case 'missing':
+      mkdirSync(dir);
+      return;
+    case 'other':
+      throw notADirectory();
+    default: {
+      const unhandled: never = state;
+      throw new Error(`Unhandled directory state: ${unhandled}`);
+    }
   }
 }
 

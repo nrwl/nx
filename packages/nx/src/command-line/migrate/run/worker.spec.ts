@@ -187,6 +187,8 @@ import {
 } from './run-state';
 import { applyStepEvent } from './state-machine';
 import { depsHash } from './util';
+import { BrokerStaleRequestError, BrokerUnavailableError } from './broker';
+import { answered, readRequest } from './test-utils';
 
 const RUN_NEXT_FIRST =
   'Run the dispensed "next" command first: its response restates this work and names the handoff file to write.';
@@ -1597,7 +1599,8 @@ describe('runSingleMigrationWorker', () => {
       expect(mockRunInstall).toHaveBeenCalledWith(
         root,
         'post-migration',
-        expect.stringContaining('--run-id=run-1')
+        expect.stringContaining('--run-id=run-1'),
+        undefined
       );
     });
 
@@ -1633,7 +1636,7 @@ describe('runSingleMigrationWorker', () => {
       });
 
       expect(mockRunInstall).not.toHaveBeenCalled();
-      expect(mockLogSkippedInstall).toHaveBeenCalledWith(root);
+      expect(mockLogSkippedInstall).toHaveBeenCalledWith(root, undefined);
     });
 
     it('passes the run install policy to the installer on a first attempt', async () => {
@@ -1791,7 +1794,8 @@ describe('runSingleMigrationWorker', () => {
       expect(mockRunInstall).toHaveBeenCalledWith(
         root,
         'post-migration',
-        expect.stringContaining('--run-id=run-1')
+        expect.stringContaining('--run-id=run-1'),
+        undefined
       );
       expect(stdout).toContain('<nx_migrate_prompt migration="@nx/js:h">');
     });
@@ -2101,7 +2105,8 @@ describe('runSingleMigrationWorker', () => {
       expect(mockRunInstall).toHaveBeenCalledWith(
         root,
         'post-migration',
-        expect.stringContaining('--run-id=run-1')
+        expect.stringContaining('--run-id=run-1'),
+        undefined
       );
       expect(mockCommit).not.toHaveBeenCalled();
       const step = readRunState(dir).steps[0];
@@ -2509,6 +2514,178 @@ describe('runSingleMigrationWorker', () => {
       await runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'));
 
       expect(mockLogSkippedInstall).toHaveBeenCalledWith(root);
+    });
+  });
+
+  describe('recorded execution through the session broker', () => {
+    const nonce = 'deadbeef';
+    const committed = {
+      status: 'committed' as const,
+      sha: 'face0003face0003face0003face0003face0003',
+    };
+
+    beforeEach(() => {
+      process.env.NX_MIGRATE_BROKER = nonce;
+      mockRunMigration.mockResolvedValue({
+        changes: changeList(),
+        nextSteps: [],
+        agentContext: [],
+        logs: '',
+        madeChanges: true,
+      });
+    });
+
+    afterEach(() => {
+      delete process.env.NX_MIGRATE_BROKER;
+    });
+
+    function committingRun(): string {
+      return setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'dispensed')],
+        migrations: [genMig('@nx/js', 'gen')],
+        createCommits: true,
+      });
+    }
+
+    function validatingRun(step: Partial<MigrateStep> = {}): string {
+      return setupRun('run-1', {
+        steps: [{ ...migStep('step-1', '@nx/js:gen', 'dispensed'), ...step }],
+        migrations: [genMig('@nx/js', 'gen')],
+        createCommits: true,
+        validate: true,
+      });
+    }
+
+    const run = () =>
+      runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'));
+
+    it('records the commit the session landed, naming the steps it absorbed', async () => {
+      const dir = committingRun();
+
+      await answered(
+        dir,
+        nonce,
+        {
+          kind: 'commit',
+          result: committed,
+          absorbedStepIds: ['step-0'],
+          output: [],
+        },
+        run
+      );
+
+      expect(mockCommit).not.toHaveBeenCalled();
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('succeeded');
+      expect(state.commits).toEqual([
+        { kind: 'landed', sha: committed.sha, stepIds: ['step-1', 'step-0'] },
+      ]);
+      expect(readRequest(dir)).toEqual({
+        kind: 'commit',
+        stepId: 'step-1',
+        attempt: 1,
+      });
+    });
+
+    it('fails the step with debt when the session reported its install failed', async () => {
+      const dir = committingRun();
+
+      await expect(
+        answered(
+          dir,
+          nonce,
+          {
+            kind: 'install-failed',
+            message: 'registry unreachable',
+            peerDeps: false,
+            output: [],
+          },
+          run
+        )
+      ).rejects.toThrow('registry unreachable');
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('failed');
+      expect(state.steps[0].outcome.summary).toBe('registry unreachable');
+      expect(state.commits).toEqual([{ kind: 'failed', stepIds: ['step-1'] }]);
+    });
+
+    it('leaves the step untouched when the session answered stale', async () => {
+      const dir = committingRun();
+
+      await expect(
+        answered(dir, nonce, { kind: 'stale' }, run)
+      ).rejects.toBeInstanceOf(BrokerStaleRequestError);
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('running');
+      expect(state.commits).toEqual([]);
+    });
+
+    it('fails the step with debt when the session is gone before answering', async () => {
+      const dir = committingRun();
+
+      await expect(run()).rejects.toBeInstanceOf(BrokerUnavailableError);
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('failed');
+      expect(state.steps[0].outcome.summary).toContain('ended before');
+      expect(state.commits).toEqual([{ kind: 'failed', stepIds: ['step-1'] }]);
+    });
+
+    it('installs through the session before handing validation to the agent', async () => {
+      const dir = validatingRun();
+
+      await answered(dir, nonce, { kind: 'installed', output: [] }, run);
+
+      expect(mockInstallDepsIfChanged).not.toHaveBeenCalled();
+      expect(mockCommit).not.toHaveBeenCalled();
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('awaiting-prompt-outcome');
+      expect(state.steps[0].awaitingKind).toBe('generator-validation');
+      expect(readRequest(dir)).toEqual({
+        kind: 'install',
+        stepId: 'step-1',
+        attempt: 1,
+      });
+    });
+
+    it('fails the step, without debt, when the session reported the install it owed failed', async () => {
+      const dir = validatingRun();
+
+      await expect(
+        answered(
+          dir,
+          nonce,
+          {
+            kind: 'install-failed',
+            message: 'registry unreachable',
+            peerDeps: false,
+            output: [],
+          },
+          run
+        )
+      ).rejects.toThrow('registry unreachable');
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('failed');
+      expect(state.steps[0].outcome.summary).toBe('registry unreachable');
+      expect(state.commits).toEqual([]);
+    });
+
+    it('reinstalls a retried step from its baseline through the session', async () => {
+      const dir = validatingRun({
+        generatorCompleted: true,
+        validationOwed: true,
+        depsHashAtDispense: 'baseline-from-an-earlier-dispense',
+      });
+
+      await answered(dir, nonce, { kind: 'installed', output: [] }, run);
+
+      expect(mockRunInstall).not.toHaveBeenCalled();
+      expect(mockRunMigration).not.toHaveBeenCalled();
+      expect(readRunState(dir).steps[0].status).toBe('awaiting-prompt-outcome');
+      expect(readRequest(dir)).toMatchObject({ kind: 'install', attempt: 1 });
     });
   });
 

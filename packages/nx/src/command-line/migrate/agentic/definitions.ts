@@ -48,7 +48,9 @@ const RULE_SAFE_RUN_DIR_NAME = /^[A-Za-z0-9][A-Za-z0-9._+-]*$/;
  * this exists to avoid. That beats widening the rule, and nothing narrower is
  * available: Claude Code has no escape for a literal path.
  */
-function claudeCodeHandoffAllowedTools(runDirName: string): string | null {
+export function claudeCodeHandoffAllowedTools(
+  runDirName: string
+): string | null {
   if (!RULE_SAFE_RUN_DIR_NAME.test(runDirName)) {
     return null;
   }
@@ -86,7 +88,8 @@ function codexWellKnownPaths(): string[] {
 }
 
 // No handoff permission flag: codex's default sandbox already allows writes
-// inside the cwd tree, and a user-hardened read-only config is theirs to keep.
+// inside the cwd tree (`.git` excepted), and a user-hardened read-only config
+// is theirs to keep.
 //
 // `-c model_instructions_file` replaces codex's built-in instructions rather
 // than adding this context to them, so the context stays on the command line,
