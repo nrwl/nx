@@ -1,6 +1,6 @@
 import { CreateNodesContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import { createNodesV2 } from './plugin';
 
 jest.mock('nx/src/utils/cache-directory', () => ({
@@ -537,6 +537,28 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
     expect(getTestOutputs(results, 'proj')).toEqual([
       '{workspaceRoot}/coverage',
     ]);
+  });
+
+  it('should disable caching when coverageDirectory is outside the workspace', async () => {
+    mockJestConfig(
+      {
+        coverageDirectory: resolve(tempFs.tempDir, '..', 'outside-coverage'),
+        testMatch: ['**/*.spec.ts'],
+      },
+      context
+    );
+
+    const results = await createNodesFunction(
+      ['proj/jest.config.js'],
+      { targetName: 'test', ciTargetName: 'test-ci', disableJestRuntime },
+      context
+    );
+
+    const targets = (results[0][1] as any).projects['proj'].targets;
+    for (const targetName of ['test', 'test-ci--src/unit.spec.ts', 'test-ci']) {
+      expect(targets[targetName].outputs).toEqual([]);
+      expect(targets[targetName].cache).toBe(false);
+    }
   });
 
   describe('ciGroupName', () => {
