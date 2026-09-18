@@ -998,9 +998,6 @@ importers:
       file-type:
         specifier: ^16.2.0
         version: 16.5.4
-      flat:
-        specifier: ^5.0.2
-        version: 5.0.2
       fork-ts-checker-webpack-plugin:
         specifier: 9.1.0
         version: 9.1.0(typescript@6.0.3)(webpack@5.105.2)
@@ -2360,9 +2357,6 @@ importers:
       chalk:
         specifier: 'catalog:'
         version: 4.1.2
-      flat:
-        specifier: ^5.0.2
-        version: 5.0.2
       open:
         specifier: ^8.4.0
         version: 8.4.2
@@ -3215,9 +3209,6 @@ importers:
       figures:
         specifier: 3.2.0
         version: 3.2.0
-      flat:
-        specifier: ^5.0.2
-        version: 5.0.2
       ignore:
         specifier: ^7.0.5
         version: 7.0.5

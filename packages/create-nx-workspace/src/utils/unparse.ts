@@ -1,5 +1,3 @@
-import { flatten } from 'flat';
-
 export function unparse(options: Object): string[] {
   const unparsed: string[] = [];
   for (const key of Object.keys(options)) {
@@ -18,13 +16,8 @@ function unparseOption(key: string, value: any, unparsed: string[]) {
   } else if (Array.isArray(value)) {
     value.forEach((item) => unparseOption(key, item, unparsed));
   } else if (Object.prototype.toString.call(value) === '[object Object]') {
-    const flattened = flatten<any, any>(value, { safe: true });
-    for (const flattenedKey in flattened) {
-      unparseOption(
-        `${key}.${flattenedKey}`,
-        flattened[flattenedKey],
-        unparsed
-      );
+    for (const nestedKey of Object.keys(value)) {
+      unparseOption(`${key}.${nestedKey}`, value[nestedKey], unparsed);
     }
   } else if (typeof value === 'string' && value.includes(' ')) {
     unparsed.push(`--${key}="${value}"`);
