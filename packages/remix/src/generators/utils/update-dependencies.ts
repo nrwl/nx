@@ -39,6 +39,7 @@ export function updateDependencies(tree: Tree) {
       eslint: eslintVersion,
       typescript: typescriptVersion,
       vite: viteVersion,
+      'vite-tsconfig-paths': '~4.3.2',
       '@nx/vite': nxVersion,
       '@nx/vitest': nxVersion,
     },

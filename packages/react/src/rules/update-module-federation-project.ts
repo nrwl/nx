@@ -30,6 +30,7 @@ export function updateModuleFederationProject(
     projectConfig.targets.build.options = {
       ...(projectConfig.targets.build.options ?? {}),
       main: maybeJs(options, `${options.appProjectRoot}/src/main.ts`),
+      standardWebpackConfigFunction: true,
       webpackConfig: `${options.appProjectRoot}/webpack.config.${
         options.typescriptConfiguration && !options.js ? 'ts' : 'js'
       }`,

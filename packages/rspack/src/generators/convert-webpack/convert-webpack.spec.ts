@@ -1,5 +1,8 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { readProjectConfiguration } from '@nx/devkit';
+import {
+  readProjectConfiguration,
+  updateProjectConfiguration,
+} from '@nx/devkit';
 // nx-ignore-next-line
 import { applicationGenerator, hostGenerator } from '@nx/react';
 // nx-ignore-next-line
@@ -54,6 +57,51 @@ describe('Convert webpack', () => {
     });
   });
   describe('convert webpack config that uses with* helpers', () => {
+    it.each(['options', 'configuration'])(
+      'converts function flags independently of the config path in %s',
+      async (configLocation) => {
+        const tree = createTreeWithEmptyWorkspace();
+        await applicationGenerator(tree, {
+          directory: 'demo',
+          bundler: 'webpack',
+          e2eTestRunner: 'none',
+          unitTestRunner: 'none',
+          style: 'css',
+          linter: 'none',
+          addPlugin: false,
+        });
+        const project = readProjectConfiguration(tree, 'demo');
+        project.targets.build.options.standardWebpackConfigFunction = true;
+        project.targets.build.configurations.development.standardWebpackConfigFunction = false;
+        if (configLocation === 'configuration') {
+          project.targets.build.configurations.production.webpackConfig =
+            project.targets.build.options.webpackConfig;
+          delete project.targets.build.options.webpackConfig;
+        }
+        updateProjectConfiguration(tree, 'demo', project);
+
+        await convertWebpack(tree, { project: 'demo' });
+
+        const build = readProjectConfiguration(tree, 'demo').targets.build;
+        expect(build.options.standardRspackConfigFunction).toBe(true);
+        expect(build.options).not.toHaveProperty(
+          'standardWebpackConfigFunction'
+        );
+        expect(
+          build.configurations.development.standardRspackConfigFunction
+        ).toBe(false);
+        expect(build.configurations.development).not.toHaveProperty(
+          'standardWebpackConfigFunction'
+        );
+        const configOptions =
+          configLocation === 'options'
+            ? build.options
+            : build.configurations.production;
+        expect(configOptions.rspackConfig).toBe('demo/rspack.config.js');
+        expect(tree.exists(configOptions.rspackConfig)).toBe(true);
+      }
+    );
+
     it('should convert basic webpack project to rspack', async () => {
       // ARRANGE
       const tree = createTreeWithEmptyWorkspace();
@@ -75,77 +123,65 @@ describe('Convert webpack', () => {
       expect(tree.exists('demo/rspack.config.js')).toBeTruthy();
       expect(tree.read('demo/rspack.config.js', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "const { withReact } = require('@nx/rspack');
-        const { withNx } = require('@nx/rspack');
-        const { composePlugins } = require('@nx/rspack');
+          "const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+          const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
 
-        // Nx plugins for webpack.
-        module.exports = composePlugins(
-          withNx(),
-          withReact({
-            useLegacyHtmlPlugin: true,
-            // Uncomment this line if you don't want to use SVGR
-            // See: https://react-svgr.com/
-            // svgr: false
-          }),
-          (config) => {
-            // Update the webpack config as needed here.
-            // e.g. \`config.plugins.push(new MyPlugin())\`
-            config.output.clean = true;
-            return config;
-          },
-        );
-        "
-      `);
+          module.exports = {
+            output: { clean: true },
+            plugins: [new NxAppRspackPlugin(), new NxReactRspackPlugin()],
+          };
+          "
+        `);
       expect(project.targets.build).toMatchInlineSnapshot(`
-              {
-                "configurations": {
-                  "development": {
-                    "extractLicenses": false,
-                    "optimization": false,
-                    "sourceMap": true,
-                    "vendorChunk": true,
-                  },
-                  "production": {
-                    "extractLicenses": true,
-                    "fileReplacements": [
-                      {
-                        "replace": "demo/src/environments/environment.ts",
-                        "with": "demo/src/environments/environment.prod.ts",
-                      },
-                    ],
-                    "namedChunks": false,
-                    "optimization": true,
-                    "outputHashing": "all",
-                    "sourceMap": false,
-                    "vendorChunk": false,
-                  },
+        {
+          "configurations": {
+            "development": {
+              "extractLicenses": false,
+              "optimization": false,
+              "sourceMap": true,
+              "vendorChunk": true,
+            },
+            "production": {
+              "extractLicenses": true,
+              "fileReplacements": [
+                {
+                  "replace": "demo/src/environments/environment.ts",
+                  "with": "demo/src/environments/environment.prod.ts",
                 },
-                "defaultConfiguration": "production",
-                "executor": "@nx/rspack:rspack",
-                "options": {
-                  "assets": [
-                    "demo/src/favicon.ico",
-                    "demo/src/assets",
-                  ],
-                  "baseHref": "/",
-                  "compiler": "babel",
-                  "index": "demo/src/index.html",
-                  "main": "demo/src/main.tsx",
-                  "outputPath": "dist/demo",
-                  "rspackConfig": "demo/rspack.config.js",
-                  "scripts": [],
-                  "styles": [
-                    "demo/src/styles.css",
-                  ],
-                  "target": "web",
-                  "tsConfig": "demo/tsconfig.app.json",
-                },
-                "outputs": [
-                  "{options.outputPath}",
-                ],
-              }
-          `);
+              ],
+              "namedChunks": false,
+              "optimization": true,
+              "outputHashing": "all",
+              "sourceMap": false,
+              "vendorChunk": false,
+            },
+          },
+          "defaultConfiguration": "production",
+          "executor": "@nx/rspack:rspack",
+          "options": {
+            "assets": [
+              "demo/src/favicon.ico",
+              "demo/src/assets",
+            ],
+            "baseHref": "/",
+            "compiler": "babel",
+            "index": "demo/src/index.html",
+            "main": "demo/src/main.tsx",
+            "outputPath": "dist/demo",
+            "rspackConfig": "demo/rspack.config.js",
+            "scripts": [],
+            "standardRspackConfigFunction": true,
+            "styles": [
+              "demo/src/styles.css",
+            ],
+            "target": "web",
+            "tsConfig": "demo/tsconfig.app.json",
+          },
+          "outputs": [
+            "{options.outputPath}",
+          ],
+        }
+      `);
       expect(project.targets.serve).toMatchInlineSnapshot(`
               {
                 "configurations": {
@@ -193,82 +229,101 @@ describe('Convert webpack', () => {
       expect(tree.exists('demo/rspack.config.ts')).toBeTruthy();
       expect(tree.read('demo/rspack.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { withModuleFederation } from '@nx/module-federation/rspack';
-        import { withReact } from '@nx/rspack';
-        import { withNx } from '@nx/rspack';
-        import { composePlugins } from '@nx/rspack';
+          "import { withModuleFederation } from '@nx/module-federation/rspack';
+          import { NxAppRspackPlugin } from '@nx/rspack/app-plugin';
+          import type { Compiler } from '@rspack/core';
+          import { NxReactRspackPlugin } from '@nx/rspack/react-plugin';
 
-        import type { ModuleFederationConfig } from '@nx/module-federation';
+          import type { ModuleFederationConfig } from '@nx/module-federation';
 
-        import baseConfig from './module-federation.config';
+          import baseConfig from './module-federation.config';
 
-        const config: ModuleFederationConfig = {
-          ...baseConfig,
-        };
+          const config: ModuleFederationConfig = {
+            ...baseConfig,
+          };
 
-        // Nx plugins for webpack to build config object from Nx options and context.
-        /**
-         * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
-         * The DTS Plugin can be enabled by setting dts: true
-         * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
-         */
-        export default composePlugins(
-          withNx(),
-          withReact({ useLegacyHtmlPlugin: true }),
-          withModuleFederation(config, { dts: false }),
-        );
-        "
-      `);
-      expect(project.targets.build).toMatchInlineSnapshot(`
+          /**
+           * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
+           * The DTS Plugin can be enabled by setting dts: true
+           * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+           */
+          export default async () => {
+            const configureFederation = await withModuleFederation(config, { dts: false });
+            const webpackConfig = configureFederation(
               {
-                "configurations": {
-                  "development": {
-                    "extractLicenses": false,
-                    "optimization": false,
-                    "sourceMap": true,
-                    "vendorChunk": true,
-                  },
-                  "production": {
-                    "extractLicenses": true,
-                    "fileReplacements": [
-                      {
-                        "replace": "demo/src/environments/environment.ts",
-                        "with": "demo/src/environments/environment.prod.ts",
-                      },
-                    ],
-                    "namedChunks": false,
-                    "optimization": true,
-                    "outputHashing": "all",
-                    "rspackConfig": "demo/rspack.config.prod.ts",
-                    "sourceMap": false,
-                    "vendorChunk": false,
-                  },
+                mode:
+                  process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production'
+                    ? process.env.NODE_ENV
+                    : 'none',
+                output: {},
+                plugins: [],
+              },
+              undefined,
+            );
+            const runtimeChunk = webpackConfig.optimization?.runtimeChunk;
+            webpackConfig.plugins.unshift(new NxAppRspackPlugin(), new NxReactRspackPlugin(), {
+              apply(compiler: Compiler) {
+                if (runtimeChunk !== undefined) {
+                  compiler.options.optimization.runtimeChunk = runtimeChunk;
+                }
+              },
+            });
+            return webpackConfig;
+          };
+          "
+        `);
+      expect(project.targets.build).toMatchInlineSnapshot(`
+        {
+          "configurations": {
+            "development": {
+              "extractLicenses": false,
+              "optimization": false,
+              "sourceMap": true,
+              "vendorChunk": true,
+            },
+            "production": {
+              "extractLicenses": true,
+              "fileReplacements": [
+                {
+                  "replace": "demo/src/environments/environment.ts",
+                  "with": "demo/src/environments/environment.prod.ts",
                 },
-                "defaultConfiguration": "production",
-                "executor": "@nx/rspack:rspack",
-                "options": {
-                  "assets": [
-                    "demo/src/favicon.ico",
-                    "demo/src/assets",
-                  ],
-                  "baseHref": "/",
-                  "compiler": "babel",
-                  "index": "demo/src/index.html",
-                  "main": "demo/src/main.ts",
-                  "outputPath": "dist/demo",
-                  "rspackConfig": "demo/rspack.config.ts",
-                  "scripts": [],
-                  "styles": [
-                    "demo/src/styles.css",
-                  ],
-                  "target": "web",
-                  "tsConfig": "demo/tsconfig.app.json",
-                },
-                "outputs": [
-                  "{options.outputPath}",
-                ],
-              }
-          `);
+              ],
+              "namedChunks": false,
+              "optimization": true,
+              "outputHashing": "all",
+              "rspackConfig": "demo/rspack.config.prod.ts",
+              "sourceMap": false,
+              "standardRspackConfigFunction": true,
+              "vendorChunk": false,
+            },
+          },
+          "defaultConfiguration": "production",
+          "executor": "@nx/rspack:rspack",
+          "options": {
+            "assets": [
+              "demo/src/favicon.ico",
+              "demo/src/assets",
+            ],
+            "baseHref": "/",
+            "compiler": "babel",
+            "index": "demo/src/index.html",
+            "main": "demo/src/main.ts",
+            "outputPath": "dist/demo",
+            "rspackConfig": "demo/rspack.config.ts",
+            "scripts": [],
+            "standardRspackConfigFunction": true,
+            "styles": [
+              "demo/src/styles.css",
+            ],
+            "target": "web",
+            "tsConfig": "demo/tsconfig.app.json",
+          },
+          "outputs": [
+            "{options.outputPath}",
+          ],
+        }
+      `);
       expect(project.targets.serve).toMatchInlineSnapshot(`
               {
                 "configurations": {
@@ -295,30 +350,47 @@ describe('Convert webpack', () => {
       expect(tree.exists('remote1/rspack.config.ts')).toBeTruthy();
       expect(tree.read('remote1/rspack.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { withModuleFederation } from '@nx/module-federation/rspack';
-        import { withReact } from '@nx/rspack';
-        import { withNx } from '@nx/rspack';
-        import { composePlugins } from '@nx/rspack';
+          "import { withModuleFederation } from '@nx/module-federation/rspack';
+          import { NxAppRspackPlugin } from '@nx/rspack/app-plugin';
+          import type { Compiler } from '@rspack/core';
+          import { NxReactRspackPlugin } from '@nx/rspack/react-plugin';
 
-        import baseConfig from './module-federation.config';
+          import baseConfig from './module-federation.config';
 
-        const config = {
-          ...baseConfig,
-        };
+          const config = {
+            ...baseConfig,
+          };
 
-        // Nx plugins for webpack to build config object from Nx options and context.
-        /**
-         * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support Module Federation
-         * The DTS Plugin can be enabled by setting dts: true
-         * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
-         */
-        export default composePlugins(
-          withNx(),
-          withReact({ useLegacyHtmlPlugin: true }),
-          withModuleFederation(config, { dts: false }),
-        );
-        "
-      `);
+          /**
+           * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support Module Federation
+           * The DTS Plugin can be enabled by setting dts: true
+           * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+           */
+          export default async () => {
+            const configureFederation = await withModuleFederation(config, { dts: false });
+            const webpackConfig = configureFederation(
+              {
+                mode:
+                  process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production'
+                    ? process.env.NODE_ENV
+                    : 'none',
+                output: {},
+                plugins: [],
+              },
+              undefined,
+            );
+            const runtimeChunk = webpackConfig.optimization?.runtimeChunk;
+            webpackConfig.plugins.unshift(new NxAppRspackPlugin(), new NxReactRspackPlugin(), {
+              apply(compiler: Compiler) {
+                if (runtimeChunk !== undefined) {
+                  compiler.options.optimization.runtimeChunk = runtimeChunk;
+                }
+              },
+            });
+            return webpackConfig;
+          };
+          "
+        `);
       expect(tree.exists('remote1/rspack.config.prod.ts')).toBeTruthy();
       expect(tree.read('remote1/rspack.config.prod.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
@@ -326,55 +398,57 @@ describe('Convert webpack', () => {
               "
           `);
       expect(project.targets.build).toMatchInlineSnapshot(`
-              {
-                "configurations": {
-                  "development": {
-                    "extractLicenses": false,
-                    "optimization": false,
-                    "sourceMap": true,
-                    "vendorChunk": true,
-                  },
-                  "production": {
-                    "extractLicenses": true,
-                    "fileReplacements": [
-                      {
-                        "replace": "demo/src/environments/environment.ts",
-                        "with": "demo/src/environments/environment.prod.ts",
-                      },
-                    ],
-                    "namedChunks": false,
-                    "optimization": true,
-                    "outputHashing": "all",
-                    "rspackConfig": "demo/rspack.config.prod.ts",
-                    "sourceMap": false,
-                    "vendorChunk": false,
-                  },
+        {
+          "configurations": {
+            "development": {
+              "extractLicenses": false,
+              "optimization": false,
+              "sourceMap": true,
+              "vendorChunk": true,
+            },
+            "production": {
+              "extractLicenses": true,
+              "fileReplacements": [
+                {
+                  "replace": "demo/src/environments/environment.ts",
+                  "with": "demo/src/environments/environment.prod.ts",
                 },
-                "defaultConfiguration": "production",
-                "executor": "@nx/rspack:rspack",
-                "options": {
-                  "assets": [
-                    "demo/src/favicon.ico",
-                    "demo/src/assets",
-                  ],
-                  "baseHref": "/",
-                  "compiler": "babel",
-                  "index": "demo/src/index.html",
-                  "main": "demo/src/main.ts",
-                  "outputPath": "dist/demo",
-                  "rspackConfig": "demo/rspack.config.ts",
-                  "scripts": [],
-                  "styles": [
-                    "demo/src/styles.css",
-                  ],
-                  "target": "web",
-                  "tsConfig": "demo/tsconfig.app.json",
-                },
-                "outputs": [
-                  "{options.outputPath}",
-                ],
-              }
-          `);
+              ],
+              "namedChunks": false,
+              "optimization": true,
+              "outputHashing": "all",
+              "rspackConfig": "demo/rspack.config.prod.ts",
+              "sourceMap": false,
+              "standardRspackConfigFunction": true,
+              "vendorChunk": false,
+            },
+          },
+          "defaultConfiguration": "production",
+          "executor": "@nx/rspack:rspack",
+          "options": {
+            "assets": [
+              "demo/src/favicon.ico",
+              "demo/src/assets",
+            ],
+            "baseHref": "/",
+            "compiler": "babel",
+            "index": "demo/src/index.html",
+            "main": "demo/src/main.ts",
+            "outputPath": "dist/demo",
+            "rspackConfig": "demo/rspack.config.ts",
+            "scripts": [],
+            "standardRspackConfigFunction": true,
+            "styles": [
+              "demo/src/styles.css",
+            ],
+            "target": "web",
+            "tsConfig": "demo/tsconfig.app.json",
+          },
+          "outputs": [
+            "{options.outputPath}",
+          ],
+        }
+      `);
       expect(project.targets.serve).toMatchInlineSnapshot(`
               {
                 "configurations": {
@@ -401,30 +475,47 @@ describe('Convert webpack', () => {
       expect(tree.exists('remote2/rspack.config.ts')).toBeTruthy();
       expect(tree.read('remote2/rspack.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { withModuleFederation } from '@nx/module-federation/rspack';
-        import { withReact } from '@nx/rspack';
-        import { withNx } from '@nx/rspack';
-        import { composePlugins } from '@nx/rspack';
+          "import { withModuleFederation } from '@nx/module-federation/rspack';
+          import { NxAppRspackPlugin } from '@nx/rspack/app-plugin';
+          import type { Compiler } from '@rspack/core';
+          import { NxReactRspackPlugin } from '@nx/rspack/react-plugin';
 
-        import baseConfig from './module-federation.config';
+          import baseConfig from './module-federation.config';
 
-        const config = {
-          ...baseConfig,
-        };
+          const config = {
+            ...baseConfig,
+          };
 
-        // Nx plugins for webpack to build config object from Nx options and context.
-        /**
-         * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support Module Federation
-         * The DTS Plugin can be enabled by setting dts: true
-         * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
-         */
-        export default composePlugins(
-          withNx(),
-          withReact({ useLegacyHtmlPlugin: true }),
-          withModuleFederation(config, { dts: false }),
-        );
-        "
-      `);
+          /**
+           * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support Module Federation
+           * The DTS Plugin can be enabled by setting dts: true
+           * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+           */
+          export default async () => {
+            const configureFederation = await withModuleFederation(config, { dts: false });
+            const webpackConfig = configureFederation(
+              {
+                mode:
+                  process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production'
+                    ? process.env.NODE_ENV
+                    : 'none',
+                output: {},
+                plugins: [],
+              },
+              undefined,
+            );
+            const runtimeChunk = webpackConfig.optimization?.runtimeChunk;
+            webpackConfig.plugins.unshift(new NxAppRspackPlugin(), new NxReactRspackPlugin(), {
+              apply(compiler: Compiler) {
+                if (runtimeChunk !== undefined) {
+                  compiler.options.optimization.runtimeChunk = runtimeChunk;
+                }
+              },
+            });
+            return webpackConfig;
+          };
+          "
+        `);
       expect(tree.exists('remote2/rspack.config.prod.ts')).toBeTruthy();
       expect(tree.read('remote2/rspack.config.prod.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
@@ -432,55 +523,57 @@ describe('Convert webpack', () => {
               "
           `);
       expect(project.targets.build).toMatchInlineSnapshot(`
-              {
-                "configurations": {
-                  "development": {
-                    "extractLicenses": false,
-                    "optimization": false,
-                    "sourceMap": true,
-                    "vendorChunk": true,
-                  },
-                  "production": {
-                    "extractLicenses": true,
-                    "fileReplacements": [
-                      {
-                        "replace": "demo/src/environments/environment.ts",
-                        "with": "demo/src/environments/environment.prod.ts",
-                      },
-                    ],
-                    "namedChunks": false,
-                    "optimization": true,
-                    "outputHashing": "all",
-                    "rspackConfig": "demo/rspack.config.prod.ts",
-                    "sourceMap": false,
-                    "vendorChunk": false,
-                  },
+        {
+          "configurations": {
+            "development": {
+              "extractLicenses": false,
+              "optimization": false,
+              "sourceMap": true,
+              "vendorChunk": true,
+            },
+            "production": {
+              "extractLicenses": true,
+              "fileReplacements": [
+                {
+                  "replace": "demo/src/environments/environment.ts",
+                  "with": "demo/src/environments/environment.prod.ts",
                 },
-                "defaultConfiguration": "production",
-                "executor": "@nx/rspack:rspack",
-                "options": {
-                  "assets": [
-                    "demo/src/favicon.ico",
-                    "demo/src/assets",
-                  ],
-                  "baseHref": "/",
-                  "compiler": "babel",
-                  "index": "demo/src/index.html",
-                  "main": "demo/src/main.ts",
-                  "outputPath": "dist/demo",
-                  "rspackConfig": "demo/rspack.config.ts",
-                  "scripts": [],
-                  "styles": [
-                    "demo/src/styles.css",
-                  ],
-                  "target": "web",
-                  "tsConfig": "demo/tsconfig.app.json",
-                },
-                "outputs": [
-                  "{options.outputPath}",
-                ],
-              }
-          `);
+              ],
+              "namedChunks": false,
+              "optimization": true,
+              "outputHashing": "all",
+              "rspackConfig": "demo/rspack.config.prod.ts",
+              "sourceMap": false,
+              "standardRspackConfigFunction": true,
+              "vendorChunk": false,
+            },
+          },
+          "defaultConfiguration": "production",
+          "executor": "@nx/rspack:rspack",
+          "options": {
+            "assets": [
+              "demo/src/favicon.ico",
+              "demo/src/assets",
+            ],
+            "baseHref": "/",
+            "compiler": "babel",
+            "index": "demo/src/index.html",
+            "main": "demo/src/main.ts",
+            "outputPath": "dist/demo",
+            "rspackConfig": "demo/rspack.config.ts",
+            "scripts": [],
+            "standardRspackConfigFunction": true,
+            "styles": [
+              "demo/src/styles.css",
+            ],
+            "target": "web",
+            "tsConfig": "demo/tsconfig.app.json",
+          },
+          "outputs": [
+            "{options.outputPath}",
+          ],
+        }
+      `);
       expect(project.targets.serve).toMatchInlineSnapshot(`
               {
                 "configurations": {

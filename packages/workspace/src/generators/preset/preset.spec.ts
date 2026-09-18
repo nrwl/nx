@@ -254,8 +254,6 @@ describe('preset', () => {
       "/// <reference types='vitest' />
       import { defineConfig } from 'vite';
       import vue from '@vitejs/plugin-vue';
-      import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-      import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
       export default defineConfig(() => ({
         root: import.meta.dirname,
@@ -268,10 +266,13 @@ describe('preset', () => {
           port: 4300,
           host: 'localhost',
         },
-        plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+        resolve: {
+          tsconfigPaths: true,
+        },
+        plugins: [vue()],
         // Uncomment this if you are using workers.
         // worker: {
-        //   plugins: () => [ nxViteTsPaths() ],
+        //  plugins: [],
         // },
         build: {
           outDir: '../../dist/apps/vue-preset-monorepo',
@@ -410,8 +411,6 @@ describe('preset', () => {
       "/// <reference types='vitest' />
       import { defineConfig } from 'vite';
       import react from '@vitejs/plugin-react';
-      import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-      import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
       export default defineConfig(() => ({
         root: import.meta.dirname,
@@ -424,10 +423,13 @@ describe('preset', () => {
           port: 4300,
           host: 'localhost',
         },
-        plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+        resolve: {
+          tsconfigPaths: true,
+        },
+        plugins: [react()],
         // Uncomment this if you are using workers.
         // worker: {
-        //   plugins: () => [ nxViteTsPaths() ],
+        //  plugins: [],
         // },
         build: {
           outDir: './dist/react-standalone-preset-vite',
@@ -467,8 +469,6 @@ describe('preset', () => {
       "/// <reference types='vitest' />
       import { defineConfig } from 'vite';
       import vue from '@vitejs/plugin-vue';
-      import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-      import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
       export default defineConfig(() => ({
         root: import.meta.dirname,
@@ -481,10 +481,13 @@ describe('preset', () => {
           port: 4300,
           host: 'localhost',
         },
-        plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+        resolve: {
+          tsconfigPaths: true,
+        },
+        plugins: [vue()],
         // Uncomment this if you are using workers.
         // worker: {
-        //   plugins: () => [ nxViteTsPaths() ],
+        //  plugins: [],
         // },
         build: {
           outDir: './dist/vue-standalone-preset',

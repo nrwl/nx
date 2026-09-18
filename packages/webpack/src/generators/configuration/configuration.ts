@@ -133,15 +133,13 @@ module.exports = {
 }
 `
         : `
-const { composePlugins, withNx, withWeb } = require('@nx/webpack');
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 
-// Nx plugins for webpack.
-module.exports = composePlugins(withNx(), withWeb(), (config) => {
-  // Update the webpack config as needed here.
-  // e.g. \`config.plugins.push(new MyPlugin())\`
-  config.output.clean = true;
-  return config;
-});
+module.exports = {
+  output: { clean: true },
+  plugins: [new NxAppWebpackPlugin()],
+};
+
 `
     );
   } else {
@@ -170,15 +168,13 @@ module.exports = {
 }
 `
         : `
-const { composePlugins, withNx } = require('@nx/webpack');
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 
-// Nx plugins for webpack.
-module.exports = composePlugins(withNx(), (config) => {
-  // Update the webpack config as needed here.
-  // e.g. \`config.plugins.push(new MyPlugin())\`
-  config.output.clean = true;
-  return config;
-});
+module.exports = {
+  output: { clean: true },
+  plugins: [new NxAppWebpackPlugin()],
+};
+
 `
     );
   }

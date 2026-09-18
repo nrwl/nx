@@ -17,11 +17,7 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/internal';
-import { withReact } from '@nx/react';
-import {
-  assertPackageIsInstalled,
-  suppressReactComposeHelperWarnings,
-} from '@nx/react/internal';
+import { assertPackageIsInstalled, applyReactConfig } from '@nx/react/internal';
 import type {
   AssetGlobPattern,
   NormalizedWebpackExecutorOptions,
@@ -42,11 +38,8 @@ export function nxComponentTestingPreset(
 
   assertPackageIsInstalled('@nx/webpack', '@nx/next/plugins/component-testing');
   const {
-    composePluginsSync,
-    withNx,
-  }: typeof import('@nx/webpack') = require('@nx/webpack');
-  const {
-    suppressWebpackComposeHelperWarnings,
+    applyBaseConfig,
+    applyWebConfig,
   }: typeof import('@nx/webpack/internal') = require('@nx/webpack/internal');
 
   const graph = readCachedProjectGraph();
@@ -151,28 +144,21 @@ Able to find CT project, ${!!ctProjectConfig}.`);
       'tsconfig.json'
     ),
   };
-  // Nx composes these helpers internally for the Cypress CT preset; suppress
-  // their deprecation warning so it fires only for user-authored configs.
-  const webpackConfig = suppressWebpackComposeHelperWarnings(() =>
-    suppressReactComposeHelperWarnings(() => {
-      const configure = composePluginsSync(
-        withNx({
-          target: 'web',
-          styles: [],
-          scripts: [],
-          postcssConfig: ctProjectConfig.root,
-        }),
-        withReact({})
-      );
-      return configure(
-        {},
-        {
-          options: webpackOptions,
-          context: ctExecutorContext,
-        }
-      );
-    })
-  );
+  const webpackConfig = {};
+  const configOptions = {
+    ...webpackOptions,
+    target: 'web',
+    styles: [],
+    scripts: [],
+    postcssConfig: ctProjectConfig.root,
+    projectName: ctExecutorContext.projectName,
+    targetName: ctExecutorContext.targetName,
+    configurationName: ctExecutorContext.configurationName,
+    projectGraph: ctExecutorContext.projectGraph,
+  };
+  applyBaseConfig(configOptions, webpackConfig);
+  applyWebConfig(configOptions, webpackConfig);
+  applyReactConfig({}, webpackConfig);
 
   return {
     ...nxBaseCypressPreset(pathToConfig),

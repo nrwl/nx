@@ -725,12 +725,12 @@ If your projects use Jest with the `@nx/jest` resolver (`@nx/jest/plugins/resolv
 
 Update `vite.config.ts` for each Vite project:
 
-1. Remove `nxViteTsPaths` from `plugins` (if present). This plugin resolved TypeScript path aliases in older Nx versions. After migration, Vite built-in resolver finds local projects through `node_modules` symlinks. Newer Nx versions may not include this plugin.
+1. Remove `resolve.tsconfigPaths`, or `nxViteTsPaths` from `plugins` on configs written before Nx v24. Both resolve TypeScript path aliases, which project references no longer use. After migration, Vite built-in resolver finds local projects through `node_modules` symlinks.
 2. Add `resolve.conditions` with the same custom condition used in `tsconfig.base.json` (e.g. `@myorg/source`). This lets Vite resolve workspace libraries to source files during dev server and test runs, matching TypeScript's `customConditions` behavior. See [Testing without building dependencies](/docs/kb/testing-without-building-dependencies) for more details on how this works.
 3. Set `build.outDir` to `./dist` relative to the project folder.
 
 {% aside type="note" title="Vitest" %}
-If your `vitest.config.ts` or `vitest.config.mts` also uses `nxViteTsPaths`, remove it and add `resolve.conditions` there as well.
+If your `vitest.config.ts` or `vitest.config.mts` also resolves tsconfig paths, remove that too and add `resolve.conditions` there as well.
 {% /aside %}
 
 {% tabs %}
@@ -821,7 +821,7 @@ E2e tests are slow and each one spins up a dev server, so it's easier to debug f
 
 Fix any e2e failures before considering the migration complete. Common e2e issues include:
 
-- **Vite/webpack dev server resolution failures**: Confirm `nxViteTsPaths` was removed and workspace symlinks are in place (`node_modules/@myorg/lib` should be a symlink to the library directory).
+- **Vite/webpack dev server resolution failures**: Confirm tsconfig path resolution was removed and workspace symlinks are in place (`node_modules/@myorg/lib` should be a symlink to the library directory).
 - **Cypress/Playwright projects missing tsconfig changes**: E2e projects need the same tsconfig restructuring as other projects. Their solution files should extend `tsconfig.base.json` directly.
 
 {% llm_only %}

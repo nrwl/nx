@@ -6,11 +6,8 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/internal';
-import {
-  NormalizedWebpackExecutorOptions,
-  composePluginsSync,
-} from '@nx/webpack';
-import { suppressWebpackComposeHelperWarnings } from '@nx/webpack/internal';
+import type { NormalizedWebpackExecutorOptions } from '@nx/webpack';
+import { applyBaseConfig, applyWebConfig } from '@nx/webpack/internal';
 import { existsSync } from 'fs';
 import { join } from 'path';
 import {
@@ -19,8 +16,7 @@ import {
   ResolvePluginInstance,
   WebpackPluginInstance,
 } from 'webpack';
-import { withReact } from '../with-react';
-import { suppressReactComposeHelperWarnings } from '../../src/utils/deprecation';
+import { applyReactConfig } from '../nx-react-webpack-plugin/lib/apply-react-config';
 import { mergePlugins } from './merge-plugins';
 
 // This is shamelessly taken from CRA and modified for NX use
@@ -173,8 +169,6 @@ export const webpack = async (
     );
   }
 
-  const { withNx, withWeb } = require('@nx/webpack');
-
   const projectData = await getProjectData(options);
   const tsconfigPath = existsSync(
     join(projectData.projectRoot, 'tsconfig.storybook.json')
@@ -200,23 +194,24 @@ export const webpack = async (
     target: 'web',
   };
 
-  // ESM build for modern browsers.
-  let baseWebpackConfig: Configuration = {};
-  // Nx composes these helpers internally for the storybook preset; suppress
-  // their deprecation warning so it fires only for user-authored configs.
-  const finalConfig = suppressWebpackComposeHelperWarnings(() =>
-    suppressReactComposeHelperWarnings(() => {
-      const configure = composePluginsSync(
-        withNx({ target: 'web', skipTypeChecking: true }),
-        withReact()
-      );
-      return configure(baseWebpackConfig, {
-        options: builderOptions,
-        // TODO(JamesHenry): replace as any type assertion with as ExecutorContext once the nx repo is updated to use https://github.com/nrwl/nx/pull/33095
-        context: { root: workspaceRoot } as any, // The context is not used here.
-      });
-    })
+  const finalConfig: Configuration = {};
+  const configOptions = {
+    ...builderOptions,
+    projectName: undefined,
+    targetName: undefined,
+    configurationName: undefined,
+    projectGraph: undefined,
+  };
+  applyBaseConfig(
+    {
+      ...configOptions,
+      assets: builderOptions.assets ?? [],
+      skipTypeChecking: true,
+    },
+    finalConfig
   );
+  applyWebConfig(configOptions, finalConfig);
+  applyReactConfig({}, finalConfig);
 
   return {
     ...storybookWebpackConfig,
