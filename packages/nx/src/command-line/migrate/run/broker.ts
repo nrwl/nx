@@ -39,11 +39,14 @@ import {
 } from './run-state';
 import { updateRunState } from './state-lock';
 import {
+  appendCommit,
+  commitResultToLedgerEntry,
   markInstallFailed,
   splitMigrationId,
   stepsToPendingMigrations,
   uncoveredFailedStepIds,
 } from './state-machine';
+import { attachIssueIdsToCommitEntry } from './issues';
 import { installDepsChangedSinceDispense } from './util';
 
 export const BROKER_ENV_VAR = 'NX_MIGRATE_BROKER';
@@ -93,6 +96,12 @@ type BrokerAnswer = Extract<BrokerResult, { kind: 'commit' | 'installed' }>;
 export interface BrokeredCommit {
   result: CommitResult;
   absorbedStepIds: string[];
+  /**
+   * True when the session's parent ran the commit and recorded whatever it
+   * produced before answering, so the caller appends nothing. False for an
+   * in-process commit, which the caller records.
+   */
+  recorded: boolean;
 }
 
 /** The request no longer matches the step: another attempt owns it. */
@@ -168,7 +177,11 @@ export async function commitStepTree(
 ): Promise<BrokeredCommit> {
   const nonce = process.env[BROKER_ENV_VAR];
   if (!nonce) {
-    return { result: await commitInProcess(), absorbedStepIds };
+    return {
+      result: await commitInProcess(),
+      absorbedStepIds,
+      recorded: false,
+    };
   }
   const answer = await ask(dir, nonce, {
     kind: 'commit',
@@ -178,7 +191,11 @@ export async function commitStepTree(
   if (answer.kind !== 'commit') {
     throw new Error(`Unexpected '${answer.kind}' answer to a commit request.`);
   }
-  return { result: answer.result, absorbedStepIds: answer.absorbedStepIds };
+  return {
+    result: answer.result,
+    absorbedStepIds: answer.absorbedStepIds,
+    recorded: true,
+  };
 }
 
 /**
@@ -333,13 +350,45 @@ export class MigrateCommitBroker {
       const id = name.slice(0, -suffix.length);
       if (this.handled.has(id)) continue;
       this.handled.add(id);
-      const result = await this.answer(
-        readRequestFile(requestPath(this.dir, id))
-      );
+      const request = readRequestFile(requestPath(this.dir, id));
+      const result = await this.answer(request);
+      // Recorded by the process that ran the commit, before the answer: the
+      // step reading it can die with the commit already in history. A failed
+      // record throws and ends the session rather than losing the entry.
+      if (result.kind === 'commit') this.record(request, result);
       publishFileAtomically(resultPath(this.dir, id), (tmpPath) =>
         writeJsonFile(tmpPath, result)
       );
     }
+  }
+
+  // Appends the entry and leaves the step a receipt for it, on the attempt the
+  // request named: a rearmed step owes nothing to the old attempt's commit.
+  private record(
+    request: BrokerRequest,
+    result: Extract<BrokerResult, { kind: 'commit' }>
+  ): void {
+    const entry = commitResultToLedgerEntry(
+      result.result,
+      request.stepId,
+      result.absorbedStepIds
+    );
+    if (!entry) return;
+    updateRunState(this.dir, (fresh) => {
+      const index = fresh.commits.length;
+      const next = appendCommit(
+        fresh,
+        attachIssueIdsToCommitEntry(fresh, entry)
+      );
+      return {
+        ...next,
+        steps: next.steps.map((s) =>
+          s.id === request.stepId && s.attempt === request.attempt
+            ? { ...s, commitLedgerIndex: index }
+            : s
+        ),
+      };
+    });
   }
 
   private async answer(request: BrokerRequest): Promise<BrokerResult> {

@@ -84,7 +84,7 @@ import { nxVersion } from '../../../utils/versions';
 import { runStepHandoffPath } from '../agentic/handoff';
 import { runOrchestratorInit, runOrchestratorReconcile } from './orchestrator';
 import { BrokerStaleRequestError, BrokerUnavailableError } from './broker';
-import { answered, readRequest } from './test-utils';
+import { answered, readRequest, serviced } from './test-utils';
 import { computePlanHash } from './run-id';
 import {
   findActiveRun,
@@ -5560,35 +5560,270 @@ describe('orchestrator', () => {
       delete process.env.NX_MIGRATE_BROKER;
     });
 
-    it('folds a completed prompt with the commit the session landed', async () => {
+    const POLICY: MigrateRunPolicy = {
+      createCommits: true,
+      skipInstall: false,
+    };
+    const brokerIssue = (
+      id: string,
+      extra: Partial<MigrateRunIssue> = {}
+    ): MigrateRunIssue => ({
+      id,
+      fingerprint: issueFingerprint(`summary of ${id}`),
+      summary: `summary of ${id}`,
+      reportedByStepId: 'step-1',
+      applicableStepIds: ['step-1'],
+      disposition: 'recorded',
+      ...extra,
+    });
+
+    it('folds a completed prompt with the commit the session landed and recorded', async () => {
+      mockCommit.mockResolvedValue({
+        status: 'committed',
+        sha: 'face0004face0004face0004face0004face0004',
+      });
       const dir = await parkedPromptStep({ createCommits: true });
       writeHandoff(dir, '@nx/js', 'p', { status: 'success', summary: 'done' });
 
-      await answered(
-        dir,
-        nonce,
-        {
-          kind: 'commit',
-          result: {
-            status: 'committed',
-            sha: 'face0004face0004face0004face0004face0004',
-          },
-          absorbedStepIds: ['step-0'],
-          output: [],
-        },
-        () => runOrchestratorReconcile({ root, runId: 'run-1' })
+      await serviced(root, dir, POLICY, () =>
+        runOrchestratorReconcile({ root, runId: 'run-1' })
       );
 
-      expect(mockCommit).not.toHaveBeenCalled();
+      // The parent committed once and recorded it; the fold appended nothing.
+      expect(mockCommit).toHaveBeenCalledTimes(1);
       const state = readRunState(dir);
       expect(state.steps[0].status).toBe('succeeded');
+      expect(state.steps[0].commitLedgerIndex).toBe(0);
       expect(state.commits).toEqual([
         {
           kind: 'landed',
           sha: 'face0004face0004face0004face0004face0004',
-          stepIds: ['step-1', 'step-0'],
+          stepIds: ['step-1'],
         },
       ]);
+    });
+
+    it('attributes the issues a handoff resolved to the entry the session recorded', async () => {
+      mockCommit.mockResolvedValue({
+        status: 'committed',
+        sha: 'face0005face0005face0005face0005face0005',
+      });
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
+        createCommits: true,
+        plan: [promptMig('@nx/js', 'p')],
+        issues: [
+          brokerIssue('issue-1', { claimedByStepId: 'step-1' }),
+          brokerIssue('issue-2'),
+        ],
+      });
+      // An update, a duplicate report and a new report: every way a handoff
+      // resolves an issue.
+      writeHandoff(dir, '@nx/js', 'p', {
+        status: 'success',
+        summary: 'prompt applied',
+        issues: [
+          {
+            summary: 'summary of issue-2',
+            applicableMigrations: ['@nx/js:p'],
+            disposition: 'resolved',
+          },
+          {
+            summary: 'stale import found and corrected on the way',
+            applicableMigrations: ['@nx/js:p'],
+            disposition: 'resolved',
+          },
+        ],
+        issueUpdates: [{ id: 'issue-1', disposition: 'resolved' }],
+      });
+
+      await serviced(root, dir, POLICY, () =>
+        runOrchestratorReconcile({ root, runId: 'run-1' })
+      );
+
+      const state = readRunState(dir);
+      // The entry was recorded before the fold resolved them, so the stamps
+      // point at it rather than past it.
+      expect(
+        state.issues.map((i) => [i.id, i.disposition, i.resolvedAtCommitCount])
+      ).toEqual([
+        ['issue-1', 'resolved', 0],
+        ['issue-2', 'resolved', 0],
+        ['issue-3', 'resolved', 0],
+      ]);
+      expect(state.commits).toEqual([
+        {
+          kind: 'landed',
+          sha: 'face0005face0005face0005face0005face0005',
+          stepIds: ['step-1'],
+          issueIds: ['issue-1', 'issue-2', 'issue-3'],
+        },
+      ]);
+    });
+
+    it("folds against the entry an earlier session recorded when this session's parent finds nothing to commit", async () => {
+      mockCommit.mockResolvedValue({ status: 'no-changes' });
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome', {
+            commitLedgerIndex: 0,
+          }),
+        ],
+        createCommits: true,
+        plan: [promptMig('@nx/js', 'p')],
+        commits: [
+          {
+            kind: 'landed',
+            sha: 'face0006face0006face0006face0006face0006',
+            stepIds: ['step-1'],
+          },
+        ],
+        issues: [brokerIssue('issue-1', { claimedByStepId: 'step-1' })],
+      });
+      writeHandoff(dir, '@nx/js', 'p', {
+        status: 'success',
+        summary: 'prompt applied',
+        issueUpdates: [{ id: 'issue-1', disposition: 'resolved' }],
+      });
+
+      await serviced(root, dir, POLICY, () =>
+        runOrchestratorReconcile({ root, runId: 'run-1' })
+      );
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('succeeded');
+      expect(state.issues[0].resolvedAtCommitCount).toBe(0);
+      expect(state.commits).toEqual([
+        {
+          kind: 'landed',
+          sha: 'face0006face0006face0006face0006face0006',
+          stepIds: ['step-1'],
+          issueIds: ['issue-1'],
+        },
+      ]);
+    });
+
+    it('lands a second commit in process after the one a session recorded', async () => {
+      delete process.env.NX_MIGRATE_BROKER;
+      mockCommit.mockResolvedValue({
+        status: 'committed',
+        sha: 'face0007face0007face0007face0007face0007',
+      });
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome', {
+            commitLedgerIndex: 0,
+          }),
+        ],
+        createCommits: true,
+        plan: [promptMig('@nx/js', 'p')],
+        commits: [
+          {
+            kind: 'landed',
+            sha: 'face0006face0006face0006face0006face0006',
+            stepIds: ['step-1'],
+          },
+        ],
+        issues: [brokerIssue('issue-1', { claimedByStepId: 'step-1' })],
+      });
+      writeHandoff(dir, '@nx/js', 'p', {
+        status: 'success',
+        summary: 'prompt applied',
+        issueUpdates: [{ id: 'issue-1', disposition: 'resolved' }],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      // The fix reported now is in the new commit, not the recorded one.
+      const state = readRunState(dir);
+      expect(state.issues[0].resolvedAtCommitCount).toBe(1);
+      expect(state.commits).toEqual([
+        {
+          kind: 'landed',
+          sha: 'face0006face0006face0006face0006face0006',
+          stepIds: ['step-1'],
+        },
+        {
+          kind: 'landed',
+          sha: 'face0007face0007face0007face0007face0007',
+          stepIds: ['step-1'],
+          issueIds: ['issue-1'],
+        },
+      ]);
+    });
+
+    it('does not let the entry a session recorded vouch for a fix a failed local commit left in the tree', async () => {
+      delete process.env.NX_MIGRATE_BROKER;
+      mockCommit.mockResolvedValue({ status: 'failed' });
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome', {
+            commitLedgerIndex: 0,
+          }),
+        ],
+        createCommits: true,
+        plan: [promptMig('@nx/js', 'p')],
+        commits: [
+          {
+            kind: 'landed',
+            sha: 'face0006face0006face0006face0006face0006',
+            stepIds: ['step-1'],
+          },
+        ],
+        issues: [brokerIssue('issue-1', { claimedByStepId: 'step-1' })],
+      });
+      writeHandoff(dir, '@nx/js', 'p', {
+        status: 'success',
+        summary: 'prompt applied',
+        issueUpdates: [{ id: 'issue-1', disposition: 'resolved' }],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const state = readRunState(dir);
+      expect(state.issues[0].resolvedAtCommitCount).toBe(1);
+      expect(state.commits).toEqual([
+        {
+          kind: 'landed',
+          sha: 'face0006face0006face0006face0006face0006',
+          stepIds: ['step-1'],
+        },
+        { kind: 'failed', stepIds: ['step-1'] },
+      ]);
+    });
+
+    it('refuses to fold on a receipt that does not name the step, before committing', async () => {
+      delete process.env.NX_MIGRATE_BROKER;
+      mockCommit.mockResolvedValue({
+        status: 'committed',
+        sha: 'face0008face0008face0008face0008face0008',
+      });
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome', {
+            commitLedgerIndex: 0,
+          }),
+        ],
+        createCommits: true,
+        plan: [promptMig('@nx/js', 'p')],
+        commits: [
+          {
+            kind: 'landed',
+            sha: 'face0006face0006face0006face0006face0006',
+            stepIds: ['step-9'],
+          },
+        ],
+      });
+      writeHandoff(dir, '@nx/js', 'p', { status: 'success', summary: 'done' });
+
+      await expect(
+        runOrchestratorReconcile({ root, runId: 'run-1' })
+      ).rejects.toThrow(
+        'Step step-1 records its commit at ledger index 0, which does not name it.'
+      );
+      expect(mockCommit).not.toHaveBeenCalled();
+      expect(readRunState(dir).steps[0].status).toBe('awaiting-prompt-outcome');
+      expect(existsSync(handoffPathIn(dir, '@nx/js', 'p'))).toBe(true);
     });
 
     it('leaves a fold for the next reconcile when the session answered stale', async () => {

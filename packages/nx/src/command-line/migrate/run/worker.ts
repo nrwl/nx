@@ -66,6 +66,7 @@ import {
 } from './run-state';
 import { RUN_ID_SAFE } from './run-id';
 import {
+  appendCommit,
   applyStepEvent,
   commitResultToLedgerEntry,
   latestRound,
@@ -950,7 +951,7 @@ async function commitStepChanges(
     if (commitError instanceof BrokerStaleRequestError) throw commitError;
     // The install failed, or the session ended unanswered and the commit may
     // or may not have landed; record the debt until a landed entry covers it.
-    appendCommit(dir, { kind: 'failed', stepIds: [step.id] });
+    recordCommitEntry(dir, { kind: 'failed', stepIds: [step.id] });
     throw commitError;
   }
   if (commit.result.status === 'failed') {
@@ -961,21 +962,21 @@ async function commitStepChanges(
     step.id,
     commit.absorbedStepIds
   );
-  return entry ? appendCommit(dir, entry) : state;
+  // A session's parent records what it commits itself, receipt included.
+  return entry && !commit.recorded ? recordCommitEntry(dir, entry) : state;
 }
 
 // The git commit itself already ran outside the lock; only this pure append is
 // locked. A landed entry carries the resolved issues of every step it names,
 // same as the orchestrator's fold and adopt appends: an absorbed step's
 // resolutions would otherwise land unattached.
-function appendCommit(
+function recordCommitEntry(
   dir: string,
   entry: MigrateCommitLedgerEntry
 ): MigrateRunState {
-  return updateRunState(dir, (fresh) => ({
-    ...fresh,
-    commits: [...fresh.commits, attachIssueIdsToCommitEntry(fresh, entry)],
-  }));
+  return updateRunState(dir, (fresh) =>
+    appendCommit(fresh, attachIssueIdsToCommitEntry(fresh, entry))
+  );
 }
 
 function buildOutcome(

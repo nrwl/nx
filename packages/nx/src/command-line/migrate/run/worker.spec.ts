@@ -188,7 +188,7 @@ import {
 import { applyStepEvent } from './state-machine';
 import { depsHash } from './util';
 import { BrokerStaleRequestError, BrokerUnavailableError } from './broker';
-import { answered, readRequest } from './test-utils';
+import { answered, readRequest, serviced } from './test-utils';
 
 const RUN_NEXT_FIRST =
   'Run the dispensed "next" command first: its response restates this work and names the handoff file to write.';
@@ -2559,32 +2559,35 @@ describe('runSingleMigrationWorker', () => {
     const run = () =>
       runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'));
 
-    it('records the commit the session landed, naming the steps it absorbed', async () => {
-      const dir = committingRun();
+    it('leaves the commit the session landed to the record the session made, naming the steps it absorbed', async () => {
+      mockCommit.mockResolvedValue(committed);
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-0', '@nx/js:prior', 'failed'),
+          migStep('step-1', '@nx/js:gen', 'dispensed'),
+        ],
+        migrations: [genMig('@nx/js', 'gen')],
+        createCommits: true,
+        commits: [{ kind: 'failed', stepIds: ['step-0'] }],
+      });
 
-      await answered(
+      await serviced(
+        root,
         dir,
-        nonce,
-        {
-          kind: 'commit',
-          result: committed,
-          absorbedStepIds: ['step-0'],
-          output: [],
-        },
+        { createCommits: true, skipInstall: false },
         run
       );
 
-      expect(mockCommit).not.toHaveBeenCalled();
+      // The parent committed once and recorded it; the worker appended
+      // nothing of its own.
+      expect(mockCommit).toHaveBeenCalledTimes(1);
       const state = readRunState(dir);
-      expect(state.steps[0].status).toBe('succeeded');
+      expect(state.steps[1].status).toBe('succeeded');
+      expect(state.steps[1].commitLedgerIndex).toBe(1);
       expect(state.commits).toEqual([
+        { kind: 'failed', stepIds: ['step-0'] },
         { kind: 'landed', sha: committed.sha, stepIds: ['step-1', 'step-0'] },
       ]);
-      expect(readRequest(dir)).toEqual({
-        kind: 'commit',
-        stepId: 'step-1',
-        attempt: 1,
-      });
     });
 
     it('fails the step with debt when the session reported its install failed', async () => {

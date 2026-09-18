@@ -6,6 +6,7 @@ import type {
 } from './run-state';
 import {
   applyStepEvent,
+  commitReceipt,
   commitResultToLedgerEntry,
   coveringLandedEntries,
   hasPendingCommitDebt,
@@ -993,6 +994,54 @@ describe('coveringLandedEntries', () => {
     ]);
 
     expect(coveringLandedEntries(state, 'step-1')).toEqual([]);
+  });
+});
+
+describe('commitReceipt', () => {
+  const landed: MigrateCommitLedgerEntry = {
+    kind: 'landed',
+    sha: 'abc',
+    stepIds: ['step-1'],
+  };
+
+  it('is undefined for a step without a receipt', () => {
+    const state = { ...stateWithStep(), commits: [landed] };
+
+    expect(commitReceipt(state, state.steps[0])).toBeUndefined();
+  });
+
+  it('resolves the receipt to its entry', () => {
+    const state = {
+      ...stateWithStep({ commitLedgerIndex: 1 }),
+      commits: [{ kind: 'failed' as const, stepIds: ['step-1'] }, landed],
+    };
+
+    expect(commitReceipt(state, state.steps[0])).toEqual({
+      index: 1,
+      entry: landed,
+    });
+  });
+
+  it('rejects a receipt past the ledger', () => {
+    const state = {
+      ...stateWithStep({ commitLedgerIndex: 1 }),
+      commits: [landed],
+    };
+
+    expect(() => commitReceipt(state, state.steps[0])).toThrow(
+      'Step step-1 records its commit at ledger index 1, which does not exist.'
+    );
+  });
+
+  it('rejects a receipt for an entry that does not name the step', () => {
+    const state = {
+      ...stateWithStep({ commitLedgerIndex: 0 }),
+      commits: [{ ...landed, stepIds: ['step-2'] }],
+    };
+
+    expect(() => commitReceipt(state, state.steps[0])).toThrow(
+      'Step step-1 records its commit at ledger index 0, which does not name it.'
+    );
   });
 });
 

@@ -60,6 +60,7 @@ import {
   type BrokerResult,
 } from './broker';
 import {
+  issueFingerprint,
   readRunState,
   runDir,
   writeRunState,
@@ -223,6 +224,7 @@ describe('migrate commit broker', () => {
       expect(commit).toEqual({
         result: committed,
         absorbedStepIds: ['step-0'],
+        recorded: false,
       });
       expect(inProcess).toHaveBeenCalledTimes(1);
       expect(existsSync(brokerDir(dir))).toBe(false);
@@ -257,6 +259,7 @@ describe('migrate commit broker', () => {
       expect(commit).toEqual({
         result: committed,
         absorbedStepIds: ['step-0'],
+        recorded: true,
       });
       expect(inProcess).not.toHaveBeenCalled();
       expect(mockCommit).toHaveBeenCalledWith(
@@ -363,6 +366,7 @@ describe('migrate commit broker', () => {
       expect(await commitStepTree(dir, step(), [], vi.fn())).toEqual({
         result: committed,
         absorbedStepIds: [],
+        recorded: true,
       });
       expect(brokerFiles()).toEqual([
         'deadbeef-step-1-1-commit.result.json',
@@ -385,6 +389,7 @@ describe('migrate commit broker', () => {
       expect(await commitStepTree(dir, step(), [], vi.fn())).toEqual({
         result: committed,
         absorbedStepIds: [],
+        recorded: true,
       });
       expect(brokerFiles()).toEqual(['deadbeef-step-1-1-commit.result.json']);
     });
@@ -403,7 +408,11 @@ describe('migrate commit broker', () => {
       await broker.service();
       broker.close();
 
-      expect(await pending).toEqual({ result: committed, absorbedStepIds: [] });
+      expect(await pending).toEqual({
+        result: committed,
+        absorbedStepIds: [],
+        recorded: true,
+      });
       expect(mockCommit).toHaveBeenCalledTimes(1);
     });
 
@@ -475,6 +484,7 @@ describe('migrate commit broker', () => {
       expect(await commitStepTree(dir, step(), [], vi.fn())).toEqual({
         result: committed,
         absorbedStepIds: [],
+        recorded: true,
       });
     });
 
@@ -495,7 +505,11 @@ describe('migrate commit broker', () => {
       });
       parentLock.unlock();
 
-      expect(await pending).toEqual({ result: committed, absorbedStepIds: [] });
+      expect(await pending).toEqual({
+        result: committed,
+        absorbedStepIds: [],
+        recorded: true,
+      });
     });
 
     it('keeps waiting when the lock cannot be probed', async () => {
@@ -665,7 +679,11 @@ describe('migrate commit broker', () => {
       const landed = await commit;
       broker.close();
 
-      expect(landed).toEqual({ result: committed, absorbedStepIds: [] });
+      expect(landed).toEqual({
+        result: committed,
+        absorbedStepIds: [],
+        recorded: true,
+      });
       expect(mockCommit).toHaveBeenCalledTimes(1);
       // The first install moved the baseline, so the commit's own found
       // nothing to install.
@@ -722,7 +740,11 @@ describe('migrate commit broker', () => {
       await sleep(20);
       await broker.service();
       const landed = await first;
-      writeRunState(dir, runState({ steps: [step({ status: 'died' })] }));
+      const recorded = readRunState(dir);
+      writeRunState(dir, {
+        ...recorded,
+        steps: [{ ...recorded.steps[0], status: 'died' }],
+      });
       const adopted = await commitStepTree(
         dir,
         step({ status: 'died' }),
@@ -731,9 +753,17 @@ describe('migrate commit broker', () => {
       );
       broker.close();
 
-      expect(landed).toEqual({ result: committed, absorbedStepIds: [] });
+      expect(landed).toEqual({
+        result: committed,
+        absorbedStepIds: [],
+        recorded: true,
+      });
       expect(adopted).toEqual(landed);
       expect(mockCommit).toHaveBeenCalledTimes(1);
+      // Both callers leave the one entry the parent recorded alone.
+      expect(readRunState(dir).commits).toEqual([
+        { kind: 'landed', sha: committed.sha, stepIds: ['step-1'] },
+      ]);
     });
   });
 
@@ -1080,7 +1110,7 @@ describe('migrate commit broker', () => {
       expect(brokerFiles()).toEqual(['00000000-step-1-1.request.json']);
     });
 
-    it('fails when the answer cannot be published', async () => {
+    it('fails when the answer cannot be published, keeping the record of the commit it landed', async () => {
       const broker = new MigrateCommitBroker(
         root,
         dir,
@@ -1095,6 +1125,182 @@ describe('migrate commit broker', () => {
       broker.close();
 
       expect(mockCommit).toHaveBeenCalledTimes(1);
+      // Recorded before the answer: the commit is in history either way.
+      const state = readRunState(dir);
+      expect(state.commits).toEqual([
+        { kind: 'landed', sha: committed.sha, stepIds: ['step-1'] },
+      ]);
+      expect(state.steps[0].commitLedgerIndex).toBe(0);
+    });
+
+    it.each<[string, object, MigrateRunState['commits']]>([
+      [
+        'a landed commit',
+        committed,
+        [{ kind: 'landed', sha: committed.sha, stepIds: ['step-1', 'step-0'] }],
+      ],
+      [
+        'a landed commit whose sha could not be read',
+        { status: 'committed', sha: null },
+        [{ kind: 'landed', stepIds: ['step-1', 'step-0'] }],
+      ],
+      [
+        'a failed commit',
+        { status: 'failed' },
+        [{ kind: 'failed', stepIds: ['step-1'] }],
+      ],
+    ])(
+      'records %s with a receipt on the step before answering',
+      async (_case, result, entries) => {
+        writeRunState(
+          dir,
+          runState({
+            steps: [
+              step({
+                id: 'step-0',
+                migrationId: '@nx/js:old',
+                status: 'failed',
+              }),
+              step(),
+            ],
+            commits: [{ kind: 'failed', stepIds: ['step-0'] }],
+          })
+        );
+        mockCommit.mockResolvedValue(result);
+        const broker = new MigrateCommitBroker(
+          root,
+          dir,
+          'npx nx migrate',
+          POLICY
+        );
+        const resultPath = writeRequest(broker.nonce);
+
+        await broker.service();
+        broker.close();
+
+        const state = readRunState(dir);
+        expect(state.commits).toEqual([
+          { kind: 'failed', stepIds: ['step-0'] },
+          ...entries,
+        ]);
+        expect(state.steps[1].commitLedgerIndex).toBe(1);
+        expect(state.steps[0].commitLedgerIndex).toBeUndefined();
+        expect(JSON.parse(readFileSync(resultPath, 'utf8'))).toEqual({
+          kind: 'commit',
+          result,
+          absorbedStepIds: ['step-0'],
+          output: [],
+        });
+      }
+    );
+
+    it('records nothing for a commit that found no changes', async () => {
+      mockCommit.mockResolvedValue({ status: 'no-changes' });
+      const broker = new MigrateCommitBroker(
+        root,
+        dir,
+        'npx nx migrate',
+        POLICY
+      );
+      const resultPath = writeRequest(broker.nonce);
+
+      await broker.service();
+      broker.close();
+
+      const state = readRunState(dir);
+      expect(state.commits).toEqual([]);
+      expect(state.steps[0].commitLedgerIndex).toBeUndefined();
+      expect(existsSync(resultPath)).toBe(true);
+    });
+
+    it('records the entry without a receipt when the attempt moved on while it committed', async () => {
+      // A reconcile rearmed the step during the commit: the entry still
+      // names the step, but the new attempt owes nothing to it.
+      mockCommit.mockImplementation(async () => {
+        writeRunState(
+          dir,
+          runState({ steps: [step({ status: 'pending', attempt: 2 })] })
+        );
+        return committed;
+      });
+      const broker = new MigrateCommitBroker(
+        root,
+        dir,
+        'npx nx migrate',
+        POLICY
+      );
+      writeRequest(broker.nonce);
+
+      await broker.service();
+      broker.close();
+
+      const state = readRunState(dir);
+      expect(state.commits).toEqual([
+        { kind: 'landed', sha: committed.sha, stepIds: ['step-1'] },
+      ]);
+      expect(state.steps[0].commitLedgerIndex).toBeUndefined();
+    });
+
+    it('attaches the resolved issues the entry can carry when it records it', async () => {
+      writeRunState(
+        dir,
+        runState({
+          issues: [
+            {
+              id: 'issue-1',
+              fingerprint: issueFingerprint('summary of issue-1'),
+              summary: 'summary of issue-1',
+              reportedByStepId: 'step-1',
+              applicableStepIds: ['step-1'],
+              disposition: 'resolved',
+              resolvedByStepId: 'step-1',
+              resolvedAtCommitCount: 0,
+            },
+          ],
+        })
+      );
+      const broker = new MigrateCommitBroker(
+        root,
+        dir,
+        'npx nx migrate',
+        POLICY
+      );
+      writeRequest(broker.nonce);
+
+      await broker.service();
+      broker.close();
+
+      expect(readRunState(dir).commits).toEqual([
+        {
+          kind: 'landed',
+          sha: committed.sha,
+          stepIds: ['step-1'],
+          issueIds: ['issue-1'],
+        },
+      ]);
+    });
+
+    it('fails without answering when the commit it landed cannot be recorded', async () => {
+      mockCommit.mockImplementation(async () => {
+        // The run state goes away under the parent between the commit and
+        // its record.
+        rmSync(join(dir, 'run.json'));
+        mkdirSync(join(dir, 'run.json'));
+        return committed;
+      });
+      const broker = new MigrateCommitBroker(
+        root,
+        dir,
+        'npx nx migrate',
+        POLICY
+      );
+      const resultPath = writeRequest(broker.nonce);
+
+      await expect(broker.service()).rejects.toThrow();
+      broker.close();
+
+      expect(mockCommit).toHaveBeenCalledTimes(1);
+      expect(existsSync(resultPath)).toBe(false);
     });
   });
 });

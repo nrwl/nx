@@ -147,6 +147,10 @@ export interface MigrateStep {
   // Recorded when the step enters 'awaiting-prompt-outcome'; dropped on re-arm
   // with the other per-attempt fields.
   awaitingKind?: MigrateStepAwaitingKind;
+  // Index of the ledger entry a parent session recorded for this attempt's
+  // commit. A fold that lands no new entry of its own attributes the
+  // handoff's resolutions there. Dropped on re-arm.
+  commitLedgerIndex?: number;
   // Set after the generator half runs and before the commit is attempted, so a
   // retry finishes the step instead of reapplying the changes. Dropped with the
   // four marker fields below when a retry's reset discards those changes.
@@ -221,9 +225,10 @@ export interface MigrateRunIssue {
   // A later commit that absorbs the step's tree carries the fix, so the
   // association outlives that step's own failed commit attempt.
   resolvedByStepId?: string;
-  // Commits ledger length when the resolution was recorded. The ledger is
-  // append-only, so entries below it predate the resolution and cannot carry
-  // the fix, whoever they name.
+  // The earliest ledger index that can carry the fix: the ledger length when
+  // the resolution was recorded, or the index of an entry a parent session
+  // recorded first. Entries below it predate the resolution and cannot carry
+  // it, whoever they name.
   resolvedAtCommitCount?: number;
 }
 
@@ -441,6 +446,9 @@ function isStepShape(value: unknown): boolean {
         (value.generatorCompletedAtAttempt as number) >= 1 &&
         (value.generatorCompletedAtAttempt as number) <=
           (value.attempt as number))) &&
+    (value.commitLedgerIndex === undefined ||
+      (Number.isSafeInteger(value.commitLedgerIndex) &&
+        (value.commitLedgerIndex as number) >= 0)) &&
     isOptionalBoolean(value.agenticWaived) &&
     isOptionalBoolean(value.validationOwed) &&
     isOptionalBoolean(value.generatorMadeChanges) &&

@@ -74,7 +74,9 @@ import {
   withRunStateLock,
 } from './state-lock';
 import {
+  appendCommit,
   applyStepEvent,
+  commitReceipt,
   commitResultToLedgerEntry,
   coveringLandedEntries,
   hasPendingCommitDebt,
@@ -119,6 +121,7 @@ import {
   archiveIssues,
   attachIssueIdsToCommitEntry,
   claimIssuesForStep,
+  enrichCommitEntryIssueIds,
   applicationArchivesIntact,
   parseHandoffIssues,
   renderIssueDigestLines,
@@ -794,12 +797,13 @@ export async function runOrchestratorReconcile(
     const target = result.targetStep;
     // An adopted death commits its working tree; that git side effect runs
     // before the lock (locked sections must stay synchronous), then the
-    // transition and its ledger entry land in one fresh-state write so a
-    // crash can't leave the step succeeded unrecorded. As with a fold, that
-    // window is wide, and a rejected reapply after the commit landed is
-    // equivalent to commitForStep's crash-refold window: the commit stays in
-    // history, the ledger misses it, and the rejection names it below so the
-    // agent re-decides against the moved HEAD.
+    // transition and any still-unrecorded ledger entry land in one fresh-state
+    // write so a crash can't leave the step succeeded unrecorded. As with a fold, that
+    // window is wide, and a rejected reapply after a commit this process ran
+    // is commitForStep's crash-refold window: the commit stays in history,
+    // the ledger misses it, and the rejection names it below so the agent
+    // re-decides against the moved HEAD. A parent-recorded one keeps its
+    // entry.
     // Without commits the adopted tree is still this migration's result, and
     // it can carry package.json edits the dead worker never installed; the
     // install has to run here or the next dispense captures the modified
@@ -807,7 +811,7 @@ export async function runOrchestratorReconcile(
     // A skip leaves the tree as it stands too, so it owes the same install
     // and, with commits on, the same debt record as a prompt that did not
     // complete. Retries owe nothing: the rearmed attempt reconciles itself.
-    const { entry, installFailed }: StepSideEffects =
+    const { entry, installFailed, recorded }: StepSideEffects =
       stepAction === 'adopt'
         ? state.createCommits
           ? await commitForStep(root, dir, state, target)
@@ -886,8 +890,9 @@ export async function runOrchestratorReconcile(
         ? markInstallFailed(rearmed, target.id)
         : rearmed;
       // An adopted commit absorbs uncovered failed steps the same way a fold
-      // commit does, so it carries their resolved issues too.
-      return entry
+      // commit does, so it carries their resolved issues too. A session's
+      // parent records its own commits as it answers.
+      return entry && !recorded
         ? appendCommit(next, attachIssueIdsToCommitEntry(next, entry))
         : next;
     });
@@ -994,6 +999,12 @@ async function foldHandoffs(
         promptOutcome,
       });
       if (applied.kind === 'error') return;
+      // A corrupt receipt refuses the fold here, before the commit below
+      // could land unrecorded.
+      commitReceipt(
+        fresh,
+        fresh.steps.find((s) => s.id === step.id)
+      );
       const issues = parseHandoffIssues(result.handoff.extras, fresh, step);
       if (issues.ok !== true) return;
       try {
@@ -1029,10 +1040,10 @@ async function foldHandoffs(
     }
     if (!ready) continue;
     // Phase 2: the commit and the install are side effects, so they happen
-    // outside the lock; the transition, the issue application, and the
-    // ledger entry then land in one fresh-state write. A crash cannot leave
-    // the step settled with its commit forgotten.
-    const { entry, installFailed } = await foldLedgerEntry(
+    // outside the lock; the transition, the issue application, and any
+    // still-unrecorded ledger entry then land in one fresh-state write. A
+    // crash cannot leave the step settled with its commit forgotten.
+    const { entry, installFailed, recorded } = await foldLedgerEntry(
       root,
       dir,
       current,
@@ -1043,8 +1054,9 @@ async function foldHandoffs(
     // handoff was read for. That window is wide (a git commit plus a package
     // install), and 'awaiting-prompt-outcome' recurs, so without the attempt
     // check a concurrent reconcile's retry could take this outcome as its own.
-    // A dropped fold is equivalent to the crash-refold window: the commit
-    // landed but the ledger misses it.
+    // A dropped fold leaves a commit this process ran in the crash-refold
+    // window: landed, missing from the ledger. A parent-recorded one keeps
+    // its entry.
     // Written through the lock directly so the issue application is re-archived
     // on the state the write actually lands on: a claim assigned between the
     // phases can add an update record phase 1 never saw.
@@ -1064,11 +1076,21 @@ async function foldHandoffs(
       if (applied.kind === 'error') return fresh;
       const issues = parseHandoffIssues(result.handoff.extras, fresh, step);
       if (issues.ok !== true) return fresh;
+      // A commit this process ran is appended below and takes the handoff's
+      // resolutions. Otherwise the entry a parent session recorded for this
+      // attempt, in this session or an earlier one, takes them: the
+      // resolutions are stamped at its index and attached to it.
+      const receipt = commitReceipt(
+        applied.state,
+        applied.state.steps.find((s) => s.id === step.id)
+      );
+      const carrier = entry && !recorded ? undefined : receipt;
       const application = applyReportedIssues(
         applied.state,
         step,
         issues.issues,
-        issues.updates
+        issues.updates,
+        carrier?.index
       );
       try {
         // Phase 1 wrote these files, so a reconstruction here means one
@@ -1090,15 +1112,16 @@ async function foldHandoffs(
         archivesDegraded = intact !== true;
       }
       folded = true;
-      const next = installFailed
+      let next = installFailed
         ? markInstallFailed(application.state, step.id)
         : application.state;
       // A landed commit carries the fixes of every issue resolved by a step it
-      // names: the folding step's own resolutions, and those of absorbed steps
-      // whose failed commit attempts left them unattached.
-      const written = entry
-        ? appendCommit(next, attachIssueIdsToCommitEntry(next, entry))
-        : next;
+      // names, absorbed steps included.
+      if (carrier) next = enrichCommitEntryIssueIds(next, carrier.index);
+      const written =
+        entry && !recorded
+          ? appendCommit(next, attachIssueIdsToCommitEntry(next, entry))
+          : next;
       writeRunState(dir, written);
       return written;
     });
@@ -1386,16 +1409,20 @@ function applyReconcileStepAction(
 interface StepSideEffects {
   entry: MigrateCommitLedgerEntry | null;
   installFailed: boolean;
+  // The session's parent ran the commit and already recorded `entry`.
+  recorded?: boolean;
 }
 
 // Commits the working tree left by a folded prompt outcome or an adopted
-// death, returning the ledger entry the caller persists together with the
-// step transition (null when there was nothing to commit). The worker's
+// death, returning the ledger entry the caller persists with the step
+// transition unless a session's parent recorded it (null when there was
+// nothing to commit). The worker's
 // recorded-commit path classifies through the same commitResultToLedgerEntry.
 //
-// Remaining narrow window: a crash after the git commit but before the state
-// write refolds on the next reconcile, where the commit attempt sees a clean
-// tree ('no-changes') and the ledger simply misses that landed entry; the
+// Remaining narrow window for a commit this process ran (a session's parent
+// records its own as it answers): a crash after the git commit but before the
+// state write refolds on the next reconcile, where the commit attempt sees a
+// clean tree ('no-changes') and the ledger simply misses that landed entry; the
 // changes themselves are never lost. A lost landed entry can also strand the
 // failed entries it had absorbed, which is why completion double-checks the
 // tree before warning about debt.
@@ -1462,6 +1489,7 @@ async function commitForStep(
       commit.absorbedStepIds
     ),
     installFailed: false,
+    recorded: commit.recorded,
   };
 }
 
@@ -2446,13 +2474,6 @@ function reconcileCommand(
 }
 
 // --- helpers ----------------------------------------------------------------
-
-function appendCommit(
-  state: MigrateRunState,
-  entry: MigrateCommitLedgerEntry
-): MigrateRunState {
-  return { ...state, commits: [...state.commits, entry] };
-}
 
 interface DispenseBaselines {
   // Undefined when there is no HEAD to capture. This and treeCleanAtDispense

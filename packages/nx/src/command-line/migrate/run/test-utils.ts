@@ -1,7 +1,36 @@
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { FileLock } from '../../../native';
-import { brokerDir } from './broker';
+import { brokerDir, MigrateCommitBroker } from './broker';
+import type { MigrateRunPolicy } from './run-state';
+
+// Runs `start` under a live parent that services its requests and records
+// what it commits, as the parent of a spawned session does.
+export async function serviced<T>(
+  root: string,
+  dir: string,
+  policy: MigrateRunPolicy,
+  start: () => Promise<T>
+): Promise<T> {
+  const broker = new MigrateCommitBroker(root, dir, 'npx nx migrate', policy);
+  process.env.NX_MIGRATE_BROKER = broker.nonce;
+  const pending = start();
+  let settled = false;
+  const watched = pending.then(
+    () => (settled = true),
+    () => (settled = true)
+  );
+  try {
+    for (let i = 0; i < 500 && !settled; i++) {
+      await broker.service();
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+  } finally {
+    broker.close();
+  }
+  await watched;
+  return pending;
+}
 
 // Holds the session lock as a live parent would, answers whichever request
 // the run under test publishes, then settles with it.

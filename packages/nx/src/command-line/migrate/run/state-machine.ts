@@ -393,6 +393,37 @@ export function coveringLandedEntries(
   );
 }
 
+// Every ledger append. Entries are never removed or reordered, which the step
+// receipts and the resolution stamps rely on.
+export function appendCommit(
+  state: MigrateRunState,
+  entry: MigrateCommitLedgerEntry
+): MigrateRunState {
+  return { ...state, commits: [...state.commits, entry] };
+}
+
+/**
+ * The entry a parent session recorded for this attempt's commit, or undefined
+ * without a receipt. A receipt past the ledger or naming another step is
+ * corrupt run state, so it throws.
+ */
+export function commitReceipt(
+  state: MigrateRunState,
+  step: MigrateStep
+): { index: number; entry: MigrateCommitLedgerEntry } | undefined {
+  const index = step.commitLedgerIndex;
+  if (index === undefined) return undefined;
+  const entry = state.commits[index];
+  if (!entry || !entry.stepIds.includes(step.id)) {
+    throw new Error(
+      `Step ${step.id} records its commit at ledger index ${index}, which ${
+        entry ? 'does not name it' : 'does not exist'
+      }.`
+    );
+  }
+  return { index, entry };
+}
+
 // The round with the highest index.
 export function latestRound(
   state: MigrateRunState
