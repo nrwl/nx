@@ -10,6 +10,16 @@
       "version": "23.1.0-beta.0",
       "description": "Remove the unused @remix-run/eslint-config dependency (ESLint v8 only) that earlier Nx versions added but never wired into the generated lint setup.",
       "implementation": "./dist/src/migrations/update-23-1-0/remove-remix-eslint-config"
+    },
+    "convert-to-inferred": {
+      "version": "24.0.0-beta.0",
+      "description": "Convert legacy Remix executors to inferred tasks. Remix v2 remains supported until Nx 25.",
+      "implementation": "./dist/src/migrations/update-24-0-0/convert-to-inferred"
+    },
+    "migrate-to-react-router": {
+      "version": "24.0.0-beta.0",
+      "description": "Migrate Remix v2 applications to React Router v8 with @nx/react, including Nx configuration and validation.",
+      "prompt": "./dist/src/migrations/update-24-0-0/migrate-to-react-router.md"
     }
   },
   "packageJsonUpdates": {

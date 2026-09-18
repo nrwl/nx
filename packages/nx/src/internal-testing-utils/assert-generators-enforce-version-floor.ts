@@ -5,7 +5,7 @@ import { updateJson } from '../generators/utils/json';
 
 interface GeneratorEntry {
   // generators.json entries point at their implementation via either `factory`
-  // (e.g. @nx/cypress) or `implementation` (e.g. @nx/remix). Both are valid.
+  // (e.g. @nx/cypress) or `implementation` (e.g. @nx/maven). Both are valid.
   factory?: string;
   implementation?: string;
 }

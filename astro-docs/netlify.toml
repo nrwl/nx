@@ -1262,6 +1262,12 @@ to = "/docs/platform-features/continuous-integration-ci"
 from = "/docs/kb/setup-ci"
 to = "/docs/getting-started/setup-ci"
 
+# NXC-4289: Remix executors were removed in Nx 24.
+[[redirects]]
+from = "/docs/technologies/react/remix/executors"
+to = "/docs/technologies/react/remix/introduction"
+status = 301
+
 # Rewrite for base path handling (keeps URL the same)
 [[redirects]]
 from = "/docs/*"
