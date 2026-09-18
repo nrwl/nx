@@ -147,15 +147,18 @@ describe('the plugins a process has loaded', () => {
     expect(load).toHaveBeenCalledTimes(2);
   });
 
-  it('sweeping a failed load disposes nothing', async () => {
+  it('sweeping a load that later fails disposes nothing', async () => {
     wantPlugins('specified', [{ plugin: 'p' }], '/root');
-    load.mockRejectedValueOnce(new Error('plugin blew up'));
+    let fail: (error: Error) => void;
+    load.mockImplementationOnce(
+      () => new Promise((_, reject) => (fail = reject))
+    );
 
     const failed = loadIsolatedNxPlugin('p', '/root');
-    await expect(failed).rejects.toThrow('plugin blew up');
+    disposeIsolatedPlugins();
+    fail!(new Error('plugin blew up'));
 
-    expect(() => disposeIsolatedPlugins()).not.toThrow();
-    await Promise.resolve();
+    await expect(failed).rejects.toThrow('plugin blew up');
   });
 
   it('leaves the plugins another copy of Nx wanted alone', async () => {
