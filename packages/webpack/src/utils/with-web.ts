@@ -1,13 +1,10 @@
 import type { Configuration } from 'webpack';
-
-import { NxComposableWebpackPlugin, NxWebpackExecutionContext } from './config';
-import {
+import type { NxComposableWebpackPlugin } from './config';
+import { warnWebpackComposeHelpersDeprecation } from './deprecation';
+import type {
   ExtraEntryPointClass,
   NormalizedWebpackExecutorOptions,
 } from '../executors/webpack/schema';
-import { warnWebpackComposeHelpersDeprecation } from './deprecation';
-
-const processed = new Set();
 
 export interface WithWebOptions {
   baseHref?: string;
@@ -35,41 +32,10 @@ export type MergedOptions = Omit<
 > &
   WithWebOptions;
 
-/**
- * @deprecated Will be removed in Nx v24. Use `NxAppWebpackPlugin` from
- * `@nx/webpack/app-plugin` in a standard webpack config and run
- * `nx g @nx/webpack:convert-to-inferred`. See
- * https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.
- * @param {WithWebOptions} pluginOptions
- * @returns {NxWebpackPlugin}
- */
+/** @deprecated Removed in Nx v24. This inert stub only keeps old configs loadable. */
 export function withWeb(
-  pluginOptions: WithWebOptions = {}
+  _options: WithWebOptions = {}
 ): NxComposableWebpackPlugin {
   warnWebpackComposeHelpersDeprecation();
-  return function configure(
-    config: Configuration,
-    { options, context }: NxWebpackExecutionContext
-  ): Configuration {
-    if (processed.has(config)) return config;
-
-    // Lazy-required so importing this module does not load the webpack bundler.
-    const { applyWebConfig } =
-      require('../plugins/nx-webpack-plugin/lib/apply-web-config') as typeof import('../plugins/nx-webpack-plugin/lib/apply-web-config');
-
-    applyWebConfig(
-      {
-        ...options,
-        ...pluginOptions,
-        projectName: context.projectName,
-        targetName: context.targetName,
-        configurationName: context.configurationName,
-        projectGraph: context.projectGraph,
-      },
-      config
-    );
-
-    processed.add(config);
-    return config;
-  };
+  return (config: Configuration) => config;
 }

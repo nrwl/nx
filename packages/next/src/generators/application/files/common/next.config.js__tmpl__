@@ -9,23 +9,28 @@ const nextConfig = {
 
 module.exports = nextConfig;
 <% } else { -%>
+const { PHASE_DEVELOPMENT_SERVER } = require('next/constants');
+const { relative, resolve } = require('path');
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { composePlugins, withNx } = require('@nx/next');
+/** @type {import('next').NextConfig} */
+const nextConfig = {};
 
 /**
- * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
- **/
-const nextConfig = {
-  // Use this to set Nx-specific options
-  // See: https://nx.dev/docs/technologies/react/next/Guides/next-config-setup
-  nx: {},
-};
-
-const plugins = [
-  // Add more Next.js plugins to this list if needed.
-  withNx,
-];
-
-module.exports = composePlugins(...plugins)(nextConfig);
+ * @param {string} phase
+ * @returns {import('next').NextConfig}
+ */
+module.exports = (phase) => ({
+  ...nextConfig,
+  ...(phase !== PHASE_DEVELOPMENT_SERVER && process.env.NX_NEXT_OUTPUT_PATH
+    ? {
+        distDir: relative(
+          __dirname,
+          resolve(__dirname, '<%= offsetFromRoot %>', process.env.NX_NEXT_OUTPUT_PATH, '.next')
+        ),
+      }
+    : {}),
+  ...(process.env.NX_SERVE_STATIC_BUILD_RUNNING === 'true'
+    ? { output: 'export', distDir: 'out' }
+    : {}),
+});
 <% } -%>

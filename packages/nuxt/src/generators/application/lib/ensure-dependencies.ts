@@ -21,7 +21,8 @@ export async function ensureDependencies(
   const nuxtVersions = await getNuxtDependenciesVersionsToInstall(host);
 
   const devDependencies: Record<string, string> = {
-    '@nx/vite': nxVersion, // needed for the nxViteTsPaths plugin and @nx/vite/plugin
+    'vite-tsconfig-paths': '~4.3.2',
+    '@nx/vite': nxVersion, // needed for @nx/vite/plugin
     '@nuxt/devtools': nuxtVersions.nuxtDevtools,
     '@nuxt/kit': nuxtVersions.nuxtKit,
     '@nuxt/schema': nuxtVersions.nuxtSchema,

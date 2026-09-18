@@ -1,8 +1,10 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
 import {
   normalizePath,
   parseTargetString,
   readCachedProjectGraph,
   workspaceRoot,
+  type Target,
 } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/internal';
 import { statSync } from 'fs';
@@ -14,6 +16,11 @@ import {
   NxAppWebpackPluginOptions,
 } from '../nx-app-webpack-plugin-options';
 
+export const webpackExecutorContext = new AsyncLocalStorage<{
+  options: Partial<NxAppWebpackPluginOptions>;
+  target: Target;
+}>();
+
 export function normalizeOptions(
   options: NxAppWebpackPluginOptions
 ): NormalizedNxAppWebpackPluginOptions {
@@ -23,9 +30,12 @@ export function normalizeOptions(
   // Since this is invoked by the executor, the graph has already been created and cached.
   const projectGraph = readCachedProjectGraph();
 
-  const taskDetailsFromBuildTarget = process.env.NX_BUILD_TARGET
-    ? parseTargetString(process.env.NX_BUILD_TARGET, projectGraph)
-    : undefined;
+  const executorContext = webpackExecutorContext.getStore();
+  const taskDetailsFromBuildTarget =
+    executorContext?.target ??
+    (process.env.NX_BUILD_TARGET
+      ? parseTargetString(process.env.NX_BUILD_TARGET, projectGraph)
+      : undefined);
   const projectName = taskDetailsFromBuildTarget
     ? taskDetailsFromBuildTarget.project
     : process.env.NX_TASK_TARGET_PROJECT;
@@ -43,37 +53,23 @@ export function normalizeOptions(
 
   // Merge options from `@nx/webpack:webpack` into plugin options.
   // Options from `@nx/webpack:webpack` take precedence.
-  const originalTargetOptions = targetConfig.options;
-  if (configurationName) {
-    Object.assign(
-      originalTargetOptions,
-      targetConfig.configurations?.[configurationName]
-    );
-  }
-  // This could be called from dev-server which means we need to read `buildTarget` to get actual build options.
-  // Otherwise, the options are passed from the `@nx/webpack:webpack` executor.
-  if (originalTargetOptions.buildTarget) {
-    const buildTargetOptions = targetConfig.options;
-    if (configurationName) {
-      Object.assign(
-        buildTargetOptions,
-        targetConfig.configurations?.[configurationName]
-      );
-    }
-    Object.assign(
-      combinedPluginAndMaybeExecutorOptions,
-      options,
-      // executor options take precedence (especially for overriding with CLI args)
-      buildTargetOptions
-    );
-  } else {
-    Object.assign(
-      combinedPluginAndMaybeExecutorOptions,
-      options,
-      // executor options take precedence (especially for overriding with CLI args)
-      originalTargetOptions
-    );
-  }
+  const targetOptions = {
+    ...targetConfig.options,
+    ...(configurationName
+      ? targetConfig.configurations?.[configurationName]
+      : undefined),
+  };
+  Object.assign(combinedPluginAndMaybeExecutorOptions, options, targetOptions);
+
+  const executorOptions = executorContext?.options;
+  Object.assign(
+    combinedPluginAndMaybeExecutorOptions,
+    Object.fromEntries(
+      Object.entries(executorOptions ?? {}).filter(
+        ([, value]) => value !== undefined
+      )
+    )
+  );
 
   const sourceRoot = getProjectSourceRoot(projectNode.data);
 
@@ -90,7 +86,8 @@ export function normalizeOptions(
           combinedPluginAndMaybeExecutorOptions.assets,
           workspaceRoot,
           sourceRoot,
-          projectNode.data.root
+          projectNode.data.root,
+          executorOptions?.assets === undefined
         )
       : [],
     baseHref: combinedPluginAndMaybeExecutorOptions.baseHref ?? '/',

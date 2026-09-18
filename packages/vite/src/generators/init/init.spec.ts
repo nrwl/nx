@@ -182,7 +182,7 @@ describe('@nx/vite:init', () => {
     });
   });
 
-  it('should add nxViteTsPaths plugin to vite config files when setupPathsPlugin is set to true', async () => {
+  it('should enable native paths resolution when setupPathsPlugin is set to true', async () => {
     tree.write(
       'proj/vite.config.ts',
       stripIndents`
@@ -201,9 +201,11 @@ describe('@nx/vite:init', () => {
     expect(tree.read('proj/vite.config.ts').toString()).toMatchInlineSnapshot(`
       "import { defineConfig } from 'vite';
       import react from '@vitejs/plugin-react';
-      import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
       export default defineConfig({
-        plugins: [react(), nxViteTsPaths()],
+        resolve: {
+          tsconfigPaths: true,
+        },
+        plugins: [react()],
       });
       "
     `);
@@ -397,5 +399,17 @@ vite.config.*.timestamp*`
         ],
       }
     `);
+  });
+  it('should use the selected Vite version when setting up paths', async () => {
+    tree.write(
+      'vite.config.ts',
+      "import { defineConfig } from 'vite'; export default defineConfig({});"
+    );
+    await initGenerator(tree, { setupPathsPlugin: true, useViteV7: true });
+    expect(readJson(tree, 'package.json').devDependencies.vite).toBe('^7.0.0');
+    const config = tree.read('vite.config.ts', 'utf-8');
+    expect(config).toContain("import tsconfigPaths from 'vite-tsconfig-paths'");
+    expect(config).toContain('tsconfigPaths({ loose: true })');
+    expect(config).not.toContain('tsconfigPaths: true');
   });
 });
