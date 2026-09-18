@@ -34,6 +34,7 @@ import {
   loadViteDynamicImport,
   loadVitestConfigDynamicImport,
 } from '../utils/executor-utils';
+import { collectSetupFileInputs } from './setup-file-inputs';
 
 export interface VitestPluginOptions {
   testTargetName?: string;
@@ -239,10 +240,26 @@ async function buildVitestTargets(
   }
 
   const { resolveConfig } = await loadViteDynamicImport();
+  // Vite fills a missing `root` with `process.cwd()`, which at graph time is
+  // the workspace root - not where the task runs. Capture what the config
+  // actually authored so a relative path can be resolved the way Vitest will.
+  let authoredViteRoot: string | undefined;
   const viteBuildConfig = await resolveConfig(
     {
       configFile: absoluteConfigFilePath,
       mode: 'development',
+      plugins: [
+        {
+          name: 'nx-capture-authored-vitest-root',
+          enforce: 'post' as const,
+          config: {
+            order: 'post' as const,
+            handler(config: { root?: string }) {
+              authoredViteRoot = config.root;
+            },
+          },
+        },
+      ],
     },
     'build'
   );
@@ -272,6 +289,12 @@ async function buildVitestTargets(
   // if file is vitest.config or vite.config has definition for test, create targets for test and/or atomized tests
   if (configFilePath.includes('vitest.config') || hasTest) {
     const isTypecheckEnabled = !!viteBuildConfig.test?.typecheck?.enabled;
+    const setupFileInputs = collectSetupFileInputs(
+      viteBuildConfig,
+      projectRoot,
+      context.workspaceRoot,
+      authoredViteRoot
+    );
     targets[options.testTargetName] = await testTarget(
       namedInputs,
       testOutputs,
@@ -279,7 +302,8 @@ async function buildVitestTargets(
       options.testMode,
       pmc,
       isTypecheckEnabled,
-      tsconfigInputs
+      [...tsconfigInputs, ...setupFileInputs.tsconfigs],
+      setupFileInputs.files
     );
 
     if (options.ciTargetName) {
@@ -495,7 +519,8 @@ async function testTarget(
   testMode: 'watch' | 'run' = 'watch',
   pmc: ReturnType<typeof getPackageManagerCommand>,
   isTypecheckEnabled: boolean,
-  tsconfigInputs: string[]
+  tsconfigInputs: string[],
+  setupFileInputs: string[] = []
 ) {
   const command = testMode === 'run' ? 'vitest run' : 'vitest';
   const depOutputsGlob = isTypecheckEnabled ? '**/*.{js,d.ts}' : '**/*.js';
@@ -529,6 +554,9 @@ async function testTarget(
         json: `{workspaceRoot}/${f}`,
         fields: ['compilerOptions'],
       })),
+      // Whole-file, not just `compilerOptions`: these are sources Vitest
+      // executes, so any change to them changes the run.
+      ...setupFileInputs.map((f) => `{workspaceRoot}/${f}`),
       {
         externalDependencies: ['vitest'],
       },
