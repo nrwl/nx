@@ -1,7 +1,14 @@
 import { detectPackageManager, type CreateNodesContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import picomatch = require('picomatch');
-import { mkdirSync, rmSync } from 'node:fs';
+import {
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+} from 'node:fs';
+import { join } from 'node:path';
 import { getLockFileName, setupWorkspaceContext } from '@nx/devkit/internal';
 import { PLUGIN_NAME, createNodesV2, type TscPluginOptions } from './plugin';
 
@@ -57,6 +64,152 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
     await expect(
       invokeCreateNodesOnMatchingFiles(configFiles, context, {})
     ).resolves.not.toThrow();
+  });
+
+  it('should use canonical cache keys and not rewrite unchanged caches', async () => {
+    process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+    configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+      'libs/my-lib/tsconfig.json': JSON.stringify({ files: [] }),
+      'libs/my-lib/tsconfig.lib.json': JSON.stringify({ files: [] }),
+      'libs/my-lib/package.json': `{}`,
+    });
+
+    const firstResult = await invokeCreateNodesOnMatchingFiles(
+      configFiles,
+      context,
+      { build: true }
+    );
+    const cacheDirectory = join(
+      context.workspaceRoot,
+      'tmp/project-graph-cache'
+    );
+    const getCacheFiles = () =>
+      Object.fromEntries(
+        readdirSync(cacheDirectory).map((file) => [
+          file,
+          statSync(join(cacheDirectory, file)).ino,
+        ])
+      );
+    const cacheFiles = getCacheFiles();
+    const tsConfigCache = JSON.parse(
+      readFileSync(join(cacheDirectory, 'tsconfig-files.hash'), 'utf8')
+    );
+
+    expect(Object.keys(tsConfigCache.data).sort()).toEqual(
+      [...configFiles].sort()
+    );
+
+    const secondResult = await invokeCreateNodesOnMatchingFiles(
+      configFiles,
+      context,
+      { build: true }
+    );
+
+    expect(secondResult).toEqual(firstResult);
+    expect(getCacheFiles()).toEqual(cacheFiles);
+  });
+
+  it('should include non-globbed configs discovered by later projects', async () => {
+    configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+      'apps/my-app/tsconfig.json': JSON.stringify({
+        files: [],
+        references: [{ path: '../../libs/my-lib' }],
+      }),
+      'apps/my-app/package.json': `{}`,
+      'libs/my-lib/tsconfig.json': JSON.stringify({
+        files: [],
+        references: [{ path: './build.json' }],
+      }),
+      'libs/my-lib/build.json': JSON.stringify({ files: [] }),
+      'libs/my-lib/package.json': `{}`,
+    });
+
+    const result = await invokeCreateNodesOnMatchingFiles(
+      configFiles,
+      context,
+      {}
+    );
+
+    expect(result.projects['apps/my-app'].targets.typecheck.inputs).toContain(
+      '^{projectRoot}/build.json'
+    );
+  });
+
+  describe.each([
+    { reference: './tsconfig.lib.json', file: 'tsconfig.lib.json' },
+    { reference: './nested', file: 'nested/tsconfig.json' },
+    { reference: './build.json', file: 'build.json' },
+  ])('project reference $reference', ({ reference, file }) => {
+    it.each([
+      ['filtered discovery', false],
+      ['concurrent plugin scopes', true],
+    ] as const)(
+      'should preserve cold and warm inputs with %s',
+      async (_description, concurrent) => {
+        process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+          'apps/my-app/tsconfig.json': JSON.stringify({
+            files: [],
+            references: [{ path: '../../libs/my-lib' }],
+          }),
+          'apps/my-app/package.json': '{}',
+          'libs/my-lib/tsconfig.json': JSON.stringify({
+            files: [],
+            references: [{ path: reference }],
+          }),
+          [`libs/my-lib/${file}`]: JSON.stringify({ files: [] }),
+          'libs/my-lib/package.json': '{}',
+        });
+
+        const run = () =>
+          concurrent
+            ? Promise.all([
+                invokeCreateNodesOnMatchingFiles(
+                  ['apps/my-app/tsconfig.json'],
+                  context,
+                  {}
+                ),
+                invokeCreateNodesOnMatchingFiles(
+                  configFiles.filter((file) => file.startsWith('libs/')),
+                  context,
+                  { typecheck: { targetName: 'check-lib' } }
+                ),
+              ])
+            : invokeCreateNodesOnMatchingFiles(
+                ['apps/my-app/tsconfig.json', 'libs/my-lib/tsconfig.json'],
+                context,
+                {}
+              ).then((result) => [result]);
+
+        const coldResults = await run();
+        expect(
+          coldResults[0].projects['apps/my-app'].targets.typecheck.inputs
+        ).toContain(`^{projectRoot}/${file}`);
+
+        expect(await run()).toEqual(coldResults);
+      }
+    );
+  });
+
+  it('should report every build validation error without successful partial results', async () => {
+    process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+    configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+      'libs/my-lib/package.json': JSON.stringify({ main: 42 }),
+      'libs/my-lib/tsconfig.json': JSON.stringify({ files: [] }),
+      'libs/my-lib/tsconfig.lib.json': JSON.stringify({ files: [] }),
+    });
+
+    for (let invocation = 0; invocation < 2; invocation++) {
+      await expect(
+        createNodesV2[1](configFiles, { build: true }, context)
+      ).rejects.toMatchObject({
+        errors: [
+          ['libs/my-lib/tsconfig.json', expect.any(Error)],
+          ['libs/my-lib/tsconfig.lib.json', expect.any(Error)],
+        ],
+        partialResults: [],
+      });
+    }
   });
 
   it('should not create nodes for root tsconfig.json files', async () => {
