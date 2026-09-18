@@ -22,6 +22,7 @@ import {
   type TargetConfiguration,
 } from '@nx/devkit';
 import { getLockFileName } from '@nx/js';
+import { createConfigFileDependencyCollector } from '@nx/js/internal';
 import { readdirSync } from 'fs';
 import { dirname, join, relative, resolve } from 'path';
 import { NX_PLUGIN_OPTIONS } from '../utils/constants';
@@ -66,6 +67,12 @@ export const createNodes: CreateNodes<CypressPluginOptions> = [
         context
       );
 
+      const collectConfigDependencies = createConfigFileDependencyCollector(
+        context.workspaceRoot
+      );
+      const configHashes = entries.map(
+        (e) => collectConfigDependencies(e.configFile).hash
+      );
       const projectHashes = await calculateHashesForCreateNodes(
         entries.map((e) => e.projectRoot),
         normalizedOptions,
@@ -84,7 +91,9 @@ export const createNodes: CreateNodes<CypressPluginOptions> = [
               ctx,
               pluginCache,
               pmc,
-              projectHashes[idx]
+              configHashes[idx] === undefined
+                ? undefined
+                : projectHashes[idx] + configHashes[idx]
             ),
           entries.map((e) => e.configFile),
           options,
@@ -118,24 +127,23 @@ async function createNodesInternal(
   context: CreateNodesContext,
   pluginCache: PluginCache<CypressTargets>,
   pmc: ReturnType<typeof getPackageManagerCommand>,
-  projectHash: string
+  projectHash: string | undefined
 ) {
   const projectRoot = dirname(configFilePath);
-  const hash = projectHash + configFilePath;
+  const hash = projectHash && projectHash + configFilePath;
 
-  if (!pluginCache.has(hash)) {
-    pluginCache.set(
-      hash,
-      await buildCypressTargets(
-        configFilePath,
-        projectRoot,
-        options,
-        context,
-        pmc
-      )
+  let cypressTargets = hash ? pluginCache.get(hash) : undefined;
+  if (!cypressTargets) {
+    cypressTargets = await buildCypressTargets(
+      configFilePath,
+      projectRoot,
+      options,
+      context,
+      pmc
     );
+    if (hash) pluginCache.set(hash, cypressTargets);
   }
-  const { targets, metadata } = pluginCache.get(hash);
+  const { targets, metadata } = cypressTargets;
 
   const project: Omit<ProjectConfiguration, 'root'> = {
     projectType: 'application',

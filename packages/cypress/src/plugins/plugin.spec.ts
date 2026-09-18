@@ -7,6 +7,17 @@ import { nxE2EPreset } from '../../plugins/cypress-preset';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { resetWorkspaceContext } from '@nx/devkit/internal';
 
+var mockWorkspaceDataDir = '';
+jest.mock('nx/src/utils/cache-directory', () => {
+  const actual = jest.requireActual('nx/src/utils/cache-directory');
+  return {
+    ...actual,
+    get workspaceDataDirectory() {
+      return mockWorkspaceDataDir || actual.workspaceDataDirectory;
+    },
+  };
+});
+
 describe('@nx/cypress/plugin', () => {
   let createNodesFunction = createNodesV2[1];
   let context: CreateNodesContext;
@@ -41,6 +52,7 @@ describe('@nx/cypress/plugin', () => {
     };
 
     process.chdir(tempFs.tempDir);
+    mockWorkspaceDataDir = join(tempFs.tempDir, '.nx', 'workspace-data');
     originalCacheProjectGraph = process.env.NX_CACHE_PROJECT_GRAPH;
     process.env.NX_CACHE_PROJECT_GRAPH = 'false';
   });
@@ -55,6 +67,64 @@ describe('@nx/cypress/plugin', () => {
 
   afterAll(() => {
     resetWorkspaceContext();
+  });
+
+  it('accepts an empty config list with a virtual workspace root', async () => {
+    await expect(
+      createNodesFunction(
+        [],
+        {},
+        {
+          ...context,
+          workspaceRoot: join(tempFs.tempDir, 'virtual'),
+        }
+      )
+    ).resolves.toEqual([]);
+  });
+
+  it('refreshes cached atomized targets and outputs after only a shared transitive config changes', async () => {
+    process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+    await tempFs.createFiles({
+      'apps/e2e/package.json': '{}',
+      'apps/e2e/cypress.config.cjs': `globalThis.__cypressInferenceLoads = (globalThis.__cypressInferenceLoads ?? 0) + 1; module.exports = require('../../shared/config.cjs');`,
+      'apps/e2e/specs/a.cy.ts': '',
+      'apps/e2e/specs/b.cy.ts': '',
+      'shared/config.cjs': `const { selected } = require('./selection.json'); module.exports = { e2e: { specPattern: 'specs/' + selected + '.cy.ts', videosFolder: '../../out/' + selected, env: { ciWebServerCommand: 'echo ready' } } };`,
+      'shared/selection.json': '{"selected":"a"}',
+      'shared/unrelated.cjs': 'module.exports = 1;',
+    });
+    const infer = async () => {
+      // Clear Jest's module registry while retaining the plugin's disk cache.
+      jest.resetModules();
+      const nodes = await createNodesFunction(
+        ['apps/e2e/cypress.config.cjs'],
+        {
+          targetName: 'e2e',
+          ciTargetName: 'e2e-ci',
+        },
+        context
+      );
+      return nodes[0][1].projects['apps/e2e'].targets;
+    };
+    try {
+      const first = await infer();
+      expect(first['e2e-ci--specs/a.cy.ts']).toBeDefined();
+      expect(first['e2e'].outputs.join()).toContain('out/a');
+      expect((globalThis as any).__cypressInferenceLoads).toBe(1);
+
+      tempFs.writeFile('shared/unrelated.cjs', 'module.exports = 2;');
+      expect(await infer()).toEqual(first);
+      expect((globalThis as any).__cypressInferenceLoads).toBe(1);
+
+      tempFs.writeFile('shared/selection.json', '{"selected":"b"}');
+      const second = await infer();
+      expect(second['e2e-ci--specs/a.cy.ts']).toBeUndefined();
+      expect(second['e2e-ci--specs/b.cy.ts']).toBeDefined();
+      expect(second['e2e'].outputs.join()).toContain('out/b');
+      expect((globalThis as any).__cypressInferenceLoads).toBe(2);
+    } finally {
+      delete (globalThis as any).__cypressInferenceLoads;
+    }
   });
 
   it('should add a target for e2e', async () => {
@@ -1745,10 +1815,10 @@ describe('@nx/cypress/plugin', () => {
   });
 
   function mockCypressConfig(cypressConfig: Cypress.ConfigOptions) {
-    // This isn't JS, but all that really matters here
-    // is that the hash is different after updating the
-    // config file. The actual config read is mocked below.
-    tempFs.createFileSync('cypress.config.js', JSON.stringify(cypressConfig));
+    tempFs.createFileSync(
+      'cypress.config.js',
+      `module.exports = ${JSON.stringify(cypressConfig)}`
+    );
     jest.mock(
       join(tempFs.tempDir, 'cypress.config.js'),
       () => ({
