@@ -1032,6 +1032,39 @@ describe('run-state', () => {
       expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
     });
 
+    it('accepts a well-formed tree reservation and refuses a malformed one', () => {
+      const dir = join(root, 'run-1');
+      mkdirSync(dir, { recursive: true });
+      const valid = {
+        kind: 'commit' as const,
+        stepId: 'step-1',
+        attempt: 1,
+        owner: 'abcd1234',
+        pid: 4242,
+      };
+      writeFileSync(
+        join(dir, 'run.json'),
+        JSON.stringify(buildState({ treeOperation: valid }))
+      );
+      expect(readRunState(dir).treeOperation).toEqual(valid);
+
+      for (const treeOperation of [
+        { ...valid, kind: 'reset' },
+        { ...valid, owner: '' },
+        { ...valid, pid: 0 },
+        { ...valid, pid: '4242' },
+        { ...valid, attempt: 0 },
+        { ...valid, stepId: 7 },
+      ]) {
+        writeFileSync(
+          join(dir, 'run.json'),
+          JSON.stringify(buildState({ treeOperation: treeOperation as never }))
+        );
+
+        expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+      }
+    });
+
     it('refuses a malformed no-progress record', () => {
       const dir = join(root, 'run-1');
       mkdirSync(dir, { recursive: true });

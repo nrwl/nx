@@ -51,13 +51,17 @@ import { output } from '../../../utils/output';
 import type { MigrateOutputSink } from '../deferred-output';
 import { NpmPeerDepsInstallError } from '../execute-migration';
 import {
+  acquireTreeOperation,
   BrokerStaleRequestError,
   BrokerUnavailableError,
   brokerDir,
   commitStepTree,
   installStepTree,
   MigrateCommitBroker,
+  releaseTreeOperation,
+  TreeBusyError,
   type BrokerResult,
+  type TreeScope,
 } from './broker';
 import {
   issueFingerprint,
@@ -67,6 +71,7 @@ import {
   type MigrateRunPolicy,
   type MigrateRunState,
   type MigrateStep,
+  type MigrateTreeOperation,
 } from './run-state';
 import { summarizeError } from './util';
 
@@ -219,7 +224,13 @@ describe('migrate commit broker', () => {
       delete process.env.NX_MIGRATE_BROKER;
       const inProcess = vi.fn().mockResolvedValue(committed);
 
-      const commit = await commitStepTree(dir, step(), ['step-0'], inProcess);
+      const commit = await commitStepTree(
+        dir,
+        step(),
+        ['step-0'],
+        inProcess,
+        {}
+      );
 
       expect(commit).toEqual({
         result: committed,
@@ -250,7 +261,7 @@ describe('migrate commit broker', () => {
       const inProcess = vi.fn();
 
       // The caller's own absorbed ids are replaced by the parent's.
-      const pending = commitStepTree(dir, step(), [], inProcess);
+      const pending = commitStepTree(dir, step(), [], inProcess, {});
       await sleep(20);
       await broker.service();
       const commit = await pending;
@@ -297,7 +308,7 @@ describe('migrate commit broker', () => {
       );
       process.env.NX_MIGRATE_BROKER = broker.nonce;
 
-      const pending = commitStepTree(dir, step(), [], vi.fn());
+      const pending = commitStepTree(dir, step(), [], vi.fn(), {});
       const request = await readRequest(broker.nonce);
       await broker.service();
       await pending;
@@ -335,7 +346,7 @@ describe('migrate commit broker', () => {
       );
       process.env.NX_MIGRATE_BROKER = broker.nonce;
 
-      const pending = commitStepTree(dir, step(), [], vi.fn());
+      const pending = commitStepTree(dir, step(), [], vi.fn(), {});
       await sleep(20);
       await broker.service();
       await expect(pending).rejects.toThrow('registry unreachable');
@@ -349,9 +360,9 @@ describe('migrate commit broker', () => {
       process.env.NX_MIGRATE_BROKER = 'deadbeef';
       mkdirSync(join(brokerDir(dir), 'deadbeef.lock'), { recursive: true });
 
-      await expect(commitStepTree(dir, step(), [], vi.fn())).rejects.toThrow(
-        'is not accepting its request'
-      );
+      await expect(
+        commitStepTree(dir, step(), [], vi.fn(), {})
+      ).rejects.toThrow('is not accepting its request');
       expect(brokerFiles()).toEqual(['deadbeef.lock']);
     });
 
@@ -363,7 +374,7 @@ describe('migrate commit broker', () => {
         JSON.stringify(ANSWER)
       );
 
-      expect(await commitStepTree(dir, step(), [], vi.fn())).toEqual({
+      expect(await commitStepTree(dir, step(), [], vi.fn(), {})).toEqual({
         result: committed,
         absorbedStepIds: [],
         recorded: true,
@@ -386,7 +397,7 @@ describe('migrate commit broker', () => {
         throw new Error('EACCES');
       });
 
-      expect(await commitStepTree(dir, step(), [], vi.fn())).toEqual({
+      expect(await commitStepTree(dir, step(), [], vi.fn(), {})).toEqual({
         result: committed,
         absorbedStepIds: [],
         recorded: true,
@@ -403,7 +414,7 @@ describe('migrate commit broker', () => {
       );
       process.env.NX_MIGRATE_BROKER = broker.nonce;
 
-      const pending = commitStepTree(dir, step(), [], vi.fn());
+      const pending = commitStepTree(dir, step(), [], vi.fn(), {});
       await sleep(20);
       await broker.service();
       broker.close();
@@ -425,7 +436,13 @@ describe('migrate commit broker', () => {
       );
       process.env.NX_MIGRATE_BROKER = broker.nonce;
 
-      const pending = commitStepTree(dir, step({ attempt: 2 }), [], vi.fn());
+      const pending = commitStepTree(
+        dir,
+        step({ attempt: 2 }),
+        [],
+        vi.fn(),
+        {}
+      );
       await sleep(20);
       await broker.service();
       await expect(pending).rejects.toBeInstanceOf(BrokerStaleRequestError);
@@ -444,9 +461,11 @@ describe('migrate commit broker', () => {
       process.env.NX_MIGRATE_BROKER = broker.nonce;
       let settled = false;
 
-      const pending = commitStepTree(dir, step(), [], vi.fn()).finally(() => {
-        settled = true;
-      });
+      const pending = commitStepTree(dir, step(), [], vi.fn(), {}).finally(
+        () => {
+          settled = true;
+        }
+      );
       await sleep(700);
       const settledWhileLocked = settled;
       await broker.service();
@@ -459,7 +478,7 @@ describe('migrate commit broker', () => {
     it('gives up once the lock is free without an answer', async () => {
       process.env.NX_MIGRATE_BROKER = 'deadbeef';
 
-      const error = await commitStepTree(dir, step(), [], vi.fn()).catch(
+      const error = await commitStepTree(dir, step(), [], vi.fn(), {}).catch(
         (e) => e
       );
 
@@ -481,7 +500,7 @@ describe('migrate commit broker', () => {
         return false;
       });
 
-      expect(await commitStepTree(dir, step(), [], vi.fn())).toEqual({
+      expect(await commitStepTree(dir, step(), [], vi.fn(), {})).toEqual({
         result: committed,
         absorbedStepIds: [],
         recorded: true,
@@ -496,7 +515,7 @@ describe('migrate commit broker', () => {
       const parentLock = new FileLock(join(brokerDir(dir), 'deadbeef.lock'));
       parentLock.lock();
 
-      const pending = commitStepTree(dir, step(), [], vi.fn());
+      const pending = commitStepTree(dir, step(), [], vi.fn(), {});
       await answerRequest('deadbeef', {
         kind: 'commit',
         result: committed,
@@ -519,9 +538,11 @@ describe('migrate commit broker', () => {
       });
       let settled = false;
 
-      const pending = commitStepTree(dir, step(), [], vi.fn()).finally(() => {
-        settled = true;
-      });
+      const pending = commitStepTree(dir, step(), [], vi.fn(), {}).finally(
+        () => {
+          settled = true;
+        }
+      );
       await sleep(600);
       const settledWithoutProbe = settled;
       await answerRequest('deadbeef', {
@@ -541,7 +562,7 @@ describe('migrate commit broker', () => {
       delete process.env.NX_MIGRATE_BROKER;
       const inProcess = vi.fn().mockResolvedValue(undefined);
 
-      await installStepTree(dir, step(), 'install', inProcess);
+      await installStepTree(dir, step(), 'install', inProcess, {});
 
       expect(inProcess).toHaveBeenCalledTimes(1);
       expect(existsSync(brokerDir(dir))).toBe(false);
@@ -558,7 +579,7 @@ describe('migrate commit broker', () => {
       process.env.NX_MIGRATE_BROKER = broker.nonce;
       const inProcess = vi.fn();
 
-      const pending = installStepTree(dir, step(), 'install', inProcess);
+      const pending = installStepTree(dir, step(), 'install', inProcess, {});
       const request = await readRequest(broker.nonce);
       await broker.service();
       await pending;
@@ -601,7 +622,7 @@ describe('migrate commit broker', () => {
       );
       process.env.NX_MIGRATE_BROKER = broker.nonce;
 
-      const pending = installStepTree(dir, step(), 'install', vi.fn());
+      const pending = installStepTree(dir, step(), 'install', vi.fn(), {});
       await sleep(20);
       await broker.service();
       await expect(pending).rejects.toThrow('registry unreachable');
@@ -626,7 +647,7 @@ describe('migrate commit broker', () => {
       );
       process.env.NX_MIGRATE_BROKER = broker.nonce;
 
-      const pending = installStepTree(dir, step(), 'install', vi.fn());
+      const pending = installStepTree(dir, step(), 'install', vi.fn(), {});
       await sleep(20);
       await broker.service();
       await expect(pending).rejects.toBeInstanceOf(NpmPeerDepsInstallError);
@@ -649,7 +670,8 @@ describe('migrate commit broker', () => {
         dir,
         step({ attempt: 2 }),
         'install',
-        vi.fn()
+        vi.fn(),
+        {}
       );
       await sleep(20);
       await broker.service();
@@ -669,11 +691,11 @@ describe('migrate commit broker', () => {
       );
       process.env.NX_MIGRATE_BROKER = broker.nonce;
 
-      const install = installStepTree(dir, step(), 'install', vi.fn());
+      const install = installStepTree(dir, step(), 'install', vi.fn(), {});
       await sleep(20);
       await broker.service();
       await install;
-      const commit = commitStepTree(dir, step(), [], vi.fn());
+      const commit = commitStepTree(dir, step(), [], vi.fn(), {});
       await sleep(20);
       await broker.service();
       const landed = await commit;
@@ -699,7 +721,7 @@ describe('migrate commit broker', () => {
       );
       process.env.NX_MIGRATE_BROKER = broker.nonce;
 
-      const worker = installStepTree(dir, step(), 'install', vi.fn());
+      const worker = installStepTree(dir, step(), 'install', vi.fn(), {});
       await sleep(20);
       await broker.service();
       await worker;
@@ -714,7 +736,8 @@ describe('migrate commit broker', () => {
         dir,
         step({ status: 'awaiting-prompt-outcome' }),
         'fold-install',
-        vi.fn()
+        vi.fn(),
+        {}
       );
       await sleep(20);
       await broker.service();
@@ -736,7 +759,7 @@ describe('migrate commit broker', () => {
       );
       process.env.NX_MIGRATE_BROKER = broker.nonce;
 
-      const first = commitStepTree(dir, step(), [], vi.fn());
+      const first = commitStepTree(dir, step(), [], vi.fn(), {});
       await sleep(20);
       await broker.service();
       const landed = await first;
@@ -749,7 +772,8 @@ describe('migrate commit broker', () => {
         dir,
         step({ status: 'died' }),
         [],
-        vi.fn()
+        vi.fn(),
+        {}
       );
       broker.close();
 
@@ -1301,6 +1325,155 @@ describe('migrate commit broker', () => {
 
       expect(mockCommit).toHaveBeenCalledTimes(1);
       expect(existsSync(resultPath)).toBe(false);
+    });
+  });
+
+  describe('tree reservation', () => {
+    const request = { kind: 'commit' as const, stepId: 'step-1', attempt: 1 };
+    function held(): MigrateTreeOperation | undefined {
+      return readRunState(dir).treeOperation;
+    }
+
+    it('reserves the tree for one owner until that owner releases it', () => {
+      const lease = acquireTreeOperation(dir, request, 'first');
+
+      expect(held()).toEqual({ ...request, owner: 'first', pid: process.pid });
+      expect(() => acquireTreeOperation(dir, request, 'second')).toThrow(
+        TreeBusyError
+      );
+      // A stranger's release, or a lease released late, keeps the holder.
+      releaseTreeOperation(dir, 'second');
+      expect(held()?.owner).toBe('first');
+      lease.release();
+      expect(held()).toBeUndefined();
+    });
+
+    it('ignores a reservation whose owner process is gone', () => {
+      writeRunState(
+        dir,
+        runState({
+          treeOperation: { ...request, owner: 'gone', pid: 999999 },
+        })
+      );
+      vi.spyOn(process, 'kill').mockImplementation(() => {
+        throw Object.assign(new Error('no such process'), { code: 'ESRCH' });
+      });
+
+      const lease = acquireTreeOperation(dir, request, 'next');
+
+      expect(held()?.owner).toBe('next');
+      lease.release();
+    });
+
+    it('refuses a request whose step is no longer at its seam', () => {
+      writeRunState(dir, runState({ steps: [step({ status: 'succeeded' })] }));
+
+      expect(() => acquireTreeOperation(dir, request, 'late')).toThrow(
+        BrokerStaleRequestError
+      );
+      expect(held()).toBeUndefined();
+    });
+
+    it('hands an in-process seam its lease before the commit runs, and keeps it when the commit throws', async () => {
+      delete process.env.NX_MIGRATE_BROKER;
+      const scope: TreeScope = {};
+      let heldDuringCommit: MigrateTreeOperation | undefined;
+
+      await expect(
+        commitStepTree(
+          dir,
+          step(),
+          [],
+          async () => {
+            heldDuringCommit = held();
+            throw new Error('git failed');
+          },
+          scope
+        )
+      ).rejects.toThrow('git failed');
+
+      expect(heldDuringCommit?.owner).toBe(scope.lease.owner);
+      expect(held()?.owner).toBe(scope.lease.owner);
+      scope.lease.release();
+      expect(held()).toBeUndefined();
+    });
+
+    it('leaves a request for a later pass while another live process holds the tree', async () => {
+      writeRunState(
+        dir,
+        runState({
+          treeOperation: { ...request, owner: 'other', pid: process.pid },
+        })
+      );
+      const broker = new MigrateCommitBroker(
+        root,
+        dir,
+        'npx nx migrate',
+        POLICY
+      );
+      mkdirSync(brokerDir(dir), { recursive: true });
+      const resultPath = join(
+        brokerDir(dir),
+        `${broker.nonce}-step-1-1-commit.result.json`
+      );
+      writeFileSync(
+        join(brokerDir(dir), `${broker.nonce}-step-1-1-commit.request.json`),
+        JSON.stringify(request)
+      );
+
+      await broker.service();
+      const answeredWhileHeld = existsSync(resultPath);
+      releaseTreeOperation(dir, 'other');
+      await broker.service();
+      broker.close();
+
+      expect(answeredWhileHeld).toBe(false);
+      expect(mockCommit).toHaveBeenCalledTimes(1);
+      expect(existsSync(resultPath)).toBe(true);
+    });
+
+    it('holds the tree under its own nonce while answering and releases it after the record', async () => {
+      let heldDuringCommit: MigrateTreeOperation | undefined;
+      const broker = new MigrateCommitBroker(
+        root,
+        dir,
+        'npx nx migrate',
+        POLICY
+      );
+      mockCommit.mockImplementation(async () => {
+        heldDuringCommit = held();
+        return committed;
+      });
+      mkdirSync(brokerDir(dir), { recursive: true });
+      writeFileSync(
+        join(brokerDir(dir), `${broker.nonce}-step-1-1-commit.request.json`),
+        JSON.stringify(request)
+      );
+
+      await broker.service();
+
+      expect(heldDuringCommit).toEqual({
+        ...request,
+        owner: broker.nonce,
+        pid: process.pid,
+      });
+      expect(held()).toBeUndefined();
+      expect(readRunState(dir).commits).toHaveLength(1);
+      broker.close();
+    });
+
+    it('releases a reservation the session still holds when it closes', () => {
+      const broker = new MigrateCommitBroker(
+        root,
+        dir,
+        'npx nx migrate',
+        POLICY
+      );
+      acquireTreeOperation(dir, request, broker.nonce);
+
+      broker.close();
+
+      expect(held()).toBeUndefined();
     });
   });
 });

@@ -282,7 +282,29 @@ export interface MigrateRunState {
   // retry (tree reset) must not be offered. Cleared if a resume retry leaves
   // the tree fully committed before any migration step runs.
   checkpointFailed?: boolean;
+  // The install, commit or checkpoint one process is running against the
+  // working tree. Set before the operation and cleared by its owner after
+  // the state that records it is written; a dead owner pid voids it.
+  treeOperation?: MigrateTreeOperation;
   analytics: MigrateRunAnalytics;
+}
+
+export const TREE_OPERATION_KINDS = [
+  'commit',
+  'install',
+  'fold-install',
+  'action-install',
+  'checkpoint',
+] as const;
+export type MigrateTreeOperationKind = (typeof TREE_OPERATION_KINDS)[number];
+
+export interface MigrateTreeOperation {
+  kind: MigrateTreeOperationKind;
+  // Absent for the run-level checkpoint.
+  stepId?: string;
+  attempt?: number;
+  owner: string;
+  pid: number;
 }
 
 const REQUIRED_TOP_LEVEL_FIELDS: readonly (keyof MigrateRunState)[] = [
@@ -590,6 +612,22 @@ function isNoProgressShape(value: unknown): boolean {
   );
 }
 
+function isTreeOperationShape(value: unknown): boolean {
+  return (
+    value === undefined ||
+    (isPlainObject(value) &&
+      isOneOf(TREE_OPERATION_KINDS, value.kind) &&
+      (value.stepId === undefined || typeof value.stepId === 'string') &&
+      (value.attempt === undefined ||
+        (Number.isSafeInteger(value.attempt) &&
+          (value.attempt as number) >= 1)) &&
+      typeof value.owner === 'string' &&
+      (value.owner as string).length > 0 &&
+      Number.isSafeInteger(value.pid) &&
+      (value.pid as number) > 0)
+  );
+}
+
 function isAnalyticsShape(value: unknown): boolean {
   return (
     isPlainObject(value) &&
@@ -639,6 +677,7 @@ function hasValidRunStateShape(parsed: Record<string, unknown>): boolean {
         )
     ) &&
     isNoProgressShape(parsed.noProgress) &&
+    isTreeOperationShape(parsed.treeOperation) &&
     isAnalyticsShape(parsed.analytics)
   );
 }

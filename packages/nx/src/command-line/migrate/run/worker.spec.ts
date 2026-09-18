@@ -184,6 +184,7 @@ import {
   type MigrateRunState,
   type MigrateStep,
   type MigrateStepStatus,
+  type MigrateTreeOperation,
 } from './run-state';
 import { applyStepEvent } from './state-machine';
 import { depsHash } from './util';
@@ -2689,6 +2690,99 @@ describe('runSingleMigrationWorker', () => {
       expect(mockRunMigration).not.toHaveBeenCalled();
       expect(readRunState(dir).steps[0].status).toBe('awaiting-prompt-outcome');
       expect(readRequest(dir)).toMatchObject({ kind: 'install', attempt: 1 });
+    });
+  });
+
+  describe('recorded execution: tree reservation', () => {
+    const committed = {
+      status: 'committed' as const,
+      sha: 'face0030face0030face0030face0030face0030',
+    };
+
+    beforeEach(() => {
+      delete process.env.NX_MIGRATE_BROKER;
+      mockRunMigration.mockResolvedValue({
+        changes: changeList(),
+        nextSteps: [],
+        agentContext: [],
+        logs: '',
+        madeChanges: true,
+      });
+    });
+
+    function committingRun(): string {
+      return setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'dispensed')],
+        migrations: [genMig('@nx/js', 'gen')],
+        createCommits: true,
+      });
+    }
+
+    const run = () =>
+      runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'));
+
+    it('fails the attempt without debt when another live process holds the tree', async () => {
+      vi.spyOn(process, 'kill').mockReturnValue(true as never);
+      const dir = committingRun();
+      writeRunState(dir, {
+        ...readRunState(dir),
+        treeOperation: {
+          kind: 'action-install',
+          stepId: 'step-0',
+          attempt: 1,
+          owner: 'another-process',
+          pid: process.pid,
+        },
+      });
+
+      await expect(run()).rejects.toThrow(
+        `held by process ${process.pid} for the install of step 'step-0'`
+      );
+
+      expect(mockCommit).not.toHaveBeenCalled();
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('failed');
+      expect(state.steps[0].outcome.summary).toContain('held by process');
+      expect(state.commits).toEqual([]);
+      expect(state.treeOperation.owner).toBe('another-process');
+    });
+
+    it('holds the tree while it commits in process and releases it once the step is recorded', async () => {
+      const dir = committingRun();
+      let heldDuringCommit: MigrateTreeOperation | undefined;
+      mockCommit.mockImplementation(async () => {
+        heldDuringCommit = readRunState(dir).treeOperation;
+        return committed;
+      });
+
+      await run();
+
+      expect(heldDuringCommit).toEqual({
+        kind: 'commit',
+        stepId: 'step-1',
+        attempt: 1,
+        owner: expect.any(String),
+        pid: process.pid,
+      });
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('succeeded');
+      expect(state.treeOperation).toBeUndefined();
+    });
+
+    it('releases the tree when the install throws after reserving it', async () => {
+      mockInstallDepsIfChanged.mockRejectedValue(
+        new Error('registry unreachable')
+      );
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'dispensed')],
+        migrations: [genMig('@nx/js', 'gen')],
+      });
+
+      await expect(run()).rejects.toThrow('registry unreachable');
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('failed');
+      expect(state.treeOperation).toBeUndefined();
     });
   });
 

@@ -100,6 +100,7 @@ import {
   type MigrateRunState,
   type MigrateStep,
   type MigrateStepStatus,
+  type MigrateTreeOperation,
 } from './run-state';
 
 interface ParsedBlock {
@@ -5898,6 +5899,290 @@ describe('orchestrator', () => {
       const state = readRunState(dir);
       expect(state.steps[0].status).toBe('died');
       expect(state.commits).toEqual([]);
+    });
+  });
+
+  describe('reconcile: tree reservation', () => {
+    const DEAD_PID = 999999;
+    // Only the recorded worker pid is dead; this process, which the
+    // reservations below name, is alive.
+    function onlyWorkerDead(): void {
+      vi.spyOn(process, 'kill').mockImplementation(((pid: number) => {
+        if (pid === DEAD_PID) {
+          throw Object.assign(new Error('no such process'), { code: 'ESRCH' });
+        }
+        return true;
+      }) as never);
+    }
+    function reserve(
+      dir: string,
+      held: Partial<MigrateTreeOperation> = {}
+    ): void {
+      writeRunState(dir, {
+        ...readRunState(dir),
+        treeOperation: {
+          kind: 'commit',
+          stepId: 'step-1',
+          attempt: 1,
+          owner: 'another-process',
+          pid: process.pid,
+          ...held,
+        },
+      });
+    }
+
+    it('leaves a dead-pid worker running while a live process still commits for it', async () => {
+      onlyWorkerDead();
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'running', {
+            pid: DEAD_PID,
+            startedAt: new Date().toISOString(),
+          }),
+        ],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+      reserve(dir);
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(readRunState(dir).steps[0].status).toBe('running');
+      expect(lastBlock().action).toBe('still-running');
+    });
+
+    it('marks a dead-pid worker died when the reservation it left belongs to a dead process too', async () => {
+      onlyWorkerDead();
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'running', {
+            pid: DEAD_PID,
+            startedAt: '2026-01-01T00:00:00.000Z',
+          }),
+        ],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+      reserve(dir, { pid: DEAD_PID });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(readRunState(dir).steps[0].status).toBe('died');
+      expect(lastBlock().action).toBe('died');
+    });
+
+    it('refuses a step action while another live process holds the tree', async () => {
+      vi.spyOn(process, 'kill').mockReturnValue(true as never);
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'died')],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+      reserve(dir);
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'skip',
+      });
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('died');
+      expect(state.treeOperation.owner).toBe('another-process');
+      const block = lastBlock();
+      expect(block.action).toBe('error');
+      expect(block.payload.instructions).toContain(
+        `held by process ${process.pid} for the commit of step 'step-1'`
+      );
+    });
+
+    it('holds the tree while an adopt commits in process and releases it once the step is recorded', async () => {
+      vi.spyOn(process, 'kill').mockReturnValue(true as never);
+      let heldDuringCommit: MigrateTreeOperation | undefined;
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'died')],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+      mockCommit.mockImplementation(async () => {
+        heldDuringCommit = readRunState(dir).treeOperation;
+        return {
+          status: 'committed',
+          sha: 'face0020face0020face0020face0020face0020',
+        };
+      });
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'adopt',
+      });
+
+      expect(heldDuringCommit).toEqual({
+        kind: 'commit',
+        stepId: 'step-1',
+        attempt: 1,
+        owner: expect.any(String),
+        pid: process.pid,
+      });
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('succeeded');
+      expect(state.treeOperation).toBeUndefined();
+    });
+
+    it("releases the tree when a skip's install throws after reserving it", async () => {
+      vi.spyOn(process, 'kill').mockReturnValue(true as never);
+      mockStringifiedDeps.mockReturnValue('{"deps":"changed-by-the-step"}');
+      mockRunInstall.mockRejectedValue(new Error('registry unreachable'));
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'failed', {
+            depsHashAtDispense: 'baseline-from-an-earlier-dispense',
+          }),
+        ],
+        createCommits: false,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'skip',
+      });
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('skipped');
+      expect(state.steps[0].installFailed).toBe(true);
+      expect(state.treeOperation).toBeUndefined();
+    });
+
+    it('holds the tree while a fold commits in process and releases it once the fold is written', async () => {
+      let heldDuringCommit: MigrateTreeOperation | undefined;
+      const dir = await parkedPromptStep({ createCommits: true });
+      writeHandoff(dir, '@nx/js', 'p', { status: 'success', summary: 'done' });
+      mockCommit.mockImplementation(async () => {
+        heldDuringCommit = readRunState(dir).treeOperation;
+        return {
+          status: 'committed',
+          sha: 'face0021face0021face0021face0021face0021',
+        };
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(heldDuringCommit).toEqual(
+        expect.objectContaining({
+          kind: 'commit',
+          stepId: 'step-1',
+          attempt: 1,
+        })
+      );
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('succeeded');
+      expect(state.treeOperation).toBeUndefined();
+    });
+
+    it('holds the tree while the resume checkpoint commits and releases it afterwards', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      let heldDuringCheckpoint: MigrateTreeOperation | undefined;
+      mockCheckpoint.mockImplementation(() => {
+        heldDuringCheckpoint = readRunState(dir).treeOperation;
+      });
+      mockGetWorkingTreeStatus
+        .mockReturnValueOnce('dirty')
+        .mockReturnValue('clean');
+      mockGetLatestCommitSha
+        .mockReturnValueOnce('before-sha')
+        .mockReturnValue('face0022face0022face0022face0022face0022');
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+        createCommits: true,
+        checkpointFailed: true,
+        planHash: computePlanHash(migrationsJson),
+        plan: migrationsJson.migrations,
+      });
+
+      await runOrchestratorInit({
+        root,
+        migrationsJson,
+        createCommits: true,
+        commitPrefix: 'chore: [nx migration] ',
+        skipInstall: false,
+        installedNxVersion: '23.0.0',
+        validate: undefined,
+      });
+
+      expect(heldDuringCheckpoint).toEqual({
+        kind: 'checkpoint',
+        owner: expect.any(String),
+        pid: process.pid,
+      });
+      const state = readRunState(dir);
+      expect(state.checkpointFailed).toBe(false);
+      expect(state.treeOperation).toBeUndefined();
+    });
+
+    it('refuses to dispense a pending step when a checkpoint takes the tree after the dispense began', async () => {
+      vi.spyOn(process, 'kill').mockReturnValue(true as never);
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'pending')],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+      // The baseline read sits between the dispatch and the dispense write.
+      mockGetLatestCommitSha.mockImplementation(() => {
+        reserve(dir, {
+          kind: 'checkpoint',
+          stepId: undefined,
+          attempt: undefined,
+        });
+        return 'beef0001beef0001beef0001beef0001beef0001';
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(readRunState(dir).steps[0].status).toBe('pending');
+      const block = lastBlock();
+      expect(block.action).toBe('error');
+      expect(block.payload.instructions).toContain('the checkpoint commit');
+    });
+
+    it('applies a step action in the same reconcile that folded a failed handoff', async () => {
+      vi.spyOn(process, 'kill').mockReturnValue(true as never);
+      const dir = await parkedPromptStep({ createCommits: false });
+      writeHandoff(dir, '@nx/js', 'p', { status: 'failed', summary: 'nope' });
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'skip',
+      });
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('skipped');
+      expect(state.treeOperation).toBeUndefined();
+      expect(lastBlock().action).not.toBe('error');
+    });
+
+    it('refuses to dispense a pending step while a live checkpoint holds the tree', async () => {
+      vi.spyOn(process, 'kill').mockReturnValue(true as never);
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'pending')],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+      reserve(dir, {
+        kind: 'checkpoint',
+        stepId: undefined,
+        attempt: undefined,
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(readRunState(dir).steps[0].status).toBe('pending');
+      const block = lastBlock();
+      expect(block.action).toBe('error');
+      expect(block.payload.instructions).toContain('the checkpoint commit');
     });
   });
 });

@@ -88,7 +88,9 @@ import {
   BrokerStaleRequestError,
   commitStepTree,
   installStepTree,
+  TreeBusyError,
   type BrokeredCommit,
+  type TreeScope,
 } from './broker';
 import { singleLine } from '../text';
 import { emitPromptBlock, logToAgent, warnToAgent } from './agent-output';
@@ -600,255 +602,274 @@ async function runRecorded(
   // The run records the resolved validation policy at init; absent (a state
   // predating the field) falls back to the same default init applies.
   const shouldValidate = state.validate !== false;
+  // The tree reservation an in-process install or commit takes is held until
+  // the transition that records this attempt's outcome is written.
+  const scope: TreeScope = {};
   // Called before a retry hands the step's work back: the prompt or validation
   // may need the dependencies the earlier attempt's generator added.
   const reinstallFromBaseline = () =>
-    installStepTree(dir, startedStep, 'install', () =>
-      recordingInstallFailure(dir, step.id, () =>
-        installDepsChangedSinceDispense(
-          root,
-          dir,
-          startedStep,
-          effectiveSkipInstall,
-          `${formatSingleMigrationRerunCommand(migrationId)} --run-id=${runId}`
-        )
-      )
+    installStepTree(
+      dir,
+      startedStep,
+      'install',
+      () =>
+        recordingInstallFailure(dir, step.id, () =>
+          installDepsChangedSinceDispense(
+            root,
+            dir,
+            startedStep,
+            effectiveSkipInstall,
+            `${formatSingleMigrationRerunCommand(migrationId)} --run-id=${runId}`
+          )
+        ),
+      scope
     );
 
   let outcome: MigrateStepOutcome | undefined;
   let awaitingKind: MigrateStepAwaitingKind | undefined;
   const payloadPath = agentWorkPayloadPath(dir, step.id, startedStep.attempt);
   try {
-    if (isPromptOnlyMigration(migration)) {
-      emitOrPrintPrompt(root, migration, agenticKind, {
-        persistPath: payloadPath,
-      });
-      awaitingKind = 'migration-prompt';
-    } else if (
-      generatorAlreadyCompleted &&
-      startedStep.agenticWaived !== true &&
-      isHybridMigration(migration)
-    ) {
-      await reinstallFromBaseline();
-      const carried = latestStoredAgentWorkPayload(
-        dir,
-        step.id,
-        startedStep.attempt,
-        startedStep.generatorCompletedAtAttempt,
-        {
-          migrationId,
-          kind: 'migration-prompt',
-          promptPath: migration.prompt,
-        }
-      );
-      if (carried) {
-        reemitCarriedAgentWork(
-          migrationId,
-          'migration-prompt',
-          payloadPath,
-          carried
-        );
-      } else {
+    try {
+      if (isPromptOnlyMigration(migration)) {
         emitOrPrintPrompt(root, migration, agenticKind, {
           persistPath: payloadPath,
         });
-      }
-      awaitingKind = 'migration-prompt';
-    } else if (
-      generatorAlreadyCompleted &&
-      startedStep.validationOwed === true
-    ) {
-      // The persisted flag is the only record that these changes still owe a
-      // validation pass: the decision needed the generator result, which is
-      // gone with the attempt that made it, and a true waiver never writes the
-      // flag. The commit stays with the fold, as on a first attempt.
-      await reinstallFromBaseline();
-      const carried = latestStoredAgentWorkPayload(
-        dir,
-        step.id,
-        startedStep.attempt,
-        startedStep.generatorCompletedAtAttempt,
-        { migrationId, kind: 'generator-validation' }
-      );
-      if (carried) {
-        reemitCarriedAgentWork(
-          migrationId,
-          'generator-validation',
-          payloadPath,
-          carried
-        );
-      } else {
-        emitValidationBlock(root, migration, undefined, {
-          persistPath: payloadPath,
-        });
-      }
-      awaitingKind = 'generator-validation';
-    } else if (generatorAlreadyCompleted) {
-      // Reached when the earlier attempt waived the AI step, or none was owed
-      // (no changes, validation off, or an older-nx state).
-      state = await finishCompletedGenerator(
-        dir,
-        root,
-        state,
-        startedStep,
-        migration,
-        effectiveSkipInstall,
-        runId
-      );
-      outcome = buildOutcome(
-        [],
-        [],
-        'The generator ran in an earlier attempt; this attempt completed its install and commit.',
-        root
-      );
-    } else {
-      const installer = new ChangedDepInstaller(
-        root,
-        effectiveSkipInstall,
-        `${formatSingleMigrationRerunCommand(migrationId)} --run-id=${runId}`
-      );
-      // Read once; the run and the hybrid documentation resolution share it.
-      const resolvedCollection = readMigrationCollection(
-        migration.package,
-        root
-      );
-      const {
-        changes,
-        nextSteps,
-        agentContext,
-        skipAgentic,
-        logs,
-        madeChanges,
-      } = await runNxOrAngularMigration(
-        root,
-        migration,
-        isVerbose,
-        // Captured whenever an agent step may consume it: a hybrid's prompt
-        // payload, or the validation pass over the generator's changes.
-        isHybridMigration(migration) || shouldValidate,
-        resolvedCollection
-      );
-
-      // Mirrors the classic loop's waiver semantics (migrate.ts): the two must
-      // agree on when an AI step was owed for skipAgentic to waive.
-      const validationApplies =
-        shouldValidate && !isHybridMigration(migration) && changes.length > 0;
-      const waivedAgenticStep =
-        skipAgentic && (isHybridMigration(migration) || validationApplies);
-      const validationOwed = validationApplies && !waivedAgenticStep;
-      const promptOwed = isHybridMigration(migration) && !waivedAgenticStep;
-
-      // Recorded before the commit is attempted: from here on the changes are
-      // in the tree, so a failed install or commit must leave a retry with
-      // only those left to do rather than running the generator again. The
-      // waiver and the owed validation ride along so that retry re-emits
-      // exactly the agent work this attempt decided was owed.
-      state = transition(dir, {
-        type: 'markGeneratorCompleted',
-        stepId: step.id,
-        agenticWaived: waivedAgenticStep,
-        validationOwed,
-        madeChanges,
-      });
-
-      if (waivedAgenticStep) {
-        logWaivedAgenticStep(migration, agentContext);
-      } else if (!isHybridMigration(migration) && !validationApplies) {
-        forwardDroppedAgentContext(migration, agentContext, agenticKind);
-      }
-
-      // Stored before the install: a failed install fails the attempt, and
-      // the retry re-hands this payload instead of a context-free one.
-      const impl = { logs, changes, agentContext };
-      const owed = validationOwed
-        ? validationPayload(root, migration, impl, resolvedCollection)
-        : promptOwed
-          ? promptPayload(root, migration, impl, resolvedCollection)
-          : undefined;
-      if (owed) {
-        persistAgentWorkPayload(payloadPath, owed);
-      }
-
-      const install = () =>
-        recordingInstallFailure(dir, step.id, () =>
-          installer.installDepsIfChanged()
-        );
-
-      // Commits follow the run config, not CLI flags, and only when the
-      // generator changed something: a no-op step's commit would absorb prior
-      // pending diffs under its name. A step handing work back defers its
-      // commit to the fold, so the migration lands as one commit and a failed
-      // hand-back leaves the changes uncommitted for review, as in the classic
-      // loop. The install still runs first: the agent may run tasks that need
-      // what the generator added.
-      if (
-        state.createCommits &&
-        madeChanges &&
-        !validationOwed &&
-        !promptOwed
+        awaitingKind = 'migration-prompt';
+      } else if (
+        generatorAlreadyCompleted &&
+        startedStep.agenticWaived !== true &&
+        isHybridMigration(migration)
       ) {
-        state = await commitStepChanges(
+        await reinstallFromBaseline();
+        const carried = latestStoredAgentWorkPayload(
+          dir,
+          step.id,
+          startedStep.attempt,
+          startedStep.generatorCompletedAtAttempt,
+          {
+            migrationId,
+            kind: 'migration-prompt',
+            promptPath: migration.prompt,
+          }
+        );
+        if (carried) {
+          reemitCarriedAgentWork(
+            migrationId,
+            'migration-prompt',
+            payloadPath,
+            carried
+          );
+        } else {
+          emitOrPrintPrompt(root, migration, agenticKind, {
+            persistPath: payloadPath,
+          });
+        }
+        awaitingKind = 'migration-prompt';
+      } else if (
+        generatorAlreadyCompleted &&
+        startedStep.validationOwed === true
+      ) {
+        // The persisted flag is the only record that these changes still owe a
+        // validation pass: the decision needed the generator result, which is
+        // gone with the attempt that made it, and a true waiver never writes the
+        // flag. The commit stays with the fold, as on a first attempt.
+        await reinstallFromBaseline();
+        const carried = latestStoredAgentWorkPayload(
+          dir,
+          step.id,
+          startedStep.attempt,
+          startedStep.generatorCompletedAtAttempt,
+          { migrationId, kind: 'generator-validation' }
+        );
+        if (carried) {
+          reemitCarriedAgentWork(
+            migrationId,
+            'generator-validation',
+            payloadPath,
+            carried
+          );
+        } else {
+          emitValidationBlock(root, migration, undefined, {
+            persistPath: payloadPath,
+          });
+        }
+        awaitingKind = 'generator-validation';
+      } else if (generatorAlreadyCompleted) {
+        // Reached when the earlier attempt waived the AI step, or none was owed
+        // (no changes, validation off, or an older-nx state).
+        state = await finishCompletedGenerator(
           dir,
           root,
           state,
           startedStep,
           migration,
-          install
+          effectiveSkipInstall,
+          runId,
+          scope
+        );
+        outcome = buildOutcome(
+          [],
+          [],
+          'The generator ran in an earlier attempt; this attempt completed its install and commit.',
+          root
         );
       } else {
-        await installStepTree(dir, startedStep, 'install', install);
-      }
+        const installer = new ChangedDepInstaller(
+          root,
+          effectiveSkipInstall,
+          `${formatSingleMigrationRerunCommand(migrationId)} --run-id=${runId}`
+        );
+        // Read once; the run and the hybrid documentation resolution share it.
+        const resolvedCollection = readMigrationCollection(
+          migration.package,
+          root
+        );
+        const {
+          changes,
+          nextSteps,
+          agentContext,
+          skipAgentic,
+          logs,
+          madeChanges,
+        } = await runNxOrAngularMigration(
+          root,
+          migration,
+          isVerbose,
+          // Captured whenever an agent step may consume it: a hybrid's prompt
+          // payload, or the validation pass over the generator's changes.
+          isHybridMigration(migration) || shouldValidate,
+          resolvedCollection
+        );
 
-      if (installer.skippedInstall) {
-        logSkippedPostMigrationInstall(root);
-      } else if (installer.installed) {
-        recordInstallLanded(root, dir, step.id);
-      }
+        // Mirrors the classic loop's waiver semantics (migrate.ts): the two must
+        // agree on when an AI step was owed for skipAgentic to waive.
+        const validationApplies =
+          shouldValidate && !isHybridMigration(migration) && changes.length > 0;
+        const waivedAgenticStep =
+          skipAgentic && (isHybridMigration(migration) || validationApplies);
+        const validationOwed = validationApplies && !waivedAgenticStep;
+        const promptOwed = isHybridMigration(migration) && !waivedAgenticStep;
 
-      printNextSteps(migration, nextSteps);
+        // Recorded before the commit is attempted: from here on the changes are
+        // in the tree, so a failed install or commit must leave a retry with
+        // only those left to do rather than running the generator again. The
+        // waiver and the owed validation ride along so that retry re-emits
+        // exactly the agent work this attempt decided was owed.
+        state = transition(dir, {
+          type: 'markGeneratorCompleted',
+          stepId: step.id,
+          agenticWaived: waivedAgenticStep,
+          validationOwed,
+          madeChanges,
+        });
 
-      if (validationOwed) {
-        emitValidationPayload(migrationId, owed);
-        awaitingKind = 'generator-validation';
-      } else if (promptOwed) {
-        emitPromptForOuterAgent(migrationId, owed, true);
-        awaitingKind = 'migration-prompt';
-      } else {
-        outcome = buildOutcome(changes, nextSteps, migration.description, root);
+        if (waivedAgenticStep) {
+          logWaivedAgenticStep(migration, agentContext);
+        } else if (!isHybridMigration(migration) && !validationApplies) {
+          forwardDroppedAgentContext(migration, agentContext, agenticKind);
+        }
+
+        // Stored before the install: a failed install fails the attempt, and
+        // the retry re-hands this payload instead of a context-free one.
+        const impl = { logs, changes, agentContext };
+        const owed = validationOwed
+          ? validationPayload(root, migration, impl, resolvedCollection)
+          : promptOwed
+            ? promptPayload(root, migration, impl, resolvedCollection)
+            : undefined;
+        if (owed) {
+          persistAgentWorkPayload(payloadPath, owed);
+        }
+
+        const install = () =>
+          recordingInstallFailure(dir, step.id, () =>
+            installer.installDepsIfChanged()
+          );
+
+        // Commits follow the run config, not CLI flags, and only when the
+        // generator changed something: a no-op step's commit would absorb prior
+        // pending diffs under its name. A step handing work back defers its
+        // commit to the fold, so the migration lands as one commit and a failed
+        // hand-back leaves the changes uncommitted for review, as in the classic
+        // loop. The install still runs first: the agent may run tasks that need
+        // what the generator added.
+        if (
+          state.createCommits &&
+          madeChanges &&
+          !validationOwed &&
+          !promptOwed
+        ) {
+          state = await commitStepChanges(
+            dir,
+            root,
+            state,
+            startedStep,
+            migration,
+            install,
+            scope
+          );
+        } else {
+          await installStepTree(dir, startedStep, 'install', install, scope);
+        }
+
+        if (installer.skippedInstall) {
+          logSkippedPostMigrationInstall(root);
+        } else if (installer.installed) {
+          recordInstallLanded(root, dir, step.id);
+        }
+
+        printNextSteps(migration, nextSteps);
+
+        if (validationOwed) {
+          emitValidationPayload(migrationId, owed);
+          awaitingKind = 'generator-validation';
+        } else if (promptOwed) {
+          emitPromptForOuterAgent(migrationId, owed, true);
+          awaitingKind = 'migration-prompt';
+        } else {
+          outcome = buildOutcome(
+            changes,
+            nextSteps,
+            migration.description,
+            root
+          );
+        }
       }
+    } catch (e) {
+      // Another attempt owns the step, and `fail` is not attempt-bound.
+      if (e instanceof BrokerStaleRequestError) throw e;
+      // The failed-step dispense surfaces this so the agent can decide
+      // retry-vs-skip; carry the error's first line, not a full stack.
+      transition(dir, {
+        type: 'fail',
+        stepId: step.id,
+        finishedAt: nowIso(),
+        outcome: { summary: summarizeError(e) },
+      });
+      throw e;
     }
-  } catch (e) {
-    // Another attempt owns the step, and `fail` is not attempt-bound.
-    if (e instanceof BrokerStaleRequestError) throw e;
-    // The failed-step dispense surfaces this so the agent can decide
-    // retry-vs-skip; carry the error's first line, not a full stack.
+
+    // Handed-back work is applied by a separate actor, so parking exits
+    // successfully rather than failing the step.
+    if (awaitingKind !== undefined) {
+      transition(dir, {
+        type: 'awaitPromptOutcome',
+        stepId: step.id,
+        finishedAt: nowIso(),
+        awaitingKind,
+      });
+      return;
+    }
+
     transition(dir, {
-      type: 'fail',
+      type: 'succeed',
       stepId: step.id,
       finishedAt: nowIso(),
-      outcome: { summary: summarizeError(e) },
+      ...(outcome ? { outcome } : {}),
     });
-    throw e;
+  } finally {
+    scope.lease?.release();
   }
-
-  // Handed-back work is applied by a separate actor, so parking exits
-  // successfully rather than failing the step.
-  if (awaitingKind !== undefined) {
-    transition(dir, {
-      type: 'awaitPromptOutcome',
-      stepId: step.id,
-      finishedAt: nowIso(),
-      awaitingKind,
-    });
-    return;
-  }
-
-  transition(dir, {
-    type: 'succeed',
-    stepId: step.id,
-    finishedAt: nowIso(),
-    ...(outcome ? { outcome } : {}),
-  });
 }
 
 // Applies a step event to the freshest on-disk state under the lock, writes it,
@@ -896,7 +917,8 @@ async function finishCompletedGenerator(
   step: MigrateStep,
   migration: PlannedMigration,
   skipInstall: boolean,
-  runId: string
+  runId: string,
+  scope: TreeScope
 ): Promise<MigrateRunState> {
   const migrationId = `${migration.package}:${migration.name}`;
   const installDeps = () =>
@@ -913,10 +935,18 @@ async function finishCompletedGenerator(
   // commit: absent means an older nx wrote the marker without recording the
   // answer, and the commit is kept as that version's retries did.
   if (!state.createCommits || step.generatorMadeChanges === false) {
-    await installStepTree(dir, step, 'install', installDeps);
+    await installStepTree(dir, step, 'install', installDeps, scope);
     return state;
   }
-  return commitStepChanges(dir, root, state, step, migration, installDeps);
+  return commitStepChanges(
+    dir,
+    root,
+    state,
+    step,
+    migration,
+    installDeps,
+    scope
+  );
 }
 
 // Installs what the step changed, commits it, and records the result in the
@@ -929,26 +959,37 @@ async function commitStepChanges(
   state: MigrateRunState,
   step: MigrateStep,
   migration: PlannedMigration,
-  installDeps: () => Promise<void>
+  installDeps: () => Promise<void>,
+  scope: TreeScope
 ): Promise<MigrateRunState> {
   const absorbedStepIds = uncoveredFailedStepIds(state).filter(
     (id) => id !== step.id
   );
   let commit: BrokeredCommit;
   try {
-    commit = await commitStepTree(dir, step, absorbedStepIds, () =>
-      commitMigrationIfRequested(
-        root,
-        migration,
-        true,
-        state.commitPrefix,
-        installDeps,
-        stepsToPendingMigrations(state, absorbedStepIds)
-      )
+    commit = await commitStepTree(
+      dir,
+      step,
+      absorbedStepIds,
+      () =>
+        commitMigrationIfRequested(
+          root,
+          migration,
+          true,
+          state.commitPrefix,
+          installDeps,
+          stepsToPendingMigrations(state, absorbedStepIds)
+        ),
+      scope
     );
   } catch (commitError) {
-    // Nothing ran for a stale request, so there is no debt to record.
-    if (commitError instanceof BrokerStaleRequestError) throw commitError;
+    // Nothing ran for a stale or refused request, so there is no debt.
+    if (
+      commitError instanceof BrokerStaleRequestError ||
+      commitError instanceof TreeBusyError
+    ) {
+      throw commitError;
+    }
     // The install failed, or the session ended unanswered and the commit may
     // or may not have landed; record the debt until a landed entry covers it.
     recordCommitEntry(dir, { kind: 'failed', stepIds: [step.id] });

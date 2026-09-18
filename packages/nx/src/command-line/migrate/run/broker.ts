@@ -34,8 +34,10 @@ import { publishFileAtomically } from './atomic-write';
 import {
   readRunState,
   type MigrateRunPolicy,
+  type MigrateRunState,
   type MigrateStep,
   type MigrateStepStatus,
+  type MigrateTreeOperation,
 } from './run-state';
 import { updateRunState } from './state-lock';
 import {
@@ -47,7 +49,7 @@ import {
   uncoveredFailedStepIds,
 } from './state-machine';
 import { attachIssueIdsToCommitEntry } from './issues';
-import { installDepsChangedSinceDispense } from './util';
+import { installDepsChangedSinceDispense, isPidAlive } from './util';
 
 export const BROKER_ENV_VAR = 'NX_MIGRATE_BROKER';
 const BROKER_DIR_NAME = 'broker';
@@ -114,6 +116,113 @@ export class BrokerStaleRequestError extends Error {}
  */
 export class BrokerUnavailableError extends Error {}
 
+/** Another live process holds the working tree for an operation of its own. */
+export class TreeBusyError extends Error {}
+
+// A reservation names a step's seam, or the checkpoint's run-level one.
+export interface TreeOperationRequest {
+  kind: BrokerRequestKind | 'checkpoint';
+  stepId?: string;
+  attempt?: number;
+}
+
+export interface TreeLease {
+  readonly owner: string;
+  release(): void;
+}
+
+/**
+ * Owned by the scope that runs an operation and its state write: a seam that
+ * acquires in process writes the lease here before its fallible callback
+ * runs, and the scope releases it in a `finally` once the write landed or
+ * failed. A brokered call leaves it empty; the parent holds its own.
+ */
+export interface TreeScope {
+  lease?: TreeLease;
+}
+
+/**
+ * Reserves the working tree for one operation in a single fresh-state write:
+ * the request must still be at its seam (else the attempt moved on and the
+ * request is stale), and no other live process may hold a reservation.
+ * A reservation whose owner process is gone holds nothing.
+ */
+export function acquireTreeOperation(
+  dir: string,
+  request: TreeOperationRequest,
+  owner: string = randomBytes(4).toString('hex')
+): TreeLease {
+  updateRunState(dir, (fresh) => {
+    if (!atSeam(fresh, request)) {
+      throw new BrokerStaleRequestError(
+        `The request for this step no longer matches its attempt; nothing was installed or committed.`
+      );
+    }
+    const held = liveTreeOperation(fresh, owner);
+    if (held) throw new TreeBusyError(treeBusyMessage(held));
+    return {
+      ...fresh,
+      treeOperation: {
+        kind: request.kind,
+        ...(request.stepId !== undefined ? { stepId: request.stepId } : {}),
+        ...(request.attempt !== undefined ? { attempt: request.attempt } : {}),
+        owner,
+        pid: process.pid,
+      },
+    };
+  });
+  return { owner, release: () => releaseTreeOperation(dir, owner) };
+}
+
+// Owner-checked: a lease released late never drops a newer reservation.
+export function releaseTreeOperation(dir: string, owner: string): void {
+  updateRunState(dir, (fresh) =>
+    fresh.treeOperation?.owner === owner
+      ? { ...fresh, treeOperation: undefined }
+      : null
+  );
+}
+
+/** The reservation a live process other than `owner` holds, if any. */
+export function liveTreeOperation(
+  state: MigrateRunState,
+  owner?: string
+): MigrateTreeOperation | undefined {
+  const held = state.treeOperation;
+  if (!held || held.owner === owner || !isPidAlive(held.pid)) return undefined;
+  return held;
+}
+
+export function treeBusyMessage(held: MigrateTreeOperation): string {
+  const what =
+    held.kind === 'checkpoint'
+      ? 'the checkpoint commit'
+      : `the ${held.kind === 'commit' ? 'commit' : 'install'} of step '${held.stepId}'`;
+  return `The working tree is held by process ${held.pid} for ${what}; run the reconcile again once it finishes.`;
+}
+
+function atSeam(
+  state: MigrateRunState,
+  request: TreeOperationRequest
+): boolean {
+  if (request.kind === 'checkpoint') {
+    return (
+      state.createCommits &&
+      state.checkpointFailed === true &&
+      state.steps.every((s) => s.status === 'pending')
+    );
+  }
+  return (
+    Object.hasOwn(SEAM_STATUSES, request.kind) &&
+    request.stepId !== undefined &&
+    request.attempt !== undefined &&
+    isAtSeam(
+      state.steps.find((s) => s.id === request.stepId),
+      request as BrokerRequest
+    )
+  );
+}
+
 // The statuses a step has at each seam: a worker mid-run, a fold of a
 // handed-back prompt, a skipped failure or an adopted death.
 const SEAM_STATUSES: Record<
@@ -173,21 +282,24 @@ export async function commitStepTree(
   dir: string,
   step: MigrateStep,
   absorbedStepIds: string[],
-  commitInProcess: () => Promise<CommitResult>
+  commitInProcess: () => Promise<CommitResult>,
+  scope: TreeScope
 ): Promise<BrokeredCommit> {
+  const request: BrokerRequest = {
+    kind: 'commit',
+    stepId: step.id,
+    attempt: step.attempt,
+  };
   const nonce = process.env[BROKER_ENV_VAR];
   if (!nonce) {
+    scope.lease = acquireTreeOperation(dir, request);
     return {
       result: await commitInProcess(),
       absorbedStepIds,
       recorded: false,
     };
   }
-  const answer = await ask(dir, nonce, {
-    kind: 'commit',
-    stepId: step.id,
-    attempt: step.attempt,
-  });
+  const answer = await ask(dir, nonce, request);
   if (answer.kind !== 'commit') {
     throw new Error(`Unexpected '${answer.kind}' answer to a commit request.`);
   }
@@ -206,17 +318,20 @@ export async function installStepTree(
   dir: string,
   step: MigrateStep,
   seam: Exclude<BrokerRequestKind, 'commit'>,
-  installInProcess: () => Promise<void>
+  installInProcess: () => Promise<void>,
+  scope: TreeScope
 ): Promise<void> {
-  const nonce = process.env[BROKER_ENV_VAR];
-  if (!nonce) {
-    return installInProcess();
-  }
-  const answer = await ask(dir, nonce, {
+  const request: BrokerRequest = {
     kind: seam,
     stepId: step.id,
     attempt: step.attempt,
-  });
+  };
+  const nonce = process.env[BROKER_ENV_VAR];
+  if (!nonce) {
+    scope.lease = acquireTreeOperation(dir, request);
+    return installInProcess();
+  }
+  const answer = await ask(dir, nonce, request);
   if (answer.kind !== 'installed') {
     throw new Error(
       `Unexpected '${answer.kind}' answer to an install request.`
@@ -349,13 +464,30 @@ export class MigrateCommitBroker {
       if (!name.startsWith(prefix) || !name.endsWith(suffix)) continue;
       const id = name.slice(0, -suffix.length);
       if (this.handled.has(id)) continue;
-      this.handled.add(id);
       const request = readRequestFile(requestPath(this.dir, id));
-      const result = await this.answer(request);
-      // Recorded by the process that ran the commit, before the answer: the
-      // step reading it can die with the commit already in history. A failed
-      // record throws and ends the session rather than losing the entry.
-      if (result.kind === 'commit') this.record(request, result);
+      // Reserved before anything runs, released after the record is written.
+      // A tree held by another live process is left for a later pass, not
+      // marked handled; a request no longer at its seam is answered stale.
+      let lease: TreeLease | null = null;
+      try {
+        lease = acquireTreeOperation(this.dir, request, this.nonce);
+      } catch (e) {
+        if (e instanceof TreeBusyError) continue;
+        if (!(e instanceof BrokerStaleRequestError)) throw e;
+      }
+      this.handled.add(id);
+      let result: BrokerResult;
+      try {
+        result = lease ? await this.answer(request) : { kind: 'stale' };
+        // Recorded by the process that ran the commit, before the answer: the
+        // step reading it can die with the commit already in history. A failed
+        // record throws and ends the session rather than losing the entry.
+        if (result.kind === 'commit') this.record(request, result);
+      } finally {
+        lease?.release();
+      }
+      // Published after the release, so the step reading the answer never
+      // finds this request's reservation still standing over its own write.
       publishFileAtomically(resultPath(this.dir, id), (tmpPath) =>
         writeJsonFile(tmpPath, result)
       );
@@ -462,6 +594,10 @@ export class MigrateCommitBroker {
   /** Releases the lock; call after the last `service` settled. */
   close(): void {
     this.lock?.unlock();
+    // A reservation this session still holds would only expire with its pid.
+    try {
+      releaseTreeOperation(this.dir, this.nonce);
+    } catch {}
     // Hygiene only; a file left behind is never read by another session.
     try {
       if (handoffsDirState(brokerDir(this.dir)) !== 'directory') return;
