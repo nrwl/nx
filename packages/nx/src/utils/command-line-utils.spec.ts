@@ -15,6 +15,8 @@ describe('splitArgs', () => {
     'NX_DISABLE_NX_CACHE',
     'NX_SKIP_REMOTE_CACHE',
     'NX_DISABLE_REMOTE_CACHE',
+    'NX_SKIP_REMOTE_CACHE_WRITES',
+    'NX_DISABLE_REMOTE_CACHE_WRITES',
   ];
   let envVarsToRestore: Record<string, string | undefined> = {};
 
@@ -58,6 +60,7 @@ describe('splitArgs', () => {
       head: 'sha2',
       skipNxCache: false,
       skipRemoteCache: false,
+      skipRemoteCacheWrites: false,
     });
   });
 
@@ -90,6 +93,7 @@ describe('splitArgs', () => {
       base: 'main',
       skipNxCache: false,
       skipRemoteCache: false,
+      skipRemoteCacheWrites: false,
     });
   });
 
@@ -108,6 +112,7 @@ describe('splitArgs', () => {
       base: 'develop',
       skipNxCache: false,
       skipRemoteCache: false,
+      skipRemoteCacheWrites: false,
     });
   });
 
@@ -126,6 +131,7 @@ describe('splitArgs', () => {
       base: 'main',
       skipNxCache: false,
       skipRemoteCache: false,
+      skipRemoteCacheWrites: false,
     });
   });
 
@@ -218,6 +224,7 @@ describe('splitArgs', () => {
       projects: ['aaa', 'bbb'],
       skipNxCache: false,
       skipRemoteCache: false,
+      skipRemoteCacheWrites: false,
     });
   });
 
@@ -243,6 +250,7 @@ describe('splitArgs', () => {
           head: 'envVarSha2',
           skipNxCache: false,
           skipRemoteCache: false,
+          skipRemoteCacheWrites: false,
         });
 
         expect(
@@ -261,6 +269,7 @@ describe('splitArgs', () => {
           head: 'directlyOnCommandSha1',
           skipNxCache: false,
           skipRemoteCache: false,
+          skipRemoteCacheWrites: false,
         });
 
         expect(
@@ -279,9 +288,53 @@ describe('splitArgs', () => {
           head: 'envVarSha2',
           skipNxCache: false,
           skipRemoteCache: false,
+          skipRemoteCacheWrites: false,
         });
       }
     );
+  });
+
+  describe('--skip-remote-cache-writes', () => {
+    const skipRemoteCacheWrites = (
+      args: Record<string, unknown> = {},
+      env: Record<string, string | false> = {}
+    ) =>
+      withEnvironment(
+        env,
+        () =>
+          splitArgsIntoNxArgsAndOverrides(
+            { __overrides_unparsed__: [], $0: '', ...args } as any,
+            'run-many',
+            {} as any,
+            {} as any
+          ).nxArgs.skipRemoteCacheWrites
+      );
+
+    it('should default to false', () => {
+      expect(skipRemoteCacheWrites()).toBe(false);
+    });
+
+    it('should be true when passed on the command', () => {
+      expect(skipRemoteCacheWrites({ skipRemoteCacheWrites: true })).toBe(true);
+    });
+
+    it('should be true when NX_DISABLE_REMOTE_CACHE_WRITES is set', () => {
+      expect(
+        skipRemoteCacheWrites({}, { NX_DISABLE_REMOTE_CACHE_WRITES: 'true' })
+      ).toBe(true);
+    });
+
+    it('should be true when NX_SKIP_REMOTE_CACHE_WRITES is set', () => {
+      expect(
+        skipRemoteCacheWrites({}, { NX_SKIP_REMOTE_CACHE_WRITES: 'true' })
+      ).toBe(true);
+    });
+
+    it('should stay false for any other env value', () => {
+      expect(
+        skipRemoteCacheWrites({}, { NX_DISABLE_REMOTE_CACHE_WRITES: '1' })
+      ).toBe(false);
+    });
   });
 
   describe('--runner environment handling', () => {

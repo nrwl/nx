@@ -1,4 +1,9 @@
-import { formatCacheSize, parseMaxCacheSize } from './cache';
+import {
+  formatCacheSize,
+  parseMaxCacheSize,
+  remoteCacheWritesDisabled,
+} from './cache';
+import { withEnvironmentVariables } from '../internal-testing-utils/with-environment';
 
 describe('cache', () => {
   describe('parseMaxCacheSize', () => {
@@ -65,6 +70,37 @@ describe('cache', () => {
 
     it('should format partial units', () => {
       expect(formatCacheSize(1024 * 88.5)).toEqual('88.50 KB');
+    });
+  });
+
+  describe('remoteCacheWritesDisabled', () => {
+    const withEnv = (value: string | false, options = {}) =>
+      withEnvironmentVariables({ NX_DISABLE_REMOTE_CACHE_WRITES: value }, () =>
+        remoteCacheWritesDisabled(options)
+      );
+
+    it('should default to enabled writes when unset', () => {
+      expect(withEnv(false)).toBe(false);
+    });
+
+    it('should disable writes when set to true', () => {
+      expect(withEnv('true')).toBe(true);
+    });
+
+    it('should only accept the exact string "true"', () => {
+      // Matches how NX_DISABLE_REMOTE_CACHE is read, so `=1` or `=TRUE` does
+      // not silently half-enable the flag.
+      expect(withEnv('false')).toBe(false);
+      expect(withEnv('1')).toBe(false);
+      expect(withEnv('TRUE')).toBe(false);
+    });
+
+    it('should disable writes via the option without the env var', () => {
+      expect(withEnv(false, { skipRemoteCacheWrites: true })).toBe(true);
+    });
+
+    it('should let the env var disable writes when the option is false', () => {
+      expect(withEnv('true', { skipRemoteCacheWrites: false })).toBe(true);
     });
   });
 });

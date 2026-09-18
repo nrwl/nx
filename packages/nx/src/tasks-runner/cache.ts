@@ -63,6 +63,24 @@ export function dbCacheEnabled() {
   return true;
 }
 
+/**
+ * Whether the remote cache may be read from but not written to.
+ *
+ * `--skip-remote-cache-writes` arrives on the option, but the env vars are also
+ * read here rather than only in `splitArgsIntoNxArgsAndOverrides`: that runs for
+ * CLI invocations, while `initTasksRunner` builds its runner options with an
+ * empty `nxArgs`, so the programmatic path would otherwise never see them.
+ */
+export function remoteCacheWritesDisabled(options: {
+  skipRemoteCacheWrites?: boolean;
+}): boolean {
+  return (
+    options.skipRemoteCacheWrites === true ||
+    process.env.NX_DISABLE_REMOTE_CACHE_WRITES === 'true' ||
+    process.env.NX_SKIP_REMOTE_CACHE_WRITES === 'true'
+  );
+}
+
 // Do not change the order of these arguments as this function is used by nx cloud
 export function getCache(options: DefaultTasksRunnerOptions): DbCache | Cache {
   const nxJson = readNxJson();
@@ -71,6 +89,7 @@ export function getCache(options: DefaultTasksRunnerOptions): DbCache | Cache {
         // Remove this in Nx 21
         nxCloudRemoteCache: isNxCloudUsed(nxJson) ? options.remoteCache : null,
         skipRemoteCache: options.skipRemoteCache,
+        skipRemoteCacheWrites: options.skipRemoteCacheWrites,
       })
     : new Cache(options);
 }
@@ -120,6 +139,7 @@ export class DbCache {
     private readonly options: {
       nxCloudRemoteCache: RemoteCache;
       skipRemoteCache?: boolean;
+      skipRemoteCacheWrites?: boolean;
     }
   ) {}
 
@@ -128,6 +148,15 @@ export class DbCache {
     this.remoteCache = await this.getRemoteCache();
     if (!this.remoteCache) {
       this.assertCacheIsValid();
+    } else if (remoteCacheWritesDisabled(this.options)) {
+      // Warned here rather than per task in `put`, and only once a remote cache
+      // resolved — otherwise writes were never going anywhere to begin with.
+      output.warn({
+        title: 'Remote Cache Writes Disabled',
+        bodyLines: [
+          'Nx will read from the remote cache, but task results will not be written back to it.',
+        ],
+      });
     }
   }
 
@@ -252,7 +281,7 @@ export class DbCache {
       // Notify TaskIOService of actual output files
       getTaskIOService().notifyTaskOutputs(task.id, expandedOutputs);
 
-      if (this.remoteCache) {
+      if (this.remoteCache && !remoteCacheWritesDisabled(this.options)) {
         await this.remoteCache.store(
           task.hash,
           this.cache.cacheDirectory,
@@ -546,7 +575,11 @@ export class Cache {
       await writeFile(join(td, 'source'), await getCurrentMachineId());
       await writeFile(tdCommit, 'true');
 
-      if (this.options.remoteCache && !this.options.skipRemoteCache) {
+      if (
+        this.options.remoteCache &&
+        !this.options.skipRemoteCache &&
+        !remoteCacheWritesDisabled(this.options)
+      ) {
         await this.options.remoteCache.store(task.hash, this.cachePath);
       }
 
