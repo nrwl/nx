@@ -5,6 +5,8 @@ import {
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
 import { filterAffected } from '../../project-graph/affected/affected-project-graph';
+import { computeAffectedTasks } from '../../project-graph/affected/affected-tasks';
+import { resolveAffectedGranularity } from '../../project-graph/affected/granularity';
 import {
   FileChange,
   calculateFileChanges,
@@ -39,7 +41,37 @@ export async function showProjectsHandler(
   // Affected touches dependencies so it needs to be processed first.
   if (args.affected) {
     const touchedFiles = await getTouchedFiles(nxArgs);
-    graph = await getAffectedGraph(touchedFiles, nxJson, graph);
+
+    // With a target in hand, answer the question the target implies: which
+    // projects have an affected *task* for it, not which affected projects
+    // happen to define it. Without this, `show projects --affected -t build`
+    // and `affected -t build` disagree, and the documented CI pattern is to
+    // feed the first into the second.
+    if (
+      resolveAffectedGranularity() === 'task' &&
+      args.withTarget?.length &&
+      !args.projects
+    ) {
+      const affectedTasks = await computeAffectedTasks({
+        projectGraph: graph,
+        nxJson,
+        targets: args.withTarget,
+        touchedFiles,
+      });
+      const owning = new Set(
+        [...affectedTasks.affectedTaskIds].map(
+          (id) => affectedTasks.taskGraph.tasks[id].target.project
+        )
+      );
+      graph = {
+        ...graph,
+        nodes: Object.fromEntries(
+          Object.entries(graph.nodes).filter(([name]) => owning.has(name))
+        ),
+      };
+    } else {
+      graph = await getAffectedGraph(touchedFiles, nxJson, graph);
+    }
   }
 
   const filter = filterNodes((node) => {

@@ -1,6 +1,7 @@
 import { NxJsonConfiguration } from '../config/nx-json';
 import { ProjectGraph } from '../config/project-graph';
 import { daemonClient } from '../daemon/client/client';
+import type { TaskPlanningContext } from './task-planning-context';
 import { getFileMap } from '../project-graph/build-project-graph';
 import {
   DaemonBasedTaskHasher,
@@ -11,7 +12,8 @@ import {
 export function createTaskHasher(
   projectGraph: ProjectGraph,
   nxJson: NxJsonConfiguration,
-  runnerOptions?: any
+  runnerOptions?: any,
+  planningContext?: TaskPlanningContext
 ): TaskHasher {
   if (daemonClient.enabled()) {
     return new DaemonBasedTaskHasher(daemonClient, runnerOptions);
@@ -21,7 +23,8 @@ export function createTaskHasher(
       projectGraph,
       nxJson,
       rustReferences,
-      runnerOptions
+      runnerOptions,
+      planningContext
     );
   }
 }
