@@ -67,6 +67,7 @@ function input(): RunMasterSessionInput {
     skipInstall: false,
     installedNxVersion: '23.0.0',
     validate: undefined,
+    finalValidation: undefined,
     agent: {
       id: 'claude-code',
       displayName: 'Claude Code',
@@ -159,6 +160,7 @@ describe('runMasterSession', () => {
       skipInstall: false,
       installedNxVersion: '23.0.0',
       validate: undefined,
+      finalValidation: undefined,
       emitAgentInstructions: false,
       onExistingRun: 'report',
       confirmStart: confirmNewRun,
@@ -526,12 +528,14 @@ describe('runMasterSession', () => {
         { status: 'succeeded', adopted: true },
         {
           status: 'unresolved',
+          kind: 'migration',
           migrationId: '@nx/js:gen',
           // Agent text is printed verbatim, so its breaks are collapsed.
           outcome: { summary: 'boom: the generator\u2028broke\n\nbadly' },
         },
         {
           status: 'unresolved',
+          kind: 'migration',
           migrationId: '@nx/js:blank',
           promptOutcome: { status: 'failed', summary: ' \n ' },
         },

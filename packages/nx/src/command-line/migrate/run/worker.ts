@@ -572,7 +572,10 @@ async function runRecorded(
   // step may match; a same-id step from an older round must not.
   const latest = latestRound(state);
   const step = state.steps.find(
-    (s) => s.migrationId === migrationId && s.roundIndex === latest?.index
+    (s) =>
+      s.kind === 'migration' &&
+      s.migrationId === migrationId &&
+      s.roundIndex === latest?.index
   );
   if (!step) {
     throw new Error(
@@ -1229,7 +1232,7 @@ function implPayload(impl: GeneratorImpl): Record<string, unknown> {
 // this attempt because the dispense reads only the current attempt's file.
 function reemitCarriedAgentWork(
   migrationId: string,
-  kind: MigrateStepAwaitingKind,
+  kind: Exclude<MigrateStepAwaitingKind, 'final-validation'>,
   payloadPath: string,
   payload: Record<string, unknown>
 ): void {

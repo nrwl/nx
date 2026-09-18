@@ -86,6 +86,7 @@ function step(overrides: Partial<MigrateStep> = {}): MigrateStep {
   return {
     id: 'step-1',
     roundIndex: 0,
+    kind: 'migration',
     migrationId: '@nx/js:gen',
     status: 'running',
     attempt: 1,

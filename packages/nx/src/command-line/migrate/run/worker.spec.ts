@@ -223,6 +223,7 @@ const migStep = (
 ): MigrateStep => ({
   id,
   roundIndex,
+  kind: 'migration',
   migrationId,
   status,
   attempt: 1,

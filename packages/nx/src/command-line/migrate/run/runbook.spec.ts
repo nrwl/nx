@@ -13,6 +13,7 @@ function buildContext(overrides: Partial<RunbookContext> = {}): RunbookContext {
     reconcileCommand: 'npx nx migrate --run-id=run-1',
     createCommits: true,
     validate: true,
+    finalValidation: true,
     ...overrides,
   };
 }
@@ -124,6 +125,18 @@ describe('renderRunbook', () => {
     expect(withoutValidation).not.toContain("validate the generator's changes");
   });
 
+  it('carries the final-validation scope rules only when the pass is on', () => {
+    const withPass = renderRunbook(buildContext({ finalValidation: true }));
+    const withoutPass = renderRunbook(buildContext({ finalValidation: false }));
+
+    expect(withPass).toContain('validation pass over the whole workspace');
+    expect(withPass).toContain('`nx affected --base <ref> -t <targets>`');
+    expect(withoutPass).not.toContain(
+      'validation pass over the whole workspace'
+    );
+    expect(withoutPass).not.toContain('nx affected --base');
+  });
+
   it('defers the formatter command to the dispensed step and names the exact replacements', () => {
     // The runbook outlives every step, so it must not freeze the formatter
     // resolved at init; the dispense re-resolves it.
@@ -156,7 +169,7 @@ describe('renderRunbook', () => {
     );
     expect(runbook).toContain('"id": "issue-<n>"');
     expect(runbook).toContain(
-      '`issueUpdates` may only reference issues the digest marks assigned to'
+      '`issueUpdates` may only reference issues the digest marks assigned or'
     );
     expect(runbook).toContain('rejected');
   });

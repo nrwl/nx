@@ -19,7 +19,7 @@ import {
   type MigrateRunState,
 } from './run-state';
 import { unresolvedIssues } from './issues';
-import { tallySteps, type StepTally } from './state-machine';
+import { stepLabel, tallySteps, type StepTally } from './state-machine';
 import { isPidAlive, runMigrationsFlag } from './util';
 
 // The stalled count is a subset of `remaining`, called out separately: the
@@ -53,7 +53,7 @@ export interface ExistingRunFacts {
     // sha null when the newest entry landed without one.
     newest: { sha: string | null; status: AncestorStatus } | null;
   };
-  liveWorkers: { pid: number; stepId: string; migrationId: string }[];
+  liveWorkers: { pid: number; stepId: string; label: string }[];
   // 'unknown' when a run from a newer nx sits on disk: whether it is active
   // cannot be read here, and a reconcile must not fail over a sibling run.
   otherActiveRuns: string[] | 'unknown';
@@ -109,11 +109,14 @@ export function collectExistingRunFacts(
     liveWorkers: state.steps
       .filter((s) => s.status === 'running' && s.pid !== undefined)
       .filter((s) => isPidAlive(s.pid))
-      .map((s) => ({ pid: s.pid, stepId: s.id, migrationId: s.migrationId })),
+      .map((s) => ({ pid: s.pid, stepId: s.id, label: stepLabel(s) })),
     otherActiveRuns: otherActiveRuns(root, runId),
     appliedStillPlanned: planned
       ? state.steps.filter(
-          (s) => s.status === 'succeeded' && planned.has(s.migrationId)
+          (s) =>
+            s.kind === 'migration' &&
+            s.status === 'succeeded' &&
+            planned.has(s.migrationId)
         ).length
       : undefined,
   };
@@ -293,6 +296,6 @@ function workersLine(workers: ExistingRunFacts['liveWorkers']): string {
     return 'none running';
   }
   return workers
-    .map((w) => `pid ${w.pid} is still running ${w.stepId} (${w.migrationId})`)
+    .map((w) => `pid ${w.pid} is still running ${w.stepId} (${w.label})`)
     .join('; ');
 }
