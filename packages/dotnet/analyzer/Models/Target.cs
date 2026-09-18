@@ -22,8 +22,10 @@ public record Target
 
     /// <summary>
     /// Other targets this target depends on.
+    /// Each element can be either a string (target name) or a TargetDependency object.
+    /// Use TargetDependency with Params="forward" to pass CLI arguments like --runtime to dependent targets.
     /// </summary>
-    public string[]? DependsOn { get; init; }
+    public object[]? DependsOn { get; init; }
 
     /// <summary>
     /// Whether this target should be cached.
