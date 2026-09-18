@@ -13,6 +13,7 @@ const state = vi.hoisted(() => ({
   builds: 0,
   writes: 0,
   events: [] as string[],
+  notedComputedAt: undefined as number | undefined,
 }));
 
 vi.mock('../native', () => ({
@@ -69,8 +70,12 @@ vi.mock('./nx-deps-cache', () => ({
   },
 }));
 vi.mock('./plugins/graph-plugin-capabilities', () => ({
-  noteGraphReadFromCache: (computedAt: number) =>
-    state.events.push(`read graph @${computedAt}`),
+  noteGraphReadFromCache: (computedAt: number | undefined) => {
+    state.notedComputedAt = computedAt;
+    if (computedAt !== undefined) {
+      state.events.push(`read graph @${computedAt}`);
+    }
+  },
   capabilitiesOfLoadedPlugin: () => ({}),
   getGraphPluginCapabilitiesStore: () => ({
     record: (computedAt: number) =>
@@ -123,6 +128,7 @@ describe('waiting on the graph lock', () => {
     state.builds = 0;
     state.writes = 0;
     state.events = [];
+    state.notedComputedAt = undefined;
   });
 
   it('reads the graph the holder wrote, once it has released', async () => {
@@ -164,6 +170,17 @@ describe('waiting on the graph lock', () => {
     await createProjectGraphAndSourceMapsAsync();
 
     expect(state.events).toEqual(['read graph @1700000000000']);
+  });
+
+  it('forgets the graph it read once it builds its own', async () => {
+    await createProjectGraphAndSourceMapsAsync();
+    expect(state.notedComputedAt).toBe(1_700_000_000_000);
+
+    state.locked = false;
+    await createProjectGraphAndSourceMapsAsync();
+
+    expect(state.builds).toBe(1);
+    expect(state.notedComputedAt).toBeUndefined();
   });
 
   it('records what its plugins register before the graph it built', async () => {

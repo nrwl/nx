@@ -130,6 +130,8 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon(
   { writeGraphCache }: { writeGraphCache: boolean } = { writeGraphCache: true }
 ) {
   preventRecursionInGraphConstruction();
+  // Answer from the plugins loaded below, not an earlier cached graph's rows.
+  noteGraphReadFromCache(undefined);
 
   global.NX_GRAPH_CREATION = true;
   const nxJson = readNxJson();
