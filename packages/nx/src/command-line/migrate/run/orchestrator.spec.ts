@@ -28,6 +28,8 @@ vi.mock('../migrate-commits', () => ({
     mockCheckpoint(...args),
 }));
 
+const mockGetAncestorStatus = vi.fn();
+const mockGetGitCurrentBranch = vi.fn();
 const mockGetGitRepositoryStatus = vi.fn();
 const mockGetLatestCommitSha = vi.fn();
 const mockGetPathCommitExposure = vi.fn();
@@ -36,6 +38,8 @@ const mockIsAncestorCommit = vi.fn();
 const mockTryCommitChanges = vi.fn();
 vi.mock('../../../utils/git-utils', async () => ({
   ...(await vi.importActual('../../../utils/git-utils')),
+  getAncestorStatus: (...args: unknown[]) => mockGetAncestorStatus(...args),
+  getGitCurrentBranch: (...args: unknown[]) => mockGetGitCurrentBranch(...args),
   getGitRepositoryStatus: (...args: unknown[]) =>
     mockGetGitRepositoryStatus(...args),
   getLatestCommitSha: (...args: unknown[]) => mockGetLatestCommitSha(...args),
@@ -58,6 +62,15 @@ vi.mock('../../../utils/package-manager', () => ({
   getPackageManagerCommand: () => ({ exec: 'npx', install: 'npm install' }),
 }));
 
+// Hoisted with the mock: the native module is read at import time.
+const wasm = vi.hoisted(() => ({ active: false }));
+vi.mock('../../../native', async () => ({
+  ...(await vi.importActual('../../../native')),
+  get IS_WASM() {
+    return wasm.active;
+  },
+}));
+
 // Serve fs from a mutable copy: the crash-window tests below spy on the very
 // functions the orchestrator calls, which the frozen builtin namespace forbids.
 vi.mock('fs', async () => ({ ...require('fs') }));
@@ -78,14 +91,21 @@ import {
 } from 'fs';
 import { createHash } from 'crypto';
 import { tmpdir } from 'os';
+import { FileLock } from '../../../native';
 import { basename, dirname, join } from 'path';
 import { output } from '../../../utils/output';
 import { nxVersion } from '../../../utils/versions';
 import { runStepHandoffPath } from '../agentic/handoff';
-import { runOrchestratorInit, runOrchestratorReconcile } from './orchestrator';
+import {
+  holdRunToContinue,
+  runOrchestratorInit,
+  runOrchestratorReconcile,
+  runOrchestratorResume,
+} from './orchestrator';
 import { BrokerStaleRequestError, BrokerUnavailableError } from './broker';
 import { answered, readRequest } from './test-utils';
 import { computePlanHash } from './run-id';
+import { hasAnyLiveRunActivity } from './state-lock';
 import {
   findActiveRun,
   migrateRunsDir,
@@ -132,6 +152,8 @@ describe('orchestrator', () => {
     mockComplete.mockReset();
     mockCommit.mockReset().mockResolvedValue({ status: 'no-changes' });
     mockCheckpoint.mockReset();
+    mockGetAncestorStatus.mockReset().mockReturnValue('unknown');
+    mockGetGitCurrentBranch.mockReset().mockReturnValue(null);
     mockGetGitRepositoryStatus.mockReset().mockReturnValue('git');
     mockGetLatestCommitSha.mockReset().mockReturnValue(null);
     mockGetPathCommitExposure.mockReset().mockReturnValue('ignored');
@@ -142,10 +164,12 @@ describe('orchestrator', () => {
     mockRunInstall.mockReset().mockResolvedValue(undefined);
     mockLogSkippedInstall.mockReset();
     mockDetectPackageManager.mockReset().mockReturnValue('npm');
+    wasm.active = false;
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.useRealTimers();
     rmSync(root, { recursive: true, force: true });
   });
 
@@ -465,12 +489,32 @@ describe('orchestrator', () => {
       });
     });
 
-    it('runs the checkpoint before the run directory exists so its git add -A cannot track run scratch', async () => {
-      let runDirsAtCheckpoint: number | undefined;
+    it('runs the checkpoint before run.json exists, with the run directory reserved and held', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      let atCheckpoint:
+        | {
+            active: string | null;
+            dirs: string[];
+            plan: unknown;
+            reserved: boolean;
+          }
+        | undefined;
       mockCheckpoint.mockImplementation(() => {
-        runDirsAtCheckpoint = existsSync(migrateRunsDir(root))
-          ? readdirSync(migrateRunsDir(root)).length
-          : 0;
+        const dirs = activeRunDirNames();
+        atCheckpoint = {
+          active: findActiveRun(root).active?.runId ?? null,
+          dirs,
+          plan: JSON.parse(
+            readFileSync(
+              join(migrateRunsDir(root), dirs[0], 'plan-0.json'),
+              'utf-8'
+            )
+          ),
+          reserved:
+            dirs.length === 1 &&
+            !existsSync(join(migrateRunsDir(root), dirs[0], 'run.json')) &&
+            hasAnyLiveRunActivity(join(migrateRunsDir(root), dirs[0])),
+        };
       });
       mockGetWorkingTreeStatus
         .mockReturnValueOnce('dirty')
@@ -481,7 +525,7 @@ describe('orchestrator', () => {
 
       await runOrchestratorInit({
         root,
-        migrationsJson: { migrations: [genMig('@nx/js', 'a')] },
+        migrationsJson,
         createCommits: true,
         commitPrefix: 'chore: [nx migration] ',
         skipInstall: false,
@@ -489,7 +533,12 @@ describe('orchestrator', () => {
         validate: undefined,
       });
 
-      expect(runDirsAtCheckpoint).toBe(0);
+      expect(atCheckpoint).toMatchObject({
+        active: null,
+        plan: migrationsJson,
+        reserved: true,
+      });
+      expect(activeRunDirNames()).toEqual(atCheckpoint.dirs);
     });
 
     it('records no checkpoint entry and skips the commit on a clean tree', async () => {
@@ -592,19 +641,22 @@ describe('orchestrator', () => {
         .map((e) => e.name);
     }
 
-    it('resumes a same-plan run created by a concurrent init instead of creating a competing run', async () => {
+    it('reports a run created by a concurrent init instead of creating a competing run', async () => {
       const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      // A dirty tree, so a checkpoint would be attempted if the ordering let
+      // a losing init reach it.
+      mockGetWorkingTreeStatus.mockReturnValue('dirty');
       // Simulate a concurrent init winning the race between this init's
-      // advisory active-run check and its run creation: the checkpoint's tree
-      // probe is the first git side effect on the fresh path, so a competitor
-      // materializing during it postdates the advisory check.
-      mockGetWorkingTreeStatus.mockImplementationOnce(() => {
+      // advisory active-run check and its reservation: the scratch exposure
+      // probe is the last call before the creation lock on the fresh path,
+      // so a competitor materializing during it postdates the advisory check.
+      mockGetPathCommitExposure.mockImplementationOnce(() => {
         setupRun('competitor-run', {
           steps: [migStep('step-1', '@nx/js:a', 'pending')],
           createCommits: true,
           planHash: computePlanHash(migrationsJson),
         });
-        return 'clean';
+        return 'ignored';
       });
 
       await runOrchestratorInit({
@@ -618,46 +670,194 @@ describe('orchestrator', () => {
       });
 
       expect(activeRunDirNames()).toEqual(['competitor-run']);
-      expect(lastBlock().runId).toBe('competitor-run');
+      expect(mockCheckpoint).not.toHaveBeenCalled();
+      expect(lastBlock()).toMatchObject({
+        runId: 'competitor-run',
+        action: 'existing-run',
+      });
     });
 
-    it('refuses under the creation lock when a concurrent init created a run with a different plan', async () => {
-      mockGetWorkingTreeStatus.mockImplementationOnce(() => {
+    it('reports, under the creation lock, the run a concurrent init created with a different plan', async () => {
+      mockGetWorkingTreeStatus.mockReturnValue('dirty');
+      mockGetPathCommitExposure.mockImplementationOnce(() => {
         setupRun('competitor-run', {
           steps: [migStep('step-1', '@nx/js:a', 'pending')],
           planHash: 'a-different-plan-hash',
         });
-        return 'clean';
+        return 'ignored';
       });
 
-      await expect(
-        runOrchestratorInit({
-          root,
-          migrationsJson: { migrations: [genMig('@nx/js', 'a')] },
-          createCommits: true,
-          commitPrefix: 'chore: [nx migration] ',
-          skipInstall: false,
-          installedNxVersion: '23.0.0',
-          validate: undefined,
-        })
-      ).rejects.toThrow(/already active with a different plan/);
+      const result = await runOrchestratorInit({
+        root,
+        migrationsJson: { migrations: [genMig('@nx/js', 'a')] },
+        createCommits: true,
+        commitPrefix: 'chore: [nx migration] ',
+        skipInstall: false,
+        installedNxVersion: '23.0.0',
+        validate: undefined,
+      });
 
+      expect(result).toMatchObject({
+        kind: 'existing-run',
+        runId: 'competitor-run',
+      });
       expect(activeRunDirNames()).toEqual(['competitor-run']);
+      expect(mockCheckpoint).not.toHaveBeenCalled();
+      expect(lastBlock().action).toBe('existing-run');
+    });
+
+    it('refuses at once while another process holds a reservation, and proceeds once it is released', async () => {
+      mockGetWorkingTreeStatus.mockReturnValue('dirty');
+      // The plan carries the ignore migration and .gitignore lacks the entry,
+      // so the fallback would write it if init got that far.
+      writeFileSync(join(root, '.gitignore'), 'node_modules\n');
+      const reservation = join(migrateRunsDir(root), 'reserved-run');
+      mkdirSync(join(reservation, 'activity'), { recursive: true });
+      const holder = new FileLock(
+        join(reservation, 'activity', '999-cafe.lock')
+      );
+      holder.lock();
+      const confirmStart = vi.fn().mockResolvedValue(true);
+      const input = {
+        root,
+        migrationsJson: {
+          migrations: [
+            genMig('nx', '23-0-0-add-migrate-runs-to-git-ignore', '23.0.0'),
+            genMig('@nx/js', 'a'),
+          ],
+        },
+        createCommits: true,
+        commitPrefix: 'chore: [nx migration] ',
+        skipInstall: false,
+        installedNxVersion: '23.0.0',
+        validate: undefined as boolean | undefined,
+        confirmStart,
+      };
+
+      try {
+        await expect(runOrchestratorInit(input)).rejects.toThrow(
+          'Another nx migrate process is starting a run (.nx/migrate-runs/reserved-run). Wait for it to finish, then re-run the command.'
+        );
+      } finally {
+        holder.unlock();
+      }
+      // Refused before the prompt and before any preparation: the scratch
+      // probe is the first step past the prompt, and the fallback would have
+      // edited .gitignore.
+      expect(confirmStart).not.toHaveBeenCalled();
+      expect(mockGetPathCommitExposure).not.toHaveBeenCalled();
+      expect(readFileSync(join(root, '.gitignore'), 'utf-8')).toBe(
+        'node_modules\n'
+      );
+      expect(activeRunDirNames()).toEqual(['reserved-run']);
+      expect(mockCheckpoint).not.toHaveBeenCalled();
+
+      const result = await runOrchestratorInit(input);
+
+      expect(result.kind).toBe('ready');
+      expect(mockCheckpoint).toHaveBeenCalledTimes(1);
+      // The dead reservation is ignored, not removed.
+      expect(activeRunDirNames()).toContain('reserved-run');
+      expect(findActiveRun(root).activeRunIds).toEqual([
+        findActiveRun(root).active.runId,
+      ]);
+    });
+
+    it('refuses while a reservation is held by a real second process', async () => {
+      const reservation = join(migrateRunsDir(root), 'reserved-run');
+      mkdirSync(join(reservation, 'activity'), { recursive: true });
+      const { spawn } =
+        require('child_process') as typeof import('child_process');
+      const child = spawn(
+        process.execPath,
+        [
+          '-e',
+          `const { FileLock } = require(process.argv[1]);
+           const lock = new FileLock(process.argv[2]);
+           lock.lock();
+           process.stdout.write('held');
+           process.stdin.resume();
+           process.stdin.on('end', () => { lock.unlock(); process.exit(0); });`,
+          join(__dirname, '../../../native/native-bindings.js'),
+          join(reservation, 'activity', 'child.lock'),
+        ],
+        { stdio: ['pipe', 'pipe', 'inherit'] }
+      );
+      await new Promise<void>((resolve) => {
+        child.stdout.on('data', (chunk) => {
+          if (String(chunk).includes('held')) resolve();
+        });
+      });
+      const input = {
+        root,
+        migrationsJson: { migrations: [genMig('@nx/js', 'a')] },
+        createCommits: false,
+        commitPrefix: 'chore: [nx migration] ',
+        skipInstall: false,
+        installedNxVersion: '23.0.0',
+        validate: undefined as boolean | undefined,
+      };
+
+      try {
+        await expect(runOrchestratorInit(input)).rejects.toThrow(
+          'Another nx migrate process is starting a run (.nx/migrate-runs/reserved-run).'
+        );
+      } finally {
+        child.stdin.end();
+        await new Promise((resolve) => child.on('exit', resolve));
+      }
+
+      expect((await runOrchestratorInit(input)).kind).toBe('ready');
+    });
+
+    it('cannot continue or reconcile a reserved run', async () => {
+      const reservation = join(migrateRunsDir(root), 'reserved-run');
+      mkdirSync(join(reservation, 'activity'), { recursive: true });
+      writeFileSync(join(reservation, 'plan-0.json'), '{"migrations":[]}');
+      const holder = new FileLock(
+        join(reservation, 'activity', '999-cafe.lock')
+      );
+      holder.lock();
+      const missing =
+        "No migrate run 'reserved-run' was found under .nx/migrate-runs.";
+
+      try {
+        await expect(
+          runOrchestratorReconcile({ root, runId: 'reserved-run' })
+        ).rejects.toThrow(missing);
+        expect(() =>
+          runOrchestratorResume({
+            root,
+            runId: 'reserved-run',
+            policy: { createCommits: false, skipInstall: false },
+          })
+        ).toThrow(missing);
+      } finally {
+        holder.unlock();
+      }
+      expect(parseBlocks()).toHaveLength(0);
     });
 
     describe('resume policy', () => {
       // run.json is writable from an agent's sandbox, so a resume proceeds
-      // only when the stored flags match what this invocation resolved.
+      // only when the stored flags match what this invocation resolved. The
+      // generated continue command carries no migrations path and run.json
+      // records none, so a run started from a custom file cannot be told
+      // apart here: the refusal must not print a default-path command.
       const MISMATCH =
-        /recorded install and commit policy differs from this invocation/;
-      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
-      const invocation = {
-        root,
-        migrationsJson,
-        commitPrefix: 'chore: [nx migration] ',
-        installedNxVersion: '23.0.0',
-        validate: undefined,
+        /recorded install and commit policy differs from this invocation.*To start fresh, re-run with --start-fresh --run-id=run-1, keeping the same --run-migrations\[=<path>\] argument used to start the run/;
+      const expectMismatch = (resume: () => unknown): void => {
+        let message: string | undefined;
+        try {
+          resume();
+        } catch (e) {
+          message = (e as Error).message;
+        }
+        expect(message).toMatch(MISMATCH);
+        expect(message).not.toContain('nx.json');
+        expect(message).not.toContain('nx migrate --run-migrations');
       };
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
 
       it.each<
         [
@@ -690,9 +890,9 @@ describe('orchestrator', () => {
         });
         const before = readRunState(dir);
 
-        await expect(
-          runOrchestratorInit({ ...invocation, root, ...policy })
-        ).rejects.toThrow(MISMATCH);
+        expectMismatch(() =>
+          runOrchestratorResume({ root, runId: 'run-1', policy })
+        );
 
         expect(readRunState(dir)).toEqual(before);
         expect(mockInit).not.toHaveBeenCalled();
@@ -709,39 +909,17 @@ describe('orchestrator', () => {
         });
         const before = readRunState(dir);
 
-        await expect(
-          runOrchestratorInit({
-            ...invocation,
+        expectMismatch(() =>
+          runOrchestratorResume({
             root,
-            createCommits: false,
-            skipInstall: false,
+            runId: 'run-1',
+            policy: { createCommits: false, skipInstall: false },
           })
-        ).rejects.toThrow(MISMATCH);
+        );
 
         expect(mockCheckpoint).not.toHaveBeenCalled();
         expect(mockGetPathCommitExposure).not.toHaveBeenCalled();
         expect(readRunState(dir)).toEqual(before);
-      });
-
-      it('refuses a run a concurrent init created with a differing policy, found under the creation lock', async () => {
-        mockGetWorkingTreeStatus.mockImplementationOnce(() => {
-          setupRun('competitor-run', {
-            steps: [migStep('step-1', '@nx/js:a', 'pending')],
-            planHash: computePlanHash(migrationsJson),
-          });
-          return 'clean';
-        });
-
-        await expect(
-          runOrchestratorInit({
-            ...invocation,
-            root,
-            createCommits: true,
-            skipInstall: false,
-          })
-        ).rejects.toThrow(MISMATCH);
-
-        expect(activeRunDirNames()).toEqual(['competitor-run']);
       });
     });
 
@@ -801,14 +979,10 @@ describe('orchestrator', () => {
         });
       });
 
-      await runOrchestratorInit({
+      await runOrchestratorResume({
         root,
-        migrationsJson,
-        createCommits: false,
-        commitPrefix: 'chore: [nx migration] ',
-        skipInstall: false,
-        installedNxVersion: '23.0.0',
-        validate: undefined,
+        runId: 'run-1',
+        policy: { createCommits: false, skipInstall: false },
       });
 
       const block = lastBlock();
@@ -859,7 +1033,7 @@ describe('orchestrator', () => {
       expect(findActiveRun(root).active).toBeNull();
     });
 
-    it('resumes the active run when init re-runs with the same plan', async () => {
+    it('reports the active run when init re-runs with the same plan, and continues it only on an explicit resume', async () => {
       const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
       mockGetWorkingTreeStatus
         .mockReturnValueOnce('dirty')
@@ -880,18 +1054,45 @@ describe('orchestrator', () => {
       const { runId } = findActiveRun(root).active;
       stdout = '';
 
-      await runOrchestratorInit(initInput);
+      const reported = await runOrchestratorInit(initInput);
 
+      expect(reported).toMatchObject({ kind: 'existing-run', runId });
       expect(findActiveRun(root).active.runId).toBe(runId);
       expect(activeRunDirNames()).toEqual([runId]);
       expect(mockInit).toHaveBeenCalledTimes(1);
       expect(mockCheckpoint).toHaveBeenCalledTimes(1);
+      expect(parseRunbookBlocks()).toHaveLength(0);
+      const report = lastBlock();
+      expect(report.runId).toBe(runId);
+      expect(report.action).toBe('existing-run');
+      expect(report.payload.instructions).toContain(
+        `A migrate run is already active: ${runId}`
+      );
+      expect(report.payload.instructions).toContain(
+        `To continue the run: npx nx migrate --run-id=${runId}`
+      );
+      expect(report.payload.instructions).toContain(
+        `To start fresh (deletes the run record, then runs the whole plan again): npx nx migrate --run-migrations --start-fresh --run-id=${runId}`
+      );
+      expect(report.payload.instructions).toContain(
+        'Show this report to the user and let them choose'
+      );
+      expect(report.payload.next).toBeUndefined();
+      stdout = '';
+
+      await runOrchestratorResume({
+        root,
+        runId,
+        policy: { createCommits: true, skipInstall: false },
+      });
+
       const block = lastBlock();
       expect(block.runId).toBe(runId);
       expect(block.action).toBe('initialized');
       expect(block.payload.instructions).toContain(
         `Nx resumed migrate run ${runId}.`
       );
+      expect(parseRunbookBlocks()).toHaveLength(1);
     });
 
     it('announces the run it resumed and how far along it is', async () => {
@@ -919,14 +1120,10 @@ describe('orchestrator', () => {
         plan: migrationsJson.migrations,
       });
 
-      await runOrchestratorInit({
+      await runOrchestratorResume({
         root,
-        migrationsJson,
-        createCommits: false,
-        commitPrefix: 'chore: [nx migration] ',
-        skipInstall: false,
-        installedNxVersion: '23.0.0',
-        validate: undefined,
+        runId: 'run-1',
+        policy: { createCommits: false, skipInstall: false },
       });
 
       expect(logged[0]).toEqual({
@@ -951,14 +1148,10 @@ describe('orchestrator', () => {
         plan: migrationsJson.migrations,
       });
 
-      await runOrchestratorInit({
+      await runOrchestratorResume({
         root,
-        migrationsJson,
-        createCommits: false,
-        commitPrefix: 'chore: [nx migration] ',
-        skipInstall: false,
-        installedNxVersion: '23.0.0',
-        validate: undefined,
+        runId: 'run-1',
+        policy: { createCommits: false, skipInstall: false },
       });
 
       expect(logged[0].bodyLines[1]).toBe(
@@ -974,14 +1167,10 @@ describe('orchestrator', () => {
         plan: migrationsJson.migrations,
       });
 
-      await runOrchestratorInit({
+      await runOrchestratorResume({
         root,
-        migrationsJson,
-        createCommits: false,
-        commitPrefix: 'chore: [nx migration] ',
-        skipInstall: false,
-        installedNxVersion: '23.0.0',
-        validate: undefined,
+        runId: 'run-1',
+        policy: { createCommits: false, skipInstall: false },
       });
 
       expect(logged[0].bodyLines[1]).toBe(
@@ -1005,7 +1194,7 @@ describe('orchestrator', () => {
       );
     });
 
-    it('validates migration ids on resume too, before deciding to resume', async () => {
+    it('validates migration ids before deleting the active run for --start-fresh', async () => {
       const migrationsJson = {
         migrations: [genMig('@nx/js', "evil'; rm -rf ~")],
       };
@@ -1026,35 +1215,94 @@ describe('orchestrator', () => {
           skipInstall: false,
           installedNxVersion: '23.0.0',
           validate: undefined,
+          onExistingRun: 'start-fresh',
         })
       ).rejects.toThrow(
         `The migration id '@nx/js:evil'; rm -rf ~' contains characters that are not shell-safe`
       );
+
+      expect(activeRunDirNames()).toEqual(['run-1']);
     });
 
-    it('prefers the plan-mismatch error over the unsafe-id error, since that plan never runs', async () => {
+    it('repeats a non-default migrations path in the start-fresh command of the report', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      const initInput = {
+        root,
+        migrationsJson,
+        migrationsPath: 'tools/migrations.json',
+        createCommits: false,
+        commitPrefix: 'chore: [nx migration] ',
+        skipInstall: false,
+        installedNxVersion: '23.0.0',
+        validate: undefined,
+      };
+      await runOrchestratorInit(initInput);
+      const { runId } = findActiveRun(root).active;
+      stdout = '';
+
+      await runOrchestratorInit(initInput);
+
+      expect(lastBlock().payload.instructions).toContain(
+        `To start fresh (deletes the run record, then runs the whole plan again): npx nx migrate --run-migrations=tools/migrations.json --start-fresh --run-id=${runId}`
+      );
+    });
+
+    it('names an unrenderable migrations path in prose on Windows and keeps the continue command', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      const initInput = {
+        root,
+        migrationsJson,
+        migrationsPath: 'tools/my migrations.json',
+        createCommits: false,
+        commitPrefix: 'chore: [nx migration] ',
+        skipInstall: false,
+        installedNxVersion: '23.0.0',
+        validate: undefined,
+      };
+      await runOrchestratorInit(initInput);
+      const { runId } = findActiveRun(root).active;
+      stdout = '';
+      const platform = process.platform;
+      Object.defineProperty(process, 'platform', { value: 'win32' });
+
+      try {
+        await runOrchestratorInit(initInput);
+      } finally {
+        Object.defineProperty(process, 'platform', { value: platform });
+      }
+
+      const { instructions } = lastBlock().payload;
+      expect(instructions).toContain(
+        `To continue the run: npx nx migrate --run-id=${runId}`
+      );
+      expect(instructions).toContain(
+        `To start fresh (deletes the run record, then runs the whole plan again): re-run this command with --start-fresh --run-id=${runId}, keeping the --run-migrations argument, which names tools/my migrations.json; that path cannot be rendered as a command for this shell`
+      );
+      expect(instructions).not.toContain('--run-migrations=');
+    });
+
+    it('reports the active run before validating the incoming plan, since that plan is not started', async () => {
       setupRun('run-1', {
         steps: [migStep('step-1', '@nx/js:a', 'pending')],
         planHash: computePlanHash({ migrations: [genMig('@nx/js', 'a')] }),
         plan: [genMig('@nx/js', 'a')],
       });
 
-      await expect(
-        runOrchestratorInit({
-          root,
-          migrationsJson: { migrations: [genMig('@nx/js', "evil'; rm -rf ~")] },
-          createCommits: false,
-          commitPrefix: 'chore: [nx migration] ',
-          skipInstall: false,
-          installedNxVersion: '23.0.0',
-          validate: undefined,
-        })
-      ).rejects.toThrow(
-        `A migrate run 'run-1' is already active with a different plan`
-      );
+      const result = await runOrchestratorInit({
+        root,
+        migrationsJson: { migrations: [genMig('@nx/js', "evil'; rm -rf ~")] },
+        createCommits: false,
+        commitPrefix: 'chore: [nx migration] ',
+        skipInstall: false,
+        installedNxVersion: '23.0.0',
+        validate: undefined,
+      });
+
+      expect(result).toMatchObject({ kind: 'existing-run', runId: 'run-1' });
+      expect(lastBlock().action).toBe('existing-run');
     });
 
-    it('throws on init when the active run has a different plan, naming the run', async () => {
+    it('reports the active run instead of starting one when the plan differs, before any git side effect', async () => {
       await runOrchestratorInit({
         root,
         migrationsJson: { migrations: [genMig('@nx/js', 'a')] },
@@ -1065,20 +1313,27 @@ describe('orchestrator', () => {
         validate: undefined,
       });
       const { runId } = findActiveRun(root).active;
+      const before = readRunState(runDir(root, runId));
+      mockGetWorkingTreeStatus.mockReset().mockReturnValue('dirty');
+      stdout = '';
 
-      await expect(
-        runOrchestratorInit({
-          root,
-          migrationsJson: { migrations: [genMig('@nx/js', 'b')] },
-          createCommits: false,
-          commitPrefix: 'chore: [nx migration] ',
-          skipInstall: false,
-          installedNxVersion: '23.0.0',
-          validate: undefined,
-        })
-      ).rejects.toThrow(
-        `A migrate run '${runId}' is already active with a different plan`
-      );
+      const result = await runOrchestratorInit({
+        root,
+        migrationsJson: { migrations: [genMig('@nx/js', 'b')] },
+        createCommits: true,
+        commitPrefix: 'chore: [nx migration] ',
+        skipInstall: false,
+        installedNxVersion: '23.0.0',
+        validate: undefined,
+      });
+
+      expect(result).toMatchObject({ kind: 'existing-run', runId });
+      expect(activeRunDirNames()).toEqual([runId]);
+      expect(readRunState(runDir(root, runId))).toEqual(before);
+      expect(mockCheckpoint).not.toHaveBeenCalled();
+      expect(mockGetPathCommitExposure).not.toHaveBeenCalled();
+      expect(lastBlock().action).toBe('existing-run');
+      expect(stdout).not.toContain('different plan');
     });
 
     it('refuses a fresh init when a run dir cannot be read, instead of starting a competing run', async () => {
@@ -1172,14 +1427,10 @@ describe('orchestrator', () => {
         plan: migrationsJson.migrations,
       });
 
-      await runOrchestratorInit({
+      await runOrchestratorResume({
         root,
-        migrationsJson,
-        createCommits: true,
-        commitPrefix: 'chore: [nx migration] ',
-        skipInstall: false,
-        installedNxVersion: '23.0.0',
-        validate: undefined,
+        runId: 'run-1',
+        policy: { createCommits: true, skipInstall: false },
       });
 
       expect(mockCheckpoint).toHaveBeenCalledTimes(1);
@@ -1202,14 +1453,10 @@ describe('orchestrator', () => {
         plan: migrationsJson.migrations,
       });
 
-      await runOrchestratorInit({
+      await runOrchestratorResume({
         root,
-        migrationsJson,
-        createCommits: true,
-        commitPrefix: 'chore: [nx migration] ',
-        skipInstall: false,
-        installedNxVersion: '23.0.0',
-        validate: undefined,
+        runId: 'run-1',
+        policy: { createCommits: true, skipInstall: false },
       });
 
       const state = readRunState(dir);
@@ -1229,14 +1476,10 @@ describe('orchestrator', () => {
         plan: migrationsJson.migrations,
       });
 
-      await runOrchestratorInit({
+      await runOrchestratorResume({
         root,
-        migrationsJson,
-        createCommits: true,
-        commitPrefix: 'chore: [nx migration] ',
-        skipInstall: false,
-        installedNxVersion: '23.0.0',
-        validate: undefined,
+        runId: 'run-1',
+        policy: { createCommits: true, skipInstall: false },
       });
 
       expect(mockCheckpoint).not.toHaveBeenCalled();
@@ -1251,17 +1494,896 @@ describe('orchestrator', () => {
         plan: migrationsJson.migrations,
       });
 
-      await runOrchestratorInit({
+      await runOrchestratorResume({
         root,
-        migrationsJson,
-        createCommits: true,
-        commitPrefix: 'chore: [nx migration] ',
-        skipInstall: false,
-        installedNxVersion: '23.0.0',
-        validate: undefined,
+        runId: 'run-1',
+        policy: { createCommits: true, skipInstall: false },
       });
 
       expect(mockCheckpoint).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('init: existing run', () => {
+    const initInput = (
+      migrationsJson: { migrations?: unknown[] },
+      extra: Partial<Parameters<typeof runOrchestratorInit>[0]> = {}
+    ) => ({
+      root,
+      migrationsJson,
+      createCommits: false,
+      commitPrefix: 'chore: [nx migration] ',
+      skipInstall: false,
+      installedNxVersion: '23.0.0',
+      validate: undefined as boolean | undefined,
+      ...extra,
+    });
+    const sha = (n: number) => n.toString(16).padStart(40, '0');
+
+    function runDirNames(): string[] {
+      return readdirSync(migrateRunsDir(root), { withFileTypes: true })
+        .filter((e) => e.isDirectory())
+        .map((e) => e.name);
+    }
+
+    it('records the checked-out branch on a new run and leaves it off without one', async () => {
+      mockGetGitCurrentBranch.mockReturnValue('feature/upgrade');
+      await runOrchestratorInit(initInput({ migrations: [] }));
+      expect(findActiveRun(root).active.state.branch).toBe('feature/upgrade');
+      rmSync(migrateRunsDir(root), { recursive: true, force: true });
+
+      mockGetGitCurrentBranch.mockReturnValue(null);
+      await runOrchestratorInit(initInput({ migrations: [] }));
+      expect(findActiveRun(root).active.state).not.toHaveProperty('branch');
+    });
+
+    it('reports the facts of the active run and the two ways forward, deciding nothing', async () => {
+      const plan = {
+        migrations: [
+          genMig('@nx/js', 'a'),
+          genMig('@nx/js', 'b'),
+          genMig('@nx/js', 'c'),
+          genMig('@nx/js', 'd'),
+        ],
+      };
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:a', 'succeeded'),
+          migStep('step-2', '@nx/js:b', 'succeeded'),
+          migStep('step-3', '@nx/js:c', 'running', { pid: process.pid }),
+          migStep('step-4', '@nx/js:d', 'died'),
+        ],
+        createCommits: true,
+        commits: [
+          { kind: 'checkpoint', sha: sha(1), stepIds: [] },
+          { kind: 'landed', sha: sha(2), stepIds: ['step-1'] },
+          { kind: 'landed', sha: sha(3), stepIds: ['step-2'] },
+        ],
+        issues: [
+          {
+            id: 'issue-1',
+            fingerprint: issueFingerprint('left open'),
+            summary: 'left open',
+            reportedByStepId: 'step-1',
+            applicableStepIds: 'unknown',
+            disposition: 'recorded',
+          },
+          {
+            id: 'issue-2',
+            fingerprint: issueFingerprint('fixed later'),
+            summary: 'fixed later',
+            reportedByStepId: 'step-1',
+            applicableStepIds: ['step-2'],
+            disposition: 'resolved',
+            resolvedByStepId: 'step-2',
+            resolvedAtCommitCount: 3,
+          },
+        ],
+      });
+      writeRunState(dir, { ...readRunState(dir), branch: 'main' });
+      setupRun('run-0', {
+        steps: [migStep('step-1', '@nx/js:z', 'pending')],
+        status: 'completed',
+      });
+      setupRun('run-2', {
+        steps: [migStep('step-1', '@nx/js:z', 'pending')],
+      });
+      writeRunState(runDir(root, 'run-2'), {
+        ...readRunState(runDir(root, 'run-2')),
+        createdAt: '2025-12-31T00:00:00.000Z',
+      });
+      mockGetGitCurrentBranch.mockReturnValue('feature/upgrade');
+      mockGetLatestCommitSha.mockReturnValue(sha(9));
+      mockGetAncestorStatus.mockImplementation((ancestor: string) =>
+        ancestor === sha(1)
+          ? 'unknown'
+          : ancestor === sha(3)
+            ? 'not-ancestor'
+            : 'ancestor'
+      );
+      // Only the still-planned applied migrations count toward the overlap.
+      const incoming = {
+        migrations: [genMig('@nx/js', 'a'), genMig('@nx/js', 'x')],
+      };
+
+      vi.useFakeTimers({
+        now: new Date('2026-01-04T00:00:00.000Z'),
+        toFake: ['Date'],
+      });
+
+      const result = await runOrchestratorInit(initInput(incoming));
+
+      expect(result).toMatchObject({
+        kind: 'existing-run',
+        runId: 'run-1',
+        facts: {
+          recordedBranch: 'main',
+          currentBranch: 'feature/upgrade',
+          progress: {
+            applied: 2,
+            adopted: 0,
+            skipped: 0,
+            unresolved: [],
+            remaining: 2,
+            stalled: 1,
+          },
+          policy: { createCommits: true, skipInstall: false },
+          commits: {
+            recorded: 3,
+            reachable: 1,
+            unchecked: 1,
+            newest: { sha: sha(3), status: 'not-ancestor' },
+          },
+          unresolvedIssues: 1,
+          liveWorkers: [
+            { pid: process.pid, stepId: 'step-3', migrationId: '@nx/js:c' },
+          ],
+          otherActiveRuns: ['run-2'],
+          appliedStillPlanned: 1,
+        },
+      });
+      expect(mockGetAncestorStatus).toHaveBeenCalledWith(sha(2), sha(9), root);
+      expect(logged).toEqual([
+        {
+          title: 'A migrate run is already active: run-1',
+          bodyLines: [
+            '  run: run-1',
+            '  started: 2026-01-01T00:00:00.000Z (3 days ago)',
+            '  branch: started on main, currently on feature/upgrade',
+            '  progress: 2 applied, 0 skipped, 2 remaining (1 awaiting a decision)',
+            '  policy: per-migration commits on, installs on',
+            `  commits: newest recorded commit ${sha(3).slice(0, 10)} is not reachable from HEAD (1 of 3 reachable, 1 could not be checked)`,
+            `  worker: pid ${process.pid} is still running step-3 (@nx/js:c)`,
+            '  issues: 1 unresolved',
+            '  other active runs on disk: run-2',
+            '  plan overlap: 1 of the applied migrations is still in the plan; a new run applies it again',
+            '',
+            'To continue the run: npx nx migrate --run-id=run-1',
+            'To start fresh (deletes the run record, then runs the whole plan again): npx nx migrate --run-migrations --start-fresh --run-id=run-1',
+          ],
+        },
+      ]);
+      expect(parseBlocks()).toEqual([
+        {
+          runId: 'run-1',
+          step: '-',
+          action: 'existing-run',
+          payload: { instructions: expect.stringContaining('  run: run-1') },
+        },
+      ]);
+      expect(readRunState(dir).steps[2].status).toBe('running');
+      expect(runDirNames().sort()).toEqual(['run-0', 'run-1', 'run-2']);
+    });
+
+    it('says what could not be established instead of guessing', async () => {
+      setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+        commits: [{ kind: 'landed', sha: sha(2), stepIds: [] }],
+      });
+      mockGetGitCurrentBranch.mockReturnValue(null);
+      mockGetLatestCommitSha.mockReturnValue(null);
+
+      await runOrchestratorInit(initInput({ migrations: [] }));
+
+      expect(logged[0].bodyLines).toEqual(
+        expect.arrayContaining([
+          '  branch: unknown',
+          `  commits: newest recorded commit ${sha(2).slice(0, 10)} is of unknown reachability from HEAD (0 of 1 reachable, 1 could not be checked)`,
+          '  worker: none running',
+          '  plan overlap: 0 of the applied migrations are still in the plan; a new run applies them again',
+        ])
+      );
+      expect(mockGetAncestorStatus).not.toHaveBeenCalled();
+    });
+
+    it('counts a landed commit without a sha and says the newest cannot be checked', async () => {
+      setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'succeeded')],
+        createCommits: true,
+        commits: [
+          { kind: 'landed', sha: sha(1), stepIds: ['step-1'] },
+          { kind: 'landed', stepIds: ['step-1'] },
+          { kind: 'failed', stepIds: ['step-1'] },
+        ],
+      });
+      mockGetLatestCommitSha.mockReturnValue(sha(9));
+      mockGetAncestorStatus.mockReturnValue('ancestor');
+
+      const result = await runOrchestratorInit(initInput({ migrations: [] }));
+
+      expect(result).toMatchObject({
+        facts: {
+          commits: {
+            recorded: 2,
+            reachable: 1,
+            unchecked: 1,
+            newest: { sha: null, status: 'unknown' },
+          },
+        },
+      });
+      expect(mockGetAncestorStatus).toHaveBeenCalledTimes(1);
+      expect(logged[0].bodyLines).toContainEqual(
+        '  commits: newest recorded commit has no recorded sha and could not be checked (1 of 2 reachable, 1 could not be checked)'
+      );
+    });
+
+    it('reports without emitting agent output when agent instructions are off', async () => {
+      setupRun('run-1', { steps: [migStep('step-1', '@nx/js:a', 'pending')] });
+
+      const result = await runOrchestratorInit(
+        initInput({ migrations: [] }, { emitAgentInstructions: false })
+      );
+
+      expect(result).toMatchObject({ kind: 'existing-run', runId: 'run-1' });
+      expect(stdout).toBe('');
+      expect(logged).toEqual([]);
+    });
+
+    it('deletes the active run and starts a new one for start-fresh', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'succeeded')],
+        // A dead worker's pid no longer counts.
+        commits: [],
+      });
+      writeRunState(runDir(root, 'run-1'), {
+        ...readRunState(runDir(root, 'run-1')),
+        steps: [migStep('step-1', '@nx/js:a', 'died', { pid: 2 ** 22 - 1 })],
+      });
+
+      const result = await runOrchestratorInit(
+        initInput(migrationsJson, { onExistingRun: 'start-fresh' })
+      );
+
+      expect(result.kind).toBe('ready');
+      const { runId, state } = findActiveRun(root).active;
+      expect(runId).not.toBe('run-1');
+      expect(runDirNames()).toEqual([runId]);
+      expect(state.steps[0].status).toBe('pending');
+      expect(logged.map((l) => l.title)).toContain(
+        'Deleted the record of migrate run run-1.'
+      );
+      expect(lastBlock()).toMatchObject({ runId, action: 'initialized' });
+    });
+
+    it('refuses start-fresh while another run is active on disk, before deleting the run or committing', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      const older = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+      });
+      const newer = setupRun('run-2', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+      });
+      writeRunState(newer, {
+        ...readRunState(newer),
+        createdAt: '2026-01-02T00:00:00.000Z',
+      });
+      const before = [readRunState(older), readRunState(newer)];
+
+      await expect(
+        runOrchestratorInit(
+          initInput(migrationsJson, {
+            onExistingRun: 'start-fresh',
+            replaceRunId: 'run-2',
+            createCommits: true,
+          })
+        )
+      ).rejects.toThrow(
+        "Not deleting migrate run 'run-2': other migrate runs are active on disk (run-1), and a new run cannot start alongside them. Remove .nx/migrate-runs/<run id> for each one that should not be continued, then re-run the command."
+      );
+
+      expect(runDirNames()).toEqual(['run-1', 'run-2']);
+      expect([readRunState(older), readRunState(newer)]).toEqual(before);
+      expect(mockCheckpoint).not.toHaveBeenCalled();
+      expect(parseBlocks()).toHaveLength(0);
+    });
+
+    it('reports a run created between the start-fresh checks and the creation lock, deleting nothing', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+      });
+      const before = readRunState(dir);
+      // A competing init publishes its run while the user is being asked.
+      const confirmStart = async () => {
+        const competitor = setupRun('run-2', {
+          steps: [migStep('step-1', '@nx/js:a', 'pending')],
+        });
+        writeRunState(competitor, {
+          ...readRunState(competitor),
+          createdAt: '2026-01-02T00:00:00.000Z',
+        });
+        return true;
+      };
+
+      const result = await runOrchestratorInit(
+        initInput(migrationsJson, {
+          onExistingRun: 'start-fresh',
+          confirmStart,
+        })
+      );
+
+      expect(result).toMatchObject({ kind: 'existing-run', runId: 'run-2' });
+      expect(runDirNames()).toEqual(['run-1', 'run-2']);
+      expect(readRunState(dir)).toEqual(before);
+      expect(logged.map((l) => l.title)).not.toContainEqual(
+        expect.stringContaining('Deleted')
+      );
+    });
+
+    it('refuses under the creation lock a worker that took the run during the start confirmation, before any checkpoint commit', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+      });
+      const before = readRunState(dir);
+      mockGetWorkingTreeStatus.mockReturnValue('dirty');
+      const holder = new FileLock(join(dir, 'activity', '999-cafe.lock'));
+      const confirmStart = async () => {
+        holder.lock();
+        return true;
+      };
+
+      try {
+        await expect(
+          runOrchestratorInit(
+            initInput(migrationsJson, {
+              onExistingRun: 'start-fresh',
+              createCommits: true,
+              confirmStart,
+            })
+          )
+        ).rejects.toThrow(
+          "Not deleting migrate run 'run-1': another nx migrate process is acting on it (an agent session, a reconcile, or a step). Wait for it to end, then re-run the command."
+        );
+      } finally {
+        holder.unlock();
+      }
+
+      expect(runDirNames()).toEqual(['run-1']);
+      expect(readRunState(dir)).toEqual(before);
+      expect(mockCheckpoint).not.toHaveBeenCalled();
+    });
+
+    it('refuses start-fresh while a dispensed worker is still alive, leaving the run untouched', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'running', { pid: process.pid })],
+      });
+      const before = readRunState(dir);
+
+      await expect(
+        runOrchestratorInit(
+          initInput(migrationsJson, { onExistingRun: 'start-fresh' })
+        )
+      ).rejects.toThrow(
+        `Not deleting migrate run 'run-1': pid ${process.pid} is still running step-1 (@nx/js:a). Wait for it to finish, then re-run the command. If that pid is not an nx migrate worker, stop it or remove .nx/migrate-runs/run-1, then re-run the command.`
+      );
+
+      expect(runDirNames()).toEqual(['run-1']);
+      expect(readRunState(dir)).toEqual(before);
+      expect(parseBlocks()).toHaveLength(0);
+    });
+
+    it('reports instead of deleting when the active run is not the one start-fresh was told to replace', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      setupRun('run-2', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+      });
+
+      const result = await runOrchestratorInit(
+        initInput(migrationsJson, {
+          onExistingRun: 'start-fresh',
+          replaceRunId: 'run-1',
+        })
+      );
+
+      expect(result).toMatchObject({ kind: 'existing-run', runId: 'run-2' });
+      expect(runDirNames()).toEqual(['run-2']);
+      expect(logged.map((l) => l.title)).not.toContainEqual(
+        expect.stringContaining('Deleted')
+      );
+      const mismatch = 'Not deleting run-1: the newest active run is run-2.';
+      expect(logged[0].bodyLines[0]).toBe(mismatch);
+      expect(lastBlock().payload.instructions).toContain(mismatch);
+    });
+
+    it('rejects an unsafe replacement id before reading any run', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+      });
+
+      await expect(
+        runOrchestratorInit(
+          initInput(migrationsJson, {
+            onExistingRun: 'start-fresh',
+            replaceRunId: 'run;$(touch pwned)',
+          })
+        )
+      ).rejects.toThrow("Invalid run id 'run;$(touch pwned)'.");
+
+      expect(runDirNames()).toEqual(['run-1']);
+      expect(existsSync(join(dir, 'activity'))).toBe(false);
+    });
+
+    it('refuses start-fresh when a sibling run dir cannot be read, before deleting the run or committing', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'succeeded')],
+      });
+      const before = readRunState(dir);
+      const corrupt = join(migrateRunsDir(root), 'corrupt');
+      mkdirSync(corrupt, { recursive: true });
+      writeFileSync(join(corrupt, 'run.json'), 'nope');
+
+      await expect(
+        runOrchestratorInit(
+          initInput(migrationsJson, {
+            onExistingRun: 'start-fresh',
+            createCommits: true,
+          })
+        )
+      ).rejects.toThrow(/could not be determined[\s\S]*corrupt/);
+
+      expect(readRunState(dir)).toEqual(before);
+      expect(mockCheckpoint).not.toHaveBeenCalled();
+    });
+
+    it('holds the run start-fresh replaces while the start is being confirmed', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'succeeded')],
+      });
+      let heldWhileAsked: boolean | undefined;
+      const confirmStart = vi.fn(async () => {
+        const names = existsSync(join(dir, 'activity'))
+          ? readdirSync(join(dir, 'activity'))
+          : [];
+        heldWhileAsked =
+          names.length === 1 &&
+          new FileLock(join(dir, 'activity', names[0])).check();
+        return false;
+      });
+
+      const result = await runOrchestratorInit(
+        initInput(migrationsJson, {
+          onExistingRun: 'start-fresh',
+          confirmStart,
+        })
+      );
+
+      expect(result).toEqual({ kind: 'refused' });
+      expect(heldWhileAsked).toBe(true);
+      expect(runDirNames()).toEqual(['run-1']);
+    });
+
+    it('refuses when a concurrent start-fresh deleted the run between discovery and the hold, starting nothing', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+      });
+      // The competitor's delete lands between this init's discovery (the
+      // first existence probe of run-1's run.json) and the hold's re-check
+      // under the creation lock (the second).
+      const realExists = fs.existsSync;
+      let probes = 0;
+      vi.spyOn(fs, 'existsSync').mockImplementation((path) => {
+        if (String(path) === join(dir, 'run.json') && ++probes === 2) {
+          rmSync(path, { force: true });
+        }
+        return realExists(path);
+      });
+
+      await expect(
+        runOrchestratorInit(
+          initInput(migrationsJson, { onExistingRun: 'start-fresh' })
+        )
+      ).rejects.toThrow(
+        "Migrate run 'run-1' was deleted while this command was starting."
+      );
+
+      expect(probes).toBe(2);
+      expect(findActiveRun(root).active).toBeNull();
+      expect(mockCheckpoint).not.toHaveBeenCalled();
+      expect(logged.map((l) => l.title)).not.toContainEqual(
+        expect.stringContaining('Deleted')
+      );
+    });
+
+    it('asks confirmStart only once it is about to start a run, before deleting anything', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      const confirmStart = vi.fn().mockResolvedValue(false);
+      setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+      });
+
+      // Reporting starts nothing, so nothing is asked.
+      expect(
+        await runOrchestratorInit(initInput(migrationsJson, { confirmStart }))
+      ).toMatchObject({ kind: 'existing-run', runId: 'run-1' });
+      expect(confirmStart).not.toHaveBeenCalled();
+
+      // Declined before the delete: the run survives.
+      expect(
+        await runOrchestratorInit(
+          initInput(migrationsJson, {
+            onExistingRun: 'start-fresh',
+            confirmStart,
+          })
+        )
+      ).toEqual({ kind: 'refused' });
+      expect(confirmStart).toHaveBeenCalledTimes(1);
+      expect(runDirNames()).toEqual(['run-1']);
+      rmSync(migrateRunsDir(root), { recursive: true, force: true });
+
+      // Declined on a fresh start: no run, no git side effect, no block.
+      stdout = '';
+      mockGetWorkingTreeStatus.mockReturnValue('dirty');
+      expect(
+        await runOrchestratorInit(
+          initInput(migrationsJson, { createCommits: true, confirmStart })
+        )
+      ).toEqual({ kind: 'refused' });
+      expect(mockCheckpoint).not.toHaveBeenCalled();
+      expect(existsSync(migrateRunsDir(root))).toBe(false);
+      expect(parseBlocks()).toHaveLength(0);
+
+      confirmStart.mockResolvedValue(true);
+      expect(
+        (await runOrchestratorInit(initInput(migrationsJson, { confirmStart })))
+          .kind
+      ).toBe('ready');
+    });
+
+    it('starts normally for start-fresh when no run is active', async () => {
+      setupRun('run-0', {
+        steps: [migStep('step-1', '@nx/js:a', 'succeeded')],
+        status: 'completed',
+      });
+
+      const result = await runOrchestratorInit(
+        initInput(
+          { migrations: [genMig('@nx/js', 'a')] },
+          { onExistingRun: 'start-fresh' }
+        )
+      );
+
+      expect(result.kind).toBe('ready');
+      expect(logged.map((l) => l.title)).not.toContainEqual(
+        expect.stringContaining('Deleted')
+      );
+      expect(runDirNames()).toContain('run-0');
+    });
+
+    it('refuses start-fresh while another process holds an activity lock on the run, leaving the run untouched', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'succeeded')],
+      });
+      const before = readRunState(dir);
+      mkdirSync(join(dir, 'activity'));
+      const holder = new FileLock(join(dir, 'activity', '999-cafe.lock'));
+      holder.lock();
+
+      try {
+        await expect(
+          runOrchestratorInit(
+            initInput(migrationsJson, { onExistingRun: 'start-fresh' })
+          )
+        ).rejects.toThrow(
+          "Not deleting migrate run 'run-1': another nx migrate process is acting on it (an agent session, a reconcile, or a step). Wait for it to end, then re-run the command."
+        );
+      } finally {
+        holder.unlock();
+      }
+
+      expect(runDirNames()).toEqual(['run-1']);
+      expect(readRunState(dir)).toEqual(before);
+      expect(parseBlocks()).toHaveLength(0);
+    });
+
+    it('refuses start-fresh under WASM, where no native lock can say whether another process is acting on the run', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'succeeded')],
+      });
+      const before = readRunState(dir);
+      wasm.active = true;
+
+      await expect(
+        runOrchestratorInit(
+          initInput(migrationsJson, { onExistingRun: 'start-fresh' })
+        )
+      ).rejects.toThrow(
+        "Not deleting migrate run 'run-1': without a native file lock nx cannot tell whether another nx migrate process is acting on it. Make sure none is, remove .nx/migrate-runs/run-1, then re-run the command."
+      );
+
+      expect(runDirNames()).toEqual(['run-1']);
+      expect(readRunState(dir)).toEqual(before);
+      expect(parseBlocks()).toHaveLength(0);
+    });
+
+    it('deletes a run whose activity lock files were left by dead processes', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'succeeded')],
+      });
+      mkdirSync(join(dir, 'activity'));
+      writeFileSync(join(dir, 'activity', '999-dead.lock'), '');
+
+      const result = await runOrchestratorInit(
+        initInput(migrationsJson, { onExistingRun: 'start-fresh' })
+      );
+
+      expect(result.kind).toBe('ready');
+      expect(runDirNames()).not.toContain('run-1');
+    });
+
+    it.each([
+      ['reports', () => runOrchestratorInit(initInput({ migrations: [] }))],
+      [
+        'continues',
+        (runId: string) =>
+          runOrchestratorResume({
+            root,
+            runId,
+            policy: { createCommits: false, skipInstall: false },
+          }),
+      ],
+      [
+        'reconciles',
+        (runId: string) => runOrchestratorReconcile({ root, runId }),
+      ],
+    ])(
+      'holds an activity lock for the process lifetime once it %s a run',
+      async (_case, act) => {
+        const dir = setupRun('run-1', {
+          steps: [migStep('step-1', '@nx/js:a', 'pending')],
+        });
+
+        await act('run-1');
+
+        const names = readdirSync(join(dir, 'activity'));
+        expect(names).toHaveLength(1);
+        expect(names[0]).toMatch(
+          new RegExp(`^${process.pid}-[0-9a-f]{8}\\.lock$`)
+        );
+        expect(new FileLock(join(dir, 'activity', names[0])).check()).toBe(
+          true
+        );
+      }
+    );
+
+    it('holds an activity lock on the run it creates', async () => {
+      await runOrchestratorInit(
+        initInput({ migrations: [genMig('@nx/js', 'a')] })
+      );
+
+      const { runId } = findActiveRun(root).active;
+      const names = readdirSync(join(runDir(root, runId), 'activity'));
+      expect(names).toHaveLength(1);
+      expect(
+        new FileLock(join(runDir(root, runId), 'activity', names[0])).check()
+      ).toBe(true);
+    });
+
+    it('holds a run to continue so that a second process sees it held', async () => {
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+      });
+
+      expect(holdRunToContinue(root, 'run-1').status).toBe('active');
+
+      const names = readdirSync(join(dir, 'activity'));
+      expect(names).toHaveLength(1);
+      // Probed from another process: this one skips its own hold when it
+      // decides whether a run is free to delete.
+      const { execFileSync } =
+        require('child_process') as typeof import('child_process');
+      const held = execFileSync(
+        process.execPath,
+        [
+          '-e',
+          `const { FileLock } = require(process.argv[1]);
+           process.stdout.write(String(new FileLock(process.argv[2]).check()));`,
+          join(__dirname, '../../../native/native-bindings.js'),
+          join(dir, 'activity', names[0]),
+        ],
+        { encoding: 'utf-8' }
+      );
+      expect(held).toBe('true');
+    });
+
+    it('holds nothing for an id that names no run or a finished one', async () => {
+      const dir = setupRun('run-0', {
+        steps: [migStep('step-1', '@nx/js:a', 'succeeded')],
+        status: 'completed',
+      });
+
+      expect(() => holdRunToContinue(root, 'missing')).toThrow(
+        "No migrate run 'missing' was found under .nx/migrate-runs."
+      );
+      expect(() => holdRunToContinue(root, 'run-0')).toThrow(
+        "Migrate run 'run-0' is already complete; there is nothing to continue."
+      );
+      expect(existsSync(join(dir, 'activity'))).toBe(false);
+      expect(existsSync(runDir(root, 'missing'))).toBe(false);
+    });
+
+    it('refuses to resume an id that names no run or a finished one', async () => {
+      setupRun('run-0', {
+        steps: [migStep('step-1', '@nx/js:a', 'succeeded')],
+        status: 'completed',
+      });
+
+      expect(() =>
+        runOrchestratorResume({
+          root,
+          runId: 'missing',
+          policy: { createCommits: false, skipInstall: false },
+        })
+      ).toThrow("No migrate run 'missing' was found under .nx/migrate-runs.");
+      expect(() =>
+        runOrchestratorResume({
+          root,
+          runId: 'run-0',
+          policy: { createCommits: false, skipInstall: false },
+        })
+      ).toThrow(
+        "Migrate run 'run-0' is already complete; there is nothing to continue."
+      );
+      expect(() =>
+        runOrchestratorResume({
+          root,
+          runId: 'bad;id',
+          policy: { createCommits: false, skipInstall: false },
+        })
+      ).toThrow("Invalid run id 'bad;id'.");
+    });
+  });
+
+  describe('reconcile: rewound history', () => {
+    const sha = (n: number) => n.toString(16).padStart(40, '0');
+
+    function setupWithCommits(shas: string[]): void {
+      setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:a', 'succeeded'),
+          migStep('step-2', '@nx/js:b', 'pending'),
+        ],
+        createCommits: true,
+        commits: shas.map((s) => ({
+          kind: 'landed',
+          sha: s,
+          stepIds: ['step-1'],
+        })),
+        plan: [genMig('@nx/js', 'a'), genMig('@nx/js', 'b')],
+      });
+      mockGetLatestCommitSha.mockReturnValue(sha(9));
+    }
+
+    it('warns with the run facts when the newest recorded commit is not reachable from HEAD, then proceeds', async () => {
+      setupWithCommits([sha(1), sha(2)]);
+      mockGetAncestorStatus.mockReturnValue('not-ancestor');
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(output.warn).toHaveBeenCalledWith({
+        title:
+          'The newest commit migrate run run-1 recorded is not reachable from HEAD. Continuing the run as asked.',
+        bodyLines: expect.arrayContaining([
+          '  run: run-1',
+          `  commits: newest recorded commit ${sha(2).slice(0, 10)} is not reachable from HEAD (0 of 2 reachable)`,
+        ]),
+      });
+      expect(
+        (output.warn as Mock).mock.calls[0][0].bodyLines
+      ).not.toContainEqual(expect.stringContaining('To continue'));
+      expect(lastBlock()).toMatchObject({
+        action: 'next-step',
+        step: 'step-2',
+      });
+    });
+
+    it('checks only the newest recorded commit, so the warning stops once the run commits again', async () => {
+      setupWithCommits([sha(1), sha(2)]);
+      mockGetAncestorStatus.mockImplementation((ancestor: string) =>
+        ancestor === sha(2) ? 'ancestor' : 'not-ancestor'
+      );
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(output.warn).not.toHaveBeenCalled();
+      expect(mockGetAncestorStatus).toHaveBeenCalledTimes(1);
+      expect(mockGetAncestorStatus).toHaveBeenCalledWith(sha(2), sha(9), root);
+    });
+
+    it('checks nothing when the newest recorded commit has no sha, rather than an older one', async () => {
+      setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:a', 'succeeded'),
+          migStep('step-2', '@nx/js:b', 'pending'),
+        ],
+        createCommits: true,
+        commits: [
+          { kind: 'landed', sha: sha(1), stepIds: ['step-1'] },
+          { kind: 'landed', stepIds: ['step-1'] },
+          { kind: 'failed', stepIds: ['step-1'] },
+        ],
+        plan: [genMig('@nx/js', 'a'), genMig('@nx/js', 'b')],
+      });
+      mockGetLatestCommitSha.mockReturnValue(sha(9));
+      mockGetAncestorStatus.mockReturnValue('not-ancestor');
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(mockGetAncestorStatus).not.toHaveBeenCalled();
+      expect(output.warn).not.toHaveBeenCalled();
+      expect(lastBlock()).toMatchObject({
+        action: 'next-step',
+        step: 'step-2',
+      });
+    });
+
+    it('reports other active runs as unknown instead of failing over a newer-format sibling', async () => {
+      setupWithCommits([sha(1)]);
+      mockGetAncestorStatus.mockReturnValue('not-ancestor');
+      const newer = join(migrateRunsDir(root), 'from-newer-nx');
+      mkdirSync(newer, { recursive: true });
+      writeFileSync(
+        join(newer, 'run.json'),
+        JSON.stringify({
+          ...readRunState(runDir(root, 'run-1')),
+          runId: 'from-newer-nx',
+          formatVersion: 2,
+          nxVersion: '123.4.5',
+        })
+      );
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(output.warn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          bodyLines: expect.arrayContaining([
+            '  other active runs on disk: unknown (a run written by a newer nx is on disk)',
+          ]),
+        })
+      );
+      expect(lastBlock()).toMatchObject({ action: 'next-step' });
+    });
+
+    it('stays quiet when reachability cannot be established or nothing is recorded', async () => {
+      setupWithCommits([sha(1)]);
+      mockGetAncestorStatus.mockReturnValue('unknown');
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+      expect(output.warn).not.toHaveBeenCalled();
+
+      rmSync(migrateRunsDir(root), { recursive: true, force: true });
+      setupWithCommits([]);
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+      expect(output.warn).not.toHaveBeenCalled();
+      expect(mockGetAncestorStatus).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -1358,7 +2480,11 @@ describe('orchestrator', () => {
         runbook: '# stored contract\ncustom bytes\n',
       });
 
-      await runOrchestratorInit(initInput(migrationsJson));
+      await runOrchestratorResume({
+        root,
+        runId: 'run-1',
+        policy: { createCommits: false, skipInstall: false },
+      });
 
       const runbooks = parseRunbookBlocks();
       expect(runbooks).toHaveLength(1);
@@ -1383,7 +2509,11 @@ describe('orchestrator', () => {
         runbook: false,
       });
 
-      await runOrchestratorInit(initInput(migrationsJson));
+      await runOrchestratorResume({
+        root,
+        runId: 'run-1',
+        policy: { createCommits: false, skipInstall: false },
+      });
 
       expect(output.warn).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -1410,7 +2540,11 @@ describe('orchestrator', () => {
         runbook: false,
       });
 
-      await runOrchestratorInit(initInput(migrationsJson));
+      await runOrchestratorResume({
+        root,
+        runId: 'run-1',
+        policy: { createCommits: false, skipInstall: false },
+      });
 
       expect(parseRunbookBlocks()).toHaveLength(0);
       const block = lastBlock();
@@ -1418,7 +2552,13 @@ describe('orchestrator', () => {
       expect(block.payload.instructions).toContain(
         'cannot re-render the one nx 1.0.0 wrote'
       );
-      expect(block.payload.instructions).toContain('abandon the run');
+      expect(block.payload.instructions).toContain(
+        'To start fresh, re-run with --start-fresh --run-id=run-1, keeping the same --run-migrations[=<path>] argument used to start the run.'
+      );
+      expect(block.payload.instructions).not.toContain(
+        'nx migrate --run-migrations'
+      );
+      expect(block.payload.instructions).not.toContain('abandon');
       expect(existsSync(join(dir, 'RUNBOOK.md'))).toBe(false);
       expect(readRunState(dir).steps[0].status).toBe('pending');
     });
@@ -1451,7 +2591,13 @@ describe('orchestrator', () => {
         runbook: false,
       });
 
-      expect(await runOrchestratorInit(initInput(migrationsJson))).toEqual({
+      expect(
+        await runOrchestratorResume({
+          root,
+          runId: 'run-1',
+          policy: { createCommits: false, skipInstall: false },
+        })
+      ).toEqual({
         kind: 'refused',
       });
     });
@@ -1479,8 +2625,10 @@ describe('orchestrator', () => {
         plan: migrationsJson.migrations,
       });
 
-      const result = await runOrchestratorInit({
-        ...initInput(migrationsJson),
+      const result = await runOrchestratorResume({
+        root,
+        runId: 'run-1',
+        policy: { createCommits: false, skipInstall: false },
         emitAgentInstructions: false,
       });
 
@@ -1505,7 +2653,11 @@ describe('orchestrator', () => {
       writeFileSync(victim, 'untouched');
       symlinkSync(victim, join(dir, 'RUNBOOK.md'));
 
-      await runOrchestratorInit(initInput(migrationsJson));
+      await runOrchestratorResume({
+        root,
+        runId: 'run-1',
+        policy: { createCommits: false, skipInstall: false },
+      });
 
       expect(lstatSync(join(dir, 'RUNBOOK.md')).isFile()).toBe(true);
       expect(readFileSync(victim, 'utf-8')).toBe('untouched');
@@ -1535,9 +2687,13 @@ describe('orchestrator', () => {
         // Removing an entry needs write on the parent, so 0o555 on the run dir is what makes the rm fail.
         chmodSync(dir, 0o555);
         try {
-          await expect(
-            runOrchestratorInit(initInput(migrationsJson))
-          ).rejects.toThrow();
+          expect(() =>
+            runOrchestratorResume({
+              root,
+              runId: 'run-1',
+              policy: { createCommits: false, skipInstall: false },
+            })
+          ).toThrow();
           expect(readFileSync(victim, 'utf-8')).toBe('untouched');
         } finally {
           chmodSync(dir, 0o755);
@@ -1560,9 +2716,10 @@ describe('orchestrator', () => {
       });
       const before = readRunState(dir);
 
-      await runOrchestratorInit({
-        ...initInput(migrationsJson),
-        createCommits: true,
+      await runOrchestratorResume({
+        root,
+        runId: 'run-1',
+        policy: { createCommits: true, skipInstall: false },
       });
 
       expect(lastBlock().action).toBe('error');
@@ -1587,12 +2744,13 @@ describe('orchestrator', () => {
         chmodSync(join(dir, 'RUNBOOK.md'), 0o000);
         const before = readRunState(dir);
         try {
-          await expect(
-            runOrchestratorInit({
-              ...initInput(migrationsJson),
-              createCommits: true,
+          expect(() =>
+            runOrchestratorResume({
+              root,
+              runId: 'run-1',
+              policy: { createCommits: false, skipInstall: false },
             })
-          ).rejects.toThrow();
+          ).toThrow();
           expect(mockCheckpoint).not.toHaveBeenCalled();
           expect(mockInit).not.toHaveBeenCalled();
           expect(readRunState(dir)).toEqual(before);
@@ -1614,9 +2772,13 @@ describe('orchestrator', () => {
       mkdirSync(join(dir, 'RUNBOOK.md'));
       writeFileSync(join(dir, 'RUNBOOK.md', 'keep.txt'), 'kept');
 
-      await expect(
-        runOrchestratorInit(initInput(migrationsJson))
-      ).rejects.toThrow(/RUNBOOK\.md is a directory/);
+      expect(() =>
+        runOrchestratorResume({
+          root,
+          runId: 'run-1',
+          policy: { createCommits: false, skipInstall: false },
+        })
+      ).toThrow(/RUNBOOK\.md is a directory/);
 
       expect(readFileSync(join(dir, 'RUNBOOK.md', 'keep.txt'), 'utf-8')).toBe(
         'kept'
@@ -2007,6 +3169,14 @@ describe('orchestrator', () => {
       expect(block.payload.instructions).toContain(
         'cannot re-render the one nx 1.0.0 wrote'
       );
+      // A bare --run-id reconcile knows no migrations path, so the recovery
+      // is prose that keeps the user's own argument, never a default-path command.
+      expect(block.payload.instructions).toContain(
+        'To start fresh, re-run with --start-fresh --run-id=run-1, keeping the same --run-migrations[=<path>] argument used to start the run.'
+      );
+      expect(block.payload.instructions).not.toContain(
+        'nx migrate --run-migrations'
+      );
       expect(readRunState(dir).steps[0].status).toBe('pending');
     });
 
@@ -2091,6 +3261,36 @@ describe('orchestrator', () => {
       expect(findActiveRun(root).active).toBeNull();
     });
 
+    it.each([
+      ['tracked scratch', 'tracked', /git rm -r --cached \.nx\/migrate-runs/],
+      [
+        'scratch left unignored after the fallback',
+        'unignored',
+        /not ignored by git/,
+      ],
+    ])(
+      'keeps the run start-fresh would replace when the replacement is refused for %s',
+      async (_case, exposure, error) => {
+        const dir = setupRun('run-1', {
+          steps: [migStep('step-1', '@nx/js:a', 'succeeded')],
+          createCommits: false,
+        });
+        const before = readRunState(dir);
+        mockGetPathCommitExposure.mockReturnValue(exposure);
+
+        await expect(
+          runOrchestratorInit({
+            ...initInput(true, { migrations: [genMig('@nx/js', 'a')] }),
+            onExistingRun: 'start-fresh',
+          })
+        ).rejects.toThrow(error);
+
+        expect(findActiveRun(root).active.runId).toBe('run-1');
+        expect(readRunState(dir)).toEqual(before);
+        expect(mockCheckpoint).not.toHaveBeenCalled();
+      }
+    );
+
     it('proceeds when the fallback repairs missing ignore coverage, with the entry in place before the checkpoint', async () => {
       writeFileSync(join(root, '.gitignore'), 'node_modules\n');
       mockGetPathCommitExposure
@@ -2140,9 +3340,13 @@ describe('orchestrator', () => {
       });
       mockGetPathCommitExposure.mockReturnValue('tracked');
 
-      await expect(
-        runOrchestratorInit(initInput(true, migrationsJson))
-      ).rejects.toThrow(/continue run 'run-1'/);
+      expect(() =>
+        runOrchestratorResume({
+          root,
+          runId: 'run-1',
+          policy: { createCommits: true, skipInstall: false },
+        })
+      ).toThrow(/continue run 'run-1'/);
 
       // The checkpoint is a `git add -A` commit, so it must not run while scratch is exposed.
       expect(mockCheckpoint).not.toHaveBeenCalled();

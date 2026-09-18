@@ -25,6 +25,7 @@ import {
   pmExecPrefix,
   pmInstallCommand,
   recordInstallLanded,
+  runMigrationsFlag,
   summarizeError,
 } from './util';
 import {
@@ -380,4 +381,84 @@ describe('summarizeError', () => {
     expect(summary).toHaveLength(200);
     expect(summary.endsWith('...')).toBe(true);
   });
+});
+
+describe('runMigrationsFlag', () => {
+  const originalPlatform = process.platform;
+  const setPlatform = (platform: NodeJS.Platform) =>
+    Object.defineProperty(process, 'platform', { value: platform });
+  afterEach(() => setPlatform(originalPlatform));
+
+  it('leaves the default path implicit', () => {
+    expect(runMigrationsFlag('migrations.json')).toBe('--run-migrations');
+  });
+
+  it('repeats a shell-safe custom path bare', () => {
+    expect(runMigrationsFlag('tools/migrations.json')).toBe(
+      '--run-migrations=tools/migrations.json'
+    );
+  });
+
+  it.each([
+    [
+      'a space',
+      'tools/my migrations.json',
+      "'--run-migrations=tools/my migrations.json'",
+    ],
+    [
+      'an apostrophe',
+      "tools/it's.json",
+      "'--run-migrations=tools/it'\\''s.json'",
+    ],
+    [
+      'a backslash',
+      'tools\\migrations.json',
+      "'--run-migrations=tools\\migrations.json'",
+    ],
+    ['a dollar', 'tools/$HOME.json', "'--run-migrations=tools/$HOME.json'"],
+    ['a backtick', 'tools/`id`.json', "'--run-migrations=tools/`id`.json'"],
+  ])(
+    'quotes the whole argument for a POSIX shell when the path has %s',
+    (_case, path, expected) => {
+      setPlatform('linux');
+      expect(runMigrationsFlag(path)).toBe(expected);
+    }
+  );
+
+  it('renders a plain path bare on Windows', () => {
+    setPlatform('win32');
+    expect(runMigrationsFlag('tools/migrations.json')).toBe(
+      '--run-migrations=tools/migrations.json'
+    );
+  });
+
+  it.each([
+    ['a space', 'tools/my migrations.json'],
+    ['a backslash', 'tools\\migrations.json'],
+    ['a cmd variable', '%USERPROFILE%/migrations.json'],
+    ['a caret', 'tools/^x.json'],
+    ['a PowerShell subexpression', 'tools/$(Write-Output changed).json'],
+    ['a double quote', 'tools/"x".json'],
+  ])('renders no flag on Windows when the path has %s', (_case, path) => {
+    setPlatform('win32');
+    expect(runMigrationsFlag(path)).toBeNull();
+  });
+
+  it.each<NodeJS.Platform>(['linux', 'win32'])(
+    'renders no flag on %s when the path has a line terminator',
+    (platform) => {
+      setPlatform(platform);
+      for (const terminator of [
+        '\n',
+        '\r',
+        '\u000b',
+        '\u000c',
+        '\u0085',
+        '\u2028',
+        '\u2029',
+      ]) {
+        expect(runMigrationsFlag(`tools/a${terminator}b.json`)).toBeNull();
+      }
+    }
+  );
 });

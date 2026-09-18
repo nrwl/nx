@@ -74,7 +74,7 @@ import {
   uncoveredFailedStepIds,
   type StepEvent,
 } from './state-machine';
-import { updateRunState } from './state-lock';
+import { holdRunActivity, updateRunState } from './state-lock';
 import {
   installDepsChangedSinceDispense,
   nowIso,
@@ -225,6 +225,9 @@ function readMigrationsSource(
         `No migrate run '${runId}' was found under ${MIGRATE_RUNS_RELATIVE_DIR}.`
       );
     }
+    // Before the state and plan reads: a concurrent start-fresh must not
+    // delete the run while this worker resolves its migration.
+    holdRunActivity(root, runId);
     // Version refusal (NewerRunStateFormatError) propagates.
     const state = readRunState(dir);
     const round = latestRound(state);
