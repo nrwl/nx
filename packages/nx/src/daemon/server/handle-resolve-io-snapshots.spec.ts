@@ -47,9 +47,8 @@ describe('handleResolveIoSnapshots', () => {
     });
   });
 
-  // The client does not parse what the socket already parsed, so the response
-  // must survive one encode and one decode — a stringified one arrives as a
-  // string and every caller of it throws.
+  // The client returns what the socket layer parsed, so the response must
+  // come back as the object the caller reads fields off.
   it.each(['json', 'v8'] as const)(
     'survives the %s socket round trip as an object',
     async (mode) => {
@@ -93,9 +92,13 @@ describe('handleResolveIoSnapshots', () => {
     expect(Object.keys(payload)).not.toContain('env');
   });
 
-  it('reports nothing stored when snapshots are off for the workspace', async () => {
-    fetchIoSnapshotsForRun.mockResolvedValue(null);
-    const { response } = await handleResolveIoSnapshots(payload);
-    expect(JSON.parse(response)).toBeNull();
-  });
+  it.each(['json', 'v8'] as const)(
+    'reports nothing stored when snapshots are off for the workspace (%s)',
+    async (mode) => {
+      fetchIoSnapshotsForRun.mockResolvedValue(null);
+      const { response } = await handleResolveIoSnapshots(payload);
+      expect(response).toBeNull();
+      expect(parseMessage(serializeWithFallback(response, mode))).toBeNull();
+    }
+  );
 });

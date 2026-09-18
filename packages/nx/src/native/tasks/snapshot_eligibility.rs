@@ -357,7 +357,11 @@ fn segment_could_disguise(segment: &str) -> bool {
     if !segment.contains('*') || segment.trim_matches('*').is_empty() {
         return false;
     }
-    NxGlobSetBuilder::new(&[segment.to_string()])
+    // Lowercased like `under_ignored_dir`, so `NODE_MODUL*S` cannot pass
+    // where `node_modul*s` is caught; a leading `!` is dropped because the
+    // glob builder would read the segment as a negation of its own.
+    let segment = segment.strip_prefix('!').unwrap_or(segment).to_lowercase();
+    NxGlobSetBuilder::new(&[segment])
         .and_then(|builder| builder.build())
         .map(|set| IGNORED_DIRS.iter().any(|dir| set.is_match(dir)))
         // A segment the glob engine rejects is not a name this can clear.
@@ -610,6 +614,7 @@ mod tests {
                 "node_modul?s/**".into(),
                 // A partial `*` hides the name from the plain-text check.
                 "node_modul*s/**".into(),
+                "NODE_MODUL*S/**".into(),
                 "apps/*odules/x".into(),
                 "{..,*}/x".into(),
                 "dist/{a,b}.js".into(),

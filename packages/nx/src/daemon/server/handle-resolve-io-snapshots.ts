@@ -33,7 +33,8 @@ export async function handleResolveIoSnapshots(
   if (resolved) {
     rememberIoSnapshots(resolved);
   }
-  // An object, not a string: `handleResult` sends a string body raw, which
-  // the client then parses — a stringified response arrives double-encoded.
+  // An object, not a string: the client returns what the socket layer
+  // parsed, and a string body comes back parsed too, so stringifying here
+  // only makes the shape depend on which side happens to parse.
   return { response, description: 'handleResolveIoSnapshots' };
 }
