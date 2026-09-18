@@ -334,7 +334,6 @@ export declare class WorkspaceContext {
   incrementalUpdate(updatedFiles: Array<string>, deletedFiles: Array<string>): ChangeBatch
   updateProjectFiles(projectRootMappings: Record<string, string>, projectFiles: ExternalObject<Record<string, Array<FileData>>>, globalFiles: ExternalObject<Array<FileData>>, updatedFiles: Record<string, string>, deletedFiles: Array<string>): UpdatedWorkspaceFiles
   allFileData(): Array<FileData>
-  getFileHashes(files: Array<string>): Array<string | undefined | null>
   /**
    * Recover from dropped watch events: re-walk, and report what changed
    * against the files this context was holding. The fresh files are

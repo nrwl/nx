@@ -7,11 +7,7 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import {
-  PluginCache,
-  readPluginCache,
-  safeWriteFileCache,
-} from './plugin-cache-utils';
+import { PluginCache, safeWriteFileCache } from './plugin-cache-utils';
 
 describe('plugin-cache-utils', () => {
   let tempDir: string;
@@ -111,17 +107,6 @@ describe('plugin-cache-utils', () => {
   });
 
   describe('PluginCache constructor reading from disk', () => {
-    it('reads entries and access order without constructing an LRU cache', () => {
-      const data = { entries: { a: '1' }, accessOrder: ['a', 'a'] };
-      writeFileSync(cachePath, JSON.stringify(data));
-
-      expect(readPluginCache(cachePath)).toEqual(data);
-      expect(new PluginCache(cachePath).toSerializable()).toEqual({
-        entries: { a: '1' },
-        accessOrder: ['a'],
-      });
-    });
-
     it('should read current format with entries and accessOrder', () => {
       writeFileSync(
         cachePath,
@@ -174,18 +159,6 @@ describe('plugin-cache-utils', () => {
   });
 
   describe('writeToDisk', () => {
-    it('preserves multibyte UTF-8 data when writing and loading a cache', () => {
-      const value = 'caf\u00e9 \u4e2d\u6587 \ud83d\ude80';
-      const cache = new PluginCache(cachePath, { a: value }, ['a']);
-      cache.writeToDisk();
-
-      expect(readFileSync(cachePath, 'utf8')).toBe(
-        JSON.stringify({ entries: { a: value }, accessOrder: ['a'] })
-      );
-      expect(new PluginCache<string>(cachePath).get('a')).toBe(value);
-      expect(readPluginCache<string>(cachePath).entries.a).toBe(value);
-    });
-
     it('should write cache with entries and accessOrder', () => {
       const cache = new PluginCache<string>(cachePath, { a: '1' }, ['a']);
 
