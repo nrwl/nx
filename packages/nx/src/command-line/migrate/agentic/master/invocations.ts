@@ -1,4 +1,7 @@
-import { claudeCodeHandoffAllowedTools } from '../definitions';
+import {
+  claudeCodeHandoffAllowedTools,
+  encodeTomlString,
+} from '../definitions';
 import type { AgentId, InvocationSpec } from '../types';
 
 export interface MasterInvocationContext {
@@ -43,7 +46,7 @@ const builders: Record<
   codex: (ctx) => ({
     args: [
       '-c',
-      `developer_instructions=${masterInvariant(ctx)}`,
+      `developer_instructions=${encodeTomlString(masterInvariant(ctx))}`,
       masterBootstrapPrompt(ctx),
     ],
   }),

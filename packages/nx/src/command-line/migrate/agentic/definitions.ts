@@ -110,7 +110,7 @@ function codexBuildInteractive(ctx: InvocationContext): InvocationSpec {
  * failure as literal text instead of reporting it, so the result is parsed
  * back before it reaches the command line.
  */
-function encodeTomlString(value: string): string {
+export function encodeTomlString(value: string): string {
   // JSON escapes every control TOML rejects except DEL, which it leaves raw.
   const encoded = JSON.stringify(value).replace(/\x7f/g, '\\u007F');
   let decoded: unknown;

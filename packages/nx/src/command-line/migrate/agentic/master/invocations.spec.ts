@@ -4,6 +4,7 @@ import {
   masterInvariant,
   type MasterInvocationContext,
 } from './invocations';
+import { encodeTomlString } from '../definitions';
 
 const runId = '20260715T101530-3f9a1c02';
 const ctx: MasterInvocationContext = {
@@ -58,7 +59,7 @@ describe('buildMasterInvocation', () => {
     expect(buildMasterInvocation('codex', ctx)).toEqual({
       args: [
         '-c',
-        `developer_instructions=${masterInvariant(ctx)}`,
+        `developer_instructions=${encodeTomlString(masterInvariant(ctx))}`,
         masterBootstrapPrompt(ctx),
       ],
     });
