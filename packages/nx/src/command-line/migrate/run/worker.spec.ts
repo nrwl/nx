@@ -1561,6 +1561,7 @@ describe('runSingleMigrationWorker', () => {
         kind: 'landed',
         sha: 'face0001face0001face0001face0001face0001',
         stepIds: ['step-1'],
+        ownerAttempt: 1,
       });
     });
 
@@ -2003,6 +2004,7 @@ describe('runSingleMigrationWorker', () => {
           kind: 'landed',
           sha: 'face0001face0001face0001face0001face0001',
           stepIds: ['step-1'],
+          ownerAttempt: 1,
         },
       ]);
       expect(stdout).not.toContain('<nx_migrate_prompt');
@@ -2071,6 +2073,7 @@ describe('runSingleMigrationWorker', () => {
             kind: 'landed',
             sha: 'face0001face0001face0001face0001face0001',
             stepIds: ['step-1'],
+            ownerAttempt: 1,
           },
         ]);
       }
@@ -2347,6 +2350,7 @@ describe('runSingleMigrationWorker', () => {
         kind: 'landed',
         sha: 'face0005face0005face0005face0005face0005',
         stepIds: ['step-2', 'step-1'],
+        ownerAttempt: 1,
       });
     });
 
@@ -2393,6 +2397,7 @@ describe('runSingleMigrationWorker', () => {
         sha: 'face0006face0006face0006face0006face0006',
         stepIds: ['step-2', 'step-1'],
         issueIds: ['issue-1'],
+        ownerAttempt: 1,
       });
     });
 
@@ -2578,7 +2583,12 @@ describe('runSingleMigrationWorker', () => {
       const state = readRunState(dir);
       expect(state.steps[0].status).toBe('succeeded');
       expect(state.commits).toEqual([
-        { kind: 'landed', sha: committed.sha, stepIds: ['step-1', 'step-0'] },
+        {
+          kind: 'landed',
+          sha: committed.sha,
+          stepIds: ['step-1', 'step-0'],
+          ownerAttempt: 1,
+        },
       ]);
       expect(readRequest(dir)).toEqual({
         kind: 'commit',
