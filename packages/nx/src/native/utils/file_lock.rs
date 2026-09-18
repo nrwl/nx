@@ -1,4 +1,3 @@
-use napi::Status;
 #[cfg(not(target_arch = "wasm32"))]
 use napi::bindgen_prelude::*;
 use std::fs;
@@ -50,26 +49,6 @@ fn wait_for_release(lock_file_path: &str, timeout: Duration) -> std::io::Result<
     }
 }
 
-/// The `code` `waitUntilFree` rejects with on timeout; matched by `isLockWaitTimeout`.
-#[cfg(not(target_arch = "wasm32"))]
-const TIMEOUT_CODE: &str = "Timeout";
-
-#[cfg(not(target_arch = "wasm32"))]
-fn timeout_error(env: &Env, lock_file_path: &str, timeout_ms: u32) -> napi::Error {
-    let message =
-        format!("Timed out after {timeout_ms}ms waiting for the lock on {lock_file_path}");
-    let built = env
-        .create_error(napi::Error::new(Status::GenericFailure, message.clone()))
-        .and_then(|mut error| {
-            error.set_named_property("code", TIMEOUT_CODE)?;
-            error.into_unknown(env)
-        });
-    match built {
-        Ok(error) => napi::Error::from(error),
-        Err(_) => napi::Error::new(Status::GenericFailure, message),
-    }
-}
-
 /// Contention is `WouldBlock` on some platforms and a raw OS error on others.
 #[cfg(not(target_arch = "wasm32"))]
 fn is_contended(e: &std::io::Error) -> bool {
@@ -80,26 +59,18 @@ fn is_contended(e: &std::io::Error) -> bool {
 /// Sleeps on the async runtime, not a libuv worker: this wait can last minutes
 /// and there are only four workers by default.
 #[cfg(not(target_arch = "wasm32"))]
-async fn wait_for_release_async(
-    lock_file_path: String,
-    timeout: Duration,
-) -> std::io::Result<bool> {
+async fn wait_for_release_async(lock_file_path: String) -> std::io::Result<()> {
     let file = open_lock_file(&lock_file_path)?;
-    let deadline = Instant::now() + timeout;
     loop {
         match fs4::fs_std::FileExt::try_lock_shared(&file) {
             Ok(()) => {
                 fs4::fs_std::FileExt::unlock(&file)?;
-                return Ok(true);
+                return Ok(());
             }
             Err(e) if is_contended(&e) => {}
             Err(e) => return Err(e),
         }
-        let remaining = deadline.saturating_duration_since(Instant::now());
-        if remaining.is_zero() {
-            return Ok(false);
-        }
-        tokio::time::sleep(LOCK_POLL_INTERVAL.min(remaining)).await;
+        tokio::time::sleep(LOCK_POLL_INTERVAL).await;
     }
 }
 
@@ -118,7 +89,7 @@ pub struct FileLock {
 ///   writeToCache()
 ///   lock.unlock()
 /// } else {
-///   await lock.waitUntilFree(timeoutMs)  // rejects with code 'Timeout' on timeout
+///   await lock.waitUntilFree()
 ///   readFromCache()
 /// }
 
@@ -195,28 +166,11 @@ impl FileLock {
     }
 
     /// Resolves once the lock is free, without taking it; follow with `tryLock`.
-    /// Rejects with `code: 'Timeout'` if it is still held after `timeout_ms`.
     #[napi(ts_return_type = "Promise<void>")]
-    pub fn wait_until_free(
-        &self,
-        env: Env,
-        timeout_ms: u32,
-    ) -> napi::Result<PromiseRaw<'static, ()>> {
+    pub fn wait_until_free(&self, env: Env) -> napi::Result<PromiseRaw<'static, ()>> {
         let lock_file_path = self.lock_file_path.clone();
-        let timeout = Duration::from_millis(timeout_ms as u64);
-        let timed_out_on = self.lock_file_path.clone();
-        // Settled on the JS thread so the rejection can carry a `code`;
-        // no napi `Status` means "timed out".
-        let promise = env.spawn_future_with_callback(
-            async move { Ok(wait_for_release_async(lock_file_path, timeout).await?) },
-            move |env, came_free: bool| {
-                if came_free {
-                    Ok(())
-                } else {
-                    Err(timeout_error(env, &timed_out_on, timeout_ms))
-                }
-            },
-        )?;
+        let promise =
+            env.spawn_future(async move { Ok(wait_for_release_async(lock_file_path).await?) })?;
         // SAFETY: PromiseRaw's inner napi_value is GC-managed by V8 and remains
         // valid beyond this stack frame.
         Ok(unsafe { std::mem::transmute(promise) })

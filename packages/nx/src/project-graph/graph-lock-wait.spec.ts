@@ -2,8 +2,6 @@ vi.unmock('./project-graph');
 
 const state = vi.hoisted(() => ({
   locked: true,
-  /** Whether each wait reports the holder released; default is released. */
-  releases: [] as boolean[],
   cachedGraph: null as unknown,
   waits: 0,
   reads: 0,
@@ -41,10 +39,6 @@ vi.mock('../native', () => ({
     };
     waitUntilFree = async (): Promise<void> => {
       state.waits++;
-      const released = state.releases.shift() ?? true;
-      if (!released) {
-        throw Object.assign(new Error('timed out'), { code: 'Timeout' });
-      }
       state.locked = false;
       // Whoever held it wrote the graph before letting go.
       state.cachedGraph = { nodes: {}, dependencies: {} };
@@ -125,7 +119,6 @@ import { createProjectGraphAndSourceMapsAsync } from './project-graph';
 describe('waiting on the graph lock', () => {
   beforeEach(() => {
     state.locked = true;
-    state.releases = [];
     state.cachedGraph = null;
     state.waits = 0;
     state.reads = 0;
@@ -145,18 +138,6 @@ describe('waiting on the graph lock', () => {
     expect(projectGraph).toEqual({ nodes: {}, dependencies: {} });
     expect(state.reads).toBe(1);
     expect(state.builds).toBe(0);
-  });
-
-  it('builds the graph itself when the holder outlasts the budget', async () => {
-    state.releases = [false];
-
-    await createProjectGraphAndSourceMapsAsync();
-
-    expect(state.reads).toBe(0);
-    expect(state.waits).toBe(1);
-    expect(state.acquires).toBe(0);
-    expect(state.builds).toBe(1);
-    expect(state.writes).toBe(0);
   });
 
   it('builds and writes the graph itself when the holder stopped without writing one', async () => {

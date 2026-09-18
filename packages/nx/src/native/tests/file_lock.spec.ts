@@ -2,7 +2,6 @@ import { join } from 'path';
 
 import { TempFs } from '../../internal-testing-utils/temp-fs';
 import { FileLock } from '../index';
-import { isLockWaitTimeout } from '../../utils/file-lock';
 
 describe('FileLock', () => {
   let tempFs: TempFs;
@@ -45,9 +44,7 @@ describe('FileLock', () => {
     const holder = new FileLock(lockPath);
     holder.lock();
 
-    const waiting = new FileLock(lockPath)
-      .waitUntilFree(10_000)
-      .then(() => 'free');
+    const waiting = new FileLock(lockPath).waitUntilFree().then(() => 'free');
 
     // A timer, not a resolved promise: the native wait settles on a macrotask,
     // so a microtask would win whether or not it waited.
@@ -60,35 +57,19 @@ describe('FileLock', () => {
     expect(await waiting).toBe('free');
   });
 
-  it('rejects `waitUntilFree` rather than waiting on a holder forever', async () => {
-    const holder = new FileLock(lockPath);
-    holder.lock();
-
-    try {
-      const started = Date.now();
-      await expect(new FileLock(lockPath).waitUntilFree(200)).rejects.toSatisfy(
-        isLockWaitTimeout
-      );
-      expect(Date.now() - started).toBeGreaterThanOrEqual(190);
-    } finally {
-      holder.unlock();
-    }
-  });
-
   it('leaves the JS thread free while `waitUntilFree` is pending', async () => {
     const holder = new FileLock(lockPath);
     holder.lock();
 
-    try {
-      let ticks = 0;
-      const ticking = setInterval(() => ticks++, 10);
-      await new FileLock(lockPath).waitUntilFree(150).catch(() => {});
-      clearInterval(ticking);
+    let ticks = 0;
+    const ticking = setInterval(() => ticks++, 10);
+    const waiting = new FileLock(lockPath).waitUntilFree();
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    clearInterval(ticking);
+    holder.unlock();
+    await waiting;
 
-      expect(ticks).toBeGreaterThan(0);
-    } finally {
-      holder.unlock();
-    }
+    expect(ticks).toBeGreaterThan(0);
   });
 
   it('does not take the lock it waited for, so the caller still has to acquire it', async () => {
@@ -97,7 +78,7 @@ describe('FileLock', () => {
     holder.unlock();
 
     const observer = new FileLock(lockPath);
-    await expect(observer.waitUntilFree(200)).resolves.toBeUndefined();
+    await expect(observer.waitUntilFree()).resolves.toBeUndefined();
 
     expect(new FileLock(lockPath).tryLock()).toBe(true);
   });

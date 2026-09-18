@@ -78,11 +78,8 @@ export declare class FileLock {
    * Wait with `waitUntilFree`, not `lock`, which blocks the event loop.
    */
   tryLock(): boolean
-  /**
-   * Resolves once the lock is free, without taking it; follow with `tryLock`.
-   * Rejects with `code: 'Timeout'` if it is still held after `timeout_ms`.
-   */
-  waitUntilFree(timeoutMs: number): Promise<void>
+  /** Resolves once the lock is free, without taking it; follow with `tryLock`. */
+  waitUntilFree(): Promise<void>
   lock(): void
 }
 

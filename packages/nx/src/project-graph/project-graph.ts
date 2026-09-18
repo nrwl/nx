@@ -20,7 +20,6 @@ import { FileLock, IS_WASM } from '../native';
 import { workspaceDataDirectory } from '../utils/cache-directory';
 import { getCallSites } from '../utils/call-sites';
 import { DelayedSpinner } from '../utils/delayed-spinner';
-import { isLockWaitTimeout } from '../utils/file-lock';
 import { fileExists } from '../utils/fileutils';
 import { isSandbox } from '../utils/is-sandbox';
 import { logger } from '../utils/logger';
@@ -125,10 +124,7 @@ export function readProjectsConfigurationFromProjectGraph(
   };
 }
 
-export async function buildProjectGraphAndSourceMapsWithoutDaemon(
-  // Only the lock holder writes the cache.
-  { writeGraphCache }: { writeGraphCache: boolean } = { writeGraphCache: true }
-) {
+export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
   preventRecursionInGraphConstruction();
   // Answer from the plugins loaded below, not an earlier cached graph's rows.
   noteGraphReadFromCache(undefined);
@@ -207,7 +203,7 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon(
     ...(projectGraphError?.errors ?? []),
   ];
 
-  if (cacheEnabled && writeGraphCache) {
+  if (cacheEnabled) {
     const computedAt = Date.now();
     // Before the graph, so a cached graph never lacks its row.
     if (errors.length === 0) {
@@ -275,9 +271,6 @@ async function readCachedGraphAndHydrateFileMap(minimumComputedAt?: number) {
   hydrateFileMap(fileMap, rustReferences);
   return graph;
 }
-
-// Long enough for a large workspace's build; bounded so a wedged holder can't hang every command.
-const MAX_WAIT_FOR_GRAPH_LOCK = 5 * 60 * 1000;
 
 /**
  * Computes and returns a ProjectGraph.
@@ -376,7 +369,7 @@ export async function createProjectGraphAndSourceMapsAsync(
       );
       const start = Date.now();
       try {
-        await lock.waitUntilFree(MAX_WAIT_FOR_GRAPH_LOCK);
+        await lock.waitUntilFree();
         // A graph computed after this process started waiting is the holder's.
         const graph = await readCachedGraphAndHydrateFileMap(start);
         const sourceMaps = readSourceMapsCache();
@@ -387,26 +380,17 @@ export async function createProjectGraphAndSourceMapsAsync(
         }
         return { projectGraph: graph, sourceMaps };
       } catch (e) {
-        if (isLockWaitTimeout(e)) {
-          logger.verbose(
-            `Another process has held the project graph lock for over ${
-              MAX_WAIT_FOR_GRAPH_LOCK / 1000
-            }s. Building the graph in this process as well.`
-          );
-        } else if (e instanceof StaleProjectGraphCacheError) {
-          // The holder stopped without writing a graph, so build it here.
-          holdingLock = lock.tryLock();
-        } else {
+        if (!(e instanceof StaleProjectGraphCacheError)) {
           throw e;
         }
+        // The holder stopped without writing a graph, so build it here.
+        holdingLock = lock.tryLock();
       } finally {
         spinner.cleanup();
       }
     }
     try {
-      const res = await buildProjectGraphAndSourceMapsWithoutDaemon({
-        writeGraphCache: !lock || holdingLock,
-      });
+      const res = await buildProjectGraphAndSourceMapsWithoutDaemon();
       performance.measure(
         'createProjectGraphAsync >> retrieve-project-configurations',
         'retrieve-project-configurations:start',
