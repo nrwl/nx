@@ -27,14 +27,15 @@ function knownThatNoPluginRegisters(
 export async function runPreTasksExecution(
   pluginContext: PreTasksExecutionContext
 ) {
-  const nxJson = readNxJson(pluginContext.workspaceRoot);
-
   if (isOnDaemon() || !isDaemonEnabled()) {
     if (knownThatNoPluginRegisters('hasPreTasksExecution')) {
       return [];
     }
     performance.mark(`preTasksExecution:start`);
-    const plugins = await getPlugins(nxJson, pluginContext.workspaceRoot);
+    const plugins = await getPlugins(
+      readNxJson(pluginContext.workspaceRoot),
+      pluginContext.workspaceRoot
+    );
     const envs = await Promise.all(
       plugins
         .filter((p) => p.preTasksExecution)
@@ -80,14 +81,12 @@ function applyProcessEnvs(envs: NodeJS.ProcessEnv[]) {
 export async function runPostTasksExecution(
   context: MaybeStubbedPostTasksExecutionContext
 ) {
-  const nxJson = readNxJson(workspaceRoot);
-
   if (isOnDaemon() || !isDaemonEnabled()) {
     if (knownThatNoPluginRegisters('hasPostTasksExecution')) {
       return;
     }
     performance.mark(`postTasksExecution:start`);
-    const plugins = await getPlugins(nxJson);
+    const plugins = await getPlugins(readNxJson(workspaceRoot));
     await Promise.all(
       plugins
         .filter((p) => p.postTasksExecution)
