@@ -107,7 +107,7 @@ describe('getTouchedProjectsFromProjectGlobChanges', () => {
   });
 
   it('ignores a plugin that registers no createNodes', async () => {
-    // Without the filter, an absent pattern becomes the literal glob `undefined`.
+    // Without the filter, a lone absent pattern reaches minimatch, which throws.
     mocks.capabilitiesOfConfiguredPlugins.mockResolvedValue([
       {
         name: 'inert',
