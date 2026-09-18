@@ -15,6 +15,10 @@ import { readNxJson } from '../../config/configuration';
 import { hasNxJson, NxJsonConfiguration } from '../../config/nx-json';
 import { FileData, ProjectGraph } from '../../config/project-graph';
 import { Task, TaskGraph } from '../../config/task-graph';
+import {
+  RESOLVE_IO_SNAPSHOTS,
+  type ResolvedIoSnapshots,
+} from '../message-types/resolve-io-snapshots';
 import { pruneTaskGraph } from '../../tasks-runner/prune-task-graph';
 import { Hash } from '../../hasher/task-hasher';
 import { IS_WASM, NxWorkspaceFiles, TaskRun, TaskTarget } from '../../native';
@@ -377,13 +381,34 @@ export class DaemonClient {
     return await this.sendToDaemonViaQueue({ type: 'REQUEST_FILE_DATA' });
   }
 
+  /**
+   * Asks the daemon to fetch and store this run's I/O snapshot set. The run's
+   * env travels with the request, since the daemon's own predates it. Both
+   * processes then read the stored set back by commit.
+   */
+  async resolveIoSnapshots(
+    runnerOptions: any,
+    ioSnapshotEnv: {
+      NX_IO_SNAPSHOTS?: string;
+      NX_IO_SNAPSHOTS_MAX_AGE?: string;
+    }
+  ): Promise<ResolvedIoSnapshots> {
+    // The socket layer parses the response; parsing it again throws.
+    return this.sendToDaemonViaQueue({
+      type: RESOLVE_IO_SNAPSHOTS,
+      runnerOptions,
+      ioSnapshotEnv,
+    });
+  }
+
   hashTasks(
     runnerOptions: any,
     tasks: Task[],
     taskGraph: TaskGraph,
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd: string,
-    collectInputs?: boolean
+    collectInputs?: boolean,
+    ioSnapshots?: { commit?: string }
   ): Promise<Hash[]> {
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS',
@@ -392,6 +417,9 @@ export class DaemonClient {
       ...withoutTaskResults(tasks, taskGraph),
       cwd,
       collectInputs,
+      // An External cannot cross the socket: the commit names the stored set
+      // to hash from. Absent (incl. an older client) means native hashing.
+      ioSnapshots,
     });
   }
 
@@ -401,7 +429,8 @@ export class DaemonClient {
     taskGraph: TaskGraph,
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd: string,
-    collectInputs?: boolean
+    collectInputs?: boolean,
+    ioSnapshots?: { commit?: string }
   ): Promise<Record<string, Hash>> {
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS_UPFRONT',
@@ -410,6 +439,7 @@ export class DaemonClient {
       ...withoutTaskResults(tasks, taskGraph),
       cwd,
       collectInputs,
+      ioSnapshots,
     });
   }
 

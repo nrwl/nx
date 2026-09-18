@@ -3,6 +3,7 @@ mod hash_plan_inspector;
 mod hash_planner;
 pub mod hashers;
 mod inputs;
+pub(crate) mod snapshot_eligibility;
 pub mod task_hasher;
 pub mod types;
 mod utils;

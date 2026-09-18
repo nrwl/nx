@@ -499,3 +499,42 @@ describe('hashTasks', () => {
     expect(task.hashDetails).toBeDefined();
   });
 });
+
+describe('resolveIoSnapshots', () => {
+  async function send(response: unknown) {
+    const { DaemonClient } = await import('./client');
+    const client = Object.create(DaemonClient.prototype);
+    const spy = vi
+      .spyOn(client, 'sendToDaemonViaQueue')
+      .mockResolvedValue(response as never);
+    const resolved = await client.resolveIoSnapshots(
+      { accessToken: 't' },
+      { NX_IO_SNAPSHOTS_MAX_AGE: '123' }
+    );
+    return { message: spy.mock.calls[0][0] as any, resolved };
+  }
+
+  // `env` is the field the server reflects onto its whole process
+  // environment, deleting every key the message leaves out. Neither tsc nor
+  // the handler spec covers the name on this side.
+  it('keeps the run env off the field the daemon reflects', async () => {
+    const { message } = await send(null);
+    expect(Object.keys(message)).not.toContain('env');
+    expect(message.ioSnapshotEnv).toEqual({ NX_IO_SNAPSHOTS_MAX_AGE: '123' });
+  });
+
+  it('returns what the socket layer parsed, without parsing it again', async () => {
+    const response = {
+      status: 'fetched',
+      reason: '',
+      message: '',
+      commit: 'head',
+    };
+    const { resolved } = await send(response);
+    expect(resolved).toEqual(response);
+  });
+
+  it('passes a null resolution through', async () => {
+    expect((await send(null)).resolved).toBeNull();
+  });
+});

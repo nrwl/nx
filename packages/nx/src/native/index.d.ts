@@ -94,8 +94,19 @@ export declare class HashPlanInspector {
 
 export declare class HashPlanner {
   constructor(nxJson: NxJson, projectGraph: ExternalObject<ProjectGraph>)
-  getPlans(taskIds: Array<string>, taskGraph: TaskGraph): Record<string, string[]>
-  getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph): ExternalObject<Record<string, Array<HashInstruction>>>
+  /**
+   * `snapshots` is this run's I/O snapshot bundle; a task with an eligible
+   * entry hashes its observed reads instead of its declared filesets.
+   * `customHasherTaskIds` and `optedOutTaskIds` are decided in JS, where
+   * executors and target configuration are resolved.
+   */
+  getPlans(taskIds: Array<string>, taskGraph: TaskGraph, snapshots?: IoSnapshots | undefined | null, customHasherTaskIds?: Array<string> | undefined | null, optedOutTaskIds?: Array<string> | undefined | null): Record<string, string[]>
+  /**
+   * The same eligibility walk `getPlans` performs, reported: which tasks
+   * hash from their snapshot and why the others do not.
+   */
+  ioSnapshotReport(taskGraph: TaskGraph, snapshots?: IoSnapshots | undefined | null, customHasherTaskIds?: Array<string> | undefined | null, optedOutTaskIds?: Array<string> | undefined | null): IoSnapshotReport
+  getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph, snapshots?: IoSnapshots | undefined | null, customHasherTaskIds?: Array<string> | undefined | null, optedOutTaskIds?: Array<string> | undefined | null): ExternalObject<Record<string, Array<HashInstruction>>>
 }
 
 export declare class HttpRemoteCache {
@@ -117,6 +128,27 @@ export declare class ImportResult {
   sourceProject: string
   dynamicImportExpressions: Array<string>
   staticImportExpressions: Array<string>
+}
+
+/**
+ * The snapshot set for one commit, plus what resolving it reported. Handed
+ * to the hash planner as-is. Entries are read from the workspace database
+ * per task as they are asked for, and remembered for the handle's lifetime,
+ * so a run costs the tasks it plans rather than the workspace's whole set.
+ * `resolution` is `None` when every task hashes natively (status `skipped`).
+ */
+export declare class IoSnapshots {
+  /** `fetched` | `cached` | `skipped` */
+  get status(): string
+  /**
+   * Why the fetch was skipped, `stale-offline` when a stale set was
+   * reused, or `no-bundle` / `invalid-bundle` from `loadIoSnapshots`.
+   */
+  get reason(): string | null
+  get message(): string | null
+  /** The commit whose stored set this is, when one was resolved. */
+  get commit(): string | null
+  get resolution(): IoSnapshotResolution | null
 }
 
 export declare class NxCache {
@@ -623,7 +655,18 @@ export interface HashInputs {
   depOutputs: Array<string>
   /** External dependencies */
   external: Array<string>
+  /** Provenance of every value above, keyed by the value itself. */
+  sources: Record<string, 'snapshot' | 'target' | 'dependency' | 'native'>
+  /** Domain markers in the plan, e.g. `io-snapshot:<digest>`. */
+  markers: Array<string>
 }
+
+/**
+ * Stores the snapshot set the Nx Cloud client read for `requested_commit`
+ * and returns it as this run's set. Never fails the caller: a payload nx
+ * cannot read or a database it cannot write is reported as `skipped`.
+ */
+export declare function importIoSnapshots(db: ExternalObject<NxDbConnection>, options: IoSnapshotImportOptions): IoSnapshots
 
 /**
  * Initialize telemetry using a DB connection.
@@ -654,6 +697,84 @@ export declare function installNxConsoleForEditor(editor: SupportedEditor): Prom
 export interface InvocationRecord {
   parentPid: number
   taskId: string
+}
+
+/**
+ * Tasks whose snapshot read another task's outputs: they hash after their
+ * producers ran, because those files only exist then. Needs no project graph,
+ * so the client can call it before the first hashing wave on the daemon path.
+ * Opted-out and custom-hasher tasks are not excluded: deferring a task that
+ * ends up hashed natively only delays its hash, it never changes it.
+ */
+export declare function ioSnapshotDeferredTaskIds(snapshots: IoSnapshots, taskGraph: TaskGraph): Array<string>
+
+/**
+ * Why a task (or the whole run) hashes natively. `reason` strings are the
+ * contract `nx show`, `nx graph`, and the run summary render.
+ */
+export interface IoSnapshotDiagnostic {
+  reason: string
+  taskId?: string
+  project?: string
+  glob?: string
+  producer?: string
+  file?: string
+  message?: string
+}
+
+/** The snapshot set the Nx Cloud client read for HEAD, as JS hands it over. */
+export interface IoSnapshotImportOptions {
+  requestedCommit: string
+  /** The commits the client asked about, newest first. */
+  commits: Array<string>
+  /**
+   * `Record<taskId, { commit, inputs, outputs }>` as JSON. `inputs` is an
+   * untagged shape (flat globs or the older per-project buckets) that serde
+   * reads directly; a typed napi object would have to model both.
+   */
+  snapshotsJson: string
+  updatedAt?: number
+  clientVersion?: string
+  retain?: number
+}
+
+/**
+ * Observed outputs per eligible task (same walk as hashing), for the runner
+ * to union into `task.outputs` and for `nx show` to label them.
+ */
+export declare function ioSnapshotOutputs(snapshots: IoSnapshots, taskGraph: TaskGraph, optedOutTaskIds: Array<string>, customHasherTaskIds: Array<string>, projectRoots?: Record<string, string> | undefined | null): Record<string, Array<string>>
+
+/**
+ * The eligibility report without a planner: the client prints the run
+ * summary from this on the daemon path, where it never transfers a project
+ * graph. `invalid-files-input` needs nx.json to expand named inputs, so it
+ * is only reported through the planner.
+ */
+export declare function ioSnapshotReport(snapshots: IoSnapshots, taskGraph: TaskGraph, optedOutTaskIds: Array<string>, customHasherTaskIds: Array<string>, projectRoots?: Record<string, string> | undefined | null): IoSnapshotReport
+
+export interface IoSnapshotReport {
+  /** Task ids hashed from their snapshot. */
+  used: Array<string>
+  /** Subset of `used` whose snapshot also contributes observed outputs. */
+  tasksWithOutputs: Array<string>
+  diagnostics: Array<IoSnapshotDiagnostic>
+  resolution?: IoSnapshotResolution
+}
+
+/** What was resolved for a commit; stored beside its entries. */
+export interface IoSnapshotResolution {
+  requestedCommit: string
+  commits: Array<string>
+  sourceCommits: Array<string>
+  digest: string
+  fetchedAt: number
+  /**
+   * The set's `updatedAt` as Nx Cloud reported it; sent back as
+   * `knownUpdatedAt` so an unchanged set costs no payload.
+   */
+  updatedAt?: number
+  clientVersion: string
+  tasks: number
 }
 
 export const IS_WASM: boolean
@@ -699,6 +820,13 @@ export interface Link {
   text: string
   href: string
 }
+
+/**
+ * The stored set for `commit`, without touching the network: `nx show`,
+ * `nx graph` and the daemon load the commit the run resolved. `reason` and
+ * `message` annotate a deliberate reuse, such as `stale-offline`.
+ */
+export declare function loadIoSnapshots(db: ExternalObject<NxDbConnection>, commit: string, reason?: string | undefined | null, message?: string | undefined | null): IoSnapshots
 
 export declare function logDebug(message: string): void
 
@@ -811,6 +939,12 @@ export interface ProjectGraph {
   externalNodes: Record<string, ExternalNode>
 }
 
+/**
+ * The resolution stored for `commit`, without reading any entries: enough
+ * to decide whether to ask Nx Cloud at all and what `knownUpdatedAt` to send.
+ */
+export declare function readIoSnapshotResolution(db: ExternalObject<NxDbConnection>, commit: string): IoSnapshotResolution | null
+
 export declare function remove(src: string): void
 
 export declare function restoreTerminal(): void
@@ -823,6 +957,12 @@ export declare const enum RunMode {
 export interface RuntimeInput {
   runtime: string
 }
+
+/**
+ * A result that hashes every task natively, for the cases JS decides
+ * (no git HEAD, no Nx Cloud client, a read that failed with nothing cached).
+ */
+export declare function skippedIoSnapshots(reason: string, message: string): IoSnapshots
 
 export declare const enum SupportedEditor {
   VSCode = 0,

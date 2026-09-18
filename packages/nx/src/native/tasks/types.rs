@@ -170,7 +170,19 @@ pub enum HashInstruction {
     External(String),
     AllExternalDependencies,
     JsonFileSet(Box<JsonFileSetInput>),
+    /// Run-constant label that keeps hash keys built from different input
+    /// sources (e.g. an I/O snapshot) from ever colliding with native keys.
+    Marker(String),
 }
+
+/// Hashed into every task regardless of its inputs (see `HashPlanner::get_plans_internal`).
+pub(crate) const ALWAYS_ON_WORKSPACE_FILES: [&str; 3] = [
+    "{workspaceRoot}/nx.json",
+    "{workspaceRoot}/.gitignore",
+    "{workspaceRoot}/.nxignore",
+];
+
+pub(crate) const IO_SNAPSHOT_MARKER_PREFIX: &str = "io-snapshot:";
 
 /// Append-only interner for hash instructions. Plans store `u32` ids into the
 /// pool, so each unique instruction is materialized once per planner instance
@@ -182,7 +194,15 @@ pub struct InstructionPool {
     // Display strings, rendered once per unique instruction at intern time so
     // hashing can hand out shared keys instead of re-rendering per task.
     keys: DashMap<u32, Arc<str>>,
+    /// `HashInstruction::label` per id, rendered once like `keys`.
+    labels: DashMap<u32, Arc<str>>,
     next_id: AtomicU32,
+    /// Instruction kind per id, for lock-cheap plan filtering.
+    kinds: parking_lot::RwLock<Vec<InstructionKind>>,
+    /// How many of a snapshot group's trailing globs are declared negations
+    /// rather than observed reads. Kept beside the instruction, not inside it,
+    /// so provenance never reaches the hash key.
+    declared_tails: DashMap<u32, u32>,
 }
 
 impl InstructionPool {
@@ -203,9 +223,45 @@ impl InstructionPool {
                 let id = self.next_id.fetch_add(1, Ordering::Relaxed);
                 self.items.insert(id, vacant.key().clone());
                 self.keys.insert(id, Arc::from(vacant.key().to_string()));
+                self.labels.insert(id, Arc::from(vacant.key().label()));
+                let kind = InstructionKind::of(vacant.key());
+                {
+                    let mut kinds = self.kinds.write();
+                    if kinds.len() <= id as usize {
+                        kinds.resize(id as usize + 1, InstructionKind::Other);
+                    }
+                    kinds[id as usize] = kind;
+                }
                 vacant.insert(id);
                 id
             }
+        }
+    }
+
+    /// Interns a snapshot group, recording how many trailing globs the planner
+    /// appended from declared inputs. Value-equal groups agree on the count,
+    /// since the globs themselves carry it.
+    pub fn intern_with_declared_tail(&self, instruction: HashInstruction, tail: u32) -> u32 {
+        let id = self.intern(instruction);
+        if tail > 0 {
+            self.declared_tails.insert(id, tail);
+        }
+        id
+    }
+
+    /// Trailing globs of this instruction that came from a declared input; 0
+    /// when it carries none, or is not a snapshot group at all.
+    pub fn declared_tail(&self, id: u32) -> u32 {
+        self.declared_tails.get(&id).map(|tail| *tail).unwrap_or(0)
+    }
+
+    /// Whether an I/O snapshot replaces this instruction: every declared
+    /// fileset, and TsConfiguration unless the root tsconfig was read.
+    pub fn replaced_by_snapshot(&self, id: u32, keep_tsconfig: bool) -> bool {
+        match self.kinds.read().get(id as usize).copied() {
+            Some(InstructionKind::FileSet) => true,
+            Some(InstructionKind::TsConfiguration) => !keep_tsconfig,
+            _ => false,
         }
     }
 
@@ -224,8 +280,39 @@ impl InstructionPool {
             .clone()
     }
 
+    /// The instruction's label (see `HashInstruction::label`), shared across
+    /// all tasks that reference the instruction.
+    pub fn label(&self, id: u32) -> Arc<str> {
+        self.labels
+            .get(&id)
+            .expect("instruction ids are only handed out by intern()")
+            .clone()
+    }
+
     pub fn len(&self) -> usize {
         self.items.len()
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum InstructionKind {
+    FileSet,
+    TsConfiguration,
+    Other,
+}
+
+impl InstructionKind {
+    fn of(instruction: &HashInstruction) -> Self {
+        match instruction {
+            HashInstruction::ProjectFileSet(..) | HashInstruction::WorkspaceFileSet(_) => {
+                Self::FileSet
+            }
+            // Disk-backed groups are the snapshot's own reads, or declared
+            // `includeIgnored` inputs; neither is replaced by a snapshot.
+            HashInstruction::IgnoredFileSet(_) => Self::Other,
+            HashInstruction::TsConfiguration(_) => Self::TsConfiguration,
+            _ => Self::Other,
+        }
     }
 }
 
@@ -238,6 +325,24 @@ pub struct HashPlans {
     /// fileset of theirs reads from contains, or sits inside, an output a
     /// task they depend on declares.
     pub deferred: std::collections::HashSet<String>,
+}
+
+/// Entries above which a disk-backed group's label carries a count and a
+/// digest instead of every path. A snapshot group can run to thousands.
+pub const COMPACT_FILES_LABEL_ABOVE: usize = 8;
+
+impl HashInstruction {
+    /// What hash details name this instruction: its Display, except that a
+    /// large disk-backed group folds to a count and a digest of its paths.
+    pub fn label(&self) -> String {
+        match self {
+            HashInstruction::IgnoredFileSet(globs) if globs.len() > COMPACT_FILES_LABEL_ABOVE => {
+                let digest = crate::native::hasher::hash(globs.join(",").as_bytes());
+                format!("files:[{} paths #{digest}]", globs.len())
+            }
+            _ => self.to_string(),
+        }
+    }
 }
 
 impl ToNapiValue for HashInstruction {
@@ -295,6 +400,7 @@ impl fmt::Display for HashInstruction {
                     format!("{task_output}:{dep_outputs}")
                 }
                 HashInstruction::External(external) => external.to_string(),
+                HashInstruction::Marker(marker) => marker.clone(),
                 HashInstruction::ProjectConfiguration(project_name) => {
                     format!("{project_name}:ProjectConfiguration")
                 }
@@ -327,6 +433,54 @@ impl fmt::Display for HashInstruction {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn label_folds_a_large_disk_backed_group_and_keeps_small_ones_verbatim() {
+        let small = HashInstruction::IgnoredFileSet(vec!["a".into(), "!b".into()]);
+        assert_eq!(small.label(), small.to_string());
+        let globs: Vec<String> = (0..20).map(|i| format!("libs/p/f{i}.ts")).collect();
+        let big = HashInstruction::IgnoredFileSet(globs.clone());
+        let label = big.label();
+        assert!(label.starts_with("files:[20 paths #"), "{label}");
+        let mut changed = globs.clone();
+        changed[3] = "libs/p/other.ts".into();
+        let relabeled = HashInstruction::IgnoredFileSet(changed).label();
+        assert_ne!(label, relabeled);
+        let tracked = HashInstruction::ProjectFileSet("p".into(), globs);
+        assert_eq!(tracked.label(), tracked.to_string());
+        let pool = InstructionPool::new();
+        let id = pool.intern(big.clone());
+        assert_eq!(&*pool.label(id), label.as_str());
+        assert_eq!(&*pool.key(id), big.to_string().as_str());
+    }
+
+    #[test]
+    fn marker_display_is_verbatim_and_interns_by_value() {
+        let pool = InstructionPool::new();
+        let a = pool.intern(HashInstruction::Marker("io-snapshot:abc".into()));
+        let b = pool.intern(HashInstruction::Marker("io-snapshot:abc".into()));
+        let c = pool.intern(HashInstruction::Marker("io-snapshot:def".into()));
+        assert_eq!(a, b);
+        assert_ne!(a, c);
+        assert_eq!(&*pool.key(a), "io-snapshot:abc");
+        // Filesets are replaced by a snapshot; a marker or disk-backed group is not.
+        let fileset = pool.intern(HashInstruction::ProjectFileSet(
+            "p".into(),
+            vec!["p/**/*".into()],
+        ));
+        let group = pool.intern_with_declared_tail(
+            HashInstruction::IgnoredFileSet(vec!["p/a.ts".into(), "!p/**/*.spec.ts".into()]),
+            1,
+        );
+        assert!(pool.replaced_by_snapshot(fileset, true));
+        assert!(!pool.replaced_by_snapshot(group, true));
+        assert!(!pool.replaced_by_snapshot(a, true));
+        assert_eq!(pool.declared_tail(group), 1);
+        assert_eq!(pool.declared_tail(fileset), 0);
+        let ts = pool.intern(HashInstruction::TsConfiguration("p".into()));
+        assert!(pool.replaced_by_snapshot(ts, false));
+        assert!(!pool.replaced_by_snapshot(ts, true));
+    }
 
     #[test]
     fn pool_key_matches_display_and_is_shared() {

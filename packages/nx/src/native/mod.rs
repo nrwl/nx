@@ -2,6 +2,7 @@ pub mod cache;
 pub mod glob;
 pub mod hasher;
 pub mod ide;
+pub mod io_snapshots;
 pub mod logger;
 mod machine_id;
 pub mod metadata;
