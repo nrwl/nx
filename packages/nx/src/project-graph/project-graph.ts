@@ -126,11 +126,7 @@ export function readProjectsConfigurationFromProjectGraph(
 }
 
 export async function buildProjectGraphAndSourceMapsWithoutDaemon(
-  // The graph cache is written by whoever holds the graph lock. A process that
-  // gave up waiting for the holder computes the graph for itself alone: writing
-  // from outside the lock would race the holder still in there, and the three
-  // cache files are renamed into place one at a time, so two writers can leave a
-  // graph and the source maps that explain it describing different runs.
+  // False for a process that gave up on the lock: only the lock holder writes the cache.
   { writeGraphCache }: { writeGraphCache: boolean } = { writeGraphCache: true }
 ) {
   preventRecursionInGraphConstruction();
@@ -211,9 +207,7 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon(
 
   if (cacheEnabled && writeGraphCache) {
     const computedAt = Date.now();
-    // Before the graph, so a graph on disk never lacks the row that describes
-    // it, and only when every plugin loaded, since a partial list would leave
-    // one out of every answer read from it.
+    // Before the graph, so a cached graph never lacks its row.
     if (errors.length === 0) {
       recordGraphPluginCapabilities(computedAt, plugins);
     }
@@ -262,8 +256,6 @@ async function readCachedGraphAndHydrateFileMap(minimumComputedAt?: number) {
     throw noCachedProjectGraphError();
   }
   const graph = stamped.projectGraph;
-  // This process has not loaded the plugins that built this graph, so what they
-  // register is read from what their build recorded.
   noteGraphReadFromCache(stamped.computedAt);
   const projectRootMap = Object.fromEntries(
     Object.entries(graph.nodes).map(([project, { data }]) => [
@@ -391,7 +383,6 @@ export async function createProjectGraphAndSourceMapsAsync(
             MAX_WAIT_FOR_GRAPH_LOCK / 1000
           }s. Building the graph in this process as well.`
         );
-        // Without the lock, so the holder's write is not raced.
         writeGraphCache = false;
         break;
       } finally {

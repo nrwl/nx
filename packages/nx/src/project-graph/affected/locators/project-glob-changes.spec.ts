@@ -6,8 +6,6 @@ const mocks = vi.hoisted(() => ({
   deleted: new Set<string>(),
 }));
 
-// The locator asks whether each touched path is still there, which is what the
-// change sets are built from too.
 vi.mock('../../file-utils', async () => ({
   ...(await vi.importActual<typeof import('../../file-utils')>(
     '../../file-utils'
@@ -24,9 +22,6 @@ function modifiedFile(file: string) {
   return {
     file,
     getChanges: () => {
-      // Evaluating a change set for a file that still exists reads it at two
-      // revisions and parses both. Every other locator pays that for one file;
-      // this one would pay it for every touched file.
       throw new Error(`getChanges() was called for ${file}`);
     },
   };
@@ -39,8 +34,6 @@ vi.mock('../../../project-graph/plugins/get-plugins', async () => ({
 
 beforeEach(() => {
   mocks.deleted.clear();
-  // Where those capabilities came from, records or a load, is settled inside
-  // `capabilitiesOfConfiguredPlugins` and is its spec's business.
   mocks.capabilitiesOfConfiguredPlugins.mockReset();
   mocks.capabilitiesOfConfiguredPlugins.mockResolvedValue([
     {
@@ -109,18 +102,12 @@ describe('getTouchedProjectsFromProjectGlobChanges', () => {
       { nodes, dependencies: {} }
     );
 
-    // A modified project configuration marks its own project through its root,
-    // so this locator has nothing to add, and the patterns it would match
-    // against cost a plugin load to work out.
     expect(result).toEqual([]);
     expect(mocks.capabilitiesOfConfiguredPlugins).not.toHaveBeenCalled();
   });
 
   it('ignores a plugin that registers no createNodes', async () => {
-    // The only plugin, so nothing else contributes a pattern: whatever this
-    // locator matches against is what an absent `createNodesPattern` turned
-    // into. Dropped rather than combined, or the literal `undefined` becomes a
-    // pattern of its own and a file by that name deletes the whole workspace.
+    // Without the filter, an absent pattern becomes the literal glob `undefined`.
     mocks.capabilitiesOfConfiguredPlugins.mockResolvedValue([
       {
         name: 'inert',

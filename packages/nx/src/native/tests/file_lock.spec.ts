@@ -17,8 +17,6 @@ describe('FileLock', () => {
     tempFs.cleanup();
   });
 
-  // The plugin capability cache holds this lock across an await, so a second
-  // lock in the same process is not only a cross-process concern.
   it('reports a lock another handle in the same process holds', () => {
     const holder = new FileLock(lockPath);
     holder.lock();
@@ -37,8 +35,6 @@ describe('FileLock', () => {
 
     expect(holder.tryLock()).toBe(true);
     try {
-      // `check` releases what it took, so this is the difference that lets a
-      // caller acquire without blocking its thread in `lock`.
       expect(new FileLock(lockPath).check()).toBe(true);
     } finally {
       holder.unlock();
@@ -53,9 +49,8 @@ describe('FileLock', () => {
       .waitUntilFree(10_000)
       .then(() => 'free');
 
-    // Raced against a timer rather than a resolved promise. `waitUntilFree`
-    // is a Rust async task, so it settles on a macrotask and an already
-    // resolved promise would win this race whether it waited or not.
+    // A timer, not a resolved promise: the native wait settles on a macrotask,
+    // so a microtask would win whether or not it waited.
     const sentinel = new Promise((resolve) =>
       setTimeout(() => resolve('sentinel'), 50)
     );
@@ -71,8 +66,6 @@ describe('FileLock', () => {
 
     try {
       const started = Date.now();
-      // Rejected rather than returned, so a caller cannot read past a timeout
-      // the way one read past a falsy result and then read a cache nobody wrote.
       await expect(new FileLock(lockPath).waitUntilFree(200)).rejects.toSatisfy(
         isLockWaitTimeout
       );
@@ -92,8 +85,6 @@ describe('FileLock', () => {
       await new FileLock(lockPath).waitUntilFree(150).catch(() => {});
       clearInterval(ticking);
 
-      // The blocking `lock()` would have frozen these timers for the whole wait,
-      // which is what makes this worth asserting rather than assuming.
       expect(ticks).toBeGreaterThan(0);
     } finally {
       holder.unlock();
@@ -108,8 +99,6 @@ describe('FileLock', () => {
     const observer = new FileLock(lockPath);
     await expect(observer.waitUntilFree(200)).resolves.toBeUndefined();
 
-    // Free afterwards: a wait that held what it waited for would deadlock the
-    // next acquire in the same process.
     expect(new FileLock(lockPath).tryLock()).toBe(true);
   });
 

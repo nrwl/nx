@@ -14,22 +14,10 @@ use tracing::trace;
 #[cfg(not(target_arch = "wasm32"))]
 use fs4::fs_std::FileExt;
 
-/// Set for pickup latency, not for cost. A waiter notices a release within one
-/// interval, and what it waits for is a plugin load or a workspace walk, so the
-/// interval is the whole of the lag a caller can see.
-///
-/// Cost is small but not as small as the syscall alone suggests, because the
-/// timer wake dominates it: measured with eleven waiters on one held lock, 4ms
-/// costs 0.31% of a core per waiting process and 3.4% in aggregate, against
-/// 0.057% and 0.62% at 25ms. Measured on a fourteen-core macOS box; the ratio
-/// holds elsewhere, the absolute percentages will not.
+/// How late a waiter can notice a release. Each poll costs a timer wake, so don't go much lower.
 #[cfg(not(target_arch = "wasm32"))]
 const LOCK_POLL_INTERVAL: Duration = Duration::from_millis(4);
 
-/// The lock file, created if it is not there yet.
-///
-/// Never truncated: the lock is on the file rather than on anything written in
-/// it, and a holder's own handle would be the one losing its contents.
 #[cfg(not(target_arch = "wasm32"))]
 fn open_lock_file(lock_file_path: &str) -> std::io::Result<fs::File> {
     OpenOptions::new()
@@ -40,11 +28,7 @@ fn open_lock_file(lock_file_path: &str) -> std::io::Result<fs::File> {
         .open(lock_file_path)
 }
 
-/// Whether the lock on `lock_file_path` was released within `timeout`.
-///
-/// Takes a shared lock and drops it again, so the caller learns that the holder
-/// is gone without becoming one. Polled rather than blocking outright, so a
-/// holder that never returns cannot hold the caller forever.
+/// Polls a shared lock, so the caller learns the holder is gone without becoming one.
 #[cfg(not(target_arch = "wasm32"))]
 fn wait_for_release(lock_file_path: &str, timeout: Duration) -> std::io::Result<bool> {
     let file = open_lock_file(lock_file_path)?;
@@ -62,30 +46,14 @@ fn wait_for_release(lock_file_path: &str, timeout: Duration) -> std::io::Result<
         if remaining.is_zero() {
             return Ok(false);
         }
-        // Never past the deadline, so the caller's ceiling is the ceiling rather
-        // than the ceiling plus one interval.
         std::thread::sleep(LOCK_POLL_INTERVAL.min(remaining));
     }
 }
 
-/// What `waitUntilFree` rejects with when the budget runs out, as the `code` a
-/// caller reads.
-///
-/// Its own word rather than one of napi's statuses: the closest of those is
-/// `Cancelled`, which says that something stopped the wait, where nothing did —
-/// the holder simply never let go.
+/// The `code` `waitUntilFree` rejects with on timeout; matched by `isLockWaitTimeout`.
 #[cfg(not(target_arch = "wasm32"))]
 const TIMEOUT_CODE: &str = "Timeout";
 
-/// A JS `Error` carrying `TIMEOUT_CODE`.
-///
-/// Built through `create_error` so it is a real `Error` with a stack, then given
-/// the code, then handed back as the value the promise rejects with.
-///
-/// Where that object cannot be built at all, the rejection goes out as an
-/// ordinary failure rather than under a second code meaning the same thing: a
-/// caller reads one code for a timeout, and anything else is the lock failing.
-/// The message still says what happened.
 #[cfg(not(target_arch = "wasm32"))]
 fn timeout_error(env: &Env, lock_file_path: &str, timeout_ms: u32) -> napi::Error {
     let message =
@@ -102,21 +70,15 @@ fn timeout_error(env: &Env, lock_file_path: &str, timeout_ms: u32) -> napi::Erro
     }
 }
 
-/// Contention reports as `WouldBlock` on some platforms and as the raw OS error
-/// on others, and neither means the lock file is unusable.
+/// Contention is `WouldBlock` on some platforms and a raw OS error on others.
 #[cfg(not(target_arch = "wasm32"))]
 fn is_contended(e: &std::io::Error) -> bool {
     e.kind() == std::io::ErrorKind::WouldBlock
         || e.raw_os_error() == fs4::lock_contended_error().raw_os_error()
 }
 
-/// Whether the lock was free within `timeout`, waited for on the async runtime
-/// rather than on a thread.
-///
-/// The sleep is the runtime's, not the OS's, so waiting occupies no thread while
-/// it waits. An `AsyncTask` would have used a libuv worker, of which there are
-/// four by default, and this wait can run for minutes: two of them are enough to
-/// starve the same process's own filesystem work.
+/// Sleeps on the async runtime, not a libuv worker: this wait can last minutes
+/// and there are only four workers by default.
 #[cfg(not(target_arch = "wasm32"))]
 async fn wait_for_release_async(
     lock_file_path: String,
@@ -137,8 +99,6 @@ async fn wait_for_release_async(
         if remaining.is_zero() {
             return Ok(false);
         }
-        // Never past the deadline, so the caller's ceiling is the ceiling rather
-        // than the ceiling plus one interval.
         tokio::time::sleep(LOCK_POLL_INTERVAL.min(remaining)).await;
     }
 }
@@ -161,8 +121,6 @@ pub struct FileLock {
 ///   await lock.waitUntilFree(timeoutMs)  // rejects with code 'Timeout' on timeout
 ///   readFromCache()
 /// }
-///
-/// `lock()` is the same acquire, blocking the JS thread until it succeeds.
 
 #[napi]
 #[cfg(not(target_arch = "wasm32"))]
@@ -212,12 +170,7 @@ impl FileLock {
         Ok(self.locked)
     }
 
-    /// Takes the lock and keeps it, reporting whether this handle got it.
-    ///
-    /// Unlike `check`, which releases whatever it took, and unlike `lock`, which
-    /// blocks the calling thread until the holder releases. Blocking matters on
-    /// the JS side: `lock` is synchronous, so a process that loses a race for the
-    /// lock freezes its own event loop until the winner is done.
+    /// Takes the lock without blocking; false means another handle holds it.
     pub fn try_lock(&mut self) -> std::io::Result<bool> {
         match self.file.try_lock_exclusive() {
             Ok(()) => {
@@ -234,27 +187,15 @@ impl FileLock {
         }
     }
 
-    /// Takes the lock without blocking, and says whether this handle got it.
-    ///
-    /// A false return means someone else holds it. Pair it with
-    /// `waitUntilFree` to wait for them, rather than `lock`, which is
-    /// synchronous and freezes this process's event loop until they are done.
+    /// Takes the lock without blocking; false means another handle holds it.
+    /// Wait with `waitUntilFree`, not `lock`, which blocks the event loop.
     #[napi(js_name = "tryLock")]
     pub fn try_lock_js(&mut self) -> napi::Result<bool> {
         Ok(self.try_lock()?)
     }
 
-    /// Resolves once nothing holds the lock, whether it was free all along or
-    /// the holder let go while this waited. Awaiting it does not block the JS
-    /// thread.
-    ///
-    /// Rejects with `code: 'Timeout'` when `timeout_ms` passes with the lock
-    /// still held — the one outcome a caller must not skip past, which is why it
-    /// is not a value that can be dropped. Any other rejection is the lock
-    /// failing, and means what it says.
-    ///
-    /// A free lock is not this handle holding it: pair this with `tryLock`,
-    /// which may still lose to whoever else was waiting.
+    /// Resolves once the lock is free, without taking it; follow with `tryLock`.
+    /// Rejects with `code: 'Timeout'` if it is still held after `timeout_ms`.
     #[napi(ts_return_type = "Promise<void>")]
     pub fn wait_until_free(
         &self,
@@ -264,9 +205,8 @@ impl FileLock {
         let lock_file_path = self.lock_file_path.clone();
         let timeout = Duration::from_millis(timeout_ms as u64);
         let timed_out_on = self.lock_file_path.clone();
-        // Settled on the JS thread rather than off it, which is what lets the
-        // rejection be an error object of this module's own making: napi builds
-        // one from a `Status`, and no status says "timed out".
+        // Settled on the JS thread so the rejection can carry a `code`;
+        // no napi `Status` means "timed out".
         let promise = env.spawn_future_with_callback(
             async move { Ok(wait_for_release_async(lock_file_path, timeout).await?) },
             move |env, came_free: bool| {
@@ -289,10 +229,7 @@ impl FileLock {
         Ok(())
     }
 
-    /// Blocks the calling thread until the current holder releases or `timeout`
-    /// passes, and says which, as a boolean this time: a Rust caller cannot drop
-    /// the result by accident. For callers without a napi `Env`; from JS,
-    /// `wait_for_release` is the same wait without blocking the thread.
+    /// Blocks the calling thread until the holder releases or `timeout` passes; true if released.
     pub fn wait_blocking(&self, timeout: Duration) -> std::io::Result<bool> {
         wait_for_release(&self.lock_file_path, timeout)
     }
@@ -369,9 +306,7 @@ mod test {
         assert!(!released);
         let waited = started.elapsed();
         assert!(waited >= Duration::from_millis(200));
-        // Near the deadline rather than an order of magnitude past it. What keeps
-        // it exact is the sleep being capped by the remaining budget; a
-        // wall-clock bound tight enough to pin a 4ms overshoot would flake.
+        // Pins the sleep being capped by the remaining budget.
         assert!(waited < Duration::from_millis(400), "waited {waited:?}");
         // Seen from a fresh handle; `check` on the holder's own handle would
         // release it, since the lock is held by that handle.

@@ -13,13 +13,7 @@ import {
   type PluginCapabilities,
 } from './graph-plugin-capabilities';
 
-/**
- * True when the plugins that built the graph this process read from the cache
- * are known to register no `hook`, so they need not be loaded to find out.
- *
- * False whenever that is not known, which includes a process that built its own
- * graph: it has them loaded already, and asking them costs nothing.
- */
+/** True only when the cached graph's recorded rows show no plugin has `hook`; unknown is false. */
 function knownThatNoPluginRegisters(
   hook: keyof Pick<
     PluginCapabilities,

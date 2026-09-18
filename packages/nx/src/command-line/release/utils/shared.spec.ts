@@ -18,7 +18,7 @@ vi.mock('../../../config/nx-json', async () => ({
   readNxJson: vi.fn(),
 }));
 
-// No plugins, so the affected glob locator matches no project files
+// Stubbed so no plugin workers start; filterAffected still runs for real.
 vi.mock('../../../project-graph/plugins/get-plugins', async () => ({
   ...(await vi.importActual('../../../project-graph/plugins/get-plugins')),
   capabilitiesOfConfiguredPlugins: vi.fn().mockResolvedValue([]),

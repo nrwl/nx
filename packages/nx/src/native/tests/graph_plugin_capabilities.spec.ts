@@ -44,8 +44,6 @@ describe('GraphPluginCapabilities', () => {
 
     expect(store.get(1_700_000_000_000)).toEqual([
       vite,
-      // A plugin with no createNodes comes back without a pattern rather than
-      // with an empty one, so it adds nothing to a glob built from the list.
       expect.objectContaining({
         name: 'hooks-only',
         hasPreTasksExecution: true,
@@ -57,8 +55,6 @@ describe('GraphPluginCapabilities', () => {
   it('answers nothing for a different graph', () => {
     store.record(1_700_000_000_000, [vite]);
 
-    // What was recorded describes another build's plugins, which the graph the
-    // reader holds may not have been built with.
     expect(store.get(1_700_000_000_001)).toBeNull();
   });
 

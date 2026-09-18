@@ -94,7 +94,6 @@ export function readProjectGraphCache(
   return readStampedProjectGraphCache(minimumComputedAt)?.projectGraph ?? null;
 }
 
-/** The cached graph together with the `computedAt` it was written with. */
 export function readStampedProjectGraphCache(
   minimumComputedAt?: number
 ): null | { projectGraph: ProjectGraph; computedAt: number | undefined } {

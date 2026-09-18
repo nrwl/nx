@@ -15,15 +15,8 @@ export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
     _projectGraph,
     projectDeletionAffectsAllProjects = true
   ): Promise<string[]> => {
-    // A deleted project configuration file is the only thing this locator
-    // answers for, so a change set without a deletion in it has nothing to find
-    // and the patterns it would be matched against are not worth asking the
-    // plugins for.
-    //
-    // Asked of each path rather than of its changes: `getChanges` answers this
-    // first and then, for a json or lock file that is still there, reads it at
-    // two revisions and parses both. Every other locator evaluates that for one
-    // file; this one would evaluate it for all of them.
+    // Only deletions matter here. Uses `isDeletedFile`, not `getChanges()`,
+    // which also parses json/lock files at two revisions for every touched file.
     const deleted = touchedFiles.filter((touchedFile) =>
       isDeletedFile(touchedFile.file)
     );
@@ -43,10 +36,6 @@ export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
 
       const nxJson = readNxJson(workspaceRoot);
 
-      // Which files a plugin claims is all this locator wants, so a workspace
-      // whose plugins are on record answers without loading any of them. A
-      // plugin nothing has recorded is loaded once to record it, and a runtime
-      // that can keep no records at all loads them the ordinary way.
       const capabilities = await capabilitiesOfConfiguredPlugins(
         nxJson,
         workspaceRoot

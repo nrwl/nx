@@ -129,10 +129,6 @@ describe('getPluginsSeparated', () => {
     // nx.json changes while test-a is still loading.
     const current = getPluginsSeparated({ plugins: ['test-b'] });
 
-    // The new load is what puts down whatever the old one left, including a set
-    // whose workers were still forking. Before this, a set still loading kept
-    // its workers, because the only thing that could stop them was a release
-    // the new load overwrote.
     expect(wantedBy('specified')).toEqual([['test-a'], ['test-b']]);
 
     finishLoading('test-a');
@@ -151,8 +147,6 @@ describe('getPluginsSeparated', () => {
     failLoading('test-a');
     await expect(superseded).rejects.toThrow();
 
-    // The failing load is not the one that declared what is wanted, so
-    // retracting here would sweep the plugins test-b's load is using.
     expect(wantedBy('specified')).toEqual([['test-a'], ['test-b']]);
 
     finishLoading('test-b');
@@ -166,8 +160,6 @@ describe('getPluginsSeparated', () => {
     finishLoading('test-a');
     await Promise.all([first, second]);
 
-    // Same plugins, so the second caller shares the load rather than starting
-    // one, and a second declaration would be a sweep of a set in use.
     expect(wantedBy('specified')).toEqual([['test-a']]);
   });
 

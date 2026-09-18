@@ -3,15 +3,8 @@ use napi::bindgen_prelude::External;
 use rusqlite::params;
 use std::sync::{Arc, Mutex};
 
-/// What the plugins that built this checkout's latest project graph register,
-/// one row per plugin, stamped with that graph's `computedAt`.
-///
-/// Written by whoever built the graph, from the plugins it had loaded to build
-/// it, so the rows are exactly as current as the graph and need no freshness of
-/// their own. Every build replaces them.
-///
-/// Created by the service rather than `create_all_tables`, which only runs for a
-/// database file that did not already exist.
+/// One row per plugin that built the latest graph, stamped with its `computedAt`.
+/// Created here because `create_all_tables` only runs for a new database file.
 const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS graph_plugin_capabilities (
     position   INTEGER PRIMARY KEY NOT NULL,
     computed_at   INTEGER NOT NULL,
@@ -55,8 +48,6 @@ impl GraphPluginCapabilities {
         Ok(service)
     }
 
-    /// Replaces whatever an earlier build recorded, in one transaction, so a
-    /// reader never sees one build's rows mixed with another's.
     #[napi]
     pub fn record(
         &self,

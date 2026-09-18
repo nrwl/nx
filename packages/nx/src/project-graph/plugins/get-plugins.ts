@@ -45,15 +45,7 @@ let currentPluginsConfigurationHash: string;
 let cachedSeparatedPlugins: SeparatedPlugins;
 let pendingPluginsPromise: Promise<LoadedNxPlugin[]> | undefined;
 
-/**
- * Drops what this module remembers about the specified plugins, so the next
- * call loads them again rather than reusing a set or a promise that describes
- * the previous configuration.
- *
- * The plugins themselves are not touched here. They are put down by the load
- * that follows, which says which ones it wants, and a plugin the new
- * configuration still names is kept rather than reloaded.
- */
+/** Workers aren't disposed here; the next load's `wantPlugins` sweeps the ones it no longer names. */
 function forgetSpecifiedPlugins(): void {
   if (pluginTranspilerIsRegistered()) {
     cleanupPluginTSTranspiler();
@@ -214,12 +206,8 @@ export async function getPluginsSeparated(
     return pendingSeparatedPlugins.promise;
   }
 
-  // Plugins config changed (e.g. `nx add @nx/maven` updated nx.json). The
-  // cached SeparatedPlugins is invalidated by the early-return above, but
-  // pendingPluginsPromise, the in-flight load, would otherwise be reused by the
-  // `??=` below and serve the previous plugin set forever. Forget it here; its
-  // workers are put down by the sweep in the load below, which declares which
-  // plugins it wants.
+  // Plugins config changed (e.g. `nx add @nx/maven`): drop the in-flight load,
+  // or the `??=` below would serve the previous plugin set forever.
   forgetSpecifiedPlugins();
 
   const loadPromise = (async (): Promise<SeparatedPlugins> => {
@@ -348,10 +336,6 @@ function pluginLabel(plugin: PluginConfiguration): string {
   return typeof plugin === 'string' ? plugin : plugin.plugin;
 }
 
-/**
- * Says which plugins this load wants before it starts, which is what puts down
- * the ones a previous load left that this configuration no longer names.
- */
 async function loadPlugins(
   loader: string,
   pluginConfigurations: PluginConfiguration[],
@@ -383,15 +367,6 @@ async function loadPlugins(
   );
 }
 
-/**
- * What every configured plugin registers, loading them only where nothing else
- * can answer.
- *
- * A client with a daemon asks the daemon, which has them loaded. A process that
- * read its graph from the cache answers from what the build of that graph
- * recorded. Anything else loads them, which a process that built its own graph
- * already has.
- */
 export async function capabilitiesOfConfiguredPlugins(
   nxJson: NxJsonConfiguration,
   root = workspaceRoot
@@ -431,9 +406,7 @@ async function loadDefaultNxPlugins(
   }
 
   if (errors.length > 0) {
-    // Dropped so the next call retries rather than re-awaiting a promise that
-    // is permanently rejected. What this load did manage to load is left
-    // declared: the plugins are the same ones the retry will ask for.
+    // Cleared so the next call retries instead of re-awaiting this rejection.
     pendingDefaultPluginPromise = undefined;
     const errorMessage = errors
       .map((e) => `  - ${e.pluginName}: ${e.error.message}`)
@@ -498,11 +471,7 @@ async function loadSpecifiedNxPlugins(
   }
 
   if (errors.length > 0) {
-    // Nothing is retracted here. This load may have been superseded while it
-    // ran, in which case the declaration is the newer load's and taking it back
-    // would sweep the plugins that load is using. What this load did manage to
-    // load stays declared until something declares otherwise, which is what the
-    // next load through `getPluginsSeparated` does.
+    // Wants are not retracted: a newer load may own the declaration by now.
     const errorMessage = errors
       .map((e) => `  - ${e.pluginName}: ${e.error.message}`)
       .join('\n');

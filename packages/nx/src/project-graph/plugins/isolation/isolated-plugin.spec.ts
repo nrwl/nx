@@ -353,8 +353,6 @@ describe('IsolatedPlugin', () => {
         'timed out'
       );
 
-      // Nothing else holds this instance once load rejects, so a worker left
-      // running here is one no later call could reach.
       expect(shutdown).toHaveBeenCalled();
     });
 
@@ -368,8 +366,6 @@ describe('IsolatedPlugin', () => {
 
       plugin.shutdown();
 
-      // The worker clears its own connect and load timers once it starts
-      // loading, so closing the socket is what its 'end' handler exits on.
       expect(socket.end).toHaveBeenCalled();
     });
   });
@@ -495,8 +491,7 @@ describe('IsolatedPlugin', () => {
   });
 
   describe('a released plugin', () => {
-    // A plugin with later hooks in the same phase, so one createNodes call does
-    // not end the phase: what shuts the worker down here is the release.
+    // Later hooks in the phase, so only the release can shut the worker down.
     const graphHooks = {
       createNodesPattern: '**/*.json',
       hasCreateDependencies: true,
@@ -514,11 +509,7 @@ describe('IsolatedPlugin', () => {
       // A caller that took this plugin while it was still the current one.
       await plugin.createNodes![1]([], {} as any);
 
-      // It got its answer, which took a worker...
       expect(spawnAndConnect).toHaveBeenCalledTimes(1);
-      // ...and the worker did not outlive the call, even though the phase is
-      // still open. Nothing holds a released plugin, so a worker left running
-      // here is one no process can stop.
       expect(shutdown).toHaveBeenCalledTimes(2);
       expect(plugin._alive).toBe(false);
     });

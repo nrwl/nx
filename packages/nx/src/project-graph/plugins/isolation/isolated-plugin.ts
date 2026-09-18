@@ -156,10 +156,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       instance.setupHooks(loadResult);
       return instance;
     } catch (e) {
-      // The worker is running whenever the failure was a timeout rather than an
-      // exit, and the caller is about to drop this instance, so nothing else
-      // could reach it. That is the whole of how a failed load used to leave a
-      // process behind.
+      // A timed-out worker is still running, and the caller is about to drop this instance.
       instance.shutdown();
       throw e;
     }
@@ -384,9 +381,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
           try {
             return await hookFn(...args);
           } finally {
-            // A released plugin is still answering a caller that had it when it
-            // was current. The call gets its answer, and then the worker goes
-            // back down rather than waiting for a phase end nothing will reach.
+            // A released plugin still answers, then shuts its worker straight back down.
             if (this._released) {
               shutdown(hook);
             }
@@ -556,10 +551,8 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   }
 
   /**
-   * Gives the worker up for good, which `shutdown` alone does not: a shut-down
-   * worker respawns on the next hook call, and after this nothing holds the
-   * instance, so a respawn would be a process nobody could ever stop. A hook
-   * that arrives anyway still gets its answer and then puts the worker back down.
+   * Like `shutdown`, but for good: a later hook call still answers, then shuts
+   * the worker back down instead of leaving a respawned one running.
    */
   dispose(): void {
     this._released = true;

@@ -68,7 +68,6 @@ describe('task execution hooks', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.isOnDaemon.mockReturnValue(false);
-    // The process that runs the hooks itself, as with the daemon off.
     mocks.isDaemonEnabled.mockReturnValue(false);
     mocks.capabilitiesOfGraphReadFromCache.mockReturnValue(null);
     mocks.getPlugins.mockResolvedValue([]);
@@ -110,8 +109,6 @@ describe('task execution hooks', () => {
     });
 
     it('loads and runs them when nothing was recorded for its graph', async () => {
-      // A process that built its own graph, or read one whose build recorded
-      // nothing: it cannot tell, so it asks the plugins.
       const preTasksExecution = vi.fn(async () => ({}));
       mocks.getPlugins.mockResolvedValue([
         { name: '@acme/plugin', preTasksExecution },

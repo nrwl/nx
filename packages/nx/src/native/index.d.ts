@@ -74,25 +74,13 @@ export declare class FileLock {
   unlock(): void
   check(): boolean
   /**
-   * Takes the lock without blocking, and says whether this handle got it.
-   *
-   * A false return means someone else holds it. Pair it with
-   * `waitUntilFree` to wait for them, rather than `lock`, which is
-   * synchronous and freezes this process's event loop until they are done.
+   * Takes the lock without blocking; false means another handle holds it.
+   * Wait with `waitUntilFree`, not `lock`, which blocks the event loop.
    */
   tryLock(): boolean
   /**
-   * Resolves once nothing holds the lock, whether it was free all along or
-   * the holder let go while this waited. Awaiting it does not block the JS
-   * thread.
-   *
-   * Rejects with `code: 'Timeout'` when `timeout_ms` passes with the lock
-   * still held — the one outcome a caller must not skip past, which is why it
-   * is not a value that can be dropped. Any other rejection is the lock
-   * failing, and means what it says.
-   *
-   * A free lock is not this handle holding it: pair this with `tryLock`,
-   * which may still lose to whoever else was waiting.
+   * Resolves once the lock is free, without taking it; follow with `tryLock`.
+   * Rejects with `code: 'Timeout'` if it is still held after `timeout_ms`.
    */
   waitUntilFree(timeoutMs: number): Promise<void>
   lock(): void
@@ -100,10 +88,6 @@ export declare class FileLock {
 
 export declare class GraphPluginCapabilities {
   constructor(db: ExternalObject<NxDbConnection>)
-  /**
-   * Replaces whatever an earlier build recorded, in one transaction, so a
-   * reader never sees one build's rows mixed with another's.
-   */
   record(computedAt: number, capabilities: Array<CachedPluginCapabilities>): void
   /**
    * The capabilities recorded with the graph computed at `computed_at`, or

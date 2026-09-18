@@ -4,11 +4,6 @@ import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 
 import { IsolatedPlugin } from './isolated-plugin';
 
-/**
- * The plugins this process has loaded, keyed by the configuration that asked for
- * them. This map is the only thing that knows which workers exist, so it is also
- * what puts them down.
- */
 // Keyed separately from the older `isolatedPluginCache`: two copies of Nx in one
 // process share this object, and they do not share this shape.
 const loadedPlugins: Map<string, Promise<IsolatedPlugin>> = (global[
@@ -16,32 +11,15 @@ const loadedPlugins: Map<string, Promise<IsolatedPlugin>> = (global[
 ] ??= new Map());
 
 /**
- * The keys each loader last asked for.
- *
- * Kept per loader because the plugins nx.json names and the ones Nx configures
- * itself are loaded by separate callers, often at once, and neither knows the
- * other's half. What a sweep keeps is the union.
- *
- * Global for the same reason the map above is. The two share a fate: a sweep
- * reads every loaded plugin and keeps the ones some loader wants, so a copy of
- * Nx whose wants were invisible here would put down the other copy's workers
- * mid-command.
+ * Keys each loader last asked for; a sweep keeps their union. Global like
+ * `loadedPlugins`, or one copy of Nx would sweep another's workers.
  */
 const wantedBy: Map<string, Set<string>> = (global['nxWantedPlugins'] ??=
   new Map());
 
 /**
- * Declares the plugins a loader wants and puts down everything no loader wants
- * any more.
- *
- * Called before loading, so a reload keeps the plugins the new configuration
- * still names, rather than tearing down a set it is about to ask for again. A
- * plugin registered after this, by a load that was superseded while it was
- * still loading, is disposed of on arrival for the same reason: nothing wants it.
- *
- * Keeping a plugin rests on its key describing its worker. Anything else that
- * would make a running worker the wrong one to reuse, such as the resolve
- * conditions it was spawned with, has to be part of that key.
+ * Declares a loader's plugins and disposes any no loader wants. Call before loading.
+ * Anything that makes a running worker unfit for reuse must be in its cache key.
  */
 export function wantPlugins(
   loader: string,
@@ -57,7 +35,6 @@ export function wantPlugins(
   sweep();
 }
 
-/** Puts every loaded plugin down, whoever wanted it. */
 export function disposeIsolatedPlugins(): void {
   wantedBy.clear();
   sweep();
@@ -82,16 +59,13 @@ function register(
 ): Promise<IsolatedPlugin> {
   const entry = loading.then(
     (plugin) => {
-      // Swept while this was loading, so the only thing waiting on it is the
-      // load that asked for it, and no configuration names it any more.
+      // Swept while loading: nothing names it any more.
       if (!isWanted(cacheKey)) {
         plugin.dispose();
       }
       return plugin;
     },
     (err) => {
-      // A failed load is not worth handing to the next caller, so the entry
-      // goes and the next call retries.
       forget(cacheKey, entry);
       throw err;
     }
@@ -111,8 +85,7 @@ function sweep(): void {
     loadedPlugins.delete(cacheKey);
     entry.then(
       (plugin) => plugin.dispose(),
-      // A load that failed has no worker to dispose of, and its rejection is
-      // already the caller's to report.
+      // No worker to dispose; the caller reports the rejection.
       () => {}
     );
   }
@@ -127,13 +100,7 @@ function isWanted(cacheKey: string): boolean {
   return false;
 }
 
-/**
- * The position is part of this because it is part of the instance: a plugin
- * carries the index of the nx.json entry it came from, and that index is what
- * `checkCompatibleWithPlugins` writes an exclusion into and what a plugin error
- * names. Keeping an instance whose configuration is unchanged but whose position
- * moved would point both at the wrong entry.
- */
+/** Includes the index: a plugin carries its nx.json position, which exclusions and errors point at. */
 function getCacheKey(
   plugin: PluginConfiguration,
   root: string,
@@ -142,7 +109,6 @@ function getCacheKey(
   return JSON.stringify({ plugin, root, index });
 }
 
-/** Drops the entry, unless a later load has already replaced it. */
 function forget(cacheKey: string, entry: Promise<IsolatedPlugin>): void {
   if (loadedPlugins.get(cacheKey) === entry) {
     loadedPlugins.delete(cacheKey);

@@ -1,7 +1,6 @@
 import type { Mock } from 'vitest';
 
-// Hoisted so the same mock survives `vi.resetModules()`, which the two-copies
-// test below needs: a second module instance has to see the same instances.
+// Hoisted so the second module copy in the two-copies test sees the same mock.
 const mocked = vi.hoisted(() => ({
   IsolatedPlugin: {
     load: vi.fn(),
@@ -22,8 +21,7 @@ describe('the plugins a process has loaded', () => {
   let instances: Map<string, { name: string; dispose: Mock }>;
 
   beforeEach(() => {
-    // The map lives on `global` so two copies of Nx share one set of workers,
-    // which also means it outlives a module reset. Wanting nothing is the reset.
+    // The plugin map lives on `global`, so disposing everything is the reset.
     disposeIsolatedPlugins();
     instances = new Map();
 
@@ -56,8 +54,6 @@ describe('the plugins a process has loaded', () => {
     await Promise.resolve();
 
     expect(instances.get('b').dispose).toHaveBeenCalled();
-    // Tearing `a` down would cost a reload of a plugin the new set is about to
-    // ask for again.
     expect(instances.get('a').dispose).not.toHaveBeenCalled();
     expect(await loadIsolatedNxPlugin('a', '/root')).toBe(instances.get('a'));
     expect(load).toHaveBeenCalledTimes(2);
@@ -67,9 +63,7 @@ describe('the plugins a process has loaded', () => {
     wantPlugins('specified', [{ plugin: 'p', index: 0 }], '/root');
     const atZero = await loadIsolatedNxPlugin('p', '/root', 0);
 
-    // `nx add` put another plugin in front of it. Its configuration is
-    // unchanged, but a plugin carries the index of the entry it came from, and
-    // an exclusion written against a stale one lands on the wrong entry.
+    // `nx add` put another plugin in front of it.
     wantPlugins('specified', [{ plugin: 'p', index: 1 }], '/root');
     await Promise.resolve();
     await loadIsolatedNxPlugin('p', '/root', 1);
@@ -86,8 +80,6 @@ describe('the plugins a process has loaded', () => {
     wantPlugins('specified', [{ plugin: 'a' }], '/root');
     await Promise.resolve();
 
-    // The two halves are loaded by separate callers, so one declaring its own
-    // must not take down the other's.
     expect(instances.get('package-json').dispose).not.toHaveBeenCalled();
   });
 
@@ -107,8 +99,6 @@ describe('the plugins a process has loaded', () => {
     finishLoading!(instance);
     await stillLoading;
 
-    // Its worker would otherwise run with nothing left to stop it: the sweep
-    // could not see a plugin that had not arrived yet.
     expect(instance.dispose).toHaveBeenCalled();
   });
 
@@ -164,8 +154,6 @@ describe('the plugins a process has loaded', () => {
     const failed = loadIsolatedNxPlugin('p', '/root');
     await expect(failed).rejects.toThrow('plugin blew up');
 
-    // The rejection belongs to the caller that asked for the plugin; the sweep
-    // must not turn it into an unhandled one.
     expect(() => disposeIsolatedPlugins()).not.toThrow();
     await Promise.resolve();
   });
@@ -174,19 +162,14 @@ describe('the plugins a process has loaded', () => {
     wantPlugins('specified', [{ plugin: 'a' }], '/root');
     await loadIsolatedNxPlugin('a', '/root');
 
-    // A second copy of Nx in this process. It shares `global`, so it sees the
-    // first copy's workers, and it loads plugins under its own loader name.
-    // The query suffix is what makes it a second instance: a plain re-import
-    // of a path this file already imported hands back the same module, even
-    // after `vi.resetModules()`, and the test then proves nothing.
+    // The query suffix makes a second module instance; a plain re-import
+    // returns the same module, even after `vi.resetModules()`.
     const second: typeof import('./load-isolated-plugin') =
       await import('./load-isolated-plugin?second-copy-of-nx');
     expect(second.wantPlugins).not.toBe(wantPlugins);
     second.wantPlugins('default', [{ plugin: 'b' }], '/root');
     await second.loadIsolatedNxPlugin('b', '/root');
 
-    // Its sweep reads every loaded plugin, so wants it could not see would read
-    // as nobody's and put the other copy's worker down mid-command.
     expect(instances.get('a').dispose).not.toHaveBeenCalled();
     expect(instances.get('b').dispose).not.toHaveBeenCalled();
   });
