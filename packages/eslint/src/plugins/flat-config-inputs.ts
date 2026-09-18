@@ -1,5 +1,4 @@
-import { ensureTypescript } from '@nx/js/internal';
-import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs';
+import { existsSync, realpathSync, statSync } from 'node:fs';
 import { builtinModules } from 'node:module';
 import {
   dirname,
@@ -10,6 +9,7 @@ import {
   resolve,
   sep,
 } from 'node:path';
+import { findImports } from 'nx/src/native';
 
 export interface FlatConfigInputs {
   externalDependencies: string[];
@@ -17,124 +17,141 @@ export interface FlatConfigInputs {
 }
 
 const RESOLVE_EXTENSIONS = ['.js', '.mjs', '.cjs', '.ts', '.mts', '.cts'];
-const PARSEABLE_EXTENSIONS = new Set([...RESOLVE_EXTENSIONS, '.jsx', '.tsx']);
+const SCANNABLE_EXTENSIONS = new Set([...RESOLVE_EXTENSIONS, '.jsx', '.tsx']);
+
+type BareImport =
+  | { kind: 'external'; packageName: string }
+  | { kind: 'fileset'; glob: string }
+  | null;
 
 /**
- * Walks a flat config's import graph. Installed packages become external
- * dependencies, relative imports become file inputs (walked in turn), and
- * packages linked into `node_modules` from the workspace become filesets.
+ * Walks the import graphs of flat configs, scanning each level of files in
+ * one native call. Installed packages become external dependencies, relative
+ * imports become file inputs (walked in turn), and packages linked into
+ * `node_modules` from the workspace become filesets.
  */
 export function collectFlatConfigInputs(
-  configFile: string,
+  configFiles: string[],
   workspaceRoot: string
-): FlatConfigInputs {
-  const externalDependencies = new Set<string>();
-  const files = new Set<string>();
-  const visited = new Set<string>();
+): Map<string, FlatConfigInputs> {
   const realWorkspaceRoot = safeRealpath(workspaceRoot);
-  const entry = resolve(workspaceRoot, configFile);
-
-  const visit = (absolutePath: string): void => {
-    if (visited.has(absolutePath)) return;
-    visited.add(absolutePath);
-
-    let source: string;
-    try {
-      source = readFileSync(absolutePath, 'utf-8');
-    } catch {
-      return;
-    }
-
-    for (const specifier of extractImportSpecifiers(absolutePath, source)) {
-      if (specifier.startsWith('.') || isAbsolute(specifier)) {
-        const resolved = resolveLocalFile(
-          resolve(dirname(absolutePath), specifier)
-        );
-        if (!resolved) continue;
-        const workspaceRelative = toWorkspaceRelative(workspaceRoot, resolved);
-        if (!workspaceRelative) continue;
-        files.add(workspaceRelative);
-        visit(resolved);
-        continue;
-      }
-
-      const packageName = getPackageName(specifier);
-      if (!packageName) continue;
-      const packageDir = findPackageDir(
-        packageName,
-        dirname(absolutePath),
-        workspaceRoot
+  const specifiersByFile = scanImportGraph(configFiles, workspaceRoot);
+  const bareImportCache = new Map<string, BareImport>();
+  const classify = (specifier: string, fromDir: string): BareImport => {
+    const key = `${fromDir}\0${specifier}`;
+    if (!bareImportCache.has(key)) {
+      bareImportCache.set(
+        key,
+        classifyBareImport(specifier, fromDir, workspaceRoot, realWorkspaceRoot)
       );
-      if (!packageDir) continue;
-      const workspaceRelative = toWorkspaceRelative(
-        realWorkspaceRoot,
-        safeRealpath(packageDir)
-      );
-      if (workspaceRelative && !isInNodeModules(workspaceRelative)) {
-        files.add(`${workspaceRelative}/**/*`);
-      } else {
-        externalDependencies.add(packageName);
-      }
     }
+    return bareImportCache.get(key);
   };
 
-  visit(entry);
-  files.delete(toWorkspaceRelative(workspaceRoot, entry));
+  const results = new Map<string, FlatConfigInputs>();
+  for (const configFile of configFiles) {
+    const entry = resolve(workspaceRoot, configFile);
+    const externalDependencies = new Set<string>();
+    const files = new Set<string>();
+    const visited = new Set<string>();
 
-  return {
-    externalDependencies: Array.from(externalDependencies),
-    files: Array.from(files),
-  };
+    const visit = (file: string): void => {
+      if (visited.has(file)) return;
+      visited.add(file);
+      for (const specifier of specifiersByFile.get(file) ?? []) {
+        if (isRelative(specifier)) {
+          const resolved = resolveLocalFile(resolve(dirname(file), specifier));
+          const workspaceRelative =
+            resolved && toWorkspaceRelative(workspaceRoot, resolved);
+          if (!workspaceRelative) continue;
+          files.add(workspaceRelative);
+          visit(resolved);
+          continue;
+        }
+        const bare = classify(specifier, dirname(file));
+        if (bare?.kind === 'external') {
+          externalDependencies.add(bare.packageName);
+        } else if (bare?.kind === 'fileset') {
+          files.add(bare.glob);
+        }
+      }
+    };
+
+    visit(entry);
+    files.delete(toWorkspaceRelative(workspaceRoot, entry));
+    results.set(configFile, {
+      externalDependencies: Array.from(externalDependencies),
+      files: Array.from(files),
+    });
+  }
+  return results;
 }
 
-function extractImportSpecifiers(filePath: string, source: string): string[] {
-  const extension = extname(filePath);
-  if (!PARSEABLE_EXTENSIONS.has(extension)) return [];
+function scanImportGraph(
+  configFiles: string[],
+  workspaceRoot: string
+): Map<string, string[]> {
+  const specifiersByFile = new Map<string, string[]>();
+  let pending = Array.from(
+    new Set(configFiles.map((f) => resolve(workspaceRoot, f)))
+  ).filter(isScannable);
 
-  const ts = ensureTypescript();
-  const sourceFile = ts.createSourceFile(
-    filePath,
-    source,
-    ts.ScriptTarget.Latest,
-    false,
-    extension.endsWith('ts') || extension.endsWith('tsx')
-      ? ts.ScriptKind.TS
-      : ts.ScriptKind.JS
-  );
-
-  const specifiers: string[] = [];
-  const walk = (node: import('typescript').Node): void => {
-    if (
-      (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) &&
-      node.moduleSpecifier &&
-      ts.isStringLiteralLike(node.moduleSpecifier)
-    ) {
-      specifiers.push(node.moduleSpecifier.text);
-    } else if (
-      ts.isImportEqualsDeclaration(node) &&
-      ts.isExternalModuleReference(node.moduleReference) &&
-      ts.isStringLiteralLike(node.moduleReference.expression)
-    ) {
-      specifiers.push(node.moduleReference.expression.text);
-    } else if (ts.isCallExpression(node)) {
-      const isRequire =
-        ts.isIdentifier(node.expression) && node.expression.text === 'require';
-      const isDynamicImport =
-        node.expression.kind === ts.SyntaxKind.ImportKeyword;
-      const [argument] = node.arguments;
-      if (
-        (isRequire || isDynamicImport) &&
-        argument &&
-        ts.isStringLiteralLike(argument)
-      ) {
-        specifiers.push(argument.text);
+  while (pending.length > 0) {
+    const scanned = new Map<string, string[]>();
+    for (const result of findImports({ eslint: pending })) {
+      scanned.set(result.file, [
+        ...result.staticImportExpressions,
+        ...result.dynamicImportExpressions,
+      ]);
+    }
+    const next = new Set<string>();
+    for (const file of pending) {
+      const specifiers = scanned.get(file) ?? [];
+      specifiersByFile.set(file, specifiers);
+      for (const specifier of specifiers) {
+        if (!isRelative(specifier)) continue;
+        const resolved = resolveLocalFile(resolve(dirname(file), specifier));
+        if (
+          resolved &&
+          isScannable(resolved) &&
+          !specifiersByFile.has(resolved) &&
+          toWorkspaceRelative(workspaceRoot, resolved)
+        ) {
+          next.add(resolved);
+        }
       }
     }
-    ts.forEachChild(node, walk);
-  };
-  walk(sourceFile);
+    pending = Array.from(next).filter((f) => !specifiersByFile.has(f));
+  }
+  return specifiersByFile;
+}
 
-  return specifiers;
+function classifyBareImport(
+  specifier: string,
+  fromDir: string,
+  workspaceRoot: string,
+  realWorkspaceRoot: string
+): BareImport {
+  const packageName = getPackageName(specifier);
+  if (!packageName) return null;
+  const packageDir = findPackageDir(packageName, fromDir, workspaceRoot);
+  if (!packageDir) return null;
+  const workspaceRelative = toWorkspaceRelative(
+    realWorkspaceRoot,
+    safeRealpath(packageDir)
+  );
+  if (workspaceRelative && !isInNodeModules(workspaceRelative)) {
+    return { kind: 'fileset', glob: `${workspaceRelative}/**/*` };
+  }
+  return { kind: 'external', packageName };
+}
+
+function isRelative(specifier: string): boolean {
+  return specifier.startsWith('.') || isAbsolute(specifier);
+}
+
+function isScannable(file: string): boolean {
+  return SCANNABLE_EXTENSIONS.has(extname(file));
 }
 
 function resolveLocalFile(basePath: string): string | null {

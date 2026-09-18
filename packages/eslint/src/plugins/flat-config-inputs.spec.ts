@@ -19,6 +19,12 @@ describe('collectFlatConfigInputs', () => {
     );
   }
 
+  function collect(configFile: string) {
+    return collectFlatConfigInputs([configFile], tempFs.tempDir).get(
+      configFile
+    );
+  }
+
   it('should collect installed packages imported by the config', () => {
     installPackage('@nx/eslint-plugin');
     installPackage('typescript-eslint');
@@ -33,7 +39,7 @@ describe('collectFlatConfigInputs', () => {
       `
     );
 
-    const result = collectFlatConfigInputs('eslint.config.mjs', tempFs.tempDir);
+    const result = collect('eslint.config.mjs');
 
     expect(result.externalDependencies).toEqual([
       '@nx/eslint-plugin',
@@ -55,7 +61,7 @@ describe('collectFlatConfigInputs', () => {
       `
     );
 
-    const result = collectFlatConfigInputs('eslint.config.mjs', tempFs.tempDir);
+    const result = collect('eslint.config.mjs');
 
     expect(result.externalDependencies).toEqual([
       'typescript-eslint',
@@ -77,13 +83,16 @@ describe('collectFlatConfigInputs', () => {
       `
     );
 
-    const result = collectFlatConfigInputs('eslint.config.cjs', tempFs.tempDir);
+    const result = collect('eslint.config.cjs');
 
-    expect(result.externalDependencies).toEqual([
-      'eslint-plugin-a',
-      'eslint-plugin-b',
-      'eslint-plugin-c',
-    ]);
+    expect(result.externalDependencies).toHaveLength(3);
+    expect(result.externalDependencies).toEqual(
+      expect.arrayContaining([
+        'eslint-plugin-a',
+        'eslint-plugin-b',
+        'eslint-plugin-c',
+      ])
+    );
   });
 
   it('should skip node builtins and packages that are not installed', () => {
@@ -99,7 +108,7 @@ describe('collectFlatConfigInputs', () => {
       `
     );
 
-    const result = collectFlatConfigInputs('eslint.config.mjs', tempFs.tempDir);
+    const result = collect('eslint.config.mjs');
 
     expect(result.externalDependencies).toEqual(['globals']);
   });
@@ -123,10 +132,7 @@ describe('collectFlatConfigInputs', () => {
       `,
     });
 
-    const result = collectFlatConfigInputs(
-      'apps/web/eslint.config.mjs',
-      tempFs.tempDir
-    );
+    const result = collect('apps/web/eslint.config.mjs');
 
     expect(result.externalDependencies).toEqual([
       '@nx/eslint-plugin',
@@ -151,7 +157,7 @@ describe('collectFlatConfigInputs', () => {
       'tools/eslint-rules/index.js': `module.exports = require('eslint-plugin-b');`,
     });
 
-    const result = collectFlatConfigInputs('eslint.config.js', tempFs.tempDir);
+    const result = collect('eslint.config.js');
 
     expect(result.externalDependencies).toEqual([
       'eslint-plugin-a',
@@ -175,7 +181,7 @@ describe('collectFlatConfigInputs', () => {
       `,
     });
 
-    const result = collectFlatConfigInputs('eslint.config.mjs', tempFs.tempDir);
+    const result = collect('eslint.config.mjs');
 
     expect(result.externalDependencies).toEqual([]);
     expect(result.files).toEqual(['other.mjs']);
@@ -190,7 +196,7 @@ describe('collectFlatConfigInputs', () => {
       `
     );
 
-    const result = collectFlatConfigInputs('eslint.config.mjs', tempFs.tempDir);
+    const result = collect('eslint.config.mjs');
 
     expect(result.files).toEqual([]);
   });
@@ -217,7 +223,7 @@ describe('collectFlatConfigInputs', () => {
       `
     );
 
-    const result = collectFlatConfigInputs('eslint.config.cjs', tempFs.tempDir);
+    const result = collect('eslint.config.cjs');
 
     expect(result.externalDependencies).toEqual([]);
     expect(result.files).toEqual(['libs/eslint-config/**/*']);
@@ -238,10 +244,7 @@ describe('collectFlatConfigInputs', () => {
       `
     );
 
-    const result = collectFlatConfigInputs(
-      'apps/web/eslint.config.mjs',
-      tempFs.tempDir
-    );
+    const result = collect('apps/web/eslint.config.mjs');
 
     expect(result.externalDependencies).toEqual([
       'eslint-plugin-local',
@@ -250,8 +253,52 @@ describe('collectFlatConfigInputs', () => {
   });
 
   it('should return empty inputs for an unreadable config', () => {
-    const result = collectFlatConfigInputs('eslint.config.mjs', tempFs.tempDir);
+    const result = collect('eslint.config.mjs');
 
     expect(result).toEqual({ externalDependencies: [], files: [] });
+  });
+
+  it('should collect inputs for many configs sharing a base config in one pass', () => {
+    installPackage('@nx/eslint-plugin');
+    installPackage('eslint-plugin-react');
+    installPackage('eslint-plugin-vue');
+    tempFs.createFilesSync({
+      'eslint.config.mjs': `
+        import nx from '@nx/eslint-plugin';
+        export default [];
+      `,
+      'apps/web/eslint.config.mjs': `
+        import baseConfig from '../../eslint.config.mjs';
+        import react from 'eslint-plugin-react';
+        export default [...baseConfig];
+      `,
+      'apps/admin/eslint.config.mjs': `
+        import baseConfig from '../../eslint.config.mjs';
+        import vue from 'eslint-plugin-vue';
+        export default [...baseConfig];
+      `,
+    });
+
+    const results = collectFlatConfigInputs(
+      [
+        'eslint.config.mjs',
+        'apps/web/eslint.config.mjs',
+        'apps/admin/eslint.config.mjs',
+      ],
+      tempFs.tempDir
+    );
+
+    expect(results.get('eslint.config.mjs')).toEqual({
+      externalDependencies: ['@nx/eslint-plugin'],
+      files: [],
+    });
+    expect(results.get('apps/web/eslint.config.mjs')).toEqual({
+      externalDependencies: ['@nx/eslint-plugin', 'eslint-plugin-react'],
+      files: ['eslint.config.mjs'],
+    });
+    expect(results.get('apps/admin/eslint.config.mjs')).toEqual({
+      externalDependencies: ['@nx/eslint-plugin', 'eslint-plugin-vue'],
+      files: ['eslint.config.mjs'],
+    });
   });
 });

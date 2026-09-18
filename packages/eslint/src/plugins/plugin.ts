@@ -183,13 +183,9 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
       projectRoots,
       context.workspaceRoot
     );
-    const flatConfigInputsByConfigFile = new Map<string, FlatConfigInputs>(
-      eslintConfigFiles
-        .filter(isFlatConfig)
-        .map((configFile) => [
-          configFile,
-          collectFlatConfigInputs(configFile, context.workspaceRoot),
-        ])
+    const flatConfigInputsByConfigFile = collectFlatConfigInputs(
+      eslintConfigFiles.filter(isFlatConfig),
+      context.workspaceRoot
     );
     const lockFilePattern = getLockFileName(
       detectPackageManager(context.workspaceRoot)
