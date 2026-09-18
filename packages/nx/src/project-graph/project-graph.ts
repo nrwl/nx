@@ -43,9 +43,14 @@ import {
 import {
   readFileMapCache,
   readProjectGraphCache,
+  readStampedProjectGraphCache,
   readSourceMapsCache,
   writeCache,
 } from './nx-deps-cache';
+import {
+  noteGraphReadFromCache,
+  recordGraphPluginCapabilities,
+} from './plugins/graph-plugin-capabilities';
 import { getPlugins, getPluginsSeparated } from './plugins/get-plugins';
 import { ConfigurationResult } from './utils/project-configuration-utils';
 import {
@@ -65,15 +70,21 @@ export function readCachedProjectGraph(
 ): ProjectGraph {
   const projectGraphCache = readProjectGraphCache(minimumComputedAt);
   if (!projectGraphCache) {
-    const angularSpecificError = fileExists(`${workspaceRoot}/angular.json`)
-      ? stripIndents`
+    throw noCachedProjectGraphError();
+  }
+  return projectGraphCache;
+}
+
+function noCachedProjectGraphError(): Error {
+  const angularSpecificError = fileExists(`${workspaceRoot}/angular.json`)
+    ? stripIndents`
       Make sure invoke 'node ./decorate-angular-cli.js' in your postinstall script.
       The decorated CLI will compute the project graph.
       'ng --help' should say 'Smart Monorepos · Fast Builds'.
       `
-      : '';
+    : '';
 
-    throw new Error(stripIndents`
+  return new Error(stripIndents`
       [readCachedProjectGraph] ERROR: No cached ProjectGraph is available.
 
       If you are leveraging \`readCachedProjectGraph()\` directly then you will need to refactor your usage to first ensure that
@@ -83,8 +94,6 @@ export function readCachedProjectGraph(
 
       ${angularSpecificError}
     `);
-  }
-  return projectGraphCache;
 }
 
 export function readCachedProjectConfiguration(
@@ -201,7 +210,20 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon(
   ];
 
   if (cacheEnabled && writeGraphCache) {
-    writeCache(projectFileMapCache, projectGraph, sourceMaps, errors);
+    const computedAt = Date.now();
+    // Before the graph, so a graph on disk never lacks the row that describes
+    // it, and only when every plugin loaded, since a partial list would leave
+    // one out of every answer read from it.
+    if (errors.length === 0) {
+      recordGraphPluginCapabilities(computedAt, plugins);
+    }
+    writeCache(
+      projectFileMapCache,
+      projectGraph,
+      sourceMaps,
+      errors,
+      computedAt
+    );
   }
 
   if (errors.length > 0) {
@@ -235,7 +257,14 @@ export function handleProjectGraphError(opts: { exitOnError: boolean }, e) {
 }
 
 async function readCachedGraphAndHydrateFileMap(minimumComputedAt?: number) {
-  const graph = readCachedProjectGraph(minimumComputedAt);
+  const stamped = readStampedProjectGraphCache(minimumComputedAt);
+  if (!stamped) {
+    throw noCachedProjectGraphError();
+  }
+  const graph = stamped.projectGraph;
+  // This process has not loaded the plugins that built this graph, so what they
+  // register is read from what their build recorded.
+  noteGraphReadFromCache(stamped.computedAt);
   const projectRootMap = Object.fromEntries(
     Object.entries(graph.nodes).map(([project, { data }]) => [
       data.root,

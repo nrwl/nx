@@ -13,6 +13,8 @@ const state = vi.hoisted(() => ({
   failedAcquires: 0,
   builds: 0,
   writes: 0,
+  /** What happened to plugin capabilities and the graph, in order. */
+  events: [] as string[],
 }));
 
 vi.mock('../native', () => ({
@@ -61,11 +63,24 @@ vi.mock('./nx-deps-cache', () => ({
     state.reads++;
     return state.cachedGraph;
   },
+  readStampedProjectGraphCache: () => {
+    state.reads++;
+    return state.cachedGraph
+      ? { projectGraph: state.cachedGraph, computedAt: 1_700_000_000_000 }
+      : null;
+  },
   readSourceMapsCache: () => ({}),
   readFileMapCache: () => null,
-  writeCache: () => {
+  writeCache: (...args: unknown[]) => {
     state.writes++;
+    state.events.push(`write graph @${args[4]}`);
   },
+}));
+vi.mock('./plugins/graph-plugin-capabilities', () => ({
+  noteGraphReadFromCache: (computedAt: number) =>
+    state.events.push(`read graph @${computedAt}`),
+  recordGraphPluginCapabilities: (computedAt: number) =>
+    state.events.push(`record capabilities @${computedAt}`),
 }));
 vi.mock('./utils/retrieve-workspace-files', () => ({
   retrieveWorkspaceFiles: async () => ({ fileMap: {}, rustReferences: {} }),
@@ -112,6 +127,7 @@ describe('waiting on the graph lock', () => {
     state.failedAcquires = 0;
     state.builds = 0;
     state.writes = 0;
+    state.events = [];
   });
 
   it('reads the graph the holder wrote, once it has released', async () => {
@@ -162,6 +178,26 @@ describe('waiting on the graph lock', () => {
     expect(state.reads).toBe(1);
     expect(state.builds).toBe(0);
     expect(state.acquires).toBe(0);
+  });
+
+  it('notes which build the graph it read came from', async () => {
+    // It did not load the plugins that built this graph, so what they register
+    // has to come from what that build recorded, found by this stamp.
+    await createProjectGraphAndSourceMapsAsync();
+
+    expect(state.events).toEqual(['read graph @1700000000000']);
+  });
+
+  it('records what its plugins register before the graph it built', async () => {
+    state.locked = false;
+
+    await createProjectGraphAndSourceMapsAsync();
+
+    // Same stamp on both, and the record first, so no graph on disk is ever
+    // without the row that describes it.
+    const [record, write] = state.events;
+    expect(record).toMatch(/^record capabilities @\d+$/);
+    expect(write).toBe(record.replace('record capabilities', 'write graph'));
   });
 
   it('writes the cache when it built the graph under the lock', async () => {

@@ -98,6 +98,20 @@ export declare class FileLock {
   lock(): void
 }
 
+export declare class GraphPluginCapabilities {
+  constructor(db: ExternalObject<NxDbConnection>)
+  /**
+   * Replaces whatever an earlier build recorded, in one transaction, so a
+   * reader never sees one build's rows mixed with another's.
+   */
+  record(computedAt: number, capabilities: Array<CachedPluginCapabilities>): void
+  /**
+   * The capabilities recorded with the graph computed at `computed_at`, or
+   * null when what is recorded belongs to another build or nothing is.
+   */
+  get(computedAt: number): Array<CachedPluginCapabilities> | null
+}
+
 export declare class HashPlanInspector {
   constructor(allWorkspaceFiles: ExternalObject<Array<FileData>>, projectFileMap: ExternalObject<Record<string, Array<FileData>>>, workspaceRoot: string)
   /** @deprecated Use `inspectInputs()` instead for structured output. */

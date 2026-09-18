@@ -91,6 +91,13 @@ export function readFileMapCache(): null | FileMapCache {
 export function readProjectGraphCache(
   minimumComputedAt?: number
 ): null | ProjectGraph {
+  return readStampedProjectGraphCache(minimumComputedAt)?.projectGraph ?? null;
+}
+
+/** The cached graph together with the `computedAt` it was written with. */
+export function readStampedProjectGraphCache(
+  minimumComputedAt?: number
+): null | { projectGraph: ProjectGraph; computedAt: number | undefined } {
   performance.mark('read project-graph:start');
   ensureCacheDirectory();
 
@@ -128,7 +135,7 @@ export function readProjectGraphCache(
         );
       }
 
-      return projectGraphCache;
+      return { projectGraph: projectGraphCache, computedAt };
     } else {
       return null;
     }
@@ -211,7 +218,8 @@ export function writeCache(
   cache: FileMapCache,
   projectGraph: ProjectGraph,
   sourceMaps: ConfigurationSourceMaps,
-  errors: ProjectGraphErrorTypes[]
+  errors: ProjectGraphErrorTypes[],
+  computedAt: number = Date.now()
 ): void {
   performance.mark('write cache:start');
   let retry = 1;
@@ -231,7 +239,7 @@ export function writeCache(
       writeJsonFile(tmpProjectGraphPath, {
         ...projectGraph,
         errors,
-        computedAt: Date.now(),
+        computedAt,
       });
       renameSync(tmpProjectGraphPath, nxProjectGraph);
 

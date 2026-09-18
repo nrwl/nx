@@ -579,6 +579,7 @@ module.exports = nativeBinding
 module.exports.AppLifeCycle = nativeBinding.AppLifeCycle
 module.exports.ChildProcess = nativeBinding.ChildProcess
 module.exports.FileLock = nativeBinding.FileLock
+module.exports.GraphPluginCapabilities = nativeBinding.GraphPluginCapabilities
 module.exports.HashPlanInspector = nativeBinding.HashPlanInspector
 module.exports.HashPlanner = nativeBinding.HashPlanner
 module.exports.HttpRemoteCache = nativeBinding.HttpRemoteCache
