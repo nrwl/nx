@@ -360,7 +360,7 @@ export async function createProjectGraphAndSourceMapsAsync(
       : null;
     let holdingLock = lock?.tryLock() ?? false;
 
-    if (lock && !holdingLock) {
+    while (lock && !holdingLock) {
       logger.verbose(
         'Waiting for graph construction in another process to complete'
       );
@@ -383,7 +383,8 @@ export async function createProjectGraphAndSourceMapsAsync(
         if (!(e instanceof StaleProjectGraphCacheError)) {
           throw e;
         }
-        // The holder stopped without writing a graph, so build it here.
+        // The holder stopped without writing a graph: build it here, or wait for
+        // whoever took the lock first.
         holdingLock = lock.tryLock();
       } finally {
         spinner.cleanup();

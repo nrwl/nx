@@ -12,7 +12,8 @@ const state = vi.hoisted(() => ({
   writes: 0,
   events: [] as string[],
   notedComputedAt: undefined as number | undefined,
-  holderStoppedWithoutWriting: false,
+  /** How many reads find the holder stopped without writing a graph. */
+  holdersStoppedWithoutWriting: 0,
 }));
 
 vi.mock('../native', () => ({
@@ -55,7 +56,8 @@ vi.mock('./nx-deps-cache', async () => {
   return {
     readProjectGraphCache: () => {
       state.reads++;
-      if (state.holderStoppedWithoutWriting) {
+      if (state.holdersStoppedWithoutWriting > 0) {
+        state.holdersStoppedWithoutWriting--;
         throw new StaleProjectGraphCacheError();
       }
       return state.cachedGraph
@@ -129,7 +131,7 @@ describe('waiting on the graph lock', () => {
     state.writes = 0;
     state.events = [];
     state.notedComputedAt = undefined;
-    state.holderStoppedWithoutWriting = false;
+    state.holdersStoppedWithoutWriting = 0;
   });
 
   it('reads the graph the holder wrote, once it has released', async () => {
@@ -141,7 +143,7 @@ describe('waiting on the graph lock', () => {
   });
 
   it('builds and writes the graph itself when the holder stopped without writing one', async () => {
-    state.holderStoppedWithoutWriting = true;
+    state.holdersStoppedWithoutWriting = 1;
 
     await createProjectGraphAndSourceMapsAsync();
 
@@ -149,6 +151,19 @@ describe('waiting on the graph lock', () => {
     expect(state.acquires).toBe(1);
     expect(state.builds).toBe(1);
     expect(state.writes).toBe(1);
+  });
+
+  it('waits for whoever took over from a holder that stopped without writing', async () => {
+    state.holdersStoppedWithoutWriting = 1;
+    // The first tryLock and the retry after the stale read both lose.
+    state.failedAcquires = 2;
+
+    const { projectGraph } = await createProjectGraphAndSourceMapsAsync();
+
+    expect(projectGraph).toEqual({ nodes: {}, dependencies: {} });
+    expect(state.waits).toBe(2);
+    expect(state.reads).toBe(2);
+    expect(state.builds).toBe(0);
   });
 
   it('waits for the winner rather than building a second graph', async () => {
