@@ -13,6 +13,9 @@ vi.mock('node:fs', async () => ({
 vi.mock('../../plugins/js/utils/typescript', () => ({
   getRootTsConfigResolveExportsConditions: vi.fn(() => ['development']),
   getRootTsConfigCustomConditions: vi.fn(() => []),
+  // Just the file itself here; `extends` is the real helper's business and has
+  // its own spec.
+  readTsConfigInputs: vi.fn((path: string) => [path]),
   // Follows the mocked filesystem, as the real one follows the real one.
   getRootTsConfigPath: vi.fn(
     (r: string) =>

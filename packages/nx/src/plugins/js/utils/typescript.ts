@@ -43,6 +43,32 @@ export function readTsConfigWithoutFiles(
   return readTsConfig(tsConfigPath, sys);
 }
 
+/**
+ * Every file TypeScript reads to settle a tsconfig: the file itself and each one
+ * its `extends` chain reaches, including configs extended from a package.
+ *
+ * Observed rather than walked, so it resolves `extends` exactly as TypeScript
+ * does, since it is TypeScript doing it.
+ */
+export function readTsConfigInputs(tsConfigPath: string): string[] {
+  if (!tsModule) {
+    tsModule = require('typescript');
+  }
+  const read = new Set<string>();
+  const sys: ts.System = {
+    ...tsModule.sys,
+    readFile: (path, encoding) => {
+      const contents = tsModule.sys.readFile(path, encoding);
+      if (contents !== undefined) {
+        read.add(path);
+      }
+      return contents;
+    },
+  };
+  readTsConfig(tsConfigPath, sys);
+  return [...read];
+}
+
 export function readTsConfigOptions(tsConfigPath: string): ts.CompilerOptions {
   const { options } = readTsConfigWithoutFiles(tsConfigPath);
 

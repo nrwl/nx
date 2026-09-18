@@ -9,6 +9,7 @@ import {
 import {
   getRootTsConfigPath,
   getRootTsConfigResolveExportsConditions,
+  readTsConfigInputs,
 } from '../../plugins/js/utils/typescript';
 import { readJsonFile } from '../../utils/fileutils';
 import { logger } from '../../utils/logger';
@@ -214,9 +215,11 @@ function resolutionInputsFor(
 ): string[] {
   const candidates: string[] = [];
   if (localPlugin) {
+    // Its `paths` and its `customConditions` both steer the match, and the
+    // conditions can come from anywhere its `extends` chain reaches.
     const rootTsConfig = getRootTsConfigPath(root);
     if (rootTsConfig) {
-      candidates.push(rootTsConfig);
+      candidates.push(...readTsConfigInputs(rootTsConfig));
     }
     candidates.push(
       path.join(localPlugin.path, 'project.json'),

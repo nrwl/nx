@@ -1,4 +1,4 @@
-import { readTsConfigOptions } from './typescript';
+import { readTsConfigInputs, readTsConfigOptions } from './typescript';
 import { join } from 'path';
 import { TempFs } from '../../../internal-testing-utils/temp-fs';
 
@@ -36,5 +36,58 @@ describe('readTsConfigOptions', () => {
       configFilePath: undefined,
       strict: true,
     });
+  });
+});
+
+describe('readTsConfigInputs', () => {
+  let fs: TempFs;
+  beforeEach(() => {
+    fs = new TempFs('ts-config-inputs');
+  });
+  afterEach(() => {
+    fs.cleanup();
+  });
+
+  it('includes every config the extends chain reaches', async () => {
+    await fs.createFiles({
+      'tsconfig.base.json': JSON.stringify({
+        extends: './tsconfig.shared.json',
+      }),
+      'tsconfig.shared.json': JSON.stringify({
+        extends: './tsconfig.conditions.json',
+      }),
+      'tsconfig.conditions.json': JSON.stringify({
+        compilerOptions: { customConditions: ['development'] },
+      }),
+      'tsconfig.unrelated.json': JSON.stringify({}),
+    });
+
+    expect(
+      readTsConfigInputs(join(fs.tempDir, 'tsconfig.base.json')).sort()
+    ).toEqual(
+      [
+        'tsconfig.base.json',
+        'tsconfig.conditions.json',
+        'tsconfig.shared.json',
+      ].map((name) => join(fs.tempDir, name))
+    );
+  });
+
+  it('includes a config extended from a package', async () => {
+    await fs.createFiles({
+      'tsconfig.base.json': JSON.stringify({
+        extends: '@acme/tsconfig/base.json',
+      }),
+      'node_modules/@acme/tsconfig/package.json': JSON.stringify({
+        name: '@acme/tsconfig',
+      }),
+      'node_modules/@acme/tsconfig/base.json': JSON.stringify({
+        compilerOptions: { customConditions: ['development'] },
+      }),
+    });
+
+    expect(
+      readTsConfigInputs(join(fs.tempDir, 'tsconfig.base.json'))
+    ).toContain(join(fs.tempDir, 'node_modules/@acme/tsconfig/base.json'));
   });
 });
