@@ -43,7 +43,6 @@ import {
 import {
   readFileMapCache,
   readProjectGraphCache,
-  readStampedProjectGraphCache,
   readSourceMapsCache,
   writeCache,
 } from './nx-deps-cache';
@@ -68,11 +67,11 @@ import { handleImport } from '../utils/handle-import';
 export function readCachedProjectGraph(
   minimumComputedAt?: number
 ): ProjectGraph {
-  const projectGraphCache = readProjectGraphCache(minimumComputedAt);
-  if (!projectGraphCache) {
+  const cached = readProjectGraphCache(minimumComputedAt);
+  if (!cached) {
     throw noCachedProjectGraphError();
   }
-  return projectGraphCache;
+  return cached.projectGraph;
 }
 
 function noCachedProjectGraphError(): Error {
@@ -251,12 +250,12 @@ export function handleProjectGraphError(opts: { exitOnError: boolean }, e) {
 }
 
 async function readCachedGraphAndHydrateFileMap(minimumComputedAt?: number) {
-  const stamped = readStampedProjectGraphCache(minimumComputedAt);
-  if (!stamped) {
+  const cached = readProjectGraphCache(minimumComputedAt);
+  if (!cached) {
     throw noCachedProjectGraphError();
   }
-  const graph = stamped.projectGraph;
-  noteGraphReadFromCache(stamped.computedAt);
+  const graph = cached.projectGraph;
+  noteGraphReadFromCache(cached.computedAt);
   const projectRootMap = Object.fromEntries(
     Object.entries(graph.nodes).map(([project, { data }]) => [
       data.root,

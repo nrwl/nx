@@ -90,12 +90,6 @@ export function readFileMapCache(): null | FileMapCache {
 
 export function readProjectGraphCache(
   minimumComputedAt?: number
-): null | ProjectGraph {
-  return readStampedProjectGraphCache(minimumComputedAt)?.projectGraph ?? null;
-}
-
-export function readStampedProjectGraphCache(
-  minimumComputedAt?: number
 ): null | { projectGraph: ProjectGraph; computedAt: number | undefined } {
   performance.mark('read project-graph:start');
   ensureCacheDirectory();

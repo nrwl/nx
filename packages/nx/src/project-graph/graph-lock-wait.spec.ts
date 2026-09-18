@@ -57,10 +57,6 @@ vi.mock('../daemon/client/client', () => ({
 vi.mock('./nx-deps-cache', () => ({
   readProjectGraphCache: () => {
     state.reads++;
-    return state.cachedGraph;
-  },
-  readStampedProjectGraphCache: () => {
-    state.reads++;
     return state.cachedGraph
       ? { projectGraph: state.cachedGraph, computedAt: 1_700_000_000_000 }
       : null;
