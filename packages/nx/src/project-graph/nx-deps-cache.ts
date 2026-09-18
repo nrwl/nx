@@ -212,7 +212,7 @@ export function writeCache(
   projectGraph: ProjectGraph,
   sourceMaps: ConfigurationSourceMaps,
   errors: ProjectGraphErrorTypes[],
-  computedAt: number = Date.now()
+  computedAt: number
 ): void {
   performance.mark('write cache:start');
   let retry = 1;
@@ -312,7 +312,7 @@ export function writeCacheIfStale(
       // File doesn't exist or can't be stat'd — proceed with write
     }
   }
-  writeCache(cache, projectGraph, sourceMaps, errors);
+  writeCache(cache, projectGraph, sourceMaps, errors, Date.now());
 }
 
 export function shouldRecomputeWholeGraph(
