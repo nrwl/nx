@@ -1,6 +1,7 @@
 import {
   addDependenciesToPackageJson,
   readJson,
+  readNxJson,
   Tree,
   updateJson,
 } from '@nx/devkit';
@@ -33,10 +34,21 @@ describe('init', () => {
     await initGenerator(tree, {});
 
     const packageJson = readJson(tree, 'package.json');
+    const nxJson = readNxJson(tree);
+
     expect(packageJson.dependencies['@nx/node']).toBeUndefined();
     expect(packageJson.dependencies[existing]).toBeDefined();
     expect(packageJson.devDependencies['@nx/node']).toBeDefined();
     expect(packageJson.devDependencies[existing]).toBeDefined();
+    expect(nxJson.plugins).toBeUndefined();
+    expect(nxJson.pluginsConfig?.['@nx/js']).toMatchObject({
+      dependencyNarrowing: {
+        respectSideEffects: true,
+        removeTypeOnlyEdges: true,
+        fallbackToStaticGraph: true,
+        affectedNarrowing: true,
+      },
+    });
   });
 
   it('should not fail when dependencies is missing from package.json and no other init generators are invoked', async () => {
@@ -46,5 +58,32 @@ describe('init', () => {
     });
 
     await expect(initGenerator(tree, {})).resolves.toBeTruthy();
+  });
+
+  it('should preserve existing @nx/js plugin config when configuring dependency narrowing', async () => {
+    updateJson(tree, 'nx.json', (json) => {
+      json.pluginsConfig = {
+        '@nx/js': {
+          analyzeLockfile: true,
+          dependencyNarrowing: {
+            debug: true,
+          },
+        },
+      };
+      return json;
+    });
+
+    await initGenerator(tree, {});
+
+    expect(readNxJson(tree).pluginsConfig?.['@nx/js']).toMatchObject({
+      analyzeLockfile: true,
+      dependencyNarrowing: {
+        debug: true,
+        respectSideEffects: true,
+        removeTypeOnlyEdges: true,
+        fallbackToStaticGraph: true,
+        affectedNarrowing: true,
+      },
+    });
   });
 });

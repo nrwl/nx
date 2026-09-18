@@ -29,7 +29,10 @@ import {
   lockFileExists,
   LOCKFILES,
 } from './lock-file/lock-file';
+import { narrowDependencies } from './project-graph/narrow-dependencies';
 import { buildExplicitDependencies } from './project-graph/build-dependencies/build-dependencies';
+import { getJsPluginDependencyNarrowingOptions } from './project-graph/narrowing-options';
+import type { RawDependency } from './project-graph/types';
 import { jsPluginConfig } from './utils/config';
 
 export const name = 'nx/js/dependencies-and-lockfile';
@@ -91,11 +94,14 @@ function internalCreateNodes(lockFile: string, _, context: CreateNodesContext) {
   };
 }
 
-export const createDependencies: CreateDependencies = (
+export const createDependencies: CreateDependencies = async (
   _,
   ctx: CreateDependenciesContext
 ) => {
   const pluginConfig = jsPluginConfig(ctx.nxJsonConfiguration);
+  const dependencyNarrowingOptions = getJsPluginDependencyNarrowingOptions(
+    ctx.nxJsonConfiguration
+  );
 
   const packageManager = detectPackageManager(workspaceRoot);
 
@@ -139,7 +145,16 @@ export const createDependencies: CreateDependencies = (
     'build typescript dependencies - start',
     'build typescript dependencies - end'
   );
-  return lockfileDependencies.concat(explicitProjectDependencies);
+
+  const narrowedProjectDependencies = dependencyNarrowingOptions
+    ? await narrowDependencies(
+        explicitProjectDependencies,
+        ctx,
+        dependencyNarrowingOptions
+      )
+    : explicitProjectDependencies;
+
+  return lockfileDependencies.concat(narrowedProjectDependencies);
 };
 
 function getLockFileHash(lockFileContents: string) {
