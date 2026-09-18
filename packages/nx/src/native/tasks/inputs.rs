@@ -164,6 +164,16 @@ fn split_inputs_into_self_and_deps<'a>(
         ]
     });
 
+    for input in &inputs {
+        if let Input::FileSet {
+            fileset,
+            dependencies: true,
+        } = input
+        {
+            validate_file_set(fileset)?;
+        }
+    }
+
     let (deps_inputs, self_inputs, project_inputs) = inputs.into_iter().fold(
         (
             // deps_inputs
@@ -304,24 +314,62 @@ pub(super) fn expand_single_project_inputs<'a>(
 }
 
 fn validate_file_set(s: &str) -> anyhow::Result<()> {
-    if !s.starts_with("{projectRoot}")
-        && !s.starts_with("!{projectRoot}")
-        && !s.starts_with("{workspaceRoot}")
-        && !s.starts_with("!{workspaceRoot}")
+    let (negation, body) = match s.strip_prefix('!') {
+        Some(body) => ("!", body),
+        None => ("", s),
+    };
+    let Some((token, rest)) = ["{workspaceRoot}", "{projectRoot}"]
+        .into_iter()
+        .find_map(|token| body.strip_prefix(token).map(|rest| (token, rest)))
+    else {
+        anyhow::bail!(
+            r#""{s}" is an invalid fileset.
+All filesets have to start with either {{workspaceRoot}} or {{projectRoot}}.
+For instance: "!{{projectRoot}}/**/*.spec.ts" or "{{workspaceRoot}}/package.json".
+If "{s}" is a named input, make sure it is defined in nx.json.
+"#
+        );
+    };
+    if rest.is_empty() {
+        let (place, example) = if token == "{projectRoot}" {
+            ("project root", "src/**/*")
+        } else {
+            ("workspace root", "package.json")
+        };
+        anyhow::bail!(
+            r#""{s}" is an invalid fileset.
+A root token on its own is the {place} itself, which is almost never the input you mean.
+Name what you need under it, such as "{negation}{token}/{example}".
+"#
+        );
+    }
+    // A `\` is what an older Gradle plugin emits on Windows; such an input is
+    // dropped downstream with a warning, as before, rather than failing the run.
+    if !rest.starts_with('/') && !rest.starts_with('\\') {
+        anyhow::bail!(
+            r#""{s}" is an invalid fileset.
+The root token must be the whole first segment. Add "/" after it: "{negation}{token}/{rest}".
+"#
+        );
+    }
+    if rest.contains("{workspaceRoot}") {
+        anyhow::bail!(
+            r#""{s}" is an invalid fileset.
+The root token {{workspaceRoot}} can only be the first segment of a fileset.
+"#
+        );
+    }
+    if rest
+        .split('/')
+        .any(|segment| segment == "." || segment == "..")
     {
         anyhow::bail!(
-            r#""{file_set}" is an invalid fileset.
-All filesets have to start with either {workspaceRoot} or {projectRoot}.
-For instance: "!{projectRoot}/**/*.spec.ts" or "{workspaceRoot}/package.json".
-If "{file_set}" is a named input, make sure it is defined in nx.json.
-"#,
-            file_set = s,
-            projectRoot = "{projectRoot}",
-            workspaceRoot = "{workspaceRoot}",
+            r#""{s}" is an invalid fileset.
+Filesets cannot contain "." or ".." segments; they can only name files under {{workspaceRoot}} or {{projectRoot}}.
+"#
         );
-    } else {
-        Ok(())
     }
+    Ok(())
 }
 
 pub(super) fn expand_named_input<'a>(
@@ -490,6 +538,69 @@ mod tests {
                 .unwrap_err()
                 .to_string()
                 .starts_with("\"src/file.ts\" is an invalid fileset.")
+        );
+    }
+
+    #[test]
+    fn filesets_start_with_a_whole_root_token_segment_and_stay_under_it() {
+        for ok in [
+            "{projectRoot}/**/*",
+            "{workspaceRoot}\\gradle\\wrapper\\gradle-wrapper.jar",
+            "{projectRoot}/src/**/*",
+            "!{workspaceRoot}/**/*.md",
+            "{workspaceRoot}/dist/{projectRoot}/**",
+            "{projectRoot}/.env",
+            "{projectRoot}/..cache/x",
+        ] {
+            assert!(validate_file_set(ok).is_ok(), "{ok}");
+        }
+        for (bad, reason) in [
+            ("{projectRoot}", "such as \"{projectRoot}/src/**/*\""),
+            ("!{projectRoot}", "such as \"!{projectRoot}/src/**/*\""),
+            (
+                "{workspaceRoot}",
+                "such as \"{workspaceRoot}/package.json\"",
+            ),
+            ("{workspaceRoot}**/*.js", "\"{workspaceRoot}/**/*.js\""),
+            (
+                "{projectRoot}dist",
+                "Add \"/\" after it: \"{projectRoot}/dist\"",
+            ),
+            ("!{workspaceRoot}src", "\"!{workspaceRoot}/src\""),
+            (
+                "{projectRoot}/{workspaceRoot}/x",
+                "only be the first segment",
+            ),
+            ("{projectRoot}/../shared/**", "\"..\" segments"),
+            ("{workspaceRoot}/./nx.json", "\"..\" segments"),
+            ("{projectRoot}/src/..", "\"..\" segments"),
+            ("src/**", "start with either"),
+        ] {
+            let message = validate_file_set(bad).unwrap_err().to_string();
+            assert!(
+                message.starts_with(&format!("\"{bad}\" is an invalid fileset.")),
+                "{message}"
+            );
+            assert!(message.contains(reason), "{message}");
+        }
+    }
+
+    #[test]
+    fn dependency_filesets_are_validated_like_self_filesets() {
+        let nx_json = NxJson { named_inputs: None };
+        let project = Project::default();
+        let err = split_inputs_into_self_and_deps(
+            Some(vec![Input::FileSet {
+                fileset: "src/**",
+                dependencies: true,
+            }]),
+            get_named_inputs(&nx_json, &project),
+        )
+        .unwrap_err()
+        .to_string();
+        assert!(
+            err.starts_with("\"src/**\" is an invalid fileset."),
+            "{err}"
         );
     }
 }
