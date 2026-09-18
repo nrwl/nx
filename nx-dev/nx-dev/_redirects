@@ -844,7 +844,7 @@
 /technologies/react/api/executors/* /docs/technologies/react/executors 301
 /technologies/test-tools/detox/api/executors/* /docs/technologies/test-tools/detox/executors 301
 /technologies/react/next/api/executors/* /docs/technologies/react/next/executors 301
-/technologies/react/remix/api/executors/* /docs/technologies/react/remix/executors 301
+/technologies/react/remix/api/executors/* /docs/getting-started/intro 301
 /technologies/test-tools/storybook/api/executors/* /docs/technologies/test-tools/storybook/executors 301
 /technologies/test-tools/cypress/api/executors/* /docs/technologies/test-tools/cypress/executors 301
 /technologies/test-tools/jest/api/executors/* /docs/technologies/test-tools/jest/executors 301
@@ -1252,7 +1252,7 @@
 /technologies/react/react-native/api/executors /docs/technologies/react/react-native/executors 301
 /technologies/react/react-native/api/generators /docs/technologies/react/react-native/generators 301
 /technologies/react/react-native/api/migrations /docs/technologies/react/react-native/migrations 301
-/technologies/react/remix/api/executors /docs/technologies/react/remix/executors 301
+/technologies/react/remix/api/executors /docs/getting-started/intro 301
 /technologies/react/remix/api/generators /docs/technologies/react/remix/generators 301
 /technologies/react/remix/api/migrations /docs/technologies/react/remix/migrations 301
 /technologies/build-tools/rollup/api/executors /docs/technologies/build-tools/rollup/executors 301
