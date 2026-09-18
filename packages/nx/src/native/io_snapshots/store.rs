@@ -248,6 +248,24 @@ mod tests {
         assert_eq!(read_entries(&db, "c1", &["a:build"]).unwrap().len(), 1);
     }
 
+    // The check names both tables so a missing `rarray` ("no such table
+    // function") errors rather than reading as an empty set.
+    #[test]
+    fn only_a_missing_snapshot_table_reads_as_empty() {
+        assert!(absent_table(&anyhow::anyhow!(
+            "DB query error: no such table: io_snapshot_tasks"
+        )));
+        assert!(absent_table(&anyhow::anyhow!(
+            "no such table: io_snapshot_bundles"
+        )));
+        assert!(!absent_table(&anyhow::anyhow!(
+            "no such table function: rarray"
+        )));
+        assert!(!absent_table(&anyhow::anyhow!(
+            "no such table: task_history"
+        )));
+    }
+
     #[test]
     fn reads_no_ids_and_one_id() {
         let (_dir, db) = temp_db();
