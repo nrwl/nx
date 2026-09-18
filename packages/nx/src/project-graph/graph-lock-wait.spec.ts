@@ -38,7 +38,7 @@ vi.mock('../native', () => ({
       state.acquires++;
       return true;
     };
-    waitUntilFree = async (): Promise<void> => {
+    wait = async (): Promise<void> => {
       state.waits++;
       state.locked = false;
       // Whoever held it wrote the graph before letting go.

@@ -369,7 +369,7 @@ export async function createProjectGraphAndSourceMapsAsync(
       );
       const start = Date.now();
       try {
-        await lock.waitUntilFree();
+        await lock.wait();
         // A graph computed after this process started waiting is the holder's.
         const graph = await readCachedGraphAndHydrateFileMap(start);
         const sourceMaps = readSourceMapsCache();

@@ -73,14 +73,10 @@ export declare class FileLock {
   constructor(lockFilePath: string)
   unlock(): void
   check(): boolean
-  /**
-   * Takes the lock without blocking; false means another handle holds it.
-   * Wait with `waitUntilFree`, not `lock`, which blocks the event loop.
-   */
-  tryLock(): boolean
-  /** Resolves once the lock is free, without taking it; follow with `tryLock`. */
-  waitUntilFree(): Promise<void>
+  wait(): Promise<void>
   lock(): void
+  /** Takes the lock without blocking; false means another handle holds it. */
+  tryLock(): boolean
 }
 
 export declare class GraphPluginCapabilities {

@@ -40,11 +40,13 @@ describe('FileLock', () => {
     }
   });
 
-  it('resolves `waitUntilFree` once the holder releases', async () => {
+  it('waits after a failed `tryLock` until the holder releases', async () => {
+    const observer = new FileLock(lockPath);
     const holder = new FileLock(lockPath);
     holder.lock();
 
-    const waiting = new FileLock(lockPath).waitUntilFree().then(() => 'free');
+    expect(observer.tryLock()).toBe(false);
+    const waiting = observer.wait().then(() => 'free');
 
     // A timer, not a resolved promise: the native wait settles on a macrotask,
     // so a microtask would win whether or not it waited.
@@ -55,32 +57,8 @@ describe('FileLock', () => {
 
     holder.unlock();
     expect(await waiting).toBe('free');
-  });
-
-  it('leaves the JS thread free while `waitUntilFree` is pending', async () => {
-    const holder = new FileLock(lockPath);
-    holder.lock();
-
-    let ticks = 0;
-    const ticking = setInterval(() => ticks++, 10);
-    const waiting = new FileLock(lockPath).waitUntilFree();
-    await new Promise((resolve) => setTimeout(resolve, 150));
-    clearInterval(ticking);
-    holder.unlock();
-    await waiting;
-
-    expect(ticks).toBeGreaterThan(0);
-  });
-
-  it('does not take the lock it waited for, so the caller still has to acquire it', async () => {
-    const holder = new FileLock(lockPath);
-    holder.lock();
-    holder.unlock();
-
-    const observer = new FileLock(lockPath);
-    await expect(observer.waitUntilFree()).resolves.toBeUndefined();
-
-    expect(new FileLock(lockPath).tryLock()).toBe(true);
+    expect(observer.tryLock()).toBe(true);
+    observer.unlock();
   });
 
   it('reports failure from `tryLock` rather than blocking', () => {

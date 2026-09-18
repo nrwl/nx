@@ -8,7 +8,7 @@ const tmp = require('os').tmpdir();
   );
   if (lock.locked) {
     const s = ora('Waiting for lock').start();
-    await lock.waitUntilFree();
+    await lock.wait();
     s.stop();
     console.log('waited for lock');
   } else {

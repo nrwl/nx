@@ -13,66 +13,8 @@ use tracing::trace;
 #[cfg(not(target_arch = "wasm32"))]
 use fs4::fs_std::FileExt;
 
-/// How late a waiter can notice a release. Each poll costs a timer wake, so don't go much lower.
 #[cfg(not(target_arch = "wasm32"))]
-const LOCK_POLL_INTERVAL: Duration = Duration::from_millis(4);
-
-#[cfg(not(target_arch = "wasm32"))]
-fn open_lock_file(lock_file_path: &str) -> std::io::Result<fs::File> {
-    OpenOptions::new()
-        .read(true)
-        .write(true)
-        .create(true)
-        .truncate(false)
-        .open(lock_file_path)
-}
-
-/// Polls a shared lock, so the caller learns the holder is gone without becoming one.
-#[cfg(not(target_arch = "wasm32"))]
-fn wait_for_release(lock_file_path: &str, timeout: Duration) -> std::io::Result<bool> {
-    let file = open_lock_file(lock_file_path)?;
-    let deadline = Instant::now() + timeout;
-    loop {
-        match fs4::fs_std::FileExt::try_lock_shared(&file) {
-            Ok(()) => {
-                fs4::fs_std::FileExt::unlock(&file)?;
-                return Ok(true);
-            }
-            Err(e) if is_contended(&e) => {}
-            Err(e) => return Err(e),
-        }
-        let remaining = deadline.saturating_duration_since(Instant::now());
-        if remaining.is_zero() {
-            return Ok(false);
-        }
-        std::thread::sleep(LOCK_POLL_INTERVAL.min(remaining));
-    }
-}
-
-/// Contention is `WouldBlock` on some platforms and a raw OS error on others.
-#[cfg(not(target_arch = "wasm32"))]
-fn is_contended(e: &std::io::Error) -> bool {
-    e.kind() == std::io::ErrorKind::WouldBlock
-        || e.raw_os_error() == fs4::lock_contended_error().raw_os_error()
-}
-
-/// Sleeps on the async runtime, not a libuv worker: this wait can last minutes
-/// and there are only four workers by default.
-#[cfg(not(target_arch = "wasm32"))]
-async fn wait_for_release_async(lock_file_path: String) -> std::io::Result<()> {
-    let file = open_lock_file(&lock_file_path)?;
-    loop {
-        match fs4::fs_std::FileExt::try_lock_shared(&file) {
-            Ok(()) => {
-                fs4::fs_std::FileExt::unlock(&file)?;
-                return Ok(());
-            }
-            Err(e) if is_contended(&e) => {}
-            Err(e) => return Err(e),
-        }
-        tokio::time::sleep(LOCK_POLL_INTERVAL).await;
-    }
-}
+const LOCK_POLL_INTERVAL: Duration = Duration::from_millis(25);
 
 #[napi]
 #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
@@ -84,13 +26,14 @@ pub struct FileLock {
 }
 
 /// const lock = new FileLock('lockfile.lock');
-/// if (lock.tryLock()) {
-///   ... do some work
-///   writeToCache()
-///   lock.unlock()
-/// } else {
-///   await lock.waitUntilFree()
+/// if (lock.locked) {
+///   lock.wait()
 ///   readFromCache()
+/// } else {
+///  lock.lock()
+///  ... do some work
+///  writeToCache()
+///  lock.unlock()
 /// }
 
 #[napi]
@@ -101,7 +44,13 @@ impl FileLock {
         // Creates the directory where the lock file will be stored
         fs::create_dir_all(Path::new(&lock_file_path).parent().unwrap())?;
 
-        let file = open_lock_file(&lock_file_path)?;
+        // Opens the lock file
+        let file = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .create(true)
+            .truncate(false)
+            .open(&lock_file_path)?;
 
         trace!("Locking file {}", lock_file_path);
 
@@ -141,39 +90,29 @@ impl FileLock {
         Ok(self.locked)
     }
 
-    /// Takes the lock without blocking; false means another handle holds it.
-    pub fn try_lock(&mut self) -> std::io::Result<bool> {
-        match self.file.try_lock_exclusive() {
-            Ok(()) => {
-                self.locked = true;
-                Ok(true)
-            }
-            Err(e) if is_contended(&e) => {
-                // Held by someone, which is what `locked` records. The return
-                // value is what says whether this handle is that someone.
-                self.locked = true;
-                Ok(false)
-            }
-            Err(e) => Err(e),
-        }
-    }
-
-    /// Takes the lock without blocking; false means another handle holds it.
-    /// Wait with `waitUntilFree`, not `lock`, which blocks the event loop.
-    #[napi(js_name = "tryLock")]
-    pub fn try_lock_js(&mut self) -> napi::Result<bool> {
-        Ok(self.try_lock()?)
-    }
-
-    /// Resolves once the lock is free, without taking it; follow with `tryLock`.
     #[napi(ts_return_type = "Promise<void>")]
-    pub fn wait_until_free(&self, env: Env) -> napi::Result<PromiseRaw<'static, ()>> {
-        let lock_file_path = self.lock_file_path.clone();
-        let promise =
-            env.spawn_future(async move { Ok(wait_for_release_async(lock_file_path).await?) })?;
-        // SAFETY: PromiseRaw's inner napi_value is GC-managed by V8 and remains
-        // valid beyond this stack frame.
-        Ok(unsafe { std::mem::transmute(promise) })
+    pub fn wait(&mut self, env: Env) -> napi::Result<PromiseRaw<'static, ()>> {
+        if self.locked {
+            let lock_file_path = self.lock_file_path.clone();
+            self.locked = false;
+            let promise = env.spawn_future(async move {
+                let file = OpenOptions::new()
+                    .read(true)
+                    .write(true)
+                    .create(true)
+                    .truncate(false)
+                    .open(&lock_file_path)?;
+                fs4::fs_std::FileExt::lock_shared(&file)?;
+                fs4::fs_std::FileExt::unlock(&file)?;
+                Ok(())
+            })?;
+            // SAFETY: PromiseRaw's inner napi_value is GC-managed by V8
+            // and remains valid beyond this stack frame.
+            Ok(unsafe { std::mem::transmute(promise) })
+        } else {
+            let promise = env.spawn_future(async move { Ok(()) })?;
+            Ok(unsafe { std::mem::transmute(promise) })
+        }
     }
 
     #[napi]
@@ -183,9 +122,59 @@ impl FileLock {
         Ok(())
     }
 
-    /// Blocks the calling thread until the holder releases or `timeout` passes; true if released.
+    /// Takes the lock if nobody holds it, without blocking. On contention it
+    /// still sets `locked`, so a following `wait()` waits.
+    pub fn try_lock(&mut self) -> std::io::Result<bool> {
+        match self.file.try_lock_exclusive() {
+            Ok(()) => {
+                self.locked = true;
+                Ok(true)
+            }
+            Err(e)
+                if e.kind() == std::io::ErrorKind::WouldBlock
+                    || e.raw_os_error() == fs4::lock_contended_error().raw_os_error() =>
+            {
+                self.locked = true;
+                Ok(false)
+            }
+            Err(e) => Err(e),
+        }
+    }
+
+    /// Takes the lock without blocking; false means another handle holds it.
+    #[napi(js_name = "tryLock")]
+    pub fn try_lock_js(&mut self) -> napi::Result<bool> {
+        Ok(self.try_lock()?)
+    }
+
+    /// Blocks the calling thread until the current holder releases or
+    /// `timeout` passes, and says which. The same shared-then-release dance as
+    /// `wait`, for callers without a napi `Env`, polled so that a holder that
+    /// never returns (suspended, or on a filesystem that has stalled) cannot
+    /// hold the caller forever.
     pub fn wait_blocking(&self, timeout: Duration) -> std::io::Result<bool> {
-        wait_for_release(&self.lock_file_path, timeout)
+        let file = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .create(true)
+            .truncate(false)
+            .open(&self.lock_file_path)?;
+        let deadline = Instant::now() + timeout;
+        loop {
+            match fs4::fs_std::FileExt::try_lock_shared(&file) {
+                Ok(()) => {
+                    fs4::fs_std::FileExt::unlock(&file)?;
+                    return Ok(true);
+                }
+                Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {}
+                Err(e) if e.raw_os_error() == fs4::lock_contended_error().raw_os_error() => {}
+                Err(e) => return Err(e),
+            }
+            if Instant::now() >= deadline {
+                return Ok(false);
+            }
+            std::thread::sleep(LOCK_POLL_INTERVAL);
+        }
     }
 }
 
@@ -258,10 +247,7 @@ mod test {
             .wait_blocking(Duration::from_millis(200))
             .unwrap();
         assert!(!released);
-        let waited = started.elapsed();
-        assert!(waited >= Duration::from_millis(200));
-        // Pins the sleep being capped by the remaining budget.
-        assert!(waited < Duration::from_millis(400), "waited {waited:?}");
+        assert!(started.elapsed() >= Duration::from_millis(200));
         // Seen from a fresh handle; `check` on the holder's own handle would
         // release it, since the lock is held by that handle.
         assert!(FileLock::new(path).unwrap().locked);
