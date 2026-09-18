@@ -47,8 +47,9 @@ import {
   writeCache,
 } from './nx-deps-cache';
 import {
+  capabilitiesOfLoadedPlugin,
+  getGraphPluginCapabilitiesStore,
   noteGraphReadFromCache,
-  recordGraphPluginCapabilities,
 } from './plugins/graph-plugin-capabilities';
 import { getPlugins, getPluginsSeparated } from './plugins/get-plugins';
 import { ConfigurationResult } from './utils/project-configuration-utils';
@@ -208,7 +209,10 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon(
     const computedAt = Date.now();
     // Before the graph, so a cached graph never lacks its row.
     if (errors.length === 0) {
-      recordGraphPluginCapabilities(computedAt, plugins);
+      getGraphPluginCapabilitiesStore()?.record(
+        computedAt,
+        plugins.map(capabilitiesOfLoadedPlugin)
+      );
     }
     writeCache(
       projectFileMapCache,

@@ -71,8 +71,11 @@ vi.mock('./nx-deps-cache', () => ({
 vi.mock('./plugins/graph-plugin-capabilities', () => ({
   noteGraphReadFromCache: (computedAt: number) =>
     state.events.push(`read graph @${computedAt}`),
-  recordGraphPluginCapabilities: (computedAt: number) =>
-    state.events.push(`record capabilities @${computedAt}`),
+  capabilitiesOfLoadedPlugin: () => ({}),
+  getGraphPluginCapabilitiesStore: () => ({
+    record: (computedAt: number) =>
+      state.events.push(`record capabilities @${computedAt}`),
+  }),
 }));
 vi.mock('./utils/retrieve-workspace-files', () => ({
   retrieveWorkspaceFiles: async () => ({ fileMap: {}, rustReferences: {} }),
