@@ -22,6 +22,14 @@
     },
     "add-extra-dependencies": {
       "command": "node ./scripts/add-dependency-to-build.js workspace nx"
+    },
+    "test": {
+      "inputs": [
+        "...",
+        "{workspaceRoot}/tools/vitest/**/*",
+        "{workspaceRoot}/scripts/jest-mocks/clack-prompts.js",
+        "{workspaceRoot}/.editorconfig"
+      ]
     }
   },
   "implicitDependencies": [

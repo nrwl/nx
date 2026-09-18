@@ -4,9 +4,9 @@ import { Schema } from '../schema';
 import { checkTargets } from './check-targets';
 
 // nested code imports graph from the repo, which might have innacurate graph version
-jest.mock('nx/src/project-graph/project-graph', () => ({
-  ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
-  createProjectGraphAsync: jest
+vi.mock('nx/src/project-graph/project-graph', async () => ({
+  ...(await vi.importActual<any>('nx/src/project-graph/project-graph')),
+  createProjectGraphAsync: vi
     .fn()
     .mockImplementation(async () => ({ nodes: {}, dependencies: {} })),
 }));
@@ -75,10 +75,10 @@ describe('checkTargets', () => {
   it('should throw an error if another project targets', async () => {
     await expect(checkTargets(tree, schema)).rejects
       .toThrowErrorMatchingInlineSnapshot(`
-      "ng-app is still targeted by some projects:
+      [Error: ng-app is still targeted by some projects:
 
       "ng-app:serve" is used by "ng-app-e2e"
-      "
+      ]
     `);
   });
 
