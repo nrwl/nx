@@ -1,3 +1,4 @@
+import { warnRemixDeprecation } from '../utils/deprecation';
 import {
   calculateHashesForCreateNodes,
   getNamedInputs,
@@ -53,6 +54,7 @@ const remixConfigGlob = '**/{remix,vite}.config.{js,cjs,mjs,ts,cts,mts}';
 export const createNodes: CreateNodes<RemixPluginOptions> = [
   remixConfigGlob,
   async (configFilePaths, options, context) => {
+    warnRemixDeprecation();
     const optionsHash = hashObject(options);
     const cachePath = join(workspaceDataDirectory, `remix-${optionsHash}.hash`);
     const targetsCache = new PluginCache<RemixTargets>(cachePath);

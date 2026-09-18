@@ -9,149 +9,33 @@ weight: 2
 filter: 'type:References'
 ---
 
-[Remix](https://remix.run/) is a full stack React framework for building web applications. In a Remix monorepo, every project benefits from Nx [caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph).
-
-The Remix plugin for Nx, `@nx/remix`, automatically [infers `build`, `dev`, `start`, and `typecheck` tasks](#how-nxremix-infers-tasks) from your Remix configuration and provides [generators for applications, libraries, routes, loaders, actions, and meta functions](#develop-remix-applications). You don't need the plugin to use Remix with Nx - it adds automatic task inference, route scaffolding, and simplified configuration.
-
-{% aside type="note" %}
-React Router v7 is the successor to Remix. `@nx/remix` supports Remix v2. [`@nx/react`](/docs/kb/react-router) handles React Router v7. For new projects, use React Router instead. Existing Remix v2 projects continue to work with `@nx/remix`.
+{% aside type="caution" title="Deprecated in Nx 24" %}
+`@nx/remix` will be removed in Nx 25. Nx 24 removes its executors and all generators except `convert-to-inferred`. Existing Remix v2 applications can keep using task inference until Nx 25.
 {% /aside %}
+
+## Upgrade to Nx 24
+
+The Nx 24 migration converts `@nx/remix:build` and `@nx/remix:serve` targets to `@nx/remix/plugin` inferred tasks. It does not upgrade your application to React Router. Applications already using inference need no conversion.
+
+To run the conversion yourself:
+
+```shell
+nx g @nx/remix:convert-to-inferred
+```
+
+Run your application's build and other existing targets after conversion. Review any warnings for options that the converter could not migrate.
+
+## Migrate your applications
+
+Use the `migrate-to-react-router` prompt migration with your AI agent to upgrade to React Router v8 with [`@nx/react`](/docs/kb/react-router). The prompt covers framework changes and Nx configuration, including last-mile fixes. It asks the agent to run build and other relevant targets to validate the result.
+
+You can also follow the official [Remix v2 migration guide](https://reactrouter.com/7.18.4/upgrading/remix), then the [React Router v7 to v8 guide](https://reactrouter.com/upgrading/v7). Register `@nx/react/router-plugin` for the migrated applications and update any target overrides or CI commands that still reference Remix.
+
+Remove `@nx/remix` only after no project or shared configuration needs it. Check for `createWatchPaths` and Cypress component-testing preset imports as well as plugin registrations.
 
 ## Requirements
 
-The `@nx/remix` plugin supports the following package versions.
-
-| Package          | Supported Versions |
-| ---------------- | ------------------ |
-| `@remix-run/dev` | ^2.0.0             |
-
-[Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
-
-## Setting up @nx/remix
-
-### Add to an existing Nx workspace
-
-{% aside type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/remix` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/kb/keep-nx-versions-in-sync).
-Using `nx add` helps ensure the correct version is installed and configured.
-{% /aside %}
-
-```shell
-nx add @nx/remix
-```
-
-Verify the plugin is setup:
-
-{% steps %}
-
-1. Check for `@nx/remix` listed as a plugin:
-
-   ```shell
-   nx report
-   ```
-
-2. Ensure inferred tasks are working:
-
-   ```shell
-   nx show projects --with-target=build
-   ```
-
-3. Inspect a specific project configuration for the inferred tasks:
-
-   ```shell
-   nx show project my-remix-app
-   ```
-
-{% /steps %}
-
-### Generate a new application
-
-```shell
-nx g @nx/remix:app apps/my-app
-```
-
-To start the application in development mode, run `nx dev my-app`. Read more about the options available for the [application generator](/docs/technologies/react/remix/generators#application).
-
-### Generate a library
-
-When developing your application, it often makes sense to split your codebase into smaller, more focused libraries.
-
-```shell
-nx g @nx/remix:lib libs/my-lib
-```
-
-Read more about the options available for the [library generator](/docs/technologies/react/remix/generators#library). Libraries let you share code between applications, enforce architectural boundaries with the [project graph](/docs/features/explore-graph), and speed up CI by only rebuilding what changed.
-
-## Develop Remix applications
-
-### Generate routes
-
-```shell
-nx g @nx/remix:route apps/my-app/app/routes/admin
-```
-
-This creates a new route file in your application's `routes` directory following Remix's file-based routing conventions. Read more about the options available for the [route generator](/docs/technologies/react/remix/generators#route).
-
-### Add loaders, actions, and meta
-
-```shell
-nx g @nx/remix:loader apps/my-app/app/routes/admin
-nx g @nx/remix:action apps/my-app/app/routes/admin
-nx g @nx/remix:meta apps/my-app/app/routes/admin
-```
-
-These generators add loader, action, and meta functions to existing route files. Read more about the options available for the [loader](/docs/technologies/react/remix/generators#loader), [action](/docs/technologies/react/remix/generators#action), and [meta](/docs/technologies/react/remix/generators#meta) generators.
-
-### Serve for development
-
-```shell
-nx dev my-app
-```
-
-This starts the Remix development server with hot module replacement at `http://localhost:3000`.
-
-### Build for production
-
-```shell
-nx build my-app
-```
-
-Compiles the application for production deployment. The output is written to the `build` directory inside your project folder by default.
-
-### Start production server
-
-```shell
-nx start my-app
-```
-
-Serves the production build using `remix-serve`. Depends on `build` completing first.
-
-### Use libraries in your application
-
-Import library code directly into your route files:
-
-```tsx
-// apps/my-app/app/routes/_index.tsx
-import { MyComponent } from '@myorg/my-lib';
-
-export default function Index() {
-  return <MyComponent />;
-}
-```
-
-You can also use library code in loaders by exporting from a separate server entry point:
-
-```ts
-// libs/my-lib/src/server.ts
-export { myLoader } from './lib/my-loader';
-```
-
-```tsx
-// apps/my-app/app/routes/admin.tsx
-import { myLoader } from '@myorg/my-lib/server';
-
-export const loader = myLoader;
-```
+The retained plugin supports `@remix-run/dev` version `^2.0.0`. Keep `@nx/remix` on the same version as `nx` until you remove it.
 
 ## Configure @nx/remix
 
@@ -159,13 +43,13 @@ export const loader = myLoader;
 
 The `@nx/remix` plugin creates tasks for any project that has a Remix configuration file. The plugin recognizes two setups:
 
-**Classic Remix Compiler** -- looks for any of the following files:
+The classic Remix compiler uses one of these files:
 
 - `remix.config.js`
 - `remix.config.mjs`
 - `remix.config.cjs`
 
-**Remix with Vite** -- looks for `vite.config.{js,ts,mjs,mts,cjs,cts}` files that import the Remix plugin from `@remix-run/dev`.
+For Remix with Vite, the plugin looks for `vite.config.{js,ts,mjs,mts,cjs,cts}` files that import the Remix plugin from `@remix-run/dev`.
 
 The configuration directory must also contain a `package.json` or `project.json`.
 
@@ -255,6 +139,5 @@ For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).
 {% linkcard title="React Router Guide" description="React Router is the successor to Remix. Learn how to use it with Nx." href="/docs/kb/react-router" /%}
 {% linkcard title="Learn Nx Tutorial" description="Build a monorepo step-by-step with Nx." href="/docs/getting-started/tutorials/crafting-your-workspace" /%}
 {% linkcard title="Generators Reference" description="Full API reference for @nx/remix generators." href="/docs/technologies/react/remix/generators" /%}
-{% linkcard title="Executors Reference" description="Full API reference for @nx/remix executors." href="/docs/technologies/react/remix/executors" /%}
 {% linkcard title="Migrations Reference" description="Full reference for @nx/remix migrations." href="/docs/technologies/react/remix/migrations" /%}
 {% /cardgrid %}

@@ -257,9 +257,6 @@
       "path": "./e2e/react"
     },
     {
-      "path": "./e2e/remix"
-    },
-    {
       "path": "./e2e/utils"
     },
     {

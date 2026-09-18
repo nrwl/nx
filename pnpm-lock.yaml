@@ -1608,12 +1608,6 @@ importers:
         specifier: workspace:*
         version: link:../../packages/nx
 
-  e2e/remix:
-    dependencies:
-      '@nx/e2e-utils':
-        specifier: workspace:*
-        version: link:../utils
-
   e2e/rollup:
     dependencies:
       '@nx/e2e-utils':
@@ -3561,18 +3555,6 @@ importers:
       '@nx/js':
         specifier: workspace:*
         version: link:../js
-      '@nx/playwright':
-        specifier: workspace:*
-        version: link:../playwright
-      '@nx/react':
-        specifier: workspace:*
-        version: link:../react
-      '@nx/web':
-        specifier: workspace:*
-        version: link:../web
-      '@phenomnomnominal/tsquery':
-        specifier: catalog:typescript
-        version: 6.2.0(typescript@6.0.3)
       '@remix-run/dev':
         specifier: ^2.0.0
         version: 2.17.3(@remix-run/react@2.17.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@6.0.3))(@types/node@24.12.2)(babel-plugin-macros@3.1.0)(bluebird@3.7.2)(jiti@2.7.0)(less@4.8.1(supports-color@7.2.0))(lightningcss@1.32.0)(sass-embedded@1.97.2)(sass@1.97.3)(supports-color@10.2.2)(terser@5.49.0)(ts-node@10.9.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@types/node@24.12.2)(typescript@6.0.3))(tsx@4.20.5)(typescript@6.0.3)(vite@8.0.16(@types/node@24.12.2)(esbuild@0.25.0)(jiti@2.7.0)(less@4.8.1(supports-color@7.2.0))(sass-embedded@1.97.2)(sass@1.97.3)(terser@5.49.0)(tsx@4.20.5)(yaml@2.8.0))(yaml@2.8.0)
@@ -3583,9 +3565,6 @@ importers:
       '@nx/eslint':
         specifier: workspace:*
         version: link:../eslint
-      '@nx/vitest':
-        specifier: workspace:*
-        version: link:../vitest
       nx:
         specifier: workspace:*
         version: link:../nx
