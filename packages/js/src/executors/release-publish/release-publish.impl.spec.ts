@@ -407,6 +407,41 @@ describe('release-publish executor', () => {
       );
     });
 
+    it('should continue to publish when bun info reports a bare 404 for an unpublished package', async () => {
+      mockDetectPackageManager.mockReturnValue('bun');
+      mockExecSync.mockReset();
+
+      mockExecSync
+        // npm --version succeeds (npm is installed)
+        .mockReturnValueOnce('11.5.1' as any)
+        // bun info fails because the package has not been published yet
+        .mockImplementationOnce(() => {
+          const error: any = new Error('bun info failed');
+          error.stdout = Buffer.from('');
+          error.stderr = Buffer.from(
+            [
+              'error: 404: https://registry.example.com/@scope%2ftest-package',
+              " - '@scope/test-package@latest' does not exist in this registry",
+            ].join('\n')
+          );
+          throw error;
+        })
+        // bun publish succeeds
+        .mockReturnValueOnce(Buffer.from('bun publish output'));
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(true);
+      expect(mockExecSync).toHaveBeenCalledWith(
+        expect.stringContaining('bun publish'),
+        expect.anything()
+      );
+      expect(console.error).not.toHaveBeenCalledWith(
+        'Something unexpected went wrong when checking for existing dist-tags.\n',
+        expect.anything()
+      );
+    });
+
     it('should fall back to npm publish when bun publish fails with an authentication error and npm is installed', async () => {
       mockDetectPackageManager.mockReturnValue('bun');
       mockExecSync.mockReset();

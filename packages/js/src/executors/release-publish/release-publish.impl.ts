@@ -56,6 +56,11 @@ function isAlreadyPublishedPublishError(
   );
 }
 
+function isBunPackageNotFoundError(stderr = '', stdout = ''): boolean {
+  const output = `${stderr}\n${stdout}`.toLowerCase();
+  return output.includes('does not exist in this registry');
+}
+
 export default async function runExecutor(
   options: PublishExecutorSchema,
   context: ExecutorContext
@@ -322,6 +327,8 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
     } catch (err) {
       try {
         const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
+        const stderrStr = err.stderr?.toString() || '';
+        const stdoutStr = err.stdout?.toString() || '';
         // If the error is that the package doesn't exist, then we can ignore it because we will be publishing it for the first time in the next step
         if (
           !(
@@ -329,14 +336,15 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
             stdoutData.error?.summary?.toLowerCase().includes('not found')
           ) &&
           !(
-            err.stderr?.toString().includes('E404') &&
-            err.stderr?.toString().toLowerCase().includes('not found')
+            stderrStr.includes('E404') &&
+            stderrStr.toLowerCase().includes('not found')
           ) &&
           // bun uses plain '404' instead of 'E404'
           !(
-            err.stderr?.toString().includes('404') &&
-            err.stderr?.toString().toLowerCase().includes('not found')
-          )
+            stderrStr.includes('404') &&
+            stderrStr.toLowerCase().includes('not found')
+          ) &&
+          !(pm === 'bun' && isBunPackageNotFoundError(stderrStr, stdoutStr))
         ) {
           console.error(
             `Something unexpected went wrong when checking for existing dist-tags.\n`,
@@ -347,7 +355,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
           };
         }
       } catch {
-        // JSON parse failed entirely — check stderr/stdout for plain 404
+        // JSON parse failed entirely — check stderr/stdout for plain 404 or bun's missing-package message
         const stderrStr = err.stderr?.toString() || '';
         const stdoutStr = err.stdout?.toString() || '';
         if (
@@ -355,7 +363,9 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
             (stderrStr.includes('404') &&
               stderrStr.toLowerCase().includes('not found')) ||
             (stdoutStr.includes('404') &&
-              stdoutStr.toLowerCase().includes('not found'))
+              stdoutStr.toLowerCase().includes('not found')) ||
+            (pm === 'bun' &&
+              isBunPackageNotFoundError(stderrStr, stdoutStr))
           )
         ) {
           console.error(
