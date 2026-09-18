@@ -77,6 +77,11 @@ import {
   type HandleGetRegisteredSyncGeneratorsMessage,
 } from '../message-types/get-registered-sync-generators';
 import {
+  GET_PLUGIN_CAPABILITIES,
+  type HandleGetPluginCapabilitiesMessage,
+} from '../message-types/get-plugin-capabilities';
+import type { PluginCapabilities } from '../../project-graph/plugins/graph-plugin-capabilities';
+import {
   GET_SYNC_GENERATOR_CHANGES,
   type HandleGetSyncGeneratorChangesMessage,
 } from '../message-types/get-sync-generator-changes';
@@ -1030,6 +1035,13 @@ export class DaemonClient {
   }> {
     const message: HandleGetRegisteredSyncGeneratorsMessage = {
       type: GET_REGISTERED_SYNC_GENERATORS,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  getPluginCapabilities(): Promise<PluginCapabilities[]> {
+    const message: HandleGetPluginCapabilitiesMessage = {
+      type: GET_PLUGIN_CAPABILITIES,
     };
     return this.sendToDaemonViaQueue(message);
   }
