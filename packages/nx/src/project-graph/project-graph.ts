@@ -279,44 +279,8 @@ async function readCachedGraphAndHydrateFileMap(minimumComputedAt?: number) {
   return graph;
 }
 
-/**
- * How long a process waits for another one's graph before building its own.
- *
- * Long, because a real build on a large workspace takes minutes and the cost of
- * giving up too early is a second process doing all of that work again. Bounded,
- * because a holder that is suspended, stalled on its filesystem, or wedged in a
- * plugin whose module-level code blocks never releases, and waiting on one
- * forever is a checkout where no command returns and nothing says why.
- */
+// Long enough for a large workspace's build; bounded so a wedged holder can't hang every command.
 const MAX_WAIT_FOR_GRAPH_LOCK = 5 * 60 * 1000;
-
-/**
- * Whether the lock came free within the budget, with the spinner that says what
- * this process is waiting on.
- */
-async function graphLockCameFree(
-  lock: FileLock,
-  timeoutMs: number
-): Promise<boolean> {
-  logger.verbose(
-    'Waiting for graph construction in another process to complete'
-  );
-  const spinner = new DelayedSpinner(
-    'Waiting for graph construction in another process to complete'
-  );
-  try {
-    await lock.waitUntilFree(timeoutMs);
-    return true;
-  } catch (e) {
-    // The lock file itself failing is not this function's to answer for.
-    if (!isLockWaitTimeout(e)) {
-      throw e;
-    }
-    return false;
-  } finally {
-    spinner.cleanup();
-  }
-}
 
 /**
  * Computes and returns a ProjectGraph.
@@ -405,39 +369,33 @@ export async function createProjectGraphAndSourceMapsAsync(
       ? new FileLock(join(workspaceDataDirectory, 'project-graph.lock'))
       : null;
     const deadline = Date.now() + MAX_WAIT_FOR_GRAPH_LOCK;
-    // Set when the holder outlasts the budget. This process then builds the
-    // graph without the lock, which is what it would have done had it never
-    // found one held, rather than reading a cache the holder has not written.
-    let holderOutlastedBudget = false;
     let holdingLock = false;
+    let writeGraphCache = true;
 
-    // `tryLock` is the check and the acquire in one step, which is what keeps a
-    // process that takes the lock between the two from stalling this one on a
-    // blocking acquire. Losing it means waiting for the winner and reading what
-    // it wrote, rather than blocking and then building a second graph. Same
-    // shape as `acquire_files` in the native workspace context.
-    while (lock) {
-      if (lock.tryLock()) {
-        holdingLock = true;
-        break;
-      }
-
-      const remaining = deadline - Date.now();
+    while (lock && !(holdingLock = lock.tryLock())) {
+      logger.verbose(
+        'Waiting for graph construction in another process to complete'
+      );
+      const spinner = new DelayedSpinner(
+        'Waiting for graph construction in another process to complete'
+      );
       const start = Date.now();
-      const cameFree =
-        remaining > 0 && (await graphLockCameFree(lock, remaining));
-
-      if (!cameFree) {
-        // Nothing has been written to read: the read below throws rather than
-        // returning empty when no graph has ever been cached, and treating a
-        // timeout as a finished build is what made that throw reachable.
+      try {
+        await lock.waitUntilFree(Math.max(0, deadline - start));
+      } catch (e) {
+        if (!isLockWaitTimeout(e)) {
+          throw e;
+        }
         logger.verbose(
           `Another process has held the project graph lock for over ${
             MAX_WAIT_FOR_GRAPH_LOCK / 1000
           }s. Building the graph in this process as well.`
         );
-        holderOutlastedBudget = true;
+        // Without the lock, so the holder's write is not raced.
+        writeGraphCache = false;
         break;
+      } finally {
+        spinner.cleanup();
       }
 
       // Note: This will currently throw if any of the caches are missing...
@@ -475,7 +433,7 @@ export async function createProjectGraphAndSourceMapsAsync(
     }
     try {
       const res = await buildProjectGraphAndSourceMapsWithoutDaemon({
-        writeGraphCache: !holderOutlastedBudget,
+        writeGraphCache,
       });
       performance.measure(
         'createProjectGraphAsync >> retrieve-project-configurations',
