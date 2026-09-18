@@ -790,12 +790,12 @@ async function runRecorded(
           dir,
           root,
           state,
-          step,
+          startedStep,
           migration,
           install
         );
       } else {
-        await installStepTree(dir, step, 'install', install);
+        await installStepTree(dir, startedStep, 'install', install);
       }
 
       if (installer.skippedInstall) {
