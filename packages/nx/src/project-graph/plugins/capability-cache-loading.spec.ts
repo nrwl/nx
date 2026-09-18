@@ -58,8 +58,9 @@ vi.mock('./isolation/isolated-plugin', () => ({
 vi.mock('./capabilities-cache', async (importOriginal) => ({
   ...(await importOriginal<typeof import('./capabilities-cache')>()),
   isCapabilityCacheEnabled: () => true,
-  computeCapabilityKey: (_moduleName: string, pluginPath: string) =>
-    pluginPath.includes('unidentifiable') ? null : `key:${pluginPath}`,
+  // Keyed on what nx.json names, as the real one is.
+  computeCapabilityKey: (moduleName: string) =>
+    moduleName.includes('unidentifiable') ? null : `key:${moduleName}`,
   createCapabilitiesLock: () => mocks.lock,
   // Hashing and path handling have their own spec. Here the closures are
   // stand-ins that never touch disk, and one that cannot be stored or hashed is
@@ -192,7 +193,7 @@ describe('loading plugins through the capability cache', () => {
     expect(mocks.recordCapabilities).toHaveBeenCalled();
     const recorded = mocks.recordCapabilities.mock.calls
       .flatMap(([entries]) => entries)
-      .find((entry) => entry.key === 'key:/resolved/test-plugin');
+      .find((entry) => entry.key === 'key:test-plugin');
     expect(recorded.record.capabilities).toEqual({
       name: 'test-plugin',
       createNodesPattern: '**/*.config.ts',
@@ -305,10 +306,10 @@ describe('loading plugins through the capability cache', () => {
     );
     // Pairing a key with another plugin's capabilities would poison the record
     // silently, so the two are checked against each other rather than counted.
-    expect(recorded.get('key:/resolved/plugin-a').createNodesPattern).toBe(
+    expect(recorded.get('key:plugin-a').createNodesPattern).toBe(
       '**/plugin-a.config.ts'
     );
-    expect(recorded.get('key:/resolved/plugin-b').createNodesPattern).toBe(
+    expect(recorded.get('key:plugin-b').createNodesPattern).toBe(
       '**/plugin-b.config.ts'
     );
   });
@@ -324,7 +325,7 @@ describe('loading plugins through the capability cache', () => {
 
     // The case worth caching most: there is no reason to ever load this again.
     expect(mocks.recordCapabilities).toHaveBeenCalledWith([
-      expect.objectContaining({ key: 'key:/resolved/test-plugin' }),
+      expect.objectContaining({ key: 'key:test-plugin' }),
     ]);
   });
 
@@ -342,7 +343,7 @@ describe('loading plugins through the capability cache', () => {
     // thing that invalidates it.
     expect(mocks.recordCapabilities).toHaveBeenCalledWith([
       expect.objectContaining({
-        key: 'key:/resolved/test-plugin',
+        key: 'key:test-plugin',
         record: expect.objectContaining({
           envReads: JSON.stringify({
             keys: ['NX_DOTNET_DISABLE'],
@@ -391,7 +392,7 @@ describe('loading plugins through the capability cache', () => {
 
       expect(mocks.recordCapabilities).toHaveBeenCalledWith([
         {
-          key: 'key:/resolved/test-plugin',
+          key: 'key:test-plugin',
           record: expect.objectContaining({
             capabilities: expect.objectContaining({
               hasPostTasksExecution: true,
@@ -421,9 +422,7 @@ describe('loading plugins through the capability cache', () => {
       // permanent on every runtime, so the record goes instead and the next run
       // loads the plugin.
       expect(mocks.recordCapabilities).not.toHaveBeenCalled();
-      expect(mocks.forgetCapabilities).toHaveBeenCalledWith(
-        'key:/resolved/test-plugin'
-      );
+      expect(mocks.forgetCapabilities).toHaveBeenCalledWith('key:test-plugin');
     });
 
     it('is left alone when the worker agrees with it', async () => {
@@ -481,7 +480,7 @@ describe('loading plugins through the capability cache', () => {
     const recorded = mocks.recordCapabilities.mock.calls
       .flatMap(([entries]) => entries)
       .map((entry) => entry.key);
-    expect(recorded).not.toContain('key:/resolved/test-plugin');
+    expect(recorded).not.toContain('key:test-plugin');
   });
   describe('peeking at the records', () => {
     it('answers for every configured plugin, including the defaults', async () => {
@@ -530,7 +529,7 @@ describe('loading plugins through the capability cache', () => {
 
       // Written, so the next command reads it instead of loading again.
       expect(mocks.recordCapabilities).toHaveBeenCalledWith([
-        expect.objectContaining({ key: 'key:/resolved/test-plugin' }),
+        expect.objectContaining({ key: 'key:test-plugin' }),
       ]);
     });
 

@@ -20,7 +20,6 @@ import { canObserveModuleClosure } from './isolation/module-closure';
 import {
   capabilitiesOfLoadedPlugin,
   computeCapabilityKey,
-  computeCapabilityKeyBeforeResolving,
   createCapabilitiesLock,
   forgetCapabilities,
   hashSourceFiles,
@@ -399,11 +398,7 @@ async function resolveCapabilityKeys(
     loads.map(async (load) => {
       try {
         load.resolved = await resolveModule(load.plugin, root);
-        load.key = computeCapabilityKey(
-          pluginLabel(load.plugin),
-          load.resolved.pluginPath,
-          root
-        );
+        load.key = computeCapabilityKey(pluginLabel(load.plugin), root);
       } catch (e) {
         // Left for the loader, which reports a resolution failure with the
         // plugin name and the context the caller expects.
@@ -492,18 +487,8 @@ export async function peekPluginCapabilities(
   // "cannot tell", which is what the callers already do with null.
   const answersHere = isOnDaemon() || !isDaemonEnabled();
 
-  if (answersHere) {
-    await resolveCapabilityKeys(loads, root);
-  } else {
-    // Keyed without resolving: a plugin that is not an installed package
-    // resolves by reading every project configuration, which is more than the
-    // load this is trying to save.
-    for (const load of loads) {
-      load.key = computeCapabilityKeyBeforeResolving(
-        pluginLabel(load.plugin),
-        root
-      );
-    }
+  for (const load of loads) {
+    load.key = computeCapabilityKey(pluginLabel(load.plugin), root);
   }
 
   // Nothing to key a record on, so there is no answer to complete and no point

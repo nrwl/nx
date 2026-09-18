@@ -13,7 +13,6 @@ import { dirname, join } from 'node:path';
 import {
   capabilitiesOfLoadedPlugin,
   computeCapabilityKey,
-  computeCapabilityKeyBeforeResolving,
   hashSourceFiles,
   recordIsFresh,
   storableSourceFiles,
@@ -89,8 +88,8 @@ describe('computeCapabilityKey', () => {
   it('identifies an installed plugin by the version of the package it belongs to', async () => {
     const pluginPath = writeInstalledPlugin('1.2.3');
 
-    const first = computeCapabilityKey('@acme/plugin', pluginPath, root);
-    const second = computeCapabilityKey('@acme/plugin', pluginPath, root);
+    const first = computeCapabilityKey('@acme/plugin', root);
+    const second = computeCapabilityKey('@acme/plugin', root);
 
     // Non-null as well as stable: both would be null if the package's manifest
     // could not be found, and a key nothing identifies caches nothing.
@@ -101,18 +100,11 @@ describe('computeCapabilityKey', () => {
   });
 
   it('gives an upgraded plugin a different key', async () => {
-    const before = computeCapabilityKey(
-      '@acme/plugin',
-      writeInstalledPlugin('1.2.3'),
-      root
-    );
-    const after = computeCapabilityKey(
-      '@acme/plugin',
-      writeInstalledPlugin('1.2.4'),
-      root
-    );
+    writeInstalledPlugin('1.2.3');
+    const before = computeCapabilityKey('@acme/plugin', root);
+    writeInstalledPlugin('1.2.4');
 
-    expect(before).not.toEqual(after);
+    expect(computeCapabilityKey('@acme/plugin', root)).not.toEqual(before);
   });
 
   it('distinguishes two entry points of one installed package', async () => {
@@ -127,108 +119,39 @@ describe('computeCapabilityKey', () => {
     );
     writeFileSync(otherEntryPoint, 'module.exports = {};');
 
-    expect(computeCapabilityKey('@acme/plugin', pluginPath, root)).not.toEqual(
-      computeCapabilityKey('@acme/plugin/src/other', otherEntryPoint, root)
+    expect(computeCapabilityKey('@acme/plugin', root)).not.toEqual(
+      computeCapabilityKey('@acme/plugin/src/other', root)
     );
   });
 
-  describe('keyed before the plugin is resolved', () => {
-    // The two have to agree, or a record written by whoever loaded the plugin
-    // is never found by whoever only reads: one side keys what it resolved, the
-    // other keys what `nx.json` names, and both are asking "which plugin".
-    /** Resolvable by name, which `writeInstalledPlugin` deliberately is not. */
-    function writeResolvableInstalledPlugin(): string {
-      const packageRoot = join(root, 'node_modules', '@acme', 'resolvable');
-      mkdirSync(join(packageRoot, 'src'), { recursive: true });
-      writeFileSync(
-        join(packageRoot, 'package.json'),
-        JSON.stringify({
-          name: '@acme/resolvable',
-          version: '1.2.3',
-          main: 'src/index.js',
-        })
-      );
-      const pluginPath = join(packageRoot, 'src', 'index.js');
-      writeFileSync(pluginPath, 'module.exports = {};');
-      return pluginPath;
-    }
+  it('keys a plugin it cannot resolve at all, since the key is its name', async () => {
+    // A name that resolves to nothing still keys, as a workspace plugin named by
+    // its package does: the load that follows reports any failure, and a record
+    // nobody wrote is simply never found.
+    expect(computeCapabilityKey('@acme/not-installed', root)).not.toBeNull();
+  });
 
-    it('matches the resolved key for an installed package', async () => {
-      const pluginPath = writeResolvableInstalledPlugin();
+  it('reads an installed version without resolving the entry point', async () => {
+    // No `main`, so `require.resolve` cannot answer for it. The package's own
+    // manifest still can, which is what the key is made of.
+    writeInstalledPlugin('1.2.3');
 
-      expect(
-        computeCapabilityKeyBeforeResolving('@acme/resolvable', root)
-      ).toEqual(computeCapabilityKey('@acme/resolvable', pluginPath, root));
-    });
+    const before = computeCapabilityKey('@acme/plugin', root);
+    writeInstalledPlugin('1.2.4');
 
-    it('keys a package it cannot resolve as a local one, which only costs the record a miss', async () => {
-      // No `main`, so `require.resolve` cannot answer for it where the loader,
-      // which reads the package's own manifest, can. Keying it by name is wrong
-      // about where it lives but right about which plugin it is, and the worst
-      // of it is that this process finds no record and leaves the question to
-      // whoever loads.
-      const pluginPath = writeInstalledPlugin('1.2.3');
-
-      expect(
-        computeCapabilityKeyBeforeResolving('@acme/plugin', root)
-      ).not.toEqual(computeCapabilityKey('@acme/plugin', pluginPath, root));
-    });
-
-    it('matches the resolved key for a plugin named by a relative path', async () => {
-      const pluginPath = writeLocalPlugin();
-
-      expect(
-        computeCapabilityKeyBeforeResolving('./tools/my-plugin', root)
-      ).toEqual(computeCapabilityKey('./tools/my-plugin', pluginPath, root));
-    });
-
-    it('matches the resolved key for a workspace plugin named by package', async () => {
-      const pluginPath = writeLocalPlugin();
-
-      // Resolvable only through the workspace's projects, which is the case
-      // that costs the walk and the reason this path exists.
-      expect(
-        computeCapabilityKeyBeforeResolving('@my-org/plugin', root)
-      ).toEqual(computeCapabilityKey('@my-org/plugin', pluginPath, root));
-    });
-
-    it('matches the resolved key for an absolute path, as Nx names its own plugins', async () => {
-      const pluginPath = writeInstalledPlugin('1.2.3');
-
-      expect(computeCapabilityKeyBeforeResolving(pluginPath, root)).toEqual(
-        computeCapabilityKey(pluginPath, pluginPath, root)
-      );
-    });
-
-    it('declines a directory, whose `main` only a resolution knows', async () => {
-      writeLocalPlugin();
-
-      expect(
-        computeCapabilityKeyBeforeResolving(
-          join(root, 'tools', 'my-plugin'),
-          root
-        )
-      ).toBeNull();
-    });
-
-    it('tells two differently named plugins apart', async () => {
-      expect(
-        computeCapabilityKeyBeforeResolving('./tools/a', root)
-      ).not.toEqual(computeCapabilityKeyBeforeResolving('./tools/b', root));
-    });
+    expect(before).not.toBeNull();
+    expect(before).not.toEqual(computeCapabilityKey('@acme/plugin', root));
   });
 
   it('identifies a local plugin without reading its contents', async () => {
     const pluginPath = writeLocalPlugin();
-    const first = computeCapabilityKey('@my-org/plugin', pluginPath, root);
+    const first = computeCapabilityKey('@my-org/plugin', root);
 
     // Deliberate: the key says WHICH module this is, and the record says what
     // its sources were when Nx last read them.
     writeFileSync(pluginPath, 'export const createDependencies = () => [];');
 
-    expect(computeCapabilityKey('@my-org/plugin', pluginPath, root)).toEqual(
-      first
-    );
+    expect(computeCapabilityKey('@my-org/plugin', root)).toEqual(first);
   });
 
   it('identifies a plugin given by path, which is how Nx names its own', async () => {
@@ -238,15 +161,15 @@ describe('computeCapabilityKey', () => {
     // so the fast paths would never run in an installed workspace.
     const pluginPath = writeInstalledPlugin('1.2.3');
 
-    expect(computeCapabilityKey(pluginPath, pluginPath, root)).not.toBeNull();
+    expect(computeCapabilityKey(pluginPath, root)).not.toBeNull();
   });
 
   it('gives a plugin given by path a new key when its package is upgraded', () => {
     const before = writeInstalledPlugin('1.2.3');
-    const first = computeCapabilityKey(before, before, root);
+    const first = computeCapabilityKey(before, root);
     const after = writeInstalledPlugin('1.2.4');
 
-    expect(computeCapabilityKey(after, after, root)).not.toEqual(first);
+    expect(computeCapabilityKey(after, root)).not.toEqual(first);
   });
 
   it('identifies nothing where the runtime could not record it anyway', async () => {
@@ -256,7 +179,7 @@ describe('computeCapabilityKey', () => {
     // Without a key nothing is read, which is what keeps a runtime that can
     // never write a record from paying for one: no query per command, and no
     // lock for every process to queue behind.
-    expect(computeCapabilityKey('@acme/plugin', pluginPath, root)).toBeNull();
+    expect(computeCapabilityKey('@acme/plugin', root)).toBeNull();
   });
 
   it('declines an installed package that declares no version', async () => {
@@ -275,9 +198,7 @@ describe('computeCapabilityKey', () => {
     const pluginPath = join(packageRoot, 'index.js');
     writeFileSync(pluginPath, 'module.exports = {};');
 
-    expect(
-      computeCapabilityKey('@acme/unversioned', pluginPath, root)
-    ).toBeNull();
+    expect(computeCapabilityKey('@acme/unversioned', root)).toBeNull();
   });
 });
 

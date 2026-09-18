@@ -350,51 +350,48 @@ export function sameCapabilities(
  */
 export function computeCapabilityKey(
   moduleName: string,
-  pluginPath: string | null,
   root: string
 ): string | null {
   if (!isCapabilityCacheEnabled()) {
     return null;
   }
   try {
-    if (pluginPath && isInstalled(pluginPath)) {
-      const version = readInstalledVersion(moduleName, pluginPath, root);
-      return version
-        ? hashArray([
-            'installed',
-            nxVersion(),
-            pluginId(pluginPath, root),
-            version,
-          ])
-        : null;
+    const id = pluginId(moduleName, root);
+    const installed = installedPackage(moduleName, root);
+    if (!installed) {
+      return hashArray(['local', nxVersion(), id]);
     }
-    return hashArray(['local', nxVersion(), localId(moduleName, root)]);
+    // An installed package with no version leaves nothing to tell two copies of
+    // it apart, and its own files are vendored, so a record of it would list no
+    // files either and nothing could ever invalidate it.
+    return installed.version
+      ? hashArray([
+          'installed',
+          nxVersion(),
+          id,
+          `${installed.name ?? ''}@${installed.version}`,
+        ])
+      : null;
   } catch (e) {
-    logger.verbose(
-      `Could not identify the plugin "${moduleName}"${
-        pluginPath ? ` at ${pluginPath}` : ''
-      }`,
-      e
-    );
+    logger.verbose(`Could not identify the plugin "${moduleName}"`, e);
     return null;
   }
 }
 
 /**
- * Identifies a plugin that is not an installed package by what `nx.json` names,
- * rather than by where that name resolves.
+ * Identifies the plugin by what `nx.json` calls it, rather than by where that
+ * name resolves.
  *
- * Resolving one reads every project configuration, since where it lives is a
- * question about the workspace's projects. Reading a record has no business
- * paying for that, and does not have to: the record carries the files the load
- * read, so a name that starts resolving somewhere else fails the hash and is
- * reloaded. The key only has to be stable and unambiguous, which a name in
- * `nx.json` already is.
+ * Resolving one is not free and can be very far from it: a plugin that is not an
+ * installed package resolves by reading every project configuration, which costs
+ * more than the load a record saves. The name is enough because the key never
+ * carried freshness — the record holds the files the load read, so a name that
+ * starts resolving elsewhere fails its hash and is loaded again.
  *
  * Two entries naming one plugin differently keep two records of it, which costs
  * a load each and says the same thing.
  */
-function localId(moduleName: string, root: string): string {
+function pluginId(moduleName: string, root: string): string {
   if (!isAbsolute(moduleName)) {
     return normalizePath(moduleName);
   }
@@ -405,99 +402,41 @@ function localId(moduleName: string, root: string): string {
 }
 
 /**
- * The key for a plugin, worked out without resolving it where that would cost
- * the workspace walk.
+ * The manifest of the installed package the plugin belongs to, or null where it
+ * belongs to none.
  *
- * An installed package answers from `require.resolve`, which reads no projects.
- * Anything else is keyed by name. Both agree with what {@link computeCapabilityKey}
- * returns once the plugin has been resolved, which is what lets a record written
- * by the process that loaded it be found by one that only wants to read it.
+ * An installed package's own files are vendored, so a record of one lists no
+ * files and nothing in it would notice an upgrade; its version is what the key
+ * carries instead. A workspace plugin needs none of this: its sources are on the
+ * record and hashed.
  */
-export function computeCapabilityKeyBeforeResolving(
+function installedPackage(
   moduleName: string,
   root: string
-): string | null {
-  if (!isCapabilityCacheEnabled()) {
-    return null;
+): { name?: string; version?: string } | null {
+  // A path names no package, so the package is whichever one owns the file, and
+  // only where that file is vendored at all.
+  if (isPath(moduleName)) {
+    return isAbsolute(moduleName) && isInstalled(moduleName)
+      ? owningPackageJson(moduleName)
+      : null;
   }
   try {
-    // An absolute path to a file is already the resolution, which is how Nx
-    // passes its own default plugins. A directory is not: its `main` decides,
-    // and reading that is the walk this exists to skip.
-    if (isAbsolute(moduleName)) {
-      return extname(moduleName)
-        ? computeCapabilityKey(moduleName, moduleName, root)
-        : null;
-    }
-    if (!isPath(moduleName)) {
-      const installedPath = resolveInstalled(moduleName, root);
-      if (installedPath) {
-        return computeCapabilityKey(moduleName, installedPath, root);
-      }
-    }
-    return computeCapabilityKey(moduleName, null, root);
-  } catch (e) {
-    logger.verbose(`Could not identify the plugin "${moduleName}"`, e);
-    return null;
-  }
-}
-
-/** Where an installed package resolves to, or null for anything else. */
-function resolveInstalled(moduleName: string, root: string): string | null {
-  try {
-    const resolved = require.resolve(moduleName, {
-      paths: getNxRequirePaths(root),
-    });
-    return isInstalled(resolved) ? resolved : null;
+    // The package's own manifest rather than a resolution of the plugin, which
+    // is dearer and answers for fewer packages: an entry point behind an
+    // `exports` map that `require.resolve` will not follow still has one.
+    const { packageJson, path } = readModulePackageJson(
+      getPackageNameFromImportPath(moduleName),
+      getNxRequirePaths(root)
+    );
+    return isInstalled(path) ? packageJson : null;
   } catch {
+    // Not installed, which a workspace plugin named by its package is not.
     return null;
   }
 }
-
-/**
- * Workspace-relative where possible, so worktrees of one repository share a
- * record for the same installed plugin.
- */
-function pluginId(pluginPath: string, root: string): string {
-  const relativePath = relative(root, pluginPath);
-  return normalizePath(
-    relativePath.startsWith('..') ? pluginPath : relativePath
-  );
-}
-
 function isInstalled(pluginPath: string): boolean {
   return pluginPath.split(sep).includes('node_modules');
-}
-
-/**
- * The version of the installed package the module belongs to, or null when that
- * package declares none. Identifying an installed package by its version is the
- * same assumption Nx makes when it hashes task inputs from a lockfile; a tool
- * that rewrites a package in place, such as patch-package, defeats both.
- *
- * Resolved from the name the nx.json entry uses, through the paths the loader
- * resolves plugins with, so this reads the manifest of the copy that loads.
- */
-function readInstalledVersion(
-  moduleName: string,
-  pluginPath: string,
-  root: string
-): string | null {
-  const packageJson = isPath(moduleName)
-    ? // A path names no package, so the package is whichever one owns the file.
-      // Nx's own default plugins are absolute paths inside the installed `nx`,
-      // and reading a package name out of one gives an empty string.
-      owningPackageJson(pluginPath)
-    : // A bare specifier resolves through the paths the loader resolves plugins
-      // with, so this reads the manifest of the copy that loads.
-      readModulePackageJson(
-        getPackageNameFromImportPath(moduleName),
-        getNxRequirePaths(root)
-      ).packageJson;
-
-  return packageJson?.version
-    ? `${packageJson.name ?? ''}@${packageJson.version}`
-    : null;
 }
 
 function isPath(moduleName: string): boolean {
