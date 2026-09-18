@@ -1,6 +1,7 @@
 import { exec, execSync } from 'child_process';
 import { promisify } from 'util';
 import { existsSync, writeFileSync } from 'fs';
+import { rm } from 'fs/promises';
 import Module, { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'path';
 
@@ -410,6 +411,24 @@ export function readModulePackageJson(
   };
 }
 
+function createFallbackTempDirectory(): {
+  dir: string;
+  cleanup: () => Promise<void>;
+} {
+  const dir = dirSync().name;
+  return {
+    dir,
+    cleanup: async () => {
+      try {
+        await rm(dir, { recursive: true, force: true });
+      } catch {
+        // Best effort, same as `createTempNpmDirectory`: callers treat cleanup
+        // as something that never throws.
+      }
+    },
+  };
+}
+
 /**
  * Resolve `request` via Node's CJS resolver while neutralising both ways
  * `require.resolve(req, { paths })` can lie about the `paths` argument:
@@ -458,10 +477,8 @@ function preparePackageInstallation(
   requiredVersion: string,
   packageManager: PackageManager
 ) {
-  const { dir: tempDir, cleanup } = createTempNpmDirectory?.() ?? {
-    dir: dirSync().name,
-    cleanup: () => {},
-  };
+  const { dir: tempDir, cleanup } =
+    createTempNpmDirectory?.() ?? createFallbackTempDirectory();
 
   console.log(`Fetching ${pkg}...`);
   const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
@@ -522,7 +539,7 @@ export function installPackageToTmp(
   packageManager: PackageManager
 ): {
   tempDir: string;
-  cleanup: () => void;
+  cleanup: () => Promise<void>;
 } {
   const { tempDir, cleanup, preInstallCommand, installCommand, execOptions } =
     preparePackageInstallation(pkg, requiredVersion, packageManager);
@@ -546,7 +563,7 @@ export async function installPackageToTmpAsync(
   packageManager: PackageManager
 ): Promise<{
   tempDir: string;
-  cleanup: () => void;
+  cleanup: () => Promise<void>;
 }> {
   const { tempDir, cleanup, preInstallCommand, installCommand, execOptions } =
     preparePackageInstallation(pkg, requiredVersion, packageManager);
