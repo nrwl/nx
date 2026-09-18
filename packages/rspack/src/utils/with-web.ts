@@ -1,8 +1,7 @@
 import type { Configuration } from '@rspack/core';
-import { ExtraEntryPointClass } from './model';
-import { applyWebConfig } from '../plugins/utils/apply-web-config';
-import { NxRspackExecutionContext } from './config';
+import type { NxComposableRspackPlugin } from './config';
 import { warnRspackComposeHelpersDeprecation } from './deprecation';
+import type { ExtraEntryPointClass } from './model';
 
 export interface WithWebOptions {
   baseHref?: string;
@@ -36,65 +35,10 @@ export interface WithWebOptions {
       ) => Record<string, any> | Promise<Record<string, any>>);
 }
 
-const processed = new Set();
-
-/**
- * @deprecated Will be removed in Nx v24. Use `NxAppRspackPlugin` from
- * `@nx/rspack/app-plugin` in a standard rspack config and run
- * `nx g @nx/rspack:convert-to-inferred`. See
- * https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.
- */
-export function withWeb(pluginOptions: WithWebOptions = {}) {
+/** @deprecated Removed in Nx v24. This inert stub only keeps old configs loadable. */
+export function withWeb(
+  _options: WithWebOptions = {}
+): NxComposableRspackPlugin {
   warnRspackComposeHelpersDeprecation();
-  return function makeConfig(
-    config: Configuration,
-    { options, context }: NxRspackExecutionContext
-  ): Configuration {
-    if (processed.has(config)) {
-      return config;
-    }
-
-    applyWebConfig(
-      {
-        ...options,
-        ...pluginOptions,
-        root: context.root,
-        projectName: context.projectName,
-        targetName: context.targetName,
-        configurationName: context.configurationName,
-        projectGraph: context.projectGraph,
-        useLegacyHtmlPlugin: pluginOptions.useLegacyHtmlPlugin ?? false,
-      },
-      config
-    );
-
-    processed.add(config);
-    return config;
-  };
-}
-
-function getClientEnvironment(mode?: string) {
-  // Grab NODE_ENV and NX_PUBLIC_* environment variables and prepare them to be
-  // injected into the application via DefinePlugin in rspack configuration.
-  const nxPublicKeyRegex = /^NX_PUBLIC_/i;
-
-  const raw = Object.keys(process.env)
-    .filter((key) => nxPublicKeyRegex.test(key))
-    .reduce((env, key) => {
-      env[key] = process.env[key];
-      return env;
-    }, {});
-
-  // Stringify all values so we can feed into rspack DefinePlugin
-  const stringified = Object.keys(raw).reduce(
-    (env, key) => {
-      env[`process.env.${key}`] = JSON.stringify(raw[key]);
-      return env;
-    },
-    // Provide a fallback for process.env itself to handle cases where code
-    // accesses process.env directly (e.g., in Cypress component testing)
-    { 'process.env': '({})' } as Record<string, string>
-  );
-
-  return { stringified };
+  return (config: Configuration) => config;
 }

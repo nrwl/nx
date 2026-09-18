@@ -89,15 +89,16 @@ export default config;
 exports[`Storybook Configuration it should create a storybook configuration and use react-vite framework with testing framework vitest 1`] = `
 "import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 export default defineConfig(() => ({
   root: import.meta.dirname,
   cacheDir: '../../node_modules/.vite/libs/storybook-test',
-  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  resolve: {
+    tsconfigPaths: true,
+  },
+  plugins: [react()],
   // Uncomment this if you are using workers.
   // worker: {
-  //   plugins: () => [ nxViteTsPaths() ],
+  //  plugins: [],
   // },
   test: {
     setupFiles: ['./src/test-setup.ts'],

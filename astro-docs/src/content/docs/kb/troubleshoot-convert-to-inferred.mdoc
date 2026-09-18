@@ -65,17 +65,13 @@ the project root, but those workarounds lead to other issues, such as Turbopack 
 To customize the output directory, set `distDir` in your Next.js config file.
 
 ```js
-const configuration = process.env.NX_TASK_TARGET_CONFIGURATION || 'default';
-// ...
+/** @type {import('next').NextConfig} */
 const nextConfig = {
-  nx: {
-    ...options,
-  },
-  // Differentiate production and development builds. You can also use the `configuration` variable that will match the `--configuration` option passed to Nx.
+  // Differentiate production and development builds. You can also use the `NX_TASK_TARGET_CONFIGURATION` variable that will match the `--configuration` option passed to Nx.
   distDir: process.env.NODE_ENV === 'production' ? 'dist' : 'dist-dev',
 };
-const plugins = [withNx];
-module.exports = composePlugins(...plugins)(nextConfig);
+
+module.exports = nextConfig;
 ```
 
 Since the output directory is now inside the project, we do not generate `package.json` since it is already present. The
@@ -182,8 +178,8 @@ export default defineConfig({
 
 Projects that
 use [Nx-enhanced Webpack configuration](/docs/kb/webpack-config-setup#nxenhanced-configuration-with-composable-plugins)
-files cannot be migrated to use Webpack CLI. Nx-enhanced configuration files that contain `composePlugins` and `withNx`
-require the `@nx/webpack:webpack` executor to work.
+files cannot be migrated to use Webpack CLI. Those configuration files call `composePlugins` and `withNx`, which Nx v24
+removed.
 
 To solve this issue, run `nx g @nx/webpack:convert-config-to-webpack-plugin` first, and then try again.
 

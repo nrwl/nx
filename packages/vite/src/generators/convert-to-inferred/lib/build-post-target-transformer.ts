@@ -4,8 +4,6 @@ import {
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { ast, query } from '@phenomnomnominal/tsquery';
-import { extname } from 'path/posix';
 import {
   addConfigValuesToViteConfig,
   getViteConfigPath,
@@ -28,23 +26,10 @@ export function buildPostTargetTransformer(
     for (const configurationName in target.configurations) {
       const configuration = target.configurations[configurationName];
       configValues[configurationName] = {};
-      let configurationConfigFile = viteConfigPath;
-      if (configuration.configFile) {
-        if ('buildLibsFromSource' in target.options) {
-          configuration.buildLibsFromSource =
-            target.options.buildLibsFromSource;
-        }
-
-        configurationConfigFile = configuration.configFile;
-      }
-
       removePropertiesFromTargetOptions(
-        tree,
         configuration,
-        configurationConfigFile,
         projectDetails.root,
-        configValues[configurationName],
-        configuration.configFile && configuration.configFile !== viteConfigPath
+        configValues[configurationName]
       );
     }
 
@@ -84,12 +69,9 @@ export function buildPostTargetTransformer(
     }
 
     removePropertiesFromTargetOptions(
-      tree,
       target.options,
-      viteConfigPath,
       projectDetails.root,
-      configValues['default'],
-      true
+      configValues['default']
     );
   }
 
@@ -118,12 +100,9 @@ export function buildPostTargetTransformer(
 }
 
 function removePropertiesFromTargetOptions(
-  tree: Tree,
   targetOptions: any,
-  viteConfigPath: string,
   projectRoot: string,
-  configValues: Record<string, unknown>,
-  needsAstTransform = false
+  configValues: Record<string, unknown>
 ) {
   if ('configFile' in targetOptions) {
     targetOptions.config = toProjectRelativePath(
@@ -141,11 +120,6 @@ function removePropertiesFromTargetOptions(
     delete targetOptions.outputPath;
   }
   if ('buildLibsFromSource' in targetOptions) {
-    configValues['buildLibsFromSource'] = targetOptions.buildLibsFromSource;
-
-    if (needsAstTransform) {
-      moveBuildLibsFromSourceToViteConfig(tree, viteConfigPath);
-    }
     delete targetOptions.buildLibsFromSource;
   }
   if ('skipTypeCheck' in targetOptions) {
@@ -160,98 +134,4 @@ function removePropertiesFromTargetOptions(
   if ('tsConfig' in targetOptions) {
     delete targetOptions.tsConfig;
   }
-}
-
-export function moveBuildLibsFromSourceToViteConfig(
-  tree: Tree,
-  configPath: string
-) {
-  const PLUGINS_PROPERTY_SELECTOR =
-    'PropertyAssignment:has(Identifier[name=plugins])';
-  const PLUGINS_NX_VITE_TS_PATHS_SELECTOR =
-    'PropertyAssignment:has(Identifier[name=plugins]) CallExpression:has(Identifier[name=nxViteTsPaths])';
-  const BUILD_LIBS_FROM_SOURCE_SELECTOR =
-    'PropertyAssignment:has(Identifier[name=plugins]) CallExpression:has(Identifier[name=nxViteTsPaths]) ObjectLiteralExpression > PropertyAssignment:has(Identifier[name=buildLibsFromSource])';
-
-  const nxViteTsPathsImport =
-    extname(configPath) === 'js'
-      ? 'const {nxViteTsPaths} = require("@nx/vite/plugins/nx-tsconfig-paths.plugin");'
-      : 'import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";';
-  const plugin = `nxViteTsPaths({ buildLibsFromSource: options.buildLibsFromSource }),`;
-
-  const viteConfigContents = tree.read(configPath, 'utf-8');
-  let newViteConfigContents = viteConfigContents;
-
-  const sourceFile = ast(viteConfigContents);
-  const buildLibsFromSourceNodes = query(
-    sourceFile,
-    BUILD_LIBS_FROM_SOURCE_SELECTOR
-  );
-  if (buildLibsFromSourceNodes.length > 0) {
-    return;
-  }
-
-  const nxViteTsPathsNodes = query(
-    sourceFile,
-    PLUGINS_NX_VITE_TS_PATHS_SELECTOR
-  );
-  if (nxViteTsPathsNodes.length === 0) {
-    const pluginsNodes = query(sourceFile, PLUGINS_PROPERTY_SELECTOR);
-    if (pluginsNodes.length === 0) {
-      // Add plugin property
-      const configNodes = query(
-        sourceFile,
-        'CallExpression:has(Identifier[name=defineConfig]) > ObjectLiteralExpression'
-      );
-      if (configNodes.length === 0) {
-        return;
-      }
-
-      newViteConfigContents = `${nxViteTsPathsImport}\n${viteConfigContents.slice(
-        0,
-        configNodes[0].getStart() + 1
-      )}plugins: [${plugin}],${viteConfigContents.slice(
-        configNodes[0].getStart() + 1
-      )}`;
-    } else {
-      // Add nxViteTsPaths plugin
-
-      const pluginsArrayNodes = query(
-        pluginsNodes[0],
-        'ArrayLiteralExpression'
-      );
-      if (pluginsArrayNodes.length === 0) {
-        return;
-      }
-
-      newViteConfigContents = `${nxViteTsPathsImport}\n${viteConfigContents.slice(
-        0,
-        pluginsArrayNodes[0].getStart() + 1
-      )}${plugin}${viteConfigContents.slice(
-        pluginsArrayNodes[0].getStart() + 1
-      )}`;
-    }
-  } else {
-    const pluginOptionsNodes = query(
-      nxViteTsPathsNodes[0],
-      'ObjectLiteralExpression'
-    );
-    if (pluginOptionsNodes.length === 0) {
-      // Add the options
-      newViteConfigContents = `${viteConfigContents.slice(
-        0,
-        nxViteTsPathsNodes[0].getStart()
-      )}${plugin}${viteConfigContents.slice(nxViteTsPathsNodes[0].getEnd())}`;
-    } else {
-      // update the object
-      newViteConfigContents = `${viteConfigContents.slice(
-        0,
-        pluginOptionsNodes[0].getStart() + 1
-      )}buildLibsFromSource: options.buildLibsFromSource, ${viteConfigContents.slice(
-        pluginOptionsNodes[0].getStart() + 1
-      )}`;
-    }
-  }
-
-  tree.write(configPath, newViteConfigContents);
 }

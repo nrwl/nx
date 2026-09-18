@@ -18,7 +18,7 @@ describe('@nx/react withReact deprecation', () => {
 
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn.mock.calls[0][0]).toContain('@nx/react');
-    expect(warn.mock.calls[0][0]).toContain('convert-to-inferred');
+    expect(warn.mock.calls[0][0]).toContain('nx migrate');
   });
 
   it('does not warn when called inside a suppression scope', () => {

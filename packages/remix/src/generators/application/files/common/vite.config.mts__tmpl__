@@ -1,6 +1,5 @@
 import { vitePlugin as remix } from '@remix-run/dev';
 import { defineConfig } from 'vite';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 declare module '@remix-run/node' {
   interface Future {
@@ -10,6 +9,9 @@ declare module '@remix-run/node' {
 
 export default defineConfig({
   root: import.meta.dirname,
+  resolve: {
+    tsconfigPaths: true,
+  },
   plugins: [
     remix({
       future: {
@@ -20,6 +22,5 @@ export default defineConfig({
         v3_lazyRouteDiscovery: true,
       },
     }),
-    nxViteTsPaths(),
   ],
 });

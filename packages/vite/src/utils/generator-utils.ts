@@ -403,16 +403,6 @@ export function createOrEditViteConfig(
     );
   }
 
-  if (!isTsSolutionSetup) {
-    // TODO(v24): drop this branch; emit `tsconfigPaths()` from
-    // `vite-tsconfig-paths` instead of the deprecated nx helpers.
-    imports.push(
-      `import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'`,
-      `import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin'`
-    );
-    plugins.push(`nxViteTsPaths()`, `nxCopyAssetsPlugin(['*.md'])`);
-  }
-
   if (!onlyVitest && options.includeLib) {
     plugins.push(
       `dts({ entryRoot: 'src', tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json')${
@@ -476,15 +466,19 @@ ${
     host: 'localhost',
   },`;
 
-  const workerOption = isTsSolutionSetup
-    ? `  // Uncomment this if you are using workers.
+  const workerOption = `  // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [],
-  // },`
-    : `  // Uncomment this if you are using workers.
-  // worker: {
-  //   plugins: () => [ nxViteTsPaths() ],
   // },`;
+
+  // Path-based workspace libraries need Vite's native tsconfig paths
+  // resolution, which is off by default. Workspaces on project references
+  // resolve through package.json instead.
+  const resolveOption = isTsSolutionSetup
+    ? ''
+    : `  resolve: {
+    tsconfigPaths: true,
+  },`;
 
   const cacheDir = `cacheDir: '${normalizedJoinPaths(
     offsetFromRoot(projectRoot),
@@ -507,7 +501,8 @@ ${
       cacheDir,
       projectRoot,
       offsetFromRoot(projectRoot),
-      projectAlreadyHasViteTargets
+      projectAlreadyHasViteTargets,
+      !isTsSolutionSetup
     );
     return;
   }
@@ -522,7 +517,8 @@ export default defineConfig(() => ({
     cacheDir,
     devServerOption,
     previewServerOption,
-    `  plugins: [${plugins.join(', ')}],`,
+    resolveOption,
+    plugins.length ? `  plugins: [${plugins.join(', ')}],` : '',
     workerOption,
     buildOption,
     defineOption,
@@ -677,7 +673,8 @@ function handleViteConfigFileExists(
   cacheDir: string,
   projectRoot: string,
   offsetFromRoot: string,
-  projectAlreadyHasViteTargets?: TargetFlags
+  projectAlreadyHasViteTargets?: TargetFlags,
+  resolveTsconfigPaths?: boolean
 ) {
   if (
     projectAlreadyHasViteTargets?.build &&
@@ -738,7 +735,8 @@ function handleViteConfigFileExists(
     testOption,
     testOptionObject,
     cacheDir,
-    projectAlreadyHasViteTargets ?? {}
+    projectAlreadyHasViteTargets ?? {},
+    resolveTsconfigPaths
   );
 
   if (!changed) {

@@ -17,7 +17,7 @@
     },
     "setupPathsPlugin": {
       "type": "boolean",
-      "description": "Updates vite config files to enable support for workspace libraries via the nxViteTsPaths plugin.",
+      "description": "Updates vite config files to enable support for workspace libraries via Vite's native `resolve.tsconfigPaths` option.",
       "default": false
     },
     "keepExistingVersions": {

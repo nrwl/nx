@@ -14,3 +14,5 @@ export { suppressWebpackComposeHelperWarnings } from './src/utils/deprecation';
 export { WebpackNxBuildCoordinationPlugin } from './src/plugins/webpack-nx-build-coordination-plugin';
 export type { WebSsrDevServerOptions } from './src/executors/ssr-dev-server/schema';
 export { default as ssrDevServerExecutor } from './src/executors/ssr-dev-server/ssr-dev-server.impl';
+export { applyBaseConfig } from './src/plugins/nx-webpack-plugin/lib/apply-base-config';
+export { applyWebConfig } from './src/plugins/nx-webpack-plugin/lib/apply-web-config';

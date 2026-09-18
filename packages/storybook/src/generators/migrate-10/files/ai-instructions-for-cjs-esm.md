@@ -57,15 +57,15 @@ B. Convert `require()` to import
 // FROM (CJS):
 
 ```
-const { nxViteTsPaths } = require('@nx/vite/plugins/nx-tsconfig-paths.plugin');
 const { mergeConfig } = require('vite');
+const react = require('@vitejs/plugin-react');
 ```
 
 // TO (ESM):
 
 ```
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { mergeConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 ```
 
 C. Handle `path.join()` patterns

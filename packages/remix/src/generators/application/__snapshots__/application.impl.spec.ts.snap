@@ -243,16 +243,17 @@ exports[`Remix Application Integrated Repo --unitTestRunner should generate the 
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
   cacheDir: '../node_modules/.vite/test',
-  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  resolve: {
+    tsconfigPaths: true,
+  },
+  plugins: [react()],
   // Uncomment this if you are using workers.
   // worker: {
-  //   plugins: () => [ nxViteTsPaths() ],
+  //  plugins: [],
   // },
   test: {
     setupFiles: ['test-setup.ts'],
@@ -434,16 +435,17 @@ exports[`Remix Application Standalone Project Repo --unitTestRunner should gener
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
   cacheDir: './node_modules/.vite/test',
-  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  resolve: {
+    tsconfigPaths: true,
+  },
+  plugins: [react()],
   // Uncomment this if you are using workers.
   // worker: {
-  //   plugins: () => [ nxViteTsPaths() ],
+  //  plugins: [],
   // },
   test: {
     setupFiles: ['test-setup.ts'],
@@ -603,7 +605,6 @@ test('renders loader data', async () => {
 exports[`Remix Application Standalone Project Repo should create the application correctly 4`] = `
 "import { vitePlugin as remix } from '@remix-run/dev';
 import { defineConfig } from 'vite';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 declare module '@remix-run/node' {
   interface Future {
@@ -613,6 +614,9 @@ declare module '@remix-run/node' {
 
 export default defineConfig({
   root: import.meta.dirname,
+  resolve: {
+    tsconfigPaths: true,
+  },
   plugins: [
     remix({
       future: {
@@ -623,7 +627,6 @@ export default defineConfig({
         v3_lazyRouteDiscovery: true,
       },
     }),
-    nxViteTsPaths(),
   ],
 });
 "
