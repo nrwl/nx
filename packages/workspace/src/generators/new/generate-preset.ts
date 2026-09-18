@@ -125,10 +125,18 @@ function getPresetDependencies({
   js,
 }: NormalizedSchema) {
   switch (preset) {
-    // These generate no project, so `@nx/js:init` never runs to add typescript
+    // Generates no project, but a plugin installed later (`npm i -D
+    // @nx/react`) pulls tsquery in and hoists typescript 7 unless the pin is
+    // already in package.json.
+    case Preset.Apps:
+      return {
+        dependencies: {},
+        dev: { '@nx/js': nxVersion, typescript: typescriptVersion },
+      };
+
+    // Generates no project, so `@nx/js:init` never runs to add typescript
     // and pinning it here would be net-new. The preset generator itself does
     // run - it sets up the chosen formatter.
-    case Preset.Apps:
     case Preset.NPM:
       return { dependencies: {}, dev: { '@nx/js': nxVersion } };
 

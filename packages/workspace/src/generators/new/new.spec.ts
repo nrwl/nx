@@ -95,22 +95,30 @@ describe('new', () => {
       expect(readJson(tree, 'my-workspace/package.json')).toMatchSnapshot();
     });
 
-    it('should not add typescript for presets that scaffold nothing', async () => {
-      for (const preset of [Preset.Apps, Preset.NPM]) {
-        tree = createTree();
-        tree.root = process.cwd();
+    it('should pin typescript for the apps preset', async () => {
+      await newGenerator(tree, {
+        ...defaultOptions,
+        name: 'my-workspace',
+        directory: 'my-workspace',
+        appName: 'app',
+        preset: Preset.Apps,
+      });
 
-        await newGenerator(tree, {
-          ...defaultOptions,
-          name: 'my-workspace',
-          directory: 'my-workspace',
-          appName: 'app',
-          preset,
-        });
+      const { devDependencies } = readJson(tree, 'my-workspace/package.json');
+      expect(devDependencies.typescript).toBe(typescriptVersion);
+    });
 
-        const { devDependencies } = readJson(tree, 'my-workspace/package.json');
-        expect(devDependencies).not.toHaveProperty('typescript');
-      }
+    it('should not add typescript for the npm preset', async () => {
+      await newGenerator(tree, {
+        ...defaultOptions,
+        name: 'my-workspace',
+        directory: 'my-workspace',
+        appName: 'app',
+        preset: Preset.NPM,
+      });
+
+      const { devDependencies } = readJson(tree, 'my-workspace/package.json');
+      expect(devDependencies).not.toHaveProperty('typescript');
     });
 
     it('should generate necessary npm dependencies for ts preset', async () => {

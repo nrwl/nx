@@ -4,7 +4,12 @@
 // `buildProjectGraphAndSourceMapsWithoutDaemon` implementation, so opt out.
 vi.unmock('./project-graph');
 
-import { buildProjectGraphAndSourceMapsWithoutDaemon } from './project-graph';
+import {
+  buildProjectGraphAndSourceMapsWithoutDaemon,
+  handleProjectGraphError,
+} from './project-graph';
+import { CreateMetadataError, ProjectGraphError } from './error-types';
+import { output } from '../utils/output';
 import * as plugins from './plugins/get-plugins';
 
 vi.mock('../utils/workspace-context', () => {
@@ -106,5 +111,47 @@ describe('buildProjectGraphAndSourceMapsWithoutDaemon', () => {
     ]).then(() => {
       expect(testPlugin.createNodes[1]).toHaveBeenCalledTimes(3);
     });
+  });
+});
+
+describe('handleProjectGraphError', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    delete process.env.NX_VERBOSE_LOGGING;
+  });
+
+  function throwGraphError() {
+    const errorSpy = vi.spyOn(output, 'error').mockImplementation(() => {});
+    vi.spyOn(process, 'exit').mockImplementation((() => {}) as any);
+    const metadataError = new CreateMetadataError(
+      new Error('cause message'),
+      'test-plugin'
+    );
+    handleProjectGraphError(
+      { exitOnError: true },
+      new ProjectGraphError(
+        [metadataError],
+        { nodes: {}, dependencies: {} },
+        {}
+      )
+    );
+    return errorSpy.mock.calls[0][0];
+  }
+
+  it('should display the underlying error messages when not verbose', () => {
+    const { bodyLines } = throwGraphError();
+    const body = bodyLines.join('\n');
+    expect(body).toContain('cause message');
+    expect(body).toContain('test-plugin');
+    expect(body).toContain('Pass --verbose to see the stacktraces.');
+    expect(body).not.toMatch(/\s+at.*project-graph.spec.ts/);
+  });
+
+  it('should display the stacktraces when verbose', () => {
+    process.env.NX_VERBOSE_LOGGING = 'true';
+    const { bodyLines } = throwGraphError();
+    const body = bodyLines.join('\n');
+    expect(body).toContain('cause message');
+    expect(body).toMatch(/\s+at.*project-graph.spec.ts/);
   });
 });

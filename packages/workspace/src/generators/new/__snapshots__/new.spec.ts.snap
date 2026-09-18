@@ -7,6 +7,7 @@ exports[`new --preset should generate necessary npm dependencies for empty prese
     "@nx/js": "0.0.1",
     "@nx/workspace": "0.0.1",
     "nx": "0.0.1",
+    "typescript": "~6.0.3",
   },
   "license": "MIT",
   "name": "@my-workspace/source",
