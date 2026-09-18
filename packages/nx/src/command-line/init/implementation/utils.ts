@@ -303,25 +303,26 @@ export function runInstall(
   packageManager: PackageManager = detectPackageManager(repoRoot),
   pmc: PackageManagerCommands = getPackageManagerCommand(packageManager)
 ) {
-  let command = pmc.install;
+  const env = { ...process.env };
   // Plugins added during init can pull build-script deps whose allowBuilds
   // entries are only recorded by their init generators after this install;
   // warn and skip for this one install, like pnpm 10 did.
   if (packageManager === 'pnpm') {
     try {
       if (gte(getPackageManagerVersion('pnpm', repoRoot), '11.0.0')) {
-        command += ' --config.strictDepBuilds=false';
+        env.pnpm_config_strict_dep_builds = 'false';
       }
     } catch {
       // The version cannot be probed; run the install unmodified.
     }
   }
   try {
-    execSync(command, {
+    execSync(pmc.install, {
       stdio: ['ignore', 'ignore', 'pipe'],
       encoding: 'utf8',
       cwd: repoRoot,
       windowsHide: true,
+      env,
     });
   } catch (e) {
     if ((e as any)?.stderr) process.stderr.write((e as any).stderr);

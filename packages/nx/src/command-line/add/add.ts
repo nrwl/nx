@@ -60,7 +60,7 @@ async function installPackage(
     const pmc = getPackageManagerCommand(pm);
 
     // if we explicitly specify latest in yarn berry, it won't resolve the version
-    let command =
+    const command =
       pm === 'yarn' && gte(pmv, '2.0.0') && version === 'latest'
         ? `${pmc.addDev} ${pkgName}`
         : `${pmc.addDev} ${pkgName}@${version}`;
@@ -69,14 +69,16 @@ async function installPackage(
     // carries unacknowledged build scripts, and the plugin's generators can
     // only record allowBuilds decisions after this install. Warn and skip
     // for this one install, like pnpm 10 did.
+    const env = { ...process.env };
     if (pm === 'pnpm' && gte(pmv, '11.0.0')) {
-      command += ' --config.strictDepBuilds=false';
+      env.pnpm_config_strict_dep_builds = 'false';
     }
     await new Promise<void>((resolve) =>
       exec(
         command,
         {
           windowsHide: true,
+          env,
         },
         (error, stdout, stderr) => {
           if (error) {

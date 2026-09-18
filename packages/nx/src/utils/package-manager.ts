@@ -58,7 +58,7 @@ const execFileAsync = promisify(execFile);
  * That quoting is the whole defence on Windows, so it goes through
  * quoteShellArg, which throws on the one argument it cannot make safe.
  */
-function execPackageManagerAsync(
+async function execPackageManagerAsync(
   pm: string,
   args: string[],
   options: { cwd: string; windowsHide: boolean; env: NodeJS.ProcessEnv }
@@ -66,7 +66,13 @@ function execPackageManagerAsync(
   if (process.platform === 'win32') {
     return execAsync([pm, ...args].map(quoteShellArg).join(' '), options);
   }
-  return execFileAsync(pm, args, options);
+  try {
+    return await execFileAsync(pm, args, options);
+  } catch (error) {
+    // pnpm 12's fallback shim has no shebang when installed without scripts.
+    if (error.code !== 'ENOEXEC') throw error;
+    return execAsync([pm, ...args].map(quoteShellArg).join(' '), options);
+  }
 }
 
 /** Same split, and the same quoting, for a blocking caller. */
@@ -78,7 +84,12 @@ function execPackageManagerSync(
   if (process.platform === 'win32') {
     return execSync([pm, ...args].map(quoteShellArg).join(' '), options);
   }
-  return execFileSync(pm, args, options);
+  try {
+    return execFileSync(pm, args, options);
+  } catch (error) {
+    if (error.code !== 'ENOEXEC') throw error;
+    return execSync([pm, ...args].map(quoteShellArg).join(' '), options);
+  }
 }
 
 export type PackageManager = 'yarn' | 'pnpm' | 'npm' | 'bun';
