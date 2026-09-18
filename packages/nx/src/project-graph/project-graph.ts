@@ -126,7 +126,7 @@ export function readProjectsConfigurationFromProjectGraph(
 }
 
 export async function buildProjectGraphAndSourceMapsWithoutDaemon(
-  // False for a process that gave up on the lock: only the lock holder writes the cache.
+  // Only the lock holder writes the cache.
   { writeGraphCache }: { writeGraphCache: boolean } = { writeGraphCache: true }
 ) {
   preventRecursionInGraphConstruction();
@@ -365,11 +365,9 @@ export async function createProjectGraphAndSourceMapsAsync(
     const lock = !IS_WASM
       ? new FileLock(join(workspaceDataDirectory, 'project-graph.lock'))
       : null;
-    const deadline = Date.now() + MAX_WAIT_FOR_GRAPH_LOCK;
-    let holdingLock = false;
-    let writeGraphCache = true;
+    let holdingLock = lock?.tryLock() ?? false;
 
-    while (lock && !(holdingLock = lock.tryLock())) {
+    if (lock && !holdingLock) {
       logger.verbose(
         'Waiting for graph construction in another process to complete'
       );
@@ -378,58 +376,36 @@ export async function createProjectGraphAndSourceMapsAsync(
       );
       const start = Date.now();
       try {
-        await lock.waitUntilFree(Math.max(0, deadline - start));
-      } catch (e) {
-        if (!isLockWaitTimeout(e)) {
-          throw e;
-        }
-        logger.verbose(
-          `Another process has held the project graph lock for over ${
-            MAX_WAIT_FOR_GRAPH_LOCK / 1000
-          }s. Building the graph in this process as well.`
-        );
-        writeGraphCache = false;
-        break;
-      } finally {
-        spinner.cleanup();
-      }
-
-      // Note: This will currently throw if any of the caches are missing...
-      // It would be nice if one of the processes that was waiting for the lock
-      // could pick up the slack and build the graph if it's missing, but
-      // we wouldn't want either of the below to happen:
-      // - All of the waiting processes to build the graph
-      // - Even one of the processes building the graph on a legitimate error
-
-      try {
-        // Ensuring that computedAt was after this process started
-        // waiting for the graph to complete, means that the graph
-        // was computed by the process was already working.
+        await lock.waitUntilFree(MAX_WAIT_FOR_GRAPH_LOCK);
+        // A graph computed after this process started waiting is the holder's.
         const graph = await readCachedGraphAndHydrateFileMap(start);
-
         const sourceMaps = readSourceMapsCache();
         if (!sourceMaps) {
           throw new Error(
             'The project graph was computed in another process, but the source maps are missing.'
           );
         }
-
-        return {
-          projectGraph: graph,
-          sourceMaps,
-        };
+        return { projectGraph: graph, sourceMaps };
       } catch (e) {
-        // If the error is that the cached graph is stale after unlock,
-        // the process that was working on the graph must have been canceled,
-        // so we will fall through and try to become the one that builds it.
-        if (!(e instanceof StaleProjectGraphCacheError)) {
+        if (isLockWaitTimeout(e)) {
+          logger.verbose(
+            `Another process has held the project graph lock for over ${
+              MAX_WAIT_FOR_GRAPH_LOCK / 1000
+            }s. Building the graph in this process as well.`
+          );
+        } else if (e instanceof StaleProjectGraphCacheError) {
+          // The holder stopped without writing a graph, so build it here.
+          holdingLock = lock.tryLock();
+        } else {
           throw e;
         }
+      } finally {
+        spinner.cleanup();
       }
     }
     try {
       const res = await buildProjectGraphAndSourceMapsWithoutDaemon({
-        writeGraphCache,
+        writeGraphCache: !lock || holdingLock,
       });
       performance.measure(
         'createProjectGraphAsync >> retrieve-project-configurations',

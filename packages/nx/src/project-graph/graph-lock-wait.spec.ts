@@ -14,6 +14,7 @@ const state = vi.hoisted(() => ({
   writes: 0,
   events: [] as string[],
   notedComputedAt: undefined as number | undefined,
+  holderStoppedWithoutWriting: false,
 }));
 
 vi.mock('../native', () => ({
@@ -55,20 +56,26 @@ vi.mock('../daemon/is-on-daemon', () => ({ isOnDaemon: () => false }));
 vi.mock('../daemon/client/client', () => ({
   daemonClient: { enabled: () => false, reset: vi.fn() },
 }));
-vi.mock('./nx-deps-cache', () => ({
-  readProjectGraphCache: () => {
-    state.reads++;
-    return state.cachedGraph
-      ? { projectGraph: state.cachedGraph, computedAt: 1_700_000_000_000 }
-      : null;
-  },
-  readSourceMapsCache: () => ({}),
-  readFileMapCache: () => null,
-  writeCache: (...args: unknown[]) => {
-    state.writes++;
-    state.events.push(`write graph @${args[4]}`);
-  },
-}));
+vi.mock('./nx-deps-cache', async () => {
+  const { StaleProjectGraphCacheError } = await import('./error-types');
+  return {
+    readProjectGraphCache: () => {
+      state.reads++;
+      if (state.holderStoppedWithoutWriting) {
+        throw new StaleProjectGraphCacheError();
+      }
+      return state.cachedGraph
+        ? { projectGraph: state.cachedGraph, computedAt: 1_700_000_000_000 }
+        : null;
+    },
+    readSourceMapsCache: () => ({}),
+    readFileMapCache: () => null,
+    writeCache: (...args: unknown[]) => {
+      state.writes++;
+      state.events.push(`write graph @${args[4]}`);
+    },
+  };
+});
 vi.mock('./plugins/graph-plugin-capabilities', () => ({
   noteGraphReadFromCache: (computedAt: number | undefined) => {
     state.notedComputedAt = computedAt;
@@ -129,6 +136,7 @@ describe('waiting on the graph lock', () => {
     state.writes = 0;
     state.events = [];
     state.notedComputedAt = undefined;
+    state.holderStoppedWithoutWriting = false;
   });
 
   it('reads the graph the holder wrote, once it has released', async () => {
@@ -149,6 +157,17 @@ describe('waiting on the graph lock', () => {
     expect(state.acquires).toBe(0);
     expect(state.builds).toBe(1);
     expect(state.writes).toBe(0);
+  });
+
+  it('builds and writes the graph itself when the holder stopped without writing one', async () => {
+    state.holderStoppedWithoutWriting = true;
+
+    await createProjectGraphAndSourceMapsAsync();
+
+    expect(state.reads).toBe(1);
+    expect(state.acquires).toBe(1);
+    expect(state.builds).toBe(1);
+    expect(state.writes).toBe(1);
   });
 
   it('waits for the winner rather than building a second graph', async () => {
