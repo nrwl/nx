@@ -11,6 +11,7 @@ import {
   normalizeLinterOption,
 } from '@nx/js/internal';
 import type { LibraryGeneratorSchema as JsLibraryGeneratorSchema } from '@nx/js/internal';
+import { getDefaultUnitTestRunner } from '../../../utils/default-unit-test-runner';
 import type { LibraryGeneratorOptions, NormalizedOptions } from '../schema';
 export async function normalizeOptions(
   tree: Tree,
@@ -62,7 +63,7 @@ export async function normalizeOptions(
     service: options.service ?? false,
     target: options.target ?? 'es6',
     testEnvironment: options.testEnvironment ?? 'node',
-    unitTestRunner: options.unitTestRunner ?? 'jest',
+    unitTestRunner: options.unitTestRunner ?? getDefaultUnitTestRunner(tree),
     isUsingTsSolutionsConfig,
     useProjectJson: options.useProjectJson ?? !isUsingTsSolutionsConfig,
   };

@@ -8,6 +8,7 @@ import {
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { join } from 'path';
 import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
+import { hasRspackPlugin } from '../../../utils/has-rspack-plugin';
 import { addVSCodeDebugConfiguration } from '../../../utils/vscode-debug-config';
 import { NormalizedSchema } from './normalized-schema';
 
@@ -42,11 +43,30 @@ export function addAppFiles(tree: Tree, options: NormalizedSchema) {
               generatePackageJson: !options.isUsingTsSolutionConfig,
             }
           : null,
+      rspackPluginOptions:
+        hasRspackPlugin(tree) && options.addPlugin !== false
+          ? {
+              outputPath: options.isUsingTsSolutionConfig
+                ? 'dist'
+                : joinPathFragments(
+                    offsetFromRoot(options.appProjectRoot),
+                    'dist',
+                    options.rootProject ? options.name : options.appProjectRoot
+                  ),
+              main: './src/main' + (options.js ? '.js' : '.ts'),
+              tsConfig: './tsconfig.app.json',
+              assets: ['./src/assets'],
+              generatePackageJson: !options.isUsingTsSolutionConfig,
+            }
+          : null,
     }
   );
 
   if (options.bundler !== 'webpack') {
     tree.delete(joinPathFragments(options.appProjectRoot, 'webpack.config.js'));
+  }
+  if (options.bundler !== 'rspack') {
+    tree.delete(joinPathFragments(options.appProjectRoot, 'rspack.config.js'));
   }
 
   if (options.framework && options.framework !== 'none') {

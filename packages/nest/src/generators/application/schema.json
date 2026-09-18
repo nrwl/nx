@@ -85,6 +85,12 @@
     "useProjectJson": {
       "type": "boolean",
       "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
+    },
+    "bundler": {
+      "description": "The bundler to use to build the application. Defaults to `rspack` for NestJS v12 and `webpack` for v10/v11; use `webpack` explicitly if the app relies on webpack-only build features (e.g. TypeScript compiler-based transformer plugins).",
+      "type": "string",
+      "enum": ["rspack", "webpack"],
+      "x-priority": "important"
     }
   },
   "additionalProperties": false,
