@@ -1,5 +1,4 @@
 use crate::native::db::connection::NxDbConnection;
-use crate::native::plugins::capabilities::CachedPluginCapabilities;
 use napi::bindgen_prelude::External;
 use rusqlite::params;
 use std::sync::{Arc, Mutex};
@@ -23,6 +22,17 @@ const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS graph_plugin_capabilities (
     has_pre_tasks_execution   INTEGER NOT NULL,
     has_post_tasks_execution   INTEGER NOT NULL
 );";
+
+#[napi(object)]
+#[derive(Clone, Debug)]
+pub struct CachedPluginCapabilities {
+    pub name: String,
+    pub create_nodes_pattern: Option<String>,
+    pub has_create_dependencies: bool,
+    pub has_create_metadata: bool,
+    pub has_pre_tasks_execution: bool,
+    pub has_post_tasks_execution: bool,
+}
 
 #[napi]
 pub struct GraphPluginCapabilities {

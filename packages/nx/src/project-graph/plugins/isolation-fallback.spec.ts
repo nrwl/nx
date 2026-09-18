@@ -59,7 +59,7 @@ describe('plugin isolation fallback', () => {
     mockIsSandbox.mockReturnValue(true);
     mockIsolated.mockReturnValue(isolatedResolving('isolated'));
 
-    const plugin = await loadingMethod('p', '/root', 0);
+    const plugin = await loadingMethod('p', '/root');
 
     expect(await plugin).toBe('isolated');
     expect(mockInProcess).not.toHaveBeenCalled();
@@ -69,7 +69,7 @@ describe('plugin isolation fallback', () => {
     mockIsSandbox.mockReturnValue(true);
     mockIsolated.mockReturnValue(isolatedRejecting(startupFailure()));
 
-    const plugin = await loadingMethod('p', '/root', 0);
+    const plugin = await loadingMethod('p', '/root');
 
     expect(await plugin).toBe('in-process');
     expect(mockInProcess).toHaveBeenCalled();
@@ -81,7 +81,7 @@ describe('plugin isolation fallback', () => {
     mockIsSandbox.mockReturnValue(true);
     mockIsolated.mockReturnValue(isolatedRejecting(startupFailure()));
 
-    await loadingMethod('p', '/root', 0);
+    await loadingMethod('p', '/root');
 
     expect(warn).toHaveBeenCalledTimes(1);
     const { title, bodyLines } = warn.mock.calls[0][0];
@@ -95,9 +95,9 @@ describe('plugin isolation fallback', () => {
     mockIsSandbox.mockReturnValue(true);
     mockIsolated.mockReturnValue(isolatedRejecting(startupFailure()));
 
-    await loadingMethod('a', '/root', 0);
-    await loadingMethod('b', '/root', 0);
-    await loadingMethod('c', '/root', 0);
+    await loadingMethod('a', '/root');
+    await loadingMethod('b', '/root');
+    await loadingMethod('c', '/root');
 
     expect(warn).toHaveBeenCalledTimes(1);
     // The first plugin tried a worker; the rest went straight in-process.

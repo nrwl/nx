@@ -5,7 +5,6 @@ import type { Mock } from 'vitest';
 const mocked = vi.hoisted(() => ({
   IsolatedPlugin: {
     load: vi.fn(),
-    fromCapabilities: vi.fn(),
   },
 }));
 
@@ -15,28 +14,10 @@ import { IsolatedPlugin } from './isolated-plugin';
 import {
   disposeIsolatedPlugins,
   loadIsolatedNxPlugin,
-  useIsolatedNxPluginCapabilities,
   wantPlugins,
 } from './load-isolated-plugin';
 
 const load = IsolatedPlugin.load as unknown as Mock;
-const fromCapabilities = IsolatedPlugin.fromCapabilities as unknown as Mock;
-
-const resolved = {
-  name: 'test-plugin',
-  pluginPath: '/root/plugin.js',
-  shouldRegisterTSTranspiler: false,
-};
-
-const capabilities = {
-  name: 'test-plugin',
-  createNodesPattern: '**/*.json',
-  hasCreateDependencies: false,
-  hasCreateMetadata: false,
-  hasPreTasksExecution: false,
-  hasPostTasksExecution: false,
-};
-
 describe('the plugins a process has loaded', () => {
   let instances: Map<string, { name: string; dispose: Mock }>;
 
@@ -53,10 +34,6 @@ describe('the plugins a process has loaded', () => {
     };
     load.mockReset();
     load.mockImplementation(async (plugin: string) => newInstance(plugin));
-    fromCapabilities.mockReset();
-    fromCapabilities.mockImplementation((plugin: string) =>
-      newInstance(plugin)
-    );
   });
 
   it('loads one worker however many loads ask for the plugin', async () => {
@@ -67,23 +44,6 @@ describe('the plugins a process has loaded', () => {
 
     expect(load).toHaveBeenCalledTimes(1);
     expect(first).toBe(second);
-  });
-
-  it('shares a plugin between a recorded wiring and a load', async () => {
-    wantPlugins('specified', [{ plugin: 'p' }], '/root');
-
-    const wired = await useIsolatedNxPluginCapabilities(
-      'p',
-      '/root',
-      resolved,
-      capabilities
-    );
-    const loaded = await loadIsolatedNxPlugin('p', '/root');
-
-    // Already wired from a record, so there is nothing to load.
-    expect(load).not.toHaveBeenCalled();
-    expect(fromCapabilities).toHaveBeenCalledTimes(1);
-    expect(loaded).toBe(wired);
   });
 
   it('keeps the plugins the next configuration still names', async () => {
@@ -140,7 +100,7 @@ describe('the plugins a process has loaded', () => {
 
     const stillLoading = loadIsolatedNxPlugin('p', '/root');
 
-    // nx.json changed while that load waited for the capabilities lock.
+    // nx.json changed while that load was spawning its worker.
     wantPlugins('specified', [{ plugin: 'q' }], '/root');
 
     const instance = { dispose: vi.fn() };

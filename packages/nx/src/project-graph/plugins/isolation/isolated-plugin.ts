@@ -1,4 +1,3 @@
-import type { EnvReads } from './env-reads';
 import { ChildProcess, spawn } from 'child_process';
 import { randomBytes } from 'crypto';
 import { Socket } from 'net';
@@ -25,9 +24,7 @@ import { stubTerminalOutputs } from '../task-results-stub';
 import { waitForSocketConnection } from '../../../utils/wait-for-socket-connection';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import type { RawProjectGraphDependency } from '../../project-graph-builder';
-import type { ObservedLoad, PluginCapabilities } from '../capabilities-cache';
 import { LoadedNxPlugin } from '../loaded-nx-plugin';
-import { pluginWithoutWorker } from './fallback';
 import type {
   CreateDependenciesContext,
   CreateMetadataContext,
@@ -76,37 +73,6 @@ export type LoadResultPayload = Extract<
   { success: true }
 >;
 
-/** The part of a worker's load reply that describes the module, not the entry. */
-export function capabilitiesFromLoadResult(
-  payload: LoadResultPayload
-): PluginCapabilities {
-  return {
-    name: payload.name,
-    createNodesPattern: payload.createNodesPattern,
-    hasCreateDependencies: payload.hasCreateDependencies,
-    hasCreateMetadata: payload.hasCreateMetadata,
-    hasPreTasksExecution: payload.hasPreTasksExecution,
-    hasPostTasksExecution: payload.hasPostTasksExecution,
-  };
-}
-
-/** Resolution of a plugin's module, which the host does before spawning. */
-export interface ResolvedPluginModule {
-  name: string;
-  pluginPath: string;
-  shouldRegisterTSTranspiler: boolean;
-  /** Workspace files that decided where the module resolved; see `resolveNxPlugin`. */
-  resolutionInputs?: string[];
-}
-
-export function resolveModule(
-  plugin: PluginConfiguration,
-  root: string
-): Promise<ResolvedPluginModule> {
-  const moduleName = typeof plugin === 'string' ? plugin : plugin.plugin;
-  return resolveNxPlugin(moduleName, root, getNxRequirePaths(root));
-}
-
 export class IsolatedPlugin implements LoadedNxPlugin {
   readonly name: string;
   readonly include?: string[];
@@ -136,12 +102,6 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   ) => Promise<void>;
 
   // Worker state
-  /**
-   * Set when a worker could not be started for a reason that says to run the
-   * plugin here instead. Every hook goes to it once it is, and the worker is
-   * not tried again.
-   */
-  private inProcess?: LoadedNxPlugin;
   private worker: ChildProcess | null = null;
   private socket: Socket | null = null;
   private _alive = false;
@@ -166,11 +126,6 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   private readonly shouldRegisterTSTranspiler: boolean;
 
   private lifecycle: PluginLifecycleManager;
-  /** Set only for an instance wired from a cached record. Called once. */
-  private onLoaded?: (
-    actual: PluginCapabilities,
-    observed: ObservedLoad
-  ) => void;
   private exitHandler:
     | ((code: number | null, signal: NodeJS.Signals | null) => void)
     | null = null;
@@ -181,25 +136,24 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   static async load(
     plugin: PluginConfiguration,
     root: string,
-    index?: number,
-    resolved?: ResolvedPluginModule
+    index?: number
   ): Promise<IsolatedPlugin> {
+    const moduleName = typeof plugin === 'string' ? plugin : plugin.plugin;
+    const { name, pluginPath, shouldRegisterTSTranspiler } =
+      await resolveNxPlugin(moduleName, root, getNxRequirePaths(root));
+
     const instance = new IsolatedPlugin(
       plugin,
       root,
-      resolved ?? (await resolveModule(plugin, root)),
+      name,
+      pluginPath,
+      shouldRegisterTSTranspiler,
       index
     );
 
     try {
       const loadResult = await instance.spawnAndConnect();
-      instance.setupHooks(
-        capabilitiesFromLoadResult(loadResult),
-        loadResult.include,
-        loadResult.exclude
-      );
-      instance.sourceFiles = loadResult.sourceFiles;
-      instance.envReads = loadResult.envReads;
+      instance.setupHooks(loadResult);
       return instance;
     } catch (e) {
       // The worker is running whenever the failure was a timeout rather than an
@@ -211,55 +165,19 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     }
   }
 
-  /**
-   * The non-vendor files the worker read while loading, or null when its runtime
-   * could not report them completely. Null is not the same as none: it means the
-   * answer cannot be validated later and so should not be recorded.
-   */
-  sourceFiles: string[] | null = null;
-
-  /**
-   * The environment the worker's load read, or null when it read all of it.
-   * Recorded beside the closure, and for the same reason: it is an input to what
-   * the plugin registers that the plugin's own files do not show.
-   */
-  envReads: EnvReads | null = null;
-
-  /**
-   * Wires the plugin's hooks from a previous load's capabilities, without a
-   * worker. The worker spawns on the first hook call, through the same
-   * `ensureAlive` path a shut-down worker takes, so a caller that only reads
-   * capabilities never starts a process at all.
-   *
-   * `onLoaded` reports what the worker says once one does spawn, which is how
-   * a record that failed to invalidate gets repaired.
-   */
-  static fromCapabilities(
-    plugin: PluginConfiguration,
-    root: string,
-    resolved: ResolvedPluginModule,
-    capabilities: PluginCapabilities,
-    index?: number,
-    onLoaded?: (actual: PluginCapabilities, observed: ObservedLoad) => void
-  ): IsolatedPlugin {
-    const instance = new IsolatedPlugin(plugin, root, resolved, index);
-    instance.onLoaded = onLoaded;
-    const definition = typeof plugin === 'string' ? undefined : plugin;
-    instance.setupHooks(capabilities, definition?.include, definition?.exclude);
-    return instance;
-  }
-
   private constructor(
     plugin: PluginConfiguration,
     root: string,
-    resolved: ResolvedPluginModule,
+    name: string,
+    pluginPath: string,
+    shouldRegisterTSTranspiler: boolean,
     public readonly index?: number
   ) {
     this.plugin = plugin;
     this.root = root;
-    this.name = resolved.name;
-    this.pluginPath = resolved.pluginPath;
-    this.shouldRegisterTSTranspiler = resolved.shouldRegisterTSTranspiler;
+    this.name = name;
+    this.pluginPath = pluginPath;
+    this.shouldRegisterTSTranspiler = shouldRegisterTSTranspiler;
   }
 
   private async spawnAndConnect(): Promise<LoadResultPayload> {
@@ -342,7 +260,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
    * so that only one worker is ever spawned at a time.
    */
   private async ensureAlive(): Promise<void> {
-    if (this.inProcess || this._alive) {
+    if (this._alive) {
       return;
     }
 
@@ -356,61 +274,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       });
     }
 
-    let loadResult: LoadResultPayload;
-    try {
-      loadResult = await this._connectPromise;
-    } catch (e) {
-      // A plugin wired from a record starts its worker here rather than at the
-      // load, so this is where a sandbox that denies the socket is met, and the
-      // same answer applies: run the plugin in this process rather than fail a
-      // command that would have worked without a record.
-      const inProcess = await pluginWithoutWorker(
-        e,
-        this.plugin,
-        this.root,
-        this.index
-      );
-      if (!inProcess) {
-        throw e;
-      }
-      this.inProcess = inProcess;
-      this.reportLoaded({
-        name: inProcess.name,
-        createNodesPattern: inProcess.createNodes?.[0],
-        hasCreateDependencies: !!inProcess.createDependencies,
-        hasCreateMetadata: !!inProcess.createMetadata,
-        hasPreTasksExecution: !!inProcess.preTasksExecution,
-        hasPostTasksExecution: !!inProcess.postTasksExecution,
-      });
-      return;
-    }
-
-    this.sourceFiles = loadResult.sourceFiles;
-    this.envReads = loadResult.envReads;
-
-    this.reportLoaded(capabilitiesFromLoadResult(loadResult), {
-      sourceFiles: loadResult.sourceFiles,
-      envReads: loadResult.envReads,
-    });
-  }
-
-  /**
-   * Tells whoever wired this from a record what the plugin really registers.
-   * Nothing was observed about an in-process load, so a record that disagrees
-   * with one is cleared rather than corrected.
-   */
-  private reportLoaded(
-    actual: PluginCapabilities,
-    observed: ObservedLoad = {
-      sourceFiles: null,
-      envReads: null,
-    }
-  ): void {
-    const onLoaded = this.onLoaded;
-    if (onLoaded) {
-      this.onLoaded = undefined;
-      onLoaded(actual, observed);
-    }
+    await this._connectPromise;
   }
 
   private handleSocketData = (raw: Buffer) => {
@@ -492,24 +356,18 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     });
   }
 
-  private setupHooks(
-    capabilities: PluginCapabilities,
-    include?: string[],
-    exclude?: string[]
-  ): void {
-    // Assigned through a cast, since they are readonly to everyone else.
-    // `include` and `exclude` come from the nx.json entry rather than the
-    // module, so a caller with a record does not need a worker to learn them.
-    (this as { name: string }).name = capabilities.name;
-    (this as { include?: string[] }).include = include;
-    (this as { exclude?: string[] }).exclude = exclude;
+  private setupHooks(loadResult: LoadResultPayload): void {
+    // These are set via Object.defineProperty to work around readonly
+    (this as { name: string }).name = loadResult.name;
+    (this as { include?: string[] }).include = loadResult.include;
+    (this as { exclude?: string[] }).exclude = loadResult.exclude;
 
     const registeredHooks: Hook[] = hooks(
-      capabilities.createNodesPattern && 'createNodes',
-      capabilities.hasCreateDependencies && 'createDependencies',
-      capabilities.hasCreateMetadata && 'createMetadata',
-      capabilities.hasPreTasksExecution && 'preTasksExecution',
-      capabilities.hasPostTasksExecution && 'postTasksExecution'
+      loadResult.createNodesPattern && 'createNodes',
+      loadResult.hasCreateDependencies && 'createDependencies',
+      loadResult.hasCreateMetadata && 'createMetadata',
+      loadResult.hasPreTasksExecution && 'preTasksExecution',
+      loadResult.hasPostTasksExecution && 'postTasksExecution'
     );
 
     this.lifecycle = new PluginLifecycleManager(registeredHooks);
@@ -537,13 +395,10 @@ export class IsolatedPlugin implements LoadedNxPlugin {
         () => shutdown(hook)
       );
 
-    if (capabilities.createNodesPattern) {
+    if (loadResult.createNodesPattern) {
       (this as { createNodes: IsolatedPlugin['createNodes'] }).createNodes = [
-        capabilities.createNodesPattern,
+        loadResult.createNodesPattern,
         wrap('createNodes', async (configFiles, ctx) => {
-          if (this.inProcess) {
-            return this.inProcess.createNodes[1](configFiles, ctx);
-          }
           const result = await this.sendRequest('createNodes', {
             configFiles,
             context: ctx,
@@ -556,13 +411,10 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       ];
     }
 
-    if (capabilities.hasCreateDependencies) {
+    if (loadResult.hasCreateDependencies) {
       (
         this as { createDependencies: IsolatedPlugin['createDependencies'] }
       ).createDependencies = wrap('createDependencies', async (ctx) => {
-        if (this.inProcess) {
-          return this.inProcess.createDependencies(ctx);
-        }
         const result = await this.sendRequest('createDependencies', {
           context: ctx,
         });
@@ -573,13 +425,10 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       });
     }
 
-    if (capabilities.hasCreateMetadata) {
+    if (loadResult.hasCreateMetadata) {
       (
         this as { createMetadata: IsolatedPlugin['createMetadata'] }
       ).createMetadata = wrap('createMetadata', async (graph, ctx) => {
-        if (this.inProcess) {
-          return this.inProcess.createMetadata(graph, ctx);
-        }
         const result = await this.sendRequest('createMetadata', {
           graph,
           context: ctx,
@@ -591,13 +440,10 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       });
     }
 
-    if (capabilities.hasPreTasksExecution) {
+    if (loadResult.hasPreTasksExecution) {
       (
         this as { preTasksExecution: IsolatedPlugin['preTasksExecution'] }
       ).preTasksExecution = wrap('preTasksExecution', async (context) => {
-        if (this.inProcess) {
-          return this.inProcess.preTasksExecution(context);
-        }
         const result = await this.sendRequest('preTasksExecution', {
           context,
         });
@@ -608,13 +454,10 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       });
     }
 
-    if (capabilities.hasPostTasksExecution) {
+    if (loadResult.hasPostTasksExecution) {
       (
         this as { postTasksExecution: IsolatedPlugin['postTasksExecution'] }
       ).postTasksExecution = wrap('postTasksExecution', async (context) => {
-        if (this.inProcess) {
-          return this.inProcess.postTasksExecution(context);
-        }
         const result = await this.sendRequest('postTasksExecution', {
           context: stubTerminalOutputs(context),
         });

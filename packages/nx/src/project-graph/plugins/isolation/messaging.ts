@@ -1,6 +1,5 @@
 import type { Serializable } from 'child_process';
 import type { Socket } from 'net';
-import type { EnvReads } from './env-reads';
 import type { PluginConfiguration } from '../../../config/nx-json';
 import type { ProjectGraph } from '../../../config/project-graph';
 import { sendMessage } from '../../../daemon/socket-utils';
@@ -47,21 +46,6 @@ type PluginMessageDefs = DefineMessages<{
           name: string;
           include?: string[];
           exclude?: string[];
-          /**
-           * The non-vendor files this load read, or null when the runtime could
-           * not be asked completely. What the plugin registers depends on these
-           * and on nothing else, so a host holding them can tell whether an
-           * answer it recorded earlier still holds.
-           */
-          sourceFiles: string[] | null;
-          /**
-           * The environment this load read, by key, or null when it took the
-           * whole environment and so cannot be described by part of it. The
-           * other input to what a plugin registers, and the one its files
-           * cannot show: `@nx/dotnet` exports no hooks under NX_DOTNET_DISABLE
-           * and its sources are identical either way.
-           */
-          envReads: EnvReads | null;
           createNodesPattern: string;
           hasCreateDependencies: boolean;
           hasProcessProjectGraph: boolean;

@@ -43,32 +43,6 @@ export function readTsConfigWithoutFiles(
   return readTsConfig(tsConfigPath, sys);
 }
 
-/**
- * Every file TypeScript reads to settle a tsconfig: the file itself and each one
- * its `extends` chain reaches, including configs extended from a package.
- *
- * Observed rather than walked, so it resolves `extends` exactly as TypeScript
- * does, since it is TypeScript doing it.
- */
-export function readTsConfigInputs(tsConfigPath: string): string[] {
-  if (!tsModule) {
-    tsModule = require('typescript');
-  }
-  const read = new Set<string>();
-  const sys: ts.System = {
-    ...tsModule.sys,
-    readFile: (path, encoding) => {
-      const contents = tsModule.sys.readFile(path, encoding);
-      if (contents !== undefined) {
-        read.add(path);
-      }
-      return contents;
-    },
-  };
-  readTsConfig(tsConfigPath, sys);
-  return [...read];
-}
-
 export function readTsConfigOptions(tsConfigPath: string): ts.CompilerOptions {
   const { options } = readTsConfigWithoutFiles(tsConfigPath);
 
@@ -121,11 +95,9 @@ function getCompilerHost(tsConfigPath: string) {
   return { options, host, moduleResolutionCache };
 }
 
-export function getRootTsConfigFileName(
-  root: string = workspaceRoot
-): string | null {
+export function getRootTsConfigFileName(): string | null {
   for (const tsConfigName of ['tsconfig.base.json', 'tsconfig.json']) {
-    const tsConfigPath = join(root, tsConfigName);
+    const tsConfigPath = join(workspaceRoot, tsConfigName);
     if (existsSync(tsConfigPath)) {
       return tsConfigName;
     }
@@ -134,12 +106,10 @@ export function getRootTsConfigFileName(
   return null;
 }
 
-export function getRootTsConfigPath(
-  root: string = workspaceRoot
-): string | null {
-  const tsConfigFileName = getRootTsConfigFileName(root);
+export function getRootTsConfigPath(): string | null {
+  const tsConfigFileName = getRootTsConfigFileName();
 
-  return tsConfigFileName ? join(root, tsConfigFileName) : null;
+  return tsConfigFileName ? join(workspaceRoot, tsConfigFileName) : null;
 }
 
 const customConditionsCache = new Map<string, string[]>();

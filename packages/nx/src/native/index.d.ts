@@ -204,22 +204,6 @@ export declare class NxTaskHistory {
   getEstimatedTaskTimings(targets: Array<TaskTarget>): Record<string, number>
 }
 
-export declare class PluginCapabilitiesCache {
-  constructor(db: ExternalObject<NxDbConnection>)
-  /**
-   * Returns only the keys that are present, so the caller can take the
-   * difference and load the rest.
-   */
-  get(keys: Array<string>): Record<string, PluginRecord>
-  /**
-   * Drops the records for `keys`, for a caller that has found one wrong and
-   * cannot write the right one. Leaving it would mean every later run reading
-   * the same wrong answer.
-   */
-  remove(keys: Array<string>): void
-  record(entries: Array<PluginCapabilitiesEntry>): void
-}
-
 /**
  * High-performance metrics collector for Nx tasks
  * Thread-safe and designed for minimal overhead
@@ -432,12 +416,6 @@ export declare const enum BatchStatus {
   Failure = 'Failure'
 }
 
-/**
- * What a plugin module registers, independent of the options it is configured
- * with. Every field describes the module's exports, and an entry's options only
- * reach a plugin as an argument when a hook is called, so one record is valid
- * for every nx.json entry naming the same module.
- */
 export interface CachedPluginCapabilities {
   name: string
   createNodesPattern?: string
@@ -843,28 +821,6 @@ export interface PerformanceSummaryPayload {
    * remote-cache CTA); empty when none apply.
    */
   links: Array<Link>
-}
-
-export interface PluginCapabilitiesEntry {
-  key: string
-  record: PluginRecord
-}
-
-/**
- * A record, which is the capabilities plus what they were derived from: the
- * non-vendor files the plugin's load read and the hash of their contents at
- * that moment. How the two are stored is on `SCHEMA` above, with why they are
- * empty rather than null for a plugin whose every source is vendored.
- */
-export interface PluginRecord {
-  capabilities: CachedPluginCapabilities
-  sourceFiles: Array<string>
-  sourceHash: string
-  /**
-   * The environment the load read, as the caller encoded it. Opaque here: it
-   * is compared against the current environment on the JavaScript side.
-   */
-  envReads: string
 }
 
 /** Process metadata (static, doesn't change during process lifetime) */

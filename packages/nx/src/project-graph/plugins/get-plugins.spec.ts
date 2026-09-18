@@ -8,7 +8,6 @@ vi.mock('./isolation/enabled', () => ({
 }));
 vi.mock('./isolation', () => ({
   loadIsolatedNxPlugin: vi.fn(),
-  useIsolatedNxPluginCapabilities: vi.fn(),
   disposeIsolatedPlugins: vi.fn(),
   wantPlugins: vi.fn(),
 }));

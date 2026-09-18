@@ -1,9 +1,8 @@
 import { PluginConfiguration } from '../../../config/nx-json';
 
-import type { ObservedLoad, PluginCapabilities } from '../capabilities-cache';
 import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 
-import { IsolatedPlugin, type ResolvedPluginModule } from './isolated-plugin';
+import { IsolatedPlugin } from './isolated-plugin';
 
 /**
  * The plugins this process has loaded, keyed by the configuration that asked for
@@ -37,8 +36,8 @@ const wantedBy: Map<string, Set<string>> = (global['nxWantedPlugins'] ??=
  *
  * Called before loading, so a reload keeps the plugins the new configuration
  * still names, rather than tearing down a set it is about to ask for again. A
- * plugin registered after this, by a load that was superseded while it waited
- * for a lock, is disposed of on arrival for the same reason: nothing wants it.
+ * plugin registered after this, by a load that was superseded while it was
+ * still loading, is disposed of on arrival for the same reason: nothing wants it.
  *
  * Keeping a plugin rests on its key describing its worker. Anything else that
  * would make a running worker the wrong one to reuse, such as the resolve
@@ -67,46 +66,13 @@ export function disposeIsolatedPlugins(): void {
 export function loadIsolatedNxPlugin(
   plugin: PluginConfiguration,
   root: string,
-  index?: number,
-  resolved?: ResolvedPluginModule
+  index?: number
 ): Promise<LoadedNxPlugin> {
   const cacheKey = getCacheKey(plugin, root, index);
 
   return (
     loadedPlugins.get(cacheKey) ??
-    register(cacheKey, IsolatedPlugin.load(plugin, root, index, resolved))
-  );
-}
-
-/**
- * Wires a plugin from capabilities another process recorded, leaving its worker
- * unspawned until a hook is called.
- */
-export function useIsolatedNxPluginCapabilities(
-  plugin: PluginConfiguration,
-  root: string,
-  resolved: ResolvedPluginModule,
-  capabilities: PluginCapabilities,
-  index?: number,
-  onLoaded?: (actual: PluginCapabilities, observed: ObservedLoad) => void
-): Promise<LoadedNxPlugin> {
-  const cacheKey = getCacheKey(plugin, root, index);
-
-  return (
-    loadedPlugins.get(cacheKey) ??
-    register(
-      cacheKey,
-      Promise.resolve(
-        IsolatedPlugin.fromCapabilities(
-          plugin,
-          root,
-          resolved,
-          capabilities,
-          index,
-          onLoaded
-        )
-      )
-    )
+    register(cacheKey, IsolatedPlugin.load(plugin, root, index))
   );
 }
 

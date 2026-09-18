@@ -1,8 +1,6 @@
 import { EventEmitter } from 'events';
 import { SOCKET_REFUSED_EXIT_CODE } from '../../../utils/socket-refused-exit-code';
 import { waitForSocketConnection } from '../../../utils/wait-for-socket-connection';
-import * as fallback from './fallback';
-import { resetIsolationFallbackForTesting } from './fallback';
 import {
   connectToWorker,
   describeWorkerExit,
@@ -32,29 +30,6 @@ vi.mock('../resolve-plugin', () => ({
     shouldRegisterTSTranspiler: false,
   }),
 }));
-
-/** What the host builds when the worker exits with the socket-refused code. */
-function socketRefusal(): Error {
-  const e = new Error('Plugin worker exited before the connection');
-  e[Symbol.for('nx.pluginWorkerStartupFailure')] = true;
-  e[Symbol.for('nx.pluginWorkerSocketRefused')] = true;
-  return e;
-}
-
-const resolvedModule = {
-  name: 'test-plugin',
-  pluginPath: '/mock/plugin/path',
-  shouldRegisterTSTranspiler: false,
-};
-
-const recordedCapabilities = {
-  name: 'test-plugin',
-  createNodesPattern: undefined,
-  hasCreateDependencies: false,
-  hasCreateMetadata: false,
-  hasPreTasksExecution: false,
-  hasPostTasksExecution: false,
-};
 
 describe('IsolatedPlugin', () => {
   describe('plugin worker socket ids', () => {
@@ -105,8 +80,6 @@ describe('IsolatedPlugin', () => {
   ): LoadResultPayload {
     return {
       name: 'test-plugin',
-      sourceFiles: [],
-      envReads: { keys: [], hash: 'nothing-read' },
       createNodesPattern: hooks.createNodesPattern ?? '',
       hasCreateDependencies: hooks.hasCreateDependencies ?? false,
       hasProcessProjectGraph: false,
@@ -521,62 +494,6 @@ describe('IsolatedPlugin', () => {
     });
   });
 
-  describe('a worker that cannot be started', () => {
-    afterEach(() => {
-      vi.restoreAllMocks();
-      resetIsolationFallbackForTesting();
-    });
-
-    function refuseTheWorker() {
-      vi.spyOn(fallback, 'pluginWithoutWorker');
-      vi.spyOn(
-        IsolatedPlugin.prototype as any,
-        'spawnAndConnect'
-      ).mockRejectedValue(socketRefusal());
-    }
-
-    it('runs the plugin here when the first hook call is refused', async () => {
-      // The record was warm, so no worker was started at load time and the
-      // sandbox refuses the socket here instead. Before this, the refusal came
-      // out of the hook and the command failed, but only when the cache was
-      // populated.
-      const createNodes = vi.fn().mockResolvedValue([]);
-      vi.spyOn(fallback, 'pluginWithoutWorker').mockResolvedValue({
-        name: 'test-plugin',
-        createNodes: ['**/*.config.ts', createNodes],
-      } as any);
-      refuseTheWorker();
-
-      const plugin = IsolatedPlugin.fromCapabilities(
-        'test-plugin',
-        '/root',
-        resolvedModule,
-        { ...recordedCapabilities, createNodesPattern: '**/*.config.ts' }
-      );
-
-      await expect(
-        plugin.createNodes![1](['a.config.ts'], {} as any)
-      ).resolves.toEqual([]);
-      expect(createNodes).toHaveBeenCalled();
-    });
-
-    it('still reports a refusal nothing says to degrade for', async () => {
-      vi.spyOn(fallback, 'pluginWithoutWorker').mockResolvedValue(null);
-      refuseTheWorker();
-
-      const plugin = IsolatedPlugin.fromCapabilities(
-        'test-plugin',
-        '/root',
-        resolvedModule,
-        { ...recordedCapabilities, createNodesPattern: '**/*.config.ts' }
-      );
-
-      await expect(plugin.createNodes![1]([], {} as any)).rejects.toSatisfy(
-        isPluginWorkerSocketRefusal
-      );
-    });
-  });
-
   describe('a released plugin', () => {
     // A plugin with later hooks in the same phase, so one createNodes call does
     // not end the phase: what shuts the worker down here is the release.
@@ -819,135 +736,6 @@ describe('IsolatedPlugin', () => {
       // Post-task phase
       await plugin.postTasksExecution!({} as any);
       expect(shutdown).toHaveBeenCalledTimes(1); // finally done
-    });
-  });
-
-  describe('wiring a plugin from recorded capabilities', () => {
-    const resolved = {
-      name: 'test-plugin',
-      pluginPath: '/mock/plugin/path',
-      shouldRegisterTSTranspiler: false,
-    };
-
-    const capabilities = {
-      name: 'test-plugin',
-      createNodesPattern: '**/*.config.ts',
-      hasCreateDependencies: true,
-      hasCreateMetadata: false,
-      hasPreTasksExecution: false,
-      hasPostTasksExecution: false,
-    };
-
-    function interceptSpawn(loadResult: LoadResultPayload) {
-      return vi
-        .spyOn(IsolatedPlugin.prototype as any, 'spawnAndConnect')
-        .mockImplementation(async function (this: any) {
-          this._alive = true;
-          return loadResult;
-        });
-    }
-
-    beforeEach(() => {
-      vi.spyOn(
-        IsolatedPlugin.prototype as any,
-        'sendRequest'
-      ).mockResolvedValue({ success: true, result: [], dependencies: [] });
-    });
-
-    afterEach(() => {
-      vi.restoreAllMocks();
-    });
-
-    it('starts no worker until a hook is called', async () => {
-      const spawnAndConnect = interceptSpawn(
-        createLoadResult({
-          createNodesPattern: '**/*.config.ts',
-          hasCreateDependencies: true,
-        })
-      );
-
-      const plugin = IsolatedPlugin.fromCapabilities(
-        'test-plugin',
-        '/root',
-        resolved,
-        capabilities
-      );
-
-      // Everything a caller that only reads capabilities needs is here.
-      expect(plugin.createNodes?.[0]).toBe('**/*.config.ts');
-      expect(plugin.createDependencies).toBeDefined();
-      expect(plugin.createMetadata).toBeUndefined();
-      expect(spawnAndConnect).not.toHaveBeenCalled();
-
-      await plugin.createNodes![1]([], {} as any);
-
-      expect(spawnAndConnect).toHaveBeenCalledTimes(1);
-    });
-
-    it('takes include and exclude from the nx.json entry', () => {
-      interceptSpawn(createLoadResult({}));
-
-      const plugin = IsolatedPlugin.fromCapabilities(
-        {
-          plugin: 'test-plugin',
-          include: ['apps/**'],
-          exclude: ['apps/legacy'],
-        },
-        '/root',
-        resolved,
-        capabilities
-      );
-
-      expect(plugin.include).toEqual(['apps/**']);
-      expect(plugin.exclude).toEqual(['apps/legacy']);
-    });
-
-    it("reports the worker's own capabilities once one spawns", async () => {
-      interceptSpawn(
-        createLoadResult({
-          createNodesPattern: '**/*.config.ts',
-          hasCreateDependencies: true,
-          // The record said this plugin had no createMetadata.
-          hasCreateMetadata: true,
-        })
-      );
-      const onLoaded = vi.fn();
-
-      const plugin = IsolatedPlugin.fromCapabilities(
-        'test-plugin',
-        '/root',
-        resolved,
-        capabilities,
-        undefined,
-        onLoaded
-      );
-
-      await plugin.createNodes![1]([], {} as any);
-
-      expect(onLoaded).toHaveBeenCalledTimes(1);
-      expect(onLoaded.mock.calls[0][0]).toEqual({
-        ...capabilities,
-        hasCreateMetadata: true,
-      });
-    });
-
-    it('reports the worker only once, however many hooks run', async () => {
-      interceptSpawn(createLoadResult({ hasCreateDependencies: true }));
-      const onLoaded = vi.fn();
-
-      const plugin = IsolatedPlugin.fromCapabilities(
-        'test-plugin',
-        '/root',
-        resolved,
-        { ...capabilities, createNodesPattern: undefined },
-        undefined,
-        onLoaded
-      );
-
-      await plugin.createDependencies!({} as any);
-      await plugin.createDependencies!({} as any);
-
-      expect(onLoaded).toHaveBeenCalledTimes(1);
     });
   });
 });
