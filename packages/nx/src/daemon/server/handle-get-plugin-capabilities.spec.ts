@@ -15,15 +15,30 @@ describe('handleGetPluginCapabilities', () => {
       {
         name: '@nx/vite/plugin',
         createNodes: ['**/vite.config.{js,ts}', async () => []],
+        capabilities: () => ({
+          createNodesPattern: '**/vite.config.{js,ts}',
+          hasCreateDependencies: false,
+          hasCreateMetadata: false,
+          hasPreTasksExecution: false,
+          hasPostTasksExecution: false,
+        }),
       },
-      { name: 'hooks-only', preTasksExecution: async () => ({}) },
+      {
+        name: 'hooks-only',
+        preTasksExecution: async () => ({}),
+        capabilities: () => ({
+          hasCreateDependencies: false,
+          hasCreateMetadata: false,
+          hasPreTasksExecution: true,
+          hasPostTasksExecution: false,
+        }),
+      },
     ]);
 
     const { response } = await handleGetPluginCapabilities();
 
     expect(response).toEqual([
       {
-        name: '@nx/vite/plugin',
         createNodesPattern: '**/vite.config.{js,ts}',
         hasCreateDependencies: false,
         hasCreateMetadata: false,
@@ -31,7 +46,6 @@ describe('handleGetPluginCapabilities', () => {
         hasPostTasksExecution: false,
       },
       {
-        name: 'hooks-only',
         createNodesPattern: undefined,
         hasCreateDependencies: false,
         hasCreateMetadata: false,

@@ -25,6 +25,7 @@ import { waitForSocketConnection } from '../../../utils/wait-for-socket-connecti
 import { workspaceRoot } from '../../../utils/workspace-root';
 import type { RawProjectGraphDependency } from '../../project-graph-builder';
 import { LoadedNxPlugin } from '../loaded-nx-plugin';
+import type { NxPluginCapabilities } from '../nx-plugin-capabilities';
 import type {
   CreateDependenciesContext,
   CreateMetadataContext,
@@ -175,6 +176,16 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     this.name = name;
     this.pluginPath = pluginPath;
     this.shouldRegisterTSTranspiler = shouldRegisterTSTranspiler;
+  }
+
+  capabilities(): NxPluginCapabilities {
+    return {
+      createNodesPattern: this.createNodes?.[0],
+      hasCreateDependencies: !!this.createDependencies,
+      hasCreateMetadata: !!this.createMetadata,
+      hasPreTasksExecution: !!this.preTasksExecution,
+      hasPostTasksExecution: !!this.postTasksExecution,
+    };
   }
 
   private async spawnAndConnect(): Promise<LoadResultPayload> {

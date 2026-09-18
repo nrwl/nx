@@ -5,10 +5,9 @@ use std::sync::{Arc, Mutex};
 
 /// One row per plugin that built the latest graph, stamped with its `computedAt`.
 /// Created here because `create_all_tables` only runs for a new database file.
-const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS graph_plugin_capabilities (
+const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS nx_plugin_capabilities (
     position   INTEGER PRIMARY KEY NOT NULL,
     computed_at   INTEGER NOT NULL,
-    name   TEXT NOT NULL,
     create_nodes_pattern   TEXT,
     has_create_dependencies   INTEGER NOT NULL,
     has_create_metadata   INTEGER NOT NULL,
@@ -19,7 +18,6 @@ const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS graph_plugin_capabilities (
 #[napi(object)]
 #[derive(Clone, Debug)]
 pub struct CachedPluginCapabilities {
-    pub name: String,
     pub create_nodes_pattern: Option<String>,
     pub has_create_dependencies: bool,
     pub has_create_metadata: bool,
@@ -28,12 +26,12 @@ pub struct CachedPluginCapabilities {
 }
 
 #[napi]
-pub struct GraphPluginCapabilities {
+pub struct NxPluginCapabilities {
     db: Arc<Mutex<NxDbConnection>>,
 }
 
 #[napi]
-impl GraphPluginCapabilities {
+impl NxPluginCapabilities {
     #[napi(constructor)]
     pub fn new(
         #[napi(ts_arg_type = "ExternalObject<NxDbConnection>")] db: &External<
@@ -56,19 +54,18 @@ impl GraphPluginCapabilities {
     ) -> anyhow::Result<()> {
         let mut db = self.db.lock().unwrap();
         db.transaction(|conn| {
-            conn.execute("DELETE FROM graph_plugin_capabilities", [])?;
+            conn.execute("DELETE FROM nx_plugin_capabilities", [])?;
             let mut insert = conn.prepare(
-                "INSERT INTO graph_plugin_capabilities (
-                    position, computed_at, name, create_nodes_pattern,
+                "INSERT INTO nx_plugin_capabilities (
+                    position, computed_at, create_nodes_pattern,
                     has_create_dependencies, has_create_metadata,
                     has_pre_tasks_execution, has_post_tasks_execution
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)",
             )?;
             for (position, plugin) in capabilities.iter().enumerate() {
                 insert.execute(params![
                     position as i64,
                     computed_at,
-                    plugin.name,
                     plugin.create_nodes_pattern,
                     plugin.has_create_dependencies,
                     plugin.has_create_metadata,
@@ -87,21 +84,20 @@ impl GraphPluginCapabilities {
     pub fn get(&self, computed_at: i64) -> anyhow::Result<Option<Vec<CachedPluginCapabilities>>> {
         let db = self.db.lock().unwrap();
         let mut query = db.prepare(
-            "SELECT computed_at, name, create_nodes_pattern,
+            "SELECT computed_at, create_nodes_pattern,
                     has_create_dependencies, has_create_metadata,
                     has_pre_tasks_execution, has_post_tasks_execution
-             FROM graph_plugin_capabilities ORDER BY position",
+             FROM nx_plugin_capabilities ORDER BY position",
         )?;
         let rows = query.query_map([], |row| {
             Ok((
                 row.get::<_, i64>(0)?,
                 CachedPluginCapabilities {
-                    name: row.get(1)?,
-                    create_nodes_pattern: row.get(2)?,
-                    has_create_dependencies: row.get(3)?,
-                    has_create_metadata: row.get(4)?,
-                    has_pre_tasks_execution: row.get(5)?,
-                    has_post_tasks_execution: row.get(6)?,
+                    create_nodes_pattern: row.get(1)?,
+                    has_create_dependencies: row.get(2)?,
+                    has_create_metadata: row.get(3)?,
+                    has_pre_tasks_execution: row.get(4)?,
+                    has_post_tasks_execution: row.get(5)?,
                 },
             ))
         })?;

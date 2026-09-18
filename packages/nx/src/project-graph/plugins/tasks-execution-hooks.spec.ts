@@ -1,4 +1,4 @@
-import type { PluginCapabilities } from './graph-plugin-capabilities';
+import type { NxPluginCapabilities } from './nx-plugin-capabilities';
 import {
   runPostTasksExecution,
   runPreTasksExecution,
@@ -6,7 +6,7 @@ import {
 
 const mocks = vi.hoisted(() => ({
   getPlugins: vi.fn(),
-  capabilitiesOfGraphReadFromCache: vi.fn(),
+  capabilitiesOfNxPluginsReadFromCache: vi.fn(),
   isOnDaemon: vi.fn(),
   isDaemonEnabled: vi.fn(),
   daemonRunPreTasksExecution: vi.fn(),
@@ -17,8 +17,9 @@ vi.mock('./get-plugins', () => ({
   getPlugins: mocks.getPlugins,
 }));
 
-vi.mock('./graph-plugin-capabilities', () => ({
-  capabilitiesOfGraphReadFromCache: mocks.capabilitiesOfGraphReadFromCache,
+vi.mock('./nx-plugin-capabilities', () => ({
+  capabilitiesOfNxPluginsReadFromCache:
+    mocks.capabilitiesOfNxPluginsReadFromCache,
 }));
 
 vi.mock('../../daemon/is-on-daemon', () => ({
@@ -37,8 +38,7 @@ vi.mock('../../config/nx-json', () => ({
   readNxJson: () => ({ plugins: ['@acme/plugin'] }),
 }));
 
-const INERT: PluginCapabilities = {
-  name: '@acme/plugin',
+const INERT: NxPluginCapabilities = {
   createNodesPattern: '**/*.config.ts',
   hasCreateDependencies: true,
   hasCreateMetadata: false,
@@ -69,7 +69,7 @@ describe('task execution hooks', () => {
     vi.clearAllMocks();
     mocks.isOnDaemon.mockReturnValue(false);
     mocks.isDaemonEnabled.mockReturnValue(false);
-    mocks.capabilitiesOfGraphReadFromCache.mockReturnValue(null);
+    mocks.capabilitiesOfNxPluginsReadFromCache.mockReturnValue(null);
     mocks.getPlugins.mockResolvedValue([]);
     mocks.daemonRunPreTasksExecution.mockResolvedValue([]);
   });
@@ -85,7 +85,7 @@ describe('task execution hooks', () => {
     });
 
     it('loads nothing when the build of the graph it read recorded no such hook', async () => {
-      mocks.capabilitiesOfGraphReadFromCache.mockReturnValue([INERT]);
+      mocks.capabilitiesOfNxPluginsReadFromCache.mockReturnValue([INERT]);
 
       await expect(runPreTasksExecution(preTasksContext())).resolves.toEqual(
         []
@@ -96,7 +96,7 @@ describe('task execution hooks', () => {
 
     it('loads and runs them when that build recorded the hook', async () => {
       const preTasksExecution = vi.fn(async () => ({ FROM_HOOK: '1' }));
-      mocks.capabilitiesOfGraphReadFromCache.mockReturnValue([
+      mocks.capabilitiesOfNxPluginsReadFromCache.mockReturnValue([
         { ...INERT, hasPreTasksExecution: true },
       ]);
       mocks.getPlugins.mockResolvedValue([
@@ -131,7 +131,7 @@ describe('task execution hooks', () => {
     });
 
     it('loads nothing when the build of the graph it read recorded no such hook', async () => {
-      mocks.capabilitiesOfGraphReadFromCache.mockReturnValue([INERT]);
+      mocks.capabilitiesOfNxPluginsReadFromCache.mockReturnValue([INERT]);
 
       await runPostTasksExecution(postTasksContext());
 
@@ -140,7 +140,7 @@ describe('task execution hooks', () => {
 
     it('loads and runs them when that build recorded the hook', async () => {
       const postTasksExecution = vi.fn(async () => {});
-      mocks.capabilitiesOfGraphReadFromCache.mockReturnValue([
+      mocks.capabilitiesOfNxPluginsReadFromCache.mockReturnValue([
         { ...INERT, hasPostTasksExecution: true },
       ]);
       mocks.getPlugins.mockResolvedValue([

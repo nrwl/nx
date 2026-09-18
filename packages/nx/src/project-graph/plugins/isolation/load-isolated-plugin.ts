@@ -4,8 +4,6 @@ import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 
 import { IsolatedPlugin } from './isolated-plugin';
 
-// Keyed separately from the older `isolatedPluginCache`: two copies of Nx in one
-// process share this object, and they do not share this shape.
 const loadedPlugins: Map<string, Promise<IsolatedPlugin>> = (global[
   'nxLoadedPlugins'
 ] ??= new Map());

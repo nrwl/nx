@@ -37,7 +37,6 @@ beforeEach(() => {
   mocks.capabilitiesOfConfiguredPlugins.mockReset();
   mocks.capabilitiesOfConfiguredPlugins.mockResolvedValue([
     {
-      name: 'test',
       createNodesPattern: '**/project.json',
       hasCreateDependencies: false,
       hasCreateMetadata: false,
@@ -110,7 +109,6 @@ describe('getTouchedProjectsFromProjectGlobChanges', () => {
     // Without the filter, a lone absent pattern reaches minimatch, which throws.
     mocks.capabilitiesOfConfiguredPlugins.mockResolvedValue([
       {
-        name: 'inert',
         createNodesPattern: undefined,
         hasCreateDependencies: true,
         hasCreateMetadata: false,
@@ -137,7 +135,6 @@ describe('getTouchedProjectsFromProjectGlobChanges', () => {
   it('matches against the patterns on record', async () => {
     mocks.capabilitiesOfConfiguredPlugins.mockResolvedValue([
       {
-        name: 'test',
         createNodesPattern: '**/project.json',
         hasCreateDependencies: false,
         hasCreateMetadata: false,

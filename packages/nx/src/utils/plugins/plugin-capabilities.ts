@@ -122,6 +122,12 @@ async function tryGetModule(
     } else {
       return {
         name: packageJson.name,
+        capabilities: () => ({
+          hasCreateDependencies: false,
+          hasCreateMetadata: false,
+          hasPreTasksExecution: false,
+          hasPostTasksExecution: false,
+        }),
       };
     }
   } catch {

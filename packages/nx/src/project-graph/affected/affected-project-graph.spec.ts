@@ -6,7 +6,6 @@ vi.mock('../plugins/get-plugins', async () => ({
   ...(await vi.importActual('../plugins/get-plugins')),
   capabilitiesOfConfiguredPlugins: async () => [
     {
-      name: 'test',
       createNodesPattern: '**/project.json',
       hasCreateDependencies: false,
       hasCreateMetadata: false,

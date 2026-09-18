@@ -9,18 +9,18 @@ import {
   type MaybeStubbedPostTasksExecutionContext,
 } from './task-results-stub';
 import {
-  capabilitiesOfGraphReadFromCache,
-  type PluginCapabilities,
-} from './graph-plugin-capabilities';
+  capabilitiesOfNxPluginsReadFromCache,
+  type NxPluginCapabilities,
+} from './nx-plugin-capabilities';
 
 /** True only when the cached graph's recorded rows show no plugin has `hook`; unknown is false. */
 function knownThatNoPluginRegisters(
   hook: keyof Pick<
-    PluginCapabilities,
+    NxPluginCapabilities,
     'hasPreTasksExecution' | 'hasPostTasksExecution'
   >
 ): boolean {
-  const recorded = capabilitiesOfGraphReadFromCache();
+  const recorded = capabilitiesOfNxPluginsReadFromCache();
   return !!recorded && !recorded.some((capabilities) => capabilities[hook]);
 }
 

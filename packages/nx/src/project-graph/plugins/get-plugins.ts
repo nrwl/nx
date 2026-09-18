@@ -18,10 +18,9 @@ import { resetResolvePluginCache } from './resolve-plugin';
 import { isOnDaemon } from '../../daemon/is-on-daemon';
 import { daemonClient, isDaemonEnabled } from '../../daemon/client/client';
 import {
-  capabilitiesOfGraphReadFromCache,
-  capabilitiesOfLoadedPlugin,
-  type PluginCapabilities,
-} from './graph-plugin-capabilities';
+  capabilitiesOfNxPluginsReadFromCache,
+  type NxPluginCapabilities,
+} from './nx-plugin-capabilities';
 
 import { isIsolationEnabled } from './isolation/enabled';
 import {
@@ -370,15 +369,17 @@ async function loadPlugins(
 export async function capabilitiesOfConfiguredPlugins(
   nxJson: NxJsonConfiguration,
   root = workspaceRoot
-): Promise<PluginCapabilities[]> {
+): Promise<NxPluginCapabilities[]> {
   if (!isOnDaemon() && isDaemonEnabled()) {
     return daemonClient.getPluginCapabilities();
   }
-  const recorded = capabilitiesOfGraphReadFromCache();
+  const recorded = capabilitiesOfNxPluginsReadFromCache();
   if (recorded) {
     return recorded;
   }
-  return (await getPlugins(nxJson, root)).map(capabilitiesOfLoadedPlugin);
+  return (await getPlugins(nxJson, root)).map((plugin) =>
+    plugin.capabilities()
+  );
 }
 
 async function loadDefaultNxPlugins(

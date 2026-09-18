@@ -80,7 +80,7 @@ import {
   GET_PLUGIN_CAPABILITIES,
   type HandleGetPluginCapabilitiesMessage,
 } from '../message-types/get-plugin-capabilities';
-import type { PluginCapabilities } from '../../project-graph/plugins/graph-plugin-capabilities';
+import type { NxPluginCapabilities } from '../../project-graph/plugins/nx-plugin-capabilities';
 import {
   GET_SYNC_GENERATOR_CHANGES,
   type HandleGetSyncGeneratorChangesMessage,
@@ -1039,7 +1039,7 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
-  getPluginCapabilities(): Promise<PluginCapabilities[]> {
+  getPluginCapabilities(): Promise<NxPluginCapabilities[]> {
     const message: HandleGetPluginCapabilitiesMessage = {
       type: GET_PLUGIN_CAPABILITIES,
     };

@@ -72,15 +72,14 @@ vi.mock('./nx-deps-cache', async () => {
     },
   };
 });
-vi.mock('./plugins/graph-plugin-capabilities', () => ({
+vi.mock('./plugins/nx-plugin-capabilities', () => ({
   noteGraphReadFromCache: (computedAt: number | undefined) => {
     state.notedComputedAt = computedAt;
     if (computedAt !== undefined) {
       state.events.push(`read graph @${computedAt}`);
     }
   },
-  capabilitiesOfLoadedPlugin: () => ({}),
-  getGraphPluginCapabilitiesStore: () => ({
+  getNxPluginCapabilitiesStore: () => ({
     record: (computedAt: number) =>
       state.events.push(`record capabilities @${computedAt}`),
   }),

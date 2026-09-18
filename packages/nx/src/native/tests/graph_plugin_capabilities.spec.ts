@@ -3,15 +3,14 @@ import { rmSync } from 'fs';
 import { join } from 'path';
 
 import { getDbConnection } from '../../utils/db-connection';
-import { GraphPluginCapabilities } from '../index';
+import { NxPluginCapabilities } from '../index';
 
 const dbOutputFolder = 'temp-db-graph-plugin-capabilities';
 
-describe('GraphPluginCapabilities', () => {
-  let store: GraphPluginCapabilities;
+describe('NxPluginCapabilities', () => {
+  let store: NxPluginCapabilities;
 
   const vite = {
-    name: '@nx/vite/plugin',
     createNodesPattern: '**/vite.config.{js,ts}',
     hasCreateDependencies: false,
     hasCreateMetadata: false,
@@ -19,7 +18,6 @@ describe('GraphPluginCapabilities', () => {
     hasPostTasksExecution: false,
   };
   const hooks = {
-    name: 'hooks-only',
     hasCreateDependencies: false,
     hasCreateMetadata: false,
     hasPreTasksExecution: true,
@@ -27,7 +25,7 @@ describe('GraphPluginCapabilities', () => {
   };
 
   beforeEach(() => {
-    store = new GraphPluginCapabilities(
+    store = new NxPluginCapabilities(
       getDbConnection({
         directory: join(__dirname, dbOutputFolder),
         dbName: `temp-db-${randomBytes(4).toString('hex')}`,
@@ -44,10 +42,7 @@ describe('GraphPluginCapabilities', () => {
 
     expect(store.get(1_700_000_000_000)).toEqual([
       vite,
-      expect.objectContaining({
-        name: 'hooks-only',
-        hasPreTasksExecution: true,
-      }),
+      expect.objectContaining({ hasPreTasksExecution: true }),
     ]);
     expect(store.get(1_700_000_000_000)[1].createNodesPattern).toBeFalsy();
   });

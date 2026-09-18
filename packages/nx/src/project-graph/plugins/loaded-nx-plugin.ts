@@ -21,6 +21,7 @@ import {
   rehydrateTerminalOutputs,
   type MaybeStubbedPostTasksExecutionContext,
 } from './task-results-stub';
+import type { NxPluginCapabilities } from './nx-plugin-capabilities';
 
 /**
  * NOTE: Avoid using `import type` with this class. It causes issues with
@@ -188,5 +189,15 @@ export class LoadedNxPlugin {
           await rehydrateTerminalOutputs(context)
         );
     }
+  }
+
+  capabilities(): NxPluginCapabilities {
+    return {
+      createNodesPattern: this.createNodes?.[0],
+      hasCreateDependencies: !!this.createDependencies,
+      hasCreateMetadata: !!this.createMetadata,
+      hasPreTasksExecution: !!this.preTasksExecution,
+      hasPostTasksExecution: !!this.postTasksExecution,
+    };
   }
 }

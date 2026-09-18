@@ -79,16 +79,6 @@ export declare class FileLock {
   tryLock(): boolean
 }
 
-export declare class GraphPluginCapabilities {
-  constructor(db: ExternalObject<NxDbConnection>)
-  record(computedAt: number, capabilities: Array<CachedPluginCapabilities>): void
-  /**
-   * The capabilities recorded with the graph computed at `computed_at`, or
-   * null when what is recorded belongs to another build or nothing is.
-   */
-  get(computedAt: number): Array<CachedPluginCapabilities> | null
-}
-
 export declare class HashPlanInspector {
   constructor(allWorkspaceFiles: ExternalObject<Array<FileData>>, projectFileMap: ExternalObject<Record<string, Array<FileData>>>, workspaceRoot: string)
   /** @deprecated Use `inspectInputs()` instead for structured output. */
@@ -172,6 +162,16 @@ export declare class NxConsolePreferences {
   constructor(homeDir: string)
   getAutoInstallPreference(): boolean | null
   setAutoInstallPreference(autoInstall: boolean): void
+}
+
+export declare class NxPluginCapabilities {
+  constructor(db: ExternalObject<NxDbConnection>)
+  record(computedAt: number, capabilities: Array<CachedPluginCapabilities>): void
+  /**
+   * The capabilities recorded with the graph computed at `computed_at`, or
+   * null when what is recorded belongs to another build or nothing is.
+   */
+  get(computedAt: number): Array<CachedPluginCapabilities> | null
 }
 
 export declare class NxTaskHistory {
@@ -394,7 +394,6 @@ export declare const enum BatchStatus {
 }
 
 export interface CachedPluginCapabilities {
-  name: string
   createNodesPattern?: string
   hasCreateDependencies: boolean
   hasCreateMetadata: boolean

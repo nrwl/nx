@@ -2,7 +2,7 @@ const mocks = vi.hoisted(() => ({
   isOnDaemon: vi.fn(),
   isDaemonEnabled: vi.fn(),
   getPluginCapabilities: vi.fn(),
-  capabilitiesOfGraphReadFromCache: vi.fn(),
+  capabilitiesOfNxPluginsReadFromCache: vi.fn(),
   loadNxPlugin: vi.fn(),
 }));
 
@@ -11,9 +11,10 @@ vi.mock('../../daemon/client/client', () => ({
   isDaemonEnabled: mocks.isDaemonEnabled,
   daemonClient: { getPluginCapabilities: mocks.getPluginCapabilities },
 }));
-vi.mock('./graph-plugin-capabilities', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('./graph-plugin-capabilities')>()),
-  capabilitiesOfGraphReadFromCache: mocks.capabilitiesOfGraphReadFromCache,
+vi.mock('./nx-plugin-capabilities', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('./nx-plugin-capabilities')>()),
+  capabilitiesOfNxPluginsReadFromCache:
+    mocks.capabilitiesOfNxPluginsReadFromCache,
 }));
 
 vi.mock('./isolation/enabled', () => ({ isIsolationEnabled: () => false }));
@@ -30,8 +31,8 @@ vi.mock('./resolve-plugin', () => ({ resetResolvePluginCache: vi.fn() }));
 
 import { capabilitiesOfConfiguredPlugins } from './get-plugins';
 
+const VITE_NAME = '@nx/vite/plugin';
 const VITE = {
-  name: '@nx/vite/plugin',
   createNodesPattern: '**/vite.config.{js,ts}',
   hasCreateDependencies: false,
   hasCreateMetadata: false,
@@ -44,7 +45,7 @@ describe('capabilitiesOfConfiguredPlugins', () => {
     vi.clearAllMocks();
     mocks.isOnDaemon.mockReturnValue(false);
     mocks.isDaemonEnabled.mockReturnValue(false);
-    mocks.capabilitiesOfGraphReadFromCache.mockReturnValue(null);
+    mocks.capabilitiesOfNxPluginsReadFromCache.mockReturnValue(null);
   });
 
   it('asks the daemon when there is one, and loads nothing', async () => {
@@ -52,11 +53,11 @@ describe('capabilitiesOfConfiguredPlugins', () => {
     mocks.getPluginCapabilities.mockResolvedValue([VITE]);
 
     await expect(capabilitiesOfConfiguredPlugins({})).resolves.toEqual([VITE]);
-    expect(mocks.capabilitiesOfGraphReadFromCache).not.toHaveBeenCalled();
+    expect(mocks.capabilitiesOfNxPluginsReadFromCache).not.toHaveBeenCalled();
   });
 
   it('answers from what the build of its cached graph recorded', async () => {
-    mocks.capabilitiesOfGraphReadFromCache.mockReturnValue([VITE]);
+    mocks.capabilitiesOfNxPluginsReadFromCache.mockReturnValue([VITE]);
 
     await expect(capabilitiesOfConfiguredPlugins({})).resolves.toEqual([VITE]);
     expect(mocks.getPluginCapabilities).not.toHaveBeenCalled();
@@ -64,17 +65,29 @@ describe('capabilitiesOfConfiguredPlugins', () => {
 
   it('loads the plugins when nothing else can answer', async () => {
     mocks.loadNxPlugin.mockImplementation(async (plugin: string) =>
-      plugin === VITE.name
-        ? { name: plugin, createNodes: [VITE.createNodesPattern, vi.fn()] }
-        : { name: plugin }
+      plugin === VITE_NAME
+        ? {
+            name: plugin,
+            createNodes: [VITE.createNodesPattern, vi.fn()],
+            capabilities: () => VITE,
+          }
+        : {
+            name: plugin,
+            capabilities: () => ({
+              hasCreateDependencies: false,
+              hasCreateMetadata: false,
+              hasPreTasksExecution: false,
+              hasPostTasksExecution: false,
+            }),
+          }
     );
 
     const capabilities = await capabilitiesOfConfiguredPlugins(
-      { plugins: [VITE.name] },
+      { plugins: [VITE_NAME] },
       '/root'
     );
 
     expect(capabilities[0]).toEqual(VITE);
-    expect(mocks.loadNxPlugin).toHaveBeenCalledWith(VITE.name, '/root', 0);
+    expect(mocks.loadNxPlugin).toHaveBeenCalledWith(VITE_NAME, '/root', 0);
   });
 });
