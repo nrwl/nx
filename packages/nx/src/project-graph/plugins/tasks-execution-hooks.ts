@@ -1,6 +1,6 @@
 import type { PreTasksExecutionContext } from './public-api';
-import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
-import { getPlugins, peekPluginCapabilities } from './get-plugins';
+import { readNxJson } from '../../config/nx-json';
+import { getPlugins } from './get-plugins';
 import { isOnDaemon } from '../../daemon/is-on-daemon';
 import { daemonClient, isDaemonEnabled } from '../../daemon/client/client';
 import { workspaceRoot } from '../../utils/workspace-root';
@@ -8,23 +8,25 @@ import {
   stubTerminalOutputs,
   type MaybeStubbedPostTasksExecutionContext,
 } from './task-results-stub';
-import type { PluginCapabilities } from './capabilities-cache';
+import {
+  capabilitiesOfGraphReadFromCache,
+  type PluginCapabilities,
+} from './graph-plugin-capabilities';
 
 /**
- * True when the records prove that no plugin registers `hook`. False when one
- * does, and false when that cannot be established at all: no usable key, a load
- * that failed, or a client that holds no record for some plugin and leaves the
- * loading to the daemon it is about to ask anyway.
+ * True when the plugins that built the graph this process read from the cache
+ * are known to register no `hook`, so they need not be loaded to find out.
+ *
+ * False whenever that is not known, which includes a process that built its own
+ * graph: it has them loaded already, and asking them costs nothing.
  */
-async function noPluginRegisters(
+function knownThatNoPluginRegisters(
   hook: keyof Pick<
     PluginCapabilities,
     'hasPreTasksExecution' | 'hasPostTasksExecution'
-  >,
-  nxJson: NxJsonConfiguration,
-  root: string
-): Promise<boolean> {
-  const recorded = await peekPluginCapabilities(nxJson, root);
+  >
+): boolean {
+  const recorded = capabilitiesOfGraphReadFromCache();
   return !!recorded && !recorded.some((capabilities) => capabilities[hook]);
 }
 
@@ -33,19 +35,10 @@ export async function runPreTasksExecution(
 ) {
   const nxJson = readNxJson(pluginContext.workspaceRoot);
 
-  // Checked before the daemon branch, so a workspace whose plugins register no
-  // hook neither loads them nor pays for the round trip.
-  if (
-    await noPluginRegisters(
-      'hasPreTasksExecution',
-      nxJson,
-      pluginContext.workspaceRoot
-    )
-  ) {
-    return [];
-  }
-
   if (isOnDaemon() || !isDaemonEnabled()) {
+    if (knownThatNoPluginRegisters('hasPreTasksExecution')) {
+      return [];
+    }
     performance.mark(`preTasksExecution:start`);
     const plugins = await getPlugins(nxJson, pluginContext.workspaceRoot);
     const envs = await Promise.all(
@@ -95,13 +88,10 @@ export async function runPostTasksExecution(
 ) {
   const nxJson = readNxJson(workspaceRoot);
 
-  // Checked before the daemon branch, so a workspace whose plugins register no
-  // postTasksExecution skips both the plugin load and the daemon round trip.
-  if (await noPluginRegisters('hasPostTasksExecution', nxJson, workspaceRoot)) {
-    return;
-  }
-
   if (isOnDaemon() || !isDaemonEnabled()) {
+    if (knownThatNoPluginRegisters('hasPostTasksExecution')) {
+      return;
+    }
     performance.mark(`postTasksExecution:start`);
     const plugins = await getPlugins(nxJson);
     await Promise.all(

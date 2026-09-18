@@ -585,34 +585,4 @@ describe('loading plugins through the capability cache', () => {
       ).toBeNull();
     });
   });
-
-  describe('capabilitiesOfConfiguredPlugins', () => {
-    it('answers from the records without loading a plugin', async () => {
-      everythingRecorded = true;
-
-      const capabilities = await capabilitiesOfConfiguredPlugins({
-        plugins: ['test-plugin'],
-      });
-
-      expect(capabilities[0]).toEqual(CAPABILITIES);
-      // The whole point: a caller that needs the answer either way still does
-      // not put the plugin set in this process to get it.
-      expect(loadIsolatedNxPlugin).not.toHaveBeenCalled();
-    });
-
-    it('loads the plugins when no record can be kept', async () => {
-      // A plugin with nothing to key a record on, which is one of the ways
-      // peeking declines outright.
-      const capabilities = await capabilitiesOfConfiguredPlugins({
-        plugins: ['unidentifiable-plugin'],
-      });
-
-      // Answered anyway, from what the load reports, so the caller has one
-      // shape to handle rather than a null to turn into a load itself.
-      expect(loadIsolatedNxPlugin).toHaveBeenCalled();
-      expect(capabilities.map((c) => c.createNodesPattern)).toContain(
-        '**/*.config.ts'
-      );
-    });
-  });
 });
