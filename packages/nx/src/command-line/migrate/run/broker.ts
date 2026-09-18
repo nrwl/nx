@@ -14,7 +14,12 @@ import { existsSync, readdirSync, rmSync } from 'fs';
 import { join } from 'path';
 import { FileLock, IS_WASM } from '../../../native';
 import { readJsonFile, writeJsonFile } from '../../../utils/fileutils';
-import { ensureRunSubdir, handoffsDirState } from '../agentic/handoff';
+import { parseJson } from '../../../utils/json';
+import {
+  ensureRunSubdir,
+  handoffsDirState,
+  readAtomicallyPublishedFile,
+} from '../agentic/handoff';
 import {
   DeferredOutputCollector,
   replayDeferredOutput,
@@ -137,6 +142,15 @@ function requestPath(runDirPath: string, id: string): string {
 
 function resultPath(runDirPath: string, id: string): string {
   return join(brokerDir(runDirPath), `${id}.result.json`);
+}
+
+// A request file lives in the agent-writable broker directory, so it could be
+// a planted symlink or FIFO; read it without reading a symlink's target or
+// blocking on a FIFO.
+function readRequestFile(filePath: string): BrokerRequest {
+  return parseJson<BrokerRequest>(
+    readAtomicallyPublishedFile(filePath, `${filePath} is not a regular file.`)
+  );
 }
 
 /**
@@ -320,7 +334,7 @@ export class MigrateCommitBroker {
       if (this.handled.has(id)) continue;
       this.handled.add(id);
       const result = await this.answer(
-        readJsonFile<BrokerRequest>(requestPath(this.dir, id))
+        readRequestFile(requestPath(this.dir, id))
       );
       publishFileAtomically(resultPath(this.dir, id), (tmpPath) =>
         writeJsonFile(tmpPath, result)

@@ -1,11 +1,4 @@
-import {
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-  type Dirent,
-} from 'fs';
+import { existsSync, mkdirSync, readdirSync, rmSync, type Dirent } from 'fs';
 import { createHash } from 'crypto';
 import { basename, join } from 'path';
 import { writeJsonFile } from '../../../utils/fileutils';
@@ -13,6 +6,7 @@ import { publishFileAtomically } from './atomic-write';
 import { GIT_SHA } from '../../../utils/git-utils';
 import { nxVersion } from '../../../utils/versions';
 import { HANDOFFS_DIR_NAME, MIGRATE_RUNS_RELATIVE_DIR } from '../agentic/types';
+import { readAtomicallyPublishedFile } from '../agentic/handoff';
 import { RUN_ID_SAFE } from './run-id';
 import { singleLine } from '../text';
 
@@ -670,7 +664,14 @@ export class NewerRunStateFormatError extends Error {
  */
 export function readRunState(runDirPath: string): MigrateRunState {
   const filePath = join(runDirPath, RUN_STATE_FILE_NAME);
-  const content = readFileSync(filePath, 'utf-8');
+  // run.json lives in the agent-writable run directory, so it could be a
+  // planted symlink or FIFO; read it without reading a symlink's target or
+  // blocking on a FIFO, while still tolerating a concurrent tmp + rename
+  // publish. A non-regular file reads as corruption; ENOENT stays "no run".
+  const content = readAtomicallyPublishedFile(
+    filePath,
+    corruptRunStateError(filePath, 'is not a regular file.').message
+  );
   let parsed: unknown;
   try {
     parsed = JSON.parse(content);

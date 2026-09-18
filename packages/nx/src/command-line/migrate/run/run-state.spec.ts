@@ -5,6 +5,7 @@ import {
   mkdtempSync,
   readdirSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
@@ -128,6 +129,19 @@ describe('run-state', () => {
 
       expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
       expect(() => readRunState(dir)).toThrow(join(dir, 'run.json'));
+    });
+
+    it('refuses a run.json that is a symlink instead of following it', () => {
+      const dir = join(root, 'run-1');
+      mkdirSync(dir, { recursive: true });
+      const elsewhere = join(root, 'planted.json');
+      writeFileSync(elsewhere, JSON.stringify(buildState()));
+      symlinkSync(elsewhere, join(dir, 'run.json'));
+
+      // A valid target proves the symlink is refused, not merely read through
+      // and rejected for its content.
+      expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+      expect(() => readRunState(dir)).toThrow(/not a regular file/i);
     });
 
     it('refuses a run state missing required top-level fields', () => {
@@ -1111,8 +1125,9 @@ describe('run-state', () => {
     });
 
     it('reports a run dir whose run.json cannot be read instead of treating it as absent', () => {
-      // run.json as a directory makes readFileSync fail with a raw fs error
-      // (EISDIR), the same failure class as EACCES on a file.
+      // A directory where run.json belongs is not a regular file, so discovery
+      // reports it as uninterpretable rather than reading through it or
+      // treating it as absent.
       mkdirSync(join(migrateRunsDir(root), 'unreadable', 'run.json'), {
         recursive: true,
       });
@@ -1121,7 +1136,10 @@ describe('run-state', () => {
 
       expect(result.active).toBeNull();
       expect(result.uninterpretable).toEqual([
-        { dirName: 'unreadable', reason: expect.stringContaining('EISDIR') },
+        {
+          dirName: 'unreadable',
+          reason: expect.stringContaining('is not a regular file'),
+        },
       ]);
     });
 

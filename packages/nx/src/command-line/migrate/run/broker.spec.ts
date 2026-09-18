@@ -836,6 +836,30 @@ describe('migrate commit broker', () => {
       expect(readdirSync(elsewhere)).toEqual([planted]);
     });
 
+    it('refuses a request file that is a symlink instead of following it', async () => {
+      const broker = new MigrateCommitBroker(
+        root,
+        dir,
+        'npx nx migrate',
+        POLICY
+      );
+      const elsewhere = join(root, 'planted.json');
+      writeFileSync(
+        elsewhere,
+        JSON.stringify({ kind: 'commit', stepId: 'step-1', attempt: 1 })
+      );
+      symlinkSync(
+        elsewhere,
+        join(brokerDir(dir), `${broker.nonce}-step-1-1.request.json`)
+      );
+
+      // A valid target proves the symlink is refused, not answered through.
+      await expect(broker.service()).rejects.toThrow(/not a regular file/i);
+      broker.close();
+
+      expect(mockCommit).not.toHaveBeenCalled();
+    });
+
     it('answers a request once, whatever else rewrites it', async () => {
       const broker = new MigrateCommitBroker(
         root,
