@@ -15,7 +15,7 @@
  */
 
 import { ESLintUtils } from '@typescript-eslint/utils';
-import { closeSync, openSync, readSync } from 'node:fs';
+import { parseAllDocuments } from 'yaml';
 
 // NOTE: The rule will be available in ESLint configs as "@nx/workspace-ensure-pnpm-lock-version"
 export const RULE_NAME = 'ensure-pnpm-lock-version';
@@ -45,16 +45,19 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
         'pnpm-lock.yaml has a lockfileVersion of {{version}}, but {{expectedVersion}} is required.',
     },
   },
-  defaultOptions: [],
+  defaultOptions: [] as { version: string }[],
   create(context) {
-    // Read upon creation of the rule, the contents should not change during linting
-    const lockfileFirstLine = readFirstLineSync('pnpm-lock.yaml');
-    // Extract the version number, it will be a string in single quotes
-    const lockfileVersion = lockfileFirstLine.match(
-      /lockfileVersion:\s*'([^']+)'/
-    )?.[1];
+    // pnpm 12 prepends a package-manager document to the dependency lockfile.
+    const documents = parseAllDocuments(context.sourceCode.text);
+    const lockfile = documents.at(-1);
+    const version = lockfile?.get('lockfileVersion');
+    const lockfileVersion =
+      !documents.some((document) => document.errors.length) &&
+      (typeof version === 'string' || typeof version === 'number')
+        ? String(version)
+        : undefined;
 
-    const options = context.options as { version: string }[];
+    const options = context.options;
     if (!Array.isArray(options) || options.length === 0) {
       throw new Error('Expected an array of options with a version property');
     }
@@ -83,27 +86,3 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
     };
   },
 });
-
-/**
- * pnpm-lock.yaml is a huge file, so only read the first line as efficiently as possible
- * for optimum linting performance.
- */
-function readFirstLineSync(filePath: string) {
-  const BUFFER_SIZE = 64; // Optimized for the expected line length
-  const buffer = Buffer.alloc(BUFFER_SIZE);
-  let line = '';
-  let bytesRead: number;
-  let fd: number;
-  try {
-    fd = openSync(filePath, 'r');
-    bytesRead = readSync(fd, buffer, 0, BUFFER_SIZE, 0);
-    line = buffer.toString('utf8', 0, bytesRead).split('\n')[0];
-  } catch (err) {
-    throw err; // Re-throw to allow caller to handle
-  } finally {
-    if (fd !== undefined) {
-      closeSync(fd);
-    }
-  }
-  return line;
-}
