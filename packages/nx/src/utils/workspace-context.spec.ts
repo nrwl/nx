@@ -1,9 +1,7 @@
 const mockGlob = vi.fn();
 const mockMultiGlob = vi.fn();
-const mockGetFileHashes = vi.fn();
 const mockDaemonGlob = vi.fn();
 const mockDaemonMultiGlob = vi.fn();
-const mockDaemonFileData = vi.fn();
 const mockEnabled = vi.fn();
 const mockIsOnDaemon = vi.fn();
 const mockReady = vi.fn();
@@ -19,7 +17,6 @@ cjsNative.WorkspaceContext = vi.fn().mockImplementation(function (
   return {
     glob: mockGlob,
     multiGlob: mockMultiGlob,
-    getFileHashes: mockGetFileHashes,
     ready: mockReady,
     refresh: mockRefresh,
     workspaceRoot: root,
@@ -36,7 +33,6 @@ vi.mock('../daemon/client/client', () => ({
     enabled: () => mockEnabled(),
     glob: (...args: unknown[]) => mockDaemonGlob(...args),
     multiGlob: (...args: unknown[]) => mockDaemonMultiGlob(...args),
-    getWorkspaceContextFileData: () => mockDaemonFileData(),
   },
 }));
 
@@ -45,7 +41,6 @@ vi.mock('../daemon/is-on-daemon', () => ({
 }));
 
 import {
-  getFileHashesInContext,
   globWithWorkspaceContext,
   multiGlobWithWorkspaceContext,
   refreshWorkspaceContext,
@@ -62,7 +57,6 @@ describe('workspace-context /virtual short-circuit', () => {
     mockIsOnDaemon.mockReturnValue(false);
     mockGlob.mockReturnValue(['virtual-glob-result']);
     mockMultiGlob.mockReturnValue([['virtual-multiglob-result']]);
-    mockGetFileHashes.mockReturnValue(['hash-a', null]);
   });
 
   it('globWithWorkspaceContext bypasses the daemon when workspaceRoot is /virtual', async () => {
@@ -91,31 +85,6 @@ describe('workspace-context /virtual short-circuit', () => {
     expect(mockMultiGlob).not.toHaveBeenCalled();
     expect(mockDaemonMultiGlob).toHaveBeenCalledWith(['**/*.ts'], undefined);
     expect(result).toEqual([['daemon-result']]);
-  });
-
-  it('returns exact native hashes in request order', async () => {
-    const result = await getFileHashesInContext('/virtual', [
-      'a.ts',
-      'missing.ts',
-    ]);
-
-    expect(mockGetFileHashes).toHaveBeenCalledWith(['a.ts', 'missing.ts']);
-    expect(result).toEqual(['hash-a', null]);
-  });
-
-  it('preserves request order when reading hashes from the daemon', async () => {
-    mockDaemonFileData.mockResolvedValue([
-      { file: 'b.ts', hash: 'hash-b' },
-      { file: 'a.ts', hash: 'hash-a' },
-    ]);
-
-    const result = await getFileHashesInContext('/some/real/root', [
-      'a.ts',
-      'missing.ts',
-      'b.ts',
-    ]);
-
-    expect(result).toEqual(['hash-a', null, 'hash-b']);
   });
 });
 
