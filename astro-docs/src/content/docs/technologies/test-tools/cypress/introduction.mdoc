@@ -22,7 +22,7 @@ The `@nx/cypress` plugin supports the following package versions.
 
 | Package   | Supported Versions |
 | --------- | ------------------ |
-| `cypress` | >= 13 < 16         |
+| `cypress` | >= 13 < 17         |
 
 [Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
@@ -345,6 +345,24 @@ nx e2e frontend-e2e --env.API_URL="https://api.my-nx-website.com" --env.API_KEY=
 {% aside type="caution" title="Command-line args vs configuration options" %}
 Providing a flag will override any option with the same name set in the project or workspace configuration.
 {% /aside %}
+
+### Reading environment variables in tests on Cypress 16
+
+Cypress 16 removed `Cypress.env()`.
+Cypress 13 to 15 keep it, so tests on those versions read `env` values synchronously as before.
+On Cypress 16, read `env` values with the asynchronous `cy.env()` command, which takes the list of keys to read:
+
+```ts
+cy.env(['API_URL']).then(({ API_URL }) => {
+  cy.request(`${API_URL}/health`);
+});
+```
+
+For non-sensitive values that a test needs synchronously, use the Cypress 16 `expose` configuration
+(the `expose` config key, the `--expose` Cypress arg, or the `expose` test configuration) and read
+them with `Cypress.expose('KEY')`.
+The `env` values passed with `--env` or the executor's `env` option are not readable with
+`Cypress.expose()`.
 
 ## Set up CI
 

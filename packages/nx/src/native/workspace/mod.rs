@@ -8,6 +8,7 @@ pub mod context;
 mod errors;
 mod files_archive;
 mod files_hashing;
+mod glob_hashing;
 pub mod ignored_index;
 pub mod types;
 pub mod workspace_files;

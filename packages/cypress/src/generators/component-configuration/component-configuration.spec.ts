@@ -11,6 +11,7 @@ import {
   updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
+import { acknowledgeBuildScripts } from '@nx/devkit/internal';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { getInstalledCypressMajorVersion } from '../../utils/versions';
 import { componentConfigurationGenerator } from './component-configuration';
@@ -20,6 +21,11 @@ jest.mock('../../utils/versions', () => ({
   ...jest.requireActual('../../utils/versions'),
   getInstalledCypressMajorVersion: jest.fn(),
 }));
+jest.mock('@nx/devkit/internal', () => ({
+  ...jest.requireActual('@nx/devkit/internal'),
+  acknowledgeBuildScripts: jest.fn(),
+}));
+const mockedAcknowledgeBuildScripts = acknowledgeBuildScripts as jest.Mock;
 
 let projectConfig: ProjectConfiguration = {
   projectType: 'library',
@@ -102,6 +108,63 @@ describe('Cypress Component Configuration', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    mockedInstalledCypressVersion.mockReset();
+  });
+
+  it('should install the cypress 15 set for the vite bundler on a fresh workspace with a vite below 8', async () => {
+    mockedInstalledCypressVersion.mockImplementation(
+      jest.requireActual('../../utils/versions').getInstalledCypressMajorVersion
+    );
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = { ...json.devDependencies, vite: '^7.0.0' };
+      return json;
+    });
+
+    await componentConfigurationGenerator(tree, {
+      project: 'cool-lib',
+      bundler: 'vite',
+      skipFormat: true,
+      addPlugin: true,
+    });
+
+    const { devDependencies } = readJson(tree, 'package.json');
+    expect(devDependencies.cypress).toBe('^15.20.1');
+    expect(devDependencies['@cypress/vite-dev-server']).toBe('^7.3.1');
+    expect(devDependencies['@nx/cypress']).toBeDefined();
+    expect(readNxJson(tree).plugins).toContainEqual(
+      expect.objectContaining({ plugin: '@nx/cypress/plugin' })
+    );
+    expect(mockedAcknowledgeBuildScripts).toHaveBeenCalledTimes(1);
+    expect(mockedAcknowledgeBuildScripts).toHaveBeenCalledWith(
+      tree,
+      expect.any(String),
+      { cypress: true }
+    );
+  });
+
+  it('should reject the vite bundler on cypress 16 with a vite below 8', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = {
+        ...json.devDependencies,
+        cypress: '^16.0.0',
+        vite: '^7.0.0',
+      };
+      return json;
+    });
+    tree.write(
+      'node_modules/cypress/package.json',
+      JSON.stringify({ name: 'cypress', version: '16.0.0' })
+    );
+
+    await expect(
+      componentConfigurationGenerator(tree, {
+        project: 'cool-lib',
+        bundler: 'vite',
+        skipFormat: true,
+      })
+    ).rejects.toThrow(
+      'Cypress 16 component testing requires Vite 8. Found Vite 7.0.0. Update Vite to 8 or use Cypress 15.'
+    );
   });
 
   it('should not add the target when @nx/cypress/plugin is registered', async () => {
