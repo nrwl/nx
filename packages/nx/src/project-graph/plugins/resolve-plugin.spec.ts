@@ -13,6 +13,13 @@ vi.mock('node:fs', async () => ({
 vi.mock('../../plugins/js/utils/typescript', () => ({
   getRootTsConfigResolveExportsConditions: vi.fn(() => ['development']),
   getRootTsConfigCustomConditions: vi.fn(() => []),
+  // Follows the mocked filesystem, as the real one follows the real one.
+  getRootTsConfigPath: vi.fn(
+    (r: string) =>
+      ['tsconfig.base.json', 'tsconfig.json']
+        .map((name) => `${r}/${name}`)
+        .find((candidate) => existsSyncMock(candidate)) ?? null
+  ),
 }));
 
 // Return a working packages-metadata mock so lookupLocalPlugin can resolve
@@ -237,5 +244,63 @@ describe('resolveSubpathFromExports (via getPluginPathAndName)', () => {
         root
       )
     ).toThrow(/Unable to resolve local plugin/);
+  });
+});
+
+describe('resolutionInputs (via getPluginPathAndName)', () => {
+  // A record is keyed by the plugin's name, so pointing that name at another
+  // file has to show up in the files it is checked against. These are the ones
+  // that decide it, and the load never reads any of them.
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('names the root tsconfig and the plugin project manifests for a local plugin', () => {
+    resetResolvePluginCache();
+    const sourceFile = `${projectPath}/src/plugin.ts`;
+    onlyFilesExist(
+      `${root}/tsconfig.base.json`,
+      `${projectPath}/project.json`,
+      `${projectPath}/package.json`,
+      sourceFile
+    );
+    const projects = setupProject(
+      { './plugin': { development: './src/plugin.ts' } },
+      ['@scope/my-plugin/plugin']
+    );
+
+    const { resolutionInputs } = getPluginPathAndName(
+      '@scope/my-plugin/plugin',
+      [`${root}/node_modules`],
+      projects,
+      root
+    );
+
+    expect(resolutionInputs).toEqual([
+      `${root}/tsconfig.base.json`,
+      `${projectPath}/project.json`,
+      `${projectPath}/package.json`,
+    ]);
+  });
+
+  it('names only the files that exist', () => {
+    // No root tsconfig and no project.json: a package-manager workspace where
+    // package.json is the whole story.
+    resetResolvePluginCache();
+    const sourceFile = `${projectPath}/src/plugin.ts`;
+    onlyFilesExist(`${projectPath}/package.json`, sourceFile);
+    const projects = setupProject(
+      { './plugin': { development: './src/plugin.ts' } },
+      ['@scope/my-plugin/plugin']
+    );
+
+    const { resolutionInputs } = getPluginPathAndName(
+      '@scope/my-plugin/plugin',
+      [`${root}/node_modules`],
+      projects,
+      root
+    );
+
+    expect(resolutionInputs).toEqual([`${projectPath}/package.json`]);
   });
 });

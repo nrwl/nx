@@ -610,7 +610,10 @@ async function loadForCapabilities(
         return recordFor(
           load.key,
           load.capabilities,
-          { sourceFiles: plugin.sourceFiles, envReads: plugin.envReads },
+          withResolutionInputs(
+            { sourceFiles: plugin.sourceFiles, envReads: plugin.envReads },
+            load
+          ),
           root
         );
       } finally {
@@ -797,7 +800,13 @@ function wireRecordedCapabilities(
       capabilities,
       load.index,
       (actual, observed) =>
-        repairRecord(load.key, root, capabilities, actual, observed)
+        repairRecord(
+          load.key,
+          root,
+          capabilities,
+          actual,
+          withResolutionInputs(observed, load)
+        )
     );
   }
   return missing;
@@ -857,7 +866,13 @@ async function loadAndRecord(loads: PluginLoad[], root: string): Promise<void> {
     const entry = recordFor(
       loads[i].key,
       capabilitiesOfLoadedPlugin(result.value),
-      observedLoads.get(result.value) ?? { sourceFiles: null, envReads: null },
+      withResolutionInputs(
+        observedLoads.get(result.value) ?? {
+          sourceFiles: null,
+          envReads: null,
+        },
+        loads[i]
+      ),
       root
     );
     if (entry) {
@@ -869,6 +884,28 @@ async function loadAndRecord(loads: PluginLoad[], root: string): Promise<void> {
 }
 
 type PluginCapabilitiesEntry = { key: string; record: PluginRecord };
+
+/**
+ * What the load read, plus what decided which module it loaded.
+ *
+ * A record is keyed by the plugin's name, so a name that starts resolving to
+ * another file has to be noticed through the files, and the ones that decide it
+ * are never read by the load itself. An unobservable closure stays unobservable:
+ * adding to it would turn "cannot check" into something that looks checkable.
+ */
+function withResolutionInputs(
+  observed: ObservedLoad,
+  load: PluginLoad
+): ObservedLoad {
+  const inputs = load.resolved?.resolutionInputs;
+  if (!observed.sourceFiles || !inputs?.length) {
+    return observed;
+  }
+  return {
+    ...observed,
+    sourceFiles: [...new Set([...observed.sourceFiles, ...inputs])],
+  };
+}
 
 /**
  * The record to write for a plugin that has just loaded, or null when there is

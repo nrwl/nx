@@ -95,9 +95,11 @@ function getCompilerHost(tsConfigPath: string) {
   return { options, host, moduleResolutionCache };
 }
 
-export function getRootTsConfigFileName(): string | null {
+export function getRootTsConfigFileName(
+  root: string = workspaceRoot
+): string | null {
   for (const tsConfigName of ['tsconfig.base.json', 'tsconfig.json']) {
-    const tsConfigPath = join(workspaceRoot, tsConfigName);
+    const tsConfigPath = join(root, tsConfigName);
     if (existsSync(tsConfigPath)) {
       return tsConfigName;
     }
@@ -106,10 +108,12 @@ export function getRootTsConfigFileName(): string | null {
   return null;
 }
 
-export function getRootTsConfigPath(): string | null {
-  const tsConfigFileName = getRootTsConfigFileName();
+export function getRootTsConfigPath(
+  root: string = workspaceRoot
+): string | null {
+  const tsConfigFileName = getRootTsConfigFileName(root);
 
-  return tsConfigFileName ? join(workspaceRoot, tsConfigFileName) : null;
+  return tsConfigFileName ? join(root, tsConfigFileName) : null;
 }
 
 const customConditionsCache = new Map<string, string[]>();

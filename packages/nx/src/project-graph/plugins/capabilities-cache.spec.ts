@@ -368,6 +368,34 @@ describe('recordIsFresh', () => {
     expect(recordIsFresh(recordFor([entry, hooks]), root)).toBe(true);
   });
 
+  it('fails when the plugin is pointed at another entry and the old one is left alone', () => {
+    // Keyed by name, so the name moving is invisible to the key. The manifest
+    // that says where it points is on the record for exactly this: nothing the
+    // old entry imports has changed, and only the manifest says it no longer
+    // loads.
+    const entry = write('libs/p/src/index.ts', 'export {};');
+    const manifest = write(
+      'libs/p/project.json',
+      JSON.stringify({
+        targets: { build: { options: { main: 'libs/p/src/index.ts' } } },
+      })
+    );
+    const record = recordFor([entry, manifest]);
+
+    write(
+      'libs/p/src/plugin.ts',
+      'export const postTasksExecution = () => {};'
+    );
+    write(
+      'libs/p/project.json',
+      JSON.stringify({
+        targets: { build: { options: { main: 'libs/p/src/plugin.ts' } } },
+      })
+    );
+
+    expect(recordIsFresh(record, root)).toBe(false);
+  });
+
   it('fails when a module in another project changes', () => {
     const entry = write('libs/p/index.js', "require('../shared/hooks');");
     const shared = write('libs/shared/hooks.js', 'module.exports = {};');

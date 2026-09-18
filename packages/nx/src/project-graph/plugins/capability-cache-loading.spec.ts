@@ -51,6 +51,8 @@ vi.mock('./isolation/isolated-plugin', () => ({
       name: label,
       pluginPath: `/resolved/${label}`,
       shouldRegisterTSTranspiler: false,
+      // What decided the resolution, as the resolver reports it.
+      resolutionInputs: [`/resolved/${label}/project.json`],
     };
   }),
 }));
@@ -202,6 +204,24 @@ describe('loading plugins through the capability cache', () => {
       hasPreTasksExecution: false,
       hasPostTasksExecution: false,
     });
+  });
+
+  it('records the files that decided where the plugin resolved', async () => {
+    // Keyed by name, so a name pointed at another file has to be noticed
+    // through the files the record is checked against, and the load never
+    // reads the manifest that decides it.
+    await getPluginsSeparated({ plugins: ['test-plugin'] });
+
+    const recorded = mocks.recordCapabilities.mock.calls
+      .flatMap(([entries]) => entries)
+      .find((entry) => entry.key === 'key:test-plugin');
+    expect(mocks.storableSourceFiles).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        '/resolved/test-plugin',
+        '/resolved/test-plugin/project.json',
+      ])
+    );
+    expect(recorded).toBeDefined();
   });
 
   it('wires a recorded plugin without starting a worker', async () => {

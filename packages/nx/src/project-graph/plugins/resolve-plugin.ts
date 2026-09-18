@@ -6,7 +6,10 @@ import {
   getWorkspacePackagesMetadata,
   matchImportToWildcardEntryPointsToProjectMap,
 } from '../../plugins/js/utils/packages';
-import { getRootTsConfigResolveExportsConditions } from '../../plugins/js/utils/typescript';
+import {
+  getRootTsConfigPath,
+  getRootTsConfigResolveExportsConditions,
+} from '../../plugins/js/utils/typescript';
 import { readJsonFile } from '../../utils/fileutils';
 import { logger } from '../../utils/logger';
 import { normalizePath } from '../../utils/path';
@@ -184,7 +187,66 @@ export function getPluginPathAndName(
     existsSync(packageJsonPath) // plugin has a package.json
       ? readJsonFile(packageJsonPath) // read name from package.json
       : { name: moduleName };
-  return { pluginPath, name, shouldRegisterTSTranspiler };
+  return {
+    pluginPath,
+    name,
+    shouldRegisterTSTranspiler,
+    resolutionInputs: resolutionInputsFor(pluginPath, localPlugin, root),
+  };
+}
+
+/**
+ * The workspace files that decided where the plugin resolved, beyond the module
+ * itself.
+ *
+ * A plugin's own sources say what it registers, but not which of them loads:
+ * that is `main` or `exports` in its manifests, or a tsconfig `paths` entry,
+ * and none of those is read by the load. Something keyed by the plugin's name
+ * rather than by where it landed needs them, or pointing the name at another
+ * file while the old one stays put would go unnoticed.
+ *
+ * Empty for an installed package, whose entry points are fixed by its version.
+ */
+function resolutionInputsFor(
+  pluginPath: string,
+  localPlugin: LocalPluginMatch | null,
+  root: string
+): string[] {
+  const candidates: string[] = [];
+  if (localPlugin) {
+    const rootTsConfig = getRootTsConfigPath(root);
+    if (rootTsConfig) {
+      candidates.push(rootTsConfig);
+    }
+    candidates.push(
+      path.join(localPlugin.path, 'project.json'),
+      path.join(localPlugin.path, 'package.json')
+    );
+  } else if (isWorkspaceLocalResolution(pluginPath, root)) {
+    // Resolved by Node rather than through a project, such as a plugin named
+    // by a relative path: its nearest manifest's `main` decided the file.
+    const manifest = nearestPackageJson(path.dirname(pluginPath), root);
+    if (manifest) {
+      candidates.push(manifest);
+    }
+  }
+  return candidates.filter((file) => existsSync(file));
+}
+
+/** The closest `package.json` at or above `dir`, without leaving `root`. */
+function nearestPackageJson(dir: string, root: string): string | null {
+  let current = dir;
+  while (isWorkspaceLocalResolution(current, root) || current === root) {
+    const candidate = path.join(current, 'package.json');
+    if (existsSync(candidate)) {
+      return candidate;
+    }
+    if (current === root) {
+      return null;
+    }
+    current = path.dirname(current);
+  }
+  return null;
 }
 
 function getSubpathOfLocalPackage(
@@ -373,9 +435,7 @@ let tsconfigPaths: Record<string, string[]>;
 
 function readTsConfigPaths(root: string = workspaceRoot) {
   if (!tsconfigPaths) {
-    const tsconfigPath: string | null = ['tsconfig.base.json', 'tsconfig.json']
-      .map((x) => path.join(root, x))
-      .filter((x) => existsSync(x))[0];
+    const tsconfigPath = getRootTsConfigPath(root);
     if (!tsconfigPath) {
       // Workspaces that wire up packages purely through package-manager
       // workspaces + package.json exports have no root tsconfig — they simply

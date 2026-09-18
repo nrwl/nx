@@ -95,6 +95,8 @@ export interface ResolvedPluginModule {
   name: string;
   pluginPath: string;
   shouldRegisterTSTranspiler: boolean;
+  /** Workspace files that decided where the module resolved; see `resolveNxPlugin`. */
+  resolutionInputs?: string[];
 }
 
 export function resolveModule(
