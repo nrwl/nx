@@ -4,10 +4,10 @@ import {
   killProcessAndPorts,
   newProject,
   runCommandUntil,
-  runE2ETests,
   uniq,
   updateFile,
   updateJson,
+  shouldRunCypressTests,
 } from '@nx/e2e-utils';
 import { readPort, runCLI } from './utils';
 
@@ -111,7 +111,7 @@ describe('Federate Module', () => {
     expect(buildOutput).toContain('Successfully ran target build');
     expect(remoteOutput).toContain('Successfully ran target build');
 
-    if (await runE2ETests()) {
+    if (await shouldRunCypressTests()) {
       const hostE2eResults = await runCommandUntil(
         `e2e ${host}-e2e --verbose`,
         (output) => output.includes('All specs passed!')
@@ -213,7 +213,7 @@ describe('Federate Module', () => {
     expect(buildOutput).toContain('Successfully ran target build');
     expect(remoteOutput).toContain('Successfully ran target build');
 
-    if (await runE2ETests()) {
+    if (await shouldRunCypressTests()) {
       const hostE2eResults = await runCommandUntil(
         `e2e ${host}-e2e --verbose`,
         (output) => output.includes('All specs passed!')

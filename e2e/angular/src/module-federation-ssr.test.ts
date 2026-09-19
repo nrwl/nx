@@ -6,9 +6,9 @@ import {
   reservePort,
   runCLI,
   runCommandUntil,
-  runE2ETests,
   uniq,
   updateFile,
+  shouldRunPlaywrightTests,
 } from '@nx/e2e-utils';
 import { join } from 'path';
 import {
@@ -107,7 +107,7 @@ test('renders remotes', async ({ page }) => {
   expect(await items.nth(2).innerText()).toContain('${capitalize(remote2)}');
 });`
     );
-    if (await runE2ETests()) {
+    if (await shouldRunPlaywrightTests()) {
       const e2eProcess = await runCommandUntil(
         `e2e ${host}-e2e`,
         (output) =>

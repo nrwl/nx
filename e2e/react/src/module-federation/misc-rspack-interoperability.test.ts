@@ -3,11 +3,11 @@ import {
   killProcessAndPorts,
   newProject,
   runCommandUntil,
-  runE2ETests,
   uniq,
   updateFile,
   updateJson,
   reservePorts,
+  shouldRunCypressTests,
 } from '@nx/e2e-utils';
 import { readPort, runCLI } from './utils';
 import { stripIndents } from 'nx/src/utils/strip-indents';
@@ -87,7 +87,7 @@ describe('React Rspack Module Federation Misc - Interoperability', () => {
 
     await killProcessAndPorts(serveResult.pid, readPort(shell));
 
-    if (await runE2ETests()) {
+    if (await shouldRunCypressTests()) {
       const e2eResultsSwc = await runCommandUntil(
         `e2e ${shell}-e2e --verbose`,
         (output) => output.includes('All specs passed!'),
@@ -147,7 +147,7 @@ describe('React Rspack Module Federation Misc - Interoperability', () => {
       `
     );
 
-    if (await runE2ETests()) {
+    if (await shouldRunCypressTests()) {
       const e2eResultsSwc = await runCommandUntil(
         `e2e ${shell}-e2e --verbose`,
         (output) => output.includes('Successfully ran target e2e'),

@@ -208,19 +208,38 @@ export function getPackageManagerCommand({
   }[packageManager.trim() as PackageManager];
 }
 
-export async function runE2ETests(runner?: 'cypress' | 'playwright') {
+export async function shouldRunCypressTests(): Promise<boolean> {
+  if (!isE2ERunEnabled()) {
+    return false;
+  }
+  const startTime = performance.now();
+  // Cypress unzips into a cache shared by the whole machine, so this has to
+  // finish before the suite starts running tests.
+  await ensureCypressInstallation();
+  logInfo(`Cypress ready (${secondsSince(startTime)}s)`);
+  return true;
+}
+
+export async function shouldRunPlaywrightTests(): Promise<boolean> {
+  if (!isE2ERunEnabled()) {
+    return false;
+  }
+  const startTime = performance.now();
+  // Playwright is deliberately not awaited: `npx playwright install
+  // --with-deps` takes longer than a test's timeout, so waiting on it here
+  // fails the suite outright.
+  ensurePlaywrightBrowsersInstallation().then(() =>
+    logInfo(`Playwright ready (${secondsSince(startTime)}s)`)
+  );
+  return true;
+}
+
+function secondsSince(startTime: number): string {
+  return ((performance.now() - startTime) / 1000).toFixed(1);
+}
+
+function isE2ERunEnabled(): boolean {
   if (process.env.NX_E2E_RUN_E2E === 'true') {
-    // Cypress unzips into a cache shared by the whole machine, so this has to
-    // finish before the suite starts running tests.
-    if (!runner || runner === 'cypress') {
-      await ensureCypressInstallation();
-    }
-    // Playwright is deliberately not awaited: `npx playwright install
-    // --with-deps` takes longer than a test's timeout, so waiting on it here
-    // fails the suite outright.
-    if (!runner || runner === 'playwright') {
-      ensurePlaywrightBrowsersInstallation();
-    }
     return true;
   }
 
@@ -479,8 +498,7 @@ export function runCLI(
       maxBuffer: 50 * 1024 * 1024,
       timeout: timeoutMs,
     });
-    const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
-    logInfo(`Run Command: ${command} (${elapsed}s)`);
+    logInfo(`Run Command: ${command} (${secondsSince(startTime)}s)`);
 
     if (opts.verbose ?? isVerboseE2ERun()) {
       output.log({

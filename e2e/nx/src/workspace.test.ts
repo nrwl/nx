@@ -9,11 +9,11 @@ import {
   readJson,
   runCLI,
   runCommand,
-  runE2ETests,
   tmpProjPath,
   uniq,
   updateFile,
   updateJson,
+  shouldRunPlaywrightTests,
 } from '@nx/e2e-utils';
 import { join } from 'path';
 
@@ -195,7 +195,7 @@ describe('@nx/workspace:convert-to-monorepo', () => {
     expect(() => runCLI(`test ${reactApp}`)).not.toThrow();
     expect(() => runCLI(`lint ${reactApp}`)).not.toThrow();
     expect(() => runCLI(`lint e2e`)).not.toThrow();
-    if (await runE2ETests()) {
+    if (await shouldRunPlaywrightTests()) {
       expect(() => runCLI(`e2e e2e`)).not.toThrow();
     }
   });

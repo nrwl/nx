@@ -10,11 +10,11 @@ import {
   readFile,
   runCLI,
   runCLIAsync,
-  runE2ETests,
   tmpProjPath,
   uniq,
   updateFile,
   updateJson,
+  shouldRunPlaywrightTests,
 } from '@nx/e2e-utils';
 import { join } from 'path';
 import { copyFileSync } from 'fs';
@@ -54,7 +54,7 @@ describe('Web Components Applications', () => {
 
     expect(lintE2eResults).toContain('Successfully ran target lint');
 
-    if (isNotWindows() && (await runE2ETests())) {
+    if (isNotWindows() && (await shouldRunPlaywrightTests())) {
       const e2eResults = runCLI(`e2e ${appName}-e2e`);
       expect(e2eResults).toContain('Successfully ran target e2e for project');
       await killPorts();
