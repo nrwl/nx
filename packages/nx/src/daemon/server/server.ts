@@ -1,11 +1,8 @@
-import { chmodSync, existsSync } from 'fs';
+import { chmodSync } from 'fs';
 import { isPermissionDenied } from '../../utils/permission-errors';
 import { SOCKET_REFUSED_EXIT_CODE } from '../../utils/socket-refused-exit-code';
 import { createServer, Server, Socket } from 'net';
-import { join } from 'path';
 import { startAnalytics } from '../../analytics';
-import { hashArray } from '../../hasher/file-hasher';
-import { hashFile } from '../../native';
 import {
   consumeMessagesFromSocket,
   describeMessage,
@@ -15,8 +12,7 @@ import {
 import '../../utils/perf-logging';
 import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache';
-import { isNxVersionMismatch } from '../is-nx-version-mismatch';
+import { writeDaemonJsonProcessCache } from '../cache';
 import { getInstalledNxVersion } from '../../utils/installed-nx-version';
 import { serverLogger } from '../logger';
 import {
@@ -154,8 +150,10 @@ import {
   scheduleInitialProjectGraphComputation,
 } from './project-graph-incremental-recomputation';
 import {
+  recordLockFileHash,
   registerDaemonForRestartChecks,
   relativeServerProcess,
+  stopDaemonIfOutdated,
   stopDaemonIfReplaced,
 } from './restart-checks';
 import {
@@ -165,7 +163,6 @@ import {
 } from './project-graph-listener-sockets';
 import {
   handleServerProcessTermination,
-  handleServerProcessTerminationWithRestart,
   resetInactivityTimeout,
   respondToClient,
   respondWithError,
@@ -205,6 +202,11 @@ const server = createServer(async (socket) => {
   serverLogger.log(
     `Established a connection. Number of open connections: ${numberOfOpenConnections}`
   );
+  // The shutdown destroys this socket with the rest; the client reconnects
+  // to whichever daemon comes next.
+  if (stopDaemonIfOutdated()) {
+    return;
+  }
   resetInactivityTimeout(handleInactivityTimeout);
 
   socket.on(
@@ -615,42 +617,6 @@ function registerProcessTerminationListeners() {
     );
 }
 
-let existingLockHash: string | undefined;
-
-function daemonIsOutdated(): string | null {
-  if (isNxVersionMismatch()) {
-    return 'NX_VERSION_CHANGED';
-  } else if (lockFileHashChanged()) {
-    return 'LOCK_FILES_CHANGED';
-  }
-  return null;
-}
-
-function lockFileHashChanged(): boolean {
-  const lockFiles = [
-    join(workspaceRoot, 'package-lock.json'),
-    join(workspaceRoot, 'yarn.lock'),
-    join(workspaceRoot, 'pnpm-lock.yaml'),
-    join(workspaceRoot, 'bun.lockb'),
-    join(workspaceRoot, 'bun.lock'),
-  ];
-
-  const existingFiles = lockFiles.filter((file) => existsSync(file));
-  const lockHashes = existingFiles.map((file) => hashFile(file));
-  const newHash = hashArray(lockHashes);
-
-  if (existingLockHash && newHash != existingLockHash) {
-    serverLogger.log(
-      `[Server] lock file hash changed! old=${existingLockHash}, new=${newHash}`
-    );
-    existingLockHash = newHash;
-    return true;
-  } else {
-    existingLockHash = newHash;
-    return false;
-  }
-}
-
 /**
  * When applicable files in the workspaces are changed (created, updated, deleted),
  * we need to recompute the cached serialized project graph so that it is readily
@@ -693,6 +659,8 @@ export async function startServer(): Promise<Server> {
   // it scans, so a file written during boot is visible to one or the other.
   if (!isWatchingWorkspaceContext()) {
     registerDaemonForRestartChecks(server, openSockets);
+    // Before the watch, so every lockfile change it reports is one to act on.
+    recordLockFileHash();
     setupWorkspaceContext(workspaceRoot, {
       watch: true,
       alwaysWatch: [relativeServerProcess],
@@ -728,40 +696,6 @@ export async function startServer(): Promise<Server> {
     killSocketOrPath();
   }
 
-  serverLogger.log(`[Server] Starting outdated check interval (20ms)`);
-
-  setInterval(() => {
-    if (getDaemonProcessIdSync() !== process.pid) {
-      return handleServerProcessTermination({
-        server,
-        reason: 'this process is no longer the current daemon (native)',
-        sockets: openSockets,
-      });
-    }
-
-    const outdated = daemonIsOutdated();
-    if (outdated) {
-      serverLogger.log(`[Server] Daemon outdated: ${outdated}`);
-      if (outdated === 'LOCK_FILES_CHANGED') {
-        // Lock file changes - restart daemon, clients will reconnect
-        serverLogger.log('[Server] Restarting daemon...');
-        handleServerProcessTerminationWithRestart({
-          server,
-          reason: outdated,
-          sockets: openSockets,
-        });
-      } else {
-        // Version changes or other reasons - just shut down, don't restart
-        serverLogger.log('[Server] Shutting down daemon (no restart)...');
-        handleServerProcessTermination({
-          server,
-          reason: outdated,
-          sockets: openSockets,
-        });
-      }
-    }
-  }, 20).unref();
-
   return new Promise(async (resolve, reject) => {
     // `listen` reports a failed bind asynchronously on the server, which the
     // try below cannot catch — without this an EACCES became an uncaught
@@ -788,9 +722,6 @@ export async function startServer(): Promise<Server> {
               // Best effort; the 0700 socket directory is the primary control.
             }
           }
-
-          // this triggers the storage of the lock file hash
-          daemonIsOutdated();
 
           // Every event the watch delivers, gitignored outputs and dotenv
           // files included.
