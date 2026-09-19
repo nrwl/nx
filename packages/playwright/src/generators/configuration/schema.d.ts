@@ -26,6 +26,16 @@ export interface ConfigurationGeneratorSchema {
    * @example: "http://localhost:4200"
    **/
   webServerAddress?: string;
+  /**
+   * command to run the web server when `CI` is set; defaults to `webServerCommand`
+   * @example: "npx nx serve-static my-fe-app"
+   **/
+  ciWebServerCommand?: string;
+  /**
+   * address of the web server when `CI` is set; defaults to `webServerAddress`
+   * @example: "http://localhost:4300"
+   **/
+  ciWebServerAddress?: string;
   rootProject?: boolean;
   addPlugin?: boolean;
 }
