@@ -95,6 +95,7 @@ export async function configurationGeneratorInternal(
     webServerAddress: options.webServerAddress ?? null,
     isTsSolutionSetup,
     ...options,
+    ...getCiWebServer(options),
   });
   const playwrightConfigFile = options.js
     ? 'playwright.config.mjs'
@@ -309,6 +310,22 @@ async function normalizeOptions(
     linter,
     directory: options.directory ?? 'e2e',
   };
+}
+
+// The template only switches on `CI` when the CI server actually differs.
+function getCiWebServer(options: NormalizedGeneratorOptions): {
+  ciWebServerCommand: string | null;
+  ciWebServerAddress: string | null;
+} {
+  const command = options.ciWebServerCommand ?? options.webServerCommand;
+  const address = options.ciWebServerAddress ?? options.webServerAddress;
+  if (
+    command === options.webServerCommand &&
+    address === options.webServerAddress
+  ) {
+    return { ciWebServerCommand: null, ciWebServerAddress: null };
+  }
+  return { ciWebServerCommand: command, ciWebServerAddress: address };
 }
 
 async function promptForMissingServeData(projectName: string) {

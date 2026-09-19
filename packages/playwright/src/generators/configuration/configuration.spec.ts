@@ -58,6 +58,75 @@ describe('Playwright e2e configuration', () => {
     });
   });
 
+  describe('webServer', () => {
+    beforeEach(() => {
+      addProjectConfiguration(tree, 'myapp-e2e', { root: 'apps/myapp-e2e' });
+    });
+
+    const readConfig = () =>
+      tree.read('apps/myapp-e2e/playwright.config.mts', 'utf-8');
+
+    it('should use the one web server everywhere when no CI server is given', async () => {
+      await configGenerator(tree, {
+        project: 'myapp-e2e',
+        webServerCommand: 'npx nx run myapp:serve-static',
+        webServerAddress: 'http://localhost:4200',
+      });
+
+      const config = readConfig();
+      expect(config).toContain("command: 'npx nx run myapp:serve-static',");
+      expect(config).toContain("url: 'http://localhost:4200',");
+      expect(config).not.toContain('isCI');
+    });
+
+    it('should switch to the CI web server when CI is set', async () => {
+      await configGenerator(tree, {
+        project: 'myapp-e2e',
+        webServerCommand: 'npx nx run myapp:serve',
+        webServerAddress: 'http://localhost:4200',
+        ciWebServerCommand: 'npx nx run myapp:preview',
+        ciWebServerAddress: 'http://localhost:4300',
+      });
+
+      const config = readConfig();
+      expect(config).toContain(
+        "const webServerAddress = isCI ? 'http://localhost:4300' : 'http://localhost:4200';"
+      );
+      expect(config).toContain(
+        "const baseURL = process.env['BASE_URL'] || webServerAddress;"
+      );
+      expect(config).toContain(
+        "command: isCI ? 'npx nx run myapp:preview' : 'npx nx run myapp:serve',"
+      );
+      expect(config).toContain('url: webServerAddress,');
+    });
+
+    it('should default the CI address to the local one', async () => {
+      await configGenerator(tree, {
+        project: 'myapp-e2e',
+        webServerCommand: 'npx nx run myapp:serve',
+        webServerAddress: 'http://localhost:4200',
+        ciWebServerCommand: 'npx nx run myapp:serve-static',
+      });
+
+      expect(readConfig()).toContain(
+        "const webServerAddress = isCI ? 'http://localhost:4200' : 'http://localhost:4200';"
+      );
+    });
+
+    it('should not switch on CI when the CI web server is the same', async () => {
+      await configGenerator(tree, {
+        project: 'myapp-e2e',
+        webServerCommand: 'npx nx run myapp:serve',
+        webServerAddress: 'http://localhost:4200',
+        ciWebServerCommand: 'npx nx run myapp:serve',
+        ciWebServerAddress: 'http://localhost:4200',
+      });
+
+      expect(readConfig()).not.toContain('isCI');
+    });
+  });
+
   describe('TS Solution Setup', () => {
     beforeEach(() => {
       updateJson(tree, 'package.json', (json) => {
