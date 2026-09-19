@@ -50,6 +50,10 @@ describe('Vue Plugin', () => {
             `$1'http://localhost:${availablePort}'$2`
           )
           .replace(
+            /const webServerAddress = [^;]*;/,
+            `const webServerAddress = getReadyUrl('http://localhost:${availablePort}');`
+          )
+          .replace(
             /(url: (?:getReadyUrl\()?)'[^']*'/,
             `$1'http://localhost:${availablePort}'`
           );
