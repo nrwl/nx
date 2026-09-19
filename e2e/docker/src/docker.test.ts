@@ -7,7 +7,6 @@ import {
   newProject,
   readJson,
   runCLI,
-  runE2ETests,
   uniq,
   updateFile,
   updateJson,

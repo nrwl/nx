@@ -5,10 +5,10 @@ import {
   ensureCypressInstallation,
   newProject,
   runCLI,
-  runE2ETests,
   uniq,
   updateFile,
   updateJson,
+  shouldRunCypressTests,
 } from '@nx/e2e-utils';
 import { join } from 'path';
 
@@ -156,7 +156,7 @@ export default Input;
     runCLI(
       `generate @nx/react:cypress-component-configuration --project=${appName} --generate-tests`
     );
-    if (await runE2ETests()) {
+    if (await shouldRunCypressTests()) {
       expect(runCLI(`component-test ${appName} --no-watch`)).toContain(
         'All specs passed!'
       );
@@ -167,7 +167,7 @@ export default Input;
     runCLI(
       `generate @nx/react:cypress-component-configuration --project=${usedInAppLibName} --generate-tests`
     );
-    if (await runE2ETests()) {
+    if (await shouldRunCypressTests()) {
       expect(runCLI(`component-test ${usedInAppLibName} --no-watch`)).toContain(
         'All specs passed!'
       );
@@ -185,7 +185,7 @@ export default Input;
         'nxComponentTestingPreset(__filename, {compiler: "babel"})'
       );
     });
-    if (await runE2ETests()) {
+    if (await shouldRunCypressTests()) {
       expect(runCLI(`component-test ${usedInAppLibName} --no-watch`)).toContain(
         'All specs passed!'
       );
@@ -217,7 +217,7 @@ describe(Input.name, () => {
       `generate @nx/react:cypress-component-configuration --project=${buildableLibName} --generate-tests --build-target=${appName}:build`
     );
 
-    if (await runE2ETests()) {
+    if (await shouldRunCypressTests()) {
       expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
         'All specs passed!'
       );
@@ -255,7 +255,7 @@ describe(Input.name, () => {
       return config;
     });
 
-    if (await runE2ETests()) {
+    if (await shouldRunCypressTests()) {
       const results = runCLI(`component-test ${appName}`);
       expect(results).toContain('I am from the custom async Webpack config');
       expect(results).toContain('All specs passed!');
@@ -286,7 +286,7 @@ export default MyComponent;`;
     runCLI(
       `generate @nx/react:cypress-component-configuration --project=${viteLibName} --generate-tests --bundler=vite --build-target=${appName}:build`
     );
-    if (await runE2ETests()) {
+    if (await shouldRunCypressTests()) {
       expect(runCLI(`component-test ${viteLibName}`)).toContain(
         'All specs passed!'
       );
