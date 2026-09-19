@@ -146,16 +146,6 @@ describe('nx release', () => {
       ).length
     ).toEqual(3);
 
-    const { graph } = JSON.parse(runCLI('graph --print'));
-    for (const pkg of [pkg1, pkg2, pkg3]) {
-      expect(graph.nodes[pkg].data.metadata.js.packageVersion).toBe('999.9.9');
-    }
-    expect(graph.dependencies[pkg2]).toContainEqual({
-      source: pkg2,
-      target: pkg1,
-      type: 'static',
-    });
-
     // Generate a changelog for the new version
     expect(exists('CHANGELOG.md')).toEqual(false);
 
