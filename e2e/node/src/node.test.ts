@@ -54,6 +54,7 @@ describe('Node Applications', () => {
   beforeAll(() => {
     originalEnvPort = process.env.PORT;
     newProject({
+      multipleProjects: true,
       packages: [
         '@nx/node',
         '@nx/express',
@@ -418,6 +419,7 @@ describe('Build Node apps', () => {
   beforeAll(() => {
     originalEnvPort = process.env.PORT;
     scope = newProject({
+      multipleProjects: true,
       packages: [
         '@nx/node',
         '@nx/express',

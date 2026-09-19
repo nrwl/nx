@@ -14,6 +14,7 @@ describe('Remix E2E Tests', () => {
   describe('--integrated (npm)', () => {
     beforeAll(() => {
       newProject({
+        multipleProjects: true,
         packages: [
           '@nx/remix',
           '@nx/react',
@@ -45,6 +46,7 @@ describe('Remix E2E Tests', () => {
   describe('--integrated (yarn)', () => {
     beforeAll(async () => {
       newProject({
+        multipleProjects: true,
         packages: [
           '@nx/remix',
           '@nx/react',
@@ -215,6 +217,7 @@ describe('Remix E2E Tests', () => {
 
     beforeAll(() => {
       proj = newProject({
+        multipleProjects: true,
         packages: ['@nx/remix'],
         // Remix rejects TypeScript 6, so keep this workspace on the 5.x line
         // that @nx/remix pins (packages/remix/src/utils/versions.ts).

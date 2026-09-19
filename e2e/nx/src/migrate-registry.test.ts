@@ -163,7 +163,11 @@ function createYarnBerryProject(): void {
   }
   try {
     activateYarn(yarnBerryVersion);
-    newProject({ packageManager: 'yarn', packages: [] });
+    newProject({
+      multipleProjects: true,
+      packageManager: 'yarn',
+      packages: [],
+    });
   } finally {
     rmSync(backup, { recursive: true, force: true });
     if (directoryExists(classicBackup)) {
@@ -198,7 +202,11 @@ suite('migrate registry configuration', () => {
       // PR runs pin the whole suite to npm, and the configuration under test is
       // pnpm's.
       process.env.SELECTED_PM = 'pnpm';
-      newProject({ packageManager: 'pnpm', packages: [] });
+      newProject({
+        multipleProjects: true,
+        packageManager: 'pnpm',
+        packages: [],
+      });
       pinNpmrcToUnreachableRegistry();
       pristineWorkspaceFile = readPristine(workspaceFile);
 
@@ -265,7 +273,11 @@ suite('migrate registry configuration', () => {
     beforeAll(() => {
       process.env.SELECTED_PM = 'yarn';
       activateYarn(yarnClassicVersion);
-      newProject({ packageManager: 'yarn', packages: [] });
+      newProject({
+        multipleProjects: true,
+        packageManager: 'yarn',
+        packages: [],
+      });
       pinPackageManager(`yarn@${yarnClassicVersion}`);
       pinNpmrcToUnreachableRegistry();
       pristineYarnrc = readPristine('.yarnrc');
@@ -345,7 +357,11 @@ suite('migrate registry configuration', () => {
     // which the suite-wide timeout does not cover.
     beforeAll(() => {
       process.env.SELECTED_PM = 'bun';
-      newProject({ packageManager: 'bun', packages: [scopedPackage] });
+      newProject({
+        multipleProjects: true,
+        packageManager: 'bun',
+        packages: [scopedPackage],
+      });
       pinNpmrcToUnreachableRegistry();
       pristineBunfig = readPristine(bunfigFile);
 

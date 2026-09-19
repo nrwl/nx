@@ -32,6 +32,7 @@ import { join } from 'path';
 describe('Nx Commands', () => {
   beforeAll(() =>
     newProject({
+      multipleProjects: true,
       packages: [
         '@nx/angular',
         '@nx/eslint',
@@ -769,7 +770,10 @@ describe('Nx Commands', () => {
 // TODO(colum): Change the fetcher to allow incremental migrations over multiple versions, allowing for beforeAll
 describe('migrate', () => {
   beforeEach(() => {
-    newProject({ packages: [] });
+    newProject({
+      multipleProjects: true,
+      packages: [],
+    });
 
     updateFile(
       `./node_modules/migrate-parent-package/package.json`,
@@ -1479,7 +1483,10 @@ describe('global installation', () => {
 
   describe('inside nx directory', () => {
     beforeEach(() => {
-      newProject({ packages: [] });
+      newProject({
+        multipleProjects: true,
+        packages: [],
+      });
     });
 
     afterEach(() => {
@@ -1577,6 +1584,7 @@ describe('global installation', () => {
 describe('cross-workspace implicit dependencies', () => {
   beforeAll(() =>
     newProject({
+      multipleProjects: true,
       packages: ['@nx/js'],
     })
   );

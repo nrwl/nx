@@ -33,6 +33,7 @@ describe('Vite Plugin', () => {
     originalEnv = process.env.NX_ADD_PLUGINS;
     process.env.NX_ADD_PLUGINS = 'false';
     proj = newProject({
+      multipleProjects: true,
       packages: ['@nx/react', '@nx/web', '@nx/vite', '@nx/vitest', '@nx/js'],
     });
   });
@@ -290,6 +291,7 @@ export default async function render(_url: string, document: string) {
     const lib = uniq('my-lib');
     beforeAll(() => {
       proj = newProject({
+        multipleProjects: true,
         name: uniq('vite-incr-build'),
         packages: ['@nx/react', '@nx/vite', '@nx/vitest', '@nx/js'],
       });
@@ -391,7 +393,10 @@ export default App;
     let app: string;
 
     beforeAll(() => {
-      proj = newProject({ packages: ['@nx/react', '@nx/vite'] });
+      proj = newProject({
+        multipleProjects: true,
+        packages: ['@nx/react', '@nx/vite'],
+      });
       app = uniq('app');
       const lib = uniq('lib');
 
@@ -441,6 +446,7 @@ export default App;
       const lib = uniq('my-default-lib');
       beforeAll(() => {
         proj = newProject({
+          multipleProjects: true,
           name: uniq('vite-proj'),
           packages: ['@nx/react', '@nx/vite', '@nx/vitest'],
         });
@@ -484,6 +490,7 @@ export default App;
       const lib = uniq('my-custom-lib');
       beforeEach(() => {
         proj = newProject({
+          multipleProjects: true,
           name: uniq('vite-proj'),
           packages: ['@nx/react', '@nx/vite', '@nx/vitest'],
         });
@@ -645,6 +652,7 @@ export default defineConfig({
   describe('ESM-only apps', () => {
     beforeAll(() => {
       newProject({
+        multipleProjects: true,
         packages: ['@nx/react', '@nx/vite'],
       });
     });

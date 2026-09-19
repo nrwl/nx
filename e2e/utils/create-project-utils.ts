@@ -90,12 +90,44 @@ export function openInEditor(projectDirectory: string = tmpProjPath()) {
  * Sets up a new project in the temporary project path
  * for the currently selected CLI.
  */
+/**
+ * Locate a pre-built base workspace template for this package manager and preset,
+ * produced by the `populate-e2e-base-workspace` task and restored via Nx cache on
+ * each agent. Existence of the directory is the only gate, so a combination that
+ * isn't pre-built just falls back to building the workspace the original way.
+ */
+function sharedBaseWorkspacePath(
+  packageManager: string,
+  preset: string
+): string | null {
+  if (process.env.NX_E2E_SKIP_SHARED_BASE === 'true') {
+    return null;
+  }
+  const candidate = join(
+    __dirname,
+    '..',
+    '..',
+    'dist',
+    'local-registry',
+    'proj-backup',
+    packageManager,
+    preset
+  );
+  return directoryExists(candidate) ? candidate : null;
+}
+
+// Package managers whose workspace has already been built once in this process.
+// The backup is only worth its full-tree copy once a suite asks for a second
+// workspace, so the first build skips it.
+const builtOnce = new Set<string>();
+
 export function newProject({
   name = uniq('proj'),
   packageManager = getSelectedPackageManager(),
   packages,
   preset = 'apps',
   typescriptVersion = defaultTypescriptVersion,
+  multipleProjects = false,
 }: {
   name?: string;
   packageManager?: 'npm' | 'yarn' | 'pnpm' | 'bun';
@@ -103,6 +135,9 @@ export function newProject({
   preset?: string;
   /** Override for suites pinned to an older TypeScript, e.g. Remix needs 5.x. */
   typescriptVersion?: string;
+  /** Set when the suite creates more than one project: keeps the installed
+   * workspace so the later calls copy it instead of installing again. */
+  multipleProjects?: boolean;
 } = {}): string {
   const newProjectStart = performance.mark('new-project:start');
   try {
@@ -110,6 +145,7 @@ export function newProject({
 
     let createNxWorkspaceMeasure: PerformanceMeasure;
     let packageInstallMeasure: PerformanceMeasure;
+    let builtHere = false;
 
     // Namespace by package manager to avoid conflicts in test suites which include multiple package managers
     const backupPath = tmpBackupProjPath(packageManager);
@@ -118,10 +154,22 @@ export function newProject({
       const createNxWorkspaceStart = performance.mark(
         'create-nx-workspace:start'
       );
-      runCreateWorkspace(projScope, {
-        preset,
-        packageManager,
-      });
+      // Seed from the pre-built template when one exists for this package
+      // manager and preset, instead of running the ~40-70s create-nx-workspace.
+      const sharedBase = sharedBaseWorkspacePath(packageManager, preset);
+      if (sharedBase) {
+        ensureDirSync(e2eCwd);
+        copySync(sharedBase, `${e2eCwd}/${projScope}`);
+        // runCreateWorkspace (the else branch) sets the module-level projName as a
+        // side effect that downstream helpers (packageInstall ->
+        // getPackageManagerCommand) rely on; mirror it when seeding from the template.
+        projName = projScope;
+      } else {
+        runCreateWorkspace(projScope, {
+          preset,
+          packageManager,
+        });
+      }
       const createNxWorkspaceEnd = performance.mark('create-nx-workspace:end');
       createNxWorkspaceMeasure = performance.measure(
         'create-nx-workspace',
@@ -186,12 +234,23 @@ export function newProject({
         stdio: isVerbose() ? 'inherit' : 'pipe',
       });
 
-      moveSync(`${e2eCwd}/proj`, backupPath);
+      if (multipleProjects || builtOnce.has(packageManager)) {
+        copySync(`${e2eCwd}/proj`, backupPath);
+      } else {
+        builtOnce.add(packageManager);
+      }
+      builtHere = true;
     }
     projName = name;
 
     const projectDirectory = tmpProjPath();
-    copySync(backupPath, projectDirectory);
+    if (builtHere) {
+      // Nothing has copied this workspace yet, so pnpm's links still resolve;
+      // renaming it into place avoids the reinstall below.
+      moveSync(`${e2eCwd}/proj`, projectDirectory);
+    } else {
+      copySync(backupPath, projectDirectory);
+    }
 
     const dependencies = readJsonFile(
       `${projectDirectory}/package.json`
@@ -200,7 +259,7 @@ export function newProject({
 
     if (missingPackages.length > 0) {
       packageInstall(missingPackages.join(` `), projName);
-    } else if (packageManager === 'pnpm') {
+    } else if (!builtHere && packageManager === 'pnpm') {
       // pnpm creates sym links to the pnpm store,
       // we need to run the install again after copying the temp folder
       try {
