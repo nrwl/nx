@@ -22,6 +22,7 @@ import { copyFileSync } from 'fs';
 describe('Web Components Applications', () => {
   beforeAll(() =>
     newProject({
+      keepBackup: true,
       packages: [
         '@nx/web',
         '@nx/webpack',
@@ -256,6 +257,7 @@ describe('Web Components Applications', () => {
 describe('CLI - Environment Variables', () => {
   it('should automatically load workspace and per-project environment variables', async () => {
     newProject({
+      keepBackup: true,
       packages: [
         '@nx/web',
         '@nx/webpack',
@@ -366,6 +368,7 @@ describe('CLI - Environment Variables', () => {
 describe('index.html interpolation', () => {
   beforeAll(() =>
     newProject({
+      keepBackup: true,
       packages: [
         '@nx/web',
         '@nx/webpack',
