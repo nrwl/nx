@@ -25,7 +25,7 @@ import {
   getYarnMajorVersion,
   isVerboseE2ERun,
 } from './get-env-info';
-import { logError, logInfo } from './log-utils';
+import { logError, logInfo, secondsSince } from './log-utils';
 
 export interface RunCmdOpts {
   silenceError?: boolean;
@@ -232,10 +232,6 @@ export async function shouldRunPlaywrightTests(): Promise<boolean> {
     logInfo(`Playwright ready (${secondsSince(startTime)}s)`)
   );
   return true;
-}
-
-function secondsSince(startTime: number): string {
-  return ((performance.now() - startTime) / 1000).toFixed(1);
 }
 
 function isE2ERunEnabled(): boolean {
