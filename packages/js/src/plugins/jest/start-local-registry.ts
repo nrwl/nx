@@ -1,5 +1,5 @@
 import { signalToCode } from '@nx/devkit/internal';
-import { execSync, fork } from 'child_process';
+import { execSync, fork, ForkOptions, SpawnOptions } from 'child_process';
 
 /**
  * This function is used to start a local registry for testing purposes.
@@ -27,6 +27,10 @@ export function startLocalRegistry({
     throw new Error(`localRegistryTarget is required`);
   }
   return new Promise<() => void>((resolve, reject) => {
+    const forkOptions: ForkOptions & Pick<SpawnOptions, 'windowsHide'> = {
+      stdio: 'pipe',
+      windowsHide: true,
+    };
     const childProcess = fork(
       require.resolve('nx/bin/nx'),
       [
@@ -35,7 +39,7 @@ export function startLocalRegistry({
         }`.split(' '),
         ...(storage ? [`--storage`, storage] : []),
       ],
-      { stdio: 'pipe' }
+      forkOptions
     );
 
     const listener = (data) => {

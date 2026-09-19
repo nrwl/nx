@@ -1,6 +1,12 @@
 import { ExecutorContext, logger } from '@nx/devkit';
 import { signalToCode, readModulePackageJson } from '@nx/devkit/internal';
-import { ChildProcess, execSync, fork } from 'child_process';
+import {
+  ChildProcess,
+  execSync,
+  fork,
+  ForkOptions,
+  SpawnOptions,
+} from 'child_process';
 import detectPort from 'detect-port';
 import { existsSync, rmSync } from 'node:fs';
 import { dirname, join, resolve } from 'path';
@@ -96,19 +102,19 @@ function startVerdaccio(
   workspaceRoot: string
 ) {
   return new Promise((resolve, reject) => {
+    const forkOptions: ForkOptions & Pick<SpawnOptions, 'windowsHide'> = {
+      windowsHide: true,
+      env: {
+        ...process.env,
+        VERDACCIO_HANDLE_KILL_SIGNALS: 'true',
+        ...(options.storage ? { VERDACCIO_STORAGE_PATH: options.storage } : {}),
+      },
+      stdio: 'inherit',
+    };
     childProcess = fork(
       getVerdaccioBinPath(),
       createVerdaccioOptions(options, workspaceRoot),
-      {
-        env: {
-          ...process.env,
-          VERDACCIO_HANDLE_KILL_SIGNALS: 'true',
-          ...(options.storage
-            ? { VERDACCIO_STORAGE_PATH: options.storage }
-            : {}),
-        },
-        stdio: 'inherit',
-      }
+      forkOptions
     );
 
     childProcess.on('error', (err) => {
