@@ -10,9 +10,13 @@ jest.mock('nx/src/utils/cache-directory', () => ({
 }));
 
 const resolveESLintClassSpy = jest.fn();
+let mockESLintClass: unknown = null;
 jest.mock('../utils/resolve-eslint-class', () => ({
   resolveESLintClass: (...args) => {
     resolveESLintClassSpy(...args);
+    if (mockESLintClass) {
+      return mockESLintClass;
+    }
     return jest
       .requireActual('../utils/resolve-eslint-class')
       .resolveESLintClass(...args);
@@ -49,6 +53,7 @@ describe('@nx/eslint/plugin', () => {
   afterEach(() => {
     jest.resetModules();
     resolveESLintClassSpy.mockClear();
+    mockESLintClass = null;
     tempFs.cleanup();
     tempFs = null;
     rmSync('tmp/project-graph-cache', { recursive: true, force: true });
@@ -1170,6 +1175,123 @@ describe('@nx/eslint/plugin', () => {
       const inputs = result.projects['apps/my-app'].targets.lint.inputs;
       expect(inputs).toContain('{workspaceRoot}/tsconfig.a.json');
       expect(inputs).toContain('{workspaceRoot}/tsconfig.b.json');
+    });
+  });
+
+  describe('flat config inputs', () => {
+    function installPackage(name: string) {
+      tempFs.createFileSync(
+        `node_modules/${name}/package.json`,
+        JSON.stringify({ name, version: '1.0.0' })
+      );
+    }
+
+    it('should add packages imported by the root flat config as external dependencies', async () => {
+      // ESLint loads flat configs with a dynamic import, which jest cannot run
+      mockESLintClass = class {
+        async isPathIgnored() {
+          return false;
+        }
+      };
+      installPackage('@nx/eslint-plugin');
+      installPackage('typescript-eslint');
+      createFiles({
+        'eslint.config.mjs': `
+          import nx from '@nx/eslint-plugin';
+          import tseslint from 'typescript-eslint';
+          export default [];
+        `,
+        'apps/my-app/project.json': `{}`,
+        'apps/my-app/index.ts': `console.log('hello world')`,
+      });
+      const result = await invokeCreateNodesOnMatchingFiles(context, {
+        targetName: 'lint',
+      });
+      const inputs = result.projects['apps/my-app'].targets.lint.inputs;
+      expect(inputs).toContainEqual({
+        externalDependencies: [
+          'eslint',
+          '@nx/eslint-plugin',
+          'typescript-eslint',
+        ],
+      });
+    });
+
+    it('should merge packages imported by the project flat config and the root config it extends', async () => {
+      installPackage('@nx/eslint-plugin');
+      installPackage('eslint-plugin-react');
+      createFiles({
+        'eslint.config.mjs': `
+          import nx from '@nx/eslint-plugin';
+          export default [];
+        `,
+        'apps/my-app/eslint.config.mjs': `
+          import baseConfig from '../../eslint.config.mjs';
+          import react from 'eslint-plugin-react';
+          export default [...baseConfig];
+        `,
+        'apps/my-app/project.json': `{}`,
+        'apps/my-app/index.ts': `console.log('hello world')`,
+      });
+      const result = await invokeCreateNodesOnMatchingFiles(context, {
+        targetName: 'lint',
+      });
+      const inputs = result.projects['apps/my-app'].targets.lint.inputs;
+      expect(inputs).toContainEqual({
+        externalDependencies: [
+          'eslint',
+          '@nx/eslint-plugin',
+          'eslint-plugin-react',
+        ],
+      });
+      expect(
+        inputs.filter((input) => input === '{workspaceRoot}/eslint.config.mjs')
+      ).toHaveLength(1);
+    });
+
+    it('should add files outside the project reached via relative imports as inputs', async () => {
+      installPackage('eslint-plugin-react');
+      createFiles({
+        'eslint.config.mjs': `export default [];`,
+        'tools/eslint/react.mjs': `
+          import react from 'eslint-plugin-react';
+          export default [];
+        `,
+        'apps/my-app/eslint.config.mjs': `
+          import reactConfig from '../../tools/eslint/react.mjs';
+          export default [...reactConfig];
+        `,
+        'apps/my-app/project.json': `{}`,
+        'apps/my-app/index.ts': `console.log('hello world')`,
+      });
+      const result = await invokeCreateNodesOnMatchingFiles(context, {
+        targetName: 'lint',
+      });
+      const inputs = result.projects['apps/my-app'].targets.lint.inputs;
+      expect(inputs).toContain('{workspaceRoot}/tools/eslint/react.mjs');
+      expect(inputs).toContainEqual({
+        externalDependencies: ['eslint', 'eslint-plugin-react'],
+      });
+    });
+
+    it('should not add file inputs for relative imports inside the project root', async () => {
+      createFiles({
+        'eslint.config.mjs': `export default [];`,
+        'apps/my-app/eslint.config.mjs': `
+          import local from './eslint.local.mjs';
+          export default [...local];
+        `,
+        'apps/my-app/eslint.local.mjs': `export default [];`,
+        'apps/my-app/project.json': `{}`,
+        'apps/my-app/index.ts': `console.log('hello world')`,
+      });
+      const result = await invokeCreateNodesOnMatchingFiles(context, {
+        targetName: 'lint',
+      });
+      const inputs = result.projects['apps/my-app'].targets.lint.inputs;
+      expect(inputs).not.toContainEqual(
+        expect.stringContaining('eslint.local.mjs')
+      );
     });
   });
 
