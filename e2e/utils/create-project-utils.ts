@@ -136,6 +136,7 @@ export function newProject({
 
     let createNxWorkspaceMeasure: PerformanceMeasure;
     let packageInstallMeasure: PerformanceMeasure;
+    let builtHere = false;
 
     // Namespace by package manager to avoid conflicts in test suites which include multiple package managers
     const backupPath = tmpBackupProjPath(packageManager);
@@ -224,12 +225,19 @@ export function newProject({
         stdio: isVerbose() ? 'inherit' : 'pipe',
       });
 
-      moveSync(`${e2eCwd}/proj`, backupPath);
+      copySync(`${e2eCwd}/proj`, backupPath);
+      builtHere = true;
     }
     projName = name;
 
     const projectDirectory = tmpProjPath();
-    copySync(backupPath, projectDirectory);
+    if (builtHere) {
+      // Nothing has copied this workspace yet, so pnpm's links still resolve;
+      // renaming it into place avoids the reinstall below.
+      moveSync(`${e2eCwd}/proj`, projectDirectory);
+    } else {
+      copySync(backupPath, projectDirectory);
+    }
 
     const dependencies = readJsonFile(
       `${projectDirectory}/package.json`
@@ -238,7 +246,7 @@ export function newProject({
 
     if (missingPackages.length > 0) {
       packageInstall(missingPackages.join(` `), projName);
-    } else if (packageManager === 'pnpm') {
+    } else if (!builtHere && packageManager === 'pnpm') {
       // pnpm creates sym links to the pnpm store,
       // we need to run the install again after copying the temp folder
       try {
