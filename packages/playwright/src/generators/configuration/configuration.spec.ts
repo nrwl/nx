@@ -101,7 +101,7 @@ describe('Playwright e2e configuration', () => {
       expect(config).toContain('url: webServerAddress,');
     });
 
-    it('should default the CI address to the local one', async () => {
+    it('should only switch the command when the CI address is the same', async () => {
       await configGenerator(tree, {
         project: 'myapp-e2e',
         webServerCommand: 'npx nx run myapp:serve',
@@ -109,9 +109,15 @@ describe('Playwright e2e configuration', () => {
         ciWebServerCommand: 'npx nx run myapp:serve-static',
       });
 
-      expect(readConfig()).toContain(
-        "const webServerAddress = isCI ? 'http://localhost:4200' : 'http://localhost:4200';"
+      const config = readConfig();
+      expect(config).toContain(
+        "command: isCI ? 'npx nx run myapp:serve-static' : 'npx nx run myapp:serve',"
       );
+      expect(config).toContain("url: 'http://localhost:4200',");
+      expect(config).toContain(
+        "const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';"
+      );
+      expect(config).not.toContain('const webServerAddress');
     });
 
     it('should not switch on CI when the CI web server is the same', async () => {

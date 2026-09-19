@@ -312,20 +312,23 @@ async function normalizeOptions(
   };
 }
 
-// The template only switches on `CI` when the CI server actually differs.
+// The template only switches on `CI` for the parts that actually differ.
 function getCiWebServer(options: NormalizedGeneratorOptions): {
   ciWebServerCommand: string | null;
   ciWebServerAddress: string | null;
 } {
-  const command = options.ciWebServerCommand ?? options.webServerCommand;
-  const address = options.ciWebServerAddress ?? options.webServerAddress;
-  if (
-    command === options.webServerCommand &&
-    address === options.webServerAddress
-  ) {
-    return { ciWebServerCommand: null, ciWebServerAddress: null };
-  }
-  return { ciWebServerCommand: command, ciWebServerAddress: address };
+  const differs = (ciValue: string | undefined, value: string | undefined) =>
+    ciValue && ciValue !== value ? ciValue : null;
+  return {
+    ciWebServerCommand: differs(
+      options.ciWebServerCommand,
+      options.webServerCommand
+    ),
+    ciWebServerAddress: differs(
+      options.ciWebServerAddress,
+      options.webServerAddress
+    ),
+  };
 }
 
 async function promptForMissingServeData(projectName: string) {
