@@ -51,6 +51,10 @@ import {
   isHandleGetRegisteredSyncGeneratorsMessage,
 } from '../message-types/get-registered-sync-generators';
 import {
+  GET_PLUGIN_CAPABILITIES,
+  isHandleGetPluginCapabilitiesMessage,
+} from '../message-types/get-plugin-capabilities';
+import {
   GET_SYNC_GENERATOR_CHANGES,
   isHandleGetSyncGeneratorChangesMessage,
 } from '../message-types/get-sync-generator-changes';
@@ -113,6 +117,7 @@ import { handleForceShutdown } from './handle-force-shutdown';
 import { handleClientEnv } from './handle-client-env';
 import { handleGetFilesInDirectory } from './handle-get-files-in-directory';
 import { handleGetRegisteredSyncGenerators } from './handle-get-registered-sync-generators';
+import { handleGetPluginCapabilities } from './handle-get-plugin-capabilities';
 import { handleGetSyncGeneratorChanges } from './handle-get-sync-generator-changes';
 import { handleGlob, handleMultiGlob } from './handle-glob';
 import { handleHashGlob, handleHashMultiGlob } from './handle-hash-glob';
@@ -455,6 +460,13 @@ async function handleMessage(socket: Socket, data: Buffer) {
       socket,
       GET_REGISTERED_SYNC_GENERATORS,
       () => handleGetRegisteredSyncGenerators(),
+      mode
+    );
+  } else if (isHandleGetPluginCapabilitiesMessage(payload)) {
+    await handleResult(
+      socket,
+      GET_PLUGIN_CAPABILITIES,
+      () => handleGetPluginCapabilities(),
       mode
     );
   } else if (isHandleUpdateWorkspaceContextMessage(payload)) {

@@ -75,6 +75,8 @@ export declare class FileLock {
   check(): boolean
   wait(): Promise<void>
   lock(): void
+  /** Takes the lock without blocking; false means another handle holds it. */
+  tryLock(): boolean
 }
 
 export declare class HashPlanInspector {
@@ -160,6 +162,16 @@ export declare class NxConsolePreferences {
   constructor(homeDir: string)
   getAutoInstallPreference(): boolean | null
   setAutoInstallPreference(autoInstall: boolean): void
+}
+
+export declare class NxPluginCapabilities {
+  constructor(db: ExternalObject<NxDbConnection>)
+  record(computedAt: number, capabilities: Array<CachedPluginCapabilities>): void
+  /**
+   * The capabilities recorded with the graph computed at `computed_at`, or
+   * null when what is recorded belongs to another build or nothing is.
+   */
+  get(computedAt: number): Array<CachedPluginCapabilities> | null
 }
 
 export declare class NxTaskHistory {
@@ -379,6 +391,14 @@ export declare const enum BatchStatus {
   Running = 'Running',
   Success = 'Success',
   Failure = 'Failure'
+}
+
+export interface CachedPluginCapabilities {
+  createNodesPattern?: string
+  hasCreateDependencies: boolean
+  hasCreateMetadata: boolean
+  hasPreTasksExecution: boolean
+  hasPostTasksExecution: boolean
 }
 
 export interface CachedResult {

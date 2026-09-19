@@ -11,6 +11,7 @@ import {
 import { CreateMetadataError, ProjectGraphError } from './error-types';
 import { output } from '../utils/output';
 import * as plugins from './plugins/get-plugins';
+import type { LoadedNxPlugin } from './plugins/loaded-nx-plugin';
 
 vi.mock('../utils/workspace-context', () => {
   return {
@@ -33,9 +34,13 @@ declare global {
   var NX_GRAPH_CREATION: boolean;
 }
 
+type TestPlugin = Pick<LoadedNxPlugin, 'name' | 'capabilities'> & {
+  createNodes: NonNullable<LoadedNxPlugin['createNodes']>;
+};
+
 describe('buildProjectGraphAndSourceMapsWithoutDaemon', () => {
   it('should throw an error if called recursively', async () => {
-    const testPlugin = {
+    const testPlugin: TestPlugin = {
       name: 'test-plugin',
       createNodes: [
         '*',
@@ -44,7 +49,14 @@ describe('buildProjectGraphAndSourceMapsWithoutDaemon', () => {
           return [];
         }),
       ],
-    } as any;
+      capabilities: () => ({
+        createNodesPattern: '*',
+        hasCreateDependencies: false,
+        hasCreateMetadata: false,
+        hasPreTasksExecution: false,
+        hasPostTasksExecution: false,
+      }),
+    };
 
     vi.spyOn(plugins, 'getPluginsSeparated').mockImplementation(async () => ({
       specifiedPlugins: [testPlugin],
@@ -68,7 +80,7 @@ describe('buildProjectGraphAndSourceMapsWithoutDaemon', () => {
   });
 
   it('should not throw an error if global.NX_GRAPH_CREATION is checked before calling createProjectGraphAsync', async () => {
-    const testPlugin = {
+    const testPlugin: TestPlugin = {
       name: 'test-plugin',
       createNodes: [
         '*',
@@ -79,7 +91,14 @@ describe('buildProjectGraphAndSourceMapsWithoutDaemon', () => {
           return [];
         }),
       ],
-    } as any;
+      capabilities: () => ({
+        createNodesPattern: '*',
+        hasCreateDependencies: false,
+        hasCreateMetadata: false,
+        hasPreTasksExecution: false,
+        hasPostTasksExecution: false,
+      }),
+    };
     vi.spyOn(plugins, 'getPluginsSeparated').mockImplementation(async () => ({
       specifiedPlugins: [testPlugin],
       defaultPlugins: [],
@@ -90,7 +109,7 @@ describe('buildProjectGraphAndSourceMapsWithoutDaemon', () => {
   });
 
   it('should not throw an error if sane plugins are used and called in parallel', () => {
-    const testPlugin = {
+    const testPlugin: TestPlugin = {
       name: 'test-plugin',
       createNodes: [
         '*',
@@ -98,7 +117,14 @@ describe('buildProjectGraphAndSourceMapsWithoutDaemon', () => {
           return [];
         }),
       ],
-    } as any;
+      capabilities: () => ({
+        createNodesPattern: '*',
+        hasCreateDependencies: false,
+        hasCreateMetadata: false,
+        hasPreTasksExecution: false,
+        hasPostTasksExecution: false,
+      }),
+    };
     vi.spyOn(plugins, 'getPluginsSeparated').mockImplementation(async () => ({
       specifiedPlugins: [testPlugin],
       defaultPlugins: [],
