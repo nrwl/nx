@@ -183,8 +183,12 @@ describe('app', () => {
         import { nxE2EPreset } from '@nx/playwright/preset';
         import { workspaceRoot } from '@nx/devkit';
 
+        // CI runs against a production build; locally the dev server is used.
+        const isCI = !!process.env['CI'];
+        const webServerAddress = isCI ? 'http://localhost:4300' : 'http://localhost:4200';
+
         // For CI, you may want to set BASE_URL to the deployed application.
-        const baseURL = process.env['BASE_URL'] || 'http://localhost:4300';
+        const baseURL = process.env['BASE_URL'] || webServerAddress;
 
         /**
          * Read environment variables from file.
@@ -212,8 +216,8 @@ describe('app', () => {
           },
           /* Run your local dev server before starting the tests */
           webServer: {
-            command: 'npx nx run my-app:preview',
-            url: 'http://localhost:4300',
+            command: isCI ? 'npx nx run my-app:preview' : 'npx nx run my-app:dev',
+            url: webServerAddress,
             reuseExistingServer: true,
             cwd: workspaceRoot
           },

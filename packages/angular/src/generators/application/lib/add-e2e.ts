@@ -78,6 +78,8 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
       enableTypedLinting: isTypedLintingEnabled(options),
       webServerCommand: e2eWebServerInfo.e2eWebServerCommand,
       webServerAddress: e2eWebServerInfo.e2eWebServerAddress,
+      ciWebServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
+      ciWebServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
       rootProject: options.rootProject,
       addPlugin,
     });

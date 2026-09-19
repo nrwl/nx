@@ -2,8 +2,13 @@ import { defineConfig, devices } from '@playwright/test';
 import { nxE2EPreset } from '@nx/playwright/preset';
 <% if (webServerCommand && webServerAddress) { %>import { workspaceRoot } from '@nx/devkit';<% } %>
 
+<% const switchesOnCI = webServerCommand && webServerAddress && (ciWebServerCommand || ciWebServerAddress); %><% if (switchesOnCI) { %>// CI runs against a production build; locally the dev server is used.
+const isCI = !!process.env['CI'];
+<% } %><% if (switchesOnCI && ciWebServerAddress) { %>const webServerAddress = isCI ? '<%= ciWebServerAddress %>' : '<%= webServerAddress %>';
+
 // For CI, you may want to set BASE_URL to the deployed application.
-const baseURL = process.env['BASE_URL'] || '<% if(webServerAddress) {%><%= webServerAddress %><% } else {%>http://localhost:3000<% } %>';
+const baseURL = process.env['BASE_URL'] || webServerAddress;<% } else { %>// For CI, you may want to set BASE_URL to the deployed application.
+const baseURL = process.env['BASE_URL'] || '<% if(webServerAddress) {%><%= webServerAddress %><% } else {%>http://localhost:3000<% } %>';<% } %>
 
 /**
  * Read environment variables from file.
@@ -31,8 +36,8 @@ export default defineConfig({
   },
   /* Run your local dev server before starting the tests */<% if(webServerCommand && webServerAddress) {%>
   webServer: {
-    command: '<%= webServerCommand %>',
-    url: '<%= webServerAddress %>',
+    command: <% if (ciWebServerCommand) { %>isCI ? '<%= ciWebServerCommand %>' : '<%= webServerCommand %>'<% } else { %>'<%= webServerCommand %>'<% } %>,
+    url: <% if (ciWebServerAddress) { %>webServerAddress<% } else { %>'<%= webServerAddress %>'<% } %>,
     reuseExistingServer: true,
     cwd: workspaceRoot
   },<% } else {%>
