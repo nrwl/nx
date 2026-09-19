@@ -116,6 +116,11 @@ function sharedBaseWorkspacePath(
   return directoryExists(candidate) ? candidate : null;
 }
 
+// Package managers whose workspace has already been built once in this process.
+// The backup is only worth its full-tree copy once a suite asks for a second
+// workspace, so the first build skips it.
+const builtOnce = new Set<string>();
+
 export function newProject({
   name = uniq('proj'),
   packageManager = getSelectedPackageManager(),
@@ -225,7 +230,11 @@ export function newProject({
         stdio: isVerbose() ? 'inherit' : 'pipe',
       });
 
-      copySync(`${e2eCwd}/proj`, backupPath);
+      if (builtOnce.has(packageManager)) {
+        copySync(`${e2eCwd}/proj`, backupPath);
+      } else {
+        builtOnce.add(packageManager);
+      }
       builtHere = true;
     }
     projName = name;
