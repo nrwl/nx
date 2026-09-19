@@ -5,8 +5,12 @@ exports[`app not nested should generate files if bundler is vite 1`] = `
 import { nxE2EPreset } from '@nx/playwright/preset';
 import { workspaceRoot } from '@nx/devkit';
 
+// CI runs against a production build; locally the dev server is used.
+const isCI = !!process.env['CI'];
+const webServerAddress = isCI ? 'http://localhost:4300' : 'http://localhost:4200';
+
 // For CI, you may want to set BASE_URL to the deployed application.
-const baseURL = process.env['BASE_URL'] || 'http://localhost:4300';
+const baseURL = process.env['BASE_URL'] || webServerAddress;
 
 /**
  * Read environment variables from file.
@@ -34,8 +38,8 @@ export default defineConfig({
   },
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npx nx run my-app:preview',
-    url: 'http://localhost:4300',
+    command: isCI ? 'npx nx run my-app:preview' : 'npx nx run my-app:dev',
+    url: webServerAddress,
     reuseExistingServer: true,
     cwd: workspaceRoot,
   },
@@ -84,6 +88,8 @@ exports[`app not nested should setup playwright e2e project correctly for webpac
 import { nxE2EPreset } from '@nx/playwright/preset';
 import { workspaceRoot } from '@nx/devkit';
 
+// CI runs against a production build; locally the dev server is used.
+const isCI = !!process.env['CI'];
 // For CI, you may want to set BASE_URL to the deployed application.
 const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
 
@@ -113,7 +119,7 @@ export default defineConfig({
   },
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npx nx run cool-app:serve-static',
+    command: isCI ? 'npx nx run cool-app:serve-static' : 'npx nx run cool-app:serve',
     url: 'http://localhost:4200',
     reuseExistingServer: true,
     cwd: workspaceRoot,
@@ -163,8 +169,12 @@ exports[`app not nested should use serve target and port if bundler=vite, e2eTes
 import { nxE2EPreset } from '@nx/playwright/preset';
 import { workspaceRoot } from '@nx/devkit';
 
+// CI runs against a production build; locally the dev server is used.
+const isCI = !!process.env['CI'];
+const webServerAddress = isCI ? 'http://localhost:4300' : 'http://localhost:4200';
+
 // For CI, you may want to set BASE_URL to the deployed application.
-const baseURL = process.env['BASE_URL'] || 'http://localhost:4300';
+const baseURL = process.env['BASE_URL'] || webServerAddress;
 
 /**
  * Read environment variables from file.
@@ -192,8 +202,8 @@ export default defineConfig({
   },
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npx nx run my-app:preview',
-    url: 'http://localhost:4300',
+    command: isCI ? 'npx nx run my-app:preview' : 'npx nx run my-app:dev',
+    url: webServerAddress,
     reuseExistingServer: true,
     cwd: workspaceRoot,
   },
