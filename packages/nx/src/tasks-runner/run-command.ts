@@ -638,6 +638,9 @@ export async function runCommandForTasks(
 
 async function printConfigureAiAgentsDisclaimer(): Promise<void> {
   try {
+    if (isCI()) {
+      return;
+    }
     if (!daemonClient.enabled() || !(await daemonClient.isServerAvailable())) {
       return;
     }
