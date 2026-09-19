@@ -8,10 +8,10 @@ import {
   readJson,
   runCLI,
   runCommand,
-  runE2ETests,
   tmpProjPath,
   uniq,
   updateFile,
+  shouldRunCypressTests,
 } from '@nx/e2e-utils';
 
 const TEN_MINS_MS = 600_000;
@@ -94,7 +94,7 @@ describe('env vars', () => {
 });`
       );
 
-      if (await runE2ETests('cypress')) {
+      if (await shouldRunCypressTests()) {
         // contains the correct output and works
         const run1 = runCLI(
           `e2e ${myapp}-e2e --config \\'{\\"env\\":{\\"cliArg\\":\\"i am from the cli args\\"}}\\'`
@@ -186,7 +186,7 @@ export default defineConfig({
         `generate @nx/cypress:configuration --project=${appName} --devServerTarget=${appName}:dev --baseUrl=http://localhost:3000 --no-interactive`
       );
 
-      if (await runE2ETests('cypress')) {
+      if (await shouldRunCypressTests()) {
         expect(runCLI(`run ${appName}:component-test`)).toContain(
           'All specs passed!'
         );
@@ -215,7 +215,7 @@ export default defineConfig({
         `generate @nx/cypress:e2e --project=${appName} --baseUrl=http://localhost:4200 --no-interactive`
       );
 
-      if (await runE2ETests('cypress')) {
+      if (await shouldRunCypressTests()) {
         expect(runCLI(`run ${appName}:component-test`)).toContain(
           'All specs passed!'
         );

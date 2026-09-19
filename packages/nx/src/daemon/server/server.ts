@@ -184,6 +184,7 @@ import {
   subscribeToWorkspaceChanges,
   type WorkspaceChangesListener,
 } from '../../utils/workspace-context';
+import { isCI } from '../../utils/is-ci';
 
 let workspaceWatcherError: Error | undefined;
 
@@ -811,15 +812,16 @@ export async function startServer(): Promise<Server> {
           registerFileChangeListener(clearSyncGeneratorsCache);
           scheduleInitialProjectGraphComputation();
 
-          // Kick off Nx Console check in background to prime the cache
-          handleGetNxConsoleStatus().catch(() => {
-            // Ignore errors, this is a background operation
-          });
-
-          // Kick off AI agents outdated check in background to prime the cache
-          handleGetConfigureAiAgentsStatus().catch(() => {
-            // Ignore errors, this is a background operation
-          });
+          // Prime the Nx Console and AI agents caches in the background. Both
+          // pull nx@latest, and the CLI never shows their results in CI.
+          if (!isCI()) {
+            handleGetNxConsoleStatus().catch(() => {
+              // Ignore errors, this is a background operation
+            });
+            handleGetConfigureAiAgentsStatus().catch(() => {
+              // Ignore errors, this is a background operation
+            });
+          }
 
           return resolve(server);
         } catch (err) {

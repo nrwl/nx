@@ -1,4 +1,4 @@
-import { runCLI, runE2ETests } from '@nx/e2e-utils';
+import { runCLI, shouldRunCypressTests } from '@nx/e2e-utils';
 import {
   setupCypressComponentTests,
   cleanupCypressComponentTests,
@@ -35,7 +35,7 @@ describe('Angular Cypress Component Tests - Implicit Dep', () => {
 
     updateBuilableLibTestsToAssertAppStyles(appName, buildableLibName);
 
-    if (await runE2ETests('cypress')) {
+    if (await shouldRunCypressTests()) {
       expect(runCLI(`component-test ${buildableLibName}`)).toContain(
         'All specs passed!'
       );
