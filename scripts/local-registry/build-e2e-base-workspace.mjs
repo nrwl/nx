@@ -13,13 +13,16 @@
  * instead of running create-nx-workspace. A missing directory is not an error —
  * newProject falls back to its original lazy build.
  *
- * The whole package-manager × preset matrix is built, one template at a time, so
- * no call site has to fall back.
+ * The whole package-manager × preset matrix is built concurrently so no call site
+ * has to fall back.
  */
-import { execSync } from 'node:child_process';
+import { exec } from 'node:child_process';
 import { cpSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { promisify } from 'node:util';
+
+const execAsync = promisify(exec);
 
 // Every package manager newProject() can be asked for: most call sites take
 // getSelectedPackageManager(), the rest either pin one or iterate all four
@@ -58,6 +61,19 @@ console.log(
   `Package managers: ${PACKAGE_MANAGERS.join(', ')} | presets: ${PRESETS.join(', ')}`
 );
 
+// Corepack fetches a package manager the first time it is used. Do that once per
+// manager before fanning out, so concurrent builds don't race on the same download.
+for (const pm of PACKAGE_MANAGERS) {
+  const cacheRoot = mkdtempSync(join(tmpdir(), `nx-e2e-base-warm-${pm}-`));
+  try {
+    await execAsync(`${pm} --version`, { env: registryEnv(cacheRoot) });
+  } catch (e) {
+    console.warn(`Could not pre-warm ${pm}: ${e.message.split('\n')[0]}`);
+  } finally {
+    rmSync(cacheRoot, { recursive: true, force: true });
+  }
+}
+
 const combos = PACKAGE_MANAGERS.flatMap((pm) =>
   PRESETS.map((preset) => ({ pm, preset }))
 );
@@ -67,9 +83,10 @@ const failures = combos
   .map((c, i) => [c, results[i]])
   .filter(([, r]) => r.status === 'rejected');
 for (const [{ pm, preset }, r] of failures) {
+  const { message, stdout, stderr } = r.reason ?? {};
   console.error(
-    `Failed to build the ${pm}/${preset} base workspace:`,
-    r.reason
+    `Failed to build the ${pm}/${preset} base workspace: ${message}\n` +
+      `${String(stdout ?? '').slice(-4000)}\n${String(stderr ?? '').slice(-4000)}`
   );
 }
 if (failures.length === combos.length) {
@@ -172,12 +189,17 @@ async function buildTemplate({ pm, preset }) {
   ].join(' ');
 
   try {
-    execSync(command, { cwd: work, stdio: 'inherit', env });
+    // Output is captured rather than inherited: concurrent builds would interleave.
+    await execAsync(command, { cwd: work, env, maxBuffer: 64 * 1024 * 1024 });
 
     const projDir = join(work, SCOPE);
     // Stop the daemon so the cached copy doesn't carry a live socket/pid.
     try {
-      execSync('npx nx reset', { cwd: projDir, stdio: 'pipe', env });
+      await execAsync('npx nx reset', {
+        cwd: projDir,
+        env,
+        maxBuffer: 64 * 1024 * 1024,
+      });
     } catch {
       // best-effort; a missing daemon is fine
     }
