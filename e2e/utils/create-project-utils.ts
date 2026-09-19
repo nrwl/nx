@@ -33,7 +33,7 @@ import {
   RunCmdOpts,
   runCommand,
 } from './command-utils';
-import { logError, logInfo } from './log-utils';
+import { logError, logInfo, secondsSince } from './log-utils';
 
 let projName: string;
 
@@ -149,6 +149,7 @@ export function newProject({
     let createNxWorkspaceMeasure: PerformanceMeasure;
     let packageInstallMeasure: PerformanceMeasure;
     let builtHere = false;
+    const stepTimings: string[] = [];
 
     // Namespace by package manager to avoid conflicts in test suites which include multiple package managers
     const backupPath = tmpBackupProjPath(packageManager);
@@ -249,13 +250,20 @@ export function newProject({
         console.info('No packages to install');
       }
       // stop the daemon
+      const resetStart = performance.now();
       execSync(`${getPackageManagerCommand({ packageManager }).runNx} reset`, {
         cwd: stagingDirectory,
         stdio: isVerbose() ? 'inherit' : 'pipe',
       });
 
+      stepTimings.push(`nx reset: ${secondsSince(resetStart)} seconds`);
+
       if (keepBackup || builtOnce.has(packageManager)) {
+        const backupStart = performance.now();
         copySync(stagingDirectory, backupPath);
+        stepTimings.push(
+          `copy to backup: ${secondsSince(backupStart)} seconds`
+        );
       } else {
         builtOnce.add(packageManager);
       }
@@ -271,7 +279,9 @@ export function newProject({
         moveSync(stagingDirectory, projectDirectory);
       }
     } else {
+      const copyStart = performance.now();
       copySync(backupPath, projectDirectory);
+      stepTimings.push(`copy from backup: ${secondsSince(copyStart)} seconds`);
     }
 
     const dependencies = readJsonFile(
@@ -279,6 +289,7 @@ export function newProject({
     ).devDependencies;
     const missingPackages = (packages || []).filter((p) => !dependencies[p]);
 
+    const reinstallStart = performance.now();
     if (missingPackages.length > 0) {
       packageInstall(missingPackages.join(` `), projName);
     } else if (!builtHere && packageManager === 'pnpm') {
@@ -297,6 +308,7 @@ export function newProject({
         throw e;
       }
     }
+    stepTimings.push(`reinstall: ${secondsSince(reinstallStart)} seconds`);
 
     const newProjectEnd = performance.mark('new-project:end');
     const perfMeasure = performance.measure(
@@ -320,7 +332,7 @@ ${
         packageInstallMeasure
           ? `packageInstall: ${packageInstallMeasure.duration / 1000} seconds\n`
           : ''
-      }`
+      }${stepTimings.join('\n')}\n`
     );
 
     openInEditor(projectDirectory);
@@ -879,9 +891,11 @@ export function cleanupProject({
         runCLI('reset', opts);
       }
     } catch {} // ignore crashed daemon
+    const removeStart = performance.now();
     try {
       removeSync(tmpProjPath());
     } catch {}
+    logInfo(`Removed the e2e project (${secondsSince(removeStart)}s)`);
   }
   resetWorkspaceContext();
 }
