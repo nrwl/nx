@@ -145,6 +145,8 @@ exports[`Remix Application Integrated Repo --e2eTestRunner should generate a pla
 import { nxE2EPreset } from '@nx/playwright/preset';
 import { workspaceRoot } from '@nx/devkit';
 
+// CI runs against a production build; locally the dev server is used.
+const isCI = !!process.env['CI'];
 // For CI, you may want to set BASE_URL to the deployed application.
 const baseURL = process.env['BASE_URL'] || 'http://localhost:3000';
 
@@ -174,7 +176,7 @@ export default defineConfig({
   },
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npx nx run test:serve-static',
+    command: isCI ? 'npx nx run test:serve-static' : 'npx nx run test:dev',
     url: 'http://localhost:3000',
     reuseExistingServer: true,
     cwd: workspaceRoot,
@@ -634,6 +636,8 @@ exports[`Remix Application Standalone Project Repo should generate a playwright 
 import { nxE2EPreset } from '@nx/playwright/preset';
 import { workspaceRoot } from '@nx/devkit';
 
+// CI runs against a production build; locally the dev server is used.
+const isCI = !!process.env['CI'];
 // For CI, you may want to set BASE_URL to the deployed application.
 const baseURL = process.env['BASE_URL'] || 'http://localhost:3000';
 
@@ -663,7 +667,7 @@ export default defineConfig({
   },
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npx nx run test:serve-static',
+    command: isCI ? 'npx nx run test:serve-static' : 'npx nx run test:dev',
     url: 'http://localhost:3000',
     reuseExistingServer: true,
     cwd: workspaceRoot,
