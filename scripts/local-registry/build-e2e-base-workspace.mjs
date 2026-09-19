@@ -66,7 +66,12 @@ console.log(
 for (const pm of PACKAGE_MANAGERS) {
   const cacheRoot = mkdtempSync(join(tmpdir(), `nx-e2e-base-warm-${pm}-`));
   try {
-    await execAsync(`${pm} --version`, { env: registryEnv(cacheRoot) });
+    // cwd must be outside the repo: corepack refuses a manager that does not
+    // match the root package.json's packageManager field.
+    await execAsync(`${pm} --version`, {
+      cwd: cacheRoot,
+      env: registryEnv(cacheRoot),
+    });
   } catch (e) {
     console.warn(`Could not pre-warm ${pm}: ${e.message.split('\n')[0]}`);
   } finally {
