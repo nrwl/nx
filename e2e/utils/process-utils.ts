@@ -1,6 +1,6 @@
 import { promisify } from 'util';
 import treeKill = require('tree-kill');
-import { logError, logInfo, logSuccess } from './log-utils';
+import { logError, logInfo, logSuccess, secondsSince } from './log-utils';
 import { check as portCheck } from 'tcp-port-used';
 
 export const kill = require('kill-port');
@@ -41,19 +41,25 @@ export async function killPort(port: number): Promise<boolean> {
   if (!(await isPortInUse(port))) {
     return true;
   }
+  const startTime = performance.now();
   let killPortResult;
   try {
     logInfo(`Attempting to close port ${port}`);
     killPortResult = await kill(port);
   } catch {
-    logError(`Port ${port} closing failed`);
+    logError(`Port ${port} closing failed (${secondsSince(startTime)}s)`);
     return false;
   }
   if (await waitForPortToClose(port)) {
-    logSuccess(`Port ${port} successfully closed`);
+    logSuccess(
+      `Port ${port} successfully closed (${secondsSince(startTime)}s)`
+    );
     return true;
   }
-  logError(`Port ${port} still open`, JSON.stringify(killPortResult));
+  logError(
+    `Port ${port} still open (${secondsSince(startTime)}s)`,
+    JSON.stringify(killPortResult)
+  );
   return false;
 }
 
