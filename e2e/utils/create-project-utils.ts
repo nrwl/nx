@@ -127,6 +127,7 @@ export function newProject({
   packages,
   preset = 'apps',
   typescriptVersion = defaultTypescriptVersion,
+  multipleProjects = false,
 }: {
   name?: string;
   packageManager?: 'npm' | 'yarn' | 'pnpm' | 'bun';
@@ -134,6 +135,9 @@ export function newProject({
   preset?: string;
   /** Override for suites pinned to an older TypeScript, e.g. Remix needs 5.x. */
   typescriptVersion?: string;
+  /** Set when the suite creates more than one project: keeps the installed
+   * workspace so the later calls copy it instead of installing again. */
+  multipleProjects?: boolean;
 } = {}): string {
   const newProjectStart = performance.mark('new-project:start');
   try {
@@ -230,7 +234,7 @@ export function newProject({
         stdio: isVerbose() ? 'inherit' : 'pipe',
       });
 
-      if (builtOnce.has(packageManager)) {
+      if (multipleProjects || builtOnce.has(packageManager)) {
         copySync(`${e2eCwd}/proj`, backupPath);
       } else {
         builtOnce.add(packageManager);

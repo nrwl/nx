@@ -33,6 +33,7 @@ describe('Linter', () => {
 
     beforeAll(() => {
       projScope = newProject({
+        multipleProjects: true,
         packages: [
           '@nx/eslint',
           '@nx/js',
@@ -647,6 +648,7 @@ describe('Linter', () => {
   describe('Root projects migration', () => {
     beforeEach(() =>
       newProject({
+        multipleProjects: true,
         packages: [
           '@nx/angular',
           '@nx/eslint',

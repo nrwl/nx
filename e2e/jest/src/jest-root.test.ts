@@ -7,6 +7,7 @@ describe('Jest root projects', () => {
   describe('angular', () => {
     beforeAll(() => {
       newProject({
+        multipleProjects: true,
         packages: ['@nx/angular', '@nx/jest'],
       });
       runCLI(
@@ -31,6 +32,7 @@ describe('Jest root projects', () => {
   describe('react', () => {
     beforeAll(() => {
       newProject({
+        multipleProjects: true,
         packages: ['@nx/react', '@nx/vite', '@nx/jest', '@nx/eslint'],
       });
       runCLI(

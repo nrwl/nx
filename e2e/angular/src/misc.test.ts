@@ -18,6 +18,7 @@ describe('Move Angular Project', () => {
 
   beforeAll(() => {
     proj = newProject({
+      multipleProjects: true,
       packages: [
         '@nx/angular',
         '@nx/eslint',
@@ -164,6 +165,7 @@ describe('Convert Angular Webpack Project to Rspack', () => {
 
   beforeAll(() => {
     proj = newProject({
+      multipleProjects: true,
       packages: [
         '@nx/angular',
         '@nx/webpack',

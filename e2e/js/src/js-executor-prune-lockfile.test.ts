@@ -120,6 +120,7 @@ describe('js:prune-lockfile executor', () => {
 
       beforeAll(() => {
         scope = newProject({
+          multipleProjects: true,
           packages: ['@nx/node', '@nx/js', '@nx/eslint', '@nx/jest'],
           preset: 'ts',
           packageManager,
@@ -256,6 +257,7 @@ describe('js:prune-lockfile executor', () => {
 
     beforeAll(() => {
       scope = newProject({
+        multipleProjects: true,
         packages: ['@nx/node', '@nx/js'],
         preset: 'ts',
         packageManager: 'npm',
@@ -317,6 +319,7 @@ describe('js:prune-lockfile executor', () => {
 
     beforeAll(() => {
       scope = newProject({
+        multipleProjects: true,
         packages: ['@nx/node', '@nx/js', '@nx/eslint', '@nx/jest'],
         preset: 'ts',
         packageManager: 'pnpm',
@@ -411,6 +414,7 @@ describe('js:prune-lockfile executor', () => {
   describe('package manager pnpm (webpack emit sink)', () => {
     beforeAll(() => {
       newProject({
+        multipleProjects: true,
         packages: ['@nx/node', '@nx/js', '@nx/eslint', '@nx/jest'],
         preset: 'ts',
         packageManager: 'pnpm',
@@ -489,6 +493,7 @@ describe('js:prune-lockfile executor', () => {
 
     beforeAll(() => {
       scope = newProject({
+        multipleProjects: true,
         packages: ['@nx/node', '@nx/js', '@nx/eslint', '@nx/jest'],
         preset: 'ts',
         packageManager: 'pnpm',
@@ -565,6 +570,7 @@ describe('js:prune-lockfile executor', () => {
 
     beforeAll(() => {
       scope = newProject({
+        multipleProjects: true,
         packages: ['@nx/node', '@nx/js', '@nx/eslint', '@nx/jest'],
         preset: 'ts',
         packageManager: 'pnpm',
@@ -631,6 +637,7 @@ describe('js:prune-lockfile executor', () => {
 
     beforeAll(() => {
       scope = newProject({
+        multipleProjects: true,
         packages: ['@nx/node', '@nx/js', '@nx/eslint', '@nx/jest'],
         preset: 'ts',
         packageManager: 'pnpm',
@@ -700,6 +707,7 @@ describe('js:prune-lockfile executor', () => {
 
     beforeAll(() => {
       scope = newProject({
+        multipleProjects: true,
         packages: ['@nx/node', '@nx/js', '@nx/eslint', '@nx/jest'],
         preset: 'ts',
         packageManager: 'pnpm',

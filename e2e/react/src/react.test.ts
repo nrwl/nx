@@ -23,6 +23,7 @@ describe('React Applications', () => {
   describe('Crystal Supported Tests', () => {
     beforeAll(async () => {
       proj = newProject({
+        multipleProjects: true,
         packages: [
           '@nx/react',
           '@nx/webpack',
@@ -279,6 +280,7 @@ describe('React Applications', () => {
     beforeAll(async () => {
       process.env.NX_ADD_PLUGINS = 'false';
       proj = newProject({
+        multipleProjects: true,
         packages: [
           '@nx/react',
           '@nx/webpack',
