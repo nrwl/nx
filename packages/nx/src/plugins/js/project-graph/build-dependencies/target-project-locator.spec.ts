@@ -6,6 +6,7 @@ import {
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
 } from '../../../../config/project-graph';
+import { getWorkspacePackagesMetadata } from '../../utils/packages';
 import {
   TargetProjectLocator,
   isBuiltinModuleImport,
@@ -1217,6 +1218,363 @@ describe('TargetProjectLocator', () => {
       );
 
       expect(result).toEqual('npm:foo@0.0.1');
+    });
+  });
+
+  describe('workspace package import fast path', () => {
+    const fastPathEnv = 'NX_ENABLE_WORKSPACE_PACKAGE_IMPORT_FAST_PATH';
+    let originalFastPathEnv: string | undefined;
+
+    beforeEach(() => {
+      originalFastPathEnv = process.env[fastPathEnv];
+      delete process.env[fastPathEnv];
+      vol.reset();
+      vol.fromJSON(
+        {
+          './tsconfig.base.json': JSON.stringify({
+            compilerOptions: { paths: {} },
+          }),
+        },
+        '/root'
+      );
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+      vol.reset();
+      if (originalFastPathEnv === undefined) {
+        delete process.env[fastPathEnv];
+      } else {
+        process.env[fastPathEnv] = originalFastPathEnv;
+      }
+    });
+
+    function createWorkspaceProject(
+      name: string,
+      js: {
+        packageExports?: string | Record<string, string | null>;
+        packageMain?: string;
+      } = {}
+    ): ProjectGraphProjectNode {
+      const project = {
+        name,
+        type: 'lib',
+        data: {
+          root: `packages/${name}`,
+          metadata: {
+            js: {
+              packageName: '@org/pkg1',
+              packageVersion: '1.0.0',
+              packageExports: undefined,
+              packageMain: undefined,
+              isInPackageManagerWorkspaces: true,
+            },
+          },
+        },
+      } satisfies ProjectGraphProjectNode;
+      Object.assign(project.data.metadata.js, js);
+      return project;
+    }
+
+    function createLocator(
+      projects: Record<string, ProjectGraphProjectNode>
+    ): TargetProjectLocator {
+      return new TargetProjectLocator(projects, {}, new Map(), new Map());
+    }
+
+    function spyOnResolutionPaths(targetProjectLocator: TargetProjectLocator) {
+      const npmResolution = vi
+        .spyOn(targetProjectLocator, 'findNpmProjectFromImport')
+        .mockReturnValue(null);
+      const typescriptResolution = vi
+        .spyOn(targetProjectLocator as any, 'resolveImportWithTypescript')
+        .mockReturnValue(undefined);
+      const requireResolution = vi
+        .spyOn(targetProjectLocator as any, 'resolveImportWithRequire')
+        .mockImplementation(() => {
+          throw new Error('Module not found');
+        });
+
+      return {
+        npmResolution,
+        typescriptResolution,
+        requireResolution,
+      };
+    }
+
+    it('should remain disabled by default', () => {
+      const targetProjectLocator = createLocator({
+        pkg1: createWorkspaceProject('pkg1', {
+          packageExports: { '.': './dist/index.js' },
+        }),
+      });
+      const { typescriptResolution, requireResolution } =
+        spyOnResolutionPaths(targetProjectLocator);
+
+      const result = targetProjectLocator.findProjectFromImport(
+        '@org/pkg1',
+        'packages/source/index.ts'
+      );
+
+      expect(result).toEqual('pkg1');
+      expect(typescriptResolution).toHaveBeenCalledOnce();
+      expect(requireResolution).toHaveBeenCalledOnce();
+    });
+
+    it.each`
+      packageExports                                                | packageMain          | importPath
+      ${'./dist/index.js'}                                          | ${undefined}         | ${'@org/pkg1'}
+      ${{ '.': './dist/index.js' }}                                 | ${undefined}         | ${'@org/pkg1'}
+      ${{ './feature': './dist/feature.js' }}                       | ${undefined}         | ${'@org/pkg1/feature'}
+      ${{ import: './dist/index.mjs', default: './dist/index.js' }} | ${undefined}         | ${'@org/pkg1'}
+      ${undefined}                                                  | ${'./dist/index.js'} | ${'@org/pkg1'}
+    `(
+      'should resolve the exact workspace entry point "$importPath" before expensive resolution',
+      ({ packageExports, packageMain, importPath }) => {
+        process.env[fastPathEnv] = 'true';
+        const targetProjectLocator = createLocator({
+          pkg1: createWorkspaceProject('pkg1', {
+            packageExports,
+            packageMain,
+          }),
+        });
+        const { npmResolution, typescriptResolution, requireResolution } =
+          spyOnResolutionPaths(targetProjectLocator);
+
+        const result = targetProjectLocator.findProjectFromImport(
+          importPath,
+          'packages/source/index.ts'
+        );
+
+        expect(result).toEqual('pkg1');
+        expect(npmResolution).toHaveBeenCalledOnce();
+        expect(typescriptResolution).not.toHaveBeenCalled();
+        expect(requireResolution).not.toHaveBeenCalled();
+      }
+    );
+
+    it('should preserve npm external project precedence', () => {
+      process.env[fastPathEnv] = 'true';
+      const targetProjectLocator = createLocator({
+        pkg1: createWorkspaceProject('pkg1', {
+          packageExports: { '.': './dist/index.js' },
+        }),
+      });
+      const { npmResolution, typescriptResolution, requireResolution } =
+        spyOnResolutionPaths(targetProjectLocator);
+      npmResolution.mockReturnValue('npm:@org/pkg1');
+
+      const result = targetProjectLocator.findProjectFromImport(
+        '@org/pkg1',
+        'packages/source/index.ts'
+      );
+
+      expect(result).toEqual('npm:@org/pkg1');
+      expect(typescriptResolution).not.toHaveBeenCalled();
+      expect(requireResolution).not.toHaveBeenCalled();
+    });
+
+    it('should preserve tsconfig path precedence', () => {
+      process.env[fastPathEnv] = 'true';
+      vol.fromJSON(
+        {
+          './tsconfig.base.json': JSON.stringify({
+            compilerOptions: {
+              paths: {
+                '@org/pkg1': ['packages/tsconfig-project'],
+              },
+            },
+          }),
+        },
+        '/root'
+      );
+      const targetProjectLocator = createLocator({
+        pkg1: createWorkspaceProject('pkg1', {
+          packageExports: { '.': './dist/index.js' },
+        }),
+        'tsconfig-project': {
+          name: 'tsconfig-project',
+          type: 'lib',
+          data: {
+            root: 'packages/tsconfig-project',
+          },
+        },
+      });
+      const { npmResolution, typescriptResolution, requireResolution } =
+        spyOnResolutionPaths(targetProjectLocator);
+
+      const result = targetProjectLocator.findProjectFromImport(
+        '@org/pkg1',
+        'packages/source/index.ts'
+      );
+
+      expect(result).toEqual('tsconfig-project');
+      expect(npmResolution).not.toHaveBeenCalled();
+      expect(typescriptResolution).not.toHaveBeenCalled();
+      expect(requireResolution).not.toHaveBeenCalled();
+    });
+
+    it('should bypass the fast path when a tsconfig path matched without resolving a project', () => {
+      process.env[fastPathEnv] = 'true';
+      vol.fromJSON(
+        {
+          './tsconfig.base.json': JSON.stringify({
+            compilerOptions: {
+              paths: {
+                '@org/pkg1': ['packages/missing'],
+              },
+            },
+          }),
+        },
+        '/root'
+      );
+      const targetProjectLocator = createLocator({
+        pkg1: createWorkspaceProject('pkg1', {
+          packageExports: { '.': './dist/index.js' },
+        }),
+      });
+      const { typescriptResolution, requireResolution } =
+        spyOnResolutionPaths(targetProjectLocator);
+
+      const result = targetProjectLocator.findProjectFromImport(
+        '@org/pkg1',
+        'packages/source/index.ts'
+      );
+
+      expect(result).toEqual('pkg1');
+      expect(typescriptResolution).toHaveBeenCalledOnce();
+      expect(requireResolution).toHaveBeenCalledOnce();
+    });
+
+    it('should bypass the fast path for ambiguous exact entry points', () => {
+      process.env[fastPathEnv] = 'true';
+      const projects = {
+        pkg1: createWorkspaceProject('pkg1', {
+          packageExports: { '.': './dist/index.js' },
+        }),
+        pkg2: createWorkspaceProject('pkg2', {
+          packageExports: { '.': './dist/index.js' },
+        }),
+      };
+      const packagesMetadata = getWorkspacePackagesMetadata(projects);
+      const targetProjectLocator = createLocator(projects);
+      const { typescriptResolution, requireResolution } =
+        spyOnResolutionPaths(targetProjectLocator);
+
+      const result = targetProjectLocator.findProjectFromImport(
+        '@org/pkg1',
+        'packages/source/index.ts'
+      );
+
+      expect(
+        packagesMetadata.directlyResolvableWorkspaceEntryPoints
+      ).not.toContain('@org/pkg1');
+      expect(result).toEqual('pkg2');
+      expect(typescriptResolution).toHaveBeenCalledOnce();
+      expect(requireResolution).toHaveBeenCalledOnce();
+    });
+
+    it('should bypass the fast path when an exact export targets a nested project', () => {
+      process.env[fastPathEnv] = 'true';
+      const projects = {
+        pkg1: createWorkspaceProject('pkg1', {
+          packageExports: {
+            './feature': './feature/index.js',
+          },
+        }),
+        feature: {
+          name: 'feature',
+          type: 'lib' as const,
+          data: {
+            root: 'packages/pkg1/feature',
+          },
+        },
+      };
+      const packagesMetadata = getWorkspacePackagesMetadata(projects);
+      const targetProjectLocator = createLocator(projects);
+      const { npmResolution, typescriptResolution, requireResolution } =
+        spyOnResolutionPaths(targetProjectLocator);
+      requireResolution.mockReturnValue('packages/pkg1/feature/index.js');
+
+      const result = targetProjectLocator.findProjectFromImport(
+        '@org/pkg1/feature',
+        'packages/source/index.ts'
+      );
+
+      expect(
+        packagesMetadata.directlyResolvableWorkspaceEntryPoints
+      ).not.toContain('@org/pkg1/feature');
+      expect(result).toEqual('feature');
+      expect(npmResolution).toHaveBeenCalledOnce();
+      expect(typescriptResolution).toHaveBeenCalledOnce();
+      expect(requireResolution).toHaveBeenCalledOnce();
+    });
+
+    it('should not requalify an entry point after one condition crosses a project boundary', () => {
+      const projects = {
+        pkg1: createWorkspaceProject('pkg1', {
+          packageExports: {
+            require: './feature/index.js',
+            default: './dist/index.js',
+          },
+        }),
+        feature: {
+          name: 'feature',
+          type: 'lib' as const,
+          data: {
+            root: 'packages/pkg1/feature',
+          },
+        },
+      };
+
+      const packagesMetadata = getWorkspacePackagesMetadata(projects);
+
+      expect(
+        packagesMetadata.directlyResolvableWorkspaceEntryPoints
+      ).not.toContain('@org/pkg1');
+      expect(
+        packagesMetadata.entryPointsToProjectMap['@org/pkg1'].name
+      ).toEqual('pkg1');
+    });
+
+    it('should bypass the fast path for wildcard entry points', () => {
+      process.env[fastPathEnv] = 'true';
+      const targetProjectLocator = createLocator({
+        pkg1: createWorkspaceProject('pkg1', {
+          packageExports: { './*': './dist/*.js' },
+        }),
+      });
+      const { typescriptResolution, requireResolution } =
+        spyOnResolutionPaths(targetProjectLocator);
+
+      const result = targetProjectLocator.findProjectFromImport(
+        '@org/pkg1/feature',
+        'packages/source/index.ts'
+      );
+
+      expect(result).toEqual('pkg1');
+      expect(typescriptResolution).toHaveBeenCalledOnce();
+      expect(requireResolution).toHaveBeenCalledOnce();
+    });
+
+    it('should not resolve restricted entry points', () => {
+      process.env[fastPathEnv] = 'true';
+      const targetProjectLocator = createLocator({
+        pkg1: createWorkspaceProject('pkg1', {
+          packageExports: { './internal': null },
+        }),
+      });
+      const { typescriptResolution, requireResolution } =
+        spyOnResolutionPaths(targetProjectLocator);
+
+      const result = targetProjectLocator.findProjectFromImport(
+        '@org/pkg1/internal',
+        'packages/source/index.ts'
+      );
+
+      expect(result).toBeNull();
+      expect(typescriptResolution).toHaveBeenCalledOnce();
+      expect(requireResolution).toHaveBeenCalledOnce();
     });
   });
 
