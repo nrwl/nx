@@ -568,5 +568,10 @@
     "name": "@anarchitects/nx-typeorm",
     "description": "Nx plugin for TypeORM integration in Nx backend applications and libraries.",
     "url": "https://github.com/anarchitects/anarchitecture-plugins/tree/main/packages/typeorm"
+  },
+  {
+    "name": "@loomweaver/devkit",
+    "description": "Nx generators for LoomWeaver, an open-source plugin platform for Angular workbenches: weavers, distributions, frame plugins and integration seams.",
+    "url": "https://github.com/yesbert/loomweaver/tree/main/platform/libs/tooling/devkit"
   }
 ]
