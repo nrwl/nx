@@ -65,7 +65,7 @@
       ],
       "dependsOn": ["local-registry-e2e", "populate-local-registry-storage"],
       "command": "node ./scripts/local-registry/build-e2e-base-workspace.mjs",
-      "outputs": ["{workspaceRoot}/dist/local-registry/proj-backup"]
+      "outputs": ["{workspaceRoot}/dist/local-registry/proj-backup/*.tar"]
     },
     "nx-release": {
       "dependsOn": [

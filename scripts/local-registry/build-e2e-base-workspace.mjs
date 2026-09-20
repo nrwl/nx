@@ -22,7 +22,7 @@
  * has to fall back.
  */
 import { exec } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { promisify } from 'node:util';
@@ -84,6 +84,12 @@ for (const pm of PACKAGE_MANAGERS) {
     rmSync(cacheRoot, { recursive: true, force: true });
   }
 }
+
+// The declared output is `<pm>-<preset>.tar` and nothing else. Clear the directory
+// so a template dropped from the matrix, or a tree left by an older build, can't be
+// cached as part of it.
+rmSync(outputRoot, { recursive: true, force: true });
+mkdirSync(outputRoot, { recursive: true });
 
 const combos = PACKAGE_MANAGERS.flatMap((pm) =>
   PRESETS.map((preset) => ({ pm, preset }))
