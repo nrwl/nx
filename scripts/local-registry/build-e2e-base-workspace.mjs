@@ -22,10 +22,11 @@
  * has to fall back.
  */
 import { exec } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { promisify } from 'node:util';
+import { packDirectory } from './tar-utils.mjs';
 
 const execAsync = promisify(exec);
 
@@ -215,13 +216,8 @@ async function buildTemplate({ pm, preset }) {
     }
 
     const dest = join(outputRoot, `${pm}-${preset}.tar`);
-    mkdirSync(outputRoot, { recursive: true });
     rmSync(dest, { force: true });
-    // No -h/--dereference: pnpm's node_modules is a web of relative symlinks, and
-    // resolving them would both explode the size and strand the links on extract.
-    await execAsync(`tar -cf "${dest}" -C "${projDir}" .`, {
-      maxBuffer: 64 * 1024 * 1024,
-    });
+    await packDirectory(projDir, dest);
     console.log(`Wrote base workspace template: ${dest}`);
   } finally {
     rmSync(work, { recursive: true, force: true });

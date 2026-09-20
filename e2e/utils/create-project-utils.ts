@@ -22,7 +22,7 @@ import { output, readJsonFile } from '@nx/devkit';
 import { angularDevkitVersion as defaultAngularCliVersion } from '@nx/angular/internal';
 import { typescriptVersion as defaultTypescriptVersion } from '@nx/js/src/utils/versions';
 import { dump } from '@zkochan/js-yaml';
-import { execSync, ExecSyncOptions } from 'node:child_process';
+import { execFileSync, execSync, ExecSyncOptions } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { performance, PerformanceMeasure } from 'node:perf_hooks';
@@ -160,8 +160,23 @@ export function newProject({
         const seedDir = `${e2eCwd}/${projScope}`;
         removeSync(seedDir);
         ensureDirSync(seedDir);
-        // tar restores pnpm's symlinks verbatim; copying the tree would not.
-        execSync(`tar -xf "${sharedBase}" -C "${seedDir}"`, { stdio: 'pipe' });
+        // Its own process because newProject() is synchronous and tar-stream is not.
+        execFileSync(
+          process.execPath,
+          [
+            join(
+              __dirname,
+              '..',
+              '..',
+              'scripts',
+              'local-registry',
+              'extract-e2e-base-workspace.mjs'
+            ),
+            sharedBase,
+            seedDir,
+          ],
+          { stdio: 'pipe' }
+        );
         // runCreateWorkspace (the else branch) sets the module-level projName as a
         // side effect that downstream helpers (packageInstall ->
         // getPackageManagerCommand) rely on; mirror it when seeding from the template.
