@@ -23,7 +23,7 @@ import { angularDevkitVersion as defaultAngularCliVersion } from '@nx/angular/in
 import { typescriptVersion as defaultTypescriptVersion } from '@nx/js/src/utils/versions';
 import { dump } from '@zkochan/js-yaml';
 import { execSync, ExecSyncOptions } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { performance, PerformanceMeasure } from 'node:perf_hooks';
 import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
@@ -93,7 +93,7 @@ export function openInEditor(projectDirectory: string = tmpProjPath()) {
 /**
  * Locate a pre-built base workspace template for this package manager and preset,
  * produced by the `populate-e2e-base-workspace` task and restored via Nx cache on
- * each agent. Existence of the directory is the only gate, so a combination that
+ * each agent. Existence of the tarball is the only gate, so a combination that
  * isn't pre-built just falls back to building the workspace the original way.
  */
 function sharedBaseWorkspacePath(
@@ -110,10 +110,9 @@ function sharedBaseWorkspacePath(
     'dist',
     'local-registry',
     'proj-backup',
-    packageManager,
-    preset
+    `${packageManager}-${preset}.tar`
   );
-  return directoryExists(candidate) ? candidate : null;
+  return existsSync(candidate) ? candidate : null;
 }
 
 // Package managers whose workspace has already been built once in this process.
@@ -158,8 +157,11 @@ export function newProject({
       // manager and preset, instead of running the ~40-70s create-nx-workspace.
       const sharedBase = sharedBaseWorkspacePath(packageManager, preset);
       if (sharedBase) {
-        ensureDirSync(e2eCwd);
-        copySync(sharedBase, `${e2eCwd}/${projScope}`);
+        const seedDir = `${e2eCwd}/${projScope}`;
+        removeSync(seedDir);
+        ensureDirSync(seedDir);
+        // tar restores pnpm's symlinks verbatim; copying the tree would not.
+        execSync(`tar -xf "${sharedBase}" -C "${seedDir}"`, { stdio: 'pipe' });
         // runCreateWorkspace (the else branch) sets the module-level projName as a
         // side effect that downstream helpers (packageInstall ->
         // getPackageManagerCommand) rely on; mirror it when seeding from the template.

@@ -8,16 +8,21 @@
  * output, so it is restored to every distributed agent the same way the verdaccio
  * storage is — which is what makes the templates shareable across machines.
  *
+ * Each template is written as a tarball, not a directory. The eight installed
+ * workspaces hold several hundred thousand files between them, and the cache's
+ * artifact walk opens them all — enough to exhaust the 256 descriptor limit macOS
+ * runners default to (EMFILE). Eight files cost one descriptor each.
+ *
  * The consumer side is `newProject()` in e2e/utils/create-project-utils.ts: it
- * looks for <package-manager>/<preset> and seeds the per-test workspace from it
- * instead of running create-nx-workspace. A missing directory is not an error —
+ * looks for <package-manager>-<preset>.tar and extracts the per-test workspace from
+ * it instead of running create-nx-workspace. A missing tarball is not an error —
  * newProject falls back to its original lazy build.
  *
  * The whole package-manager × preset matrix is built concurrently so no call site
  * has to fall back.
  */
 import { exec } from 'node:child_process';
-import { cpSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { promisify } from 'node:util';
@@ -209,11 +214,14 @@ async function buildTemplate({ pm, preset }) {
       // best-effort; a missing daemon is fine
     }
 
-    const dest = join(outputRoot, pm, preset);
-    rmSync(dest, { recursive: true, force: true });
-    // Without verbatimSymlinks, cpSync rewrites pnpm's relative links to absolute
-    // paths into `work`, which is deleted below.
-    cpSync(projDir, dest, { recursive: true, verbatimSymlinks: true });
+    const dest = join(outputRoot, `${pm}-${preset}.tar`);
+    mkdirSync(outputRoot, { recursive: true });
+    rmSync(dest, { force: true });
+    // No -h/--dereference: pnpm's node_modules is a web of relative symlinks, and
+    // resolving them would both explode the size and strand the links on extract.
+    await execAsync(`tar -cf "${dest}" -C "${projDir}" .`, {
+      maxBuffer: 64 * 1024 * 1024,
+    });
     console.log(`Wrote base workspace template: ${dest}`);
   } finally {
     rmSync(work, { recursive: true, force: true });
