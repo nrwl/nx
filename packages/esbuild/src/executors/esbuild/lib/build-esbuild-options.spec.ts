@@ -1,4 +1,7 @@
-import { buildEsbuildOptions, getRegisterFileContent } from './build-esbuild-options';
+import {
+  buildEsbuildOptions,
+  getRegisterFileContent,
+} from './build-esbuild-options';
 import { ExecutorContext } from '@nx/devkit';
 import { execFileSync } from 'child_process';
 import { mkdtempSync, mkdirSync, writeFileSync } from 'fs';
