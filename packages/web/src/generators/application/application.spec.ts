@@ -157,13 +157,13 @@ describe('app', () => {
               cypressDir: 'src',
               bundler: 'vite',
               webServerCommands: {
-                default: 'npx nx run cool-app:dev',
+                default: process.env['CI'] ? 'npx nx run cool-app:preview' : 'npx nx run cool-app:dev',
                 production: 'npx nx run cool-app:preview',
               },
               ciWebServerCommand: 'npx nx run cool-app:preview',
               ciBaseUrl: 'http://localhost:4300',
             }),
-            baseUrl: 'http://localhost:4200',
+            baseUrl: process.env['CI'] ? 'http://localhost:4300' : 'http://localhost:4200',
           },
         });
         "
@@ -187,7 +187,9 @@ describe('app', () => {
             ...nxE2EPreset(__filename, {
               cypressDir: 'src',
               webServerCommands: {
-                default: 'npx nx run cool-app:serve',
+                default: process.env['CI']
+                  ? 'npx nx run cool-app:serve-static'
+                  : 'npx nx run cool-app:serve',
                 production: 'npx nx run cool-app:serve-static',
               },
               ciWebServerCommand: 'npx nx run cool-app:serve-static',

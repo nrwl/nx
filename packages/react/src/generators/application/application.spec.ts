@@ -137,13 +137,13 @@ describe('app', () => {
               cypressDir: 'src',
               bundler: 'vite',
               webServerCommands: {
-                default: '<pm-exec> nx run my-app:dev',
+                default: process.env['CI'] ? '<pm-exec> nx run my-app:preview' : '<pm-exec> nx run my-app:dev',
                 production: '<pm-exec> nx run my-app:preview',
               },
               ciWebServerCommand: '<pm-exec> nx run my-app:preview',
               ciBaseUrl: 'http://localhost:4300',
             }),
-            baseUrl: 'http://localhost:4200',
+            baseUrl: process.env['CI'] ? 'http://localhost:4300' : 'http://localhost:4200',
           },
         });
         "
