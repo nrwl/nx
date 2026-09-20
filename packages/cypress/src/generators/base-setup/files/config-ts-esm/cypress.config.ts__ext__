@@ -7,6 +7,6 @@ import { defineConfig } from 'cypress';
 export default defineConfig({<% if (e2ePreset) { %>
   e2e: {
     ...nxE2EPreset(import.meta.url, <%- presetOptions %>),<% if (baseUrl) { %>
-    baseUrl: '<%- baseUrl %>',<% } %>
+    baseUrl: <%- baseUrl %>,<% } %>
   },
 <% } %>});

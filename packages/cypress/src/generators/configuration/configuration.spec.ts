@@ -48,7 +48,7 @@ describe('Cypress e2e configuration', () => {
           ...nxE2EPreset(__filename, {
             cypressDir: 'src',
             webServerCommands: {
-              default: 'nx run my-app:serve',
+              default: process.env['CI'] ? 'nx run my-app:serve-static' : 'nx run my-app:serve',
               production: 'nx run my-app:serve:production',
             },
             ciWebServerCommand: 'nx run my-app:serve-static',
@@ -87,6 +87,47 @@ describe('Cypress e2e configuration', () => {
       }
     `);
     assertCypressFiles(tree, 'apps/my-app/src');
+  });
+
+  it('should switch the web server and baseUrl on CI when they differ', async () => {
+    await cypressInitGenerator(tree, { addPlugin: true });
+    addProject(tree, { name: 'my-app', type: 'apps' });
+
+    await cypressE2EConfigurationGenerator(tree, {
+      project: 'my-app',
+      baseUrl: 'http://localhost:4200',
+      webServerCommands: { default: 'nx run my-app:serve' },
+      ciWebServerCommand: 'nx run my-app:preview',
+      ciBaseUrl: 'http://localhost:4300',
+      addPlugin: true,
+    });
+
+    const config = tree.read('apps/my-app/cypress.config.ts', 'utf-8');
+    expect(config).toContain(
+      "default: process.env['CI'] ? 'nx run my-app:preview' : 'nx run my-app:serve',"
+    );
+    expect(config).toContain(
+      "baseUrl: process.env['CI'] ? 'http://localhost:4300' : 'http://localhost:4200',"
+    );
+  });
+
+  it('should keep plain values when there is no separate CI web server', async () => {
+    await cypressInitGenerator(tree, { addPlugin: true });
+    addProject(tree, { name: 'my-app', type: 'apps' });
+
+    await cypressE2EConfigurationGenerator(tree, {
+      project: 'my-app',
+      baseUrl: 'http://localhost:4200',
+      webServerCommands: { default: 'nx run my-app:serve' },
+      ciWebServerCommand: 'nx run my-app:serve',
+      ciBaseUrl: 'http://localhost:4200',
+      addPlugin: true,
+    });
+
+    const config = tree.read('apps/my-app/cypress.config.ts', 'utf-8');
+    expect(config).toContain("default: 'nx run my-app:serve',");
+    expect(config).toContain("baseUrl: 'http://localhost:4200',");
+    expect(config).not.toContain("process.env['CI']");
   });
 
   it('should add e2e target to existing app when not using plugin', async () => {
@@ -174,7 +215,7 @@ describe('Cypress e2e configuration', () => {
           ...nxE2EPreset(__filename, {
             cypressDir: 'cypress',
             webServerCommands: {
-              default: 'nx run my-app:serve',
+              default: process.env['CI'] ? 'nx run my-app:serve-static' : 'nx run my-app:serve',
               production: 'nx run my-app:serve:production',
             },
             ciWebServerCommand: 'nx run my-app:serve-static',
@@ -203,7 +244,7 @@ describe('Cypress e2e configuration', () => {
           ...nxE2EPreset(__filename, {
             cypressDir: 'src',
             webServerCommands: {
-              default: 'nx run my-app:serve',
+              default: process.env['CI'] ? 'nx run my-app:serve-static' : 'nx run my-app:serve',
               production: 'nx run my-app:serve:production',
             },
             ciWebServerCommand: 'nx run my-app:serve-static',
