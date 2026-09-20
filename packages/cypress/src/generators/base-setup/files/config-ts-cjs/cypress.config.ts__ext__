@@ -7,6 +7,6 @@ const { defineConfig } = require('cypress');
 module.exports = defineConfig({<% if (e2ePreset) { %>
   e2e: {
     ...nxE2EPreset(__filename, <%- presetOptions %>),<% if (baseUrl) { %>
-    baseUrl: '<%- baseUrl %>',<% } %>
+    baseUrl: <%- baseUrl %>,<% } %>
   },
 <% } %>});

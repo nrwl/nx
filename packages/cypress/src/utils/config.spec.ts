@@ -237,7 +237,7 @@ export default defineConfig({
               ...nxE2EPreset(import.meta.url, {
                   "cypressDir": "cypress",
                   "webServerCommands": {
-                      "default": "my-app:serve",
+                      "default": process.env['CI'] ? 'my-app:serve-static' : 'my-app:serve',
                       "production": "my-app:serve:production"
                   },
                   "ciWebServerCommand": "my-app:serve-static"
