@@ -48,20 +48,6 @@ const execAsync = promisify(exec);
 const execFileAsync = promisify(execFile);
 
 /**
- * Runs `$0` with `$@`, so the command and its arguments stay argv rather than
- * shell syntax.
- */
-const SHELL_EXEC_PREFIX = ['-c', 'exec "$0" "$@"'] as const;
-
-/**
- * Node only started mapping libuv's -8 to `ENOEXEC` in 22.18; 20.x and older
- * 22.x report `Unknown system error -8` for the same spawn failure.
- */
-function isExecFormatError(error: any): boolean {
-  return error?.code === 'ENOEXEC' || error?.errno === -8;
-}
-
-/**
  * Shell-less spawn for the registry-bridged fetches: `exec` goes through
  * /bin/sh, which is dash on Debian-family systems, and dash drops environment
  * names that are not valid shell identifiers, i.e. every `//...:_authToken`
@@ -71,12 +57,8 @@ function isExecFormatError(error: any): boolean {
  *
  * That quoting is the whole defence on Windows, so it goes through
  * quoteShellArg, which throws on the one argument it cannot make safe.
- *
- * The ENOEXEC retry needs a shell as well, but only to interpret the shim, so
- * it hands `sh` a fixed script and passes the command and its arguments as
- * positional parameters. Nothing of ours reaches the shell's parser.
  */
-async function execPackageManagerAsync(
+function execPackageManagerAsync(
   pm: string,
   args: string[],
   options: { cwd: string; windowsHide: boolean; env: NodeJS.ProcessEnv }
@@ -84,17 +66,7 @@ async function execPackageManagerAsync(
   if (process.platform === 'win32') {
     return execAsync([pm, ...args].map(quoteShellArg).join(' '), options);
   }
-  try {
-    return await execFileAsync(pm, args, options);
-  } catch (error) {
-    // pnpm 12's fallback shim has no shebang when installed without scripts.
-    if (!isExecFormatError(error)) throw error;
-    return execFileAsync(
-      '/bin/sh',
-      [...SHELL_EXEC_PREFIX, pm, ...args],
-      options
-    );
-  }
+  return execFileAsync(pm, args, options);
 }
 
 /** Same split, and the same quoting, for a blocking caller. */
@@ -106,16 +78,7 @@ function execPackageManagerSync(
   if (process.platform === 'win32') {
     return execSync([pm, ...args].map(quoteShellArg).join(' '), options);
   }
-  try {
-    return execFileSync(pm, args, options);
-  } catch (error) {
-    if (!isExecFormatError(error)) throw error;
-    return execFileSync(
-      '/bin/sh',
-      [...SHELL_EXEC_PREFIX, pm, ...args],
-      options
-    );
-  }
+  return execFileSync(pm, args, options);
 }
 
 export type PackageManager = 'yarn' | 'pnpm' | 'npm' | 'bun';
