@@ -96,7 +96,7 @@ exports[`task planner > should deduplicate overlapping external closures for all
       "libs/child/test.ts",
       "nx.json",
     ],
-    "markers": [],
+    "ioSnapshots": [],
     "runtime": [],
     "sources": {
       "AllExternalDependencies": "native",
@@ -147,7 +147,7 @@ exports[`task planner > should deduplicate overlapping external closures for exe
       "libs/child/test.ts",
       "nx.json",
     ],
-    "markers": [],
+    "ioSnapshots": [],
     "runtime": [],
     "sources": {
       "NX_CLOUD_ENCRYPTION_KEY": "native",
@@ -197,7 +197,7 @@ exports[`task planner > should deduplicate overlapping external closures for exp
       "libs/child/test.ts",
       "nx.json",
     ],
-    "markers": [],
+    "ioSnapshots": [],
     "runtime": [],
     "sources": {
       "NX_CLOUD_ENCRYPTION_KEY": "native",

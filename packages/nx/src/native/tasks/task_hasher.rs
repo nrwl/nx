@@ -53,8 +53,9 @@ pub struct HashInputs {
     /// Provenance of every value above, keyed by the value itself.
     #[napi(ts_type = "Record<string, 'snapshot' | 'target' | 'dependency' | 'native'>")]
     pub sources: HashMap<String, String>,
-    /// Domain markers in the plan, e.g. `io-snapshot:<digest>`.
-    pub markers: Vec<String>,
+    /// The `io-snapshot:<digest>` value of each snapshot entry the plan
+    /// hashed, as it appears in `sources` and in the plan itself.
+    pub io_snapshots: Vec<String>,
 }
 
 /// Where an input value came from; see `input_source`.
@@ -146,7 +147,7 @@ pub(crate) struct HashInputsBuilder {
     pub(crate) dep_outputs: HashSet<String>,
     pub(crate) external: HashSet<String>,
     pub(crate) sources: HashMap<String, &'static str>,
-    pub(crate) markers: HashSet<String>,
+    pub(crate) io_snapshots: HashSet<String>,
 }
 
 impl HashInputsBuilder {
@@ -160,7 +161,7 @@ impl HashInputsBuilder {
         for (value, source) in other.sources {
             self.sources.entry(value).or_insert(source);
         }
-        self.markers.extend(other.markers);
+        self.io_snapshots.extend(other.io_snapshots);
     }
 
     /// Records `source` for every value currently in the builder.
@@ -206,7 +207,7 @@ impl From<&HashInstruction> for HashInputsBuilder {
                 ..Default::default()
             },
             HashInstruction::IoSnapshot(_) => HashInputsBuilder {
-                markers: HashSet::from([instruction.to_string()]),
+                io_snapshots: HashSet::from([instruction.to_string()]),
                 ..Default::default()
             },
             HashInstruction::ProjectConfiguration(_) | HashInstruction::Cwd(_) => {
@@ -243,7 +244,7 @@ impl From<HashInputsBuilder> for HashInputs {
                 .into_iter()
                 .map(|(k, v)| (k, v.to_string()))
                 .collect(),
-            markers: to_sorted_vec(builder.markers),
+            io_snapshots: to_sorted_vec(builder.io_snapshots),
         }
     }
 }

@@ -235,7 +235,7 @@ describe('native task hasher', () => {
               "nx.json",
               "tsconfig.base.json",
             ],
-            "markers": [],
+            "ioSnapshots": [],
             "runtime": [
               "echo runtime123",
             ],
@@ -487,7 +487,7 @@ describe('native task hasher', () => {
             "nx.json",
             "tsconfig.base.json",
           ],
-          "markers": [],
+          "ioSnapshots": [],
           "runtime": [],
           "sources": {
             "AllExternalDependencies": "native",
@@ -603,7 +603,7 @@ describe('native task hasher', () => {
             "nx.json",
             "tsconfig.base.json",
           ],
-          "markers": [],
+          "ioSnapshots": [],
           "runtime": [],
           "sources": {
             "AllExternalDependencies": "native",
@@ -962,7 +962,7 @@ describe('native task hasher', () => {
               "nx.json",
               "tsconfig.base.json",
             ],
-            "markers": [],
+            "ioSnapshots": [],
             "runtime": [],
             "sources": {
               "AllExternalDependencies": "native",
@@ -1001,7 +1001,7 @@ describe('native task hasher', () => {
               "nx.json",
               "tsconfig.base.json",
             ],
-            "markers": [],
+            "ioSnapshots": [],
             "runtime": [],
             "sources": {
               "AllExternalDependencies": "native",
@@ -1135,7 +1135,7 @@ describe('native task hasher', () => {
               "nx.json",
               "tsconfig.base.json",
             ],
-            "markers": [],
+            "ioSnapshots": [],
             "runtime": [],
             "sources": {
               "AllExternalDependencies": "native",
@@ -1225,7 +1225,7 @@ describe('native task hasher', () => {
             "nx.json",
             "tsconfig.base.json",
           ],
-          "markers": [],
+          "ioSnapshots": [],
           "runtime": [],
           "sources": {
             "AllExternalDependencies": "native",
@@ -1337,7 +1337,7 @@ describe('native task hasher', () => {
             "nx.json",
             "tsconfig.base.json",
           ],
-          "markers": [],
+          "ioSnapshots": [],
           "runtime": [],
           "sources": {
             "AllExternalDependencies": "native",
@@ -1397,7 +1397,7 @@ describe('native task hasher', () => {
             "nx.json",
             "tsconfig.base.json",
           ],
-          "markers": [],
+          "ioSnapshots": [],
           "runtime": [],
           "sources": {
             "AllExternalDependencies": "native",
@@ -1746,10 +1746,10 @@ describe('native task hasher', () => {
     expect(fromSnapshot.inputs.sources['libs/child/observed.txt']).toBe(
       'snapshot'
     );
-    expect(fromSnapshot.inputs.markers).toEqual([
+    expect(fromSnapshot.inputs.ioSnapshots).toEqual([
       expect.stringMatching(/^io-snapshot:[0-9a-f]{64}$/),
     ]);
-    expect(native.inputs.markers).toEqual([]);
+    expect(native.inputs.ioSnapshots).toEqual([]);
     expect(native.inputs.sources['libs/child/observed.txt']).toBeUndefined();
 
     // The observed file is what the hash follows now, not the declared fileset.

@@ -677,8 +677,11 @@ export interface HashInputs {
   external: Array<string>
   /** Provenance of every value above, keyed by the value itself. */
   sources: Record<string, 'snapshot' | 'target' | 'dependency' | 'native'>
-  /** Domain markers in the plan, e.g. `io-snapshot:<digest>`. */
-  markers: Array<string>
+  /**
+   * The `io-snapshot:<digest>` value of each snapshot entry the plan
+   * hashed, as it appears in `sources` and in the plan itself.
+   */
+  ioSnapshots: Array<string>
 }
 
 /**
