@@ -42,6 +42,29 @@ describe('createDependencies', () => {
     ]);
   });
 
+  it('should pass through dependencies with no sourceFile, such as external-to-external edges', async () => {
+    (getCurrentMavenData as jest.Mock).mockReturnValue({
+      createNodesResults: [],
+      createDependenciesResults: [
+        {
+          type: 'static',
+          source: 'maven:org.springframework:spring-core',
+          target: 'maven:org.springframework:spring-jcl',
+        },
+      ],
+    });
+
+    const dependencies = await createDependencies({}, context);
+
+    expect(dependencies).toEqual([
+      {
+        type: 'static',
+        source: 'maven:org.springframework:spring-core',
+        target: 'maven:org.springframework:spring-jcl',
+      },
+    ]);
+  });
+
   it('should return no dependencies when the analyzer produced no data', async () => {
     (getCurrentMavenData as jest.Mock).mockReturnValue(null);
 

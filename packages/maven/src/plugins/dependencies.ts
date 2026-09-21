@@ -37,7 +37,6 @@ export const createDependencies: CreateDependencies = async (
   const transformedDependencies = mavenData.createDependenciesResults.map(
     (dep) => ({
       ...dep,
-      sourceFile: normalizePath(dep.sourceFile),
       source: dep.source.startsWith('maven:')
         ? dep.source
         : rootToProjectMap.get(normalizePath(dep.source)),
@@ -45,6 +44,10 @@ export const createDependencies: CreateDependencies = async (
       target: dep.target.startsWith('maven:')
         ? dep.target
         : rootToProjectMap.get(normalizePath(dep.target)),
+      // ImplicitDependency has no sourceFile; only normalize when present.
+      ...('sourceFile' in dep && dep.sourceFile != null
+        ? { sourceFile: normalizePath(dep.sourceFile) }
+        : null),
     })
   );
 
