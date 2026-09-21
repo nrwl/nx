@@ -12,6 +12,7 @@ import {
 describe('Remix - TS solution setup', () => {
   beforeEach(() => {
     newProject({
+      keepBackup: true,
       packages: [
         '@nx/remix',
         '@nx/vite',

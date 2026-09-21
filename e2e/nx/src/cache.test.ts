@@ -27,7 +27,10 @@ import { join } from 'path';
 
 describe('cache', () => {
   beforeEach(() =>
-    newProject({ packages: ['@nx/eslint', '@nx/web', '@nx/js', '@nx/jest'] })
+    newProject({
+      keepBackup: true,
+      packages: ['@nx/eslint', '@nx/web', '@nx/js', '@nx/jest'],
+    })
   );
 
   afterEach(() => cleanupProject());

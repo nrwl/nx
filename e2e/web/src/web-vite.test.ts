@@ -15,6 +15,7 @@ import {
 describe('Web Components Applications with bundler set as vite', () => {
   beforeEach(() =>
     newProject({
+      keepBackup: true,
       packages: [
         '@nx/web',
         '@nx/react',

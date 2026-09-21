@@ -451,7 +451,7 @@ describe('migrate orchestrator (dark launch)', () => {
   // A workspace per test: each run leaves run dirs and commits the next
   // test's assertions would see.
   beforeEach(() => {
-    newProject({ packages: [] });
+    newProject({ keepBackup: true, packages: [] });
     // The workspace starts on its default branch, where an orchestrated init
     // with the default commit policy stops instead of starting a run.
     defaultBranch = runCommand('git rev-parse --abbrev-ref HEAD').trim();
