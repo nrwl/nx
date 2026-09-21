@@ -9,6 +9,7 @@ mod errors;
 mod files_archive;
 mod files_hashing;
 mod glob_hashing;
+mod glob_matching;
 pub mod ignored_index;
 pub mod types;
 pub mod workspace_files;

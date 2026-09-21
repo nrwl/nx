@@ -1379,7 +1379,21 @@ impl WorkspaceContext {
         globs: Vec<String>,
         exclude: Option<Vec<String>>,
     ) -> napi::Result<Vec<String>> {
-        let file_data = self.current_files();
+        let file_data = if super::glob_matching::may_have_literal_prefix(&globs) {
+            self.apply_delivered();
+            // Invalid patterns must also wait for an in-progress walk.
+            self.files.wait_ready();
+            let include = crate::native::glob::build_glob_set(&globs)?;
+            if let Some(prefix) = include.literal_prefix() {
+                self.files
+                    .with_files(|files| super::glob_matching::files_under_prefix(files, prefix))
+                    .unwrap_or_default()
+            } else {
+                self.files.get_files()
+            }
+        } else {
+            self.current_files()
+        };
         let globbed_files = glob_files(&file_data, globs, exclude)?;
         Ok(globbed_files.map(|file| file.file.to_owned()).collect())
     }
@@ -2153,6 +2167,39 @@ mod tests {
                 "multi_glob group {i} must be sorted regardless of file creation order"
             );
         }
+    }
+
+    #[test]
+    #[cfg(not(target_arch = "wasm32"))]
+    fn extglob_prefix_reads_preserve_delivered_and_archived_states() {
+        let temp = workspace_with(&["a/old.spec.ts", "b/other.spec.ts"]);
+        let cache = TempDir::new().unwrap();
+        let ctx = context(&temp, &cache);
+        let globs = vec!["a/**/+(*.)+(spec|test).+(ts|js)?(x)".into()];
+        assert_eq!(ctx.glob(globs.clone(), None).unwrap(), ["a/old.spec.ts"]);
+
+        temp.child("a/new.test.tsx").write_str("new").unwrap();
+        std::fs::remove_file(temp.path().join("a/old.spec.ts")).unwrap();
+        ctx.files.deliver(vec![
+            Change {
+                path: "a/old.spec.ts".into(),
+                kind: ChangeKind::Deleted,
+            },
+            Change {
+                path: "a/new.test.tsx".into(),
+                kind: ChangeKind::Created,
+            },
+        ]);
+        assert_eq!(ctx.glob(globs.clone(), None).unwrap(), ["a/new.test.tsx"]);
+        assert_eq!(
+            ctx.glob(vec!["**/*.tsx".into()], None).unwrap(),
+            ["a/new.test.tsx"]
+        );
+        ctx.refresh();
+        ctx.files.wait_ready();
+        let loaded =
+            WorkspaceContext::from_archive(as_string(&temp), as_string(&cache), None).unwrap();
+        assert_eq!(loaded.glob(globs, None).unwrap(), ["a/new.test.tsx"]);
     }
 
     /// Restoring a cached task output rewrites a file with identical bytes

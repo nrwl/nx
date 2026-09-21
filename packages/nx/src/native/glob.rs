@@ -10,7 +10,7 @@ pub(crate) use crate::native::glob::glob_transform::{
 use dashmap::DashMap;
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
 use std::fmt::Debug;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, LazyLock};
 use tracing::trace;
 
@@ -19,6 +19,7 @@ static GLOB_CACHE: LazyLock<DashMap<String, Arc<NxGlobSet>>> = LazyLock::new(Das
 pub struct NxGlobSetBuilder {
     included_globs: GlobSetBuilder,
     excluded_globs: GlobSetBuilder,
+    literal_prefixes: Option<Vec<PathBuf>>,
 }
 
 impl NxGlobSetBuilder {
@@ -26,6 +27,7 @@ impl NxGlobSetBuilder {
         let mut glob_set_builder = NxGlobSetBuilder {
             included_globs: GlobSetBuilder::new(),
             excluded_globs: GlobSetBuilder::new(),
+            literal_prefixes: Some(Vec::new()),
         };
         let mut globs: Vec<&str> = globs.iter().map(|s| s.as_ref()).collect();
         globs.sort();
@@ -54,15 +56,39 @@ impl NxGlobSetBuilder {
             self.excluded_globs.add(glob);
         } else {
             self.included_globs.add(glob);
+            if let Some(prefixes) = &mut self.literal_prefixes {
+                // Extglob conversion can rewrite a prefix, so use the pattern globset receives.
+                if let Some(prefix) = literal_directory_prefix(&glob_string) {
+                    prefixes.push(prefix);
+                } else {
+                    self.literal_prefixes = None;
+                }
+            }
         }
 
         Ok(self)
     }
 
     pub fn build(&self) -> anyhow::Result<NxGlobSet> {
+        let literal_prefix = self.literal_prefixes.as_ref().and_then(|prefixes| {
+            let mut common = prefixes.first()?.clone();
+            for prefix in &prefixes[1..] {
+                common = common
+                    .components()
+                    .zip(prefix.components())
+                    .take_while(|(left, right)| left == right)
+                    .map(|(component, _)| component)
+                    .collect();
+                if common.as_os_str().is_empty() {
+                    return None;
+                }
+            }
+            (!common.as_os_str().is_empty()).then_some(common)
+        });
         Ok(NxGlobSet {
             excluded_globs: self.excluded_globs.build()?,
             included_globs: self.included_globs.build()?,
+            literal_prefix,
         })
     }
 }
@@ -71,8 +97,13 @@ impl NxGlobSetBuilder {
 pub struct NxGlobSet {
     included_globs: GlobSet,
     excluded_globs: GlobSet,
+    literal_prefix: Option<PathBuf>,
 }
 impl NxGlobSet {
+    pub(crate) fn literal_prefix(&self) -> Option<&Path> {
+        self.literal_prefix.as_deref()
+    }
+
     pub fn is_match<P: AsRef<Path>>(&self, path: P) -> bool {
         if self.included_globs.is_empty() {
             !self.excluded_globs.is_match(path.as_ref())
@@ -83,6 +114,27 @@ impl NxGlobSet {
                 && !self.excluded_globs.is_match(path.as_ref())
         }
     }
+}
+
+fn literal_directory_prefix(glob: &str) -> Option<PathBuf> {
+    if glob.contains('\\') {
+        return None;
+    }
+    let end = glob
+        .find(['*', '?', '[', ']', '{', '}'])
+        .unwrap_or(glob.len());
+    let slash = glob[..end].rfind('/')?;
+    let prefix = &glob[..slash];
+    // Lossy normalization can make distinct non-UTF-8 paths match this character.
+    if prefix.contains('\u{fffd}')
+        || prefix.contains(':')
+        || prefix
+            .split('/')
+            .any(|part| part.is_empty() || part == "." || part == "..")
+    {
+        return None;
+    }
+    Some(PathBuf::from(prefix))
 }
 
 /// Splits a glob that is a single top-level brace group (`{a,b,c}`) into its
