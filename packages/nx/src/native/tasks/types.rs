@@ -199,9 +199,10 @@ pub enum HashInstruction {
     External(String),
     AllExternalDependencies,
     JsonFileSet(Box<JsonFileSetInput>),
-    /// Run-constant label that keeps hash keys built from different input
-    /// sources (e.g. an I/O snapshot) from ever colliding with native keys.
-    Marker(String),
+    /// Digest of the I/O snapshot entry a task's plan was built from, so its
+    /// hash moves when its own observations do. Hashed as the text `Display`
+    /// renders, which also keeps it from colliding with a native key.
+    IoSnapshot(String),
 }
 
 /// Hashed into every task regardless of its inputs (see `HashPlanner::get_plans_internal`).
@@ -211,7 +212,7 @@ pub(crate) const ALWAYS_ON_WORKSPACE_FILES: [&str; 3] = [
     "{workspaceRoot}/.nxignore",
 ];
 
-pub(crate) const IO_SNAPSHOT_MARKER_PREFIX: &str = "io-snapshot:";
+pub(crate) const IO_SNAPSHOT_DIGEST_PREFIX: &str = "io-snapshot:";
 
 /// Append-only interner for hash instructions. Plans store `u32` ids into the
 /// pool, so each unique instruction is materialized once per planner instance
@@ -429,7 +430,9 @@ impl fmt::Display for HashInstruction {
                     format!("{task_output}:{dep_outputs}")
                 }
                 HashInstruction::External(external) => external.to_string(),
-                HashInstruction::Marker(marker) => marker.clone(),
+                HashInstruction::IoSnapshot(digest) => {
+                    format!("{IO_SNAPSHOT_DIGEST_PREFIX}{digest}")
+                }
                 HashInstruction::ProjectConfiguration(project_name) => {
                     format!("{project_name}:ProjectConfiguration")
                 }
@@ -484,15 +487,16 @@ mod tests {
     }
 
     #[test]
-    fn marker_display_is_verbatim_and_interns_by_value() {
+    fn the_snapshot_digest_renders_with_its_prefix_and_interns_by_value() {
         let pool = InstructionPool::new();
-        let a = pool.intern(HashInstruction::Marker("io-snapshot:abc".into()));
-        let b = pool.intern(HashInstruction::Marker("io-snapshot:abc".into()));
-        let c = pool.intern(HashInstruction::Marker("io-snapshot:def".into()));
+        let a = pool.intern(HashInstruction::IoSnapshot("abc".into()));
+        let b = pool.intern(HashInstruction::IoSnapshot("abc".into()));
+        let c = pool.intern(HashInstruction::IoSnapshot("def".into()));
         assert_eq!(a, b);
         assert_ne!(a, c);
         assert_eq!(&*pool.key(a), "io-snapshot:abc");
-        // Filesets are replaced by a snapshot; a marker or disk-backed group is not.
+        // Filesets are replaced by a snapshot; the digest or a disk-backed
+        // group is not.
         let fileset = pool.intern(HashInstruction::ProjectFileSet(
             "p".into(),
             vec!["p/**/*".into()],

@@ -5,7 +5,7 @@ use std::sync::Arc;
 use hashbrown::HashSet;
 
 use crate::native::glob::{normalize_glob, partition_glob};
-use crate::native::tasks::types::{ALWAYS_ON_WORKSPACE_FILES, IO_SNAPSHOT_MARKER_PREFIX};
+use crate::native::tasks::types::ALWAYS_ON_WORKSPACE_FILES;
 use crate::native::{
     hasher::hash,
     project_graph::{types::ProjectGraph, utils::create_project_root_mappings},
@@ -126,11 +126,10 @@ fn is_file_bearing(instruction: &HashInstruction) -> bool {
     )
 }
 
-/// True when the plan carries an io-snapshot marker.
+/// True when the plan carries a snapshot entry's digest.
 pub(crate) fn is_snapshot_backed(pool: &InstructionPool, ids: &[u32]) -> bool {
-    ids.iter().any(|id| {
-        matches!(&*pool.get(*id), HashInstruction::Marker(m) if m.starts_with(IO_SNAPSHOT_MARKER_PREFIX))
-    })
+    ids.iter()
+        .any(|id| matches!(&*pool.get(*id), HashInstruction::IoSnapshot(_)))
 }
 
 pub(crate) fn task_project(task_id: &str) -> &str {
@@ -206,8 +205,8 @@ impl From<&HashInstruction> for HashInputsBuilder {
                 external: HashSet::from(["AllExternalDependencies".to_string()]),
                 ..Default::default()
             },
-            HashInstruction::Marker(marker) => HashInputsBuilder {
-                markers: HashSet::from([marker.clone()]),
+            HashInstruction::IoSnapshot(_) => HashInputsBuilder {
+                markers: HashSet::from([instruction.to_string()]),
                 ..Default::default()
             },
             HashInstruction::ProjectConfiguration(_) | HashInstruction::Cwd(_) => {
@@ -716,7 +715,7 @@ impl TaskHasher {
                 | HashInstruction::External(_)
                 | HashInstruction::AllExternalDependencies
                 | HashInstruction::JsonFileSet(_)
-                | HashInstruction::Marker(_) => Some(OnceCell::new()),
+                | HashInstruction::IoSnapshot(_) => Some(OnceCell::new()),
             })
             .collect();
         hash_plans.plans.par_iter().try_for_each(|(task_id, ids)| {
@@ -1082,13 +1081,14 @@ impl TaskHasher {
                 };
                 (hashed_external, inputs)
             }
-            HashInstruction::Marker(marker) => {
+            HashInstruction::IoSnapshot(_) => {
                 let inputs = if collect_inputs {
                     instruction.into()
                 } else {
                     empty
                 };
-                (hash(marker.as_bytes()), inputs)
+                // The rendered text, so the prefix lives in one place.
+                (hash(instruction.to_string().as_bytes()), inputs)
             }
             HashInstruction::AllExternalDependencies => {
                 // Identical for every task, so fold once and reuse (individual externals

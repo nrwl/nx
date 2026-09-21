@@ -31,8 +31,8 @@ use crate::native::tasks::utils;
 use crate::native::utils::find_matching_projects;
 use std::sync::{Arc, OnceLock};
 
-fn io_snapshot_marker(digest: &str) -> HashInstruction {
-    HashInstruction::Marker(format!("io-snapshot:{digest}"))
+fn io_snapshot_digest_input(digest: &str) -> HashInstruction {
+    HashInstruction::IoSnapshot(digest.to_string())
 }
 
 /// (project, workspace-relative negated pattern) pairs declared by the
@@ -677,7 +677,7 @@ impl HashPlanner {
             group.extend(declared_negations);
             instructions.push((HashInstruction::IgnoredFileSet(group), declared_tail));
         }
-        instructions.push((io_snapshot_marker(&io.digest), 0));
+        instructions.push((io_snapshot_digest_input(&io.digest), 0));
         instructions
     }
 
