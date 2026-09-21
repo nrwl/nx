@@ -16,6 +16,7 @@ describe('React Rspack Module Federation Misc - Interoperability', () => {
   beforeEach(() => {
     process.env.NX_ADD_PLUGINS = 'false';
     newProject({
+      keepBackup: true,
       packages: ['@nx/react', '@nx/webpack', '@nx/rspack', '@nx/cypress'],
     });
   });

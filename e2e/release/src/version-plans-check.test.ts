@@ -55,6 +55,7 @@ describe('nx release version plans check command', () => {
 
   beforeEach(async () => {
     newProject({
+      keepBackup: true,
       packages: ['@nx/js'],
     });
 

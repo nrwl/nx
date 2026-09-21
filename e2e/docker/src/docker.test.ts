@@ -22,7 +22,7 @@ const TEN_MINS_MS = 600_000;
 describe('Docker E2Es', () => {
   if (isDockerAvailable()) {
     beforeEach(async () => {
-      newProject({ packages: ['@nx/docker'] });
+      newProject({ keepBackup: true, packages: ['@nx/docker'] });
       addDockerPluginIfNotExists();
       // Normalize git committer information so it is deterministic in snapshots
       await runCommandAsync(`git config user.email "test@test.com"`);

@@ -46,6 +46,7 @@ describe('nx release source tag selection', () => {
 
   beforeEach(async () => {
     newProject({
+      keepBackup: true,
       packages: ['@nx/js'],
     });
 
