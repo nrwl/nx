@@ -32,7 +32,7 @@ export declare class ExternalObject<T> {
   }
 }
 export declare class AppLifeCycle {
-  constructor(tasks: Array<Task>, initiatingTasks: Array<string>, runMode: RunMode, pinnedTasks: Array<string>, tuiCliArgs: TuiCliArgs, tuiConfig: TuiConfig, titleText: string, workspaceRoot: string, taskGraph: TaskGraph, isCloudEnabled?: boolean | undefined | null)
+  constructor(tasks: Array<Task>, initiatingTasks: Array<string>, runMode: RunMode, pinnedTasks: Array<string>, tuiCliArgs: TuiCliArgs, tuiConfig: TuiConfig, titleText: string, workspaceRoot: string, taskGraph: TaskGraph, readyDependencies: Record<string, Array<string>>, isCloudEnabled?: boolean | undefined | null)
   startCommand(threadCount?: number | undefined | null): void
   scheduleTask(task: Task): void
   startTasks(tasks: Array<Task>, metadata: object): void
@@ -44,6 +44,7 @@ export declare class AppLifeCycle {
   registerRunningTaskWithEmptyParser(taskId: string): void
   appendTaskOutput(taskId: string, output: string, isPtyOutput: boolean): void
   setTaskStatus(taskId: string, status: TaskStatus): void
+  setTaskReadiness(taskId: string, readiness: TaskReadiness): void
   setTaskTiming(taskId: string, startTime: number, endTime: number): void
   registerForcedShutdownCallback(forcedShutdownCallback: (() => unknown)): void
   __setCloudMessage(message: string): Promise<void>

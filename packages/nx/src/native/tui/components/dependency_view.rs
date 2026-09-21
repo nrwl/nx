@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use crate::native::tasks::running_tasks_service::TaskReadiness;
 use crate::native::tasks::types::TaskGraph;
 use crate::native::tui::action::Action;
 use crate::native::tui::components::nx_paragraph::NxParagraph;
@@ -227,31 +228,92 @@ impl DependencyViewState {
 pub struct DependencyView<'a> {
     status_map: &'a HashMap<String, TaskStatus>,
     task_graph: &'a TaskGraph,
+    readiness_map: &'a HashMap<String, TaskReadiness>,
+    ready_dependencies: &'a HashMap<String, Vec<String>>,
 }
 
 impl<'a> DependencyView<'a> {
-    pub fn new(status_map: &'a HashMap<String, TaskStatus>, task_graph: &'a TaskGraph) -> Self {
+    pub fn new(
+        status_map: &'a HashMap<String, TaskStatus>,
+        task_graph: &'a TaskGraph,
+        readiness_map: &'a HashMap<String, TaskReadiness>,
+        ready_dependencies: &'a HashMap<String, Vec<String>>,
+    ) -> Self {
         Self {
             status_map,
             task_graph,
+            readiness_map,
+            ready_dependencies,
         }
     }
 
+    /// Whether `task` waits for `dep` to be ready rather than merely started
+    fn is_ready_dependency(&self, task: &str, dep: &str) -> bool {
+        self.ready_dependencies
+            .get(task)
+            .is_some_and(|deps| deps.iter().any(|d| d == dep))
+    }
+
+    /// The probe verdict for `dep`, `Pending` until one arrives
+    fn readiness_of(&self, dep: &str) -> TaskReadiness {
+        self.readiness_map
+            .get(dep)
+            .copied()
+            .unwrap_or(TaskReadiness::Pending)
+    }
+
     /// Helper function to check if a task is considered incomplete
-    fn is_task_incomplete(&self, dep: &str) -> bool {
+    fn is_task_incomplete(&self, task: &str, dep: &str) -> bool {
         let status = self.status_map.get(dep).unwrap_or(&TaskStatus::NotStarted);
         let is_continuous = is_task_continuous(self.task_graph, dep);
 
-        // For continuous tasks, InProgress and Stopped are considered complete
-        // For regular tasks, only traditional completion statuses count
-        !matches!(
+        if matches!(
             status,
             TaskStatus::Success
                 | TaskStatus::LocalCacheKeptExisting
                 | TaskStatus::LocalCache
                 | TaskStatus::RemoteCache
                 | TaskStatus::Skipped
-        ) && !(is_continuous && matches!(status, TaskStatus::InProgress | TaskStatus::Stopped))
+        ) {
+            return false;
+        }
+        if !is_continuous {
+            return true;
+        }
+        // A continuous task over a ready edge is done once its probe passes,
+        // over a plain edge once it has started (or was stopped after that)
+        if self.is_ready_dependency(task, dep) {
+            self.readiness_of(dep) != TaskReadiness::Ready
+        } else {
+            !matches!(status, TaskStatus::InProgress | TaskStatus::Stopped)
+        }
+    }
+
+    /// Whether `dep` runs and `task` still waits for its probe verdict
+    fn is_awaiting_readiness(&self, task: &str, dep: &str) -> bool {
+        let status = self.status_map.get(dep).unwrap_or(&TaskStatus::NotStarted);
+        matches!(status, TaskStatus::InProgress | TaskStatus::Shared)
+            && self.is_ready_dependency(task, dep)
+            && self.readiness_of(dep) == TaskReadiness::Pending
+    }
+
+    /// Row suffix for a dependency whose readiness matters to `task`
+    fn readiness_suffix(&self, task: &str, dep: &str) -> Option<(&'static str, Style)> {
+        if !self.is_ready_dependency(task, dep) {
+            return None;
+        }
+        let status = self.status_map.get(dep).unwrap_or(&TaskStatus::NotStarted);
+        match self.readiness_of(dep) {
+            TaskReadiness::Failed => {
+                Some((" (readiness failed)", Style::default().fg(THEME.error)))
+            }
+            TaskReadiness::Pending
+                if matches!(status, TaskStatus::InProgress | TaskStatus::Shared) =>
+            {
+                Some((" (not ready)", Style::default().fg(THEME.secondary_fg)))
+            }
+            TaskReadiness::Pending | TaskReadiness::Ready => None,
+        }
     }
 
     /// Apply focus styling to a base style - dims the style when not focused
@@ -363,14 +425,28 @@ impl<'a> DependencyView<'a> {
         match state.task_status {
             TaskStatus::NotStarted => {
                 let total_count = state.dependencies.len();
-                let incomplete_count = state
-                    .dependencies
-                    .iter()
-                    .filter(|dep| self.is_task_incomplete(dep))
-                    .count();
+                let mut incomplete_count = 0;
+                let mut awaiting_readiness = 0;
+                let mut awaited: Option<&String> = None;
+                for dep in &state.dependencies {
+                    if !self.is_task_incomplete(&state.current_task, dep) {
+                        continue;
+                    }
+                    incomplete_count += 1;
+                    if self.is_awaiting_readiness(&state.current_task, dep) {
+                        awaiting_readiness += 1;
+                        awaited = Some(dep);
+                    }
+                }
 
                 if incomplete_count == 0 && total_count > 0 {
                     "All dependencies satisfied, waiting for an available thread...".to_string()
+                } else if incomplete_count > 0 && awaiting_readiness == incomplete_count {
+                    if let (1, Some(dep)) = (incomplete_count, awaited) {
+                        format!("Waiting for {} to be ready...", dep)
+                    } else {
+                        format!("Waiting for {} tasks to be ready...", incomplete_count)
+                    }
                 } else {
                     format!(
                         "Not started yet, waiting for {} / {} tasks to complete...",
@@ -403,7 +479,7 @@ impl<'a> DependencyView<'a> {
                 let incomplete_count = state
                     .dependencies
                     .iter()
-                    .filter(|dep| self.is_task_incomplete(dep))
+                    .filter(|dep| self.is_task_incomplete(&state.current_task, dep))
                     .count();
 
                 Style::default()
@@ -459,8 +535,16 @@ impl<'a> DependencyView<'a> {
             let dep_base_style = Style::default().fg(THEME.primary_fg);
             let dep_style = Self::apply_focus_styling(dep_base_style, state.is_focused);
 
-            let line = Line::from(vec![status_icon, Span::styled(dep.clone(), dep_style)]);
-            lines.push(line);
+            let mut spans = Vec::with_capacity(3);
+            spans.push(status_icon);
+            spans.push(Span::styled(dep.clone(), dep_style));
+            if let Some((suffix, style)) = self.readiness_suffix(&state.current_task, dep) {
+                spans.push(Span::styled(
+                    suffix,
+                    Self::apply_focus_styling(style, state.is_focused),
+                ));
+            }
+            lines.push(Line::from(spans));
         }
 
         // Calculate scrolling parameters
@@ -692,7 +776,14 @@ mod tests {
             selection_area: None,
         };
 
-        let view = DependencyView::new(&status_map, &task_graph);
+        let readiness_map = HashMap::new();
+        let ready_dependencies = HashMap::new();
+        let view = DependencyView::new(
+            &status_map,
+            &task_graph,
+            &readiness_map,
+            &ready_dependencies,
+        );
         StatefulWidget::render(view, area, &mut buf, &mut state);
 
         // Inner content begins at y=2 (border + top padding). Lines are laid out as
@@ -745,7 +836,14 @@ mod tests {
             selection_area: None,
         };
 
-        let view = DependencyView::new(&status_map, &task_graph);
+        let readiness_map = HashMap::new();
+        let ready_dependencies = HashMap::new();
+        let view = DependencyView::new(
+            &status_map,
+            &task_graph,
+            &readiness_map,
+            &ready_dependencies,
+        );
         StatefulWidget::render(view, area, &mut buf, &mut state);
 
         // With scroll_offset 3, global line 3 (the first dependency, lib-0 is global
@@ -992,5 +1090,192 @@ mod tests {
             assert!(safe_scrollbar_area.width > 0);
             assert!(safe_scrollbar_area.height > 0);
         }
+    }
+
+    fn readiness_task_graph() -> TaskGraph {
+        let serve = crate::native::tasks::types::Task::new("srv", "serve").with_continuous(true);
+        let api = crate::native::tasks::types::Task::new("api", "serve").with_continuous(true);
+        let build = crate::native::tasks::types::Task::new("lib", "build");
+        TaskGraph {
+            tasks: HashMap::from([
+                ("srv:serve".to_string(), serve),
+                ("api:serve".to_string(), api),
+                ("lib:build".to_string(), build),
+            ]),
+            dependencies: HashMap::new(),
+            continuous_dependencies: HashMap::new(),
+            roots: vec![],
+        }
+    }
+
+    fn readiness_state(dependencies: &[&str]) -> DependencyViewState {
+        DependencyViewState {
+            current_task: "app:e2e".to_string(),
+            task_status: TaskStatus::NotStarted,
+            dependencies: dependencies.iter().map(|d| d.to_string()).collect(),
+            dependency_levels: HashMap::new(),
+            is_focused: true,
+            throbber_counter: 0,
+            scroll_offset: 0,
+            scrollbar_state: ScrollbarState::default(),
+            pane_area: Rect::default(),
+            dep_row_hits: Vec::new(),
+            dep_row_x_range: (0, 0),
+            selection_area: None,
+        }
+    }
+
+    fn render_rows(
+        state: &mut DependencyViewState,
+        status_map: &HashMap<String, TaskStatus>,
+        readiness_map: &HashMap<String, TaskReadiness>,
+        ready_dependencies: &HashMap<String, Vec<String>>,
+    ) -> Vec<String> {
+        let task_graph = readiness_task_graph();
+        let area = Rect {
+            x: 0,
+            y: 0,
+            width: 80,
+            height: 12,
+        };
+        let mut buf = Buffer::empty(area);
+        let view = DependencyView::new(status_map, &task_graph, readiness_map, ready_dependencies);
+        StatefulWidget::render(view, area, &mut buf, state);
+        // Inner text only: drop the border column on each side
+        (0..area.height)
+            .map(|y| {
+                (1..area.width - 1)
+                    .map(|x| buf[(x, y)].symbol())
+                    .collect::<String>()
+                    .trim()
+                    .to_string()
+            })
+            .collect()
+    }
+
+    fn ready_edges(edges: &[&str]) -> HashMap<String, Vec<String>> {
+        HashMap::from([(
+            "app:e2e".to_string(),
+            edges.iter().map(|d| d.to_string()).collect(),
+        )])
+    }
+
+    #[test]
+    fn test_ready_edge_waits_for_the_probe_verdict() {
+        let mut state = readiness_state(&["srv:serve"]);
+        let status_map = HashMap::from([("srv:serve".to_string(), TaskStatus::InProgress)]);
+        let ready_dependencies = ready_edges(&["srv:serve"]);
+
+        // Started but no verdict yet: the hold is the only thing outstanding
+        let rows = render_rows(
+            &mut state,
+            &status_map,
+            &HashMap::new(),
+            &ready_dependencies,
+        );
+        assert_eq!(rows[2], "Waiting for srv:serve to be ready...");
+        assert!(rows[4].ends_with("srv:serve (not ready)"), "{}", rows[4]);
+
+        let readiness_map = HashMap::from([("srv:serve".to_string(), TaskReadiness::Ready)]);
+        let rows = render_rows(&mut state, &status_map, &readiness_map, &ready_dependencies);
+        assert_eq!(
+            rows[2],
+            "All dependencies satisfied, waiting for an available thread..."
+        );
+        assert!(rows[4].ends_with("srv:serve"), "{}", rows[4]);
+
+        let readiness_map = HashMap::from([("srv:serve".to_string(), TaskReadiness::Failed)]);
+        let rows = render_rows(&mut state, &status_map, &readiness_map, &ready_dependencies);
+        assert_eq!(
+            rows[2],
+            "Not started yet, waiting for 1 / 1 tasks to complete..."
+        );
+        assert!(
+            rows[4].ends_with("srv:serve (readiness failed)"),
+            "{}",
+            rows[4]
+        );
+    }
+
+    #[test]
+    fn test_plain_edge_is_satisfied_once_the_producer_starts() {
+        let mut state = readiness_state(&["srv:serve"]);
+        let status_map = HashMap::from([("srv:serve".to_string(), TaskStatus::InProgress)]);
+
+        let rows = render_rows(&mut state, &status_map, &HashMap::new(), &HashMap::new());
+        assert_eq!(
+            rows[2],
+            "All dependencies satisfied, waiting for an available thread..."
+        );
+        assert!(rows[4].ends_with("srv:serve"), "{}", rows[4]);
+    }
+
+    #[test]
+    fn test_ready_edge_is_not_the_only_hold_before_the_producer_starts() {
+        let mut state = readiness_state(&["srv:serve"]);
+        let status_map = HashMap::from([("srv:serve".to_string(), TaskStatus::NotStarted)]);
+        let ready_dependencies = ready_edges(&["srv:serve"]);
+
+        let rows = render_rows(
+            &mut state,
+            &status_map,
+            &HashMap::new(),
+            &ready_dependencies,
+        );
+        assert_eq!(
+            rows[2],
+            "Not started yet, waiting for 1 / 1 tasks to complete..."
+        );
+        assert!(rows[4].ends_with("srv:serve"), "{}", rows[4]);
+    }
+
+    #[test]
+    fn test_readiness_hold_counts_with_other_pending_dependencies() {
+        let mut state = readiness_state(&["lib:build", "srv:serve"]);
+        let status_map = HashMap::from([
+            ("lib:build".to_string(), TaskStatus::NotStarted),
+            ("srv:serve".to_string(), TaskStatus::InProgress),
+        ]);
+        let ready_dependencies = ready_edges(&["srv:serve"]);
+
+        let rows = render_rows(
+            &mut state,
+            &status_map,
+            &HashMap::new(),
+            &ready_dependencies,
+        );
+        assert_eq!(
+            rows[2],
+            "Not started yet, waiting for 2 / 2 tasks to complete..."
+        );
+        assert!(rows[5].ends_with("srv:serve (not ready)"), "{}", rows[5]);
+
+        let status_map = HashMap::from([
+            ("lib:build".to_string(), TaskStatus::Success),
+            ("srv:serve".to_string(), TaskStatus::InProgress),
+        ]);
+        let rows = render_rows(
+            &mut state,
+            &status_map,
+            &HashMap::new(),
+            &ready_dependencies,
+        );
+        assert_eq!(rows[2], "Waiting for srv:serve to be ready...");
+    }
+
+    #[test]
+    fn test_several_readiness_holds_are_counted() {
+        let mut state = readiness_state(&["api:serve", "srv:serve"]);
+        let status_map = HashMap::from([
+            ("api:serve".to_string(), TaskStatus::Shared),
+            ("srv:serve".to_string(), TaskStatus::InProgress),
+        ]);
+        let ready_dependencies = ready_edges(&["api:serve", "srv:serve"]);
+        let readiness_map = HashMap::from([("srv:serve".to_string(), TaskReadiness::Pending)]);
+
+        let rows = render_rows(&mut state, &status_map, &readiness_map, &ready_dependencies);
+        assert_eq!(rows[2], "Waiting for 2 tasks to be ready...");
+        assert!(rows[4].ends_with("api:serve (not ready)"), "{}", rows[4]);
+        assert!(rows[5].ends_with("srv:serve (not ready)"), "{}", rows[5]);
     }
 }
