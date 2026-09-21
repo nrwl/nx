@@ -216,6 +216,43 @@ mod tests {
     }
 
     #[test]
+    fn readiness_is_visible_through_another_connection() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let path = temp_dir.path().join("test.db");
+        let mut owner = RunningTasksService::new(&External::new(Arc::new(Mutex::new(
+            initialize_db(&path).unwrap(),
+        ))))
+        .unwrap();
+        let reader = RunningTasksService::new(&External::new(Arc::new(Mutex::new(
+            initialize_db(&path).unwrap(),
+        ))))
+        .unwrap();
+        let id = "app:serve".to_string();
+
+        assert_eq!(reader.get_task_readiness(id.clone()).unwrap(), None);
+        owner.add_running_task(id.clone()).unwrap();
+        assert_eq!(
+            reader.get_task_readiness(id.clone()).unwrap(),
+            Some(TaskReadiness::Pending)
+        );
+        owner
+            .set_task_readiness(id.clone(), TaskReadiness::Ready)
+            .unwrap();
+        assert_eq!(
+            reader.get_task_readiness(id.clone()).unwrap(),
+            Some(TaskReadiness::Ready)
+        );
+        // restart resets what the other connection sees
+        owner.add_running_task(id.clone()).unwrap();
+        assert_eq!(
+            reader.get_task_readiness(id.clone()).unwrap(),
+            Some(TaskReadiness::Pending)
+        );
+        owner.remove_running_task(id.clone()).unwrap();
+        assert_eq!(reader.get_task_readiness(id.clone()).unwrap(), None);
+    }
+
+    #[test]
     fn readiness_follows_the_running_row() {
         let (_dir, mut service) = service();
         let id = "app:serve".to_string();

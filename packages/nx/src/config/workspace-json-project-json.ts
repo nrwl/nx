@@ -370,10 +370,9 @@ export interface TargetConfiguration<T = any> {
   continuous?: boolean;
 
   /**
-   * How Nx detects that this continuous target is ready. A string is a
-   * shorthand for `{ logMatches: string }`. Only honored when `continuous`
-   * is true; dependents opt in with `waitFor: 'ready'` on their `dependsOn`
-   * entry.
+   * How Nx detects that this continuous target is ready. Only honored when
+   * `continuous` is true; dependents opt in with `waitFor: 'ready'` on their
+   * `dependsOn` entry.
    */
   readyWhen?: ReadyWhen;
 

@@ -117,7 +117,8 @@ export function notReadyError(
   return new Error(`Task "${taskId}" ${reason} before it became ready.`);
 }
 
-// The owner's own error, with the reason, is in the owner's output
+// The row carries only the status; the owner prints the reason under
+// NX_VERBOSE_LOGGING
 export function readinessFailedElsewhereError(taskId: string): Error {
   return new Error(
     `Task "${taskId}" failed its readiness check in the process that started it.`
@@ -177,7 +178,13 @@ export function getReadyProducerIds(
         projectGraph,
         cachedAllTargetNames(projectGraph)
       )
-    );
+    )
+    .map((entry) => ({
+      target: entry.target,
+      projects: entry.dependencies
+        ? dependenciesWithTarget(project, entry.target, projectGraph)
+        : new Set(entry.projects),
+    }));
   if (readyEntries.length === 0) {
     return [];
   }
@@ -188,11 +195,7 @@ export function getReadyProducerIds(
       readyEntries.some(
         (entry) =>
           entry.target === producer.target.target &&
-          (entry.dependencies
-            ? dependenciesWithTarget(project, entry.target, projectGraph).has(
-                producer.target.project
-              )
-            : entry.projects.includes(producer.target.project))
+          entry.projects.has(producer.target.project)
       )
     );
   });
