@@ -5,6 +5,7 @@ import type {
   MigrateStepStatus,
 } from './run-state';
 import {
+  appendCommit,
   applyStepEvent,
   commitReceipt,
   commitResultToLedgerEntry,
@@ -738,6 +739,70 @@ describe('applyStepEvent', () => {
       });
     });
 
+    it('rejects skip from died while a started commit is unaccounted for, steering to adopt', () => {
+      // The committer died between its git commit and the record, or before
+      // committing; the ledger cannot tell which.
+      const state = stateWithStep({
+        status: 'died',
+        generatorCompleted: true,
+        commitStarted: true,
+      });
+      const before = snapshot(state);
+
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        attempt: 1,
+        action: 'skip',
+      });
+
+      expect(result).toEqual({
+        kind: 'error',
+        reason: expect.stringContaining("Use 'adopt'"),
+      });
+      expect(state).toEqual(before);
+    });
+
+    it.each(['retry', 'retry-clean'] as const)(
+      '%s from died carries the unaccounted commit into the next attempt',
+      (action) => {
+        const state = stateWithStep({
+          status: 'died',
+          generatorCompleted: true,
+          commitStarted: true,
+        });
+
+        const result = applyStepEvent(state, {
+          type: 'stepAction',
+          stepId: 'step-1',
+          attempt: 1,
+          action,
+        });
+
+        expect(result.kind).toBe('ok');
+        if (result.kind === 'ok') {
+          expect(result.state.steps[0].attempt).toBe(2);
+          expect(result.state.steps[0].commitStarted).toBe(true);
+        }
+      }
+    );
+
+    it('steers a rejected pre-marker retry from died away from skip while a started commit is unaccounted for', () => {
+      const state = stateWithStep({ status: 'died', commitStarted: true });
+
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        attempt: 1,
+        action: 'retry',
+      });
+
+      expect(result).toEqual({
+        kind: 'error',
+        reason: expect.not.stringContaining("'skip'"),
+      });
+    });
+
     it('still skips a failed step a landed commit covers: failed offers no adopt', () => {
       const state = {
         ...stateWithStep({ status: 'failed', generatorCompleted: true }),
@@ -999,6 +1064,35 @@ describe('applyStepEvent', () => {
       expect(cleaned.state.steps[0].generatorCompleted).toBe(true);
       expect(cleaned.state.steps[0].status).toBe('pending');
     });
+  });
+});
+
+describe('appendCommit', () => {
+  it('accounts for the started commits of the steps a landed entry names', () => {
+    const state = {
+      ...stateWithStep({ status: 'died', commitStarted: true }),
+    };
+    state.steps.push({ ...state.steps[0], id: 'step-2' });
+
+    const next = appendCommit(state, {
+      kind: 'landed',
+      sha: 'abc',
+      stepIds: ['step-1'],
+    });
+
+    expect(next.commits).toHaveLength(1);
+    expect(next.steps[0].commitStarted).toBeUndefined();
+    expect(next.steps[1].commitStarted).toBe(true);
+  });
+
+  it('leaves a started commit unaccounted for on a failed or checkpoint entry', () => {
+    const state = stateWithStep({ status: 'died', commitStarted: true });
+
+    const failed = appendCommit(state, { kind: 'failed', stepIds: ['step-1'] });
+    const checkpoint = appendCommit(state, { kind: 'checkpoint', sha: 'abc' });
+
+    expect(failed.steps[0].commitStarted).toBe(true);
+    expect(checkpoint.steps[0].commitStarted).toBe(true);
   });
 });
 

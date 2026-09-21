@@ -86,8 +86,10 @@ import { nxVersion } from '../../../utils/versions';
 import { runStepHandoffPath } from '../agentic/handoff';
 import { runOrchestratorInit, runOrchestratorReconcile } from './orchestrator';
 import {
+  brokerDir,
   BrokerStaleRequestError,
   BrokerUnavailableError,
+  MigrateCommitBroker,
   TreeBusyError,
 } from './broker';
 import { answered, readRequest, serviced } from './test-utils';
@@ -5976,6 +5978,111 @@ describe('orchestrator', () => {
       ]);
     });
 
+    it('holds a step whose worker died mid-commit until the session lands it, then refuses skip and adopts it with the one entry', async () => {
+      const DEAD_PID = 999999;
+      vi.spyOn(process, 'kill').mockImplementation(((pid: number) => {
+        if (pid === DEAD_PID) {
+          throw Object.assign(new Error('no such process'), { code: 'ESRCH' });
+        }
+        return true;
+      }) as never);
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'running', {
+            pid: DEAD_PID,
+            startedAt: new Date().toISOString(),
+            gitRefBefore: 'beef0001beef0001beef0001beef0001beef0001',
+            treeCleanAtDispense: true,
+            generatorCompleted: true,
+          }),
+          migStep('step-2', '@nx/js:next', 'pending'),
+        ],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen'), genMig('@nx/js', 'next')],
+      });
+      // The worker published its commit request and was killed while the
+      // session's parent was landing it.
+      const broker = new MigrateCommitBroker(
+        root,
+        dir,
+        'npx nx migrate',
+        POLICY
+      );
+      process.env.NX_MIGRATE_BROKER = broker.nonce;
+      writeFileSync(
+        join(brokerDir(dir), `${broker.nonce}-step-1-1-commit.request.json`),
+        JSON.stringify({ kind: 'commit', stepId: 'step-1', attempt: 1 })
+      );
+      let finishCommit: () => void;
+      const commitStarted = new Promise<void>((resolve) => {
+        mockCommit.mockImplementation(async () => {
+          resolve();
+          await new Promise<void>((r) => (finishCommit = r));
+          return {
+            status: 'committed',
+            sha: 'face0007face0007face0007face0007face0007',
+          };
+        });
+      });
+      mockGetLatestCommitSha.mockReturnValue(
+        'face0007face0007face0007face0007face0007'
+      );
+      const servicing = broker.service();
+      await commitStarted;
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+      expect(readRunState(dir).steps[0].status).toBe('running');
+      expect(lastBlock().action).toBe('held');
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'skip',
+      });
+      expect(readRunState(dir).steps[0].status).toBe('running');
+      expect(lastBlock().action).toBe('error');
+
+      finishCommit();
+      await servicing;
+      broker.close();
+      let state = readRunState(dir);
+      expect(state.steps[0].status).toBe('running');
+      expect(state.commits).toHaveLength(1);
+      expect(state.treeOperation).toBeUndefined();
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+      expect(readRunState(dir).steps[0].status).toBe('died');
+      expect(lastBlock().action).toBe('died');
+      expect(lastBlock().payload.instructions).not.toContain(
+        '--step-action=skip'
+      );
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'skip',
+      });
+      expect(readRunState(dir).steps[0].status).toBe('died');
+      expect(lastBlock().action).toBe('error');
+      expect(lastBlock().payload.instructions).toContain("Use 'adopt'");
+
+      // The adopt reads the answer the session recorded; git commits once.
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'adopt',
+      });
+      state = readRunState(dir);
+      expect(state.steps[0].status).toBe('succeeded');
+      expect(state.commits).toEqual([
+        {
+          kind: 'landed',
+          sha: 'face0007face0007face0007face0007face0007',
+          stepIds: ['step-1'],
+        },
+      ]);
+      expect(mockCommit).toHaveBeenCalledTimes(1);
+      expect(lastBlock().action).toBe('next-step');
+    });
+
     it('attributes the issues a handoff resolved to the entry the session recorded', async () => {
       mockCommit.mockResolvedValue({
         status: 'committed',
@@ -6373,6 +6480,104 @@ describe('orchestrator', () => {
 
       expect(readRunState(dir).steps[0].status).toBe('died');
       expect(lastBlock().action).toBe('died');
+    });
+
+    it('omits skip from the died block while a started commit is unaccounted for', async () => {
+      onlyWorkerDead();
+      setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'died', {
+            pid: DEAD_PID,
+            generatorCompleted: true,
+            commitStarted: true,
+          }),
+        ],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const block = lastBlock();
+      expect(block.action).toBe('died');
+      expect(block.payload.instructions).toContain('  adopt:');
+      expect(block.payload.instructions).not.toContain('--step-action=skip');
+    });
+
+    it('refuses to skip a died step whose started commit is unaccounted for, through a retry and a second death', async () => {
+      onlyWorkerDead();
+      mockGetLatestCommitSha.mockReturnValue(
+        'face0007face0007face0007face0007face0007'
+      );
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'died', {
+            pid: DEAD_PID,
+            gitRefBefore: 'beef0001beef0001beef0001beef0001beef0001',
+            generatorCompleted: true,
+            commitStarted: true,
+          }),
+        ],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'skip',
+      });
+      let state = readRunState(dir);
+      expect(state.steps[0]).toMatchObject({
+        status: 'died',
+        attempt: 1,
+        commitStarted: true,
+      });
+      expect(mockRunInstall).not.toHaveBeenCalled();
+      expect(lastBlock().action).toBe('error');
+      expect(lastBlock().payload.instructions).toContain("Use 'adopt'");
+
+      // A plain retry re-dispenses past the commit; the new attempt's worker
+      // dies before it acquires anything of its own.
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'retry',
+      });
+      state = readRunState(dir);
+      expect(state.steps[0]).toMatchObject({
+        status: 'dispensed',
+        attempt: 2,
+        commitStarted: true,
+      });
+      writeRunState(dir, {
+        ...state,
+        steps: [
+          {
+            ...state.steps[0],
+            status: 'running',
+            pid: DEAD_PID,
+            startedAt: '2026-01-01T00:00:00.000Z',
+          },
+        ],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+      expect(readRunState(dir).steps[0].status).toBe('died');
+      expect(lastBlock().payload.instructions).not.toContain(
+        '--step-action=skip'
+      );
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'skip',
+      });
+      expect(readRunState(dir).steps[0]).toMatchObject({
+        status: 'died',
+        attempt: 2,
+      });
+      expect(lastBlock().action).toBe('error');
+      expect(lastBlock().payload.instructions).toContain("Use 'adopt'");
     });
 
     it('refuses a step action while another live process holds the tree', async () => {

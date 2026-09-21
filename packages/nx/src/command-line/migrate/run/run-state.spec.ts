@@ -613,6 +613,7 @@ describe('run-state', () => {
             outcome: { summary: 'done' },
             promptOutcome: { status: 'completed', summary: 'applied' },
             awaitingKind: 'migration-prompt',
+            commitStarted: true,
             generatorCompleted: true,
           },
         ],

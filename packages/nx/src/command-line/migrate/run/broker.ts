@@ -43,6 +43,7 @@ import { updateRunState } from './state-lock';
 import {
   appendCommit,
   commitResultToLedgerEntry,
+  markCommitStarted,
   markInstallFailed,
   splitMigrationId,
   stepsToPendingMigrations,
@@ -174,7 +175,9 @@ export function acquireTreeOperation(
     const held = liveTreeOperation(fresh, owner);
     if (held) throw new TreeBusyError(treeBusyMessage(held));
     return {
-      ...fresh,
+      ...(request.kind === 'commit'
+        ? markCommitStarted(fresh, request.stepId)
+        : fresh),
       treeOperation: {
         kind: request.kind,
         ...(request.stepId !== undefined ? { stepId: request.stepId } : {}),

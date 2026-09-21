@@ -216,7 +216,7 @@ function applyStepAction(
         return {
           kind: 'error',
           reason: `Cannot apply action 'retry' to step '${step.id}': the worker died before recording that its generator ran, so keeping the current tree could apply the migration twice. Use ${
-            coveringLandedEntries(state, step.id).length > 0
+            commitMayBeInHistory(state, step)
               ? `'retry-clean' where offered, or 'adopt'`
               : `'retry-clean', 'adopt' or 'skip'`
           } instead.`,
@@ -229,7 +229,7 @@ function applyStepAction(
           status: 'succeeded',
           outcome: { ...step.outcome, summary: adoptedSummary(step) },
         });
-      case 'skip':
+      case 'skip': {
         // A landed commit means the migration applied; only adopt records
         // that. A failed step has no adopt, so its skip stays open.
         if (coveringLandedEntries(state, step.id).length > 0) {
@@ -238,8 +238,15 @@ function applyStepAction(
             reason: `Cannot apply action 'skip' to step '${step.id}': a commit of its changes already landed, so the migration is applied. Use 'adopt' to record that.`,
           };
         }
+        if (step.commitStarted === true) {
+          return {
+            kind: 'error',
+            reason: `Cannot apply action 'skip' to step '${step.id}': a commit of its changes was started and never recorded, so it may be in history. Use 'adopt' to record the migration as applied.`,
+          };
+        }
         // Same as skipping a failure: the tree stays as the worker left it.
         return commit(state, index, { ...step, status: 'skipped' });
+      }
     }
   }
   return {
@@ -294,6 +301,8 @@ function rearm(
     ...(step.depsHashAtDispense !== undefined
       ? { depsHashAtDispense: step.depsHashAtDispense }
       : {}),
+    // A reset keeps a commit that landed before this attempt's ref as well.
+    ...(step.commitStarted ? { commitStarted: true } : {}),
     ...(keepGeneratorCompleted ? generatorRunFields(step) : {}),
   };
 }
@@ -434,13 +443,52 @@ export function coveringLandedEntries(
   );
 }
 
+/** Marks the step as having a commit under way; see `commitStarted`. */
+export function markCommitStarted(
+  state: MigrateRunState,
+  stepId: string
+): MigrateRunState {
+  return {
+    ...state,
+    steps: state.steps.map((step) =>
+      step.id === stepId ? { ...step, commitStarted: true } : step
+    ),
+  };
+}
+
+/**
+ * True when a landed entry names the step, or a commit was started for it
+ * that no entry accounts for. Skipping the step would then report as not
+ * applied a migration whose commit is, or may be, in history.
+ */
+export function commitMayBeInHistory(
+  state: MigrateRunState,
+  step: MigrateStep
+): boolean {
+  return (
+    coveringLandedEntries(state, step.id).length > 0 ||
+    step.commitStarted === true
+  );
+}
+
 // Every ledger append. Entries are never removed or reordered, which the step
-// receipts and the resolution stamps rely on.
+// receipts and the resolution stamps rely on. A landed entry accounts for the
+// commits started on the steps it names.
 export function appendCommit(
   state: MigrateRunState,
   entry: MigrateCommitLedgerEntry
 ): MigrateRunState {
-  return { ...state, commits: [...state.commits, entry] };
+  const steps =
+    entry.kind === 'landed'
+      ? state.steps.map((step) => {
+          if (!entry.stepIds.includes(step.id) || !step.commitStarted) {
+            return step;
+          }
+          const { commitStarted: _started, ...rest } = step;
+          return rest;
+        })
+      : state.steps;
+  return { ...state, steps, commits: [...state.commits, entry] };
 }
 
 /**

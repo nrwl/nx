@@ -1263,6 +1263,31 @@ describe('migrate commit broker', () => {
       expect(brokerFiles()).toEqual(['00000000-step-1-1.request.json']);
     });
 
+    it('leaves the commit it landed marked as started when its record fails, so a skip cannot hide it', async () => {
+      const broker = new MigrateCommitBroker(
+        root,
+        dir,
+        'npx nx migrate',
+        POLICY
+      );
+      writeRequest(broker.nonce);
+      vi.spyOn(
+        MigrateCommitBroker.prototype as unknown as { record: () => void },
+        'record'
+      ).mockImplementation(() => {
+        throw new Error('run.json: ENOSPC');
+      });
+
+      await expect(broker.service()).rejects.toThrow('ENOSPC');
+      broker.close();
+
+      expect(mockCommit).toHaveBeenCalledTimes(1);
+      const state = readRunState(dir);
+      expect(state.commits).toEqual([]);
+      expect(state.steps[0].commitStarted).toBe(true);
+      expect(state.treeOperation).toBeUndefined();
+    });
+
     it('fails when the answer cannot be published, keeping the record of the commit it landed', async () => {
       const broker = new MigrateCommitBroker(
         root,
@@ -1363,6 +1388,8 @@ describe('migrate commit broker', () => {
       const state = readRunState(dir);
       expect(state.commits).toEqual([]);
       expect(state.steps[0].commitLedgerIndex).toBeUndefined();
+      // Nothing accounts for the start: an earlier commit may be in history.
+      expect(state.steps[0].commitStarted).toBe(true);
       expect(existsSync(resultPath)).toBe(true);
     });
 
@@ -1467,6 +1494,8 @@ describe('migrate commit broker', () => {
       const lease = acquireTreeOperation(dir, request, 'first');
 
       expect(held()).toEqual({ ...request, owner: 'first', pid: process.pid });
+      // Written with the reservation: the trace that outlives the holder.
+      expect(readRunState(dir).steps[0].commitStarted).toBe(true);
       expect(() => acquireTreeOperation(dir, request, 'second')).toThrow(
         TreeBusyError
       );

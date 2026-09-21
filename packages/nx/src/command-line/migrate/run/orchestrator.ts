@@ -89,8 +89,8 @@ import {
   appendCommit,
   applyStepEvent,
   commitReceipt,
+  commitMayBeInHistory,
   commitResultToLedgerEntry,
-  coveringLandedEntries,
   hasPendingCommitDebt,
   latestRound,
   markInstallFailed,
@@ -1391,7 +1391,7 @@ async function applyReconcileStepAction(
     const head = getLatestCommitSha(root);
     const fallback =
       step.status === 'died'
-        ? coveringLandedEntries(state, step.id).length > 0
+        ? commitMayBeInHistory(state, step)
           ? `Use 'adopt' instead.`
           : `Use 'adopt' or 'skip' instead.`
         : `Use 'retry' or 'skip' instead.`;
@@ -2002,8 +2002,8 @@ function emitDied(
       'adopt'
     )}`
   );
-  // Refused by the state machine once a commit landed: the migration applied.
-  if (coveringLandedEntries(state, step.id).length === 0) {
+  // Refused by the state machine: the migration is, or may be, committed.
+  if (!commitMayBeInHistory(state, step)) {
     options.push(
       `  skip: leave the tree as it stands and move on without this migration, then run: ${reconcileCommand(
         root,

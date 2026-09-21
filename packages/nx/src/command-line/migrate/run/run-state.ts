@@ -151,6 +151,10 @@ export interface MigrateStep {
   // commit. A fold that lands no new entry of its own attributes the
   // handoff's resolutions there. Dropped on re-arm.
   commitLedgerIndex?: number;
+  // Set when the tree is reserved to commit for the step, before git runs;
+  // cleared by the landed entry that names it. While set, a died step cannot
+  // be skipped: a committer that died before recording may have committed.
+  commitStarted?: boolean;
   // Set after the generator half runs and before the commit is attempted, so a
   // retry finishes the step instead of reapplying the changes. Dropped with the
   // four marker fields below when a retry's reset discards those changes.
@@ -461,6 +465,7 @@ function isStepShape(value: unknown): boolean {
     isPromptOutcomeShape(value.promptOutcome) &&
     (value.awaitingKind === undefined ||
       isOneOf(MIGRATE_STEP_AWAITING_KINDS, value.awaitingKind)) &&
+    isOptionalBoolean(value.commitStarted) &&
     isOptionalBoolean(value.generatorCompleted) &&
     // Bounded by the step's attempt: a higher value could not name one that
     // exists.
