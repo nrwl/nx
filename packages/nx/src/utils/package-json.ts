@@ -28,7 +28,6 @@ import {
   getPackageManagerVersion,
   PackageManager,
   PackageManagerCommands,
-  setPnpmConfigEnv,
 } from './package-manager';
 import { workspaceRoot } from './workspace-root';
 
@@ -503,7 +502,9 @@ function preparePackageInstallation(
     YARN_ENABLE_SCRIPTS: 'false',
   };
   if (packageManager === 'pnpm') {
-    setPnpmConfigEnv(env, 'auto_install_peers', 'false');
+    // pnpm 11 reads the lowercase form first, 12 the uppercase one.
+    env.pnpm_config_auto_install_peers = 'false';
+    env.PNPM_CONFIG_AUTO_INSTALL_PEERS = 'false';
   }
 
   const execOptions = {

@@ -100,23 +100,6 @@ function execPackageManagerSync(
   }
 }
 
-/**
- * Sets a pnpm setting on a child environment. pnpm 12 reads `PNPM_CONFIG_*`
- * ahead of `pnpm_config_*` (11 reads it after), so an inherited uppercase
- * value has to go or it wins over the override.
- */
-export function setPnpmConfigEnv(
-  env: NodeJS.ProcessEnv,
-  setting: string,
-  value: string
-): void {
-  const key = `pnpm_config_${setting}`;
-  for (const name of Object.keys(env)) {
-    if (name.toLowerCase() === key) delete env[name];
-  }
-  env[key] = value;
-}
-
 export type PackageManager = 'yarn' | 'pnpm' | 'npm' | 'bun';
 
 export interface PackageManagerCommands {

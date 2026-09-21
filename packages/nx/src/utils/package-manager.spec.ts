@@ -80,39 +80,10 @@ import {
   parseRegistryViewJson,
   parseVersionFromPackageManagerField,
   resolvePackageVersionUsingRegistry,
-  setPnpmConfigEnv,
   PackageManager,
 } from './package-manager';
 
 describe('package-manager', () => {
-  describe('setPnpmConfigEnv', () => {
-    it('sets the lowercase form', () => {
-      const env: NodeJS.ProcessEnv = {};
-
-      setPnpmConfigEnv(env, 'strict_dep_builds', 'false');
-
-      expect(env).toEqual({ pnpm_config_strict_dep_builds: 'false' });
-    });
-
-    // pnpm 12 reads PNPM_CONFIG_* first, so an inherited value would win.
-    it.each(['PNPM_CONFIG_STRICT_DEP_BUILDS', 'PnPm_Config_Strict_Dep_Builds'])(
-      'drops an inherited %s',
-      (inherited) => {
-        const env: NodeJS.ProcessEnv = {
-          [inherited]: 'true',
-          PATH: '/usr/bin',
-        };
-
-        setPnpmConfigEnv(env, 'strict_dep_builds', 'false');
-
-        expect(env).toEqual({
-          PATH: '/usr/bin',
-          pnpm_config_strict_dep_builds: 'false',
-        });
-      }
-    );
-  });
-
   describe('detectPackageManager', () => {
     afterEach(() => {
       vi.restoreAllMocks();

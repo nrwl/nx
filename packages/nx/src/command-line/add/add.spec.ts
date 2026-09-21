@@ -53,9 +53,9 @@ describe('nx add installation', () => {
       expect(install.mock.calls[0][1].env.pnpm_config_strict_dep_builds).toBe(
         'false'
       );
-      expect(
-        install.mock.calls[0][1].env.PNPM_CONFIG_STRICT_DEP_BUILDS
-      ).toBeUndefined();
+      expect(install.mock.calls[0][1].env.PNPM_CONFIG_STRICT_DEP_BUILDS).toBe(
+        'false'
+      );
     }
   );
 });
