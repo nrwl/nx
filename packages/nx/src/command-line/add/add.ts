@@ -9,6 +9,7 @@ import {
   detectPackageManager,
   getPackageManagerCommand,
   getPackageManagerVersion,
+  setPnpmConfigEnv,
 } from '../../utils/package-manager';
 import { handleErrors } from '../../utils/handle-errors';
 import { nxVersion } from '../../utils/versions';
@@ -71,7 +72,7 @@ async function installPackage(
     // for this one install, like pnpm 10 did.
     const env = { ...process.env };
     if (pm === 'pnpm' && gte(pmv, '11.0.0')) {
-      env.pnpm_config_strict_dep_builds = 'false';
+      setPnpmConfigEnv(env, 'strict_dep_builds', 'false');
     }
     await new Promise<void>((resolve) =>
       exec(

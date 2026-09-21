@@ -20,6 +20,7 @@ import {
   getPackageManagerVersion,
   PackageManager,
   PackageManagerCommands,
+  setPnpmConfigEnv,
 } from '../../../utils/package-manager';
 import { acknowledgeBuildScripts } from '../../../utils/acknowledge-build-scripts';
 import { joinPathFragments } from '../../../utils/path';
@@ -310,7 +311,7 @@ export function runInstall(
   if (packageManager === 'pnpm') {
     try {
       if (gte(getPackageManagerVersion('pnpm', repoRoot), '11.0.0')) {
-        env.pnpm_config_strict_dep_builds = 'false';
+        setPnpmConfigEnv(env, 'strict_dep_builds', 'false');
       }
     } catch {
       // The version cannot be probed; run the install unmodified.

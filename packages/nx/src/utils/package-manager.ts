@@ -48,6 +48,14 @@ const execAsync = promisify(exec);
 const execFileAsync = promisify(execFile);
 
 /**
+ * Node only started mapping libuv's -8 to `ENOEXEC` in 22.18; 20.x and older
+ * 22.x report `Unknown system error -8` for the same spawn failure.
+ */
+function isExecFormatError(error: any): boolean {
+  return error?.code === 'ENOEXEC' || error?.errno === -8;
+}
+
+/**
  * Shell-less spawn for the registry-bridged fetches: `exec` goes through
  * /bin/sh, which is dash on Debian-family systems, and dash drops environment
  * names that are not valid shell identifiers, i.e. every `//...:_authToken`
@@ -70,7 +78,7 @@ async function execPackageManagerAsync(
     return await execFileAsync(pm, args, options);
   } catch (error) {
     // pnpm 12's fallback shim has no shebang when installed without scripts.
-    if (error.code !== 'ENOEXEC') throw error;
+    if (!isExecFormatError(error)) throw error;
     return execAsync([pm, ...args].map(quoteShellArg).join(' '), options);
   }
 }
@@ -87,9 +95,26 @@ function execPackageManagerSync(
   try {
     return execFileSync(pm, args, options);
   } catch (error) {
-    if (error.code !== 'ENOEXEC') throw error;
+    if (!isExecFormatError(error)) throw error;
     return execSync([pm, ...args].map(quoteShellArg).join(' '), options);
   }
+}
+
+/**
+ * Sets a pnpm setting on a child environment. pnpm 12 reads `PNPM_CONFIG_*`
+ * ahead of `pnpm_config_*` (11 reads it after), so an inherited uppercase
+ * value has to go or it wins over the override.
+ */
+export function setPnpmConfigEnv(
+  env: NodeJS.ProcessEnv,
+  setting: string,
+  value: string
+): void {
+  const key = `pnpm_config_${setting}`;
+  for (const name of Object.keys(env)) {
+    if (name.toLowerCase() === key) delete env[name];
+  }
+  env[key] = value;
 }
 
 export type PackageManager = 'yarn' | 'pnpm' | 'npm' | 'bun';

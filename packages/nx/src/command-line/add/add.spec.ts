@@ -16,11 +16,16 @@ import { nxVersion } from '../../utils/versions';
 import { addHandler, coreNxPluginVersions } from './add';
 
 describe('nx add installation', () => {
-  afterEach(() => vi.restoreAllMocks());
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+  });
 
   it.each(['11.0.0', '12.4.2'])(
     'disables strict build approvals for pnpm %s before plugin initialization',
     async (version) => {
+      // pnpm 12 reads the uppercase form first, so it has to go.
+      vi.stubEnv('PNPM_CONFIG_STRICT_DEP_BUILDS', 'true');
       vi.spyOn(fs, 'existsSync').mockReturnValue(true);
       vi.spyOn(configuration, 'readNxJson').mockReturnValue({});
       vi.spyOn(packageManager, 'detectPackageManager').mockReturnValue('pnpm');
@@ -48,6 +53,9 @@ describe('nx add installation', () => {
       expect(install.mock.calls[0][1].env.pnpm_config_strict_dep_builds).toBe(
         'false'
       );
+      expect(
+        install.mock.calls[0][1].env.PNPM_CONFIG_STRICT_DEP_BUILDS
+      ).toBeUndefined();
     }
   );
 });

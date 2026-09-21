@@ -28,6 +28,7 @@ import {
   getPackageManagerVersion,
   PackageManager,
   PackageManagerCommands,
+  setPnpmConfigEnv,
 } from './package-manager';
 import { workspaceRoot } from './workspace-root';
 
@@ -495,19 +496,21 @@ function preparePackageInstallation(
     .filter(Boolean)
     .join(' ');
 
+  // Yarn Berry requires an environment variable (not a CLI flag) to disable lifecycle scripts.
+  // Apply this defensively for all package managers when pulling nx@latest to tmp.
+  const env: NodeJS.ProcessEnv = {
+    ...process.env,
+    YARN_ENABLE_SCRIPTS: 'false',
+  };
+  if (packageManager === 'pnpm') {
+    setPnpmConfigEnv(env, 'auto_install_peers', 'false');
+  }
+
   const execOptions = {
     cwd: tempDir,
     stdio: isVerbose ? 'inherit' : 'ignore',
     windowsHide: true,
-    // Yarn Berry requires an environment variable (not a CLI flag) to disable lifecycle scripts.
-    // Apply this defensively for all package managers when pulling nx@latest to tmp.
-    env: {
-      ...process.env,
-      YARN_ENABLE_SCRIPTS: 'false',
-      ...(packageManager === 'pnpm'
-        ? { pnpm_config_auto_install_peers: 'false' }
-        : {}),
-    },
+    env,
   } as const;
 
   return {
