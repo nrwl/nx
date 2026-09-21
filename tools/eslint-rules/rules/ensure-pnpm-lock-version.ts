@@ -15,10 +15,13 @@
  */
 
 import { ESLintUtils } from '@typescript-eslint/utils';
-import { parseAllDocuments } from 'yaml';
+import { parseDocument } from 'yaml';
 
 // NOTE: The rule will be available in ESLint configs as "@nx/workspace-ensure-pnpm-lock-version"
 export const RULE_NAME = 'ensure-pnpm-lock-version';
+
+/** Enough of the last document to hold its `lockfileVersion` line. */
+const HEAD_LENGTH = 4096;
 
 export const rule = ESLintUtils.RuleCreator(() => __filename)({
   name: RULE_NAME,
@@ -47,13 +50,26 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
   },
   defaultOptions: [] as { version: string }[],
   create(context) {
-    // pnpm 12 prepends a package-manager document to the dependency lockfile.
-    const documents = parseAllDocuments(context.sourceCode.text);
-    const lockfile = documents.at(-1);
-    const version = lockfile?.get('lockfileVersion');
+    // pnpm 12 prepends a package-manager document, so the dependency lockfile
+    // is the last one. Parsing all of it to read one scalar costs ~800ms on a
+    // 2MB lockfile, so only the head of that document is parsed.
+    const text = context.sourceCode.text;
+    const separator = text.lastIndexOf('\n---\n');
+    const head = (separator === -1 ? text : text.slice(separator + 5)).slice(
+      0,
+      HEAD_LENGTH
+    );
+    const lines = head.split('\n');
+    if (head.length === HEAD_LENGTH) lines.pop(); // the slice cuts a line in half
+    const versionLine = lines.find((line) =>
+      line.startsWith('lockfileVersion:')
+    );
+    const document = versionLine ? parseDocument(versionLine) : undefined;
+    const version = document?.errors.length
+      ? undefined
+      : document?.get('lockfileVersion');
     const lockfileVersion =
-      !documents.some((document) => document.errors.length) &&
-      (typeof version === 'string' || typeof version === 'number')
+      typeof version === 'string' || typeof version === 'number'
         ? String(version)
         : undefined;
 

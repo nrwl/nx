@@ -8,12 +8,18 @@ const options = [{ version: '9.0' }];
 ruleTester.run(RULE_NAME, rule, {
   valid: [
     { code: "lockfileVersion: '9.0'\n", options },
+    { code: "lockfileVersion: '9.0'", options },
     {
       code: "---\nlockfileVersion: '9.0'\nimporters: {}\n---\nlockfileVersion: '9.0'\nimporters: {}\n",
       options,
     },
     {
       code: "---\nlockfileVersion: '8.0'\n---\nlockfileVersion: '9.0'\n",
+      options,
+    },
+    // The rule only reads the head of the document, so a long one still works.
+    {
+      code: `---\nlockfileVersion: '9.0'\n${'  padding: value\n'.repeat(1000)}`,
       options,
     },
   ],
