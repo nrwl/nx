@@ -1,25 +1,21 @@
 use once_cell::sync::OnceCell;
-use std::borrow::Cow;
 use std::future::Future;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::process::Stdio;
-use std::sync::OnceLock;
 use std::time::{Duration, Instant};
 
 use hickory_resolver::TokioResolver;
 use hickory_resolver::config::LookupIpStrategy;
-use regex::Regex;
 use reqwest::{Client, Url};
 use tokio::net::TcpStream;
 use tokio::process::Command;
 use tokio_util::sync::CancellationToken;
+use vte::{Parser, Perform};
 
 use crate::native::pseudo_terminal::process_killer::kill_process_tree_internal;
 
 // Attempt cadence without a configured interval, the last entry repeating
 const BACKOFF_MS: [u64; 4] = [100, 250, 500, 1000];
-// Longer than any real control sequence; parameters past it are dropped
-const MAX_ESCAPE_LEN: usize = 256;
 // A killed shell exits at once; past this the wait would only hang
 const REAP_MS: u64 = 1000;
 
@@ -317,7 +313,23 @@ async fn probe_command(
 pub struct LogMatcher {
     pending: Vec<String>,
     tail: String,
-    partial_escape: String,
+    parser: Parser,
+    visible: Visible,
+}
+
+// What a terminal would show: printable characters and C0 controls. Escape
+// sequences of every family reach the other callbacks and are dropped.
+#[derive(Default)]
+struct Visible(String);
+
+impl Perform for Visible {
+    fn print(&mut self, c: char) {
+        self.0.push(c);
+    }
+
+    fn execute(&mut self, byte: u8) {
+        self.0.push(byte as char);
+    }
 }
 
 #[napi]
@@ -327,24 +339,15 @@ impl LogMatcher {
         Self {
             pending: patterns,
             tail: String::new(),
-            partial_escape: String::new(),
+            parser: Parser::new(),
+            visible: Visible::default(),
         }
     }
 
     #[napi]
     pub fn feed(&mut self, chunk: String) -> bool {
-        let mut raw = std::mem::take(&mut self.partial_escape);
-        raw.push_str(&chunk);
-        let complete = partial_escape_start(&raw);
-        // Past the cap only the opener is kept, so the sequence still ends at
-        // its final byte without its parameters ever becoming text
-        let held = &raw[complete..];
-        self.partial_escape = if held.len() > MAX_ESCAPE_LEN {
-            held[..2].to_string()
-        } else {
-            held.to_string()
-        };
-        self.tail.push_str(&strip_ansi(&raw[..complete]));
+        self.parser.advance(&mut self.visible, chunk.as_bytes());
+        self.tail.push_str(&std::mem::take(&mut self.visible.0));
         let text = &self.tail;
         self.pending
             .retain(|pattern| !text.contains(pattern.as_str()));
@@ -361,21 +364,6 @@ impl LogMatcher {
         self.tail.drain(..start);
         self.pending.is_empty()
     }
-}
-
-fn strip_ansi(text: &str) -> Cow<'_, str> {
-    static CSI: OnceLock<Regex> = OnceLock::new();
-    CSI.get_or_init(|| Regex::new(r"\x1b\[[0-?]*[ -/]*[@-~]").unwrap())
-        .replace_all(text, "")
-}
-
-// Where a control sequence still missing its final byte begins, or the end
-fn partial_escape_start(text: &str) -> usize {
-    static PARTIAL: OnceLock<Regex> = OnceLock::new();
-    PARTIAL
-        .get_or_init(|| Regex::new(r"\x1b(\[[0-?]*[ -/]*)?$").unwrap())
-        .find(text)
-        .map_or(text.len(), |m| m.start())
 }
 
 #[cfg(test)]
@@ -418,20 +406,35 @@ mod tests {
     }
 
     #[test]
-    fn log_matcher_drops_the_parameters_of_an_oversized_escape() {
-        let long = format!("\x1b[{}", "1;".repeat(150));
-        let mut matcher = LogMatcher::new(vec!["1;1;".into(), "ready".into()]);
-        assert!(!matcher.feed(format!("rea{long}")));
-        assert!(matcher.partial_escape.len() <= MAX_ESCAPE_LEN);
-        assert!(!matcher.feed("mdy".into()));
-        assert!(matcher.feed("1;1;".into()));
+    fn log_matcher_ignores_control_strings() {
+        // A title or hyperlink payload is not visible text
         let mut matcher = LogMatcher::new(vec!["ready".into()]);
-        assert!(!matcher.feed("\x1b[".into()));
+        assert!(!matcher.feed("\x1b]0;ready\x07".into()));
+        assert!(!matcher.feed("\x1b]8;;http://ready\x1b\\".into()));
+        assert!(!matcher.feed("\x1bPready\x1b\\\x1b_ready\x1b\\".into()));
+        assert!(matcher.feed("ready".into()));
+        // A marker split by a control string is still one word
+        let mut matcher = LogMatcher::new(vec!["ready".into()]);
+        assert!(matcher.feed("rea\x1b]0;title\x07dy".into()));
+        let mut matcher = LogMatcher::new(vec!["ready".into()]);
+        assert!(matcher.feed("rea\x1b]8;;http://x\x1b\\dy".into()));
+        // Split opener, split payload and a split ST terminator
+        let mut matcher = LogMatcher::new(vec!["ready".into()]);
+        assert!(!matcher.feed("rea\x1b".into()));
+        assert!(!matcher.feed("]0;ti".into()));
+        assert!(!matcher.feed("tle\x1b".into()));
+        assert!(matcher.feed("\\dy".into()));
+    }
+
+    #[test]
+    fn log_matcher_holds_a_bounded_payload_for_an_unterminated_control_string() {
+        let mut matcher = LogMatcher::new(vec!["ready".into()]);
+        assert!(!matcher.feed("rea\x1b]8;;".into()));
         for _ in 0..10 {
-            assert!(!matcher.feed("1".repeat(100)));
-            assert!(matcher.partial_escape.len() <= MAX_ESCAPE_LEN);
+            assert!(!matcher.feed("x".repeat(1000)));
         }
-        assert!(matcher.feed("mready".into()));
+        assert!(matcher.tail.len() < 10);
+        assert!(matcher.feed("\x07dy".into()));
     }
 
     fn probe(config: ReadinessProbeConfig) -> ReadinessProbe {
