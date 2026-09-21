@@ -1311,25 +1311,28 @@ describe('migrate commit broker', () => {
       expect(state.steps[0].commitLedgerIndex).toBe(0);
     });
 
-    it.each<[string, object, MigrateRunState['commits']]>([
+    it.each<[string, object, MigrateRunState['commits'], true | undefined]>([
       [
         'a landed commit',
         committed,
         [{ kind: 'landed', sha: committed.sha, stepIds: ['step-1', 'step-0'] }],
+        undefined,
       ],
       [
         'a landed commit whose sha could not be read',
         { status: 'committed', sha: null },
         [{ kind: 'landed', stepIds: ['step-1', 'step-0'] }],
+        undefined,
       ],
       [
         'a failed commit',
         { status: 'failed' },
         [{ kind: 'failed', stepIds: ['step-1'] }],
+        true,
       ],
     ])(
       'records %s with a receipt on the step before answering',
-      async (_case, result, entries) => {
+      async (_case, result, entries, markAfter) => {
         writeRunState(
           dir,
           runState({
@@ -1363,6 +1366,9 @@ describe('migrate commit broker', () => {
         ]);
         expect(state.steps[1].commitLedgerIndex).toBe(1);
         expect(state.steps[0].commitLedgerIndex).toBeUndefined();
+        // Marked with the reservation; a landed entry accounts for it, while
+        // a failure once git ran cannot vouch that nothing landed.
+        expect(state.steps[1].commitStarted).toBe(markAfter);
         expect(JSON.parse(readFileSync(resultPath, 'utf8'))).toEqual({
           kind: 'commit',
           result,
@@ -1388,8 +1394,8 @@ describe('migrate commit broker', () => {
       const state = readRunState(dir);
       expect(state.commits).toEqual([]);
       expect(state.steps[0].commitLedgerIndex).toBeUndefined();
-      // Nothing accounts for the start: an earlier commit may be in history.
-      expect(state.steps[0].commitStarted).toBe(true);
+      // A known outcome: the release clears the mark this commit set.
+      expect(state.steps[0].commitStarted).toBeUndefined();
       expect(existsSync(resultPath)).toBe(true);
     });
 
@@ -1494,7 +1500,7 @@ describe('migrate commit broker', () => {
       const lease = acquireTreeOperation(dir, request, 'first');
 
       expect(held()).toEqual({ ...request, owner: 'first', pid: process.pid });
-      // Written with the reservation: the trace that outlives the holder.
+      // Written with the reservation: the trace a mid-commit death leaves.
       expect(readRunState(dir).steps[0].commitStarted).toBe(true);
       expect(() => acquireTreeOperation(dir, request, 'second')).toThrow(
         TreeBusyError
@@ -1531,6 +1537,63 @@ describe('migrate commit broker', () => {
       );
       expect(held()).toBeUndefined();
     });
+
+    it('clears the mark it set on release, and leaves one an earlier commit left behind', () => {
+      const own = acquireTreeOperation(dir, request, 'first');
+      own.release();
+      expect(readRunState(dir).steps[0].commitStarted).toBeUndefined();
+
+      writeRunState(dir, runState({ steps: [step({ commitStarted: true })] }));
+      const inherited = acquireTreeOperation(dir, request, 'second');
+      inherited.release();
+      expect(held()).toBeUndefined();
+      expect(readRunState(dir).steps[0].commitStarted).toBe(true);
+    });
+
+    it('does not clear the mark of a newer holder through a late release', () => {
+      const late = acquireTreeOperation(dir, request, 'first');
+      // The first holder's process is gone; a new committer takes over.
+      writeRunState(
+        dir,
+        runState({
+          steps: [step({ commitStarted: true })],
+          treeOperation: { ...request, owner: 'first', pid: 999999 },
+        })
+      );
+      vi.spyOn(process, 'kill').mockImplementation(((pid: number) => {
+        if (pid === 999999) {
+          throw Object.assign(new Error('no such process'), { code: 'ESRCH' });
+        }
+        return true;
+      }) as never);
+      acquireTreeOperation(dir, request, 'second');
+
+      late.release();
+
+      expect(held()?.owner).toBe('second');
+      expect(readRunState(dir).steps[0].commitStarted).toBe(true);
+    });
+
+    it.each([
+      ['committed', { status: 'committed', sha: 'abc' }, true],
+      ['failed', { status: 'failed', reason: 'ENOBUFS' }, true],
+      ['no-changes', { status: 'no-changes' }, undefined],
+      ['disabled', { status: 'disabled' }, undefined],
+    ] as const)(
+      'keeps the mark of an in-process commit whose result is %s past the release only when git ran',
+      async (_, result, markAfterRelease) => {
+        delete process.env.NX_MIGRATE_BROKER;
+        const scope: TreeScope = {};
+
+        await commitStepTree(dir, step(), [], async () => result, scope);
+        // A landed commit's entry may fail to persist, and a failure once git
+        // ran may follow a commit; neither release may clear the mark.
+        scope.lease.release();
+
+        expect(held()).toBeUndefined();
+        expect(readRunState(dir).steps[0].commitStarted).toBe(markAfterRelease);
+      }
+    );
 
     it('hands an in-process seam its lease before the commit runs, and keeps it when the commit throws', async () => {
       delete process.env.NX_MIGRATE_BROKER;

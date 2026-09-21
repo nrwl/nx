@@ -2291,6 +2291,34 @@ describe('orchestrator', () => {
       ]);
     });
 
+    it('keeps an unrecorded commit marked when a failed handoff records dirty-tree debt', async () => {
+      // The fold's own commit died mid-commit earlier; the debt this fold
+      // records for the retained tree says nothing about that commit.
+      mockGetWorkingTreeStatus.mockReturnValue('dirty');
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome', {
+            commitStarted: true,
+          }),
+        ],
+        createCommits: true,
+        plan: [promptMig('@nx/js', 'p')],
+      });
+      writeHandoff(dir, '@nx/js', 'p', { status: 'failed', summary: 'boom' });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const state = readRunState(dir);
+      expect(state.steps[0]).toMatchObject({
+        status: 'failed',
+        commitStarted: true,
+      });
+      expect(state.commits).toEqual([{ kind: 'failed', stepIds: ['step-1'] }]);
+      const block = lastBlock();
+      expect(block.action).toBe('retry-failed');
+      expect(block.payload.instructions).not.toContain('--step-action=skip');
+    });
+
     it('removes the handoff file once its outcome is folded', async () => {
       const dir = setupRun('run-1', {
         steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
@@ -4745,6 +4773,105 @@ describe('orchestrator', () => {
       expect(block.payload.instructions).not.toContain("'skip'");
     });
 
+    it('refuses to skip a failed step whose started commit is unaccounted for, naming retry', async () => {
+      mockGetLatestCommitSha.mockReturnValue(
+        'face0007face0007face0007face0007face0007'
+      );
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'failed', {
+            gitRefBefore: 'beef0001beef0001beef0001beef0001beef0001',
+            generatorCompleted: true,
+            commitStarted: true,
+          }),
+        ],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+        commits: [{ kind: 'failed', stepIds: ['step-1'] }],
+      });
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'skip',
+      });
+
+      const state = readRunState(dir);
+      expect(state.steps[0]).toMatchObject({
+        status: 'failed',
+        attempt: 1,
+        commitStarted: true,
+      });
+      expect(state.commits).toHaveLength(1);
+      expect(mockRunInstall).not.toHaveBeenCalled();
+      const block = lastBlock();
+      expect(block.action).toBe('error');
+      expect(block.payload.instructions).toContain(
+        "Cannot apply action 'skip' to step 'step-1'"
+      );
+      expect(block.payload.instructions).toContain("Use 'retry'");
+    });
+
+    it('steers a rejected pre-marker retry away from skip while a started commit is unaccounted for', async () => {
+      // A clean retry from a later baseline dropped the generator marker but
+      // kept the mark; the generator then wrote and failed.
+      mockGetLatestCommitSha.mockReturnValue(
+        'beef0001beef0001beef0001beef0001beef0001'
+      );
+      mockGetWorkingTreeStatus.mockReturnValue('dirty');
+      setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'failed', {
+            gitRefBefore: 'beef0001beef0001beef0001beef0001beef0001',
+            commitStarted: true,
+          }),
+        ],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'retry',
+      });
+
+      const block = lastBlock();
+      expect(block.action).toBe('error');
+      expect(block.payload.instructions).toContain(
+        "Use 'retry-clean' where offered."
+      );
+      expect(block.payload.instructions).not.toContain("'skip'");
+    });
+
+    it('steers a rejected retry-clean on a failed step to retry alone while a started commit is unaccounted for', async () => {
+      mockGetLatestCommitSha.mockReturnValue(
+        'face0007face0007face0007face0007face0007'
+      );
+      setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'failed', {
+            gitRefBefore: 'beef0001beef0001beef0001beef0001beef0001',
+            generatorCompleted: true,
+            commitStarted: true,
+          }),
+        ],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'retry-clean',
+      });
+
+      const block = lastBlock();
+      expect(block.action).toBe('error');
+      expect(block.payload.instructions).toContain("Use 'retry' instead.");
+      expect(block.payload.instructions).not.toContain("'skip'");
+    });
+
     it('rejects a pre-marker retry when the tree is dirty, leaving state untouched', async () => {
       mockGetLatestCommitSha.mockReturnValue(
         'beef0001beef0001beef0001beef0001beef0001'
@@ -5308,6 +5435,34 @@ describe('orchestrator', () => {
       // proven safe and no automatic continuation is handed out.
       expect(block.payload.instructions).toContain('refused until');
       expect(block.payload.next).toBeUndefined();
+    });
+
+    it('omits skip from the retry-failed block while a started commit is unaccounted for, preselecting retry', async () => {
+      mockGetLatestCommitSha.mockReturnValue(
+        'face0007face0007face0007face0007face0007'
+      );
+      setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'failed', {
+            gitRefBefore: 'beef0001beef0001beef0001beef0001beef0001',
+            generatorCompleted: true,
+            commitStarted: true,
+            outcome: { summary: 'the session ended before answering' },
+          }),
+        ],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+        commits: [{ kind: 'failed', stepIds: ['step-1'] }],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const block = lastBlock();
+      expect(block.action).toBe('retry-failed');
+      expect(block.payload.instructions).toContain('  retry:');
+      expect(block.payload.instructions).not.toContain('  skip:');
+      expect(block.payload.instructions).not.toContain('--step-action=skip');
+      expect(block.payload.next).toMatch(/--step-action=retry$/);
     });
 
     it('withholds the automatic continuation from a pre-marker failure even when git sees the tree as untouched', async () => {
@@ -6576,6 +6731,65 @@ describe('orchestrator', () => {
         status: 'died',
         attempt: 2,
       });
+      expect(lastBlock().action).toBe('error');
+      expect(lastBlock().payload.instructions).toContain("Use 'adopt'");
+    });
+
+    it('keeps an adopted commit marked as started when its record write fails, so a skip cannot hide it', async () => {
+      delete process.env.NX_MIGRATE_BROKER;
+      mockGetLatestCommitSha.mockReturnValue(
+        'beef0001beef0001beef0001beef0001beef0001'
+      );
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'died', {
+            gitRefBefore: 'beef0001beef0001beef0001beef0001beef0001',
+            generatorCompleted: true,
+          }),
+        ],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+      // The commit lands; the write that would record it and adopt the step
+      // is the next run.json publish, and it fails.
+      const realRename = renameSync;
+      mockCommit.mockImplementation(async () => {
+        vi.spyOn(fs, 'renameSync').mockImplementationOnce(
+          (from: string, to: string) => {
+            if (!String(to).endsWith('run.json')) return realRename(from, to);
+            throw Object.assign(new Error('disk full'), { code: 'ENOSPC' });
+          }
+        );
+        return {
+          status: 'committed',
+          sha: 'face0007face0007face0007face0007face0007',
+        };
+      });
+
+      await expect(
+        runOrchestratorReconcile({
+          root,
+          runId: 'run-1',
+          stepAction: 'adopt',
+        })
+      ).rejects.toThrow('disk full');
+
+      let state = readRunState(dir);
+      expect(state.steps[0]).toMatchObject({
+        status: 'died',
+        commitStarted: true,
+      });
+      expect(state.commits).toEqual([]);
+      expect(state.treeOperation).toBeUndefined();
+
+      mockCommit.mockResolvedValue({ status: 'no-changes' });
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'skip',
+      });
+      state = readRunState(dir);
+      expect(state.steps[0].status).toBe('died');
       expect(lastBlock().action).toBe('error');
       expect(lastBlock().payload.instructions).toContain("Use 'adopt'");
     });

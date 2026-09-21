@@ -199,6 +199,14 @@ function applyStepAction(
         // offered under the same guard as for a death.
         return commit(state, index, cleanRearm(state, step));
       case 'skip':
+        // A retry keeps the recorded generator run, and its commit finds a
+        // clean tree when the commit already landed.
+        if (commitMayBeInHistory(state, step)) {
+          return {
+            kind: 'error',
+            reason: `Cannot apply action 'skip' to step '${step.id}': a commit of its changes landed or was started and never recorded, so the migration may be committed. Use 'retry' to finish it.`,
+          };
+        }
         return commit(state, index, { ...step, status: 'skipped' });
     }
   }
@@ -231,7 +239,7 @@ function applyStepAction(
         });
       case 'skip': {
         // A landed commit means the migration applied; only adopt records
-        // that. A failed step has no adopt, so its skip stays open.
+        // that.
         if (coveringLandedEntries(state, step.id).length > 0) {
           return {
             kind: 'error',
@@ -456,6 +464,20 @@ export function markCommitStarted(
   };
 }
 
+export function clearCommitStarted(
+  state: MigrateRunState,
+  stepId: string
+): MigrateRunState {
+  return {
+    ...state,
+    steps: state.steps.map((step) => {
+      if (step.id !== stepId || !step.commitStarted) return step;
+      const { commitStarted: _started, ...rest } = step;
+      return rest;
+    }),
+  };
+}
+
 /**
  * True when a landed entry names the step, or a commit was started for it
  * that no entry accounts for. Skipping the step would then report as not
@@ -473,22 +495,17 @@ export function commitMayBeInHistory(
 
 // Every ledger append. Entries are never removed or reordered, which the step
 // receipts and the resolution stamps rely on. A landed entry accounts for the
-// commits started on the steps it names.
+// commits started on the steps it names; a failed entry says nothing about an
+// earlier commit and leaves the mark to its own operation's release.
 export function appendCommit(
   state: MigrateRunState,
   entry: MigrateCommitLedgerEntry
 ): MigrateRunState {
-  const steps =
+  const accounted =
     entry.kind === 'landed'
-      ? state.steps.map((step) => {
-          if (!entry.stepIds.includes(step.id) || !step.commitStarted) {
-            return step;
-          }
-          const { commitStarted: _started, ...rest } = step;
-          return rest;
-        })
-      : state.steps;
-  return { ...state, steps, commits: [...state.commits, entry] };
+      ? entry.stepIds.reduce(clearCommitStarted, state)
+      : state;
+  return { ...accounted, commits: [...state.commits, entry] };
 }
 
 /**

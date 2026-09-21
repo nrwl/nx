@@ -157,11 +157,15 @@ vi.mock('../../../utils/package-manager', () => ({
   getPackageManagerCommand: () => ({ exec: 'npx', install: 'npm install' }),
 }));
 
+vi.mock('fs', async () => ({ ...require('fs') }));
+
+import * as fs from 'fs';
 import {
   existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  renameSync,
   rmSync,
   writeFileSync,
 } from 'fs';
@@ -1546,6 +1550,7 @@ describe('runSingleMigrationWorker', () => {
           {
             ...migStep('step-1', '@nx/js:gen', 'dispensed'),
             generatorCompleted: true,
+            commitStarted: true,
           },
         ],
         migrations: [genMig('@nx/js', 'gen')],
@@ -1563,6 +1568,33 @@ describe('runSingleMigrationWorker', () => {
         sha: 'face0001face0001face0001face0001face0001',
         stepIds: ['step-1'],
       });
+      expect(state.steps[0].commitStarted).toBeUndefined();
+    });
+
+    it('finishes a retried generator step whose earlier commit already landed unrecorded, committing nothing', async () => {
+      // The previous attempt's committer died after git ran: the tree is
+      // clean, the mark is set, and the retry is what resolves it.
+      mockCommit.mockResolvedValue({ status: 'no-changes' });
+      const dir = setupRun('run-1', {
+        steps: [
+          {
+            ...migStep('step-1', '@nx/js:gen', 'dispensed'),
+            generatorCompleted: true,
+            commitStarted: true,
+          },
+        ],
+        migrations: [genMig('@nx/js', 'gen')],
+        createCommits: true,
+        commits: [{ kind: 'failed', stepIds: ['step-1'] }],
+      });
+
+      await runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'));
+
+      expect(mockRunMigration).not.toHaveBeenCalled();
+      expect(mockCommit).toHaveBeenCalledTimes(1);
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('succeeded');
+      expect(state.commits).toEqual([{ kind: 'failed', stepIds: ['step-1'] }]);
     });
 
     it('installs the retry from the baseline captured at dispense, not from the generator output', async () => {
@@ -2422,6 +2454,75 @@ describe('runSingleMigrationWorker', () => {
         stepIds: ['step-1'],
       });
       expect(state.steps[0].status).toBe('failed');
+      // Git never ran and the lease was released: nothing may be in history.
+      expect(state.steps[0].commitStarted).toBeUndefined();
+    });
+
+    it('keeps the commit it landed marked as started when the record write fails', async () => {
+      mockRunMigration.mockResolvedValue({
+        changes: changeList(),
+        nextSteps: [],
+        agentContext: [],
+        logs: '',
+        madeChanges: true,
+      });
+      const realRename = renameSync;
+      mockCommit.mockImplementation(async () => {
+        vi.spyOn(fs, 'renameSync').mockImplementationOnce(
+          (from: string, to: string) => {
+            if (!String(to).endsWith('run.json')) return realRename(from, to);
+            throw Object.assign(new Error('disk full'), { code: 'ENOSPC' });
+          }
+        );
+        return {
+          status: 'committed',
+          sha: 'face0001face0001face0001face0001face0001',
+        };
+      });
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'dispensed')],
+        migrations: [genMig('@nx/js', 'gen')],
+        createCommits: true,
+      });
+
+      await expect(
+        runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'))
+      ).rejects.toThrow('disk full');
+
+      const state = readRunState(dir);
+      expect(state.commits).not.toContainEqual(
+        expect.objectContaining({ kind: 'landed' })
+      );
+      expect(state.steps[0].commitStarted).toBe(true);
+      expect(state.treeOperation).toBeUndefined();
+    });
+
+    it('keeps an earlier commit marked as started when the retry fails before git runs', async () => {
+      // The previous attempt's committer died mid-commit. This attempt's
+      // install failure says nothing about that commit, so the mark stays and
+      // the step cannot be skipped past it.
+      mockCommit.mockRejectedValue(new Error('install failed'));
+      const dir = setupRun('run-1', {
+        steps: [
+          {
+            ...migStep('step-1', '@nx/js:gen', 'dispensed'),
+            generatorCompleted: true,
+            commitStarted: true,
+          },
+        ],
+        migrations: [genMig('@nx/js', 'gen')],
+        createCommits: true,
+        commits: [{ kind: 'failed', stepIds: ['step-1'] }],
+      });
+
+      await expect(
+        runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'))
+      ).rejects.toThrow('install failed');
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('failed');
+      expect(state.steps[0].commitStarted).toBe(true);
+      expect(state.treeOperation).toBeUndefined();
     });
 
     it('only matches the latest round step when an older round has the same migration id', async () => {
@@ -2480,6 +2581,9 @@ describe('runSingleMigrationWorker', () => {
       expect(output.warn).toHaveBeenCalled();
       // A failed commit is not a failed step: the generator still succeeded.
       expect(state.steps[0].status).toBe('succeeded');
+      // A failure once git ran cannot vouch that nothing landed; the mark
+      // stays, moot on a succeeded step.
+      expect(state.steps[0].commitStarted).toBe(true);
     });
 
     it('records no commit ledger entry when the generator makes no changes', async () => {
@@ -2635,6 +2739,30 @@ describe('runSingleMigrationWorker', () => {
       expect(state.steps[0].status).toBe('failed');
       expect(state.steps[0].outcome.summary).toContain('ended before');
       expect(state.commits).toEqual([{ kind: 'failed', stepIds: ['step-1'] }]);
+      // The session never took the request up, so no commit was started.
+      expect(state.steps[0].commitStarted).toBeUndefined();
+    });
+
+    it('keeps the commit the session started marked when the session is gone before answering', async () => {
+      // The parent reserved the tree and marked the step, then died: the
+      // commit may be in history, and the debt alone would let a skip hide it.
+      const dir = setupRun('run-1', {
+        steps: [
+          {
+            ...migStep('step-1', '@nx/js:gen', 'dispensed'),
+            commitStarted: true,
+          },
+        ],
+        migrations: [genMig('@nx/js', 'gen')],
+        createCommits: true,
+      });
+
+      await expect(run()).rejects.toBeInstanceOf(BrokerUnavailableError);
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('failed');
+      expect(state.commits).toEqual([{ kind: 'failed', stepIds: ['step-1'] }]);
+      expect(state.steps[0].commitStarted).toBe(true);
     });
 
     it('installs through the session before handing validation to the agent', async () => {

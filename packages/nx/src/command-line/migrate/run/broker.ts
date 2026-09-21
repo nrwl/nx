@@ -42,6 +42,7 @@ import {
 import { updateRunState } from './state-lock';
 import {
   appendCommit,
+  clearCommitStarted,
   commitResultToLedgerEntry,
   markCommitStarted,
   markInstallFailed,
@@ -142,6 +143,11 @@ export interface TreeOperationRequest {
 
 export interface TreeLease {
   readonly owner: string;
+  // The step this operation marked as having a commit under way, if any.
+  // Cleared by the seam once git ran: a landed entry accounts for the mark
+  // then, and a record write that fails, or a failure after git started,
+  // must leave it.
+  markedStepId?: string;
   release(): void;
 }
 
@@ -166,6 +172,9 @@ export function acquireTreeOperation(
   request: TreeOperationRequest,
   owner: string = randomBytes(4).toString('hex')
 ): TreeLease {
+  // A commit marks its step as started; a mark already there belongs to an
+  // operation whose outcome is still unknown, and this one leaves it.
+  let marks = false;
   updateRunState(dir, (fresh) => {
     if (!atSeam(fresh, request)) {
       throw new BrokerStaleRequestError(
@@ -174,10 +183,11 @@ export function acquireTreeOperation(
     }
     const held = liveTreeOperation(fresh, owner);
     if (held) throw new TreeBusyError(treeBusyMessage(held));
+    marks =
+      request.kind === 'commit' &&
+      fresh.steps.find((s) => s.id === request.stepId)?.commitStarted !== true;
     return {
-      ...(request.kind === 'commit'
-        ? markCommitStarted(fresh, request.stepId)
-        : fresh),
+      ...(marks ? markCommitStarted(fresh, request.stepId) : fresh),
       treeOperation: {
         kind: request.kind,
         ...(request.stepId !== undefined ? { stepId: request.stepId } : {}),
@@ -187,16 +197,30 @@ export function acquireTreeOperation(
       },
     };
   });
-  return { owner, release: () => releaseTreeOperation(dir, owner) };
+  const lease: TreeLease = {
+    owner,
+    ...(marks ? { markedStepId: request.stepId } : {}),
+    release: () => releaseTreeOperation(dir, owner, lease.markedStepId),
+  };
+  return lease;
 }
 
-// Owner-checked: a lease released late never drops a newer reservation.
-export function releaseTreeOperation(dir: string, owner: string): void {
-  updateRunState(dir, (fresh) =>
-    fresh.treeOperation?.owner === owner
-      ? { ...fresh, treeOperation: undefined }
-      : null
-  );
+/**
+ * Owner-checked: a lease released late never drops a newer reservation, nor
+ * the mark it set. Releasing the tree and accounting for the commit are
+ * different things: the release clears the mark of an operation that never
+ * ran git, while a commit git ran is the ledger entry's to account for.
+ */
+export function releaseTreeOperation(
+  dir: string,
+  owner: string,
+  markedStepId?: string
+): void {
+  updateRunState(dir, (fresh) => {
+    if (fresh.treeOperation?.owner !== owner) return null;
+    const released = { ...fresh, treeOperation: undefined };
+    return markedStepId ? clearCommitStarted(released, markedStepId) : released;
+  });
 }
 
 /** The reservation a live process other than `owner` holds, if any. */
@@ -313,12 +337,11 @@ export async function commitStepTree(
   };
   const nonce = process.env[BROKER_ENV_VAR];
   if (!nonce) {
-    scope.lease = acquireTreeOperation(dir, request);
-    return {
-      result: await commitInProcess(),
-      absorbedStepIds,
-      recorded: false,
-    };
+    const lease = acquireTreeOperation(dir, request);
+    scope.lease = lease;
+    const result = await commitInProcess();
+    if (gitRan(result)) lease.markedStepId = undefined;
+    return { result, absorbedStepIds, recorded: false };
   }
   const answer = await ask(dir, nonce, request);
   if (answer.kind !== 'commit') {
@@ -329,6 +352,25 @@ export async function commitStepTree(
     absorbedStepIds: answer.absorbedStepIds,
     recorded: true,
   };
+}
+
+// Whether git may have written history for this result. A landed commit's
+// mark is the ledger entry's to clear, and a failure reported once git ran
+// (a hook's output overflowing the subprocess buffer after the commit) cannot
+// vouch that nothing landed, so only the other results release the mark.
+function gitRan(result: CommitResult): boolean {
+  switch (result.status) {
+    case 'committed':
+    case 'failed':
+      return true;
+    case 'no-changes':
+    case 'disabled':
+      return false;
+    default: {
+      const exhaustive: never = result;
+      throw new Error(`Unhandled commit result: ${JSON.stringify(exhaustive)}`);
+    }
+  }
 }
 
 /**
@@ -536,7 +578,10 @@ export class MigrateCommitBroker {
         // Recorded by the process that ran the commit, before the answer: the
         // step reading it can die with the commit already in history. A failed
         // record throws and ends the session rather than losing the entry.
-        if (result.kind === 'commit') this.record(request, result);
+        if (result.kind === 'commit') {
+          if (gitRan(result.result)) lease.markedStepId = undefined;
+          this.record(request, result);
+        }
       } finally {
         lease?.release();
       }

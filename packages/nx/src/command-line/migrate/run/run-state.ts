@@ -151,9 +151,12 @@ export interface MigrateStep {
   // commit. A fold that lands no new entry of its own attributes the
   // handoff's resolutions there. Dropped on re-arm.
   commitLedgerIndex?: number;
-  // Set when the tree is reserved to commit for the step, before git runs;
-  // cleared by the landed entry that names it. While set, a died step cannot
-  // be skipped: a committer that died before recording may have committed.
+  // Set when the tree is reserved to commit for the step, before git runs.
+  // Cleared by the landed entry that names the step, or by the release of a
+  // reservation that never ran git. A committer that dies mid-commit, fails
+  // once git ran, or cannot persist the entry for a commit it landed, leaves
+  // it; while it is set the step cannot be skipped: the commit may be in
+  // history.
   commitStarted?: boolean;
   // Set after the generator half runs and before the commit is attempted, so a
   // retry finishes the step instead of reapplying the changes. Dropped with the

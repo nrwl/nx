@@ -1394,7 +1394,9 @@ async function applyReconcileStepAction(
         ? commitMayBeInHistory(state, step)
           ? `Use 'adopt' instead.`
           : `Use 'adopt' or 'skip' instead.`
-        : `Use 'retry' or 'skip' instead.`;
+        : commitMayBeInHistory(state, step)
+          ? `Use 'retry' instead.`
+          : `Use 'retry' or 'skip' instead.`;
     if (!canOfferCleanRetry(root, state, step, head)) {
       return {
         kind: 'error',
@@ -1450,7 +1452,9 @@ async function applyReconcileStepAction(
     if (safety.kind === 'unsafe') {
       return {
         kind: 'error',
-        reason: `Cannot apply action 'retry' to step '${step.id}': ${safety.reason} Use 'retry-clean' where offered, or 'skip'.`,
+        reason: `Cannot apply action 'retry' to step '${step.id}': ${safety.reason} Use 'retry-clean' where offered${
+          commitMayBeInHistory(state, step) ? '' : `, or 'skip'`
+        }.`,
       };
     }
     if (safety.kind === 'warned') {
@@ -1814,7 +1818,10 @@ function emitRetryFailed(
       )}`
     );
   }
-  lines.push(`  skip:  ${reconcileCommand(root, runId, 'skip')}`);
+  // Refused by the state machine: the migration is, or may be, committed.
+  if (!commitMayBeInHistory(state, step)) {
+    lines.push(`  skip:  ${reconcileCommand(root, runId, 'skip')}`);
+  }
   if (pending) {
     lines.push(UNVERIFIABLE_WRITES_LINE);
   }

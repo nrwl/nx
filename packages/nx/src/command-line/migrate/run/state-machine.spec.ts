@@ -803,26 +803,38 @@ describe('applyStepEvent', () => {
       });
     });
 
-    it('still skips a failed step a landed commit covers: failed offers no adopt', () => {
-      const state = {
-        ...stateWithStep({ status: 'failed', generatorCompleted: true }),
-        commits: [
-          { kind: 'landed', sha: 'abc', stepIds: ['step-1'] },
-        ] as MigrateCommitLedgerEntry[],
-      };
+    it.each([
+      ['a landed commit covers the step', { commits: true }],
+      ['a started commit is unaccounted for', { commitStarted: true }],
+    ] as const)(
+      'rejects skip from failed while %s, steering to retry',
+      (_, shape) => {
+        const state = {
+          ...stateWithStep({
+            status: 'failed',
+            generatorCompleted: true,
+            ...('commitStarted' in shape ? { commitStarted: true } : {}),
+          }),
+          commits: ('commits' in shape
+            ? [{ kind: 'landed', sha: 'abc', stepIds: ['step-1'] }]
+            : []) as MigrateCommitLedgerEntry[],
+        };
+        const before = snapshot(state);
 
-      const result = applyStepEvent(state, {
-        type: 'stepAction',
-        stepId: 'step-1',
-        attempt: 1,
-        action: 'skip',
-      });
+        const result = applyStepEvent(state, {
+          type: 'stepAction',
+          stepId: 'step-1',
+          attempt: 1,
+          action: 'skip',
+        });
 
-      expect(result.kind).toBe('ok');
-      if (result.kind === 'ok') {
-        expect(result.state.steps[0].status).toBe('skipped');
+        expect(result).toEqual({
+          kind: 'error',
+          reason: expect.stringContaining("Use 'retry'"),
+        });
+        expect(state).toEqual(before);
       }
-    });
+    );
 
     it('retry from died re-arms without a reset once the generator half is recorded', () => {
       const state = stateWithStep({
@@ -1086,6 +1098,8 @@ describe('appendCommit', () => {
   });
 
   it('leaves a started commit unaccounted for on a failed or checkpoint entry', () => {
+    // A failed entry describes its own operation only; an earlier commit's
+    // unknown outcome is not resolved by it.
     const state = stateWithStep({ status: 'died', commitStarted: true });
 
     const failed = appendCommit(state, { kind: 'failed', stepIds: ['step-1'] });
