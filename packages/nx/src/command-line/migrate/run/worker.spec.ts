@@ -735,7 +735,7 @@ describe('runSingleMigrationWorker', () => {
         'chore: [nx migration] ',
         expect.any(Function),
         [],
-        'Commit or revert the changes manually.'
+        'Commit or revert any remaining uncommitted changes manually.'
       );
       // `commitMigrationIfRequested` already logs the failure with that
       // guidance; the worker must not print a second message for it.

@@ -1110,7 +1110,7 @@ function attemptStandaloneCommit(
     commitPrefix,
     installDepsIfChanged,
     [],
-    'Commit or revert the changes manually.'
+    'Commit or revert any remaining uncommitted changes manually.'
   );
 }
 

@@ -243,9 +243,9 @@ describe('commitMigrationIfRequested', () => {
       reason: expect.stringContaining('gpg failed to sign'),
     });
     expect(stripAnsi(mockInfo.mock.calls[0][0])).toMatchInlineSnapshot(`
-      "Could not create a commit for m1:
+      "The commit for m1 failed:
       error: gpg failed to sign the data
-      The migration's diff remains in the working tree; inspect with \`git status\` / \`git diff\` to review. The next successful commit will absorb it and reference this migration in its body; if no later commit lands, the end-of-run output will list this migration so you can commit or revert manually."
+      Check \`git status\` and \`git log\`; the commit may have landed despite this error. Any uncommitted changes will be included in the next successful commit, which will reference this migration; if they remain uncommitted, the end-of-run output will list this migration so you can commit or revert them manually."
     `);
   });
 
@@ -346,7 +346,7 @@ describe('commitMigrationIfRequested with an output sink', () => {
       [
         'red',
         expect.stringContaining(
-          "gpg failed to sign the data\nThe migration's diff remains in the working tree; inspect with `git status` / `git diff` to review. Commit or revert the changes manually."
+          'gpg failed to sign the data\nCheck `git status` and `git log`; the commit may have landed despite this error. Commit or revert the changes manually.'
         ),
       ],
     ]);

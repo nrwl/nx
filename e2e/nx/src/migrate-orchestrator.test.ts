@@ -567,7 +567,7 @@ describe('migrate orchestrator (dark launch)', () => {
     // A commit failure is only warned, so its absence is asserted first: on a
     // regression the received output names git's reason.
     const foldOutput = runDispensed(reconcile);
-    expect(foldOutput).not.toContain('Could not create a commit');
+    expect(foldOutput).not.toContain('The commit for gen-mig failed:');
     expect(foldOutput).not.toContain('No changes to commit');
     const second = parseLastDispense(foldOutput);
     expect(second.action).toBe('next-step');
@@ -1736,7 +1736,7 @@ process.exit(status ?? 1);
       expect(exitCode).toBe(0);
       expect(output).toContain('is complete');
       expect(output).toContain('could not be committed');
-      const failure = 'Could not create a commit for deps-mig';
+      const failure = 'The commit for deps-mig failed';
       expect(output).not.toContain(failure);
       const log = readFakeAgentLog(logFile);
       const runId = log.find((entry) => entry.complete).complete;
@@ -1750,7 +1750,7 @@ process.exit(status ?? 1);
       const stepOutput = log.find((entry) => entry.stdout).stdout;
       expect(stepOutput).toContain(failure);
       expect(stepOutput).toContain('fake git: refused the commit');
-      expect(stepOutput).toContain('The next successful commit will absorb it');
+      expect(stepOutput).toContain('included in the next successful commit');
       expect(commitCountFor('deps-mig')).toBe(0);
       expect(listFiles(`.nx/migrate-runs/${runId}/broker`).sort()).toEqual([
         expect.stringMatching(/^[0-9a-f]{8}-step-1-1-commit\.result\.json$/),

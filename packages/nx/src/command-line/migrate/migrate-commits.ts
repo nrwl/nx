@@ -27,9 +27,8 @@ const MIGRATE_COMMIT_EXCLUDES = [MIGRATE_RUNS_RELATIVE_DIR];
  *   HEAD` failed transiently — by contract the diff is no longer in the
  *   working tree.
  * - `no-changes`: commits were requested but there was nothing to commit.
- * - `failed`: the commit attempt itself errored. The diff remains in the
- *   working tree; the executor uses this signal to track pending migrations
- *   so the next successful commit can annotate its body.
+ * - `failed`: the attempt errored, possibly after the commit landed; tracked
+ *   as pending so the next successful commit can annotate its body.
  * - `disabled`: commits are off for this run.
  */
 export type CommitResult =
@@ -54,7 +53,7 @@ export async function commitMigrationIfRequested(
   commitPrefix: string,
   installDepsIfChanged: () => Promise<void>,
   pendingMigrations: ReadonlyArray<{ package: string; name: string }> = [],
-  failureGuidance = 'The next successful commit will absorb it and reference this migration in its body; if no later commit lands, the end-of-run output will list this migration so you can commit or revert manually.',
+  failureGuidance = 'Any uncommitted changes will be included in the next successful commit, which will reference this migration; if they remain uncommitted, the end-of-run output will list this migration so you can commit or revert them manually.',
   out: MigrateOutputSink = terminalOutput
 ): Promise<CommitResult> {
   if (!shouldCreateCommits) return { status: 'disabled' };
@@ -84,7 +83,7 @@ export async function commitMigrationIfRequested(
     const reason = err instanceof Error ? err.message : String(err);
     out.line(
       'red',
-      `Could not create a commit for ${migration.name}:\n${reason}\nThe migration's diff remains in the working tree; inspect with \`git status\` / \`git diff\` to review. ${failureGuidance}`
+      `The commit for ${migration.name} failed:\n${reason}\nCheck \`git status\` and \`git log\`; the commit may have landed despite this error. ${failureGuidance}`
     );
     return { status: 'failed', reason };
   }
