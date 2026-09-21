@@ -168,7 +168,7 @@ describe('fetchIoSnapshotsForRun', () => {
     expect(result.status).toBe('fetched');
   });
 
-  it('reuses a stale bundle when the read fails, and reports the failure otherwise', async () => {
+  it('hashes natively when the read fails, stored set or not', async () => {
     const offline = Object.assign(new Error('getaddrinfo ENOTFOUND'), {
       code: 'ENOTFOUND',
     });

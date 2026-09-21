@@ -38,8 +38,16 @@ export function formatIoSnapshotSummary(
     return null;
   }
   const used = result.used.length;
-  const byReason = countByReason(result.diagnostics);
-  const fellBack = result.diagnostics.filter((d) => d.taskId != null).length;
+  // A task-level diagnostic used to mean the task was withheld. An
+  // `unusable-output` does not: it reports a dropped write on a task that is
+  // still hashed from its snapshot, and one task can raise several. So count
+  // the tasks that actually fell back, and leave those out of the reasons.
+  const usedTasks = new Set(result.used);
+  const withheld = result.diagnostics.filter(
+    (d) => d.taskId != null && !usedTasks.has(d.taskId)
+  );
+  const byReason = countByReason(withheld);
+  const fellBack = new Set(withheld.map((d) => d.taskId)).size;
   const bundleLevel = result.diagnostics.find((d) => d.taskId == null);
 
   const withOutputs = result.tasksWithOutputs?.length ?? 0;

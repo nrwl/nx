@@ -17,6 +17,7 @@ import { FileData, ProjectGraph } from '../../config/project-graph';
 import { Task, TaskGraph } from '../../config/task-graph';
 import {
   RESOLVE_IO_SNAPSHOTS,
+  type IoSnapshotEnvMessage,
   type ResolvedIoSnapshots,
 } from '../message-types/resolve-io-snapshots';
 import { pruneTaskGraph } from '../../tasks-runner/prune-task-graph';
@@ -393,10 +394,7 @@ export class DaemonClient {
    */
   async resolveIoSnapshots(
     runnerOptions: any,
-    ioSnapshotEnv: {
-      NX_IO_SNAPSHOTS?: string;
-      NX_IO_SNAPSHOTS_MAX_AGE?: string;
-    }
+    ioSnapshotEnv: IoSnapshotEnvMessage
   ): Promise<ResolvedIoSnapshots> {
     // The socket layer parses the response; parsing it again throws.
     return this.sendToDaemonViaQueue({

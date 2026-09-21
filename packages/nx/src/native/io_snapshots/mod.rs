@@ -353,9 +353,11 @@ mod tests {
         let header = read_io_snapshot_resolution(&db, "head".into()).unwrap();
         assert_eq!(header.digest, resolution.digest);
 
-        let loaded = load_io_snapshots(&db, "head".into(), Some("stale-offline".into()), None);
+        // The caller annotates a load with what it already knows; the daemon
+        // path passes the reason its resolve request came back with.
+        let loaded = load_io_snapshots(&db, "head".into(), Some("no-bundle".into()), None);
         assert_eq!(loaded.status(), "cached");
-        assert_eq!(loaded.reason().as_deref(), Some("stale-offline"));
+        assert_eq!(loaded.reason().as_deref(), Some("no-bundle"));
         assert_eq!(loaded.resolution().unwrap().digest, resolution.digest);
         // Read per task, normalized on import: duplicates collapsed.
         let entries = loaded.entries_for(&["web:build", "gone:build"]).unwrap();

@@ -17,7 +17,6 @@ import { verifyOrUpdateNxCloudClient } from '../nx-cloud/update-manager';
 import { getDbConnection } from '../utils/db-connection';
 import { getLatestCommitSha } from '../utils/git-utils';
 import { logger } from '../utils/logger';
-import { isNxCloudDisabled, isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { output } from '../utils/output';
 import { nxVersion } from '../utils/versions';
 import { workspaceRoot } from '../utils/workspace-root';
