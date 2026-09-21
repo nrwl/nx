@@ -597,7 +597,8 @@ And the E2E project's `e2e` task has a dependency on the `serve` task, which ens
 
 #### Wait for a continuous task to be ready
 
-A dependent task starts as soon as its continuous dependency has started, which can be before the server accepts requests.
+A dependent task starts as soon as its continuous dependency has started.
+That can be before the server accepts requests.
 To wait longer, describe in `readyWhen` how Nx detects that the continuous target is ready.
 Then set `waitFor` to `ready` on the `dependsOn` entry of each task that should wait.
 
@@ -632,19 +633,32 @@ Then set `waitFor` to `ready` on the `dependsOn` entry of each task that should 
 
 `readyWhen` is an object with exactly one of these keys:
 
-- `url`: ready when an HTTP or HTTPS `GET` request, following redirects, ends with a status from 200 to 403. A 404 at the root path is retried at `/index.html`. Certificates aren't verified, so a self-signed development certificate works. Proxy environment variables such as `HTTP_PROXY` and `NO_PROXY` apply.
-- `port`: ready when a TCP connection to the port succeeds. Nx tries both `127.0.0.1` and `::1` unless `host` names the address to connect to.
-- `command`: ready when the command, run through the shell at the workspace root, exits with code 0. Use it for a container health check, such as `docker inspect --format='{{.State.Health.Status}}' db | grep -q healthy`.
-- `logMatches`: ready when the task output has contained the string, or every string of an array, in any order.
+- `url`: ready when an HTTP or HTTPS `GET` request ends with a status from 200 to 403.
+  Redirects are followed.
+  A 404 at the root path is retried at `/index.html`.
+  Certificates aren't verified, so a self-signed development certificate works.
+  Proxy environment variables such as `HTTP_PROXY` and `NO_PROXY` apply.
+- `port`: ready when a TCP connection to the port succeeds.
+  Nx tries both `127.0.0.1` and `::1` unless `host` names the address to connect to.
+- `command`: ready when the command, run through the shell at the workspace root, exits with code 0.
+  Use it for a container health check:
+  `docker inspect --format='{{.State.Health.Status}}' db | grep -q healthy`.
+- `logMatches`: ready when the task output has contained the string, or every string of an array.
+  The order doesn't matter.
 
-The optional `timeout` key is how long Nx waits for readiness, in milliseconds, and defaults to `60000`.
-The optional `interval` key is the time between attempts, in milliseconds. Without it, attempts back off from 100 to 1000 milliseconds.
+The optional `timeout` key is how long Nx waits for readiness, in milliseconds.
+It defaults to `60000`.
+The optional `interval` key is the time between attempts, in milliseconds.
+Without it, attempts back off from 100 to 1000 milliseconds.
 
-If the target isn't ready within `timeout`, the tasks waiting for it fail while the continuous task keeps running.
+If the target isn't ready within `timeout`, the tasks waiting for it fail.
+The continuous task keeps running.
 Tasks whose `dependsOn` entry doesn't set `waitFor` to `ready` start as before.
-A continuous target without `readyWhen` counts as ready once it has started, so `waitFor: "ready"` on such a dependency changes nothing.
+A continuous target without `readyWhen` counts as ready once it has started.
+On such a dependency, `waitFor: "ready"` changes nothing.
 
-`readyWhen` is unrelated to the option of the same name on the `nx:run-commands` executor, which marks the run-commands task itself as done.
+`readyWhen` is unrelated to the option of the same name on the `nx:run-commands` executor.
+That option marks the run-commands task itself as done.
 
 ### Sandbox
 
