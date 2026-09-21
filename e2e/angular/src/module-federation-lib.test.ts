@@ -5,6 +5,7 @@ import {
   runCommandUntil,
   uniq,
   updateFile,
+  updateJson,
   shouldRunCypressTests,
 } from '@nx/e2e-utils';
 import {
@@ -154,6 +155,21 @@ describe('Angular Module Federation - Federated Libraries', () => {
 
       export default config;`
     );
+
+    // The child remote was wired into the remote by editing the config above,
+    // so no generator recorded it. Serving the remote statically has to start
+    // the child remote the same way the host's serve-static starts the remote.
+    updateJson(`${remote}/project.json`, (json) => {
+      json.targets['serve-static'].dependsOn = [
+        { target: 'serve-static', projects: [childRemote] },
+      ];
+      return json;
+    });
+
+    // Build the child remote up front. Leaving it to its serve-static builds it
+    // cold while the other servers start, which races the remote's own build.
+    const buildChildRemoteOutput = runCLI(`build ${childRemote}`);
+    expect(buildChildRemoteOutput).toContain('Successfully ran target build');
 
     // Update e2e test to check the module
     updateFile(
