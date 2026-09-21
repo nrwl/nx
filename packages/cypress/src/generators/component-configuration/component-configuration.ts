@@ -135,6 +135,12 @@ function updateDeps(tree: Tree, opts: NormalizeCTOptions) {
     devDeps['@cypress/vite-dev-server'] =
       pkgVersions.cypressViteDevServerVersion;
   } else {
+    // @cypress/webpack-dev-server depends on tsx, which depends on esbuild,
+    // whose install script only validates the prebuilt binary that ships as an
+    // optional dependency.
+    acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+      esbuild: false,
+    });
     devDeps['@cypress/webpack-dev-server'] = pkgVersions.cypressWebpackVersion;
     devDeps['html-webpack-plugin'] = pkgVersions.htmlWebpackPluginVersion;
   }
