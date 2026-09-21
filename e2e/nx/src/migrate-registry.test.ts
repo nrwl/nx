@@ -64,6 +64,15 @@ function overrideEnv(entries: Record<string, string | undefined>): () => void {
   return () => applyEnv(previous);
 }
 
+function withSharedBaseDisabled(callback: () => void): void {
+  const restoreEnv = overrideEnv({ NX_E2E_SKIP_SHARED_BASE: 'true' });
+  try {
+    callback();
+  } finally {
+    restoreEnv();
+  }
+}
+
 /**
  * Runs `nx migrate` twice against the same file, first with the closed port in
  * it and then with the local registry, so the run that succeeds can only have
@@ -163,11 +172,13 @@ function createYarnBerryProject(): void {
   }
   try {
     activateYarn(yarnBerryVersion);
-    newProject({
-      keepBackup: true,
-      packageManager: 'yarn',
-      packages: [],
-    });
+    withSharedBaseDisabled(() =>
+      newProject({
+        keepBackup: true,
+        packageManager: 'yarn',
+        packages: [],
+      })
+    );
   } finally {
     rmSync(backup, { recursive: true, force: true });
     if (directoryExists(classicBackup)) {
@@ -273,11 +284,13 @@ suite('migrate registry configuration', () => {
     beforeAll(() => {
       process.env.SELECTED_PM = 'yarn';
       activateYarn(yarnClassicVersion);
-      newProject({
-        keepBackup: true,
-        packageManager: 'yarn',
-        packages: [],
-      });
+      withSharedBaseDisabled(() =>
+        newProject({
+          keepBackup: true,
+          packageManager: 'yarn',
+          packages: [],
+        })
+      );
       pinPackageManager(`yarn@${yarnClassicVersion}`);
       pinNpmrcToUnreachableRegistry();
       pristineYarnrc = readPristine('.yarnrc');

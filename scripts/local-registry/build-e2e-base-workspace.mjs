@@ -136,10 +136,19 @@ function strippedEnv() {
     'CURSOR_TRACE_ID',
     'COMPOSER_NO_INTERACTION',
     'REPL_ID',
+    'VSCODE_AGENT',
+    'CODEX_THREAD_ID',
+    'COPILOT_CLI',
+    'SUPERSET_AGENT_ID',
   ]);
   return Object.fromEntries(
     Object.entries(process.env).filter(([key]) => {
-      if (key === 'NODE_PATH' || key === 'JEST_WORKER_ID') return false;
+      if (
+        key === 'NODE_PATH' ||
+        key === 'JEST_WORKER_ID' ||
+        key === 'GITHUB_STEP_SUMMARY'
+      )
+        return false;
       if (aiAgentVars.has(key)) return false;
       if (key.startsWith('NX_E2E_')) return true;
       return !key.startsWith('NX_') || allowed.has(key);
