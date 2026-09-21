@@ -37,6 +37,27 @@ describe('NodeChildProcessWithNonDirectOutput', () => {
     expect(exitSpy).toHaveBeenCalledTimes(1);
   });
 
+  it('keeps a code point split across two chunks intact', async () => {
+    const proc = makeMockChildProcess();
+    const wrapped = new NodeChildProcessWithNonDirectOutput(proc, {
+      streamOutput: false,
+      prefix: 'test',
+    });
+    const chunks: string[] = [];
+    wrapped.onOutput((chunk) => chunks.push(chunk));
+
+    // "réady" with the two bytes of "é" in different chunks
+    proc.stdout!.write(Buffer.from([0x72, 0xc3]));
+    proc.stdout!.write(Buffer.from([0xa9, 0x61, 0x64, 0x79]));
+    await new Promise((resolve) => setImmediate(resolve));
+    proc.emit('close', 0, null);
+
+    expect(chunks.join('')).toBe('réady');
+    expect(chunks.join('')).not.toContain('�');
+    const { terminalOutput } = await wrapped.getResults();
+    expect(terminalOutput).toBe('réady');
+  });
+
   it('captures output that arrives before the child closes', async () => {
     const proc = makeMockChildProcess();
     const wrapped = new NodeChildProcessWithNonDirectOutput(proc, {
