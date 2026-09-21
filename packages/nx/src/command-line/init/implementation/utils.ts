@@ -303,17 +303,17 @@ export function runInstall(
   packageManager: PackageManager = detectPackageManager(repoRoot),
   pmc: PackageManagerCommands = getPackageManagerCommand(packageManager)
 ) {
+  let command = pmc.install;
   const env = { ...process.env };
   // Plugins added during init can pull build-script deps whose allowBuilds
   // entries are only recorded by their init generators after this install;
-  // warn and skip for this one install, like pnpm 10 did.
+  // warn and skip for this one install, like pnpm 10 did. pnpm 12 gave
+  // `--config` a meaning of its own and takes the setting from the
+  // environment instead.
   if (packageManager === 'pnpm') {
     try {
       if (gte(getPackageManagerVersion('pnpm', repoRoot), '11.0.0')) {
-        // pnpm 12 dropped the `--config.<setting>` flag this used to ride on and
-        // reads the setting from the environment; 11.0.0 to 11.0.5 read only the
-        // lowercase spelling.
-        env.pnpm_config_strict_dep_builds = 'false';
+        command += ' --config.strictDepBuilds=false';
         env.PNPM_CONFIG_STRICT_DEP_BUILDS = 'false';
       }
     } catch {
@@ -321,7 +321,7 @@ export function runInstall(
     }
   }
   try {
-    execSync(pmc.install, {
+    execSync(command, {
       stdio: ['ignore', 'ignore', 'pipe'],
       encoding: 'utf8',
       cwd: repoRoot,

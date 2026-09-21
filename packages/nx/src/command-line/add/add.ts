@@ -60,7 +60,7 @@ async function installPackage(
     const pmc = getPackageManagerCommand(pm);
 
     // if we explicitly specify latest in yarn berry, it won't resolve the version
-    const command =
+    let command =
       pm === 'yarn' && gte(pmv, '2.0.0') && version === 'latest'
         ? `${pmc.addDev} ${pkgName}`
         : `${pmc.addDev} ${pkgName}@${version}`;
@@ -68,13 +68,11 @@ async function installPackage(
     // pnpm 11+ fails the install when the plugin's own dependency tree
     // carries unacknowledged build scripts, and the plugin's generators can
     // only record allowBuilds decisions after this install. Warn and skip
-    // for this one install, like pnpm 10 did.
+    // for this one install, like pnpm 10 did. pnpm 12 gave `--config` a
+    // meaning of its own and takes the setting from the environment instead.
     const env = { ...process.env };
     if (pm === 'pnpm' && gte(pmv, '11.0.0')) {
-      // pnpm 12 dropped the `--config.<setting>` flag this used to ride on and
-      // reads the setting from the environment; 11.0.0 to 11.0.5 read only the
-      // lowercase spelling.
-      env.pnpm_config_strict_dep_builds = 'false';
+      command += ' --config.strictDepBuilds=false';
       env.PNPM_CONFIG_STRICT_DEP_BUILDS = 'false';
     }
     await new Promise<void>((resolve) =>

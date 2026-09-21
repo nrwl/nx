@@ -35,11 +35,11 @@ describe('utils', () => {
         runInstall('/workspace', 'pnpm', { install: 'pnpm install' } as any);
 
         expect(install).toHaveBeenCalledWith(
-          'pnpm install',
+          'pnpm install --config.strictDepBuilds=false',
           expect.objectContaining({
             cwd: '/workspace',
             env: expect.objectContaining({
-              pnpm_config_strict_dep_builds: 'false',
+              PNPM_CONFIG_STRICT_DEP_BUILDS: 'false',
             }),
           })
         );

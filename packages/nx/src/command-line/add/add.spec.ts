@@ -49,9 +49,8 @@ describe('nx add installation', () => {
           verbose: false,
         })
       ).toBe(0);
-      expect(install.mock.calls[0][0]).toBe('pnpm add -Dw @nx/vite@21.6.4');
-      expect(install.mock.calls[0][1].env.pnpm_config_strict_dep_builds).toBe(
-        'false'
+      expect(install.mock.calls[0][0]).toBe(
+        'pnpm add -Dw @nx/vite@21.6.4 --config.strictDepBuilds=false'
       );
       expect(install.mock.calls[0][1].env.PNPM_CONFIG_STRICT_DEP_BUILDS).toBe(
         'false'
