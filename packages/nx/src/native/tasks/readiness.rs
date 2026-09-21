@@ -462,7 +462,12 @@ mod tests {
 
     #[tokio::test]
     async fn port_without_host_accepts_either_loopback() {
-        let listener = TcpListener::bind("[::1]:0").unwrap();
+        // Some CI kernels have no IPv6 loopback
+        let listener = match TcpListener::bind("[::1]:0") {
+            Ok(listener) => listener,
+            Err(e) if e.kind() == std::io::ErrorKind::AddrNotAvailable => return,
+            Err(e) => panic!("{e}"),
+        };
         let port = listener.local_addr().unwrap().port();
         assert_eq!(
             probe(port_config(port, None, 2000)).wait().await.unwrap(),
