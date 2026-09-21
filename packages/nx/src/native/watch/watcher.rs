@@ -714,6 +714,27 @@ mod tests {
         events.iter().find(|e| e.path.ends_with(name))
     }
 
+    /// Accumulate events until `pred` holds or the deadline passes. Both
+    /// delivery paths hand an event out exactly once -- force-flush drains the
+    /// accumulator and races the idle-window callback -- so a poll has to keep
+    /// what it drained rather than re-read one snapshot.
+    fn collect_until(
+        watcher: &WatchSession,
+        captured: &Captured,
+        pred: impl Fn(&[WatchEvent]) -> bool,
+    ) -> Vec<WatchEvent> {
+        let deadline = Instant::now() + Duration::from_secs(2);
+        let mut seen: Vec<WatchEvent> = Vec::new();
+        loop {
+            seen.extend(watcher.flush(FlushMode::Settled));
+            seen.append(&mut captured.lock().unwrap());
+            if pred(&seen) || Instant::now() >= deadline {
+                return seen;
+            }
+            std::thread::sleep(Duration::from_millis(25));
+        }
+    }
+
     /// Poll both delivery paths until `path` shows up. Force-flush and the
     /// idle-window callback race, and force-flush resets the accumulator, so
     /// an event is reported through exactly one of them.
@@ -1432,16 +1453,24 @@ mod tests {
         let target = dir.path().join("foo.txt");
         fs::write(&target, "v1").expect("initial write");
 
-        let (_watcher, captured) = start_watcher(dir.path());
+        let (watcher, captured) = start_watcher(dir.path());
 
         fs::remove_file(&target).expect("rm");
         fs::write(&target, "v2").expect("recreate");
 
-        let events = collect(&captured);
+        // Pre-fix, "Delete always wins" made the Create unreachable, so waiting
+        // for one cannot paper the regression over -- it only removes the
+        // assumption that both halves land inside a fixed window.
+        let events = collect_until(&watcher, &captured, |seen| {
+            seen.iter()
+                .any(|e| e.path.ends_with("foo.txt") && matches!(e.r#type, EventType::create))
+        });
         let evt = find_event(&events, "foo.txt")
             .unwrap_or_else(|| panic!("expected event for foo.txt; got {events:?}"));
         assert!(
-            matches!(evt.r#type, EventType::create),
+            events
+                .iter()
+                .any(|e| e.path.ends_with("foo.txt") && matches!(e.r#type, EventType::create)),
             "unlink+create (git-style update) should yield Create; got {:?}",
             evt.r#type
         );
@@ -1622,11 +1651,18 @@ mod tests {
         let target = dir.path().join("nx.json");
         fs::write(&target, "v1").expect("initial write");
 
-        let (watcher, _captured) = start_watcher(dir.path());
+        let (watcher, captured) = start_watcher(dir.path());
 
         for i in 0..20 {
             fs::write(&target, format!("v{i}")).expect("rewrite");
-            let events = watcher.flush(FlushMode::Settled);
+            // Pre-fix a bare try_recv dropped the in-flight event outright, so
+            // it never surfaced through any later flush either. Polling keeps
+            // that regression in reach without betting the assertion on
+            // FORCE_FLUSH_GRACE (10ms off macOS) covering a loaded runner's
+            // kernel->notify hop.
+            let events = collect_until(&watcher, &captured, |seen| {
+                seen.iter().any(|e| e.path == "nx.json")
+            });
             assert!(
                 events.iter().any(|e| e.path == "nx.json"),
                 "iteration {i}: missed nx.json event — got {events:?}"
@@ -1673,26 +1709,43 @@ mod tests {
         // cutting a burst delivered with gaps mid-stream and serving a stale
         // graph. Writes are spaced 20ms apart — past the 10ms Linux grace but
         // under FORCE_FLUSH_QUIET — so the last write must still be captured.
-        let dir = tempdir().expect("tempdir");
-        let (watcher, _captured) = start_watcher(dir.path());
-        let dir_path = dir.path().to_path_buf();
+        //
+        // Deliberately one flush: polling for t4.txt would pass on a later
+        // flush and stop testing anything. A writer descheduled past
+        // FORCE_FLUSH_QUIET instead ends the burst correctly, so that round
+        // proves nothing and is retried rather than asserted on.
+        for attempt in 0..5 {
+            let dir = tempdir().expect("tempdir");
+            let (watcher, _captured) = start_watcher(dir.path());
+            let dir_path = dir.path().to_path_buf();
 
-        let writer = std::thread::spawn(move || {
-            for i in 0..5 {
-                fs::write(dir_path.join(format!("t{i}.txt")), "x").expect("write");
-                std::thread::sleep(Duration::from_millis(20));
+            let writer = std::thread::spawn(move || {
+                let mut gaps = Vec::new();
+                let mut last = Instant::now();
+                for i in 0..5 {
+                    fs::write(dir_path.join(format!("t{i}.txt")), "x").expect("write");
+                    std::thread::sleep(Duration::from_millis(20));
+                    gaps.push(last.elapsed());
+                    last = Instant::now();
+                }
+                gaps
+            });
+
+            // Flush while writes are still trickling in.
+            std::thread::sleep(Duration::from_millis(5));
+            let events = watcher.flush(FlushMode::Settled);
+            let gaps = writer.join().unwrap();
+
+            if events.iter().any(|e| e.path == "t4.txt") {
+                return;
             }
-        });
-
-        // Flush while writes are still trickling in.
-        std::thread::sleep(Duration::from_millis(5));
-        let events = watcher.flush(FlushMode::Settled);
-        writer.join().unwrap();
-
-        assert!(
-            events.iter().any(|e| e.path == "t4.txt"),
-            "flush cut the burst mid-stream; expected trailing write t4.txt — got {events:?}"
-        );
+            assert!(
+                gaps.iter().any(|gap| *gap >= FORCE_FLUSH_QUIET),
+                "attempt {attempt}: flush cut the burst mid-stream; \
+                 expected trailing write t4.txt — got {events:?}"
+            );
+        }
+        panic!("writer never held its cadence under FORCE_FLUSH_QUIET in 5 attempts");
     }
 
     #[test]
