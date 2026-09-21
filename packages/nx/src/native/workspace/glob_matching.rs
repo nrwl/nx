@@ -2,7 +2,7 @@ use super::context::Files;
 use crate::native::types::FileData;
 use crate::native::utils::Normalize;
 use std::ops::Bound;
-use std::path::Path;
+use std::path::{Path, is_separator};
 
 pub(super) fn may_have_literal_prefix(globs: &[String]) -> bool {
     let mut included = false;
@@ -12,9 +12,9 @@ pub(super) fn may_have_literal_prefix(globs: &[String]) -> bool {
         }
         included = true;
         let end = glob
-            .find(['*', '?', '[', '{', '(', '\\'])
+            .find(|c| matches!(c, '*' | '?' | '[' | '{' | '(') || (c == '\\' && !is_separator(c)))
             .unwrap_or(glob.len());
-        if !glob[..end].contains('/') {
+        if !glob[..end].contains(is_separator) {
             return false;
         }
     }
@@ -159,6 +159,74 @@ mod tests {
                 .literal_prefix()
                 .is_none()
         );
+    }
+
+    #[test]
+    fn backslash_prefixes_follow_platform_separators() {
+        for pattern in [
+            r"e2e\react\**\+(*.)+(spec|test).+(ts|js)?(x)",
+            r"e2e\react/**/*.spec.ts",
+            r"e2e\react\*.spec.ts",
+        ] {
+            let globs = [pattern.to_string()];
+            assert_eq!(may_have_literal_prefix(&globs), cfg!(windows));
+            let matcher = build_glob_set(&globs).unwrap();
+            assert_eq!(
+                matcher.literal_prefix(),
+                cfg!(windows).then_some(Path::new("e2e/react")),
+                "{pattern}"
+            );
+        }
+    }
+
+    #[test]
+    #[cfg(windows)]
+    fn windows_jest_globs_preserve_ordered_matches() {
+        let files: Files = [
+            "e2e/react/z.spec.ts",
+            "e2e/react/a.test.tsx",
+            "e2e/react/nested/b.spec.js",
+            "e2e/react/source.ts",
+            "e2e/react-other/c.spec.ts",
+            "e2e/vue/d.spec.ts",
+        ]
+        .into_iter()
+        .map(|path| (PathBuf::from(path), "h".to_string()))
+        .collect();
+        let globs = [r"e2e\react\**\+(*.)+(spec|test).+(ts|js)?(x)".to_string()];
+        assert!(may_have_literal_prefix(&globs));
+        let matcher = build_glob_set(&globs).unwrap();
+        let prefix = matcher.literal_prefix().unwrap();
+        assert_eq!(prefix, Path::new("e2e/react"));
+        let candidates = files_under_prefix(&files, prefix);
+        assert_eq!(candidates.len(), 4);
+        let actual: Vec<String> = glob_files(&candidates, globs.to_vec(), None)
+            .unwrap()
+            .map(|file| file.file.clone())
+            .collect();
+        assert_eq!(actual, scan(&files, &globs, None).unwrap());
+        assert_eq!(
+            actual,
+            [
+                "e2e/react/a.test.tsx",
+                "e2e/react/nested/b.spec.js",
+                "e2e/react/z.spec.ts",
+            ]
+        );
+    }
+
+    #[test]
+    #[cfg(not(windows))]
+    fn escaped_patterns_keep_full_scan_semantics() {
+        let files: Files = ["e2e/react/*.spec.ts", "e2e/react/a.spec.ts"]
+            .into_iter()
+            .map(|path| (PathBuf::from(path), "h".to_string()))
+            .collect();
+        let globs = [r"e2e/react/\*.spec.ts".to_string()];
+        assert!(may_have_literal_prefix(&globs));
+        assert!(build_glob_set(&globs).unwrap().literal_prefix().is_none());
+        assert_eq!(scan(&files, &globs, None).unwrap(), ["e2e/react/*.spec.ts"]);
+        assert!(!may_have_literal_prefix(&[r"e2e\*/react/**".to_string()]));
     }
 
     #[test]

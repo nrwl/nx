@@ -10,7 +10,7 @@ pub(crate) use crate::native::glob::glob_transform::{
 use dashmap::DashMap;
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
 use std::fmt::Debug;
-use std::path::{Path, PathBuf};
+use std::path::{Path, PathBuf, is_separator};
 use std::sync::{Arc, LazyLock};
 use tracing::trace;
 
@@ -117,19 +117,19 @@ impl NxGlobSet {
 }
 
 fn literal_directory_prefix(glob: &str) -> Option<PathBuf> {
-    if glob.contains('\\') {
+    if !is_separator('\\') && glob.contains('\\') {
         return None;
     }
     let end = glob
         .find(['*', '?', '[', ']', '{', '}'])
         .unwrap_or(glob.len());
-    let slash = glob[..end].rfind('/')?;
+    let slash = glob[..end].rfind(is_separator)?;
     let prefix = &glob[..slash];
     // Lossy normalization can make distinct non-UTF-8 paths match this character.
     if prefix.contains('\u{fffd}')
         || prefix.contains(':')
         || prefix
-            .split('/')
+            .split(is_separator)
             .any(|part| part.is_empty() || part == "." || part == "..")
     {
         return None;
