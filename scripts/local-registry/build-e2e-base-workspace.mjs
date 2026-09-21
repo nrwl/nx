@@ -6,20 +6,20 @@
  * Runs as the `populate-e2e-base-workspace` task (sibling to
  * `populate-local-registry-storage`). Its output dir is declared as a cached Nx
  * output, so it is restored to every distributed agent the same way the verdaccio
- * storage is — which is what makes the templates shareable across machines.
+ * storage is. This makes the templates shareable across machines.
  *
  * Each template is written as a tarball, not a directory. The eight installed
  * workspaces hold several hundred thousand files between them, and the cache's
- * artifact walk opens them all — enough to exhaust the 256 descriptor limit macOS
+ * artifact walk opens them all, which can exhaust the 256 descriptor limit macOS
  * runners default to (EMFILE). Eight files cost one descriptor each.
  *
  * The consumer side is `newProject()` in e2e/utils/create-project-utils.ts: it
  * looks for <package-manager>-<preset>.tar and extracts the per-test workspace from
- * it instead of running create-nx-workspace. A missing tarball is not an error —
+ * it instead of running create-nx-workspace. A missing tarball is not an error;
  * newProject falls back to its original lazy build.
  *
- * The whole package-manager × preset matrix is built concurrently so no call site
- * has to fall back.
+ * Matrix entries are built concurrently. Failed entries remain absent so matching
+ * callers use the lazy fallback; the task fails only when every entry fails.
  */
 import { exec } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
@@ -116,12 +116,13 @@ if (failures.length === combos.length) {
  * Drop the vars Nx sets for this task before handing the environment to
  * create-nx-workspace. NODE_PATH and NX_* point back at this repo, so a child nx
  * resolves @nx/devkit and nx to packages/*\/dist instead of the versions it just
- * installed from verdaccio — the template would then be built against unpublished
- * code. Mirrors getStrippedEnvironmentVariables() in e2e/utils/get-env-info.ts.
+ * installed from verdaccio. The template would then be built against unpublished
+ * code. Mirrors getStrippedEnvironmentVariables() in e2e/utils/get-env-info.ts,
+ * except that NX_ADD_PLUGINS is removed because shared templates always represent
+ * the default plugin-inference mode. Legacy callers use the lazy fallback.
  */
 function strippedEnv() {
   const allowed = new Set([
-    'NX_ADD_PLUGINS',
     'NX_ISOLATE_PLUGINS',
     'NX_VERBOSE_LOGGING',
     'NX_NATIVE_LOGGING',

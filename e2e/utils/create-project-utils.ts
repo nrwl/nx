@@ -24,7 +24,7 @@ import { typescriptVersion as defaultTypescriptVersion } from '@nx/js/src/utils/
 import { dump } from '@zkochan/js-yaml';
 import { execFileSync, execSync, ExecSyncOptions } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { performance, PerformanceMeasure } from 'node:perf_hooks';
 import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 import {
@@ -87,20 +87,19 @@ export function openInEditor(projectDirectory: string = tmpProjPath()) {
 }
 
 /**
- * Sets up a new project in the temporary project path
- * for the currently selected CLI.
- */
-/**
  * Locate a pre-built base workspace template for this package manager and preset,
  * produced by the `populate-e2e-base-workspace` task and restored via Nx cache on
- * each agent. Existence of the tarball is the only gate, so a combination that
- * isn't pre-built just falls back to building the workspace the original way.
+ * each agent. Templates are not selected for `NX_ADD_PLUGINS=false`; combinations
+ * that were not pre-built also fall back to building the workspace the original way.
  */
 function sharedBaseWorkspacePath(
   packageManager: string,
   preset: string
 ): string | null {
-  if (process.env.NX_E2E_SKIP_SHARED_BASE === 'true') {
+  if (
+    process.env.NX_E2E_SKIP_SHARED_BASE === 'true' ||
+    process.env.NX_ADD_PLUGINS === 'false'
+  ) {
     return null;
   }
   const candidate = join(
@@ -120,6 +119,10 @@ function sharedBaseWorkspacePath(
 // workspace, so the first build skips it.
 const builtOnce = new Set<string>();
 
+/**
+ * Sets up a new project in the temporary project path
+ * for the currently selected CLI.
+ */
 export function newProject({
   name = uniq('proj'),
   packageManager = getSelectedPackageManager(),
@@ -141,6 +144,7 @@ export function newProject({
   const newProjectStart = performance.mark('new-project:start');
   try {
     const projScope = 'proj';
+    const stagingDirectory = `${e2eCwd}/${projScope}`;
 
     let createNxWorkspaceMeasure: PerformanceMeasure;
     let packageInstallMeasure: PerformanceMeasure;
@@ -157,9 +161,8 @@ export function newProject({
       // manager and preset, instead of running the ~40-70s create-nx-workspace.
       const sharedBase = sharedBaseWorkspacePath(packageManager, preset);
       if (sharedBase) {
-        const seedDir = `${e2eCwd}/${projScope}`;
-        removeSync(seedDir);
-        ensureDirSync(seedDir);
+        removeSync(stagingDirectory);
+        ensureDirSync(stagingDirectory);
         // Its own process because newProject() is synchronous and tar-stream is not.
         execFileSync(
           process.execPath,
@@ -173,7 +176,7 @@ export function newProject({
               'extract-e2e-base-workspace.mjs'
             ),
             sharedBase,
-            seedDir,
+            stagingDirectory,
           ],
           { stdio: 'pipe' }
         );
@@ -247,12 +250,12 @@ export function newProject({
       }
       // stop the daemon
       execSync(`${getPackageManagerCommand({ packageManager }).runNx} reset`, {
-        cwd: `${e2eCwd}/proj`,
+        cwd: stagingDirectory,
         stdio: isVerbose() ? 'inherit' : 'pipe',
       });
 
       if (keepBackup || builtOnce.has(packageManager)) {
-        copySync(`${e2eCwd}/proj`, backupPath);
+        copySync(stagingDirectory, backupPath);
       } else {
         builtOnce.add(packageManager);
       }
@@ -264,7 +267,9 @@ export function newProject({
     if (builtHere) {
       // Nothing has copied this workspace yet, so pnpm's links still resolve;
       // renaming it into place avoids the reinstall below.
-      moveSync(`${e2eCwd}/proj`, projectDirectory);
+      if (resolve(stagingDirectory) !== resolve(projectDirectory)) {
+        moveSync(stagingDirectory, projectDirectory);
+      }
     } else {
       copySync(backupPath, projectDirectory);
     }
