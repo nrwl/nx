@@ -19,6 +19,14 @@ vi.mock('../../../utils/package-manager', () => ({
   getPackageManagerCommand: () => ({ exec: 'npx', install: 'npm install' }),
 }));
 
+const mockGetLatestCommitSha = vi.fn();
+const mockResetWorkingTree = vi.fn();
+vi.mock('../../../utils/git-utils', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../../utils/git-utils')>()),
+  getLatestCommitSha: (...args: unknown[]) => mockGetLatestCommitSha(...args),
+  resetWorkingTree: (...args: unknown[]) => mockResetWorkingTree(...args),
+}));
+
 const mockLockCtor = vi.fn();
 vi.mock('../../../native', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../../native')>();
@@ -58,6 +66,7 @@ import {
   commitStepTree,
   installStepTree,
   MigrateCommitBroker,
+  resetStepTree,
   releaseTreeOperation,
   TreeBusyError,
   type BrokerResult,
@@ -73,6 +82,7 @@ import {
   type MigrateStep,
   type MigrateTreeOperation,
 } from './run-state';
+import { serviced } from './test-utils';
 import { summarizeError } from './util';
 
 const runId = 'run-1';
@@ -788,6 +798,125 @@ describe('migrate commit broker', () => {
       expect(readRunState(dir).commits).toEqual([
         { kind: 'landed', sha: committed.sha, stepIds: ['step-1'] },
       ]);
+    });
+  });
+
+  describe('resetStepTree', () => {
+    const ref = 'beef0001beef0001beef0001beef0001beef0001';
+    const failed = () =>
+      step({
+        status: 'failed',
+        gitRefBefore: ref,
+        treeCleanAtDispense: true,
+        generatorCompleted: true,
+      });
+
+    beforeEach(() => {
+      mockGetLatestCommitSha.mockReset().mockReturnValue(ref);
+      mockResetWorkingTree.mockReset();
+      writeRunState(dir, runState({ steps: [failed()] }));
+    });
+
+    it('runs in process under its reservation when no session advertised a broker', async () => {
+      delete process.env.NX_MIGRATE_BROKER;
+      const scope: TreeScope = {};
+      let heldDuringReset: MigrateTreeOperation | undefined;
+
+      await resetStepTree(
+        dir,
+        failed(),
+        () => {
+          heldDuringReset = readRunState(dir).treeOperation;
+        },
+        scope
+      );
+
+      expect(heldDuringReset).toEqual({
+        kind: 'reset',
+        stepId: 'step-1',
+        attempt: 1,
+        owner: scope.lease.owner,
+        pid: process.pid,
+      });
+      expect(existsSync(brokerDir(dir))).toBe(false);
+      scope.lease.release();
+      expect(readRunState(dir).treeOperation).toBeUndefined();
+    });
+
+    it("hands the reset to the advertised session, which resets to the step's ref and records nothing", async () => {
+      const inProcess = vi.fn();
+
+      await serviced(root, dir, POLICY, () =>
+        resetStepTree(dir, failed(), inProcess, {})
+      );
+
+      expect(inProcess).not.toHaveBeenCalled();
+      expect(mockResetWorkingTree).toHaveBeenCalledWith(
+        ref,
+        ['.nx/migrate-runs'],
+        root
+      );
+      const state = readRunState(dir);
+      expect(state.steps[0]).toMatchObject({ status: 'failed', attempt: 1 });
+      // The session forgets the generator run the reset discarded.
+      expect(state.steps[0].generatorCompleted).toBeUndefined();
+      expect(state.commits).toEqual([]);
+      expect(state.treeOperation).toBeUndefined();
+    });
+
+    it('resets again for a second clean retry of the same attempt', async () => {
+      await serviced(root, dir, POLICY, async () => {
+        await resetStepTree(dir, failed(), vi.fn(), {});
+        await resetStepTree(dir, failed(), vi.fn(), {});
+      });
+
+      expect(mockResetWorkingTree).toHaveBeenCalledTimes(2);
+      expect(
+        brokerFiles().filter((f) => f.includes('-step-1-1-reset-'))
+      ).toHaveLength(2);
+    });
+
+    it('throws what the session said when the reset failed there, marking nothing', async () => {
+      mockResetWorkingTree.mockImplementation(() => {
+        throw new Error('fatal: unable to unlink old file');
+      });
+
+      await expect(
+        serviced(root, dir, POLICY, () =>
+          resetStepTree(dir, failed(), vi.fn(), {})
+        )
+      ).rejects.toThrow('fatal: unable to unlink old file');
+
+      const state = readRunState(dir);
+      expect(state.steps[0]).toMatchObject({ status: 'failed', attempt: 1 });
+      expect(state.treeOperation).toBeUndefined();
+    });
+
+    it('refuses the reset when the state the session reads no longer offers a clean retry', async () => {
+      mockGetLatestCommitSha.mockReturnValue(
+        'cafe0002cafe0002cafe0002cafe0002cafe0002'
+      );
+
+      await expect(
+        serviced(root, dir, POLICY, () =>
+          resetStepTree(dir, failed(), vi.fn(), {})
+        )
+      ).rejects.toThrow(
+        `HEAD is at cafe0002cafe0002cafe0002cafe0002cafe0002 rather than the ${ref} this migration started from`
+      );
+
+      expect(mockResetWorkingTree).not.toHaveBeenCalled();
+      expect(readRunState(dir).steps[0].generatorCompleted).toBe(true);
+    });
+
+    it('throws the stale error when the session does not commit, whatever run.json says', async () => {
+      await expect(
+        serviced(root, dir, { ...POLICY, createCommits: false }, () =>
+          resetStepTree(dir, failed(), vi.fn(), {})
+        )
+      ).rejects.toThrow(BrokerStaleRequestError);
+
+      expect(mockResetWorkingTree).not.toHaveBeenCalled();
     });
   });
 

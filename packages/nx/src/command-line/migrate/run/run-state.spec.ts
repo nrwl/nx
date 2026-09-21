@@ -511,8 +511,8 @@ describe('run-state', () => {
     });
 
     it('refuses recorded git refs that are not commit shas', () => {
-      // A died step's ref is rendered into the `git reset --hard <ref>`
-      // remediation the agent is told to run.
+      // A died step's ref is the target of the `git reset --hard` a clean
+      // retry runs.
       const dir = join(root, 'run-1');
       mkdirSync(dir, { recursive: true });
       const step = {
@@ -1049,7 +1049,7 @@ describe('run-state', () => {
       expect(readRunState(dir).treeOperation).toEqual(valid);
 
       for (const treeOperation of [
-        { ...valid, kind: 'reset' },
+        { ...valid, kind: 'rebase' },
         { ...valid, owner: '' },
         { ...valid, pid: 0 },
         { ...valid, pid: '4242' },

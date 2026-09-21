@@ -11,25 +11,30 @@ import { join } from 'path';
 import { readJsonFile, writeJsonFile } from '../../../utils/fileutils';
 import { publishFileAtomically } from './atomic-write';
 import {
+  canOfferCleanRetry,
+  cleanRetryUnavailableReason,
+  resetForCleanRetry,
+} from './clean-retry';
+import {
   acquireTreeOperation,
   BrokerStaleRequestError,
   BrokerUnavailableError,
   commitStepTree,
   installStepTree,
+  resetStepTree,
   liveTreeOperation,
   TreeBusyError,
   treeBusyMessage,
   type BrokeredCommit,
   type TreeLease,
   type TreeScope,
-  type BrokerRequestKind,
+  type InstallSeam,
 } from './broker';
 import {
   getGitRepositoryStatus,
   getLatestCommitSha,
   getPathCommitExposure,
   getWorkingTreeStatus,
-  isAncestorCommit,
   type PathCommitExposure,
 } from '../../../utils/git-utils';
 import { nxVersion } from '../../../utils/versions';
@@ -85,7 +90,6 @@ import {
   applyStepEvent,
   commitReceipt,
   commitResultToLedgerEntry,
-  coveringLandedEntries,
   hasPendingCommitDebt,
   latestRound,
   markInstallFailed,
@@ -133,9 +137,8 @@ import {
   parseHandoffIssues,
   renderIssueDigestLines,
   renderUnresolvedIssueLines,
-  reopenResolutionsForStep,
   settleUnclaimableIssues,
-  type IssueArchiveUpdate,
+  warnReconstructedArchives,
 } from './issues';
 import {
   renderRunbook,
@@ -810,14 +813,21 @@ export async function runOrchestratorReconcile(
   state = detectDeaths(dir, state);
   // (c) apply the decision relay to the single failed/died step.
   if (stepAction) {
-    // Owns the tree reservation an adopt's commit or a skip's install takes
-    // below, released once the transition that records it is written.
+    // Owns the tree reservation a clean retry's reset, an adopt's commit or a
+    // skip's install takes, released once the transition that records it is
+    // written.
     const scope: TreeScope = {};
     try {
-      const result = applyReconcileStepAction(root, state, stepAction);
+      const result = await applyReconcileStepAction(
+        root,
+        dir,
+        state,
+        stepAction,
+        scope
+      );
       if (result.kind === 'error') {
         emitError(root, runId, result.reason);
-        return; // state untouched
+        return; // no transition was written
       }
       const target = result.targetStep;
       // An adopted death commits its working tree; that git side effect runs
@@ -892,13 +902,24 @@ export async function runOrchestratorReconcile(
       // against `state`, and a step that was re-armed and failed again in
       // between is a different attempt those checks never saw.
       let freshRejection: string | undefined;
-      let reopenedIssueUpdates: IssueArchiveUpdate[] = [];
       const written = updateRunState(dir, (fresh) => {
-        // A retry takes no reservation of its own, so this is where it learns
-        // that a live process still commits or installs for the step.
+        // A plain retry takes no reservation of its own, so this is where it
+        // learns that a live process still commits or installs for the step.
         const held = liveTreeOperation(fresh, scope.lease?.owner);
         if (held) {
           freshRejection = treeBusyMessage(held);
+          return null;
+        }
+        // A plain retry's acceptance read the generator marker on the
+        // snapshot; a clean retry that started meanwhile forgets the marker
+        // without moving the attempt, so the attempt check cannot see it.
+        const freshStep = fresh.steps.find((s) => s.id === target.id);
+        if (
+          stepAction === 'retry' &&
+          freshStep !== undefined &&
+          generatorPending(freshStep) !== generatorPending(target)
+        ) {
+          freshRejection = `Cannot apply action 'retry' to step '${target.id}': whether its generator ran changed since this reconcile read it. Run the reconcile again.`;
           return null;
         }
         const reapplied = applyStepEvent(fresh, {
@@ -911,18 +932,9 @@ export async function runOrchestratorReconcile(
           freshRejection = reapplied.reason;
           return null;
         }
-        // The reset this action requires discarded the failed attempt's tree,
-        // so resolutions that attempt claimed and no landed commit carries are
-        // reverted with the rearm, in the same write.
-        let rearmed = reapplied.state;
-        if (stepAction === 'retry-clean') {
-          const reopened = reopenResolutionsForStep(rearmed, target.id);
-          rearmed = reopened.state;
-          reopenedIssueUpdates = reopened.updates;
-        }
         const next = installFailed
-          ? markInstallFailed(rearmed, target.id)
-          : rearmed;
+          ? markInstallFailed(reapplied.state, target.id)
+          : reapplied.state;
         // An adopted commit absorbs uncovered failed steps the same way a fold
         // commit does, so it carries their resolved issues too. A session's
         // parent records its own commits as it answers.
@@ -939,30 +951,6 @@ export async function runOrchestratorReconcile(
             : freshRejection
         );
         return;
-      }
-      if (reopenedIssueUpdates.length > 0) {
-        // Best-effort: run.json records the reverted dispositions and stays
-        // authoritative, so a failed append loses only the archive's trail record
-        // of the revert. The sink survives a throw: a shell rebuilt before the
-        // failure is durable and reads healthy on retry, so this pass must warn
-        // it.
-        const revertApplication = {
-          state: written,
-          newIssues: [],
-          updates: reopenedIssueUpdates,
-        };
-        const revertReconstructedIds: string[] = [];
-        try {
-          archiveIssues(dir, revertApplication, revertReconstructedIds);
-        } catch (e) {
-          warnToAgent({
-            title: `The reverted issue resolutions for ${target.migrationId} could not be archived (${summarizeError(e)}).`,
-            bodyLines: [
-              `run.json stays authoritative for the dispositions; the archived files under the run's issues directory miss the revert records, so their last entries may still read resolved.`,
-            ],
-          });
-        }
-        warnReconstructedArchives(revertReconstructedIds);
       }
       state = written;
     } finally {
@@ -986,18 +974,6 @@ function buildSteps(sortedMigrations: PlannedMigration[]): MigrateStep[] {
 }
 
 // --- reconcile phases -------------------------------------------------------
-
-// The runbook points every later consumer at issues/<id>.json for the full
-// details, so a rebuild from run-state fields (the reported detail is gone
-// with the lost file) must not stay silent.
-function warnReconstructedArchives(issueIds: string[]): void {
-  if (issueIds.length === 0) return;
-  warnToAgent({
-    title: `The archived details for ${issueIds.join(
-      ', '
-    )} were missing or unreadable and were rebuilt from the run state; the originally reported detail is lost.`,
-  });
-}
 
 async function foldHandoffs(
   root: string,
@@ -1269,7 +1245,7 @@ async function retainedTreeSideEffects(
   dir: string,
   state: MigrateRunState,
   step: MigrateStep,
-  seam: Exclude<BrokerRequestKind, 'commit'>,
+  seam: InstallSeam,
   scope: TreeScope
 ): Promise<StepSideEffects> {
   const installFailed = await installFailedForStep(
@@ -1298,7 +1274,7 @@ async function installFailedForStep(
   dir: string,
   state: MigrateRunState,
   step: MigrateStep,
-  seam: Exclude<BrokerRequestKind, 'commit'>,
+  seam: InstallSeam,
   scope: TreeScope
 ): Promise<boolean> {
   const skipInstall = state.skipInstall === true;
@@ -1377,13 +1353,16 @@ function detectDeaths(dir: string, state: MigrateRunState): MigrateRunState {
   return current;
 }
 
-function applyReconcileStepAction(
+async function applyReconcileStepAction(
   root: string,
+  dir: string,
   state: MigrateRunState,
-  action: StepAction
-):
+  action: StepAction,
+  scope: TreeScope
+): Promise<
   | { kind: 'ok'; state: MigrateRunState; targetStep: MigrateStep }
-  | { kind: 'error'; reason: string } {
+  | { kind: 'error'; reason: string }
+> {
   const candidates = state.steps.filter(
     (s) => s.status === 'failed' || s.status === 'died'
   );
@@ -1421,15 +1400,37 @@ function applyReconcileStepAction(
         }': ${cleanRetryUnavailableReason(root, state, step, head)} ${fallback}`,
       };
     }
-    // The reset itself is delegated to the caller, and every check above
-    // passes identically whether or not it ran, so only the tree can say
-    // whether the reset actually happened. Anything but a verified-clean tree
-    // is refused: accepting would drop the generator marker and rerun the
+    // Reset under the reservation, against the state read once it is held:
+    // the checks above ran on a snapshot. A refused or failed reset leaves
+    // the step failed or died; the agent re-decides against the tree as it
+    // stands.
+    try {
+      await resetStepTree(
+        dir,
+        step,
+        () => resetForCleanRetry(root, dir, step.id),
+        scope
+      );
+    } catch (e) {
+      if (
+        e instanceof BrokerStaleRequestError ||
+        e instanceof BrokerUnavailableError ||
+        e instanceof TreeBusyError
+      ) {
+        throw e;
+      }
+      return {
+        kind: 'error',
+        reason: `Cannot apply action 'retry-clean' to step '${step.id}': the reset to ${step.gitRefBefore} failed: ${e instanceof Error ? e.message : String(e)} ${fallback}`,
+      };
+    }
+    // Only the tree can say whether the reset left it clean. Anything else is
+    // refused: accepting would rearm a step whose next attempt reruns the
     // generator over the previous attempt's output.
     if (getWorkingTreeStatus(root) !== 'clean') {
       return {
         kind: 'error',
-        reason: `Cannot apply action 'retry-clean' to step '${step.id}': the working tree is not verifiably clean, so the reset this action requires has not happened. Run \`git reset --hard ${step.gitRefBefore}\` then \`git clean -fd -e ${MIGRATE_RUNS_RELATIVE_DIR}\` first, then re-run it. ${fallback}`,
+        reason: `Cannot apply action 'retry-clean' to step '${step.id}': the working tree is not verifiably clean after the reset to ${step.gitRefBefore}. Inspect it with \`git status\`, then re-run it. ${fallback}`,
       };
     }
   }
@@ -1794,9 +1795,9 @@ function emitRetryFailed(
   ];
   if (cleanRetry) {
     lines.push(
-      `  retry-clean: restore the tree to ${
+      `  retry-clean: reset the tree to ${
         step.gitRefBefore ?? 'the pre-migration ref'
-      } first (e.g. \`git reset --hard ${step.gitRefBefore ?? '<ref>'}\` then \`git clean -fd -e ${MIGRATE_RUNS_RELATIVE_DIR}\`, keeping the run state out of the clean), then retry from that clean state by running: ${reconcileCommand(
+      } (discarding its uncommitted tracked changes and the untracked files git does not ignore, ${MIGRATE_RUNS_RELATIVE_DIR} kept) and retry from that clean state by running: ${reconcileCommand(
         root,
         runId,
         'retry-clean'
@@ -1880,85 +1881,6 @@ function retryOptionLine(
       return exhaustive;
     }
   }
-}
-
-// A clean retry resets the tree to the step's captured pre-migration ref.
-// That is only safe when every prior diff is already committed: without
-// per-migration commits the ref is the run's starting commit (the reset would
-// wipe all prior steps' uncommitted work); a failed init checkpoint or a
-// pending step commit means the ref predates diffs the reset would also
-// destroy; without a captured ref there is nothing to reset to; edits already
-// in the tree when this step was dispensed (the user's own, or an earlier
-// step's the checkpoint never saw) are not represented by the ref either; and
-// HEAD anywhere other than the ref means something was committed since the
-// step was dispensed that the reset would discard, whether that is this step's
-// own commit (recorded, or made in the window before the worker died writing
-// its ledger entry) or one the user made alongside the run.
-// Cleanliness and position both have to say so explicitly: a failed tree probe
-// records dirty, a run created before that field existed carries nothing to
-// check, and an unreadable HEAD is no ref at all, so none of the three can be
-// read as a restore point that exists.
-// The debt check is run-wide: a clean retry resets and cleans the whole tree,
-// which would discard every other failed step's uncommitted work as well.
-function canOfferCleanRetry(
-  root: string,
-  state: MigrateRunState,
-  step: MigrateStep,
-  head: string | null
-): boolean {
-  return (
-    state.createCommits &&
-    !state.checkpointFailed &&
-    !hasPendingCommitDebt(state) &&
-    !!step.gitRefBefore &&
-    head === step.gitRefBefore &&
-    step.treeCleanAtDispense === true &&
-    !endangeredLandedEntry(root, state, step)
-  );
-}
-
-// The last landed ledger entry covering the step whose commit a reset to the
-// step's gitRefBefore would discard. Entries from earlier attempts predate the
-// ref re-captured at re-dispense and survive the reset; only a commit that is
-// not an ancestor of the ref (or cannot be verified as one) is endangered.
-function endangeredLandedEntry(
-  root: string,
-  state: MigrateRunState,
-  step: MigrateStep
-): MigrateCommitLedgerEntry | null {
-  let endangered: MigrateCommitLedgerEntry | null = null;
-  for (const entry of coveringLandedEntries(state, step.id)) {
-    if (
-      !entry.sha ||
-      !step.gitRefBefore ||
-      !isAncestorCommit(entry.sha, step.gitRefBefore, root)
-    ) {
-      endangered = entry;
-    }
-  }
-  return endangered;
-}
-
-// Explains why retry-clean is withheld for a failed or died step; feeds the
-// death dispense and a rejected --step-action=retry-clean.
-function cleanRetryUnavailableReason(
-  root: string,
-  state: MigrateRunState,
-  step: MigrateStep,
-  head: string | null
-): string {
-  const endangered = endangeredLandedEntry(root, state, step);
-  if (endangered) {
-    return endangered.sha
-      ? `this migration's changes already landed in commit ${endangered.sha}, which a reset would discard.`
-      : `this migration's changes already landed in a commit, which a reset would discard.`;
-  }
-  if (step.gitRefBefore && head !== step.gitRefBefore) {
-    return `HEAD is at ${head ?? '(unreadable)'} rather than the ${
-      step.gitRefBefore
-    } this migration started from, so a reset would discard what was committed in between.`;
-  }
-  return `resetting the tree could discard uncommitted work that no restore point accounts for.`;
 }
 
 // How a plain retry of a failed step whose generator marker is absent can be
@@ -2045,11 +1967,9 @@ function emitDied(
   }
   if (cleanRetry) {
     options.push(
-      // Two commands rather than one `&&` chain: the agent runs these in its
-      // own shell, and not every shell joins statements that way.
-      `  retry-clean: restore the tree to ${
+      `  retry-clean: reset the tree to ${
         ref ?? 'the pre-migration ref'
-      } first (e.g. \`git reset --hard ${ref ?? '<ref>'}\` then \`git clean -fd -e ${MIGRATE_RUNS_RELATIVE_DIR}\`, keeping the run state out of the clean), then retry from that clean state by running: ${reconcileCommand(
+      } (discarding its uncommitted tracked changes and the untracked files git does not ignore, ${MIGRATE_RUNS_RELATIVE_DIR} kept) and retry from that clean state by running: ${reconcileCommand(
         root,
         runId,
         'retry-clean'

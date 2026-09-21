@@ -282,8 +282,8 @@ export interface MigrateRunState {
   // retry (tree reset) must not be offered. Cleared if a resume retry leaves
   // the tree fully committed before any migration step runs.
   checkpointFailed?: boolean;
-  // The install, commit or checkpoint one process is running against the
-  // working tree. Set before the operation and cleared by its owner after
+  // The install, commit, reset or checkpoint one process is running against
+  // the working tree. Set before the operation and cleared by its owner after
   // the state that records it is written; a dead owner pid voids it.
   treeOperation?: MigrateTreeOperation;
   analytics: MigrateRunAnalytics;
@@ -294,6 +294,7 @@ export const TREE_OPERATION_KINDS = [
   'install',
   'fold-install',
   'action-install',
+  'reset',
   'checkpoint',
 ] as const;
 export type MigrateTreeOperationKind = (typeof TREE_OPERATION_KINDS)[number];

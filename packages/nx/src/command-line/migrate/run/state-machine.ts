@@ -282,25 +282,54 @@ function rearm(
     ...(step.depsHashAtDispense !== undefined
       ? { depsHashAtDispense: step.depsHashAtDispense }
       : {}),
-    ...(keepGeneratorCompleted && step.generatorCompleted
-      ? { generatorCompleted: true }
-      : {}),
-    ...(keepGeneratorCompleted &&
-    step.generatorCompleted &&
-    step.generatorCompletedAtAttempt !== undefined
+    ...(keepGeneratorCompleted ? generatorRunFields(step) : {}),
+  };
+}
+
+// What the generator half of an attempt recorded, all of it hanging off the
+// completion marker.
+function generatorRunFields(step: MigrateStep): Partial<MigrateStep> {
+  if (!step.generatorCompleted) return {};
+  return {
+    generatorCompleted: true,
+    ...(step.generatorCompletedAtAttempt !== undefined
       ? { generatorCompletedAtAttempt: step.generatorCompletedAtAttempt }
       : {}),
-    ...(keepGeneratorCompleted && step.generatorCompleted && step.agenticWaived
-      ? { agenticWaived: true }
-      : {}),
-    ...(keepGeneratorCompleted && step.generatorCompleted && step.validationOwed
-      ? { validationOwed: true }
-      : {}),
-    ...(keepGeneratorCompleted &&
-    step.generatorCompleted &&
-    step.generatorMadeChanges !== undefined
+    ...(step.agenticWaived ? { agenticWaived: true } : {}),
+    ...(step.validationOwed ? { validationOwed: true } : {}),
+    ...(step.generatorMadeChanges !== undefined
       ? { generatorMadeChanges: step.generatorMadeChanges }
       : {}),
+  };
+}
+
+/**
+ * Forgets the generator run of `stepId`'s current attempt, under the same
+ * rule as a clean rearm keeps it: only while a landed commit carries its
+ * changes. Written before a clean retry resets the tree, so a reset that
+ * fails midway or a rearm that never lands leaves a step whose plain retry
+ * is gated as one whose generator has yet to run, instead of one that skips
+ * the generator over the reset tree.
+ */
+export function discardGeneratorRun(
+  state: MigrateRunState,
+  stepId: string
+): MigrateRunState {
+  if (coveringLandedEntries(state, stepId).length > 0) return state;
+  return {
+    ...state,
+    steps: state.steps.map((step) => {
+      if (step.id !== stepId || !step.generatorCompleted) return step;
+      const {
+        generatorCompleted: _completed,
+        generatorCompletedAtAttempt: _atAttempt,
+        agenticWaived: _waived,
+        validationOwed: _owed,
+        generatorMadeChanges: _madeChanges,
+        ...rest
+      } = step;
+      return rest;
+    }),
   };
 }
 

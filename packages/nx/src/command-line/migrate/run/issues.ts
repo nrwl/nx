@@ -7,6 +7,7 @@ import { writeJsonFile } from '../../../utils/fileutils';
 import { publishFileAtomically } from './atomic-write';
 import { MIGRATE_RUNS_RELATIVE_DIR } from '../agentic/types';
 import { singleLine } from '../text';
+import { warnToAgent } from './agent-output';
 import {
   ISSUE_ID,
   issueFingerprint,
@@ -1057,6 +1058,18 @@ function issuesDir(runDirPath: string): string {
 // directory.
 export function issueArchivePath(runDirPath: string, issueId: string): string {
   return join(issuesDir(runDirPath), `${issueId}.json`);
+}
+
+// The runbook points every later consumer at issues/<id>.json for the full
+// details, so a rebuild from run-state fields (the reported detail is gone
+// with the lost file) must not stay silent.
+export function warnReconstructedArchives(issueIds: string[]): void {
+  if (issueIds.length === 0) return;
+  warnToAgent({
+    title: `The archived details for ${issueIds.join(
+      ', '
+    )} were missing or unreadable and were rebuilt from the run state; the originally reported detail is lost.`,
+  });
 }
 
 /**

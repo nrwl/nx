@@ -9,6 +9,7 @@ import {
   commitReceipt,
   commitResultToLedgerEntry,
   coveringLandedEntries,
+  discardGeneratorRun,
   hasPendingCommitDebt,
   stepsToPendingMigrations,
   type StepAction,
@@ -994,6 +995,46 @@ describe('coveringLandedEntries', () => {
     ]);
 
     expect(coveringLandedEntries(state, 'step-1')).toEqual([]);
+  });
+});
+
+describe('discardGeneratorRun', () => {
+  const run = {
+    generatorCompleted: true,
+    generatorCompletedAtAttempt: 1,
+    agenticWaived: true,
+    validationOwed: true,
+    generatorMadeChanges: true,
+  } as const;
+
+  it('drops everything the generator run recorded when no landed commit carries it', () => {
+    const state = stateWithStep({ status: 'died', ...run });
+
+    const next = discardGeneratorRun(state, 'step-1');
+
+    expect(next.steps[0]).toEqual({
+      id: 'step-1',
+      roundIndex: 0,
+      status: 'died',
+      attempt: 1,
+      dispenseCount: 0,
+    });
+    expect(state.steps[0]).toMatchObject(run);
+  });
+
+  it('keeps the run when a landed commit covers the step', () => {
+    const state = {
+      ...stateWithStep({ status: 'died', ...run }),
+      commits: [{ kind: 'landed' as const, sha: 'abc', stepIds: ['step-1'] }],
+    };
+
+    expect(discardGeneratorRun(state, 'step-1')).toBe(state);
+  });
+
+  it('leaves a step without a generator run alone', () => {
+    const state = stateWithStep({ status: 'died' });
+
+    expect(discardGeneratorRun(state, 'step-1').steps[0]).toBe(state.steps[0]);
   });
 });
 

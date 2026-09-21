@@ -1028,6 +1028,30 @@ export function tryCommitChanges(
   return getLatestCommitSha(directory);
 }
 
+/**
+ * `git reset --hard <ref>` then `git clean -fd`, keeping `keepPaths` (repo
+ * relative) out of the clean. Throws with git's stderr when either fails.
+ * `ref` is a sha a caller validated with `GIT_SHA`, never user input.
+ */
+export function resetWorkingTree(
+  ref: string,
+  keepPaths: string[],
+  directory: string
+): void {
+  const options = {
+    encoding: 'utf8' as const,
+    stdio: 'pipe' as const,
+    cwd: directory,
+    windowsHide: true,
+  };
+  execFileSync('git', ['reset', '--hard', ref], options);
+  execFileSync(
+    'git',
+    ['clean', '-fd', ...keepPaths.flatMap((keepPath) => ['-e', keepPath])],
+    options
+  );
+}
+
 export function getLatestCommitSha(directory?: string): string | null {
   try {
     return execSync('git rev-parse HEAD', {

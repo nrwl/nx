@@ -49,6 +49,7 @@ import {
   uncoveredFailedStepIds,
 } from './state-machine';
 import { attachIssueIdsToCommitEntry } from './issues';
+import { resetForCleanRetry } from './clean-retry';
 import { installDepsChangedSinceDispense, isPidAlive } from './util';
 
 export const BROKER_ENV_VAR = 'NX_MIGRATE_BROKER';
@@ -59,7 +60,8 @@ const CHILD_POLL_INTERVAL_MS = 250;
 // names the request: a repeat of the same operation (a refold after a crash,
 // the adopt of a worker that died mid-commit) reads the first answer instead
 // of landing twice. Commits share one seam: a worker's, the fold's and the
-// adopt's are the same operation on the same tree.
+// adopt's are the same operation on the same tree. The reset is the
+// exception: each clean retry names its own request (see `invocation`).
 export type BrokerRequestKind =
   | 'commit'
   // A worker's install: after its generator, or a retry's from the baseline.
@@ -67,7 +69,11 @@ export type BrokerRequestKind =
   // The fold's install when it commits nothing, a retained tree included.
   | 'fold-install'
   // The install a skip or a non-commit adopt owes for the tree it keeps.
-  | 'action-install';
+  | 'action-install'
+  // A clean retry's reset of the tree to the step's starting ref.
+  | 'reset';
+
+export type InstallSeam = 'install' | 'fold-install' | 'action-install';
 
 // Names the seam only. Whether to install or commit is the parent's own
 // policy, so a request carries nothing that would widen it.
@@ -75,6 +81,9 @@ export interface BrokerRequest {
   kind: BrokerRequestKind;
   stepId: string;
   attempt: number;
+  // Reset only: a fresh id per clean retry, so a second retry of the same
+  // attempt resets again instead of reading the first reset's answer.
+  invocation?: string;
 }
 
 export type BrokerResult =
@@ -91,9 +100,13 @@ export type BrokerResult =
       peerDeps: boolean;
       output: DeferredOutputRecord[];
     }
+  | { kind: 'reset'; error?: string }
   | { kind: 'stale' };
 
-type BrokerAnswer = Extract<BrokerResult, { kind: 'commit' | 'installed' }>;
+type BrokerAnswer = Extract<
+  BrokerResult,
+  { kind: 'commit' | 'installed' | 'reset' }
+>;
 
 export interface BrokeredCommit {
   result: CommitResult;
@@ -197,7 +210,11 @@ export function treeBusyMessage(held: MigrateTreeOperation): string {
   const what =
     held.kind === 'checkpoint'
       ? 'the checkpoint commit'
-      : `the ${held.kind === 'commit' ? 'commit' : 'install'} of step '${held.stepId}'`;
+      : `the ${
+          held.kind === 'commit' || held.kind === 'reset'
+            ? held.kind
+            : 'install'
+        } of step '${held.stepId}'`;
   return `The working tree is held by process ${held.pid} for ${what}; run the reconcile again once it finishes.`;
 }
 
@@ -233,6 +250,7 @@ const SEAM_STATUSES: Record<
   install: new Set(['running']),
   'fold-install': new Set(['awaiting-prompt-outcome']),
   'action-install': new Set(['failed', 'died']),
+  reset: new Set(['failed', 'died']),
 };
 
 function isAtSeam(
@@ -317,7 +335,7 @@ export async function commitStepTree(
 export async function installStepTree(
   dir: string,
   step: MigrateStep,
-  seam: Exclude<BrokerRequestKind, 'commit'>,
+  seam: InstallSeam,
   installInProcess: () => Promise<void>,
   scope: TreeScope
 ): Promise<void> {
@@ -339,12 +357,42 @@ export async function installStepTree(
   }
 }
 
+/**
+ * The same for the reset a clean retry of a failed or died step needs. Runs
+ * `resetInProcess` under the reservation, or asks the parent, which resets
+ * against the state it reads then; a reset that could not run throws.
+ */
+export async function resetStepTree(
+  dir: string,
+  step: MigrateStep,
+  resetInProcess: () => void,
+  scope: TreeScope
+): Promise<void> {
+  const request: BrokerRequest = {
+    kind: 'reset',
+    stepId: step.id,
+    attempt: step.attempt,
+    invocation: randomBytes(4).toString('hex'),
+  };
+  const nonce = process.env[BROKER_ENV_VAR];
+  if (!nonce) {
+    scope.lease = acquireTreeOperation(dir, request);
+    return resetInProcess();
+  }
+  const answer = await ask(dir, nonce, request);
+  if (answer.kind !== 'reset') {
+    throw new Error(`Unexpected '${answer.kind}' answer to a reset request.`);
+  }
+}
+
 async function ask(
   dir: string,
   nonce: string,
   request: BrokerRequest
 ): Promise<BrokerAnswer> {
-  const id = `${nonce}-${request.stepId}-${request.attempt}-${request.kind}`;
+  const id = `${nonce}-${request.stepId}-${request.attempt}-${request.kind}${
+    request.invocation ? `-${request.invocation}` : ''
+  }`;
   const path = resultPath(dir, id);
   // A repeat reads the first answer, whatever became of the session since.
   if (existsSync(path)) {
@@ -414,6 +462,9 @@ function settle(result: BrokerResult): BrokerAnswer {
       throw result.peerDeps
         ? new NpmPeerDepsInstallError()
         : new Error(result.message);
+    case 'reset':
+      if (result.error !== undefined) throw new Error(result.error);
+      return result;
     case 'stale':
       throw new BrokerStaleRequestError(
         `The request for this step no longer matches its attempt; nothing was installed or committed.`
@@ -529,9 +580,21 @@ export class MigrateCommitBroker {
     if (
       !Object.hasOwn(SEAM_STATUSES, request.kind) ||
       !isAtSeam(step, request) ||
-      (request.kind === 'commit' && !this.policy.createCommits)
+      ((request.kind === 'commit' || request.kind === 'reset') &&
+        !this.policy.createCommits)
     ) {
       return { kind: 'stale' };
+    }
+    if (request.kind === 'reset') {
+      try {
+        resetForCleanRetry(this.root, this.dir, step.id);
+        return { kind: 'reset' };
+      } catch (e) {
+        return {
+          kind: 'reset',
+          error: e instanceof Error ? e.message : String(e),
+        };
+      }
     }
     const output = new DeferredOutputCollector();
     const install = () =>
