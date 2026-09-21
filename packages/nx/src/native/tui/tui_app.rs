@@ -6,6 +6,7 @@ use std::sync::Arc;
 use tokio::sync::mpsc::UnboundedSender;
 
 use crate::native::ide::nx_console::messaging::NxConsoleMessageConnection;
+use crate::native::tasks::running_tasks_service::TaskReadiness;
 use crate::native::{
     pseudo_terminal::pseudo_terminal::PtyHandles,
     tasks::types::{Task, TaskResult},
@@ -183,6 +184,14 @@ pub trait TuiApp: Send {
     /// * `status` - The new status for the task
     fn update_task_status(&mut self, task_id: &str, status: TaskStatus) {
         self.core().update_task_status(task_id, status);
+    }
+
+    /// Record a readiness probe verdict; the dependency view reads it on render.
+    fn update_task_readiness(&mut self, task_id: &str, readiness: TaskReadiness) {
+        self.core()
+            .state()
+            .lock()
+            .update_task_readiness(task_id, readiness);
     }
 
     /// Set the start and end time for a task (in milliseconds since epoch)
