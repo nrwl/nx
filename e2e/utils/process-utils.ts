@@ -12,21 +12,26 @@ export const promisifiedTreeKill: (
   signal: string
 ) => Promise<void> = promisify(treeKill);
 
-async function isPortInUse(port: number): Promise<boolean> {
+/**
+ * `unknown` is not `free`: tcp-port-used's check() rejects on any connect error
+ * other than ECONNREFUSED, so a probe that resets (ECONNRESET) tells us nothing
+ * about whether the port is still bound.
+ */
+type PortState = 'in-use' | 'free' | 'unknown';
+
+async function probePort(port: number): Promise<PortState> {
   try {
-    return await portCheck(port);
+    return (await portCheck(port)) ? 'in-use' : 'free';
   } catch {
-    // tcp-port-used's check() rejects on any connect error other than
-    // ECONNREFUSED. A port whose process was just killed can reset the probe
-    // (ECONNRESET) instead of cleanly refusing it; treat "can't probe" as
-    // freed rather than letting it throw and fail the caller's teardown.
-    return false;
+    return 'unknown';
   }
 }
 
 async function waitForPortToClose(port: number): Promise<boolean> {
   const deadline = Date.now() + KILL_PORT_TIMEOUT;
-  while (await isPortInUse(port)) {
+  // Only a `free` probe confirms closure. An `unknown` one is retried, since a
+  // port that resets the probe now usually refuses it a moment later.
+  while ((await probePort(port)) !== 'free') {
     if (Date.now() >= deadline) {
       return false;
     }
@@ -38,7 +43,9 @@ async function waitForPortToClose(port: number): Promise<boolean> {
 }
 
 export async function killPort(port: number): Promise<boolean> {
-  if (!(await isPortInUse(port))) {
+  // An unprobeable port is left alone, as on master: running kill-port against
+  // a port nothing is listening on fails the teardown it is meant to clean up.
+  if ((await probePort(port)) !== 'in-use') {
     return true;
   }
   const startTime = performance.now();
