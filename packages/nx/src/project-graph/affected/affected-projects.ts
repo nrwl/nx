@@ -1,8 +1,7 @@
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { ProjectGraph } from '../../config/project-graph';
 import { locateTouchedProjects } from '../../native';
-import { getPlugins } from '../plugins/get-plugins';
-import { getGlobPatternsOfPlugins } from '../utils/retrieve-workspace-files';
+import { capabilitiesOfConfiguredPlugins } from '../plugins/get-plugins';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { FileChange } from '../file-utils';
 import { getTouchedProjects as getJSTouchedProjects } from '../../plugins/js/project-graph/affected/touched-projects';
@@ -53,12 +52,10 @@ export async function runTouchedProjectLocators(
   return native.map((project) => ({ project, locator: 'native' }));
 }
 
-/** Resolved here because `getPlugins` is async and starts plugin workers. */
+/** Resolved here because the native side takes the patterns, not the plugins. */
 export async function getProjectGlobPatterns(
   nxJson: NxJsonConfiguration
 ): Promise<string[]> {
-  // TODO: We need a quicker way to get patterns that should not
-  // require starting up plugin workers
   if (process.env.NX_FORCE_REUSE_CACHED_GRAPH === 'true') {
     return [
       '**/package.json',
@@ -67,6 +64,11 @@ export async function getProjectGlobPatterns(
       'package.json',
     ];
   }
-  const plugins = (await getPlugins(nxJson)).filter((p) => !!p.createNodes);
-  return getGlobPatternsOfPlugins(plugins);
+  const capabilities = await capabilitiesOfConfiguredPlugins(
+    nxJson,
+    workspaceRoot
+  );
+  return capabilities
+    .map((capability) => capability.createNodesPattern)
+    .filter((pattern) => !!pattern);
 }

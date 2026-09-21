@@ -1,18 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
-// getProjectGlobPatterns resolves these through getPlugins, which starts plugin
-// workers. Mocked at that boundary rather than on affected-projects itself,
-// since the call is module-internal and would not see a mock of its own export.
+// getProjectGlobPatterns reads these from the plugins' recorded capabilities.
+// Mocked at that boundary rather than on affected-projects itself, since the
+// call is module-internal and would not see a mock of its own export.
 vi.mock('../plugins/get-plugins', () => ({
-  getPlugins: async () => [{ createNodes: [] }],
-}));
-vi.mock('../utils/retrieve-workspace-files', async (importOriginal) => ({
-  ...(await importOriginal<any>()),
-  getGlobPatternsOfPlugins: () => [
-    '**/project.json',
-    '**/package.json',
-    '**/build.gradle',
-  ],
+  capabilitiesOfConfiguredPlugins: async () =>
+    ['**/project.json', '**/package.json', '**/build.gradle'].map(
+      (createNodesPattern) => ({ createNodesPattern })
+    ),
 }));
 import { computeAffectedTasks } from './affected-tasks';
 import { LockFileChange, WholeFileChange } from '../file-utils';
