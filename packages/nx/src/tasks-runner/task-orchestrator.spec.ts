@@ -1784,7 +1784,10 @@ describe('TaskOrchestrator', () => {
         removeRunningTask: vi.fn(),
       };
       orchestrator.options = {
-        lifeCycle: { printTaskTerminalOutput: vi.fn() },
+        lifeCycle: {
+          printTaskTerminalOutput: vi.fn(),
+          setTaskReadiness: vi.fn(),
+        },
       };
       orchestrator.handleDiscreteWorkerFailure = vi.fn();
       orchestrator.preRunSteps = vi.fn();
@@ -1842,11 +1845,20 @@ describe('TaskOrchestrator', () => {
         runningTask
       );
       await expect(settled(waiting)).resolves.toBe('pending');
+      expect(
+        orchestrator.options.lifeCycle.setTaskReadiness.mock.calls
+      ).toEqual([['app:serve', 0]]);
       emit('server listening');
       await expect(settled(waiting)).resolves.toBe('resolved');
       expect(
         orchestrator.runningTasksService.setTaskReadiness
       ).toHaveBeenCalledWith('app:serve', 1);
+      expect(
+        orchestrator.options.lifeCycle.setTaskReadiness.mock.calls
+      ).toEqual([
+        ['app:serve', 0],
+        ['app:serve', 1],
+      ]);
     });
 
     it('fails the waiter when the probe times out and leaves the producer running', async () => {
@@ -1865,6 +1877,9 @@ describe('TaskOrchestrator', () => {
       expect(
         orchestrator.runningTasksService.setTaskReadiness
       ).toHaveBeenCalledWith('app:serve', 2);
+      expect(
+        orchestrator.options.lifeCycle.setTaskReadiness
+      ).toHaveBeenLastCalledWith('app:serve', 2);
       expect(runningTask.kill).not.toHaveBeenCalled();
     });
 
@@ -1923,6 +1938,13 @@ describe('TaskOrchestrator', () => {
       await expect(settled(waiting)).resolves.toBe('pending');
       await expect(waiting).resolves.toBeUndefined();
       expect(orchestrator.readiness.size).toBe(0);
+      // Each row state observed is reported once, however often it is read
+      expect(
+        orchestrator.options.lifeCycle.setTaskReadiness.mock.calls
+      ).toEqual([
+        ['app:serve', 0],
+        ['app:serve', 1],
+      ]);
     });
 
     it('fails the waiter when the producer row disappears mid-wait', async () => {
@@ -2128,6 +2150,19 @@ describe('TaskOrchestrator', () => {
           expect(log).toHaveBeenCalledWith(
             'Waiting for "app:serve" to be ready...'
           );
+        } finally {
+          log.mockRestore();
+        }
+      });
+
+      it('keeps the summary output style silent about the wait', () => {
+        const { orchestrator } = createOrchestrator();
+        orchestrator.tuiEnabled = false;
+        orchestrator.resolvedOutputStyle = 'summary';
+        const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+        try {
+          orchestrator.onReadinessHold('app:serve');
+          expect(log).not.toHaveBeenCalled();
         } finally {
           log.mockRestore();
         }
