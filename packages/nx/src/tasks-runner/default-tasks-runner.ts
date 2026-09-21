@@ -158,7 +158,8 @@ async function runAllTasks(
     options,
     context.nxArgs?.nxBail,
     context.daemon,
-    context.nxArgs?.outputStyle
+    context.nxArgs?.specifiedOutputStyle,
+    context.nxArgs?.resolvedOutputStyle ?? 'static-failures-only'
   );
 
   return orchestrator.run();

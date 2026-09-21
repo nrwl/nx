@@ -1,7 +1,7 @@
-use std::fs::{create_dir_all, read_to_string, write};
+use std::fs::{create_dir_all, read_dir, read_to_string, remove_file, symlink_metadata, write};
 use std::path::{Component, Path, PathBuf};
 use std::rc::Rc;
-use std::time::Instant;
+use std::time::{Duration, Instant, SystemTime};
 use tracing::{debug, trace};
 
 use fs_extra::remove_items;
@@ -16,6 +16,134 @@ use crate::native::db::connection::NxDbConnection;
 use crate::native::utils::Normalize;
 use napi::bindgen_prelude::External;
 use std::sync::{Arc, Mutex};
+
+/// Batch logs older than this are swept. Matches `remove_old_cache_records`.
+const BATCH_OUTPUT_MAX_AGE: Duration = Duration::from_secs(7 * 24 * 60 * 60);
+/// Budget for `batchOutputs/`, separate from `maxCacheSize`.
+const BATCH_OUTPUT_MAX_BYTES: u64 = 1024 * 1024 * 1024;
+/// How recently a log must have been written to count as live.
+const BATCH_OUTPUT_MIN_EVICTION_AGE: Duration = Duration::from_secs(60 * 60);
+
+/// One directory, one file per batch — keyed by the batch rather than a
+/// task hash, since one worker produces one log and the hash of any task in
+/// it is still preliminary while it runs. Mirrored by
+/// `batchOutputPathForKey` in tasks-runner/cache.ts, which writes them.
+fn batch_outputs_path(cache_path: &str) -> PathBuf {
+    PathBuf::from(cache_path).join("batchOutputs")
+}
+
+/// A free function, not a method: `BatchProcess` writes these logs whichever
+/// cache implementation is active, so the sweep must not be reachable only
+/// through the DB-backed one.
+///
+/// Deletes batch logs by age, then oldest-first while the directory is over
+/// budget.
+///
+/// No database rows: nothing looks a batch log up by key, so a row would be
+/// write-only bookkeeping that a hard-killed process could skip, orphaning
+/// the file forever. The filesystem cannot drift from itself, and the file
+/// is appended to for the life of its batch, so a size recorded anywhere
+/// else is wrong until that batch ends.
+///
+/// The budget is separate from `maxCacheSize` on purpose: these are debug
+/// artifacts, and sharing a budget would let one evict a replayable cache
+/// entry — trading a rebuild for a text file.
+///
+/// The age sweep deletes at `BATCH_OUTPUT_MAX_AGE`; the eviction skips
+/// anything written within `BATCH_OUTPUT_MIN_EVICTION_AGE`. That is
+/// last-write, not creation, so a batch silent through a long quiet phase is
+/// not protected.
+#[napi]
+pub fn sweep_batch_outputs(cache_path: String) -> anyhow::Result<()> {
+    sweep_batch_outputs_with(
+        &batch_outputs_path(&cache_path),
+        SystemTime::now(),
+        BATCH_OUTPUT_MAX_AGE,
+        BATCH_OUTPUT_MAX_BYTES,
+        BATCH_OUTPUT_MIN_EVICTION_AGE,
+    )
+}
+
+/// The sweep proper, with its thresholds as parameters. Split out so tests can
+/// drive the eviction path without writing a gigabyte, and pin the age window
+/// without waiting a week.
+fn sweep_batch_outputs_with(
+    dir: &Path,
+    now: SystemTime,
+    max_age: Duration,
+    max_bytes: u64,
+    min_eviction_age: Duration,
+) -> anyhow::Result<()> {
+    // `read_dir` opens through `opendir(2)`, which follows a symlink on the
+    // directory itself - so without this a `batchOutputs` symlinked elsewhere
+    // would have that directory's aged files deleted instead. The per-entry
+    // handling below already refuses to follow a link; this is the one hop it
+    // cannot see. `~/.nx` is writable by anything sharing our uid, which is why
+    // `probeWritable` opens with `wx` for the same reason.
+    if symlink_metadata(dir).map(|m| !m.is_dir()).unwrap_or(true) {
+        return Ok(());
+    }
+
+    let entries = match read_dir(dir) {
+        Ok(entries) => entries,
+        // Nothing has captured a batch log yet.
+        Err(_) => return Ok(()),
+    };
+
+    let mut files: Vec<(PathBuf, u64, SystemTime)> = Vec::new();
+    for entry in entries.flatten() {
+        // From the dirent, so a symlink is neither followed for its age nor
+        // counted as a file.
+        if !entry.file_type().map(|t| t.is_file()).unwrap_or(false) {
+            continue;
+        }
+        let path = entry.path();
+        let Ok(metadata) = entry.metadata() else {
+            continue;
+        };
+        let Ok(modified) = metadata.modified() else {
+            continue;
+        };
+        let age = now.duration_since(modified).unwrap_or(Duration::ZERO);
+        if age > max_age {
+            // Racing another Nx process sweeping the same directory is fine.
+            let _ = remove_file(&path);
+            continue;
+        }
+        files.push((path, metadata.len(), modified));
+    }
+
+    let mut total: u64 = files.iter().map(|(_, size, _)| size).sum();
+    if total <= max_bytes {
+        return Ok(());
+    }
+
+    // Never evict a log young enough to belong to a batch that is still
+    // running, possibly in another Nx process. Going over budget recovers on
+    // the next sweep; deleting a live batch's only log does not.
+    files.retain(|(_, _, modified)| {
+        now.duration_since(*modified).unwrap_or(Duration::ZERO) > min_eviction_age
+    });
+    files.sort_by_key(|(_, _, modified)| *modified);
+    for (path, size, _) in files {
+        if total <= max_bytes {
+            break;
+        }
+        if remove_file(&path).is_ok() {
+            total = total.saturating_sub(size);
+        }
+    }
+    Ok(())
+}
+
+#[napi(object)]
+#[derive(Clone, Debug)]
+pub struct TerminalOutputRecord {
+    pub hash: String,
+    /// Byte length of the terminal output written for this hash, so these
+    /// files are counted against `maxCacheSize` like any other cache content.
+    pub size: i64,
+}
 
 #[napi(object)]
 #[derive(Default, Clone, Debug)]
@@ -71,11 +199,16 @@ impl NxCache {
     }
 
     fn setup(&self) -> anyhow::Result<()> {
+        // `is_cache_entry` distinguishes a real cache entry, which owns a
+        // `<cacheDir>/<hash>` directory, from a row that exists only so the
+        // terminal output of an uncacheable run is reachable by the GC. Only
+        // the former may be served as a cache hit — see `get`/`fetch_cache_rows`.
         let query = if self.link_task_details {
             "CREATE TABLE IF NOT EXISTS cache_outputs (
                 hash    TEXT PRIMARY KEY NOT NULL,
                 code   INTEGER NOT NULL,
                 size   INTEGER NOT NULL,
+                is_cache_entry BOOLEAN NOT NULL DEFAULT TRUE CHECK (is_cache_entry IN (0, 1)),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 accessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (hash) REFERENCES task_details (hash)
@@ -86,6 +219,7 @@ impl NxCache {
                 hash    TEXT PRIMARY KEY NOT NULL,
                 code   INTEGER NOT NULL,
                 size   INTEGER NOT NULL,
+                is_cache_entry BOOLEAN NOT NULL DEFAULT TRUE CHECK (is_cache_entry IN (0, 1)),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 accessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
@@ -114,7 +248,7 @@ impl NxCache {
             .query_row(
                 "UPDATE cache_outputs
                     SET accessed_at = CURRENT_TIMESTAMP
-                    WHERE hash = ?1
+                    WHERE hash = ?1 AND is_cache_entry
                     RETURNING code, size",
                 params![hash],
                 |row| Ok((row.get::<_, i16>(0)?, row.get::<_, i64>(1)?)),
@@ -183,7 +317,7 @@ impl NxCache {
             .unwrap()
             .query_map(
                 "UPDATE cache_outputs SET accessed_at = CURRENT_TIMESTAMP
-                 WHERE hash IN rarray(?1)
+                 WHERE hash IN rarray(?1) AND is_cache_entry
                  RETURNING hash, code, size",
                 [values],
                 |row| {
@@ -299,6 +433,62 @@ impl NxCache {
         Ok(())
     }
 
+    /// Register terminal outputs that were written without a cache entry —
+    /// uncacheable tasks, and cacheable ones run with `--skip-nx-cache`.
+    ///
+    /// Without a row the file is invisible to `remove_old_cache_records`,
+    /// which only ever walks hashes it finds in the database, so these files
+    /// would accumulate forever. The row carries `is_cache_entry = FALSE` so it
+    /// can never be served as a cache hit.
+    ///
+    /// On conflict `accessed_at` always moves: the reads filter these rows out,
+    /// so they would otherwise age from the first write and be collected out
+    /// from under a task that is still being run daily. `size` moves only while
+    /// the row is still output-only (`NOT is_cache_entry`), so a task rerun with
+    /// a longer log stops undercounting against `maxCacheSize`. `is_cache_entry`
+    /// is never touched, and a row that already has artifacts keeps the size
+    /// `put` recorded, so a rewrite can neither demote a real entry nor replace
+    /// its whole-entry size with the terminal output's.
+    #[napi]
+    pub fn record_terminal_outputs(
+        &mut self,
+        records: Vec<TerminalOutputRecord>,
+    ) -> anyhow::Result<()> {
+        if records.is_empty() {
+            return Ok(());
+        }
+        trace!("RECORD_TERMINAL_OUTPUTS {}", records.len());
+
+        {
+            let mut db = self.db.lock().unwrap();
+            db.transaction(|conn| {
+                for record in records.iter() {
+                    // `code` is meaningless for a row that can't be replayed;
+                    // the reads all filter it out before it could be read.
+                    conn.execute(
+                        // `size` is refreshed only for a row that is still
+                        // output-only: a task rerun with a longer log would
+                        // otherwise keep its first size forever and undercount
+                        // against maxCacheSize. A row with artifacts is owned by
+                        // `record_to_cache`, whose size covers the whole entry.
+                        "INSERT INTO cache_outputs (hash, code, size, is_cache_entry)
+                         VALUES (?1, 0, ?2, FALSE)
+                         ON CONFLICT(hash) DO UPDATE SET
+                             accessed_at = CURRENT_TIMESTAMP,
+                             size = CASE WHEN NOT is_cache_entry THEN excluded.size ELSE size END",
+                        params![record.hash, record.size],
+                    )?;
+                }
+                Ok(())
+            })?;
+        }
+
+        if self.max_cache_size != 0 {
+            self.ensure_cache_size_within_limit()?;
+        }
+        Ok(())
+    }
+
     fn get_task_outputs_path_internal(&self, hash: &str) -> PathBuf {
         self.cache_path.join("terminalOutputs").join(hash)
     }
@@ -311,9 +501,12 @@ impl NxCache {
 
     fn record_to_cache(&self, hash: String, code: i16, size: i64) -> anyhow::Result<()> {
         trace!("Recording to cache: {}, {}, {}", &hash, code, size);
+        // `is_cache_entry` is forced back to TRUE on conflict: an earlier
+        // uncacheable run of the same hash (`--skip-nx-cache`) may have left a
+        // terminal-output-only row, and this run did write the artifacts.
         self.db.lock().unwrap().execute(
-            "INSERT INTO cache_outputs (hash, code, size) VALUES (?1, ?2, ?3)
-             ON CONFLICT(hash) DO UPDATE SET code = excluded.code, size = excluded.size, created_at = CURRENT_TIMESTAMP, accessed_at = CURRENT_TIMESTAMP",
+            "INSERT INTO cache_outputs (hash, code, size, is_cache_entry) VALUES (?1, ?2, ?3, TRUE)
+             ON CONFLICT(hash) DO UPDATE SET code = excluded.code, size = excluded.size, is_cache_entry = TRUE, created_at = CURRENT_TIMESTAMP, accessed_at = CURRENT_TIMESTAMP",
             params![hash, code, size],
         )?;
         if self.max_cache_size != 0 {
@@ -369,7 +562,13 @@ impl NxCache {
                     if let Ok((hash, size)) = row {
                         cache_size -= size;
                         db.execute("DELETE FROM cache_outputs WHERE hash = ?1", params![hash])?;
-                        remove_items(&[self.cache_path.join(&hash)])?;
+                        // Both paths, matching remove_old_cache_records. Dropping
+                        // the row without the terminal output file would strand
+                        // that file with nothing left to point the GC at it.
+                        remove_items(&[
+                            self.cache_path.join(&hash),
+                            self.get_task_outputs_path_internal(&hash),
+                        ])?;
                     }
                     // We've deleted enough cache entries to be under the
                     // target cache size, stop looking for more.
@@ -437,10 +636,16 @@ impl NxCache {
             .db
             .lock()
             .unwrap()
-            .query_row("SELECT EXISTS (SELECT 1 FROM cache_outputs)", [], |row| {
-                let exists: bool = row.get(0)?;
-                Ok(exists)
-            })?
+            .query_row(
+                // Only real cache entries own a `<hash>` directory, so only
+                // those can be out of sync with the filesystem.
+                "SELECT EXISTS (SELECT 1 FROM cache_outputs WHERE is_cache_entry)",
+                [],
+                |row| {
+                    let exists: bool = row.get(0)?;
+                    Ok(exists)
+                },
+            )?
             .unwrap_or(false);
 
         if !cache_records_exist {
@@ -557,6 +762,105 @@ fn escapes_workspace(path: &Path) -> bool {
 #[cfg(test)]
 mod test {
     use super::*;
+
+    use assert_fs::TempDir;
+    use std::fs::{File, create_dir_all};
+    use std::time::Duration;
+
+    fn write_log(dir: &Path, name: &str, bytes: usize, age: Duration) -> PathBuf {
+        create_dir_all(dir).unwrap();
+        let path = dir.join(name);
+        std::fs::write(&path, vec![b'x'; bytes]).unwrap();
+        let mtime = SystemTime::now() - age;
+        File::options()
+            .write(true)
+            .open(&path)
+            .unwrap()
+            .set_modified(mtime)
+            .unwrap();
+        path
+    }
+
+    const HOUR: Duration = Duration::from_secs(3600);
+
+    fn sweep(dir: &Path, max_bytes: u64) {
+        sweep_batch_outputs_with(dir, SystemTime::now(), 7 * 24 * HOUR, max_bytes, HOUR).unwrap();
+    }
+
+    #[test]
+    fn sweep_batch_outputs_is_a_noop_without_the_directory() {
+        let temp = TempDir::new().unwrap();
+        // Nothing has captured a batch log yet; this runs on every command.
+        sweep_batch_outputs(temp.path().to_str().unwrap().to_string()).unwrap();
+    }
+
+    #[test]
+    fn sweep_batch_outputs_deletes_by_age() {
+        let temp = TempDir::new().unwrap();
+        let old = write_log(temp.path(), "old.log", 16, 8 * 24 * HOUR);
+        let fresh = write_log(temp.path(), "fresh.log", 16, Duration::from_secs(30));
+
+        sweep(temp.path(), u64::MAX);
+
+        assert!(
+            !old.exists(),
+            "a log past the age limit should be collected"
+        );
+        assert!(fresh.exists(), "a log inside the window should survive");
+    }
+
+    #[test]
+    fn sweep_batch_outputs_evicts_oldest_first_to_the_budget() {
+        let temp = TempDir::new().unwrap();
+        let oldest = write_log(temp.path(), "a.log", 100, 5 * HOUR);
+        let middle = write_log(temp.path(), "b.log", 100, 4 * HOUR);
+        let newest = write_log(temp.path(), "c.log", 100, 3 * HOUR);
+
+        // 300 bytes present, budget 150: the two oldest go.
+        sweep(temp.path(), 150);
+
+        assert!(!oldest.exists());
+        assert!(!middle.exists());
+        assert!(
+            newest.exists(),
+            "eviction stops as soon as it is under budget"
+        );
+    }
+
+    #[test]
+    fn sweep_batch_outputs_will_not_evict_a_log_a_live_batch_may_still_hold() {
+        let temp = TempDir::new().unwrap();
+        // Far over budget, but written seconds ago - a running batch appends to
+        // its log for the life of the batch, possibly from another Nx process,
+        // so evicting this loses the only copy of a run still going.
+        let live = write_log(temp.path(), "live.log", 500, Duration::from_secs(5));
+        let stale = write_log(temp.path(), "stale.log", 500, 3 * HOUR);
+
+        sweep(temp.path(), 100);
+
+        assert!(live.exists(), "a log written within the hour is off limits");
+        assert!(!stale.exists(), "an older one over budget still goes");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn sweep_batch_outputs_will_not_follow_a_symlinked_directory() {
+        let temp = TempDir::new().unwrap();
+        // What an agent confined to `~/.nx` can plant: `batchOutputs` pointing
+        // somewhere it was never granted. Following it would delete that
+        // directory's aged files instead of our own.
+        let victim = temp.path().join("victim");
+        let aged = write_log(&victim, "secrets.env", 16, 8 * 24 * HOUR);
+        let link = temp.path().join("batchOutputs");
+        std::os::unix::fs::symlink(&victim, &link).unwrap();
+
+        sweep(&link, u64::MAX);
+
+        assert!(
+            aged.exists(),
+            "a symlinked sweep root must be refused, not walked"
+        );
+    }
 
     #[cfg(unix)]
     #[test]

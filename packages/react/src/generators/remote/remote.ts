@@ -19,7 +19,11 @@ import {
 import { join } from 'path';
 
 import { isValidVariable } from '@nx/js';
-import { getProjectSourceRoot, isUsingTsSolutionSetup } from '@nx/js/internal';
+import {
+  addSwcRegisterDependencies,
+  getProjectSourceRoot,
+  isUsingTsSolutionSetup,
+} from '@nx/js/internal';
 import { updateModuleFederationProject } from '../../rules/update-module-federation-project';
 import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
 import { normalizeRemoteName } from '../../utils/normalize-remote';
@@ -309,6 +313,12 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
     true
   );
   tasks.push(installTask);
+
+  // The TS config templates use extensionless relative imports and
+  // `__dirname`, which Node's native type stripping cannot load.
+  if (options.typescriptConfiguration) {
+    tasks.push(addSwcRegisterDependencies(host));
+  }
 
   if (!options.skipFormat) {
     await formatFiles(host);

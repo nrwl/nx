@@ -488,6 +488,9 @@
         "rule": "./tools/workspace-plugin/dist/src/conformance-rules/migration-markdown-assets"
       },
       {
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/generator-template-assets"
+      },
+      {
         "rule": "./tools/workspace-plugin/dist/src/conformance-rules/no-ignored-tracked-files"
       },
       {
@@ -495,6 +498,9 @@
       },
       {
         "rule": "./tools/workspace-plugin/dist/src/conformance-rules/relative-image-imports"
+      },
+      {
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/headings-in-tabs"
       },
       {
         "rule": "./tools/workspace-plugin/dist/src/conformance-rules/types-versions-exports-sync"

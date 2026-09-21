@@ -33,6 +33,7 @@ import {
 } from './build-project-graph';
 import {
   AggregateProjectGraphError,
+  formatProjectGraphError,
   isAggregateProjectGraphError,
   ProjectConfigurationsError,
   ProjectGraphError,
@@ -44,6 +45,10 @@ import {
   readSourceMapsCache,
   writeCache,
 } from './nx-deps-cache';
+import {
+  getNxPluginCapabilitiesStore,
+  noteGraphReadFromCache,
+} from './plugins/nx-plugin-capabilities';
 import { getPlugins, getPluginsSeparated } from './plugins/get-plugins';
 import { ConfigurationResult } from './utils/project-configuration-utils';
 import {
@@ -61,17 +66,23 @@ import { handleImport } from '../utils/handle-import';
 export function readCachedProjectGraph(
   minimumComputedAt?: number
 ): ProjectGraph {
-  const projectGraphCache = readProjectGraphCache(minimumComputedAt);
-  if (!projectGraphCache) {
-    const angularSpecificError = fileExists(`${workspaceRoot}/angular.json`)
-      ? stripIndents`
+  const cached = readProjectGraphCache(minimumComputedAt);
+  if (!cached) {
+    throw noCachedProjectGraphError();
+  }
+  return cached.projectGraph;
+}
+
+function noCachedProjectGraphError(): Error {
+  const angularSpecificError = fileExists(`${workspaceRoot}/angular.json`)
+    ? stripIndents`
       Make sure invoke 'node ./decorate-angular-cli.js' in your postinstall script.
       The decorated CLI will compute the project graph.
       'ng --help' should say 'Smart Monorepos · Fast Builds'.
       `
-      : '';
+    : '';
 
-    throw new Error(stripIndents`
+  return new Error(stripIndents`
       [readCachedProjectGraph] ERROR: No cached ProjectGraph is available.
 
       If you are leveraging \`readCachedProjectGraph()\` directly then you will need to refactor your usage to first ensure that
@@ -81,8 +92,6 @@ export function readCachedProjectGraph(
 
       ${angularSpecificError}
     `);
-  }
-  return projectGraphCache;
 }
 
 export function readCachedProjectConfiguration(
@@ -116,6 +125,8 @@ export function readProjectsConfigurationFromProjectGraph(
 
 export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
   preventRecursionInGraphConstruction();
+  // Answer from the plugins loaded below, not an earlier cached graph's rows.
+  noteGraphReadFromCache(undefined);
 
   global.NX_GRAPH_CREATION = true;
   const nxJson = readNxJson();
@@ -192,7 +203,21 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
   ];
 
   if (cacheEnabled) {
-    writeCache(projectFileMapCache, projectGraph, sourceMaps, errors);
+    const computedAt = Date.now();
+    // Before the graph, so a cached graph never lacks its row.
+    if (errors.length === 0) {
+      getNxPluginCapabilitiesStore()?.record(
+        computedAt,
+        plugins.map((plugin) => plugin.capabilities())
+      );
+    }
+    writeCache(
+      projectFileMapCache,
+      projectGraph,
+      sourceMaps,
+      errors,
+      computedAt
+    );
   }
 
   if (errors.length > 0) {
@@ -206,16 +231,7 @@ export function handleProjectGraphError(opts: { exitOnError: boolean }, e) {
   if (opts.exitOnError) {
     const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
     if (e instanceof ProjectGraphError) {
-      let title = e.message;
-
-      const bodyLines = isVerbose
-        ? [e.stack]
-        : ['Pass --verbose to see the stacktraces.'];
-
-      output.error({
-        title,
-        bodyLines: bodyLines,
-      });
+      output.error(formatProjectGraphError(e, isVerbose));
     } else if (typeof e.message === 'string') {
       const lines = e.message.split('\n');
       output.error({
@@ -235,7 +251,12 @@ export function handleProjectGraphError(opts: { exitOnError: boolean }, e) {
 }
 
 async function readCachedGraphAndHydrateFileMap(minimumComputedAt?: number) {
-  const graph = readCachedProjectGraph(minimumComputedAt);
+  const cached = readProjectGraphCache(minimumComputedAt);
+  if (!cached) {
+    throw noCachedProjectGraphError();
+  }
+  const graph = cached.projectGraph;
+  noteGraphReadFromCache(cached.computedAt);
   const projectRootMap = Object.fromEntries(
     Object.entries(graph.nodes).map(([project, { data }]) => [
       data.root,
@@ -336,8 +357,9 @@ export async function createProjectGraphAndSourceMapsAsync(
     const lock = !IS_WASM
       ? new FileLock(join(workspaceDataDirectory, 'project-graph.lock'))
       : null;
-    let locked = lock?.locked;
-    while (locked) {
+    let holdingLock = lock?.tryLock() ?? false;
+
+    while (lock && !holdingLock) {
       logger.verbose(
         'Waiting for graph construction in another process to complete'
       );
@@ -345,45 +367,28 @@ export async function createProjectGraphAndSourceMapsAsync(
         'Waiting for graph construction in another process to complete'
       );
       const start = Date.now();
-      await lock.wait();
-      spinner.cleanup();
-
-      // Note: This will currently throw if any of the caches are missing...
-      // It would be nice if one of the processes that was waiting for the lock
-      // could pick up the slack and build the graph if it's missing, but
-      // we wouldn't want either of the below to happen:
-      // - All of the waiting processes to build the graph
-      // - Even one of the processes building the graph on a legitimate error
-
       try {
-        // Ensuring that computedAt was after this process started
-        // waiting for the graph to complete, means that the graph
-        // was computed by the process was already working.
+        await lock.wait();
+        // A graph computed after this process started waiting is the holder's.
         const graph = await readCachedGraphAndHydrateFileMap(start);
-
         const sourceMaps = readSourceMapsCache();
         if (!sourceMaps) {
           throw new Error(
             'The project graph was computed in another process, but the source maps are missing.'
           );
         }
-
-        return {
-          projectGraph: graph,
-          sourceMaps,
-        };
+        return { projectGraph: graph, sourceMaps };
       } catch (e) {
-        // If the error is that the cached graph is stale after unlock,
-        // the process that was working on the graph must have been canceled,
-        // so we will fall through to the normal flow to ensure
-        // its created by one of the processes that was waiting
         if (!(e instanceof StaleProjectGraphCacheError)) {
           throw e;
         }
+        // The holder stopped without writing a graph: build it here, or wait for
+        // whoever took the lock first.
+        holdingLock = lock.tryLock();
+      } finally {
+        spinner.cleanup();
       }
-      locked = lock.check();
     }
-    lock?.lock();
     try {
       const res = await buildProjectGraphAndSourceMapsWithoutDaemon();
       performance.measure(
@@ -418,7 +423,9 @@ export async function createProjectGraphAndSourceMapsAsync(
     } catch (e) {
       handleProjectGraphError(opts, e);
     } finally {
-      lock?.unlock();
+      if (holdingLock) {
+        lock.unlock();
+      }
     }
   } else {
     try {

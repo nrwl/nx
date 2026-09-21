@@ -134,6 +134,48 @@ describe('HashPlanInspector', () => {
     tempFs.reset();
   });
 
+  describe('includeIgnored filesets', () => {
+    it('expands the group on disk, including gitignored files', async () => {
+      await tempFs.createFiles({
+        '.gitignore': 'dist\n',
+        'apps/test-app/dist/out.js': 'built',
+        'apps/test-app/dist/out.js.map': 'map',
+      });
+      const graph: ProjectGraph = JSON.parse(JSON.stringify(projectGraph));
+      graph.nodes['test-app'].data.targets.build.inputs = [
+        { fileset: '{projectRoot}/dist/**/*.js', includeIgnored: true },
+        { fileset: '!{projectRoot}/dist/**/*.map', includeIgnored: true },
+      ];
+      const diskInspector = new HashPlanInspector(graph, tempFs.tempDir);
+      await diskInspector.init();
+
+      const inputs = diskInspector.inspectTaskInputs({
+        project: 'test-app',
+        target: 'build',
+      })['test-app:build'];
+
+      expect(inputs.files).toContain('apps/test-app/dist/out.js');
+      expect(inputs.files).not.toContain('apps/test-app/dist/out.js.map');
+    });
+
+    it('does not report a declared exact path that is missing', async () => {
+      const graph: ProjectGraph = JSON.parse(JSON.stringify(projectGraph));
+      graph.nodes['test-app'].data.targets.build.inputs = [
+        { fileset: '{projectRoot}/dist/absent.js', includeIgnored: true },
+      ];
+      const diskInspector = new HashPlanInspector(graph, tempFs.tempDir);
+      await diskInspector.init();
+
+      const inputs = diskInspector.inspectTaskInputs({
+        project: 'test-app',
+        target: 'build',
+      })['test-app:build'];
+
+      // Not on disk, so not an input until it appears.
+      expect(inputs.files).not.toContain('apps/test-app/dist/absent.js');
+    });
+  });
+
   describe('inspectHashPlan', () => {
     beforeAll(async () => {
       await inspector.init();

@@ -13,6 +13,8 @@ on:
 
 env:
   CYPRESS_CACHE_FOLDER: ${{ github.workspace }}/.cypress
+  # npm 10 crashes resolving Vitest 4's optional peer graph after Vitest 5's release.
+  NPM_VERSION: '11.12.0'
   # See the root Cargo.toml: the release profile is incremental for local dev.
   # CI builds cold, so incremental only inflates the cargo cache.
   CARGO_INCREMENTAL: '0'
@@ -57,6 +59,9 @@ jobs:
 
       - name: Setup dev tools with mise
         uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
+
+      - name: Install npm
+        run: npm install -g npm@${{ env.NPM_VERSION }} --ignore-scripts
 
       - name: Enable corepack and install pnpm
         run: |
@@ -163,6 +168,9 @@ jobs:
 
       - name: Setup dev tools with mise
         uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
+
+      - name: Install npm
+        run: npm install -g npm@${{ env.NPM_VERSION }} --ignore-scripts
 
       - name: Enable corepack and install pnpm
         run: |

@@ -31,6 +31,32 @@ describe('serializeOverridesIntoCommandLine', () => {
     ).toEqual(['--env.foo=bar', '--env.baz=qux']);
   });
 
+  it('should flatten objects nested more than one level deep', () => {
+    expect(
+      serializeOverridesIntoCommandLine({ a: { b: { c: { d: 2 } } } })
+    ).toEqual(['--a.b.c.d=2']);
+  });
+
+  it('should flatten objects inside arrays', () => {
+    expect(
+      serializeOverridesIntoCommandLine({ a: [{ b: 1 }, { c: 2 }] })
+    ).toEqual(['--a.b=1', '--a.c=2']);
+  });
+
+  it('should serialize arrays, booleans and null nested inside an object', () => {
+    expect(
+      serializeOverridesIntoCommandLine({
+        a: { b: [1, 2], c: true, d: false, e: null },
+      })
+    ).toEqual(['--a.b=1', '--a.b=2', '--a.c', '--no-a.d']);
+  });
+
+  it('should emit nothing for empty nested objects', () => {
+    expect(serializeOverridesIntoCommandLine({ a: {}, e: { f: {} } })).toEqual(
+      []
+    );
+  });
+
   it('should preserve positional arguments from _', () => {
     expect(serializeOverridesIntoCommandLine({ _: ['pos1', 'pos2'] })).toEqual([
       'pos1',

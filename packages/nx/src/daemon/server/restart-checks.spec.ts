@@ -1,19 +1,20 @@
-// Loading ./watcher pulls in the daemon server and the shutdown path. Stub both
-// so a restart decision can be observed without starting either. vi.hoisted
-// runs before the hoisted vi.mock factories, which is the only way the spy can
-// be shared with them.
+// Stub the shutdown path so a restart decision can be observed without taking
+// it. vi.hoisted runs before the hoisted vi.mock factories, which is the only
+// way the spy can be shared with them.
 const { terminate } = vi.hoisted(() => ({ terminate: vi.fn() }));
 vi.mock('./shutdown-utils', () => ({
   handleServerProcessTermination: terminate,
-  getWatcherInstance: vi.fn(),
 }));
-vi.mock('./server', () => ({ openSockets: new Set() }));
 
-import { restartDaemonIfIgnoreFilesChanged } from './watcher';
+import {
+  registerDaemonForRestartChecks,
+  restartDaemonIfIgnoreFilesChanged,
+} from './restart-checks';
 
 describe('restartDaemonIfIgnoreFilesChanged', () => {
   beforeEach(() => {
     terminate.mockClear();
+    registerDaemonForRestartChecks({} as import('net').Server, []);
   });
 
   it.each(['.gitignore', '.nxignore'])(

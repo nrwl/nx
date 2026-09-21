@@ -394,6 +394,9 @@ Don't use possessives on product names. "the Docker CLI", not "Docker's CLI." "t
 - Don't use code in headings unless it's essential (like a CLI command).
 - Don't use bold text in headings.
 - Keep headings short and scannable. Lead with keywords.
+- Don't put headings inside `{% tabs %}`. Tab content is hidden until its tab is active, so the heading
+  still lands in the table of contents but nothing scrolls to it. Inline the section above the tabs, or
+  drop the heading. The `headings-in-tabs` conformance rule enforces this.
 
 ### Line length
 

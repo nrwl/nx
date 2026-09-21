@@ -75,6 +75,8 @@ export declare class FileLock {
   check(): boolean
   wait(): Promise<void>
   lock(): void
+  /** Takes the lock without blocking; false means another handle holds it. */
+  tryLock(): boolean
 }
 
 export declare class HashPlanInspector {
@@ -104,6 +106,14 @@ export declare class HttpRemoteCache {
   store(hash: string, cacheDirectory: string, terminalOutput: string, code: number): Promise<boolean>
 }
 
+/**
+ * The hasher's handle on an index: lists only after catching up with the
+ * watch behind it.
+ */
+export declare class IgnoredIndexReader {
+
+}
+
 export declare class ImportResult {
   file: string
   sourceProject: string
@@ -122,6 +132,25 @@ export declare class NxCache {
   getBatch(hashes: Array<string>): Array<CachedResult | undefined | null>
   put(hash: string, terminalOutput: string, outputs: Array<string>, code: number): Array<string>
   applyRemoteCacheResults(hash: string, result: CachedResult, outputs?: Array<string> | undefined | null): void
+  /**
+   * Register terminal outputs that were written without a cache entry —
+   * uncacheable tasks, and cacheable ones run with `--skip-nx-cache`.
+   *
+   * Without a row the file is invisible to `remove_old_cache_records`,
+   * which only ever walks hashes it finds in the database, so these files
+   * would accumulate forever. The row carries `is_cache_entry = FALSE` so it
+   * can never be served as a cache hit.
+   *
+   * On conflict `accessed_at` always moves: the reads filter these rows out,
+   * so they would otherwise age from the first write and be collected out
+   * from under a task that is still being run daily. `size` moves only while
+   * the row is still output-only (`NOT is_cache_entry`), so a task rerun with
+   * a longer log stops undercounting against `maxCacheSize`. `is_cache_entry`
+   * is never touched, and a row that already has artifacts keeps the size
+   * `put` recorded, so a rewrite can neither demote a real entry nor replace
+   * its whole-entry size with the terminal output's.
+   */
+  recordTerminalOutputs(records: Array<TerminalOutputRecord>): void
   getTaskOutputsPath(hash: string): string
   getCacheSize(): number
   copyFilesFromCache(cachedResult: CachedResult, outputs: Array<string>): number
@@ -133,6 +162,16 @@ export declare class NxConsolePreferences {
   constructor(homeDir: string)
   getAutoInstallPreference(): boolean | null
   setAutoInstallPreference(autoInstall: boolean): void
+}
+
+export declare class NxPluginCapabilities {
+  constructor(db: ExternalObject<NxDbConnection>)
+  record(computedAt: number, capabilities: Array<CachedPluginCapabilities>): void
+  /**
+   * The capabilities recorded with the graph computed at `computed_at`, or
+   * null when what is recorded belongs to another build or nothing is.
+   */
+  get(computedAt: number): Array<CachedPluginCapabilities> | null
 }
 
 export declare class NxTaskHistory {
@@ -204,7 +243,7 @@ export declare class TaskDetails {
 }
 
 export declare class TaskHasher {
-  constructor(workspaceRoot: string, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<Record<string, Array<FileData>>>, allWorkspaceFiles: ExternalObject<Array<FileData>>, tsConfig: Buffer, tsConfigPaths: Record<string, Array<string>>, rootTsconfigPath?: string | undefined | null, options?: HasherOptions | undefined | null)
+  constructor(workspaceRoot: string, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<Record<string, Array<FileData>>>, allWorkspaceFiles: ExternalObject<Array<FileData>>, tsConfig: Buffer, tsConfigPaths: Record<string, Array<string>>, rootTsconfigPath: string | undefined | null, options: HasherOptions | undefined | null, ignoredIndex: ExternalObject<IgnoredIndexReader>)
   /**
    * Hash each task's instructions using the env map keyed by `task.id`.
    * Every task in `hash_plans` must have an entry in `per_task_envs` —
@@ -215,9 +254,12 @@ export declare class TaskHasher {
    */
   hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, perTaskEnvs: Record<string, Record<string, string>>, cwd: string, collectTaskInputs?: boolean | undefined | null): Record<string, HashDetails>
   /**
-   * Like `hash_plans`, but only for the plans that hold no output of another
-   * task. The rest are left out and hash once those tasks have run; their
-   * ids are absent from the result and need no entry in `per_task_envs`.
+   * Like `hash_plans`, but only for the plans the planner did not defer
+   * (`HashPlans::deferred`: a task that reads another task's outputs, or a
+   * disk-backed fileset whose directory contains, or sits inside, an
+   * upstream task's output). The rest are left out and hash once those
+   * tasks have run; their ids are absent from the result and need no entry
+   * in `per_task_envs`.
    */
   hashPlansUpfront(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, perTaskEnvs: Record<string, Record<string, string>>, cwd: string, collectTaskInputs?: boolean | undefined | null): Record<string, HashDetails>
   /**
@@ -240,37 +282,29 @@ export declare class TaskInvocationTracker {
   cleanupStale(): void
 }
 
-export declare class Watcher {
-  origin: string
-  /**
-   * Always applies HARDCODED_IGNORE_PATTERNS plus watcher-specific
-   * patterns (vite/vitest timestamp files), regardless of `use_ignore`.
-   */
-  constructor(origin: string, additionalGlobs?: Array<string> | undefined | null, useIgnore?: boolean | undefined | null)
-  watch(callbackTsfn: (err: string | null, events: WatchEvent[]) => void): void
-  stop(): Promise<void>
-  /**
-   * Synchronously drains the accumulator. Used by the daemon before
-   * serving a cached project graph so events buffered inside the
-   * IDLE_WINDOW debounce don't go missing. Returns an empty vec if
-   * the watcher hasn't started, the loop has exited, or no events
-   * are buffered.
-   */
-  forceFlushPending(): Array<WatchEvent>
-}
-
 export declare class WorkspaceContext {
   workspaceRoot: string
-  constructor(workspaceRoot: string, cacheDir: string)
+  constructor(workspaceRoot: string, cacheDir: string, options?: WorkspaceContextOptions | undefined | null)
   /**
    * Loads the files the last walk recorded instead of walking. For a
    * process whose host already walked, such as a plugin worker.
    */
-  static fromArchive(workspaceRoot: string, cacheDir: string): WorkspaceContext
+  static fromArchive(workspaceRoot: string, cacheDir: string, options?: WorkspaceContextOptions | undefined | null): WorkspaceContext
+  /**
+   * Bumped once per applied batch that changed anything. Equal values
+   * mean equal files, so a consumer that remembers the value it computed
+   * from can skip recomputing.
+   */
+  changeSeq(): number
   /**
    * Walks the workspace again into this context, so it and the archive
    * include writes made since the last walk. Does nothing while a walk is
-   * in progress. Await `ready()` before reading.
+   * in progress. Await `ready()` before reading. What the walk finds
+   * changed goes to the subscriber.
+   *
+   * For a graph built without the daemon, where nothing watches: see
+   * `refreshWorkspaceContext`, called by
+   * `buildProjectGraphAndSourceMapsWithoutDaemon`.
    */
   refresh(): boolean
   /**
@@ -292,17 +326,60 @@ export declare class WorkspaceContext {
   multiGlob(globs: Array<string>, exclude?: Array<string> | undefined | null): Array<Array<string>>
   hashFilesMatchingGlobs(globGroups: Array<Array<string>>): Array<string>
   hashFilesMatchingGlob(globs: Array<string>, exclude?: Array<string> | undefined | null): string
-  incrementalUpdate(updatedFiles: Array<string>, deletedFiles: Array<string>): Record<string, string>
+  /**
+   * Applies changes a caller learned of on its own. Waits through a walk in
+   * progress so the answer reflects them. Returns what really changed; the
+   * batch is not published to subscribers.
+   */
+  incrementalUpdate(updatedFiles: Array<string>, deletedFiles: Array<string>): ChangeBatch
   updateProjectFiles(projectRootMappings: Record<string, string>, projectFiles: ExternalObject<Record<string, Array<FileData>>>, globalFiles: ExternalObject<Array<FileData>>, updatedFiles: Record<string, string>, deletedFiles: Array<string>): UpdatedWorkspaceFiles
   allFileData(): Array<FileData>
   /**
    * Recover from dropped watch events: re-walk, and report what changed
-   * against the map this context was holding. The fresh map is adopted, so
-   * the caller only has to feed the returned changes through its normal
-   * recomputation path.
+   * against the files this context was holding. The fresh files are
+   * adopted, so the caller only has to feed the returned changes through
+   * its normal recomputation path; subscribers do not see them.
    */
-  rescanAndDiff(): RescanDiff
+  rescanAndDiff(): ChangeBatch
+  /**
+   * The subset of `paths` the file map holds: what the watch tracks, with
+   * the ignore rules applied. A path it does not hold is gitignored, gone,
+   * or not yet reported. Applies what the watch delivered first, as every
+   * other read of the files does, so a write already reported counts.
+   */
+  trackedFiles(paths: Array<string>): Array<string>
   getFilesInDirectory(directory: string): Array<string>
+  /**
+   * Subscribes to the context's changes: the callback is called whenever
+   * something was applied or delivered, with everything not yet taken by
+   * it or by `settle`. Replaces any earlier subscriber.
+   */
+  onChanges(callback: (err: Error | null, batch: ChangeBatch | null) => void): void
+  /**
+   * Subscribes to every event the watch delivers, whether or not it
+   * concerns the files: writes under ignored directories included, and
+   * the `rescan` marker when the kernel dropped events. Replaces any
+   * earlier subscriber. Batches applied to the files are `onChanges`.
+   */
+  onWatchEvents(callback: (err: Error | null, events: WatchEvent[] | null) => void): void
+  /**
+   * Applies everything the watch has delivered, waiting out the kernel hop,
+   * then takes every change applied and not yet taken, one entry per path
+   * at its latest state. The change subscriber takes from the same place,
+   * so no change is handed out twice.
+   */
+  settle(): ChangeBatch
+  /**
+   * Takes every change applied and not yet taken, without waiting for the
+   * watch: for a caller that just applied changes itself, through
+   * `incrementalUpdate` or `rescanAndDiff`.
+   */
+  takeAppliedChanges(): ChangeBatch
+  /**
+   * Stops the watcher and forgets the subscribers. The files stay as they
+   * were; reads no longer pull anything in.
+   */
+  stopWatching(): void
 }
 
 export interface BatchInfo {
@@ -314,6 +391,14 @@ export declare const enum BatchStatus {
   Running = 'Running',
   Success = 'Success',
   Failure = 'Failure'
+}
+
+export interface CachedPluginCapabilities {
+  createNodesPattern?: string
+  hasCreateDependencies: boolean
+  hasCreateMetadata: boolean
+  hasPreTasksExecution: boolean
+  hasPostTasksExecution: boolean
 }
 
 export interface CachedResult {
@@ -335,6 +420,20 @@ export interface CacheStat {
 export declare function canInstallNxConsole(): Promise<boolean>
 
 export declare function canInstallNxConsoleForEditor(editor: SupportedEditor): Promise<boolean>
+
+/**
+ * What one application of changes did to the files. `seq` is the context's
+ * change sequence afterwards; it is unchanged, and the lists empty, when
+ * nothing the batch reported was really different. A path can reach a
+ * consumer in more than one batch (see `settle`): the one with the higher
+ * `seq` holds its later state.
+ */
+export interface ChangeBatch {
+  seq: number
+  createdFiles: Array<FileData>
+  updatedFiles: Array<FileData>
+  deletedFiles: Array<string>
+}
 
 export declare function closeDbConnection(connection: ExternalObject<NxDbConnection>): void
 
@@ -403,6 +502,9 @@ export declare const enum EventType {
   rescan = 'rescan'
 }
 
+/** The files an `includeIgnored` fileset group matches on disk, sorted. */
+export declare function expandFilesInput(workspaceRoot: string, globs: Array<string>): Array<string>
+
 export declare function expandOutputs(directory: string, entries: Array<string>): Array<string>
 
 export interface ExternalDependenciesInput {
@@ -428,6 +530,11 @@ export interface FileMap {
 export interface FileSetInput {
   fileset: string
   dependencies?: boolean
+  /**
+   * Hash the glob straight from disk (so gitignored/generated files count)
+   * instead of the workspace file map.
+   */
+  includeIgnored?: boolean
 }
 
 export declare function findImports(projectFileMap: Record<string, Array<string>>): Array<ImportResult>
@@ -667,6 +774,7 @@ export interface NxWorkspaceFilesExternals {
   projectFiles: ExternalObject<Record<string, Array<FileData>>>
   globalFiles: ExternalObject<Array<FileData>>
   allWorkspaceFiles: ExternalObject<Array<FileData>>
+  ignoredIndex: ExternalObject<IgnoredIndexReader>
 }
 
 export declare function parseTaskStatus(stringStatus: string): TaskStatus
@@ -725,13 +833,6 @@ export interface ProjectGraph {
 
 export declare function remove(src: string): void
 
-/** What a rescan re-walk found had changed while the watcher was not being told. */
-export interface RescanDiff {
-  createdFiles: Array<FileData>
-  updatedFiles: Array<FileData>
-  deletedFiles: Array<string>
-}
-
 export declare function restoreTerminal(): void
 
 export declare const enum RunMode {
@@ -751,6 +852,31 @@ export declare const enum SupportedEditor {
   JetBrains = 4,
   Unknown = 5
 }
+
+/**
+ * A free function, not a method: `BatchProcess` writes these logs whichever
+ * cache implementation is active, so the sweep must not be reachable only
+ * through the DB-backed one.
+ *
+ * Deletes batch logs by age, then oldest-first while the directory is over
+ * budget.
+ *
+ * No database rows: nothing looks a batch log up by key, so a row would be
+ * write-only bookkeeping that a hard-killed process could skip, orphaning
+ * the file forever. The filesystem cannot drift from itself, and the file
+ * is appended to for the life of its batch, so a size recorded anywhere
+ * else is wrong until that batch ends.
+ *
+ * The budget is separate from `maxCacheSize` on purpose: these are debug
+ * artifacts, and sharing a budget would let one evict a replayable cache
+ * entry — trading a rebuild for a text file.
+ *
+ * The age sweep deletes at `BATCH_OUTPUT_MAX_AGE`; the eviction skips
+ * anything written within `BATCH_OUTPUT_MIN_EVICTION_AGE`. That is
+ * last-write, not creation, so a batch silent through a long quiet phase is
+ * not protected.
+ */
+export declare function sweepBatchOutputs(cachePath: string): void
 
 /** System information (static system-level data) */
 export interface SystemInfo {
@@ -861,6 +987,15 @@ export interface TaskTarget {
   configuration?: string
 }
 
+export interface TerminalOutputRecord {
+  hash: string
+  /**
+   * Byte length of the terminal output written for this hash, so these
+   * files are counted against `maxCacheSize` like any other cache content.
+   */
+  size: number
+}
+
 export declare function testOnlyTransferFileMap(projectFiles: Record<string, Array<FileData>>, nonProjectFiles: Array<FileData>): NxWorkspaceFilesExternals
 
 /** Track an event using the global telemetry instance */
@@ -899,6 +1034,22 @@ export interface WatchEvent {
 
 export interface WorkingDirectoryInput {
   workingDirectory: string
+}
+
+export interface WorkspaceContextOptions {
+  /**
+   * Keep the files current from a watcher the context owns. Watching
+   * starts before the scan, so nothing written after construction is
+   * missed. Off by default; ignored on wasm, which has no watcher.
+   */
+  watch?: boolean
+  /**
+   * Paths the watch reports even though a hardcoded ignore covers them,
+   * as the daemon does for its own process file. They reach the event
+   * stream only, never the files: the workspace ignore rules still decide
+   * what enters those.
+   */
+  alwaysWatch?: Array<string>
 }
 
 /** Public NAPI error codes that are for Node */
