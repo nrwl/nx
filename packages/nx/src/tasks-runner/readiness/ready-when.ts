@@ -201,6 +201,28 @@ export function getReadyProducerIds(
   });
 }
 
+// Producers with a probe that each task in the graph waits on, keyed by the
+// waiting task. Tasks with none are left out.
+export function getReadyDependencies(
+  taskGraph: TaskGraph,
+  projectGraph: ProjectGraph
+): Record<string, string[]> {
+  const readyDependencies: Record<string, string[]> = {};
+  for (const task of Object.values(taskGraph.tasks)) {
+    const producerIds = getReadyProducerIds(
+      task,
+      taskGraph,
+      projectGraph
+    ).filter(
+      (id) => getReadyWhenConfig(taskGraph.tasks[id], projectGraph) != null
+    );
+    if (producerIds.length > 0) {
+      readyDependencies[task.id] = producerIds;
+    }
+  }
+  return readyDependencies;
+}
+
 function cachedAllTargetNames(projectGraph: ProjectGraph): string[] {
   let names = allTargetNamesCache.get(projectGraph);
   if (!names) {
