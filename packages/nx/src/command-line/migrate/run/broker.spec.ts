@@ -203,8 +203,6 @@ describe('migrate commit broker', () => {
     );
   }
 
-  // Answers like a parent whose install ran and whose commit landed, writing
-  // through the sinks it was handed.
   function parentCommits(): void {
     mockRunInstall.mockImplementation(
       async (_root, _phase, _rerun, sink: MigrateOutputSink) => {
@@ -293,8 +291,6 @@ describe('migrate commit broker', () => {
         undefined,
         expect.anything()
       );
-      // The session started with --skip-install, so the parent skipped the
-      // install it would otherwise have run.
       expect(mockRunInstall).not.toHaveBeenCalled();
       expect(mockLogSkippedInstall).toHaveBeenCalledWith(
         root,
@@ -398,7 +394,6 @@ describe('migrate commit broker', () => {
     it('answers a repeat from a result published while its lock probe failed to build', async () => {
       process.env.NX_MIGRATE_BROKER = 'deadbeef';
       mkdirSync(brokerDir(dir), { recursive: true });
-      // The parent answers and closes while the step builds its probe.
       mockLockCtor.mockImplementation(() => {
         writeFileSync(
           join(brokerDir(dir), 'deadbeef-step-1-1-commit.result.json'),
@@ -493,7 +488,6 @@ describe('migrate commit broker', () => {
       );
 
       expect(error).toBeInstanceOf(BrokerUnavailableError);
-      // What the failed step reports, whole.
       expect(summarizeError(error)).toBe(
         'The nx migrate session that started this step ended before its request was answered. The install or the commit may still have landed; check the working tree and git log.'
       );
@@ -501,7 +495,6 @@ describe('migrate commit broker', () => {
 
     it('takes an answer published between the poll and the free-lock probe', async () => {
       process.env.NX_MIGRATE_BROKER = 'deadbeef';
-      // The parent answers and closes while the step probes the lock.
       vi.spyOn(FileLock.prototype, 'check').mockImplementation(() => {
         writeFileSync(
           join(brokerDir(dir), 'deadbeef-step-1-1-commit.result.json'),

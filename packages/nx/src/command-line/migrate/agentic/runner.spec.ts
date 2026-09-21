@@ -749,8 +749,6 @@ describe('runAgentic', () => {
         handoffsDir: workspace,
       });
 
-      // The adapter itself is covered in windows-cmd.spec.ts; here we only
-      // verify runAgentic actually routes through it.
       const [binary, args] = mockSpawn.mock.calls[0];
       expect(binary).toMatch(/cmd\.exe$/i);
       expect(args.slice(0, 5)).toEqual(['/e:on', '/v:off', '/d', '/s', '/c']);

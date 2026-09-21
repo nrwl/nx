@@ -1,9 +1,5 @@
 import { type ChildProcess, execSync } from 'child_process';
 
-// How long to wait for the agent to exit gracefully after sending SIGINT.
-// Long enough for an interactive agent to finish its current render and
-// clean up; short enough that a frozen child still gets escalated in a
-// sensible time.
 export const AGENT_GRACEFUL_EXIT_MS = 5_000;
 
 // Safety bound after force-kill. SIGKILL normally reaps in microseconds;
@@ -17,10 +13,9 @@ export interface ExitInfo {
   error?: Error;
 }
 
-// Merge window so a paired exit + error both land in the same ExitInfo
-// (e.g. error from IPC followed by exit when the process actually
-// terminates). For error-only paths like spawn ENOENT — where Node fires
-// error but never exit — this timer is the SOLE settlement mechanism.
+// Merge window so a paired exit + error both land in one ExitInfo. On
+// error-only paths like spawn ENOENT, where Node fires error but never exit,
+// this timer is the only settlement mechanism.
 const EXIT_MERGE_WINDOW_MS = 10;
 
 export function waitForExit(child: ChildProcess): Promise<ExitInfo> {
@@ -43,10 +38,6 @@ export function waitForExit(child: ChildProcess): Promise<ExitInfo> {
       info.signal = signal;
       onFirst();
     });
-    // `error` fires when spawn itself fails (e.g. binary disappeared between
-    // detection and run) OR alongside `exit` when the process started but
-    // emitted an error event later. Treat both as an exit; field-merge so we
-    // don't drop the loser's contribution when both fire.
     child.on('error', (error) => {
       info.error = error;
       onFirst();
@@ -77,7 +68,6 @@ export async function closeAgentSession(
     return;
   }
 
-  // POSIX path.
   try {
     child.kill('SIGINT');
   } catch {
@@ -97,9 +87,6 @@ export async function closeAgentSession(
   }
   if (child.exitCode !== null || child.signalCode !== null) return;
 
-  // Graceful timeout elapsed without the agent exiting. SIGKILL is
-  // uncatchable; bound the post-kill wait so a pathological uninterruptible
-  // syscall can't hang us forever.
   try {
     child.kill('SIGKILL');
   } catch {
@@ -114,11 +101,8 @@ async function forceKillWindowsTree(
   forceKillWaitMs: number
 ): Promise<void> {
   const pid = child.pid;
-  // `child.pid` is undefined only when spawn itself failed; the early-return
-  // guard in `closeAgentSession` should short-circuit that path. Reaching
-  // here without a pid means a narrow race between the close trigger and
-  // error-event propagation — without a pid we can't taskkill, so wait
-  // briefly and return.
+  // No pid means spawn itself failed, which the guard in `closeAgentSession`
+  // normally short-circuits. Without one there is nothing to taskkill.
   if (pid !== undefined) {
     try {
       execSync(`taskkill /T /F /PID ${pid}`, {
@@ -128,7 +112,7 @@ async function forceKillWindowsTree(
         timeout: 2_000,
       });
     } catch {
-      /* taskkill missing, pid already dead, or timed out — fall through */
+      /* taskkill missing, pid already dead, or timed out */
     }
   }
   await raceWithTimeout(exitPromise, forceKillWaitMs);

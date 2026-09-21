@@ -199,8 +199,6 @@ function applyStepAction(
         // offered under the same guard as for a death.
         return commit(state, index, cleanRearm(state, step));
       case 'skip':
-        // A retry keeps the recorded generator run, and its commit finds a
-        // clean tree when the commit already landed.
         if (commitMayBeInHistory(state, step)) {
           return {
             kind: 'error',
@@ -238,8 +236,6 @@ function applyStepAction(
           outcome: { ...step.outcome, summary: adoptedSummary(step) },
         });
       case 'skip': {
-        // A landed commit means the migration applied; only adopt records
-        // that.
         if (coveringLandedEntries(state, step.id).length > 0) {
           return {
             kind: 'error',
@@ -279,10 +275,8 @@ function adoptedSummary(step: MigrateStep): string {
     : "Adopted after the worker died before recording that its generator had run; the working tree it left was taken as this migration's result.";
 }
 
-// Re-arms a step for a fresh attempt. Drops every field the previous attempt
-// wrote (pid, timestamps, git ref, tree state, outcomes) so a later success
-// can't carry a stale failure outcome; dispenseCount stays cumulative across
-// attempts.
+// Rebuilds the step for a fresh attempt so a stale outcome cannot survive;
+// dispenseCount stays cumulative across attempts.
 // `keepGeneratorCompleted` says whether the generator's changes reach the new
 // attempt. They do when nothing resets the tree, and when the reset target
 // already contains the commit that landed them; re-running the generator there
@@ -315,8 +309,6 @@ function rearm(
   };
 }
 
-// What the generator half of an attempt recorded, all of it hanging off the
-// completion marker.
 function generatorRunFields(step: MigrateStep): Partial<MigrateStep> {
   if (!step.generatorCompleted) return {};
   return {
@@ -333,12 +325,8 @@ function generatorRunFields(step: MigrateStep): Partial<MigrateStep> {
 }
 
 /**
- * Forgets the generator run of `stepId`'s current attempt, under the same
- * rule as a clean rearm keeps it: only while a landed commit carries its
- * changes. Written before a clean retry resets the tree, so a reset that
- * fails midway or a rearm that never lands leaves a step whose plain retry
- * is gated as one whose generator has yet to run, instead of one that skips
- * the generator over the reset tree.
+ * Forgets the generator run of `stepId`'s current attempt, unless a landed
+ * commit already carries its changes.
  */
 export function discardGeneratorRun(
   state: MigrateRunState,
@@ -451,7 +439,6 @@ export function coveringLandedEntries(
   );
 }
 
-/** Marks the step as having a commit under way; see `commitStarted`. */
 export function markCommitStarted(
   state: MigrateRunState,
   stepId: string
@@ -493,10 +480,9 @@ export function commitMayBeInHistory(
   );
 }
 
-// Every ledger append. Entries are never removed or reordered, which the step
-// receipts and the resolution stamps rely on. A landed entry accounts for the
-// commits started on the steps it names; a failed entry says nothing about an
-// earlier commit and leaves the mark to its own operation's release.
+// Every ledger append. Entries are never removed or reordered: step receipts
+// and resolution stamps index into the ledger. A failed entry says nothing
+// about an earlier commit, so only a landed one clears the mark.
 export function appendCommit(
   state: MigrateRunState,
   entry: MigrateCommitLedgerEntry

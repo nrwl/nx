@@ -3,10 +3,8 @@ import { logger } from '../../utils/logger';
 import { output } from '../../utils/output';
 import type { BoundedChunks } from './agentic/capture-generator-output';
 
-// What a dependency install or a migration commit tells the user, as the
-// calls that would print it. The helpers write through a sink so a caller
-// that does not own the terminal can collect the output and have it printed
-// elsewhere; the default sink prints where the calls always did.
+// A sink so a caller that does not own the terminal can collect what an
+// install or a commit would have printed and render it elsewhere.
 
 export type NoticeLevel = 'log' | 'warn' | 'error';
 export type LineColor = 'dim' | 'yellow' | 'red';

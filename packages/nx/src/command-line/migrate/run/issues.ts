@@ -658,7 +658,7 @@ export function attachIssueIdsToCommitEntry(
 
 /**
  * Adds to a landed entry the resolutions it can now carry, keeping the ids it
- * has; a failed entry carries nothing. Repeating it is a no-op, since
+ * has; other entries pass through. Repeating it is a no-op, since
  * `issueIdsForCommit` skips resolutions an entry already carries.
  */
 export function enrichCommitEntryIssueIds(

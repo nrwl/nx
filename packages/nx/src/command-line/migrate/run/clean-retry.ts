@@ -24,24 +24,12 @@ import {
 } from './state-machine';
 import { summarizeError } from './util';
 
-// A clean retry resets the tree to the step's captured pre-migration ref.
-// That is only safe when every prior diff is already committed: without
-// per-migration commits the ref is the run's starting commit (the reset would
-// wipe all prior steps' uncommitted work); a failed init checkpoint or a
-// pending step commit means the ref predates diffs the reset would also
-// destroy; without a captured ref there is nothing to reset to; edits already
-// in the tree when this step was dispensed (the user's own, or an earlier
-// step's the checkpoint never saw) are not represented by the ref either; and
-// HEAD anywhere other than the ref means something was committed since the
-// step was dispensed that the reset would discard, whether that is this step's
-// own commit (recorded, or made in the window before the worker died writing
-// its ledger entry) or one the user made alongside the run.
-// Cleanliness and position both have to say so explicitly: a failed tree probe
-// records dirty, a run created before that field existed carries nothing to
-// check, and an unreadable HEAD is no ref at all, so none of the three can be
-// read as a restore point that exists.
-// The debt check is run-wide: a clean retry resets and cleans the whole tree,
-// which would discard every other failed step's uncommitted work as well.
+// A clean retry resets the tree to the step's `gitRefBefore`, discarding
+// everything the ref does not account for. It is offered only when it does
+// account for the whole tree: every prior diff committed, the tree clean when
+// the step was dispensed, and HEAD still at the ref. An absent or unreadable
+// value is no restore point, never a clean one. The debt check is run-wide:
+// the reset discards every step's uncommitted work, not only this one's.
 export function canOfferCleanRetry(
   root: string,
   state: MigrateRunState,
@@ -59,10 +47,8 @@ export function canOfferCleanRetry(
   );
 }
 
-// The last landed ledger entry covering the step whose commit a reset to the
-// step's gitRefBefore would discard. Entries from earlier attempts predate the
-// ref re-captured at re-dispense and survive the reset; only a commit that is
-// not an ancestor of the ref (or cannot be verified as one) is endangered.
+// The last landed entry covering the step whose commit a reset to the step's
+// `gitRefBefore` would discard: one that is not a verified ancestor of it.
 function endangeredLandedEntry(
   root: string,
   state: MigrateRunState,
@@ -81,8 +67,6 @@ function endangeredLandedEntry(
   return endangered;
 }
 
-// Explains why retry-clean is withheld for a failed or died step; feeds the
-// death dispense and a rejected --step-action=retry-clean.
 export function cleanRetryUnavailableReason(
   root: string,
   state: MigrateRunState,
@@ -105,8 +89,7 @@ export function cleanRetryUnavailableReason(
 
 // Best-effort: run.json records the reverted dispositions and stays
 // authoritative, so a failed append loses only the archive's trail record of
-// the revert. The sink survives a throw: a shell rebuilt before the failure
-// is durable and reads healthy on retry, so this pass must warn it.
+// the revert.
 function archiveReopenedResolutions(
   dir: string,
   state: MigrateRunState,

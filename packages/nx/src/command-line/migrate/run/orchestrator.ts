@@ -469,8 +469,7 @@ function resumeRun(
   policy: MigrateRunPolicy,
   emitAgentInstructions: boolean
 ): OrchestratorInitResult {
-  // Before anything acts on the stored flags: the checkpoint retry below is
-  // a commit, and the run dir is writable by an agent's sandbox.
+  // Refused before the checkpoint retry below, which commits.
   if (
     state.createCommits !== policy.createCommits ||
     (state.skipInstall === true) !== policy.skipInstall
@@ -831,22 +830,11 @@ export async function runOrchestratorReconcile(
         return; // no transition was written
       }
       const target = result.targetStep;
-      // An adopted death commits its working tree; that git side effect runs
-      // before the lock (locked sections must stay synchronous), then the
-      // transition and any still-unrecorded ledger entry land in one fresh-state
-      // write so a crash can't leave the step succeeded unrecorded. As with a fold, that
-      // window is wide, and a rejected reapply after a commit this process ran
-      // is commitForStep's crash-refold window: the commit stays in history,
-      // the ledger misses it, and the rejection names it below so the agent
-      // re-decides against the moved HEAD. A parent-recorded one keeps its
-      // entry.
-      // Without commits the adopted tree is still this migration's result, and
-      // it can carry package.json edits the dead worker never installed; the
-      // install has to run here or the next dispense captures the modified
-      // dependencies as its own baseline and nothing is left to detect them.
-      // A skip leaves the tree as it stands too, so it owes the same install
-      // and, with commits on, the same debt record as a prompt that did not
-      // complete. Retries owe nothing: the rearmed attempt reconciles itself.
+      // The commit is a git side effect, so it runs before the lock (locked
+      // sections stay synchronous); the transition and any unrecorded entry then
+      // land in one write. Adopt and skip keep the tree, so the install they owe
+      // runs here: the next dispense would take the changed deps as its baseline.
+      // Retries owe nothing: the rearmed attempt reconciles itself.
       const { entry, installFailed, recorded }: StepSideEffects =
         stepAction === 'adopt'
           ? state.createCommits
@@ -878,16 +866,9 @@ export async function runOrchestratorReconcile(
       // still failed/died and the agent re-issues the action.
       if (stepAction === 'retry' || stepAction === 'retry-clean') {
         removeHandoff(dir, target.id);
-        // A reset-backed retry that dropped the generator marker reruns the
-        // generator, so payloads stored by earlier attempts describe a run
-        // whose tree was reset away; remove them. Hygiene, not the correctness
-        // boundary: the lineage bound persisted with the next marker
-        // (generatorCompletedAtAttempt) is what keeps a later retry from
-        // re-handing a copy this best-effort removal missed. A plain retry
-        // keeps the files: its lineage is unbroken, and a retained retry
-        // re-hands the newest copy. Removed with the handoff, before the rearm
-        // is persisted: losing them without the rearm only costs a later
-        // emission its stored copy.
+        // A reset-backed retry reruns the generator, so payloads from earlier
+        // attempts describe a tree that was reset away. Hygiene only: the persisted
+        // generatorCompletedAtAttempt bound is the correctness gate.
         if (
           stepAction === 'retry-clean' &&
           result.state.steps.find((s) => s.id === target.id)
@@ -896,12 +877,9 @@ export async function runOrchestratorReconcile(
           removeAgentWorkPayloads(dir, target.id, target.attempt);
         }
       }
-      // Re-validate the transition against the fresh disk state: if a concurrent
-      // reconcile already resolved this step, surface the state machine's own
-      // rejection through the same emitError path rather than writing over it.
-      // The bound attempt keeps the acceptance checks above honest: they ran
-      // against `state`, and a step that was re-armed and failed again in
-      // between is a different attempt those checks never saw.
+      // Re-validate against fresh disk state so a concurrent reconcile's own
+      // rejection surfaces through emitError instead of being written over. The
+      // bound attempt keeps the snapshot checks above honest.
       let freshRejection: string | undefined;
       const written = updateRunState(dir, (fresh) => {
         // A plain retry takes no reservation of its own, so this is where it
@@ -973,8 +951,6 @@ function buildSteps(sortedMigrations: PlannedMigration[]): MigrateStep[] {
     hasGenerator: !isPromptOnlyMigration(m),
   }));
 }
-
-// --- reconcile phases -------------------------------------------------------
 
 async function foldHandoffs(
   root: string,
@@ -1053,11 +1029,9 @@ async function foldHandoffs(
       });
     }
     if (!ready) continue;
-    // Phase 2: the commit and the install are side effects, so they happen
-    // outside the lock; the transition, the issue application, and any
-    // still-unrecorded ledger entry then land in one fresh-state write. A
-    // crash cannot leave the step settled with its commit forgotten. The
-    // tree reservation those side effects take is released after that write.
+    // Phase 2: the commit and the install are side effects, so they run outside
+    // the lock; the transition, the issue application and any unrecorded ledger
+    // entry then land in one fresh-state write.
     let folded = false;
     let updateArchiveError: unknown = null;
     let detailArchiveError: unknown = null;
@@ -1073,16 +1047,10 @@ async function foldHandoffs(
         promptOutcome,
         scope
       );
-      // The write re-validates against fresh disk state, on the attempt this
-      // handoff was read for. That window is wide (a git commit plus a package
-      // install), and 'awaiting-prompt-outcome' recurs, so without the attempt
-      // check a concurrent reconcile's retry could take this outcome as its own.
-      // A dropped fold leaves a commit this process ran in the crash-refold
-      // window: landed, missing from the ledger. A parent-recorded one keeps
-      // its entry.
-      // Written through the lock directly so the issue application is re-archived
-      // on the state the write actually lands on: a claim assigned between the
-      // phases can add an update record phase 1 never saw.
+      // Bound to the attempt this handoff was read for: the window is wide (a
+      // commit plus an install) and 'awaiting-prompt-outcome' recurs, so a
+      // concurrent retry could otherwise take this outcome as its own. Under the
+      // lock so the issue application re-archives on the state it lands on.
       current = withRunStateLock(dir, () => {
         const fresh = readRunState(dir);
         if (liveTreeOperation(fresh, scope.lease?.owner)) return fresh;
@@ -1095,10 +1063,9 @@ async function foldHandoffs(
         if (applied.kind === 'error') return fresh;
         const issues = parseHandoffIssues(result.handoff.extras, fresh, step);
         if (issues.ok !== true) return fresh;
-        // A commit this process ran is appended below and takes the handoff's
-        // resolutions. Otherwise the entry a parent session recorded for this
-        // attempt, in this session or an earlier one, takes them: the
-        // resolutions are stamped at its index and attached to it.
+        // A commit this process ran takes the handoff's resolutions when it is
+        // appended below; otherwise the entry already recorded for this attempt
+        // takes them, stamped at its index.
         const receipt = commitReceipt(
           applied.state,
           applied.state.steps.find((s) => s.id === step.id)
@@ -1196,20 +1163,11 @@ async function foldHandoffs(
   return current;
 }
 
-// What a folded prompt outcome owes the run state. A completed prompt with
-// commits on is committed and its result classified as usual, the install
-// riding in on the commit path. Every other outcome still reconciles the
-// dependencies itself: the prompt (or the generator half before it) can have
-// edited package.json whether or not it completed, and skipping the install
-// there strands that change with nothing left to detect it, since the next
-// step's dispense captures the already-modified state as its own baseline.
-//
-// A failed or skipped prompt is not committed, but it can still have left
-// edits behind, so a tree that is not verifiably clean records debt: the
-// changes then read as pending for a later commit to absorb, and the
-// completion warning knows about them. A failed probe counts as dirty,
-// matching every other retry-safety decision in this file; debt a later landed
-// entry covers costs nothing.
+// What a folded prompt outcome owes the run state. Only a completed prompt
+// with commits on rides its install in on the commit path; every other
+// outcome installs here, or the next dispense takes the unreconciled
+// package.json edit as its own baseline. A tree that is not verifiably clean
+// records debt; a failed probe counts as dirty.
 async function foldLedgerEntry(
   root: string,
   dir: string,
@@ -1265,11 +1223,9 @@ async function retainedTreeSideEffects(
 }
 
 // Installs the dependency changes a step's tree may carry when no commit path
-// will do it (the fold of a prompt outcome that lands no commit, or a
-// non-commit adopt), returning whether the install failed. A failure is
-// recorded rather than thrown: reconcile still owes the agent a dispense, and
-// a warning alone dies with this process. The session broker's own errors do
-// throw, as from commitForStep: the next reconcile redoes this action.
+// will, returning whether the install failed. A failure is recorded rather
+// than thrown: reconcile still owes the agent a dispense. Broker errors do
+// throw, as in commitForStep: the next reconcile redoes the action.
 async function installFailedForStep(
   root: string,
   dir: string,
@@ -1405,10 +1361,8 @@ async function applyReconcileStepAction(
         }': ${cleanRetryUnavailableReason(root, state, step, head)} ${fallback}`,
       };
     }
-    // Reset under the reservation, against the state read once it is held:
-    // the checks above ran on a snapshot. A refused or failed reset leaves
-    // the step failed or died; the agent re-decides against the tree as it
-    // stands.
+    // Reset under the reservation: the checks above ran on a snapshot, and
+    // resetForCleanRetry re-checks against the state read once it is held.
     try {
       await resetStepTree(
         dir,
@@ -1488,18 +1442,10 @@ interface StepSideEffects {
 }
 
 // Commits the working tree left by a folded prompt outcome or an adopted
-// death, returning the ledger entry the caller persists with the step
-// transition unless a session's parent recorded it (null when there was
-// nothing to commit). The worker's
-// recorded-commit path classifies through the same commitResultToLedgerEntry.
-//
-// Remaining narrow window for a commit this process ran (a session's parent
-// records its own as it answers): a crash after the git commit but before the
-// state write refolds on the next reconcile, where the commit attempt sees a
-// clean tree ('no-changes') and the ledger simply misses that landed entry; the
-// changes themselves are never lost. A lost landed entry can also strand the
-// failed entries it had absorbed, which is why completion double-checks the
-// tree before warning about debt.
+// death. The caller persists `entry` with the step transition unless
+// `recorded` says a session's parent already did; null when nothing to
+// commit. A crash between the git commit and the state write leaves that
+// commit in history and out of the ledger; the refold then sees a clean tree.
 async function commitForStep(
   root: string,
   dir: string,
@@ -1537,10 +1483,8 @@ async function commitForStep(
       scope
     );
   } catch (e) {
-    // No result to record: another attempt owns the step, another live
-    // process holds the tree, or the session's parent could not answer and
-    // the next session's reconcile redoes this fold or adopt against
-    // whatever it did land.
+    // Nothing to record: the step moved on, another process holds the tree, or
+    // the parent never answered. The next reconcile redoes this fold or adopt.
     if (
       e instanceof BrokerStaleRequestError ||
       e instanceof BrokerUnavailableError ||
@@ -1548,13 +1492,10 @@ async function commitForStep(
     ) {
       throw e;
     }
-    // The dependency install is the only other thing that throws here: the
-    // commit attempt itself reports through result.status, and the install's
-    // own bookkeeping never throws. Both consequences are recorded, and
-    // neither aborts reconcile so the next dispense still fires. The debt
-    // cannot stand in for the install failure: a later step's commit absorbs
-    // this diff and lands an entry naming this step, which clears the debt
-    // while the dependencies are still missing.
+    // The dependency install is the only other thrower: the commit attempt
+    // reports through result.status. The debt cannot stand in for the install
+    // failure, since a later commit absorbing this diff clears the debt while
+    // the dependencies are still missing.
     warnCommitFailed(name, e);
     return {
       entry: { kind: 'failed', stepIds: [step.id] },
@@ -1574,8 +1515,6 @@ async function commitForStep(
     recorded: commit.recorded,
   };
 }
-
-// --- dispense ---------------------------------------------------------------
 
 function advanceAndDispense(root: string, dir: string, runId: string): void {
   // Demote recorded issues no remaining step can claim before anything is
@@ -2419,8 +2358,6 @@ function completeRun(
   });
 }
 
-// --- output -----------------------------------------------------------------
-
 interface DispensePayload {
   command?: string;
   next?: string;
@@ -2518,8 +2455,6 @@ function reconcileCommand(
   const base = `${pmExecPrefix(root)} nx migrate --run-id=${runId}`;
   return action ? `${base} --step-action=${action}` : base;
 }
-
-// --- helpers ----------------------------------------------------------------
 
 interface DispenseBaselines {
   // Undefined when there is no HEAD to capture. This and treeCleanAtDispense

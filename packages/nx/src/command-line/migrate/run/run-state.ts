@@ -153,10 +153,8 @@ export interface MigrateStep {
   commitLedgerIndex?: number;
   // Set when the tree is reserved to commit for the step, before git runs.
   // Cleared by the landed entry that names the step, or by the release of a
-  // reservation that never ran git. A committer that dies mid-commit, fails
-  // once git ran, or cannot persist the entry for a commit it landed, leaves
-  // it; while it is set the step cannot be skipped: the commit may be in
-  // history.
+  // reservation that never ran git. Anything else (a death mid-commit, a
+  // failure once git ran, a lost entry) leaves it, and blocks a skip.
   commitStarted?: boolean;
   // Set after the generator half runs and before the commit is attempted, so a
   // retry finishes the step instead of reapplying the changes. Dropped with the

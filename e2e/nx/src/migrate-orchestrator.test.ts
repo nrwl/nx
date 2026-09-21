@@ -1320,11 +1320,9 @@ describe('migrate orchestrator (dark launch)', () => {
     expect(runCommand('git status --porcelain').trim()).toBe('');
   }, 600000);
 
-  // A `claude` on PATH that records how it was started, then drives the run
-  // the way a session would: through the reconcile command in its bootstrap.
-  // Started by the per-step runner instead, it writes the step's handoff.
-  // With FAKE_AGENT_KILL_PARENT it starts the first step detached, waits for
-  // the step's request to reach the parent, and kills the parent.
+  // A `claude` on PATH: as the master it drives the run through its bootstrap
+  // reconcile command; per step it writes the handoff. FAKE_AGENT_KILL_PARENT
+  // kills the parent once the first step's request reaches it.
   const FAKE_AGENT_SCRIPT = `#!/usr/bin/env node
 const { execSync, spawn } = require('child_process');
 const fs = require('fs');
@@ -1431,8 +1429,8 @@ setTimeout(() => {}, 120000);
   }
 
   // The selected package manager on PATH, logging each call and whether the
-  // gate env var (stripped from the agent's env) reached it. PATH stays as is
-  // for the child: stripping it would hide an install a dispensed command ran.
+  // gate env var reached it. PATH stays intact for the child so an install a
+  // dispensed command ran still shows up.
   const FAKE_PM_SCRIPT = `#!/usr/bin/env node
 const { spawnSync } = require('child_process');
 const fs = require('fs');
@@ -1468,9 +1466,8 @@ process.exit(status ?? 1);
     return { pmDir, pmLog: join(tmpProjPath(), 'fake-pm.log') };
   }
 
-  // `git` on PATH, forwarding every call and logging each commit's message
-  // and whether the gate env var (stripped from the agent's env) reached it.
-  // A commit whose message contains FAKE_GIT_REFUSE fails instead.
+  // `git` on PATH, logging each commit message and whether the gate env var
+  // reached it; a message containing FAKE_GIT_REFUSE fails instead.
   const FAKE_GIT_SCRIPT = `#!/usr/bin/env node
 const { spawnSync } = require('child_process');
 const fs = require('fs');
@@ -1515,8 +1512,7 @@ process.exit(status ?? 1);
   }
 
   // `--agentic=<id>` enables only on a TTY, so nx runs in a real terminal; the
-  // exit code comes back through a file because the terminal reports only
-  // its own status.
+  // exit code comes back through a file since the terminal reports only its own.
   async function runMigrateInTerminal(
     env: Record<string, string>,
     commitsFlag = '--no-create-commits'
@@ -1765,9 +1761,8 @@ process.exit(status ?? 1);
       writePlan([depsMig]);
       const { binDir, logFile } = installFakeAgent();
       const { pmDir, pmLog } = installFakePackageManager();
-      // A real install prunes what package.json does not declare, so the
-      // migration package is declared from a copy, and the dependency
-      // deps-mig adds exists locally. Neither needs a registry.
+      // A real install prunes undeclared deps, so the migration package is declared
+      // from a local copy and the dependency it adds is local too: no registry.
       cpSync(
         join(tmpProjPath(), 'node_modules', PKG),
         join(tmpProjPath(), PKG),

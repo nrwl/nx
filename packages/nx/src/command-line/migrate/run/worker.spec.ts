@@ -1572,8 +1572,8 @@ describe('runSingleMigrationWorker', () => {
     });
 
     it('finishes a retried generator step whose earlier commit already landed unrecorded, committing nothing', async () => {
-      // The previous attempt's committer died after git ran: the tree is
-      // clean, the mark is set, and the retry is what resolves it.
+      // The previous attempt's committer died after git ran, so the tree is
+      // already clean and this retry commits nothing new.
       mockCommit.mockResolvedValue({ status: 'no-changes' });
       const dir = setupRun('run-1', {
         steps: [
@@ -2683,8 +2683,6 @@ describe('runSingleMigrationWorker', () => {
         run
       );
 
-      // The parent committed once and recorded it; the worker appended
-      // nothing of its own.
       expect(mockCommit).toHaveBeenCalledTimes(1);
       const state = readRunState(dir);
       expect(state.steps[1].status).toBe('succeeded');

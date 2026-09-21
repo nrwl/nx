@@ -1159,9 +1159,6 @@ describe('run-state', () => {
     });
 
     it('reports a run dir whose run.json cannot be read instead of treating it as absent', () => {
-      // A directory where run.json belongs is not a regular file, so discovery
-      // reports it as uninterpretable rather than reading through it or
-      // treating it as absent.
       mkdirSync(join(migrateRunsDir(root), 'unreadable', 'run.json'), {
         recursive: true,
       });

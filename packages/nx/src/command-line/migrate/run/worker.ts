@@ -220,9 +220,8 @@ function readMigrationsSource(
   if (runId) {
     const dir = runDir(root, runId);
     // A missing run.json would surface a raw ENOENT from readRunState; report
-    // it the way the orchestrator does instead, down to carrying no
-    // remediation: starting a run is a separate, gated entry point, and
-    // `--run-migrations` would run the whole plan in process instead.
+    // it the way the orchestrator does instead, with no remediation: starting
+    // a run is a gated entry point of its own.
     if (!hasRunState(dir)) {
       throw new Error(
         `No migrate run '${runId}' was found under ${MIGRATE_RUNS_RELATIVE_DIR}.`
@@ -669,10 +668,9 @@ async function runRecorded(
         generatorAlreadyCompleted &&
         startedStep.validationOwed === true
       ) {
-        // The persisted flag is the only record that these changes still owe a
-        // validation pass: the decision needed the generator result, which is
-        // gone with the attempt that made it, and a true waiver never writes the
-        // flag. The commit stays with the fold, as on a first attempt.
+        // The flag is the only record that these changes still owe a validation
+        // pass; the decision needed the generator result, which is gone with the
+        // attempt that made it. The commit stays with the fold.
         await reinstallFromBaseline();
         const carried = latestStoredAgentWorkPayload(
           dir,
@@ -695,8 +693,6 @@ async function runRecorded(
         }
         awaitingKind = 'generator-validation';
       } else if (generatorAlreadyCompleted) {
-        // Reached when the earlier attempt waived the AI step, or none was owed
-        // (no changes, validation off, or an older-nx state).
         state = await finishCompletedGenerator(
           dir,
           root,
@@ -752,9 +748,7 @@ async function runRecorded(
 
         // Recorded before the commit is attempted: from here on the changes are
         // in the tree, so a failed install or commit must leave a retry with
-        // only those left to do rather than running the generator again. The
-        // waiver and the owed validation ride along so that retry re-emits
-        // exactly the agent work this attempt decided was owed.
+        // only those left to do rather than running the generator again.
         state = transition(dir, {
           type: 'markGeneratorCompleted',
           stepId: step.id,
@@ -786,13 +780,10 @@ async function runRecorded(
             installer.installDepsIfChanged()
           );
 
-        // Commits follow the run config, not CLI flags, and only when the
-        // generator changed something: a no-op step's commit would absorb prior
-        // pending diffs under its name. A step handing work back defers its
-        // commit to the fold, so the migration lands as one commit and a failed
-        // hand-back leaves the changes uncommitted for review, as in the classic
-        // loop. The install still runs first: the agent may run tasks that need
-        // what the generator added.
+        // A no-op step's commit would absorb prior pending diffs under its name;
+        // a step handing work back defers its commit to the fold, so the
+        // migration still lands as one commit. The install runs either way: the
+        // agent may run tasks that need what the generator added.
         if (
           state.createCommits &&
           madeChanges &&

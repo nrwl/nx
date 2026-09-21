@@ -101,9 +101,8 @@ describe('adaptSpawnForWindowsShim', () => {
       ['arg with spaces', 'arg&with&amp', 'plain'],
       {}
     );
-    // Each arg is double-quoted, then cmd.exe metacharacters (including the
-    // quotes and the embedded spaces) are caret-escaped. cmd strips the
-    // carets in its first parsing pass, leaving the original argument intact.
+    // Args are quoted first, then caret-escaped, so the quotes get escaped
+    // too; cmd strips the carets on its first parse, restoring the argument.
     const cmdLine = out.args[5];
     expect(cmdLine).toContain('^"arg^ with^ spaces^"');
     expect(cmdLine).toContain('^"arg^&with^&amp^"');
@@ -164,8 +163,6 @@ describe('adaptSpawnForWindowsShim', () => {
     setPlatform('win32');
     process.env.comspec = 'C:\\Windows\\System32\\cmd.exe';
     const out = adaptSpawnForWindowsShim('C:\\bin\\claude.cmd', ['a', 'b'], {});
-    // Spelled out rather than recomputed from `out`, which would pass for any
-    // formula the adapter used.
     const expected =
       'C:\\Windows\\System32\\cmd.exe /e:on /v:off /d /s /c ' +
       '"^^^"C:\\bin\\claude.cmd^^^" ^"a^" ^"b^""';

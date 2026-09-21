@@ -87,8 +87,7 @@ function sanitizeSegment(value: string): string {
 
 const STEP_NAME_PREFIX_MAX_BYTES = 64;
 
-// Cuts on code points so a multibyte character is never split, and counts
-// UTF-8 bytes because the filesystem limit is per byte, not per character.
+// Truncates to a UTF-8 byte budget without splitting a code point.
 export function truncateUtf8(value: string, maxBytes: number): string {
   let out = '';
   let used = 0;

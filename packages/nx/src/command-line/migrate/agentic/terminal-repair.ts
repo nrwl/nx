@@ -4,10 +4,9 @@ export function restoreTermiosAfterAgent(): void {
   if (process.platform === 'win32') return;
   if (!process.stdin.isTTY) return;
   try {
-    // `stty sane` resets termios to a known cooked state via the kernel —
-    // independent of Node's libuv mode tracking (Node's setRawMode(false)
-    // short-circuits when libuv's per-handle mode is already NORMAL, even
-    // if the OS-level termios was changed out-of-band by the agent).
+    // Not setRawMode(false): it short-circuits when libuv's per-handle mode
+    // is already NORMAL, even after the agent changed termios out-of-band.
+    // `stty sane` goes through the kernel instead.
     execSync('stty sane < /dev/tty', {
       stdio: ['ignore', 'ignore', 'ignore'],
       windowsHide: true,
@@ -17,7 +16,7 @@ export function restoreTermiosAfterAgent(): void {
     // (e.g. a status footer past where our text wraps).
     process.stdout.write('\r\x1B[J');
   } catch {
-    // best-effort — if stty isn't on PATH or /dev/tty isn't accessible,
-    // the worst case is the pre-existing staircase + cell-bleed output.
+    // Best-effort: if stty isn't on PATH or /dev/tty isn't accessible, the
+    // worst case is the pre-existing staircase + cell-bleed output.
   }
 }

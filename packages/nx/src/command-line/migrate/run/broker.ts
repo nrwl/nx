@@ -4,10 +4,8 @@
 // itself through NX_MIGRATE_BROKER, and a step then hands its install, and
 // its commit when one is due, over a request/result file pair under
 // <runDir>/broker/ instead of running them itself. Nothing here authorizes:
-// every file the parent could consult lives in the workspace the sandboxed
-// side can write, and installs and commits always ran unsandboxed from the
-// process the user started. The parent's checks only keep a stale attempt or
-// a duplicate request from landing twice.
+// every file the parent could consult is writable from the sandbox, so the
+// parent's own invocation decides what it installs and commits.
 
 import { randomBytes } from 'crypto';
 import { existsSync, readdirSync, rmSync } from 'fs';
@@ -58,12 +56,9 @@ export const BROKER_ENV_VAR = 'NX_MIGRATE_BROKER';
 const BROKER_DIR_NAME = 'broker';
 const CHILD_POLL_INTERVAL_MS = 250;
 
-// The seam a request comes from. A seam runs once per attempt, so the seam
-// names the request: a repeat of the same operation (a refold after a crash,
-// the adopt of a worker that died mid-commit) reads the first answer instead
-// of landing twice. Commits share one seam: a worker's, the fold's and the
-// adopt's are the same operation on the same tree. The reset is the
-// exception: each clean retry names its own request (see `invocation`).
+// The seam a request comes from, and its name: within a session, non-reset
+// seams reuse one answer per attempt (see `invocation`). A worker's commit,
+// the fold's and the adopt's share one seam.
 export type BrokerRequestKind =
   | 'commit'
   // A worker's install: after its generator, or a retry's from the baseline.
@@ -144,9 +139,8 @@ export interface TreeOperationRequest {
 export interface TreeLease {
   readonly owner: string;
   // The step this operation marked as having a commit under way, if any.
-  // Cleared by the seam once git ran: a landed entry accounts for the mark
-  // then, and a record write that fails, or a failure after git started,
-  // must leave it.
+  // Unset by the seam once git ran, so the release leaves the mark standing:
+  // only a landed ledger entry can account for a commit that may be in history.
   markedStepId?: string;
   release(): void;
 }
@@ -207,9 +201,7 @@ export function acquireTreeOperation(
 
 /**
  * Owner-checked: a lease released late never drops a newer reservation, nor
- * the mark it set. Releasing the tree and accounting for the commit are
- * different things: the release clears the mark of an operation that never
- * ran git, while a commit git ran is the ledger entry's to account for.
+ * the mark it set.
  */
 export function releaseTreeOperation(
   dir: string,
@@ -267,8 +259,6 @@ function atSeam(
   );
 }
 
-// The statuses a step has at each seam: a worker mid-run, a fold of a
-// handed-back prompt, a skipped failure or an adopted death.
 const SEAM_STATUSES: Record<
   BrokerRequestKind,
   ReadonlySet<MigrateStepStatus>

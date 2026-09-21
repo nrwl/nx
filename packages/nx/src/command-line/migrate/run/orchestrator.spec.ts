@@ -2292,8 +2292,6 @@ describe('orchestrator', () => {
     });
 
     it('keeps an unrecorded commit marked when a failed handoff records dirty-tree debt', async () => {
-      // The fold's own commit died mid-commit earlier; the debt this fold
-      // records for the retained tree says nothing about that commit.
       mockGetWorkingTreeStatus.mockReturnValue('dirty');
       const dir = setupRun('run-1', {
         steps: [
@@ -3163,9 +3161,6 @@ describe('orchestrator', () => {
     });
 
     it('forgets the generator run and reopens its resolutions before the reset, so a failed reset leaves the generator pending', async () => {
-      // The reset can have discarded the generator's changes before it
-      // failed, and nothing after it is guaranteed to run: the marker and the
-      // fixes the attempt claimed must already be gone.
       mockGetLatestCommitSha.mockReturnValue(
         'beef0001beef0001beef0001beef0001beef0001'
       );
@@ -3217,9 +3212,8 @@ describe('orchestrator', () => {
     });
 
     it('changes nothing for a retry-clean whose reset finds the tree taken after the snapshot', async () => {
-      // The reset forgets the generator run and reopens its resolutions
-      // before git runs, but only once the tree is reserved: refused for a
-      // busy tree, it must leave both as they were.
+      // The reset only forgets the generator run and reopens the issues once
+      // the tree is reserved, so a busy-tree refusal must leave both untouched.
       const dir = setupRun('run-1', {
         steps: [
           migStep('step-1', '@nx/js:gen', 'died', {
@@ -3280,9 +3274,6 @@ describe('orchestrator', () => {
     });
 
     it('rejects a plain retry whose snapshot saw the generator marker a clean retry dropped meanwhile', async () => {
-      // The plain retry's acceptance skipped the pre-marker safety check on
-      // the strength of the marker; the write that rearms must notice the
-      // marker is gone, since the attempt did not move.
       const dir = setupRun('run-1', {
         steps: [
           migStep('step-1', '@nx/js:gen', 'failed', {
@@ -6119,7 +6110,6 @@ describe('orchestrator', () => {
         runOrchestratorReconcile({ root, runId: 'run-1' })
       );
 
-      // The parent committed once and recorded it; the fold appended nothing.
       expect(mockCommit).toHaveBeenCalledTimes(1);
       const state = readRunState(dir);
       expect(state.steps[0].status).toBe('succeeded');
@@ -6219,7 +6209,6 @@ describe('orchestrator', () => {
       expect(lastBlock().action).toBe('error');
       expect(lastBlock().payload.instructions).toContain("Use 'adopt'");
 
-      // The adopt reads the answer the session recorded; git commits once.
       await runOrchestratorReconcile({
         root,
         runId: 'run-1',
@@ -6369,7 +6358,6 @@ describe('orchestrator', () => {
 
       await runOrchestratorReconcile({ root, runId: 'run-1' });
 
-      // The fix reported now is in the new commit, not the recorded one.
       const state = readRunState(dir);
       expect(state.issues[0].resolvedAtCommitCount).toBe(1);
       expect(state.commits).toEqual([
@@ -6692,8 +6680,6 @@ describe('orchestrator', () => {
       expect(lastBlock().action).toBe('error');
       expect(lastBlock().payload.instructions).toContain("Use 'adopt'");
 
-      // A plain retry re-dispenses past the commit; the new attempt's worker
-      // dies before it acquires anything of its own.
       await runOrchestratorReconcile({
         root,
         runId: 'run-1',

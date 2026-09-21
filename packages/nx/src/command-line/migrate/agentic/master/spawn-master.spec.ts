@@ -209,7 +209,6 @@ describe('spawnMasterSession', () => {
     mockSpawn.mockImplementation(() => child);
 
     const pending = spawnMasterSession(input());
-    // Before the child's own `spawn` event has fired.
     const beforeSpawnEvent = process.listeners('SIGINT').length;
     await tick();
     const afterSpawnEvent = process.listeners('SIGINT').length;

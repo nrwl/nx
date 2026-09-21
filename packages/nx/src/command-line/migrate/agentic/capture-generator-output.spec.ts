@@ -182,9 +182,8 @@ describe('generator output capture', () => {
     });
 
     it('keeps a lone low surrogate that fits at the tail cut', () => {
-      // 4096 bytes fill the head; the rest (`A`, the 3-byte surrogate, the
-      // x's and the record's newline) overflows the tail by one byte, so the
-      // cut lands between `A` and the lone surrogate.
+      // 4096 bytes fill the head; the rest (`A`, the surrogate, the x's and the
+      // newline) overflows the tail by one byte: the cut lands after `A`.
       const tail = MAX_GENERATOR_OUTPUT_BYTES - 4096 - MARKER_BYTES;
       const flushed = captured(() =>
         console.log('h'.repeat(4096) + 'A\uDC00' + 'x'.repeat(tail - 4))

@@ -1335,7 +1335,6 @@ describe('migrate run issues', () => {
           issueIds: ['issue-1', 'issue-2'],
         },
       ]);
-      // The entry now carries both, so a repeat has nothing to add.
       expect(enrichCommitEntryIssueIds(enriched, 0)).toBe(enriched);
     });
 

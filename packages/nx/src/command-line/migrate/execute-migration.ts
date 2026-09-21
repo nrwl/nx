@@ -104,10 +104,9 @@ export function runInstall(
   });
 
   return new Promise<void>((resolve, reject) => {
-    // For npm, pipe stderr so we can detect peer dependency errors while still
-    // mirroring it live to the user's terminal. Without a sink, other package
-    // managers inherit stderr directly since we don't need to inspect their
-    // output.
+    // npm's stderr is piped so peer dependency errors can be detected in it.
+    // Without a sink it is mirrored live and other package managers inherit
+    // stderr directly, since their output is not inspected.
     const shouldCaptureStderr = packageManager === 'npm';
     const child = spawn(installCommand, {
       shell: true,

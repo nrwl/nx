@@ -42,7 +42,7 @@ const RULE_SAFE_RUN_DIR_NAME = /^[A-Za-z0-9][A-Za-z0-9._+-]*$/;
  * handoffs decide how its steps settle. `Edit` is the only tool name file
  * rules are matched against, and it covers creating the file as well as
  * correcting one already written. Prefix-less patterns resolve against the
- * session cwd, pinned to the workspace root below.
+ * session cwd, which every caller pins to the workspace root.
  *
  * Returns null for a name it cannot express, which costs the approval prompt
  * this exists to avoid. That beats widening the rule, and nothing narrower is

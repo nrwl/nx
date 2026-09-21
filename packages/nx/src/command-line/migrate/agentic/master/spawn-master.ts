@@ -36,8 +36,6 @@ export interface SpawnMasterSessionInput {
   runId: string;
   runbookPath: string;
   reconcileCommand: string;
-  // This invocation's own install and commit policy, answered from for every
-  // request the session makes.
   policy: MigrateRunPolicy;
   sentinelPollIntervalMs?: number;
   gracefulExitMs?: number;
@@ -59,10 +57,9 @@ const STRIPPED_ENV_VARS = [
   'NX_MIGRATE_ORCHESTRATOR',
 ];
 
-// Lives under handoffs/ because claude's run-scoped Edit rule already admits
-// the write and the orchestrator reads handoffs by step id, never by listing.
-// The session nonce keeps a sentinel from an earlier session of the same run,
-// stale or still being written, from closing this one.
+// Under handoffs/ so claude's run-scoped Edit rule already admits the write;
+// nothing lists that directory. The nonce keeps a sentinel left by an earlier
+// session of the same run from closing this one.
 function sessionCompleteSentinel(
   runRoot: string,
   runId: string,
@@ -127,9 +124,7 @@ export async function spawnMasterSession(
       windowsHide: true,
     });
     assertWithinWindowsCommandLineBudget(adapted, agent, runId);
-    // Recreated if the agent removed it, refused if something else stands in
-    // its place: a symlink would send the agent's write and the poll below
-    // elsewhere.
+    // A symlink here would send the agent's write and the poll below elsewhere.
     const handoffsDir = dirname(sentinelPath);
     ensureRunSubdir(
       handoffsDir,
@@ -152,9 +147,8 @@ export async function spawnMasterSession(
   process.on('SIGINT', swallowSigint);
   const sentinelWatch = new AbortController();
   let brokerFailure: Error | undefined;
-  // Settles once the poll is aborted and the request in flight, if any, is
-  // answered; earlier only when a request could not be answered, which is
-  // where it must not sit unanswered while this process lives on.
+  // Settles when the poll aborts and the request in flight is answered, or
+  // early when a request could not be answered at all.
   const brokerDone = serviceBrokerUntilAborted(
     broker,
     sentinelPollIntervalMs,
@@ -277,8 +271,7 @@ function prosePath(runRoot: string, path: string): string {
   return relative(runRoot, path).split(sep).join('/');
 }
 
-// Resolves once the file exists. Never settles after an abort; the race it
-// feeds has settled by then.
+// Never settles after an abort; the race it feeds has settled by then.
 function waitForFile(
   path: string,
   intervalMs: number,

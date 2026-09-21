@@ -1029,9 +1029,10 @@ export function tryCommitChanges(
 }
 
 /**
- * `git reset --hard <ref>` then `git clean -fd`, keeping `keepPaths` (repo
- * relative) out of the clean. Throws with git's stderr when either fails.
- * `ref` is a sha a caller validated with `GIT_SHA`, never user input.
+ * `git reset --hard <ref>` then `git clean -fd`, keeping `keepPaths` (git
+ * exclusion patterns, repo-relative) out of the clean. Throws with git's
+ * stderr when either fails. `ref` is a sha a caller validated with `GIT_SHA`,
+ * never user input.
  */
 export function resetWorkingTree(
   ref: string,

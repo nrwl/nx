@@ -162,8 +162,6 @@ const NOOP_CAPTURE: GeneratorOutputCapture = {
 };
 
 export function installGeneratorOutputCapture(): GeneratorOutputCapture {
-  // Refuse to layer if the previous install never restored. Returns a noop
-  // handle so callers' `flush()` / `restore()` calls remain safe.
   for (const method of CONSOLE_METHODS) {
     if ((console[method] as { [CAPTURED_MARKER]?: true })[CAPTURED_MARKER]) {
       logger.verbose(
