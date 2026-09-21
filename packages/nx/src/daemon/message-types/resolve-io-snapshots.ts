@@ -11,6 +11,8 @@ export type HandleResolveIoSnapshotsMessage = {
   ioSnapshotEnv: {
     NX_IO_SNAPSHOTS?: string;
     NX_IO_SNAPSHOTS_MAX_AGE?: string;
+    /** Decided by the run: the daemon's env may not carry CI at all. */
+    ci?: boolean;
   };
 };
 

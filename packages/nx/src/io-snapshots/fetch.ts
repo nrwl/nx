@@ -67,7 +67,7 @@ const WARNED_REASONS = new Set([
 export async function fetchIoSnapshotsForRun(
   nxJson: NxJsonConfiguration,
   runnerOptions: IoSnapshotCloudOptions,
-  env: IoSnapshotEnv = process.env
+  env: IoSnapshotEnv = ioSnapshotEnv()
 ): Promise<IoSnapshots | null> {
   if (!isIoSnapshotFetchEnabled(nxJson, runnerOptions, env)) {
     return null;
@@ -129,15 +129,10 @@ export async function fetchIoSnapshotsForRun(
       })
     );
   } catch (e) {
-    const reason = reasonFromError(e);
-    if (cached) {
-      const stale = loadIoSnapshots(db, head, 'stale-offline', errorMessage(e));
-      if (stale.status !== 'skipped') {
-        return reportIoSnapshotResolution(stale);
-      }
-    }
+    // No fallback to an older set for this commit: it would hash from a
+    // recording the run could not refresh, and CI can hash natively instead.
     return reportIoSnapshotResolution(
-      skippedIoSnapshots(reason, errorMessage(e))
+      skippedIoSnapshots(reasonFromError(e), errorMessage(e))
     );
   }
 }

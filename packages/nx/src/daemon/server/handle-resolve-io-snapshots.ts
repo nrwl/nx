@@ -15,6 +15,8 @@ import { rememberIoSnapshots } from './io-snapshots-state';
 export async function handleResolveIoSnapshots(
   payload: HandleResolveIoSnapshotsMessage
 ) {
+  // An absent env (an older client) reads as not CI, so snapshots stay off
+  // rather than the daemon deciding from its own environment.
   const resolved = await fetchIoSnapshotsForRun(
     readNxJson(),
     (payload.runnerOptions ?? {}) as IoSnapshotCloudOptions,

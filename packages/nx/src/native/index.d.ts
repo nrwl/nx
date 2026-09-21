@@ -143,8 +143,8 @@ export declare class IoSnapshots {
   /** `fetched` | `cached` | `skipped` */
   get status(): string
   /**
-   * Why the fetch was skipped, `stale-offline` when a stale set was
-   * reused, or `no-bundle` / `invalid-bundle` from `loadIoSnapshots`.
+   * Why the fetch was skipped, or `no-bundle` / `invalid-bundle` from
+   * `loadIoSnapshots`.
    */
   get reason(): string | null
   get message(): string | null
@@ -847,7 +847,7 @@ export interface Link {
 /**
  * The stored set for `commit`, without touching the network: `nx show`,
  * `nx graph` and the daemon load the commit the run resolved. `reason` and
- * `message` annotate a deliberate reuse, such as `stale-offline`.
+ * `message` carry what the caller already knows about the set.
  */
 export declare function loadIoSnapshots(db: ExternalObject<NxDbConnection>, commit: string, reason?: string | undefined | null, message?: string | undefined | null): IoSnapshots
 

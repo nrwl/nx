@@ -95,8 +95,8 @@ impl IoSnapshots {
         self.status.clone()
     }
 
-    /// Why the fetch was skipped, `stale-offline` when a stale set was
-    /// reused, or `no-bundle` / `invalid-bundle` from `loadIoSnapshots`.
+    /// Why the fetch was skipped, or `no-bundle` / `invalid-bundle` from
+    /// `loadIoSnapshots`.
     #[napi(getter)]
     pub fn reason(&self) -> Option<String> {
         self.reason.clone()
@@ -205,7 +205,7 @@ pub fn skipped_io_snapshots(reason: String, message: String) -> IoSnapshots {
 
 /// The stored set for `commit`, without touching the network: `nx show`,
 /// `nx graph` and the daemon load the commit the run resolved. `reason` and
-/// `message` annotate a deliberate reuse, such as `stale-offline`.
+/// `message` carry what the caller already knows about the set.
 #[cfg(not(target_arch = "wasm32"))]
 #[napi]
 pub fn load_io_snapshots(

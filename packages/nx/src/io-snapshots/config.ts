@@ -4,6 +4,7 @@
 
 import type { NxJsonConfiguration } from '../config/nx-json';
 import { getLatestCommitSha } from '../utils/git-utils';
+import { isCI } from '../utils/is-ci';
 import { isNxCloudDisabled, isNxCloudUsed } from '../utils/nx-cloud-utils';
 
 export interface IoSnapshotCloudOptions {
@@ -21,23 +22,31 @@ export interface IoSnapshotCloudOptions {
 export interface IoSnapshotEnv {
   NX_IO_SNAPSHOTS?: string;
   NX_IO_SNAPSHOTS_MAX_AGE?: string;
+  /**
+   * Whether the run is in CI, decided by the run rather than read here: the
+   * daemon's own environment predates it and may not carry CI at all.
+   */
+  ci?: boolean;
 }
 
 /**
- * On whenever the workspace is connected to Nx Cloud; the server decides
- * whether anything comes back. `NX_IO_SNAPSHOTS=false` is the kill switch,
- * `NX_IO_SNAPSHOTS=true` forces it on for debugging.
+ * On in CI when the workspace is connected to Nx Cloud; the server decides
+ * whether anything comes back. Off outside CI: a recording is taken at a
+ * commit, so a working tree with uncommitted edits can read files no
+ * recording accounts for. `NX_IO_SNAPSHOTS=false` is the kill switch, and
+ * `true` forces it on anywhere for debugging.
  */
 export function isIoSnapshotFetchEnabled(
   nxJson: NxJsonConfiguration,
   runnerOptions: IoSnapshotCloudOptions = {},
-  env: IoSnapshotEnv = process.env
+  env: IoSnapshotEnv = ioSnapshotEnv()
 ): boolean {
   // A disabled Cloud wins over everything, including the debug override.
   if (isNxCloudDisabled(nxJson) || runnerOptions.cloud === false) return false;
   const override = env.NX_IO_SNAPSHOTS;
   if (override === 'false') return false;
-  return override === 'true' || isNxCloudUsed(nxJson);
+  if (override === 'true') return true;
+  return env.ci === true && isNxCloudUsed(nxJson);
 }
 
 /** The subset of this run's environment the decision and the max age read. */
@@ -47,6 +56,7 @@ export function ioSnapshotEnv(
   return {
     NX_IO_SNAPSHOTS: env.NX_IO_SNAPSHOTS,
     NX_IO_SNAPSHOTS_MAX_AGE: env.NX_IO_SNAPSHOTS_MAX_AGE,
+    ci: !!isCI(),
   };
 }
 

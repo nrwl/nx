@@ -76,19 +76,19 @@ describe('resolveIoSnapshotsForRun', () => {
     expect(native.loadIoSnapshots).not.toHaveBeenCalled();
   });
 
-  it('carries a stale-offline load back with its reason', async () => {
+  it('carries the daemon reason into the local load', async () => {
     daemon.resolveIoSnapshots.mockResolvedValue({
       status: 'cached',
-      reason: 'stale-offline',
-      message: 'ENOTFOUND',
+      reason: 'no-bundle',
+      message: 'nothing stored yet',
       commit: 'head',
     });
     await resolveIoSnapshotsForRun(nxJson, {});
     expect(native.loadIoSnapshots).toHaveBeenCalledWith(
       'db',
       'head',
-      'stale-offline',
-      'ENOTFOUND'
+      'no-bundle',
+      'nothing stored yet'
     );
   });
 

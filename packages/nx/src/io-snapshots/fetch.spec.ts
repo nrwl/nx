@@ -33,6 +33,13 @@ vi.mock('../utils/logger', () => ({ logger: { verbose: vi.fn() } }));
 
 describe('fetchIoSnapshotsForRun', () => {
   const nxJson = {} as any;
+  /** The run's env, with CI decided explicitly so the test machine cannot. */
+  const ci = (overrides: Record<string, unknown> = {}) => ({
+    ci: true,
+    NX_IO_SNAPSHOTS: process.env.NX_IO_SNAPSHOTS,
+    NX_IO_SNAPSHOTS_MAX_AGE: process.env.NX_IO_SNAPSHOTS_MAX_AGE,
+    ...overrides,
+  });
   const cached = (fetchedAt: number, updatedAt = 7) => ({
     fetchedAt,
     updatedAt,
@@ -63,15 +70,38 @@ describe('fetchIoSnapshotsForRun', () => {
     native.readIoSnapshotResolution.mockReturnValue(null);
   });
 
+  it('is off outside CI', async () => {
+    expect(
+      await fetchIoSnapshotsForRun(nxJson, {}, ci({ ci: false }))
+    ).toBeNull();
+    expect(cloud.verifyOrUpdateNxCloudClient).not.toHaveBeenCalled();
+  });
+
+  it('is forced on outside CI by the debug override', async () => {
+    cloud.readIoSnapshots.mockResolvedValue({
+      commits: ['head'],
+      updatedAt: 9,
+      snapshots: {},
+    });
+    native.importIoSnapshots.mockReturnValue(loaded());
+    expect(
+      await fetchIoSnapshotsForRun(
+        nxJson,
+        {},
+        ci({ ci: false, NX_IO_SNAPSHOTS: 'true' })
+      )
+    ).toMatchObject({ status: 'cached' });
+  });
+
   it('is off when the kill switch is set', async () => {
     process.env.NX_IO_SNAPSHOTS = 'false';
-    expect(await fetchIoSnapshotsForRun(nxJson, {})).toBeNull();
+    expect(await fetchIoSnapshotsForRun(nxJson, {}, ci())).toBeNull();
     expect(cloud.verifyOrUpdateNxCloudClient).not.toHaveBeenCalled();
   });
 
   it('serves a fresh cached bundle without loading the client', async () => {
     native.readIoSnapshotResolution.mockReturnValue(cached(Date.now()));
-    const result = await fetchIoSnapshotsForRun(nxJson, {});
+    const result = await fetchIoSnapshotsForRun(nxJson, {}, ci());
     expect(result.status).toBe('cached');
     expect(native.loadIoSnapshots).toHaveBeenCalledWith('db', 'head');
     expect(cloud.verifyOrUpdateNxCloudClient).not.toHaveBeenCalled();
@@ -81,17 +111,21 @@ describe('fetchIoSnapshotsForRun', () => {
     native.readIoSnapshotResolution.mockReturnValue(cached(Date.now()));
     cloud.readIoSnapshots.mockResolvedValue(null);
     process.env.NX_IO_SNAPSHOTS_MAX_AGE = '0';
-    await fetchIoSnapshotsForRun(nxJson, {});
+    await fetchIoSnapshotsForRun(nxJson, {}, ci());
     expect(cloud.readIoSnapshots).toHaveBeenCalledTimes(1);
     process.env.NX_IO_SNAPSHOTS_MAX_AGE = 'soon';
-    await fetchIoSnapshotsForRun(nxJson, {});
+    await fetchIoSnapshotsForRun(nxJson, {}, ci());
     expect(cloud.readIoSnapshots).toHaveBeenCalledTimes(1);
   });
 
   it('asks the client with knownUpdatedAt and keeps the cache when unchanged', async () => {
     native.readIoSnapshotResolution.mockReturnValue(cached(0, 7));
     cloud.readIoSnapshots.mockResolvedValue(null);
-    const result = await fetchIoSnapshotsForRun(nxJson, { accessToken: 't' });
+    const result = await fetchIoSnapshotsForRun(
+      nxJson,
+      { accessToken: 't' },
+      ci()
+    );
     expect(cloud.readIoSnapshots).toHaveBeenCalledWith(
       expect.objectContaining({
         knownUpdatedAt: 7,
@@ -115,7 +149,7 @@ describe('fetchIoSnapshotsForRun', () => {
       reason: null,
       resolution: loaded().resolution,
     });
-    const result = await fetchIoSnapshotsForRun(nxJson, {});
+    const result = await fetchIoSnapshotsForRun(nxJson, {}, ci());
     expect(native.importIoSnapshots).toHaveBeenCalledWith(
       'db',
       expect.objectContaining({
@@ -140,19 +174,17 @@ describe('fetchIoSnapshotsForRun', () => {
     });
     cloud.readIoSnapshots.mockRejectedValue(offline);
 
+    // A stored set for this commit is NOT reused when the fetch fails: the
+    // run hashes natively rather than from a recording it could not refresh.
     native.readIoSnapshotResolution.mockReturnValue(cached(0));
-    native.loadIoSnapshots.mockReturnValue(loaded('stale-offline'));
-    const stale = await fetchIoSnapshotsForRun(nxJson, {});
-    expect(native.loadIoSnapshots).toHaveBeenCalledWith(
-      'db',
-      'head',
-      'stale-offline',
-      'getaddrinfo ENOTFOUND'
-    );
-    expect(stale.reason).toBe('stale-offline');
+    expect(await fetchIoSnapshotsForRun(nxJson, {}, ci())).toMatchObject({
+      status: 'skipped',
+      reason: 'offline',
+    });
+    expect(native.loadIoSnapshots).not.toHaveBeenCalled();
 
     native.readIoSnapshotResolution.mockReturnValue(null);
-    const skipped = await fetchIoSnapshotsForRun(nxJson, {});
+    const skipped = await fetchIoSnapshotsForRun(nxJson, {}, ci());
     expect(skipped).toMatchObject({ status: 'skipped', reason: 'offline' });
   });
 
@@ -160,7 +192,7 @@ describe('fetchIoSnapshotsForRun', () => {
     cloud.readIoSnapshots.mockRejectedValue(
       Object.assign(new Error('bad'), { code: 'INVALID_RESPONSE' })
     );
-    expect(await fetchIoSnapshotsForRun(nxJson, {})).toMatchObject({
+    expect(await fetchIoSnapshotsForRun(nxJson, {}, ci())).toMatchObject({
       status: 'skipped',
       reason: 'invalid-response',
     });
@@ -170,7 +202,7 @@ describe('fetchIoSnapshotsForRun', () => {
     cloud.verifyOrUpdateNxCloudClient.mockResolvedValue({
       nxCloudClient: { configureLightClientRequire: () => () => {} },
     });
-    expect(await fetchIoSnapshotsForRun(nxJson, {})).toMatchObject({
+    expect(await fetchIoSnapshotsForRun(nxJson, {}, ci())).toMatchObject({
       status: 'skipped',
       reason: 'unsupported-client',
     });
