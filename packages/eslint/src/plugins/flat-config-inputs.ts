@@ -9,7 +9,7 @@ import {
   resolve,
   sep,
 } from 'node:path';
-import { findImports } from 'nx/src/native';
+import { findImports } from '@nx/devkit/internal';
 
 export interface FlatConfigInputs {
   externalDependencies: string[];
