@@ -568,5 +568,10 @@
     "name": "@anarchitects/nx-typeorm",
     "description": "Nx plugin for TypeORM integration in Nx backend applications and libraries.",
     "url": "https://github.com/anarchitects/anarchitecture-plugins/tree/main/packages/typeorm"
+  },
+  {
+    "name": "nx-domainify",
+    "description": "Nx plugin that scaffolds Angular libraries using a domain-driven layout and ESLint module-boundary tags.",
+    "url": "https://github.com/wizardnet972/nx-domainify"
   }
 ]

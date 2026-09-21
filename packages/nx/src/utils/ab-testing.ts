@@ -3,7 +3,6 @@ import { isCI } from './is-ci';
 import { getPackageManagerCommand } from './package-manager';
 import { getCloudUrl } from '../nx-cloud/utilities/get-cloud-options';
 import { terminalLink } from './terminal-link';
-import * as pc from 'picocolors';
 
 export const NX_CLOUD_URL = 'https://nx.dev/nx-cloud';
 export const NX_CLOUD_DEMO_URL = 'https://cloud.nx.app/demo/intro';
@@ -56,7 +55,7 @@ export type RecordStatMeta =
   | RecordStatMetaComplete
   | RecordStatMetaError;
 
-export type MessageOptionKey = 'yes' | 'skip' | 'never';
+export type MessageOptionKey = 'yes' | 'skip';
 
 interface MessageData {
   code: string;
@@ -76,7 +75,6 @@ const messageOptions: Record<string, MessageData[]> = {
       choices: [
         { value: 'yes', name: 'Yes' },
         { value: 'skip', name: 'Skip for now' },
-        { value: 'never', name: pc.dim("No, don't ask again") },
       ],
       footer:
         '\nFree for small teams. Remote caching and task distribution. 2-minute setup:',
@@ -88,7 +86,6 @@ const messageOptions: Record<string, MessageData[]> = {
       choices: [
         { value: 'yes', name: 'Yes' },
         { value: 'skip', name: 'Skip for now' },
-        { value: 'never', name: pc.dim("No, don't ask again") },
       ],
       footer: '\nLearn about it at',
       hint: `\n(it's free and can be disabled any time)`,

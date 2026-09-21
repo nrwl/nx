@@ -393,14 +393,6 @@ export async function initCloud(
   await printSuccessMessage(token, installationSource);
 }
 
-export function setNeverConnectToCloud(repoRoot: string): void {
-  const nxJsonPath = join(repoRoot, 'nx.json');
-  const nxJson = readJsonFile(nxJsonPath);
-  nxJson.neverConnectToCloud = true;
-  writeJsonFile(nxJsonPath, nxJson);
-  recordInitWrite(nxJsonPath);
-}
-
 export function addVsCodeRecommendedExtensions(
   repoRoot: string,
   extensions: string[]

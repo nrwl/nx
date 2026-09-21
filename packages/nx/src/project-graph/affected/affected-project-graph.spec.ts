@@ -4,15 +4,13 @@ import { filterAffected } from './affected-project-graph';
 
 vi.mock('../plugins/get-plugins', async () => ({
   ...(await vi.importActual('../plugins/get-plugins')),
-  getPlugins: async () => [
+  capabilitiesOfConfiguredPlugins: async () => [
     {
-      name: 'test',
-      createNodes: [
-        '**/project.json',
-        async () => {
-          return [];
-        },
-      ],
+      createNodesPattern: '**/project.json',
+      hasCreateDependencies: false,
+      hasCreateMetadata: false,
+      hasPreTasksExecution: false,
+      hasPostTasksExecution: false,
     },
   ],
 }));
