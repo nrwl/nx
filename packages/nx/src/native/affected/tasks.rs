@@ -242,9 +242,14 @@ pub(crate) fn touched_tasks(
 /// A consumer reads its dependency's build artifacts, which are gitignored and
 /// do not exist yet, so the dependency's *inputs* are what decide the consumer.
 /// Only output-read edges are followed, never plain `dependsOn`: affectedness
-/// follows data rather than the schedule. Walking in topological order settles
-/// a chain in O(V+E), where unioning upstream file sets would copy a shared
-/// ancestor once per path through a diamond.
+/// follows data rather than the schedule.
+///
+/// Reachability over `producers_of` reversed, in O(V+E). Visiting in some
+/// dependency order would settle a chain in one pass, but only while the order
+/// respects every edge affectedness can travel: a continuous dependency is one
+/// such edge and an ordering built from `dependencies` alone does not hold it,
+/// and a cycle leaves any order arbitrary. Reaching outward from the touched
+/// set needs no order, so neither can strand a consumer.
 ///
 /// Returns the affected set, sorted, and the edges it crossed: for every
 /// affected task, the affected producers it reads. A task that was touched
@@ -255,71 +260,53 @@ fn affected_through_output_reads(
     task_graph: &TaskGraph,
     producers_of: &HashMap<String, Vec<String>>,
 ) -> (Vec<String>, HashMap<String, Vec<String>>) {
-    let mut affected: HashSet<&str> = touched.iter().map(String::as_str).collect();
-    let mut edges: HashMap<String, Vec<String>> = HashMap::new();
-    for id in topological_order(task_graph) {
-        let Some(producers) = producers_of.get(id) else {
+    // A read by a task outside the graph is not an edge, as an unknown producer
+    // was never one.
+    let known = |id: &str| task_graph.tasks.contains_key(id);
+
+    let mut consumers_of: HashMap<&str, Vec<&str>> = HashMap::new();
+    for (consumer, producers) in producers_of {
+        if !known(consumer) {
             continue;
-        };
+        }
+        for producer in producers {
+            consumers_of
+                .entry(producer.as_str())
+                .or_default()
+                .push(consumer.as_str());
+        }
+    }
+
+    let mut affected: HashSet<&str> = touched.iter().map(String::as_str).collect();
+    let mut stack: Vec<&str> = affected.iter().copied().collect();
+    while let Some(current) = stack.pop() {
+        for consumer in consumers_of.get(current).into_iter().flatten() {
+            if affected.insert(consumer) {
+                stack.push(consumer);
+            }
+        }
+    }
+
+    // Collected once the set is closed, so a consumer names every affected
+    // producer it reads rather than whichever one reached it first.
+    let mut edges: HashMap<String, Vec<String>> = HashMap::new();
+    for (consumer, producers) in producers_of {
+        if !known(consumer) {
+            continue;
+        }
         let hit: Vec<String> = producers
             .iter()
             .filter(|producer| affected.contains(producer.as_str()))
             .cloned()
             .collect();
-        if hit.is_empty() {
-            continue;
+        if !hit.is_empty() {
+            edges.insert(consumer.clone(), hit);
         }
-        edges.insert(id.to_string(), hit);
-        affected.insert(id);
     }
+
     let mut affected: Vec<String> = affected.into_iter().map(str::to_string).collect();
     affected.sort_unstable();
     (affected, edges)
-}
-
-/// Dependencies before dependents, Kahn's algorithm. Any task a cycle keeps out
-/// of the order is appended, so a cyclic graph degrades to "no propagation
-/// across the cycle" rather than hanging or dropping a task. Ids are visited in
-/// sorted order so the result is the same on every run.
-fn topological_order(task_graph: &TaskGraph) -> Vec<&str> {
-    let mut ids: Vec<&str> = task_graph.tasks.keys().map(String::as_str).collect();
-    ids.sort_unstable();
-
-    let mut in_degree: HashMap<&str, usize> = ids.iter().map(|id| (*id, 0)).collect();
-    let mut dependents: HashMap<&str, Vec<&str>> = HashMap::new();
-    for id in &ids {
-        for dep in task_graph.dependencies.get(*id).into_iter().flatten() {
-            // An edge to a task outside the graph is not an edge.
-            if !in_degree.contains_key(dep.as_str()) {
-                continue;
-            }
-            *in_degree.get_mut(id).unwrap() += 1;
-            dependents.entry(dep.as_str()).or_default().push(id);
-        }
-    }
-
-    let mut order: Vec<&str> = ids
-        .iter()
-        .copied()
-        .filter(|id| in_degree[id] == 0)
-        .collect();
-    let mut head = 0;
-    while head < order.len() {
-        let id = order[head];
-        head += 1;
-        for dependent in dependents.get(id).into_iter().flatten() {
-            let remaining = in_degree.get_mut(dependent).unwrap();
-            *remaining -= 1;
-            if *remaining == 0 {
-                order.push(dependent);
-            }
-        }
-    }
-    if order.len() < ids.len() {
-        let seen: HashSet<&str> = order.iter().copied().collect();
-        order.extend(ids.iter().copied().filter(|id| !seen.contains(id)));
-    }
-    order
 }
 
 /// The changed paths, normalized, with each one's owning project resolved once
@@ -977,18 +964,190 @@ mod tests {
         assert_eq!(s.producers_of["c:build"], strings(&["b:build"]));
     }
 
-    /// The order is dependencies first, deterministic, and a cycle neither hangs
-    /// nor drops the tasks in it.
+    /// A served task's outputs are read across a continuous dependency, which is
+    /// the only edge reaching the consumer. Propagation has to cross it: the e2e
+    /// suite reads what the serve task builds, so a change under the library it
+    /// serves must select it.
     #[test]
-    fn topological_order_puts_dependencies_first_and_survives_a_cycle() {
-        let tg = task_graph(
-            &[("a", &[]), ("b", &[]), ("c", &[]), ("x", &[]), ("y", &[])],
-            &[("b", &["a"]), ("c", &["b"]), ("x", &["y"]), ("y", &["x"])],
+    fn propagates_across_a_continuous_only_edge() {
+        let g = graph(&[
+            ("lib", "libs/lib"),
+            ("web", "apps/web"),
+            ("e2e", "apps/e2e"),
+        ]);
+        let p = multi_plans(&[
+            (
+                "lib:build",
+                vec![HashInstruction::ProjectFileSet(
+                    "lib".into(),
+                    strings(&["libs/lib/**/*"]),
+                )],
+            ),
+            (
+                "web:serve",
+                vec![HashInstruction::TaskOutput(
+                    "**".into(),
+                    strings(&["dist/libs/lib"]),
+                )],
+            ),
+            (
+                "e2e:e2e",
+                vec![HashInstruction::IgnoredFileSet(strings(&[
+                    "dist/apps/web/**",
+                ]))],
+            ),
+        ]);
+        let mut tg = task_graph(
+            &[
+                ("lib:build", &["dist/libs/lib"]),
+                ("web:serve", &["dist/apps/web"]),
+                ("e2e:e2e", &[]),
+            ],
+            &[("web:serve", &["lib:build"])],
         );
-        let order = topological_order(&tg);
-        let pos = |id: &str| order.iter().position(|o| *o == id).unwrap();
-        assert!(pos("a") < pos("b") && pos("b") < pos("c"));
-        assert_eq!(order.len(), 5, "the cycle's tasks are still present");
-        assert_eq!(order, topological_order(&tg), "stable across runs");
+        tg.continuous_dependencies
+            .insert("e2e:e2e".into(), strings(&["web:serve"]));
+
+        let s = compute_affected_task_selection(
+            &g,
+            &p,
+            &tg,
+            &strings(&["libs/lib/src/x.ts"]),
+            &options(&[]),
+        )
+        .unwrap();
+
+        assert_eq!(
+            s.affected,
+            strings(&["e2e:e2e", "lib:build", "web:serve"]),
+            "the e2e suite reads the served outputs and must run"
+        );
+        assert_eq!(s.producers_of["e2e:e2e"], strings(&["web:serve"]));
+    }
+
+    /// Two serve tasks that continuously depend on each other. Affectedness is
+    /// all-or-nothing across a cycle, so neither the tasks in it nor the suite
+    /// reading through it may be stranded by the order they are visited in.
+    #[test]
+    fn a_continuous_cycle_stands_nobody_up() {
+        let g = graph(&[
+            ("lib", "libs/lib"),
+            ("a", "apps/a"),
+            ("b", "apps/b"),
+            ("c", "apps/c"),
+        ]);
+        let p = multi_plans(&[
+            (
+                "lib:build",
+                vec![HashInstruction::ProjectFileSet(
+                    "lib".into(),
+                    strings(&["libs/lib/**/*"]),
+                )],
+            ),
+            (
+                "a:serve",
+                vec![HashInstruction::IgnoredFileSet(strings(&[
+                    "dist/libs/lib/**",
+                ]))],
+            ),
+            (
+                "b:serve",
+                vec![HashInstruction::IgnoredFileSet(strings(&[
+                    "dist/apps/a/**",
+                ]))],
+            ),
+            (
+                "c:e2e",
+                vec![HashInstruction::IgnoredFileSet(strings(&[
+                    "dist/apps/b/**",
+                ]))],
+            ),
+        ]);
+        let mut tg = task_graph(
+            &[
+                ("lib:build", &["dist/libs/lib"]),
+                ("a:serve", &["dist/apps/a"]),
+                ("b:serve", &["dist/apps/b"]),
+                ("c:e2e", &[]),
+            ],
+            &[("a:serve", &["lib:build"])],
+        );
+        tg.continuous_dependencies
+            .insert("a:serve".into(), strings(&["b:serve"]));
+        tg.continuous_dependencies
+            .insert("b:serve".into(), strings(&["a:serve"]));
+        tg.continuous_dependencies
+            .insert("c:e2e".into(), strings(&["b:serve"]));
+
+        let s = compute_affected_task_selection(
+            &g,
+            &p,
+            &tg,
+            &strings(&["libs/lib/src/x.ts"]),
+            &options(&[]),
+        )
+        .unwrap();
+
+        assert_eq!(
+            s.affected,
+            strings(&["a:serve", "b:serve", "c:e2e", "lib:build"]),
+            "a cycle must not decide the answer by task name"
+        );
+    }
+
+    /// A `dependsOn` cycle neither hangs nor drops the tasks in it, and the
+    /// answer does not move between runs.
+    #[test]
+    fn a_dependency_cycle_neither_hangs_nor_drops_a_task() {
+        let g = graph(&[("lib", "libs/lib"), ("x", "apps/x"), ("y", "apps/y")]);
+        let p = multi_plans(&[
+            (
+                "lib:build",
+                vec![HashInstruction::ProjectFileSet(
+                    "lib".into(),
+                    strings(&["libs/lib/**/*"]),
+                )],
+            ),
+            (
+                "x:build",
+                vec![
+                    HashInstruction::TaskOutput("**".into(), strings(&["dist/libs/lib"])),
+                    HashInstruction::TaskOutput("**".into(), strings(&["dist/y"])),
+                ],
+            ),
+            (
+                "y:build",
+                vec![HashInstruction::TaskOutput(
+                    "**".into(),
+                    strings(&["dist/x"]),
+                )],
+            ),
+        ]);
+        let tg = task_graph(
+            &[
+                ("lib:build", &["dist/libs/lib"]),
+                ("x:build", &["dist/x"]),
+                ("y:build", &["dist/y"]),
+            ],
+            &[
+                ("x:build", &["lib:build", "y:build"]),
+                ("y:build", &["x:build"]),
+            ],
+        );
+
+        let run = || {
+            compute_affected_task_selection(
+                &g,
+                &p,
+                &tg,
+                &strings(&["libs/lib/src/x.ts"]),
+                &options(&[]),
+            )
+            .unwrap()
+            .affected
+        };
+
+        assert_eq!(run(), strings(&["lib:build", "x:build", "y:build"]));
+        assert_eq!(run(), run(), "stable across runs");
     }
 }
