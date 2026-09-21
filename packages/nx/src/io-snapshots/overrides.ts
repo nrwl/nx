@@ -12,7 +12,7 @@ import {
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
 import { getExecutorForTask } from '../tasks-runner/utils';
 import { getDbConnection } from '../utils/db-connection';
-import { ioSnapshotCommitForHead, isIoSnapshotFetchEnabled } from './fetch';
+import { ioSnapshotCommitForHead, isIoSnapshotFetchEnabled } from './config';
 
 export type {
   IoSnapshotDiagnostic,

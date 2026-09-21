@@ -7,6 +7,12 @@ import {
   type IoSnapshots,
 } from '../native';
 import { findAncestorNodeModules } from '../nx-cloud/resolution-helpers';
+import {
+  ioSnapshotEnv,
+  isIoSnapshotFetchEnabled,
+  type IoSnapshotCloudOptions,
+  type IoSnapshotEnv,
+} from './config';
 import { verifyOrUpdateNxCloudClient } from '../nx-cloud/update-manager';
 import { getDbConnection } from '../utils/db-connection';
 import { getLatestCommitSha } from '../utils/git-utils';
@@ -21,23 +27,6 @@ export type { IoSnapshotResolution, IoSnapshots } from '../native';
 /** A cached bundle younger than this is served without asking Nx Cloud. */
 const DEFAULT_MAX_AGE_MS = 60 * 60 * 1000;
 const READ_TIMEOUT_MS = 10_000;
-
-export interface IoSnapshotCloudOptions {
-  accessToken?: string;
-  nxCloudId?: string;
-  url?: string;
-  cloud?: boolean;
-}
-
-/**
- * The environment the decision is made in. The daemon has its own
- * `process.env`, older than this run, so the run's values travel with the
- * request instead.
- */
-export interface IoSnapshotEnv {
-  NX_IO_SNAPSHOTS?: string;
-  NX_IO_SNAPSHOTS_MAX_AGE?: string;
-}
 
 /** The Nx Cloud client's `readIoSnapshots` contract, as far as nx uses it. */
 export interface ReadIoSnapshotsOptions {
@@ -59,54 +48,6 @@ export interface ReadIoSnapshotsResult {
   commits: string[];
   updatedAt: number;
   snapshots: Readonly<Record<string, ReadIoSnapshot>>;
-}
-
-/**
- * On whenever the workspace is connected to Nx Cloud; the server decides
- * whether anything comes back. `NX_IO_SNAPSHOTS=false` is the kill switch,
- * `NX_IO_SNAPSHOTS=true` forces it on for debugging.
- */
-export function isIoSnapshotFetchEnabled(
-  nxJson: NxJsonConfiguration,
-  runnerOptions: IoSnapshotCloudOptions = {},
-  env: IoSnapshotEnv = process.env
-): boolean {
-  // A disabled Cloud wins over everything, including the debug override.
-  if (isNxCloudDisabled(nxJson) || runnerOptions.cloud === false) return false;
-  const override = env.NX_IO_SNAPSHOTS;
-  if (override === 'false') return false;
-  return override === 'true' || isNxCloudUsed(nxJson);
-}
-
-/**
- * The Cloud options a run would resolve, for callers that have nx.json but not
- * a task runner. Mirrors `getRunnerOptions`' precedence for these fields:
- * the default runner's own options first, then the top-level nx.json keys.
- */
-export function ioSnapshotOptionsFromNxJson(
-  nxJson: NxJsonConfiguration
-): IoSnapshotCloudOptions {
-  const runner = nxJson.tasksRunnerOptions?.default?.options ?? {};
-  return {
-    accessToken: runner.accessToken ?? nxJson.nxCloudAccessToken,
-    nxCloudId: runner.nxCloudId ?? nxJson.nxCloudId,
-    url: runner.url ?? nxJson.nxCloudUrl,
-  };
-}
-
-/** The subset of this run's environment the decision and the max age read. */
-export function ioSnapshotEnv(
-  env: NodeJS.ProcessEnv = process.env
-): IoSnapshotEnv {
-  return {
-    NX_IO_SNAPSHOTS: env.NX_IO_SNAPSHOTS,
-    NX_IO_SNAPSHOTS_MAX_AGE: env.NX_IO_SNAPSHOTS_MAX_AGE,
-  };
-}
-
-/** The commit whose stored set applies to this checkout; `null` outside a git repo. */
-export function ioSnapshotCommitForHead(): string | null {
-  return getLatestCommitSha() || null;
 }
 
 // Reasons that indicate misconfiguration rather than an expected offline

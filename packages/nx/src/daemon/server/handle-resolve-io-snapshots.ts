@@ -1,8 +1,6 @@
 import { readNxJson } from '../../config/configuration';
-import {
-  fetchIoSnapshotsForRun,
-  type IoSnapshotCloudOptions,
-} from '../../io-snapshots/fetch';
+import type { IoSnapshotCloudOptions } from '../../io-snapshots/config';
+import { fetchIoSnapshotsForRun } from '../../io-snapshots/fetch';
 import type {
   HandleResolveIoSnapshotsMessage,
   ResolvedIoSnapshots,

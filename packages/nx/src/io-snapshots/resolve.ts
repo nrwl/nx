@@ -7,12 +7,11 @@ import {
 } from '../native';
 import { getDbConnection } from '../utils/db-connection';
 import {
-  fetchIoSnapshotsForRun,
   ioSnapshotEnv,
   isIoSnapshotFetchEnabled,
-  reportIoSnapshotResolution,
   type IoSnapshotCloudOptions,
-} from './fetch';
+} from './config';
+import { fetchIoSnapshotsForRun, reportIoSnapshotResolution } from './fetch';
 
 /**
  * This run's snapshot set. With the daemon, the daemon fetches it and writes

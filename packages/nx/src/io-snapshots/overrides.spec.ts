@@ -10,7 +10,7 @@ let snapshotDb: ReturnType<typeof connectToNxDb>;
 vi.mock('../utils/git-utils', () => ({
   getLatestCommitSha: vi.fn(() => HEAD),
 }));
-vi.mock('./fetch', () => ({
+vi.mock('./config', () => ({
   ioSnapshotCommitForHead: () => HEAD,
   isIoSnapshotFetchEnabled: vi.fn(() => true),
 }));
@@ -24,7 +24,7 @@ vi.mock('../tasks-runner/utils', () => ({
 }));
 
 import { closeDbConnection, connectToNxDb, importIoSnapshots } from '../native';
-import { isIoSnapshotFetchEnabled } from './fetch';
+import { isIoSnapshotFetchEnabled } from './config';
 import { buildIoSnapshotOverrides, loadIoSnapshotsForHead } from './overrides';
 
 function node(name: string, root: string, targets: Record<string, any>) {

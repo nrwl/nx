@@ -20,10 +20,12 @@ const fetched = vi.hoisted(() => ({
 vi.mock('../daemon/client/client', () => ({ daemonClient: daemon }));
 vi.mock('../native', () => native);
 vi.mock('../utils/db-connection', () => ({ getDbConnection: () => 'db' }));
-vi.mock('./fetch', () => ({
-  fetchIoSnapshotsForRun: fetched.fetchIoSnapshotsForRun,
+vi.mock('./config', () => ({
   isIoSnapshotFetchEnabled: fetched.isIoSnapshotFetchEnabled,
   ioSnapshotEnv: () => ({ NX_IO_SNAPSHOTS_MAX_AGE: '123' }),
+}));
+vi.mock('./fetch', () => ({
+  fetchIoSnapshotsForRun: fetched.fetchIoSnapshotsForRun,
   reportIoSnapshotResolution: (result: unknown) => result,
 }));
 
