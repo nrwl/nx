@@ -3,7 +3,7 @@ import { ProjectGraph } from '../../config/project-graph';
 import { locateTouchedProjects } from '../../native';
 import { capabilitiesOfConfiguredPlugins } from '../plugins/get-plugins';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { FileChange } from '../file-utils';
+import { FileChange, isDeletedFile } from '../file-utils';
 import { getTouchedProjects as getJSTouchedProjects } from '../../plugins/js/project-graph/affected/touched-projects';
 import { marshalGraph } from './marshal-graph';
 
@@ -31,7 +31,11 @@ export async function runTouchedProjectLocators(
     nxJson,
     touchedFiles.map((f) => f.file),
     {
-      projectGlobPatterns: await getProjectGlobPatterns(nxJson),
+      // Only a deletion reaches projects_from_project_glob_changes, and
+      // resolving the patterns can fall back to starting plugin workers.
+      projectGlobPatterns: touchedFiles.some((f) => isDeletedFile(f.file))
+        ? await getProjectGlobPatterns(nxJson)
+        : [],
       projectDeletionAffectsAllProjects,
       workspaceRoot,
     },
