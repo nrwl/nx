@@ -90,6 +90,7 @@ import {
   applyStepEvent,
   commitReceipt,
   commitResultToLedgerEntry,
+  coveringLandedEntries,
   hasPendingCommitDebt,
   latestRound,
   markInstallFailed,
@@ -1390,7 +1391,9 @@ async function applyReconcileStepAction(
     const head = getLatestCommitSha(root);
     const fallback =
       step.status === 'died'
-        ? `Use 'adopt' or 'skip' instead.`
+        ? coveringLandedEntries(state, step.id).length > 0
+          ? `Use 'adopt' instead.`
+          : `Use 'adopt' or 'skip' instead.`
         : `Use 'retry' or 'skip' instead.`;
     if (!canOfferCleanRetry(root, state, step, head)) {
       return {
@@ -1592,6 +1595,13 @@ function advanceAndDispense(root: string, dir: string, runId: string): void {
   // above repeats by design, and a rejected --step-action ends the reconcile
   // before reaching here, already naming its own fix.
   const noProgress = trackNoProgress(dir, step);
+  // Another live process still commits, installs or resets for the run; the
+  // responses below would offer actions it refuses or name a pid already gone.
+  const held = liveTreeOperation(state);
+  if (held) {
+    emitHeld(root, runId, step, held, noProgress);
+    return;
+  }
   switch (step.status) {
     case 'pending':
       dispenseNextStep(root, dir, runId, state, step, noProgress);
@@ -1722,7 +1732,7 @@ function dispenseNextStep(
     return;
   }
   if (held) {
-    emitError(root, runId, treeBusyMessage(held));
+    emitHeld(root, runId, step, held, noProgress);
     return;
   }
   emitNextStep(
@@ -1990,13 +2000,18 @@ function emitDied(
       root,
       runId,
       'adopt'
-    )}`,
-    `  skip: leave the tree as it stands and move on without this migration, then run: ${reconcileCommand(
-      root,
-      runId,
-      'skip'
     )}`
   );
+  // Refused by the state machine once a commit landed: the migration applied.
+  if (coveringLandedEntries(state, step.id).length === 0) {
+    options.push(
+      `  skip: leave the tree as it stands and move on without this migration, then run: ${reconcileCommand(
+        root,
+        runId,
+        'skip'
+      )}`
+    );
+  }
   lines.push(`Choose exactly one:`);
   lines.push(...options);
   if (!resume) {
@@ -2019,6 +2034,26 @@ function emitDied(
         ? { next: reconcileCommand(root, runId, 'retry') }
         : {}),
       instructionLines: lines,
+    },
+    noProgress
+  );
+}
+
+function emitHeld(
+  root: string,
+  runId: string,
+  step: MigrateStep,
+  held: MigrateTreeOperation,
+  noProgress: MigrateRunNoProgress | null
+): void {
+  emit(
+    root,
+    runId,
+    step,
+    'held',
+    {
+      next: reconcileCommand(root, runId),
+      instructionLines: [treeBusyMessage(held)],
     },
     noProgress
   );

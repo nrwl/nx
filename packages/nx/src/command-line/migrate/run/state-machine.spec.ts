@@ -688,6 +688,77 @@ describe('applyStepEvent', () => {
       }
     });
 
+    it('rejects skip from died once a landed commit covers the step, steering to adopt', () => {
+      const state = {
+        ...stateWithStep({ status: 'died', generatorCompleted: true }),
+        commits: [
+          { kind: 'landed', sha: 'abc', stepIds: ['step-1'] },
+        ] as MigrateCommitLedgerEntry[],
+      };
+      const before = snapshot(state);
+
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        attempt: 1,
+        action: 'skip',
+      });
+
+      expect(result).toEqual({
+        kind: 'error',
+        reason: expect.stringContaining("Use 'adopt'"),
+      });
+      expect(state).toEqual(before);
+    });
+
+    it('steers a rejected pre-marker retry from died away from skip once a landed commit covers the step', () => {
+      // A parent-recorded adopt commit whose transition never landed leaves
+      // the step died, covered, and without the marker.
+      const state = {
+        ...stateWithStep({ status: 'died' }),
+        commits: [
+          { kind: 'landed', sha: 'abc', stepIds: ['step-1'] },
+        ] as MigrateCommitLedgerEntry[],
+      };
+
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        attempt: 1,
+        action: 'retry',
+      });
+
+      expect(result).toEqual({
+        kind: 'error',
+        reason: expect.stringContaining("or 'adopt' instead."),
+      });
+      expect(result).toEqual({
+        kind: 'error',
+        reason: expect.not.stringContaining("'skip'"),
+      });
+    });
+
+    it('still skips a failed step a landed commit covers: failed offers no adopt', () => {
+      const state = {
+        ...stateWithStep({ status: 'failed', generatorCompleted: true }),
+        commits: [
+          { kind: 'landed', sha: 'abc', stepIds: ['step-1'] },
+        ] as MigrateCommitLedgerEntry[],
+      };
+
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        attempt: 1,
+        action: 'skip',
+      });
+
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        expect(result.state.steps[0].status).toBe('skipped');
+      }
+    });
+
     it('retry from died re-arms without a reset once the generator half is recorded', () => {
       const state = stateWithStep({
         status: 'died',

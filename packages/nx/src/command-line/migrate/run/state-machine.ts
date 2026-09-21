@@ -215,7 +215,11 @@ function applyStepAction(
         }
         return {
           kind: 'error',
-          reason: `Cannot apply action 'retry' to step '${step.id}': the worker died before recording that its generator ran, so keeping the current tree could apply the migration twice. Use 'retry-clean', 'adopt' or 'skip' instead.`,
+          reason: `Cannot apply action 'retry' to step '${step.id}': the worker died before recording that its generator ran, so keeping the current tree could apply the migration twice. Use ${
+            coveringLandedEntries(state, step.id).length > 0
+              ? `'retry-clean' where offered, or 'adopt'`
+              : `'retry-clean', 'adopt' or 'skip'`
+          } instead.`,
         };
       case 'retry-clean':
         return commit(state, index, cleanRearm(state, step));
@@ -226,6 +230,14 @@ function applyStepAction(
           outcome: { ...step.outcome, summary: adoptedSummary(step) },
         });
       case 'skip':
+        // A landed commit means the migration applied; only adopt records
+        // that. A failed step has no adopt, so its skip stays open.
+        if (coveringLandedEntries(state, step.id).length > 0) {
+          return {
+            kind: 'error',
+            reason: `Cannot apply action 'skip' to step '${step.id}': a commit of its changes already landed, so the migration is applied. Use 'adopt' to record that.`,
+          };
+        }
         // Same as skipping a failure: the tree stays as the worker left it.
         return commit(state, index, { ...step, status: 'skipped' });
     }
