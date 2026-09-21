@@ -850,19 +850,9 @@ describe('Nx Running Tests', () => {
       }, 10000);
 
       it('should wait for a continuous dependency to be ready when the edge asks for it', async () => {
-        // The marker exists only once the server has printed its ready line,
-        // so the check passes only if Nx waited for that line.
-        updateFile(
-          `libs/${mylib1}/serve.js`,
-          `
-          const { writeFileSync } = require('fs');
-          setTimeout(() => {
-            writeFileSync('ready.txt', '');
-            console.log('server listening');
-          }, 2000);
-          setInterval(() => {}, 1000);
-        `
-        );
+        // A server that never becomes ready: with the default edge the check
+        // runs right away and fails, whatever the machine's speed.
+        updateFile(`libs/${mylib1}/serve.js`, 'setInterval(() => {}, 1000);');
         const check = {
           command:
             "node -e \"process.exit(require('fs').existsSync('ready.txt') ? 0 : 1)\"",
@@ -883,6 +873,19 @@ describe('Nx Running Tests', () => {
           runCLI(`check ${mylib1} --skip-nx-cache`, { silenceError: true })
         ).toContain(`Failed tasks:`);
 
+        // The marker exists only once the server has printed its ready line,
+        // so the check passes only if Nx waited for that line.
+        updateFile(
+          `libs/${mylib1}/serve.js`,
+          `
+          const { writeFileSync } = require('fs');
+          setTimeout(() => {
+            writeFileSync('ready.txt', '');
+            console.log('server listening');
+          }, 2000);
+          setInterval(() => {}, 1000);
+        `
+        );
         updateJson(`libs/${mylib1}/project.json`, (config) => {
           config.targets.check = {
             ...check,
