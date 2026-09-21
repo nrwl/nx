@@ -282,11 +282,18 @@ pub(crate) fn resolve_scoped(
             continue;
         }
 
+        let (outputs, dropped_outputs) = observed_outputs(entry);
+        for glob in dropped_outputs {
+            let mut diagnostic = IoSnapshotDiagnostic::task("unusable-output", task_id);
+            diagnostic.glob = Some(glob);
+            diagnostics.push(diagnostic);
+        }
+
         tasks.insert(
             task_id.clone(),
             SnapshotTask {
                 files,
-                outputs: observed_outputs(entry),
+                outputs,
                 digest: stored.digest.clone(),
             },
         );
@@ -326,24 +333,24 @@ pub fn io_snapshot_report(
 
 /// The observed outputs a task's declared outputs get extended with: no
 /// negations, nothing outside the workspace, nothing under node_modules,
-/// .nx or .git (never cache content).
-fn observed_outputs(entry: &TaskIoSnapshot) -> Vec<String> {
-    let mut outputs: Vec<String> = entry
-        .outputs
-        .iter()
-        .filter(|glob| {
+/// .nx or .git (never cache content). Nx Cloud drops those before a set is
+/// uploaded, so this is expected to keep everything; a write it does reject
+/// means the two sides disagree, hence the second return value.
+fn observed_outputs(entry: &TaskIoSnapshot) -> (Vec<String>, Vec<String>) {
+    let (mut outputs, mut dropped): (Vec<String>, Vec<String>) =
+        entry.outputs.iter().cloned().partition(|glob| {
             !glob.starts_with('!')
                 && expand_literal_braces(glob).iter().all(|g| {
                     !escapes_workspace(g)
                         && !under_ignored_dir(g)
                         && !g.split(['/', '\\']).any(segment_could_disguise)
                 })
-        })
-        .cloned()
-        .collect();
+        });
     outputs.sort();
     outputs.dedup();
-    outputs
+    dropped.sort();
+    dropped.dedup();
+    (outputs, dropped)
 }
 
 /// Whether a segment could hide an excluded name behind glob syntax: a class,
@@ -623,7 +630,7 @@ mod tests {
             ],
         };
         assert_eq!(
-            observed_outputs(&entry),
+            observed_outputs(&entry).0,
             vec![
                 "apps/web/.next/cache/*",
                 "dist/*.js",
@@ -631,6 +638,24 @@ mod tests {
                 "dist/{a,b}.js"
             ]
         );
+    }
+
+    #[test]
+    fn a_write_the_filter_rejects_is_reported_and_the_task_keeps_its_snapshot() {
+        let (outputs, dropped) = observed_outputs(&TaskIoSnapshot {
+            commit: "c".into(),
+            inputs: TaskInputs::Flat(vec![]),
+            task_outputs: None,
+            outputs: vec![
+                "dist/apps/web/**".into(),
+                "node_modules/.cache/x".into(),
+                "../outside/y".into(),
+            ],
+        });
+        assert_eq!(outputs, vec!["dist/apps/web/**"]);
+        // Nx Cloud drops these before upload, so a rejection here means the
+        // two sides disagree and the run should say so.
+        assert_eq!(dropped, vec!["../outside/y", "node_modules/.cache/x"]);
     }
 
     #[test]

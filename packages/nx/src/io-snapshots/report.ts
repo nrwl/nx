@@ -111,6 +111,8 @@ function describeDiagnostic(d: IoSnapshotDiagnostic): string {
       return `${d.taskId}: reads outputs of "${d.producer}", which is not in this task graph`;
     case 'escapes-workspace':
       return `${d.taskId}: snapshot glob "${d.glob}" escapes the workspace`;
+    case 'unusable-output':
+      return `${d.taskId}: observed write "${d.glob}" is not usable as an output, so it is not cached`;
     case 'invalid-files-input':
       return `${d.taskId}: a declared files input is invalid`;
     default:
