@@ -98,6 +98,16 @@
       "description": "AI-assisted migration: replaces `Cypress.env()`, `cy.exec()`, `.end()`, `env` test-configuration overrides and runtime `Cypress.config()` writes removed in Cypress 16, whose replacements depend on where each value comes from, so it is driven by an AI prompt rather than a deterministic generator.",
       "prompt": "./dist/src/migrations/update-23-3-0/ai-instructions-for-cypress-16.md",
       "documentation": "./dist/src/migrations/update-23-3-0/upgrade-to-cypress-16.md"
+    },
+    "upgrade-to-cypress-16": {
+      "version": "23.3.0-beta.2",
+      "requires": {
+        "cypress": ">=15.0.0 <16.0.0"
+      },
+      "description": "Moves a Cypress 15 workspace to Cypress 16: bumps `cypress` and the declared `@cypress/*-dev-server` packages unless a Vite component testing project resolves a Vite below 8, applies the Cypress 16 config option, `overwriteQuery` and `cypress/angular` rewrites, and hands the remaining source changes to an AI prompt.",
+      "implementation": "./dist/src/migrations/update-23-3-0/upgrade-to-cypress-16",
+      "prompt": "./dist/src/migrations/update-23-3-0/ai-instructions-for-cypress-16.md",
+      "documentation": "./dist/src/migrations/update-23-3-0/upgrade-to-cypress-16.md"
     }
   },
   "packageJsonUpdates": {
@@ -194,29 +204,6 @@
       "packages": {
         "cypress": {
           "version": "^15.20.1",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "23.3.0-cypress-16": {
-      "version": "23.3.0-beta.1",
-      "requires": {
-        "cypress": ">=15.0.0 <16.0.0"
-      },
-      "incompatibleWith": {
-        "vite": "<8.0.0"
-      },
-      "packages": {
-        "cypress": {
-          "version": "^16.0.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@cypress/vite-dev-server": {
-          "version": "^8.0.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@cypress/webpack-dev-server": {
-          "version": "^6.0.0",
           "alwaysAddToPackageJson": false
         }
       }
