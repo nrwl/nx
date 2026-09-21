@@ -849,11 +849,12 @@ export class TaskOrchestrator {
     // Phase 2: Run non-cached tasks, then re-hash depsOutputs tasks
     let batchResults: TaskResult[] = [];
 
-    if (nonCachedTasks.length > 0) {
-      const runGraph = removeTasksFromTaskGraph(
-        batch.taskGraph,
-        tasks.filter((t) => !nonCachedTasks.includes(t)).map((t) => t.id)
-      );
+    // Read again: a member can be skipped while the hooks above ran
+    const taskIdsToSkip = tasks
+      .filter((t) => this.completedTasks.has(t.id))
+      .map((t) => t.id);
+    if (taskIdsToSkip.length < tasks.length) {
+      const runGraph = removeTasksFromTaskGraph(batch.taskGraph, taskIdsToSkip);
 
       for (const task of Object.values(runGraph.tasks)) {
         this.detectTaskInvocationLoop(task);
