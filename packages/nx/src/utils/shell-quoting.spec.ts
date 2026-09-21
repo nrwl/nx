@@ -1,4 +1,8 @@
-import { isAlreadyQuoted, needsShellQuoting, quoteShellArg } from './shell-quoting';
+import {
+  isAlreadyQuoted,
+  needsShellQuoting,
+  quoteShellArg,
+} from './shell-quoting';
 
 describe('needsShellQuoting', () => {
   it.each([
