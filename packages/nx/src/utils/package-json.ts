@@ -481,11 +481,23 @@ function preparePackageInstallation(
   // npm needs `--legacy-peer-deps` rather than `--omit=peer`: npm marks a package
   // as a peer if anything in the tree peer-depends on it, so `--omit=peer` also
   // prunes packages that are real dependencies. Bun's `--omit=peer` does not.
+  //
+  // pnpm has no plain flag for it. Up to 11 it takes `--config.<setting>`;
+  // pnpm 12 gave `--config` a meaning of its own and reads the setting only
+  // from the environment, where 11.0.0 to 11.0.5 in turn read just the
+  // lowercase spelling.
   const skipPeerDependenciesFlags: Partial<Record<PackageManager, string>> = {
     npm: '--legacy-peer-deps',
     bun: '--omit=peer',
     pnpm: '--config.auto-install-peers=false',
   };
+  const skipPeerDependenciesEnv: NodeJS.ProcessEnv =
+    packageManager === 'pnpm'
+      ? {
+          pnpm_config_auto_install_peers: 'false',
+          PNPM_CONFIG_AUTO_INSTALL_PEERS: 'false',
+        }
+      : {};
   const installCommand = [
     pmCommands.addDev,
     `${pkg}@${requiredVersion}`,
@@ -495,23 +507,17 @@ function preparePackageInstallation(
     .filter(Boolean)
     .join(' ');
 
-  // Yarn Berry requires an environment variable (not a CLI flag) to disable lifecycle scripts.
-  // Apply this defensively for all package managers when pulling nx@latest to tmp.
-  const env: NodeJS.ProcessEnv = {
-    ...process.env,
-    YARN_ENABLE_SCRIPTS: 'false',
-  };
-  if (packageManager === 'pnpm') {
-    // pnpm 11 reads the lowercase form first, 12 the uppercase one.
-    env.pnpm_config_auto_install_peers = 'false';
-    env.PNPM_CONFIG_AUTO_INSTALL_PEERS = 'false';
-  }
-
   const execOptions = {
     cwd: tempDir,
     stdio: isVerbose ? 'inherit' : 'ignore',
     windowsHide: true,
-    env,
+    // Yarn Berry requires an environment variable (not a CLI flag) to disable lifecycle scripts.
+    // Apply this defensively for all package managers when pulling nx@latest to tmp.
+    env: {
+      ...process.env,
+      YARN_ENABLE_SCRIPTS: 'false',
+      ...skipPeerDependenciesEnv,
+    },
   } as const;
 
   return {

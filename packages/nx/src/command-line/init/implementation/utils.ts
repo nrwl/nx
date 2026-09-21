@@ -310,7 +310,9 @@ export function runInstall(
   if (packageManager === 'pnpm') {
     try {
       if (gte(getPackageManagerVersion('pnpm', repoRoot), '11.0.0')) {
-        // pnpm 11 reads the lowercase form first, 12 the uppercase one.
+        // pnpm 12 dropped the `--config.<setting>` flag this used to ride on and
+        // reads the setting from the environment; 11.0.0 to 11.0.5 read only the
+        // lowercase spelling.
         env.pnpm_config_strict_dep_builds = 'false';
         env.PNPM_CONFIG_STRICT_DEP_BUILDS = 'false';
       }
