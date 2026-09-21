@@ -1932,7 +1932,11 @@ describe('task planner', () => {
     function snapshotsFor(
       entries: Record<
         string,
-        { inputs?: string[]; taskOutputs?: Record<string, string[]> }
+        {
+          inputs?: string[];
+          taskOutputs?: Record<string, string[]>;
+          outputs?: string[];
+        }
       >
     ) {
       const commit = `c${bundleCount++}`.padEnd(40, 'c');
@@ -1948,7 +1952,7 @@ describe('task planner', () => {
                 commit,
                 inputs: e.inputs ?? [],
                 taskOutputs: e.taskOutputs,
-                outputs: [],
+                outputs: e.outputs ?? [],
               },
             ])
           )
@@ -1988,33 +1992,53 @@ describe('task planner', () => {
       );
     });
 
-    it("marks a task with the digest of its own entry, so another task's snapshot does not move it", () => {
+    it("marks a task with the digest of its own writes, so another task's snapshot does not move it", () => {
       const { planner, taskGraph } = fixture();
+      const planFor = (snapshots: ReturnType<typeof snapshotsFor>) =>
+        planner.getPlans(['parent:build'], taskGraph, snapshots)[
+          'parent:build'
+        ];
       const marker = (snapshots: ReturnType<typeof snapshotsFor>) =>
-        planner
-          .getPlans(['parent:build'], taskGraph, snapshots)
-          ['parent:build'].find((i) => i.startsWith('io-snapshot:'));
-      const same = marker(
-        snapshotsFor({
-          'parent:build': { inputs: ['libs/parent/filea.ts'] },
-          'child:build': { inputs: ['libs/child/fileb.ts'] },
-        })
-      );
+        planFor(snapshots).find((i) => i.startsWith('io-snapshot:'));
+      const base = {
+        'parent:build': {
+          inputs: ['libs/parent/filea.ts'],
+          outputs: ['dist/parent/a.js'],
+        },
+        'child:build': { inputs: ['libs/child/fileb.ts'] },
+      };
+      const same = marker(snapshotsFor(base));
       const childChanged = marker(
         snapshotsFor({
-          'parent:build': { inputs: ['libs/parent/filea.ts'] },
+          ...base,
           'child:build': { inputs: ['libs/child/other.ts'] },
         })
       );
-      const parentChanged = marker(
+      const parentWroteMore = marker(
         snapshotsFor({
-          'parent:build': { inputs: ['libs/parent/other.ts'] },
-          'child:build': { inputs: ['libs/child/fileb.ts'] },
+          ...base,
+          'parent:build': {
+            ...base['parent:build'],
+            outputs: ['dist/parent/a.js', 'dist/parent/b.js'],
+          },
         })
       );
+      const parentReadOther = snapshotsFor({
+        ...base,
+        'parent:build': {
+          ...base['parent:build'],
+          inputs: ['libs/parent/other.ts'],
+        },
+      });
+
       expect(same).toMatch(/^io-snapshot:[0-9a-f]{64}$/);
       expect(childChanged).toBe(same);
-      expect(parentChanged).not.toBe(same);
+      expect(parentWroteMore).not.toBe(same);
+      // The reads are hashed as the file group they become, so they move the
+      // plan without moving the digest — hashing them here too would make a
+      // read the plan drops, or one naming a missing file, move the key.
+      expect(marker(parentReadOther)).toBe(same);
+      expect(planFor(parentReadOther)).not.toEqual(planFor(snapshotsFor(base)));
     });
 
     it("keeps a continuous dependency's inputs in the task it serves", () => {
