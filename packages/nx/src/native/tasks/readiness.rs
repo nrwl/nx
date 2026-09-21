@@ -613,22 +613,23 @@ mod tests {
         assert_eq!(probe(config).wait().await.unwrap(), ProbeOutcome::Ready);
     }
 
-    // Runs in a fresh process so the shared client is still unbuilt
+    // Runs the ignored test in a fresh process so the shared client is still unbuilt
     #[test]
     fn url_cold_client_setup_counts_against_the_timeout() {
         let status = std::process::Command::new(std::env::current_exe().unwrap())
-            .args(["--exact", "native::tasks::readiness::tests::cold_url_wait"])
-            .env("NX_READINESS_COLD_TEST", "1")
+            .args([
+                "--ignored",
+                "--exact",
+                "native::tasks::readiness::tests::cold_url_wait",
+            ])
             .status()
             .unwrap();
         assert!(status.success());
     }
 
     #[tokio::test]
+    #[ignore]
     async fn cold_url_wait() {
-        if std::env::var_os("NX_READINESS_COLD_TEST").is_none() {
-            return;
-        }
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let port = listener.local_addr().unwrap().port();
         let config = ReadinessProbeConfig {
