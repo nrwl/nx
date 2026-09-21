@@ -823,36 +823,38 @@ describe('package-manager', () => {
     it.each([
       { code: 'ENOEXEC', errno: -8 },
       { code: 'Unknown system error -8', errno: -8 },
-    ])(
-      'retries a shebang-less pnpm shim through the shell on $code',
-      (spawnError) => {
-        Object.defineProperty(process, 'platform', { value: 'darwin' });
-        vi.spyOn(configModule, 'readNxJson').mockReturnValue({
-          cli: { packageManager: 'pnpm' },
-        });
-        execFileSyncMock.mockImplementation(() => {
-          throw Object.assign(
-            new Error(`spawnSync pnpm ${spawnError.code}`),
-            spawnError
-          );
-        });
-        const shell = vi
-          .spyOn(childProcess, 'execSync')
-          .mockImplementation((command: string) =>
-            command.includes('config get')
-              ? 'https://registry.example.com/\n'
-              : '12.4.2\n'
-          );
+    ])('retries a shebang-less pnpm shim through sh on $code', (spawnError) => {
+      Object.defineProperty(process, 'platform', { value: 'darwin' });
+      vi.spyOn(configModule, 'readNxJson').mockReturnValue({
+        cli: { packageManager: 'pnpm' },
+      });
+      execFileSyncMock.mockImplementation((file: string, args: string[]) => {
+        if (file === '/bin/sh') {
+          return args.includes('config')
+            ? 'https://registry.example.com/\n'
+            : '12.4.2\n';
+        }
+        throw Object.assign(
+          new Error(`spawnSync ${file} ${spawnError.code}`),
+          spawnError
+        );
+      });
+      const shell = vi.spyOn(childProcess, 'execSync');
 
-        expect(getWorkspaceRegistryUrlForDisplay('@nx/js')).toBe(
-          'https://registry.example.com/'
-        );
-        expect(shell).toHaveBeenCalledWith(
-          'pnpm config get @nx:registry',
-          expect.objectContaining({ env: process.env })
-        );
-      }
-    );
+      expect(getWorkspaceRegistryUrlForDisplay('@nx/js')).toBe(
+        'https://registry.example.com/'
+      );
+      expect(execFileSyncMock).toHaveBeenCalledWith(
+        '/bin/sh',
+        ['-c', 'exec "$0" "$@"', 'pnpm', 'config', 'get', '@nx:registry'],
+        expect.objectContaining({ env: process.env })
+      );
+      // The retry keeps the arguments in argv, so the registry key never lands
+      // in a command string.
+      expect(
+        shell.mock.calls.map(([command]) => command).join(' ')
+      ).not.toContain('@nx:registry');
+    });
 
     /** Answers `<pm> config get <key>` from `answers`, `undefined` for the rest. */
     function stubPackageManagerConfig(answers: Record<string, string>): void {
@@ -1154,35 +1156,42 @@ describe('package-manager', () => {
       { code: 'ENOEXEC', errno: -8 },
       { code: 'Unknown system error -8', errno: -8 },
     ])(
-      'retries $code with quoted arguments and the same environment',
+      'retries $code through sh with the arguments still in argv',
       async (spawnError) => {
         vi.spyOn(configModule, 'readNxJson').mockReturnValue({
           cli: { packageManager: 'pnpm' },
         });
         vi.spyOn(childProcess, 'execSync').mockReturnValue('12.4.2');
-        execMock.mockImplementation((_file, _args, _options, callback) => {
+        execMock.mockImplementation((file, _args, _options, callback) => {
+          if (file === '/bin/sh') {
+            callback(null, { stdout: '12.4.2\n', stderr: '' });
+            return;
+          }
           callback(
             Object.assign(
-              new Error(`spawn pnpm ${spawnError.code}`),
+              new Error(`spawn ${file} ${spawnError.code}`),
               spawnError
             )
           );
         });
-        const shell = vi.spyOn(childProcess, 'exec').mockImplementation(((
-          command,
-          options,
-          callback
-        ) => {
-          callback(null, { stdout: '12.4.2\n', stderr: '' });
-        }) as any);
+        const shell = vi.spyOn(childProcess, 'exec');
 
         expect(
           await packageRegistryView('nx', '>=23.0.0 <24', ['version'])
         ).toBe('12.4.2');
-        expect(shell.mock.calls[0][0]).toBe(
-          "pnpm view 'nx@>=23.0.0 <24' version"
-        );
-        expect(shell.mock.calls[0][1]).toBe(execMock.mock.calls[0][2]);
+        const retry = execMock.mock.calls[1];
+        expect(retry[0]).toBe('/bin/sh');
+        // The range keeps its space and never reaches a shell parser.
+        expect(retry[1]).toEqual([
+          '-c',
+          'exec "$0" "$@"',
+          'pnpm',
+          'view',
+          'nx@>=23.0.0 <24',
+          'version',
+        ]);
+        expect(retry[2]).toBe(execMock.mock.calls[0][2]);
+        expect(shell).not.toHaveBeenCalled();
       }
     );
 
