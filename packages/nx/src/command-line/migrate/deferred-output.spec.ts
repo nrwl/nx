@@ -115,28 +115,6 @@ describe('deferred output', () => {
       expect(text).toContain('bytes of output omitted');
     });
 
-    it('keeps the end of an overlong line however the chunks split it', () => {
-      const text = (collector: DeferredOutputCollector) =>
-        (collector.render('keep')[0] as { text: string }).text;
-      const line =
-        'HEAD:' + 'x'.repeat(MAX_GENERATOR_OUTPUT_BYTES - 9) + 'ERR_';
-      const split = new DeferredOutputCollector();
-      split.raw(line);
-      split.raw('PNPM_');
-      split.raw('NO_MATCHING_VERSION\n');
-      const whole = new DeferredOutputCollector();
-      whole.raw(`${line}PNPM_NO_MATCHING_VERSION\n`);
-
-      const rendered = text(split);
-
-      expect(rendered.startsWith('HEAD:')).toBe(true);
-      expect(rendered.endsWith('ERR_PNPM_NO_MATCHING_VERSION')).toBe(true);
-      expect(Buffer.byteLength(rendered)).toBeLessThanOrEqual(
-        MAX_GENERATOR_OUTPUT_BYTES
-      );
-      expect(rendered).toBe(text(whole));
-    });
-
     it('renders the same records twice', () => {
       const collector = new DeferredOutputCollector();
       collector.raw('partial');

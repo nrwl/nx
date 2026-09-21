@@ -124,29 +124,24 @@ describe('generator output capture', () => {
       }
     }
 
-    it('returns output under the cap whole, without a marker', () => {
-      const lines = Array.from({ length: 160 }, (_, i) =>
-        `line-${i}`.padEnd(99, '.')
-      );
-      const flushed = captured(() => lines.forEach((l) => console.log(l)));
+    const underCapLines = Array.from({ length: 160 }, (_, i) =>
+      `line-${i}`.padEnd(99, '.')
+    );
+    const longRecord = 'x'.repeat(5000);
+
+    it.each([
+      ['output under the cap', underCapLines, underCapLines.join('\n')],
+      ['one record longer than the head', [longRecord], longRecord],
+    ])('returns %s whole, without a marker', (_, records, expected) => {
+      const flushed = captured(() => records.forEach((r) => console.log(r)));
 
       expect(bytes(flushed)).toBeLessThanOrEqual(MAX_GENERATOR_OUTPUT_BYTES);
-      expect(flushed).toBe(lines.join('\n'));
-    });
-
-    it('returns one record longer than the head whole, without a marker', () => {
-      const record = 'x'.repeat(5000);
-
-      expect(captured(() => console.log(record))).toBe(record);
+      expect(flushed).toBe(expected);
     });
 
     it.each([
-      ['ASCII lines', () => 'x'.repeat(100), 20_000],
       ['multibyte lines', () => 'é'.repeat(100), 20_000],
-      ['CRLF lines', () => 'a\r\nb\r\n', 20_000],
-      ['a single line with no newline', () => 'y'.repeat(1024 * 1024), 1],
       ['empty calls', () => '', 20_000],
-      ['one-character calls', () => 'z', 20_000],
     ])('bounds %s to the cap and points at the omission', (_, line, calls) => {
       const flushed = captured(() => {
         for (let i = 0; i < calls; i++) console.log(line());

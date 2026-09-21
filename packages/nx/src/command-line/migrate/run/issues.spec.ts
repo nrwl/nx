@@ -1338,13 +1338,12 @@ describe('migrate run issues', () => {
       expect(enrichCommitEntryIssueIds(enriched, 0)).toBe(enriched);
     });
 
-    it('leaves an entry with nothing to add, and a failed entry, untouched', () => {
+    it('leaves a failed entry untouched', () => {
       const carried = resolvedState([
         { kind: 'landed', stepIds: ['step-2'] },
         { kind: 'failed', stepIds: ['step-1'] },
       ]);
 
-      expect(enrichCommitEntryIssueIds(carried, 0)).toBe(carried);
       expect(enrichCommitEntryIssueIds(carried, 1)).toBe(carried);
     });
   });

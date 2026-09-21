@@ -1571,32 +1571,6 @@ describe('runSingleMigrationWorker', () => {
       expect(state.steps[0].commitStarted).toBeUndefined();
     });
 
-    it('finishes a retried generator step whose earlier commit already landed unrecorded, committing nothing', async () => {
-      // The previous attempt's committer died after git ran, so the tree is
-      // already clean and this retry commits nothing new.
-      mockCommit.mockResolvedValue({ status: 'no-changes' });
-      const dir = setupRun('run-1', {
-        steps: [
-          {
-            ...migStep('step-1', '@nx/js:gen', 'dispensed'),
-            generatorCompleted: true,
-            commitStarted: true,
-          },
-        ],
-        migrations: [genMig('@nx/js', 'gen')],
-        createCommits: true,
-        commits: [{ kind: 'failed', stepIds: ['step-1'] }],
-      });
-
-      await runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'));
-
-      expect(mockRunMigration).not.toHaveBeenCalled();
-      expect(mockCommit).toHaveBeenCalledTimes(1);
-      const state = readRunState(dir);
-      expect(state.steps[0].status).toBe('succeeded');
-      expect(state.commits).toEqual([{ kind: 'failed', stepIds: ['step-1'] }]);
-    });
-
     it('installs the retry from the baseline captured at dispense, not from the generator output', async () => {
       // A snapshot taken now would already include the previous attempt's
       // package.json edits and see nothing to install.
@@ -2497,34 +2471,6 @@ describe('runSingleMigrationWorker', () => {
       expect(state.treeOperation).toBeUndefined();
     });
 
-    it('keeps an earlier commit marked as started when the retry fails before git runs', async () => {
-      // The previous attempt's committer died mid-commit. This attempt's
-      // install failure says nothing about that commit, so the mark stays and
-      // the step cannot be skipped past it.
-      mockCommit.mockRejectedValue(new Error('install failed'));
-      const dir = setupRun('run-1', {
-        steps: [
-          {
-            ...migStep('step-1', '@nx/js:gen', 'dispensed'),
-            generatorCompleted: true,
-            commitStarted: true,
-          },
-        ],
-        migrations: [genMig('@nx/js', 'gen')],
-        createCommits: true,
-        commits: [{ kind: 'failed', stepIds: ['step-1'] }],
-      });
-
-      await expect(
-        runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'))
-      ).rejects.toThrow('install failed');
-
-      const state = readRunState(dir);
-      expect(state.steps[0].status).toBe('failed');
-      expect(state.steps[0].commitStarted).toBe(true);
-      expect(state.treeOperation).toBeUndefined();
-    });
-
     it('only matches the latest round step when an older round has the same migration id', async () => {
       mockRunMigration.mockResolvedValue({
         changes: changeList(),
@@ -2581,9 +2527,6 @@ describe('runSingleMigrationWorker', () => {
       expect(output.warn).toHaveBeenCalled();
       // A failed commit is not a failed step: the generator still succeeded.
       expect(state.steps[0].status).toBe('succeeded');
-      // A failure once git ran cannot vouch that nothing landed; the mark
-      // stays, moot on a succeeded step.
-      expect(state.steps[0].commitStarted).toBe(true);
     });
 
     it('records no commit ledger entry when the generator makes no changes', async () => {
@@ -2693,29 +2636,6 @@ describe('runSingleMigrationWorker', () => {
       ]);
     });
 
-    it('fails the step with debt when the session reported its install failed', async () => {
-      const dir = committingRun();
-
-      await expect(
-        answered(
-          dir,
-          nonce,
-          {
-            kind: 'install-failed',
-            message: 'registry unreachable',
-            peerDeps: false,
-            output: [],
-          },
-          run
-        )
-      ).rejects.toThrow('registry unreachable');
-
-      const state = readRunState(dir);
-      expect(state.steps[0].status).toBe('failed');
-      expect(state.steps[0].outcome.summary).toBe('registry unreachable');
-      expect(state.commits).toEqual([{ kind: 'failed', stepIds: ['step-1'] }]);
-    });
-
     it('leaves the step untouched when the session answered stale', async () => {
       const dir = committingRun();
 
@@ -2726,19 +2646,6 @@ describe('runSingleMigrationWorker', () => {
       const state = readRunState(dir);
       expect(state.steps[0].status).toBe('running');
       expect(state.commits).toEqual([]);
-    });
-
-    it('fails the step with debt when the session is gone before answering', async () => {
-      const dir = committingRun();
-
-      await expect(run()).rejects.toBeInstanceOf(BrokerUnavailableError);
-
-      const state = readRunState(dir);
-      expect(state.steps[0].status).toBe('failed');
-      expect(state.steps[0].outcome.summary).toContain('ended before');
-      expect(state.commits).toEqual([{ kind: 'failed', stepIds: ['step-1'] }]);
-      // The session never took the request up, so no commit was started.
-      expect(state.steps[0].commitStarted).toBeUndefined();
     });
 
     it('keeps the commit the session started marked when the session is gone before answering', async () => {

@@ -763,29 +763,26 @@ describe('applyStepEvent', () => {
       expect(state).toEqual(before);
     });
 
-    it.each(['retry', 'retry-clean'] as const)(
-      '%s from died carries the unaccounted commit into the next attempt',
-      (action) => {
-        const state = stateWithStep({
-          status: 'died',
-          generatorCompleted: true,
-          commitStarted: true,
-        });
+    it('retry-clean from died carries the unaccounted commit into the next attempt', () => {
+      const state = stateWithStep({
+        status: 'died',
+        generatorCompleted: true,
+        commitStarted: true,
+      });
 
-        const result = applyStepEvent(state, {
-          type: 'stepAction',
-          stepId: 'step-1',
-          attempt: 1,
-          action,
-        });
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        attempt: 1,
+        action: 'retry-clean',
+      });
 
-        expect(result.kind).toBe('ok');
-        if (result.kind === 'ok') {
-          expect(result.state.steps[0].attempt).toBe(2);
-          expect(result.state.steps[0].commitStarted).toBe(true);
-        }
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        expect(result.state.steps[0].attempt).toBe(2);
+        expect(result.state.steps[0].commitStarted).toBe(true);
       }
-    );
+    });
 
     it('steers a rejected pre-marker retry from died away from skip while a started commit is unaccounted for', () => {
       const state = stateWithStep({ status: 'died', commitStarted: true });

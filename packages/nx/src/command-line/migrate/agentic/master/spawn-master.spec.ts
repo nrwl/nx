@@ -254,6 +254,7 @@ describe('spawnMasterSession', () => {
       kind: 'spawn-failed',
       error,
     });
+    expect(mockBrokerClose).toHaveBeenCalledTimes(1);
   });
 
   describe('commit broker', () => {
@@ -311,16 +312,6 @@ describe('spawnMasterSession', () => {
 
       expect(await pending).toEqual({ kind: 'broker-failed', error });
       expect(child.kill).toHaveBeenCalledWith('SIGINT');
-      expect(mockBrokerClose).toHaveBeenCalledTimes(1);
-    });
-
-    it('closes the broker when the agent cannot be started', async () => {
-      mockSpawn.mockImplementation(() => {
-        throw new Error('EACCES');
-      });
-
-      await spawnMasterSession(input());
-
       expect(mockBrokerClose).toHaveBeenCalledTimes(1);
     });
 

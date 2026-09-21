@@ -282,76 +282,58 @@ describe('commitMigrationIfRequested with an output sink', () => {
     };
   };
 
-  it('sends the no-changes message to the sink instead of the logger', async () => {
-    mockHas.mockReturnValue(false);
-    const out = sink();
-
-    await commitMigrationIfRequested(
-      ROOT,
-      { name: 'm1' },
-      true,
-      PREFIX,
-      installDeps,
-      [],
-      undefined,
-      out
-    );
-
-    expect(out.lines).toEqual([['dim', '- No changes to commit for m1.']]);
-    expect(mockInfo).not.toHaveBeenCalled();
-  });
-
-  it('sends the degraded-sha message to the sink', async () => {
-    mockHas.mockReturnValue(true);
-    mockTry.mockReturnValue(null);
-    const out = sink();
-
-    const result = await commitMigrationIfRequested(
-      ROOT,
-      { name: 'm1' },
-      true,
-      PREFIX,
-      installDeps,
-      [],
-      undefined,
-      out
-    );
-
-    expect(result).toEqual({ status: 'committed', sha: null });
-    expect(out.lines).toEqual([
-      ['yellow', expect.stringContaining('its sha could not be resolved')],
-    ]);
-    expect(mockInfo).not.toHaveBeenCalled();
-  });
-
-  it('sends the failure message with the guidance to the sink', async () => {
-    mockHas.mockReturnValue(true);
-    mockTry.mockImplementation(() => {
-      throw new Error('error: gpg failed to sign the data');
-    });
-    const out = sink();
-
-    await commitMigrationIfRequested(
-      ROOT,
-      { name: 'm1' },
-      true,
-      PREFIX,
-      installDeps,
-      [],
-      'Commit or revert the changes manually.',
-      out
-    );
-
-    expect(out.lines).toEqual([
+  it.each([
+    [
+      'no-changes',
+      () => mockHas.mockReturnValue(false),
+      [['dim', '- No changes to commit for m1.']],
+    ],
+    [
+      'degraded-sha',
+      () => {
+        mockHas.mockReturnValue(true);
+        mockTry.mockReturnValue(null);
+      },
+      [['yellow', expect.stringContaining('its sha could not be resolved')]],
+    ],
+    [
+      'failure',
+      () => {
+        mockHas.mockReturnValue(true);
+        mockTry.mockImplementation(() => {
+          throw new Error('error: gpg failed to sign the data');
+        });
+      },
       [
-        'red',
-        expect.stringContaining(
-          'gpg failed to sign the data\nCheck `git status` and `git log`; the commit may have landed despite this error. Commit or revert the changes manually.'
-        ),
+        [
+          'red',
+          expect.stringContaining(
+            'gpg failed to sign the data\nCheck `git status` and `git log`; the commit may have landed despite this error. Commit or revert the changes manually.'
+          ),
+        ],
       ],
-    ]);
-    expect(mockInfo).not.toHaveBeenCalled();
-  });
+    ],
+  ])(
+    'sends the %s message to the sink instead of the logger',
+    async (_, arrange, expected) => {
+      arrange();
+      const out = sink();
+
+      await commitMigrationIfRequested(
+        ROOT,
+        { name: 'm1' },
+        true,
+        PREFIX,
+        installDeps,
+        [],
+        'Commit or revert the changes manually.',
+        out
+      );
+
+      expect(out.lines).toEqual(expected);
+      expect(mockInfo).not.toHaveBeenCalled();
+    }
+  );
 });
 
 describe('commitCheckpointBeforeMigrations', () => {
