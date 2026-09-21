@@ -135,6 +135,42 @@ Pass `--webServerCommand` and `--webServerAddress` to skip the prompts.
 nx g @nx/playwright:configuration --project=your-app-name --webServerCommand="npx nx serve your-project-name" --webServerAddress="http://localhost:4200"
 ```
 
+### Choosing the web server per environment
+
+Application generators pass two servers to the Playwright configuration: the dev server for local
+runs and a production build for CI.
+The generated config reads the `CI` environment variable and picks between them.
+
+```ts frame="none"
+// CI runs against a production build; locally the dev server is used.
+const isCI = !!process.env['CI'];
+const webServerAddress = isCI
+  ? 'http://localhost:4300'
+  : 'http://localhost:4200';
+
+export default defineConfig({
+  // ... rest of the config
+  webServer: {
+    command: isCI
+      ? 'npx nx run <your-app-name>:preview'
+      : 'npx nx run <your-app-name>:dev',
+    url: webServerAddress,
+    reuseExistingServer: true,
+    cwd: workspaceRoot,
+  },
+});
+```
+
+The dev server avoids a rebuild on every change, and the CI run tests the output you ship.
+
+Pass `--ciWebServerCommand` and `--ciWebServerAddress` to choose the CI side yourself.
+Each one defaults to its local counterpart, so leaving both unset generates a config with a single
+server.
+
+```shell
+nx g @nx/playwright:configuration --project=<your-app-name> --webServerCommand="npx nx run <your-app-name>:dev" --webServerAddress="http://localhost:4200" --ciWebServerCommand="npx nx run <your-app-name>:preview" --ciWebServerAddress="http://localhost:4300"
+```
+
 ### Testing applications
 
 Run `nx e2e <your-app-name>` to execute e2e tests with Playwright
