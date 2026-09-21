@@ -192,6 +192,60 @@ describe('TaskOrchestrator', () => {
       ).toEqual(['dep:build']);
     });
 
+    it('drops a member skipped while the start hooks ran', async () => {
+      const dep = createTask('dep:build');
+      const consumer = createTask('consumer:build');
+      const taskGraph: TaskGraph = {
+        roots: ['dep:build'],
+        tasks: { 'dep:build': dep, 'consumer:build': consumer },
+        dependencies: { 'dep:build': [], 'consumer:build': ['dep:build'] },
+        continuousDependencies: { 'dep:build': [], 'consumer:build': [] },
+      };
+      const { orchestrator } = createOrchestrator(taskGraph);
+      orchestrator.preRunSteps = vi.fn(async () => {
+        orchestrator.completedTasks.set('consumer:build', 'skipped');
+      });
+
+      await orchestrator.applyFromCacheOrRunBatch(
+        true,
+        { id: 'batch-1', executorName: 'my-plugin:batch', taskGraph },
+        0
+      );
+
+      expect(orchestrator.runBatch).toHaveBeenCalledTimes(1);
+      expect(
+        Object.keys(orchestrator.runBatch.mock.calls[0][0].taskGraph.tasks)
+      ).toEqual(['dep:build']);
+    });
+
+    it('does not fork a batch whose every member was skipped meanwhile', async () => {
+      const dep = createTask('dep:build');
+      const consumer = createTask('consumer:build');
+      const taskGraph: TaskGraph = {
+        roots: ['dep:build'],
+        tasks: { 'dep:build': dep, 'consumer:build': consumer },
+        dependencies: { 'dep:build': [], 'consumer:build': ['dep:build'] },
+        continuousDependencies: { 'dep:build': [], 'consumer:build': [] },
+      };
+      const { orchestrator } = createOrchestrator(taskGraph);
+      orchestrator.preRunSteps = vi.fn(async () => {
+        orchestrator.completedTasks.set('dep:build', 'skipped');
+        orchestrator.completedTasks.set('consumer:build', 'skipped');
+      });
+
+      const results = await orchestrator.applyFromCacheOrRunBatch(
+        true,
+        { id: 'batch-1', executorName: 'my-plugin:batch', taskGraph },
+        0
+      );
+
+      expect(orchestrator.runBatch).not.toHaveBeenCalled();
+      expect(orchestrator.postRunSteps).not.toHaveBeenCalled();
+      expect(results).toEqual([]);
+      expect(orchestrator.completedTasks.get('dep:build')).toBe('skipped');
+      expect(orchestrator.completedTasks.get('consumer:build')).toBe('skipped');
+    });
+
     it('should not re-hash tasks whose deps were all cache hits', async () => {
       const dep = createTask('dep:build');
       const consumer = createTask('consumer:build');
