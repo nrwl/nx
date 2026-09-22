@@ -1,6 +1,6 @@
 The `@nx/oxlint:lint` executor runs Oxlint on a project. When several projects lint in one command, Nx batches them: one Oxlint process lints every project and each project still gets its own result, cache entry, and output. Pass `--batch=false` to lint each project in its own process.
 
-Options not listed in the schema are forwarded to Oxlint as CLI flags, so `nx run-many -t lint --config a.json` runs Oxlint with `--config a.json`, and the same holds for options set on the target.
+Options not listed in the schema are forwarded to Oxlint as CLI flags, so `nx run-many -t lint --config a.json` runs Oxlint with `--config a.json`, and the same holds for options set on the target. Oxlint runs from the workspace root, so a path in a forwarded option is workspace-relative rather than project-relative, and it applies to every project in the run.
 
 ```json
 {

@@ -3,7 +3,7 @@
   "outputCapture": "direct-nodejs",
   "$schema": "https://json-schema.org/schema",
   "title": "Oxlint Lint Target",
-  "description": "Lints a project with Oxlint. Runs in batch mode by default, so one Oxlint process lints every project in the run. Options not listed here are forwarded to Oxlint as CLI flags.",
+  "description": "Lints a project with Oxlint. Runs in batch mode by default, so one Oxlint process lints every project in the run, from the workspace root. Options not listed here are forwarded to Oxlint as CLI flags; paths in them are relative to the workspace root.",
   "cli": "nx",
   "type": "object",
   "properties": {
@@ -42,7 +42,7 @@
           "type": "string"
         }
       ],
-      "description": "Extra arguments appended to the Oxlint command verbatim."
+      "description": "Extra arguments appended to the Oxlint command verbatim. Paths are relative to the workspace root, which is where Oxlint runs."
     },
     "__unparsed__": {
       "hidden": true,
