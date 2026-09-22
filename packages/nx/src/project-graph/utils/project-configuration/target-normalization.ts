@@ -255,13 +255,6 @@ function warnAboutLegacyCachedTargets(
   });
 }
 
-export class InvalidTargetSandboxError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'InvalidTargetSandboxError';
-  }
-}
-
 function describeSandboxValue(value: unknown): string {
   if (Array.isArray(value)) return 'an array';
   if (value === null) return 'null';
@@ -269,13 +262,17 @@ function describeSandboxValue(value: unknown): string {
 }
 
 /**
- * Rejects a `sandbox` whose shape the schema forbids.
+ * Describes every way a `sandbox` violates the shape the schema forbids.
  *
  * The schema is editor-only, and everything downstream — the Rust task hasher,
  * the cloud runner's Go and Kotlin deserializers — is strict. A bad value that
  * gets this far is reported far from its source, or silently drops the task's
- * tracking, so it is worth failing here where the project, target and file are
- * all still in hand.
+ * tracking, so it is worth reporting here where the project, target and file
+ * are all still in hand.
+ *
+ * Returns messages rather than throwing: only a WorkspaceValidityError is
+ * collected by `validateAndNormalizeProjectRootMap`, and anything else escapes
+ * as far as the daemon, which exits on an error it cannot classify.
  */
 function validateTargetSandbox(
   sandbox: unknown,
@@ -283,9 +280,9 @@ function validateTargetSandbox(
   projectRoot: string,
   targetName: string,
   sourceMaps: ConfigurationSourceMaps
-): void {
+): string[] {
   if (sandbox === undefined) {
-    return;
+    return [];
   }
 
   const targetSourceMaps = sourceMaps?.[projectRoot];
@@ -301,15 +298,17 @@ function validateTargetSandbox(
   const where = `"${targetName}" in project "${projectName}"${origin}`;
 
   if (!isObject(sandbox)) {
-    throw new InvalidTargetSandboxError(
+    return [
       `The "sandbox" configuration for target ${where} must be an object, but it is ${describeSandboxValue(
         sandbox
-      )}.`
-    );
+      )}.`,
+    ];
   }
 
+  const errors: string[] = [];
+
   if (sandbox.enabled !== undefined && typeof sandbox.enabled !== 'boolean') {
-    throw new InvalidTargetSandboxError(
+    errors.push(
       `"sandbox.enabled" for target ${where} must be a boolean, but it is ${describeSandboxValue(
         sandbox.enabled
       )}. Use \`false\` to opt the target out of observed-IO tracking.`
@@ -320,21 +319,24 @@ function validateTargetSandbox(
     const value = sandbox[key];
     if (value === undefined) continue;
     if (!Array.isArray(value)) {
-      throw new InvalidTargetSandboxError(
+      errors.push(
         `"sandbox.${key}" for target ${where} must be an array of glob patterns, but it is ${describeSandboxValue(
           value
         )}.`
       );
+      continue;
     }
     const badIndex = value.findIndex((glob) => typeof glob !== 'string');
     if (badIndex !== -1) {
-      throw new InvalidTargetSandboxError(
+      errors.push(
         `"sandbox.${key}[${badIndex}]" for target ${where} must be a glob pattern string, but it is ${describeSandboxValue(
           value[badIndex]
         )}.`
       );
     }
   }
+
+  return errors;
 }
 
 function normalizeTargets(
@@ -365,12 +367,14 @@ function normalizeTargets(
 
     const target = project.targets[targetName];
 
-    validateTargetSandbox(
-      target.sandbox,
-      project.name ?? project.root,
-      project.root,
-      targetName,
-      sourceMaps
+    targetErrorMessage.push(
+      ...validateTargetSandbox(
+        target.sandbox,
+        project.name ?? project.root,
+        project.root,
+        targetName,
+        sourceMaps
+      ).map((message) => `- ${message}`)
     );
 
     const targetDefaults = nxJsonConfiguration.targetDefaults;

@@ -141,32 +141,45 @@ describe('validateAndNormalizeProjectRootMap', () => {
       ],
     ];
 
-    it('rejects sandbox: false authored on a project', async () => {
+    // Escaping this call is what takes the daemon down: only the three
+    // classifiable errors are collected, and `shutdown-utils` exits the
+    // process for anything else.
+    it('collects sandbox: false authored on a project instead of throwing', async () => {
       const { mergeCreateNodesResults } =
         await import('../project-configuration-utils');
+      const errors: Error[] = [];
+
       expect(() =>
         mergeCreateNodesResults(
           resultsFor(false) as any,
           [],
           {} as any,
           tempFs.tempDir,
-          []
+          errors
         )
-      ).toThrow(/"sandbox" configuration for target "build"/);
+      ).not.toThrow();
+
+      expect(errors.map((e) => e.message)).toEqual([
+        expect.stringMatching(/"sandbox" configuration for target "build"/),
+      ]);
     });
 
     it('accepts a well-formed sandbox authored on a project', async () => {
       const { mergeCreateNodesResults } =
         await import('../project-configuration-utils');
+      const errors: Error[] = [];
+
       expect(() =>
         mergeCreateNodesResults(
           resultsFor({ enabled: false, ignoredReads: ['tmp/**'] }) as any,
           [],
           {} as any,
           tempFs.tempDir,
-          []
+          errors
         )
       ).not.toThrow();
+
+      expect(errors).toEqual([]);
     });
   });
 
@@ -179,70 +192,81 @@ describe('validateAndNormalizeProjectRootMap', () => {
       },
     });
 
-    it('should reject a non-object sandbox', () => {
-      expect(() =>
+    // Aggregated as a WorkspaceValidityError so `mergeCreateNodesResults` can
+    // classify it; a bespoke class escapes to the daemon.
+    const sandboxErrors = (sandbox: unknown): string[] => {
+      try {
         validateAndNormalizeProjectRootMap(
           tempFs.tempDir,
-          projectRootMapWithSandbox(false) as any,
+          projectRootMapWithSandbox(sandbox) as any,
           {}
-        )
-      ).toThrow(/"sandbox" configuration for target "build" in project "a-ui"/);
+        );
+      } catch (e) {
+        expect(e).toBeInstanceOf(AggregateError);
+        for (const inner of (e as AggregateError).errors) {
+          expect(inner.name).toEqual('WorkspaceValidityError');
+        }
+        return (e as AggregateError).errors.map((inner) => inner.message);
+      }
+      return [];
+    };
+
+    it('should reject a non-object sandbox', () => {
+      expect(sandboxErrors(false)).toEqual([
+        expect.stringMatching(
+          /"sandbox" configuration for target "build" in project "a-ui"/
+        ),
+      ]);
     });
 
     it('should reject a string where a glob array is required', () => {
-      expect(() =>
-        validateAndNormalizeProjectRootMap(
-          tempFs.tempDir,
-          projectRootMapWithSandbox({ ignoredReads: 'tmp/**' }) as any,
-          {}
-        )
-      ).toThrow(
-        /"sandbox.ignoredReads" for target "build" in project "a-ui" must be an array of glob patterns, but it is a string/
-      );
+      expect(sandboxErrors({ ignoredReads: 'tmp/**' })).toEqual([
+        expect.stringMatching(
+          /"sandbox.ignoredReads" for target "build" in project "a-ui" must be an array of glob patterns, but it is a string/
+        ),
+      ]);
     });
 
     it('should reject a non-string element inside a glob array', () => {
-      expect(() =>
-        validateAndNormalizeProjectRootMap(
-          tempFs.tempDir,
-          projectRootMapWithSandbox({ ignoredWrites: ['ok/**', 7] }) as any,
-          {}
-        )
-      ).toThrow(/"sandbox.ignoredWrites\[1\]".*must be a glob pattern string/);
+      expect(sandboxErrors({ ignoredWrites: ['ok/**', 7] })).toEqual([
+        expect.stringMatching(
+          /"sandbox.ignoredWrites\[1\]".*must be a glob pattern string/
+        ),
+      ]);
     });
 
     it('should reject a non-boolean enabled', () => {
-      expect(() =>
-        validateAndNormalizeProjectRootMap(
-          tempFs.tempDir,
-          projectRootMapWithSandbox({ enabled: 'false' }) as any,
-          {}
-        )
-      ).toThrow(/"sandbox.enabled".*must be a boolean, but it is a string/);
+      expect(sandboxErrors({ enabled: 'false' })).toEqual([
+        expect.stringMatching(
+          /"sandbox.enabled".*must be a boolean, but it is a string/
+        ),
+      ]);
+    });
+
+    it('should report every malformed key in one error', () => {
+      const [message] = sandboxErrors({
+        enabled: 'false',
+        ignoredReads: 'tmp/**',
+        ignoredWrites: ['ok/**', 7],
+      });
+
+      expect(message).toMatch(/"sandbox.enabled"/);
+      expect(message).toMatch(/"sandbox.ignoredReads"/);
+      expect(message).toMatch(/"sandbox.ignoredWrites\[1\]"/);
     });
 
     it('should accept a well-formed sandbox', () => {
-      expect(() =>
-        validateAndNormalizeProjectRootMap(
-          tempFs.tempDir,
-          projectRootMapWithSandbox({
-            enabled: false,
-            ignoredReads: ['tmp/**'],
-            ignoredWrites: ['scratch/**'],
-          }) as any,
-          {}
-        )
-      ).not.toThrow();
+      expect(
+        sandboxErrors({
+          enabled: false,
+          ignoredReads: ['tmp/**'],
+          ignoredWrites: ['scratch/**'],
+        })
+      ).toEqual([]);
     });
 
     it('should accept a target with no sandbox', () => {
-      expect(() =>
-        validateAndNormalizeProjectRootMap(
-          tempFs.tempDir,
-          projectRootMapWithSandbox(undefined) as any,
-          {}
-        )
-      ).not.toThrow();
+      expect(sandboxErrors(undefined)).toEqual([]);
     });
   });
 
