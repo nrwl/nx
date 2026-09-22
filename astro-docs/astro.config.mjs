@@ -75,6 +75,7 @@ export default defineConfig({
       '/docs/technologies/typescript/introduction',
     '/guides/nx-cloud/ci-resource-usage':
       '/docs/features/ci-features/resource-usage',
+    '/guides/nx-cloud/enable-ai-features': '/docs/kb/enable-ai-features',
     '/reference/remote-cache-plugins':
       '/docs/reference/deprecated/self-hosted-cache-packages',
     '/reference/remote-cache-plugins/s3-cache':

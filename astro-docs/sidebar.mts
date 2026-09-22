@@ -167,10 +167,6 @@ const learnGroups: SidebarItems = [
             label: 'Self-healing CI',
             link: 'features/ci-features/self-healing-ci',
           },
-          {
-            label: 'Enable AI features',
-            link: 'guides/nx-cloud/enable-ai-features',
-          },
           { label: 'Flaky tasks', link: 'features/ci-features/flaky-tasks' },
           {
             label: 'Distribute task execution (Nx Agents)',
