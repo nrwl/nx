@@ -62,8 +62,12 @@ from = "/showcase/example-repos/*"
 to = "/docs/quickstart"
 
 [[redirects]]
+from = "/showcase/benchmarks/tsc-batch-mode"
+to = "/docs/kb/tsc-batch-mode"
+
+[[redirects]]
 from = "/showcase/benchmarks/*"
-to = "/docs/reference/benchmarks/:splat"
+to = "/docs/kb/nx-agents"
 
 # DOC-452: Old framework tutorials redirect to new topic-based tutorials
 [[redirects]]
@@ -634,8 +638,16 @@ from = "/docs/guides/tips-n-tricks/yarn-workspaces"
 to = "/docs/kb/yarn-workspaces"
 
 [[redirects]]
+from = "/docs/reference/benchmarks"
+to = "/docs/kb/nx-agents"
+
+[[redirects]]
 from = "/docs/reference/benchmarks/caching"
-to = "/docs/kb/caching"
+to = "/docs/kb/nx-agents"
+
+[[redirects]]
+from = "/docs/kb/caching"
+to = "/docs/kb/nx-agents"
 
 [[redirects]]
 from = "/docs/reference/benchmarks/nx-agents"
