@@ -25,7 +25,6 @@ describe('isIoSnapshotFetchEnabled', () => {
   it('is off until then, whatever else the env says', () => {
     for (const env of [
       {},
-      { NX_IO_SNAPSHOTS_MAX_AGE: '1' },
       { NX_IO_SNAPSHOTS: '' },
       { NX_IO_SNAPSHOTS: 'false' },
       { NX_IO_SNAPSHOTS: '1' },

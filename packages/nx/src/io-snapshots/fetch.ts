@@ -23,8 +23,13 @@ import { workspaceRoot } from '../utils/workspace-root';
 
 export type { IoSnapshotResolution, IoSnapshots } from '../native';
 
-/** A cached bundle younger than this is served without asking Nx Cloud. */
-const DEFAULT_MAX_AGE_MS = 60 * 60 * 1000;
+/**
+ * A stored set younger than this is served without asking Nx Cloud, so the
+ * several commands of one CI job share one fetch. Past it the run asks again,
+ * since Nx Cloud resolves HEAD from its nearest recorded ancestors and a
+ * closer recording can appear for the same commit later.
+ */
+const STORED_SET_MAX_AGE_MS = 60 * 60 * 1000;
 const READ_TIMEOUT_MS = 10_000;
 
 /** The Nx Cloud client's `readIoSnapshots` contract, as far as nx uses it. */
@@ -79,8 +84,7 @@ export async function fetchIoSnapshotsForRun(
   }
   const db = getDbConnection();
   const cached = readIoSnapshotResolution(db, head);
-  const maxAge = parseMaxAge(env.NX_IO_SNAPSHOTS_MAX_AGE) ?? DEFAULT_MAX_AGE_MS;
-  if (cached && maxAge > 0 && Date.now() - cached.fetchedAt <= maxAge) {
+  if (cached && Date.now() - cached.fetchedAt <= STORED_SET_MAX_AGE_MS) {
     const fresh = loadIoSnapshots(db, head);
     if (fresh.status !== 'skipped') {
       return reportIoSnapshotResolution(fresh);
@@ -162,12 +166,6 @@ function reasonFromError(e: unknown): string {
 
 function errorMessage(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
-}
-
-function parseMaxAge(value: string | undefined): number | undefined {
-  if (value === undefined || value === '') return undefined;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
 }
 
 /** Warns or logs what a resolution came to; also used by the daemon path. */

@@ -22,7 +22,7 @@ vi.mock('../native', () => native);
 vi.mock('../utils/db-connection', () => ({ getDbConnection: () => 'db' }));
 vi.mock('./config', () => ({
   isIoSnapshotFetchEnabled: fetched.isIoSnapshotFetchEnabled,
-  ioSnapshotEnv: () => ({ NX_IO_SNAPSHOTS_MAX_AGE: '123' }),
+  ioSnapshotEnv: () => ({ NX_IO_SNAPSHOTS: 'true' }),
 }));
 vi.mock('./fetch', () => ({
   fetchIoSnapshotsForRun: fetched.fetchIoSnapshotsForRun,
@@ -50,7 +50,7 @@ describe('resolveIoSnapshotsForRun', () => {
     const result = await resolveIoSnapshotsForRun(nxJson, { accessToken: 't' });
     expect(daemon.resolveIoSnapshots).toHaveBeenCalledWith(
       { accessToken: 't' },
-      { NX_IO_SNAPSHOTS_MAX_AGE: '123' }
+      { NX_IO_SNAPSHOTS: 'true' }
     );
     // The fetch itself belongs to the daemon.
     expect(fetched.fetchIoSnapshotsForRun).not.toHaveBeenCalled();

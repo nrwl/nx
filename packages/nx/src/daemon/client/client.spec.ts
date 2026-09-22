@@ -509,7 +509,7 @@ describe('resolveIoSnapshots', () => {
       .mockResolvedValue(response as never);
     const resolved = await client.resolveIoSnapshots(
       { accessToken: 't' },
-      { NX_IO_SNAPSHOTS_MAX_AGE: '123' }
+      { NX_IO_SNAPSHOTS: 'true' }
     );
     return { message: spy.mock.calls[0][0] as any, resolved };
   }
@@ -520,7 +520,7 @@ describe('resolveIoSnapshots', () => {
   it('keeps the run env off the field the daemon reflects', async () => {
     const { message } = await send(null);
     expect(Object.keys(message)).not.toContain('env');
-    expect(message.ioSnapshotEnv).toEqual({ NX_IO_SNAPSHOTS_MAX_AGE: '123' });
+    expect(message.ioSnapshotEnv).toEqual({ NX_IO_SNAPSHOTS: 'true' });
   });
 
   it('returns what the socket layer parsed, without parsing it again', async () => {

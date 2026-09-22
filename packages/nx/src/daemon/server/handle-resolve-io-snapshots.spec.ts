@@ -20,7 +20,7 @@ describe('handleResolveIoSnapshots', () => {
   const payload = {
     type: 'RESOLVE_IO_SNAPSHOTS' as const,
     runnerOptions: { accessToken: 't' },
-    ioSnapshotEnv: { NX_IO_SNAPSHOTS_MAX_AGE: '123' },
+    ioSnapshotEnv: { NX_IO_SNAPSHOTS: 'true' },
   };
 
   beforeEach(() => vi.clearAllMocks());
@@ -37,7 +37,7 @@ describe('handleResolveIoSnapshots', () => {
     expect(fetchIoSnapshotsForRun).toHaveBeenCalledWith(
       { a: 1 },
       { accessToken: 't' },
-      { NX_IO_SNAPSHOTS_MAX_AGE: '123' }
+      { NX_IO_SNAPSHOTS: 'true' }
     );
     expect(response).toEqual({
       status: 'fetched',

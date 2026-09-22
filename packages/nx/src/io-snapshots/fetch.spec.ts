@@ -36,7 +36,6 @@ describe('fetchIoSnapshotsForRun', () => {
   /** A run that opted in, stated explicitly so the machine's env cannot. */
   const ci = (overrides: Record<string, unknown> = {}) => ({
     NX_IO_SNAPSHOTS: 'true',
-    NX_IO_SNAPSHOTS_MAX_AGE: process.env.NX_IO_SNAPSHOTS_MAX_AGE,
     ...overrides,
   });
   const cached = (fetchedAt: number, updatedAt = 7) => ({
@@ -58,7 +57,6 @@ describe('fetchIoSnapshotsForRun', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     delete process.env.NX_IO_SNAPSHOTS;
-    delete process.env.NX_IO_SNAPSHOTS_MAX_AGE;
     cloud.verifyOrUpdateNxCloudClient.mockResolvedValue({
       nxCloudClient: {
         configureLightClientRequire: () => () => {},
@@ -113,13 +111,19 @@ describe('fetchIoSnapshotsForRun', () => {
     expect(cloud.verifyOrUpdateNxCloudClient).not.toHaveBeenCalled();
   });
 
-  it('treats MAX_AGE=0 as always ask, and an invalid MAX_AGE as the default', async () => {
-    native.readIoSnapshotResolution.mockReturnValue(cached(Date.now()));
+  // Nx Cloud resolves HEAD from its nearest recorded ancestors, so a closer
+  // recording can appear for the same commit: past an hour the run asks.
+  it('asks again once a stored set is older than an hour', async () => {
     cloud.readIoSnapshots.mockResolvedValue(null);
-    process.env.NX_IO_SNAPSHOTS_MAX_AGE = '0';
+    native.readIoSnapshotResolution.mockReturnValue(
+      cached(Date.now() - 59 * 60 * 1000)
+    );
     await fetchIoSnapshotsForRun(nxJson, {}, ci());
-    expect(cloud.readIoSnapshots).toHaveBeenCalledTimes(1);
-    process.env.NX_IO_SNAPSHOTS_MAX_AGE = 'soon';
+    expect(cloud.readIoSnapshots).not.toHaveBeenCalled();
+
+    native.readIoSnapshotResolution.mockReturnValue(
+      cached(Date.now() - 61 * 60 * 1000)
+    );
     await fetchIoSnapshotsForRun(nxJson, {}, ci());
     expect(cloud.readIoSnapshots).toHaveBeenCalledTimes(1);
   });

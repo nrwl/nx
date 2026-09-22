@@ -20,7 +20,6 @@ export interface IoSnapshotCloudOptions {
  */
 export interface IoSnapshotEnv {
   NX_IO_SNAPSHOTS?: string;
-  NX_IO_SNAPSHOTS_MAX_AGE?: string;
 }
 
 /**
@@ -40,13 +39,12 @@ export function isIoSnapshotFetchEnabled(
   return env.NX_IO_SNAPSHOTS === 'true';
 }
 
-/** The subset of this run's environment the decision and the max age read. */
+/** The subset of this run's environment the decision reads. */
 export function ioSnapshotEnv(
   env: NodeJS.ProcessEnv = process.env
 ): IoSnapshotEnv {
   return {
     NX_IO_SNAPSHOTS: env.NX_IO_SNAPSHOTS,
-    NX_IO_SNAPSHOTS_MAX_AGE: env.NX_IO_SNAPSHOTS_MAX_AGE,
   };
 }
 

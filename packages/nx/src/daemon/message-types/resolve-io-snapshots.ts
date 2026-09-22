@@ -8,7 +8,6 @@ export const RESOLVE_IO_SNAPSHOTS = 'RESOLVE_IO_SNAPSHOTS' as const;
  */
 export interface IoSnapshotEnvMessage {
   NX_IO_SNAPSHOTS?: string;
-  NX_IO_SNAPSHOTS_MAX_AGE?: string;
 }
 
 export type HandleResolveIoSnapshotsMessage = {
