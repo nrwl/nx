@@ -1,19 +1,20 @@
 import { IoSnapshotStore, type IoSnapshots } from '../../native';
 import { getDbConnection } from '../../utils/db-connection';
+import { snapshotsOf, storedIoSnapshots } from '../../io-snapshots/outcome';
 
 // One handle at a time: entries read for a request serve the next one while
 // the commit and the set's digest hold, and a new commit or a re-imported set
 // replaces it, so nothing accumulates over a long-lived daemon.
-let loaded: IoSnapshots | null = null;
+let remembered: IoSnapshots | undefined;
 
 /** Keeps the set the resolve request just fetched, so hashing reuses it. */
 export function rememberIoSnapshots(snapshots: IoSnapshots): void {
-  loaded = snapshots;
+  remembered = snapshots;
 }
 
 /**
  * The set for `commit`. Getting it reads the one commit row to compare
- * digests, so a re-imported set is never served stale; the handle in hand is
+ * digests, so a re-imported set is never served stale; the remembered set is
  * kept when they match, which is what preserves the entries it has read.
  */
 export function getIoSnapshotsForCommit(
@@ -22,19 +23,16 @@ export function getIoSnapshotsForCommit(
   if (!commit) {
     return undefined;
   }
-  let fresh: IoSnapshots | null;
-  try {
-    fresh = new IoSnapshotStore(getDbConnection()).get(commit);
-  } catch {
-    fresh = null;
-  }
+  const stored = snapshotsOf(
+    storedIoSnapshots(new IoSnapshotStore(getDbConnection()), commit)
+  );
   if (
-    fresh &&
-    loaded?.commit === commit &&
-    loaded.resolution.digest === fresh.resolution.digest
+    stored &&
+    remembered?.commit === commit &&
+    remembered.resolution.digest === stored.resolution.digest
   ) {
-    return loaded;
+    return remembered;
   }
-  loaded = fresh;
-  return fresh ?? undefined;
+  remembered = stored;
+  return stored;
 }
