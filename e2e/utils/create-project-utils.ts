@@ -23,7 +23,7 @@ import { angularDevkitVersion as defaultAngularCliVersion } from '@nx/angular/in
 import { typescriptVersion as defaultTypescriptVersion } from '@nx/js/src/utils/versions';
 import { dump } from '@zkochan/js-yaml';
 import { execFileSync, execSync, ExecSyncOptions } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { performance, PerformanceMeasure } from 'node:perf_hooks';
 import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
@@ -114,6 +114,35 @@ function sharedBaseWorkspacePath(
   return existsSync(candidate) ? candidate : null;
 }
 
+/**
+ * pnpm writes the absolute store path into node_modules/.modules.yaml and refuses to
+ * touch the tree when it no longer matches (ERR_PNPM_UNEXPECTED_STORE). The template
+ * is built on a different machine from the one that seeds a workspace out of it, so
+ * repoint the record at this machine's store. Reinstalling would also fix it, and
+ * would cost the whole saving the template exists for.
+ */
+function alignPnpmStoreDir(workspace: string): void {
+  const modulesYaml = join(workspace, 'node_modules', '.modules.yaml');
+  if (!existsSync(modulesYaml)) {
+    return;
+  }
+  const storeDir = execSync('pnpm store path', {
+    cwd: workspace,
+    encoding: 'utf-8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  }).trim();
+  const contents = readFileSync(modulesYaml, 'utf-8');
+  // Rewritten in place rather than re-dumped: pnpm 10 writes plain YAML and pnpm 11
+  // a JSON-ish dialect, and only this one value is machine-specific.
+  const updated = contents.replace(
+    /^(\s*"?storeDir"?\s*:\s*)("[^"]*"|[^,\n]*)/m,
+    (_match, key) => `${key}${JSON.stringify(storeDir)}`
+  );
+  if (updated !== contents) {
+    writeFileSync(modulesYaml, updated);
+  }
+}
+
 // Package managers whose workspace has already been built once in this process.
 // The backup is only worth its full-tree copy once a suite asks for a second
 // workspace, so the first build skips it.
@@ -180,6 +209,9 @@ export function newProject({
           ],
           { stdio: 'pipe' }
         );
+        if (packageManager === 'pnpm') {
+          alignPnpmStoreDir(stagingDirectory);
+        }
         // runCreateWorkspace (the else branch) sets the module-level projName as a
         // side effect that downstream helpers (packageInstall ->
         // getPackageManagerCommand) rely on; mirror it when seeding from the template.
