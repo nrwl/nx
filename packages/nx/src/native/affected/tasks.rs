@@ -1133,6 +1133,64 @@ mod tests {
         assert_eq!(s.producers_of["e2e:e2e"], strings(&["web:serve"]));
     }
 
+    /// e2e serves web, and web reads ui's build through a declared read, with no
+    /// `^default` splicing ui's files into e2e's plan. The planner carries ui's
+    /// TaskOutput into e2e's plan through the served task, so a change under ui
+    /// has to reach e2e.
+    #[test]
+    fn propagates_a_task_output_across_a_continuous_dependency() {
+        let g = graph(&[("ui", "libs/ui"), ("web", "apps/web"), ("e2e", "apps/e2e")]);
+        let p = multi_plans(&[
+            (
+                "ui:build",
+                vec![HashInstruction::ProjectFileSet(
+                    "ui".into(),
+                    strings(&["libs/ui/**/*"]),
+                )],
+            ),
+            (
+                "web:serve",
+                vec![HashInstruction::TaskOutput(
+                    "**/*.js".into(),
+                    strings(&["dist/libs/ui"]),
+                )],
+            ),
+            (
+                "e2e:e2e",
+                vec![HashInstruction::TaskOutput(
+                    "**/*.js".into(),
+                    strings(&["dist/libs/ui"]),
+                )],
+            ),
+        ]);
+        let mut tg = task_graph(
+            &[
+                ("ui:build", &["dist/libs/ui"]),
+                ("web:serve", &["dist/apps/web"]),
+                ("e2e:e2e", &[]),
+            ],
+            &[("web:serve", &["ui:build"])],
+        );
+        tg.continuous_dependencies
+            .insert("e2e:e2e".into(), strings(&["web:serve"]));
+
+        let s = compute_affected_task_selection(
+            &g,
+            &p,
+            &tg,
+            &strings(&["libs/ui/src/x.ts"]),
+            &options(&[]),
+        )
+        .unwrap();
+
+        assert_eq!(
+            s.affected,
+            strings(&["e2e:e2e", "ui:build", "web:serve"]),
+            "the suite exercising the changed library must run"
+        );
+        assert_eq!(s.producers_of["e2e:e2e"], strings(&["ui:build"]));
+    }
+
     /// Two serve tasks that continuously depend on each other. Affectedness is
     /// all-or-nothing across a cycle, so neither the tasks in it nor the suite
     /// reading through it may be stranded by the order they are visited in.

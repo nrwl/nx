@@ -100,11 +100,9 @@ pub(crate) fn compute_dependent_output_edges(
             if !declared.is_empty() {
                 // Equality names the producer, but two unrelated tasks can
                 // declare the same outputs, so only one the consumer depends on
-                // counts. `dependencies` alone: that is what the vector was
-                // collected from.
-                let upstream: HashSet<&str> = closure_of(task_graph, consumer, seen, false)
-                    .into_iter()
-                    .collect();
+                // counts.
+                let upstream: HashSet<&str> =
+                    closure_of(task_graph, consumer, seen).into_iter().collect();
                 producers.extend(
                     declared
                         .iter()
@@ -123,7 +121,7 @@ pub(crate) fn compute_dependent_output_edges(
                 .flatten()
                 .collect();
             if !reads.is_empty() {
-                for upstream in closure_of(task_graph, consumer, seen, true) {
+                for upstream in closure_of(task_graph, consumer, seen) {
                     if let Some(outputs) = outputs_of.get(upstream) {
                         let claims = reads
                             .iter()
@@ -150,17 +148,15 @@ pub(crate) fn compute_dependent_output_edges(
         .collect()
 }
 
-/// Every task reachable from `from`, excluding itself unless a cycle leads
-/// back. `continuous_dependencies` are followed only when asked: a `TaskOutput`
-/// was collected from `dependencies` alone (`collect_task_dependencies`), while
-/// a disk-backed read can reach a served task's outputs, which is the walk the
-/// hasher's deferral makes (`upstream_output_roots`). `seen` is caller-owned so
-/// one allocation serves every consumer on a rayon worker.
+/// Every task reachable from `from` over regular and continuous edges,
+/// excluding itself unless a cycle leads back. The planner splices a served
+/// task's reads into its consumer's plan (`collect_continuous_dependencies`),
+/// so either kind of read can name a producer behind a continuous edge.
+/// `seen` is caller-owned so one allocation serves every consumer on a worker.
 fn closure_of<'a>(
     task_graph: &'a TaskGraph,
     from: &str,
     seen: &mut HashSet<&'a str>,
-    continuous: bool,
 ) -> Vec<&'a str> {
     seen.clear();
     let mut stack: Vec<&str> = vec![from];
@@ -168,11 +164,7 @@ fn closure_of<'a>(
     while let Some(current) = stack.pop() {
         let edges = [
             task_graph.dependencies.get(current),
-            if continuous {
-                task_graph.continuous_dependencies.get(current)
-            } else {
-                None
-            },
+            task_graph.continuous_dependencies.get(current),
         ];
         for dep in edges.into_iter().flatten().flatten() {
             if seen.insert(dep.as_str()) {
@@ -483,11 +475,10 @@ mod tests {
         assert_eq!(e["app:build"], strings(&["ui:build"]));
     }
 
-    /// A served task's outputs are read through a continuous dependency, the
-    /// edge the hasher's deferral follows too. A TaskOutput never came from
-    /// one, so it does not cross it.
+    /// A served task's outputs are read across a continuous dependency, by a
+    /// disk-backed read and by a declared TaskOutput alike.
     #[test]
-    fn a_disk_backed_read_reaches_a_continuous_dependency() {
+    fn a_read_reaches_across_a_continuous_dependency() {
         let mut tg = task_graph(&[("web:serve", &["dist/apps/web"]), ("e2e:e2e", &[])], &[]);
         tg.continuous_dependencies
             .insert("e2e:e2e".into(), strings(&["web:serve"]));
@@ -506,7 +497,27 @@ mod tests {
             .insert("e2e:declared".into(), strings(&["web:serve"]));
         let e = compute_dependent_output_edges(&p, &tg);
         assert_eq!(e["e2e:e2e"], strings(&["web:serve"]));
-        assert!(!e.contains_key("e2e:declared"));
+        assert_eq!(e["e2e:declared"], strings(&["web:serve"]));
+    }
+
+    /// e2e serves web, and web builds from ui. The planner splices ui's
+    /// TaskOutput into e2e's plan through web, so the edge follows the same two
+    /// hops: one continuous, one regular.
+    #[test]
+    fn a_task_output_reaches_a_producer_behind_a_continuous_dependency() {
+        let mut tg = task_graph(
+            &[
+                ("ui:build", &["dist/libs/ui"]),
+                ("web:serve", &["dist/apps/web"]),
+                ("e2e:e2e", &[]),
+            ],
+            &[("web:serve", &["ui:build"])],
+        );
+        tg.continuous_dependencies
+            .insert("e2e:e2e".into(), strings(&["web:serve"]));
+        let p = plans(&[("e2e:e2e", vec![task_output(&["dist/libs/ui"])])]);
+        let e = compute_dependent_output_edges(&p, &tg);
+        assert_eq!(e["e2e:e2e"], strings(&["ui:build"]));
     }
 
     /// Reached through an intermediate, since a read cannot say how deep the
