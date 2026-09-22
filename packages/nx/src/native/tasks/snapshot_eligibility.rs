@@ -378,7 +378,7 @@ fn under_ignored_dir(path: &str) -> bool {
 /// Observed outputs per eligible task (same walk as hashing), for the runner
 /// to union into `task.outputs` and for `nx show` to label them.
 #[napi]
-pub fn io_snapshot_outputs(
+pub fn get_observed_io_snapshot_outputs(
     snapshots: &IoSnapshots,
     task_graph: TaskGraph,
     opted_out_task_ids: Vec<String>,

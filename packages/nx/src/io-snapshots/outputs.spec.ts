@@ -15,7 +15,7 @@ vi.mock('../tasks-runner/utils', () => ({
   })),
 }));
 
-import { applyIoSnapshotOutputs, observedIoSnapshotOutputs } from './outputs';
+import { applyIoSnapshotOutputs } from './outputs';
 
 function node(name: string, root: string, targets: Record<string, any>) {
   return { name, type: 'lib' as const, data: { root, targets } };
@@ -116,16 +116,10 @@ describe('io snapshot outputs', () => {
       'web:custom': { outputs: ['dist/custom'] },
     });
 
-    const observed = observedIoSnapshotOutputs(
-      projectGraph,
-      taskGraph,
-      snapshots
-    );
-    expect(observed).toEqual({
+    const result = applyIoSnapshotOutputs(projectGraph, taskGraph, snapshots);
+    expect(result.observed).toEqual({
       'web:build': ['apps/web/.next/cache/**', 'dist/apps/web'],
     });
-
-    const result = applyIoSnapshotOutputs(projectGraph, taskGraph, snapshots);
     expect(result.applied).toEqual(['web:build']);
     expect(taskGraph.tasks['web:build'].outputs).toEqual([
       'dist/apps/web',

@@ -624,6 +624,12 @@ export declare function getHardcodedIgnorePatterns(): Array<string>
  */
 export declare function getMainWorktreeRoot(workspaceRoot: string): string | null
 
+/**
+ * Observed outputs per eligible task (same walk as hashing), for the runner
+ * to union into `task.outputs` and for `nx show` to label them.
+ */
+export declare function getObservedIoSnapshotOutputs(snapshots: IoSnapshots, taskGraph: TaskGraph, optedOutTaskIds: Array<string>, customHasherTaskIds: Array<string>, projectRoots?: Record<string, string> | undefined | null): Record<string, Array<string>>
+
 export declare function getTransformableOutputs(outputs: Array<string>): Array<string>
 
 /**
@@ -762,12 +768,6 @@ export interface IoSnapshotImportOptions {
   clientVersion?: string
   retain?: number
 }
-
-/**
- * Observed outputs per eligible task (same walk as hashing), for the runner
- * to union into `task.outputs` and for `nx show` to label them.
- */
-export declare function ioSnapshotOutputs(snapshots: IoSnapshots, taskGraph: TaskGraph, optedOutTaskIds: Array<string>, customHasherTaskIds: Array<string>, projectRoots?: Record<string, string> | undefined | null): Record<string, Array<string>>
 
 /**
  * The eligibility report without a planner: the client prints the run
