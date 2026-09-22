@@ -99,10 +99,21 @@ describe('waitForReadiness', () => {
       ).resolves.toBeUndefined();
     });
 
-    it('accepts a server bound to ::1 only unless a host is given', async () => {
+    it('accepts a server bound to ::1 only unless a host is given', async ({
+      skip,
+    }) => {
       await new Promise((r) => server.close(r));
       server = createTcpServer();
-      await new Promise<void>((r) => server.listen(port, '::1', r));
+      try {
+        await new Promise<void>((resolve, reject) => {
+          server.once('error', reject);
+          server.listen(port, '::1', resolve);
+        });
+      } catch (e) {
+        // Some CI kernels have no IPv6 loopback
+        if (e.code === 'EADDRNOTAVAIL') skip();
+        throw e;
+      }
       await expect(wait({ port, interval: 10 })).resolves.toBeUndefined();
       await expect(
         wait({ port, host: '127.0.0.1', timeout: 50, interval: 10 })
