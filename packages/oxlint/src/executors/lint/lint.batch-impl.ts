@@ -21,7 +21,7 @@ export default async function* batchLintExecutor(
       context.projectsConfigurations.projects[task.target.project].root,
     options: inputs[task.id],
   }));
-  const results = runLintTasks(tasks, context.root, context.projectGraph);
+  const results = runLintTasks(tasks, context.root);
   for (const [task, result] of Object.entries(results)) {
     yield { task, result };
   }

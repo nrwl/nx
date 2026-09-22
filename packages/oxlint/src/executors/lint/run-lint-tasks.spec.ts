@@ -1,4 +1,4 @@
-import { logger, type ProjectGraph } from '@nx/devkit';
+import { logger } from '@nx/devkit';
 import { runLintTasks } from './run-lint-tasks';
 import { runOxlint, type OxlintReport } from './run-oxlint';
 
@@ -12,20 +12,6 @@ jest.mock('@nx/devkit/internal', () => ({
 
 const mockRunOxlint = runOxlint as jest.MockedFunction<typeof runOxlint>;
 const mockLogger = logger as unknown as { warn: jest.Mock };
-
-const graph = (roots: string[]): ProjectGraph => ({
-  nodes: Object.fromEntries(
-    roots.map((root) => [
-      root,
-      {
-        name: root,
-        type: 'lib' as const,
-        data: { root, targets: { lint: { executor: '@nx/oxlint:lint' } } },
-      },
-    ])
-  ),
-  dependencies: {},
-});
 
 const report = (
   files: { filename: string; severity?: 'error' | 'warning' }[]
@@ -65,11 +51,7 @@ describe('runLintTasks', () => {
       report: report([{ filename: 'libs/b/x.ts' }]),
     });
 
-    const results = runLintTasks(
-      [task('libs/a'), task('libs/b')],
-      '/ws',
-      graph(['libs/a', 'libs/b'])
-    );
+    const results = runLintTasks([task('libs/a'), task('libs/b')], '/ws');
 
     expect(mockRunOxlint).toHaveBeenCalledTimes(1);
     expect(mockRunOxlint).toHaveBeenCalledWith(
@@ -103,8 +85,7 @@ describe('runLintTasks', () => {
         task('libs/b', { maxWarnings: 0 }),
         task('libs/c', { denyWarnings: true }),
       ],
-      '/ws',
-      graph(['libs/a', 'libs/b', 'libs/c'])
+      '/ws'
     );
 
     expect(results['libs/a:lint'].success).toBe(true);
@@ -118,11 +99,7 @@ describe('runLintTasks', () => {
       output: 'Failed to parse oxlint configuration file',
     });
 
-    const results = runLintTasks(
-      [task('libs/a'), task('libs/b')],
-      '/ws',
-      graph(['libs/a', 'libs/b'])
-    );
+    const results = runLintTasks([task('libs/a'), task('libs/b')], '/ws');
 
     expect(results).toEqual({
       'libs/a:lint': expect.objectContaining({
@@ -133,15 +110,39 @@ describe('runLintTasks', () => {
     });
   });
 
-  it('should ignore nested projects that are not in the run', () => {
+  it("should ignore a task's nested roots when they are not in the run", () => {
     mockRunOxlint.mockReturnValue({ ok: true, report: report([]) });
 
-    runLintTasks([task('libs/a')], '/ws', graph(['libs/a', 'libs/a/nested']));
+    runLintTasks(
+      [task('libs/a', { nestedProjectRoots: ['libs/a/nested'] })],
+      '/ws'
+    );
 
     expect(mockRunOxlint.mock.calls[0][0]).toEqual([
       '--ignore-pattern=/libs/a/nested',
       '--no-error-on-unmatched-pattern',
       'libs/a',
+    ]);
+  });
+
+  it('should keep an in-run nested root lintable and exclude its own children', () => {
+    mockRunOxlint.mockReturnValue({ ok: true, report: report([]) });
+
+    runLintTasks(
+      [
+        task('libs/a', { nestedProjectRoots: ['libs/a/nested'] }),
+        task('libs/a/nested', {
+          nestedProjectRoots: ['libs/a/nested/deeper'],
+        }),
+      ],
+      '/ws'
+    );
+
+    expect(mockRunOxlint.mock.calls[0][0]).toEqual([
+      '--ignore-pattern=/libs/a/nested/deeper',
+      '--no-error-on-unmatched-pattern',
+      'libs/a',
+      'libs/a/nested',
     ]);
   });
 
@@ -153,8 +154,7 @@ describe('runLintTasks', () => {
         task('libs/a', { config: 'a.json', typeAware: true }),
         task('libs/b', { config: 'b.json', typeAware: true }),
       ],
-      '/ws',
-      graph(['libs/a', 'libs/b'])
+      '/ws'
     );
 
     expect(mockRunOxlint.mock.calls[0][0]).toEqual([
@@ -173,8 +173,7 @@ describe('runLintTasks', () => {
 
     runLintTasks(
       [task('libs/a', { fix: true }), task('libs/b', { fix: true })],
-      '/ws',
-      graph(['libs/a', 'libs/b'])
+      '/ws'
     );
 
     expect(mockRunOxlint.mock.calls[0][0]).toEqual([
@@ -194,8 +193,7 @@ describe('runLintTasks', () => {
 
     const results = runLintTasks(
       [task('libs/a', { lintFilePatterns: ['{projectRoot}/src'] })],
-      '/ws',
-      graph(['libs/a'])
+      '/ws'
     );
 
     expect(mockRunOxlint.mock.calls[0][0]).toContain('libs/a/src');
@@ -211,8 +209,7 @@ describe('runLintTasks', () => {
 
     const results = runLintTasks(
       [task('libs/a', { __unparsed__: ['--silent'] })],
-      '/ws',
-      graph(['libs/a'])
+      '/ws'
     );
 
     expect(mockRunOxlint.mock.calls[0][0]).not.toContain('--silent');

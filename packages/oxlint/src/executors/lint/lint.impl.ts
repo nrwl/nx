@@ -27,8 +27,7 @@ export default async function lintExecutor(
         options,
       },
     ],
-    context.root,
-    context.projectGraph
+    context.root
   );
   process.stdout.write(results[taskId].terminalOutput);
   return { success: results[taskId].success };

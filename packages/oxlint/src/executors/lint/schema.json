@@ -15,6 +15,15 @@
         "type": "string"
       }
     },
+    "nestedProjectRoots": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Workspace-relative roots of projects nested inside this one. The executor excludes the ones that are not linting in the same run. The inferred target sets this.",
+      "hidden": true,
+      "x-priority": "internal"
+    },
     "format": {
       "type": "string",
       "description": "Output format. Rendered by Nx from Oxlint's JSON report, so only these values are supported. `default` matches Oxlint's own terminal output, and switches to `agent` in CI or under an AI agent, as Oxlint does.",
@@ -25,9 +34,13 @@
       "oneOf": [
         {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
-        { "type": "string" }
+        {
+          "type": "string"
+        }
       ],
       "description": "Extra arguments appended to the Oxlint command verbatim."
     },

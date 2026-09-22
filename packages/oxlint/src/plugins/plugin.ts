@@ -81,6 +81,7 @@ const internalCreateNodes = async (
   options: OxlintPluginOptions,
   context: CreateNodesContext,
   projectRootsByOxlintRoots: Map<string, string[]>,
+  nestedRootsByParent: Map<string, string[]>,
   getLintableFilesPerProjectRoot: () => Promise<Map<string, number>>,
   configChainsByConfig: Map<string, string[]>,
   jsPluginSpecifiersByConfig: Map<string, string[]>,
@@ -120,6 +121,7 @@ const internalCreateNodes = async (
       const project = getProjectUsingOxlintConfig(
         configFilePath,
         projectRoot,
+        nestedRootsByParent,
         options,
         context,
         pmc,
@@ -163,6 +165,7 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
 
     const { oxlintConfigFiles, projectRoots, projectRootsByOxlintRoots } =
       splitConfigFiles(configFiles, context.workspaceRoot);
+    const nestedRootsByParent = nestedRootsByParentRoot(projectRoots);
 
     // The glob also matches `**/package.json`, so this callback runs in every
     // workspace, Oxlint or not. Bail before the chain walks and the hashing.
@@ -245,6 +248,7 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
             fileOptions,
             fileContext,
             projectRootsByOxlintRoots,
+            nestedRootsByParent,
             getLintableFilesPerProjectRoot,
             configChainsByConfig,
             jsPluginSpecifiersByConfig,
@@ -783,6 +787,42 @@ function ancestorIgnorePaths(projectRoot: string): string[] {
   return result;
 }
 
+/**
+ * Direct child project roots for each project root, keyed by the parent. A root
+ * belongs to its NEAREST enclosing root, so a grandchild lands under the child
+ * rather than the grandparent — which is what keeps an outer project from
+ * carrying an exclusion that a shallower one already covers.
+ *
+ * Built once per run: resolving each root's parent by walking up is linear in
+ * the workspace, where asking every project which roots sit below it is not.
+ */
+function nestedRootsByParentRoot(
+  projectRoots: string[]
+): Map<string, string[]> {
+  // getRootForDirectory reads only the keys.
+  const roots = new Map(projectRoots.map((root) => [root, true]));
+  const byParent = new Map<string, string[]>();
+
+  for (const root of projectRoots) {
+    const parent = getRootForDirectory(dirname(root), roots);
+    // A workspace-root project is its own ancestor, so it must not claim itself.
+    if (parent === null || parent === root) {
+      continue;
+    }
+    const claimed = byParent.get(parent);
+    if (claimed) {
+      claimed.push(root);
+    } else {
+      byParent.set(parent, [root]);
+    }
+  }
+
+  for (const claimed of byParent.values()) {
+    claimed.sort();
+  }
+  return byParent;
+}
+
 // Only the keys are read, so the value type is left open for all callers.
 function getRootForDirectory(
   directory: string,
@@ -803,6 +843,7 @@ function getRootForDirectory(
 function getProjectUsingOxlintConfig(
   configFilePath: string,
   projectRoot: string,
+  nestedRootsByParent: Map<string, string[]>,
   options: OxlintPluginOptions,
   context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>,
@@ -855,13 +896,18 @@ function getProjectUsingOxlintConfig(
     )
   );
 
+  // Linter-agnostic on purpose: a nested ESLint project's files are still its
+  // own. The executor excludes the roots that are not linting in the same run.
+  const nestedProjectRoots = nestedRootsByParent.get(projectRoot) ?? [];
+
   const targetConfig: TargetConfiguration = {
     executor: '@nx/oxlint:lint',
-    // Every other project lints its root, the executor's default. Nested
-    // project roots are excluded at run time, where the executor knows which
-    // of them lint in the same run.
-    ...(standaloneSrcPath && {
-      options: { lintFilePatterns: [standaloneSrcPath] },
+    ...((standaloneSrcPath || nestedProjectRoots.length > 0) && {
+      options: {
+        // Every other project lints its root, the executor's default.
+        ...(standaloneSrcPath && { lintFilePatterns: [standaloneSrcPath] }),
+        ...(nestedProjectRoots.length > 0 && { nestedProjectRoots }),
+      },
     }),
     cache: true,
     inputs: [
