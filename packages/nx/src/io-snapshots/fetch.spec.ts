@@ -220,4 +220,12 @@ describe('fetchIoSnapshotsForRun', () => {
       reason: 'unsupported-client',
     });
   });
+
+  it('reports a client that could not be loaded', async () => {
+    cloud.verifyOrUpdateNxCloudClient.mockResolvedValue(null);
+    expect(await fetchIoSnapshotsForRun(nxJson, {}, optedIn())).toMatchObject({
+      status: 'skipped',
+      reason: 'no-cloud-client',
+    });
+  });
 });

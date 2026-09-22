@@ -8,15 +8,15 @@ import {
 } from './config';
 import { skippedIoSnapshots, type IoSnapshotOutcome } from './outcome';
 import { getIoSnapshotStore } from './store';
-import { verifyOrUpdateNxCloudClient } from '../nx-cloud/update-manager';
+import {
+  verifyOrUpdateNxCloudClient,
+  type NxCloudClient,
+} from '../nx-cloud/update-manager';
 import { getLatestCommitSha } from '../utils/git-utils';
 import { logger } from '../utils/logger';
 import { output } from '../utils/output';
 import { nxVersion } from '../utils/versions';
 import { workspaceRoot } from '../utils/workspace-root';
-
-export type { IoSnapshotResolution, IoSnapshots } from '../native';
-export type { IoSnapshotOutcome } from './outcome';
 
 /**
  * A stored set younger than this is served without asking Nx Cloud, so the
@@ -86,24 +86,9 @@ export async function fetchIoSnapshotsForRun(
     return reportIoSnapshotResolution({ status: 'cached', snapshots: stored });
   }
 
-  let read: NonNullable<
-    Awaited<ReturnType<typeof loadCloudClient>>['readIoSnapshots']
-  >;
-  try {
-    const client = await loadCloudClient(runnerOptions);
-    if (typeof client.readIoSnapshots !== 'function') {
-      return reportIoSnapshotResolution(
-        skippedIoSnapshots(
-          'unsupported-client',
-          'The installed Nx Cloud client does not expose I/O snapshots; update nx-cloud'
-        )
-      );
-    }
-    read = client.readIoSnapshots;
-  } catch (e) {
-    return reportIoSnapshotResolution(
-      skippedIoSnapshots('no-cloud-client', errorMessage(e))
-    );
+  const read = await loadReadIoSnapshots(runnerOptions);
+  if (typeof read !== 'function') {
+    return reportIoSnapshotResolution(read);
   }
 
   try {
@@ -165,12 +150,32 @@ function errorMessage(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
 }
 
-async function loadCloudClient(runnerOptions: IoSnapshotCloudOptions) {
-  const { nxCloudClient } = await verifyOrUpdateNxCloudClient(runnerOptions);
-  nxCloudClient.configureLightClientRequire()(
-    findAncestorNodeModules(__dirname, [])
-  );
-  return nxCloudClient;
+/** The Nx Cloud client's snapshot read, or the skip that says why there is none. */
+async function loadReadIoSnapshots(
+  runnerOptions: IoSnapshotCloudOptions
+): Promise<NonNullable<NxCloudClient['readIoSnapshots']> | IoSnapshotOutcome> {
+  try {
+    const client = (await verifyOrUpdateNxCloudClient(runnerOptions))
+      ?.nxCloudClient;
+    if (!client) {
+      return skippedIoSnapshots(
+        'no-cloud-client',
+        'The Nx Cloud client could not be loaded'
+      );
+    }
+    if (typeof client.readIoSnapshots !== 'function') {
+      return skippedIoSnapshots(
+        'unsupported-client',
+        'The installed Nx Cloud client does not expose I/O snapshots; update nx-cloud'
+      );
+    }
+    client.configureLightClientRequire()(
+      findAncestorNodeModules(__dirname, [])
+    );
+    return client.readIoSnapshots;
+  } catch (e) {
+    return skippedIoSnapshots('no-cloud-client', errorMessage(e));
+  }
 }
 
 /** Warns or logs what a resolution came to; also used by the daemon path. */
