@@ -1029,8 +1029,8 @@ mod tests {
         assert!(!s.producers_of.contains_key("ui:build"));
     }
 
-    /// Settled in one pass because dependencies come first: a chain of three
-    /// reaches the end without revisiting.
+    /// A chain of three: reachability carries the change to the end, whatever
+    /// order the walk visits in.
     #[test]
     fn propagates_along_a_chain() {
         let g = graph(&[("a", "libs/a")]);
