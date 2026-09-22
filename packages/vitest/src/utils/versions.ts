@@ -1,14 +1,17 @@
 import { getDependencyVersionFromPackageJson, type Tree } from '@nx/devkit';
 import { getInstalledPackageVersion } from '@nx/devkit/internal';
 import { join } from 'path';
-import { clean, coerce, major } from 'semver';
+import { clean, coerce, gte, major } from 'semver';
 
 export const nxVersion = require(join('@nx/vitest', 'package.json')).version;
 export const minSupportedVitestVersion = '3.0.0';
 
-export const vitestVersion = '~4.1.0';
-export const vitestCoverageV8Version = '~4.1.0';
-export const vitestCoverageIstanbulVersion = '~4.1.0';
+export const vitestVersion = '~5.0.1';
+export const vitestCoverageV8Version = '~5.0.1';
+export const vitestCoverageIstanbulVersion = '~5.0.1';
+// Each vitest major's own `vite` peer floor. Vitest 3 declares no vite peer at
+// all, so it is the only option left on vite 5.
+const MIN_VITE_BY_VITEST_MAJOR = { 5: '6.4.0', 4: '6.0.0' } as const;
 export const viteVersion = '^8.0.0';
 export const viteV7Version = '^7.0.0';
 export const viteV6Version = '^6.0.0';
@@ -36,22 +39,63 @@ const latestVersions: VitestVersions = {
   vitestCoverageIstanbulVersion,
 };
 
-type CompatVersions = 3;
+type CompatVersions = 3 | 4;
 const versionMap: Record<CompatVersions, VitestVersions> = {
   3: {
     vitestVersion: '^3.0.0',
     vitestCoverageV8Version: '^3.0.5',
     vitestCoverageIstanbulVersion: '^3.0.5',
   },
+  4: {
+    vitestVersion: '^4.0.0',
+    vitestCoverageV8Version: '^4.0.0',
+    vitestCoverageIstanbulVersion: '^4.0.0',
+  },
 };
 
-export function versions(tree: Tree): VitestVersions {
+export function versions(
+  tree: Tree,
+  options?: { viteMajorVersion?: number }
+): VitestVersions {
   const installedVitestVersion = getInstalledVitestVersion(tree);
-  if (!installedVitestVersion) {
-    return latestVersions;
+  if (installedVitestVersion) {
+    const vitestMajorVersion = major(installedVitestVersion);
+    return versionMap[vitestMajorVersion as CompatVersions] ?? latestVersions;
   }
-  const vitestMajorVersion = major(installedVitestVersion);
-  return versionMap[vitestMajorVersion as CompatVersions] ?? latestVersions;
+
+  const supported = highestSupportedVitestMajor(tree, options);
+  return versionMap[supported as CompatVersions] ?? latestVersions;
+}
+
+/**
+ * Nothing pins vitest yet, so the rest of the workspace decides which major it
+ * can actually install.
+ */
+function highestSupportedVitestMajor(
+  tree: Tree,
+  options?: { viteMajorVersion?: number }
+): number {
+  // `@analogjs/vitest-angular` has no vitest 5 peer yet.
+  if (getDependencyVersionFromPackageJson(tree, '@analogjs/vitest-angular')) {
+    return 4;
+  }
+
+  const viteVersionToUse =
+    options?.viteMajorVersion !== undefined
+      ? `${options.viteMajorVersion}.0.0`
+      : getDependencyVersionFromPackageJson(tree, 'vite');
+  if (!viteVersionToUse) {
+    // No vite either, so init installs the latest alongside vitest.
+    return 5;
+  }
+
+  // Coerce to the range's floor: `^6.0.0` may resolve to 6.4+, but pairing on
+  // what the manifest guarantees keeps the installed set satisfiable.
+  const coerced = coerce(viteVersionToUse);
+  if (!coerced) return 5;
+  if (gte(coerced.version, MIN_VITE_BY_VITEST_MAJOR[5])) return 5;
+  if (gte(coerced.version, MIN_VITE_BY_VITEST_MAJOR[4])) return 4;
+  return 3;
 }
 
 export function getInstalledVitestVersion(tree?: Tree): string | null {

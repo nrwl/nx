@@ -17,11 +17,23 @@ You can use Vitest with Nx without the plugin and still get [task caching](/docs
 
 The `@nx/vitest` plugin supports the following package versions.
 
-| Package  | Supported Versions |
-| -------- | ------------------ |
-| `vitest` | ^3.0.0 \|\| ^4.0.0 |
+| Package  | Supported Versions             |
+| -------- | ------------------------------ |
+| `vitest` | ^3.0.0 \|\| ^4.0.0 \|\| ^5.0.0 |
 
-[Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
+Each Vitest major sets its own Vite and Node requirements.
+
+| Vitest | Vite     | Node   |
+| ------ | -------- | ------ |
+| 5      | 6.4 to 8 | 22.12+ |
+| 4      | 6 to 8   | 20+    |
+| 3      | 5 to 7   | 18+    |
+
+Nx does not pin a Node version of its own, so the Vitest major you run decides the floor.
+
+Vitest 5 treats Vite as a peer dependency rather than installing its own copy. If you upgrade from Vitest 4 and your `package.json` never listed `vite`, add it. The `nx migrate` path does this for you.
+
+[Nx generators](/docs/features/generate-code) install versions that work together when scaffolding new projects. They pick the highest Vitest major the rest of your workspace supports, so a project on Vite 6.2 gets Vitest 4 rather than a pairing that cannot resolve.
 
 ## Setup
 
