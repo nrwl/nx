@@ -24,7 +24,9 @@ Rules that override any shortcut you are tempted to take:
 9. Hosts that load remotes from a runtime map get `implicitDependencies` on those remotes.
 10. Remove `@nx/module-federation` and the `@nx/react/mf`, `@nx/react/module-federation`, `@nx/rspack/module-federation` imports only after every consumer is gone. Move `@module-federation/enhanced` to `dependencies`. Rebuild uncached with the old package renamed away.
 11. Do not claim hot-update parity, shared-state parity, or deployment-path correctness from a green build. Report what you verified and what you did not.
-    {% /llm_copy_prompt %}
+
+Reference: {pageUrl}
+{% /llm_copy_prompt %}
 
 Nx v24 removes the Module Federation wrappers, runtime helpers, and dev-server executors that
 `@nx/module-federation`, `@nx/react`, `@nx/rspack`, and `@nx/angular` ship today, and the
