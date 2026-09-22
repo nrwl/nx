@@ -11,7 +11,6 @@ import {
   checkFilesExist,
   updateFile,
   runCLIAsync,
-  runE2ETests,
   killPorts,
   createFile,
   exists,
@@ -19,6 +18,7 @@ import {
   runCommand,
   tmpProjPath,
   reservePort,
+  shouldRunCypressTests,
 } from '@nx/e2e-utils';
 import { join } from 'path';
 import { setupExpoEnv } from './setup';
@@ -320,7 +320,7 @@ console.log(
   });
 
   it('should run e2e for cypress', async () => {
-    if (await runE2ETests()) {
+    if (await shouldRunCypressTests()) {
       const results = runCLI(`e2e ${appName}-e2e`);
       expect(results).toContain('Successfully ran target e2e');
 

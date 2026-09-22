@@ -1,4 +1,9 @@
-import { addDependenciesToPackageJson, Tree } from '@nx/devkit';
+import {
+  addDependenciesToPackageJson,
+  detectPackageManager,
+  Tree,
+} from '@nx/devkit';
+import { acknowledgeBuildScripts } from '@nx/devkit/internal';
 import {
   babelCoreVersion,
   babelPresetReactVersion,
@@ -50,6 +55,11 @@ export async function installCommonDependencies(
   // `@nx/webpack` installs them automatically for now.
   if (options.bundler === 'vite' || options.unitTestRunner === 'vitest') {
     if (options.style === 'scss') {
+      // sass pulls in @parcel/watcher, whose install script only builds from
+      // source when npm_config_build_from_source is set.
+      acknowledgeBuildScripts(host, detectPackageManager(host.root), {
+        '@parcel/watcher': false,
+      });
       devDependencies['sass'] = sassVersion;
     }
   }
