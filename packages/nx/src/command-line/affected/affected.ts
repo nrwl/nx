@@ -21,7 +21,7 @@ import { readNxJson } from '../../config/configuration';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { generateGraph } from '../graph/graph';
 import { computeAffectedTasks } from '../../project-graph/affected/affected-tasks';
-import { resolveAffectedGranularity } from '../../project-graph/affected/granularity';
+import { selectsAffectedTasks } from '../../project-graph/affected/granularity';
 import type { TaskSelection } from '../../tasks-runner/run-command';
 
 export async function affected(
@@ -58,11 +58,10 @@ export async function affected(
   const projectGraph = await createProjectGraphAsync({
     exitOnError: true,
   });
-  const granularity = resolveAffectedGranularity();
-  // Task granularity needs a target to select against, so `nx graph --affected`
+  // Task selection needs a target to select against, so `nx graph --affected`
   // and the deprecated print-affected stay project-grained.
   const useTasks =
-    granularity === 'task' &&
+    selectsAffectedTasks() &&
     command === 'affected' &&
     !!nxArgs.targets?.length;
 

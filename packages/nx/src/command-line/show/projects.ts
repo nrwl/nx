@@ -6,7 +6,7 @@ import {
 } from '../../config/project-graph';
 import { filterAffected } from '../../project-graph/affected/affected-project-graph';
 import { computeAffectedTasks } from '../../project-graph/affected/affected-tasks';
-import { resolveAffectedGranularity } from '../../project-graph/affected/granularity';
+import { selectsAffectedTasks } from '../../project-graph/affected/granularity';
 import {
   FileChange,
   calculateFileChanges,
@@ -47,11 +47,7 @@ export async function showProjectsHandler(
     // happen to define it. Without this, `show projects --affected -t build`
     // and `affected -t build` disagree, and the documented CI pattern is to
     // feed the first into the second.
-    if (
-      resolveAffectedGranularity() === 'task' &&
-      args.withTarget?.length &&
-      !args.projects
-    ) {
+    if (selectsAffectedTasks() && args.withTarget?.length && !args.projects) {
       const affectedTasks = await computeAffectedTasks({
         projectGraph: graph,
         nxJson,
