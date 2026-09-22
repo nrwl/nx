@@ -4,8 +4,7 @@
 
 import type { NxJsonConfiguration } from '../config/nx-json';
 import { getLatestCommitSha } from '../utils/git-utils';
-import { isCI } from '../utils/is-ci';
-import { isNxCloudDisabled, isNxCloudUsed } from '../utils/nx-cloud-utils';
+import { isNxCloudDisabled } from '../utils/nx-cloud-utils';
 
 export interface IoSnapshotCloudOptions {
   accessToken?: string;
@@ -22,31 +21,23 @@ export interface IoSnapshotCloudOptions {
 export interface IoSnapshotEnv {
   NX_IO_SNAPSHOTS?: string;
   NX_IO_SNAPSHOTS_MAX_AGE?: string;
-  /**
-   * Whether the run is in CI, decided by the run rather than read here: the
-   * daemon's own environment predates it and may not carry CI at all.
-   */
-  ci?: boolean;
 }
 
 /**
- * On in CI when the workspace is connected to Nx Cloud; the server decides
- * whether anything comes back. Off outside CI: a recording is taken at a
- * commit, so a working tree with uncommitted edits can read files no
- * recording accounts for. `NX_IO_SNAPSHOTS=false` is the kill switch, and
- * `true` forces it on anywhere for debugging.
+ * Off unless a run opts in with `NX_IO_SNAPSHOTS=true`, so a workspace
+ * connected to Nx Cloud is unaffected until it asks. A disabled Cloud wins
+ * over the opt-in, since there is nothing to fetch from.
+ *
+ * Meant for CI: a recording is taken at a commit, so a working tree with
+ * uncommitted edits can read files no recording accounts for.
  */
 export function isIoSnapshotFetchEnabled(
   nxJson: NxJsonConfiguration,
   runnerOptions: IoSnapshotCloudOptions = {},
   env: IoSnapshotEnv = ioSnapshotEnv()
 ): boolean {
-  // A disabled Cloud wins over everything, including the debug override.
   if (isNxCloudDisabled(nxJson) || runnerOptions.cloud === false) return false;
-  const override = env.NX_IO_SNAPSHOTS;
-  if (override === 'false') return false;
-  if (override === 'true') return true;
-  return env.ci === true && isNxCloudUsed(nxJson);
+  return env.NX_IO_SNAPSHOTS === 'true';
 }
 
 /** The subset of this run's environment the decision and the max age read. */
@@ -56,7 +47,6 @@ export function ioSnapshotEnv(
   return {
     NX_IO_SNAPSHOTS: env.NX_IO_SNAPSHOTS,
     NX_IO_SNAPSHOTS_MAX_AGE: env.NX_IO_SNAPSHOTS_MAX_AGE,
-    ci: !!isCI(),
   };
 }
 

@@ -33,10 +33,9 @@ vi.mock('../utils/logger', () => ({ logger: { verbose: vi.fn() } }));
 
 describe('fetchIoSnapshotsForRun', () => {
   const nxJson = {} as any;
-  /** The run's env, with CI decided explicitly so the test machine cannot. */
+  /** A run that opted in, stated explicitly so the machine's env cannot. */
   const ci = (overrides: Record<string, unknown> = {}) => ({
-    ci: true,
-    NX_IO_SNAPSHOTS: process.env.NX_IO_SNAPSHOTS,
+    NX_IO_SNAPSHOTS: 'true',
     NX_IO_SNAPSHOTS_MAX_AGE: process.env.NX_IO_SNAPSHOTS_MAX_AGE,
     ...overrides,
   });
@@ -70,9 +69,15 @@ describe('fetchIoSnapshotsForRun', () => {
     native.readIoSnapshotResolution.mockReturnValue(null);
   });
 
-  it('is off outside CI', async () => {
+  // Connecting the workspace is not the opt-in: a run that says nothing
+  // never reaches the client.
+  it('does nothing for a run that did not opt in', async () => {
     expect(
-      await fetchIoSnapshotsForRun(nxJson, {}, ci({ ci: false }))
+      await fetchIoSnapshotsForRun(
+        nxJson,
+        {},
+        ci({ NX_IO_SNAPSHOTS: undefined })
+      )
     ).toBeNull();
     expect(cloud.verifyOrUpdateNxCloudClient).not.toHaveBeenCalled();
   });
@@ -93,9 +98,10 @@ describe('fetchIoSnapshotsForRun', () => {
     ).toMatchObject({ status: 'cached' });
   });
 
-  it('is off when the kill switch is set', async () => {
-    process.env.NX_IO_SNAPSHOTS = 'false';
-    expect(await fetchIoSnapshotsForRun(nxJson, {}, ci())).toBeNull();
+  it('is off when the opt-in is set to anything but true', async () => {
+    expect(
+      await fetchIoSnapshotsForRun(nxJson, {}, ci({ NX_IO_SNAPSHOTS: 'false' }))
+    ).toBeNull();
     expect(cloud.verifyOrUpdateNxCloudClient).not.toHaveBeenCalled();
   });
 
