@@ -78,6 +78,11 @@
     "./migrations.json": "./migrations.json",
     "./generators.json": "./generators.json",
     "./executors.json": "./executors.json",
+    "./executors": {
+      "@nx/nx-source": "./executors.ts",
+      "types": "./dist/executors.d.ts",
+      "default": "./dist/executors.js"
+    },
     "./babel": {
       "@nx/nx-source": "./babel.ts",
       "types": "./dist/babel.d.ts",
