@@ -9,7 +9,7 @@ topics:
 ---
 
 {% llm_copy_prompt title="Migrate Nx Module Federation to the official plugins" %}
-Migrate this workspace off the Nx Module Federation APIs that Nx v24 removes, keeping each app's current bundler. Follow every step at {pageUrl} in order. Scope is React client-side webpack and Rspack; stop and report if you find Angular or server-side rendering apps.
+Migrate this workspace off the Nx Module Federation APIs that Nx v24 will remove, keeping each app's current bundler. Follow every step at {pageUrl} in order. Scope is React client-side webpack and Rspack; stop and report if you find Angular or server-side rendering apps.
 
 Rules that override any shortcut you are tempted to take:
 
@@ -28,7 +28,7 @@ Rules that override any shortcut you are tempted to take:
 Reference: {pageUrl}
 {% /llm_copy_prompt %}
 
-Nx v24 removes the Module Federation wrappers, runtime helpers, and dev-server executors that
+Nx v24 will remove the Module Federation wrappers, runtime helpers, and dev-server executors that
 `@nx/module-federation`, `@nx/react`, `@nx/rspack`, and `@nx/angular` ship today, and the
 generators and executors that created these setups are already deprecated in v23.
 Their replacement is the official [Module Federation](https://module-federation.io) plugins, which
@@ -44,17 +44,15 @@ The other way off these APIs is to regenerate each app with the `@nx/react:consu
 Rspack, so a webpack app changes bundler. Take the steps below when you want to keep the bundler
 and the app you have.
 
-{% aside type="caution" title="What this guide covers" %}
+{% aside type="note" title="Scope" %}
 React client-side rendering on webpack or Rspack, keeping the same bundler.
-
-Angular Module Federation and server-side rendering are not covered.
-Angular workspaces move to a different runtime with a different manifest format.
-See [micro frontends with Angular](/docs/kb/angular-micro-frontends) for that path.
+Angular Module Federation and server-side rendering are not covered here.
+For Angular, see [micro frontends with Angular](/docs/kb/angular-micro-frontends).
 {% /aside %}
 
 ## What replaces what
 
-| Removed in v24                                                                        | Replacement                                                         |
+| Going away in v24                                                                     | Replacement                                                         |
 | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
 | `withModuleFederation` from `@nx/module-federation/webpack`                           | `ModuleFederationPlugin` from `@module-federation/enhanced/webpack` |
 | `withModuleFederation` from `@nx/module-federation/rspack`                            | `ModuleFederationPlugin` from `@module-federation/enhanced/rspack`  |
