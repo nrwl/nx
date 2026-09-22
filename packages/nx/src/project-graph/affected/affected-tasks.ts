@@ -109,7 +109,7 @@ export async function computeAffectedTasks(
         namedProjects.has(taskGraph.tasks[id].target.project)
       ),
       changedExternals: dependencies.externals,
-      allExternalsChanged: dependencies.allExternals,
+      changedExternalTypes: dependencies.changedExternalTypes,
     }
   );
 
@@ -147,7 +147,9 @@ function dependencyChanges(
   ];
   return {
     externals: [...new Set(changes.flatMap((c) => c.externals))],
-    allExternals: changes.some((c) => c.allExternals),
+    changedExternalTypes: [
+      ...new Set(changes.flatMap((c) => c.changedExternalTypes)),
+    ],
     projects: [...new Set(changes.flatMap((c) => c.projects))],
   };
 }

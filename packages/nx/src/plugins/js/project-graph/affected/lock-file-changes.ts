@@ -70,7 +70,7 @@ export function lockFileDependencyChanges(
 ): DependencyChanges {
   const none: DependencyChanges = {
     externals: [],
-    allExternals: false,
+    changedExternalTypes: [],
     projects: [],
   };
   const changedLockFile = findChangedLockFile(fileChanges);
@@ -92,7 +92,9 @@ export function lockFileDependencyChanges(
     projectsAffectedByDependencyUpdates === 'auto'
       ? changedExternalNodes(changedLockFile, projectGraph, packageJson)
       : null;
-  return externals ? { ...none, externals } : { ...none, allExternals: true };
+  return externals
+    ? { ...none, externals }
+    : { ...none, changedExternalTypes: ['npm'] };
 }
 
 function findChangedLockFile(

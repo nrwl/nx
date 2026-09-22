@@ -43,6 +43,7 @@ export function transformProjectGraphForRust(
     graph.externalNodes ?? {}
   )) {
     externalNodes[projectName] = {
+      type: externalNode.type,
       packageName: externalNode.data.packageName,
       hash: externalNode.data.hash,
       version: externalNode.data.version,

@@ -39,11 +39,11 @@ export function packageJsonDependencyChanges(
 ): DependencyChanges {
   const touched = touchedNpmPackages(touchedFiles, nxJson, projectGraph);
   if (touched === null) {
-    return { externals: [], allExternals: true, projects: [] };
+    return { externals: [], changedExternalTypes: ['npm'], projects: [] };
   }
   return {
     externals: touched.filter((name) => name in projectGraph.externalNodes),
-    allExternals: false,
+    changedExternalTypes: [],
     projects: touched.filter((name) => name in projectGraph.nodes),
   };
 }

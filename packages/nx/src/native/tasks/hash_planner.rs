@@ -1828,6 +1828,7 @@ mod tests {
                 external_nodes: HashMap::from([(
                     "npm:external".into(),
                     ExternalNode {
+                        r#type: Some("npm".into()),
                         package_name: Some("external".into()),
                         version: "1".into(),
                         hash: None,
@@ -2239,6 +2240,7 @@ mod tests {
                     (
                         name,
                         ExternalNode {
+                            r#type: Some("npm".into()),
                             package_name: None,
                             version: "1.0.0".to_string(),
                             hash: None,

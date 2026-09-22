@@ -18,8 +18,10 @@ export interface AffectedProjectGraphContext {
 export interface DependencyChanges {
   /** External node names whose version or integrity moved. */
   externals: string[];
-  /** The change could not be pinned to packages, so every external counts. */
-  allExternals: boolean;
+  /** Ecosystems whose manifest changed without the change being pinnable to
+   * packages, so every node of that type counts as moved. A locator names the
+   * ecosystem it reads, since a change to one cannot move another's nodes. */
+  changedExternalTypes: string[];
   /** Workspace projects the change names outright. */
   projects: string[];
 }

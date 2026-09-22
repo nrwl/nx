@@ -471,10 +471,12 @@ export interface AffectedTasksOptions {
    */
   changedExternals: Array<string>
   /**
-   * The change could not be pinned to packages, or the workspace asked for
-   * everything on a lockfile change, so every external counts as moved.
+   * Ecosystems whose manifest changed without the change being pinnable to
+   * packages, `npm` for a lock file. Every node of that type counts as
+   * moved, and a node of any other type does not: a pnpm lock file cannot
+   * have moved a Maven artifact.
    */
-  allExternalsChanged: boolean
+  changedExternalTypes: Array<string>
 }
 
 export interface BatchInfo {
@@ -607,6 +609,11 @@ export interface ExternalDependenciesInput {
 }
 
 export interface ExternalNode {
+  /**
+   * The ecosystem the node belongs to, `npm` for a package the JS lock-file
+   * parsers found. Optional because a plugin may leave it unset.
+   */
+  type?: string
   packageName?: string
   version: string
   hash?: string

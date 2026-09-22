@@ -26,7 +26,7 @@ use crate::native::affected::dependent_outputs::compute_dependent_output_edges;
 use crate::native::affected::plan_ids::referenced_ids;
 use crate::native::affected::project_paths::{ProjectRoots, normalize_path};
 use crate::native::glob::{build_glob_set, fileset_patterns};
-use crate::native::project_graph::types::ProjectGraph;
+use crate::native::project_graph::types::{ExternalNode, ProjectGraph};
 use crate::native::tasks::hashers::globs_from_workspace_globs;
 use crate::native::tasks::types::{HashInstruction, HashPlans, TaskGraph};
 
@@ -43,31 +43,49 @@ pub struct AffectedTasksOptions {
     /// External node names whose version or integrity moved. A plan carries them
     /// as `External(name)`, so a package is matched the way a path is.
     pub changed_externals: Vec<String>,
-    /// The change could not be pinned to packages, or the workspace asked for
-    /// everything on a lockfile change, so every external counts as moved.
-    pub all_externals_changed: bool,
+    /// Ecosystems whose manifest changed without the change being pinnable to
+    /// packages, `npm` for a lock file. Every node of that type counts as
+    /// moved, and a node of any other type does not: a pnpm lock file cannot
+    /// have moved a Maven artifact.
+    pub changed_external_types: Vec<String>,
 }
 
 /// The externals a change moved, as the matcher asks about them.
 pub(crate) struct ChangedExternals<'a> {
     names: HashSet<&'a str>,
-    all: bool,
+    types: HashSet<&'a str>,
+    external_nodes: &'a HashMap<String, ExternalNode>,
 }
 
 impl<'a> ChangedExternals<'a> {
-    pub(crate) fn new(names: &'a [String], all: bool) -> Self {
+    pub(crate) fn new(
+        names: &'a [String],
+        types: &'a [String],
+        external_nodes: &'a HashMap<String, ExternalNode>,
+    ) -> Self {
         Self {
             names: names.iter().map(String::as_str).collect(),
-            all,
+            types: types.iter().map(String::as_str).collect(),
+            external_nodes,
         }
     }
 
+    /// An unset type is not a claim of membership, so it matches no ecosystem.
+    /// The lock-file parsers set `npm` on every node they produce, so a node
+    /// without one came from somewhere that never said it was a package.
     fn includes(&self, name: &str) -> bool {
-        self.all || self.names.contains(name)
+        self.names.contains(name)
+            || self
+                .external_nodes
+                .get(name)
+                .and_then(|node| node.r#type.as_deref())
+                .is_some_and(|kind| self.types.contains(kind))
     }
 
+    /// `AllExternalDependencies` hashes every node, so any moved external
+    /// reaches it whatever its type.
     fn any(&self) -> bool {
-        self.all || !self.names.is_empty()
+        !self.names.is_empty() || !self.types.is_empty()
     }
 }
 
@@ -112,8 +130,11 @@ pub(crate) fn compute_affected_task_selection(
 ) -> anyhow::Result<AffectedTaskSelection> {
     let (configs, deleted) = changed_project_configs(changed_files, options);
 
-    let externals =
-        ChangedExternals::new(&options.changed_externals, options.all_externals_changed);
+    let externals = ChangedExternals::new(
+        &options.changed_externals,
+        &options.changed_external_types,
+        &graph.external_nodes,
+    );
     let mut touched: HashSet<String> =
         touched_tasks(graph, hash_plans, changed_files, &configs, &externals)?
             .into_iter()
@@ -496,12 +517,35 @@ mod tests {
             workspace_root: format!("{}/../..", env!("CARGO_MANIFEST_DIR")),
             seed_task_ids: strings(seeds),
             changed_externals: vec![],
-            all_externals_changed: false,
+            changed_external_types: vec![],
         }
     }
 
+    static NO_NODES: std::sync::LazyLock<HashMap<String, ExternalNode>> =
+        std::sync::LazyLock::new(HashMap::new);
+
     fn no_externals() -> ChangedExternals<'static> {
-        ChangedExternals::new(&[], false)
+        ChangedExternals::new(&[], &[], &NO_NODES)
+    }
+
+    /// Named external nodes with their ecosystem, so `type_of` can answer.
+    fn externals_graph(externals: &[(&str, &str)]) -> ProjectGraph {
+        let mut g = graph(&[("a", "libs/a")]);
+        g.external_nodes = externals
+            .iter()
+            .map(|(name, kind)| {
+                (
+                    name.to_string(),
+                    ExternalNode {
+                        r#type: Some(kind.to_string()),
+                        package_name: Some(name.to_string()),
+                        version: "1.0.0".into(),
+                        hash: None,
+                    },
+                )
+            })
+            .collect();
+        g
     }
 
     fn touched_for(
@@ -516,12 +560,28 @@ mod tests {
     fn touched_for_externals(
         instructions: Vec<HashInstruction>,
         moved: &[&str],
-        all: bool,
+        types: &[&str],
     ) -> Vec<String> {
-        let g = graph(&[("a", "libs/a")]);
+        touched_in(graph(&[("a", "libs/a")]), instructions, moved, types)
+    }
+
+    fn touched_in(
+        g: ProjectGraph,
+        instructions: Vec<HashInstruction>,
+        moved: &[&str],
+        types: &[&str],
+    ) -> Vec<String> {
         let p = plans("a:build", instructions);
         let moved = strings(moved);
-        touched_tasks(&g, &p, &[], &[], &ChangedExternals::new(&moved, all)).unwrap()
+        let types = strings(types);
+        touched_tasks(
+            &g,
+            &p,
+            &[],
+            &[],
+            &ChangedExternals::new(&moved, &types, &g.external_nodes),
+        )
+        .unwrap()
     }
 
     // --- matching ---------------------------------------------------------------
@@ -640,21 +700,21 @@ mod tests {
     fn external_matches_the_named_package_only() {
         let plan = || vec![HashInstruction::External("npm:lodash".into())];
         assert_eq!(
-            touched_for_externals(plan(), &["npm:lodash"], false),
+            touched_for_externals(plan(), &["npm:lodash"], &[]),
             vec!["a:build"]
         );
-        assert!(touched_for_externals(plan(), &["npm:react"], false).is_empty());
-        assert!(touched_for_externals(plan(), &[], false).is_empty());
+        assert!(touched_for_externals(plan(), &["npm:react"], &[]).is_empty());
+        assert!(touched_for_externals(plan(), &[], &[]).is_empty());
     }
 
     #[test]
     fn all_external_dependencies_matches_when_any_package_moved() {
         let plan = || vec![HashInstruction::AllExternalDependencies];
         assert_eq!(
-            touched_for_externals(plan(), &["npm:lodash"], false),
+            touched_for_externals(plan(), &["npm:lodash"], &[]),
             vec!["a:build"]
         );
-        assert!(touched_for_externals(plan(), &[], false).is_empty());
+        assert!(touched_for_externals(plan(), &[], &[]).is_empty());
     }
 
     /// The locator could not say which packages moved, so every external counts,
@@ -662,15 +722,63 @@ mod tests {
     #[test]
     fn every_external_counts_when_the_change_could_not_be_pinned() {
         assert_eq!(
-            touched_for_externals(
+            touched_in(
+                externals_graph(&[("npm:react", "npm")]),
                 vec![HashInstruction::External("npm:react".into())],
                 &[],
-                true
+                &["npm"],
             ),
             vec!["a:build"]
         );
         assert_eq!(
-            touched_for_externals(vec![HashInstruction::AllExternalDependencies], &[], true),
+            touched_for_externals(
+                vec![HashInstruction::AllExternalDependencies],
+                &[],
+                &["npm"]
+            ),
+            vec!["a:build"]
+        );
+    }
+
+    /// A pnpm lock file cannot have moved a Maven artifact, so an unpinned npm
+    /// change leaves another ecosystem's nodes alone. This is what lets a plugin
+    /// declare its own externals and have the declaration mean something.
+    #[test]
+    fn an_unpinned_change_stays_within_its_own_ecosystem() {
+        let guava = "gradle:com.google.guava:guava";
+        assert!(
+            touched_in(
+                externals_graph(&[(guava, "gradle")]),
+                vec![HashInstruction::External(guava.into())],
+                &[],
+                &["npm"],
+            )
+            .is_empty(),
+            "a gradle artifact is not moved by a lock file change"
+        );
+        assert_eq!(
+            touched_in(
+                externals_graph(&[("npm:react", "npm")]),
+                vec![HashInstruction::External("npm:react".into())],
+                &[],
+                &["npm"],
+            ),
+            vec!["a:build"],
+            "an npm package still is"
+        );
+    }
+
+    /// AllExternalDependencies hashes every node whatever its type, so any moved
+    /// external reaches it.
+    #[test]
+    fn all_external_dependencies_still_matches_another_ecosystem() {
+        assert_eq!(
+            touched_in(
+                externals_graph(&[("gradle:guava", "gradle")]),
+                vec![HashInstruction::AllExternalDependencies],
+                &[],
+                &["npm"],
+            ),
             vec!["a:build"]
         );
     }
