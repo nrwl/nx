@@ -220,6 +220,53 @@ describe('@nx/oxlint plugin', () => {
     }
   );
 
+  // The exclusion itself happens at run time in the executor, which knows
+  // which nested roots lint in the same run. The plugin's job is the list.
+  it('should carry direct nested project roots on the inferred target', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"rules":{}}`,
+      'libs/a/project.json': `{"name":"a"}`,
+      'libs/a/src/index.ts': `export const a = 1;`,
+      'libs/a/nested/project.json': `{"name":"a-nested"}`,
+      'libs/a/nested/src/index.ts': `export const n = 1;`,
+      'libs/a/nested/deeper/project.json': `{"name":"a-deeper"}`,
+      'libs/a/nested/deeper/src/index.ts': `export const d = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+
+    // Nearest parent claims a root, so the grandchild is the child's entry.
+    expect(results.projects['libs/a'].targets.lint.options).toEqual({
+      nestedProjectRoots: ['libs/a/nested'],
+    });
+    expect(results.projects['libs/a/nested'].targets.lint.options).toEqual({
+      nestedProjectRoots: ['libs/a/nested/deeper'],
+    });
+    expect(
+      results.projects['libs/a/nested/deeper'].targets.lint.options
+    ).toBeUndefined();
+  });
+
+  // A nested project that lints with something else is still its own project;
+  // its root must reach the executor's exclusion list all the same.
+  it('should list nested roots regardless of what lints them', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"rules":{}}`,
+      'libs/a/project.json': `{"name":"a"}`,
+      'libs/a/src/index.ts': `export const a = 1;`,
+      // Only markdown inside: this project gets no oxlint target at all.
+      'libs/a/docs-only/project.json': `{"name":"a-docs"}`,
+      'libs/a/docs-only/README.md': `# docs`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+
+    expect(results.projects['libs/a'].targets.lint.options).toEqual({
+      nestedProjectRoots: ['libs/a/docs-only'],
+    });
+    expect(results.projects['libs/a/docs-only']).toBeUndefined();
+  });
+
   // Nested-project exclusion happens at run time in the executor, where the
   // batch knows which nested roots lint in the same run — see
   // nestedProjectIgnorePatterns in src/executors/lint/partition.ts.

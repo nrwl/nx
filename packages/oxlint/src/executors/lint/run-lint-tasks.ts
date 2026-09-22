@@ -1,4 +1,4 @@
-import { logger, type ProjectGraph } from '@nx/devkit';
+import { logger } from '@nx/devkit';
 import { interpolate, isAiAgent, isCI } from '@nx/devkit/internal';
 import { resolveLintOptions } from './options.js';
 import {
@@ -9,8 +9,6 @@ import {
 import { countBySeverity, renderDiagnostics } from './render/index.js';
 import { runOxlint } from './run-oxlint.js';
 import type { LintExecutorSchema } from './schema.js';
-
-export const LINT_EXECUTOR = '@nx/oxlint:lint';
 
 export interface LintTask {
   taskId: string;
@@ -33,8 +31,7 @@ export interface LintTaskResult {
  */
 export function runLintTasks(
   tasks: LintTask[],
-  workspaceRoot: string,
-  projectGraph: ProjectGraph
+  workspaceRoot: string
 ): Record<string, LintTaskResult> {
   const resolved = tasks.map((task) => ({
     task,
@@ -62,9 +59,11 @@ export function runLintTasks(
       `[@nx/oxlint] ${differing.task.projectName} resolves different Oxlint options than ${resolved[0].task.projectName}. Oxlint runs once for the whole batch, using ${resolved[0].task.projectName}'s options.`
     );
   }
+  // The inferred targets carry their nested project roots, so the whole
+  // exclusion frontier is the union of the participants' lists.
   const ignores = nestedProjectIgnorePatterns(
     resolved.map((r) => ({ projectRoot: r.task.projectRoot, paths: r.paths })),
-    oxlintProjectRoots(projectGraph)
+    [...new Set(tasks.flatMap((t) => t.options.nestedProjectRoots ?? []))]
   );
   const paths = [...new Set(resolved.flatMap((r) => r.paths))];
 
@@ -123,18 +122,4 @@ export function runLintTasks(
     `Finished in ${Math.round(start_time * 1000)}ms on ${number_of_files} files using ${threads_count} threads.\n`
   );
   return results;
-}
-
-function oxlintProjectRoots(projectGraph: ProjectGraph): string[] {
-  const roots: string[] = [];
-  for (const node of Object.values(projectGraph.nodes)) {
-    if (
-      Object.values(node.data.targets ?? {}).some(
-        (t) => t.executor === LINT_EXECUTOR
-      )
-    ) {
-      roots.push(node.data.root);
-    }
-  }
-  return roots;
 }

@@ -29,6 +29,8 @@ export function resolveLintOptions(
 ): ResolvedLintOptions {
   const {
     lintFilePatterns: _patterns,
+    // Carried for the batch's nested exclusions, not an Oxlint flag.
+    nestedProjectRoots: _nestedRoots,
     format,
     args,
     __unparsed__: unparsed = [],
