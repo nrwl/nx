@@ -5,6 +5,7 @@ import {
   mkdtempSync,
   readdirSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
@@ -128,6 +129,19 @@ describe('run-state', () => {
 
       expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
       expect(() => readRunState(dir)).toThrow(join(dir, 'run.json'));
+    });
+
+    it('refuses a run.json that is a symlink instead of following it', () => {
+      const dir = join(root, 'run-1');
+      mkdirSync(dir, { recursive: true });
+      const elsewhere = join(root, 'planted.json');
+      writeFileSync(elsewhere, JSON.stringify(buildState()));
+      symlinkSync(elsewhere, join(dir, 'run.json'));
+
+      // A valid target proves the symlink is refused, not merely read through
+      // and rejected for its content.
+      expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+      expect(() => readRunState(dir)).toThrow(/not a regular file/i);
     });
 
     it('refuses a run state missing required top-level fields', () => {
@@ -497,8 +511,8 @@ describe('run-state', () => {
     });
 
     it('refuses recorded git refs that are not commit shas', () => {
-      // A died step's ref is rendered into the `git reset --hard <ref>`
-      // remediation the agent is told to run.
+      // A died step's ref is the target of the `git reset --hard` a clean
+      // retry runs.
       const dir = join(root, 'run-1');
       mkdirSync(dir, { recursive: true });
       const step = {
@@ -599,6 +613,7 @@ describe('run-state', () => {
             outcome: { summary: 'done' },
             promptOutcome: { status: 'completed', summary: 'applied' },
             awaitingKind: 'migration-prompt',
+            commitStarted: true,
             generatorCompleted: true,
           },
         ],
@@ -1018,6 +1033,39 @@ describe('run-state', () => {
       expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
     });
 
+    it('accepts a well-formed tree reservation and refuses a malformed one', () => {
+      const dir = join(root, 'run-1');
+      mkdirSync(dir, { recursive: true });
+      const valid = {
+        kind: 'commit' as const,
+        stepId: 'step-1',
+        attempt: 1,
+        owner: 'abcd1234',
+        pid: 4242,
+      };
+      writeFileSync(
+        join(dir, 'run.json'),
+        JSON.stringify(buildState({ treeOperation: valid }))
+      );
+      expect(readRunState(dir).treeOperation).toEqual(valid);
+
+      for (const treeOperation of [
+        { ...valid, kind: 'rebase' },
+        { ...valid, owner: '' },
+        { ...valid, pid: 0 },
+        { ...valid, pid: '4242' },
+        { ...valid, attempt: 0 },
+        { ...valid, stepId: 7 },
+      ]) {
+        writeFileSync(
+          join(dir, 'run.json'),
+          JSON.stringify(buildState({ treeOperation: treeOperation as never }))
+        );
+
+        expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+      }
+    });
+
     it('refuses a malformed no-progress record', () => {
       const dir = join(root, 'run-1');
       mkdirSync(dir, { recursive: true });
@@ -1111,8 +1159,6 @@ describe('run-state', () => {
     });
 
     it('reports a run dir whose run.json cannot be read instead of treating it as absent', () => {
-      // run.json as a directory makes readFileSync fail with a raw fs error
-      // (EISDIR), the same failure class as EACCES on a file.
       mkdirSync(join(migrateRunsDir(root), 'unreadable', 'run.json'), {
         recursive: true,
       });
@@ -1121,7 +1167,10 @@ describe('run-state', () => {
 
       expect(result.active).toBeNull();
       expect(result.uninterpretable).toEqual([
-        { dirName: 'unreadable', reason: expect.stringContaining('EISDIR') },
+        {
+          dirName: 'unreadable',
+          reason: expect.stringContaining('is not a regular file'),
+        },
       ]);
     });
 
