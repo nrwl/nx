@@ -1,5 +1,4 @@
 import type { NxJsonConfiguration } from '../config/nx-json';
-import { IoSnapshotStore } from '../native';
 import { findAncestorNodeModules } from '../nx-cloud/resolution-helpers';
 import {
   ioSnapshotEnv,
@@ -7,15 +6,9 @@ import {
   type IoSnapshotCloudOptions,
   type IoSnapshotEnv,
 } from './config';
-import {
-  errorMessage,
-  reasonFromError,
-  skippedIoSnapshots,
-  storedIoSnapshots,
-  type IoSnapshotOutcome,
-} from './outcome';
+import { skippedIoSnapshots, type IoSnapshotOutcome } from './outcome';
+import { getIoSnapshotStore } from './store';
 import { verifyOrUpdateNxCloudClient } from '../nx-cloud/update-manager';
-import { getDbConnection } from '../utils/db-connection';
 import { getLatestCommitSha } from '../utils/git-utils';
 import { logger } from '../utils/logger';
 import { output } from '../utils/output';
@@ -84,14 +77,13 @@ export async function fetchIoSnapshotsForRun(
       skippedIoSnapshots('not-a-git-repo', 'Could not resolve HEAD')
     );
   }
-  const store = new IoSnapshotStore(getDbConnection());
-  const stored = storedIoSnapshots(store, head);
-  const storedSet = stored.status === 'skipped' ? null : stored.snapshots;
+  const store = getIoSnapshotStore();
+  const stored = store.get(head);
   if (
-    storedSet &&
-    Date.now() - storedSet.resolution.fetchedAt <= STORED_SET_MAX_AGE_MS
+    stored &&
+    Date.now() - stored.resolution.fetchedAt <= STORED_SET_MAX_AGE_MS
   ) {
-    return reportIoSnapshotResolution(stored);
+    return reportIoSnapshotResolution({ status: 'cached', snapshots: stored });
   }
 
   let read: NonNullable<
@@ -118,12 +110,20 @@ export async function fetchIoSnapshotsForRun(
     const result = await read({
       workspaceRoot,
       nxCloudOptions: runnerOptions,
-      knownUpdatedAt: storedSet?.resolution.updatedAt ?? undefined,
+      knownUpdatedAt: stored?.resolution.updatedAt ?? undefined,
       timeoutMs: READ_TIMEOUT_MS,
     });
     if (result === null) {
-      // Unchanged since the stored set, which is still current.
-      return reportIoSnapshotResolution(stored);
+      // Unchanged since the stored set: only a run holding one sends
+      // `knownUpdatedAt`, so this is it.
+      return reportIoSnapshotResolution(
+        stored
+          ? { status: 'cached', snapshots: stored }
+          : skippedIoSnapshots(
+              'no-bundle',
+              `no I/O snapshot set is stored for ${head}`
+            )
+      );
     }
     return reportIoSnapshotResolution({
       status: 'fetched',
@@ -142,6 +142,27 @@ export async function fetchIoSnapshotsForRun(
       skippedIoSnapshots(reasonFromError(e), errorMessage(e))
     );
   }
+}
+
+const OFFLINE_CODES = new Set([
+  'ECONNABORTED',
+  'ECONNREFUSED',
+  'ECONNRESET',
+  'ENOTFOUND',
+  'EAI_AGAIN',
+  'ETIMEDOUT',
+]);
+
+/** A skip reason from an error's `code`: the Nx Cloud client's or the store's. */
+function reasonFromError(e: unknown): string {
+  const code = (e as { code?: unknown })?.code;
+  if (typeof code !== 'string') return 'fetch-failed';
+  if (OFFLINE_CODES.has(code)) return 'offline';
+  return code.toLowerCase().replace(/_/g, '-');
+}
+
+function errorMessage(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
 }
 
 async function loadCloudClient(runnerOptions: IoSnapshotCloudOptions) {

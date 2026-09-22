@@ -1,18 +1,13 @@
 import type { NxJsonConfiguration } from '../config/nx-json';
 import { daemonClient } from '../daemon/client/client';
-import { IoSnapshotStore } from '../native';
-import { getDbConnection } from '../utils/db-connection';
 import {
   ioSnapshotEnv,
   isIoSnapshotFetchEnabled,
   type IoSnapshotCloudOptions,
 } from './config';
 import { fetchIoSnapshotsForRun, reportIoSnapshotResolution } from './fetch';
-import {
-  skippedIoSnapshots,
-  storedIoSnapshots,
-  type IoSnapshotOutcome,
-} from './outcome';
+import { skippedIoSnapshots, type IoSnapshotOutcome } from './outcome';
+import { getIoSnapshotStore } from './store';
 
 /**
  * This run's snapshot set. With the daemon, the daemon fetches it and writes
@@ -50,13 +45,13 @@ export async function resolveIoSnapshotsForRun(
       skippedIoSnapshots(resolved.reason, resolved.message)
     );
   }
-  const stored = storedIoSnapshots(
-    new IoSnapshotStore(getDbConnection()),
-    resolved.commit
-  );
+  const snapshots = getIoSnapshotStore().get(resolved.commit);
   return reportIoSnapshotResolution(
-    stored.status === 'skipped'
-      ? stored
-      : { status: resolved.status, snapshots: stored.snapshots }
+    snapshots
+      ? { status: resolved.status, snapshots }
+      : skippedIoSnapshots(
+          'no-bundle',
+          `no I/O snapshot set is stored for ${resolved.commit}`
+        )
   );
 }

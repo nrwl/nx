@@ -136,9 +136,9 @@ impl IoSnapshots {
     }
 }
 
-/// The workspace database's snapshot sets, one per commit. Failures throw
-/// with a `code` JS maps to a skip reason: `INVALID_RESPONSE`,
-/// `WRITE_FAILED` or `INVALID_BUNDLE`.
+/// The workspace database's snapshot sets, one per commit. A failed import
+/// throws with a `code` JS maps to a skip reason: `INVALID_RESPONSE` or
+/// `WRITE_FAILED`.
 #[cfg(not(target_arch = "wasm32"))]
 #[napi]
 pub struct IoSnapshotStore {
@@ -222,16 +222,22 @@ impl IoSnapshotStore {
     }
 
     /// The stored set for `commit`, without touching the network; `null`
-    /// when none is stored. Reads only the commit's summary row.
+    /// when none is stored or its row cannot be read, since either way the
+    /// run fetches again. Reads only the commit's summary row.
     #[napi]
-    pub fn get(&self, commit: String) -> napi::Result<Option<IoSnapshots>, String> {
-        let resolution = store::read_resolution(&self.db, &commit)
-            .map_err(|err| napi::Error::new("INVALID_BUNDLE".to_string(), err.to_string()))?;
-        Ok(resolution.map(|resolution| IoSnapshots {
+    pub fn get(&self, commit: String) -> Option<IoSnapshots> {
+        let resolution = match store::read_resolution(&self.db, &commit) {
+            Ok(resolution) => resolution?,
+            Err(err) => {
+                debug!("io snapshots: the stored set for {commit} is unreadable: {err}");
+                return None;
+            }
+        };
+        Some(IoSnapshots {
             resolution,
             db: Arc::clone(&self.db),
             entries: Mutex::new(HashMap::new()),
-        }))
+        })
     }
 }
 
@@ -273,7 +279,7 @@ mod tests {
         assert_eq!(resolution.commits, vec!["head", "parent"]);
         assert_eq!(imported.commit(), "head");
 
-        let stored = store.get("head".into()).unwrap().unwrap();
+        let stored = store.get("head".into()).unwrap();
         assert_eq!(stored.resolution().digest, resolution.digest);
         // Read per task, normalized on import: duplicates collapsed.
         let entries = stored.entries_for(&["web:build", "gone:build"]).unwrap();
@@ -314,6 +320,19 @@ mod tests {
         let (_dir, store) = temp_store();
         let err = import(&store, "{ not json").err().unwrap();
         assert_eq!(err.status, "INVALID_RESPONSE");
-        assert!(store.get("head".into()).unwrap().is_none());
+        assert!(store.get("head".into()).is_none());
+    }
+
+    #[test]
+    fn treats_an_unreadable_row_as_nothing_stored() {
+        let (_dir, store) = temp_store();
+        import(&store, "{}").unwrap();
+        store
+            .db
+            .lock()
+            .unwrap()
+            .execute("UPDATE io_snapshot_bundles SET resolution = 'not json'", [])
+            .unwrap();
+        assert!(store.get("head".into()).is_none());
     }
 }

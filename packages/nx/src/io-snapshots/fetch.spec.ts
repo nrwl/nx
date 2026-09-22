@@ -211,24 +211,6 @@ describe('fetchIoSnapshotsForRun', () => {
     });
   });
 
-  it('asks again when the stored set cannot be read', async () => {
-    store.get.mockImplementation(() => {
-      throw Object.assign(new Error('bad row'), { code: 'INVALID_BUNDLE' });
-    });
-    cloud.readIoSnapshots.mockResolvedValue({
-      commits: ['head'],
-      updatedAt: 9,
-      snapshots: {},
-    });
-    store.import.mockReturnValue(stored(Date.now()));
-    expect(await fetchIoSnapshotsForRun(nxJson, {}, optedIn())).toMatchObject({
-      status: 'fetched',
-    });
-    expect(cloud.readIoSnapshots).toHaveBeenCalledWith(
-      expect.objectContaining({ knownUpdatedAt: undefined })
-    );
-  });
-
   it('reports a client that predates snapshots', async () => {
     cloud.verifyOrUpdateNxCloudClient.mockResolvedValue({
       nxCloudClient: { configureLightClientRequire: () => () => {} },

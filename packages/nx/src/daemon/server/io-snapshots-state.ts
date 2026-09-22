@@ -1,6 +1,5 @@
-import { IoSnapshotStore, type IoSnapshots } from '../../native';
-import { getDbConnection } from '../../utils/db-connection';
-import { snapshotsOf, storedIoSnapshots } from '../../io-snapshots/outcome';
+import type { IoSnapshots } from '../../native';
+import { getIoSnapshotStore } from '../../io-snapshots/store';
 
 // One handle at a time: entries read for a request serve the next one while
 // the commit and the set's digest hold, and a new commit or a re-imported set
@@ -23,9 +22,7 @@ export function getIoSnapshotsForCommit(
   if (!commit) {
     return undefined;
   }
-  const stored = snapshotsOf(
-    storedIoSnapshots(new IoSnapshotStore(getDbConnection()), commit)
-  );
+  const stored = getIoSnapshotStore().get(commit) ?? undefined;
   if (
     stored &&
     remembered?.commit === commit &&

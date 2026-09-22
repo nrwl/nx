@@ -25,7 +25,7 @@ vi.mock('../tasks-runner/utils', () => ({
 
 import { closeDbConnection, connectToNxDb, IoSnapshotStore } from '../native';
 import { isIoSnapshotFetchEnabled } from './config';
-import { buildIoSnapshotOverrides, getIoSnapshotsForHead } from './overrides';
+import { buildIoSnapshotOverrides } from './overrides';
 
 function node(name: string, root: string, targets: Record<string, any>) {
   return { name, type: 'lib' as const, data: { root, targets } };
@@ -105,17 +105,12 @@ describe('buildIoSnapshotOverrides', () => {
 
   it('returns null when snapshots are off', () => {
     (isIoSnapshotFetchEnabled as Mock).mockReturnValue(false);
-    expect(getIoSnapshotsForHead({})).toBeNull();
     expect(buildIoSnapshotOverrides(projectGraph, graph('web:build'), {})).toBe(
       null
     );
   });
 
   it('reports no-bundle when nothing is cached for HEAD', () => {
-    expect(getIoSnapshotsForHead({})).toMatchObject({
-      status: 'skipped',
-      reason: 'no-bundle',
-    });
     const result = buildIoSnapshotOverrides(
       projectGraph,
       graph('web:build'),

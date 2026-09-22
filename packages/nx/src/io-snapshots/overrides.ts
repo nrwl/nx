@@ -3,7 +3,6 @@ import type { ProjectGraph } from '../config/project-graph';
 import type { TaskGraph } from '../config/task-graph';
 import {
   ioSnapshotReport,
-  IoSnapshotStore,
   type IoSnapshotDiagnostic,
   type IoSnapshotReport,
   type IoSnapshotResolution,
@@ -11,9 +10,8 @@ import {
 } from '../native';
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
 import { getExecutorForTask } from '../tasks-runner/utils';
-import { getDbConnection } from '../utils/db-connection';
 import { ioSnapshotCommitForHead, isIoSnapshotFetchEnabled } from './config';
-import { storedIoSnapshots, type IoSnapshotOutcome } from './outcome';
+import { getIoSnapshotStore } from './store';
 
 export type {
   IoSnapshotDiagnostic,
@@ -21,24 +19,6 @@ export type {
   IoSnapshotResolution,
   IoSnapshots,
 } from '../native';
-
-/**
- * The set stored for HEAD, read from the database only. Callers that must
- * resolve what a run would hash fetch first (see `fetchIoSnapshotsForRun`);
- * this never reaches the network itself. `null` when snapshots are off for
- * this workspace or HEAD cannot be resolved.
- */
-export function getIoSnapshotsForHead(
-  nxJson: NxJsonConfiguration
-): IoSnapshotOutcome | null {
-  if (!isIoSnapshotFetchEnabled(nxJson)) {
-    return null;
-  }
-  const head = ioSnapshotCommitForHead();
-  return head
-    ? storedIoSnapshots(new IoSnapshotStore(getDbConnection()), head)
-    : null;
-}
 
 const customHasherMemo = new WeakMap<
   ProjectGraph,
@@ -122,27 +102,34 @@ export function buildIoSnapshotOverrides(
   nxJson: NxJsonConfiguration,
   snapshots?: IoSnapshots | string
 ): IoSnapshotReport | null {
-  const resolved: IoSnapshotOutcome | null =
-    typeof snapshots === 'string'
-      ? storedIoSnapshots(new IoSnapshotStore(getDbConnection()), snapshots)
-      : snapshots
-        ? { status: 'cached', snapshots }
-        : getIoSnapshotsForHead(nxJson);
-  if (!resolved) {
+  const report = (set: IoSnapshots) =>
+    ioSnapshotReport(
+      set,
+      taskGraph,
+      optedOutTaskIds(projectGraph, taskGraph),
+      customHasherTaskIds(projectGraph, taskGraph),
+      projectRoots(projectGraph)
+    );
+  if (typeof snapshots === 'object') {
+    return report(snapshots);
+  }
+  const commit =
+    snapshots ??
+    (isIoSnapshotFetchEnabled(nxJson) ? ioSnapshotCommitForHead() : null);
+  if (!commit) {
     return null;
   }
-  if (resolved.status === 'skipped') {
-    return {
-      used: [],
-      tasksWithOutputs: [],
-      diagnostics: [{ reason: resolved.reason, message: resolved.message }],
-    };
-  }
-  return ioSnapshotReport(
-    resolved.snapshots,
-    taskGraph,
-    optedOutTaskIds(projectGraph, taskGraph),
-    customHasherTaskIds(projectGraph, taskGraph),
-    projectRoots(projectGraph)
-  );
+  const set = getIoSnapshotStore().get(commit);
+  return set
+    ? report(set)
+    : {
+        used: [],
+        tasksWithOutputs: [],
+        diagnostics: [
+          {
+            reason: 'no-bundle',
+            message: `no I/O snapshot set is stored for ${commit}`,
+          },
+        ],
+      };
 }

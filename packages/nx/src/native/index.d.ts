@@ -144,9 +144,9 @@ export declare class IoSnapshots {
 }
 
 /**
- * The workspace database's snapshot sets, one per commit. Failures throw
- * with a `code` JS maps to a skip reason: `INVALID_RESPONSE`,
- * `WRITE_FAILED` or `INVALID_BUNDLE`.
+ * The workspace database's snapshot sets, one per commit. A failed import
+ * throws with a `code` JS maps to a skip reason: `INVALID_RESPONSE` or
+ * `WRITE_FAILED`.
  */
 export declare class IoSnapshotStore {
   constructor(db: ExternalObject<NxDbConnection>)
@@ -157,7 +157,8 @@ export declare class IoSnapshotStore {
   import(options: IoSnapshotImportOptions): IoSnapshots
   /**
    * The stored set for `commit`, without touching the network; `null`
-   * when none is stored. Reads only the commit's summary row.
+   * when none is stored or its row cannot be read, since either way the
+   * run fetches again. Reads only the commit's summary row.
    */
   get(commit: string): IoSnapshots | null
 }
