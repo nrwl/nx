@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, OnceLock};
 
 use anyhow::{Context, Result};
-use parking_lot::Mutex;
+use parking_lot::{Mutex, RwLock};
 
 use crate::native::glob::{NxGlobSet, build_glob_set};
 
@@ -256,13 +256,17 @@ where
         walker.standard_filters(false);
     }
 
-    // We should make sure to always ignore node_modules and the .git folder
+    // One predicate, because `filter_entry` replaces rather than composes:
+    // the hardcoded ignores, the caller's extra globs, and the configured
+    // cache directories all have to be answered here or not at all.
+    let configured_skips: Vec<PathBuf> = CONFIGURED_SKIPS.read().clone();
     walker.filter_entry(move |entry| {
         let path = entry.path().to_string_lossy();
         !ignore_glob_set.is_match(path.as_ref())
             && extra
                 .as_ref()
                 .is_none_or(|set| !set.is_match(path.as_ref()))
+            && !configured_skips.iter().any(|dir| dir == entry.path())
     });
     walker
 }
@@ -271,6 +275,34 @@ where
 // Reading a directory's files, for the hashers and for the ignored index.
 // Both want the same thing: every file under a directory, workspace-relative.
 // ---------------------------------------------------------------------------
+
+/// Directories no walk enters beyond the hardcoded ones: the Nx cache and
+/// workspace-data locations, which are configurable and so unknown here
+/// until a caller says where they are. Absolute, compared as paths rather
+/// than matched as globs, since a configured path may hold glob syntax.
+///
+/// Only the directory itself is vetoed, never what is under it, so a walk
+/// started inside one still reads it — the same as a hardcoded ignore.
+static CONFIGURED_SKIPS: RwLock<Vec<PathBuf>> = RwLock::new(Vec::new());
+
+/// Sets the directories above, replacing whatever a previous caller set.
+/// `dirs` are workspace-relative; one that names the root or leaves it is
+/// not a directory this can skip, so it is dropped.
+pub(crate) fn set_configured_skips(workspace_root: &Path, dirs: &[String]) {
+    *CONFIGURED_SKIPS.write() = dirs
+        .iter()
+        .filter(|dir| is_skippable_dir(dir))
+        .map(|dir| workspace_root.join(dir))
+        .collect();
+}
+
+/// Whether a configured skipped directory is a plain workspace-relative
+/// path. An empty entry, `.`, `..` or an absolute path would name the root
+/// or leave it, so it is not a skip.
+pub(crate) fn is_skippable_dir(dir: &str) -> bool {
+    let mut components = Path::new(dir).components().peekable();
+    components.peek().is_some() && components.all(|c| matches!(c, std::path::Component::Normal(_)))
+}
 
 /// The transient files the watch never reports. The hardcoded directories
 /// come from `create_walker`, which vetoes them for every walk.

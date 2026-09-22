@@ -10,8 +10,9 @@ vi.mock('../../native', async (importOriginal) => ({
   ...(await importOriginal<any>()),
   HashPlanner: vi.fn(),
   transferProjectGraph: vi.fn((g) => g),
-  expandFilesInput: vi.fn((_root: string, globs: string[]) =>
-    globs.filter((g) => !g.startsWith('!'))
+  expandFilesInput: vi.fn(
+    (_root: string, globs: string[], _skipped?: string[]) =>
+      globs.filter((g) => !g.startsWith('!'))
   ),
 }));
 vi.mock('../../native/transform-objects', () => ({
@@ -204,7 +205,8 @@ describe('getExpandedTaskInputs', () => {
 
     expect(expandFilesInput as unknown as Mock).toHaveBeenCalledWith(
       expect.any(String),
-      ['libs/myproj/generated/a.json', '!libs/myproj/generated/b.json']
+      ['libs/myproj/generated/a.json', '!libs/myproj/generated/b.json'],
+      expect.any(Array)
     );
     expect(result).toEqual({
       general: ['libs/myproj/generated/a.json'],
@@ -228,7 +230,8 @@ describe('getExpandedTaskInputs', () => {
         '{nx,tsconfig.base}.json',
         'libs/myproj/gen/{a,b}/*.ts',
         '!libs/myproj/gen/b/x.ts',
-      ]
+      ],
+      expect.any(Array)
     );
   });
 
@@ -260,7 +263,8 @@ describe('getExpandedTaskInputs', () => {
 
     expect(expandFilesInput as unknown as Mock).toHaveBeenCalledWith(
       expect.any(String),
-      ['libs/myproj/{a.json', 'libs/myproj/b.json']
+      ['libs/myproj/{a.json', 'libs/myproj/b.json'],
+      expect.any(Array)
     );
   });
 

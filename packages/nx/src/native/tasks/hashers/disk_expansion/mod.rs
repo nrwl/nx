@@ -36,6 +36,35 @@ pub(crate) mod tests {
         )
     }
 
+    /// A configured cache directory is skipped by a walk that passes over it,
+    /// and still read by a glob pointed straight at it — the same as a
+    /// hardcoded ignore.
+    #[test]
+    fn a_configured_cache_directory_is_skipped_unless_a_glob_names_it() {
+        let temp = TempDir::new().unwrap();
+        temp.child("tmp/keep.txt").write_str("k").unwrap();
+        temp.child("tmp/nx-cache/d/out.js").write_str("o").unwrap();
+        temp.child("tmp/nx-data/project-graph.json")
+            .write_str("{}")
+            .unwrap();
+
+        crate::native::walker::set_configured_skips(
+            temp.path(),
+            &["tmp/nx-cache".to_string(), "tmp/nx-data".to_string()],
+        );
+
+        let swept = expand_files(temp.path(), &globs(&["tmp/**"])).unwrap();
+        assert_eq!(swept.files, vec!["tmp/keep.txt"]);
+
+        let named = expand_files(temp.path(), &globs(&["tmp/nx-cache/**"])).unwrap();
+        assert_eq!(named.files, vec!["tmp/nx-cache/d/out.js"]);
+
+        // Nothing configured: the cache is just another directory again.
+        crate::native::walker::set_configured_skips(temp.path(), &[]);
+        let all = expand_files(temp.path(), &globs(&["tmp/**"])).unwrap();
+        assert_eq!(all.files.len(), 3);
+    }
+
     /// `expand_files` with a workspace context to lean on.
     fn expand_files_with(
         workspace_root: &Path,

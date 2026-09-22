@@ -56,6 +56,9 @@ pub struct IgnoredIndex {
     /// Bumped by every change the watch reports under a prefix, so a seed or
     /// a read can tell whether something moved while it ran.
     generation: AtomicU64,
+    /// Directories never tracked, listed or remembered: the configured Nx
+    /// cache and workspace-data locations, see `skip`.
+    skipped: RwLock<BTreeSet<String>>,
     /// Test seam: makes every walk fail to settle, which is otherwise only
     /// reachable by racing the disk against the walk.
     #[cfg(test)]
@@ -157,6 +160,7 @@ impl IgnoredIndex {
             announced_whole_workspace: std::sync::atomic::AtomicBool::new(false),
             canonical_root: OnceLock::new(),
             generation: AtomicU64::new(0),
+            skipped: RwLock::new(BTreeSet::new()),
             #[cfg(test)]
             never_settles: std::sync::atomic::AtomicBool::new(false),
         }
@@ -202,12 +206,43 @@ impl IgnoredIndex {
     /// prefix asks for. It is kept like any other, and says so once at debug
     /// level: a listing of it walks everything, where a named directory walks
     /// only itself.
+    /// Adds directories that are never tracked, listed or remembered: the Nx
+    /// cache and workspace-data locations the hasher was configured with.
+    /// Whatever a previous caller set is replaced, and anything already held
+    /// under one is dropped, so a stale listing cannot outlive the change.
+    pub(crate) fn skip(&self, dirs: &[String]) {
+        let skipped: BTreeSet<String> = dirs
+            .iter()
+            .map(|dir| dir.trim_matches('/'))
+            .filter(|dir| crate::native::walker::is_skippable_dir(dir))
+            .map(str::to_string)
+            .collect();
+        if *self.skipped.read() == skipped {
+            return;
+        }
+        let added: Vec<String> = skipped.iter().cloned().collect();
+        *self.skipped.write() = skipped;
+        for dir in added {
+            self.generation.fetch_add(1, Ordering::AcqRel);
+            self.tracked.write().retain(|d| !under(d, &dir));
+            self.listed.write().retain(|d| !under(d, &dir));
+            self.members.write().retain(|m| !under(m, &dir));
+            self.contents.retain(|path, _| !under(path, &dir));
+        }
+    }
+
+    /// Whether `path` sits in a directory `skip` named.
+    fn is_skipped(&self, path: &str) -> bool {
+        holds(&self.skipped.read(), path)
+    }
+
     pub(crate) fn track(&self, workspace_root: &Path, dir: &str) -> bool {
         let dir = dir.trim_matches('/');
         let refused = match &self.watch {
             Some(watch) if watch.may_miss_under(dir) => {
                 Some("the watch does not report everything under it")
             }
+            _ if self.is_skipped(dir) => Some("it is a configured cache directory"),
             _ if self.leaves_the_workspace(workspace_root, dir) => {
                 Some("it resolves outside the workspace")
             }
