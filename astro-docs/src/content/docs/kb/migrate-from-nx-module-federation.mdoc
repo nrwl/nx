@@ -67,7 +67,7 @@ before you change anything:
   map, `exposes`, and normalized container name that Steps 3 and 5 reproduce.
 
 If you are already on v24 and the project graph no longer loads, read the configuration files
-directly and recover the old values from version control rather than waiting for the graph.
+directly and recover the old values from version control. A broken graph does not block the repair.
 
 ## Step 1: inventory the workspace
 
@@ -219,7 +219,6 @@ module.exports = {
   devServer: {
     port: 4700,
     hot: true,
-    liveReload: false,
     static: false,
     headers: { 'Access-Control-Allow-Origin': '*' },
     historyApiFallback: { index: '/index.html', disableDotRule: true },
@@ -227,7 +226,7 @@ module.exports = {
   plugins: [
     new NxAppWebpackPlugin({
       // ... your existing options
-      runtimeChunk: process.env.NODE_ENV !== 'production',
+      runtimeChunk: false,
       commonChunk: false,
       namedChunks: false,
     }),
@@ -422,12 +421,15 @@ module.exports = {
 };
 ```
 
-Read the values from the baseline `mf-stats.json` rather than deriving them. For npm packages
+Read the values from the baseline `mf-stats.json` instead of deriving them. For npm packages
 Nx emitted `singleton: true`, `strictVersion: true`, and the `requiredVersion` range from your
 root `package.json`, and it marked only `react`, `react-dom`, `react-router`, and
 `react-router-dom` as `eager`. Secondary entry points such as `react/jsx-runtime` are separate
-keys, each one listed and none of them eager, and any other shared npm package with an
-`exports` map got the same treatment. Carry over anything your `shared` callback or
+keys, each one listed and none of them eager. Nx found secondary entry points by walking
+nested `package.json` directories, so `rxjs/operators` was a key but `date-fns/addDays` from an
+`exports`-only map was not. A shared key such as `date-fns` does not cover `date-fns/addDays`
+requests. Read the baseline `mf-stats.json` to see which subpaths were shared and carry exactly
+those. A package the baseline never matched is not a migration loss. Carry over anything your `shared` callback or
 `additionalShared` changed on top of that. If a build target set `buildLibsFromSource: false`,
 the old map pointed shared libraries at their built output, so decide which path the new map
 should use.
@@ -437,6 +439,14 @@ In one tested Rspack workspace, `singleton: true` alone was not enough to make t
 resolve to the same copy, and an explicit `version` was required.
 Use the version the library already declares, or one your team agrees on.
 Do not invent a version, and do not give the same version to two different implementations.
+
+In a workspace that links projects through package manager workspaces rather than `tsconfig`
+paths, Nx resolved a `"*"` or `workspace:*` dependency on a workspace library to that library's
+own `package.json` version and shared it with `requiredVersion` pinned to it, so `@org/state`
+at `1.0.0` was emitted as `{ singleton: true, requiredVersion: '1.0.0', version: '1.0.0' }`.
+Remote typing there comes from the remote's `exports['./Module']` and the host's
+`devDependencies` on each remote, and the `build` and `serve` targets keep their `typecheck`
+dependency. None of that changes in this migration.
 
 {% aside type="caution" title="Relative imports across library boundaries" %}
 Nx installed a `NormalModuleReplacementPlugin` that rewrote any relative request reaching into
@@ -490,12 +500,12 @@ carried into `devServer` by hand.
 `withModuleFederation` defined `process.env.NX_MF_DEV_REMOTES` in the bundle. Application code
 that read it now sees an unresolved `process` reference, so remove those reads.
 
-In the tested webpack workspace, keeping host state across a remote edit needed
-`runtimeChunk: false` in production and on every remote, a separate host runtime chunk in
-development, and `hot: true` with `liveReload: false` on the dev server.
-The simpler configuration with `runtimeChunk: false` everywhere built cleanly and reloaded the page
-on every edit.
-Verify these values in your own workspace instead of copying them.
+Hot updates for a remote edit reach the host through the remote's dev server, so set
+`devServer.hot: true` on every remote. Isolating each setting on the tested webpack workspace
+showed nothing else mattered: with `hot` left unset or `false` on a remote, editing it reloaded
+the host and reset its state, while the host's own `hot`, `liveReload`, and `runtimeChunk`
+values made no difference either way. Keep `runtimeChunk: false` on remotes in every mode. A
+separate runtime chunk on a remote stopped its `remoteEntry.js` from loading at all.
 
 ## Step 7: replace the serve orchestration
 
@@ -538,10 +548,36 @@ for the named configurations the executor used to pass, and start the set you wa
 nx run-many -t serve -p webpack-host webpackRemoteA webpackRemoteB --parallel=3
 ```
 
-To work on one remote while the others stay on their last build, give each of those a
-`serve-static` target such as `@nx/web:file-server` with `buildTarget` pointing at its build,
-`cors: true`, and `cacheSeconds: -1` so a rebuild is served immediately, and run it alongside the
-live set.
+To work on one remote while the others stay on their last build, give every app a
+`serve-static` target that serves its build output and depends on the build:
+
+```jsonc
+// apps/webpackRemoteB/project.json
+{
+  "targets": {
+    "serve-static": {
+      "executor": "@nx/web:file-server",
+      "continuous": true,
+      "dependsOn": ["build"],
+      "options": {
+        "staticFilePath": "dist/apps/webpackRemoteB",
+        "port": 4702,
+        "spa": true,
+        "watch": false,
+      },
+    },
+  },
+}
+```
+
+`@nx/web:file-server` already defaults to `cors: true` and no caching. Use `staticFilePath` with
+`dependsOn`, not the executor's `buildTarget` option. With `buildTarget`, the file server
+spawns a nested `nx run <app>:build`, and under `nx run-many` or an e2e target that already
+scheduled those builds Nx aborts with `Recursive task invocation detected`. The
+`@nx/webpack/plugin` inference plugin emits the `buildTarget` form, so if you use that plugin,
+give its `serveStaticTargetName` option another name and keep this explicit target.
+
+Run the live set with `serve` and the rest with `serve-static`, each on its own port.
 
 A static host imports `<remote>/Module`, which gives the project graph a host-to-remote edge
 already. A host that resolves remotes from a runtime map has no such import and no edge, so add
@@ -564,8 +600,10 @@ Some of what the Nx executors did has no replacement in the official plugins tod
   over a static one. Nothing sets the variable or attaches the plugin now.
 - **The e2e web server.** Generated Playwright and Cypress projects start the host with
   `nx run <host>:serve-static`, which built and served every remote behind it. After Step 7 that
-  target serves the host alone, so point the e2e `webServerCommand` at a command that starts the
-  remotes too.
+  target serves the host alone, so point the e2e `webServerCommand` at
+  `nx run-many -t serve-static -p <host> <remoteA> <remoteB>` using the `serve-static` shape
+  from Step 7, with production remote URLs aimed at each remote's `serve-static` port. This
+  passed the generated Playwright suite on the tested workspace.
 - **Automatic remote fallback.** Nothing here adds an error boundary. A host whose remote is
   unavailable fails the request, so add your own fallback UI if you need one.
 
