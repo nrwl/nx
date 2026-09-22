@@ -1697,6 +1697,50 @@ describe('native task hasher', () => {
     expect(reused.details).toEqual(planned.details);
   });
 
+  // The entry digest covers the writes, not the reads, because a read
+  // reaches the hash as the file group it becomes. That is only true while
+  // every read-driven difference has another carrier, so assert it directly
+  // rather than by reading the planner: two entries differing in one read
+  // must hash differently, with the digest identical.
+  it('moves a task hash by a changed read while the entry digest holds', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    await tempFs.createFiles({
+      'libs/child/one.txt': 'one',
+      'libs/child/two.txt': 'two',
+    });
+    const commit = 'head'.padEnd(40, '0');
+    const snapshotDb = connectToNxDb(
+      join(tempFs.tempDir, 'io-snapshots-read-db'),
+      'io-snapshots'
+    );
+    const bundle = (inputs: string[]) => {
+      importIoSnapshots(snapshotDb, {
+        requestedCommit: commit,
+        commits: [commit],
+        clientVersion: 'nx/test',
+        snapshotsJson: JSON.stringify({
+          'child:compile': { commit, inputs, outputs: ['dist/child'] },
+        }),
+      });
+      return loadIoSnapshots(snapshotDb, commit);
+    };
+    const task = taskGraph.tasks['child:compile'];
+    const hashWith = async (inputs: string[]) =>
+      impl.hashTask(task, taskGraph, {}, tempFs.tempDir, true, bundle(inputs));
+
+    const one = await hashWith(['libs/child/one.txt']);
+    const two = await hashWith(['libs/child/two.txt']);
+
+    const digestOf = (hash: typeof one) => hash.inputs.ioSnapshots;
+    expect(digestOf(one)).toEqual(digestOf(two));
+    expect(digestOf(one)).toEqual([
+      expect.stringMatching(/^io-snapshot:[0-9a-f]{64}$/),
+    ]);
+    expect(two.value).not.toBe(one.value);
+    expect(two.inputs.files).toContain('libs/child/two.txt');
+    expect(two.inputs.files).not.toContain('libs/child/one.txt');
+  });
+
   it('hashes a task from its snapshot and labels where each input came from', async () => {
     const { taskGraph, impl } = await upfrontFixture();
     await tempFs.createFiles({ 'libs/child/observed.txt': 'observed' });

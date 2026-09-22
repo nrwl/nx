@@ -250,7 +250,9 @@ const server = createServer(async (socket) => {
 });
 registerProcessTerminationListeners();
 
-async function handleMessage(socket: Socket, data: Buffer) {
+// Exported as a test seam: the env reflection above and the response shape
+// below are only observable by driving a real message through this.
+export async function handleMessage(socket: Socket, data: Buffer) {
   if (workspaceWatcherError) {
     await respondWithErrorAndExit(
       socket,
