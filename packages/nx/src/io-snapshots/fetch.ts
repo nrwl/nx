@@ -1,4 +1,5 @@
 import type { NxJsonConfiguration } from '../config/nx-json';
+import type { IoSnapshots } from '../native';
 import { findAncestorNodeModules } from '../nx-cloud/resolution-helpers';
 import {
   ioSnapshotEnv,
@@ -6,7 +7,6 @@ import {
   type IoSnapshotCloudOptions,
   type IoSnapshotEnv,
 } from './config';
-import { skippedIoSnapshots, type IoSnapshotOutcome } from './outcome';
 import { getIoSnapshotStore } from './store';
 import {
   verifyOrUpdateNxCloudClient,
@@ -17,6 +17,27 @@ import { logger } from '../utils/logger';
 import { output } from '../utils/output';
 import { nxVersion } from '../utils/versions';
 import { workspaceRoot } from '../utils/workspace-root';
+
+/** What resolving this run's snapshot set came to. Only a set that resolved carries one. */
+export type IoSnapshotOutcome =
+  | { status: 'fetched' | 'cached'; snapshots: IoSnapshots }
+  | { status: 'skipped'; reason: string; message: string };
+
+export function skippedIoSnapshots(
+  reason: string,
+  message: string
+): IoSnapshotOutcome {
+  return { status: 'skipped', reason, message };
+}
+
+/** The set an outcome resolved to, if any. */
+export function snapshotsOf(
+  outcome: IoSnapshotOutcome | null
+): IoSnapshots | undefined {
+  return outcome && outcome.status !== 'skipped'
+    ? outcome.snapshots
+    : undefined;
+}
 
 /**
  * A stored set younger than this is served without asking Nx Cloud, so the

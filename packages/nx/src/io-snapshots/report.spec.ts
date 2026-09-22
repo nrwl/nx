@@ -1,6 +1,6 @@
 import { formatIoSnapshotSummary, ioSnapshotReportToJson } from './report';
 import type { IoSnapshotReport, IoSnapshots } from '../native';
-import type { IoSnapshotOutcome } from './outcome';
+import type { IoSnapshotOutcome } from './fetch';
 
 function resolved(
   status: 'fetched' | 'cached',

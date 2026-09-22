@@ -3,7 +3,7 @@ import type {
   IoSnapshotReport,
   IoSnapshotResolution,
 } from '../native';
-import type { IoSnapshotOutcome } from './outcome';
+import type { IoSnapshotOutcome } from './fetch';
 
 export type { IoSnapshotReport } from '../native';
 

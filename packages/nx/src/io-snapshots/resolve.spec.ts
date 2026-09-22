@@ -24,6 +24,11 @@ vi.mock('./config', () => ({
 vi.mock('./fetch', () => ({
   fetchIoSnapshotsForRun: fetched.fetchIoSnapshotsForRun,
   reportIoSnapshotResolution: (result: unknown) => result,
+  skippedIoSnapshots: (reason: string, message: string) => ({
+    status: 'skipped',
+    reason,
+    message,
+  }),
 }));
 
 describe('resolveIoSnapshotsForRun', () => {

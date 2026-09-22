@@ -33,7 +33,7 @@ import { resolveIoSnapshotsForRun } from '../io-snapshots/resolve';
 import { applyIoSnapshotOutputs } from '../io-snapshots/outputs';
 import { buildIoSnapshotOverrides } from '../io-snapshots/overrides';
 import { formatIoSnapshotSummary } from '../io-snapshots/report';
-import { snapshotsOf, type IoSnapshotOutcome } from '../io-snapshots/outcome';
+import { snapshotsOf, type IoSnapshotOutcome } from '../io-snapshots/fetch';
 import {
   createNxKeyLicenseeInformation,
   getNxKeyInformation,

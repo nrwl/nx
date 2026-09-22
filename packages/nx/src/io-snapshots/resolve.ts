@@ -5,8 +5,12 @@ import {
   isIoSnapshotFetchEnabled,
   type IoSnapshotCloudOptions,
 } from './config';
-import { fetchIoSnapshotsForRun, reportIoSnapshotResolution } from './fetch';
-import { skippedIoSnapshots, type IoSnapshotOutcome } from './outcome';
+import {
+  fetchIoSnapshotsForRun,
+  reportIoSnapshotResolution,
+  skippedIoSnapshots,
+  type IoSnapshotOutcome,
+} from './fetch';
 import { getIoSnapshotStore } from './store';
 
 /**
