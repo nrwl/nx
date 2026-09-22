@@ -65,18 +65,25 @@ export async function affected(
     command === 'affected' &&
     !!nxArgs.targets?.length;
 
-  // Planning throws when a project's externalDependencies name something
-  // that is not an external node. Inside the try so it is reported the way
-  // every other failure in this command is.
+  // Above the try, so a bad --base or a project-graph error reaches
+  // handleErrors with its own title in either mode. Only planning runs inside
+  // it, since it throws on an externalDependencies entry naming no external node.
+  let taskSelection: TaskSelection | undefined;
+  let projects: ProjectGraphProjectNode[] = [];
+  let touchedFiles: ReturnType<typeof calculateFileChanges> = [];
+  if (useTasks) {
+    touchedFiles = calculateFileChanges(parseFiles(nxArgs).files, nxArgs);
+  } else {
+    projects = await getAffectedGraphNodes(nxArgs, projectGraph);
+  }
+
   try {
-    let taskSelection: TaskSelection | undefined;
-    let projects: ProjectGraphProjectNode[];
     if (useTasks) {
       const affectedTasks = await computeAffectedTasks({
         projectGraph,
         nxJson,
         targets: nxArgs.targets,
-        touchedFiles: calculateFileChanges(parseFiles(nxArgs).files, nxArgs),
+        touchedFiles,
         configuration: nxArgs.configuration,
         overrides,
         extraTargetDependencies,
@@ -107,8 +114,6 @@ export async function affected(
         )
       );
       projects = [...owning].map((name) => projectGraph.nodes[name]);
-    } else {
-      projects = await getAffectedGraphNodes(nxArgs, projectGraph);
     }
 
     switch (command) {
