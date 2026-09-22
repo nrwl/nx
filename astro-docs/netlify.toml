@@ -1180,6 +1180,11 @@ to = "/docs/kb/what-is-a-monorepo"
 from = "/docs/angular-nx-version-matrix"
 to = "/docs/kb/angular-nx-version-matrix"
 
+# DOC-675: Enable AI features moved from the Nx Cloud guides into the knowledge base
+[[redirects]]
+from = "/docs/guides/nx-cloud/enable-ai-features"
+to = "/docs/kb/enable-ai-features"
+
 # Rewrite for base path handling (keeps URL the same)
 [[redirects]]
 from = "/docs/*"
