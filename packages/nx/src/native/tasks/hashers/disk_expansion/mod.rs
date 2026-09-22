@@ -65,6 +65,34 @@ pub(crate) mod tests {
         assert_eq!(all.files.len(), 3);
     }
 
+    /// A token the planner should have resolved would be walked as a literal.
+    #[test]
+    fn a_glob_still_holding_a_root_token_is_refused() {
+        let temp = TempDir::new().unwrap();
+        temp.child("workspaceRoot").write_str("x").unwrap();
+        for glob in [
+            "{workspaceRoot}",
+            "{workspaceRoot}**/*.js",
+            "dist/{projectRoot}/**",
+            "!{workspaceRoot}**/.env*",
+        ] {
+            let Err(err) = expand_files(temp.path(), &globs(&[glob])) else {
+                panic!("{glob} was expanded instead of refused");
+            };
+            assert!(
+                err.to_string().contains("still holds a root token"),
+                "{glob}: {err}"
+            );
+        }
+        // Resolved globs are unaffected, including a literal named like a token.
+        assert_eq!(
+            expand_files(temp.path(), &globs(&["workspaceRoot"]))
+                .unwrap()
+                .files,
+            vec!["workspaceRoot"]
+        );
+    }
+
     /// `expand_files` with a workspace context to lean on.
     fn expand_files_with(
         workspace_root: &Path,
