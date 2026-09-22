@@ -396,8 +396,8 @@ export keep working. With `type: 'global'`, the runtime reads the container from
 `globalThis[name]`, so each manifest key has to be the remote's normalized container name, the
 same constraint the old `setRemoteDefinitions` had.
 
-Remotes deployed under a path prefix need testing under that prefix, and nothing in this guide
-serves one. `@nx/web:file-server` has no prefix option, so the prefix comes from your hosting.
+Remotes deployed under a path prefix need testing under that prefix, and no step here serves
+one. `@nx/web:file-server` has no prefix option, so the prefix comes from your hosting.
 A host that only ever loads `http://localhost:4701/remoteEntry.js` proves nothing about
 `https://example.com/deployed/remoteEntry.js`, where both the entry and its chunks have to resolve.
 
