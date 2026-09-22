@@ -1,5 +1,6 @@
 import {
   ExecFileOptions,
+  exec,
   execFile,
   execFileSync,
   execSync,
@@ -984,48 +985,96 @@ export function tryCommitChanges(
   excludePaths: string[] = []
 ): string | null {
   try {
-    execSync('git add -A', {
-      encoding: 'utf8',
-      stdio: 'pipe',
-      cwd: directory,
-      windowsHide: true,
-    });
+    for (const { command, input } of commitCommands(
+      commitMessage,
+      excludePaths
+    )) {
+      execSync(command, {
+        encoding: 'utf8',
+        stdio: 'pipe',
+        input,
+        cwd: directory,
+        windowsHide: true,
+      });
+    }
+  } catch (err) {
+    throw commitFailure(err);
+  }
+  return getLatestCommitSha(directory);
+}
+
+/**
+ * `tryCommitChanges` for a process that has to stay responsive while git
+ * runs: a signing prompt or a hook can hold the commit for minutes.
+ */
+export async function tryCommitChangesAsync(
+  commitMessage: string,
+  directory: string,
+  excludePaths: string[] = []
+): Promise<string | null> {
+  try {
+    for (const { command, input } of commitCommands(
+      commitMessage,
+      excludePaths
+    )) {
+      await execAsync(command, directory, input);
+    }
+  } catch (err) {
+    throw commitFailure(err);
+  }
+  return getLatestCommitSha(directory);
+}
+
+function commitCommands(
+  commitMessage: string,
+  excludePaths: string[]
+): { command: string; input?: string }[] {
+  return [
+    { command: 'git add -A' },
     // Exclusion happens as an unstage rather than an add-time pathspec:
     // `git add` refuses a pathspec naming an ignored directory (exit 1) even
     // as an exclusion, and an add-time pathspec cannot cover entries that
     // were already staged before this call. The reset is relative to cwd, so
     // a workspace nested inside a larger repo excludes its own path; a path
     // with no index entry is a quiet no-op, unborn HEAD included.
-    for (const excludePath of excludePaths) {
-      execSync(`git reset -q -- "${excludePath}"`, {
-        encoding: 'utf8',
-        stdio: 'pipe',
-        cwd: directory,
-        windowsHide: true,
-      });
-    }
-    execSync('git commit --no-verify -F -', {
-      encoding: 'utf8',
-      stdio: 'pipe',
-      input: commitMessage,
-      cwd: directory,
-      windowsHide: true,
-    });
-  } catch (err) {
-    const stderr = (err as { stderr?: Buffer | string })?.stderr?.toString();
-    const stdout = (err as { stdout?: Buffer | string })?.stdout?.toString();
-    const detail = [stderr, stdout]
-      .map((s) => s?.trim())
-      .filter(Boolean)
-      .join('\n');
-    // `{ cause }` preserves structured fields (.signal, .status, .code)
-    // for callers to inspect; otherwise only stderr/stdout text survives.
-    throw new Error(
-      detail || (err instanceof Error ? err.message : String(err)),
-      { cause: err }
+    ...excludePaths.map((excludePath) => ({
+      command: `git reset -q -- "${excludePath}"`,
+    })),
+    { command: 'git commit --no-verify -F -', input: commitMessage },
+  ];
+}
+
+function commitFailure(err: unknown): Error {
+  const stderr = (err as { stderr?: Buffer | string })?.stderr?.toString();
+  const stdout = (err as { stdout?: Buffer | string })?.stdout?.toString();
+  const detail = [stderr, stdout]
+    .map((s) => s?.trim())
+    .filter(Boolean)
+    .join('\n');
+  // `{ cause }` preserves structured fields (.signal, .status, .code)
+  // for callers to inspect; otherwise only stderr/stdout text survives.
+  return new Error(
+    detail || (err instanceof Error ? err.message : String(err)),
+    { cause: err }
+  );
+}
+
+function execAsync(command: string, cwd: string, input?: string) {
+  return new Promise<void>((res, rej) => {
+    const child = exec(
+      command,
+      { encoding: 'utf8', cwd, windowsHide: true },
+      // The streams ride on the error as `execSync` reports them, so
+      // `commitFailure` shapes both the same way.
+      (err, stdout, stderr) =>
+        err ? rej(Object.assign(err, { stdout, stderr })) : res()
     );
-  }
-  return getLatestCommitSha(directory);
+    // Closed for every command, since `git commit -F -` reads to end of
+    // input. A child that exits before reading raises EPIPE here, which the
+    // exit callback already reports.
+    child.stdin?.on('error', () => {});
+    child.stdin?.end(input ?? '');
+  });
 }
 
 /**

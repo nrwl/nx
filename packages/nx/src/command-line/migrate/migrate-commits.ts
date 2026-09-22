@@ -6,6 +6,7 @@ import {
   getGitRemoteNames,
   hasUncommittedChanges,
   tryCommitChanges,
+  tryCommitChangesAsync,
 } from '../../utils/git-utils';
 import { logger } from '../../utils/logger';
 import { output } from '../../utils/output';
@@ -70,10 +71,14 @@ export async function commitMigrationIfRequested(
     pendingMigrations
   );
   try {
-    const sha = tryCommitChanges(commitMessage, root, MIGRATE_COMMIT_EXCLUDES);
+    const sha = await tryCommitChangesAsync(
+      commitMessage,
+      root,
+      MIGRATE_COMMIT_EXCLUDES
+    );
     if (sha) return { status: 'committed', sha };
     // null = commit landed but `git rev-parse HEAD` failed (see
-    // `tryCommitChanges`). Degraded-but-correct — log yellow, not red.
+    // `tryCommitChangesAsync`). Degraded-but-correct — log yellow, not red.
     out.line(
       'yellow',
       `The commit for ${migration.name} was created, but its sha could not be resolved (\`git rev-parse HEAD\` failed transiently). Continuing without recording the sha for this step.`

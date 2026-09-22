@@ -2,6 +2,7 @@ import type { Mock } from 'vitest';
 vi.mock('../../utils/git-utils', () => ({
   hasUncommittedChanges: vi.fn(),
   tryCommitChanges: vi.fn(),
+  tryCommitChangesAsync: vi.fn(),
   getGitCurrentBranch: vi.fn(),
   getGitRemoteNames: vi.fn(),
 }));
@@ -24,6 +25,7 @@ import {
   getGitRemoteNames,
   hasUncommittedChanges,
   tryCommitChanges,
+  tryCommitChangesAsync,
 } from '../../utils/git-utils';
 import { logger } from '../../utils/logger';
 import { output } from '../../utils/output';
@@ -37,6 +39,7 @@ import { migrateConfirm } from './safe-prompt';
 
 const mockHas = hasUncommittedChanges as Mock;
 const mockTry = tryCommitChanges as Mock;
+const mockTryAsync = tryCommitChangesAsync as Mock;
 const mockInfo = logger.info as Mock;
 const mockWarn = output.warn as Mock;
 const mockLog = output.log as Mock;
@@ -58,6 +61,7 @@ const stripAnsi = (s: string): string => s.replace(ANSI_RE, '');
 beforeEach(() => {
   mockHas.mockReset();
   mockTry.mockReset();
+  mockTryAsync.mockReset();
   mockInfo.mockReset();
   mockWarn.mockReset();
   mockLog.mockReset();
@@ -81,7 +85,7 @@ describe('commitMigrationIfRequested', () => {
     expect(result).toEqual({ status: 'disabled' });
     expect(installDeps).not.toHaveBeenCalled();
     expect(mockHas).not.toHaveBeenCalled();
-    expect(mockTry).not.toHaveBeenCalled();
+    expect(mockTryAsync).not.toHaveBeenCalled();
   });
 
   it('runs installDeps before checking for uncommitted changes', async () => {
@@ -118,7 +122,7 @@ describe('commitMigrationIfRequested', () => {
       installDeps
     );
     expect(result).toEqual({ status: 'no-changes' });
-    expect(mockTry).not.toHaveBeenCalled();
+    expect(mockTryAsync).not.toHaveBeenCalled();
     expect(stripAnsi(mockInfo.mock.calls[0][0])).toMatchInlineSnapshot(
       `"- No changes to commit for m1."`
     );
@@ -139,7 +143,7 @@ describe('commitMigrationIfRequested', () => {
 
   it('returns the new sha and uses `<prefix><name>` as the commit subject on success', async () => {
     mockHas.mockReturnValue(true);
-    mockTry.mockReturnValue('abc123');
+    mockTryAsync.mockReturnValue('abc123');
 
     const result = await commitMigrationIfRequested(
       ROOT,
@@ -151,14 +155,14 @@ describe('commitMigrationIfRequested', () => {
     expect(result).toEqual({ status: 'committed', sha: 'abc123' });
     // The scratch exclusion rides on every migration commit so `git add -A`
     // cannot capture run state even when its ignore rule went missing mid-run.
-    expect(mockTry).toHaveBeenCalledWith(`${PREFIX}m1`, ROOT, [
+    expect(mockTryAsync).toHaveBeenCalledWith(`${PREFIX}m1`, ROOT, [
       '.nx/migrate-runs',
     ]);
   });
 
   it('annotates the commit body with the package: name of prior migrations whose commits failed', async () => {
     mockHas.mockReturnValue(true);
-    mockTry.mockReturnValue('def456');
+    mockTryAsync.mockReturnValue('def456');
 
     const result = await commitMigrationIfRequested(
       ROOT,
@@ -172,7 +176,7 @@ describe('commitMigrationIfRequested', () => {
       ]
     );
     expect(result).toEqual({ status: 'committed', sha: 'def456' });
-    expect(mockTry.mock.calls[0][0]).toMatchInlineSnapshot(`
+    expect(mockTryAsync.mock.calls[0][0]).toMatchInlineSnapshot(`
       "chore: [nx migration] m4
 
       Includes changes from prior migrations whose own commits failed:
@@ -183,7 +187,7 @@ describe('commitMigrationIfRequested', () => {
 
   it('strips embedded newlines from migration names so hostile entries cannot inject body lines', async () => {
     mockHas.mockReturnValue(true);
-    mockTry.mockReturnValue('def456');
+    mockTryAsync.mockReturnValue('def456');
 
     await commitMigrationIfRequested(
       ROOT,
@@ -198,7 +202,7 @@ describe('commitMigrationIfRequested', () => {
         },
       ]
     );
-    expect(mockTry.mock.calls[0][0]).toMatchInlineSnapshot(`
+    expect(mockTryAsync.mock.calls[0][0]).toMatchInlineSnapshot(`
       "chore: [nx migration] m4
 
       Includes changes from prior migrations whose own commits failed:
@@ -208,7 +212,7 @@ describe('commitMigrationIfRequested', () => {
 
   it('does not modify the commit message when pendingMigrationNames is empty', async () => {
     mockHas.mockReturnValue(true);
-    mockTry.mockReturnValue('abc123');
+    mockTryAsync.mockReturnValue('abc123');
 
     await commitMigrationIfRequested(
       ROOT,
@@ -218,14 +222,14 @@ describe('commitMigrationIfRequested', () => {
       installDeps,
       []
     );
-    expect(mockTry).toHaveBeenCalledWith(`${PREFIX}m1`, ROOT, [
+    expect(mockTryAsync).toHaveBeenCalledWith(`${PREFIX}m1`, ROOT, [
       '.nx/migrate-runs',
     ]);
   });
 
   it('returns failed with the real git stderr from tryCommitChanges; message tells the user a future commit will absorb the diff', async () => {
     mockHas.mockReturnValue(true);
-    mockTry.mockImplementation(() => {
+    mockTryAsync.mockImplementation(() => {
       // GPG signing failures aren't bypassed by --no-verify (unlike
       // client-side hooks).
       throw new Error('error: gpg failed to sign the data');
@@ -255,7 +259,7 @@ describe('commitMigrationIfRequested', () => {
     // result is still `committed` (with a null sha) so the executor knows the
     // diff cleared, not `failed` which would push it into pending.
     mockHas.mockReturnValue(true);
-    mockTry.mockReturnValue(null);
+    mockTryAsync.mockReturnValue(null);
 
     const result = await commitMigrationIfRequested(
       ROOT,
@@ -292,7 +296,7 @@ describe('commitMigrationIfRequested with an output sink', () => {
       'degraded-sha',
       () => {
         mockHas.mockReturnValue(true);
-        mockTry.mockReturnValue(null);
+        mockTryAsync.mockReturnValue(null);
       },
       [['yellow', expect.stringContaining('its sha could not be resolved')]],
     ],
@@ -300,7 +304,7 @@ describe('commitMigrationIfRequested with an output sink', () => {
       'failure',
       () => {
         mockHas.mockReturnValue(true);
-        mockTry.mockImplementation(() => {
+        mockTryAsync.mockImplementation(() => {
           throw new Error('error: gpg failed to sign the data');
         });
       },
