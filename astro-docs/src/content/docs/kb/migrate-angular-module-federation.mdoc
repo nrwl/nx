@@ -1,0 +1,420 @@
+---
+title: Migrate Angular Module Federation off the Nx wrappers
+description: Move Angular Module Federation apps off @nx/module-federation, either onto the official plugin on your current bundler or onto Native Federation.
+sidebar:
+  label: Migrate Angular Module Federation
+filter: 'type:Guides'
+topics:
+  - 'Module Federation'
+  - 'Angular'
+---
+
+{% llm_copy_prompt title="Migrate Angular Module Federation off the Nx wrappers" %}
+Migrate this Angular workspace off the Nx Module Federation APIs that Nx v24 will remove. Follow every step at {pageUrl} in order. Default to Path A (keep the current bundler, use the official plugin). Take Path B (Native Federation) only when the user asks for it. Stop and report if you find server-side rendering apps.
+
+Rules that override any shortcut you are tempted to take:
+
+1. Before editing, run production builds and keep every `dist/apps/<app>/mf-stats.json` (`dist/apps/<app>/browser/mf-stats.json` on Rspack). Its `shared` array, `exposes`, and container name are what you reproduce.
+2. Replace `withModuleFederation` and `NxModuleFederationPlugin` from `@nx/module-federation/angular` with `ModuleFederationPlugin` from `@module-federation/enhanced/webpack` or `/rspack`. Keep `@nx/angular:webpack-browser` with `customWebpackConfig` on webpack, and `createConfig` from `@nx/angular-rspack` on Rspack.
+3. Angular containers are ES modules: set `library: { type: 'module' }`, `experiments.outputModule: true` (webpack) or `output.module: true` (Rspack), `filename: 'remoteEntry.mjs'` on webpack and `remoteEntry.js` on Rspack, `dts: false`, `output.publicPath: 'auto'`, `output.uniqueName`, and `optimization.runtimeChunk: false`. Write `remotes` as plain URLs with no `name@` prefix.
+4. Add `resolve.alias` entries for every workspace library referenced through `tsconfig` paths. Nx did this for you and the Angular webpack builder does not read `paths`.
+5. For hosts on `@nx/angular/mf`, convert `setRemoteDefinitions` to `registerRemotes` with `type: 'module'` and `loadRemoteModule(name, './Routes')` to `loadRemote(name + '/Routes')`. Map values must be full `remoteEntry.mjs` URLs. Hosts already calling `registerRemotes` stay as they are.
+6. Replace the `serve` target with `@nx/angular:dev-server` (or `@angular/build:dev-server`), keep each remote's `dependsOn: ['<host>:serve']`, and add a `serve-static` target per app using `@nx/web:file-server` with `staticFilePath`, `dependsOn: ['build']`, `watch: false`, never `buildTarget`.
+7. Remove `@nx/module-federation` only after every consumer is gone. Move `@module-federation/enhanced` to `dependencies`. Rebuild uncached with the old package renamed away, then restore it.
+8. Do not claim hot-update parity or shared-state parity from a green build. Report what you verified and what you did not.
+
+Reference: {pageUrl}
+{% /llm_copy_prompt %}
+
+Nx v24 will remove the Angular Module Federation generators, executors, runtime helpers, and the
+`withModuleFederation` and `NxModuleFederationPlugin` wrappers in `@nx/module-federation/angular`.
+The generators and executors are already deprecated in v23. Module Federation itself keeps
+working: the wrappers were thin layers over the official
+[Module Federation](https://module-federation.io) plugin, and that plugin stays supported on both
+webpack and Rspack.
+
+Two paths lead off the wrappers:
+
+- **Path A** keeps your bundler and swaps the wrapper for the official plugin. Your build target,
+  routes, and deployment model stay the same. Take this path when the workspace works today and
+  you want the smallest diff.
+- **Path B** moves to [Native Federation](https://www.npmjs.com/package/@angular-architects/native-federation),
+  which also moves the app onto the esbuild-based `@angular/build:application` builder. Take it
+  when you want off webpack entirely.
+
+Both paths were tested on Nx 23.2.1 with Angular 22.1, and the
+[React guide](/docs/kb/migrate-from-nx-module-federation) covers the same ground for React apps.
+
+{% aside type="note" title="Scope" %}
+Client-side rendering with static and runtime-loaded remotes.
+Server-side rendering (`--ssr` hosts and remotes) is not covered.
+{% /aside %}
+
+## Capture a baseline first
+
+Run production builds and keep each `mf-stats.json`, which on webpack sits at
+`dist/apps/<app>/mf-stats.json` and on Rspack at `dist/apps/<app>/browser/mf-stats.json`. It
+holds the resolved `shared` map, the `exposes`, and the container name that both paths reproduce.
+Also record which routes load which remote and what a shared mutable value does when you change it
+in the host and read it in a remote, since a duplicated shared library renders correctly and only
+shows up as diverging state.
+
+## Step 1: inventory the workspace
+
+```shell
+grep -rE "@nx/module-federation|@nx/angular/mf|module-federation-dev-server|module-federation-static-server|module-federation-dev-ssr" --include="*.ts" --include="*.js" --include="*.json" --exclude-dir=node_modules --exclude-dir=.nx --exclude-dir=dist --exclude=package-lock.json --exclude=pnpm-lock.yaml --exclude=yarn.lock .
+```
+
+A generated Angular host has `withModuleFederation` in `webpack.config.ts` and
+`webpack.prod.config.ts`, a `module-federation.config.ts`, a `build` target on
+`@nx/angular:webpack-browser` with `customWebpackConfig`, a `serve` target on
+`@nx/angular:module-federation-dev-server`, and a `serve-static` target on `@nx/web:file-server`.
+Remotes expose `./Routes` and their `serve` target depends on the host's. A host generated on
+Nx 21.5 or later with `--dynamic` already calls `registerRemotes` from
+`@module-federation/enhanced/runtime` and points its manifest at each remote's
+`mf-manifest.json`. Older dynamic hosts call `setRemoteDefinitions` and `loadRemoteModule` from
+`@nx/angular/mf`.
+
+## Path A, the official plugin on your current bundler
+
+### Step 2: install the official package
+
+```shell
+npm add --save-prod @module-federation/enhanced
+```
+
+The `host` generator already added it under `dependencies`. Check that it is not under
+`devDependencies`, since the runtime is imported by application code.
+
+### Step 3: translate the federation config
+
+Nx accepted a list of project names and resolved each one to a URL from the project graph.
+The official plugin takes explicit entries. Angular containers are ES modules, so the URL has no
+`name@` prefix.
+
+Two values that Nx derived are easy to lose:
+
+- The container name is normalized. Every character outside `[a-zA-Z0-9_$]` and any leading digit
+  becomes `_`, so a project named `dyn-shell` publishes as `dyn_shell`. The remote import alias
+  stays the project name.
+- The shared map came from the project graph. Read it from the baseline `mf-stats.json` rather
+  than deriving it: Nx emitted every `@angular/*` package the app imports plus their secondary
+  entry points such as `@angular/core/primitives/signals`, each as `singleton: true`,
+  `strictVersion: true`, with the `requiredVersion` range from your root `package.json`. A
+  source-only workspace library is emitted with `requiredVersion: '^0.0.0'` and
+  `version: '0.0.0'`.
+
+{% tabs %}
+{% tabitem label="Before" %}
+
+```ts
+// apps/shell/module-federation.config.ts
+import type { ModuleFederationConfig } from '@nx/module-federation';
+
+const config: ModuleFederationConfig = {
+  name: 'shell',
+  remotes: ['remoteA', 'remoteB'],
+};
+
+export default config;
+```
+
+{% /tabitem %}
+{% tabitem label="After" %}
+
+```js
+// apps/shell/module-federation.config.js
+module.exports = {
+  name: 'shell',
+  filename: 'remoteEntry.mjs',
+  library: { type: 'module' },
+  dts: false,
+  remotes: {
+    remoteA: 'http://localhost:4201/remoteEntry.mjs',
+    remoteB: 'http://localhost:4202/remoteEntry.mjs',
+  },
+  shared: {
+    '@angular/core': {
+      singleton: true,
+      strictVersion: true,
+      requiredVersion: '~22.1.0',
+    },
+    '@angular/core/primitives/signals': {
+      singleton: true,
+      strictVersion: true,
+      requiredVersion: '~22.1.0',
+    },
+    // ... every entry the baseline mf-stats.json lists
+    '@myorg/state': {
+      singleton: true,
+      strictVersion: true,
+      requiredVersion: '^0.0.0',
+      version: '0.0.0',
+    },
+  },
+};
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+Remote configs keep their `exposes` map. The generator wrote the exposed path relative to the
+workspace root (`apps/remoteA/src/app/remote-entry/entry.routes.ts`), and the official plugin
+resolves it the same way once Step 4 puts the workspace root on `resolve.modules`.
+
+A generated host also carries `webpack.prod.config.ts` with production remote URLs as
+`['remoteA', 'http://remote-a.example.com/']` tuples, wired through
+`build.configurations.production.customWebpackConfig`. Nx appended `/remoteEntry.mjs` to a tuple
+URL without a filename. Fold those into the one config keyed on `NODE_ENV` and write the full
+entry URL.
+
+### Step 4: replace the wrapper in the bundler config
+
+{% tabs syncKey="mf-bundler" %}
+{% tabitem label="webpack" %}
+
+`@nx/angular:webpack-browser` passes the Angular build's webpack config to the function your
+`customWebpackConfig` exports. `withModuleFederation` was that function. Replace it with one
+that adds the plugin and the settings the wrapper used to set:
+
+```js
+// apps/shell/webpack.config.js
+const {
+  ModuleFederationPlugin,
+} = require('@module-federation/enhanced/webpack');
+const { join } = require('node:path');
+const mf = require('./module-federation.config.js');
+
+module.exports = (config) => ({
+  ...config,
+  output: { ...config.output, uniqueName: mf.name, publicPath: 'auto' },
+  experiments: { ...(config.experiments ?? {}), outputModule: true },
+  resolve: {
+    ...config.resolve,
+    modules: [
+      ...(config.resolve?.modules ?? ['node_modules']),
+      join(__dirname, '../..'),
+    ],
+    alias: {
+      ...(config.resolve?.alias ?? {}),
+      '@myorg/state': join(__dirname, '../../libs/state/src/index.ts'),
+    },
+  },
+  optimization: { ...config.optimization, runtimeChunk: false },
+  plugins: [...(config.plugins ?? []), new ModuleFederationPlugin(mf)],
+});
+```
+
+Point `customWebpackConfig.path` at this file in `project.json` and delete the
+`production` configuration's override of it. Keep `@nx/angular:webpack-browser` as the executor.
+
+{% /tabitem %}
+{% tabitem label="Rspack" %}
+
+The generated `rspack.config.ts` builds the Angular config with `createConfig` from
+`@nx/angular-rspack` and merges a `webpack.config.ts` that held `NxModuleFederationPlugin`.
+Keep that structure and replace the contents of the merged file:
+
+```ts
+// apps/shell/webpack.config.ts
+import { ModuleFederationPlugin } from '@module-federation/enhanced/rspack';
+import { join } from 'node:path';
+const mf = require('./module-federation.config.js');
+
+export default {
+  output: { uniqueName: mf.name, publicPath: 'auto', module: true },
+  experiments: { outputModule: true },
+  resolve: { modules: ['node_modules', join(__dirname, '../..')] },
+  optimization: { runtimeChunk: false },
+  plugins: [new ModuleFederationPlugin(mf)],
+};
+```
+
+Rspack remotes keep `filename: 'remoteEntry.js'`.
+
+{% /tabitem %}
+{% /tabs %}
+
+The `resolve.alias` entries are not optional. The Nx wrapper mapped every workspace library your
+app reaches through `tsconfig` paths to an alias, and without them the Angular webpack build fails
+with `Can't resolve '@myorg/state'`.
+
+### Step 5: convert runtime-loaded remotes
+
+A host on `@nx/angular/mf` keeps its manifest and changes how it feeds it in. The map values
+have to be full `remoteEntry.mjs` URLs, and the container type is `module`:
+
+```ts
+// apps/dyn-shell/src/main.ts
+import { registerRemotes } from '@module-federation/enhanced/runtime';
+
+fetch('/module-federation.manifest.json')
+  .then((res) => res.json())
+  .then((remotes: Record<string, string>) =>
+    registerRemotes(
+      Object.entries(remotes).map(([name, entry]) => ({
+        name,
+        entry,
+        type: 'module' as const,
+      }))
+    )
+  )
+  .then(() => import('./bootstrap'));
+```
+
+```ts
+// apps/dyn-shell/src/app/app.routes.ts
+import { loadRemote } from '@module-federation/enhanced/runtime';
+
+export const appRoutes: Route[] = [
+  {
+    path: 'remoteA',
+    loadChildren: () =>
+      loadRemote<typeof import('remoteA/Routes')>('remoteA/Routes').then(
+        (m) => m!.remoteRoutes
+      ),
+  },
+];
+```
+
+### Step 6: replace the serve orchestration
+
+`@nx/angular:module-federation-dev-server` built the remotes and served them behind the host, with
+`--devRemotes` picking which ones ran live. Nothing in the official plugin starts remotes. Move the
+host's `serve` to `@nx/angular:dev-server` and keep each remote's `dependsOn: ['shell:serve']`,
+so `nx serve remoteA` still brings the host up. To run several apps live, start them in one Nx
+process:
+
+```shell
+nx run-many -t serve -p shell remoteA remoteB
+```
+
+Starting the remotes in separate terminals does not work with the generated dependency: each one
+waits for `shell:serve` in another Nx process and exits.
+
+For a static remote, give it a `serve-static` target that serves its build and depends on it:
+
+```jsonc
+// apps/remoteB/project.json
+{
+  "targets": {
+    "serve-static": {
+      "executor": "@nx/web:file-server",
+      "continuous": true,
+      "dependsOn": ["build"],
+      "options": {
+        "staticFilePath": "dist/apps/remoteB",
+        "port": 4202,
+        "spa": true,
+        "watch": false,
+      },
+    },
+  },
+}
+```
+
+Use `staticFilePath` with `dependsOn` and not the generated `buildTarget` form. With
+`buildTarget` the file server spawns a nested `nx run <app>:build`, and under `nx run-many` or an
+e2e target that already scheduled those builds Nx aborts with
+`Recursive task invocation detected`. The generated Playwright project starts the host with
+`nx run shell:serve`, which used to bring the remotes with it; point its `webServerCommand` at
+`nx run-many -t serve-static -p shell remoteA remoteB` instead.
+
+Remove `targetDefaults` entries in `nx.json` keyed on `@nx/angular:webpack-browser`. Their
+`NX_MF_DEV_REMOTES` input is dead.
+
+### Step 7: validate the result
+
+A green build is not the acceptance criterion. If a rebuilt remote fails to load with
+`Cannot read properties of undefined (reading 'call') while loading "./Routes"`, clear
+`.angular/cache` and rebuild before you look anywhere else. The Angular build cache written by
+one build can leave a later build's host and remote out of step.
+
+Against the baseline, confirm in a browser that
+each remote route renders, that a shared mutable value written in the host reads back in each
+remote after a client-side route change, and that editing a remote's component updates the host
+without a page navigation. Angular 22 apps are zoneless by default, so give a fixture component
+a `signal` and poll for the rendered value rather than reading it synchronously after a click.
+
+### Step 8: remove the old package
+
+```shell
+npm remove @nx/module-federation
+```
+
+`@nx/angular` on v23 still depends on it, so uninstalling does not prove your builds stopped
+using it. Rename `node_modules/@nx/module-federation` out of the way, rebuild uncached, then
+rename it back.
+
+## Path B, rewrite to native federation
+
+Native Federation implements the same runtime composition on ES modules and import maps, on top
+of the esbuild `@angular/build:application` builder. The migration is a rewrite of the federation
+layer rather than a swap, and its `init` generator expects an Angular CLI app shape.
+
+### Step 2: install and initialize
+
+```shell
+npm add -D @angular-architects/native-federation
+```
+
+The generator refuses an Nx Module Federation app as generated, because `bootstrap.ts` already
+exists and `main.ts` does not call `initFederation`. Fold `bootstrap.ts` back into `main.ts`,
+delete `bootstrap.ts`, then run it per app:
+
+```shell
+nx g @angular-architects/native-federation:init --project=shell --port=4200 --type=dynamic-host
+nx g @angular-architects/native-federation:init --project=remoteA --port=4201 --type=remote
+```
+
+It creates `federation.config.mjs`, `tsconfig.federation.json`, a new `bootstrap.ts` and
+`main.ts`, moves the app onto an `esbuild` target running `@angular/build:application`, wraps
+`build` and `serve` in `@angular-architects/native-federation:build`, and adds `es-module-shims`
+to the polyfills.
+
+### Step 3: finish what the generator left
+
+- Delete `module-federation.config.ts`, `webpack.config.ts`, and `webpack.prod.config.ts`, and
+  remove the `customWebpackConfig` it copied onto the `esbuild` target and its `production`
+  configuration.
+- Replace each remote's placeholder `exposes: { './Component': './update-this.ts' }` with the
+  route file, as a path from the workspace root:
+  `exposes: { './Routes': './apps/remoteA/src/app/remote-entry/entry.routes.ts' }`.
+- Share workspace libraries reached through `tsconfig` paths with
+  `sharedMappings: ['@myorg/state']` in every app's `federation.config.mjs`. `shareAll` covers
+  only `package.json` dependencies.
+- Prune `public/federation.manifest.json` on the host. The generator lists every project in the
+  workspace, so it names apps that are not remotes.
+- Point the host's `serve-original` target at `@angular/build:dev-server` with
+  `buildTarget: shell:esbuild:development`. The generator wraps whatever `serve` was, which on a
+  Module Federation host is the deprecated `module-federation-dev-server`.
+- Rewrite host routes to load through Native Federation:
+
+```ts
+// apps/shell/src/app/app.routes.ts
+import { loadRemoteModule } from '@angular-architects/native-federation';
+
+export const appRoutes: Route[] = [
+  {
+    path: 'remoteA',
+    loadChildren: () =>
+      loadRemoteModule('remoteA', './Routes').then((m) => m.remoteRoutes),
+  },
+];
+```
+
+- Drop the `remoteA/Routes` entries from `tsconfig.base.json` paths and remove
+  `@nx/module-federation`, `@module-federation/enhanced`, and `@nx/webpack` from `package.json`.
+
+Builds land under `dist/apps/<app>/browser/` with a `remoteEntry.json` per app instead of
+`remoteEntry.mjs`. Validate as in Path A Step 7.
+
+## Tested configuration
+
+Both paths were exercised on Nx 23.2.1 with Angular 22.1.4, `@module-federation/enhanced` 2.9.1,
+`@angular-architects/native-federation` 22.1.3, and Node 26.7.0 on macOS: a webpack workspace with
+a static host, a runtime-loaded host on `@nx/angular/mf`, two remotes, and a shared mutable
+workspace library, and an Rspack workspace with a static host and two remotes. Production builds
+and browser checks (remote routes rendered, shared state read back across route changes) pass for
+Path A on both bundlers and for Path B. Development serving with hot updates and the Playwright
+e2e replacement are still being verified for Angular.
