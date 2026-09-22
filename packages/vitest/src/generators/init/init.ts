@@ -16,7 +16,7 @@ import {
 import { InitGeneratorSchema } from './schema';
 import {
   nxVersion,
-  vitestVersion,
+  versions,
   viteV5Version,
   viteV6Version,
   viteV7Version,
@@ -48,7 +48,10 @@ export function updateDependencies(tree: Tree, schema: InitGeneratorSchema) {
     {},
     {
       '@nx/vitest': nxVersion,
-      vitest: vitestVersion,
+      // Pass the vite major being installed: it may not be in package.json yet,
+      // and it constrains which vitest major can pair with it.
+      vitest: versions(tree, { viteMajorVersion: installedMajor })
+        .vitestVersion,
       vite: viteVersionToUse,
     },
     undefined,

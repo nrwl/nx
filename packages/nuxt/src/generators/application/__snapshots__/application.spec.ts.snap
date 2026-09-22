@@ -69,7 +69,8 @@ exports[`app generated files content - as-provided - my-app general application 
 .nuxt
 .nitro
 .cache
-vitest.config.*.timestamp*"
+vitest.config.*.timestamp*
+.vitest"
 `;
 
 exports[`app generated files content - as-provided - my-app general application should configure eslint correctly (eslintrc) 1`] = `
@@ -506,7 +507,8 @@ exports[`app generated files content - as-provided - myApp general application s
 .nuxt
 .nitro
 .cache
-vitest.config.*.timestamp*"
+vitest.config.*.timestamp*
+.vitest"
 `;
 
 exports[`app generated files content - as-provided - myApp general application should configure eslint correctly (eslintrc) 1`] = `

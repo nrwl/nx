@@ -18,6 +18,12 @@ export function addVitestTempFilesToGitIgnore(tree: Tree): void {
     gitIgnoreContents = stripIndents`${gitIgnoreContents}
       vitest.config.*.timestamp*`;
   }
+  // Vitest 5 writes attachments, blob reports, failure screenshots and the
+  // json/junit reporter output here.
+  if (!/^\.vitest$/m.test(gitIgnoreContents)) {
+    gitIgnoreContents = stripIndents`${gitIgnoreContents}
+      .vitest`;
+  }
 
   tree.write('.gitignore', gitIgnoreContents);
 }
