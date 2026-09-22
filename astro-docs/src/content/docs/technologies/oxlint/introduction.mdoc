@@ -62,6 +62,7 @@ A nested project owns its own files: the project that contains it never lints th
 To lint each project in its own process instead, pass `--batch=false`.
 
 Options on the task and flags on the command line are forwarded to Oxlint, so `nx run-many -t lint --config a.json` runs Oxlint with `--config a.json`, once for the whole run.
+Oxlint runs from the workspace root, so a path in a forwarded option is relative to it rather than to the project: a project with its own config writes `"config": "libs/a/oxlint.local.json"`.
 The exceptions are the options Nx interprets itself: `--max-warnings` and `--deny-warnings` decide each project's result from that project's diagnostics, `--silent` empties the output, and `--format` is rendered by Nx from Oxlint's JSON report.
 Supported formats are `default`, `agent`, `github`, and `json`.
 `default` matches Oxlint's terminal output, and switches to one line per diagnostic in CI or under an AI agent, as Oxlint does.
