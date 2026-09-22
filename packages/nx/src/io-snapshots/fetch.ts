@@ -31,8 +31,6 @@ const READ_TIMEOUT_MS = 10_000;
 export interface ReadIoSnapshotsOptions {
   workspaceRoot?: string;
   nxCloudOptions?: IoSnapshotCloudOptions;
-  /** The `updatedAt` of the set the caller holds; an unchanged set resolves to `null`. */
-  knownUpdatedAt?: number;
   timeoutMs?: number;
 }
 
@@ -78,11 +76,8 @@ export async function fetchIoSnapshotsForRun(
     );
   }
   const store = getIoSnapshotStore();
-  const stored = store.get(head);
-  if (
-    stored &&
-    Date.now() - stored.resolution.fetchedAt <= STORED_SET_MAX_AGE_MS
-  ) {
+  const stored = store.get(head, STORED_SET_MAX_AGE_MS);
+  if (stored) {
     return reportIoSnapshotResolution({ status: 'cached', snapshots: stored });
   }
 
@@ -95,19 +90,15 @@ export async function fetchIoSnapshotsForRun(
     const result = await read({
       workspaceRoot,
       nxCloudOptions: runnerOptions,
-      knownUpdatedAt: stored?.resolution.updatedAt ?? undefined,
       timeoutMs: READ_TIMEOUT_MS,
     });
-    if (result === null) {
-      // Unchanged since the stored set: only a run holding one sends
-      // `knownUpdatedAt`, so this is it.
+    if (!result) {
+      // `null` only answers a `knownUpdatedAt` this run never sends.
       return reportIoSnapshotResolution(
-        stored
-          ? { status: 'cached', snapshots: stored }
-          : skippedIoSnapshots(
-              'no-bundle',
-              `no I/O snapshot set is stored for ${head}`
-            )
+        skippedIoSnapshots(
+          'invalid-response',
+          'Nx Cloud returned no I/O snapshot set'
+        )
       );
     }
     return reportIoSnapshotResolution({

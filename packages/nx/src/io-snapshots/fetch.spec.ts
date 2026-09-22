@@ -36,12 +36,12 @@ describe('fetchIoSnapshotsForRun', () => {
     NX_IO_SNAPSHOTS: 'true',
     ...overrides,
   });
-  /** A stored set for HEAD, fetched at `fetchedAt`. */
-  const stored = (fetchedAt: number, updatedAt = 7) => ({
+  /** A stored set for HEAD. */
+  const stored = () => ({
     commit: 'head',
     resolution: {
-      fetchedAt,
-      updatedAt,
+      fetchedAt: 0,
+      updatedAt: 7,
       requestedCommit: 'head',
       tasks: 1,
       sourceCommits: [],
@@ -82,7 +82,7 @@ describe('fetchIoSnapshotsForRun', () => {
       updatedAt: 9,
       snapshots: {},
     });
-    store.import.mockReturnValue(stored(Date.now()));
+    store.import.mockReturnValue(stored());
     expect(await fetchIoSnapshotsForRun(nxJson, {}, optedIn())).toMatchObject({
       status: 'fetched',
     });
@@ -99,45 +99,40 @@ describe('fetchIoSnapshotsForRun', () => {
     expect(cloud.verifyOrUpdateNxCloudClient).not.toHaveBeenCalled();
   });
 
-  it('serves a fresh stored set without loading the client', async () => {
-    const set = stored(Date.now());
+  it('serves a stored set under an hour old without loading the client', async () => {
+    const set = stored();
     store.get.mockReturnValue(set);
     const result = await fetchIoSnapshotsForRun(nxJson, {}, optedIn());
     expect(result).toEqual({ status: 'cached', snapshots: set });
-    expect(store.get).toHaveBeenCalledWith('head');
+    expect(store.get).toHaveBeenCalledWith('head', 60 * 60 * 1000);
     expect(cloud.verifyOrUpdateNxCloudClient).not.toHaveBeenCalled();
   });
 
   // Nx Cloud resolves HEAD from its nearest recorded ancestors, so a closer
   // recording can appear for the same commit: past an hour the run asks.
-  it('asks again once a stored set is older than an hour', async () => {
-    cloud.readIoSnapshots.mockResolvedValue(null);
-    store.get.mockReturnValue(stored(Date.now() - 59 * 60 * 1000));
-    await fetchIoSnapshotsForRun(nxJson, {}, optedIn());
-    expect(cloud.readIoSnapshots).not.toHaveBeenCalled();
-
-    store.get.mockReturnValue(stored(Date.now() - 61 * 60 * 1000));
-    await fetchIoSnapshotsForRun(nxJson, {}, optedIn());
-    expect(cloud.readIoSnapshots).toHaveBeenCalledTimes(1);
-  });
-
-  it('asks the client with knownUpdatedAt and keeps the stored set when unchanged', async () => {
-    const set = stored(0, 7);
-    store.get.mockReturnValue(set);
-    cloud.readIoSnapshots.mockResolvedValue(null);
-    const result = await fetchIoSnapshotsForRun(
-      nxJson,
-      { accessToken: 't' },
-      optedIn()
+  it('asks Nx Cloud when no stored set is young enough', async () => {
+    cloud.readIoSnapshots.mockResolvedValue({
+      commits: ['head'],
+      updatedAt: 9,
+      snapshots: {},
+    });
+    store.import.mockReturnValue(stored());
+    await fetchIoSnapshotsForRun(nxJson, { accessToken: 't' }, optedIn());
+    expect(cloud.readIoSnapshots).toHaveBeenCalledWith(
+      expect.not.objectContaining({ knownUpdatedAt: expect.anything() })
     );
     expect(cloud.readIoSnapshots).toHaveBeenCalledWith(
-      expect.objectContaining({
-        knownUpdatedAt: 7,
-        nxCloudOptions: { accessToken: 't' },
-      })
+      expect.objectContaining({ nxCloudOptions: { accessToken: 't' } })
     );
+  });
+
+  it('skips when Nx Cloud answers with no set', async () => {
+    cloud.readIoSnapshots.mockResolvedValue(null);
+    expect(await fetchIoSnapshotsForRun(nxJson, {}, optedIn())).toMatchObject({
+      status: 'skipped',
+      reason: 'invalid-response',
+    });
     expect(store.import).not.toHaveBeenCalled();
-    expect(result).toEqual({ status: 'cached', snapshots: set });
   });
 
   it('imports what the client read', async () => {
@@ -148,7 +143,7 @@ describe('fetchIoSnapshotsForRun', () => {
         'web:build': { commit: 'parent', inputs: ['apps/web/**'], outputs: [] },
       },
     });
-    const set = stored(Date.now());
+    const set = stored();
     store.import.mockReturnValue(set);
     const result = await fetchIoSnapshotsForRun(nxJson, {}, optedIn());
     expect(store.import).toHaveBeenCalledWith(
@@ -168,24 +163,15 @@ describe('fetchIoSnapshotsForRun', () => {
     expect(result).toEqual({ status: 'fetched', snapshots: set });
   });
 
-  it('hashes natively when the read fails, stored set or not', async () => {
-    const offline = Object.assign(new Error('getaddrinfo ENOTFOUND'), {
-      code: 'ENOTFOUND',
-    });
-    cloud.readIoSnapshots.mockRejectedValue(offline);
-
-    // A stored set for this commit is NOT reused when the fetch fails: the
-    // run hashes natively rather than from a recording it could not refresh.
-    store.get.mockReturnValue(stored(0));
+  it('hashes natively when the read fails', async () => {
+    cloud.readIoSnapshots.mockRejectedValue(
+      Object.assign(new Error('getaddrinfo ENOTFOUND'), { code: 'ENOTFOUND' })
+    );
     expect(await fetchIoSnapshotsForRun(nxJson, {}, optedIn())).toEqual({
       status: 'skipped',
       reason: 'offline',
       message: 'getaddrinfo ENOTFOUND',
     });
-
-    store.get.mockReturnValue(null);
-    const skipped = await fetchIoSnapshotsForRun(nxJson, {}, optedIn());
-    expect(skipped).toMatchObject({ status: 'skipped', reason: 'offline' });
   });
 
   it('maps client and store error codes to reasons', async () => {

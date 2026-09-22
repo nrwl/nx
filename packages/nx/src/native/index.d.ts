@@ -157,10 +157,10 @@ export declare class IoSnapshotStore {
   import(options: IoSnapshotImportOptions): IoSnapshots
   /**
    * The stored set for `commit`, without touching the network; `null`
-   * when none is stored or its row cannot be read, since either way the
-   * run fetches again. Reads only the commit's summary row.
+   * when none is stored, its row cannot be read, or it was fetched more
+   * than `max_age_ms` ago. Reads only the commit's summary row.
    */
-  get(commit: string): IoSnapshots | null
+  get(commit: string, maxAgeMs?: number | undefined | null): IoSnapshots | null
 }
 
 export declare class NxCache {
@@ -794,10 +794,7 @@ export interface IoSnapshotResolution {
   sourceCommits: Array<string>
   digest: string
   fetchedAt: number
-  /**
-   * The set's `updatedAt` as Nx Cloud reported it; sent back as
-   * `knownUpdatedAt` so an unchanged set costs no payload.
-   */
+  /** The set's `updatedAt` as Nx Cloud reported it. */
   updatedAt?: number
   clientVersion: string
   tasks: number

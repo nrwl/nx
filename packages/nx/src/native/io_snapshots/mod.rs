@@ -36,8 +36,7 @@ pub struct IoSnapshotResolution {
     pub source_commits: Vec<String>,
     pub digest: String,
     pub fetched_at: i64,
-    /// The set's `updatedAt` as Nx Cloud reported it; sent back as
-    /// `knownUpdatedAt` so an unchanged set costs no payload.
+    /// The set's `updatedAt` as Nx Cloud reported it.
     #[serde(default)]
     pub updated_at: Option<i64>,
     pub client_version: String,
@@ -222,10 +221,10 @@ impl IoSnapshotStore {
     }
 
     /// The stored set for `commit`, without touching the network; `null`
-    /// when none is stored or its row cannot be read, since either way the
-    /// run fetches again. Reads only the commit's summary row.
+    /// when none is stored, its row cannot be read, or it was fetched more
+    /// than `max_age_ms` ago. Reads only the commit's summary row.
     #[napi]
-    pub fn get(&self, commit: String) -> Option<IoSnapshots> {
+    pub fn get(&self, commit: String, max_age_ms: Option<i64>) -> Option<IoSnapshots> {
         let resolution = match store::read_resolution(&self.db, &commit) {
             Ok(resolution) => resolution?,
             Err(err) => {
@@ -233,6 +232,9 @@ impl IoSnapshotStore {
                 return None;
             }
         };
+        if max_age_ms.is_some_and(|max| current_timestamp_millis() - resolution.fetched_at > max) {
+            return None;
+        }
         Some(IoSnapshots {
             resolution,
             db: Arc::clone(&self.db),
@@ -279,7 +281,7 @@ mod tests {
         assert_eq!(resolution.commits, vec!["head", "parent"]);
         assert_eq!(imported.commit(), "head");
 
-        let stored = store.get("head".into()).unwrap();
+        let stored = store.get("head".into(), None).unwrap();
         assert_eq!(stored.resolution().digest, resolution.digest);
         // Read per task, normalized on import: duplicates collapsed.
         let entries = stored.entries_for(&["web:build", "gone:build"]).unwrap();
@@ -316,11 +318,31 @@ mod tests {
     }
 
     #[test]
+    fn leaves_out_a_set_older_than_the_age_asked_for() {
+        let (_dir, store) = temp_store();
+        let mut resolution = import(&store, "{}").unwrap().resolution();
+        let minute = 60 * 1000;
+        resolution.fetched_at -= 61 * minute;
+        store::write(
+            &store.db,
+            &store::Bundle {
+                resolution,
+                snapshots: BTreeMap::new(),
+            },
+            5,
+        )
+        .unwrap();
+        assert!(store.get("head".into(), Some(60 * minute)).is_none());
+        assert!(store.get("head".into(), Some(62 * minute)).is_some());
+        assert!(store.get("head".into(), None).is_some());
+    }
+
+    #[test]
     fn rejects_a_payload_it_cannot_read_and_stores_nothing() {
         let (_dir, store) = temp_store();
         let err = import(&store, "{ not json").err().unwrap();
         assert_eq!(err.status, "INVALID_RESPONSE");
-        assert!(store.get("head".into()).is_none());
+        assert!(store.get("head".into(), None).is_none());
     }
 
     #[test]
@@ -333,6 +355,6 @@ mod tests {
             .unwrap()
             .execute("UPDATE io_snapshot_bundles SET resolution = 'not json'", [])
             .unwrap();
-        assert!(store.get("head".into()).is_none());
+        assert!(store.get("head".into(), None).is_none());
     }
 }
