@@ -51,6 +51,8 @@ vi.mock('../../../utils/git-utils', async () => ({
   isAncestorCommit: (...args: unknown[]) => mockIsAncestorCommit(...args),
   resetWorkingTree: (...args: unknown[]) => mockResetWorkingTree(...args),
   tryCommitChanges: (...args: unknown[]) => mockTryCommitChanges(...args),
+  tryCommitChangesAsync: async (...args: unknown[]) =>
+    mockTryCommitChanges(...args),
 }));
 
 const mockDetectPackageManager = vi.fn();
@@ -109,6 +111,7 @@ import {
   type MigrateStep,
   type MigrateStepStatus,
   type MigrateTreeOperation,
+  type MigrateTreeOperationKind,
 } from './run-state';
 
 interface ParsedBlock {
@@ -6364,6 +6367,9 @@ describe('orchestrator', () => {
         return true;
       }) as never);
     }
+    function twentyMinutesAgo(): string {
+      return new Date(Date.now() - 20 * 60 * 1000).toISOString();
+    }
     function reserve(
       dir: string,
       held: Partial<MigrateTreeOperation> = {}
@@ -6487,6 +6493,83 @@ describe('orchestrator', () => {
         expect(block.payload.next).toBe('npx nx migrate --run-id=run-1');
       }
     );
+
+    it.each<[MigrateTreeOperationKind, number, string]>([
+      ['commit', 4242, new Date().toISOString()],
+      ['install', 4242, new Date().toISOString()],
+      ['commit', process.pid, new Date().toISOString()],
+      ['install', process.pid, new Date().toISOString()],
+      ['commit', 4242, twentyMinutesAgo()],
+      ['install', 4242, twentyMinutesAgo()],
+      ['commit', process.pid, twentyMinutesAgo()],
+      ['install', process.pid, twentyMinutesAgo()],
+    ])(
+      'answers still-running for a live worker whose own %s holds the tree (holder pid %i, started %s)',
+      async (kind, holderPid, startedAt) => {
+        vi.spyOn(process, 'kill').mockReturnValue(true as never);
+        const dir = setupRun('run-1', {
+          steps: [
+            migStep('step-1', '@nx/js:gen', 'running', {
+              pid: 4242,
+              startedAt,
+            }),
+          ],
+          createCommits: true,
+          plan: [genMig('@nx/js', 'gen')],
+        });
+        reserve(dir, { kind, pid: holderPid });
+
+        await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+        expect(readRunState(dir).steps[0].status).toBe('running');
+        const block = lastBlock();
+        expect(block.action).toBe('still-running');
+        const instructions = block.payload.instructions;
+        expect(instructions).toContain('(pid 4242) is still running');
+        expect(instructions).not.toContain('--step-action');
+        const hung = Date.now() - Date.parse(startedAt) > 15 * 60 * 1000;
+        if (hung) {
+          expect(instructions).toContain('may be hung');
+        } else {
+          expect(instructions).not.toContain('may be hung');
+        }
+        if (holderPid === process.pid) {
+          expect(instructions).toContain(
+            `process ${process.pid} is running the ${kind} of step 'step-1' for it`
+          );
+          expect(instructions).not.toContain('kill it so the next reconcile');
+          if (hung) expect(instructions).toContain('Ctrl+C');
+        } else {
+          expect(instructions).not.toContain(`process ${process.pid}`);
+          if (hung)
+            expect(instructions).toContain('kill it so the next reconcile');
+        }
+      }
+    );
+
+    it('keeps the held block for a live running step while the tree is held for another step', async () => {
+      vi.spyOn(process, 'kill').mockReturnValue(true as never);
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'running', {
+            pid: 4242,
+            startedAt: new Date().toISOString(),
+          }),
+          migStep('step-2', '@nx/js:other', 'pending'),
+        ],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen'), genMig('@nx/js', 'other')],
+      });
+      reserve(dir, { stepId: 'step-2', pid: process.pid });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const block = lastBlock();
+      expect(block.action).toBe('held');
+      expect(block.payload.instructions).toContain(
+        `held by process ${process.pid} for the commit of step 'step-2'`
+      );
+    });
 
     it('refuses to skip a died step whose started commit is unaccounted for, after a retry and a second death', async () => {
       onlyWorkerDead();

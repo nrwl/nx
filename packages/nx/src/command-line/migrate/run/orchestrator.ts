@@ -25,6 +25,7 @@ import {
   liveTreeOperation,
   TreeBusyError,
   treeBusyMessage,
+  treeOperationLabel,
   type BrokeredCommit,
   type TreeLease,
   type TreeScope,
@@ -1538,10 +1539,11 @@ function advanceAndDispense(root: string, dir: string, runId: string): void {
   // above repeats by design, and a rejected --step-action ends the reconcile
   // before reaching here, already naming its own fix.
   const noProgress = trackNoProgress(dir, step);
-  // Another live process still commits, installs or resets for the run; the
-  // responses below would offer actions it refuses or name a pid already gone.
+  // Another live process holds the tree: the responses below would offer
+  // actions it refuses or name a pid already gone. A running step's own
+  // operation with a live worker keeps still-running, which offers none.
   const held = liveTreeOperation(state);
-  if (held) {
+  if (held && !isOwnOperation(step, held)) {
     emitHeld(root, runId, step, held, noProgress);
     return;
   }
@@ -1560,7 +1562,7 @@ function advanceAndDispense(root: string, dir: string, runId: string): void {
       emitDied(root, runId, state, step, noProgress);
       break;
     case 'running':
-      emitStillRunning(root, runId, step, noProgress);
+      emitStillRunning(root, runId, step, held, noProgress);
       break;
     case 'awaiting-prompt-outcome':
       emitAwaitPrompt(root, dir, runId, step, noProgress);
@@ -1582,6 +1584,18 @@ function advanceAndDispense(root: string, dir: string, runId: string): void {
       );
     }
   }
+}
+
+function isOwnOperation(
+  step: MigrateStep,
+  held: MigrateTreeOperation
+): boolean {
+  return (
+    step.status === 'running' &&
+    held.stepId === step.id &&
+    step.pid !== undefined &&
+    isPidAlive(step.pid)
+  );
 }
 
 function firstActionableStep(state: MigrateRunState): MigrateStep | undefined {
@@ -2009,6 +2023,7 @@ function emitStillRunning(
   root: string,
   runId: string,
   step: MigrateStep,
+  held: MigrateTreeOperation | undefined,
   noProgress: MigrateRunNoProgress | null
 ): void {
   const migrationId = step.migrationId;
@@ -2016,11 +2031,24 @@ function emitStillRunning(
   const lines = [
     `The worker for ${migrationId} (pid ${step.pid}) is still running. Wait for it to finish, then run the "next" command.`,
   ];
-  if (ageMs >= HANG_THRESHOLD_MS) {
+  // A holder pid other than the worker's is the session's parent process.
+  const parentOperation =
+    held !== undefined && held.pid !== step.pid
+      ? treeOperationLabel(held)
+      : undefined;
+  if (parentOperation) {
     lines.push(
-      `It has been running for ${Math.floor(
-        ageMs / 60000
-      )} minutes and may be hung. Verify pid ${step.pid}; either keep waiting, or kill it so the next reconcile can classify it as died.`
+      `The nx process ${held.pid} is running ${parentOperation} for it; killing the worker does not stop that, and the step can be classified as died only once it finishes.`
+    );
+  }
+  if (ageMs >= HANG_THRESHOLD_MS) {
+    const hung = `It has been running for ${Math.floor(
+      ageMs / 60000
+    )} minutes and may be hung.`;
+    lines.push(
+      parentOperation
+        ? `${hung} Report this to the user: they can quit this session, then press Ctrl+C in the terminal to end ${parentOperation}, and resume the run afterwards.`
+        : `${hung} Verify pid ${step.pid}; either keep waiting, or kill it so the next reconcile can classify it as died.`
     );
   }
   emit(

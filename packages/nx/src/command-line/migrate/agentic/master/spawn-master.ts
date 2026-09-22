@@ -2,6 +2,7 @@ import { type ChildProcess, spawn } from 'child_process';
 import { existsSync, rmSync } from 'fs';
 import { dirname, join, relative, sep } from 'path';
 import { logger } from '../../../../utils/logger';
+import { output } from '../../../../utils/output';
 import { resetSgrAfterAgent } from '../../migrate-output';
 import {
   BROKER_ENV_VAR,
@@ -9,6 +10,7 @@ import {
   type MigrateRunPolicy,
   runDir,
   runHandoffsDir,
+  treeOperationLabel,
 } from '../../run';
 import {
   AGENT_GRACEFUL_EXIT_MS,
@@ -212,10 +214,13 @@ export async function spawnMasterSession(
   } finally {
     sentinelWatch.abort();
     // With the agent gone, the terminal is restored before the wait: an
-    // agent that left it raw would keep a Ctrl+C from reaching the install
+    // agent that left it raw would keep a Ctrl+C from reaching the operation
     // in flight as a signal.
     const exited = child.exitCode !== null || child.signalCode !== null;
-    if (started && exited) restoreTerminal();
+    if (started && exited) {
+      restoreTerminal();
+      warnOperationInFlight(broker);
+    }
     // The request in flight settles before the lock is released.
     await brokerDone;
     broker.close();
@@ -230,6 +235,18 @@ export async function spawnMasterSession(
 function restoreTerminal(): void {
   restoreTermiosAfterAgent();
   resetSgrAfterAgent();
+}
+
+// With the agent gone a Ctrl+C reaches the operation's child process, and
+// nothing else tells the user one is still running.
+function warnOperationInFlight(broker: MigrateCommitBroker): void {
+  const request = broker.requestInFlight;
+  if (!request) return;
+  output.warn({
+    title: `Still running ${treeOperationLabel(
+      request
+    )} for this migrate run. Press Ctrl+C to end it; the run can be resumed afterwards.`,
+  });
 }
 
 async function serviceBrokerUntilAborted(

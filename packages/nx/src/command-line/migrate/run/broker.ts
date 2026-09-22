@@ -226,15 +226,19 @@ export function liveTreeOperation(
 }
 
 export function treeBusyMessage(held: MigrateTreeOperation): string {
-  const what =
-    held.kind === 'checkpoint'
-      ? 'the checkpoint commit'
-      : `the ${
-          held.kind === 'commit' || held.kind === 'reset'
-            ? held.kind
-            : 'install'
-        } of step '${held.stepId}'`;
-  return `The working tree is held by process ${held.pid} for ${what}; run the reconcile again once it finishes.`;
+  return `The working tree is held by process ${held.pid} for ${treeOperationLabel(
+    held
+  )}; run the reconcile again once it finishes.`;
+}
+
+export function treeOperationLabel(
+  held: Pick<MigrateTreeOperation, 'kind' | 'stepId'>
+): string {
+  return held.kind === 'checkpoint'
+    ? 'the checkpoint commit'
+    : `the ${
+        held.kind === 'commit' || held.kind === 'reset' ? held.kind : 'install'
+      } of step '${held.stepId}'`;
 }
 
 function atSeam(
@@ -523,6 +527,7 @@ function settle(result: BrokerResult): BrokerAnswer {
 export class MigrateCommitBroker {
   readonly nonce = randomBytes(4).toString('hex');
   private readonly handled = new Set<string>();
+  private inFlight: BrokerRequest | null = null;
   // Kept referenced: the lock is released when the instance is collected.
   private readonly lock: FileLock | null;
 
@@ -535,6 +540,11 @@ export class MigrateCommitBroker {
     ensureRunSubdir(brokerDir(dir), () => this.notADirectory());
     this.lock = IS_WASM ? null : new FileLock(lockPath(dir, this.nonce));
     this.lock?.lock();
+  }
+
+  /** The request whose operation this process is running right now. */
+  get requestInFlight(): BrokerRequest | null {
+    return this.inFlight;
   }
 
   /** Answers this session's unanswered requests, one at a time. */
@@ -564,6 +574,7 @@ export class MigrateCommitBroker {
       this.handled.add(id);
       let result: BrokerResult;
       try {
+        if (lease) this.inFlight = request;
         result = lease ? await this.answer(request) : { kind: 'stale' };
         // Recorded by the process that ran the commit, before the answer: the
         // step reading it can die with the commit already in history. A failed
@@ -573,6 +584,7 @@ export class MigrateCommitBroker {
           this.record(request, result);
         }
       } finally {
+        this.inFlight = null;
         lease?.release();
       }
       // Published after the release, so the step reading the answer never

@@ -50,4 +50,8 @@ export type {
   RunOrchestratorReconcileInput,
 } from './orchestrator';
 
-export { BROKER_ENV_VAR, MigrateCommitBroker } from './broker';
+export {
+  BROKER_ENV_VAR,
+  MigrateCommitBroker,
+  treeOperationLabel,
+} from './broker';

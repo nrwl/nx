@@ -21,12 +21,18 @@ vi.mock('child_process', () => ({
 const mockBrokerCtor = vi.fn();
 const mockBrokerService = vi.fn();
 const mockBrokerClose = vi.fn();
-vi.mock('../../run/broker', () => ({
-  BROKER_ENV_VAR: 'NX_MIGRATE_BROKER',
+let mockBrokerInFlight: BrokerRequest | null = null;
+vi.mock('../../run/broker', async () => ({
+  ...(await vi.importActual<typeof import('../../run/broker')>(
+    '../../run/broker'
+  )),
   MigrateCommitBroker: class {
     nonce = 'abcd1234';
     constructor(...args: unknown[]) {
       mockBrokerCtor(...args);
+    }
+    get requestInFlight(): BrokerRequest | null {
+      return mockBrokerInFlight;
     }
     service(): Promise<void> {
       return mockBrokerService();
@@ -38,6 +44,8 @@ vi.mock('../../run/broker', () => ({
 }));
 
 import { execSync, spawn } from 'child_process';
+import { output } from '../../../../utils/output';
+import type { BrokerRequest } from '../../run/broker';
 import type { DetectedInstalledAgent } from '../types';
 import { WINDOWS_COMMAND_LINE_BUDGET } from '../windows-cmd';
 import {
@@ -364,6 +372,49 @@ describe('spawnMasterSession', () => {
         expect(await pending).toEqual({ kind: 'exited' });
         expect(restoredWhileWaiting).toBe(1);
         expect(sttyCalls()).toBe(1);
+      });
+
+      it('names the operation still running once the agent exited and says Ctrl+C ends it', async () => {
+        const warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
+        const child = fakeChild({ exitAfterSpawn: false });
+        mockSpawn.mockImplementation(() => child);
+        let finishInFlight: () => void;
+        const inFlight = new Promise<void>((resolve) => {
+          finishInFlight = resolve;
+        });
+
+        const pending = spawnMasterSession(input());
+        await pollsElapsed(2);
+        mockBrokerService.mockReturnValue(inFlight);
+        mockBrokerInFlight = { kind: 'install', stepId: 'step-1', attempt: 1 };
+        await pollsElapsed(2);
+        child.exitCode = 0;
+        child.emit('exit', 0, null);
+        await pollsElapsed(2);
+        const warnedWhileWaiting = warn.mock.calls.length;
+        mockBrokerInFlight = null;
+        finishInFlight();
+
+        expect(await pending).toEqual({ kind: 'exited' });
+        expect(warnedWhileWaiting).toBe(1);
+        expect(warn).toHaveBeenCalledTimes(1);
+        expect(warn.mock.calls[0][0].title).toBe(
+          "Still running the install of step 'step-1' for this migrate run. Press Ctrl+C to end it; the run can be resumed afterwards."
+        );
+      });
+
+      it('says nothing on exit when no operation is in flight', async () => {
+        const warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
+        const child = fakeChild({ exitAfterSpawn: false });
+        mockSpawn.mockImplementation(() => child);
+
+        const pending = spawnMasterSession(input());
+        await pollsElapsed(2);
+        child.exitCode = 0;
+        child.emit('exit', 0, null);
+
+        expect(await pending).toEqual({ kind: 'exited' });
+        expect(warn).not.toHaveBeenCalled();
       });
 
       it('restores the terminal only after the wait when the agent outlived its close', async () => {
