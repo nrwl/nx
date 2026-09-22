@@ -30,6 +30,9 @@
   "types": "./dist/src/index.d.ts",
   "typesVersions": {
     "*": {
+      "executors": [
+        "dist/executors.d.ts"
+      ],
       "babel": [
         "dist/babel.d.ts"
       ],
