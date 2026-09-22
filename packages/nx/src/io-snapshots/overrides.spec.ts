@@ -1,4 +1,3 @@
-import type { Mock } from 'vitest';
 import { join } from 'path';
 import { TempFs } from '../internal-testing-utils/temp-fs';
 import type { ProjectGraph } from '../config/project-graph';
@@ -7,16 +6,6 @@ import type { TaskGraph } from '../config/task-graph';
 const HEAD = 'a'.repeat(40);
 let snapshotDb: ReturnType<typeof connectToNxDb>;
 
-vi.mock('../utils/git-utils', () => ({
-  getLatestCommitSha: vi.fn(() => HEAD),
-}));
-vi.mock('./config', () => ({
-  ioSnapshotCommitForHead: () => HEAD,
-  isIoSnapshotFetchEnabled: vi.fn(() => true),
-}));
-vi.mock('../utils/db-connection', () => ({
-  getDbConnection: () => snapshotDb,
-}));
 vi.mock('../tasks-runner/utils', () => ({
   getExecutorForTask: vi.fn((task: { target: { target: string } }) => ({
     hasherFactory: task.target.target === 'custom' ? () => ({}) : undefined,
@@ -24,7 +13,6 @@ vi.mock('../tasks-runner/utils', () => ({
 }));
 
 import { closeDbConnection, connectToNxDb, IoSnapshotStore } from '../native';
-import { isIoSnapshotFetchEnabled } from './config';
 import { buildIoSnapshotOverrides } from './overrides';
 
 function node(name: string, root: string, targets: Record<string, any>) {
@@ -81,7 +69,7 @@ function graph(...ids: string[]): TaskGraph {
 }
 
 function writeBundle(snapshots: Record<string, unknown>) {
-  new IoSnapshotStore(snapshotDb).import({
+  return new IoSnapshotStore(snapshotDb).import({
     requestedCommit: HEAD,
     commits: [HEAD],
     clientVersion: 'nx/test',
@@ -95,7 +83,6 @@ describe('buildIoSnapshotOverrides', () => {
   beforeEach(() => {
     tempFs = new TempFs('io-snapshot-overrides');
     snapshotDb = connectToNxDb(join(tempFs.tempDir, 'db'), 'io-snapshots');
-    (isIoSnapshotFetchEnabled as Mock).mockReturnValue(true);
   });
 
   afterEach(() => {
@@ -103,27 +90,8 @@ describe('buildIoSnapshotOverrides', () => {
     tempFs.cleanup();
   });
 
-  it('returns null when snapshots are off', () => {
-    (isIoSnapshotFetchEnabled as Mock).mockReturnValue(false);
-    expect(buildIoSnapshotOverrides(projectGraph, graph('web:build'), {})).toBe(
-      null
-    );
-  });
-
-  it('reports no-bundle when nothing is cached for HEAD', () => {
-    const result = buildIoSnapshotOverrides(
-      projectGraph,
-      graph('web:build'),
-      {}
-    );
-    expect(result.used).toEqual([]);
-    expect(result.resolution).toBeUndefined();
-    expect(result.diagnostics).toHaveLength(1);
-    expect(result.diagnostics[0]).toMatchObject({ reason: 'no-bundle' });
-  });
-
   it('uses flat entries, including one that read nothing', () => {
-    writeBundle({
+    const set = writeBundle({
       'web:build': {
         commit: HEAD,
         inputs: ['apps/web/src/**/*.ts', 'dist/libs/ui/index.js'],
@@ -135,7 +103,7 @@ describe('buildIoSnapshotOverrides', () => {
     const result = buildIoSnapshotOverrides(
       projectGraph,
       graph('web:build', 'ui:build', 'root:build'),
-      {}
+      set
     );
     expect(result.used).toEqual(['root:build', 'web:build']);
     expect(result.diagnostics.map((d) => [d.reason, d.taskId])).toEqual([
@@ -145,7 +113,7 @@ describe('buildIoSnapshotOverrides', () => {
   });
 
   it('flattens legacy bucketed entries, and withholds one that names a project the graph no longer has', () => {
-    writeBundle({
+    const set = writeBundle({
       'web:build': {
         commit: HEAD,
         inputs: {
@@ -161,7 +129,7 @@ describe('buildIoSnapshotOverrides', () => {
     const withheld = buildIoSnapshotOverrides(
       projectGraph,
       graph('web:build'),
-      {}
+      set
     );
     expect(withheld.used).toEqual([]);
     expect(withheld.diagnostics).toEqual([
@@ -172,7 +140,7 @@ describe('buildIoSnapshotOverrides', () => {
       }),
     ]);
 
-    writeBundle({
+    const reset = writeBundle({
       'web:build': {
         commit: HEAD,
         inputs: {
@@ -186,14 +154,14 @@ describe('buildIoSnapshotOverrides', () => {
     const flattened = buildIoSnapshotOverrides(
       projectGraph,
       graph('web:build'),
-      {}
+      reset
     );
     expect(flattened.used).toEqual(['web:build']);
     expect(flattened.diagnostics).toEqual([]);
   });
 
   it('withholds disabled, custom-hasher, dangling, and root-anchored tasks', () => {
-    writeBundle({
+    const set = writeBundle({
       'web:build': {
         commit: HEAD,
         inputs: ['dist/x'],
@@ -211,7 +179,7 @@ describe('buildIoSnapshotOverrides', () => {
     const result = buildIoSnapshotOverrides(
       projectGraph,
       graph('web:build', 'web:lint', 'web:custom', 'ui:build'),
-      {}
+      set
     );
     expect(result.used).toEqual([]);
     expect(result.diagnostics.map((d) => [d.reason, d.taskId])).toEqual([
@@ -222,23 +190,5 @@ describe('buildIoSnapshotOverrides', () => {
     ]);
     expect(result.diagnostics[0].glob).toBe('**/*.gen');
     expect(result.diagnostics[1].producer).toBe('gone:build');
-  });
-
-  it('accepts a commit or a set', () => {
-    writeBundle({ 'web:build': { commit: HEAD, inputs: [], outputs: [] } });
-    const byDir = buildIoSnapshotOverrides(
-      projectGraph,
-      graph('web:build'),
-      {},
-      HEAD
-    );
-    const byHandle = buildIoSnapshotOverrides(
-      projectGraph,
-      graph('web:build'),
-      {},
-      new IoSnapshotStore(snapshotDb).get(HEAD)
-    );
-    expect(byDir.used).toEqual(['web:build']);
-    expect(byHandle).toEqual(byDir);
   });
 });

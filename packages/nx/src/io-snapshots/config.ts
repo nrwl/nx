@@ -3,7 +3,6 @@
 //! can ask without pulling in the Nx Cloud client.
 
 import type { NxJsonConfiguration } from '../config/nx-json';
-import { getLatestCommitSha } from '../utils/git-utils';
 import { isNxCloudDisabled } from '../utils/nx-cloud-utils';
 
 export interface IoSnapshotCloudOptions {
@@ -46,9 +45,4 @@ export function ioSnapshotEnv(
   return {
     NX_IO_SNAPSHOTS: env.NX_IO_SNAPSHOTS,
   };
-}
-
-/** The commit whose stored set applies to this checkout; `null` outside a git repo. */
-export function ioSnapshotCommitForHead(): string | null {
-  return getLatestCommitSha() || null;
 }

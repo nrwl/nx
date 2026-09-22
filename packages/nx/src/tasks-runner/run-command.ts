@@ -1040,7 +1040,7 @@ export async function invokeTasksRunner({
     taskDetails,
     ioSnapshots
   );
-  reportIoSnapshots(ioSnapshotOutcome, projectGraph, taskGraph, nxJson, nxArgs);
+  reportIoSnapshots(ioSnapshotOutcome, projectGraph, taskGraph, nxArgs);
   const taskResultsLifecycle = new TaskResultsLifeCycle();
   const compositedLifeCycle: LifeCycle = new CompositeLifeCycle([
     ...constructLifeCycles(lifeCycle, taskGraph, nxJson, nxArgs.skipNxCache),
@@ -1239,7 +1239,6 @@ function reportIoSnapshots(
   outcome: IoSnapshotOutcome | null,
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
-  nxJson: NxJsonConfiguration,
   nxArgs: NxArgs
 ): void {
   if (!outcome) return;
@@ -1247,7 +1246,7 @@ function reportIoSnapshots(
   const snapshots = snapshotsOf(outcome);
   const summary = formatIoSnapshotSummary(
     snapshots
-      ? buildIoSnapshotOverrides(projectGraph, taskGraph, nxJson, snapshots)
+      ? buildIoSnapshotOverrides(projectGraph, taskGraph, snapshots)
       : null,
     outcome
   );

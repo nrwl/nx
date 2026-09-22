@@ -1,4 +1,3 @@
-import type { NxJsonConfiguration } from '../config/nx-json';
 import type { ProjectGraph } from '../config/project-graph';
 import type { TaskGraph } from '../config/task-graph';
 import {
@@ -10,8 +9,6 @@ import {
 } from '../native';
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
 import { getExecutorForTask } from '../tasks-runner/utils';
-import { ioSnapshotCommitForHead, isIoSnapshotFetchEnabled } from './config';
-import { getIoSnapshotStore } from './store';
 
 export type {
   IoSnapshotDiagnostic,
@@ -87,49 +84,23 @@ export function projectRoots(
 }
 
 /**
- * Reports which tasks in `taskGraph` hash from the snapshot bundle and why
- * the rest do not, with the same eligibility walk the planner uses, without
- * building a planner (no project-graph transfer). `snapshots` is this run's
- * set, a commit to read from the database, or omitted to read HEAD's.
- * Returns `null` when snapshots are off. Never fetches, never throws.
+ * Reports which tasks in `taskGraph` hash from `snapshots` and why the rest
+ * do not, with the same eligibility walk the planner uses, without building a
+ * planner (no project-graph transfer). Never fetches, never throws.
  *
- * The export name and module path are probed by the Nx Cloud client bundle
- * to decide whether core handles snapshots; keep both stable.
+ * The Nx Cloud client bundle probes this module path for the export's
+ * presence to decide whether core handles snapshots; keep both stable.
  */
 export function buildIoSnapshotOverrides(
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
-  nxJson: NxJsonConfiguration,
-  snapshots?: IoSnapshots | string
-): IoSnapshotReport | null {
-  const report = (set: IoSnapshots) =>
-    ioSnapshotReport(
-      set,
-      taskGraph,
-      optedOutTaskIds(projectGraph, taskGraph),
-      customHasherTaskIds(projectGraph, taskGraph),
-      projectRoots(projectGraph)
-    );
-  if (typeof snapshots === 'object') {
-    return report(snapshots);
-  }
-  const commit =
-    snapshots ??
-    (isIoSnapshotFetchEnabled(nxJson) ? ioSnapshotCommitForHead() : null);
-  if (!commit) {
-    return null;
-  }
-  const set = getIoSnapshotStore().get(commit);
-  return set
-    ? report(set)
-    : {
-        used: [],
-        tasksWithOutputs: [],
-        diagnostics: [
-          {
-            reason: 'no-bundle',
-            message: `no I/O snapshot set is stored for ${commit}`,
-          },
-        ],
-      };
+  snapshots: IoSnapshots
+): IoSnapshotReport {
+  return ioSnapshotReport(
+    snapshots,
+    taskGraph,
+    optedOutTaskIds(projectGraph, taskGraph),
+    customHasherTaskIds(projectGraph, taskGraph),
+    projectRoots(projectGraph)
+  );
 }
