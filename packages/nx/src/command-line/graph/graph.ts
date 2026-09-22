@@ -45,6 +45,7 @@ import {
   handleProjectGraphError,
 } from '../../project-graph/project-graph';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
+import { pruneToSelectedTasks } from '../../tasks-runner/utils';
 import { allFileData } from '../../utils/all-file-data';
 import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
 import {
@@ -260,6 +261,8 @@ export async function generateGraph(
     focus?: string;
     exclude?: string[];
     affected?: boolean;
+    /** Tasks `nx affected` selected for `targets`; the graph shows what they run. */
+    selectedTaskIds?: string[];
   },
   affectedProjects: string[]
 ): Promise<void> {
@@ -431,7 +434,9 @@ export async function generateGraph(
       const taskGraphClientResponse = args.targets
         ? await createTaskGraphForTargetsAndProjects(
             args.targets,
-            args.projects
+            args.projects,
+            undefined,
+            args.selectedTaskIds
           )
         : await createTaskGraphClientResponse();
 
@@ -505,7 +510,10 @@ export async function generateGraph(
         affectedProjects,
         args.focus,
         args.groupByFolder,
-        excludePatterns
+        excludePatterns,
+        args.selectedTaskIds && args.targets
+          ? { targets: args.targets, taskIds: args.selectedTaskIds }
+          : undefined
       );
       app = result.app;
       url = result.url;
@@ -623,7 +631,8 @@ async function startServer(
   affected: string[] = [],
   focus: string = null,
   groupByFolder: boolean = false,
-  exclude: string[] = []
+  exclude: string[] = [],
+  selection?: TaskSelectionForGraph
 ) {
   let unregisterFileWatcher: (() => void) | undefined;
 
@@ -702,7 +711,8 @@ async function startServer(
             await createTaskGraphForTargetsAndProjects(
               targetNames,
               projectNames,
-              configuration
+              configuration,
+              selectedFor(targetNames, selection)
             )
           )
         );
@@ -1210,10 +1220,31 @@ function clearTaskGraphCache() {
  * Creates a single task graph for multiple projects with multiple targets
  * If no projects specified, returns graph for all projects with the targets
  */
+export interface TaskSelectionForGraph {
+  targets: string[];
+  taskIds: string[];
+}
+
+/**
+ * The selection was made for one set of targets. The page can ask for others,
+ * and pruning those to it would empty them, so they are shown whole.
+ */
+export function selectedFor(
+  targets: string[],
+  selection: TaskSelectionForGraph | undefined
+): string[] | undefined {
+  return selection &&
+    targets.length === selection.targets.length &&
+    targets.every((target) => selection.targets.includes(target))
+    ? selection.taskIds
+    : undefined;
+}
+
 async function createTaskGraphForTargetsAndProjects(
   targetNames: string[],
   projectNames?: string[],
-  configuration?: string
+  configuration?: string,
+  selectedTaskIds?: string[]
 ): Promise<TaskGraphClientResponse> {
   // Get project graph
   let graph: ProjectGraph;
@@ -1242,7 +1273,7 @@ async function createTaskGraphForTargetsAndProjects(
 
   try {
     // Create single task graph
-    const taskGraph = createTaskGraph(
+    let taskGraph = createTaskGraph(
       graph,
       {},
       projectsToUse,
@@ -1250,6 +1281,9 @@ async function createTaskGraphForTargetsAndProjects(
       configuration,
       {}
     );
+    if (selectedTaskIds) {
+      taskGraph = pruneToSelectedTasks(taskGraph, selectedTaskIds);
+    }
 
     performance.mark(`task graph generation:end`);
 

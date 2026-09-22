@@ -574,6 +574,21 @@ export function collectTaskDependencyClosure(
   return keep;
 }
 
+/**
+ * The graph a run executes for a selection. Shared by the run and by
+ * `--graph`, so what the graph shows is what runs.
+ */
+export function pruneToSelectedTasks(
+  taskGraph: TaskGraph,
+  selected: Iterable<string>
+): TaskGraph {
+  const keep = collectTaskDependencyClosure(taskGraph, selected);
+  return removeTasksFromTaskGraph(
+    taskGraph,
+    Object.keys(taskGraph.tasks).filter((id) => !keep.has(id))
+  );
+}
+
 export function removeTasksFromTaskGraph(
   graph: TaskGraph,
   ids: string[]

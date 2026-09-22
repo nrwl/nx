@@ -4,7 +4,11 @@ import { expandFilesInput, HashPlanner } from '../../native';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { allFileData } from '../../utils/all-file-data';
-import { getExpandedTaskInputs, ProjectGraphClientResponse } from './graph';
+import {
+  getExpandedTaskInputs,
+  ProjectGraphClientResponse,
+  selectedFor,
+} from './graph';
 
 vi.mock('../../native', async (importOriginal) => ({
   ...(await importOriginal<any>()),
@@ -301,5 +305,22 @@ describe('getExpandedTaskInputs', () => {
 
     expect(result).toEqual({ general: [], external: ['npm:some-pkg'] });
     expect(cache.get('myproj:test:integration')).toBe(result);
+  });
+});
+
+describe('selectedFor', () => {
+  const selection = { targets: ['build', 'test'], taskIds: ['a:build'] };
+
+  it('applies the selection to the targets it was made for', () => {
+    expect(selectedFor(['test', 'build'], selection)).toEqual(['a:build']);
+  });
+
+  it('shows another target whole rather than pruning it to nothing', () => {
+    expect(selectedFor(['lint'], selection)).toBeUndefined();
+    expect(selectedFor(['build'], selection)).toBeUndefined();
+  });
+
+  it('prunes nothing without a selection', () => {
+    expect(selectedFor(['build', 'test'], undefined)).toBeUndefined();
   });
 });
