@@ -17,7 +17,7 @@ export function rememberIoSnapshots(handle: IoSnapshots): void {
  * digests, so a re-imported set is never served stale; the handle in hand is
  * kept when they match, which is what preserves the entries it has read.
  */
-export function ioSnapshotsForCommit(
+export function getIoSnapshotsForCommit(
   commit: string | undefined
 ): IoSnapshots | undefined {
   if (!commit) {

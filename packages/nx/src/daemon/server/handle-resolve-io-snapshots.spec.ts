@@ -14,7 +14,7 @@ vi.mock('../../utils/db-connection', () => ({ getDbConnection: () => 'db' }));
 import { serializeWithFallback } from '../socket-utils';
 import { parseMessage } from '../../utils/consume-messages-from-socket';
 import { handleResolveIoSnapshots } from './handle-resolve-io-snapshots';
-import { ioSnapshotsForCommit } from './io-snapshots-state';
+import { getIoSnapshotsForCommit } from './io-snapshots-state';
 
 describe('handleResolveIoSnapshots', () => {
   const payload = {
@@ -83,7 +83,7 @@ describe('handleResolveIoSnapshots', () => {
       resolution: { digest: 'd' },
     });
     await handleResolveIoSnapshots(payload);
-    expect(ioSnapshotsForCommit('head')).toBe(handle);
+    expect(getIoSnapshotsForCommit('head')).toBe(handle);
   });
 
   // `handleClientEnv` reflects a message's `env` onto the daemon's whole

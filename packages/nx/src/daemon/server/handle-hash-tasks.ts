@@ -2,7 +2,7 @@ import { Task, TaskGraph } from '../../config/task-graph';
 import { getCachedSerializedProjectGraphPromise } from './project-graph-incremental-recomputation';
 import { InProcessTaskHasher } from '../../hasher/task-hasher';
 import { readNxJson } from '../../config/configuration';
-import { ioSnapshotsForCommit } from './io-snapshots-state';
+import { getIoSnapshotsForCommit } from './io-snapshots-state';
 
 /**
  * We use this not to recreated hasher for every hash operation
@@ -51,7 +51,7 @@ export async function handleHashTasks(payload: HashTasksPayload) {
     payload.perTaskEnvs,
     payload.cwd,
     payload.collectInputs,
-    ioSnapshotsForCommit(payload.ioSnapshots?.commit)
+    getIoSnapshotsForCommit(payload.ioSnapshots?.commit)
   );
   return {
     response,
@@ -67,7 +67,7 @@ export async function handleHashTasksUpfront(payload: HashTasksPayload) {
     payload.perTaskEnvs,
     payload.cwd,
     payload.collectInputs,
-    ioSnapshotsForCommit(payload.ioSnapshots?.commit)
+    getIoSnapshotsForCommit(payload.ioSnapshots?.commit)
   );
   return {
     response,
