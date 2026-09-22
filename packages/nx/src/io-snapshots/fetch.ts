@@ -1,11 +1,5 @@
 import type { NxJsonConfiguration } from '../config/nx-json';
-import {
-  importIoSnapshots,
-  loadIoSnapshots,
-  readIoSnapshotResolution,
-  skippedIoSnapshots,
-  type IoSnapshots,
-} from '../native';
+import { IoSnapshotStore } from '../native';
 import { findAncestorNodeModules } from '../nx-cloud/resolution-helpers';
 import {
   ioSnapshotEnv,
@@ -13,6 +7,13 @@ import {
   type IoSnapshotCloudOptions,
   type IoSnapshotEnv,
 } from './config';
+import {
+  errorMessage,
+  reasonFromError,
+  skippedIoSnapshots,
+  storedIoSnapshots,
+  type IoSnapshotOutcome,
+} from './outcome';
 import { verifyOrUpdateNxCloudClient } from '../nx-cloud/update-manager';
 import { getDbConnection } from '../utils/db-connection';
 import { getLatestCommitSha } from '../utils/git-utils';
@@ -22,6 +23,7 @@ import { nxVersion } from '../utils/versions';
 import { workspaceRoot } from '../utils/workspace-root';
 
 export type { IoSnapshotResolution, IoSnapshots } from '../native';
+export type { IoSnapshotOutcome } from './outcome';
 
 /**
  * A stored set younger than this is served without asking Nx Cloud, so the
@@ -63,16 +65,16 @@ const WARNED_REASONS = new Set([
 ]);
 
 /**
- * Resolves the I/O snapshot bundle for HEAD once per run: the cached bundle
- * while it is fresh, otherwise what the Nx Cloud client reads for HEAD's
- * commit graph, stored through the native store. Returns `null` when
- * snapshots are not enabled for this workspace; never throws.
+ * Resolves the I/O snapshot set for HEAD once per run: the stored set while
+ * it is fresh, otherwise what the Nx Cloud client reads for HEAD's commit
+ * graph, imported into the store. Returns `null` when snapshots are not
+ * enabled for this workspace; never throws.
  */
 export async function fetchIoSnapshotsForRun(
   nxJson: NxJsonConfiguration,
   runnerOptions: IoSnapshotCloudOptions,
   env: IoSnapshotEnv = ioSnapshotEnv()
-): Promise<IoSnapshots | null> {
+): Promise<IoSnapshotOutcome | null> {
   if (!isIoSnapshotFetchEnabled(nxJson, runnerOptions, env)) {
     return null;
   }
@@ -82,13 +84,14 @@ export async function fetchIoSnapshotsForRun(
       skippedIoSnapshots('not-a-git-repo', 'Could not resolve HEAD')
     );
   }
-  const db = getDbConnection();
-  const cached = readIoSnapshotResolution(db, head);
-  if (cached && Date.now() - cached.fetchedAt <= STORED_SET_MAX_AGE_MS) {
-    const fresh = loadIoSnapshots(db, head);
-    if (fresh.status !== 'skipped') {
-      return reportIoSnapshotResolution(fresh);
-    }
+  const store = new IoSnapshotStore(getDbConnection());
+  const stored = storedIoSnapshots(store, head);
+  const storedSet = stored.status === 'skipped' ? null : stored.snapshots;
+  if (
+    storedSet &&
+    Date.now() - storedSet.resolution.fetchedAt <= STORED_SET_MAX_AGE_MS
+  ) {
+    return reportIoSnapshotResolution(stored);
   }
 
   let read: NonNullable<
@@ -115,22 +118,23 @@ export async function fetchIoSnapshotsForRun(
     const result = await read({
       workspaceRoot,
       nxCloudOptions: runnerOptions,
-      knownUpdatedAt: cached?.updatedAt ?? undefined,
+      knownUpdatedAt: storedSet?.resolution.updatedAt ?? undefined,
       timeoutMs: READ_TIMEOUT_MS,
     });
     if (result === null) {
-      // Unchanged since the cached set: the bundle on disk is still current.
-      return reportIoSnapshotResolution(loadIoSnapshots(db, head));
+      // Unchanged since the stored set, which is still current.
+      return reportIoSnapshotResolution(stored);
     }
-    return reportIoSnapshotResolution(
-      importIoSnapshots(db, {
+    return reportIoSnapshotResolution({
+      status: 'fetched',
+      snapshots: store.import({
         requestedCommit: head,
         commits: result.commits,
         snapshotsJson: JSON.stringify(result.snapshots),
         updatedAt: result.updatedAt,
         clientVersion: `nx/${nxVersion}`,
-      })
-    );
+      }),
+    });
   } catch (e) {
     // No fallback to an older set for this commit: it would hash from a
     // recording the run could not refresh, and CI can hash natively instead.
@@ -148,49 +152,29 @@ async function loadCloudClient(runnerOptions: IoSnapshotCloudOptions) {
   return nxCloudClient;
 }
 
-const OFFLINE_CODES = new Set([
-  'ECONNABORTED',
-  'ECONNREFUSED',
-  'ECONNRESET',
-  'ENOTFOUND',
-  'EAI_AGAIN',
-  'ETIMEDOUT',
-]);
-
-function reasonFromError(e: unknown): string {
-  const code = (e as { code?: unknown })?.code;
-  if (typeof code !== 'string') return 'fetch-failed';
-  if (OFFLINE_CODES.has(code)) return 'offline';
-  return code.toLowerCase().replace(/_/g, '-');
-}
-
-function errorMessage(e: unknown): string {
-  return e instanceof Error ? e.message : String(e);
-}
-
 /** Warns or logs what a resolution came to; also used by the daemon path. */
-export function reportIoSnapshotResolution(result: IoSnapshots): IoSnapshots {
-  if (result.status === 'skipped') {
-    if (WARNED_REASONS.has(result.reason)) {
+export function reportIoSnapshotResolution(
+  outcome: IoSnapshotOutcome
+): IoSnapshotOutcome {
+  if (outcome.status === 'skipped') {
+    if (WARNED_REASONS.has(outcome.reason)) {
       output.warn({
-        title: `Nx Cloud I/O snapshots are unavailable (${result.reason})`,
-        bodyLines: [result.message, 'Tasks will be hashed without them.'],
+        title: `Nx Cloud I/O snapshots are unavailable (${outcome.reason})`,
+        bodyLines: [outcome.message, 'Tasks will be hashed without them.'],
       });
     } else {
       logger.verbose(
-        `Skipping Nx Cloud I/O snapshots (${result.reason}): ${result.message}`
+        `Skipping Nx Cloud I/O snapshots (${outcome.reason}): ${outcome.message}`
       );
     }
-    return result;
+    return outcome;
   }
-  const { resolution } = result;
+  const { resolution } = outcome.snapshots;
   logger.verbose(
-    `Nx Cloud I/O snapshots ${result.status}${
-      result.reason ? ` (${result.reason})` : ''
-    }: ${resolution.tasks} tasks for ${resolution.requestedCommit.slice(
+    `Nx Cloud I/O snapshots ${outcome.status}: ${resolution.tasks} tasks for ${resolution.requestedCommit.slice(
       0,
       12
     )} from ${resolution.sourceCommits.length} commit(s), digest ${resolution.digest}`
   );
-  return result;
+  return outcome;
 }

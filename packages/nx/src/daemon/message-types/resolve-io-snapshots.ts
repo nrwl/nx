@@ -16,13 +16,11 @@ export type HandleResolveIoSnapshotsMessage = {
   ioSnapshotEnv: IoSnapshotEnvMessage;
 };
 
-/** What a resolved set looks like over the socket; the handle itself cannot cross it. */
-export type ResolvedIoSnapshots = {
-  status: string;
-  reason: string;
-  message: string;
-  commit?: string;
-} | null;
+/** An `IoSnapshotOutcome` over the socket: the handle cannot cross it, its commit does. */
+export type ResolvedIoSnapshots =
+  | { status: 'fetched' | 'cached'; commit: string }
+  | { status: 'skipped'; reason: string; message: string }
+  | null;
 
 export function isHandleResolveIoSnapshotsMessage(
   message: unknown

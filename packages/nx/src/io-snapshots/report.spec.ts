@@ -1,17 +1,12 @@
 import { formatIoSnapshotSummary, ioSnapshotReportToJson } from './report';
 import type { IoSnapshotReport, IoSnapshots } from '../native';
+import type { IoSnapshotOutcome } from './outcome';
 
-function fetchResult(
-  partial: Partial<Record<'status' | 'reason' | 'message' | 'commit', string>>
-): IoSnapshots {
-  return {
-    status: 'skipped',
-    reason: null,
-    message: null,
-    commit: null,
-    resolution: null,
-    ...partial,
-  } as unknown as IoSnapshots;
+function resolved(
+  status: 'fetched' | 'cached',
+  commit = 'abc123'
+): IoSnapshotOutcome {
+  return { status, snapshots: { commit } as IoSnapshots };
 }
 
 const resolution = {
@@ -76,13 +71,7 @@ describe('formatIoSnapshotSummary', () => {
       ],
       resolution,
     };
-    const summary = formatIoSnapshotSummary(
-      result,
-      fetchResult({
-        status: 'cached',
-        commit: 'abc123',
-      })
-    );
+    const summary = formatIoSnapshotSummary(result, resolved('cached'));
     expect(summary.line).toBe(
       'I/O snapshots: 2 tasks hashed from snapshot (1 with observed outputs), 5 tasks fell back (2 missing, 1 disabled, 1 escapes-workspace, 1 root-anchored-glob)'
     );
@@ -104,10 +93,11 @@ describe('formatIoSnapshotSummary', () => {
       diagnostics: [{ reason: 'no-bundle' }],
     };
     expect(
-      formatIoSnapshotSummary(
-        result,
-        fetchResult({ status: 'skipped', reason: 'offline' })
-      ).line
+      formatIoSnapshotSummary(result, {
+        status: 'skipped',
+        reason: 'offline',
+        message: 'ENOTFOUND',
+      }).line
     ).toBe('I/O snapshots: none used (offline)');
     expect(
       formatIoSnapshotSummary(
@@ -132,10 +122,8 @@ describe('formatIoSnapshotSummary', () => {
       diagnostics: [{ reason: 'disabled', taskId: 'c:e2e' }],
       resolution,
     };
-    expect(
-      ioSnapshotReportToJson(result, fetchResult({ status: 'fetched' }))
-    ).toEqual({
-      fetch: { status: 'fetched', reason: undefined, message: undefined },
+    expect(ioSnapshotReportToJson(result, resolved('fetched'))).toEqual({
+      fetch: { status: 'fetched' },
       resolution,
       used: ['a:build', 'b:build'],
       diagnostics: [{ reason: 'disabled', taskId: 'c:e2e' }],

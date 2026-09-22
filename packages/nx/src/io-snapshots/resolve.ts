@@ -1,10 +1,6 @@
 import type { NxJsonConfiguration } from '../config/nx-json';
 import { daemonClient } from '../daemon/client/client';
-import {
-  loadIoSnapshots,
-  skippedIoSnapshots,
-  type IoSnapshots,
-} from '../native';
+import { IoSnapshotStore } from '../native';
 import { getDbConnection } from '../utils/db-connection';
 import {
   ioSnapshotEnv,
@@ -12,6 +8,11 @@ import {
   type IoSnapshotCloudOptions,
 } from './config';
 import { fetchIoSnapshotsForRun, reportIoSnapshotResolution } from './fetch';
+import {
+  skippedIoSnapshots,
+  storedIoSnapshots,
+  type IoSnapshotOutcome,
+} from './outcome';
 
 /**
  * This run's snapshot set. With the daemon, the daemon fetches it and writes
@@ -22,7 +23,7 @@ import { fetchIoSnapshotsForRun, reportIoSnapshotResolution } from './fetch';
 export async function resolveIoSnapshotsForRun(
   nxJson: NxJsonConfiguration,
   runnerOptions: IoSnapshotCloudOptions
-): Promise<IoSnapshots | null> {
+): Promise<IoSnapshotOutcome | null> {
   if (!daemonClient.enabled()) {
     return fetchIoSnapshotsForRun(nxJson, runnerOptions);
   }
@@ -44,17 +45,18 @@ export async function resolveIoSnapshotsForRun(
   if (!resolved) {
     return null;
   }
-  if (!resolved.commit) {
+  if (resolved.status === 'skipped') {
     return reportIoSnapshotResolution(
       skippedIoSnapshots(resolved.reason, resolved.message)
     );
   }
+  const stored = storedIoSnapshots(
+    new IoSnapshotStore(getDbConnection()),
+    resolved.commit
+  );
   return reportIoSnapshotResolution(
-    loadIoSnapshots(
-      getDbConnection(),
-      resolved.commit,
-      resolved.reason || undefined,
-      resolved.message || undefined
-    )
+    stored.status === 'skipped'
+      ? stored
+      : { status: resolved.status, snapshots: stored.snapshots }
   );
 }

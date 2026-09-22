@@ -3,7 +3,7 @@ import type { ProjectGraph } from '../config/project-graph';
 import type { TaskGraph } from '../config/task-graph';
 import {
   ioSnapshotReport,
-  loadIoSnapshots,
+  IoSnapshotStore,
   type IoSnapshotDiagnostic,
   type IoSnapshotReport,
   type IoSnapshotResolution,
@@ -13,6 +13,7 @@ import { readProjectsConfigurationFromProjectGraph } from '../project-graph/proj
 import { getExecutorForTask } from '../tasks-runner/utils';
 import { getDbConnection } from '../utils/db-connection';
 import { ioSnapshotCommitForHead, isIoSnapshotFetchEnabled } from './config';
+import { storedIoSnapshots, type IoSnapshotOutcome } from './outcome';
 
 export type {
   IoSnapshotDiagnostic,
@@ -22,19 +23,21 @@ export type {
 } from '../native';
 
 /**
- * The bundle fetched for HEAD, read from the cache only. Callers that must
+ * The set stored for HEAD, read from the database only. Callers that must
  * resolve what a run would hash fetch first (see `fetchIoSnapshotsForRun`);
  * this never reaches the network itself. `null` when snapshots are off for
- * this workspace.
+ * this workspace or HEAD cannot be resolved.
  */
-export function loadIoSnapshotsForHead(
+export function getIoSnapshotsForHead(
   nxJson: NxJsonConfiguration
-): IoSnapshots | null {
+): IoSnapshotOutcome | null {
   if (!isIoSnapshotFetchEnabled(nxJson)) {
     return null;
   }
   const head = ioSnapshotCommitForHead();
-  return head ? loadIoSnapshots(getDbConnection(), head) : null;
+  return head
+    ? storedIoSnapshots(new IoSnapshotStore(getDbConnection()), head)
+    : null;
 }
 
 const customHasherMemo = new WeakMap<
@@ -106,8 +109,8 @@ export function projectRoots(
 /**
  * Reports which tasks in `taskGraph` hash from the snapshot bundle and why
  * the rest do not, with the same eligibility walk the planner uses, without
- * building a planner (no project-graph transfer). `snapshots` is the fetch
- * result, a commit to read from the database, or omitted to read HEAD's.
+ * building a planner (no project-graph transfer). `snapshots` is this run's
+ * set, a commit to read from the database, or omitted to read HEAD's.
  * Returns `null` when snapshots are off. Never fetches, never throws.
  *
  * The export name and module path are probed by the Nx Cloud client bundle
@@ -119,15 +122,24 @@ export function buildIoSnapshotOverrides(
   nxJson: NxJsonConfiguration,
   snapshots?: IoSnapshots | string
 ): IoSnapshotReport | null {
-  const resolved =
+  const resolved: IoSnapshotOutcome | null =
     typeof snapshots === 'string'
-      ? loadIoSnapshots(getDbConnection(), snapshots)
-      : (snapshots ?? loadIoSnapshotsForHead(nxJson));
+      ? storedIoSnapshots(new IoSnapshotStore(getDbConnection()), snapshots)
+      : snapshots
+        ? { status: 'cached', snapshots }
+        : getIoSnapshotsForHead(nxJson);
   if (!resolved) {
     return null;
   }
+  if (resolved.status === 'skipped') {
+    return {
+      used: [],
+      tasksWithOutputs: [],
+      diagnostics: [{ reason: resolved.reason, message: resolved.message }],
+    };
+  }
   return ioSnapshotReport(
-    resolved,
+    resolved.snapshots,
     taskGraph,
     optedOutTaskIds(projectGraph, taskGraph),
     customHasherTaskIds(projectGraph, taskGraph),

@@ -33,6 +33,7 @@ import { resolveIoSnapshotsForRun } from '../io-snapshots/resolve';
 import { applyIoSnapshotOutputs } from '../io-snapshots/outputs';
 import { buildIoSnapshotOverrides } from '../io-snapshots/overrides';
 import { formatIoSnapshotSummary } from '../io-snapshots/report';
+import { snapshotsOf, type IoSnapshotOutcome } from '../io-snapshots/outcome';
 import {
   createNxKeyLicenseeInformation,
   getNxKeyInformation,
@@ -1011,7 +1012,11 @@ export async function invokeTasksRunner({
 
   // Must precede hashing: the bundle is the snapshot source for task hashes,
   // and observed outputs join the task outputs the hasher and cache see.
-  const ioSnapshots = await resolveIoSnapshotsForRun(nxJson, runnerOptions);
+  const ioSnapshotOutcome = await resolveIoSnapshotsForRun(
+    nxJson,
+    runnerOptions
+  );
+  const ioSnapshots = snapshotsOf(ioSnapshotOutcome);
   if (ioSnapshots) {
     applyIoSnapshotOutputs(projectGraph, taskGraph, ioSnapshots);
   }
@@ -1020,7 +1025,7 @@ export async function invokeTasksRunner({
     projectGraph,
     nxJson,
     runnerOptions,
-    ioSnapshots ?? undefined
+    ioSnapshots
   );
 
   // this is used for two reasons: to fetch all remote cache hits AND
@@ -1033,9 +1038,9 @@ export async function invokeTasksRunner({
     taskGraph,
     nxJson,
     taskDetails,
-    ioSnapshots ?? undefined
+    ioSnapshots
   );
-  reportIoSnapshots(ioSnapshots, projectGraph, taskGraph, nxJson, nxArgs);
+  reportIoSnapshots(ioSnapshotOutcome, projectGraph, taskGraph, nxJson, nxArgs);
   const taskResultsLifecycle = new TaskResultsLifeCycle();
   const compositedLifeCycle: LifeCycle = new CompositeLifeCycle([
     ...constructLifeCycles(lifeCycle, taskGraph, nxJson, nxArgs.skipNxCache),
@@ -1231,19 +1236,20 @@ function loadTasksRunner(modulePath: string): TasksRunner {
 }
 
 function reportIoSnapshots(
-  ioSnapshots: Awaited<ReturnType<typeof resolveIoSnapshotsForRun>>,
+  outcome: IoSnapshotOutcome | null,
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
   nxJson: NxJsonConfiguration,
   nxArgs: NxArgs
 ): void {
-  if (!ioSnapshots) return;
+  if (!outcome) return;
   if (!nxArgs.verbose && process.env.NX_VERBOSE_LOGGING !== 'true') return;
+  const snapshots = snapshotsOf(outcome);
   const summary = formatIoSnapshotSummary(
-    ioSnapshots.commit
-      ? buildIoSnapshotOverrides(projectGraph, taskGraph, nxJson, ioSnapshots)
+    snapshots
+      ? buildIoSnapshotOverrides(projectGraph, taskGraph, nxJson, snapshots)
       : null,
-    ioSnapshots
+    outcome
   );
   if (!summary) return;
   output.note({ title: summary.line, bodyLines: summary.bodyLines });

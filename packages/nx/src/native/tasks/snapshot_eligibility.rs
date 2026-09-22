@@ -134,18 +134,7 @@ pub(crate) fn resolve_scoped(
     inputs: &EligibilityInputs,
     scope: Option<&[&str]>,
 ) -> Resolved {
-    let Some(resolution) = snapshots.resolution_ref() else {
-        return Resolved {
-            tasks: HashMap::new(),
-            diagnostics: vec![IoSnapshotDiagnostic::run(
-                snapshots
-                    .reason()
-                    .unwrap_or_else(|| "no-bundle".to_string()),
-                snapshots.message(),
-            )],
-            resolution: None,
-        };
-    };
+    let resolution = snapshots.resolution_ref();
 
     let mut tasks = HashMap::new();
     let mut diagnostics = Vec::new();
@@ -542,9 +531,6 @@ pub fn io_snapshot_deferred_task_ids(
     snapshots: &IoSnapshots,
     task_graph: TaskGraph,
 ) -> Vec<String> {
-    if snapshots.resolution_ref().is_none() {
-        return vec![];
-    }
     let ids: Vec<&str> = task_graph.tasks.keys().map(String::as_str).collect();
     let entries = snapshots.entries_for(&ids).unwrap_or_default();
     let mut deferred: Vec<String> = task_graph

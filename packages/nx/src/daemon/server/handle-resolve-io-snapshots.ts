@@ -22,16 +22,12 @@ export async function handleResolveIoSnapshots(
     (payload.runnerOptions ?? {}) as IoSnapshotCloudOptions,
     payload.ioSnapshotEnv ?? {}
   );
-  const response: ResolvedIoSnapshots = resolved
-    ? {
-        status: resolved.status,
-        reason: resolved.reason,
-        message: resolved.message,
-        commit: resolved.commit ?? undefined,
-      }
-    : null;
-  if (resolved) {
-    rememberIoSnapshots(resolved);
+  let response: ResolvedIoSnapshots = null;
+  if (resolved?.status === 'skipped') {
+    response = resolved;
+  } else if (resolved) {
+    response = { status: resolved.status, commit: resolved.snapshots.commit };
+    rememberIoSnapshots(resolved.snapshots);
   }
   // An object, not a string: the client returns what the socket layer
   // parsed, and a string body comes back parsed too, so stringifying here

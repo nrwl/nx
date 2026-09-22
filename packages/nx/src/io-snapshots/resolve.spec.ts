@@ -4,21 +4,18 @@ const daemon = vi.hoisted(() => ({
   enabled: vi.fn(() => true),
   resolveIoSnapshots: vi.fn(),
 }));
-const native = vi.hoisted(() => ({
-  loadIoSnapshots: vi.fn(),
-  skippedIoSnapshots: vi.fn((reason: string, message: string) => ({
-    status: 'skipped',
-    reason,
-    message,
-  })),
-}));
+const store = vi.hoisted(() => ({ get: vi.fn() }));
 const fetched = vi.hoisted(() => ({
   fetchIoSnapshotsForRun: vi.fn(),
   isIoSnapshotFetchEnabled: vi.fn(() => true),
 }));
 
 vi.mock('../daemon/client/client', () => ({ daemonClient: daemon }));
-vi.mock('../native', () => native);
+vi.mock('../native', () => ({
+  IoSnapshotStore: vi.fn(function () {
+    return store;
+  }),
+}));
 vi.mock('../utils/db-connection', () => ({ getDbConnection: () => 'db' }));
 vi.mock('./config', () => ({
   isIoSnapshotFetchEnabled: fetched.isIoSnapshotFetchEnabled,
@@ -31,20 +28,19 @@ vi.mock('./fetch', () => ({
 
 describe('resolveIoSnapshotsForRun', () => {
   const nxJson = {} as any;
-  const stored = { status: 'cached', reason: null };
+  const set = { commit: 'head', resolution: { digest: 'd' } };
+  const stored = { status: 'cached', snapshots: set };
 
   beforeEach(() => {
     vi.clearAllMocks();
     daemon.enabled.mockReturnValue(true);
     fetched.isIoSnapshotFetchEnabled.mockReturnValue(true);
-    native.loadIoSnapshots.mockReturnValue(stored);
+    store.get.mockReturnValue(set);
   });
 
   it('lets the daemon fetch and store, then reads the stored set back', async () => {
     daemon.resolveIoSnapshots.mockResolvedValue({
       status: 'fetched',
-      reason: '',
-      message: '',
       commit: 'head',
     });
     const result = await resolveIoSnapshotsForRun(nxJson, { accessToken: 't' });
@@ -54,13 +50,9 @@ describe('resolveIoSnapshotsForRun', () => {
     );
     // The fetch itself belongs to the daemon.
     expect(fetched.fetchIoSnapshotsForRun).not.toHaveBeenCalled();
-    expect(native.loadIoSnapshots).toHaveBeenCalledWith(
-      'db',
-      'head',
-      undefined,
-      undefined
-    );
-    expect(result).toBe(stored);
+    expect(store.get).toHaveBeenCalledWith('head');
+    // The status is the daemon's: it fetched, this process only read.
+    expect(result).toEqual({ status: 'fetched', snapshots: set });
   });
 
   it('keeps the reason the daemon gives when it stored nothing', async () => {
@@ -69,27 +61,24 @@ describe('resolveIoSnapshotsForRun', () => {
       reason: 'offline',
       message: 'ENOTFOUND',
     });
-    expect(await resolveIoSnapshotsForRun(nxJson, {})).toMatchObject({
+    expect(await resolveIoSnapshotsForRun(nxJson, {})).toEqual({
       status: 'skipped',
       reason: 'offline',
+      message: 'ENOTFOUND',
     });
-    expect(native.loadIoSnapshots).not.toHaveBeenCalled();
+    expect(store.get).not.toHaveBeenCalled();
   });
 
-  it('carries the daemon reason into the local load', async () => {
+  it('skips when the commit the daemon named is not stored', async () => {
     daemon.resolveIoSnapshots.mockResolvedValue({
       status: 'cached',
-      reason: 'no-bundle',
-      message: 'nothing stored yet',
       commit: 'head',
     });
-    await resolveIoSnapshotsForRun(nxJson, {});
-    expect(native.loadIoSnapshots).toHaveBeenCalledWith(
-      'db',
-      'head',
-      'no-bundle',
-      'nothing stored yet'
-    );
+    store.get.mockReturnValue(null);
+    expect(await resolveIoSnapshotsForRun(nxJson, {})).toMatchObject({
+      status: 'skipped',
+      reason: 'no-bundle',
+    });
   });
 
   it('fetches in this process when the daemon cannot answer', async () => {

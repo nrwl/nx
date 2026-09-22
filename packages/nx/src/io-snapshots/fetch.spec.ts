@@ -1,21 +1,19 @@
 import { fetchIoSnapshotsForRun } from './fetch';
 
-const native = vi.hoisted(() => ({
-  importIoSnapshots: vi.fn(),
-  loadIoSnapshots: vi.fn(),
-  readIoSnapshotResolution: vi.fn(),
-  skippedIoSnapshots: vi.fn((reason: string, message: string) => ({
-    status: 'skipped',
-    reason,
-    message,
-  })),
+const store = vi.hoisted(() => ({
+  import: vi.fn(),
+  get: vi.fn(),
 }));
 const cloud = vi.hoisted(() => ({
   verifyOrUpdateNxCloudClient: vi.fn(),
   readIoSnapshots: vi.fn(),
 }));
 
-vi.mock('../native', () => native);
+vi.mock('../native', () => ({
+  IoSnapshotStore: vi.fn(function () {
+    return store;
+  }),
+}));
 vi.mock('../nx-cloud/update-manager', () => ({
   verifyOrUpdateNxCloudClient: cloud.verifyOrUpdateNxCloudClient,
 }));
@@ -38,17 +36,14 @@ describe('fetchIoSnapshotsForRun', () => {
     NX_IO_SNAPSHOTS: 'true',
     ...overrides,
   });
-  const cached = (fetchedAt: number, updatedAt = 7) => ({
-    fetchedAt,
-    updatedAt,
-    requestedCommit: 'head',
-  });
-  const loaded = (reason?: string) => ({
-    status: 'cached',
-    reason: reason ?? null,
+  /** A stored set for HEAD, fetched at `fetchedAt`. */
+  const stored = (fetchedAt: number, updatedAt = 7) => ({
+    commit: 'head',
     resolution: {
-      tasks: 1,
+      fetchedAt,
+      updatedAt,
       requestedCommit: 'head',
+      tasks: 1,
       sourceCommits: [],
       digest: 'd',
     },
@@ -56,6 +51,8 @@ describe('fetchIoSnapshotsForRun', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    store.get.mockReset();
+    store.import.mockReset();
     delete process.env.NX_IO_SNAPSHOTS;
     cloud.verifyOrUpdateNxCloudClient.mockResolvedValue({
       nxCloudClient: {
@@ -63,8 +60,7 @@ describe('fetchIoSnapshotsForRun', () => {
         readIoSnapshots: cloud.readIoSnapshots,
       },
     });
-    native.loadIoSnapshots.mockReturnValue(loaded());
-    native.readIoSnapshotResolution.mockReturnValue(null);
+    store.get.mockReturnValue(null);
   });
 
   // Connecting the workspace is not the opt-in: a run that says nothing
@@ -86,9 +82,9 @@ describe('fetchIoSnapshotsForRun', () => {
       updatedAt: 9,
       snapshots: {},
     });
-    native.importIoSnapshots.mockReturnValue(loaded());
+    store.import.mockReturnValue(stored(Date.now()));
     expect(await fetchIoSnapshotsForRun(nxJson, {}, optedIn())).toMatchObject({
-      status: 'cached',
+      status: 'fetched',
     });
   });
 
@@ -103,11 +99,12 @@ describe('fetchIoSnapshotsForRun', () => {
     expect(cloud.verifyOrUpdateNxCloudClient).not.toHaveBeenCalled();
   });
 
-  it('serves a fresh cached bundle without loading the client', async () => {
-    native.readIoSnapshotResolution.mockReturnValue(cached(Date.now()));
+  it('serves a fresh stored set without loading the client', async () => {
+    const set = stored(Date.now());
+    store.get.mockReturnValue(set);
     const result = await fetchIoSnapshotsForRun(nxJson, {}, optedIn());
-    expect(result.status).toBe('cached');
-    expect(native.loadIoSnapshots).toHaveBeenCalledWith('db', 'head');
+    expect(result).toEqual({ status: 'cached', snapshots: set });
+    expect(store.get).toHaveBeenCalledWith('head');
     expect(cloud.verifyOrUpdateNxCloudClient).not.toHaveBeenCalled();
   });
 
@@ -115,21 +112,18 @@ describe('fetchIoSnapshotsForRun', () => {
   // recording can appear for the same commit: past an hour the run asks.
   it('asks again once a stored set is older than an hour', async () => {
     cloud.readIoSnapshots.mockResolvedValue(null);
-    native.readIoSnapshotResolution.mockReturnValue(
-      cached(Date.now() - 59 * 60 * 1000)
-    );
+    store.get.mockReturnValue(stored(Date.now() - 59 * 60 * 1000));
     await fetchIoSnapshotsForRun(nxJson, {}, optedIn());
     expect(cloud.readIoSnapshots).not.toHaveBeenCalled();
 
-    native.readIoSnapshotResolution.mockReturnValue(
-      cached(Date.now() - 61 * 60 * 1000)
-    );
+    store.get.mockReturnValue(stored(Date.now() - 61 * 60 * 1000));
     await fetchIoSnapshotsForRun(nxJson, {}, optedIn());
     expect(cloud.readIoSnapshots).toHaveBeenCalledTimes(1);
   });
 
-  it('asks the client with knownUpdatedAt and keeps the cache when unchanged', async () => {
-    native.readIoSnapshotResolution.mockReturnValue(cached(0, 7));
+  it('asks the client with knownUpdatedAt and keeps the stored set when unchanged', async () => {
+    const set = stored(0, 7);
+    store.get.mockReturnValue(set);
     cloud.readIoSnapshots.mockResolvedValue(null);
     const result = await fetchIoSnapshotsForRun(
       nxJson,
@@ -142,8 +136,8 @@ describe('fetchIoSnapshotsForRun', () => {
         nxCloudOptions: { accessToken: 't' },
       })
     );
-    expect(native.importIoSnapshots).not.toHaveBeenCalled();
-    expect(result.status).toBe('cached');
+    expect(store.import).not.toHaveBeenCalled();
+    expect(result).toEqual({ status: 'cached', snapshots: set });
   });
 
   it('imports what the client read', async () => {
@@ -154,14 +148,10 @@ describe('fetchIoSnapshotsForRun', () => {
         'web:build': { commit: 'parent', inputs: ['apps/web/**'], outputs: [] },
       },
     });
-    native.importIoSnapshots.mockReturnValue({
-      status: 'fetched',
-      reason: null,
-      resolution: loaded().resolution,
-    });
+    const set = stored(Date.now());
+    store.import.mockReturnValue(set);
     const result = await fetchIoSnapshotsForRun(nxJson, {}, optedIn());
-    expect(native.importIoSnapshots).toHaveBeenCalledWith(
-      'db',
+    expect(store.import).toHaveBeenCalledWith(
       expect.objectContaining({
         requestedCommit: 'head',
         commits: ['head', 'parent'],
@@ -175,7 +165,7 @@ describe('fetchIoSnapshotsForRun', () => {
         }),
       })
     );
-    expect(result.status).toBe('fetched');
+    expect(result).toEqual({ status: 'fetched', snapshots: set });
   });
 
   it('hashes natively when the read fails, stored set or not', async () => {
@@ -186,26 +176,57 @@ describe('fetchIoSnapshotsForRun', () => {
 
     // A stored set for this commit is NOT reused when the fetch fails: the
     // run hashes natively rather than from a recording it could not refresh.
-    native.readIoSnapshotResolution.mockReturnValue(cached(0));
-    expect(await fetchIoSnapshotsForRun(nxJson, {}, optedIn())).toMatchObject({
+    store.get.mockReturnValue(stored(0));
+    expect(await fetchIoSnapshotsForRun(nxJson, {}, optedIn())).toEqual({
       status: 'skipped',
       reason: 'offline',
+      message: 'getaddrinfo ENOTFOUND',
     });
-    expect(native.loadIoSnapshots).not.toHaveBeenCalled();
 
-    native.readIoSnapshotResolution.mockReturnValue(null);
+    store.get.mockReturnValue(null);
     const skipped = await fetchIoSnapshotsForRun(nxJson, {}, optedIn());
     expect(skipped).toMatchObject({ status: 'skipped', reason: 'offline' });
   });
 
-  it('maps the client error codes to reasons', async () => {
+  it('maps client and store error codes to reasons', async () => {
     cloud.readIoSnapshots.mockRejectedValue(
-      Object.assign(new Error('bad'), { code: 'INVALID_RESPONSE' })
+      Object.assign(new Error('bad'), { code: 'UNAUTHORIZED' })
     );
     expect(await fetchIoSnapshotsForRun(nxJson, {}, optedIn())).toMatchObject({
       status: 'skipped',
-      reason: 'invalid-response',
+      reason: 'unauthorized',
     });
+
+    cloud.readIoSnapshots.mockResolvedValue({
+      commits: ['head'],
+      updatedAt: 9,
+      snapshots: {},
+    });
+    store.import.mockImplementation(() => {
+      throw Object.assign(new Error('disk full'), { code: 'WRITE_FAILED' });
+    });
+    expect(await fetchIoSnapshotsForRun(nxJson, {}, optedIn())).toMatchObject({
+      status: 'skipped',
+      reason: 'write-failed',
+    });
+  });
+
+  it('asks again when the stored set cannot be read', async () => {
+    store.get.mockImplementation(() => {
+      throw Object.assign(new Error('bad row'), { code: 'INVALID_BUNDLE' });
+    });
+    cloud.readIoSnapshots.mockResolvedValue({
+      commits: ['head'],
+      updatedAt: 9,
+      snapshots: {},
+    });
+    store.import.mockReturnValue(stored(Date.now()));
+    expect(await fetchIoSnapshotsForRun(nxJson, {}, optedIn())).toMatchObject({
+      status: 'fetched',
+    });
+    expect(cloud.readIoSnapshots).toHaveBeenCalledWith(
+      expect.objectContaining({ knownUpdatedAt: undefined })
+    );
   });
 
   it('reports a client that predates snapshots', async () => {

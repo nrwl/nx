@@ -133,24 +133,33 @@ export declare class ImportResult {
 }
 
 /**
- * The snapshot set for one commit, plus what resolving it reported. Handed
- * to the hash planner as-is. Entries are read from the workspace database
- * per task as they are asked for, and remembered for the handle's lifetime,
- * so a run costs the tasks it plans rather than the workspace's whole set.
- * `resolution` is `None` when every task hashes natively (status `skipped`).
+ * One commit's stored snapshot set. Handed to the hash planner as-is.
+ * Entries are read from the workspace database per task as they are asked
+ * for, and remembered for the handle's lifetime, so a run costs the tasks it
+ * plans rather than the workspace's whole set.
  */
 export declare class IoSnapshots {
-  /** `fetched` | `cached` | `skipped` */
-  get status(): string
+  get commit(): string
+  get resolution(): IoSnapshotResolution
+}
+
+/**
+ * The workspace database's snapshot sets, one per commit. Failures throw
+ * with a `code` JS maps to a skip reason: `INVALID_RESPONSE`,
+ * `WRITE_FAILED` or `INVALID_BUNDLE`.
+ */
+export declare class IoSnapshotStore {
+  constructor(db: ExternalObject<NxDbConnection>)
   /**
-   * Why the fetch was skipped, or `no-bundle` / `invalid-bundle` from
-   * `loadIoSnapshots`.
+   * Stores the set the Nx Cloud client read for `requested_commit`,
+   * replacing what the commit had, and returns it with every entry in hand.
    */
-  get reason(): string | null
-  get message(): string | null
-  /** The commit whose stored set this is, when one was resolved. */
-  get commit(): string | null
-  get resolution(): IoSnapshotResolution | null
+  import(options: IoSnapshotImportOptions): IoSnapshots
+  /**
+   * The stored set for `commit`, without touching the network; `null`
+   * when none is stored. Reads only the commit's summary row.
+   */
+  get(commit: string): IoSnapshots | null
 }
 
 export declare class NxCache {
@@ -685,13 +694,6 @@ export interface HashInputs {
 }
 
 /**
- * Stores the snapshot set the Nx Cloud client read for `requested_commit`
- * and returns it as this run's set. Never fails the caller: a payload nx
- * cannot read or a database it cannot write is reported as `skipped`.
- */
-export declare function importIoSnapshots(db: ExternalObject<NxDbConnection>, options: IoSnapshotImportOptions): IoSnapshots
-
-/**
  * Initialize telemetry using a DB connection.
  * Gets/creates the session ID from the DB, stores the connection
  * for persisting session refreshes on flush, and returns the session ID
@@ -844,13 +846,6 @@ export interface Link {
   href: string
 }
 
-/**
- * The stored set for `commit`, without touching the network: `nx show`,
- * `nx graph` and the daemon load the commit the run resolved. `reason` and
- * `message` carry what the caller already knows about the set.
- */
-export declare function loadIoSnapshots(db: ExternalObject<NxDbConnection>, commit: string, reason?: string | undefined | null, message?: string | undefined | null): IoSnapshots
-
 export declare function logDebug(message: string): void
 
 /**
@@ -962,12 +957,6 @@ export interface ProjectGraph {
   externalNodes: Record<string, ExternalNode>
 }
 
-/**
- * The resolution stored for `commit`, without reading any entries: enough
- * to decide whether to ask Nx Cloud at all and what `knownUpdatedAt` to send.
- */
-export declare function readIoSnapshotResolution(db: ExternalObject<NxDbConnection>, commit: string): IoSnapshotResolution | null
-
 export declare function remove(src: string): void
 
 export declare function restoreTerminal(): void
@@ -980,12 +969,6 @@ export declare const enum RunMode {
 export interface RuntimeInput {
   runtime: string
 }
-
-/**
- * A result that hashes every task natively, for the cases JS decides
- * (no git HEAD, no Nx Cloud client, a read that failed with nothing cached).
- */
-export declare function skippedIoSnapshots(reason: string, message: string): IoSnapshots
 
 export declare const enum SupportedEditor {
   VSCode = 0,

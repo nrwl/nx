@@ -6,9 +6,8 @@ import {
   closeDbConnection,
   connectToNxDb,
   HashPlanner,
-  importIoSnapshots,
+  IoSnapshotStore,
   ioSnapshotDeferredTaskIds,
-  loadIoSnapshots,
   TaskHasher,
   testOnlyTransferFileMap,
   transferProjectGraph,
@@ -1940,7 +1939,7 @@ describe('task planner', () => {
       >
     ) {
       const commit = `c${bundleCount++}`.padEnd(40, 'c');
-      importIoSnapshots(snapshotDb, {
+      new IoSnapshotStore(snapshotDb).import({
         requestedCommit: commit,
         commits: [commit],
         clientVersion: 'nx/test',
@@ -1958,7 +1957,7 @@ describe('task planner', () => {
           )
         ),
       });
-      return loadIoSnapshots(snapshotDb, commit);
+      return new IoSnapshotStore(snapshotDb).get(commit);
     }
 
     const PARENT_NEG = '!libs/parent/**/*.spec.ts';

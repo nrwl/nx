@@ -15,14 +15,15 @@ vi.mock('./project-graph-incremental-recomputation', () => ({
   }),
 }));
 vi.mock('../../config/configuration', () => ({ readNxJson: () => ({}) }));
-const mockLoadIoSnapshots = vi.fn((db: string, commit: string) => ({
+const mockGetStored = vi.fn((commit: string) => ({
   commit,
   resolution: { digest: `digest-of-${commit}` },
 }));
 // Lazy so the hoisted mock factory does not touch the const before it exists.
 vi.mock('../../native', () => ({
-  loadIoSnapshots: (db: string, commit: string) =>
-    mockLoadIoSnapshots(db, commit),
+  IoSnapshotStore: vi.fn(function () {
+    return { get: (commit: string) => mockGetStored(commit) };
+  }),
 }));
 vi.mock('../../utils/db-connection', () => ({ getDbConnection: () => 'db' }));
 
@@ -43,17 +44,17 @@ describe('handleHashTasks', () => {
     collectInputs: false,
   };
 
-  it('loads the stored set for the commit and keeps one handle while its digest holds', async () => {
+  it('gets the stored set for the commit and keeps one handle while its digest holds', async () => {
     const commit = 'abc';
     await handleHashTasks({ ...base, ioSnapshots: { commit } });
-    expect(mockLoadIoSnapshots).toHaveBeenLastCalledWith('db', commit);
+    expect(mockGetStored).toHaveBeenLastCalledWith(commit);
     const first = hashTasks.mock.lastCall[5];
     expect(first).toMatchObject({ commit });
     await handleHashTasksUpfront({ ...base, ioSnapshots: { commit } });
     // Identity, not shape: the mock returns an equal object on every call.
     expect(hashTasksUpfront.mock.lastCall[5]).toBe(first);
     // A re-import for the same commit (new digest) replaces the handle.
-    mockLoadIoSnapshots.mockImplementationOnce((db, c) => ({
+    mockGetStored.mockImplementationOnce((c) => ({
       commit: c,
       resolution: { digest: 'new' },
     }));
@@ -61,13 +62,19 @@ describe('handleHashTasks', () => {
     const replaced = hashTasks.mock.lastCall[5];
     expect(replaced).not.toBe(first);
     // A different commit is a different handle even when the digests match.
-    mockLoadIoSnapshots.mockImplementationOnce((db, c) => ({
+    mockGetStored.mockImplementationOnce((c) => ({
       commit: c,
       resolution: { digest: 'new' },
     }));
     await handleHashTasks({ ...base, ioSnapshots: { commit: 'def' } });
     expect(hashTasks.mock.lastCall[5]).toMatchObject({ commit: 'def' });
     expect(hashTasks.mock.lastCall[5]).not.toBe(replaced);
+  });
+
+  it('hashes natively when the commit has no stored set', async () => {
+    mockGetStored.mockImplementationOnce(() => null);
+    await handleHashTasks({ ...base, ioSnapshots: { commit: 'gone' } });
+    expect(hashTasks.mock.lastCall[5]).toBeUndefined();
   });
 
   it('passes nothing when an older client omits the field', async () => {

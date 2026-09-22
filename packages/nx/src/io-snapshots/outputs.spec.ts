@@ -5,9 +5,8 @@ import type { TaskGraph } from '../config/task-graph';
 import {
   closeDbConnection,
   connectToNxDb,
-  importIoSnapshots,
+  IoSnapshotStore,
   ioSnapshotDeferredTaskIds,
-  loadIoSnapshots,
 } from '../native';
 
 vi.mock('../tasks-runner/utils', () => ({
@@ -76,7 +75,7 @@ function snapshotsFor(
   entries: Record<string, { inputs?: string[]; outputs?: string[] }>
 ) {
   const commit = `a${bundles++}`.padEnd(40, 'a');
-  importIoSnapshots(snapshotDb, {
+  new IoSnapshotStore(snapshotDb).import({
     requestedCommit: commit,
     commits: [commit],
     clientVersion: 'nx/test',
@@ -89,7 +88,7 @@ function snapshotsFor(
       )
     ),
   });
-  return loadIoSnapshots(snapshotDb, commit);
+  return new IoSnapshotStore(snapshotDb).get(commit);
 }
 
 describe('io snapshot outputs', () => {

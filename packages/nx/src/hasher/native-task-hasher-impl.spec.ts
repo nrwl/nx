@@ -7,8 +7,7 @@ import {
   closeDbConnection,
   connectToNxDb,
   HashPlanner,
-  importIoSnapshots,
-  loadIoSnapshots,
+  IoSnapshotStore,
 } from '../native';
 import { join } from 'path';
 import { TaskGraph } from '../config/task-graph';
@@ -1714,7 +1713,7 @@ describe('native task hasher', () => {
       'io-snapshots'
     );
     const bundle = (inputs: string[]) => {
-      importIoSnapshots(snapshotDb, {
+      new IoSnapshotStore(snapshotDb).import({
         requestedCommit: commit,
         commits: [commit],
         clientVersion: 'nx/test',
@@ -1722,7 +1721,7 @@ describe('native task hasher', () => {
           'child:compile': { commit, inputs, outputs: ['dist/child'] },
         }),
       });
-      return loadIoSnapshots(snapshotDb, commit);
+      return new IoSnapshotStore(snapshotDb).get(commit);
     };
     const task = taskGraph.tasks['child:compile'];
     const hashWith = async (inputs: string[]) =>
@@ -1750,7 +1749,7 @@ describe('native task hasher', () => {
       'io-snapshots'
     );
     const bundle = (inputs: string[]) => {
-      importIoSnapshots(snapshotDb, {
+      new IoSnapshotStore(snapshotDb).import({
         requestedCommit: commit,
         commits: [commit],
         clientVersion: 'nx/test',
@@ -1758,7 +1757,7 @@ describe('native task hasher', () => {
           'child:compile': { commit, inputs, outputs: [] },
         }),
       });
-      return loadIoSnapshots(snapshotDb, commit);
+      return new IoSnapshotStore(snapshotDb).get(commit);
     };
     const snapshots = bundle(['libs/child/observed.txt']);
     const task = taskGraph.tasks['child:compile'];

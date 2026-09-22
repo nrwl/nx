@@ -2,8 +2,8 @@ import type {
   IoSnapshotDiagnostic,
   IoSnapshotReport,
   IoSnapshotResolution,
-  IoSnapshots,
 } from '../native';
+import type { IoSnapshotOutcome } from './outcome';
 
 export type { IoSnapshotReport } from '../native';
 
@@ -32,7 +32,7 @@ export interface IoSnapshotReportJson {
  */
 export function formatIoSnapshotSummary(
   result: IoSnapshotReport | null,
-  fetch: IoSnapshots | null
+  fetch: IoSnapshotOutcome | null
 ): IoSnapshotSummary | null {
   if (!result) {
     return null;
@@ -62,9 +62,9 @@ export function formatIoSnapshotSummary(
   const bodyLines: string[] = [];
   if (fetch) {
     bodyLines.push(
-      `bundle: ${fetch.status}${fetch.reason ? ` (${fetch.reason})` : ''}${
-        fetch.commit ? ` for ${fetch.commit}` : ''
-      }`
+      fetch.status === 'skipped'
+        ? `bundle: skipped (${fetch.reason})`
+        : `bundle: ${fetch.status} for ${fetch.snapshots.commit}`
     );
   }
   if (result.resolution) {
@@ -80,18 +80,16 @@ export function formatIoSnapshotSummary(
 
 export function ioSnapshotReportToJson(
   result: IoSnapshotReport | null,
-  fetch: IoSnapshots | null
+  fetch: IoSnapshotOutcome | null
 ): IoSnapshotReportJson | null {
   if (!result) {
     return null;
   }
   return {
     fetch: fetch
-      ? {
-          status: fetch.status,
-          reason: fetch.reason ?? undefined,
-          message: fetch.message ?? undefined,
-        }
+      ? fetch.status === 'skipped'
+        ? { status: fetch.status, reason: fetch.reason, message: fetch.message }
+        : { status: fetch.status }
       : null,
     resolution: result.resolution,
     used: [...result.used].sort(),
@@ -130,12 +128,14 @@ function describeDiagnostic(d: IoSnapshotDiagnostic): string {
 
 function describeBundleLevel(
   d: IoSnapshotDiagnostic,
-  fetch: IoSnapshots | null
+  fetch: IoSnapshotOutcome | null
 ): string {
   if (d.reason === 'invalid-bundle') {
     return `invalid bundle: ${d.message}`;
   }
-  return fetch?.reason ?? 'no bundle for this commit';
+  return fetch?.status === 'skipped'
+    ? fetch.reason
+    : 'no bundle for this commit';
 }
 
 function countByReason(

@@ -5,9 +5,11 @@ vi.mock('../../io-snapshots/fetch', () => ({
     fetchIoSnapshotsForRun(...args),
 }));
 vi.mock('../../config/configuration', () => ({ readNxJson: () => ({ a: 1 }) }));
-const loadIoSnapshots = vi.fn();
+const getStored = vi.fn();
 vi.mock('../../native', () => ({
-  loadIoSnapshots: (db: string, commit: string) => loadIoSnapshots(db, commit),
+  IoSnapshotStore: vi.fn(function () {
+    return { get: (commit: string) => getStored(commit) };
+  }),
 }));
 vi.mock('../../utils/db-connection', () => ({ getDbConnection: () => 'db' }));
 
@@ -23,15 +25,14 @@ describe('handleResolveIoSnapshots', () => {
     ioSnapshotEnv: { NX_IO_SNAPSHOTS: 'true' },
   };
 
+  const set = { commit: 'head', resolution: { digest: 'd' } };
+
   beforeEach(() => vi.clearAllMocks());
 
   it('fetches with the run env and reports what it stored', async () => {
     fetchIoSnapshotsForRun.mockResolvedValue({
       status: 'fetched',
-      reason: '',
-      message: '',
-      commit: 'head',
-      resolution: { digest: 'd' },
+      snapshots: set,
     });
     const { response } = await handleResolveIoSnapshots(payload);
     expect(fetchIoSnapshotsForRun).toHaveBeenCalledWith(
@@ -39,12 +40,7 @@ describe('handleResolveIoSnapshots', () => {
       { accessToken: 't' },
       { NX_IO_SNAPSHOTS: 'true' }
     );
-    expect(response).toEqual({
-      status: 'fetched',
-      reason: '',
-      message: '',
-      commit: 'head',
-    });
+    expect(response).toEqual({ status: 'fetched', commit: 'head' });
   });
 
   // The client returns what the socket layer parsed, so the response must
@@ -54,36 +50,31 @@ describe('handleResolveIoSnapshots', () => {
     async (mode) => {
       fetchIoSnapshotsForRun.mockResolvedValue({
         status: 'fetched',
-        reason: '',
-        message: '',
-        commit: 'head',
-        resolution: { digest: 'd' },
+        snapshots: set,
       });
       const { response } = await handleResolveIoSnapshots(payload);
       expect(parseMessage(serializeWithFallback(response, mode))).toEqual({
         status: 'fetched',
-        reason: '',
-        message: '',
         commit: 'head',
       });
     }
   );
 
-  it('hands hashing the handle it just fetched instead of loading again', async () => {
-    const handle = {
+  it('hands hashing the set it just fetched instead of reading it again', async () => {
+    fetchIoSnapshotsForRun.mockResolvedValue({
       status: 'fetched',
-      reason: '',
-      message: '',
-      commit: 'head',
-      resolution: { digest: 'd' },
-    };
-    fetchIoSnapshotsForRun.mockResolvedValue(handle);
-    loadIoSnapshots.mockReturnValue({
-      commit: 'head',
-      resolution: { digest: 'd' },
+      snapshots: set,
     });
+    getStored.mockReturnValue({ commit: 'head', resolution: { digest: 'd' } });
     await handleResolveIoSnapshots(payload);
-    expect(getIoSnapshotsForCommit('head')).toBe(handle);
+    expect(getIoSnapshotsForCommit('head')).toBe(set);
+  });
+
+  it('passes a skip through as it came', async () => {
+    const skipped = { status: 'skipped', reason: 'offline', message: 'x' };
+    fetchIoSnapshotsForRun.mockResolvedValue(skipped);
+    const { response } = await handleResolveIoSnapshots(payload);
+    expect(response).toEqual(skipped);
   });
 
   // `handleClientEnv` reflects a message's `env` onto the daemon's whole

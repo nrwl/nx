@@ -23,9 +23,9 @@ vi.mock('../tasks-runner/utils', () => ({
   })),
 }));
 
-import { closeDbConnection, connectToNxDb, importIoSnapshots } from '../native';
+import { closeDbConnection, connectToNxDb, IoSnapshotStore } from '../native';
 import { isIoSnapshotFetchEnabled } from './config';
-import { buildIoSnapshotOverrides, loadIoSnapshotsForHead } from './overrides';
+import { buildIoSnapshotOverrides, getIoSnapshotsForHead } from './overrides';
 
 function node(name: string, root: string, targets: Record<string, any>) {
   return { name, type: 'lib' as const, data: { root, targets } };
@@ -81,7 +81,7 @@ function graph(...ids: string[]): TaskGraph {
 }
 
 function writeBundle(snapshots: Record<string, unknown>) {
-  importIoSnapshots(snapshotDb, {
+  new IoSnapshotStore(snapshotDb).import({
     requestedCommit: HEAD,
     commits: [HEAD],
     clientVersion: 'nx/test',
@@ -105,16 +105,17 @@ describe('buildIoSnapshotOverrides', () => {
 
   it('returns null when snapshots are off', () => {
     (isIoSnapshotFetchEnabled as Mock).mockReturnValue(false);
-    expect(loadIoSnapshotsForHead({})).toBeNull();
+    expect(getIoSnapshotsForHead({})).toBeNull();
     expect(buildIoSnapshotOverrides(projectGraph, graph('web:build'), {})).toBe(
       null
     );
   });
 
   it('reports no-bundle when nothing is cached for HEAD', () => {
-    const snapshots = loadIoSnapshotsForHead({});
-    expect(snapshots.status).toBe('skipped');
-    expect(snapshots.reason).toBe('no-bundle');
+    expect(getIoSnapshotsForHead({})).toMatchObject({
+      status: 'skipped',
+      reason: 'no-bundle',
+    });
     const result = buildIoSnapshotOverrides(
       projectGraph,
       graph('web:build'),
@@ -228,7 +229,7 @@ describe('buildIoSnapshotOverrides', () => {
     expect(result.diagnostics[1].producer).toBe('gone:build');
   });
 
-  it('accepts a commit or a loaded handle', () => {
+  it('accepts a commit or a set', () => {
     writeBundle({ 'web:build': { commit: HEAD, inputs: [], outputs: [] } });
     const byDir = buildIoSnapshotOverrides(
       projectGraph,
@@ -240,7 +241,7 @@ describe('buildIoSnapshotOverrides', () => {
       projectGraph,
       graph('web:build'),
       {},
-      loadIoSnapshotsForHead({})
+      new IoSnapshotStore(snapshotDb).get(HEAD)
     );
     expect(byDir.used).toEqual(['web:build']);
     expect(byHandle).toEqual(byDir);

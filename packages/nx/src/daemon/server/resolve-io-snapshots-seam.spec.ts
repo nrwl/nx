@@ -18,7 +18,9 @@ vi.mock('../../io-snapshots/fetch', () => ({
 // Partial: importing the server pulls in plenty that wants the real binding.
 vi.mock('../../native', async (importOriginal) => ({
   ...((await importOriginal()) as object),
-  loadIoSnapshots: () => ({ commit: 'head', resolution: { digest: 'd' } }),
+  IoSnapshotStore: vi.fn(function () {
+    return { get: () => ({ commit: 'head', resolution: { digest: 'd' } }) };
+  }),
 }));
 vi.mock('../../utils/db-connection', () => ({ getDbConnection: () => 'db' }));
 vi.mock('../../config/configuration', () => ({ readNxJson: () => ({}) }));
@@ -49,10 +51,7 @@ describe('the resolve message across the client/daemon seam', () => {
     vi.clearAllMocks();
     fetched.fetchIoSnapshotsForRun.mockResolvedValue({
       status: 'fetched',
-      reason: '',
-      message: '',
-      commit: 'head',
-      resolution: { digest: 'd' },
+      snapshots: { commit: 'head', resolution: { digest: 'd' } },
     });
   });
 
@@ -73,12 +72,7 @@ describe('the resolve message across the client/daemon seam', () => {
     );
 
     // What the client does with the body it reads.
-    expect(parseMessage(body())).toEqual({
-      status: 'fetched',
-      reason: '',
-      message: '',
-      commit: 'head',
-    });
+    expect(parseMessage(body())).toEqual({ status: 'fetched', commit: 'head' });
     // `handleClientEnv` deletes every key a reflected env omits.
     expect(process.env.NX_SEAM_SENTINEL).toBe('kept');
     expect(Object.keys(process.env).length).toBe(before);
