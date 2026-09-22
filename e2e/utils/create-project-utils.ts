@@ -138,7 +138,9 @@ function alignPnpmStoreDir(workspace: string): void {
     /^(\s*"?storeDir"?\s*:\s*)("[^"]*"|[^,\n]*)/m,
     (_match, key) => `${key}${JSON.stringify(storeDir)}`
   );
-  writeFileSync(modulesYaml, updated);
+  if (updated !== contents) {
+    writeFileSync(modulesYaml, updated);
+  }
 }
 
 // Package managers whose workspace has already been built once in this process.
