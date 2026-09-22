@@ -41,7 +41,6 @@ describe('fetchIoSnapshotsForRun', () => {
     commit: 'head',
     resolution: {
       fetchedAt: 0,
-      updatedAt: 7,
       requestedCommit: 'head',
       tasks: 1,
       sourceCommits: [],
@@ -150,7 +149,6 @@ describe('fetchIoSnapshotsForRun', () => {
       expect.objectContaining({
         requestedCommit: 'head',
         commits: ['head', 'parent'],
-        updatedAt: 9,
         snapshotsJson: JSON.stringify({
           'web:build': {
             commit: 'parent',

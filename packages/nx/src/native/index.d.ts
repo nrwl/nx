@@ -759,7 +759,6 @@ export interface IoSnapshotImportOptions {
    * reads directly; a typed napi object would have to model both.
    */
   snapshotsJson: string
-  updatedAt?: number
   clientVersion?: string
   retain?: number
 }
@@ -794,8 +793,6 @@ export interface IoSnapshotResolution {
   sourceCommits: Array<string>
   digest: string
   fetchedAt: number
-  /** The set's `updatedAt` as Nx Cloud reported it. */
-  updatedAt?: number
   clientVersion: string
   tasks: number
 }

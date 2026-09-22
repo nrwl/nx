@@ -51,7 +51,6 @@ impl IoSnapshotStore {
             source_commits,
             digest: db::digest(&snapshots),
             fetched_at: current_timestamp_millis(),
-            updated_at: options.updated_at,
             client_version: options.client_version.unwrap_or_else(|| "nx".to_string()),
             tasks: snapshots.len() as u32,
         };
@@ -130,7 +129,6 @@ mod tests {
             requested_commit: "head".into(),
             commits: vec!["head".into(), "parent".into()],
             snapshots_json: json.into(),
-            updated_at: Some(42),
             client_version: Some("nx/test".into()),
             retain: None,
         })
@@ -147,7 +145,6 @@ mod tests {
         let resolution = imported.resolution();
         assert_eq!(resolution.tasks, 2);
         assert_eq!(resolution.source_commits, vec!["head", "parent"]);
-        assert_eq!(resolution.updated_at, Some(42));
         assert_eq!(resolution.commits, vec!["head", "parent"]);
         assert_eq!(imported.commit(), "head");
 

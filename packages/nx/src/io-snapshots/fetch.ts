@@ -64,7 +64,6 @@ export interface ReadIoSnapshot {
 export interface ReadIoSnapshotsResult {
   /** Newest first; index 0 is HEAD. */
   commits: string[];
-  updatedAt: number;
   snapshots: Readonly<Record<string, ReadIoSnapshot>>;
 }
 
@@ -128,7 +127,6 @@ export async function fetchIoSnapshotsForRun(
         requestedCommit: head,
         commits: result.commits,
         snapshotsJson: JSON.stringify(result.snapshots),
-        updatedAt: result.updatedAt,
         clientVersion: `nx/${nxVersion}`,
       }),
     });

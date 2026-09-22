@@ -207,7 +207,6 @@ mod tests {
                 source_commits: vec![commit.into()],
                 digest: digest(&snapshots),
                 fetched_at,
-                updated_at: None,
                 client_version: "test".into(),
                 tasks: snapshots.len() as u32,
             },

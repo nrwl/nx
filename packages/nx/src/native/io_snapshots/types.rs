@@ -10,9 +10,6 @@ pub struct IoSnapshotResolution {
     pub source_commits: Vec<String>,
     pub digest: String,
     pub fetched_at: i64,
-    /// The set's `updatedAt` as Nx Cloud reported it.
-    #[serde(default)]
-    pub updated_at: Option<i64>,
     pub client_version: String,
     pub tasks: u32,
 }
@@ -27,7 +24,6 @@ pub struct IoSnapshotImportOptions {
     /// untagged shape (flat globs or the older per-project buckets) that serde
     /// reads directly; a typed napi object would have to model both.
     pub snapshots_json: String,
-    pub updated_at: Option<i64>,
     pub client_version: Option<String>,
     pub retain: Option<u32>,
 }
