@@ -65,48 +65,52 @@ export async function affected(
     command === 'affected' &&
     !!nxArgs.targets?.length;
 
-  let taskSelection: TaskSelection | undefined;
-  let projects: ProjectGraphProjectNode[];
-  if (useTasks) {
-    const affectedTasks = await computeAffectedTasks({
-      projectGraph,
-      nxJson,
-      targets: nxArgs.targets,
-      touchedFiles: calculateFileChanges(parseFiles(nxArgs).files, nxArgs),
-      configuration: nxArgs.configuration,
-      overrides,
-      extraTargetDependencies,
-      excludeTaskDependencies: extraOptions.excludeTaskDependencies,
-    });
-    taskSelection = {
-      taskIds: [...affectedTasks.affectedTaskIds],
-      planningContext: affectedTasks.planningContext,
-    };
-    // --exclude is honoured in getAffectedGraphNodes, which this branch does
-    // not call. Dropping it would restart a project someone deliberately took
-    // out of the pipeline.
-    if (nxArgs.exclude?.length) {
-      const excluded = new Set(
-        findMatchingProjects(nxArgs.exclude, projectGraph.nodes)
+  // Planning throws when a project's externalDependencies name something
+  // that is not an external node. Inside the try so it is reported the way
+  // every other failure in this command is.
+  try {
+    let taskSelection: TaskSelection | undefined;
+    let projects: ProjectGraphProjectNode[];
+    if (useTasks) {
+      const affectedTasks = await computeAffectedTasks({
+        projectGraph,
+        nxJson,
+        targets: nxArgs.targets,
+        touchedFiles: calculateFileChanges(parseFiles(nxArgs).files, nxArgs),
+        configuration: nxArgs.configuration,
+        overrides,
+        extraTargetDependencies,
+        excludeTaskDependencies: extraOptions.excludeTaskDependencies,
+      });
+      taskSelection = {
+        taskIds: [...affectedTasks.affectedTaskIds],
+        planningContext: affectedTasks.planningContext,
+      };
+      // --exclude is honoured in getAffectedGraphNodes, which this branch does
+      // not call. Dropping it would restart a project someone deliberately took
+      // out of the pipeline.
+      if (nxArgs.exclude?.length) {
+        const excluded = new Set(
+          findMatchingProjects(nxArgs.exclude, projectGraph.nodes)
+        );
+        taskSelection.taskIds = taskSelection.taskIds.filter(
+          (id) =>
+            !excluded.has(affectedTasks.taskGraph.tasks[id].target.project)
+        );
+      }
+
+      // runCommand still seeds the graph from projects; the prune is what narrows
+      // it back down to the selected tasks and their dependencies.
+      const owning = new Set(
+        taskSelection.taskIds.map(
+          (id) => affectedTasks.taskGraph.tasks[id].target.project
+        )
       );
-      taskSelection.taskIds = taskSelection.taskIds.filter(
-        (id) => !excluded.has(affectedTasks.taskGraph.tasks[id].target.project)
-      );
+      projects = [...owning].map((name) => projectGraph.nodes[name]);
+    } else {
+      projects = await getAffectedGraphNodes(nxArgs, projectGraph);
     }
 
-    // runCommand still seeds the graph from projects; the prune is what narrows
-    // it back down to the selected tasks and their dependencies.
-    const owning = new Set(
-      taskSelection.taskIds.map(
-        (id) => affectedTasks.taskGraph.tasks[id].target.project
-      )
-    );
-    projects = [...owning].map((name) => projectGraph.nodes[name]);
-  } else {
-    projects = await getAffectedGraphNodes(nxArgs, projectGraph);
-  }
-
-  try {
     switch (command) {
       case 'affected': {
         const projectsWithTarget = allProjectsWithTarget(projects, nxArgs);
