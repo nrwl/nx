@@ -18,10 +18,7 @@ import { transformProjectGraphForRust } from '../native/transform-objects';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
 import { readJsonFile } from '../utils/fileutils';
-import {
-  customHasherTaskIds,
-  optedOutTaskIds,
-} from '../io-snapshots/overrides';
+import { ioSnapshotEligibilityOptions } from '../io-snapshots/overrides';
 import { PartialHash, TaskHasherImpl } from './task-hasher';
 
 export class NativeTaskHasherImpl implements TaskHasherImpl {
@@ -157,10 +154,12 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     if (!ioSnapshots) {
       return this.planner.getPlansReference(taskIds, taskGraph);
     }
-    return this.planner.getPlansReference(taskIds, taskGraph, ioSnapshots, {
-      customHasherTaskIds: customHasherTaskIds(this.projectGraph, taskGraph),
-      optedOutTaskIds: optedOutTaskIds(this.projectGraph, taskGraph),
-    });
+    return this.planner.getPlansReference(
+      taskIds,
+      taskGraph,
+      ioSnapshots,
+      ioSnapshotEligibilityOptions(this.projectGraph, taskGraph)
+    );
   }
 
   async hashTasksUpfront(

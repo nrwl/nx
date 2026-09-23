@@ -9,26 +9,18 @@ import {
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
 import { getExecutorForTask } from '../tasks-runner/utils';
 
-const customHasherMemo = new WeakMap<
-  ProjectGraph,
-  WeakMap<TaskGraph, string[]>
->();
+const customHasherMemo = new WeakMap<TaskGraph, string[]>();
 
 /**
  * Tasks whose executor ships a custom hasher; they are never hashed from a
  * snapshot. Detected here because executors are resolved in JS, by the
  * factory's presence only — invoking it would load user modules.
  */
-export function customHasherTaskIds(
+function customHasherTaskIds(
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph
 ): string[] {
-  let byTaskGraph = customHasherMemo.get(projectGraph);
-  if (!byTaskGraph) {
-    byTaskGraph = new WeakMap();
-    customHasherMemo.set(projectGraph, byTaskGraph);
-  }
-  const memoized = byTaskGraph.get(taskGraph);
+  const memoized = customHasherMemo.get(taskGraph);
   if (memoized) {
     return memoized;
   }
@@ -45,12 +37,12 @@ export function customHasherTaskIds(
       }
     })
     .map((task) => task.id);
-  byTaskGraph.set(taskGraph, ids);
+  customHasherMemo.set(taskGraph, ids);
   return ids;
 }
 
 /** Tasks whose target sets `sandbox.enabled: false`. */
-export function optedOutTaskIds(
+function optedOutTaskIds(
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph
 ): string[] {
