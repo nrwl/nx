@@ -888,8 +888,8 @@ describe('Nx Running Tests', () => {
           `
           const { writeFileSync } = require('fs');
           setTimeout(() => {
-            writeFileSync('ready.txt', '');
             console.log('server listening');
+            writeFileSync('ready.txt', '');
           }, 2000);
           setInterval(() => {}, 1000);
         `
@@ -962,8 +962,8 @@ describe('Nx Running Tests', () => {
             const { createServer } = require('http');
             const { writeFileSync } = require('fs');
             setTimeout(() => {
-              writeFileSync('ready.txt', '');
               createServer((req, res) => res.end('ok')).listen(${port}, '127.0.0.1');
+              writeFileSync('ready.txt', '');
             }, 2000);
           `
           );
