@@ -2117,7 +2117,7 @@ describe('task planner', () => {
       );
     });
 
-    it('drops reads that externals cover and keeps the rest, including the root package.json', () => {
+    it('drops node_modules reads and keeps the rest, including the root package.json and lockfile', () => {
       const { planner, taskGraph } = fixture();
       const plan = planner.getPlans(
         ['parent:build'],
@@ -2133,12 +2133,112 @@ describe('task planner', () => {
           },
         })
       )['parent:build'];
-      // package.json stays: externals hash resolved versions, not its scripts.
-      expect(plan).toContain(`files:[package.json,tools/x.ts,${PARENT_NEG}]`);
-      expect(plan).toContain('AllExternalDependencies');
-      expect(plan).not.toContainEqual(
-        expect.stringMatching(/node_modules|yarn\.lock/)
+      // Externals hash resolved versions, not package.json scripts or the
+      // rest of the lockfile.
+      expect(plan).toContain(
+        `files:[package.json,tools/x.ts,yarn.lock,${PARENT_NEG}]`
       );
+      expect(plan).toContain('AllExternalDependencies');
+      expect(plan).not.toContainEqual(expect.stringMatching(/node_modules/));
+    });
+
+    describe('with externals narrowed to a few packages', () => {
+      function narrowedFixture(target: Record<string, unknown>) {
+        const builder = new ProjectGraphBuilder(undefined, {
+          tools: [{ file: 'tools/audit-deps.js', hash: 'a.hash' }],
+        });
+        builder.addNode({
+          name: 'tools',
+          type: 'lib',
+          data: { root: 'tools', targets: { audit: target } },
+        });
+        for (const name of ['semver', 'lodash', '@nx/js']) {
+          builder.addExternalNode({
+            type: 'npm',
+            name: `npm:${name}`,
+            data: { packageName: name, hash: `${name}.hash`, version: '1.0.0' },
+          });
+        }
+        const projectGraph = builder.getUpdatedProjectGraph();
+        const taskGraph = createTaskGraph(
+          projectGraph,
+          {},
+          ['tools'],
+          ['audit'],
+          undefined,
+          {}
+        );
+        const planner = new HashPlanner(
+          {} as any,
+          transferProjectGraph(transformProjectGraphForRust(projectGraph))
+        );
+        return { planner, taskGraph };
+      }
+
+      it.each([
+        [
+          'an externalDependencies input',
+          {
+            executor: 'nx:run-commands',
+            inputs: [
+              '{projectRoot}/audit-deps.js',
+              '{workspaceRoot}/package-lock.json',
+              { externalDependencies: ['semver'] },
+            ],
+          },
+          'npm:semver',
+        ],
+        [
+          'an @nx executor',
+          {
+            executor: '@nx/js:tsc',
+            inputs: ['default', '{workspaceRoot}/package-lock.json'],
+          },
+          'npm:@nx/js',
+        ],
+      ])(
+        'hashes a lockfile the task read when it has %s',
+        (_, target, external) => {
+          const { planner, taskGraph } = narrowedFixture(target);
+          const plan = planner.getPlans(
+            ['tools:audit'],
+            taskGraph,
+            snapshotsFor({
+              'tools:audit': {
+                inputs: ['package-lock.json', 'tools/audit-deps.js'],
+              },
+            })
+          )['tools:audit'];
+          // lodash is neither hashed as an external nor covered some other
+          // way, so a bump to it reaches the hash only through the lockfile.
+          expect(plan).toContain(external);
+          expect(plan).not.toContain('npm:lodash');
+          expect(plan).not.toContain('AllExternalDependencies');
+          expect(plan).toContain(
+            'files:[package-lock.json,tools/audit-deps.js]'
+          );
+        }
+      );
+
+      it('leaves out a declared lockfile the task never read', () => {
+        const { planner, taskGraph } = narrowedFixture({
+          executor: 'nx:run-commands',
+          inputs: [
+            '{projectRoot}/audit-deps.js',
+            '{workspaceRoot}/package-lock.json',
+            { externalDependencies: ['semver'] },
+          ],
+        });
+        const plan = planner.getPlans(
+          ['tools:audit'],
+          taskGraph,
+          snapshotsFor({ 'tools:audit': { inputs: ['tools/audit-deps.js'] } })
+        )['tools:audit'];
+        expect(plan).toContain('files:[tools/audit-deps.js]');
+        expect(plan).not.toContainEqual(
+          expect.stringMatching(/package-lock\.json/)
+        );
+      });
     });
 
     it("hashes reads of a producer task's outputs from disk and defers the task", () => {

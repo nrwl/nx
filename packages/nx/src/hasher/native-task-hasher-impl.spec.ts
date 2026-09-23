@@ -1676,6 +1676,33 @@ describe('native task hasher', () => {
     closeDbConnection(snapshotDb);
   });
 
+  it('moves a task hash by a lockfile-only edit when the snapshot read the lockfile', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    await tempFs.createFiles({ 'package-lock.json': '{"lodash":"4.17.20"}' });
+    const commit = 'head'.padEnd(40, '0');
+    const snapshotDb = connectToNxDb(
+      join(tempFs.tempDir, 'io-snapshots-lockfile-db'),
+      'io-snapshots'
+    );
+    new IoSnapshotStore(snapshotDb).import({
+      requestedCommit: commit,
+      snapshotsJson: JSON.stringify({
+        'child:compile': { commit, inputs: ['package-lock.json'], outputs: [] },
+      }),
+    });
+    const snapshots = new IoSnapshotStore(snapshotDb).get(commit);
+    const task = taskGraph.tasks['child:compile'];
+    const hash = () =>
+      impl.hashTask(task, taskGraph, {}, tempFs.tempDir, true, snapshots);
+
+    const before = await hash();
+    expect(before.inputs.files).toContain('package-lock.json');
+
+    await tempFs.createFiles({ 'package-lock.json': '{"lodash":"4.17.21"}' });
+    expect((await hash()).value).not.toBe(before.value);
+    closeDbConnection(snapshotDb);
+  });
+
   it('plans again for a task graph other than the up-front batch, and for a task the batch never planned', async () => {
     const { taskGraph, impl } = await upfrontFixture();
     const planned = Object.values(taskGraph.tasks).filter(

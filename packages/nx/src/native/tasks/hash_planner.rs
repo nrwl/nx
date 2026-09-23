@@ -39,14 +39,6 @@ type Negations = Vec<(String, String)>;
 const ROOT_TSCONFIG_FILES: [&str; 2] = ["tsconfig.base.json", "tsconfig.json"];
 /// Hashed by the always-on workspace fileset every plan carries.
 const ALWAYS_ON_FILES: [&str; 3] = ["nx.json", ".gitignore", ".nxignore"];
-const LOCKFILES: [&str; 6] = [
-    "package-lock.json",
-    "npm-shrinkwrap.json",
-    "yarn.lock",
-    "pnpm-lock.yaml",
-    "bun.lock",
-    "bun.lockb",
-];
 
 /// A task's snapshot plus a matcher over its observed reads, used to decide
 /// whether a class-mapped file (root tsconfig, a declared `{json}` file) was
@@ -1623,14 +1615,13 @@ fn collect_negations(
     }
 }
 
-/// Reads a native instruction already hashes whole: node_modules and lockfiles
-/// (externals), nx.json/.gitignore/.nxignore (always-on). The root package.json,
-/// `{json}` inputs and root tsconfig stay: those instructions hash only part.
+/// Reads left out of the snapshot's file groups: node_modules (never hashed as
+/// files) and nx.json/.gitignore/.nxignore (the always-on set hashes them whole).
+/// Lockfiles stay: externals may cover only a few packages, not the whole file.
 fn covered_by_native_instruction(glob: &str) -> bool {
     let path = glob.strip_prefix('!').unwrap_or(glob);
     path.starts_with("node_modules/")
         || path.contains("/node_modules/")
-        || LOCKFILES.contains(&path)
         || ALWAYS_ON_FILES.contains(&path)
 }
 
