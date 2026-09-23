@@ -903,6 +903,36 @@ describe('Nx Running Tests', () => {
         );
       }, 60000);
 
+      it('should see a log marker the server prints as soon as it starts', () => {
+        // Nothing replays earlier output, so a marker printed before the
+        // matcher subscribes would be missed and the wait would time out.
+        updateFile(
+          `libs/${mylib1}/serve.js`,
+          `
+          console.log('server listening');
+          setInterval(() => {}, 1000);
+        `
+        );
+        updateJson(`libs/${mylib1}/project.json`, (config) => {
+          config.targets.serve = {
+            command: 'node serve.js',
+            options: { cwd: `libs/${mylib1}` },
+            continuous: true,
+            readyWhen: { logMatches: 'server listening', timeout: 5000 },
+          };
+          config.targets.check = {
+            command: 'echo checked',
+            dependsOn: [{ target: 'serve', waitFor: 'ready' }],
+          };
+          return config;
+        });
+
+        const output = runCLI(`check ${mylib1} --skip-nx-cache`);
+        expect(output).toContain(
+          `Successfully ran target check for project ${mylib1}`
+        );
+      }, 60000);
+
       describe('readyWhen probes', () => {
         let port: number;
         let check: object;
