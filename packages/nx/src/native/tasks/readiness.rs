@@ -116,6 +116,9 @@ fn build_http_client() -> reqwest::Result<Client> {
         // A dev server's self-signed certificate must not keep it from
         // counting as ready
         .danger_accept_invalid_certs(true)
+        // A redirect already proves the server is up, and following it would
+        // let the server pick the next request's destination
+        .redirect(reqwest::redirect::Policy::none())
         .build()
 }
 

@@ -211,8 +211,8 @@ export interface ReadyWhenOptions {
 export type ReadyWhen =
   | ({
       /**
-       * Ready when an HTTP or HTTPS GET, following redirects, ends with a
-       * status from 200 to 403.
+       * Ready when an HTTP or HTTPS GET gets a status from 200 to 403. A
+       * redirect counts as ready and is not followed.
        */
       url: string;
     } & ReadyWhenOptions)
