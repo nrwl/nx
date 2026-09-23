@@ -55,13 +55,21 @@ impl SnapshotDb {
         let commit = &resolution.requested_commit;
         self.0.lock().unwrap().transaction(|conn| {
             conn.execute(
-                "DELETE FROM io_snapshot_tasks WHERE commit_sha = ?1",
-                params![commit],
-            )?;
-            conn.execute(
                 "INSERT OR REPLACE INTO io_snapshot_sets (commit_sha, fetched_at, tasks) \
                  VALUES (?1, ?2, ?3)",
                 params![commit, resolution.fetched_at, resolution.tasks],
+            )?;
+            conn.execute(
+                "DELETE FROM io_snapshot_sets WHERE commit_sha NOT IN \
+                 (SELECT commit_sha FROM io_snapshot_sets \
+                  ORDER BY fetched_at DESC, commit_sha LIMIT ?1)",
+                params![RETAINED_COMMITS],
+            )?;
+            // This commit's previous entries, and those of pruned sets.
+            conn.execute(
+                "DELETE FROM io_snapshot_tasks WHERE commit_sha = ?1 \
+                 OR commit_sha NOT IN (SELECT commit_sha FROM io_snapshot_sets)",
+                params![commit],
             )?;
             let mut insert = conn.prepare(
                 "INSERT INTO io_snapshot_tasks (commit_sha, task_id, entry) VALUES (?1, ?2, ?3)",
@@ -69,17 +77,6 @@ impl SnapshotDb {
             for (task_id, entry) in &entries {
                 insert.execute(params![commit, task_id, entry])?;
             }
-            conn.execute(
-                "DELETE FROM io_snapshot_sets WHERE commit_sha NOT IN \
-                 (SELECT commit_sha FROM io_snapshot_sets \
-                  ORDER BY fetched_at DESC, commit_sha LIMIT ?1)",
-                params![RETAINED_COMMITS],
-            )?;
-            conn.execute(
-                "DELETE FROM io_snapshot_tasks WHERE commit_sha NOT IN \
-                 (SELECT commit_sha FROM io_snapshot_sets)",
-                [],
-            )?;
             Ok(())
         })
     }
