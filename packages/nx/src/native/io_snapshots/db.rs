@@ -7,7 +7,7 @@ use rusqlite::params;
 use rusqlite::types::Value;
 
 use super::IoSnapshotResolution;
-use super::bundle::{TaskInputs, TaskIoSnapshot};
+use super::bundle::TaskIoSnapshot;
 use crate::native::db::connection::NxDbConnection;
 
 pub type Db = Arc<Mutex<NxDbConnection>>;
@@ -44,17 +44,7 @@ pub fn digest(snapshots: &BTreeMap<String, TaskIoSnapshot>) -> String {
 
 pub fn normalize(snapshots: &mut BTreeMap<String, TaskIoSnapshot>) {
     for snapshot in snapshots.values_mut() {
-        match &mut snapshot.inputs {
-            TaskInputs::Flat(globs) => sort_unique(globs),
-            TaskInputs::Structured(inputs) => {
-                inputs.projects.values_mut().for_each(sort_unique);
-                sort_unique(&mut inputs.workspace);
-                inputs.task_outputs.values_mut().for_each(sort_unique);
-            }
-        }
-        if let Some(task_outputs) = &mut snapshot.task_outputs {
-            task_outputs.values_mut().for_each(sort_unique);
-        }
+        sort_unique(&mut snapshot.inputs);
         sort_unique(&mut snapshot.outputs);
     }
 }
@@ -192,8 +182,7 @@ mod tests {
                     id.to_string(),
                     TaskIoSnapshot {
                         commit: commit.into(),
-                        inputs: TaskInputs::Flat(vec![format!("libs/{id}/a.ts"), "b.ts".into()]),
-                        task_outputs: None,
+                        inputs: vec![format!("libs/{id}/a.ts"), "b.ts".into()],
                         outputs: vec![],
                     },
                 )
@@ -228,7 +217,7 @@ mod tests {
         assert_eq!(entries[0].0, "a:build");
         assert_eq!(
             entries[0].1.inputs,
-            TaskInputs::Flat(vec!["libs/a:build/a.ts".into(), "b.ts".into()])
+            vec!["libs/a:build/a.ts".to_string(), "b.ts".into()]
         );
         assert_eq!(read_resolution(&db, "c3").unwrap().unwrap().tasks, 1);
         // Only the newest two commits survive.

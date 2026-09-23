@@ -114,7 +114,6 @@ impl IoSnapshotStore {
 mod tests {
     use super::*;
     use crate::native::db::initialize::initialize_db;
-    use crate::native::io_snapshots::bundle;
     use std::sync::Mutex;
 
     fn temp_store() -> (tempfile::TempDir, IoSnapshotStore) {
@@ -155,7 +154,7 @@ mod tests {
         assert_eq!(entries.len(), 1);
         assert_eq!(
             entries["web:build"].entry.inputs,
-            bundle::TaskInputs::Flat(vec!["apps/web/src/**/*.ts".into()])
+            vec!["apps/web/src/**/*.ts".to_string()]
         );
         assert_eq!(
             entries["web:build"].digest,

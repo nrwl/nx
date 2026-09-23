@@ -95,7 +95,6 @@ describe('buildIoSnapshotOverrides', () => {
       'web:build': {
         commit: HEAD,
         inputs: ['apps/web/src/**/*.ts', 'dist/libs/ui/index.js'],
-        taskOutputs: { 'ui:build': ['dist/libs/ui/index.js'] },
         outputs: [],
       },
       'root:build': { commit: HEAD, inputs: [], outputs: [] },
@@ -112,62 +111,8 @@ describe('buildIoSnapshotOverrides', () => {
     expect(result.resolution.digest).toMatch(/^\d+$/);
   });
 
-  it('flattens legacy bucketed entries, and withholds one that names a project the graph no longer has', () => {
+  it('withholds disabled, custom-hasher, and root-anchored tasks', () => {
     const set = writeBundle({
-      'web:build': {
-        commit: HEAD,
-        inputs: {
-          projects: { web: ['src/**/*.ts'], gone: ['x.ts'] },
-          workspace: ['tsconfig.base.json'],
-          taskOutputs: {},
-        },
-        outputs: [],
-      },
-    });
-    // A renamed project would otherwise leave its reads out of the plan and
-    // replay a stale hit after an edit under the old root.
-    const withheld = buildIoSnapshotOverrides(
-      projectGraph,
-      graph('web:build'),
-      set
-    );
-    expect(withheld.used).toEqual([]);
-    expect(withheld.diagnostics).toEqual([
-      expect.objectContaining({
-        reason: 'unknown-project',
-        taskId: 'web:build',
-        project: 'gone',
-      }),
-    ]);
-
-    const reset = writeBundle({
-      'web:build': {
-        commit: HEAD,
-        inputs: {
-          projects: { web: ['src/**/*.ts'] },
-          workspace: ['tsconfig.base.json'],
-          taskOutputs: {},
-        },
-        outputs: [],
-      },
-    });
-    const flattened = buildIoSnapshotOverrides(
-      projectGraph,
-      graph('web:build'),
-      reset
-    );
-    expect(flattened.used).toEqual(['web:build']);
-    expect(flattened.diagnostics).toEqual([]);
-  });
-
-  it('withholds disabled, custom-hasher, dangling, and root-anchored tasks', () => {
-    const set = writeBundle({
-      'web:build': {
-        commit: HEAD,
-        inputs: ['dist/x'],
-        taskOutputs: { 'gone:build': ['dist/x'] },
-        outputs: [],
-      },
       'web:lint': { commit: HEAD, inputs: [], outputs: [] },
       'web:custom': { commit: HEAD, inputs: [], outputs: [] },
       'ui:build': {
@@ -178,17 +123,15 @@ describe('buildIoSnapshotOverrides', () => {
     });
     const result = buildIoSnapshotOverrides(
       projectGraph,
-      graph('web:build', 'web:lint', 'web:custom', 'ui:build'),
+      graph('web:lint', 'web:custom', 'ui:build'),
       set
     );
     expect(result.used).toEqual([]);
     expect(result.diagnostics.map((d) => [d.reason, d.taskId])).toEqual([
       ['root-anchored-glob', 'ui:build'],
-      ['producer-not-in-graph', 'web:build'],
       ['custom-hasher', 'web:custom'],
       ['disabled', 'web:lint'],
     ]);
     expect(result.diagnostics[0].glob).toBe('**/*.gen');
-    expect(result.diagnostics[1].producer).toBe('gone:build');
   });
 });

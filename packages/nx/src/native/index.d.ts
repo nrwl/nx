@@ -100,8 +100,7 @@ export declare class HashPlanner {
    * `snapshots` is this run's I/O snapshot bundle; a task with an eligible
    * entry hashes its observed reads instead of its declared filesets.
    * `options` carries the task ids decided in JS, where executors and
-   * target configuration are resolved; its `projectRoots` is unused, since
-   * the planner reads roots from its own graph.
+   * target configuration are resolved.
    */
   getPlans(taskIds: Array<string>, taskGraph: TaskGraph, snapshots?: IoSnapshots | undefined | null, options?: IoSnapshotEligibilityOptions | undefined | null): Record<string, string[]>
   getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph, snapshots?: IoSnapshots | undefined | null, options?: IoSnapshotEligibilityOptions | undefined | null): ExternalObject<Record<string, Array<HashInstruction>>>
@@ -749,10 +748,7 @@ export interface InvocationRecord {
 export interface IoSnapshotDiagnostic {
   reason: string
   taskId?: string
-  project?: string
   glob?: string
-  producer?: string
-  file?: string
   message?: string
 }
 
@@ -762,8 +758,6 @@ export interface IoSnapshotEligibilityOptions {
   optedOutTaskIds?: Array<string>
   /** Tasks whose executor ships a custom hasher. */
   customHasherTaskIds?: Array<string>
-  /** Project name → root, for flattening bucketed entries. */
-  projectRoots?: Record<string, string>
 }
 
 /** The snapshot set the Nx Cloud client read for HEAD, as JS hands it over. */
@@ -771,7 +765,7 @@ export interface IoSnapshotImportOptions {
   requestedCommit: string
   /** The commits the client asked about, newest first. */
   commits: Array<string>
-  /** `Record<taskId, TaskIoSnapshot>` as JSON; serde reads the untagged `inputs`. */
+  /** `Record<taskId, { commit, inputs, outputs }>` as JSON. */
   snapshotsJson: string
   clientVersion?: string
   retain?: number

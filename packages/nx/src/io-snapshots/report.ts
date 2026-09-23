@@ -60,10 +60,6 @@ function describeDiagnostic(d: IoSnapshotDiagnostic): string {
       return `${d.taskId}: no snapshot for this task`;
     case 'root-anchored-glob':
       return `${d.taskId}: snapshot glob "${d.glob}" is anchored at the workspace root`;
-    case 'unknown-project':
-      return `${d.taskId}: snapshot references unknown project "${d.project}"`;
-    case 'producer-not-in-graph':
-      return `${d.taskId}: reads outputs of "${d.producer}", which is not in this task graph`;
     case 'escapes-workspace':
       return `${d.taskId}: snapshot glob "${d.glob}" escapes the workspace`;
     case 'unusable-output':

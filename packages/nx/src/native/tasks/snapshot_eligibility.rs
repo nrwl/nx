@@ -2,7 +2,7 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 
 use crate::native::cache::expand_outputs::match_output_paths;
 use crate::native::glob::{NxGlobSetBuilder, expand_literal_braces};
-use crate::native::io_snapshots::bundle::{TaskInputs, TaskIoSnapshot};
+use crate::native::io_snapshots::bundle::TaskIoSnapshot;
 use crate::native::io_snapshots::{IoSnapshotResolution, IoSnapshots};
 use crate::native::tasks::hash_planner::walk_root;
 use crate::native::tasks::hashers::validate_files_glob;
@@ -20,8 +20,6 @@ pub(crate) struct EligibilityInputs {
     /// Tasks with a declared `{ files }` glob the hasher would reject; natively
     /// that is an error, so a snapshot must not paper over it.
     pub invalid_files_input: HashSet<String>,
-    /// Project name → root, for flattening legacy bucketed entries.
-    pub project_roots: HashMap<String, String>,
 }
 
 /// What JS knows about a run's tasks that the eligibility walk needs.
@@ -32,8 +30,6 @@ pub struct IoSnapshotEligibilityOptions {
     pub opted_out_task_ids: Option<Vec<String>>,
     /// Tasks whose executor ships a custom hasher.
     pub custom_hasher_task_ids: Option<Vec<String>>,
-    /// Project name → root, for flattening bucketed entries.
-    pub project_roots: Option<HashMap<String, String>>,
 }
 
 impl From<IoSnapshotEligibilityOptions> for EligibilityInputs {
@@ -50,7 +46,6 @@ impl From<IoSnapshotEligibilityOptions> for EligibilityInputs {
                 .into_iter()
                 .collect(),
             invalid_files_input: HashSet::new(),
-            project_roots: options.project_roots.unwrap_or_default(),
         }
     }
 }
@@ -74,10 +69,7 @@ pub(crate) struct SnapshotTask {
 pub struct IoSnapshotDiagnostic {
     pub reason: String,
     pub task_id: Option<String>,
-    pub project: Option<String>,
     pub glob: Option<String>,
-    pub producer: Option<String>,
-    pub file: Option<String>,
     pub message: Option<String>,
 }
 
@@ -86,10 +78,7 @@ impl IoSnapshotDiagnostic {
         Self {
             reason: reason.into(),
             task_id: Some(task_id.into()),
-            project: None,
             glob: None,
-            producer: None,
-            file: None,
             message: None,
         }
     }
@@ -99,10 +88,7 @@ impl IoSnapshotDiagnostic {
         Self {
             reason,
             task_id: None,
-            project: None,
             glob: None,
-            producer: None,
-            file: None,
             message,
         }
     }
@@ -210,66 +196,7 @@ pub(crate) fn resolve_scoped(
             continue;
         }
 
-        let mut files: Vec<String> = Vec::new();
-        // A bucket whose project the graph no longer has withholds the whole
-        // task: its reads cannot be placed, and a plan without them would
-        // replay a stale hit after an edit under that project's old root.
-        let mut unknown_project: Option<String> = None;
-        let task_outputs: BTreeMap<String, Vec<String>> = match &entry.inputs {
-            TaskInputs::Flat(globs) => {
-                files.extend(globs.iter().cloned());
-                entry.task_outputs.clone().unwrap_or_default()
-            }
-            TaskInputs::Structured(legacy) => {
-                // Legacy bucketed entries hold project-relative globs per project.
-                for (project, globs) in &legacy.projects {
-                    let Some(root) = inputs.project_roots.get(project) else {
-                        unknown_project = Some(project.clone());
-                        break;
-                    };
-                    let prefix = if root == "." {
-                        String::new()
-                    } else {
-                        format!("{root}/")
-                    };
-                    files.extend(globs.iter().map(|glob| match glob.strip_prefix('!') {
-                        Some(rest) => format!("!{prefix}{rest}"),
-                        None => format!("{prefix}{glob}"),
-                    }));
-                }
-                files.extend(legacy.workspace.iter().cloned());
-                if legacy.task_outputs.is_empty() {
-                    entry.task_outputs.clone().unwrap_or_default()
-                } else {
-                    legacy.task_outputs.clone()
-                }
-            }
-        };
-
-        if let Some(project) = unknown_project {
-            let mut diagnostic = IoSnapshotDiagnostic::task("unknown-project", task_id);
-            diagnostic.project = Some(project);
-            diagnostics.push(diagnostic);
-            continue;
-        }
-
-        let mut dangling = None;
-        for (producer, paths) in &task_outputs {
-            if !task_graph.tasks.contains_key(producer) {
-                dangling = Some(producer.clone());
-                break;
-            }
-            // Output reads hash from disk like any other read; the producer
-            // entry only orders this task after them.
-            files.extend(paths.iter().cloned());
-        }
-        if let Some(producer) = dangling {
-            let mut diagnostic = IoSnapshotDiagnostic::task("producer-not-in-graph", task_id);
-            diagnostic.producer = Some(producer);
-            diagnostics.push(diagnostic);
-            continue;
-        }
-
+        let mut files = entry.inputs.clone();
         files.sort();
         files.dedup();
         if let Some(glob) = files.iter().find(|g| {
@@ -506,24 +433,6 @@ fn producers_by_declared_outputs(
     producers
 }
 
-fn entry_task_outputs(entry: &TaskIoSnapshot) -> BTreeMap<String, Vec<String>> {
-    match &entry.inputs {
-        TaskInputs::Structured(legacy) if !legacy.task_outputs.is_empty() => {
-            legacy.task_outputs.clone()
-        }
-        _ => entry.task_outputs.clone().unwrap_or_default(),
-    }
-}
-
-fn entry_files(entry: &TaskIoSnapshot) -> Vec<String> {
-    match &entry.inputs {
-        TaskInputs::Flat(globs) => globs.clone(),
-        // Legacy project buckets are project-relative and cannot be matched
-        // against outputs without the graph; the workspace bucket can.
-        TaskInputs::Structured(legacy) => legacy.workspace.clone(),
-    }
-}
-
 /// Tasks whose snapshot read another task's outputs: they hash after their
 /// producers ran, because those files only exist then. Needs no project graph,
 /// so the client can call it before the first hashing wave on the daemon path.
@@ -541,16 +450,8 @@ pub fn get_io_snapshot_deferred_task_ids(
         .keys()
         .filter(|task_id| {
             entries.get(*task_id).is_some_and(|stored| {
-                let entry = &stored.entry;
-                let mut producers: Vec<String> = entry_task_outputs(entry).into_keys().collect();
-                producers.extend(
-                    producers_by_declared_outputs(task_id, &entry_files(entry), &task_graph)
-                        .into_keys(),
-                );
-                !producers.is_empty()
-                    && producers
-                        .iter()
-                        .all(|producer| task_graph.tasks.contains_key(producer))
+                !producers_by_declared_outputs(task_id, &stored.entry.inputs, &task_graph)
+                    .is_empty()
             })
         })
         .cloned()
@@ -592,8 +493,7 @@ mod tests {
     fn observed_outputs_are_confined_and_skip_cache_dirs() {
         let entry = TaskIoSnapshot {
             commit: "c".into(),
-            inputs: TaskInputs::Flat(vec![]),
-            task_outputs: None,
+            inputs: vec![],
             outputs: vec![
                 "dist/apps/web/**".into(),
                 "dist/apps/web/**".into(),
@@ -633,8 +533,7 @@ mod tests {
     fn a_write_the_filter_rejects_is_reported_and_the_task_keeps_its_snapshot() {
         let (outputs, dropped) = observed_outputs(&TaskIoSnapshot {
             commit: "c".into(),
-            inputs: TaskInputs::Flat(vec![]),
-            task_outputs: None,
+            inputs: vec![],
             outputs: vec![
                 "dist/apps/web/**".into(),
                 "node_modules/.cache/x".into(),

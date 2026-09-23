@@ -1934,7 +1934,6 @@ describe('task planner', () => {
         string,
         {
           inputs?: string[];
-          taskOutputs?: Record<string, string[]>;
           outputs?: string[];
         }
       >
@@ -1951,7 +1950,6 @@ describe('task planner', () => {
               {
                 commit,
                 inputs: e.inputs ?? [],
-                taskOutputs: e.taskOutputs,
                 outputs: e.outputs ?? [],
               },
             ])
@@ -2150,7 +2148,6 @@ describe('task planner', () => {
       const snapshots = snapshotsFor({
         'parent:build': {
           inputs: ['dist/libs/child/index.js'],
-          taskOutputs: { 'child:build': ['dist/libs/child/index.js'] },
         },
       });
       const plan = planner.getPlans(['parent:build'], taskGraph, snapshots)[
@@ -2167,26 +2164,23 @@ describe('task planner', () => {
 
     it('reports eligibility the same way it plans', () => {
       const { planner, taskGraph } = fixture();
-      const withProducer = snapshotsFor({
-        'parent:build': {
-          inputs: ['dist/x'],
-          taskOutputs: { 'gone:build': ['dist/x'] },
-        },
+      const withheld = snapshotsFor({
+        'parent:build': { inputs: ['**/*.gen'] },
       });
-      const report = getIoSnapshotReport(withProducer, taskGraph, {
+      const report = getIoSnapshotReport(withheld, taskGraph, {
         customHasherTaskIds: ['child:build'],
       });
       expect(report.used).toEqual([]);
       expect(report.diagnostics.map((d) => [d.reason, d.taskId])).toEqual([
         ['custom-hasher', 'child:build'],
-        ['producer-not-in-graph', 'parent:build'],
+        ['root-anchored-glob', 'parent:build'],
       ]);
       expect(report.resolution.digest).toMatch(/^\d+$/);
-      expect(getIoSnapshotDeferredTaskIds(withProducer, taskGraph)).toEqual([]);
+      expect(getIoSnapshotDeferredTaskIds(withheld, taskGraph)).toEqual([]);
 
       const plain = planner.getPlans(['parent:build'], taskGraph);
       expect(
-        planner.getPlans(['parent:build'], taskGraph, withProducer, {
+        planner.getPlans(['parent:build'], taskGraph, withheld, {
           customHasherTaskIds: ['child:build'],
         })
       ).toEqual(plain);
@@ -2267,7 +2261,7 @@ describe('task planner', () => {
       expect(plan).not.toContainEqual(expect.stringMatching(/^child:libs\//));
     });
 
-    it("defers a task whose reads sit under a producer's declared outputs even without taskOutputs", () => {
+    it("defers a task whose reads sit under a producer's declared outputs ", () => {
       const { planner, taskGraph } = fixture();
       const snapshots = snapshotsFor({
         'parent:build': { inputs: ['dist/libs/child/index.js'] },

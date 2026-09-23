@@ -58,21 +58,6 @@ function optedOutTaskIds(
     .map((task) => task.id);
 }
 
-const projectRootsMemo = new WeakMap<ProjectGraph, Record<string, string>>();
-
-/** Project name → root, for flattening bundles that bucket reads by project. */
-function projectRoots(projectGraph: ProjectGraph): Record<string, string> {
-  const memoized = projectRootsMemo.get(projectGraph);
-  if (memoized) {
-    return memoized;
-  }
-  const roots = Object.fromEntries(
-    Object.values(projectGraph.nodes).map((node) => [node.name, node.data.root])
-  );
-  projectRootsMemo.set(projectGraph, roots);
-  return roots;
-}
-
 /** The eligibility walk's view of the run's tasks, as JS resolves it. */
 export function ioSnapshotEligibilityOptions(
   projectGraph: ProjectGraph,
@@ -81,7 +66,6 @@ export function ioSnapshotEligibilityOptions(
   return {
     optedOutTaskIds: optedOutTaskIds(projectGraph, taskGraph),
     customHasherTaskIds: customHasherTaskIds(projectGraph, taskGraph),
-    projectRoots: projectRoots(projectGraph),
   };
 }
 

@@ -480,8 +480,7 @@ impl HashPlanner {
     /// `snapshots` is this run's I/O snapshot bundle; a task with an eligible
     /// entry hashes its observed reads instead of its declared filesets.
     /// `options` carries the task ids decided in JS, where executors and
-    /// target configuration are resolved; its `projectRoots` is unused, since
-    /// the planner reads roots from its own graph.
+    /// target configuration are resolved.
     #[napi(ts_return_type = "Record<string, string[]>")]
     pub fn get_plans(
         &self,
@@ -534,12 +533,6 @@ impl HashPlanner {
         let mut inputs = EligibilityInputs {
             custom_hasher: custom_hasher_task_ids.iter().cloned().collect(),
             opted_out: opted_out_task_ids.iter().cloned().collect(),
-            project_roots: self
-                .project_graph
-                .nodes
-                .iter()
-                .map(|(name, project)| (name.clone(), project.root.clone()))
-                .collect(),
             ..Default::default()
         };
         let scoped: Vec<(&String, &Task)> = match scope {
@@ -780,9 +773,9 @@ impl HashPlanner {
             .map(|instruction| pool.intern(instruction))
             .collect();
         if snapshot.is_none() {
-            // Both are file inputs; with a snapshot, observed reads of other
-            // tasks' outputs arrive as task_outputs and {input, projects}
-            // filesets are part of the replaced set.
+            // Both are file inputs; with a snapshot, reads of other tasks'
+            // outputs are observed reads and {input, projects} filesets are
+            // part of the replaced set.
             ids.extend(
                 self.gather_dependency_outputs(task, task_graph, &inputs.deps_outputs)?
                     .into_iter()

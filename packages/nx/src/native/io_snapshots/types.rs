@@ -20,7 +20,7 @@ pub struct IoSnapshotImportOptions {
     pub requested_commit: String,
     /// The commits the client asked about, newest first.
     pub commits: Vec<String>,
-    /// `Record<taskId, TaskIoSnapshot>` as JSON; serde reads the untagged `inputs`.
+    /// `Record<taskId, { commit, inputs, outputs }>` as JSON.
     pub snapshots_json: String,
     pub client_version: Option<String>,
     pub retain: Option<u32>,
