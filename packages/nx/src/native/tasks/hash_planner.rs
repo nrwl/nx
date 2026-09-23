@@ -1115,7 +1115,7 @@ impl HashPlanner {
         snapshot: Option<&SnapshotContext>,
     ) -> anyhow::Result<Vec<HashInstruction>> {
         if let Some(snapshot) = snapshot {
-            return Ok(self.gather_self_inputs_from_snapshot(project_name, self_inputs, snapshot));
+            return self.gather_self_inputs_from_snapshot(project_name, self_inputs, snapshot);
         }
         // `includeIgnored` filesets hash from disk as one aggregated group, so
         // a negation filters across entries; the rest read the file map.
@@ -1198,7 +1198,7 @@ impl HashPlanner {
         project_name: &str,
         self_inputs: &[Input],
         snapshot: &SnapshotContext,
-    ) -> Vec<HashInstruction> {
+    ) -> anyhow::Result<Vec<HashInstruction>> {
         let project_root = &self.project_graph.nodes[project_name].root;
         let mut instructions = vec![
             HashInstruction::ProjectConfiguration(project_name.to_string()),
@@ -1216,6 +1216,8 @@ impl HashPlanner {
             })
             .collect();
         if !ignored.is_empty() {
+            // Same rules as the native path, so an invalid group fails either way.
+            validate_files_globs(project_name, &ignored)?;
             instructions.push(HashInstruction::IgnoredFileSet(ignored));
         }
         instructions.extend(self.runtime_env_cwd_json_inputs(
@@ -1223,7 +1225,7 @@ impl HashPlanner {
             self_inputs,
             Some(snapshot),
         ));
-        instructions
+        Ok(instructions)
     }
 
     /// With a snapshot, a declared `{json}` file counts only if the trace
