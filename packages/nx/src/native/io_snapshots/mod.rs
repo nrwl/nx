@@ -8,7 +8,5 @@ mod types;
 
 pub use snapshots::IoSnapshots;
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) use snapshots::StoredEntry;
-#[cfg(not(target_arch = "wasm32"))]
 pub use store::IoSnapshotStore;
 pub use types::{IoSnapshotImportOptions, IoSnapshotResolution};

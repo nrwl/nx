@@ -13,19 +13,6 @@ type Db = db::SnapshotDb;
 #[cfg(target_arch = "wasm32")]
 type Db = ();
 
-/// One task's stored entry with its own digest, computed once when read.
-pub(crate) struct StoredEntry {
-    pub entry: bundle::TaskIoSnapshot,
-    pub digest: String,
-}
-
-impl StoredEntry {
-    pub(super) fn new(entry: bundle::TaskIoSnapshot) -> Self {
-        let digest = entry.digest();
-        Self { entry, digest }
-    }
-}
-
 /// One commit's stored snapshot set. Handed to the hash planner as-is.
 /// Entries are read from the workspace database per task as they are asked
 /// for, and remembered for the handle's lifetime, so a run costs the tasks it
@@ -35,7 +22,7 @@ impl StoredEntry {
 pub struct IoSnapshots {
     resolution: IoSnapshotResolution,
     db: Db,
-    entries: Mutex<HashMap<String, Option<Arc<StoredEntry>>>>,
+    entries: Mutex<HashMap<String, Option<Arc<bundle::TaskIoSnapshot>>>>,
 }
 
 impl IoSnapshots {
@@ -43,7 +30,7 @@ impl IoSnapshots {
     pub(super) fn new(
         resolution: IoSnapshotResolution,
         db: Db,
-        entries: HashMap<String, Option<Arc<StoredEntry>>>,
+        entries: HashMap<String, Option<Arc<bundle::TaskIoSnapshot>>>,
     ) -> Self {
         Self {
             resolution,
@@ -74,7 +61,7 @@ impl IoSnapshots {
     pub(crate) fn entries_for(
         &self,
         task_ids: &[&str],
-    ) -> anyhow::Result<HashMap<String, Arc<StoredEntry>>> {
+    ) -> anyhow::Result<HashMap<String, Arc<bundle::TaskIoSnapshot>>> {
         let mut entries = self.entries.lock().unwrap();
         let missing: Vec<&str> = task_ids
             .iter()
@@ -92,7 +79,7 @@ impl IoSnapshots {
                 entries.insert((*id).to_string(), None);
             }
             for (id, entry) in read {
-                entries.insert(id, Some(Arc::new(StoredEntry::new(entry))));
+                entries.insert(id, Some(Arc::new(entry)));
             }
         }
         Ok(task_ids

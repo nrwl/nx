@@ -190,7 +190,7 @@ pub(crate) fn resolve_scoped(
             diagnostics.push(IoSnapshotDiagnostic::task("missing", task_id));
             continue;
         };
-        let entry = &stored.entry;
+        let entry = stored.as_ref();
         if inputs.invalid_files_input.contains(task_id) {
             diagnostics.push(IoSnapshotDiagnostic::task("invalid-files-input", task_id));
             continue;
@@ -238,7 +238,7 @@ pub(crate) fn resolve_scoped(
             SnapshotTask {
                 files,
                 outputs,
-                digest: stored.digest.clone(),
+                digest: entry.digest(),
             },
         );
     }
@@ -450,8 +450,7 @@ pub fn get_io_snapshot_deferred_task_ids(
         .keys()
         .filter(|task_id| {
             entries.get(*task_id).is_some_and(|stored| {
-                !producers_by_declared_outputs(task_id, &stored.entry.inputs, &task_graph)
-                    .is_empty()
+                !producers_by_declared_outputs(task_id, &stored.inputs, &task_graph).is_empty()
             })
         })
         .cloned()

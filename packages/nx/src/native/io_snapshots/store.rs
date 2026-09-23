@@ -6,7 +6,7 @@ use tracing::debug;
 
 use super::bundle::{Bundle, TaskIoSnapshot};
 use super::db::{Db, SnapshotDb};
-use super::{IoSnapshotImportOptions, IoSnapshots, StoredEntry};
+use super::{IoSnapshotImportOptions, IoSnapshots};
 use crate::native::utils::time::current_timestamp_millis;
 
 /// The workspace database's snapshot sets, one per commit. A failed import
@@ -64,7 +64,7 @@ impl IoSnapshotStore {
         // The importing process keeps what it just parsed; nothing to re-read.
         let entries = snapshots
             .into_iter()
-            .map(|(id, entry)| (id, Some(Arc::new(StoredEntry::new(entry)))))
+            .map(|(id, entry)| (id, Some(Arc::new(entry))))
             .collect();
         Ok(IoSnapshots::new(resolution, self.db.clone(), entries))
     }
@@ -130,12 +130,8 @@ mod tests {
         let entries = stored.entries_for(&["web:build", "gone:build"]).unwrap();
         assert_eq!(entries.len(), 1);
         assert_eq!(
-            entries["web:build"].entry.outputs,
+            entries["web:build"].outputs,
             vec!["dist/web/a".to_string(), "dist/web/b".into()]
-        );
-        assert_eq!(
-            entries["web:build"].digest,
-            entries["web:build"].entry.digest()
         );
         // A second ask does not go back to the database: rewrite the commit
         // without the entry and the handle still answers from memory.
