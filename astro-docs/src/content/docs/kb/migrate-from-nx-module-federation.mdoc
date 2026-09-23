@@ -155,7 +155,7 @@ single config, keyed on `NODE_ENV`, and write the full entry URL with exactly on
 
 ```js
 // apps/webpack-host/module-federation.config.js
-const isProd = process.env.NODE_ENV === 'production';
+const isProd = process.env.NODE_ENV === 'production'; // development URLs use each remote's serve port
 module.exports = {
   // ... name, filename, remoteType, dts
   remotes: {
@@ -465,14 +465,16 @@ module.exports = {
 
 Read the values from the baseline `mf-stats.json` instead of deriving them, and carry exactly
 the keys it lists, with `singleton`, `strictVersion`, `requiredVersion`, and `eager` copied per
-entry. For npm packages Nx emitted `singleton: true`, `strictVersion: true`, and the
-`requiredVersion` range from your root `package.json`, and it marked only `react`, `react-dom`,
-`react-router`, and `react-router-dom` as `eager`. Secondary entry points such as
+entry. Where nothing overrode them, Nx emitted npm packages as `singleton: true`,
+`strictVersion: true`, with the `requiredVersion` range from your root `package.json`, and it
+marked only `react`, `react-dom`, `react-router`, and `react-router-dom` as `eager`. An
+`additionalShared` tuple set its own values, so the same package can appear with a different
+range and no `strictVersion`, which is why you copy rather than derive. Secondary entry points such as
 `react/jsx-runtime` are separate keys. A key such as `pkg` does not cover `pkg/subpath` requests,
 so list the subpaths the stats show. Where the baseline emitted an entry your `shared` callback or
-`additionalShared` shaped, carry those values; an `additionalShared` entry the stats do not list
-was never used and can go: the plugin emits a `shared` entry only for a package the app
-imports. The stats list only what the app imported, so a package you start
+`additionalShared` shaped, carry those values; a callback branch that returned `false` emitted
+nothing and needs no translation, and an `additionalShared` entry the stats do not list was never
+used and can go, since the plugin emits a `shared` entry only for a package the app imports. The stats list only what the app imported, so a package you start
 importing later stops being shared until you add it. One field the stats rewrite: a callback
 that set `requiredVersion: false` shows up as `requiredVersion: '^<version>'`, so for a workspace
 library keep the `false` and `version` your callback wrote.
@@ -614,7 +616,8 @@ another name such as `serve-static-inferred`, keep this explicit target, and nev
 inferred one.
 
 Give a remote's `serve-static` the port its production URL from Step 3 names, so a live remote
-and a static one can run at the same time. Hosts, remotes without a production override, and
+and a static one can run at the same time. That set then only matches a production build of the
+host, which is what `dependsOn: ['build']` produces. Hosts, remotes without a production override, and
 remotes loaded from a runtime manifest keep their existing port for both targets.
 
 Point an e2e project's web server command at `nx run-many -t serve-static -p <host> <remotes>`,
@@ -624,8 +627,8 @@ the warning is the whole cost.
 
 Remove `targetDefaults` entries in `nx.json` keyed on `@nx/webpack:webpack` or
 `@nx/rspack:rspack`. The `NX_MF_DEV_REMOTES` input they carried is dead, and the `build`
-inputs move to the generic `build` default as
-`"inputs": ["production", "^production"]`.
+inputs move to the generic `build` default as `"inputs": ["production", "^production"]`. Move
+anything else those entries held, such as `cache` and `dependsOn`, to the same place.
 
 A static host imports `<remote>/Module`, which gives the project graph a host-to-remote edge
 already. A host that resolves remotes from a runtime map has no such import and no edge, so add
