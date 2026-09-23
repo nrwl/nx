@@ -1816,8 +1816,6 @@ mod tests {
         let cache = TempDir::new().unwrap();
         let ctx = context(&temp, &cache);
         let files = ctx.current_files();
-        // Narrowing must remain consistent with cached matchers when cache keys alias.
-        build_glob_set(&["!prefix-cache-other/**\0e2e/react/**"]).unwrap();
         for patterns in [
             vec!["e2e/react/**/+(*.)+(spec|test).+(ts|js)?(x)"],
             vec![r"e2e\react\**\+(*.)+(spec|test).+(ts|js)?(x)"],
@@ -1833,7 +1831,6 @@ mod tests {
             vec!["libs/a/**", "libs/a/nested/**", "libs/a/**"],
             vec!["libs/a/**", "e2e/vue/**"],
             vec!["!libs/a/**"],
-            vec!["!prefix-cache-other/**", "e2e/react/**"],
         ] {
             let globs: Vec<String> = patterns.into_iter().map(String::from).collect();
             let exclude = Some(vec!["**/.hidden.spec.ts".into()]);

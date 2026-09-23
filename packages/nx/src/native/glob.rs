@@ -59,11 +59,11 @@ impl NxGlobSetBuilder {
         Ok(self)
     }
 
-    pub fn build(&self) -> anyhow::Result<NxGlobSet> {
+    pub fn build(&self, literal_prefix: Option<PathBuf>) -> anyhow::Result<NxGlobSet> {
         Ok(NxGlobSet {
             excluded_globs: self.excluded_globs.build()?,
             included_globs: self.included_globs.build()?,
-            literal_prefix: None,
+            literal_prefix,
         })
     }
 }
@@ -211,10 +211,7 @@ pub(crate) fn build_glob_set<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Resu
 
     trace!(?globs, ?result, "converted globs");
 
-    let mut glob_set = NxGlobSetBuilder::new(&result)?.build()?;
-    // Conversion can change the prefix, so cache it with the resulting matcher.
-    glob_set.literal_prefix = common_glob_prefix(&result);
-    let glob_set = Arc::new(glob_set);
+    let glob_set = Arc::new(NxGlobSetBuilder::new(&result)?.build(common_glob_prefix(&result))?);
     GLOB_CACHE.insert(cache_key, Arc::clone(&glob_set));
     Ok(glob_set)
 }

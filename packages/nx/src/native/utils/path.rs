@@ -35,6 +35,7 @@ pub fn get_child_files<'a, T>(
     directory: &Path,
     files: &'a BTreeMap<PathBuf, T>,
 ) -> impl Iterator<Item = (&'a PathBuf, &'a T)> {
+    // Path order keeps a directory and its descendants contiguous.
     files
         .range::<Path, _>((Bound::Included(directory), Bound::Unbounded))
         .take_while(move |(path, _)| path.starts_with(directory))
