@@ -1,6 +1,7 @@
 //! A task's I/O snapshot entry, as Nx Cloud sends it and the store keeps it.
 
 use serde::{Deserialize, Serialize};
+use xxhash_rust::xxh3::Xxh3;
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -16,9 +17,25 @@ impl TaskIoSnapshot {
     /// commit and other entries stay out, so a task's key moves only with its
     /// own entry.
     pub fn digest(&self) -> String {
-        let canonical = serde_json::to_vec(&self.outputs).expect("a list of strings serializes");
-        crate::native::hasher::hash(&canonical)
+        let mut hasher = Xxh3::new();
+        hash_list(&mut hasher, &self.outputs);
+        hasher.digest().to_string()
     }
+}
+
+/// Feeds one value then a NUL, which no path, task id or commit contains, so
+/// adjacent values cannot run together.
+pub(super) fn hash_value(hasher: &mut Xxh3, value: &str) {
+    hasher.update(value.as_bytes());
+    hasher.update(&[0]);
+}
+
+/// Feeds each value, then a 0x01 so one list cannot run into the next.
+pub(super) fn hash_list(hasher: &mut Xxh3, values: &[String]) {
+    for value in values {
+        hash_value(hasher, value);
+    }
+    hasher.update(&[1]);
 }
 
 #[cfg(test)]
@@ -38,6 +55,14 @@ mod tests {
             outputs: outputs.iter().map(|s| s.to_string()).collect(),
             ..entry("c1", &["a.ts"])
         }
+    }
+
+    #[test]
+    fn digest_keeps_values_apart() {
+        assert_ne!(
+            with_outputs(&["a", "bc"]).digest(),
+            with_outputs(&["ab", "c"]).digest()
+        );
     }
 
     #[test]

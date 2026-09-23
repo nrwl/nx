@@ -7,7 +7,7 @@ use rusqlite::params;
 use rusqlite::types::Value;
 
 use super::IoSnapshotResolution;
-use super::bundle::TaskIoSnapshot;
+use super::bundle::{TaskIoSnapshot, hash_list, hash_value};
 use crate::native::db::connection::NxDbConnection;
 
 pub type Db = Arc<Mutex<NxDbConnection>>;
@@ -38,8 +38,14 @@ CREATE TABLE IF NOT EXISTS io_snapshot_tasks (
 /// Deterministic identity of the snapshot content, independent of which
 /// commit it was requested for.
 pub fn digest(snapshots: &BTreeMap<String, TaskIoSnapshot>) -> String {
-    let canonical = serde_json::to_vec(snapshots).expect("BTreeMap of strings serializes");
-    crate::native::hasher::hash(&canonical)
+    let mut hasher = xxhash_rust::xxh3::Xxh3::new();
+    for (task_id, entry) in snapshots {
+        hash_value(&mut hasher, task_id);
+        hash_value(&mut hasher, &entry.commit);
+        hash_list(&mut hasher, &entry.inputs);
+        hash_list(&mut hasher, &entry.outputs);
+    }
+    hasher.digest().to_string()
 }
 
 pub fn normalize(snapshots: &mut BTreeMap<String, TaskIoSnapshot>) {
