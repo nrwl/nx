@@ -1,11 +1,7 @@
 import type { ProjectGraph } from '../config/project-graph';
 import type { TaskGraph } from '../config/task-graph';
 import { getObservedIoSnapshotOutputs, type IoSnapshots } from '../native';
-import {
-  customHasherTaskIds,
-  optedOutTaskIds,
-  projectRoots,
-} from './overrides';
+import { ioSnapshotEligibilityOptions } from './overrides';
 
 /**
  * Extends each eligible task's outputs in place to `declared ∪ observed`,
@@ -23,9 +19,7 @@ export function applyIoSnapshotOutputs(
   const observed = getObservedIoSnapshotOutputs(
     snapshots,
     taskGraph,
-    optedOutTaskIds(projectGraph, taskGraph),
-    customHasherTaskIds(projectGraph, taskGraph),
-    projectRoots(projectGraph)
+    ioSnapshotEligibilityOptions(projectGraph, taskGraph)
   );
   const applied: string[] = [];
   for (const [taskId, outputs] of Object.entries(observed)) {

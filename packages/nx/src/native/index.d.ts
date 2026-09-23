@@ -628,7 +628,7 @@ export declare function getIoSnapshotDeferredTaskIds(snapshots: IoSnapshots, tas
  * graph. It cannot see `invalid-files-input`, which needs nx.json, so a task
  * the planner withholds for it still counts as used here.
  */
-export declare function getIoSnapshotReport(snapshots: IoSnapshots, taskGraph: TaskGraph, optedOutTaskIds: Array<string>, customHasherTaskIds: Array<string>, projectRoots?: Record<string, string> | undefined | null): IoSnapshotReport
+export declare function getIoSnapshotReport(snapshots: IoSnapshots, taskGraph: TaskGraph, options?: IoSnapshotEligibilityOptions | undefined | null): IoSnapshotReport
 
 /**
  * If `workspace_root` is inside a git worktree, returns the main repo root.
@@ -640,7 +640,7 @@ export declare function getMainWorktreeRoot(workspaceRoot: string): string | nul
  * Observed outputs per eligible task (same walk as hashing), for the runner
  * to union into `task.outputs` and for `nx show` to label them.
  */
-export declare function getObservedIoSnapshotOutputs(snapshots: IoSnapshots, taskGraph: TaskGraph, optedOutTaskIds: Array<string>, customHasherTaskIds: Array<string>, projectRoots?: Record<string, string> | undefined | null): Record<string, Array<string>>
+export declare function getObservedIoSnapshotOutputs(snapshots: IoSnapshots, taskGraph: TaskGraph, options?: IoSnapshotEligibilityOptions | undefined | null): Record<string, Array<string>>
 
 export declare function getTransformableOutputs(outputs: Array<string>): Array<string>
 
@@ -755,6 +755,16 @@ export interface IoSnapshotDiagnostic {
   producer?: string
   file?: string
   message?: string
+}
+
+/** What JS knows about a run's tasks that the eligibility walk needs. */
+export interface IoSnapshotEligibilityOptions {
+  /** Tasks whose target sets `sandbox.enabled: false`. */
+  optedOutTaskIds?: Array<string>
+  /** Tasks whose executor ships a custom hasher. */
+  customHasherTaskIds?: Array<string>
+  /** Project name → root, for flattening bucketed entries. */
+  projectRoots?: Record<string, string>
 }
 
 /** The snapshot set the Nx Cloud client read for HEAD, as JS hands it over. */

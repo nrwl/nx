@@ -2,6 +2,7 @@ import type { ProjectGraph } from '../config/project-graph';
 import type { TaskGraph } from '../config/task-graph';
 import {
   getIoSnapshotReport,
+  type IoSnapshotEligibilityOptions,
   type IoSnapshotReport,
   type IoSnapshots,
 } from '../native';
@@ -66,12 +67,22 @@ export function optedOutTaskIds(
 }
 
 /** Project name → root, for flattening bundles that bucket reads by project. */
-export function projectRoots(
-  projectGraph: ProjectGraph
-): Record<string, string> {
+function projectRoots(projectGraph: ProjectGraph): Record<string, string> {
   return Object.fromEntries(
     Object.values(projectGraph.nodes).map((node) => [node.name, node.data.root])
   );
+}
+
+/** The eligibility walk's view of the run's tasks, as JS resolves it. */
+export function ioSnapshotEligibilityOptions(
+  projectGraph: ProjectGraph,
+  taskGraph: TaskGraph
+): IoSnapshotEligibilityOptions {
+  return {
+    optedOutTaskIds: optedOutTaskIds(projectGraph, taskGraph),
+    customHasherTaskIds: customHasherTaskIds(projectGraph, taskGraph),
+    projectRoots: projectRoots(projectGraph),
+  };
 }
 
 /**
@@ -90,8 +101,6 @@ export function buildIoSnapshotOverrides(
   return getIoSnapshotReport(
     snapshots,
     taskGraph,
-    optedOutTaskIds(projectGraph, taskGraph),
-    customHasherTaskIds(projectGraph, taskGraph),
-    projectRoots(projectGraph)
+    ioSnapshotEligibilityOptions(projectGraph, taskGraph)
   );
 }

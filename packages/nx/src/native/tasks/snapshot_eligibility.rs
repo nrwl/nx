@@ -24,6 +24,37 @@ pub(crate) struct EligibilityInputs {
     pub project_roots: HashMap<String, String>,
 }
 
+/// What JS knows about a run's tasks that the eligibility walk needs.
+#[napi(object)]
+#[derive(Default)]
+pub struct IoSnapshotEligibilityOptions {
+    /// Tasks whose target sets `sandbox.enabled: false`.
+    pub opted_out_task_ids: Option<Vec<String>>,
+    /// Tasks whose executor ships a custom hasher.
+    pub custom_hasher_task_ids: Option<Vec<String>>,
+    /// Project name → root, for flattening bucketed entries.
+    pub project_roots: Option<HashMap<String, String>>,
+}
+
+impl From<IoSnapshotEligibilityOptions> for EligibilityInputs {
+    fn from(options: IoSnapshotEligibilityOptions) -> Self {
+        Self {
+            opted_out: options
+                .opted_out_task_ids
+                .unwrap_or_default()
+                .into_iter()
+                .collect(),
+            custom_hasher: options
+                .custom_hasher_task_ids
+                .unwrap_or_default()
+                .into_iter()
+                .collect(),
+            invalid_files_input: HashSet::new(),
+            project_roots: options.project_roots.unwrap_or_default(),
+        }
+    }
+}
+
 /// A task the hash planner hashes from its snapshot: observed reads as
 /// workspace-relative globs (negations included), observed writes, and the
 /// digest of its own entry that marks the plan.
@@ -303,21 +334,9 @@ pub(crate) fn resolve_scoped(
 pub fn get_io_snapshot_report(
     snapshots: &IoSnapshots,
     task_graph: TaskGraph,
-    opted_out_task_ids: Vec<String>,
-    custom_hasher_task_ids: Vec<String>,
-    project_roots: Option<HashMap<String, String>>,
+    options: Option<IoSnapshotEligibilityOptions>,
 ) -> IoSnapshotReport {
-    resolve(
-        snapshots,
-        &task_graph,
-        &EligibilityInputs {
-            opted_out: opted_out_task_ids.into_iter().collect(),
-            custom_hasher: custom_hasher_task_ids.into_iter().collect(),
-            invalid_files_input: HashSet::new(),
-            project_roots: project_roots.unwrap_or_default(),
-        },
-    )
-    .report()
+    resolve(snapshots, &task_graph, &options.unwrap_or_default().into()).report()
 }
 
 /// The observed outputs a task's declared outputs get extended with: no
@@ -381,25 +400,14 @@ fn under_ignored_dir(path: &str) -> bool {
 pub fn get_observed_io_snapshot_outputs(
     snapshots: &IoSnapshots,
     task_graph: TaskGraph,
-    opted_out_task_ids: Vec<String>,
-    custom_hasher_task_ids: Vec<String>,
-    project_roots: Option<HashMap<String, String>>,
+    options: Option<IoSnapshotEligibilityOptions>,
 ) -> HashMap<String, Vec<String>> {
-    resolve(
-        snapshots,
-        &task_graph,
-        &EligibilityInputs {
-            opted_out: opted_out_task_ids.into_iter().collect(),
-            custom_hasher: custom_hasher_task_ids.into_iter().collect(),
-            invalid_files_input: HashSet::new(),
-            project_roots: project_roots.unwrap_or_default(),
-        },
-    )
-    .tasks
-    .into_iter()
-    .filter(|(_, task)| !task.outputs.is_empty())
-    .map(|(id, task)| (id, task.outputs))
-    .collect()
+    resolve(snapshots, &task_graph, &options.unwrap_or_default().into())
+        .tasks
+        .into_iter()
+        .filter(|(_, task)| !task.outputs.is_empty())
+        .map(|(id, task)| (id, task.outputs))
+        .collect()
 }
 
 /// A glob with no literal leading directory reads from the workspace root.

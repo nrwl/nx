@@ -2173,12 +2173,9 @@ describe('task planner', () => {
           taskOutputs: { 'gone:build': ['dist/x'] },
         },
       });
-      const report = getIoSnapshotReport(
-        withProducer,
-        taskGraph,
-        [],
-        ['child:build']
-      );
+      const report = getIoSnapshotReport(withProducer, taskGraph, {
+        customHasherTaskIds: ['child:build'],
+      });
       expect(report.used).toEqual([]);
       expect(report.diagnostics.map((d) => [d.reason, d.taskId])).toEqual([
         ['custom-hasher', 'child:build'],
@@ -2211,8 +2208,9 @@ describe('task planner', () => {
         )
       ).toEqual(plain);
       expect(
-        getIoSnapshotReport(snapshots, taskGraph, ['parent:build'], [])
-          .diagnostics
+        getIoSnapshotReport(snapshots, taskGraph, {
+          optedOutTaskIds: ['parent:build'],
+        }).diagnostics
       ).toContainEqual(
         expect.objectContaining({ reason: 'disabled', taskId: 'parent:build' })
       );
@@ -2228,7 +2226,7 @@ describe('task planner', () => {
         plain
       );
       expect(
-        getIoSnapshotReport(snapshots, taskGraph, [], []).diagnostics.find(
+        getIoSnapshotReport(snapshots, taskGraph).diagnostics.find(
           (d) => d.taskId === 'parent:build'
         )
       ).toMatchObject({ reason: 'root-anchored-glob', glob: '**/*.gen' });
@@ -2281,7 +2279,7 @@ describe('task planner', () => {
       expect(getIoSnapshotDeferredTaskIds(snapshots, taskGraph)).toEqual([
         'parent:build',
       ]);
-      expect(getIoSnapshotReport(snapshots, taskGraph, [], []).used).toEqual([
+      expect(getIoSnapshotReport(snapshots, taskGraph).used).toEqual([
         'parent:build',
       ]);
     });
@@ -2297,7 +2295,7 @@ describe('task planner', () => {
           planner.getPlans(['parent:build'], taskGraph, snapshots)
         ).toEqual(plain);
         expect(
-          getIoSnapshotReport(snapshots, taskGraph, [], []).diagnostics.find(
+          getIoSnapshotReport(snapshots, taskGraph).diagnostics.find(
             (d) => d.taskId === 'parent:build'
           )
         ).toMatchObject({ reason: 'escapes-workspace', glob });
