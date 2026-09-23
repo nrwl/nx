@@ -4,9 +4,9 @@ use std::sync::Arc;
 use napi::bindgen_prelude::External;
 use tracing::debug;
 
-use super::bundle;
-use super::db::{self, Db};
-use super::{IoSnapshotImportOptions, IoSnapshotResolution, IoSnapshots, StoredEntry};
+use super::bundle::{Bundle, TaskIoSnapshot};
+use super::db::{Db, SnapshotDb};
+use super::{IoSnapshotImportOptions, IoSnapshots, StoredEntry};
 use crate::native::utils::time::current_timestamp_millis;
 
 const DEFAULT_RETAIN: u32 = 5;
@@ -16,14 +16,16 @@ const DEFAULT_RETAIN: u32 = 5;
 /// `WRITE_FAILED`.
 #[napi]
 pub struct IoSnapshotStore {
-    db: Db,
+    db: SnapshotDb,
 }
 
 #[napi]
 impl IoSnapshotStore {
     #[napi(constructor)]
     pub fn new(#[napi(ts_arg_type = "ExternalObject<NxDbConnection>")] db: &External<Db>) -> Self {
-        Self { db: Arc::clone(db) }
+        Self {
+            db: SnapshotDb::new(Arc::clone(db)),
+        }
     }
 
     /// Stores the set the Nx Cloud client read for `requested_commit`,
@@ -33,37 +35,26 @@ impl IoSnapshotStore {
         &self,
         options: IoSnapshotImportOptions,
     ) -> napi::Result<IoSnapshots, String> {
-        let mut snapshots: BTreeMap<String, bundle::TaskIoSnapshot> =
+        let snapshots: BTreeMap<String, TaskIoSnapshot> =
             serde_json::from_str(&options.snapshots_json).map_err(|err| {
                 napi::Error::new(
                     "INVALID_RESPONSE".to_string(),
                     format!("Nx Cloud returned I/O snapshots nx cannot read: {err}"),
                 )
             })?;
-        db::normalize(&mut snapshots);
-        let mut source_commits: Vec<String> =
-            snapshots.values().map(|s| s.commit.clone()).collect();
-        source_commits.sort();
-        source_commits.dedup();
-        let resolution = IoSnapshotResolution {
-            requested_commit: options.requested_commit.clone(),
-            commits: options.commits,
-            source_commits,
-            digest: db::digest(&snapshots),
-            fetched_at: current_timestamp_millis(),
-            client_version: options.client_version.unwrap_or_else(|| "nx".to_string()),
-            tasks: snapshots.len() as u32,
-        };
-        let bundle = db::Bundle {
-            resolution: resolution.clone(),
+        let bundle = Bundle::new(
+            options.requested_commit,
+            options.commits,
+            options.client_version.unwrap_or_else(|| "nx".to_string()),
             snapshots,
-        };
-        db::write(
-            &self.db,
-            &bundle,
-            options.retain.unwrap_or(DEFAULT_RETAIN) as usize,
-        )
-        .map_err(|err| napi::Error::new("WRITE_FAILED".to_string(), err.to_string()))?;
+        );
+        self.db
+            .write(&bundle, options.retain.unwrap_or(DEFAULT_RETAIN) as usize)
+            .map_err(|err| napi::Error::new("WRITE_FAILED".to_string(), err.to_string()))?;
+        let Bundle {
+            resolution,
+            snapshots,
+        } = bundle;
         if resolution.tasks == 0 {
             debug!(
                 "io snapshots: Nx Cloud has no snapshots for any of the {} commit(s) ending at {}; every task falls back to its declared inputs",
@@ -79,12 +70,11 @@ impl IoSnapshotStore {
             );
         }
         // The importing process keeps what it just parsed; nothing to re-read.
-        let entries = bundle
-            .snapshots
+        let entries = snapshots
             .into_iter()
             .map(|(id, entry)| (id, Some(Arc::new(StoredEntry::new(entry)))))
             .collect();
-        Ok(IoSnapshots::new(resolution, Arc::clone(&self.db), entries))
+        Ok(IoSnapshots::new(resolution, self.db.clone(), entries))
     }
 
     /// The stored set for `commit`, without touching the network; `null`
@@ -92,7 +82,7 @@ impl IoSnapshotStore {
     /// than `max_age_ms` ago. Reads only the commit's summary row.
     #[napi]
     pub fn get(&self, commit: String, max_age_ms: Option<i64>) -> Option<IoSnapshots> {
-        let resolution = match db::read_resolution(&self.db, &commit) {
+        let resolution = match self.db.read_resolution(&commit) {
             Ok(resolution) => resolution?,
             Err(err) => {
                 debug!("io snapshots: the stored set for {commit} is unreadable: {err}");
@@ -104,7 +94,7 @@ impl IoSnapshotStore {
         }
         Some(IoSnapshots::new(
             resolution,
-            Arc::clone(&self.db),
+            self.db.clone(),
             HashMap::new(),
         ))
     }
@@ -162,17 +152,20 @@ mod tests {
         );
         // A second ask does not go back to the database: rewrite the commit
         // without the entry and the handle still answers from memory.
-        db::write(
-            &store.db,
-            &db::Bundle {
-                resolution: stored.resolution(),
-                snapshots: BTreeMap::new(),
-            },
-            5,
-        )
-        .unwrap();
+        store
+            .db
+            .write(
+                &Bundle {
+                    resolution: stored.resolution(),
+                    snapshots: BTreeMap::new(),
+                },
+                5,
+            )
+            .unwrap();
         assert!(
-            db::read_entries(&store.db, "head", &["web:build"])
+            store
+                .db
+                .read_entries("head", &["web:build"])
                 .unwrap()
                 .is_empty()
         );
@@ -189,15 +182,16 @@ mod tests {
         let mut resolution = import(&store, "{}").unwrap().resolution();
         let minute = 60 * 1000;
         resolution.fetched_at -= 61 * minute;
-        db::write(
-            &store.db,
-            &db::Bundle {
-                resolution,
-                snapshots: BTreeMap::new(),
-            },
-            5,
-        )
-        .unwrap();
+        store
+            .db
+            .write(
+                &Bundle {
+                    resolution,
+                    snapshots: BTreeMap::new(),
+                },
+                5,
+            )
+            .unwrap();
         assert!(store.get("head".into(), Some(60 * minute)).is_none());
         assert!(store.get("head".into(), Some(62 * minute)).is_some());
         assert!(store.get("head".into(), None).is_some());
@@ -217,6 +211,7 @@ mod tests {
         import(&store, "{}").unwrap();
         store
             .db
+            .0
             .lock()
             .unwrap()
             .execute("UPDATE io_snapshot_bundles SET resolution = 'not json'", [])

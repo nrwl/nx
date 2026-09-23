@@ -1,7 +1,76 @@
 //! A task's I/O snapshot entry, as Nx Cloud sends it and the store keeps it.
 
+#[cfg(not(target_arch = "wasm32"))]
+use std::collections::BTreeMap;
+
 use serde::{Deserialize, Serialize};
 use xxhash_rust::xxh3::Xxh3;
+
+#[cfg(not(target_arch = "wasm32"))]
+use super::IoSnapshotResolution;
+#[cfg(not(target_arch = "wasm32"))]
+use crate::native::utils::time::current_timestamp_millis;
+
+/// One resolved set of entries, as imported for a requested commit.
+#[cfg(not(target_arch = "wasm32"))]
+pub struct Bundle {
+    pub resolution: IoSnapshotResolution,
+    pub snapshots: BTreeMap<String, TaskIoSnapshot>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl Bundle {
+    /// Normalizes `snapshots` and describes them as the set fetched now for
+    /// `requested_commit`.
+    pub fn new(
+        requested_commit: String,
+        commits: Vec<String>,
+        client_version: String,
+        mut snapshots: BTreeMap<String, TaskIoSnapshot>,
+    ) -> Self {
+        for entry in snapshots.values_mut() {
+            sort_unique(&mut entry.inputs);
+            sort_unique(&mut entry.outputs);
+        }
+        let mut source_commits: Vec<String> = snapshots
+            .values()
+            .map(|entry| entry.commit.clone())
+            .collect();
+        sort_unique(&mut source_commits);
+        let resolution = IoSnapshotResolution {
+            requested_commit,
+            commits,
+            source_commits,
+            digest: set_digest(&snapshots),
+            fetched_at: current_timestamp_millis(),
+            client_version,
+            tasks: snapshots.len() as u32,
+        };
+        Self {
+            resolution,
+            snapshots,
+        }
+    }
+}
+
+/// Identity of a set's content, independent of the commit it was requested for.
+#[cfg(not(target_arch = "wasm32"))]
+fn set_digest(snapshots: &BTreeMap<String, TaskIoSnapshot>) -> String {
+    let mut hasher = Xxh3::new();
+    for (task_id, entry) in snapshots {
+        hash_value(&mut hasher, task_id);
+        hash_value(&mut hasher, &entry.commit);
+        hash_list(&mut hasher, &entry.inputs);
+        hash_list(&mut hasher, &entry.outputs);
+    }
+    hasher.digest().to_string()
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn sort_unique(values: &mut Vec<String>) {
+    values.sort();
+    values.dedup();
+}
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -25,13 +94,13 @@ impl TaskIoSnapshot {
 
 /// Feeds one value then a NUL, which no path, task id or commit contains, so
 /// adjacent values cannot run together.
-pub(super) fn hash_value(hasher: &mut Xxh3, value: &str) {
+fn hash_value(hasher: &mut Xxh3, value: &str) {
     hasher.update(value.as_bytes());
     hasher.update(&[0]);
 }
 
 /// Feeds each value, then a 0x01 so one list cannot run into the next.
-pub(super) fn hash_list(hasher: &mut Xxh3, values: &[String]) {
+fn hash_list(hasher: &mut Xxh3, values: &[String]) {
     for value in values {
         hash_value(hasher, value);
     }

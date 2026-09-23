@@ -9,7 +9,7 @@ use super::db;
 /// The workspace database the entries live in. The wasm build has no
 /// database, so it has no store and never holds a set.
 #[cfg(not(target_arch = "wasm32"))]
-type Db = db::Db;
+type Db = db::SnapshotDb;
 #[cfg(target_arch = "wasm32")]
 type Db = ();
 
@@ -83,7 +83,9 @@ impl IoSnapshots {
             .collect();
         if !missing.is_empty() {
             #[cfg(not(target_arch = "wasm32"))]
-            let read = db::read_entries(&self.db, &self.resolution.requested_commit, &missing)?;
+            let read = self
+                .db
+                .read_entries(&self.resolution.requested_commit, &missing)?;
             #[cfg(target_arch = "wasm32")]
             let read: Vec<(String, bundle::TaskIoSnapshot)> = Vec::new();
             for id in &missing {
