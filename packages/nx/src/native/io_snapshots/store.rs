@@ -9,7 +9,8 @@ use super::db::{Db, SnapshotDb};
 use super::{IoSnapshotImportOptions, IoSnapshots, StoredEntry};
 use crate::native::utils::time::current_timestamp_millis;
 
-const DEFAULT_RETAIN: u32 = 5;
+/// Commits whose sets are kept; older ones are pruned on import.
+const RETAINED_COMMITS: usize = 5;
 
 /// The workspace database's snapshot sets, one per commit. A failed import
 /// throws with a `code` JS maps to a skip reason: `INVALID_RESPONSE` or
@@ -42,14 +43,9 @@ impl IoSnapshotStore {
                     format!("Nx Cloud returned I/O snapshots nx cannot read: {err}"),
                 )
             })?;
-        let bundle = Bundle::new(
-            options.requested_commit,
-            options.commits,
-            options.client_version.unwrap_or_else(|| "nx".to_string()),
-            snapshots,
-        );
+        let bundle = Bundle::new(options.requested_commit, &options.commits, snapshots);
         self.db
-            .write(&bundle, options.retain.unwrap_or(DEFAULT_RETAIN) as usize)
+            .write(&bundle, RETAINED_COMMITS)
             .map_err(|err| napi::Error::new("WRITE_FAILED".to_string(), err.to_string()))?;
         let Bundle {
             resolution,
@@ -58,7 +54,7 @@ impl IoSnapshotStore {
         if resolution.tasks == 0 {
             debug!(
                 "io snapshots: Nx Cloud has no snapshots for any of the {} commit(s) ending at {}; every task falls back to its declared inputs",
-                resolution.commits.len(),
+                options.commits.len(),
                 resolution.requested_commit
             );
         } else {
@@ -117,8 +113,6 @@ mod tests {
             requested_commit: "head".into(),
             commits: vec!["head".into(), "parent".into()],
             snapshots_json: json.into(),
-            client_version: Some("nx/test".into()),
-            retain: None,
         })
     }
 
@@ -133,7 +127,6 @@ mod tests {
         let resolution = imported.resolution();
         assert_eq!(resolution.tasks, 2);
         assert_eq!(resolution.source_commits, vec!["head", "parent"]);
-        assert_eq!(resolution.commits, vec!["head", "parent"]);
         assert_eq!(imported.commit(), "head");
 
         let stored = store.get("head".into(), None).unwrap();

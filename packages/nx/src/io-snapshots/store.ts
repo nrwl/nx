@@ -4,7 +4,6 @@ import { getDbConnection } from '../utils/db-connection';
 import { getLatestCommitSha } from '../utils/git-utils';
 import { logger } from '../utils/logger';
 import { output } from '../utils/output';
-import { nxVersion } from '../utils/versions';
 import {
   ioSnapshotEnv,
   isIoSnapshotFetchEnabled,
@@ -87,7 +86,6 @@ export async function loadIoSnapshotsForRun(
         requestedCommit: head,
         commits: result.commits,
         snapshotsJson: JSON.stringify(result.snapshots),
-        clientVersion: `nx/${nxVersion}`,
       }),
     });
   } catch (e) {

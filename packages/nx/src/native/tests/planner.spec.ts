@@ -1942,7 +1942,6 @@ describe('task planner', () => {
       new IoSnapshotStore(snapshotDb).import({
         requestedCommit: commit,
         commits: [commit],
-        clientVersion: 'nx/test',
         snapshotsJson: JSON.stringify(
           Object.fromEntries(
             Object.entries(entries).map(([id, e]) => [

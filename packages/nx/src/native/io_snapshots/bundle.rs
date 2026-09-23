@@ -1,4 +1,4 @@
-//! A task's I/O snapshot entry, as Nx Cloud sends it and the store keeps it.
+//! A snapshot set and its task entries, as Nx Cloud sends them and the store keeps them.
 
 #[cfg(not(target_arch = "wasm32"))]
 use std::collections::{BTreeMap, HashSet};
@@ -21,11 +21,10 @@ pub struct Bundle {
 #[cfg(not(target_arch = "wasm32"))]
 impl Bundle {
     /// Normalizes `snapshots` and describes them as the set fetched now for
-    /// `requested_commit`.
+    /// `requested_commit`, searched across `commits` (newest first).
     pub fn new(
         requested_commit: String,
-        commits: Vec<String>,
-        client_version: String,
+        commits: &[String],
         mut snapshots: BTreeMap<String, TaskIoSnapshot>,
     ) -> Self {
         for entry in snapshots.values_mut() {
@@ -44,10 +43,8 @@ impl Bundle {
             .collect();
         let resolution = IoSnapshotResolution {
             requested_commit,
-            commits,
             source_commits,
             fetched_at: current_timestamp_millis(),
-            client_version,
             tasks: snapshots.len() as u32,
         };
         Self {
@@ -115,8 +112,7 @@ mod tests {
         ]);
         let bundle = Bundle::new(
             "head".into(),
-            vec!["head".into(), "zeta".into(), "alpha".into()],
-            "nx/test".into(),
+            &["head".into(), "zeta".into(), "alpha".into()],
             snapshots,
         );
         assert_eq!(bundle.resolution.source_commits, vec!["zeta", "alpha"]);

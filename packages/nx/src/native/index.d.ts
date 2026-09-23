@@ -767,8 +767,6 @@ export interface IoSnapshotImportOptions {
   commits: Array<string>
   /** `Record<taskId, { commit, inputs, outputs }>` as JSON. */
   snapshotsJson: string
-  clientVersion?: string
-  retain?: number
 }
 
 export interface IoSnapshotReport {
@@ -783,10 +781,9 @@ export interface IoSnapshotReport {
 /** What was resolved for a commit; stored beside its entries. */
 export interface IoSnapshotResolution {
   requestedCommit: string
-  commits: Array<string>
+  /** The commits entries were recorded at, newest first. */
   sourceCommits: Array<string>
   fetchedAt: number
-  clientVersion: string
   tasks: number
 }
 

@@ -72,7 +72,6 @@ function writeBundle(snapshots: Record<string, unknown>) {
   return new IoSnapshotStore(snapshotDb).import({
     requestedCommit: HEAD,
     commits: [HEAD],
-    clientVersion: 'nx/test',
     snapshotsJson: JSON.stringify(snapshots),
   });
 }

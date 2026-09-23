@@ -171,7 +171,7 @@ mod tests {
                 )
             })
             .collect();
-        let mut bundle = Bundle::new(commit.into(), vec![commit.into()], "test".into(), snapshots);
+        let mut bundle = Bundle::new(commit.into(), &[commit.into()], snapshots);
         bundle.resolution.fetched_at = fetched_at;
         bundle
     }

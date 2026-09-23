@@ -3,10 +3,8 @@ import type { IoSnapshotReport } from '../native';
 
 const resolution = {
   requestedCommit: 'abc123',
-  commits: ['abc123'],
   sourceCommits: ['abc123'],
   fetchedAt: 0,
-  clientVersion: '1',
   tasks: 3,
 };
 
