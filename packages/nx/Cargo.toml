@@ -71,7 +71,6 @@ vt100-ctt = { git = "https://github.com/JamesHenry/vt100-rust", rev = "b15dc3b0f
 serde = "1.0.219"
 serde_json = "1.0.140"
 static_assertions = "1.1"
-vte = "0.14"
 wrap-ansi = "0.1"
 
 [target.'cfg(windows)'.dependencies]
@@ -110,6 +109,7 @@ libc = "0.2"
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 hickory-resolver = "0.25"
 tokio = { version = "1.44.0", features = ["net", "process"] }
+vte = "0.14"
 arboard = { version = "3.4.1", default-features = false, features = [
   "wayland-data-control",
 ] }

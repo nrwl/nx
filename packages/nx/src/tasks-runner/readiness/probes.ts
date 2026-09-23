@@ -24,7 +24,6 @@ export async function waitForReadiness(
   readyWhen: NormalizedReadyWhen,
   context: ReadinessProbeContext
 ): Promise<void> {
-  // The probes live in the native module, which the WASM binding compiles out
   if (IS_WASM) {
     throw new Error(
       `The WASM build of Nx does not support "readyWhen", so "${context.taskId}" cannot be probed for readiness.`
@@ -67,6 +66,10 @@ export async function waitForReadiness(
       throw timedOut();
     case ProbeOutcome.Cancelled:
       throw exited();
+    default: {
+      const unhandled: never = outcome;
+      throw new Error(`Unhandled readiness probe outcome: ${unhandled}`);
+    }
   }
 }
 

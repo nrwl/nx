@@ -13,8 +13,8 @@ import { reverse } from '../project-graph/operators';
 import { TaskHistory, getTaskHistory } from '../utils/task-history';
 import { TaskReadiness } from '../native';
 import {
+  filterProbedProducers,
   getReadyProducerIds,
-  getReadyWhenConfig,
 } from './readiness/ready-when';
 
 export interface Batch {
@@ -30,8 +30,6 @@ export interface TasksScheduleHooks {
   // A task was held back because this producer is not ready yet
   onReadinessHold?: (producerId: string) => void;
 }
-
-type ProducerReadiness = 'ready' | 'failed' | 'pending' | 'unknown';
 
 export class TasksSchedule {
   private notScheduledTaskGraph = this.taskGraph;
@@ -143,8 +141,8 @@ export class TasksSchedule {
   }
 
   // A task whose producer is not ready yet is skipped in place: it keeps its
-  // position and never blocks the tasks behind it. Only a producer of this
-  // task graph holds it; the run itself waits on one run elsewhere.
+  // position and never blocks the tasks behind it. A producer outside this
+  // task graph never holds it; the task polls that producer's row itself.
   public nextTask(filter?: (task: Task) => boolean) {
     for (let i = 0; i < this.scheduledTasks.length; i++) {
       const task = this.taskGraph.tasks[this.scheduledTasks[i]];
@@ -261,7 +259,7 @@ export class TasksSchedule {
 
   private async scheduleBatches() {
     const batchMap: Record<string, TaskGraph> = {};
-    const elsewhere = new Map<string, ProducerReadiness>();
+    const readyElsewhere = new Map<string, boolean>();
     for (const root of this.notScheduledTaskGraph.roots) {
       const rootTask = this.notScheduledTaskGraph.tasks[root];
       const executorName = getExecutorNameForTask(rootTask, this.projectGraph);
@@ -271,7 +269,7 @@ export class TasksSchedule {
         executorName,
         true,
         new Set<string>(),
-        elsewhere
+        readyElsewhere
       );
     }
     for (const [executorName, taskGraph] of Object.entries(batchMap)) {
@@ -302,7 +300,7 @@ export class TasksSchedule {
     rootExecutorName: string,
     isRoot: boolean,
     visitedInBatch: Set<string>,
-    elsewhere: Map<string, ProducerReadiness>
+    readyElsewhere: Map<string, boolean>
   ): Promise<void> {
     // Skip if already processed in this batch - prevents redundant traversals
     if (visitedInBatch.has(task.id)) {
@@ -319,9 +317,7 @@ export class TasksSchedule {
     const producers = this.readyProducersOf(task);
     if (
       (task.continuous && producers.all.length > 0) ||
-      producers.probed.some(
-        (id) => this.producerReadiness(id, elsewhere) !== 'ready'
-      )
+      producers.probed.some((id) => !this.isProducerReady(id, readyElsewhere))
     ) {
       return;
     }
@@ -379,7 +375,7 @@ export class TasksSchedule {
         rootExecutorName,
         false,
         visitedInBatch,
-        elsewhere
+        readyElsewhere
       );
     }
   }
@@ -394,10 +390,10 @@ export class TasksSchedule {
         this.fullTaskGraph,
         this.projectGraph
       );
-      const probed = all.filter(
-        (id) =>
-          getReadyWhenConfig(this.fullTaskGraph.tasks[id], this.projectGraph) !=
-          null
+      const probed = filterProbedProducers(
+        all,
+        this.fullTaskGraph,
+        this.projectGraph
       );
       producers = { all, probed };
       this.readyProducers.set(task.id, producers);
@@ -405,21 +401,20 @@ export class TasksSchedule {
     return producers;
   }
 
-  private producerReadiness(
+  private isProducerReady(
     producerId: string,
-    elsewhere: Map<string, ProducerReadiness>
-  ): ProducerReadiness {
+    readyElsewhere: Map<string, boolean>
+  ): boolean {
     if (this.taskGraph.tasks[producerId]) {
-      return this.readiness.get(producerId) ?? 'pending';
+      return this.readiness.get(producerId) === 'ready';
     }
-    let status = elsewhere.get(producerId);
-    if (!status) {
-      status = fromReadinessRow(
-        this.hooks.readinessElsewhere?.(producerId) ?? null
-      );
-      elsewhere.set(producerId, status);
+    let ready = readyElsewhere.get(producerId);
+    if (ready === undefined) {
+      ready =
+        this.hooks.readinessElsewhere?.(producerId) === TaskReadiness.Ready;
+      readyElsewhere.set(producerId, ready);
     }
-    return status;
+    return ready;
   }
 
   private canBatchTaskBeScheduled(
@@ -476,18 +471,5 @@ export class TasksSchedule {
 
   public getEstimatedTaskTimings(): Record<string, number> {
     return this.estimatedTaskTimings;
-  }
-}
-
-function fromReadinessRow(row: TaskReadiness | null): ProducerReadiness {
-  switch (row) {
-    case null:
-      return 'unknown';
-    case TaskReadiness.Pending:
-      return 'pending';
-    case TaskReadiness.Ready:
-      return 'ready';
-    case TaskReadiness.Failed:
-      return 'failed';
   }
 }

@@ -21,7 +21,7 @@ const REAP_MS: u64 = 1000;
 
 /// One of `url`, `port` or `command` is set. `interval` absent means backoff.
 #[napi(object)]
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct ReadinessProbeConfig {
     pub url: Option<String>,
     pub port: Option<u32>,
@@ -48,7 +48,7 @@ enum Probe {
 enum PortHost {
     Loopback,
     Ip(IpAddr),
-    // Resolved in-process for the same reason the url probe keeps hickory
+    // Resolved in-process: getaddrinfo reads the environment while JS may write it
     Name(String, Box<TokioResolver>),
 }
 
