@@ -769,50 +769,6 @@ describe('migrate commit broker', () => {
     });
   });
 
-  it('lands the commit of a step given up on after its own commit failed, instead of replaying that answer', async () => {
-    // Giving up is a new operation on the same attempt; it must not replay the
-    // worker's cached failure.
-    mockRunInstall.mockRejectedValueOnce(new Error('registry unreachable'));
-    mockCommit.mockImplementation(async (...args: unknown[]) => {
-      await (args[4] as () => Promise<void>)();
-      return committed;
-    });
-    const broker = new MigrateCommitBroker(root, dir, 'npx nx migrate', POLICY);
-    process.env.NX_MIGRATE_BROKER = broker.nonce;
-
-    const worker = commitStepTree(dir, step(), [], vi.fn(), {});
-    await sleep(20);
-    await broker.service();
-    await expect(worker).rejects.toThrow('registry unreachable');
-    writeRunState(
-      dir,
-      runState({
-        steps: [step({ status: 'failed', generatorCompleted: true })],
-      })
-    );
-    const givenUp = commitStepTree(
-      dir,
-      step({ status: 'failed', generatorCompleted: true }),
-      [],
-      vi.fn(),
-      {},
-      'unresolved'
-    );
-    await sleep(20);
-    await broker.service();
-    const partial = await givenUp;
-    broker.close();
-
-    expect(partial).toEqual({
-      result: committed,
-      absorbedStepIds: [],
-      recorded: true,
-    });
-    expect(mockRunInstall).toHaveBeenCalledTimes(2);
-    expect(mockCommit).toHaveBeenCalledTimes(2);
-    expect(mockCommit.mock.calls[1][1]).toEqual({ name: 'gen (unresolved)' });
-  });
-
   it('lands the commit of a failed step adopted by hand after its own commit failed, under the plain name', async () => {
     mockRunInstall.mockRejectedValueOnce(new Error('registry unreachable'));
     mockCommit.mockImplementation(async (...args: unknown[]) => {
@@ -1018,34 +974,68 @@ describe('migrate commit broker', () => {
       }
     );
 
-    it.each(['failed', 'died'] as const)(
-      'commits the partial tree of a %s step given up on under its name, marked unresolved',
-      async (status) => {
-        writeRunState(dir, runState({ steps: [step({ status })] }));
+    describe('a give-up request', () => {
+      const giveUp = { kind: 'give-up', stepId: 'step-1', attempt: 1 };
+
+      it('settles the step in one operation: its partial tree committed under its name, marked unresolved, and the step written before the answer', async () => {
+        writeRunState(
+          dir,
+          runState({
+            steps: [step({ status: 'failed', generatorCompleted: true })],
+          })
+        );
         const broker = new MigrateCommitBroker(
           root,
           dir,
           'npx nx migrate',
           POLICY
         );
-        const resultPath = writeRequest(broker.nonce, {
-          kind: 'commit',
-          stepId: 'step-1',
-          attempt: 1,
-          commitAs: 'unresolved',
-        });
+        const resultPath = writeRequest(broker.nonce, giveUp);
 
         await broker.service();
         const result = JSON.parse(readFileSync(resultPath, 'utf8'));
         broker.close();
 
-        expect(result.kind).toBe('commit');
+        expect(result).toEqual({
+          kind: 'give-up',
+          outcome: { kind: 'given-up', commit: committed },
+          output: [],
+        });
         expect(mockCommit).toHaveBeenCalledTimes(1);
         expect(mockCommit.mock.calls[0][1]).toEqual({
           name: 'gen (unresolved)',
         });
-      }
-    );
+        const state = readRunState(dir);
+        expect(state.steps[0]).toMatchObject({
+          status: 'unresolved',
+          attempt: 1,
+          unresolvedIssueId: 'issue-1',
+          commitLedgerIndex: 0,
+        });
+        expect(state.steps[0].commitStarted).toBeUndefined();
+        expect(state.commits).toEqual([
+          { kind: 'landed', sha: committed.sha, stepIds: ['step-1'] },
+        ]);
+        expect(state.treeOperation).toBeUndefined();
+      });
+
+      it('answers stale when the run makes no commits', async () => {
+        writeRunState(dir, runState({ steps: [step({ status: 'failed' })] }));
+        const broker = new MigrateCommitBroker(root, dir, 'npx nx migrate', {
+          ...POLICY,
+          createCommits: false,
+        });
+        const resultPath = writeRequest(broker.nonce, giveUp);
+
+        await broker.service();
+        const result = JSON.parse(readFileSync(resultPath, 'utf8'));
+        broker.close();
+
+        expect(result).toEqual({ kind: 'stale' });
+        expect(mockCommit).not.toHaveBeenCalled();
+        expect(readRunState(dir).steps[0].status).toBe('failed');
+      });
+    });
 
     it('commits a failed step adopted by hand under its plain name', async () => {
       writeRunState(dir, runState({ steps: [step({ status: 'failed' })] }));

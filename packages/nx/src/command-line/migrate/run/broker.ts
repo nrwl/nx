@@ -29,6 +29,7 @@ import {
   type CommitResult,
 } from '../migrate-commits';
 import { publishFileAtomically } from './atomic-write';
+import { giveUpWithCommit, type GiveUpOutcome } from './give-up';
 import {
   readRunState,
   type MigrateRunPolicy,
@@ -43,11 +44,11 @@ import {
   clearCommitStarted,
   commitNameForStep,
   commitResultToLedgerEntry,
+  gitRan,
   markCommitStarted,
   markInstallFailed,
   stepsToPendingMigrations,
   uncoveredFailedStepIds,
-  type CommitAction,
 } from './state-machine';
 import { attachIssueIdsToCommitEntry } from './issues';
 import { resetForCleanRetry } from './clean-retry';
@@ -70,12 +71,13 @@ export type BrokerRequestKind =
   // The install a skip or a non-commit adopt owes for the tree it keeps.
   | 'action-install'
   // A clean retry's reset of the tree to the step's starting ref.
-  | 'reset';
+  | 'reset'
+  // A give-up's commit of the partial tree and the transition it settles,
+  // as one operation (see give-up.ts).
+  | 'give-up';
 
 export type InstallSeam = 'install' | 'fold-install' | 'action-install';
 
-// The parent owns install and commit policy; commitAs only tells a post-failure
-// commit apart from the worker's and names it.
 export interface BrokerRequest {
   kind: BrokerRequestKind;
   stepId: string;
@@ -83,9 +85,9 @@ export interface BrokerRequest {
   // Reset only: a fresh id per clean retry, so a second retry of the same
   // attempt resets again instead of reading the first reset's answer.
   invocation?: string;
-  // The parent owns commit policy; the action only tells a post-failure commit
-  // apart from the worker's and names it.
-  commitAs?: CommitAction;
+  // The parent owns commit policy; this only tells a failed step's adopt
+  // commit apart from the worker's request.
+  commitAs?: 'adopt';
 }
 
 export type BrokerResult =
@@ -103,11 +105,12 @@ export type BrokerResult =
       output: DeferredOutputRecord[];
     }
   | { kind: 'reset'; error?: string }
+  | { kind: 'give-up'; outcome: GiveUpOutcome; output: DeferredOutputRecord[] }
   | { kind: 'stale' };
 
 type BrokerAnswer = Extract<
   BrokerResult,
-  { kind: 'commit' | 'installed' | 'reset' }
+  { kind: 'commit' | 'installed' | 'reset' | 'give-up' }
 >;
 
 export interface BrokeredCommit {
@@ -183,7 +186,7 @@ export function acquireTreeOperation(
     const held = liveTreeOperation(fresh, owner);
     if (held) throw new TreeBusyError(treeBusyMessage(held));
     marks =
-      request.kind === 'commit' &&
+      (request.kind === 'commit' || request.kind === 'give-up') &&
       fresh.steps.find((s) => s.id === request.stepId)?.commitStarted !== true;
     return {
       ...(marks ? markCommitStarted(fresh, request.stepId) : fresh),
@@ -239,11 +242,23 @@ export function treeBusyMessage(held: MigrateTreeOperation): string {
 export function treeOperationLabel(
   held: Pick<MigrateTreeOperation, 'kind' | 'stepId'>
 ): string {
-  return held.kind === 'checkpoint'
-    ? 'the checkpoint commit'
-    : `the ${
-        held.kind === 'commit' || held.kind === 'reset' ? held.kind : 'install'
-      } of step '${held.stepId}'`;
+  switch (held.kind) {
+    case 'checkpoint':
+      return 'the checkpoint commit';
+    case 'commit':
+    case 'give-up':
+      return `the commit of step '${held.stepId}'`;
+    case 'reset':
+      return `the reset of step '${held.stepId}'`;
+    case 'install':
+    case 'fold-install':
+    case 'action-install':
+      return `the install of step '${held.stepId}'`;
+    default: {
+      const exhaustive: never = held.kind;
+      throw new Error(`Unhandled tree operation '${exhaustive}'.`);
+    }
+  }
 }
 
 function atSeam(
@@ -277,6 +292,7 @@ const SEAM_STATUSES: Record<
   'fold-install': new Set(['awaiting-prompt-outcome']),
   'action-install': new Set(['failed', 'died']),
   reset: new Set(['failed', 'died']),
+  'give-up': new Set(['failed', 'died']),
 };
 
 function isAtSeam(
@@ -328,7 +344,7 @@ export async function commitStepTree(
   absorbedStepIds: string[],
   commitInProcess: () => Promise<CommitResult>,
   scope: TreeScope,
-  commitAs?: CommitAction
+  commitAs?: 'adopt'
 ): Promise<BrokeredCommit> {
   const request: BrokerRequest = {
     kind: 'commit',
@@ -353,25 +369,6 @@ export async function commitStepTree(
     absorbedStepIds: answer.absorbedStepIds,
     recorded: true,
   };
-}
-
-// Whether git may have written history for this result. A landed commit's
-// mark is the ledger entry's to clear, and a failure reported once git ran
-// (a hook's output overflowing the subprocess buffer after the commit) cannot
-// vouch that nothing landed, so only the other results release the mark.
-function gitRan(result: CommitResult): boolean {
-  switch (result.status) {
-    case 'committed':
-    case 'failed':
-      return true;
-    case 'no-changes':
-    case 'disabled':
-      return false;
-    default: {
-      const exhaustive: never = result;
-      throw new Error(`Unhandled commit result: ${JSON.stringify(exhaustive)}`);
-    }
-  }
 }
 
 /**
@@ -429,6 +426,44 @@ export async function resetStepTree(
   if (answer.kind !== 'reset') {
     throw new Error(`Unexpected '${answer.kind}' answer to a reset request.`);
   }
+}
+
+/**
+ * The same for giving a failed or died step up while the run commits. Unlike
+ * the seams above, the operation settles the step itself, under the
+ * reservation it runs with, so the caller writes no transition of its own.
+ */
+export async function giveUpStepTree(
+  root: string,
+  dir: string,
+  step: MigrateStep,
+  skipInstall: boolean,
+  reconcileCommand: string,
+  scope: TreeScope
+): Promise<GiveUpOutcome> {
+  const request: BrokerRequest = {
+    kind: 'give-up',
+    stepId: step.id,
+    attempt: step.attempt,
+  };
+  const nonce = process.env[BROKER_ENV_VAR];
+  if (!nonce) {
+    const lease = acquireTreeOperation(dir, request);
+    scope.lease = lease;
+    return giveUpWithCommit({
+      root,
+      dir,
+      step,
+      lease,
+      skipInstall,
+      reconcileCommand,
+    });
+  }
+  const answer = await ask(dir, nonce, request);
+  if (answer.kind !== 'give-up') {
+    throw new Error(`Unexpected '${answer.kind}' answer to a give-up request.`);
+  }
+  return answer.outcome;
 }
 
 async function ask(
@@ -511,6 +546,9 @@ function settle(result: BrokerResult): BrokerAnswer {
     case 'reset':
       if (result.error !== undefined) throw new Error(result.error);
       return result;
+    case 'give-up':
+      replayDeferredOutput(result.output);
+      return result;
     case 'stale':
       throw new BrokerStaleRequestError(
         `The request for this step no longer matches its attempt; nothing was installed or committed.`
@@ -582,7 +620,7 @@ export class MigrateCommitBroker {
       let result: BrokerResult;
       try {
         if (lease) this.inFlight = request;
-        result = lease ? await this.answer(request) : { kind: 'stale' };
+        result = lease ? await this.answer(request, lease) : { kind: 'stale' };
         // Recorded by the process that ran the commit, before the answer: the
         // step reading it can die with the commit already in history. A failed
         // record throws and ends the session rather than losing the entry.
@@ -631,19 +669,45 @@ export class MigrateCommitBroker {
     });
   }
 
-  private async answer(request: BrokerRequest): Promise<BrokerResult> {
+  private async answer(
+    request: BrokerRequest,
+    lease: TreeLease
+  ): Promise<BrokerResult> {
     const state = readRunState(this.dir);
     const step = state.steps.find((s) => s.id === request.stepId);
     if (
       !Object.hasOwn(SEAM_STATUSES, request.kind) ||
       !isAtSeam(step, request) ||
-      ((request.kind === 'commit' || request.kind === 'reset') &&
+      ((request.kind === 'commit' ||
+        request.kind === 'reset' ||
+        request.kind === 'give-up') &&
         !this.policy.createCommits) ||
-      (request.commitAs !== undefined &&
-        request.commitAs !== 'adopt' &&
-        request.commitAs !== 'unresolved')
+      (request.commitAs !== undefined && request.commitAs !== 'adopt')
     ) {
       return { kind: 'stale' };
+    }
+    if (request.kind === 'give-up') {
+      const output = new DeferredOutputCollector();
+      const outcome = await giveUpWithCommit({
+        root: this.root,
+        dir: this.dir,
+        step,
+        lease,
+        skipInstall: this.policy.skipInstall,
+        reconcileCommand: this.reconcileCommand,
+        output,
+      });
+      // Raw package-manager output only for a failed install, as for a commit.
+      return {
+        kind: 'give-up',
+        outcome,
+        output: output.render(
+          outcome.kind === 'given-up' &&
+            outcome.commit.status === 'install-failed'
+            ? 'keep'
+            : 'drop'
+        ),
+      };
     }
     if (request.kind === 'reset') {
       try {

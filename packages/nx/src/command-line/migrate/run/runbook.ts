@@ -245,8 +245,10 @@ export function renderRunbook(ctx: RunbookContext): string {
     `Present the options to the user unless the choice is clearly yours to`,
     `make. When no user can answer (nothing interactive is driving this`,
     `session), give the step up with \`unresolved\` and continue the run`,
-    `rather than stalling on it; where the dispense withholds it, \`adopt\``,
-    `is that choice.`,
+    `rather than stalling on it. Where the dispense withholds it, a commit of`,
+    `the migration may already be in history: \`adopt\` only once you have`,
+    `inspected the tree and finished the migration; otherwise stop and`,
+    `report.`,
     ``,
     `## Commits`,
     ``

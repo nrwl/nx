@@ -682,6 +682,25 @@ export function stepsToPendingMigrations(
   return pending;
 }
 
+// Whether git may have written history for this result. A landed commit's
+// mark is the ledger entry's to clear, and a failure reported once git ran
+// (a hook's output overflowing the subprocess buffer after the commit) cannot
+// vouch that nothing landed, so only the other results release the mark.
+export function gitRan(result: CommitResult): boolean {
+  switch (result.status) {
+    case 'committed':
+    case 'failed':
+      return true;
+    case 'no-changes':
+    case 'disabled':
+      return false;
+    default: {
+      const exhaustive: never = result;
+      throw new Error(`Unhandled commit result: ${JSON.stringify(exhaustive)}`);
+    }
+  }
+}
+
 /**
  * Classifies a commit attempt into the ledger entry to record, or null when
  * there is nothing to record ('no-changes' / 'disabled'). A landed entry
