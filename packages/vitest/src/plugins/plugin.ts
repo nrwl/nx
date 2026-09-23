@@ -35,7 +35,10 @@ import {
   loadViteDynamicImport,
   loadVitestConfigDynamicImport,
 } from '../utils/executor-utils';
-import { collectSetupFileInputs } from './setup-file-inputs';
+import {
+  collectSetupFileInputs,
+  resolveSetupFileCandidates,
+} from './setup-file-inputs';
 
 export interface VitestPluginOptions {
   testTargetName?: string;
@@ -76,7 +79,9 @@ export interface VitestPluginOptions {
   discoverTestFiles?: 'glob' | 'vitest';
 }
 
-type VitestTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
+type VitestTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'> & {
+  setupFileCandidates: string[];
+};
 
 /**
  * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
@@ -137,6 +142,8 @@ export const createNodes: CreateNodes<VitestPluginOptions> = [
       ])
     );
 
+    const setupTsconfigJsonCache: RawTsconfigJsonCache = new Map();
+
     try {
       return await createNodesFromFiles(
         async (configFile, _, context, idx) => {
@@ -147,7 +154,12 @@ export const createNodes: CreateNodes<VitestPluginOptions> = [
           // Adding the config file path to the hash ensures that the final hash value is different
           // for different config files.
           const hash = hashes[idx] + configFile;
-          if (!targetsCache.has(hash)) {
+          const cachedTargets = targetsCache.get(hash);
+          // Older cache entries predate `setupFileCandidates`.
+          if (
+            cachedTargets === undefined ||
+            (cachedTargets && !cachedTargets.setupFileCandidates)
+          ) {
             const result = await buildVitestTargets(
               configFile,
               projectRoot,
@@ -166,11 +178,20 @@ export const createNodes: CreateNodes<VitestPluginOptions> = [
           if (!cached) {
             return { projects: {} };
           }
-          const { metadata, targets } = cached;
+          const { metadata, targets, setupFileCandidates } = cached;
 
           const project: ProjectConfiguration = {
             root: projectRoot,
-            targets,
+            // Resolved on every run: the cache key does not cover setup files
+            // or their tsconfigs.
+            targets: withSetupFileInputs(
+              targets,
+              normalizedOptions.testTargetName,
+              setupFileCandidates,
+              projectRoot,
+              context.workspaceRoot,
+              setupTsconfigJsonCache
+            ),
             metadata,
           };
 
@@ -275,11 +296,12 @@ async function buildVitestTargets(
   const namedInputs = getNamedInputs(projectRoot, context);
 
   const targets: Record<string, TargetConfiguration> = {};
+  let setupFileCandidates: string[] = [];
 
   // if file is vitest.config or vite.config has definition for test, create targets for test and/or atomized tests
   if (configFilePath.includes('vitest.config') || hasTest) {
     const isTypecheckEnabled = !!viteBuildConfig.test?.typecheck?.enabled;
-    const setupFileInputs = collectSetupFileInputs(
+    setupFileCandidates = resolveSetupFileCandidates(
       viteBuildConfig,
       projectRoot,
       context.workspaceRoot,
@@ -292,8 +314,7 @@ async function buildVitestTargets(
       options.testMode,
       pmc,
       isTypecheckEnabled,
-      [...tsconfigInputs, ...setupFileInputs.tsconfigs],
-      setupFileInputs.files
+      tsconfigInputs
     );
 
     if (options.ciTargetName) {
@@ -499,7 +520,42 @@ async function buildVitestTargets(
     }
   }
 
-  return { targets, metadata };
+  return { targets, metadata, setupFileCandidates };
+}
+
+function withSetupFileInputs(
+  targets: Record<string, TargetConfiguration>,
+  testTargetName: string,
+  setupFileCandidates: string[],
+  projectRoot: string,
+  workspaceRoot: string,
+  jsonCache: RawTsconfigJsonCache
+): Record<string, TargetConfiguration> {
+  if (setupFileCandidates.length === 0) return targets;
+  const { files, tsconfigs } = collectSetupFileInputs(
+    setupFileCandidates,
+    projectRoot,
+    workspaceRoot,
+    jsonCache
+  );
+  if (files.length === 0 && tsconfigs.length === 0) return targets;
+
+  const setupInputs = [
+    ...tsconfigs.map((f) => ({
+      json: `{workspaceRoot}/${f}`,
+      fields: ['compilerOptions'],
+    })),
+    // Whole-file, not just `compilerOptions`: these are sources Vitest
+    // executes, so any change to them changes the run.
+    ...files.map((f) => `{workspaceRoot}/${f}`),
+  ];
+  const inputs = [...targets[testTargetName].inputs, ...setupInputs];
+  return Object.fromEntries(
+    Object.entries(targets).map(([name, target]) => [
+      name,
+      { ...target, inputs },
+    ])
+  );
 }
 
 async function testTarget(
@@ -511,8 +567,7 @@ async function testTarget(
   testMode: 'watch' | 'run' = 'watch',
   pmc: ReturnType<typeof getPackageManagerCommand>,
   isTypecheckEnabled: boolean,
-  tsconfigInputs: string[],
-  setupFileInputs: string[] = []
+  tsconfigInputs: string[]
 ) {
   const command = testMode === 'run' ? 'vitest run' : 'vitest';
   const depOutputsGlob = isTypecheckEnabled ? '**/*.{js,d.ts}' : '**/*.js';
@@ -546,9 +601,6 @@ async function testTarget(
         json: `{workspaceRoot}/${f}`,
         fields: ['compilerOptions'],
       })),
-      // Whole-file, not just `compilerOptions`: these are sources Vitest
-      // executes, so any change to them changes the run.
-      ...setupFileInputs.map((f) => `{workspaceRoot}/${f}`),
       {
         externalDependencies: ['vitest'],
       },

@@ -1,7 +1,7 @@
 import { CreateNodesContext, TargetConfiguration } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { join } from 'node:path';
-import { createNodesV2 } from './plugin';
+import { createNodesV2, type VitestPluginOptions } from './plugin';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 
 // Only the Vite/Vitest module loading is mocked; the filesystem and the
@@ -80,13 +80,13 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
   }
 
   async function getProjectTargets(
-    configFile: string
+    configFile: string,
+    options: VitestPluginOptions = {
+      testTargetName: 'test',
+      ciTargetName: 'test-ci',
+    }
   ): Promise<Record<string, TargetConfiguration>> {
-    const nodes = await createNodesFunction(
-      [configFile],
-      { testTargetName: 'test', ciTargetName: 'test-ci' },
-      context
-    );
+    const nodes = await createNodesFunction([configFile], options, context);
     const [, result] = nodes[0];
     return Object.values(result.projects!)[0].targets!;
   }
@@ -186,6 +186,39 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
       expect(targets['test'].inputs).toContainEqual(
         '{workspaceRoot}/libs/shared/setup.mts'
       );
+    });
+
+    it('should declare a setup file created after the targets were cached', async () => {
+      delete process.env.NX_CACHE_PROJECT_GRAPH;
+      try {
+        // Unique options and config content: no other test or earlier run
+        // can supply the cache entry.
+        await temp.createFiles({
+          'libs/lib1/vitest.config.ts': `// ${temp.tempDir}`,
+          'libs/lib1/package.json': '{"name":"lib1"}',
+          'libs/lib1/src/a.spec.ts': '',
+        });
+        mockResolvedTestConfig({
+          setupFiles: ['../../tools/vitest/setup.mts'],
+        });
+        await getProjectTargets('libs/lib1/vitest.config.ts', {
+          testTargetName: 'cached-test',
+        });
+        await temp.createFiles({ 'tools/vitest/setup.mts': '' });
+
+        const targets = await getProjectTargets('libs/lib1/vitest.config.ts', {
+          testTargetName: 'cached-test',
+        });
+
+        expect(
+          (await loadViteDynamicImport()).resolveConfig
+        ).toHaveBeenCalledTimes(1);
+        expect(targets['cached-test'].inputs).toContainEqual(
+          '{workspaceRoot}/tools/vitest/setup.mts'
+        );
+      } finally {
+        process.env.NX_CACHE_PROJECT_GRAPH = 'false';
+      }
     });
 
     it('should carry the setup file input into the atomized targets', async () => {

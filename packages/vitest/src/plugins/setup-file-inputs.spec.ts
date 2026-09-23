@@ -1,7 +1,10 @@
 import { join } from 'node:path';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import type { ResolvedConfig } from 'vite';
-import { collectSetupFileInputs } from './setup-file-inputs';
+import {
+  collectSetupFileInputs,
+  resolveSetupFileCandidates,
+} from './setup-file-inputs';
 
 describe('collectSetupFileInputs', () => {
   let tempFs: TempFs;
@@ -28,13 +31,18 @@ describe('collectSetupFileInputs', () => {
     }: { projectRoot?: string; authoredRoot?: string } = {}
   ) =>
     collectSetupFileInputs(
-      {
-        root: authoredRoot ?? workspaceRoot,
-        test,
-      } as unknown as ResolvedConfig,
+      resolveSetupFileCandidates(
+        {
+          root: authoredRoot ?? workspaceRoot,
+          test,
+        } as unknown as ResolvedConfig,
+        projectRoot,
+        workspaceRoot,
+        authoredRoot
+      ),
       projectRoot,
       workspaceRoot,
-      authoredRoot
+      new Map()
     );
 
   it('should declare a setup file that lives outside the project root', async () => {
