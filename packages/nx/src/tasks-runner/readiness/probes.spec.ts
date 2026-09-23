@@ -11,6 +11,14 @@ import type { RunningTask } from '../running-tasks/running-task';
 import { waitForReadiness } from './probes';
 import { normalizeReadyWhen, type NormalizedReadyWhen } from './ready-when';
 
+const native = vi.hoisted(() => ({ wasm: false }));
+vi.mock('../../native', async () => ({
+  ...(await vi.importActual('../../native')),
+  get IS_WASM() {
+    return native.wasm;
+  },
+}));
+
 describe('waitForReadiness', () => {
   let outputListeners: ((chunk: string) => void)[];
   let runningTask: RunningTask;
@@ -42,6 +50,17 @@ describe('waitForReadiness', () => {
       ),
       new Promise((r) => setTimeout(() => r('pending'), 20)),
     ]);
+
+  it('rejects with a clear error on the WASM build, where the probes do not exist', async () => {
+    native.wasm = true;
+    try {
+      await expect(wait({ logMatches: 'ready' })).rejects.toThrow(
+        'The WASM build of Nx does not support "readyWhen", so "app:serve" cannot be probed for readiness.'
+      );
+    } finally {
+      native.wasm = false;
+    }
+  });
 
   describe('logMatches', () => {
     it('resolves once every entry has appeared, split across chunks and colored', async () => {

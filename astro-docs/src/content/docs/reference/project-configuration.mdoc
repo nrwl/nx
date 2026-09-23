@@ -656,6 +656,7 @@ The continuous task keeps running.
 Tasks whose `dependsOn` entry doesn't set `waitFor` to `ready` start as before.
 A continuous target without `readyWhen` counts as ready once it has started.
 On such a dependency, `waitFor: "ready"` changes nothing.
+The WASM build of Nx doesn't support `readyWhen`, so tasks waiting for such a target fail there.
 
 `readyWhen` is unrelated to the option of the same name on the `nx:run-commands` executor.
 That option marks the run-commands task itself as done.
