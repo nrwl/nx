@@ -633,8 +633,8 @@ Then set `waitFor` to `ready` on the `dependsOn` entry of each task that should 
 
 `readyWhen` is an object with exactly one of these keys:
 
-- `url`: ready when an HTTP or HTTPS `GET` request ends with a status from 200 to 403.
-  Redirects are followed.
+- `url`: ready when an HTTP or HTTPS `GET` request gets a status from 200 to 403.
+  A redirect counts as ready and isn't followed.
   A 404 at the root path is retried at `/index.html`.
   Certificates aren't verified, so a self-signed development certificate works.
   Proxy environment variables such as `HTTP_PROXY` and `NO_PROXY` apply.

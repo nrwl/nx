@@ -158,26 +158,6 @@ describe('waitForReadiness', () => {
     beforeEach(async () => {
       status = 503;
       server = createHttpServer((req, res) => {
-        if (req.url === '/redirect') {
-          res.writeHead(302, { location: '/' });
-          res.end();
-          return;
-        }
-        if (req.url.startsWith('/slow-redirect/')) {
-          const hop = Number(req.url.slice('/slow-redirect/'.length));
-          setTimeout(() => {
-            res.writeHead(302, {
-              location: hop > 0 ? `/slow-redirect/${hop - 1}` : '/',
-            });
-            res.end();
-          }, 40);
-          return;
-        }
-        if (req.url === '/loop') {
-          res.writeHead(302, { location: '/loop' });
-          res.end();
-          return;
-        }
         res.writeHead(status);
         res.end();
       });
@@ -216,20 +196,22 @@ describe('waitForReadiness', () => {
       ).resolves.toBeUndefined();
     });
 
-    it('follows a redirect to the final status', async () => {
-      status = 200;
+    it('counts a redirect as ready without requesting its target', async () => {
+      const requested: string[] = [];
+      server.removeAllListeners('request');
+      server.on('request', (req, res) => {
+        requested.push(req.url);
+        if (req.url === '/redirect') {
+          res.writeHead(302, { location: '/target' });
+        } else {
+          res.writeHead(503);
+        }
+        res.end();
+      });
       await expect(
         wait({ url: `${baseUrl}/redirect`, interval: 10 })
       ).resolves.toBeUndefined();
-    });
-
-    it('charges every redirect hop against the one timeout', async () => {
-      status = 200;
-      const start = Date.now();
-      await expect(
-        wait({ url: `${baseUrl}/slow-redirect/5`, timeout: 100, interval: 10 })
-      ).rejects.toThrow('did not become ready within 100ms');
-      expect(Date.now() - start).toBeLessThan(200);
+      expect(requested).toEqual(['/redirect']);
     });
 
     it('closes the connection of a response whose body keeps streaming', async () => {
@@ -271,12 +253,6 @@ describe('waitForReadiness', () => {
         sockets.forEach((socket) => socket.destroy());
         await new Promise((r) => trickle.close(r));
       }
-    });
-
-    it('does not treat a redirect loop as ready', async () => {
-      await expect(
-        wait({ url: `${baseUrl}/loop`, timeout: 100, interval: 10 })
-      ).rejects.toThrow('did not become ready within 100ms');
     });
 
     it('rejects on timeout while the status stays out of range', async () => {
