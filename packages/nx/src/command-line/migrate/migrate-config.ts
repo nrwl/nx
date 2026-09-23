@@ -55,10 +55,10 @@ export function applyNxJsonMigrateDefaults(
   const startsRun =
     (isRunMigrations || isSingleMigration) &&
     (merged.runId === undefined || merged.startFresh === true);
-  // A continue spawns a new agent session on a recorded run, so it takes
-  // `agentic` and nothing else: a resume under another commit policy is
-  // refused. The reconcile and the worker must not take it: `agentic` there
-  // trips the `--agentic`/`--run-id` parse conflict.
+  // A continue re-enters a recorded run (a new agent session, or in place
+  // inside an agent), so it takes `agentic` and nothing else: a resume under
+  // another commit policy is refused. The reconcile and the worker must not
+  // take it: `agentic` there trips the `--agentic`/`--run-id` parse conflict.
   const isContinue =
     isRunMigrations && merged.runId !== undefined && merged.startFresh !== true;
 

@@ -7,6 +7,7 @@ import {
   completionSummaryLines,
   completionWarnings,
   hasUnresolvedIssues,
+  holdRunToContinue,
   type MigrateRunPolicy,
   type MigrateRunState,
   type OrchestratorInitResult,
@@ -17,6 +18,7 @@ import {
   runOrchestratorInit,
   type RunOrchestratorInitInput,
   runOrchestratorResume,
+  renderContinueCommand,
   renderStartFresh,
   tallySteps,
 } from '../../run';
@@ -39,17 +41,6 @@ export interface RunMasterSessionInput extends Omit<
   // Asked by init before it starts a run (never before a report or a
   // continue); false stops with nothing started.
   confirmNewRun: () => Promise<boolean>;
-}
-
-// The policy flags are always explicit: a continue must resolve to the run's
-// recorded policy, and nx.json can flip the bare default either way.
-function continueCommand(
-  root: string,
-  agentId: string,
-  runId: string,
-  policy: MigrateRunPolicy
-): string {
-  return `${pmExecPrefix(root)} nx migrate --run-migrations --agentic=${agentId} --run-id=${runId} ${policy.createCommits ? '--create-commits' : '--no-create-commits'}${policy.skipInstall ? ' --skip-install' : ''}`;
 }
 
 function startFreshCommand(
@@ -231,7 +222,7 @@ function continueHint(
   runId: string,
   policy: MigrateRunPolicy
 ): string {
-  return `Run ${continueCommand(root, agentId, runId, policy)} to continue it.`;
+  return `Run ${renderContinueCommand(root, runId, policy, agentId)} to continue it.`;
 }
 
 function printExistingRunReport(
@@ -242,11 +233,11 @@ function printExistingRunReport(
 ): void {
   output.warn(
     renderExistingRunReport(found.facts, {
-      continueCommand: continueCommand(
+      continueCommand: renderContinueCommand(
         root,
-        agentId,
         found.runId,
-        found.facts.policy
+        found.facts.policy,
+        agentId
       ),
       startFresh: renderStartFresh(migrationsPath, (flag) =>
         startFreshCommand(root, agentId, found.runId, flag)
@@ -273,6 +264,16 @@ async function decideExistingRun(
     return undefined;
   }
   output.log(renderExistingRunReport(found.facts));
+  // A held run leaves nothing to ask: continue would open a second session
+  // over the live one, and start fresh refuses. The continue's own gate
+  // throws the refusal; a holder gone since the report lets the prompt run,
+  // and so does WASM, where the gate cannot tell and continue proceeds.
+  if (
+    found.facts.otherHolders === 'unknown' ||
+    found.facts.otherHolders.length > 0
+  ) {
+    holdRunToContinue(root, found.runId);
+  }
   return migrateChoice({
     message: 'What do you want to do with the active migrate run?',
     choices: [

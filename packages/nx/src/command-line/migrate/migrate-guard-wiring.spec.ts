@@ -61,11 +61,17 @@ vi.mock('./resolve-package-version', async () => ({
     mockResolvePackageVersion(...args),
 }));
 
-vi.mock('./run', () => ({
+// migrate.ts lazy-requires ./run (CJS channel), which vi.mock cannot
+// intercept; replace the module in the require channel instead.
+const mockHoldRunToContinue = vi.fn();
+const mockReleaseRunToHandOff = vi.fn();
+mockCjsModule(import.meta.url, './run', {
   runSingleMigrationWorker: vi.fn(),
   runOrchestratorInit: vi.fn(),
   runOrchestratorReconcile: vi.fn(),
-}));
+  holdRunToContinue: (...args: unknown[]) => mockHoldRunToContinue(...args),
+  releaseRunToHandOff: (...args: unknown[]) => mockReleaseRunToHandOff(...args),
+});
 
 vi.mock('../../daemon/client/client', () => ({
   daemonClient: {
@@ -113,6 +119,8 @@ describe('migrate() version-skew-guard wiring (temp-installation hand-off)', () 
     mockAssertWorkspaceNx.mockReset().mockReturnValue(undefined);
     mockRunNxArgvSync.mockReset();
     mockRunInstall.mockReset().mockResolvedValue(undefined);
+    mockHoldRunToContinue.mockReset();
+    mockReleaseRunToHandOff.mockReset();
     delete process.env.NX_MIGRATE_SKIP_INSTALL;
     vi.spyOn(output, 'log').mockImplementation(() => {});
     vi.spyOn(output, 'warn').mockImplementation(() => {});
@@ -222,6 +230,48 @@ describe('migrate() version-skew-guard wiring (temp-installation hand-off)', () 
 
       expect(exitCode).toBe(1);
       expect(mockRunNxArgvSync).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('runMigrations', () => {
+    it('holds the run a continue names through the install, then releases it for the local nx it hands off to', async () => {
+      const exitCode = await migrate(
+        ROOT,
+        {
+          runMigrations: 'migrations.json',
+          runId: 'run-1',
+          agentic: 'claude-code',
+        },
+        ['--run-migrations', '--agentic=claude-code', '--run-id=run-1']
+      );
+
+      expect(exitCode).toBe(0);
+      expect(mockHoldRunToContinue).toHaveBeenCalledWith(ROOT, 'run-1');
+      expect(mockReleaseRunToHandOff).toHaveBeenCalledWith(ROOT, 'run-1');
+      expect(mockRunNxArgvSync).toHaveBeenCalledTimes(1);
+      // The child's own hold is exclusive: it refuses while this one stands.
+      expect(mockHoldRunToContinue.mock.invocationCallOrder[0]).toBeLessThan(
+        mockRunInstall.mock.invocationCallOrder[0]
+      );
+      expect(mockRunInstall.mock.invocationCallOrder[0]).toBeLessThan(
+        mockReleaseRunToHandOff.mock.invocationCallOrder[0]
+      );
+      expect(mockReleaseRunToHandOff.mock.invocationCallOrder[0]).toBeLessThan(
+        mockRunNxArgvSync.mock.invocationCallOrder[0]
+      );
+    });
+
+    it('releases no run for a start-fresh, which holds none', async () => {
+      const exitCode = await migrate(
+        ROOT,
+        { runMigrations: 'migrations.json', runId: 'run-1', startFresh: true },
+        ['--run-migrations', '--start-fresh', '--run-id=run-1']
+      );
+
+      expect(exitCode).toBe(0);
+      expect(mockHoldRunToContinue).not.toHaveBeenCalled();
+      expect(mockReleaseRunToHandOff).not.toHaveBeenCalled();
+      expect(mockRunNxArgvSync).toHaveBeenCalledTimes(1);
     });
   });
 

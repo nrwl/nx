@@ -19,6 +19,7 @@ import {
 } from './run-state';
 import {
   hasLiveRunActivity,
+  liveRunActivityPids,
   registerRunActivity,
   releaseRunActivity,
   updateRunState,
@@ -187,6 +188,43 @@ describe('state-lock', () => {
       writeFileSync(join(dir, 'activity'), '');
 
       expect(hasLiveRunActivity(dir)).toBe(true);
+    });
+  });
+
+  describe('liveRunActivityPids', () => {
+    it('is empty when no process registered on the run or every lock file is free', () => {
+      expect(liveRunActivityPids(dir)).toEqual([]);
+      mkdirSync(join(dir, 'activity'));
+      writeFileSync(join(dir, 'activity', '999-cafe.lock'), '');
+
+      expect(liveRunActivityPids(dir)).toEqual([]);
+    });
+
+    it("names the other live holders by pid and skips this process's own hold", () => {
+      registerRunActivity(dir);
+      const holder = new FileLock(join(dir, 'activity', '4242-beef.lock'));
+      holder.lock();
+      try {
+        expect(liveRunActivityPids(dir)).toEqual([4242]);
+      } finally {
+        holder.unlock();
+        releaseRunActivity(dir);
+      }
+    });
+
+    it('is unknown when the activity directory cannot be listed or a held lock has no pid in its name', () => {
+      writeFileSync(join(dir, 'activity'), '');
+      expect(liveRunActivityPids(dir)).toBe('unknown');
+
+      rmSync(join(dir, 'activity'));
+      mkdirSync(join(dir, 'activity'));
+      const holder = new FileLock(join(dir, 'activity', 'stray.lock'));
+      holder.lock();
+      try {
+        expect(liveRunActivityPids(dir)).toBe('unknown');
+      } finally {
+        holder.unlock();
+      }
     });
   });
 });

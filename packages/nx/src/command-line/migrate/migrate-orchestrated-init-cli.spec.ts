@@ -315,7 +315,8 @@ describe('migrate() orchestrated init dispatch', () => {
     expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
   });
 
-  it('holds the run a continue names before the preflight install', async () => {
+  it('holds the run a continue names before the preflight install, gate env var or not', async () => {
+    delete process.env.NX_MIGRATE_ORCHESTRATOR;
     const order: string[] = [];
     mockHoldRunToContinue.mockImplementation(() => {
       order.push('hold');
@@ -379,41 +380,57 @@ describe('migrate() orchestrated init dispatch', () => {
     );
   });
 
-  // Both flags act on a run's record; outside the orchestrator they would
-  // silently do nothing, so every route out of it refuses them.
-  it.each<[string, string, () => void]>([
+  // A run id names a directory only a gated init created, so neither flag
+  // needs the gate env var; the routes that lead to no orchestrator at all
+  // still refuse them rather than silently doing nothing.
+  it.each<[string, () => void]>([
     [
       '--start-fresh',
-      'the gate env var is not set',
       () => {
         delete process.env.NX_MIGRATE_ORCHESTRATOR;
       },
     ],
     [
       '--run-id',
-      'the gate env var is not set',
       () => {
         delete process.env.NX_MIGRATE_ORCHESTRATOR;
-      },
-    ],
-    [
-      '--start-fresh',
-      'no agent is driving the process',
-      () => {
-        mockIsInsideAgent.mockReturnValue(false);
-      },
-    ],
-    [
-      '--run-id',
-      'no agent is driving the process',
-      () => {
-        mockIsInsideAgent.mockReturnValue(false);
       },
     ],
   ])(
-    'refuses %s when %s instead of ignoring it',
-    async (flag, _label, arrange) => {
+    'accepts %s without the gate env var inside an agent',
+    async (flag, arrange) => {
       arrange();
+      const overrides =
+        flag === '--start-fresh'
+          ? { startFresh: true, runId: 'run-1' }
+          : { runId: 'run-1', agentic: 'claude-code' };
+      const args =
+        flag === '--start-fresh'
+          ? ['--run-migrations', '--start-fresh', '--run-id=run-1']
+          : ['--run-migrations', '--agentic=claude-code', '--run-id=run-1'];
+
+      await migrate(root, runMigrationsArgs(overrides), args);
+
+      if (flag === '--start-fresh') {
+        expect(mockRunOrchestratorInit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            onExistingRun: 'start-fresh',
+            replaceRunId: 'run-1',
+          })
+        );
+      } else {
+        expect(mockRunOrchestratorResume).toHaveBeenCalledWith(
+          expect.objectContaining({ root, runId: 'run-1' })
+        );
+      }
+      expect(output.error).not.toHaveBeenCalled();
+    }
+  );
+
+  it.each<[string]>([['--start-fresh'], ['--run-id']])(
+    'refuses %s when no agent is driving the process instead of ignoring it',
+    async (flag) => {
+      mockIsInsideAgent.mockReturnValue(false);
       const overrides =
         flag === '--start-fresh'
           ? { startFresh: true, runId: 'run-1' }
@@ -427,7 +444,7 @@ describe('migrate() orchestrated init dispatch', () => {
       expect(await migrate(root, runMigrationsArgs(overrides), args)).toBe(1);
       expect(output.error).toHaveBeenCalledWith(
         expect.objectContaining({
-          title: `'${flag}' acts on an orchestrated migrate run (NX_MIGRATE_ORCHESTRATOR=true with an enabled agent), and this invocation is not orchestrated.`,
+          title: `'${flag}' acts on an orchestrated migrate run (one an enabled agent drives), and this invocation is not orchestrated.`,
         })
       );
 
@@ -455,7 +472,7 @@ describe('migrate() orchestrated init dispatch', () => {
     expect(output.error).toHaveBeenCalledWith(
       expect.objectContaining({
         title:
-          "'--start-fresh' acts on an orchestrated migrate run (NX_MIGRATE_ORCHESTRATOR=true with an enabled agent), and this invocation is not orchestrated.",
+          "'--start-fresh' acts on an orchestrated migrate run (one an enabled agent drives), and this invocation is not orchestrated.",
       })
     );
 
@@ -556,6 +573,39 @@ describe('migrate() orchestrated init dispatch', () => {
         })
       );
     });
+
+    it.each<[string, Record<string, unknown>, string[]]>([
+      [
+        'continues the run --run-id names',
+        { runId: 'run-1', agentic: 'claude-code' },
+        ['--run-migrations', '--agentic=claude-code', '--run-id=run-1'],
+      ],
+      [
+        'replaces the run --start-fresh --run-id names',
+        { startFresh: true, runId: 'run-1', agentic: 'claude-code' },
+        [
+          '--run-migrations',
+          '--agentic=claude-code',
+          '--start-fresh',
+          '--run-id=run-1',
+        ],
+      ],
+    ])(
+      '%s through the master session without the gate env var',
+      async (_label, overrides, args) => {
+        delete process.env.NX_MIGRATE_ORCHESTRATOR;
+
+        await migrate(root, runMigrationsArgs(overrides), args);
+
+        expect(mockRunMasterSession).toHaveBeenCalledWith(
+          expect.objectContaining({
+            runId: 'run-1',
+            startFresh: overrides.startFresh,
+          })
+        );
+        expect(output.error).not.toHaveBeenCalled();
+      }
+    );
 
     it('runs the classic per-step loop under WASM, where the broker cannot tell a dead session from a slow one', async () => {
       wasm.active = true;

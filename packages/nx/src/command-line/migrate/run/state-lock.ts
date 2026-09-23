@@ -98,20 +98,52 @@ const heldActivity = new Map<string, { lock: FileLock; name: string }>();
  * session holds one for its whole agent session while the reconciles that
  * session runs hold their own. Registered under the creation lock, the same
  * gate deletion probes under, so a run cannot vanish between the run.json
- * check and the lock. No-op under WASM, where there is no native lock.
+ * check and the lock. `exclusive` refuses instead when another process holds
+ * the run, for a continue that would open a second session over a live one;
+ * it is checked even when this process already holds the run, since the
+ * report that took that hold does not decide. No-op under WASM, where there
+ * is no native lock.
  */
-export function holdRunActivity(root: string, runId: string): void {
+export function holdRunActivity(
+  root: string,
+  runId: string,
+  exclusive = false
+): void {
   if (IS_WASM) return;
   const dir = runDir(root, runId);
-  if (heldActivity.has(dir)) return;
+  if (heldActivity.has(dir) && !exclusive) return;
   withRunCreationLock(root, () => {
     if (!hasRunState(dir)) {
       throw new Error(
         `Migrate run '${runId}' was deleted while this command was starting.`
       );
     }
+    if (exclusive) {
+      const others = liveRunActivityPids(dir);
+      if (others === 'unknown' || others.length > 0) {
+        throw heldRunError(runId, others);
+      }
+    }
     registerRunActivity(dir);
   });
+}
+
+// 'unknown' is the fail-closed case: the activity folder could not be read or
+// a lock could not be probed.
+function heldRunError(runId: string, holders: number[] | 'unknown'): Error {
+  return new Error(
+    holders === 'unknown'
+      ? `Not continuing migrate run '${runId}': nx cannot tell whether another nx migrate process is still working on it.`
+      : `Not continuing migrate run '${runId}': ${describeHolders(
+          holders
+        )} (an agent session, a reconcile, or a step). Wait for it to end, then re-run the command.`
+  );
+}
+
+export function describeHolders(holders: number[]): string {
+  return holders.length === 1
+    ? `process ${holders[0]} is still working on it`
+    : `processes ${holders.join(', ')} are still working on it`;
 }
 
 /**
@@ -149,6 +181,21 @@ export function hasLiveRunActivity(dir: string): boolean {
 }
 
 /**
+ * The pids of the other live processes holding the run, from their lock
+ * names. 'unknown' under WASM, where nothing registers, and in the cases
+ * hasLiveRunActivity counts as live without a holder to name.
+ */
+export function liveRunActivityPids(dir: string): number[] | 'unknown' {
+  if (IS_WASM) return 'unknown';
+  const names = liveActivityNames(dir, heldActivity.get(dir)?.name);
+  if (names === 'unknown') return 'unknown';
+  const pids = names.map((name) => Number(name.split('-', 1)[0]));
+  return pids.every((pid) => Number.isInteger(pid) && pid > 0)
+    ? pids
+    : 'unknown';
+}
+
+/**
  * hasLiveRunActivity counting this process's own hold too: for the init
  * discovery that treats a held directory without run.json as a run being
  * started, whichever process is starting it.
@@ -158,22 +205,33 @@ export function hasAnyLiveRunActivity(dir: string): boolean {
 }
 
 function hasLiveActivity(dir: string, skip: string | undefined): boolean {
+  const names = liveActivityNames(dir, skip);
+  return names === 'unknown' || names.length > 0;
+}
+
+// The names of the held lock files other than `skip`; 'unknown' when the
+// folder cannot be listed or a lock cannot be probed.
+function liveActivityNames(
+  dir: string,
+  skip: string | undefined
+): string[] | 'unknown' {
   let names: string[];
   try {
     names = readdirSync(join(dir, ACTIVITY_DIR_NAME));
   } catch (e) {
-    if (e?.code === 'ENOENT') return false;
-    return true;
+    if (e?.code === 'ENOENT') return [];
+    return 'unknown';
   }
+  const held: string[] = [];
   for (const name of names) {
     if (name === skip) continue;
     try {
       if (new FileLock(join(dir, ACTIVITY_DIR_NAME, name)).check()) {
-        return true;
+        held.push(name);
       }
     } catch {
-      return true;
+      return 'unknown';
     }
   }
-  return false;
+  return held;
 }

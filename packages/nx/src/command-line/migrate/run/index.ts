@@ -50,6 +50,7 @@ export type { RunSingleMigrationWorkerInput } from './worker';
 export {
   completionWarnings,
   holdRunToContinue,
+  releaseRunToHandOff,
   runOrchestratorInit,
   runOrchestratorReconcile,
   runOrchestratorResume,
@@ -62,6 +63,7 @@ export type {
 } from './orchestrator';
 
 export {
+  renderContinueCommand,
   renderExistingRunReport,
   renderStartFresh,
 } from './existing-run-report';

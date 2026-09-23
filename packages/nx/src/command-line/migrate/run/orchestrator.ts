@@ -172,6 +172,7 @@ import {
   collectExistingRunFacts,
   progressLine,
   recordedCommits,
+  renderContinueCommand,
   renderExistingRunReport,
   type ExistingRunFacts,
   renderStartFresh,
@@ -352,6 +353,11 @@ export async function runOrchestratorInit(
       replaceRunId
     );
   }
+  // The id is what admits a start-fresh without the env gate, so one naming
+  // no active run (missing, completed, deleted) starts nothing.
+  if (onExistingRun === 'start-fresh' && !active) {
+    throw new Error(noActiveRunToReplace(replaceRunId));
+  }
   // Held through confirmStart: a concurrent start-fresh must not delete the
   // run this one was told to replace while the user is still being asked.
   // The refusals run here first so the common ones land before the prompt,
@@ -445,6 +451,10 @@ export async function runOrchestratorInit(
       return nowActive;
     }
     if (active) {
+      // Completed meanwhile (a reconcile finished it): nothing to replace.
+      if (!nowActive) {
+        throw new Error(noActiveRunToReplace(active.runId));
+      }
       deleted = deleteRunRecord(root, active.runId);
     }
     // The snapshot must exist before run.json makes the run discoverable: a
@@ -531,8 +541,9 @@ export async function runOrchestratorInit(
 }
 
 /**
- * Continues the active run `runId` names, as an explicit `--run-id` does for
- * the agent path. Throws when the id names no run or a finished one.
+ * Continues the active run `runId` names: the `--run-migrations --run-id`
+ * shape on both paths. Throws when the id names no run or a finished one,
+ * and while another nx migrate process holds the run.
  */
 export function runOrchestratorResume(
   input: RunOrchestratorResumeInput
@@ -544,9 +555,10 @@ export function runOrchestratorResume(
 
 /**
  * Holds the active run `runId` names and returns its state. A continue calls
- * this before its first await: a concurrent start-fresh must not delete the
- * run while the command installs or selects an agent. Throws when the id
- * names no run or a finished one.
+ * this before the install and the agent selection: a concurrent start-fresh
+ * must not delete the run meanwhile. Throws when the id names no run or a
+ * finished one, and while another process holds the run: continuing would
+ * open a second session over a live one.
  */
 export function holdRunToContinue(
   root: string,
@@ -567,8 +579,17 @@ export function holdRunToContinue(
       `Migrate run '${runId}' is already complete; there is nothing to continue.`
     );
   }
-  holdRunActivity(root, runId);
+  holdRunActivity(root, runId, true);
   return state;
+}
+
+/**
+ * Drops the hold holdRunToContinue took, for a wrapper that hands the
+ * continue to the workspace-local nx: the child takes its own hold, and an
+ * exclusive one refuses while this process still holds.
+ */
+export function releaseRunToHandOff(root: string, runId: string): void {
+  releaseRunActivity(runDir(root, runId));
 }
 
 // Reads the newest active run; null when no run is active. Uninterpretable
@@ -662,7 +683,7 @@ function reportExistingRun(
   }
   if (emitAgentInstructions) {
     const report = renderExistingRunReport(facts, {
-      continueCommand: reconcileCommand(root, runId),
+      continueCommand: renderContinueCommand(root, runId, facts.policy),
       startFresh: renderStartFresh(migrationsPath, (flag) =>
         startFreshCommand(root, runId, flag)
       ),
@@ -719,6 +740,12 @@ function refuseUndeletableRun(
       )}), and a new run cannot start alongside them. Remove ${MIGRATE_RUNS_RELATIVE_DIR}/<run id> for each one that should not be continued, then re-run the command.`
     );
   }
+}
+
+function noActiveRunToReplace(runId: string | undefined): string {
+  return `Not starting fresh: ${
+    runId === undefined ? 'no migrate run' : `no migrate run '${runId}'`
+  } is active, so there is nothing to replace. To start a new orchestrated run, re-run with NX_MIGRATE_ORCHESTRATOR=true and without --start-fresh and --run-id.`;
 }
 
 // Removes the run's record so the replacement can be written in the same
@@ -898,9 +925,8 @@ function finishInit(
   // which must fail before its git and state side effects).
   runbook?: string
 ): OrchestratorInitResult {
-  // Already held by the creating init; the resume path holds here. The master
-  // session is this process and lives for the whole agent session.
-  holdRunActivity(root, runId);
+  // The hold from the reservation or holdRunToContinue lasts this process:
+  // for the master session, the whole agent session.
   let current = state;
   if (!current.analytics.startEmitted) {
     // Claim the watermark on the fresh state first: of two concurrent inits

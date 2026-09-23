@@ -1082,7 +1082,7 @@ describe('orchestrator', () => {
         `A migrate run is already active: ${runId}`
       );
       expect(report.payload.instructions).toContain(
-        `To continue the run: npx nx migrate --run-id=${runId}`
+        `To continue the run: npx nx migrate --run-migrations --agentic --run-id=${runId} --create-commits`
       );
       expect(report.payload.instructions).toContain(
         `To start fresh (deletes the run record, then runs the whole plan again): npx nx migrate --run-migrations --start-fresh --run-id=${runId}`
@@ -1286,7 +1286,7 @@ describe('orchestrator', () => {
 
       const { instructions } = lastBlock().payload;
       expect(instructions).toContain(
-        `To continue the run: npx nx migrate --run-id=${runId}`
+        `To continue the run: npx nx migrate --run-migrations --agentic --run-id=${runId} --no-create-commits`
       );
       expect(instructions).toContain(
         `To start fresh (deletes the run record, then runs the whole plan again): re-run this command with --start-fresh --run-id=${runId}, keeping the --run-migrations argument, which names tools/my migrations.json; that path cannot be rendered as a command for this shell`
@@ -1651,6 +1651,7 @@ describe('orchestrator', () => {
           liveWorkers: [
             { pid: process.pid, stepId: 'step-3', migrationId: '@nx/js:c' },
           ],
+          otherHolders: [],
           otherActiveRuns: ['run-2'],
           appliedStillPlanned: 1,
         },
@@ -1667,11 +1668,12 @@ describe('orchestrator', () => {
             '  policy: per-migration commits on, installs on',
             `  commits: newest recorded commit ${sha(3).slice(0, 10)} is not reachable from HEAD (1 of 3 reachable, 1 could not be checked)`,
             `  worker: pid ${process.pid} is still running step-3 (@nx/js:c)`,
+            '  activity: no other nx migrate process is working on it',
             '  issues: 1 unresolved',
             '  other active runs on disk: run-2',
             '  plan overlap: 1 of the applied migrations is still in the plan; a new run applies it again',
             '',
-            'To continue the run: npx nx migrate --run-id=run-1',
+            'To continue the run: npx nx migrate --run-migrations --agentic --run-id=run-1 --create-commits',
             'To start fresh (deletes the run record, then runs the whole plan again): npx nx migrate --run-migrations --start-fresh --run-id=run-1',
           ],
         },
@@ -2069,24 +2071,63 @@ describe('orchestrator', () => {
       ).toBe('ready');
     });
 
-    it('starts normally for start-fresh when no run is active', async () => {
-      setupRun('run-0', {
-        steps: [migStep('step-1', '@nx/js:a', 'succeeded')],
-        status: 'completed',
+    // The run id is what admits a start-fresh without the orchestrator env
+    // gate, so an id naming no active run must start nothing.
+    it.each<[string, string]>([
+      ['a completed run', 'run-0'],
+      ['no run', 'run-9'],
+    ])(
+      'refuses start-fresh, starting nothing, when the id names %s',
+      async (_label, replaceRunId) => {
+        setupRun('run-0', {
+          steps: [migStep('step-1', '@nx/js:a', 'succeeded')],
+          status: 'completed',
+        });
+
+        await expect(
+          runOrchestratorInit(
+            initInput(
+              { migrations: [genMig('@nx/js', 'a')] },
+              { onExistingRun: 'start-fresh', replaceRunId }
+            )
+          )
+        ).rejects.toThrow(
+          `Not starting fresh: no migrate run '${replaceRunId}' is active, so there is nothing to replace. To start a new orchestrated run, re-run with NX_MIGRATE_ORCHESTRATOR=true and without --start-fresh and --run-id.`
+        );
+
+        expect(runDirNames()).toEqual(['run-0']);
+        expect(mockCheckpoint).not.toHaveBeenCalled();
+        expect(parseBlocks()).toHaveLength(0);
+      }
+    );
+
+    it('refuses start-fresh when the named run completes between the checks and the creation lock', async () => {
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
       });
+      const confirmStart = async () => {
+        writeRunState(dir, { ...readRunState(dir), status: 'completed' });
+        return true;
+      };
 
-      const result = await runOrchestratorInit(
-        initInput(
-          { migrations: [genMig('@nx/js', 'a')] },
-          { onExistingRun: 'start-fresh' }
+      await expect(
+        runOrchestratorInit(
+          initInput(
+            { migrations: [genMig('@nx/js', 'a')] },
+            {
+              onExistingRun: 'start-fresh',
+              replaceRunId: 'run-1',
+              confirmStart,
+            }
+          )
         )
+      ).rejects.toThrow(
+        "Not starting fresh: no migrate run 'run-1' is active, so there is nothing to replace."
       );
 
-      expect(result.kind).toBe('ready');
-      expect(logged.map((l) => l.title)).not.toContainEqual(
-        expect.stringContaining('Deleted')
-      );
-      expect(runDirNames()).toContain('run-0');
+      expect(runDirNames()).toEqual(['run-1']);
+      expect(readRunState(dir).status).toBe('completed');
+      expect(mockCheckpoint).not.toHaveBeenCalled();
     });
 
     it('refuses start-fresh while another process holds an activity lock on the run, leaving the run untouched', async () => {
@@ -2242,6 +2283,51 @@ describe('orchestrator', () => {
       );
       expect(existsSync(join(dir, 'activity'))).toBe(false);
       expect(existsSync(runDir(root, 'missing'))).toBe(false);
+    });
+
+    it('refuses to continue while another process holds the run, and reports that process', async () => {
+      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:a', 'pending')],
+        planHash: computePlanHash(migrationsJson),
+        plan: migrationsJson.migrations,
+      });
+      const before = readRunState(dir);
+      mkdirSync(join(dir, 'activity'));
+      const holder = new FileLock(join(dir, 'activity', '4242-beef.lock'));
+      holder.lock();
+
+      try {
+        expect(
+          await runOrchestratorInit(initInput(migrationsJson))
+        ).toMatchObject({
+          kind: 'existing-run',
+          facts: { otherHolders: [4242] },
+        });
+        expect(lastBlock().payload.instructions).toContain(
+          '  activity: process 4242 is still working on it'
+        );
+        expect(() =>
+          runOrchestratorResume({
+            root,
+            runId: 'run-1',
+            policy: { createCommits: false, skipInstall: false },
+          })
+        ).toThrow(
+          "Not continuing migrate run 'run-1': process 4242 is still working on it (an agent session, a reconcile, or a step). Wait for it to end, then re-run the command."
+        );
+      } finally {
+        holder.unlock();
+      }
+
+      expect(readRunState(dir)).toEqual(before);
+      expect(
+        runOrchestratorResume({
+          root,
+          runId: 'run-1',
+          policy: { createCommits: false, skipInstall: false },
+        })
+      ).toMatchObject({ kind: 'ready', runId: 'run-1' });
     });
 
     it('refuses to resume an id that names no run or a finished one', async () => {

@@ -619,7 +619,12 @@ describe('migrate orchestrator (dark launch)', () => {
     expect(reportOutput).toContain(
       'progress: 1 applied, 0 skipped, 2 remaining'
     );
-    expect(reportOutput).toContain(`To continue the run: ${reconcile}`);
+    expect(reportOutput).toContain(
+      `To continue the run: ${PM_EXEC_PREFIX[getSelectedPackageManager()]} nx migrate --run-migrations --agentic --run-id=${init.runId} --create-commits`
+    );
+    expect(reportOutput).toContain(
+      '  activity: no other nx migrate process is working on it'
+    );
     expect(reportOutput).not.toContain('<nx_migrate_runbook');
     const reawaitOutput = runDispensed(reconcile);
     const reawait = parseLastDispense(reawaitOutput);
@@ -1463,7 +1468,7 @@ describe('migrate orchestrator (dark launch)', () => {
     });
     expect(samePlan).toContain('progress: 2 applied, 0 skipped, 1 remaining');
     expect(samePlan).toContain(
-      `To continue the run: ${PM_EXEC_PREFIX[getSelectedPackageManager()]} nx migrate --run-id=${first.runId}`
+      `To continue the run: ${PM_EXEC_PREFIX[getSelectedPackageManager()]} nx migrate --run-migrations --agentic --run-id=${first.runId} --create-commits`
     );
     expect(samePlan).toContain(
       `${PM_EXEC_PREFIX[getSelectedPackageManager()]} nx migrate --run-migrations --start-fresh --run-id=${first.runId}`
@@ -1939,7 +1944,7 @@ process.exit(status ?? 1);
         `- ${PKG}:prompt-mig: fake agent could not finish`
       );
       expect(output).toContain('left work unresolved; exiting with code 1');
-      expect(output).not.toContain('resume');
+      expect(output).not.toContain('is still active');
       const log = readFakeAgentLog(logFile);
       expect(log.find((entry) => entry.gaveUp)).toBeDefined();
       const done = log.find((entry) => entry.complete);
