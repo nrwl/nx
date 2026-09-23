@@ -698,13 +698,6 @@ export interface HashInputs {
   depOutputs: Array<string>
   /** External dependencies */
   external: Array<string>
-  /** Provenance of every value above, keyed by the value itself. */
-  sources: Record<string, 'snapshot' | 'target' | 'dependency' | 'native'>
-  /**
-   * The `io-snapshot:<digest>` value of each snapshot entry the plan
-   * hashed, as it appears in `sources` and in the plan itself.
-   */
-  ioSnapshots: Array<string>
 }
 
 /**
@@ -770,7 +763,7 @@ export interface IoSnapshotReport {
   /** Subset of `used` whose snapshot also contributes observed outputs. */
   tasksWithOutputs: Array<string>
   diagnostics: Array<IoSnapshotDiagnostic>
-  resolution?: IoSnapshotResolution
+  resolution: IoSnapshotResolution
 }
 
 /** What was resolved for a commit; stored beside its entries. */

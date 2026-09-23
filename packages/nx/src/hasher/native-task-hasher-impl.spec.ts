@@ -234,26 +234,9 @@ describe('native task hasher', () => {
               "nx.json",
               "tsconfig.base.json",
             ],
-            "ioSnapshots": [],
             "runtime": [
               "echo runtime123",
             ],
-            "sources": {
-              "AllExternalDependencies": "native",
-              "NONEXISTENTENV": "native",
-              "NX_CLOUD_ENCRYPTION_KEY": "native",
-              "TESTENV": "native",
-              "echo runtime123": "native",
-              "libs/parent/filea.spec.ts": "target",
-              "libs/parent/filea.ts": "target",
-              "libs/parent/project.json": "target",
-              "libs/parent/src/index.ts": "target",
-              "libs/tagged/project.json": "dependency",
-              "libs/unrelated/filec.ts": "dependency",
-              "libs/unrelated/project.json": "dependency",
-              "nx.json": "native",
-              "tsconfig.base.json": "native",
-            },
           },
           "value": "15987635381237972716",
         },
@@ -486,22 +469,7 @@ describe('native task hasher', () => {
             "nx.json",
             "tsconfig.base.json",
           ],
-          "ioSnapshots": [],
           "runtime": [],
-          "sources": {
-            "AllExternalDependencies": "native",
-            "NX_CLOUD_ENCRYPTION_KEY": "native",
-            "libs/child/fileb.spec.ts": "dependency",
-            "libs/child/fileb.ts": "dependency",
-            "libs/child/project.json": "dependency",
-            "libs/child/src/index.ts": "dependency",
-            "libs/parent/filea.spec.ts": "target",
-            "libs/parent/filea.ts": "target",
-            "libs/parent/project.json": "target",
-            "libs/parent/src/index.ts": "target",
-            "nx.json": "native",
-            "tsconfig.base.json": "native",
-          },
         },
         "value": "10262178246623018030",
       }
@@ -602,21 +570,7 @@ describe('native task hasher', () => {
             "nx.json",
             "tsconfig.base.json",
           ],
-          "ioSnapshots": [],
           "runtime": [],
-          "sources": {
-            "AllExternalDependencies": "native",
-            "NX_CLOUD_ENCRYPTION_KEY": "native",
-            "libs/child/fileb.spec.ts": "dependency",
-            "libs/child/fileb.ts": "dependency",
-            "libs/child/project.json": "dependency",
-            "libs/child/src/index.ts": "dependency",
-            "libs/parent/filea.ts": "target",
-            "libs/parent/project.json": "target",
-            "libs/parent/src/index.ts": "target",
-            "nx.json": "native",
-            "tsconfig.base.json": "native",
-          },
         },
         "value": "14320402761058545796",
       }
@@ -961,17 +915,7 @@ describe('native task hasher', () => {
               "nx.json",
               "tsconfig.base.json",
             ],
-            "ioSnapshots": [],
             "runtime": [],
-            "sources": {
-              "AllExternalDependencies": "native",
-              "NX_CLOUD_ENCRYPTION_KEY": "native",
-              "libs/parent/filea.ts": "target",
-              "libs/parent/project.json": "target",
-              "libs/parent/src/index.ts": "target",
-              "nx.json": "native",
-              "tsconfig.base.json": "native",
-            },
           },
           "value": "2453961902871518313",
         },
@@ -1000,18 +944,7 @@ describe('native task hasher', () => {
               "nx.json",
               "tsconfig.base.json",
             ],
-            "ioSnapshots": [],
             "runtime": [],
-            "sources": {
-              "AllExternalDependencies": "native",
-              "NX_CLOUD_ENCRYPTION_KEY": "native",
-              "libs/parent/filea.spec.ts": "target",
-              "libs/parent/filea.ts": "target",
-              "libs/parent/project.json": "target",
-              "libs/parent/src/index.ts": "target",
-              "nx.json": "native",
-              "tsconfig.base.json": "native",
-            },
           },
           "value": "5894031627295207190",
         },
@@ -1134,24 +1067,7 @@ describe('native task hasher', () => {
               "nx.json",
               "tsconfig.base.json",
             ],
-            "ioSnapshots": [],
             "runtime": [],
-            "sources": {
-              "AllExternalDependencies": "native",
-              "MY_TEST_HASH_ENV": "native",
-              "NX_CLOUD_ENCRYPTION_KEY": "native",
-              "global1": "target",
-              "global2": "target",
-              "libs/child/fileb.ts": "dependency",
-              "libs/child/project.json": "dependency",
-              "libs/child/src/index.ts": "dependency",
-              "libs/parent/filea.spec.ts": "target",
-              "libs/parent/filea.ts": "target",
-              "libs/parent/project.json": "target",
-              "libs/parent/src/index.ts": "target",
-              "nx.json": "native",
-              "tsconfig.base.json": "native",
-            },
           },
           "value": "12394084267697729491",
         },
@@ -1224,18 +1140,7 @@ describe('native task hasher', () => {
             "nx.json",
             "tsconfig.base.json",
           ],
-          "ioSnapshots": [],
           "runtime": [],
-          "sources": {
-            "AllExternalDependencies": "native",
-            "NX_CLOUD_ENCRYPTION_KEY": "native",
-            "libs/parent/filea.spec.ts": "target",
-            "libs/parent/filea.ts": "target",
-            "libs/parent/project.json": "target",
-            "libs/parent/src/index.ts": "target",
-            "nx.json": "native",
-            "tsconfig.base.json": "native",
-          },
         },
         "value": "16657264716563422624",
       }
@@ -1336,22 +1241,7 @@ describe('native task hasher', () => {
             "nx.json",
             "tsconfig.base.json",
           ],
-          "ioSnapshots": [],
           "runtime": [],
-          "sources": {
-            "AllExternalDependencies": "native",
-            "NX_CLOUD_ENCRYPTION_KEY": "native",
-            "libs/child/fileb.spec.ts": "dependency",
-            "libs/child/fileb.ts": "dependency",
-            "libs/child/project.json": "dependency",
-            "libs/child/src/index.ts": "dependency",
-            "libs/parent/filea.spec.ts": "target",
-            "libs/parent/filea.ts": "target",
-            "libs/parent/project.json": "target",
-            "libs/parent/src/index.ts": "target",
-            "nx.json": "native",
-            "tsconfig.base.json": "native",
-          },
         },
         "value": "1325637283470296766",
       }
@@ -1396,22 +1286,7 @@ describe('native task hasher', () => {
             "nx.json",
             "tsconfig.base.json",
           ],
-          "ioSnapshots": [],
           "runtime": [],
-          "sources": {
-            "AllExternalDependencies": "native",
-            "NX_CLOUD_ENCRYPTION_KEY": "native",
-            "libs/child/fileb.spec.ts": "target",
-            "libs/child/fileb.ts": "target",
-            "libs/child/project.json": "target",
-            "libs/child/src/index.ts": "target",
-            "libs/parent/filea.spec.ts": "dependency",
-            "libs/parent/filea.ts": "dependency",
-            "libs/parent/project.json": "dependency",
-            "libs/parent/src/index.ts": "dependency",
-            "nx.json": "native",
-            "tsconfig.base.json": "native",
-          },
         },
         "value": "1325637283470296766",
       }
@@ -1728,7 +1603,8 @@ describe('native task hasher', () => {
     const one = await hashWith(['libs/child/one.txt']);
     const two = await hashWith(['libs/child/two.txt']);
 
-    const digestOf = (hash: typeof one) => hash.inputs.ioSnapshots;
+    const digestOf = (hash: typeof one) =>
+      Object.keys(hash.details).filter((key) => key.startsWith('io-snapshot:'));
     expect(digestOf(one)).toEqual(digestOf(two));
     expect(digestOf(one)).toEqual([expect.stringMatching(/^io-snapshot:\d+$/)]);
     expect(two.value).not.toBe(one.value);
@@ -1736,7 +1612,7 @@ describe('native task hasher', () => {
     expect(two.inputs.files).not.toContain('libs/child/one.txt');
   });
 
-  it('hashes a task from its snapshot and labels where each input came from', async () => {
+  it('hashes a task from its snapshot instead of its declared fileset', async () => {
     const { taskGraph, impl } = await upfrontFixture();
     await tempFs.createFiles({ 'libs/child/observed.txt': 'observed' });
     const commit = 'head'.padEnd(40, '0');
@@ -1779,15 +1655,12 @@ describe('native task hasher', () => {
     expect(
       fromSnapshot.inputs.files.filter((f) => f.startsWith('libs/child/'))
     ).toEqual(['libs/child/observed.txt']);
-    expect(fromSnapshot.inputs.sources['nx.json']).toBe('native');
-    expect(fromSnapshot.inputs.sources['libs/child/observed.txt']).toBe(
-      'snapshot'
-    );
-    expect(fromSnapshot.inputs.ioSnapshots).toEqual([
+    const digests = (hash: typeof native) =>
+      Object.keys(hash.details).filter((key) => key.startsWith('io-snapshot:'));
+    expect(digests(fromSnapshot)).toEqual([
       expect.stringMatching(/^io-snapshot:\d+$/),
     ]);
-    expect(native.inputs.ioSnapshots).toEqual([]);
-    expect(native.inputs.sources['libs/child/observed.txt']).toBeUndefined();
+    expect(digests(native)).toEqual([]);
 
     // The observed file is what the hash follows now, not the declared fileset.
     await tempFs.createFiles({ 'libs/child/observed.txt': 'changed' });

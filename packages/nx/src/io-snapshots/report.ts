@@ -37,11 +37,9 @@ export function formatIoSnapshotSummary(
       }`;
 
   const bodyLines: string[] = [`bundle: ${status}`];
-  if (result.resolution) {
-    bodyLines.push(
-      `commit ${result.resolution.requestedCommit}, ${result.resolution.tasks} tasks in bundle`
-    );
-  }
+  bodyLines.push(
+    `commit ${result.resolution.requestedCommit}, ${result.resolution.tasks} tasks in bundle`
+  );
   for (const d of result.diagnostics) {
     bodyLines.push(describeDiagnostic(d));
   }

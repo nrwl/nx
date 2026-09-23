@@ -5,15 +5,14 @@ use std::sync::Arc;
 use hashbrown::HashSet;
 
 use crate::native::glob::{normalize_glob, partition_glob};
-use crate::native::tasks::types::ALWAYS_ON_WORKSPACE_FILES;
 use crate::native::{
     hasher::hash,
     project_graph::{types::ProjectGraph, utils::create_project_root_mappings},
-    tasks::types::{HashInstruction, HashPlans, InstructionPool},
+    tasks::types::{HashInstruction, HashPlans},
     types::{NapiDashMap, SharedStr, SharedStrMap},
 };
 use crate::native::{
-    project_graph::utils::{ProjectRootMappings, find_project_for_path},
+    project_graph::utils::ProjectRootMappings,
     tasks::hashers::{hash_cwd, hash_env, hash_runtime},
 };
 use crate::native::{
@@ -50,91 +49,6 @@ pub struct HashInputs {
     pub dep_outputs: Vec<String>,
     /// External dependencies
     pub external: Vec<String>,
-    /// Provenance of every value above, keyed by the value itself.
-    #[napi(ts_type = "Record<string, 'snapshot' | 'target' | 'dependency' | 'native'>")]
-    pub sources: HashMap<String, String>,
-    /// The `io-snapshot:<digest>` value of each snapshot entry the plan
-    /// hashed, as it appears in `sources` and in the plan itself.
-    pub io_snapshots: Vec<String>,
-}
-
-/// Where an input value came from; see `input_source`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum InputSource {
-    Snapshot,
-    Target,
-    Dependency,
-    Native,
-}
-
-impl InputSource {
-    fn as_str(self) -> &'static str {
-        match self {
-            InputSource::Snapshot => "snapshot",
-            InputSource::Target => "target",
-            InputSource::Dependency => "dependency",
-            InputSource::Native => "native",
-        }
-    }
-}
-
-/// Classifies one instruction's inputs for `HashInputs::sources`. A plan that
-/// carries an io-snapshot marker had its declared filesets replaced, so its
-/// file-bearing instructions are snapshot-sourced; otherwise filesets are
-/// `target` (own project) or `dependency`. Env/runtime/externals/config are
-/// always native.
-pub(crate) fn input_source(
-    instruction: &HashInstruction,
-    task_project: &str,
-    project_roots: &ProjectRootMappings,
-    snapshot_backed: bool,
-) -> InputSource {
-    let own_or_dependency = |project: Option<&str>| match project {
-        Some(project) if project != task_project => InputSource::Dependency,
-        _ => InputSource::Target,
-    };
-    match instruction {
-        HashInstruction::WorkspaceFileSet(file_sets)
-            if file_sets.iter().eq(ALWAYS_ON_WORKSPACE_FILES.iter()) =>
-        {
-            InputSource::Native
-        }
-        _ if snapshot_backed && is_file_bearing(instruction) => InputSource::Snapshot,
-        HashInstruction::ProjectFileSet(project, _) => own_or_dependency(Some(project)),
-        // Carries no project: its first positive glob's directory names the
-        // owner, which a root project makes a dependency of every other task.
-        // Only feeds `sources`, never a hash, so the order of a group whose
-        // globs span projects decides the label.
-        HashInstruction::IgnoredFileSet(globs) => own_or_dependency(
-            globs
-                .iter()
-                .find(|glob| !glob.starts_with('!'))
-                .and_then(|glob| find_project_for_path(partition_glob(glob).0, project_roots)),
-        ),
-        HashInstruction::WorkspaceFileSet(_) => InputSource::Target,
-        HashInstruction::TaskOutput(_, _) => InputSource::Dependency,
-        _ => InputSource::Native,
-    }
-}
-
-fn is_file_bearing(instruction: &HashInstruction) -> bool {
-    matches!(
-        instruction,
-        HashInstruction::WorkspaceFileSet(_)
-            | HashInstruction::ProjectFileSet(..)
-            | HashInstruction::IgnoredFileSet(_)
-            | HashInstruction::TaskOutput(..)
-    )
-}
-
-/// True when the plan carries a snapshot entry's digest.
-pub(crate) fn is_snapshot_backed(pool: &InstructionPool, ids: &[u32]) -> bool {
-    ids.iter()
-        .any(|id| matches!(&*pool.get(*id), HashInstruction::IoSnapshot(_)))
-}
-
-pub(crate) fn task_project(task_id: &str) -> &str {
-    task_id.split(':').next().unwrap_or(task_id)
 }
 
 /// Internal builder that uses HashSet for O(1) deduplication during accumulation.
@@ -146,8 +60,6 @@ pub(crate) struct HashInputsBuilder {
     pub(crate) environment: HashSet<String>,
     pub(crate) dep_outputs: HashSet<String>,
     pub(crate) external: HashSet<String>,
-    pub(crate) sources: HashMap<String, &'static str>,
-    pub(crate) io_snapshots: HashSet<String>,
 }
 
 impl HashInputsBuilder {
@@ -158,26 +70,6 @@ impl HashInputsBuilder {
         self.environment.extend(other.environment);
         self.dep_outputs.extend(other.dep_outputs);
         self.external.extend(other.external);
-        for (value, source) in other.sources {
-            self.sources.entry(value).or_insert(source);
-        }
-        self.io_snapshots.extend(other.io_snapshots);
-    }
-
-    /// Records `source` for every value currently in the builder.
-    pub(crate) fn tag(mut self, source: InputSource) -> Self {
-        let label = source.as_str();
-        for value in self
-            .files
-            .iter()
-            .chain(self.runtime.iter())
-            .chain(self.environment.iter())
-            .chain(self.dep_outputs.iter())
-            .chain(self.external.iter())
-        {
-            self.sources.entry(value.clone()).or_insert(label);
-        }
-        self
     }
 }
 
@@ -206,13 +98,9 @@ impl From<&HashInstruction> for HashInputsBuilder {
                 external: HashSet::from(["AllExternalDependencies".to_string()]),
                 ..Default::default()
             },
-            HashInstruction::IoSnapshot(_) => HashInputsBuilder {
-                io_snapshots: HashSet::from([instruction.to_string()]),
-                ..Default::default()
-            },
-            HashInstruction::ProjectConfiguration(_) | HashInstruction::Cwd(_) => {
-                HashInputsBuilder::default()
-            }
+            HashInstruction::IoSnapshot(_)
+            | HashInstruction::ProjectConfiguration(_)
+            | HashInstruction::Cwd(_) => HashInputsBuilder::default(),
             // These variants require external context — callers must match on them
             // explicitly before falling through to `.into()`.
             other => unreachable!(
@@ -239,12 +127,6 @@ impl From<HashInputsBuilder> for HashInputs {
             environment: to_sorted_vec(builder.environment),
             dep_outputs: to_sorted_vec(builder.dep_outputs),
             external: to_sorted_vec(builder.external),
-            sources: builder
-                .sources
-                .into_iter()
-                .map(|(k, v)| (k, v.to_string()))
-                .collect(),
-            io_snapshots: to_sorted_vec(builder.io_snapshots),
         }
     }
 }
@@ -724,7 +606,6 @@ impl TaskHasher {
                 return Ok(());
             }
             let js_env = resolve_env(task_id);
-            let snapshot_backed = should_collect_inputs && is_snapshot_backed(pool, ids);
             // Workers accumulate locally, then publish one result per task.
             // The inner parallel iterator also preserves concurrency when
             // a single task has several expensive runtime/file inputs.
@@ -791,12 +672,7 @@ impl TaskHasher {
                                 )?;
 
                                 if should_collect_inputs {
-                                    task_inputs.extend(inputs.tag(input_source(
-                                        instruction_ref.value(),
-                                        task_project(task_id),
-                                        &project_root_mappings,
-                                        snapshot_backed,
-                                    )));
+                                    task_inputs.extend(inputs);
                                 }
 
                                 match slot {
@@ -1174,37 +1050,6 @@ struct HashInstructionArgs<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn an_ignored_file_set_belongs_to_the_project_its_first_positive_glob_reads_from() {
-        let roots: ProjectRootMappings = [
-            ("apps/web".to_string(), "web".to_string()),
-            ("libs/ui".to_string(), "ui".to_string()),
-        ]
-        .into();
-        let source = |globs: &[&str], snapshot_backed| {
-            let set =
-                HashInstruction::IgnoredFileSet(globs.iter().map(|g| g.to_string()).collect());
-            input_source(&set, "web", &roots, snapshot_backed)
-        };
-        assert_eq!(source(&["apps/web/dist/**"], false), InputSource::Target);
-        assert_eq!(
-            source(&["!apps/web/x", "libs/ui/gen/**"], false),
-            InputSource::Dependency
-        );
-        assert_eq!(source(&["{a,b}.gen"], false), InputSource::Target);
-        assert_eq!(source(&["libs/ui/gen/**"], true), InputSource::Snapshot);
-        let always_on = HashInstruction::WorkspaceFileSet(
-            ALWAYS_ON_WORKSPACE_FILES
-                .iter()
-                .map(|f| f.to_string())
-                .collect(),
-        );
-        assert_eq!(
-            input_source(&always_on, "web", &roots, true),
-            InputSource::Native
-        );
-    }
 
     #[test]
     fn ranked_assembly_matches_map_order_and_duplicate_resolution() {

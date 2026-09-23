@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{HashMap, HashSet};
 
 use crate::native::cache::expand_outputs::match_output_paths;
 use crate::native::glob::{NxGlobSetBuilder, expand_literal_braces};
@@ -98,13 +98,13 @@ pub struct IoSnapshotReport {
     /// Subset of `used` whose snapshot also contributes observed outputs.
     pub tasks_with_outputs: Vec<String>,
     pub diagnostics: Vec<IoSnapshotDiagnostic>,
-    pub resolution: Option<IoSnapshotResolution>,
+    pub resolution: IoSnapshotResolution,
 }
 
 pub(crate) struct Resolved {
     pub tasks: HashMap<String, SnapshotTask>,
     pub diagnostics: Vec<IoSnapshotDiagnostic>,
-    pub resolution: Option<IoSnapshotResolution>,
+    pub resolution: IoSnapshotResolution,
 }
 
 impl Resolved {
@@ -168,7 +168,7 @@ pub(crate) fn resolve_scoped(
                         "invalid-bundle".to_string(),
                         Some(err.to_string()),
                     )],
-                    resolution: Some(resolution.clone()),
+                    resolution: resolution.clone(),
                 };
             }
         };
@@ -238,7 +238,7 @@ pub(crate) fn resolve_scoped(
     Resolved {
         tasks,
         diagnostics,
-        resolution: Some(resolution.clone()),
+        resolution: resolution.clone(),
     }
 }
 
@@ -363,23 +363,18 @@ fn escapes_workspace(glob: &str) -> bool {
         || path.split(['/', '\\']).any(|segment| segment == "..")
 }
 
-/// Producer tasks (direct and transitive dependencies) whose declared outputs
-/// contain one of the observed reads, with those reads.
-fn producers_by_declared_outputs(
-    task_id: &str,
-    files: &[String],
-    task_graph: &TaskGraph,
-) -> BTreeMap<String, Vec<String>> {
+/// Whether an observed read falls under a declared output of one of the task's
+/// direct or transitive dependencies.
+fn reads_dependency_outputs(task_id: &str, files: &[String], task_graph: &TaskGraph) -> bool {
     let mut candidates: Vec<String> = files
         .iter()
         .filter(|f| !f.starts_with('!'))
         .cloned()
         .collect();
-    candidates.sort();
-    let mut producers = BTreeMap::new();
     if candidates.is_empty() {
-        return producers;
+        return false;
     }
+    candidates.sort();
     let mut visited: HashSet<&str> = HashSet::new();
     let mut queue: Vec<&str> = vec![task_id];
     while let Some(current) = queue.pop() {
@@ -391,9 +386,6 @@ fn producers_by_declared_outputs(
             let Some(producer) = task_graph.tasks.get(dep) else {
                 continue;
             };
-            if producer.outputs.is_empty() {
-                continue;
-            }
             // Only reads under an output's walk root can match it; glob
             // semantics (negations included) are settled on those few.
             let mut under: Vec<String> = producer
@@ -402,26 +394,19 @@ fn producers_by_declared_outputs(
                 .filter(|output| !output.starts_with('!'))
                 .flat_map(|output| candidates_under(&candidates, &walk_root(output)))
                 .collect();
-            under.sort();
-            under.dedup();
             if under.is_empty() {
                 continue;
             }
-            let Ok(matched) = match_output_paths(producer.outputs.clone(), under.clone()) else {
-                continue;
-            };
-            let paths: Vec<String> = under
-                .iter()
-                .zip(matched)
-                .filter(|(_, hit)| *hit)
-                .map(|(path, _)| path.clone())
-                .collect();
-            if !paths.is_empty() {
-                producers.insert(dep.clone(), paths);
+            under.sort();
+            under.dedup();
+            if match_output_paths(producer.outputs.clone(), under)
+                .is_ok_and(|matched| matched.into_iter().any(|hit| hit))
+            {
+                return true;
             }
         }
     }
-    producers
+    false
 }
 
 /// Tasks whose snapshot read another task's outputs: they hash after their
@@ -441,7 +426,7 @@ pub fn get_io_snapshot_deferred_task_ids(
         .keys()
         .filter(|task_id| {
             entries.get(*task_id).is_some_and(|stored| {
-                !producers_by_declared_outputs(task_id, &stored.inputs, &task_graph).is_empty()
+                reads_dependency_outputs(task_id, &stored.inputs, &task_graph)
             })
         })
         .cloned()

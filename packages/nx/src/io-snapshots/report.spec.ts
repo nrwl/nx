@@ -76,6 +76,7 @@ describe('formatIoSnapshotSummary', () => {
           used: [],
           tasksWithOutputs: [],
           diagnostics: [{ reason: 'invalid-bundle', message: 'bad' }],
+          resolution,
         },
         'cached'
       ).line
