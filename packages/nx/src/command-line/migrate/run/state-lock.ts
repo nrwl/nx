@@ -87,13 +87,14 @@ export function updateRunState(
 }
 
 // The activity locks this process holds, one per run dir. Each is held until
-// the process exits (the kernel releases it) or until this process deletes
-// the run itself.
+// the process exits (the kernel releases it) or until this process releases
+// it: deleting the run, or handing a continue off to the workspace-local nx.
 const heldActivity = new Map<string, { lock: FileLock; name: string }>();
 
 /**
- * Marks this process as acting on the run for the rest of its lifetime, so a
- * `--start-fresh` from another process refuses to delete the run under it.
+ * Marks this process as acting on the run until it exits or releases the
+ * hold (see heldActivity), so a `--start-fresh` from another process refuses
+ * to delete the run under it.
  * The lock file is per process (`activity/<pid>-<nonce>.lock`): the master
  * session holds one for its whole agent session while the reconciles that
  * session runs hold their own. Registered under the creation lock, the same

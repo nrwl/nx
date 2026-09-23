@@ -543,7 +543,8 @@ export async function runOrchestratorInit(
 /**
  * Continues the active run `runId` names: the `--run-migrations --run-id`
  * shape on both paths. Throws when the id names no run or a finished one,
- * and while another nx migrate process holds the run.
+ * and while another nx migrate process holds the run. Not under WASM: no
+ * lock exists there, so holders are unknown and the continue proceeds.
  */
 export function runOrchestratorResume(
   input: RunOrchestratorResumeInput
@@ -558,7 +559,8 @@ export function runOrchestratorResume(
  * this before the install and the agent selection: a concurrent start-fresh
  * must not delete the run meanwhile. Throws when the id names no run or a
  * finished one, and while another process holds the run: continuing would
- * open a second session over a live one.
+ * open a second session over a live one. Under WASM nothing is held and no
+ * holder refuses.
  */
 export function holdRunToContinue(
   root: string,
