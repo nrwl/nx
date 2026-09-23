@@ -1,7 +1,7 @@
 //! A task's I/O snapshot entry, as Nx Cloud sends it and the store keeps it.
 
 #[cfg(not(target_arch = "wasm32"))]
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 
 use serde::{Deserialize, Serialize};
 use xxhash_rust::xxh3::Xxh3;
@@ -32,11 +32,16 @@ impl Bundle {
             sort_unique(&mut entry.inputs);
             sort_unique(&mut entry.outputs);
         }
-        let mut source_commits: Vec<String> = snapshots
+        let recorded: HashSet<&str> = snapshots
             .values()
-            .map(|entry| entry.commit.clone())
+            .map(|entry| entry.commit.as_str())
             .collect();
-        sort_unique(&mut source_commits);
+        // `commits` is newest first; keep that order for the ones entries used.
+        let source_commits = commits
+            .iter()
+            .filter(|commit| recorded.contains(commit.as_str()))
+            .cloned()
+            .collect();
         let resolution = IoSnapshotResolution {
             requested_commit,
             commits,
@@ -124,6 +129,22 @@ mod tests {
             outputs: outputs.iter().map(|s| s.to_string()).collect(),
             ..entry("c1", &["a.ts"])
         }
+    }
+
+    #[test]
+    fn source_commits_keep_the_newest_first_order() {
+        let snapshots = BTreeMap::from([
+            ("a:build".to_string(), entry("alpha", &[])),
+            ("b:build".to_string(), entry("zeta", &[])),
+            ("c:build".to_string(), entry("zeta", &[])),
+        ]);
+        let bundle = Bundle::new(
+            "head".into(),
+            vec!["head".into(), "zeta".into(), "alpha".into()],
+            "nx/test".into(),
+            snapshots,
+        );
+        assert_eq!(bundle.resolution.source_commits, vec!["zeta", "alpha"]);
     }
 
     #[test]
