@@ -165,7 +165,7 @@ pub(crate) fn resolve_scoped(
                 return Resolved {
                     tasks: HashMap::new(),
                     diagnostics: vec![IoSnapshotDiagnostic::run(
-                        "invalid-bundle".to_string(),
+                        "unreadable-set".to_string(),
                         Some(err.to_string()),
                     )],
                     resolution: resolution.clone(),

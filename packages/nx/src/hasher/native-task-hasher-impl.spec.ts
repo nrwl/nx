@@ -1587,7 +1587,7 @@ describe('native task hasher', () => {
       join(tempFs.tempDir, 'io-snapshots-read-db'),
       'io-snapshots'
     );
-    const bundle = (inputs: string[]) => {
+    const snapshotSet = (inputs: string[]) => {
       new IoSnapshotStore(snapshotDb).import({
         requestedCommit: commit,
         snapshotsJson: JSON.stringify({
@@ -1598,7 +1598,14 @@ describe('native task hasher', () => {
     };
     const task = taskGraph.tasks['child:compile'];
     const hashWith = async (inputs: string[]) =>
-      impl.hashTask(task, taskGraph, {}, tempFs.tempDir, true, bundle(inputs));
+      impl.hashTask(
+        task,
+        taskGraph,
+        {},
+        tempFs.tempDir,
+        true,
+        snapshotSet(inputs)
+      );
 
     const one = await hashWith(['libs/child/one.txt']);
     const two = await hashWith(['libs/child/two.txt']);
@@ -1620,7 +1627,7 @@ describe('native task hasher', () => {
       join(tempFs.tempDir, 'io-snapshots-db'),
       'io-snapshots'
     );
-    const bundle = (inputs: string[]) => {
+    const snapshotSet = (inputs: string[]) => {
       new IoSnapshotStore(snapshotDb).import({
         requestedCommit: commit,
         snapshotsJson: JSON.stringify({
@@ -1629,7 +1636,7 @@ describe('native task hasher', () => {
       });
       return new IoSnapshotStore(snapshotDb).get(commit);
     };
-    const snapshots = bundle(['libs/child/observed.txt']);
+    const snapshots = snapshotSet(['libs/child/observed.txt']);
     const task = taskGraph.tasks['child:compile'];
 
     const native = await impl.hashTask(

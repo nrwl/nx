@@ -1927,7 +1927,7 @@ describe('task planner', () => {
       closeDbConnection(snapshotDb);
       rmSync(snapshotDbDir, { recursive: true, force: true });
     });
-    let bundleCount = 0;
+    let setCount = 0;
     /** Stores a set with the given entries and loads it as the daemon would. */
     function snapshotsFor(
       entries: Record<
@@ -1938,7 +1938,7 @@ describe('task planner', () => {
         }
       >
     ) {
-      const commit = `c${bundleCount++}`.padEnd(40, 'c');
+      const commit = `c${setCount++}`.padEnd(40, 'c');
       new IoSnapshotStore(snapshotDb).import({
         requestedCommit: commit,
         snapshotsJson: JSON.stringify(

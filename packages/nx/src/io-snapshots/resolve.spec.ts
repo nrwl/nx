@@ -92,7 +92,7 @@ describe('resolveIoSnapshotsForRun', () => {
     store.get.mockReturnValue(null);
     expect(await resolveIoSnapshotsForRun(nxJson, {})).toMatchObject({
       status: 'skipped',
-      reason: 'no-bundle',
+      reason: 'no-set',
     });
   });
 

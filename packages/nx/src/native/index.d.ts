@@ -97,7 +97,7 @@ export declare class HashPlanInspector {
 export declare class HashPlanner {
   constructor(nxJson: NxJson, projectGraph: ExternalObject<ProjectGraph>)
   /**
-   * `snapshots` is this run's I/O snapshot bundle; a task with an eligible
+   * `snapshots` is this run's I/O snapshot set; a task with an eligible
    * entry hashes its observed reads instead of its declared filesets.
    * `options` carries the task ids decided in JS, where executors and
    * target configuration are resolved.

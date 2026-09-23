@@ -59,8 +59,8 @@ describe('formatIoSnapshotSummary', () => {
       'I/O snapshots: 2 tasks hashed from snapshot (1 with observed outputs), 5 tasks fell back (2 missing, 1 disabled, 1 escapes-workspace, 1 invalid-glob)'
     );
     expect(summary.bodyLines).toEqual([
-      'bundle: cached',
-      'commit abc123, 3 tasks in bundle',
+      'set: cached',
+      'commit abc123, 3 tasks in set',
       'c:e2e: sandbox.enabled is false',
       'd:test: no snapshot for this task',
       'e:test: no snapshot for this task',
@@ -75,11 +75,11 @@ describe('formatIoSnapshotSummary', () => {
         {
           used: [],
           tasksWithOutputs: [],
-          diagnostics: [{ reason: 'invalid-bundle', message: 'bad' }],
+          diagnostics: [{ reason: 'unreadable-set', message: 'bad' }],
           resolution,
         },
         'cached'
       ).line
-    ).toBe('I/O snapshots: none used (invalid bundle: bad)');
+    ).toBe('I/O snapshots: none used (unreadable set: bad)');
   });
 });

@@ -1010,7 +1010,7 @@ export async function invokeTasksRunner({
 
   const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
 
-  // Must precede hashing: the bundle is the snapshot source for task hashes,
+  // Must precede hashing: the set is the snapshot source for task hashes,
   // and observed outputs join the task outputs the hasher and cache see.
   const ioSnapshotOutcome = await resolveIoSnapshotsForRun(
     nxJson,

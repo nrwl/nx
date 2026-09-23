@@ -61,7 +61,7 @@ function storedOutcome(
     return snapshots
       ? { status, snapshots }
       : skippedIoSnapshots(
-          'no-bundle',
+          'no-set',
           `no I/O snapshot set is stored for ${commit}`
         );
   } catch (e) {

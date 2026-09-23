@@ -25,20 +25,20 @@ export function formatIoSnapshotSummary(
   );
   const byReason = countByReason(withheld);
   const fellBack = new Set(withheld.map((d) => d.taskId)).size;
-  const bundleLevel = result.diagnostics.find((d) => d.taskId == null);
+  const setLevel = result.diagnostics.find((d) => d.taskId == null);
 
   const withOutputs = result.tasksWithOutputs?.length ?? 0;
-  const line = bundleLevel
-    ? `I/O snapshots: none used (invalid bundle: ${bundleLevel.message})`
+  const line = setLevel
+    ? `I/O snapshots: none used (unreadable set: ${setLevel.message})`
     : `I/O snapshots: ${plural(used, 'task')} hashed from snapshot${
         withOutputs ? ` (${withOutputs} with observed outputs)` : ''
       }, ${plural(fellBack, 'task')} fell back${
         fellBack ? ` (${summarizeReasons(byReason)})` : ''
       }`;
 
-  const bodyLines: string[] = [`bundle: ${status}`];
+  const bodyLines: string[] = [`set: ${status}`];
   bodyLines.push(
-    `commit ${result.resolution.requestedCommit}, ${result.resolution.tasks} tasks in bundle`
+    `commit ${result.resolution.requestedCommit}, ${result.resolution.tasks} tasks in set`
   );
   for (const d of result.diagnostics) {
     bodyLines.push(describeDiagnostic(d));
@@ -48,8 +48,8 @@ export function formatIoSnapshotSummary(
 
 function describeDiagnostic(d: IoSnapshotDiagnostic): string {
   switch (d.reason) {
-    case 'invalid-bundle':
-      return `invalid snapshot set: ${d.message}`;
+    case 'unreadable-set':
+      return `unreadable snapshot set: ${d.message}`;
     case 'disabled':
       return `${d.taskId}: sandbox.enabled is false`;
     case 'custom-hasher':

@@ -463,7 +463,7 @@ impl HashPlanner {
             .collect())
     }
 
-    /// `snapshots` is this run's I/O snapshot bundle; a task with an eligible
+    /// `snapshots` is this run's I/O snapshot set; a task with an eligible
     /// entry hashes its observed reads instead of its declared filesets.
     /// `options` carries the task ids decided in JS, where executors and
     /// target configuration are resolved.
@@ -539,7 +539,7 @@ impl HashPlanner {
             unowned
         };
 
-        // Bundles collapse sibling files into brace groups; class mapping needs
+        // Nx Cloud collapses sibling files into brace groups; class mapping needs
         // the individual names, so observed groups of literals are expanded.
         let mut buckets: BTreeMap<&str, Vec<String>> = BTreeMap::new();
         for glob in io

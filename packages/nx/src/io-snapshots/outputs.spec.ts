@@ -69,12 +69,12 @@ function graph(
 
 let tempFs: TempFs;
 let snapshotDb: ReturnType<typeof connectToNxDb>;
-let bundles = 0;
+let sets = 0;
 
 function snapshotsFor(
   entries: Record<string, { inputs?: string[]; outputs?: string[] }>
 ) {
-  const commit = `a${bundles++}`.padEnd(40, 'a');
+  const commit = `a${sets++}`.padEnd(40, 'a');
   new IoSnapshotStore(snapshotDb).import({
     requestedCommit: commit,
     snapshotsJson: JSON.stringify(

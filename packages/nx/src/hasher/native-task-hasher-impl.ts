@@ -142,7 +142,7 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
   }
 
   /**
-   * Plans through the native planner. With a bundle, the tasks JS resolves as
+   * Plans through the native planner. With a snapshot set, the tasks JS resolves as
    * custom-hashed or opted out ride along so the planner's eligibility walk
    * withholds their snapshots.
    */
@@ -193,7 +193,7 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
 
 /**
  * Everything the planner reads from a task graph: each task's target and
- * outputs, and the graph's edges, plus the snapshot bundle the plans were
+ * outputs, and the graph's edges, plus the snapshot set the plans were
  * built against. The project graph and nx.json are fixed for the life of a
  * hasher, so equal fingerprints mean equal plans. A run's
  * results (hash, timings) are left out so hashing one task does not

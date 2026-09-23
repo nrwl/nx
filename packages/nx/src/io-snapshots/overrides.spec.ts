@@ -68,7 +68,7 @@ function graph(...ids: string[]): TaskGraph {
   };
 }
 
-function writeBundle(snapshots: Record<string, unknown>) {
+function writeSet(snapshots: Record<string, unknown>) {
   return new IoSnapshotStore(snapshotDb).import({
     requestedCommit: HEAD,
     snapshotsJson: JSON.stringify(snapshots),
@@ -89,7 +89,7 @@ describe('buildIoSnapshotOverrides', () => {
   });
 
   it('uses flat entries, including one that read nothing', () => {
-    const set = writeBundle({
+    const set = writeSet({
       'web:build': {
         commit: HEAD,
         inputs: ['apps/web/src/**/*.ts', 'dist/libs/ui/index.js'],
@@ -109,7 +109,7 @@ describe('buildIoSnapshotOverrides', () => {
   });
 
   it('withholds disabled, custom-hasher, and invalid-glob tasks', () => {
-    const set = writeBundle({
+    const set = writeSet({
       'web:lint': { commit: HEAD, inputs: [], outputs: [] },
       'web:custom': { commit: HEAD, inputs: [], outputs: [] },
       'ui:build': {
