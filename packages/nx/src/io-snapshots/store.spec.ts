@@ -17,7 +17,8 @@ vi.mock('../utils/db-connection', () => ({ getDbConnection: () => 'db' }));
 vi.mock('../utils/nx-cloud-utils', () => ({
   isNxCloudDisabled: () => false,
 }));
-vi.mock('../utils/output', () => ({ output: { warn: vi.fn() } }));
+const warn = vi.hoisted(() => vi.fn());
+vi.mock('../utils/output', () => ({ output: { warn } }));
 vi.mock('../utils/logger', () => ({ logger: { verbose: vi.fn() } }));
 
 describe('loadIoSnapshotsForRun', () => {
@@ -118,6 +119,19 @@ describe('loadIoSnapshotsForRun', () => {
     expect(await loadIoSnapshotsForRun(nxJson, {}, optedIn())).toMatchObject({
       reason: 'fetch-failed',
     });
+  });
+
+  // Only reasons that point at misconfiguration warn on every run.
+  it('warns for an unauthorized read but not when Nx Cloud has no set', async () => {
+    cloud.fetchIoSnapshots.mockRejectedValueOnce(coded('NO_SNAPSHOTS'));
+    expect(await loadIoSnapshotsForRun(nxJson, {}, optedIn())).toMatchObject({
+      reason: 'no-snapshots',
+    });
+    expect(warn).not.toHaveBeenCalled();
+
+    cloud.fetchIoSnapshots.mockRejectedValueOnce(coded('UNAUTHORIZED'));
+    await loadIoSnapshotsForRun(nxJson, {}, optedIn());
+    expect(warn).toHaveBeenCalledTimes(1);
   });
 
   it('skips when the store cannot write what Nx Cloud read', async () => {

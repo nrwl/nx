@@ -30,7 +30,7 @@ export interface ReadIoSnapshotsResult {
 /**
  * Reads HEAD's snapshot set from Nx Cloud. Throws with a `code` saying why it
  * could not: the client's own, or `NO_CLOUD_CLIENT`, `UNSUPPORTED_CLIENT` or
- * `INVALID_RESPONSE`.
+ * `NO_SNAPSHOTS`.
  */
 export async function fetchIoSnapshots(
   runnerOptions: IoSnapshotCloudOptions
@@ -59,11 +59,9 @@ export async function fetchIoSnapshots(
     timeoutMs: READ_TIMEOUT_MS,
   });
   if (!result) {
-    // `null` only answers a `knownUpdatedAt` nx never sends.
-    throw codedError(
-      'INVALID_RESPONSE',
-      'Nx Cloud returned no I/O snapshot set'
-    );
+    // Today's server only answers `null` to a `knownUpdatedAt` nx never
+    // sends; a client that means "nothing to serve" by it is not an error.
+    throw codedError('NO_SNAPSHOTS', 'Nx Cloud returned no I/O snapshot set');
   }
   return result;
 }

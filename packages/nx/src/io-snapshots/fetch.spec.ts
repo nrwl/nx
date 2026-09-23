@@ -44,7 +44,7 @@ describe('fetchIoSnapshots', () => {
     [
       'no set',
       () => cloud.readIoSnapshots.mockResolvedValue(null),
-      'INVALID_RESPONSE',
+      'NO_SNAPSHOTS',
     ],
     [
       'a client that predates snapshots',
