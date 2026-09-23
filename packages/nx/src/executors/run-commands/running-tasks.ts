@@ -14,7 +14,10 @@ import {
   loadAndExpandDotEnvFile,
   unloadDotEnvFile,
 } from '../../tasks-runner/task-env';
-import { registerTaskProcessStart } from '../../tasks-runner/task-io-service';
+import {
+  registerTaskProcessStart,
+  type TaskProcessOwner,
+} from '../../tasks-runner/task-io-service';
 import { signalToCode } from '../../utils/exit-codes';
 import { output as cliOutput } from '../../utils/output';
 import {
@@ -70,7 +73,7 @@ export class ParallelRunningTasks implements RunningTask {
   constructor(
     options: NormalizedRunCommandsOptions,
     context: ExecutorContext,
-    taskId: string
+    task: TaskProcessOwner
   ) {
     this.childProcesses = options.commands.map(
       (commandConfig) =>
@@ -82,7 +85,7 @@ export class ParallelRunningTasks implements RunningTask {
           options.readyWhenStatus,
           options.streamOutput,
           options.envFile,
-          taskId
+          task
         )
     );
     this.readyWhenStatus = options.readyWhenStatus;
@@ -251,7 +254,7 @@ export class SeriallyRunningTasks implements RunningTask {
     options: NormalizedRunCommandsOptions,
     context: ExecutorContext,
     private readonly tuiEnabled: boolean,
-    private readonly taskId: string
+    private readonly task: TaskProcessOwner
   ) {
     this.run(options, context)
       .catch((e) => {
@@ -324,7 +327,7 @@ export class SeriallyRunningTasks implements RunningTask {
         options.color,
         calculateCwd(options.cwd, context),
         options.processEnv ?? options.env ?? {},
-        this.taskId,
+        this.task,
         options.usePty,
         options.streamOutput,
         options.tty,
@@ -357,7 +360,7 @@ export class SeriallyRunningTasks implements RunningTask {
     color: boolean,
     cwd: string,
     env: Record<string, string>,
-    taskId: string,
+    task: TaskProcessOwner,
     usePty: boolean = true,
     streamOutput: boolean = true,
     tty: boolean,
@@ -389,7 +392,7 @@ export class SeriallyRunningTasks implements RunningTask {
       // Skip registration if we're in a forked executor - the fork wrapper already registered
       const pid = pseudoTtyProcess.getPid();
       if (pid && !process.env.NX_FORKED_TASK_EXECUTOR) {
-        registerTaskProcessStart(taskId, pid);
+        registerTaskProcessStart(task, pid);
       }
 
       return pseudoTtyProcess;
@@ -403,7 +406,7 @@ export class SeriallyRunningTasks implements RunningTask {
       [],
       streamOutput,
       envFile,
-      taskId
+      task
     );
   }
 }
@@ -436,7 +439,7 @@ class RunningNodeProcess implements RunningTask {
     private readyWhenStatus: { stringToMatch: string; found: boolean }[],
     private readonly streamOutput = true,
     envFile: string,
-    private taskId: string
+    private task: TaskProcessOwner
   ) {
     env = processEnv(color, cwd, env, envFile);
     this.command = commandConfig.command;
@@ -461,7 +464,7 @@ class RunningNodeProcess implements RunningTask {
     // Register process for metrics collection
     // Skip registration if we're in a forked executor - the fork wrapper already registered
     if (this.childProcess.pid && !process.env.NX_FORKED_TASK_EXECUTOR) {
-      registerTaskProcessStart(taskId, this.childProcess.pid);
+      registerTaskProcessStart(this.task, this.childProcess.pid);
     }
 
     this.addListeners(commandConfig);
@@ -635,7 +638,7 @@ class RunningNodeProcess implements RunningTask {
 export async function runSingleCommandWithPseudoTerminal(
   normalized: NormalizedRunCommandsOptions,
   context: ExecutorContext,
-  taskId: string
+  task: TaskProcessOwner
 ): Promise<PseudoTtyProcess> {
   const pseudoTerminal = createPseudoTerminal();
   const pseudoTtyProcess = await createProcessWithPseudoTty(
@@ -653,7 +656,7 @@ export async function runSingleCommandWithPseudoTerminal(
   // Skip registration if we're in a forked executor - the fork wrapper already registered
   const pid = pseudoTtyProcess.getPid();
   if (pid && !process.env.NX_FORKED_TASK_EXECUTOR) {
-    registerTaskProcessStart(taskId, pid);
+    registerTaskProcessStart(task, pid);
   }
 
   registerProcessListener(pseudoTtyProcess, pseudoTerminal);

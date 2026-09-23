@@ -1,4 +1,4 @@
-import type { TargetSandboxConfiguration } from '../config/workspace-json-project-json';
+import type { Task } from '../config/task-graph';
 import { getProcessMetricsService } from './process-metrics-service';
 
 /**
@@ -50,30 +50,6 @@ class TaskIOService {
   private pidCallbacks: TaskPidCallback[] = [];
   private taskInputCallbacks: TaskInputCallback[] = [];
   private taskOutputsCallbacks: TaskOutputsCallback[] = [];
-
-  /**
-   * Task IDs whose target opted out of sandboxing via
-   * `sandbox: { enabled: false }`. PID updates for these tasks are
-   * suppressed so no IO tracing (and therefore no sandbox report) is
-   * produced for them.
-   */
-  private sandboxDisabledTaskIds = new Set<string>();
-
-  /**
-   * Register the sandbox configuration of a task before it runs.
-   * Only the disabled state is retained; a task without a registered
-   * config is treated as sandbox-enabled.
-   */
-  registerTaskSandboxConfiguration(
-    taskId: string,
-    config: TargetSandboxConfiguration | undefined
-  ): void {
-    if (config?.enabled === false) {
-      this.sandboxDisabledTaskIds.add(taskId);
-    } else {
-      this.sandboxDisabledTaskIds.delete(taskId);
-    }
-  }
 
   /**
    * Subscribe to task PID updates.
@@ -156,13 +132,9 @@ class TaskIOService {
 
   /**
    * Registers a PID to a task and notifies subscribers.
-   * No-op for tasks whose target disabled sandboxing.
    * @param update The TaskPidUpdate containing taskId and pid.
    */
   notifyPidUpdate(update: TaskPidUpdate): void {
-    if (this.sandboxDisabledTaskIds.has(update.taskId)) {
-      return;
-    }
     for (const cb of this.pidCallbacks) {
       try {
         cb(update);
@@ -187,12 +159,26 @@ export function getTaskIOService(): TaskIOService {
 }
 
 /**
+ * The task a process belongs to. `run-commands` can synthesize an id for a task
+ * that is not in the graph, so only the id is guaranteed.
+ */
+export type TaskProcessOwner = Pick<Task, 'id' | 'sandbox'>;
+
+/**
  * Register a task process start with both IO and metrics services.
  * This is the standard way to notify the system that a task process has started.
- * Both services need to be notified together - TaskIOService for external subscribers
- * and ProcessMetricsService for native resource monitoring.
+ *
+ * A target that opted out of sandboxing (`sandbox: { enabled: false }`) reports
+ * no PID, which suppresses IO tracing and therefore its sandbox report. Metrics
+ * are registered either way: the opt-out covers reporting, not the process
+ * management that cleanup and orphan reaping depend on.
  */
-export function registerTaskProcessStart(taskId: string, pid: number): void {
-  getTaskIOService().notifyPidUpdate({ taskId, pid });
-  getProcessMetricsService().registerTaskProcess(taskId, pid);
+export function registerTaskProcessStart(
+  task: TaskProcessOwner,
+  pid: number
+): void {
+  if (task.sandbox?.enabled !== false) {
+    getTaskIOService().notifyPidUpdate({ taskId: task.id, pid });
+  }
+  getProcessMetricsService().registerTaskProcess(task.id, pid);
 }

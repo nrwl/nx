@@ -1,57 +1,74 @@
-import { getTaskIOService, TaskPidUpdate } from './task-io-service';
+import {
+  getTaskIOService,
+  registerTaskProcessStart,
+  TaskPidUpdate,
+} from './task-io-service';
+import { getProcessMetricsService } from './process-metrics-service';
 
-describe('TaskIOService sandbox configuration', () => {
-  it('notifies PID subscribers for tasks without a sandbox configuration', () => {
-    const service = getTaskIOService();
-    const updates: TaskPidUpdate[] = [];
-    service.subscribeToTaskPids((update) => updates.push(update));
+describe('registerTaskProcessStart', () => {
+  // The service is a singleton with no unsubscribe, so one subscription for
+  // the file; re-subscribing per test would multiply every notification.
+  const updates: TaskPidUpdate[] = [];
+  let registerTaskProcess: ReturnType<typeof vi.spyOn>;
 
-    service.notifyPidUpdate({ taskId: 'proj:tracked', pid: 100 });
+  beforeAll(() =>
+    getTaskIOService().subscribeToTaskPids((update) => updates.push(update))
+  );
+
+  beforeEach(() => {
+    updates.length = 0;
+    registerTaskProcess = vi
+      .spyOn(getProcessMetricsService(), 'registerTaskProcess')
+      .mockImplementation(() => {});
+  });
+
+  afterEach(() => registerTaskProcess.mockRestore());
+
+  it('notifies PID subscribers for a task without a sandbox configuration', () => {
+    registerTaskProcessStart({ id: 'proj:tracked' }, 100);
 
     expect(updates).toEqual([{ taskId: 'proj:tracked', pid: 100 }]);
   });
 
-  it('suppresses PID updates for tasks whose sandbox is disabled', () => {
-    const service = getTaskIOService();
-    const updates: TaskPidUpdate[] = [];
-    service.subscribeToTaskPids((update) => updates.push(update));
-
-    service.registerTaskSandboxConfiguration('proj:disabled', {
-      enabled: false,
-    });
-    service.notifyPidUpdate({ taskId: 'proj:disabled', pid: 200 });
-    service.notifyPidUpdate({ taskId: 'proj:other', pid: 201 });
-
-    expect(updates).toEqual([{ taskId: 'proj:other', pid: 201 }]);
-  });
-
-  it('keeps PID updates for a sandbox configuration without enabled: false', () => {
-    const service = getTaskIOService();
-    const updates: TaskPidUpdate[] = [];
-    service.subscribeToTaskPids((update) => updates.push(update));
-
-    service.registerTaskSandboxConfiguration('proj:ignores-only', {
-      ignoredReads: ['tmp/**'],
-    });
-    service.notifyPidUpdate({ taskId: 'proj:ignores-only', pid: 300 });
+  it('notifies PID subscribers for a sandbox configuration without enabled: false', () => {
+    registerTaskProcessStart(
+      { id: 'proj:ignores-only', sandbox: { ignoredReads: ['tmp/**'] } },
+      300
+    );
 
     expect(updates).toEqual([{ taskId: 'proj:ignores-only', pid: 300 }]);
   });
 
-  it('re-enables PID updates when a task is re-registered as enabled', () => {
-    const service = getTaskIOService();
-    const updates: TaskPidUpdate[] = [];
-    service.subscribeToTaskPids((update) => updates.push(update));
+  it('suppresses PID updates for a task whose sandbox is disabled', () => {
+    registerTaskProcessStart(
+      { id: 'proj:disabled', sandbox: { enabled: false } },
+      200
+    );
+    registerTaskProcessStart({ id: 'proj:other' }, 201);
 
-    service.registerTaskSandboxConfiguration('proj:reenabled', {
-      enabled: false,
-    });
-    service.notifyPidUpdate({ taskId: 'proj:reenabled', pid: 400 });
-    service.registerTaskSandboxConfiguration('proj:reenabled', {
-      enabled: true,
-    });
-    service.notifyPidUpdate({ taskId: 'proj:reenabled', pid: 401 });
+    expect(updates).toEqual([{ taskId: 'proj:other', pid: 201 }]);
+  });
 
-    expect(updates).toEqual([{ taskId: 'proj:reenabled', pid: 401 }]);
+  // The opt-out covers reporting only. Cleanup, kill-on-exit and orphan reaping
+  // all run off the metrics service, so it must see every process.
+  it('registers metrics for a task whose sandbox is disabled', () => {
+    registerTaskProcessStart(
+      { id: 'proj:disabled', sandbox: { enabled: false } },
+      200
+    );
+
+    expect(registerTaskProcess).toHaveBeenCalledWith('proj:disabled', 200);
+  });
+
+  // The decision travels with the task, so one run's opt-out cannot leak into
+  // another task that happens to reuse the id.
+  it('decides per call rather than remembering a task id', () => {
+    registerTaskProcessStart(
+      { id: 'proj:same', sandbox: { enabled: false } },
+      400
+    );
+    registerTaskProcessStart({ id: 'proj:same' }, 401);
+
+    expect(updates).toEqual([{ taskId: 'proj:same', pid: 401 }]);
   });
 });

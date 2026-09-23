@@ -63,7 +63,6 @@ import {
   getTaskSpecificEnv,
 } from './task-env';
 import { TaskStatus } from './tasks-runner';
-import { getTaskIOService } from './task-io-service';
 import { Batch, TasksSchedule } from './tasks-schedule';
 import {
   calculateReverseDeps,
@@ -444,15 +443,6 @@ export class TaskOrchestrator {
   // region Processing Scheduled Tasks
   private async processTask(taskId: string): Promise<NodeJS.ProcessEnv> {
     const task = this.taskGraph.tasks[taskId];
-    if (task.sandbox) {
-      // Suppresses PID reporting for tasks whose target opted out of
-      // sandboxing (`sandbox: { enabled: false }`), so no sandbox report is
-      // produced for them. Both run paths await processTask before spawning.
-      getTaskIOService().registerTaskSandboxConfiguration(
-        task.id,
-        task.sandbox
-      );
-    }
     const taskSpecificEnv = getTaskSpecificEnv(task, this.projectGraph);
 
     if (!task.hash) {
@@ -1490,7 +1480,7 @@ export class TaskOrchestrator {
           {
             root: workspaceRoot, // only root is needed in runCommands
           } as any,
-          task.id
+          task
         );
 
         this.runningRunCommandsTasks.set(task.id, runningTask);
