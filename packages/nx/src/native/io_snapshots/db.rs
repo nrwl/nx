@@ -5,7 +5,6 @@ use std::sync::{Arc, Mutex};
 use anyhow::{Context, Result};
 use rusqlite::params;
 use rusqlite::types::Value;
-use sha2::{Digest, Sha256};
 
 use super::IoSnapshotResolution;
 use super::bundle::{TaskInputs, TaskIoSnapshot};
@@ -40,7 +39,7 @@ CREATE TABLE IF NOT EXISTS io_snapshot_tasks (
 /// commit it was requested for.
 pub fn digest(snapshots: &BTreeMap<String, TaskIoSnapshot>) -> String {
     let canonical = serde_json::to_vec(snapshots).expect("BTreeMap of strings serializes");
-    hex::encode(Sha256::digest(canonical))
+    crate::native::hasher::hash(&canonical)
 }
 
 pub fn normalize(snapshots: &mut BTreeMap<String, TaskIoSnapshot>) {

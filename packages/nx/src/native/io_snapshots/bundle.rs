@@ -3,7 +3,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
 
 /// Legacy (§2a) pre-classified reads: `projects` globs are project-relative,
 /// `workspace` holds reads outside any project root, `task_outputs` maps a
@@ -70,7 +69,7 @@ impl TaskIoSnapshot {
             outputs: &self.outputs,
         })
         .expect("a snapshot entry serializes");
-        hex::encode(Sha256::digest(canonical))
+        crate::native::hasher::hash(&canonical)
     }
 }
 
@@ -113,7 +112,6 @@ mod tests {
             with_outputs(&[]).digest(),
             with_outputs(&["dist/a.js"]).digest()
         );
-        assert_eq!(entry("c1", &["a.ts"]).digest().len(), 64);
     }
 
     #[test]

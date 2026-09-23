@@ -2031,7 +2031,7 @@ describe('task planner', () => {
         },
       });
 
-      expect(same).toMatch(/^io-snapshot:[0-9a-f]{64}$/);
+      expect(same).toMatch(/^io-snapshot:\d+$/);
       expect(childChanged).toBe(same);
       expect(parentWroteMore).not.toBe(same);
       // The reads are hashed as the file group they become, so they move the
@@ -2085,7 +2085,7 @@ describe('task planner', () => {
           'env:NX_CLOUD_ENCRYPTION_KEY',
           'workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]',
           'AllExternalDependencies',
-          expect.stringMatching(/^io-snapshot:[0-9a-f]{64}$/),
+          expect.stringMatching(/^io-snapshot:\d+$/),
         ])
       );
       expect(plan).not.toContainEqual(
@@ -2181,7 +2181,7 @@ describe('task planner', () => {
         ['custom-hasher', 'child:build'],
         ['producer-not-in-graph', 'parent:build'],
       ]);
-      expect(report.resolution.digest).toMatch(/^[0-9a-f]{64}$/);
+      expect(report.resolution.digest).toMatch(/^\d+$/);
       expect(getIoSnapshotDeferredTaskIds(withProducer, taskGraph)).toEqual([]);
 
       const plain = planner.getPlans(['parent:build'], taskGraph);
@@ -2242,7 +2242,7 @@ describe('task planner', () => {
           'env:TESTENV',
           'runtime:echo runtime123',
           'files:[libs/parent/generated]',
-          expect.stringMatching(/^io-snapshot:[0-9a-f]{64}$/),
+          expect.stringMatching(/^io-snapshot:\d+$/),
         ])
       );
       expect(plan).not.toContainEqual(
@@ -2351,7 +2351,7 @@ describe('task planner', () => {
       expect(plan).toEqual(
         expect.arrayContaining([
           'files:[libs/parent/dist/**,!libs/parent/dist/**/*.map]',
-          expect.stringMatching(/^io-snapshot:[0-9a-f]{64}$/),
+          expect.stringMatching(/^io-snapshot:\d+$/),
         ])
       );
     });

@@ -1733,7 +1733,7 @@ describe('native task hasher', () => {
     const digestOf = (hash: typeof one) => hash.inputs.ioSnapshots;
     expect(digestOf(one)).toEqual(digestOf(two));
     expect(digestOf(one)).toEqual([
-      expect.stringMatching(/^io-snapshot:[0-9a-f]{64}$/),
+      expect.stringMatching(/^io-snapshot:\d+$/),
     ]);
     expect(two.value).not.toBe(one.value);
     expect(two.inputs.files).toContain('libs/child/two.txt');
@@ -1790,7 +1790,7 @@ describe('native task hasher', () => {
       'snapshot'
     );
     expect(fromSnapshot.inputs.ioSnapshots).toEqual([
-      expect.stringMatching(/^io-snapshot:[0-9a-f]{64}$/),
+      expect.stringMatching(/^io-snapshot:\d+$/),
     ]);
     expect(native.inputs.ioSnapshots).toEqual([]);
     expect(native.inputs.sources['libs/child/observed.txt']).toBeUndefined();

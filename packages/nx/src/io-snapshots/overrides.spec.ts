@@ -109,7 +109,7 @@ describe('buildIoSnapshotOverrides', () => {
     expect(result.diagnostics.map((d) => [d.reason, d.taskId])).toEqual([
       ['missing', 'ui:build'],
     ]);
-    expect(result.resolution.digest).toMatch(/^[0-9a-f]{64}$/);
+    expect(result.resolution.digest).toMatch(/^\d+$/);
   });
 
   it('flattens legacy bucketed entries, and withholds one that names a project the graph no longer has', () => {
