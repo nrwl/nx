@@ -1,4 +1,9 @@
-// ESLint needs an ESTree root; the lockfile rule handles the YAML content.
+/**
+ * We have a custom lint rule for our pnpm-lock.yaml file and naturally ESLint does not natively know how to parse it.
+ * Rather than using a full yaml parser for this one case (which will need to spend time creating a real AST for the giant
+ * lock file), we can instead use a custom parser which just immediately returns a dummy AST and then build the reading of
+ * the lock file into the rule itself.
+ */
 module.exports = {
   parseForESLint: (code) => ({
     ast: {
