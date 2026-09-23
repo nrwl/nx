@@ -20,7 +20,7 @@ vi.mock('../../io-snapshots/store', async (importOriginal) => ({
 vi.mock('../../native', async (importOriginal) => ({
   ...((await importOriginal()) as object),
   IoSnapshotStore: vi.fn(function () {
-    return { get: () => ({ commit: 'head', resolution: { digest: 'd' } }) };
+    return { get: () => ({ commit: 'head', resolution: { fetchedAt: 1 } }) };
   }),
 }));
 vi.mock('../../utils/db-connection', () => ({ getDbConnection: () => 'db' }));
@@ -52,7 +52,7 @@ describe('the resolve message across the client/daemon seam', () => {
     vi.clearAllMocks();
     fetched.loadIoSnapshotsForRun.mockResolvedValue({
       status: 'fetched',
-      snapshots: { commit: 'head', resolution: { digest: 'd' } },
+      snapshots: { commit: 'head', resolution: { fetchedAt: 1 } },
     });
   });
 

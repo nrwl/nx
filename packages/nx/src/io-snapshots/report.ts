@@ -39,7 +39,7 @@ export function formatIoSnapshotSummary(
   const bodyLines: string[] = [`bundle: ${status}`];
   if (result.resolution) {
     bodyLines.push(
-      `commit ${result.resolution.requestedCommit}, digest ${result.resolution.digest}, ${result.resolution.tasks} tasks in bundle`
+      `commit ${result.resolution.requestedCommit}, ${result.resolution.tasks} tasks in bundle`
     );
   }
   for (const d of result.diagnostics) {

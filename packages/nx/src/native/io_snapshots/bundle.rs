@@ -46,7 +46,6 @@ impl Bundle {
             requested_commit,
             commits,
             source_commits,
-            digest: set_digest(&snapshots),
             fetched_at: current_timestamp_millis(),
             client_version,
             tasks: snapshots.len() as u32,
@@ -56,19 +55,6 @@ impl Bundle {
             snapshots,
         }
     }
-}
-
-/// Identity of a set's content, independent of the commit it was requested for.
-#[cfg(not(target_arch = "wasm32"))]
-fn set_digest(snapshots: &BTreeMap<String, TaskIoSnapshot>) -> String {
-    let mut hasher = Xxh3::new();
-    for (task_id, entry) in snapshots {
-        hash_value(&mut hasher, task_id);
-        hash_value(&mut hasher, &entry.commit);
-        hash_list(&mut hasher, &entry.inputs);
-        hash_list(&mut hasher, &entry.outputs);
-    }
-    hasher.digest().to_string()
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -92,24 +78,13 @@ impl TaskIoSnapshot {
     /// own entry.
     pub fn digest(&self) -> String {
         let mut hasher = Xxh3::new();
-        hash_list(&mut hasher, &self.outputs);
+        for output in &self.outputs {
+            hasher.update(output.as_bytes());
+            // No path contains NUL, so adjacent outputs cannot run together.
+            hasher.update(&[0]);
+        }
         hasher.digest().to_string()
     }
-}
-
-/// Feeds one value then a NUL, which no path, task id or commit contains, so
-/// adjacent values cannot run together.
-fn hash_value(hasher: &mut Xxh3, value: &str) {
-    hasher.update(value.as_bytes());
-    hasher.update(&[0]);
-}
-
-/// Feeds each value, then a 0x01 so one list cannot run into the next.
-fn hash_list(hasher: &mut Xxh3, values: &[String]) {
-    for value in values {
-        hash_value(hasher, value);
-    }
-    hasher.update(&[1]);
 }
 
 #[cfg(test)]

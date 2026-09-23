@@ -108,7 +108,6 @@ describe('buildIoSnapshotOverrides', () => {
     expect(result.diagnostics.map((d) => [d.reason, d.taskId])).toEqual([
       ['missing', 'ui:build'],
     ]);
-    expect(result.resolution.digest).toMatch(/^\d+$/);
   });
 
   it('withholds disabled, custom-hasher, and root-anchored tasks', () => {

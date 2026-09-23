@@ -16,7 +16,6 @@ pub type Db = Arc<Mutex<NxDbConnection>>;
 const SCHEMA: &str = "
 CREATE TABLE IF NOT EXISTS io_snapshot_bundles (
     commit_sha TEXT PRIMARY KEY NOT NULL,
-    digest TEXT NOT NULL,
     fetched_at INTEGER NOT NULL,
     resolution TEXT NOT NULL
 );
@@ -50,7 +49,6 @@ impl SnapshotDb {
             .collect::<Result<_>>()
             .context("serializing snapshot entries")?;
         let commit = &bundle.resolution.requested_commit;
-        let digest = &bundle.resolution.digest;
         let fetched_at = bundle.resolution.fetched_at;
         let mut db = self.0.lock().unwrap();
         db.execute_batch(SCHEMA)?;
@@ -60,9 +58,9 @@ impl SnapshotDb {
                 params![commit],
             )?;
             conn.execute(
-                "INSERT OR REPLACE INTO io_snapshot_bundles (commit_sha, digest, fetched_at, resolution) \
-                 VALUES (?1, ?2, ?3, ?4)",
-                params![commit, digest, fetched_at, resolution],
+                "INSERT OR REPLACE INTO io_snapshot_bundles (commit_sha, fetched_at, resolution) \
+                 VALUES (?1, ?2, ?3)",
+                params![commit, fetched_at, resolution],
             )?;
             let mut insert = conn.prepare(
                 "INSERT INTO io_snapshot_tasks (commit_sha, task_id, entry) VALUES (?1, ?2, ?3)",

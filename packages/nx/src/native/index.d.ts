@@ -785,7 +785,6 @@ export interface IoSnapshotResolution {
   requestedCommit: string
   commits: Array<string>
   sourceCommits: Array<string>
-  digest: string
   fetchedAt: number
   clientVersion: string
   tasks: number

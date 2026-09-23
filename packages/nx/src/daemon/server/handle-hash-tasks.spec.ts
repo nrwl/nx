@@ -17,7 +17,7 @@ vi.mock('./project-graph-incremental-recomputation', () => ({
 vi.mock('../../config/configuration', () => ({ readNxJson: () => ({}) }));
 const mockGetStored = vi.fn((commit: string) => ({
   commit,
-  resolution: { digest: `digest-of-${commit}` },
+  resolution: { fetchedAt: 1 },
 }));
 // Lazy so the hoisted mock factory does not touch the const before it exists.
 vi.mock('../../native', () => ({
@@ -44,7 +44,7 @@ describe('handleHashTasks', () => {
     collectInputs: false,
   };
 
-  it('gets the stored set for the commit and keeps one handle while its digest holds', async () => {
+  it('gets the stored set for the commit and keeps one handle while its import holds', async () => {
     const commit = 'abc';
     await handleHashTasks({ ...base, ioSnapshots: { commit } });
     expect(mockGetStored).toHaveBeenLastCalledWith(commit);
@@ -53,18 +53,18 @@ describe('handleHashTasks', () => {
     await handleHashTasksUpfront({ ...base, ioSnapshots: { commit } });
     // Identity, not shape: the mock returns an equal object on every call.
     expect(hashTasksUpfront.mock.lastCall[5]).toBe(first);
-    // A re-import for the same commit (new digest) replaces the handle.
+    // A re-import for the same commit (new fetch time) replaces the handle.
     mockGetStored.mockImplementationOnce((c) => ({
       commit: c,
-      resolution: { digest: 'new' },
+      resolution: { fetchedAt: 2 },
     }));
     await handleHashTasks({ ...base, ioSnapshots: { commit } });
     const replaced = hashTasks.mock.lastCall[5];
     expect(replaced).not.toBe(first);
-    // A different commit is a different handle even when the digests match.
+    // A different commit is a different handle even when the fetch times match.
     mockGetStored.mockImplementationOnce((c) => ({
       commit: c,
-      resolution: { digest: 'new' },
+      resolution: { fetchedAt: 2 },
     }));
     await handleHashTasks({ ...base, ioSnapshots: { commit: 'def' } });
     expect(hashTasks.mock.lastCall[5]).toMatchObject({ commit: 'def' });

@@ -28,7 +28,7 @@ vi.mock('./store', () => ({
 
 describe('resolveIoSnapshotsForRun', () => {
   const nxJson = {} as any;
-  const set = { commit: 'head', resolution: { digest: 'd' } };
+  const set = { commit: 'head', resolution: { fetchedAt: 1 } };
   const stored = { status: 'cached', snapshots: set };
 
   beforeEach(() => {

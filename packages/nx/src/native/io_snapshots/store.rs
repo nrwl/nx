@@ -63,10 +63,9 @@ impl IoSnapshotStore {
             );
         } else {
             debug!(
-                "io snapshots: imported {} task(s) from {} commit(s), digest {}",
+                "io snapshots: imported {} task(s) from {} commit(s)",
                 resolution.tasks,
-                resolution.source_commits.len(),
-                resolution.digest
+                resolution.source_commits.len()
             );
         }
         // The importing process keeps what it just parsed; nothing to re-read.
@@ -138,7 +137,7 @@ mod tests {
         assert_eq!(imported.commit(), "head");
 
         let stored = store.get("head".into(), None).unwrap();
-        assert_eq!(stored.resolution().digest, resolution.digest);
+        assert_eq!(stored.resolution().fetched_at, resolution.fetched_at);
         // Read per task, normalized on import: duplicates collapsed.
         let entries = stored.entries_for(&["web:build", "gone:build"]).unwrap();
         assert_eq!(entries.len(), 1);

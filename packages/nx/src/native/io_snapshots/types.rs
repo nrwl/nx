@@ -8,7 +8,6 @@ pub struct IoSnapshotResolution {
     pub requested_commit: String,
     pub commits: Vec<String>,
     pub source_commits: Vec<String>,
-    pub digest: String,
     pub fetched_at: i64,
     pub client_version: String,
     pub tasks: u32,

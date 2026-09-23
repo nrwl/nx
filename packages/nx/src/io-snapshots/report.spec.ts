@@ -5,7 +5,6 @@ const resolution = {
   requestedCommit: 'abc123',
   commits: ['abc123'],
   sourceCommits: ['abc123'],
-  digest: 'deadbeef',
   fetchedAt: 0,
   clientVersion: '1',
   tasks: 3,
@@ -64,7 +63,7 @@ describe('formatIoSnapshotSummary', () => {
     );
     expect(summary.bodyLines).toEqual([
       'bundle: cached',
-      'commit abc123, digest deadbeef, 3 tasks in bundle',
+      'commit abc123, 3 tasks in bundle',
       'c:e2e: sandbox.enabled is false',
       'd:test: no snapshot for this task',
       'e:test: no snapshot for this task',

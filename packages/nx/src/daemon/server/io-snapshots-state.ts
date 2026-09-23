@@ -2,7 +2,7 @@ import type { IoSnapshots } from '../../native';
 import { getIoSnapshotStore } from '../../io-snapshots/store';
 
 // One handle at a time: entries read for a request serve the next one while
-// the commit and the set's digest hold, and a new commit or a re-imported set
+// the commit and its import hold, and a new commit or a re-imported set
 // replaces it, so nothing accumulates over a long-lived daemon.
 let remembered: IoSnapshots | undefined;
 
@@ -12,8 +12,8 @@ export function rememberIoSnapshots(snapshots: IoSnapshots): void {
 }
 
 /**
- * The set for `commit`. Getting it reads the one commit row to compare
- * digests, so a re-imported set is never served stale; the remembered set is
+ * The set for `commit`. Getting it reads the one commit row to compare fetch
+ * times, so a re-imported set is never served stale; the remembered set is
  * kept when they match, which is what preserves the entries it has read.
  */
 export function getIoSnapshotsForCommit(
@@ -26,7 +26,7 @@ export function getIoSnapshotsForCommit(
   if (
     stored &&
     remembered?.commit === commit &&
-    remembered.resolution.digest === stored.resolution.digest
+    remembered.resolution.fetchedAt === stored.resolution.fetchedAt
   ) {
     return remembered;
   }

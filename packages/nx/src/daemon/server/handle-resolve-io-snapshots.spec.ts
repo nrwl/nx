@@ -25,7 +25,7 @@ describe('handleResolveIoSnapshots', () => {
     ioSnapshotEnv: { NX_IO_SNAPSHOTS: 'true' },
   };
 
-  const set = { commit: 'head', resolution: { digest: 'd' } };
+  const set = { commit: 'head', resolution: { fetchedAt: 1 } };
 
   beforeEach(() => vi.clearAllMocks());
 
@@ -65,7 +65,7 @@ describe('handleResolveIoSnapshots', () => {
       status: 'fetched',
       snapshots: set,
     });
-    getStored.mockReturnValue({ commit: 'head', resolution: { digest: 'd' } });
+    getStored.mockReturnValue({ commit: 'head', resolution: { fetchedAt: 1 } });
     await handleResolveIoSnapshots(payload);
     expect(getIoSnapshotsForCommit('head')).toBe(set);
   });

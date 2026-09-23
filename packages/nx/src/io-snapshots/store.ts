@@ -142,7 +142,7 @@ export function reportIoSnapshotResolution(
     `Nx Cloud I/O snapshots ${outcome.status}: ${resolution.tasks} tasks for ${resolution.requestedCommit.slice(
       0,
       12
-    )} from ${resolution.sourceCommits.length} commit(s), digest ${resolution.digest}`
+    )} from ${resolution.sourceCommits.length} commit(s)`
   );
   return outcome;
 }

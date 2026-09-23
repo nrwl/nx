@@ -203,7 +203,11 @@ function taskGraphFingerprint(
   taskGraph: TaskGraph,
   ioSnapshots?: IoSnapshots
 ): string {
-  const parts: string[] = [ioSnapshots?.resolution?.digest ?? ''];
+  const parts: string[] = [
+    ioSnapshots
+      ? `${ioSnapshots.commit}@${ioSnapshots.resolution.fetchedAt}`
+      : '',
+  ];
   for (const id of Object.keys(taskGraph.tasks).sort()) {
     const task = taskGraph.tasks[id];
     parts.push(

@@ -2175,7 +2175,6 @@ describe('task planner', () => {
         ['custom-hasher', 'child:build'],
         ['root-anchored-glob', 'parent:build'],
       ]);
-      expect(report.resolution.digest).toMatch(/^\d+$/);
       expect(getIoSnapshotDeferredTaskIds(withheld, taskGraph)).toEqual([]);
 
       const plain = planner.getPlans(['parent:build'], taskGraph);

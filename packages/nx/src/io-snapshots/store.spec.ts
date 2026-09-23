@@ -36,7 +36,6 @@ describe('loadIoSnapshotsForRun', () => {
       requestedCommit: 'head',
       tasks: 1,
       sourceCommits: [],
-      digest: 'd',
     },
   });
   const coded = (code: string, message = code) =>
