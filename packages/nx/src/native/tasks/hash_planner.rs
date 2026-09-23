@@ -31,10 +31,6 @@ use crate::native::tasks::utils;
 use crate::native::utils::find_matching_projects;
 use std::sync::{Arc, OnceLock};
 
-fn io_snapshot_digest_input(digest: &str) -> HashInstruction {
-    HashInstruction::IoSnapshot(digest.to_string())
-}
-
 /// (project, workspace-relative negated pattern) pairs declared by the
 /// projects a task's plan visits. Snapshot globs are filtered by them at hash
 /// time, so removing a negation re-admits the observed reads it excluded.
@@ -632,7 +628,7 @@ impl HashPlanner {
             group.extend(declared_negations);
             instructions.push(HashInstruction::IgnoredFileSet(group));
         }
-        instructions.push(io_snapshot_digest_input(&io.digest));
+        instructions.push(HashInstruction::IoSnapshot(io.digest.clone()));
         instructions
     }
 
