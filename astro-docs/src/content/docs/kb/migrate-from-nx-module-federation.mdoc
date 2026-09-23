@@ -192,7 +192,7 @@ export default config;
 module.exports = {
   name: 'webpack_host',
   filename: 'remoteEntry.js',
-  remoteType: 'script', // webpack only; on Rspack only with a var or window library
+  remoteType: 'script', // webpack only; on Rspack omit it, the plugin defaults to script
   dts: false,
   remotes: {
     webpackRemoteA: 'webpackRemoteA@http://localhost:4701/remoteEntry.js',
@@ -228,7 +228,8 @@ from the workspace root; drop a `fileReplacements` pair whose files do not exist
 differed per named configuration become `process.env.NODE_ENV === 'production'` ternaries, which
 Step 7 sets per configuration. The generator's per-configuration `optimization`,
 `outputHashing`, `sourceMap`, `namedChunks`, and `vendorChunk` values match what the plugin
-derives from `NODE_ENV` and can go; `extractLicenses` has no such default, so keep its ternary.
+derives from `NODE_ENV` and can go, with the development-build caveat in Step 7;
+`extractLicenses` has no such default, so keep its ternary.
 
 {% tabs syncKey="mf-bundler" %}
 {% tabitem label="webpack" %}
@@ -501,18 +502,18 @@ it.
 `withModuleFederation` and `NxModuleFederationPlugin` mutated the bundler config on their way
 through. Set these yourself:
 
-| Setting                     | Value                                                                                                                                                                                                               |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `output.uniqueName`         | The project name, not the normalized container name                                                                                                                                                                 |
-| `output.publicPath`         | `'auto'`                                                                                                                                                                                                            |
-| `output.scriptType`         | `'text/javascript'` on webpack                                                                                                                                                                                      |
-| `output.clean`              | `true`. The bundler CLI does not clear the output directory, so a development build lands on top of production files                                                                                                |
-| `resolve.modules`           | The workspace root appended after `node_modules`                                                                                                                                                                    |
-| `optimization.runtimeChunk` | `false`, and also as the app-plugin `runtimeChunk` option, which overwrites the top-level value. The wrapper let a host under the dev server keep the plugin default; `false` there too passes the hot-update check |
-| `commonChunk`               | `false` in the app-plugin options. `NxAppWebpackPlugin` defaults `commonChunk` to `true`, where `withNx()` left it unset, which adds a `common.<hash>.js` chunk to every remote                                     |
-| `splitChunks.cacheGroups`   | `default` and `common` set to `false`, only if the old config used `NxModuleFederationPlugin`. `withModuleFederation` did not set them, and adding them changes the output                                          |
-| `lazyCompilation` (Rspack)  | `false`. rspack-cli dev mode defaults it on and it breaks federation                                                                                                                                                |
-| `devServer.hot`             | `true` on every app. Hot updates reach the host through the remote's dev server; without it, editing a remote reloads the host and resets its state                                                                 |
+| Setting                     | Value                                                                                                                                                                                                                                                                                      |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `output.uniqueName`         | The project name, not the normalized container name                                                                                                                                                                                                                                        |
+| `output.publicPath`         | `'auto'`                                                                                                                                                                                                                                                                                   |
+| `output.scriptType`         | `'text/javascript'` on webpack                                                                                                                                                                                                                                                             |
+| `output.clean`              | `true`. The Rspack app plugin defaults it, the webpack one does not, and without it a development build lands on top of production files                                                                                                                                                   |
+| `resolve.modules`           | The workspace root appended after `node_modules`                                                                                                                                                                                                                                           |
+| `optimization.runtimeChunk` | `false`, and also as the app-plugin `runtimeChunk` option, which overwrites the top-level value. The wrapper let a host under the dev server keep the plugin default, and forced `'single'` on a development-mode host with several remotes; `false` there too passes the hot-update check |
+| `commonChunk`               | `false` in the app-plugin options. `NxAppWebpackPlugin` defaults `commonChunk` to `true`, where `withNx()` left it unset, which adds a `common.<hash>.js` chunk to every remote                                                                                                            |
+| `splitChunks.cacheGroups`   | `default` and `common` set to `false`, only if the old config used `NxModuleFederationPlugin`. `withModuleFederation` did not set them, and adding them changes the output                                                                                                                 |
+| `lazyCompilation` (Rspack)  | `false`. rspack-cli dev mode defaults it on and it breaks federation                                                                                                                                                                                                                       |
+| `devServer.hot`             | `true` on every app. Hot updates reach the host through the remote's dev server; without it, editing a remote reloads the host and resets its state                                                                                                                                        |
 
 The Nx dev server also derived `devMiddleware.publicPath` from `baseHref`, mapped `publicHost` to
 `client.webSocketURL`, and passed `proxyConfig`, `allowedHosts`, and the `ssl` options through.
@@ -637,7 +638,8 @@ set per configuration needs no input, since the configuration name is part of th
 A green build is not the acceptance criterion. The migration is done when every check you
 recorded in the baseline passes again, plus these:
 
-- Production and development configurations both build with `--skipNxCache`.
+- Production and development configurations both build with `--skipNxCache`, production last,
+  since both write the same `mf-stats.json`.
 - `tsc -p apps/<app>/tsconfig.app.json --noEmit` passes for each app. The app plugin type-checks
   asynchronously, so a build exits 0 on type errors.
 - Each app's production `mf-stats.json` lists the same container name, remotes, exposes, and
