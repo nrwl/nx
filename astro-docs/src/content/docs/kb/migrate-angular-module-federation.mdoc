@@ -174,8 +174,8 @@ Remote configs keep their `exposes` map. The generator wrote the exposed path re
 workspace root (`apps/remoteA/src/app/remote-entry/entry.routes.ts`), and the official plugin
 resolves it the same way once Step 4 puts the workspace root on `resolve.modules`.
 
-A generated host also carries `webpack.prod.config.ts` with production remote URLs as
-`['remoteA', 'http://remote-a.example.com/']` tuples, wired through
+Generated hosts and remotes also carry `webpack.prod.config.ts`, on a host with production
+remote URLs as `['remoteA', 'http://remote-a.example.com/']` tuples, wired through
 `build.configurations.production.customWebpackConfig` on webpack; on Rspack the file exists but
 `rspack.config.ts` never loads it. Nx appended `/remoteEntry.mjs` to a tuple URL without a
 filename. Fold those into the one config and write the full entry URL; a file that still holds
@@ -255,7 +255,7 @@ merged file:
 // apps/shell/webpack.config.ts
 import { ModuleFederationPlugin } from '@module-federation/enhanced/rspack';
 import { join } from 'node:path';
-import mf from './module-federation.config.js'; // CommonJS; the default import works under rspack-cli's TS loading
+import mf from './module-federation.config.js'; // CommonJS; rspack-cli's TS loader handles the default import
 
 export default {
   output: { uniqueName: mf.name, publicPath: 'auto', module: true },
@@ -268,6 +268,9 @@ export default {
   plugins: [new ModuleFederationPlugin(mf)],
 };
 ```
+
+The `MODULE_TYPELESS_PACKAGE_JSON` warning on every Rspack build predates the migration; do
+not follow its advice to add `"type": "module"`, which breaks the CommonJS config.
 
 Rspack containers keep `filename: 'remoteEntry.js'`, so the host's `remotes` URLs end in
 `/remoteEntry.js` there, not `.mjs`.
@@ -386,8 +389,8 @@ header under `devServer.headers` (recent generators write it), and point `static
 `dist/apps/<app>/browser`, where the Rspack build lands. Nx merges `project.json` options key by
 key over the inferred target, so the inferred `buildTarget` survives next to `staticFilePath`
 unless the inferred target has another name: set `serveStaticTargetName` on the
-`@nx/rspack/plugin` entry in `nx.json` to something like `serve-static-inferred` and never run
-that target. The `serve-static` the generator wrote into `project.json` still carries
+`@nx/rspack/plugin` entry in `nx.json` to something like `serve-static-inferred`. That dead
+target then appears on every Rspack project; keep it out of `run-many` and `affected` target lists. The `serve-static` the generator wrote into `project.json` still carries
 `buildTarget`, so replace that target whole as above, in addition to the rename.
 
 In `nx.json`, drop the `{ "env": "NX_MF_DEV_REMOTES" }` input from the
@@ -403,10 +406,12 @@ the baseline:
   change.
 - Editing a remote's component updates the host without a page navigation.
 - Production and development configurations both build with `--skipNxCache` after you delete
-  `dist/apps/<app>`, since hashed chunks from the wrapper build linger next to the new output.
+  `dist/apps/<app>` and `.angular/cache`, since hashed chunks from the wrapper build linger next
+  to the new output and the warm cache hides a missing alias.
   Build production last, since both configurations write the same `mf-stats.json`. On Rspack,
   `createConfig` picks the configuration from `NGRS_CONFIG`, so run the development build as
-  `NGRS_CONFIG=development nx build <app> --configuration=development`. Each app's production
+  `NGRS_CONFIG=development nx build <app> --configuration=development`; without the variable the
+  build exits 0 with production output. Each app's production
   `mf-stats.json` lists the same container name, remotes, exposes, and `shared` entries as the
   baseline. Compare those fields, not the whole file: asset hashes and the `usedIn` text differ.
 - The e2e suite passes on the replacement web server from Step 6 (Path A) or Step 3 (Path B).
@@ -448,11 +453,12 @@ The generator refuses an Nx Module Federation app as generated, because `bootstr
 exists and `main.ts` does not call `initFederation`. Fold `bootstrap.ts` back into `main.ts`,
 delete `bootstrap.ts`, then run it per app. On a runtime-loaded host, drop the
 `fetch(...).then(setRemoteDefinitions)` chain as well and keep only the bootstrap body: the
-`dynamic-host` type writes `public/federation.manifest.json` and reads it itself, so the old
-`module-federation.manifest.json` is dead. Use `--type=host` for a static host and
+`dynamic-host` type writes `public/federation.manifest.json` and reads it itself, so delete the
+old `module-federation.manifest.json`. Use `--type=host` for a static host and
 `--type=dynamic-host` for one that reads a manifest. The generator builds the host's remote map
-from every other application's `serve` port, 4200 when it has none, so the map always needs the
-pruning in Step 3. The wrapped `serve` it writes gets `port: 0`, which falls through to the real
+from every other application's `serve` port (or its `serve-original` port once that app has
+moved, so the order does not matter), 4200 when it has none, so the map always needs the pruning
+in Step 3. The wrapped `serve` it writes gets `port: 0`, which falls through to the real
 port on `serve-original`:
 
 ```shell

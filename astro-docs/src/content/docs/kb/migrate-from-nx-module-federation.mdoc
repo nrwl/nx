@@ -135,7 +135,8 @@ Two values that Nx derived are easy to lose here:
   container name. Drop any `library` entry from the Nx config. Nx never passed it to the plugin,
   and the `{ type: 'var', name: '<project-name>' }` the generator wrote publishes an
   un-normalized global. On Rspack a `var` or `window` type was the switch for
-  `remoteType: 'script'` and `output.scriptType: 'text/javascript'`, so carry those two by hand.
+  `remoteType: 'script'` and `output.scriptType: 'text/javascript'`, so carry those two by hand
+  only if your Rspack config had such a `library`.
 
 Nx also defaulted `filename` to `remoteEntry.js` and, for webpack, `remoteType` to `script`,
 and it passed through the `{ dts: false }` override from your old `withModuleFederation` call.
@@ -463,7 +464,8 @@ module.exports = {
 ```
 
 Read the values from the baseline `mf-stats.json` instead of deriving them, and carry exactly
-the keys it lists. For npm packages Nx emitted `singleton: true`, `strictVersion: true`, and the
+the keys it lists, with `singleton`, `strictVersion`, `requiredVersion`, and `eager` copied per
+entry. For npm packages Nx emitted `singleton: true`, `strictVersion: true`, and the
 `requiredVersion` range from your root `package.json`, and it marked only `react`, `react-dom`,
 `react-router`, and `react-router-dom` as `eager`. Secondary entry points such as
 `react/jsx-runtime` are separate keys. A key such as `pkg` does not cover `pkg/subpath` requests,
@@ -530,7 +532,7 @@ for the named configurations the executor used to pass, and start the set you wa
 One behavior change: the old executor set `NODE_ENV=production` for every configuration, so a
 `development` build that now runs with `NODE_ENV=development` gets development-mode output such
 as `react/jsx-dev-runtime`. That module is not in your stats, so each app bundles its own copy;
-it imports the shared `react`, so leave it out or share it alongside `react/jsx-runtime`. Set
+it imports the shared `react`, so leave it out. Set
 `NODE_ENV=production` on both configurations if you want the old output back.
 
 ```jsonc
@@ -542,7 +544,7 @@ it imports the shared `react`, so leave it out or share it alongside `react/jsx-
       "outputs": ["{workspaceRoot}/dist/apps/webpack-host"],
       "defaultConfiguration": "production",
       "options": {
-        "command": "webpack build --config webpack.config.js",
+        "command": "webpack build --config webpack.config.js", // rspack build --config rspack.config.js
         "cwd": "apps/webpack-host",
       },
       "configurations": {
@@ -555,7 +557,7 @@ it imports the shared `react`, so leave it out or share it alongside `react/jsx-
       "continuous": true,
       "defaultConfiguration": "development",
       "options": {
-        "command": "webpack serve --config webpack.config.js",
+        "command": "webpack serve --config webpack.config.js", // rspack serve --config rspack.config.js
         "cwd": "apps/webpack-host",
       },
       "configurations": {
