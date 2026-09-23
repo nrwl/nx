@@ -395,7 +395,8 @@ export async function generateGraph(
           prunedGraph,
           rawGraph,
           args.projects,
-          args.targets
+          args.targets,
+          args.selectedTaskIds
         ),
         null,
         2
@@ -473,7 +474,8 @@ export async function generateGraph(
         prunedGraph,
         rawGraph,
         args.projects,
-        args.targets
+        args.targets,
+        args.selectedTaskIds
       );
 
       writeJsonFile(fullFilePath, json);
@@ -1572,14 +1574,15 @@ async function createJsonOutput(
   prunedGraph: ProjectGraph,
   rawGraph: ProjectGraph,
   projects: string[],
-  targets?: string[]
+  targets?: string[],
+  selectedTaskIds?: string[]
 ): Promise<GraphJson> {
   const response: GraphJson = {
     graph: prunedGraph,
   };
 
   if (targets?.length) {
-    const taskGraph = createTaskGraph(
+    let taskGraph = createTaskGraph(
       rawGraph,
       {},
       projects,
@@ -1587,6 +1590,9 @@ async function createJsonOutput(
       undefined,
       {}
     );
+    if (selectedTaskIds) {
+      taskGraph = pruneToSelectedTasks(taskGraph, selectedTaskIds);
+    }
 
     const hasher = createTaskHasher(rawGraph, readNxJson());
     let tasks = Object.values(taskGraph.tasks);
