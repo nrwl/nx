@@ -26,13 +26,13 @@ import {
   appendCommit,
   applyStepEvent,
   clearCommitStarted,
-  commitNameForStep,
   commitResultToLedgerEntry,
   gitRan,
   markCommitStarted,
   markInstallFailed,
   stepsToPendingMigrations,
   uncoveredFailedStepIds,
+  unresolvedCommitName,
 } from './state-machine';
 import {
   installDepsChangedSinceDispense,
@@ -94,7 +94,7 @@ export async function giveUpWithCommit(
   try {
     const result = await commitMigrationIfRequested(
       root,
-      { name: commitNameForStep(step, 'unresolved') },
+      { name: unresolvedCommitName(step) },
       true,
       state.commitPrefix,
       () =>
@@ -146,21 +146,13 @@ export async function giveUpWithCommit(
       step.id
     );
     archiveError = recorded.archiveError;
-    let next =
+    const next =
       commit.status === 'install-failed'
         ? markInstallFailed(recorded.state, step.id)
         : recorded.state;
-    if (entry) {
-      const index = next.commits.length;
-      next = appendCommit(next, attachIssueIdsToCommitEntry(next, entry));
-      next = {
-        ...next,
-        steps: next.steps.map((s) =>
-          s.id === step.id ? { ...s, commitLedgerIndex: index } : s
-        ),
-      };
-    }
-    return next;
+    return entry
+      ? appendCommit(next, attachIssueIdsToCommitEntry(next, entry))
+      : next;
   });
   if (refusal !== undefined) {
     return {
@@ -230,7 +222,7 @@ export function warnAboutGiveUp(
   step: MigrateStep,
   outcome: Extract<GiveUpOutcome, { kind: 'given-up' }>
 ): void {
-  const name = commitNameForStep(step, 'unresolved');
+  const name = unresolvedCommitName(step);
   switch (outcome.commit.status) {
     case 'install-failed':
       warnCommitFailed(name, outcome.commit.reason);

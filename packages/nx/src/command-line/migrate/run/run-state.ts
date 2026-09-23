@@ -145,7 +145,6 @@ export interface MigrateStep {
   outcome?: MigrateStepOutcome;
   // Folded from the handoff file at reconcile time.
   promptOutcome?: MigrateStepPromptOutcome;
-  // A success accepted through the adopt action.
   adopted?: boolean;
   // The run issue minted when the step was given up on, carrying its last
   // failure to the completion report.
@@ -720,8 +719,7 @@ function corruptRunStateError(filePath: string, reason: string): Error {
  * Adding a member to a persisted closed set needs a
  * `CURRENT_RUN_STATE_FORMAT_VERSION` bump only once a released Nx can read the
  * run, or that Nx rejects the new value as corruption instead of asking for a
- * newer Nx. While the orchestrator is dark the sets grow at v1, and the feature
- * goes public at v1.
+ * newer Nx.
  */
 export class NewerRunStateFormatError extends Error {
   constructor(message: string) {

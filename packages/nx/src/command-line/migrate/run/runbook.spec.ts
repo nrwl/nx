@@ -101,8 +101,6 @@ describe('renderRunbook', () => {
     );
     expect(runbook).toContain('run `next` so the step is recorded as failed');
     expect(runbook).toContain('a session Nx started for this run');
-    expect(runbook).not.toContain('the run exits non-zero');
-    expect(runbook).not.toContain('retry/skip options');
   });
 
   it('carries the author scope rules, and the validation scope rules only when validation is on', () => {

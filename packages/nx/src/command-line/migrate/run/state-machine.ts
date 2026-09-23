@@ -202,21 +202,17 @@ function applyStepAction(
       case 'adopt':
         return commit(state, index, adopt(step));
       case 'skip':
-        if (commitMayBeInHistory(state, step)) {
-          return {
-            kind: 'error',
-            reason: `Cannot apply action 'skip' to step '${step.id}': a commit of its changes landed or was started and never recorded, so the migration may be committed. Use 'retry' to finish it, or 'adopt' to record it as applied.`,
-          };
-        }
-        return commit(state, index, { ...step, status: 'skipped' });
       case 'unresolved':
         if (commitMayBeInHistory(state, step)) {
           return {
             kind: 'error',
-            reason: `Cannot apply action 'unresolved' to step '${step.id}': a commit of its changes landed or was started and never recorded, so the migration may be committed. Use 'retry' to finish it, or 'adopt' to record it as applied.`,
+            reason: `Cannot apply action '${action}' to step '${step.id}': a commit of its changes landed or was started and never recorded, so the migration may be committed. Use 'retry' to finish it, or 'adopt' to record it as applied.`,
           };
         }
-        return commit(state, index, { ...step, status: 'unresolved' });
+        return commit(state, index, {
+          ...step,
+          status: action === 'skip' ? 'skipped' : 'unresolved',
+        });
     }
   }
   if (step.status === 'died') {
@@ -463,17 +459,10 @@ export function completionSummaryLines(state: MigrateRunState): string[] {
   ];
 }
 
-// A commit made by a step action after the step's own attempt failed. It
-// suffixes the broker request id and, for 'unresolved', the commit name, so
-// history does not read a partial result as the migration applied.
-export type CommitAction = 'adopt' | 'unresolved';
-
-export function commitNameForStep(
-  step: MigrateStep,
-  commitAs?: CommitAction
-): string {
-  const { name } = splitMigrationId(step.migrationId);
-  return commitAs === 'unresolved' ? `${name} (unresolved)` : name;
+// Suffixed so history does not read the partial result as the migration
+// applied.
+export function unresolvedCommitName(step: MigrateStep): string {
+  return `${splitMigrationId(step.migrationId).name} (unresolved)`;
 }
 
 // A guarded transition whose observation was made against an earlier attempt
