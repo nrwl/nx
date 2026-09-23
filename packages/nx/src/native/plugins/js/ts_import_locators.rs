@@ -1,7 +1,5 @@
 use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
-use std::path::Path;
-use std::sync::Arc;
 use std::time::Instant;
 
 use rayon::prelude::*;
@@ -9,16 +7,17 @@ use tracing::debug;
 use tracing::trace;
 
 use swc_common::comments::SingleThreadedComments;
-use swc_common::{BytePos, SourceMap, Spanned};
+use swc_common::{BytePos, Spanned};
 use swc_ecma_ast::EsVersion::EsNext;
-use swc_ecma_parser::error::Error;
-use swc_ecma_parser::lexer::Lexer;
-use swc_ecma_parser::token::Keyword::{
+use swc_ecma_lexer::common::input::Tokens;
+use swc_ecma_lexer::error::Error;
+use swc_ecma_lexer::lexer::Lexer;
+use swc_ecma_lexer::token::Keyword::{
     Catch, Class, Default_, Export, Finally, Function, Import, Try,
 };
-use swc_ecma_parser::token::Word::{Ident, Keyword};
-use swc_ecma_parser::token::{BinOpToken, Token, TokenAndSpan};
-use swc_ecma_parser::{StringInput, Syntax, Tokens, TsConfig};
+use swc_ecma_lexer::token::Word::{Ident, Keyword};
+use swc_ecma_lexer::token::{BinOpToken, Token, TokenAndSpan};
+use swc_ecma_lexer::{StringInput, Syntax, TsSyntax};
 
 #[napi]
 #[derive(Debug)]
@@ -124,7 +123,7 @@ impl<'a> State<'a> {
             // Keep track of when we are in an array declaration because commas mean different things
             let in_array_declaration = self.open_bracket_count > 0;
 
-            let new_line = self.lexer.had_line_break_before_last();
+            let new_line = current.had_line_break;
 
             // This is the beginning of a new statement, reset the import type to the default
             // Reset import type when there is new line not in braces or angle brackets (generics)
@@ -136,7 +135,7 @@ impl<'a> State<'a> {
                 Token::Word(word) => match word {
                     // Matches something like const a = a as import('a')
                     // This is a static type import
-                    Ident(i) if i == "as" => {
+                    Ident(i) if i.as_ref() == "as" => {
                         self.import_type = ImportType::Static;
                     }
                     // Matches something like export const = import('a')
@@ -329,7 +328,7 @@ fn find_specifier_in_import(state: &mut State) -> Option<(String, ImportType)> {
                     match &current.token {
                         // If we match a string, then it might be a literal import
                         Token::Str { value, .. } => {
-                            maybe_literal = Some(value.to_string());
+                            maybe_literal = Some(value.to_string_lossy().into_owned());
                         }
                         Token::BackQuote => {
                             let mut set = false;
@@ -374,7 +373,7 @@ fn find_specifier_in_import(state: &mut State) -> Option<(String, ImportType)> {
             Token::Word(word) => match word {
                 // This is a import type statement
                 // Ex: import type { } from 'a';
-                Ident(i) if i == "type" => {
+                Ident(i) if i.as_ref() == "type" => {
                     if let Some(next) = state.next() {
                         // What follows a type import is pretty strict, otherwise ignore it
                         match &next.token {
@@ -399,7 +398,7 @@ fn find_specifier_in_import(state: &mut State) -> Option<(String, ImportType)> {
                             // After `=`, check if followed by `require(`
                             if let Some(maybe_require) = state.next() {
                                 match &maybe_require.token {
-                                    Token::Word(Ident(i)) if i == "require" => {
+                                    Token::Word(Ident(i)) if i.as_ref() == "require" => {
                                         // import X = require('module') -- continue to find specifier
                                     }
                                     _ => {
@@ -416,7 +415,7 @@ fn find_specifier_in_import(state: &mut State) -> Option<(String, ImportType)> {
             },
             // Matches: import 'a';
             Token::Str { value, .. } => {
-                return Some((value.to_string(), ImportType::Static));
+                return Some((value.to_string_lossy().into_owned(), ImportType::Static));
             }
             _ => {
                 return None;
@@ -428,7 +427,7 @@ fn find_specifier_in_import(state: &mut State) -> Option<(String, ImportType)> {
     // import { } from 'a';
     while let Some(current) = state.next() {
         if let Token::Str { value, .. } = &current.token {
-            return Some((value.to_string(), ImportType::Static));
+            return Some((value.to_string_lossy().into_owned(), ImportType::Static));
         }
     }
 
@@ -442,7 +441,7 @@ fn find_specifier_in_export(state: &mut State) -> Option<(String, ImportType)> {
         match &next.token {
             // Matches export { } from 'a';
             Token::LBrace => {}
-            Token::Word(Ident(i)) if i == "type" => {
+            Token::Word(Ident(i)) if i.as_ref() == "type" => {
                 // Matches an export type
                 if let Some(next) = state.next() {
                     // What follows is pretty strict
@@ -475,7 +474,9 @@ fn find_specifier_in_export(state: &mut State) -> Option<(String, ImportType)> {
             Token::RBrace | Token::Word(Ident(_)) | Token::Comma => {}
             Token::Word(Keyword(kw)) if *kw == Default_ => {}
             // When we find a string, it's a export
-            Token::Str { value, .. } => return Some((value.to_string(), ImportType::Static)),
+            Token::Str { value, .. } => {
+                return Some((value.to_string_lossy().into_owned(), ImportType::Static));
+            }
             _ => {
                 return None;
             }
@@ -505,7 +506,7 @@ fn find_specifier_in_require(state: &mut State) -> Option<(String, ImportType)> 
             Token::Str { value, .. }=> {
                 if !set {
                     set = true;
-                    import = Some(value.to_string());
+                    import = Some(value.to_string_lossy().into_owned());
                 } else {
                     import = None
                 }
@@ -624,7 +625,7 @@ fn process_file(
 
     let tsx = file_path.ends_with(".tsx") || file_path.ends_with(".jsx");
     let lexer = Lexer::new(
-        Syntax::Typescript(TsConfig {
+        Syntax::Typescript(TsSyntax {
             tsx,
             decorators: false,
             dts: file_path.ends_with(".d.ts"),
@@ -670,7 +671,7 @@ fn process_file(
 
                     find_specifier_in_export(&mut state)
                 }
-                Ident(ident) if ident == "require" => {
+                Ident(ident) if ident.as_ref() == "require" => {
                     pos = Some(current.span.lo);
                     find_specifier_in_require(&mut state)
                 }
@@ -788,8 +789,11 @@ mod find_imports {
     use assert_fs::TempDir;
     use assert_fs::prelude::*;
     use std::env;
-    use std::path::PathBuf;
-    use swc_common::comments::NoopComments;
+    use std::path::{Path, PathBuf};
+    use std::sync::Arc;
+    use swc_common::SourceMap;
+    use swc_ecma_ast as ast;
+    use swc_ecma_visit::{Visit, VisitWith};
 
     #[test]
     fn should_not_include_ignored_imports() {
@@ -1749,23 +1753,94 @@ import(myTag`react@${version}`);
         );
     }
 
+    /// Mirrors `swc_ecma_dep_graph::analyze_dependencies`, which no longer builds against current swc.
+    #[derive(Default)]
+    struct AstImportCollector {
+        in_block: bool,
+        deps: Vec<(swc_common::Span, String, bool)>,
+    }
+
+    impl AstImportCollector {
+        fn push(&mut self, span: swc_common::Span, src: &ast::Str, is_dynamic: bool) {
+            let specifier = src.value.to_string_lossy().into_owned();
+            self.deps.push((span, specifier, is_dynamic));
+        }
+    }
+
+    impl Visit for AstImportCollector {
+        fn visit_import_decl(&mut self, node: &ast::ImportDecl) {
+            self.push(node.span, &node.src, false);
+        }
+
+        fn visit_named_export(&mut self, node: &ast::NamedExport) {
+            if let Some(src) = &node.src {
+                self.push(node.span, src, false);
+            }
+        }
+
+        fn visit_export_all(&mut self, node: &ast::ExportAll) {
+            self.push(node.span, &node.src, false);
+        }
+
+        fn visit_ts_import_type(&mut self, node: &ast::TsImportType) {
+            self.push(node.span, &node.arg, false);
+        }
+
+        fn visit_stmts(&mut self, stmts: &[ast::Stmt]) {
+            let was_in_block = std::mem::replace(&mut self.in_block, true);
+            stmts.visit_children_with(self);
+            self.in_block = was_in_block;
+        }
+
+        fn visit_call_expr(&mut self, node: &ast::CallExpr) {
+            node.visit_children_with(self);
+            let is_import = match &node.callee {
+                ast::Callee::Import(_) => true,
+                ast::Callee::Expr(expr) => match &**expr {
+                    ast::Expr::Ident(ident) if ident.sym == "require" => false,
+                    ast::Expr::Member(member) => match (&*member.obj, &member.prop) {
+                        (ast::Expr::Ident(obj), ast::MemberProp::Ident(prop))
+                            if obj.sym == "require" && prop.sym == "resolve" =>
+                        {
+                            false
+                        }
+                        _ => return,
+                    },
+                    _ => return,
+                },
+                ast::Callee::Super(_) => return,
+            };
+            if let Some(arg) = node.args.first() {
+                if let ast::Expr::Lit(ast::Lit::Str(src)) = &*arg.expr {
+                    self.push(node.span, src, is_import || self.in_block);
+                }
+            }
+        }
+
+        fn visit_ts_import_equals_decl(&mut self, node: &ast::TsImportEqualsDecl) {
+            if let ast::TsModuleRef::TsExternalModuleRef(module) = &node.module_ref {
+                self.push(node.span, &module.expr, false);
+            }
+        }
+    }
+
     // This function finds imports with the ast which verifies that the imports we find are the same as the ones typescript finds
     fn find_imports_with_ast(file_path: String) -> anyhow::Result<ImportResult> {
         let cm = Arc::<SourceMap>::default()
             .load_file(Path::new(file_path.as_str()))
             .unwrap();
 
-        let mut errs: Vec<Error> = vec![];
+        let mut errs = vec![];
         let tsx = file_path.ends_with(".tsx") || file_path.ends_with(".jsx");
 
         let module = swc_ecma_parser::parse_file_as_module(
             &cm,
-            Syntax::Typescript(TsConfig {
+            swc_ecma_parser::Syntax::Typescript(swc_ecma_parser::TsSyntax {
                 tsx,
                 decorators: true,
                 dts: file_path.ends_with(".d.ts"),
                 no_early_errors: false,
-                ..TsConfig::default()
+                ..Default::default()
             }),
             EsNext,
             None,
@@ -1773,13 +1848,13 @@ import(myTag`react@${version}`);
         )
         .map_err(|_| anyhow::anyhow!("Failed to create ast"))?;
 
-        let comments = NoopComments;
-        let deps = swc_ecma_dep_graph::analyze_dependencies(&module, &comments);
+        let mut collector = AstImportCollector::default();
+        module.visit_with(&mut collector);
 
         let mut static_import_expressions = vec![];
         let mut dynamic_import_expressions = vec![];
-        for dep in deps {
-            let line_with_dep = cm.lookup_line(dep.span.lo).expect("The dep is on a line");
+        for (span, specifier, is_dynamic) in collector.deps {
+            let line_with_dep = cm.lookup_line(span.lo).expect("The dep is on a line");
 
             if line_with_dep > 0 {
                 if let Some(line_before_dep) = cm.get_line(line_with_dep - 1) {
@@ -1792,10 +1867,10 @@ import(myTag`react@${version}`);
                 }
             }
 
-            if dep.is_dynamic {
-                dynamic_import_expressions.push(dep.specifier.to_string());
+            if is_dynamic {
+                dynamic_import_expressions.push(specifier);
             } else {
-                static_import_expressions.push(dep.specifier.to_string());
+                static_import_expressions.push(specifier);
             }
         }
         Ok(ImportResult {
