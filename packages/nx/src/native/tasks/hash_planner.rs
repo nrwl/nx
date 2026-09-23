@@ -351,7 +351,7 @@ impl HashPlanner {
                 if let Some(snapshot) = &snapshot {
                     // Declared filesets anywhere in the plan (self, deps,
                     // {input, projects}) are replaced by the observed reads;
-                    // TsConfiguration survives only if the root tsconfig was read.
+                    // TsConfiguration and JSON inputs survive only if read.
                     let keep_tsconfig = snapshot.root_tsconfig_read();
                     let own: hashbrown::HashSet<u32> = self
                         .snapshot_file_instructions(task, snapshot, &negations)
@@ -361,7 +361,9 @@ impl HashPlanner {
                     ids.retain(|id| {
                         *id == always_on_id
                             || own.contains(id)
-                            || !pool.replaced_by_snapshot(*id, keep_tsconfig)
+                            || !pool.replaced_by_snapshot(*id, keep_tsconfig, |path| {
+                                snapshot.read(path)
+                            })
                     });
                     ids.extend(own);
                 }
@@ -1111,8 +1113,8 @@ impl HashPlanner {
         self_inputs: &[Input],
         snapshot: Option<&SnapshotContext>,
     ) -> anyhow::Result<Vec<HashInstruction>> {
-        if let Some(snapshot) = snapshot {
-            return self.gather_self_inputs_from_snapshot(project_name, self_inputs, snapshot);
+        if snapshot.is_some() {
+            return self.gather_self_inputs_from_snapshot(project_name, self_inputs);
         }
         // `includeIgnored` filesets hash from disk as one aggregated group, so
         // a negation filters across entries; the rest read the file map.
@@ -1174,8 +1176,7 @@ impl HashPlanner {
             validate_files_globs(project_name, &resolved)?;
             vec![HashInstruction::IgnoredFileSet(resolved)]
         };
-        let runtime_and_env_inputs =
-            self.runtime_env_cwd_json_inputs(project_name, self_inputs, None);
+        let runtime_and_env_inputs = self.runtime_env_cwd_json_inputs(project_name, self_inputs);
 
         Ok(project_inputs
             .into_iter()
@@ -1188,13 +1189,12 @@ impl HashPlanner {
     /// The self inputs of a snapshot-hashed project: the trace replaces its
     /// declared filesets, so only the configuration, tsconfig, disk-backed
     /// groups (which hash from disk regardless of the trace) and the
-    /// non-file inputs remain. Whether TsConfiguration stays is decided by the
-    /// caller's replacement pass.
+    /// non-file inputs remain. Whether TsConfiguration and JSON inputs stay is
+    /// decided by the caller's replacement pass.
     fn gather_self_inputs_from_snapshot(
         &self,
         project_name: &str,
         self_inputs: &[Input],
-        snapshot: &SnapshotContext,
     ) -> anyhow::Result<Vec<HashInstruction>> {
         let project_root = &self.project_graph.nodes[project_name].root;
         let mut instructions = vec![
@@ -1217,11 +1217,7 @@ impl HashPlanner {
             validate_files_globs(project_name, &ignored)?;
             instructions.push(HashInstruction::IgnoredFileSet(ignored));
         }
-        instructions.extend(self.runtime_env_cwd_json_inputs(
-            project_name,
-            self_inputs,
-            Some(snapshot),
-        ));
+        instructions.extend(self.runtime_env_cwd_json_inputs(project_name, self_inputs));
         Ok(instructions)
     }
 
@@ -1231,7 +1227,6 @@ impl HashPlanner {
         &self,
         project_name: &str,
         self_inputs: &[Input],
-        snapshot: Option<&SnapshotContext>,
     ) -> Vec<HashInstruction> {
         let project_root = &self.project_graph.nodes[project_name].root;
         self_inputs
@@ -1252,9 +1247,6 @@ impl HashPlanner {
                     exclude_fields,
                 } => {
                     let json_path = resolve_tokens(json, project_root, project_name);
-                    if snapshot.is_some_and(|snapshot| !snapshot.read(&json_path)) {
-                        return None;
-                    }
                     let proj_name = if json.starts_with("{projectRoot}") {
                         Some(project_name.to_string())
                     } else {

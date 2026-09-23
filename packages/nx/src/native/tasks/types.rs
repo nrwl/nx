@@ -253,13 +253,20 @@ impl InstructionPool {
     }
 
     /// Whether an I/O snapshot replaces this instruction: every declared
-    /// fileset, and TsConfiguration unless the root tsconfig was read.
-    pub fn replaced_by_snapshot(&self, id: u32, keep_tsconfig: bool) -> bool {
+    /// fileset, TsConfiguration unless the root tsconfig was read, and a JSON
+    /// input unless `read` says its file was.
+    pub fn replaced_by_snapshot(
+        &self,
+        id: u32,
+        keep_tsconfig: bool,
+        read: impl Fn(&str) -> bool,
+    ) -> bool {
         // Disk-backed groups are the snapshot's own reads or declared
         // `includeIgnored` inputs, so neither is replaced.
         match &*self.get(id) {
             HashInstruction::ProjectFileSet(..) | HashInstruction::WorkspaceFileSet(_) => true,
             HashInstruction::TsConfiguration(_) => !keep_tsconfig,
+            HashInstruction::JsonFileSet(json) => !read(&json.json_path),
             _ => false,
         }
     }
@@ -452,12 +459,21 @@ mod tests {
             "p/a.ts".into(),
             "!p/**/*.spec.ts".into(),
         ]));
-        assert!(pool.replaced_by_snapshot(fileset, true));
-        assert!(!pool.replaced_by_snapshot(group, true));
-        assert!(!pool.replaced_by_snapshot(a, true));
+        let unread = |_: &str| false;
+        assert!(pool.replaced_by_snapshot(fileset, true, unread));
+        assert!(!pool.replaced_by_snapshot(group, true, unread));
+        assert!(!pool.replaced_by_snapshot(a, true, unread));
         let ts = pool.intern(HashInstruction::TsConfiguration("p".into()));
-        assert!(pool.replaced_by_snapshot(ts, false));
-        assert!(!pool.replaced_by_snapshot(ts, true));
+        assert!(pool.replaced_by_snapshot(ts, false, unread));
+        assert!(!pool.replaced_by_snapshot(ts, true, unread));
+        let json = pool.intern(HashInstruction::JsonFileSet(Box::new(JsonFileSetInput {
+            project_name: None,
+            json_path: "p/package.json".into(),
+            fields: Some(vec!["version".into()]),
+            exclude_fields: None,
+        })));
+        assert!(pool.replaced_by_snapshot(json, true, unread));
+        assert!(!pool.replaced_by_snapshot(json, true, |path| path == "p/package.json"));
     }
 
     #[test]

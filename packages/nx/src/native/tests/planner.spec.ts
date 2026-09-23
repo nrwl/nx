@@ -2305,6 +2305,53 @@ describe('task planner', () => {
       expect(childGroup).toContain('!libs/child/**/*.gen.ts');
     });
 
+    it.each([
+      [
+        'a dependency input',
+        (projectGraph: any) =>
+          projectGraph.nodes.child.data.namedInputs.prod.push({
+            json: '{projectRoot}/package.json',
+            fields: ['version'],
+          }),
+      ],
+      [
+        'a project-selected input',
+        (projectGraph: any) => {
+          projectGraph.nodes.parent.data.targets.build.inputs.push({
+            input: 'selected',
+            projects: ['child'],
+          });
+          projectGraph.nodes.child.data.namedInputs.selected = [
+            { json: '{projectRoot}/package.json', fields: ['version'] },
+          ];
+        },
+      ],
+    ])('keeps a JSON input from %s only when the trace read it', (_, add) => {
+      const { taskGraph, projectGraph } = fixture();
+      add(projectGraph);
+      const planner = new HashPlanner(
+        {
+          namedInputs: { prod: ['default', '!{projectRoot}/**/*.spec.ts'] },
+        } as any,
+        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+      );
+      const json = 'child:json:libs/child/package.json[version]';
+      const planReading = (inputs: string[]) =>
+        planner.getPlans(
+          ['parent:build'],
+          taskGraph,
+          snapshotsFor({ 'parent:build': { inputs } })
+        )['parent:build'];
+
+      expect(
+        planner.getPlans(['parent:build'], taskGraph)['parent:build']
+      ).toContain(json);
+      expect(planReading(['libs/parent/filea.ts'])).not.toContain(json);
+      expect(
+        planReading(['libs/parent/filea.ts', 'libs/child/package.json'])
+      ).toContain(json);
+    });
+
     it("hashes reads of a producer task's outputs from disk and defers the task", () => {
       const { planner, taskGraph } = fixture();
       const snapshots = snapshotsFor({
