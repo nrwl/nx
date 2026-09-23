@@ -247,7 +247,6 @@ impl<'a> DependencyView<'a> {
         }
     }
 
-    /// Whether `task` waits for `dep` to be ready rather than merely started
     fn is_ready_dependency(&self, task: &str, dep: &str) -> bool {
         self.ready_dependencies
             .get(task)
@@ -289,7 +288,6 @@ impl<'a> DependencyView<'a> {
         }
     }
 
-    /// Whether `dep` runs and `task` still waits for its probe verdict
     fn is_awaiting_readiness(&self, task: &str, dep: &str) -> bool {
         let status = self.status_map.get(dep).unwrap_or(&TaskStatus::NotStarted);
         matches!(status, TaskStatus::InProgress | TaskStatus::Shared)
@@ -297,7 +295,6 @@ impl<'a> DependencyView<'a> {
             && self.readiness_of(dep) == TaskReadiness::Pending
     }
 
-    /// Row suffix for a dependency whose readiness matters to `task`
     fn readiness_suffix(&self, task: &str, dep: &str) -> Option<(&'static str, Style)> {
         if !self.is_ready_dependency(task, dep) {
             return None;
