@@ -24,7 +24,9 @@ use crate::native::tasks::hashers::{OnceCache, validate_files_globs};
 use crate::native::tasks::inputs::{
     expand_single_project_inputs, get_inputs, get_inputs_for_dependency_group, get_named_inputs,
 };
-use crate::native::tasks::snapshot_eligibility::{self, EligibilityInputs, SnapshotTask};
+use crate::native::tasks::snapshot_eligibility::{
+    self, EligibilityInputs, IoSnapshotEligibilityOptions, SnapshotTask,
+};
 use crate::native::tasks::utils;
 use crate::native::utils::find_matching_projects;
 use std::sync::{Arc, OnceLock};
@@ -479,24 +481,25 @@ impl HashPlanner {
 
     /// `snapshots` is this run's I/O snapshot bundle; a task with an eligible
     /// entry hashes its observed reads instead of its declared filesets.
-    /// `customHasherTaskIds` and `optedOutTaskIds` are decided in JS, where
-    /// executors and target configuration are resolved.
+    /// `options` carries the task ids decided in JS, where executors and
+    /// target configuration are resolved; its `projectRoots` is unused, since
+    /// the planner reads roots from its own graph.
     #[napi(ts_return_type = "Record<string, string[]>")]
     pub fn get_plans(
         &self,
         task_ids: Vec<String>,
         task_graph: TaskGraph,
         snapshots: Option<ClassInstance<'_, IoSnapshots>>,
-        custom_hasher_task_ids: Option<Vec<String>>,
-        opted_out_task_ids: Option<Vec<String>>,
+        options: Option<IoSnapshotEligibilityOptions>,
     ) -> anyhow::Result<HashMap<String, Vec<HashInstruction>>> {
         let task_ids: Vec<&str> = task_ids.iter().map(|s| s.as_str()).collect();
+        let options = options.unwrap_or_default();
         self.get_plans_materialized(
             task_ids,
             task_graph,
             snapshots.as_deref(),
-            custom_hasher_task_ids.as_deref().unwrap_or(&[]),
-            opted_out_task_ids.as_deref().unwrap_or(&[]),
+            options.custom_hasher_task_ids.as_deref().unwrap_or(&[]),
+            options.opted_out_task_ids.as_deref().unwrap_or(&[]),
         )
     }
 
@@ -506,16 +509,16 @@ impl HashPlanner {
         task_ids: Vec<String>,
         task_graph: TaskGraph,
         snapshots: Option<ClassInstance<'_, IoSnapshots>>,
-        custom_hasher_task_ids: Option<Vec<String>>,
-        opted_out_task_ids: Option<Vec<String>>,
+        options: Option<IoSnapshotEligibilityOptions>,
     ) -> anyhow::Result<External<HashPlans>> {
         let task_ids: Vec<&str> = task_ids.iter().map(|s| s.as_str()).collect();
+        let options = options.unwrap_or_default();
         let plans = self.get_plans_internal(
             task_ids,
             task_graph,
             snapshots.as_deref(),
-            custom_hasher_task_ids.as_deref().unwrap_or(&[]),
-            opted_out_task_ids.as_deref().unwrap_or(&[]),
+            options.custom_hasher_task_ids.as_deref().unwrap_or(&[]),
+            options.opted_out_task_ids.as_deref().unwrap_or(&[]),
         )?;
         Ok(External::new(plans))
     }

@@ -2186,9 +2186,9 @@ describe('task planner', () => {
 
       const plain = planner.getPlans(['parent:build'], taskGraph);
       expect(
-        planner.getPlans(['parent:build'], taskGraph, withProducer, [
-          'child:build',
-        ])
+        planner.getPlans(['parent:build'], taskGraph, withProducer, {
+          customHasherTaskIds: ['child:build'],
+        })
       ).toEqual(plain);
     });
 
@@ -2199,13 +2199,9 @@ describe('task planner', () => {
       });
       const plain = planner.getPlans(['parent:build'], taskGraph);
       expect(
-        planner.getPlans(
-          ['parent:build'],
-          taskGraph,
-          snapshots,
-          [],
-          ['parent:build']
-        )
+        planner.getPlans(['parent:build'], taskGraph, snapshots, {
+          optedOutTaskIds: ['parent:build'],
+        })
       ).toEqual(plain);
       expect(
         getIoSnapshotReport(snapshots, taskGraph, {

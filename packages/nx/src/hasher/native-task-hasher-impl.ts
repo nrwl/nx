@@ -157,13 +157,10 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     if (!ioSnapshots) {
       return this.planner.getPlansReference(taskIds, taskGraph);
     }
-    return this.planner.getPlansReference(
-      taskIds,
-      taskGraph,
-      ioSnapshots,
-      customHasherTaskIds(this.projectGraph, taskGraph),
-      optedOutTaskIds(this.projectGraph, taskGraph)
-    );
+    return this.planner.getPlansReference(taskIds, taskGraph, ioSnapshots, {
+      customHasherTaskIds: customHasherTaskIds(this.projectGraph, taskGraph),
+      optedOutTaskIds: optedOutTaskIds(this.projectGraph, taskGraph),
+    });
   }
 
   async hashTasksUpfront(

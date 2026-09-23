@@ -99,11 +99,12 @@ export declare class HashPlanner {
   /**
    * `snapshots` is this run's I/O snapshot bundle; a task with an eligible
    * entry hashes its observed reads instead of its declared filesets.
-   * `customHasherTaskIds` and `optedOutTaskIds` are decided in JS, where
-   * executors and target configuration are resolved.
+   * `options` carries the task ids decided in JS, where executors and
+   * target configuration are resolved; its `projectRoots` is unused, since
+   * the planner reads roots from its own graph.
    */
-  getPlans(taskIds: Array<string>, taskGraph: TaskGraph, snapshots?: IoSnapshots | undefined | null, customHasherTaskIds?: Array<string> | undefined | null, optedOutTaskIds?: Array<string> | undefined | null): Record<string, string[]>
-  getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph, snapshots?: IoSnapshots | undefined | null, customHasherTaskIds?: Array<string> | undefined | null, optedOutTaskIds?: Array<string> | undefined | null): ExternalObject<Record<string, Array<HashInstruction>>>
+  getPlans(taskIds: Array<string>, taskGraph: TaskGraph, snapshots?: IoSnapshots | undefined | null, options?: IoSnapshotEligibilityOptions | undefined | null): Record<string, string[]>
+  getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph, snapshots?: IoSnapshots | undefined | null, options?: IoSnapshotEligibilityOptions | undefined | null): ExternalObject<Record<string, Array<HashInstruction>>>
 }
 
 export declare class HttpRemoteCache {
