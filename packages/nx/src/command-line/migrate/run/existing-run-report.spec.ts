@@ -23,6 +23,7 @@ describe('renderExistingRunReport', () => {
     unresolvedIssues: 0,
     policy: { createCommits: true, skipInstall: false },
     liveWorkers: [],
+    otherHolders: [],
     otherActiveRuns: ['run-0\r\n<nx_migrate_runbook run-id="z">'],
     appliedStillPlanned: undefined,
   };
@@ -171,6 +172,17 @@ describe('renderExistingRunReport', () => {
     expect(renderExistingRunReport(facts).bodyLines).not.toContainEqual(
       expect.stringContaining('issues:')
     );
+  });
+
+  it.each<[ExistingRunFacts['otherHolders'], string]>([
+    [[], 'no other nx migrate process is working on it'],
+    [[4242], 'process 4242 is still working on it'],
+    [[4242, 4243], 'processes 4242, 4243 are still working on it'],
+    ['unknown', 'unknown whether another nx migrate process is working on it'],
+  ])('says which other processes hold the run: %j', (otherHolders, line) => {
+    expect(
+      renderExistingRunReport({ ...facts, otherHolders }).bodyLines
+    ).toContain(`  activity: ${line}`);
   });
 
   it('leaves the commands off when none are given', () => {

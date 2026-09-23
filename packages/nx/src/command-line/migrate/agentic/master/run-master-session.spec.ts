@@ -2,10 +2,12 @@ import type { Mock } from 'vitest';
 
 const mockInit = vi.fn();
 const mockResume = vi.fn();
+const mockHoldRunToContinue = vi.fn();
 const mockCompletionWarnings = vi.fn();
 vi.mock('../../run/orchestrator', () => ({
   runOrchestratorInit: (...args: unknown[]) => mockInit(...args),
   runOrchestratorResume: (...args: unknown[]) => mockResume(...args),
+  holdRunToContinue: (...args: unknown[]) => mockHoldRunToContinue(...args),
   completionWarnings: (...args: unknown[]) => mockCompletionWarnings(...args),
 }));
 const mockCanPrompt = vi.fn();
@@ -90,6 +92,7 @@ const facts: ExistingRunFacts = {
   policy: { createCommits: false, skipInstall: false },
   commits: { recorded: 0, reachable: 0, unchecked: 0, newest: null },
   liveWorkers: [],
+  otherHolders: [],
   otherActiveRuns: [],
   appliedStillPlanned: 1,
 };
@@ -117,6 +120,7 @@ describe('runMasterSession', () => {
     mockResume.mockReset().mockReturnValue(ready);
     mockCanPrompt.mockReset().mockReturnValue(false);
     mockChoice.mockReset();
+    mockHoldRunToContinue.mockReset();
     mockCompletionWarnings.mockReset().mockReturnValue([]);
     mockReadRunState.mockReset();
     confirmNewRun.mockReset().mockResolvedValue(true);
@@ -315,6 +319,58 @@ describe('runMasterSession', () => {
           expect.objectContaining({ value: 'abort' }),
         ],
       });
+    });
+
+    it.each<[string, number[] | 'unknown', string, string]>([
+      [
+        'another process holds the run',
+        [4242],
+        '  activity: process 4242 is still working on it',
+        `Not continuing migrate run '${runId}': process 4242 is still working on it (an agent session, a reconcile, or a step). Wait for it to end, then re-run the command.`,
+      ],
+      [
+        'nx cannot tell whether one does',
+        'unknown',
+        '  activity: unknown whether another nx migrate process is working on it',
+        `Not continuing migrate run '${runId}': nx cannot tell whether another nx migrate process is still working on it.`,
+      ],
+    ])(
+      'shows the report and refuses through the continue gate, without asking, while %s',
+      async (_label, otherHolders, activityLine, message) => {
+        mockCanPrompt.mockReturnValue(true);
+        mockInit.mockReset().mockResolvedValue({
+          ...existing,
+          facts: { ...facts, otherHolders },
+        });
+        const refusal = new Error(message);
+        mockHoldRunToContinue.mockImplementation(() => {
+          throw refusal;
+        });
+
+        await expect(runMasterSession(input())).rejects.toBe(refusal);
+
+        expect(logSpy).toHaveBeenCalledWith({
+          title: `A migrate run is already active: ${runId}`,
+          bodyLines: expect.arrayContaining([activityLine]),
+        });
+        expect(mockHoldRunToContinue).toHaveBeenCalledWith(root, runId);
+        expect(mockChoice).not.toHaveBeenCalled();
+        expect(mockSpawnMaster).not.toHaveBeenCalled();
+      }
+    );
+
+    it('asks when the continue gate passes although nx cannot tell who holds the run (WASM)', async () => {
+      mockCanPrompt.mockReturnValue(true);
+      mockInit.mockReset().mockResolvedValue({
+        ...existing,
+        facts: { ...facts, otherHolders: 'unknown' },
+      });
+      mockChoice.mockResolvedValue('abort');
+
+      await runMasterSession(input());
+
+      expect(mockHoldRunToContinue).toHaveBeenCalledWith(root, runId);
+      expect(mockChoice).toHaveBeenCalledTimes(1);
     });
 
     it('continues the run in-process when asked to', async () => {
@@ -539,7 +595,7 @@ describe('runMasterSession', () => {
     expect(warnSpy).toHaveBeenCalledWith({
       title: `Migrate run ${runId} left work unresolved; exiting with code 1.`,
     });
-    expect(everythingPrinted()).not.toContain('resume');
+    expect(everythingPrinted()).not.toContain('is still active');
     expect(mockRunComplete).toHaveBeenCalledWith({
       agenticOutcome: 'enabled',
       agentUsed: 'claude-code',
@@ -604,7 +660,7 @@ describe('runMasterSession', () => {
       title: `Nx could not determine whether migrate run ${runId} completed.`,
       bodyLines: ['ENOENT: no such file or directory, open run.json'],
     });
-    expect(everythingPrinted()).not.toContain('resume');
+    expect(everythingPrinted()).not.toContain('is still active');
     expect(mockRunComplete).not.toHaveBeenCalled();
   });
 

@@ -1,6 +1,7 @@
-// The facts an init reports when it finds a run already active, so the user
-// (or the agent relaying to them) can choose between continuing the run and
-// starting fresh. Facts only: nothing here decides, and anything that could
+// The facts reported about a run already active: by an init that found one,
+// so the user (or the agent relaying to them) can choose between continuing
+// the run and starting fresh, and by a reconcile whose run's newest commit
+// left history. Facts only: nothing here decides, and anything that could
 // not be established says so instead of guessing.
 
 import {
@@ -13,14 +14,16 @@ import { formatAge, hasLineBreak, singleLine } from '../text';
 import {
   findActiveRun,
   NewerRunStateFormatError,
+  runDir,
   type MigrateCommitKind,
   type MigrateCommitLedgerEntry,
   type MigrateRunPolicy,
   type MigrateRunState,
 } from './run-state';
 import { unresolvedIssues } from './issues';
+import { describeHolders, liveRunActivityPids } from './state-lock';
 import { tallySteps, type StepTally } from './state-machine';
-import { isPidAlive, runMigrationsFlag } from './util';
+import { isPidAlive, pmExecPrefix, runMigrationsFlag } from './util';
 
 // The stalled count is a subset of `remaining`, called out separately: the
 // count alone would read as work that has not been reached yet. Adopted and
@@ -41,8 +44,8 @@ export interface ExistingRunFacts {
   recordedBranch: string | undefined;
   currentBranch: string | null;
   progress: StepTally;
-  // Reported problems nobody has fixed yet; a run completing with any of them
-  // exits 1, so the count matters to the continue-or-restart decision.
+  // Reported problems nobody has fixed yet; the master session exits 1 when
+  // the run completes with any, so the count matters to the decision.
   unresolvedIssues: number;
   // The recorded commit and install policy; a continue runs under it.
   policy: MigrateRunPolicy;
@@ -54,6 +57,9 @@ export interface ExistingRunFacts {
     newest: { sha: string | null; status: AncestorStatus } | null;
   };
   liveWorkers: { pid: number; stepId: string; migrationId: string }[];
+  // The other nx migrate processes holding the run's activity lock (an agent
+  // session, a reconcile, a step); 'unknown' where nx cannot tell (WASM).
+  otherHolders: number[] | 'unknown';
   // 'unknown' when a run from a newer nx sits on disk: whether it is active
   // cannot be read here, and a reconcile must not fail over a sibling run.
   otherActiveRuns: string[] | 'unknown';
@@ -110,6 +116,7 @@ export function collectExistingRunFacts(
       .filter((s) => s.status === 'running' && s.pid !== undefined)
       .filter((s) => isPidAlive(s.pid))
       .map((s) => ({ pid: s.pid, stepId: s.id, migrationId: s.migrationId })),
+    otherHolders: liveRunActivityPids(runDir(root, runId)),
     otherActiveRuns: otherActiveRuns(root, runId),
     appliedStillPlanned: planned
       ? state.steps.filter(
@@ -149,6 +156,22 @@ function otherActiveRuns(root: string, runId: string): string[] | 'unknown' {
     }
     throw e;
   }
+}
+
+// The `--run-migrations --run-id` continue, the one entry that re-enters a
+// run on both paths. The policy flags are always explicit: a continue must
+// resolve to the run's recorded policy, and nx.json can flip the bare default
+// either way. `--agentic` names the agent to spawn; bare, inside an agent, it
+// only satisfies the parse and the run continues in place.
+export function renderContinueCommand(
+  root: string,
+  runId: string,
+  policy: MigrateRunPolicy,
+  agentId?: string
+): string {
+  return `${pmExecPrefix(root)} nx migrate --run-migrations --agentic${
+    agentId === undefined ? '' : `=${agentId}`
+  } --run-id=${runId} ${policy.createCommits ? '--create-commits' : '--no-create-commits'}${policy.skipInstall ? ' --skip-install' : ''}`;
 }
 
 export interface ExistingRunCommands {
@@ -192,6 +215,7 @@ export function renderExistingRunReport(
     `  policy: per-migration commits ${facts.policy.createCommits ? 'on' : 'off'}, installs ${facts.policy.skipInstall ? 'skipped' : 'on'}`,
     `  commits: ${commitsLine(facts.commits)}`,
     `  worker: ${workersLine(facts.liveWorkers)}`,
+    `  activity: ${activityLine(facts.otherHolders)}`,
   ];
   if (facts.unresolvedIssues > 0) {
     lines.push(`  issues: ${facts.unresolvedIssues} unresolved`);
@@ -286,6 +310,16 @@ function describeStatus(status: AncestorStatus): string {
       throw new Error(`Unhandled ancestor status '${exhaustive}'.`);
     }
   }
+}
+
+function activityLine(holders: ExistingRunFacts['otherHolders']): string {
+  if (holders === 'unknown') {
+    return 'unknown whether another nx migrate process is working on it';
+  }
+  if (holders.length === 0) {
+    return 'no other nx migrate process is working on it';
+  }
+  return describeHolders(holders);
 }
 
 function workersLine(workers: ExistingRunFacts['liveWorkers']): string {

@@ -3237,7 +3237,7 @@ module.exports = {
             runMigrations: 'migrations.json',
           })
         ).rejects.toThrow(
-          /'--run-id' .* cannot be combined with '--run-migrations'.*pass '--agentic=<agent>' as well/
+          /'--run-id' .* cannot be combined with '--run-migrations'.*pass '--agentic' \(or '--agentic=<agent>'\) as well/
         );
         await expect(() =>
           parseMigrationsOptions({

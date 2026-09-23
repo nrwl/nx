@@ -26,9 +26,8 @@ function compactUtcTimestamp(date: Date): string {
 
 /**
  * Hashes a migrations.json plan; each recorded round carries the hash of the
- * plan it ran, so two rounds can be told apart without diffing their snapshots.
- * Nothing acts on it: an init over an active run reports the run whatever the
- * plan. `nx-console` is stripped first since
+ * plan it ran. Nothing acts on it: an init over an active run reports the run
+ * whatever the plan. `nx-console` is stripped first since
  * editors write to it without changing the plan; object keys are sorted
  * recursively (arrays keep their order) so key reordering from a different
  * JSON serializer doesn't change the hash.
