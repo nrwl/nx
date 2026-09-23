@@ -306,6 +306,7 @@ export const TREE_OPERATION_KINDS = [
   'fold-install',
   'action-install',
   'reset',
+  'give-up',
   'checkpoint',
 ] as const;
 export type MigrateTreeOperationKind = (typeof TREE_OPERATION_KINDS)[number];

@@ -92,7 +92,7 @@ describe('renderRunbook', () => {
       "Withheld, with `skip`, when a commit of this migration's changes\n  landed, or was started and never recorded"
     );
     expect(runbook).toContain(
-      'where the dispense withholds it, `adopt`\nis that choice.'
+      '`adopt` only once you have\ninspected the tree and finished the migration; otherwise stop and\nreport.'
     );
     // Unattended, an unfinishable prompt reaches the give-up option only
     // through a failed handoff.
