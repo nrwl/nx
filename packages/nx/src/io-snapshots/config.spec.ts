@@ -4,6 +4,9 @@ describe('isIoSnapshotFetchEnabled', () => {
   const connected = { nxCloudId: 'id' } as any;
   const optedIn = { NX_IO_SNAPSHOTS: 'true' };
 
+  beforeEach(() => vi.stubEnv('CI', 'true'));
+  afterEach(() => vi.unstubAllEnvs());
+
   it('is on when a run in a connected workspace opts in', () => {
     expect(isIoSnapshotFetchEnabled(connected, {}, optedIn)).toBe(true);
   });
@@ -20,6 +23,11 @@ describe('isIoSnapshotFetchEnabled', () => {
     ]) {
       expect(isIoSnapshotFetchEnabled(connected, {}, env)).toBe(false);
     }
+  });
+
+  it('is off outside CI, opt-in or not', () => {
+    vi.stubEnv('CI', 'false');
+    expect(isIoSnapshotFetchEnabled(connected, {}, optedIn)).toBe(false);
   });
 
   it('is off in a workspace that does not use Nx Cloud, opt-in or not', () => {

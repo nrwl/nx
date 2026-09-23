@@ -1,4 +1,5 @@
 import type { NxJsonConfiguration } from '../config/nx-json';
+import { isCI } from '../utils/is-ci';
 import { isNxCloudConfigured } from '../utils/nx-cloud-utils';
 
 export interface IoSnapshotCloudOptions {
@@ -16,8 +17,8 @@ export interface IoSnapshotEnv {
 }
 
 /**
- * Off unless a run opts in with `NX_IO_SNAPSHOTS=true` in a workspace that uses
- * Nx Cloud, since there is nothing to fetch from otherwise. `env` defaults to
+ * Off unless a CI run opts in with `NX_IO_SNAPSHOTS=true` in a workspace that
+ * uses Nx Cloud, since there is nothing to fetch from otherwise. `env` defaults to
  * this process's; the daemon passes its client's, never its own.
  */
 export function isIoSnapshotFetchEnabled(
@@ -29,7 +30,8 @@ export function isIoSnapshotFetchEnabled(
     env.NX_NO_CLOUD === 'true' ||
     nxJson.neverConnectToCloud ||
     runnerOptions.cloud === false ||
-    env.NX_IO_SNAPSHOTS !== 'true'
+    env.NX_IO_SNAPSHOTS !== 'true' ||
+    !isCI()
   ) {
     return false;
   }

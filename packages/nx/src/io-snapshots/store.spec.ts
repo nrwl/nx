@@ -23,6 +23,8 @@ vi.mock('../utils/output', () => ({ output: { warn } }));
 vi.mock('../utils/logger', () => ({ logger: { verbose: vi.fn() } }));
 
 describe('loadIoSnapshotsForRun', () => {
+  afterEach(() => vi.unstubAllEnvs());
+
   const nxJson = {} as any;
   /** A run that opted in, stated explicitly so the machine's env cannot. */
   const optedIn = (overrides: Record<string, unknown> = {}) => ({
@@ -42,6 +44,7 @@ describe('loadIoSnapshotsForRun', () => {
     Object.assign(new Error(message), { code });
 
   beforeEach(() => {
+    vi.stubEnv('CI', 'true');
     vi.clearAllMocks();
     store.get.mockReset();
     store.import.mockReset();
