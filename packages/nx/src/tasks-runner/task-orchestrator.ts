@@ -1896,22 +1896,20 @@ export class TaskOrchestrator {
       if (this.taskGraph.tasks[producerId]) {
         await this.readinessOf(producerId).promise;
       } else {
-        this.logWaitingForReady(producer);
+        this.onReadinessHold(producerId);
         await this.pollReadinessRow(producer, readyWhen);
       }
     }
   }
 
   private onReadinessHold(producerId: string) {
-    if (!this.waitingLogged.has(producerId)) {
+    if (
+      !this.waitingLogged.has(producerId) &&
+      !this.tuiEnabled &&
+      printsTaskOutput(this.resolvedOutputStyle)
+    ) {
       this.waitingLogged.add(producerId);
-      this.logWaitingForReady(this.fullTaskGraph.tasks[producerId]);
-    }
-  }
-
-  private logWaitingForReady(producer: Task) {
-    if (!this.tuiEnabled && printsTaskOutput(this.resolvedOutputStyle)) {
-      console.log(`Waiting for "${producer.id}" to be ready...`);
+      console.log(`Waiting for "${producerId}" to be ready...`);
     }
   }
 
