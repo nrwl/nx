@@ -39,6 +39,7 @@ pub struct IoSnapshots {
 }
 
 impl IoSnapshots {
+    #[cfg(not(target_arch = "wasm32"))]
     pub(super) fn new(
         resolution: IoSnapshotResolution,
         db: Db,
