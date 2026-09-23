@@ -122,13 +122,9 @@ describe('next library', () => {
       buildable: true,
     });
 
-    const build = readProjectConfiguration(appTree, 'my-buildable-lib').targets
-      .build;
-    expect(build.executor).toBe('@nx/rollup:rollup');
-    expect(build.options.additionalEntryPoints).toEqual([
-      'my-buildable-lib/src/server.ts',
-    ]);
-    expect(build.options.generateExportsField).toBeUndefined();
+    expect(
+      appTree.read('my-buildable-lib/rollup.config.cjs', 'utf-8')
+    ).toContain("additionalEntryPoints: ['./src/server.ts']");
   });
 
   it('should configure server entry point in the rollup config file when using the rollup plugin', async () => {
@@ -311,7 +307,6 @@ describe('next library', () => {
           "main",
           "types",
           "exports",
-          "nx",
         ]
       `);
       expect(readJson(tree, 'mylib/tsconfig.json')).toMatchInlineSnapshot(`
@@ -488,54 +483,6 @@ describe('next library', () => {
               "import": "./dist/server.esm.js",
               "default": "./dist/server.esm.js"
             }
-          },
-          "nx": {
-            "targets": {
-              "lint": {
-                "executor": "@nx/eslint:lint"
-              },
-              "build": {
-                "executor": "@nx/rollup:rollup",
-                "outputs": [
-                  "{options.outputPath}"
-                ],
-                "options": {
-                  "outputPath": "dist/mylib",
-                  "tsConfig": "mylib/tsconfig.lib.json",
-                  "project": "mylib/package.json",
-                  "entryFile": "mylib/src/index.ts",
-                  "external": [
-                    "react",
-                    "react-dom",
-                    "react/jsx-runtime"
-                  ],
-                  "rollupConfig": "@nx/react/plugins/bundle-rollup",
-                  "compiler": "babel",
-                  "assets": [
-                    {
-                      "glob": "mylib/README.md",
-                      "input": ".",
-                      "output": "."
-                    }
-                  ],
-                  "additionalEntryPoints": [
-                    "mylib/src/server.ts"
-                  ]
-                }
-              },
-              "test": {
-                "executor": "@nx/jest:jest",
-                "outputs": [
-                  "{projectRoot}/test-output/jest/coverage"
-                ],
-                "options": {
-                  "jestConfig": "mylib/jest.config.cts"
-                }
-              }
-            },
-            "sourceRoot": "mylib/src",
-            "projectType": "library",
-            "tags": []
           }
         }
         "

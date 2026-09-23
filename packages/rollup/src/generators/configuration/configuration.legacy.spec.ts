@@ -32,36 +32,15 @@ describe('configurationGenerator', () => {
 
     const project = readProjectConfiguration(tree, 'mypkg');
 
-    expect(project.targets).toMatchObject({
-      build: {
-        executor: '@nx/rollup:rollup',
-        outputs: ['{options.outputPath}'],
-        options: {
-          main: 'libs/mypkg/src/index.ts',
-        },
-      },
-    });
-
-    expect(readJson(tree, 'libs/mypkg/package.json')).toEqual({
-      name: '@proj/mypkg',
-      version: '0.0.1',
-    });
-
-    const td = readJson(tree, 'nx.json').targetDefaults;
-    const rollupEntry = td['@nx/rollup:rollup'];
-    expect(rollupEntry).toEqual({
-      cache: true,
-      dependsOn: ['^build'],
-      inputs: [
-        'default',
-        '^default',
-        {
-          json: '{workspaceRoot}/tsconfig.json',
-          fields: ['extends', 'files', 'include'],
-        },
-      ],
-    });
-    expect(project.targets.build.inputs).toBeUndefined();
+    expect(project.targets.build).toBeUndefined();
+    expect(tree.read('libs/mypkg/rollup.config.cjs', 'utf-8')).toContain(
+      "main: './src/index.ts'"
+    );
+    expect(readJson(tree, 'nx.json').plugins).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ plugin: '@nx/rollup/plugin' }),
+      ])
+    );
   });
 
   it('should respect existing package.json file', async () => {
@@ -89,15 +68,10 @@ describe('configurationGenerator', () => {
 
     const project = readProjectConfiguration(tree, 'mypkg');
 
-    expect(project.targets).toMatchObject({
-      build: {
-        executor: '@nx/rollup:rollup',
-        outputs: ['{options.outputPath}'],
-        options: {
-          main: 'libs/mypkg/index.ts',
-        },
-      },
-    });
+    expect(project.targets.build).toBeUndefined();
+    expect(tree.read('libs/mypkg/rollup.config.cjs', 'utf-8')).toContain(
+      "main: './index.ts'"
+    );
   });
 
   it('should support --tsConfig option', async () => {
@@ -109,18 +83,13 @@ describe('configurationGenerator', () => {
 
     const project = readProjectConfiguration(tree, 'mypkg');
 
-    expect(project.targets).toMatchObject({
-      build: {
-        executor: '@nx/rollup:rollup',
-        outputs: ['{options.outputPath}'],
-        options: {
-          tsConfig: 'libs/mypkg/tsconfig.custom.json',
-        },
-      },
-    });
+    expect(project.targets.build).toBeUndefined();
+    expect(tree.read('libs/mypkg/rollup.config.cjs', 'utf-8')).toContain(
+      "tsConfig: './tsconfig.custom.json'"
+    );
   });
 
-  it('should carry over known executor options from existing build target', async () => {
+  it('should preserve an existing non-Rollup target', async () => {
     updateProjectConfiguration(tree, 'mypkg', {
       root: 'libs/mypkg',
       sourceRoot: 'libs/mypkg/src',
@@ -149,8 +118,7 @@ describe('configurationGenerator', () => {
 
     expect(project.targets).toMatchObject({
       build: {
-        executor: '@nx/rollup:rollup',
-        outputs: ['{options.outputPath}'],
+        executor: '@nx/js:tsc',
         options: {
           main: 'libs/mypkg/src/custom.ts',
           outputPath: 'dist/custom',

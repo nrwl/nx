@@ -5,7 +5,6 @@ import {
   createProjectGraphAsync,
   formatFiles,
   GeneratorCallback,
-  readNxJson,
   Tree,
 } from '@nx/devkit';
 import { createNodesV2 } from '../../plugins/plugin';
@@ -25,11 +24,7 @@ export function webpackInitGenerator(tree: Tree, schema: Schema) {
 export async function webpackInitGeneratorInternal(tree: Tree, schema: Schema) {
   assertSupportedWebpackVersion(tree);
 
-  const nxJson = readNxJson(tree);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  schema.addPlugin ??= addPluginDefault;
+  schema.addPlugin ??= true;
 
   if (schema.addPlugin) {
     await addPlugin(

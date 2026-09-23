@@ -36,6 +36,12 @@
       "requires": {
         "@rspack/core": ">=2.0.0"
       }
+    },
+    "remove-deprecated-executors": {
+      "version": "24.0.0-beta.1",
+      "description": "Convert removed @nx/rspack executors to inferred tasks.",
+      "implementation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors",
+      "prompt": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors.md"
     }
   },
   "packageJsonUpdates": {

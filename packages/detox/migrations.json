@@ -14,6 +14,12 @@
       "description": "Rename imports of `createNodesV2` from `@nx/detox/plugin` to the canonical `createNodes` export.",
       "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
       "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
+    },
+    "remove-deprecated-executors": {
+      "version": "24.0.0-beta.1",
+      "description": "Convert removed @nx/detox executors to inferred tasks.",
+      "implementation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors",
+      "prompt": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors.md"
     }
   },
   "packageJsonUpdates": {

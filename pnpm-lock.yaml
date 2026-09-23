@@ -2720,9 +2720,6 @@ importers:
       '@jest/reporters':
         specifier: catalog:jest
         version: 30.3.0(supports-color@10.2.2)
-      '@jest/test-result':
-        specifier: catalog:jest
-        version: 30.3.0
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit

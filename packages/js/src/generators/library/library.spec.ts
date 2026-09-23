@@ -1938,24 +1938,12 @@ describe('lib', () => {
       expect(readJson(tree, 'my-lib/project.json')).toMatchInlineSnapshot(`
         {
           "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "// targets": "to see all targets run: nx show project my-lib --web",
           "name": "my-lib",
           "projectType": "library",
           "sourceRoot": "my-lib/src",
           "tags": [],
-          "targets": {
-            "lint": {
-              "executor": "@nx/eslint:lint",
-            },
-            "test": {
-              "executor": "@nx/jest:jest",
-              "options": {
-                "jestConfig": "my-lib/jest.config.cts",
-              },
-              "outputs": [
-                "{workspaceRoot}/coverage/{projectRoot}",
-              ],
-            },
-          },
+          "targets": {},
         }
       `);
       expect(tree.exists('my-lib/package.json')).toBe(false);

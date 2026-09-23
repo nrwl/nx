@@ -1,22 +1,18 @@
-import { addBuildTargetDefaults } from '@nx/devkit/internal';
 import {
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
   offsetFromRoot,
-  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
   updateProjectConfiguration,
-  writeJson,
 } from '@nx/devkit';
 
 import { webpackInitGenerator } from '../init/init';
 import { ConfigurationGeneratorSchema } from './schema';
 import { WebpackExecutorOptions } from '../../executors/webpack/schema';
 import { hasPlugin } from '../../utils/has-plugin';
-import { warnWebpackExecutorGenerating } from '../../utils/deprecation';
 import { TS_SOLUTION_SETUP_TSCONFIG_INPUT } from '@nx/js/internal';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { assertSupportedWebpackVersion } from '../../utils/versions';
@@ -35,11 +31,7 @@ export async function configurationGeneratorInternal(
   assertSupportedWebpackVersion(tree);
 
   const tasks: GeneratorCallback[] = [];
-  const nxJson = readNxJson(tree);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  options.addPlugin ??= addPluginDefault;
+  options.addPlugin = true;
 
   const initTask = await webpackInitGenerator(tree, {
     ...options,
@@ -53,14 +45,6 @@ export async function configurationGeneratorInternal(
   tasks.push(depsTask);
 
   checkForTargetConflicts(tree, options);
-
-  if (!hasPlugin(tree)) {
-    warnWebpackExecutorGenerating();
-    addBuildTarget(tree, options);
-    if (options.devServer) {
-      addServeTarget(tree, options);
-    }
-  }
 
   createWebpackConfig(tree, options);
 
@@ -182,80 +166,6 @@ module.exports = composePlugins(withNx(), (config) => {
 `
     );
   }
-}
-
-function addBuildTarget(tree: Tree, options: ConfigurationGeneratorSchema) {
-  addBuildTargetDefaults(tree, '@nx/webpack:webpack', 'build', [
-    TS_SOLUTION_SETUP_TSCONFIG_INPUT,
-  ]);
-
-  const project = readProjectConfiguration(tree, options.project);
-  const buildOptions: WebpackExecutorOptions = {
-    target: options.target,
-    outputPath: joinPathFragments('dist', project.root),
-    compiler: options.compiler ?? 'swc',
-    main: options.main ?? joinPathFragments(project.root, 'src/main.ts'),
-    tsConfig:
-      options.tsConfig ?? joinPathFragments(project.root, 'tsconfig.app.json'),
-    webpackConfig: joinPathFragments(project.root, 'webpack.config.js'),
-  };
-
-  if (options.webpackConfig) {
-    buildOptions.webpackConfig = options.webpackConfig;
-  }
-
-  if (options.babelConfig) {
-    buildOptions.babelConfig = options.babelConfig;
-  } else if (options.compiler === 'babel') {
-    // If no babel config file is provided then write a default one, otherwise build will fail.
-    writeJson(tree, joinPathFragments(project.root, '.babelrc'), {
-      presets: ['@nx/js/babel'],
-    });
-  }
-
-  updateProjectConfiguration(tree, options.project, {
-    ...project,
-    targets: {
-      ...project.targets,
-      build: {
-        executor: '@nx/webpack:webpack',
-        outputs: ['{options.outputPath}'],
-        defaultConfiguration: 'production',
-        options: buildOptions,
-        configurations: {
-          production: {
-            optimization: true,
-            outputHashing: options.target === 'web' ? 'all' : 'none',
-            sourceMap: false,
-            namedChunks: false,
-            extractLicenses: true,
-            vendorChunk: false,
-          },
-        },
-      },
-    },
-  });
-}
-
-function addServeTarget(tree: Tree, options: ConfigurationGeneratorSchema) {
-  const project = readProjectConfiguration(tree, options.project);
-  updateProjectConfiguration(tree, options.project, {
-    ...project,
-    targets: {
-      ...project.targets,
-      serve: {
-        executor: '@nx/webpack:dev-server',
-        options: {
-          buildTarget: `${options.project}:build`,
-        },
-        configurations: {
-          production: {
-            buildTarget: `${options.project}:build:production`,
-          },
-        },
-      },
-    },
-  });
 }
 
 export default configurationGenerator;

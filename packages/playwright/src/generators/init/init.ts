@@ -4,7 +4,6 @@ import {
   createProjectGraphAsync,
   formatFiles,
   GeneratorCallback,
-  readNxJson,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
@@ -25,12 +24,7 @@ export async function initGeneratorInternal(
 
   const tasks: GeneratorCallback[] = [];
 
-  const nxJson = readNxJson(tree);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-
-  options.addPlugin ??= addPluginDefault;
+  options.addPlugin = true;
 
   if (!options.skipPackageJson) {
     tasks.push(

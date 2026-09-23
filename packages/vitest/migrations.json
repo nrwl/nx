@@ -34,6 +34,12 @@
       "description": "Replace `__dirname` with `import.meta.dirname` in `vite.config.mts`/`vitest.config.mts` files so they work with Vite's `configLoader: 'native'`.",
       "implementation": "./dist/src/migrations/update-23-2-0/use-import-meta-dirname",
       "documentation": "./dist/src/migrations/update-23-2-0/use-import-meta-dirname.md"
+    },
+    "remove-deprecated-executors": {
+      "version": "24.0.0-beta.1",
+      "description": "Convert removed @nx/vitest executors to inferred tasks.",
+      "implementation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors",
+      "prompt": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors.md"
     }
   },
   "packageJsonUpdates": {

@@ -97,7 +97,6 @@ export async function cypressComponentConfiguration(
       project: options.project,
       skipFormat: true,
       addPlugin: false,
-      addExplicitTargets: true,
       skipPackageJson: options.skipPackageJson,
     })
   );

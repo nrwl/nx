@@ -725,14 +725,11 @@ describe('app', () => {
     });
 
     describe('eslint', () => {
-      it('should add lint target to application', async () => {
+      it('should rely on the inferred lint target for the application', async () => {
         await generateApp(appTree, 'my-app', { linter: 'eslint' });
-        expect(readProjectConfiguration(appTree, 'my-app').targets.lint)
-          .toMatchInlineSnapshot(`
-          {
-            "executor": "@nx/eslint:lint",
-          }
-        `);
+        expect(
+          readProjectConfiguration(appTree, 'my-app').targets.lint
+        ).toBeUndefined();
       });
 
       it('should add eslint plugin and no lint target to e2e project', async () => {
@@ -743,18 +740,24 @@ describe('app', () => {
           [
             {
               "options": {
+                "targetName": "lint",
+              },
+              "plugin": "@nx/eslint/plugin",
+            },
+            {
+              "options": {
+                "targetName": "test",
+              },
+              "plugin": "@nx/jest/plugin",
+            },
+            {
+              "options": {
                 "ciTargetName": "e2e-ci",
                 "componentTestingTargetName": "component-test",
                 "openTargetName": "open-cypress",
                 "targetName": "e2e",
               },
               "plugin": "@nx/cypress/plugin",
-            },
-            {
-              "options": {
-                "targetName": "lint",
-              },
-              "plugin": "@nx/eslint/plugin",
             },
           ]
         `);
@@ -763,13 +766,17 @@ describe('app', () => {
         ).toBeUndefined();
       });
 
-      it('should not add eslint plugin when no e2e test runner', async () => {
+      it('should not add the cypress plugin when no e2e test runner', async () => {
         await generateApp(appTree, 'my-app', {
           linter: 'eslint',
           e2eTestRunner: E2eTestRunner.None,
         });
 
-        expect(readNxJson(appTree).plugins).toBeUndefined();
+        const plugins = readNxJson(appTree).plugins.map((p) =>
+          typeof p === 'string' ? p : p.plugin
+        );
+        expect(plugins).toContain('@nx/eslint/plugin');
+        expect(plugins).not.toContain('@nx/cypress/plugin');
       });
 
       it('should add valid eslint JSON configuration which extends from Nx presets', async () => {

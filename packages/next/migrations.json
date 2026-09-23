@@ -35,6 +35,12 @@
       "description": "Add `@svgr/webpack` when a next config references it.",
       "implementation": "./dist/src/migrations/update-23-2-0/add-svgr-webpack-if-used",
       "documentation": "./dist/src/migrations/update-23-2-0/add-svgr-webpack-if-used.md"
+    },
+    "remove-deprecated-executors": {
+      "version": "24.0.0-beta.1",
+      "description": "Convert removed @nx/next executors to inferred tasks.",
+      "implementation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors",
+      "prompt": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors.md"
     }
   },
   "packageJsonUpdates": {

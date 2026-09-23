@@ -5,7 +5,6 @@ import {
   detectPackageManager,
   formatFiles,
   GeneratorCallback,
-  readNxJson,
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   Tree,
@@ -36,11 +35,7 @@ export async function reactNativeInitGeneratorInternal(
 
   addGitIgnoreEntry(host);
 
-  const nxJson = readNxJson(host);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  schema.addPlugin ??= addPluginDefault;
+  schema.addPlugin = true;
 
   if (schema.addPlugin) {
     await addPlugin(

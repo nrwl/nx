@@ -49,14 +49,12 @@ describe('addLinting generator', () => {
     });
 
     // Assert the arguments, not just the call: this is the only test that sees
-    // the `addLintingToProject` hop, and `addExplicitTargets` in particular
-    // decides whether the project gets an explicit `lint` target or relies on
-    // inference — it can be dropped in the hop with every suite still green.
+    // the `addLintingToProject` hop, and a key dropped there would leave every
+    // other suite green.
     expect(linter.lintProjectGenerator).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
         project: appProjectName,
-        addExplicitTargets: true,
         addPlugin: false,
         rootProject: false,
         tsConfigPaths: [`${appProjectRoot}/tsconfig.app.json`],

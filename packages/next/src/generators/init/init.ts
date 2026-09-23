@@ -6,7 +6,6 @@ import {
   runTasksInSerial,
   type GeneratorCallback,
   type Tree,
-  readNxJson,
   createProjectGraphAsync,
 } from '@nx/devkit';
 import {
@@ -69,12 +68,7 @@ export async function nextInitGeneratorInternal(
 ) {
   assertSupportedNextVersion(host);
 
-  const nxJson = readNxJson(host);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-
-  schema.addPlugin ??= addPluginDefault;
+  schema.addPlugin = true;
   if (schema.addPlugin) {
     const {
       createNodesV2,

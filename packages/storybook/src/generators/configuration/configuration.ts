@@ -15,14 +15,12 @@ import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import { StorybookConfigureSchema } from './schema';
 import { initGenerator } from '../init/init';
-import { warnStorybookExecutorGenerating } from '../../utils/deprecation';
 import { assertSupportedStorybookVersion } from '../../utils/assert-supported-storybook-version';
 
 import {
   addAngularStorybookTarget,
   addBuildStorybookToCacheableOperations,
   addStaticTarget,
-  addStorybookTarget,
   addStorybookToNamedInputs,
   addStorybookToTargetDefaults,
   configureTsProjectConfig,
@@ -181,18 +179,10 @@ export async function configurationGeneratorInternal(
 
   let devDeps = {};
 
-  if (!hasPlugin || schema.addExplicitTargets) {
-    warnStorybookExecutorGenerating();
-    if (schema.uiFramework === '@storybook/angular') {
-      addAngularStorybookTarget(tree, schema.project, schema.interactionTests);
-    } else {
-      addStorybookTarget(
-        tree,
-        schema.project,
-        schema.uiFramework,
-        schema.interactionTests
-      );
-    }
+  if (schema.uiFramework === '@storybook/angular') {
+    // `@storybook/angular:*` builders are third-party and still supported, so
+    // Angular keeps an explicit target rather than relying on inference.
+    addAngularStorybookTarget(tree, schema.project, schema.interactionTests);
     if (schema.configureStaticServe) {
       await addStaticTarget(tree, schema);
     }
@@ -261,9 +251,7 @@ function normalizeSchema(
   schema: StorybookConfigureSchema
 ): StorybookConfigureSchema {
   const nxJson = readNxJson(tree);
-  const addPlugin =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
+  const addPlugin = true;
 
   const defaults = {
     interactionTests: true,
@@ -274,6 +262,7 @@ function normalizeSchema(
   return {
     ...defaults,
     ...schema,
+    addPlugin: true,
   };
 }
 

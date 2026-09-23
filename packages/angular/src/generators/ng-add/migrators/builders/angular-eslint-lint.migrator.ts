@@ -67,8 +67,6 @@ export class AngularEslintLintMigrator extends BuilderMigrator {
     targetName: string,
     target: TargetConfiguration
   ): Promise<void> {
-    target.executor = '@nx/eslint:lint';
-
     if (!target.options) {
       this.logger.warn(
         `The target "${targetName}" is not specifying any options. Skipping updating the target configuration.`
@@ -112,6 +110,19 @@ export class AngularEslintLintMigrator extends BuilderMigrator {
 
         return pattern;
       });
+
+    // `@nx/eslint:lint` is gone in v24, so the migrated target runs the ESLint
+    // CLI directly. Patterns were rebased onto the new project root above.
+    const eslintConfig =
+      target.options.eslintConfig && this.newEsLintConfigPath;
+    const patterns: string[] = target.options.lintFilePatterns ?? [];
+    delete target.executor;
+    delete target.options;
+    target.command = [
+      'eslint',
+      ...(eslintConfig ? ['--config', eslintConfig] : []),
+      ...patterns,
+    ].join(' ');
 
     updateProjectConfiguration(this.tree, this.project.name, {
       ...this.projectConfig,

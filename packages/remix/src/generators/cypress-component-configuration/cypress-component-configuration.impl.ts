@@ -2,7 +2,6 @@ import {
   formatFiles,
   generateFiles,
   readProjectConfiguration,
-  readNxJson,
   type Tree,
 } from '@nx/devkit';
 import { join } from 'path';
@@ -26,11 +25,7 @@ export async function cypressComponentConfigurationGeneratorInternal(
 ) {
   assertSupportedRemixVersion(tree);
 
-  const nxJson = readNxJson(tree);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  options.addPlugin ??= addPluginDefault;
+  options.addPlugin = true;
   await cypressComponentConfigGenerator(tree, {
     project: options.project,
     generateTests: options.generateTests,

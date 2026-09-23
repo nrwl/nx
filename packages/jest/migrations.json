@@ -89,6 +89,12 @@
       "implementation": "./dist/src/migrations/update-23-1-0/set-ts-jest-isolated-modules",
       "prompt": "./dist/src/migrations/update-23-1-0/verify-typecheck.md",
       "documentation": "./dist/src/migrations/update-23-1-0/set-ts-jest-isolated-modules.md"
+    },
+    "remove-deprecated-executors": {
+      "version": "24.0.0-beta.1",
+      "description": "Convert removed @nx/jest executors to inferred tasks.",
+      "implementation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors",
+      "prompt": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors.md"
     }
   },
   "packageJsonUpdates": {

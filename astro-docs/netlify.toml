@@ -1184,6 +1184,47 @@ to = "/docs/kb/angular-nx-version-matrix"
 [[redirects]]
 from = "/docs/guides/nx-cloud/enable-ai-features"
 to = "/docs/kb/enable-ai-features"
+# Executor reference pages removed in Nx 24 along with the executors they documented
+
+[[redirects]]
+from = "/docs/technologies/test-tools/cypress/executors"
+to = "/docs/technologies/test-tools/cypress/introduction"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/detox/executors"
+to = "/docs/technologies/test-tools/detox/introduction"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/jest/executors"
+to = "/docs/technologies/test-tools/jest/introduction"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/storybook/executors"
+to = "/docs/technologies/test-tools/storybook/introduction"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/vitest/executors"
+to = "/docs/technologies/test-tools/vitest/introduction"
+
+[[redirects]]
+from = "/docs/technologies/eslint/executors"
+to = "/docs/technologies/eslint/introduction"
+
+[[redirects]]
+from = "/docs/technologies/react/next/executors"
+to = "/docs/technologies/react/next/introduction"
+
+[[redirects]]
+from = "/docs/technologies/react/remix/executors"
+to = "/docs/technologies/react/remix/introduction"
+
+[[redirects]]
+from = "/docs/technologies/build-tools/rollup/executors"
+to = "/docs/technologies/build-tools/rollup/introduction"
+
+[[redirects]]
+from = "/docs/technologies/build-tools/vite/executors"
+to = "/docs/technologies/build-tools/vite/introduction"
 
 # Rewrite for base path handling (keeps URL the same)
 [[redirects]]

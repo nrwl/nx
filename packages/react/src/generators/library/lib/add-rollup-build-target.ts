@@ -3,12 +3,8 @@ import {
   ensurePackage,
   GeneratorCallback,
   joinPathFragments,
-  logger,
   offsetFromRoot,
-  readNxJson,
-  readProjectConfiguration,
   runTasksInSerial,
-  updateProjectConfiguration,
   Tree,
 } from '@nx/devkit';
 
@@ -57,17 +53,9 @@ export async function addRollupBuildTarget(
 
   external.add('react/jsx-runtime');
 
-  const nxJson = readNxJson(host);
-  const hasRollupPlugin = !!nxJson.plugins?.some((p) =>
-    typeof p === 'string'
-      ? p === '@nx/rollup/plugin'
-      : p.plugin === '@nx/rollup/plugin'
-  );
-  if (hasRollupPlugin) {
-    // New behavior, using rollup config file and inferred target.
-    host.write(
-      joinPathFragments(options.projectRoot, 'rollup.config.cjs'),
-      `const { withNx } = require('@nx/rollup/with-nx');
+  host.write(
+    joinPathFragments(options.projectRoot, 'rollup.config.cjs'),
+    `const { withNx } = require('@nx/rollup/with-nx');
 const url = require('@rollup/plugin-url');
 const svg = require('@svgr/rollup');
 
@@ -103,47 +91,6 @@ module.exports = withNx(
   }
 );
 `
-    );
-  } else {
-    // Legacy behavior, there is a target in project.json using rollup executor.
-    // Mirrors warnRollupExecutorGenerating from @nx/rollup/src/utils/deprecation.
-    // Inlined to avoid a cross-package deep import; @nx/rollup's package
-    // exports field doesn't expose internal `src/...` paths, so the import
-    // works at compile time (via tsconfig project refs) but fails at runtime
-    // in published packages.
-    logger.warn(
-      'The `@nx/rollup:rollup` executor is deprecated and will be removed in Nx v24. Run `nx g @nx/rollup:convert-to-inferred` to migrate to the `@nx/rollup/plugin` inferred targets. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.'
-    );
-    const { targets } = readProjectConfiguration(host, options.name);
-    targets.build = {
-      executor: '@nx/rollup:rollup',
-      outputs: ['{options.outputPath}'],
-      options: {
-        outputPath: joinPathFragments('dist', options.projectRoot),
-        tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
-        project: `${options.projectRoot}/package.json`,
-        entryFile: maybeJs(options, `${options.projectRoot}/src/index.ts`),
-        external: Array.from(external),
-        rollupConfig: `@nx/react/plugins/bundle-rollup`,
-        compiler: options.compiler ?? 'babel',
-        assets: [
-          {
-            glob: `${options.projectRoot}/README.md`,
-            input: '.',
-            output: '.',
-          },
-        ],
-      },
-    };
-
-    updateProjectConfiguration(host, options.name, {
-      root: options.projectRoot,
-      sourceRoot: joinPathFragments(options.projectRoot, 'src'),
-      projectType: 'library',
-      tags: options.parsedTags,
-      targets,
-    });
-  }
-
+  );
   return runTasksInSerial(...tasks);
 }

@@ -1,10 +1,12 @@
 import {
   createProjectGraphAsync,
   parseTargetString,
+  joinPathFragments,
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
+import { findPluginForConfigFile } from '@nx/devkit/internal';
 import { ensureTypescript } from '@nx/js/internal';
 import { getComponentNode } from './ast-utils';
 import { type FoundTarget } from '@nx/cypress/internal';
@@ -26,6 +28,35 @@ export async function resolveCypressCTTarget(
   }
 ): Promise<{ found: FoundTarget; bundler: 'vite' | 'webpack' }> {
   let found: FoundTarget = { target: options.buildTarget, config: undefined };
+
+  if (options.buildTarget !== '') {
+    const graph = await createProjectGraphAsync();
+    const parsed = options.buildTarget
+      ? parseTargetString(options.buildTarget, graph)
+      : undefined;
+    const candidates = parsed
+      ? [parsed.project]
+      : [
+          options.project,
+          ...Object.keys(graph.dependencies).filter((name) =>
+            graph.dependencies[name].some(
+              (dep) => dep.target === options.project
+            )
+          ),
+        ];
+    for (const project of candidates) {
+      const native = await findNativeBuild(tree, project, parsed?.target);
+      if (native) {
+        return {
+          found: {
+            target: options.buildTarget ?? native.target,
+            config: { command: `${native.bundler} build` },
+          },
+          bundler: options.bundler ?? native.bundler,
+        };
+      }
+    }
+  }
 
   // Specifically undefined as a workaround for Remix to pass an empty string as the buildTarget
   if (options.buildTarget === undefined) {
@@ -130,8 +161,40 @@ export async function getBundlerFromTarget(
     await createProjectGraphAsync()
   );
   const projectConfig = readProjectConfiguration(tree, project);
+  const native = await findNativeBuild(tree, project, target);
+  if (native) return native.bundler;
   const executor = projectConfig?.targets?.[target]?.executor;
   return executor === '@nx/vite:build' ? 'vite' : 'webpack';
+}
+
+async function findNativeBuild(tree: Tree, project: string, target?: string) {
+  const config = readProjectConfiguration(tree, project);
+  if (
+    target &&
+    config.targets?.[target]?.executor &&
+    config.targets[target].executor !== 'nx:run-commands'
+  ) {
+    return;
+  }
+  for (const bundler of ['vite', 'webpack'] as const) {
+    for (const ext of ['ts', 'mts', 'cts', 'js', 'mjs', 'cjs']) {
+      const path = joinPathFragments(config.root, `${bundler}.config.${ext}`);
+      if (!tree.exists(path)) continue;
+      const plugin = await findPluginForConfigFile(
+        tree,
+        `@nx/${bundler}/plugin`,
+        path
+      );
+      if (!plugin) continue;
+      const buildTarget =
+        typeof plugin === 'string'
+          ? 'build'
+          : ((plugin.options as { buildTargetName?: string })
+              ?.buildTargetName ?? 'build');
+      if (target && target !== buildTarget) continue;
+      return { target: `${project}:${buildTarget}`, bundler };
+    }
+  }
 }
 
 export async function getActualBundler(

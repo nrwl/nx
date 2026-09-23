@@ -12,6 +12,13 @@ topics:
 
 ## Overview
 
+{% aside type="note" title="Nx 24 removes the @nx/vitest:test executor" %}
+This guide describes the Nx 23 split. In Nx 24 the `@nx/vitest:test` executor is removed in
+favour of the `@nx/vitest` plugin's inferred test target. If you are upgrading straight to
+Nx 24, `nx migrate` converts these targets for you. See
+[Removed Executors](/docs/reference/deprecated/removed-executors).
+{% /aside %}
+
 Vitest functionality has been split from `@nx/vite` into a standalone `@nx/vitest` package. This provides better separation of concerns and allows vitest to be used independently of vite.
 
 ## What changed

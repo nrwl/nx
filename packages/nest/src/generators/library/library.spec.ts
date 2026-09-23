@@ -452,22 +452,6 @@ describe('lib', () => {
           },
           "main": "./src/index.ts",
           "name": "@proj/mylib",
-          "nx": {
-            "targets": {
-              "lint": {
-                "executor": "@nx/eslint:lint",
-              },
-              "test": {
-                "executor": "@nx/jest:jest",
-                "options": {
-                  "jestConfig": "mylib/jest.config.cts",
-                },
-                "outputs": [
-                  "{projectRoot}/test-output/jest/coverage",
-                ],
-              },
-            },
-          },
           "private": true,
           "types": "./src/index.ts",
           "version": "0.0.1",
@@ -587,22 +571,6 @@ describe('lib', () => {
               "default": "./dist/index.js"
             }
           },
-          "nx": {
-            "targets": {
-              "lint": {
-                "executor": "@nx/eslint:lint"
-              },
-              "test": {
-                "executor": "@nx/jest:jest",
-                "outputs": [
-                  "{projectRoot}/test-output/jest/coverage"
-                ],
-                "options": {
-                  "jestConfig": "mylib/jest.config.cts"
-                }
-              }
-            }
-          },
           "dependencies": {
             "tslib": "^2.3.0"
           }
@@ -689,20 +657,7 @@ describe('lib', () => {
           "root": "mylib",
           "sourceRoot": "mylib/src",
           "tags": [],
-          "targets": {
-            "lint": {
-              "executor": "@nx/eslint:lint",
-            },
-            "test": {
-              "executor": "@nx/jest:jest",
-              "options": {
-                "jestConfig": "mylib/jest.config.cts",
-              },
-              "outputs": [
-                "{projectRoot}/test-output/jest/coverage",
-              ],
-            },
-          },
+          "targets": {},
         }
       `);
       expect(readJson(tree, 'mylib/package.json').nx).toBeUndefined();

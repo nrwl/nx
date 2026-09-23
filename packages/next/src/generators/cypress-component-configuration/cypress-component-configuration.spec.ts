@@ -92,14 +92,10 @@ describe('cypress-component-configuration generator', () => {
     expect(tree.exists('demo/pages/index.cy.ts')).toBeFalsy();
     expect(
       readProjectConfiguration(tree, 'demo').targets['component-test']
-    ).toEqual({
-      executor: '@nx/cypress:cypress',
-      options: {
-        cypressConfig: 'demo/cypress.config.ts',
-        skipServe: true,
-        testingType: 'component',
-      },
-    });
+    ).toBeUndefined();
+    expect(tree.read('demo/cypress.config.ts', 'utf-8')).toContain(
+      'component:'
+    );
   });
 
   it('should import "mount" from "cypress/react18" when cypress version is lower than v14', async () => {

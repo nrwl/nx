@@ -51,8 +51,8 @@ base config at the workspace root, and folds `.eslintignore` files into `ignores
 It does not convert JavaScript-based eslintrc files (`.eslintrc.js`, `.eslintrc.cjs`), so
 convert those by hand using the steps below.
 New Nx workspaces generate flat config by default, and the
-[@nx/eslint:lint executor](/docs/technologies/eslint/executors#lint) runs it without extra
-configuration.
+[@nx/eslint/plugin inferred targets](/docs/technologies/eslint/introduction) run it without
+extra configuration.
 
 The generator aims to produce a flat config that behaves exactly like your original JSON
 config, so depending on the complexity of the original it may wrap parts in `FlatCompat`.

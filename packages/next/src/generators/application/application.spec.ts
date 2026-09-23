@@ -329,7 +329,7 @@ describe('app', () => {
     );
   });
 
-  it('should set up the nx next build builder', async () => {
+  it('should generate native Next configuration', async () => {
     const name = uniq();
 
     // addPlugin: false -> legacy @nx/next:build executor, which relies on
@@ -344,24 +344,13 @@ describe('app', () => {
       .toMatchInlineSnapshot(`
       "//@ts-check
 
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { composePlugins, withNx } = require('@nx/next');
-
-      /**
-       * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
-       **/
+      /** @type {import('next').NextConfig} */
       const nextConfig = {
-        // Use this to set Nx-specific options
-        // See: https://nx.dev/docs/technologies/react/next/Guides/next-config-setup
-        nx: {},
+        // Next.js options go here
+        // See: https://nextjs.org/docs/app/api-reference/config/next-config-js
       };
 
-      const plugins = [
-        // Add more Next.js plugins to this list if needed.
-        withNx,
-      ];
-
-      module.exports = composePlugins(...plugins)(nextConfig);
+      module.exports = nextConfig;
       "
     `);
   });
@@ -1509,7 +1498,7 @@ describe('app (legacy)', () => {
     }
   });
 
-  it('should generate build and serve targets', async () => {
+  it('should infer build and serve targets even for legacy callers', async () => {
     const name = uniq();
 
     await applicationGenerator(tree, {
@@ -1518,8 +1507,8 @@ describe('app (legacy)', () => {
     });
 
     const projectConfiguration = readProjectConfiguration(tree, name);
-    expect(projectConfiguration.targets.build).toBeDefined();
-    expect(projectConfiguration.targets.serve).toBeDefined();
+    expect(projectConfiguration.targets.build).toBeUndefined();
+    expect(projectConfiguration.targets.serve).toBeUndefined();
   });
 
   describe('--unit-test-runner jest', () => {

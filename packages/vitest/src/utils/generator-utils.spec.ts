@@ -374,10 +374,11 @@ describe('addOrChangeTestTarget', () => {
       false
     );
 
-    expect(targetsOf('my-app-e2e').e2e).toEqual({
-      executor: '@nx/vitest:test',
-      outputs: ['{options.reportsDirectory}'],
-      options: { reportsDirectory: 'coverage/apps/my-app-e2e' },
+    expect(targetsOf('my-app-e2e').e2e).toBeUndefined();
+    expect(readNxJson(tree).plugins).toContainEqual({
+      plugin: '@nx/vitest',
+      include: ['apps/my-app-e2e/**/*'],
+      options: { testTargetName: 'e2e' },
     });
   });
 

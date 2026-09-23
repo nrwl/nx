@@ -488,7 +488,7 @@ describe('@nx/storybook:configuration', () => {
         expect(devDependencies['@storybook/test-runner']).not.toBeDefined();
       });
 
-      it('should install the runner the explicit target invokes', async () => {
+      it('should install the runner for inferred tests with legacy addPlugin=false', async () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
           uiFramework: '@storybook/react-vite',
@@ -498,8 +498,9 @@ describe('@nx/storybook:configuration', () => {
         const { devDependencies } = readJson(tree, 'package.json');
         expect(devDependencies['@storybook/test-runner']).toBeDefined();
         const project = readJson(tree, 'test-ui-lib/project.json');
-        expect(project.targets['test-storybook'].options.command).toContain(
-          'test-storybook -c'
+        expect(project.targets['test-storybook']).toBeUndefined();
+        expect(readJson(tree, 'nx.json').plugins).toContainEqual(
+          expect.objectContaining({ plugin: '@nx/storybook/plugin' })
         );
       });
     });
@@ -676,8 +677,9 @@ describe('@nx/storybook:configuration', () => {
         expect(nxJson.namedInputs.production).not.toContain(
           '!{projectRoot}/tsconfig.storybook.json'
         );
-        expect(nxJson.targetDefaults['build-storybook'].inputs).not.toContain(
-          '{projectRoot}/tsconfig.storybook.json'
+        expect(nxJson.targetDefaults?.['build-storybook']).toBeUndefined();
+        expect(nxJson.plugins).toContainEqual(
+          expect.objectContaining({ plugin: '@nx/storybook/plugin' })
         );
       });
 
@@ -692,8 +694,9 @@ describe('@nx/storybook:configuration', () => {
         expect(nxJson.namedInputs.production).toContain(
           '!{projectRoot}/tsconfig.storybook.json'
         );
-        expect(nxJson.targetDefaults['build-storybook'].inputs).toContain(
-          '{projectRoot}/tsconfig.storybook.json'
+        expect(nxJson.targetDefaults?.['build-storybook']).toBeUndefined();
+        expect(nxJson.plugins).toContainEqual(
+          expect.objectContaining({ plugin: '@nx/storybook/plugin' })
         );
       });
     });

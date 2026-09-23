@@ -13,7 +13,6 @@ import {
 } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { getRelativeProjectJsonSchemaPath } from '@nx/devkit/internal';
 import type { WebpackPluginOptions } from '../../plugins/plugin';
@@ -78,20 +77,6 @@ jest.mock('nx/src/devkit-internals', () => {
     {},
     {
       get(target, prop) {
-        if (prop === 'getExecutorInformation') {
-          // Read the executor schema from source so this unit test does not
-          // depend on @nx/webpack being built. executors.json points `schema`
-          // at ./dist (only present after copy-assets); readTargetOptions only
-          // consumes `schema`.
-          return jest.fn().mockImplementation((_pkg, executorName) => ({
-            schema: JSON.parse(
-              readFileSync(
-                join(__dirname, '../../executors', executorName, 'schema.json'),
-                'utf-8'
-              )
-            ),
-          }));
-        }
         if (prop === 'retrieveProjectConfigurations') {
           return getActual().retrieveProjectConfigurations;
         }
@@ -369,6 +354,29 @@ describe('convert-to-inferred', () => {
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
       expect(updatedProject2.targets.build).toStrictEqual(project2BuildTarget);
+    });
+
+    it('should convert native configs without legacy wrappers or executor registrations', async () => {
+      const project = createProject(tree);
+      writeWebpackConfig(
+        tree,
+        project.root,
+        `
+        const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+        module.exports = { plugins: [new NxAppWebpackPlugin({ baseHref: '/custom/' })] };
+      `
+      );
+
+      await convertToInferred(tree, { project: project.name });
+
+      const config = readProjectConfiguration(tree, project.name);
+      expect(config.targets.build?.executor).not.toBe('@nx/webpack:webpack');
+      expect(config.targets.serve?.executor).not.toBe('@nx/webpack:dev-server');
+      const content = tree.read(`${project.root}/webpack.config.js`, 'utf-8');
+      expect(content).toContain('/custom/');
+      expect(content).toContain('src/main.tsx');
+      expect(content).toContain('devServer');
+      expect(content).not.toContain('useLegacyNxPlugin');
     });
 
     it('should register plugin in nx.json', async () => {

@@ -662,18 +662,14 @@ module.exports = withNx(
 
       const projectsConfigurations = getProjects(tree);
 
-      expect(projectsConfigurations.get('my-lib').targets.build).toMatchObject({
-        executor: '@nx/rollup:rollup',
-        outputs: ['{options.outputPath}'],
-        options: {
-          external: ['react', 'react-dom', 'react/jsx-runtime'],
-          entryFile: 'my-lib/src/index.ts',
-          outputPath: 'dist/my-lib',
-          project: 'my-lib/package.json',
-          tsConfig: 'my-lib/tsconfig.lib.json',
-          rollupConfig: '@nx/react/plugins/bundle-rollup',
-        },
-      });
+      expect(
+        projectsConfigurations.get('my-lib').targets.build
+      ).toBeUndefined();
+      const rollupConfig = tree.read('my-lib/rollup.config.cjs', 'utf-8');
+      expect(rollupConfig).toContain(
+        'external: ["react","react-dom","react/jsx-runtime"]'
+      );
+      expect(rollupConfig).toContain("main: './src/index.ts'");
     });
 
     it('should support style none (legacy)', async () => {
@@ -687,11 +683,10 @@ module.exports = withNx(
 
       const config = readProjectConfiguration(tree, 'my-lib');
 
-      expect(config.targets.build).toMatchObject({
-        options: {
-          external: ['react', 'react-dom', 'react/jsx-runtime'],
-        },
-      });
+      expect(config.targets.build).toBeUndefined();
+      expect(tree.read('my-lib/rollup.config.cjs', 'utf-8')).toContain(
+        'external: ["react","react-dom","react/jsx-runtime"]'
+      );
     });
   });
 

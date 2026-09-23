@@ -670,14 +670,13 @@ describe('application generator', () => {
           "root": "myapp-e2e",
           "targets": {
             "e2e": {
+              "command": "jest --passWithNoTests",
               "dependsOn": [
                 "@proj/myapp:build",
                 "@proj/myapp:serve",
               ],
-              "executor": "@nx/jest:jest",
               "options": {
-                "jestConfig": "myapp-e2e/jest.config.cts",
-                "passWithNoTests": true,
+                "cwd": "myapp-e2e",
               },
               "outputs": [
                 "{workspaceRoot}/coverage/{e2eProjectRoot}",
