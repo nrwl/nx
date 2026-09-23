@@ -72,13 +72,15 @@ export async function loadIoSnapshotsForRun(
       skippedIoSnapshots('not-a-git-repo', 'Could not resolve HEAD')
     );
   }
-  const store = getIoSnapshotStore();
-  const stored = store.get(head, STORED_SET_MAX_AGE_MS);
-  if (stored) {
-    return reportIoSnapshotResolution({ status: 'cached', snapshots: stored });
-  }
-
   try {
+    const store = getIoSnapshotStore();
+    const stored = store.get(head, STORED_SET_MAX_AGE_MS);
+    if (stored) {
+      return reportIoSnapshotResolution({
+        status: 'cached',
+        snapshots: stored,
+      });
+    }
     const result = await fetchIoSnapshots(runnerOptions);
     return reportIoSnapshotResolution({
       status: 'fetched',

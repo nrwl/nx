@@ -9,9 +9,6 @@ use super::db::{Db, SnapshotDb};
 use super::{IoSnapshotImportOptions, IoSnapshots, StoredEntry};
 use crate::native::utils::time::current_timestamp_millis;
 
-/// Commits whose sets are kept; older ones are pruned on import.
-const RETAINED_COMMITS: usize = 5;
-
 /// The workspace database's snapshot sets, one per commit. A failed import
 /// throws with a `code` JS maps to a skip reason: `INVALID_RESPONSE` or
 /// `WRITE_FAILED`.
@@ -23,10 +20,12 @@ pub struct IoSnapshotStore {
 #[napi]
 impl IoSnapshotStore {
     #[napi(constructor)]
-    pub fn new(#[napi(ts_arg_type = "ExternalObject<NxDbConnection>")] db: &External<Db>) -> Self {
-        Self {
-            db: SnapshotDb::new(Arc::clone(db)),
-        }
+    pub fn new(
+        #[napi(ts_arg_type = "ExternalObject<NxDbConnection>")] db: &External<Db>,
+    ) -> anyhow::Result<Self> {
+        Ok(Self {
+            db: SnapshotDb::new(Arc::clone(db))?,
+        })
     }
 
     /// Stores the set the Nx Cloud client read for `requested_commit`,
@@ -45,7 +44,7 @@ impl IoSnapshotStore {
             })?;
         let bundle = Bundle::new(options.requested_commit, snapshots);
         self.db
-            .write(&bundle, RETAINED_COMMITS)
+            .write(&bundle)
             .map_err(|err| napi::Error::new("WRITE_FAILED".to_string(), err.to_string()))?;
         let Bundle {
             resolution,
@@ -103,7 +102,7 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let conn = initialize_db(&dir.path().join("test.db")).unwrap();
         let db = External::new(Arc::new(Mutex::new(conn)));
-        (dir, IoSnapshotStore::new(&db))
+        (dir, IoSnapshotStore::new(&db).unwrap())
     }
 
     fn import(store: &IoSnapshotStore, json: &str) -> napi::Result<IoSnapshots, String> {
@@ -142,13 +141,10 @@ mod tests {
         // without the entry and the handle still answers from memory.
         store
             .db
-            .write(
-                &Bundle {
-                    resolution: stored.resolution(),
-                    snapshots: BTreeMap::new(),
-                },
-                5,
-            )
+            .write(&Bundle {
+                resolution: stored.resolution(),
+                snapshots: BTreeMap::new(),
+            })
             .unwrap();
         assert!(
             store
@@ -172,13 +168,10 @@ mod tests {
         resolution.fetched_at -= 61 * minute;
         store
             .db
-            .write(
-                &Bundle {
-                    resolution,
-                    snapshots: BTreeMap::new(),
-                },
-                5,
-            )
+            .write(&Bundle {
+                resolution,
+                snapshots: BTreeMap::new(),
+            })
             .unwrap();
         assert!(store.get("head".into(), Some(60 * minute)).is_none());
         assert!(store.get("head".into(), Some(62 * minute)).is_some());
@@ -202,7 +195,7 @@ mod tests {
             .0
             .lock()
             .unwrap()
-            .execute("UPDATE io_snapshot_bundles SET resolution = 'not json'", [])
+            .execute("UPDATE io_snapshot_sets SET tasks = 'not a number'", [])
             .unwrap();
         assert!(store.get("head".into(), None).is_none());
     }

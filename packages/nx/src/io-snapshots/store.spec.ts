@@ -6,11 +6,12 @@ const store = vi.hoisted(() => ({
 }));
 const cloud = vi.hoisted(() => ({ fetchIoSnapshots: vi.fn() }));
 
-vi.mock('../native', () => ({
-  IoSnapshotStore: vi.fn(function () {
+const IoSnapshotStore = vi.hoisted(() =>
+  vi.fn(function () {
     return store;
-  }),
-}));
+  })
+);
+vi.mock('../native', () => ({ IoSnapshotStore }));
 vi.mock('./fetch', () => ({ fetchIoSnapshots: cloud.fetchIoSnapshots }));
 vi.mock('../utils/git-utils', () => ({ getLatestCommitSha: () => 'head' }));
 vi.mock('../utils/db-connection', () => ({ getDbConnection: () => 'db' }));
@@ -127,6 +128,17 @@ describe('loadIoSnapshotsForRun', () => {
     cloud.fetchIoSnapshots.mockRejectedValueOnce(coded('UNAUTHORIZED'));
     await loadIoSnapshotsForRun(nxJson, {}, optedIn());
     expect(warn).toHaveBeenCalledTimes(1);
+  });
+
+  it('skips rather than throws when the store cannot be opened', async () => {
+    IoSnapshotStore.mockImplementationOnce(function () {
+      throw new Error('database disk image is malformed');
+    });
+    expect(await loadIoSnapshotsForRun(nxJson, {}, optedIn())).toMatchObject({
+      status: 'skipped',
+      message: 'database disk image is malformed',
+    });
+    expect(cloud.fetchIoSnapshots).not.toHaveBeenCalled();
   });
 
   it('skips when the store cannot write what Nx Cloud read', async () => {
