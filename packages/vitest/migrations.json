@@ -36,7 +36,7 @@
       "documentation": "./dist/src/migrations/update-23-2-0/use-import-meta-dirname.md"
     },
     "migrate-to-vitest-5": {
-      "version": "23.3.0-beta.2",
+      "version": "23.3.0-beta.6",
       "requires": {
         "vitest": ">=5.0.0"
       },
@@ -151,7 +151,7 @@
       }
     },
     "23.3.0-vitest-v5": {
-      "version": "23.3.0-beta.2",
+      "version": "23.3.0-beta.6",
       "requires": {
         "vitest": ">=4.0.0 <5.0.0"
       },
@@ -167,7 +167,7 @@
       }
     },
     "23.3.0-vitest-v5-coverage-v8": {
-      "version": "23.3.0-beta.2",
+      "version": "23.3.0-beta.6",
       "requires": {
         "@vitest/coverage-v8": ">=4.0.0 <5.0.0"
       },
@@ -183,7 +183,7 @@
       }
     },
     "23.3.0-vitest-v5-coverage-istanbul": {
-      "version": "23.3.0-beta.2",
+      "version": "23.3.0-beta.6",
       "requires": {
         "@vitest/coverage-istanbul": ">=4.0.0 <5.0.0"
       },
@@ -199,7 +199,7 @@
       }
     },
     "23.3.0-vitest-v5-ui": {
-      "version": "23.3.0-beta.2",
+      "version": "23.3.0-beta.6",
       "requires": {
         "@vitest/ui": ">=4.0.0 <5.0.0"
       },
