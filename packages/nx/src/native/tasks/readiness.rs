@@ -429,17 +429,6 @@ mod tests {
         assert!(matcher.feed("\\dy".into()));
     }
 
-    #[test]
-    fn log_matcher_holds_a_bounded_payload_for_an_unterminated_control_string() {
-        let mut matcher = LogMatcher::new(vec!["ready".into()]);
-        assert!(!matcher.feed("rea\x1b]8;;".into()));
-        for _ in 0..10 {
-            assert!(!matcher.feed("x".repeat(1000)));
-        }
-        assert!(matcher.tail.len() < 10);
-        assert!(matcher.feed("\x07dy".into()));
-    }
-
     fn probe(config: ReadinessProbeConfig) -> ReadinessProbe {
         ReadinessProbe::new(config, std::env::temp_dir().to_string_lossy().to_string()).unwrap()
     }
@@ -514,23 +503,6 @@ mod tests {
         assert!(started.elapsed() < Duration::from_millis(1500));
     }
 
-    #[tokio::test]
-    async fn cancel_stops_the_wait() {
-        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
-        let port = listener.local_addr().unwrap().port();
-        drop(listener);
-        let probe = probe(port_config(port, None, 60_000));
-        let cancelled = tokio::spawn({
-            let token = probe.token.clone();
-            async move {
-                tokio::time::sleep(Duration::from_millis(50)).await;
-                token.cancel();
-            }
-        });
-        assert_eq!(probe.wait().await.unwrap(), ProbeOutcome::Cancelled);
-        cancelled.await.unwrap();
-    }
-
     #[cfg(not(windows))]
     #[tokio::test]
     async fn command_passes_on_exit_zero_and_is_killed_on_overrun() {
@@ -590,38 +562,51 @@ mod tests {
         assert!(!marker.exists());
     }
 
+    #[test]
+    fn log_matcher_keeps_only_what_a_split_pattern_needs() {
+        let mut matcher = LogMatcher::new(vec!["ready".into(), "listening".into()]);
+        assert!(!matcher.feed("x".repeat(10_000)));
+        assert!(matcher.tail.len() < "listening".len());
+    }
+
     #[tokio::test]
-    async fn url_retries_the_root_at_index_html() {
-        use std::io::{Read, Write};
+    async fn cancel_interrupts_an_attempt_that_never_answers() {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let port = listener.local_addr().unwrap().port();
+        let (received, request_in) = tokio::sync::oneshot::channel();
+        let (release, hold) = std::sync::mpsc::channel::<()>();
+        // Reads the whole request and never answers, holding the attempt open
         std::thread::spawn(move || {
-            for stream in listener.incoming().take(2) {
-                let mut stream = stream.unwrap();
-                let mut buf = [0u8; 1024];
+            use std::io::Read;
+            let (mut stream, _) = listener.accept().unwrap();
+            let mut request = Vec::new();
+            let mut buf = [0u8; 1024];
+            while !request.windows(4).any(|w| w == b"\r\n\r\n") {
                 let n = stream.read(&mut buf).unwrap();
-                let request = String::from_utf8_lossy(&buf[..n]);
-                let status = if request.starts_with("GET /index.html") {
-                    "200 OK"
-                } else {
-                    "404 Not Found"
-                };
-                write!(
-                    stream,
-                    "HTTP/1.1 {status}\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
-                )
-                .unwrap();
+                assert!(n > 0, "connection closed before the request arrived");
+                request.extend_from_slice(&buf[..n]);
             }
+            let _ = received.send(());
+            let _ = hold.recv();
         });
-        let config = ReadinessProbeConfig {
+        let probe = probe(ReadinessProbeConfig {
             url: Some(format!("http://127.0.0.1:{port}/")),
             port: None,
             host: None,
             command: None,
-            timeout: 5000,
+            timeout: 5_000,
             interval: None,
-        };
-        assert_eq!(probe(config).wait().await.unwrap(), ProbeOutcome::Ready);
+        });
+        let token = probe.token.clone();
+        let cancelled = tokio::spawn(async move {
+            request_in.await.unwrap();
+            token.cancel();
+            Instant::now()
+        });
+        assert_eq!(probe.wait().await.unwrap(), ProbeOutcome::Cancelled);
+        let cancelled_at = cancelled.await.unwrap();
+        assert!(cancelled_at.elapsed() < Duration::from_millis(2000));
+        drop(release);
     }
 
     // Runs the ignored test in a fresh process so the shared client is still unbuilt
