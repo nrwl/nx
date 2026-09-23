@@ -1,4 +1,4 @@
-import { formatIoSnapshotSummary, ioSnapshotReportToJson } from './report';
+import { formatIoSnapshotSummary } from './report';
 import type { IoSnapshotReport, IoSnapshots } from '../native';
 import type { IoSnapshotOutcome } from './fetch';
 
@@ -22,7 +22,6 @@ const resolution = {
 describe('formatIoSnapshotSummary', () => {
   it('prints nothing when snapshots are disabled', () => {
     expect(formatIoSnapshotSummary(null, null)).toBeNull();
-    expect(ioSnapshotReportToJson(null, null)).toBeNull();
   });
 
   // `unusable-output` reports a dropped write on a task that IS hashed from
@@ -113,20 +112,5 @@ describe('formatIoSnapshotSummary', () => {
         null
       ).line
     ).toBe('I/O snapshots: none used (invalid bundle: bad)');
-  });
-
-  it('serializes the report for --json consumers', () => {
-    const result: IoSnapshotReport = {
-      used: ['b:build', 'a:build'],
-      tasksWithOutputs: [],
-      diagnostics: [{ reason: 'disabled', taskId: 'c:e2e' }],
-      resolution,
-    };
-    expect(ioSnapshotReportToJson(result, resolved('fetched'))).toEqual({
-      fetch: { status: 'fetched' },
-      resolution,
-      used: ['a:build', 'b:build'],
-      diagnostics: [{ reason: 'disabled', taskId: 'c:e2e' }],
-    });
   });
 });

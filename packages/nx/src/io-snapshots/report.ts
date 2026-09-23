@@ -1,28 +1,11 @@
-import type {
-  IoSnapshotDiagnostic,
-  IoSnapshotReport,
-  IoSnapshotResolution,
-} from '../native';
+import type { IoSnapshotDiagnostic, IoSnapshotReport } from '../native';
 import type { IoSnapshotOutcome } from './fetch';
-
-export type { IoSnapshotReport } from '../native';
 
 export interface IoSnapshotSummary {
   /** One line for the default output, e.g. "I/O snapshots: 12 tasks hashed from snapshot, 3 fell back". */
   line: string;
   /** Per-reason detail for verbose output. */
   bodyLines: string[];
-}
-
-export interface IoSnapshotReportJson {
-  fetch: {
-    status: string;
-    reason?: string;
-    message?: string;
-  } | null;
-  resolution?: IoSnapshotResolution;
-  used: string[];
-  diagnostics: IoSnapshotDiagnostic[];
 }
 
 /**
@@ -76,25 +59,6 @@ export function formatIoSnapshotSummary(
     bodyLines.push(describeDiagnostic(d));
   }
   return { line, bodyLines };
-}
-
-export function ioSnapshotReportToJson(
-  result: IoSnapshotReport | null,
-  fetch: IoSnapshotOutcome | null
-): IoSnapshotReportJson | null {
-  if (!result) {
-    return null;
-  }
-  return {
-    fetch: fetch
-      ? fetch.status === 'skipped'
-        ? { status: fetch.status, reason: fetch.reason, message: fetch.message }
-        : { status: fetch.status }
-      : null,
-    resolution: result.resolution,
-    used: [...result.used].sort(),
-    diagnostics: result.diagnostics,
-  };
 }
 
 function describeDiagnostic(d: IoSnapshotDiagnostic): string {

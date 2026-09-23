@@ -2,20 +2,11 @@ import type { ProjectGraph } from '../config/project-graph';
 import type { TaskGraph } from '../config/task-graph';
 import {
   getIoSnapshotReport,
-  type IoSnapshotDiagnostic,
   type IoSnapshotReport,
-  type IoSnapshotResolution,
   type IoSnapshots,
 } from '../native';
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
 import { getExecutorForTask } from '../tasks-runner/utils';
-
-export type {
-  IoSnapshotDiagnostic,
-  IoSnapshotReport,
-  IoSnapshotResolution,
-  IoSnapshots,
-} from '../native';
 
 const customHasherMemo = new WeakMap<
   ProjectGraph,
