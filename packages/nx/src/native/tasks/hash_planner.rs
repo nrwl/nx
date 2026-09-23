@@ -284,12 +284,10 @@ impl HashPlanner {
             snapshot_eligibility::resolve_scoped(
                 snapshots,
                 &task_graph,
-                &self.eligibility_inputs(
-                    &task_graph,
-                    custom_hasher_task_ids,
-                    opted_out_task_ids,
-                    Some(&task_ids),
-                ),
+                &EligibilityInputs {
+                    custom_hasher: custom_hasher_task_ids.iter().cloned().collect(),
+                    opted_out: opted_out_task_ids.iter().cloned().collect(),
+                },
                 Some(&task_ids),
             )
             .tasks
@@ -514,59 +512,6 @@ impl HashPlanner {
             options.opted_out_task_ids.as_deref().unwrap_or(&[]),
         )?;
         Ok(External::new(plans))
-    }
-
-    /// What the eligibility walk needs from this planner's graph and nx.json.
-    /// `scope` limits the declared-glob validation to those tasks; eligibility
-    /// is per task, so a call planning one task pays for one.
-    fn eligibility_inputs(
-        &self,
-        task_graph: &TaskGraph,
-        custom_hasher_task_ids: &[String],
-        opted_out_task_ids: &[String],
-        scope: Option<&[&str]>,
-    ) -> EligibilityInputs {
-        let mut inputs = EligibilityInputs {
-            custom_hasher: custom_hasher_task_ids.iter().cloned().collect(),
-            opted_out: opted_out_task_ids.iter().cloned().collect(),
-            ..Default::default()
-        };
-        let scoped: Vec<(&String, &Task)> = match scope {
-            Some(ids) => ids
-                .iter()
-                .filter_map(|id| task_graph.tasks.get_key_value(*id))
-                .collect(),
-            None => task_graph.tasks.iter().collect(),
-        };
-        for (task_id, task) in scoped {
-            if !inputs.opted_out.contains(task_id) && self.declared_files_invalid(task) {
-                inputs.invalid_files_input.insert(task_id.clone());
-            }
-        }
-        inputs
-    }
-
-    /// A declared `includeIgnored` group the hasher would reject is a native
-    /// error; a snapshot must not turn it into a plan with a hole. The plain
-    /// planner is the judge, so its group rules apply here unchanged.
-    fn declared_files_invalid(&self, task: &Task) -> bool {
-        let Ok(inputs) = get_inputs(task, &self.project_graph, &self.nx_json) else {
-            return false;
-        };
-        // Only an includeIgnored group can fail there, so the rest skip it.
-        let declares_ignored = inputs.self_inputs.iter().any(|input| {
-            matches!(
-                input,
-                Input::FileSet {
-                    include_ignored: true,
-                    ..
-                }
-            )
-        });
-        declares_ignored
-            && self
-                .gather_self_inputs(&task.target.project, &inputs.self_inputs, None)
-                .is_err()
     }
 
     /// Observed reads minus natively covered files, one disk-backed group per
@@ -1815,66 +1760,6 @@ mod tests {
                 )]),
             })),
         )
-    }
-
-    fn include_ignored_planner(filesets: &[&str]) -> (HashPlanner, TaskGraph) {
-        use crate::native::types::{FileSetInput, JsInputs};
-        use napi::bindgen_prelude::Either9;
-        let inputs: Vec<JsInputs> = filesets
-            .iter()
-            .map(|fileset| {
-                Either9::C(FileSetInput {
-                    fileset: fileset.to_string(),
-                    dependencies: None,
-                    include_ignored: Some(true),
-                })
-            })
-            .collect();
-        let project = Project {
-            root: "libs/parent".into(),
-            targets: HashMap::from([(
-                "build".into(),
-                Target {
-                    inputs: Some(inputs),
-                    ..Default::default()
-                },
-            )]),
-            ..Default::default()
-        };
-        let planner = HashPlanner::new(
-            NxJson { named_inputs: None },
-            &External::new(Arc::new(ProjectGraph {
-                nodes: HashMap::from([("parent".into(), project)]),
-                dependencies: HashMap::from([("parent".into(), vec![])]),
-                external_nodes: HashMap::new(),
-            })),
-        );
-        let task = Task::new("parent", "build");
-        let task_graph = TaskGraph {
-            roots: vec![task.id.clone()],
-            dependencies: HashMap::from([(task.id.clone(), vec![])]),
-            continuous_dependencies: HashMap::new(),
-            tasks: HashMap::from([(task.id.clone(), task)]),
-        };
-        (planner, task_graph)
-    }
-
-    // A group the native hasher rejects must withhold the snapshot, so the
-    // native error still fires instead of a plan with a hole.
-    #[test]
-    fn eligibility_withholds_a_task_whose_include_ignored_group_is_invalid() {
-        let (planner, task_graph) = include_ignored_planner(&["!{projectRoot}/dist/**/*.map"]);
-        let inputs = planner.eligibility_inputs(&task_graph, &[], &[], None);
-        assert!(inputs.invalid_files_input.contains("parent:build"));
-
-        let opted_out =
-            planner.eligibility_inputs(&task_graph, &[], &["parent:build".into()], None);
-        assert!(opted_out.invalid_files_input.is_empty());
-
-        let (planner, task_graph) =
-            include_ignored_planner(&["{projectRoot}/dist/**", "!{projectRoot}/dist/**/*.map"]);
-        let inputs = planner.eligibility_inputs(&task_graph, &[], &[], None);
-        assert!(inputs.invalid_files_input.is_empty());
     }
 
     #[test]

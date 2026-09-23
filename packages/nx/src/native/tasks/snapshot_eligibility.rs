@@ -10,16 +10,13 @@ use crate::native::tasks::types::TaskGraph;
 
 /// What the eligibility walk needs from the workspace. Task-level opt-outs
 /// and custom hashers are decided in JS, where target configuration and
-/// executors are resolved; the planner adds what needs nx.json.
+/// executors are resolved.
 #[derive(Default)]
 pub(crate) struct EligibilityInputs {
     /// Tasks whose target sets `sandbox.enabled: false`.
     pub opted_out: HashSet<String>,
     /// Tasks whose executor ships a custom hasher.
     pub custom_hasher: HashSet<String>,
-    /// Tasks with a declared `{ files }` glob the hasher would reject; natively
-    /// that is an error, so a snapshot must not paper over it.
-    pub invalid_files_input: HashSet<String>,
 }
 
 /// What JS knows about a run's tasks that the eligibility walk needs.
@@ -45,7 +42,6 @@ impl From<IoSnapshotEligibilityOptions> for EligibilityInputs {
                 .unwrap_or_default()
                 .into_iter()
                 .collect(),
-            invalid_files_input: HashSet::new(),
         }
     }
 }
@@ -191,10 +187,6 @@ pub(crate) fn resolve_scoped(
             continue;
         };
         let entry = stored.as_ref();
-        if inputs.invalid_files_input.contains(task_id) {
-            diagnostics.push(IoSnapshotDiagnostic::task("invalid-files-input", task_id));
-            continue;
-        }
 
         let mut files = entry.inputs.clone();
         files.sort();
@@ -250,8 +242,7 @@ pub(crate) fn resolve_scoped(
     }
 }
 
-/// The eligibility report without a planner, for the run summary. Blind to
-/// `invalid-files-input` (needs nx.json), so such a task counts as used here.
+/// The eligibility report, for the run summary.
 #[napi]
 pub fn get_io_snapshot_report(
     snapshots: &IoSnapshots,

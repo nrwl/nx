@@ -2320,17 +2320,6 @@ describe('task planner', () => {
       return { planner, taskGraph, snapshots };
     }
 
-    it('withholds the snapshot when a declared includeIgnored group is invalid, so the native error still fires', () => {
-      // A well-formed negation with nothing to filter: the group, not the
-      // entry, is the native error the snapshot must not hide.
-      const { planner, taskGraph, snapshots } = lonelyParent([
-        { fileset: '!{projectRoot}/dist/**/*.map', includeIgnored: true },
-      ]);
-      expect(() =>
-        planner.getPlans(['parent:build'], taskGraph, snapshots)
-      ).toThrow(/no positive includeIgnored fileset/);
-    });
-
     it('keeps the snapshot when a declared includeIgnored negation has a positive fileset to filter', () => {
       const { planner, taskGraph, snapshots } = lonelyParent([
         { fileset: '{projectRoot}/dist/**', includeIgnored: true },

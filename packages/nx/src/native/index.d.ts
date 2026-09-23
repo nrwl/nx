@@ -622,10 +622,7 @@ export declare function getHardcodedIgnorePatterns(): Array<string>
  */
 export declare function getIoSnapshotDeferredTaskIds(snapshots: IoSnapshots, taskGraph: TaskGraph): Array<string>
 
-/**
- * The eligibility report without a planner, for the run summary. Blind to
- * `invalid-files-input` (needs nx.json), so such a task counts as used here.
- */
+/** The eligibility report, for the run summary. */
 export declare function getIoSnapshotReport(snapshots: IoSnapshots, taskGraph: TaskGraph, options?: IoSnapshotEligibilityOptions | undefined | null): IoSnapshotReport
 
 /**
