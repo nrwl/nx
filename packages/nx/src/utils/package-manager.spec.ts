@@ -330,6 +330,7 @@ describe('package-manager', () => {
     afterEach(() => {
       vi.restoreAllMocks();
       vi.clearAllMocks();
+      clearPackageManagerVersionCache();
     });
 
     it('should detect package manager from --version', () => {
@@ -417,6 +418,20 @@ describe('package-manager', () => {
         packageManager: 'npm@6.32.4',
       });
       expect(() => getPackageManagerVersion('yarn')).toThrow();
+    });
+
+    it('should cache the version and not spawn execSync on repeated calls', () => {
+      vi.spyOn(fs, 'existsSync').mockReturnValue(false);
+      const execSync = vi
+        .spyOn(childProcess, 'execSync')
+        .mockReturnValue('9.0.0');
+
+      expect(getPackageManagerVersion('pnpm', '/repo')).toEqual('9.0.0');
+      expect(getPackageManagerVersion('pnpm', '/repo')).toEqual('9.0.0');
+      expect(getPackageManagerVersion('pnpm', '/repo')).toEqual('9.0.0');
+
+      // execSync must have been called exactly once despite three invocations.
+      expect(execSync).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -1023,6 +1038,7 @@ describe('package-manager', () => {
     ];
     afterEach(() => {
       vi.restoreAllMocks();
+      clearPackageManagerVersionCache();
     });
 
     it('should return npm publish command', () => {
