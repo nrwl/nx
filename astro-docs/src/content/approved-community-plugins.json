@@ -51,7 +51,7 @@
   },
   {
     "name": "@nx-iac/aws-cdk",
-    "description": "Empowers your Nx workspace with AWS CDK capabilities ⚡",
+    "description": "Empowers your Nx workspace with AWS CDK capabilities \u26a1",
     "url": "https://github.com/joelklint/nx-aws-cdk"
   },
   {
@@ -578,5 +578,10 @@
     "name": "@itssky/nx-sonar",
     "url": "https://github.com/xItsSky/nx-sonar",
     "description": "A Nx plugin that runs SonarQube or SonarCloud scans on any project in your workspace"
+  },
+  {
+    "name": "@nx-devkit/typescript",
+    "url": "https://github.com/nx-devkit/nx.ts/tree/main/packages/typescript-preset",
+    "description": "Zero-config Nx preset that infers typecheck, test, lint, format, and build targets from the config files a project already keeps (tsconfig, vitest, oxlint, eslint, biome, tsdown) \u2014 no project.json required."
   }
 ]
