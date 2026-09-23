@@ -104,7 +104,7 @@
       "requires": {
         "cypress": ">=15.0.0 <16.0.0"
       },
-      "description": "Moves a Cypress 15 workspace to Cypress 16: bumps `cypress` and the declared `@cypress/*-dev-server` packages unless a Vite component testing project resolves a Vite below 8, applies the Cypress 16 config option, `overwriteQuery` and `cypress/angular` rewrites, and hands the remaining source changes to an AI prompt.",
+      "description": "Moves a Cypress 15 workspace to Cypress 16: bumps `cypress` and the declared `@cypress/*-dev-server` packages unless a Vite component testing config, or a config whose bundler cannot be determined statically, resolves a Vite below 8, applies the Cypress 16 config option, `overwriteQuery` and `cypress/angular` rewrites, and hands the remaining source changes to an AI prompt.",
       "implementation": "./dist/src/migrations/update-23-3-0/upgrade-to-cypress-16",
       "prompt": "./dist/src/migrations/update-23-3-0/ai-instructions-for-cypress-16.md",
       "documentation": "./dist/src/migrations/update-23-3-0/upgrade-to-cypress-16.md"

@@ -513,6 +513,58 @@ export default defineConfig({ component: ctConfig });
     );
   });
 
+  it.each<[string, (tree: Tree) => string]>([
+    [
+      'referenced by an absolute path',
+      (tree) => {
+        addProjectConfiguration(tree, 'app', {
+          root: 'apps/app',
+          targets: {
+            'component-test': {
+              executor: '@nx/cypress:cypress',
+              options: {
+                cypressConfig: `${tree.root}/apps/app/cypress.ct.config.ts`,
+              },
+            },
+          },
+        });
+        tree.write('apps/app/cypress.ct.config.ts', INLINE_VITE_CT_CONFIG);
+        return 'apps/app/cypress.ct.config.ts resolves Vite 7.3.6';
+      },
+    ],
+    [
+      'outside any project',
+      (tree) => {
+        tree.write('tools/ct/cypress.config.ts', INLINE_VITE_CT_CONFIG);
+        return 'tools/ct/cypress.config.ts resolves Vite 7.3.6';
+      },
+    ],
+    [
+      'that does not exist',
+      (tree) => {
+        const configPath = addCypressProject(
+          tree,
+          'app',
+          INLINE_VITE_CT_CONFIG
+        );
+        tree.delete(configPath);
+        return `${configPath} resolves Vite 7.3.6 and its bundler could not be determined statically`;
+      },
+    ],
+  ])(
+    'should keep Cypress 15 when a config %s resolves a Vite below 8',
+    async (_, setup) => {
+      installPackage('vite', '7.3.6');
+      const blocker = setup(tree);
+
+      const result = await migration(tree);
+
+      expect(result.nextSteps).toEqual([
+        `Kept Cypress 15: Cypress 16 component testing requires Vite 8 and ${blocker}. Update Vite to 8 (\`nx migrate\` bumps it through \`@nx/vite\`), then run \`${RERUN_COMMAND}\` to move to Cypress 16.`,
+      ]);
+    }
+  );
+
   it('should bump when a config whose bundler cannot be read resolves no Vite', async () => {
     addCypressProject(
       tree,

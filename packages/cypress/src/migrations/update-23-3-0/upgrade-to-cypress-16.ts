@@ -2,12 +2,13 @@ import {
   addDependenciesToPackageJson,
   formatFiles,
   getDependencyVersionFromPackageJson,
+  globAsync,
   readJson,
   type Tree,
 } from '@nx/devkit';
 import { getInstalledPackageVersion } from '@nx/devkit/internal';
 import { ensureTypescript } from '@nx/js/internal';
-import { join, posix } from 'path';
+import { dirname, resolve } from 'path';
 import { lt, validRange } from 'semver';
 import type {
   Expression,
@@ -17,6 +18,7 @@ import type {
   SpreadAssignment,
 } from 'typescript';
 import {
+  CYPRESS_CONFIG_FILE_NAME_PATTERN,
   resolveCypressConfigObject,
   resolveObjectLiteral,
 } from '../../utils/config';
@@ -126,20 +128,23 @@ function skipped(message: string): MigrationResult {
 // 8. Vite is resolved from each config's directory, as Cypress does. A config
 // whose bundler cannot be read statically counts when such a Vite resolves.
 async function findViteBelowFloor(tree: Tree): Promise<string[]> {
-  const blockers: string[] = [];
+  const cypressConfigPaths = new Set(
+    await globAsync(tree, [`**/${CYPRESS_CONFIG_FILE_NAME_PATTERN}`])
+  );
   for await (const { cypressConfigPath } of cypressProjectConfigs(tree)) {
-    if (!tree.exists(cypressConfigPath)) {
-      continue;
-    }
+    cypressConfigPaths.add(cypressConfigPath);
+  }
 
-    const bundler = getComponentTestingBundler(
-      tree.read(cypressConfigPath, 'utf-8')
-    );
+  const blockers: string[] = [];
+  for (const cypressConfigPath of cypressConfigPaths) {
+    const bundler = tree.exists(cypressConfigPath)
+      ? getComponentTestingBundler(tree.read(cypressConfigPath, 'utf-8'))
+      : 'unknown';
     if (bundler === 'other') {
       continue;
     }
     const viteVersion = getInstalledPackageVersion('vite', [
-      join(tree.root, posix.dirname(cypressConfigPath)),
+      resolve(tree.root, dirname(cypressConfigPath)),
     ]);
     if (!viteVersion || !lt(viteVersion, VITE_FLOOR)) {
       continue;
