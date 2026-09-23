@@ -13,7 +13,7 @@ export function applyIoSnapshotOutputs(
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
   snapshots: IoSnapshots
-): { applied: string[]; observed: Record<string, string[]> } {
+): void {
   // Same walk as hashing, already confined to the workspace and outside
   // node_modules/.nx/.git; ineligible tasks are absent.
   const observed = getObservedIoSnapshotOutputs(
@@ -21,19 +21,10 @@ export function applyIoSnapshotOutputs(
     taskGraph,
     ioSnapshotEligibilityOptions(projectGraph, taskGraph)
   );
-  const applied: string[] = [];
   for (const [taskId, outputs] of Object.entries(observed)) {
     const task = taskGraph.tasks[taskId];
-    if (!task) continue;
-    const merged = [...new Set([...task.outputs, ...outputs])];
-    const changed =
-      merged.length !== task.outputs.length ||
-      merged.some((output, i) => output !== task.outputs[i]);
-    if (changed) {
-      task.outputs = merged;
-      applied.push(taskId);
+    if (task) {
+      task.outputs = [...new Set([...task.outputs, ...outputs])];
     }
   }
-  applied.sort();
-  return { applied, observed };
 }

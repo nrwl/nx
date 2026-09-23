@@ -116,25 +116,22 @@ describe('io snapshot outputs', () => {
       'web:custom': { outputs: ['dist/custom'] },
     });
 
-    const result = applyIoSnapshotOutputs(projectGraph, taskGraph, snapshots);
-    expect(result.observed).toEqual({
-      'web:build': ['apps/web/.next/cache/**', 'dist/apps/web'],
-    });
-    expect(result.applied).toEqual(['web:build']);
-    expect(taskGraph.tasks['web:build'].outputs).toEqual([
+    applyIoSnapshotOutputs(projectGraph, taskGraph, snapshots);
+    // The escaping write is dropped; the declared one is not repeated.
+    const merged = [
       'dist/apps/web',
       '!dist/apps/web/*.map',
       'apps/web/.next/cache/**',
-    ]);
+    ];
+    expect(taskGraph.tasks['web:build'].outputs).toEqual(merged);
     // Opted out, custom hasher, and absent entries stay byte-identical.
     expect(taskGraph.tasks['web:lint'].outputs).toEqual(['reports/lint']);
     expect(taskGraph.tasks['web:custom'].outputs).toEqual([]);
     expect(taskGraph.tasks['ui:build'].outputs).toEqual(['dist/libs/ui']);
 
     // Idempotent.
-    const again = applyIoSnapshotOutputs(projectGraph, taskGraph, snapshots);
-    expect(again.applied).toEqual([]);
-    expect(taskGraph.tasks['web:build'].outputs).toHaveLength(3);
+    applyIoSnapshotOutputs(projectGraph, taskGraph, snapshots);
+    expect(taskGraph.tasks['web:build'].outputs).toEqual(merged);
   });
 
   it('merges into a set, so a declared duplicate collapses too', () => {
@@ -144,8 +141,7 @@ describe('io snapshot outputs', () => {
     const snapshots = snapshotsFor({
       'web:build': { outputs: ['apps/web/.next/cache/**'] },
     });
-    const result = applyIoSnapshotOutputs(projectGraph, taskGraph, snapshots);
-    expect(result.applied).toEqual(['web:build']);
+    applyIoSnapshotOutputs(projectGraph, taskGraph, snapshots);
     expect(taskGraph.tasks['web:build'].outputs).toEqual([
       'dist/apps/web',
       'apps/web/.next/cache/**',
