@@ -768,6 +768,36 @@ mod tests {
         );
     }
 
+    /// A node that never declared an ecosystem is not claimed by one, so an
+    /// unpinned npm change leaves it alone. Naming it outright still matches.
+    #[test]
+    fn an_untyped_node_is_claimed_by_no_ecosystem() {
+        let untyped = || {
+            let mut g = graph(&[("a", "libs/a")]);
+            g.external_nodes.insert(
+                "gradle:guava".into(),
+                ExternalNode {
+                    r#type: None,
+                    package_name: Some("guava".into()),
+                    version: "1.0.0".into(),
+                    hash: None,
+                },
+            );
+            g
+        };
+        let plan = || vec![HashInstruction::External("gradle:guava".into())];
+
+        assert!(
+            touched_in(untyped(), plan(), &[], &["npm"]).is_empty(),
+            "an unset type is not npm"
+        );
+        assert_eq!(
+            touched_in(untyped(), plan(), &["gradle:guava"], &[]),
+            vec!["a:build"],
+            "a pinned name matches whatever the type"
+        );
+    }
+
     /// AllExternalDependencies hashes every node whatever its type, so any moved
     /// external reaches it.
     #[test]
