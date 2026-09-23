@@ -13,13 +13,13 @@ use crate::native::utils::time::current_timestamp_millis;
 
 /// One resolved set of entries, as imported for a requested commit.
 #[cfg(not(target_arch = "wasm32"))]
-pub struct Bundle {
+pub struct ImportedSet {
     pub resolution: IoSnapshotResolution,
     pub snapshots: BTreeMap<String, TaskIoSnapshot>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl Bundle {
+impl ImportedSet {
     /// Describes `snapshots` as the set fetched now for `requested_commit`.
     pub fn new(requested_commit: String, mut snapshots: BTreeMap<String, TaskIoSnapshot>) -> Self {
         // The entry digest hashes outputs in order, and Nx Cloud does not sort them.

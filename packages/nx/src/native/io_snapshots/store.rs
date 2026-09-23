@@ -8,7 +8,7 @@ use rusqlite::params;
 use rusqlite::types::Value;
 use tracing::debug;
 
-use super::bundle::{Bundle, TaskIoSnapshot};
+use super::set::{ImportedSet, TaskIoSnapshot};
 use super::{IoSnapshotImportOptions, IoSnapshotResolution, IoSnapshots};
 use crate::native::db::connection::NxDbConnection;
 use crate::native::utils::time::current_timestamp_millis;
@@ -50,13 +50,13 @@ impl IoSnapshotStore {
                     format!("Nx Cloud returned I/O snapshots nx cannot read: {err}"),
                 )
             })?;
-        let bundle = Bundle::new(options.requested_commit, snapshots);
-        self.write(&bundle)
+        let set = ImportedSet::new(options.requested_commit, snapshots);
+        self.write(&set)
             .map_err(|err| napi::Error::new("WRITE_FAILED".to_string(), err.to_string()))?;
-        let Bundle {
+        let ImportedSet {
             resolution,
             snapshots,
-        } = bundle;
+        } = set;
         // The importing process keeps what it just parsed; nothing to re-read.
         let entries = snapshots
             .into_iter()
@@ -107,17 +107,17 @@ CREATE TABLE IF NOT EXISTS io_snapshot_tasks (
 
 /// The SQL behind the store; not exposed to JS.
 impl IoSnapshotStore {
-    /// Replaces whatever was stored for the bundle's commit and prunes all but
+    /// Replaces whatever was stored for the set's commit and prunes all but
     /// the newest sets. One transaction, so a reader sees the previous set or
     /// the new one, never a gap.
-    pub(super) fn write(&self, bundle: &Bundle) -> Result<()> {
-        let entries: Vec<(&String, String)> = bundle
+    pub(super) fn write(&self, set: &ImportedSet) -> Result<()> {
+        let entries: Vec<(&String, String)> = set
             .snapshots
             .iter()
             .map(|(task_id, entry)| Ok((task_id, serde_json::to_string(entry)?)))
             .collect::<Result<_>>()
             .context("serializing snapshot entries")?;
-        let resolution = &bundle.resolution;
+        let resolution = &set.resolution;
         let commit = &resolution.requested_commit;
         self.db.lock().unwrap().transaction(|conn| {
             conn.execute(
@@ -233,7 +233,7 @@ mod tests {
         // A second ask does not go back to the database: rewrite the commit
         // without the entry and the handle still answers from memory.
         store
-            .write(&Bundle {
+            .write(&ImportedSet {
                 resolution: stored.resolution(),
                 snapshots: BTreeMap::new(),
             })
@@ -258,7 +258,7 @@ mod tests {
         let minute = 60 * 1000;
         resolution.fetched_at -= 61 * minute;
         store
-            .write(&Bundle {
+            .write(&ImportedSet {
                 resolution,
                 snapshots: BTreeMap::new(),
             })
@@ -304,7 +304,7 @@ mod tests {
         assert!(store.get("head".into(), None).is_none());
     }
 
-    fn bundle(commit: &str, fetched_at: i64, tasks: &[&str]) -> Bundle {
+    fn imported(commit: &str, fetched_at: i64, tasks: &[&str]) -> ImportedSet {
         let snapshots: BTreeMap<String, TaskIoSnapshot> = tasks
             .iter()
             .map(|id| {
@@ -318,9 +318,9 @@ mod tests {
                 )
             })
             .collect();
-        let mut bundle = Bundle::new(commit.into(), snapshots);
-        bundle.resolution.fetched_at = fetched_at;
-        bundle
+        let mut set = ImportedSet::new(commit.into(), snapshots);
+        set.resolution.fetched_at = fetched_at;
+        set
     }
 
     #[test]
@@ -329,10 +329,10 @@ mod tests {
         assert!(db.read_resolution("c0").unwrap().is_none());
         assert!(db.read_entries("c0", &["a:build"]).unwrap().is_empty());
 
-        db.write(&bundle("c0", 0, &["a:build", "b:build", "c:build"]))
+        db.write(&imported("c0", 0, &["a:build", "b:build", "c:build"]))
             .unwrap();
         for i in 1..=5 {
-            db.write(&bundle(&format!("c{i}"), i, &["a:build"]))
+            db.write(&imported(&format!("c{i}"), i, &["a:build"]))
                 .unwrap();
         }
 
@@ -355,10 +355,10 @@ mod tests {
     fn never_prunes_the_set_it_writes() {
         let (_dir, db) = temp_store();
         for i in 10..15 {
-            db.write(&bundle(&format!("c{i}"), i, &["a:build"]))
+            db.write(&imported(&format!("c{i}"), i, &["a:build"]))
                 .unwrap();
         }
-        db.write(&bundle("old", 1, &["a:build"])).unwrap();
+        db.write(&imported("old", 1, &["a:build"])).unwrap();
         assert!(db.read_resolution("old").unwrap().is_some());
         assert_eq!(db.read_entries("old", &["a:build"]).unwrap().len(), 1);
     }
@@ -366,8 +366,9 @@ mod tests {
     #[test]
     fn rewriting_a_commit_replaces_its_entries() {
         let (_dir, db) = temp_store();
-        db.write(&bundle("c1", 1, &["a:build", "b:build"])).unwrap();
-        db.write(&bundle("c1", 2, &["a:build"])).unwrap();
+        db.write(&imported("c1", 1, &["a:build", "b:build"]))
+            .unwrap();
+        db.write(&imported("c1", 2, &["a:build"])).unwrap();
         assert!(db.read_entries("c1", &["b:build"]).unwrap().is_empty());
         assert_eq!(db.read_entries("c1", &["a:build"]).unwrap().len(), 1);
     }
@@ -375,7 +376,8 @@ mod tests {
     #[test]
     fn reads_no_ids_and_one_id() {
         let (_dir, db) = temp_store();
-        db.write(&bundle("c1", 1, &["a:build", "b:build"])).unwrap();
+        db.write(&imported("c1", 1, &["a:build", "b:build"]))
+            .unwrap();
         assert!(db.read_entries("c1", &[]).unwrap().is_empty());
         let one = db.read_entries("c1", &["b:build"]).unwrap();
         assert_eq!(one.len(), 1);
@@ -387,7 +389,7 @@ mod tests {
         let (_dir, db) = temp_store();
         let ids: Vec<String> = (0..40_000).map(|i| format!("p{i}:build")).collect();
         let refs: Vec<&str> = ids.iter().map(String::as_str).collect();
-        db.write(&bundle("c1", 1, &refs)).unwrap();
+        db.write(&imported("c1", 1, &refs)).unwrap();
         assert_eq!(db.read_entries("c1", &refs).unwrap().len(), 40_000);
     }
 }

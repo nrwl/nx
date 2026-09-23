@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 
 use crate::native::cache::expand_outputs::match_output_paths;
 use crate::native::glob::{NxGlobSetBuilder, expand_literal_braces};
-use crate::native::io_snapshots::bundle::TaskIoSnapshot;
+use crate::native::io_snapshots::set::TaskIoSnapshot;
 use crate::native::io_snapshots::{IoSnapshotResolution, IoSnapshots};
 use crate::native::tasks::hash_planner::walk_root;
 use crate::native::tasks::hashers::validate_files_glob;
@@ -344,7 +344,7 @@ fn candidates_under(sorted: &[String], root: &str) -> Vec<String> {
 }
 
 /// A glob that would resolve outside the workspace: absolute, drive-lettered,
-/// or carrying a `..` segment. The bundle is server-supplied, so this is the
+/// or carrying a `..` segment. The set is server-supplied, so this is the
 /// line that keeps a hostile snapshot from turning hashing into a read oracle.
 fn escapes_workspace(glob: &str) -> bool {
     let path = glob.strip_prefix('!').unwrap_or(glob);

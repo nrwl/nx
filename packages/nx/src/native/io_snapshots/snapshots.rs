@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use super::IoSnapshotResolution;
-use super::bundle;
+use super::set;
 #[cfg(not(target_arch = "wasm32"))]
 use super::store;
 
@@ -22,7 +22,7 @@ type Db = ();
 pub struct IoSnapshots {
     resolution: IoSnapshotResolution,
     db: Db,
-    entries: Mutex<HashMap<String, Option<Arc<bundle::TaskIoSnapshot>>>>,
+    entries: Mutex<HashMap<String, Option<Arc<set::TaskIoSnapshot>>>>,
 }
 
 impl IoSnapshots {
@@ -30,7 +30,7 @@ impl IoSnapshots {
     pub(super) fn new(
         resolution: IoSnapshotResolution,
         db: Db,
-        entries: HashMap<String, Option<Arc<bundle::TaskIoSnapshot>>>,
+        entries: HashMap<String, Option<Arc<set::TaskIoSnapshot>>>,
     ) -> Self {
         Self {
             resolution,
@@ -61,7 +61,7 @@ impl IoSnapshots {
     pub(crate) fn entries_for(
         &self,
         task_ids: &[&str],
-    ) -> anyhow::Result<HashMap<String, Arc<bundle::TaskIoSnapshot>>> {
+    ) -> anyhow::Result<HashMap<String, Arc<set::TaskIoSnapshot>>> {
         let mut entries = self.entries.lock().unwrap();
         let missing: Vec<&str> = task_ids
             .iter()
@@ -74,7 +74,7 @@ impl IoSnapshots {
                 .db
                 .read_entries(&self.resolution.requested_commit, &missing)?;
             #[cfg(target_arch = "wasm32")]
-            let read: Vec<(String, bundle::TaskIoSnapshot)> = Vec::new();
+            let read: Vec<(String, set::TaskIoSnapshot)> = Vec::new();
             for id in &missing {
                 entries.insert((*id).to_string(), None);
             }
