@@ -31,23 +31,20 @@ export async function resolveIoSnapshotsForRun(
   if (!isIoSnapshotFetchEnabled(nxJson, runnerOptions)) {
     return null;
   }
-  let resolved: Awaited<ReturnType<typeof daemonClient.resolveIoSnapshots>>;
-  try {
-    resolved = await daemonClient.resolveIoSnapshots(
-      runnerOptions,
-      ioSnapshotEnv()
-    );
-  } catch {
+  // `undefined` is a daemon that could not answer; `null` is one whose own
+  // gate said snapshots are off.
+  const resolved = await daemonClient
+    .resolveIoSnapshots(runnerOptions, ioSnapshotEnv())
+    .catch(() => undefined);
+  if (resolved === undefined) {
     // A daemon that cannot answer must not cost the run its snapshots.
     return loadIoSnapshotsForRun(nxJson, runnerOptions);
   }
-  if (!resolved) {
+  if (resolved === null) {
     return null;
   }
   if (resolved.status === 'skipped') {
-    return reportIoSnapshotResolution(
-      skippedIoSnapshots(resolved.reason, resolved.message)
-    );
+    return reportIoSnapshotResolution(resolved);
   }
   const snapshots = getIoSnapshotStore().get(resolved.commit);
   return reportIoSnapshotResolution(

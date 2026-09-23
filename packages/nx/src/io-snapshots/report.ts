@@ -1,15 +1,16 @@
 import type { IoSnapshotDiagnostic, IoSnapshotReport } from '../native';
 
 export interface IoSnapshotSummary {
-  /** One line for the default output, e.g. "I/O snapshots: 12 tasks hashed from snapshot, 3 fell back". */
+  /** The heading, e.g. "I/O snapshots: 12 tasks hashed from snapshot, 3 fell back". */
   line: string;
-  /** Per-reason detail for verbose output. */
+  /** Per-reason detail under it. */
   bodyLines: string[];
 }
 
 /**
- * Formats the once-per-run summary of a run that resolved a set: `result` is
- * what hashing used, `status` whether the set was fetched or already stored.
+ * Formats the once-per-run verbose summary of a run that resolved a set:
+ * `result` is what hashing used, `status` whether the set was fetched or
+ * already stored.
  */
 export function formatIoSnapshotSummary(
   result: IoSnapshotReport,
