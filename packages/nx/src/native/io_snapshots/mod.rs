@@ -1,6 +1,4 @@
 pub(crate) mod bundle;
-#[cfg(not(target_arch = "wasm32"))]
-pub(crate) mod db;
 mod snapshots;
 #[cfg(not(target_arch = "wasm32"))]
 mod store;

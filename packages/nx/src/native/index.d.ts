@@ -139,9 +139,9 @@ export declare class IoSnapshots {
 }
 
 /**
- * The workspace database's snapshot sets, one per commit. A failed import
- * throws with a `code` JS maps to a skip reason: `INVALID_RESPONSE` or
- * `WRITE_FAILED`.
+ * The workspace database's snapshot sets, one per commit. Failures throw
+ * with a `code` JS maps to a skip reason: `STORE_UNAVAILABLE`,
+ * `INVALID_RESPONSE` or `WRITE_FAILED`.
  */
 export declare class IoSnapshotStore {
   constructor(db: ExternalObject<NxDbConnection>)

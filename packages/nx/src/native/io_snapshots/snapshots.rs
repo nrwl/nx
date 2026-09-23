@@ -4,12 +4,12 @@ use std::sync::{Arc, Mutex};
 use super::IoSnapshotResolution;
 use super::bundle;
 #[cfg(not(target_arch = "wasm32"))]
-use super::db;
+use super::store;
 
-/// The workspace database the entries live in. The wasm build has no
-/// database, so it has no store and never holds a set.
+/// The store the entries are read from. The wasm build has no database, so it
+/// has no store and never holds a set.
 #[cfg(not(target_arch = "wasm32"))]
-type Db = db::SnapshotDb;
+type Db = store::IoSnapshotStore;
 #[cfg(target_arch = "wasm32")]
 type Db = ();
 
