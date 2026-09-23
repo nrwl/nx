@@ -428,6 +428,39 @@ describe('target merging', () => {
   });
 
   describe('cache', () => {
+    // `backfill: false` decides whether a recorded snapshot may stand in for
+    // declared inputs, so losing it silently changes how the task hashes.
+    it('should drop an inherited backfill when the target replaces the sandbox', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          sandbox: { ignoredReads: ['tmp/**'] },
+        },
+        {
+          executor: 'nx:run-commands',
+          sandbox: { backfill: false },
+        }
+      );
+      expect(result.sandbox).toEqual({ ignoredReads: ['tmp/**'] });
+    });
+
+    it('should keep an inherited backfill under the spread token', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'nx:run-commands',
+          sandbox: { '...': true, ignoredReads: ['tmp/**'] },
+        },
+        {
+          executor: 'nx:run-commands',
+          sandbox: { backfill: false },
+        }
+      );
+      expect(result.sandbox).toEqual({
+        backfill: false,
+        ignoredReads: ['tmp/**'],
+      });
+    });
+
     it('should not be merged for incompatible targets', () => {
       const result = mergeTargetConfigurations(
         {

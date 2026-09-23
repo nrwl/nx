@@ -315,6 +315,14 @@ function validateTargetSandbox(
     );
   }
 
+  if (sandbox.backfill !== undefined && typeof sandbox.backfill !== 'boolean') {
+    errors.push(
+      `"sandbox.backfill" for target ${where} must be a boolean, but it is ${describeSandboxValue(
+        sandbox.backfill
+      )}. Use \`false\` to hash the target from its declared inputs and outputs instead of a recorded snapshot.`
+    );
+  }
+
   for (const key of ['ignoredReads', 'ignoredWrites'] as const) {
     const value = sandbox[key];
     if (value === undefined) continue;

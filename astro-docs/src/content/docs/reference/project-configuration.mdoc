@@ -632,6 +632,26 @@ Use `ignoredReads` and `ignoredWrites` to keep tracking the target while excludi
 The first path segment cannot contain `*`, so `**/generated/**` is not supported. `?`, `!`, `[`, `]` and extglobs are not supported either. Nothing reports these at authoring time, so the pattern has no effect. Anchor it to a directory instead, such as `libs/*/generated/**`.
 {% /aside %}
 
+Set `"backfill": false` to keep tracking the target but hash it from its declared inputs and outputs. By default, a recorded snapshot backfills both: the reads it observed replace the target's declared filesets, and the writes it observed extend its outputs. A target whose inputs depend on dynamic behavior or external state can't be described that way, so it should opt out.
+
+```json
+{
+  "targets": {
+    "build": {
+      "sandbox": {
+        "backfill": false
+      }
+    }
+  }
+}
+```
+
+Reads and writes are one switch. A task hashed from its recorded reads but cached from its declared outputs would describe a run that never happened.
+
+{% aside type="note" title="Not in effect yet" %}
+Nothing reads recorded snapshots yet, so `backfill` changes nothing today. Every task hashes from its declared inputs and caches its declared outputs.
+{% /aside %}
+
 A target that defines `sandbox` replaces the inherited configuration rather than adding to it. Use the [spread token](#spread-token) to merge instead, either at the object level to keep inherited keys, or inside `ignoredReads` and `ignoredWrites` to keep inherited patterns.
 
 ```json

@@ -243,14 +243,24 @@ describe('validateAndNormalizeProjectRootMap', () => {
       ]);
     });
 
+    it('should reject a non-boolean backfill', () => {
+      expect(sandboxErrors({ backfill: 'false' })).toEqual([
+        expect.stringMatching(
+          /"sandbox.backfill".*must be a boolean, but it is a string/
+        ),
+      ]);
+    });
+
     it('should report every malformed key in one error', () => {
       const [message] = sandboxErrors({
         enabled: 'false',
+        backfill: 'false',
         ignoredReads: 'tmp/**',
         ignoredWrites: ['ok/**', 7],
       });
 
       expect(message).toMatch(/"sandbox.enabled"/);
+      expect(message).toMatch(/"sandbox.backfill"/);
       expect(message).toMatch(/"sandbox.ignoredReads"/);
       expect(message).toMatch(/"sandbox.ignoredWrites\[1\]"/);
     });
@@ -259,6 +269,7 @@ describe('validateAndNormalizeProjectRootMap', () => {
       expect(
         sandboxErrors({
           enabled: false,
+          backfill: false,
           ignoredReads: ['tmp/**'],
           ignoredWrites: ['scratch/**'],
         })

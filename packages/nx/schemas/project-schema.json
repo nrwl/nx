@@ -152,6 +152,11 @@
                 "default": true,
                 "description": "Whether tasks for this target are tracked by the sandbox"
               },
+              "backfill": {
+                "type": "boolean",
+                "default": true,
+                "description": "Whether a recorded IO snapshot backfills this target's declared inputs and outputs. When false, the task hashes from its declared filesets and caches its declared outputs, even though its IO is still recorded."
+              },
               "ignoredReads": {
                 "type": "array",
                 "items": {
