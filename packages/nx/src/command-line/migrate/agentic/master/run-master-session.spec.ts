@@ -433,7 +433,7 @@ describe('runMasterSession', () => {
         })
       );
       expect(warnSpy).toHaveBeenCalledWith({
-        title: `Migrate run ${runId} is still active. Run npx nx migrate --run-migrations --agentic=claude-code --run-id=${runId} --create-commits --skip-install to continue it.`,
+        title: `Migrate run ${runId} is still active. Run npx nx migrate --run-migrations --agentic=claude-code --run-id=${runId} --create-commits --skip-install, with NX_MIGRATE_ORCHESTRATOR=true set in the environment, to continue it.`,
       });
     });
 
@@ -474,7 +474,7 @@ describe('runMasterSession', () => {
       expect(await runMasterSession(input())).toBeUndefined();
 
       expect(logSpy).toHaveBeenCalledWith({
-        title: `Leaving migrate run ${runId} as it is. Run ${continueCommand} to continue it.`,
+        title: `Leaving migrate run ${runId} as it is. Run ${continueCommand}, with NX_MIGRATE_ORCHESTRATOR=true set in the environment, to continue it.`,
       });
       expect(mockResume).not.toHaveBeenCalled();
       expect(mockSpawnMaster).not.toHaveBeenCalled();
@@ -627,7 +627,7 @@ describe('runMasterSession', () => {
     expect(await runMasterSession(input())).toBe(1);
 
     expect(warnSpy).toHaveBeenCalledWith({
-      title: `Migrate run ${runId} is still active. Run ${continueCommand} to continue it.`,
+      title: `Migrate run ${runId} is still active. Run ${continueCommand}, with NX_MIGRATE_ORCHESTRATOR=true set in the environment, to continue it.`,
     });
     expect(mockRunComplete).not.toHaveBeenCalled();
     expect(mockRunError).not.toHaveBeenCalled();
@@ -645,7 +645,7 @@ describe('runMasterSession', () => {
     ).toBe(1);
 
     expect(warnSpy).toHaveBeenCalledWith({
-      title: `Migrate run ${runId} is still active. Run npx nx migrate --run-migrations --agentic=claude-code --run-id=${runId} --create-commits --skip-install to continue it.`,
+      title: `Migrate run ${runId} is still active. Run npx nx migrate --run-migrations --agentic=claude-code --run-id=${runId} --create-commits --skip-install, with NX_MIGRATE_ORCHESTRATOR=true set in the environment, to continue it.`,
     });
   });
 
@@ -673,7 +673,7 @@ describe('runMasterSession', () => {
     expect(errorSpy).toHaveBeenCalledWith({
       title: 'Could not start Claude Code: spawn claude ENOENT',
       bodyLines: [
-        `Migrate run ${runId} is still active. Run ${continueCommand} to continue it.`,
+        `Migrate run ${runId} is still active. Run ${continueCommand}, with NX_MIGRATE_ORCHESTRATOR=true set in the environment, to continue it.`,
       ],
     });
     expect(mockRunError).toHaveBeenCalledWith({ code: 'agentic', error });
@@ -692,7 +692,7 @@ describe('runMasterSession', () => {
         "Closed the Claude Code session: a step's request could not be answered (EACCES: permission denied, rename).",
     });
     expect(warnSpy).toHaveBeenCalledWith({
-      title: `Migrate run ${runId} is still active. Run ${continueCommand} to continue it.`,
+      title: `Migrate run ${runId} is still active. Run ${continueCommand}, with NX_MIGRATE_ORCHESTRATOR=true set in the environment, to continue it.`,
     });
     expect(mockRunError).toHaveBeenCalledWith({ code: 'agentic', error });
     expect(mockRunComplete).not.toHaveBeenCalled();

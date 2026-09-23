@@ -235,6 +235,7 @@ describe('migrate() version-skew-guard wiring (temp-installation hand-off)', () 
 
   describe('runMigrations', () => {
     it('holds the run a continue names through the install, then releases it for the local nx it hands off to', async () => {
+      process.env.NX_MIGRATE_ORCHESTRATOR = 'true';
       const exitCode = await migrate(
         ROOT,
         {
@@ -262,6 +263,7 @@ describe('migrate() version-skew-guard wiring (temp-installation hand-off)', () 
     });
 
     it('releases no run for a start-fresh, which holds none', async () => {
+      process.env.NX_MIGRATE_ORCHESTRATOR = 'true';
       const exitCode = await migrate(
         ROOT,
         { runMigrations: 'migrations.json', runId: 'run-1', startFresh: true },

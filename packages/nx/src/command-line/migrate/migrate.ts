@@ -1419,9 +1419,9 @@ export async function parseMigrationsOptions(
         `Error: '--step-action' cannot be combined with '--run-migrations'.`
       );
     }
-    // A bare '--run-id' reconciles the run it names. Ungated, like every
-    // '--run-id' shape: the id has to name a run directory that exists, and
-    // only a gated init ever creates one.
+    // A bare '--run-id' reconciles the run it names. Ungated, unlike init:
+    // the id has to name a run directory that exists, and only a gated init
+    // ever creates one.
     // yargs' choices already reject bad CLI values; this guards programmatic
     // callers, where silently dropping the action would reconcile without it.
     if (options.stepAction !== undefined && !isStepAction(options.stepAction)) {
@@ -3254,7 +3254,7 @@ export async function executeMigrations(
 }
 
 function orchestratorFlagNeedsOrchestrator(flag: string): string {
-  return `'${flag}' acts on an orchestrated migrate run (one an enabled agent drives), and this invocation is not orchestrated.`;
+  return `'${flag}' acts on an orchestrated migrate run (NX_MIGRATE_ORCHESTRATOR=true with an enabled agent), and this invocation is not orchestrated.`;
 }
 
 // nx is located at spawn time, after the gated pre-install, so the child runs
@@ -3290,6 +3290,26 @@ async function runMigrations(
   commitPrefix: string,
   shouldSkipInstall = false
 ) {
+  // Both flags act on the record of an orchestrated run, so outside the
+  // orchestrator they would silently do nothing. Outside an outer agent, an
+  // explicit --agentic=false can never reach the orchestrator either. Checked
+  // before the install, which a refused command has no use for, and before
+  // the --if-exists early return below, which would turn the flag into a
+  // silent no-op.
+  const orchestratorFlag =
+    opts.startFresh === true
+      ? '--start-fresh'
+      : opts.runId !== undefined
+        ? '--run-id'
+        : undefined;
+  if (
+    orchestratorFlag !== undefined &&
+    (process.env.NX_MIGRATE_ORCHESTRATOR !== 'true' ||
+      (opts.agentic === false && !isInsideAgent()))
+  ) {
+    throw new Error(orchestratorFlagNeedsOrchestrator(orchestratorFlag));
+  }
+
   const isContinue = opts.runId !== undefined && opts.startFresh !== true;
   if (isContinue) {
     // Before the install: a concurrent start-fresh must not delete the run
@@ -3313,29 +3333,6 @@ async function runMigrations(
     }
     return handOffToLocalNx(args);
   }
-
-  // Both flags act on the record of an orchestrated run, so outside the
-  // orchestrator they would silently do nothing. Neither needs the env var:
-  // the id names a run directory only a gated init created.
-  const orchestratorFlag =
-    opts.startFresh === true
-      ? '--start-fresh'
-      : opts.runId !== undefined
-        ? '--run-id'
-        : undefined;
-  // Outside an outer agent, an explicit --agentic=false can never reach the
-  // orchestrator; checked here so an --if-exists early return below cannot
-  // turn the flag into a silent no-op.
-  if (
-    orchestratorFlag !== undefined &&
-    opts.agentic === false &&
-    !isInsideAgent()
-  ) {
-    throw new Error(orchestratorFlagNeedsOrchestrator(orchestratorFlag));
-  }
-  // The env gate applies to starting a run from a migrations file alone.
-  const orchestrated =
-    process.env.NX_MIGRATE_ORCHESTRATOR === 'true' || opts.runId !== undefined;
 
   let migrationsJson: { migrations?: PlannedMigration[]; [k: string]: unknown };
   if (opts.runId !== undefined && opts.startFresh !== true) {
@@ -3386,7 +3383,7 @@ async function runMigrations(
   // the classic loop: init starts a fresh run or reports an already-active
   // one; `--run-id` continues that run. Bare `--run-id` reconciles are
   // dispatched separately and never reach here.
-  if (orchestrated && isInsideAgent()) {
+  if (process.env.NX_MIGRATE_ORCHESTRATOR === 'true' && isInsideAgent()) {
     const { runOrchestratorInit, runOrchestratorResume } =
       require('./run') as typeof import('./run');
     // Orchestrated runs are agent-driven, so commits default on exactly as they
@@ -3498,11 +3495,14 @@ async function runMigrations(
     !canPrompt(opts.interactive) ||
     confirmMigrationCommitsOnDefaultBranch(root, 'running migrations');
 
-  // Dark: with the env var set or a run named, the agent drives the whole run
-  // through the orchestrator from one session instead of being spawned per
-  // step. Not under WASM, where the broker has no native lock to detect a
-  // dead parent.
-  if (agentic.kind === 'enabled' && orchestrated && !IS_WASM) {
+  // Dark: with the env var set, the agent drives the whole run through the
+  // orchestrator from one session instead of being spawned per step. Not
+  // under WASM, where the broker has no native lock to detect a dead parent.
+  if (
+    agentic.kind === 'enabled' &&
+    process.env.NX_MIGRATE_ORCHESTRATOR === 'true' &&
+    !IS_WASM
+  ) {
     const init = orchestratorInitInput(effectiveCreateCommits);
     const { runMasterSession } =
       require('./agentic/master/run-master-session') as typeof import('./agentic/master/run-master-session');
