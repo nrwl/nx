@@ -57,13 +57,12 @@ rendering is not covered.
 | `@nx/react/module-federation` and `@nx/rspack/module-federation` re-exports           | Same as the `@nx/module-federation` entry they re-export            |
 | `sharePackages`, `shareWorkspaceLibraries`, `mapRemotes` from `@nx/module-federation` | Not supported. Write the resolved values out, Step 4                |
 
-Two of those coordinated processes rather than built code, and nothing upstream replaces them.
-`NxModuleFederationDevServerPlugin` is the Rspack form of the dev-server executor: it started
-each remote alongside the host, so one `nx serve` brought the whole system up.
-`@nx/react:module-federation-static-server` served every remote you were not actively developing
-from a single port, so a ten-remote workspace ran one static server instead of ten. After this
-migration you start the processes you want yourself, which is why Step 5 moves remotes to a
-runtime manifest.
+The two unsupported entries coordinated processes rather than built code, and this migration
+skips them. `NxModuleFederationDevServerPlugin` is the Rspack form of the dev-server executor,
+which started each remote alongside the host so one `nx serve` brought the whole system up.
+`@nx/react:module-federation-static-server` served every remote you were not developing from a
+single port. You start the processes you want yourself now, which is why Step 5 moves remotes to
+a runtime manifest.
 
 Keep `NxAppRspackPlugin`, `NxAppWebpackPlugin`, `NxReactRspackPlugin`, and
 `NxReactWebpackPlugin`. They are general bundler plugins and are not part of this removal.
@@ -98,7 +97,13 @@ Search for every consumer before you edit one:
 grep -rE "@nx/module-federation|@nx/react/module-federation|@nx/rspack/module-federation|@nx/react/mf|module-federation-dev-server|module-federation-static-server|module-federation-ssr-dev-server|NX_MF_DEV_REMOTES" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.json" --exclude-dir=node_modules --exclude-dir=.nx --exclude-dir=dist .
 ```
 
-On Windows, run the same pattern through your editor's project-wide search or `Select-String`.
+On Windows:
+
+```powershell
+Get-ChildItem -Recurse -File -Include *.ts,*.tsx,*.js,*.json |
+  Where-Object FullName -notmatch 'node_modules|dist|\.nx' |
+  Select-String -Pattern '@nx/module-federation|@nx/react/module-federation|@nx/rspack/module-federation|@nx/react/mf|module-federation-dev-server|module-federation-static-server|module-federation-ssr-dev-server|NX_MF_DEV_REMOTES'
+```
 
 Record, per app, whether it exposes modules, consumes them, or does both, along with its
 production remote URLs, custom upstream options, and any runtime plugins.
