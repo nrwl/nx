@@ -95,7 +95,7 @@ npm add --save-prod @module-federation/enhanced
 
 Nx accepted a list of project names and resolved each one to a URL from the project graph.
 The official plugin takes explicit entries: each remote's `serve` port, which the baseline
-`mf-stats.json` also lists under `remotes`. Angular containers are ES modules, so the URL has no
+`mf-stats.json` also lists as `remotes[].federationContainerName`. Angular containers are ES modules, so the URL has no
 `name@` prefix. A host without `exposes` emits no `remoteEntry` file, so `filename` is inert
 there.
 
@@ -206,7 +206,10 @@ place, and on webpack `webpack.config.ts` too. On Rspack `webpack.config.ts` sta
 
 `@nx/angular:webpack-browser` passes the Angular build's webpack config to the function your
 `customWebpackConfig` exports. `withModuleFederation` was that function. Replace it with one
-that adds the plugin and the settings the wrapper used to set:
+that adds the plugin and the settings the wrapper used to set. The samples are CommonJS `.js`
+files, which the builder loads without a TypeScript loader; a `.ts` file keeps working. The
+wrapper also exported `FEDERATION_WEBPACK_PATH`, which the plugin now derives from the compiler
+itself:
 
 ```js
 // apps/shell/webpack.config.js
@@ -252,13 +255,14 @@ merged file:
 // apps/shell/webpack.config.ts
 import { ModuleFederationPlugin } from '@module-federation/enhanced/rspack';
 import { join } from 'node:path';
-import mf from './module-federation.config.js'; // CommonJS; rspack-cli loads this file via jiti
+import mf from './module-federation.config.js'; // CommonJS; the default import works under rspack-cli's TS loading
 
 export default {
   output: { uniqueName: mf.name, publicPath: 'auto', module: true },
   resolve: { modules: ['node_modules', join(__dirname, '../..')] },
   optimization: {
     runtimeChunk: false,
+    // keeps the wrapper's chunk layout; without it one chunk is renamed common.<hash>.js
     splitChunks: { cacheGroups: { default: false, common: false } },
   },
   plugins: [new ModuleFederationPlugin(mf)],
@@ -275,8 +279,9 @@ On webpack, add the `resolve.alias` entries in every federated app. The Angular 
 `tsconfig` paths for the app's own code, but an exposed module is resolved by the federation
 plugin outside that path, so on a clean build a remote whose exposed routes import a workspace
 library fails with `Can't resolve '@myorg/state'` without the alias the Nx wrapper used to add.
-A warm `.angular/cache` can hide that failure until the next clean build. Alias libraries
-only, not the `remoteX/Routes` path entries, or the remotes get bundled into the host. On Rspack,
+A warm `.angular/cache` can hide that failure until the next clean build. The alias is the whole
+replacement for the wrapper's module-replacement plugin. Alias libraries only, not the
+`remoteX/Routes` path entries, or the remotes get bundled into the host. On Rspack,
 `createConfig` reads `tsconfig` paths itself, so no alias is needed.
 
 ### Step 5: convert runtime-loaded remotes
@@ -325,8 +330,9 @@ export const appRoutes: Route[] = [
 `--devRemotes` picking which ones ran live. Nothing in the official plugin starts remotes. Move the
 host's `serve` to `@nx/angular:dev-server`, swapping only the executor: `port`, `publicHost`, and
 the per-configuration `buildTarget` options stay. Keep each remote's
-`dependsOn: ['shell:serve']`, so `nx serve remoteA` still brings the host up. Every remote's `serve`
-target needs `headers: { 'Access-Control-Allow-Origin': '*' }`, which recent generators already
+`dependsOn: ['shell:serve']`, so `nx serve remoteA` still brings the host up; a runtime-loaded
+host is served the same way and its remotes' `dependsOn` still names the host the generator
+wrote. Every remote's `serve` target needs `headers: { 'Access-Control-Allow-Origin': '*' }`, which recent generators already
 write: the old executor started remotes with
 `cors: true`, the Angular dev server sets nothing, and the host loads `remoteEntry.mjs` as a
 cross-origin module. To run several apps live, start them in one Nx
@@ -351,7 +357,7 @@ depends on it (`watch: false` is required when there is no `buildTarget`):
       "continuous": true,
       "dependsOn": ["build"],
       "options": {
-        "staticFilePath": "dist/apps/remoteB",
+        "staticFilePath": "dist/apps/remoteB", // dist/apps/remoteB/browser on Rspack
         "port": 4202,
         "spa": true,
         "watch": false,
@@ -361,8 +367,9 @@ depends on it (`watch: false` is required when there is no `buildTarget`):
 }
 ```
 
-Use `staticFilePath` with `dependsOn` and not the generated `buildTarget` form, and drop the
-`configurations` block that only carried a per-configuration `buildTarget`. With
+Use `staticFilePath` with `dependsOn` and not the generated `buildTarget` form, replacing the
+whole target: the generated `configurations` block and `defaultConfiguration` only carried a
+per-configuration `buildTarget`. With
 `buildTarget` the file server spawns a nested `nx run <app>:build`, and under `nx run-many` or an
 e2e target that already scheduled those builds Nx aborts with
 `Recursive task invocation detected`. The generated Playwright project starts the host with
@@ -393,7 +400,9 @@ the baseline:
 - A shared mutable value written in the host reads back in each remote after a client-side route
   change.
 - Editing a remote's component updates the host without a page navigation.
-- Production and development configurations both build with `--skipNxCache`. On Rspack,
+- Production and development configurations both build with `--skipNxCache` after you delete
+  `dist/apps/<app>`, since hashed chunks from the wrapper build linger next to the new output. On
+  Rspack,
   `createConfig` picks the configuration from `NGRS_CONFIG`, so run the development build as
   `NGRS_CONFIG=development nx build <app> --configuration=development`. Each app's production
   `mf-stats.json` lists the same container name, remotes, exposes, and `shared` entries as the
@@ -452,8 +461,8 @@ nx g @angular-architects/native-federation:init --project=remoteA --port=4201 --
 It creates `federation.config.mjs`, `tsconfig.federation.json`, a new `bootstrap.ts` and
 `main.ts`, moves the app onto an `esbuild` target running `@angular/build:application`, wraps
 `build` and `serve` in `@angular-architects/native-federation:build`, and adds `es-module-shims`
-to the polyfills. It also adds `es-module-shims` and `@softarc/native-federation-orchestrator`
-to `package.json` and runs an install. The first build rewrites the `files` list in
+to the polyfills. It also adds `es-module-shims` under `dependencies` and
+`@softarc/native-federation-orchestrator` under `devDependencies`, and runs an install. The first build rewrites the `files` list in
 `tsconfig.federation.json`, replacing `src/main.ts` with the shared mappings and exposed files,
 so commit after that build. Delete `dist/apps/<app>` before
 that build, since the new build writes under `browser/` and leaves the old webpack output next
@@ -467,14 +476,14 @@ leaves this cleanup:
 - Delete `module-federation.config.ts`, `webpack.config.ts`, and `webpack.prod.config.ts`, and
   remove the `customWebpackConfig` it copied onto the `esbuild` target and its `production`
   configuration.
-- Replace each remote's placeholder `exposes: { './Component': './update-this.ts' }` with the
+- Replace the `'./Component'` entry the generator writes under each remote's `exposes` with the
   route file, as a path from the workspace root:
   `exposes: { './Routes': './apps/remoteA/src/app/remote-entry/entry.routes.ts' }`.
 - Share workspace libraries reached through `tsconfig` paths with
   `sharedMappings: ['@myorg/state']` in every app's `federation.config.mjs`. `shareAll` covers
   only `package.json` dependencies.
-- Prune the host's remote map. The generator lists every project in the workspace under a
-  camel-cased key, so it names apps that are not remotes. With `--type=host` the map is the first
+- Prune the host's remote map. The generator lists every application with `build` and `serve`
+  targets under a camel-cased key, so it names apps that are not remotes. With `--type=host` the map is the first
   argument of `initFederation` in `main.ts`; with `--type=dynamic-host` it is
   `public/federation.manifest.json`. Keep the `hostRemoteEntry` option the generator writes next
   to it.
@@ -482,9 +491,13 @@ leaves this cleanup:
   drop `publicHost`, which that builder does not accept; the generator already repointed its
   `buildTarget` at the `esbuild` target. Point `extract-i18n` at `<app>:esbuild` as well, on
   `@angular/build:extract-i18n`. The generator wraps whatever `serve` was, which on a Module
-  Federation host is the deprecated `module-federation-dev-server`. Mark the wrapped `serve` `continuous: true` and give
-  the wrapped `build` `cache: true` with `outputs` (`{workspaceRoot}/dist/apps/<app>`) so Nx
-  caches it.
+  Federation host is the deprecated `module-federation-dev-server`. Mark the wrapped `serve`
+  `continuous: true`; it has no configurations, so a production-like local run is `serve-static`.
+  Give the wrapped `build` `cache: true` with `outputs` (`{workspaceRoot}/dist/apps/<app>`) so Nx
+  caches it; the first build's rewrite of `tsconfig.federation.json` is its own input, so the
+  cache settles from the second build.
+- Nothing to add for CORS: `@nx/web:file-server` defaults `cors: true` and the Native Federation
+  dev server sets the header itself.
 - The generator renames the whole old `serve` target to `serve-original`, including a remote's
   `dependsOn: ['shell:serve']`. Move that `dependsOn` back onto the new `serve`.
 - Replace each app's whole `serve-static` target, `defaultConfiguration` included, with the one

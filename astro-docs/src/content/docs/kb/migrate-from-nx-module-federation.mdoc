@@ -76,7 +76,8 @@ it.
 Both of those failures build green and show nothing in the output, so record the current behavior
 before you change anything:
 
-- Production builds for every host and remote, with the output file list per app.
+- Production builds for every host and remote, with the output file list per app, and each
+  app's `serve` port, which the development remote URLs in Step 3 use.
 - Each host rendered in a browser with every remote visible and its React hooks working.
 - A shared mutable value changed in the host and read back in each remote.
 - The requests for `remoteEntry.js` and remote chunks, including any deployment path prefix.
@@ -112,7 +113,7 @@ npm add --save-prod @module-federation/enhanced
 ```
 
 Step 7 runs the bundler CLI directly. A webpack workspace that only ever built through the Nx
-executor has no `webpack-cli`, so add it now:
+executor has no `webpack-cli`, even though `node_modules/.bin/webpack` exists, so add it now:
 
 ```shell
 npm add -D webpack-cli
@@ -220,11 +221,14 @@ app folder crashes.
 
 The options on your old `build` target become `NxAppWebpackPlugin` or `NxAppRspackPlugin`
 options. The plugin also merges whatever options the running target still carries in
-`project.json`, and those win, so leave none of the old build options there. Paths such as `main`, `index`, `tsConfig`, `assets`, and `styles` resolve from the
-project root, so `apps/webpack-host/src/main.ts` becomes `./src/main.ts`, while
-`fileReplacements` paths resolve from the workspace root. Values that differed per named
-configuration become `process.env.NODE_ENV === 'production'` ternaries, which Step 7 sets per
-configuration.
+`project.json`, and those win, so leave none of the old build options there. Paths such as
+`main`, `index`, `tsConfig`, `assets`, and `styles` resolve from the project root, so
+`apps/webpack-host/src/main.ts` becomes `./src/main.ts`, while `fileReplacements` paths resolve
+from the workspace root; drop a `fileReplacements` pair whose files do not exist. Values that
+differed per named configuration become `process.env.NODE_ENV === 'production'` ternaries, which
+Step 7 sets per configuration. The generator's per-configuration `optimization`,
+`outputHashing`, `sourceMap`, `namedChunks`, and `vendorChunk` values match what the plugin
+derives from `NODE_ENV` and can go; `extractLicenses` has no such default, so keep its ternary.
 
 {% tabs syncKey="mf-bundler" %}
 {% tabitem label="webpack" %}
@@ -464,7 +468,8 @@ the keys it lists. For npm packages Nx emitted `singleton: true`, `strictVersion
 `react/jsx-runtime` are separate keys. A key such as `pkg` does not cover `pkg/subpath` requests,
 so list the subpaths the stats show. Where the baseline emitted an entry your `shared` callback or
 `additionalShared` shaped, carry those values; an `additionalShared` entry the stats do not list
-was never used and can go. The stats list only what the app imported, so a package you start
+was never used and can go: the plugin emits a `shared` entry only for a package the app
+imports. The stats list only what the app imported, so a package you start
 importing later stops being shared until you add it. One field the stats rewrite: a callback
 that set `requiredVersion: false` shows up as `requiredVersion: '^<version>'`, so for a workspace
 library keep the `false` and `version` your callback wrote.
@@ -616,7 +621,8 @@ the warning is the whole cost.
 
 Remove `targetDefaults` entries in `nx.json` keyed on `@nx/webpack:webpack` or
 `@nx/rspack:rspack`. The `NX_MF_DEV_REMOTES` input they carried is dead, and the `build`
-inputs move to the generic `build` default.
+inputs move to the generic `build` default as
+`"inputs": ["production", "^production"]`.
 
 A static host imports `<remote>/Module`, which gives the project graph a host-to-remote edge
 already. A host that resolves remotes from a runtime map has no such import and no edge, so add
