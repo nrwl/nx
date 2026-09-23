@@ -60,6 +60,6 @@ RUN mise trust /work/mise.toml \
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml /work/
 COPY patches /work/patches
 RUN corepack prepare --activate \
-    && pnpm fetch --lockfile-dir /work \
+    && pnpm fetch --dir /work \
     && rm -rf /work/node_modules \
     && pnpm store path
