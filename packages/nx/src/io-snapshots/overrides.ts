@@ -88,7 +88,8 @@ export function ioSnapshotEligibilityOptions(
 /**
  * Reports which tasks in `taskGraph` hash from `snapshots` and why the rest
  * do not, with the same eligibility walk the planner uses, without building a
- * planner (no project-graph transfer). Feeds the `--verbose` run summary.
+ * planner (no project-graph transfer). Never fetches, never throws. Feeds
+ * the `--verbose` run summary.
  *
  * The Nx Cloud client bundle is meant to probe this module path for the
  * export's presence to decide whether core handles snapshots; keep both stable.
