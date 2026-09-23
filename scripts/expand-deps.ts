@@ -166,11 +166,7 @@ function main() {
   // Parse lockfile
   console.log('Parsing pnpm-lock.yaml...');
   const lockfileContent = readFileSync(lockfilePath, 'utf-8');
-  const documents = yaml.parseAllDocuments(lockfileContent);
-  for (const document of documents) {
-    if (document.errors.length) throw document.errors[0];
-  }
-  const lockfile: Lockfile = documents.at(-1).toJS();
+  const lockfile: Lockfile = yaml.parse(lockfileContent);
 
   // Find the importer entry for this package
   const importerKey = `packages/${project}`;

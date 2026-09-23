@@ -27,7 +27,7 @@ env:
   NX_RUN_GROUP: ${{ github.run_id }}-${{ github.run_attempt }}
   CYPRESS_INSTALL_BINARY: 0
   NODE_VERSION: 26.7.0
-  PNPM_VERSION: 12.4.2 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
+  PNPM_VERSION: 11.22.0 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
   NX_GRADLE_PROJECT_GRAPH_TIMEOUT: 600
 
 jobs:
@@ -465,13 +465,13 @@ jobs:
           operating_system: freebsd
           version: '14.0'
           architecture: x86-64
-          environment_variables: DEBUG RUSTUP_IO_THREADS CARGO_INCREMENTAL CI PLAYWRIGHT_BROWSERS_PATH NODE_VERSION NX_GRADLE_DISABLE NX_DOTNET_DISABLE NODE_OPTIONS PNPM_VERSION
+          environment_variables: DEBUG RUSTUP_IO_THREADS CARGO_INCREMENTAL CI PLAYWRIGHT_BROWSERS_PATH NODE_VERSION NX_GRADLE_DISABLE NX_DOTNET_DISABLE NODE_OPTIONS
           shell: bash
           run: |
             env
             whoami
             sudo pkg install -y -f node libnghttp2 www/npm git ca_root_nss
-            sudo npm install --location=global --ignore-scripts pnpm@${PNPM_VERSION}
+            sudo npm install --location=global --ignore-scripts pnpm@11.22.0
             curl https://sh.rustup.rs -sSf --output rustup.sh
             sh rustup.sh -y --profile minimal --default-toolchain stable
             source "$HOME/.cargo/env"
@@ -888,3 +888,4 @@ jobs:
               issue_number: ${{ github.event.inputs.pr }},
               body: message
             });
+
