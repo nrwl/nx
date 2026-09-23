@@ -131,8 +131,10 @@ Two values that Nx derived are easy to lose here:
   Use the normalized form for `name`.
 - The remote import alias is the original project name.
   `webpackRemoteA/Module` keeps working because the key in `remotes` is the alias, not the
-  container name. Drop any `library` entry from the Nx config. Nx never forwarded it, and the
-  `{ type: 'var', name: '<project-name>' }` the generator wrote publishes an un-normalized global.
+  container name. Drop any `library` entry from the Nx config. Nx never passed it to the plugin,
+  and the `{ type: 'var', name: '<project-name>' }` the generator wrote publishes an
+  un-normalized global. On Rspack a `var` or `window` type was the switch for
+  `remoteType: 'script'` and `output.scriptType: 'text/javascript'`, so carry those two by hand.
 
 Nx also defaulted `filename` to `remoteEntry.js` and, for webpack, `remoteType` to `script`,
 and it passed through the `{ dts: false }` override from your old `withModuleFederation` call.
@@ -562,6 +564,8 @@ it imports the shared `react`, so leave it out or share it alongside `react/jsx-
 nx run-many -t serve -p webpack-host webpackRemoteA webpackRemoteB --parallel=3
 ```
 
+Name the remotes of remotes from Step 3 in that list too; the host's `serve` starts nothing.
+
 To work on one remote while the others stay on their last build, give every app a
 `serve-static` target that serves its build output and depends on the build:
 
@@ -601,6 +605,11 @@ Give a remote's `serve-static` the port its production URL from Step 3 names, so
 and a static one can run at the same time. Hosts, remotes without a production override, and
 remotes loaded from a runtime manifest keep their existing port for both targets.
 
+Point an e2e project's web server command at `nx run-many -t serve-static -p <host> <remotes>`,
+with its URL on the host's `serve-static` port. `@nx/playwright` then warns that it could not
+infer an Nx task from that command on every `nx` call; Playwright's own `webServer` still starts
+the servers, so the warning is the whole cost.
+
 Remove `targetDefaults` entries in `nx.json` keyed on `@nx/webpack:webpack` or
 `@nx/rspack:rspack`. The `NX_MF_DEV_REMOTES` input they carried is dead, and the `build`
 inputs move to the generic `build` default.
@@ -610,7 +619,8 @@ already. A host that resolves remotes from a runtime map has no such import and 
 `implicitDependencies` on that host so the remotes build before it and `nx affected` treats a
 remote change as affecting the host.
 Give each app its own output directory, and make sure its build inputs cover the workspace library
-sources, the federation config, and any environment variable that feeds a remote URL.
+sources, the federation config, and any environment variable that feeds a remote URL. `NODE_ENV`
+set per configuration needs no input, since the configuration name is part of the task hash.
 
 ## Step 8: validate the result
 
@@ -620,8 +630,8 @@ recorded in the baseline passes again, plus these:
 - Production and development configurations both build with `--skipNxCache`.
 - `tsc -p apps/<app>/tsconfig.app.json --noEmit` passes for each app. The app plugin type-checks
   asynchronously, so a build exits 0 on type errors.
-- Each app's `mf-stats.json` lists the same container name, remotes, exposes, and `shared`
-  entries as the baseline.
+- Each app's production `mf-stats.json` lists the same container name, remotes, exposes, and
+  `shared` entries as the baseline.
 - The e2e suite passes on the replacement web server from Step 7.
 
 Record baseline failures separately rather than weakening an assertion to get a pass.
