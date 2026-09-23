@@ -10,10 +10,11 @@
 // not parsing it a second time is pinned in the client's own spec.
 import type { Socket } from 'net';
 
-const fetched = vi.hoisted(() => ({ fetchIoSnapshotsForRun: vi.fn() }));
-vi.mock('../../io-snapshots/fetch', () => ({
-  fetchIoSnapshotsForRun: (...args: unknown[]) =>
-    fetched.fetchIoSnapshotsForRun(...args),
+const fetched = vi.hoisted(() => ({ loadIoSnapshotsForRun: vi.fn() }));
+vi.mock('../../io-snapshots/store', async (importOriginal) => ({
+  ...((await importOriginal()) as object),
+  loadIoSnapshotsForRun: (...args: unknown[]) =>
+    fetched.loadIoSnapshotsForRun(...args),
 }));
 // Partial: importing the server pulls in plenty that wants the real binding.
 vi.mock('../../native', async (importOriginal) => ({
@@ -49,7 +50,7 @@ function collectingSocket() {
 describe('the resolve message across the client/daemon seam', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    fetched.fetchIoSnapshotsForRun.mockResolvedValue({
+    fetched.loadIoSnapshotsForRun.mockResolvedValue({
       status: 'fetched',
       snapshots: { commit: 'head', resolution: { digest: 'd' } },
     });
@@ -76,7 +77,7 @@ describe('the resolve message across the client/daemon seam', () => {
     // `handleClientEnv` deletes every key a reflected env omits.
     expect(process.env.NX_SEAM_SENTINEL).toBe('kept');
     expect(Object.keys(process.env).length).toBe(before);
-    expect(fetched.fetchIoSnapshotsForRun).toHaveBeenCalledWith(
+    expect(fetched.loadIoSnapshotsForRun).toHaveBeenCalledWith(
       {},
       { accessToken: 't' },
       {

@@ -1,6 +1,6 @@
 import { readNxJson } from '../../config/configuration';
 import type { IoSnapshotCloudOptions } from '../../io-snapshots/config';
-import { fetchIoSnapshotsForRun } from '../../io-snapshots/fetch';
+import { loadIoSnapshotsForRun } from '../../io-snapshots/store';
 import type {
   HandleResolveIoSnapshotsMessage,
   ResolvedIoSnapshots,
@@ -17,7 +17,7 @@ export async function handleResolveIoSnapshots(
 ) {
   // An absent env (an older client) reads as not opted in, so snapshots stay
   // off rather than the daemon deciding from its own environment.
-  const resolved = await fetchIoSnapshotsForRun(
+  const resolved = await loadIoSnapshotsForRun(
     readNxJson(),
     (payload.runnerOptions ?? {}) as IoSnapshotCloudOptions,
     payload.ioSnapshotEnv ?? {}

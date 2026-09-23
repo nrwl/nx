@@ -1,0 +1,132 @@
+import { loadIoSnapshotsForRun } from './store';
+
+const store = vi.hoisted(() => ({
+  import: vi.fn(),
+  get: vi.fn(),
+}));
+const cloud = vi.hoisted(() => ({ fetchIoSnapshots: vi.fn() }));
+
+vi.mock('../native', () => ({
+  IoSnapshotStore: vi.fn(function () {
+    return store;
+  }),
+}));
+vi.mock('./fetch', () => ({ fetchIoSnapshots: cloud.fetchIoSnapshots }));
+vi.mock('../utils/git-utils', () => ({ getLatestCommitSha: () => 'head' }));
+vi.mock('../utils/db-connection', () => ({ getDbConnection: () => 'db' }));
+vi.mock('../utils/nx-cloud-utils', () => ({
+  isNxCloudDisabled: () => false,
+}));
+vi.mock('../utils/output', () => ({ output: { warn: vi.fn() } }));
+vi.mock('../utils/logger', () => ({ logger: { verbose: vi.fn() } }));
+
+describe('loadIoSnapshotsForRun', () => {
+  const nxJson = {} as any;
+  /** A run that opted in, stated explicitly so the machine's env cannot. */
+  const optedIn = (overrides: Record<string, unknown> = {}) => ({
+    NX_IO_SNAPSHOTS: 'true',
+    ...overrides,
+  });
+  /** A stored set for HEAD. */
+  const stored = () => ({
+    commit: 'head',
+    resolution: {
+      fetchedAt: 0,
+      requestedCommit: 'head',
+      tasks: 1,
+      sourceCommits: [],
+      digest: 'd',
+    },
+  });
+  const coded = (code: string, message = code) =>
+    Object.assign(new Error(message), { code });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    store.get.mockReset();
+    store.import.mockReset();
+    store.get.mockReturnValue(null);
+    cloud.fetchIoSnapshots.mockResolvedValue({
+      commits: ['head'],
+      snapshots: {},
+    });
+  });
+
+  // Connecting the workspace is not the opt-in: a run that says nothing
+  // never reaches Nx Cloud.
+  it('does nothing for a run that did not opt in', async () => {
+    for (const NX_IO_SNAPSHOTS of [undefined, 'false']) {
+      expect(
+        await loadIoSnapshotsForRun(nxJson, {}, optedIn({ NX_IO_SNAPSHOTS }))
+      ).toBeNull();
+    }
+    expect(cloud.fetchIoSnapshots).not.toHaveBeenCalled();
+  });
+
+  it('serves a stored set under an hour old without asking Nx Cloud', async () => {
+    const set = stored();
+    store.get.mockReturnValue(set);
+    expect(await loadIoSnapshotsForRun(nxJson, {}, optedIn())).toEqual({
+      status: 'cached',
+      snapshots: set,
+    });
+    expect(store.get).toHaveBeenCalledWith('head', 60 * 60 * 1000);
+    expect(cloud.fetchIoSnapshots).not.toHaveBeenCalled();
+  });
+
+  it('imports what Nx Cloud read when no stored set is young enough', async () => {
+    const snapshots = {
+      'web:build': { commit: 'parent', inputs: ['apps/web/**'], outputs: [] },
+    };
+    cloud.fetchIoSnapshots.mockResolvedValue({
+      commits: ['head', 'parent'],
+      snapshots,
+    });
+    const set = stored();
+    store.import.mockReturnValue(set);
+    const result = await loadIoSnapshotsForRun(
+      nxJson,
+      { accessToken: 't' },
+      optedIn()
+    );
+    expect(cloud.fetchIoSnapshots).toHaveBeenCalledWith({ accessToken: 't' });
+    expect(store.import).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requestedCommit: 'head',
+        commits: ['head', 'parent'],
+        snapshotsJson: JSON.stringify(snapshots),
+      })
+    );
+    expect(result).toEqual({ status: 'fetched', snapshots: set });
+  });
+
+  it('hashes natively when the read fails, with the reason its code gives', async () => {
+    for (const [code, reason] of [
+      ['ENOTFOUND', 'offline'],
+      ['UNAUTHORIZED', 'unauthorized'],
+      ['UNSUPPORTED_CLIENT', 'unsupported-client'],
+      ['NO_CLOUD_CLIENT', 'no-cloud-client'],
+    ]) {
+      cloud.fetchIoSnapshots.mockRejectedValueOnce(coded(code, 'x'));
+      expect(await loadIoSnapshotsForRun(nxJson, {}, optedIn())).toEqual({
+        status: 'skipped',
+        reason,
+        message: 'x',
+      });
+    }
+    cloud.fetchIoSnapshots.mockRejectedValueOnce(new Error('no code'));
+    expect(await loadIoSnapshotsForRun(nxJson, {}, optedIn())).toMatchObject({
+      reason: 'fetch-failed',
+    });
+  });
+
+  it('skips when the store cannot write what Nx Cloud read', async () => {
+    store.import.mockImplementation(() => {
+      throw coded('WRITE_FAILED', 'disk full');
+    });
+    expect(await loadIoSnapshotsForRun(nxJson, {}, optedIn())).toMatchObject({
+      status: 'skipped',
+      reason: 'write-failed',
+    });
+  });
+});

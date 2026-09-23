@@ -1,8 +1,8 @@
-const fetchIoSnapshotsForRun = vi.fn();
+const loadIoSnapshotsForRun = vi.fn();
 // Lazy so the hoisted factory does not touch the const before it exists.
-vi.mock('../../io-snapshots/fetch', () => ({
-  fetchIoSnapshotsForRun: (...args: unknown[]) =>
-    fetchIoSnapshotsForRun(...args),
+vi.mock('../../io-snapshots/store', async (importOriginal) => ({
+  ...((await importOriginal()) as object),
+  loadIoSnapshotsForRun: (...args: unknown[]) => loadIoSnapshotsForRun(...args),
 }));
 vi.mock('../../config/configuration', () => ({ readNxJson: () => ({ a: 1 }) }));
 const getStored = vi.fn();
@@ -30,12 +30,12 @@ describe('handleResolveIoSnapshots', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('fetches with the run env and reports what it stored', async () => {
-    fetchIoSnapshotsForRun.mockResolvedValue({
+    loadIoSnapshotsForRun.mockResolvedValue({
       status: 'fetched',
       snapshots: set,
     });
     const { response } = await handleResolveIoSnapshots(payload);
-    expect(fetchIoSnapshotsForRun).toHaveBeenCalledWith(
+    expect(loadIoSnapshotsForRun).toHaveBeenCalledWith(
       { a: 1 },
       { accessToken: 't' },
       { NX_IO_SNAPSHOTS: 'true' }
@@ -48,7 +48,7 @@ describe('handleResolveIoSnapshots', () => {
   it.each(['json', 'v8'] as const)(
     'survives the %s socket round trip as an object',
     async (mode) => {
-      fetchIoSnapshotsForRun.mockResolvedValue({
+      loadIoSnapshotsForRun.mockResolvedValue({
         status: 'fetched',
         snapshots: set,
       });
@@ -61,7 +61,7 @@ describe('handleResolveIoSnapshots', () => {
   );
 
   it('hands hashing the set it just fetched instead of reading it again', async () => {
-    fetchIoSnapshotsForRun.mockResolvedValue({
+    loadIoSnapshotsForRun.mockResolvedValue({
       status: 'fetched',
       snapshots: set,
     });
@@ -72,7 +72,7 @@ describe('handleResolveIoSnapshots', () => {
 
   it('passes a skip through as it came', async () => {
     const skipped = { status: 'skipped', reason: 'offline', message: 'x' };
-    fetchIoSnapshotsForRun.mockResolvedValue(skipped);
+    loadIoSnapshotsForRun.mockResolvedValue(skipped);
     const { response } = await handleResolveIoSnapshots(payload);
     expect(response).toEqual(skipped);
   });
@@ -86,7 +86,7 @@ describe('handleResolveIoSnapshots', () => {
   it.each(['json', 'v8'] as const)(
     'reports nothing stored when snapshots are off for the workspace (%s)',
     async (mode) => {
-      fetchIoSnapshotsForRun.mockResolvedValue(null);
+      loadIoSnapshotsForRun.mockResolvedValue(null);
       const { response } = await handleResolveIoSnapshots(payload);
       expect(response).toBeNull();
       expect(parseMessage(serializeWithFallback(response, mode))).toBeNull();

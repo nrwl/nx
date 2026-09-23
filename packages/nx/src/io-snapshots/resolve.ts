@@ -6,12 +6,12 @@ import {
   type IoSnapshotCloudOptions,
 } from './config';
 import {
-  fetchIoSnapshotsForRun,
+  getIoSnapshotStore,
+  loadIoSnapshotsForRun,
   reportIoSnapshotResolution,
   skippedIoSnapshots,
   type IoSnapshotOutcome,
-} from './fetch';
-import { getIoSnapshotStore } from './store';
+} from './store';
 
 /**
  * This run's snapshot set. With the daemon, the daemon fetches it and writes
@@ -24,7 +24,7 @@ export async function resolveIoSnapshotsForRun(
   runnerOptions: IoSnapshotCloudOptions
 ): Promise<IoSnapshotOutcome | null> {
   if (!daemonClient.enabled()) {
-    return fetchIoSnapshotsForRun(nxJson, runnerOptions);
+    return loadIoSnapshotsForRun(nxJson, runnerOptions);
   }
   // Re-checked in the daemon, which reads nx.json itself; asking here keeps a
   // disabled workspace from paying for a round trip.
@@ -39,7 +39,7 @@ export async function resolveIoSnapshotsForRun(
     );
   } catch {
     // A daemon that cannot answer must not cost the run its snapshots.
-    return fetchIoSnapshotsForRun(nxJson, runnerOptions);
+    return loadIoSnapshotsForRun(nxJson, runnerOptions);
   }
   if (!resolved) {
     return null;

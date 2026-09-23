@@ -1,5 +1,5 @@
 import type { IoSnapshotDiagnostic, IoSnapshotReport } from '../native';
-import type { IoSnapshotOutcome } from './fetch';
+import type { IoSnapshotOutcome } from './store';
 
 export interface IoSnapshotSummary {
   /** One line for the default output, e.g. "I/O snapshots: 12 tasks hashed from snapshot, 3 fell back". */

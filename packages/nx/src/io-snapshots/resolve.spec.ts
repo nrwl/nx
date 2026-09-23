@@ -6,23 +6,18 @@ const daemon = vi.hoisted(() => ({
 }));
 const store = vi.hoisted(() => ({ get: vi.fn() }));
 const fetched = vi.hoisted(() => ({
-  fetchIoSnapshotsForRun: vi.fn(),
+  loadIoSnapshotsForRun: vi.fn(),
   isIoSnapshotFetchEnabled: vi.fn(() => true),
 }));
 
 vi.mock('../daemon/client/client', () => ({ daemonClient: daemon }));
-vi.mock('../native', () => ({
-  IoSnapshotStore: vi.fn(function () {
-    return store;
-  }),
-}));
-vi.mock('../utils/db-connection', () => ({ getDbConnection: () => 'db' }));
 vi.mock('./config', () => ({
   isIoSnapshotFetchEnabled: fetched.isIoSnapshotFetchEnabled,
   ioSnapshotEnv: () => ({ NX_IO_SNAPSHOTS: 'true' }),
 }));
-vi.mock('./fetch', () => ({
-  fetchIoSnapshotsForRun: fetched.fetchIoSnapshotsForRun,
+vi.mock('./store', () => ({
+  getIoSnapshotStore: () => store,
+  loadIoSnapshotsForRun: fetched.loadIoSnapshotsForRun,
   reportIoSnapshotResolution: (result: unknown) => result,
   skippedIoSnapshots: (reason: string, message: string) => ({
     status: 'skipped',
@@ -54,7 +49,7 @@ describe('resolveIoSnapshotsForRun', () => {
       { NX_IO_SNAPSHOTS: 'true' }
     );
     // The fetch itself belongs to the daemon.
-    expect(fetched.fetchIoSnapshotsForRun).not.toHaveBeenCalled();
+    expect(fetched.loadIoSnapshotsForRun).not.toHaveBeenCalled();
     expect(store.get).toHaveBeenCalledWith('head');
     // The status is the daemon's: it fetched, this process only read.
     expect(result).toEqual({ status: 'fetched', snapshots: set });
@@ -88,14 +83,14 @@ describe('resolveIoSnapshotsForRun', () => {
 
   it('fetches in this process when the daemon cannot answer', async () => {
     daemon.resolveIoSnapshots.mockRejectedValue(new Error('socket closed'));
-    fetched.fetchIoSnapshotsForRun.mockResolvedValue(stored);
+    fetched.loadIoSnapshotsForRun.mockResolvedValue(stored);
     expect(await resolveIoSnapshotsForRun(nxJson, {})).toBe(stored);
-    expect(fetched.fetchIoSnapshotsForRun).toHaveBeenCalled();
+    expect(fetched.loadIoSnapshotsForRun).toHaveBeenCalled();
   });
 
   it('fetches in this process when the daemon is off', async () => {
     daemon.enabled.mockReturnValue(false);
-    fetched.fetchIoSnapshotsForRun.mockResolvedValue(stored);
+    fetched.loadIoSnapshotsForRun.mockResolvedValue(stored);
     expect(await resolveIoSnapshotsForRun(nxJson, {})).toBe(stored);
     expect(daemon.resolveIoSnapshots).not.toHaveBeenCalled();
   });
@@ -104,6 +99,6 @@ describe('resolveIoSnapshotsForRun', () => {
     fetched.isIoSnapshotFetchEnabled.mockReturnValue(false);
     expect(await resolveIoSnapshotsForRun(nxJson, {})).toBeNull();
     expect(daemon.resolveIoSnapshots).not.toHaveBeenCalled();
-    expect(fetched.fetchIoSnapshotsForRun).not.toHaveBeenCalled();
+    expect(fetched.loadIoSnapshotsForRun).not.toHaveBeenCalled();
   });
 });

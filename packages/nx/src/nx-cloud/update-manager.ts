@@ -64,7 +64,7 @@ export interface NxCloudClient {
   commands: Record<string, () => Promise<void>>;
   nxCloudTasksRunner: TasksRunner<CloudTaskRunnerOptions>;
   getRemoteCache: () => RemoteCacheV2;
-  /** Clients that expose I/O snapshots; see `fetchIoSnapshotsForRun`. */
+  /** Clients that expose I/O snapshots; see `fetchIoSnapshots`. */
   readIoSnapshots?: (
     options: ReadIoSnapshotsOptions
   ) => Promise<ReadIoSnapshotsResult | null>;

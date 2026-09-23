@@ -10,7 +10,7 @@ import {
 } from './task-hasher';
 
 /**
- * `ioSnapshots` is this run's fetched bundle (see `fetchIoSnapshotsForRun`);
+ * `ioSnapshots` is this run's fetched bundle (see `loadIoSnapshotsForRun`);
  * undefined hashes natively. The daemon receives only its commit and reads
  * the same set from the database itself.
  */
