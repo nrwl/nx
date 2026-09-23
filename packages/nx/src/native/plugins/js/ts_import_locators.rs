@@ -1753,7 +1753,7 @@ import(myTag`react@${version}`);
         );
     }
 
-    /// Mirrors `swc_ecma_dep_graph::analyze_dependencies`, which no longer builds against current swc.
+    /// Based on `swc_ecma_dep_graph::analyze_dependencies`, which no longer builds against current swc.
     #[derive(Default)]
     struct AstImportCollector {
         in_block: bool,
