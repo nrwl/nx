@@ -5,6 +5,14 @@ import * as path from 'path';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { runInNewContext } from 'vm';
+import { createRequire } from 'module';
+import {
+  mockCjsModule,
+  unmockCjsModule,
+} from '@nx/devkit/internal-testing-utils';
+
+// The source `require`s these lazily, which `vi.mock`/`vi.doMock` cannot reach.
+const cjsRequire = createRequire(import.meta.url);
 
 describe('apply-base-config libraryTarget handling', () => {
   let options: NormalizedNxAppRspackPluginOptions;
@@ -163,19 +171,20 @@ describe('apply-base-config libraryTarget handling', () => {
       // Force the loaded module to report v2 so the v1/v2 branch in
       // applyBaseConfig picks the modern output.library.type shape.
       vi.resetModules();
-      vi.doMock('@rspack/core', async () => {
-        const actual = await vi.importActual<any>('@rspack/core');
-        return new Proxy(actual, {
+      mockCjsModule(
+        import.meta.url,
+        '@rspack/core',
+        new Proxy(cjsRequire('@rspack/core'), {
           get(target, prop) {
             if (prop === 'rspackVersion') return '2.0.3';
             return (target as any)[prop];
           },
-        });
-      });
+        })
+      );
     });
 
     afterEach(() => {
-      vi.doUnmock('@rspack/core');
+      unmockCjsModule(import.meta.url, '@rspack/core');
       vi.resetModules();
     });
 
@@ -221,18 +230,22 @@ describe('apply-base-config ts-checker rootDir (TS6059 prevention)', () => {
     capturedPluginConfigs.length = 0;
     vi.resetModules();
     global.NX_GRAPH_CREATION = false;
-    vi.doMock('ts-checker-rspack-plugin', () => ({
+    mockCjsModule(import.meta.url, 'ts-checker-rspack-plugin', {
       TsCheckerRspackPlugin: class {
         constructor(pluginConfig: any) {
           capturedPluginConfigs.push(pluginConfig);
         }
         apply() {}
       },
-    }));
+    });
   });
 
   afterEach(() => {
     delete global.NX_GRAPH_CREATION;
+    unmockCjsModule(import.meta.url, 'ts-checker-rspack-plugin');
+    // Unlike jest.resetModules, vi.resetModules keeps doMock registrations.
+    vi.doUnmock('@nx/js/internal');
+    vi.doUnmock('../../utils/is-serve-mode');
     vi.resetModules();
   });
 
@@ -293,7 +306,7 @@ describe('apply-base-config cache option', () => {
 
   afterEach(() => {
     delete global.NX_GRAPH_CREATION;
-    vi.doUnmock('@rspack/core');
+    unmockCjsModule(import.meta.url, '@rspack/core');
     vi.resetModules();
   });
 
@@ -319,17 +332,18 @@ describe('apply-base-config cache option', () => {
     const getNormalizedRspackOptions = vi.fn(({ cache }) => ({
       cache: normalize(cache),
     }));
-    vi.doMock('@rspack/core', async () => {
-      const actual = await vi.importActual<any>('@rspack/core');
-      return new Proxy(actual, {
+    mockCjsModule(
+      import.meta.url,
+      '@rspack/core',
+      new Proxy(cjsRequire('@rspack/core'), {
         get(target, prop) {
           if (prop === 'config') {
             return { ...(target as any).config, getNormalizedRspackOptions };
           }
           return (target as any)[prop];
         },
-      });
-    });
+      })
+    );
     const { applyBaseConfig } = await import('./apply-base-config');
 
     const defaults: Partial<Configuration> = {};

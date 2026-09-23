@@ -2,15 +2,11 @@ import type { Mock } from 'vitest';
 import { type CreateNodesContext } from '@nx/devkit';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { createNodes } from './plugin';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { mockCjsModule, TempFs } from '@nx/devkit/internal-testing-utils';
 
-vi.mock('@rsbuild/core', async () => ({
-  ...(await vi.importActual<any>('@rsbuild/core')),
-  loadConfig: vi.fn().mockResolvedValue({
-    filePath: 'my-app/rsbuild.config.ts',
-    content: {},
-  }),
-}));
+// The plugin `require`s `@rsbuild/core` lazily, which `vi.mock` cannot reach.
+const loadConfig = vi.fn();
+mockCjsModule(import.meta.url, '@rsbuild/core', { loadConfig });
 
 vi.mock('@nx/js/internal', async () => ({
   ...(await vi.importActual<any>('@nx/js/internal')),
@@ -24,6 +20,10 @@ describe('@nx/rsbuild', () => {
 
   beforeEach(() => {
     (isUsingTsSolutionSetup as Mock).mockReturnValue(false);
+    loadConfig.mockResolvedValue({
+      filePath: 'my-app/rsbuild.config.ts',
+      content: {},
+    });
     tempFs = new TempFs('rsbuild-test');
     context = {
       nxJsonConfiguration: {
@@ -274,10 +274,7 @@ describe('@nx/rsbuild', () => {
         configPath,
         `export default {}; // distPath.root=${distPathRoot ?? '(unset)'}`
       );
-      // `@rsbuild/core` is `require`d lazily inside the plugin, so grab the
-      // same (mocked) module instance from the current registry.
-      const { loadConfig } = require('@rsbuild/core');
-      (loadConfig as Mock).mockResolvedValueOnce({
+      loadConfig.mockResolvedValueOnce({
         filePath: configPath,
         content: distPathRoot
           ? { output: { distPath: { root: distPathRoot } } }
