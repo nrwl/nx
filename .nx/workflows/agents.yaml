@@ -4,7 +4,8 @@ common-env-vars: &common-env-vars
   GIT_COMMITTER_EMAIL: test@test.com
   GIT_COMMITTER_NAME: Test
   SELECTED_PM: 'pnpm'
-  NX_NATIVE_LOGGING: 'nx::native::db'
+  NX_NATIVE_LOGGING: 'nx::native::db,nx::native::io_snapshots'
+  NX_IO_SNAPSHOTS: 'true'
   # The release profile enables incremental compilation for local dev (see the
   # root Cargo.toml). Agents build each task once from a cold cache, so
   # incremental buys nothing here and only inflates the cargo cache.

@@ -12,6 +12,7 @@ on:
 env:
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
   NX_CLOUD_ENABLE_METRICS_COLLECTION: 'true'
+  NX_IO_SNAPSHOTS: 'true'
   PNPM_HOME: ~/.pnpm
   # See the root Cargo.toml: the release profile is incremental for local dev.
   # CI builds cold, so incremental only inflates the cargo cache.
@@ -111,10 +112,10 @@ jobs:
           pnpm nx build workspace-plugin && pnpm nx record -- pnpm nx-cloud conformance:check
           pids+=($!)
 
-          pnpm nx run-many -t check-imports check-lock-files check-codeowners --parallel=1 --no-dte &
+          NX_VERBOSE_LOGGING=true NX_NATIVE_LOGGING=nx::native::io_snapshots pnpm nx run-many -t check-imports check-lock-files check-codeowners --parallel=1 --no-dte &
           pids+=($!)
 
-          pnpm nx affected --targets=lint,oxlint,test,build,e2e,e2e-ci,format-native,lint-native,check-native-wasm,gradle:build-ci,vale,run,validate-example &
+          NX_VERBOSE_LOGGING=true NX_NATIVE_LOGGING=nx::native::io_snapshots pnpm nx affected --targets=lint,oxlint,test,build,e2e,e2e-ci,format-native,lint-native,check-native-wasm,gradle:build-ci,vale,run,validate-example &
           pids+=($!)
 
           for pid in "${pids[@]}"; do
