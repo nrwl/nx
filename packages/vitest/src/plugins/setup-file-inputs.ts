@@ -10,11 +10,6 @@ import type { ResolvedConfig } from 'vite';
  * and `globalSetup`. `collectSetupFileInputs` declares the ones that exist,
  * together with the tsconfigs Vite reads to transform them.
  *
- * `default` covers everything under `{projectRoot}`, and `^production` covers a
- * dependency's sources, but a setup file in a shared directory is neither. Left
- * undeclared, editing it does not invalidate the task and the suite replays a
- * stale cache hit.
- *
  * Reads the build-resolved config, as the inferred target's inputs are built
  * from it. Setup files contributed by an `apply: 'serve'` plugin are therefore
  * invisible here - the same build/serve divergence the atomized path documents.

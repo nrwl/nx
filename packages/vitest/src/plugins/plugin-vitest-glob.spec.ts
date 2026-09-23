@@ -188,7 +188,7 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
       );
     });
 
-    it('should declare a setup file created after the targets were cached', async () => {
+    it('should declare a setup file and tsconfig created after the targets were cached', async () => {
       delete process.env.NX_CACHE_PROJECT_GRAPH;
       try {
         // Unique options and config content: no other test or earlier run
@@ -204,7 +204,10 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
         await getProjectTargets('libs/lib1/vitest.config.ts', {
           testTargetName: 'cached-test',
         });
-        await temp.createFiles({ 'tools/vitest/setup.mts': '' });
+        await temp.createFiles({
+          'tools/vitest/setup.mts': '',
+          'tools/vitest/tsconfig.json': '{"compilerOptions":{}}',
+        });
 
         const targets = await getProjectTargets('libs/lib1/vitest.config.ts', {
           testTargetName: 'cached-test',
@@ -216,6 +219,10 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
         expect(targets['cached-test'].inputs).toContainEqual(
           '{workspaceRoot}/tools/vitest/setup.mts'
         );
+        expect(targets['cached-test'].inputs).toContainEqual({
+          json: '{workspaceRoot}/tools/vitest/tsconfig.json',
+          fields: ['compilerOptions'],
+        });
       } finally {
         process.env.NX_CACHE_PROJECT_GRAPH = 'false';
       }
