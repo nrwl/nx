@@ -16,10 +16,10 @@ Rules that override any shortcut you are tempted to take:
 
 1. Before editing, run production builds and keep every `dist/apps/<app>/mf-stats.json` (`dist/apps/<app>/browser/mf-stats.json` on Rspack). Its `shared` array, `exposes`, and container name are what you reproduce.
 2. Replace `withModuleFederation` and `NxModuleFederationPlugin` from `@nx/module-federation/angular` with `ModuleFederationPlugin` from `@module-federation/enhanced/webpack` or `/rspack`. Keep `@nx/angular:webpack-browser` with `customWebpackConfig` on webpack, and `createConfig` from `@nx/angular-rspack` on Rspack.
-3. Angular containers are ES modules: set `library: { type: 'module' }`, `experiments.outputModule: true` (webpack) or `output.module: true` (Rspack), `filename: 'remoteEntry.mjs'` on webpack and `remoteEntry.js` on Rspack, `dts: false`, `output.publicPath: 'auto'`, `output.uniqueName`, and `optimization.runtimeChunk: false`. Write `remotes` as plain URLs with no `name@` prefix.
+3. Angular containers are ES modules: set `library: { type: 'module' }`, `experiments.outputModule: true` on webpack or `output.module: true` on Rspack, `filename: 'remoteEntry.mjs'` on webpack and `remoteEntry.js` on Rspack, `dts: false`, `output.publicPath: 'auto'`, `output.uniqueName`, and `optimization.runtimeChunk: false`. Write `remotes` as plain URLs with no `name@` prefix.
 4. Add `resolve.alias` entries for every workspace library referenced through `tsconfig` paths. Nx did this for you and the Angular webpack builder does not read `paths`.
 5. For hosts on `@nx/angular/mf`, convert `setRemoteDefinitions` to `registerRemotes` with `type: 'module'` and `loadRemoteModule(name, './Routes')` to `loadRemote(name + '/Routes')`. Map values must be full `remoteEntry.mjs` URLs. Hosts already calling `registerRemotes` stay as they are.
-6. Replace the `serve` target with `@nx/angular:dev-server` (or `@angular/build:dev-server`), keep each remote's `dependsOn: ['<host>:serve']`, and add a `serve-static` target per app using `@nx/web:file-server` with `staticFilePath`, `dependsOn: ['build']`, `watch: false`, never `buildTarget`.
+6. Replace the `serve` target with `@nx/angular:dev-server` (or `@angular/build:dev-server`), keep each remote's `dependsOn: ['<host>:serve']`, set `headers: { 'Access-Control-Allow-Origin': '*' }` on every remote's serve target, and add a `serve-static` target per app using `@nx/web:file-server` with `staticFilePath`, `dependsOn: ['build']`, `watch: false`, never `buildTarget`.
 7. Remove `@nx/module-federation` only after every consumer is gone. Move `@module-federation/enhanced` to `dependencies`. Rebuild uncached with the old package renamed away, then restore it.
 8. Do not claim hot-update parity or shared-state parity from a green build. Report what you verified and what you did not.
 
@@ -70,7 +70,7 @@ A generated Angular host has `withModuleFederation` in `webpack.config.ts` and
 `@nx/angular:webpack-browser` with `customWebpackConfig`, a `serve` target on
 `@nx/angular:module-federation-dev-server`, and a `serve-static` target on `@nx/web:file-server`.
 Remotes expose `./Routes` and their `serve` target depends on the host's. A host generated on
-Nx 21.5 or later with `--dynamic` already calls `registerRemotes` from
+Nx 20.1 or later with `--dynamic` already calls `init` or `registerRemotes` from
 `@module-federation/enhanced/runtime` and points its manifest at each remote's
 `mf-manifest.json`. Older dynamic hosts call `setRemoteDefinitions` and `loadRemoteModule` from
 `@nx/angular/mf`.
@@ -223,7 +223,6 @@ const mf = require('./module-federation.config.js');
 
 export default {
   output: { uniqueName: mf.name, publicPath: 'auto', module: true },
-  experiments: { outputModule: true },
   resolve: { modules: ['node_modules', join(__dirname, '../..')] },
   optimization: { runtimeChunk: false },
   plugins: [new ModuleFederationPlugin(mf)],
@@ -282,7 +281,10 @@ export const appRoutes: Route[] = [
 `@nx/angular:module-federation-dev-server` built the remotes and served them behind the host, with
 `--devRemotes` picking which ones ran live. Nothing in the official plugin starts remotes. Move the
 host's `serve` to `@nx/angular:dev-server` and keep each remote's `dependsOn: ['shell:serve']`,
-so `nx serve remoteA` still brings the host up. To run several apps live, start them in one Nx
+so `nx serve remoteA` still brings the host up. Give every remote's `serve` target
+`headers: { 'Access-Control-Allow-Origin': '*' }`: the old executor started remotes with
+`cors: true`, the Angular dev server sets nothing, and the host loads `remoteEntry.mjs` as a
+cross-origin module. To run several apps live, start them in one Nx
 process:
 
 ```shell
@@ -325,16 +327,21 @@ Remove `targetDefaults` entries in `nx.json` keyed on `@nx/angular:webpack-brows
 
 ### Step 7: validate the result
 
-A green build is not the acceptance criterion. If a rebuilt remote fails to load with
-`Cannot read properties of undefined (reading 'call') while loading "./Routes"`, clear
-`.angular/cache` and rebuild before you look anywhere else. The Angular build cache written by
-one build can leave a later build's host and remote out of step.
+A green build is not the acceptance criterion. The migration is done when, in a browser against
+the baseline:
 
-Against the baseline, confirm in a browser that
-each remote route renders, that a shared mutable value written in the host reads back in each
-remote after a client-side route change, and that editing a remote's component updates the host
-without a page navigation. Angular 22 apps are zoneless by default, so give a fixture component
-a `signal` and poll for the rendered value rather than reading it synchronously after a click.
+- Each remote route renders in the host.
+- A shared mutable value written in the host reads back in each remote after a client-side route
+  change.
+- Editing a remote's component updates the host without a page navigation.
+- Production and development configurations both build with `--skipNxCache`, and each app's
+  `mf-stats.json` lists the same container name, remotes, exposes, and `shared` entries as the
+  baseline.
+- The e2e suite passes on the replacement web server from Step 6.
+
+If a rebuilt remote fails to load with
+`Cannot read properties of undefined (reading 'call') while loading "./Routes"`, delete
+`.angular/cache` and rebuild before you look anywhere else.
 
 ### Step 8: remove the old package
 
@@ -373,6 +380,9 @@ It creates `federation.config.mjs`, `tsconfig.federation.json`, a new `bootstrap
 to the polyfills.
 
 ### Step 3: finish what the generator left
+
+The generator assumes an Angular CLI app with no federation, so on an Nx Module Federation app it
+leaves this cleanup:
 
 - Delete `module-federation.config.ts`, `webpack.config.ts`, and `webpack.prod.config.ts`, and
   remove the `customWebpackConfig` it copied onto the `esbuild` target and its `production`
@@ -415,6 +425,13 @@ Both paths were exercised on Nx 23.2.1 with Angular 22.1.4, `@module-federation/
 `@angular-architects/native-federation` 22.1.3, and Node 26.7.0 on macOS: a webpack workspace with
 a static host, a runtime-loaded host on `@nx/angular/mf`, two remotes, and a shared mutable
 workspace library, and an Rspack workspace with a static host and two remotes. Production builds
-and browser checks (remote routes rendered, shared state read back across route changes) pass for
-Path A on both bundlers and for Path B. Development serving with hot updates and the Playwright
-e2e replacement are still being verified for Angular.
+and browser checks pass for Path A on both bundlers and for Path B.
+
+## When your setup is not covered
+
+Server-side rendering, promise-based remotes, custom runtime plugins, and cross-version remote
+deployments were not tested. The method still applies: read what Nx emitted from the baseline
+`mf-stats.json`, write it as explicit plugin options, and grade the result in a browser against
+the baseline rather than on a green build. For the plugin options themselves, use the official
+[configuration reference](https://module-federation.io/configure/), and for Native Federation
+the package's own documentation.
