@@ -71,7 +71,6 @@ function graph(...ids: string[]): TaskGraph {
 function writeBundle(snapshots: Record<string, unknown>) {
   return new IoSnapshotStore(snapshotDb).import({
     requestedCommit: HEAD,
-    commits: [HEAD],
     snapshotsJson: JSON.stringify(snapshots),
   });
 }

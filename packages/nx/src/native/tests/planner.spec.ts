@@ -1941,7 +1941,6 @@ describe('task planner', () => {
       const commit = `c${bundleCount++}`.padEnd(40, 'c');
       new IoSnapshotStore(snapshotDb).import({
         requestedCommit: commit,
-        commits: [commit],
         snapshotsJson: JSON.stringify(
           Object.fromEntries(
             Object.entries(entries).map(([id, e]) => [

@@ -24,7 +24,7 @@ describe('fetchIoSnapshots', () => {
   });
 
   it('reads with the run options and returns what Nx Cloud sent', async () => {
-    const result = { commits: ['head'], snapshots: {} };
+    const result = { snapshots: {} };
     cloud.readIoSnapshots.mockResolvedValue(result);
     expect(await fetchIoSnapshots({ accessToken: 't' })).toBe(result);
     expect(cloud.readIoSnapshots).toHaveBeenCalledWith(

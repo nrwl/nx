@@ -77,7 +77,6 @@ function snapshotsFor(
   const commit = `a${bundles++}`.padEnd(40, 'a');
   new IoSnapshotStore(snapshotDb).import({
     requestedCommit: commit,
-    commits: [commit],
     snapshotsJson: JSON.stringify(
       Object.fromEntries(
         Object.entries(entries).map(([id, e]) => [

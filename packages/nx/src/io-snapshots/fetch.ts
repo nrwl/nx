@@ -22,8 +22,6 @@ export interface ReadIoSnapshot {
 }
 
 export interface ReadIoSnapshotsResult {
-  /** Newest first; index 0 is HEAD. */
-  commits: string[];
   snapshots: Readonly<Record<string, ReadIoSnapshot>>;
 }
 

@@ -1,7 +1,7 @@
 //! A snapshot set and its task entries, as Nx Cloud sends them and the store keeps them.
 
 #[cfg(not(target_arch = "wasm32"))]
-use std::collections::{BTreeMap, HashSet};
+use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 use xxhash_rust::xxh3::Xxh3;
@@ -20,30 +20,15 @@ pub struct Bundle {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl Bundle {
-    /// Normalizes `snapshots` and describes them as the set fetched now for
-    /// `requested_commit`, searched across `commits` (newest first).
-    pub fn new(
-        requested_commit: String,
-        commits: &[String],
-        mut snapshots: BTreeMap<String, TaskIoSnapshot>,
-    ) -> Self {
+    /// Describes `snapshots` as the set fetched now for `requested_commit`.
+    pub fn new(requested_commit: String, mut snapshots: BTreeMap<String, TaskIoSnapshot>) -> Self {
+        // The entry digest hashes outputs in order, and Nx Cloud does not sort them.
         for entry in snapshots.values_mut() {
-            sort_unique(&mut entry.inputs);
-            sort_unique(&mut entry.outputs);
+            entry.outputs.sort();
+            entry.outputs.dedup();
         }
-        let recorded: HashSet<&str> = snapshots
-            .values()
-            .map(|entry| entry.commit.as_str())
-            .collect();
-        // `commits` is newest first; keep that order for the ones entries used.
-        let source_commits = commits
-            .iter()
-            .filter(|commit| recorded.contains(commit.as_str()))
-            .cloned()
-            .collect();
         let resolution = IoSnapshotResolution {
             requested_commit,
-            source_commits,
             fetched_at: current_timestamp_millis(),
             tasks: snapshots.len() as u32,
         };
@@ -52,12 +37,6 @@ impl Bundle {
             snapshots,
         }
     }
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-fn sort_unique(values: &mut Vec<String>) {
-    values.sort();
-    values.dedup();
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
@@ -101,21 +80,6 @@ mod tests {
             outputs: outputs.iter().map(|s| s.to_string()).collect(),
             ..entry("c1", &["a.ts"])
         }
-    }
-
-    #[test]
-    fn source_commits_keep_the_newest_first_order() {
-        let snapshots = BTreeMap::from([
-            ("a:build".to_string(), entry("alpha", &[])),
-            ("b:build".to_string(), entry("zeta", &[])),
-            ("c:build".to_string(), entry("zeta", &[])),
-        ]);
-        let bundle = Bundle::new(
-            "head".into(),
-            &["head".into(), "zeta".into(), "alpha".into()],
-            snapshots,
-        );
-        assert_eq!(bundle.resolution.source_commits, vec!["zeta", "alpha"]);
     }
 
     #[test]

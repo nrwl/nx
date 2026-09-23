@@ -43,7 +43,7 @@ impl IoSnapshotStore {
                     format!("Nx Cloud returned I/O snapshots nx cannot read: {err}"),
                 )
             })?;
-        let bundle = Bundle::new(options.requested_commit, &options.commits, snapshots);
+        let bundle = Bundle::new(options.requested_commit, snapshots);
         self.db
             .write(&bundle, RETAINED_COMMITS)
             .map_err(|err| napi::Error::new("WRITE_FAILED".to_string(), err.to_string()))?;
@@ -53,15 +53,13 @@ impl IoSnapshotStore {
         } = bundle;
         if resolution.tasks == 0 {
             debug!(
-                "io snapshots: Nx Cloud has no snapshots for any of the {} commit(s) ending at {}; every task falls back to its declared inputs",
-                options.commits.len(),
+                "io snapshots: Nx Cloud has no snapshots for {}; every task falls back to its declared inputs",
                 resolution.requested_commit
             );
         } else {
             debug!(
-                "io snapshots: imported {} task(s) from {} commit(s)",
-                resolution.tasks,
-                resolution.source_commits.len()
+                "io snapshots: imported {} task(s) for {}",
+                resolution.tasks, resolution.requested_commit
             );
         }
         // The importing process keeps what it just parsed; nothing to re-read.
@@ -111,7 +109,6 @@ mod tests {
     fn import(store: &IoSnapshotStore, json: &str) -> napi::Result<IoSnapshots, String> {
         store.import_set(IoSnapshotImportOptions {
             requested_commit: "head".into(),
-            commits: vec!["head".into(), "parent".into()],
             snapshots_json: json.into(),
         })
     }
@@ -120,23 +117,22 @@ mod tests {
     fn imports_a_payload_and_gets_it_back_per_task() {
         let (_dir, store) = temp_store();
         let json = r#"{
-          "web:build": { "commit": "parent", "inputs": ["apps/web/src/**/*.ts", "apps/web/src/**/*.ts"], "outputs": ["dist/apps/web/**"] },
+          "web:build": { "commit": "parent", "inputs": ["apps/web/src/**/*.ts"], "outputs": ["dist/web/b", "dist/web/a", "dist/web/b"] },
           "ui:test": { "commit": "head", "inputs": ["libs/ui/**/*.ts"], "outputs": [] }
         }"#;
         let imported = import(&store, json).unwrap();
         let resolution = imported.resolution();
         assert_eq!(resolution.tasks, 2);
-        assert_eq!(resolution.source_commits, vec!["head", "parent"]);
         assert_eq!(imported.commit(), "head");
 
         let stored = store.get("head".into(), None).unwrap();
         assert_eq!(stored.resolution().fetched_at, resolution.fetched_at);
-        // Read per task, normalized on import: duplicates collapsed.
+        // Read per task; outputs are sorted and deduped on import for the digest.
         let entries = stored.entries_for(&["web:build", "gone:build"]).unwrap();
         assert_eq!(entries.len(), 1);
         assert_eq!(
-            entries["web:build"].entry.inputs,
-            vec!["apps/web/src/**/*.ts".to_string()]
+            entries["web:build"].entry.outputs,
+            vec!["dist/web/a".to_string(), "dist/web/b".into()]
         );
         assert_eq!(
             entries["web:build"].digest,

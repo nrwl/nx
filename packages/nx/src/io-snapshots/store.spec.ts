@@ -35,7 +35,6 @@ describe('loadIoSnapshotsForRun', () => {
       fetchedAt: 0,
       requestedCommit: 'head',
       tasks: 1,
-      sourceCommits: [],
     },
   });
   const coded = (code: string, message = code) =>
@@ -47,7 +46,6 @@ describe('loadIoSnapshotsForRun', () => {
     store.import.mockReset();
     store.get.mockReturnValue(null);
     cloud.fetchIoSnapshots.mockResolvedValue({
-      commits: ['head'],
       snapshots: {},
     });
   });
@@ -79,7 +77,6 @@ describe('loadIoSnapshotsForRun', () => {
       'web:build': { commit: 'parent', inputs: ['apps/web/**'], outputs: [] },
     };
     cloud.fetchIoSnapshots.mockResolvedValue({
-      commits: ['head', 'parent'],
       snapshots,
     });
     const set = stored();
@@ -93,7 +90,6 @@ describe('loadIoSnapshotsForRun', () => {
     expect(store.import).toHaveBeenCalledWith(
       expect.objectContaining({
         requestedCommit: 'head',
-        commits: ['head', 'parent'],
         snapshotsJson: JSON.stringify(snapshots),
       })
     );

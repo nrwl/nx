@@ -1715,7 +1715,6 @@ describe('native task hasher', () => {
     const bundle = (inputs: string[]) => {
       new IoSnapshotStore(snapshotDb).import({
         requestedCommit: commit,
-        commits: [commit],
         snapshotsJson: JSON.stringify({
           'child:compile': { commit, inputs, outputs: ['dist/child'] },
         }),
@@ -1748,7 +1747,6 @@ describe('native task hasher', () => {
     const bundle = (inputs: string[]) => {
       new IoSnapshotStore(snapshotDb).import({
         requestedCommit: commit,
-        commits: [commit],
         snapshotsJson: JSON.stringify({
           'child:compile': { commit, inputs, outputs: [] },
         }),

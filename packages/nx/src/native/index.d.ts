@@ -763,8 +763,6 @@ export interface IoSnapshotEligibilityOptions {
 /** The snapshot set the Nx Cloud client read for HEAD, as JS hands it over. */
 export interface IoSnapshotImportOptions {
   requestedCommit: string
-  /** The commits the client asked about, newest first. */
-  commits: Array<string>
   /** `Record<taskId, { commit, inputs, outputs }>` as JSON. */
   snapshotsJson: string
 }
@@ -781,8 +779,6 @@ export interface IoSnapshotReport {
 /** What was resolved for a commit; stored beside its entries. */
 export interface IoSnapshotResolution {
   requestedCommit: string
-  /** The commits entries were recorded at, newest first. */
-  sourceCommits: Array<string>
   fetchedAt: number
   tasks: number
 }

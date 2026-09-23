@@ -6,8 +6,6 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 pub struct IoSnapshotResolution {
     pub requested_commit: String,
-    /// The commits entries were recorded at, newest first.
-    pub source_commits: Vec<String>,
     pub fetched_at: i64,
     pub tasks: u32,
 }
@@ -16,8 +14,6 @@ pub struct IoSnapshotResolution {
 #[napi(object)]
 pub struct IoSnapshotImportOptions {
     pub requested_commit: String,
-    /// The commits the client asked about, newest first.
-    pub commits: Vec<String>,
     /// `Record<taskId, { commit, inputs, outputs }>` as JSON.
     pub snapshots_json: String,
 }

@@ -171,7 +171,7 @@ mod tests {
                 )
             })
             .collect();
-        let mut bundle = Bundle::new(commit.into(), &[commit.into()], snapshots);
+        let mut bundle = Bundle::new(commit.into(), snapshots);
         bundle.resolution.fetched_at = fetched_at;
         bundle
     }
@@ -192,7 +192,7 @@ mod tests {
         assert_eq!(entries[0].0, "a:build");
         assert_eq!(
             entries[0].1.inputs,
-            vec!["b.ts".to_string(), "libs/a:build/a.ts".into()]
+            vec!["libs/a:build/a.ts".to_string(), "b.ts".into()]
         );
         assert_eq!(db.read_resolution("c3").unwrap().unwrap().tasks, 1);
         // Only the newest two commits survive.
