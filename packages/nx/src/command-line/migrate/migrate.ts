@@ -3316,6 +3316,11 @@ async function runMigrations(
     // this command is about to continue.
     const { holdRunToContinue } = require('./run') as typeof import('./run');
     holdRunToContinue(root, opts.runId);
+  } else if (opts.startFresh === true) {
+    // Before the install too: with no active run there is nothing to replace.
+    const { refuseStartFreshWithoutActiveRun } =
+      require('./run') as typeof import('./run');
+    refuseStartFreshWithoutActiveRun(root, opts.runId);
   }
 
   if (!shouldSkipInstall && !process.env.NX_MIGRATE_SKIP_INSTALL) {
