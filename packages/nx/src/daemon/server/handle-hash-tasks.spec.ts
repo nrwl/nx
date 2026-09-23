@@ -15,14 +15,17 @@ vi.mock('./project-graph-incremental-recomputation', () => ({
   }),
 }));
 vi.mock('../../config/configuration', () => ({ readNxJson: () => ({}) }));
-const mockGetStored = vi.fn((commit: string) => ({
+const mockGetStored = vi.fn((commit: string, fetchedAt: number) => ({
   commit,
-  resolution: { fetchedAt: 1 },
+  resolution: { fetchedAt },
 }));
 // Lazy so the hoisted mock factory does not touch the const before it exists.
 vi.mock('../../native', () => ({
   IoSnapshotStore: vi.fn(function () {
-    return { get: (commit: string) => mockGetStored(commit) };
+    return {
+      getVersion: (commit: string, fetchedAt: number) =>
+        mockGetStored(commit, fetchedAt),
+    };
   }),
 }));
 vi.mock('../../utils/db-connection', () => ({ getDbConnection: () => 'db' }));
@@ -44,36 +47,38 @@ describe('handleHashTasks', () => {
     collectInputs: false,
   };
 
-  it('gets the stored set for the commit and keeps one handle while its import holds', async () => {
-    const commit = 'abc';
-    await handleHashTasks({ ...base, ioSnapshots: { commit } });
-    expect(mockGetStored).toHaveBeenLastCalledWith(commit);
+  it('gets the version the client names and keeps one handle while it holds', async () => {
+    const version = { commit: 'abc', fetchedAt: 1 };
+    await handleHashTasks({ ...base, ioSnapshots: version });
+    expect(mockGetStored).toHaveBeenLastCalledWith('abc', 1);
     const first = hashTasks.mock.lastCall[5];
-    expect(first).toMatchObject({ commit });
-    await handleHashTasksUpfront({ ...base, ioSnapshots: { commit } });
+    expect(first).toMatchObject({ commit: 'abc' });
+    await handleHashTasksUpfront({ ...base, ioSnapshots: version });
     // Identity, not shape: the mock returns an equal object on every call.
     expect(hashTasksUpfront.mock.lastCall[5]).toBe(first);
-    // A re-import for the same commit (new fetch time) replaces the handle.
-    mockGetStored.mockImplementationOnce((c) => ({
-      commit: c,
-      resolution: { fetchedAt: 2 },
-    }));
-    await handleHashTasks({ ...base, ioSnapshots: { commit } });
-    const replaced = hashTasks.mock.lastCall[5];
-    expect(replaced).not.toBe(first);
+    // A client on a newer version of the same commit gets that version.
+    await handleHashTasks({
+      ...base,
+      ioSnapshots: { commit: 'abc', fetchedAt: 2 },
+    });
+    const newer = hashTasks.mock.lastCall[5];
+    expect(newer).not.toBe(first);
+    expect(newer.resolution.fetchedAt).toBe(2);
     // A different commit is a different handle even when the fetch times match.
-    mockGetStored.mockImplementationOnce((c) => ({
-      commit: c,
-      resolution: { fetchedAt: 2 },
-    }));
-    await handleHashTasks({ ...base, ioSnapshots: { commit: 'def' } });
+    await handleHashTasks({
+      ...base,
+      ioSnapshots: { commit: 'def', fetchedAt: 2 },
+    });
     expect(hashTasks.mock.lastCall[5]).toMatchObject({ commit: 'def' });
-    expect(hashTasks.mock.lastCall[5]).not.toBe(replaced);
+    expect(hashTasks.mock.lastCall[5]).not.toBe(newer);
   });
 
-  it('hashes natively when the commit has no stored set', async () => {
+  it('hashes natively when the version is no longer stored', async () => {
     mockGetStored.mockImplementationOnce(() => null);
-    await handleHashTasks({ ...base, ioSnapshots: { commit: 'gone' } });
+    await handleHashTasks({
+      ...base,
+      ioSnapshots: { commit: 'gone', fetchedAt: 1 },
+    });
     expect(hashTasks.mock.lastCall[5]).toBeUndefined();
   });
 
@@ -81,11 +86,14 @@ describe('handleHashTasks', () => {
     mockGetStored.mockImplementationOnce(() => {
       throw new Error('database disk image is malformed');
     });
-    await handleHashTasks({ ...base, ioSnapshots: { commit: 'broken' } });
+    await handleHashTasks({
+      ...base,
+      ioSnapshots: { commit: 'broken', fetchedAt: 1 },
+    });
     expect(hashTasks.mock.lastCall[5]).toBeUndefined();
   });
 
-  it('passes nothing when an older client omits the field', async () => {
+  it('passes nothing when the client sends no version', async () => {
     await handleHashTasks({ ...base });
     expect(hashTasks).toHaveBeenLastCalledWith(
       base.tasks,

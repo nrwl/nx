@@ -8,7 +8,10 @@ vi.mock('../../config/configuration', () => ({ readNxJson: () => ({ a: 1 }) }));
 const getStored = vi.fn();
 vi.mock('../../native', () => ({
   IoSnapshotStore: vi.fn(function () {
-    return { get: (commit: string) => getStored(commit) };
+    return {
+      getVersion: (commit: string, fetchedAt: number) =>
+        getStored(commit, fetchedAt),
+    };
   }),
 }));
 vi.mock('../../utils/db-connection', () => ({ getDbConnection: () => 'db' }));
@@ -16,7 +19,7 @@ vi.mock('../../utils/db-connection', () => ({ getDbConnection: () => 'db' }));
 import { serializeWithFallback } from '../socket-utils';
 import { parseMessage } from '../../utils/consume-messages-from-socket';
 import { handleResolveIoSnapshots } from './handle-resolve-io-snapshots';
-import { getIoSnapshotsForCommit } from './io-snapshots-state';
+import { getIoSnapshotsForVersion } from './io-snapshots-state';
 
 describe('handleResolveIoSnapshots', () => {
   const payload = {
@@ -40,7 +43,11 @@ describe('handleResolveIoSnapshots', () => {
       { accessToken: 't' },
       { NX_IO_SNAPSHOTS: 'true' }
     );
-    expect(response).toEqual({ status: 'fetched', commit: 'head' });
+    expect(response).toEqual({
+      status: 'fetched',
+      commit: 'head',
+      fetchedAt: 1,
+    });
   });
 
   // The client returns what the socket layer parsed, so the response must
@@ -56,6 +63,7 @@ describe('handleResolveIoSnapshots', () => {
       expect(parseMessage(serializeWithFallback(response, mode))).toEqual({
         status: 'fetched',
         commit: 'head',
+        fetchedAt: 1,
       });
     }
   );
@@ -65,9 +73,11 @@ describe('handleResolveIoSnapshots', () => {
       status: 'fetched',
       snapshots: set,
     });
-    getStored.mockReturnValue({ commit: 'head', resolution: { fetchedAt: 1 } });
     await handleResolveIoSnapshots(payload);
-    expect(getIoSnapshotsForCommit('head')).toBe(set);
+    expect(getIoSnapshotsForVersion({ commit: 'head', fetchedAt: 1 })).toBe(
+      set
+    );
+    expect(getStored).not.toHaveBeenCalled();
   });
 
   it('passes a skip through as it came', async () => {

@@ -26,7 +26,11 @@ export async function handleResolveIoSnapshots(
   if (resolved?.status === 'skipped') {
     response = resolved;
   } else if (resolved) {
-    response = { status: resolved.status, commit: resolved.snapshots.commit };
+    response = {
+      status: resolved.status,
+      commit: resolved.snapshots.commit,
+      fetchedAt: resolved.snapshots.resolution.fetchedAt,
+    };
     rememberIoSnapshots(resolved.snapshots);
   }
   return { response, description: 'handleResolveIoSnapshots' };

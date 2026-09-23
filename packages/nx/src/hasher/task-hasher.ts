@@ -6,6 +6,7 @@ import {
 import { NxJsonConfiguration } from '../config/nx-json';
 import { Task, TaskGraph } from '../config/task-graph';
 import { DaemonClient } from '../daemon/client/client';
+import type { IoSnapshotVersion } from '../daemon/message-types/resolve-io-snapshots';
 import { hashArray } from './file-hasher';
 import { InputDefinition } from '../config/workspace-json-project-json';
 import { minimatch } from 'minimatch';
@@ -171,7 +172,7 @@ export class DaemonBasedTaskHasher implements TaskHasher {
   constructor(
     private readonly daemonClient: DaemonClient,
     private readonly runnerOptions: any,
-    private readonly ioSnapshots?: { commit?: string }
+    private readonly ioSnapshots?: IoSnapshotVersion
   ) {}
 
   async hashTasks(

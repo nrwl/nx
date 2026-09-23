@@ -1,5 +1,6 @@
 import type { NxJsonConfiguration } from '../config/nx-json';
 import { daemonClient } from '../daemon/client/client';
+import type { IoSnapshotVersion } from '../daemon/message-types/resolve-io-snapshots';
 import {
   ioSnapshotEnv,
   isIoSnapshotFetchEnabled,
@@ -15,8 +16,8 @@ import {
 
 /**
  * This run's snapshot set. With the daemon, the daemon fetches it and writes
- * the database, and this process reads the stored set back for the commit the
- * daemon resolved: one fetch, shared by every client it serves. Without the
+ * the database, and this process reads back the version the daemon resolved:
+ * one fetch, shared by every client it serves. Without the
  * daemon this process does both. `null` means snapshots are not enabled here.
  */
 export async function resolveIoSnapshotsForRun(
@@ -46,18 +47,17 @@ export async function resolveIoSnapshotsForRun(
   if (resolved.status === 'skipped') {
     return reportIoSnapshotResolution(resolved);
   }
-  return reportIoSnapshotResolution(
-    storedOutcome(resolved.commit, resolved.status)
-  );
+  return reportIoSnapshotResolution(storedOutcome(resolved));
 }
 
-/** The set the daemon resolved, read back from the store this process opens. */
-function storedOutcome(
-  commit: string,
-  status: 'fetched' | 'cached'
-): IoSnapshotOutcome {
+/** The version the daemon resolved, read back from the store this process opens. */
+function storedOutcome({
+  status,
+  commit,
+  fetchedAt,
+}: IoSnapshotVersion & { status: 'fetched' | 'cached' }): IoSnapshotOutcome {
   try {
-    const snapshots = getIoSnapshotStore().get(commit);
+    const snapshots = getIoSnapshotStore().getVersion(commit, fetchedAt);
     return snapshots
       ? { status, snapshots }
       : skippedIoSnapshots(

@@ -1683,6 +1683,43 @@ describe('native task hasher', () => {
     closeDbConnection(snapshotDb);
   });
 
+  it('keeps hashing from its own version after the commit is re-imported', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    await tempFs.createFiles({
+      'libs/child/one.txt': 'one',
+      'libs/child/two.txt': 'two',
+    });
+    const commit = 'head'.padEnd(40, '0');
+    const snapshotDb = connectToNxDb(
+      join(tempFs.tempDir, 'io-snapshots-versions-db'),
+      'io-snapshots'
+    );
+    const store = new IoSnapshotStore(snapshotDb);
+    const importReads = (inputs: string[]) =>
+      store.import({
+        requestedCommit: commit,
+        snapshotsJson: JSON.stringify({
+          'child:compile': { commit, inputs, outputs: [] },
+        }),
+      });
+    const first = importReads(['libs/child/one.txt']);
+    // Read back lazily, as the daemon and a reading client do.
+    const pinned = store.getVersion(commit, first.resolution.fetchedAt);
+    await new Promise((resolve) => setTimeout(resolve, 2));
+    importReads(['libs/child/two.txt']);
+
+    const task = taskGraph.tasks['child:compile'];
+    const hashWith = (snapshots: typeof first) =>
+      impl.hashTask(task, taskGraph, {}, tempFs.tempDir, true, snapshots);
+    const fromPinned = await hashWith(pinned);
+    expect(fromPinned.inputs.files).toContain('libs/child/one.txt');
+    expect(fromPinned.inputs.files).not.toContain('libs/child/two.txt');
+    expect((await hashWith(store.get(commit))).inputs.files).toContain(
+      'libs/child/two.txt'
+    );
+    closeDbConnection(snapshotDb);
+  });
+
   it('moves a task hash by a lockfile-only edit when the snapshot read the lockfile', async () => {
     const { taskGraph, impl } = await upfrontFixture();
     await tempFs.createFiles({ 'package-lock.json': '{"lodash":"4.17.20"}' });

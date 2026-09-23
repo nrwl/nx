@@ -128,7 +128,7 @@ export declare class ImportResult {
 }
 
 /**
- * One commit's stored snapshot set. Handed to the hash planner as-is.
+ * One stored version of a commit's snapshot set. Handed to the hash planner as-is.
  * Entries are read from the workspace database per task as they are asked
  * for, and remembered for the handle's lifetime, so a run costs the tasks it
  * plans rather than the workspace's whole set.
@@ -139,23 +139,29 @@ export declare class IoSnapshots {
 }
 
 /**
- * The workspace database's snapshot sets, one per commit. Failures throw
- * with a `code` JS maps to a skip reason: `STORE_UNAVAILABLE`,
- * `INVALID_RESPONSE` or `WRITE_FAILED`.
+ * The workspace database's snapshot sets. Each import is its own version,
+ * keyed by commit and fetch time, so a run that pinned one keeps reading it
+ * while a newer one is imported. Failures throw with a `code` JS maps to a
+ * skip reason: `STORE_UNAVAILABLE`, `INVALID_RESPONSE` or `WRITE_FAILED`.
  */
 export declare class IoSnapshotStore {
   constructor(db: ExternalObject<NxDbConnection>)
   /**
-   * Stores the set the Nx Cloud client read for `requested_commit`,
-   * replacing what the commit had, and returns it with every entry in hand.
+   * Stores the set the Nx Cloud client read for `requested_commit` as a new
+   * version, and returns it with every entry in hand.
    */
   import(options: IoSnapshotImportOptions): IoSnapshots
   /**
-   * The stored set for `commit`, without touching the network; `null`
-   * when none is stored, its row cannot be read, or it was fetched more
-   * than `max_age_ms` ago. Reads only the commit's summary row.
+   * The newest stored set for `commit`, without touching the network;
+   * `null` when none is stored, its row cannot be read, or it was fetched
+   * more than `max_age_ms` ago. Reads only the version's summary row.
    */
   get(commit: string, maxAgeMs?: number | undefined | null): IoSnapshots | null
+  /**
+   * Exactly the version of `commit` fetched at `fetched_at`; `null` once it
+   * has been pruned or its row cannot be read.
+   */
+  getVersion(commit: string, fetchedAt: number): IoSnapshots | null
 }
 
 export declare class NxCache {

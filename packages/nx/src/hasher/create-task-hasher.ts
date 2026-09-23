@@ -11,7 +11,8 @@ import {
 
 /**
  * `ioSnapshots` is this run's set (see `resolveIoSnapshotsForRun`); undefined
- * hashes natively. The daemon gets only its commit.
+ * hashes natively. The daemon gets its version, so it hashes from the same
+ * set even after a newer one is imported for the commit.
  */
 export function createTaskHasher(
   projectGraph: ProjectGraph,
@@ -23,7 +24,12 @@ export function createTaskHasher(
     return new DaemonBasedTaskHasher(
       daemonClient,
       runnerOptions,
-      ioSnapshots?.commit ? { commit: ioSnapshots.commit } : undefined
+      ioSnapshots
+        ? {
+            commit: ioSnapshots.commit,
+            fetchedAt: ioSnapshots.resolution.fetchedAt,
+          }
+        : undefined
     );
   } else {
     const { rustReferences } = getFileMap();

@@ -13,7 +13,7 @@ type Db = store::IoSnapshotStore;
 #[cfg(target_arch = "wasm32")]
 type Db = ();
 
-/// One commit's stored snapshot set. Handed to the hash planner as-is.
+/// One stored version of a commit's snapshot set. Handed to the hash planner as-is.
 /// Entries are read from the workspace database per task as they are asked
 /// for, and remembered for the handle's lifetime, so a run costs the tasks it
 /// plans rather than the workspace's whole set.
@@ -70,9 +70,11 @@ impl IoSnapshots {
             .collect();
         if !missing.is_empty() {
             #[cfg(not(target_arch = "wasm32"))]
-            let read = self
-                .db
-                .read_entries(&self.resolution.requested_commit, &missing)?;
+            let read = self.db.read_entries(
+                &self.resolution.requested_commit,
+                self.resolution.fetched_at,
+                &missing,
+            )?;
             #[cfg(target_arch = "wasm32")]
             let read: Vec<(String, set::TaskIoSnapshot)> = Vec::new();
             for id in &missing {

@@ -7,15 +7,21 @@ export interface IoSnapshotEnvMessage {
   hasNxCloudToken?: boolean;
 }
 
+/** One stored version of a snapshot set: what crosses the socket in place of the handle. */
+export interface IoSnapshotVersion {
+  commit: string;
+  fetchedAt: number;
+}
+
 export type HandleResolveIoSnapshotsMessage = {
   type: typeof RESOLVE_IO_SNAPSHOTS;
   runnerOptions: unknown;
   ioSnapshotEnv: IoSnapshotEnvMessage;
 };
 
-/** An `IoSnapshotOutcome` over the socket: the handle cannot cross it, its commit does. */
+/** An `IoSnapshotOutcome` over the socket: the handle cannot cross it, its version does. */
 export type ResolvedIoSnapshots =
-  | { status: 'fetched' | 'cached'; commit: string }
+  | ({ status: 'fetched' | 'cached' } & IoSnapshotVersion)
   | { status: 'skipped'; reason: string; message: string }
   | null;
 

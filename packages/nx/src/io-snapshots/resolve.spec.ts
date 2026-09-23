@@ -4,7 +4,7 @@ const daemon = vi.hoisted(() => ({
   enabled: vi.fn(() => true),
   resolveIoSnapshots: vi.fn(),
 }));
-const store = vi.hoisted(() => ({ get: vi.fn() }));
+const store = vi.hoisted(() => ({ getVersion: vi.fn() }));
 const fetched = vi.hoisted(() => ({
   loadIoSnapshotsForRun: vi.fn(),
   isIoSnapshotFetchEnabled: vi.fn(() => true),
@@ -35,13 +35,14 @@ describe('resolveIoSnapshotsForRun', () => {
     vi.clearAllMocks();
     daemon.enabled.mockReturnValue(true);
     fetched.isIoSnapshotFetchEnabled.mockReturnValue(true);
-    store.get.mockReturnValue(set);
+    store.getVersion.mockReturnValue(set);
   });
 
   it('lets the daemon fetch and store, then reads the stored set back', async () => {
     daemon.resolveIoSnapshots.mockResolvedValue({
       status: 'fetched',
       commit: 'head',
+      fetchedAt: 1,
     });
     const result = await resolveIoSnapshotsForRun(nxJson, { accessToken: 't' });
     expect(daemon.resolveIoSnapshots).toHaveBeenCalledWith(
@@ -50,7 +51,8 @@ describe('resolveIoSnapshotsForRun', () => {
     );
     // The fetch itself belongs to the daemon.
     expect(fetched.loadIoSnapshotsForRun).not.toHaveBeenCalled();
-    expect(store.get).toHaveBeenCalledWith('head');
+    // The version the daemon stored, not whatever is newest by now.
+    expect(store.getVersion).toHaveBeenCalledWith('head', 1);
     // The status is the daemon's: it fetched, this process only read.
     expect(result).toEqual({ status: 'fetched', snapshots: set });
   });
@@ -66,15 +68,16 @@ describe('resolveIoSnapshotsForRun', () => {
       reason: 'offline',
       message: 'ENOTFOUND',
     });
-    expect(store.get).not.toHaveBeenCalled();
+    expect(store.getVersion).not.toHaveBeenCalled();
   });
 
   it('skips rather than throws when the store cannot be opened', async () => {
     daemon.resolveIoSnapshots.mockResolvedValue({
       status: 'fetched',
       commit: 'head',
+      fetchedAt: 1,
     });
-    store.get.mockImplementationOnce(() => {
+    store.getVersion.mockImplementationOnce(() => {
       throw new Error('database disk image is malformed');
     });
     expect(await resolveIoSnapshotsForRun(nxJson, {})).toEqual({
@@ -84,12 +87,13 @@ describe('resolveIoSnapshotsForRun', () => {
     });
   });
 
-  it('skips when the commit the daemon named is not stored', async () => {
+  it('skips when the version the daemon named is not stored', async () => {
     daemon.resolveIoSnapshots.mockResolvedValue({
       status: 'cached',
       commit: 'head',
+      fetchedAt: 1,
     });
-    store.get.mockReturnValue(null);
+    store.getVersion.mockReturnValue(null);
     expect(await resolveIoSnapshotsForRun(nxJson, {})).toMatchObject({
       status: 'skipped',
       reason: 'no-set',

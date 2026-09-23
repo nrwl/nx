@@ -20,7 +20,9 @@ vi.mock('../../io-snapshots/store', async (importOriginal) => ({
 vi.mock('../../native', async (importOriginal) => ({
   ...((await importOriginal()) as object),
   IoSnapshotStore: vi.fn(function () {
-    return { get: () => ({ commit: 'head', resolution: { fetchedAt: 1 } }) };
+    return {
+      getVersion: () => ({ commit: 'head', resolution: { fetchedAt: 1 } }),
+    };
   }),
 }));
 vi.mock('../../utils/db-connection', () => ({ getDbConnection: () => 'db' }));
@@ -73,7 +75,11 @@ describe('the resolve message across the client/daemon seam', () => {
     );
 
     // What the client does with the body it reads.
-    expect(parseMessage(body())).toEqual({ status: 'fetched', commit: 'head' });
+    expect(parseMessage(body())).toEqual({
+      status: 'fetched',
+      commit: 'head',
+      fetchedAt: 1,
+    });
     // `handleClientEnv` deletes every key a reflected env omits.
     expect(process.env.NX_SEAM_SENTINEL).toBe('kept');
     expect(Object.keys(process.env).length).toBe(before);

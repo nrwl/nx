@@ -18,6 +18,7 @@ import { Task, TaskGraph } from '../../config/task-graph';
 import {
   RESOLVE_IO_SNAPSHOTS,
   type IoSnapshotEnvMessage,
+  type IoSnapshotVersion,
   type ResolvedIoSnapshots,
 } from '../message-types/resolve-io-snapshots';
 import { pruneTaskGraph } from '../../tasks-runner/prune-task-graph';
@@ -411,7 +412,7 @@ export class DaemonClient {
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd: string,
     collectInputs?: boolean,
-    ioSnapshots?: { commit?: string }
+    ioSnapshots?: IoSnapshotVersion
   ): Promise<Hash[]> {
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS',
@@ -420,8 +421,8 @@ export class DaemonClient {
       ...withoutTaskResults(tasks, taskGraph),
       cwd,
       collectInputs,
-      // An External cannot cross the socket: the commit names the stored set
-      // to hash from. Absent (incl. an older client) means native hashing.
+      // An External cannot cross the socket: the version names the stored set
+      // to hash from. Absent means native hashing.
       ioSnapshots,
     });
   }
@@ -433,7 +434,7 @@ export class DaemonClient {
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd: string,
     collectInputs?: boolean,
-    ioSnapshots?: { commit?: string }
+    ioSnapshots?: IoSnapshotVersion
   ): Promise<Record<string, Hash>> {
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS_UPFRONT',
