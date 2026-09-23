@@ -257,8 +257,7 @@ an edit:
   "inputs": [
     "...",
     "{workspaceRoot}/tools/vitest/**/*",
-    "{workspaceRoot}/scripts/jest-mocks/clack-prompts.js",
-    "{workspaceRoot}/.editorconfig"
+    "{workspaceRoot}/scripts/jest-mocks/clack-prompts.js"
   ]
 }
 ```
@@ -269,10 +268,7 @@ dependency-scoped — so leaving them off does not fail loudly; it serves a
 **stale cache hit** the next time someone edits the shared setup. (nx#36920
 teaches `@nx/vitest` to infer `setup.mts` and its tsconfig, but only from
 `23.3.0-beta.5`; this repo's pinned `@nx/vitest` predates it. Even after the
-bump, the resolver, the clack mock, and `.editorconfig` still need declaring.)
-
-`.editorconfig` is there because the formatter resolves it from the real repo
-during a run. See Step 9.
+bump, the resolver and the clack mock still need declaring.)
 
 ---
 
@@ -520,11 +516,11 @@ The two this migration produced, both worth checking for:
   console.log((await parse('tools/vitest/setup.mts')).referenced?.length); // 0 == leaf, 114 == solution root
   ```
 
-- **`.editorconfig`, read by a worker.** The formatter resolves config from the
-  real repo; the jest prettier shim pinned `resolveConfig: () => null` and hid
-  it. Declaring it as an input keeps the cache correct. Whether unit tests
-  _should_ inherit the repo's formatting config is a separate question — raise
-  it rather than silently choosing.
+- **The repo's `.editorconfig`, read by a worker.** `formatFiles` resolves
+  prettier config from disk at `tree.root`, and a spec that points
+  `tree.root` into the repo (e.g. `process.cwd()`) picks it up; the jest
+  prettier shim pinned `resolveConfig: () => null` and hid it. Give that spec a
+  `TempFs` root instead of declaring the file as an input.
 
 Prefer declaring an input over excluding a path: an over-broad input costs
 cache misses, an over-broad exclusion buys wrong cache hits. But a violation

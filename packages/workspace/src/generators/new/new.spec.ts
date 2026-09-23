@@ -2,6 +2,7 @@ import type { MockInstance } from 'vitest';
 import { readJson, Tree, writeJson } from '@nx/devkit';
 import * as devkit from '@nx/devkit';
 import { createTree } from '@nx/devkit/testing';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { load } from '@zkochan/js-yaml';
 import {
   angularCliVersion,
@@ -27,14 +28,17 @@ const defaultOptions: Omit<
 
 describe('new', () => {
   let tree: Tree;
+  let tempFs: TempFs;
   let installPackagesTaskSpy: MockInstance;
   let generatePresetSpy: MockInstance;
   let getNpmPackageVersionSpy: MockInstance;
 
   beforeEach(() => {
+    tempFs = new TempFs('new-spec');
     tree = createTree();
-    // we need an actual path for the package manager version check
-    tree.root = process.cwd();
+    // A real dir for the package manager version check, outside the repo so
+    // prettier does not pick up the repo's .editorconfig.
+    tree.root = tempFs.tempDir;
 
     installPackagesTaskSpy = vi
       .spyOn(devkit, 'installPackagesTask')
@@ -53,6 +57,7 @@ describe('new', () => {
 
   afterEach(() => {
     vi.resetAllMocks();
+    tempFs.cleanup();
   });
 
   it('should generate an empty nx.json', async () => {

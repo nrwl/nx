@@ -27,8 +27,7 @@
       "inputs": [
         "...",
         "{workspaceRoot}/tools/vitest/**/*",
-        "{workspaceRoot}/scripts/jest-mocks/clack-prompts.js",
-        "{workspaceRoot}/.editorconfig"
+        "{workspaceRoot}/scripts/jest-mocks/clack-prompts.js"
       ]
     }
   },
