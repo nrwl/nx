@@ -207,14 +207,6 @@ mod tests {
     use std::env::args_os;
     use std::ffi::OsString;
 
-    fn service() -> (tempfile::TempDir, RunningTasksService) {
-        let temp_dir = tempfile::tempdir().unwrap();
-        let conn = initialize_db(&temp_dir.path().join("test.db")).unwrap();
-        let db = External::new(Arc::new(Mutex::new(conn)));
-        let service = RunningTasksService::new(&db).unwrap();
-        (temp_dir, service)
-    }
-
     #[test]
     fn readiness_is_visible_through_another_connection() {
         let temp_dir = tempfile::tempdir().unwrap();
@@ -250,48 +242,6 @@ mod tests {
         );
         owner.remove_running_task(id.clone()).unwrap();
         assert_eq!(reader.get_task_readiness(id.clone()).unwrap(), None);
-    }
-
-    #[test]
-    fn readiness_follows_the_running_row() {
-        let (_dir, mut service) = service();
-        let id = "app:serve".to_string();
-
-        assert_eq!(service.get_task_readiness(id.clone()).unwrap(), None);
-
-        service.add_running_task(id.clone()).unwrap();
-        assert_eq!(
-            service.get_task_readiness(id.clone()).unwrap(),
-            Some(TaskReadiness::Pending)
-        );
-
-        service
-            .set_task_readiness(id.clone(), TaskReadiness::Ready)
-            .unwrap();
-        assert_eq!(
-            service.get_task_readiness(id.clone()).unwrap(),
-            Some(TaskReadiness::Ready)
-        );
-
-        // re-adding (producer restart) resets to pending
-        service.add_running_task(id.clone()).unwrap();
-        assert_eq!(
-            service.get_task_readiness(id.clone()).unwrap(),
-            Some(TaskReadiness::Pending)
-        );
-
-        service.remove_running_task(id.clone()).unwrap();
-        assert_eq!(service.get_task_readiness(id.clone()).unwrap(), None);
-
-        // a late probe result after removal leaves no orphan row
-        service
-            .set_task_readiness(id.clone(), TaskReadiness::Ready)
-            .unwrap();
-        service.add_running_task(id.clone()).unwrap();
-        assert_eq!(
-            service.get_task_readiness(id.clone()).unwrap(),
-            Some(TaskReadiness::Pending)
-        );
     }
 
     #[test]

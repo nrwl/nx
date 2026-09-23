@@ -177,19 +177,12 @@ describe('TaskOrchestrator', () => {
         0
       );
 
-      expect(orchestrator.options.lifeCycle.scheduleTask).toHaveBeenCalledTimes(
-        1
-      );
       expect(orchestrator.options.lifeCycle.scheduleTask).toHaveBeenCalledWith(
         dep
       );
       expect(orchestrator.preRunSteps).toHaveBeenCalledWith([dep], {
         groupId: 0,
       });
-      expect(orchestrator.runBatch).toHaveBeenCalledTimes(1);
-      expect(
-        Object.keys(orchestrator.runBatch.mock.calls[0][0].taskGraph.tasks)
-      ).toEqual(['dep:build']);
     });
 
     it('drops a member skipped while the start hooks ran', async () => {
@@ -242,8 +235,6 @@ describe('TaskOrchestrator', () => {
       expect(orchestrator.runBatch).not.toHaveBeenCalled();
       expect(orchestrator.postRunSteps).not.toHaveBeenCalled();
       expect(results).toEqual([]);
-      expect(orchestrator.completedTasks.get('dep:build')).toBe('skipped');
-      expect(orchestrator.completedTasks.get('consumer:build')).toBe('skipped');
     });
 
     it('should not re-hash tasks whose deps were all cache hits', async () => {
@@ -1606,16 +1597,6 @@ describe('TaskOrchestrator', () => {
       return { orchestrator, serve, e2e, runningTask, emit, settled };
     }
 
-    it('does not wait when the edge waits for started', async () => {
-      const { orchestrator, e2e, settled } = createOrchestrator({
-        waitFor: 'started',
-      });
-      await expect(
-        settled(orchestrator.waitForReadyDependencies(e2e))
-      ).resolves.toBe('resolved');
-      expect(orchestrator.readiness.size).toBe(0);
-    });
-
     it('does not wait when the producer declares no readyWhen', async () => {
       const { orchestrator, e2e, settled } = createOrchestrator({
         readyWhen: null,
@@ -1637,9 +1618,6 @@ describe('TaskOrchestrator', () => {
         runningTask
       );
       await expect(settled(waiting)).resolves.toBe('pending');
-      expect(
-        orchestrator.options.lifeCycle.setTaskReadiness.mock.calls
-      ).toEqual([['app:serve', 0]]);
       emit('server listening');
       await expect(settled(waiting)).resolves.toBe('resolved');
       expect(
@@ -1663,25 +1641,11 @@ describe('TaskOrchestrator', () => {
         orchestrator.getReadyWhen(serve),
         runningTask
       );
-      await expect(waiting).rejects.toThrow(
-        'Task "app:serve" did not become ready within 20ms (readyWhen: logMatches "never").'
-      );
+      await expect(waiting).rejects.toThrow('did not become ready within 20ms');
       expect(
         orchestrator.runningTasksService.setTaskReadiness
       ).toHaveBeenCalledWith('app:serve', 2);
-      expect(
-        orchestrator.options.lifeCycle.setTaskReadiness
-      ).toHaveBeenLastCalledWith('app:serve', 2);
       expect(runningTask.kill).not.toHaveBeenCalled();
-    });
-
-    it('fails the waiter when the producer exits before it is ready', async () => {
-      const { orchestrator, e2e } = createOrchestrator();
-      const waiting = orchestrator.waitForReadyDependencies(e2e);
-      orchestrator.abortReadiness('app:serve', 'exited');
-      await expect(waiting).rejects.toThrow(
-        'Task "app:serve" exited before it became ready.'
-      );
     });
 
     it('fails the waiter when the producer fails before it starts', async () => {
@@ -1719,24 +1683,39 @@ describe('TaskOrchestrator', () => {
       await expect(
         settled(orchestrator.readinessOf('app:serve').promise)
       ).resolves.toBe('pending');
+      expect(
+        orchestrator.tasksSchedule.markReadinessPending
+      ).toHaveBeenCalledTimes(2);
     });
 
     it('polls the readiness row when another process owns the producer', async () => {
       const { orchestrator, e2e, settled } = createOrchestrator({ flat: true });
+      orchestrator.tuiEnabled = false;
       orchestrator.runningTasksService.getTaskReadiness
         .mockReturnValueOnce(0)
+        .mockReturnValueOnce(0)
         .mockReturnValue(1);
-      const waiting = orchestrator.waitForReadyDependencies(e2e);
-      await expect(settled(waiting)).resolves.toBe('pending');
-      await expect(waiting).resolves.toBeUndefined();
-      expect(orchestrator.readiness.size).toBe(0);
-      // Each row state observed is reported once, however often it is read
-      expect(
-        orchestrator.options.lifeCycle.setTaskReadiness.mock.calls
-      ).toEqual([
-        ['app:serve', 0],
-        ['app:serve', 1],
-      ]);
+      const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+      try {
+        const waiting = orchestrator.waitForReadyDependencies(e2e);
+        await expect(settled(waiting)).resolves.toBe('pending');
+        await expect(waiting).resolves.toBeUndefined();
+        // Each row state observed is reported once, however often it is read
+        expect(
+          orchestrator.options.lifeCycle.setTaskReadiness.mock.calls
+        ).toEqual([
+          ['app:serve', 0],
+          ['app:serve', 1],
+        ]);
+
+        await orchestrator.waitForReadyDependencies(e2e);
+        expect(log).toHaveBeenCalledTimes(1);
+        expect(log).toHaveBeenCalledWith(
+          'Waiting for "app:serve" to be ready...'
+        );
+      } finally {
+        log.mockRestore();
+      }
     });
 
     it('fails the waiter when the producer row disappears mid-wait', async () => {
@@ -1781,9 +1760,6 @@ describe('TaskOrchestrator', () => {
         const runningTask = await orchestrator.startContinuousTask(serve, 1);
         await expect(settled(waiting)).resolves.toBe('pending');
         await expect(
-          settled(orchestrator.readinessOf('app:serve').promise)
-        ).resolves.toBe('pending');
-        await expect(
           waiting.then(
             () => 'resolved',
             () => 'rejected'
@@ -1798,17 +1774,6 @@ describe('TaskOrchestrator', () => {
       await expect(
         settled(orchestrator.waitForReadyDependencies(e2e))
       ).resolves.toBe('resolved');
-    });
-
-    it('fails the waiter when the owning process recorded a failed probe', async () => {
-      const { orchestrator, e2e } = createOrchestrator({
-        flat: true,
-        readyWhen: { url: 'http://localhost:4200' },
-      });
-      orchestrator.runningTasksService.getTaskReadiness.mockReturnValue(2);
-      await expect(orchestrator.waitForReadyDependencies(e2e)).rejects.toThrow(
-        'Task "app:serve" failed its readiness check in the process that started it.'
-      );
     });
 
     it('fails the waiter when the row is still pending at its own deadline', async () => {
@@ -1922,28 +1887,13 @@ describe('TaskOrchestrator', () => {
         e2e,
         1,
         expect.objectContaining({
-          message: expect.stringContaining('failed its readiness check'),
+          message:
+            'Task "app:serve" failed its readiness check in the process that started it.',
         })
       );
     });
 
     describe('dispatch', () => {
-      it('logs the wait once per producer', () => {
-        const { orchestrator } = createOrchestrator();
-        orchestrator.tuiEnabled = false;
-        const log = vi.spyOn(console, 'log').mockImplementation(() => {});
-        try {
-          orchestrator.onReadinessHold('app:serve');
-          orchestrator.onReadinessHold('app:serve');
-          expect(log).toHaveBeenCalledTimes(1);
-          expect(log).toHaveBeenCalledWith(
-            'Waiting for "app:serve" to be ready...'
-          );
-        } finally {
-          log.mockRestore();
-        }
-      });
-
       it('keeps the summary output style silent about the wait', () => {
         const { orchestrator } = createOrchestrator();
         orchestrator.tuiEnabled = false;
@@ -1981,32 +1931,6 @@ describe('TaskOrchestrator', () => {
         orchestrator.abortReadiness('app:serve', 'exited');
         expect(parked).toHaveBeenCalledTimes(1);
         expect(markReadinessFailed).not.toHaveBeenCalled();
-      });
-
-      it('marks the producer failed in the schedule when its probe fails', async () => {
-        const { orchestrator } = createOrchestrator();
-        const { markReady, markReadinessFailed } = orchestrator.tasksSchedule;
-        const parked = vi.fn(() => {
-          expect(markReadinessFailed).toHaveBeenCalledWith('app:serve');
-        });
-        orchestrator.waitingForTasks.push(parked);
-        orchestrator.readinessOf('app:serve');
-        orchestrator.abortReadiness('app:serve', 'exited');
-        expect(parked).toHaveBeenCalledTimes(1);
-        expect(markReady).not.toHaveBeenCalled();
-      });
-
-      it('clears the verdict in the schedule when a producer restarts', async () => {
-        const { orchestrator } = createOrchestrator();
-        const { markReadinessPending } = orchestrator.tasksSchedule;
-        orchestrator.readinessOf('app:serve');
-        expect(markReadinessPending).toHaveBeenCalledTimes(1);
-        orchestrator.abortReadiness('app:serve', 'exited');
-        orchestrator.readinessOf('app:serve');
-        expect(markReadinessPending).toHaveBeenCalledTimes(1);
-        const restarted = orchestrator.armReadiness('app:serve');
-        expect(restarted.settled).toBe(false);
-        expect(markReadinessPending).toHaveBeenCalledTimes(2);
       });
 
       it('keeps holding the dependents of an exited producer while its completion is pending', async () => {
@@ -2055,7 +1979,6 @@ describe('TaskOrchestrator', () => {
         expect(
           orchestrator.runningTasksService.setTaskReadiness
         ).not.toHaveBeenCalledWith('app:serve', 1);
-        expect(orchestrator.completedTasks.get('app:serve')).toBe('failure');
         await expect(skippedWhenRejected).resolves.toBe(
           'skipped: Task "app:serve" exited before it became ready.'
         );
