@@ -1,3 +1,4 @@
+import { existsSync, rmSync } from 'fs';
 import { join } from 'path';
 import { TempFs } from '../internal-testing-utils/temp-fs';
 import type { ProjectGraph } from '../config/project-graph';
@@ -6,6 +7,7 @@ import {
   closeDbConnection,
   connectToNxDb,
   IoSnapshotStore,
+  NxCache,
   getIoSnapshotDeferredTaskIds,
 } from '../native';
 
@@ -166,5 +168,42 @@ describe('io snapshot outputs', () => {
     expect(getIoSnapshotDeferredTaskIds(snapshots, taskGraph)).toEqual([
       'web:build',
     ]);
+  });
+
+  // The runner caches and restores `task.outputs`, which is the list this extends.
+  it('restores an observed-only output on a cache hit', async () => {
+    await tempFs.createFiles({
+      'dist/libs/ui/index.js': 'declared',
+      'libs/ui/generated/types.d.ts': 'observed',
+    });
+    const taskGraph = graph([task('ui', 'build', ['dist/libs/ui'])]);
+    applyIoSnapshotOutputs(
+      projectGraph,
+      taskGraph,
+      snapshotsFor({
+        'ui:build': { outputs: ['libs/ui/generated/types.d.ts'] },
+      })
+    );
+    const { outputs } = taskGraph.tasks['ui:build'];
+    const cacheDb = connectToNxDb(join(tempFs.tempDir, 'cache-db'), 'cache');
+    const cache = new NxCache(
+      tempFs.tempDir,
+      join(tempFs.tempDir, 'cache'),
+      cacheDb,
+      false
+    );
+    cache.put('hash', 'terminal output', outputs, 0);
+    rmSync(join(tempFs.tempDir, 'dist'), { recursive: true });
+    rmSync(join(tempFs.tempDir, 'libs'), { recursive: true });
+
+    cache.copyFilesFromCache(cache.get('hash'), outputs);
+
+    expect(
+      existsSync(join(tempFs.tempDir, 'libs/ui/generated/types.d.ts'))
+    ).toBe(true);
+    expect(existsSync(join(tempFs.tempDir, 'dist/libs/ui/index.js'))).toBe(
+      true
+    );
+    closeDbConnection(cacheDb);
   });
 });

@@ -117,6 +117,21 @@ describe('loadIoSnapshotsForRun', () => {
     });
   });
 
+  it('hashes natively instead of reusing a stale set when the refresh fails', async () => {
+    // As the native store behaves: the old set is there, but not young enough.
+    store.get.mockImplementation((_commit, maxAgeMs) =>
+      maxAgeMs === undefined ? stored() : null
+    );
+    cloud.fetchIoSnapshots.mockRejectedValueOnce(coded('ENOTFOUND', 'x'));
+    expect(await loadIoSnapshotsForRun(nxJson, {}, optedIn())).toEqual({
+      status: 'skipped',
+      reason: 'offline',
+      message: 'x',
+    });
+    expect(store.get).toHaveBeenCalledTimes(1);
+    expect(store.get).toHaveBeenCalledWith('head', 60 * 60 * 1000);
+  });
+
   // Only reasons that point at misconfiguration warn on every run.
   it('warns for an unauthorized read but not when Nx Cloud has no set', async () => {
     cloud.fetchIoSnapshots.mockRejectedValueOnce(coded('NO_SNAPSHOTS'));
