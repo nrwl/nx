@@ -14,7 +14,7 @@ export function rememberIoSnapshots(snapshots: IoSnapshots): void {
 
 /**
  * Exactly the version the client hashes from, never a newer import for the
- * same commit. `undefined` once that version has been pruned.
+ * same commit. `undefined` when it is not stored, e.g. after `nx reset`.
  */
 export function getIoSnapshotsForVersion(
   version: IoSnapshotVersion | undefined

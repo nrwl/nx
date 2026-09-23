@@ -158,8 +158,8 @@ export declare class IoSnapshotStore {
    */
   get(commit: string, maxAgeMs?: number | undefined | null): IoSnapshots | null
   /**
-   * Exactly the version of `commit` fetched at `fetched_at`; `null` once it
-   * has been pruned or its row cannot be read.
+   * Exactly the version of `commit` fetched at `fetched_at`; `null` when it
+   * is not stored or its row cannot be read.
    */
   getVersion(commit: string, fetchedAt: number): IoSnapshots | null
 }

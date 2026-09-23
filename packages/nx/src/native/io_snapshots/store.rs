@@ -78,8 +78,8 @@ impl IoSnapshotStore {
         Some(IoSnapshots::new(resolution, self.clone(), HashMap::new()))
     }
 
-    /// Exactly the version of `commit` fetched at `fetched_at`; `null` once it
-    /// has been pruned or its row cannot be read.
+    /// Exactly the version of `commit` fetched at `fetched_at`; `null` when it
+    /// is not stored or its row cannot be read.
     #[napi]
     pub fn get_version(&self, commit: String, fetched_at: i64) -> Option<IoSnapshots> {
         let resolution = readable(&commit, self.read_resolution(&commit, Some(fetched_at)))?;
@@ -99,12 +99,6 @@ fn readable(
 }
 
 pub type Db = Arc<Mutex<NxDbConnection>>;
-
-/// Commits whose sets are kept; older ones are pruned on each write.
-const RETAINED_COMMITS: i64 = 5;
-/// Versions kept per commit: the newest, and the one a run that started
-/// before it may still be reading.
-const RETAINED_VERSIONS: i64 = 2;
 
 /// One row per version for the set, one row per task for its entry, so a run
 /// reads the tasks it plans instead of the workspace's whole set.
@@ -126,9 +120,9 @@ CREATE TABLE IF NOT EXISTS io_snapshot_entries (
 
 /// The SQL behind the store; not exposed to JS.
 impl IoSnapshotStore {
-    /// Adds the set as a version of its commit and prunes to the newest
-    /// commits and versions. One transaction, so a reader sees the previous
-    /// set or the new one, never a gap.
+    /// Adds the set as a version of its commit. Versions are never pruned, so a
+    /// pinned run can always read its own; `nx reset` clears them. One
+    /// transaction, so a reader sees the previous set or the new one, never a gap.
     pub(super) fn write(&self, set: &ImportedSet) -> Result<()> {
         let entries: Vec<(&String, String)> = set
             .snapshots
@@ -145,21 +139,9 @@ impl IoSnapshotStore {
                  VALUES (?1, ?2, ?3)",
                 params![commit, fetched_at, resolution.tasks],
             )?;
-            // Never the version just written, whatever the clock did.
+            // A version rewritten at the same instant.
             conn.execute(
-                "DELETE FROM io_snapshot_versions WHERE NOT (commit_sha = ?1 AND fetched_at = ?2) \
-                 AND (commit_sha NOT IN (SELECT commit_sha FROM io_snapshot_versions \
-                      GROUP BY commit_sha ORDER BY MAX(fetched_at) DESC, commit_sha LIMIT ?3) \
-                   OR fetched_at < (SELECT newer.fetched_at FROM io_snapshot_versions newer \
-                      WHERE newer.commit_sha = io_snapshot_versions.commit_sha \
-                      ORDER BY newer.fetched_at DESC LIMIT 1 OFFSET ?4 - 1))",
-                params![commit, fetched_at, RETAINED_COMMITS, RETAINED_VERSIONS],
-            )?;
-            // A version rewritten at the same instant, and pruned versions.
-            conn.execute(
-                "DELETE FROM io_snapshot_entries WHERE (commit_sha = ?1 AND fetched_at = ?2) \
-                 OR (commit_sha, fetched_at) NOT IN \
-                    (SELECT commit_sha, fetched_at FROM io_snapshot_versions)",
+                "DELETE FROM io_snapshot_entries WHERE commit_sha = ?1 AND fetched_at = ?2",
                 params![commit, fetched_at],
             )?;
             let mut insert = conn.prepare(
@@ -357,7 +339,7 @@ mod tests {
     }
 
     #[test]
-    fn reads_only_the_requested_tasks_and_prunes_old_commits() {
+    fn reads_only_the_requested_tasks_and_keeps_every_commit() {
         let (_dir, db) = temp_store();
         assert!(resolution_of(&db, "c0").is_none());
         assert!(db.read_entries("c0", 0, &["a:build"]).unwrap().is_empty());
@@ -377,27 +359,7 @@ mod tests {
             vec!["libs/a:build/a.ts".to_string(), "b.ts".into()]
         );
         assert_eq!(resolution_of(&db, "c5").unwrap().tasks, 1);
-        // Only the newest five commits survive, with their entries.
-        assert!(resolution_of(&db, "c0").is_none());
-        assert!(db.read_entries("c0", 0, &["a:build"]).unwrap().is_empty());
-        assert!(resolution_of(&db, "c1").is_some());
-    }
-
-    // A clock that stepped back must not prune the set being written.
-    #[test]
-    fn never_prunes_the_set_it_writes() {
-        let (_dir, db) = temp_store();
-        for i in 10..15 {
-            db.write(&imported(&format!("c{i}"), i, &["a:build"]))
-                .unwrap();
-        }
-        db.write(&imported("old", 1, &["a:build"])).unwrap();
-        assert!(resolution_of(&db, "old").is_some());
-        assert_eq!(db.read_entries("old", 1, &["a:build"]).unwrap().len(), 1);
-        // Nor an older version of a commit, written after a newer one.
-        db.write(&imported("c14", 3, &["a:build"])).unwrap();
-        db.write(&imported("c14", 2, &["a:build"])).unwrap();
-        assert_eq!(db.read_entries("c14", 2, &["a:build"]).unwrap().len(), 1);
+        assert_eq!(db.read_entries("c0", 0, &["c:build"]).unwrap().len(), 1);
     }
 
     #[test]
@@ -438,14 +400,12 @@ mod tests {
     }
 
     #[test]
-    fn keeps_the_newest_two_versions_of_a_commit() {
+    fn keeps_every_version_of_a_commit() {
         let (_dir, db) = temp_store();
         for fetched_at in 1..=3 {
             db.write(&imported("c1", fetched_at, &["a:build"])).unwrap();
         }
-        assert!(db.read_resolution("c1", Some(1)).unwrap().is_none());
-        assert!(db.read_entries("c1", 1, &["a:build"]).unwrap().is_empty());
-        for fetched_at in [2, 3] {
+        for fetched_at in 1..=3 {
             assert!(
                 db.read_resolution("c1", Some(fetched_at))
                     .unwrap()
