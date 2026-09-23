@@ -1,13 +1,5 @@
 import { formatIoSnapshotSummary } from './report';
-import type { IoSnapshotReport, IoSnapshots } from '../native';
-import type { IoSnapshotOutcome } from './store';
-
-function resolved(
-  status: 'fetched' | 'cached',
-  commit = 'abc123'
-): IoSnapshotOutcome {
-  return { status, snapshots: { commit } as IoSnapshots };
-}
+import type { IoSnapshotReport } from '../native';
 
 const resolution = {
   requestedCommit: 'abc123',
@@ -20,10 +12,6 @@ const resolution = {
 };
 
 describe('formatIoSnapshotSummary', () => {
-  it('prints nothing when snapshots are disabled', () => {
-    expect(formatIoSnapshotSummary(null, null)).toBeNull();
-  });
-
   // `unusable-output` reports a dropped write on a task that IS hashed from
   // its snapshot, and one task can raise several. Counting diagnostics would
   // put that task in both totals and let them exceed the task count.
@@ -47,7 +35,7 @@ describe('formatIoSnapshotSummary', () => {
         ],
         resolution,
       } as IoSnapshotReport,
-      null
+      'fetched'
     );
     expect(summary.line).toBe(
       'I/O snapshots: 2 tasks hashed from snapshot (2 with observed outputs), 1 task fell back (1 missing)'
@@ -70,12 +58,12 @@ describe('formatIoSnapshotSummary', () => {
       ],
       resolution,
     };
-    const summary = formatIoSnapshotSummary(result, resolved('cached'));
+    const summary = formatIoSnapshotSummary(result, 'cached');
     expect(summary.line).toBe(
       'I/O snapshots: 2 tasks hashed from snapshot (1 with observed outputs), 5 tasks fell back (2 missing, 1 disabled, 1 escapes-workspace, 1 root-anchored-glob)'
     );
     expect(summary.bodyLines).toEqual([
-      'bundle: cached for abc123',
+      'bundle: cached',
       'commit abc123, digest deadbeef, 3 tasks in bundle',
       'c:e2e: sandbox.enabled is false',
       'd:test: no snapshot for this task',
@@ -85,31 +73,15 @@ describe('formatIoSnapshotSummary', () => {
     ]);
   });
 
-  it('explains a bundle-level failure with the fetch reason', () => {
-    const result: IoSnapshotReport = {
-      used: [],
-      tasksWithOutputs: [],
-      diagnostics: [{ reason: 'no-bundle' }],
-    };
-    expect(
-      formatIoSnapshotSummary(result, {
-        status: 'skipped',
-        reason: 'offline',
-        message: 'ENOTFOUND',
-      }).line
-    ).toBe('I/O snapshots: none used (offline)');
+  it('says none were used when the set could not be read', () => {
     expect(
       formatIoSnapshotSummary(
         {
-          ...result,
-          diagnostics: [
-            {
-              reason: 'invalid-bundle',
-              message: 'bad',
-            },
-          ],
+          used: [],
+          tasksWithOutputs: [],
+          diagnostics: [{ reason: 'invalid-bundle', message: 'bad' }],
         },
-        null
+        'cached'
       ).line
     ).toBe('I/O snapshots: none used (invalid bundle: bad)');
   });

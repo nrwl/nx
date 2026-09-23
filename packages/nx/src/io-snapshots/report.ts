@@ -1,5 +1,4 @@
 import type { IoSnapshotDiagnostic, IoSnapshotReport } from '../native';
-import type { IoSnapshotOutcome } from './store';
 
 export interface IoSnapshotSummary {
   /** One line for the default output, e.g. "I/O snapshots: 12 tasks hashed from snapshot, 3 fell back". */
@@ -9,17 +8,13 @@ export interface IoSnapshotSummary {
 }
 
 /**
- * Formats the once-per-run summary. `result` is what hashing used; `fetch`
- * explains where the bundle came from (or why there is none). Returns null
- * when snapshots are disabled so callers print nothing.
+ * Formats the once-per-run summary of a run that resolved a set: `result` is
+ * what hashing used, `status` whether the set was fetched or already stored.
  */
 export function formatIoSnapshotSummary(
-  result: IoSnapshotReport | null,
-  fetch: IoSnapshotOutcome | null
-): IoSnapshotSummary | null {
-  if (!result) {
-    return null;
-  }
+  result: IoSnapshotReport,
+  status: 'fetched' | 'cached'
+): IoSnapshotSummary {
   const used = result.used.length;
   // A task-level diagnostic used to mean the task was withheld. An
   // `unusable-output` does not: it reports a dropped write on a task that is
@@ -35,21 +30,14 @@ export function formatIoSnapshotSummary(
 
   const withOutputs = result.tasksWithOutputs?.length ?? 0;
   const line = bundleLevel
-    ? `I/O snapshots: none used (${describeBundleLevel(bundleLevel, fetch)})`
+    ? `I/O snapshots: none used (invalid bundle: ${bundleLevel.message})`
     : `I/O snapshots: ${plural(used, 'task')} hashed from snapshot${
         withOutputs ? ` (${withOutputs} with observed outputs)` : ''
       }, ${plural(fellBack, 'task')} fell back${
         fellBack ? ` (${summarizeReasons(byReason)})` : ''
       }`;
 
-  const bodyLines: string[] = [];
-  if (fetch) {
-    bodyLines.push(
-      fetch.status === 'skipped'
-        ? `bundle: skipped (${fetch.reason})`
-        : `bundle: ${fetch.status} for ${fetch.snapshots.commit}`
-    );
-  }
+  const bodyLines: string[] = [`bundle: ${status}`];
   if (result.resolution) {
     bodyLines.push(
       `commit ${result.resolution.requestedCommit}, digest ${result.resolution.digest}, ${result.resolution.tasks} tasks in bundle`
@@ -63,8 +51,6 @@ export function formatIoSnapshotSummary(
 
 function describeDiagnostic(d: IoSnapshotDiagnostic): string {
   switch (d.reason) {
-    case 'no-bundle':
-      return 'no snapshot bundle for the current commit';
     case 'invalid-bundle':
       return `invalid snapshot set: ${d.message}`;
     case 'disabled':
@@ -88,18 +74,6 @@ function describeDiagnostic(d: IoSnapshotDiagnostic): string {
     default:
       return `${d.taskId ? `${d.taskId}: ` : ''}${d.reason}`;
   }
-}
-
-function describeBundleLevel(
-  d: IoSnapshotDiagnostic,
-  fetch: IoSnapshotOutcome | null
-): string {
-  if (d.reason === 'invalid-bundle') {
-    return `invalid bundle: ${d.message}`;
-  }
-  return fetch?.status === 'skipped'
-    ? fetch.reason
-    : 'no bundle for this commit';
 }
 
 function countByReason(

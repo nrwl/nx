@@ -1241,16 +1241,12 @@ function reportIoSnapshots(
   taskGraph: TaskGraph,
   nxArgs: NxArgs
 ): void {
-  if (!outcome) return;
+  if (!outcome || outcome.status === 'skipped') return;
   if (!nxArgs.verbose && process.env.NX_VERBOSE_LOGGING !== 'true') return;
-  const snapshots = snapshotsOf(outcome);
   const summary = formatIoSnapshotSummary(
-    snapshots
-      ? buildIoSnapshotOverrides(projectGraph, taskGraph, snapshots)
-      : null,
-    outcome
+    buildIoSnapshotOverrides(projectGraph, taskGraph, outcome.snapshots),
+    outcome.status
   );
-  if (!summary) return;
   output.note({ title: summary.line, bodyLines: summary.bodyLines });
 }
 
