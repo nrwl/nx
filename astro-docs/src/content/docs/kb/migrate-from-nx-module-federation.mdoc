@@ -104,7 +104,8 @@ Flag Angular and server-side rendering apps now.
 
 The `host` generator already added `@module-federation/enhanced` to your root `package.json`.
 Move it under `dependencies` by hand if it sits in `devDependencies`, since the federation
-runtime is imported by application code. Only if it is missing:
+runtime is imported by application code, then run your package manager's install so the lockfile
+follows. Only if it is missing:
 
 ```shell
 npm add --save-prod @module-federation/enhanced
@@ -215,7 +216,8 @@ read `NX_TASK_TARGET_PROJECT` and friends to find the project, so `npx webpack s
 app folder crashes.
 
 The options on your old `build` target become `NxAppWebpackPlugin` or `NxAppRspackPlugin`
-options. Paths such as `main`, `index`, `tsConfig`, `assets`, and `styles` resolve from the
+options. The plugin also merges whatever options the running target still carries in
+`project.json`, and those win, so leave none of the old build options there. Paths such as `main`, `index`, `tsConfig`, `assets`, and `styles` resolve from the
 project root, so `apps/webpack-host/src/main.ts` becomes `./src/main.ts`, while
 `fileReplacements` paths resolve from the workspace root. Values that differed per named
 configuration become `process.env.NODE_ENV === 'production'` ternaries, which Step 7 sets per
@@ -268,8 +270,8 @@ module.exports = {
 
 ```js
 // apps/rspack-host/rspack.config.js
-const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin.js');
-const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin.js');
+const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
 const {
   ModuleFederationPlugin,
 } = require('@module-federation/enhanced/rspack');
@@ -491,18 +493,18 @@ it.
 `withModuleFederation` and `NxModuleFederationPlugin` mutated the bundler config on their way
 through. Set these yourself:
 
-| Setting                     | Value                                                                                                                                                                           |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `output.uniqueName`         | The project name                                                                                                                                                                |
-| `output.publicPath`         | `'auto'`                                                                                                                                                                        |
-| `output.scriptType`         | `'text/javascript'` on webpack                                                                                                                                                  |
-| `output.clean`              | `true`. The bundler CLI does not clear the output directory, so a development build lands on top of production files                                                            |
-| `resolve.modules`           | The workspace root appended after `node_modules`                                                                                                                                |
-| `optimization.runtimeChunk` | `false` everywhere, and also as the app-plugin `runtimeChunk` option, which overwrites the top-level value                                                                      |
-| `commonChunk`               | `false` in the app-plugin options. `NxAppWebpackPlugin` defaults `commonChunk` to `true`, where `withNx()` left it unset, which adds a `common.<hash>.js` chunk to every remote |
-| `splitChunks.cacheGroups`   | `default` and `common` set to `false`, only if the old config used `NxModuleFederationPlugin`. `withModuleFederation` did not set them, and adding them changes the output      |
-| `lazyCompilation` (Rspack)  | `false`. rspack-cli dev mode defaults it on and it breaks federation                                                                                                            |
-| `devServer.hot`             | `true` on every app. Hot updates reach the host through the remote's dev server; without it, editing a remote reloads the host and resets its state                             |
+| Setting                     | Value                                                                                                                                                                                                               |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `output.uniqueName`         | The project name, not the normalized container name                                                                                                                                                                 |
+| `output.publicPath`         | `'auto'`                                                                                                                                                                                                            |
+| `output.scriptType`         | `'text/javascript'` on webpack                                                                                                                                                                                      |
+| `output.clean`              | `true`. The bundler CLI does not clear the output directory, so a development build lands on top of production files                                                                                                |
+| `resolve.modules`           | The workspace root appended after `node_modules`                                                                                                                                                                    |
+| `optimization.runtimeChunk` | `false`, and also as the app-plugin `runtimeChunk` option, which overwrites the top-level value. The wrapper let a host under the dev server keep the plugin default; `false` there too passes the hot-update check |
+| `commonChunk`               | `false` in the app-plugin options. `NxAppWebpackPlugin` defaults `commonChunk` to `true`, where `withNx()` left it unset, which adds a `common.<hash>.js` chunk to every remote                                     |
+| `splitChunks.cacheGroups`   | `default` and `common` set to `false`, only if the old config used `NxModuleFederationPlugin`. `withModuleFederation` did not set them, and adding them changes the output                                          |
+| `lazyCompilation` (Rspack)  | `false`. rspack-cli dev mode defaults it on and it breaks federation                                                                                                                                                |
+| `devServer.hot`             | `true` on every app. Hot updates reach the host through the remote's dev server; without it, editing a remote reloads the host and resets its state                                                                 |
 
 The Nx dev server also derived `devMiddleware.publicPath` from `baseHref`, mapped `publicHost` to
 `client.webSocketURL`, and passed `proxyConfig`, `allowedHosts`, and the `ssl` options through.
@@ -518,8 +520,9 @@ Point both the `build` and `serve` targets at the bundler CLI, with `NODE_ENV` s
 for the named configurations the executor used to pass, and start the set you want explicitly.
 One behavior change: the old executor set `NODE_ENV=production` for every configuration, so a
 `development` build that now runs with `NODE_ENV=development` gets development-mode output such
-as `react/jsx-dev-runtime`. Set `NODE_ENV=production` on both configurations if you want the old
-output back.
+as `react/jsx-dev-runtime`. That module is not in your stats, so each app bundles its own copy;
+it imports the shared `react`, so leave it out or share it alongside `react/jsx-runtime`. Set
+`NODE_ENV=production` on both configurations if you want the old output back.
 
 ```jsonc
 // apps/webpack-host/project.json
@@ -635,7 +638,8 @@ npm remove @nx/module-federation
 `@nx/rspack` on v23 depends on `@nx/module-federation`, so on an Rspack workspace it stays in
 `node_modules` and its absence from `package.json` proves nothing; `@nx/react` lists it only as an
 optional peer, so on a webpack-only workspace `npm remove` takes it out. Build once with
-`node_modules/@nx/module-federation` renamed out of the way if it is still there. Keep `@module-federation/enhanced` in
+`node_modules/@nx/module-federation` renamed out of the way if it is still there, then put it
+back: `@nx/rspack` still resolves it and the next install restores it anyway. Keep `@module-federation/enhanced` in
 `package.json` as a direct dependency and commit the lockfile.
 
 ## What you lose
