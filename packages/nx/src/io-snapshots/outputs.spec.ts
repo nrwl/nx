@@ -137,6 +137,21 @@ describe('io snapshot outputs', () => {
     expect(taskGraph.tasks['web:build'].outputs).toHaveLength(3);
   });
 
+  it('merges into a set, so a declared duplicate collapses too', () => {
+    const taskGraph = graph([
+      task('web', 'build', ['dist/apps/web', 'dist/apps/web']),
+    ]);
+    const snapshots = snapshotsFor({
+      'web:build': { outputs: ['apps/web/.next/cache/**'] },
+    });
+    const result = applyIoSnapshotOutputs(projectGraph, taskGraph, snapshots);
+    expect(result.applied).toEqual(['web:build']);
+    expect(taskGraph.tasks['web:build'].outputs).toEqual([
+      'dist/apps/web',
+      'apps/web/.next/cache/**',
+    ]);
+  });
+
   it('lets a consumer of an observed-only write defer to the second wave', () => {
     const taskGraph = graph(
       [task('ui', 'build', ['dist/libs/ui']), task('web', 'build', [])],

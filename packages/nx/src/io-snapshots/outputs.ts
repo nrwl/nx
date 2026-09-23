@@ -5,7 +5,7 @@ import { ioSnapshotEligibilityOptions } from './overrides';
 
 /**
  * Extends each eligible task's outputs in place to `declared ∪ observed`,
- * declared first, deduplicated by exact string. Ineligible tasks keep their
+ * declared first, as a set of exact strings. Ineligible tasks keep their
  * declared outputs untouched. Idempotent. Runs before hashing so the task
  * graph the hasher, the cache, and the deferral check see carries the union.
  */
@@ -25,9 +25,12 @@ export function applyIoSnapshotOutputs(
   for (const [taskId, outputs] of Object.entries(observed)) {
     const task = taskGraph.tasks[taskId];
     if (!task) continue;
-    const added = outputs.filter((output) => !task.outputs.includes(output));
-    if (added.length) {
-      task.outputs = [...task.outputs, ...added];
+    const merged = [...new Set([...task.outputs, ...outputs])];
+    const changed =
+      merged.length !== task.outputs.length ||
+      merged.some((output, i) => output !== task.outputs[i]);
+    if (changed) {
+      task.outputs = merged;
       applied.push(taskId);
     }
   }
