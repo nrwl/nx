@@ -705,17 +705,21 @@ impl HashPlanner {
             .into_iter()
             .map(|instruction| pool.intern(instruction))
             .collect();
+        // With a snapshot, reads of other tasks' outputs are observed reads.
         if snapshot.is_none() {
-            // Both are file inputs; with a snapshot, reads of other tasks'
-            // outputs are observed reads and {input, projects} filesets are
-            // part of the replaced set.
             ids.extend(
                 self.gather_dependency_outputs(task, task_graph, &inputs.deps_outputs)?
                     .into_iter()
-                    .chain(self.gather_project_inputs(&inputs.project_inputs)?)
                     .map(|instruction| pool.intern(instruction)),
             );
         }
+        // Always gathered: a selected input can carry env, runtime or externals
+        // too. Its filesets are dropped with the rest of the replaced set.
+        ids.extend(
+            self.gather_project_inputs(&inputs.project_inputs)?
+                .into_iter()
+                .map(|instruction| pool.intern(instruction)),
+        );
 
         ids.extend(self.gather_dependency_inputs(
             task,

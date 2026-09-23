@@ -2241,6 +2241,39 @@ describe('task planner', () => {
       });
     });
 
+    it('keeps the non-file inputs of a project-selected input and replaces its filesets', () => {
+      const { taskGraph, projectGraph } = fixture();
+      (projectGraph.nodes.parent.data.targets.build as any).inputs.push(
+        { input: 'selected', projects: ['child'] },
+        { dependentTasksOutputFiles: '**/*.d.ts' }
+      );
+      (projectGraph.nodes.child.data as any).namedInputs.selected = [
+        '{projectRoot}/**/*',
+        { env: 'MODE' },
+      ];
+      const planner = new HashPlanner(
+        {
+          namedInputs: { prod: ['default', '!{projectRoot}/**/*.spec.ts'] },
+        } as any,
+        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+      );
+      expect(
+        planner.getPlans(['parent:build'], taskGraph)['parent:build']
+      ).toEqual(
+        expect.arrayContaining(['env:MODE', '**/*.d.ts:dist/libs/child'])
+      );
+
+      const plan = planner.getPlans(
+        ['parent:build'],
+        taskGraph,
+        snapshotsFor({ 'parent:build': { inputs: ['libs/parent/filea.ts'] } })
+      )['parent:build'];
+      expect(plan).toContain('env:MODE');
+      expect(plan).not.toContain('child:libs/child/**/*');
+      // Dependency outputs count through the reads the trace recorded.
+      expect(plan).not.toContain('**/*.d.ts:dist/libs/child');
+    });
+
     it("hashes reads of a producer task's outputs from disk and defers the task", () => {
       const { planner, taskGraph } = fixture();
       const snapshots = snapshotsFor({
