@@ -127,7 +127,8 @@ The official plugin takes explicit entries, so resolve the names and ports yours
 Two values that Nx derived are easy to lose here:
 
 - The container name is normalized.
-  Every character outside `[a-zA-Z0-9_$]` becomes `_`, and so does a leading digit, so a
+  Every character outside `[a-zA-Z0-9_$]` becomes `_`, and so does a leading character that
+  cannot start an identifier, so a
   project named `webpack-host` publishes as `webpack_host`.
   Use the normalized form for `name`.
 - The remote import alias is the original project name.
@@ -244,6 +245,7 @@ const {
 } = require('@module-federation/enhanced/webpack');
 const { join } = require('node:path');
 const mf = require('./module-federation.config');
+const isProd = process.env.NODE_ENV === 'production';
 
 module.exports = {
   output: {
@@ -255,6 +257,8 @@ module.exports = {
   },
   resolve: { modules: ['node_modules', join(__dirname, '../..')] },
   optimization: { runtimeChunk: false },
+  // every app needs this block, remotes included: the header is what lets a host fetch
+  // remoteEntry.js from another port
   devServer: {
     port: 4700,
     hot: true,
@@ -286,6 +290,7 @@ const {
 } = require('@module-federation/enhanced/rspack');
 const { join } = require('node:path');
 const mf = require('./module-federation.config');
+const isProd = process.env.NODE_ENV === 'production';
 
 module.exports = {
   // rspack-cli turns this on in dev mode and it breaks Module Federation
@@ -302,6 +307,8 @@ module.exports = {
     // only if the old config used NxModuleFederationPlugin, which set these; withModuleFederation did not
     splitChunks: { cacheGroups: { default: false, common: false } },
   },
+  // every app needs this block, remotes included: the header is what lets a host fetch
+  // remoteEntry.js from another port
   devServer: {
     port: 4703,
     hot: true,
