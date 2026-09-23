@@ -266,7 +266,7 @@ module.exports = {
 };
 ```
 
-Five things decide whether the map you write matches the one Nx produced:
+Four things decide whether the map you write matches the one Nx produced:
 
 - **Secondary entry points are separate keys.** A key such as `pkg` does not cover `pkg/subpath`
   requests, so list the subpaths the stats show.
@@ -276,13 +276,16 @@ Five things decide whether the map you write matches the one Nx produced:
 - **The stats rewrite one field.** A callback that set `requiredVersion: false` shows up as
   `requiredVersion: '^<version>'`. For a workspace library, keep the `false` and the `version`
   your callback wrote.
-- **A `shared` key matches the request string.** An import that reaches a workspace library by a
-  relative path rather than its package name resolves to a separate copy, so the entry you wrote
-  never applies to it.
 - **A source-only workspace library needs an explicit `version`.** It has no published version
   for the plugin to compare, and `singleton: true` alone did not make host and remotes resolve to
   one copy in testing. Use the version the library declares or one your team agrees on, and do
   not give the same version to two different implementations.
+
+{% aside type="note" title="Imports have to use the library's package name" %}
+A `shared` key matches the request string, so a library imported by a relative path into its
+source, rather than by its package name, resolves to a separate copy. Nx rewrote those requests
+for you and the official plugin does not.
+{% /aside %}
 
 A config that called `sharePackages`, `shareWorkspaceLibraries`, or `mapRemotes` keeps the same
 shape once you replace each call with the values it returned, which the stats give you:
