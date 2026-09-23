@@ -1,5 +1,5 @@
 import type { NxJsonConfiguration } from '../config/nx-json';
-import { isNxCloudDisabled } from '../utils/nx-cloud-utils';
+import { isNxCloudConfigured } from '../utils/nx-cloud-utils';
 
 export interface IoSnapshotCloudOptions {
   accessToken?: string;
@@ -10,20 +10,30 @@ export interface IoSnapshotCloudOptions {
 
 export interface IoSnapshotEnv {
   NX_IO_SNAPSHOTS?: string;
+  NX_NO_CLOUD?: string;
+  /** Whether the run's env holds an Nx Cloud token; the token stays in the run. */
+  hasNxCloudToken?: boolean;
 }
 
 /**
- * Off unless a run opts in with `NX_IO_SNAPSHOTS=true`, so a workspace
- * connected to Nx Cloud is unaffected until it asks. A disabled Cloud wins
- * over the opt-in, since there is nothing to fetch from.
+ * Off unless a run opts in with `NX_IO_SNAPSHOTS=true` in a workspace that uses
+ * Nx Cloud, since there is nothing to fetch from otherwise. Reads the run's
+ * env from `env`, never `process.env`: the daemon decides for its clients.
  */
 export function isIoSnapshotFetchEnabled(
   nxJson: NxJsonConfiguration,
   runnerOptions: IoSnapshotCloudOptions = {},
   env: IoSnapshotEnv = ioSnapshotEnv()
 ): boolean {
-  if (isNxCloudDisabled(nxJson) || runnerOptions.cloud === false) return false;
-  return env.NX_IO_SNAPSHOTS === 'true';
+  if (
+    env.NX_NO_CLOUD === 'true' ||
+    nxJson.neverConnectToCloud ||
+    runnerOptions.cloud === false ||
+    env.NX_IO_SNAPSHOTS !== 'true'
+  ) {
+    return false;
+  }
+  return !!env.hasNxCloudToken || isNxCloudConfigured(nxJson);
 }
 
 /** The subset of this run's environment the decision reads. */
@@ -32,5 +42,7 @@ export function ioSnapshotEnv(
 ): IoSnapshotEnv {
   return {
     NX_IO_SNAPSHOTS: env.NX_IO_SNAPSHOTS,
+    NX_NO_CLOUD: env.NX_NO_CLOUD,
+    hasNxCloudToken: !!(env.NX_CLOUD_ACCESS_TOKEN || env.NX_CLOUD_AUTH_TOKEN),
   };
 }

@@ -16,7 +16,7 @@ vi.mock('./fetch', () => ({ fetchIoSnapshots: cloud.fetchIoSnapshots }));
 vi.mock('../utils/git-utils', () => ({ getLatestCommitSha: () => 'head' }));
 vi.mock('../utils/db-connection', () => ({ getDbConnection: () => 'db' }));
 vi.mock('../utils/nx-cloud-utils', () => ({
-  isNxCloudDisabled: () => false,
+  isNxCloudConfigured: () => true,
 }));
 const warn = vi.hoisted(() => vi.fn());
 vi.mock('../utils/output', () => ({ output: { warn } }));
