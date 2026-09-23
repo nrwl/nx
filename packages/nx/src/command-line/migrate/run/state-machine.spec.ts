@@ -980,10 +980,16 @@ describe('applyStepEvent', () => {
       }
     );
 
-    it.each(['failed', 'died'] as const)(
-      'adopt from %s marks the step adopted',
-      (status) => {
-        const state = stateWithStep({ status });
+    it.each([
+      ['failed', 'Adopted after the attempt failed'],
+      ['died', 'Adopted after the worker died'],
+    ] as const)(
+      'adopt from %s marks the step adopted and records that the tree as it stood was taken',
+      (status, adopted) => {
+        const state = stateWithStep({
+          status,
+          outcome: { summary: 'generator threw', fileChanges: ['a.ts'] },
+        });
 
         const result = applyStepEvent(state, {
           type: 'stepAction',
@@ -994,33 +1000,17 @@ describe('applyStepEvent', () => {
 
         expect(result.kind).toBe('ok');
         if (result.kind === 'ok') {
-          expect(result.state.steps[0].status).toBe('succeeded');
-          expect(result.state.steps[0].adopted).toBe(true);
+          expect(result.state.steps[0]).toMatchObject({
+            status: 'succeeded',
+            adopted: true,
+            outcome: {
+              fileChanges: ['a.ts'],
+              summary: expect.stringContaining(adopted),
+            },
+          });
         }
       }
     );
-
-    it('adopt from failed records that the tree as it stood was taken, keeping the failure outcome', () => {
-      const state = stateWithStep({
-        status: 'failed',
-        outcome: { summary: 'generator threw', fileChanges: ['a.ts'] },
-      });
-
-      const result = applyStepEvent(state, {
-        type: 'stepAction',
-        stepId: 'step-1',
-        attempt: 1,
-        action: 'adopt',
-      });
-
-      expect(result.kind).toBe('ok');
-      if (result.kind === 'ok') {
-        expect(result.state.steps[0].outcome).toEqual({
-          fileChanges: ['a.ts'],
-          summary: expect.stringContaining('Adopted after the attempt failed'),
-        });
-      }
-    });
 
     it('unresolved from failed keeps the attempt and the failure it gave up on', () => {
       const state = stateWithStep({
@@ -1251,15 +1241,16 @@ describe('tallySteps', () => {
 
 describe('unresolvedFailureDetail', () => {
   it.each([
-    ['an empty summary', ''],
-    ['a whitespace-only summary', ' \n\t '],
-  ])(
+    ['no outcome at all', undefined],
+    ['an empty summary', { status: 'failed', summary: '' }],
+    ['a whitespace-only summary', { status: 'failed', summary: ' \n\t ' }],
+  ] as const)(
     'reports the fallback for %s, in the report and the ledger alike',
-    (_case, summary) => {
+    (_case, promptOutcome) => {
       const state = stateWithStep({
         status: 'unresolved',
         migrationId: '@nx/js:gen',
-        promptOutcome: { status: 'failed', summary },
+        ...(promptOutcome ? { promptOutcome } : {}),
       });
 
       expect(unresolvedFailureDetail(state.steps[0])).toBe(

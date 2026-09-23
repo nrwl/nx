@@ -92,7 +92,6 @@ import {
   applyStepEvent,
   commitReceipt,
   commitMayBeInHistory,
-  commitNameForStep,
   commitResultToLedgerEntry,
   completionSummaryLines,
   coveringLandedEntries,
@@ -520,8 +519,6 @@ function resumeRun(
 
 function announceResume(runId: string, state: MigrateRunState): void {
   const tally = tallySteps(state);
-  // Stalled steps are included in remaining; the extra count names the ones
-  // waiting on a decision.
   logToAgent({
     title: `nx migrate: resuming run ${runId}`,
     bodyLines: [
@@ -838,12 +835,9 @@ export async function runOrchestratorReconcile(
         return; // no transition was written
       }
       const target = result.targetStep;
-      // Giving up while the run commits, unless a reset ran: the partial
-      // result is committed under the migration's name, marked unresolved,
-      // so a later revert does not have to untangle it from the next step's
-      // work, and the step is settled in the same operation, by the process
-      // that holds the tree. The write below would find that commit and
-      // refuse the transition as a commit of the migration.
+      // Unless a reset ran, the partial result is committed under the
+      // migration's name, marked unresolved, and the step is settled in the
+      // same operation (see give-up.ts).
       if (
         stepAction === 'unresolved' &&
         state.createCommits &&
@@ -1355,7 +1349,7 @@ async function applyReconcileStepAction(
       kind: 'ok';
       state: MigrateRunState;
       targetStep: MigrateStep;
-      // When true, the reset the dispense asked for has been verified.
+      // True when the give-up reset the tree and it verified clean.
       resetTree: boolean;
     }
   | { kind: 'error'; reason: string }
@@ -1449,7 +1443,11 @@ async function applyReconcileStepAction(
   // verified target.
   const resetTree =
     action === 'unresolved' &&
-    unresolvedResetsTree(root, state, step, getLatestCommitSha(root));
+    unresolvedResetsTree(
+      state,
+      step,
+      canOfferCleanRetry(root, state, step, getLatestCommitSha(root))
+    );
   if (resetTree) {
     try {
       await resetStepTree(
@@ -1522,13 +1520,16 @@ function actionList(actions: string[]): string {
     : `${quoted.slice(0, -1).join(', ')} or ${quoted[quoted.length - 1]}`;
 }
 
+// The reset runs before the transition, so it is withheld where the
+// transition refuses the give-up.
 function unresolvedResetsTree(
-  root: string,
   state: MigrateRunState,
   step: MigrateStep,
-  head: string | null
+  cleanRetry: boolean
 ): boolean {
-  return generatorPending(step) && canOfferCleanRetry(root, state, step, head);
+  return (
+    generatorPending(step) && !commitMayBeInHistory(state, step) && cleanRetry
+  );
 }
 
 // What a reconcile's git and install side effects owe the run state, applied
@@ -1627,7 +1628,7 @@ async function commitForStep(
   scope: TreeScope,
   commitAs?: 'adopt'
 ): Promise<StepSideEffects> {
-  const name = commitNameForStep(step, commitAs);
+  const { name } = splitMigrationId(step.migrationId);
   const absorbedStepIds = uncoveredFailedStepIds(state).filter(
     (id) => id !== step.id
   );
@@ -1967,10 +1968,16 @@ function emitRetryFailed(
         )}`
   );
   // Refused by the state machine: the migration is, or may be, committed.
-  if (!commitMayBeInHistory(state, step)) {
+  if (!committed) {
     lines.push(
       `  skip:  ${reconcileCommand(root, runId, 'skip')}`,
-      unresolvedOptionLine(root, runId, state, step, pending && cleanRetry)
+      unresolvedOptionLine(
+        root,
+        runId,
+        state,
+        step,
+        unresolvedResetsTree(state, step, cleanRetry)
+      )
     );
   }
   if (pending) {
@@ -2202,14 +2209,20 @@ function emitDied(
     )}`
   );
   // Refused by the state machine: the migration is, or may be, committed.
-  if (!commitMayBeInHistory(state, step)) {
+  if (!committed) {
     options.push(
       `  skip: leave the tree as it stands and move on without this migration, then run: ${reconcileCommand(
         root,
         runId,
         'skip'
       )}`,
-      unresolvedOptionLine(root, runId, state, step, !resume && cleanRetry)
+      unresolvedOptionLine(
+        root,
+        runId,
+        state,
+        step,
+        unresolvedResetsTree(state, step, cleanRetry)
+      )
     );
   }
   lines.push(`Choose exactly one:`);

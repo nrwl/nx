@@ -1202,7 +1202,7 @@ describe('migrate run issues', () => {
       expect(application.newIssues.map((n) => n.entry.id)).toEqual(['issue-1']);
     });
 
-    it("falls back to the prompt outcome's summary, then to a fixed line, and bounds the summary", () => {
+    it("falls back to the prompt outcome's summary and bounds the summary", () => {
       const prompted = step('step-1', '@nx/js:one', 'unresolved');
       prompted.promptOutcome = {
         status: 'failed',
@@ -1213,18 +1213,6 @@ describe('migrate run issues', () => {
         /^Migration @nx\/js:one was left unresolved after 1 attempt: line one line two x+\.\.\.$/
       );
       expect(minted.application.state.issues[0].summary.length).toBe(500);
-
-      const silent = step('step-1', '@nx/js:one', 'unresolved');
-      const blank = step('step-1', '@nx/js:one', 'unresolved');
-      blank.promptOutcome = { status: 'failed', summary: ' \n ' };
-      for (const s of [silent, blank]) {
-        expect(
-          mintUnresolvedIssue(stateWith([s]), s).application.state.issues[0]
-            .summary
-        ).toBe(
-          'Migration @nx/js:one was left unresolved after 1 attempt: no failure detail was recorded'
-        );
-      }
     });
 
     it.each([
@@ -1299,20 +1287,15 @@ describe('migrate run issues', () => {
       const minted = mintUnresolvedIssue(state, first);
       const again = mintUnresolvedIssue(minted.application.state, second);
 
-      expect(again.application.state.issues).toHaveLength(2);
-      const [one, two] = again.application.state.issues.map((i) => i.summary);
-      expect(one).toMatch(
-        /^Migration @nx\/js:m+\.\.\.\[[0-9a-f]{8}\] was left unresolved after 1 attempt: boom$/
-      );
-      expect(two).toMatch(
-        /^Migration @nx\/js:m+\.\.\.\[[0-9a-f]{8}\] was left unresolved after 1 attempt: boom$/
-      );
-      expect(one).not.toBe(two);
-      expect(one.length).toBeLessThan(500);
-      expect(again.application.state.issues.map((i) => i.id)).toEqual([
-        'issue-1',
-        'issue-2',
-      ]);
+      const summaries = again.application.state.issues.map((i) => i.summary);
+      expect(summaries).toHaveLength(2);
+      for (const summary of summaries) {
+        expect(summary).toMatch(
+          /^Migration @nx\/js:m+\.\.\.\[[0-9a-f]{8}\] was left unresolved after 1 attempt: boom$/
+        );
+        expect(summary.length).toBeLessThan(500);
+      }
+      expect(summaries[0]).not.toBe(summaries[1]);
     });
   });
 

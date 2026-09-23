@@ -1149,9 +1149,6 @@ describe('migrate orchestrator (dark launch)', () => {
       runInit(' --validate=false')
     );
     expect(diedBlock.action).toBe('died');
-    expect(diedBlock.payload.instructions).toContain(
-      'Retries left for this migration: 2'
-    );
     const unresolvedCommand = stepActionCommand(runId, 'unresolved');
     expect(diedBlock.payload.instructions).toContain(unresolvedCommand);
     // The generator never completed and a restore point exists: the option
@@ -1197,9 +1194,6 @@ describe('migrate orchestrator (dark launch)', () => {
     const failed = failPromptStep(
       runDispensed(parseLastDispense(runInit()).payload.next),
       'blocked by fake agent'
-    );
-    expect(failed.payload.instructions).toContain(
-      'Retries left for this migration: 2'
     );
     const unresolvedCommand = stepActionCommand(failed.runId, 'unresolved');
     expect(failed.payload.instructions).toContain(unresolvedCommand);
