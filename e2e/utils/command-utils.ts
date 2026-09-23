@@ -9,7 +9,6 @@ import { existsSync } from 'fs-extra';
 import * as isCI from 'is-ci';
 import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
-import { gte } from 'semver';
 import { packageInstall, tmpProjPath } from './create-project-utils';
 import {
   ensureCypressInstallation,
@@ -19,7 +18,6 @@ import { fileExists, readJson, updateJson } from './file-utils';
 import {
   detectPackageManager,
   getNpmMajorVersion,
-  getPnpmVersion,
   getPublishedVersion,
   getStrippedEnvironmentVariables,
   getYarnMajorVersion,
@@ -129,7 +127,6 @@ export function getPackageManagerCommand({
 } {
   const npmMajorVersion = getNpmMajorVersion();
   const yarnMajorVersion = getYarnMajorVersion(path);
-  const pnpmVersion = getPnpmVersion(path);
   const publishedVersion = getPublishedVersion();
   const isYarnWorkspace = fileExists(join(path, 'package.json'))
     ? readJson('package.json').workspaces
@@ -188,7 +185,7 @@ export function getPackageManagerCommand({
       addDev: isPnpmWorkspace ? 'pnpm add -Dw' : 'pnpm add -D',
       list: 'pnpm ls --depth 10',
       runLerna: `pnpm exec lerna`,
-      exec: pnpmVersion && gte(pnpmVersion, '6.13.0') ? 'pnpm exec' : 'pnpx',
+      exec: 'pnpm exec',
     },
     bun: {
       // See note in runCreateWorkspace in create-project-utils.ts for why we don't set @{version} for `bunx create-nx-workspace` right now
