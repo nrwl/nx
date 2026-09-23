@@ -239,6 +239,8 @@ NX_LEGACY_AFFECTED=false nx affected -t test
 
 Changing one spec file then runs that project's `test` task rather than the `test` task of every project that depends on it. Tasks that read most of a project, like `lint`, narrow very little.
 
+Task selection can also pick up a task that project selection misses. A `dependsOn` that names another project's target, like `{ "projects": ["lib"], "target": "build" }`, adds an edge the project graph doesn't record. When the task reads that target's output through `dependentTasksOutputFiles`, task selection follows the edge and project selection can't.
+
 Use the environment variable rather than a flag, so `nx show projects --affected -t test` and `nx affected -t test` in the same CI script see the same affected set. The run also executes the tasks the affected ones depend on, and those can restore from cache when nothing in them changed.
 
 {% aside type="caution" title="What changes when you opt in" %}
