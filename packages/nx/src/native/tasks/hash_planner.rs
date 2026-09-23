@@ -505,7 +505,7 @@ impl HashPlanner {
     /// The same eligibility walk `getPlans` performs, reported: which tasks
     /// hash from their snapshot and why the others do not.
     #[napi]
-    pub fn io_snapshot_report(
+    pub fn get_io_snapshot_report(
         &self,
         task_graph: TaskGraph,
         snapshots: Option<ClassInstance<'_, IoSnapshots>>,

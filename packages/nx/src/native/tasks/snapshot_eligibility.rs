@@ -300,7 +300,7 @@ pub(crate) fn resolve_scoped(
 /// graph. `invalid-files-input` needs nx.json to expand named inputs, so it
 /// is only reported through the planner.
 #[napi]
-pub fn io_snapshot_report(
+pub fn get_io_snapshot_report(
     snapshots: &IoSnapshots,
     task_graph: TaskGraph,
     opted_out_task_ids: Vec<String>,
@@ -527,7 +527,7 @@ fn entry_files(entry: &TaskIoSnapshot) -> Vec<String> {
 /// Opted-out and custom-hasher tasks are not excluded: deferring a task that
 /// ends up hashed natively only delays its hash, it never changes it.
 #[napi]
-pub fn io_snapshot_deferred_task_ids(
+pub fn get_io_snapshot_deferred_task_ids(
     snapshots: &IoSnapshots,
     task_graph: TaskGraph,
 ) -> Vec<String> {

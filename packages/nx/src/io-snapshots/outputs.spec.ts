@@ -6,7 +6,7 @@ import {
   closeDbConnection,
   connectToNxDb,
   IoSnapshotStore,
-  ioSnapshotDeferredTaskIds,
+  getIoSnapshotDeferredTaskIds,
 } from '../native';
 
 vi.mock('../tasks-runner/utils', () => ({
@@ -147,14 +147,14 @@ describe('io snapshot outputs', () => {
       'web:build': { inputs: ['libs/ui/generated/types.d.ts'] },
     });
     // Declared outputs alone do not cover the read: no deferral.
-    expect(ioSnapshotDeferredTaskIds(snapshots, taskGraph)).toEqual([]);
+    expect(getIoSnapshotDeferredTaskIds(snapshots, taskGraph)).toEqual([]);
 
     applyIoSnapshotOutputs(projectGraph, taskGraph, snapshots);
     expect(taskGraph.tasks['ui:build'].outputs).toEqual([
       'dist/libs/ui',
       'libs/ui/generated/types.d.ts',
     ]);
-    expect(ioSnapshotDeferredTaskIds(snapshots, taskGraph)).toEqual([
+    expect(getIoSnapshotDeferredTaskIds(snapshots, taskGraph)).toEqual([
       'web:build',
     ]);
   });

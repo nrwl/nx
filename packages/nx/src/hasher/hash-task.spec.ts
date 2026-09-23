@@ -15,7 +15,7 @@ vi.mock('../tasks-runner/task-env', () => ({
 const deferredBySnapshot = vi.hoisted(() => ({ ids: [] as string[] }));
 vi.mock('../native', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../native')>()),
-  ioSnapshotDeferredTaskIds: () => deferredBySnapshot.ids,
+  getIoSnapshotDeferredTaskIds: () => deferredBySnapshot.ids,
 }));
 
 describe('hashTasksThatDoNotDependOnOutputsOfOtherTasks', () => {

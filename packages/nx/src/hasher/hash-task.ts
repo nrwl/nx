@@ -3,7 +3,7 @@ import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import {
   IS_WASM,
-  ioSnapshotDeferredTaskIds,
+  getIoSnapshotDeferredTaskIds,
   type IoSnapshots,
   TaskDetails,
 } from '../native';
@@ -42,7 +42,7 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
   // A snapshot can make a task depend on producer outputs its declared
   // inputs never mentioned; those hash after their producers too.
   const deferredBySnapshot = ioSnapshots
-    ? new Set(ioSnapshotDeferredTaskIds(ioSnapshots, taskGraph))
+    ? new Set(getIoSnapshotDeferredTaskIds(ioSnapshots, taskGraph))
     : null;
   const tasks = Object.values(taskGraph.tasks);
   const tasksWithHashers = await Promise.all(

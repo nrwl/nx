@@ -107,7 +107,7 @@ export declare class HashPlanner {
    * The same eligibility walk `getPlans` performs, reported: which tasks
    * hash from their snapshot and why the others do not.
    */
-  ioSnapshotReport(taskGraph: TaskGraph, snapshots?: IoSnapshots | undefined | null, customHasherTaskIds?: Array<string> | undefined | null, optedOutTaskIds?: Array<string> | undefined | null): IoSnapshotReport
+  getIoSnapshotReport(taskGraph: TaskGraph, snapshots?: IoSnapshots | undefined | null, customHasherTaskIds?: Array<string> | undefined | null, optedOutTaskIds?: Array<string> | undefined | null): IoSnapshotReport
   getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph, snapshots?: IoSnapshots | undefined | null, customHasherTaskIds?: Array<string> | undefined | null, optedOutTaskIds?: Array<string> | undefined | null): ExternalObject<Record<string, Array<HashInstruction>>>
 }
 
@@ -619,6 +619,23 @@ export declare function getFilesForOutputsBatch(directory: string, entriesBatch:
 export declare function getHardcodedIgnorePatterns(): Array<string>
 
 /**
+ * Tasks whose snapshot read another task's outputs: they hash after their
+ * producers ran, because those files only exist then. Needs no project graph,
+ * so the client can call it before the first hashing wave on the daemon path.
+ * Opted-out and custom-hasher tasks are not excluded: deferring a task that
+ * ends up hashed natively only delays its hash, it never changes it.
+ */
+export declare function getIoSnapshotDeferredTaskIds(snapshots: IoSnapshots, taskGraph: TaskGraph): Array<string>
+
+/**
+ * The eligibility report without a planner: the client prints the run
+ * summary from this on the daemon path, where it never transfers a project
+ * graph. `invalid-files-input` needs nx.json to expand named inputs, so it
+ * is only reported through the planner.
+ */
+export declare function getIoSnapshotReport(snapshots: IoSnapshots, taskGraph: TaskGraph, optedOutTaskIds: Array<string>, customHasherTaskIds: Array<string>, projectRoots?: Record<string, string> | undefined | null): IoSnapshotReport
+
+/**
  * If `workspace_root` is inside a git worktree, returns the main repo root.
  * Returns `None` when already in the main repo (or not in a git repo at all).
  */
@@ -732,15 +749,6 @@ export interface InvocationRecord {
 }
 
 /**
- * Tasks whose snapshot read another task's outputs: they hash after their
- * producers ran, because those files only exist then. Needs no project graph,
- * so the client can call it before the first hashing wave on the daemon path.
- * Opted-out and custom-hasher tasks are not excluded: deferring a task that
- * ends up hashed natively only delays its hash, it never changes it.
- */
-export declare function ioSnapshotDeferredTaskIds(snapshots: IoSnapshots, taskGraph: TaskGraph): Array<string>
-
-/**
  * Why a task (or the whole run) hashes natively. `reason` strings are the
  * contract `nx show`, `nx graph`, and the run summary render.
  */
@@ -768,14 +776,6 @@ export interface IoSnapshotImportOptions {
   clientVersion?: string
   retain?: number
 }
-
-/**
- * The eligibility report without a planner: the client prints the run
- * summary from this on the daemon path, where it never transfers a project
- * graph. `invalid-files-input` needs nx.json to expand named inputs, so it
- * is only reported through the planner.
- */
-export declare function ioSnapshotReport(snapshots: IoSnapshots, taskGraph: TaskGraph, optedOutTaskIds: Array<string>, customHasherTaskIds: Array<string>, projectRoots?: Record<string, string> | undefined | null): IoSnapshotReport
 
 export interface IoSnapshotReport {
   /** Task ids hashed from their snapshot. */

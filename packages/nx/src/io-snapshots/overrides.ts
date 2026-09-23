@@ -1,7 +1,7 @@
 import type { ProjectGraph } from '../config/project-graph';
 import type { TaskGraph } from '../config/task-graph';
 import {
-  ioSnapshotReport,
+  getIoSnapshotReport,
   type IoSnapshotDiagnostic,
   type IoSnapshotReport,
   type IoSnapshotResolution,
@@ -96,7 +96,7 @@ export function buildIoSnapshotOverrides(
   taskGraph: TaskGraph,
   snapshots: IoSnapshots
 ): IoSnapshotReport {
-  return ioSnapshotReport(
+  return getIoSnapshotReport(
     snapshots,
     taskGraph,
     optedOutTaskIds(projectGraph, taskGraph),
