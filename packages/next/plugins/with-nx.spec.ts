@@ -1,50 +1,24 @@
-import { getAliasForProject } from './with-nx';
+import { withNx } from './with-nx';
 
-describe('getAliasForProject', () => {
-  it('should return the matching alias for a project', () => {
-    const paths = {
-      '@x/proj1': ['packages/proj1'],
-      // customized lookup paths with relative path syntax
-      '@x/proj2': ['./something-else', './packages/proj2'],
-    };
+describe('removed withNx stub', () => {
+  it('keeps the async config shape without reading an Nx graph or changing options', async () => {
+    const config = Object.freeze({
+      distDir: 'custom',
+      env: { marker: 'preserved' },
+    });
+    for (const phase of [
+      'phase-development-server',
+      'phase-production-build',
+      'phase-production-server',
+    ]) {
+      expect(await withNx(config)(phase, {})).toBe(config);
+    }
+  });
 
-    expect(
-      getAliasForProject(
-        {
-          name: 'proj1',
-          type: 'lib',
-          data: {
-            root: 'packages/proj1',
-          },
-        },
-        paths
-      )
-    ).toEqual('@x/proj1');
-
-    expect(
-      getAliasForProject(
-        {
-          name: 'proj2',
-          type: 'lib',
-          data: {
-            root: 'packages/proj2', // relative path
-          },
-        },
-        paths
-      )
-    ).toEqual('@x/proj2');
-
-    expect(
-      getAliasForProject(
-        {
-          name: 'no-alias',
-          type: 'lib',
-          data: {
-            root: 'packages/no-alias',
-          },
-        },
-        paths
-      )
-    ).toEqual(null);
+  it('supports both generated CommonJS import forms', async () => {
+    const legacy = require('./with-nx');
+    expect(legacy).toBe(legacy.withNx);
+    const config = { distDir: 'custom' };
+    expect(await legacy(config)('phase-production-server', {})).toBe(config);
   });
 });

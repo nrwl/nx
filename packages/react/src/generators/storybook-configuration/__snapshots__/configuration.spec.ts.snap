@@ -3,7 +3,6 @@
 exports[`react:storybook-configuration should configure everything and install correct dependencies 1`] = `
 "import type { StorybookConfig } from '@storybook/react-vite';
 
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { mergeConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
@@ -17,7 +16,10 @@ const config: StorybookConfig = {
 
   viteFinal: async (config) =>
     mergeConfig(config, {
-      plugins: [react(), nxViteTsPaths()],
+      resolve: {
+        tsconfigPaths: true,
+      },
+      plugins: [react()],
     }),
 };
 

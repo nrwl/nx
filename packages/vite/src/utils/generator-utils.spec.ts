@@ -143,16 +143,17 @@ describe('generator utils', () => {
         import { defineConfig } from 'vite';
         import dts from 'vite-plugin-dts';
         import * as path from 'path';
-        import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-        import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
         export default defineConfig(() => ({
           root: import.meta.dirname,
           cacheDir: '../node_modules/.vite/myproj',
-          plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md']), dts({ entryRoot: 'src', tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json'), pathsToAliases: false })],
+          resolve: {
+            tsconfigPaths: true,
+          },
+          plugins: [dts({ entryRoot: 'src', tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json'), pathsToAliases: false })],
           // Uncomment this if you are using workers.
           // worker: {
-          //   plugins: () => [ nxViteTsPaths() ],
+          //  plugins: [],
           // },
           // Configuration for building your library.
           // See: https://vite.dev/guide/build.html#library-mode
@@ -218,8 +219,6 @@ describe('generator utils', () => {
         .toMatchInlineSnapshot(`
         "/// <reference types='vitest' />
         import { defineConfig } from 'vite';
-        import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-        import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
         export default defineConfig(() => ({
           root: import.meta.dirname,
@@ -232,10 +231,12 @@ describe('generator utils', () => {
             port: 4300,
             host: 'localhost',
           },
-          plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+          resolve: {
+            tsconfigPaths: true,
+          },
           // Uncomment this if you are using workers.
           // worker: {
-          //   plugins: () => [ nxViteTsPaths() ],
+          //  plugins: [],
           // },
           build: {
             outDir: '../dist/myproj',

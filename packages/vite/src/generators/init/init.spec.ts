@@ -201,9 +201,11 @@ describe('@nx/vite:init', () => {
     expect(tree.read('proj/vite.config.ts').toString()).toMatchInlineSnapshot(`
       "import { defineConfig } from 'vite';
       import react from '@vitejs/plugin-react';
-      import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
       export default defineConfig({
-        plugins: [react(), nxViteTsPaths()],
+        resolve: {
+          tsconfigPaths: true,
+        },
+        plugins: [react()],
       });
       "
     `);

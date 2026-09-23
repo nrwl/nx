@@ -1,73 +1,54 @@
 import {
-  composePluginsSync,
   composePlugins,
-  NxWebpackExecutionContext,
+  composePluginsSync,
   isNxWebpackComposablePlugin,
 } from './config';
+import { withNx } from './with-nx';
+import { withWeb } from './with-web';
 
-describe('composePlugins', () => {
-  it('should support sync and async plugin functions', async () => {
-    const callOrder = [];
-    const a = () => (config) => {
-      callOrder.push('a');
-      config.plugins.push(new (class A {})());
-      return config;
-    };
-    const b = async () => (config) => {
-      callOrder.push('b');
-      config.plugins.push(new (class B {})());
-      return config;
-    };
-    const c = () => async (config) => {
-      callOrder.push('c');
-      config.plugins.push(new (class C {})());
-      return config;
-    };
-    const d = async () => async (config) => {
-      callOrder.push('d');
-      config.plugins.push(new (class D {})());
-      return config;
-    };
+describe('removed compose helper stubs', () => {
+  it.each([composePlugins, composePluginsSync])(
+    'keeps executor configs loadable without running callbacks',
+    async (compose) => {
+      const callback = jest.fn(() => {
+        throw new Error('legacy callback requires Nx build context');
+      });
+      const original = {
+        mode: 'production' as const,
+        output: { path: '/tmp/output' },
+      };
+      const combined = compose(withNx(), withWeb(), callback);
+      expect(isNxWebpackComposablePlugin(combined)).toBe(true);
+      expect(
+        await combined(original, {
+          options: {},
+          context: { projectGraph: null },
+        } as any)
+      ).toBe(original);
+      expect(callback).not.toHaveBeenCalled();
+    }
+  );
 
-    const combined = composePlugins(a(), b(), c(), d());
-    expect(isNxWebpackComposablePlugin(combined)).toBeTruthy();
-    const config = await combined(
-      { plugins: [] },
-      {} as NxWebpackExecutionContext
-    );
+  it.each([composePlugins, composePluginsSync])(
+    'does not treat CLI env as a config',
+    async (compose) => {
+      const env = { WEBPACK_BUILD: true };
+      expect(await compose()(env as any, { env } as any)).toEqual({});
+      expect(
+        await compose()(env as any, { mode: 'production' } as any)
+      ).toEqual({});
+      expect(
+        await compose()(env as any, { context: '/workspace' } as any)
+      ).toEqual({});
+      expect(await compose()(env as any)).toEqual({});
+    }
+  );
 
-    expect(config.plugins.map((p) => p.constructor.name)).toEqual([
-      'A',
-      'B',
-      'C',
-      'D',
-    ]);
-    expect(callOrder).toEqual(['a', 'b', 'c', 'd']);
-  });
-});
-
-describe('composePluginsSync', () => {
-  it('should support sync plugin functions', async () => {
-    const callOrder = [];
-    const a = () => (config) => {
-      callOrder.push('a');
-      config.plugins.push(new (class A {})());
-      return config;
-    };
-    const b = () => (config) => {
-      callOrder.push('b');
-      config.plugins.push(new (class B {})());
-      return config;
-    };
-
-    const combined = composePluginsSync(a(), b());
-    expect(isNxWebpackComposablePlugin(combined)).toBeTruthy();
-    const config = await combined(
-      { plugins: [] },
-      {} as NxWebpackExecutionContext
-    );
-
-    expect(config.plugins.map((p) => p.constructor.name)).toEqual(['A', 'B']);
-    expect(callOrder).toEqual(['a', 'b']);
-  });
+  it.each([withNx, withWeb])(
+    'does not configure a build or require executor context',
+    (helper) => {
+      const config = Object.freeze({ mode: 'production' as const });
+      expect(helper()(config, undefined)).toBe(config);
+    }
+  );
 });

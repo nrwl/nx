@@ -3,7 +3,6 @@
 exports[`nuxt:storybook-configuration should configure with vue3 framework and styles import 1`] = `
 "import type { StorybookConfig } from '@storybook/vue3-vite';
 
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { mergeConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 
@@ -17,7 +16,10 @@ const config: StorybookConfig = {
 
   viteFinal: async (config) =>
     mergeConfig(config, {
-      plugins: [vue(), nxViteTsPaths()],
+      resolve: {
+        tsconfigPaths: true,
+      },
+      plugins: [vue()],
     }),
 };
 

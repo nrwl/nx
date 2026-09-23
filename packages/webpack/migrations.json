@@ -30,6 +30,11 @@
       "description": "Rename imports of `createNodesV2` from `@nx/webpack/plugin` to the canonical `createNodes` export.",
       "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
       "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
+    },
+    "update-24-0-0-migrate-compose-plugins": {
+      "version": "24.0.0-beta.0",
+      "description": "Migrate deprecated webpack configuration helpers while preserving custom behavior.",
+      "prompt": "./dist/src/migrations/update-24-0-0/migrate-compose-plugins.md"
     }
   },
   "packageJsonUpdates": {

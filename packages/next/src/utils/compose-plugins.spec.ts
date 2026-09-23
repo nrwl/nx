@@ -1,79 +1,22 @@
-import { NextConfig } from 'next';
 import { composePlugins } from './compose-plugins';
-import { NextConfigFn } from './config';
 
-describe('composePlugins', () => {
-  it('should combine multiple plugins', async () => {
-    const nextConfig: NextConfig = {
-      env: {
-        original: 'original',
-      },
-    };
-    const a = (config: NextConfig): NextConfig => {
-      config.env['a'] = 'a';
-      return config;
-    };
-    const b = (config: NextConfig): NextConfig => {
-      config.env['b'] = 'b';
-      return config;
-    };
-    const fn = await composePlugins(a, b);
-    const output = await fn(nextConfig)('test', {});
-
-    expect(output).toEqual({
-      env: {
-        original: 'original',
-        a: 'a',
-        b: 'b',
-      },
+describe('removed Next composePlugins stub', () => {
+  it('returns the original config without invoking old wrappers', async () => {
+    const wrapper = jest.fn(() => {
+      throw new Error('requires removed Nx behavior');
     });
-  });
-
-  it('should not load the deprecation module, which is not copied into the .nx-helpers build output', async () => {
-    jest.resetModules();
-    jest.doMock('./deprecation', () => {
-      throw new Error('compose-plugins must not require ./deprecation');
+    const config = Object.freeze({
+      distDir: 'custom',
+      env: { marker: 'preserved' },
     });
-    try {
-      const {
-        composePlugins: isolatedComposePlugins,
-      } = require('./compose-plugins');
-      const { PHASE_PRODUCTION_SERVER } = require('next/constants');
-      const fn = await isolatedComposePlugins();
-      const output = await fn({ env: {} })(PHASE_PRODUCTION_SERVER, {});
-
-      expect(output).toEqual({ env: {} });
-    } finally {
-      jest.dontMock('./deprecation');
-      jest.resetModules();
+    const load = composePlugins(wrapper)(config);
+    for (const phase of [
+      'phase-development-server',
+      'phase-production-build',
+      'phase-production-server',
+    ]) {
+      expect(await load(phase, {})).toBe(config);
     }
-  });
-
-  it('should compose plugins that return an async function', async () => {
-    const nextConfig: NextConfig = {
-      env: {
-        original: 'original',
-      },
-    };
-    const a = (config: NextConfig): NextConfig => {
-      config.env['a'] = 'a';
-      return config;
-    };
-    const b = (config: NextConfig): NextConfigFn => {
-      return (phase: string) => {
-        config.env['b'] = phase;
-        return config;
-      };
-    };
-    const fn = await composePlugins(a, b);
-    const output = await fn(nextConfig)('test', {});
-
-    expect(output).toEqual({
-      env: {
-        original: 'original',
-        a: 'a',
-        b: 'test',
-      },
-    });
+    expect(wrapper).not.toHaveBeenCalled();
   });
 });

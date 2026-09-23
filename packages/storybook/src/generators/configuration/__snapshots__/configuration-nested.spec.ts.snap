@@ -6,7 +6,6 @@ import { dirname } from 'node:path';
 
 import type { StorybookConfig } from '@storybook/react-vite';
 
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { mergeConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
@@ -20,7 +19,10 @@ const config: StorybookConfig = {
 
   viteFinal: async (config) =>
     mergeConfig(config, {
-      plugins: [react(), nxViteTsPaths()],
+      resolve: {
+        tsconfigPaths: true,
+      },
+      plugins: [react()],
     }),
 };
 
@@ -65,9 +67,9 @@ exports[`@nx/storybook:configuration for workspaces with Root project basic func
     ".storybook/*.ts"
   ],
   "files": [
-    "./node_modules/@nx/react/typings/styled-jsx.d.ts",
-    "./node_modules/@nx/react/typings/cssmodule.d.ts",
-    "./node_modules/@nx/react/typings/image.d.ts"
+    "node_modules/@nx/react/typings/styled-jsx.d.ts",
+    "node_modules/@nx/react/typings/cssmodule.d.ts",
+    "node_modules/@nx/react/typings/image.d.ts"
   ]
 }
 "

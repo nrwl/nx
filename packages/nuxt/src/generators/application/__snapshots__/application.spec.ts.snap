@@ -1,8 +1,7 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`app Nuxt v4 with app directory structure should configure nuxt.config.ts without srcDir for app directory 1`] = `
-"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { defineNuxtConfig } from 'nuxt/config';
+"import { defineNuxtConfig } from 'nuxt/config';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -22,7 +21,9 @@ export default defineNuxtConfig({
     autoImport: true,
   },
   vite: {
-    plugins: [nxViteTsPaths()],
+    resolve: {
+      tsconfigPaths: true,
+    },
   },
 });
 "
@@ -141,8 +142,7 @@ export default createConfigForNuxt({
 `;
 
 exports[`app generated files content - as-provided - my-app general application should configure nuxt correctly 1`] = `
-"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { defineNuxtConfig } from 'nuxt/config';
+"import { defineNuxtConfig } from 'nuxt/config';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -163,7 +163,9 @@ export default defineNuxtConfig({
     autoImport: true,
   },
   vite: {
-    plugins: [nxViteTsPaths()],
+    resolve: {
+      tsconfigPaths: true,
+    },
   },
 });
 "
@@ -202,16 +204,17 @@ exports[`app generated files content - as-provided - my-app general application 
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
   cacheDir: '../node_modules/.vite/my-app',
-  plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  resolve: {
+    tsconfigPaths: true,
+  },
+  plugins: [vue()],
   // Uncomment this if you are using workers.
   // worker: {
-  //   plugins: () => [ nxViteTsPaths() ],
+  //  plugins: [],
   // },
   test: {
     name: 'my-app',
@@ -381,8 +384,7 @@ export default createConfigForNuxt({
 `;
 
 exports[`app generated files content - as-provided - my-app styles setup should configure css 1`] = `
-"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { defineNuxtConfig } from 'nuxt/config';
+"import { defineNuxtConfig } from 'nuxt/config';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -404,15 +406,16 @@ export default defineNuxtConfig({
   },
   css: ['~/assets/css/styles.css'],
   vite: {
-    plugins: [nxViteTsPaths()],
+    resolve: {
+      tsconfigPaths: true,
+    },
   },
 });
 "
 `;
 
 exports[`app generated files content - as-provided - my-app styles setup should configure less 1`] = `
-"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { defineNuxtConfig } from 'nuxt/config';
+"import { defineNuxtConfig } from 'nuxt/config';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -434,15 +437,16 @@ export default defineNuxtConfig({
   },
   css: ['~/assets/css/styles.less'],
   vite: {
-    plugins: [nxViteTsPaths()],
+    resolve: {
+      tsconfigPaths: true,
+    },
   },
 });
 "
 `;
 
 exports[`app generated files content - as-provided - my-app styles setup should configure scss 1`] = `
-"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { defineNuxtConfig } from 'nuxt/config';
+"import { defineNuxtConfig } from 'nuxt/config';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -464,15 +468,16 @@ export default defineNuxtConfig({
   },
   css: ['~/assets/css/styles.scss'],
   vite: {
-    plugins: [nxViteTsPaths()],
+    resolve: {
+      tsconfigPaths: true,
+    },
   },
 });
 "
 `;
 
 exports[`app generated files content - as-provided - my-app styles setup should not configure styles 1`] = `
-"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { defineNuxtConfig } from 'nuxt/config';
+"import { defineNuxtConfig } from 'nuxt/config';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -493,7 +498,9 @@ export default defineNuxtConfig({
     autoImport: true,
   },
   vite: {
-    plugins: [nxViteTsPaths()],
+    resolve: {
+      tsconfigPaths: true,
+    },
   },
 });
 "
@@ -578,8 +585,7 @@ export default createConfigForNuxt({
 `;
 
 exports[`app generated files content - as-provided - myApp general application should configure nuxt correctly 1`] = `
-"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { defineNuxtConfig } from 'nuxt/config';
+"import { defineNuxtConfig } from 'nuxt/config';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -600,7 +606,9 @@ export default defineNuxtConfig({
     autoImport: true,
   },
   vite: {
-    plugins: [nxViteTsPaths()],
+    resolve: {
+      tsconfigPaths: true,
+    },
   },
 });
 "
@@ -639,16 +647,17 @@ exports[`app generated files content - as-provided - myApp general application s
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
   cacheDir: '../node_modules/.vite/myApp',
-  plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  resolve: {
+    tsconfigPaths: true,
+  },
+  plugins: [vue()],
   // Uncomment this if you are using workers.
   // worker: {
-  //   plugins: () => [ nxViteTsPaths() ],
+  //  plugins: [],
   // },
   test: {
     name: 'myApp',
@@ -818,8 +827,7 @@ export default createConfigForNuxt({
 `;
 
 exports[`app generated files content - as-provided - myApp styles setup should configure css 1`] = `
-"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { defineNuxtConfig } from 'nuxt/config';
+"import { defineNuxtConfig } from 'nuxt/config';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -841,15 +849,16 @@ export default defineNuxtConfig({
   },
   css: ['~/assets/css/styles.css'],
   vite: {
-    plugins: [nxViteTsPaths()],
+    resolve: {
+      tsconfigPaths: true,
+    },
   },
 });
 "
 `;
 
 exports[`app generated files content - as-provided - myApp styles setup should configure less 1`] = `
-"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { defineNuxtConfig } from 'nuxt/config';
+"import { defineNuxtConfig } from 'nuxt/config';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -871,15 +880,16 @@ export default defineNuxtConfig({
   },
   css: ['~/assets/css/styles.less'],
   vite: {
-    plugins: [nxViteTsPaths()],
+    resolve: {
+      tsconfigPaths: true,
+    },
   },
 });
 "
 `;
 
 exports[`app generated files content - as-provided - myApp styles setup should configure scss 1`] = `
-"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { defineNuxtConfig } from 'nuxt/config';
+"import { defineNuxtConfig } from 'nuxt/config';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -901,15 +911,16 @@ export default defineNuxtConfig({
   },
   css: ['~/assets/css/styles.scss'],
   vite: {
-    plugins: [nxViteTsPaths()],
+    resolve: {
+      tsconfigPaths: true,
+    },
   },
 });
 "
 `;
 
 exports[`app generated files content - as-provided - myApp styles setup should not configure styles 1`] = `
-"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { defineNuxtConfig } from 'nuxt/config';
+"import { defineNuxtConfig } from 'nuxt/config';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -930,7 +941,9 @@ export default defineNuxtConfig({
     autoImport: true,
   },
   vite: {
-    plugins: [nxViteTsPaths()],
+    resolve: {
+      tsconfigPaths: true,
+    },
   },
 });
 "
