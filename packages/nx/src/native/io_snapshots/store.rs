@@ -186,19 +186,19 @@ mod tests {
         assert!(store.get("head".into(), None).is_none());
     }
 
-    // Nx Cloud sends only `commit`, `inputs` and `outputs`; any other shape is
-    // refused rather than half-read.
+    // Unknown fields are ignored so Nx Cloud can add some; an `inputs` shape
+    // nx does not model is refused rather than half-read.
     #[test]
-    fn rejects_entry_shapes_it_does_not_model() {
+    fn ignores_unknown_fields_and_rejects_structured_inputs() {
         let (_dir, store) = temp_store();
-        for json in [
-            r#"{ "a:build": { "commit": "head", "inputs": [], "outputs": [], "taskOutputs": { "b:build": ["dist/b"] } } }"#,
-            r#"{ "a:build": { "commit": "head", "inputs": { "projects": {}, "workspace": [] }, "outputs": [] } }"#,
-        ] {
-            let err = import(&store, json).err().unwrap();
-            assert_eq!(err.status, "INVALID_RESPONSE");
-        }
-        assert!(store.get("head".into(), None).is_none());
+        let extra =
+            r#"{ "a:build": { "commit": "head", "inputs": [], "outputs": [], "recordedAt": 1 } }"#;
+        assert!(import(&store, extra).is_ok());
+        let structured = r#"{ "a:build": { "commit": "head", "inputs": { "projects": {}, "workspace": [] }, "outputs": [] } }"#;
+        assert_eq!(
+            import(&store, structured).err().unwrap().status,
+            "INVALID_RESPONSE"
+        );
     }
 
     #[test]
