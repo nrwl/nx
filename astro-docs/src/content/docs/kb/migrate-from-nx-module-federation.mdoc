@@ -102,14 +102,13 @@ Flag Angular and server-side rendering apps now.
 
 ## Step 2: install the official packages
 
+The `host` generator already added `@module-federation/enhanced` to your root `package.json`.
+Move it under `dependencies` by hand if it sits in `devDependencies`, since the federation
+runtime is imported by application code. Only if it is missing:
+
 ```shell
 npm add --save-prod @module-federation/enhanced
 ```
-
-The `host` generator already added it to your root `package.json`, so most workspaces have it.
-Make sure it sits under `dependencies`, not `devDependencies`, since the federation runtime is
-imported by application code. `npm add` re-resolves the range to the latest release; edit
-`package.json` by hand if you want to keep the version you have.
 
 Step 7 runs the bundler CLI directly. A webpack workspace that only ever built through the Nx
 executor has no `webpack-cli`, so add it now:
@@ -203,13 +202,17 @@ module.exports = {
 {% /tabitem %}
 {% /tabs %}
 
-Remote configs keep their `exposes` map unchanged. Delete the old `module-federation.config.ts`,
+Remote configs keep their `exposes` map unchanged. Keep the `<remote>/Module` entries in
+`tsconfig.base.json` paths and any `remotes.d.ts`: the type-check and the static
+`import('<remote>/Module')` still rely on them. Delete the old `module-federation.config.ts`,
 `webpack.config.ts`, and `webpack.config.prod.ts` (or the Rspack equivalents) once the new files
 are in place, or the graph keeps reading them.
 
-Then swap the wrapper for the plugin in the bundler config. The result is a standalone config
-that the bundler CLI can run, which the `composePlugins` form was not, so both the `build` and
-the `serve` targets move to the CLI in Step 7.
+Then swap the wrapper for the plugin in the bundler config. The result is a plain config the
+bundler CLI accepts, which the `composePlugins` form was not, so both the `build` and the
+`serve` targets move to the CLI in Step 7. It still runs only under `nx run`: the app plugins
+read `NX_TASK_TARGET_PROJECT` and friends to find the project, so `npx webpack serve` from the
+app folder crashes.
 
 The options on your old `build` target become `NxAppWebpackPlugin` or `NxAppRspackPlugin`
 options. Paths such as `main`, `index`, `tsConfig`, `assets`, and `styles` resolve from the
@@ -653,11 +656,12 @@ Some of what the Nx executors did has no replacement in the official plugins tod
 ## Tested configuration
 
 The webpack and Rspack paths above were validated on Nx 23.2.1 with
-`@module-federation/enhanced` 2.9.1, webpack 5.105.2, Rspack 2.0.4, React 19.3.0, and Node 26.7.0
-on macOS, with static and dynamic remotes, production URL overrides, a remote that consumes
+`@module-federation/enhanced` 2.9.1, webpack 5.105.2, webpack-cli 7.2.3, Rspack 2.0.4, React
+19.3.0, and Node 26.7.0 on macOS, with static and dynamic remotes, production URL overrides, a remote that consumes
 another remote, deployment path prefixes, shared workspace library state, hot updates with mixed
-live and static remotes, and a Playwright suite. Expect the same file list and federation config
-as the baseline, not byte-identical bundles.
+live and static remotes, and a Playwright suite. The deployment prefix was supplied by a static
+server outside Nx, since `serve-static` serves each app at its root. Expect the same file list
+and federation config as the baseline, not byte-identical bundles.
 
 ## When your setup is not covered
 
