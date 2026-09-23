@@ -2274,6 +2274,37 @@ describe('task planner', () => {
       expect(plan).not.toContain('**/*.d.ts:dist/libs/child');
     });
 
+    it("scopes a selected project's observed reads by its selected input's negations", () => {
+      const { taskGraph, projectGraph } = fixture();
+      (projectGraph.nodes.parent.data.targets.build as any).inputs.push({
+        input: 'selected',
+        projects: ['child'],
+      });
+      (projectGraph.nodes.child.data as any).namedInputs.selected = [
+        '{projectRoot}/**/*',
+        '!{projectRoot}/**/*.gen.ts',
+      ];
+      const planner = new HashPlanner(
+        {
+          namedInputs: { prod: ['default', '!{projectRoot}/**/*.spec.ts'] },
+        } as any,
+        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+      );
+      const plan = planner.getPlans(
+        ['parent:build'],
+        taskGraph,
+        snapshotsFor({
+          'parent:build': {
+            inputs: ['libs/child/a.gen.ts', 'libs/child/fileb.ts'],
+          },
+        })
+      )['parent:build'];
+      const childGroup = plan.find((entry) =>
+        entry.includes('libs/child/fileb.ts')
+      );
+      expect(childGroup).toContain('!libs/child/**/*.gen.ts');
+    });
+
     it("hashes reads of a producer task's outputs from disk and defers the task", () => {
       const { planner, taskGraph } = fixture();
       const snapshots = snapshotsFor({

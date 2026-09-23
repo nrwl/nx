@@ -714,9 +714,10 @@ impl HashPlanner {
             );
         }
         // Always gathered: a selected input can carry env, runtime or externals
-        // too. Its filesets are dropped with the rest of the replaced set.
+        // too. Its filesets are dropped with the rest of the replaced set, and
+        // their negations scope the selected project's observed reads.
         ids.extend(
-            self.gather_project_inputs(&inputs.project_inputs)?
+            self.gather_project_inputs(&inputs.project_inputs, negations.as_deref_mut())?
                 .into_iter()
                 .map(|instruction| pool.intern(instruction)),
         );
@@ -1305,6 +1306,7 @@ impl HashPlanner {
     fn gather_project_inputs(
         &self,
         project_inputs: &[Input],
+        mut negations: Option<&mut Negations>,
     ) -> anyhow::Result<Vec<HashInstruction>> {
         let mut result: Vec<HashInstruction> = vec![];
         for project in project_inputs {
@@ -1322,6 +1324,9 @@ impl HashPlanner {
                     }],
                     &named_inputs,
                 )?;
+                if let Some(negations) = negations.as_deref_mut() {
+                    collect_negations(project, &self.project_graph, &expanded_input, negations);
+                }
                 result.extend(self.gather_self_inputs(project, &expanded_input, None)?)
             }
         }
