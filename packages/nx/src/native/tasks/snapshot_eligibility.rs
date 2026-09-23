@@ -297,8 +297,8 @@ pub(crate) fn resolve_scoped(
 
 /// The eligibility report without a planner: the client prints the run
 /// summary from this on the daemon path, where it never transfers a project
-/// graph. `invalid-files-input` needs nx.json to expand named inputs, so it
-/// is only reported through the planner.
+/// graph. It cannot see `invalid-files-input`, which needs nx.json, so a task
+/// the planner withholds for it still counts as used here.
 #[napi]
 pub fn get_io_snapshot_report(
     snapshots: &IoSnapshots,

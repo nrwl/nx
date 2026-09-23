@@ -24,9 +24,7 @@ use crate::native::tasks::hashers::{OnceCache, validate_files_globs};
 use crate::native::tasks::inputs::{
     expand_single_project_inputs, get_inputs, get_inputs_for_dependency_group, get_named_inputs,
 };
-use crate::native::tasks::snapshot_eligibility::{
-    self, EligibilityInputs, IoSnapshotReport, SnapshotTask,
-};
+use crate::native::tasks::snapshot_eligibility::{self, EligibilityInputs, SnapshotTask};
 use crate::native::tasks::utils;
 use crate::native::utils::find_matching_projects;
 use std::sync::{Arc, OnceLock};
@@ -500,37 +498,6 @@ impl HashPlanner {
             custom_hasher_task_ids.as_deref().unwrap_or(&[]),
             opted_out_task_ids.as_deref().unwrap_or(&[]),
         )
-    }
-
-    /// The same eligibility walk `getPlans` performs, reported: which tasks
-    /// hash from their snapshot and why the others do not.
-    #[napi]
-    pub fn get_io_snapshot_report(
-        &self,
-        task_graph: TaskGraph,
-        snapshots: Option<ClassInstance<'_, IoSnapshots>>,
-        custom_hasher_task_ids: Option<Vec<String>>,
-        opted_out_task_ids: Option<Vec<String>>,
-    ) -> IoSnapshotReport {
-        match snapshots.as_deref() {
-            Some(snapshots) => snapshot_eligibility::resolve(
-                snapshots,
-                &task_graph,
-                &self.eligibility_inputs(
-                    &task_graph,
-                    custom_hasher_task_ids.as_deref().unwrap_or(&[]),
-                    opted_out_task_ids.as_deref().unwrap_or(&[]),
-                    None,
-                ),
-            )
-            .report(),
-            None => IoSnapshotReport {
-                used: vec![],
-                tasks_with_outputs: vec![],
-                diagnostics: vec![],
-                resolution: None,
-            },
-        }
     }
 
     #[napi(ts_return_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
@@ -1867,6 +1834,66 @@ mod tests {
                 )]),
             })),
         )
+    }
+
+    fn include_ignored_planner(filesets: &[&str]) -> (HashPlanner, TaskGraph) {
+        use crate::native::types::{FileSetInput, JsInputs};
+        use napi::bindgen_prelude::Either9;
+        let inputs: Vec<JsInputs> = filesets
+            .iter()
+            .map(|fileset| {
+                Either9::C(FileSetInput {
+                    fileset: fileset.to_string(),
+                    dependencies: None,
+                    include_ignored: Some(true),
+                })
+            })
+            .collect();
+        let project = Project {
+            root: "libs/parent".into(),
+            targets: HashMap::from([(
+                "build".into(),
+                Target {
+                    inputs: Some(inputs),
+                    ..Default::default()
+                },
+            )]),
+            ..Default::default()
+        };
+        let planner = HashPlanner::new(
+            NxJson { named_inputs: None },
+            &External::new(Arc::new(ProjectGraph {
+                nodes: HashMap::from([("parent".into(), project)]),
+                dependencies: HashMap::from([("parent".into(), vec![])]),
+                external_nodes: HashMap::new(),
+            })),
+        );
+        let task = Task::new("parent", "build");
+        let task_graph = TaskGraph {
+            roots: vec![task.id.clone()],
+            dependencies: HashMap::from([(task.id.clone(), vec![])]),
+            continuous_dependencies: HashMap::new(),
+            tasks: HashMap::from([(task.id.clone(), task)]),
+        };
+        (planner, task_graph)
+    }
+
+    // A group the native hasher rejects must withhold the snapshot, so the
+    // native error still fires instead of a plan with a hole.
+    #[test]
+    fn eligibility_withholds_a_task_whose_include_ignored_group_is_invalid() {
+        let (planner, task_graph) = include_ignored_planner(&["!{projectRoot}/dist/**/*.map"]);
+        let inputs = planner.eligibility_inputs(&task_graph, &[], &[], None);
+        assert!(inputs.invalid_files_input.contains("parent:build"));
+
+        let opted_out =
+            planner.eligibility_inputs(&task_graph, &[], &["parent:build".into()], None);
+        assert!(opted_out.invalid_files_input.is_empty());
+
+        let (planner, task_graph) =
+            include_ignored_planner(&["{projectRoot}/dist/**", "!{projectRoot}/dist/**/*.map"]);
+        let inputs = planner.eligibility_inputs(&task_graph, &[], &[], None);
+        assert!(inputs.invalid_files_input.is_empty());
     }
 
     #[test]

@@ -103,11 +103,6 @@ export declare class HashPlanner {
    * executors and target configuration are resolved.
    */
   getPlans(taskIds: Array<string>, taskGraph: TaskGraph, snapshots?: IoSnapshots | undefined | null, customHasherTaskIds?: Array<string> | undefined | null, optedOutTaskIds?: Array<string> | undefined | null): Record<string, string[]>
-  /**
-   * The same eligibility walk `getPlans` performs, reported: which tasks
-   * hash from their snapshot and why the others do not.
-   */
-  getIoSnapshotReport(taskGraph: TaskGraph, snapshots?: IoSnapshots | undefined | null, customHasherTaskIds?: Array<string> | undefined | null, optedOutTaskIds?: Array<string> | undefined | null): IoSnapshotReport
   getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph, snapshots?: IoSnapshots | undefined | null, customHasherTaskIds?: Array<string> | undefined | null, optedOutTaskIds?: Array<string> | undefined | null): ExternalObject<Record<string, Array<HashInstruction>>>
 }
 
@@ -630,8 +625,8 @@ export declare function getIoSnapshotDeferredTaskIds(snapshots: IoSnapshots, tas
 /**
  * The eligibility report without a planner: the client prints the run
  * summary from this on the daemon path, where it never transfers a project
- * graph. `invalid-files-input` needs nx.json to expand named inputs, so it
- * is only reported through the planner.
+ * graph. It cannot see `invalid-files-input`, which needs nx.json, so a task
+ * the planner withholds for it still counts as used here.
  */
 export declare function getIoSnapshotReport(snapshots: IoSnapshots, taskGraph: TaskGraph, optedOutTaskIds: Array<string>, customHasherTaskIds: Array<string>, projectRoots?: Record<string, string> | undefined | null): IoSnapshotReport
 

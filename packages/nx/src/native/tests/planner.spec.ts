@@ -8,6 +8,7 @@ import {
   HashPlanner,
   IoSnapshotStore,
   getIoSnapshotDeferredTaskIds,
+  getIoSnapshotReport,
   TaskHasher,
   testOnlyTransferFileMap,
   transferProjectGraph,
@@ -2172,9 +2173,12 @@ describe('task planner', () => {
           taskOutputs: { 'gone:build': ['dist/x'] },
         },
       });
-      const report = planner.getIoSnapshotReport(taskGraph, withProducer, [
-        'child:build',
-      ]);
+      const report = getIoSnapshotReport(
+        withProducer,
+        taskGraph,
+        [],
+        ['child:build']
+      );
       expect(report.used).toEqual([]);
       expect(report.diagnostics.map((d) => [d.reason, d.taskId])).toEqual([
         ['custom-hasher', 'child:build'],
@@ -2207,7 +2211,7 @@ describe('task planner', () => {
         )
       ).toEqual(plain);
       expect(
-        planner.getIoSnapshotReport(taskGraph, snapshots, [], ['parent:build'])
+        getIoSnapshotReport(snapshots, taskGraph, ['parent:build'], [])
           .diagnostics
       ).toContainEqual(
         expect.objectContaining({ reason: 'disabled', taskId: 'parent:build' })
@@ -2224,9 +2228,9 @@ describe('task planner', () => {
         plain
       );
       expect(
-        planner
-          .getIoSnapshotReport(taskGraph, snapshots)
-          .diagnostics.find((d) => d.taskId === 'parent:build')
+        getIoSnapshotReport(snapshots, taskGraph, [], []).diagnostics.find(
+          (d) => d.taskId === 'parent:build'
+        )
       ).toMatchObject({ reason: 'root-anchored-glob', glob: '**/*.gen' });
     });
 
@@ -2277,7 +2281,7 @@ describe('task planner', () => {
       expect(getIoSnapshotDeferredTaskIds(snapshots, taskGraph)).toEqual([
         'parent:build',
       ]);
-      expect(planner.getIoSnapshotReport(taskGraph, snapshots).used).toEqual([
+      expect(getIoSnapshotReport(snapshots, taskGraph, [], []).used).toEqual([
         'parent:build',
       ]);
     });
@@ -2293,9 +2297,9 @@ describe('task planner', () => {
           planner.getPlans(['parent:build'], taskGraph, snapshots)
         ).toEqual(plain);
         expect(
-          planner
-            .getIoSnapshotReport(taskGraph, snapshots)
-            .diagnostics.find((d) => d.taskId === 'parent:build')
+          getIoSnapshotReport(snapshots, taskGraph, [], []).diagnostics.find(
+            (d) => d.taskId === 'parent:build'
+          )
         ).toMatchObject({ reason: 'escapes-workspace', glob });
       }
     });
@@ -2340,14 +2344,6 @@ describe('task planner', () => {
       expect(() =>
         planner.getPlans(['parent:build'], taskGraph, snapshots)
       ).toThrow(/no positive includeIgnored fileset/);
-      expect(
-        planner.getIoSnapshotReport(taskGraph, snapshots).diagnostics
-      ).toEqual([
-        expect.objectContaining({
-          reason: 'invalid-files-input',
-          taskId: 'parent:build',
-        }),
-      ]);
     });
 
     it('keeps the snapshot when a declared includeIgnored negation has a positive fileset to filter', () => {
@@ -2364,9 +2360,6 @@ describe('task planner', () => {
           expect.stringMatching(/^io-snapshot:[0-9a-f]{64}$/),
         ])
       );
-      expect(
-        planner.getIoSnapshotReport(taskGraph, snapshots).diagnostics
-      ).toEqual([]);
     });
   });
 });
