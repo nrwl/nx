@@ -583,6 +583,20 @@ export function holdRunToContinue(
   return state;
 }
 
+// Init's first two checks, read-only, for the CLI to run before the install.
+// An active run other than `runId` passes: init reports it instead.
+export function refuseStartFreshWithoutActiveRun(
+  root: string,
+  runId: string
+): void {
+  if (!RUN_ID_SAFE.test(runId)) {
+    throw new Error(`Invalid run id '${runId}'.`);
+  }
+  if (!findActiveRunForInit(root, true)) {
+    throw new Error(noActiveRunToReplace(runId));
+  }
+}
+
 /**
  * Drops the hold holdRunToContinue took, for a wrapper that hands the
  * continue to the workspace-local nx: the child takes its own hold, and an

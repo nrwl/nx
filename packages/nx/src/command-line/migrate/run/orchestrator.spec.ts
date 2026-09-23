@@ -102,6 +102,7 @@ import { nxVersion } from '../../../utils/versions';
 import { runStepHandoffPath } from '../agentic/handoff';
 import {
   holdRunToContinue,
+  refuseStartFreshWithoutActiveRun,
   runOrchestratorInit,
   runOrchestratorReconcile,
   runOrchestratorResume,
@@ -2287,6 +2288,42 @@ describe('orchestrator', () => {
       );
       expect(existsSync(join(dir, 'activity'))).toBe(false);
       expect(existsSync(runDir(root, 'missing'))).toBe(false);
+    });
+
+    describe('refuseStartFreshWithoutActiveRun', () => {
+      it.each<[string, () => void]>([
+        ['no run directory exists', () => {}],
+        [
+          'only a completed run exists',
+          () => {
+            setupRun('run-0', {
+              steps: [migStep('step-1', '@nx/js:a', 'succeeded')],
+              status: 'completed',
+            });
+          },
+        ],
+      ])('refuses when %s, creating nothing', (_label, arrange) => {
+        arrange();
+        const before = existsSync(migrateRunsDir(root));
+
+        expect(() => refuseStartFreshWithoutActiveRun(root, 'run-9')).toThrow(
+          "Not starting fresh: no migrate run 'run-9' is active, so there is nothing to replace. To start a run, re-run the command without --start-fresh and --run-id."
+        );
+
+        expect(existsSync(runDir(root, 'run-9'))).toBe(false);
+        expect(existsSync(migrateRunsDir(root))).toBe(before);
+      });
+
+      it('passes while a run is active, even one the id does not name, without holding it', () => {
+        const dir = setupRun('run-1', {
+          steps: [migStep('step-1', '@nx/js:a', 'pending')],
+        });
+
+        expect(() =>
+          refuseStartFreshWithoutActiveRun(root, 'run-9')
+        ).not.toThrow();
+        expect(existsSync(join(dir, 'activity'))).toBe(false);
+      });
     });
 
     it('refuses to continue while another process holds the run, and reports that process', async () => {

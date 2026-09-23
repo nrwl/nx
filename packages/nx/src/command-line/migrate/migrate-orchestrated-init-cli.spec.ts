@@ -7,6 +7,7 @@ const mockRunOrchestratorInit = vi.fn();
 const mockRunOrchestratorResume = vi.fn();
 const mockReadLatestPlanSnapshot = vi.fn();
 const mockHoldRunToContinue = vi.fn();
+const mockRefuseStartFreshWithoutActiveRun = vi.fn();
 // migrate.ts lazy-requires ./run (CJS channel), which vi.mock cannot
 // intercept; replace the module in the require channel instead.
 import { mockCjsModule } from '../../internal-testing-utils/cjs-mock';
@@ -19,6 +20,8 @@ mockCjsModule(import.meta.url, './run', {
   readLatestPlanSnapshot: (...args: unknown[]) =>
     mockReadLatestPlanSnapshot(...args),
   holdRunToContinue: (...args: unknown[]) => mockHoldRunToContinue(...args),
+  refuseStartFreshWithoutActiveRun: (...args: unknown[]) =>
+    mockRefuseStartFreshWithoutActiveRun(...args),
 });
 const mockRunMasterSession = vi.fn();
 mockCjsModule(import.meta.url, './agentic/master/run-master-session', {
@@ -143,6 +146,7 @@ describe('migrate() orchestrated init dispatch', () => {
     mockRunOrchestratorResume.mockReset().mockReturnValue(undefined);
     mockReadLatestPlanSnapshot.mockReset().mockReturnValue({ migrations: [] });
     mockHoldRunToContinue.mockReset();
+    mockRefuseStartFreshWithoutActiveRun.mockReset();
     mockRunInstall.mockReset().mockResolvedValue(undefined);
     mockRunMasterSession.mockReset().mockResolvedValue(undefined);
     mockResolveAgentic.mockReset().mockResolvedValue({ kind: 'disabled' });
@@ -342,6 +346,27 @@ describe('migrate() orchestrated init dispatch', () => {
     );
 
     expect(mockHoldRunToContinue).not.toHaveBeenCalled();
+  });
+
+  it('refuses a start-fresh naming no active run before the preflight install', async () => {
+    mockRefuseStartFreshWithoutActiveRun.mockImplementation(() => {
+      throw new Error('nothing to replace');
+    });
+
+    expect(
+      await migrate(
+        root,
+        runMigrationsArgs({ runId: 'run-1', startFresh: true }),
+        ['--run-migrations', '--start-fresh', '--run-id=run-1']
+      )
+    ).toBe(1);
+
+    expect(mockRefuseStartFreshWithoutActiveRun).toHaveBeenCalledWith(
+      root,
+      'run-1'
+    );
+    expect(mockRunInstall).not.toHaveBeenCalled();
+    expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
   });
 
   it('continues with the agent nx.json names when --agentic is not passed', async () => {
