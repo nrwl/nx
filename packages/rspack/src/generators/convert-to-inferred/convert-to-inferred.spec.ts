@@ -23,12 +23,12 @@ import { getLockFileName } from '@nx/js';
 
 let fs: TempFs;
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  createProjectGraphAsync: jest
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi
     .fn()
     .mockImplementation(() => Promise.resolve(projectGraph)),
-  updateProjectConfiguration: jest
+  updateProjectConfiguration: vi
     .fn()
     .mockImplementation((tree, projectName, projectConfiguration) => {
       function handleEmptyTargets(
@@ -69,7 +69,7 @@ jest.mock('@nx/devkit', () => ({
       projectGraph.nodes[projectName].data = projectConfiguration;
     }),
 }));
-jest.mock('nx/src/devkit-internals', () => {
+vi.mock('nx/src/devkit-internals', () => {
   // Use a proxy to lazily access the actual module to avoid initialization timing issues with SWC
   const getActual = () =>
     jest.requireActual('nx/src/project-graph/utils/retrieve-workspace-files');
@@ -85,7 +85,7 @@ jest.mock('nx/src/devkit-internals', () => {
           // depend on @nx/rspack being built. executors.json points `schema`
           // at ./dist (only present after copy-assets); readTargetOptions only
           // consumes `schema`.
-          return jest.fn().mockImplementation((_pkg, executorName) => ({
+          return vi.fn().mockImplementation((_pkg, executorName) => ({
             schema: JSON.parse(
               readFileSync(
                 join(__dirname, '../../executors', executorName, 'schema.json'),
@@ -163,7 +163,7 @@ function writeRspackConfig(
 ) {
   tree.write(`${projectRoot}/rspack.config.js`, rspackConfig);
   fs.createFileSync(`${projectRoot}/rspack.config.js`, rspackConfig);
-  jest.doMock(join(fs.tempDir, projectRoot, 'rspack.config.js'), () => ({}), {
+  vi.doMock(join(fs.tempDir, projectRoot, 'rspack.config.js'), () => ({}), {
     virtual: true,
   });
 }
@@ -283,7 +283,7 @@ describe('convert-to-inferred', () => {
 
   afterEach(() => {
     fs.cleanup();
-    jest.resetModules();
+    vi.resetModules();
   });
 
   describe('--project', () => {

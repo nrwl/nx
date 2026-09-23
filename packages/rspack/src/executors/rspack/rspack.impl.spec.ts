@@ -3,18 +3,18 @@ import { runTypeCheck } from '@nx/js';
 import { executeTypeCheck } from './rspack.impl';
 import { RspackExecutorSchema } from './schema';
 
-jest.mock('@nx/js', () => ({
-  ...jest.requireActual('@nx/js'),
-  runTypeCheck: jest.fn().mockResolvedValue({ errors: [], warnings: [] }),
-  printDiagnostics: jest.fn().mockResolvedValue(undefined),
+vi.mock('@nx/js', async () => ({
+  ...(await vi.importActual<any>('@nx/js')),
+  runTypeCheck: vi.fn().mockResolvedValue({ errors: [], warnings: [] }),
+  printDiagnostics: vi.fn().mockResolvedValue(undefined),
 }));
-jest.mock('../../utils/create-compiler', () => ({
-  createCompiler: jest.fn(),
-  isMultiCompiler: jest.fn(),
+vi.mock('../../utils/create-compiler', () => ({
+  createCompiler: vi.fn(),
+  isMultiCompiler: vi.fn(),
 }));
 
 describe('rspack executeTypeCheck', () => {
-  afterEach(() => jest.clearAllMocks());
+  afterEach(() => vi.clearAllMocks());
 
   // TS 6 defaults rootDir to the tsconfig dir, so a workspace lib resolved from
   // source (outside the project) fails the type-check with TS6059. The check

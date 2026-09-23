@@ -1,10 +1,11 @@
+import type { MockInstance } from 'vitest';
 describe('@nx/rspack compose helpers deprecation', () => {
   function setup() {
-    let warn!: jest.SpyInstance;
+    let warn!: MockInstance;
     let mod!: typeof import('./deprecation');
     jest.isolateModules(() => {
       const { logger } = require('@nx/devkit');
-      warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+      warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
       mod = require('./deprecation');
     });
     return { warn, mod };

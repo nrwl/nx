@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { type CreateNodesContext } from '@nx/devkit';
 import {
   isUsingTsSolutionSetup,
@@ -10,9 +11,9 @@ import { join } from 'path';
 import { createNodes } from './plugin';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 
-jest.mock('@nx/js/internal', () => ({
-  ...jest.requireActual('@nx/js/internal'),
-  isUsingTsSolutionSetup: jest.fn(),
+vi.mock('@nx/js/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/js/internal')),
+  isUsingTsSolutionSetup: vi.fn(),
 }));
 
 describe('@nx/rspack', () => {
@@ -22,7 +23,7 @@ describe('@nx/rspack', () => {
   let originalCacheProjectGraph = process.env.NX_CACHE_PROJECT_GRAPH;
 
   beforeEach(() => {
-    (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(false);
+    (isUsingTsSolutionSetup as Mock).mockReturnValue(false);
     tempFs = new TempFs('rspack-test');
     context = {
       nxJsonConfiguration: {
@@ -47,7 +48,7 @@ describe('@nx/rspack', () => {
   });
 
   afterEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     tempFs.cleanup();
     if (originalCacheProjectGraph !== undefined) {
       process.env.NX_CACHE_PROJECT_GRAPH = originalCacheProjectGraph;

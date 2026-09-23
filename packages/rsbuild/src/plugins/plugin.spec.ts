@@ -1,19 +1,20 @@
+import type { Mock } from 'vitest';
 import { type CreateNodesContext } from '@nx/devkit';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { createNodes } from './plugin';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 
-jest.mock('@rsbuild/core', () => ({
-  ...jest.requireActual('@rsbuild/core'),
-  loadConfig: jest.fn().mockResolvedValue({
+vi.mock('@rsbuild/core', async () => ({
+  ...(await vi.importActual<any>('@rsbuild/core')),
+  loadConfig: vi.fn().mockResolvedValue({
     filePath: 'my-app/rsbuild.config.ts',
     content: {},
   }),
 }));
 
-jest.mock('@nx/js/internal', () => ({
-  ...jest.requireActual('@nx/js/internal'),
-  isUsingTsSolutionSetup: jest.fn(),
+vi.mock('@nx/js/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/js/internal')),
+  isUsingTsSolutionSetup: vi.fn(),
 }));
 
 describe('@nx/rsbuild', () => {
@@ -22,7 +23,7 @@ describe('@nx/rsbuild', () => {
   let tempFs: TempFs;
 
   beforeEach(() => {
-    (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(false);
+    (isUsingTsSolutionSetup as Mock).mockReturnValue(false);
     tempFs = new TempFs('rsbuild-test');
     context = {
       nxJsonConfiguration: {
@@ -43,7 +44,7 @@ describe('@nx/rsbuild', () => {
   });
 
   afterEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     tempFs.cleanup();
   });
 
@@ -216,7 +217,7 @@ describe('@nx/rsbuild', () => {
   });
 
   it('should infer typecheck with --build flag when using TS solution setup', async () => {
-    (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(true);
+    (isUsingTsSolutionSetup as Mock).mockReturnValue(true);
     tempFs.createFileSync('my-app/tsconfig.json', `{}`);
 
     const nodes = await createNodesFunction(
@@ -276,7 +277,7 @@ describe('@nx/rsbuild', () => {
       // `@rsbuild/core` is `require`d lazily inside the plugin, so grab the
       // same (mocked) module instance from the current registry.
       const { loadConfig } = require('@rsbuild/core');
-      (loadConfig as jest.Mock).mockResolvedValueOnce({
+      (loadConfig as Mock).mockResolvedValueOnce({
         filePath: configPath,
         content: distPathRoot
           ? { output: { distPath: { root: distPathRoot } } }

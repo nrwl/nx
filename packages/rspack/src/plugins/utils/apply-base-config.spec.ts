@@ -162,9 +162,9 @@ describe('apply-base-config libraryTarget handling', () => {
     beforeEach(() => {
       // Force the loaded module to report v2 so the v1/v2 branch in
       // applyBaseConfig picks the modern output.library.type shape.
-      jest.resetModules();
-      jest.doMock('@rspack/core', () => {
-        const actual = jest.requireActual('@rspack/core');
+      vi.resetModules();
+      vi.doMock('@rspack/core', async () => {
+        const actual = await vi.importActual<any>('@rspack/core');
         return new Proxy(actual, {
           get(target, prop) {
             if (prop === 'rspackVersion') return '2.0.3';
@@ -175,8 +175,8 @@ describe('apply-base-config libraryTarget handling', () => {
     });
 
     afterEach(() => {
-      jest.dontMock('@rspack/core');
-      jest.resetModules();
+      vi.doUnmock('@rspack/core');
+      vi.resetModules();
     });
 
     it('emits output.library.type instead of libraryTarget on v2', async () => {
@@ -219,9 +219,9 @@ describe('apply-base-config ts-checker rootDir (TS6059 prevention)', () => {
 
   beforeEach(() => {
     capturedPluginConfigs.length = 0;
-    jest.resetModules();
+    vi.resetModules();
     global.NX_GRAPH_CREATION = false;
-    jest.doMock('ts-checker-rspack-plugin', () => ({
+    vi.doMock('ts-checker-rspack-plugin', () => ({
       TsCheckerRspackPlugin: class {
         constructor(pluginConfig: any) {
           capturedPluginConfigs.push(pluginConfig);
@@ -233,7 +233,7 @@ describe('apply-base-config ts-checker rootDir (TS6059 prevention)', () => {
 
   afterEach(() => {
     delete global.NX_GRAPH_CREATION;
-    jest.resetModules();
+    vi.resetModules();
   });
 
   const baseOptions = {
@@ -244,8 +244,8 @@ describe('apply-base-config ts-checker rootDir (TS6059 prevention)', () => {
   } as NormalizedNxAppRspackPluginOptions;
 
   it('widens the ts-checker rootDir to the workspace root in a classic setup', async () => {
-    jest.doMock('@nx/js/internal', () => ({
-      ...jest.requireActual('@nx/js/internal'),
+    vi.doMock('@nx/js/internal', async () => ({
+      ...(await vi.importActual<any>('@nx/js/internal')),
       isUsingTsSolutionSetup: () => false,
     }));
 
@@ -260,13 +260,13 @@ describe('apply-base-config ts-checker rootDir (TS6059 prevention)', () => {
   });
 
   it('does not override rootDir when using the TS solution setup', async () => {
-    jest.doMock('@nx/js/internal', () => ({
-      ...jest.requireActual('@nx/js/internal'),
+    vi.doMock('@nx/js/internal', async () => ({
+      ...(await vi.importActual<any>('@nx/js/internal')),
       isUsingTsSolutionSetup: () => true,
     }));
     // The TS solution setup only type-checks during serve, so force serve mode
     // to make the plugin be installed at all.
-    jest.doMock('../../utils/is-serve-mode', () => ({
+    vi.doMock('../../utils/is-serve-mode', () => ({
       isServeMode: () => true,
     }));
 
@@ -287,14 +287,14 @@ describe('apply-base-config cache option', () => {
   } as NormalizedNxAppRspackPluginOptions;
 
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     global.NX_GRAPH_CREATION = false;
   });
 
   afterEach(() => {
     delete global.NX_GRAPH_CREATION;
-    jest.dontMock('@rspack/core');
-    jest.resetModules();
+    vi.doUnmock('@rspack/core');
+    vi.resetModules();
   });
 
   it('writes the public cache value as-is in executor mode', async () => {
@@ -316,11 +316,11 @@ describe('apply-base-config cache option', () => {
       cache === true
         ? { type: 'memory', snapshot: {} }
         : { ...(cache as object), snapshot: {} };
-    const getNormalizedRspackOptions = jest.fn(({ cache }) => ({
+    const getNormalizedRspackOptions = vi.fn(({ cache }) => ({
       cache: normalize(cache),
     }));
-    jest.doMock('@rspack/core', () => {
-      const actual = jest.requireActual('@rspack/core');
+    vi.doMock('@rspack/core', async () => {
+      const actual = await vi.importActual<any>('@rspack/core');
       return new Proxy(actual, {
         get(target, prop) {
           if (prop === 'config') {
@@ -352,7 +352,7 @@ describe('apply-base-config cache option', () => {
   it('passes an explicit cache option through the installed normalizer in plugin mode', async () => {
     const { applyBaseConfig } = await import('./apply-base-config');
     const rspackCore: typeof import('@rspack/core') =
-      jest.requireActual('@rspack/core');
+      await vi.importActual<any>('@rspack/core');
     const normalizedCache = (cache: Configuration['cache']) =>
       rspackCore.config.getNormalizedRspackOptions({
         context: path.join('/test', 'apps/test'),
@@ -401,13 +401,13 @@ describe('apply-base-config minimizer', () => {
   });
 
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     global.NX_GRAPH_CREATION = false;
   });
 
   afterEach(() => {
     delete global.NX_GRAPH_CREATION;
-    jest.resetModules();
+    vi.resetModules();
   });
 
   it.each(['web', 'node'] as const)(
