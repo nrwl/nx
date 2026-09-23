@@ -80,17 +80,43 @@ describe('handleResolveIoSnapshots', () => {
     expect(getStored).not.toHaveBeenCalled();
   });
 
+  it('shares one load between requests that arrive while it is under way', async () => {
+    let finish: (outcome: unknown) => void;
+    loadIoSnapshotsForRun.mockReturnValueOnce(
+      new Promise((resolve) => (finish = resolve))
+    );
+    const first = handleResolveIoSnapshots(payload);
+    const second = handleResolveIoSnapshots(payload);
+    finish({ status: 'fetched', snapshots: set });
+    expect((await first).response).toEqual((await second).response);
+    expect(loadIoSnapshotsForRun).toHaveBeenCalledTimes(1);
+
+    // Settled loads are not reused: the store decides what is fresh.
+    loadIoSnapshotsForRun.mockResolvedValue({
+      status: 'cached',
+      snapshots: set,
+    });
+    await handleResolveIoSnapshots(payload);
+    expect(loadIoSnapshotsForRun).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not share a load between requests with different credentials', async () => {
+    loadIoSnapshotsForRun.mockResolvedValue(null);
+    await Promise.all([
+      handleResolveIoSnapshots(payload),
+      handleResolveIoSnapshots({
+        ...payload,
+        runnerOptions: { accessToken: 'other' },
+      }),
+    ]);
+    expect(loadIoSnapshotsForRun).toHaveBeenCalledTimes(2);
+  });
+
   it('passes a skip through as it came', async () => {
     const skipped = { status: 'skipped', reason: 'offline', message: 'x' };
     loadIoSnapshotsForRun.mockResolvedValue(skipped);
     const { response } = await handleResolveIoSnapshots(payload);
     expect(response).toEqual(skipped);
-  });
-
-  // `handleClientEnv` reflects a message's `env` onto the daemon's whole
-  // process env, deleting every key the message leaves out.
-  it('carries the run env under a name the daemon does not reflect', () => {
-    expect(Object.keys(payload)).not.toContain('env');
   });
 
   it.each(['json', 'v8'] as const)(

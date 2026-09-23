@@ -16,9 +16,10 @@ import {
 
 /**
  * This run's snapshot set. With the daemon, the daemon fetches it and writes
- * the database, and this process reads back the version the daemon resolved:
- * one fetch, shared by every client it serves. Without the
- * daemon this process does both. `null` means snapshots are not enabled here.
+ * the database, and this process reads back the version the daemon resolved;
+ * concurrent clients share the daemon's fetch. Without the daemon this process
+ * does both, and concurrent processes each fetch. `null` means snapshots are
+ * not enabled here.
  */
 export async function resolveIoSnapshotsForRun(
   nxJson: NxJsonConfiguration,
