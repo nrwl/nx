@@ -20,7 +20,7 @@ Rules that override any shortcut you are tempted to take:
 4. Add `resolve.alias` entries for every workspace library referenced through `tsconfig` paths. Nx did this for you and the Angular webpack builder does not read `paths`.
 5. For hosts on `@nx/angular/mf`, convert `setRemoteDefinitions` to `registerRemotes` with `type: 'module'` and `loadRemoteModule(name, './Routes')` to `loadRemote(name + '/Routes')`. Map values must be full `remoteEntry.mjs` URLs. Hosts already calling `registerRemotes` stay as they are.
 6. Replace the `serve` target with `@nx/angular:dev-server` (or `@angular/build:dev-server`), keep each remote's `dependsOn: ['<host>:serve']`, set `headers: { 'Access-Control-Allow-Origin': '*' }` on every remote's serve target, and add a `serve-static` target per app using `@nx/web:file-server` with `staticFilePath`, `dependsOn: ['build']`, `watch: false`, never `buildTarget`.
-7. Remove `@nx/module-federation` only after every consumer is gone. Move `@module-federation/enhanced` to `dependencies`. Rebuild uncached with the old package renamed away, then restore it.
+7. Remove `@nx/module-federation` only after every consumer is gone. Move `@module-federation/enhanced` to `dependencies`. Rebuild uncached afterwards.
 8. Do not claim hot-update parity or shared-state parity from a green build. Report what you verified and what you did not.
 
 Reference: {pageUrl}
@@ -83,8 +83,8 @@ Nx 20.1 or later with `--dynamic` already calls `init` or `registerRemotes` from
 npm add --save-prod @module-federation/enhanced
 ```
 
-The `host` generator already added it under `dependencies`. Check that it is not under
-`devDependencies`, since the runtime is imported by application code.
+The `host` generator added it to your root `package.json`, under `devDependencies` on recent
+versions. Move it to `dependencies`, since the runtime is imported by application code.
 
 ### Step 3: translate the federation config
 
@@ -100,9 +100,9 @@ Two values that Nx derived are easy to lose:
 - The shared map came from the project graph. Read it from the baseline `mf-stats.json` rather
   than deriving it: Nx emitted every `@angular/*` package the app imports plus their secondary
   entry points such as `@angular/core/primitives/signals`, each as `singleton: true`,
-  `strictVersion: true`, with the `requiredVersion` range from your root `package.json`. A
-  source-only workspace library is emitted with `requiredVersion: '^0.0.0'` and
-  `version: '0.0.0'`.
+  `strictVersion: true`, with the `requiredVersion` range from your root `package.json`, and on
+  Rspack with `eager: true` on the `@angular/*` packages. A source-only workspace library is
+  emitted with `requiredVersion: '^0.0.0'` and `version: '0.0.0'`.
 
 {% tabs %}
 {% tabitem label="Before" %}
@@ -224,7 +224,10 @@ const mf = require('./module-federation.config.js');
 export default {
   output: { uniqueName: mf.name, publicPath: 'auto', module: true },
   resolve: { modules: ['node_modules', join(__dirname, '../..')] },
-  optimization: { runtimeChunk: false },
+  optimization: {
+    runtimeChunk: false,
+    splitChunks: { cacheGroups: { default: false, common: false } },
+  },
   plugins: [new ModuleFederationPlugin(mf)],
 };
 ```
@@ -322,8 +325,12 @@ e2e target that already scheduled those builds Nx aborts with
 `nx run shell:serve`, which used to bring the remotes with it; point its `webServerCommand` at
 `nx run-many -t serve-static -p shell remoteA remoteB` instead.
 
-Remove `targetDefaults` entries in `nx.json` keyed on `@nx/angular:webpack-browser`. Their
-`NX_MF_DEV_REMOTES` input is dead.
+On Rspack the `build`, `serve`, and `serve-static` targets come from `@nx/rspack/plugin`
+inference. Keep them, put the CORS header in `rspack.config.ts` under `devServer.headers`, and
+give the plugin's `serveStaticTargetName` another name so the explicit `serve-static` above wins.
+
+In `nx.json`, drop the `{ "env": "NX_MF_DEV_REMOTES" }` input from the
+`@nx/angular:webpack-browser` target default and keep the rest of the entry.
 
 ### Step 7: validate the result
 
@@ -349,9 +356,8 @@ If a rebuilt remote fails to load with
 npm remove @nx/module-federation
 ```
 
-`@nx/angular` on v23 still depends on it, so uninstalling does not prove your builds stopped
-using it. Rename `node_modules/@nx/module-federation` out of the way, rebuild uncached, then
-rename it back.
+`@nx/angular` lists it as an optional peer dependency, so `npm remove` takes it out of
+`node_modules` too. Rebuild uncached afterwards to confirm nothing still imports it.
 
 ## Path B, rewrite to native federation
 
@@ -397,7 +403,12 @@ leaves this cleanup:
   workspace, so it names apps that are not remotes.
 - Point the host's `serve-original` target at `@angular/build:dev-server` with
   `buildTarget: shell:esbuild:development`. The generator wraps whatever `serve` was, which on a
-  Module Federation host is the deprecated `module-federation-dev-server`.
+  Module Federation host is the deprecated `module-federation-dev-server`. Mark the wrapped
+  `serve` `continuous: true`, give the wrapped `build` `outputs` (`{workspaceRoot}/dist/apps/<app>`)
+  so Nx caches it, and check that each remote's `dependsOn` still names the host's `serve`, not
+  `serve-original`.
+- `shareAll` shares every `package.json` dependency, so the remote entry lists more packages than
+  the old `mf-stats.json`. Use `skip` to trim it if the extra shared packages matter to you.
 - Rewrite host routes to load through Native Federation:
 
 ```ts
