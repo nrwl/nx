@@ -26,15 +26,14 @@ Rules that override any shortcut you are tempted to take:
 Reference: {pageUrl}
 {% /llm_copy_prompt %}
 
-Nx v24 removes the Module Federation wrappers, runtime helpers, and dev-server executors that
-`@nx/module-federation`, `@nx/react`, `@nx/rspack`, and `@nx/angular` ship today, and the
-generators that created these setups are already deprecated in v23. Their replacement is the
-official [Module Federation](https://module-federation.io) plugins, which `withModuleFederation`
-already wraps internally, so your Rspack apps stay on Rspack and your webpack apps stay on
-webpack.
+Nx v23 deprecates the Module Federation wrappers, runtime helpers, dev-server executors, and
+generators that `@nx/module-federation`, `@nx/react`, `@nx/rspack`, and `@nx/angular` ship today.
+Nx v24 will remove them. Their replacement is the official
+[Module Federation](https://module-federation.io) plugins, which `withModuleFederation` already
+wraps internally, so your Rspack apps stay on Rspack and your webpack apps stay on webpack.
 
-Nx v24 provides a migration for this. Run the steps here before you upgrade: the old packages
-still work, so you can compare the result against a baseline you captured yourself.
+Migrate before you upgrade to v24, while the old packages still work and you can compare the
+result against a baseline you captured yourself. Nx will also ship migrations for this later.
 
 {% aside type="note" title="Scope" %}
 React client-side rendering on Rspack or webpack, keeping the same bundler. For Angular, see

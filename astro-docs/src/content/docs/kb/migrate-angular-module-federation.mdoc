@@ -26,12 +26,11 @@ Rules that override any shortcut you are tempted to take. Rules 2 to 7 are Path 
 Reference: {pageUrl}
 {% /llm_copy_prompt %}
 
-Nx v24 removes the Angular Module Federation generators, executors, runtime helpers, and the
+Nx v23 deprecates the Angular Module Federation generators, executors, runtime helpers, and the
 `withModuleFederation` and `NxModuleFederationPlugin` wrappers in `@nx/module-federation/angular`.
-The generators and executors are already deprecated in v23. Module Federation itself keeps
-working. Nx provided wrappers and runtime helpers over the official
-[Module Federation](https://module-federation.io) plugin, and that plugin stays supported on both
-webpack and Rspack.
+Nx v24 will remove them. Module Federation itself keeps working. Nx provided wrappers and runtime
+helpers over the official [Module Federation](https://module-federation.io) plugin, and that
+plugin stays supported on both webpack and Rspack.
 
 Migrate before you upgrade to v24, while the old packages still work and you can compare the
 result against a baseline you captured yourself. Nx will also ship migrations for this later.
