@@ -10,9 +10,8 @@ import {
 } from './task-hasher';
 
 /**
- * `ioSnapshots` is this run's fetched bundle (see `loadIoSnapshotsForRun`);
- * undefined hashes natively. The daemon receives only its commit and reads
- * the same set from the database itself.
+ * `ioSnapshots` is this run's set (see `resolveIoSnapshotsForRun`); undefined
+ * hashes natively. The daemon gets only its commit.
  */
 export function createTaskHasher(
   projectGraph: ProjectGraph,

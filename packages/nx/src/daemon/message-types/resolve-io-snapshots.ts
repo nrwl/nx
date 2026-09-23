@@ -1,11 +1,6 @@
 export const RESOLVE_IO_SNAPSHOTS = 'RESOLVE_IO_SNAPSHOTS' as const;
 
-/**
- * The run's own values, NOT named `env`: the server reflects that field onto
- * its whole process env (`handleClientEnv`), deleting every key the message
- * omits. They travel with the request because the daemon's own environment
- * predates the run, so its `NX_IO_SNAPSHOTS` may differ or be absent.
- */
+/** Not named `env`: the daemon reflects `env` onto its whole process env (`handleClientEnv`). */
 export interface IoSnapshotEnvMessage {
   NX_IO_SNAPSHOTS?: string;
 }

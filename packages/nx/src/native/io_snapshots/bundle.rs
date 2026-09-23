@@ -1,12 +1,10 @@
-//! On-disk bundle data model; wasm-safe (no network).
+//! A task's I/O snapshot entry, as Nx Cloud sends it and the store keeps it.
 
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 
-/// Legacy (§2a) pre-classified reads: `projects` globs are project-relative,
-/// `workspace` holds reads outside any project root, `task_outputs` maps a
-/// producer task id to the paths read from its observed writes.
+/// Older per-project form: `projects` globs are relative to each project's root.
 #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct StructuredInputs {
@@ -18,9 +16,8 @@ pub struct StructuredInputs {
     pub task_outputs: BTreeMap<String, Vec<String>>,
 }
 
-/// Flat is the shape (NXC-4847 §2b): the server's collapsed workspace-relative
-/// globs. The earlier structured form is still accepted; `resolve` flattens it
-/// against the project roots. TODO(v24): drop the structured form.
+/// Workspace-relative globs; `Structured` is the older per-project form.
+/// TODO(v24): drop `Structured`.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(untagged)]
 pub enum TaskInputs {
@@ -39,24 +36,17 @@ impl Default for TaskInputs {
 pub struct TaskIoSnapshot {
     pub commit: String,
     pub inputs: TaskInputs,
-    /// producer task id → observed paths inside that task's outputs; the paths
-    /// are also in `inputs`, this only schedules the task after its producers.
+    /// producer task id → paths read from its outputs; orders the task after
+    /// them and withholds it if one is missing.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub task_outputs: Option<BTreeMap<String, Vec<String>>>,
     pub outputs: Vec<String>,
 }
 
 impl TaskIoSnapshot {
-    /// The half of an entry no other instruction in a plan hashes: the writes,
-    /// which decide what the cache stores, and the producer map. The reads
-    /// reach the hash as the file groups they become, `(path, content hash)`
-    /// pairs and all, so hashing them here would only add churn — a read the
-    /// plan drops because an external or always-on instruction already covers
-    /// it, or one naming a file that does not exist, would move the key while
-    /// changing nothing the task sees.
-    ///
-    /// Independent of the commit the entry was recorded at, and of every
-    /// other entry in the set, so a task's key moves only with its own.
+    /// Hashes only the writes and producer map: reads are hashed as their file
+    /// groups, and the commit and other entries stay out, so a task's key moves
+    /// only with its own entry.
     pub fn digest(&self) -> String {
         #[derive(Serialize)]
         #[serde(rename_all = "camelCase")]

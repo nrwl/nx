@@ -17,10 +17,8 @@ export function formatIoSnapshotSummary(
   status: 'fetched' | 'cached'
 ): IoSnapshotSummary {
   const used = result.used.length;
-  // A task-level diagnostic used to mean the task was withheld. An
-  // `unusable-output` does not: it reports a dropped write on a task that is
-  // still hashed from its snapshot, and one task can raise several. So count
-  // the tasks that actually fell back, and leave those out of the reasons.
+  // `unusable-output` is raised on used tasks, possibly several per task:
+  // count withheld tasks, not diagnostics.
   const usedTasks = new Set(result.used);
   const withheld = result.diagnostics.filter(
     (d) => d.taskId != null && !usedTasks.has(d.taskId)

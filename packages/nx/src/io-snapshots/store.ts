@@ -35,10 +35,8 @@ export function snapshotsOf(
 }
 
 /**
- * A stored set younger than this is served without asking Nx Cloud, so the
- * several commands of one CI job share one fetch. Past it the run asks again,
- * since Nx Cloud resolves HEAD from its nearest recorded ancestors and a
- * closer recording can appear for the same commit later.
+ * Younger sets are served without asking Nx Cloud; older ones re-fetch, since
+ * a closer ancestor's recording may have landed.
  */
 const STORED_SET_MAX_AGE_MS = 60 * 60 * 1000;
 

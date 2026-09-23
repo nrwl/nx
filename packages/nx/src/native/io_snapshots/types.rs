@@ -20,9 +20,7 @@ pub struct IoSnapshotImportOptions {
     pub requested_commit: String,
     /// The commits the client asked about, newest first.
     pub commits: Vec<String>,
-    /// `Record<taskId, { commit, inputs, outputs }>` as JSON. `inputs` is an
-    /// untagged shape (flat globs or the older per-project buckets) that serde
-    /// reads directly; a typed napi object would have to model both.
+    /// `Record<taskId, TaskIoSnapshot>` as JSON; serde reads the untagged `inputs`.
     pub snapshots_json: String,
     pub client_version: Option<String>,
     pub retain: Option<u32>,

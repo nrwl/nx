@@ -20,7 +20,7 @@ pub(crate) struct EligibilityInputs {
     /// Tasks with a declared `{ files }` glob the hasher would reject; natively
     /// that is an error, so a snapshot must not paper over it.
     pub invalid_files_input: HashSet<String>,
-    /// Project name → root, for flattening pre-§2b bucketed bundles.
+    /// Project name → root, for flattening legacy bucketed entries.
     pub project_roots: HashMap<String, String>,
 }
 
@@ -67,8 +67,8 @@ pub(crate) struct SnapshotTask {
     pub digest: String,
 }
 
-/// Why a task (or the whole run) hashes natively. `reason` strings are the
-/// contract `nx show`, `nx graph`, and the run summary render.
+/// Why a task (or the whole run) hashes natively; `reason` is rendered by the
+/// run summary.
 #[napi(object)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct IoSnapshotDiagnostic {
@@ -145,10 +145,9 @@ impl Resolved {
     }
 }
 
-/// Decides, per task in the graph, whether its bundle entry can be hashed:
-/// the target has not opted out, no custom hasher, an entry exists, every
-/// producer it read from is in this task graph, and no glob would walk the
-/// whole workspace. A bundle-level failure yields one diagnostic and no tasks.
+/// Decides per task whether its entry can be hashed; each withheld task gets
+/// one diagnostic naming why. A set-level read failure yields one diagnostic
+/// and no tasks.
 pub(crate) fn resolve(
     snapshots: &IoSnapshots,
     task_graph: &TaskGraph,
@@ -222,7 +221,7 @@ pub(crate) fn resolve_scoped(
                 entry.task_outputs.clone().unwrap_or_default()
             }
             TaskInputs::Structured(legacy) => {
-                // Pre-§2b bundles bucket reads by project with project-relative globs.
+                // Legacy bucketed entries hold project-relative globs per project.
                 for (project, globs) in &legacy.projects {
                     let Some(root) = inputs.project_roots.get(project) else {
                         unknown_project = Some(project.clone());
@@ -287,10 +286,8 @@ pub(crate) fn resolve_scoped(
             diagnostics.push(diagnostic);
             continue;
         }
-        // A path that names one file never walks, so only real globs can be
-        // root-anchored. A declared fileset may walk from the workspace root;
-        // an observed one is withheld, as hashing that walk per task is not
-        // what a trace is for.
+        // Literal paths never walk; an observed glob that walks from the root
+        // is withheld.
         if let Some(glob) = files
             .iter()
             .filter(|g| !g.starts_with('!') && !is_literal_path(g))
@@ -326,10 +323,8 @@ pub(crate) fn resolve_scoped(
     }
 }
 
-/// The eligibility report without a planner: the client prints the run
-/// summary from this on the daemon path, where it never transfers a project
-/// graph. It cannot see `invalid-files-input`, which needs nx.json, so a task
-/// the planner withholds for it still counts as used here.
+/// The eligibility report without a planner, for the run summary. Blind to
+/// `invalid-files-input` (needs nx.json), so such a task counts as used here.
 #[napi]
 pub fn get_io_snapshot_report(
     snapshots: &IoSnapshots,
@@ -394,8 +389,8 @@ fn under_ignored_dir(path: &str) -> bool {
     })
 }
 
-/// Observed outputs per eligible task (same walk as hashing), for the runner
-/// to union into `task.outputs` and for `nx show` to label them.
+/// Observed outputs per eligible task, for the runner to union into
+/// `task.outputs`.
 #[napi]
 pub fn get_observed_io_snapshot_outputs(
     snapshots: &IoSnapshots,

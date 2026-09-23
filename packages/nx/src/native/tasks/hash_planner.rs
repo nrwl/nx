@@ -582,12 +582,9 @@ impl HashPlanner {
                 .is_err()
     }
 
-    /// The file half of a snapshot-hashed task: the observed reads minus files
-    /// a native instruction hashes whole, as one disk-backed group per owning
-    /// project (reads under no project root belong to the project rooted at
-    /// `.`, else to the task's own), each carrying only that project's declared
-    /// negations — a dependency's `!{workspaceRoot}/…` never suppresses the
-    /// task's own reads. Plus the marker.
+    /// Observed reads minus natively covered files, one disk-backed group per
+    /// owning project (else the `.` project, else the task's), each with only
+    /// that project's declared negations; plus the entry digest.
     fn snapshot_file_instructions(
         &self,
         task: &Task,
@@ -1695,12 +1692,9 @@ fn collect_negations(
     }
 }
 
-/// Whether an observed read is already hashed whole by a native instruction:
-/// externals cover node_modules and lockfiles (the root package.json stays —
-/// externals hash resolved versions, not its scripts); the always-on fileset
-/// covers nx.json, .gitignore and .nxignore. A declared `{json}` file and the
-/// root tsconfig stay: JsonFileSet hashes only its fields and TsConfiguration
-/// strips `paths`, so an observed read of either must hash the file itself.
+/// Reads a native instruction already hashes whole: node_modules and lockfiles
+/// (externals), nx.json/.gitignore/.nxignore (always-on). The root package.json,
+/// `{json}` inputs and root tsconfig stay: those instructions hash only part.
 fn covered_by_native_instruction(glob: &str) -> bool {
     let path = glob.strip_prefix('!').unwrap_or(glob);
     path.starts_with("node_modules/")

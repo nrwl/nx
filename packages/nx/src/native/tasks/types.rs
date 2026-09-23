@@ -269,8 +269,7 @@ impl InstructionPool {
     }
 
     /// Interns a snapshot group, recording how many trailing globs the planner
-    /// appended from declared inputs. Value-equal groups agree on the count,
-    /// since the globs themselves carry it.
+    /// appended from declared inputs.
     pub fn intern_with_declared_tail(&self, instruction: HashInstruction, tail: u32) -> u32 {
         let id = self.intern(instruction);
         if tail > 0 {

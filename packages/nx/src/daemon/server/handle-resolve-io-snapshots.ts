@@ -29,8 +29,5 @@ export async function handleResolveIoSnapshots(
     response = { status: resolved.status, commit: resolved.snapshots.commit };
     rememberIoSnapshots(resolved.snapshots);
   }
-  // An object, not a string: the client returns what the socket layer
-  // parsed, and a string body comes back parsed too, so stringifying here
-  // only makes the shape depend on which side happens to parse.
   return { response, description: 'handleResolveIoSnapshots' };
 }

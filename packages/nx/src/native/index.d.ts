@@ -624,10 +624,8 @@ export declare function getHardcodedIgnorePatterns(): Array<string>
 export declare function getIoSnapshotDeferredTaskIds(snapshots: IoSnapshots, taskGraph: TaskGraph): Array<string>
 
 /**
- * The eligibility report without a planner: the client prints the run
- * summary from this on the daemon path, where it never transfers a project
- * graph. It cannot see `invalid-files-input`, which needs nx.json, so a task
- * the planner withholds for it still counts as used here.
+ * The eligibility report without a planner, for the run summary. Blind to
+ * `invalid-files-input` (needs nx.json), so such a task counts as used here.
  */
 export declare function getIoSnapshotReport(snapshots: IoSnapshots, taskGraph: TaskGraph, options?: IoSnapshotEligibilityOptions | undefined | null): IoSnapshotReport
 
@@ -638,8 +636,8 @@ export declare function getIoSnapshotReport(snapshots: IoSnapshots, taskGraph: T
 export declare function getMainWorktreeRoot(workspaceRoot: string): string | null
 
 /**
- * Observed outputs per eligible task (same walk as hashing), for the runner
- * to union into `task.outputs` and for `nx show` to label them.
+ * Observed outputs per eligible task, for the runner to union into
+ * `task.outputs`.
  */
 export declare function getObservedIoSnapshotOutputs(snapshots: IoSnapshots, taskGraph: TaskGraph, options?: IoSnapshotEligibilityOptions | undefined | null): Record<string, Array<string>>
 
@@ -745,8 +743,8 @@ export interface InvocationRecord {
 }
 
 /**
- * Why a task (or the whole run) hashes natively. `reason` strings are the
- * contract `nx show`, `nx graph`, and the run summary render.
+ * Why a task (or the whole run) hashes natively; `reason` is rendered by the
+ * run summary.
  */
 export interface IoSnapshotDiagnostic {
   reason: string
@@ -773,11 +771,7 @@ export interface IoSnapshotImportOptions {
   requestedCommit: string
   /** The commits the client asked about, newest first. */
   commits: Array<string>
-  /**
-   * `Record<taskId, { commit, inputs, outputs }>` as JSON. `inputs` is an
-   * untagged shape (flat globs or the older per-project buckets) that serde
-   * reads directly; a typed napi object would have to model both.
-   */
+  /** `Record<taskId, TaskIoSnapshot>` as JSON; serde reads the untagged `inputs`. */
   snapshotsJson: string
   clientVersion?: string
   retain?: number

@@ -59,8 +59,8 @@ export async function fetchIoSnapshots(
     timeoutMs: READ_TIMEOUT_MS,
   });
   if (!result) {
-    // Today's server only answers `null` to a `knownUpdatedAt` nx never
-    // sends; a client that means "nothing to serve" by it is not an error.
+    // The client returns `null` only for a `knownUpdatedAt` match, which nx
+    // never sends; a future "nothing to serve" is not an error either.
     throw codedError('NO_SNAPSHOTS', 'Nx Cloud returned no I/O snapshot set');
   }
   return result;

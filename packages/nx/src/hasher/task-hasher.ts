@@ -171,7 +171,6 @@ export class DaemonBasedTaskHasher implements TaskHasher {
   constructor(
     private readonly daemonClient: DaemonClient,
     private readonly runnerOptions: any,
-    // The client decides whether snapshots apply; the daemon only obeys.
     private readonly ioSnapshots?: { commit?: string }
   ) {}
 
