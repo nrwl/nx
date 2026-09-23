@@ -835,9 +835,9 @@ export async function runOrchestratorReconcile(
         return; // no transition was written
       }
       const target = result.targetStep;
-      // Unless a reset ran, the partial result is committed under the
-      // migration's name, marked unresolved, and the step is settled in the
-      // same operation (see give-up.ts).
+      // Unless a reset ran, give-up.ts commits the partial result under the
+      // migration's name and settles the step in one operation; a failed
+      // install or commit settles it with the debt recorded.
       if (
         stepAction === 'unresolved' &&
         state.createCommits &&
