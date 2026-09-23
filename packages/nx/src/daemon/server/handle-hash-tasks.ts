@@ -11,6 +11,20 @@ import { getIoSnapshotsForVersion } from './io-snapshots-state';
  */
 let storedProjectGraph: any = null;
 let storedHasher: InProcessTaskHasher | null = null;
+/** The last selection's plans, for the graph they were built over. */
+let selectionPlans: {
+  projectGraph: unknown;
+  taskGraph: TaskGraph;
+  plans: Parameters<InProcessTaskHasher['adoptSelectionPlans']>[0];
+} | null = null;
+
+export function keepSelectionPlans(
+  projectGraph: unknown,
+  taskGraph: TaskGraph,
+  plans: Parameters<InProcessTaskHasher['adoptSelectionPlans']>[0]
+): void {
+  selectionPlans = { projectGraph, taskGraph, plans };
+}
 
 interface HashTasksPayload {
   runnerOptions: any;
@@ -40,6 +54,14 @@ async function getHasher(runnerOptions: any): Promise<InProcessTaskHasher> {
       rustReferences,
       runnerOptions
     );
+  }
+  if (selectionPlans?.projectGraph === projectGraph) {
+    storedHasher.adoptSelectionPlans(
+      selectionPlans.plans,
+      selectionPlans.taskGraph
+    );
+  } else {
+    selectionPlans = null;
   }
   return storedHasher;
 }

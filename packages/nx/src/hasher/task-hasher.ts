@@ -224,7 +224,7 @@ export class DaemonBasedTaskHasher implements TaskHasher {
 }
 
 export class InProcessTaskHasher implements TaskHasher {
-  private taskHasher: TaskHasherImpl;
+  private taskHasher: NativeTaskHasherImpl;
 
   constructor(
     private readonly projectGraph: ProjectGraph,
@@ -245,6 +245,13 @@ export class InProcessTaskHasher implements TaskHasher {
       },
       this.planningContext
     );
+  }
+
+  /** Plans a daemon-side selection built, for later hashes of the same tasks. */
+  adoptSelectionPlans(
+    ...args: Parameters<NativeTaskHasherImpl['adoptSelectionPlans']>
+  ): void {
+    this.taskHasher.adoptSelectionPlans(...args);
   }
 
   async hashTasks(

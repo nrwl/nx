@@ -2,7 +2,7 @@ import { TempFs } from '../internal-testing-utils/temp-fs';
 import { retrieveWorkspaceFiles } from '../project-graph/utils/retrieve-workspace-files';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { createTaskGraph } from '../tasks-runner/create-task-graph';
-import { NativeTaskHasherImpl } from './native-task-hasher-impl';
+import { NativeTaskHasherImpl, plannedAlike } from './native-task-hasher-impl';
 import {
   closeDbConnection,
   connectToNxDb,
@@ -1939,5 +1939,166 @@ describe('native task hasher', () => {
       'gen:compile'
     ].value;
     expect(again).toEqual(upfront);
+  });
+
+  // With the daemon on, selection plans in the daemon and leaves the plans
+  // there; hashing the tasks that run should reuse them rather than plan again.
+  it('hashes from adopted selection plans without planning again', async () => {
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+      'libs/child': 'child',
+    });
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      workspaceFiles.fileMap.projectFileMap
+    );
+    for (const name of ['parent', 'child']) {
+      builder.addNode({
+        name,
+        type: 'lib',
+        data: {
+          root: `libs/${name}`,
+          targets: { build: { executor: 'nx:run-commands' } },
+        },
+      });
+    }
+    builder.addStaticDependency('parent', 'child', 'libs/parent/filea.ts');
+    const projectGraph = builder.getUpdatedProjectGraph();
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      { build: ['^build'] },
+      ['parent', 'child'],
+      ['build'],
+      undefined,
+      {}
+    );
+    const tasks = Object.values(taskGraph.tasks);
+    const envs = Object.fromEntries(tasks.map((t) => [t.id, {}]));
+    const hasher = new NativeTaskHasherImpl(
+      tempFs.tempDir,
+      nxJson,
+      projectGraph,
+      workspaceFiles.rustReferences,
+      { selectivelyHashTsConfig: false }
+    );
+    const reference = await hasher.hashTasks(tasks, taskGraph, envs);
+
+    hasher.adoptSelectionPlans(
+      new HashPlanner(nxJson, hasher.projectGraphRef).getPlansReference(
+        tasks.map((t) => t.id),
+        taskGraph
+      ),
+      taskGraph
+    );
+    const plan = vi.spyOn(hasher.planner, 'getPlansReference');
+
+    const reused = await hasher.hashTasks(tasks, taskGraph, envs);
+    expect(plan).not.toHaveBeenCalled();
+    expect(reused.map((h) => h.value)).toEqual(reference.map((h) => h.value));
+
+    // Without `^build` the parent no longer depends on the child's build, so
+    // the adopted plans describe a different task and must not be used.
+    const other = createTaskGraph(
+      projectGraph,
+      {},
+      ['parent'],
+      ['build'],
+      undefined,
+      {}
+    );
+    await hasher.hashTasks([other.tasks['parent:build']], other, {
+      'parent:build': {},
+    });
+    expect(plan).toHaveBeenCalled();
+  });
+});
+
+describe('plannedAlike', () => {
+  // `app:build` depends on `lib:build`, which serves continuously from `api:serve`.
+  function graph(overrides: Partial<TaskGraph> = {}): TaskGraph {
+    const task = (id: string, outputs: string[] = []) => {
+      const [project, target] = id.split(':');
+      return { id, target: { project, target }, outputs, overrides: {} } as any;
+    };
+    return {
+      roots: ['api:serve'],
+      tasks: {
+        'app:build': task('app:build', ['dist/app']),
+        'lib:build': task('lib:build', ['dist/lib']),
+        'api:serve': task('api:serve'),
+      },
+      dependencies: {
+        'app:build': ['lib:build'],
+        'lib:build': [],
+        'api:serve': [],
+      },
+      continuousDependencies: {
+        'app:build': [],
+        'lib:build': ['api:serve'],
+        'api:serve': [],
+      },
+      ...overrides,
+    };
+  }
+
+  it('reuses plans for the same graph', () => {
+    expect(plannedAlike(graph(), graph(), ['app:build'])).toBe(true);
+  });
+
+  // What a run hashes after pruning: the selected task and its closure, from a
+  // graph planned with more in it.
+  it('reuses plans for a pruned graph that keeps the closure', () => {
+    const planned = graph();
+    planned.tasks['other:build'] = {
+      id: 'other:build',
+      target: { project: 'other', target: 'build' },
+      outputs: ['dist/other'],
+      overrides: {},
+    } as any;
+    planned.dependencies['other:build'] = ['lib:build'];
+    planned.continuousDependencies['other:build'] = [];
+    expect(plannedAlike(planned, graph(), ['lib:build'])).toBe(true);
+  });
+
+  it('refuses when a requested task depends on something else', () => {
+    const requested = graph({
+      dependencies: { 'app:build': [], 'lib:build': [], 'api:serve': [] },
+    });
+    expect(plannedAlike(graph(), requested, ['app:build'])).toBe(false);
+  });
+
+  // The plan for app:build reads lib:build's outputs, so a change two edges
+  // away still changes it.
+  it('refuses when a dependency further down differs', () => {
+    const requested = graph();
+    requested.tasks['lib:build'] = {
+      ...requested.tasks['lib:build'],
+      outputs: ['dist/somewhere-else'],
+    };
+    expect(plannedAlike(graph(), requested, ['app:build'])).toBe(false);
+  });
+
+  it('refuses when a continuous dependency differs', () => {
+    const requested = graph({
+      continuousDependencies: {
+        'app:build': [],
+        'lib:build': [],
+        'api:serve': [],
+      },
+    });
+    expect(plannedAlike(graph(), requested, ['app:build'])).toBe(false);
+  });
+
+  it('refuses a task the plans were never built for', () => {
+    const requested = graph();
+    requested.tasks['new:build'] = {
+      id: 'new:build',
+      target: { project: 'new', target: 'build' },
+      outputs: [],
+      overrides: {},
+    } as any;
+    requested.dependencies['new:build'] = [];
+    requested.continuousDependencies['new:build'] = [];
+    expect(plannedAlike(graph(), requested, ['new:build'])).toBe(false);
   });
 });

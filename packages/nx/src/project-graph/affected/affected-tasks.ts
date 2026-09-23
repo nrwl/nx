@@ -11,6 +11,8 @@ import {
   TaskPlanningContext,
 } from '../../hasher/task-planning-context';
 import { DependencyChanges } from './affected-project-graph-models';
+import { daemonClient } from '../../daemon/client/client';
+import { isOnDaemon } from '../../daemon/is-on-daemon';
 import { getProjectGlobPatterns } from './affected-projects';
 import { lockFileDependencyChanges } from '../../plugins/js/project-graph/affected/lock-file-changes';
 import { packageJsonDependencyChanges } from '../../plugins/js/project-graph/affected/npm-packages';
@@ -37,29 +39,96 @@ export interface ComputeAffectedTasksOptions {
 }
 
 /**
+ * What selection needs from the command, reduced to plain data so the daemon
+ * can run it. The lockfile diff reads git, so it is taken here.
+ */
+export interface AffectedTasksRequest {
+  targets: string[];
+  changedFiles: string[];
+  configuration?: string;
+  overrides: Record<string, unknown>;
+  extraTargetDependencies: TargetDependencies;
+  excludeTaskDependencies: boolean;
+  dependencies: DependencyChanges;
+}
+
+/**
  * Selects the tasks a change reaches, rather than the projects that own a
  * changed file.
  *
- * The full task graph for the targets is planned, as `run-many` would build it,
- * and the changed paths are matched against every plan. There is no
- * project-grained pass in front of it: that bound rests on declared ownership,
- * and under an I/O snapshot a task's observed reads can name a file no project
- * the reverse walk finds would own, so bounding by it would miss the task.
+ * With the daemon on, the daemon selects: it hashes the tasks that run, and
+ * plans are native memory that cannot cross to it, so selecting anywhere else
+ * would plan every task twice.
  */
 export async function computeAffectedTasks(
   opts: ComputeAffectedTasksOptions
 ): Promise<AffectedTasksResult> {
-  const {
-    projectGraph,
-    nxJson,
-    targets,
-    touchedFiles,
-    configuration,
-    overrides = {},
-    extraTargetDependencies = {},
-    excludeTaskDependencies = false,
-  } = opts;
+  const request: AffectedTasksRequest = {
+    targets: opts.targets,
+    changedFiles: opts.touchedFiles.map((f) => f.file),
+    configuration: opts.configuration,
+    overrides: opts.overrides ?? {},
+    extraTargetDependencies: opts.extraTargetDependencies ?? {},
+    excludeTaskDependencies: opts.excludeTaskDependencies ?? false,
+    dependencies: dependencyChanges(
+      opts.projectGraph,
+      opts.touchedFiles,
+      opts.nxJson,
+      opts.packageJson
+    ),
+  };
 
+  if (!isOnDaemon() && daemonClient.enabled()) {
+    const selection = await daemonClient.selectAffectedTasks(request);
+    return {
+      affectedTaskIds: new Set(selection.affectedTaskIds),
+      taskGraph: selection.taskGraph,
+    };
+  }
+
+  const planningContext = createTaskPlanningContext(
+    opts.projectGraph,
+    opts.nxJson
+  );
+  const selection = await selectAffectedTasks(
+    opts.projectGraph,
+    opts.nxJson,
+    planningContext,
+    request
+  );
+  return {
+    affectedTaskIds: selection.affectedTaskIds,
+    taskGraph: selection.taskGraph,
+    // The plans ride along so the hasher narrows them instead of building its
+    // own. Every task it will be asked about is in here, since the pruned graph
+    // is a subset of the one planned above.
+    planningContext: selection.plans
+      ? { ...planningContext, plans: selection.plans }
+      : undefined,
+  };
+}
+
+/**
+ * Plans the targets' full task graph, as `run-many` would build it, and matches
+ * the changed paths against every plan. There is no project-grained pass in
+ * front of it: that bound rests on declared ownership, and under an I/O
+ * snapshot a task's observed reads can name a file no project the reverse walk
+ * finds would own, so bounding by it would miss the task.
+ *
+ * The one implementation for the client and the daemon, so the two cannot
+ * select differently.
+ */
+export async function selectAffectedTasks(
+  projectGraph: ProjectGraph,
+  nxJson: NxJsonConfiguration,
+  planningContext: TaskPlanningContext,
+  request: AffectedTasksRequest
+): Promise<{
+  affectedTaskIds: Set<string>;
+  taskGraph: TaskGraph;
+  plans?: TaskPlanningContext['plans'];
+}> {
+  const { targets } = request;
   // Only projects that have one of the targets: with a single target,
   // createTaskGraph tries to create a task for projects that lack it and
   // createTask throws.
@@ -78,49 +147,34 @@ export async function computeAffectedTasks(
 
   const taskGraph = createTaskGraph(
     projectGraph,
-    extraTargetDependencies,
+    request.extraTargetDependencies,
     candidates,
     targets,
-    configuration,
-    overrides,
-    excludeTaskDependencies
+    request.configuration,
+    request.overrides,
+    request.excludeTaskDependencies
   );
   const taskIds = Object.keys(taskGraph.tasks);
-
-  const planningContext = createTaskPlanningContext(projectGraph, nxJson);
   const plans = planningContext.planner.getPlansReference(taskIds, taskGraph);
 
-  const dependencies = dependencyChanges(
-    projectGraph,
-    touchedFiles,
-    nxJson,
-    opts.packageJson
-  );
-  const namedProjects = new Set(dependencies.projects);
+  const namedProjects = new Set(request.dependencies.projects);
   const selection = nativeAffectedTasks(
     planningContext.projectGraphRef,
     plans,
     taskGraph,
-    touchedFiles.map((f) => f.file),
+    request.changedFiles,
     {
       projectGlobPatterns: await getProjectGlobPatterns(nxJson),
       workspaceRoot,
       seedTaskIds: taskIds.filter((id) =>
         namedProjects.has(taskGraph.tasks[id].target.project)
       ),
-      changedExternals: dependencies.externals,
-      changedExternalTypes: dependencies.changedExternalTypes,
+      changedExternals: request.dependencies.externals,
+      changedExternalTypes: request.dependencies.changedExternalTypes,
     }
   );
 
-  return {
-    affectedTaskIds: new Set(selection.affected),
-    taskGraph,
-    // The plans ride along so the hasher narrows them instead of building its
-    // own. Every task it will be asked about is in here, since the pruned graph
-    // is a subset of the one planned above.
-    planningContext: { ...planningContext, plans },
-  };
+  return { affectedTaskIds: new Set(selection.affected), taskGraph, plans };
 }
 
 /**

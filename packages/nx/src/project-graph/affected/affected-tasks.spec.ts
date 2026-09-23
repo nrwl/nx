@@ -9,6 +9,13 @@ vi.mock('../plugins/get-plugins', () => ({
       (createNodesPattern) => ({ createNodesPattern })
     ),
 }));
+// Off unless a test turns it on, so selection runs in-process whatever
+// NX_DAEMON the suite happens to run under.
+const daemon = vi.hoisted(() => ({
+  enabled: vi.fn(() => false),
+  selectAffectedTasks: vi.fn(),
+}));
+vi.mock('../../daemon/client/client', () => ({ daemonClient: daemon }));
 import { computeAffectedTasks } from './affected-tasks';
 import { LockFileChange, WholeFileChange } from '../file-utils';
 import type { ProjectGraph } from '../../config/project-graph';
@@ -235,5 +242,46 @@ describe('computeAffectedTasks', () => {
 
   it('selects nothing when the change reaches no input', async () => {
     expect(await affectedFor(['docs/README.md'])).toEqual([]);
+  });
+});
+
+describe('computeAffectedTasks with the daemon on', () => {
+  it('asks the daemon to select, sending the request as plain data', async () => {
+    daemon.enabled.mockReturnValueOnce(true);
+    daemon.selectAffectedTasks.mockResolvedValueOnce({
+      affectedTaskIds: ['lib:test'],
+      taskGraph: {
+        roots: [],
+        tasks: {},
+        dependencies: {},
+        continuousDependencies: {},
+      },
+    });
+
+    const result = await computeAffectedTasks({
+      projectGraph: graph(),
+      nxJson: {} as any,
+      targets: ['test'],
+      touchedFiles: [
+        {
+          file: 'packages/nx/src/x.ts',
+          getChanges: () => [new WholeFileChange()],
+        },
+      ] as any,
+    });
+
+    const [request] = daemon.selectAffectedTasks.mock.calls[0];
+    expect(request).toMatchObject({
+      targets: ['test'],
+      changedFiles: ['packages/nx/src/x.ts'],
+      overrides: {},
+      extraTargetDependencies: {},
+      excludeTaskDependencies: false,
+    });
+    // A FileChange's lazy getChanges() cannot cross the socket.
+    expect(JSON.parse(JSON.stringify(request))).toEqual(request);
+    expect([...result.affectedTaskIds]).toEqual(['lib:test']);
+    // The plans stay in the daemon, which is what hashes them.
+    expect(result.planningContext).toBeUndefined();
   });
 });

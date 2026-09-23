@@ -81,6 +81,12 @@ import {
   GET_PLUGIN_CAPABILITIES,
   type HandleGetPluginCapabilitiesMessage,
 } from '../message-types/get-plugin-capabilities';
+import {
+  SELECT_AFFECTED_TASKS,
+  type HandleSelectAffectedTasksMessage,
+  type SelectAffectedTasksResponse,
+} from '../message-types/select-affected-tasks';
+import type { AffectedTasksRequest } from '../../project-graph/affected/affected-tasks';
 import type { NxPluginCapabilities } from '../../project-graph/plugins/nx-plugin-capabilities';
 import {
   GET_SYNC_GENERATOR_CHANGES,
@@ -1049,6 +1055,17 @@ export class DaemonClient {
   getPluginCapabilities(): Promise<NxPluginCapabilities[]> {
     const message: HandleGetPluginCapabilitiesMessage = {
       type: GET_PLUGIN_CAPABILITIES,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  /** Selection runs where hashing does, so the plans it builds are reused. */
+  selectAffectedTasks(
+    request: AffectedTasksRequest
+  ): Promise<SelectAffectedTasksResponse> {
+    const message: HandleSelectAffectedTasksMessage = {
+      type: SELECT_AFFECTED_TASKS,
+      request,
     };
     return this.sendToDaemonViaQueue(message);
   }
