@@ -129,7 +129,7 @@ export function getPackageManagerCommand({
 } {
   const npmMajorVersion = getNpmMajorVersion();
   const yarnMajorVersion = getYarnMajorVersion(path);
-  const pnpmVersion = getPnpmVersion();
+  const pnpmVersion = getPnpmVersion(path);
   const publishedVersion = getPublishedVersion();
   const isYarnWorkspace = fileExists(join(path, 'package.json'))
     ? readJson('package.json').workspaces

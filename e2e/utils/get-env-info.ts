@@ -1,6 +1,7 @@
 import { readJsonFile, workspaceRoot } from '@nx/devkit';
 import { existsSync } from 'fs-extra';
 import { execSync } from 'node:child_process';
+import { tmpdir } from 'node:os';
 import { join } from 'path';
 import { gte } from 'semver';
 import { dirSync } from 'tmp';
@@ -100,9 +101,11 @@ export function getYarnMajorVersion(path: string): string | undefined {
   }
 }
 
-export function getPnpmVersion(): string | undefined {
+export function getPnpmVersion(path?: string): string | undefined {
   try {
+    // Never run inside the repo: pnpm reads the root pnpm-lock.yaml, an undeclared e2e input.
     const pnpmVersion = execSync(`pnpm -v`, {
+      cwd: path && existsSync(path) ? path : tmpdir(),
       encoding: 'utf-8',
     }).trim();
     return pnpmVersion;
