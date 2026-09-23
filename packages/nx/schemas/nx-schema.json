@@ -621,7 +621,7 @@
       "properties": {
         "url": {
           "type": "string",
-          "description": "Ready when an HTTP or HTTPS GET, following redirects, ends with a status from 200 to 403"
+          "description": "Ready when an HTTP or HTTPS GET gets a status from 200 to 403. A redirect counts as ready and is not followed"
         },
         "port": {
           "type": "integer",
