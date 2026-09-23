@@ -15,7 +15,7 @@ Rules that override any shortcut you are tempted to take:
 
 1. Before editing, run production builds and keep every `dist/apps/<app>/mf-stats.json`. Its `shared` array, `exposes`, and container name are what you reproduce. Do not derive sharing from package.json.
 2. Replace `withModuleFederation` / `NxModuleFederationPlugin` with `ModuleFederationPlugin` from `@module-federation/enhanced/webpack` or `/rspack`. Keep `NxAppWebpackPlugin`, `NxAppRspackPlugin`, `NxReactWebpackPlugin`, `NxReactRspackPlugin`. Do not switch bundlers or regenerate apps.
-3. Write `remotes` as explicit `alias: 'container@url/remoteEntry.js'` entries. The container name is the project name with every character outside `[a-zA-Z0-9_$]` and any leading digit replaced by `_`; the alias is the original project name. Fold `webpack.config.prod.*` tuple URLs into the same config keyed on `NODE_ENV`, appending `/remoteEntry.js` to bare origins. Drop any `library` entry.
+3. Write `remotes` as explicit `alias: 'container@url/remoteEntry.js'` entries. The container name is the project name with every character outside `[a-zA-Z0-9_$]` and any leading digit replaced by `_`; the alias is the original project name. Fold `webpack.config.prod.*` tuple URLs into the same config keyed on `NODE_ENV`, appending `remoteEntry.js` to bare origins with exactly one slash before it. Drop any `library` entry.
 4. Pass `dts: false` and `filename: 'remoteEntry.js'`, and on webpack `remoteType: 'script'`.
 5. For runtime-loaded remotes, convert `setRemoteDefinitions` to `registerRemotes` with `type: 'global'` and `loadRemoteModule(name, './Module')` to `loadRemote(name + '/Module')`. Every map value must be a full `remoteEntry.js` URL. Hosts that already call `registerRemotes` stay as they are.
 6. Rewrite relative imports that reach into another workspace library to that library's public entry point. Nx rewrote those for you and the plugin does not.
@@ -146,9 +146,10 @@ A host that resolves its remotes at runtime has `remotes: []` in its Nx config. 
 
 Generated webpack hosts also carry a `webpack.config.prod.*` file, wired through
 `build.configurations.production.webpackConfig`, whose `remotes` are tuples such as
-`['webpackRemoteA', 'http://localhost:4701/']`. Nx appended `/remoteEntry.js` to any tuple URL
-without a filename. Fold those URLs into the single config, keyed on `NODE_ENV`, and write the
-full entry URL:
+`['webpackRemoteA', 'http://localhost:4701/']`. Nx appended `remoteEntry.js` to any tuple URL
+without a filename, with or without a trailing slash on the origin. Fold those URLs into the
+single config, keyed on `NODE_ENV`, and write the full entry URL with exactly one slash before
+`remoteEntry.js`:
 
 ```js
 // apps/webpack-host/module-federation.config.js
@@ -190,7 +191,7 @@ export default config;
 module.exports = {
   name: 'webpack_host',
   filename: 'remoteEntry.js',
-  remoteType: 'script',
+  remoteType: 'script', // webpack only; on Rspack only with a var or window library
   dts: false,
   remotes: {
     webpackRemoteA: 'webpackRemoteA@http://localhost:4701/remoteEntry.js',
@@ -598,8 +599,11 @@ already ignored in a workspace that ignores `node_modules`.
 `dependsOn`, not the executor's `buildTarget` option. With `buildTarget`, the file server
 spawns a nested `nx run <app>:build`, and under `nx run-many` or an e2e target that already
 scheduled those builds Nx aborts with `Recursive task invocation detected`. The
-`@nx/webpack/plugin` inference plugin emits the `buildTarget` form, so if you use that plugin,
-give its `serveStaticTargetName` option another name and keep this explicit target.
+`@nx/webpack/plugin` inference plugin emits the `buildTarget` form, and Nx merges `project.json`
+options key by key over the inferred target, so the inferred `buildTarget` would survive next to
+`staticFilePath`. If you use that plugin, set its `serveStaticTargetName` option in `nx.json` to
+another name such as `serve-static-inferred`, keep this explicit target, and never run the
+inferred one.
 
 Give a remote's `serve-static` the port its production URL from Step 3 names, so a live remote
 and a static one can run at the same time. Hosts, remotes without a production override, and
@@ -607,8 +611,8 @@ remotes loaded from a runtime manifest keep their existing port for both targets
 
 Point an e2e project's web server command at `nx run-many -t serve-static -p <host> <remotes>`,
 with its URL on the host's `serve-static` port. `@nx/playwright` then warns that it could not
-infer an Nx task from that command on every `nx` call; Playwright's own `webServer` still starts
-the servers, so the warning is the whole cost.
+infer an Nx task from that command; Playwright's own `webServer` still starts the servers, so
+the warning is the whole cost.
 
 Remove `targetDefaults` entries in `nx.json` keyed on `@nx/webpack:webpack` or
 `@nx/rspack:rspack`. The `NX_MF_DEV_REMOTES` input they carried is dead, and the `build`
