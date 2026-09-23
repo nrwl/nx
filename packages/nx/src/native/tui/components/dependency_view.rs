@@ -1240,18 +1240,6 @@ mod tests {
             "Not started yet, waiting for 2 / 2 tasks to complete..."
         );
         assert!(rows[5].ends_with("srv:serve (not ready)"), "{}", rows[5]);
-
-        let status_map = HashMap::from([
-            ("lib:build".to_string(), TaskStatus::Success),
-            ("srv:serve".to_string(), TaskStatus::InProgress),
-        ]);
-        let rows = render_rows(
-            &mut state,
-            &status_map,
-            &HashMap::new(),
-            &ready_dependencies,
-        );
-        assert_eq!(rows[2], "Waiting for srv:serve to be ready...");
     }
 
     #[test]

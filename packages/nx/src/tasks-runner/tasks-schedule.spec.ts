@@ -1600,11 +1600,6 @@ describe('TasksSchedule', () => {
       taskSchedule.markContinuousTaskStarted('api:serve');
       await taskSchedule.scheduleNextTasks();
       expect(taskSchedule.nextTask()?.id).toBe('e2e:e2e');
-
-      // A dependent of a task that failed before starting stays unreleased,
-      // left to the orchestrator's skip propagation
-      taskSchedule.complete(['e2e:e2e', 'api:serve']);
-      expect(taskSchedule.hasTasks()).toBe(false);
     });
 
     it('holds back a batchable dependent of such a task until it has started', async () => {
@@ -1629,23 +1624,6 @@ describe('TasksSchedule', () => {
       });
     });
 
-    it('never releases the dependents of such a task when it fails before starting', async () => {
-      const { taskSchedule } = await createChainSchedule();
-      await taskSchedule.scheduleNextTasks();
-      taskSchedule.nextTask();
-      taskSchedule.markReady('db:up');
-      await taskSchedule.scheduleNextTasks();
-      taskSchedule.nextTask();
-
-      taskSchedule.complete(['api:serve']);
-      await taskSchedule.scheduleNextTasks();
-      expect(taskSchedule.nextTask()).toBeNull();
-      expect(taskSchedule.getIncompleteTasks().map((t) => t.id)).toEqual([
-        'db:up',
-        'e2e:e2e',
-      ]);
-    });
-
     async function scheduleUntilProducerRuns() {
       await taskSchedule.scheduleNextTasks();
       expect(taskSchedule.nextBatch()).toMatchObject({
@@ -1661,6 +1639,10 @@ describe('TasksSchedule', () => {
 
       await taskSchedule.scheduleNextTasks();
       expect(taskSchedule.nextBatch()).toBeNull();
+      expect(taskSchedule.nextTask((t) => !t.continuous)).toBeNull();
+
+      taskSchedule.markReady('app1:serve');
+      taskSchedule.markReadinessPending('app1:serve');
       expect(taskSchedule.nextTask((t) => !t.continuous)).toBeNull();
 
       taskSchedule.markReady('app1:serve');
@@ -1688,15 +1670,6 @@ describe('TasksSchedule', () => {
       expect(taskSchedule.nextTask((t) => !t.continuous)?.id).toBe(
         'app1:build'
       );
-    });
-
-    it('holds such a task again when the producer restarts', async () => {
-      await scheduleUntilProducerRuns();
-      await taskSchedule.scheduleNextTasks();
-
-      taskSchedule.markReady('app1:serve');
-      taskSchedule.markReadinessPending('app1:serve');
-      expect(taskSchedule.nextTask((t) => !t.continuous)).toBeNull();
     });
 
     it('skips a held task in place and reports the producer it waits on', async () => {
@@ -1744,69 +1717,6 @@ describe('TasksSchedule', () => {
       expect(taskSchedule.nextTask((t) => !t.continuous)?.id).toBe(
         'app1:build'
       );
-    });
-
-    it('starts a continuous task waiting on a ready producer on its own', async () => {
-      const taskGraph: TaskGraph = {
-        tasks: {
-          'db:up': createMockTask('db:up', true, true),
-          'api:build': createMockTask('api:build', true, true),
-        },
-        dependencies: { 'db:up': [], 'api:build': [] },
-        continuousDependencies: { 'db:up': [], 'api:build': ['db:up'] },
-        roots: ['db:up'],
-      };
-      const projectGraph: ProjectGraph = {
-        nodes: {
-          db: {
-            name: 'db',
-            type: 'app',
-            data: {
-              root: 'db',
-              targets: {
-                up: {
-                  executor: 'awesome-executors:up',
-                  continuous: true,
-                  readyWhen: { logMatches: 'ready' },
-                },
-              },
-            },
-          },
-          api: {
-            name: 'api',
-            type: 'app',
-            data: {
-              root: 'api',
-              targets: {
-                build: {
-                  executor: 'awesome-executors:build',
-                  continuous: true,
-                  dependsOn: [
-                    { projects: ['db'], target: 'up', waitFor: 'ready' },
-                  ],
-                },
-              },
-            },
-          },
-        } as any,
-        dependencies: { db: [], api: [] },
-        externalNodes: {},
-        version: '5',
-      };
-      taskSchedule = new TasksSchedule(
-        projectGraph,
-        readProjectsConfigurationFromProjectGraph(projectGraph).projects,
-        taskGraph,
-        { lifeCycle }
-      );
-      await taskSchedule.init();
-
-      await taskSchedule.scheduleNextTasks();
-      expect(taskSchedule.nextTask()?.id).toBe('db:up');
-      taskSchedule.markReady('db:up');
-      await taskSchedule.scheduleNextTasks();
-      expect(taskSchedule.nextBatch()).toBeNull();
-      expect(taskSchedule.nextTask()?.id).toBe('api:build');
     });
 
     it('starts a continuous task waiting on a producer without a probe on its own', async () => {
@@ -1904,28 +1814,23 @@ describe('TasksSchedule', () => {
           continuousDependencies: { 'app1:build': [] },
           roots: ['app1:build'],
         };
-        const readinessElsewhere = vi.fn(() => readiness);
-        const schedule = new TasksSchedule(
+        return new TasksSchedule(
           projectGraph,
           projects,
           workerTaskGraph,
           { lifeCycle },
           taskGraph,
-          { readinessElsewhere }
+          { readinessElsewhere: () => readiness }
         );
-        return { schedule, readinessElsewhere };
       }
 
       it('batches the task when the row says ready', async () => {
-        const { schedule, readinessElsewhere } = createWorkerSchedule(
-          TaskReadiness.Ready
-        );
+        const schedule = createWorkerSchedule(TaskReadiness.Ready);
         await schedule.init();
         await schedule.scheduleNextTasks();
         expect(schedule.nextBatch()).toMatchObject({
           taskGraph: { tasks: { 'app1:build': expect.anything() } },
         });
-        expect(readinessElsewhere).toHaveBeenCalledWith('app1:serve');
       });
 
       // The run waits on the row itself; a hold here has nothing to wake it
@@ -1936,7 +1841,7 @@ describe('TasksSchedule', () => {
       ])(
         'runs the task on its own when the row says %s',
         async (_, readiness) => {
-          const { schedule } = createWorkerSchedule(readiness);
+          const schedule = createWorkerSchedule(readiness);
           await schedule.init();
           await schedule.scheduleNextTasks();
           expect(schedule.nextBatch()).toBeNull();

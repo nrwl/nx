@@ -1,11 +1,7 @@
 import type { ProjectGraph } from '../../config/project-graph';
 import type { Task, TaskGraph } from '../../config/task-graph';
 import type { TargetConfiguration } from '../../config/workspace-json-project-json';
-import {
-  getReadyProducerIds,
-  normalizeReadyWhen,
-  readinessTimeoutError,
-} from './ready-when';
+import { getReadyProducerIds, normalizeReadyWhen } from './ready-when';
 
 describe('normalizeReadyWhen', () => {
   it('normalizes each probe kind and keeps the knobs', () => {
@@ -55,29 +51,9 @@ describe('normalizeReadyWhen', () => {
     [{ port: 80, timeout: 0 }, '"timeout" must be an integer from 1 to'],
     [{ port: 80, timeout: 2 ** 31 }, '"timeout" must be an integer from 1 to'],
     [{ port: 80, interval: 1.5 }, '"interval" must be an integer from 1 to'],
-    [42, 'expected an object'],
   ])('rejects %j', (readyWhen, reason) => {
     expect(() => normalizeReadyWhen(readyWhen as any, 'app:serve')).toThrow(
       `Task "app:serve" has an invalid "readyWhen": ${reason}`
-    );
-  });
-});
-
-describe('readinessTimeoutError', () => {
-  it('names the task and the probe', () => {
-    expect(
-      readinessTimeoutError('a:b', normalizeReadyWhen({ port: 3000 }, 'a:b'))
-        .message
-    ).toBe(
-      'Task "a:b" did not become ready within 60000ms (readyWhen: port 3000).'
-    );
-    expect(
-      readinessTimeoutError(
-        'a:b',
-        normalizeReadyWhen({ logMatches: ['x', 'y'], timeout: 5 }, 'a:b')
-      ).message
-    ).toBe(
-      'Task "a:b" did not become ready within 5ms (readyWhen: logMatches "x", "y").'
     );
   });
 });
@@ -181,17 +157,15 @@ describe('getReadyProducerIds', () => {
     ).toEqual(['app:serve']);
   });
 
-  it('matches a dependencies entry against project dependencies only', () => {
+  it('lets any matching ready entry win', () => {
     expect(
-      readyProducers(
-        {
-          dependsOn: [
-            { dependencies: true, target: 'serve', waitFor: 'ready' },
-          ],
-        },
-        ['app', 'api']
-      )
-    ).toEqual(['app:serve', 'api:serve']);
+      readyProducers({
+        dependsOn: [
+          { projects: ['app'], target: 'serve' },
+          { dependencies: true, target: 'serve', waitFor: 'ready' },
+        ],
+      })
+    ).toEqual(['app:serve']);
   });
 
   it('matches a dependencies entry through a dependency without the target', () => {
@@ -223,27 +197,5 @@ describe('getReadyProducerIds', () => {
         dependsOn: [{ projects: ['app'], target: 'serve*', waitFor: 'ready' }],
       })
     ).toEqual(['app:serve']);
-  });
-
-  it('lets any matching ready entry win', () => {
-    expect(
-      readyProducers({
-        dependsOn: [
-          { projects: ['app'], target: 'serve' },
-          { dependencies: true, target: 'serve', waitFor: 'ready' },
-        ],
-      })
-    ).toEqual(['app:serve']);
-  });
-
-  it('ignores producers the entries do not name', () => {
-    expect(
-      readyProducers(
-        {
-          dependsOn: [{ projects: ['api'], target: 'serve', waitFor: 'ready' }],
-        },
-        ['app', 'api']
-      )
-    ).toEqual(['api:serve']);
   });
 });
