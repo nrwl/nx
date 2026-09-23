@@ -10,7 +10,7 @@ pub(crate) use crate::native::glob::glob_transform::{
 use dashmap::DashMap;
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
 use std::fmt::Debug;
-use std::path::{Path, PathBuf, is_separator};
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, LazyLock};
 use tracing::trace;
 
@@ -19,7 +19,6 @@ static GLOB_CACHE: LazyLock<DashMap<String, Arc<NxGlobSet>>> = LazyLock::new(Das
 pub struct NxGlobSetBuilder {
     included_globs: GlobSetBuilder,
     excluded_globs: GlobSetBuilder,
-    literal_prefixes: Option<Vec<PathBuf>>,
 }
 
 impl NxGlobSetBuilder {
@@ -27,7 +26,6 @@ impl NxGlobSetBuilder {
         let mut glob_set_builder = NxGlobSetBuilder {
             included_globs: GlobSetBuilder::new(),
             excluded_globs: GlobSetBuilder::new(),
-            literal_prefixes: Some(Vec::new()),
         };
         let mut globs: Vec<&str> = globs.iter().map(|s| s.as_ref()).collect();
         globs.sort();
@@ -56,39 +54,16 @@ impl NxGlobSetBuilder {
             self.excluded_globs.add(glob);
         } else {
             self.included_globs.add(glob);
-            if let Some(prefixes) = &mut self.literal_prefixes {
-                // Extglob conversion can rewrite a prefix, so use the pattern globset receives.
-                if let Some(prefix) = literal_directory_prefix(&glob_string) {
-                    prefixes.push(prefix);
-                } else {
-                    self.literal_prefixes = None;
-                }
-            }
         }
 
         Ok(self)
     }
 
     pub fn build(&self) -> anyhow::Result<NxGlobSet> {
-        let literal_prefix = self.literal_prefixes.as_ref().and_then(|prefixes| {
-            let mut common = prefixes.first()?.clone();
-            for prefix in &prefixes[1..] {
-                common = common
-                    .components()
-                    .zip(prefix.components())
-                    .take_while(|(left, right)| left == right)
-                    .map(|(component, _)| component)
-                    .collect();
-                if common.as_os_str().is_empty() {
-                    return None;
-                }
-            }
-            (!common.as_os_str().is_empty()).then_some(common)
-        });
         Ok(NxGlobSet {
             excluded_globs: self.excluded_globs.build()?,
             included_globs: self.included_globs.build()?,
-            literal_prefix,
+            literal_prefix: None,
         })
     }
 }
@@ -116,25 +91,39 @@ impl NxGlobSet {
     }
 }
 
-fn literal_directory_prefix(glob: &str) -> Option<PathBuf> {
-    if !is_separator('\\') && glob.contains('\\') {
-        return None;
+fn common_glob_prefix(globs: &[String]) -> Option<PathBuf> {
+    let mut common: Option<PathBuf> = None;
+    for glob in globs {
+        if glob.starts_with('!') {
+            continue;
+        }
+        #[cfg(windows)]
+        let glob = glob.replace('\\', "/");
+        let (directory, _) = partition_glob(glob.as_str());
+        // Escaped or lossy names cannot safely index the raw file map.
+        if directory.contains(['\\', ':', '\u{fffd}'])
+            || directory
+                .split('/')
+                .any(|part| part.is_empty() || part == "." || part == "..")
+        {
+            return None;
+        }
+        let directory = PathBuf::from(directory);
+        let prefix = match common {
+            None => directory,
+            Some(prefix) => prefix
+                .components()
+                .zip(directory.components())
+                .take_while(|(left, right)| left == right)
+                .map(|(component, _)| component)
+                .collect::<PathBuf>(),
+        };
+        if prefix.as_os_str().is_empty() {
+            return None;
+        }
+        common = Some(prefix);
     }
-    let end = glob
-        .find(['*', '?', '[', ']', '{', '}'])
-        .unwrap_or(glob.len());
-    let slash = glob[..end].rfind(is_separator)?;
-    let prefix = &glob[..slash];
-    // Lossy normalization can make distinct non-UTF-8 paths match this character.
-    if prefix.contains('\u{fffd}')
-        || prefix.contains(':')
-        || prefix
-            .split(is_separator)
-            .any(|part| part.is_empty() || part == "." || part == "..")
-    {
-        return None;
-    }
-    Some(PathBuf::from(prefix))
+    common
 }
 
 /// Splits a glob that is a single top-level brace group (`{a,b,c}`) into its
@@ -188,7 +177,6 @@ fn potential_glob_split(
 }
 
 pub(crate) fn build_glob_set<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Result<Arc<NxGlobSet>> {
-    // Build cache key from sorted globs joined by null byte (cannot appear in glob strings)
     let mut sorted_globs: Vec<&str> = globs.iter().map(|s| s.as_ref()).collect();
     sorted_globs.sort();
     let cache_key = sorted_globs.join("\0");
@@ -223,7 +211,10 @@ pub(crate) fn build_glob_set<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Resu
 
     trace!(?globs, ?result, "converted globs");
 
-    let glob_set = Arc::new(NxGlobSetBuilder::new(&result)?.build()?);
+    let mut glob_set = NxGlobSetBuilder::new(&result)?.build()?;
+    // Conversion can change the prefix, so cache it with the resulting matcher.
+    glob_set.literal_prefix = common_glob_prefix(&result);
+    let glob_set = Arc::new(glob_set);
     GLOB_CACHE.insert(cache_key, Arc::clone(&glob_set));
     Ok(glob_set)
 }
@@ -256,6 +247,37 @@ pub(crate) fn contains_glob_pattern(value: &str) -> bool {
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[test]
+    fn jest_extglobs_narrow_to_a_shared_ancestor() {
+        let globs = [
+            "e2e/深/左/**/+(*.)+(spec|test).+(ts|js)?(x)",
+            "e2e/深/右/**",
+        ];
+        assert_eq!(
+            build_glob_set(&globs).unwrap().literal_prefix(),
+            Some(Path::new("e2e/深"))
+        );
+        for globs in [vec!["!e2e/react/**"], vec![]] {
+            assert!(build_glob_set(&globs).unwrap().literal_prefix().is_none());
+        }
+    }
+
+    #[test]
+    fn backslash_prefixes_follow_platform_separators() {
+        for pattern in [
+            r"e2e\react\**\+(*.)+(spec|test).+(ts|js)?(x)",
+            r"e2e\react/**/*.spec.ts",
+            r"e2e\react\*.spec.ts",
+        ] {
+            let globs = [pattern.to_string()];
+            assert_eq!(
+                build_glob_set(&globs).unwrap().literal_prefix(),
+                cfg!(windows).then_some(Path::new("e2e/react")),
+                "{pattern}"
+            );
+        }
+    }
 
     #[test]
     fn should_not_strip_literal_chars_from_plain_negated_globs() {

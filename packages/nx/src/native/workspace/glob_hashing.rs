@@ -1,12 +1,11 @@
 use std::borrow::Cow;
-use std::ops::Bound;
 use std::path::{Path, PathBuf};
 
 use rayon::prelude::*;
 use xxhash_rust::xxh3;
 
 use crate::native::glob::build_glob_set;
-use crate::native::utils::Normalize;
+use crate::native::utils::{Normalize, path::get_child_files};
 use crate::native::workspace::context::Files;
 
 /// Globs that resolve without a scan: `<dir>/**/*` is a contiguous range of
@@ -58,8 +57,7 @@ fn prefix_entries<'a>(files: &'a Files, dir: &str, into: &mut Vec<Entry<'a>>) {
         return;
     }
     let dir = Path::new(dir);
-    let below = files.range::<Path, _>((Bound::Excluded(dir), Bound::Unbounded));
-    into.extend(below.take_while(|(path, _)| path.starts_with(dir)));
+    into.extend(get_child_files(dir, files).skip_while(|(path, _)| path.as_path() == dir));
 }
 
 /// The union of the group's matches in table order, or `None` when the group

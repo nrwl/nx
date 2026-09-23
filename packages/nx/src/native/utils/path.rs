@@ -1,4 +1,6 @@
-use crate::native::{types::FileData, utils::normalize_trait::Normalize};
+use crate::native::utils::normalize_trait::Normalize;
+use std::collections::BTreeMap;
+use std::ops::Bound;
 use std::path::{Path, PathBuf};
 
 impl Normalize for Path {
@@ -29,12 +31,13 @@ where
     }
 }
 
-pub fn get_child_files<P: AsRef<Path>>(directory: P, files: Vec<FileData>) -> Vec<String> {
+pub fn get_child_files<'a, T>(
+    directory: &Path,
+    files: &'a BTreeMap<PathBuf, T>,
+) -> impl Iterator<Item = (&'a PathBuf, &'a T)> {
     files
-        .into_iter()
-        .filter(|file_data| Path::new(&file_data.file).starts_with(directory.as_ref()))
-        .map(|file_data| file_data.file)
-        .collect()
+        .range::<Path, _>((Bound::Included(directory), Bound::Unbounded))
+        .take_while(move |(path, _)| path.starts_with(directory))
 }
 
 #[cfg(test)]
@@ -44,30 +47,19 @@ mod test {
 
     #[test]
     fn should_get_child_files() {
-        let directory = PathBuf::from("foo");
-        let files = vec![
-            FileData {
-                file: "foo/bar".into(),
-                hash: "123".into(),
-            },
-            FileData {
-                file: "foo/baz".into(),
-                hash: "123".into(),
-            },
-            FileData {
-                file: "foo/child/bar".into(),
-                hash: "123".into(),
-            },
-            FileData {
-                file: "bar/baz".into(),
-                hash: "123".into(),
-            },
-            FileData {
-                file: "foo-other/not-child".into(),
-                hash: "123".into(),
-            },
-        ];
-        let child_files = get_child_files(&directory, files);
-        assert_eq!(child_files, ["foo/bar", "foo/baz", "foo/child/bar",]);
+        let files: BTreeMap<_, _> = [
+            "foo/bar",
+            "foo/baz",
+            "foo/child/bar",
+            "bar/baz",
+            "foo-other/not-child",
+        ]
+        .into_iter()
+        .map(|path| (PathBuf::from(path), "123"))
+        .collect();
+        let child_files: Vec<_> = get_child_files(Path::new("foo"), &files)
+            .map(|(path, _)| path.to_normalized_string())
+            .collect();
+        assert_eq!(child_files, ["foo/bar", "foo/baz", "foo/child/bar"]);
     }
 }
