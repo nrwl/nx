@@ -222,7 +222,7 @@ function continueHint(
   runId: string,
   policy: MigrateRunPolicy
 ): string {
-  return `Run ${renderContinueCommand(root, runId, policy, agentId)} to continue it.`;
+  return `Run ${renderContinueCommand(root, runId, policy, agentId)}, with NX_MIGRATE_ORCHESTRATOR=true set in the environment, to continue it.`;
 }
 
 function printExistingRunReport(

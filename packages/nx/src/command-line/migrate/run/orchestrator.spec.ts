@@ -1088,6 +1088,9 @@ describe('orchestrator', () => {
         `To start fresh (deletes the run record, then runs the whole plan again): npx nx migrate --run-migrations --start-fresh --run-id=${runId}`
       );
       expect(report.payload.instructions).toContain(
+        'Run either command with NX_MIGRATE_ORCHESTRATOR=true set in the environment.'
+      );
+      expect(report.payload.instructions).toContain(
         'Show this report to the user and let them choose'
       );
       expect(report.payload.next).toBeUndefined();
@@ -1675,6 +1678,7 @@ describe('orchestrator', () => {
             '',
             'To continue the run: npx nx migrate --run-migrations --agentic --run-id=run-1 --create-commits',
             'To start fresh (deletes the run record, then runs the whole plan again): npx nx migrate --run-migrations --start-fresh --run-id=run-1',
+            'Run either command with NX_MIGRATE_ORCHESTRATOR=true set in the environment.',
           ],
         },
       ]);
@@ -2071,8 +2075,8 @@ describe('orchestrator', () => {
       ).toBe('ready');
     });
 
-    // The run id is what admits a start-fresh without the orchestrator env
-    // gate, so an id naming no active run must start nothing.
+    // The id names the run the report showed; a completed one means the plan
+    // already ran, so a new run would repeat every migration.
     it.each<[string, string]>([
       ['a completed run', 'run-0'],
       ['no run', 'run-9'],
@@ -2092,7 +2096,7 @@ describe('orchestrator', () => {
             )
           )
         ).rejects.toThrow(
-          `Not starting fresh: no migrate run '${replaceRunId}' is active, so there is nothing to replace. To start a new orchestrated run, re-run with NX_MIGRATE_ORCHESTRATOR=true and without --start-fresh and --run-id.`
+          `Not starting fresh: no migrate run '${replaceRunId}' is active, so there is nothing to replace. To start a run, re-run the command without --start-fresh and --run-id.`
         );
 
         expect(runDirNames()).toEqual(['run-0']);
@@ -2101,7 +2105,7 @@ describe('orchestrator', () => {
       }
     );
 
-    it('refuses start-fresh when the named run completes between the checks and the creation lock', async () => {
+    it('refuses start-fresh when the named run completes between the checks and the creation lock, keeping its record', async () => {
       const dir = setupRun('run-1', {
         steps: [migStep('step-1', '@nx/js:a', 'pending')],
       });

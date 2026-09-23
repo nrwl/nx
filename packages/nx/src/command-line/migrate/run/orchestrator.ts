@@ -353,8 +353,8 @@ export async function runOrchestratorInit(
       replaceRunId
     );
   }
-  // The id is what admits a start-fresh without the env gate, so one naming
-  // no active run (missing, completed, deleted) starts nothing.
+  // The id names the run the report showed; one naming no active run
+  // (missing, completed, deleted) starts nothing: the plan already ran.
   if (onExistingRun === 'start-fresh' && !active) {
     throw new Error(noActiveRunToReplace(replaceRunId));
   }
@@ -745,7 +745,7 @@ function refuseUndeletableRun(
 function noActiveRunToReplace(runId: string | undefined): string {
   return `Not starting fresh: ${
     runId === undefined ? 'no migrate run' : `no migrate run '${runId}'`
-  } is active, so there is nothing to replace. To start a new orchestrated run, re-run with NX_MIGRATE_ORCHESTRATOR=true and without --start-fresh and --run-id.`;
+  } is active, so there is nothing to replace. To start a run, re-run the command without --start-fresh and --run-id.`;
 }
 
 // Removes the run's record so the replacement can be written in the same

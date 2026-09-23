@@ -248,7 +248,8 @@ export function renderExistingRunReport(
           : `re-run this command with --start-fresh --run-id=${facts.runId}, keeping the --run-migrations argument, which names ${displayPath(
               commands.startFresh.migrationsPath
             )}; that path cannot be rendered as a command for this shell`
-      }`
+      }`,
+      `Run either command with NX_MIGRATE_ORCHESTRATOR=true set in the environment.`
     );
   }
   return {
