@@ -22,7 +22,7 @@ export function getIoSnapshotsForCommit(
   if (!commit) {
     return undefined;
   }
-  const stored = getIoSnapshotStore().get(commit) ?? undefined;
+  const stored = readStored(commit);
   if (
     stored &&
     remembered?.commit === commit &&
@@ -32,4 +32,13 @@ export function getIoSnapshotsForCommit(
   }
   remembered = stored;
   return stored;
+}
+
+function readStored(commit: string): IoSnapshots | undefined {
+  try {
+    return getIoSnapshotStore().get(commit) ?? undefined;
+  } catch {
+    // An unusable database hashes natively rather than failing the request.
+    return undefined;
+  }
 }

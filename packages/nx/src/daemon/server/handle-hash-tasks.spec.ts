@@ -77,6 +77,14 @@ describe('handleHashTasks', () => {
     expect(hashTasks.mock.lastCall[5]).toBeUndefined();
   });
 
+  it('hashes natively when the store cannot be opened', async () => {
+    mockGetStored.mockImplementationOnce(() => {
+      throw new Error('database disk image is malformed');
+    });
+    await handleHashTasks({ ...base, ioSnapshots: { commit: 'broken' } });
+    expect(hashTasks.mock.lastCall[5]).toBeUndefined();
+  });
+
   it('passes nothing when an older client omits the field', async () => {
     await handleHashTasks({ ...base });
     expect(hashTasks).toHaveBeenLastCalledWith(

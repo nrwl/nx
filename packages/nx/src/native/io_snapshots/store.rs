@@ -22,10 +22,10 @@ impl IoSnapshotStore {
     #[napi(constructor)]
     pub fn new(
         #[napi(ts_arg_type = "ExternalObject<NxDbConnection>")] db: &External<Db>,
-    ) -> anyhow::Result<Self> {
-        Ok(Self {
-            db: SnapshotDb::new(Arc::clone(db))?,
-        })
+    ) -> napi::Result<Self, String> {
+        let db = SnapshotDb::new(Arc::clone(db))
+            .map_err(|err| napi::Error::new("STORE_UNAVAILABLE".to_string(), err.to_string()))?;
+        Ok(Self { db })
     }
 
     /// Stores the set the Nx Cloud client read for `requested_commit`,
@@ -183,6 +183,21 @@ mod tests {
         let (_dir, store) = temp_store();
         let err = import(&store, "{ not json").err().unwrap();
         assert_eq!(err.status, "INVALID_RESPONSE");
+        assert!(store.get("head".into(), None).is_none());
+    }
+
+    // Nx Cloud sends only `commit`, `inputs` and `outputs`; any other shape is
+    // refused rather than half-read.
+    #[test]
+    fn rejects_entry_shapes_it_does_not_model() {
+        let (_dir, store) = temp_store();
+        for json in [
+            r#"{ "a:build": { "commit": "head", "inputs": [], "outputs": [], "taskOutputs": { "b:build": ["dist/b"] } } }"#,
+            r#"{ "a:build": { "commit": "head", "inputs": { "projects": {}, "workspace": [] }, "outputs": [] } }"#,
+        ] {
+            let err = import(&store, json).err().unwrap();
+            assert_eq!(err.status, "INVALID_RESPONSE");
+        }
         assert!(store.get("head".into(), None).is_none());
     }
 

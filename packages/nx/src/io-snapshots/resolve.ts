@@ -46,13 +46,29 @@ export async function resolveIoSnapshotsForRun(
   if (resolved.status === 'skipped') {
     return reportIoSnapshotResolution(resolved);
   }
-  const snapshots = getIoSnapshotStore().get(resolved.commit);
   return reportIoSnapshotResolution(
-    snapshots
-      ? { status: resolved.status, snapshots }
+    storedOutcome(resolved.commit, resolved.status)
+  );
+}
+
+/** The set the daemon resolved, read back from the store this process opens. */
+function storedOutcome(
+  commit: string,
+  status: 'fetched' | 'cached'
+): IoSnapshotOutcome {
+  try {
+    const snapshots = getIoSnapshotStore().get(commit);
+    return snapshots
+      ? { status, snapshots }
       : skippedIoSnapshots(
           'no-bundle',
-          `no I/O snapshot set is stored for ${resolved.commit}`
-        )
-  );
+          `no I/O snapshot set is stored for ${commit}`
+        );
+  } catch (e) {
+    // An unusable database costs the run its snapshots, never the run.
+    return skippedIoSnapshots(
+      'store-unavailable',
+      e instanceof Error ? e.message : String(e)
+    );
+  }
 }

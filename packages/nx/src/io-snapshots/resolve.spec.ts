@@ -69,6 +69,21 @@ describe('resolveIoSnapshotsForRun', () => {
     expect(store.get).not.toHaveBeenCalled();
   });
 
+  it('skips rather than throws when the store cannot be opened', async () => {
+    daemon.resolveIoSnapshots.mockResolvedValue({
+      status: 'fetched',
+      commit: 'head',
+    });
+    store.get.mockImplementationOnce(() => {
+      throw new Error('database disk image is malformed');
+    });
+    expect(await resolveIoSnapshotsForRun(nxJson, {})).toEqual({
+      status: 'skipped',
+      reason: 'store-unavailable',
+      message: 'database disk image is malformed',
+    });
+  });
+
   it('skips when the commit the daemon named is not stored', async () => {
     daemon.resolveIoSnapshots.mockResolvedValue({
       status: 'cached',

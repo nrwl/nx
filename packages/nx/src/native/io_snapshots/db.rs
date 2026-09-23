@@ -60,10 +60,10 @@ impl SnapshotDb {
                 params![commit, resolution.fetched_at, resolution.tasks],
             )?;
             conn.execute(
-                "DELETE FROM io_snapshot_sets WHERE commit_sha NOT IN \
+                "DELETE FROM io_snapshot_sets WHERE commit_sha != ?1 AND commit_sha NOT IN \
                  (SELECT commit_sha FROM io_snapshot_sets \
-                  ORDER BY fetched_at DESC, commit_sha LIMIT ?1)",
-                params![RETAINED_COMMITS],
+                  ORDER BY fetched_at DESC, commit_sha LIMIT ?2)",
+                params![commit, RETAINED_COMMITS],
             )?;
             // This commit's previous entries, and those of pruned sets.
             conn.execute(
@@ -180,6 +180,19 @@ mod tests {
         assert!(db.read_resolution("c0").unwrap().is_none());
         assert!(db.read_entries("c0", &["a:build"]).unwrap().is_empty());
         assert!(db.read_resolution("c1").unwrap().is_some());
+    }
+
+    // A clock that stepped back must not prune the set being written.
+    #[test]
+    fn never_prunes_the_set_it_writes() {
+        let (_dir, db) = temp_db();
+        for i in 10..15 {
+            db.write(&bundle(&format!("c{i}"), i, &["a:build"]))
+                .unwrap();
+        }
+        db.write(&bundle("old", 1, &["a:build"])).unwrap();
+        assert!(db.read_resolution("old").unwrap().is_some());
+        assert_eq!(db.read_entries("old", &["a:build"]).unwrap().len(), 1);
     }
 
     #[test]

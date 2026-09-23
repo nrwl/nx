@@ -40,7 +40,9 @@ impl Bundle {
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
+// A field this nx does not model, such as a producer ordering, would otherwise be
+// dropped silently; rejecting the set makes it hash natively with a warning.
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TaskIoSnapshot {
     pub commit: String,
     /// Workspace-relative globs the task read.

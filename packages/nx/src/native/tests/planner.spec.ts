@@ -2258,7 +2258,7 @@ describe('task planner', () => {
       expect(plan).not.toContainEqual(expect.stringMatching(/^child:libs\//));
     });
 
-    it("defers a task whose reads sit under a producer's declared outputs ", () => {
+    it("defers a task whose reads sit under a producer's declared outputs", () => {
       const { planner, taskGraph } = fixture();
       const snapshots = snapshotsFor({
         'parent:build': { inputs: ['dist/libs/child/index.js'] },
