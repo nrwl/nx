@@ -1,4 +1,5 @@
 import {
+  acknowledgeBuildScripts,
   addPlugin,
   upsertTargetDefault,
   findTargetDefault,
@@ -6,6 +7,7 @@ import {
 import {
   type Tree,
   type GeneratorCallback,
+  detectPackageManager,
   readNxJson,
   addDependenciesToPackageJson,
   formatFiles,
@@ -13,6 +15,7 @@ import {
   updateNxJson,
   createProjectGraphAsync,
 } from '@nx/devkit';
+import { coerce, major } from 'semver';
 import { InitGeneratorSchema } from './schema';
 import {
   nxVersion,
@@ -42,6 +45,15 @@ export function updateDependencies(tree: Tree, schema: InitGeneratorSchema) {
         : installedMajor === 7
           ? viteV7Version
           : viteVersion;
+
+  // Vite below 8 depends on esbuild (8 bundles rolldown instead), whose install
+  // script only validates the prebuilt binary that ships as an optional
+  // dependency.
+  if (major(coerce(viteVersionToUse)) < 8) {
+    acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+      esbuild: false,
+    });
+  }
 
   return addDependenciesToPackageJson(
     tree,

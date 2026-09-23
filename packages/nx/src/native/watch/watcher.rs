@@ -7,7 +7,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime};
 
 use crossbeam_channel::{Receiver, Sender, bounded, select, unbounded};
-use notify::{RecursiveMode, Watcher as NotifyWatcher};
+use notify::{Config, EventKindMask, RecommendedWatcher, RecursiveMode, Watcher as NotifyWatcher};
 use tracing::{debug, trace};
 
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
@@ -185,9 +185,12 @@ impl WatchPipeline {
             .map_err(|e| format!("failed to create watch filter: {e}"))?;
 
         let (notify_tx, notify_rx) = unbounded::<NotifyResult>();
-        let mut watcher = notify::recommended_watcher(move |event| {
-            let _ = notify_tx.send(event);
-        })
+        let mut watcher = RecommendedWatcher::new(
+            move |event| {
+                let _ = notify_tx.send(event);
+            },
+            Config::default().with_event_kinds(EventKindMask::CORE),
+        )
         .map_err(|e| format!("failed to create file watcher: {e}"))?;
 
         // FSEvents and ReadDirectoryChangesW recurse in the kernel. notify
@@ -444,7 +447,11 @@ impl WatchPipeline {
     fn with_test_channel(origin: &str) -> (Self, Sender<NotifyResult>) {
         let filterer = watch_filterer::create_filter(origin, &[], false).expect("test filter");
         let (notify_tx, notify_rx) = unbounded::<NotifyResult>();
-        let watcher = notify::recommended_watcher(|_res| {}).expect("test watcher");
+        let watcher = RecommendedWatcher::new(
+            |_res| {},
+            Config::default().with_event_kinds(EventKindMask::CORE),
+        )
+        .expect("test watcher");
         let mut origin_path = origin.to_string();
         if !origin_path.ends_with(MAIN_SEPARATOR) {
             origin_path.push(MAIN_SEPARATOR);

@@ -44,6 +44,23 @@ Work through the failed test in this order:
 Record an owner and review date for each quarantine. A quarantine protects the pipeline, but it
 also reduces test coverage.
 
+## How to manage flaky tests in CI
+
+Flaky test management is a repeated process, not a retry setting. Use the same process for every
+test runner:
+
+| Stage      | Action                                                                                  |
+| ---------- | --------------------------------------------------------------------------------------- |
+| Detect     | Record a failed and a successful result for the same code and test inputs.              |
+| Preserve   | Keep the logs, screenshots, traces, machine details, and test order from both attempts. |
+| Prioritize | Fix tests with the highest flake rate and run count before rare, low-impact failures.   |
+| Assign     | Give each flaky test or quarantine an owner and a review date.                          |
+| Fix        | Remove the timing, state, resource, or environment difference that caused the failure.  |
+| Verify     | Keep the test enabled and confirm that it stays reliable across later CI runs.          |
+
+Track the history outside one pipeline. A test that passed after one retry is still flaky, and a
+team cannot prioritize flakes from a set of disconnected build logs.
+
 ## Flaky tests in Playwright, Cypress, Jest, and Vitest
 
 End-to-end tests flake more than unit tests because they carry real browsers, real servers, and
@@ -51,9 +68,12 @@ real network calls. Both major e2e runners can retry a failed test - `retries` i
 `playwright.config.ts`, and `retries` (with separate `runMode` and `openMode` values) in the Cypress
 config. Playwright even labels a fail-then-pass result as flaky in its report.
 
+Use the [flaky Playwright test guide](/docs/technologies/test-tools/playwright/guides/flaky-tests)
+to reproduce a failed spec, inspect its trace, replace fixed waits, and isolate its test data.
+
 A framework retry runs on the same machine, so a port conflict or a process leaked by an earlier
-test is still there when the test runs again. The record is also scoped to one run's report, and
-nothing accumulates into a picture of which tests flake the most across your CI.
+test can still affect the retry. The record is also scoped to one run's report, and nothing
+accumulates into a picture of which tests flake the most across your CI.
 
 Nx Cloud retries on a different machine to rule out the environment, and tracks results per task
 across runs. [Automated task splitting](/docs/features/ci-features/split-e2e-tasks) creates one
@@ -77,9 +97,9 @@ once after a new commit has a new hash and may be a regression.
 A task that passes and fails with one hash - even on different machines, days apart - is
 nondeterministic.
 
-When a known flaky task fails, Nx Cloud sends it to a different [Nx Agent](/docs/features/ci-features/distribute-task-execution).
-It makes at most two attempts in total. The retry targets the failed work instead of the complete
-pipeline.
+When distributed task execution is enabled and a known flaky task fails, Nx Cloud sends it to a
+different [Nx Agent](/docs/features/ci-features/distribute-task-execution). It makes at most two
+attempts in total. The retry targets the failed work instead of the complete pipeline.
 
 [Enable flaky test detection](/docs/features/ci-features/flaky-tasks) to use this behavior in your
 CI pipeline.

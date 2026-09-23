@@ -11,7 +11,7 @@ import {
   updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { acknowledgeBuildScripts } from '@nx/devkit/internal';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { getInstalledCypressMajorVersion } from '../../utils/versions';
 import { componentConfigurationGenerator } from './component-configuration';
@@ -21,11 +21,6 @@ jest.mock('../../utils/versions', () => ({
   ...jest.requireActual('../../utils/versions'),
   getInstalledCypressMajorVersion: jest.fn(),
 }));
-jest.mock('@nx/devkit/internal', () => ({
-  ...jest.requireActual('@nx/devkit/internal'),
-  acknowledgeBuildScripts: jest.fn(),
-}));
-const mockedAcknowledgeBuildScripts = acknowledgeBuildScripts as jest.Mock;
 
 let projectConfig: ProjectConfiguration = {
   projectType: 'library',
@@ -120,12 +115,14 @@ describe('Cypress Component Configuration', () => {
       return json;
     });
 
-    await componentConfigurationGenerator(tree, {
-      project: 'cool-lib',
-      bundler: 'vite',
-      skipFormat: true,
-      addPlugin: true,
-    });
+    await withPnpm(tree, '11.2.2', () =>
+      componentConfigurationGenerator(tree, {
+        project: 'cool-lib',
+        bundler: 'vite',
+        skipFormat: true,
+        addPlugin: true,
+      })
+    );
 
     const { devDependencies } = readJson(tree, 'package.json');
     expect(devDependencies.cypress).toBe('^15.20.1');
@@ -134,11 +131,8 @@ describe('Cypress Component Configuration', () => {
     expect(readNxJson(tree).plugins).toContainEqual(
       expect.objectContaining({ plugin: '@nx/cypress/plugin' })
     );
-    expect(mockedAcknowledgeBuildScripts).toHaveBeenCalledTimes(1);
-    expect(mockedAcknowledgeBuildScripts).toHaveBeenCalledWith(
-      tree,
-      expect.any(String),
-      { cypress: true }
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+      /['"]?cypress['"]?: true/
     );
   });
 
@@ -164,6 +158,40 @@ describe('Cypress Component Configuration', () => {
       })
     ).rejects.toThrow(
       'Cypress 16 component testing requires Vite 8. Found Vite 7.0.0. Update Vite to 8 or use Cypress 15.'
+    );
+  });
+
+  it('should deny the esbuild build script pulled in by the webpack dev server', async () => {
+    mockedInstalledCypressVersion.mockReturnValue(10);
+
+    await withPnpm(tree, '11.2.2', () =>
+      componentConfigurationGenerator(tree, {
+        project: 'cool-lib',
+        skipFormat: true,
+        bundler: 'webpack',
+        addPlugin: true,
+      })
+    );
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+      /['"]?esbuild['"]?: false/
+    );
+  });
+
+  it('should not record an esbuild decision for the vite dev server', async () => {
+    mockedInstalledCypressVersion.mockReturnValue(10);
+
+    await withPnpm(tree, '11.2.2', () =>
+      componentConfigurationGenerator(tree, {
+        project: 'cool-lib',
+        skipFormat: true,
+        bundler: 'vite',
+        addPlugin: true,
+      })
+    );
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8') ?? '').not.toContain(
+      'esbuild'
     );
   });
 

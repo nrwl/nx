@@ -33,7 +33,10 @@ const runCLI = (cmd: string, opts: RunCmdOpts = {}) =>
 
 describe('cache (no daemon)', () => {
   beforeEach(() =>
-    newProject({ packages: ['@nx/eslint', '@nx/web', '@nx/js', '@nx/jest'] })
+    newProject({
+      keepBackup: true,
+      packages: ['@nx/eslint', '@nx/web', '@nx/js', '@nx/jest'],
+    })
   );
 
   afterEach(() => cleanupProject());

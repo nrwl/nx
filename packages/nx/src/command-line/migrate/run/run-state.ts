@@ -1,11 +1,4 @@
-import {
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-  type Dirent,
-} from 'fs';
+import { existsSync, mkdirSync, readdirSync, rmSync, type Dirent } from 'fs';
 import { createHash } from 'crypto';
 import { basename, join } from 'path';
 import { writeJsonFile } from '../../../utils/fileutils';
@@ -13,6 +6,7 @@ import { publishFileAtomically } from './atomic-write';
 import { GIT_SHA } from '../../../utils/git-utils';
 import { nxVersion } from '../../../utils/versions';
 import { HANDOFFS_DIR_NAME, MIGRATE_RUNS_RELATIVE_DIR } from '../agentic/types';
+import { readAtomicallyPublishedFile } from '../agentic/handoff';
 import { RUN_ID_SAFE } from './run-id';
 import { singleLine } from '../text';
 
@@ -153,6 +147,15 @@ export interface MigrateStep {
   // Recorded when the step enters 'awaiting-prompt-outcome'; dropped on re-arm
   // with the other per-attempt fields.
   awaitingKind?: MigrateStepAwaitingKind;
+  // Index of the ledger entry a parent session recorded for this attempt's
+  // commit. A fold that lands no new entry of its own attributes the
+  // handoff's resolutions there. Dropped on re-arm.
+  commitLedgerIndex?: number;
+  // Set when the tree is reserved to commit for the step, before git runs.
+  // Cleared by the landed entry that names the step, or by the release of a
+  // reservation that never ran git. Anything else (a death mid-commit, a
+  // failure once git ran, a lost entry) leaves it, and blocks a skip.
+  commitStarted?: boolean;
   // Set after the generator half runs and before the commit is attempted, so a
   // retry finishes the step instead of reapplying the changes. Dropped with the
   // four marker fields below when a retry's reset discards those changes.
@@ -227,9 +230,10 @@ export interface MigrateRunIssue {
   // A later commit that absorbs the step's tree carries the fix, so the
   // association outlives that step's own failed commit attempt.
   resolvedByStepId?: string;
-  // Commits ledger length when the resolution was recorded. The ledger is
-  // append-only, so entries below it predate the resolution and cannot carry
-  // the fix, whoever they name.
+  // The earliest ledger index that can carry the fix: the ledger length when
+  // the resolution was recorded, or the index of an entry a parent session
+  // recorded first. Entries below it predate the resolution and cannot carry
+  // it, whoever they name.
   resolvedAtCommitCount?: number;
 }
 
@@ -244,6 +248,14 @@ export interface MigrateRunNoProgress {
   fingerprint: string;
   consecutiveCount: number;
   firstSeenAt: string;
+}
+
+// Resolved for the invocation from its flags and the nx.json defaults, never
+// from run state. An agent's sandbox can write run state, so a master session
+// decides installs and commits from this.
+export interface MigrateRunPolicy {
+  createCommits: boolean;
+  skipInstall: boolean;
 }
 
 export interface MigrateRunState {
@@ -275,7 +287,30 @@ export interface MigrateRunState {
   // retry (tree reset) must not be offered. Cleared if a resume retry leaves
   // the tree fully committed before any migration step runs.
   checkpointFailed?: boolean;
+  // The install, commit, reset or checkpoint one process is running against
+  // the working tree. Set before the operation and cleared by its owner after
+  // the state that records it is written; a dead owner pid voids it.
+  treeOperation?: MigrateTreeOperation;
   analytics: MigrateRunAnalytics;
+}
+
+export const TREE_OPERATION_KINDS = [
+  'commit',
+  'install',
+  'fold-install',
+  'action-install',
+  'reset',
+  'checkpoint',
+] as const;
+export type MigrateTreeOperationKind = (typeof TREE_OPERATION_KINDS)[number];
+
+export interface MigrateTreeOperation {
+  kind: MigrateTreeOperationKind;
+  // Absent for the run-level checkpoint.
+  stepId?: string;
+  attempt?: number;
+  owner: string;
+  pid: number;
 }
 
 const REQUIRED_TOP_LEVEL_FIELDS: readonly (keyof MigrateRunState)[] = [
@@ -431,6 +466,7 @@ function isStepShape(value: unknown): boolean {
     isPromptOutcomeShape(value.promptOutcome) &&
     (value.awaitingKind === undefined ||
       isOneOf(MIGRATE_STEP_AWAITING_KINDS, value.awaitingKind)) &&
+    isOptionalBoolean(value.commitStarted) &&
     isOptionalBoolean(value.generatorCompleted) &&
     // Bounded by the step's attempt: a higher value could not name one that
     // exists.
@@ -439,6 +475,9 @@ function isStepShape(value: unknown): boolean {
         (value.generatorCompletedAtAttempt as number) >= 1 &&
         (value.generatorCompletedAtAttempt as number) <=
           (value.attempt as number))) &&
+    (value.commitLedgerIndex === undefined ||
+      (Number.isSafeInteger(value.commitLedgerIndex) &&
+        (value.commitLedgerIndex as number) >= 0)) &&
     isOptionalBoolean(value.agenticWaived) &&
     isOptionalBoolean(value.validationOwed) &&
     isOptionalBoolean(value.generatorMadeChanges) &&
@@ -580,6 +619,22 @@ function isNoProgressShape(value: unknown): boolean {
   );
 }
 
+function isTreeOperationShape(value: unknown): boolean {
+  return (
+    value === undefined ||
+    (isPlainObject(value) &&
+      isOneOf(TREE_OPERATION_KINDS, value.kind) &&
+      (value.stepId === undefined || typeof value.stepId === 'string') &&
+      (value.attempt === undefined ||
+        (Number.isSafeInteger(value.attempt) &&
+          (value.attempt as number) >= 1)) &&
+      typeof value.owner === 'string' &&
+      (value.owner as string).length > 0 &&
+      Number.isSafeInteger(value.pid) &&
+      (value.pid as number) > 0)
+  );
+}
+
 function isAnalyticsShape(value: unknown): boolean {
   return (
     isPlainObject(value) &&
@@ -629,6 +684,7 @@ function hasValidRunStateShape(parsed: Record<string, unknown>): boolean {
         )
     ) &&
     isNoProgressShape(parsed.noProgress) &&
+    isTreeOperationShape(parsed.treeOperation) &&
     isAnalyticsShape(parsed.analytics)
   );
 }
@@ -662,7 +718,14 @@ export class NewerRunStateFormatError extends Error {
  */
 export function readRunState(runDirPath: string): MigrateRunState {
   const filePath = join(runDirPath, RUN_STATE_FILE_NAME);
-  const content = readFileSync(filePath, 'utf-8');
+  // run.json lives in the agent-writable run directory, so it could be a
+  // planted symlink or FIFO; read it without reading a symlink's target or
+  // blocking on a FIFO, while still tolerating a concurrent tmp + rename
+  // publish. A non-regular file reads as corruption; ENOENT stays "no run".
+  const content = readAtomicallyPublishedFile(
+    filePath,
+    corruptRunStateError(filePath, 'is not a regular file.').message
+  );
   let parsed: unknown;
   try {
     parsed = JSON.parse(content);

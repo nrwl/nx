@@ -17,6 +17,7 @@ import {
   archiveIssues,
   claimIssuesForStep,
   applicationArchivesIntact,
+  enrichCommitEntryIssueIds,
   issueArchivePath,
   issueFingerprint,
   issueIdsForCommit,
@@ -1248,6 +1249,102 @@ describe('migrate run issues', () => {
         ],
       };
       expect(issueIdsForCommit(state, ['step-1'])).toEqual(['issue-1']);
+    });
+  });
+
+  describe('applyReportedIssues stamp', () => {
+    it('stamps every resolution at the given ledger index instead of the ledger length', () => {
+      const steps = baseSteps();
+      const state = {
+        ...stateWith(steps, [
+          issue('issue-1', { applicableStepIds: ['step-1'] }),
+          issue('issue-2', {
+            fingerprint: issueFingerprint('summary of issue-2'),
+            applicableStepIds: ['step-1'],
+          }),
+        ]),
+        commits: [
+          { kind: 'landed' as const, stepIds: ['step-1'] },
+          { kind: 'landed' as const, stepIds: ['step-1'] },
+        ],
+      };
+
+      // An update, a duplicate report and a new report.
+      const result = applyReportedIssues(
+        state,
+        steps[0],
+        [
+          {
+            summary: 'summary of issue-2',
+            applicableMigrations: ['@nx/js:one'],
+            disposition: 'resolved',
+          },
+          {
+            summary: 'fixed on the way',
+            applicableMigrations: ['@nx/js:one'],
+            disposition: 'resolved',
+          },
+        ],
+        [{ id: 'issue-1', disposition: 'resolved' }],
+        1
+      );
+
+      expect(
+        result.state.issues.map((i) => [i.id, i.resolvedAtCommitCount])
+      ).toEqual([
+        ['issue-1', 1],
+        ['issue-2', 1],
+        ['issue-3', 1],
+      ]);
+    });
+  });
+
+  describe('enrichCommitEntryIssueIds', () => {
+    const resolvedState = (commits: MigrateRunState['commits']) => ({
+      ...stateWith(baseSteps(), [
+        issue('issue-1', {
+          disposition: 'resolved',
+          resolvedByStepId: 'step-1',
+          resolvedAtCommitCount: 0,
+        }),
+        issue('issue-2', {
+          disposition: 'resolved',
+          resolvedByStepId: 'step-1',
+          resolvedAtCommitCount: 0,
+        }),
+        issue('issue-3', {
+          disposition: 'resolved',
+          resolvedByStepId: 'step-3',
+          resolvedAtCommitCount: 0,
+        }),
+      ]),
+      commits,
+    });
+
+    it('adds the uncarried resolutions of the steps the entry names, keeping the ids it has', () => {
+      const state = resolvedState([
+        { kind: 'landed', stepIds: ['step-1'], issueIds: ['issue-1'] },
+      ]);
+
+      const enriched = enrichCommitEntryIssueIds(state, 0);
+
+      expect(enriched.commits).toEqual([
+        {
+          kind: 'landed',
+          stepIds: ['step-1'],
+          issueIds: ['issue-1', 'issue-2'],
+        },
+      ]);
+      expect(enrichCommitEntryIssueIds(enriched, 0)).toBe(enriched);
+    });
+
+    it('leaves a failed entry untouched', () => {
+      const carried = resolvedState([
+        { kind: 'landed', stepIds: ['step-2'] },
+        { kind: 'failed', stepIds: ['step-1'] },
+      ]);
+
+      expect(enrichCommitEntryIssueIds(carried, 1)).toBe(carried);
     });
   });
 

@@ -1,7 +1,10 @@
 ---
-title: Enable AI Features
+title: Enable AI features
 description: Learn how to enable and configure AI-powered features in Nx Cloud
 filter: 'type:Guides'
+topics:
+  - 'Continuous integration'
+  - 'Nx Cloud'
 ---
 
 This guide walks you through enabling AI features in Nx Cloud.
@@ -12,7 +15,7 @@ To enable AI features for your organization, go to [your organization's settings
 
 In the **settings** menu, find the **AI Features** section and toggle it **On**.
 
-![enable ai features](../../../../assets/features/ci-features/ai-features.avif)
+![enable ai features](../../../assets/features/ci-features/ai-features.avif)
 
 Make sure you **accept the AI terms** to start using the AI features.
 
@@ -34,6 +37,4 @@ Supply the key in one of two ways:
 - Configure the provider and API key on the organization's AI provider settings page. The key is stored encrypted.
 - Leave the UI unset and provide `ANTHROPIC_API_KEY` in the CI runner environment.
 
-## Regional availability
-
-AI features aren't available for the EU cluster in public cloud installations due to regional restrictions. Providing your own Anthropic API key (BYOK) for Self-Healing CI isn't subject to this restriction.
+For provider setup, model tiers, and verification, see [Bring your own AI API key](/docs/kb/bring-your-own-ai-api-key).
