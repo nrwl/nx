@@ -1,18 +1,18 @@
-import type { MockInstance } from 'vitest';
 describe('@nx/rspack compose helpers deprecation', () => {
-  function setup() {
-    let warn!: MockInstance;
-    let mod!: typeof import('./deprecation');
-    jest.isolateModules(() => {
-      const { logger } = require('@nx/devkit');
-      warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
-      mod = require('./deprecation');
-    });
+  async function setup() {
+    vi.resetModules();
+    const { logger } = await import('@nx/devkit');
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+    const mod = await import('./deprecation');
     return { warn, mod };
   }
 
-  it('warns once per process even when several helpers are composed', () => {
-    const { warn, mod } = setup();
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('warns once per process even when several helpers are composed', async () => {
+    const { warn, mod } = await setup();
 
     mod.warnRspackComposeHelpersDeprecation();
     mod.warnRspackComposeHelpersDeprecation();
@@ -22,8 +22,8 @@ describe('@nx/rspack compose helpers deprecation', () => {
     expect(warn.mock.calls[0][0]).toContain('convert-to-inferred');
   });
 
-  it('does not warn when called inside a suppression scope', () => {
-    const { warn, mod } = setup();
+  it('does not warn when called inside a suppression scope', async () => {
+    const { warn, mod } = await setup();
 
     mod.suppressRspackComposeHelperWarnings(() =>
       mod.warnRspackComposeHelpersDeprecation()
@@ -32,8 +32,8 @@ describe('@nx/rspack compose helpers deprecation', () => {
     expect(warn).not.toHaveBeenCalled();
   });
 
-  it('restores warning after the suppression scope exits', () => {
-    const { warn, mod } = setup();
+  it('restores warning after the suppression scope exits', async () => {
+    const { warn, mod } = await setup();
 
     mod.suppressRspackComposeHelperWarnings(() =>
       mod.warnRspackComposeHelpersDeprecation()
