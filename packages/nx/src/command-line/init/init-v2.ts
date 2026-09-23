@@ -570,7 +570,6 @@ export function getPluginReason(plugin: string): string {
     '@nx/next': 'next.js detected in dependencies',
     '@nx/nuxt': 'nuxt detected in dependencies',
     '@nx/react-native': 'react-native detected in dependencies',
-    '@nx/remix': '@remix-run/dev detected in dependencies',
     '@nx/rsbuild': '@rsbuild/core detected in dependencies',
     '@nx/react': '@react-router/dev detected in dependencies',
     '@nx/gradle': 'gradlew detected in workspace',
@@ -625,7 +624,6 @@ const npmPackageToPluginMap: Record<string, `@nx/${string}`> = {
   next: '@nx/next',
   nuxt: '@nx/nuxt',
   'react-native': '@nx/react-native',
-  '@remix-run/dev': '@nx/remix',
   '@rsbuild/core': '@nx/rsbuild',
   '@react-router/dev': '@nx/react',
 };

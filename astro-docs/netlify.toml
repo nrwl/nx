@@ -1163,6 +1163,12 @@ to = "/docs/technologies/module-federation/introduction"
 from = "/docs/concepts/decisions"
 to = "/docs/kb/monorepo-vs-polyrepo"
 
+# NXC-4289: Remix executors were removed in Nx 24.
+[[redirects]]
+from = "/docs/technologies/react/remix/executors"
+to = "/docs/technologies/react/remix/introduction"
+status = 301
+
 # Rewrite for base path handling (keeps URL the same)
 [[redirects]]
 from = "/docs/*"

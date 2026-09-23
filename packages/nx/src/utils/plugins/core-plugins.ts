@@ -83,7 +83,7 @@ export const CORE_PLUGINS: CorePlugin[] = [
   },
   {
     name: '@nx/remix',
-    capabilities: 'executors,generators',
+    capabilities: 'generators',
   },
   {
     name: '@nx/rollup',
