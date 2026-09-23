@@ -557,21 +557,19 @@ Replace it, on hosts as well as remotes, with one that serves the build output d
 ```
 
 Replace the generated target whole, `configurations` and `defaultConfiguration` included, since
-both only carried a per-configuration `buildTarget`. Use `staticFilePath` with `dependsOn` and
-never the `buildTarget` form: with it the file server spawns a nested `nx run <app>:build`, and
-under `nx run-many` or an e2e target that already scheduled those builds, Nx aborts with
-`Recursive task invocation detected`. Keep `spa: true` on every app, or a refresh on a deep route
-returns a 404.
+both only carried a per-configuration `buildTarget`. Serve the output with `staticFilePath` and
+leave `buildTarget` unset, since the file server rebuilds the app itself whenever that option is
+present, which duplicates the `dependsOn` build and can fail with
+`Recursive task invocation detected` from inside an e2e run that already built it. Keep
+`spa: true` on every app, or a refresh on a deep route returns a 404.
 
 Each remote's `serve-static` port has to be the port the host's `remotes` URL names, or the host
 404s on `remoteEntry.mjs` against a web server that started cleanly.
 
 {% aside type="note" title="Inferred targets on Rspack" %}
-On Rspack these targets come from `@nx/rspack/plugin` inference, and Nx merges `project.json`
-options key by key over an inferred target. Your `staticFilePath` lands next to the inferred
-`buildTarget`, which brings back the recursive invocation above. Rename the inferred target by
-setting `serveStaticTargetName` on the `@nx/rspack/plugin` entry in `nx.json` to something like
-`serve-static-inferred`, then leave that target unused.
+On Rspack these targets come from `@nx/rspack/plugin` inference, and Nx merges your `project.json`
+options over the inferred ones key by key. The inferred `buildTarget` therefore arrives next to
+your `staticFilePath`. Add `"buildTarget": ""` to your target to clear it.
 {% /aside %}
 
 #### End-to-end projects

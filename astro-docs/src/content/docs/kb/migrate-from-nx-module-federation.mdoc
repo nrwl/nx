@@ -623,17 +623,15 @@ want the old output back.
 
 {% aside type="note" title="Inferred targets" %}
 If `nx.json` lists `@nx/rspack/plugin` or `@nx/webpack/plugin`, the inferred `build` and `serve`
-targets work as they are and only `serve-static` needs the explicit shape above. Nx merges
-`project.json` options key by key over an inferred target, so the inferred `buildTarget` would
-survive next to your `staticFilePath`. Set the plugin's `serveStaticTargetName` option in
-`nx.json` to another name, such as `serve-static-inferred`, and leave that target unused.
+targets work as they are and only `serve-static` needs the shape above. Nx merges your
+`project.json` options over the inferred ones key by key, so the inferred `buildTarget` arrives
+next to your `staticFilePath`. Add `"buildTarget": ""` to your target to clear it.
 {% /aside %}
 
-`serve-static` needs `staticFilePath` with `dependsOn`, not the executor's `buildTarget` option.
-With `buildTarget` the file server spawns a nested `nx run <app>:build`, and under `nx run-many`
-or an e2e target that already scheduled those builds, Nx aborts with
-`Recursive task invocation detected`. Keep `spa: true` on every app, or a refresh on a deep route
-returns a 404.
+`serve-static` serves the output with `staticFilePath` and leaves `buildTarget` unset, since the
+file server rebuilds the app itself whenever that option is present, which duplicates the
+`dependsOn` build and can fail with `Recursive task invocation detected` from inside an e2e run
+that already built it. Keep `spa: true` on every app, or a refresh on a deep route returns a 404.
 
 Point an e2e project's web server command at `nx run-many -t serve-static -p <host> <remotes>`,
 with its URL on the host's `serve-static` port.
