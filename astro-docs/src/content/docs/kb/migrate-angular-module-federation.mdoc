@@ -19,7 +19,7 @@ Rules that override any shortcut you are tempted to take. Rules 2 to 7 are Path 
 3. Angular containers are ES modules: set `library: { type: 'module' }`, `experiments.outputModule: true` on webpack or `output.module: true` on Rspack, `filename: 'remoteEntry.mjs'` on webpack and `remoteEntry.js` on Rspack, `dts: false`, `output.publicPath: 'auto'`, `output.uniqueName`, and `optimization.runtimeChunk: false`. Write `remotes` as plain URLs with no `name@` prefix.
 4. On webpack, add `resolve.alias` entries for every workspace library referenced through `tsconfig` paths (not for the `remoteX/Routes` entries). Exposed modules are resolved outside the Angular compilation, so remotes fail to build without them. Rspack's `createConfig` reads the paths itself, so no alias there.
 5. For hosts on `@nx/angular/mf`, convert `setRemoteDefinitions` to `registerRemotes` with `type: 'module'` and `loadRemoteModule(name, './Routes')` to `loadRemote(name + '/Routes')`. Map values must be full `remoteEntry.mjs` URLs (`remoteEntry.js` on Rspack). Hosts already calling `registerRemotes` stay as they are.
-6. On webpack, replace the `serve` target with `@nx/angular:dev-server`; on Rspack keep the inferred targets. Keep each remote's `dependsOn: ['<host>:serve']`, set `headers: { 'Access-Control-Allow-Origin': '*' }` on every remote's serve target (on Rspack under `devServer.headers` in `rspack.config.ts`), and add a `serve-static` target per app using `@nx/web:file-server` with `staticFilePath`, `dependsOn: ['build']`, `watch: false`, never `buildTarget`.
+6. On webpack, replace the `serve` target with `@nx/angular:dev-server`; on Rspack keep the inferred targets. Keep each remote's `dependsOn: ['<host>:serve']`, set `headers: { 'Access-Control-Allow-Origin': '*' }` on every remote's serve target (on Rspack under `devServer.headers` in `rspack.config.ts`), and add a `serve-static` target per app using `@nx/web:file-server` with `staticFilePath`, `dependsOn: ['build']`, `spa: true`, `watch: false`, never `buildTarget`.
 7. Remove `@nx/module-federation` only after every consumer is gone. Move `@module-federation/enhanced` to `dependencies`. `@nx/rspack` still depends on it, so on Rspack workspaces it stays installed. Rebuild uncached afterwards, production last; on Rspack a development build needs `NGRS_CONFIG=development`.
 8. Do not claim hot-update parity or shared-state parity from a green build. Report what you verified and what you did not.
 
@@ -381,9 +381,10 @@ depends on it (`watch: false` is required when there is no `buildTarget`):
 ```
 
 Use `staticFilePath` with `dependsOn` and not the generated `buildTarget` form, replacing the
-whole target (`spa` only matters for an app you navigate in, so remotes can leave it out): the generated `configurations` block and `defaultConfiguration` only carried a
-per-configuration `buildTarget`. With
-`buildTarget` the file server spawns a nested `nx run <app>:build`, and under `nx run-many` or an
+whole target: the generated `configurations` block and `defaultConfiguration` only carried a
+per-configuration `buildTarget`. Keep `spa: true` on every app, or a refresh on a deep route 404s.
+With `buildTarget` the file server spawns a nested `nx run <app>:build`, and under `nx run-many`
+or an
 e2e target that already scheduled those builds Nx aborts with
 `Recursive task invocation detected`. The generated Playwright project starts the host with
 `nx run shell:serve`, which used to bring the remotes with it; point its `webServer.command` at
