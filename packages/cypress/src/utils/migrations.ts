@@ -1,6 +1,7 @@
 import {
   getProjects,
   globAsync,
+  normalizePath,
   readNxJson,
   type ProjectConfiguration,
   type TargetConfiguration,
@@ -12,7 +13,7 @@ import {
   readTargetDefaultsForTarget,
 } from '@nx/devkit/internal';
 import { ensureTypescript } from '@nx/js/internal';
-import { posix } from 'path';
+import { isAbsolute, posix, relative } from 'path';
 import type {
   Expression,
   ModuleDeclaration,
@@ -68,7 +69,8 @@ export async function* cypressProjectConfigs(tree: Tree): AsyncGenerator<{
       )) {
         if (options.cypressConfig) {
           cypressConfigPaths.add(
-            posix.normalize(
+            toTreePath(
+              tree,
               interpolate(options.cypressConfig, {
                 workspaceRoot: '.',
                 projectRoot: projectConfig.root,
@@ -91,6 +93,16 @@ export async function* cypressProjectConfigs(tree: Tree): AsyncGenerator<{
       yield { projectName, projectConfig, cypressConfigPath };
     }
   }
+}
+
+function toTreePath(tree: Tree, path: string): string {
+  if (!isAbsolute(path)) {
+    return posix.normalize(path);
+  }
+  const relativePath = relative(tree.root, path);
+  return relativePath.startsWith('..') || isAbsolute(relativePath)
+    ? path
+    : normalizePath(relativePath);
 }
 
 export function getObjectProperty(
