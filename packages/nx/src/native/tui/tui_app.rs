@@ -186,7 +186,7 @@ pub trait TuiApp: Send {
         self.core().update_task_status(task_id, status);
     }
 
-    /// Record a readiness probe verdict; the dependency view reads it on render.
+    /// Record a task's readiness; the dependency view reads it on render.
     fn update_task_readiness(&mut self, task_id: &str, readiness: TaskReadiness) {
         self.core()
             .state()

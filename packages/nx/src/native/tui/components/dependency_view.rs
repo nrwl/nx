@@ -296,20 +296,14 @@ impl<'a> DependencyView<'a> {
     }
 
     fn readiness_suffix(&self, task: &str, dep: &str) -> Option<(&'static str, Style)> {
-        if !self.is_ready_dependency(task, dep) {
-            return None;
-        }
-        let status = self.status_map.get(dep).unwrap_or(&TaskStatus::NotStarted);
-        match self.readiness_of(dep) {
-            TaskReadiness::Failed => {
-                Some((" (readiness failed)", Style::default().fg(THEME.error)))
-            }
-            TaskReadiness::Pending
-                if matches!(status, TaskStatus::InProgress | TaskStatus::Shared) =>
-            {
-                Some((" (not ready)", Style::default().fg(THEME.secondary_fg)))
-            }
-            TaskReadiness::Pending | TaskReadiness::Ready => None,
+        if self.is_awaiting_readiness(task, dep) {
+            Some((" (not ready)", Style::default().fg(THEME.secondary_fg)))
+        } else if self.is_ready_dependency(task, dep)
+            && self.readiness_of(dep) == TaskReadiness::Failed
+        {
+            Some((" (readiness failed)", Style::default().fg(THEME.error)))
+        } else {
+            None
         }
     }
 

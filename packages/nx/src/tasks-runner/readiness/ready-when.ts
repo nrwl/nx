@@ -154,6 +154,16 @@ export function getReadyWhenConfig(
   ]?.readyWhen;
 }
 
+export function filterProbedProducers(
+  producerIds: string[],
+  taskGraph: TaskGraph,
+  projectGraph: ProjectGraph
+): string[] {
+  return producerIds.filter(
+    (id) => getReadyWhenConfig(taskGraph.tasks[id], projectGraph) != null
+  );
+}
+
 const allTargetNamesCache = new WeakMap<ProjectGraph, string[]>();
 
 // Whether each producer declares a `readyWhen` is up to the caller.
@@ -209,12 +219,10 @@ export function getReadyDependencies(
 ): Record<string, string[]> {
   const readyDependencies: Record<string, string[]> = {};
   for (const task of Object.values(taskGraph.tasks)) {
-    const producerIds = getReadyProducerIds(
-      task,
+    const producerIds = filterProbedProducers(
+      getReadyProducerIds(task, taskGraph, projectGraph),
       taskGraph,
       projectGraph
-    ).filter(
-      (id) => getReadyWhenConfig(taskGraph.tasks[id], projectGraph) != null
     );
     if (producerIds.length > 0) {
       readyDependencies[task.id] = producerIds;
