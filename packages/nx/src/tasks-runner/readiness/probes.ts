@@ -1,4 +1,9 @@
-import { LogMatcher, ProbeOutcome, ReadinessProbe } from '../../native';
+import {
+  IS_WASM,
+  LogMatcher,
+  ProbeOutcome,
+  ReadinessProbe,
+} from '../../native';
 import type { RunningTask } from '../running-tasks/running-task';
 import {
   notReadyError,
@@ -19,6 +24,12 @@ export async function waitForReadiness(
   readyWhen: NormalizedReadyWhen,
   context: ReadinessProbeContext
 ): Promise<void> {
+  // The probes live in the native module, which the WASM binding compiles out
+  if (IS_WASM) {
+    throw new Error(
+      `The WASM build of Nx does not support "readyWhen", so "${context.taskId}" cannot be probed for readiness.`
+    );
+  }
   const timedOut = () => readinessTimeoutError(context.taskId, readyWhen);
   const exited = () => notReadyError(context.taskId, 'exited');
 
