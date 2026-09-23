@@ -234,6 +234,20 @@ describe('daemon environment', () => {
       expect(env.NX_CLOUD_WORKER_ID).toBeUndefined();
     });
 
+    it('should keep the CI vars isCI reads despite their prefix exclusions', () => {
+      process.env.JENKINS_URL = 'https://jenkins.example.com/';
+      process.env.JENKINS_HOME = '/var/jenkins';
+      process.env.GITHUB_ACTIONS = 'true';
+      process.env.GITHUB_RUN_ID = '1';
+
+      const env = getDaemonEnv();
+
+      expect(env.JENKINS_URL).toBe('https://jenkins.example.com/');
+      expect(env.GITHUB_ACTIONS).toBe('true');
+      expect(env.JENKINS_HOME).toBeUndefined();
+      expect(env.GITHUB_RUN_ID).toBeUndefined();
+    });
+
     it('should apply the required and overridable daemon settings', () => {
       process.env.NX_PROJECT_GLOB_CACHE = 'true';
       delete process.env.NX_VERBOSE_LOGGING;

@@ -233,15 +233,16 @@ const DAEMON_ENV_PATTERN_EXCLUSIONS = [
 ];
 
 /**
- * Vars that match an excluded prefix but should still reach the daemon. The
- * Nx Cloud auth/access tokens are excluded by the `NX_CLOUD_` prefix, but
- * unlike the per-worker cloud vars they are stable across clients (so they
- * don't churn the daemon env) and signal that the workspace uses Nx Cloud
- * (e.g. for analytics). Keep them.
+ * Vars that match an excluded prefix but should still reach the daemon: they
+ * are stable across clients, so they don't churn the daemon env. The Nx Cloud
+ * tokens signal that the workspace uses Nx Cloud; the CI vars are ones `isCI`
+ * reads that no surviving var stands in for.
  */
 const DAEMON_ENV_PREFIX_EXCLUSION_OVERRIDES = new Set([
   'NX_CLOUD_ACCESS_TOKEN',
   'NX_CLOUD_AUTH_TOKEN',
+  'JENKINS_URL',
+  'GITHUB_ACTIONS',
 ]);
 
 function isExcludedEnvVar(key: string): boolean {
