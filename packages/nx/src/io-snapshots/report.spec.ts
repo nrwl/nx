@@ -49,14 +49,14 @@ describe('formatIoSnapshotSummary', () => {
         { reason: 'disabled', taskId: 'c:e2e' },
         { reason: 'missing', taskId: 'd:test' },
         { reason: 'missing', taskId: 'e:test' },
-        { reason: 'root-anchored-glob', taskId: 'f:lint', glob: '**/*.ts' },
+        { reason: 'invalid-glob', taskId: 'f:lint', glob: 'libs/./x.ts' },
         { reason: 'escapes-workspace', taskId: 'g:build', glob: '../x/**' },
       ],
       resolution,
     };
     const summary = formatIoSnapshotSummary(result, 'cached');
     expect(summary.line).toBe(
-      'I/O snapshots: 2 tasks hashed from snapshot (1 with observed outputs), 5 tasks fell back (2 missing, 1 disabled, 1 escapes-workspace, 1 root-anchored-glob)'
+      'I/O snapshots: 2 tasks hashed from snapshot (1 with observed outputs), 5 tasks fell back (2 missing, 1 disabled, 1 escapes-workspace, 1 invalid-glob)'
     );
     expect(summary.bodyLines).toEqual([
       'bundle: cached',
@@ -64,7 +64,7 @@ describe('formatIoSnapshotSummary', () => {
       'c:e2e: sandbox.enabled is false',
       'd:test: no snapshot for this task',
       'e:test: no snapshot for this task',
-      'f:lint: snapshot glob "**/*.ts" is anchored at the workspace root',
+      'f:lint: snapshot glob "libs/./x.ts" is not a valid files glob',
       'g:build: snapshot glob "../x/**" escapes the workspace',
     ]);
   });

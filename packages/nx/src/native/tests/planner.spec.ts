@@ -2163,7 +2163,7 @@ describe('task planner', () => {
     it('reports eligibility the same way it plans', () => {
       const { planner, taskGraph } = fixture();
       const withheld = snapshotsFor({
-        'parent:build': { inputs: ['**/*.gen'] },
+        'parent:build': { inputs: ['libs/./parent/*.gen'] },
       });
       const report = getIoSnapshotReport(withheld, taskGraph, {
         customHasherTaskIds: ['child:build'],
@@ -2171,7 +2171,7 @@ describe('task planner', () => {
       expect(report.used).toEqual([]);
       expect(report.diagnostics.map((d) => [d.reason, d.taskId])).toEqual([
         ['custom-hasher', 'child:build'],
-        ['root-anchored-glob', 'parent:build'],
+        ['invalid-glob', 'parent:build'],
       ]);
       expect(getIoSnapshotDeferredTaskIds(withheld, taskGraph)).toEqual([]);
 
@@ -2203,20 +2203,20 @@ describe('task planner', () => {
       );
     });
 
-    it('falls back to the native plan for a root-anchored snapshot glob instead of throwing', () => {
+    it('hashes a snapshot glob that reads from the workspace root', () => {
       const { planner, taskGraph } = fixture();
-      const plain = planner.getPlans(['parent:build'], taskGraph);
       const snapshots = snapshotsFor({
         'parent:build': { inputs: ['**/*.gen', 'libs/parent/a.ts'] },
       });
-      expect(planner.getPlans(['parent:build'], taskGraph, snapshots)).toEqual(
-        plain
+      const plan = planner.getPlans(['parent:build'], taskGraph, snapshots)[
+        'parent:build'
+      ];
+      expect(plan).toContainEqual(
+        expect.stringMatching(/^files:\[\*\*\/\*\.gen,/)
       );
-      expect(
-        getIoSnapshotReport(snapshots, taskGraph).diagnostics.find(
-          (d) => d.taskId === 'parent:build'
-        )
-      ).toMatchObject({ reason: 'root-anchored-glob', glob: '**/*.gen' });
+      expect(getIoSnapshotReport(snapshots, taskGraph).used).toContain(
+        'parent:build'
+      );
     });
 
     it('hashes a task that read nothing from native instructions plus the marker', () => {

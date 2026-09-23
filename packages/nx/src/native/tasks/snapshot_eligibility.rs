@@ -205,14 +205,13 @@ pub(crate) fn resolve_scoped(
             diagnostics.push(diagnostic);
             continue;
         }
-        // Literal paths never walk; an observed glob that walks from the root
-        // is withheld.
+        // A read the hasher would reject fails the whole hash; fall back instead.
         if let Some(glob) = files
             .iter()
-            .filter(|g| !g.starts_with('!') && !is_literal_path(g))
-            .find(|g| validate_files_glob(g).is_err() || walks_from_root(g))
+            .filter(|g| !g.starts_with('!'))
+            .find(|g| validate_files_glob(g).is_err())
         {
-            let mut diagnostic = IoSnapshotDiagnostic::task("root-anchored-glob", task_id);
+            let mut diagnostic = IoSnapshotDiagnostic::task("invalid-glob", task_id);
             diagnostic.glob = Some(glob.clone());
             diagnostics.push(diagnostic);
             continue;
@@ -321,13 +320,6 @@ pub fn get_observed_io_snapshot_outputs(
         .filter(|(_, task)| !task.outputs.is_empty())
         .map(|(id, task)| (id, task.outputs))
         .collect()
-}
-
-/// A glob with no literal leading directory reads from the workspace root.
-fn walks_from_root(glob: &str) -> bool {
-    expand_literal_braces(glob)
-        .iter()
-        .any(|expanded| walk_root(expanded).is_empty())
 }
 
 /// Whether an observed read names exactly one path, with no glob syntax.

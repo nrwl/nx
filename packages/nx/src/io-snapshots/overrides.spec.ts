@@ -108,13 +108,13 @@ describe('buildIoSnapshotOverrides', () => {
     ]);
   });
 
-  it('withholds disabled, custom-hasher, and root-anchored tasks', () => {
+  it('withholds disabled, custom-hasher, and invalid-glob tasks', () => {
     const set = writeBundle({
       'web:lint': { commit: HEAD, inputs: [], outputs: [] },
       'web:custom': { commit: HEAD, inputs: [], outputs: [] },
       'ui:build': {
         commit: HEAD,
-        inputs: ['libs/ui/a.ts', '**/*.gen'],
+        inputs: ['libs/ui/a.ts', 'libs/./ui/*.gen'],
         outputs: [],
       },
     });
@@ -125,10 +125,10 @@ describe('buildIoSnapshotOverrides', () => {
     );
     expect(result.used).toEqual([]);
     expect(result.diagnostics.map((d) => [d.reason, d.taskId])).toEqual([
-      ['root-anchored-glob', 'ui:build'],
+      ['invalid-glob', 'ui:build'],
       ['custom-hasher', 'web:custom'],
       ['disabled', 'web:lint'],
     ]);
-    expect(result.diagnostics[0].glob).toBe('**/*.gen');
+    expect(result.diagnostics[0].glob).toBe('libs/./ui/*.gen');
   });
 });
