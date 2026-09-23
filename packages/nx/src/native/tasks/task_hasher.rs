@@ -285,9 +285,10 @@ pub struct TaskHasher {
     project_file_indices_cache: ProjectFileIndicesCache,
     // Fold over all externals; identical for every task, so computed once.
     all_externals_hash: OnceCell<String>,
-    // `includeIgnored` filesets: a path index over the file map so tracked
-    // files skip the disk, built only once a plan carries a disk-backed
-    // group. Their content lives in the context's IgnoredIndex.
+    // Disk-backed filesets (`includeIgnored` and snapshot reads): a path index
+    // over the file map so tracked files skip the disk, built only once a plan
+    // carries a disk-backed group. Their content lives in the context's
+    // IgnoredIndex.
     workspace_file_index: WorkspaceFileIndex,
 }
 #[napi]
@@ -332,7 +333,7 @@ impl TaskHasher {
     }
 
     /// Hands the index the directories the plans read from disk: the literal
-    /// prefix of every includeIgnored glob, and every declared output root.
+    /// prefix of every disk-backed glob, and every declared output root.
     /// The index remembers hashes under all of them and lists the ones
     /// something asks to list, which is the filesets and not the outputs.
     /// Anything it refuses is read from disk instead.

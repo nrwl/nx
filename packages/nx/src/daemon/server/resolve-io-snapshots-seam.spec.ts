@@ -1,8 +1,7 @@
 // A spec that stops on one side of the socket cannot see what this guards: a
 // payload field named `env` makes the server reflect it onto its whole
 // process environment before the handler ever runs, deleting every key the
-// message omits. That was a Critical, and it is only observable by driving a
-// real message through the real routing.
+// message omits. Only a real message through the real routing shows that.
 //
 // The response assertion pins the shape the client is handed, which is not
 // the same as the handler's return value: a string body is parsed by the

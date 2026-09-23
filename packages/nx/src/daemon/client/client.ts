@@ -390,8 +390,9 @@ export class DaemonClient {
 
   /**
    * Asks the daemon to fetch and store this run's I/O snapshot set. The run's
-   * env travels with the request, since the daemon's own predates it. Both
-   * processes then read the stored set back by commit.
+   * env travels with the request, since the daemon's own predates it. The
+   * daemon keeps the handle it fetched; this process reopens the version the
+   * reply names.
    */
   async resolveIoSnapshots(
     runnerOptions: any,

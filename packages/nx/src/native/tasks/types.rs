@@ -188,10 +188,10 @@ pub enum HashInstruction {
     Cwd(CwdMode),
     /// Globs filtered against one project's tracked files.
     ProjectFileSet(String, Vec<String>),
-    /// A project's `includeIgnored` globs, workspace-relative and expanded
-    /// against the disk so gitignored and generated files count. The project
-    /// is not part of it: the same globs read the same files wherever they
-    /// were declared.
+    /// Workspace-relative globs expanded against the disk, so gitignored and
+    /// generated files count: a project's `includeIgnored` globs, or a
+    /// snapshot's observed reads. The project is not part of it: the same globs
+    /// read the same files wherever they were declared.
     IgnoredFileSet(Vec<String>),
     ProjectConfiguration(String),
     TsConfiguration(String),

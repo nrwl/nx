@@ -17,8 +17,8 @@ export interface IoSnapshotEnv {
 
 /**
  * Off unless a run opts in with `NX_IO_SNAPSHOTS=true` in a workspace that uses
- * Nx Cloud, since there is nothing to fetch from otherwise. Reads the run's
- * env from `env`, never `process.env`: the daemon decides for its clients.
+ * Nx Cloud, since there is nothing to fetch from otherwise. `env` defaults to
+ * this process's; the daemon passes its client's, never its own.
  */
 export function isIoSnapshotFetchEnabled(
   nxJson: NxJsonConfiguration,

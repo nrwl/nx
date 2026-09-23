@@ -250,7 +250,6 @@ const server = createServer(async (socket) => {
 });
 registerProcessTerminationListeners();
 
-// Exported for resolve-io-snapshots-seam.spec.ts.
 export async function handleMessage(socket: Socket, data: Buffer) {
   if (workspaceWatcherError) {
     await respondWithErrorAndExit(
