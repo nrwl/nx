@@ -111,7 +111,14 @@ fn http_client() -> anyhow::Result<&'static Client> {
     Ok(CLIENT.get_or_try_init(build_http_client)?)
 }
 
+#[cfg(test)]
+static SETUP_DELAY_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
 fn build_http_client() -> reqwest::Result<Client> {
+    #[cfg(test)]
+    std::thread::sleep(Duration::from_millis(
+        SETUP_DELAY_MS.load(std::sync::atomic::Ordering::Relaxed),
+    ));
     Client::builder()
         // A dev server's self-signed certificate must not keep it from
         // counting as ready
@@ -633,19 +640,18 @@ mod tests {
             port: None,
             host: None,
             command: None,
-            timeout: 200,
+            timeout: 500,
             interval: None,
         };
+        SETUP_DELAY_MS.store(600, std::sync::atomic::Ordering::Relaxed);
         let started = Instant::now();
         assert_eq!(probe(config).wait().await.unwrap(), ProbeOutcome::TimedOut);
         let waited = started.elapsed();
-        let started = Instant::now();
-        build_http_client().unwrap();
-        let built = started.elapsed();
-        // Setup overlaps the timeout instead of adding to it
+        // Setup overlaps the timeout instead of adding to it: 600 ms plus the
+        // client build here, 500 ms more if the budget were taken first
         assert!(
-            waited < built.max(Duration::from_millis(200)) + Duration::from_millis(100),
-            "waited {waited:?} with a {built:?} client build"
+            waited < Duration::from_millis(1100),
+            "waited {waited:?} with a 600 ms client setup"
         );
     }
 }
