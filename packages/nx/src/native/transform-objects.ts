@@ -62,3 +62,21 @@ export function transformProjectGraphForRust(
     dependencies,
   };
 }
+
+/**
+ * The graph without its external nodes, for callers that read only projects.
+ * In a workspace with many packages the external nodes are most of what
+ * crosses to Rust, so dropping them is most of the transfer saved.
+ */
+export function transformProjectGraphForRustWithoutExternals(
+  graph: ProjectGraph
+): RustProjectGraph {
+  const { nodes, dependencies } = transformProjectGraphForRust(graph);
+  const projectDependencies: Record<string, string[]> = {};
+  for (const [source, targets] of Object.entries(dependencies)) {
+    if (source in nodes) {
+      projectDependencies[source] = targets.filter((target) => target in nodes);
+    }
+  }
+  return { nodes, externalNodes: {}, dependencies: projectDependencies };
+}

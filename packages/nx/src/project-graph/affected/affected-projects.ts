@@ -5,7 +5,7 @@ import { capabilitiesOfConfiguredPlugins } from '../plugins/get-plugins';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { FileChange, isDeletedFile } from '../file-utils';
 import { getTouchedProjects as getJSTouchedProjects } from '../../plugins/js/project-graph/affected/touched-projects';
-import { marshalGraph } from './marshal-graph';
+import { marshalGraphWithoutExternals } from './marshal-graph';
 
 /** Which locator marked a project touched. PR 2 deepens this into a reason. */
 export interface TouchedProject {
@@ -27,7 +27,7 @@ export async function runTouchedProjectLocators(
   projectDeletionAffectsAllProjects = true
 ): Promise<TouchedProject[]> {
   const native = await locateTouchedProjects(
-    marshalGraph(graph),
+    marshalGraphWithoutExternals(graph),
     nxJson,
     touchedFiles.map((f) => f.file),
     {
