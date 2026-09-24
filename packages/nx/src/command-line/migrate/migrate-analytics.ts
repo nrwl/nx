@@ -337,20 +337,26 @@ export function reportMigrateOrchestratorStepDispensed(opts: {
 export interface MigrateOrchestratorTallies {
   completed: number;
   skipped: number;
+  // Steps the agent gave up on: terminal, but neither completed nor skipped.
+  unresolved: number;
   dispenseCount: number;
 }
 
+/**
+ * The three step tallies and the total dispense count ride reused numeric
+ * dimensions, read conditioned on the event name.
+ */
 function orchestratorTallyParams(tallies: MigrateOrchestratorTallies) {
   return {
     [customDimensions.appliedCount]: tallies.completed,
     [customDimensions.taskCount]: tallies.skipped,
+    [customDimensions.majorsCrossed]: tallies.unresolved,
     [customDimensions.migrationCount]: tallies.dispenseCount,
   };
 }
 
 /**
- * Terminal funnel event. The two step tallies and the total dispense count
- * ride reused numeric dimensions, read conditioned on the event name.
+ * Terminal funnel event.
  */
 export function reportMigrateOrchestratorComplete(
   opts: MigrateOrchestratorTallies
@@ -379,12 +385,12 @@ export function reportMigrateOrchestratorAbandoned(
 }
 
 /**
- * The orchestrator took up an existing active run instead of creating one.
- * The start watermark hides that, so this is the only trace of how far a run
- * got before its session was restarted; every resume reports, since the state
- * cannot tell a crashed session from a re-invocation. A bare --run-id
- * reconcile is not a resume: nothing in run state marks the first call after
- * a lost session.
+ * An explicit continue (`--run-migrations --run-id`, or "continue" at the
+ * master prompt) took up an active run instead of creating one. The start
+ * watermark hides that, so this is the only trace of how far a run got before
+ * its session was restarted; every resume reports, since the state cannot tell
+ * a crashed session from a re-invocation. A bare --run-id reconcile is not a
+ * resume: nothing in run state marks the first call after a lost session.
  */
 export function reportMigrateOrchestratorResume(
   opts: MigrateOrchestratorTallies
@@ -396,19 +402,23 @@ export function reportMigrateOrchestratorResume(
 }
 
 /**
- * An invocation found an active run and started nothing. On the master path
- * this precedes the resume when the user continues; on the agent path it is
- * the only trace of a revisit. Same tallies as the resume event.
+ * An invocation found an active run and started nothing; a continue that
+ * follows reports a resume. `activity` (reused prompt-choice dimension) says
+ * whether another nx migrate process held the run at the time: a revisit of
+ * an idle run is the abandonment signal, a collision with a live one is not.
+ * 'unknown' is WASM, which holds nothing, or an unreadable activity folder.
  */
 export function reportMigrateOrchestratorExistingRun(
-  opts: MigrateOrchestratorTallies
+  opts: MigrateOrchestratorTallies & {
+    activity: 'idle' | 'held' | 'unknown';
+  }
 ): void {
   safeReport(() => {
     if (!customDimensions) return;
-    reportEvent(
-      'migrate_orchestrator_existing_run',
-      orchestratorTallyParams(opts)
-    );
+    reportEvent('migrate_orchestrator_existing_run', {
+      ...orchestratorTallyParams(opts),
+      [customDimensions.promptChoice]: opts.activity,
+    });
   });
 }
 

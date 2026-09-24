@@ -1968,6 +1968,9 @@ describe('orchestrator', () => {
           kind: 'existing-run',
           facts: { otherHolders: [4242] },
         });
+        expect(mockExistingRun).toHaveBeenCalledWith(
+          expect.objectContaining({ activity: 'held' })
+        );
         expect(() =>
           runOrchestratorResume({
             root,
@@ -2427,8 +2430,8 @@ describe('orchestrator', () => {
       expect(mockInit).not.toHaveBeenCalled();
       expect(mockExistingRun).not.toHaveBeenCalled();
       expect(mockResume.mock.calls).toEqual([
-        [{ completed: 1, skipped: 1, dispenseCount: 4 }],
-        [{ completed: 1, skipped: 1, dispenseCount: 4 }],
+        [{ completed: 1, skipped: 1, unresolved: 0, dispenseCount: 4 }],
+        [{ completed: 1, skipped: 1, unresolved: 0, dispenseCount: 4 }],
       ]);
     });
 
@@ -2458,8 +2461,24 @@ describe('orchestrator', () => {
       expect(mockInit).not.toHaveBeenCalled();
       expect(mockResume).not.toHaveBeenCalled();
       expect(mockExistingRun.mock.calls).toEqual([
-        [{ completed: 1, skipped: 1, dispenseCount: 4 }],
-        [{ completed: 1, skipped: 1, dispenseCount: 4 }],
+        [
+          {
+            completed: 1,
+            skipped: 1,
+            unresolved: 0,
+            dispenseCount: 4,
+            activity: 'idle',
+          },
+        ],
+        [
+          {
+            completed: 1,
+            skipped: 1,
+            unresolved: 0,
+            dispenseCount: 4,
+            activity: 'idle',
+          },
+        ],
       ]);
     });
 
@@ -2908,6 +2927,7 @@ describe('orchestrator', () => {
       expect(mockComplete).toHaveBeenCalledWith({
         completed: 2,
         skipped: 1,
+        unresolved: 2,
         dispenseCount: 5,
       });
     });

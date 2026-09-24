@@ -549,7 +549,13 @@ describe('runMasterSession', () => {
 
   it('exits 1 with the resume hint and the abandonment event when the run is still active', async () => {
     mockReadRunState.mockReturnValue(
-      state('active', ['succeeded', 'skipped', 'failed', 'pending'])
+      state('active', [
+        'succeeded',
+        'skipped',
+        'unresolved',
+        'failed',
+        'pending',
+      ])
     );
 
     expect(await runMasterSession(input())).toBe(1);
@@ -560,7 +566,8 @@ describe('runMasterSession', () => {
     expect(mockAbandoned).toHaveBeenCalledWith({
       completed: 1,
       skipped: 1,
-      dispenseCount: 3,
+      unresolved: 1,
+      dispenseCount: 4,
       agentUsed: 'claude-code',
     });
     expect(mockRunComplete).not.toHaveBeenCalled();
