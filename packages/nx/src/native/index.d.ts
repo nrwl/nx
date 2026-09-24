@@ -129,9 +129,9 @@ export declare class ImportResult {
 
 /**
  * One stored version of a commit's snapshot set. Handed to the hash planner as-is.
- * Entries are read from the workspace database per task as they are asked
- * for, and remembered for the handle's lifetime, so a run costs the tasks it
- * plans rather than the workspace's whole set.
+ * A fresh import holds every entry; a handle reopened from storage reads
+ * them per task as they are asked for and remembers them, so it costs the
+ * tasks it plans rather than the workspace's whole set.
  */
 export declare class IoSnapshots {
   get commit(): string
