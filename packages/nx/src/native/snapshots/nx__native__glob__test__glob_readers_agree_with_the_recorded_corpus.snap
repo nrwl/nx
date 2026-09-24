@@ -204,8 +204,8 @@ brack]/x
   prefix: Some("brack]/x")
 brace}/x
   convert: ["brace}/x"]
-  partition: ("brace}/x", None)
-  is_glob: false
+  partition: ("", Some("brace}/x"))
+  is_glob: true
   prefix: error
 paren(/x.ts
   convert: []

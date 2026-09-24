@@ -183,6 +183,8 @@ fn lex_globset(text: &str) -> Vec<GlobGroup<'_>> {
             b'?' => i + 1,
             b'[' => closing_bracket(text, i),
             b'{' => closing_brace(text, i),
+            // globset rejects a `}` that closes no group.
+            b'}' => i + 1,
             #[cfg(not(windows))]
             b'\\' => i + 1 + text[i + 1..].chars().next().map_or(0, char::len_utf8),
             _ => {
@@ -198,7 +200,7 @@ fn lex_globset(text: &str) -> Vec<GlobGroup<'_>> {
             b'*' => GlobGroup::Wildcard(raw),
             b'?' => GlobGroup::Any,
             b'[' => GlobGroup::Class(raw),
-            b'{' => GlobGroup::Alternates(raw),
+            b'{' | b'}' => GlobGroup::Alternates(raw),
             _ => GlobGroup::Escaped(raw),
         });
         i = end;
@@ -350,13 +352,14 @@ mod test {
     fn globset_syntax_is_split_from_literal_names() {
         use GlobGroup::*;
         assert_eq!(
-            segments("@scope/a+b/co,ma/pi|pe/x)]}"),
+            segments("@scope/a+b/co,ma/pi|pe/x)]/y}"),
             [
                 vec![Literal("@scope".into())],
                 vec![Literal("a+b".into())],
                 vec![Literal("co,ma".into())],
                 vec![Literal("pi|pe".into())],
-                vec![Literal("x)]}".into())],
+                vec![Literal("x)]".into())],
+                vec![Literal("y".into()), Alternates("}".into())],
             ]
         );
         assert_eq!(
