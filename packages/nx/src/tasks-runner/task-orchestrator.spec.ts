@@ -1985,6 +1985,27 @@ describe('TaskOrchestrator', () => {
         expect(markReadinessFailed).toHaveBeenCalledWith('app:serve');
       });
 
+      it('fails a shared producer with an invalid readyWhen the way an owned one fails', async () => {
+        const { orchestrator, serve } = createOrchestrator({
+          readyWhen: { port: 0 },
+        });
+        orchestrator.runningTasksService.getRunningTasks = () => ['app:serve'];
+
+        const shared = await orchestrator.startContinuousTask(serve, 1);
+
+        await expect(shared.getResults()).resolves.toMatchObject({ code: 1 });
+        expect(orchestrator.preRunSteps).toHaveBeenCalledTimes(1);
+        expect(orchestrator.handleDiscreteWorkerFailure).toHaveBeenCalledWith(
+          false,
+          serve,
+          1,
+          expect.objectContaining({
+            message:
+              'Task "app:serve" has an invalid "readyWhen": "port" must be an integer from 1 to 65535.',
+          })
+        );
+      });
+
       it('ignores a readiness row that turns ready after a shared producer exited', async () => {
         const { orchestrator, serve } = createOrchestrator({
           readyWhen: { port: 4200 },
