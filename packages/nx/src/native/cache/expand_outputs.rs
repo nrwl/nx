@@ -131,13 +131,10 @@ pub fn match_output_paths(entries: Vec<String>, paths: Vec<String>) -> anyhow::R
             } else {
                 // Match the entry itself and anything nested under it, like
                 // expand_outputs does when it includes an existing directory
-                // wholesale. This cannot be gated on contains_glob_pattern:
-                // that predicate flags `@`, `+` and `,`, which are ordinary in
-                // directory names (scoped packages), and expand_outputs only
-                // gets away with it because it then stats the path. We have no
-                // filesystem here, so we emit the containment form for every
-                // entry — for a true glob (`dist/*.js/**`) it matches nothing
-                // real and is inert.
+                // wholesale. This cannot be gated on contains_glob_pattern: a
+                // real directory can carry glob syntax (`app/[id]`), and only
+                // expand_outputs, which stats the path first, can tell. For a
+                // true glob (`dist/*.js/**`) the containment form is inert.
                 vec![
                     format!("{negation}{pattern}"),
                     format!("{negation}{pattern}/**"),
@@ -429,9 +426,7 @@ mod test {
             &["apps/web/.next", "!apps/web/.next/cache"],
         );
 
-        // Directory outputs whose *path* contains characters that
-        // contains_glob_pattern treats as glob syntax (`@` in a scoped package
-        // name, `+`, `,`). expand_outputs stats these and walks them as
+        // Directory outputs named with `@` (scoped packages) or `+` are plain
         // directories, so the static matcher must capture nested files too.
         assert_static_matches_expansion(
             &["dist/libs/@scope/pkg/index.js"],

@@ -285,6 +285,22 @@ fn negated_glob(input: &str) -> (&str, bool) {
     }
 }
 
+/// Whether `segment` names itself: the parser reads all of it, and every part
+/// is literal text. A segment the parser cuts short (NXC-5001) is not.
+pub fn is_literal_segment(segment: &str) -> bool {
+    match parse_segment(segment).finish() {
+        Ok(("", parts)) => {
+            parts.iter().all(GlobGroup::is_literal)
+                && parts
+                    .iter()
+                    .map(|part| part.to_string())
+                    .collect::<String>()
+                    == segment
+        }
+        _ => false,
+    }
+}
+
 pub fn parse_glob(input: &str) -> anyhow::Result<(bool, Vec<Vec<GlobGroup<'_>>>)> {
     let (input, negated) = negated_glob(input);
     let result = separated_segments(input).finish();

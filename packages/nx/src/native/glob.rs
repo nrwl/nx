@@ -225,20 +225,10 @@ pub fn match_glob_paths(globs: Vec<String>, paths: Vec<String>) -> anyhow::Resul
     Ok(paths.iter().map(|path| glob_set.is_match(path)).collect())
 }
 
+/// Whether an entry is read as a glob: a negation, or a pattern past its
+/// literal directory. Names like `@scope`, `a+b` and `co,ma` are literal.
 pub(crate) fn contains_glob_pattern(value: &str) -> bool {
-    value.contains('!')
-        || value.contains('?')
-        || value.contains('@')
-        || value.contains('+')
-        || value.contains('*')
-        || value.contains('|')
-        || value.contains(',')
-        || value.contains('{')
-        || value.contains('}')
-        || value.contains('[')
-        || value.contains(']')
-        || value.contains('(')
-        || value.contains(')')
+    value.starts_with('!') || partition_glob(value).1.is_some()
 }
 
 #[cfg(test)]

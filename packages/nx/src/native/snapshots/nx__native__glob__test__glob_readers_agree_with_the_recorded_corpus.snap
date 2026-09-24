@@ -140,22 +140,22 @@ vite.config.*
 dist/@scope/pkg
   convert: ["dist/@scope/pkg"]
   partition: ("dist/@scope/pkg", None)
-  is_glob: true
+  is_glob: false
   prefix: Some("dist/@scope/pkg")
 dist/libs/@scope/pkg
   convert: ["dist/libs/@scope/pkg"]
   partition: ("dist/libs/@scope/pkg", None)
-  is_glob: true
+  is_glob: false
   prefix: Some("dist/libs/@scope/pkg")
 node_modules/@scope/pkg/package.json
   convert: ["node_modules/@scope/pkg/package.json"]
   partition: ("node_modules/@scope/pkg/package.json", None)
-  is_glob: true
+  is_glob: false
   prefix: Some("node_modules/@scope/pkg/package.json")
 libs/app/@gen/schema.json
   convert: ["libs/app/@gen/schema.json"]
   partition: ("libs/app/@gen/schema.json", None)
-  is_glob: true
+  is_glob: false
   prefix: Some("libs/app/@gen/schema.json")
 a+b/**
   convert: ["a+b/**"]
@@ -165,47 +165,47 @@ a+b/**
 dist/libs/a+b
   convert: ["dist/libs/a+b"]
   partition: ("dist/libs/a+b", None)
-  is_glob: true
+  is_glob: false
   prefix: Some("dist/libs/a+b")
 libs/x/src/+state
   convert: ["libs/x/src/+state"]
   partition: ("libs/x/src/+state", None)
-  is_glob: true
+  is_glob: false
   prefix: Some("libs/x/src/+state")
 libs/src/index.+spec.ts
   convert: ["libs/src/index.+spec.ts"]
   partition: ("libs/src/index.+spec.ts", None)
-  is_glob: true
+  is_glob: false
   prefix: Some("libs/src/index.+spec.ts")
 libs/c++/x.cpp
   convert: ["libs"]
-  partition: ("libs/c++/x.cpp", None)
+  partition: ("libs", Some("c++/x.cpp"))
   is_glob: true
-  prefix: Some("libs/c++/x.cpp")
+  prefix: Some("libs")
 co,ma/x.ts
   convert: ["co,ma/x.ts"]
   partition: ("co,ma/x.ts", None)
-  is_glob: true
+  is_glob: false
   prefix: Some("co,ma/x.ts")
 pi|pe/x
   convert: ["pi|pe/x"]
   partition: ("pi|pe/x", None)
-  is_glob: true
+  is_glob: false
   prefix: Some("pi|pe/x")
 paren)/x.ts
   convert: ["paren)/x.ts"]
   partition: ("paren)/x.ts", None)
-  is_glob: true
+  is_glob: false
   prefix: Some("paren)/x.ts")
 brack]/x
   convert: ["brack]/x"]
   partition: ("brack]/x", None)
-  is_glob: true
+  is_glob: false
   prefix: Some("brack]/x")
 brace}/x
   convert: ["brace}/x"]
   partition: ("brace}/x", None)
-  is_glob: true
+  is_glob: false
   prefix: error
 paren(/x.ts
   convert: []
@@ -304,19 +304,19 @@ libs/\*/x
   prefix: Some("libs")
 libs/a\ b/x
   convert: ["libs/a\\ b/x"]
-  partition: ("libs/a\\ b/x", None)
-  is_glob: false
-  prefix: None
+  partition: ("libs", Some("a\\ b/x"))
+  is_glob: true
+  prefix: Some("libs")
 libs/f\oo/*.ts
   convert: ["libs/f\\oo/*.ts"]
-  partition: ("libs/f\\oo", Some("*.ts"))
+  partition: ("libs", Some("f\\oo/*.ts"))
   is_glob: true
-  prefix: None
+  prefix: Some("libs")
 path/to\\file.css
   convert: ["path/to\\\\file.css"]
-  partition: ("path/to\\\\file.css", None)
-  is_glob: false
-  prefix: None
+  partition: ("path", Some("to\\\\file.css"))
+  is_glob: true
+  prefix: Some("path")
 libs/prefix*(suffix)/**
   convert: ["libs/prefix*suffix/**"]
   partition: ("libs", Some("prefix*(suffix)/**"))
@@ -329,7 +329,7 @@ prefix?(suffix)
   prefix: None
 truncated/foo+/**/!(ignored).ts
   convert: ["truncated"]
-  partition: ("truncated/foo+", Some("**/!(ignored).ts"))
+  partition: ("truncated", Some("foo+/**/!(ignored).ts"))
   is_glob: true
   prefix: Some("truncated")
 libs/**/*.?spec.ts
@@ -369,7 +369,7 @@ e2e\react\**\+(*.)+(spec|test).+(ts|js)?(x)
   prefix: None
 e2e\react/**/*.spec.ts
   convert: ["e2e\\react/**/*.spec.ts"]
-  partition: ("e2e\\react", Some("**/*.spec.ts"))
+  partition: ("", Some("e2e\\react/**/*.spec.ts"))
   is_glob: true
   prefix: None
 e2e\react\!(*.test).ts
@@ -500,10 +500,10 @@ dist/app/(group)/page.js
 @nrwl/
   convert: ["@nrwl/"]
   partition: ("@nrwl", None)
-  is_glob: true
+  is_glob: false
   prefix: Some("@nrwl")
 /back\\slash
   convert: ["/back\\\\slash"]
-  partition: ("/back\\\\slash", None)
-  is_glob: false
+  partition: ("", Some("back\\\\slash"))
+  is_glob: true
   prefix: None

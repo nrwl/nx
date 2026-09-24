@@ -3,7 +3,7 @@
 //! normalization, and the conversion the engine needs.
 
 use crate::native::glob::glob_group::GlobGroup;
-use crate::native::glob::glob_parser::parse_glob;
+use crate::native::glob::glob_parser::{is_literal_segment, parse_glob};
 use itertools::Itertools;
 use std::collections::HashSet;
 
@@ -49,9 +49,9 @@ pub(crate) fn expand_literal_braces(glob: &str) -> Vec<String> {
 /// re-attached, and is `None` when the glob is literal to its end: it then
 /// names that path rather than matching under it.
 ///
-/// A segment counts as a pattern on the characters this dialect treats as
-/// syntax, which over-reads a directory literally named `paren(`: the walk
-/// starts shallower and still matches, only slower. See NXC-5001.
+/// A segment is literal when the glob parser reads it as nothing but text. One
+/// the parser cuts short, like a directory named `paren(`, counts as a pattern:
+/// the walk starts shallower and still matches, only slower. See NXC-5001.
 pub(crate) fn partition_glob(glob: &str) -> (String, Option<String>) {
     let (negated, body) = match glob.strip_prefix('!') {
         Some(body) => (true, body),
@@ -61,7 +61,7 @@ pub(crate) fn partition_glob(glob: &str) -> (String, Option<String>) {
     let mut consumed = 0;
     let mut remainder = None;
     for segment in body.split('/') {
-        if segment.contains(['*', '?', '{', '[', '(']) {
+        if !is_literal_segment(segment) {
             remainder = Some(&body[consumed..]);
             break;
         }
