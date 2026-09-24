@@ -922,7 +922,7 @@ describe('@nx/storybook:configuration', () => {
       });
 
       test.each(testCases)(
-        'should contain the correct configuration in %p',
+        'should contain the correct configuration in %j',
         (storybookConfigPath) => {
           if (tree.exists(storybookConfigPath)) {
             if (tree.exists(`${storybookConfigPath}main.ts`)) {
@@ -1895,7 +1895,7 @@ describe('@nx/storybook:configuration', () => {
       });
 
       test.each(testCases)(
-        'should contain the correct configuration in %p',
+        'should contain the correct configuration in %j',
         (storybookConfigPath) => {
           if (tree.exists(storybookConfigPath)) {
             if (tree.exists(`${storybookConfigPath}main.ts`)) {
