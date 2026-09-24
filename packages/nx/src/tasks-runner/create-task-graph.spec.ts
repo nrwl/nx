@@ -183,9 +183,9 @@ describe('createTaskGraph', () => {
     });
   });
 
-  it('should copy the target sandbox configuration onto the task', () => {
-    projectGraph.nodes['app1'].data.targets['test'].sandbox = {
-      enabled: false,
+  it('should copy the target ultracache configuration onto the task', () => {
+    projectGraph.nodes['app1'].data.targets['test'].ultracache = {
+      mode: 'off',
       ignoredReads: ['tmp/**'],
       ignoredWrites: ['scratch/**'],
     };
@@ -199,12 +199,12 @@ describe('createTaskGraph', () => {
       {}
     );
 
-    expect(taskGraph.tasks['app1:test'].sandbox).toEqual({
-      enabled: false,
+    expect(taskGraph.tasks['app1:test'].ultracache).toEqual({
+      mode: 'off',
       ignoredReads: ['tmp/**'],
       ignoredWrites: ['scratch/**'],
     });
-    expect(taskGraph.tasks['lib1:test'].sandbox).toBeUndefined();
+    expect(taskGraph.tasks['lib1:test'].ultracache).toBeUndefined();
   });
 
   it('should return tasks with outputs', () => {

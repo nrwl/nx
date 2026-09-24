@@ -1020,8 +1020,8 @@ export interface Task {
   parallelism?: boolean
   /** This denotes if the task runs continuously */
   continuous?: boolean
-  /** The target's observed-IO sandbox configuration, if declared */
-  sandbox?: TaskSandboxConfiguration
+  /** The target's ultracache configuration, if declared */
+  ultracache?: TaskUltracacheConfiguration
 }
 
 /** Graph of Tasks to be executed */
@@ -1068,39 +1068,6 @@ export interface TaskRun {
   end: number
 }
 
-/** Observed-IO sandbox configuration of a task's target */
-export interface TaskSandboxConfiguration {
-  /**
-   * Whether tasks for this target are tracked by the sandbox.
-   * Defaults to true. When false, no IO tracing is reported for the
-   * task, so no sandbox report is produced.
-   */
-  enabled?: boolean
-  /**
-   * Workspace-relative glob patterns for reads that should be excluded
-   * from sandboxing reports. The first path segment cannot contain `*`,
-   * and `?`, `!`, `[`, `]` and extglobs are not supported; anchor the
-   * pattern to a directory instead of leading with `**`.
-   */
-  ignoredReads?: Array<string>
-  /**
-   * Workspace-relative glob patterns for writes that should be excluded
-   * from sandboxing reports. The first path segment cannot contain `*`,
-   * and `?`, `!`, `[`, `]` and extglobs are not supported; anchor the
-   * pattern to a directory instead of leading with `**`.
-   */
-  ignoredWrites?: Array<string>
-  /**
-   * Whether a recorded IO snapshot backfills this target's declared inputs
-   * and outputs. Defaults to true. When false, the task hashes from its
-   * declared filesets and caches its declared outputs, even though its IO is
-   * still recorded. Reads and writes are one switch: a task whose hash came
-   * from the recording but whose cache did not would describe a state that
-   * never ran.
-   */
-  backfill?: boolean
-}
-
 export declare const enum TaskStatus {
   Success = 0,
   Failure = 1,
@@ -1121,6 +1088,26 @@ export interface TaskTarget {
   target: string
   /** The configuration of the target which the task invokes */
   configuration?: string
+}
+
+/** Ultracache configuration of a task's target */
+export interface TaskUltracacheConfiguration {
+  /** How this target's tasks participate. Defaults to `on`. */
+  mode?: 'on' | 'warn' | 'error' | 'off'
+  /**
+   * Workspace-relative glob patterns for reads that should be excluded
+   * from ultracache reports. The first path segment cannot contain `*`,
+   * and `?`, `!`, `[`, `]` and extglobs are not supported; anchor the
+   * pattern to a directory instead of leading with `**`.
+   */
+  ignoredReads?: Array<string>
+  /**
+   * Workspace-relative glob patterns for writes that should be excluded
+   * from ultracache reports. The first path segment cannot contain `*`,
+   * and `?`, `!`, `[`, `]` and extglobs are not supported; anchor the
+   * pattern to a directory instead of leading with `**`.
+   */
+  ignoredWrites?: Array<string>
 }
 
 export interface TerminalOutputRecord {
@@ -1154,6 +1141,31 @@ export interface TuiCliArgs {
 export interface TuiConfig {
   autoExit?: boolean | number | undefined
   suppressHints?: boolean
+}
+
+/**
+ * How a target's tasks participate in ultracache. Nx Cloud only: nothing in
+ * the OSS runner records or applies IO, so every mode behaves as `Off` without
+ * it.
+ */
+export declare const enum UltracacheMode {
+  /**
+   * Record IO and let the recording stand in for the target's declared
+   * inputs and outputs. The default.
+   */
+  On = 'on',
+  /**
+   * Record IO and report undeclared reads and writes, but hash and cache
+   * from what the target declared.
+   */
+  Warn = 'warn',
+  /**
+   * Reserved for failing the task on an undeclared read or write. Nothing
+   * enforces that per target yet, so it behaves as `Warn` today.
+   */
+  Error = 'error',
+  /** Record nothing, so no report is produced and nothing is applied. */
+  Off = 'off'
 }
 
 export interface UpdatedWorkspaceFiles {

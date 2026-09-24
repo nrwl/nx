@@ -367,7 +367,8 @@ impl HashPlanner {
                 // its inputs and externals are hashed here, and its own servers' in
                 // turn: its observed reads when both it and this task hash from a
                 // snapshot, else its declared inputs, so a task hashed natively
-                // (`backfill: false` included) stays native throughout. When it reads
+                // (any `ultracache.mode` but `on` included) stays native throughout.
+                // When it reads
                 // its builds' outputs, those land in this plan too, which holds the
                 // task back from the up-front batch.
                 for dep_task in collect_continuous_dependencies(&task_graph, id) {

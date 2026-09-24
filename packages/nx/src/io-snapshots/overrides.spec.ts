@@ -26,7 +26,7 @@ const projectGraph: ProjectGraph = {
       lint: {
         executor: 'nx:run-commands',
         cache: true,
-        sandbox: { enabled: false },
+        ultracache: { mode: 'off' },
       },
       custom: { executor: 'nx:run-commands', cache: true },
     }),
@@ -50,8 +50,8 @@ function task(project: string, target: string) {
     projectRoot: projectGraph.nodes[project].data.root,
     cache: true,
     parallelism: true,
-    // As createTaskGraph does: the task carries its target's sandbox config.
-    sandbox: projectGraph.nodes[project].data.targets[target]?.sandbox,
+    // As createTaskGraph does: the task carries its target's ultracache config.
+    ultracache: projectGraph.nodes[project].data.targets[target]?.ultracache,
   };
 }
 

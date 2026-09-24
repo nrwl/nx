@@ -30,13 +30,13 @@ const projectGraph: ProjectGraph = {
       lint: {
         executor: 'nx:run-commands',
         cache: true,
-        sandbox: { enabled: false },
+        ultracache: { mode: 'off' },
       },
       custom: { executor: 'nx:run-commands', cache: true },
       deploy: {
         executor: 'nx:run-commands',
         cache: true,
-        sandbox: { backfill: false },
+        ultracache: { mode: 'warn' },
       },
     }),
     ui: node('ui', 'libs/ui', {
@@ -56,8 +56,8 @@ function task(project: string, target: string, outputs: string[] = []) {
     projectRoot: projectGraph.nodes[project].data.root,
     cache: true,
     parallelism: true,
-    // As createTaskGraph does: the task carries its target's sandbox config.
-    sandbox: projectGraph.nodes[project].data.targets[target]?.sandbox,
+    // As createTaskGraph does: the task carries its target's ultracache config.
+    ultracache: projectGraph.nodes[project].data.targets[target]?.ultracache,
   };
 }
 
@@ -133,7 +133,7 @@ describe('io snapshot outputs', () => {
       'apps/web/.next/cache/**',
     ];
     expect(taskGraph.tasks['web:build'].outputs).toEqual(merged);
-    // Opted out, not backfilled, custom hasher, and absent entries stay byte-identical.
+    // Opted out, autofix off, custom hasher, and absent entries stay byte-identical.
     expect(taskGraph.tasks['web:lint'].outputs).toEqual(['reports/lint']);
     expect(taskGraph.tasks['web:deploy'].outputs).toEqual(['dist/deploy']);
     expect(taskGraph.tasks['web:custom'].outputs).toEqual([]);

@@ -6,7 +6,7 @@ use crate::native::io_snapshots::set::TaskIoSnapshot;
 use crate::native::io_snapshots::{IoSnapshotResolution, IoSnapshots};
 use crate::native::tasks::hash_planner::walk_root;
 use crate::native::tasks::hashers::{parse_group, validate_files_glob};
-use crate::native::tasks::types::{TaskGraph, TaskSandboxConfiguration};
+use crate::native::tasks::types::{TaskGraph, TaskUltracacheConfiguration, UltracacheMode};
 use xxhash_rust::xxh3::Xxh3;
 
 /// What the eligibility walk needs beyond the task graph. Custom hashers are
@@ -165,14 +165,20 @@ pub(crate) fn resolve_scoped(
         };
 
     for task_id in task_ids {
-        let sandbox = task_graph.tasks[task_id].sandbox.as_ref();
-        if sandbox.and_then(|sandbox| sandbox.enabled) == Some(false) {
-            diagnostics.push(IoSnapshotDiagnostic::task("disabled", task_id));
-            continue;
-        }
-        if sandbox.and_then(|sandbox| sandbox.backfill) == Some(false) {
-            diagnostics.push(IoSnapshotDiagnostic::task("backfill-disabled", task_id));
-            continue;
+        // `On` is the only mode that lets a recording stand in for what the
+        // target declared; `Warn` and `Error` still record, but report against
+        // the declaration rather than replacing it.
+        let ultracache = task_graph.tasks[task_id].ultracache.as_ref();
+        match ultracache.and_then(|ultracache| ultracache.mode.as_ref()) {
+            Some(UltracacheMode::Off) => {
+                diagnostics.push(IoSnapshotDiagnostic::task("disabled", task_id));
+                continue;
+            }
+            Some(UltracacheMode::Warn) | Some(UltracacheMode::Error) => {
+                diagnostics.push(IoSnapshotDiagnostic::task("autofix-disabled", task_id));
+                continue;
+            }
+            Some(UltracacheMode::On) | None => {}
         }
         if inputs.custom_hasher.contains(task_id) {
             diagnostics.push(IoSnapshotDiagnostic::task("custom-hasher", task_id));
@@ -223,7 +229,7 @@ pub(crate) fn resolve_scoped(
             SnapshotTask {
                 files,
                 outputs,
-                digest: snapshot_digest(entry, sandbox),
+                digest: snapshot_digest(entry, ultracache),
             },
         );
     }
@@ -245,24 +251,27 @@ pub fn get_io_snapshot_report(
     resolve(snapshots, &task_graph, &options.unwrap_or_default().into()).report()
 }
 
-/// The marker's digest: the entry's outputs, plus the sandbox exclusions that
-/// shape what a recording holds, so editing them re-runs the task and records
-/// it afresh. Sorted, since their order means nothing.
-fn snapshot_digest(entry: &TaskIoSnapshot, sandbox: Option<&TaskSandboxConfiguration>) -> String {
+/// The marker's digest: the entry's outputs, plus the ultracache exclusions
+/// that shape what a recording holds, so editing them re-runs the task and
+/// records it afresh. Sorted, since their order means nothing.
+fn snapshot_digest(
+    entry: &TaskIoSnapshot,
+    ultracache: Option<&TaskUltracacheConfiguration>,
+) -> String {
     let sorted = |globs: Option<&Vec<String>>| {
         let mut globs = globs.cloned().unwrap_or_default();
         globs.sort();
         globs.dedup();
         globs
     };
-    // Destructured so a new sandbox key must be placed here: one left out would
-    // never re-run a task that keeps hitting. enabled/backfill false mean no marker.
-    let (reads, writes) = match sandbox {
-        Some(TaskSandboxConfiguration {
+    // Destructured so a new ultracache key must be placed here: one left out
+    // would never re-run a task that keeps hitting. Any mode but `on` means no
+    // marker, since the task never reaches here.
+    let (reads, writes) = match ultracache {
+        Some(TaskUltracacheConfiguration {
             ignored_reads,
             ignored_writes,
-            enabled: _,
-            backfill: _,
+            mode: _,
         }) => (
             sorted(ignored_reads.as_ref()),
             sorted(ignored_writes.as_ref()),

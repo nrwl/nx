@@ -646,5 +646,6 @@ module.exports.testOnlyTransferFileMap = nativeBinding.testOnlyTransferFileMap
 module.exports.trackEvent = nativeBinding.trackEvent
 module.exports.trackPageView = nativeBinding.trackPageView
 module.exports.transferProjectGraph = nativeBinding.transferProjectGraph
+module.exports.UltracacheMode = nativeBinding.UltracacheMode
 module.exports.validateOutputs = nativeBinding.validateOutputs
 module.exports.WorkspaceErrors = nativeBinding.WorkspaceErrors

@@ -165,7 +165,7 @@ Nx reads a symlinked file where it points, even outside the workspace, so a `dis
 
 In CI with [`NX_IO_SNAPSHOTS`](/docs/reference/environment-variables) set, Nx can hash a task from the files it read on a recorded run.
 Those reads replace its declared filesets, `includeIgnored` ones included, so a matching file the recorded run didn't read doesn't change the hash.
-To keep a target's declared inputs authoritative, set [`sandbox.backfill: false`](/docs/reference/project-configuration#sandbox) on it.
+To keep a target's declared inputs authoritative, set [`ultracache.mode: "warn"`](/docs/reference/project-configuration#ultracache) on it.
 
 ### JSON files
 
