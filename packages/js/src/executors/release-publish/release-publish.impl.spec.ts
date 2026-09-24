@@ -113,9 +113,16 @@ describe('release-publish executor', () => {
       });
     }
 
+    // With no `packageManager` field at the workspace root, resolving pnpm's
+    // flags runs `pnpm --version`; answer it before the publish call.
+    function mockPnpmVersion() {
+      mockExecSync.mockReturnValueOnce('10.0.0' as any);
+    }
+
     it('should skip publishing when pnpm reports that the version was previously published', async () => {
       mockDetectPackageManager.mockReturnValue('pnpm');
       mockNpmViewNotFound();
+      mockPnpmVersion();
       mockExecSync.mockImplementationOnce(() => {
         const error: any = new Error('pnpm publish failed');
         error.stdout = Buffer.from(
@@ -143,6 +150,7 @@ describe('release-publish executor', () => {
     it('should skip publishing when raw publish output says the version was previously published', async () => {
       mockDetectPackageManager.mockReturnValue('pnpm');
       mockNpmViewNotFound();
+      mockPnpmVersion();
       mockExecSync.mockImplementationOnce(() => {
         const error: any = new Error('pnpm publish failed');
         error.stdout = Buffer.from('not json');
@@ -164,6 +172,7 @@ describe('release-publish executor', () => {
     it('should fail when pnpm publish returns a generic 403 error', async () => {
       mockDetectPackageManager.mockReturnValue('pnpm');
       mockNpmViewNotFound();
+      mockPnpmVersion();
       mockExecSync.mockImplementationOnce(() => {
         const error: any = new Error('pnpm publish failed');
         error.stdout = Buffer.from(
