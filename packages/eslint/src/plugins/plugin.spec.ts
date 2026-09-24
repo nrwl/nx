@@ -8,24 +8,22 @@ import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createNodesV2, EslintPluginOptions } from './plugin';
 import { mkdirSync, rmSync } from 'fs';
 
-jest.mock('@nx/devkit/internal', () => {
-  const actual = jest.requireActual('@nx/devkit/internal');
+vi.mock('@nx/devkit/internal', async () => {
+  const actual = await vi.importActual<any>('@nx/devkit/internal');
   return {
     ...actual,
-    calculateHashesForCreateNodes: jest.fn(
-      actual.calculateHashesForCreateNodes
-    ),
-    globWithWorkspaceContext: jest.fn(actual.globWithWorkspaceContext),
+    calculateHashesForCreateNodes: vi.fn(actual.calculateHashesForCreateNodes),
+    globWithWorkspaceContext: vi.fn(actual.globWithWorkspaceContext),
   };
 });
 
-jest.mock('nx/src/utils/cache-directory', () => ({
-  ...jest.requireActual('nx/src/utils/cache-directory'),
+vi.mock('nx/src/utils/cache-directory', async () => ({
+  ...(await vi.importActual<any>('nx/src/utils/cache-directory')),
   workspaceDataDirectory: 'tmp/project-graph-cache',
 }));
 
-const resolveESLintClassSpy = jest.fn();
-jest.mock('../utils/resolve-eslint-class', () => ({
+const resolveESLintClassSpy = vi.fn();
+vi.mock('../utils/resolve-eslint-class', () => ({
   resolveESLintClass: (...args) => {
     resolveESLintClassSpy(...args);
     return jest
@@ -62,10 +60,10 @@ describe('@nx/eslint/plugin', () => {
   });
 
   afterEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     resolveESLintClassSpy.mockClear();
-    jest.mocked(calculateHashesForCreateNodes).mockClear();
-    jest.mocked(globWithWorkspaceContext).mockClear();
+    vi.mocked(calculateHashesForCreateNodes).mockClear();
+    vi.mocked(globWithWorkspaceContext).mockClear();
     tempFs.cleanup();
     tempFs = null;
     rmSync('tmp/project-graph-cache', { recursive: true, force: true });
@@ -74,12 +72,10 @@ describe('@nx/eslint/plugin', () => {
   describe('config hash inputs', () => {
     async function captureInputs(files: string[]) {
       const captured = new Error('Hash inputs captured');
-      jest.mocked(globWithWorkspaceContext).mockResolvedValueOnce([]);
-      jest
-        .mocked(calculateHashesForCreateNodes)
-        .mockRejectedValueOnce(captured);
+      vi.mocked(globWithWorkspaceContext).mockResolvedValueOnce([]);
+      vi.mocked(calculateHashesForCreateNodes).mockRejectedValueOnce(captured);
       await expect(createNodesV2[1](files, {}, context)).rejects.toBe(captured);
-      const [roots, , , inputs] = jest
+      const [roots, , , inputs] = vi
         .mocked(calculateHashesForCreateNodes)
         .mock.calls.at(-1);
       return Object.fromEntries(
