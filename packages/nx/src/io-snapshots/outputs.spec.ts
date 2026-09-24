@@ -33,6 +33,11 @@ const projectGraph: ProjectGraph = {
         sandbox: { enabled: false },
       },
       custom: { executor: 'nx:run-commands', cache: true },
+      deploy: {
+        executor: 'nx:run-commands',
+        cache: true,
+        sandbox: { backfill: false },
+      },
     }),
     ui: node('ui', 'libs/ui', {
       build: { executor: 'nx:run-commands', cache: true },
@@ -108,6 +113,7 @@ describe('io snapshot outputs', () => {
       task('web', 'build', ['dist/apps/web', '!dist/apps/web/*.map']),
       task('web', 'lint', ['reports/lint']),
       task('web', 'custom', []),
+      task('web', 'deploy', ['dist/deploy']),
       task('ui', 'build', ['dist/libs/ui']),
     ]);
     const snapshots = snapshotsFor({
@@ -116,6 +122,7 @@ describe('io snapshot outputs', () => {
       },
       'web:lint': { outputs: ['reports/lint-observed'] },
       'web:custom': { outputs: ['dist/custom'] },
+      'web:deploy': { outputs: ['dist/deploy-observed'] },
     });
 
     applyIoSnapshotOutputs(projectGraph, taskGraph, snapshots);
@@ -126,8 +133,9 @@ describe('io snapshot outputs', () => {
       'apps/web/.next/cache/**',
     ];
     expect(taskGraph.tasks['web:build'].outputs).toEqual(merged);
-    // Opted out, custom hasher, and absent entries stay byte-identical.
+    // Opted out, not backfilled, custom hasher, and absent entries stay byte-identical.
     expect(taskGraph.tasks['web:lint'].outputs).toEqual(['reports/lint']);
+    expect(taskGraph.tasks['web:deploy'].outputs).toEqual(['dist/deploy']);
     expect(taskGraph.tasks['web:custom'].outputs).toEqual([]);
     expect(taskGraph.tasks['ui:build'].outputs).toEqual(['dist/libs/ui']);
 

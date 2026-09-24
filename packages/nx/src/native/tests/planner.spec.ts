@@ -2394,23 +2394,29 @@ describe('task planner', () => {
       ).toEqual(plain);
     });
 
-    it('withholds the snapshot from a task that opted out', () => {
-      const { planner, taskGraph } = fixture();
-      // Read off the task, where the task graph resolved target defaults.
-      taskGraph.tasks['parent:build'].sandbox = { enabled: false };
-      const snapshots = snapshotsFor({
-        'parent:build': { inputs: ['libs/parent/filea.ts'] },
-      });
-      const plain = planner.getPlans(['parent:build'], taskGraph);
-      expect(planner.getPlans(['parent:build'], taskGraph, snapshots)).toEqual(
-        plain
-      );
-      expect(
-        getIoSnapshotReport(snapshots, taskGraph).diagnostics
-      ).toContainEqual(
-        expect.objectContaining({ reason: 'disabled', taskId: 'parent:build' })
-      );
-    });
+    it.each([
+      [{ enabled: false }, 'disabled'],
+      [{ backfill: false }, 'backfill-disabled'],
+    ])(
+      'withholds the snapshot from a task whose sandbox is %j',
+      (sandbox, reason) => {
+        const { planner, taskGraph } = fixture();
+        // Read off the task, where the task graph resolved target defaults.
+        taskGraph.tasks['parent:build'].sandbox = sandbox;
+        const snapshots = snapshotsFor({
+          'parent:build': { inputs: ['libs/parent/filea.ts'] },
+        });
+        const plain = planner.getPlans(['parent:build'], taskGraph);
+        expect(
+          planner.getPlans(['parent:build'], taskGraph, snapshots)
+        ).toEqual(plain);
+        expect(
+          getIoSnapshotReport(snapshots, taskGraph).diagnostics
+        ).toContainEqual(
+          expect.objectContaining({ reason, taskId: 'parent:build' })
+        );
+      }
+    );
 
     it('hashes a snapshot glob that reads from the workspace root', () => {
       const { planner, taskGraph } = fixture();

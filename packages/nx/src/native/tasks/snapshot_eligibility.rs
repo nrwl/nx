@@ -169,6 +169,10 @@ pub(crate) fn resolve_scoped(
             diagnostics.push(IoSnapshotDiagnostic::task("disabled", task_id));
             continue;
         }
+        if sandbox.and_then(|sandbox| sandbox.backfill) == Some(false) {
+            diagnostics.push(IoSnapshotDiagnostic::task("backfill-disabled", task_id));
+            continue;
+        }
         if inputs.custom_hasher.contains(task_id) {
             diagnostics.push(IoSnapshotDiagnostic::task("custom-hasher", task_id));
             continue;

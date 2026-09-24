@@ -52,6 +52,8 @@ function describeDiagnostic(d: IoSnapshotDiagnostic): string {
       return `unreadable snapshot set: ${d.message}`;
     case 'disabled':
       return `${d.taskId}: sandbox.enabled is false`;
+    case 'backfill-disabled':
+      return `${d.taskId}: sandbox.backfill is false`;
     case 'custom-hasher':
       return `${d.taskId}: uses a custom hasher`;
     case 'missing':
