@@ -9,6 +9,8 @@ topics:
 When Nx [computes the hash for a given operation](/docs/concepts/how-caching-works), it takes into account the `inputs` of the target.
 The `inputs` are a list of file sets, runtime inputs, and environment variables that affect the output of the target.
 If any of the `inputs` change, the cache is invalidated and the target is re-run.
+In CI with [`NX_IO_SNAPSHOTS`](/docs/reference/environment-variables) set, Nx can hash a task from the files it read on a recorded run instead of its declared file sets, so a change to a declared file that run didn't read doesn't re-run it.
+Set [`sandbox.backfill: false`](/docs/reference/project-configuration#sandbox) on a target to keep its declared inputs authoritative.
 
 Nx errs on the side of caution when using inputs. Ideally, the "perfect" configuration of inputs will allow Nx to never re-run something when it does not need to. In practice though, it is better to play it safe and include more than strictly necessary in the inputs of a task. Forgetting to consider something during computation hash calculation may lead to negative consequences for end users. Start safe and fine-tune your inputs when there are clear opportunities to improve the cache hit rate.
 

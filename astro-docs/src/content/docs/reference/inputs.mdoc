@@ -163,6 +163,10 @@ A glob never walks into `node_modules`, `.git`, `.nx/cache`, `.nx/workspace-data
 It also skips the timestamp files Vite and Vitest write beside their config, such as `vite.config.ts.timestamp-1700000000000.mjs`.
 Nx reads a symlinked file where it points, even outside the workspace, so a `dist` linked into a build cache is hashed. A glob doesn't walk into a symlinked directory unless it names that directory. A glob that climbs out with `..`, or names an absolute path, is a configuration error.
 
+In CI with [`NX_IO_SNAPSHOTS`](/docs/reference/environment-variables) set, Nx can hash a task from the files it read on a recorded run.
+Those reads replace its declared filesets, `includeIgnored` ones included, so a matching file the recorded run didn't read doesn't change the hash.
+To keep a target's declared inputs authoritative, set [`sandbox.backfill: false`](/docs/reference/project-configuration#sandbox) on it.
+
 ### JSON files
 
 Configuration files such as `package.json` or `tsconfig.base.json` hold fields that are irrelevant to most tasks. Nx can hash a subset of a JSON file so that edits to the remaining fields do not invalidate the cache. JSON inputs are defined like this:
