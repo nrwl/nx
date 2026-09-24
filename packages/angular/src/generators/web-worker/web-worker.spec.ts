@@ -5,6 +5,7 @@ import type { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { generateTestApplication } from '../utils/testing';
 import { webWorkerGenerator } from './web-worker';
+import * as devkitModule from '@nx/devkit';
 
 describe('webWorker generator', () => {
   let tree: Tree;
@@ -60,7 +61,6 @@ describe('webWorker generator', () => {
     let formatFilesSpy: MockInstance;
 
     beforeEach(() => {
-      const devkitModule = require('@nx/devkit');
       formatFilesSpy = vi
         .spyOn(devkitModule, 'formatFiles')
         .mockImplementation(() => Promise.resolve());

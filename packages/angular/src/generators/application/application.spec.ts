@@ -635,8 +635,7 @@ describe('app', () => {
     let formatFilesSpy: MockInstance;
 
     beforeEach(() => {
-      const devkitModule = require('@nx/devkit');
-      formatFilesSpy = vi.spyOn(devkitModule, 'formatFiles');
+      formatFilesSpy = vi.spyOn(devkit, 'formatFiles');
     });
 
     afterAll(() => {

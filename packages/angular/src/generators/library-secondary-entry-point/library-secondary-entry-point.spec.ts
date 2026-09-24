@@ -12,6 +12,7 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { generateTestLibrary } from '../utils/testing';
 import { librarySecondaryEntryPointGenerator } from './library-secondary-entry-point';
+import * as devkitModule from '@nx/devkit';
 
 describe('librarySecondaryEntryPoint generator', () => {
   let tree: Tree;
@@ -272,7 +273,6 @@ describe('librarySecondaryEntryPoint generator', () => {
     let formatFilesSpy: MockInstance;
 
     beforeEach(() => {
-      const devkitModule = require('@nx/devkit');
       formatFilesSpy = vi
         .spyOn(devkitModule, 'formatFiles')
         .mockImplementation(() => Promise.resolve());
