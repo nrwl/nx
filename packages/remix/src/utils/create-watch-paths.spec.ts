@@ -1,3 +1,4 @@
+import * as devkit from '@nx/devkit';
 import { joinPathFragments, workspaceRoot } from '@nx/devkit';
 import {
   createWatchPaths,
@@ -7,10 +8,7 @@ import {
 describe('createWatchPaths', () => {
   it('should list root paths of dependencies relative to project root', async () => {
     // This test is written based on the Nx repo's project graph.
-    vi.spyOn(
-      require('@nx/devkit'),
-      'createProjectGraphAsync'
-    ).mockResolvedValue({
+    vi.spyOn(devkit, 'createProjectGraphAsync').mockResolvedValue({
       nodes: {
         parent: {
           type: 'app',
