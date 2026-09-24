@@ -23,14 +23,15 @@ vi.mock('nx/src/utils/cache-directory', async () => ({
 }));
 
 const resolveESLintClassSpy = vi.fn();
-vi.mock('../utils/resolve-eslint-class', () => ({
-  resolveESLintClass: (...args) => {
-    resolveESLintClassSpy(...args);
-    return jest
-      .requireActual('../utils/resolve-eslint-class')
-      .resolveESLintClass(...args);
-  },
-}));
+vi.mock('../utils/resolve-eslint-class', async () => {
+  const actual = await vi.importActual<any>('../utils/resolve-eslint-class');
+  return {
+    resolveESLintClass: (...args) => {
+      resolveESLintClassSpy(...args);
+      return actual.resolveESLintClass(...args);
+    },
+  };
+});
 
 describe('@nx/eslint/plugin', () => {
   let context: CreateNodesContext;

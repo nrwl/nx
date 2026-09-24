@@ -39,11 +39,12 @@ const VALID_ESLINT_VERSION = '8.0';
 let mockReports: any[] = [{ results: [], usedDeprecatedRules: [] }];
 const mockLintFiles = vi.fn().mockImplementation(() => mockReports);
 
+const { ESLint: actualESLint } = await vi.importActual<any>('eslint');
+
 class MockESLint {
   static version = VALID_ESLINT_VERSION;
   static outputFixes = mockOutputFixes;
-  static getErrorResults =
-    await vi.importActual<any>('eslint').ESLint.getErrorResults;
+  static getErrorResults = actualESLint.getErrorResults;
   loadFormatter = mockLoadFormatter;
   isPathIgnored = mockIsPathIgnored;
   lintFiles = mockLintFiles;
