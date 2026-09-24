@@ -192,6 +192,9 @@
   },
   "typesVersions": {
     "*": {
+      "nx-cloud-internals": [
+        "dist/nx-cloud-internals.d.ts"
+      ],
       "bin/*": [
         "dist/bin/*.d.ts"
       ],
