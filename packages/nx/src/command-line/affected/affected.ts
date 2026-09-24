@@ -18,6 +18,7 @@ import { projectHasTarget } from '../../utils/project-graph-utils';
 import { filterAffected } from '../../project-graph/affected/affected-project-graph';
 import { TargetDependencyConfig } from '../../config/workspace-json-project-json';
 import { readNxJson } from '../../config/configuration';
+import type { NxJsonConfiguration } from '../../config/nx-json';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { generateGraph } from '../graph/graph';
 import { computeAffectedTasks } from '../../project-graph/affected/affected-tasks';
@@ -65,57 +66,18 @@ export async function affected(
     command === 'affected' &&
     !!nxArgs.targets?.length;
 
-  // Above the try, so a bad --base or a project-graph error reaches
-  // handleErrors with its own title in either mode. Only planning runs inside
-  // it, since it throws on an externalDependencies entry naming no external node.
-  let taskSelection: TaskSelection | undefined;
-  let projects: ProjectGraphProjectNode[] = [];
-  let touchedFiles: ReturnType<typeof calculateFileChanges> = [];
-  if (useTasks) {
-    touchedFiles = calculateFileChanges(parseFiles(nxArgs).files, nxArgs);
-  } else {
-    projects = await getAffectedGraphNodes(nxArgs, projectGraph);
-  }
-
-  try {
-    if (useTasks) {
-      const affectedTasks = await computeAffectedTasks({
+  const { projects, taskSelection } = useTasks
+    ? await getAffectedTasks(
+        nxArgs,
         projectGraph,
         nxJson,
-        targets: nxArgs.targets,
-        touchedFiles,
-        configuration: nxArgs.configuration,
         overrides,
         extraTargetDependencies,
-        excludeTaskDependencies: extraOptions.excludeTaskDependencies,
-      });
-      taskSelection = {
-        taskIds: [...affectedTasks.affectedTaskIds],
-        planningContext: affectedTasks.planningContext,
-      };
-      // --exclude is honoured in getAffectedGraphNodes, which this branch does
-      // not call. Dropping it would restart a project someone deliberately took
-      // out of the pipeline.
-      if (nxArgs.exclude?.length) {
-        const excluded = new Set(
-          findMatchingProjects(nxArgs.exclude, projectGraph.nodes)
-        );
-        taskSelection.taskIds = taskSelection.taskIds.filter(
-          (id) =>
-            !excluded.has(affectedTasks.taskGraph.tasks[id].target.project)
-        );
-      }
+        extraOptions.excludeTaskDependencies
+      )
+    : { projects: await getAffectedGraphNodes(nxArgs, projectGraph) };
 
-      // runCommand still seeds the graph from projects; the prune is what narrows
-      // it back down to the selected tasks and their dependencies.
-      const owning = new Set(
-        taskSelection.taskIds.map(
-          (id) => affectedTasks.taskGraph.tasks[id].target.project
-        )
-      );
-      projects = [...owning].map((name) => projectGraph.nodes[name]);
-    }
-
+  try {
     switch (command) {
       case 'affected': {
         const projectsWithTarget = allProjectsWithTarget(projects, nxArgs);
@@ -175,17 +137,56 @@ export async function getAffectedGraphNodes(
         calculateFileChanges(parseFiles(nxArgs).files, nxArgs)
       );
 
-  if (nxArgs.exclude) {
-    const excludedProjects = new Set(
-      findMatchingProjects(nxArgs.exclude, affectedGraph.nodes)
-    );
+  const excluded = excludedProjects(nxArgs, affectedGraph.nodes);
+  return Object.entries(affectedGraph.nodes)
+    .filter(([projectName]) => !excluded.has(projectName))
+    .map(([, project]) => project);
+}
 
-    return Object.entries(affectedGraph.nodes)
-      .filter(([projectName]) => !excludedProjects.has(projectName))
-      .map(([, project]) => project);
-  }
+async function getAffectedTasks(
+  nxArgs: NxArgs,
+  projectGraph: ProjectGraph,
+  nxJson: NxJsonConfiguration,
+  overrides: Record<string, unknown>,
+  extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
+  excludeTaskDependencies: boolean
+): Promise<{
+  projects: ProjectGraphProjectNode[];
+  taskSelection: TaskSelection;
+}> {
+  const { affectedTaskIds, taskGraph, planningContext } =
+    await computeAffectedTasks({
+      projectGraph,
+      nxJson,
+      targets: nxArgs.targets,
+      touchedFiles: calculateFileChanges(parseFiles(nxArgs).files, nxArgs),
+      configuration: nxArgs.configuration,
+      overrides,
+      extraTargetDependencies,
+      excludeTaskDependencies,
+    });
+  const excluded = excludedProjects(nxArgs, projectGraph.nodes);
+  const taskIds = [...affectedTaskIds].filter(
+    (id) => !excluded.has(taskGraph.tasks[id].target.project)
+  );
+  // runCommand still seeds the graph from projects; the prune is what narrows
+  // it back down to the selected tasks and their dependencies.
+  const owning = new Set(
+    taskIds.map((id) => taskGraph.tasks[id].target.project)
+  );
+  return {
+    projects: [...owning].map((name) => projectGraph.nodes[name]),
+    taskSelection: { taskIds, planningContext },
+  };
+}
 
-  return Object.values(affectedGraph.nodes);
+function excludedProjects(
+  nxArgs: NxArgs,
+  nodes: Record<string, ProjectGraphProjectNode>
+): Set<string> {
+  return new Set(
+    nxArgs.exclude ? findMatchingProjects(nxArgs.exclude, nodes) : []
+  );
 }
 
 function allProjectsWithTarget(
