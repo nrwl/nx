@@ -35,7 +35,11 @@ import initGenerator from '../init/init';
 import { VitestGeneratorSchema } from './schema';
 import { detectUiFramework } from '../../utils/detect-ui-framework';
 import { getInstalledViteMajorVersion } from '../../utils/version-utils';
-import { getInstalledVitestMajorVersion, versions } from '../../utils/versions';
+import {
+  analogVitestAngular,
+  getInstalledVitestMajorVersion,
+  versions,
+} from '../../utils/versions';
 import { assertSupportedVitestVersion } from '../../utils/assert-supported-vitest-version';
 import { clean, coerce, major } from 'semver';
 import type {
@@ -130,12 +134,28 @@ export async function configurationGeneratorInternal(
 
   tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
 
+  // Written before init so version selection sees it: analog peers vitest 4,
+  // and init is what picks the vitest version.
+  if (uiFramework === 'angular' && !schema.skipPackageJson) {
+    tasks.push(
+      addDependenciesToPackageJson(
+        tree,
+        {},
+        {
+          '@analogjs/vitest-angular': analogVitestAngular,
+          '@analogjs/vite-plugin-angular': analogVitestAngular,
+        },
+        undefined,
+        true
+      )
+    );
+  }
+
   const initTask = await initGenerator(tree, {
     skipFormat: true,
     addPlugin: schema.addPlugin,
     projectRoot: root,
     viteVersion: schema.viteVersion,
-    uiFramework,
     skipPackageJson: schema.skipPackageJson,
     keepExistingVersions: true,
   });
@@ -287,8 +307,7 @@ getTestBed().initTestEnvironment(
 
   const devDependencies = await getCoverageProviderDependency(
     tree,
-    schema.coverageProvider,
-    uiFramework
+    schema.coverageProvider
   );
   devDependencies['@types/node'] = typesNodeVersion;
 
@@ -554,13 +573,10 @@ function createFiles(
 
 function getCoverageProviderDependency(
   tree: Tree,
-  coverageProvider: VitestGeneratorSchema['coverageProvider'],
-  uiFramework?: 'angular' | 'react' | 'vue' | 'none'
+  coverageProvider: VitestGeneratorSchema['coverageProvider']
 ): Record<string, string> {
-  const { vitestCoverageV8Version, vitestCoverageIstanbulVersion } = versions(
-    tree,
-    { uiFramework }
-  );
+  const { vitestCoverageV8Version, vitestCoverageIstanbulVersion } =
+    versions(tree);
   switch (coverageProvider) {
     case 'v8':
       return {

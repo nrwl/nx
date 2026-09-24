@@ -71,25 +71,11 @@ describe('versions', () => {
     expect(versions(tree).vitestVersion).toBe('^4.0.0');
   });
 
-  // The configuration generator adds analog in the same pass, so at selection
-  // time it is not in package.json yet and only the framework says it is coming.
-  it('should cap at vitest 4 for angular before analog reaches package.json', () => {
+  it('should cap the coverage provider alongside vitest', () => {
     setDevDependency('vite', '^8.0.0');
+    setDevDependency('@analogjs/vitest-angular', '~2.6.4');
 
-    expect(versions(tree, { uiFramework: 'angular' }).vitestVersion).toBe(
-      '^4.0.0'
-    );
-    expect(
-      versions(tree, { uiFramework: 'angular' }).vitestCoverageV8Version
-    ).toBe('^4.0.0');
-  });
-
-  it('should not cap for a framework that has no such constraint', () => {
-    setDevDependency('vite', '^8.0.0');
-
-    expect(versions(tree, { uiFramework: 'react' }).vitestVersion).toBe(
-      vitestVersion
-    );
+    expect(versions(tree).vitestCoverageV8Version).toBe('^4.0.0');
   });
 
   it('should honor a vite range that is not in package.json yet', () => {
@@ -118,23 +104,21 @@ describe('versions', () => {
     expect(versions(tree).vitestVersion).toBe('^4.0.0');
   });
 
-  // Vitest 4 needs vite >= 6, so the angular cap has to intersect the floor
-  // rather than short-circuit to 4.
-  it('should intersect the framework cap with the vite floor', () => {
+  // Vitest 4 needs vite >= 6, so the peer cap has to intersect the floor rather
+  // than short-circuit to 4.
+  it('should intersect the peer cap with the vite floor', () => {
     setDevDependency('vite', '^5.0.0');
+    setDevDependency('@angular/build', '^22.1.2');
 
-    expect(versions(tree, { uiFramework: 'angular' }).vitestVersion).toBe(
-      '^3.0.0'
-    );
+    expect(versions(tree).vitestVersion).toBe('^3.0.0');
   });
 
-  it('should refuse to pair an installed vitest 5 with angular', () => {
+  it('should refuse an installed vitest the workspace peers cannot take', () => {
     setDevDependency('vite', '^8.0.0');
     setDevDependency('vitest', '~5.0.1');
+    setDevDependency('@angular/build', '^22.1.2');
 
-    expect(() => versions(tree, { uiFramework: 'angular' })).toThrow(
-      /not compatible with Angular/
-    );
+    expect(() => versions(tree)).toThrow(/not compatible with this workspace/);
   });
 
   it.each(['^6.4.0', '^7.0.0', '^8.0.0'])(
