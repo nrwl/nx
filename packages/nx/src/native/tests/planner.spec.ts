@@ -16,7 +16,7 @@ import {
 import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
 import { ProjectGraphBuilder } from '../../project-graph/project-graph-builder';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
-import { transformProjectGraphForRust } from '../transform-objects';
+import { toRustProjectGraph } from '../transform-objects';
 import { DependencyType } from '../../config/project-graph';
 
 let tempFs = new TempFs('task-planner');
@@ -105,9 +105,7 @@ describe('task planner', () => {
 
       let nxJson = {} as any;
 
-      const ref = transferProjectGraph(
-        transformProjectGraphForRust(projectGraph)
-      );
+      const ref = transferProjectGraph(toRustProjectGraph(projectGraph));
       const planner = new HashPlanner(nxJson as any, ref);
 
       const plans = planner.getPlans(['parent:build'], taskGraph);
@@ -157,9 +155,7 @@ describe('task planner', () => {
         {},
         false
       );
-      const ref = transferProjectGraph(
-        transformProjectGraphForRust(projectGraph)
-      );
+      const ref = transferProjectGraph(toRustProjectGraph(projectGraph));
       return new HashPlanner({} as any, ref).getPlans(
         ['parent:build'],
         taskGraph
@@ -260,9 +256,7 @@ describe('task planner', () => {
         {},
         false
       );
-      const ref = transferProjectGraph(
-        transformProjectGraphForRust(projectGraph)
-      );
+      const ref = transferProjectGraph(toRustProjectGraph(projectGraph));
       return (order: string[]) =>
         new HashPlanner({} as any, ref).getPlans(order, taskGraph);
     }
@@ -302,9 +296,7 @@ describe('task planner', () => {
         {},
         false
       );
-      const ref = transferProjectGraph(
-        transformProjectGraphForRust(projectGraph)
-      );
+      const ref = transferProjectGraph(toRustProjectGraph(projectGraph));
       return new HashPlanner({} as any, ref).getPlans(['a:build'], taskGraph);
     }
 
@@ -385,9 +377,7 @@ describe('task planner', () => {
         {},
         false
       );
-      const ref = transferProjectGraph(
-        transformProjectGraphForRust(projectGraph)
-      );
+      const ref = transferProjectGraph(toRustProjectGraph(projectGraph));
       const plans = new HashPlanner({} as any, ref).getPlans(
         ['a:build'],
         taskGraph
@@ -569,7 +559,7 @@ describe('task planner', () => {
     let nxJson = {} as any;
     const planner = new HashPlanner(
       nxJson as any,
-      transferProjectGraph(transformProjectGraphForRust(projectGraph))
+      transferProjectGraph(toRustProjectGraph(projectGraph))
     );
     const plans = planner.getPlans(['parent:build'], taskGraph);
 
@@ -633,7 +623,7 @@ describe('task planner', () => {
     } as any;
     const planner = new HashPlanner(
       nxJson as any,
-      transferProjectGraph(transformProjectGraphForRust(projectGraph))
+      transferProjectGraph(toRustProjectGraph(projectGraph))
     );
     const plans = planner.getPlans(['parent:build'], taskGraph);
 
@@ -705,7 +695,7 @@ describe('task planner', () => {
 
       const planner = new HashPlanner(
         nxJson,
-        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+        transferProjectGraph(toRustProjectGraph(projectGraph))
       );
       const plans = planner.getPlans(['parent:e2e'], taskGraph);
 
@@ -782,7 +772,7 @@ describe('task planner', () => {
 
     const planner = new HashPlanner(
       nxJson,
-      transferProjectGraph(transformProjectGraphForRust(projectGraph))
+      transferProjectGraph(toRustProjectGraph(projectGraph))
     );
     const plans = planner.getPlans(['parent:e2e'], taskGraph);
 
@@ -852,7 +842,7 @@ describe('task planner', () => {
 
     const planner = new HashPlanner(
       nxJson,
-      transferProjectGraph(transformProjectGraphForRust(projectGraph))
+      transferProjectGraph(toRustProjectGraph(projectGraph))
     );
     const plans = planner.getPlans(['parent:e2e'], taskGraph);
 
@@ -907,7 +897,7 @@ describe('task planner', () => {
     } as any;
     const planner = new HashPlanner(
       nxJson as any,
-      transferProjectGraph(transformProjectGraphForRust(projectGraph))
+      transferProjectGraph(toRustProjectGraph(projectGraph))
     );
     const taskIds = Object.keys(taskGraph.tasks);
 
@@ -982,7 +972,7 @@ describe('task planner', () => {
 
         const planner = new HashPlanner(
           nxJson as any,
-          transferProjectGraph(transformProjectGraphForRust(projectGraph))
+          transferProjectGraph(toRustProjectGraph(projectGraph))
         );
         const taskIds = Object.keys(taskGraph.tasks);
 
@@ -1052,7 +1042,7 @@ describe('task planner', () => {
 
     const planner = new HashPlanner(
       nxJson as any,
-      transferProjectGraph(transformProjectGraphForRust(projectGraph))
+      transferProjectGraph(toRustProjectGraph(projectGraph))
     );
     const taskIds = Object.keys(taskGraph.tasks);
 
@@ -1096,7 +1086,7 @@ describe('task planner', () => {
     let nxJson = {} as any;
     const planner = new HashPlanner(
       nxJson as any,
-      transferProjectGraph(transformProjectGraphForRust(projectGraph))
+      transferProjectGraph(toRustProjectGraph(projectGraph))
     );
     const taskIds = Object.keys(taskGraph.tasks);
 
@@ -1146,7 +1136,7 @@ describe('task planner', () => {
     let nxJson = {} as any;
     const planner = new HashPlanner(
       nxJson,
-      transferProjectGraph(transformProjectGraphForRust(projectGraph))
+      transferProjectGraph(toRustProjectGraph(projectGraph))
     );
     const taskIds = Object.keys(taskGraph.tasks);
 
@@ -1186,9 +1176,7 @@ describe('task planner', () => {
       {}
     );
     let nxJson = {} as any;
-    const transformed = transferProjectGraph(
-      transformProjectGraphForRust(projectGraph)
-    );
+    const transformed = transferProjectGraph(toRustProjectGraph(projectGraph));
     const planner = new HashPlanner(nxJson as any, transformed);
 
     const plans = planner.getPlans(['app:build'], taskGraph);
@@ -1263,7 +1251,7 @@ describe('task planner', () => {
       );
       const planner = new HashPlanner(
         {},
-        transferProjectGraph(transformProjectGraphForRust(graph))
+        transferProjectGraph(toRustProjectGraph(graph))
       );
       const plan = planner.getPlans(['app:build'], tasks)['app:build'];
       expect(
@@ -1298,7 +1286,7 @@ describe('task planner', () => {
           },
           [{ file: 'nx.json', hash: 'nx-json-hash' }]
         );
-        const transformed = transformProjectGraphForRust(graph);
+        const transformed = toRustProjectGraph(graph);
         if (changes.acyclic) {
           transformed.dependencies.child =
             transformed.dependencies.child.filter((dep) => dep !== 'app');
@@ -1401,7 +1389,7 @@ describe('task planner', () => {
     };
     const planner = new HashPlanner(
       nxJson as any,
-      transferProjectGraph(transformProjectGraphForRust(projectGraph))
+      transferProjectGraph(toRustProjectGraph(projectGraph))
     );
     const plans = planner.getPlans(['parent:build'], taskGraph);
     // {projectRoot} should be interpolated to 'libs/parent', so the workspace fileset
@@ -1517,7 +1505,7 @@ describe('task planner', () => {
       });
 
       const transformed = transferProjectGraph(
-        transformProjectGraphForRust(projectGraph)
+        toRustProjectGraph(projectGraph)
       );
       const planner = new HashPlanner(nxJson, transformed);
 
@@ -1566,7 +1554,7 @@ describe('task planner', () => {
       );
       const planner = new HashPlanner(
         {} as any,
-        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+        transferProjectGraph(toRustProjectGraph(projectGraph))
       );
 
       // The dependency serving this task runs in its own process, so only its
@@ -1636,7 +1624,7 @@ describe('task planner', () => {
       );
       const planner = new HashPlanner(
         {} as any,
-        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+        transferProjectGraph(toRustProjectGraph(projectGraph))
       );
 
       expect(taskGraph.continuousDependencies['child:serve']).toContain(
@@ -1702,7 +1690,7 @@ describe('task planner', () => {
       );
       const planner = new HashPlanner(
         {} as any,
-        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+        transferProjectGraph(toRustProjectGraph(projectGraph))
       );
       return { planner, taskGraph };
     }
@@ -1831,7 +1819,7 @@ describe('task planner', () => {
       );
       const planner = new HashPlanner(
         {} as any,
-        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+        transferProjectGraph(toRustProjectGraph(projectGraph))
       );
 
       const plan = planner.getPlans(['parent:test'], taskGraph)['parent:test'];

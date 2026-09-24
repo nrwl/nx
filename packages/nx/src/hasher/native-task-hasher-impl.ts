@@ -14,7 +14,7 @@ import {
   subsetHashPlans,
 } from '../native';
 import type { IgnoredIndexReader } from '../native';
-import { marshalGraph } from '../project-graph/affected/marshal-graph';
+import { transformProjectGraphForRust } from '../native/transform-objects';
 import type { TaskPlanningContext } from './task-planning-context';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
@@ -58,10 +58,10 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     options: { selectivelyHashTsConfig: boolean },
     planningContext?: TaskPlanningContext
   ) {
-    // Affected's planner was built over its ref, so the two stay paired; the
-    // marshal is otherwise shared per graph with the locators.
+    // Affected's planner was built over its ref, so the two stay paired.
     this.projectGraphRef =
-      planningContext?.projectGraphRef ?? marshalGraph(projectGraph);
+      planningContext?.projectGraphRef ??
+      transformProjectGraphForRust(projectGraph);
 
     this.allWorkspaceFilesRef = externals.allWorkspaceFiles;
     this.projectFileMapRef = externals.projectFiles;

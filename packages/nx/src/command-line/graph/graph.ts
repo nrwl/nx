@@ -48,11 +48,7 @@ import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { pruneToSelectedTasks } from '../../tasks-runner/utils';
 import { allFileData } from '../../utils/all-file-data';
 import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
-import {
-  expandFilesInput,
-  HashPlanner,
-  transferProjectGraph,
-} from '../../native';
+import { expandFilesInput, HashPlanner } from '../../native';
 import { transformProjectGraphForRust } from '../../native/transform-objects';
 import { getAffectedGraphNodes } from '../affected/affected';
 import { readFileMapCache } from '../../project-graph/nx-deps-cache';
@@ -1140,7 +1136,7 @@ async function createTaskGraphClientResponse(
 
     const planner = new HashPlanner(
       nxJson,
-      transferProjectGraph(transformProjectGraphForRust(graph))
+      transformProjectGraphForRust(graph)
     );
     performance.mark('task hash plan generation:start');
 
@@ -1308,7 +1304,7 @@ async function createTaskGraphForTargetsAndProjects(
 
     const planner = new HashPlanner(
       nxJson,
-      transferProjectGraph(transformProjectGraphForRust(graph))
+      transformProjectGraphForRust(graph)
     );
     performance.mark('task hash plan generation:start');
 

@@ -1,14 +1,37 @@
 import { ProjectGraph } from '../config/project-graph';
 import {
   ExternalNode,
+  ExternalObject,
   Project,
   Target,
   ProjectGraph as RustProjectGraph,
+  transferProjectGraph,
 } from './index';
 
+/**
+ * Keyed by graph identity, but weak so a replaced graph is collectable. `nx
+ * release` runs the locators once per commit with the same graph, and a run's
+ * hasher reuses what affected already copied.
+ */
+const transferred = new WeakMap<
+  ProjectGraph,
+  ExternalObject<RustProjectGraph>
+>();
+
+/** The graph copied into Rust, once per graph. */
 export function transformProjectGraphForRust(
   graph: ProjectGraph
-): RustProjectGraph {
+): ExternalObject<RustProjectGraph> {
+  let ref = transferred.get(graph);
+  if (!ref) {
+    ref = transferProjectGraph(toRustProjectGraph(graph));
+    transferred.set(graph, ref);
+  }
+  return ref;
+}
+
+/** The graph in Rust's shape, still a JS object. Uncached, so safe to edit. */
+export function toRustProjectGraph(graph: ProjectGraph): RustProjectGraph {
   const dependencies: Record<string, string[]> = {};
   const nodes: Record<string, Project> = {};
   const externalNodes: Record<string, ExternalNode> = {};

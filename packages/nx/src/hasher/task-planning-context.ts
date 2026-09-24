@@ -6,10 +6,10 @@ import {
   HashInstruction,
   ProjectGraph as NativeProjectGraph,
 } from '../native';
-import { marshalGraph } from '../project-graph/affected/marshal-graph';
+import { transformProjectGraphForRust } from '../native/transform-objects';
 
 /**
- * A marshalled graph and the planner built over it, passed between the phases
+ * The graph copied into Rust and the planner built over it, passed between the phases
  * of one command.
  *
  * Task-grained affected plans the candidate tasks to decide what is affected,
@@ -19,8 +19,8 @@ import { marshalGraph } from '../project-graph/affected/marshal-graph';
  *
  * Threaded as an argument rather than held in a module-level cache, because
  * `plans` below is per-command rather than per-graph: two runs over the same
- * graph select different tasks. The marshalled graph is cached, in
- * ../project-graph/affected/marshal-graph.
+ * graph select different tasks. The graph copy itself is cached, by
+ * `transformProjectGraphForRust`.
  */
 export interface TaskPlanningContext {
   projectGraphRef: ExternalObject<NativeProjectGraph>;
@@ -37,7 +37,7 @@ export function createTaskPlanningContext(
   projectGraph: ProjectGraph,
   nxJson: NxJsonConfiguration
 ): TaskPlanningContext {
-  const projectGraphRef = marshalGraph(projectGraph);
+  const projectGraphRef = transformProjectGraphForRust(projectGraph);
   return {
     projectGraphRef,
     planner: new HashPlanner(nxJson as any, projectGraphRef),

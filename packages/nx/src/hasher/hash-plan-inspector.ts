@@ -12,7 +12,6 @@ import {
   HashPlanner,
   HashPlanInspector as NativeHashPlanInspector,
   ProjectGraph as NativeProjectGraph,
-  transferProjectGraph,
 } from '../native';
 import { transformProjectGraphForRust } from '../native/transform-objects';
 import { createProjectRootMappings } from '../project-graph/utils/find-project-for-path';
@@ -33,9 +32,7 @@ export class HashPlanInspector {
     nxJson?: NxJsonConfiguration
   ) {
     this.nxJson = nxJson ?? readNxJson(this.workspaceRootPath);
-    this.projectGraphRef = transferProjectGraph(
-      transformProjectGraphForRust(this.projectGraph)
-    );
+    this.projectGraphRef = transformProjectGraphForRust(this.projectGraph);
     this.planner = new HashPlanner(this.nxJson, this.projectGraphRef);
   }
 
