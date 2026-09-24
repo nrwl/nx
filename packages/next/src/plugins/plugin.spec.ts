@@ -27,7 +27,7 @@ describe('@nx/next/plugin', () => {
     });
 
     afterEach(() => {
-      jest.resetModules();
+      vi.resetModules();
       tempFs.cleanup();
     });
 
@@ -71,7 +71,7 @@ describe('@nx/next/plugin', () => {
     });
 
     afterEach(() => {
-      jest.resetModules();
+      vi.resetModules();
     });
 
     it('should create nodes', async () => {
@@ -112,7 +112,7 @@ describe('@nx/next/plugin', () => {
     });
 
     afterEach(() => {
-      jest.resetModules();
+      vi.resetModules();
       tempFs.cleanup();
     });
 
@@ -205,7 +205,7 @@ describe('@nx/next/plugin', () => {
     });
 
     afterEach(() => {
-      jest.resetModules();
+      vi.resetModules();
       tempFs.cleanup();
     });
 
@@ -235,7 +235,7 @@ describe('@nx/next/plugin', () => {
 });
 
 function mockNextConfig(path: string, config: NextConfig) {
-  jest.mock(
+  vi.mock(
     path,
     () => ({
       default: config,

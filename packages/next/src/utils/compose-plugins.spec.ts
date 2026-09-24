@@ -30,8 +30,8 @@ describe('composePlugins', () => {
   });
 
   it('should not load the deprecation module, which is not copied into the .nx-helpers build output', async () => {
-    jest.resetModules();
-    jest.doMock('./deprecation', () => {
+    vi.resetModules();
+    vi.doMock('./deprecation', () => {
       throw new Error('compose-plugins must not require ./deprecation');
     });
     try {
@@ -44,8 +44,8 @@ describe('composePlugins', () => {
 
       expect(output).toEqual({ env: {} });
     } finally {
-      jest.dontMock('./deprecation');
-      jest.resetModules();
+      vi.doUnmock('./deprecation');
+      vi.resetModules();
     }
   });
 
