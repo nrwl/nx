@@ -428,8 +428,9 @@ describe('target merging', () => {
   });
 
   describe('cache', () => {
-    // `backfill: false` decides whether a recorded snapshot may stand in for
-    // declared inputs, so losing it silently changes how the task hashes.
+    // Once a consumer reads it, `backfill: false` decides whether a recorded
+    // snapshot may stand in for declared inputs, so losing it in a merge would
+    // silently change how the task hashes.
     it('should drop an inherited backfill when the target replaces the sandbox', () => {
       const result = mergeTargetConfigurations(
         {
@@ -531,6 +532,30 @@ describe('target merging', () => {
         { executor: 'bar', sandbox: { enabled: false } }
       );
       expect(result.sandbox).not.toBeDefined();
+    });
+
+    // The guard above already skips a base-only sandbox, so this is the case
+    // that decides whether the base is discarded: the target overrode the
+    // executor, so the base describes a different program.
+    it('should not inherit the base sandbox when an incompatible target declares its own', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'foo',
+          sandbox: { '...': true, ignoredWrites: ['scratch/**'] },
+        },
+        {
+          executor: 'bar',
+          sandbox: { enabled: false, ignoredReads: ['tmp/**'] },
+        }
+      );
+      // The base contributes nothing — no `enabled`, no inherited
+      // `ignoredReads`. The `'...'` survives because there was no base to
+      // expand it against; unlike the target level, `mergeSandbox` does not
+      // strip an unresolved token.
+      expect(result.sandbox).toEqual({
+        '...': true,
+        ignoredWrites: ['scratch/**'],
+      });
     });
 
     it('should resolve the spread token inside ignoredReads', () => {

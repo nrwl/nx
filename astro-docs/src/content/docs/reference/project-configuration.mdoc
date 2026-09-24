@@ -648,8 +648,8 @@ Set `"backfill": false` to keep tracking the target but hash it from its declare
 
 Reads and writes are one switch. A task hashed from its recorded reads but cached from its declared outputs would describe a run that never happened.
 
-{% aside type="note" title="Not in effect yet" %}
-Nothing reads recorded snapshots yet, so `backfill` changes nothing today. Every task hashes from its declared inputs and caches its declared outputs.
+{% aside type="note" title="Needs snapshot-backed hashing" %}
+`backfill` only applies where a recorded snapshot is available to read. A task hashes from its declared inputs and caches its declared outputs wherever one is not.
 {% /aside %}
 
 A target that defines `sandbox` replaces the inherited configuration rather than adding to it. Use the [spread token](#spread-token) to merge instead, either at the object level to keep inherited keys, or inside `ignoredReads` and `ignoredWrites` to keep inherited patterns.

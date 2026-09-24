@@ -693,7 +693,10 @@ export function mergeTargetConfigurations(
   }
 
   // merge sandbox if either side declares one
-  // as with options, an incompatible target discards the base
+  // as with options, an incompatible target discards the base.
+  // `sandbox` is in `skipForOwnMerge` so the key-by-key pass leaves it to this
+  // block; removing it from that set would change only the key's position in
+  // the result, since this overwrites whatever the generic pass produced.
   if (
     'sandbox' in target ||
     (isCompatible && baseTarget && 'sandbox' in baseTarget)

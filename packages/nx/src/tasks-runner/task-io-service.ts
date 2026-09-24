@@ -159,12 +159,6 @@ export function getTaskIOService(): TaskIOService {
 }
 
 /**
- * The task a process belongs to. `run-commands` can synthesize an id for a task
- * that is not in the graph, so only the id is guaranteed.
- */
-export type TaskProcessOwner = Pick<Task, 'id' | 'sandbox'>;
-
-/**
  * Register a task process start with both IO and metrics services.
  * This is the standard way to notify the system that a task process has started.
  *
@@ -172,9 +166,12 @@ export type TaskProcessOwner = Pick<Task, 'id' | 'sandbox'>;
  * no PID, which suppresses IO tracing and therefore its sandbox report. Metrics
  * are registered either way: the opt-out covers reporting, not the process
  * management that cleanup and orphan reaping depend on.
+ *
+ * Narrower than a whole `Task` because `run-commands` can synthesize an id for
+ * a task that is not in any graph.
  */
 export function registerTaskProcessStart(
-  task: TaskProcessOwner,
+  task: Pick<Task, 'id' | 'sandbox'>,
   pid: number
 ): void {
   if (task.sandbox?.enabled !== false) {

@@ -1,9 +1,9 @@
 import yargsParser from 'yargs-parser';
 import { ExecutorContext } from '../../config/misc-interfaces';
+import type { Task } from '../../config/task-graph';
 import { isTuiEnabled } from '../../tasks-runner/is-tui-enabled';
 import { PseudoTerminal } from '../../tasks-runner/pseudo-terminal';
 import { createTaskId } from '../../tasks-runner/utils';
-import type { TaskProcessOwner } from '../../tasks-runner/task-io-service';
 import { NoopChildProcess } from '../../tasks-runner/running-tasks/noop-child-process';
 import {
   ParallelRunningTasks,
@@ -101,7 +101,7 @@ export default async function (
 export async function runCommands(
   options: RunCommandsOptions,
   context: ExecutorContext,
-  task?: TaskProcessOwner
+  task?: Pick<Task, 'id' | 'sandbox'>
 ) {
   const normalized = normalizeOptions(options);
 

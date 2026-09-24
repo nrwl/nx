@@ -251,14 +251,32 @@ describe('validateAndNormalizeProjectRootMap', () => {
       ]);
     });
 
+    it('should reject a key that is not a sandbox option', () => {
+      expect(sandboxErrors({ ignoreReads: ['tmp/**'] })).toEqual([
+        expect.stringMatching(
+          /"sandbox.ignoreReads" for target "build" in project "a-ui" is not a sandbox option/
+        ),
+      ]);
+    });
+
+    // A spread with no base to resolve against survives merging, so rejecting
+    // it here would fail a config the merge deliberately let through.
+    it('should accept the spread token as a key', () => {
+      expect(sandboxErrors({ '...': true, backfill: false })).toEqual([]);
+    });
+
     it('should report every malformed key in one error', () => {
       const [message] = sandboxErrors({
         enabled: 'false',
         backfill: 'false',
+        ignoreReads: ['tmp/**'],
         ignoredReads: 'tmp/**',
         ignoredWrites: ['ok/**', 7],
       });
 
+      expect(message).toMatch(
+        /"sandbox.ignoreReads" .* is not a sandbox option/
+      );
       expect(message).toMatch(/"sandbox.enabled"/);
       expect(message).toMatch(/"sandbox.backfill"/);
       expect(message).toMatch(/"sandbox.ignoredReads"/);

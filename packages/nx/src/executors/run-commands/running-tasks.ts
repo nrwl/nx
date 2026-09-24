@@ -14,10 +14,8 @@ import {
   loadAndExpandDotEnvFile,
   unloadDotEnvFile,
 } from '../../tasks-runner/task-env';
-import {
-  registerTaskProcessStart,
-  type TaskProcessOwner,
-} from '../../tasks-runner/task-io-service';
+import type { Task } from '../../config/task-graph';
+import { registerTaskProcessStart } from '../../tasks-runner/task-io-service';
 import { signalToCode } from '../../utils/exit-codes';
 import { output as cliOutput } from '../../utils/output';
 import {
@@ -73,7 +71,7 @@ export class ParallelRunningTasks implements RunningTask {
   constructor(
     options: NormalizedRunCommandsOptions,
     context: ExecutorContext,
-    task: TaskProcessOwner
+    task: Pick<Task, 'id' | 'sandbox'>
   ) {
     this.childProcesses = options.commands.map(
       (commandConfig) =>
@@ -254,7 +252,7 @@ export class SeriallyRunningTasks implements RunningTask {
     options: NormalizedRunCommandsOptions,
     context: ExecutorContext,
     private readonly tuiEnabled: boolean,
-    private readonly task: TaskProcessOwner
+    private readonly task: Pick<Task, 'id' | 'sandbox'>
   ) {
     this.run(options, context)
       .catch((e) => {
@@ -360,7 +358,7 @@ export class SeriallyRunningTasks implements RunningTask {
     color: boolean,
     cwd: string,
     env: Record<string, string>,
-    task: TaskProcessOwner,
+    task: Pick<Task, 'id' | 'sandbox'>,
     usePty: boolean = true,
     streamOutput: boolean = true,
     tty: boolean,
@@ -439,7 +437,7 @@ class RunningNodeProcess implements RunningTask {
     private readyWhenStatus: { stringToMatch: string; found: boolean }[],
     private readonly streamOutput = true,
     envFile: string,
-    private task: TaskProcessOwner
+    private task: Pick<Task, 'id' | 'sandbox'>
   ) {
     env = processEnv(color, cwd, env, envFile);
     this.command = commandConfig.command;
@@ -638,7 +636,7 @@ class RunningNodeProcess implements RunningTask {
 export async function runSingleCommandWithPseudoTerminal(
   normalized: NormalizedRunCommandsOptions,
   context: ExecutorContext,
-  task: TaskProcessOwner
+  task: Pick<Task, 'id' | 'sandbox'>
 ): Promise<PseudoTtyProcess> {
   const pseudoTerminal = createPseudoTerminal();
   const pseudoTtyProcess = await createProcessWithPseudoTty(

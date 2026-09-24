@@ -28,7 +28,7 @@ import {
   resolveCommandSyntacticSugar,
   resolveNxTokensInOptions,
 } from './target-merging';
-import { isObject } from './utils';
+import { isObject, NX_SPREAD_TOKEN } from './utils';
 
 import type { ConfigurationSourceMaps } from './source-maps';
 
@@ -255,6 +255,21 @@ function warnAboutLegacyCachedTargets(
   });
 }
 
+/**
+ * Nothing downstream rejects a key it does not know — the Rust hasher drops it,
+ * the Cloud runner reads only the keys it reads, and the Kotlin API decodes with
+ * `ignoreUnknownKeys`. So a typo is silent everywhere else, and this is the only
+ * place a misspelled option can be reported at all. `'...'` is listed because a
+ * spread with no base to resolve against survives merging.
+ */
+const KNOWN_SANDBOX_KEYS = new Set<string>([
+  'enabled',
+  'backfill',
+  'ignoredReads',
+  'ignoredWrites',
+  NX_SPREAD_TOKEN,
+]);
+
 function describeSandboxValue(value: unknown): string {
   if (Array.isArray(value)) return 'an array';
   if (value === null) return 'null';
@@ -306,6 +321,14 @@ function validateTargetSandbox(
   }
 
   const errors: string[] = [];
+
+  for (const key of Object.keys(sandbox)) {
+    if (!KNOWN_SANDBOX_KEYS.has(key)) {
+      errors.push(
+        `"sandbox.${key}" for target ${where} is not a sandbox option. Supported options are "enabled", "backfill", "ignoredReads" and "ignoredWrites".`
+      );
+    }
+  }
 
   if (sandbox.enabled !== undefined && typeof sandbox.enabled !== 'boolean') {
     errors.push(
