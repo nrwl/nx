@@ -51,7 +51,7 @@ See the [CI configuration file reference](/docs/reference/nx-cloud/ci-config) fo
 ```yaml
 # .nx/ci-config.yaml
 dte:
-  distribute-on: 3 linux-medium-js
+  distribute-on: 3 linux-large-js
 lifecycle:
   stop-after:
     - lint
@@ -402,6 +402,16 @@ After your CI runs, navigate to the CIPE, then the **Configurations** tab to see
 - What the final, effective configuration was
 
 ---
+
+## Related guides
+
+{% cardgrid %}
+
+{% linkcard title="Enable AI features" description="Turn on AI features for your Nx Cloud organization" href="/docs/kb/enable-ai-features" /%}
+
+{% linkcard title="Bring your own AI API key" description="Use your own model provider key for self-healing CI" href="/docs/kb/bring-your-own-ai-api-key" /%}
+
+{% /cardgrid %}
 
 ## Learn more
 

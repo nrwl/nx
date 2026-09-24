@@ -89,7 +89,7 @@ Running Cypress with `--watch` is a great way to iterate on your components sinc
 Splitting component testing tasks by file is available since Nx 21.6.1.
 {% /aside %}
 
-Nx provides powerful features for [distributing tasks in CI](/docs/features/ci-features/distribute-task-execution), including [splitting tasks by file](/docs/features/ci-features/split-e2e-tasks) (also known as atomization). The `@nx/cypress` plugin facilitates this for Cypress projects, allowing you to run your tests more efficiently in your Continuous Integration (CI) environment.
+Nx provides powerful features for [distributing tasks in CI](/docs/features/ci-features/distribute-task-execution), including [splitting tasks by file](/docs/kb/split-e2e-tasks) (also known as atomization). The `@nx/cypress` plugin facilitates this for Cypress projects, allowing you to run your tests more efficiently in your Continuous Integration (CI) environment.
 
 To enable component testing task splitting, set the `ciComponentTestingTargetName` option of the `@nx/cypress/plugin` in your `nx.json` file. It will look something like this:
 

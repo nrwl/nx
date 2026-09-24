@@ -2,6 +2,9 @@
 title: 'Optimize Your Time to Green (TTG)'
 description: 'Learn how to reduce your Time to Green (TTG) and improve developer productivity'
 filter: 'type:Guides'
+topics:
+  - 'Continuous integration'
+  - 'Nx Cloud'
 ---
 
 Time to Green (TTG) is the **time from when a pull request (PR) opens and triggers CI to the moment all checks are green and the PR is review-ready**.
@@ -58,7 +61,7 @@ The expensive loop is switching branches to fix, re‑pushing, waiting, and repe
 **What to do:**
 
 - Approve fixes instead of branch‑hopping: enable **[Self‑Healing CI](/docs/features/ci-features/self-healing-ci#configure-your-ci-pipeline)** to analyze failed tasks, propose and verify fixes, and commit to your PR after approval.
-- Also enable **[flaky task detection and retries](/docs/features/ci-features/flaky-tasks)** to automatically re-run flaky tasks in the background while you keep working undisturbed.
+- Also enable **[flaky task detection and retries](/docs/kb/flaky-tasks)** to automatically re-run flaky tasks in the background while you keep working undisturbed.
 
 ### 3) Shorten actual CI time (make the pipeline fast)
 
@@ -68,11 +71,11 @@ Once feedback and context switching are handled, compress the compute side.
 
 - Reuse work with [remote caching](/docs/features/ci-features/remote-cache).
 - Run more in parallel with **[Distributed task execution (Nx Agents)](/docs/features/ci-features/distribute-task-execution)**.
-- Scale long suites with **[E2E test splitting](/docs/features/ci-features/split-e2e-tasks)** so they finish quickly.
+- Scale long suites with **[E2E test splitting](/docs/kb/split-e2e-tasks)** so they finish quickly.
 
 ## Measure TTG and diagnose bottlenecks
 
-![TTG metrics](../../../../assets/nx-cloud/nx-cloud-ttg-stats.avif)
+![TTG metrics](../../../assets/nx-cloud/nx-cloud-ttg-stats.avif)
 
 **Doing too much work on PRs**
 
@@ -87,17 +90,17 @@ Once feedback and context switching are handled, compress the compute side.
 **Agents are idle, or queue time is high**
 
 - Increase or right-size distributed capacity and parallelism with [Nx Agents](/docs/features/ci-features/distribute-task-execution).
-- Use [Dynamic Agents](/docs/features/ci-features/dynamic-agents) to scale based on PR size.
+- Use [Dynamic Agents](/docs/features/ci-features/distribute-task-execution#scale-agents-with-pr-size) to scale based on PR size.
 - Remove unnecessary serialization (global locks, [overly strict `dependsOn`](/docs/kb/defining-task-pipeline)).
 
 **E2E suites take too long**
 
-- Enable [E2E test splitting](/docs/features/ci-features/split-e2e-tasks) so large suites run across agents.
+- Enable [E2E test splitting](/docs/kb/split-e2e-tasks) so large suites run across agents.
 - Ensure tests are shardable (no hidden global state, independent specs).
 
 **Flaky task rate is high**
 
-- Enable [flaky test detection and automatic retries](/docs/features/ci-features/flaky-tasks).
+- Enable [flaky test detection and automatic retries](/docs/kb/flaky-tasks).
 - [Find and fix flaky tests](/docs/kb/flaky-tests-in-ci) before they consume more pipeline time.
 
 **Late failure discovery / PR babysitting**

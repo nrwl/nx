@@ -597,7 +597,7 @@ And the E2E project's `e2e` task has a dependency on the `serve` task, which ens
 
 ### Sandbox
 
-When [sandboxing](/docs/features/ci-features/sandboxing) is enabled, Nx tracks the files each task reads and writes. The `sandbox` property adjusts that tracking for a single target.
+When [sandboxing](/docs/kb/sandboxing) is enabled, Nx tracks the files each task reads and writes. The `sandbox` property adjusts that tracking for a single target.
 
 Set `"enabled": false` to stop tracking a target's tasks:
 
@@ -668,7 +668,7 @@ A target that defines `sandbox` replaces the inherited configuration rather than
 ```
 
 {% aside type="note" title="Workspace-wide exclusions live elsewhere" %}
-`sandbox` applies to one target. To exclude paths across every task in the workspace, use `.nx/workflows/sandboxing-config.yaml`. See [Excluding paths](/docs/features/ci-features/sandboxing#excluding-paths). The two combine: a task is checked against its own `sandbox` patterns and the workspace-wide ones together, so neither overrides the other.
+`sandbox` applies to one target. To exclude paths across every task in the workspace, use `.nx/workflows/sandboxing-config.yaml`. See [Excluding paths](/docs/kb/sandboxing#excluding-paths). The two combine: a task is checked against its own `sandbox` patterns and the workspace-wide ones together, so neither overrides the other.
 {% /aside %}
 
 ### Sync generators

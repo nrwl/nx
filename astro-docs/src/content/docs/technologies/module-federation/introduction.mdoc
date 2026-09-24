@@ -47,7 +47,7 @@ Because the remote's `dev` task depends on the host's continuous `dev` task, `nx
 
 When you change a shared library, Module Federation forces every app that consumes it to redeploy. Because each host and remote is its own project, [`nx affected`](/docs/features/ci-features/affected) computes that exact set from the graph and rebuilds and retests only those apps, while Nx [caches](/docs/features/cache-task-results) the rest. Each app has its own test and e2e targets, so affected verification runs only for the apps a change touches.
 
-With [remote caching](/docs/features/ci-features/remote-cache) on [Nx Cloud](/docs/getting-started/nx-cloud), a remote already built by a teammate or in CI is restored instead of rebuilt.
+With [remote caching](/docs/features/ci-features/remote-cache) on [Nx Cloud](/docs/features/ci-features), a remote already built by a teammate or in CI is restored instead of rebuilt.
 
 ### Scale builds and tests across machines
 

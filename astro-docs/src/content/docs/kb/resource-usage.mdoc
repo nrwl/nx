@@ -11,11 +11,10 @@ keywords:
     nx agents,
     nx cloud,
   ]
-sidebar:
-  label: Resource usage
-  order: 14
-  badge: new!
-filter: 'type:Features'
+filter: 'type:Guides'
+topics:
+  - 'Continuous integration'
+  - 'Nx Cloud'
 ---
 
 Resource usage records CPU and memory metrics while your tasks run and surfaces them in Nx Cloud.
@@ -43,7 +42,7 @@ Data collection can be turned off at either the organization or the workspace le
 Turn the resource usage add-on on or off under **Settings > Add-ons**. Disabling it here stops
 collection for every workspace in the organization.
 
-![The resource usage add-on toggle in organization settings](../../../../assets/guides/nx-cloud/resource-usage-org-add-on.avif)
+![The resource usage add-on toggle in organization settings](../../../assets/guides/nx-cloud/resource-usage-org-add-on.avif)
 
 ### Workspace
 
@@ -53,7 +52,7 @@ Once the add-on is on for the organization, go to **Workspace > Settings** and f
 - **Distributed runs** - metrics for runs distributed across Nx Agents.
 - **Non distributed runs** - metrics for runs from non-distributed Nx commands.
 
-![The distributed and non distributed run toggles in workspace settings](../../../../assets/guides/nx-cloud/resource-usage-workspace-toggles.avif)
+![The distributed and non distributed run toggles in workspace settings](../../../assets/guides/nx-cloud/resource-usage-workspace-toggles.avif)
 
 Turning a switch off stops new reports from being generated. Reports collected earlier stay
 viewable as long as the add-on is active for the organization.
@@ -75,7 +74,7 @@ For a standalone Nx command in CI, it records every task in the run.
 
 Open any CI pipeline execution and go to the **Resource usage** tab.
 
-![The Resource usage tab for a run distributed across Nx Agents](../../../../assets/guides/nx-cloud/resource-usage-agents-view.avif)
+![The Resource usage tab for a run distributed across Nx Agents](../../../assets/guides/nx-cloud/resource-usage-agents-view.avif)
 
 #### Agent resource usage summary
 
@@ -83,7 +82,7 @@ The **Agent resource usage** table lists every agent in the run with its average
 memory, plus the machine specs (cores and RAM) of its resource class. It's the fastest way to spot an
 agent that ran hot.
 
-![Agent resource usage table showing per-agent average and maximum CPU and memory](../../../../assets/guides/nx-cloud/agent-resource-usage-table.png)
+![Agent resource usage table showing per-agent average and maximum CPU and memory](../../../assets/guides/nx-cloud/agent-resource-usage-table.png)
 
 #### Resource usage over time
 
@@ -92,25 +91,25 @@ utilization across the agent's lifetime, with reference lines for the machine's 
 usage. When a task exceeds available memory and is killed, the chart marks the out-of-memory point so
 you can trace the failure back to the task that caused it.
 
-![Resource usage over time showing memory and CPU charts by task](../../../../assets/guides/nx-cloud/resource-chart-details.png)
+![Resource usage over time showing memory and CPU charts by task](../../../assets/guides/nx-cloud/resource-chart-details.png)
 
 The detail view has a few controls for digging in:
 
 - **View mode** - switch between **Individual** (each task or process plotted separately) and
   **Stacked** (total usage at any point in time).
 
-  ![Stacked view showing total resource usage](../../../../assets/guides/nx-cloud/resource-stacked-chart-view.png)
+  ![Stacked view showing total resource usage](../../../assets/guides/nx-cloud/resource-stacked-chart-view.png)
 
 - **Reference lines** - toggle the capacity and peak-usage lines on or off.
 - **Snap to max** - zoom the axis to the peak memory or CPU value.
 - **Legend** - click items to focus on specific tasks or processes (for example a single
   `nx build`, the Nx daemon, or CLI overhead).
 
-  ![Using the legend to focus on specific tasks](../../../../assets/guides/nx-cloud/resource-chart-legend.png)
+  ![Using the legend to focus on specific tasks](../../../assets/guides/nx-cloud/resource-chart-legend.png)
 
 - **Timeline scrubber** - jump to a point in time or zoom in on a spike.
 
-  ![Timeline scrubber for navigating resource usage over time](../../../../assets/guides/nx-cloud/resource-chart-scrubber.jpg)
+  ![Timeline scrubber for navigating resource usage over time](../../../assets/guides/nx-cloud/resource-chart-scrubber.jpg)
 
 - **Download CSV** - export the raw per-process data for deeper analysis.
 
@@ -119,7 +118,7 @@ The detail view has a few controls for digging in:
 For a run that isn't distributed on Nx Agents, open the run details and go to the **Resource usage**
 view.
 
-![Resource usage view for a run that isn't distributed on Nx Agents](../../../../assets/guides/nx-cloud/resource-usage-non-distributed-view.avif)
+![Resource usage view for a run that isn't distributed on Nx Agents](../../../assets/guides/nx-cloud/resource-usage-non-distributed-view.avif)
 
 Three cards across the top give you the machine specs plus average and maximum figures for CPU and
 memory. Memory and CPU charts below them plot utilization over the run's lifetime, broken down by

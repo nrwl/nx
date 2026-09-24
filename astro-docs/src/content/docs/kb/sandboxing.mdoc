@@ -2,11 +2,10 @@
 title: 'Task Sandboxing'
 description: 'Confine each task to its declared inputs and outputs to catch undeclared dependencies and keep caching correct.'
 keywords: [sandboxing, CI, hermeticity, inputs, outputs, caching]
-sidebar:
-  label: Task sandboxing
-  order: 15
-  badge: new!
-filter: 'type:Features'
+filter: 'type:Guides'
+topics:
+  - 'Continuous integration'
+  - 'Nx Cloud'
 ---
 
 Task sandboxing confines each task to the files it declares as `inputs` and `outputs` in your
@@ -20,7 +19,7 @@ restore.
 
 {% aside type="note" title="Nx Cloud add-on" %}
 Sandboxing is an Nx Cloud add-on that runs on a
-[dedicated compute cluster](/docs/features/ci-features/dedicated-compute-cluster). Request the
+[dedicated compute cluster](/docs/kb/dedicated-compute-cluster). Request the
 cluster, then enable sandboxing under [**Settings > Add-ons**](https://cloud.nx.app/go/organization/add-ons).
 {% /aside %}
 
@@ -35,7 +34,7 @@ outputs.
 Hermetic tasks are safe to cache and replay because their behavior is fully described by their
 configuration.
 
-![Diagram showing declared inputs flowing into vite build, producing declared outputs, with a cache key derived from the input hash](../../../../assets/features/sandboxing-cache-flow.svg)
+![Diagram showing declared inputs flowing into vite build, producing declared outputs, with a cache key derived from the input hash](../../../assets/features/sandboxing-cache-flow.svg)
 
 [Computation caching](/docs/features/cache-task-results) relies on declared `inputs` and `outputs`
 to determine when a cache entry is valid.
@@ -120,13 +119,13 @@ When sandboxing detects undeclared file access, a warning banner appears on the 
 Execution (CIPE) page in Nx Cloud.
 Runs that contain violations are tagged with a "sandbox violation" badge.
 
-![CIPE page showing sandbox violations detected in 109 tasks, with a run tagged as sandbox violation](../../../../assets/features/sandboxing-cipe-violations.png)
+![CIPE page showing sandbox violations detected in 109 tasks, with a run tagged as sandbox violation](../../../assets/features/sandboxing-cipe-violations.png)
 
 Click into a run to see which individual tasks have violations.
 Click the **Sandbox violations** button to filter the task list to only tasks with undeclared reads
 or writes.
 
-![Task list showing individual tasks with sandbox violation badges](../../../../assets/features/sandboxing-task-violations.png)
+![Task list showing individual tasks with sandbox violation badges](../../../assets/features/sandboxing-task-violations.png)
 
 Open the task details and switch to the **Sandbox analysis** tab.
 The process tree shows every process spawned during the task, along with the files each one read
@@ -135,12 +134,12 @@ Click a process to see its full file access list.
 Files flagged as "unexpected read" or "unexpected write" are the ones not covered by your declared
 `inputs` and `outputs`.
 
-![Sandbox analysis tab showing process tree with unexpected reads and writes highlighted](../../../../assets/features/sandboxing-analysis.png)
+![Sandbox analysis tab showing process tree with unexpected reads and writes highlighted](../../../assets/features/sandboxing-analysis.png)
 
 To export the raw report data for further analysis, click **View raw sandbox report** to download
 the JSON report.
 
-![View raw sandbox report button](../../../../assets/features/sandboxing-raw-report.png)
+![View raw sandbox report button](../../../assets/features/sandboxing-raw-report.png)
 
 Once you have identified the violating tasks, follow
 [Fix sandbox violations](/docs/kb/fix-sandbox-violations)
@@ -240,7 +239,7 @@ and reports discrepancies.
 ## Enabling sandboxing
 
 Sandboxing requires a
-[dedicated compute cluster](/docs/features/ci-features/dedicated-compute-cluster) and runs on
+[dedicated compute cluster](/docs/kb/dedicated-compute-cluster) and runs on
 [Nx Agents](/docs/features/ci-features/distribute-task-execution).
 It is not supported when you [bring your own compute](/docs/kb/bring-your-own-compute).
 
@@ -287,7 +286,7 @@ Its patterns add to the ones here rather than replacing them.
 Once sandboxing is enabled, configure the enforcement mode in the Nx Cloud workspace settings under
 **Settings > General**.
 
-![Nx Cloud settings sidebar showing General settings](../../../../assets/features/sandboxing-settings-sidebar.png)
+![Nx Cloud settings sidebar showing General settings](../../../assets/features/sandboxing-settings-sidebar.png)
 
 Three enforcement modes are available:
 
@@ -295,4 +294,4 @@ Three enforcement modes are available:
 - **Warning** - tasks complete but violations are reported in the Nx Cloud UI.
 - **Off** - sandboxing is disabled.
 
-![Sandboxing enforcement mode setting with Strict, Warning, and Off options](../../../../assets/features/sandboxing-settings.png)
+![Sandboxing enforcement mode setting with Strict, Warning, and Off options](../../../assets/features/sandboxing-settings.png)

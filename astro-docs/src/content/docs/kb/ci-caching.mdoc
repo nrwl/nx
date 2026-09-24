@@ -65,10 +65,10 @@ full picture.
 
 Yes, when the cache key covers every input the test depends on.
 Nx hashes source files, dependency graphs, configuration, and declared environment variables, and
-[task sandboxing](/docs/features/ci-features/sandboxing) can enforce that tasks don't read
+[task sandboxing](/docs/kb/sandboxing) can enforce that tasks don't read
 undeclared inputs.
 Flaky tests are the real hazard: a flaky failure cached as a result is misleading, which is why
-Nx Cloud [detects flaky tasks](/docs/features/ci-features/flaky-tasks) and retries them instead
+Nx Cloud [detects flaky tasks](/docs/kb/flaky-tasks) and retries them instead
 of caching the noise.
 
 ### How much faster does CI get with a remote cache?
