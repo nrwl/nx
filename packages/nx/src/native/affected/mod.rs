@@ -80,6 +80,16 @@ pub async fn locate_touched_projects(
     Ok(touched)
 }
 
+/// Only the projects that own a changed file, one entry per file, in input
+/// order. `nx release` version plans ignore implicit and config-derived touches.
+#[napi]
+pub fn directly_touched_projects(
+    project_graph: &External<Arc<ProjectGraph>>,
+    touched_files: Vec<String>,
+) -> Vec<String> {
+    touched_projects(project_graph, &touched_files)
+}
+
 /// Sorted, because `ProjectGraph.nodes` is a `HashMap` and callers surface this
 /// list directly — `nx show projects --affected --json` would otherwise emit the
 /// same set in a different order on every run.

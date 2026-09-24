@@ -547,6 +547,12 @@ export interface DepsOutputsInput {
  */
 export declare function detectAiAgent(): string | null
 
+/**
+ * Only the projects that own a changed file, one entry per file, in input
+ * order. `nx release` version plans ignore implicit and config-derived touches.
+ */
+export declare function directlyTouchedProjects(projectGraph: ExternalObject<ProjectGraph>, touchedFiles: Array<string>): Array<string>
+
 export interface EnvironmentInput {
   env: string
 }

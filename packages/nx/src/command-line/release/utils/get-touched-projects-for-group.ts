@@ -1,9 +1,7 @@
 import { FileData, ProjectGraph } from '../../../config/project-graph';
+import { directlyTouchedProjects } from '../../../native';
+import { transformProjectGraphForRust } from '../../../native/transform-objects';
 import { calculateFileChanges } from '../../../project-graph/file-utils';
-import {
-  createProjectRootMappings,
-  findProjectForPath,
-} from '../../../project-graph/utils/find-project-for-path';
 import { NxArgs } from '../../../utils/command-line-utils';
 import { getIgnoreObject } from '../../../utils/ignore';
 import { output } from '../../../utils/output';
@@ -75,15 +73,12 @@ export function createGetTouchedProjectsForGroup(
       );
     } else {
       // We only care about directly touched projects, not implicitly affected ones etc
-      const projectRootMap = createProjectRootMappings(projectGraph.nodes);
-      const touchedProjectsArr = calculateFileChanges(
-        changedFiles,
-        nxArgs,
-        undefined,
-        ignore
-      )
-        .map((f) => findProjectForPath(f.file, projectRootMap))
-        .filter(Boolean);
+      const touchedProjectsArr = directlyTouchedProjects(
+        transformProjectGraphForRust(projectGraph),
+        calculateFileChanges(changedFiles, nxArgs, undefined, ignore).map(
+          (f) => f.file
+        )
+      );
       touchedProjects = touchedProjectsArr.reduce(
         (acc, project) => ({ ...acc, [project]: true }),
         {}
