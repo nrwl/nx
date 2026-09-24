@@ -44,8 +44,9 @@ pub(crate) fn expand_literal_braces(glob: &str) -> Vec<String> {
 }
 
 /// A glob split into the directory it is read from and the pattern under it.
-/// The directory is literal text, so `dist/@scope` is a directory like any
-/// other. The remainder comes back untouched, with a negation marker
+/// The directory is the glob's own text up to its first pattern segment, so
+/// `dist/@scope` is a directory like any other; `normalize_glob` first when
+/// `dist//gen/` and `dist/gen` should read the same. The remainder comes back untouched, with a negation marker
 /// re-attached, and is `None` when the glob is literal to its end: it then
 /// names that path rather than matching under it.
 ///
@@ -68,7 +69,7 @@ pub(crate) fn partition_glob(glob: &str) -> (String, Option<String>) {
         literal.push(segment);
         consumed += segment.len() + 1;
     }
-    let directory = literal.join("/").trim_end_matches('/').to_string();
+    let directory = literal.join("/");
     let remainder = remainder.map(|rest| match negated {
         true => format!("!{rest}"),
         false => rest.to_string(),
@@ -449,9 +450,16 @@ mod test {
 
     #[test]
     fn should_partition_glob_with_leading_dirs_and_no_patterns() {
-        let (leading_dirs, rest) = super::partition_glob("dist/app/");
-        assert_eq!(leading_dirs, "dist/app");
-        assert_eq!(rest, None);
+        assert_eq!(super::partition_glob("dist/app"), ("dist/app".into(), None));
+        // The split keeps the text as written; cleaning it is normalize_glob's job.
+        assert_eq!(
+            super::partition_glob("dist//app/"),
+            ("dist//app/".into(), None)
+        );
+        assert_eq!(
+            super::partition_glob(&super::normalize_glob("dist//app/")),
+            ("dist/app".into(), None)
+        );
     }
 
     /// A negation keeps its marker on the remainder, so the exclusion still

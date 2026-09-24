@@ -99,9 +99,9 @@ fn common_glob_prefix(globs: &[String]) -> Option<PathBuf> {
         }
         #[cfg(windows)]
         let glob = glob.replace('\\', "/");
-        let (directory, _) = partition_glob(glob.as_str());
-        // Escaped or lossy names cannot safely index the raw file map.
-        if directory.contains(['\\', ':', '\u{fffd}'])
+        let (directory, _) = partition_glob(&normalize_glob(glob.as_str()));
+        // Drive letters and lossy names cannot safely index the raw file map.
+        if directory.contains([':', '\u{fffd}'])
             || directory
                 .split('/')
                 .any(|part| part.is_empty() || part == "." || part == "..")

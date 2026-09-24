@@ -49,7 +49,7 @@ libs/a
   prefix: Some("libs/a")
 libs/a/
   convert: ["libs/a/"]
-  partition: ("libs/a", None)
+  partition: ("libs/a/", None)
   is_glob: false
   prefix: Some("libs/a")
 libs/a/x.ts
@@ -81,7 +81,7 @@ libs//a/**
   convert: ["libs//a/**"]
   partition: ("libs//a", Some("**"))
   is_glob: true
-  prefix: None
+  prefix: Some("libs/a")
 libs/./a/**
   convert: ["libs/./a/**"]
   partition: ("libs/./a", Some("**"))
@@ -99,19 +99,19 @@ libs/../a/**
   prefix: None
 dist/gen/
   convert: ["dist/gen/"]
-  partition: ("dist/gen", None)
+  partition: ("dist/gen/", None)
   is_glob: false
   prefix: Some("dist/gen")
 dist//gen/**
   convert: ["dist//gen/**"]
   partition: ("dist//gen", Some("**"))
   is_glob: true
-  prefix: None
+  prefix: Some("dist/gen")
 apps/web//generated/**
   convert: ["apps/web//generated/**"]
   partition: ("apps/web//generated", Some("**"))
   is_glob: true
-  prefix: None
+  prefix: Some("apps/web/generated")
 src/**/*.ts
   convert: ["src/**/*.ts"]
   partition: ("src", Some("**/*.ts"))
@@ -236,7 +236,7 @@ libs/?(a)/x
   convert: ["libs//x", "libs/a/x"]
   partition: ("libs", Some("?(a)/x"))
   is_glob: true
-  prefix: None
+  prefix: Some("libs")
 libs/+(a|b)/x
   convert: ["libs/{a,b}/x"]
   partition: ("libs", Some("+(a|b)/x"))
@@ -281,7 +281,7 @@ libs/{,a}/x
   convert: ["libs//x", "libs/a/x"]
   partition: ("libs", Some("{,a}/x"))
   is_glob: true
-  prefix: None
+  prefix: Some("libs")
 {libs/a,e2e}/x
   convert: ["{libs/a,e2e}/x"]
   partition: ("", Some("{libs/a,e2e}/x"))
@@ -499,7 +499,7 @@ dist/app/(group)/page.js
   prefix: Some(".next/server/app")
 @nrwl/
   convert: ["@nrwl/"]
-  partition: ("@nrwl", None)
+  partition: ("@nrwl/", None)
   is_glob: false
   prefix: Some("@nrwl")
 /back\\slash
