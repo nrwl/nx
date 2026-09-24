@@ -21,8 +21,10 @@ import { readNxJson } from '../../config/configuration';
 import type { NxJsonConfiguration } from '../../config/nx-json';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { generateGraph } from '../graph/graph';
-import { computeAffectedTasks } from '../../project-graph/affected/affected-tasks';
-import { selectsAffectedTasks } from '../../project-graph/affected/granularity';
+import {
+  computeAffectedTasks,
+  selectsAffectedTasks,
+} from '../../project-graph/affected/affected-tasks';
 import type { TaskSelection } from '../../tasks-runner/run-command';
 
 export async function affected(

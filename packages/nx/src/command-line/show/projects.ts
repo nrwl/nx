@@ -5,8 +5,10 @@ import {
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
 import { filterAffected } from '../../project-graph/affected/affected-project-graph';
-import { computeAffectedTasks } from '../../project-graph/affected/affected-tasks';
-import { selectsAffectedTasks } from '../../project-graph/affected/granularity';
+import {
+  computeAffectedTasks,
+  selectsAffectedTasks,
+} from '../../project-graph/affected/affected-tasks';
 import {
   FileChange,
   calculateFileChanges,

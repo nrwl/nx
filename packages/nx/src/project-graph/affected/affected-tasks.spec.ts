@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 // getProjectGlobPatterns reads these from the plugins' recorded capabilities.
 // Mocked at that boundary rather than on affected-projects itself, since the
@@ -18,7 +18,7 @@ const daemon = vi.hoisted(() => ({
 vi.mock('../../daemon/client/client', () => ({ daemonClient: daemon }));
 const onDaemon = vi.hoisted(() => ({ isOnDaemon: vi.fn(() => false) }));
 vi.mock('../../daemon/is-on-daemon', () => onDaemon);
-import { computeAffectedTasks } from './affected-tasks';
+import { computeAffectedTasks, selectsAffectedTasks } from './affected-tasks';
 import { LockFileChange, WholeFileChange } from '../file-utils';
 import type { ProjectGraph } from '../../config/project-graph';
 
@@ -333,5 +333,34 @@ describe('computeAffectedTasks with the daemon on', () => {
 
     expect(daemon.selectAffectedTasks).not.toHaveBeenCalled();
     expect(result.planningContext).toBeDefined();
+  });
+});
+
+describe('selectsAffectedTasks', () => {
+  const original = process.env.NX_LEGACY_AFFECTED;
+
+  afterEach(() => {
+    if (original === undefined) {
+      delete process.env.NX_LEGACY_AFFECTED;
+    } else {
+      process.env.NX_LEGACY_AFFECTED = original;
+    }
+  });
+
+  // The default is the release: task selection stays opt-in until it is
+  // flipped on purpose, so an edit that flips it has to fail here.
+  it('selects whole projects when the variable is unset', () => {
+    delete process.env.NX_LEGACY_AFFECTED;
+    expect(selectsAffectedTasks()).toBe(false);
+  });
+
+  it('selects whole projects when the variable is true', () => {
+    process.env.NX_LEGACY_AFFECTED = 'true';
+    expect(selectsAffectedTasks()).toBe(false);
+  });
+
+  it('selects tasks only when the variable is false', () => {
+    process.env.NX_LEGACY_AFFECTED = 'false';
+    expect(selectsAffectedTasks()).toBe(true);
   });
 });
