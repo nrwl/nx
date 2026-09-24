@@ -7,26 +7,15 @@ import { FileChange, isDeletedFile } from '../file-utils';
 import { getTouchedProjects as getJSTouchedProjects } from '../../plugins/js/project-graph/affected/touched-projects';
 import { marshalGraphWithoutExternals } from './marshal-graph';
 
-/** Which locator marked a project touched. PR 2 deepens this into a reason. */
-export interface TouchedProject {
-  project: string;
-  locator: string;
-}
-
-/**
- * Runs every locator and returns what each one marked, duplicates included.
- *
- * Provenance is captured here rather than inside `TouchedProjectLocator`, whose
- * `string[]` return the four JS-plugin locators still use.
- */
+/** Runs every locator and returns what each one marked, duplicates included. */
 export async function runTouchedProjectLocators(
   graph: ProjectGraph,
   touchedFiles: FileChange[],
   nxJson: NxJsonConfiguration,
   packageJson?: any,
   projectDeletionAffectsAllProjects = true
-): Promise<TouchedProject[]> {
-  const native = await locateTouchedProjects(
+): Promise<string[]> {
+  return locateTouchedProjects(
     marshalGraphWithoutExternals(graph),
     nxJson,
     touchedFiles.map((f) => f.file),
@@ -53,7 +42,6 @@ export async function runTouchedProjectLocators(
         ),
     ]
   );
-  return native.map((project) => ({ project, locator: 'native' }));
 }
 
 /** Resolved here because the native side takes the patterns, not the plugins. */
