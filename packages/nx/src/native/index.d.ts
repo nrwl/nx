@@ -474,6 +474,11 @@ export interface AffectedTasksOptions {
    * after the walk, so they still carry a change to the tasks reading them.
    */
   excludedProjects: Array<string>
+  /**
+   * The targets the command asked for. The graph also holds what they depend
+   * on, which carries a change but is only ever run as a dependency.
+   */
+  targets: Array<string>
 }
 
 export interface BatchInfo {

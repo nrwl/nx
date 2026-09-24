@@ -196,6 +196,7 @@ export async function selectAffectedTasks(
       changedExternals: request.dependencies.externals,
       changedExternalTypes: request.dependencies.changedExternalTypes,
       excludedProjects: request.excludedProjects,
+      targets,
     }
   );
 

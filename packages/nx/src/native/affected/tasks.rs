@@ -53,6 +53,9 @@ pub struct AffectedTasksOptions {
     /// Projects `--exclude` names. Their tasks are dropped from the selection
     /// after the walk, so they still carry a change to the tasks reading them.
     pub excluded_projects: Vec<String>,
+    /// The targets the command asked for. The graph also holds what they depend
+    /// on, which carries a change but is only ever run as a dependency.
+    pub targets: Vec<String>,
 }
 
 /// The externals a change moved, as the matcher asks about them.
@@ -162,10 +165,10 @@ pub(crate) fn compute_affected_task_selection(
     let affected: Vec<String> = affected_through_output_reads(&touched, task_graph, &producers_of)
         .into_iter()
         .filter(|id| {
-            task_graph
-                .tasks
-                .get(id)
-                .is_none_or(|task| !excluded.contains(task.target.project.as_str()))
+            task_graph.tasks.get(id).is_some_and(|task| {
+                options.targets.contains(&task.target.target)
+                    && !excluded.contains(task.target.project.as_str())
+            })
         })
         .collect();
     let required = with_dependencies(task_graph, affected.iter().map(String::as_str));
@@ -486,6 +489,7 @@ mod tests {
                             id: id.to_string(),
                             target: TaskTarget {
                                 project: id.split(':').next().unwrap().to_string(),
+                                target: id.split(':').nth(1).unwrap_or_default().to_string(),
                                 ..Default::default()
                             },
                             outputs: strings(outputs),
@@ -513,6 +517,7 @@ mod tests {
             changed_externals: vec![],
             changed_external_types: vec![],
             excluded_projects: vec![],
+            targets: strings(&["build", "serve", "e2e"]),
         }
     }
 
@@ -1447,5 +1452,49 @@ mod tests {
         let s = select(&tg, &p, &options(&[]));
 
         assert_eq!(s.required, strings(&["app:build", "lib:build"]));
+    }
+
+    /// A dependency the command did not ask for is planned so a change can
+    /// travel through it, but is not itself a result.
+    #[test]
+    fn a_dependency_only_target_is_not_reported_affected() {
+        let p = multi_plans(&[("app:prebuild", vec![reads_x()]), ("app:build", vec![])]);
+        let tg = task_graph(
+            &[("app:prebuild", &["dist/gen"]), ("app:build", &[])],
+            &[("app:build", &["app:prebuild"])],
+        );
+        let options = AffectedTasksOptions {
+            targets: strings(&["build"]),
+            ..options(&[])
+        };
+
+        let s = select(&tg, &p, &options);
+
+        assert!(s.affected.is_empty());
+        assert!(s.required.is_empty());
+    }
+
+    #[test]
+    fn a_change_still_travels_through_a_dependency_only_target() {
+        let p = multi_plans(&[
+            ("app:prebuild", vec![reads_x()]),
+            (
+                "app:build",
+                vec![HashInstruction::IgnoredFileSet(strings(&["dist/gen/**"]))],
+            ),
+        ]);
+        let tg = task_graph(
+            &[("app:prebuild", &["dist/gen"]), ("app:build", &[])],
+            &[("app:build", &["app:prebuild"])],
+        );
+        let options = AffectedTasksOptions {
+            targets: strings(&["build"]),
+            ..options(&[])
+        };
+
+        let s = select(&tg, &p, &options);
+
+        assert_eq!(s.affected, strings(&["app:build"]));
+        assert_eq!(s.required, strings(&["app:build", "app:prebuild"]));
     }
 }

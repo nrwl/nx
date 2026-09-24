@@ -265,9 +265,13 @@ describe('Nx Affected with task selection', () => {
     it('selects the suite when the library it exercises changes', () => {
       const changed = `libs/${lib}/src/index.ts`;
 
-      expect(
-        runCLI(`show projects --affected -t e2e --files="${changed}"`, byTask)
-      ).toContain(webE2e);
+      const selected = runCLI(
+        `show projects --affected -t e2e --files="${changed}"`,
+        byTask
+      );
+      expect(selected).toContain(webE2e);
+      // The library's build carries the change but is not an e2e task.
+      expect(selected).not.toContain(lib);
 
       // Project selection has no edge to follow from the library to the suite.
       expect(
