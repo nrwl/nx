@@ -81,7 +81,9 @@ export async function ensureDependencies(
   }
 
   if (useVitestUi) {
-    devDependencies['@vitest/ui'] = versions(tree).vitestVersion;
+    devDependencies['@vitest/ui'] = versions(tree, {
+      uiFramework: schema.uiFramework,
+    }).vitestVersion;
   }
 
   return addDependenciesToPackageJson(

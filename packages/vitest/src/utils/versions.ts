@@ -27,6 +27,13 @@ export const edgeRuntimeVmVersion = '~3.0.2';
 export const jitiVersion = '2.4.2';
 export const analogVitestAngular = '~2.6.0';
 
+export type VersionSelectionOptions = {
+  /** Vite major about to be installed, which may not be in `package.json` yet. */
+  viteMajorVersion?: number;
+  /** Framework the caller is configuring, which may pull in its own peers. */
+  uiFramework?: string;
+};
+
 type VitestVersions = {
   vitestVersion: string;
   vitestCoverageV8Version: string;
@@ -55,7 +62,7 @@ const versionMap: Record<CompatVersions, VitestVersions> = {
 
 export function versions(
   tree: Tree,
-  options?: { viteMajorVersion?: number }
+  options?: VersionSelectionOptions
 ): VitestVersions {
   const installedVitestVersion = getInstalledVitestVersion(tree);
   if (installedVitestVersion) {
@@ -73,10 +80,16 @@ export function versions(
  */
 function highestSupportedVitestMajor(
   tree: Tree,
-  options?: { viteMajorVersion?: number }
+  options?: VersionSelectionOptions
 ): number {
-  // `@analogjs/vitest-angular` has no vitest 5 peer yet.
-  if (getDependencyVersionFromPackageJson(tree, '@analogjs/vitest-angular')) {
+  // `@analogjs/vitest-angular`, which the Angular setup pulls in, has no vitest
+  // 5 peer yet. The framework is checked alongside the manifest because the
+  // configuration generator adds analog in the same pass, so it is not in
+  // `package.json` yet when this runs.
+  if (
+    options?.uiFramework === 'angular' ||
+    getDependencyVersionFromPackageJson(tree, '@analogjs/vitest-angular')
+  ) {
     return 4;
   }
 
