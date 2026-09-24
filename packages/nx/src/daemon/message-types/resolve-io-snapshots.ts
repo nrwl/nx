@@ -3,6 +3,7 @@ export const RESOLVE_IO_SNAPSHOTS = 'RESOLVE_IO_SNAPSHOTS' as const;
 /** Not named `env`: the daemon reflects `env` onto its whole process env (`handleClientEnv`). */
 export interface IoSnapshotEnvMessage {
   NX_IO_SNAPSHOTS?: string;
+  NX_CLOUD_USE_IO_SNAPSHOTS?: string;
   NX_NO_CLOUD?: string;
   hasNxCloudToken?: boolean;
 }

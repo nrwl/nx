@@ -25,6 +25,16 @@ describe('isIoSnapshotFetchEnabled', () => {
     }
   });
 
+  it("is on when the run opts in through the Nx Cloud client's variable", () => {
+    expect(
+      isIoSnapshotFetchEnabled(
+        connected,
+        {},
+        { NX_CLOUD_USE_IO_SNAPSHOTS: 'true' }
+      )
+    ).toBe(true);
+  });
+
   it('is off outside CI, opt-in or not', () => {
     vi.stubEnv('CI', 'false');
     expect(isIoSnapshotFetchEnabled(connected, {}, optedIn)).toBe(false);
