@@ -20,16 +20,19 @@ vi.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
 
-vi.mock('nx/src/plugins/js/lock-file/lock-file', async () => ({
-  ...(await vi.importActual<any>('nx/src/plugins/js/lock-file/lock-file')),
-  generatePrunedDeployOutput: vi.fn((packageJson) => {
-    // mimic the real contract: a successful prune strips the manifest's baked
-    // pnpm config, and the caller writes the manifest afterwards
-    jest
-      .requireActual('nx/src/plugins/js/lock-file/pruned-output')
-      .stripPrunedLockfilePnpmConfig(packageJson);
-  }),
-}));
+vi.mock('nx/src/plugins/js/lock-file/lock-file', async () => {
+  const { stripPrunedLockfilePnpmConfig } = await vi.importActual<any>(
+    'nx/src/plugins/js/lock-file/pruned-output'
+  );
+  return {
+    ...(await vi.importActual<any>('nx/src/plugins/js/lock-file/lock-file')),
+    generatePrunedDeployOutput: vi.fn((packageJson) => {
+      // mimic the real contract: a successful prune strips the manifest's baked
+      // pnpm config, and the caller writes the manifest afterwards
+      stripPrunedLockfilePnpmConfig(packageJson);
+    }),
+  };
+});
 
 describe('getUpdatedPackageJsonContent', () => {
   it('should update fields for commonjs only (default)', () => {

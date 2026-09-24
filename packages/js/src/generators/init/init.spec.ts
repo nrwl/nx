@@ -1,5 +1,12 @@
 import type { Mock } from 'vitest';
-import { writeJson, readJson, Tree, updateJson, readNxJson } from '@nx/devkit';
+import {
+  ensurePackage,
+  writeJson,
+  readJson,
+  Tree,
+  updateJson,
+  readNxJson,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import init from './init';
 import {
@@ -14,7 +21,6 @@ vi.mock('@nx/devkit', async () => ({
   ...(await vi.importActual<any>('@nx/devkit')),
   ensurePackage: vi.fn(),
 }));
-const { ensurePackage } = jest.requireMock('@nx/devkit');
 
 describe('js init generator', () => {
   let tree: Tree;

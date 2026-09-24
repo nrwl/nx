@@ -31,16 +31,19 @@ vi.mock('@nx/devkit/internal', async () => ({
 
 // The real entry point reads the workspace's own root lockfile, which no temp
 // fixture provides; stub it with the contract the executor depends on.
-vi.mock('nx/src/plugins/js/lock-file/lock-file', async () => ({
-  ...(await vi.importActual<any>('nx/src/plugins/js/lock-file/lock-file')),
-  generatePrunedDeployOutput: vi.fn((packageJson) => {
-    // a successful prune strips the manifest's baked pnpm config, and the
-    // executor writes the manifest afterwards
-    jest
-      .requireActual('nx/src/plugins/js/lock-file/pruned-output')
-      .stripPrunedLockfilePnpmConfig(packageJson);
-  }),
-}));
+vi.mock('nx/src/plugins/js/lock-file/lock-file', async () => {
+  const { stripPrunedLockfilePnpmConfig } = await vi.importActual<any>(
+    'nx/src/plugins/js/lock-file/pruned-output'
+  );
+  return {
+    ...(await vi.importActual<any>('nx/src/plugins/js/lock-file/lock-file')),
+    generatePrunedDeployOutput: vi.fn((packageJson) => {
+      // a successful prune strips the manifest's baked pnpm config, and the
+      // executor writes the manifest afterwards
+      stripPrunedLockfilePnpmConfig(packageJson);
+    }),
+  };
+});
 vi.mock(
   'nx/src/plugins/js/utils/get-workspace-packages-from-graph',
   async () => ({
