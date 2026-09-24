@@ -62,7 +62,6 @@ export async function e2eProjectGeneratorInternal(
   // Detect Jest 30+ to use .cts config files (CommonJS TypeScript)
   const jestMajorVersion = getInstalledJestMajorVersion(host);
   const useCommonJsConfig = jestMajorVersion === null || jestMajorVersion >= 30;
-  const jestConfigExt = useCommonJsConfig ? 'cts' : 'ts';
 
   // TODO(@ndcunningham): This is broken.. the outputs are wrong.. and this isn't using the jest generator
   const packageJson: PackageJson = {
@@ -80,12 +79,9 @@ export async function e2eProjectGeneratorInternal(
       implicitDependencies: [options.project],
       targets: {
         e2e: {
-          executor: '@nx/jest:jest',
+          command: 'jest --passWithNoTests',
+          options: { cwd: options.e2eProjectRoot },
           outputs: ['{projectRoot}/test-output/jest/coverage'],
-          options: {
-            jestConfig: `${options.e2eProjectRoot}/jest.config.${jestConfigExt}`,
-            passWithNoTests: true,
-          },
           dependsOn: [`${options.project}:build`, `${options.project}:serve`],
         },
       },
@@ -97,12 +93,9 @@ export async function e2eProjectGeneratorInternal(
       projectType: 'application',
       targets: {
         e2e: {
-          executor: '@nx/jest:jest',
+          command: 'jest --passWithNoTests',
+          options: { cwd: options.e2eProjectRoot },
           outputs: ['{workspaceRoot}/coverage/{e2eProjectRoot}'],
-          options: {
-            jestConfig: `${options.e2eProjectRoot}/jest.config.${jestConfigExt}`,
-            passWithNoTests: true,
-          },
           dependsOn: [`${options.project}:build`, `${options.project}:serve`],
         },
       },

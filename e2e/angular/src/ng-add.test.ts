@@ -276,38 +276,16 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     // check e2e project config
     const e2eProjectConfig = readJson(`apps/${project}-e2e/project.json`);
     expect(e2eProjectConfig.targets['cypress-run']).toEqual({
-      executor: '@nx/cypress:cypress',
-      options: {
-        devServerTarget: `${project}:serve`,
-        cypressConfig: `apps/${e2eProject}/cypress.config.ts`,
-      },
-      configurations: {
-        production: {
-          devServerTarget: `${project}:serve:production`,
-        },
-      },
+      command: `cypress run --e2e --config-file cypress.config.ts`,
+      options: { cwd: `apps/${e2eProject}` },
     });
     expect(e2eProjectConfig.targets['cypress-open']).toEqual({
-      executor: '@nx/cypress:cypress',
-      options: {
-        watch: true,
-        headless: false,
-        cypressConfig: `apps/${e2eProject}/cypress.config.ts`,
-      },
+      command: `cypress open --e2e --config-file cypress.config.ts`,
+      options: { cwd: `apps/${e2eProject}` },
     });
     expect(e2eProjectConfig.targets.e2e).toEqual({
-      executor: '@nx/cypress:cypress',
-      options: {
-        devServerTarget: `${project}:serve`,
-        watch: true,
-        headless: false,
-        cypressConfig: `apps/${e2eProject}/cypress.config.ts`,
-      },
-      configurations: {
-        production: {
-          devServerTarget: `${project}:serve:production`,
-        },
-      },
+      command: `cypress open --e2e --config-file cypress.config.ts`,
+      options: { cwd: `apps/${e2eProject}` },
     });
   });
 
@@ -323,7 +301,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
 
     const projectConfig = readJson(`apps/${project}/project.json`);
     expect(projectConfig.targets.lint).toStrictEqual({
-      executor: '@nx/eslint:lint',
+      command: 'eslint',
     });
 
     let output = runCLI(`lint ${project}`);

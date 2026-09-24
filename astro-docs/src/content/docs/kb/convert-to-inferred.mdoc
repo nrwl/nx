@@ -77,7 +77,7 @@ We recommend that you check that the configurations are correct before continuin
 
 ## Understand the migration process
 
-The `convert-to-inferred` generator removes uses of executors from the corresponding plugin. For example, if `@nx/vite` is migrated, then uses of [`@nx/vite:build`](/docs/technologies/build-tools/vite/executors#build), [`@nx/vite:dev-server`](/docs/technologies/build-tools/vite/executors#dev-server), [`@nx/vite:preview-server`](/docs/technologies/build-tools/vite/executors#preview-server), and [`@nx/vite:test`](/docs/technologies/build-tools/vite/executors#test) executors will be removed.
+The `convert-to-inferred` generator removes uses of executors from the corresponding plugin. For example, if `@nx/vite` is migrated, then uses of the `@nx/vite:build`, `@nx/vite:dev-server`, `@nx/vite:preview-server`, and `@nx/vite:test` executors will be removed.
 
 Target and configuration names are maintained for each project in their `project.json` files.
 A target may be removed from `project.json` entirely when nothing is left to store there: either

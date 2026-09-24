@@ -465,6 +465,8 @@ describe('convert-to-flat-config generator', () => {
       });
       tree.write('another-folder/.myeslintignore', 'ignore/me');
       updateJson(tree, 'libs/test-lib/project.json', (json) => {
+        json.targets ??= {};
+        json.targets.lint ??= { executor: '@nx/eslint:lint', options: {} };
         json.targets.lint.options = json.targets.lint.options || {};
         json.targets.lint.options.ignorePath = 'another-folder/.myeslintignore';
         return json;
@@ -740,7 +742,7 @@ describe('convert-to-flat-config generator', () => {
         'libs/test-lib/project.json',
         (json: ProjectConfiguration) => {
           json.targets.lint = {
-            options: json.targets.lint.options,
+            options: json.targets.lint?.options ?? {},
           };
           return json;
         }
@@ -773,6 +775,16 @@ describe('convert-to-flat-config generator', () => {
         project: 'test-lib',
         setParserOptionsProject: false,
         eslintConfigFormat: 'cjs',
+      });
+
+      updateJson(tree, 'nx.json', (json) => {
+        delete json.plugins;
+        return json;
+      });
+      updateJson(tree, 'libs/test-lib/project.json', (json) => {
+        json.targets ??= {};
+        json.targets.lint = { executor: '@nx/eslint:lint' };
+        return json;
       });
 
       const warnSpy = jest.spyOn(logger, 'warn');
@@ -1089,6 +1101,8 @@ describe('convert-to-flat-config generator', () => {
       });
       tree.write('another-folder/.myeslintignore', 'ignore/me');
       updateJson(tree, 'libs/test-lib/project.json', (json) => {
+        json.targets ??= {};
+        json.targets.lint ??= { executor: '@nx/eslint:lint', options: {} };
         json.targets.lint.options = json.targets.lint.options || {};
         json.targets.lint.options.ignorePath = 'another-folder/.myeslintignore';
         return json;

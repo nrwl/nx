@@ -34,6 +34,12 @@
       "version": "23.1.0-beta.5",
       "description": "Migrate the removed @typescript-eslint/ban-types rule to its v8 successors (no-empty-object-type, no-unsafe-function-type, no-wrapper-object-types), whose options do not map 1:1 - so it is driven by an AI prompt rather than a deterministic codemod.",
       "prompt": "./dist/src/migrations/update-23-1-0/migrate-ban-types-rule.md"
+    },
+    "remove-deprecated-executors": {
+      "version": "24.0.0-beta.1",
+      "description": "Convert removed @nx/eslint executors to inferred tasks.",
+      "implementation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors",
+      "prompt": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors.md"
     }
   },
   "packageJsonUpdates": {

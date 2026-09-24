@@ -1,13 +1,15 @@
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
-import { joinPathFragments, readProjectConfiguration } from '@nx/devkit';
+import {
+  joinPathFragments,
+  readProjectConfiguration,
+  readNxJson,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import libraryGenerator from '../library/library.impl';
 import cypressComponentConfigurationGenerator from './cypress-component-configuration.impl';
 
 describe('CypressComponentConfiguration', () => {
-  // TODO(@colum): Update this to adding the plugin
-
   it('should create the cypress configuration correctly', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();
@@ -39,17 +41,10 @@ describe('CypressComponentConfiguration', () => {
       });
       "
     `);
-    expect(project.targets['component-test']).toMatchInlineSnapshot(`
-      {
-        "executor": "@nx/cypress:cypress",
-        "options": {
-          "cypressConfig": "cypress-test/cypress.config.ts",
-          "devServerTarget": "",
-          "skipServe": true,
-          "testingType": "component",
-        },
-      }
-    `);
+    expect(project.targets['component-test']).toBeUndefined();
+    expect(readNxJson(tree).plugins).toContainEqual(
+      expect.objectContaining({ plugin: '@nx/cypress/plugin' })
+    );
     expect(
       tree.exists(joinPathFragments(project.root, 'cypress'))
     ).toBeTruthy();

@@ -14,8 +14,6 @@ import {
   rspackDevServerVersion,
   rspackPluginReactRefreshVersion,
 } from '../../utils/versions';
-import { transformEsmConfigFile } from './lib/transform-esm';
-import { transformCjsConfigFile } from './lib/transform-cjs';
 import { transformPluginConfig } from './lib/transform-plugin-config';
 import { assertSupportedRspackVersion } from '../../utils/assert-supported-rspack-version';
 
@@ -30,44 +28,23 @@ export default async function (tree: Tree, options: Schema) {
   }
   const project = projects.get(options.project);
 
-  const webpackConfigsWithHelpersToConvert: [string, string][] = [];
+  if (
+    Object.values(project.targets ?? {}).some((target) =>
+      [
+        '@nx/webpack:webpack',
+        '@nx/webpack:dev-server',
+        '@nx/webpack:ssr-dev-server',
+      ].includes(target.executor)
+    )
+  ) {
+    throw new Error(
+      'Migrate this project to @nx/webpack/plugin before converting it to Rspack.'
+    );
+  }
   const webpackConfigsWithPluginsToConvert: [string, string][] = [];
 
-  for (const [targetName, target] of Object.entries(project.targets)) {
-    if (target.executor === '@nx/webpack:webpack') {
-      target.executor = '@nx/rspack:rspack';
-      if (!target.options.target) {
-        target.options.target = 'web';
-      }
-      const convertWebpackConfigOption = (options: Record<string, any>) => {
-        if (!options.webpackConfig) {
-          return;
-        }
-        const rspackConfigPath = options.webpackConfig.replace(
-          /webpack(?!.*webpack)/,
-          'rspack'
-        );
-        webpackConfigsWithHelpersToConvert.push([
-          options.webpackConfig,
-          rspackConfigPath,
-        ]);
-
-        options.rspackConfig = rspackConfigPath;
-        delete options.webpackConfig;
-      };
-
-      if (target.options.webpackConfig) {
-        convertWebpackConfigOption(target.options);
-      }
-
-      if (target.configurations) {
-        for (const [configurationName, configuration] of Object.entries(
-          target.configurations
-        )) {
-          convertWebpackConfigOption(configuration);
-        }
-      }
-    } else if (
+  for (const target of Object.values(project.targets ?? {})) {
+    if (
       (target.executor === 'nx:run-commands' && target.options.command) ||
       target.command === 'webpack-cli build'
     ) {
@@ -84,10 +61,6 @@ export default async function (tree: Tree, options: Schema) {
           webpackConfigPath.replace(/webpack(?!.*webpack)/, 'rspack'),
         ]);
       }
-    } else if (target.executor === '@nx/webpack:dev-server') {
-      target.executor = '@nx/rspack:dev-server';
-    } else if (target.executor === '@nx/webpack:ssr-dev-server') {
-      target.executor = '@nx/rspack:dev-server';
     } else if (target.executor === '@nx/react:module-federation-dev-server') {
       target.executor = '@nx/rspack:module-federation-dev-server';
     } else if (
@@ -101,10 +74,7 @@ export default async function (tree: Tree, options: Schema) {
     }
   }
 
-  if (
-    webpackConfigsWithHelpersToConvert.length === 0 &&
-    webpackConfigsWithPluginsToConvert.length === 0
-  ) {
+  if (webpackConfigsWithPluginsToConvert.length === 0) {
     // Projects built by the inferred @nx/webpack/plugin target have no
     // explicit webpack target to match, only a config file.
     const webpackConfigPath = findWebpackConfigPath(tree, project.root);
@@ -116,22 +86,11 @@ export default async function (tree: Tree, options: Schema) {
     }
   }
 
-  if (
-    webpackConfigsWithHelpersToConvert.length === 0 &&
-    webpackConfigsWithPluginsToConvert.length === 0
-  ) {
+  if (webpackConfigsWithPluginsToConvert.length === 0) {
     console.error(
       `Project '${options.project}' does not have any webpack targets to convert.`
     );
     return;
-  }
-
-  for (const [
-    webpackConfigPath,
-    rspackConfigPath,
-  ] of webpackConfigsWithHelpersToConvert) {
-    tree.rename(webpackConfigPath, rspackConfigPath);
-    transformConfigFileWithHelpers(tree, rspackConfigPath);
   }
 
   for (const [
@@ -199,13 +158,6 @@ export default async function (tree: Tree, options: Schema) {
 
 function transformConfigFileWithPlugins(tree: Tree, configPath: string) {
   transformPluginConfig(tree, configPath);
-}
-
-function transformConfigFileWithHelpers(tree: Tree, configPath: string) {
-  transformEsmConfigFile(tree, configPath);
-  transformCjsConfigFile(tree, configPath);
-  cleanupEmptyImports(tree, configPath);
-  replaceOfRequireOfLocalWebpackConfig(tree, configPath);
 }
 
 function replaceOfRequireOfLocalWebpackConfig(tree: Tree, configPath: string) {

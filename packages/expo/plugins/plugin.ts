@@ -139,7 +139,8 @@ function buildExpoTargets(
 
   const targets: Record<string, TargetConfiguration> = {
     [options.startTargetName]: {
-      executor: `@nx/expo:start`,
+      command: `expo start`,
+      options: { cwd: projectRoot },
       continuous: true,
     },
     [options.serveTargetName]: {
@@ -166,15 +167,18 @@ function buildExpoTargets(
       outputs: [getOutputs(projectRoot, 'dist')],
     },
     [options.installTargetName]: {
-      executor: '@nx/expo:install',
+      command: `expo install`,
+      options: { cwd: projectRoot },
       continuous: false,
     },
     [options.prebuildTargetName]: {
-      executor: `@nx/expo:prebuild`,
+      command: `expo prebuild`,
+      options: { cwd: projectRoot },
       continuous: false,
     },
     [options.buildTargetName]: {
-      executor: `@nx/expo:build`,
+      command: `eas build`,
+      options: { cwd: projectRoot },
       continuous: false,
     },
     [options.submitTargetName]: {

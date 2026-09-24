@@ -77,7 +77,7 @@ export async function convertToInferred(tree: Tree, options: Schema) {
       .flat()
       .find((v) => v.includes('@nx/rspack:convert-config-to-rspack-plugin'));
 
-    if (convertMessage.length > 0) {
+    if (convertMessage?.length > 0) {
       logger.flushLogs((message) => !convertMessage.includes(message));
       throw new Error(convertMessage);
     } else {

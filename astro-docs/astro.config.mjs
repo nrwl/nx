@@ -52,6 +52,26 @@ export default defineConfig({
   compressHTML: true,
   trailingSlash: 'never',
   redirects: {
+    // Executor reference pages removed in Nx 24 with their executors.
+    '/technologies/test-tools/cypress/executors':
+      '/docs/technologies/test-tools/cypress/introduction',
+    '/technologies/test-tools/detox/executors':
+      '/docs/technologies/test-tools/detox/introduction',
+    '/technologies/test-tools/jest/executors':
+      '/docs/technologies/test-tools/jest/introduction',
+    '/technologies/test-tools/storybook/executors':
+      '/docs/technologies/test-tools/storybook/introduction',
+    '/technologies/test-tools/vitest/executors':
+      '/docs/technologies/test-tools/vitest/introduction',
+    '/technologies/eslint/executors': '/docs/technologies/eslint/introduction',
+    '/technologies/react/next/executors':
+      '/docs/technologies/react/next/introduction',
+    '/technologies/react/remix/executors':
+      '/docs/technologies/react/remix/introduction',
+    '/technologies/build-tools/rollup/executors':
+      '/docs/technologies/build-tools/rollup/introduction',
+    '/technologies/build-tools/vite/executors':
+      '/docs/technologies/build-tools/vite/introduction',
     '/concepts/inferred-tasks': '/docs/concepts/mental-model',
     '/concepts/executors-and-configurations':
       '/docs/kb/executors-and-configurations',

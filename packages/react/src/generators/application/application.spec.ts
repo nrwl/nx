@@ -1276,7 +1276,7 @@ describe('app', () => {
     });
   });
 
-  it('should add targetDefaults to nxJson when addPlugin=false', async () => {
+  it('should enable inference when addPlugin=false', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();
     let nxJson = readNxJson(tree);
@@ -1294,29 +1294,16 @@ describe('app', () => {
 
     // ASSERT
     nxJson = readNxJson(tree);
-    const td = nxJson.targetDefaults!;
-    const buildEntry = Array.isArray(td)
-      ? td.find(
-          (e) =>
-            e.target === 'build' &&
-            e.projects === undefined &&
-            e.plugin === undefined
+    expect(
+      nxJson.plugins?.some((plugin) =>
+        ['@nx/vite/plugin', '@nx/webpack/plugin', '@nx/rspack/plugin'].includes(
+          typeof plugin === 'string' ? plugin : plugin.plugin
         )
-      : td.build;
-    const {
-      target: _t,
-      projects: _p,
-      plugin: _pl,
-      ...buildConfig
-    } = (buildEntry as any) ?? {};
-    expect(buildConfig).toMatchInlineSnapshot(`
-      {
-        "cache": true,
-        "dependsOn": [
-          "^build",
-        ],
-      }
-    `);
+      )
+    ).toBe(true);
+    expect(
+      readProjectConfiguration(tree, 'myapp').targets?.build
+    ).toBeUndefined();
   });
 
   describe('TS solution setup', () => {
@@ -1699,10 +1686,9 @@ describe('app', () => {
         skipFormat: true,
       });
 
-      expect(
-        readProjectConfiguration(appTree, '@proj/my-app').targets.build.options
-          .outputPath
-      ).toBe('apps/my-app/dist');
+      expect(appTree.read('apps/my-app/webpack.config.js', 'utf-8')).toContain(
+        "path: join(__dirname, 'dist')"
+      );
     });
 
     it('should configure rspack build task correctly with the output contained within the project root', async () => {
@@ -1717,10 +1703,9 @@ describe('app', () => {
         skipFormat: true,
       });
 
-      expect(
-        readProjectConfiguration(appTree, '@proj/my-app').targets.build.options
-          .outputPath
-      ).toBe('apps/my-app/dist');
+      expect(appTree.read('apps/my-app/rspack.config.js', 'utf-8')).toContain(
+        "path: join(__dirname, 'dist')"
+      );
     });
 
     it('should generate project.json if useProjectJson is true', async () => {

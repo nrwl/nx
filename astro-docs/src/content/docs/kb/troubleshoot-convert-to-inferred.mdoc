@@ -57,7 +57,7 @@ project structure.
 
 ## Next.js: unable to migrate `outputPath`, `generateLockfile` and `includeDevDependenciesInPackageJson` options
 
-The [`outputPath`](/docs/technologies/react/remix/executors#build) option from `@nx/next:build` is ignored because it
+The `outputPath` option from `@nx/next:build` is ignored because it
 conflicts with Next.js' requirement that [`distDir`](https://nextjs.org/docs/app/api-reference/next-config-js/distDir)
 remain inside the project directory. Previously, the `@nx/next:build` executor performed workarounds to bring it outside
 the project root, but those workarounds lead to other issues, such as Turbopack not working.
@@ -97,7 +97,7 @@ migration, `nx run <proj>:serve --prod` not longer starts the prod server. Use `
 
 ## Remix: unable to migrate `outputPath` option
 
-The [`outputPath`](/docs/technologies/react/remix/executors#build) option from `@nx/remix:build` is ignored because it often
+The `outputPath` option from `@nx/remix:build` is ignored because it often
 leads to ESM errors when the output path is outside the project root. The ESM error occurs because the
 root `package.json` may not have `"type": "module"` set, which means that the compiled ESM code will fail to run. To
 guarantee that `serve` works, we migrate the outputs to the Remix defaults (`build` and `public/build` inside the
@@ -120,7 +120,7 @@ to `"type": "module"`.
 
 ## Remix: unsupported `generatePackageJson` and `generateLockFile` options
 
-The `generatePackageJson` and `generateLockFile` options in [`@nx/remix:build`](/docs/technologies/react/remix/executors#build) cannot
+The `generatePackageJson` and `generateLockFile` options in `@nx/remix:build` cannot
 currently be migrated. There is support for this feature in
 the [Nx Vite plugin](/docs/kb/configure-vite#typescript-paths), so in the future we may be able to support it if
 using Remix+Vite.
@@ -149,7 +149,7 @@ export default config;
 
 ## Vite: unsupported `proxyConfig` option
 
-Projects that used the [`proxyConfig`](/docs/technologies/build-tools/vite/executors#dev-server) option of `@nx/vite:dev-server`
+Projects that used the `proxyConfig` option of `@nx/vite:dev-server`
 will need to inline the proxy configuration from the original file into `vite.config.ts`.
 
 For example, if you previously used this in `proxy.config.json`:

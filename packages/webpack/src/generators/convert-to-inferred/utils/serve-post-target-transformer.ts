@@ -4,10 +4,6 @@ import {
 } from '@nx/devkit/internal';
 import {
   parseTargetString,
-  readJson,
-  readTargetOptions,
-  type ExecutorContext,
-  type ProjectsConfigurations,
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
@@ -68,25 +64,21 @@ async function processOptions(
   devServerOptions: ExtractedOptions;
   webpackConfigPath: string;
 }> {
-  const executorContext = {
-    cwd: process.cwd(),
-    nxJsonConfiguration: readJson(tree, 'nx.json'),
-    projectGraph: context.projectGraph,
-    projectName: context.projectName,
-    projectsConfigurations: Object.entries(context.projectGraph.nodes).reduce(
-      (acc, [projectName, project]) => {
-        acc.projects[projectName] = project.data;
-        return acc;
-      },
-      { version: 1, projects: {} } as ProjectsConfigurations
-    ),
-    root: context.workspaceRoot,
-  } as ExecutorContext;
   const buildTarget = parseTargetString(
     target.options.buildTarget,
-    executorContext
+    context.projectGraph
   );
-  const buildOptions = readTargetOptions(buildTarget, executorContext);
+  const buildConfiguration =
+    context.projectGraph.nodes[buildTarget.project].data.targets[
+      buildTarget.target
+    ];
+  // The build executor is removed in v24; do not resolve its schema.
+  const buildOptions = {
+    ...buildConfiguration.options,
+    ...buildConfiguration.configurations?.[
+      buildTarget.configuration ?? buildConfiguration.defaultConfiguration
+    ],
+  };
 
   // it must exist, we validated it in the project filter
   const webpackConfigPath = buildOptions.webpackConfig;

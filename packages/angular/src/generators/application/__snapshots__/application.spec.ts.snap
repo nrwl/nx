@@ -825,9 +825,6 @@ exports[`app nested should create project configs 1`] = `
         "{options.outputPath}",
       ],
     },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-    },
     "serve": {
       "configurations": {
         "development": {
@@ -850,16 +847,6 @@ exports[`app nested should create project configs 1`] = `
         "spa": true,
         "staticFilePath": "dist/my-dir/my-app/browser",
       },
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "options": {
-        "jestConfig": "my-dir/my-app/jest.config.cts",
-        "tsConfig": "my-dir/my-app/tsconfig.spec.json",
-      },
-      "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}",
-      ],
     },
   },
 }
@@ -933,9 +920,6 @@ exports[`app not nested should create project configs 1`] = `
         "{options.outputPath}",
       ],
     },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-    },
     "serve": {
       "configurations": {
         "development": {
@@ -958,16 +942,6 @@ exports[`app not nested should create project configs 1`] = `
         "spa": true,
         "staticFilePath": "dist/my-app/browser",
       },
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "options": {
-        "jestConfig": "my-app/jest.config.cts",
-        "tsConfig": "my-app/tsconfig.spec.json",
-      },
-      "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}",
-      ],
     },
   },
 }

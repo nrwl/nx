@@ -170,15 +170,7 @@ describe('React:CypressComponentTestConfiguration', () => {
 
     expect(
       readProjectConfiguration(tree, 'some-lib').targets['component-test']
-    ).toEqual({
-      executor: '@nx/cypress:cypress',
-      options: {
-        cypressConfig: 'some-lib/cypress.config.ts',
-        devServerTarget: 'my-app:build',
-        skipServe: true,
-        testingType: 'component',
-      },
-    });
+    ).toBeUndefined();
   });
 
   it('should generate cypress component test config with project graph', async () => {
@@ -235,15 +227,7 @@ describe('React:CypressComponentTestConfiguration', () => {
 
     expect(
       readProjectConfiguration(tree, 'some-lib').targets['component-test']
-    ).toEqual({
-      executor: '@nx/cypress:cypress',
-      options: {
-        cypressConfig: 'some-lib/cypress.config.ts',
-        devServerTarget: 'my-app:build',
-        skipServe: true,
-        testingType: 'component',
-      },
-    });
+    ).toBeUndefined();
   });
 
   it('should install the vite dev server when the bundler is inferred from the build target', async () => {
@@ -417,15 +401,7 @@ describe('React:CypressComponentTestConfiguration', () => {
 
     expect(
       readProjectConfiguration(tree, 'some-lib').targets['component-test']
-    ).toEqual({
-      executor: '@nx/cypress:cypress',
-      options: {
-        cypressConfig: 'some-lib/cypress.config.ts',
-        devServerTarget: 'my-app:build',
-        skipServe: true,
-        testingType: 'component',
-      },
-    });
+    ).toBeUndefined();
   });
   it('should generate tests for existing tsx components', async () => {
     await applicationGenerator(tree, {
@@ -542,7 +518,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       skipTsConfig: false,
     });
     const appConfig = readProjectConfiguration(tree, 'my-app');
-    appConfig.targets['build'].executor = 'something/else';
+    appConfig.targets['build'] = { executor: 'something/else' };
     updateProjectConfiguration(tree, 'my-app', appConfig);
     jest.clearAllMocks();
     projectGraph = {
@@ -572,9 +548,7 @@ describe('React:CypressComponentTestConfiguration', () => {
         buildTarget: 'my-app:build',
       })
     ).rejects.toThrow();
-    expect(require('@nx/devkit').createProjectGraphAsync).toHaveBeenCalledTimes(
-      1
-    );
+    expect(require('@nx/devkit').createProjectGraphAsync).toHaveBeenCalled();
   });
 
   it('should setup cypress config files correctly', async () => {
@@ -632,7 +606,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       "const { nxComponentTestingPreset } = require('@nx/react/plugins/component-testing');
       const { defineConfig } = require('cypress');
       module.exports = defineConfig({
-        component: nxComponentTestingPreset(__filename, { bundler: 'vite' }),
+        component: nxComponentTestingPreset(__filename, { bundler: 'vite', buildTarget: 'my-app:build' }),
       });
       "
     `);

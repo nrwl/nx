@@ -11,7 +11,7 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { CypressExecutorOptions } from '../../executors/cypress/cypress.impl';
+import { CypressExecutorOptions } from '../../executors/cypress/schema';
 import {
   assertMinimumCypressVersion,
   getInstalledCypressMajorVersion,

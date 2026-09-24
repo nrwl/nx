@@ -1,16 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
   "executors": {
-    "rspack": {
-      "implementation": "./dist/src/executors/rspack/rspack.impl",
-      "schema": "./dist/src/executors/rspack/schema.json",
-      "description": "Run Rspack via an executor for a project."
-    },
-    "dev-server": {
-      "implementation": "./dist/src/executors/dev-server/dev-server.impl",
-      "schema": "./dist/src/executors/dev-server/schema.json",
-      "description": "Run @rspack/dev-server to serve a project."
-    },
     "ssr-dev-server": {
       "implementation": "./dist/src/executors/ssr-dev-server/ssr-dev-server.impl",
       "schema": "./dist/src/executors/ssr-dev-server/schema.json",

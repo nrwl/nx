@@ -15,5 +15,4 @@ export interface StorybookConfigureSchema {
   /**
    * @internal
    */
-  addExplicitTargets?: boolean;
 }

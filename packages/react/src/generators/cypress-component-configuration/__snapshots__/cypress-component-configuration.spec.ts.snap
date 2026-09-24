@@ -4,7 +4,7 @@ exports[`React:CypressComponentTestConfiguration should generate cypress compone
 "const { nxComponentTestingPreset } = require('@nx/react/plugins/component-testing');
 const { defineConfig } = require('cypress');
 module.exports = defineConfig({
-  component: nxComponentTestingPreset(__filename, { bundler: 'vite' }),
+  component: nxComponentTestingPreset(__filename, { bundler: 'vite', buildTarget: 'my-app:build' }),
 });
 "
 `;
@@ -13,7 +13,7 @@ exports[`React:CypressComponentTestConfiguration should generate cypress compone
 "const { nxComponentTestingPreset } = require('@nx/react/plugins/component-testing');
 const { defineConfig } = require('cypress');
 module.exports = defineConfig({
-  component: nxComponentTestingPreset(__filename, { bundler: 'vite' }),
+  component: nxComponentTestingPreset(__filename, { bundler: 'vite', buildTarget: 'my-app:build' }),
 });
 "
 `;
@@ -23,7 +23,7 @@ exports[`React:CypressComponentTestConfiguration should generate cypress compone
 const { defineConfig } = require('cypress');
 module.exports = defineConfig({
   component: {
-    ...nxComponentTestingPreset(__filename),
+    ...nxComponentTestingPreset(__filename, { buildTarget: 'my-app:build' }),
     // Cypress 14+ defaults justInTimeCompile to true (webpack only), which can
     // intermittently run 0 tests in CI. Remove this line to opt back in.
     justInTimeCompile: false,
@@ -36,7 +36,7 @@ exports[`React:CypressComponentTestConfiguration should generate cypress config 
 "const { nxComponentTestingPreset } = require('@nx/react/plugins/component-testing');
 const { defineConfig } = require('cypress');
 module.exports = defineConfig({
-  component: nxComponentTestingPreset(__filename, { bundler: 'vite' }),
+  component: nxComponentTestingPreset(__filename, { bundler: 'vite', buildTarget: 'my-app:build' }),
 });
 "
 `;

@@ -84,6 +84,12 @@
       },
       "description": "Update Jest test-setup for the Expo SDK 56 winter runtime",
       "factory": "./dist/src/migrations/update-23-1-0/update-jest-winter-runtime-for-expo-56"
+    },
+    "remove-deprecated-executors": {
+      "version": "24.0.0-beta.1",
+      "description": "Convert removed @nx/expo executors to inferred tasks.",
+      "implementation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors",
+      "prompt": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors.md"
     }
   },
   "packageJsonUpdates": {

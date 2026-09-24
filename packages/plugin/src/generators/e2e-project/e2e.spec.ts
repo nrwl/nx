@@ -157,19 +157,16 @@ describe('NxPlugin e2e-project Generator', () => {
         "dependsOn": [
           "^build",
         ],
-        "executor": "@nx/jest:jest",
         "options": {
-          "jestConfig": "my-plugin-e2e/jest.config.cts",
           "runInBand": true,
         },
-        "outputs": [
-          "{workspaceRoot}/coverage/{projectRoot}",
-        ],
       }
     `);
   });
 
-  it('should not update create e2e target if target covered by existing plugin', async () => {
+  // The e2e target itself is inferred; the generator only contributes the
+  // `^build` dependency and serialized run that the inferred target lacks.
+  it('only contributes the e2e overrides when a plugin already covers the target', async () => {
     updateJson(tree, 'nx.json', (json) => {
       return {
         ...(json ?? {}),
@@ -198,7 +195,10 @@ describe('NxPlugin e2e-project Generator', () => {
 
     expect(project).toBeTruthy();
     expect(project.root).toEqual('my-plugin-e2e');
-    expect(project.targets.e2e).toBeFalsy();
+    expect(project.targets.e2e).toEqual({
+      dependsOn: ['^build'],
+      options: { runInBand: true },
+    });
   });
 
   it('should add jest support', async () => {
@@ -212,9 +212,7 @@ describe('NxPlugin e2e-project Generator', () => {
     const project = readProjectConfiguration(tree, 'my-plugin-e2e');
 
     expect(project.targets.e2e).toMatchObject({
-      options: expect.objectContaining({
-        jestConfig: 'my-plugin-e2e/jest.config.cts',
-      }),
+      options: expect.objectContaining({ runInBand: true }),
     });
 
     expect(tree.exists('my-plugin-e2e/tsconfig.spec.json')).toBeTruthy();
@@ -248,7 +246,6 @@ describe('NxPlugin e2e-project Generator', () => {
 
     const project = readProjectConfiguration(tree, 'my-plugin-e2e');
 
-    expect(project.targets.e2e.executor).toBe('@nx/vitest:test');
     // The suites share a tmp/test-project directory, so they must not run in
     // parallel. These have to stay scalar: vitest 4 removed `poolOptions`, and
     // the executor serializes nested options into a string vitest cannot read.
@@ -304,7 +301,6 @@ describe('NxPlugin e2e-project Generator', () => {
     const project = readProjectConfiguration(tree, 'my-plugin-e2e');
 
     expect(project.targets.e2e).toMatchObject({
-      executor: '@nx/vitest:test',
       dependsOn: ['^build'],
       options: expect.objectContaining({
         maxWorkers: 1,
@@ -371,9 +367,7 @@ describe('NxPlugin e2e-project Generator', () => {
       const project = readProjectConfiguration(tree, 'my-plugin-e2e');
 
       expect(project.targets.e2e).toMatchObject({
-        options: expect.objectContaining({
-          jestConfig: 'packages/my-plugin-e2e/jest.config.cts',
-        }),
+        options: expect.objectContaining({ runInBand: true }),
       });
 
       expect(

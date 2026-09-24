@@ -10,7 +10,7 @@ import {
   targetToTargetString,
 } from '@nx/devkit';
 import { join } from 'path';
-import { CypressExecutorOptions } from '../executors/cypress/cypress.impl';
+import { CypressExecutorOptions } from '../executors/cypress/schema';
 import detectPort from 'detect-port';
 import { existsSync, writeFileSync, mkdirSync } from 'fs';
 import { tmpdir } from 'os';

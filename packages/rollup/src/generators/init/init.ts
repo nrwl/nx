@@ -4,7 +4,6 @@ import {
   createProjectGraphAsync,
   formatFiles,
   GeneratorCallback,
-  readNxJson,
   Tree,
 } from '@nx/devkit';
 import {
@@ -19,10 +18,7 @@ export async function rollupInitGenerator(tree: Tree, schema: Schema) {
   assertSupportedRollupVersion(tree);
 
   let task: GeneratorCallback = () => {};
-  const nxJson = readNxJson(tree);
-  schema.addPlugin ??=
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
+  schema.addPlugin = true;
 
   if (!schema.skipPackageJson) {
     // Rollup is a peer dependency, so ensure it is installed for both the

@@ -20,7 +20,6 @@ export interface JestProjectSchema {
   /**
    * @internal
    */
-  addExplicitTargets?: boolean;
 
   /**
    * @deprecated Use the `compiler` option instead. It will be removed in Nx v22.
