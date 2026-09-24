@@ -93,12 +93,6 @@ impl<'a> ChangedExternals<'a> {
 pub struct AffectedTaskSelection {
     /// Every affected task, sorted.
     pub affected: Vec<String>,
-    /// Consumer -> the affected producers whose outputs it reads. Only the
-    /// edges the walk crossed, which is what `--explain` reports.
-    pub producers_of: HashMap<String, Vec<String>>,
-    /// Changed project configs no longer on disk. Every task was seeded for
-    /// them, since the project each described is gone from the graph.
-    pub deleted_project_configs: Vec<String>,
 }
 
 pub(crate) const ROOT_TSCONFIG_FILES: [&str; 2] = ["tsconfig.base.json", "tsconfig.json"];
@@ -153,14 +147,9 @@ pub(crate) fn compute_affected_task_selection(
     }
 
     let producers_of = compute_dependent_output_edges(hash_plans, task_graph);
-    let (affected, producers_of) =
-        affected_through_output_reads(&touched, task_graph, &producers_of);
+    let affected = affected_through_output_reads(&touched, task_graph, &producers_of);
 
-    Ok(AffectedTaskSelection {
-        affected,
-        producers_of,
-        deleted_project_configs: deleted,
-    })
+    Ok(AffectedTaskSelection { affected })
 }
 
 /// Changed paths that are project configuration, split by whether the file is
@@ -272,15 +261,12 @@ pub(crate) fn touched_tasks(
 /// and a cycle leaves any order arbitrary. Reaching outward from the touched
 /// set needs no order, so neither can strand a consumer.
 ///
-/// Returns the affected set, sorted, and the edges it crossed: for every
-/// affected task, the affected producers it reads. A task that was touched
-/// directly still records its producers, since `--explain` lists every reason
-/// that applies rather than the first one found.
+/// Returns the affected set, sorted.
 fn affected_through_output_reads(
     touched: &HashSet<String>,
     task_graph: &TaskGraph,
     producers_of: &HashMap<String, Vec<String>>,
-) -> (Vec<String>, HashMap<String, Vec<String>>) {
+) -> Vec<String> {
     // A read by a task outside the graph is not an edge, as an unknown producer
     // was never one.
     let known = |id: &str| task_graph.tasks.contains_key(id);
@@ -308,26 +294,9 @@ fn affected_through_output_reads(
         }
     }
 
-    // Collected once the set is closed, so a consumer names every affected
-    // producer it reads rather than whichever one reached it first.
-    let mut edges: HashMap<String, Vec<String>> = HashMap::new();
-    for (consumer, producers) in producers_of {
-        if !known(consumer) {
-            continue;
-        }
-        let hit: Vec<String> = producers
-            .iter()
-            .filter(|producer| affected.contains(producer.as_str()))
-            .cloned()
-            .collect();
-        if !hit.is_empty() {
-            edges.insert(consumer.clone(), hit);
-        }
-    }
-
     let mut affected: Vec<String> = affected.into_iter().map(str::to_string).collect();
     affected.sort_unstable();
-    (affected, edges)
+    affected
 }
 
 /// The changed paths, normalized, with each one's owning project resolved once
@@ -963,7 +932,6 @@ mod tests {
         )
         .unwrap();
         assert_eq!(s.affected, strings(&["b:build"]));
-        assert!(s.deleted_project_configs.is_empty());
     }
 
     /// One plugin's glob failing to parse must not switch config detection off
@@ -989,8 +957,7 @@ mod tests {
     }
 
     /// The project a deleted config described is gone from the graph, so no
-    /// surviving task has a fileset naming it. Everything is selected, and the
-    /// file is reported so `--explain` can say why.
+    /// surviving task has a fileset naming it, and everything is selected.
     #[test]
     fn a_deleted_project_config_selects_every_task() {
         let g = graph(&[("a", "packages/nx")]);
@@ -1000,7 +967,6 @@ mod tests {
         let s = compute_affected_task_selection(&g, &p, &tg, &strings(&[deleted]), &options(&[]))
             .unwrap();
         assert_eq!(s.affected, strings(&["a:build", "b:build"]));
-        assert_eq!(s.deleted_project_configs, strings(&[deleted]));
     }
 
     #[test]
@@ -1055,8 +1021,6 @@ mod tests {
         // docs:build depends on ui:build but never reads its outputs, so a
         // dependsOn edge alone does not carry affectedness.
         assert_eq!(s.affected, strings(&["app:build", "ui:build"]));
-        assert_eq!(s.producers_of["app:build"], strings(&["ui:build"]));
-        assert!(!s.producers_of.contains_key("ui:build"));
     }
 
     /// A chain of three: reachability carries the change to the end, whatever
@@ -1099,7 +1063,6 @@ mod tests {
             compute_affected_task_selection(&g, &p, &tg, &strings(&["libs/a/x.ts"]), &options(&[]))
                 .unwrap();
         assert_eq!(s.affected, strings(&["a:build", "b:build", "c:build"]));
-        assert_eq!(s.producers_of["c:build"], strings(&["b:build"]));
     }
 
     /// A served task's outputs are read across a continuous dependency, which is
@@ -1160,7 +1123,6 @@ mod tests {
             strings(&["e2e:e2e", "lib:build", "web:serve"]),
             "the e2e suite reads the served outputs and must run"
         );
-        assert_eq!(s.producers_of["e2e:e2e"], strings(&["web:serve"]));
     }
 
     /// e2e serves web, and web reads ui's build through a declared read, with no
@@ -1218,7 +1180,6 @@ mod tests {
             strings(&["e2e:e2e", "ui:build", "web:serve"]),
             "the suite exercising the changed library must run"
         );
-        assert_eq!(s.producers_of["e2e:e2e"], strings(&["ui:build"]));
     }
 
     /// Two serve tasks that continuously depend on each other. Affectedness is

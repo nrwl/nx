@@ -440,16 +440,6 @@ export declare function affectedTasks(projectGraph: ExternalObject<ProjectGraph>
 export interface AffectedTaskSelection {
   /** Every affected task, sorted. */
   affected: Array<string>
-  /**
-   * Consumer -> the affected producers whose outputs it reads. Only the
-   * edges the walk crossed, which is what `--explain` reports.
-   */
-  producersOf: Record<string, Array<string>>
-  /**
-   * Changed project configs no longer on disk. Every task was seeded for
-   * them, since the project each described is gone from the graph.
-   */
-  deletedProjectConfigs: Array<string>
 }
 
 export interface AffectedTasksOptions {
