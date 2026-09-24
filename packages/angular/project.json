@@ -18,6 +18,13 @@
       "outputs": ["{projectRoot}/README.md"],
       "command": "node ./scripts/copy-readme.js angular packages/angular/readme-template.md packages/angular/README.md",
       "inputs": ["copyReadme"]
+    },
+    "test": {
+      "inputs": [
+        "...",
+        "{workspaceRoot}/tools/vitest/**/*",
+        "{workspaceRoot}/scripts/jest-mocks/clack-prompts.js"
+      ]
     }
   },
   "implicitDependencies": ["vite", "storybook", "playwright", "jest"]
