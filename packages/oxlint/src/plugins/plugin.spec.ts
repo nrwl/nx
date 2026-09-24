@@ -10,6 +10,15 @@ import {
   OxlintPluginOptions,
 } from './plugin.js';
 
+// The shared setup's `@nx/devkit` mock spreads the module, freezing
+// `workspaceRoot` before TempFs moves it; `getRootTsConfigFileName` reads it.
+vi.mock('@nx/devkit', async () => {
+  const actual = await vi.importActual<any>('@nx/devkit');
+  return Object.defineProperty({ ...actual }, 'workspaceRoot', {
+    get: () => actual.workspaceRoot,
+  });
+});
+
 vi.mock('nx/src/utils/cache-directory', async () => ({
   ...(await vi.importActual<any>('nx/src/utils/cache-directory')),
   workspaceDataDirectory: 'tmp/oxlint-project-graph-cache',
