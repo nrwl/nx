@@ -1,6 +1,8 @@
+import type { MockInstance } from 'vitest';
 import { readJson, Tree, writeJson } from '@nx/devkit';
 import * as devkit from '@nx/devkit';
 import { createTree } from '@nx/devkit/testing';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { load } from '@zkochan/js-yaml';
 import {
   angularCliVersion,
@@ -26,24 +28,27 @@ const defaultOptions: Omit<
 
 describe('new', () => {
   let tree: Tree;
-  let installPackagesTaskSpy: jest.SpyInstance;
-  let generatePresetSpy: jest.SpyInstance;
-  let getNpmPackageVersionSpy: jest.SpyInstance;
+  let tempFs: TempFs;
+  let installPackagesTaskSpy: MockInstance;
+  let generatePresetSpy: MockInstance;
+  let getNpmPackageVersionSpy: MockInstance;
 
   beforeEach(() => {
+    tempFs = new TempFs('new-spec');
     tree = createTree();
-    // we need an actual path for the package manager version check
-    tree.root = process.cwd();
+    // A real dir for the package manager version check, outside the repo so
+    // prettier does not pick up the repo's .editorconfig.
+    tree.root = tempFs.tempDir;
 
-    installPackagesTaskSpy = jest
+    installPackagesTaskSpy = vi
       .spyOn(devkit, 'installPackagesTask')
       .mockImplementation(() => undefined);
 
-    generatePresetSpy = jest
+    generatePresetSpy = vi
       .spyOn(generatePreset, 'generatePreset')
       .mockImplementation(async () => undefined);
 
-    getNpmPackageVersionSpy = jest
+    getNpmPackageVersionSpy = vi
       .spyOn(getNpmPackageVersion, 'getNpmPackageVersion')
       .mockImplementation(
         (name, version) => version ?? DEFAULT_PACKAGE_VERSION
@@ -51,7 +56,8 @@ describe('new', () => {
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
+    tempFs.cleanup();
   });
 
   it('should generate an empty nx.json', async () => {
@@ -249,7 +255,7 @@ describe('new', () => {
         } else {
           delete process.env['NX_E2E_PRESET_VERSION'];
         }
-        jest.restoreAllMocks();
+        vi.restoreAllMocks();
       });
       // the process of actual resolving of a version relies on npm and is mocked here,
       // thus "package@2" is expected to be resolved with version "2" instead of "2.0.0"
@@ -295,9 +301,7 @@ describe('new', () => {
 
       it('should deny the build script of a custom preset on pnpm 11', async () => {
         process.env['NX_E2E_PRESET_VERSION'] = '1.1.1';
-        jest
-          .spyOn(devkit, 'getPackageManagerVersion')
-          .mockReturnValue('11.22.0');
+        vi.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('11.22.0');
 
         await newGenerator(tree, {
           ...defaultOptions,
