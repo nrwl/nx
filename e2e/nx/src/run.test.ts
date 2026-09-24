@@ -4,19 +4,23 @@ import {
   fileExists,
   getStrippedEnvironmentVariables,
   isWindows,
+  killProcessAndPorts,
   newProject,
+  readFile,
   readJson,
   removeFile,
   reservePort,
   runCLI,
   runCLIAsync,
   runCommand,
+  runCommandUntil,
   tmpProjPath,
   uniq,
   updateFile,
   updateJson,
 } from '@nx/e2e-utils';
 import { execSync } from 'child_process';
+import { stripVTControlCharacters } from 'util';
 import { PackageJson } from 'nx/src/utils/package-json';
 import * as path from 'path';
 
@@ -880,8 +884,8 @@ describe('Nx Running Tests', () => {
           `
           const { writeFileSync } = require('fs');
           setTimeout(() => {
-            console.log('server listening');
             writeFileSync('ready.txt', '');
+            console.log('server listening');
           }, 2000);
           setInterval(() => {}, 1000);
         `
@@ -931,6 +935,66 @@ describe('Nx Running Tests', () => {
         expect(output).toContain(
           `Successfully ran target check for project ${mylib1}`
         );
+      }, 60000);
+
+      it('should wait for a serve that another Nx process started', async () => {
+        removeFile(`libs/${mylib1}/ready.txt`);
+        updateFile(`libs/${mylib1}/starts.txt`, '');
+        updateFile(
+          `libs/${mylib1}/serve.js`,
+          `
+          const { appendFileSync, existsSync, writeFileSync } = require('fs');
+          appendFileSync('starts.txt', 'x');
+          console.log('server starting');
+          const poll = setInterval(() => {
+            if (!existsSync('go.txt')) return;
+            clearInterval(poll);
+            writeFileSync('ready.txt', '');
+            console.log('server listening');
+          }, 100);
+          setInterval(() => {}, 1000);
+        `
+        );
+        updateJson(`libs/${mylib1}/project.json`, (config) => {
+          config.targets.serve = {
+            command: 'node serve.js',
+            options: { cwd: `libs/${mylib1}` },
+            continuous: true,
+            readyWhen: { logMatches: 'server listening' },
+          };
+          config.targets.check = {
+            command:
+              "node -e \"process.exit(require('fs').existsSync('ready.txt') ? 0 : 1)\"",
+            options: { cwd: `libs/${mylib1}` },
+            dependsOn: [{ target: 'serve', waitFor: 'ready' }],
+          };
+          return config;
+        });
+
+        const serve = await runCommandUntil(
+          `serve ${mylib1} --skip-nx-cache`,
+          (output) => output.includes('server starting')
+        );
+        try {
+          const check = await runCommandUntil(
+            `check ${mylib1} --skip-nx-cache`,
+            (output) =>
+              output.includes(`Waiting for "${mylib1}:serve" to be ready...`)
+          );
+          expect(fileExists(`libs/${mylib1}/ready.txt`)).toBe(false);
+          const done = new Promise<string>((resolve) => {
+            let output = '';
+            check.stdout.on('data', (chunk) => (output += chunk));
+            check.on('close', () => resolve(stripVTControlCharacters(output)));
+          });
+          updateFile(`libs/${mylib1}/go.txt`, '');
+          expect(await done).toContain(
+            `Successfully ran target check for project ${mylib1}`
+          );
+          expect(readFile(`libs/${mylib1}/starts.txt`)).toBe('x');
+        } finally {
+          await killProcessAndPorts(serve.pid);
+        }
       }, 60000);
 
       describe('readyWhen probes', () => {
