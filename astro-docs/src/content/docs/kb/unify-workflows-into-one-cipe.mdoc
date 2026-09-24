@@ -1,0 +1,69 @@
+---
+title: 'Unify multiple workflows into one CIPE'
+description: 'Coordinate several CI workflows triggered by the same commit so they share a single CI Pipeline Execution in Nx Cloud'
+sidebar:
+  label: Unify workflows into one CIPE
+filter: 'type:Guides'
+topics:
+  - 'Continuous integration'
+---
+
+A single push often triggers more than one workflow, for example `project-checks.yaml` for lint and test and `release.yaml` for publishing. By default each workflow gets its own `GITHUB_RUN_ID`, so each creates its own [CI Pipeline Execution (CIPE)](/docs/features/ci-features/distribute-task-execution) in Nx Cloud. Every CIPE consumes execution credits and produces its own dashboard entry, even when the workflows describe one logical run of the same commit.
+
+Setting [`NX_CI_EXECUTION_ID`](/docs/reference/environment-variables#nx-cloud-environment-variables) and [`NX_CI_EXECUTION_ENV`](/docs/reference/environment-variables#nx-cloud-environment-variables) explicitly lets you tell Nx Cloud that the workflows belong together: they share one CIPE, and each still gets its own run group with its own [heartbeat](/docs/kb/heartbeat-and-manual-shutdown-handling) lifecycle.
+
+## Recipe
+
+Set the same pair of environment variables at the workflow level in every workflow that should participate in the unified CIPE:
+
+```yaml
+# .github/workflows/project-checks.yaml
+env:
+  # Every workflow triggered by this commit ends up in the same CIPE.
+  NX_CI_EXECUTION_ID: ${{ github.event.pull_request.head.sha || github.sha }}-${{ github.run_attempt }}
+  # Each workflow gets its own run group inside that CIPE.
+  NX_CI_EXECUTION_ENV: ${{ github.workflow }}
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - run: npx nx-cloud start-ci-run --distribute-on="8 linux-medium-js" --stop-agents-after=e2e
+      - run: npx nx affected -t lint,test,build,e2e
+```
+
+```yaml
+# .github/workflows/release.yaml
+env:
+  NX_CI_EXECUTION_ID: ${{ github.event.pull_request.head.sha || github.sha }}-${{ github.run_attempt }}
+  NX_CI_EXECUTION_ENV: ${{ github.workflow }}
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - run: npx nx-cloud start-ci-run --distribute-on="4 linux-medium-js" --stop-agents-after=release
+      - run: npx nx release
+```
+
+The commit SHA plus `run_attempt` gives each push a stable, unique execution ID. The workflow name distinguishes the run groups inside it. Nx Cloud will show one CIPE for the push, containing one run group per workflow.
+
+## Nuances to know
+
+### `github.run_attempt` belongs in the ID, not the env
+
+Putting `run_attempt` in `NX_CI_EXECUTION_ID` means that clicking "Re-run failed jobs" in GitHub creates a fresh CIPE for the retry, which is what most teams want to see in the dashboard. Putting it in `NX_CI_EXECUTION_ENV` would instead attach a new run group to the original CIPE on every rerun, and the CIPE would accumulate run groups over time without a clean boundary between attempts.
+
+### Reruns of one workflow split the CIPE, on purpose
+
+If you rerun `project-checks.yaml` but not `release.yaml`, the two workflows will be at different `run_attempt` numbers, so their execution IDs no longer match and they land in separate CIPEs. That is the correct outcome. They are at different states in the retry cycle and should not be treated as one run. If you want a rerun to always pull the release workflow along with it, rerun both workflows in GitHub.
+
+### `--fix-tasks` and `--auto-apply-fixes` must match across the unified CIPE
+
+If any workflow in the unified CIPE passes `--fix-tasks` or `--auto-apply-fixes` to `start-ci-run`, every workflow in that CIPE must pass the same values. Nx Cloud rejects mismatched invocations with `--fix-tasks has to match in all invocations of start-ci-run`, because [self-healing CI](/docs/features/ci-features/self-healing-ci) settings are a property of the CIPE, not of one workflow.
+
+The safest pattern is to define these flags in one place, whether that's a reusable action, a shared shell script, or the CI config file when you use [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config), so a workflow cannot drift from the others.
+
+### Run groups still have independent heartbeats
+
+Each workflow's `nx` invocations run under their own `NX_CI_EXECUTION_ENV`, which means each workflow has its own [heartbeat lifecycle](/docs/kb/heartbeat-and-manual-shutdown-handling). A parallel workflow can start, stop, or fail without evicting the run group of another workflow in the same CIPE. This is the same isolation described in [isolate a job into its own run group](/docs/kb/heartbeat-and-manual-shutdown-handling#isolate-a-job-into-its-own-run-group), applied across workflows rather than across jobs in one workflow.

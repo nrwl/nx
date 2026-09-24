@@ -75,7 +75,7 @@ Type: `integer`, minimum `0`. Default: `1`.
 
 ### `lifecycle.heartbeat`
 
-When `true`, Nx Cloud monitors the run for stalled progress and marks it failed if the main job stops reporting in for too long.
+When `true`, Nx Cloud monitors the run for stalled progress and marks it failed if the main job stops reporting in for too long. See [heartbeat and main job completion handling](/docs/kb/heartbeat-and-manual-shutdown-handling) for how the heartbeat is scoped to the run group and when to turn it off in favor of explicit completion.
 
 Type: `boolean`. Default: `true`.
 
@@ -223,9 +223,11 @@ Type: array of strings.
 
 ## `overrides`
 
-Per-environment overrides keyed by [`NX_CI_EXECUTION_ENV`](/docs/reference/environment-variables) value.
+Per-environment overrides keyed by [`NX_CI_EXECUTION_ENV`](/docs/reference/environment-variables#nx-cloud-environment-variables) value.
 Each override is a partial config that takes precedence over the base sections when its key matches the active environment.
 This has no `start-ci-run` flag equivalent. It is specific to the config file.
+
+`NX_CI_EXECUTION_ENV` also defines the run group boundary — see [isolate a job into its own run group](/docs/kb/heartbeat-and-manual-shutdown-handling#isolate-a-job-into-its-own-run-group) for the mechanism, and [unify multiple workflows into one CIPE](/docs/kb/unify-workflows-into-one-cipe) for using it across workflows.
 
 ```yaml
 # .nx/ci-config.yaml

@@ -12,8 +12,9 @@ A big challenge in building a task distribution engine is tracking when the main
 For example, your agents might be busy running your Nx tasks, but GitHub Actions suddenly decides to kill your main job because it is consuming too many resources.
 In that case, regardless of how you configured your pipeline or how many shutdown hooks we add to the code, we simply do not have enough time to tell Nx Cloud it can stop running tasks on agents.
 
-To fix this, the first time you run `nx` commands, we create a small background process on your main job that pings Nx Cloud every few seconds. The moment
-we stop receiving these pings, we assume the main job has died, and we will fail the CI run and shut down the agents.
+To fix this, the first task-executing `nx` command on your main job (`nx run`, `nx run-many`, `nx affected`) starts a small background process that pings Nx Cloud every few seconds. If Nx Cloud does not receive a ping for 30 seconds, it assumes the main job has died, marks the run group complete, and shuts down its agents. Metadata commands such as `nx graph`, `nx show projects`, and `nx-cloud start-ci-run` do not start heartbeats on their own. They rely on a later task-executing command to do so.
+
+Heartbeats are scoped to a run group, not to a CIPE. The run group is derived from `NX_CI_EXECUTION_ID` and, when set, `NX_CI_EXECUTION_ENV` (see the [environment variables reference](/docs/reference/environment-variables#nx-cloud-environment-variables)). Every invocation that resolves to the same run group shares a single heartbeat lifecycle, so an agent's heartbeat keeps the run group alive for the main job, and a parallel job on the same run group can also keep it alive or evict it, depending on when its own heartbeat stops. This scoping is what makes it possible to isolate one job's heartbeat from another job's without breaking distributed execution. See [isolate a job into its own run group](#isolate-a-job-into-its-own-run-group) below.
 
 This is useful not just for worst-case scenarios, but it also keeps your CI config simple:
 
@@ -34,9 +35,37 @@ dte:
 
 In summary, for 99% of cases, you will never have to think about the heartbeat or care that it exists. Your CI will just work.
 
+### Isolate a job into its own run group
+
+By default, every `nx` invocation in a single CI workflow run resolves to the same run group. That is what lets Nx Agents attach to their main coordinator without any per-job configuration. It also means that if a parallel job in the same workflow runs its own `nx` command, that job's heartbeat starts pinging the shared run group. When that job finishes, its heartbeat process goes with it. If no other heartbeat replaces it within 30 seconds, the run group is evicted and the main coordinator fails with `The Nx Cloud heartbeat process failed to report its status in time`, even though the coordinator itself is still running.
+
+Set `NX_CI_EXECUTION_ENV` on the parallel job to move its `nx` invocations into a separate run group. The CIPE and the remote cache are still shared (cache entries are keyed by task hash, not by run group), but the heartbeat lifecycles are now independent, and that job can start and stop at its own pace without affecting the main coordinator.
+
+```yaml
+# .github/workflows/ci.yaml
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - run: npx nx-cloud start-ci-run --distribute-on="8 linux-medium-js" --stop-agents-after=e2e
+      - run: npx nx affected -t lint,test,build,e2e
+
+  static-checks:
+    runs-on: ubuntu-latest
+    env:
+      # Isolate this job's heartbeat from the main coordinator's run group.
+      NX_CI_EXECUTION_ENV: ${{ github.job }}
+    steps:
+      - run: npx nx affected -t format:check,typecheck
+```
+
+Any distinct string works. `${{ github.job }}` is a convenient default because it is guaranteed unique across jobs in one workflow. The same env variable also pairs agents with the matching main job when you [have more than one main job](#multi-job-pipelines-with-different-stages), and selects the matching [`overrides`](/docs/reference/nx-cloud/ci-config#overrides) entry in `.nx/ci-config.yaml`, so pick a value that both is unique and reads well in configuration.
+
+If you would rather have the parallel job opt out of Nx Cloud entirely (giving up cache reuse), pass `--no-cloud` on its `nx` commands instead. The isolation via `NX_CI_EXECUTION_ENV` is preferred when you still want the cache benefits.
+
 ### Caveats
 
-In some specific cases, though, the heartbeat process will not work properly. In that case, turn off [`lifecycle.heartbeat`](/docs/reference/nx-cloud/ci-config#lifecycleheartbeat) and manage completion yourself:
+In some specific cases, though, the heartbeat process will not work properly. In that case, turn off automatic completion and manage completion yourself. If you configure runs with `.nx/ci-config.yaml` and `nx-cloud start-nx-agents`, set [`lifecycle.heartbeat`](/docs/reference/nx-cloud/ci-config#lifecycleheartbeat) to `false`:
 
 ```yaml
 # .nx/ci-config.yaml
@@ -46,13 +75,17 @@ lifecycle:
   heartbeat: false
 ```
 
+If you configure runs with `nx-cloud start-ci-run` and CLI flags, pass [`--require-explicit-completion`](/docs/reference/nx-cloud-cli#nx-cloud-start-ci-run) instead. Both do the same thing, and both require you to add an `nx complete-ci-run` step that always runs:
+
 ```yaml
-- run: npx nx start-nx-agents
+- run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --require-explicit-completion
 - run: npm ci
 - run: npx nx affected -t build,lint,test
 - run: npx nx complete-ci-run # this now tells NxCloud to turn off the agents
   if: always() # IMPORTANT: Always run, even in case of failures
 ```
+
+The trade-off: if the `always()` step never runs (a catastrophic runner failure, a GitHub Actions outage that kills the whole job), the CIPE stays open until Nx Cloud's server-side reconciliation sweeps it, which can take hours. In practice `if: always()` runs after both success and failure, and even after workflow cancellation, so this is a good trade-off for most workflows.
 
 When you might need to do this:
 
