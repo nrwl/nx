@@ -18,7 +18,6 @@ import {
   type MigrateRunState,
 } from './run-state';
 import {
-  hasLiveRunActivity,
   liveRunActivityPids,
   registerRunActivity,
   releaseRunActivity,
@@ -166,28 +165,6 @@ describe('state-lock', () => {
       );
       // The lock is released even though the read threw.
       expect(isLocked()).toBe(false);
-    });
-  });
-
-  describe('hasLiveRunActivity', () => {
-    it('is free when no process ever registered on the run', () => {
-      expect(hasLiveRunActivity(dir)).toBe(false);
-    });
-
-    it("ignores this process's own hold", () => {
-      registerRunActivity(dir);
-      try {
-        expect(hasLiveRunActivity(dir)).toBe(false);
-      } finally {
-        releaseRunActivity(dir);
-      }
-    });
-
-    it('counts an activity directory it cannot list as live', () => {
-      // A file where the directory should be: readdir fails with ENOTDIR.
-      writeFileSync(join(dir, 'activity'), '');
-
-      expect(hasLiveRunActivity(dir)).toBe(true);
     });
   });
 

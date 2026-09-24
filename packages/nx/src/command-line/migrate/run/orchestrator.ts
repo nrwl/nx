@@ -90,9 +90,10 @@ import {
   TERMINAL_STEP_STATUSES,
 } from './run-state';
 import {
+  describeHolders,
   hasAnyLiveRunActivity,
-  hasLiveRunActivity,
   holdRunActivity,
+  liveRunActivityPids,
   registerRunActivity,
   releaseRunActivity,
   updateRunState,
@@ -732,9 +733,17 @@ function refuseUndeletableRun(
       `Not deleting migrate run '${runId}': without a native file lock nx cannot tell whether another nx migrate process is acting on it. Make sure none is, remove ${MIGRATE_RUNS_RELATIVE_DIR}/${runId}, then re-run the command.`
     );
   }
-  if (hasLiveRunActivity(runDir(root, runId))) {
+  const holders = liveRunActivityPids(runDir(root, runId));
+  if (holders === 'unknown') {
     throw new Error(
-      `Not deleting migrate run '${runId}': another nx migrate process is acting on it (an agent session, a reconcile, or a step). Wait for it to end, then re-run the command.`
+      `Not deleting migrate run '${runId}': nx cannot tell whether another nx migrate process is still working on it.`
+    );
+  }
+  if (holders.length > 0) {
+    throw new Error(
+      `Not deleting migrate run '${runId}': ${describeHolders(
+        holders
+      )} (an agent session, a reconcile, or a step). Wait for it to end, then re-run the command.`
     );
   }
   const live = state.steps.filter(

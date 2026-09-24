@@ -248,9 +248,10 @@ function printExistingRunReport(
 
 /**
  * The user's call on an active run found where a new one would start. On a
- * terminal, asks; otherwise prints the report with both commands and returns
- * undefined, which the caller turns into exit 1: nothing was done and
- * nothing could be asked.
+ * terminal, asks, unless another process holds the run, where the continue
+ * gate's refusal is thrown instead; otherwise prints the report with both
+ * commands and returns undefined, which the caller turns into exit 1: nothing
+ * was done and nothing could be asked.
  */
 async function decideExistingRun(
   found: Extract<OrchestratorInitResult, { kind: 'existing-run' }>,
