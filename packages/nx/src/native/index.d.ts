@@ -750,8 +750,6 @@ export interface IoSnapshotDiagnostic {
 
 /** What JS knows about a run's tasks that the eligibility walk needs. */
 export interface IoSnapshotEligibilityOptions {
-  /** Tasks whose target sets `sandbox.enabled: false`. */
-  optedOutTaskIds?: Array<string>
   /** Tasks whose executor ships a custom hasher. */
   customHasherTaskIds?: Array<string>
 }

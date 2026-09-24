@@ -269,7 +269,6 @@ impl HashPlanner {
         task_graph: TaskGraph,
         snapshots: Option<&IoSnapshots>,
         custom_hasher_task_ids: &[String],
-        opted_out_task_ids: &[String],
     ) -> anyhow::Result<HashPlans> {
         let function_start = std::time::Instant::now();
         let snapshot_tasks = snapshots.map(|snapshots| {
@@ -278,7 +277,6 @@ impl HashPlanner {
                 &task_graph,
                 &EligibilityInputs {
                     custom_hasher: custom_hasher_task_ids.iter().cloned().collect(),
-                    opted_out: opted_out_task_ids.iter().cloned().collect(),
                 },
                 Some(&task_ids),
             )
@@ -442,15 +440,9 @@ impl HashPlanner {
         task_graph: TaskGraph,
         snapshots: Option<&IoSnapshots>,
         custom_hasher_task_ids: &[String],
-        opted_out_task_ids: &[String],
     ) -> anyhow::Result<HashMap<String, Vec<HashInstruction>>> {
-        let hash_plans = self.get_plans_internal(
-            task_ids,
-            task_graph,
-            snapshots,
-            custom_hasher_task_ids,
-            opted_out_task_ids,
-        )?;
+        let hash_plans =
+            self.get_plans_internal(task_ids, task_graph, snapshots, custom_hasher_task_ids)?;
         Ok(hash_plans
             .plans
             .into_iter()
@@ -484,7 +476,6 @@ impl HashPlanner {
             task_graph,
             snapshots.as_deref(),
             options.custom_hasher_task_ids.as_deref().unwrap_or(&[]),
-            options.opted_out_task_ids.as_deref().unwrap_or(&[]),
         )
     }
 
@@ -503,7 +494,6 @@ impl HashPlanner {
             task_graph,
             snapshots.as_deref(),
             options.custom_hasher_task_ids.as_deref().unwrap_or(&[]),
-            options.opted_out_task_ids.as_deref().unwrap_or(&[]),
         )?;
         Ok(External::new(plans))
     }
@@ -1838,7 +1828,6 @@ mod tests {
                     tasks(),
                     None,
                     &[],
-                    &[],
                 )
                 .unwrap();
             for _ in 0..3 {
@@ -1849,7 +1838,6 @@ mod tests {
                             ids.iter().map(String::as_str).collect(),
                             tasks(),
                             None,
-                            &[],
                             &[]
                         )
                         .unwrap(),
@@ -1859,7 +1847,7 @@ mod tests {
             for id in &ids {
                 assert_eq!(
                     cached
-                        .get_plans_materialized(vec![id], tasks(), None, &[], &[])
+                        .get_plans_materialized(vec![id], tasks(), None, &[])
                         .unwrap()[id],
                     expected[id]
                 );
@@ -2180,7 +2168,7 @@ mod tests {
             continuous_dependencies: HashMap::new(),
         };
         let plans = planner
-            .get_plans_internal(vec!["app:build"], task_graph, None, &[], &[])
+            .get_plans_internal(vec!["app:build"], task_graph, None, &[])
             .unwrap();
         let plan = &plans.plans["app:build"];
         assert_eq!(

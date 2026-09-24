@@ -41,30 +41,12 @@ function customHasherTaskIds(
   return ids;
 }
 
-/** Tasks whose target sets `sandbox.enabled: false`. */
-function optedOutTaskIds(
-  projectGraph: ProjectGraph,
-  taskGraph: TaskGraph
-): string[] {
-  return Object.values(taskGraph.tasks)
-    .filter(
-      (task) =>
-        (
-          projectGraph.nodes[task.target.project]?.data.targets?.[
-            task.target.target
-          ] as { sandbox?: { enabled?: boolean } } | undefined
-        )?.sandbox?.enabled === false
-    )
-    .map((task) => task.id);
-}
-
 /** The eligibility walk's view of the run's tasks, as JS resolves it. */
 export function ioSnapshotEligibilityOptions(
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph
 ): IoSnapshotEligibilityOptions {
   return {
-    optedOutTaskIds: optedOutTaskIds(projectGraph, taskGraph),
     customHasherTaskIds: customHasherTaskIds(projectGraph, taskGraph),
   };
 }

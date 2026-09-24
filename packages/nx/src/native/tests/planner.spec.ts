@@ -2396,19 +2396,17 @@ describe('task planner', () => {
 
     it('withholds the snapshot from a task that opted out', () => {
       const { planner, taskGraph } = fixture();
+      // Read off the task, where the task graph resolved target defaults.
+      taskGraph.tasks['parent:build'].sandbox = { enabled: false };
       const snapshots = snapshotsFor({
         'parent:build': { inputs: ['libs/parent/filea.ts'] },
       });
       const plain = planner.getPlans(['parent:build'], taskGraph);
+      expect(planner.getPlans(['parent:build'], taskGraph, snapshots)).toEqual(
+        plain
+      );
       expect(
-        planner.getPlans(['parent:build'], taskGraph, snapshots, {
-          optedOutTaskIds: ['parent:build'],
-        })
-      ).toEqual(plain);
-      expect(
-        getIoSnapshotReport(snapshots, taskGraph, {
-          optedOutTaskIds: ['parent:build'],
-        }).diagnostics
+        getIoSnapshotReport(snapshots, taskGraph).diagnostics
       ).toContainEqual(
         expect.objectContaining({ reason: 'disabled', taskId: 'parent:build' })
       );

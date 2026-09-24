@@ -8,13 +8,10 @@ use crate::native::tasks::hash_planner::walk_root;
 use crate::native::tasks::hashers::validate_files_glob;
 use crate::native::tasks::types::TaskGraph;
 
-/// What the eligibility walk needs from the workspace. Task-level opt-outs
-/// and custom hashers are decided in JS, where target configuration and
-/// executors are resolved.
+/// What the eligibility walk needs beyond the task graph. Custom hashers are
+/// decided in JS, where executors are resolved; opt-outs ride on each task.
 #[derive(Default)]
 pub(crate) struct EligibilityInputs {
-    /// Tasks whose target sets `sandbox.enabled: false`.
-    pub opted_out: HashSet<String>,
     /// Tasks whose executor ships a custom hasher.
     pub custom_hasher: HashSet<String>,
 }
@@ -23,8 +20,6 @@ pub(crate) struct EligibilityInputs {
 #[napi(object)]
 #[derive(Default)]
 pub struct IoSnapshotEligibilityOptions {
-    /// Tasks whose target sets `sandbox.enabled: false`.
-    pub opted_out_task_ids: Option<Vec<String>>,
     /// Tasks whose executor ships a custom hasher.
     pub custom_hasher_task_ids: Option<Vec<String>>,
 }
@@ -32,11 +27,6 @@ pub struct IoSnapshotEligibilityOptions {
 impl From<IoSnapshotEligibilityOptions> for EligibilityInputs {
     fn from(options: IoSnapshotEligibilityOptions) -> Self {
         Self {
-            opted_out: options
-                .opted_out_task_ids
-                .unwrap_or_default()
-                .into_iter()
-                .collect(),
             custom_hasher: options
                 .custom_hasher_task_ids
                 .unwrap_or_default()
@@ -174,7 +164,8 @@ pub(crate) fn resolve_scoped(
         };
 
     for task_id in task_ids {
-        if inputs.opted_out.contains(task_id) {
+        let sandbox = task_graph.tasks[task_id].sandbox.as_ref();
+        if sandbox.and_then(|sandbox| sandbox.enabled) == Some(false) {
             diagnostics.push(IoSnapshotDiagnostic::task("disabled", task_id));
             continue;
         }

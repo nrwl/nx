@@ -50,6 +50,8 @@ function task(project: string, target: string) {
     projectRoot: projectGraph.nodes[project].data.root,
     cache: true,
     parallelism: true,
+    // As createTaskGraph does: the task carries its target's sandbox config.
+    sandbox: projectGraph.nodes[project].data.targets[target]?.sandbox,
   };
 }
 
