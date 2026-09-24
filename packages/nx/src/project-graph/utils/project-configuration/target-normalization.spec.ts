@@ -119,6 +119,186 @@ describe('validateAndNormalizeProjectRootMap', () => {
     expect(projectRootMap['libs/a/ui'].name).toEqual('ui');
   });
 
+  describe('sandbox validation through the real merge pipeline', () => {
+    // The root-map tests below construct shapes the pipeline cannot produce.
+    // This one goes through mergeCreateNodesResults so a falsy sandbox is
+    // proven to reach validation the way an authored project.json would.
+    const resultsFor = (sandbox: unknown) => [
+      [
+        [
+          'nx/core/project-json',
+          'libs/a/ui/project.json',
+          {
+            projects: {
+              'libs/a/ui': {
+                name: 'a-ui',
+                root: 'libs/a/ui',
+                targets: { build: { executor: 'nx:run-commands', sandbox } },
+              },
+            },
+          },
+        ],
+      ],
+    ];
+
+    // Escaping this call is what takes the daemon down: only the three
+    // classifiable errors are collected, and `shutdown-utils` exits the
+    // process for anything else.
+    it('collects sandbox: false authored on a project instead of throwing', async () => {
+      const { mergeCreateNodesResults } =
+        await import('../project-configuration-utils');
+      const errors: Error[] = [];
+
+      expect(() =>
+        mergeCreateNodesResults(
+          resultsFor(false) as any,
+          [],
+          {} as any,
+          tempFs.tempDir,
+          errors
+        )
+      ).not.toThrow();
+
+      expect(errors.map((e) => e.message)).toEqual([
+        expect.stringMatching(/"sandbox" configuration for target "build"/),
+      ]);
+    });
+
+    it('accepts a well-formed sandbox authored on a project', async () => {
+      const { mergeCreateNodesResults } =
+        await import('../project-configuration-utils');
+      const errors: Error[] = [];
+
+      expect(() =>
+        mergeCreateNodesResults(
+          resultsFor({ enabled: false, ignoredReads: ['tmp/**'] }) as any,
+          [],
+          {} as any,
+          tempFs.tempDir,
+          errors
+        )
+      ).not.toThrow();
+
+      expect(errors).toEqual([]);
+    });
+  });
+
+  describe('sandbox validation', () => {
+    const projectRootMapWithSandbox = (sandbox: unknown) => ({
+      'libs/a/ui': {
+        root: 'libs/a/ui',
+        name: 'a-ui',
+        targets: { build: { executor: 'nx:run-commands', sandbox } },
+      },
+    });
+
+    // Aggregated as a WorkspaceValidityError so `mergeCreateNodesResults` can
+    // classify it; a bespoke class escapes to the daemon.
+    const sandboxErrors = (sandbox: unknown): string[] => {
+      try {
+        validateAndNormalizeProjectRootMap(
+          tempFs.tempDir,
+          projectRootMapWithSandbox(sandbox) as any,
+          {}
+        );
+      } catch (e) {
+        expect(e).toBeInstanceOf(AggregateError);
+        for (const inner of (e as AggregateError).errors) {
+          expect(inner.name).toEqual('WorkspaceValidityError');
+        }
+        return (e as AggregateError).errors.map((inner) => inner.message);
+      }
+      return [];
+    };
+
+    it('should reject a non-object sandbox', () => {
+      expect(sandboxErrors(false)).toEqual([
+        expect.stringMatching(
+          /"sandbox" configuration for target "build" in project "a-ui"/
+        ),
+      ]);
+    });
+
+    it('should reject a string where a glob array is required', () => {
+      expect(sandboxErrors({ ignoredReads: 'tmp/**' })).toEqual([
+        expect.stringMatching(
+          /"sandbox.ignoredReads" for target "build" in project "a-ui" must be an array of glob patterns, but it is a string/
+        ),
+      ]);
+    });
+
+    it('should reject a non-string element inside a glob array', () => {
+      expect(sandboxErrors({ ignoredWrites: ['ok/**', 7] })).toEqual([
+        expect.stringMatching(
+          /"sandbox.ignoredWrites\[1\]".*must be a glob pattern string/
+        ),
+      ]);
+    });
+
+    it('should reject a non-boolean enabled', () => {
+      expect(sandboxErrors({ enabled: 'false' })).toEqual([
+        expect.stringMatching(
+          /"sandbox.enabled".*must be a boolean, but it is a string/
+        ),
+      ]);
+    });
+
+    it('should reject a non-boolean backfill', () => {
+      expect(sandboxErrors({ backfill: 'false' })).toEqual([
+        expect.stringMatching(
+          /"sandbox.backfill".*must be a boolean, but it is a string/
+        ),
+      ]);
+    });
+
+    it('should reject a key that is not a sandbox option', () => {
+      expect(sandboxErrors({ ignoreReads: ['tmp/**'] })).toEqual([
+        expect.stringMatching(
+          /"sandbox.ignoreReads" for target "build" in project "a-ui" is not a sandbox option/
+        ),
+      ]);
+    });
+
+    // A spread with no base to resolve against survives merging, so rejecting
+    // it here would fail a config the merge deliberately let through.
+    it('should accept the spread token as a key', () => {
+      expect(sandboxErrors({ '...': true, backfill: false })).toEqual([]);
+    });
+
+    it('should report every malformed key in one error', () => {
+      const [message] = sandboxErrors({
+        enabled: 'false',
+        backfill: 'false',
+        ignoreReads: ['tmp/**'],
+        ignoredReads: 'tmp/**',
+        ignoredWrites: ['ok/**', 7],
+      });
+
+      expect(message).toMatch(
+        /"sandbox.ignoreReads" .* is not a sandbox option/
+      );
+      expect(message).toMatch(/"sandbox.enabled"/);
+      expect(message).toMatch(/"sandbox.backfill"/);
+      expect(message).toMatch(/"sandbox.ignoredReads"/);
+      expect(message).toMatch(/"sandbox.ignoredWrites\[1\]"/);
+    });
+
+    it('should accept a well-formed sandbox', () => {
+      expect(
+        sandboxErrors({
+          enabled: false,
+          backfill: false,
+          ignoredReads: ['tmp/**'],
+          ignoredWrites: ['scratch/**'],
+        })
+      ).toEqual([]);
+    });
+
+    it('should accept a target with no sandbox', () => {
+      expect(sandboxErrors(undefined)).toEqual([]);
+    });
+  });
+
   it('should fall back to the folder name when project.json cannot be parsed', () => {
     tempFs.createFilesSync({
       'libs/a/ui/project.json': 'not json',
