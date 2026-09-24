@@ -1,6 +1,7 @@
 import { readJson, Tree, writeJson } from '@nx/devkit';
 import * as devkit from '@nx/devkit';
 import { createTree } from '@nx/devkit/testing';
+import { load } from '@zkochan/js-yaml';
 import {
   angularCliVersion,
   nxVersion,
@@ -95,22 +96,30 @@ describe('new', () => {
       expect(readJson(tree, 'my-workspace/package.json')).toMatchSnapshot();
     });
 
-    it('should not add typescript for presets that scaffold nothing', async () => {
-      for (const preset of [Preset.Apps, Preset.NPM]) {
-        tree = createTree();
-        tree.root = process.cwd();
+    it('should pin typescript for the apps preset', async () => {
+      await newGenerator(tree, {
+        ...defaultOptions,
+        name: 'my-workspace',
+        directory: 'my-workspace',
+        appName: 'app',
+        preset: Preset.Apps,
+      });
 
-        await newGenerator(tree, {
-          ...defaultOptions,
-          name: 'my-workspace',
-          directory: 'my-workspace',
-          appName: 'app',
-          preset,
-        });
+      const { devDependencies } = readJson(tree, 'my-workspace/package.json');
+      expect(devDependencies.typescript).toBe(typescriptVersion);
+    });
 
-        const { devDependencies } = readJson(tree, 'my-workspace/package.json');
-        expect(devDependencies).not.toHaveProperty('typescript');
-      }
+    it('should not add typescript for the npm preset', async () => {
+      await newGenerator(tree, {
+        ...defaultOptions,
+        name: 'my-workspace',
+        directory: 'my-workspace',
+        appName: 'app',
+        preset: Preset.NPM,
+      });
+
+      const { devDependencies } = readJson(tree, 'my-workspace/package.json');
+      expect(devDependencies).not.toHaveProperty('typescript');
     });
 
     it('should generate necessary npm dependencies for ts preset', async () => {
@@ -240,6 +249,7 @@ describe('new', () => {
         } else {
           delete process.env['NX_E2E_PRESET_VERSION'];
         }
+        jest.restoreAllMocks();
       });
       // the process of actual resolving of a version relies on npm and is mocked here,
       // thus "package@2" is expected to be resolved with version "2" instead of "2.0.0"
@@ -282,6 +292,29 @@ describe('new', () => {
           });
         }
       );
+
+      it('should deny the build script of a custom preset on pnpm 11', async () => {
+        process.env['NX_E2E_PRESET_VERSION'] = '1.1.1';
+        jest
+          .spyOn(devkit, 'getPackageManagerVersion')
+          .mockReturnValue('11.22.0');
+
+        await newGenerator(tree, {
+          ...defaultOptions,
+          name: 'my-workspace',
+          directory: 'my-workspace',
+          appName: 'app',
+          preset: '3rd-party-package',
+          packageManager: 'pnpm',
+        });
+
+        expect(
+          load(tree.read('my-workspace/pnpm-workspace.yaml', 'utf-8'))
+        ).toStrictEqual({
+          autoInstallPeers: true,
+          allowBuilds: { nx: true, '3rd-party-package': false },
+        });
+      });
     });
   });
 

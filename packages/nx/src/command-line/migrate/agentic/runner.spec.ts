@@ -19,8 +19,9 @@ vi.mock('@clack/prompts', () => ({
 import { execSync, spawn } from 'child_process';
 import { autocomplete } from '@clack/prompts';
 import { output } from '../../../utils/output';
-import { adaptSpawnForWindowsShim, runAgentic } from './runner';
+import { runAgentic } from './runner';
 import { AgentDefinition, DetectedInstalledAgent } from './types';
+import { WINDOWS_COMMAND_LINE_BUDGET } from './windows-cmd';
 
 const mockSpawn = spawn as unknown as Mock;
 const mockExecSync = execSync as unknown as Mock;
@@ -52,7 +53,7 @@ type FakeChild = EventEmitter & {
   exitCode: number | null;
   signalCode: NodeJS.Signals | null;
   killed: boolean;
-  kill: Mock<boolean, [NodeJS.Signals?]>;
+  kill: Mock<(signal?: NodeJS.Signals) => boolean>;
 };
 
 function fakeChild(
@@ -166,8 +167,11 @@ describe('runAgentic', () => {
 
   function defaultInvocation(workspaceRoot = workspace) {
     return {
-      systemContext: 'sys',
-      userPrompt: 'user',
+      systemPrompt: 'sys',
+      systemPromptFilePath: `${workspaceRoot}/.nx/migrate-runs/1.0.0/m.system.md`,
+      instructionsPointer: 'read m.instructions.md',
+      inlineSystemContext: 'inline sys',
+      inlineSystemContextFallback: 'short sys',
       workspaceRoot,
       runDirName: '23.0.0',
     } as const;
@@ -208,6 +212,7 @@ describe('runAgentic', () => {
       definition,
       invocationContext: defaultInvocation('/workspace'),
       handoffFilePath,
+      handoffsDir: workspace,
     });
 
     const [binary, args, options] = mockSpawn.mock.calls[0];
@@ -229,6 +234,7 @@ describe('runAgentic', () => {
       definition,
       invocationContext: defaultInvocation('/ws'),
       handoffFilePath,
+      handoffsDir: workspace,
     });
 
     expect(mockSpawn.mock.calls[0][2].cwd).toBe('/ws');
@@ -264,6 +270,7 @@ describe('runAgentic', () => {
         definition: makeDefinition(),
         invocationContext: defaultInvocation(),
         handoffFilePath,
+        handoffsDir: workspace,
       });
 
       expect(outcome).toEqual(expected);
@@ -288,6 +295,7 @@ describe('runAgentic', () => {
         definition: makeDefinition(),
         invocationContext: defaultInvocation(),
         handoffFilePath,
+        handoffsDir: workspace,
       });
 
       expect(mockPrompt).toHaveBeenCalledTimes(1);
@@ -323,6 +331,7 @@ describe('runAgentic', () => {
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
     });
 
     expect(outcome.kind).toBe('ambiguous-abort');
@@ -341,6 +350,7 @@ describe('runAgentic', () => {
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
       handoffPollIntervalMs: 5,
     });
 
@@ -366,6 +376,7 @@ describe('runAgentic', () => {
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
       handoffPollIntervalMs: 5,
     });
 
@@ -398,14 +409,15 @@ describe('runAgentic', () => {
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
       handoffPollIntervalMs: 5,
       gracefulExitMs: 20,
     });
 
     expect(child.kill).toHaveBeenCalledWith('SIGINT');
     expect(child.kill).toHaveBeenCalledWith('SIGKILL');
-    // SIGTERM is intentionally skipped — a process that ignores SIGINT
-    // hits the same handler on SIGTERM.
+    // SIGTERM is skipped so a child that ignored SIGINT does not get a
+    // second graceful signal before SIGKILL.
     expect(child.kill).not.toHaveBeenCalledWith('SIGTERM');
     expect(outcome).toEqual({ kind: 'success', summary: 'done' });
   });
@@ -432,6 +444,7 @@ describe('runAgentic', () => {
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
       handoffPollIntervalMs: 5,
       gracefulExitMs: 20,
       forceKillWaitMs: 20,
@@ -472,6 +485,7 @@ describe('runAgentic', () => {
         definition: makeDefinition(),
         invocationContext: defaultInvocation(),
         handoffFilePath,
+        handoffsDir: workspace,
         handoffPollIntervalMs: 5,
       });
 
@@ -512,6 +526,7 @@ describe('runAgentic', () => {
         definition: makeDefinition(),
         invocationContext: defaultInvocation(),
         handoffFilePath,
+        handoffsDir: workspace,
         handoffPollIntervalMs: 5,
         forceKillWaitMs: 20,
       });
@@ -548,6 +563,7 @@ describe('runAgentic', () => {
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
     });
 
     // Verify the spy captured exactly the runner-registered listener.
@@ -569,6 +585,7 @@ describe('runAgentic', () => {
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
     });
 
     const lines = ambiguousCauseLines();
@@ -595,6 +612,7 @@ describe('runAgentic', () => {
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
     });
 
     expect(ambiguousCauseLines().join('\n')).toContain(
@@ -619,6 +637,7 @@ describe('runAgentic', () => {
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
     });
 
     const text = ambiguousCauseLines().join('\n');
@@ -643,6 +662,7 @@ describe('runAgentic', () => {
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
     });
 
     expect(localCapture.handlers).toHaveLength(1);
@@ -676,6 +696,7 @@ describe('runAgentic', () => {
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
     });
 
     expect(localCapture.handlers).toHaveLength(1);
@@ -706,6 +727,7 @@ describe('runAgentic', () => {
       definition: makeDefinition(),
       invocationContext: defaultInvocation(),
       handoffFilePath,
+      handoffsDir: workspace,
     });
 
     expect(ambiguousCauseLines().join('\n')).toContain('invalid JSON');
@@ -724,90 +746,112 @@ describe('runAgentic', () => {
         definition: makeDefinition(),
         invocationContext: defaultInvocation('C:\\workspace'),
         handoffFilePath,
+        handoffsDir: workspace,
       });
 
-      // Adapter behavior is covered in detail by the adaptSpawnForWindowsShim
-      // suite below; here we only verify runAgentic actually routes through it.
       const [binary, args] = mockSpawn.mock.calls[0];
       expect(binary).toMatch(/cmd\.exe$/i);
-      expect(args.slice(0, 3)).toEqual(['/d', '/s', '/c']);
+      expect(args.slice(0, 5)).toEqual(['/e:on', '/v:off', '/d', '/s', '/c']);
     });
   });
-});
 
-describe('adaptSpawnForWindowsShim', () => {
-  const originalPlatform = process.platform;
-  const originalComspec = process.env.comspec;
-
-  function setPlatform(value: NodeJS.Platform): void {
-    Object.defineProperty(process, 'platform', {
-      configurable: true,
-      writable: true,
-      value,
-    });
-  }
-
-  afterEach(() => {
-    Object.defineProperty(process, 'platform', {
-      configurable: true,
-      writable: true,
-      value: originalPlatform,
-    });
-    if (originalComspec === undefined) delete process.env.comspec;
-    else process.env.comspec = originalComspec;
-  });
-
-  it('returns inputs untouched for non-shim binaries on Windows', () => {
-    setPlatform('win32');
-    const out = adaptSpawnForWindowsShim('C:\\bin\\claude.exe', ['a'], {});
-    expect(out.binary).toBe('C:\\bin\\claude.exe');
-    expect(out.args).toEqual(['a']);
-    expect(out.options.windowsVerbatimArguments).toBeUndefined();
-  });
-
-  it.each([
-    ['lowercase .cmd', 'C:\\Program Files\\agent\\bin\\claude.cmd'],
-    ['.bat', 'C:\\tools\\agent.bat'],
-    ['uppercase .CMD', 'C:\\bin\\AGENT.CMD'],
-  ])(
-    'wraps %s in cmd.exe /d /s /c with windowsVerbatimArguments',
-    (_label, binary) => {
-      setPlatform('win32');
-      process.env.comspec = 'C:\\Windows\\System32\\cmd.exe';
-      const out = adaptSpawnForWindowsShim(binary, ['--flag', 'value'], {
-        stdio: 'inherit',
-        windowsHide: true,
-      });
-      expect(out.binary).toBe('C:\\Windows\\System32\\cmd.exe');
-      expect(out.args.slice(0, 3)).toEqual(['/d', '/s', '/c']);
-      expect(out.args[3]).toMatch(/^".*"$/);
-      expect(out.options.windowsVerbatimArguments).toBe(true);
-      // Pre-existing options are preserved.
-      expect(out.options.stdio).toBe('inherit');
-      expect(out.options.windowsHide).toBe(true);
+  describe('Windows command line budget', () => {
+    function echoingDefinition(): AgentDefinition {
+      return {
+        ...makeDefinition(),
+        buildInteractive: vi.fn((ctx) => ({
+          args: ['-c', `developer_instructions=${ctx.inlineSystemContext}`],
+          cwd: ctx.workspaceRoot,
+        })),
+      };
     }
-  );
 
-  it('quotes args and caret-escapes cmd metacharacters (cross-spawn style)', () => {
-    setPlatform('win32');
-    const out = adaptSpawnForWindowsShim(
-      'C:\\bin\\claude.cmd',
-      ['arg with spaces', 'arg&with&amp', 'plain'],
-      {}
-    );
-    // Each arg is double-quoted, then cmd.exe metacharacters (including the
-    // quotes and the embedded spaces) are caret-escaped — cmd strips the
-    // carets in its first parsing pass, leaving the original argument intact.
-    const cmdLine = out.args[3];
-    expect(cmdLine).toContain('^"arg^ with^ spaces^"');
-    expect(cmdLine).toContain('^"arg^&with^&amp^"');
-    expect(cmdLine).toContain('^"plain^"');
-  });
+    function shimAgent(): DetectedInstalledAgent {
+      return {
+        ...makeDetected(),
+        displayName: 'OpenAI Codex',
+        binary: 'C:\\Users\\u\\AppData\\Roaming\\npm\\codex.cmd',
+      };
+    }
 
-  it('falls back to "cmd.exe" when comspec is unset', () => {
-    setPlatform('win32');
-    delete process.env.comspec;
-    const out = adaptSpawnForWindowsShim('C:\\x.cmd', [], {});
-    expect(out.binary).toBe('cmd.exe');
+    it('falls back to the shorter system context when the full one overflows', async () => {
+      await withPlatform('win32', async () => {
+        spawnWithHandoff({ status: 'success', summary: 'ok' });
+        const definition = echoingDefinition();
+
+        const outcome = await runAgentic({
+          detected: shimAgent(),
+          definition,
+          invocationContext: {
+            ...defaultInvocation('C:\\workspace'),
+            inlineSystemContext: 'x'.repeat(WINDOWS_COMMAND_LINE_BUDGET),
+            inlineSystemContextFallback: 'short',
+          },
+          handoffFilePath,
+          handoffsDir: workspace,
+        });
+
+        expect(outcome).toEqual({ kind: 'success', summary: 'ok' });
+        const cmdLine = mockSpawn.mock.calls[0][1][5];
+        expect(cmdLine).toContain('short');
+        expect(cmdLine.length).toBeLessThanOrEqual(WINDOWS_COMMAND_LINE_BUDGET);
+      });
+    });
+
+    it('refuses to spawn when even the shorter system context overflows', async () => {
+      await withPlatform('win32', async () => {
+        const errorSpy = vi.spyOn(output, 'error').mockImplementation(() => {});
+        try {
+          await expect(
+            runAgentic({
+              detected: shimAgent(),
+              definition: echoingDefinition(),
+              invocationContext: {
+                ...defaultInvocation('C:\\workspace'),
+                inlineSystemContext: 'x'.repeat(WINDOWS_COMMAND_LINE_BUDGET),
+                inlineSystemContextFallback: 'y'.repeat(
+                  WINDOWS_COMMAND_LINE_BUDGET
+                ),
+              },
+              handoffFilePath,
+              handoffsDir: workspace,
+            })
+          ).rejects.toThrow('exceeds the Windows limit');
+          expect(mockSpawn).not.toHaveBeenCalled();
+          const reported = errorSpy.mock.calls[0][0] as {
+            title: string;
+            bodyLines: string[];
+          };
+          expect(reported.title).toContain('OpenAI Codex');
+          expect(reported.bodyLines.join('\n')).toContain('8191');
+          expect(reported.bodyLines.join('\n')).toContain('--agentic=false');
+          // The workspace root is one contributor of three and none at all
+          // for opencode, so the message must not pin the overflow on it.
+          expect(reported.bodyLines.join('\n')).toContain(
+            `migration's package and name`
+          );
+        } finally {
+          errorSpy.mockRestore();
+        }
+      });
+    });
+
+    it('does not measure a command line off the Windows shim path', async () => {
+      spawnWithHandoff({ status: 'success', summary: 'ok' });
+
+      const outcome = await runAgentic({
+        detected: makeDetected(),
+        definition: echoingDefinition(),
+        invocationContext: {
+          ...defaultInvocation(),
+          inlineSystemContext: 'x'.repeat(WINDOWS_COMMAND_LINE_BUDGET * 2),
+        },
+        handoffFilePath,
+        handoffsDir: workspace,
+      });
+
+      expect(outcome).toEqual({ kind: 'success', summary: 'ok' });
+      expect(mockSpawn.mock.calls[0][1][1]).toContain('x'.repeat(100));
+    });
   });
 });

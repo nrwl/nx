@@ -1,5 +1,6 @@
 import yargsParser from 'yargs-parser';
 import { ExecutorContext } from '../../config/misc-interfaces';
+import type { Task } from '../../config/task-graph';
 import { isTuiEnabled } from '../../tasks-runner/is-tui-enabled';
 import { PseudoTerminal } from '../../tasks-runner/pseudo-terminal';
 import { createTaskId } from '../../tasks-runner/utils';
@@ -100,7 +101,7 @@ export default async function (
 export async function runCommands(
   options: RunCommandsOptions,
   context: ExecutorContext,
-  taskId?: string
+  task?: Pick<Task, 'id' | 'sandbox'>
 ) {
   const normalized = normalizeOptions(options);
 
@@ -141,26 +142,41 @@ export async function runCommands(
   const tuiEnabled = isTuiEnabled();
 
   try {
+    // The orchestrator's in-process path passes the task with a stub context,
+    // so prefer it. `runExecutor` can name a target the task graph does not
+    // hold, hence the project lookup; `convert-nx-executor` has neither graph,
+    // and only then is the config unknowable, which counts as tracked.
     const resolvedTaskId =
-      taskId ??
+      task?.id ??
       createTaskId(
         context.projectName,
         context.targetName,
         context.configurationName
       );
+    const resolvedTask = task ??
+      context.taskGraph?.tasks?.[resolvedTaskId] ?? {
+        id: resolvedTaskId,
+        // Both graphs are typed as present, but `convert-nx-executor` passes
+        // null for each.
+        sandbox:
+          context.projectName && context.targetName
+            ? context.projectGraph?.nodes?.[context.projectName]?.data
+                .targets?.[context.targetName]?.sandbox
+            : undefined,
+      };
     const runningTask = isSingleCommandAndCanUsePseudoTerminal
       ? await runSingleCommandWithPseudoTerminal(
           normalized,
           context,
-          resolvedTaskId
+          resolvedTask
         )
       : options.parallel
-        ? new ParallelRunningTasks(normalized, context, resolvedTaskId)
+        ? new ParallelRunningTasks(normalized, context, resolvedTask)
         : new SeriallyRunningTasks(
             normalized,
             context,
             tuiEnabled,
-            resolvedTaskId
+            resolvedTask
           );
     return runningTask;
   } catch (e) {

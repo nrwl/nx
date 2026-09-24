@@ -20,13 +20,15 @@ async function main() {
   );
   const trendData = getTrendData(currentData, oldData);
   const scopeLabels = await getScopeLabels();
-  const report = formatGhReport(currentData, trendData, oldData, {
-    unlabeledIssuesUrl: getUnlabeledUrl('issue', scopeLabels),
-    unlabeledPrsUrl: getUnlabeledUrl('pr', scopeLabels),
-  });
+  const report = formatGhReport(currentData, trendData, oldData, scopeLabels);
   const markdown = toMarkdown(report);
   if (process.env.GITHUB_ACTIONS) {
-    setOutput('SLACK_MESSAGE', getSlackMessageJson(report));
+    setOutput(
+      'SLACK_MESSAGE',
+      getSlackMessageJson(report, {
+        fencedTables: process.env.SLACK_FENCED_TABLES === 'true',
+      })
+    );
   }
   if (process.env.GITHUB_STEP_SUMMARY) {
     await summary.addRaw(markdown).write();
@@ -40,14 +42,6 @@ if (require.main === module) {
     console.error(e);
     process.exit(1);
   });
-}
-
-function getUnlabeledUrl(type: 'issue' | 'pr', scopeLabels: string[]) {
-  const labelFilters = scopeLabels.map((s) => `-label:"${s}"`);
-  const path = type === 'issue' ? 'issues' : 'pulls';
-  return `https://github.com/nrwl/nx/${path}?q=is%3Aopen+is%3A${type}+sort%3Aupdated-desc+${encodeURIComponent(
-    labelFilters.join(' ')
-  )}`;
 }
 
 function saveCacheData(report: ReportData) {

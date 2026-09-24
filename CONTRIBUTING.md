@@ -39,6 +39,23 @@ This repo contains a mix of different technologies, including:
 
 ## Development Workstation Setup
 
+For local development with [mise](https://mise.jdx.dev/), install the tools declared in `mise.toml`:
+
+```bash
+mise install
+```
+
+Activate mise in your shell, or prefix commands with `mise exec --`. The configuration keeps Java 24 as the default runtime and installs Temurin JDK 17 for Gradle compilation. Mise sets `JAVA17_HOME`, which `gradle.properties` uses to discover that compiler toolchain. Gradle's automatic JDK downloads are disabled, so installing Java 24 alone is insufficient.
+
+To verify toolchain discovery and start the documentation site with its build dependencies:
+
+```bash
+mise exec -- pnpm nx run ':gradle-batch-runner:gradle:javaToolchains' --skipNxCache
+mise exec -- pnpm nx serve astro-docs
+```
+
+The toolchain report should list JDK 17 as detected through `JAVA17_HOME` and Java 24 as the current JVM. With mise activated, you can run the same `pnpm nx` commands directly.
+
 If you are using `VSCode`, and provided you have [Docker](https://docker.com) installed on your machine, then you can leverage [Dev Containers](https://containers.dev) through this [VSCode extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers), to easily setup your development environment, with everything needed to contribute to Nx, already installed (namely `NodeJS`, `Yarn`, `Rust`, `Cargo`, plus some useful extensions like `Nx Console`).
 
 To do so, simply:

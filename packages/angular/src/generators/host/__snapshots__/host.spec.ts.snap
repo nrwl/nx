@@ -52,7 +52,11 @@ export function app(): express.Express {
 
   server.use(cors());
 
-  const commonEngine = new CommonEngine();
+  const commonEngine = new CommonEngine({
+    // The engine rejects any host that is not listed here. Add the hosts this
+    // server is reached through before deploying it, or set NG_ALLOWED_HOSTS.
+    allowedHosts: ['localhost', '127.0.0.1', '[::1]'],
+  });
 
   server.set('view engine', 'html');
   server.set('views', distFolder);
@@ -241,7 +245,11 @@ export function app(): express.Express {
 
   server.use(cors());
 
-  const commonEngine = new CommonEngine();
+  const commonEngine = new CommonEngine({
+    // The engine rejects any host that is not listed here. Add the hosts this
+    // server is reached through before deploying it, or set NG_ALLOWED_HOSTS.
+    allowedHosts: ['localhost', '127.0.0.1', '[::1]'],
+  });
 
   server.set('view engine', 'html');
   server.set('views', distFolder);
@@ -459,7 +467,11 @@ export function app(): express.Express {
 
   server.use(cors());
 
-  const commonEngine = new CommonEngine();
+  const commonEngine = new CommonEngine({
+    // The engine rejects any host that is not listed here. Add the hosts this
+    // server is reached through before deploying it, or set NG_ALLOWED_HOSTS.
+    allowedHosts: ['localhost', '127.0.0.1', '[::1]'],
+  });
 
   server.set('view engine', 'html');
   server.set('views', distFolder);
@@ -691,7 +703,11 @@ export function app(): express.Express {
 
   server.use(cors());
 
-  const commonEngine = new CommonEngine();
+  const commonEngine = new CommonEngine({
+    // The engine rejects any host that is not listed here. Add the hosts this
+    // server is reached through before deploying it, or set NG_ALLOWED_HOSTS.
+    allowedHosts: ['localhost', '127.0.0.1', '[::1]'],
+  });
 
   server.set('view engine', 'html');
   server.set('views', distFolder);

@@ -10,6 +10,7 @@ import {
   readPackageJsonDeps,
   runInstall,
 } from '../execute-migration';
+import type { MigrateOutputSink } from '../deferred-output';
 import type { MigrateStep } from './run-state';
 import { updateRunState } from './state-lock';
 import { warnToAgent } from './agent-output';
@@ -55,15 +56,16 @@ export async function installDepsChangedSinceDispense(
   dir: string,
   step: MigrateStep,
   skipInstall: boolean,
-  rerunCommand?: string
+  rerunCommand?: string,
+  sink?: MigrateOutputSink
 ): Promise<void> {
   const current = depsHash(root);
   if (current !== null && current === step.depsHashAtDispense) return;
   if (skipInstall) {
-    logSkippedPostMigrationInstall(root);
+    logSkippedPostMigrationInstall(root, sink);
     return;
   }
-  await runInstall(root, 'post-migration', rerunCommand);
+  await runInstall(root, 'post-migration', rerunCommand, sink);
   recordInstallLanded(root, dir, step.id);
 }
 

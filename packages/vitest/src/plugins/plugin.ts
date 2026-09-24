@@ -7,6 +7,7 @@ import {
   deriveGroupNameFromTarget,
   globWithWorkspaceContext,
   quoteShellArg,
+  retryOnRequireEsmRace,
 } from '@nx/devkit/internal';
 import {
   CreateDependencies,
@@ -34,6 +35,10 @@ import {
   loadViteDynamicImport,
   loadVitestConfigDynamicImport,
 } from '../utils/executor-utils';
+import {
+  collectSetupFileInputs,
+  resolveSetupFileCandidates,
+} from './setup-file-inputs';
 
 export interface VitestPluginOptions {
   testTargetName?: string;
@@ -74,7 +79,9 @@ export interface VitestPluginOptions {
   discoverTestFiles?: 'glob' | 'vitest';
 }
 
-type VitestTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
+type VitestTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'> & {
+  setupFileCandidates: string[];
+};
 
 /**
  * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
@@ -135,6 +142,8 @@ export const createNodes: CreateNodes<VitestPluginOptions> = [
       ])
     );
 
+    const setupTsconfigJsonCache: RawTsconfigJsonCache = new Map();
+
     try {
       return await createNodesFromFiles(
         async (configFile, _, context, idx) => {
@@ -145,7 +154,12 @@ export const createNodes: CreateNodes<VitestPluginOptions> = [
           // Adding the config file path to the hash ensures that the final hash value is different
           // for different config files.
           const hash = hashes[idx] + configFile;
-          if (!targetsCache.has(hash)) {
+          const cachedTargets = targetsCache.get(hash);
+          // Older cache entries predate `setupFileCandidates`.
+          if (
+            cachedTargets === undefined ||
+            (cachedTargets && !cachedTargets.setupFileCandidates)
+          ) {
             const result = await buildVitestTargets(
               configFile,
               projectRoot,
@@ -164,11 +178,20 @@ export const createNodes: CreateNodes<VitestPluginOptions> = [
           if (!cached) {
             return { projects: {} };
           }
-          const { metadata, targets } = cached;
+          const { metadata, targets, setupFileCandidates } = cached;
 
           const project: ProjectConfiguration = {
             root: projectRoot,
-            targets,
+            // Resolved on every run: the cache key does not cover setup files
+            // or their tsconfigs.
+            targets: withSetupFileInputs(
+              targets,
+              normalizedOptions.testTargetName,
+              setupFileCandidates,
+              projectRoot,
+              context.workspaceRoot,
+              setupTsconfigJsonCache
+            ),
             metadata,
           };
 
@@ -212,19 +235,6 @@ async function buildVitestTargets(
     // do nothing
   }
 
-  // Workaround for race condition with ESM-only Vite plugins (e.g. @vitejs/plugin-vue@6+)
-  // If vite.config.ts is compiled as CJS, then when both require('@vitejs/plugin-vue') and import('@vitejs/plugin-vue')
-  // are pending in the same process, Node will throw an error:
-  // Error [ERR_INTERNAL_ASSERTION]: Cannot require() ES Module @vitejs/plugin-vue/dist/index.js because it is not yet fully loaded.
-  // This may be caused by a race condition if the module is simultaneously dynamically import()-ed via Promise.all().
-  try {
-    const importVuePlugin = () =>
-      new Function('return import("@vitejs/plugin-vue")')();
-    await importVuePlugin();
-  } catch {
-    // Plugin not installed or not needed, ignore
-  }
-
   // Workaround for race condition with vitest/node on Node 24+
   // When multiple vitest.config files are processed in parallel, Node can throw:
   // Error [ERR_INTERNAL_ASSERTION]: Cannot require() ES Module vitest/dist/node.js
@@ -239,12 +249,30 @@ async function buildVitestTargets(
   }
 
   const { resolveConfig } = await loadViteDynamicImport();
-  const viteBuildConfig = await resolveConfig(
-    {
-      configFile: absoluteConfigFilePath,
-      mode: 'development',
-    },
-    'build'
+  // Vite fills a missing `root` with `process.cwd()`, which at graph time is
+  // the workspace root - not where the task runs. Capture what the config
+  // actually authored so a relative path can be resolved the way Vitest will.
+  let authoredViteRoot: string | undefined;
+  const viteBuildConfig = await retryOnRequireEsmRace(() =>
+    resolveConfig(
+      {
+        configFile: absoluteConfigFilePath,
+        mode: 'development',
+        plugins: [
+          {
+            name: 'nx-capture-authored-vitest-root',
+            enforce: 'post' as const,
+            config: {
+              order: 'post' as const,
+              handler(config: { root?: string }) {
+                authoredViteRoot = config.root;
+              },
+            },
+          },
+        ],
+      },
+      'build'
+    )
   );
 
   // A root config that aggregates project configs via `test.projects` is just an
@@ -268,10 +296,17 @@ async function buildVitestTargets(
   const namedInputs = getNamedInputs(projectRoot, context);
 
   const targets: Record<string, TargetConfiguration> = {};
+  let setupFileCandidates: string[] = [];
 
   // if file is vitest.config or vite.config has definition for test, create targets for test and/or atomized tests
   if (configFilePath.includes('vitest.config') || hasTest) {
     const isTypecheckEnabled = !!viteBuildConfig.test?.typecheck?.enabled;
+    setupFileCandidates = resolveSetupFileCandidates(
+      viteBuildConfig,
+      projectRoot,
+      context.workspaceRoot,
+      authoredViteRoot
+    );
     targets[options.testTargetName] = await testTarget(
       namedInputs,
       testOutputs,
@@ -307,35 +342,37 @@ async function buildVitestTargets(
       // Capture the raw root after user hooks: graph construction and the
       // atom run resolve it against different cwds.
       let configuredViteRoot: string | undefined;
-      const viteServeConfig = await resolveConfig(
-        {
-          configFile: absoluteConfigFilePath,
-          mode: 'test',
-          plugins: [
-            {
-              // Promotes test.root before user hooks as Vitest does, so a
-              // later hook can override it. No options.root: atoms pass no --root.
-              name: 'nx-promote-vitest-root',
-              enforce: 'pre' as const,
-              config(config: { root?: string; test?: { root?: string } }) {
-                if (config.test?.root) {
-                  return { root: config.test.root };
-                }
-              },
-            },
-            {
-              name: 'nx-capture-vitest-root',
-              enforce: 'post' as const,
-              config: {
-                order: 'post' as const,
-                handler(config: { root?: string }) {
-                  configuredViteRoot = config.root;
+      const viteServeConfig = await retryOnRequireEsmRace(() =>
+        resolveConfig(
+          {
+            configFile: absoluteConfigFilePath,
+            mode: 'test',
+            plugins: [
+              {
+                // Promotes test.root before user hooks as Vitest does, so a
+                // later hook can override it. No options.root: atoms pass no --root.
+                name: 'nx-promote-vitest-root',
+                enforce: 'pre' as const,
+                config(config: { root?: string; test?: { root?: string } }) {
+                  if (config.test?.root) {
+                    return { root: config.test.root };
+                  }
                 },
               },
-            },
-          ],
-        },
-        'serve'
+              {
+                name: 'nx-capture-vitest-root',
+                enforce: 'post' as const,
+                config: {
+                  order: 'post' as const,
+                  handler(config: { root?: string }) {
+                    configuredViteRoot = config.root;
+                  },
+                },
+              },
+            ],
+          },
+          'serve'
+        )
       );
       const projectRootRelativeTestPaths =
         await getTestPathsRelativeToProjectRoot(
@@ -483,7 +520,42 @@ async function buildVitestTargets(
     }
   }
 
-  return { targets, metadata };
+  return { targets, metadata, setupFileCandidates };
+}
+
+function withSetupFileInputs(
+  targets: Record<string, TargetConfiguration>,
+  testTargetName: string,
+  setupFileCandidates: string[],
+  projectRoot: string,
+  workspaceRoot: string,
+  jsonCache: RawTsconfigJsonCache
+): Record<string, TargetConfiguration> {
+  if (setupFileCandidates.length === 0) return targets;
+  const { files, tsconfigs } = collectSetupFileInputs(
+    setupFileCandidates,
+    projectRoot,
+    workspaceRoot,
+    jsonCache
+  );
+  if (files.length === 0 && tsconfigs.length === 0) return targets;
+
+  const setupInputs = [
+    ...tsconfigs.map((f) => ({
+      json: `{workspaceRoot}/${f}`,
+      fields: ['compilerOptions'],
+    })),
+    // Whole-file, not just `compilerOptions`: these are sources Vitest
+    // executes, so any change to them changes the run.
+    ...files.map((f) => `{workspaceRoot}/${f}`),
+  ];
+  const inputs = [...targets[testTargetName].inputs, ...setupInputs];
+  return Object.fromEntries(
+    Object.entries(targets).map(([name, target]) => [
+      name,
+      { ...target, inputs },
+    ])
+  );
 }
 
 async function testTarget(
@@ -686,6 +758,36 @@ function collectTsconfigInputsByProjectRoot(
 
   const rootTsConfigName = getRootTsConfigFileName();
 
+  // A directory cache requires project-specific filtering on replay.
+  const dirChainCache = new Map<string, string[]>();
+  const collectDirChain = (dir: string): string[] => {
+    const cached = dirChainCache.get(dir);
+    if (cached !== undefined) return cached;
+    const paths: string[] = [];
+    const localSeen = new Set<string>();
+    const tsconfigPath = dir
+      ? join(workspaceRoot, dir, 'tsconfig.json')
+      : join(workspaceRoot, 'tsconfig.json');
+    if (existsSync(tsconfigPath)) {
+      walkTsconfigExtendsChain(
+        tsconfigPath,
+        (absPath) => {
+          const wsRelative = relative(workspaceRoot, absPath)
+            .split(sep)
+            .join('/');
+          if (!localSeen.has(wsRelative)) {
+            localSeen.add(wsRelative);
+            paths.push(wsRelative);
+          }
+          return 'continue';
+        },
+        { jsonCache }
+      );
+    }
+    dirChainCache.set(dir, paths);
+    return paths;
+  };
+
   for (const projectRoot of projectRoots) {
     if (projectRoot === '.') continue;
 
@@ -693,10 +795,7 @@ function collectTsconfigInputsByProjectRoot(
     const seen = new Set<string>();
     const projectPrefix = `${projectRoot}/`;
 
-    const collect = (absolutePath: string) => {
-      const wsRelative = relative(workspaceRoot, absolutePath)
-        .split(sep)
-        .join('/');
+    const collectWsRelative = (wsRelative: string) => {
       if (seen.has(wsRelative)) return;
       seen.add(wsRelative);
       if (wsRelative.startsWith('../') || wsRelative === '..') return;
@@ -711,13 +810,15 @@ function collectTsconfigInputsByProjectRoot(
       outside.push(wsRelative);
     };
 
-    // 1. Walk the project tsconfig's extends chain
     const projectTsconfig = join(workspaceRoot, projectRoot, 'tsconfig.json');
     if (existsSync(projectTsconfig)) {
       walkTsconfigExtendsChain(
         projectTsconfig,
         (absPath) => {
-          collect(absPath);
+          const wsRelative = relative(workspaceRoot, absPath)
+            .split(sep)
+            .join('/');
+          collectWsRelative(wsRelative);
           return 'continue';
         },
         { jsonCache }
@@ -728,16 +829,8 @@ function collectTsconfigInputsByProjectRoot(
     //    between the entry point and the filesystem root)
     let dir = dirname(projectRoot);
     while (dir && dir !== '.') {
-      const ancestorTsconfig = join(workspaceRoot, dir, 'tsconfig.json');
-      if (existsSync(ancestorTsconfig)) {
-        walkTsconfigExtendsChain(
-          ancestorTsconfig,
-          (absPath) => {
-            collect(absPath);
-            return 'continue';
-          },
-          { jsonCache }
-        );
+      for (const wsRelative of collectDirChain(dir)) {
+        collectWsRelative(wsRelative);
       }
       const parent = dirname(dir);
       if (parent === dir) break;
@@ -745,16 +838,8 @@ function collectTsconfigInputsByProjectRoot(
     }
 
     // 3. Check the workspace root itself (dirname loop above stops at '.')
-    const rootTsconfig = join(workspaceRoot, 'tsconfig.json');
-    if (existsSync(rootTsconfig)) {
-      walkTsconfigExtendsChain(
-        rootTsconfig,
-        (absPath) => {
-          collect(absPath);
-          return 'continue';
-        },
-        { jsonCache }
-      );
+    for (const wsRelative of collectDirChain('')) {
+      collectWsRelative(wsRelative);
     }
 
     if (outside.length > 0) {

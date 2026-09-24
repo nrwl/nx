@@ -1,4 +1,10 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'fs';
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { stripVTControlCharacters } from 'util';
@@ -395,6 +401,293 @@ describe('TaskOrchestrator', () => {
     });
   });
 
+  describe('terminal output persistence', () => {
+    let terminalOutputsDir: string;
+    let originalCacheFailures: string | undefined;
+
+    beforeEach(() => {
+      terminalOutputsDir = mkdtempSync(join(tmpdir(), 'nx-terminal-outputs-'));
+      // These tests assert that a FAILED task is not cached, which is only true
+      // while `NX_CACHE_FAILURES` is off - `shouldCacheTaskResult` returns true
+      // for any code when it is set. Reading it from the ambient environment
+      // makes the outcome depend on whatever else ran first: this suite passes
+      // locally and fails in CI, where something sets it. State it here rather
+      // than inherit it.
+      originalCacheFailures = process.env.NX_CACHE_FAILURES;
+      delete process.env.NX_CACHE_FAILURES;
+    });
+
+    afterEach(() => {
+      rmSync(terminalOutputsDir, { recursive: true, force: true });
+      if (originalCacheFailures === undefined) {
+        delete process.env.NX_CACHE_FAILURES;
+      } else {
+        process.env.NX_CACHE_FAILURES = originalCacheFailures;
+      }
+    });
+
+    function makeTask(id: string, overrides: Partial<Task> = {}): Task {
+      const [project, target] = id.split(':');
+      return {
+        id,
+        target: { project, target },
+        overrides: {},
+        outputs: [],
+        projectRoot: project,
+        cache: true,
+        parallelism: true,
+        hash: `${id}-hash`,
+        ...overrides,
+      } as Task;
+    }
+
+    function createOrchestrator() {
+      const orchestrator: any = Object.create(TaskOrchestrator.prototype);
+      // Object.create bypasses field initializers.
+      orchestrator.tasksWithPersistedOutput = new Set<string>();
+      orchestrator.stopRequested = false;
+      orchestrator.cache = {
+        temporaryOutputPath: (task: Task) =>
+          join(terminalOutputsDir, task.hash),
+        put: vi.fn(async (task: Task, terminalOutput: string) => {
+          // The real cache writes the same file this backstop targets.
+          writeFileSync(join(terminalOutputsDir, task.hash), terminalOutput);
+        }),
+        recordTerminalOutputs: vi.fn(),
+      };
+      orchestrator.recordOutputsHashBatch = vi.fn();
+      orchestrator.complete = vi.fn();
+      orchestrator.scheduleNextTasksAndReleaseThreads = vi.fn();
+      return orchestrator;
+    }
+
+    function readOutput(task: Task): string | null {
+      const path = join(terminalOutputsDir, task.hash);
+      return existsSync(path) ? readFileSync(path, 'utf-8') : null;
+    }
+
+    it('writes the terminal output of an uncacheable task', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:build', { cache: false });
+
+      await orchestrator.postRunSteps(
+        [{ task, status: 'success', terminalOutput: 'batch body' }],
+        true,
+        0
+      );
+
+      expect(readOutput(task)).toBe('batch body');
+      expect(orchestrator.cache.put).not.toHaveBeenCalled();
+    });
+
+    it('writes the terminal output of a failed cacheable task', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:test');
+
+      await orchestrator.postRunSteps(
+        [{ task, status: 'failure', terminalOutput: 'assertion failed' }],
+        true,
+        0
+      );
+
+      // Failures aren't cached (without NX_CACHE_FAILURES), so the cache would
+      // never have written this one.
+      expect(orchestrator.cache.put).not.toHaveBeenCalled();
+      expect(readOutput(task)).toBe('assertion failed');
+    });
+
+    it('writes the terminal output of a stopped task', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:build');
+
+      await orchestrator.postRunSteps(
+        [{ task, status: 'stopped', terminalOutput: 'partial output' }],
+        true,
+        0
+      );
+
+      expect(readOutput(task)).toBe('partial output');
+    });
+
+    it('leaves the write to the cache when the task is cached', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:build');
+      const writes: string[] = [];
+      orchestrator.cache.put = vi.fn(
+        async (t: Task, terminalOutput: string) => {
+          writes.push(terminalOutput);
+          writeFileSync(join(terminalOutputsDir, t.hash), terminalOutput);
+        }
+      );
+
+      await orchestrator.postRunSteps(
+        [{ task, status: 'success', terminalOutput: 'cached body' }],
+        true,
+        0
+      );
+
+      // Written once, by the cache — not twice.
+      expect(writes).toEqual(['cached body']);
+      expect(readOutput(task)).toBe('cached body');
+      expect(orchestrator.tasksWithPersistedOutput.has(task.id)).toBe(false);
+    });
+
+    it('does not rewrite output a runner already persisted', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:build', { cache: false });
+      // The runner wrote the real PTY bytes when the process exited.
+      writeFileSync(join(terminalOutputsDir, task.hash), 'from the runner');
+      orchestrator.tasksWithPersistedOutput.add(task.id);
+
+      await orchestrator.postRunSteps(
+        [{ task, status: 'success', terminalOutput: 'from the result' }],
+        true,
+        0
+      );
+
+      expect(readOutput(task)).toBe('from the runner');
+    });
+
+    it('does not rewrite output replayed from the cache', async () => {
+      const orchestrator = createOrchestrator();
+      const local = makeTask('app:build');
+      const remote = makeTask('app:test');
+
+      await orchestrator.postRunSteps(
+        [
+          { task: local, status: 'local-cache', terminalOutput: 'replayed' },
+          { task: remote, status: 'remote-cache', terminalOutput: 'replayed' },
+        ],
+        false,
+        0
+      );
+
+      // The replayed output was read from these very files.
+      expect(readOutput(local)).toBeNull();
+      expect(readOutput(remote)).toBeNull();
+    });
+
+    it('writes nothing for a skipped task', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:build', { cache: false });
+
+      await orchestrator.postRunSteps(
+        [{ task, status: 'skipped', terminalOutput: '' }],
+        true,
+        0
+      );
+
+      expect(readOutput(task)).toBeNull();
+    });
+
+    it('writes nothing when the result carries no terminal output', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:build', { cache: false });
+
+      await orchestrator.postRunSteps([{ task, status: 'success' }], true, 0);
+
+      expect(readOutput(task)).toBeNull();
+    });
+
+    it('registers an uncacheable output with the cache so the GC can collect it', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:build', { cache: false });
+
+      await orchestrator.postRunSteps(
+        [{ task, status: 'success', terminalOutput: 'batch body' }],
+        true,
+        0
+      );
+
+      expect(orchestrator.cache.recordTerminalOutputs).toHaveBeenCalledWith([
+        { hash: task.hash, size: 'batch body'.length },
+      ]);
+    });
+
+    it('registers output a runner wrote, which the GC cannot see either', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:build', { cache: false });
+      writeFileSync(join(terminalOutputsDir, task.hash), 'from the runner');
+      orchestrator.tasksWithPersistedOutput.add(task.id);
+
+      await orchestrator.postRunSteps(
+        [{ task, status: 'success', terminalOutput: 'from the runner' }],
+        true,
+        0
+      );
+
+      // Skipping the write must not skip the bookkeeping.
+      expect(orchestrator.cache.recordTerminalOutputs).toHaveBeenCalledWith([
+        { hash: task.hash, size: 'from the runner'.length },
+      ]);
+    });
+
+    it('does not register output the cache recorded itself', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:build');
+
+      await orchestrator.postRunSteps(
+        [{ task, status: 'success', terminalOutput: 'cached body' }],
+        true,
+        0
+      );
+
+      expect(orchestrator.cache.put).toHaveBeenCalled();
+      expect(orchestrator.cache.recordTerminalOutputs).not.toHaveBeenCalled();
+    });
+
+    it('does not register output replayed from the cache', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:build');
+
+      await orchestrator.postRunSteps(
+        [{ task, status: 'local-cache', terminalOutput: 'replayed' }],
+        false,
+        0
+      );
+
+      // That hash is already recorded — it is what the replay read.
+      expect(orchestrator.cache.recordTerminalOutputs).not.toHaveBeenCalled();
+    });
+
+    it('registers a cacheable task run with --skip-nx-cache', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:build');
+
+      // shouldCache false is how --skip-nx-cache reaches postRunSteps: the
+      // output lands on disk but no artifacts do.
+      await orchestrator.postRunSteps(
+        [{ task, status: 'success', terminalOutput: 'uncached body' }],
+        false,
+        0
+      );
+
+      expect(readOutput(task)).toBe('uncached body');
+      expect(orchestrator.cache.put).not.toHaveBeenCalled();
+      expect(orchestrator.cache.recordTerminalOutputs).toHaveBeenCalledWith([
+        { hash: task.hash, size: 'uncached body'.length },
+      ]);
+    });
+
+    it('writes every task of a batch that could not be cached', async () => {
+      const orchestrator = createOrchestrator();
+      const a = makeTask('a:build', { cache: false });
+      const b = makeTask('b:build', { cache: false });
+
+      await orchestrator.postRunSteps(
+        [
+          { task: a, status: 'success', terminalOutput: 'a body' },
+          { task: b, status: 'failure', terminalOutput: 'b body' },
+        ],
+        true,
+        0
+      );
+
+      expect(readOutput(a)).toBe('a body');
+      expect(readOutput(b)).toBe('b body');
+    });
+  });
+
   describe('printGroupedBatchOutput', () => {
     // Restoring by assignment would set the string "undefined" for anything
     // that was unset, which is truthy - leaving isLogGroupingEnabled() true for
@@ -446,9 +739,15 @@ describe('TaskOrchestrator', () => {
       // argument, sourced from `nxArgs`, while `options` is the merged runner
       // options object. Putting the style in `options` here would let a read of
       // the wrong one pass.
-      orchestrator.outputStyle = args.outputStyle;
+      // Mirrors the two constructor fields: what the user named, and what the
+      // run renders with. A fixture that set only one would let a read of the
+      // wrong field pass.
+      orchestrator.specifiedOutputStyle = args.outputStyle;
+      orchestrator.resolvedOutputStyle =
+        args.outputStyle ?? 'static-failures-only';
       // Object.create bypasses field initializers.
       orchestrator.batchFoldRenders = new Map();
+      orchestrator.announcedBatchLogs = new Set();
       return orchestrator;
     }
 
@@ -608,6 +907,36 @@ describe('TaskOrchestrator', () => {
       }
     );
 
+    it('never folds under --output-style=summary, even when a task failed', async () => {
+      const orchestrator = createOrchestrator({ outputStyle: 'summary' });
+      const a = makeTask('a:build');
+      const b = makeTask('b:build');
+      const taskResults = [
+        { task: a, status: 'success', code: 0, terminalOutput: 'a body' },
+        { task: b, status: 'failure', code: 1, terminalOutput: 'b failed' },
+      ];
+
+      const out = await captureStdout(() =>
+        orchestrator.printGroupedBatchOutput(
+          BATCH,
+          taskResults,
+          capturedOutputFile('the entire gradle build log')
+        )
+      );
+
+      // summary addresses logs by path rather than printing them. The fold
+      // bypasses the life cycle and writes to `output` directly, so without an
+      // explicit check it would dump the whole worker log into exactly the run
+      // that asked not to see it.
+      expect(out).not.toContain('the entire gradle build log');
+      expect(out).not.toContain('batch @nx/js:tsc');
+      // The tasks still report themselves - the summary life cycle is what
+      // turns that into a path.
+      expect(
+        orchestrator.options.lifeCycle.printTaskTerminalOutput
+      ).toHaveBeenCalledWith(b, 'failure', 'b failed');
+    });
+
     it('still collapses an all-green batch on the default, captured log or not', async () => {
       const orchestrator = createOrchestrator();
       const a = makeTask('a:build');
@@ -734,10 +1063,12 @@ describe('TaskOrchestrator', () => {
           printTaskTerminalOutput: vi.fn(),
           appendTaskOutput: vi.fn(),
           setTaskStatus: vi.fn(),
+          batchOutputAvailable: vi.fn(),
         },
       };
       // Object.create bypasses field initializers.
       orchestrator.batchFoldRenders = new Map();
+      orchestrator.announcedBatchLogs = new Set();
       orchestrator.stopRequested = stopRequested;
       orchestrator.projectGraph = {} as ProjectGraph;
       orchestrator.taskGraph = {
@@ -756,6 +1087,10 @@ describe('TaskOrchestrator', () => {
       // batches with different bodies - which is what makes the fold-count map
       // key load-bearing in `labels each fold with the batch it came from`.
       orchestrator.capturedForTest = captured;
+      // Observable so a test can pin whether the log survived the run: the
+      // `finally` skips the discard for any batch whose log was announced, and
+      // that guard is the only thing keeping the file on disk for the sweep.
+      orchestrator.discardedForTest = vi.fn();
       orchestrator.forkedProcessTaskRunner = {
         forkProcessForBatch: vi.fn().mockResolvedValue({
           onOutput: vi.fn(),
@@ -765,7 +1100,8 @@ describe('TaskOrchestrator', () => {
             orchestrator.capturedForTest
               ? capturedPath(orchestrator.capturedForTest)
               : undefined,
-          discardCapturedOutput: () => {},
+          flushCapturedOutput: async () => {},
+          discardCapturedOutput: orchestrator.discardedForTest,
         }),
       };
       return orchestrator;
@@ -792,6 +1128,98 @@ describe('TaskOrchestrator', () => {
       taskGraph: { tasks: { 'a:build': {} } },
     };
 
+    // Drives the RESULTS path rather than the crash path: the worker reported
+    // results, so `getResults` resolves. Without the handoff in `runBatch` the
+    // captured file is read by nobody here and unlinked on the way out, and a
+    // unit test of the handoff alone still passes.
+    it("surfaces a reporting batch's worker log under summary", async () => {
+      const orchestrator = createOrchestrator(
+        'gradlew: OutOfMemoryError in the daemon',
+        false
+      );
+      orchestrator.resolvedOutputStyle = 'summary';
+      orchestrator.taskGraph.tasks['a:build'].hash = 'hash-a';
+      orchestrator.forkedProcessTaskRunner.forkProcessForBatch = vi
+        .fn()
+        .mockResolvedValue({
+          onOutput: vi.fn(),
+          onTaskResults: vi.fn(),
+          getResults: vi.fn().mockResolvedValue({
+            'a:build': { success: false, terminalOutput: 'a failed' },
+          }),
+          getCapturedOutputPath: () =>
+            capturedPath('gradlew: OutOfMemoryError in the daemon'),
+          flushCapturedOutput: async () => {},
+          discardCapturedOutput: () => {},
+        });
+
+      const results: any = await orchestrator.runBatch(batch, {}, 0);
+
+      // The log is addressed, not copied: one worker means one log, and it
+      // explains the batch rather than any single task.
+      expect(
+        orchestrator.options.lifeCycle.batchOutputAvailable
+      ).toHaveBeenCalledWith(
+        batch.id,
+        capturedPath('gradlew: OutOfMemoryError in the daemon')
+      );
+      expect(results[0].status).toEqual('failure');
+      expect(results[0].terminalOutput).toEqual('a failed');
+      expect(results[0].terminalOutput).not.toContain('OutOfMemoryError');
+    });
+
+    // The fold tests above all run under grouping, where the handoff is a no-op,
+    // so none of them notice if the crash path stops calling it. Under summary
+    // the results are the only route the captured log has.
+    it("carries a crashed batch's log in its results under summary", async () => {
+      const orchestrator = createOrchestrator(
+        'FAILURE: Could not resolve all dependencies',
+        false
+      );
+      orchestrator.resolvedOutputStyle = 'summary';
+
+      const results: any = await orchestrator.runBatch(batch, {}, 0);
+
+      expect(
+        orchestrator.options.lifeCycle.batchOutputAvailable
+      ).toHaveBeenCalledWith(
+        batch.id,
+        capturedPath('FAILURE: Could not resolve all dependencies')
+      );
+      expect(results[0].status).toEqual('failure');
+      // The task's own file holds the exit error; the worker log is addressed.
+      expect(results[0].terminalOutput).toContain(EXIT_ERROR);
+      expect(results[0].terminalOutput).not.toContain('Could not resolve');
+    });
+
+    it('keeps an announced batch log rather than unlinking it', async () => {
+      const orchestrator = createOrchestrator(
+        'FAILURE: Could not resolve all dependencies',
+        false
+      );
+      orchestrator.resolvedOutputStyle = 'summary';
+
+      await orchestrator.runBatch(batch, {}, 0);
+
+      // Announced, so the file has to outlive the run - the sweep collects it
+      // later. Discarding here would unlink the only copy the moment the
+      // summary printed its path.
+      expect(
+        orchestrator.options.lifeCycle.batchOutputAvailable
+      ).toHaveBeenCalled();
+      expect(orchestrator.discardedForTest).not.toHaveBeenCalled();
+    });
+
+    it('discards a batch log nobody was told about', async () => {
+      const orchestrator = createOrchestrator('noisy but harmless', false);
+      // A printing style never announces, so nothing will ever read this file.
+      orchestrator.resolvedOutputStyle = 'static';
+
+      await orchestrator.runBatch(batch, {}, 0);
+
+      expect(orchestrator.discardedForTest).toHaveBeenCalled();
+    });
+
     it("surfaces a crashed batch's captured log alongside the exit error", async () => {
       const orchestrator = createOrchestrator(
         'FAILURE: Could not resolve all dependencies',
@@ -805,6 +1233,30 @@ describe('TaskOrchestrator', () => {
       expect(out).toContain('batch @nx/gradle:batch 1');
       expect(out).toContain('FAILURE: Could not resolve all dependencies');
       expect(out).toContain(EXIT_ERROR);
+    });
+
+    // The fold cannot carry it under summary, so the results are the only route
+    // and the finally would otherwise unlink the only copy.
+    it("carries a stopped batch's partial log in its results under summary", async () => {
+      const orchestrator = createOrchestrator(
+        'gradle: still resolving dependencies',
+        true
+      );
+      orchestrator.resolvedOutputStyle = 'summary';
+
+      const results: any = await orchestrator.runBatch(batch, {}, 0);
+
+      // A stopped batch's partial log is the only record of what got through,
+      // so it is still addressed - but no task's file is given a copy, which
+      // previously left every non-holder holding only a pointer sentence.
+      expect(
+        orchestrator.options.lifeCycle.batchOutputAvailable
+      ).toHaveBeenCalledWith(
+        batch.id,
+        capturedPath('gradle: still resolving dependencies')
+      );
+      expect(results[0].status).toEqual('stopped');
+      expect(results[0].terminalOutput).toEqual('');
     });
 
     it("surfaces a stopped batch's captured log, without the exit error", async () => {

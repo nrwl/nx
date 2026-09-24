@@ -12,6 +12,26 @@ mockCjsModule(import.meta.url, './run', {
   runOrchestratorInit: (...args: unknown[]) => mockRunOrchestratorInit(...args),
   runOrchestratorReconcile: vi.fn(),
 });
+const mockRunMasterSession = vi.fn();
+mockCjsModule(import.meta.url, './agentic/master/run-master-session', {
+  runMasterSession: (...args: unknown[]) => mockRunMasterSession(...args),
+});
+// Stubbed the same way: the user-initiated path resolves the agentic flow
+// before it can branch to the master session.
+const mockResolveAgentic = vi.fn();
+mockCjsModule(import.meta.url, './agentic/select', {
+  ...require('./agentic/select'),
+  resolveAgentic: (...args: unknown[]) => mockResolveAgentic(...args),
+});
+
+// Hoisted with the mock: the native module is read at import time.
+const wasm = vi.hoisted(() => ({ active: false }));
+vi.mock('../../native', async () => ({
+  ...(await vi.importActual('../../native')),
+  get IS_WASM() {
+    return wasm.active;
+  },
+}));
 
 const mockIsInsideAgent = vi.fn();
 vi.mock('./agentic/inception', async () => ({
@@ -27,8 +47,8 @@ vi.mock('./migrate-analytics', async () => ({
   reportMigrateRunStart: (...args: unknown[]) => mockReportRunStart(...args),
 }));
 
-// The confirmation itself stays real so the branch resolution behind it is
-// exercised; only the terminal prompt is stubbed.
+// The default-branch stop never prompts, prompt-capable terminal or not; both
+// are stubbed to prove it.
 const mockCanPrompt = vi.fn();
 const mockMigrateConfirm = vi.fn();
 vi.mock('./safe-prompt', async () => ({
@@ -47,9 +67,10 @@ vi.mock('../../utils/git-utils', async () => ({
   getGitRemoteNames: (...args: unknown[]) => mockGetGitRemoteNames(),
 }));
 
+const mockReadNxJson = vi.fn();
 vi.mock('../../config/configuration', async () => ({
   ...(await vi.importActual('../../config/configuration')),
-  readNxJson: () => ({}),
+  readNxJson: (...args: unknown[]) => mockReadNxJson(...args),
 }));
 
 const mockGetBaseRef = vi.fn();
@@ -105,13 +126,17 @@ describe('migrate() orchestrated init dispatch', () => {
     );
     process.env.NX_MIGRATE_ORCHESTRATOR = 'true';
     mockRunOrchestratorInit.mockReset().mockResolvedValue(undefined);
+    mockRunMasterSession.mockReset().mockResolvedValue(undefined);
+    mockResolveAgentic.mockReset().mockResolvedValue({ kind: 'disabled' });
     mockReportRunStart.mockReset();
     mockIsInsideAgent.mockReset().mockReturnValue(true);
     mockCanPrompt.mockReset().mockReturnValue(true);
     mockMigrateConfirm.mockReset().mockResolvedValue(true);
     mockIsGitRepository.mockReset().mockReturnValue(true);
-    mockGetGitCurrentBranch.mockReset().mockReturnValue('main');
+    mockGetGitCurrentBranch.mockReset().mockReturnValue('feat/migrate');
     mockGetBaseRef.mockReset().mockReturnValue('main');
+    mockReadNxJson.mockReset().mockReturnValue({});
+    wasm.active = false;
     vi.spyOn(output, 'log').mockImplementation(() => {});
     vi.spyOn(output, 'warn').mockImplementation(() => {});
     vi.spyOn(output, 'error').mockImplementation(() => {});
@@ -134,50 +159,69 @@ describe('migrate() orchestrated init dispatch', () => {
     };
   }
 
-  it('starts no run when the default-branch commit confirmation is declined', async () => {
-    mockMigrateConfirm.mockResolvedValue(false);
+  it('stops without a run when commits default on and the branch is the default one', async () => {
+    mockGetGitCurrentBranch.mockReturnValue('main');
 
     await migrate(root, runMigrationsArgs(), ['--run-migrations']);
 
-    expect(mockMigrateConfirm).toHaveBeenCalledWith(
-      expect.objectContaining({
-        message: expect.stringContaining(`default branch 'main'`),
-      })
-    );
     expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
+    // Prompting was possible, and still nothing asked: the stop is the answer.
+    expect(mockMigrateConfirm).not.toHaveBeenCalled();
+    expect(output.log).toHaveBeenCalledWith({
+      title: `Not starting the run: you are on the default branch 'main' and nx migrate would create a commit for each migration on it.`,
+      bodyLines: [
+        'Ask the user how to proceed, then either:',
+        '- re-run with --create-commits to commit on this branch for this run,',
+        '- set "migrate": { "createCommits": true } in nx.json to always allow it, then re-run,',
+        '- or switch to another branch and re-run.',
+      ],
+    });
   });
 
-  it('starts the run once the confirmation is accepted', async () => {
-    await migrate(root, runMigrationsArgs(), ['--run-migrations']);
-
-    expect(mockMigrateConfirm).toHaveBeenCalledTimes(1);
-    expect(mockRunOrchestratorInit).toHaveBeenCalledTimes(1);
-  });
-
-  it('confirms against the local branch name when the base ref carries an origin/ prefix', async () => {
+  it('stops against the local branch name when the base ref carries an origin/ prefix', async () => {
+    mockGetGitCurrentBranch.mockReturnValue('main');
     mockGetBaseRef.mockReturnValue('origin/main');
 
     await migrate(root, runMigrationsArgs(), ['--run-migrations']);
 
-    expect(mockMigrateConfirm).toHaveBeenCalledTimes(1);
+    expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
+    expect(output.log).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: expect.stringContaining(`default branch 'main'`),
+      })
+    );
   });
 
-  it('does not confirm when the run will not commit', async () => {
-    await migrate(root, runMigrationsArgs({ createCommits: false }), [
+  it('starts the run on the default branch when --create-commits is passed', async () => {
+    mockGetGitCurrentBranch.mockReturnValue('main');
+
+    await migrate(root, runMigrationsArgs({ createCommits: true }), [
       '--run-migrations',
-      '--no-create-commits',
+      '--create-commits',
     ]);
 
     expect(mockMigrateConfirm).not.toHaveBeenCalled();
     expect(mockRunOrchestratorInit).toHaveBeenCalledTimes(1);
   });
 
-  it('does not confirm when prompting is impossible', async () => {
-    mockCanPrompt.mockReturnValue(false);
+  it('starts the run on the default branch when nx.json enables commits', async () => {
+    mockGetGitCurrentBranch.mockReturnValue('main');
+    mockReadNxJson.mockReturnValue({ migrate: { createCommits: true } });
 
     await migrate(root, runMigrationsArgs(), ['--run-migrations']);
 
     expect(mockMigrateConfirm).not.toHaveBeenCalled();
+    expect(mockRunOrchestratorInit).toHaveBeenCalledTimes(1);
+  });
+
+  it('starts the run on the default branch when the run will not commit', async () => {
+    mockGetGitCurrentBranch.mockReturnValue('main');
+
+    await migrate(root, runMigrationsArgs({ createCommits: false }), [
+      '--run-migrations',
+      '--no-create-commits',
+    ]);
+
     expect(mockRunOrchestratorInit).toHaveBeenCalledTimes(1);
   });
 
@@ -224,4 +268,126 @@ describe('migrate() orchestrated init dispatch', () => {
       );
     }
   );
+
+  describe('user-initiated run with the agentic flow enabled', () => {
+    const selectedAgent = {
+      id: 'claude-code',
+      displayName: 'Claude Code',
+      binary: '/usr/local/bin/claude',
+      source: 'path',
+    };
+
+    beforeEach(() => {
+      mockIsInsideAgent.mockReturnValue(false);
+      mockResolveAgentic.mockResolvedValue({
+        kind: 'enabled',
+        selectedAgent,
+      });
+    });
+
+    it('hands the run to the master session, after the default-branch confirmation, when the gate env var is set', async () => {
+      mockGetGitCurrentBranch.mockReturnValue('main');
+
+      await migrate(root, runMigrationsArgs({ agentic: 'claude-code' }), [
+        '--run-migrations',
+        '--agentic=claude-code',
+      ]);
+
+      expect(mockReportRunStart).toHaveBeenCalledTimes(1);
+      expect(mockMigrateConfirm).toHaveBeenCalledTimes(1);
+      expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
+      expect(mockRunMasterSession).toHaveBeenCalledTimes(1);
+      expect(mockMigrateConfirm.mock.invocationCallOrder[0]).toBeLessThan(
+        mockRunMasterSession.mock.invocationCallOrder[0]
+      );
+      expect(mockRunMasterSession).toHaveBeenCalledWith({
+        root,
+        migrationsJson: expect.objectContaining({
+          migrations: expect.any(Array),
+        }),
+        createCommits: true,
+        commitPrefix: expect.any(String),
+        skipInstall: false,
+        installedNxVersion: '23.0.0',
+        validate: undefined,
+        agent: selectedAgent,
+      });
+      expect(output.log).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.stringContaining('Running migrations from'),
+        })
+      );
+    });
+
+    it('starts nothing when the default-branch confirmation is declined', async () => {
+      mockGetGitCurrentBranch.mockReturnValue('main');
+      mockMigrateConfirm.mockResolvedValue(false);
+
+      await migrate(root, runMigrationsArgs({ agentic: 'claude-code' }), [
+        '--run-migrations',
+        '--agentic=claude-code',
+      ]);
+
+      expect(mockRunMasterSession).not.toHaveBeenCalled();
+      expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
+      expect(output.log).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.stringContaining('Running migrations from'),
+        })
+      );
+    });
+
+    it('runs the classic per-step loop without the gate env var', async () => {
+      delete process.env.NX_MIGRATE_ORCHESTRATOR;
+
+      // The classic loop runs real migration execution, which fails on this
+      // fixture; only the dispatch itself is under test.
+      await migrate(root, runMigrationsArgs({ agentic: 'claude-code' }), [
+        '--run-migrations',
+        '--agentic=claude-code',
+      ]).catch(() => {});
+
+      expect(mockRunMasterSession).not.toHaveBeenCalled();
+      expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
+      expect(output.log).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.stringContaining('Running migrations from'),
+        })
+      );
+    });
+
+    it('runs the classic per-step loop under WASM, where the broker cannot tell a dead session from a slow one', async () => {
+      wasm.active = true;
+
+      await migrate(root, runMigrationsArgs({ agentic: 'claude-code' }), [
+        '--run-migrations',
+        '--agentic=claude-code',
+      ]).catch(() => {});
+
+      expect(mockRunMasterSession).not.toHaveBeenCalled();
+      expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
+      expect(output.log).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.stringContaining('Running migrations from'),
+        })
+      );
+    });
+  });
+
+  it.each<[string, boolean | undefined, string[]]>([
+    ['forwards --validate=false to the run', false, ['--no-validate']],
+    [
+      'leaves the validation policy unset when the flag is omitted',
+      undefined,
+      [],
+    ],
+  ])('%s', async (_label, validate, extraArgs) => {
+    await migrate(root, runMigrationsArgs({ validate }), [
+      '--run-migrations',
+      ...extraArgs,
+    ]);
+
+    // Raw flag value on purpose: the run records the resolved policy itself.
+    expect(mockRunOrchestratorInit.mock.calls[0][0].validate).toBe(validate);
+  });
 });

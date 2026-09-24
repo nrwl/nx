@@ -149,7 +149,12 @@ describe('state-lock', () => {
     it('propagates a newer-format run state instead of overwriting it', () => {
       writeFileSync(
         join(dir, 'run.json'),
-        JSON.stringify(buildState({ formatVersion: 2, nxVersion: '123.4.5' }))
+        JSON.stringify(
+          buildState({
+            formatVersion: CURRENT_RUN_STATE_FORMAT_VERSION + 1,
+            nxVersion: '123.4.5',
+          })
+        )
       );
 
       expect(() => updateRunState(dir, (fresh) => fresh)).toThrow(

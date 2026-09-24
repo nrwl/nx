@@ -7,9 +7,9 @@ import {
   reservePort,
   runCLI,
   runCommandUntil,
-  runE2ETests,
   uniq,
   updateFile,
+  shouldRunPlaywrightTests,
 } from '@nx/e2e-utils';
 import { ChildProcess } from 'child_process';
 
@@ -53,7 +53,7 @@ describe('Webpack Plugin (legacy)', () => {
     // TODO: figure out why this test hangs in CI (maybe down to sudo prompt?)
     // expect(() => runCLI(`build ${appName}`)).not.toThrow();
 
-    // if (await runE2ETests()) {
+    // if (await shouldRunCypressTests()) {
     //   runCLI(`e2e ${appName}-e2e --watch=false --verbose`);
     // }
   }, 500_000);
@@ -155,7 +155,7 @@ describe('Webpack Plugin (legacy)', () => {
       runCLI(`build ${appName} --outputHashing none`);
     }).not.toThrow();
 
-    if (await runE2ETests()) {
+    if (await shouldRunPlaywrightTests()) {
       expect(() => {
         runCLI(`e2e ${appName}-e2e`);
       }).not.toThrow();
@@ -195,7 +195,7 @@ describe('Webpack Plugin (legacy)', () => {
         runCLI(`build ${appName}`);
       }).not.toThrow();
 
-      if (await runE2ETests()) {
+      if (await shouldRunPlaywrightTests()) {
         expect(() => {
           runCLI(`e2e ${appName}-e2e`);
         }).not.toThrow();

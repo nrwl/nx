@@ -1,10 +1,21 @@
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { addDependenciesToPackageJson, readJson } from '@nx/devkit';
 import initGenerator, { remixInitGeneratorInternal } from './init';
 
 describe('Remix Init Generator', () => {
+  it('should deny the esbuild build script pulled in by @remix-run/dev', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+
+    await withPnpm(tree, '11.2.2', () => remixInitGeneratorInternal(tree, {}));
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+      /['"]?esbuild['"]?: false/
+    );
+  });
+
   it('should setup the workspace and add dependencies', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();

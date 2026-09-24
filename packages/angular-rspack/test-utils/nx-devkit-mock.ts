@@ -1,5 +1,16 @@
 import * as path from 'path';
 import { PathLike, statSync } from 'node:fs';
+
+export const logger = {
+  warn: (...args: unknown[]) => console.warn(...args),
+  error: (...args: unknown[]) => console.error(...args),
+  info: (...args: unknown[]) => console.info(...args),
+  log: (...args: unknown[]) => console.log(...args),
+  debug: (...args: unknown[]) => console.debug(...args),
+  fatal: (...args: unknown[]) => console.error(...args),
+  verbose: (...args: unknown[]) => console.log(...args),
+};
+
 export function fileExists(path: PathLike): boolean {
   try {
     return statSync(path).isFile();

@@ -13,6 +13,7 @@ import {
 } from '@nx/devkit';
 import { findTargetDefault, upsertTargetDefault } from '@nx/devkit/internal';
 import { getProjectSourceRoot } from '@nx/js/internal';
+import { supportsSsrAllowedHosts } from '../../utils/version-utils';
 import type { NormalizedGeneratorOptions } from '../schema';
 import {
   DEFAULT_BROWSER_DIR,
@@ -68,6 +69,12 @@ export function updateProjectConfigForApplicationBuilder(
     entry: joinPathFragments(sourceRoot, options.serverFileName),
   };
   buildTarget.options.outputMode = 'server';
+  if (supportsSsrAllowedHosts(tree)) {
+    // The engine matches the request host against this list and an unset list
+    // matches nothing, so surface it for the deployment to fill in
+    buildTarget.options.security ??= {};
+    buildTarget.options.security.allowedHosts ??= [];
+  }
 
   updateProjectConfiguration(tree, options.project, project);
 }

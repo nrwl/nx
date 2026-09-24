@@ -1,7 +1,10 @@
 import { applyBaseConfig } from './apply-base-config';
 import { NormalizedNxAppRspackPluginOptions } from './models';
-import type { Configuration } from '@rspack/core';
+import type { Configuration, Stats } from '@rspack/core';
 import * as path from 'path';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
+import { runInNewContext } from 'vm';
 
 describe('apply-base-config libraryTarget handling', () => {
   let options: NormalizedNxAppRspackPluginOptions;
@@ -376,4 +379,85 @@ describe('apply-base-config cache option', () => {
     );
     expect(persistent.cache).toEqual(normalizedCache({ type: 'persistent' }));
   });
+});
+
+describe('apply-base-config minimizer', () => {
+  let dir: string;
+
+  beforeAll(() => {
+    dir = mkdtempSync(path.join(tmpdir(), 'nx-rspack-minimizer-'));
+    writeFileSync(
+      path.join(dir, 'index.js'),
+      `
+        function wrap(cb) { return () => cb(); }
+        class C { static n = 0; id = ++C.n; v = wrap(() => this.id); }
+        console.log([new C(), new C(), new C()].map((c) => c.v()).join(','));
+      `
+    );
+  });
+
+  afterAll(() => {
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  beforeEach(() => {
+    jest.resetModules();
+    global.NX_GRAPH_CREATION = false;
+  });
+
+  afterEach(() => {
+    delete global.NX_GRAPH_CREATION;
+    jest.resetModules();
+  });
+
+  it.each(['web', 'node'] as const)(
+    'keeps per-instance closures from class field initializers when minifying for %s targets',
+    async (target) => {
+      const { applyBaseConfig } = await import('./apply-base-config');
+      const { rspack } = await import('@rspack/core');
+      const config: Partial<Configuration> = {};
+      applyBaseConfig(
+        {
+          root: '/test',
+          projectRoot: 'apps/test',
+          target,
+          mode: 'production',
+          optimization: true,
+        } as NormalizedNxAppRspackPluginOptions,
+        config
+      );
+
+      const outDir = path.join(dir, `out-${target}`);
+      const compiler = rspack({
+        mode: 'production',
+        context: dir,
+        entry: './index.js',
+        target,
+        output: { path: outDir, filename: 'main.js' },
+        devtool: false,
+        optimization: config.optimization,
+      });
+      const stats = await new Promise<Stats>((res, rej) => {
+        compiler.run((err, stats) => {
+          compiler.close((closeErr) => {
+            if (err || closeErr) {
+              rej(err ?? closeErr);
+            } else if (stats.hasErrors()) {
+              rej(new Error(stats.toString({ errors: true, all: false })));
+            } else {
+              res(stats);
+            }
+          });
+        });
+      });
+      const mainAsset = stats.compilation.getAsset('main.js');
+      expect(mainAsset && mainAsset.info.minimized).toBe(true);
+
+      const logs: string[] = [];
+      runInNewContext(readFileSync(path.join(outDir, 'main.js'), 'utf8'), {
+        console: { log: (message: string) => logs.push(message) },
+      });
+      expect(logs).toEqual(['1,2,3']);
+    }
+  );
 });

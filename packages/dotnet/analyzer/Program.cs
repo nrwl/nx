@@ -8,9 +8,10 @@ using MsbuildAnalyzer.Utilities;
 // Parse input - either from stdin or command line arguments
 // Format (stdin): the plugin options JSON on the first line, empty for defaults, then
 //   newline-separated file paths. Files are partitioned here by name:
-//   .csproj/.fsproj/.vbproj go to projectFiles, the canonical Directory.* files go to
-//   directoryFiles. MSBuild evaluation finds those directory files on its own; we need
-//   them in this process to declare the right per-project inputs back to Nx.
+//   .csproj/.fsproj/.vbproj go to projectFiles; the ancestor-scoped files (Directory.*,
+//   global.json, nuget.config, .editorconfig) go to directoryFiles. MSBuild finds those on
+//   its own; we need them in this process to declare the right per-project inputs back
+//   to Nx. Anything else the plugin's glob matched only feeds its cache key and is dropped.
 //   Options travel on stdin rather than in argv because argv reaches cmd.exe on Windows,
 //   which cannot carry the JSON's double quotes.
 // Args: MsbuildAnalyzer <workspace-root>
@@ -21,7 +22,7 @@ List<string> directoryFiles = new();
 PluginOptions? pluginOptions = null;
 
 var directoryFileNameSet = new HashSet<string>(
-    ProjectUtilities.DirectoryBuildFileNames,
+    ProjectUtilities.DirectoryBuildFileNames.Concat(ProjectUtilities.CascadingFileNames),
     StringComparer.OrdinalIgnoreCase
 );
 
@@ -79,8 +80,8 @@ if (Console.IsInputRedirected)
         {
             directoryFiles.Add(line);
         }
-        // Anything else is silently dropped; the glob shouldn't surface unrelated files,
-        // but we don't want a stray path to abort the run.
+        // Anything else (an arbitrary .props/.targets, say) is dropped: MSBuild will find it
+        // through the project's own imports, and it is reported back as an evaluation input.
     }
 }
 else

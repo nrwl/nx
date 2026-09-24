@@ -285,6 +285,35 @@ export function isProjectConfigurationsError(
   );
 }
 
+export function formatProjectGraphError(
+  error: ProjectGraphError | ProjectConfigurationsError,
+  isVerbose: boolean
+): { title: string; bodyLines: string[] } {
+  const errors = isProjectConfigurationsError(error)
+    ? error.errors
+    : error.getErrors();
+
+  let title = error.message;
+  if (
+    error.cause &&
+    typeof error.cause === 'object' &&
+    'message' in error.cause
+  ) {
+    title += ' ' + error.cause.message + '.';
+  }
+
+  return {
+    title,
+    bodyLines: isVerbose
+      ? [formatErrorStackAndCause(error)]
+      : [
+          ...errors.map((e) => e.message),
+          '',
+          'Pass --verbose to see the stacktraces.',
+        ],
+  };
+}
+
 /**
  * This error should be thrown when a `createNodesV2` function hits a recoverable error.
  * It allows Nx to recieve partial results and continue processing for better UX.
@@ -619,13 +648,29 @@ function indentString(str: string, indent: number): string {
   );
 }
 
-function formatErrorStackAndCause(error: Error): string {
-  const cause =
-    error.cause && error.cause instanceof Error ? error.cause : null;
+export function formatErrorStackAndCause(error: Error): string {
+  const cause = describeCause(error.cause);
   return (
-    error.stack +
-    (cause
-      ? `\nCaused by: \n${indentString(cause.stack ?? cause.message, 2)}`
-      : '')
+    (error.stack ?? error.message) +
+    (cause ? `\nCaused by: \n${indentString(cause, 2)}` : '')
   );
+}
+
+function describeCause(cause: unknown): string | null {
+  if (!cause) {
+    return null;
+  }
+  if (cause instanceof Error) {
+    return cause.stack ?? cause.message;
+  }
+  if (typeof cause === 'object') {
+    const { stack, message } = cause as { stack?: unknown; message?: unknown };
+    if (typeof stack === 'string') {
+      return stack;
+    }
+    if (typeof message === 'string') {
+      return message;
+    }
+  }
+  return String(cause);
 }

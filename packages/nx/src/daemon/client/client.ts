@@ -15,16 +15,15 @@ import { readNxJson } from '../../config/configuration';
 import { hasNxJson, NxJsonConfiguration } from '../../config/nx-json';
 import { FileData, ProjectGraph } from '../../config/project-graph';
 import { Task, TaskGraph } from '../../config/task-graph';
+import { pruneTaskGraph } from '../../tasks-runner/prune-task-graph';
 import { Hash } from '../../hasher/task-hasher';
 import { IS_WASM, NxWorkspaceFiles, TaskRun, TaskTarget } from '../../native';
 import {
   DaemonProjectGraphError,
   ProjectGraphError,
 } from '../../project-graph/error-types';
-import {
-  PostTasksExecutionContext,
-  PreTasksExecutionContext,
-} from '../../project-graph/plugins/public-api';
+import { PreTasksExecutionContext } from '../../project-graph/plugins/public-api';
+import type { MaybeStubbedPostTasksExecutionContext } from '../../project-graph/plugins/task-results-stub';
 import { getPluginResolveConditionNodeArgs } from '../../plugins/js/utils/typescript';
 import { preventRecursionInGraphConstruction } from '../../project-graph/project-graph';
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration/source-maps';
@@ -77,6 +76,11 @@ import {
   GET_REGISTERED_SYNC_GENERATORS,
   type HandleGetRegisteredSyncGeneratorsMessage,
 } from '../message-types/get-registered-sync-generators';
+import {
+  GET_PLUGIN_CAPABILITIES,
+  type HandleGetPluginCapabilitiesMessage,
+} from '../message-types/get-plugin-capabilities';
+import type { NxPluginCapabilities } from '../../project-graph/plugins/nx-plugin-capabilities';
 import {
   GET_SYNC_GENERATOR_CHANGES,
   type HandleGetSyncGeneratorChangesMessage,
@@ -177,6 +181,18 @@ export class WatcherFailedError extends Error {
  * re-dialing once this many land back to back without a message in between.
  */
 const MAX_CONSECUTIVE_FRAMING_FAILURES = 3;
+
+// Task results get written back onto these task objects as the run
+// progresses — hash/hashDetails/timestamps by hashing and the orchestrator,
+// terminalOutput by the Nx Cloud life cycle (untyped) — so a later message
+// would otherwise re-ship every earlier result.
+function withoutTaskResults(
+  tasks: Task[],
+  taskGraph: TaskGraph
+): { tasks: Task[]; taskGraph: TaskGraph } {
+  const pruned = pruneTaskGraph(taskGraph);
+  return { tasks: tasks.map((t) => pruned.tasks[t.id]), taskGraph: pruned };
+}
 
 export class DaemonClient {
   private readonly nxJson: NxJsonConfiguration | null;
@@ -374,28 +390,29 @@ export class DaemonClient {
     cwd: string,
     collectInputs?: boolean
   ): Promise<Hash[]> {
-    // Task results get written back onto these task objects as the run
-    // progresses — hash/hashDetails/timestamps by hashing and the
-    // orchestrator, terminalOutput by the Nx Cloud life cycle (untyped) —
-    // so a later message would otherwise re-ship every earlier result.
-    const trimmedTasks: Record<string, Task> = {};
-    for (const [id, t] of Object.entries(taskGraph.tasks)) {
-      const {
-        hash,
-        hashDetails,
-        startTime,
-        endTime,
-        terminalOutput,
-        ...strippedTask
-      } = t as Task & { terminalOutput?: string };
-      trimmedTasks[id] = strippedTask as Task;
-    }
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS',
       runnerOptions,
       perTaskEnvs,
-      tasks: tasks.map((t) => trimmedTasks[t.id]),
-      taskGraph: { ...taskGraph, tasks: trimmedTasks },
+      ...withoutTaskResults(tasks, taskGraph),
+      cwd,
+      collectInputs,
+    });
+  }
+
+  hashTasksUpfront(
+    runnerOptions: any,
+    tasks: Task[],
+    taskGraph: TaskGraph,
+    perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
+    cwd: string,
+    collectInputs?: boolean
+  ): Promise<Record<string, Hash>> {
+    return this.sendToDaemonViaQueue({
+      type: 'HASH_TASKS_UPFRONT',
+      runnerOptions,
+      perTaskEnvs,
+      ...withoutTaskResults(tasks, taskGraph),
       cwd,
       collectInputs,
     });
@@ -1022,6 +1039,13 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
+  getPluginCapabilities(): Promise<NxPluginCapabilities[]> {
+    const message: HandleGetPluginCapabilitiesMessage = {
+      type: GET_PLUGIN_CAPABILITIES,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
   updateWorkspaceContext(
     createdFiles: string[],
     updatedFiles: string[],
@@ -1047,7 +1071,7 @@ export class DaemonClient {
   }
 
   async runPostTasksExecution(
-    context: PostTasksExecutionContext
+    context: MaybeStubbedPostTasksExecutionContext
   ): Promise<void> {
     const message: HandlePostTasksExecutionMessage = {
       type: POST_TASKS_EXECUTION,

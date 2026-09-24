@@ -5,6 +5,7 @@ import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 
 import { output } from '../utils/output';
+import { pruneTaskGraph } from './prune-task-graph';
 import { stripIndents } from '../utils/strip-indents';
 import { BatchMessageType } from './batch/batch-messages';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
@@ -52,7 +53,8 @@ export class ForkedProcessTaskRunner {
     { id: batchId, executorName, taskGraph: batchTaskGraph }: Batch,
     projectGraph: ProjectGraph,
     fullTaskGraph: TaskGraph,
-    env: NodeJS.ProcessEnv
+    env: NodeJS.ProcessEnv,
+    printsOutput = true
   ): Promise<BatchProcess> {
     const count = Object.keys(batchTaskGraph.tasks).length;
     if (count > 1) {
@@ -83,7 +85,7 @@ export class ForkedProcessTaskRunner {
       getProcessMetricsService().registerBatch(batchId, taskIds, p.pid);
     }
 
-    const cp = new BatchProcess(p, executorName);
+    const cp = new BatchProcess(p, executorName, printsOutput, batchId);
     this.processes.add(cp);
 
     cp.onExit(() => {
@@ -95,8 +97,8 @@ export class ForkedProcessTaskRunner {
       type: BatchMessageType.RunTasks,
       executorName,
       projectGraph,
-      batchTaskGraph,
-      fullTaskGraph,
+      batchTaskGraph: pruneTaskGraph(batchTaskGraph),
+      fullTaskGraph: pruneTaskGraph(fullTaskGraph),
     });
 
     return cp;
@@ -235,13 +237,13 @@ export class ForkedProcessTaskRunner {
     // Register forked process for metrics collection
     const pid = p.getPid();
     if (pid) {
-      registerTaskProcessStart(task.id, pid);
+      registerTaskProcessStart(task, pid);
     }
 
     p.send({
       targetDescription: task.target,
       overrides: task.overrides,
-      taskGraph,
+      taskGraph: pruneTaskGraph(taskGraph),
       isVerbose: this.verbose,
     });
     this.processes.add(p);
@@ -296,14 +298,14 @@ export class ForkedProcessTaskRunner {
 
       // Register forked process for metrics collection
       if (p.pid) {
-        registerTaskProcessStart(task.id, p.pid);
+        registerTaskProcessStart(task, p.pid);
       }
 
       // Send message to run the executor
       p.send({
         targetDescription: task.target,
         overrides: task.overrides,
-        taskGraph,
+        taskGraph: pruneTaskGraph(taskGraph),
         isVerbose: this.verbose,
       });
 
@@ -363,7 +365,7 @@ export class ForkedProcessTaskRunner {
 
       // Register forked process for metrics collection
       if (p.pid) {
-        registerTaskProcessStart(task.id, p.pid);
+        registerTaskProcessStart(task, p.pid);
       }
 
       const cp = new NodeChildProcessWithDirectOutput(p, temporaryOutputPath);
@@ -374,7 +376,7 @@ export class ForkedProcessTaskRunner {
       p.send({
         targetDescription: task.target,
         overrides: task.overrides,
-        taskGraph,
+        taskGraph: pruneTaskGraph(taskGraph),
         isVerbose: this.verbose,
       });
 

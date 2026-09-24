@@ -20,10 +20,12 @@ import { getNxRequirePaths } from '../../../utils/installation-directory';
 import { isSandbox } from '../../../utils/is-sandbox';
 import { logger } from '../../../utils/logger';
 import { ProgressTopics } from '../../../utils/progress-topics';
+import { stubTerminalOutputs } from '../task-results-stub';
 import { waitForSocketConnection } from '../../../utils/wait-for-socket-connection';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import type { RawProjectGraphDependency } from '../../project-graph-builder';
 import { LoadedNxPlugin } from '../loaded-nx-plugin';
+import type { NxPluginCapabilities } from '../nx-plugin-capabilities';
 import type {
   CreateDependenciesContext,
   CreateMetadataContext,
@@ -104,6 +106,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   private worker: ChildProcess | null = null;
   private socket: Socket | null = null;
   private _alive = false;
+  private _released = false;
   private _connectPromise: Promise<LoadResultPayload> | null = null;
   private txId = 0;
   private pendingCount = 0;
@@ -149,9 +152,15 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       index
     );
 
-    const loadResult = await instance.spawnAndConnect();
-    instance.setupHooks(loadResult);
-    return instance;
+    try {
+      const loadResult = await instance.spawnAndConnect();
+      instance.setupHooks(loadResult);
+      return instance;
+    } catch (e) {
+      // A timed-out worker is still running, and the caller is about to drop this instance.
+      instance.shutdown();
+      throw e;
+    }
   }
 
   private constructor(
@@ -167,6 +176,16 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     this.name = name;
     this.pluginPath = pluginPath;
     this.shouldRegisterTSTranspiler = shouldRegisterTSTranspiler;
+  }
+
+  capabilities(): NxPluginCapabilities {
+    return {
+      createNodesPattern: this.createNodes?.[0],
+      hasCreateDependencies: !!this.createDependencies,
+      hasCreateMetadata: !!this.createMetadata,
+      hasPreTasksExecution: !!this.preTasksExecution,
+      hasPostTasksExecution: !!this.postTasksExecution,
+    };
   }
 
   private async spawnAndConnect(): Promise<LoadResultPayload> {
@@ -370,7 +389,14 @@ export class IsolatedPlugin implements LoadedNxPlugin {
         hook,
         async (...args: TArgs) => {
           await this.ensureAlive();
-          return hookFn(...args);
+          try {
+            return await hookFn(...args);
+          } finally {
+            // A released plugin still answers, then shuts its worker straight back down.
+            if (this._released) {
+              shutdown(hook);
+            }
+          }
         },
         () => shutdown(hook)
       );
@@ -439,7 +465,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
         this as { postTasksExecution: IsolatedPlugin['postTasksExecution'] }
       ).postTasksExecution = wrap('postTasksExecution', async (context) => {
         const result = await this.sendRequest('postTasksExecution', {
-          context,
+          context: stubTerminalOutputs(context),
         });
         if (result.success === false) {
           throw result.error;
@@ -535,8 +561,19 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     }
   }
 
+  /**
+   * Like `shutdown`, but for good: a later hook call still answers, then shuts
+   * the worker back down instead of leaving a respawned one running.
+   */
+  dispose(): void {
+    this._released = true;
+    this.shutdown();
+  }
+
   shutdown(): void {
-    if (!this._alive) return;
+    // Not `_alive`: that is only set once the worker answers a load, so gating
+    // on it would leave a worker that never got that far running.
+    if (!this.worker && !this.socket) return;
     this._alive = false;
     this._connectPromise = null;
 

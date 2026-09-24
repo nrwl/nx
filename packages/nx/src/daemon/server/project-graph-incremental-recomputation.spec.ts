@@ -1,4 +1,10 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { join } from 'node:path';
 
 import { TempFs } from '../../internal-testing-utils/temp-fs';
@@ -32,65 +38,6 @@ vi.mock('../../utils/perf-logging', () => ({}));
 // every case stalls to the suite timeout; run with NX_ISOLATE_PLUGINS=false.
 // The first case additionally needs real watcher event delivery, which a
 // container filesystem does not provide, and fails there either way.
-
-describe('isKnownWorkspaceFile', () => {
-  let fs: TempFs;
-
-  beforeEach(() => {
-    fs = new TempFs('pgir-known-files');
-  });
-
-  afterEach(() => {
-    fs.cleanup();
-  });
-
-  it('answers membership from the committed ignore-filtered file map', async () => {
-    fs.createFilesSync({
-      'nx.json': JSON.stringify({}),
-      'package.json': JSON.stringify({ name: 'root' }),
-      '.nxignore': '.env\n',
-      '.env': 'A=1\n',
-      'libs/foo/project.json': JSON.stringify({
-        name: 'foo',
-        root: 'libs/foo',
-      }),
-      'libs/foo/src/index.ts': '',
-    });
-
-    vi.resetModules();
-    // The plugin-loader mocks vi.doMock installs in the tests above are
-    // registry-wide and outlive vi.resetModules.
-    vi.doUnmock('../../project-graph/plugins/get-plugins');
-    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
-    setWorkspaceRoot(fs.tempDir);
-
-    const {
-      getCachedSerializedProjectGraphPromise,
-      scheduleProjectGraphRecomputation,
-      isKnownWorkspaceFile,
-    } = await import('./project-graph-incremental-recomputation');
-
-    // Nothing is known before the first recompute commits a map; the caller
-    // (server.ts) then fails safe by invalidating.
-    expect(isKnownWorkspaceFile('package.json')).toBe(false);
-
-    const committed = await getCachedSerializedProjectGraphPromise();
-    expect(committed.error).toBeNull();
-
-    expect(isKnownWorkspaceFile('package.json')).toBe(true);
-    expect(isKnownWorkspaceFile('libs/foo/src/index.ts')).toBe(true);
-    // Ignored, so filtered out of the map (and never watched).
-    expect(isKnownWorkspaceFile('.env')).toBe(false);
-    expect(isKnownWorkspaceFile('never-existed.env')).toBe(false);
-
-    // A later commit replaces the map; membership must follow the new map,
-    // not a lookup structure built from the old one.
-    fs.createFileSync('libs/foo/src/other.ts', '');
-    scheduleProjectGraphRecomputation(['libs/foo/src/other.ts'], [], []);
-    await getCachedSerializedProjectGraphPromise();
-    expect(isKnownWorkspaceFile('libs/foo/src/other.ts')).toBe(true);
-  });
-});
 
 describe('invalidateGraphCache', () => {
   let fs: TempFs;

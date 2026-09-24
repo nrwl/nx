@@ -8,13 +8,14 @@ import {
   newProject,
   runCLI,
   runCLIAsync,
-  runE2ETests,
   uniq,
+  shouldRunPlaywrightTests,
 } from '@nx/e2e-utils';
 
 describe('Web Components Applications with bundler set as vite', () => {
   beforeEach(() =>
     newProject({
+      keepBackup: true,
       packages: [
         '@nx/web',
         '@nx/react',
@@ -50,7 +51,7 @@ describe('Web Components Applications with bundler set as vite', () => {
 
     expect(lintE2eResults).toContain('Successfully ran target lint');
 
-    if (isNotWindows() && (await runE2ETests())) {
+    if (isNotWindows() && (await shouldRunPlaywrightTests())) {
       const e2eResults = runCLI(`e2e ${appName}-e2e`);
       expect(e2eResults).toContain('Successfully ran target e2e for project');
       await killPorts();

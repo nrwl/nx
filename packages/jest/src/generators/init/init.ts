@@ -100,10 +100,11 @@ function createJestDefaultPatch(
 function updateDependencies(tree: Tree, options: JestInitSchema) {
   const { jestVersion, nxVersion } = versions(tree);
 
-  // jest 30 pulls in unrs-resolver; its postinstall only fetches a fallback
-  // binding for platforms not covered by its prebuilt optional dependencies,
-  // so skip it.
+  // jest-resolve depends on unrs-resolver, and from jest 30.5.0 it pins a
+  // jest-haste-map that depends on @parcel/watcher. Neither build is needed:
+  // the binding has a fallback and the watcher ships prebuilt.
   acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+    '@parcel/watcher': false,
     'unrs-resolver': false,
   });
 

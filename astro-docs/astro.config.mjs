@@ -6,6 +6,7 @@ import react from '@astrojs/react';
 import markdoc from '@astrojs/markdoc';
 import tailwindcss from '@tailwindcss/vite';
 import sitemap from '@astrojs/sitemap';
+import { unified } from '@astrojs/markdown-remark';
 import { sidebar } from './sidebar.mts';
 import rehypeTableOptionLinks from './src/plugins/utils/rehype-table-option-links.ts';
 import { resolveNxDevUrl } from './src/utils/resolve-nx-dev-url.ts';
@@ -42,8 +43,13 @@ export default defineConfig({
     },
   },
   markdown: {
-    rehypePlugins: [rehypeTableOptionLinks],
+    // Astro 7 defaults to Satteri. This plugin only runs on loader-generated
+    // markdown (the renderMarkdown path), so we stay on unified for it.
+    processor: unified({ rehypePlugins: [rehypeTableOptionLinks] }),
   },
+  // Astro 7 defaults this to 'jsx', which strips whitespace between inline
+  // elements and joins words together in prose.
+  compressHTML: true,
   trailingSlash: 'never',
   redirects: {
     '/concepts/inferred-tasks': '/docs/concepts/mental-model',
@@ -69,6 +75,7 @@ export default defineConfig({
       '/docs/technologies/typescript/introduction',
     '/guides/nx-cloud/ci-resource-usage':
       '/docs/features/ci-features/resource-usage',
+    '/guides/nx-cloud/enable-ai-features': '/docs/kb/enable-ai-features',
     '/reference/remote-cache-plugins':
       '/docs/reference/deprecated/self-hosted-cache-packages',
     '/reference/remote-cache-plugins/s3-cache':
@@ -97,8 +104,6 @@ export default defineConfig({
     // https://starlight.astro.build/reference/configuration/
     starlight({
       title: 'Nx',
-      tagline:
-        'Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents.',
       customCss: ['./src/styles/global.css'],
       favicon: '/favicon.svg',
       logo: {

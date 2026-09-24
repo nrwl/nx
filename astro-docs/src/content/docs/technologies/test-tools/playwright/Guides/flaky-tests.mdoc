@@ -1,0 +1,145 @@
+---
+title: 'How to Fix Flaky Playwright Tests'
+description: 'Reproduce, debug, and fix flaky Playwright tests, then use Nx to isolate retries and detect recurring failures in CI.'
+sidebar:
+  label: Fix Flaky Tests
+filter: 'type:Guides'
+topics:
+  - 'Continuous integration'
+---
+
+A **flaky Playwright test** passes and fails without a change to the application or test code.
+Retries can keep a pull request moving, but they do not fix the timing, state, or environment problem
+that caused the failure.
+
+Use this process to reproduce the failure, preserve evidence, and fix its cause.
+
+## Reproduce the flaky test
+
+Run the failed spec repeatedly before you change it:
+
+```shell
+nx e2e <project-name> -- path/to/test.spec.ts --repeat-each=20 --project=chromium
+```
+
+Then run the same spec with one worker:
+
+```shell
+nx e2e <project-name> -- path/to/test.spec.ts --repeat-each=20 --project=chromium --workers=1
+```
+
+A test that fails only with parallel workers usually shares data, files, ports, or process state.
+A test that fails with one worker usually has a timing, selector, network, or environment problem.
+Do not make `--workers=1` the permanent fix. Remove the shared dependency instead.
+
+Use this table to narrow the investigation:
+
+| Signal                                      | Likely cause                            | First check                                      |
+| ------------------------------------------- | --------------------------------------- | ------------------------------------------------ |
+| The test passes alone but fails in a suite. | Shared state or test-order dependence.  | Data creation, cleanup, and global variables.    |
+| The test fails only with parallel workers.  | A shared user, file, port, or database. | Resources that need a unique value per worker.   |
+| The test fails after a click or navigation. | A missing wait for application state.   | A web-first assertion or a response wait.        |
+| The test fails only in CI.                  | An environment or resource difference.  | Browser versions, server readiness, and outputs. |
+| The test fails in one browser.              | A browser-specific assumption.          | The failing Playwright project and trace.        |
+
+## Wait for application state, not time
+
+Playwright locators auto-wait before actions. Its web-first assertions also retry until their
+condition succeeds or the assertion times out. Use those features instead of fixed delays.
+
+```ts
+// Flaky: the response can take more or less than one second.
+await page.getByRole('button', { name: 'Save' }).click();
+await page.waitForTimeout(1000);
+expect(await page.getByText('Saved').isVisible()).toBe(true);
+
+// Stable: wait for the state that the user can observe.
+await page.getByRole('button', { name: 'Save' }).click();
+await expect(page.getByText('Saved')).toBeVisible();
+```
+
+Wait for a specific response when the next assertion depends on that response:
+
+```ts
+const saveResponse = page.waitForResponse(
+  (response) =>
+    response.url().endsWith('/api/profile') && response.status() === 200
+);
+
+await page.getByRole('button', { name: 'Save' }).click();
+await saveResponse;
+await expect(page.getByText('Saved')).toBeVisible();
+```
+
+Do not use a network wait when a user-visible assertion proves the required state. Each additional
+implementation detail makes the test more fragile.
+
+## Use stable Playwright locators
+
+Prefer locators that match how a user finds an element:
+
+1. Use `getByRole()` with an accessible name.
+2. Use `getByLabel()` for a form control.
+3. Use `getByText()` for stable visible text.
+4. Use `getByTestId()` when the interface has no suitable user-facing locator.
+
+Avoid long CSS or XPath selectors. They bind the test to markup that users do not depend on.
+
+```ts
+// Fragile: a layout change breaks the selector.
+await page.locator('div.toolbar > div:nth-child(2) > button').click();
+
+// Stable: the locator describes the user action.
+await page.getByRole('button', { name: 'Create project' }).click();
+```
+
+## Isolate test data and state
+
+Each test must create its prerequisites and remove its side effects. A test must not depend on
+another test to run first.
+
+- Create a unique account, project, or record for each parallel worker.
+- Reset mocks, feature flags, files, and database records after each test.
+- Use Playwright fixtures for setup that needs a separate browser context.
+- Stub an external service when the test does not need to verify that integration.
+- Keep an integration test for the real service, but monitor its failures separately.
+
+If a serial test fixes the symptom, use the trace to find the shared resource. Keep serial mode only
+when the workflow itself must be sequential.
+
+## Preserve the failed Playwright trace
+
+The Nx Playwright preset retries tests twice in CI and does not retry them locally. The generated
+Playwright configuration also records a trace on the first retry:
+
+```ts
+export default defineConfig({
+  ...nxE2EPreset(import.meta.dirname, { testDir: './e2e' }),
+  use: {
+    baseURL,
+    trace: 'on-first-retry',
+  },
+});
+```
+
+The preset writes test results below the Playwright output directory and writes reports to separate
+report directories. Nx includes the inferred output paths in the task cache. The
+`on-first-retry` setting records the retry attempt, not the initial failed attempt. Temporarily use
+`trace: 'retain-on-failure'` when you need a trace from the initial failure.
+
+A failed attempt followed by a successful retry is evidence of a flaky test. Do not treat the
+eventual pass as proof that the test is healthy.
+
+## Isolate Playwright retries in CI
+
+The `@nx/playwright` plugin can create one CI task for each spec file. Run the inferred `e2e-ci`
+target in CI to use this [automated task splitting](/docs/features/ci-features/split-e2e-tasks).
+A failed spec can then retry without running the complete Playwright suite.
+
+Nx Cloud detects a flaky task when the same task hash has both a failed and a successful execution.
+With distributed task execution through Nx Agents, it can retry a known flaky task on a different
+agent. This helps separate a test problem from an agent problem. See [flaky test detection and
+automatic retries](/docs/features/ci-features/flaky-tasks).
+
+After the fix, keep the test enabled and watch its CI history. A quarantine hides the signal and
+reduces coverage, so use it only with an owner and a review date.

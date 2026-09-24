@@ -1,6 +1,6 @@
 ---
-title: Enforce Module Boundaries ESLint Rule
-description: Learn how to use the @nx/enforce-module-boundaries ESLint rule to define strict rules for accessing resources between different projects in your Nx workspace.
+title: Enforce Module Boundaries Rule
+description: Learn how to use the @nx/enforce-module-boundaries lint rule on ESLint or Oxlint to define strict rules for accessing resources between different projects in your Nx workspace.
 sidebar:
   label: The enforce-module-boundaries rule
 filter: 'type:Guides'
@@ -8,7 +8,7 @@ topics:
   - 'ESLint'
 ---
 
-The `@nx/enforce-module-boundaries` ESLint rule enables you to define strict rules for accessing resources between
+The `@nx/enforce-module-boundaries` lint rule enables you to define strict rules for accessing resources between
 different projects in the repository. Enforcing strict boundaries helps to prevent unplanned cross-dependencies.
 
 {% aside type="note" %}
@@ -17,7 +17,7 @@ This rule only works for JavaScript/TypeScript projects. It runs on ESLint, and 
 
 ## Usage
 
-You can use the `enforce-module-boundaries` rule by adding it to your ESLint rules configuration:
+Add the rule to your linter configuration:
 
 {% tabs syncKey="eslint-config-preference" %}
 {% tabitem label="Flat Config" %}
@@ -65,6 +65,24 @@ export default [
     },
     // ... more ESLint overrides here
   ],
+}
+```
+
+{% /tabitem %}
+{% tabitem label="Oxlint" %}
+
+```json
+// .oxlintrc.json
+{
+  "jsPlugins": ["@nx/oxlint/boundaries-plugin"],
+  "rules": {
+    "@nx/enforce-module-boundaries": [
+      "error",
+      {
+        // ...rule specific configuration
+      }
+    ]
+  }
 }
 ```
 

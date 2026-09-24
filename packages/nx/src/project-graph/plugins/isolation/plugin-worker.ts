@@ -65,6 +65,10 @@ if (!socketPath || !expectedPluginName || !hostWorkspaceRoot) {
 }
 
 const CONNECT_TIMEOUT_MS = 30_000;
+// Runs in this worker's own loop from the moment it accepts, while the host is
+// loading every plugin at once and may sit in a synchronous workspace walk for
+// over ten seconds. A host that has died closes the socket; 'end' covers that.
+const LOAD_TIMEOUT_MS = 60_000;
 
 let connectErrorTimeout = setErrorTimeout(
   CONNECT_TIMEOUT_MS,
@@ -88,8 +92,8 @@ const server = createServer((socket) => {
   // after the worker connected but before the worker was
   // instructed to load the plugin.
   let loadErrorTimeout = setErrorTimeout(
-    10_000,
-    `Plugin Worker for ${expectedPluginName} is exiting as it did not receive a load message within 10 seconds of connecting. ` +
+    LOAD_TIMEOUT_MS,
+    `Plugin Worker for ${expectedPluginName} is exiting as it did not receive a load message within ${LOAD_TIMEOUT_MS / 1000} seconds of connecting. ` +
       'This likely indicates that the host process was terminated before the worker could be instructed to load the plugin. ' +
       'If you are seeing this issue, please report it to the Nx team at https://github.com/nrwl/nx/issues.'
   );

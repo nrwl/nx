@@ -157,6 +157,8 @@ nx e2e frontend-e2e --grepInvert="feat-a"
 By default, Playwright will run in headless mode. You will have the result of all the tests and errors (if any) in your
 terminal. Test output such as reports, screenshots, and videos will be accessible in `dist/.playwright/apps/<your-app-name>/`. This can be configured with the `outputDir` configuration options.
 
+If a test passes and fails without a code change, use the [flaky Playwright test guide](/docs/technologies/test-tools/playwright/guides/flaky-tests) to reproduce the failure, inspect its trace, and fix its cause.
+
 {% aside type="note" title="Output Caching" %}
 If changing the output directory or report output, make sure to update the [target outputs](/docs/concepts/how-caching-works#what-is-cached) so the artifacts are correctly cached
 {% /aside %}

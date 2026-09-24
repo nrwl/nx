@@ -3,7 +3,7 @@ import type { Server, Socket } from 'net';
 import { serverLogger } from '../logger';
 import { serializeResult } from '../socket-utils';
 import { deleteDaemonJsonProcessCache } from '../cache';
-import type { Watcher } from '../../native';
+import { stopWatchingWorkspaceContext } from '../../utils/workspace-context';
 import {
   DaemonProjectGraphError,
   ProjectGraphError,
@@ -64,26 +64,6 @@ async function startNewDaemonInBackground() {
   serverLogger.log('Started new daemon process in background');
 }
 
-let watcherInstance: Watcher | undefined;
-
-export function storeWatcherInstance(instance: Watcher) {
-  watcherInstance = instance;
-}
-
-export function getWatcherInstance() {
-  return watcherInstance;
-}
-
-let outputWatcherInstance: Watcher | undefined;
-
-export function storeOutputWatcherInstance(instance: Watcher) {
-  outputWatcherInstance = instance;
-}
-
-export function getOutputWatcherInstance() {
-  return outputWatcherInstance;
-}
-
 interface HandleServerProcessTerminationParams {
   server: Server;
   reason: string;
@@ -126,19 +106,8 @@ async function performShutdown(
       }
     });
 
-    if (watcherInstance) {
-      await watcherInstance.stop();
-      serverLogger.watcherLog(
-        `Stopping the watcher for ${workspaceRoot} (sources)`
-      );
-    }
-
-    if (outputWatcherInstance) {
-      await outputWatcherInstance.stop();
-      serverLogger.watcherLog(
-        `Stopping the watcher for ${workspaceRoot} (outputs)`
-      );
-    }
+    stopWatchingWorkspaceContext();
+    serverLogger.watcherLog(`Stopping the watch for ${workspaceRoot}`);
 
     deleteDaemonJsonProcessCache();
     cleanupPlugins();
