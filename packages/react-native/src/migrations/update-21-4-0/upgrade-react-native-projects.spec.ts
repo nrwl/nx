@@ -3,6 +3,8 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import update from './upgrade-react-native-projects';
 import * as nxDevkitConfigUtils from '@nx/devkit/internal';
 import * as path from 'path';
+import { execSync as realExecSync } from 'child_process';
+import type { Mock } from 'vitest';
 
 // Mock execSync
 vi.mock('child_process', () => ({
@@ -13,7 +15,7 @@ vi.mock('child_process', () => ({
 
 describe('upgrade-react-native-projects', () => {
   let tree: Tree;
-  const { execSync } = require('child_process');
+  const execSync = realExecSync as unknown as Mock;
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
