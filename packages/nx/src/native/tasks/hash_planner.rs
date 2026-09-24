@@ -76,7 +76,7 @@ impl<'a> SnapshotContext<'a> {
                 unparsable: false,
             };
         }
-        match NxGlobSetBuilder::new(&patterns).and_then(|b| b.build()) {
+        match NxGlobSetBuilder::new(&patterns).and_then(|b| b.build(None)) {
             Ok(set) => Self {
                 io,
                 literal,

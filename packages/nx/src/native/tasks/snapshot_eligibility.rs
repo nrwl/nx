@@ -323,7 +323,7 @@ fn segment_could_disguise(segment: &str) -> bool {
     // glob builder would read the segment as a negation of its own.
     let segment = segment.strip_prefix('!').unwrap_or(segment).to_lowercase();
     NxGlobSetBuilder::new(&[segment])
-        .and_then(|builder| builder.build())
+        .and_then(|builder| builder.build(None))
         .map(|set| IGNORED_DIRS.iter().any(|dir| set.is_match(dir)))
         // A segment the glob engine rejects is not a name this can clear.
         .unwrap_or(true)
