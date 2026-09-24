@@ -7,8 +7,8 @@ import { tmpdir } from 'node:os';
 import { createNodesV2 } from './plugin';
 
 // Outside the repo tree: an in-workspace path would be an undeclared task output.
-jest.mock('nx/src/utils/cache-directory', () => ({
-  ...jest.requireActual('nx/src/utils/cache-directory'),
+vi.mock('nx/src/utils/cache-directory', async () => ({
+  ...(await vi.importActual<any>('nx/src/utils/cache-directory')),
   workspaceDataDirectory: require('node:path').join(
     require('node:os').tmpdir(),
     'nx-storybook-plugin-cache'
@@ -126,7 +126,7 @@ describe('@nx/storybook/plugin', () => {
   });
 
   afterEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     tempFs.cleanup();
   });
 
@@ -951,7 +951,7 @@ export default config;
     mainTsPath: string,
     mainTsConfig: StorybookConfig
   ) {
-    jest.mock(
+    vi.mock(
       join(tempFs.tempDir, mainTsPath),
       () => ({ default: mainTsConfig }),
       { virtual: true }

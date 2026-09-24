@@ -12,9 +12,9 @@ import * as workspaceConfiguration from './test-configs/root-workspace-configura
 import { storybookVersion } from '../../utils/versions';
 
 // nested code imports graph from the repo, which might have innacurate graph version
-jest.mock('nx/src/project-graph/project-graph', () => ({
-  ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
-  createProjectGraphAsync: jest
+vi.mock('nx/src/project-graph/project-graph', async () => ({
+  ...(await vi.importActual<any>('nx/src/project-graph/project-graph')),
+  createProjectGraphAsync: vi
     .fn()
     .mockImplementation(async () => ({ nodes: {}, dependencies: {} })),
 }));
@@ -76,8 +76,8 @@ describe('@nx/storybook:configuration for workspaces with Root project', () => {
         },
       });
 
-      jest.resetModules();
-      jest.doMock('storybook/package.json', () => ({
+      vi.resetModules();
+      vi.doMock('storybook/package.json', () => ({
         version: storybookVersion,
       }));
     });
