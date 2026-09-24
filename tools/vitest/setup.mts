@@ -17,6 +17,7 @@
 import { vi } from 'vitest';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as os from 'os';
 import { createRequire } from 'module';
 import { resolveNxSourceSpecifier } from './nx-source-resolver.mts';
 
@@ -115,9 +116,10 @@ delete process.env.FORCE_COLOR;
 process.env.NO_COLOR = '1';
 
 /**
- * `patched-jest-resolver.js` pointed `workspaceRoot` at `tmp/unit` as a side
- * effect of being loaded. Keep that: source that reads the imported
- * `workspaceRoot` const must not land on the real repo.
+ * Point `workspaceRoot` at a scratch dir so source that reads the imported
+ * `workspaceRoot` const never lands on the real repo. It lives outside the repo:
+ * pnpm 12 reads the enclosing workspace's lockfile even for `pnpm --version`,
+ * which code under test spawns there, so an in-repo root reads the repo's.
  *
  * Per worker process, unlike jest: code that slips past the graph mocks takes
  * a file lock under the workspace data dir, and vitest's parallel workers
@@ -125,7 +127,11 @@ process.env.NO_COLOR = '1';
  * two of them).
  */
 if (!process.env.NX_WORKSPACE_ROOT_PATH) {
-  const root = path.join(realWorkspaceRoot, 'tmp', 'unit', `${process.pid}`);
+  const root = path.join(
+    fs.realpathSync(os.tmpdir()),
+    'nx-unit',
+    `${process.pid}`
+  );
   fs.mkdirSync(root, { recursive: true });
   process.env.NX_WORKSPACE_ROOT_PATH = root;
 }
