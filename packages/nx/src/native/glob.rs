@@ -245,6 +245,30 @@ pub(crate) fn contains_glob_pattern(value: &str) -> bool {
 mod test {
     use super::*;
 
+    /// Pins how every glob-syntax reader answers for a corpus of real globs,
+    /// so a change to the parser or the splitter shows up as a snapshot diff.
+    #[test]
+    fn glob_readers_agree_with_the_recorded_corpus() {
+        let corpus = include_str!("glob/fixtures/glob_corpus.txt");
+        let mut report = String::new();
+        for glob in corpus.lines() {
+            let converted = match convert_glob(glob) {
+                Ok(globs) => format!("{globs:?}"),
+                Err(_) => "error".into(),
+            };
+            let prefix = match build_glob_set(&[glob]) {
+                Ok(set) => format!("{:?}", set.literal_prefix()),
+                Err(_) => "error".into(),
+            };
+            report.push_str(&format!(
+                "{glob}\n  convert: {converted}\n  partition: {:?}\n  is_glob: {}\n  prefix: {prefix}\n",
+                partition_glob(glob),
+                contains_glob_pattern(glob),
+            ));
+        }
+        insta::assert_snapshot!(report);
+    }
+
     #[test]
     fn jest_extglobs_narrow_to_a_shared_ancestor() {
         let globs = [
