@@ -1,4 +1,4 @@
-import { hasLineBreak, singleLine } from './text';
+import { singleLine } from './text';
 
 describe('singleLine', () => {
   it('collapses a newline so the value cannot reach column 0 of the next line', () => {
@@ -39,22 +39,5 @@ describe('singleLine', () => {
 
   it('leaves a value that is already one line untouched', () => {
     expect(singleLine('already fine')).toBe('already fine');
-  });
-});
-
-describe('hasLineBreak', () => {
-  it('is true for every terminator singleLine collapses and false otherwise', () => {
-    for (const terminator of [
-      '\n',
-      '\r',
-      '\u000b',
-      '\u000c',
-      '\u0085',
-      '\u2028',
-      '\u2029',
-    ]) {
-      expect(hasLineBreak(`a${terminator}b`)).toBe(true);
-    }
-    expect(hasLineBreak('a\tb \u001b[31mc')).toBe(false);
   });
 });

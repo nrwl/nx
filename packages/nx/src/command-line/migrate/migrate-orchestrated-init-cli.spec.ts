@@ -5,23 +5,23 @@
 
 const mockRunOrchestratorInit = vi.fn();
 const mockRunOrchestratorResume = vi.fn();
-const mockReadLatestPlanSnapshot = vi.fn();
 const mockHoldRunToContinue = vi.fn();
-const mockRefuseStartFreshWithoutActiveRun = vi.fn();
+const mockActiveRunToReplace = vi.fn();
 // migrate.ts lazy-requires ./run (CJS channel), which vi.mock cannot
 // intercept; replace the module in the require channel instead.
 import { mockCjsModule } from '../../internal-testing-utils/cjs-mock';
+import { runDir } from './run/run-state';
+import { latestRound } from './run/state-machine';
 mockCjsModule(import.meta.url, './run', {
   runSingleMigrationWorker: vi.fn(),
   runOrchestratorInit: (...args: unknown[]) => mockRunOrchestratorInit(...args),
   runOrchestratorReconcile: vi.fn(),
   runOrchestratorResume: (...args: unknown[]) =>
     mockRunOrchestratorResume(...args),
-  readLatestPlanSnapshot: (...args: unknown[]) =>
-    mockReadLatestPlanSnapshot(...args),
   holdRunToContinue: (...args: unknown[]) => mockHoldRunToContinue(...args),
-  refuseStartFreshWithoutActiveRun: (...args: unknown[]) =>
-    mockRefuseStartFreshWithoutActiveRun(...args),
+  activeRunToReplace: (...args: unknown[]) => mockActiveRunToReplace(...args),
+  latestRound,
+  runDir,
 });
 const mockRunMasterSession = vi.fn();
 mockCjsModule(import.meta.url, './agentic/master/run-master-session', {
@@ -112,7 +112,13 @@ vi.mock('../../daemon/client/client', () => ({
   },
 }));
 
-import { mkdtempSync, realpathSync, rmSync, writeFileSync } from 'fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { output } from '../../utils/output';
@@ -144,9 +150,15 @@ describe('migrate() orchestrated init dispatch', () => {
     process.env.NX_MIGRATE_ORCHESTRATOR = 'true';
     mockRunOrchestratorInit.mockReset().mockResolvedValue(undefined);
     mockRunOrchestratorResume.mockReset().mockReturnValue(undefined);
-    mockReadLatestPlanSnapshot.mockReset().mockReturnValue({ migrations: [] });
-    mockHoldRunToContinue.mockReset();
-    mockRefuseStartFreshWithoutActiveRun.mockReset();
+    mkdirSync(runDir(root, 'run-1'), { recursive: true });
+    writeFileSync(
+      join(runDir(root, 'run-1'), 'plan-0.json'),
+      JSON.stringify({ migrations: [] })
+    );
+    mockHoldRunToContinue
+      .mockReset()
+      .mockReturnValue({ rounds: [{ index: 0, planSnapshot: 'plan-0.json' }] });
+    mockActiveRunToReplace.mockReset();
     mockRunInstall.mockReset().mockResolvedValue(undefined);
     mockRunMasterSession.mockReset().mockResolvedValue(undefined);
     mockResolveAgentic.mockReset().mockResolvedValue({ kind: 'disabled' });
@@ -310,7 +322,6 @@ describe('migrate() orchestrated init dispatch', () => {
       ['--run-migrations', '--agentic=claude-code', '--run-id=run-1']
     );
 
-    expect(mockReadLatestPlanSnapshot).toHaveBeenCalledWith(root, 'run-1');
     expect(mockRunOrchestratorResume).toHaveBeenCalledWith({
       root,
       runId: 'run-1',
@@ -319,37 +330,8 @@ describe('migrate() orchestrated init dispatch', () => {
     expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
   });
 
-  it('holds the run a continue names before the preflight install', async () => {
-    const order: string[] = [];
-    mockHoldRunToContinue.mockImplementation(() => {
-      order.push('hold');
-    });
-    mockRunInstall.mockImplementation(async () => {
-      order.push('install');
-    });
-
-    await migrate(
-      root,
-      runMigrationsArgs({ runId: 'run-1', agentic: 'claude-code' }),
-      ['--run-migrations', '--agentic=claude-code', '--run-id=run-1']
-    );
-
-    expect(mockHoldRunToContinue).toHaveBeenCalledWith(root, 'run-1');
-    expect(order).toEqual(['hold', 'install']);
-  });
-
-  it('holds no run for a start-fresh, which deletes the one it names', async () => {
-    await migrate(
-      root,
-      runMigrationsArgs({ runId: 'run-1', startFresh: true }),
-      ['--run-migrations', '--start-fresh', '--run-id=run-1']
-    );
-
-    expect(mockHoldRunToContinue).not.toHaveBeenCalled();
-  });
-
   it('refuses a start-fresh naming no active run before the preflight install', async () => {
-    mockRefuseStartFreshWithoutActiveRun.mockImplementation(() => {
+    mockActiveRunToReplace.mockImplementation(() => {
       throw new Error('nothing to replace');
     });
 
@@ -361,27 +343,9 @@ describe('migrate() orchestrated init dispatch', () => {
       )
     ).toBe(1);
 
-    expect(mockRefuseStartFreshWithoutActiveRun).toHaveBeenCalledWith(
-      root,
-      'run-1'
-    );
+    expect(mockActiveRunToReplace).toHaveBeenCalledWith(root, 'run-1');
     expect(mockRunInstall).not.toHaveBeenCalled();
     expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
-  });
-
-  it('continues with the agent nx.json names when --agentic is not passed', async () => {
-    mockReadNxJson.mockReturnValue({ migrate: { agentic: 'claude-code' } });
-
-    await migrate(root, runMigrationsArgs({ runId: 'run-1' }), [
-      '--run-migrations',
-      '--run-id=run-1',
-    ]);
-
-    expect(mockRunOrchestratorResume).toHaveBeenCalledWith({
-      root,
-      runId: 'run-1',
-      policy: { createCommits: true, skipInstall: false },
-    });
   });
 
   it('replaces the run --start-fresh --run-id names through init, on the workspace plan', async () => {
@@ -391,12 +355,11 @@ describe('migrate() orchestrated init dispatch', () => {
       ['--run-migrations', '--start-fresh', '--run-id=run-1']
     );
 
-    expect(mockReadLatestPlanSnapshot).not.toHaveBeenCalled();
     expect(mockRunOrchestratorResume).not.toHaveBeenCalled();
     expect(mockRunOrchestratorInit).toHaveBeenCalledWith(
       expect.objectContaining({
         migrationsJson: expect.objectContaining({
-          migrations: expect.any(Array),
+          migrations: [expect.objectContaining({ name: 'gen' })],
         }),
         onExistingRun: 'start-fresh',
         replaceRunId: 'run-1',
@@ -412,20 +375,6 @@ describe('migrate() orchestrated init dispatch', () => {
       'the gate env var is not set',
       () => {
         delete process.env.NX_MIGRATE_ORCHESTRATOR;
-      },
-    ],
-    [
-      '--run-id',
-      'the gate env var is not set',
-      () => {
-        delete process.env.NX_MIGRATE_ORCHESTRATOR;
-      },
-    ],
-    [
-      '--start-fresh',
-      'no agent is driving the process',
-      () => {
-        mockIsInsideAgent.mockReturnValue(false);
       },
     ],
     [
@@ -544,17 +493,38 @@ describe('migrate() orchestrated init dispatch', () => {
         interactive: undefined,
         runId: undefined,
         startFresh: undefined,
-        confirmNewRun: expect.any(Function),
+        confirmStart: expect.any(Function),
       });
       // Asked by init once it is about to start a run, never up front.
       expect(mockMigrateConfirm).not.toHaveBeenCalled();
-      const { confirmNewRun } = mockRunMasterSession.mock.calls[0][0];
-      expect(await confirmNewRun()).toBe(true);
+      const { confirmStart } = mockRunMasterSession.mock.calls[0][0];
+      expect(await confirmStart()).toBe(true);
       expect(mockMigrateConfirm).toHaveBeenCalledTimes(1);
       expect(output.log).not.toHaveBeenCalledWith(
         expect.objectContaining({
           title: expect.stringContaining('Running migrations from'),
         })
+      );
+    });
+
+    it('hands the run a start-fresh replaces to the master session', async () => {
+      await migrate(
+        root,
+        runMigrationsArgs({
+          agentic: 'claude-code',
+          startFresh: true,
+          runId: 'run-1',
+        }),
+        [
+          '--run-migrations',
+          '--agentic=claude-code',
+          '--start-fresh',
+          '--run-id=run-1',
+        ]
+      );
+
+      expect(mockRunMasterSession).toHaveBeenCalledWith(
+        expect.objectContaining({ runId: 'run-1', startFresh: true })
       );
     });
 
@@ -568,8 +538,8 @@ describe('migrate() orchestrated init dispatch', () => {
       ]);
 
       expect(mockRunMasterSession).toHaveBeenCalledTimes(1);
-      const { confirmNewRun } = mockRunMasterSession.mock.calls[0][0];
-      expect(await confirmNewRun()).toBe(false);
+      const { confirmStart } = mockRunMasterSession.mock.calls[0][0];
+      expect(await confirmStart()).toBe(false);
       expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
       expect(output.log).not.toHaveBeenCalledWith(
         expect.objectContaining({

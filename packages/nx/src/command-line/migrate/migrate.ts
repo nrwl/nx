@@ -136,7 +136,7 @@ import {
   assertCommitPrefixHasCommits,
 } from './migrate-config';
 import type { ResolvedAgentic } from './agentic/types';
-import type { RunOrchestratorInitInput } from './run';
+import type { MigrateRunState, RunOrchestratorInitInput } from './run';
 import {
   commitCheckpointBeforeMigrations,
   commitMigrationIfRequested,
@@ -1280,7 +1280,7 @@ type RunMigrations = {
   agentic: AgenticArg;
   validate?: boolean;
   interactive?: boolean;
-  // The active orchestrated run to continue instead of starting one.
+  // The orchestrated run to continue, or the one --start-fresh replaces.
   runId?: string;
   // Delete the active orchestrated run's record and start a new run.
   startFresh?: boolean;
@@ -1326,11 +1326,6 @@ export async function parseMigrationsOptions(
   }
 
   if (options.startFresh === true) {
-    if (options.runMigration !== undefined) {
-      throw new Error(
-        `Error: '--start-fresh' cannot be combined with '--run-migration'.`
-      );
-    }
     if (options.runMigrations === undefined) {
       throw new Error(`Error: '--start-fresh' requires '--run-migrations'.`);
     }
@@ -1396,10 +1391,8 @@ export async function parseMigrationsOptions(
         `Error: '--run-id' requires the id of the migrate run to record into.`
       );
     }
-    // With `--run-migrations`, `--run-id` continues the named run (in a new
-    // agent session, or in place inside an agent), so `--agentic` has to be
-    // on too; the agentic/run-id conflict above already let that shape
-    // through. A start-fresh names the run it replaces instead, from any path.
+    // With `--run-migrations`, `--run-id` continues the named run, which needs
+    // `--agentic`; a start-fresh names the run it replaces instead.
     if (
       options.runMigrations !== undefined &&
       options.startFresh !== true &&
@@ -1409,8 +1402,6 @@ export async function parseMigrationsOptions(
         `Error: '--run-id' (reconcile an orchestrated run) cannot be combined with '--run-migrations' (run the whole migrations file). To continue the run, pass '--agentic' (or '--agentic=<agent>') as well.`
       );
     }
-    // A continue starts a session; the reconciles that session runs take the
-    // step actions.
     if (
       options.runMigrations !== undefined &&
       options.stepAction !== undefined
@@ -3290,12 +3281,9 @@ async function runMigrations(
   commitPrefix: string,
   shouldSkipInstall = false
 ) {
-  // Both flags act on the record of an orchestrated run, so outside the
-  // orchestrator they would silently do nothing. Outside an outer agent, an
-  // explicit --agentic=false can never reach the orchestrator either. Checked
-  // before the install, which a refused command has no use for, and before
-  // the --if-exists early return below, which would turn the flag into a
-  // silent no-op.
+  // Both flags act on an orchestrated run: refuse them where none can run
+  // (an explicit --agentic=false outside an agent cannot reach one either),
+  // before the install and before --if-exists could return silently.
   const orchestratorFlag =
     opts.startFresh === true
       ? '--start-fresh'
@@ -3311,16 +3299,16 @@ async function runMigrations(
   }
 
   const isContinue = opts.runId !== undefined && opts.startFresh !== true;
+  let continued: MigrateRunState | undefined;
   if (isContinue) {
     // Before the install: a concurrent start-fresh must not delete the run
     // this command is about to continue.
     const { holdRunToContinue } = require('./run') as typeof import('./run');
-    holdRunToContinue(root, opts.runId);
+    continued = holdRunToContinue(root, opts.runId);
   } else if (opts.startFresh === true) {
     // Before the install too: with no active run there is nothing to replace.
-    const { refuseStartFreshWithoutActiveRun } =
-      require('./run') as typeof import('./run');
-    refuseStartFreshWithoutActiveRun(root, opts.runId);
+    const { activeRunToReplace } = require('./run') as typeof import('./run');
+    activeRunToReplace(root, opts.runId);
   }
 
   if (!shouldSkipInstall && !process.env.NX_MIGRATE_SKIP_INSTALL) {
@@ -3340,15 +3328,17 @@ async function runMigrations(
   }
 
   let migrationsJson: { migrations?: PlannedMigration[]; [k: string]: unknown };
-  if (opts.runId !== undefined && opts.startFresh !== true) {
+  if (isContinue) {
     // A continue runs the plan the run recorded, not whatever the workspace's
     // migrations file holds now (it may be gone, or belong to another plan).
-    const { readLatestPlanSnapshot } =
-      require('./run') as typeof import('./run');
-    migrationsJson = readLatestPlanSnapshot(
-      root,
-      opts.runId
-    ) as typeof migrationsJson;
+    const { latestRound, runDir } = require('./run') as typeof import('./run');
+    const round = latestRound(continued);
+    if (!round) {
+      throw new Error(`Migrate run '${opts.runId}' records no plan.`);
+    }
+    migrationsJson = readJsonFile(
+      join(runDir(root, opts.runId), round.planSnapshot)
+    );
   } else {
     const migrationsExists: boolean = fileExists(opts.runMigrations);
 
@@ -3409,7 +3399,7 @@ async function runMigrations(
     if (createCommitsWarning) {
       output.warn({ title: createCommitsWarning });
     }
-    if (opts.runId !== undefined && opts.startFresh !== true) {
+    if (isContinue) {
       runOrchestratorResume({
         root,
         runId: opts.runId,
@@ -3517,7 +3507,7 @@ async function runMigrations(
       interactive: opts.interactive,
       runId: opts.runId,
       startFresh: opts.startFresh,
-      confirmNewRun: confirmNewRunCommits,
+      confirmStart: confirmNewRunCommits,
     });
   }
   if (orchestratorFlag !== undefined) {

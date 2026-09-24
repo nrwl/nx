@@ -50,37 +50,6 @@ describe('renderExistingRunReport', () => {
     );
   });
 
-  it('names the migrations file in prose, keeping the continue command, when start-fresh cannot be rendered', () => {
-    const { bodyLines } = renderExistingRunReport(facts, {
-      continueCommand: 'npx nx migrate --run-id=run-1',
-      startFresh: { migrationsPath: 'tools\\my migrations.json' },
-    });
-
-    expect(bodyLines).toContainEqual(
-      'To continue the run: npx nx migrate --run-id=run-1'
-    );
-    expect(bodyLines).toContainEqual(
-      'To start fresh (deletes the run record, then runs the whole plan again): re-run this command with --start-fresh --run-id=run-1, keeping the --run-migrations argument, which names tools\\my migrations.json; that path cannot be rendered as a command for this shell'
-    );
-    expect(bodyLines).not.toContainEqual(
-      expect.stringContaining('nx migrate --run-migrations')
-    );
-  });
-
-  it('names a migrations file with a line break JSON-escaped, so the break is shown rather than collapsed', () => {
-    const { bodyLines } = renderExistingRunReport(facts, {
-      continueCommand: 'npx nx migrate --run-id=run-1',
-      startFresh: { migrationsPath: 'tools\\my\nmigrations.json' },
-    });
-
-    expect(bodyLines).toContainEqual(
-      'To start fresh (deletes the run record, then runs the whole plan again): re-run this command with --start-fresh --run-id=run-1, keeping the --run-migrations argument, which names "tools\\\\my\\nmigrations.json"; that path cannot be rendered as a command for this shell'
-    );
-    expect(bodyLines).not.toContainEqual(
-      expect.stringContaining('tools\\my migrations.json')
-    );
-  });
-
   // JSON.stringify escapes only the ASCII terminators; the other three would
   // reach singleLine literal and come out as spaces.
   it.each(['000a', '000d', '000b', '000c', '0085', '2028', '2029'])(
@@ -101,47 +70,15 @@ describe('renderExistingRunReport', () => {
     }
   );
 
-  it('leads with the run a start-fresh named when the newest active run is another', () => {
+  it('states the recorded policy', () => {
     const { bodyLines } = renderExistingRunReport({
       ...facts,
-      replacedRunId: 'run-0',
-    });
-
-    expect(bodyLines[0]).toBe(
-      'Not deleting run-0: the newest active run is run-1.'
-    );
-    expect(bodyLines[1]).toBe('  run: run-1');
-  });
-
-  it('says the newest recorded commit cannot be checked when it has no sha', () => {
-    const { bodyLines } = renderExistingRunReport({
-      ...facts,
-      commits: {
-        recorded: 2,
-        reachable: 1,
-        unchecked: 1,
-        newest: { sha: null, status: 'unknown' },
-      },
+      policy: { createCommits: false, skipInstall: true },
     });
 
     expect(bodyLines).toContainEqual(
-      '  commits: newest recorded commit has no recorded sha and could not be checked (1 of 2 reachable, 1 could not be checked)'
+      '  policy: per-migration commits off, installs skipped'
     );
-  });
-
-  it.each([
-    [
-      { createCommits: true, skipInstall: false },
-      'per-migration commits on, installs on',
-    ],
-    [
-      { createCommits: false, skipInstall: true },
-      'per-migration commits off, installs skipped',
-    ],
-  ])('states the recorded policy %o', (policy, expected) => {
-    const { bodyLines } = renderExistingRunReport({ ...facts, policy });
-
-    expect(bodyLines).toContainEqual(`  policy: ${expected}`);
   });
 
   it('lists adopted and unresolved migrations only when the run has them', () => {
@@ -159,9 +96,6 @@ describe('renderExistingRunReport', () => {
 
     expect(bodyLines).toContainEqual(
       '  progress: 2 applied, 1 adopted, 0 skipped, 1 unresolved, 3 remaining (1 awaiting a decision)'
-    );
-    expect(renderExistingRunReport(facts).bodyLines).toContainEqual(
-      '  progress: 0 applied, 0 skipped, 1 remaining'
     );
   });
 
@@ -183,11 +117,5 @@ describe('renderExistingRunReport', () => {
     expect(
       renderExistingRunReport({ ...facts, otherHolders }).bodyLines
     ).toContain(`  activity: ${line}`);
-  });
-
-  it('leaves the commands off when none are given', () => {
-    expect(renderExistingRunReport(facts).bodyLines).not.toContainEqual(
-      expect.stringContaining('To continue')
-    );
   });
 });

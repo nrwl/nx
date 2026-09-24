@@ -617,9 +617,6 @@ describe('migrate orchestrator (dark launch)', () => {
       `A migrate run is already active: ${init.runId}`
     );
     expect(reportOutput).toContain(
-      'progress: 1 applied, 0 skipped, 2 remaining'
-    );
-    expect(reportOutput).toContain(
       `To continue the run: ${PM_EXEC_PREFIX[getSelectedPackageManager()]} nx migrate --run-migrations --agentic --run-id=${init.runId} --create-commits`
     );
     expect(reportOutput).toContain(
@@ -1444,9 +1441,6 @@ describe('migrate orchestrator (dark launch)', () => {
     expect(mismatch).toContain(
       `A migrate run is already active: ${first.runId}`
     );
-    expect(mismatch).toContain(
-      'plan overlap: 2 of the applied migrations are still in the plan; a new run applies them again'
-    );
     expect(mismatch).not.toContain('<nx_migrate_runbook');
     expect(runCommand('git rev-parse HEAD').trim()).toBe(headBeforeMismatch);
     expect(readFile(`.nx/migrate-runs/${first.runId}/run.json`)).toBe(
@@ -1458,22 +1452,6 @@ describe('migrate orchestrator (dark launch)', () => {
     );
     updateFile('.gitignore', gitignoreBefore);
     writePlan([genMig, genTwoMig, gitignoreMig]);
-
-    // A killed orchestrator is just init running again: the same plan gets
-    // the same report, and the run is untouched.
-    const samePlan = runInit(' --validate=false');
-    expect(parseLastDispense(samePlan)).toMatchObject({
-      runId: first.runId,
-      action: 'existing-run',
-    });
-    expect(samePlan).toContain('progress: 2 applied, 0 skipped, 1 remaining');
-    expect(samePlan).toContain(
-      `To continue the run: ${PM_EXEC_PREFIX[getSelectedPackageManager()]} nx migrate --run-migrations --agentic --run-id=${first.runId} --create-commits`
-    );
-    expect(samePlan).toContain(
-      `${PM_EXEC_PREFIX[getSelectedPackageManager()]} nx migrate --run-migrations --start-fresh --run-id=${first.runId}`
-    );
-    expect(samePlan).not.toContain('<nx_migrate_runbook');
 
     // --run-id continues it, re-emitting the stored runbook. The marker
     // proves the stored bytes are re-emitted, not re-rendered.
@@ -1553,38 +1531,14 @@ describe('migrate orchestrator (dark launch)', () => {
     const second = parseLastDispense(output);
     expect(second.action).toBe('next-step');
     expect(second.payload.command).toContain(`--run-migration=${PKG}:gen-two`);
-
-    // Only the newest commit is checked, so once the run commits again on
-    // the new history the warning stops.
-    runDispensed(second.payload.command);
-    const after = runCommand(`${second.payload.next} 2>&1`, { env: AGENT_ENV });
-    expect(after).not.toContain('not reachable from HEAD');
-    expect(parseLastDispense(after).action).toBe('complete');
   }, 600000);
 
-  it('should start a new run on --start-fresh and refuse the flag outside the orchestrator', () => {
+  it('should start a new run on --start-fresh', () => {
     writePlan([genMig, genTwoMig]);
     const first = reconcileAfterInit(runInit());
     runDispensed(first.payload.command);
     const runDirs = () =>
       listFiles('.nx/migrate-runs').filter((f) => f !== 'init.lock');
-    expect(runDirs()).toEqual([first.runId]);
-
-    // Outside the orchestrator the flag is an error, never a silent no-op.
-    const outside = runCLI(
-      `migrate --run-migrations=migrations.json --start-fresh --run-id=${first.runId}`,
-      {
-        env: {
-          NX_MIGRATE_USE_LOCAL: 'true',
-          NX_MIGRATE_SKIP_INSTALL: 'true',
-        },
-        silenceError: true,
-      }
-    );
-    expect(outside).toContain(
-      "'--start-fresh' acts on an orchestrated migrate run"
-    );
-    expect(runCLI.lastExitCode).toBe(1);
     expect(runDirs()).toEqual([first.runId]);
 
     const fresh = runInit(` --start-fresh --run-id=${first.runId}`);
@@ -1973,9 +1927,6 @@ process.exit(status ?? 1);
       expect(runDirs()).toHaveLength(1);
       const runId = runDirs()[0];
       expect(output).toContain('is still active');
-      expect(output).toContain(
-        `${PM_EXEC_PREFIX[getSelectedPackageManager()]} nx migrate --run-migrations --agentic=claude-code --run-id=${runId} --no-create-commits`
-      );
       expect(readRunStateFile(runId).status).toBe('active');
 
       // A plain re-run reports the active run; with no terminal to ask on
@@ -1989,12 +1940,6 @@ process.exit(status ?? 1);
       expect(report.exitCode).toBe(1);
       expect(report.output).toContain(
         `A migrate run is already active: ${runId}`
-      );
-      expect(report.output).toContain(
-        `To continue the run: ${PM_EXEC_PREFIX[getSelectedPackageManager()]} nx migrate --run-migrations --agentic=claude-code --run-id=${runId} --no-create-commits`
-      );
-      expect(report.output).toContain(
-        `nx migrate --run-migrations --agentic=claude-code --start-fresh --run-id=${runId}`
       );
       expect(runDirs()).toEqual([runId]);
       expect(readRunStateFile(runId).status).toBe('active');

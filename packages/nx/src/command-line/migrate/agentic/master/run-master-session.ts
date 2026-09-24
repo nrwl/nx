@@ -11,15 +11,14 @@ import {
   type MigrateRunPolicy,
   type MigrateRunState,
   type OrchestratorInitResult,
-  pmExecPrefix,
   readRunState,
+  renderContinueCommand,
+  renderExistingRunCommands,
   renderExistingRunReport,
   runDir,
   runOrchestratorInit,
   type RunOrchestratorInitInput,
   runOrchestratorResume,
-  renderContinueCommand,
-  renderStartFresh,
   tallySteps,
 } from '../../run';
 import { canPrompt, migrateChoice } from '../../safe-prompt';
@@ -38,18 +37,8 @@ export interface RunMasterSessionInput extends Omit<
   // Delete the record of the run `runId` names and start a new one
   // (`--start-fresh --run-id`).
   startFresh?: boolean;
-  // Asked by init before it starts a run (never before a report or a
-  // continue); false stops with nothing started.
-  confirmNewRun: () => Promise<boolean>;
-}
-
-function startFreshCommand(
-  root: string,
-  agentId: string,
-  runId: string,
-  runMigrationsFlag: string
-): string {
-  return `${pmExecPrefix(root)} nx migrate ${runMigrationsFlag} --agentic=${agentId} --start-fresh --run-id=${runId}`;
+  // Required here: without it init would start or replace a run unasked.
+  confirmStart: () => Promise<boolean>;
 }
 
 /**
@@ -66,7 +55,6 @@ export async function runMasterSession(
     interactive,
     runId: requestedRunId,
     startFresh,
-    confirmNewRun,
     ...init
   } = input;
   // The invocation's policy; an interactive continue adopts the run's recorded
@@ -76,34 +64,28 @@ export async function runMasterSession(
     createCommits: init.createCommits,
     skipInstall: init.skipInstall,
   };
-  let ready: OrchestratorInitResult;
-  if (requestedRunId !== undefined && !startFresh) {
-    ready = runOrchestratorResume({
+  const resume = (runId: string) =>
+    runOrchestratorResume({
       root: init.root,
-      runId: requestedRunId,
+      runId,
       policy,
       emitAgentInstructions: false,
     });
-  } else {
-    ready = await runOrchestratorInit({
+  // With `replaceRunId`, starts fresh over that run only; the consent covers
+  // the run the user saw, and any other active run is reported instead.
+  const start = (replaceRunId?: string) =>
+    runOrchestratorInit({
       ...init,
       emitAgentInstructions: false,
-      onExistingRun: startFresh ? 'start-fresh' : 'report',
-      ...(startFresh ? { replaceRunId: requestedRunId } : {}),
-      confirmStart: confirmNewRun,
+      onExistingRun: replaceRunId === undefined ? 'report' : 'start-fresh',
+      replaceRunId,
     });
-  }
-  if (ready.kind === 'existing-run') {
-    const decision = await decideExistingRun(
-      ready,
-      init.root,
-      agent.id,
-      init.migrationsPath,
-      interactive
-    );
-    if (decision === undefined) {
-      return 1;
-    }
+  let ready =
+    requestedRunId !== undefined && !startFresh
+      ? resume(requestedRunId)
+      : await start(startFresh ? requestedRunId : undefined);
+  if (ready.kind === 'existing-run' && canPrompt(interactive)) {
+    const decision = await decideExistingRun(ready, init.root);
     if (decision === 'abort') {
       output.log({
         title: `Leaving migrate run ${ready.runId} as it is. ${continueHint(init.root, agent.id, ready.runId, ready.facts.policy)}`,
@@ -112,27 +94,24 @@ export async function runMasterSession(
     }
     if (decision === 'continue') {
       policy = ready.facts.policy;
-      ready = runOrchestratorResume({
-        root: init.root,
-        runId: ready.runId,
-        policy,
-        emitAgentInstructions: false,
-      });
+      ready = resume(ready.runId);
     } else {
-      ready = await runOrchestratorInit({
-        ...init,
-        emitAgentInstructions: false,
-        onExistingRun: 'start-fresh',
-        // The consent covers the run the user saw; a run that replaced it
-        // since is reported, not deleted.
-        replaceRunId: ready.runId,
-        confirmStart: confirmNewRun,
-      });
+      ready = await start(ready.runId);
     }
-    if (ready.kind === 'existing-run') {
-      printExistingRunReport(ready, init.root, agent.id, init.migrationsPath);
-      return 1;
-    }
+  }
+  if (ready.kind === 'existing-run') {
+    output.warn(
+      renderExistingRunReport(
+        ready.facts,
+        renderExistingRunCommands(
+          init.root,
+          ready.facts,
+          init.migrationsPath,
+          agent.id
+        )
+      )
+    );
+    return 1;
   }
   if (ready.kind === 'refused') {
     return;
@@ -225,50 +204,14 @@ function continueHint(
   return `Run ${renderContinueCommand(root, runId, policy, agentId)}, with NX_MIGRATE_ORCHESTRATOR=true set in the environment, to continue it.`;
 }
 
-function printExistingRunReport(
-  found: Extract<OrchestratorInitResult, { kind: 'existing-run' }>,
-  root: string,
-  agentId: string,
-  migrationsPath: string | undefined
-): void {
-  output.warn(
-    renderExistingRunReport(found.facts, {
-      continueCommand: renderContinueCommand(
-        root,
-        found.runId,
-        found.facts.policy,
-        agentId
-      ),
-      startFresh: renderStartFresh(migrationsPath, (flag) =>
-        startFreshCommand(root, agentId, found.runId, flag)
-      ),
-    })
-  );
-}
-
-/**
- * The user's call on an active run found where a new one would start. On a
- * terminal, asks, unless another process holds the run, where the continue
- * gate's refusal is thrown instead; otherwise prints the report with both
- * commands and returns undefined, which the caller turns into exit 1: nothing
- * was done and nothing could be asked.
- */
 async function decideExistingRun(
   found: Extract<OrchestratorInitResult, { kind: 'existing-run' }>,
-  root: string,
-  agentId: string,
-  migrationsPath: string | undefined,
-  interactive: boolean | undefined
-): Promise<'continue' | 'start-fresh' | 'abort' | undefined> {
-  if (!canPrompt(interactive)) {
-    printExistingRunReport(found, root, agentId, migrationsPath);
-    return undefined;
-  }
+  root: string
+): Promise<'continue' | 'start-fresh' | 'abort'> {
   output.log(renderExistingRunReport(found.facts));
   // A held run leaves nothing to ask: continue would open a second session
   // over the live one, and start fresh refuses. The continue's own gate
-  // throws the refusal; a holder gone since the report lets the prompt run,
-  // and so does WASM, where the gate cannot tell and continue proceeds.
+  // throws the refusal; a holder gone since the report lets the prompt run.
   if (
     found.facts.otherHolders === 'unknown' ||
     found.facts.otherHolders.length > 0

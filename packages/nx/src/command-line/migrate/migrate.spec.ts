@@ -3310,40 +3310,12 @@ module.exports = {
           runId: 'run-1',
           startFresh: true,
         });
-        // The user-launched shape names the agent as well.
-        expect(
-          await parseMigrationsOptions({
-            runMigrations: 'migrations.json',
-            startFresh: true,
-            runId: 'run-1',
-            agentic: 'claude-code',
-            ifExists: false,
-          })
-        ).toMatchObject({
-          type: 'runMigrations',
-          runId: 'run-1',
-          startFresh: true,
-          agentic: 'claude-code',
-        });
-        // yargs' boolean default is not a request.
-        expect(
-          await parseMigrationsOptions({
-            runMigrations: 'migrations.json',
-            startFresh: false,
-            ifExists: false,
-          })
-        ).not.toHaveProperty('startFresh');
       });
 
-      it('rejects it without --run-migrations or --run-id, and with the single-run flag', async () => {
+      it('rejects it without --run-migrations or --run-id', async () => {
         await expect(() =>
           parseMigrationsOptions({ startFresh: true })
         ).rejects.toThrow(/'--start-fresh' requires '--run-migrations'/);
-        await expect(() =>
-          parseMigrationsOptions({ startFresh: true, runMigration: 'a' })
-        ).rejects.toThrow(
-          /'--start-fresh' cannot be combined with '--run-migration'/
-        );
         await expect(() =>
           parseMigrationsOptions({
             startFresh: true,
@@ -3415,14 +3387,6 @@ module.exports = {
       await expect(() =>
         parseMigrationsOptions({ runId: 'r1', agentic: 'claude-code' })
       ).rejects.toThrow(/'--agentic' cannot be combined with '--run-id'/);
-      // The --run-migrations shape is where --run-id names a run to continue.
-      await expect(
-        parseMigrationsOptions({
-          runId: 'r1',
-          runMigrations: 'migrations.json',
-          agentic: 'claude-code',
-        })
-      ).resolves.toMatchObject({ type: 'runMigrations', runId: 'r1' });
       await expect(
         parseMigrationsOptions({
           runMigration: 'a',

@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readdirSync, rmSync, type Dirent } from 'fs';
 import { createHash } from 'crypto';
 import { basename, join } from 'path';
-import { readJsonFile, writeJsonFile } from '../../../utils/fileutils';
+import { writeJsonFile } from '../../../utils/fileutils';
 import { publishFileAtomically } from './atomic-write';
 import { GIT_SHA } from '../../../utils/git-utils';
 import { nxVersion } from '../../../utils/versions';
@@ -68,7 +68,6 @@ export type MigrateRunStatus = (typeof MIGRATE_RUN_STATUSES)[number];
 
 export interface MigrateRunRound {
   index: number;
-  planHash: string;
   planSnapshot: string;
 }
 
@@ -280,7 +279,7 @@ export interface MigrateRunState {
   // A bare file name despite the field name; it is joined to the run directory.
   runbookPath?: string;
   // The branch checked out when the run started; absent on a detached HEAD or
-  // when git could not say. Reported back when a later init finds the run.
+  // when git could not say.
   branch?: string;
   rounds: MigrateRunRound[];
   steps: MigrateStep[];
@@ -335,32 +334,6 @@ const REQUIRED_TOP_LEVEL_FIELDS: readonly (keyof MigrateRunState)[] = [
   'commits',
   'analytics',
 ];
-
-/**
- * The plan of a run's latest round, read back from the snapshot Nx wrote next
- * to run.json. What a continue uses instead of the workspace's current
- * migrations file, which the run does not depend on.
- */
-export function readLatestPlanSnapshot(
-  root: string,
-  runId: string
-): { migrations?: unknown[]; [k: string]: unknown } {
-  const dir = runDir(root, runId);
-  if (!RUN_ID_SAFE.test(runId)) {
-    throw new Error(`Invalid run id '${runId}'.`);
-  }
-  if (!hasRunState(dir)) {
-    throw new Error(
-      `No migrate run '${runId}' was found under ${MIGRATE_RUNS_RELATIVE_DIR}.`
-    );
-  }
-  const state = readRunState(dir);
-  const round = state.rounds[state.rounds.length - 1];
-  if (!round) {
-    throw new Error(`Migrate run '${runId}' records no plan.`);
-  }
-  return readJsonFile(join(dir, round.planSnapshot));
-}
 
 export function migrateRunsDir(root: string): string {
   return join(root, MIGRATE_RUNS_RELATIVE_DIR);
@@ -449,7 +422,6 @@ function isRoundShape(value: unknown): boolean {
   return (
     isPlainObject(value) &&
     typeof value.index === 'number' &&
-    typeof value.planHash === 'string' &&
     typeof value.planSnapshot === 'string' &&
     PLAN_SNAPSHOT_NAME.test(value.planSnapshot)
   );

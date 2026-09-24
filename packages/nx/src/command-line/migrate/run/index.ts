@@ -8,7 +8,6 @@ export {
   writeRunState,
   findActiveRun,
   createRun,
-  readLatestPlanSnapshot,
 } from './run-state';
 export type {
   MigrateRunStatus,
@@ -33,6 +32,7 @@ export {
   applyStepEvent,
   completionSummaryLines,
   hasPendingCommitDebt,
+  latestRound,
   tallySteps,
 } from './state-machine';
 export { hasUnresolvedIssues } from './issues';
@@ -42,15 +42,15 @@ export type {
   ApplyStepEventResult,
 } from './state-machine';
 
-export { createRunId, computePlanHash } from './run-id';
+export { createRunId } from './run-id';
 
 export { runSingleMigrationWorker } from './worker';
 export type { RunSingleMigrationWorkerInput } from './worker';
 
 export {
+  activeRunToReplace,
   completionWarnings,
   holdRunToContinue,
-  refuseStartFreshWithoutActiveRun,
   releaseRunToHandOff,
   runOrchestratorInit,
   runOrchestratorReconcile,
@@ -60,16 +60,13 @@ export type {
   OrchestratorInitResult,
   RunOrchestratorInitInput,
   RunOrchestratorReconcileInput,
-  RunOrchestratorResumeInput,
 } from './orchestrator';
 
 export {
   renderContinueCommand,
+  renderExistingRunCommands,
   renderExistingRunReport,
-  renderStartFresh,
 } from './existing-run-report';
-export { pmExecPrefix } from './util';
-export type { ExistingRunFacts } from './existing-run-report';
 
 export {
   BROKER_ENV_VAR,

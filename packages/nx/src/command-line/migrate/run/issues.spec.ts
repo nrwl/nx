@@ -73,7 +73,7 @@ describe('migrate run issues', () => {
     status: 'active',
     createCommits: false,
     commitPrefix: 'chore: ',
-    rounds: [{ index: 0, planHash: 'h', planSnapshot: 'plan-0.json' }],
+    rounds: [{ index: 0, planSnapshot: 'plan-0.json' }],
     steps,
     commits: [],
     ...(issues ? { issues } : {}),

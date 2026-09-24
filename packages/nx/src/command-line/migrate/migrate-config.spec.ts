@@ -325,15 +325,6 @@ describe('applyNxJsonMigrateDefaults', () => {
       expect(result.validate).toBeUndefined();
     });
 
-    it('keeps an explicit --agentic on a continue over the nx.json one', () => {
-      const result = applyNxJsonMigrateDefaults(
-        { runMigrations: '', runId: 'run-1', agentic: 'codex' },
-        { agentic: 'claude-code' },
-        noEnv
-      );
-      expect(result.agentic).toBe('codex');
-    });
-
     it('fills the run-migrations overlay for a start-fresh, which starts a new run', () => {
       const config: NxMigrateConfiguration = {
         createCommits: true,

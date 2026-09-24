@@ -67,7 +67,7 @@ import {
   reportMigrateOrchestratorInit,
 } from '../migrate-analytics';
 import { sortMigrations } from '../sort-migrations';
-import { createRunId, computePlanHash, RUN_ID_SAFE } from './run-id';
+import { createRunId, RUN_ID_SAFE } from './run-id';
 import {
   createRun,
   findActiveRun,
@@ -90,8 +90,8 @@ import {
   TERMINAL_STEP_STATUSES,
 } from './run-state';
 import {
-  describeHolders,
   hasAnyLiveRunActivity,
+  heldRunError,
   holdRunActivity,
   liveRunActivityPids,
   registerRunActivity,
@@ -171,12 +171,13 @@ import {
 } from './runbook';
 import {
   collectExistingRunFacts,
+  liveWorkers,
   progressLine,
   recordedCommits,
-  renderContinueCommand,
+  renderExistingRunCommands,
   renderExistingRunReport,
   type ExistingRunFacts,
-  renderStartFresh,
+  workersLine,
 } from './existing-run-report';
 import { detectPackageManager } from '../../../utils/package-manager';
 
@@ -222,9 +223,7 @@ export interface RunOrchestratorInitInput {
   // replace. A different active run is reported instead of deleted.
   replaceRunId?: string;
   // Asked once init has decided to start a run, before any run is deleted or
-  // any git side effect lands; false refuses. Sits here rather than in the
-  // caller because only init knows, under its own discovery, whether a run
-  // is about to start or an existing one is about to be reported.
+  // any git side effect lands; false refuses.
   confirmStart?: () => Promise<boolean>;
 }
 
@@ -323,22 +322,21 @@ export async function runOrchestratorInit(
     replaceRunId,
     confirmStart,
   } = input;
-  const planHash = computePlanHash(migrationsJson);
   const migrations = (migrationsJson.migrations ?? []) as PlannedMigration[];
   const sorted = sortMigrations(migrations.slice(), {
     hoistHandoffGitignore: true,
   });
   const plannedIds = sorted.map((m) => `${m.package}:${m.name}`);
-  if (replaceRunId !== undefined && !RUN_ID_SAFE.test(replaceRunId)) {
-    throw new Error(`Invalid run id '${replaceRunId}'.`);
-  }
 
   // An active run means a prior init already happened (e.g. it crashed before
   // the agent's first reconcile); starting a second run would compete with it,
   // and whether to continue it or replace it is the user's call, not a guess
-  // from the plans. Reported before the id check below: this plan is not
-  // being started. NewerRunStateFormatError propagates.
-  const active = findActiveRunForInit(root, onExistingRun === 'start-fresh');
+  // from the plans. Reported before the migration id check below: this plan
+  // is not being started. NewerRunStateFormatError propagates.
+  const active =
+    onExistingRun === 'start-fresh'
+      ? activeRunToReplace(root, replaceRunId)
+      : findActiveRunForInit(root);
   if (
     active &&
     (onExistingRun === 'report' ||
@@ -354,18 +352,10 @@ export async function runOrchestratorInit(
       replaceRunId
     );
   }
-  // The id names the run the report showed; one naming no active run
-  // (missing, completed, deleted) starts nothing: the plan already ran.
-  if (onExistingRun === 'start-fresh' && !active) {
-    throw new Error(noActiveRunToReplace(replaceRunId));
-  }
-  // Held through confirmStart: a concurrent start-fresh must not delete the
-  // run this one was told to replace while the user is still being asked.
-  // The refusals run here first so the common ones land before the prompt,
-  // the .gitignore fallback and the checkpoint commit; the authoritative pass
-  // is the one under the creation lock at the check/create boundary below.
-  // Without the scratch dir there is nothing to refuse, and taking the lock
-  // would create it before the user has agreed to start.
+  // Held through confirmStart so a concurrent start-fresh cannot delete the
+  // run while the user is asked. The refusals run here first, before the
+  // prompt, the .gitignore fallback and the checkpoint; the locked pass below
+  // is authoritative. Skipped without the scratch dir: the lock would create it.
   if (active) {
     holdRunActivity(root, active.runId);
   }
@@ -431,19 +421,10 @@ export async function runOrchestratorInit(
       INIT_CONTINUE_HINT
     );
   }
-  // The check/create boundary runs under the creation lock: without it, two
-  // concurrent inits could both observe no active run above and create
-  // competing runs against the same workspace. A start-fresh deletes the run
-  // it replaces in this same section: released in between, the lock would
-  // let a concurrent init publish a run this one then reports, with the
-  // replaced run already gone and nothing in its place. The section ends
-  // with the new run's directory reserved but not discoverable (no run.json):
-  // the checkpoint below is a git side effect, which stays outside the lock
-  // (a hook that re-entered nx migrate would otherwise wait on this
-  // process), and while it runs nothing may act on either run. The old one
-  // has no record left; the new one is invisible to discovery, to a
-  // `--run-id`, and to a hold, and its reservation turns a competing init
-  // away. The fallback's .gitignore edit above is idempotent.
+  // One creation-lock section: two inits cannot both create a run, and a
+  // start-fresh's delete and the new directory's reservation (no run.json
+  // yet) land together. Git stays outside the lock: a hook re-entering nx
+  // migrate would wait on this process. The .gitignore fallback is idempotent.
   let deleted = false;
   const reserved = withRunCreationLock(root, () => {
     refuseLiveReservation(root);
@@ -477,8 +458,7 @@ export async function runOrchestratorInit(
       reserved.state,
       plannedIds,
       migrationsPath,
-      emitAgentInstructions,
-      active ? undefined : replaceRunId
+      emitAgentInstructions
     );
   }
   if (deleted) {
@@ -514,7 +494,6 @@ export async function runOrchestratorInit(
     rounds: [
       {
         index: 0,
-        planHash,
         planSnapshot: PLAN_SNAPSHOT_0,
       },
     ],
@@ -523,8 +502,6 @@ export async function runOrchestratorInit(
     ...(checkpointFailed ? { checkpointFailed: true } : {}),
     analytics: { startEmitted: false, completeEmitted: false },
   };
-  // Under the lock again so discovery never sees run.json half-written next
-  // to the reservation's live hold.
   withRunCreationLock(root, () => {
     // The runbook gets the snapshot's crash guarantee: a discoverable run
     // always has the runbook a resume re-emits from disk. 'wx' creates
@@ -543,9 +520,7 @@ export async function runOrchestratorInit(
 
 /**
  * Continues the active run `runId` names: the `--run-migrations --run-id`
- * shape on both paths. Throws when the id names no run or a finished one,
- * and while another nx migrate process holds the run. Not under WASM: no
- * lock exists there, so holders are unknown and the continue proceeds.
+ * shape on both paths. Refuses as holdRunToContinue does.
  */
 export function runOrchestratorResume(
   input: RunOrchestratorResumeInput
@@ -586,18 +561,22 @@ export function holdRunToContinue(
   return state;
 }
 
-// Init's first two checks, read-only, for the CLI to run before the install.
-// An active run other than `runId` passes: init reports it instead.
-export function refuseStartFreshWithoutActiveRun(
+// The active run a start-fresh naming `runId` finds, read-only: init's first
+// check, which the CLI also runs before the install. None refuses, since a
+// completed run means the plan already ran. A different active run is returned
+// too: init reports it instead of deleting it.
+export function activeRunToReplace(
   root: string,
-  runId: string
-): void {
-  if (!RUN_ID_SAFE.test(runId)) {
+  runId: string | undefined
+): { runId: string; state: MigrateRunState } {
+  if (runId !== undefined && !RUN_ID_SAFE.test(runId)) {
     throw new Error(`Invalid run id '${runId}'.`);
   }
-  if (!findActiveRunForInit(root, true)) {
+  const active = findActiveRunForInit(root, true);
+  if (!active) {
     throw new Error(noActiveRunToReplace(runId));
   }
+  return active;
 }
 
 /**
@@ -671,14 +650,6 @@ function refuseLiveReservation(root: string): void {
   }
 }
 
-function startFreshCommand(
-  root: string,
-  runId: string,
-  runMigrationsFlag = '--run-migrations'
-): string {
-  return `${pmExecPrefix(root)} nx migrate ${runMigrationsFlag} --start-fresh --run-id=${runId}`;
-}
-
 // The report for an init that found a run already active. On the agent path
 // the report and both ways forward go to stdout, in a block of its own kind:
 // an `error` block would read as a crash, and this is a decision for the
@@ -699,12 +670,10 @@ function reportExistingRun(
     facts.replacedRunId = replaceRunId;
   }
   if (emitAgentInstructions) {
-    const report = renderExistingRunReport(facts, {
-      continueCommand: renderContinueCommand(root, runId, facts.policy),
-      startFresh: renderStartFresh(migrationsPath, (flag) =>
-        startFreshCommand(root, runId, flag)
-      ),
-    });
+    const report = renderExistingRunReport(
+      facts,
+      renderExistingRunCommands(root, facts, migrationsPath)
+    );
     logToAgent(report);
     const lines = safeLines([
       report.title,
@@ -734,26 +703,13 @@ function refuseUndeletableRun(
     );
   }
   const holders = liveRunActivityPids(runDir(root, runId));
-  if (holders === 'unknown') {
-    throw new Error(
-      `Not deleting migrate run '${runId}': nx cannot tell whether another nx migrate process is still working on it.`
-    );
+  if (holders === 'unknown' || holders.length > 0) {
+    throw heldRunError('deleting', runId, holders);
   }
-  if (holders.length > 0) {
+  const workers = liveWorkers(state);
+  if (workers.length > 0) {
     throw new Error(
-      `Not deleting migrate run '${runId}': ${describeHolders(
-        holders
-      )} (an agent session, a reconcile, or a step). Wait for it to end, then re-run the command.`
-    );
-  }
-  const live = state.steps.filter(
-    (s) => s.status === 'running' && s.pid !== undefined && isPidAlive(s.pid)
-  );
-  if (live.length > 0) {
-    throw new Error(
-      `Not deleting migrate run '${runId}': ${live
-        .map((w) => `pid ${w.pid} is still running ${w.id} (${w.migrationId})`)
-        .join('; ')}. ` +
+      `Not deleting migrate run '${runId}': ${workersLine(workers)}. ` +
         `Wait for it to finish, then re-run the command. If that pid is not an nx migrate worker, stop it or remove ${MIGRATE_RUNS_RELATIVE_DIR}/${runId}, then re-run the command.`
     );
   }
@@ -773,12 +729,9 @@ function noActiveRunToReplace(runId: string | undefined): string {
   } is active, so there is nothing to replace. To start a run, re-run the command without --start-fresh and --run-id.`;
 }
 
-// Removes the run's record so the replacement can be written in the same
-// creation-lock section. run.json goes under the state lock, so that from
-// then on no reconcile or worker can discover the run and start against a
-// directory that is about to disappear. The refusals are repeated here,
-// against fresh state: the preflight pass predates the confirmation prompt
-// and the checkpoint commit. False when the record was already gone.
+// Removes run.json under the state lock, so no reconcile or worker can start
+// against a directory about to disappear. The refusals run again on fresh
+// state: the early pass predates the prompt. False when already gone.
 function deleteRunRecord(root: string, runId: string): boolean {
   const dir = runDir(root, runId);
   return withRunStateLock(dir, () => {
@@ -950,8 +903,6 @@ function finishInit(
   // which must fail before its git and state side effects).
   runbook?: string
 ): OrchestratorInitResult {
-  // The hold from the reservation or holdRunToContinue lasts this process:
-  // for the master session, the whole agent session.
   let current = state;
   if (!current.analytics.startEmitted) {
     // Claim the watermark on the fresh state first: of two concurrent inits

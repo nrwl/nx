@@ -385,7 +385,6 @@ describe('runSingleMigrationWorker', () => {
       ...(opts.skipInstall ? { skipInstall: true } : {}),
       rounds: rounds.map((r) => ({
         index: r.index,
-        planHash: 'h',
         planSnapshot: `plan-${r.index}.json`,
       })),
       steps: opts.steps,
@@ -1070,26 +1069,6 @@ describe('runSingleMigrationWorker', () => {
   });
 
   describe('recorded execution (--run-id)', () => {
-    it('holds an activity lock on the run for the process lifetime', async () => {
-      mockRunMigration.mockResolvedValue({
-        changes: changeList(),
-        nextSteps: [],
-        agentContext: [],
-        logs: '',
-        madeChanges: true,
-      });
-      const dir = setupRun('run-1', {
-        steps: [migStep('step-1', '@nx/js:gen', 'dispensed')],
-        migrations: [genMig('@nx/js', 'gen')],
-      });
-
-      await runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'));
-
-      const names = readdirSync(join(dir, 'activity'));
-      expect(names).toHaveLength(1);
-      expect(new FileLock(join(dir, 'activity', names[0])).check()).toBe(true);
-    });
-
     it('holds the run before it reads the plan', async () => {
       const dir = setupRun('run-1', {
         steps: [migStep('step-1', '@nx/js:gen', 'dispensed')],
@@ -2875,7 +2854,6 @@ describe('runSingleMigrationWorker', () => {
       ).rejects.toThrow(
         /No migrate run 'missing' was found under \.nx\/migrate-runs/
       );
-      expect(existsSync(runDir(root, 'missing'))).toBe(false);
     });
 
     it('errors the same way for a directory that holds no run', async () => {
