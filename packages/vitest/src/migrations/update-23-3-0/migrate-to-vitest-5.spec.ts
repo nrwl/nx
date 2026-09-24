@@ -10,28 +10,68 @@ describe('migrate-to-vitest-5', () => {
   });
 
   describe('removed entry points', () => {
-    it('should repoint the entry points that moved wholesale', async () => {
+    it('should repoint the entry points whose exports moved as a group', async () => {
       tree.write(
         'libs/mylib/src/reporter.ts',
         `import type { Reporter } from 'vitest/reporters';
-import type { CoverageProvider } from 'vitest/coverage';
-import type { VitestRunner } from 'vitest/runners';
+import type { BaseCoverageProvider } from 'vitest/coverage';
 import { SnapshotEnvironment } from 'vitest/snapshot';
-import { getCurrentSuite } from 'vitest/suite';
+import { populateGlobal } from 'vitest/environments';
 `
       );
 
-      await migrateToVitest5(tree);
+      const result = await migrateToVitest5(tree);
 
       expect(tree.read('libs/mylib/src/reporter.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import type { Reporter } from 'vitest/node';
-        import type { CoverageProvider } from 'vitest/node';
-        import type { VitestRunner } from 'vitest/runtime';
+        import type { BaseCoverageProvider } from 'vitest/node';
         import { SnapshotEnvironment } from 'vitest/runtime';
-        import { getCurrentSuite } from 'vitest';
+        import { populateGlobal } from 'vitest/runtime';
         "
       `);
+      expect(result.agentContext).toBeUndefined();
+    });
+
+    // `getCurrentSuite` and friends became static members of `TestRunner`, so
+    // repointing the specifier would emit an import that does not resolve.
+    it('should not repoint vitest/suite, whose exports did not survive', async () => {
+      const contents = `import { getCurrentSuite } from 'vitest/suite';\n`;
+      tree.write('libs/mylib/src/suite.ts', contents);
+
+      const result = await migrateToVitest5(tree);
+
+      expect(tree.read('libs/mylib/src/suite.ts', 'utf-8')).toBe(contents);
+      expect(result.agentContext).toEqual([
+        expect.stringContaining('vitest/suite'),
+      ]);
+    });
+
+    // VitestTestRunner moved to `vitest`, VitestRunner to `vitest/runtime`.
+    it('should not repoint vitest/runners, whose exports split up', async () => {
+      const contents = `import { VitestTestRunner } from 'vitest/runners';\n`;
+      tree.write('libs/mylib/src/runner.ts', contents);
+
+      const result = await migrateToVitest5(tree);
+
+      expect(tree.read('libs/mylib/src/runner.ts', 'utf-8')).toBe(contents);
+      expect(result.agentContext).toEqual([
+        expect.stringContaining('vitest/runners'),
+      ]);
+    });
+
+    // The benchmark rewrite removed these outright, so vitest/node has no home
+    // for them even though the rest of vitest/reporters moved there.
+    it('should not repoint a reporters import that binds a removed benchmark symbol', async () => {
+      const contents = `import type { BenchmarkReporter } from 'vitest/reporters';\n`;
+      tree.write('libs/mylib/src/bench.ts', contents);
+
+      const result = await migrateToVitest5(tree);
+
+      expect(tree.read('libs/mylib/src/bench.ts', 'utf-8')).toBe(contents);
+      expect(result.agentContext).toEqual([
+        expect.stringContaining('BenchmarkReporter'),
+      ]);
     });
 
     it('should rewrite re-export specifiers too', async () => {
@@ -45,22 +85,6 @@ import { getCurrentSuite } from 'vitest/suite';
       expect(tree.read('libs/mylib/src/index.ts', 'utf-8')).toContain(
         `from 'vitest/node'`
       );
-    });
-
-    it('should hand vitest/environments to the agent rather than guess', async () => {
-      tree.write(
-        'libs/mylib/src/env.ts',
-        `import { populateGlobal } from 'vitest/environments';\n`
-      );
-
-      const result = await migrateToVitest5(tree);
-
-      expect(tree.read('libs/mylib/src/env.ts', 'utf-8')).toContain(
-        `from 'vitest/environments'`
-      );
-      expect(result.agentContext).toEqual([
-        expect.stringContaining('libs/mylib/src/env.ts'),
-      ]);
     });
 
     it('should leave supported entry points alone', async () => {
@@ -128,7 +152,7 @@ import { createVitest } from 'vitest/node';
       tree.write(
         'libs/mylib/src/dyn.ts',
         `const m = await import('vitest/reporters');
-const r = require('vitest/runners');
+const r = require('vitest/environments');
 type R = import('vitest/snapshot').SnapshotEnvironment;
 `
       );
@@ -141,7 +165,7 @@ type R = import('vitest/snapshot').SnapshotEnvironment;
       expect(result.agentContext).toEqual(
         expect.arrayContaining([
           expect.stringContaining('vitest/reporters'),
-          expect.stringContaining('vitest/runners'),
+          expect.stringContaining('vitest/environments'),
           expect.stringContaining('vitest/snapshot'),
         ])
       );

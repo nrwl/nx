@@ -5,9 +5,16 @@ import {
   visitNotIgnoredFiles,
   type Tree,
 } from '@nx/devkit';
+import { getInstalledPackageVersion } from '@nx/devkit/internal';
 import { ensureTypescript } from '@nx/js/internal';
+import { major } from 'semver';
 import { ast, query } from '@phenomnomnominal/tsquery';
-import type { SourceFile, StringLiteral } from 'typescript';
+import type {
+  ExportSpecifier,
+  ImportSpecifier,
+  SourceFile,
+  StringLiteral,
+} from 'typescript';
 
 /**
  * Hybrid migration paired with `ai-instructions-for-vitest-5.md`. Applies the
@@ -38,14 +45,16 @@ export default async function migrateToVitest5(tree: Tree) {
   const result: { nextSteps?: string[]; agentContext?: string[] } = {};
   if (addedVite) {
     result.nextSteps = [
-      `Added \`vite\` to the root \`package.json\` devDependencies. Vitest 4 depended on Vite directly; Vitest 5 only declares it as a required peer, so a workspace that relied on the transitive copy has none after the upgrade. It was pinned to the latest major - lower it if a Vite plugin in the workspace needs an older one.`,
+      `Added \`vite\` to the root \`package.json\` devDependencies, matching the version already resolved in the workspace. Vitest 4 depended on Vite directly; Vitest 5 only declares it as a required peer, so a workspace that relied on the transitive copy has none after the upgrade.`,
     ];
   }
   if (unhandled.length > 0) result.agentContext = unhandled;
   return result;
 }
 
-const VITE_VERSION = '^8.0.0';
+// Fallback only. The workspace's own resolved vite is preferred, since moving
+// a 6.4 or 7.x workspace to 8 is a bundler major riding inside a test upgrade.
+const FALLBACK_VITE_VERSION = '^8.0.0';
 
 /**
  * Vitest 4 listed `vite` in `dependencies`, so workspaces that only ran tests
@@ -64,9 +73,12 @@ function declareVitePeerDependency(tree: Tree): boolean {
   )
     return false;
 
+  const installedVite = getInstalledPackageVersion('vite');
   updateJson(tree, 'package.json', (json) => {
     json.devDependencies ??= {};
-    json.devDependencies['vite'] = VITE_VERSION;
+    json.devDependencies['vite'] = installedVite
+      ? `^${major(installedVite)}.0.0`
+      : FALLBACK_VITE_VERSION;
     return json;
   });
   return true;
@@ -78,46 +90,76 @@ function isJsOrTsFile(filePath: string): boolean {
 }
 
 /**
- * v5 removed the deprecated deep entry points. Each specifier below has all of
- * its exports in exactly one replacement, so the rewrite is a straight swap.
- * `vitest/environments` is absent on purpose: its exports split across
- * `vitest/runtime` (`builtinEnvironments`, `populateGlobal`) and `vitest/node`
- * (`VitestEnvironment`), so it goes to the agent instead.
+ * v5 removed the deprecated deep entry points. A specifier is only rewritten
+ * when every one of its v4 exports landed in a single v5 module; the rest are
+ * described for the agent, because their exports scattered or disappeared.
  */
-const REMOVED_ENTRY_POINTS: Record<string, string> = {
-  'vitest/reporters': 'vitest/node',
-  'vitest/coverage': 'vitest/node',
-  'vitest/runners': 'vitest/runtime',
-  'vitest/snapshot': 'vitest/runtime',
-  'vitest/suite': 'vitest',
+const REMOVED_ENTRY_POINTS: Record<
+  string,
+  { replacement?: string; note: string }
+> = {
+  'vitest/reporters': {
+    replacement: 'vitest/node',
+    note: 'its reporter exports are now in `vitest/node`',
+  },
+  'vitest/coverage': {
+    replacement: 'vitest/node',
+    note: '`BaseCoverageProvider` is now in `vitest/node`',
+  },
+  'vitest/snapshot': {
+    replacement: 'vitest/runtime',
+    note: 'its snapshot exports are now in `vitest/runtime`',
+  },
+  'vitest/environments': {
+    replacement: 'vitest/runtime',
+    note: 'its environment exports are now in `vitest/runtime`',
+  },
+  'vitest/suite': {
+    note: 'its exports did not survive as module exports. `getCurrentSuite` and `createTaskCollector` are static members of `TestRunner` (exported from `vitest`), and the rest were removed. Rebind the use sites rather than repointing the import',
+  },
+  'vitest/runners': {
+    note: 'its exports split up. `VitestTestRunner` is exported from `vitest`, `VitestRunner` from `vitest/runtime`, and `NodeBenchmarkRunner` was removed with the old benchmark API',
+  },
 };
 
 /**
- * Only plain import/export declarations are rewritten. A removed specifier
+ * Exports the v5 benchmark rewrite removed outright. A file importing one of
+ * these from `vitest/reporters` cannot simply be repointed.
+ */
+const REMOVED_SYMBOLS = new Set([
+  'BenchmarkBuiltinReporters',
+  'BenchmarkReporter',
+  'BenchmarkReportsMap',
+  'VerboseBenchmarkReporter',
+  'NodeBenchmarkRunner',
+]);
+
+/**
+ * Only import and export declarations are rewritten. A removed specifier
  * reached any other way still has to go, so name it for the agent.
  */
 function reportUnrewritableSpecifiers(
   sourceFile: SourceFile,
-  rewritable: StringLiteral[],
+  moduleSpecifiers: StringLiteral[],
   filePath: string,
   unhandled: string[]
 ): void {
-  const rewritableStarts = new Set(
-    rewritable.map((node) => node.getStart(sourceFile))
+  const specifierStarts = new Set(
+    moduleSpecifiers.map((node) => node.getStart(sourceFile))
   );
   const stragglers = new Set(
     query<StringLiteral>(sourceFile, 'StringLiteral')
       .filter(
         (node) =>
           node.text in REMOVED_ENTRY_POINTS &&
-          !rewritableStarts.has(node.getStart(sourceFile))
+          !specifierStarts.has(node.getStart(sourceFile))
       )
       .map((node) => node.text)
   );
 
   for (const specifier of stragglers) {
     unhandled.push(
-      `${filePath} references \`${specifier}\` outside a plain import or export declaration (a dynamic \`import()\`, a \`require()\`, or an \`import('...')\` type). Vitest 5 removed it; its exports are now in \`${REMOVED_ENTRY_POINTS[specifier]}\`.`
+      `${filePath} references \`${specifier}\` outside an import or export declaration. Vitest 5 removed it: ${REMOVED_ENTRY_POINTS[specifier].note}.`
     );
   }
 }
@@ -141,23 +183,39 @@ function rewriteRemovedEntryPoints(
   let changed = false;
   // Right-to-left so earlier offsets stay valid as the text shifts.
   for (const specifier of [...specifiers].reverse()) {
-    const replacement = REMOVED_ENTRY_POINTS[specifier.text];
-    if (!replacement) {
-      if (specifier.text === 'vitest/environments') {
-        unhandled.push(
-          `${filePath} imports from \`vitest/environments\`, which Vitest 5 removed. Its exports moved to two places: \`builtinEnvironments\` and \`populateGlobal\` are now in \`vitest/runtime\`, and the \`VitestEnvironment\` type is in \`vitest/node\`. Split the import according to what the file uses.`
-        );
-      }
+    const entryPoint = REMOVED_ENTRY_POINTS[specifier.text];
+    if (!entryPoint) continue;
+
+    const relocated = boundNamesOf(specifier).filter((name) =>
+      REMOVED_SYMBOLS.has(name)
+    );
+    if (!entryPoint.replacement || relocated.length) {
+      unhandled.push(
+        `${filePath} imports from \`${specifier.text}\`, which Vitest 5 removed: ${
+          relocated.length
+            ? `\`${relocated.join('`, `')}\` no longer exists anywhere, it went with the old benchmark API`
+            : entryPoint.note
+        }.`
+      );
       continue;
     }
+
     updated =
       updated.slice(0, specifier.getStart(sourceFile) + 1) +
-      replacement +
+      entryPoint.replacement +
       updated.slice(specifier.getEnd() - 1);
     changed = true;
   }
 
   if (changed) tree.write(filePath, updated);
+}
+
+/** The names an import or export declaration binds from its module. */
+function boundNamesOf(specifier: StringLiteral): string[] {
+  return query<ImportSpecifier | ExportSpecifier>(
+    specifier.parent,
+    'ImportSpecifier, ExportSpecifier'
+  ).map((element) => (element.propertyName ?? element.name).text);
 }
 
 /**

@@ -60,10 +60,10 @@ export function updateDependencies(tree: Tree, schema: InitGeneratorSchema) {
     {},
     {
       '@nx/vitest': nxVersion,
-      // Pass the vite major being installed: it may not be in package.json yet,
-      // and it constrains which vitest major can pair with it.
       vitest: versions(tree, {
-        viteMajorVersion: installedMajor,
+        // The range about to be installed, used only when the workspace has no
+        // vite of its own. It constrains which vitest major can pair with it.
+        viteRange: viteVersionToUse,
         uiFramework: schema.uiFramework,
       }).vitestVersion,
       vite: viteVersionToUse,
