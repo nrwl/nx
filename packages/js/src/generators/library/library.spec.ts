@@ -1998,12 +1998,9 @@ describe('lib', () => {
           directory,
         });
 
-        expect(tree.read('pnpm-workspace.yaml', 'utf-8'))
-          .toMatchInlineSnapshot(`
-          "packages:
-            - '${expected}'
-          "
-        `);
+        expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toBe(
+          `packages:\n  - '${expected}'\n`
+        );
       }
     );
 
