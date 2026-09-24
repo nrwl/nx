@@ -37,7 +37,7 @@ describe('resource route', () => {
           skipChecks: false,
         })
     ).rejects.toThrowErrorMatchingInlineSnapshot(
-      `"The resource route generator requires either \`loader\` or \`action\` to be true"`
+      `[Error: The resource route generator requires either \`loader\` or \`action\` to be true]`
     );
   });
 
