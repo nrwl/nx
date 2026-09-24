@@ -11,6 +11,7 @@
   },
   "files": [
     "dist/bin",
+    "dist/nx-cloud-internals.*",
     "dist/plugins",
     "dist/presets",
     "dist/release",
@@ -279,10 +280,10 @@
     },
     "./package.json": "./package.json",
     "./package": "./package.json",
-    "./nx-cloud-exports": {
-      "@nx/nx-source": "./src/nx-cloud-exports.ts",
-      "types": "./dist/src/nx-cloud-exports.d.ts",
-      "default": "./dist/src/nx-cloud-exports.js"
+    "./nx-cloud-internals": {
+      "@nx/nx-source": "./nx-cloud-internals.ts",
+      "types": "./dist/nx-cloud-internals.d.ts",
+      "default": "./dist/nx-cloud-internals.js"
     },
     "./migrations.json": "./migrations.json",
     "./migrations": "./migrations.json",
