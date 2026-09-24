@@ -1177,10 +1177,10 @@ impl HashPlanner {
     }
 
     /// The self inputs of a snapshot-hashed project: the trace replaces its
-    /// declared filesets, so only the configuration, tsconfig, disk-backed
-    /// groups (which hash from disk regardless of the trace) and the
-    /// non-file inputs remain. Whether TsConfiguration and JSON inputs stay is
-    /// decided by the caller's replacement pass.
+    /// declared filesets, `includeIgnored` ones included, so only the
+    /// configuration, tsconfig and non-file inputs remain. Whether
+    /// TsConfiguration and JSON inputs stay is decided by the caller's
+    /// replacement pass.
     fn gather_self_inputs_from_snapshot(
         &self,
         project_name: &str,
@@ -1202,11 +1202,8 @@ impl HashPlanner {
                 _ => None,
             })
             .collect();
-        if !ignored.is_empty() {
-            // Same rules as the native path, so an invalid group fails either way.
-            validate_files_globs(project_name, &ignored)?;
-            instructions.push(HashInstruction::IgnoredFileSet(ignored));
-        }
+        // Validated but not hashed: an invalid group fails either way.
+        validate_files_globs(project_name, &ignored)?;
         instructions.extend(self.runtime_env_cwd_json_inputs(project_name, self_inputs));
         Ok(instructions)
     }

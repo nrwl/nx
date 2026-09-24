@@ -253,18 +253,19 @@ impl InstructionPool {
     }
 
     /// Whether an I/O snapshot replaces this instruction: every declared
-    /// fileset, TsConfiguration unless the root tsconfig was read, and a JSON
-    /// input unless `read` says its file was.
+    /// fileset (`includeIgnored` ones too), TsConfiguration unless the root
+    /// tsconfig was read, and a JSON input unless `read` says its file was.
     pub fn replaced_by_snapshot(
         &self,
         id: u32,
         keep_tsconfig: bool,
         read: impl Fn(&str) -> bool,
     ) -> bool {
-        // Disk-backed groups are the snapshot's own reads or declared
-        // `includeIgnored` inputs, so neither is replaced.
+        // The snapshot's own reads are disk-backed groups too; the caller keeps those.
         match &*self.get(id) {
-            HashInstruction::ProjectFileSet(..) | HashInstruction::WorkspaceFileSet(_) => true,
+            HashInstruction::ProjectFileSet(..)
+            | HashInstruction::WorkspaceFileSet(_)
+            | HashInstruction::IgnoredFileSet(_) => true,
             HashInstruction::TsConfiguration(_) => !keep_tsconfig,
             HashInstruction::JsonFileSet(json) => !read(&json.json_path),
             _ => false,
@@ -449,8 +450,8 @@ mod tests {
         assert_eq!(a, b);
         assert_ne!(a, c);
         assert_eq!(&*pool.key(a), "io-snapshot:abc");
-        // Filesets are replaced by a snapshot; the digest or a disk-backed
-        // group is not.
+        // Filesets, disk-backed ones included, are replaced by a snapshot; the
+        // digest is not.
         let fileset = pool.intern(HashInstruction::ProjectFileSet(
             "p".into(),
             vec!["p/**/*".into()],
@@ -461,7 +462,7 @@ mod tests {
         ]));
         let unread = |_: &str| false;
         assert!(pool.replaced_by_snapshot(fileset, true, unread));
-        assert!(!pool.replaced_by_snapshot(group, true, unread));
+        assert!(pool.replaced_by_snapshot(group, true, unread));
         assert!(!pool.replaced_by_snapshot(a, true, unread));
         let ts = pool.intern(HashInstruction::TsConfiguration("p".into()));
         assert!(pool.replaced_by_snapshot(ts, false, unread));

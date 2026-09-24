@@ -2072,8 +2072,6 @@ describe('task planner', () => {
           // Reads under no project root belong to the task's own project, so
           // the dependency's !**/*.md never suppresses docs/readme.md.
           `files:[docs/readme.md,libs/parent/src/**/*.ts,${PARENT_NEG}]`,
-          // A declared includeIgnored input hashes from disk regardless; it survives.
-          'files:[libs/parent/generated]',
           'parent:ProjectConfiguration',
           'child:ProjectConfiguration',
           'env:TESTENV',
@@ -2352,6 +2350,67 @@ describe('task planner', () => {
       ).toContain(json);
     });
 
+    it.each([
+      [
+        'own',
+        (graph: any) =>
+          graph.nodes.parent.data.targets.build.inputs.push({
+            fileset: '{workspaceRoot}/libs/child/gen/**',
+            includeIgnored: true,
+          }),
+      ],
+      [
+        'dependency',
+        (graph: any) =>
+          graph.nodes.parent.data.targets.build.inputs.push({
+            fileset: '{projectRoot}/gen/**',
+            includeIgnored: true,
+            dependencies: true,
+          }),
+      ],
+      [
+        'project-selected',
+        (graph: any) => {
+          graph.nodes.parent.data.targets.build.inputs.push({
+            input: 'selected',
+            projects: ['child'],
+          });
+          graph.nodes.child.data.namedInputs.selected = [
+            { fileset: '{projectRoot}/gen/**', includeIgnored: true },
+          ];
+        },
+      ],
+    ])(
+      'replaces a declared includeIgnored group from a %s input with the reads',
+      (_, declare) => {
+        const { taskGraph, projectGraph } = fixture();
+        declare(projectGraph);
+        const planner = new HashPlanner(
+          {
+            namedInputs: { prod: ['default', '!{projectRoot}/**/*.spec.ts'] },
+          } as any,
+          transferProjectGraph(transformProjectGraphForRust(projectGraph))
+        );
+        const declared = planner
+          .getPlans(['parent:build'], taskGraph)
+          ['parent:build'].find((entry) => entry.includes('libs/child/gen/**'));
+        expect(declared).toBeDefined();
+
+        const plan = planner.getPlans(
+          ['parent:build'],
+          taskGraph,
+          snapshotsFor({
+            'parent:build': { inputs: ['libs/child/gen/used.json'] },
+          })
+        )['parent:build'];
+        // An unread ignored file no longer reaches the hash; a read one does.
+        expect(plan).not.toContain(declared);
+        expect(plan).toContainEqual(
+          expect.stringContaining('libs/child/gen/used.json')
+        );
+      }
+    );
+
     it("hashes reads of a producer task's outputs from disk and defers the task", () => {
       const { planner, taskGraph } = fixture();
       const snapshots = snapshotsFor({
@@ -2447,7 +2506,6 @@ describe('task planner', () => {
           'child:ProjectConfiguration',
           'env:TESTENV',
           'runtime:echo runtime123',
-          'files:[libs/parent/generated]',
           expect.stringMatching(/^io-snapshot:\d+$/),
         ])
       );
@@ -2455,9 +2513,8 @@ describe('task planner', () => {
         expect.stringMatching(/^(parent|child):libs\//)
       );
       expect(plan).not.toContainEqual(expect.stringMatching(/TsConfig$/));
-      expect(plan.filter((i) => i.startsWith('files:'))).toEqual([
-        'files:[libs/parent/generated]',
-      ]);
+      // Nothing read, so no file group at all, declared includeIgnored included.
+      expect(plan.filter((i) => i.startsWith('files:'))).toEqual([]);
     });
 
     it('applies dependency negations on cyclic graphs too (non-memo traversal)', () => {
@@ -2554,11 +2611,10 @@ describe('task planner', () => {
       const plan = planner.getPlans(['parent:build'], taskGraph, snapshots)[
         'parent:build'
       ];
-      expect(plan).toEqual(
-        expect.arrayContaining([
-          'files:[libs/parent/dist/**,!libs/parent/dist/**/*.map]',
-          expect.stringMatching(/^io-snapshot:\d+$/),
-        ])
+      // Validated, then replaced by the reads like any declared fileset.
+      expect(plan).toContainEqual(expect.stringMatching(/^io-snapshot:\d+$/));
+      expect(plan).not.toContain(
+        'files:[libs/parent/dist/**,!libs/parent/dist/**/*.map]'
       );
     });
   });
