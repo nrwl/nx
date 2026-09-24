@@ -6,7 +6,8 @@ use crate::native::io_snapshots::set::TaskIoSnapshot;
 use crate::native::io_snapshots::{IoSnapshotResolution, IoSnapshots};
 use crate::native::tasks::hash_planner::walk_root;
 use crate::native::tasks::hashers::validate_files_glob;
-use crate::native::tasks::types::TaskGraph;
+use crate::native::tasks::types::{TaskGraph, TaskSandboxConfiguration};
+use xxhash_rust::xxh3::Xxh3;
 
 /// What the eligibility walk needs beyond the task graph. Custom hashers are
 /// decided in JS, where executors are resolved; opt-outs ride on each task.
@@ -224,7 +225,7 @@ pub(crate) fn resolve_scoped(
             SnapshotTask {
                 files,
                 outputs,
-                digest: entry.digest(),
+                digest: snapshot_digest(entry, sandbox),
             },
         );
     }
@@ -244,6 +245,34 @@ pub fn get_io_snapshot_report(
     options: Option<IoSnapshotEligibilityOptions>,
 ) -> IoSnapshotReport {
     resolve(snapshots, &task_graph, &options.unwrap_or_default().into()).report()
+}
+
+/// The marker's digest: the entry's outputs, plus the sandbox exclusions that
+/// shape what a recording holds, so editing them re-runs the task and records
+/// it afresh. Sorted, since their order means nothing.
+fn snapshot_digest(entry: &TaskIoSnapshot, sandbox: Option<&TaskSandboxConfiguration>) -> String {
+    let sorted = |globs: Option<&Vec<String>>| {
+        let mut globs = globs.cloned().unwrap_or_default();
+        globs.sort();
+        globs.dedup();
+        globs
+    };
+    let reads = sorted(sandbox.and_then(|sandbox| sandbox.ignored_reads.as_ref()));
+    let writes = sorted(sandbox.and_then(|sandbox| sandbox.ignored_writes.as_ref()));
+    if reads.is_empty() && writes.is_empty() {
+        return entry.digest();
+    }
+    let mut hasher = Xxh3::new();
+    hasher.update(entry.digest().as_bytes());
+    // Tagged per list, NUL after each glob, so no two configurations collide.
+    for (tag, globs) in [(b'r', reads), (b'w', writes)] {
+        hasher.update(&[tag]);
+        for glob in globs {
+            hasher.update(glob.as_bytes());
+            hasher.update(&[0]);
+        }
+    }
+    hasher.digest().to_string()
 }
 
 /// The observed outputs a task's declared outputs get extended with: no

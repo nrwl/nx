@@ -2411,6 +2411,30 @@ describe('task planner', () => {
       }
     );
 
+    it("moves the snapshot marker when the task's sandbox exclusions change, and only then", () => {
+      const { planner, taskGraph } = fixture();
+      const snapshots = snapshotsFor({
+        'parent:build': { inputs: ['libs/parent/filea.ts'] },
+      });
+      const markerWith = (sandbox: object | undefined) => {
+        taskGraph.tasks['parent:build'].sandbox = sandbox;
+        return planner
+          .getPlans(['parent:build'], taskGraph, snapshots)
+          ['parent:build'].find((entry) => entry.startsWith('io-snapshot:'));
+      };
+
+      const none = markerWith(undefined);
+      const reads = markerWith({ ignoredReads: ['tmp/**', 'cache/**'] });
+      expect(reads).not.toBe(none);
+      // Order means nothing; an empty list is no exclusion.
+      expect(markerWith({ ignoredReads: ['cache/**', 'tmp/**'] })).toBe(reads);
+      expect(markerWith({ ignoredReads: [] })).toBe(none);
+      // Writes shape the recording too, and are told apart from reads.
+      const writes = markerWith({ ignoredWrites: ['tmp/**', 'cache/**'] });
+      expect(writes).not.toBe(none);
+      expect(writes).not.toBe(reads);
+    });
+
     it("hashes reads of a producer task's outputs from disk and defers the task", () => {
       const { planner, taskGraph } = fixture();
       const snapshots = snapshotsFor({
