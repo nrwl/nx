@@ -1,6 +1,7 @@
 import type { ProjectGraph } from '../../config/project-graph';
 import type { Task, TaskGraph } from '../../config/task-graph';
 import type { TargetConfiguration } from '../../config/workspace-json-project-json';
+import { createTaskGraph } from '../create-task-graph';
 import { getReadyProducerIds, normalizeReadyWhen } from './ready-when';
 
 describe('normalizeReadyWhen', () => {
@@ -189,6 +190,115 @@ describe('getReadyProducerIds', () => {
     expect(
       getReadyProducerIds(taskGraph.tasks['e2e:e2e'], taskGraph, projectGraph)
     ).toEqual(['app:serve']);
+  });
+
+  describe('with a task graph the builder resolved', () => {
+    const serve = { executor: 'nx:run-commands', continuous: true };
+    const build = { executor: 'nx:run-commands' };
+
+    function readyProducersFromBuilder(
+      dependsOn: TargetConfiguration['dependsOn'],
+      targets: Record<string, Record<string, TargetConfiguration>>,
+      dependencies: Record<string, string[]>
+    ) {
+      const projectGraph: ProjectGraph = { nodes: {}, dependencies: {} };
+      for (const [name, projectTargets] of Object.entries(targets)) {
+        projectGraph.nodes[name] = {
+          name,
+          type: 'lib',
+          data: { root: name, targets: projectTargets },
+        };
+        projectGraph.dependencies[name] = (dependencies[name] ?? []).map(
+          (target) => ({ source: name, target, type: 'static' })
+        );
+      }
+      projectGraph.nodes.e2e.data.targets.e2e = { ...build, dependsOn };
+      const taskGraph = createTaskGraph(
+        projectGraph,
+        {},
+        ['e2e'],
+        ['e2e'],
+        undefined,
+        {}
+      );
+      return {
+        edges: taskGraph.continuousDependencies['e2e:e2e'],
+        ready: getReadyProducerIds(
+          taskGraph.tasks['e2e:e2e'],
+          taskGraph,
+          projectGraph
+        ),
+      };
+    }
+
+    it('keeps an edge another entry reached through a dependency without its target', () => {
+      expect(
+        readyProducersFromBuilder(
+          ['^build', { dependencies: true, target: 'serve', waitFor: 'ready' }],
+          { e2e: {}, lib: { serve }, app: { build, serve } },
+          { e2e: ['lib'], lib: ['app'] }
+        )
+      ).toEqual({
+        edges: ['app:serve', 'lib:serve'],
+        ready: ['app:serve', 'lib:serve'],
+      });
+    });
+
+    it('keeps a self edge reached through a project cycle', () => {
+      expect(
+        readyProducersFromBuilder(
+          [{ dependencies: true, target: 'serve', waitFor: 'ready' }],
+          { e2e: { serve }, lib: {} },
+          { e2e: ['lib'], lib: ['e2e'] }
+        )
+      ).toEqual({ edges: ['e2e:serve'], ready: ['e2e:serve'] });
+    });
+
+    it('lets projects win over dependencies in one entry, as the builder does', () => {
+      expect(
+        readyProducersFromBuilder(
+          [
+            {
+              projects: ['app'],
+              dependencies: true,
+              target: 'serve',
+              waitFor: 'ready',
+            },
+            { projects: ['lib'], target: 'serve' },
+          ],
+          { e2e: {}, lib: { serve }, app: { serve } },
+          { e2e: ['lib'] }
+        )
+      ).toEqual({ edges: ['app:serve', 'lib:serve'], ready: ['app:serve'] });
+    });
+
+    it('leaves a started edge alone when a ready entry stops at a closer dependency', () => {
+      expect(
+        readyProducersFromBuilder(
+          [
+            { dependencies: true, target: 'serve', waitFor: 'ready' },
+            { projects: ['app'], target: 'serve' },
+          ],
+          { e2e: {}, lib: { serve }, app: { serve } },
+          { e2e: ['lib'], lib: ['app'] }
+        )
+      ).toEqual({ edges: ['lib:serve', 'app:serve'], ready: ['lib:serve'] });
+    });
+
+    it('waits for ready where a project cycle makes the builder keep the edge through a plain entry', () => {
+      // The builder drops the placeholder chain on the cycle, so only the
+      // plain entry keeps app:serve; the ready entry still reaches app
+      expect(
+        readyProducersFromBuilder(
+          [
+            { dependencies: true, target: 'serve', waitFor: 'ready' },
+            { projects: ['app'], target: 'serve' },
+          ],
+          { e2e: {}, lib: {}, app: { serve } },
+          { e2e: ['lib'], lib: ['e2e', 'app'] }
+        )
+      ).toEqual({ edges: ['app:serve'], ready: ['app:serve'] });
+    });
   });
 
   it('matches a wildcard target', () => {
