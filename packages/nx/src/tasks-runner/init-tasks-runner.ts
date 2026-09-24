@@ -60,7 +60,8 @@ async function createOrchestrator(
     }, {} as any),
   };
 
-  // Tasks the caller did not hash hash from its set, as in run-command.
+  // As in run-command, unhashed tasks hash from the caller's set. Applying is
+  // idempotent, so both graphs may share the same Task objects.
   if (ioSnapshots) {
     applyIoSnapshotOutputs(projectGraph, fullTaskGraph, ioSnapshots);
     applyIoSnapshotOutputs(projectGraph, taskGraph, ioSnapshots);
