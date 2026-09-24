@@ -284,7 +284,10 @@ impl<'a> DependencyView<'a> {
         if self.is_ready_dependency(task, dep) {
             self.readiness_of(dep) != TaskReadiness::Ready
         } else {
-            !matches!(status, TaskStatus::InProgress | TaskStatus::Stopped)
+            !matches!(
+                status,
+                TaskStatus::InProgress | TaskStatus::Shared | TaskStatus::Stopped
+            )
         }
     }
 
@@ -1192,6 +1195,19 @@ mod tests {
     fn test_plain_edge_is_satisfied_once_the_producer_starts() {
         let mut state = readiness_state(&["srv:serve"]);
         let status_map = HashMap::from([("srv:serve".to_string(), TaskStatus::InProgress)]);
+
+        let rows = render_rows(&mut state, &status_map, &HashMap::new(), &HashMap::new());
+        assert_eq!(
+            rows[2],
+            "All dependencies satisfied, waiting for an available thread..."
+        );
+        assert!(rows[4].ends_with("srv:serve"), "{}", rows[4]);
+    }
+
+    #[test]
+    fn test_plain_edge_is_satisfied_by_a_producer_started_elsewhere() {
+        let mut state = readiness_state(&["srv:serve"]);
+        let status_map = HashMap::from([("srv:serve".to_string(), TaskStatus::Shared)]);
 
         let rows = render_rows(&mut state, &status_map, &HashMap::new(), &HashMap::new());
         assert_eq!(
