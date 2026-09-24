@@ -1,6 +1,10 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import {
+  mockCjsModule,
+  resetCjsMocks,
+} from '@nx/devkit/internal-testing-utils';
 
 describe('withNxMetro', () => {
   let testWorkspaceRoot: string;
@@ -10,8 +14,7 @@ describe('withNxMetro', () => {
   });
 
   afterEach(() => {
-    vi.doUnmock('@nx/devkit');
-    vi.resetModules();
+    resetCjsMocks();
     rmSync(testWorkspaceRoot, { recursive: true, force: true });
   });
 
@@ -39,8 +42,11 @@ describe('withNxMetro', () => {
       'metro-resolver.js': metroResolverModule('expo-57'),
     });
 
-    vi.resetModules();
-    vi.doMock('@nx/devkit', () => ({ workspaceRoot: testWorkspaceRoot }));
+    // with-nx-metro is `require`d, so its @nx/devkit import is on the CJS channel.
+    mockCjsModule(import.meta.url, '@nx/devkit', {
+      workspaceRoot: testWorkspaceRoot,
+    });
+    delete require.cache[require.resolve('./with-nx-metro')];
     const { withNxMetro } =
       require('./with-nx-metro') as typeof import('./with-nx-metro');
 
