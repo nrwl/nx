@@ -5,6 +5,7 @@ import {
   updateJson,
   writeJson,
 } from '@nx/devkit';
+import { mockCjsModule } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import configurationGenerator from './configuration';
@@ -77,9 +78,10 @@ describe('@nx/storybook:configuration for workspaces with Root project', () => {
       });
 
       vi.resetModules();
-      vi.doMock('storybook/package.json', () => ({
+      // getInstalledStorybookVersion `require`s this, which `vi.doMock` cannot reach.
+      mockCjsModule(import.meta.url, 'storybook/package.json', {
         version: storybookVersion,
-      }));
+      });
     });
 
     it('should generate files for root app - js for tsConfiguration: false', async () => {

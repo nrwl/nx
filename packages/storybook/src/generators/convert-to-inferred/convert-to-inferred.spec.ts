@@ -11,7 +11,11 @@ import {
   updateNxJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
+import {
+  mockCjsModule,
+  resetCjsMocks,
+  TempFs,
+} from '@nx/devkit/internal-testing-utils';
 import { join } from 'path';
 import { convertToInferred } from './convert-to-inferred';
 import { getRelativeProjectJsonSchemaPath } from '@nx/devkit/internal';
@@ -129,10 +133,11 @@ export default config;`;
     `${projectRoot}/.storybook/main.ts`,
     storybookConfigContents
   );
-  vi.doMock(
+  // loadConfigFile `require`s the config, which `vi.doMock` cannot reach.
+  mockCjsModule(
+    import.meta.url,
     join(fs.tempDir, projectRoot, '.storybook', 'main.ts'),
-    () => storybookConfig,
-    { virtual: true }
+    storybookConfig
   );
 }
 
@@ -205,6 +210,7 @@ describe('Storybook - Convert To Inferred', () => {
   afterEach(() => {
     fs.cleanup();
     vi.resetModules();
+    resetCjsMocks();
   });
 
   describe('--project', () => {

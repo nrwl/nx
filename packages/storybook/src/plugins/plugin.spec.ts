@@ -1,5 +1,9 @@
 import { CreateNodesContext } from '@nx/devkit';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
+import {
+  mockCjsModule,
+  resetCjsMocks,
+  TempFs,
+} from '@nx/devkit/internal-testing-utils';
 import type { StorybookConfig } from 'storybook/internal/types';
 import { join } from 'node:path';
 import { rmSync } from 'node:fs';
@@ -127,6 +131,7 @@ describe('@nx/storybook/plugin', () => {
 
   afterEach(() => {
     vi.resetModules();
+    resetCjsMocks();
     tempFs.cleanup();
   });
 
@@ -951,10 +956,9 @@ export default config;
     mainTsPath: string,
     mainTsConfig: StorybookConfig
   ) {
-    vi.mock(
-      join(tempFs.tempDir, mainTsPath),
-      () => ({ default: mainTsConfig }),
-      { virtual: true }
-    );
+    // loadConfigFile `require`s the config, which `vi.mock` cannot reach.
+    mockCjsModule(import.meta.url, join(tempFs.tempDir, mainTsPath), {
+      default: mainTsConfig,
+    });
   }
 });
