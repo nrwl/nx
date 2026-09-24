@@ -38,7 +38,7 @@ describe('addLinting generator', () => {
   });
 
   it('should invoke the lintProjectGenerator', async () => {
-    jest.spyOn(linter, 'lintProjectGenerator');
+    vi.spyOn(linter, 'lintProjectGenerator');
 
     await addLintingGenerator(tree, {
       linter: 'eslint',
@@ -68,7 +68,7 @@ describe('addLinting generator', () => {
     // `mockClear`: this suite has no `restoreMocks`, and `spyOn` on an
     // already-spied property hands back the same mock — so without it the
     // previous test's call is still recorded and this one fails on it.
-    jest.spyOn(linter, 'lintProjectGenerator').mockClear();
+    vi.spyOn(linter, 'lintProjectGenerator').mockClear();
 
     await addLintingGenerator(tree, {
       prefix: 'myOrg',
@@ -98,7 +98,7 @@ describe('addLinting generator', () => {
 
   // `linter` has no schema default, so leaving it unset follows the workspace.
   it('should set up oxlint when the workspace already uses it', async () => {
-    jest.spyOn(linter, 'lintProjectGenerator').mockClear();
+    vi.spyOn(linter, 'lintProjectGenerator').mockClear();
     updateJson(tree, 'package.json', (json) => {
       json.devDependencies = { ...json.devDependencies, oxlint: '^1.70.0' };
       return json;

@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest';
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
@@ -268,17 +269,17 @@ describe('librarySecondaryEntryPoint generator', () => {
   });
 
   describe('--skipFormat', () => {
-    let formatFilesSpy: jest.SpyInstance;
+    let formatFilesSpy: MockInstance;
 
     beforeEach(() => {
       const devkitModule = require('@nx/devkit');
-      formatFilesSpy = jest
+      formatFilesSpy = vi
         .spyOn(devkitModule, 'formatFiles')
         .mockImplementation(() => Promise.resolve());
     });
 
     afterAll(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     it('should format files', async () => {

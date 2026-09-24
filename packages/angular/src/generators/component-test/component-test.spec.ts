@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
@@ -12,14 +13,14 @@ import { generateTestLibrary } from '../utils/testing';
 import { componentTestGenerator } from './component-test';
 import { EOL } from 'node:os';
 
-jest.mock('@nx/cypress/internal');
+vi.mock('@nx/cypress/internal');
 
 describe('Angular Cypress Component Test Generator', () => {
   let tree: Tree;
-  let mockedAssertMinimumCypressVersion: jest.Mock<
+  let mockedAssertMinimumCypressVersion: Mock<
     ReturnType<typeof assertMinimumCypressVersion>
   > = assertMinimumCypressVersion as never;
-  let mockedInstalledCypressMajorVersion: jest.Mock<
+  let mockedInstalledCypressMajorVersion: Mock<
     ReturnType<typeof getInstalledCypressMajorVersion>
   > = getInstalledCypressMajorVersion as never;
   beforeEach(() => {
