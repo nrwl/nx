@@ -261,7 +261,7 @@ export async function generateGraph(
     focus?: string;
     exclude?: string[];
     affected?: boolean;
-    /** Tasks `nx affected` selected for `targets`; the graph shows what they run. */
+    /** Tasks `nx affected` selected for `targets`, plus everything they depend on. */
     selectedTaskIds?: string[];
     /** The `-c` the selection ran with; its task ids carry it. */
     configuration?: string;
@@ -1228,10 +1228,6 @@ function clearTaskGraphCache() {
   expandedTaskInputsCache.clear();
 }
 
-/**
- * Creates a single task graph for multiple projects with multiple targets
- * If no projects specified, returns graph for all projects with the targets
- */
 export interface TaskSelectionForGraph {
   targets: string[];
   configuration?: string;
@@ -1259,6 +1255,10 @@ export function selectedFor(
     : { configuration };
 }
 
+/**
+ * Creates a single task graph for multiple projects with multiple targets
+ * If no projects specified, returns graph for all projects with the targets
+ */
 async function createTaskGraphForTargetsAndProjects(
   targetNames: string[],
   projectNames?: string[],
