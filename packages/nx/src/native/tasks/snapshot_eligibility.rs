@@ -5,7 +5,7 @@ use crate::native::glob::{NxGlobSetBuilder, expand_literal_braces};
 use crate::native::io_snapshots::set::TaskIoSnapshot;
 use crate::native::io_snapshots::{IoSnapshotResolution, IoSnapshots};
 use crate::native::tasks::hash_planner::walk_root;
-use crate::native::tasks::hashers::validate_files_glob;
+use crate::native::tasks::hashers::{parse_group, validate_files_glob};
 use crate::native::tasks::types::{TaskGraph, TaskSandboxConfiguration};
 use xxhash_rust::xxh3::Xxh3;
 
@@ -202,11 +202,9 @@ pub(crate) fn resolve_scoped(
             continue;
         }
         // A read the hasher would reject fails the whole hash; fall back instead.
-        if let Some(glob) = files
-            .iter()
-            .filter(|g| !g.starts_with('!'))
-            .find(|g| validate_files_glob(g).is_err())
-        {
+        if let Some(glob) = files.iter().find(|g| {
+            validate_files_glob(g).is_err() || parse_group(std::slice::from_ref(*g)).is_err()
+        }) {
             let mut diagnostic = IoSnapshotDiagnostic::task("invalid-glob", task_id);
             diagnostic.glob = Some(glob.clone());
             diagnostics.push(diagnostic);

@@ -2470,6 +2470,23 @@ describe('task planner', () => {
       expect(getIoSnapshotDeferredTaskIds(withheld, taskGraph)).toEqual([]);
 
       const plain = planner.getPlans(['parent:build'], taskGraph);
+      for (const negation of ['!', '!libs/parent/[']) {
+        const negated = snapshotsFor({
+          'parent:build': { inputs: ['libs/parent/filea.ts', negation] },
+        });
+        expect(
+          getIoSnapshotReport(negated, taskGraph).diagnostics
+        ).toContainEqual(
+          expect.objectContaining({
+            reason: 'invalid-glob',
+            taskId: 'parent:build',
+            glob: negation,
+          })
+        );
+        expect(planner.getPlans(['parent:build'], taskGraph, negated)).toEqual(
+          plain
+        );
+      }
       expect(
         planner.getPlans(['parent:build'], taskGraph, withheld, {
           customHasherTaskIds: ['child:build'],
