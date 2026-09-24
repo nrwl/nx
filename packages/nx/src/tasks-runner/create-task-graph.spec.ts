@@ -6,6 +6,7 @@ import {
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import {
   createTaskGraph,
+  createTaskGraphWithDependencyOverrides,
   filterDummyTasks,
   getNonDummyDeps,
 } from './create-task-graph';
@@ -4552,6 +4553,89 @@ describe('getNonDummyDeps', () => {
     ]);
     expect(getNonDummyDeps('app9:__nx_dummy_task__', dependencies)).toEqual([
       'app21:build',
+    ]);
+  });
+});
+
+describe('createTaskGraphWithDependencyOverrides', () => {
+  const build = (dependsOn?: any[]) => ({
+    executor: 'nx:run-commands',
+    ...(dependsOn ? { dependsOn } : {}),
+  });
+  const node = (name: string, targets: Record<string, any>) => ({
+    name,
+    type: 'lib' as const,
+    data: { root: `libs/${name}`, targets },
+  });
+  const edge = (source: string, target: string) => ({
+    source,
+    target,
+    type: 'static',
+  });
+  const cli = { flag: true, __overrides_unparsed__: ['--flag'] };
+
+  // app -> mid -> lib, where mid has no build target.
+  function graphWith(appDependsOn: any[]): ProjectGraph {
+    return {
+      nodes: {
+        app: node('app', { build: build(appDependsOn) }),
+        mid: node('mid', { lint: build() }),
+        lib: node('lib', { build: build() }),
+      },
+      dependencies: {
+        app: [edge('app', 'mid')],
+        mid: [edge('mid', 'lib')],
+        lib: [],
+      },
+    };
+  }
+
+  it('builds the same graph createTaskGraph does', () => {
+    const graph = graphWith(['^build']);
+    const { taskGraph } = createTaskGraphWithDependencyOverrides(
+      graph,
+      {},
+      ['app', 'lib'],
+      ['build'],
+      undefined,
+      cli
+    );
+    expect(taskGraph).toEqual(
+      createTaskGraph(graph, {}, ['app', 'lib'], ['build'], undefined, cli)
+    );
+  });
+
+  // lib:build is created as initial here, so it holds the CLI overrides, but
+  // the edge records what it would get as app:build's dependency. The edge
+  // crosses mid, which has no build, and is recorded against app:build.
+  it('records what each edge would give its task, even one that already exists', () => {
+    const { taskGraph, dependencyOverrides } =
+      createTaskGraphWithDependencyOverrides(
+        graphWith(['^build']),
+        {},
+        ['app', 'lib'],
+        ['build'],
+        undefined,
+        cli
+      );
+    expect(taskGraph.tasks['lib:build'].overrides).toEqual(cli);
+    expect(dependencyOverrides['lib:build']).toEqual([
+      { from: 'app:build', overrides: { __overrides_unparsed__: [] } },
+    ]);
+    expect(dependencyOverrides['app:build']).toBeUndefined();
+  });
+
+  it('records forwarded params as the CLI overrides', () => {
+    const { dependencyOverrides } = createTaskGraphWithDependencyOverrides(
+      graphWith([{ dependencies: true, target: 'build', params: 'forward' }]),
+      {},
+      ['app'],
+      ['build'],
+      undefined,
+      cli
+    );
+    expect(dependencyOverrides['lib:build']).toEqual([
+      { from: 'app:build', overrides: cli },
     ]);
   });
 });
