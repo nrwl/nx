@@ -11,11 +11,24 @@ import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { findAllProjectNodeDependencies } from '../utils/project-graph-utils';
 import { reverse } from '../project-graph/operators';
 import { TaskHistory, getTaskHistory } from '../utils/task-history';
+import { TaskReadiness } from '../native';
+import {
+  filterProbedProducers,
+  getReadyProducerIds,
+} from './readiness/ready-when';
 
 export interface Batch {
   id: string;
   executorName: string;
   taskGraph: TaskGraph;
+}
+
+export interface TasksScheduleHooks {
+  // Readiness of a producer outside this schedule's task graph (an Nx Cloud
+  // agent worker runs one task with a flat graph): null when it has no row
+  readinessElsewhere?: (producerId: string) => TaskReadiness | null;
+  // A task was held back because this producer is not ready yet
+  onReadinessHold?: (producerId: string) => void;
 }
 
 export class TasksSchedule {
@@ -27,7 +40,15 @@ export class TasksSchedule {
   private scheduledBatches: Batch[] = [];
   private scheduledTasks: string[] = [];
   private runningTasks = new Set<string>();
+  // Continuous tasks queued but not spawned: they wait for a dependency to
+  // be ready first, so their own dependents must not be released yet
+  private pendingStart = new Set<string>();
   private completedTasks = new Set<string>();
+  private readiness = new Map<string, 'ready' | 'failed'>();
+  private readyProducers = new Map<
+    string,
+    { all: string[]; probed: string[] }
+  >();
   private scheduleRequestsExecutionChain = Promise.resolve();
   private estimatedTaskTimings: Record<string, number> = {};
   private projectDependencies: Record<string, number> = {};
@@ -37,7 +58,9 @@ export class TasksSchedule {
     private readonly projectGraph: ProjectGraph,
     private readonly projects: Record<string, ProjectConfiguration>,
     private readonly taskGraph: TaskGraph,
-    private readonly options: DefaultTasksRunnerOptions
+    private readonly options: DefaultTasksRunnerOptions,
+    private readonly fullTaskGraph: TaskGraph = taskGraph,
+    private readonly hooks: TasksScheduleHooks = {}
   ) {}
 
   public async init() {
@@ -64,6 +87,22 @@ export class TasksSchedule {
     await this.scheduleRequestsExecutionChain;
   }
 
+  public markContinuousTaskStarted(taskId: string) {
+    this.pendingStart.delete(taskId);
+  }
+
+  public markReady(taskId: string) {
+    this.readiness.set(taskId, 'ready');
+  }
+
+  public markReadinessFailed(taskId: string) {
+    this.readiness.set(taskId, 'failed');
+  }
+
+  public markReadinessPending(taskId: string) {
+    this.readiness.delete(taskId);
+  }
+
   public hasTasks() {
     return (
       this.scheduledBatches.length +
@@ -77,6 +116,8 @@ export class TasksSchedule {
     for (const taskId of taskIds) {
       this.completedTasks.add(taskId);
       this.runningTasks.delete(taskId);
+      this.pendingStart.delete(taskId);
+      this.readiness.delete(taskId);
       delete this.reverseTaskDeps[taskId];
     }
     const removedSet = new Set(taskIds);
@@ -99,21 +140,26 @@ export class TasksSchedule {
     };
   }
 
+  // A task whose producer is not ready yet is skipped in place: it keeps its
+  // position and never blocks the tasks behind it. A producer outside this
+  // task graph never holds it; the task polls that producer's row itself.
   public nextTask(filter?: (task: Task) => boolean) {
-    if (this.scheduledTasks.length === 0) {
-      return null;
+    for (let i = 0; i < this.scheduledTasks.length; i++) {
+      const task = this.taskGraph.tasks[this.scheduledTasks[i]];
+      if (filter && !filter(task)) {
+        continue;
+      }
+      const pendingProducer = this.readyProducersOf(task).probed.find(
+        (id) => this.taskGraph.tasks[id] && !this.readiness.has(id)
+      );
+      if (pendingProducer) {
+        this.hooks.onReadinessHold?.(pendingProducer);
+        continue;
+      }
+      this.scheduledTasks.splice(i, 1);
+      return task;
     }
-    if (!filter) {
-      return this.taskGraph.tasks[this.scheduledTasks.shift()];
-    }
-    const idx = this.scheduledTasks.findIndex((id) =>
-      filter(this.taskGraph.tasks[id])
-    );
-    if (idx === -1) {
-      return null;
-    }
-    const [taskId] = this.scheduledTasks.splice(idx, 1);
-    return this.taskGraph.tasks[taskId];
+    return null;
   }
 
   public nextBatch(): Batch {
@@ -161,6 +207,10 @@ export class TasksSchedule {
     for (const taskId of taskIds) {
       this.scheduledTasks.push(taskId);
       this.runningTasks.add(taskId);
+      const task = this.taskGraph.tasks[taskId];
+      if (task.continuous && this.readyProducersOf(task).all.length > 0) {
+        this.pendingStart.add(taskId);
+      }
     }
     this.sortScheduledTasks();
   }
@@ -209,6 +259,7 @@ export class TasksSchedule {
 
   private async scheduleBatches() {
     const batchMap: Record<string, TaskGraph> = {};
+    const readyElsewhere = new Map<string, boolean>();
     for (const root of this.notScheduledTaskGraph.roots) {
       const rootTask = this.notScheduledTaskGraph.tasks[root];
       const executorName = getExecutorNameForTask(rootTask, this.projectGraph);
@@ -217,7 +268,8 @@ export class TasksSchedule {
         rootTask,
         executorName,
         true,
-        new Set<string>()
+        new Set<string>(),
+        readyElsewhere
       );
     }
     for (const [executorName, taskGraph] of Object.entries(batchMap)) {
@@ -247,7 +299,8 @@ export class TasksSchedule {
     task: Task,
     rootExecutorName: string,
     isRoot: boolean,
-    visitedInBatch: Set<string>
+    visitedInBatch: Set<string>,
+    readyElsewhere: Map<string, boolean>
   ): Promise<void> {
     // Skip if already processed in this batch - prevents redundant traversals
     if (visitedInBatch.has(task.id)) {
@@ -255,6 +308,17 @@ export class TasksSchedule {
     }
 
     if (!this.canBatchTaskBeScheduled(task, batches[rootExecutorName])) {
+      return;
+    }
+
+    // A batch never waits: only a task whose producers are all ready joins
+    // one. A continuous consumer is started on its own so its dependents are
+    // released once it has started.
+    const producers = this.readyProducersOf(task);
+    if (
+      (task.continuous && producers.all.length > 0) ||
+      producers.probed.some((id) => !this.isProducerReady(id, readyElsewhere))
+    ) {
       return;
     }
 
@@ -310,9 +374,47 @@ export class TasksSchedule {
         depTask,
         rootExecutorName,
         false,
-        visitedInBatch
+        visitedInBatch,
+        readyElsewhere
       );
     }
+  }
+
+  // Producers this task waits on, and those among them that declare a probe.
+  // Read from the full graph: an agent worker's own graph has no edges.
+  private readyProducersOf(task: Task) {
+    let producers = this.readyProducers.get(task.id);
+    if (!producers) {
+      const all = getReadyProducerIds(
+        task,
+        this.fullTaskGraph,
+        this.projectGraph
+      );
+      const probed = filterProbedProducers(
+        all,
+        this.fullTaskGraph,
+        this.projectGraph
+      );
+      producers = { all, probed };
+      this.readyProducers.set(task.id, producers);
+    }
+    return producers;
+  }
+
+  private isProducerReady(
+    producerId: string,
+    readyElsewhere: Map<string, boolean>
+  ): boolean {
+    if (this.taskGraph.tasks[producerId]) {
+      return this.readiness.get(producerId) === 'ready';
+    }
+    let ready = readyElsewhere.get(producerId);
+    if (ready === undefined) {
+      ready =
+        this.hooks.readinessElsewhere?.(producerId) === TaskReadiness.Ready;
+      readyElsewhere.set(producerId, ready);
+    }
+    return ready;
   }
 
   private canBatchTaskBeScheduled(
@@ -325,7 +427,14 @@ export class TasksSchedule {
       task.parallelism !== false &&
       this.taskGraph.dependencies[task.id].every(
         (id) => this.completedTasks.has(id) || !!batchTaskGraph?.tasks[id]
-      )
+      ) &&
+      this.hasContinuousDependenciesStarted(task.id)
+    );
+  }
+
+  private hasContinuousDependenciesStarted(taskId: string): boolean {
+    return this.taskGraph.continuousDependencies[taskId].every(
+      (id) => this.runningTasks.has(id) && !this.pendingStart.has(id)
     );
   }
 
@@ -334,9 +443,7 @@ export class TasksSchedule {
       (id) => this.completedTasks.has(id)
     );
     const hasContinuousDependenciesStarted =
-      this.taskGraph.continuousDependencies[taskId].every((id) =>
-        this.runningTasks.has(id)
-      );
+      this.hasContinuousDependenciesStarted(taskId);
 
     // if dependencies have not completed, cannot schedule
     if (!hasDependenciesCompleted || !hasContinuousDependenciesStarted) {

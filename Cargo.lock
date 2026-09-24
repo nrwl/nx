@@ -2467,6 +2467,7 @@ dependencies = [
  "futures",
  "globset",
  "hashbrown 0.14.5",
+ "hickory-resolver",
  "ignore",
  "insta",
  "interprocess",
@@ -2517,6 +2518,7 @@ dependencies = [
  "urlencoding",
  "uuid",
  "vt100-ctt",
+ "vte 0.14.1",
  "walkdir",
  "winapi",
  "winres",
@@ -4442,6 +4444,7 @@ dependencies = [
  "libc",
  "mio",
  "pin-project-lite",
+ "signal-hook-registry",
  "socket2",
  "tokio-macros",
  "windows-sys 0.61.2",
@@ -4855,6 +4858,7 @@ version = "0.14.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "231fdcd7ef3037e8330d8e17e61011a2c244126acc0a982f4040ac3f9f0bc077"
 dependencies = [
+ "arrayvec",
  "memchr",
 ]
 
