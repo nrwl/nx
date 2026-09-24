@@ -279,6 +279,11 @@
     },
     "./package.json": "./package.json",
     "./package": "./package.json",
+    "./nx-cloud-exports": {
+      "@nx/nx-source": "./src/nx-cloud-exports.ts",
+      "types": "./dist/src/nx-cloud-exports.d.ts",
+      "default": "./dist/src/nx-cloud-exports.js"
+    },
     "./migrations.json": "./migrations.json",
     "./migrations": "./migrations.json",
     "./generators.json": "./generators.json",

@@ -54,9 +54,8 @@ export function getIoSnapshotStore(): IoSnapshotStore {
 
 /**
  * Stores a set the Nx Cloud client read for `requestedCommit` and returns its
- * handle, for `runDiscreteTasks` and `runContinuousTasks`. The client probes
- * for this export to tell whether Nx hashes from snapshots; keep it stable.
- * Throws with the store's `code`.
+ * handle, for `runDiscreteTasks` and `runContinuousTasks`. Exposed to the
+ * client through `nx/nx-cloud-exports`. Throws with the store's `code`.
  */
 export function importIoSnapshots(
   requestedCommit: string,
