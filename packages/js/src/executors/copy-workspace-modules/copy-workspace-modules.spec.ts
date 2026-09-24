@@ -1,5 +1,5 @@
 import type { MockedFunction } from 'vitest';
-import { type ExecutorContext } from '@nx/devkit';
+import { type ExecutorContext, logger } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
@@ -473,7 +473,6 @@ describe('copyWorkspaceModules', () => {
   });
 
   it('leaves an absolute local-path dep in a copied module as-is with a warning', async () => {
-    const { logger } = require('@nx/devkit');
     const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
     tempFs.createFilesSync({
       'pnpm-lock.yaml': '',

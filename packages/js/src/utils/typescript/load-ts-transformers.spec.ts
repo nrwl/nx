@@ -1,12 +1,16 @@
-import { loadTsTransformers } from './load-ts-transformers';
+import { createRequire } from 'node:module';
+import { join } from 'node:path';
+import type * as LoadTsTransformers from './load-ts-transformers';
 
-vi.mock('plugin-a');
-vi.mock('plugin-b');
-vi.mock('function-after-plugin');
-vi.mock('function-after-declarations-plugin');
-vi.mock('function-direct-export');
-vi.mock('function-multiple-hooks');
-const mockRequireResolve = vi.fn((path) => path);
+// The source reads `module.paths`, which vitest's ESM module shim lacks, and
+// `require()`s each plugin, so load it on the CJS channel and resolve plugins
+// straight to the fixtures in `__mocks__`.
+const { loadTsTransformers } = createRequire(import.meta.url)(
+  './load-ts-transformers'
+) as typeof LoadTsTransformers;
+const mockRequireResolve = vi.fn((name: string) =>
+  join(import.meta.dirname, '__mocks__', `${name}.ts`)
+);
 
 describe('loadTsTransformers', () => {
   it('should return empty hooks if plugins is falsy', () => {
