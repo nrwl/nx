@@ -2076,6 +2076,23 @@ describe('task planner', () => {
       ).toHaveLength(2);
     });
 
+    it('keeps the declared inputs of a continuous dependency of a task that opted out of backfill', () => {
+      const { planner, taskGraph } = fixture();
+      const graph = withContinuousDependency(taskGraph);
+      graph.tasks['parent:build'].sandbox = { backfill: false };
+      const plan = planner.getPlans(
+        ['parent:build'],
+        graph,
+        snapshotsFor({
+          'parent:build': { inputs: ['libs/parent/filea.ts'] },
+          'child:build': { inputs: ['libs/child/src/index.ts'] },
+        })
+      )['parent:build'];
+
+      expect(plan).toContain('child:libs/child/**/*');
+      expect(plan).not.toContainEqual(expect.stringMatching(/^io-snapshot:/));
+    });
+
     it('replaces declared filesets (self and dependency) with one files group per owning project, each with its own negations', () => {
       const { planner, taskGraph } = fixture();
       const plan = planner.getPlans(

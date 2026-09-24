@@ -364,13 +364,16 @@ impl HashPlanner {
 
                 // A continuous dependency serves this task from its own process, so
                 // its inputs and externals are hashed here, and its own servers' in
-                // turn: its observed reads when it has an eligible entry, else its
-                // declared inputs. When it reads its builds' outputs, those land in
-                // this plan too, which holds the task back from the up-front batch.
+                // turn: its observed reads when both it and this task hash from a
+                // snapshot, else its declared inputs, so a task hashed natively
+                // (`backfill: false` included) stays native throughout. When it reads
+                // its builds' outputs, those land in this plan too, which holds the
+                // task back from the up-front batch.
                 for dep_task in collect_continuous_dependencies(&task_graph, id) {
                     let dep_inputs = get_inputs(dep_task, &self.project_graph, &self.nx_json)?;
-                    let dep_snapshot = snapshot_tasks
+                    let dep_snapshot = snapshot
                         .as_ref()
+                        .and(snapshot_tasks.as_ref())
                         .and_then(|tasks| tasks.get(&dep_task.id))
                         .map(SnapshotContext::new);
                     let mut dep_negations: Negations = Vec::new();
