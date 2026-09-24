@@ -6,7 +6,7 @@ import {
   interpolate,
 } from '@nx/devkit/internal';
 import chalk from 'chalk';
-import { ChildProcess, fork, ForkOptions, SpawnOptions } from 'child_process';
+import { ChildProcess, fork } from 'child_process';
 import {
   ExecutorContext,
   isDaemonEnabled,
@@ -183,7 +183,9 @@ export async function* nodeExecutor(
                 ? 'node-with-esm-loader'
                 : 'node-with-require-overrides';
 
-            const forkOptions: ForkOptions & Pick<SpawnOptions, 'windowsHide'> =
+            task.childProcess = fork(
+              join(__dirname, loaderFile),
+              options.args ?? [],
               {
                 windowsHide: true,
                 execArgv: getExecArgv(options),
@@ -193,11 +195,7 @@ export async function* nodeExecutor(
                   NX_FILE_TO_RUN: fileToRunCorrectPath(fileToRun),
                   NX_MAPPINGS: JSON.stringify(mappings),
                 },
-              };
-            task.childProcess = fork(
-              join(__dirname, loaderFile),
-              options.args ?? [],
-              forkOptions
+              }
             );
 
             task.childProcess.stdout?.on('data', (data) => {
@@ -311,11 +309,6 @@ export async function* nodeExecutor(
       const runBuild = async () => {
         let childProcess: ChildProcess = null;
         const whenReady = new Promise<{ success: boolean }>(async (resolve) => {
-          const forkOptions: ForkOptions & Pick<SpawnOptions, 'windowsHide'> = {
-            windowsHide: true,
-            cwd: context.root,
-            stdio: 'inherit',
-          };
           childProcess = fork(
             require.resolve('nx/bin/nx.js'),
             [
@@ -324,7 +317,11 @@ export async function* nodeExecutor(
                 buildTarget.configuration ? `:${buildTarget.configuration}` : ''
               }`,
             ],
-            forkOptions
+            {
+              windowsHide: true,
+              cwd: context.root,
+              stdio: 'inherit',
+            }
           );
           childProcess.once('exit', (code) => {
             if (code === 0) resolve({ success: true });
