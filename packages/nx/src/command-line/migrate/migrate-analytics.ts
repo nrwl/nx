@@ -387,10 +387,10 @@ export function reportMigrateOrchestratorAbandoned(
 /**
  * An explicit continue (`--run-migrations --run-id`, or "continue" at the
  * master prompt) took up an active run instead of creating one. The start
- * watermark hides that, so this is the only trace of how far a run got before
- * its session was restarted; every resume reports, since the state cannot tell
- * a crashed session from a re-invocation. A bare --run-id reconcile is not a
- * resume: nothing in run state marks the first call after a lost session.
+ * watermark hides that, so this records how far the run had got at the
+ * continue; every resume reports, since the state cannot tell a crashed
+ * session from a re-invocation. A bare --run-id reconcile is not a resume:
+ * nothing in run state marks the first call after a lost session.
  */
 export function reportMigrateOrchestratorResume(
   opts: MigrateOrchestratorTallies
