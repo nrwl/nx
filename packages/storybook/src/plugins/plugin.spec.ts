@@ -5,8 +5,8 @@ import {
   TempFs,
 } from '@nx/devkit/internal-testing-utils';
 import type { StorybookConfig } from 'storybook/internal/types';
-import { join } from 'node:path';
-import { rmSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { mkdirSync, rmSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { createNodesV2 } from './plugin';
 
@@ -41,6 +41,13 @@ describe('@nx/storybook/plugin', () => {
     };
     tempFs.createFileSync('package.json', JSON.stringify({ name: 'repo' }));
     tempFs.createFileSync('package-lock.json', '{}');
+    // The swc-node hook compiles real configs with `importHelpers`; a temp root
+    // can't resolve `@swc/helpers` on its own.
+    mkdirSync(join(tempFs.tempDir, 'node_modules/@swc'), { recursive: true });
+    symlinkSync(
+      dirname(require.resolve('@swc/helpers/package.json')),
+      join(tempFs.tempDir, 'node_modules/@swc/helpers')
+    );
     tempFs.createFileSync(
       'my-app/project.json',
       JSON.stringify({ name: 'my-app' })
