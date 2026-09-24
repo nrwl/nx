@@ -257,8 +257,20 @@ fn snapshot_digest(entry: &TaskIoSnapshot, sandbox: Option<&TaskSandboxConfigura
         globs.dedup();
         globs
     };
-    let reads = sorted(sandbox.and_then(|sandbox| sandbox.ignored_reads.as_ref()));
-    let writes = sorted(sandbox.and_then(|sandbox| sandbox.ignored_writes.as_ref()));
+    // Destructured so a new sandbox key must be placed here: one left out would
+    // never re-run a task that keeps hitting. enabled/backfill false mean no marker.
+    let (reads, writes) = match sandbox {
+        Some(TaskSandboxConfiguration {
+            ignored_reads,
+            ignored_writes,
+            enabled: _,
+            backfill: _,
+        }) => (
+            sorted(ignored_reads.as_ref()),
+            sorted(ignored_writes.as_ref()),
+        ),
+        None => (Vec::new(), Vec::new()),
+    };
     if reads.is_empty() && writes.is_empty() {
         return entry.digest();
     }
