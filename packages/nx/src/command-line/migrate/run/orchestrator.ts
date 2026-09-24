@@ -673,7 +673,15 @@ function reportExistingRun(
   if (replaceRunId !== undefined) {
     facts.replacedRunId = replaceRunId;
   }
-  reportMigrateOrchestratorExistingRun(runTallies(state));
+  reportMigrateOrchestratorExistingRun({
+    ...runTallies(state),
+    activity:
+      facts.otherHolders === 'unknown'
+        ? 'unknown'
+        : facts.otherHolders.length > 0
+          ? 'held'
+          : 'idle',
+  });
   if (emitAgentInstructions) {
     const report = renderExistingRunReport(
       facts,

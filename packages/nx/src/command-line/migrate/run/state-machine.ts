@@ -445,6 +445,7 @@ export function runTallies(state: MigrateRunState): MigrateOrchestratorTallies {
   return {
     completed: tally.applied + tally.adopted,
     skipped: tally.skipped,
+    unresolved: tally.unresolved.length,
     dispenseCount: state.steps.reduce((n, s) => n + s.dispenseCount, 0),
   };
 }
