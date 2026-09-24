@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`componentStory generator should generate the right props 1`] = `
+exports[`componentStory generator > should generate the right props 1`] = `
 "import type { Meta, StoryObj } from '@storybook/angular';
 import { TestButtonComponent } from './test-button.component';
 

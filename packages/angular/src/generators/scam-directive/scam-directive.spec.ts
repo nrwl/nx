@@ -376,7 +376,7 @@ describe('SCAM Directive Generator', () => {
           skipFormat: true,
         })
       ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"The provided directory resolved relative to the current working directory "libs/proj/src/lib/random/example" does not exist under any project root. Please make sure to navigate to a location or provide a directory that exists under a project root."`
+        `[Error: The provided directory resolved relative to the current working directory "libs/proj/src/lib/random/example" does not exist under any project root. Please make sure to navigate to a location or provide a directory that exists under a project root.]`
       );
     });
   });
