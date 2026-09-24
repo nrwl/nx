@@ -22,7 +22,6 @@ import {
   initCloud,
   markRootPackageJsonAsNxProjectLegacy,
   runInstall,
-  setNeverConnectToCloud,
   updateGitIgnore,
 } from './utils';
 import { nxVersion } from '../../../utils/versions';
@@ -139,8 +138,6 @@ export async function addNxToNest(options: Options, packageJson: PackageJson) {
   if (nxCloudChoice === 'yes') {
     output.log({ title: '🛠️ Setting up Nx Cloud' });
     await initCloud('nx-init-nest');
-  } else if (nxCloudChoice === 'never') {
-    setNeverConnectToCloud(repoRoot);
   }
 }
 

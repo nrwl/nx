@@ -7,6 +7,7 @@ import { writeJsonFile } from '../../../utils/fileutils';
 import { publishFileAtomically } from './atomic-write';
 import { MIGRATE_RUNS_RELATIVE_DIR } from '../agentic/types';
 import { singleLine } from '../text';
+import { warnToAgent } from './agent-output';
 import {
   ISSUE_ID,
   issueFingerprint,
@@ -353,7 +354,10 @@ export function applyReportedIssues(
   state: MigrateRunState,
   reportingStep: MigrateStep,
   issues: ReportedIssue[],
-  updates: ReportedIssueUpdate[]
+  updates: ReportedIssueUpdate[],
+  // The index of the entry that will carry this application's resolutions:
+  // the next append, unless a parent session already recorded it.
+  resolvedAtCommitCount: number = state.commits.length
 ): IssueApplication {
   const ledger = [...(state.issues ?? [])];
   const newIssues: IssueApplication['newIssues'] = [];
@@ -377,7 +381,8 @@ export function applyReportedIssues(
         existing,
         report,
         reportingStep,
-        state
+        state,
+        resolvedAtCommitCount
       );
       if (outcome.entry !== existing) {
         ledger[existingIndex] = outcome.entry;
@@ -418,7 +423,7 @@ export function applyReportedIssues(
       ...(disposition === 'resolved'
         ? {
             resolvedByStepId: reportingStep.id,
-            resolvedAtCommitCount: state.commits.length,
+            resolvedAtCommitCount,
           }
         : {}),
     };
@@ -445,7 +450,7 @@ export function applyReportedIssues(
               ...rest,
               disposition: 'resolved',
               resolvedByStepId: reportingStep.id,
-              resolvedAtCommitCount: state.commits.length,
+              resolvedAtCommitCount,
             }
           : { ...rest, disposition: update.disposition };
     }
@@ -493,7 +498,8 @@ function applyDuplicateReport(
   existing: MigrateRunIssue,
   report: ReportedIssue,
   reportingStep: MigrateStep,
-  state: MigrateRunState
+  state: MigrateRunState,
+  resolvedAtCommitCount: number
 ): { entry: MigrateRunIssue; archive: boolean } {
   const intent = reportIntent(report);
   const merged = mergedApplicableStepIds(existing, report, state);
@@ -539,7 +545,7 @@ function applyDuplicateReport(
         ...(disposition === 'resolved'
           ? {
               resolvedByStepId: reportingStep.id,
-              resolvedAtCommitCount: state.commits.length,
+              resolvedAtCommitCount,
             }
           : {}),
       },
@@ -648,6 +654,30 @@ export function attachIssueIdsToCommitEntry(
   if (entry.kind !== 'landed') return entry;
   const issueIds = issueIdsForCommit(state, entry.stepIds);
   return issueIds.length > 0 ? { ...entry, issueIds } : entry;
+}
+
+/**
+ * Adds to a landed entry the resolutions it can now carry, keeping the ids it
+ * has; other entries pass through. Repeating it is a no-op, since
+ * `issueIdsForCommit` skips resolutions an entry already carries.
+ */
+export function enrichCommitEntryIssueIds(
+  state: MigrateRunState,
+  index: number
+): MigrateRunState {
+  const entry = state.commits[index];
+  if (entry.kind !== 'landed') return state;
+  const existing = entry.issueIds ?? [];
+  const added = issueIdsForCommit(state, entry.stepIds).filter(
+    (id) => !existing.includes(id)
+  );
+  if (added.length === 0) return state;
+  return {
+    ...state,
+    commits: state.commits.map((c, i) =>
+      i === index ? { ...c, issueIds: [...existing, ...added] } : c
+    ),
+  };
 }
 
 /**
@@ -1028,6 +1058,18 @@ function issuesDir(runDirPath: string): string {
 // directory.
 export function issueArchivePath(runDirPath: string, issueId: string): string {
   return join(issuesDir(runDirPath), `${issueId}.json`);
+}
+
+// The runbook points every later consumer at issues/<id>.json for the full
+// details, so a rebuild from run-state fields (the reported detail is gone
+// with the lost file) must not stay silent.
+export function warnReconstructedArchives(issueIds: string[]): void {
+  if (issueIds.length === 0) return;
+  warnToAgent({
+    title: `The archived details for ${issueIds.join(
+      ', '
+    )} were missing or unreadable and were rebuilt from the run state; the originally reported detail is lost.`,
+  });
 }
 
 /**

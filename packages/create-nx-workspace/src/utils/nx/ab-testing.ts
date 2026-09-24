@@ -8,7 +8,6 @@ import {
 } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import chalk from 'chalk';
 import { isCI } from '../ci/is-ci';
 import { terminalLink } from '../terminal-link';
 import type { BannerVariant, CompletionMessageKey } from './messages';
@@ -183,7 +182,6 @@ export const NxCloudChoices = [
   'bitbucket-pipelines',
   'circleci',
   'skip',
-  'never',
   'yes', // Deprecated but still handled
 ];
 
@@ -240,7 +238,6 @@ const messageOptions: Record<string, MessageData[]> = {
       choices: [
         { value: 'yes', name: 'Yes' },
         { value: 'skip', name: 'Skip for now' },
-        { value: 'never', name: chalk.dim("No, don't ask again") },
       ],
       footer: `\nFree for small teams. Remote caching and task distribution. 2-minute setup: ${NX_CLOUD_HYPERLINK}\nSee it in action: ${NX_CLOUD_DEMO_HYPERLINK}`,
       fallback: undefined,

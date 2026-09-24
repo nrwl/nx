@@ -51,6 +51,10 @@ import {
   isHandleGetRegisteredSyncGeneratorsMessage,
 } from '../message-types/get-registered-sync-generators';
 import {
+  GET_PLUGIN_CAPABILITIES,
+  isHandleGetPluginCapabilitiesMessage,
+} from '../message-types/get-plugin-capabilities';
+import {
   GET_SYNC_GENERATOR_CHANGES,
   isHandleGetSyncGeneratorChangesMessage,
 } from '../message-types/get-sync-generator-changes';
@@ -113,6 +117,7 @@ import { handleForceShutdown } from './handle-force-shutdown';
 import { handleClientEnv } from './handle-client-env';
 import { handleGetFilesInDirectory } from './handle-get-files-in-directory';
 import { handleGetRegisteredSyncGenerators } from './handle-get-registered-sync-generators';
+import { handleGetPluginCapabilities } from './handle-get-plugin-capabilities';
 import { handleGetSyncGeneratorChanges } from './handle-get-sync-generator-changes';
 import { handleGlob, handleMultiGlob } from './handle-glob';
 import { handleHashGlob, handleHashMultiGlob } from './handle-hash-glob';
@@ -179,6 +184,7 @@ import {
   subscribeToWorkspaceChanges,
   type WorkspaceChangesListener,
 } from '../../utils/workspace-context';
+import { isCI } from '../../utils/is-ci';
 
 let workspaceWatcherError: Error | undefined;
 
@@ -455,6 +461,13 @@ async function handleMessage(socket: Socket, data: Buffer) {
       socket,
       GET_REGISTERED_SYNC_GENERATORS,
       () => handleGetRegisteredSyncGenerators(),
+      mode
+    );
+  } else if (isHandleGetPluginCapabilitiesMessage(payload)) {
+    await handleResult(
+      socket,
+      GET_PLUGIN_CAPABILITIES,
+      () => handleGetPluginCapabilities(),
       mode
     );
   } else if (isHandleUpdateWorkspaceContextMessage(payload)) {
@@ -799,15 +812,16 @@ export async function startServer(): Promise<Server> {
           registerFileChangeListener(clearSyncGeneratorsCache);
           scheduleInitialProjectGraphComputation();
 
-          // Kick off Nx Console check in background to prime the cache
-          handleGetNxConsoleStatus().catch(() => {
-            // Ignore errors, this is a background operation
-          });
-
-          // Kick off AI agents outdated check in background to prime the cache
-          handleGetConfigureAiAgentsStatus().catch(() => {
-            // Ignore errors, this is a background operation
-          });
+          // Prime the Nx Console and AI agents caches in the background. Both
+          // pull nx@latest, and the CLI never shows their results in CI.
+          if (!isCI()) {
+            handleGetNxConsoleStatus().catch(() => {
+              // Ignore errors, this is a background operation
+            });
+            handleGetConfigureAiAgentsStatus().catch(() => {
+              // Ignore errors, this is a background operation
+            });
+          }
 
           return resolve(server);
         } catch (err) {

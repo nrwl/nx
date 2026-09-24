@@ -67,14 +67,12 @@ export async function newGenerator(tree: Tree, opts: Schema) {
   const options = normalizeOptions(opts);
   validateOptions(options, tree);
 
-  const { token, aiAgentsCallback } = await generateWorkspaceFiles(
-    tree,
-    options
-  );
+  const { token, aiAgentsCallback, presetDependencies } =
+    await generateWorkspaceFiles(tree, options);
 
   options.nxCloudToken = token;
 
-  addPresetDependencies(tree, options);
+  addPresetDependencies(tree, options, presetDependencies);
   if (options.isCustomPreset && options.presetVersion) {
     // The preset generator only runs after the install below, so the
     // decisions it declares for its dependency tree are recorded here.

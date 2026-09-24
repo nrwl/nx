@@ -15,6 +15,14 @@ import {
 // covered by its prebuilt optional dependencies, so skip it.
 const swcAllowBuilds = { '@swc/core': false };
 
+export function acknowledgeSwcBuildScripts(tree: Tree): void {
+  acknowledgeBuildScripts(
+    tree,
+    detectPackageManager(tree.root),
+    swcAllowBuilds
+  );
+}
+
 export function getSwcDependencies(): {
   dependencies: Record<string, string>;
   devDependencies: Record<string, string>;
@@ -33,11 +41,7 @@ export function getSwcDependencies(): {
 export function addSwcDependencies(tree: Tree) {
   const { dependencies, devDependencies } = getSwcDependencies();
 
-  acknowledgeBuildScripts(
-    tree,
-    detectPackageManager(tree.root),
-    swcAllowBuilds
-  );
+  acknowledgeSwcBuildScripts(tree);
   return addDependenciesToPackageJson(
     tree,
     dependencies,
@@ -48,11 +52,7 @@ export function addSwcDependencies(tree: Tree) {
 }
 
 export function addSwcRegisterDependencies(tree: Tree) {
-  acknowledgeBuildScripts(
-    tree,
-    detectPackageManager(tree.root),
-    swcAllowBuilds
-  );
+  acknowledgeSwcBuildScripts(tree);
   return addDependenciesToPackageJson(
     tree,
     {},

@@ -71,7 +71,10 @@ export async function installPackage(
     // carries unacknowledged build scripts, and the plugin's generators can
     // only record allowBuilds decisions after this install. A plugin that
     // declares them in its package.json keeps the install strict; otherwise
-    // warn and skip for this one install, like pnpm 10 did.
+    // warn and skip for this one install, like pnpm 10 did. pnpm 12 gave
+    // `--config` a meaning of its own and takes the setting from the
+    // environment instead.
+    const env = { ...process.env };
     let restorePnpmWorkspace: (() => void) | undefined;
     if (pm === 'pnpm' && gte(pmv, '11.0.0')) {
       restorePnpmWorkspace = snapshotFile(
@@ -86,6 +89,7 @@ export async function installPackage(
         ))
       ) {
         command += ' --config.strictDepBuilds=false';
+        env.PNPM_CONFIG_STRICT_DEP_BUILDS = 'false';
       }
     }
     await new Promise<void>((resolve) =>
@@ -93,6 +97,7 @@ export async function installPackage(
         command,
         {
           windowsHide: true,
+          env,
         },
         (error, stdout, stderr) => {
           if (error) {

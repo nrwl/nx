@@ -804,7 +804,8 @@ function persistProjectGraphToDisk(result: SerializedProjectGraph) {
     result.projectFileMapCache,
     result.projectGraph,
     result.sourceMaps,
-    extractErrors(result.error)
+    extractErrors(result.error),
+    Date.now()
   );
   cacheHasBeenPersisted = true;
 }

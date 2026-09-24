@@ -22,9 +22,9 @@ import { output, readJsonFile } from '@nx/devkit';
 import { angularDevkitVersion as defaultAngularCliVersion } from '@nx/angular/internal';
 import { typescriptVersion as defaultTypescriptVersion } from '@nx/js/src/utils/versions';
 import { dump } from '@zkochan/js-yaml';
-import { execSync, ExecSyncOptions } from 'node:child_process';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { execFileSync, execSync, ExecSyncOptions } from 'node:child_process';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { performance, PerformanceMeasure } from 'node:perf_hooks';
 import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 import {
@@ -87,6 +87,68 @@ export function openInEditor(projectDirectory: string = tmpProjPath()) {
 }
 
 /**
+ * Locate a pre-built base workspace template for this package manager and preset,
+ * produced by the `populate-e2e-base-workspace` task and restored via Nx cache on
+ * each agent. Templates are not selected for `NX_ADD_PLUGINS=false`; combinations
+ * that were not pre-built also fall back to building the workspace the original way.
+ */
+function sharedBaseWorkspacePath(
+  packageManager: string,
+  preset: string
+): string | null {
+  if (
+    process.env.NX_E2E_SKIP_SHARED_BASE === 'true' ||
+    process.env.NX_ADD_PLUGINS === 'false'
+  ) {
+    return null;
+  }
+  const candidate = join(
+    __dirname,
+    '..',
+    '..',
+    'dist',
+    'local-registry',
+    'proj-backup',
+    `${packageManager}-${preset}.tar`
+  );
+  return existsSync(candidate) ? candidate : null;
+}
+
+/**
+ * pnpm writes the absolute store path into node_modules/.modules.yaml and refuses to
+ * touch the tree when it no longer matches (ERR_PNPM_UNEXPECTED_STORE). The template
+ * is built on a different machine from the one that seeds a workspace out of it, so
+ * repoint the record at this machine's store. Reinstalling would also fix it, and
+ * would cost the whole saving the template exists for.
+ */
+function alignPnpmStoreDir(workspace: string): void {
+  const modulesYaml = join(workspace, 'node_modules', '.modules.yaml');
+  if (!existsSync(modulesYaml)) {
+    return;
+  }
+  const storeDir = execSync('pnpm store path', {
+    cwd: workspace,
+    encoding: 'utf-8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  }).trim();
+  const contents = readFileSync(modulesYaml, 'utf-8');
+  // Rewritten in place rather than re-dumped: pnpm 10 writes plain YAML and pnpm 11
+  // a JSON-ish dialect, and only this one value is machine-specific.
+  const updated = contents.replace(
+    /^(\s*"?storeDir"?\s*:\s*)("[^"]*"|[^,\n]*)/m,
+    (_match, key) => `${key}${JSON.stringify(storeDir)}`
+  );
+  if (updated !== contents) {
+    writeFileSync(modulesYaml, updated);
+  }
+}
+
+// Package managers whose workspace has already been built once in this process.
+// The backup is only worth its full-tree copy once a suite asks for a second
+// workspace, so the first build skips it.
+const builtOnce = new Set<string>();
+
+/**
  * Sets up a new project in the temporary project path
  * for the currently selected CLI.
  */
@@ -96,6 +158,7 @@ export function newProject({
   packages,
   preset = 'apps',
   typescriptVersion = defaultTypescriptVersion,
+  keepBackup = false,
 }: {
   name?: string;
   packageManager?: 'npm' | 'yarn' | 'pnpm' | 'bun';
@@ -103,13 +166,18 @@ export function newProject({
   preset?: string;
   /** Override for suites pinned to an older TypeScript, e.g. Remix needs 5.x. */
   typescriptVersion?: string;
+  /** Set when the file creates more than one workspace: keeps the installed
+   * workspace so later newProject() calls copy it instead of installing again. */
+  keepBackup?: boolean;
 } = {}): string {
   const newProjectStart = performance.mark('new-project:start');
   try {
     const projScope = 'proj';
+    const stagingDirectory = `${e2eCwd}/${projScope}`;
 
     let createNxWorkspaceMeasure: PerformanceMeasure;
     let packageInstallMeasure: PerformanceMeasure;
+    let builtHere = false;
 
     // Namespace by package manager to avoid conflicts in test suites which include multiple package managers
     const backupPath = tmpBackupProjPath(packageManager);
@@ -118,10 +186,42 @@ export function newProject({
       const createNxWorkspaceStart = performance.mark(
         'create-nx-workspace:start'
       );
-      runCreateWorkspace(projScope, {
-        preset,
-        packageManager,
-      });
+      // Seed from the pre-built template when one exists for this package
+      // manager and preset, instead of running the ~40-70s create-nx-workspace.
+      const sharedBase = sharedBaseWorkspacePath(packageManager, preset);
+      if (sharedBase) {
+        removeSync(stagingDirectory);
+        ensureDirSync(stagingDirectory);
+        // Its own process because newProject() is synchronous and tar-stream is not.
+        execFileSync(
+          process.execPath,
+          [
+            join(
+              __dirname,
+              '..',
+              '..',
+              'scripts',
+              'local-registry',
+              'extract-e2e-base-workspace.mjs'
+            ),
+            sharedBase,
+            stagingDirectory,
+          ],
+          { stdio: 'pipe' }
+        );
+        if (packageManager === 'pnpm') {
+          alignPnpmStoreDir(stagingDirectory);
+        }
+        // runCreateWorkspace (the else branch) sets the module-level projName as a
+        // side effect that downstream helpers (packageInstall ->
+        // getPackageManagerCommand) rely on; mirror it when seeding from the template.
+        projName = projScope;
+      } else {
+        runCreateWorkspace(projScope, {
+          preset,
+          packageManager,
+        });
+      }
       const createNxWorkspaceEnd = performance.mark('create-nx-workspace:end');
       createNxWorkspaceMeasure = performance.measure(
         'create-nx-workspace',
@@ -182,16 +282,29 @@ export function newProject({
       }
       // stop the daemon
       execSync(`${getPackageManagerCommand({ packageManager }).runNx} reset`, {
-        cwd: `${e2eCwd}/proj`,
+        cwd: stagingDirectory,
         stdio: isVerbose() ? 'inherit' : 'pipe',
       });
 
-      moveSync(`${e2eCwd}/proj`, backupPath);
+      if (keepBackup || builtOnce.has(packageManager)) {
+        copySync(stagingDirectory, backupPath);
+      } else {
+        builtOnce.add(packageManager);
+      }
+      builtHere = true;
     }
     projName = name;
 
     const projectDirectory = tmpProjPath();
-    copySync(backupPath, projectDirectory);
+    if (builtHere) {
+      // Nothing has copied this workspace yet, so pnpm's links still resolve;
+      // renaming it into place avoids the reinstall below.
+      if (resolve(stagingDirectory) !== resolve(projectDirectory)) {
+        moveSync(stagingDirectory, projectDirectory);
+      }
+    } else {
+      copySync(backupPath, projectDirectory);
+    }
 
     const dependencies = readJsonFile(
       `${projectDirectory}/package.json`
@@ -200,7 +313,7 @@ export function newProject({
 
     if (missingPackages.length > 0) {
       packageInstall(missingPackages.join(` `), projName);
-    } else if (packageManager === 'pnpm') {
+    } else if (!builtHere && packageManager === 'pnpm') {
       // pnpm creates sym links to the pnpm store,
       // we need to run the install again after copying the temp folder
       try {
@@ -289,7 +402,7 @@ export function runCreateWorkspace(
     extraArgs?: string;
     useDetectedPm?: boolean;
     cwd?: string;
-    bundler?: 'webpack' | 'vite';
+    bundler?: 'webpack' | 'vite' | 'rspack' | 'esbuild';
     standaloneApi?: boolean;
     routing?: boolean;
     useReactRouter?: boolean;

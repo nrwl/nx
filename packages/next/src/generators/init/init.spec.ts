@@ -5,6 +5,7 @@ import {
   ProjectGraph,
   addDependenciesToPackageJson,
 } from '@nx/devkit';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 
 import { nextInitGenerator } from './init';
 import {
@@ -86,5 +87,31 @@ describe('init', () => {
     await nextInitGenerator(tree, { keepExistingVersions: true });
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson.dependencies['next']).toBe('15.0.0');
+  });
+
+  describe('pnpm 11 build scripts', () => {
+    it('should deny the sharp build script pulled in by next 15+', async () => {
+      await withPnpm(tree, '11.2.2', () => nextInitGenerator(tree, {}));
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toContain(
+        'sharp: false'
+      );
+    });
+
+    it('should not record a sharp decision for next 14', async () => {
+      projectGraph.externalNodes = {
+        'npm:next': {
+          type: 'npm',
+          name: 'npm:next',
+          data: { packageName: 'next', version: '14.2.26' },
+        },
+      };
+
+      await withPnpm(tree, '11.2.2', () => nextInitGenerator(tree, {}));
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8') ?? '').not.toContain(
+        'sharp'
+      );
+    });
   });
 });

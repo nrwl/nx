@@ -64,6 +64,11 @@ const TEXT_LOCK_FILES = new Set([
 ]);
 const BINARY_LOCK_FILES = new Set(['bun.lockb']);
 
+/** Whether a touched file was deleted. Much cheaper than `getChanges()`. */
+export function isDeletedFile(file: string): boolean {
+  return !existsSync(join(workspaceRoot, file));
+}
+
 export function calculateFileChanges(
   files: string[],
   nxArgs?: NxArgs,
@@ -81,7 +86,7 @@ export function calculateFileChanges(
     return {
       file: f,
       getChanges: (): Change[] => {
-        if (!existsSync(join(workspaceRoot, f))) {
+        if (isDeletedFile(f)) {
           return [new DeletedFileChange()];
         }
 
