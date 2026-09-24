@@ -20,6 +20,8 @@ import { packageJsonDependencyChanges } from '../../plugins/js/project-graph/aff
 export interface AffectedTasksResult {
   /** Tasks that are themselves affected — NOT their dependency closure. */
   affectedTaskIds: Set<string>;
+  /** `affectedTaskIds` plus everything they depend on: what a run keeps. */
+  requiredTaskIds: string[];
   /** The full, unpruned graph the answer was computed over. */
   taskGraph: TaskGraph;
   /** Hand to the runner so the survivors are not planned a second time. */
@@ -35,6 +37,8 @@ export interface ComputeAffectedTasksOptions {
   overrides?: Record<string, unknown>;
   extraTargetDependencies?: TargetDependencies;
   excludeTaskDependencies?: boolean;
+  /** Projects whose tasks are dropped from the selection, but not from its dependencies. */
+  excludedProjects?: string[];
   packageJson?: any;
 }
 
@@ -49,6 +53,7 @@ export interface AffectedTasksRequest {
   overrides: Record<string, unknown>;
   extraTargetDependencies: TargetDependencies;
   excludeTaskDependencies: boolean;
+  excludedProjects: string[];
   dependencies: DependencyChanges;
 }
 
@@ -70,6 +75,7 @@ export async function computeAffectedTasks(
     overrides: opts.overrides ?? {},
     extraTargetDependencies: opts.extraTargetDependencies ?? {},
     excludeTaskDependencies: opts.excludeTaskDependencies ?? false,
+    excludedProjects: opts.excludedProjects ?? [],
     dependencies: dependencyChanges(
       opts.projectGraph,
       opts.touchedFiles,
@@ -82,6 +88,7 @@ export async function computeAffectedTasks(
     const selection = await daemonClient.selectAffectedTasks(request);
     return {
       affectedTaskIds: new Set(selection.affectedTaskIds),
+      requiredTaskIds: selection.requiredTaskIds,
       taskGraph: selection.taskGraph,
     };
   }
@@ -98,6 +105,7 @@ export async function computeAffectedTasks(
   );
   return {
     affectedTaskIds: selection.affectedTaskIds,
+    requiredTaskIds: selection.requiredTaskIds,
     taskGraph: selection.taskGraph,
     // The plans ride along so the hasher narrows them instead of building its
     // own. Every task it will be asked about is in here, since the pruned graph
@@ -125,6 +133,7 @@ export async function selectAffectedTasks(
   request: AffectedTasksRequest
 ): Promise<{
   affectedTaskIds: Set<string>;
+  requiredTaskIds: string[];
   taskGraph: TaskGraph;
   plans?: TaskPlanningContext['plans'];
 }> {
@@ -136,6 +145,7 @@ export async function selectAffectedTasks(
   if (!candidates.length) {
     return {
       affectedTaskIds: new Set(),
+      requiredTaskIds: [],
       taskGraph: {
         roots: [],
         tasks: {},
@@ -171,10 +181,16 @@ export async function selectAffectedTasks(
       ),
       changedExternals: request.dependencies.externals,
       changedExternalTypes: request.dependencies.changedExternalTypes,
+      excludedProjects: request.excludedProjects,
     }
   );
 
-  return { affectedTaskIds: new Set(selection.affected), taskGraph, plans };
+  return {
+    affectedTaskIds: new Set(selection.affected),
+    requiredTaskIds: selection.required,
+    taskGraph,
+    plans,
+  };
 }
 
 /**

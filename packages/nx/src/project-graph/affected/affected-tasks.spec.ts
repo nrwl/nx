@@ -245,6 +245,25 @@ describe('computeAffectedTasks', () => {
   it('selects nothing when the change reaches no input', async () => {
     expect(await affectedFor(['docs/README.md'])).toEqual([]);
   });
+
+  it('drops an excluded project from both the selection and what a run keeps', async () => {
+    const result = await computeAffectedTasks({
+      projectGraph: graph(),
+      nxJson: {
+        namedInputs: { production: ['{projectRoot}/src/**/*'] },
+      } as any,
+      targets: ['test'],
+      touchedFiles: [
+        {
+          file: 'packages/nx/src/index.ts',
+          getChanges: () => [new WholeFileChange()],
+        },
+      ] as any,
+      excludedProjects: ['lib'],
+    });
+    expect([...result.affectedTaskIds]).toEqual(['app:test']);
+    expect(result.requiredTaskIds).toEqual(['app:test']);
+  });
 });
 
 describe('computeAffectedTasks with the daemon on', () => {
@@ -254,6 +273,7 @@ describe('computeAffectedTasks with the daemon on', () => {
     daemon.enabled.mockReturnValueOnce(true);
     daemon.selectAffectedTasks.mockResolvedValueOnce({
       affectedTaskIds: ['lib:test'],
+      requiredTaskIds: ['lib:test'],
       taskGraph: {
         roots: [],
         tasks: {},
@@ -281,10 +301,12 @@ describe('computeAffectedTasks with the daemon on', () => {
       overrides: {},
       extraTargetDependencies: {},
       excludeTaskDependencies: false,
+      excludedProjects: [],
     });
     // A FileChange's lazy getChanges() cannot cross the socket.
     expect(JSON.parse(JSON.stringify(request))).toEqual(request);
     expect([...result.affectedTaskIds]).toEqual(['lib:test']);
+    expect(result.requiredTaskIds).toEqual(['lib:test']);
     // The plans stay in the daemon, which is what hashes them.
     expect(result.planningContext).toBeUndefined();
   });

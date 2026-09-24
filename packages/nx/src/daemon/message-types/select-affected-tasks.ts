@@ -10,6 +10,7 @@ export type HandleSelectAffectedTasksMessage = {
 
 export type SelectAffectedTasksResponse = {
   affectedTaskIds: string[];
+  requiredTaskIds: string[];
   taskGraph: TaskGraph;
 };
 

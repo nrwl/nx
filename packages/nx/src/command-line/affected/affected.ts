@@ -154,7 +154,7 @@ async function getAffectedTasks(
   projects: ProjectGraphProjectNode[];
   taskSelection: TaskSelection;
 }> {
-  const { affectedTaskIds, taskGraph, planningContext } =
+  const { affectedTaskIds, requiredTaskIds, taskGraph, planningContext } =
     await computeAffectedTasks({
       projectGraph,
       nxJson,
@@ -164,19 +164,16 @@ async function getAffectedTasks(
       overrides,
       extraTargetDependencies,
       excludeTaskDependencies,
+      excludedProjects: [...excludedProjects(nxArgs, projectGraph.nodes)],
     });
-  const excluded = excludedProjects(nxArgs, projectGraph.nodes);
-  const taskIds = [...affectedTaskIds].filter(
-    (id) => !excluded.has(taskGraph.tasks[id].target.project)
-  );
   // runCommand still seeds the graph from projects; the prune is what narrows
   // it back down to the selected tasks and their dependencies.
   const owning = new Set(
-    taskIds.map((id) => taskGraph.tasks[id].target.project)
+    [...affectedTaskIds].map((id) => taskGraph.tasks[id].target.project)
   );
   return {
     projects: [...owning].map((name) => projectGraph.nodes[name]),
-    taskSelection: { taskIds, planningContext },
+    taskSelection: { taskIds: requiredTaskIds, planningContext },
   };
 }
 

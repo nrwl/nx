@@ -22,7 +22,9 @@ use std::path::Path;
 use std::sync::Arc;
 use tracing::warn;
 
-use crate::native::affected::dependent_outputs::compute_dependent_output_edges;
+use crate::native::affected::dependent_outputs::{
+    compute_dependent_output_edges, with_dependencies,
+};
 use crate::native::affected::plan_ids::referenced_ids;
 use crate::native::affected::project_paths::{ProjectRoots, normalize_path};
 use crate::native::glob::{build_glob_set, fileset_patterns};
@@ -48,6 +50,9 @@ pub struct AffectedTasksOptions {
     /// moved, and a node of any other type does not: a pnpm lock file cannot
     /// have moved a Maven artifact.
     pub changed_external_types: Vec<String>,
+    /// Projects `--exclude` names. Their tasks are dropped from the selection
+    /// after the walk, so they still carry a change to the tasks reading them.
+    pub excluded_projects: Vec<String>,
 }
 
 /// The externals a change moved, as the matcher asks about them.
@@ -93,6 +98,8 @@ impl<'a> ChangedExternals<'a> {
 pub struct AffectedTaskSelection {
     /// Every affected task, sorted.
     pub affected: Vec<String>,
+    /// `affected` plus everything it depends on, sorted: what a run keeps.
+    pub required: Vec<String>,
 }
 
 pub(crate) const ROOT_TSCONFIG_FILES: [&str; 2] = ["tsconfig.base.json", "tsconfig.json"];
@@ -147,9 +154,23 @@ pub(crate) fn compute_affected_task_selection(
     }
 
     let producers_of = compute_dependent_output_edges(hash_plans, task_graph);
-    let affected = affected_through_output_reads(&touched, task_graph, &producers_of);
+    let excluded: HashSet<&str> = options
+        .excluded_projects
+        .iter()
+        .map(String::as_str)
+        .collect();
+    let affected: Vec<String> = affected_through_output_reads(&touched, task_graph, &producers_of)
+        .into_iter()
+        .filter(|id| {
+            task_graph
+                .tasks
+                .get(id)
+                .is_none_or(|task| !excluded.contains(task.target.project.as_str()))
+        })
+        .collect();
+    let required = with_dependencies(task_graph, affected.iter().map(String::as_str));
 
-    Ok(AffectedTaskSelection { affected })
+    Ok(AffectedTaskSelection { affected, required })
 }
 
 /// Changed paths that are project configuration, split by whether the file is
@@ -405,7 +426,7 @@ fn instruction_matches(
 mod tests {
     use super::*;
     use crate::native::project_graph::types::Project;
-    use crate::native::tasks::types::{InstructionPool, Task};
+    use crate::native::tasks::types::{InstructionPool, Task, TaskTarget};
     use std::collections::HashMap;
 
     fn graph(roots: &[(&str, &str)]) -> ProjectGraph {
@@ -463,6 +484,10 @@ mod tests {
                         id.to_string(),
                         Task {
                             id: id.to_string(),
+                            target: TaskTarget {
+                                project: id.split(':').next().unwrap().to_string(),
+                                ..Default::default()
+                            },
                             outputs: strings(outputs),
                             ..Default::default()
                         },
@@ -487,6 +512,7 @@ mod tests {
             seed_task_ids: strings(seeds),
             changed_externals: vec![],
             changed_external_types: vec![],
+            excluded_projects: vec![],
         }
     }
 
@@ -1306,5 +1332,120 @@ mod tests {
 
         assert_eq!(run(), strings(&["lib:build", "x:build", "y:build"]));
         assert_eq!(run(), run(), "stable across runs");
+    }
+
+    // --- what a run keeps ------------------------------------------------------
+
+    fn select(
+        tg: &TaskGraph,
+        p: &HashPlans,
+        options: &AffectedTasksOptions,
+    ) -> AffectedTaskSelection {
+        compute_affected_task_selection(
+            &graph(&[("app", "apps/app"), ("lib", "libs/lib")]),
+            p,
+            tg,
+            &strings(&["x.txt"]),
+            options,
+        )
+        .unwrap()
+    }
+
+    fn reads_x() -> HashInstruction {
+        HashInstruction::WorkspaceFileSet(strings(&["{workspaceRoot}/x.txt"]))
+    }
+
+    /// An affected task still needs its upstream to run or restore from cache.
+    #[test]
+    fn required_adds_everything_an_affected_task_depends_on() {
+        let p = multi_plans(&[("app:build", vec![reads_x()])]);
+        let mut tg = task_graph(
+            &[
+                ("app:build", &[]),
+                ("app:serve", &[]),
+                ("api:serve", &[]),
+                ("lib:build", &[]),
+                ("util:build", &[]),
+                ("other:build", &[]),
+            ],
+            &[
+                ("app:build", &["lib:build"]),
+                ("lib:build", &["util:build"]),
+            ],
+        );
+        tg.continuous_dependencies
+            .insert("app:build".into(), strings(&["api:serve"]));
+
+        let s = select(&tg, &p, &options(&[]));
+
+        assert_eq!(s.affected, strings(&["app:build"]));
+        assert_eq!(
+            s.required,
+            strings(&["api:serve", "app:build", "lib:build", "util:build"])
+        );
+    }
+
+    /// An excluded task is dropped from the selection, but a kept task that
+    /// depends on it still gets it.
+    #[test]
+    fn an_excluded_project_is_kept_only_as_a_dependency() {
+        let p = multi_plans(&[
+            ("app:build", vec![reads_x()]),
+            ("lib:build", vec![reads_x()]),
+            ("other:build", vec![reads_x()]),
+        ]);
+        let tg = task_graph(
+            &[("app:build", &[]), ("lib:build", &[]), ("other:build", &[])],
+            &[("app:build", &["lib:build"])],
+        );
+        let options = AffectedTasksOptions {
+            excluded_projects: strings(&["lib", "other"]),
+            ..options(&[])
+        };
+
+        let s = select(&tg, &p, &options);
+
+        assert_eq!(s.affected, strings(&["app:build"]));
+        assert_eq!(s.required, strings(&["app:build", "lib:build"]));
+    }
+
+    /// Exclusion narrows what is selected, not what a change reaches.
+    #[test]
+    fn an_excluded_producer_still_affects_its_readers() {
+        let p = multi_plans(&[
+            ("lib:build", vec![reads_x()]),
+            (
+                "app:build",
+                vec![HashInstruction::IgnoredFileSet(strings(&[
+                    "dist/libs/lib/**",
+                ]))],
+            ),
+        ]);
+        let tg = task_graph(
+            &[("lib:build", &["dist/libs/lib"]), ("app:build", &[])],
+            &[("app:build", &["lib:build"])],
+        );
+        let options = AffectedTasksOptions {
+            excluded_projects: strings(&["lib"]),
+            ..options(&[])
+        };
+
+        let s = select(&tg, &p, &options);
+
+        assert_eq!(s.affected, strings(&["app:build"]));
+        assert_eq!(s.required, strings(&["app:build", "lib:build"]));
+    }
+
+    #[test]
+    fn required_survives_a_dependency_cycle() {
+        let p = multi_plans(&[("app:build", vec![reads_x()])]);
+        let tg = task_graph(
+            &[("app:build", &[]), ("lib:build", &[])],
+            &[("app:build", &["lib:build"]), ("lib:build", &["app:build"])],
+        );
+
+        let s = select(&tg, &p, &options(&[]));
+
+        assert_eq!(s.required, strings(&["app:build", "lib:build"]));
     }
 }

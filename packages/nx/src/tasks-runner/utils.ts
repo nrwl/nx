@@ -542,47 +542,16 @@ export function getCustomHasher(
 }
 
 /**
- * Every task in `ids` plus everything it depends on, continuous dependencies
- * included, so a selected task's upstream still runs or restores from cache.
- * Ids the graph does not contain are ignored rather than thrown on: a sync
- * generator can remove a task between selecting it and rebuilding the graph.
- */
-export function collectTaskDependencyClosure(
-  taskGraph: TaskGraph,
-  ids: Iterable<string>
-): Set<string> {
-  const keep = new Set<string>();
-  const stack: string[] = [];
-  for (const id of ids) {
-    if (taskGraph.tasks[id] && !keep.has(id)) {
-      keep.add(id);
-      stack.push(id);
-    }
-  }
-  while (stack.length) {
-    const id = stack.pop()!;
-    for (const dep of [
-      ...(taskGraph.dependencies[id] ?? []),
-      ...(taskGraph.continuousDependencies?.[id] ?? []),
-    ]) {
-      if (taskGraph.tasks[dep] && !keep.has(dep)) {
-        keep.add(dep);
-        stack.push(dep);
-      }
-    }
-  }
-  return keep;
-}
-
-/**
  * The graph a run executes for a selection. Shared by the run and by
- * `--graph`, so what the graph shows is what runs.
+ * `--graph`, so what the graph shows is what runs. `required` already holds
+ * the selection's dependencies; ids the graph lacks are ignored, since a sync
+ * generator can remove a task after selection.
  */
 export function pruneToSelectedTasks(
   taskGraph: TaskGraph,
-  selected: Iterable<string>
+  required: Iterable<string>
 ): TaskGraph {
-  const keep = collectTaskDependencyClosure(taskGraph, selected);
+  const keep = new Set(required);
   return removeTasksFromTaskGraph(
     taskGraph,
     Object.keys(taskGraph.tasks).filter((id) => !keep.has(id))

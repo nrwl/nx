@@ -31,6 +31,7 @@ export async function handleSelectAffectedTasks(
 
   const response: SelectAffectedTasksResponse = {
     affectedTaskIds: [...selection.affectedTaskIds],
+    requiredTaskIds: selection.requiredTaskIds,
     taskGraph: selection.taskGraph,
   };
   return { response, description: 'handleSelectAffectedTasks' };

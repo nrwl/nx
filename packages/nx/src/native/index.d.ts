@@ -440,6 +440,8 @@ export declare function affectedTasks(projectGraph: ExternalObject<ProjectGraph>
 export interface AffectedTaskSelection {
   /** Every affected task, sorted. */
   affected: Array<string>
+  /** `affected` plus everything it depends on, sorted: what a run keeps. */
+  required: Array<string>
 }
 
 export interface AffectedTasksOptions {
@@ -467,6 +469,11 @@ export interface AffectedTasksOptions {
    * have moved a Maven artifact.
    */
   changedExternalTypes: Array<string>
+  /**
+   * Projects `--exclude` names. Their tasks are dropped from the selection
+   * after the walk, so they still carry a change to the tasks reading them.
+   */
+  excludedProjects: Array<string>
 }
 
 export interface BatchInfo {

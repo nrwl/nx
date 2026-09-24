@@ -159,7 +159,33 @@ fn closure_of<'a>(
     seen: &mut HashSet<&'a str>,
 ) -> Vec<&'a str> {
     seen.clear();
-    let mut stack: Vec<&str> = vec![from];
+    reach(task_graph, vec![from], seen)
+}
+
+/// `from` and every task reachable from it, sorted. Ids the graph does not
+/// contain are dropped.
+pub(crate) fn with_dependencies<'a>(
+    task_graph: &TaskGraph,
+    from: impl IntoIterator<Item = &'a str>,
+) -> Vec<String> {
+    let mut seen = HashSet::new();
+    let starts: Vec<&str> = from
+        .into_iter()
+        .filter_map(|id| task_graph.tasks.get_key_value(id))
+        .map(|(id, _)| id.as_str())
+        .filter(|id| seen.insert(*id))
+        .collect();
+    let mut all = starts.clone();
+    all.extend(reach(task_graph, starts, &mut seen));
+    all.sort_unstable();
+    all.into_iter().map(str::to_string).collect()
+}
+
+fn reach<'a: 'b, 'b>(
+    task_graph: &'a TaskGraph,
+    mut stack: Vec<&'b str>,
+    seen: &mut HashSet<&'a str>,
+) -> Vec<&'a str> {
     let mut reached = Vec::new();
     while let Some(current) = stack.pop() {
         let edges = [
