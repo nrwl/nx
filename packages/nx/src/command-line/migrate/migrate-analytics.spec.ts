@@ -499,76 +499,43 @@ describe('migrate-analytics events', () => {
       });
     });
 
-    it('reports the terminal tallies and total dispense count on complete', async () => {
+    it('reports the run tallies on complete, abandonment, resume and every existing-run activity', async () => {
       const a = await load();
-      a.reportMigrateOrchestratorComplete({
+      const tallies = {
         completed: 3,
         skipped: 1,
         unresolved: 2,
         dispenseCount: 9,
-      });
-      expect(paramsFor('migrate_orchestrator_complete')).toEqual({
+      };
+      const params = {
         appliedCount: 3,
         taskCount: 1,
         majorsCrossed: 2,
         migrationCount: 9,
-      });
-    });
-
-    it('reports the tallies and the agent on abandonment', async () => {
-      const a = await load();
+      };
+      const activities = ['idle', 'held', 'unknown'] as const;
+      a.reportMigrateOrchestratorComplete(tallies);
       a.reportMigrateOrchestratorAbandoned({
-        completed: 2,
-        skipped: 0,
-        unresolved: 1,
-        dispenseCount: 4,
+        ...tallies,
         agentUsed: 'claude-code',
       });
-      expect(paramsFor('migrate_orchestrator_abandoned')).toEqual({
-        appliedCount: 2,
-        taskCount: 0,
-        majorsCrossed: 1,
-        migrationCount: 4,
-        agentUsed: 'claude-code',
-      });
-    });
-
-    it('reports the tallies on resume', async () => {
-      const a = await load();
-      a.reportMigrateOrchestratorResume({
-        completed: 1,
-        skipped: 1,
-        unresolved: 0,
-        dispenseCount: 3,
-      });
-      expect(paramsFor('migrate_orchestrator_resume')).toEqual({
-        appliedCount: 1,
-        taskCount: 1,
-        majorsCrossed: 0,
-        migrationCount: 3,
-      });
-    });
-
-    it.each(['idle', 'held', 'unknown'] as const)(
-      'reports the tallies and the %s run activity on an existing-run report',
-      async (activity) => {
-        const a = await load();
-        a.reportMigrateOrchestratorExistingRun({
-          completed: 2,
-          skipped: 0,
-          unresolved: 0,
-          dispenseCount: 4,
-          activity,
-        });
-        expect(paramsFor('migrate_orchestrator_existing_run')).toEqual({
-          appliedCount: 2,
-          taskCount: 0,
-          majorsCrossed: 0,
-          migrationCount: 4,
-          promptChoice: activity,
-        });
+      a.reportMigrateOrchestratorResume(tallies);
+      for (const activity of activities) {
+        a.reportMigrateOrchestratorExistingRun({ ...tallies, activity });
       }
-    );
+      expect(mockReportEvent.mock.calls).toEqual([
+        ['migrate_orchestrator_complete', params],
+        [
+          'migrate_orchestrator_abandoned',
+          { ...params, agentUsed: 'claude-code' },
+        ],
+        ['migrate_orchestrator_resume', params],
+        ...activities.map((activity) => [
+          'migrate_orchestrator_existing_run',
+          { ...params, promptChoice: activity },
+        ]),
+      ]);
+    });
 
     it('encodes recorded vs standalone in the single-migration event name', async () => {
       const a = await load();
