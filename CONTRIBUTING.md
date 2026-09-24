@@ -303,7 +303,7 @@ Please follow the following guidelines:
   - Target a specific project with: `nx run proj:test` (i.e. `nx run angular:test` to target `packages/angular`)
   - Target a specific unit test file (i.e. `packages/angular/src/utils/ast-command-line-utils.spec.ts`)
     with `npx jest angular/src/utils/ast-utils` or `npx jest packages/angular/src/utils/ast-utils`
-  - `packages/nx`, `packages/workspace`, `packages/rspack`, `packages/rsbuild`, `packages/angular` and `packages/react` run on vitest instead: target a file with
+  - `packages/nx`, `packages/workspace`, `packages/rspack`, `packages/rsbuild`, `packages/angular`, `packages/react` and `packages/plugin` run on vitest instead: target a file with
     `nx run nx:test -- src/utils/formatters/oxfmt.spec.ts` (paths relative to the package)
   - For more options on running tests - check `npx jest --help` or visit [jestjs.io](https://jestjs.io/)
   - Debug with `node --inspect-brk ./node_modules/jest/bin/jest.js build/packages/angular/src/utils/ast-utils.spec.js`
