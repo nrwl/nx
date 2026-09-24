@@ -144,6 +144,27 @@ describe('io snapshot outputs', () => {
     expect(taskGraph.tasks['web:build'].outputs).toEqual(merged);
   });
 
+  it('extends a graph once per set', () => {
+    const taskGraph = graph([task('web', 'build', ['dist/apps/web'])]);
+    const snapshots = snapshotsFor({
+      'web:build': { outputs: ['apps/web/.next/cache/**'] },
+    });
+    applyIoSnapshotOutputs(projectGraph, taskGraph, snapshots);
+    // A repeat call with the same graph and set does no work.
+    taskGraph.tasks['web:build'].outputs = ['dist/apps/web'];
+    applyIoSnapshotOutputs(projectGraph, taskGraph, snapshots);
+    expect(taskGraph.tasks['web:build'].outputs).toEqual(['dist/apps/web']);
+
+    const other = snapshotsFor({
+      'web:build': { outputs: ['apps/web/.next/cache/**'] },
+    });
+    applyIoSnapshotOutputs(projectGraph, taskGraph, other);
+    expect(taskGraph.tasks['web:build'].outputs).toEqual([
+      'dist/apps/web',
+      'apps/web/.next/cache/**',
+    ]);
+  });
+
   it('merges into a set, so a declared duplicate collapses too', () => {
     const taskGraph = graph([
       task('web', 'build', ['dist/apps/web', 'dist/apps/web']),
