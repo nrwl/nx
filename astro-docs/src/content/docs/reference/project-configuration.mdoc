@@ -642,7 +642,7 @@ Then set `waitFor` to `ready` on the `dependsOn` entry of each task that should 
   Nx tries both `127.0.0.1` and `::1` unless `host` names the address to connect to.
 - `command`: ready when the command, run through the shell at the workspace root, exits with code 0.
   Use it for a container health check:
-  `docker inspect --format='{{.State.Health.Status}}' db | grep -q healthy`.
+  `docker inspect --format='{{.State.Health.Status}}' db | grep -qx healthy`.
 - `logMatches`: ready when the task output has contained the string, or every string of an array.
   The order doesn't matter.
 
