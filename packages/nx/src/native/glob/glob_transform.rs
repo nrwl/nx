@@ -3,7 +3,7 @@
 //! normalization, and the conversion the engine needs.
 
 use crate::native::glob::glob_group::GlobGroup;
-use crate::native::glob::glob_parser::{is_literal_segment, parse_glob};
+use crate::native::glob::glob_parser::{literal_segment, parse_glob};
 use itertools::Itertools;
 use std::collections::HashSet;
 
@@ -58,15 +58,15 @@ pub(crate) fn partition_glob(glob: &str) -> (String, Option<String>) {
         Some(body) => (true, body),
         None => (false, glob),
     };
-    let mut literal: Vec<&str> = Vec::new();
+    let mut literal: Vec<String> = Vec::new();
     let mut consumed = 0;
     let mut remainder = None;
     for segment in body.split('/') {
-        if !is_literal_segment(segment) {
+        let Some(name) = literal_segment(segment) else {
             remainder = Some(&body[consumed..]);
             break;
-        }
-        literal.push(segment);
+        };
+        literal.push(name);
         consumed += segment.len() + 1;
     }
     let directory = literal.join("/");

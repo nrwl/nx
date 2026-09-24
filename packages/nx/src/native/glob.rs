@@ -3,7 +3,7 @@ mod glob_group;
 mod glob_parser;
 pub mod glob_transform;
 
-pub(crate) use crate::native::glob::glob_parser::is_literal_segment;
+pub(crate) use crate::native::glob::glob_parser::literal_segment;
 use crate::native::glob::glob_transform::convert_glob;
 pub(crate) use crate::native::glob::glob_transform::{
     expand_literal_braces, fileset_patterns, normalize_glob, partition_glob,
@@ -209,10 +209,12 @@ pub fn match_glob_paths(globs: Vec<String>, paths: Vec<String>) -> anyhow::Resul
     Ok(paths.iter().map(|path| glob_set.is_match(path)).collect())
 }
 
-/// Whether an entry is read as a glob: a negation, or a pattern past its
-/// literal directory. Names like `@scope`, `a+b` and `co,ma` are literal.
+/// Whether an entry is read as a glob: a negation, a pattern past its literal
+/// directory, or an escape, which names a path other than the one it spells.
+/// Names like `@scope`, `a+b` and `co,ma` are literal.
 pub(crate) fn contains_glob_pattern(value: &str) -> bool {
-    value.starts_with('!') || partition_glob(value).1.is_some()
+    let (directory, pattern) = partition_glob(value);
+    value.starts_with('!') || pattern.is_some() || directory != value
 }
 
 #[cfg(test)]
@@ -260,15 +262,24 @@ mod test {
 
     #[test]
     fn backslash_prefixes_follow_platform_separators() {
-        for pattern in [
+        // Off Windows `\` escapes, as globset reads it: `\r` is `r`.
+        let expected = if cfg!(windows) {
+            [Some("e2e/react"); 3]
+        } else {
+            [None, Some("e2ereact"), Some("e2ereact*.spec.ts")]
+        };
+        for (pattern, expected) in [
             r"e2e\react\**\+(*.)+(spec|test).+(ts|js)?(x)",
             r"e2e\react/**/*.spec.ts",
             r"e2e\react\*.spec.ts",
-        ] {
+        ]
+        .into_iter()
+        .zip(expected)
+        {
             let globs = [pattern.to_string()];
             assert_eq!(
                 build_glob_set(&globs).unwrap().literal_prefix(),
-                cfg!(windows).then_some(Path::new("e2e/react")),
+                expected.map(Path::new),
                 "{pattern}"
             );
         }

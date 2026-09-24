@@ -174,8 +174,17 @@ pub fn get_files_for_outputs(
         let path = directory.join(&entry);
 
         if !path.exists() {
-            if contains_glob_pattern(&entry) {
-                globs.push(entry);
+            match partition_glob(&entry) {
+                // Literal once its escapes are resolved: read the path it names.
+                (named, None) if !entry.starts_with('!') => {
+                    let named_path = directory.join(&named);
+                    if named_path.is_dir() {
+                        directories.push(named);
+                    } else if named_path.is_file() {
+                        files.push(named);
+                    }
+                }
+                _ => globs.push(entry),
             }
         } else if path.is_dir() {
             directories.push(entry);
@@ -493,6 +502,22 @@ mod test {
                 "test.txt"
             ]
         );
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn an_escaped_entry_reads_the_path_it_names() {
+        let temp = TempDir::new().unwrap();
+        temp.child("dist/*/x.js").write_str("x").unwrap();
+        temp.child("dist/*/y.js").write_str("y").unwrap();
+        temp.child("dist/other/x.js").write_str("x").unwrap();
+
+        let files = get_files_for_outputs(temp.path(), vec![r"dist/\*".into()]).unwrap();
+        assert_eq!(files, ["dist/*/x.js", "dist/*/y.js"]);
+        let files = get_files_for_outputs(temp.path(), vec![r"dist/\*/x.js".into()]).unwrap();
+        assert_eq!(files, ["dist/*/x.js"]);
+        let expanded = _expand_outputs(temp.path(), vec![r"dist/\*/x.js".into()]).unwrap();
+        assert_eq!(expanded, ["dist/*/x.js"]);
     }
 
     #[test]

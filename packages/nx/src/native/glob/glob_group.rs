@@ -59,10 +59,14 @@ impl GlobGroup<'_> {
         }
     }
 
-    /// Whether this part matches only its own text, so a segment made of
-    /// such parts names one directory.
-    pub fn is_literal(&self) -> bool {
-        matches!(self, GlobGroup::Literal(_))
+    /// The text this part matches when it matches only one string: a literal
+    /// as written, an escape as the character it escapes.
+    pub fn literal_text(&self) -> Option<&str> {
+        match self {
+            GlobGroup::Literal(text) => Some(text),
+            GlobGroup::Escaped(text) => text.strip_prefix('\\').filter(|c| !c.is_empty()),
+            _ => None,
+        }
     }
 }
 

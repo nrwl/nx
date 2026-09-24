@@ -287,13 +287,13 @@ fn negated_glob(input: &str) -> (&str, bool) {
     }
 }
 
-/// Whether `segment` names itself: the parser reads all of it, and every part
-/// is literal text.
-pub fn is_literal_segment(segment: &str) -> bool {
-    matches!(
-        parse_segment(segment).finish(),
-        Ok(("", parts)) if parts.iter().all(GlobGroup::is_literal)
-    )
+/// The one name `segment` matches, with escapes resolved, or `None` when it is
+/// a pattern: `a\*b` names `a*b`.
+pub fn literal_segment(segment: &str) -> Option<String> {
+    let ("", parts) = parse_segment(segment).finish().ok()? else {
+        return None;
+    };
+    parts.iter().map(GlobGroup::literal_text).collect()
 }
 
 pub fn parse_glob(input: &str) -> anyhow::Result<(bool, Vec<Vec<GlobGroup<'_>>>)> {
@@ -396,8 +396,8 @@ mod test {
                 vec![Literal("c@".into())],
             ]
         );
-        assert!(super::is_literal_segment("c++"));
-        assert!(!super::is_literal_segment("paren("));
+        assert_eq!(super::literal_segment("c++").as_deref(), Some("c++"));
+        assert_eq!(super::literal_segment("paren("), None);
         for unclosed in ["dist/paren(/x.js", "?(", "a/@(b/c)"] {
             assert!(parse_glob(unclosed).is_err(), "{unclosed}");
         }

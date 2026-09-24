@@ -299,24 +299,24 @@ libs/[!ab]/x
   prefix: Some("libs")
 libs/\*/x
   convert: ["libs/\\*/x"]
-  partition: ("libs", Some("\\*/x"))
+  partition: ("libs/*/x", None)
   is_glob: true
-  prefix: Some("libs")
+  prefix: Some("libs/*/x")
 libs/a\ b/x
   convert: ["libs/a\\ b/x"]
-  partition: ("libs", Some("a\\ b/x"))
+  partition: ("libs/a b/x", None)
   is_glob: true
-  prefix: Some("libs")
+  prefix: Some("libs/a b/x")
 libs/f\oo/*.ts
   convert: ["libs/f\\oo/*.ts"]
-  partition: ("libs", Some("f\\oo/*.ts"))
+  partition: ("libs/foo", Some("*.ts"))
   is_glob: true
-  prefix: Some("libs")
+  prefix: Some("libs/foo")
 path/to\\file.css
   convert: ["path/to\\\\file.css"]
-  partition: ("path", Some("to\\\\file.css"))
+  partition: ("path/to\\file.css", None)
   is_glob: true
-  prefix: Some("path")
+  prefix: Some("path/to\\file.css")
 libs/prefix*(suffix)/**
   convert: ["libs/prefix*suffix/**"]
   partition: ("libs", Some("prefix*(suffix)/**"))
@@ -369,9 +369,9 @@ e2e\react\**\+(*.)+(spec|test).+(ts|js)?(x)
   prefix: None
 e2e\react/**/*.spec.ts
   convert: ["e2e\\react/**/*.spec.ts"]
-  partition: ("", Some("e2e\\react/**/*.spec.ts"))
+  partition: ("e2ereact", Some("**/*.spec.ts"))
   is_glob: true
-  prefix: None
+  prefix: Some("e2ereact")
 e2e\react\!(*.test).ts
   convert: ["!e2e\\react\\*.test.ts", "*.ts"]
   partition: ("", Some("e2e\\react\\!(*.test).ts"))
@@ -504,6 +504,6 @@ dist/app/(group)/page.js
   prefix: Some("@nrwl")
 /back\\slash
   convert: ["/back\\\\slash"]
-  partition: ("", Some("back\\\\slash"))
+  partition: ("/back\\slash", None)
   is_glob: true
   prefix: None

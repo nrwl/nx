@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use rayon::prelude::*;
 use xxhash_rust::xxh3;
 
-use crate::native::glob::{build_glob_set, is_literal_segment};
+use crate::native::glob::{build_glob_set, literal_segment};
 use crate::native::utils::{Normalize, path::get_child_files};
 use crate::native::workspace::context::Files;
 
@@ -26,11 +26,15 @@ fn classify(glob: &str) -> Option<Lookup> {
     } else {
         Cow::Borrowed(glob)
     };
-    let plain = |s: &str| {
-        !s.is_empty()
-            && s.split('/').all(|part| {
-                !part.is_empty() && part != "." && part != ".." && is_literal_segment(part)
+    // The path a glob names, escapes resolved, when every segment is literal.
+    let plain = |s: &str| -> Option<String> {
+        let names = s
+            .split('/')
+            .map(|part| {
+                literal_segment(part).filter(|name| !matches!(name.as_str(), "" | "." | ".."))
             })
+            .collect::<Option<Vec<_>>>()?;
+        Some(names.join("/"))
     };
     if glob == "**" || glob == "**/*" {
         return Some(Lookup::Prefix(String::new()));
@@ -40,9 +44,9 @@ fn classify(glob: &str) -> Option<Lookup> {
         .or_else(|| glob.strip_suffix("/**"))
         .or_else(|| glob.strip_suffix('/'))
     {
-        return plain(dir).then(|| Lookup::Prefix(dir.to_owned()));
+        return plain(dir).map(Lookup::Prefix);
     }
-    plain(&glob).then(|| Lookup::Literal(glob.into_owned()))
+    plain(&glob).map(Lookup::Literal)
 }
 
 /// Whether the group must scan the table: it is empty, or a glob in it is
@@ -251,7 +255,14 @@ mod tests {
     #[test]
     fn backslash_is_an_escape_off_windows() {
         assert!(classify(r"libs\a\**\*").is_none());
-        assert!(classify(r"libs/\*/**").is_none());
+        // An escape names its character: a directory literally called `*`.
+        assert!(matches!(
+            classify(r"libs/\*/**"),
+            Some(Lookup::Prefix(dir)) if dir == "libs/*"
+        ));
+        let files = table(&["libs/*/x.ts", "libs/a/x.ts"]);
+        assert_same_as_scan(&files, &[r"libs/\*/**"]);
+        assert_same_as_scan(&files, &[r"libs/\*/x.ts"]);
     }
 
     #[test]
