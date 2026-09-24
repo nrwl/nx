@@ -263,6 +263,8 @@ export async function generateGraph(
     affected?: boolean;
     /** Tasks `nx affected` selected for `targets`; the graph shows what they run. */
     selectedTaskIds?: string[];
+    /** The `-c` the selection ran with; its task ids carry it. */
+    configuration?: string;
   },
   affectedProjects: string[]
 ): Promise<void> {
@@ -396,7 +398,8 @@ export async function generateGraph(
           rawGraph,
           args.projects,
           args.targets,
-          args.selectedTaskIds
+          args.selectedTaskIds,
+          args.configuration
         ),
         null,
         2
@@ -436,7 +439,7 @@ export async function generateGraph(
         ? await createTaskGraphForTargetsAndProjects(
             args.targets,
             args.projects,
-            undefined,
+            args.configuration,
             args.selectedTaskIds
           )
         : await createTaskGraphClientResponse();
@@ -475,7 +478,8 @@ export async function generateGraph(
         rawGraph,
         args.projects,
         args.targets,
-        args.selectedTaskIds
+        args.selectedTaskIds,
+        args.configuration
       );
 
       writeJsonFile(fullFilePath, json);
@@ -514,7 +518,11 @@ export async function generateGraph(
         args.groupByFolder,
         excludePatterns,
         args.selectedTaskIds && args.targets
-          ? { targets: args.targets, taskIds: args.selectedTaskIds }
+          ? {
+              targets: args.targets,
+              configuration: args.configuration,
+              taskIds: args.selectedTaskIds,
+            }
           : undefined
       );
       app = result.app;
@@ -698,7 +706,8 @@ async function startServer(
     if (sanitizePath === 'task-graph.json') {
       const projectsParam = parsedUrl.searchParams.get('projects');
       const targetsParam = parsedUrl.searchParams.get('targets');
-      const configuration = parsedUrl.searchParams.get('configuration');
+      const configuration =
+        parsedUrl.searchParams.get('configuration') || undefined;
 
       res.writeHead(200, { 'Content-Type': 'application/json' });
 
@@ -708,13 +717,14 @@ async function startServer(
           ? projectsParam.split(' ').filter(Boolean)
           : undefined;
 
+        const request = selectedFor(targetNames, configuration, selection);
         return res.end(
           JSON.stringify(
             await createTaskGraphForTargetsAndProjects(
               targetNames,
               projectNames,
-              configuration,
-              selectedFor(targetNames, selection)
+              request.configuration,
+              request.taskIds
             )
           )
         );
@@ -1224,22 +1234,29 @@ function clearTaskGraphCache() {
  */
 export interface TaskSelectionForGraph {
   targets: string[];
+  configuration?: string;
   taskIds: string[];
 }
 
 /**
- * The selection was made for one set of targets. The page can ask for others,
- * and pruning those to it would empty them, so they are shown whole.
+ * What to build for a page request. The selection was made for one set of
+ * targets and one configuration, and its task ids carry the configuration. A
+ * page asking for those, or naming no configuration, gets the selection; any
+ * other request would prune to nothing, so it is shown whole.
  */
 export function selectedFor(
   targets: string[],
+  configuration: string | undefined,
   selection: TaskSelectionForGraph | undefined
-): string[] | undefined {
-  return selection &&
+): { configuration?: string; taskIds?: string[] } {
+  const applies =
+    selection &&
     targets.length === selection.targets.length &&
-    targets.every((target) => selection.targets.includes(target))
-    ? selection.taskIds
-    : undefined;
+    targets.every((target) => selection.targets.includes(target)) &&
+    (configuration === undefined || configuration === selection.configuration);
+  return applies
+    ? { configuration: selection.configuration, taskIds: selection.taskIds }
+    : { configuration };
 }
 
 async function createTaskGraphForTargetsAndProjects(
@@ -1575,7 +1592,8 @@ async function createJsonOutput(
   rawGraph: ProjectGraph,
   projects: string[],
   targets?: string[],
-  selectedTaskIds?: string[]
+  selectedTaskIds?: string[],
+  configuration?: string
 ): Promise<GraphJson> {
   const response: GraphJson = {
     graph: prunedGraph,
@@ -1587,7 +1605,7 @@ async function createJsonOutput(
       {},
       projects,
       targets,
-      undefined,
+      configuration,
       {}
     );
     if (selectedTaskIds) {

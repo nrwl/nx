@@ -157,6 +157,44 @@ describe('Nx Affected with task selection', () => {
     });
   });
 
+  // A selected task's id carries its configuration (`lib:build:production`),
+  // so --graph has to build with it too, or pruning to the selection leaves
+  // nothing.
+  describe('configurations', () => {
+    let lib: string;
+
+    beforeAll(() => {
+      lib = uniq('configured');
+      updateFile(`libs/${lib}/src/index.ts`, `export const x = 1;\n`);
+      updateFile(
+        `libs/${lib}/project.json`,
+        JSON.stringify({
+          name: lib,
+          root: `libs/${lib}`,
+          targets: {
+            build: {
+              command: 'echo build',
+              inputs: ['{projectRoot}/**/*'],
+              configurations: { production: {} },
+            },
+          },
+        })
+      );
+    });
+
+    it('--graph keeps the configuration the run uses', async () => {
+      const { stdout } = await runCLIAsync(
+        `affected -t build -c production --files="libs/${lib}/src/index.ts" --graph stdout`,
+        {
+          silent: true,
+          env: { ...getStrippedEnvironmentVariables(), ...byTask.env },
+        }
+      );
+      const tasks = JSON.parse(stdout.trim()).tasks.tasks;
+      expect(tasks[`${lib}:build:production`]).toBeDefined();
+    });
+  });
+
   // An e2e suite continuously depends on a served app, which reads a library's
   // build. The only path from the library to the suite crosses the continuous
   // edge, and the project graph records neither dependsOn edge.

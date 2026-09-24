@@ -310,18 +310,43 @@ describe('getExpandedTaskInputs', () => {
 });
 
 describe('selectedFor', () => {
-  const selection = { targets: ['build', 'test'], taskIds: ['a:build'] };
+  const selection = {
+    targets: ['build', 'test'],
+    configuration: 'production',
+    taskIds: ['a:build:production'],
+  };
 
-  it('applies the selection to the targets it was made for', () => {
-    expect(selectedFor(['test', 'build'], selection)).toEqual(['a:build']);
+  it('builds the selection, with its configuration, for its own targets', () => {
+    expect(selectedFor(['test', 'build'], undefined, selection)).toEqual({
+      configuration: 'production',
+      taskIds: ['a:build:production'],
+    });
+    expect(selectedFor(['build', 'test'], 'production', selection)).toEqual({
+      configuration: 'production',
+      taskIds: ['a:build:production'],
+    });
   });
 
-  it('shows another target whole rather than pruning it to nothing', () => {
-    expect(selectedFor(['lint'], selection)).toBeUndefined();
-    expect(selectedFor(['build'], selection)).toBeUndefined();
+  // The selection's ids carry `:production`; built without it the graph holds
+  // `a:build`, and pruning one to the other would leave nothing.
+  it("does not let a page with no configuration drop the selection's", () => {
+    expect(
+      selectedFor(['build', 'test'], undefined, selection).configuration
+    ).toBe('production');
+  });
+
+  it('shows another target or configuration whole rather than pruning it to nothing', () => {
+    expect(selectedFor(['lint'], undefined, selection)).toEqual({
+      configuration: undefined,
+    });
+    expect(selectedFor(['build', 'test'], 'development', selection)).toEqual({
+      configuration: 'development',
+    });
   });
 
   it('prunes nothing without a selection', () => {
-    expect(selectedFor(['build', 'test'], undefined)).toBeUndefined();
+    expect(selectedFor(['build', 'test'], 'production', undefined)).toEqual({
+      configuration: 'production',
+    });
   });
 });

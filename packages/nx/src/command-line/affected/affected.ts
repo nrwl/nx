@@ -135,6 +135,7 @@ export async function affected(
               projects: projectNames,
               file,
               selectedTaskIds: taskSelection?.taskIds,
+              configuration: nxArgs.configuration,
             },
             projectNames
           );
