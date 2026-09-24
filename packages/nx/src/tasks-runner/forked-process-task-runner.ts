@@ -71,6 +71,7 @@ export class ForkedProcessTaskRunner {
     }
 
     const p = fork(workerPath, {
+      windowsHide: true,
       stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
       env: {
         ...env,
@@ -287,6 +288,7 @@ export class ForkedProcessTaskRunner {
       }
 
       const p = fork(this.cliPath, {
+        windowsHide: true,
         stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
         env: {
           ...env,
@@ -353,6 +355,7 @@ export class ForkedProcessTaskRunner {
         output.logCommand(args.join(' '));
       }
       const p = fork(this.cliPath, {
+        windowsHide: true,
         stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
         env: {
           ...env,

@@ -187,6 +187,7 @@ export async function* nodeExecutor(
               join(__dirname, loaderFile),
               options.args ?? [],
               {
+                windowsHide: true,
                 execArgv: getExecArgv(options),
                 stdio: [0, 'pipe', 'pipe', 'ipc'],
                 env: {
@@ -317,6 +318,7 @@ export async function* nodeExecutor(
               }`,
             ],
             {
+              windowsHide: true,
               cwd: context.root,
               stdio: 'inherit',
             }

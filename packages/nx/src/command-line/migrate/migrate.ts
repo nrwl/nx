@@ -2184,6 +2184,7 @@ async function getPackageMigrationsUsingInstallImpl(
     const addCommand = `${pmc.add} ${packageName}@${packageVersion}`;
     try {
       await execAsync(addCommand, {
+        windowsHide: true,
         cwd: dir,
         env: {
           ...process.env,

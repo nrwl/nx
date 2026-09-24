@@ -35,7 +35,7 @@ export function startLocalRegistry({
         }`.split(' '),
         ...(storage ? [`--storage`, storage] : []),
       ],
-      { stdio: 'pipe' }
+      { stdio: 'pipe', windowsHide: true }
     );
 
     const listener = (data) => {

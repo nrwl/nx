@@ -100,6 +100,7 @@ function startVerdaccio(
       getVerdaccioBinPath(),
       createVerdaccioOptions(options, workspaceRoot),
       {
+        windowsHide: true,
         env: {
           ...process.env,
           VERDACCIO_HANDLE_KILL_SIGNALS: 'true',

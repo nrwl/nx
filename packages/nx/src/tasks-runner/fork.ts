@@ -15,6 +15,7 @@ if (process.env['NX_PSEUDO_TERMINAL_EXEC_ARGV']) {
 }
 
 const childProcess = fork(script, {
+  windowsHide: true,
   stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
   env: process.env,
   execArgv,
