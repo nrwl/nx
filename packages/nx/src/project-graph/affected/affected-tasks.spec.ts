@@ -16,6 +16,8 @@ const daemon = vi.hoisted(() => ({
   selectAffectedTasks: vi.fn(),
 }));
 vi.mock('../../daemon/client/client', () => ({ daemonClient: daemon }));
+const onDaemon = vi.hoisted(() => ({ isOnDaemon: vi.fn(() => false) }));
+vi.mock('../../daemon/is-on-daemon', () => onDaemon);
 import { computeAffectedTasks } from './affected-tasks';
 import { LockFileChange, WholeFileChange } from '../file-utils';
 import type { ProjectGraph } from '../../config/project-graph';
@@ -246,6 +248,8 @@ describe('computeAffectedTasks', () => {
 });
 
 describe('computeAffectedTasks with the daemon on', () => {
+  beforeEach(() => vi.clearAllMocks());
+
   it('asks the daemon to select, sending the request as plain data', async () => {
     daemon.enabled.mockReturnValueOnce(true);
     daemon.selectAffectedTasks.mockResolvedValueOnce({
@@ -283,5 +287,29 @@ describe('computeAffectedTasks with the daemon on', () => {
     expect([...result.affectedTaskIds]).toEqual(['lib:test']);
     // The plans stay in the daemon, which is what hashes them.
     expect(result.planningContext).toBeUndefined();
+  });
+
+  // The daemon handles SELECT_AFFECTED_TASKS by calling the same selection;
+  // asking itself over the socket would never return.
+  it('selects in-process when already running inside the daemon', async () => {
+    daemon.enabled.mockReturnValueOnce(true);
+    onDaemon.isOnDaemon.mockReturnValueOnce(true);
+
+    const result = await computeAffectedTasks({
+      projectGraph: graph(),
+      nxJson: {
+        namedInputs: { production: ['{projectRoot}/src/**/*'] },
+      } as any,
+      targets: ['test'],
+      touchedFiles: [
+        {
+          file: 'packages/nx/src/x.ts',
+          getChanges: () => [new WholeFileChange()],
+        },
+      ] as any,
+    });
+
+    expect(daemon.selectAffectedTasks).not.toHaveBeenCalled();
+    expect(result.planningContext).toBeDefined();
   });
 });
