@@ -51,15 +51,6 @@ assignment-rules:
     run-on:
       - agent: linux-extra-large
         parallelism: 1
-  - projects:
-      - angular
-      - react
-    targets:
-      - test
-    run-on:
-      - agent: linux-extra-large
-        parallelism: 1
-
   - targets:
       - lint
     run-on:
