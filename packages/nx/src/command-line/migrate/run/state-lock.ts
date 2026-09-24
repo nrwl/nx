@@ -171,20 +171,12 @@ export function releaseRunActivity(dir: string): void {
 }
 
 /**
- * Whether another live process holds an activity lock on the run. This
- * process's own hold is skipped for the reason releaseRunActivity gives.
- * Files left by dead holders are unlocked and count as free. Fails closed: a
- * probe that cannot be built or checked counts as live. Call under the
- * creation lock.
- */
-export function hasLiveRunActivity(dir: string): boolean {
-  return hasLiveActivity(dir, heldActivity.get(dir)?.name);
-}
-
-/**
  * The pids of the other live processes holding the run, from their lock
- * names. 'unknown' under WASM, where nothing registers, and in the cases
- * hasLiveRunActivity counts as live without a holder to name.
+ * names. This process's own hold is skipped for the reason releaseRunActivity
+ * gives, and files left by dead holders are unlocked and count as free.
+ * 'unknown' under WASM, where nothing registers, and fails closed to it when
+ * the folder cannot be listed, a lock cannot be probed, or a held lock's name
+ * carries no pid. Call under the creation lock.
  */
 export function liveRunActivityPids(dir: string): number[] | 'unknown' {
   if (IS_WASM) return 'unknown';
@@ -197,16 +189,12 @@ export function liveRunActivityPids(dir: string): number[] | 'unknown' {
 }
 
 /**
- * hasLiveRunActivity counting this process's own hold too: for the init
- * discovery that treats a held directory without run.json as a run being
- * started, whichever process is starting it.
+ * Whether any live process, this one included, holds an activity lock on the
+ * run: for the init discovery that treats a held directory without run.json
+ * as a run being started, whichever process is starting it. Fails closed.
  */
 export function hasAnyLiveRunActivity(dir: string): boolean {
-  return hasLiveActivity(dir, undefined);
-}
-
-function hasLiveActivity(dir: string, skip: string | undefined): boolean {
-  const names = liveActivityNames(dir, skip);
+  const names = liveActivityNames(dir, undefined);
   return names === 'unknown' || names.length > 0;
 }
 

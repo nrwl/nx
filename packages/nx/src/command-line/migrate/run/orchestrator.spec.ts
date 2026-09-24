@@ -1874,7 +1874,7 @@ describe('orchestrator', () => {
             })
           )
         ).rejects.toThrow(
-          "Not deleting migrate run 'run-1': another nx migrate process is acting on it (an agent session, a reconcile, or a step). Wait for it to end, then re-run the command."
+          "Not deleting migrate run 'run-1': process 999 is still working on it (an agent session, a reconcile, or a step). Wait for it to end, then re-run the command."
         );
       } finally {
         holder.unlock();
@@ -2151,7 +2151,7 @@ describe('orchestrator', () => {
             initInput(migrationsJson, { onExistingRun: 'start-fresh' })
           )
         ).rejects.toThrow(
-          "Not deleting migrate run 'run-1': another nx migrate process is acting on it (an agent session, a reconcile, or a step). Wait for it to end, then re-run the command."
+          "Not deleting migrate run 'run-1': process 999 is still working on it (an agent session, a reconcile, or a step). Wait for it to end, then re-run the command."
         );
       } finally {
         holder.unlock();
