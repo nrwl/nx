@@ -5,7 +5,7 @@ use std::sync::Arc;
 #[cfg(not(target_arch = "wasm32"))]
 use std::time::{Duration, Instant, SystemTime};
 
-use crate::native::glob::glob_files::glob_files;
+use crate::native::glob::{build_glob_set, glob_files::glob_files};
 use crate::native::hasher::hash;
 use crate::native::project_graph::utils::{ProjectRootMappings, find_project_for_path};
 use crate::native::types::FileData;
@@ -30,6 +30,7 @@ use crate::native::workspace::types::{
     FileMap, NxWorkspaceFilesExternals, ProjectFiles, UpdatedWorkspaceFiles,
 };
 use crate::native::workspace::{types::NxWorkspaceFiles, workspace_files};
+use itertools::Either;
 #[cfg(not(target_arch = "wasm32"))]
 use napi::bindgen_prelude::AsyncTask;
 use napi::bindgen_prelude::External;
@@ -794,10 +795,13 @@ impl FileState {
         Some(f(&state.files))
     }
 
-    fn get_files(&self) -> Vec<FileData> {
+    fn get_files(&self, directory: Option<&Path>) -> Vec<FileData> {
         self.with_files(|files| {
-            files
-                .iter()
+            let entries = match directory {
+                Some(directory) => Either::Left(get_child_files(directory, files)),
+                None => Either::Right(files.iter()),
+            };
+            entries
                 .map(|(path, hash)| FileData {
                     file: path.to_normalized_string(),
                     hash: hash.clone(),
@@ -853,12 +857,7 @@ fn apply(state: &mut State, workspace_root: &Path, changes: Vec<Change>) -> Outc
             outcomes.insert(change.path.clone(), Outcome::Deleted);
             continue;
         }
-        // Path order puts a directory's files right after it, so the scan
-        // stops at the first path outside it.
-        let under: Vec<PathBuf> = state
-            .files
-            .range(key.clone()..)
-            .take_while(|(path, _)| path.starts_with(&key))
+        let under: Vec<PathBuf> = get_child_files(&key, &state.files)
             .map(|(path, _)| path.clone())
             .collect();
         for path in under {
@@ -1279,7 +1278,7 @@ impl WorkspaceContext {
     /// first, and a subscriber hears about it as it would any other batch.
     fn current_files(&self) -> Vec<FileData> {
         self.apply_delivered();
-        self.files.get_files()
+        self.files.get_files(None)
     }
 
     /// `current_files` without the copy: `f` reads the files under their lock.
@@ -1379,8 +1378,12 @@ impl WorkspaceContext {
         globs: Vec<String>,
         exclude: Option<Vec<String>>,
     ) -> napi::Result<Vec<String>> {
-        let file_data = self.current_files();
-        let globbed_files = glob_files(&file_data, globs, exclude)?;
+        self.apply_delivered();
+        // Invalid patterns must also wait for an in-progress walk.
+        self.files.wait_ready();
+        let matcher = build_glob_set(&globs)?;
+        let file_data = self.files.get_files(matcher.literal_prefix());
+        let globbed_files = glob_files(&file_data, matcher, exclude)?;
         Ok(globbed_files.map(|file| file.file.to_owned()).collect())
     }
 
@@ -1399,7 +1402,8 @@ impl WorkspaceContext {
         globs
             .into_iter()
             .map(|glob| {
-                let globbed_files = glob_files(&file_data, vec![glob], exclude.clone())?;
+                let globbed_files =
+                    glob_files(&file_data, build_glob_set(&[glob])?, exclude.clone())?;
                 Ok(globbed_files.map(|file| file.file.to_owned()).collect())
             })
             .collect()
@@ -1438,7 +1442,8 @@ impl WorkspaceContext {
             return Ok(hashes.remove(0));
         }
         let files = &self.current_files();
-        let globbed_files = glob_files(files, globs, exclude)?.collect::<Vec<_>>();
+        let globbed_files =
+            glob_files(files, build_glob_set(&globs)?, exclude)?.collect::<Vec<_>>();
 
         let mut hasher = xxh3::Xxh3::new();
         for file in globbed_files {
@@ -1620,7 +1625,21 @@ impl WorkspaceContext {
 
     #[napi]
     pub fn get_files_in_directory(&self, directory: String) -> Vec<String> {
-        get_child_files(directory, self.current_files())
+        // A replacement character can match distinct non-UTF-8 paths after normalization.
+        if directory.contains('\u{fffd}') {
+            return self
+                .current_files()
+                .into_iter()
+                .filter(|file| Path::new(&file.file).starts_with(&directory))
+                .map(|file| file.file)
+                .collect();
+        }
+        self.with_current_files(|files| {
+            get_child_files(Path::new(&directory), files)
+                .map(|(path, _)| path.to_normalized_string())
+                .collect()
+        })
+        .unwrap_or_default()
     }
 }
 
@@ -1774,6 +1793,120 @@ mod tests {
     }
 
     #[test]
+    fn glob_and_directory_reads_preserve_full_scan_results() {
+        let temp = workspace_with(&[
+            "e2e/react/x.spec.ts",
+            "e2e/react/nested/y.test.tsx",
+            "e2e/react/.hidden.spec.ts",
+            "e2e/react-other/z.spec.ts",
+            "e2e/vue/x.test.js",
+            "root.json",
+            "root.ts",
+            "truncated",
+            "libs/a/x.ts",
+            "libs/a/nested/x.spec.ts",
+            "libs/foo/x.ts",
+            "libs/prefixsuffix/x.ts",
+            "libs/suffix/x.ts",
+            "libs/雪/x.ts",
+            "other/x.ts",
+        ]);
+        #[cfg(not(windows))]
+        temp.child("libs/a/*.ts").write_str("x").unwrap();
+        let cache = TempDir::new().unwrap();
+        let ctx = context(&temp, &cache);
+        let files = ctx.current_files();
+        for patterns in [
+            vec!["e2e/react/**/+(*.)+(spec|test).+(ts|js)?(x)"],
+            vec![r"e2e\react\**\+(*.)+(spec|test).+(ts|js)?(x)"],
+            vec![r"e2e\react/**/*.spec.ts"],
+            vec![r"e2e\react\*.spec.ts"],
+            vec![r"e2e\react\!(*.test).ts"],
+            vec![r"e2e\react\*(nested)/*.ts"],
+            vec!["e2e/react/**", "!(other)/**"],
+            vec!["truncated/foo+/**/!(ignored).ts"],
+            vec![r"libs/f\oo/*.ts"],
+            vec!["libs/prefix*(suffix)/**"],
+            vec!["{libs/a/**,e2e/vue/**}"],
+            vec!["libs/a/**", "libs/a/nested/**", "libs/a/**"],
+            vec!["libs/a/**", "e2e/vue/**"],
+            vec!["!libs/a/**"],
+        ] {
+            let globs: Vec<String> = patterns.into_iter().map(String::from).collect();
+            let exclude = Some(vec!["**/.hidden.spec.ts".into()]);
+            let matcher = build_glob_set(&globs).unwrap();
+            let expected: Vec<_> = glob_files(&files, matcher, exclude.clone())
+                .unwrap()
+                .map(|file| file.file.clone())
+                .collect();
+            assert_eq!(
+                ctx.glob(globs.clone(), exclude).unwrap(),
+                expected,
+                "{globs:?}"
+            );
+        }
+        for directory in [
+            "",
+            ".",
+            "libs/a",
+            "libs/a/",
+            "libs//a",
+            "libs/./a",
+            "./libs/a",
+            "libs/a/..",
+            "libs/a/x.ts",
+            "missing",
+            "libs/雪",
+            r"libs\a",
+        ] {
+            let expected: Vec<_> = files
+                .iter()
+                .map(|file| file.file.clone())
+                .filter(|file| Path::new(file).starts_with(directory))
+                .collect();
+            assert_eq!(
+                ctx.get_files_in_directory(directory.into()),
+                expected,
+                "{directory}"
+            );
+        }
+        #[cfg(not(windows))]
+        assert_eq!(
+            ctx.glob(vec![r"libs/a/\*.ts".into()], None).unwrap(),
+            ["libs/a/*.ts"]
+        );
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn glob_and_directory_reads_preserve_lossy_path_matches() {
+        use std::ffi::OsString;
+        use std::os::unix::ffi::OsStringExt;
+
+        let temp = TempDir::new().unwrap();
+        let cache = TempDir::new().unwrap();
+        let ctx = context(&temp, &cache);
+        ctx.files.wait_ready();
+        let (lock, _) = ctx.files.0.as_ref().unwrap().as_ref();
+        lock.lock().unwrap().files = [
+            PathBuf::from(OsString::from_vec(b"libs/\xff/x.ts".to_vec())),
+            PathBuf::from("libs/\u{fffd}/x.ts"),
+            PathBuf::from("libs/other/x.ts"),
+        ]
+        .into_iter()
+        .map(|path| (path, "h".into()))
+        .collect();
+        assert_eq!(
+            ctx.get_files_in_directory("libs/\u{fffd}".into()),
+            ["libs/\u{fffd}/x.ts", "libs/\u{fffd}/x.ts"]
+        );
+        assert_eq!(
+            ctx.glob(vec!["libs/\u{fffd}/*.ts".into()], None).unwrap(),
+            ["libs/\u{fffd}/x.ts", "libs/\u{fffd}/x.ts"]
+        );
+    }
+
+    #[test]
     fn an_empty_workspace_answers_every_read_instead_of_waiting_forever() {
         // The scan-finished signal used to be "the list is non-empty", so a
         // second read of an empty workspace waited for a scan that had
@@ -1808,12 +1941,16 @@ mod tests {
 
         // Change the disk without touching the archive. A walk would see both
         // changes; a load of the archive cannot.
-        std::fs::remove_file(temp.child("a.ts").path()).unwrap();
-        temp.child("c.ts").write_str("c").unwrap();
+        std::fs::remove_file(temp.child("src/b.ts").path()).unwrap();
+        temp.child("src/c.ts").write_str("c").unwrap();
 
         let loaded =
             WorkspaceContext::from_archive(as_string(&temp), as_string(&cache), None).unwrap();
         assert_eq!(files_of(&loaded), recorded);
+        assert_eq!(
+            loaded.glob(vec!["src/*.(ts|js)".into()], None).unwrap(),
+            ["src/b.ts"]
+        );
     }
 
     #[test]
@@ -2717,7 +2854,7 @@ mod tests {
         }
         assert_eq!(ctx.change_seq(), scanned);
         // The next read applies it.
-        assert!(names_of(&ctx).contains(&"b.ts".to_string()));
+        assert_eq!(ctx.glob(vec!["b.ts".into()], None).unwrap(), ["b.ts"]);
         assert!(lock.lock().unwrap().delivered.is_empty());
     }
 
