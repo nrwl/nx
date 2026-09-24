@@ -18,17 +18,17 @@ expression: report
   is_glob: true
   prefix: None
 ?
-  convert: []
+  convert: ["?"]
   partition: ("", Some("?"))
   is_glob: true
   prefix: None
 a/?/b
-  convert: ["a"]
+  convert: ["a/?/b"]
   partition: ("a", Some("?/b"))
   is_glob: true
   prefix: Some("a")
 libs/?/x
-  convert: ["libs"]
+  convert: ["libs/?/x"]
   partition: ("libs", Some("?/x"))
   is_glob: true
   prefix: Some("libs")
@@ -178,10 +178,10 @@ libs/src/index.+spec.ts
   is_glob: false
   prefix: Some("libs/src/index.+spec.ts")
 libs/c++/x.cpp
-  convert: ["libs"]
-  partition: ("libs", Some("c++/x.cpp"))
-  is_glob: true
-  prefix: Some("libs")
+  convert: ["libs/c++/x.cpp"]
+  partition: ("libs/c++/x.cpp", None)
+  is_glob: false
+  prefix: Some("libs/c++/x.cpp")
 co,ma/x.ts
   convert: ["co,ma/x.ts"]
   partition: ("co,ma/x.ts", None)
@@ -208,30 +208,30 @@ brace}/x
   is_glob: true
   prefix: error
 paren(/x.ts
-  convert: []
+  convert: error
   partition: ("", Some("paren(/x.ts"))
   is_glob: true
-  prefix: None
+  prefix: error
 !(
-  convert: []
+  convert: error
   partition: ("", Some("!("))
   is_glob: true
-  prefix: None
+  prefix: error
 ?(
-  convert: []
+  convert: error
   partition: ("", Some("?("))
   is_glob: true
-  prefix: None
+  prefix: error
 {,
-  convert: []
+  convert: error
   partition: ("", Some("{,"))
   is_glob: true
-  prefix: None
+  prefix: error
 @babel/plugin-transform-destructuring@7.27.3(@babel/core@7.27.4)
-  convert: ["@babel"]
+  convert: error
   partition: ("@babel", Some("plugin-transform-destructuring@7.27.3(@babel/core@7.27.4)"))
   is_glob: true
-  prefix: Some("@babel")
+  prefix: error
 libs/?(a)/x
   convert: ["libs//x", "libs/a/x"]
   partition: ("libs", Some("?(a)/x"))
@@ -328,10 +328,10 @@ prefix?(suffix)
   is_glob: true
   prefix: None
 truncated/foo+/**/!(ignored).ts
-  convert: ["truncated"]
-  partition: ("truncated", Some("foo+/**/!(ignored).ts"))
+  convert: ["!truncated/foo+/**/ignored.ts", "truncated/foo+/**/*.ts"]
+  partition: ("truncated/foo+", Some("**/!(ignored).ts"))
   is_glob: true
-  prefix: Some("truncated")
+  prefix: Some("truncated/foo+")
 libs/**/*.?spec.ts
   convert: ["libs/**/*.?spec.ts"]
   partition: ("libs", Some("**/*.?spec.ts"))

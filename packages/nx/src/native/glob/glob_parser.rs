@@ -1,7 +1,7 @@
 use crate::native::glob::glob_group::GlobGroup;
 use nom::branch::alt;
 use nom::bytes::complete::{is_not, tag, take_till, take_until, take_while};
-use nom::combinator::{eof, map, map_parser};
+use nom::combinator::{eof, map, map_parser, not};
 use nom::error::{VerboseError, context, convert_error};
 use nom::multi::{many_till, separated_list0};
 use nom::sequence::{preceded, terminated};
@@ -16,7 +16,7 @@ fn special_char_alone<'a>(
 ) -> IResult<&'a str, GlobGroup<'a>, VerboseError<&'a str>> {
     context("special_char_alone", |input: &'a str| {
         let (rest, matched) = alt((tag("?"), tag("+"), tag("@"), tag("!")))(input)?;
-        let _ = is_not("(")(rest)?;
+        let _ = not(tag("("))(rest)?;
         Ok((rest, GlobGroup::Literal(matched.into())))
     })(input)
 }
@@ -288,25 +288,26 @@ fn negated_glob(input: &str) -> (&str, bool) {
 }
 
 /// Whether `segment` names itself: the parser reads all of it, and every part
-/// is literal text. A segment the parser cuts short (NXC-5001) is not.
+/// is literal text.
 pub fn is_literal_segment(segment: &str) -> bool {
-    match parse_segment(segment).finish() {
-        Ok(("", parts)) => {
-            parts.iter().all(GlobGroup::is_literal)
-                && parts
-                    .iter()
-                    .map(|part| part.to_string())
-                    .collect::<String>()
-                    == segment
-        }
-        _ => false,
-    }
+    matches!(
+        parse_segment(segment).finish(),
+        Ok(("", parts)) if parts.iter().all(GlobGroup::is_literal)
+    )
 }
 
 pub fn parse_glob(input: &str) -> anyhow::Result<(bool, Vec<Vec<GlobGroup<'_>>>)> {
     let (input, negated) = negated_glob(input);
     let result = separated_segments(input).finish();
-    if let Ok((_, result)) = result {
+    if let Ok((rest, result)) = result {
+        // A segment that fails to parse ends the list early; say so rather
+        // than returning the glob cut short.
+        if !rest.is_empty() {
+            anyhow::bail!(
+                "Could not parse the glob \"{input}\" from \"{}\"",
+                rest.trim_start_matches('/')
+            );
+        }
         Ok((negated, result))
     } else {
         Err(anyhow::anyhow!(
@@ -382,6 +383,26 @@ mod test {
         );
     }
 
+    /// NXC-5001: a glob is read whole or refused, never cut short.
+    #[test]
+    fn a_glob_is_read_whole_or_refused() {
+        use GlobGroup::*;
+        assert_eq!(
+            segments("a/?/b+/c@"),
+            [
+                vec![Literal("a".into())],
+                vec![Any],
+                vec![Literal("b+".into())],
+                vec![Literal("c@".into())],
+            ]
+        );
+        assert!(super::is_literal_segment("c++"));
+        assert!(!super::is_literal_segment("paren("));
+        for unclosed in ["dist/paren(/x.js", "?(", "a/@(b/c)"] {
+            assert!(parse_glob(unclosed).is_err(), "{unclosed}");
+        }
+    }
+
     #[test]
     #[cfg(not(windows))]
     fn a_backslash_escapes_the_next_character() {
@@ -404,8 +425,10 @@ mod test {
     #[test]
     fn parts_print_back_to_their_source() {
         let mut truncated = Vec::new();
+        let mut rejected = Vec::new();
         for glob in include_str!("fixtures/glob_corpus.txt").lines() {
             let Ok((negated, parsed)) = parse_glob(glob) else {
+                rejected.push(glob);
                 continue;
             };
             let printed = parsed
@@ -435,21 +458,17 @@ mod test {
                 truncated.push(glob);
             }
         }
-        // The parser stops at a lone `?` or `+` ending a segment, or at an
-        // unclosed group, and drops the rest; see NXC-5001.
+        assert_eq!(truncated, Vec::<&str>::new());
+        // Only an unclosed group is refused, never read as a shorter glob.
+        rejected.sort();
         assert_eq!(
-            truncated,
+            rejected,
             [
-                "?",
-                "a/?/b",
-                "libs/?/x",
-                "libs/c++/x.cpp",
-                "paren(/x.ts",
                 "!(",
                 "?(",
-                "{,",
                 "@babel/plugin-transform-destructuring@7.27.3(@babel/core@7.27.4)",
-                "truncated/foo+/**/!(ignored).ts",
+                "paren(/x.ts",
+                "{,",
             ]
         );
     }

@@ -51,8 +51,8 @@ pub(crate) fn expand_literal_braces(glob: &str) -> Vec<String> {
 /// names that path rather than matching under it.
 ///
 /// A segment is literal when the glob parser reads it as nothing but text. One
-/// the parser cuts short, like a directory named `paren(`, counts as a pattern:
-/// the walk starts shallower and still matches, only slower. See NXC-5001.
+/// it rejects, like an unclosed `paren(`, counts as a pattern, so the error
+/// surfaces where the pattern is matched.
 pub(crate) fn partition_glob(glob: &str) -> (String, Option<String>) {
     let (negated, body) = match glob.strip_prefix('!') {
         Some(body) => (true, body),
@@ -299,6 +299,13 @@ mod test {
     }
 
     use super::convert_glob;
+
+    #[test]
+    fn convert_glob_keeps_a_lone_special_character() {
+        assert_eq!(convert_glob("a/?/b").unwrap(), ["a/?/b"]);
+        assert_eq!(convert_glob("?").unwrap(), ["?"]);
+        assert!(convert_glob("dist/paren(/x.js").is_err());
+    }
 
     #[test]
     fn convert_globs_full_convert() {

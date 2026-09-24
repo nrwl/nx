@@ -190,12 +190,9 @@ pub(crate) fn build_glob_set<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Resu
         .iter()
         .flat_map(|s| potential_glob_split(s.as_ref()))
         .map(|glob| {
-            // Convert only what needs it: `convert_glob` truncates a glob at
-            // a special character that begins no group, so `!dist/?/x` would
-            // come back as `dist` (NXC-5001). Deciding on the pattern without
-            // its negation marker is what keeps it off that road — a leading
-            // `!` marks the whole glob as an exclusion, not extglob syntax,
-            // and the pattern beneath it holds nothing needing conversion.
+            // A shortcut: a glob with no extglob syntax converts to itself. A
+            // leading `!` is the exclusion marker, not syntax, so the check
+            // reads the pattern beneath it.
             let pattern = glob.strip_prefix('!').unwrap_or(glob);
             if pattern.contains('!')
                 || pattern.contains('|')
