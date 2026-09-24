@@ -259,6 +259,8 @@ export async function generateGraph(
     affected?: boolean;
     /** Tasks `nx affected` selected for `targets`, plus everything they depend on. */
     selectedTaskIds?: string[];
+    /** The graph the run executes for them, when selection narrowed one. */
+    selectedTaskGraph?: TaskGraph;
     /** The `-c` the selection ran with; its task ids carry it. */
     configuration?: string;
   },
@@ -395,7 +397,8 @@ export async function generateGraph(
           args.projects,
           args.targets,
           args.selectedTaskIds,
-          args.configuration
+          args.configuration,
+          args.selectedTaskGraph
         ),
         null,
         2
@@ -436,7 +439,8 @@ export async function generateGraph(
             args.targets,
             args.projects,
             args.configuration,
-            args.selectedTaskIds
+            args.selectedTaskIds,
+            args.selectedTaskGraph
           )
         : await createTaskGraphClientResponse();
 
@@ -475,7 +479,8 @@ export async function generateGraph(
         args.projects,
         args.targets,
         args.selectedTaskIds,
-        args.configuration
+        args.configuration,
+        args.selectedTaskGraph
       );
 
       writeJsonFile(fullFilePath, json);
@@ -1252,6 +1257,24 @@ export function selectedFor(
 }
 
 /**
+ * The task graph to draw for a selection: the one the run executes when
+ * selection narrowed it, otherwise built and pruned to the selected tasks.
+ */
+export function taskGraphForSelection(
+  build: () => TaskGraph,
+  selectedTaskIds?: string[],
+  selectedTaskGraph?: TaskGraph
+): TaskGraph {
+  if (selectedTaskGraph) {
+    return selectedTaskGraph;
+  }
+  const taskGraph = build();
+  return selectedTaskIds
+    ? pruneToSelectedTasks(taskGraph, selectedTaskIds)
+    : taskGraph;
+}
+
+/**
  * Creates a single task graph for multiple projects with multiple targets
  * If no projects specified, returns graph for all projects with the targets
  */
@@ -1259,7 +1282,8 @@ async function createTaskGraphForTargetsAndProjects(
   targetNames: string[],
   projectNames?: string[],
   configuration?: string,
-  selectedTaskIds?: string[]
+  selectedTaskIds?: string[],
+  selectedTaskGraph?: TaskGraph
 ): Promise<TaskGraphClientResponse> {
   // Get project graph
   let graph: ProjectGraph;
@@ -1288,17 +1312,19 @@ async function createTaskGraphForTargetsAndProjects(
 
   try {
     // Create single task graph
-    let taskGraph = createTaskGraph(
-      graph,
-      {},
-      projectsToUse,
-      targetNames,
-      configuration,
-      {}
+    const taskGraph = taskGraphForSelection(
+      () =>
+        createTaskGraph(
+          graph,
+          {},
+          projectsToUse,
+          targetNames,
+          configuration,
+          {}
+        ),
+      selectedTaskIds,
+      selectedTaskGraph
     );
-    if (selectedTaskIds) {
-      taskGraph = pruneToSelectedTasks(taskGraph, selectedTaskIds);
-    }
 
     performance.mark(`task graph generation:end`);
 
@@ -1589,24 +1615,19 @@ async function createJsonOutput(
   projects: string[],
   targets?: string[],
   selectedTaskIds?: string[],
-  configuration?: string
+  configuration?: string,
+  selectedTaskGraph?: TaskGraph
 ): Promise<GraphJson> {
   const response: GraphJson = {
     graph: prunedGraph,
   };
 
   if (targets?.length) {
-    let taskGraph = createTaskGraph(
-      rawGraph,
-      {},
-      projects,
-      targets,
-      configuration,
-      {}
+    const taskGraph = taskGraphForSelection(
+      () => createTaskGraph(rawGraph, {}, projects, targets, configuration, {}),
+      selectedTaskIds,
+      selectedTaskGraph
     );
-    if (selectedTaskIds) {
-      taskGraph = pruneToSelectedTasks(taskGraph, selectedTaskIds);
-    }
 
     const hasher = createTaskHasher(rawGraph, readNxJson());
     let tasks = Object.values(taskGraph.tasks);

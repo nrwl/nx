@@ -99,6 +99,7 @@ export async function affected(
               projects: projectNames,
               file,
               selectedTaskIds: taskSelection?.taskIds,
+              selectedTaskGraph: taskSelection?.taskGraph,
               configuration: nxArgs.configuration,
             },
             projectNames

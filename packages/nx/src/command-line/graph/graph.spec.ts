@@ -8,7 +8,9 @@ import {
   getExpandedTaskInputs,
   ProjectGraphClientResponse,
   selectedFor,
+  taskGraphForSelection,
 } from './graph';
+import type { TaskGraph } from '../../config/task-graph';
 
 vi.mock('../../native', async (importOriginal) => ({
   ...(await importOriginal<any>()),
@@ -347,5 +349,50 @@ describe('selectedFor', () => {
     expect(selectedFor(['build', 'test'], 'production', undefined)).toEqual({
       configuration: 'production',
     });
+  });
+});
+
+describe('taskGraphForSelection', () => {
+  const task = (id: string) => ({ id }) as any;
+  const built: TaskGraph = {
+    roots: ['lib:build', 'other:build'],
+    tasks: {
+      'app:build': task('app:build'),
+      'lib:build': task('lib:build'),
+      'other:build': task('other:build'),
+    },
+    dependencies: {
+      'app:build': ['lib:build'],
+      'lib:build': [],
+      'other:build': [],
+    },
+    continuousDependencies: {
+      'app:build': [],
+      'lib:build': [],
+      'other:build': [],
+    },
+  };
+
+  // It carries the overrides the run gives each task, which a graph built
+  // here without them would not.
+  it('draws the graph the run executes without building one', () => {
+    const narrowed = { ...built, tasks: { 'app:build': task('app:build') } };
+    const build = vi.fn(() => built);
+    expect(
+      taskGraphForSelection(build, ['app:build', 'lib:build'], narrowed)
+    ).toBe(narrowed);
+    expect(build).not.toHaveBeenCalled();
+  });
+
+  it('builds and prunes to the selection when none was narrowed', () => {
+    const drawn = taskGraphForSelection(
+      () => built,
+      ['app:build', 'lib:build']
+    );
+    expect(Object.keys(drawn.tasks).sort()).toEqual(['app:build', 'lib:build']);
+  });
+
+  it('draws the whole graph without a selection', () => {
+    expect(taskGraphForSelection(() => built)).toBe(built);
   });
 });
