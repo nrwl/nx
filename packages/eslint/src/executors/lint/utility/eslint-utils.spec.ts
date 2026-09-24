@@ -8,14 +8,14 @@ vi.mock('eslint', () => ({
   loadESLint: vi.fn(),
 }));
 
+import { loadESLint } from 'eslint';
 import { resolveAndInstantiateESLint } from './eslint-utils';
 import * as resolveEslintClassModule from '../../../utils/resolve-eslint-class';
 
 describe('eslint-utils', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    const eslintModule = require('eslint');
-    eslintModule.loadESLint = vi.fn().mockResolvedValue(LegacyESLint);
+    vi.mocked(loadESLint).mockResolvedValue(LegacyESLint as any);
   });
 
   afterEach(() => {
