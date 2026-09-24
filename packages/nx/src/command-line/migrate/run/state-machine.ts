@@ -436,10 +436,6 @@ export function tallySteps(state: MigrateRunState): StepTally {
   return tally;
 }
 
-/**
- * Analytics tallies. Adopted steps count as completed; dispenseCount is
- * cumulative across attempts, so a retried step counts every dispense it had.
- */
 export function runTallies(state: MigrateRunState): MigrateOrchestratorTallies {
   const tally = tallySteps(state);
   return {

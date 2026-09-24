@@ -290,15 +290,12 @@ export function reportMigrateOrchestratorInit(opts: {
 }
 
 /**
- * One event per orchestrator response, repeated on every reconcile until the
+ * One event per dispense response, repeated on every reconcile until the
  * step moves. The `action` (dispense case) is a closed enum carried on a
  * reused dimension, read conditioned on the event name (the same
  * multiplexing pattern as {@link reportMigratePrompt}); `attempt` rides the
- * migration-count dimension and `ordinal` (the run's dispense count so far)
- * the task-count one. The action mix per ordinal shows what a run was being
- * asked around each position; the survival curve itself comes from
- * {@link reportMigrateOrchestratorStepDispensed}. A rejected step action has
- * no ordinal: it is an answer, not a dispense.
+ * migration-count dimension and `ordinal` (the run's dispense count) the
+ * task-count one.
  */
 export function reportMigrateOrchestratorDispense(opts: {
   action: string;
@@ -315,12 +312,7 @@ export function reportMigrateOrchestratorDispense(opts: {
   });
 }
 
-/**
- * Once per durable dispense transition, unlike the response event above,
- * which repeats on every reconcile until the step moves. Counting these per
- * ordinal is the survival curve; the response event's ordinal is the action
- * mix around each position.
- */
+/** Once per durable dispense transition. */
 export function reportMigrateOrchestratorStepDispensed(opts: {
   attempt: number;
   ordinal: number;
@@ -337,7 +329,7 @@ export function reportMigrateOrchestratorStepDispensed(opts: {
 export interface MigrateOrchestratorTallies {
   completed: number;
   skipped: number;
-  // Steps the agent gave up on: terminal, but neither completed nor skipped.
+  // Steps the agent gave up on.
   unresolved: number;
   dispenseCount: number;
 }
@@ -355,9 +347,6 @@ function orchestratorTallyParams(tallies: MigrateOrchestratorTallies) {
   };
 }
 
-/**
- * Terminal funnel event.
- */
 export function reportMigrateOrchestratorComplete(
   opts: MigrateOrchestratorTallies
 ): void {
@@ -367,11 +356,7 @@ export function reportMigrateOrchestratorComplete(
   });
 }
 
-/**
- * The spawned agent exited with the run still active. Only the parent that
- * spawned it can report this: an agent-initiated run has no process left to
- * notice it stopped. Same tallies as complete, read the same way.
- */
+/** The agent session nx spawned ended with the run still active. */
 export function reportMigrateOrchestratorAbandoned(
   opts: MigrateOrchestratorTallies & { agentUsed: string }
 ): void {
@@ -386,11 +371,9 @@ export function reportMigrateOrchestratorAbandoned(
 
 /**
  * An explicit continue (`--run-migrations --run-id`, or "continue" at the
- * master prompt) took up an active run instead of creating one. The start
- * watermark hides that, so this records how far the run had got at the
- * continue; every resume reports, since the state cannot tell a crashed
- * session from a re-invocation. A bare --run-id reconcile is not a resume:
- * nothing in run state marks the first call after a lost session.
+ * master prompt) took up an active run; every resume reports. A bare
+ * `--run-id` reconcile is not a resume: nothing in run state marks the first
+ * call after a lost session.
  */
 export function reportMigrateOrchestratorResume(
   opts: MigrateOrchestratorTallies
@@ -402,11 +385,9 @@ export function reportMigrateOrchestratorResume(
 }
 
 /**
- * An invocation found an active run and started nothing; a continue that
- * follows reports a resume. `activity` (reused prompt-choice dimension) says
- * whether another nx migrate process held the run at the time: a revisit of
- * an idle run is the abandonment signal, a collision with a live one is not.
- * 'unknown' is WASM, which holds nothing, or an unreadable activity folder.
+ * An invocation found an active run and started nothing. `activity` says
+ * whether another nx migrate process held the run; 'unknown' where nx cannot
+ * tell.
  */
 export function reportMigrateOrchestratorExistingRun(
   opts: MigrateOrchestratorTallies & {

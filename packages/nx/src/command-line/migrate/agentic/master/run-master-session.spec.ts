@@ -621,7 +621,7 @@ describe('runMasterSession', () => {
     expect(mockReadRunState).not.toHaveBeenCalled();
     expect(mockRunComplete).not.toHaveBeenCalled();
   });
-  it('exits 1 with the error, the error event and the resume hint when the session had to be closed on an unanswered request and the run is still active', async () => {
+  it('exits 1 with the error, the error and abandonment events and the resume hint when the session had to be closed on an unanswered request and the run is still active', async () => {
     const error = new Error('EACCES: permission denied, rename');
     mockSpawnMaster.mockResolvedValue({ kind: 'broker-failed', error });
     mockReadRunState.mockReturnValue(state('active', ['running']));
@@ -636,6 +636,7 @@ describe('runMasterSession', () => {
       title: `Migrate run ${runId} is still active. Run ${continueCommand}, with NX_MIGRATE_ORCHESTRATOR=true set in the environment, to continue it.`,
     });
     expect(mockRunError).toHaveBeenCalledWith({ code: 'agentic', error });
+    expect(mockAbandoned).toHaveBeenCalledTimes(1);
     expect(mockRunComplete).not.toHaveBeenCalled();
   });
 });

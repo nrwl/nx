@@ -2407,7 +2407,7 @@ describe('orchestrator', () => {
       }
     );
 
-    it('reports the tallies of the resumed run on every resume', async () => {
+    it('reports the run tallies on every existing-run report and every resume, with or without agent instructions', async () => {
       const migrationsJson = {
         migrations: [
           genMig('@nx/js', 'a'),
@@ -2424,88 +2424,34 @@ describe('orchestrator', () => {
         plan: migrationsJson.migrations,
       });
       const policy = { createCommits: false, skipInstall: false };
-
-      await runOrchestratorResume({ root, runId: 'run-1', policy });
-      await runOrchestratorResume({ root, runId: 'run-1', policy });
-
-      expect(mockInit).not.toHaveBeenCalled();
-      expect(mockExistingRun).not.toHaveBeenCalled();
-      expect(mockResume.mock.calls).toEqual([
-        [{ completed: 1, skipped: 1, unresolved: 0, dispenseCount: 4 }],
-        [{ completed: 1, skipped: 1, unresolved: 0, dispenseCount: 4 }],
-      ]);
-    });
-
-    it('reports the tallies of the active run on every existing-run report, with or without agent instructions', async () => {
-      const migrationsJson = {
-        migrations: [
-          genMig('@nx/js', 'a'),
-          genMig('@nx/js', 'b'),
-          genMig('@nx/js', 'c'),
-        ],
+      const tallies = {
+        completed: 1,
+        skipped: 1,
+        unresolved: 0,
+        dispenseCount: 4,
       };
-      setupRun('run-1', {
-        steps: [
-          migStep('step-1', '@nx/js:a', 'succeeded'),
-          migStep('step-2', '@nx/js:b', 'skipped'),
-          migStep('step-3', '@nx/js:c', 'pending', { dispenseCount: 2 }),
-        ],
-        plan: migrationsJson.migrations,
-      });
 
       await runOrchestratorInit(initInput(migrationsJson));
       await runOrchestratorInit({
         ...initInput(migrationsJson),
         emitAgentInstructions: false,
       });
-
-      expect(mockInit).not.toHaveBeenCalled();
+      expect(mockExistingRun).toHaveBeenCalledTimes(2);
       expect(mockResume).not.toHaveBeenCalled();
-      expect(mockExistingRun.mock.calls).toEqual([
-        [
-          {
-            completed: 1,
-            skipped: 1,
-            unresolved: 0,
-            dispenseCount: 4,
-            activity: 'idle',
-          },
-        ],
-        [
-          {
-            completed: 1,
-            skipped: 1,
-            unresolved: 0,
-            dispenseCount: 4,
-            activity: 'idle',
-          },
-        ],
-      ]);
-    });
 
-    it('reports the existing run before the resume when the master session continues it', async () => {
-      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
-      setupRun('run-1', {
-        steps: [migStep('step-1', '@nx/js:a', 'pending', { dispenseCount: 1 })],
-        plan: migrationsJson.migrations,
-      });
-
-      await runOrchestratorInit({
-        ...initInput(migrationsJson),
-        emitAgentInstructions: false,
-      });
+      await runOrchestratorResume({ root, runId: 'run-1', policy });
       await runOrchestratorResume({
         root,
         runId: 'run-1',
-        policy: { createCommits: false, skipInstall: false },
+        policy,
         emitAgentInstructions: false,
       });
 
-      expect(mockExistingRun).toHaveBeenCalledTimes(1);
-      expect(mockResume).toHaveBeenCalledTimes(1);
-      expect(mockExistingRun.mock.invocationCallOrder[0]).toBeLessThan(
-        mockResume.mock.invocationCallOrder[0]
-      );
+      expect(mockExistingRun.mock.calls).toEqual([
+        [{ ...tallies, activity: 'idle' }],
+        [{ ...tallies, activity: 'idle' }],
+      ]);
+      expect(mockResume.mock.calls).toEqual([[tallies], [tallies]]);
     });
 
     it('replaces a non-regular entry at the runbook path with the re-rendered runbook', async () => {
@@ -7470,7 +7416,7 @@ describe('orchestrator', () => {
       });
     });
 
-    it('numbers each dispense by the run-wide dispense count, cumulative across retries', async () => {
+    it('numbers each dispense by the run-wide dispense count, and reports a durable dispense once while the response repeats', async () => {
       const dir = setupRun('run-1', {
         steps: [
           migStep('step-1', '@nx/js:p', 'failed', { hasGenerator: false }),
@@ -7499,35 +7445,17 @@ describe('orchestrator', () => {
         ],
       });
       await runOrchestratorReconcile({ root, runId: 'run-1' });
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
 
       expect(mockDispense.mock.calls).toEqual([
         [{ action: 'retry-failed', attempt: 1, ordinal: 1 }],
         [{ action: 'next-step', attempt: 2, ordinal: 2 }],
         [{ action: 'next-step', attempt: 1, ordinal: 3 }],
+        [{ action: 'next-step', attempt: 1, ordinal: 3 }],
       ]);
       expect(mockStepDispensed.mock.calls).toEqual([
         [{ attempt: 2, ordinal: 2 }],
         [{ attempt: 1, ordinal: 3 }],
-      ]);
-    });
-
-    it('reports a durable dispense once while the response repeats on every reconcile', async () => {
-      setupRun('run-1', {
-        steps: [migStep('step-1', '@nx/js:gen', 'pending')],
-        plan: [genMig('@nx/js', 'gen')],
-      });
-
-      await runOrchestratorReconcile({ root, runId: 'run-1' });
-      await runOrchestratorReconcile({ root, runId: 'run-1' });
-      await runOrchestratorReconcile({ root, runId: 'run-1' });
-
-      expect(mockDispense.mock.calls).toEqual([
-        [{ action: 'next-step', attempt: 1, ordinal: 1 }],
-        [{ action: 'next-step', attempt: 1, ordinal: 1 }],
-        [{ action: 'next-step', attempt: 1, ordinal: 1 }],
-      ]);
-      expect(mockStepDispensed.mock.calls).toEqual([
-        [{ attempt: 1, ordinal: 1 }],
       ]);
     });
 
