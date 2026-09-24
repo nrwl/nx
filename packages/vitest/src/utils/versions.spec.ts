@@ -71,6 +71,27 @@ describe('versions', () => {
     expect(versions(tree).vitestVersion).toBe('^4.0.0');
   });
 
+  // The configuration generator adds analog in the same pass, so at selection
+  // time it is not in package.json yet and only the framework says it is coming.
+  it('should cap at vitest 4 for angular before analog reaches package.json', () => {
+    setDevDependency('vite', '^8.0.0');
+
+    expect(versions(tree, { uiFramework: 'angular' }).vitestVersion).toBe(
+      '^4.0.0'
+    );
+    expect(
+      versions(tree, { uiFramework: 'angular' }).vitestCoverageV8Version
+    ).toBe('^4.0.0');
+  });
+
+  it('should not cap for a framework that has no such constraint', () => {
+    setDevDependency('vite', '^8.0.0');
+
+    expect(versions(tree, { uiFramework: 'react' }).vitestVersion).toBe(
+      vitestVersion
+    );
+  });
+
   it('should honor a requested vite major that is not in package.json yet', () => {
     expect(versions(tree, { viteMajorVersion: 5 }).vitestVersion).toBe(
       '^3.0.0'

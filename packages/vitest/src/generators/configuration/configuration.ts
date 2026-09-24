@@ -135,6 +135,7 @@ export async function configurationGeneratorInternal(
     addPlugin: schema.addPlugin,
     projectRoot: root,
     viteVersion: schema.viteVersion,
+    uiFramework,
     skipPackageJson: schema.skipPackageJson,
     keepExistingVersions: true,
   });
@@ -286,7 +287,8 @@ getTestBed().initTestEnvironment(
 
   const devDependencies = await getCoverageProviderDependency(
     tree,
-    schema.coverageProvider
+    schema.coverageProvider,
+    uiFramework
   );
   devDependencies['@types/node'] = typesNodeVersion;
 
@@ -552,10 +554,13 @@ function createFiles(
 
 function getCoverageProviderDependency(
   tree: Tree,
-  coverageProvider: VitestGeneratorSchema['coverageProvider']
+  coverageProvider: VitestGeneratorSchema['coverageProvider'],
+  uiFramework?: string
 ): Record<string, string> {
-  const { vitestCoverageV8Version, vitestCoverageIstanbulVersion } =
-    versions(tree);
+  const { vitestCoverageV8Version, vitestCoverageIstanbulVersion } = versions(
+    tree,
+    { uiFramework }
+  );
   switch (coverageProvider) {
     case 'v8':
       return {
