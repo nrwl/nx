@@ -1,12 +1,12 @@
 import { loadTsTransformers } from './load-ts-transformers';
 
-jest.mock('plugin-a');
-jest.mock('plugin-b');
-jest.mock('function-after-plugin');
-jest.mock('function-after-declarations-plugin');
-jest.mock('function-direct-export');
-jest.mock('function-multiple-hooks');
-const mockRequireResolve = jest.fn((path) => path);
+vi.mock('plugin-a');
+vi.mock('plugin-b');
+vi.mock('function-after-plugin');
+vi.mock('function-after-declarations-plugin');
+vi.mock('function-direct-export');
+vi.mock('function-multiple-hooks');
+const mockRequireResolve = vi.fn((path) => path);
 
 describe('loadTsTransformers', () => {
   it('should return empty hooks if plugins is falsy', () => {

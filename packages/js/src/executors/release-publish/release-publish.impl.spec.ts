@@ -1,3 +1,4 @@
+import type { MockedFunction } from 'vitest';
 import {
   ExecutorContext,
   readJsonFile,
@@ -10,33 +11,31 @@ import * as npmConfigModule from '../../utils/npm-config';
 import * as npmRunPath from 'npm-run-path';
 import * as extractModule from './extract-npm-publish-json-data';
 
-jest.mock('child_process');
-jest.mock('npm-run-path', () => ({
-  env: jest.fn(() => ({})),
+vi.mock('child_process');
+vi.mock('npm-run-path', () => ({
+  env: vi.fn(() => ({})),
 }));
-jest.mock('../../utils/npm-config');
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  detectPackageManager: jest.fn(() => 'npm'),
-  readJsonFile: jest.fn(),
+vi.mock('../../utils/npm-config');
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  detectPackageManager: vi.fn(() => 'npm'),
+  readJsonFile: vi.fn(),
 }));
-jest.mock('./extract-npm-publish-json-data');
-jest.mock('./log-tar');
+vi.mock('./extract-npm-publish-json-data');
+vi.mock('./log-tar');
 
 describe('release-publish executor', () => {
   let context: ExecutorContext;
   let options: PublishExecutorSchema;
-  const mockExecSync = execSync as jest.MockedFunction<typeof execSync>;
-  const mockDetectPackageManager = detectPackageManager as jest.MockedFunction<
+  const mockExecSync = execSync as MockedFunction<typeof execSync>;
+  const mockDetectPackageManager = detectPackageManager as MockedFunction<
     typeof detectPackageManager
   >;
   const mockParseRegistryOptions =
-    npmConfigModule.parseRegistryOptions as jest.MockedFunction<
+    npmConfigModule.parseRegistryOptions as MockedFunction<
       typeof npmConfigModule.parseRegistryOptions
     >;
-  const mockReadJsonFile = readJsonFile as jest.MockedFunction<
-    typeof readJsonFile
-  >;
+  const mockReadJsonFile = readJsonFile as MockedFunction<typeof readJsonFile>;
 
   function npmViewNotFoundError() {
     const error: any = new Error('npm view failed');
@@ -55,11 +54,11 @@ describe('release-publish executor', () => {
   }
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockDetectPackageManager.mockReturnValue('npm');
-    jest.spyOn(console, 'log').mockImplementation();
-    jest.spyOn(console, 'warn').mockImplementation();
-    jest.spyOn(console, 'error').mockImplementation();
+    vi.spyOn(console, 'log').mockImplementation();
+    vi.spyOn(console, 'warn').mockImplementation();
+    vi.spyOn(console, 'error').mockImplementation();
 
     context = {
       root: '/root',
@@ -104,7 +103,7 @@ describe('release-publish executor', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe('already published error handling', () => {
@@ -222,7 +221,7 @@ describe('release-publish executor', () => {
         })
         .mockReturnValueOnce(Buffer.from('{}') as any); // npm publish
 
-      jest.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue({
+      vi.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue({
         beforeJsonData: '',
         jsonData: {
           id: '@scope/test-package@1.0.0',
@@ -264,7 +263,7 @@ describe('release-publish executor', () => {
         })
         .mockReturnValueOnce(Buffer.from('{}') as any); // npm publish
 
-      jest.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue({
+      vi.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue({
         beforeJsonData: '',
         jsonData: {
           id: '@scope/test-package@1.0.0',
@@ -475,7 +474,7 @@ describe('release-publish executor', () => {
         .mockReturnValueOnce(Buffer.from('') as any) // npm view -> empty stdout
         .mockReturnValueOnce(Buffer.from('{}') as any); // npm publish
 
-      jest.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue({
+      vi.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue({
         beforeJsonData: '',
         jsonData: {
           id: '@scope/test-package@1.0.0',
@@ -527,9 +526,9 @@ describe('release-publish executor', () => {
         // bun publish call
         .mockReturnValueOnce(Buffer.from('bun publish output'));
 
-      jest
-        .spyOn(extractModule, 'extractNpmPublishJsonData')
-        .mockReturnValue(null);
+      vi.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue(
+        null
+      );
 
       const result = await runExecutor(options, context);
 
@@ -574,7 +573,7 @@ describe('release-publish executor', () => {
         // npm publish (fallback) succeeds
         .mockReturnValueOnce(Buffer.from('{}') as any);
 
-      jest.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue({
+      vi.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue({
         beforeJsonData: '',
         jsonData: {
           id: '@scope/test-package@1.0.0',

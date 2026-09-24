@@ -1531,7 +1531,7 @@ describe('lib', () => {
         });
 
         it("should warn the user if their defined groups don't match the new project", async () => {
-          const outputSpy = jest
+          const outputSpy = vi
             .spyOn(output, 'warn')
             .mockImplementationOnce(() => {
               return undefined as never;

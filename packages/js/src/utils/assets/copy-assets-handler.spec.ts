@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'path';
 import * as os from 'os';
@@ -9,10 +10,10 @@ import { type ChangedFile } from '@nx/devkit/internal';
 
 const mockWatcher = new Subject<ChangedFile>();
 
-jest.mock(
+vi.mock(
   'nx/src/daemon/client/client',
-  (): Partial<typeof import('nx/src/daemon/client/client')> => {
-    const original = jest.requireActual('nx/src/daemon/client/client');
+  async (): Promise<Partial<typeof import('nx/src/daemon/client/client')>> => {
+    const original = await vi.importActual<any>('nx/src/daemon/client/client');
     return {
       ...original,
       daemonClient: {
@@ -65,7 +66,7 @@ describe('AssetInputOutputHandler', () => {
   let rootDir: string;
   let projectDir: string;
   let outputDir: string;
-  let callback: jest.SpyInstance;
+  let callback: MockInstance;
   let originalCwd: string;
 
   beforeEach(() => {
@@ -75,7 +76,7 @@ describe('AssetInputOutputHandler', () => {
     // Resolve to real paths to avoid symlink discrepancies with watcher.
     const tmp = fs.realpathSync(path.join(os.tmpdir()));
 
-    callback = jest.fn();
+    callback = vi.fn();
     rootDir = path.join(tmp, 'nx-assets-test');
     projectDir = path.join(rootDir, 'mylib');
     outputDir = path.join(rootDir, 'dist/mylib');
@@ -633,14 +634,14 @@ describe('CopyAssetsHandler - node_modules support', () => {
   let rootDir: string;
   let projectDir: string;
   let outputDir: string;
-  let callback: jest.SpyInstance;
+  let callback: MockInstance;
   let originalCwd: string;
 
   beforeEach(() => {
     originalCwd = process.cwd();
     const tmp = fs.realpathSync(path.join(os.tmpdir()));
 
-    callback = jest.fn();
+    callback = vi.fn();
     rootDir = path.join(tmp, 'nx-assets-node-modules-test');
     projectDir = path.join(rootDir, 'apps/api');
     outputDir = path.join(rootDir, 'dist/apps/api');

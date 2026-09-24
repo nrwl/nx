@@ -1,3 +1,4 @@
+import type { MockedFunction } from 'vitest';
 import '@nx/devkit/internal-testing-utils/mock-fs';
 
 import {
@@ -15,13 +16,13 @@ import {
 import { DependentBuildableProjectNode } from '../buildable-libs-utils';
 import { generatePrunedDeployOutput } from '@nx/devkit/internal';
 
-jest.mock('nx/src/utils/workspace-root', () => ({
+vi.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
 
-jest.mock('nx/src/plugins/js/lock-file/lock-file', () => ({
-  ...jest.requireActual('nx/src/plugins/js/lock-file/lock-file'),
-  generatePrunedDeployOutput: jest.fn((packageJson) => {
+vi.mock('nx/src/plugins/js/lock-file/lock-file', async () => ({
+  ...(await vi.importActual<any>('nx/src/plugins/js/lock-file/lock-file')),
+  generatePrunedDeployOutput: vi.fn((packageJson) => {
     // mimic the real contract: a successful prune strips the manifest's baked
     // pnpm config, and the caller writes the manifest afterwards
     jest
@@ -756,7 +757,7 @@ describe('updatePackageJson', () => {
   });
 
   const mockGeneratePrunedDeployOutput =
-    generatePrunedDeployOutput as jest.MockedFunction<
+    generatePrunedDeployOutput as MockedFunction<
       typeof generatePrunedDeployOutput
     >;
 

@@ -1,3 +1,4 @@
+import type { MockedFunction } from 'vitest';
 import { type ExecutorContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { existsSync, readFileSync } from 'fs';
@@ -12,33 +13,36 @@ import copyWorkspaceModules from './copy-workspace-modules';
 // and not updated by TempFs. Point it at the per-test temp dir via a getter;
 // everything else stays real.
 let mockWorkspaceRoot = '';
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
   get workspaceRoot() {
     return mockWorkspaceRoot;
   },
 }));
 
-jest.mock('@nx/devkit/internal', () => ({
-  ...jest.requireActual('@nx/devkit/internal'),
-  getCatalogManager: jest.fn(),
+vi.mock('@nx/devkit/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit/internal')),
+  getCatalogManager: vi.fn(),
 }));
 
-jest.mock('nx/src/plugins/js/utils/get-workspace-packages-from-graph', () => ({
-  ...jest.requireActual(
-    'nx/src/plugins/js/utils/get-workspace-packages-from-graph'
-  ),
-  getWorkspacePackagesFromGraph: jest.fn(() => new Map()),
-}));
+vi.mock(
+  'nx/src/plugins/js/utils/get-workspace-packages-from-graph',
+  async () => ({
+    ...(await vi.importActual<any>(
+      'nx/src/plugins/js/utils/get-workspace-packages-from-graph'
+    )),
+    getWorkspacePackagesFromGraph: vi.fn(() => new Map()),
+  })
+);
 
 const PROJECT_ROOT = 'apps/app';
 
 describe('copyWorkspaceModules', () => {
   const mockGetWorkspacePackages =
-    getWorkspacePackagesFromGraph as jest.MockedFunction<
+    getWorkspacePackagesFromGraph as MockedFunction<
       typeof getWorkspacePackagesFromGraph
     >;
-  const mockGetCatalogManager = getCatalogManager as jest.MockedFunction<
+  const mockGetCatalogManager = getCatalogManager as MockedFunction<
     typeof getCatalogManager
   >;
   let tempFs: TempFs;
@@ -51,13 +55,13 @@ describe('copyWorkspaceModules', () => {
 
   afterEach(() => {
     tempFs.cleanup();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   function makeManager(catalog: Record<string, string>) {
     return {
       isCatalogReference: (version: string) => version.startsWith('catalog:'),
-      resolveCatalogReference: jest.fn(
+      resolveCatalogReference: vi.fn(
         (_root: string, packageName: string, _version: string) =>
           catalog[packageName] ?? null
       ),
@@ -470,7 +474,7 @@ describe('copyWorkspaceModules', () => {
 
   it('leaves an absolute local-path dep in a copied module as-is with a warning', async () => {
     const { logger } = require('@nx/devkit');
-    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
     tempFs.createFilesSync({
       'pnpm-lock.yaml': '',
       [`${PROJECT_ROOT}/package.json`]: JSON.stringify({

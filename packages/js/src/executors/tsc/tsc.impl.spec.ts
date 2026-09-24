@@ -1,3 +1,4 @@
+import type { MockedFunction } from 'vitest';
 import { ExecutorContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import * as ts from 'typescript';
@@ -9,11 +10,9 @@ import {
   determineModuleFormatFromTsConfig,
 } from './tsc.impl';
 
-jest.mock('../../utils/typescript/ts-config');
+vi.mock('../../utils/typescript/ts-config');
 
-const mockReadTsConfig = readTsConfig as jest.MockedFunction<
-  typeof readTsConfig
->;
+const mockReadTsConfig = readTsConfig as MockedFunction<typeof readTsConfig>;
 
 describe('tscExecutor', () => {
   let context: ExecutorContext;
@@ -100,7 +99,7 @@ describe('determineModuleFormatFromTsConfig', () => {
   let workspaceRoot: string;
 
   beforeEach(async () => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
     tempFs = new TempFs('tsc-module-format');
     workspaceRoot = tempFs.tempDir;
   });

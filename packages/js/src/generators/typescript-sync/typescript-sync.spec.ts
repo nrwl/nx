@@ -11,10 +11,10 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { syncGenerator } from './typescript-sync';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  createProjectGraphAsync: jest.fn(() => Promise.resolve(projectGraph)),
-  formatFiles: jest.fn(() => Promise.resolve()),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi.fn(() => Promise.resolve(projectGraph)),
+  formatFiles: vi.fn(() => Promise.resolve()),
 }));
 
 describe('syncGenerator()', () => {
