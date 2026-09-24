@@ -189,21 +189,7 @@ pub(crate) fn build_glob_set<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Resu
     let result = globs
         .iter()
         .flat_map(|s| potential_glob_split(s.as_ref()))
-        .map(|glob| {
-            // A shortcut: a glob with no extglob syntax converts to itself. A
-            // leading `!` is the exclusion marker, not syntax, so the check
-            // reads the pattern beneath it.
-            let pattern = glob.strip_prefix('!').unwrap_or(glob);
-            if pattern.contains('!')
-                || pattern.contains('|')
-                || pattern.contains('(')
-                || pattern.contains("{,")
-            {
-                convert_glob(glob)
-            } else {
-                Ok(vec![glob.to_string()])
-            }
-        })
+        .map(convert_glob)
         .collect::<anyhow::Result<Vec<_>>>()?
         .concat();
 
