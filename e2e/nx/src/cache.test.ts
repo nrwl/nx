@@ -261,6 +261,9 @@ describe('cache', () => {
     expect(outputsWithUntouchedOutputs).toContain('x.txt');
     expect(outputsWithUntouchedOutputs).toContain('z.md');
 
+    // The daemon ignores output changes within 2s of recording their hash.
+    await waitPastOutputsTrackingWindow();
+
     // Create a file in the dist that does not match output glob
     updateFile('dist/apps/c.ts', '');
 
@@ -286,6 +289,8 @@ describe('cache', () => {
     expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('x.txt');
     expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('z.md');
     expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('c.ts');
+
+    await waitPastOutputsTrackingWindow();
 
     // Clear Dist
     rmDist();
@@ -887,3 +892,7 @@ const dirSize = async (dir) => {
     .flat(Infinity)
     .reduce((i, size) => i + size, 0);
 };
+
+function waitPastOutputsTrackingWindow() {
+  return new Promise((resolve) => setTimeout(resolve, 2100));
+}
