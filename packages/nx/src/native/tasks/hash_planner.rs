@@ -272,13 +272,25 @@ impl HashPlanner {
     ) -> anyhow::Result<HashPlans> {
         let function_start = std::time::Instant::now();
         let snapshot_tasks = snapshots.map(|snapshots| {
+            // Continuous dependencies are planned into their dependents, so
+            // their entries are needed too.
+            let mut scope: Vec<&str> = task_ids.clone();
+            for id in &task_ids {
+                scope.extend(
+                    collect_continuous_dependencies(&task_graph, id)
+                        .iter()
+                        .map(|task| task.id.as_str()),
+                );
+            }
+            scope.sort_unstable();
+            scope.dedup();
             snapshot_eligibility::resolve_scoped(
                 snapshots,
                 &task_graph,
                 &EligibilityInputs {
                     custom_hasher: custom_hasher_task_ids.iter().cloned().collect(),
                 },
-                Some(&task_ids),
+                Some(&scope),
             )
             .tasks
         });
@@ -347,33 +359,23 @@ impl HashPlanner {
                 )?);
 
                 if let Some(snapshot) = &snapshot {
-                    // Declared filesets anywhere in the plan (self, deps,
-                    // {input, projects}) are replaced by the observed reads;
-                    // TsConfiguration and JSON inputs survive only if read.
-                    let keep_tsconfig = snapshot.root_tsconfig_read();
-                    let own: hashbrown::HashSet<u32> = self
-                        .snapshot_file_instructions(task, snapshot, &negations)
-                        .into_iter()
-                        .map(|instruction| pool.intern(instruction))
-                        .collect();
-                    ids.retain(|id| {
-                        *id == always_on_id
-                            || own.contains(id)
-                            || !pool.replaced_by_snapshot(*id, keep_tsconfig, |path| {
-                                snapshot.read(path)
-                            })
-                    });
-                    ids.extend(own);
+                    self.replace_with_snapshot(task, snapshot, &negations, &mut ids, always_on_id);
                 }
 
                 // A continuous dependency serves this task from its own process, so
-                // its declared inputs and externals are hashed here, and its own
-                // servers' in turn. When it reads its builds' outputs, those land in
+                // its inputs and externals are hashed here, and its own servers' in
+                // turn: its observed reads when it has an eligible entry, else its
+                // declared inputs. When it reads its builds' outputs, those land in
                 // this plan too, which holds the task back from the up-front batch.
                 for dep_task in collect_continuous_dependencies(&task_graph, id) {
                     let dep_inputs = get_inputs(dep_task, &self.project_graph, &self.nx_json)?;
-                    ids.extend(
-                        self.target_input(
+                    let dep_snapshot = snapshot_tasks
+                        .as_ref()
+                        .and_then(|tasks| tasks.get(&dep_task.id))
+                        .map(SnapshotContext::new);
+                    let mut dep_negations: Negations = Vec::new();
+                    let mut dep_ids: Vec<u32> = self
+                        .target_input(
                             &dep_task.target.project,
                             &dep_task.target.target,
                             &dep_inputs.self_inputs,
@@ -381,18 +383,28 @@ impl HashPlanner {
                         )?
                         .unwrap_or_default()
                         .into_iter()
-                        .map(|instruction| pool.intern(instruction)),
-                    );
-                    ids.extend(self.self_and_deps_inputs(
+                        .map(|instruction| pool.intern(instruction))
+                        .collect();
+                    dep_ids.extend(self.self_and_deps_inputs(
                         &dep_task.target.project,
                         dep_task,
                         &dep_inputs,
                         &task_graph,
                         external_deps_mapped,
                         &mut VisitedTracker::new(dep_task.target.project.as_str()),
-                        None,
-                        None,
+                        dep_snapshot.as_ref(),
+                        dep_snapshot.as_ref().map(|_| &mut dep_negations),
                     )?);
+                    if let Some(dep_snapshot) = &dep_snapshot {
+                        self.replace_with_snapshot(
+                            dep_task,
+                            dep_snapshot,
+                            &dep_negations,
+                            &mut dep_ids,
+                            always_on_id,
+                        );
+                    }
+                    ids.extend(dep_ids);
                 }
 
                 ids.sort_unstable();
@@ -501,6 +513,32 @@ impl HashPlanner {
     /// Observed reads minus natively covered files, one disk-backed group per
     /// owning project (else the `.` project, else the task's), each with only
     /// that project's declared negations; plus the entry digest.
+    /// Replaces the declared filesets in `ids` (self, deps, `{input, projects}`)
+    /// with `task`'s observed reads; TsConfiguration and JSON inputs survive
+    /// only if read.
+    fn replace_with_snapshot(
+        &self,
+        task: &Task,
+        snapshot: &SnapshotContext,
+        negations: &Negations,
+        ids: &mut Vec<u32>,
+        always_on_id: u32,
+    ) {
+        let pool = &self.instruction_pool;
+        let keep_tsconfig = snapshot.root_tsconfig_read();
+        let own: hashbrown::HashSet<u32> = self
+            .snapshot_file_instructions(task, snapshot, negations)
+            .into_iter()
+            .map(|instruction| pool.intern(instruction))
+            .collect();
+        ids.retain(|id| {
+            *id == always_on_id
+                || own.contains(id)
+                || !pool.replaced_by_snapshot(*id, keep_tsconfig, |path| snapshot.read(path))
+        });
+        ids.extend(own);
+    }
+
     fn snapshot_file_instructions(
         &self,
         task: &Task,

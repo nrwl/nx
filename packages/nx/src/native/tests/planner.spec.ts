@@ -2051,6 +2051,31 @@ describe('task planner', () => {
       expect(plan).toContain('child:libs/child/**/*');
     });
 
+    it('hashes a continuous dependency from its own snapshot when it has one', () => {
+      const { planner, taskGraph } = fixture();
+      const plan = planner.getPlans(
+        ['parent:build'],
+        withContinuousDependency(taskGraph),
+        snapshotsFor({
+          'parent:build': { inputs: ['libs/parent/filea.ts'] },
+          'child:build': {
+            inputs: ['libs/child/src/index.ts'],
+            outputs: ['dist/libs/child'],
+          },
+        })
+      )['parent:build'];
+
+      expect(plan).not.toContain('child:libs/child/**/*');
+      expect(plan).toContainEqual(
+        expect.stringMatching(/^files:\[libs\/child\/src\/index\.ts[,\]]/)
+      );
+      // Its marker joins the task's, so its outputs and exclusions count too
+      // (identical digests would share one).
+      expect(
+        plan.filter((entry) => entry.startsWith('io-snapshot:'))
+      ).toHaveLength(2);
+    });
+
     it('replaces declared filesets (self and dependency) with one files group per owning project, each with its own negations', () => {
       const { planner, taskGraph } = fixture();
       const plan = planner.getPlans(
