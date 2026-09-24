@@ -232,8 +232,14 @@ fn build_segment(
             }
             GlobGroup::OneOrMore(_)
             | GlobGroup::ExactOne(_)
-            | GlobGroup::NonSpecial(_)
-            | GlobGroup::NonSpecialGroup(_) => {
+            | GlobGroup::NonSpecialGroup(_)
+            | GlobGroup::Literal(_)
+            | GlobGroup::Recursive
+            | GlobGroup::Wildcard(_)
+            | GlobGroup::Any
+            | GlobGroup::Class(_)
+            | GlobGroup::Alternates(_)
+            | GlobGroup::Escaped(_) => {
                 build_segment(&built_glob, &group[1..], is_last_segment, is_negative)
             }
         }
