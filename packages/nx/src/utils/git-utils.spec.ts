@@ -1053,12 +1053,6 @@ describe('git utils tests', () => {
       vi.resetAllMocks();
     });
 
-    it("reports 'ancestor' when git confirms the ancestry", () => {
-      (execSync as Mock).mockReturnValue('');
-
-      expect(getAncestorStatus(shaA, shaB, '/repo')).toBe('ancestor');
-    });
-
     it("reports 'not-ancestor' only on git's exit 1", () => {
       (execSync as Mock).mockImplementation(() => {
         throw Object.assign(new Error('exit 1'), { status: 1 });

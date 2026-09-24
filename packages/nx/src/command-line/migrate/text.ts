@@ -31,8 +31,8 @@ export function hasLineBreak(value: string): boolean {
  * Renders an ISO timestamp as a human age ("6 hours ago"), falling back to
  * the raw value when it is not parseable or lies in the future.
  */
-export function formatAge(timestamp: string, nowMs = Date.now()): string {
-  const elapsedMs = nowMs - Date.parse(timestamp);
+export function formatAge(timestamp: string): string {
+  const elapsedMs = Date.now() - Date.parse(timestamp);
   if (!Number.isFinite(elapsedMs) || elapsedMs < 0) {
     return timestamp;
   }

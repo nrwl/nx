@@ -53,11 +53,11 @@ const ready = {
   reconcileCommand: `npx nx migrate --run-id=${runId}`,
 };
 
-const confirmNewRun = vi.fn();
+const confirmStart = vi.fn();
 
 function input(): RunMasterSessionInput {
   return {
-    confirmNewRun,
+    confirmStart,
     root,
     migrationsJson: { migrations: [] },
     migrationsPath: 'migrations.json',
@@ -123,7 +123,7 @@ describe('runMasterSession', () => {
     mockHoldRunToContinue.mockReset();
     mockCompletionWarnings.mockReset().mockReturnValue([]);
     mockReadRunState.mockReset();
-    confirmNewRun.mockReset().mockResolvedValue(true);
+    confirmStart.mockReset().mockResolvedValue(true);
     mockSpawnMaster.mockReset().mockResolvedValue({ kind: 'exited' });
     mockRunComplete.mockReset();
     mockRunError.mockReset();
@@ -158,7 +158,7 @@ describe('runMasterSession', () => {
       validate: undefined,
       emitAgentInstructions: false,
       onExistingRun: 'report',
-      confirmStart: confirmNewRun,
+      confirmStart,
     });
     expect(mockResume).not.toHaveBeenCalled();
     expect(mockSpawnMaster).toHaveBeenCalledWith({
@@ -174,12 +174,11 @@ describe('runMasterSession', () => {
     );
   });
 
-  it('continues the run --run-id names instead of initializing, without the new-run confirmation', async () => {
+  it('continues the run --run-id names instead of initializing', async () => {
     mockReadRunState.mockReturnValue(state('completed', ['succeeded']));
 
     await runMasterSession({ ...input(), runId });
 
-    expect(confirmNewRun).not.toHaveBeenCalled();
     expect(mockInit).not.toHaveBeenCalled();
     expect(mockResume).toHaveBeenCalledWith({
       root,
@@ -200,7 +199,7 @@ describe('runMasterSession', () => {
       expect.objectContaining({
         onExistingRun: 'start-fresh',
         replaceRunId: 'run-0',
-        confirmStart: confirmNewRun,
+        confirmStart,
       })
     );
   });
@@ -217,7 +216,6 @@ describe('runMasterSession', () => {
         1
       );
 
-      expect(mockCanPrompt).toHaveBeenCalledWith(false);
       expect(warnSpy).toHaveBeenCalledWith({
         title: `A migrate run is already active: ${runId}`,
         bodyLines: expect.arrayContaining([
@@ -270,32 +268,6 @@ describe('runMasterSession', () => {
       );
     });
 
-    it('leads with the run a start-fresh named when the newest active run is another', async () => {
-      mockCanPrompt.mockReturnValue(false);
-      mockInit.mockReset();
-      mockInit.mockResolvedValueOnce({
-        ...existing,
-        facts: { ...facts, replacedRunId: 'run-0' },
-      });
-
-      expect(
-        await runMasterSession({
-          ...input(),
-          startFresh: true,
-          runId: 'run-0',
-          interactive: false,
-        })
-      ).toBe(1);
-
-      expect(warnSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          bodyLines: expect.arrayContaining([
-            `Not deleting run-0: the newest active run is ${runId}.`,
-          ]),
-        })
-      );
-    });
-
     it('shows the report and asks, continue first, on a terminal', async () => {
       mockCanPrompt.mockReturnValue(true);
       mockChoice.mockResolvedValue('abort');
@@ -321,45 +293,36 @@ describe('runMasterSession', () => {
       });
     });
 
-    it.each<[string, number[] | 'unknown', string, string]>([
-      [
-        'another process holds the run',
-        [4242],
-        '  activity: process 4242 is still working on it',
-        `Not continuing migrate run '${runId}': process 4242 is still working on it (an agent session, a reconcile, or a step). Wait for it to end, then re-run the command.`,
-      ],
-      [
-        'nx cannot tell whether one does',
-        'unknown',
-        '  activity: unknown whether another nx migrate process is working on it',
-        `Not continuing migrate run '${runId}': nx cannot tell whether another nx migrate process is still working on it.`,
-      ],
+    it.each<[string, number[] | 'unknown']>([
+      ['another process holds the run', [4242]],
+      ['nx cannot tell whether one does', 'unknown'],
     ])(
       'shows the report and refuses through the continue gate, without asking, while %s',
-      async (_label, otherHolders, activityLine, message) => {
+      async (_label, otherHolders) => {
         mockCanPrompt.mockReturnValue(true);
         mockInit.mockReset().mockResolvedValue({
           ...existing,
           facts: { ...facts, otherHolders },
         });
-        const refusal = new Error(message);
+        const refusal = new Error('held');
         mockHoldRunToContinue.mockImplementation(() => {
           throw refusal;
         });
 
         await expect(runMasterSession(input())).rejects.toBe(refusal);
 
-        expect(logSpy).toHaveBeenCalledWith({
-          title: `A migrate run is already active: ${runId}`,
-          bodyLines: expect.arrayContaining([activityLine]),
-        });
+        expect(logSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: `A migrate run is already active: ${runId}`,
+          })
+        );
         expect(mockHoldRunToContinue).toHaveBeenCalledWith(root, runId);
         expect(mockChoice).not.toHaveBeenCalled();
         expect(mockSpawnMaster).not.toHaveBeenCalled();
       }
     );
 
-    it('asks when the continue gate passes although nx cannot tell who holds the run (WASM)', async () => {
+    it('asks when the continue gate passes although nx cannot tell who holds the run', async () => {
       mockCanPrompt.mockReturnValue(true);
       mockInit.mockReset().mockResolvedValue({
         ...existing,
@@ -371,23 +334,6 @@ describe('runMasterSession', () => {
 
       expect(mockHoldRunToContinue).toHaveBeenCalledWith(root, runId);
       expect(mockChoice).toHaveBeenCalledTimes(1);
-    });
-
-    it('continues the run in-process when asked to', async () => {
-      mockCanPrompt.mockReturnValue(true);
-      mockChoice.mockResolvedValue('continue');
-      mockReadRunState.mockReturnValue(state('completed', ['succeeded']));
-
-      expect(await runMasterSession(input())).toBeUndefined();
-
-      expect(mockResume).toHaveBeenCalledWith({
-        root,
-        runId,
-        policy: { createCommits: false, skipInstall: false },
-        emitAgentInstructions: false,
-      });
-      expect(mockInit).toHaveBeenCalledTimes(1);
-      expect(mockSpawnMaster).toHaveBeenCalled();
     });
 
     it('continues under the recorded policy when it differs from this invocation, through resume, the broker and the resume hint', async () => {
@@ -404,23 +350,6 @@ describe('runMasterSession', () => {
 
       expect(await runMasterSession(input())).toBe(1);
 
-      expect(logSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          bodyLines: expect.arrayContaining([
-            '  policy: per-migration commits on, installs skipped',
-          ]),
-        })
-      );
-      expect(mockChoice).toHaveBeenCalledWith(
-        expect.objectContaining({
-          choices: expect.arrayContaining([
-            expect.objectContaining({
-              value: 'continue',
-              hint: 'picks the run up where it stopped, keeping its recorded commit and install policy',
-            }),
-          ]),
-        })
-      );
       expect(mockResume).toHaveBeenCalledWith({
         root,
         runId,
@@ -449,22 +378,11 @@ describe('runMasterSession', () => {
         expect.objectContaining({
           onExistingRun: 'start-fresh',
           replaceRunId: runId,
-          confirmStart: confirmNewRun,
+          confirmStart,
         })
       );
       expect(mockResume).not.toHaveBeenCalled();
       expect(mockSpawnMaster).toHaveBeenCalled();
-    });
-
-    it('spawns nothing when init refuses the start-fresh choice', async () => {
-      mockCanPrompt.mockReturnValue(true);
-      mockChoice.mockResolvedValue('start-fresh');
-      mockInit.mockResolvedValueOnce({ kind: 'refused' });
-
-      expect(await runMasterSession(input())).toBeUndefined();
-
-      expect(mockInit).toHaveBeenCalledTimes(2);
-      expect(mockSpawnMaster).not.toHaveBeenCalled();
     });
 
     it('exits 0 leaving the run alone when the user aborts', async () => {

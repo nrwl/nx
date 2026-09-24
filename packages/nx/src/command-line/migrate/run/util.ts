@@ -1,4 +1,4 @@
-// Internal to run/ except pmExecPrefix, which ./index re-exports.
+// Internal to run/: deliberately not re-exported from ./index.
 
 import { createHash } from 'crypto';
 import { needsShellQuoting, quoteShellArg } from '../../../utils/shell-quoting';
@@ -172,13 +172,10 @@ export function pmExecPrefix(root: string): string {
 
 const DEFAULT_MIGRATIONS_FILE = 'migrations.json';
 
-// The --run-migrations flag a rendered command repeats: a custom path stays,
-// the default is left implicit. On a POSIX shell the argument is quoted. On
-// Windows the paste target may be cmd.exe or PowerShell, whose quoting and
-// expansion rules conflict (`%VAR%` expands in cmd, `$(...)` runs in
-// PowerShell), so only a path neither would touch is rendered; null says the
-// path cannot be rendered as executable text for this shell. A path with a
-// line break is never rendered: the command goes out on one line.
+// The --run-migrations flag a rendered command repeats; null when the path
+// cannot go out as a one-line command for this shell. On Windows the paste
+// target may be cmd.exe or PowerShell, whose quoting and expansion conflict
+// (`%VAR%` expands in cmd, `$(...)` runs in PowerShell).
 export function runMigrationsFlag(migrationsPath: string): string | null {
   if (migrationsPath === DEFAULT_MIGRATIONS_FILE) {
     return '--run-migrations';

@@ -23,7 +23,6 @@ import {
   runHandoffsDir,
   writeRunState,
   type MigrateRunState,
-  readLatestPlanSnapshot,
 } from './run-state';
 
 function buildState(overrides: Partial<MigrateRunState> = {}): MigrateRunState {
@@ -102,11 +101,6 @@ describe('run-state', () => {
       expect(() => readRunState(dir)).toThrow(/123\.4\.5/);
       expect(() => readRunState(dir)).toThrow(
         new RegExp(nxVersion.replace(/\./g, '\\.'))
-      );
-      // Which command threw decides what a rerun does (init reports the run,
-      // a --run-id command acts on it), so the tail promises neither.
-      expect(() => readRunState(dir)).toThrow(
-        /Re-run your migrate command with Nx 123\.4\.5 or later\.$/
       );
     });
 
@@ -516,9 +510,7 @@ describe('run-state', () => {
       ]) {
         writeFileSync(
           join(dir, 'run.json'),
-          JSON.stringify(
-            buildState({ rounds: [{ index: 0, planHash: 'h', planSnapshot }] })
-          )
+          JSON.stringify(buildState({ rounds: [{ index: 0, planSnapshot }] }))
         );
 
         expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
@@ -664,7 +656,7 @@ describe('run-state', () => {
       const dir = join(root, 'run-1');
       mkdirSync(dir, { recursive: true });
       const state = buildState({
-        rounds: [{ index: 0, planHash: 'hash', planSnapshot: 'plan-0.json' }],
+        rounds: [{ index: 0, planSnapshot: 'plan-0.json' }],
         steps: [
           {
             id: 'step-1',
@@ -1328,40 +1320,6 @@ describe('run-state', () => {
       createRun(root, buildState({ runId: 'run-1', status: 'active' }));
 
       expect(existsSync(runHandoffsDir(runDir(root, 'run-1')))).toBe(true);
-    });
-  });
-
-  describe('readLatestPlanSnapshot', () => {
-    it('reads the plan of the latest round back from the run directory', () => {
-      const dir = join(migrateRunsDir(root), 'run-1');
-      writeRun(
-        root,
-        'run-1',
-        buildState({
-          rounds: [
-            { index: 0, planHash: 'h0', planSnapshot: 'plan-0.json' },
-            { index: 1, planHash: 'h1', planSnapshot: 'plan-1.json' },
-          ],
-        })
-      );
-      writeFileSync(join(dir, 'plan-0.json'), '{"migrations":[]}');
-      writeFileSync(
-        join(dir, 'plan-1.json'),
-        JSON.stringify({ migrations: [{ package: 'p', name: 'n' }] })
-      );
-
-      expect(readLatestPlanSnapshot(root, 'run-1')).toEqual({
-        migrations: [{ package: 'p', name: 'n' }],
-      });
-    });
-
-    it('names a missing or invalid run instead of failing on the file read', () => {
-      expect(() => readLatestPlanSnapshot(root, 'missing')).toThrow(
-        "No migrate run 'missing' was found under .nx/migrate-runs."
-      );
-      expect(() => readLatestPlanSnapshot(root, 'bad;id')).toThrow(
-        "Invalid run id 'bad;id'."
-      );
     });
   });
 

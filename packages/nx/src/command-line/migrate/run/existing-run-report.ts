@@ -1,8 +1,5 @@
-// The facts reported about a run already active: by an init that found one,
-// so the user (or the agent relaying to them) can choose between continuing
-// the run and starting fresh, and by a reconcile whose run's newest commit
-// left history. Facts only: nothing here decides, and anything that could
-// not be established says so instead of guessing.
+// The report on a run already active. Facts only: nothing here decides, and
+// anything that could not be established says so instead of guessing.
 
 import {
   getAncestorStatus,
@@ -44,8 +41,6 @@ export interface ExistingRunFacts {
   recordedBranch: string | undefined;
   currentBranch: string | null;
   progress: StepTally;
-  // Reported problems nobody has fixed yet; the master session exits 1 when
-  // the run completes with any, so the count matters to the decision.
   unresolvedIssues: number;
   // The recorded commit and install policy; a continue runs under it.
   policy: MigrateRunPolicy;
@@ -110,12 +105,7 @@ export function collectExistingRunFacts(
             }
           : null,
     },
-    // Only a step recorded as running can own a worker; a died or finished
-    // step's pid may have been reused by an unrelated process since.
-    liveWorkers: state.steps
-      .filter((s) => s.status === 'running' && s.pid !== undefined)
-      .filter((s) => isPidAlive(s.pid))
-      .map((s) => ({ pid: s.pid, stepId: s.id, migrationId: s.migrationId })),
+    liveWorkers: liveWorkers(state),
     otherHolders: liveRunActivityPids(runDir(root, runId)),
     otherActiveRuns: otherActiveRuns(root, runId),
     appliedStillPlanned: planned
@@ -124,6 +114,18 @@ export function collectExistingRunFacts(
         ).length
       : undefined,
   };
+}
+
+// Only a step recorded as running can own a worker; a died or finished step's
+// pid may have been reused by an unrelated process since.
+export function liveWorkers(
+  state: MigrateRunState
+): ExistingRunFacts['liveWorkers'] {
+  return state.steps
+    .filter(
+      (s) => s.status === 'running' && s.pid !== undefined && isPidAlive(s.pid)
+    )
+    .map((s) => ({ pid: s.pid, stepId: s.id, migrationId: s.migrationId }));
 }
 
 // The commits the run made, in ledger order.
@@ -181,15 +183,32 @@ export interface ExistingRunCommands {
   startFresh: { command: string } | { migrationsPath: string };
 }
 
-export function renderStartFresh(
+export function renderExistingRunCommands(
+  root: string,
+  facts: ExistingRunFacts,
   migrationsPath: string | undefined,
-  command: (runMigrationsFlag: string) => string
-): ExistingRunCommands['startFresh'] {
-  if (migrationsPath === undefined) {
-    return { command: command('--run-migrations') };
-  }
-  const flag = runMigrationsFlag(migrationsPath);
-  return flag === null ? { migrationsPath } : { command: command(flag) };
+  agentId?: string
+): ExistingRunCommands {
+  const flag =
+    migrationsPath === undefined
+      ? '--run-migrations'
+      : runMigrationsFlag(migrationsPath);
+  return {
+    continueCommand: renderContinueCommand(
+      root,
+      facts.runId,
+      facts.policy,
+      agentId
+    ),
+    startFresh:
+      flag === null
+        ? { migrationsPath }
+        : {
+            command: `${pmExecPrefix(root)} nx migrate ${flag}${
+              agentId === undefined ? '' : ` --agentic=${agentId}`
+            } --start-fresh --run-id=${facts.runId}`,
+          },
+  };
 }
 
 /**
@@ -323,7 +342,7 @@ function activityLine(holders: ExistingRunFacts['otherHolders']): string {
   return describeHolders(holders);
 }
 
-function workersLine(workers: ExistingRunFacts['liveWorkers']): string {
+export function workersLine(workers: ExistingRunFacts['liveWorkers']): string {
   if (workers.length === 0) {
     return 'none running';
   }

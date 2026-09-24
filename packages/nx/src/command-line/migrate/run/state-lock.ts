@@ -93,17 +93,10 @@ const heldActivity = new Map<string, { lock: FileLock; name: string }>();
 
 /**
  * Marks this process as acting on the run until it exits or releases the
- * hold (see heldActivity), so a `--start-fresh` from another process refuses
- * to delete the run under it.
- * The lock file is per process (`activity/<pid>-<nonce>.lock`): the master
- * session holds one for its whole agent session while the reconciles that
- * session runs hold their own. Registered under the creation lock, the same
- * gate deletion probes under, so a run cannot vanish between the run.json
- * check and the lock. `exclusive` refuses instead when another process holds
- * the run, for a continue that would open a second session over a live one;
- * it is checked even when this process already holds the run, since the
- * report that took that hold does not decide. No-op under WASM, where there
- * is no native lock.
+ * hold, so a `--start-fresh` elsewhere refuses to delete it. One lock file per
+ * process and run, taken under the creation lock that deletion probes under.
+ * `exclusive` refuses while another process holds the run, even when this one
+ * already does. No-op under WASM, which has no native lock.
  */
 export function holdRunActivity(
   root: string,
@@ -122,7 +115,7 @@ export function holdRunActivity(
     if (exclusive) {
       const others = liveRunActivityPids(dir);
       if (others === 'unknown' || others.length > 0) {
-        throw heldRunError(runId, others);
+        throw heldRunError('continuing', runId, others);
       }
     }
     registerRunActivity(dir);
@@ -131,11 +124,16 @@ export function holdRunActivity(
 
 // 'unknown' is the fail-closed case: the activity folder could not be read or
 // a lock could not be probed.
-function heldRunError(runId: string, holders: number[] | 'unknown'): Error {
+export function heldRunError(
+  action: 'continuing' | 'deleting',
+  runId: string,
+  holders: number[] | 'unknown'
+): Error {
+  const refusal = `Not ${action} migrate run '${runId}'`;
   return new Error(
     holders === 'unknown'
-      ? `Not continuing migrate run '${runId}': nx cannot tell whether another nx migrate process is still working on it.`
-      : `Not continuing migrate run '${runId}': ${describeHolders(
+      ? `${refusal}: nx cannot tell whether another nx migrate process is still working on it.`
+      : `${refusal}: ${describeHolders(
           holders
         )} (an agent session, a reconcile, or a step). Wait for it to end, then re-run the command.`
   );
@@ -160,9 +158,6 @@ export function registerRunActivity(dir: string): void {
   heldActivity.set(dir, { lock, name });
 }
 
-// Drops this process's own hold. A deleting init may already hold the run
-// from an earlier report or its own start-fresh preflight. That hold is the
-// deletion caller, not competing work.
 export function releaseRunActivity(dir: string): void {
   const held = heldActivity.get(dir);
   if (held === undefined) return;
@@ -172,11 +167,10 @@ export function releaseRunActivity(dir: string): void {
 
 /**
  * The pids of the other live processes holding the run, from their lock
- * names. This process's own hold is skipped for the reason releaseRunActivity
- * gives, and files left by dead holders are unlocked and count as free.
- * 'unknown' under WASM, where nothing registers, and fails closed to it when
- * the folder cannot be listed, a lock cannot be probed, or a held lock's name
- * carries no pid. Call under the creation lock.
+ * names. This process's own hold is skipped: a deleting init may hold the run
+ * from its report or preflight, which is not competing work. Locks left by
+ * dead holders are free. 'unknown' under WASM, and when the folder cannot be
+ * listed, a lock cannot be probed, or a held lock's name carries no pid.
  */
 export function liveRunActivityPids(dir: string): number[] | 'unknown' {
   if (IS_WASM) return 'unknown';
