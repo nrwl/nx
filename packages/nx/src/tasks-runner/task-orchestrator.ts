@@ -1775,6 +1775,12 @@ export class TaskOrchestrator {
       this.runningTasksService &&
       this.runningTasksService.getRunningTasks([task.id]).length
     ) {
+      let readyWhen: NormalizedReadyWhen | null;
+      try {
+        readyWhen = this.getReadyWhen(task);
+      } catch (e) {
+        return this.failContinuousTaskBeforeStart(task, groupId, e);
+      }
       await this.preRunSteps([task], { groupId });
 
       if (this.tuiEnabled) {
@@ -1785,7 +1791,6 @@ export class TaskOrchestrator {
         this.runningTasksService,
         task.id
       );
-      const readyWhen = this.getReadyWhen(task);
       if (readyWhen) {
         const state = this.armReadiness(task.id);
         this.pollReadinessRow(task, readyWhen, state.abort.signal).then(
