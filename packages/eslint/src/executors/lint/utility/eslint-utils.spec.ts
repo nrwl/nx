@@ -218,7 +218,7 @@ describe('eslint-utils', () => {
       await expect(
         resolveAndInstantiateESLint('./.eslintrc.json', {} as any, true)
       ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"When using the new Flat Config with ESLint, all configs must be named eslint.config.js or eslint.config.cjs and .eslintrc files may not be used. See https://eslint.org/docs/latest/use/configure/configuration-files"`
+        `[Error: When using the new Flat Config with ESLint, all configs must be named eslint.config.js or eslint.config.cjs and .eslintrc files may not be used. See https://eslint.org/docs/latest/use/configure/configuration-files]`
       );
     });
 
@@ -232,7 +232,7 @@ describe('eslint-utils', () => {
           true
         )
       ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"For Flat Config, the \`useEslintrc\` option is not applicable. See https://eslint.org/docs/latest/use/configure/configuration-files-new"`
+        `[Error: For Flat Config, the \`useEslintrc\` option is not applicable. See https://eslint.org/docs/latest/use/configure/configuration-files-new]`
       );
 
       await expect(
@@ -244,7 +244,7 @@ describe('eslint-utils', () => {
           true
         )
       ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"For Flat Config, ESLint removed \`resolvePluginsRelativeTo\` and so it is not supported as an option. See https://eslint.org/docs/latest/use/configure/configuration-files-new"`
+        `[Error: For Flat Config, ESLint removed \`resolvePluginsRelativeTo\` and so it is not supported as an option. See https://eslint.org/docs/latest/use/configure/configuration-files-new]`
       );
 
       await expect(
@@ -256,7 +256,7 @@ describe('eslint-utils', () => {
           true
         )
       ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"For Flat Config, ESLint removed \`ignorePath\` and so it is not supported as an option. See https://eslint.org/docs/latest/use/configure/configuration-files-new"`
+        `[Error: For Flat Config, ESLint removed \`ignorePath\` and so it is not supported as an option. See https://eslint.org/docs/latest/use/configure/configuration-files-new]`
       );
     });
 

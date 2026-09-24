@@ -279,7 +279,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
       await expect(
         convertToInferred(tree, { project: project.name, skipFormat: true })
       ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"The lint target on project "myapp" cannot be migrated. The "eslintConfig" option value (.invalid-eslint-config.json) is not a default config file known by ESLint."`
+        `[Error: The lint target on project "myapp" cannot be migrated. The "eslintConfig" option value (.invalid-eslint-config.json) is not a default config file known by ESLint.]`
       );
     });
 
@@ -291,7 +291,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
       await expect(
         convertToInferred(tree, { project: project.name, skipFormat: true })
       ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"The lint target on project "myapp" cannot be migrated. The "eslintConfig" option value (myapp/nested/.eslintrc.json) must point to a file in the project root or a parent directory."`
+        `[Error: The lint target on project "myapp" cannot be migrated. The "eslintConfig" option value (myapp/nested/.eslintrc.json) must point to a file in the project root or a parent directory.]`
       );
     });
 
