@@ -3,6 +3,7 @@ mod glob_group;
 mod glob_parser;
 pub mod glob_transform;
 
+pub(crate) use crate::native::glob::glob_parser::is_literal_segment;
 use crate::native::glob::glob_transform::convert_glob;
 pub(crate) use crate::native::glob::glob_transform::{
     expand_literal_braces, fileset_patterns, normalize_glob, partition_glob,

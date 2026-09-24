@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use rayon::prelude::*;
 use xxhash_rust::xxh3;
 
-use crate::native::glob::build_glob_set;
+use crate::native::glob::{build_glob_set, is_literal_segment};
 use crate::native::utils::{Normalize, path::get_child_files};
 use crate::native::workspace::context::Files;
 
@@ -15,9 +15,11 @@ enum Lookup {
     Literal(String),
 }
 
-const GLOB_SPECIAL: &[char] = &['*', '?', '[', ']', '{', '}', '(', ')', '!', '|', '\\'];
-
 fn classify(glob: &str) -> Option<Lookup> {
+    // A leading `!` is a negation, which only a scan can apply.
+    if glob.starts_with('!') {
+        return None;
+    }
     // globset reads `\` as `/` on Windows, where node's `join` produces it.
     let glob: Cow<str> = if cfg!(windows) {
         Cow::Owned(glob.replace('\\', "/"))
@@ -26,9 +28,9 @@ fn classify(glob: &str) -> Option<Lookup> {
     };
     let plain = |s: &str| {
         !s.is_empty()
-            && !s.contains(GLOB_SPECIAL)
-            && s.split('/')
-                .all(|part| !part.is_empty() && part != "." && part != "..")
+            && s.split('/').all(|part| {
+                !part.is_empty() && part != "." && part != ".." && is_literal_segment(part)
+            })
     };
     if glob == "**" || glob == "**/*" {
         return Some(Lookup::Prefix(String::new()));
@@ -204,7 +206,16 @@ mod tests {
             literal("apps/@scope/pkg/tsconfig.json").as_deref(),
             Some("apps/@scope/pkg/tsconfig.json")
         );
+        // Characters globset reads as text stay literal lookups.
+        for name in ["libs/a!b", "libs/pi|pe", "libs/x)", "libs/y]", "libs/co,ma"] {
+            assert_eq!(prefix(&format!("{name}/**")).as_deref(), Some(name));
+            assert_eq!(literal(name).as_deref(), Some(name));
+        }
         for scanned in [
+            "libs/(a)/**",
+            "libs/brace}/**",
+            "libs/+(a|b)/**",
+            "libs/?/**",
             "libs/**/*.spec.ts",
             "libs/{a,b}/**/*",
             "!libs/a/**/*",
@@ -240,6 +251,7 @@ mod tests {
     #[test]
     fn backslash_is_an_escape_off_windows() {
         assert!(classify(r"libs\a\**\*").is_none());
+        assert!(classify(r"libs/\*/**").is_none());
     }
 
     #[test]
@@ -329,6 +341,20 @@ mod tests {
         assert_same_as_scan(&files, &["libs/missing/**/*", "missing.json"]);
         assert_same_as_scan(&files, &["libs/a/"]);
         assert_same_as_scan(&files, &["**/*", "pnpm-lock.yaml"]);
+        let named = table(&[
+            "libs/a!b/x.ts",
+            "libs/pi|pe/x.ts",
+            "libs/x)/y.ts",
+            "libs/y]/z.ts",
+        ]);
+        for glob in [
+            "libs/a!b/**",
+            "libs/pi|pe/x.ts",
+            "libs/x)/**/*",
+            "libs/y]/z.ts",
+        ] {
+            assert_same_as_scan(&named, &[glob]);
+        }
         assert_same_as_scan(&files, &["libs/a.ts/**/*"]);
         assert_same_as_scan(&files, &["libs/a.ts/"]);
         assert_same_as_scan(&files, &["libs//a/**/*"]);
