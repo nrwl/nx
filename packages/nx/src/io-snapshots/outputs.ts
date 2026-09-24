@@ -19,15 +19,9 @@ export function applyIoSnapshotOutputs(
   taskGraph: TaskGraph,
   snapshots: IoSnapshots
 ): void {
-  let sets = applied.get(taskGraph);
-  if (sets?.has(snapshots)) {
+  if (applied.get(taskGraph)?.has(snapshots)) {
     return;
   }
-  if (!sets) {
-    sets = new WeakSet();
-    applied.set(taskGraph, sets);
-  }
-  sets.add(snapshots);
   // Same walk as hashing, already confined to the workspace and outside
   // node_modules/.nx/.git; ineligible tasks are absent.
   const observed = getObservedIoSnapshotOutputs(
@@ -41,4 +35,8 @@ export function applyIoSnapshotOutputs(
       task.outputs = [...new Set([...task.outputs, ...outputs])];
     }
   }
+  // Marked only once applied, so a call that threw is retried.
+  const sets = applied.get(taskGraph) ?? new WeakSet<IoSnapshots>();
+  sets.add(snapshots);
+  applied.set(taskGraph, sets);
 }
