@@ -1,8 +1,13 @@
 import { CreateNodesContext } from '@nx/devkit';
 import type { NextConfig } from 'next';
 
+import { join } from 'node:path';
 import { createNodesV2 } from './plugin';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
+import {
+  mockCjsModule,
+  resetCjsMocks,
+  TempFs,
+} from '@nx/devkit/internal-testing-utils';
 
 describe('@nx/next/plugin', () => {
   let createNodesFunction = createNodesV2[1];
@@ -28,12 +33,13 @@ describe('@nx/next/plugin', () => {
 
     afterEach(() => {
       vi.resetModules();
+      resetCjsMocks();
       tempFs.cleanup();
     });
 
     it('should create nodes', async () => {
       const nextConfigPath = 'next.config.js';
-      mockNextConfig(nextConfigPath, {});
+      mockNextConfig(tempFs.tempDir, nextConfigPath, {});
       const nodes = await createNodesFunction(
         [nextConfigPath],
         {
@@ -72,10 +78,11 @@ describe('@nx/next/plugin', () => {
 
     afterEach(() => {
       vi.resetModules();
+      resetCjsMocks();
     });
 
     it('should create nodes', async () => {
-      mockNextConfig('my-app/next.config.js', {});
+      mockNextConfig(tempFs.tempDir, 'my-app/next.config.js', {});
       const nodes = await createNodesFunction(
         ['my-app/next.config.js'],
         {
@@ -113,6 +120,7 @@ describe('@nx/next/plugin', () => {
 
     afterEach(() => {
       vi.resetModules();
+      resetCjsMocks();
       tempFs.cleanup();
     });
 
@@ -206,6 +214,7 @@ describe('@nx/next/plugin', () => {
 
     afterEach(() => {
       vi.resetModules();
+      resetCjsMocks();
       tempFs.cleanup();
     });
 
@@ -234,14 +243,7 @@ describe('@nx/next/plugin', () => {
   });
 });
 
-function mockNextConfig(path: string, config: NextConfig) {
-  vi.mock(
-    path,
-    () => ({
-      default: config,
-    }),
-    {
-      virtual: true,
-    }
-  );
+// loadConfigFile `require`s the config, which `vi.mock` cannot reach.
+function mockNextConfig(root: string, path: string, config: NextConfig) {
+  mockCjsModule(import.meta.url, join(root, path), { default: config });
 }
