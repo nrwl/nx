@@ -20,7 +20,6 @@ vi.mock('../../native', async (importOriginal) => ({
 }));
 vi.mock('../../native/transform-objects', () => ({
   transformProjectGraphForRust: vi.fn((g) => g),
-  transformProjectGraphForRustWithoutExternals: vi.fn((g) => g),
 }));
 vi.mock('../../project-graph/project-graph', () => ({
   createProjectGraphAsync: vi.fn(),

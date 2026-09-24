@@ -12,10 +12,9 @@ import {
   NxWorkspaceFilesExternals,
   TaskHasher,
   subsetHashPlans,
-  transferProjectGraph,
 } from '../native';
 import type { IgnoredIndexReader } from '../native';
-import { transformProjectGraphForRust } from '../native/transform-objects';
+import { marshalGraph } from '../project-graph/affected/marshal-graph';
 import type { TaskPlanningContext } from './task-planning-context';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
@@ -59,11 +58,10 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     options: { selectivelyHashTsConfig: boolean },
     planningContext?: TaskPlanningContext
   ) {
-    // Reuses the marshal and planner memo when affected already built them for
-    // this graph; otherwise this is the only phase that needs them.
+    // Affected's planner was built over its ref, so the two stay paired; the
+    // marshal is otherwise shared per graph with the locators.
     this.projectGraphRef =
-      planningContext?.projectGraphRef ??
-      transferProjectGraph(transformProjectGraphForRust(projectGraph));
+      planningContext?.projectGraphRef ?? marshalGraph(projectGraph);
 
     this.allWorkspaceFilesRef = externals.allWorkspaceFiles;
     this.projectFileMapRef = externals.projectFiles;
