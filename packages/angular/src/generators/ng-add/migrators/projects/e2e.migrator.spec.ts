@@ -1,19 +1,20 @@
 import type { Mock } from 'vitest';
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
+import { mockCjsModule } from '@nx/devkit/internal-testing-utils';
+import { createRequire } from 'module';
 
 // mock so we can test multiple versions
 vi.mock('@nx/cypress/internal', async () => ({
   ...(await vi.importActual<any>('@nx/cypress/internal')),
   getInstalledCypressMajorVersion: vi.fn(),
 }));
-// mock bc the nxE2EPreset uses fs for path normalization
-vi.mock('fs', async () => {
-  return {
-    ...(await vi.importActual<any>('fs')),
-    lstatSync: vi.fn(() => ({
-      isDirectory: vi.fn(() => true),
-    })),
-  };
+// mock bc the nxE2EPreset uses fs for path normalization; it is `require`d,
+// so the fake has to go on the CJS channel.
+mockCjsModule(import.meta.url, 'fs', {
+  ...createRequire(import.meta.url)('fs'),
+  lstatSync: vi.fn(() => ({
+    isDirectory: vi.fn(() => true),
+  })),
 });
 
 import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';

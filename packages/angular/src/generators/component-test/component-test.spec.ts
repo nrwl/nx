@@ -12,8 +12,16 @@ import { componentGenerator } from '../component/component';
 import { generateTestLibrary } from '../utils/testing';
 import { componentTestGenerator } from './component-test';
 import { EOL } from 'node:os';
+import { mockCjsModule } from '@nx/devkit/internal-testing-utils';
+import { createRequire } from 'node:module';
 
 vi.mock('@nx/cypress/internal');
+// The generator also `require`s @nx/cypress/internal; share the automocks.
+mockCjsModule(import.meta.url, '@nx/cypress/internal', {
+  ...createRequire(import.meta.url)('@nx/cypress/internal'),
+  assertMinimumCypressVersion,
+  getInstalledCypressMajorVersion,
+});
 
 describe('Angular Cypress Component Test Generator', () => {
   let tree: Tree;
