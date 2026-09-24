@@ -8,5 +8,5 @@ export interface InitGeneratorSchema {
   skipPackageJson?: boolean;
   // Internal only
   viteVersion?: 5 | 6 | 7 | 8;
-  uiFramework?: string;
+  uiFramework?: 'angular' | 'react' | 'vue' | 'none';
 }

@@ -28,10 +28,10 @@ export const jitiVersion = '2.4.2';
 export const analogVitestAngular = '~2.6.0';
 
 export type VersionSelectionOptions = {
-  /** Vite major about to be installed, which may not be in `package.json` yet. */
-  viteMajorVersion?: number;
+  /** Vite range about to be installed, which may not be in `package.json` yet. */
+  viteRange?: string;
   /** Framework the caller is configuring, which may pull in its own peers. */
-  uiFramework?: string;
+  uiFramework?: 'angular' | 'react' | 'vue' | 'none';
 };
 
 type VitestVersions = {
@@ -64,47 +64,60 @@ export function versions(
   tree: Tree,
   options?: VersionSelectionOptions
 ): VitestVersions {
+  const cap = highestVitestMajorTheFrameworkAllows(tree, options);
+
   const installedVitestVersion = getInstalledVitestVersion(tree);
   if (installedVitestVersion) {
-    const vitestMajorVersion = major(installedVitestVersion);
-    return versionMap[vitestMajorVersion as CompatVersions] ?? latestVersions;
+    const installedMajor = major(installedVitestVersion);
+    if (installedMajor > cap) {
+      throw new Error(
+        `The installed vitest version "${installedVitestVersion}" is not compatible with Angular, which supports vitest ${cap} and below. Pin vitest to ^${cap}.0.0 before adding an Angular project.`
+      );
+    }
+    return versionMap[installedMajor as CompatVersions] ?? latestVersions;
   }
 
-  const supported = highestSupportedVitestMajor(tree, options);
+  const supported = Math.min(
+    cap,
+    highestVitestMajorTheViteRangeAllows(tree, options)
+  );
   return versionMap[supported as CompatVersions] ?? latestVersions;
 }
 
 /**
- * Nothing pins vitest yet, so the rest of the workspace decides which major it
- * can actually install.
+ * `@analogjs/vitest-angular` at the version Nx installs has no vitest 5 peer,
+ * and `@angular/build` peers vitest `^4.0.8`. The framework is checked
+ * alongside the manifest because the configuration generator adds analog in
+ * the same pass, so it is not in `package.json` yet when this runs.
  */
-function highestSupportedVitestMajor(
+function highestVitestMajorTheFrameworkAllows(
   tree: Tree,
   options?: VersionSelectionOptions
 ): number {
-  // `@analogjs/vitest-angular`, which the Angular setup pulls in, has no vitest
-  // 5 peer yet. The framework is checked alongside the manifest because the
-  // configuration generator adds analog in the same pass, so it is not in
-  // `package.json` yet when this runs.
-  if (
-    options?.uiFramework === 'angular' ||
-    getDependencyVersionFromPackageJson(tree, '@analogjs/vitest-angular')
-  ) {
-    return 4;
-  }
+  return options?.uiFramework === 'angular' ||
+    getDependencyVersionFromPackageJson(tree, '@analogjs/vitest-angular') ||
+    getDependencyVersionFromPackageJson(tree, '@angular/build')
+    ? 4
+    : 5;
+}
 
-  const viteVersionToUse =
-    options?.viteMajorVersion !== undefined
-      ? `${options.viteMajorVersion}.0.0`
-      : getDependencyVersionFromPackageJson(tree, 'vite');
-  if (!viteVersionToUse) {
+/** Each vitest major only accepts vite at or above its own peer floor. */
+function highestVitestMajorTheViteRangeAllows(
+  tree: Tree,
+  options?: VersionSelectionOptions
+): number {
+  // The manifest wins: it carries the minor the caller's major-derived range
+  // would drop, and `keepExistingVersions` means it is what survives anyway.
+  const viteRange =
+    getDependencyVersionFromPackageJson(tree, 'vite') ?? options?.viteRange;
+  if (!viteRange) {
     // No vite either, so init installs the latest alongside vitest.
     return 5;
   }
 
   // Coerce to the range's floor: `^6.0.0` may resolve to 6.4+, but pairing on
   // what the manifest guarantees keeps the installed set satisfiable.
-  const coerced = coerce(viteVersionToUse);
+  const coerced = coerce(viteRange);
   if (!coerced) return 5;
   if (gte(coerced.version, MIN_VITE_BY_VITEST_MAJOR[5])) return 5;
   if (gte(coerced.version, MIN_VITE_BY_VITEST_MAJOR[4])) return 4;

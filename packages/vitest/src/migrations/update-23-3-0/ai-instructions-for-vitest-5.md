@@ -65,11 +65,19 @@ project needs its own resolution.
   opting out of a concurrent suite or a concurrent setting in the config, it
   becomes the `{ concurrent: false }` option. The same applies to a `sequential`
   entry in a test's options object.
-- `vitest/environments` imports, if the pre-pass flagged any: `builtinEnvironments`
-  and `populateGlobal` moved to `vitest/runtime`, the `VitestEnvironment` type to
-  `vitest/node`.
+- `vitest/suite` and `vitest/runners` imports, if the pre-pass flagged any. Their
+  exports did not move as a group: `getCurrentSuite` and `createTaskCollector` are
+  static members of `TestRunner` (exported from `vitest`), `VitestTestRunner` is
+  exported from `vitest`, the `VitestRunner` type is in `vitest/runtime`, and
+  `NodeBenchmarkRunner`, `getBenchFn` and `getBenchOptions` went with the old
+  benchmark API. Rebind the use sites rather than repointing the import.
 - `@vitest/runner` and `@vitest/ws-client` in `package.json`: neither is published
-  for v5. Their exports are in `vitest/runtime`.
+  for v5. Their exports scattered. The hooks and `describe`/`it`/`test` come from
+  `vitest`, the collection helpers are now static members of `TestRunner`
+  (`TestRunner.getCurrentSuite()`, `TestRunner.getCurrentTest()`), and only the
+  `VitestRunner` type and the environment and snapshot helpers are in
+  `vitest/runtime`. `collectTests`, `startTests` and `updateTask` have no public
+  replacement.
 - Benchmarks: the module-level `bench()` API is gone, along with
   `benchmark.reporters`, `benchmark.outputFile`, `benchmark.compare` and the
   `--compare` CLI flag. `bench` now comes off the test context.

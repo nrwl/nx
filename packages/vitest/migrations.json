@@ -157,7 +157,11 @@
       },
       "incompatibleWith": {
         "vite": "<6.4.0",
-        "@analogjs/vitest-angular": "*"
+        "@analogjs/vitest-angular": "*",
+        "@angular/build": "*",
+        "@vitest/browser-playwright": "*",
+        "@vitest/browser-preview": "*",
+        "@vitest/browser-webdriverio": "*"
       },
       "packages": {
         "vitest": {
@@ -173,7 +177,11 @@
       },
       "incompatibleWith": {
         "vite": "<6.4.0",
-        "@analogjs/vitest-angular": "*"
+        "@analogjs/vitest-angular": "*",
+        "@angular/build": "*",
+        "@vitest/browser-playwright": "*",
+        "@vitest/browser-preview": "*",
+        "@vitest/browser-webdriverio": "*"
       },
       "packages": {
         "@vitest/coverage-v8": {
@@ -189,7 +197,11 @@
       },
       "incompatibleWith": {
         "vite": "<6.4.0",
-        "@analogjs/vitest-angular": "*"
+        "@analogjs/vitest-angular": "*",
+        "@angular/build": "*",
+        "@vitest/browser-playwright": "*",
+        "@vitest/browser-preview": "*",
+        "@vitest/browser-webdriverio": "*"
       },
       "packages": {
         "@vitest/coverage-istanbul": {
@@ -205,7 +217,11 @@
       },
       "incompatibleWith": {
         "vite": "<6.4.0",
-        "@analogjs/vitest-angular": "*"
+        "@analogjs/vitest-angular": "*",
+        "@angular/build": "*",
+        "@vitest/browser-playwright": "*",
+        "@vitest/browser-preview": "*",
+        "@vitest/browser-webdriverio": "*"
       },
       "packages": {
         "@vitest/ui": {

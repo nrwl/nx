@@ -92,12 +92,48 @@ describe('versions', () => {
     );
   });
 
-  it('should honor a requested vite major that is not in package.json yet', () => {
-    expect(versions(tree, { viteMajorVersion: 5 }).vitestVersion).toBe(
+  it('should honor a vite range that is not in package.json yet', () => {
+    expect(versions(tree, { viteRange: '^5.0.0' }).vitestVersion).toBe(
       '^3.0.0'
     );
-    expect(versions(tree, { viteMajorVersion: 8 }).vitestVersion).toBe(
+    expect(versions(tree, { viteRange: '^8.0.0' }).vitestVersion).toBe(
       vitestVersion
+    );
+  });
+
+  // The caller's range is derived from a major, so it drops the minor that
+  // decides vitest 4 vs 5. package.json has the real answer.
+  it('should prefer the declared vite range over the caller hint', () => {
+    setDevDependency('vite', '^6.9.0');
+
+    expect(versions(tree, { viteRange: '^6.0.0' }).vitestVersion).toBe(
+      vitestVersion
+    );
+  });
+
+  it('should cap at vitest 4 when @angular/build is installed', () => {
+    setDevDependency('vite', '^8.0.0');
+    setDevDependency('@angular/build', '^22.1.2');
+
+    expect(versions(tree).vitestVersion).toBe('^4.0.0');
+  });
+
+  // Vitest 4 needs vite >= 6, so the angular cap has to intersect the floor
+  // rather than short-circuit to 4.
+  it('should intersect the framework cap with the vite floor', () => {
+    setDevDependency('vite', '^5.0.0');
+
+    expect(versions(tree, { uiFramework: 'angular' }).vitestVersion).toBe(
+      '^3.0.0'
+    );
+  });
+
+  it('should refuse to pair an installed vitest 5 with angular', () => {
+    setDevDependency('vite', '^8.0.0');
+    setDevDependency('vitest', '~5.0.1');
+
+    expect(() => versions(tree, { uiFramework: 'angular' })).toThrow(
+      /not compatible with Angular/
     );
   });
 

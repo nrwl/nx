@@ -555,7 +555,7 @@ function createFiles(
 function getCoverageProviderDependency(
   tree: Tree,
   coverageProvider: VitestGeneratorSchema['coverageProvider'],
-  uiFramework?: string
+  uiFramework?: 'angular' | 'react' | 'vue' | 'none'
 ): Record<string, string> {
   const { vitestCoverageV8Version, vitestCoverageIstanbulVersion } = versions(
     tree,
