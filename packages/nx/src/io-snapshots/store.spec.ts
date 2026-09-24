@@ -1,8 +1,13 @@
-import { importIoSnapshots, loadIoSnapshotsForRun } from './store';
+import {
+  importIoSnapshots,
+  loadIoSnapshotsForRun,
+  openIoSnapshots,
+} from './store';
 
 const store = vi.hoisted(() => ({
   import: vi.fn(),
   get: vi.fn(),
+  getVersion: vi.fn(),
 }));
 const cloud = vi.hoisted(() => ({ fetchIoSnapshots: vi.fn() }));
 
@@ -182,5 +187,17 @@ describe('importIoSnapshots', () => {
       requestedCommit: 'head',
       snapshotsJson: JSON.stringify(snapshots),
     });
+  });
+});
+
+describe('openIoSnapshots', () => {
+  it('reopens the stored version by commit and fetch time', () => {
+    const handle = { commit: 'head' };
+    store.getVersion.mockReturnValue(handle);
+    expect(openIoSnapshots('head', 7)).toBe(handle);
+    expect(store.getVersion).toHaveBeenCalledWith('head', 7);
+
+    store.getVersion.mockReturnValue(null);
+    expect(openIoSnapshots('head', 8)).toBeNull();
   });
 });

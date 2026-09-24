@@ -68,6 +68,18 @@ export function importIoSnapshots(
 }
 
 /**
+ * The stored version `importIoSnapshots` returned, reopened by its commit and
+ * `resolution.fetchedAt`, so other processes hash from it without importing
+ * it again. `null` when it isn't stored. Exposed through `nx/nx-cloud-internals`.
+ */
+export function openIoSnapshots(
+  commit: string,
+  fetchedAt: number
+): IoSnapshots | null {
+  return getIoSnapshotStore().getVersion(commit, fetchedAt);
+}
+
+/**
  * This run's I/O snapshot set for HEAD, in the process that owns the fetch:
  * the stored set while it is fresh, otherwise what Nx Cloud reads, imported
  * into the store. Returns `null` when snapshots are not enabled for this
