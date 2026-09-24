@@ -99,7 +99,7 @@ describe('addRoute', () => {
 
   beforeEach(() => {
     context = {
-      warn: jest.fn(),
+      warn: vi.fn(),
     };
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
@@ -180,7 +180,7 @@ describe('addBrowserRouter', () => {
 
   beforeEach(() => {
     context = {
-      warn: jest.fn(),
+      warn: vi.fn(),
     };
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
@@ -214,7 +214,7 @@ describe('findMainRenderStatement', () => {
 
   beforeEach(() => {
     context = {
-      warn: jest.fn(),
+      warn: vi.fn(),
     };
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
@@ -295,7 +295,7 @@ describe('addReduxStoreToMain', () => {
 
   beforeEach(() => {
     context = {
-      warn: jest.fn(),
+      warn: vi.fn(),
     };
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
@@ -331,7 +331,7 @@ describe('updateReduxStore', () => {
 
   beforeEach(() => {
     context = {
-      warn: jest.fn(),
+      warn: vi.fn(),
     };
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
