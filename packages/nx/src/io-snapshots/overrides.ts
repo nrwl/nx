@@ -74,9 +74,6 @@ export function ioSnapshotEligibilityOptions(
  * do not, with the same eligibility walk the planner uses, without building a
  * planner (no project-graph transfer). Never fetches, never throws. Feeds
  * the `--verbose` run summary.
- *
- * The Nx Cloud client bundle is meant to probe this module path for the
- * export's presence to decide whether core handles snapshots; keep both stable.
  */
 export function buildIoSnapshotOverrides(
   projectGraph: ProjectGraph,

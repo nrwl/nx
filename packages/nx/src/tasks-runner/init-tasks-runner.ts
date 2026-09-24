@@ -10,6 +10,8 @@ import { loadRootEnvFiles } from '../utils/dotenv';
 import { CompositeLifeCycle, LifeCycle, TaskResult } from './life-cycle';
 import { TaskOrchestrator } from './task-orchestrator';
 import { createTaskHasher } from '../hasher/create-task-hasher';
+import { applyIoSnapshotOutputs } from '../io-snapshots/outputs';
+import type { IoSnapshots } from '../native';
 import type { ProjectGraph } from '../config/project-graph';
 import { daemonClient } from '../daemon/client/client';
 import { RunningTask } from './running-tasks/running-task';
@@ -21,7 +23,8 @@ async function createOrchestrator(
   projectGraph: ProjectGraph,
   fullTaskGraph: TaskGraph,
   nxJson: NxJsonConfiguration,
-  lifeCycle: LifeCycle
+  lifeCycle: LifeCycle,
+  ioSnapshots: IoSnapshots | undefined
 ) {
   loadRootEnvFiles();
 
@@ -41,8 +44,6 @@ async function createOrchestrator(
 
   const { runnerOptions: options } = getRunner({}, nxJson);
 
-  let hasher = createTaskHasher(projectGraph, nxJson, options);
-
   const taskGraph: TaskGraph = {
     roots: tasks.map((task) => task.id),
     tasks: tasks.reduce((acc, task) => {
@@ -58,6 +59,13 @@ async function createOrchestrator(
       return acc;
     }, {} as any),
   };
+
+  // Tasks the caller did not hash hash from its set, as in run-command.
+  if (ioSnapshots) {
+    applyIoSnapshotOutputs(projectGraph, fullTaskGraph, ioSnapshots);
+    applyIoSnapshotOutputs(projectGraph, taskGraph, ioSnapshots);
+  }
+  const hasher = createTaskHasher(projectGraph, nxJson, options, ioSnapshots);
 
   const nxArgs = {
     ...options,
@@ -102,14 +110,17 @@ export async function runDiscreteTasks(
   projectGraph: ProjectGraph,
   fullTaskGraph: TaskGraph,
   nxJson: NxJsonConfiguration,
-  lifeCycle: LifeCycle
+  lifeCycle: LifeCycle,
+  /** The set to hash from, e.g. from `importIoSnapshots`; omitted hashes natively. */
+  ioSnapshots?: IoSnapshots
 ): Promise<Array<Promise<TaskResult[]>>> {
   const orchestrator = await createOrchestrator(
     tasks,
     projectGraph,
     fullTaskGraph,
     nxJson,
-    lifeCycle
+    lifeCycle,
+    ioSnapshots
   );
 
   let groupId = 0;
@@ -168,14 +179,17 @@ export async function runContinuousTasks(
   projectGraph: ProjectGraph,
   fullTaskGraph: TaskGraph,
   nxJson: NxJsonConfiguration,
-  lifeCycle: LifeCycle
+  lifeCycle: LifeCycle,
+  /** The set to hash from, e.g. from `importIoSnapshots`; omitted hashes natively. */
+  ioSnapshots?: IoSnapshots
 ) {
   const orchestrator = await createOrchestrator(
     tasks,
     projectGraph,
     fullTaskGraph,
     nxJson,
-    lifeCycle
+    lifeCycle,
+    ioSnapshots
   );
   const runningTasks = tasks.reduce(
     (current, task, index) => {

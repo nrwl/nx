@@ -10,7 +10,7 @@ import {
   type IoSnapshotCloudOptions,
   type IoSnapshotEnv,
 } from './config';
-import { fetchIoSnapshots } from './fetch';
+import { fetchIoSnapshots, type ReadIoSnapshotsResult } from './fetch';
 
 /** What resolving this run's snapshot set came to. Only a set that resolved carries one. */
 export type IoSnapshotOutcome =
@@ -50,6 +50,22 @@ const WARNED_REASONS = new Set([
 /** The snapshot store in this process's workspace database. */
 export function getIoSnapshotStore(): IoSnapshotStore {
   return new IoSnapshotStore(getDbConnection());
+}
+
+/**
+ * Stores a set the Nx Cloud client read for `requestedCommit` and returns its
+ * handle, for `runDiscreteTasks` and `runContinuousTasks`. The client probes
+ * for this export to tell whether Nx hashes from snapshots; keep it stable.
+ * Throws with the store's `code`.
+ */
+export function importIoSnapshots(
+  requestedCommit: string,
+  snapshots: ReadIoSnapshotsResult['snapshots']
+): IoSnapshots {
+  return getIoSnapshotStore().import({
+    requestedCommit,
+    snapshotsJson: JSON.stringify(snapshots),
+  });
 }
 
 /**

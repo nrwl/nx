@@ -1,4 +1,4 @@
-import { loadIoSnapshotsForRun } from './store';
+import { importIoSnapshots, loadIoSnapshotsForRun } from './store';
 
 const store = vi.hoisted(() => ({
   import: vi.fn(),
@@ -166,6 +166,21 @@ describe('loadIoSnapshotsForRun', () => {
     expect(await loadIoSnapshotsForRun(nxJson, {}, optedIn())).toMatchObject({
       status: 'skipped',
       reason: 'write-failed',
+    });
+  });
+});
+
+describe('importIoSnapshots', () => {
+  it('stores what the Nx Cloud client read and returns the handle', () => {
+    const handle = { commit: 'head' };
+    store.import.mockReturnValue(handle);
+    const snapshots = {
+      'web:build': { commit: 'head', inputs: ['apps/web/**'], outputs: [] },
+    };
+    expect(importIoSnapshots('head', snapshots)).toBe(handle);
+    expect(store.import).toHaveBeenCalledWith({
+      requestedCommit: 'head',
+      snapshotsJson: JSON.stringify(snapshots),
     });
   });
 });
