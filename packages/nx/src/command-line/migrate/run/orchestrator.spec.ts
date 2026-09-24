@@ -869,6 +869,7 @@ describe('orchestrator', () => {
         'beef0002beef0002beef0002beef0002beef0002'
       );
       expect(step.dispenseCount).toBe(1);
+      expect(mockStepDispensed).not.toHaveBeenCalled();
     });
 
     it('keeps the runbook-only response and the concurrent progress when the run advanced during the init report', async () => {
