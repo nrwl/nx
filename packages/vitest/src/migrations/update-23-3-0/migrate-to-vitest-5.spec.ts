@@ -220,15 +220,30 @@ type R = import('vitest/snapshot').SnapshotEnvironment;
 
       await migrateToVitest5(tree);
 
-      expect(tree.read('.gitignore', 'utf-8')).toBe('node_modules\n.vitest\n');
+      expect(tree.read('.gitignore', 'utf-8')).toBe(
+        'node_modules\nvitest.config.*.timestamp*\n.vitest\n'
+      );
     });
 
-    it('should not duplicate an existing entry', async () => {
+    it('should not duplicate existing entries', async () => {
       tree.write('.gitignore', 'node_modules\n.vitest\n');
 
       await migrateToVitest5(tree);
 
-      expect(tree.read('.gitignore', 'utf-8')).toBe('node_modules\n.vitest\n');
+      expect(tree.read('.gitignore', 'utf-8')).toBe(
+        'node_modules\n.vitest\nvitest.config.*.timestamp*\n'
+      );
+    });
+
+    // stripIndents would rewrite every line of the user's file.
+    it('should leave existing lines byte-identical', async () => {
+      tree.write('.gitignore', '  indented\nvitest.config.*.timestamp*\n');
+
+      await migrateToVitest5(tree);
+
+      expect(tree.read('.gitignore', 'utf-8')).toBe(
+        '  indented\nvitest.config.*.timestamp*\n.vitest\n'
+      );
     });
   });
 });

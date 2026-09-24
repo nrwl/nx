@@ -1,6 +1,7 @@
 import {
   addProjectConfiguration,
   logger,
+  readJson,
   type ProjectGraph,
   type Tree,
   updateJson,
@@ -9,6 +10,7 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import { configurationGenerator } from './configuration';
+import { vitestCoverageV8Version, vitestVersion } from '../../utils/versions';
 
 let projectGraph: ProjectGraph;
 jest.mock('@nx/devkit', () => ({
@@ -40,6 +42,42 @@ describe('@nx/vitest:configuration', () => {
       return json;
     });
   }
+
+  // These go through the real generator flow rather than versions() directly,
+  // so they catch the ordering the analog write depends on.
+  describe('dependency selection', () => {
+    it('should install vitest 5 and matching companions in a fresh workspace', async () => {
+      await configurationGenerator(tree, {
+        project: 'mylib',
+        uiFramework: 'none',
+        coverageProvider: 'v8',
+        addPlugin: false,
+        skipFormat: true,
+      });
+
+      const { devDependencies } = readJson(tree, 'package.json');
+      expect(devDependencies.vitest).toBe(vitestVersion);
+      expect(devDependencies['@vitest/coverage-v8']).toBe(
+        vitestCoverageV8Version
+      );
+    });
+
+    it('should hold vitest, coverage and ui at 4 together for angular', async () => {
+      await configurationGenerator(tree, {
+        project: 'mylib',
+        uiFramework: 'angular',
+        coverageProvider: 'v8',
+        addPlugin: false,
+        skipFormat: true,
+      });
+
+      const { devDependencies } = readJson(tree, 'package.json');
+      expect(devDependencies['@analogjs/vitest-angular']).toBeDefined();
+      expect(devDependencies.vitest).toBe('^4.0.0');
+      expect(devDependencies['@vitest/coverage-v8']).toBe('^4.0.0');
+      expect(devDependencies['@vitest/ui']).toBe('^4.0.0');
+    });
+  });
 
   it('should inline the projects into a root vitest.config.mts for vitest 4', async () => {
     setVitestVersion('~4.1.0');

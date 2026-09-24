@@ -10,7 +10,6 @@ import { acknowledgeSwcBuildScripts } from '@nx/js/internal';
 import { coerce, major } from 'semver';
 import {
   ajvVersion,
-  analogVitestAngular,
   edgeRuntimeVmVersion,
   happyDomVersion,
   jsdomVersion,
@@ -50,11 +49,6 @@ export async function ensureDependencies(
     );
   }
 
-  if (schema.uiFramework === 'angular') {
-    devDependencies['@analogjs/vitest-angular'] = analogVitestAngular;
-    devDependencies['@analogjs/vite-plugin-angular'] = analogVitestAngular;
-  }
-
   if (schema.uiFramework === 'react') {
     if (schema.compiler === 'swc') {
       // @vitejs/plugin-react-swc depends on @swc/core.
@@ -81,9 +75,7 @@ export async function ensureDependencies(
   }
 
   if (useVitestUi) {
-    devDependencies['@vitest/ui'] = versions(tree, {
-      uiFramework: schema.uiFramework,
-    }).vitestVersion;
+    devDependencies['@vitest/ui'] = versions(tree).vitestVersion;
   }
 
   return addDependenciesToPackageJson(

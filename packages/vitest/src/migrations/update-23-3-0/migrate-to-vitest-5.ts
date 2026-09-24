@@ -6,15 +6,18 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { getInstalledPackageVersion } from '@nx/devkit/internal';
-import { ensureTypescript } from '@nx/js/internal';
+import { addVitestTempFilesToGitIgnore } from '../../utils/ignore-vitest-temp-files';
 import { major } from 'semver';
 import { ast, query } from '@phenomnomnominal/tsquery';
 import type {
   ExportSpecifier,
   ImportSpecifier,
+  PropertyAccessExpression,
   SourceFile,
   StringLiteral,
 } from 'typescript';
+
+const TEST_CALLEES = new Set(['test', 'it', 'describe', 'suite', 'bench']);
 
 /**
  * Hybrid migration paired with `ai-instructions-for-vitest-5.md`. Applies the
@@ -26,18 +29,33 @@ import type {
  * test run surfaces far better than a codemod can guess at.
  */
 export default async function migrateToVitest5(tree: Tree) {
-  // tsquery parses through the workspace's typescript.
-  ensureTypescript();
-
   const unhandled: string[] = [];
 
-  addVitestArtifactsDirToGitIgnore(tree);
+  addVitestTempFilesToGitIgnore(tree);
   const addedVite = declareVitePeerDependency(tree);
 
   visitNotIgnoredFiles(tree, '', (filePath) => {
     if (!isJsOrTsFile(filePath)) return;
-    rewriteRemovedEntryPoints(tree, filePath, unhandled);
-    detectSequentialUsage(tree, filePath, unhandled);
+    const contents = tree.read(filePath, 'utf-8');
+    if (!contents) return;
+
+    const hasEntryPoints = contents.includes('vitest/');
+    const hasSequential = contents.includes('sequential');
+    if (!hasEntryPoints && !hasSequential) return;
+
+    const sourceFile = ast(contents);
+    if (hasEntryPoints) {
+      rewriteRemovedEntryPoints(
+        tree,
+        filePath,
+        contents,
+        sourceFile,
+        unhandled
+      );
+    }
+    if (hasSequential) {
+      detectSequentialUsage(filePath, sourceFile, unhandled);
+    }
   });
 
   await formatFiles(tree);
@@ -167,12 +185,10 @@ function reportUnrewritableSpecifiers(
 function rewriteRemovedEntryPoints(
   tree: Tree,
   filePath: string,
+  contents: string,
+  sourceFile: SourceFile,
   unhandled: string[]
 ): void {
-  const contents = tree.read(filePath, 'utf-8');
-  if (!contents?.includes('vitest/')) return;
-
-  const sourceFile = ast(contents);
   const specifiers = query<StringLiteral>(
     sourceFile,
     'ImportDeclaration > StringLiteral, ExportDeclaration > StringLiteral'
@@ -225,32 +241,28 @@ function boundNamesOf(specifier: StringLiteral): string[] {
  * codemod.
  */
 function detectSequentialUsage(
-  tree: Tree,
   filePath: string,
+  sourceFile: SourceFile,
   unhandled: string[]
 ): void {
-  const contents = tree.read(filePath, 'utf-8');
-  if (!contents?.includes('sequential')) return;
-
-  const sourceFile = ast(contents);
-  const usages = query(
+  // Both AST forms of a property key. `sequential` reached off anything other
+  // than a test or suite callee is someone else's API, so it is left alone.
+  const optionKeys = query(
     sourceFile,
-    'PropertyAccessExpression > Identifier[name=sequential], PropertyAssignment > Identifier[name=sequential]'
+    'PropertyAssignment > :matches(Identifier[name=sequential], StringLiteral[value=sequential])'
   );
+  const modifiers = query<PropertyAccessExpression>(
+    sourceFile,
+    'PropertyAccessExpression:has(Identifier[name=sequential])'
+  ).filter(
+    (node) =>
+      node.name.text === 'sequential' &&
+      TEST_CALLEES.has(node.expression.getText(sourceFile))
+  );
+  const usages = [...optionKeys, ...modifiers];
   if (usages.length === 0) return;
 
   unhandled.push(
     `${filePath} uses \`sequential\`, which Vitest 5 removed. Replace \`test.sequential(...)\` / \`describe.sequential(...)\` with a plain \`test(...)\` / \`describe(...)\` when nothing makes them concurrent, and with the \`{ concurrent: false }\` option when they are opting out of a concurrent suite or a concurrent setting in the config.`
   );
-}
-
-/**
- * v5 unifies attachments, blob reports, failure screenshots and the json/junit
- * reporter output (which now writes files by default) under `.vitest`.
- */
-function addVitestArtifactsDirToGitIgnore(tree: Tree): void {
-  if (!tree.exists('.gitignore')) return;
-  const contents = tree.read('.gitignore', 'utf-8') ?? '';
-  if (/^\.vitest$/m.test(contents)) return;
-  tree.write('.gitignore', `${contents.replace(/\s*$/, '')}\n.vitest\n`);
 }
