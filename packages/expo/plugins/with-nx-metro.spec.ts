@@ -10,8 +10,8 @@ describe('withNxMetro', () => {
   });
 
   afterEach(() => {
-    jest.dontMock('@nx/devkit');
-    jest.resetModules();
+    vi.doUnmock('@nx/devkit');
+    vi.resetModules();
     rmSync(testWorkspaceRoot, { recursive: true, force: true });
   });
 
@@ -39,8 +39,8 @@ describe('withNxMetro', () => {
       'metro-resolver.js': metroResolverModule('expo-57'),
     });
 
-    jest.resetModules();
-    jest.doMock('@nx/devkit', () => ({ workspaceRoot: testWorkspaceRoot }));
+    vi.resetModules();
+    vi.doMock('@nx/devkit', () => ({ workspaceRoot: testWorkspaceRoot }));
     const { withNxMetro } =
       require('./with-nx-metro') as typeof import('./with-nx-metro');
 
