@@ -206,27 +206,23 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
    * Affected already planned a superset of these tasks. Narrowing that answer
    * skips a second pass over the same planner, which costs about as much as
    * the first even with the subtree memo warm. Falls back to planning when the
-   * plans cannot answer for a task, the signal that they describe some other
-   * task graph.
+   * plans were built for a graph that plans these tasks differently.
    */
   private plansFor(
     taskIds: string[],
     taskGraph: TaskGraph,
     ioSnapshots?: IoSnapshots
   ): ReturnType<HashPlanner['getPlansReference']> {
-    // Affected plans without snapshots, so they cannot answer a run that has them.
-    const planned = ioSnapshots ? undefined : this.planningContext?.plans;
-    if (planned) {
-      const subset = subsetHashPlans(planned, taskIds);
-      if (subset) {
-        return subset;
-      }
-    }
-    const selected = ioSnapshots ? undefined : this.selectionPlans;
-    if (selected && plannedAlike(selected.taskGraph, taskGraph, taskIds)) {
-      const subset = subsetHashPlans(selected.plans, taskIds);
-      if (subset) {
-        return subset;
+    // Both were planned without snapshots, so they cannot answer a run that has them.
+    const reusable = ioSnapshots
+      ? []
+      : [this.planningContext?.plans, this.selectionPlans];
+    for (const planned of reusable) {
+      if (planned && plannedAlike(planned.taskGraph, taskGraph, taskIds)) {
+        const subset = subsetHashPlans(planned.plans, taskIds);
+        if (subset) {
+          return subset;
+        }
       }
     }
     return this.plan(taskIds, taskGraph, ioSnapshots);

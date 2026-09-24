@@ -125,7 +125,10 @@ export async function computeAffectedTasks(
     // own. Every task it will be asked about is in here, since the pruned graph
     // is a subset of the one planned above.
     planningContext: selection.plans
-      ? { ...planningContext, plans: selection.plans }
+      ? {
+          ...planningContext,
+          plans: { plans: selection.plans, taskGraph: selection.taskGraph },
+        }
       : undefined,
   };
 }
@@ -149,7 +152,7 @@ export async function selectAffectedTasks(
   affectedTaskIds: Set<string>;
   requiredTaskIds: string[];
   taskGraph: TaskGraph;
-  plans?: TaskPlanningContext['plans'];
+  plans?: NonNullable<TaskPlanningContext['plans']>['plans'];
 }> {
   const { targets } = request;
   // Only projects that have one of the targets: with a single target,

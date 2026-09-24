@@ -11,6 +11,7 @@ import {
 } from '../native';
 import { join } from 'path';
 import { TaskGraph } from '../config/task-graph';
+import { createTaskPlanningContext } from './task-planning-context';
 import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
 
@@ -1998,6 +1999,88 @@ describe('native task hasher', () => {
 
     // Without `^build` the parent no longer depends on the child's build, so
     // the adopted plans describe a different task and must not be used.
+    const other = createTaskGraph(
+      projectGraph,
+      {},
+      ['parent'],
+      ['build'],
+      undefined,
+      {}
+    );
+    await hasher.hashTasks([other.tasks['parent:build']], other, {
+      'parent:build': {},
+    });
+    expect(plan).toHaveBeenCalled();
+  });
+});
+
+describe('native task hasher with affected plans', () => {
+  let tempFs: TempFs;
+  beforeEach(async () => {
+    tempFs = new TempFs('NativeTaskHasherPlans');
+    await tempFs.createFiles({
+      'libs/parent/filea.ts': 'a',
+      'libs/child/fileb.ts': 'b',
+      'nx.json': JSON.stringify({}),
+    });
+  });
+  afterEach(() => tempFs.cleanup());
+
+  // Plans read their dependencies' outputs, so plans affected built for one
+  // graph are wrong for a run graph that differs from it.
+  it('reuses affected plans only for a graph they were built for', async () => {
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+      'libs/child': 'child',
+    });
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      workspaceFiles.fileMap.projectFileMap
+    );
+    for (const name of ['parent', 'child']) {
+      builder.addNode({
+        name,
+        type: 'lib',
+        data: {
+          root: `libs/${name}`,
+          targets: { build: { executor: 'nx:run-commands' } },
+        },
+      });
+    }
+    builder.addStaticDependency('parent', 'child', 'libs/parent/filea.ts');
+    const projectGraph = builder.getUpdatedProjectGraph();
+    const nxJson = {} as NxJsonConfiguration;
+    const planned = createTaskGraph(
+      projectGraph,
+      { build: ['^build'] },
+      ['parent', 'child'],
+      ['build'],
+      undefined,
+      {}
+    );
+    const context = createTaskPlanningContext(projectGraph, nxJson);
+    context.plans = {
+      plans: context.planner.getPlansReference(
+        Object.keys(planned.tasks),
+        planned
+      ),
+      taskGraph: planned,
+    };
+    const hasher = new NativeTaskHasherImpl(
+      tempFs.tempDir,
+      nxJson,
+      projectGraph,
+      workspaceFiles.rustReferences,
+      { selectivelyHashTsConfig: false },
+      context
+    );
+    const plan = vi.spyOn(hasher.planner, 'getPlansReference');
+
+    await hasher.hashTasks([planned.tasks['parent:build']], planned, {
+      'parent:build': {},
+    });
+    expect(plan).not.toHaveBeenCalled();
+
     const other = createTaskGraph(
       projectGraph,
       {},

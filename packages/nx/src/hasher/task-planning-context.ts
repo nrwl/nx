@@ -1,5 +1,6 @@
 import { NxJsonConfiguration } from '../config/nx-json';
 import { ProjectGraph } from '../config/project-graph';
+import type { TaskGraph } from '../config/task-graph';
 import {
   ExternalObject,
   HashPlanner,
@@ -26,11 +27,14 @@ export interface TaskPlanningContext {
   projectGraphRef: ExternalObject<NativeProjectGraph>;
   planner: HashPlanner;
   /**
-   * Plans for the task set affected already walked. The hasher narrows these to
-   * the tasks it was given instead of planning them again; it falls back when
-   * they cannot answer, so this is an optimisation and never a contract.
+   * Plans for the task set affected already walked, and the graph they were
+   * built for. The hasher narrows these to the tasks it was given when its graph
+   * plans them alike, so this is an optimisation and never a contract.
    */
-  plans?: ExternalObject<Record<string, Array<HashInstruction>>>;
+  plans?: {
+    plans: ExternalObject<Record<string, Array<HashInstruction>>>;
+    taskGraph: TaskGraph;
+  };
 }
 
 export function createTaskPlanningContext(
