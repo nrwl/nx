@@ -12,6 +12,7 @@ export type SelectAffectedTasksResponse = {
   affectedTaskIds: string[];
   requiredTaskIds: string[];
   taskGraph: TaskGraph;
+  runTaskGraph?: TaskGraph;
 };
 
 export function isHandleSelectAffectedTasksMessage(

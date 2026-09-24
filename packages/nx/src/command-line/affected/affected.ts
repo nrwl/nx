@@ -156,18 +156,23 @@ async function getAffectedTasks(
   projects: ProjectGraphProjectNode[];
   taskSelection: TaskSelection;
 }> {
-  const { affectedTaskIds, requiredTaskIds, taskGraph, planningContext } =
-    await computeAffectedTasks({
-      projectGraph,
-      nxJson,
-      targets: nxArgs.targets,
-      touchedFiles: calculateFileChanges(parseFiles(nxArgs).files, nxArgs),
-      configuration: nxArgs.configuration,
-      overrides,
-      extraTargetDependencies,
-      excludeTaskDependencies,
-      excludedProjects: [...excludedProjects(nxArgs, projectGraph.nodes)],
-    });
+  const {
+    affectedTaskIds,
+    requiredTaskIds,
+    taskGraph,
+    runTaskGraph,
+    planningContext,
+  } = await computeAffectedTasks({
+    projectGraph,
+    nxJson,
+    targets: nxArgs.targets,
+    touchedFiles: calculateFileChanges(parseFiles(nxArgs).files, nxArgs),
+    configuration: nxArgs.configuration,
+    overrides,
+    extraTargetDependencies,
+    excludeTaskDependencies,
+    excludedProjects: [...excludedProjects(nxArgs, projectGraph.nodes)],
+  });
   // runCommand still seeds the graph from projects; the prune is what narrows
   // it back down to the selected tasks and their dependencies.
   const owning = new Set(
@@ -175,7 +180,11 @@ async function getAffectedTasks(
   );
   return {
     projects: [...owning].map((name) => projectGraph.nodes[name]),
-    taskSelection: { taskIds: requiredTaskIds, planningContext },
+    taskSelection: {
+      taskIds: requiredTaskIds,
+      planningContext,
+      taskGraph: runTaskGraph,
+    },
   };
 }
 

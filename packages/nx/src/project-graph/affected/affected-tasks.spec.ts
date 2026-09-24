@@ -21,6 +21,8 @@ vi.mock('../../daemon/is-on-daemon', () => onDaemon);
 import { computeAffectedTasks, selectsAffectedTasks } from './affected-tasks';
 import { LockFileChange, WholeFileChange } from '../file-utils';
 import type { ProjectGraph } from '../../config/project-graph';
+import { createTaskGraph } from '../../tasks-runner/create-task-graph';
+import { pruneToSelectedTasks } from '../../tasks-runner/utils';
 
 /**
  * `app` depends on `lib`. Both roots are real directories in this repo, because
@@ -263,6 +265,52 @@ describe('computeAffectedTasks', () => {
     });
     expect([...result.affectedTaskIds]).toEqual(['app:test']);
     expect(result.requiredTaskIds).toEqual(['app:test']);
+  });
+});
+
+describe('the run graph selection hands over', () => {
+  // app:test depends on lib:test, which only a lib change affects. The run
+  // builds from app alone, so lib:test is a dependency there and must not
+  // carry the CLI overrides it took as an initial task of the full graph.
+  it('is what building from the owning projects and pruning would give', async () => {
+    const overrides = {
+      watch: false,
+      __overrides_unparsed__: ['--watch=false'],
+    };
+    const extraTargetDependencies = { test: ['^test'] };
+    const result = await computeAffectedTasks({
+      projectGraph: graph(),
+      nxJson: {
+        namedInputs: { production: ['{projectRoot}/src/**/*'] },
+      } as any,
+      targets: ['test'],
+      touchedFiles: [
+        {
+          file: 'packages/js/src/index.ts',
+          getChanges: () => [new WholeFileChange()],
+        },
+      ] as any,
+      overrides,
+      extraTargetDependencies,
+    });
+    expect([...result.affectedTaskIds]).toEqual(['app:test']);
+
+    const expected = pruneToSelectedTasks(
+      createTaskGraph(
+        graph(),
+        extraTargetDependencies,
+        ['app'],
+        ['test'],
+        undefined,
+        overrides
+      ),
+      result.requiredTaskIds
+    );
+    expect(result.runTaskGraph.tasks).toEqual(expected.tasks);
+    expect(result.runTaskGraph.tasks['lib:test'].overrides).toEqual({
+      __overrides_unparsed__: [],
+    });
+    expect(result.runTaskGraph.dependencies).toEqual(expected.dependencies);
   });
 });
 

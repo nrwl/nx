@@ -442,6 +442,11 @@ export interface AffectedTaskSelection {
   affected: Array<string>
   /** `affected` plus everything it depends on, sorted: what a run keeps. */
   required: Array<string>
+  /**
+   * What the run builds before pruning to `required`, sorted: the requested
+   * tasks of every project owning an affected task, and their dependencies.
+   */
+  built: Array<string>
 }
 
 export interface AffectedTasksOptions {

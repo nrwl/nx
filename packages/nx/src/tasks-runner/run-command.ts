@@ -67,6 +67,8 @@ import type { TaskPlanningContext } from '../hasher/task-planning-context';
 export interface TaskSelection {
   /** The selected tasks and everything they depend on: the graph is pruned to these. */
   taskIds: string[];
+  /** The graph already built for these tasks, used instead of building one. */
+  taskGraph?: TaskGraph;
   /** Reused by the hasher so the survivors are not planned a second time. */
   planningContext?: TaskPlanningContext;
 }
@@ -463,19 +465,21 @@ function createTaskGraphAndRunValidations(
   },
   taskSelection?: TaskSelection
 ) {
-  let taskGraph = createTaskGraph(
-    projectGraph,
-    extraTargetDependencies,
-    projectNames,
-    nxArgs.targets,
-    nxArgs.configuration,
-    overrides,
-    extraOptions.excludeTaskDependencies
-  );
-
-  // Before validation, so a cycle or atomizer error names what will actually run.
-  if (taskSelection) {
-    taskGraph = pruneToSelectedTasks(taskGraph, taskSelection.taskIds);
+  let taskGraph = taskSelection?.taskGraph;
+  if (!taskGraph) {
+    taskGraph = createTaskGraph(
+      projectGraph,
+      extraTargetDependencies,
+      projectNames,
+      nxArgs.targets,
+      nxArgs.configuration,
+      overrides,
+      extraOptions.excludeTaskDependencies
+    );
+    // Before validation, so a cycle or atomizer error names what will actually run.
+    if (taskSelection) {
+      taskGraph = pruneToSelectedTasks(taskGraph, taskSelection.taskIds);
+    }
   }
 
   assertTaskGraphDoesNotContainInvalidTargets(taskGraph);
@@ -886,6 +890,7 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
     // reusing it would hash against a workspace that no longer exists.
     if (taskSelection) {
       taskSelection.planningContext = undefined;
+      taskSelection.taskGraph = undefined;
     }
     projectGraph = await createProjectGraphAsync();
     taskGraph = createTaskGraphAndRunValidations(

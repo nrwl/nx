@@ -4,6 +4,7 @@ import {
   getOutputs,
   interpolate,
   createTaskId,
+  removeTasksFromTaskGraph,
 } from './utils';
 import {
   projectHasTarget,
@@ -497,6 +498,56 @@ export function createTaskGraphWithDependencyOverrides(
     excludeTaskDependencies
   );
   return { taskGraph, dependencyOverrides: p.dependencyOverrides };
+}
+
+/**
+ * `taskGraph` pruned to `keep`, as if built from `initial` alone: a kept task
+ * that build reaches only as a dependency gets the overrides its edges from
+ * `built` give it. Undefined when those edges disagree, since which one wins
+ * depends on the order `createTaskGraph` visits them.
+ */
+export function narrowTaskGraph(
+  projectGraph: ProjectGraph,
+  taskGraph: TaskGraph,
+  dependencyOverrides: DependencyOverrides,
+  initial: Set<string>,
+  built: Set<string>,
+  keep: Set<string>
+): TaskGraph | undefined {
+  const tasks: Record<string, Task> = {};
+  for (const id of keep) {
+    const task = taskGraph.tasks[id];
+    if (initial.has(id)) {
+      tasks[id] = { ...task };
+      continue;
+    }
+    const edges = (dependencyOverrides[id] ?? []).filter((e) =>
+      built.has(e.from)
+    );
+    if (!edges.length) {
+      return undefined;
+    }
+    const first = JSON.stringify(edges[0].overrides);
+    if (edges.some((e) => JSON.stringify(e.overrides) !== first)) {
+      return undefined;
+    }
+    const project = projectGraph.nodes[task.target.project];
+    const overrides = interpolateOverrides(
+      edges[0].overrides,
+      project.name,
+      project.data
+    );
+    tasks[id] = {
+      ...task,
+      overrides,
+      outputs: getOutputs(projectGraph.nodes, task.target, overrides),
+    };
+  }
+  const pruned = removeTasksFromTaskGraph(
+    taskGraph,
+    Object.keys(taskGraph.tasks).filter((id) => !keep.has(id))
+  );
+  return { ...pruned, tasks };
 }
 
 function buildTaskGraph(

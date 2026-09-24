@@ -2,7 +2,10 @@ import { NxJsonConfiguration, TargetDependencies } from '../../config/nx-json';
 import { ProjectGraph } from '../../config/project-graph';
 import { TaskGraph } from '../../config/task-graph';
 import { affectedTasks as nativeAffectedTasks } from '../../native';
-import { createTaskGraph } from '../../tasks-runner/create-task-graph';
+import {
+  createTaskGraphWithDependencyOverrides,
+  narrowTaskGraph,
+} from '../../tasks-runner/create-task-graph';
 import { runnableForTarget } from '../../utils/project-graph-utils';
 import { FileChange, readPackageJson } from '../file-utils';
 import { workspaceRoot } from '../../utils/workspace-root';
@@ -38,6 +41,11 @@ export interface AffectedTasksResult {
   requiredTaskIds: string[];
   /** The full, unpruned graph the answer was computed over. */
   taskGraph: TaskGraph;
+  /**
+   * The graph the run executes, narrowed from `taskGraph` so the run need not
+   * build its own. Absent when it cannot be derived.
+   */
+  runTaskGraph?: TaskGraph;
   /** Hand to the runner so the survivors are not planned a second time. */
   planningContext?: TaskPlanningContext;
 }
@@ -104,6 +112,7 @@ export async function computeAffectedTasks(
       affectedTaskIds: new Set(selection.affectedTaskIds),
       requiredTaskIds: selection.requiredTaskIds,
       taskGraph: selection.taskGraph,
+      runTaskGraph: selection.runTaskGraph,
     };
   }
 
@@ -121,6 +130,7 @@ export async function computeAffectedTasks(
     affectedTaskIds: selection.affectedTaskIds,
     requiredTaskIds: selection.requiredTaskIds,
     taskGraph: selection.taskGraph,
+    runTaskGraph: selection.runTaskGraph,
     // The plans ride along so the hasher narrows them instead of building its
     // own. Every task it will be asked about is in here, since the pruned graph
     // is a subset of the one planned above.
@@ -152,6 +162,7 @@ export async function selectAffectedTasks(
   affectedTaskIds: Set<string>;
   requiredTaskIds: string[];
   taskGraph: TaskGraph;
+  runTaskGraph?: TaskGraph;
   plans?: NonNullable<TaskPlanningContext['plans']>['plans'];
 }> {
   const { targets } = request;
@@ -172,15 +183,16 @@ export async function selectAffectedTasks(
     };
   }
 
-  const taskGraph = createTaskGraph(
-    projectGraph,
-    request.extraTargetDependencies,
-    candidates,
-    targets,
-    request.configuration,
-    request.overrides,
-    request.excludeTaskDependencies
-  );
+  const { taskGraph, dependencyOverrides } =
+    createTaskGraphWithDependencyOverrides(
+      projectGraph,
+      request.extraTargetDependencies,
+      candidates,
+      targets,
+      request.configuration,
+      request.overrides,
+      request.excludeTaskDependencies
+    );
   const taskIds = Object.keys(taskGraph.tasks);
   const plans = planningContext.planner.getPlansReference(taskIds, taskGraph);
 
@@ -203,10 +215,28 @@ export async function selectAffectedTasks(
     }
   );
 
+  // The run builds from the owning projects, so only their requested tasks
+  // take the CLI overrides there; every other task is a dependency.
+  const owning = new Set(
+    selection.affected.map((id) => taskGraph.tasks[id].target.project)
+  );
+  const initial = selection.built.filter((id) => {
+    const { project, target } = taskGraph.tasks[id].target;
+    return owning.has(project) && targets.includes(target);
+  });
+
   return {
     affectedTaskIds: new Set(selection.affected),
     requiredTaskIds: selection.required,
     taskGraph,
+    runTaskGraph: narrowTaskGraph(
+      projectGraph,
+      taskGraph,
+      dependencyOverrides,
+      new Set(initial),
+      new Set(selection.built),
+      new Set(selection.required)
+    ),
     plans,
   };
 }
