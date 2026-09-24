@@ -63,7 +63,7 @@
       "documentation": "./dist/src/migrations/update-23-1-0/disable-webpack-ct-just-in-time-compile.md"
     },
     "update-cypress-16-config-options": {
-      "version": "23.3.0-beta.1",
+      "version": "23.3.0-beta.6",
       "requires": {
         "cypress": ">=16.0.0"
       },
@@ -72,7 +72,7 @@
       "documentation": "./dist/src/migrations/update-23-3-0/update-cypress-16-config-options.md"
     },
     "update-cypress-16-query-command-overwrites": {
-      "version": "23.3.0-beta.1",
+      "version": "23.3.0-beta.6",
       "requires": {
         "cypress": ">=16.0.0"
       },
@@ -82,7 +82,7 @@
       "documentation": "./dist/src/migrations/update-23-3-0/update-cypress-16-query-command-overwrites.md"
     },
     "update-angular-zoneless-mount-import": {
-      "version": "23.3.0-beta.1",
+      "version": "23.3.0-beta.6",
       "requires": {
         "cypress": ">=16.0.0"
       },
@@ -91,7 +91,7 @@
       "documentation": "./dist/src/migrations/update-23-3-0/update-angular-zoneless-mount-import.md"
     },
     "create-ai-instructions-for-cypress-16": {
-      "version": "23.3.0-beta.1",
+      "version": "23.3.0-beta.6",
       "requires": {
         "cypress": ">=16.0.0"
       },
@@ -100,7 +100,7 @@
       "documentation": "./dist/src/migrations/update-23-3-0/upgrade-to-cypress-16.md"
     },
     "upgrade-to-cypress-16": {
-      "version": "23.3.0-beta.2",
+      "version": "23.3.0-beta.6",
       "requires": {
         "cypress": ">=15.0.0 <16.0.0"
       },
