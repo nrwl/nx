@@ -7,6 +7,11 @@ import {
 } from 'node:fs';
 import { cpus, tmpdir } from 'node:os';
 import { join } from 'node:path';
+import * as devkitInternal from '@nx/devkit/internal';
+import {
+  mockCjsModule,
+  unmockCjsModule,
+} from '@nx/devkit/internal-testing-utils';
 import {
   _setChildEval,
   _setWorkerScriptPath,
@@ -666,8 +671,14 @@ describe('loadConfigWithProbeEnv', () => {
 
   beforeAll(() => {
     dir = realpathSync(mkdtempSync(join(tmpdir(), 'pw-load-probe-env-')));
+    // The config's `require` would load a second copy of the module with its
+    // own apply state; hand it the instance the source under test reads.
+    mockCjsModule(import.meta.url, '@nx/devkit/internal', devkitInternal);
   });
-  afterAll(() => rmSync(dir, { recursive: true, force: true }));
+  afterAll(() => {
+    unmockCjsModule(import.meta.url, '@nx/devkit/internal');
+    rmSync(dir, { recursive: true, force: true });
+  });
   beforeEach(() => {
     // Start from no probe variables at all: the host (a sandbox, a corporate
     // shell) may set some, and the assertions below are absolute.
