@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { CreateNodesContext, TargetConfiguration } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { join } from 'node:path';
@@ -8,9 +9,9 @@ import { loadViteDynamicImport } from '../utils/executor-utils';
 // workspace-context glob are real. These tests pin the native glob's semantics
 // for the patterns Vitest resolves with (the extglob default include, `**`
 // matching zero segments, ignore-file behavior) against real files.
-jest.mock('../utils/executor-utils', () => ({
-  loadViteDynamicImport: jest.fn(),
-  loadVitestConfigDynamicImport: jest.fn().mockResolvedValue({
+vi.mock('../utils/executor-utils', () => ({
+  loadViteDynamicImport: vi.fn(),
+  loadVitestConfigDynamicImport: vi.fn().mockResolvedValue({
     configDefaults: {
       include: ['**/*.{test,spec}.?(c|m)[jt]s?(x)'],
       exclude: ['**/node_modules/**', '**/.git/**'],
@@ -22,8 +23,8 @@ jest.mock('../utils/executor-utils', () => ({
   }),
 }));
 
-jest.mock('vitest/node', () => ({
-  createVitest: jest.fn(() => {
+vi.mock('vitest/node', () => ({
+  createVitest: vi.fn(() => {
     throw new Error('these tests must take the glob discovery path');
   }),
 }));
@@ -44,8 +45,8 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
       test?: Record<string, any>;
     }) => { root?: string } | undefined
   ): void {
-    (loadViteDynamicImport as jest.Mock).mockResolvedValue({
-      resolveConfig: jest
+    (loadViteDynamicImport as Mock).mockResolvedValue({
+      resolveConfig: vi
         .fn()
         .mockImplementation(async (inlineConfig: Record<string, any>) => {
           // Emulates vite's config hook phases (pre, user, post) for the
@@ -119,7 +120,7 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
 
   afterEach(() => {
     temp.cleanup();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('setup file inputs', () => {
