@@ -16,7 +16,7 @@ import {
 } from '../../project-graph/plugins/tasks-execution-hooks';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { TaskResult } from '../../tasks-runner/life-cycle';
-import { runCommandForTasks } from '../../tasks-runner/run-command';
+import { runTasksForCommand } from '../../tasks-runner/run-command';
 import {
   createOverrides,
   readGraphFileFromGraphArg,
@@ -308,7 +308,7 @@ async function runPublishOnProjects(
    */
   process.env.NX_TUI = 'false';
   const publishOutputStyle = (args as any).specifiedOutputStyle ?? 'static';
-  const { taskResults } = await runCommandForTasks(
+  const { taskResults } = await runTasksForCommand(
     projectsWithTarget,
     projectGraph,
     { nxJson },

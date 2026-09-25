@@ -537,7 +537,7 @@ export async function runCommand(
       });
 
       const startTime = Date.now();
-      const { taskResults, completed } = await runCommandForTasks(
+      const { taskResults, completed } = await runTasksForCommand(
         projectsToRun,
         currentProjectGraph,
         { nxJson },
@@ -582,7 +582,7 @@ export async function runCommand(
   return status;
 }
 
-export async function runCommandForTasks(
+export async function runTasksForCommand(
   projectsToRun: ProjectGraphProjectNode[],
   currentProjectGraph: ProjectGraph,
   { nxJson }: { nxJson: NxJsonConfiguration },
