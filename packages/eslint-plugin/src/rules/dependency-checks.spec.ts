@@ -9,7 +9,15 @@ import type {
 } from '@nx/devkit';
 import { Linter } from 'eslint';
 import * as jsoncParser from 'jsonc-eslint-parser';
-import { vol } from 'memfs';
+import { createRequire } from 'node:module';
+import { fs as memfs, vol } from 'memfs';
+import { mockCjsModule } from '@nx/devkit/internal-testing-utils';
+
+// typescript is loaded with `require` and reads through the CJS `fs`; the
+// import graph has loaded it already, so evict it onto memfs.
+mockCjsModule(import.meta.url, 'fs', memfs);
+const cjsRequire = createRequire(import.meta.url);
+delete cjsRequire.cache[cjsRequire.resolve('typescript')];
 import { detectPackageManager } from '@nx/devkit';
 import type { FileDataDependency } from '@nx/devkit/internal';
 import { createProjectRootMappings } from '@nx/devkit/internal';

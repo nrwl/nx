@@ -18,7 +18,15 @@ import {
   isTerminalRun,
   parseExports,
 } from './runtime-lint-utils';
-import { vol } from 'memfs';
+import { createRequire } from 'node:module';
+import { fs as memfs, vol } from 'memfs';
+import { mockCjsModule } from '@nx/devkit/internal-testing-utils';
+
+// Import resolution loads typescript with `require`, which reads through the
+// CJS `fs`; the import graph has loaded it already, so evict it onto memfs.
+mockCjsModule(import.meta.url, 'fs', memfs);
+const cjsRequire = createRequire(import.meta.url);
+delete cjsRequire.cache[cjsRequire.resolve('typescript')];
 
 vi.mock('@nx/devkit', async () => ({
   ...(await vi.importActual<any>('@nx/devkit')),
