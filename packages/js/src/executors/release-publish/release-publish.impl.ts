@@ -29,6 +29,15 @@ function processEnv(color: boolean) {
   return env;
 }
 
+// npm enforces `devEngines.packageManager` on every command, even a read-only
+// `view`, so a workspace that pins a non-npm manager aborts the registry calls
+// below with EBADDEVENGINES (pnpm's `onFail: "download"` is treated as an error
+// by npm). force downgrades the mismatch to a warning. Scoped to the npm
+// registry spawns; the publish command itself is left untouched.
+function npmRegistryEnv() {
+  return { ...processEnv(true), npm_config_force: 'true' };
+}
+
 function isAlreadyPublishedPublishError(
   stdoutData?: any,
   stderr = '',
@@ -236,7 +245,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
     const currentVersion = packageJson.version;
     try {
       const result = execSync(npmViewCommandSegments.join(' '), {
-        env: processEnv(true),
+        env: pm === 'bun' ? processEnv(true) : npmRegistryEnv(),
         cwd: context.root,
         stdio: ['ignore', 'pipe', 'pipe'],
         windowsHide: true,
@@ -299,7 +308,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
           try {
             if (!isDryRun) {
               execSync(npmDistTagAddCommandSegments.join(' '), {
-                env: processEnv(true),
+                env: npmRegistryEnv(),
                 cwd: context.root,
                 stdio: 'ignore',
                 windowsHide: true,
