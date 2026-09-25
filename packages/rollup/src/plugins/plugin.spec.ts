@@ -1,14 +1,10 @@
 import { type CreateNodesContext } from '@nx/devkit';
 import { createNodesV2 } from './plugin';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { mockCjsModule, TempFs } from '@nx/devkit/internal-testing-utils';
 
-// Jest 29 does not support dynamic import() unless --experimental-vm-modules is set.
-// For now, we will mock the loadConfigFile function. We should remove this once we upgrade to Jest 30.
-vi.mock('rollup/loadConfigFile', () => {
-  return {
-    loadConfigFile: vi.fn(),
-  };
-});
+// The plugin `require`s rollup/loadConfigFile, which `vi.mock` cannot reach.
+const loadConfigFile = vi.fn();
+mockCjsModule(import.meta.url, 'rollup/loadConfigFile', { loadConfigFile });
 
 // Mock getPackageManagerCommand to ensure consistent test environment
 vi.mock('@nx/devkit', async () => ({
@@ -89,7 +85,6 @@ describe('@nx/rollup/plugin', () => {
       }`
       );
 
-      const { loadConfigFile } = require('rollup/loadConfigFile');
       loadConfigFile.mockReturnValue(rollupConfigOptions);
 
       process.chdir(tempFs.tempDir);
@@ -167,7 +162,6 @@ describe('@nx/rollup/plugin', () => {
       }`
       );
 
-      const { loadConfigFile } = require('rollup/loadConfigFile');
       loadConfigFile.mockReturnValue(rollupConfigOptions);
 
       process.chdir(tempFs.tempDir);
