@@ -7,7 +7,6 @@ import {
   type FileRevisions,
   type IoSnapshots,
 } from '../../native';
-import { tsConfigChange } from './changed-contents';
 import { applyIoSnapshotOutputs } from '../../io-snapshots/outputs';
 import { ioSnapshotEligibilityOptions } from '../../io-snapshots/overrides';
 import { snapshotsOf, type IoSnapshotOutcome } from '../../io-snapshots/store';
@@ -290,11 +289,7 @@ export async function selectAffectedTasks(
         : [],
       targets,
       revisions: fileRevisions(request.fileChangeArgs),
-      tsConfigChange: tsConfigChange(
-        request.changedFiles,
-        request.fileChangeArgs,
-        request.selectivelyHashTsConfig ?? false
-      ),
+      selectivelyHashTsConfig: request.selectivelyHashTsConfig ?? false,
     }
   );
 

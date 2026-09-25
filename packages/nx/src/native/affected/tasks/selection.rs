@@ -8,7 +8,7 @@ use std::sync::Arc;
 use std::time::Instant;
 use tracing::{debug, trace};
 
-use super::changed_contents::{ChangedContents, FileRevisions, TsConfigChange};
+use super::changed_contents::{ChangedContents, FileRevisions};
 use super::dependency_closure::dependency_closure;
 use super::dependent_outputs::compute_dependent_output_edges;
 use super::touched::{ChangedExternals, touched_tasks};
@@ -44,8 +44,9 @@ pub struct AffectedTasksOptions {
     /// Where a field-filtered JSON input's file is read at both ends of the diff.
     /// Unset, as for `--files`, such a file counts as changed whole.
     pub revisions: Option<FileRevisions>,
-    /// Set when a root tsconfig is in the diff.
-    pub ts_config_change: Option<TsConfigChange>,
+    /// The runner's `selectivelyHashTsConfig`: a task hashes only its own
+    /// project's tsconfig `paths` entries, rather than none.
+    pub selectively_hash_ts_config: bool,
 }
 
 #[napi(object)]
@@ -152,7 +153,8 @@ fn reached_by_change(
         graph,
         &options.workspace_root,
         options.revisions.as_ref(),
-        options.ts_config_change.as_ref(),
+        changed_files,
+        options.selectively_hash_ts_config,
     );
     let mut touched = touched_tasks(
         graph,
@@ -290,7 +292,7 @@ mod tests {
             excluded_projects: vec![],
             targets: strings(&["build", "serve", "e2e"]),
             revisions: None,
-            ts_config_change: None,
+            selectively_hash_ts_config: false,
         }
     }
 

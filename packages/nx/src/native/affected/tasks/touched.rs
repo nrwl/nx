@@ -270,7 +270,6 @@ fn json_files_in_diff<'c>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::native::affected::tasks::changed_contents::TsConfigChange;
     use crate::native::tasks::types::InstructionPool;
     use crate::native::test_utils::{graph_of_roots as graph, hash_plans, strings};
     use std::sync::Arc;
@@ -839,13 +838,7 @@ mod tests {
                 vec![HashInstruction::TsConfiguration("b".into())],
             ),
         ]);
-        let change = TsConfigChange {
-            rest_changed: false,
-            selective: true,
-            paths_before: HashMap::from([("@ws/a".into(), strings(&["libs/a/index.ts"]))]),
-            paths_after: HashMap::from([("@ws/a".into(), strings(&["libs/a/main.ts"]))]),
-        };
-        let contents = ChangedContents::new(&g, "", None, Some(&change));
+        let contents = ChangedContents::default().with_ts_config_projects(&["a"]);
         let touched = touched_tasks(
             &g,
             &p,

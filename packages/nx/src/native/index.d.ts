@@ -485,8 +485,11 @@ export interface AffectedTasksOptions {
    * Unset, as for `--files`, such a file counts as changed whole.
    */
   revisions?: FileRevisions
-  /** Set when a root tsconfig is in the diff. */
-  tsConfigChange?: TsConfigChange
+  /**
+   * The runner's `selectivelyHashTsConfig`: a task hashes only its own
+   * project's tsconfig `paths` entries, rather than none.
+   */
+  selectivelyHashTsConfig: boolean
 }
 
 export interface BatchInfo {
@@ -1225,25 +1228,6 @@ export declare function trackPageView(pageTitle: string, pageLocation?: string |
  * This wont be needed once the project graph is created in Rust
  */
 export declare function transferProjectGraph(projectGraph: ProjectGraph): ExternalObject<ProjectGraph>
-
-/**
- * The root tsconfig as `TsConfiguration` hashes it: `compilerOptions.paths`
- * apart from the rest.
- */
-export interface TsConfigChange {
-  /**
-   * Everything but `compilerOptions.paths` changed, or the file could not be
-   * compared at all.
-   */
-  restChanged: boolean
-  /**
-   * `selectivelyHashTsConfig`: a task hashes only its own project's paths.
-   * Otherwise it hashes no paths at all.
-   */
-  selective: boolean
-  pathsBefore: Record<string, Array<string>>
-  pathsAfter: Record<string, Array<string>>
-}
 
 export interface TuiCliArgs {
   targets?: string[] | undefined

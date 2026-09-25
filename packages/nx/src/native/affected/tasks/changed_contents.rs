@@ -1,19 +1,24 @@
 //! What changed inside the files the hasher reads by content rather than by
 //! bytes: field-filtered JSON inputs and the root tsconfig. Without it such a
-//! file counts as changed whenever it is in the diff.
+//! file counts as changed whenever it is in the diff. Each is read at both
+//! revisions only when some instruction asks about it.
 
+use jsonc_parser::JsonValue;
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 use std::convert::Infallible;
 use std::path::Path;
 use std::process::Stdio;
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 use crate::native::project_graph::types::ProjectGraph;
 use crate::native::project_graph::utils::{create_project_root_mappings, find_project_for_path};
 use crate::native::tasks::hashers::{OnceCache, parse_json_or_jsonc};
 use crate::native::tasks::types::JsonFileSetInput;
 use crate::native::utils::command::create_command;
+use crate::native::utils::path::normalize_js_path;
+
+const ROOT_TSCONFIG_FILES: [&str; 2] = ["tsconfig.base.json", "tsconfig.json"];
 
 /// Where a changed file's two versions are read: `base` from git, `head` from
 /// git or, unset, the working tree.
@@ -23,79 +28,68 @@ pub struct FileRevisions {
     pub head: Option<String>,
 }
 
-/// The root tsconfig as `TsConfiguration` hashes it: `compilerOptions.paths`
-/// apart from the rest.
-#[napi(object)]
-pub struct TsConfigChange {
-    /// Everything but `compilerOptions.paths` changed, or the file could not be
-    /// compared at all.
-    pub rest_changed: bool,
-    /// `selectivelyHashTsConfig`: a task hashes only its own project's paths.
-    /// Otherwise it hashes no paths at all.
-    pub selective: bool,
-    pub paths_before: HashMap<String, Vec<String>>,
-    pub paths_after: HashMap<String, Vec<String>>,
-}
-
 pub(crate) struct ChangedContents<'a> {
-    json: JsonFieldDiffs<'a>,
-    ts_config: TsConfigTouch,
+    graph: Option<&'a ProjectGraph>,
+    files: Revisions<'a>,
+    changed_files: &'a [String],
+    /// `selectivelyHashTsConfig`: a task hashes its own project's paths
+    /// entries. Otherwise it hashes none.
+    selective: bool,
+    json: OnceCache<Option<Vec<Vec<String>>>>,
+    ts_config: OnceLock<TsConfigTouch>,
 }
 
+/// Which `TsConfiguration` instructions a root tsconfig change reaches.
 enum TsConfigTouch {
-    /// No comparison was made: any root tsconfig in the diff touches everything.
-    Unknown,
     All,
     Projects(HashSet<String>),
 }
 
-/// The field paths that changed in each JSON file, read and diffed on first use
-/// so only files some field-filtered input reads are ever opened. `None` is a
-/// file that counts as changed whole.
-struct JsonFieldDiffs<'a> {
+struct Revisions<'a> {
     workspace_root: &'a Path,
     revisions: Option<&'a FileRevisions>,
-    diffs: OnceCache<Option<Vec<Vec<String>>>>,
 }
 
 impl Default for ChangedContents<'_> {
     fn default() -> Self {
         Self {
-            json: JsonFieldDiffs {
+            graph: None,
+            files: Revisions {
                 workspace_root: Path::new(""),
                 revisions: None,
-                diffs: OnceCache::new(),
             },
-            ts_config: TsConfigTouch::Unknown,
+            changed_files: &[],
+            selective: false,
+            json: OnceCache::new(),
+            ts_config: OnceLock::new(),
         }
     }
 }
 
 impl<'a> ChangedContents<'a> {
     pub(crate) fn new(
-        graph: &ProjectGraph,
+        graph: &'a ProjectGraph,
         workspace_root: &'a str,
         revisions: Option<&'a FileRevisions>,
-        ts_config: Option<&TsConfigChange>,
+        changed_files: &'a [String],
+        selective: bool,
     ) -> Self {
         Self {
-            json: JsonFieldDiffs {
+            graph: Some(graph),
+            files: Revisions {
                 workspace_root: Path::new(workspace_root),
                 revisions,
-                diffs: OnceCache::new(),
             },
-            ts_config: match ts_config {
-                None => TsConfigTouch::Unknown,
-                Some(change) if change.rest_changed => TsConfigTouch::All,
-                Some(change) if !change.selective => TsConfigTouch::Projects(HashSet::new()),
-                Some(change) => TsConfigTouch::Projects(projects_with_changed_paths(graph, change)),
-            },
+            changed_files,
+            selective,
+            json: OnceCache::new(),
+            ts_config: OnceLock::new(),
         }
     }
 
     /// Whether `file`, read through `json`'s field filters, can hash differently.
     pub(crate) fn json_file_changed(&self, file: &str, json: &JsonFileSetInput) -> bool {
-        match self.json.changed_fields(file).as_ref() {
+        match self.changed_fields(file).as_ref() {
             Some(paths) => paths.iter().any(|path| {
                 field_change_reaches_hash(
                     path,
@@ -111,36 +105,74 @@ impl<'a> ChangedContents<'a> {
     pub(crate) fn with_json_diff(self, file: &str, paths: Option<Vec<Vec<String>>>) -> Self {
         let _ = self
             .json
-            .diffs
             .get_or_try_init(file.to_string(), || Ok::<_, Infallible>(paths));
+        self
+    }
+
+    #[cfg(test)]
+    pub(crate) fn with_ts_config_projects(self, projects: &[&str]) -> Self {
+        let _ = self.ts_config.set(TsConfigTouch::Projects(
+            projects.iter().map(|p| p.to_string()).collect(),
+        ));
         self
     }
 
     /// Whether `project`'s `TsConfiguration` can hash differently, given that a
     /// root tsconfig is in the diff.
     pub(crate) fn ts_config_changed(&self, project: &str) -> bool {
-        match &self.ts_config {
-            TsConfigTouch::Unknown | TsConfigTouch::All => true,
+        match self.ts_config.get_or_init(|| self.ts_config_touch()) {
+            TsConfigTouch::All => true,
             TsConfigTouch::Projects(projects) => projects.contains(project),
+        }
+    }
+
+    fn changed_fields(&self, file: &str) -> Arc<Option<Vec<Vec<String>>>> {
+        let Ok(diff) = self.json.get_or_try_init(file.to_string(), || {
+            Ok::<_, Infallible>(self.files.both(file).and_then(|(before, after)| {
+                Some(changed_field_paths(
+                    &json_object(&before)?,
+                    &json_object(&after)?,
+                ))
+            }))
+        });
+        diff
+    }
+
+    fn ts_config_touch(&self) -> TsConfigTouch {
+        // The file `getRootTsConfigPath` picks, as the hasher reads it.
+        let root = if self
+            .files
+            .workspace_root
+            .join(ROOT_TSCONFIG_FILES[0])
+            .exists()
+        {
+            ROOT_TSCONFIG_FILES[0]
+        } else {
+            ROOT_TSCONFIG_FILES[1]
+        };
+        // Another candidate changing may have switched which file is the root.
+        let switched = self.changed_files.iter().any(|file| {
+            let file = normalize_js_path(file);
+            ROOT_TSCONFIG_FILES.contains(&file.as_str()) && file != root
+        });
+        match (self.graph, self.files.both(root)) {
+            (Some(graph), Some((before, after))) if !switched => {
+                compare_ts_configs(graph, &before, &after, self.selective)
+            }
+            _ => TsConfigTouch::All,
         }
     }
 }
 
-impl JsonFieldDiffs<'_> {
-    fn changed_fields(&self, file: &str) -> Arc<Option<Vec<Vec<String>>>> {
-        let Ok(diff) = self
-            .diffs
-            .get_or_try_init(file.to_string(), || Ok::<_, Infallible>(self.diff(file)));
-        diff
-    }
-
-    /// Parsed as the hasher parses it, so both agree on what a field is. Whole
-    /// when a version is missing, unparseable or not an object.
-    fn diff(&self, file: &str) -> Option<Vec<Vec<String>>> {
+impl Revisions<'_> {
+    /// Both versions of `file`, or `None` when there is no diff to read or a
+    /// version is missing.
+    fn both(&self, file: &str) -> Option<(Vec<u8>, Vec<u8>)> {
         let revisions = self.revisions?;
-        let before = json_object(&self.read(file, Some(&revisions.base))?)?;
-        let after = json_object(&self.read(file, revisions.head.as_deref())?)?;
-        Some(changed_field_paths(&before, &after))
+        Some((
+            self.read(file, Some(&revisions.base))?,
+            self.read(file, revisions.head.as_deref())?,
+        ))
     }
 
     /// Relative to the workspace root, whichever directory the command ran in.
@@ -163,6 +195,8 @@ impl JsonFieldDiffs<'_> {
     }
 }
 
+/// Parsed as the hasher parses it, so both agree on what a field is. Whole
+/// when unparseable or not an object.
 fn json_object(bytes: &[u8]) -> Option<Value> {
     parse_json_or_jsonc(bytes).filter(Value::is_object)
 }
@@ -198,23 +232,119 @@ fn collect_changed(
     }
 }
 
+/// A JSON value with its keys in file order, so `==` sees a reorder the way
+/// `JSON.stringify` does. Numbers keep their text: `1.0` and `1` differ here
+/// though not to JS, which can only select an extra task.
+#[derive(PartialEq)]
+enum Ordered {
+    Object(Vec<(String, Ordered)>),
+    Array(Vec<Ordered>),
+    String(String),
+    Number(String),
+    Boolean(bool),
+    Null,
+}
+
+impl From<JsonValue<'_>> for Ordered {
+    fn from(value: JsonValue<'_>) -> Self {
+        match value {
+            JsonValue::Object(object) => Self::Object(
+                object
+                    .take_inner()
+                    .into_iter()
+                    .map(|(key, value)| (key, value.into()))
+                    .collect(),
+            ),
+            JsonValue::Array(array) => {
+                Self::Array(array.take_inner().into_iter().map(Self::from).collect())
+            }
+            JsonValue::String(text) => Self::String(text.into_owned()),
+            JsonValue::Number(text) => Self::Number(text.to_string()),
+            JsonValue::Boolean(value) => Self::Boolean(value),
+            JsonValue::Null => Self::Null,
+        }
+    }
+}
+
+/// The root tsconfig split as `NativeTaskHasherImpl` splits it: everything but
+/// `compilerOptions.paths`, stringified with key order, and the paths apart.
+struct TsConfigParts {
+    rest: Ordered,
+    paths: HashMap<String, Vec<String>>,
+}
+
+fn ts_config_parts(bytes: &[u8]) -> Option<TsConfigParts> {
+    let text = std::str::from_utf8(bytes).ok()?;
+    let mut rest: Ordered = jsonc_parser::parse_to_value(text, &Default::default())
+        .ok()??
+        .into();
+    let Ordered::Object(entries) = &mut rest else {
+        return None;
+    };
+    let mut paths = HashMap::new();
+    if let Some((_, Ordered::Object(options))) =
+        entries.iter_mut().find(|(key, _)| key == "compilerOptions")
+    {
+        if let Some(index) = options.iter().position(|(key, _)| key == "paths") {
+            paths = path_mappings(options.remove(index).1)?;
+        }
+    }
+    Some(TsConfigParts { rest, paths })
+}
+
+/// `None` unless every entry maps to a list of strings, as the hasher expects.
+fn path_mappings(paths: Ordered) -> Option<HashMap<String, Vec<String>>> {
+    let Ordered::Object(entries) = paths else {
+        return None;
+    };
+    entries
+        .into_iter()
+        .map(|(key, targets)| match targets {
+            Ordered::Array(targets) => targets
+                .into_iter()
+                .map(|target| match target {
+                    Ordered::String(target) => Some(target),
+                    _ => None,
+                })
+                .collect::<Option<Vec<_>>>()
+                .map(|targets| (key, targets)),
+            _ => None,
+        })
+        .collect()
+}
+
+fn compare_ts_configs(
+    graph: &ProjectGraph,
+    before: &[u8],
+    after: &[u8],
+    selective: bool,
+) -> TsConfigTouch {
+    match (ts_config_parts(before), ts_config_parts(after)) {
+        (Some(before), Some(after)) if before.rest == after.rest => {
+            TsConfigTouch::Projects(if selective {
+                projects_with_changed_paths(graph, &before.paths, &after.paths)
+            } else {
+                HashSet::new()
+            })
+        }
+        _ => TsConfigTouch::All,
+    }
+}
+
 /// The projects whose paths entries, as `hash_tsconfig_selectively` filters
 /// them, differ between the two versions: per changed key, the owners whose
 /// own targets changed. Only changed keys are walked, not every project.
-fn projects_with_changed_paths(graph: &ProjectGraph, change: &TsConfigChange) -> HashSet<String> {
+fn projects_with_changed_paths(
+    graph: &ProjectGraph,
+    paths_before: &HashMap<String, Vec<String>>,
+    paths_after: &HashMap<String, Vec<String>>,
+) -> HashSet<String> {
     // The hasher's own mapping, so ownership agrees with the hash.
     let mappings = create_project_root_mappings(&graph.nodes);
-    let keys: HashSet<&String> = change
-        .paths_before
-        .keys()
-        .chain(change.paths_after.keys())
-        .collect();
+    let keys: HashSet<&String> = paths_before.keys().chain(paths_after.keys()).collect();
     let mut projects = HashSet::new();
     for key in keys {
-        let (before, after) = (
-            targets(&change.paths_before, key),
-            targets(&change.paths_after, key),
-        );
+        let (before, after) = (targets(paths_before, key), targets(paths_after, key));
         if before == after {
             continue;
         }
@@ -399,7 +529,8 @@ mod tests {
             base: "HEAD".into(),
             head: head.map(String::from),
         };
-        ChangedContents::new(&graph_of_roots(&[]), root, Some(&revisions), None)
+        let graph = graph_of_roots(&[]);
+        ChangedContents::new(&graph, root, Some(&revisions), &[], false)
             .json_file_changed("package.json", &version_only())
     }
 
@@ -435,66 +566,101 @@ mod tests {
         assert!(changed_against_head(dir.path(), None));
     }
 
-    fn ts_config(rest_changed: bool, selective: bool) -> TsConfigChange {
-        TsConfigChange {
-            rest_changed,
-            selective,
-            paths_before: HashMap::from([
-                ("@ws/a".to_string(), strings(&["libs/a/src/index.ts"])),
-                ("@ws/b".to_string(), strings(&["libs/b/src/index.ts"])),
-            ]),
-            paths_after: HashMap::from([
-                ("@ws/a".to_string(), strings(&["libs/a/src/main.ts"])),
-                ("@ws/b".to_string(), strings(&["libs/b/src/index.ts"])),
-            ]),
-        }
+    /// A root tsconfig mapping `@ws/a` and `@ws/b`, with `extra` spliced into its
+    /// `compilerOptions` before `paths`.
+    fn tsconfig(a_target: &str, extra: &str) -> Vec<u8> {
+        format!(
+            r#"{{
+  // comments are fine
+  "compilerOptions": {{
+    {extra}
+    "paths": {{
+      "@ws/a": ["{a_target}"],
+      "@ws/b": ["libs/b/src/index.ts"]
+    }},
+  }},
+}}"#
+        )
+        .into_bytes()
+    }
+
+    fn touched(before: &[u8], after: &[u8], selective: bool) -> Vec<&'static str> {
+        let g = graph_of_roots(&[("a", "libs/a"), ("b", "libs/b")]);
+        let touch = compare_ts_configs(&g, before, after, selective);
+        ["a", "b"]
+            .into_iter()
+            .filter(|project| match &touch {
+                TsConfigTouch::All => true,
+                TsConfigTouch::Projects(projects) => projects.contains(*project),
+            })
+            .collect()
     }
 
     #[test]
     fn a_selectively_hashed_paths_change_touches_only_the_project_it_maps_into() {
-        let g = graph_of_roots(&[("a", "libs/a"), ("b", "libs/b")]);
-        let contents = ChangedContents::new(&g, "", None, Some(&ts_config(false, true)));
-        assert!(contents.ts_config_changed("a"));
-        assert!(!contents.ts_config_changed("b"));
+        let before = tsconfig("libs/a/src/index.ts", "");
+        let after = tsconfig("libs/a/src/main.ts", "");
+        assert_eq!(touched(&before, &after, true), ["a"]);
+    }
+
+    /// Without selective hashing no task hashes the paths at all.
+    #[test]
+    fn a_paths_change_touches_nothing_when_paths_are_not_hashed() {
+        let before = tsconfig("libs/a/src/index.ts", "");
+        let after = tsconfig("libs/a/src/main.ts", "");
+        assert!(touched(&before, &after, false).is_empty());
+    }
+
+    #[test]
+    fn any_other_change_touches_every_project_either_way() {
+        let before = tsconfig("libs/a/src/index.ts", r#""strict": false,"#);
+        let after = tsconfig("libs/a/src/index.ts", r#""strict": true,"#);
+        for selective in [true, false] {
+            assert_eq!(touched(&before, &after, selective), ["a", "b"]);
+        }
+    }
+
+    /// The hash is of `JSON.stringify`'s text, so a reorder changes it.
+    #[test]
+    fn a_reordered_key_touches_every_project() {
+        let before = tsconfig(
+            "libs/a/src/index.ts",
+            r#""strict": true, "target": "es2022","#,
+        );
+        let after = tsconfig(
+            "libs/a/src/index.ts",
+            r#""target": "es2022", "strict": true,"#,
+        );
+        assert_eq!(touched(&before, &after, true), ["a", "b"]);
+    }
+
+    #[test]
+    fn a_comment_only_change_touches_nothing() {
+        let before = tsconfig("libs/a/src/index.ts", "");
+        let after = tsconfig("libs/a/src/index.ts", "// a new comment");
+        assert!(touched(&before, &after, true).is_empty());
+    }
+
+    #[test]
+    fn a_tsconfig_that_cannot_be_split_touches_every_project() {
+        let before = tsconfig("libs/a/src/index.ts", "");
+        assert_eq!(touched(&before, b"[1]", true), ["a", "b"]);
+        let bad_paths = br#"{ "compilerOptions": { "paths": { "@ws/a": "libs/a" } } }"#;
+        assert_eq!(touched(&before, bad_paths, true), ["a", "b"]);
+        assert!(ChangedContents::default().ts_config_changed("b"));
     }
 
     /// A key can point into several projects; only those whose own targets moved changed.
     #[test]
     fn a_shared_key_touches_only_the_project_whose_target_moved() {
         let g = graph_of_roots(&[("a", "libs/a"), ("b", "libs/b")]);
-        let change = TsConfigChange {
-            rest_changed: false,
-            selective: true,
-            paths_before: HashMap::from([(
-                "@ws/*".to_string(),
-                strings(&["libs/a/src/index.ts", "libs/b/src/index.ts"]),
-            )]),
-            paths_after: HashMap::from([(
-                "@ws/*".to_string(),
-                strings(&["libs/a/src/main.ts", "libs/b/src/index.ts"]),
-            )]),
-        };
-        let contents = ChangedContents::new(&g, "", None, Some(&change));
-        assert!(contents.ts_config_changed("a"));
-        assert!(!contents.ts_config_changed("b"));
-    }
-
-    /// Without selective hashing no task hashes the paths at all.
-    #[test]
-    fn a_paths_change_touches_nothing_when_paths_are_not_hashed() {
-        let g = graph_of_roots(&[("a", "libs/a"), ("b", "libs/b")]);
-        let contents = ChangedContents::new(&g, "", None, Some(&ts_config(false, false)));
-        assert!(!contents.ts_config_changed("a"));
-        assert!(!contents.ts_config_changed("b"));
-    }
-
-    #[test]
-    fn any_other_change_touches_every_project_either_way() {
-        let g = graph_of_roots(&[("a", "libs/a"), ("b", "libs/b")]);
-        for selective in [true, false] {
-            let contents = ChangedContents::new(&g, "", None, Some(&ts_config(true, selective)));
-            assert!(contents.ts_config_changed("a") && contents.ts_config_changed("b"));
-        }
-        assert!(ChangedContents::default().ts_config_changed("b"));
+        let paths =
+            |a: &str| HashMap::from([("@ws/*".to_string(), strings(&[a, "libs/b/src/index.ts"]))]);
+        let projects = projects_with_changed_paths(
+            &g,
+            &paths("libs/a/src/index.ts"),
+            &paths("libs/a/src/main.ts"),
+        );
+        assert_eq!(projects, HashSet::from(["a".to_string()]));
     }
 }
