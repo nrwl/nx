@@ -17,7 +17,7 @@ describe('exec gradle', () => {
     });
 
     afterEach(() => {
-      jest.resetModules();
+      vi.resetModules();
       process.chdir(cwd);
     });
 
@@ -148,16 +148,16 @@ describe('exec gradle', () => {
 
 describe('execGradleAsync', () => {
   afterEach(() => {
-    jest.resetModules();
-    jest.restoreAllMocks();
+    vi.resetModules();
+    vi.restoreAllMocks();
   });
 
   function loadWithMockedSpawn() {
     let captured: any;
-    jest.doMock('@nx/devkit/internal', () => ({
-      ...jest.requireActual('@nx/devkit/internal'),
-      killChildOnHostExit: jest.fn(),
-      safeSpawn: jest.fn((binary, args, options) => {
+    vi.doMock('@nx/devkit/internal', async () => ({
+      ...(await vi.importActual<any>('@nx/devkit/internal')),
+      killChildOnHostExit: vi.fn(),
+      safeSpawn: vi.fn((binary, args, options) => {
         captured = { binary, args, options };
         const EventEmitter = require('events');
         const cp: any = new EventEmitter();
@@ -188,10 +188,10 @@ describe('execGradleAsync', () => {
   // Node emits `error` instead of `exit`.
   it('should reject when the spawn itself fails', async () => {
     let captured: any;
-    jest.doMock('@nx/devkit/internal', () => ({
-      ...jest.requireActual('@nx/devkit/internal'),
-      killChildOnHostExit: jest.fn(),
-      safeSpawn: jest.fn(() => {
+    vi.doMock('@nx/devkit/internal', async () => ({
+      ...(await vi.importActual<any>('@nx/devkit/internal')),
+      killChildOnHostExit: vi.fn(),
+      safeSpawn: vi.fn(() => {
         const EventEmitter = require('events');
         const cp: any = new EventEmitter();
         cp.stdout = new EventEmitter();
@@ -210,11 +210,11 @@ describe('execGradleAsync', () => {
   // A wedged JVM can survive the kill signal; the promise must still settle
   // on abort or the timeout error never surfaces.
   it('should reject on abort even if the process never exits', async () => {
-    const killProcessTreeGraceful = jest.fn(() => Promise.resolve());
-    jest.doMock('@nx/devkit/internal', () => ({
-      ...jest.requireActual('@nx/devkit/internal'),
-      killChildOnHostExit: jest.fn(),
-      safeSpawn: jest.fn(() => {
+    const killProcessTreeGraceful = vi.fn(() => Promise.resolve());
+    vi.doMock('@nx/devkit/internal', async () => ({
+      ...(await vi.importActual<any>('@nx/devkit/internal')),
+      killChildOnHostExit: vi.fn(),
+      safeSpawn: vi.fn(() => {
         const EventEmitter = require('events');
         const cp: any = new EventEmitter();
         cp.pid = 123;
@@ -237,11 +237,11 @@ describe('execGradleAsync', () => {
   });
 
   it('should register the gradle process to be killed on host exit', async () => {
-    const killChildOnHostExit = jest.fn();
+    const killChildOnHostExit = vi.fn();
     let spawned: any;
-    jest.doMock('@nx/devkit/internal', () => ({
-      ...jest.requireActual('@nx/devkit/internal'),
-      safeSpawn: jest.fn(() => {
+    vi.doMock('@nx/devkit/internal', async () => ({
+      ...(await vi.importActual<any>('@nx/devkit/internal')),
+      safeSpawn: vi.fn(() => {
         const EventEmitter = require('events');
         spawned = new EventEmitter();
         spawned.pid = 456;
