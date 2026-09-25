@@ -1,3 +1,4 @@
+import * as devkit from '@nx/devkit';
 import type { MockInstance } from 'vitest';
 // Pin the detected package manager so inferred lock-file outputs (e.g.
 // prune-lockfile) and package-manager commands are deterministic regardless of
@@ -307,9 +308,8 @@ describe('application generator', () => {
     let formatFilesSpy: MockInstance;
 
     beforeEach(() => {
-      const devkitModule = require('@nx/devkit');
       formatFilesSpy = vi
-        .spyOn(devkitModule, 'formatFiles')
+        .spyOn(devkit, 'formatFiles')
         .mockImplementation(() => Promise.resolve());
     });
 

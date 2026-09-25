@@ -1,3 +1,4 @@
+import * as devkit from '@nx/devkit';
 import type { MockInstance } from 'vitest';
 import {
   getProjects,
@@ -357,9 +358,8 @@ describe('lib', () => {
     let formatFilesSpy: MockInstance;
 
     beforeEach(() => {
-      const devkitModule = require('@nx/devkit');
       formatFilesSpy = vi
-        .spyOn(devkitModule, 'formatFiles')
+        .spyOn(devkit, 'formatFiles')
         .mockImplementation(() => Promise.resolve());
     });
 

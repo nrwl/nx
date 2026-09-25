@@ -1,3 +1,4 @@
+import * as devkit from '@nx/devkit';
 import type { MockInstance } from 'vitest';
 import type { Tree } from '@nx/devkit';
 import { runNestSchematic } from './run-nest-schematic';
@@ -43,9 +44,8 @@ describe('runNestSchematic utility', () => {
     let formatFilesSpy: MockInstance;
 
     beforeEach(() => {
-      const devkitModule = require('@nx/devkit');
       formatFilesSpy = vi
-        .spyOn(devkitModule, 'formatFiles')
+        .spyOn(devkit, 'formatFiles')
         .mockImplementation(() => Promise.resolve());
     });
 

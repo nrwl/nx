@@ -1,3 +1,4 @@
+import * as devkit from '@nx/devkit';
 import type { MockInstance } from 'vitest';
 import { readJson, type Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -26,9 +27,8 @@ describe('init generator', () => {
     let formatFilesSpy: MockInstance;
 
     beforeEach(() => {
-      const devkitModule = require('@nx/devkit');
       formatFilesSpy = vi
-        .spyOn(devkitModule, 'formatFiles')
+        .spyOn(devkit, 'formatFiles')
         .mockImplementation(() => Promise.resolve());
     });
 
