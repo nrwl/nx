@@ -40,11 +40,7 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     taskIds: Set<string>;
     plans: ReturnType<HashPlanner['getPlansReference']>;
   } | null = null;
-  /**
-   * Plans an earlier selection left in the daemon. Unlike the planning
-   * context's, these outlive a command, so each use checks them against the
-   * task graph it was given.
-   */
+  /** Plans a daemon-side selection built. They outlive the command that built them. */
   private selectionPlans: {
     taskGraph: TaskGraph;
     plans: ReturnType<HashPlanner['getPlansReference']>;
@@ -203,10 +199,8 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
   }
 
   /**
-   * Affected already planned a superset of these tasks. Narrowing that answer
-   * skips a second pass over the same planner, which costs about as much as
-   * the first even with the subtree memo warm. Falls back to planning when the
-   * plans were built for a graph that plans these tasks differently.
+   * Narrows plans affected already built instead of planning again: a second
+   * pass costs about as much as the first, even with the subtree memo warm.
    */
   private plansFor(
     taskIds: string[],

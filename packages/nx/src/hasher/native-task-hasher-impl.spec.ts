@@ -2094,7 +2094,7 @@ describe('native task hasher with affected plans', () => {
     });
     expect(plan).toHaveBeenCalled();
 
-    // Affected plans without snapshots; a run that hashes from them plans anew.
+    // Affected's plans have no snapshots, so a run with snapshots plans anew.
     plan.mockClear();
     const plansWithSnapshots = vi
       .spyOn(hasher as any, 'plan')
@@ -2119,7 +2119,7 @@ describe('native task hasher with affected plans', () => {
 });
 
 describe('plannedAlike', () => {
-  // `app:build` depends on `lib:build`, which serves continuously from `api:serve`.
+  // `app:build` depends on `lib:build`, which has a continuous dependency on `api:serve`.
   function graph(overrides: Partial<TaskGraph> = {}): TaskGraph {
     const task = (id: string, outputs: string[] = []) => {
       const [project, target] = id.split(':');
@@ -2172,8 +2172,8 @@ describe('plannedAlike', () => {
     expect(plannedAlike(graph(), requested, ['app:build'])).toBe(false);
   });
 
-  // The plan for app:build reads lib:build's outputs, so a change two edges
-  // away still changes it.
+  // The plan for app:build reads lib:build's outputs, so changing only
+  // lib:build still changes it.
   it('refuses when a dependency further down differs', () => {
     const requested = graph();
     requested.tasks['lib:build'] = {
