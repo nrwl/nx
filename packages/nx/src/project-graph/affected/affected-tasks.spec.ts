@@ -277,7 +277,7 @@ describe('computeAffectedTasks', () => {
       exclude: ['lib'],
     });
     expect([...result.affectedTaskIds]).toEqual(['app:test']);
-    expect(result.requiredTaskIds).toEqual(['app:test']);
+    expect(result.taskSelection.taskIds).toEqual(['app:test']);
   });
 });
 
@@ -317,15 +317,17 @@ describe('the run graph selection hands over', () => {
         undefined,
         overrides
       ),
-      result.requiredTaskIds
+      result.taskSelection.taskIds
     );
-    expect(result.runTaskGraph.tasks).toEqual(expected.tasks);
-    expect(result.runTaskGraph.tasks['lib:test'].overrides).toEqual({
+    expect(result.taskSelection.taskGraph.tasks).toEqual(expected.tasks);
+    expect(result.taskSelection.taskGraph.tasks['lib:test'].overrides).toEqual({
       __overrides_unparsed__: [],
     });
-    expect(result.runTaskGraph.dependencies).toEqual(expected.dependencies);
+    expect(result.taskSelection.taskGraph.dependencies).toEqual(
+      expected.dependencies
+    );
     // lib:test runs only because app:test needs it.
-    expect(result.initiatingTaskIds).toEqual(['app:test']);
+    expect(result.taskSelection.initiatingTaskIds).toEqual(['app:test']);
   });
 });
 
@@ -348,7 +350,9 @@ describe('the run graph with --exclude-task-dependencies', () => {
       extraTargetDependencies: { test: ['^test'] },
       excludeTaskDependencies: true,
     });
-    expect(Object.keys(result.runTaskGraph.tasks)).toEqual(['app:test']);
+    expect(Object.keys(result.taskSelection.taskGraph.tasks)).toEqual([
+      'app:test',
+    ]);
   });
 });
 
@@ -371,13 +375,21 @@ describe('computeAffectedTasks with the daemon on', () => {
     daemon.selectAffectedTasks.mockResolvedValueOnce({
       projectGraph: daemonGraph,
       affectedTaskIds: ['lib:test'],
-      requiredTaskIds: ['lib:test'],
-      initiatingTaskIds: ['lib:test'],
       taskGraph: {
         roots: [],
         tasks: {},
         dependencies: {},
         continuousDependencies: {},
+      },
+      taskSelection: {
+        taskGraph: {
+          roots: [],
+          tasks: {},
+          dependencies: {},
+          continuousDependencies: {},
+        },
+        initiatingTaskIds: ['lib:test'],
+        taskIds: ['lib:test'],
       },
     });
 
@@ -405,10 +417,10 @@ describe('computeAffectedTasks with the daemon on', () => {
     // A FileChange's lazy getChanges() cannot cross the socket.
     expect(JSON.parse(JSON.stringify(request))).toEqual(request);
     expect([...result.affectedTaskIds]).toEqual(['lib:test']);
-    expect(result.requiredTaskIds).toEqual(['lib:test']);
-    expect(result.initiatingTaskIds).toEqual(['lib:test']);
+    expect(result.taskSelection.taskIds).toEqual(['lib:test']);
+    expect(result.taskSelection.initiatingTaskIds).toEqual(['lib:test']);
     // The plans stay in the daemon, which is what hashes them.
-    expect(result.planningContext).toBeUndefined();
+    expect(result.taskSelection.planningContext).toBeUndefined();
     // The command runs with the graph the daemon selected against.
     expect(result.projectGraph).toBe(daemonGraph);
   });
@@ -464,7 +476,7 @@ describe('computeAffectedTasks with the daemon on', () => {
       'app:test',
       'lib:test',
     ]);
-    expect(result.planningContext).toBeDefined();
+    expect(result.taskSelection.planningContext).toBeDefined();
   });
 
   // The daemon handles SELECT_AFFECTED_TASKS by calling the same selection;
@@ -488,7 +500,7 @@ describe('computeAffectedTasks with the daemon on', () => {
     });
 
     expect(daemon.selectAffectedTasks).not.toHaveBeenCalled();
-    expect(result.planningContext).toBeDefined();
+    expect(result.taskSelection.planningContext).toBeDefined();
   });
 });
 

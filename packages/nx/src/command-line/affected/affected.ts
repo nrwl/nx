@@ -182,13 +182,7 @@ async function getAffectedTasks(
   projectGraph: ProjectGraph;
   taskSelection: TaskSelection;
 }> {
-  const {
-    projectGraph,
-    requiredTaskIds,
-    initiatingTaskIds,
-    runTaskGraph,
-    planningContext,
-  } = await computeAffectedTasks({
+  const { projectGraph, taskSelection } = await computeAffectedTasks({
     nxJson,
     targets: nxArgs.targets,
     touchedFiles: calculateFileChanges(parseFiles(nxArgs).files, nxArgs),
@@ -203,15 +197,7 @@ async function getAffectedTasks(
     excludeTaskDependencies,
     exclude: nxArgs.exclude,
   });
-  return {
-    projectGraph,
-    taskSelection: {
-      taskGraph: runTaskGraph,
-      initiatingTaskIds,
-      taskIds: requiredTaskIds,
-      planningContext,
-    },
-  };
+  return { projectGraph, taskSelection };
 }
 
 function initiatingProjects(selection: TaskSelection): string[] {

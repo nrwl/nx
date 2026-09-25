@@ -32,6 +32,7 @@ import {
   TaskPlanningContext,
 } from '../../hasher/task-planning-context';
 import { DependencyChanges } from './affected-project-graph-models';
+import type { TaskSelection } from '../../tasks-runner/run-command';
 import { daemonClient } from '../../daemon/client/client';
 import { isOnDaemon } from '../../daemon/is-on-daemon';
 import { getProjectGlobPatterns } from './affected-projects';
@@ -57,16 +58,10 @@ export interface AffectedTasksResult {
   projectGraph: ProjectGraph;
   /** Tasks that are themselves affected — NOT their dependency closure. */
   affectedTaskIds: Set<string>;
-  /** `affectedTaskIds` plus everything they depend on: what a run keeps. */
-  requiredTaskIds: string[];
-  /** The kept tasks the command asked for, rather than ones pulled in as dependencies. */
-  initiatingTaskIds: string[];
   /** The full, unpruned graph the answer was computed over. */
   taskGraph: TaskGraph;
-  /** The graph the run executes. */
-  runTaskGraph: TaskGraph;
-  /** Hand to the runner so the survivors are not planned a second time. */
-  planningContext?: TaskPlanningContext;
+  /** What the run executes: the affected tasks and what they depend on. */
+  taskSelection: TaskSelection;
 }
 
 export interface ComputeAffectedTasksOptions {
@@ -134,12 +129,8 @@ export async function computeAffectedTasks(
     try {
       const selection = await daemonClient.selectAffectedTasks(request);
       return {
-        projectGraph: selection.projectGraph,
+        ...selection,
         affectedTaskIds: new Set(selection.affectedTaskIds),
-        requiredTaskIds: selection.requiredTaskIds,
-        initiatingTaskIds: selection.initiatingTaskIds,
-        taskGraph: selection.taskGraph,
-        runTaskGraph: selection.runTaskGraph,
       };
     } catch (e) {
       if (e?.name === DaemonProjectGraphError.name) {
@@ -165,19 +156,19 @@ export async function computeAffectedTasks(
   return {
     projectGraph,
     affectedTaskIds: selection.affectedTaskIds,
-    requiredTaskIds: selection.requiredTaskIds,
-    initiatingTaskIds: selection.initiatingTaskIds,
     taskGraph: selection.taskGraph,
-    runTaskGraph: selection.runTaskGraph,
-    // The plans ride along so the hasher narrows them instead of building its
-    // own. Every task it will be asked about is in here, since the pruned graph
-    // is a subset of the one planned above.
-    planningContext: selection.plans
-      ? {
-          ...planningContext,
-          plans: { plans: selection.plans, taskGraph: selection.taskGraph },
-        }
-      : undefined,
+    taskSelection: {
+      ...selection.taskSelection,
+      // The plans ride along so the hasher narrows them instead of building
+      // its own. Every task it will be asked about is in here, since the run
+      // graph is a subset of the one planned above.
+      planningContext: selection.plans
+        ? {
+            ...planningContext,
+            plans: { plans: selection.plans, taskGraph: selection.taskGraph },
+          }
+        : undefined,
+    },
   };
 }
 
@@ -203,10 +194,8 @@ export async function selectAffectedTasks(
   packageJson?: any
 ): Promise<{
   affectedTaskIds: Set<string>;
-  requiredTaskIds: string[];
-  initiatingTaskIds: string[];
   taskGraph: TaskGraph;
-  runTaskGraph: TaskGraph;
+  taskSelection: TaskSelection;
   plans?: NonNullable<TaskPlanningContext['plans']>['plans'];
 }> {
   const { targets } = request;
@@ -223,10 +212,8 @@ export async function selectAffectedTasks(
     };
     return {
       affectedTaskIds: new Set(),
-      requiredTaskIds: [],
-      initiatingTaskIds: [],
       taskGraph: empty,
-      runTaskGraph: empty,
+      taskSelection: { taskGraph: empty, initiatingTaskIds: [], taskIds: [] },
     };
   }
 
@@ -292,31 +279,33 @@ export async function selectAffectedTasks(
 
   return {
     affectedTaskIds: new Set(selection.affected),
-    requiredTaskIds: selection.required,
-    initiatingTaskIds: keep.filter((id) => initial.has(id)),
     taskGraph,
-    // Edges that disagree on a dependency's overrides leave it to a build from
-    // the owning projects, which settles them the way the run always has.
-    runTaskGraph:
-      narrowTaskGraph(
-        projectGraph,
-        taskGraph,
-        dependencyOverrides,
-        initial,
-        new Set(keep)
-      ) ??
-      pruneToSelectedTasks(
-        createTaskGraph(
+    taskSelection: {
+      // Edges that disagree on a dependency's overrides leave it to a build
+      // from the owning projects, which settles them the way the run always has.
+      taskGraph:
+        narrowTaskGraph(
           projectGraph,
-          request.extraTargetDependencies,
-          [...owning],
-          targets,
-          request.configuration,
-          request.overrides,
-          request.excludeTaskDependencies
+          taskGraph,
+          dependencyOverrides,
+          initial,
+          new Set(keep)
+        ) ??
+        pruneToSelectedTasks(
+          createTaskGraph(
+            projectGraph,
+            request.extraTargetDependencies,
+            [...owning],
+            targets,
+            request.configuration,
+            request.overrides,
+            request.excludeTaskDependencies
+          ),
+          keep
         ),
-        keep
-      ),
+      initiatingTaskIds: keep.filter((id) => initial.has(id)),
+      taskIds: keep,
+    },
     plans,
   };
 }

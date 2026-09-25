@@ -2,14 +2,22 @@ const state = vi.hoisted(() => ({
   graph: { error: null as unknown, projectGraph: { nodes: {} } as any },
   selection: {
     affectedTaskIds: new Set(['app:build']),
-    requiredTaskIds: ['app:build'],
     taskGraph: {
       roots: [],
       tasks: {},
       dependencies: {},
       continuousDependencies: {},
     },
-    runTaskGraph: undefined,
+    taskSelection: {
+      taskGraph: {
+        roots: [],
+        tasks: {},
+        dependencies: {},
+        continuousDependencies: {},
+      },
+      initiatingTaskIds: ['app:build'],
+      taskIds: ['app:build'],
+    },
     plans: {} as unknown,
   },
 }));
@@ -51,6 +59,7 @@ describe('handleSelectAffectedTasks', () => {
     expect(selectAffectedTasks.mock.calls[0][0]).toBe(state.graph.projectGraph);
     expect((response as any).projectGraph).toBe(state.graph.projectGraph);
     expect((response as any).affectedTaskIds).toEqual(['app:build']);
+    expect((response as any).taskSelection).toBe(state.selection.taskSelection);
     expect(keepSelectionPlans).toHaveBeenCalledWith(
       state.graph.projectGraph,
       state.selection.taskGraph,
