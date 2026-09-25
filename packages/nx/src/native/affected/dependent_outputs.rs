@@ -39,16 +39,7 @@ pub(crate) fn compute_dependent_output_edges(
         setup_duration
     );
 
-    let edges: HashMap<String, Vec<String>> = hash_plans
-        .plans
-        .par_iter()
-        .map_init(HashSet::new, |seen, (consumer, plan)| {
-            let producers =
-                producers_read_by(consumer, plan, &reads, &patterns_of, task_graph, seen);
-            (!producers.is_empty()).then(|| (consumer.clone(), producers))
-        })
-        .flatten()
-        .collect();
+    let edges = producers_by_consumer(hash_plans, &reads, &patterns_of, task_graph);
     debug!(
         "output reads resolved in {:?} - {} plans, {} consumers, {} edges (setup: {:?})",
         start.elapsed(),
@@ -58,6 +49,24 @@ pub(crate) fn compute_dependent_output_edges(
         setup_duration
     );
     edges
+}
+
+/// Every consumer that reads another task's outputs -> those producers.
+fn producers_by_consumer(
+    hash_plans: &HashPlans,
+    reads: &OutputReads,
+    patterns_of: &HashMap<&str, Vec<OutputPattern>>,
+    task_graph: &TaskGraph,
+) -> HashMap<String, Vec<String>> {
+    hash_plans
+        .plans
+        .par_iter()
+        .map_init(HashSet::new, |seen, (consumer, plan)| {
+            let producers = producers_read_by(consumer, plan, reads, patterns_of, task_graph, seen);
+            (!producers.is_empty()).then(|| (consumer.clone(), producers))
+        })
+        .flatten()
+        .collect()
 }
 
 /// Each task with declared outputs -> those outputs, parsed for comparison.
