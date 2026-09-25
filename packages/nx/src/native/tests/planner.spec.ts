@@ -1896,7 +1896,7 @@ describe('task planner', () => {
       } as any;
       const planner = new HashPlanner(
         nxJson,
-        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+        transferProjectGraph(toRustProjectGraph(projectGraph))
       );
       return { planner, taskGraph, projectGraph };
     }
@@ -2220,7 +2220,7 @@ describe('task planner', () => {
         );
         const planner = new HashPlanner(
           {} as any,
-          transferProjectGraph(transformProjectGraphForRust(projectGraph))
+          transferProjectGraph(toRustProjectGraph(projectGraph))
         );
         return { planner, taskGraph };
       }
@@ -2305,7 +2305,7 @@ describe('task planner', () => {
         {
           namedInputs: { prod: ['default', '!{projectRoot}/**/*.spec.ts'] },
         } as any,
-        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+        transferProjectGraph(toRustProjectGraph(projectGraph))
       );
       expect(
         planner.getPlans(['parent:build'], taskGraph)['parent:build']
@@ -2338,7 +2338,7 @@ describe('task planner', () => {
         {
           namedInputs: { prod: ['default', '!{projectRoot}/**/*.spec.ts'] },
         } as any,
-        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+        transferProjectGraph(toRustProjectGraph(projectGraph))
       );
       const plan = planner.getPlans(
         ['parent:build'],
@@ -2387,7 +2387,7 @@ describe('task planner', () => {
         {
           namedInputs: { prod: ['default', '!{projectRoot}/**/*.spec.ts'] },
         } as any,
-        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+        transferProjectGraph(toRustProjectGraph(projectGraph))
       );
       const json = 'child:json:libs/child/package.json[version]';
       const planReading = (inputs: string[]) =>
@@ -2445,7 +2445,7 @@ describe('task planner', () => {
           {
             namedInputs: { prod: ['default', '!{projectRoot}/**/*.spec.ts'] },
           } as any,
-          transferProjectGraph(transformProjectGraphForRust(projectGraph))
+          transferProjectGraph(toRustProjectGraph(projectGraph))
         );
         const declared = planner
           .getPlans(['parent:build'], taskGraph)
@@ -2682,7 +2682,7 @@ describe('task planner', () => {
       );
       const planner = new HashPlanner(
         {} as any,
-        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+        transferProjectGraph(toRustProjectGraph(projectGraph))
       );
       const snapshots = snapshotsFor({
         'parent:build': { inputs: ['libs/parent/filea.ts'] },

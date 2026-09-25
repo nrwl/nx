@@ -676,7 +676,7 @@ mod tests {
             &External::new(Arc::new(graph)),
         );
         let plans = planner
-            .get_plans_internal(vec!["app:build", "ui:build"], graph_of_tasks())
+            .get_plans_internal(vec!["app:build", "ui:build"], graph_of_tasks(), None, &[])
             .unwrap();
         let e = compute_dependent_output_edges(&plans, &graph_of_tasks());
         assert_eq!(e["app:build"], strings(&["ui:build"]));
