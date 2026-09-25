@@ -29,7 +29,7 @@ Follow the steps from this guide exactly: {pageUrl}
 Report which tasks you fixed and which category (a/b/c) you used for each. Ask before continuing to the next task if you are uncertain about any change.
 {% /llm_copy_prompt %}
 
-When [task sandboxing](/docs/features/ci-features/sandboxing) catches a task reading or writing files outside its declared `inputs` and `outputs`, the cache is no longer reliable for that task.
+When [task sandboxing](/docs/kb/sandboxing) catches a task reading or writing files outside its declared `inputs` and `outputs`, the cache is no longer reliable for that task.
 This guide walks through fixing every violating task on a branch so caching is correct again.
 
 ## 1. Download the reports
@@ -110,7 +110,7 @@ Fix the offending code or script, not the Nx config.
 ### Benign access, last resort
 
 The access is harmless and not worth a per-task fix.
-Exclude the path in `.nx/workflows/sandboxing-config.yaml` (see [Excluding paths](/docs/features/ci-features/sandboxing#excluding-paths) for the full reference):
+Exclude the path in `.nx/workflows/sandboxing-config.yaml` (see [Excluding paths](/docs/kb/sandboxing#excluding-paths) for the full reference):
 
 ```yaml
 # .nx/workflows/sandboxing-config.yaml
@@ -163,6 +163,6 @@ The dashboard view is the canonical source - it shows the most recent report per
 
 ## Related
 
-- [Task sandboxing](/docs/features/ci-features/sandboxing)
+- [Task sandboxing](/docs/kb/sandboxing)
 - [Cache task results](/docs/features/cache-task-results)
 - [Project configuration reference](/docs/reference/project-configuration)

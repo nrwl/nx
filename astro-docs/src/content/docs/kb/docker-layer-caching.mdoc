@@ -2,11 +2,10 @@
 title: 'Docker Layer Caching'
 description: 'Cache Docker build layers across CI runs on Nx Agents to speed up image builds.'
 keywords: [docker, layer caching, buildkit, nx agents, nx cloud, add-on]
-sidebar:
-  label: Docker layer caching
-  order: 21
-  badge: new!
-filter: 'type:Features'
+filter: 'type:Guides'
+topics:
+  - 'Continuous integration'
+  - 'Nx Cloud'
 ---
 
 Docker layer caching reuses the intermediate layers produced by `docker build` (the result of each
@@ -18,7 +17,7 @@ build pulls it from a registry cache instead of rebuilding it, cutting image bui
 
 {% aside type="note" title="Requires a dedicated compute cluster" %}
 Docker layer caching is an Nx Cloud add-on that runs on a
-[dedicated compute cluster](/docs/features/ci-features/dedicated-compute-cluster). Request the
+[dedicated compute cluster](/docs/kb/dedicated-compute-cluster). Request the
 cluster, then enable this add-on under [**Settings > Add-ons**](https://cloud.nx.app/go/organization/add-ons).
 {% /aside %}
 

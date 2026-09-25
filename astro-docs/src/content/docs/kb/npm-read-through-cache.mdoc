@@ -3,11 +3,10 @@ title: 'npm Read-Through Cache'
 description: 'Serve repeated npm installs from a cache close to your Nx Agents instead of the public npm registry.'
 keywords:
   [npm, read-through cache, registry proxy, nx agents, nx cloud, add-on, npmrc]
-sidebar:
-  label: npm read-through cache
-  order: 23
-  badge: new!
-filter: 'type:Features'
+filter: 'type:Guides'
+topics:
+  - 'Continuous integration'
+  - 'Nx Cloud'
 ---
 
 The npm read-through cache puts a package registry proxy close to your
@@ -23,7 +22,7 @@ It also protects your organization from npm registry outages.
 
 {% aside type="note" title="Requires a dedicated compute cluster" %}
 The npm read-through cache is an Nx Cloud add-on that runs on a
-[dedicated compute cluster](/docs/features/ci-features/dedicated-compute-cluster). Request the
+[dedicated compute cluster](/docs/kb/dedicated-compute-cluster). Request the
 cluster, then enable this add-on under [**Settings > Add-ons**](https://cloud.nx.app/go/organization/add-ons).
 {% /aside %}
 

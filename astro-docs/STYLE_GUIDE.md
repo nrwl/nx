@@ -547,25 +547,26 @@ Use tables for structured data that benefits from a matrix layout. For simple li
 
 Use these terms consistently. When writing about Nx concepts, use the exact term from this list.
 
-| Term           | Usage notes                                                                                |
-| -------------- | ------------------------------------------------------------------------------------------ |
-| workspace      | The root directory managed by Nx. Not "repo" or "monorepo" when referring to Nx's context. |
-| project        | An app or library within the workspace.                                                    |
-| target         | A task that can be run for a project (e.g., `build`, `test`, `lint`).                      |
-| executor       | The implementation behind a target. Not "builder."                                         |
-| generator      | Code scaffolding tool. Not "schematic."                                                    |
-| plugin         | An Nx plugin that provides executors, generators, or graph inference.                      |
-| task           | A specific invocation of a target for a project (e.g., `myapp:build`).                     |
-| project graph  | The dependency graph between projects.                                                     |
-| affected       | Projects impacted by a code change.                                                        |
-| cache / cached | Not "memoized" or "stored results."                                                        |
-| remote caching | Sharing cached results across machines. Specific product: "Nx Replay."                     |
-| Nx Cloud       | The hosted CI/CD product. Always capitalized.                                              |
-| Nx Console     | The IDE extension. Always capitalized.                                                     |
-| Nx Agents      | Distributed task execution product. Always capitalized.                                    |
-| Nx Replay      | Remote caching product. Always capitalized.                                                |
-| `nx.json`      | Always in code style.                                                                      |
-| `project.json` | Always in code style.                                                                      |
+| Term                 | Usage notes                                                                                            |
+| -------------------- | ------------------------------------------------------------------------------------------------------ |
+| workspace            | The root directory managed by Nx. Not "repo" or "monorepo" when referring to Nx's context.             |
+| project              | An app or library within the workspace.                                                                |
+| target               | A task that can be run for a project (e.g., `build`, `test`, `lint`).                                  |
+| executor             | The implementation behind a target. Not "builder."                                                     |
+| generator            | Code scaffolding tool. Not "schematic."                                                                |
+| plugin               | An Nx plugin that provides executors, generators, or graph inference.                                  |
+| task                 | A specific invocation of a target for a project (e.g., `myapp:build`).                                 |
+| project graph        | The dependency graph between projects.                                                                 |
+| affected             | Projects impacted by a code change.                                                                    |
+| cache / cached       | Not "memoized" or "stored results."                                                                    |
+| remote caching       | Sharing cached results across machines. Specific product: "Nx Replay."                                 |
+| Nx Cloud             | The hosted CI/CD product. Always capitalized.                                                          |
+| Nx Console           | The IDE extension. Always capitalized.                                                                 |
+| Nx Agents            | Distributed task execution product. Always capitalized.                                                |
+| Nx Replay            | Remote caching product. Always capitalized.                                                            |
+| dynamic task packing | How Nx Agents fill each agent by CPU and memory use. Lowercase. Italicize the first mention on a page. |
+| `nx.json`            | Always in code style.                                                                                  |
+| `project.json`       | Always in code style.                                                                                  |
 
 ## Vale configuration
 

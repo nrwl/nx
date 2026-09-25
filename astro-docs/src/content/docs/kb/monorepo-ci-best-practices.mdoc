@@ -158,7 +158,7 @@ jobs:
 Nothing here names a project or a path, so adding, removing, or renaming projects changes no CI
 config.
 For the complete workflow, including caching and distribution, see the
-[GitHub Actions integration](/docs/features/ci-features/github-integration).
+[GitHub Actions integration](/docs/kb/github-integration).
 
 One case needs tuning.
 A lock file change marks every project affected by default, which is safe but expensive.
@@ -219,7 +219,7 @@ Sparse checkout is a worse trade, since excluding files the project graph is bui
 change detection incomplete.
 
 Other providers expose the same information under different names.
-The [CI setup guides](/docs/kb/setup-ci) cover how to retrieve the last successful commit on
+The [affected base commit guide](/docs/kb/affected-base-commit) covers how to retrieve the last successful commit on
 CircleCI, GitLab, Azure Pipelines, Jenkins, and Bitbucket.
 
 ## Cache task results, not just dependencies
@@ -262,7 +262,7 @@ A task that writes outside its declared outputs leaves those files missing on th
 Prefer tooling that derives inputs from your build configuration rather than asking you to list them
 by hand.
 To enforce the declarations instead of trusting them, Nx Cloud
-[task sandboxing](/docs/features/ci-features/sandboxing) confines each task to its declared inputs
+[task sandboxing](/docs/kb/sandboxing) confines each task to its declared inputs
 and outputs and reports a violation when it reads or writes anything else, so an undeclared
 dependency surfaces on the run that introduced it.
 
@@ -339,7 +339,7 @@ Heavy targets like `e2e` and `build` need more memory than `lint`.
 work gets large machines and everything else runs on cheap ones.
 
 For a side-by-side comparison of running on one machine against distributing across many, see
-[parallelization and distribution](/docs/concepts/ci-concepts/parallelization-distribution).
+[parallelization and distribution](/docs/concepts/ci-concepts/building-blocks-fast-ci).
 
 ## Split slow tasks into smaller ones
 
@@ -364,7 +364,7 @@ Three files can run on three agents.
 The cost is that you now maintain the division by hand, and files drift back toward being too large
 as tests get added.
 
-Nx Cloud [splits slow tasks by file](/docs/features/ci-features/split-e2e-tasks) once you add the Nx
+Nx Cloud [splits slow tasks by file](/docs/kb/split-e2e-tasks) once you add the Nx
 plugin for your test runner.
 It creates one task per spec file you already have, without changing your filenames.
 Each task is scheduled and cached like any other, so unchanged specs are read from cache, changed
@@ -391,7 +391,7 @@ A general approach needs three things, in order of preference:
   service you don't control.
 
 A task cache makes the first one tractable, because "identical inputs" is already the cache key.
-Nx Cloud [detects flaky tasks](/docs/features/ci-features/flaky-tasks) from that history, re-runs
+Nx Cloud [detects flaky tasks](/docs/kb/flaky-tasks) from that history, re-runs
 only those tasks instead of the whole pipeline, and puts them on a different agent so an environment
 problem doesn't reproduce itself. [Find and fix flaky tests](/docs/kb/flaky-tests-in-ci) before
 they force another full-pipeline retry.
