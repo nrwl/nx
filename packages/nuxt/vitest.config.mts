@@ -12,8 +12,9 @@ export default defineConfig({
     include: ['**/*.spec.ts'],
     exclude: ['**/node_modules/**', '**/files/**'],
     setupFiles: ['../../tools/vitest/setup.mts'],
-    // Matches jest.preset.js.
+    // Matches jest.preset.js, whose testTimeout also bounds hooks.
     testTimeout: 35000,
+    hookTimeout: 35000,
     // nx's native .node bindings are not thread-safe across worker threads.
     pool: 'forks',
     // Specs that stand up native workspace contexts leave their worker slow to
