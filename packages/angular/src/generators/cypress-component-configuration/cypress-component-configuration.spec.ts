@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import {
   DependencyType,
@@ -10,13 +11,18 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { mockCjsModule } from '@nx/devkit/internal-testing-utils';
+import { createRequire } from 'module';
 
 let projectGraph: ProjectGraph = { nodes: {}, dependencies: {} };
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
-  createProjectGraphAsync: jest
-    .fn()
-    .mockImplementation(async () => projectGraph),
+const mocks = vi.hoisted(() => ({
+  createProjectGraphAsync: vi.fn().mockImplementation(async () => projectGraph),
+  readCachedProjectGraph: vi.fn().mockImplementation(() => projectGraph),
+  getInstalledCypressMajorVersion: vi.fn(),
+}));
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: mocks.createProjectGraphAsync,
 }));
 
 import { componentGenerator } from '../component/component';
@@ -24,15 +30,30 @@ import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-
 import { generateTestApplication, generateTestLibrary } from '../utils/testing';
 import { cypressComponentConfiguration } from './cypress-component-configuration';
 
-jest.mock('@nx/cypress/internal', () => ({
-  ...jest.requireActual('@nx/cypress/internal'),
-  getInstalledCypressMajorVersion: jest.fn(),
+vi.mock('@nx/cypress/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/cypress/internal')),
+  getInstalledCypressMajorVersion: mocks.getInstalledCypressMajorVersion,
 }));
 // nested code imports graph from the repo, which might have innacurate graph version
-jest.mock('nx/src/project-graph/project-graph', () => ({
-  ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
-  readCachedProjectGraph: jest.fn().mockImplementation(() => projectGraph),
+vi.mock('nx/src/project-graph/project-graph', async () => ({
+  ...(await vi.importActual<any>('nx/src/project-graph/project-graph')),
+  readCachedProjectGraph: mocks.readCachedProjectGraph,
 }));
+// The generator `require`s @nx/cypress/internal, which reaches the graph and
+// @nx/devkit on the CJS channel; register those first so cypress loads them.
+const cjsRequire = createRequire(import.meta.url);
+mockCjsModule(import.meta.url, 'nx/src/project-graph/project-graph', {
+  ...cjsRequire('nx/src/project-graph/project-graph'),
+  readCachedProjectGraph: mocks.readCachedProjectGraph,
+});
+mockCjsModule(import.meta.url, '@nx/devkit', {
+  ...cjsRequire('@nx/devkit'),
+  createProjectGraphAsync: mocks.createProjectGraphAsync,
+});
+mockCjsModule(import.meta.url, '@nx/cypress/internal', {
+  ...cjsRequire('@nx/cypress/internal'),
+  getInstalledCypressMajorVersion: mocks.getInstalledCypressMajorVersion,
+});
 
 // Cypress below 15.20.1 can't run component tests on Angular 22.1+, so tests
 // exercising older Cypress behavior pin Angular below 22.1.
@@ -46,7 +67,7 @@ function useAngularSupportedByCypress(tree: Tree) {
 
 describe('Cypress Component Testing Configuration', () => {
   let tree: Tree;
-  let mockedInstalledCypressVersion: jest.Mock<
+  let mockedInstalledCypressVersion: Mock<
     ReturnType<typeof getInstalledCypressMajorVersion>
   > = getInstalledCypressMajorVersion as never;
   // TODO(@leosvelperez): Turn this to adding the plugin
@@ -62,7 +83,7 @@ describe('Cypress Component Testing Configuration', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('updateProjectConfig', () => {
@@ -218,7 +239,7 @@ describe('Cypress Component Testing Configuration', () => {
         skipFormat: true,
       });
 
-      jest.clearAllMocks();
+      vi.clearAllMocks();
 
       const appConfig = readProjectConfiguration(tree, 'fancy-app');
       appConfig.targets['build'].executor = 'something/else';
