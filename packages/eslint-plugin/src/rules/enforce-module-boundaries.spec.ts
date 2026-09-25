@@ -15,17 +15,17 @@ import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName,
 } from '../../src/rules/enforce-module-boundaries';
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
   workspaceRoot: '/root',
 }));
 
-jest.mock('nx/src/utils/workspace-root', () => ({
+vi.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
 
-jest.mock('nx/src/plugins/js/utils/resolve-relative-to-dir', () => ({
-  resolveRelativeToDir: jest.fn().mockImplementation((pathOrPackage) => {
+vi.mock('nx/src/plugins/js/utils/resolve-relative-to-dir', () => ({
+  resolveRelativeToDir: vi.fn().mockImplementation((pathOrPackage) => {
     return join(
       '/root',
       'node_modules',

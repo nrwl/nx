@@ -20,8 +20,8 @@ import {
 } from './runtime-lint-utils';
 import { vol } from 'memfs';
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
   workspaceRoot: '/root',
 }));
 
@@ -348,9 +348,8 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
 describe('is terminal run', () => {
   const originalArgv = process.argv;
 
-  // Set only process.argv rather than reassigning the whole `process` object.
-  // Under Node >= 26 the jest sandbox global is a Proxy and reassigning the
-  // global `process` binding throws ReferenceError; mutating the property works.
+  // Mutate process.argv: reassigning the global `process` binding throws in
+  // sandboxed test globals (Node >= 26).
   const mockProcessArgv = (argv: string[]) => {
     process.argv = argv;
   };

@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import '@nx/devkit/internal-testing-utils/mock-fs';
 
 import type {
@@ -17,20 +18,20 @@ import dependencyChecks, {
   RULE_NAME as dependencyChecksRuleName,
 } from './dependency-checks';
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
   workspaceRoot: '/root',
 }));
 
-jest.mock('nx/src/utils/workspace-root', () => ({
+vi.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
 
-jest.mock('nx/src/utils/package-manager', () => {
-  const actual = jest.requireActual('nx/src/utils/package-manager');
+vi.mock('nx/src/utils/package-manager', async () => {
+  const actual = await vi.importActual<any>('nx/src/utils/package-manager');
   return {
     ...actual,
-    detectPackageManager: jest.fn(actual.detectPackageManager),
+    detectPackageManager: vi.fn(actual.detectPackageManager),
   };
 });
 
@@ -1726,11 +1727,11 @@ describe('Dependency checks (eslint)', () => {
 
   describe('pnpm catalogs', () => {
     beforeEach(() => {
-      (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
+      (detectPackageManager as Mock).mockReturnValue('pnpm');
     });
 
     afterEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     it('should report error for catalog references without pnpm-workspace.yaml', () => {
@@ -2680,11 +2681,11 @@ describe('Dependency checks (eslint)', () => {
 
   describe('bun catalogs', () => {
     beforeEach(() => {
-      (detectPackageManager as jest.Mock).mockReturnValue('bun');
+      (detectPackageManager as Mock).mockReturnValue('bun');
     });
 
     afterEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     function runMissingDepRule(rootPackageJsonContent: object) {
