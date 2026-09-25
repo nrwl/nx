@@ -55,7 +55,6 @@ import {
   createNxReleaseConfigAndPopulateWorkspace,
   mockResolveVersionActionsForProjectImplementation,
 } from '../version/test-utils';
-import { ProjectNotConfiguredForReleaseError } from '../version/version-actions';
 import { createReleaseGraph } from './release-graph';
 
 process.env.NX_DAEMON = 'false';
@@ -1415,12 +1414,12 @@ describe('ReleaseGraph', () => {
         ''
       );
 
-      await expect(result).rejects.toBeInstanceOf(
-        ProjectNotConfiguredForReleaseError
-      );
-      await expect(result).rejects.toThrow(
-        'dependency project "external-project" because it is not configured for Nx Release'
-      );
+      await expect(result).rejects.toMatchObject({
+        code: 'NX_RELEASE_PROJECT_NOT_CONFIGURED',
+        message: expect.stringContaining(
+          'dependency project "external-project" because it is not configured for Nx Release'
+        ),
+      });
     });
 
     it('retains the underlying resolver failure in the actionable error', async () => {

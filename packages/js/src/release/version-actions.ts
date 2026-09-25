@@ -12,10 +12,7 @@ import { exec } from 'node:child_process';
 import { join } from 'node:path';
 import { applyEdits, FormattingOptions, modify } from 'jsonc-parser';
 import { validRange } from 'semver';
-import {
-  ProjectNotConfiguredForReleaseError,
-  VersionActions,
-} from 'nx/release';
+import { VersionActions } from 'nx/release';
 import type { ResolveVersionForDependency } from 'nx/release';
 import type {
   AfterAllProjectsVersioned,
@@ -459,7 +456,11 @@ export default class JsVersionActions extends VersionActions {
 
   private shouldPreserveUnconfiguredPrivateDevDependency(
     tree: Tree,
-    manifest: Record<string, Record<string, string> | unknown>,
+    manifest: {
+      dependencies?: Record<string, string>;
+      peerDependencies?: Record<string, string>;
+      optionalDependencies?: Record<string, string>;
+    },
     dependencyType: string,
     dependencyName: string,
     targetProject: LocalDependencyProject,
@@ -467,13 +468,13 @@ export default class JsVersionActions extends VersionActions {
   ): boolean {
     if (
       dependencyType !== 'devDependencies' ||
-      !(error instanceof ProjectNotConfiguredForReleaseError) ||
-      ['dependencies', 'peerDependencies', 'optionalDependencies'].some(
-        (type) =>
-          (manifest[type] as Record<string, string> | undefined)?.[
-            dependencyName
-          ] !== undefined
-      )
+      (error as { code?: unknown } | null | undefined)?.code !==
+        'NX_RELEASE_PROJECT_NOT_CONFIGURED' ||
+      [
+        manifest.dependencies,
+        manifest.peerDependencies,
+        manifest.optionalDependencies,
+      ].some((dependencies) => dependencies?.[dependencyName] !== undefined)
     ) {
       return false;
     }

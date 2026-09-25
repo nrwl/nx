@@ -34,26 +34,14 @@ export type SemverBumpType = ReleaseType | 'none';
  * when it is part of the release, or its current version when it is not being
  * versioned.
  *
+ * When the project is not configured for Nx Release, the returned promise
+ * rejects with an error whose `code` is `NX_RELEASE_PROJECT_NOT_CONFIGURED`.
+ *
  * @public
  */
 export type ResolveVersionForDependency = (
   dependencyProjectName: string
 ) => Promise<string>;
-
-/**
- * Indicates that a dependency project cannot provide a concrete version
- * because it is outside the configured Nx Release projects.
- *
- * @public
- */
-export class ProjectNotConfiguredForReleaseError extends Error {
-  constructor(projectName: string) {
-    super(
-      `Cannot resolve a concrete current version for dependency project "${projectName}" because it is not configured for Nx Release. Include the project in an Nx Release group so that its current version resolver can be configured.`
-    );
-    this.name = 'ProjectNotConfiguredForReleaseError';
-  }
-}
 
 function resolveVersionActionsPath(
   path: string,

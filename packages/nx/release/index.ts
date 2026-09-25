@@ -9,6 +9,5 @@ export {
   releaseVersion,
   VersionActions,
   AfterAllProjectsVersioned,
-  ProjectNotConfiguredForReleaseError,
   ResolveVersionForDependency,
 } from '../src/command-line/release';

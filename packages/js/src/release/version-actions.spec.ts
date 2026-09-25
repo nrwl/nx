@@ -1,6 +1,5 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { readJson, writeJson, type Tree } from '@nx/devkit';
-import { ProjectNotConfiguredForReleaseError } from 'nx/release';
 import JsVersionActions from './version-actions';
 
 vi.mock('@nx/devkit', async () => ({
@@ -227,8 +226,10 @@ describe('JsVersionActions', () => {
   });
 
   describe('local dependencies outside the release set', () => {
-    const notConfiguredForReleaseError = (projectName = 'dependency') =>
-      new ProjectNotConfiguredForReleaseError(projectName);
+    const notConfiguredForReleaseError = () =>
+      Object.assign(new Error('not configured for Nx Release'), {
+        code: 'NX_RELEASE_PROJECT_NOT_CONFIGURED',
+      });
 
     it('handles protocol preservation independently for each manifest', async () => {
       const tree = createTreeWithEmptyWorkspace();
@@ -419,37 +420,40 @@ describe('JsVersionActions', () => {
       expect(resolveCurrentVersion).not.toHaveBeenCalled();
     });
 
-    it('preserves an unconfigured private development dependency', async () => {
-      const tree = createTreeWithEmptyWorkspace();
-      writeJson(tree, 'packages/my-lib/package.json', {
-        devDependencies: { dependency: 'workspace:^' },
-      });
-      writeJson(tree, 'packages/dependency/package.json', {
-        name: 'dependency',
-        private: true,
-      });
-      const versionActions = await createVersionActions(tree);
+    it.each(['workspace:^', 'file:../dependency'])(
+      'preserves an unconfigured private development dependency using %s',
+      async (specifier) => {
+        const tree = createTreeWithEmptyWorkspace();
+        writeJson(tree, 'packages/my-lib/package.json', {
+          devDependencies: { dependency: specifier },
+        });
+        writeJson(tree, 'packages/dependency/package.json', {
+          name: 'dependency',
+          private: true,
+        });
+        const versionActions = await createVersionActions(tree);
 
-      await versionActions.updateProjectDependencies(
-        tree,
-        createProjectGraph(),
-        {},
-        async () => {
-          throw notConfiguredForReleaseError();
-        }
-      );
+        await versionActions.updateProjectDependencies(
+          tree,
+          createProjectGraph(),
+          {},
+          async () => {
+            throw notConfiguredForReleaseError();
+          }
+        );
 
-      expect(readJson(tree, 'packages/my-lib/package.json')).toEqual({
-        devDependencies: { dependency: 'workspace:^' },
-      });
-    });
+        expect(readJson(tree, 'packages/my-lib/package.json')).toEqual({
+          devDependencies: { dependency: specifier },
+        });
+      }
+    );
 
     it.each(['dependencies', 'peerDependencies', 'optionalDependencies'])(
       'rejects an unconfigured private dependency also used in %s',
       async (dependencyType) => {
         const tree = createTreeWithEmptyWorkspace();
         writeJson(tree, 'packages/my-lib/package.json', {
-          [dependencyType]: { dependency: 'workspace:^' },
+          [dependencyType]: { dependency: '^1.0.0' },
           devDependencies: { dependency: 'workspace:^' },
         });
         writeJson(tree, 'packages/dependency/package.json', {
@@ -471,27 +475,31 @@ describe('JsVersionActions', () => {
       }
     );
 
-    it('rejects an unconfigured public development dependency', async () => {
-      const tree = createTreeWithEmptyWorkspace();
-      writeJson(tree, 'packages/my-lib/package.json', {
-        devDependencies: { dependency: 'workspace:^' },
-      });
-      writeJson(tree, 'packages/dependency/package.json', {
-        name: 'dependency',
-      });
-      const versionActions = await createVersionActions(tree);
+    it.each([undefined, false, 'true'])(
+      'rejects an unconfigured development dependency with private set to %s',
+      async (isPrivate) => {
+        const tree = createTreeWithEmptyWorkspace();
+        writeJson(tree, 'packages/my-lib/package.json', {
+          devDependencies: { dependency: 'workspace:^' },
+        });
+        writeJson(tree, 'packages/dependency/package.json', {
+          name: 'dependency',
+          private: isPrivate,
+        });
+        const versionActions = await createVersionActions(tree);
 
-      await expect(
-        versionActions.updateProjectDependencies(
-          tree,
-          createProjectGraph(),
-          {},
-          async () => {
-            throw notConfiguredForReleaseError();
-          }
-        )
-      ).rejects.toThrow('not configured for Nx Release');
-    });
+        await expect(
+          versionActions.updateProjectDependencies(
+            tree,
+            createProjectGraph(),
+            {},
+            async () => {
+              throw notConfiguredForReleaseError();
+            }
+          )
+        ).rejects.toThrow('not configured for Nx Release');
+      }
+    );
 
     it('rejects an unconfigured development dependency with no manifest', async () => {
       const tree = createTreeWithEmptyWorkspace();
@@ -510,6 +518,49 @@ describe('JsVersionActions', () => {
           }
         )
       ).rejects.toThrow('not configured for Nx Release');
+    });
+
+    it('rejects an unconfigured development dependency with a malformed manifest', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      writeJson(tree, 'packages/my-lib/package.json', {
+        devDependencies: { dependency: 'workspace:^' },
+      });
+      tree.write('packages/dependency/package.json', '{');
+      const versionActions = await createVersionActions(tree);
+
+      await expect(
+        versionActions.updateProjectDependencies(
+          tree,
+          createProjectGraph(),
+          {},
+          async () => {
+            throw notConfiguredForReleaseError();
+          }
+        )
+      ).rejects.toThrow('not configured for Nx Release');
+    });
+
+    it('resolves a configured private development dependency', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      writeJson(tree, 'packages/my-lib/package.json', {
+        devDependencies: { dependency: 'workspace:^' },
+      });
+      writeJson(tree, 'packages/dependency/package.json', {
+        name: 'dependency',
+        private: true,
+      });
+      const versionActions = await createVersionActions(tree);
+
+      await versionActions.updateProjectDependencies(
+        tree,
+        createProjectGraph(),
+        {},
+        async () => '2.5.0'
+      );
+
+      expect(readJson(tree, 'packages/my-lib/package.json')).toEqual({
+        devDependencies: { dependency: '^2.5.0' },
+      });
     });
 
     it('rejects other resolver errors for private development dependencies', async () => {
