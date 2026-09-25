@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import {
   confirmThirdPartyPreset,
   determineAiAgents,
@@ -9,25 +10,25 @@ import {
 import * as clack from '@clack/prompts';
 import { detectAiAgentName } from '../utils/ai/ai-output';
 
-jest.mock('../utils/ci/is-ci', () => ({
-  isCI: jest.fn(() => false),
+vi.mock('../utils/ci/is-ci', () => ({
+  isCI: vi.fn(() => false),
 }));
 
-jest.mock('../utils/ai/ai-output', () => ({
-  isAiAgent: jest.fn(() => false),
-  detectAiAgentName: jest.fn(() => null),
+vi.mock('../utils/ai/ai-output', () => ({
+  isAiAgent: vi.fn(() => false),
+  detectAiAgentName: vi.fn(() => null),
 }));
 
-jest.mock('@clack/prompts', () => ({
+vi.mock('@clack/prompts', () => ({
   __esModule: true,
-  autocomplete: jest.fn(),
-  multiselect: jest.fn(),
-  text: jest.fn(),
-  isCancel: jest.fn(() => false),
+  autocomplete: vi.fn(),
+  multiselect: vi.fn(),
+  text: vi.fn(),
+  isCancel: vi.fn(() => false),
 }));
 
-jest.mock('../utils/output', () => ({
-  output: { warn: jest.fn(), log: jest.fn() },
+vi.mock('../utils/output', () => ({
+  output: { warn: vi.fn(), log: vi.fn() },
 }));
 
 describe('determineTemplate', () => {
@@ -65,7 +66,7 @@ describe('determineTemplate', () => {
   describe('CI mode', () => {
     it('should return nrwl/empty-template in CI without preset or template', async () => {
       const { isCI } = require('../utils/ci/is-ci');
-      (isCI as jest.Mock).mockReturnValueOnce(true);
+      (isCI as Mock).mockReturnValueOnce(true);
 
       const result = await determineTemplate({
         _: [],
@@ -82,19 +83,19 @@ describe('confirmThirdPartyPreset', () => {
   const { isAiAgent } = require('../utils/ai/ai-output');
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (isCI as jest.Mock).mockReturnValue(false);
-    (isAiAgent as jest.Mock).mockReturnValue(false);
+    vi.clearAllMocks();
+    (isCI as Mock).mockReturnValue(false);
+    (isAiAgent as Mock).mockReturnValue(false);
   });
 
   it('prompts and returns true when user confirms', async () => {
-    (clack.autocomplete as jest.Mock).mockResolvedValueOnce('Yes');
+    (clack.autocomplete as Mock).mockResolvedValueOnce('Yes');
     await expect(confirmThirdPartyPreset('core', true)).resolves.toBe(true);
     expect(clack.autocomplete).toHaveBeenCalledTimes(1);
   });
 
   it('prompts and returns false when user declines', async () => {
-    (clack.autocomplete as jest.Mock).mockResolvedValueOnce('No');
+    (clack.autocomplete as Mock).mockResolvedValueOnce('No');
     await expect(confirmThirdPartyPreset('core', true)).resolves.toBe(false);
     expect(clack.autocomplete).toHaveBeenCalledTimes(1);
   });
@@ -107,7 +108,7 @@ describe('confirmThirdPartyPreset', () => {
   });
 
   it('skips prompt and returns true in CI', async () => {
-    (isCI as jest.Mock).mockReturnValue(true);
+    (isCI as Mock).mockReturnValue(true);
     await expect(
       confirmThirdPartyPreset('@my-org/nx-plugin', true)
     ).resolves.toBe(true);
@@ -115,7 +116,7 @@ describe('confirmThirdPartyPreset', () => {
   });
 
   it('skips prompt and returns true when running as an AI agent', async () => {
-    (isAiAgent as jest.Mock).mockReturnValue(true);
+    (isAiAgent as Mock).mockReturnValue(true);
     await expect(
       confirmThirdPartyPreset('@my-org/nx-plugin', true)
     ).resolves.toBe(true);
@@ -132,7 +133,7 @@ describe('confirmThirdPartyPreset', () => {
   });
 
   it('still prompts when trusted flag is false', async () => {
-    (clack.autocomplete as jest.Mock).mockResolvedValueOnce('Yes');
+    (clack.autocomplete as Mock).mockResolvedValueOnce('Yes');
     await expect(
       confirmThirdPartyPreset('@my-org/nx-plugin', true, false)
     ).resolves.toBe(true);
@@ -144,8 +145,8 @@ describe('determineLinterOptions', () => {
   const { isCI } = require('../utils/ci/is-ci');
 
   beforeEach(() => {
-    (clack.autocomplete as jest.Mock).mockReset();
-    (isCI as jest.Mock).mockReturnValue(false);
+    (clack.autocomplete as Mock).mockReset();
+    (isCI as Mock).mockReturnValue(false);
   });
 
   it('should return the given linter without prompting', async () => {
@@ -166,7 +167,7 @@ describe('determineLinterOptions', () => {
   });
 
   it('should default to eslint without prompting in CI', async () => {
-    (isCI as jest.Mock).mockReturnValue(true);
+    (isCI as Mock).mockReturnValue(true);
 
     const result = await determineLinterOptions({ interactive: true });
 
@@ -175,7 +176,7 @@ describe('determineLinterOptions', () => {
   });
 
   it('should prompt when interactive', async () => {
-    (clack.autocomplete as jest.Mock).mockResolvedValue('oxlint');
+    (clack.autocomplete as Mock).mockResolvedValue('oxlint');
 
     const result = await determineLinterOptions({ interactive: true });
 
@@ -197,19 +198,19 @@ describe('determineNxCloudV2', () => {
   const { isCI } = require('../utils/ci/is-ci');
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (isCI as jest.Mock).mockReturnValue(false);
+    vi.clearAllMocks();
+    (isCI as Mock).mockReturnValue(false);
   });
 
   // The message choices are `{ value, name }` with `name` as the display text.
   // Mapping `name` into clack's `value` made every answer resolve to 'yes',
   // because the caller compares against 'skip'.
   it('offers the choice keys as values, not their labels', async () => {
-    (clack.autocomplete as jest.Mock).mockResolvedValueOnce('skip');
+    (clack.autocomplete as Mock).mockResolvedValueOnce('skip');
 
     await determineNxCloudV2({ _: [], $0: '', interactive: true });
 
-    const { options } = (clack.autocomplete as jest.Mock).mock.calls[0][0];
+    const { options } = (clack.autocomplete as Mock).mock.calls[0][0];
     // Exact, not arrayContaining: the opt-out choice ('never') must stay gone,
     // since it wrote `neverConnectToCloud` on an agent's behalf (NXC-4900).
     expect(options.map((o: { value: string }) => o.value)).toEqual([
@@ -228,7 +229,7 @@ describe('determineNxCloudV2', () => {
     ['Yes', 'yes'],
     ['Skip for now', 'skip'],
   ])('resolves the %s option to %s', async (label, expected) => {
-    (clack.autocomplete as jest.Mock).mockImplementationOnce(
+    (clack.autocomplete as Mock).mockImplementationOnce(
       async ({ options }: { options: { value: string; label: string }[] }) =>
         options.find((o) => o.label.includes(label.slice(0, 8)))?.value
     );
@@ -241,11 +242,11 @@ describe('determineNxCloudV2', () => {
   // Typing text that matches nothing leaves clack with an empty selection and
   // Enter submits `undefined`, which isCancel() does not catch.
   it('blocks a submit that matched no option', async () => {
-    (clack.autocomplete as jest.Mock).mockResolvedValueOnce('yes');
+    (clack.autocomplete as Mock).mockResolvedValueOnce('yes');
 
     await determineNxCloudV2({ _: [], $0: '', interactive: true });
 
-    const { validate } = (clack.autocomplete as jest.Mock).mock.calls[0][0];
+    const { validate } = (clack.autocomplete as Mock).mock.calls[0][0];
     expect(validate(undefined)).toEqual(expect.any(String));
     expect(validate('skip')).toBeUndefined();
   });
@@ -255,8 +256,8 @@ describe('determineFormatterOptions', () => {
   const { isCI } = require('../utils/ci/is-ci');
 
   beforeEach(() => {
-    (clack.autocomplete as jest.Mock).mockReset();
-    (isCI as jest.Mock).mockReturnValue(false);
+    (clack.autocomplete as Mock).mockReset();
+    (isCI as Mock).mockReturnValue(false);
   });
 
   it('should return the given formatter without prompting', async () => {
@@ -277,7 +278,7 @@ describe('determineFormatterOptions', () => {
   });
 
   it('should default to prettier without prompting in CI', async () => {
-    (isCI as jest.Mock).mockReturnValue(true);
+    (isCI as Mock).mockReturnValue(true);
 
     const result = await determineFormatterOptions({ interactive: true });
 
@@ -286,11 +287,11 @@ describe('determineFormatterOptions', () => {
   });
 
   it('should label oxfmt experimental while it is pre-1.0', async () => {
-    (clack.autocomplete as jest.Mock).mockResolvedValue('prettier');
+    (clack.autocomplete as Mock).mockResolvedValue('prettier');
 
     await determineFormatterOptions({ interactive: true });
 
-    const [[question]] = (clack.autocomplete as jest.Mock).mock.calls;
+    const [[question]] = (clack.autocomplete as Mock).mock.calls;
     const oxfmt = question.options.find(
       (o: { value: string }) => o.value === 'oxfmt'
     );
@@ -298,7 +299,7 @@ describe('determineFormatterOptions', () => {
   });
 
   it('should prompt when interactive', async () => {
-    (clack.autocomplete as jest.Mock).mockResolvedValue('oxfmt');
+    (clack.autocomplete as Mock).mockResolvedValue('oxfmt');
 
     const result = await determineFormatterOptions({ interactive: true });
 
@@ -317,7 +318,7 @@ describe('determineFormatterOptions', () => {
 });
 
 describe('determineAiAgents', () => {
-  const mockDetect = detectAiAgentName as jest.Mock;
+  const mockDetect = detectAiAgentName as Mock;
 
   afterEach(() => mockDetect.mockReset());
 

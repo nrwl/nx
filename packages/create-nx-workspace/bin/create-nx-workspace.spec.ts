@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import {
   applyEmptyPresetAlias,
   validateWorkspaceName,
@@ -18,15 +19,15 @@ import {
 import { join, basename, dirname } from 'path';
 import { tmpdir } from 'os';
 
-jest.mock('@clack/prompts', () => ({
+vi.mock('@clack/prompts', () => ({
   __esModule: true,
-  autocomplete: jest.fn(),
-  text: jest.fn(),
-  isCancel: jest.fn(() => false),
+  autocomplete: vi.fn(),
+  text: vi.fn(),
+  isCancel: vi.fn(() => false),
 }));
 
-jest.mock('../src/utils/ci/is-ci', () => ({
-  isCI: jest.fn(() => false),
+vi.mock('../src/utils/ci/is-ci', () => ({
+  isCI: vi.fn(() => false),
 }));
 
 describe('validateWorkspaceName', () => {
@@ -274,9 +275,9 @@ describe('determineFolder - explicit "." confirmation', () => {
 
   beforeEach(() => {
     originalCwd = process.cwd();
-    (clack.autocomplete as jest.Mock).mockReset();
-    (clack.text as jest.Mock).mockReset();
-    (isCI as jest.Mock).mockReset().mockReturnValue(false);
+    (clack.autocomplete as Mock).mockReset();
+    (clack.text as Mock).mockReset();
+    (isCI as Mock).mockReset().mockReturnValue(false);
   });
 
   afterEach(() => {
@@ -295,7 +296,7 @@ describe('determineFolder - explicit "." confirmation', () => {
   it('scaffolds in place when the user confirms', async () => {
     const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
     process.chdir(tmpDir);
-    (clack.autocomplete as jest.Mock).mockResolvedValueOnce('Yes');
+    (clack.autocomplete as Mock).mockResolvedValueOnce('Yes');
 
     const parsedArgs = dotArgs();
     const result = await determineFolder(parsedArgs);
@@ -311,8 +312,8 @@ describe('determineFolder - explicit "." confirmation', () => {
   it('falls back to a named subfolder when the user declines', async () => {
     const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
     process.chdir(tmpDir);
-    (clack.autocomplete as jest.Mock).mockResolvedValueOnce('No');
-    (clack.text as jest.Mock).mockResolvedValueOnce('myorg');
+    (clack.autocomplete as Mock).mockResolvedValueOnce('No');
+    (clack.text as Mock).mockResolvedValueOnce('myorg');
 
     const parsedArgs = dotArgs();
     const result = await determineFolder(parsedArgs);
@@ -370,7 +371,7 @@ describe('determinePresetOptions', () => {
   beforeEach(() => {
     // Recorded calls persist across tests otherwise, so any assertion on which
     // questions were asked would see every earlier test's prompts too.
-    (clack.autocomplete as jest.Mock).mockClear();
+    (clack.autocomplete as Mock).mockClear();
   });
 
   // Every stack must come back with the resolved linter. Once the schemas
@@ -502,10 +503,8 @@ describe('determinePresetOptions', () => {
       } as any);
 
       expect(result.linter).toBeUndefined();
-      const linterQuestions = (
-        clack.autocomplete as jest.Mock
-      ).mock.calls.filter(([question]) =>
-        String(question?.message ?? '').includes('linter')
+      const linterQuestions = (clack.autocomplete as Mock).mock.calls.filter(
+        ([question]) => String(question?.message ?? '').includes('linter')
       );
       expect(linterQuestions).toHaveLength(0);
     }
@@ -586,7 +585,7 @@ describe('determineUnitTestRunner', () => {
   };
 
   beforeEach(() => {
-    (clack.autocomplete as jest.Mock).mockClear();
+    (clack.autocomplete as Mock).mockClear();
   });
 
   it.each(Object.keys(stacks))(
@@ -604,7 +603,7 @@ describe('determineUnitTestRunner', () => {
     'should not offer %s an excluded runner',
     async (stack) => {
       const { args, excluded } = stacks[stack];
-      (clack.autocomplete as jest.Mock).mockImplementation(
+      (clack.autocomplete as Mock).mockImplementation(
         async ({ options }) => options[0].value
       );
 
@@ -614,7 +613,7 @@ describe('determineUnitTestRunner', () => {
         interactive: true,
       } as any);
 
-      const question = (clack.autocomplete as jest.Mock).mock.calls
+      const question = (clack.autocomplete as Mock).mock.calls
         .map(([q]) => q)
         .find((q) => String(q?.message ?? '').includes('unit test runner'));
       expect(question).toBeDefined();

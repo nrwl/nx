@@ -17,7 +17,7 @@ describe('downloadTemplate', () => {
   });
 
   it('throws NETWORK_ERROR with a --preset=empty hint when github.com is unreachable', async () => {
-    globalThis.fetch = jest.fn(() =>
+    globalThis.fetch = vi.fn(() =>
       Promise.reject(new TypeError('fetch failed'))
     ) as any;
 
@@ -39,7 +39,7 @@ describe('downloadTemplate', () => {
   it.each([403, 407, 429, 503])(
     'throws NETWORK_ERROR with the hint for HTTP %i (egress blocked by a proxy or transient failure)',
     async (status) => {
-      globalThis.fetch = jest.fn(() =>
+      globalThis.fetch = vi.fn(() =>
         Promise.resolve({ ok: false, status, body: null })
       ) as any;
 
@@ -53,7 +53,7 @@ describe('downloadTemplate', () => {
   );
 
   it('throws TEMPLATE_CLONE_FAILED without the hint for HTTP 404 (missing repo or branch)', async () => {
-    globalThis.fetch = jest.fn(() =>
+    globalThis.fetch = vi.fn(() =>
       Promise.resolve({ ok: false, status: 404, body: null })
     ) as any;
 
