@@ -546,6 +546,13 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   }
 
   async setWorkerEnv(env: Record<string, string>): Promise<void> {
+    // A restart may have spawned under the previous client env but not yet
+    // finished loading. Wait for that worker so it receives the update too.
+    // Do not start a stopped worker solely to forward env: its next spawn
+    // will inherit the daemon's already-updated environment.
+    if (!this._alive && this._connectPromise) {
+      await this._connectPromise;
+    }
     if (!this._alive) {
       return;
     }
