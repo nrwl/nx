@@ -77,7 +77,7 @@ fn output_patterns(task_graph: &TaskGraph) -> HashMap<&str, Vec<OutputPattern>> 
 /// `Ref` guard cannot outlive the lookup.
 struct OutputReads {
     declared: HashMap<u32, Vec<String>>,
-    globs: HashMap<u32, Vec<ReadPattern>>,
+    globs: HashMap<u32, Vec<IgnoredFileSetPattern>>,
 }
 
 impl OutputReads {
@@ -95,7 +95,7 @@ impl OutputReads {
                     let reads = patterns
                         .iter()
                         .filter(|pattern| !pattern.starts_with('!'))
-                        .map(|pattern| ReadPattern::new(&normalize_glob(pattern)))
+                        .map(|pattern| IgnoredFileSetPattern::new(&normalize_glob(pattern)))
                         .collect();
                     globs.insert(id, reads);
                 }
@@ -116,7 +116,7 @@ fn producers_read_by<'a>(
     seen: &mut HashSet<&'a str>,
 ) -> Vec<String> {
     let mut declared: HashSet<&[String]> = HashSet::new();
-    let mut globs: Vec<&ReadPattern> = Vec::new();
+    let mut globs: Vec<&IgnoredFileSetPattern> = Vec::new();
     for id in plan {
         if let Some(outputs) = reads.declared.get(id) {
             declared.insert(outputs.as_slice());
@@ -175,7 +175,7 @@ impl OutputPattern {
 /// A read classified by how it compares to a producer's outputs. Both sides are
 /// patterns, so this is overlap, and it errs towards claiming: an extra edge
 /// costs a cache hit, a missing one skips a task that needed to run.
-enum ReadPattern {
+enum IgnoredFileSetPattern {
     /// Has a literal leading path, `dist/libs/ui/**/*.js` or `package.json`.
     /// Claims an output when either literal prefix contains the other.
     Under(String),
@@ -190,7 +190,7 @@ enum ReadPattern {
     RootLevel(String, Option<Arc<NxGlobSet>>),
 }
 
-impl ReadPattern {
+impl IgnoredFileSetPattern {
     fn new(pattern: &str) -> Self {
         let prefix = literal_prefix(pattern);
         if !prefix.is_empty() {
