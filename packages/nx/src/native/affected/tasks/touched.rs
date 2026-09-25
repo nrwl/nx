@@ -267,36 +267,10 @@ fn json_files_in_diff<'c>(
         .collect())
 }
 
-/// The changed files some field-filtered `JsonFileSet` reads: the only ones
-/// whose contents are worth comparing between revisions.
-pub(crate) fn changed_json_files_read_by_fields(
-    graph: &ProjectGraph,
-    hash_plans: &HashPlans,
-    changed_files: &[String],
-) -> anyhow::Result<Vec<String>> {
-    let roots = ProjectRoots::new(graph);
-    let changed = ChangedFiles::new(&roots, changed_files);
-    let mut files: Vec<String> = Vec::new();
-    for id in referenced_ids(hash_plans) {
-        if let HashInstruction::JsonFileSet(json) = hash_plans.pool.get(id).value() {
-            if json.fields.is_some() || json.exclude_fields.is_some() {
-                files.extend(
-                    json_files_in_diff(json, &changed)?
-                        .into_iter()
-                        .map(String::from),
-                );
-            }
-        }
-    }
-    files.sort();
-    files.dedup();
-    Ok(files)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::native::affected::tasks::changed_contents::{JsonFileChange, TsConfigChange};
+    use crate::native::affected::tasks::changed_contents::TsConfigChange;
     use crate::native::tasks::types::InstructionPool;
     use crate::native::test_utils::{graph_of_roots as graph, hash_plans, strings};
     use std::sync::Arc;
@@ -790,16 +764,15 @@ mod tests {
 
     fn touched_by_package_json(instruction: HashInstruction, changed_paths: &[&str]) -> bool {
         let g = graph(&[("a", "libs/a")]);
-        let changes = [JsonFileChange {
-            file: "package.json".into(),
-            paths: Some(
+        let contents = ChangedContents::default().with_json_diff(
+            "package.json",
+            Some(
                 changed_paths
                     .iter()
                     .map(|p| p.split('.').map(String::from).collect())
                     .collect(),
             ),
-        }];
-        let contents = ChangedContents::new(&g, Some(&changes), None);
+        );
         !touched_tasks(
             &g,
             &plans("a:build", vec![instruction]),
@@ -872,7 +845,7 @@ mod tests {
             paths_before: HashMap::from([("@ws/a".into(), strings(&["libs/a/index.ts"]))]),
             paths_after: HashMap::from([("@ws/a".into(), strings(&["libs/a/main.ts"]))]),
         };
-        let contents = ChangedContents::new(&g, None, Some(&change));
+        let contents = ChangedContents::new(&g, "", None, Some(&change));
         let touched = touched_tasks(
             &g,
             &p,
@@ -895,24 +868,6 @@ mod tests {
                 &[]
             ),
             vec!["a:build"]
-        );
-    }
-
-    #[test]
-    fn only_field_filtered_json_inputs_ask_for_a_diff() {
-        let g = graph(&[("a", "libs/a")]);
-        let p = hash_plans(&[
-            ("a:build", vec![json_input(&["version"], &[])]),
-            ("a:test", vec![json_input(&[], &[])]),
-        ]);
-        assert_eq!(
-            changed_json_files_read_by_fields(
-                &g,
-                &p,
-                &strings(&["package.json", "libs/a/project.json"])
-            )
-            .unwrap(),
-            strings(&["package.json"])
         );
     }
 }

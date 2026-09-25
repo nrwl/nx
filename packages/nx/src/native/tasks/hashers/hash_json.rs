@@ -68,7 +68,7 @@ pub fn collect_json_input_files<'a>(
 ///
 /// Returns `None` when neither parser accepts the bytes — callers should fall
 /// back to hashing the raw bytes in that case.
-fn parse_json_or_jsonc(bytes: &[u8]) -> Option<Value> {
+pub(crate) fn parse_json_or_jsonc(bytes: &[u8]) -> Option<Value> {
     if let Ok(v) = serde_json::from_slice::<Value>(bytes) {
         return Some(v);
     }

@@ -1,6 +1,5 @@
-import type { JsonFileChange, TsConfigChange } from '../../native';
+import type { TsConfigChange } from '../../native';
 import { getRootTsConfigFileName } from '../../plugins/js/utils/typescript';
-import { JsonDiffType, jsonDiff } from '../../utils/json-diff';
 import { parseJson } from '../../utils/json';
 import { defaultReadFileAtRevision } from '../file-utils';
 import type { FileChangeArgs } from './affected-tasks';
@@ -8,49 +7,6 @@ import type { FileChangeArgs } from './affected-tasks';
 type ReadFileAtRevision = (file: string, revision: string | void) => string;
 
 const ROOT_TSCONFIG_FILES = ['tsconfig.base.json', 'tsconfig.json'];
-
-/**
- * The field paths that changed in each file, for inputs that hash only some
- * fields. `paths` is left unset when the file must count as changed whole.
- */
-export function jsonFieldChanges(
-  files: string[],
-  fileChangeArgs: FileChangeArgs | undefined,
-  read: ReadFileAtRevision = defaultReadFileAtRevision
-): JsonFileChange[] {
-  return files.map((file) => ({
-    file,
-    paths: changedFieldPaths(file, fileChangeArgs, read),
-  }));
-}
-
-function changedFieldPaths(
-  file: string,
-  args: FileChangeArgs | undefined,
-  read: ReadFileAtRevision
-): string[][] | undefined {
-  // As calculateFileChanges: a named file is compared as a whole.
-  if (!args || args.files?.includes(file)) {
-    return undefined;
-  }
-  const before = readJsonObject(read(file, args.base));
-  const after = readJsonObject(read(file, args.head));
-  if (!before || !after) {
-    return undefined;
-  }
-  return (
-    jsonDiff(before, after)
-      // A container that stayed a container is fully described by its children's changes.
-      .filter(
-        (change) =>
-          !(
-            change.type === JsonDiffType.Modified &&
-            sameContainer(change.value.lhs, change.value.rhs)
-          )
-      )
-      .map((change) => change.path)
-  );
-}
 
 /**
  * The root tsconfig as `TsConfiguration` hashes it, when a root tsconfig is in
@@ -135,14 +91,4 @@ function readJsonObject(text: string): Record<string, any> | null {
   } catch {
     return null;
   }
-}
-
-function sameContainer(lhs: unknown, rhs: unknown): boolean {
-  return (
-    !!lhs &&
-    !!rhs &&
-    typeof lhs === 'object' &&
-    typeof rhs === 'object' &&
-    Array.isArray(lhs) === Array.isArray(rhs)
-  );
 }

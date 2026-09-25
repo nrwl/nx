@@ -481,10 +481,10 @@ export interface AffectedTasksOptions {
    */
   targets: Array<string>
   /**
-   * The field paths that changed in the files `jsonFilesReadByFields` named.
-   * A file left out counts as changed as a whole.
+   * Where a field-filtered JSON input's file is read at both ends of the diff.
+   * Unset, as for `--files`, such a file counts as changed whole.
    */
-  jsonChanges?: Array<JsonFileChange>
+  revisions?: FileRevisions
   /** Set when a root tsconfig is in the diff. */
   tsConfigChange?: TsConfigChange
 }
@@ -643,6 +643,15 @@ export interface FileData {
 export interface FileMap {
   projectFileMap: Record<string, Array<FileData>>
   nonProjectFiles: Array<FileData>
+}
+
+/**
+ * Where a changed file's two versions are read: `base` from git, `head` from
+ * git or, unset, the working tree.
+ */
+export interface FileRevisions {
+  base: string
+  head?: string
 }
 
 export interface FileSetInput {
@@ -863,21 +872,6 @@ export const IS_WASM: boolean
 export declare function isAiAgent(): boolean
 
 export declare function isEditorInstalled(editor: SupportedEditor): Promise<boolean>
-
-export interface JsonFileChange {
-  file: string
-  /**
-   * The changed field paths, one key per segment. Unset when the file as a
-   * whole counts as changed: added, deleted, unparseable or not an object.
-   */
-  paths?: Array<Array<string>>
-}
-
-/**
- * The changed files some field-filtered JSON input reads, so only those are
- * read at both revisions and diffed.
- */
-export declare function jsonFilesReadByFields(projectGraph: ExternalObject<ProjectGraph>, hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, changedFiles: Array<string>): Array<string>
 
 export interface JsonInput {
   json: string

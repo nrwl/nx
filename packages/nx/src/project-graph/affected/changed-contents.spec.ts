@@ -7,7 +7,7 @@ vi.mock('../../plugins/js/utils/typescript', () => ({
   getRootTsConfigFileName: () => root.name,
 }));
 
-import { jsonFieldChanges, tsConfigChange } from './changed-contents';
+import { tsConfigChange } from './changed-contents';
 
 const args = { base: 'base', head: 'head' };
 
@@ -17,53 +17,6 @@ function reader(files: Record<string, { base?: unknown; head?: unknown }>) {
     return value === undefined ? '' : JSON.stringify(value);
   };
 }
-
-describe('jsonFieldChanges', () => {
-  it('lists the leaf field paths that changed', () => {
-    const read = reader({
-      'package.json': {
-        base: { version: '1', scripts: { build: 'a', test: 'b' } },
-        head: { version: '2', scripts: { build: 'a', test: 'c' } },
-      },
-    });
-    expect(jsonFieldChanges(['package.json'], args, read)).toEqual([
-      {
-        file: 'package.json',
-        paths: [['version'], ['scripts', 'test']],
-      },
-    ]);
-  });
-
-  // The object turned into a string: its own path, not only its children's.
-  it('keeps a change of kind at the path where it happened', () => {
-    const read = reader({
-      'a.json': { base: { a: { b: 1 } }, head: { a: 'x' } },
-    });
-    expect(jsonFieldChanges(['a.json'], args, read)[0].paths).toContainEqual([
-      'a',
-    ]);
-  });
-
-  it('compares a file as a whole when it cannot be read as an object', () => {
-    const read = reader({
-      'added.json': { head: { a: 1 } },
-      'list.json': { base: [1], head: [2] },
-    });
-    expect(
-      jsonFieldChanges(['added.json', 'list.json'], args, read).map(
-        (change) => change.paths
-      )
-    ).toEqual([undefined, undefined]);
-  });
-
-  it('compares a file named with --files as a whole', () => {
-    const read = reader({ 'a.json': { base: { a: 1 }, head: { a: 2 } } });
-    expect(
-      jsonFieldChanges(['a.json'], { ...args, files: ['a.json'] }, read)[0]
-        .paths
-    ).toBeUndefined();
-  });
-});
 
 describe('tsConfigChange', () => {
   const paths = (target: string) => ({ '@ws/a': [target] });

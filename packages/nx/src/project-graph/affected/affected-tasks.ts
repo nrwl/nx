@@ -4,10 +4,10 @@ import type { ProjectConfiguration } from '../../config/workspace-json-project-j
 import { TaskGraph } from '../../config/task-graph';
 import {
   affectedTasks as nativeAffectedTasks,
-  jsonFilesReadByFields,
+  type FileRevisions,
   type IoSnapshots,
 } from '../../native';
-import { jsonFieldChanges, tsConfigChange } from './changed-contents';
+import { tsConfigChange } from './changed-contents';
 import { applyIoSnapshotOutputs } from '../../io-snapshots/outputs';
 import { ioSnapshotEligibilityOptions } from '../../io-snapshots/overrides';
 import { snapshotsOf, type IoSnapshotOutcome } from '../../io-snapshots/store';
@@ -289,15 +289,7 @@ export async function selectAffectedTasks(
         ? findMatchingProjects(request.exclude, projectGraph.nodes)
         : [],
       targets,
-      // Read at both revisions only for the inputs that hash part of a file.
-      jsonChanges: jsonFieldChanges(
-        jsonFilesReadByFields(
-          planningContext.projectGraphRef,
-          plans,
-          request.changedFiles
-        ),
-        request.fileChangeArgs
-      ),
+      revisions: fileRevisions(request.fileChangeArgs),
       tsConfigChange: tsConfigChange(
         request.changedFiles,
         request.fileChangeArgs,
@@ -352,6 +344,15 @@ export async function selectAffectedTasks(
       taskIds: keep,
     },
   };
+}
+
+/** Unset for `--files`, which names files without a diff to compare. */
+function fileRevisions(
+  args: FileChangeArgs | undefined
+): FileRevisions | undefined {
+  return args?.base && !args.files?.length
+    ? { base: args.base, head: args.head }
+    : undefined;
 }
 
 /**

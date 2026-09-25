@@ -2,19 +2,25 @@
 //! bytes: field-filtered JSON inputs and the root tsconfig. Without it such a
 //! file counts as changed whenever it is in the diff.
 
+use serde_json::Value;
 use std::collections::{HashMap, HashSet};
+use std::convert::Infallible;
+use std::path::Path;
+use std::process::Stdio;
+use std::sync::Arc;
 
 use crate::native::project_graph::types::ProjectGraph;
 use crate::native::project_graph::utils::{create_project_root_mappings, find_project_for_path};
+use crate::native::tasks::hashers::{OnceCache, parse_json_or_jsonc};
 use crate::native::tasks::types::JsonFileSetInput;
-use crate::native::utils::path::normalize_js_path;
+use crate::native::utils::command::create_command;
 
+/// Where a changed file's two versions are read: `base` from git, `head` from
+/// git or, unset, the working tree.
 #[napi(object)]
-pub struct JsonFileChange {
-    pub file: String,
-    /// The changed field paths, one key per segment. Unset when the file as a
-    /// whole counts as changed: added, deleted, unparseable or not an object.
-    pub paths: Option<Vec<Vec<String>>>,
+pub struct FileRevisions {
+    pub base: String,
+    pub head: Option<String>,
 }
 
 /// The root tsconfig as `TsConfiguration` hashes it: `compilerOptions.paths`
@@ -32,7 +38,7 @@ pub struct TsConfigChange {
 }
 
 pub(crate) struct ChangedContents<'a> {
-    json: HashMap<String, Option<&'a [Vec<String>]>>,
+    json: JsonFieldDiffs<'a>,
     ts_config: TsConfigTouch,
 }
 
@@ -43,10 +49,23 @@ enum TsConfigTouch {
     Projects(HashSet<String>),
 }
 
+/// The field paths that changed in each JSON file, read and diffed on first use
+/// so only files some field-filtered input reads are ever opened. `None` is a
+/// file that counts as changed whole.
+struct JsonFieldDiffs<'a> {
+    workspace_root: &'a Path,
+    revisions: Option<&'a FileRevisions>,
+    diffs: OnceCache<Option<Vec<Vec<String>>>>,
+}
+
 impl Default for ChangedContents<'_> {
     fn default() -> Self {
         Self {
-            json: HashMap::new(),
+            json: JsonFieldDiffs {
+                workspace_root: Path::new(""),
+                revisions: None,
+                diffs: OnceCache::new(),
+            },
             ts_config: TsConfigTouch::Unknown,
         }
     }
@@ -55,15 +74,16 @@ impl Default for ChangedContents<'_> {
 impl<'a> ChangedContents<'a> {
     pub(crate) fn new(
         graph: &ProjectGraph,
-        json: Option<&'a [JsonFileChange]>,
+        workspace_root: &'a str,
+        revisions: Option<&'a FileRevisions>,
         ts_config: Option<&TsConfigChange>,
     ) -> Self {
         Self {
-            json: json
-                .into_iter()
-                .flatten()
-                .map(|change| (normalize_js_path(&change.file), change.paths.as_deref()))
-                .collect(),
+            json: JsonFieldDiffs {
+                workspace_root: Path::new(workspace_root),
+                revisions,
+                diffs: OnceCache::new(),
+            },
             ts_config: match ts_config {
                 None => TsConfigTouch::Unknown,
                 Some(change) if change.rest_changed => TsConfigTouch::All,
@@ -75,17 +95,25 @@ impl<'a> ChangedContents<'a> {
 
     /// Whether `file`, read through `json`'s field filters, can hash differently.
     pub(crate) fn json_file_changed(&self, file: &str, json: &JsonFileSetInput) -> bool {
-        match self.json.get(file) {
-            Some(Some(paths)) => paths.iter().any(|path| {
+        match self.json.changed_fields(file).as_ref() {
+            Some(paths) => paths.iter().any(|path| {
                 field_change_reaches_hash(
                     path,
                     json.fields.as_deref(),
                     json.exclude_fields.as_deref(),
                 )
             }),
-            // Not compared, or changed as a whole.
-            _ => true,
+            None => true,
         }
+    }
+
+    #[cfg(test)]
+    pub(crate) fn with_json_diff(self, file: &str, paths: Option<Vec<Vec<String>>>) -> Self {
+        let _ = self
+            .json
+            .diffs
+            .get_or_try_init(file.to_string(), || Ok::<_, Infallible>(paths));
+        self
     }
 
     /// Whether `project`'s `TsConfiguration` can hash differently, given that a
@@ -95,6 +123,78 @@ impl<'a> ChangedContents<'a> {
             TsConfigTouch::Unknown | TsConfigTouch::All => true,
             TsConfigTouch::Projects(projects) => projects.contains(project),
         }
+    }
+}
+
+impl JsonFieldDiffs<'_> {
+    fn changed_fields(&self, file: &str) -> Arc<Option<Vec<Vec<String>>>> {
+        let Ok(diff) = self
+            .diffs
+            .get_or_try_init(file.to_string(), || Ok::<_, Infallible>(self.diff(file)));
+        diff
+    }
+
+    /// Parsed as the hasher parses it, so both agree on what a field is. Whole
+    /// when a version is missing, unparseable or not an object.
+    fn diff(&self, file: &str) -> Option<Vec<Vec<String>>> {
+        let revisions = self.revisions?;
+        let before = json_object(&self.read(file, Some(&revisions.base))?)?;
+        let after = json_object(&self.read(file, revisions.head.as_deref())?)?;
+        Some(changed_field_paths(&before, &after))
+    }
+
+    /// Relative to the workspace root, whichever directory the command ran in.
+    fn read(&self, file: &str, revision: Option<&str>) -> Option<Vec<u8>> {
+        let Some(revision) = revision else {
+            return std::fs::read(self.workspace_root.join(file)).ok();
+        };
+        // Never an option to git.
+        if revision.starts_with('-') {
+            return None;
+        }
+        let output = create_command("git")
+            .arg("show")
+            .arg(format!("{revision}:./{file}"))
+            .current_dir(self.workspace_root)
+            .stderr(Stdio::null())
+            .output()
+            .ok()?;
+        output.status.success().then_some(output.stdout)
+    }
+}
+
+fn json_object(bytes: &[u8]) -> Option<Value> {
+    parse_json_or_jsonc(bytes).filter(Value::is_object)
+}
+
+/// The field paths whose values differ, one key per segment. Objects are
+/// compared key by key; anything else, arrays included, as a whole.
+fn changed_field_paths(before: &Value, after: &Value) -> Vec<Vec<String>> {
+    let mut changed = Vec::new();
+    collect_changed(before, after, &mut Vec::new(), &mut changed);
+    changed
+}
+
+fn collect_changed(
+    before: &Value,
+    after: &Value,
+    path: &mut Vec<String>,
+    changed: &mut Vec<Vec<String>>,
+) {
+    match (before, after) {
+        (Value::Object(before), Value::Object(after)) => {
+            let added = after.keys().filter(|key| !before.contains_key(*key));
+            for key in before.keys().chain(added) {
+                path.push(key.clone());
+                match (before.get(key), after.get(key)) {
+                    (Some(before), Some(after)) => collect_changed(before, after, path, changed),
+                    _ => changed.push(path.clone()),
+                }
+                path.pop();
+            }
+        }
+        _ if before != after => changed.push(path.clone()),
+        _ => {}
     }
 }
 
@@ -235,21 +335,104 @@ mod tests {
         assert!(!field_change_reaches_hash(&change, Some(&fields), None));
     }
 
-    #[test]
-    fn a_file_compared_as_a_whole_or_not_at_all_counts_as_changed() {
-        let json = JsonFileSetInput {
+    fn version_only() -> JsonFileSetInput {
+        JsonFileSetInput {
             project_name: None,
-            json_path: "package.json".into(),
+            json_path: "{workspaceRoot}/package.json".into(),
             fields: Some(strings(&["version"])),
             exclude_fields: None,
+        }
+    }
+
+    #[test]
+    fn a_file_compared_as_a_whole_or_not_at_all_counts_as_changed() {
+        let contents = ChangedContents::default().with_json_diff("package.json", None);
+        assert!(contents.json_file_changed("package.json", &version_only()));
+        assert!(contents.json_file_changed("other/package.json", &version_only()));
+    }
+
+    #[test]
+    fn changed_field_paths_descend_objects_and_compare_the_rest_whole() {
+        let before = serde_json::json!({ "a": { "b": 1, "c": 2 }, "list": [1, 2], "gone": 1 });
+        let after = serde_json::json!({ "a": { "b": 1, "c": 3 }, "list": [1, 3], "new": 1 });
+        let mut changed = changed_field_paths(&before, &after);
+        changed.sort();
+        assert_eq!(
+            changed,
+            [vec!["a", "c"], vec!["gone"], vec!["list"], vec!["new"]]
+                .map(|path| path.into_iter().map(String::from).collect::<Vec<_>>())
+        );
+    }
+
+    /// A git repo whose `HEAD` has `committed` as package.json and whose working
+    /// tree has `on_disk`.
+    fn repo(committed: &str, on_disk: &str) -> assert_fs::TempDir {
+        let dir = assert_fs::TempDir::new().unwrap();
+        let git = |args: &[&str]| {
+            let status = std::process::Command::new("git")
+                .args([
+                    "-c",
+                    "user.name=t",
+                    "-c",
+                    "user.email=t@t",
+                    "-c",
+                    "commit.gpgsign=false",
+                ])
+                .args(args)
+                .current_dir(dir.path())
+                .stdout(Stdio::null())
+                .status()
+                .unwrap();
+            assert!(status.success());
         };
-        let changes = [JsonFileChange {
-            file: "package.json".into(),
-            paths: None,
-        }];
-        let contents = ChangedContents::new(&graph_of_roots(&[]), Some(&changes), None);
-        assert!(contents.json_file_changed("package.json", &json));
-        assert!(contents.json_file_changed("other/package.json", &json));
+        git(&["init", "-q"]);
+        std::fs::write(dir.path().join("package.json"), committed).unwrap();
+        git(&["add", "."]);
+        git(&["commit", "-q", "-m", "base"]);
+        std::fs::write(dir.path().join("package.json"), on_disk).unwrap();
+        dir
+    }
+
+    fn changed_against_head(dir: &Path, head: Option<&str>) -> bool {
+        let root = dir.to_str().unwrap();
+        let revisions = FileRevisions {
+            base: "HEAD".into(),
+            head: head.map(String::from),
+        };
+        ChangedContents::new(&graph_of_roots(&[]), root, Some(&revisions), None)
+            .json_file_changed("package.json", &version_only())
+    }
+
+    #[test]
+    fn reads_the_base_from_git_and_the_head_from_the_working_tree() {
+        let unrelated = repo(
+            r#"{ "version": "1", "description": "a" }"#,
+            r#"{ "version": "1", "description": "b" }"#,
+        );
+        assert!(!changed_against_head(unrelated.path(), None));
+        let bumped = repo(r#"{ "version": "1" }"#, r#"{ "version": "2" }"#);
+        assert!(changed_against_head(bumped.path(), None));
+    }
+
+    /// Parsed as the hasher parses it: comments and trailing commas are fine.
+    #[test]
+    fn parses_jsonc_like_the_hasher() {
+        let dir = repo(
+            "{ \"version\": \"1\" }",
+            "{\n  // note\n  \"version\": \"1\",\n  \"description\": \"b\",\n}",
+        );
+        assert!(!changed_against_head(dir.path(), None));
+    }
+
+    #[test]
+    fn a_version_that_cannot_be_read_counts_the_file_as_changed() {
+        let dir = repo(r#"{ "version": "1" }"#, r#"{ "version": "1" }"#);
+        // `head` names a commit that does not exist.
+        assert!(changed_against_head(dir.path(), Some("does-not-exist")));
+        // An option-like revision is never handed to git.
+        assert!(changed_against_head(dir.path(), Some("--output=x")));
+        std::fs::write(dir.path().join("package.json"), "[1]").unwrap();
+        assert!(changed_against_head(dir.path(), None));
     }
 
     fn ts_config(rest_changed: bool, selective: bool) -> TsConfigChange {
@@ -270,7 +453,7 @@ mod tests {
     #[test]
     fn a_selectively_hashed_paths_change_touches_only_the_project_it_maps_into() {
         let g = graph_of_roots(&[("a", "libs/a"), ("b", "libs/b")]);
-        let contents = ChangedContents::new(&g, None, Some(&ts_config(false, true)));
+        let contents = ChangedContents::new(&g, "", None, Some(&ts_config(false, true)));
         assert!(contents.ts_config_changed("a"));
         assert!(!contents.ts_config_changed("b"));
     }
@@ -291,7 +474,7 @@ mod tests {
                 strings(&["libs/a/src/main.ts", "libs/b/src/index.ts"]),
             )]),
         };
-        let contents = ChangedContents::new(&g, None, Some(&change));
+        let contents = ChangedContents::new(&g, "", None, Some(&change));
         assert!(contents.ts_config_changed("a"));
         assert!(!contents.ts_config_changed("b"));
     }
@@ -300,7 +483,7 @@ mod tests {
     #[test]
     fn a_paths_change_touches_nothing_when_paths_are_not_hashed() {
         let g = graph_of_roots(&[("a", "libs/a"), ("b", "libs/b")]);
-        let contents = ChangedContents::new(&g, None, Some(&ts_config(false, false)));
+        let contents = ChangedContents::new(&g, "", None, Some(&ts_config(false, false)));
         assert!(!contents.ts_config_changed("a"));
         assert!(!contents.ts_config_changed("b"));
     }
@@ -309,7 +492,7 @@ mod tests {
     fn any_other_change_touches_every_project_either_way() {
         let g = graph_of_roots(&[("a", "libs/a"), ("b", "libs/b")]);
         for selective in [true, false] {
-            let contents = ChangedContents::new(&g, None, Some(&ts_config(true, selective)));
+            let contents = ChangedContents::new(&g, "", None, Some(&ts_config(true, selective)));
             assert!(contents.ts_config_changed("a") && contents.ts_config_changed("b"));
         }
         assert!(ChangedContents::default().ts_config_changed("b"));
