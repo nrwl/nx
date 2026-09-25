@@ -27,6 +27,8 @@
 use rayon::prelude::*;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
+use std::time::Instant;
+use tracing::{debug, trace};
 
 use crate::native::affected::dependency_closure::walk_dependencies;
 use crate::native::affected::plan_ids::referenced_ids;
@@ -44,11 +46,21 @@ pub(crate) fn compute_dependent_output_edges(
     hash_plans: &HashPlans,
     task_graph: &TaskGraph,
 ) -> HashMap<String, Vec<String>> {
+    let start = Instant::now();
     let Some(reads) = Reads::resolve(hash_plans) else {
+        trace!("no plan reads another task's outputs");
         return HashMap::new();
     };
     let patterns_of = output_patterns(task_graph);
-    hash_plans
+    let setup_duration = start.elapsed();
+    trace!(
+        "{} output reads and {} producers' outputs decoded in {:?}",
+        reads.declared.len() + reads.globs.len(),
+        patterns_of.len(),
+        setup_duration
+    );
+
+    let edges: HashMap<String, Vec<String>> = hash_plans
         .plans
         .par_iter()
         .map_init(HashSet::new, |seen, (consumer, plan)| {
@@ -57,7 +69,16 @@ pub(crate) fn compute_dependent_output_edges(
             (!producers.is_empty()).then(|| (consumer.clone(), producers))
         })
         .flatten()
-        .collect()
+        .collect();
+    debug!(
+        "output reads resolved in {:?} - {} plans, {} consumers, {} edges (setup: {:?})",
+        start.elapsed(),
+        hash_plans.plans.len(),
+        edges.len(),
+        edges.values().map(Vec::len).sum::<usize>(),
+        setup_duration
+    );
+    edges
 }
 
 /// Each task with declared outputs -> those outputs, parsed for comparison.

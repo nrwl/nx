@@ -20,7 +20,8 @@ use rayon::prelude::*;
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 use std::sync::Arc;
-use tracing::warn;
+use std::time::Instant;
+use tracing::{debug, trace, warn};
 
 use crate::native::affected::dependency_closure::dependency_closure;
 use crate::native::affected::dependent_outputs::compute_dependent_output_edges;
@@ -131,6 +132,7 @@ pub(crate) fn compute_affected_task_selection(
     changed_files: &[String],
     options: &AffectedTasksOptions,
 ) -> anyhow::Result<AffectedTaskSelection> {
+    let start = Instant::now();
     let (configs, deleted) = changed_project_configs(changed_files, options);
 
     let externals = ChangedExternals::new(
@@ -154,8 +156,19 @@ pub(crate) fn compute_affected_task_selection(
     if !deleted.is_empty() {
         touched.extend(task_graph.tasks.keys().cloned());
     }
+    let touched_duration = start.elapsed();
+    trace!("{} tasks touched in {:?}", touched.len(), touched_duration);
 
+    let edges_start = Instant::now();
     let producers_of = compute_dependent_output_edges(hash_plans, task_graph);
+    let edges_duration = edges_start.elapsed();
+    trace!(
+        "{} consumers read another task's outputs, resolved in {:?}",
+        producers_of.len(),
+        edges_duration
+    );
+
+    let propagate_start = Instant::now();
     let excluded: HashSet<&str> = options
         .excluded_projects
         .iter()
@@ -170,7 +183,26 @@ pub(crate) fn compute_affected_task_selection(
             })
         })
         .collect();
+    let propagate_duration = propagate_start.elapsed();
+
+    let closure_start = Instant::now();
     let required = dependency_closure(task_graph, affected.iter().map(String::as_str));
+    let closure_duration = closure_start.elapsed();
+
+    debug!(
+        "affected tasks selected in {:?} - {} changed files over {} tasks: {} touched ({:?}), {} consumers of outputs ({:?}), {} affected ({:?}), {} required ({:?})",
+        start.elapsed(),
+        changed_files.len(),
+        task_graph.tasks.len(),
+        touched.len(),
+        touched_duration,
+        producers_of.len(),
+        edges_duration,
+        affected.len(),
+        propagate_duration,
+        required.len(),
+        closure_duration
+    );
     Ok(AffectedTaskSelection { affected, required })
 }
 
