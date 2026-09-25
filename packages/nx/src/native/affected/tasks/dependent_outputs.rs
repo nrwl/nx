@@ -225,61 +225,16 @@ fn is_path_prefix(prefix: &str, path: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::native::tasks::types::{InstructionPool, Task};
+    use crate::native::tasks::types::Task;
+    use crate::native::test_utils::{hash_plans, strings, task_graph};
     use std::sync::Arc;
-
-    fn strings(values: &[&str]) -> Vec<String> {
-        values.iter().map(|v| v.to_string()).collect()
-    }
-
-    fn task_graph(tasks: &[(&str, &[&str])], deps: &[(&str, &[&str])]) -> TaskGraph {
-        TaskGraph {
-            tasks: tasks
-                .iter()
-                .map(|(id, outputs)| {
-                    (
-                        id.to_string(),
-                        Task {
-                            id: id.to_string(),
-                            outputs: strings(outputs),
-                            ..Default::default()
-                        },
-                    )
-                })
-                .collect(),
-            dependencies: deps
-                .iter()
-                .map(|(id, d)| (id.to_string(), strings(d)))
-                .collect(),
-            continuous_dependencies: HashMap::new(),
-            roots: vec![],
-        }
-    }
-
-    fn plans(entries: &[(&str, Vec<HashInstruction>)]) -> HashPlans {
-        let pool = Arc::new(InstructionPool::new());
-        HashPlans {
-            plans: entries
-                .iter()
-                .map(|(task, instructions)| {
-                    let ids = instructions
-                        .iter()
-                        .map(|i| pool.intern(i.clone()))
-                        .collect();
-                    (task.to_string(), ids)
-                })
-                .collect(),
-            pool,
-            deferred: Default::default(),
-        }
-    }
 
     fn edges(
         tasks: &[(&str, &[&str])],
         deps: &[(&str, &[&str])],
         entries: &[(&str, Vec<HashInstruction>)],
     ) -> HashMap<String, Vec<String>> {
-        compute_dependent_output_edges(&plans(entries), &task_graph(tasks, deps))
+        compute_dependent_output_edges(&hash_plans(entries), &task_graph(tasks, deps))
     }
 
     fn task_output(outputs: &[&str]) -> HashInstruction {
@@ -435,7 +390,7 @@ mod tests {
         let mut tg = task_graph(&[("web:serve", &["dist/apps/web"]), ("e2e:e2e", &[])], &[]);
         tg.continuous_dependencies
             .insert("e2e:e2e".into(), strings(&["web:serve"]));
-        let p = plans(&[
+        let p = hash_plans(&[
             ("e2e:e2e", vec![include_ignored(&["dist/apps/web/**"])]),
             ("e2e:declared", vec![task_output(&["dist/apps/web"])]),
         ]);
@@ -468,7 +423,7 @@ mod tests {
         );
         tg.continuous_dependencies
             .insert("e2e:e2e".into(), strings(&["web:serve"]));
-        let p = plans(&[("e2e:e2e", vec![task_output(&["dist/libs/ui"])])]);
+        let p = hash_plans(&[("e2e:e2e", vec![task_output(&["dist/libs/ui"])])]);
         let e = compute_dependent_output_edges(&p, &tg);
         assert_eq!(e["e2e:e2e"], strings(&["ui:build"]));
     }
