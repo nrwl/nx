@@ -50,7 +50,7 @@ describe('analyzeProjects', () => {
   let readCachedAnalysisResult: typeof import('./analyzer-client').readCachedAnalysisResult;
   let ANALYZER_CANCELLED_MESSAGE: string;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.resetModules();
     vi.clearAllMocks();
     mocks.hashWithWorkspaceContext.mockImplementation(async () => 'files-hash');
@@ -61,7 +61,7 @@ describe('analyzeProjects', () => {
       getAnalysisTimeoutMs,
       readCachedAnalysisResult,
       ANALYZER_CANCELLED_MESSAGE,
-    } = require('./analyzer-client'));
+    } = await import('./analyzer-client'));
   });
 
   it('should stream the options then the file list over stdin and parse stdout', async () => {
