@@ -4,6 +4,7 @@ import {
   queuePendingDotEnvEvents,
 } from './dotenv-graph-changes';
 import {
+  clearRecordedOutputsHashes,
   disableOutputsTracking,
   processFileChangesInOutputs,
 } from './outputs-tracking';
@@ -11,9 +12,12 @@ import {
   currentProjectGraph,
   getRecomputationGeneration,
   invalidateGraphCache,
-  isKnownWorkspaceFile,
 } from './project-graph-incremental-recomputation';
-import type { FileWatcherCallback } from './watcher';
+import { workspaceRoot } from '../../utils/workspace-root';
+import {
+  trackedFilesInContext,
+  type WatchEventsListener,
+} from '../../utils/workspace-context';
 
 let outputsWatcherError: Error | undefined;
 let outputsWatcherTerminalError: Error | undefined;
@@ -29,7 +33,7 @@ export function getOutputsWatcherTerminalError(): Error | undefined {
   return outputsWatcherTerminalError;
 }
 
-export const handleOutputsChanges: FileWatcherCallback = async (
+export const handleOutputsChanges: WatchEventsListener = async (
   err,
   changeEvents
 ) => {
@@ -56,6 +60,18 @@ export const handleOutputsChanges: FileWatcherCallback = async (
       return;
     }
 
+    if (changeEvents.some((event) => event.type === 'rescan')) {
+      // Dropped events cannot be classified: any recorded output hash and any
+      // gitignored dotenv file may have changed unseen. Start the tracker
+      // over and invalidate the graph rather than trust either.
+      serverLogger.watcherLog(
+        'The outputs watcher reported dropped events; clearing recorded output hashes and invalidating the graph cache.'
+      );
+      clearRecordedOutputsHashes();
+      invalidateGraphCache();
+      return;
+    }
+
     // A dotenv change that a task chain loads must refresh the graph so
     // createNodes re-resolves config reading process.env. This runs above the
     // outputsWatcherError guard: the two concerns are independent, and a
@@ -65,11 +81,11 @@ export const handleOutputsChanges: FileWatcherCallback = async (
     // would discard that recomputation at commit and force a second one. It is
     // queued instead of dropped: the two watchers deliver independently, so a
     // computation already in flight may have read the file before the edit,
-    // and only the pre-serve replay can prove that. The committed file map
-    // approximates what the watcher tracks: a file it does not know is either
-    // gitignored (never reaches the workspace watcher, so it needs the
-    // invalidation) or created since the last recompute (the watcher handles
-    // it; the extra invalidation is fail-safe). Its own try/catch so a fault
+    // and only the pre-serve replay can prove that. The context answers from
+    // the files the watch keeps, so a path it does not hold is gitignored,
+    // already deleted, or not yet ingested, and each of those needs the
+    // invalidation. A missing context answers with nothing, which invalidates
+    // too. Its own try/catch so a fault
     // here cannot trip the outputs-tracking kill switch below, which belongs
     // to an unrelated subsystem, and it fails safe by invalidating: a stale
     // graph on a dotenv edit is the bug this prevents.
@@ -83,9 +99,11 @@ export const handleOutputsChanges: FileWatcherCallback = async (
         unclassified.map((event) => event.path),
         generation
       );
-      const knownInvalidating = invalidating.filter((path) =>
-        isKnownWorkspaceFile(path)
-      );
+      // Skips the napi call, which takes the files mutex and can wait out a
+      // re-walk, for the common batch that classifies nothing.
+      const knownInvalidating = invalidating.length
+        ? trackedFilesInContext(workspaceRoot, invalidating)
+        : [];
       queuePendingDotEnvEvents(knownInvalidating, generation);
       if (knownInvalidating.length < invalidating.length) {
         invalidateGraphCache();

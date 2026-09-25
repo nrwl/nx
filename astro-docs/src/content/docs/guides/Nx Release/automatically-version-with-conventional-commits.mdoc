@@ -57,8 +57,21 @@ If you are using [independent releases](/docs/guides/nx-release/release-projects
 Nx Release will select the `patch` version bump for `pkg-1` and `minor` for `pkg-2`. `pkg-3` will be skipped entirely, since it has no `feat` or `fix` commits.
 
 {% aside type="note" title="Determining if a commit affects a project" %}
-Note that this determination is made based on files changed by each commit, _not_ by the scope of the commit message itself. This means that `feat(pkg-2): add a new feature` could trigger a version bump for a project other than `pkg-2` if it updated files in another project.
+Which projects a commit affects is determined by the files it changed, _not_ by the scope of the commit message. This means that `feat(pkg-2): add a new feature` could trigger a version bump for a project other than `pkg-2` if it updated files in another project.
 {% /aside %}
+
+The scope does affect the _size_ of the bump. By default (`useCommitScope: true`), a commit only counts as a `feat`, `fix` or breaking change for a project when it has no scope or when its scope matches that project's name. A commit with any other scope, such as `feat(button): add size prop` in a project named `ui`, is treated as a `patch` for the projects it touched. Set `useCommitScope` to `false` to derive the bump purely from the affected files:
+
+```json
+// nx.json
+{
+  "release": {
+    "conventionalCommits": {
+      "useCommitScope": false
+    }
+  }
+}
+```
 
 An example partial output of running Nx Release with independent releases and conventional commits enabled:
 

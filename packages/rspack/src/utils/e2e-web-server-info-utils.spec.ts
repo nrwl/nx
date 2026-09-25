@@ -19,7 +19,7 @@ describe('getRspackE2EWebServerInfo', () => {
 
   afterEach(() => {
     tempFs.cleanup();
-    jest.resetModules();
+    vi.resetModules();
   });
 
   it('should use map-shaped targetDefaults when no plugin is registered and plugins are not being used', async () => {

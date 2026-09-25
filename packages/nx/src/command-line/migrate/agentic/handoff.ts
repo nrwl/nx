@@ -87,9 +87,8 @@ function sanitizeSegment(value: string): string {
 
 const STEP_NAME_PREFIX_MAX_BYTES = 64;
 
-// Cuts on code points so a multibyte character is never split, and counts
-// UTF-8 bytes because the filesystem limit is per byte, not per character.
-function truncateUtf8(value: string, maxBytes: number): string {
+// Truncates to a UTF-8 byte budget without splitting a code point.
+export function truncateUtf8(value: string, maxBytes: number): string {
   let out = '';
   let used = 0;
   for (const ch of value) {
@@ -164,6 +163,34 @@ export function handoffsDirState(
 }
 
 /**
+ * Non-recursive mkdir: the run dir exists, and a symlink created after the
+ * missing-path check fails with EEXIST instead of being followed.
+ */
+export function ensureRunSubdir(dir: string, notADirectory: () => Error): void {
+  const state = handoffsDirState(dir);
+  switch (state) {
+    case 'directory':
+      return;
+    case 'missing':
+      mkdirSync(dir);
+      return;
+    case 'other':
+      throw notADirectory();
+    default: {
+      const unhandled: never = state;
+      throw new Error(`Unhandled directory state: ${unhandled}`);
+    }
+  }
+}
+
+/**
+ * Thrown by {@link readInspectedFile} when the opened descriptor is not the
+ * file the caller's lstat described: a symlink followed on Windows, or an
+ * atomic replacement between the lstat and the open.
+ */
+export class FileReplacedDuringReadError extends Error {}
+
+/**
  * Reads the file `stat` describes, refusing a symlink swapped in after the
  * caller's lstat: O_NOFOLLOW fails the open with ELOOP, and O_NONBLOCK keeps a
  * planted FIFO from blocking it. Windows has neither flag, so there the inode
@@ -189,11 +216,49 @@ export function readInspectedFile(
       fdStat.dev !== stat.dev ||
       fdStat.ino !== stat.ino
     ) {
-      throw new Error(replacedMessage);
+      throw new FileReplacedDuringReadError(replacedMessage);
     }
     return readFileSync(fd, 'utf-8');
   } finally {
     closeSync(fd);
+  }
+}
+
+const ATOMIC_READ_ATTEMPTS = 5;
+
+/**
+ * Reads a file its owner publishes atomically (tmp + rename), with
+ * {@link readInspectedFile}'s refusal of a symlink or FIFO but tolerant of the
+ * publish: a rename swaps the inode between the lstat and the open, read as a
+ * replacement, so re-lstat and retry to read the new file. A pre-existing
+ * symlink or FIFO fails the isFile check before any open; a file that keeps
+ * changing past the retry budget is refused. Throws `notRegularMessage` for a
+ * non-regular file; ENOENT and ELOOP propagate.
+ */
+export function readAtomicallyPublishedFile(
+  filePath: string,
+  notRegularMessage: string
+): string {
+  for (let attempt = 1; ; attempt++) {
+    const stat = lstatSync(filePath, { bigint: true });
+    if (!stat.isFile()) {
+      throw new Error(notRegularMessage);
+    }
+    try {
+      return readInspectedFile(
+        filePath,
+        stat,
+        `${filePath} was replaced while being read.`
+      );
+    } catch (e) {
+      if (
+        e instanceof FileReplacedDuringReadError &&
+        attempt < ATOMIC_READ_ATTEMPTS
+      ) {
+        continue;
+      }
+      throw e;
+    }
   }
 }
 

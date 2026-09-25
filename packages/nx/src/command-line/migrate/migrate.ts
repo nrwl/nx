@@ -35,6 +35,7 @@ import { extractFileFromTarball } from '../../utils/tar';
 import { writeFormattedJsonFile } from '../../utils/write-formatted-json-file';
 import { quoteShellArg } from '../../utils/shell-quoting';
 import { logger } from '../../utils/logger';
+import { IS_WASM } from '../../native';
 import {
   getUncommittedChangesSnapshot,
   isGitRepository,
@@ -55,6 +56,7 @@ import {
   PackageManagerCommands,
   packageRegistryPack,
   packageRegistryView,
+  parseRegistryViewJson,
 } from '../../utils/package-manager';
 import { MinReleaseAgeViolationError } from '../../utils/min-release-age/errors';
 import {
@@ -134,6 +136,7 @@ import {
   assertCommitPrefixHasCommits,
 } from './migrate-config';
 import type { ResolvedAgentic } from './agentic/types';
+import type { RunOrchestratorInitInput } from './run';
 import {
   commitCheckpointBeforeMigrations,
   commitMigrationIfRequested,
@@ -2032,7 +2035,7 @@ async function getPackageMigrationsConfigFromRegistry(
     return null;
   }
 
-  const json = JSON.parse(result);
+  const json = parseRegistryViewJson<Record<string, any>>(result);
 
   if (!json['nx-migrations'] && !json['ng-update']) {
     const registry = new URL('dist' in json ? json.dist.tarball : json.tarball)
@@ -3261,6 +3264,22 @@ async function runMigrations(
 
   const migrationsJson = readJsonFile(join(root, opts.runMigrations));
   const migrations: PlannedMigration[] = migrationsJson.migrations;
+  // Defer the nx package lookup until an orchestrated branch needs this payload.
+  const orchestratorInitInput = (
+    createCommits: boolean
+  ): Omit<RunOrchestratorInitInput, 'emitAgentInstructions'> => ({
+    root,
+    migrationsJson,
+    createCommits,
+    commitPrefix,
+    // The flag only, never NX_MIGRATE_SKIP_INSTALL: the wrapper's local
+    // re-exec sets that env var for its own hop, and it says nothing about
+    // what the user asked for.
+    skipInstall: shouldSkipInstall,
+    installedNxVersion: readModulePackageJson('nx', getNxRequirePaths(root))
+      .packageJson.version,
+    validate: opts.validate,
+  });
 
   // An outer agent drives the loop, so hand off to the orchestrator instead of
   // the classic loop: init either starts a fresh run or resumes an already-
@@ -3304,23 +3323,10 @@ async function runMigrations(
         return;
       }
     }
-    const { packageJson: orchestratorNxPackageJson } = readModulePackageJson(
-      'nx',
-      getNxRequirePaths(root)
-    );
+    const init = orchestratorInitInput(effectiveCreateCommits);
     const { runOrchestratorInit } = require('./run') as typeof import('./run');
-    return await runOrchestratorInit({
-      root,
-      migrationsJson,
-      createCommits: effectiveCreateCommits,
-      commitPrefix,
-      // The flag only, never NX_MIGRATE_SKIP_INSTALL: the wrapper's local
-      // re-exec sets that env var for its own hop, and it says nothing about
-      // what the user asked for.
-      skipInstall: shouldSkipInstall,
-      installedNxVersion: orchestratorNxPackageJson.version,
-      validate: opts.validate,
-    });
+    await runOrchestratorInit(init);
+    return;
   }
 
   reportMigrateRunStart({
@@ -3366,6 +3372,20 @@ async function runMigrations(
     !(await confirmMigrationCommitsOnDefaultBranch(root, 'running migrations'))
   ) {
     return;
+  }
+
+  // Dark: with the env var set, the agent drives the whole run through the
+  // orchestrator from one session instead of being spawned per step. Not
+  // under WASM, where the broker has no native lock to detect a dead parent.
+  if (
+    agentic.kind === 'enabled' &&
+    process.env.NX_MIGRATE_ORCHESTRATOR === 'true' &&
+    !IS_WASM
+  ) {
+    const init = orchestratorInitInput(effectiveCreateCommits);
+    const { runMasterSession } =
+      require('./agentic/master/run-master-session') as typeof import('./agentic/master/run-master-session');
+    return await runMasterSession({ ...init, agent: agentic.selectedAgent });
   }
 
   const shouldRunValidation = resolveShouldRunValidation({
@@ -3650,7 +3670,7 @@ function stringifyCaught(e: unknown): string {
   }
 }
 
-// A resolver-based lookup (including `resolvePackageJsonWithoutCachePollution`,
+// A resolver-based lookup (including `resolveWithoutCachePollution`,
 // which does defeat Node's package self-reference) is the wrong tool here:
 // resolvers fall back to NODE_PATH after the explicit paths, and NODE_PATH
 // names the temp installation when this runs there. The scan below reads its

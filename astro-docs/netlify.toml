@@ -314,6 +314,13 @@ to = "/docs/kb/what-is-a-monorepo"
 from = "/docs/concepts/typescript-project-linking"
 to = "/docs/kb/typescript-project-linking"
 
+# force = true so this wins over the hidden extending-nx/index.mdoc stub page.
+[[redirects]]
+from = "/docs/extending-nx"
+to = "/docs/kb/extending-nx"
+status = 301
+force = true
+
 [[redirects]]
 from = "/docs/extending-nx/compose-executors"
 to = "/docs/kb/compose-executors"
@@ -1162,6 +1169,21 @@ to = "/docs/technologies/module-federation/introduction"
 [[redirects]]
 from = "/docs/concepts/decisions"
 to = "/docs/kb/monorepo-vs-polyrepo"
+
+# DOC-660: bare /docs/<slug> forms of these kb pages are indexed and ranking,
+# but only the old deep paths were redirected.
+[[redirects]]
+from = "/docs/what-is-a-monorepo"
+to = "/docs/kb/what-is-a-monorepo"
+
+[[redirects]]
+from = "/docs/angular-nx-version-matrix"
+to = "/docs/kb/angular-nx-version-matrix"
+
+# DOC-675: Enable AI features moved from the Nx Cloud guides into the knowledge base
+[[redirects]]
+from = "/docs/guides/nx-cloud/enable-ai-features"
+to = "/docs/kb/enable-ai-features"
 
 # Rewrite for base path handling (keeps URL the same)
 [[redirects]]

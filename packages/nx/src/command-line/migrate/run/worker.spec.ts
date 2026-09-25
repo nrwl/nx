@@ -157,11 +157,15 @@ vi.mock('../../../utils/package-manager', () => ({
   getPackageManagerCommand: () => ({ exec: 'npx', install: 'npm install' }),
 }));
 
+vi.mock('fs', async () => ({ ...require('fs') }));
+
+import * as fs from 'fs';
 import {
   existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  renameSync,
   rmSync,
   writeFileSync,
 } from 'fs';
@@ -184,9 +188,12 @@ import {
   type MigrateRunState,
   type MigrateStep,
   type MigrateStepStatus,
+  type MigrateTreeOperation,
 } from './run-state';
 import { applyStepEvent } from './state-machine';
 import { depsHash } from './util';
+import { BrokerStaleRequestError, BrokerUnavailableError } from './broker';
+import { answered, readRequest, serviced } from './test-utils';
 
 const RUN_NEXT_FIRST =
   'Run the dispensed "next" command first: its response restates this work and names the handoff file to write.';
@@ -728,7 +735,7 @@ describe('runSingleMigrationWorker', () => {
         'chore: [nx migration] ',
         expect.any(Function),
         [],
-        'Commit or revert the changes manually.'
+        'Commit or revert any remaining uncommitted changes manually.'
       );
       // `commitMigrationIfRequested` already logs the failure with that
       // guidance; the worker must not print a second message for it.
@@ -1543,6 +1550,7 @@ describe('runSingleMigrationWorker', () => {
           {
             ...migStep('step-1', '@nx/js:gen', 'dispensed'),
             generatorCompleted: true,
+            commitStarted: true,
           },
         ],
         migrations: [genMig('@nx/js', 'gen')],
@@ -1560,6 +1568,7 @@ describe('runSingleMigrationWorker', () => {
         sha: 'face0001face0001face0001face0001face0001',
         stepIds: ['step-1'],
       });
+      expect(state.steps[0].commitStarted).toBeUndefined();
     });
 
     it('installs the retry from the baseline captured at dispense, not from the generator output', async () => {
@@ -1597,7 +1606,8 @@ describe('runSingleMigrationWorker', () => {
       expect(mockRunInstall).toHaveBeenCalledWith(
         root,
         'post-migration',
-        expect.stringContaining('--run-id=run-1')
+        expect.stringContaining('--run-id=run-1'),
+        undefined
       );
     });
 
@@ -1633,7 +1643,7 @@ describe('runSingleMigrationWorker', () => {
       });
 
       expect(mockRunInstall).not.toHaveBeenCalled();
-      expect(mockLogSkippedInstall).toHaveBeenCalledWith(root);
+      expect(mockLogSkippedInstall).toHaveBeenCalledWith(root, undefined);
     });
 
     it('passes the run install policy to the installer on a first attempt', async () => {
@@ -1791,7 +1801,8 @@ describe('runSingleMigrationWorker', () => {
       expect(mockRunInstall).toHaveBeenCalledWith(
         root,
         'post-migration',
-        expect.stringContaining('--run-id=run-1')
+        expect.stringContaining('--run-id=run-1'),
+        undefined
       );
       expect(stdout).toContain('<nx_migrate_prompt migration="@nx/js:h">');
     });
@@ -2101,7 +2112,8 @@ describe('runSingleMigrationWorker', () => {
       expect(mockRunInstall).toHaveBeenCalledWith(
         root,
         'post-migration',
-        expect.stringContaining('--run-id=run-1')
+        expect.stringContaining('--run-id=run-1'),
+        undefined
       );
       expect(mockCommit).not.toHaveBeenCalled();
       const step = readRunState(dir).steps[0];
@@ -2416,6 +2428,47 @@ describe('runSingleMigrationWorker', () => {
         stepIds: ['step-1'],
       });
       expect(state.steps[0].status).toBe('failed');
+      // Git never ran and the lease was released: nothing may be in history.
+      expect(state.steps[0].commitStarted).toBeUndefined();
+    });
+
+    it('keeps the commit it landed marked as started when the record write fails', async () => {
+      mockRunMigration.mockResolvedValue({
+        changes: changeList(),
+        nextSteps: [],
+        agentContext: [],
+        logs: '',
+        madeChanges: true,
+      });
+      const realRename = renameSync;
+      mockCommit.mockImplementation(async () => {
+        vi.spyOn(fs, 'renameSync').mockImplementationOnce(
+          (from: string, to: string) => {
+            if (!String(to).endsWith('run.json')) return realRename(from, to);
+            throw Object.assign(new Error('disk full'), { code: 'ENOSPC' });
+          }
+        );
+        return {
+          status: 'committed',
+          sha: 'face0001face0001face0001face0001face0001',
+        };
+      });
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'dispensed')],
+        migrations: [genMig('@nx/js', 'gen')],
+        createCommits: true,
+      });
+
+      await expect(
+        runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'))
+      ).rejects.toThrow('disk full');
+
+      const state = readRunState(dir);
+      expect(state.commits).not.toContainEqual(
+        expect.objectContaining({ kind: 'landed' })
+      );
+      expect(state.steps[0].commitStarted).toBe(true);
+      expect(state.treeOperation).toBeUndefined();
     });
 
     it('only matches the latest round step when an older round has the same migration id', async () => {
@@ -2509,6 +2562,260 @@ describe('runSingleMigrationWorker', () => {
       await runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'));
 
       expect(mockLogSkippedInstall).toHaveBeenCalledWith(root);
+    });
+  });
+
+  describe('recorded execution through the session broker', () => {
+    const nonce = 'deadbeef';
+    const committed = {
+      status: 'committed' as const,
+      sha: 'face0003face0003face0003face0003face0003',
+    };
+
+    beforeEach(() => {
+      process.env.NX_MIGRATE_BROKER = nonce;
+      mockRunMigration.mockResolvedValue({
+        changes: changeList(),
+        nextSteps: [],
+        agentContext: [],
+        logs: '',
+        madeChanges: true,
+      });
+    });
+
+    afterEach(() => {
+      delete process.env.NX_MIGRATE_BROKER;
+    });
+
+    function committingRun(): string {
+      return setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'dispensed')],
+        migrations: [genMig('@nx/js', 'gen')],
+        createCommits: true,
+      });
+    }
+
+    function validatingRun(step: Partial<MigrateStep> = {}): string {
+      return setupRun('run-1', {
+        steps: [{ ...migStep('step-1', '@nx/js:gen', 'dispensed'), ...step }],
+        migrations: [genMig('@nx/js', 'gen')],
+        createCommits: true,
+        validate: true,
+      });
+    }
+
+    const run = () =>
+      runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'));
+
+    it('leaves the commit the session landed to the record the session made, naming the steps it absorbed', async () => {
+      mockCommit.mockResolvedValue(committed);
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-0', '@nx/js:prior', 'failed'),
+          migStep('step-1', '@nx/js:gen', 'dispensed'),
+        ],
+        migrations: [genMig('@nx/js', 'gen')],
+        createCommits: true,
+        commits: [{ kind: 'failed', stepIds: ['step-0'] }],
+      });
+
+      await serviced(
+        root,
+        dir,
+        { createCommits: true, skipInstall: false },
+        run
+      );
+
+      expect(mockCommit).toHaveBeenCalledTimes(1);
+      const state = readRunState(dir);
+      expect(state.steps[1].status).toBe('succeeded');
+      expect(state.steps[1].commitLedgerIndex).toBe(1);
+      expect(state.commits).toEqual([
+        { kind: 'failed', stepIds: ['step-0'] },
+        { kind: 'landed', sha: committed.sha, stepIds: ['step-1', 'step-0'] },
+      ]);
+    });
+
+    it('leaves the step untouched when the session answered stale', async () => {
+      const dir = committingRun();
+
+      await expect(
+        answered(dir, nonce, { kind: 'stale' }, run)
+      ).rejects.toBeInstanceOf(BrokerStaleRequestError);
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('running');
+      expect(state.commits).toEqual([]);
+    });
+
+    it('keeps the commit the session started marked when the session is gone before answering', async () => {
+      // The parent reserved the tree and marked the step, then died: the
+      // commit may be in history, and the debt alone would let a skip hide it.
+      const dir = setupRun('run-1', {
+        steps: [
+          {
+            ...migStep('step-1', '@nx/js:gen', 'dispensed'),
+            commitStarted: true,
+          },
+        ],
+        migrations: [genMig('@nx/js', 'gen')],
+        createCommits: true,
+      });
+
+      await expect(run()).rejects.toBeInstanceOf(BrokerUnavailableError);
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('failed');
+      expect(state.commits).toEqual([{ kind: 'failed', stepIds: ['step-1'] }]);
+      expect(state.steps[0].commitStarted).toBe(true);
+    });
+
+    it('installs through the session before handing validation to the agent', async () => {
+      const dir = validatingRun();
+
+      await answered(dir, nonce, { kind: 'installed', output: [] }, run);
+
+      expect(mockInstallDepsIfChanged).not.toHaveBeenCalled();
+      expect(mockCommit).not.toHaveBeenCalled();
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('awaiting-prompt-outcome');
+      expect(state.steps[0].awaitingKind).toBe('generator-validation');
+      expect(readRequest(dir)).toEqual({
+        kind: 'install',
+        stepId: 'step-1',
+        attempt: 1,
+      });
+    });
+
+    it('fails the step, without debt, when the session reported the install it owed failed', async () => {
+      const dir = validatingRun();
+
+      await expect(
+        answered(
+          dir,
+          nonce,
+          {
+            kind: 'install-failed',
+            message: 'registry unreachable',
+            peerDeps: false,
+            output: [],
+          },
+          run
+        )
+      ).rejects.toThrow('registry unreachable');
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('failed');
+      expect(state.steps[0].outcome.summary).toBe('registry unreachable');
+      expect(state.commits).toEqual([]);
+    });
+
+    it('reinstalls a retried step from its baseline through the session', async () => {
+      const dir = validatingRun({
+        generatorCompleted: true,
+        validationOwed: true,
+        depsHashAtDispense: 'baseline-from-an-earlier-dispense',
+      });
+
+      await answered(dir, nonce, { kind: 'installed', output: [] }, run);
+
+      expect(mockRunInstall).not.toHaveBeenCalled();
+      expect(mockRunMigration).not.toHaveBeenCalled();
+      expect(readRunState(dir).steps[0].status).toBe('awaiting-prompt-outcome');
+      expect(readRequest(dir)).toMatchObject({ kind: 'install', attempt: 1 });
+    });
+  });
+
+  describe('recorded execution: tree reservation', () => {
+    const committed = {
+      status: 'committed' as const,
+      sha: 'face0030face0030face0030face0030face0030',
+    };
+
+    beforeEach(() => {
+      delete process.env.NX_MIGRATE_BROKER;
+      mockRunMigration.mockResolvedValue({
+        changes: changeList(),
+        nextSteps: [],
+        agentContext: [],
+        logs: '',
+        madeChanges: true,
+      });
+    });
+
+    function committingRun(): string {
+      return setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'dispensed')],
+        migrations: [genMig('@nx/js', 'gen')],
+        createCommits: true,
+      });
+    }
+
+    const run = () =>
+      runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'));
+
+    it('fails the attempt without debt when another live process holds the tree', async () => {
+      vi.spyOn(process, 'kill').mockReturnValue(true as never);
+      const dir = committingRun();
+      writeRunState(dir, {
+        ...readRunState(dir),
+        treeOperation: {
+          kind: 'action-install',
+          stepId: 'step-0',
+          attempt: 1,
+          owner: 'another-process',
+          pid: process.pid,
+        },
+      });
+
+      await expect(run()).rejects.toThrow(
+        `held by process ${process.pid} for the install of step 'step-0'`
+      );
+
+      expect(mockCommit).not.toHaveBeenCalled();
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('failed');
+      expect(state.steps[0].outcome.summary).toContain('held by process');
+      expect(state.commits).toEqual([]);
+      expect(state.treeOperation.owner).toBe('another-process');
+    });
+
+    it('holds the tree while it commits in process and releases it once the step is recorded', async () => {
+      const dir = committingRun();
+      let heldDuringCommit: MigrateTreeOperation | undefined;
+      mockCommit.mockImplementation(async () => {
+        heldDuringCommit = readRunState(dir).treeOperation;
+        return committed;
+      });
+
+      await run();
+
+      expect(heldDuringCommit).toEqual({
+        kind: 'commit',
+        stepId: 'step-1',
+        attempt: 1,
+        owner: expect.any(String),
+        pid: process.pid,
+      });
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('succeeded');
+      expect(state.treeOperation).toBeUndefined();
+    });
+
+    it('releases the tree when the install throws after reserving it', async () => {
+      mockInstallDepsIfChanged.mockRejectedValue(
+        new Error('registry unreachable')
+      );
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'dispensed')],
+        migrations: [genMig('@nx/js', 'gen')],
+      });
+
+      await expect(run()).rejects.toThrow('registry unreachable');
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('failed');
+      expect(state.treeOperation).toBeUndefined();
     });
   });
 

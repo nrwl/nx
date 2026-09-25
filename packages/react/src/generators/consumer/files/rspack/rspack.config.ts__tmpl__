@@ -1,6 +1,7 @@
 import { defineConfig } from '@rspack/cli';
 import { rspack } from '@rspack/core';
 import { ModuleFederationPlugin } from '@module-federation/enhanced/rspack';
+import { ReactRefreshRspackPlugin } from '@rspack/plugin-react-refresh';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -38,7 +39,9 @@ export default defineConfig((_env, argv) => {
             options: {
               jsc: {
                 parser: { syntax: 'typescript', tsx: true },
-                transform: { react: { runtime: 'automatic', development: isDev } },
+                transform: {
+                  react: { runtime: 'automatic', development: isDev, refresh: isDev },
+                },
               },
               env: { targets: 'Chrome >= 87, Firefox >= 78, Edge >= 88, Safari >= 14' },
             },
@@ -47,6 +50,7 @@ export default defineConfig((_env, argv) => {
       ],
     },
     plugins: [
+      isDev && new ReactRefreshRspackPlugin(),
       new rspack.HtmlRspackPlugin({ template: './index.html' }),
       new ModuleFederationPlugin({
         name: NAME,
@@ -54,6 +58,6 @@ export default defineConfig((_env, argv) => {
         // src/mf.ts at module load time.
         shared: ['react', 'react-dom'],
       }),
-    ],
+    ].filter(Boolean),
   };
 });

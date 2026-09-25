@@ -4,10 +4,13 @@ mod glob_parser;
 pub mod glob_transform;
 
 use crate::native::glob::glob_transform::convert_glob;
+pub(crate) use crate::native::glob::glob_transform::{
+    expand_literal_braces, fileset_patterns, normalize_glob, partition_glob,
+};
 use dashmap::DashMap;
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
 use std::fmt::Debug;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, LazyLock};
 use tracing::trace;
 
@@ -56,10 +59,11 @@ impl NxGlobSetBuilder {
         Ok(self)
     }
 
-    pub fn build(&self) -> anyhow::Result<NxGlobSet> {
+    pub fn build(&self, literal_prefix: Option<PathBuf>) -> anyhow::Result<NxGlobSet> {
         Ok(NxGlobSet {
             excluded_globs: self.excluded_globs.build()?,
             included_globs: self.included_globs.build()?,
+            literal_prefix,
         })
     }
 }
@@ -68,8 +72,13 @@ impl NxGlobSetBuilder {
 pub struct NxGlobSet {
     included_globs: GlobSet,
     excluded_globs: GlobSet,
+    literal_prefix: Option<PathBuf>,
 }
 impl NxGlobSet {
+    pub(crate) fn literal_prefix(&self) -> Option<&Path> {
+        self.literal_prefix.as_deref()
+    }
+
     pub fn is_match<P: AsRef<Path>>(&self, path: P) -> bool {
         if self.included_globs.is_empty() {
             !self.excluded_globs.is_match(path.as_ref())
@@ -80,6 +89,41 @@ impl NxGlobSet {
                 && !self.excluded_globs.is_match(path.as_ref())
         }
     }
+}
+
+fn common_glob_prefix(globs: &[String]) -> Option<PathBuf> {
+    let mut common: Option<PathBuf> = None;
+    for glob in globs {
+        if glob.starts_with('!') {
+            continue;
+        }
+        #[cfg(windows)]
+        let glob = glob.replace('\\', "/");
+        let (directory, _) = partition_glob(glob.as_str());
+        // Escaped or lossy names cannot safely index the raw file map.
+        if directory.contains(['\\', ':', '\u{fffd}'])
+            || directory
+                .split('/')
+                .any(|part| part.is_empty() || part == "." || part == "..")
+        {
+            return None;
+        }
+        let directory = PathBuf::from(directory);
+        let prefix = match common {
+            None => directory,
+            Some(prefix) => prefix
+                .components()
+                .zip(directory.components())
+                .take_while(|(left, right)| left == right)
+                .map(|(component, _)| component)
+                .collect::<PathBuf>(),
+        };
+        if prefix.as_os_str().is_empty() {
+            return None;
+        }
+        common = Some(prefix);
+    }
+    common
 }
 
 /// Splits a glob that is a single top-level brace group (`{a,b,c}`) into its
@@ -133,7 +177,6 @@ fn potential_glob_split(
 }
 
 pub(crate) fn build_glob_set<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Result<Arc<NxGlobSet>> {
-    // Build cache key from sorted globs joined by null byte (cannot appear in glob strings)
     let mut sorted_globs: Vec<&str> = globs.iter().map(|s| s.as_ref()).collect();
     sorted_globs.sort();
     let cache_key = sorted_globs.join("\0");
@@ -146,13 +189,12 @@ pub(crate) fn build_glob_set<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Resu
         .iter()
         .flat_map(|s| potential_glob_split(s.as_ref()))
         .map(|glob| {
-            // Decide on the pattern without its negation marker. A leading `!`
-            // marks the whole glob as an exclusion — it is not extglob syntax —
-            // and convert_glob strips bare `@`, `+` and `?` out of anything it
-            // touches (see special_char_with_no_group, which `+spec.ts`-style
-            // patterns rely on). Routing a plain exclusion through it purely
-            // because of that leading `!` silently rewrote `!dist/@scope/pkg`
-            // to `!dist/scope/pkg`, so the exclusion matched nothing.
+            // Convert only what needs it: `convert_glob` truncates a glob at
+            // a special character that begins no group, so `!dist/?/x` would
+            // come back as `dist` (NXC-5001). Deciding on the pattern without
+            // its negation marker is what keeps it off that road — a leading
+            // `!` marks the whole glob as an exclusion, not extglob syntax,
+            // and the pattern beneath it holds nothing needing conversion.
             let pattern = glob.strip_prefix('!').unwrap_or(glob);
             if pattern.contains('!')
                 || pattern.contains('|')
@@ -169,7 +211,7 @@ pub(crate) fn build_glob_set<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Resu
 
     trace!(?globs, ?result, "converted globs");
 
-    let glob_set = Arc::new(NxGlobSetBuilder::new(&result)?.build()?);
+    let glob_set = Arc::new(NxGlobSetBuilder::new(&result)?.build(common_glob_prefix(&result))?);
     GLOB_CACHE.insert(cache_key, Arc::clone(&glob_set));
     Ok(glob_set)
 }
@@ -204,6 +246,37 @@ mod test {
     use super::*;
 
     #[test]
+    fn jest_extglobs_narrow_to_a_shared_ancestor() {
+        let globs = [
+            "e2e/深/左/**/+(*.)+(spec|test).+(ts|js)?(x)",
+            "e2e/深/右/**",
+        ];
+        assert_eq!(
+            build_glob_set(&globs).unwrap().literal_prefix(),
+            Some(Path::new("e2e/深"))
+        );
+        for globs in [vec!["!e2e/react/**"], vec![]] {
+            assert!(build_glob_set(&globs).unwrap().literal_prefix().is_none());
+        }
+    }
+
+    #[test]
+    fn backslash_prefixes_follow_platform_separators() {
+        for pattern in [
+            r"e2e\react\**\+(*.)+(spec|test).+(ts|js)?(x)",
+            r"e2e\react/**/*.spec.ts",
+            r"e2e\react\*.spec.ts",
+        ] {
+            let globs = [pattern.to_string()];
+            assert_eq!(
+                build_glob_set(&globs).unwrap().literal_prefix(),
+                cfg!(windows).then_some(Path::new("e2e/react")),
+                "{pattern}"
+            );
+        }
+    }
+
+    #[test]
     fn should_not_strip_literal_chars_from_plain_negated_globs() {
         // A leading `!` is not extglob syntax. Routing a plain exclusion
         // through convert_glob because of it used to eat the `@`/`+`, so the
@@ -215,10 +288,19 @@ mod test {
         let glob_set = build_glob_set(&["dist/**", "!dist/libs/a+b/.cache/**"]).unwrap();
         assert!(!glob_set.is_match("dist/libs/a+b/.cache/x"));
 
-        // Extglob exclusions still convert exactly as before — nx's own default
-        // inputs rely on `+spec.ts` collapsing to `spec.ts`.
+        // A `+` that begins no group is a literal `+`, so this excludes
+        // `b.+spec.ts` and not `b.spec.ts`. The shipped default inputs write
+        // the group out, `+(spec|test)`, and are unaffected.
         let glob_set = build_glob_set(&["libs/**/*", "!libs/**/?(*.)+spec.ts?(.snap)"]).unwrap();
+        assert!(!glob_set.is_match("libs/a/b.+spec.ts"));
+        assert!(glob_set.is_match("libs/a/b.spec.ts"));
+        assert!(glob_set.is_match("libs/a/b.ts"));
+
+        // The well-formed default still excludes what it always did.
+        let glob_set =
+            build_glob_set(&["libs/**/*", "!libs/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)"]).unwrap();
         assert!(!glob_set.is_match("libs/a/b.spec.ts"));
+        assert!(!glob_set.is_match("libs/a/b.test.tsx"));
         assert!(glob_set.is_match("libs/a/b.ts"));
     }
 
@@ -501,7 +583,7 @@ mod test {
     }
 
     #[test]
-    fn should_handle_invalid_group_globs() {
+    fn a_malformed_extglob_is_read_literally() {
         let glob_set = build_glob_set(&[
             "libs/**/*",
             "!libs/**/?(*.)+spec.ts?(.snap)",
@@ -513,6 +595,9 @@ mod test {
         .unwrap();
 
         assert!(glob_set.is_match("libs/src/index.ts"));
-        assert!(!glob_set.is_match("libs/src/index.spec.ts"));
+        // `+spec.ts` names a file called that, and no longer stands in for
+        // `spec.ts`, so a real spec file is not excluded by it.
+        assert!(glob_set.is_match("libs/src/index.spec.ts"));
+        assert!(!glob_set.is_match("libs/src/index.+spec.ts"));
     }
 }

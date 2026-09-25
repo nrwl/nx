@@ -1,7 +1,6 @@
 import {
   createProjectGraphAsync,
   getPackageManagerCommand,
-  joinPathFragments,
   workspaceRoot,
 } from '@nx/devkit';
 import {
@@ -20,7 +19,7 @@ import {
 } from 'tsconfig-paths';
 import { Plugin } from 'vite';
 import { warnNxViteTsPathsDeprecation } from '../src/utils/deprecation';
-import { findFile } from '../src/utils/nx-tsconfig-paths-find-file';
+import { loadFileFromPaths } from '../src/utils/nx-tsconfig-paths-load-file';
 import { getProjectTsConfigPath } from '../src/utils/options-utils';
 import { nxViteBuildCoordinationPlugin } from './nx-vite-build-coordination.plugin';
 
@@ -40,7 +39,7 @@ export interface nxViteTsPathsOptions {
   mainFields?: (string | string[])[];
   /**
    * extensions to check when resolving files when package.json resolution fails
-   * @default ['.ts', '.tsx', '.js', '.jsx', '.json', '.mjs', '.cjs']
+   * @default ['.ts', '.tsx', '.js', '.jsx', '.json', '.mts', '.mjs', '.cts', '.cjs', '.css', '.scss', '.less']
    **/
   extensions?: string[];
   /**
@@ -72,9 +71,11 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
   warnNxViteTsPathsDeprecation();
   let foundTsConfigPath: string;
   let matchTsPathEsm: MatchPath;
+  let matchTsPathEsmExact: MatchPath;
   let matchTsPathFallback: MatchPath | undefined;
+  let matchTsPathFallbackExact: MatchPath | undefined;
   let tsConfigPathsEsm: ConfigLoaderSuccessResult;
-  let tsConfigPathsFallback: ConfigLoaderSuccessResult;
+  let tsConfigPathsFallback: ConfigLoaderSuccessResult | undefined;
 
   options.extensions ??= [
     '.ts',
@@ -175,10 +176,18 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
       if (parsed.resultType === 'failed') {
         throw new Error(`Failed loading tsconfig at ${foundTsConfigPath}`);
       }
-      tsConfigPathsEsm = parsed;
+      // `loadConfig` derives `absoluteBaseUrl` from the leaf tsconfig, but
+      // `paths` resolve against the config that declared them.
+      const pathsBaseUrl = resolvePathsBaseUrl(foundTsConfigPath);
+      tsConfigPathsEsm = { ...parsed, absoluteBaseUrl: pathsBaseUrl };
 
       matchTsPathEsm = createMatchPath(
-        resolvePathsBaseUrl(foundTsConfigPath),
+        pathsBaseUrl,
+        parsed.paths,
+        options.mainFields
+      );
+      matchTsPathEsmExact = createExactMatchPath(
+        pathsBaseUrl,
         parsed.paths,
         options.mainFields
       );
@@ -186,15 +195,29 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
       const rootLevelTsConfig = getTsConfig(
         join(workspaceRoot, 'tsconfig.base.json')
       );
-      const rootLevelParsed = loadConfig(rootLevelTsConfig);
-      logIt('fallback parsed tsconfig: ', rootLevelParsed);
-      if (rootLevelParsed.resultType === 'success') {
-        tsConfigPathsFallback = rootLevelParsed;
-        matchTsPathFallback = createMatchPath(
-          resolvePathsBaseUrl(rootLevelTsConfig),
-          rootLevelParsed.paths,
-          ['main', 'module']
-        );
+      // A workspace may have no root-level tsconfig at all. Passing no path to
+      // `loadConfig` makes it search upwards from the cwd instead, which finds
+      // an unrelated tsconfig whose directory is not this workspace.
+      if (rootLevelTsConfig) {
+        const rootLevelParsed = loadConfig(rootLevelTsConfig);
+        logIt('fallback parsed tsconfig: ', rootLevelParsed);
+        if (rootLevelParsed.resultType === 'success') {
+          const rootLevelPathsBaseUrl = resolvePathsBaseUrl(rootLevelTsConfig);
+          tsConfigPathsFallback = {
+            ...rootLevelParsed,
+            absoluteBaseUrl: rootLevelPathsBaseUrl,
+          };
+          matchTsPathFallback = createMatchPath(
+            rootLevelPathsBaseUrl,
+            rootLevelParsed.paths,
+            ['main', 'module']
+          );
+          matchTsPathFallbackExact = createExactMatchPath(
+            rootLevelPathsBaseUrl,
+            rootLevelParsed.paths,
+            ['main', 'module']
+          );
+        }
       }
     },
     resolveId(importPath: string) {
@@ -209,10 +232,16 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
 
       let resolvedFile: string;
       try {
-        resolvedFile = matchTsPathEsm(importPath);
+        resolvedFile =
+          matchTsPathEsmExact(importPath) ??
+          loadFileFromExactAlias(tsConfigPathsEsm, importPath) ??
+          matchTsPathEsm(importPath);
       } catch (e) {
         logIt('Using fallback path matching.');
-        resolvedFile = matchTsPathFallback?.(importPath);
+        resolvedFile =
+          matchTsPathFallbackExact?.(importPath) ??
+          loadFileFromExactAlias(tsConfigPathsFallback, importPath) ??
+          matchTsPathFallback?.(importPath);
       }
 
       if (!resolvedFile || !existsSync(resolvedFile)) {
@@ -220,9 +249,12 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
           logIt(
             `Unable to resolve ${importPath} with tsconfig paths. Using fallback file matching.`
           );
+          // The tsconfig the project builds with need not extend the
+          // root-level one, so the second pass covers aliases only the
+          // root-level config declares.
           resolvedFile =
-            loadFileFromPaths(tsConfigPathsEsm, importPath) ||
-            loadFileFromPaths(tsConfigPathsFallback, importPath);
+            loadFileFromPathsWithLogging(tsConfigPathsEsm, importPath) ||
+            loadFileFromPathsWithLogging(tsConfigPathsFallback, importPath);
         } else {
           logIt(`Unable to resolve ${importPath} with tsconfig paths`);
         }
@@ -277,54 +309,64 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
     }
   }
 
-  function loadFileFromPaths(
-    tsconfig: ConfigLoaderSuccessResult,
+  /**
+   * Resolves an import that names an alias exactly, through that alias alone.
+   *
+   * The matcher above already covers a mapped path that names a file or a
+   * package entry, so this is what finds an `index` or supplies the extension.
+   * Restricting it to the one alias keeps it from answering with a wildcard,
+   * which is the last resort's job.
+   */
+  function loadFileFromExactAlias(
+    tsconfig: ConfigLoaderSuccessResult | undefined,
     importPath: string
   ) {
+    // An own-property check, because an import named after an `Object`
+    // prototype member (`constructor`, `toString`) would otherwise read the
+    // inherited value and hand a non-array on to the resolver.
+    if (!tsconfig || !Object.hasOwn(tsconfig.paths, importPath)) {
+      return undefined;
+    }
+
+    return loadFileFromPaths(
+      { ...tsconfig, paths: { [importPath]: tsconfig.paths[importPath] } },
+      importPath,
+      options.extensions
+    );
+  }
+
+  function loadFileFromPathsWithLogging(
+    tsconfig: ConfigLoaderSuccessResult | undefined,
+    importPath: string
+  ) {
+    // The root-level tsconfig is optional: a workspace without one leaves
+    // `tsConfigPathsFallback` unset, and the import has to defer to Vite.
+    if (!tsconfig) return undefined;
+
     logIt(
       `Trying to resolve file from config in ${tsconfig.configFileAbsolutePath}`
     );
-    let resolvedFile: string;
-    for (const alias in tsconfig.paths) {
-      const paths = tsconfig.paths[alias];
-
-      const normalizedImport = alias.replace(/\/\*$/, '');
-
-      if (
-        importPath === normalizedImport ||
-        importPath.startsWith(normalizedImport + '/')
-      ) {
-        for (const path of paths) {
-          const joinedPath = joinPathFragments(
-            tsconfig.absoluteBaseUrl,
-            path.replace(/\/\*$/, '')
-          );
-
-          resolvedFile = findFile(
-            importPath.replace(normalizedImport, joinedPath),
-            options.extensions
-          );
-
-          if (
-            resolvedFile === undefined &&
-            options.extensions.some((ext) => importPath.endsWith(ext))
-          ) {
-            const foundExtension = options.extensions.find((ext) =>
-              importPath.endsWith(ext)
-            );
-            const pathWithoutExtension = importPath
-              .replace(normalizedImport, joinedPath)
-              .slice(0, -foundExtension.length);
-            resolvedFile = findFile(pathWithoutExtension, options.extensions);
-          }
-
-          if (resolvedFile !== undefined) {
-            return resolvedFile;
-          }
-        }
-      }
-    }
-
-    return resolvedFile;
+    return loadFileFromPaths(tsconfig, importPath, options.extensions);
   }
+}
+
+/**
+ * Matcher over the non-wildcard aliases alone, to run before the full one.
+ *
+ * `tsconfig-paths` ranks an alias by the length of the text before its `*`,
+ * counting one without a `*` as zero, so an exact alias sorts no higher than
+ * any wildcard. TypeScript matches an exact alias first.
+ */
+function createExactMatchPath(
+  absoluteBaseUrl: string,
+  paths: ConfigLoaderSuccessResult['paths'],
+  mainFields: nxViteTsPathsOptions['mainFields']
+): MatchPath {
+  const exactPaths = Object.fromEntries(
+    Object.entries(paths).filter(([alias]) => !alias.includes('*'))
+  );
+
+  // The match-all `*` entry would resolve any import against `baseUrl` before
+  // the wildcard aliases of the full matcher get their turn.
+  return createMatchPath(absoluteBaseUrl, exactPaths, mainFields, false);
 }

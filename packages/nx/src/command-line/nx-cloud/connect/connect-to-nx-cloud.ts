@@ -1,4 +1,3 @@
-import { join } from 'path';
 import { handleImport } from '../../../utils/handle-import';
 import { selectPrompt } from '../../../utils/prompt-helpers';
 import { output } from '../../../utils/output';
@@ -10,7 +9,6 @@ import {
 } from '../../../nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
 import { createNxCloudOnboardingURL } from '../../../nx-cloud/utilities/url-shorten';
 import { isNxCloudUsed } from '../../../utils/nx-cloud-utils';
-import { writeJsonFile } from '../../../utils/fileutils';
 import { runNxSync } from '../../../utils/child-process';
 import { NxJsonConfiguration } from '../../../config/nx-json';
 import { NxArgs } from '../../../utils/command-line-utils';
@@ -19,6 +17,7 @@ import {
   MessageOptionKey,
   recordStat,
   messages,
+  nxCloudDemoHyperlink,
   nxCloudHyperlink,
 } from '../../../utils/ab-testing';
 import { nxVersion } from '../../../utils/versions';
@@ -269,13 +268,6 @@ export async function connectToNxCloudWithPrompt(command: string) {
   let useCloud = false;
   if (setNxCloud === 'yes') {
     useCloud = await connectToNxCloudCommand({ generateToken: false }, command);
-  } else if (setNxCloud === 'never') {
-    const nxJsonPath = join(workspaceRoot, 'nx.json');
-    const nxJson = readNxJson();
-    if (nxJson) {
-      nxJson.neverConnectToCloud = true;
-      writeJsonFile(nxJsonPath, nxJson);
-    }
   }
   await recordStat({
     command,
@@ -313,7 +305,11 @@ async function nxCloudPrompt(
   const { message, choices, initial, footer, hint } = messages.getPrompt(key);
 
   // No separate footer/hint slot, so both are folded into the message.
-  const suffix = [hint, footer && `${footer} ${nxCloudHyperlink(utmContent)}`]
+  const suffix = [
+    hint,
+    footer && `${footer} ${nxCloudHyperlink(utmContent)}`,
+    `See it in action: ${nxCloudDemoHyperlink(utmContent)}`,
+  ]
     .filter(Boolean)
     .map((t) => pc.dim(t));
 

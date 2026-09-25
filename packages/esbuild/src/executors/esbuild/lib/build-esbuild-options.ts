@@ -285,8 +285,11 @@ export function getOutfile(
   context: ExecutorContext
 ) {
   const ext = getOutExtension(format, options, context);
+  // Use the normalized options rather than `context.target.options`, which
+  // holds the static value from the project configuration and misses any
+  // override, e.g. `--output-path` on the command line.
   const candidate = joinPathFragments(
-    context.target.options.outputPath,
+    options.outputPath,
     options.outputFileName
   );
   const { dir, name } = path.parse(candidate);
