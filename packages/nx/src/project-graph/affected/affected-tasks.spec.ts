@@ -29,7 +29,11 @@ vi.mock('../../tasks-runner/utils', async (importOriginal) => {
   };
 });
 import { computeAffectedTasks, selectsAffectedTasks } from './affected-tasks';
-import { LockFileChange, WholeFileChange } from '../file-utils';
+import {
+  DeletedFileChange,
+  LockFileChange,
+  WholeFileChange,
+} from '../file-utils';
 import { ProjectGraphError } from '../error-types';
 import type { ProjectGraph } from '../../config/project-graph';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
@@ -150,6 +154,29 @@ describe('computeAffectedTasks', () => {
       'packages/nx/does-not-exist/project.json',
     ]);
     expect(affected).toEqual(['app:test', 'lib:test']);
+  });
+
+  it('explains a deleted project config where nothing narrower applies', async () => {
+    const { explanation } = await computeAffectedTasks({
+      projectGraph: graph(),
+      nxJson: {
+        namedInputs: { production: ['{projectRoot}/src/**/*'] },
+      } as any,
+      targets: ['test'],
+      touchedFiles: [
+        {
+          file: 'packages/nx/does-not-exist/project.json',
+          getChanges: () => [new DeletedFileChange()],
+        },
+      ] as any,
+      explain: true,
+    });
+    expect(explanation.affected['lib:test']).toEqual([
+      {
+        kind: 'deleted-project-configuration',
+        file: 'packages/nx/does-not-exist/project.json',
+      },
+    ]);
   });
 
   /**

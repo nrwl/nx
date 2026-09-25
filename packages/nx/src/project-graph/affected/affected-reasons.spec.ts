@@ -49,9 +49,9 @@ describe('JS locator reasons', () => {
     });
   });
 
-  it('carries the package name on an npm-package reason', () => {
-    // The field the napi struct dropped: set here, and it has to survive
-    // whatever the value crosses on its way to --explain.
+  // The locator setting `package`, and napi keeping it, are covered in
+  // npm-packages.spec and affected-project-graph.spec.
+  it('renders an npm-package reason with and without a package name', () => {
     const reason: AffectedReason = {
       kind: 'npm-package',
       package: 'npm:lodash@4.17.21',
