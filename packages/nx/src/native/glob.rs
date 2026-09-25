@@ -3,6 +3,7 @@ mod glob_group;
 mod glob_parser;
 pub mod glob_transform;
 
+pub(crate) use crate::native::glob::glob_parser::literal_segment;
 use crate::native::glob::glob_transform::convert_glob;
 pub(crate) use crate::native::glob::glob_transform::{
     expand_literal_braces, fileset_patterns, normalize_glob, partition_glob,
@@ -99,9 +100,9 @@ fn common_glob_prefix(globs: &[String]) -> Option<PathBuf> {
         }
         #[cfg(windows)]
         let glob = glob.replace('\\', "/");
-        let (directory, _) = partition_glob(glob.as_str());
-        // Escaped or lossy names cannot safely index the raw file map.
-        if directory.contains(['\\', ':', '\u{fffd}'])
+        let (directory, _) = partition_glob(&normalize_glob(glob.as_str()));
+        // Drive letters and lossy names cannot safely index the raw file map.
+        if directory.contains([':', '\u{fffd}'])
             || directory
                 .split('/')
                 .any(|part| part.is_empty() || part == "." || part == "..")
@@ -188,24 +189,7 @@ pub(crate) fn build_glob_set<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Resu
     let result = globs
         .iter()
         .flat_map(|s| potential_glob_split(s.as_ref()))
-        .map(|glob| {
-            // Convert only what needs it: `convert_glob` truncates a glob at
-            // a special character that begins no group, so `!dist/?/x` would
-            // come back as `dist` (NXC-5001). Deciding on the pattern without
-            // its negation marker is what keeps it off that road — a leading
-            // `!` marks the whole glob as an exclusion, not extglob syntax,
-            // and the pattern beneath it holds nothing needing conversion.
-            let pattern = glob.strip_prefix('!').unwrap_or(glob);
-            if pattern.contains('!')
-                || pattern.contains('|')
-                || pattern.contains('(')
-                || pattern.contains("{,")
-            {
-                convert_glob(glob)
-            } else {
-                Ok(vec![glob.to_string()])
-            }
-        })
+        .map(convert_glob)
         .collect::<anyhow::Result<Vec<_>>>()?
         .concat();
 
@@ -225,25 +209,34 @@ pub fn match_glob_paths(globs: Vec<String>, paths: Vec<String>) -> anyhow::Resul
     Ok(paths.iter().map(|path| glob_set.is_match(path)).collect())
 }
 
-pub(crate) fn contains_glob_pattern(value: &str) -> bool {
-    value.contains('!')
-        || value.contains('?')
-        || value.contains('@')
-        || value.contains('+')
-        || value.contains('*')
-        || value.contains('|')
-        || value.contains(',')
-        || value.contains('{')
-        || value.contains('}')
-        || value.contains('[')
-        || value.contains(']')
-        || value.contains('(')
-        || value.contains(')')
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
+
+    /// Pins convert_glob, partition_glob and the narrowing prefix for a corpus
+    /// of real globs, so a change to them shows up as a snapshot diff.
+    /// Recorded off Windows, where `\` escapes rather than separates.
+    #[test]
+    #[cfg(not(windows))]
+    fn glob_readers_agree_with_the_recorded_corpus() {
+        let corpus = include_str!("glob/fixtures/glob_corpus.txt");
+        let mut report = String::new();
+        for glob in corpus.lines() {
+            let converted = match convert_glob(glob) {
+                Ok(globs) => format!("{globs:?}"),
+                Err(_) => "error".into(),
+            };
+            let prefix = match build_glob_set(&[glob]) {
+                Ok(set) => format!("{:?}", set.literal_prefix()),
+                Err(_) => "error".into(),
+            };
+            report.push_str(&format!(
+                "{glob}\n  convert: {converted}\n  partition: {:?}\n  prefix: {prefix}\n",
+                partition_glob(glob),
+            ));
+        }
+        insta::assert_snapshot!(report);
+    }
 
     #[test]
     fn jest_extglobs_narrow_to_a_shared_ancestor() {
@@ -262,15 +255,24 @@ mod test {
 
     #[test]
     fn backslash_prefixes_follow_platform_separators() {
-        for pattern in [
+        // Off Windows `\` escapes, as globset reads it: `\r` is `r`.
+        let expected = if cfg!(windows) {
+            [Some("e2e/react"); 3]
+        } else {
+            [None, Some("e2ereact"), Some("e2ereact*.spec.ts")]
+        };
+        for (pattern, expected) in [
             r"e2e\react\**\+(*.)+(spec|test).+(ts|js)?(x)",
             r"e2e\react/**/*.spec.ts",
             r"e2e\react\*.spec.ts",
-        ] {
+        ]
+        .into_iter()
+        .zip(expected)
+        {
             let globs = [pattern.to_string()];
             assert_eq!(
                 build_glob_set(&globs).unwrap().literal_prefix(),
-                cfg!(windows).then_some(Path::new("e2e/react")),
+                expected.map(Path::new),
                 "{pattern}"
             );
         }

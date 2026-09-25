@@ -1202,7 +1202,7 @@ mod tests {
     }
 
     /// The shapes `holds` is given, and the two it is never given. Paths
-    /// reach it trimmed by `partition_glob` and shape-checked by
+    /// reach it trimmed by `normalize_glob` and shape-checked by
     /// `validate_shape`, so a trailing slash and a leading slash cannot
     /// arrive; both are pinned as the answers they would get, not as answers
     /// anything relies on.
@@ -1227,7 +1227,7 @@ mod tests {
         // An empty set answers nothing, whatever the path.
         assert!(!holds(&BTreeSet::new(), "a/b"));
         assert!(!holds(&BTreeSet::new(), ""));
-        // Never reached: `partition_glob` trims a trailing slash, and
+        // Never reached: `normalize_glob` trims a trailing slash, and
         // `validate_shape` rejects an absolute glob before anything asks.
         assert!(!holds(&named, "a/b/"));
         assert!(!holds(&root, "/a/b"));
