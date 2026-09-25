@@ -7,7 +7,7 @@ import type { TouchedProject } from '../../../../project-graph/affected/affected
 import { getTouchedNpmPackages as locategetTouchedNpmPackages } from './npm-packages';
 // These specs assert *which* projects a locator selects. The locator now returns
 // a reason per project, so unwrap to names here rather than restating 70-odd
-// assertions; the reasons themselves are covered in affected-reasons.spec.ts.
+// assertions; the reason itself is asserted once below.
 const getTouchedNpmPackages = (
   ...args: Parameters<typeof locategetTouchedNpmPackages>
 ) =>
@@ -96,6 +96,35 @@ describe('getTouchedNpmPackages', () => {
       projectGraph
     );
     expect(result).toEqual(['npm:happy-nrwl']);
+  });
+
+  it('names the package whose version moved', () => {
+    const touched = locategetTouchedNpmPackages(
+      [
+        {
+          file: 'package.json',
+          getChanges: () => [
+            {
+              type: JsonDiffType.Modified,
+              path: ['dependencies', 'happy-nrwl'],
+              value: { lhs: '0.0.1', rhs: '0.0.2' },
+            },
+          ],
+        },
+      ],
+      projectsConfigurations,
+      nxJson,
+      { dependencies: { 'happy-nrwl': '0.0.2' } },
+      projectGraph
+    );
+    expect(touched).toEqual([
+      {
+        project: 'npm:happy-nrwl',
+        kind: 'npm-package',
+        package: 'npm:happy-nrwl',
+        file: 'package.json',
+      },
+    ]);
   });
 
   it('should handle json changes for type declaration packages where the implementation package exists', () => {
