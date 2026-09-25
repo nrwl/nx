@@ -74,6 +74,11 @@ export interface AffectedTasksResult {
   taskSelection: TaskSelection;
   /** Every reason that applies, per affected task. Only when `explain`. */
   reasons?: Record<string, AffectedReason[]>;
+  /**
+   * Tasks outside the selection that carried the change to it, such as a
+   * `prebuild` under `-t build`, so every producer a reason names is listed.
+   */
+  dependencyReasons?: Record<string, AffectedReason[]>;
 }
 
 export interface ComputeAffectedTasksOptions {
@@ -191,7 +196,8 @@ export async function computeAffectedTasks(
     projectGraph,
     affectedTaskIds: selection.affectedTaskIds,
     taskGraph: selection.taskGraph,
-    reasons: selection.reasons,
+    reasons: selection.reasons?.affected,
+    dependencyReasons: selection.reasons?.dependencies,
     taskSelection: {
       ...selection.taskSelection,
       // The planner remembers what selection planned, so the run's hashing reuses it.
@@ -229,7 +235,7 @@ export async function selectAffectedTasks(
   affectedTaskIds: Set<string>;
   taskGraph: TaskGraph;
   taskSelection: TaskSelection;
-  reasons?: Record<string, AffectedReason[]>;
+  reasons?: TaskReasons;
 }> {
   const { targets } = request;
   // Only projects that have one of the targets: with a single target,
@@ -428,8 +434,14 @@ function dependencyChanges(
   };
 }
 
+interface TaskReasons {
+  affected: Record<string, AffectedReason[]>;
+  dependencies: Record<string, AffectedReason[]>;
+}
+
 /**
- * Why each selected task is in the answer.
+ * Why each selected task is in the answer, and why each task outside it that
+ * a reason names as a producer is too.
  *
  * Assembled after the fact rather than accumulated during selection, so the
  * selection path costs nothing when `--explain` is off. Every reason that
@@ -442,7 +454,7 @@ function taskReasons(
   dependencies: DependencyChanges,
   changedPaths: string[],
   taskGraph: TaskGraph
-): Record<string, AffectedReason[]> {
+): TaskReasons {
   // What a plan hashing every external saw change.
   const dependencyFiles = changedPaths.filter(
     (file) =>
@@ -454,8 +466,7 @@ function taskReasons(
     named.set(project, [...(named.get(project) ?? []), reason]);
   }
 
-  const reasons: Record<string, AffectedReason[]> = {};
-  for (const taskId of affected) {
+  const reasonsFor = (taskId: string): AffectedReason[] => {
     const forTask: AffectedReason[] = [];
     const matches = explanation.inputMatches[taskId];
 
@@ -493,7 +504,19 @@ function taskReasons(
       }
     }
 
-    reasons[taskId] = forTask;
+    return forTask;
+  };
+
+  const reasons: TaskReasons = {
+    affected: Object.fromEntries(affected.map((id) => [id, reasonsFor(id)])),
+    dependencies: {},
+  };
+  const producers = affected.flatMap((id) => explanation.producersOf[id] ?? []);
+  while (producers.length) {
+    const id = producers.pop();
+    if (id in reasons.affected || id in reasons.dependencies) continue;
+    reasons.dependencies[id] = reasonsFor(id);
+    producers.push(...(explanation.producersOf[id] ?? []));
   }
   return reasons;
 }

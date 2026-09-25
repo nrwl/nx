@@ -15,7 +15,8 @@ export function printAffectedExplanation(
   destination: string | boolean | undefined,
   /** Tasks that run only to satisfy the selected ones. Only `nx affected`
    * runs them, so `show projects` leaves this off. */
-  dependencies?: number
+  dependencies?: number,
+  carried?: Record<string, AffectedReason[]>
 ): void {
   if (destination === 'stdout') {
     console.log(JSON.stringify(reasons, null, 2));
@@ -27,7 +28,12 @@ export function printAffectedExplanation(
     return;
   }
 
-  const rendered = formatAffectedExplanation(reasons, heading, dependencies);
+  const rendered = formatAffectedExplanation(
+    reasons,
+    heading,
+    dependencies,
+    carried
+  );
   if (!Object.keys(reasons).length) {
     output.log({ title: rendered });
     return;

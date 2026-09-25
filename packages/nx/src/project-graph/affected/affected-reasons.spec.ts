@@ -148,6 +148,20 @@ describe('formatAffectedExplanation', () => {
     expect(out).not.toContain('depend on');
   });
 
+  it('lists a producer outside the selection in its own section', () => {
+    const out = formatAffectedExplanation(
+      { 'app:build': [{ kind: 'dependent-output', producer: 'app:prebuild' }] },
+      'Affected tasks',
+      undefined,
+      { 'app:prebuild': [{ kind: 'input-file', file: 'libs/app/src/x.ts' }] }
+    );
+    expect(out).toContain(
+      'Not selected, but carried the change to a selected task (1):'
+    );
+    expect(out.indexOf('app:build')).toBeLessThan(out.indexOf('app:prebuild'));
+    expect(out).toContain('1 affected task.');
+  });
+
   it('sorts an entry reached only through a dependency to the bottom', () => {
     const out = formatAffectedExplanation(reasons, 'Affected tasks');
     expect(out.indexOf('ui:build')).toBeLessThan(out.indexOf('app:build'));
