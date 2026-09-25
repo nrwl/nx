@@ -324,15 +324,9 @@ async function runPublishOnProjects(
   const publishArgs = {
     targets: [requiredTargetName],
     ...(args as any),
-    // Everything this command reports — the registry, the tag, the
-    // package.json diff, the dry-run summary — is printed from inside the
-    // task, so the failures-only default would swallow all of it (under
-    // --dry-run every task succeeds by definition). Set after the spread and
-    // on all three fields: the middleware always writes `resolvedOutputStyle`,
-    // so a value placed before it would be overwritten on every run, and the
-    // renderer reads the new fields rather than the deprecated one. A style
-    // the user actually named still wins, which is what `specifiedOutputStyle`
-    // being set means.
+    // All output is printed from inside the task, so the failures-only default
+    // would hide it. Set after the spread, on all three fields: the middleware
+    // always writes `resolvedOutputStyle`.
     outputStyle: publishOutputStyle,
     specifiedOutputStyle: publishOutputStyle,
     resolvedOutputStyle: publishOutputStyle,

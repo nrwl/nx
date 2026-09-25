@@ -4654,7 +4654,7 @@ describe('narrowTaskGraph', () => {
     target,
     type: 'static',
   });
-  // app depends on lib; lib's outputs follow its outputPath option.
+  // app and app2 depend on lib; lib's outputs follow its outputPath option.
   const libBuild = {
     executor: 'nx:run-commands',
     options: { outputPath: 'dist/lib' },

@@ -381,7 +381,7 @@ export class ProcessTasks {
     if (!this.recordDependencyOverrides) {
       return;
     }
-    // A dummy task copies the target of the task it stands in for.
+    // A dummy task keeps its creator's target, so `from` is the real task the edge started from.
     const from = createTaskId(
       task.target.project,
       task.target.target,
@@ -501,10 +501,8 @@ export function createTaskGraphWithDependencyOverrides(
 }
 
 /**
- * `taskGraph` pruned to `keep`, as if built from `initial` alone: a kept task
- * that build reaches only as a dependency gets the overrides its edges give it.
- * Every recorded edge counts, since the smaller build visits a subset of them
- * and which one wins depends on visiting order; undefined when they disagree.
+ * `taskGraph` pruned to `keep`, as if built from `initial` alone: a kept dependency
+ * takes the overrides its edges give it. Undefined when those edges disagree or are missing.
  */
 export function narrowTaskGraph(
   projectGraph: ProjectGraph,

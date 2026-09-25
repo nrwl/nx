@@ -1251,10 +1251,8 @@ export interface TaskSelectionForGraph {
 }
 
 /**
- * What to build for a page request. The selection was made for one set of
- * targets and one configuration, and its task ids carry the configuration. A
- * page asking for those, or naming no configuration, gets the selection; any
- * other request would prune to nothing, so it is shown whole.
+ * The selection applies only to a page asking for its exact targets with its configuration
+ * or none (the ids carry it); anything else would prune to nothing, so it is shown whole.
  */
 export function selectedFor(
   targets: string[],
@@ -1296,8 +1294,8 @@ export function taskGraphForSelection(
 }
 
 /**
- * Creates a single task graph for multiple projects with multiple targets
- * If no projects specified, returns graph for all projects with the targets
+ * The task graph client response for `targetNames`: `selection`'s graph when given,
+ * else built for `projectNames` (default: every project with one of the targets).
  */
 async function createTaskGraphForTargetsAndProjects(
   targetNames: string[],
@@ -1333,7 +1331,6 @@ async function createTaskGraphForTargetsAndProjects(
   }
 
   try {
-    // Create single task graph
     const taskGraph = taskGraphForSelection(
       () =>
         createTaskGraph(

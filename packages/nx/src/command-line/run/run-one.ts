@@ -77,7 +77,7 @@ export async function runOne(
 
   await connectToNxCloudIfExplicitlyAsked(nxArgs);
 
-  // Drawn by --graph and run otherwise, so the two agree.
+  // --graph's file output draws this selection; the live graph builds its own.
   const selectTasks = () =>
     selectTasksForProjects(
       projectGraph,

@@ -72,7 +72,6 @@ export function createGetTouchedProjectsForGroup(
         serializedIgnorePatterns
       );
     } else {
-      // We only care about directly touched projects, not implicitly affected ones etc
       const touchedProjectsArr = directlyTouchedProjects(
         transformProjectGraphForLocators(projectGraph),
         calculateFileChanges(changedFiles, nxArgs, undefined, ignore).map(

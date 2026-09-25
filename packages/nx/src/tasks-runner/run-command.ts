@@ -60,9 +60,8 @@ import { workspaceRoot } from '../utils/workspace-root';
 import { createTaskGraph } from './create-task-graph';
 import type { TaskPlanningContext } from '../hasher/task-planning-context';
 
-/** What a command runs: decided by the command, not by the runner. */
+/** What a command runs. */
 export interface TaskSelection {
-  /** The graph to run. */
   taskGraph: TaskGraph;
   /**
    * The tasks the command asked for, as opposed to ones pulled in as
@@ -74,7 +73,7 @@ export interface TaskSelection {
    * depend on. Unset keeps the whole rebuilt graph.
    */
   taskIds?: string[];
-  /** Reused by the hasher so the survivors are not planned a second time. */
+  /** Plans from selection, reused by the hasher so the run's tasks are not planned twice. */
   planningContext?: TaskPlanningContext;
 }
 import { isTuiEnabled, ORIGINAL_TUI_ENV_VALUE } from './is-tui-enabled';
@@ -883,13 +882,8 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
       await confirmRunningTasksWithSyncFailures();
     }
 
-    // Re-create project graph and task graph. The selection is re-applied
-    // rather than carried, since a sync generator may have removed a task.
-    //
-    // The planning context goes with the old graph. Its marshalled graph and
-    // the planner built over it describe the pre-sync workspace, and a sync
-    // generator rewriting tsconfig references moves inferred target outputs, so
-    // reusing it would hash against a workspace that no longer exists.
+    // Rebuild rather than carry: a sync generator may remove tasks or move inferred
+    // outputs, so the old graph and planning context are stale.
     taskSelection.planningContext = undefined;
     const projectNames = [
       ...new Set(

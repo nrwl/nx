@@ -44,11 +44,7 @@ export async function showProjectsHandler(
   if (args.affected) {
     const touchedFiles = await getTouchedFiles(nxArgs);
 
-    // With a target in hand, answer the question the target implies: which
-    // projects have an affected *task* for it, not which affected projects
-    // happen to define it. Without this, `show projects --affected -t build`
-    // and `affected -t build` disagree, and the documented CI pattern is to
-    // feed the first into the second.
+    // With a target, list projects owning an affected task for it, matching `affected -t`.
     if (selectsAffectedTasks() && args.withTarget?.length && !args.projects) {
       const affectedTasks = await computeAffectedTasks({
         projectGraph: graph,
@@ -65,7 +61,7 @@ export async function showProjectsHandler(
       const owning = new Set(
         initiatingTaskIds.map((id) => taskGraph.tasks[id].target.project)
       );
-      // The graph selection used, which with the daemon on is its own.
+      // The graph selection ran against: with the daemon on, the daemon's, not `graph`.
       graph = {
         ...affectedTasks.projectGraph,
         nodes: Object.fromEntries(

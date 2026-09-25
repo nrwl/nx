@@ -104,7 +104,7 @@ export class HashPlanInspector {
       this.nxJson
     );
 
-    // Create task graph exactly like run-one.ts does via createTaskGraphAndRunValidations
+    // Same task graph run-one builds via `selectTasksForProjects`.
     const taskGraph = createTaskGraph(
       this.projectGraph,
       extraTargetDependencies,

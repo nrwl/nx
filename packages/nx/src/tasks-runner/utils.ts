@@ -542,10 +542,8 @@ export function getCustomHasher(
 }
 
 /**
- * The graph a run executes for a selection. Shared by the run and by
- * `--graph`, so what the graph shows is what runs. `required` already holds
- * the selection's dependencies; ids the graph lacks are ignored, since a sync
- * generator can remove a task after selection.
+ * `taskGraph` pruned to `required`, which must already hold its dependencies.
+ * Unknown ids are ignored: a sync generator can remove a task after selection.
  */
 export function pruneToSelectedTasks(
   taskGraph: TaskGraph,

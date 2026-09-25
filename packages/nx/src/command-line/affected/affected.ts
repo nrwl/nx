@@ -68,8 +68,7 @@ export async function affected(
     command === 'affected' &&
     !!nxArgs.targets?.length;
 
-  // Above the try, so an error building what to run reports the way the run's
-  // own would.
+  // Outside the try so errors reach handleErrors, as they did from inside runCommand.
   let projectGraph: ProjectGraph;
   let taskSelection: TaskSelection | undefined;
   let projects: ProjectGraphProjectNode[] = [];
