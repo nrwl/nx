@@ -139,7 +139,50 @@ it('renders on mobile', { viewportWidth: 375 }, () => {
 
 `cy.getCookie()`, `cy.getCookies()`, `cy.getAllCookies()`, `cy.getAllLocalStorage()` and `cy.getAllSessionStorage()` are queries: they retry assertions chained with `.should()` and follow `defaultCommandTimeout` (4000ms) instead of `responseTimeout` (30000ms). A `.then()` callback still runs once and does not retry. Change nothing unless a test fails; then move the assertion from `.then()` onto `.should()` so it retries, or pass `{ timeout }` when a cookie read needs longer than 4 seconds.
 
-The deterministic migration renamed `Cypress.Commands.overwrite()` to `overwriteQuery()` for those five names. Adapt each renamed callback: make it a `function` expression, call `originalFn.call(this, ...)`, and return a function that computes the result from the subject, not a chainable. Cypress calls both the callback and the original query with the command as `this`, so an arrow callback fails to typecheck (TS2684) and throws at runtime. The paired `adapt-query-command-overwrites` instructions show the rewrites.
+The deterministic migration renamed `Cypress.Commands.overwrite()` to `overwriteQuery()` for those five names; `<advisory_context>` lists each renamed call. Do not re-apply the rename. Adapt each renamed callback to the query contract: `overwriteQuery` calls the callback with the command as `this`, the original query function as the first argument, and then the arguments the test passed, and the callback must return a function that takes the subject. Cypress calls that returned function, possibly many times while retrying, to compute the result. It must not return a chainable, call `cy.*` commands or use `.then()`. The original query reads `this` as well, so every callback must be a `function` expression that calls `originalFn.call(this, ...)`. An arrow callback, or a plain `originalFn(...)` call, fails to typecheck (TS2684, `QueryFnWithOriginalFn` declares `this: Command`) and throws at runtime. Convert arrow callbacks even when they only forward their arguments:
+
+**Before:**
+
+```ts
+Cypress.Commands.overwriteQuery('getCookie', (originalFn, name, options) => {
+  return originalFn(name, { ...options, log: false });
+});
+```
+
+**After:**
+
+```ts
+Cypress.Commands.overwriteQuery(
+  'getCookie',
+  function (originalFn, name, options) {
+    return originalFn.call(this, name, { ...options, log: false });
+  }
+);
+```
+
+Rewrite callbacks that post-process the result. Get the inner function from `originalFn`, then return a function that calls it with the subject and transforms the value:
+
+**Before:**
+
+```ts
+Cypress.Commands.overwriteQuery('getCookies', (originalFn, options) => {
+  return originalFn(options).then((cookies) =>
+    cookies.filter((cookie) => cookie.name.startsWith('app.'))
+  );
+});
+```
+
+**After:**
+
+```ts
+Cypress.Commands.overwriteQuery('getCookies', function (originalFn, options) {
+  const innerFn = originalFn.call(this, options);
+  return (subject) =>
+    innerFn(subject).filter((cookie) => cookie.name.startsWith('app.'));
+});
+```
+
+Callbacks that call other `cy.*` commands, use `cy.wrap()`, or run asynchronous work cannot become queries. Move that logic into a separate custom command added with `Cypress.Commands.add()` and update the specs that relied on the overwritten behavior.
 
 ## Step 7: Review behavior changes that need no code by default
 
@@ -155,7 +198,7 @@ Flag these, and change code only when a test fails:
 ## Step 8: Component testing
 
 - Angular: `cypress/angular` mounts with zoneless change detection on Cypress 16, for zone-based apps too. A template no longer re-renders after a plain property mutation on the component instance, so state that tests assert on in the DOM must be signal-based. The `autoSpyOutputs` and `autoDetectChanges` mount options no longer exist: remove `autoDetectChanges`, and replace `autoSpyOutputs: true` with explicit spies passed through `componentProperties` (for example `{ saved: createOutputSpy('savedSpy') }`). Cypress officially supports Angular 21 and later; Angular 20 runs with a warning. The harness bootstraps through `@angular/platform-browser/testing`, so `@angular/platform-browser-dynamic` can be uninstalled when nothing else imports it. The deprecated `@cypress/angular-zoneless` npm package was removed and its imports rewritten to `cypress/angular` by the deterministic migration; remove any leftover reference to it.
-- Vite: Cypress 16 component testing runs on Vite 8 only, and `@cypress/vite-dev-server` 8 declares it as a peer. Bump `vite` and any `@vitejs/*` plugin that still pins an older major. The package update only sees the Vite installed at the workspace root, so check projects that declare their own `vite` in a project-level `package.json`.
+- Vite: Cypress 16 component testing runs on Vite 8 only, and `@cypress/vite-dev-server` 8 declares it as a peer. The deterministic migration kept the workspace on Cypress 15 only when a Vite component testing config, or a config whose bundler could not be determined statically, resolved an installed Vite below 8. It cannot see a `vite` that is declared but not installed. It also does not check a Cypress config with a custom name that no `@nx/cypress:cypress` target references, such as one run through `nx:run-commands`. Bump any `vite` below 8 in the root or a project `package.json`, and any `@vitejs/*` plugin that still pins an older major. A Vite component testing config the migration did not check must resolve Vite 8 from its directory.
 - Next.js: Cypress's `next` dev server framework requires Next.js 15.0.4 or later. The `@nx/next/plugins/component-testing` preset runs the `react` framework over a webpack config Nx builds, so a Cypress config on that preset does not use the dropped adapter. Only a hand-written config with `devServer: { framework: 'next' }` needs the Next.js bump.
 - Electron: the bundled Electron browser is deprecated. Cypress prints a warning; set `defaultBrowser: 'chrome'` (or another installed browser) in the Cypress config, or pass `--browser`, when the warning matters in CI.
 
