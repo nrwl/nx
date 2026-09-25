@@ -133,13 +133,13 @@ eventual pass as proof that the test is healthy.
 ## Isolate Playwright retries in CI
 
 The `@nx/playwright` plugin can create one CI task for each spec file. Run the inferred `e2e-ci`
-target in CI to use this [automated task splitting](/docs/features/ci-features/split-e2e-tasks).
+target in CI to use this [automated task splitting](/docs/kb/split-e2e-tasks).
 A failed spec can then retry without running the complete Playwright suite.
 
 Nx Cloud detects a flaky task when the same task hash has both a failed and a successful execution.
 With distributed task execution through Nx Agents, it can retry a known flaky task on a different
 agent. This helps separate a test problem from an agent problem. See [flaky test detection and
-automatic retries](/docs/features/ci-features/flaky-tasks).
+automatic retries](/docs/kb/flaky-tasks).
 
 After the fix, keep the test enabled and watch its CI history. A quarantine hides the signal and
 reduces coverage, so use it only with an owner and a review date.

@@ -2,10 +2,10 @@
 title: Automatically Split Slow Tasks by File (Atomizer)
 description: Automatically split large test tasks into individual file-level tasks for parallel execution
 keywords: [split tasks, atomizer]
-sidebar:
-  label: Automatically Split Slow Tasks
-  order: 15
-filter: 'type:Features'
+filter: 'type:Guides'
+topics:
+  - 'Continuous integration'
+  - 'Nx Cloud'
 ---
 
 {% youtube
@@ -18,7 +18,7 @@ Certain tasks like end-to-end (e2e) tests, integration tests, or large unit test
 Manually splitting these slow tasks can be complex and require ongoing maintenance. Nx Atomizer solves this by **automatically generating runnable targets for each test file**. For example, a task that takes 10 minutes can be split and distributed as five 2-minute tasks per agent. This allows for:
 
 - parallelization across multiple machines with [Nx Agents](/docs/features/ci-features/distribute-task-execution)
-- faster [flaky test detection & retries](/docs/features/ci-features/flaky-tasks) by isolating and re-running only the failed tests
+- faster [flaky test detection & retries](/docs/kb/flaky-tasks) by isolating and re-running only the failed tests
 
 ## Enable automated task splitting
 
@@ -483,4 +483,4 @@ jobs:
       - run: pnpm exec nx affected -t lint test build e2e-ci
 ```
 
-Learn more about configuring your [CI provider by following these detailed recipes](/docs/kb/setup-ci).
+Learn more about configuring your [CI provider with these workflow examples](/docs/kb/ci-workflow-examples).

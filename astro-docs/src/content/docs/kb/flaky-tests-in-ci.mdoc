@@ -76,7 +76,7 @@ test can still affect the retry. The record is also scoped to one run's report, 
 accumulates into a picture of which tests flake the most across your CI.
 
 Nx Cloud retries on a different machine to rule out the environment, and tracks results per task
-across runs. [Automated task splitting](/docs/features/ci-features/split-e2e-tasks) creates one
+across runs. [Automated task splitting](/docs/kb/split-e2e-tasks) creates one
 task per test file for `@nx/playwright`, `@nx/cypress`, `@nx/jest`, and `@nx/vitest`, so only the
 failed spec file runs again.
 
@@ -101,7 +101,7 @@ When distributed task execution is enabled and a known flaky task fails, Nx Clou
 different [Nx Agent](/docs/features/ci-features/distribute-task-execution). It makes at most two
 attempts in total. The retry targets the failed work instead of the complete pipeline.
 
-[Enable flaky test detection](/docs/features/ci-features/flaky-tasks) to use this behavior in your
+[Enable flaky test detection](/docs/kb/flaky-tasks) to use this behavior in your
 CI pipeline.
 
 ## Choose which flaky test to fix first
@@ -114,7 +114,7 @@ tasks by impact, which combines a task's flake rate with how often it runs.
 Start with a frequently run task that fails often. It blocks more pull requests and wastes more CI
 time than a task with one isolated failure. Open the task to inspect its attempts, logs, and
 execution environments before you change the test. The dashboard is part of [flaky task
-analytics](/docs/features/ci-features/flaky-tasks#flaky-task-analytics) in Nx Cloud.
+analytics](/docs/kb/flaky-tasks#flaky-task-analytics) in Nx Cloud.
 
 ## Keep task inputs complete
 
@@ -123,7 +123,7 @@ in its inputs. Include configuration, environment values, generated files, and o
 that affect the result.
 
 [How caching works](/docs/concepts/how-caching-works) explains how Nx uses task inputs. [Task
-sandboxing](/docs/features/ci-features/sandboxing) can find undeclared task dependencies.
+sandboxing](/docs/kb/sandboxing) can find undeclared task dependencies.
 
 For the wider CI design, use [Monorepo CI best practices](/docs/kb/monorepo-ci-best-practices). It
 covers affected runs, caching, distribution, test splitting, and flaky-task handling together.
