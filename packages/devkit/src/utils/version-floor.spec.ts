@@ -15,12 +15,12 @@ describe('throwForUnsupportedVersion', () => {
     expect(() =>
       throwForUnsupportedVersion('@angular/core', '18.2.0', '19.0.0')
     ).toThrowErrorMatchingInlineSnapshot(`
-      "Unsupported version of \`@angular/core\` detected.
+      [Error: Unsupported version of \`@angular/core\` detected.
 
         Installed: 18.2.0
         Supported: >= 19.0.0
 
-      Update \`@angular/core\` to 19.0.0 or higher."
+      Update \`@angular/core\` to 19.0.0 or higher.]
     `);
   });
 });
