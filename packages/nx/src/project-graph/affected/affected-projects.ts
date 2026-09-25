@@ -5,7 +5,7 @@ import { capabilitiesOfConfiguredPlugins } from '../plugins/get-plugins';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { FileChange, isDeletedFile } from '../file-utils';
 import { getTouchedProjects as getJSTouchedProjects } from '../../plugins/js/project-graph/affected/touched-projects';
-import { transformProjectGraphForRust } from '../../native/transform-objects';
+import { transformProjectGraphForLocators } from '../../native/transform-objects';
 
 /** Runs every locator and returns what each one marked, duplicates included. */
 export async function runTouchedProjectLocators(
@@ -16,7 +16,7 @@ export async function runTouchedProjectLocators(
   projectDeletionAffectsAllProjects = true
 ): Promise<string[]> {
   return locateTouchedProjects(
-    transformProjectGraphForRust(graph),
+    transformProjectGraphForLocators(graph),
     nxJson,
     touchedFiles.map((f) => f.file),
     {

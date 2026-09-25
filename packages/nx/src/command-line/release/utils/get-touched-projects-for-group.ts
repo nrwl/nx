@@ -1,6 +1,6 @@
 import { FileData, ProjectGraph } from '../../../config/project-graph';
 import { directlyTouchedProjects } from '../../../native';
-import { transformProjectGraphForRust } from '../../../native/transform-objects';
+import { transformProjectGraphForLocators } from '../../../native/transform-objects';
 import { calculateFileChanges } from '../../../project-graph/file-utils';
 import { NxArgs } from '../../../utils/command-line-utils';
 import { getIgnoreObject } from '../../../utils/ignore';
@@ -74,7 +74,7 @@ export function createGetTouchedProjectsForGroup(
     } else {
       // We only care about directly touched projects, not implicitly affected ones etc
       const touchedProjectsArr = directlyTouchedProjects(
-        transformProjectGraphForRust(projectGraph),
+        transformProjectGraphForLocators(projectGraph),
         calculateFileChanges(changedFiles, nxArgs, undefined, ignore).map(
           (f) => f.file
         )

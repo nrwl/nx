@@ -9,9 +9,8 @@ import {
 } from './index';
 
 /**
- * Keyed by graph identity, but weak so a replaced graph is collectable. `nx
- * release` runs the locators once per commit with the same graph, and a run's
- * hasher reuses what affected already copied.
+ * Keyed by graph identity, but weak so a replaced graph is collectable. A run's
+ * hasher reuses what affected's planner already copied.
  */
 const transferred = new WeakMap<
   ProjectGraph,
@@ -26,6 +25,40 @@ export function transformProjectGraphForRust(
   if (!ref) {
     ref = transferProjectGraph(toRustProjectGraph(graph));
     transferred.set(graph, ref);
+  }
+  return ref;
+}
+
+/** Per graph like `transferred`: `nx release` runs the locators once per commit. */
+const transferredForLocators = new WeakMap<
+  ProjectGraph,
+  ExternalObject<RustProjectGraph>
+>();
+
+/**
+ * Only what the touched-project locators read: project roots, named inputs and
+ * target inputs. Copying target options and every edge costs several times
+ * what the locators themselves do on a large workspace.
+ */
+export function transformProjectGraphForLocators(
+  graph: ProjectGraph
+): ExternalObject<RustProjectGraph> {
+  let ref = transferredForLocators.get(graph);
+  if (!ref) {
+    const nodes: Record<string, Project> = {};
+    for (const [name, node] of Object.entries(graph.nodes)) {
+      const targets: Record<string, Target> = {};
+      for (const [target, config] of Object.entries(node.data.targets ?? {})) {
+        targets[target] = { inputs: config.inputs };
+      }
+      nodes[name] = {
+        root: node.data.root,
+        namedInputs: node.data.namedInputs,
+        targets,
+      };
+    }
+    ref = transferProjectGraph({ nodes, externalNodes: {}, dependencies: {} });
+    transferredForLocators.set(graph, ref);
   }
   return ref;
 }
