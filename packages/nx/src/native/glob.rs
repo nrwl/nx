@@ -213,8 +213,8 @@ pub fn match_glob_paths(globs: Vec<String>, paths: Vec<String>) -> anyhow::Resul
 mod test {
     use super::*;
 
-    /// Pins how every glob-syntax reader answers for a corpus of real globs,
-    /// so a change to the parser or the splitter shows up as a snapshot diff.
+    /// Pins convert_glob, partition_glob and the narrowing prefix for a corpus
+    /// of real globs, so a change to them shows up as a snapshot diff.
     /// Recorded off Windows, where `\` escapes rather than separates.
     #[test]
     #[cfg(not(windows))]

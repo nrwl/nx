@@ -65,7 +65,7 @@ pub fn get_transformable_outputs(outputs: Vec<String>) -> Vec<String> {
 
 #[cfg(test)]
 mod test {
-    use super::is_missing_prefix;
+    use super::{is_missing_prefix, validate_outputs};
 
     #[test]
     fn test_is_missing_prefix() {
@@ -73,5 +73,21 @@ mod test {
         assert!(is_missing_prefix("!dist"));
         assert!(!is_missing_prefix("{workspaceRoot}/dist"));
         assert!(!is_missing_prefix("!{workspaceRoot}/dist"));
+    }
+
+    #[test]
+    fn a_workspace_root_output_must_name_a_directory_before_its_pattern() {
+        for accepted in ["{workspaceRoot}/@scope", "{workspaceRoot}/dist/**"] {
+            assert!(
+                validate_outputs(vec![accepted.into()]).is_ok(),
+                "{accepted}"
+            );
+        }
+        for rejected in ["{workspaceRoot}/brace}", "{workspaceRoot}/**"] {
+            assert!(
+                validate_outputs(vec![rejected.into()]).is_err(),
+                "{rejected}"
+            );
+        }
     }
 }
