@@ -15,7 +15,7 @@ use crate::native::affected::dependency_closure::dependency_closure;
 use crate::native::affected::dependent_outputs::compute_dependent_output_edges;
 use crate::native::affected::plan_ids::referenced_ids;
 use crate::native::affected::project_paths::{ProjectRoots, normalize_path};
-use crate::native::glob::{build_glob_set, fileset_patterns};
+use crate::native::glob::{build_glob_set, fileset_patterns, normalize_glob};
 use crate::native::project_graph::types::{ExternalNode, ProjectGraph};
 use crate::native::tasks::hashers::globs_from_workspace_globs;
 use crate::native::tasks::types::{HashInstruction, HashPlans, TaskGraph};
@@ -386,8 +386,12 @@ fn instruction_matches(
         HashInstruction::ProjectFileSet(project, file_sets) => {
             any_matching(file_sets, Some(project))
         }
-        // Unscoped: the hasher expands these workspace-wide.
-        HashInstruction::IgnoredFileSet(globs) => any_matching(globs, None),
+        // Unscoped: the hasher expands these workspace-wide. Normalized as disk
+        // expansion does, so `apps//app/**` still matches `apps/app/x.ts`.
+        HashInstruction::IgnoredFileSet(globs) => {
+            let globs: Vec<String> = globs.iter().map(|glob| normalize_glob(glob)).collect();
+            any_matching(&globs, None)
+        }
         HashInstruction::JsonFileSet(json) => match json.project_name.as_deref() {
             Some(project) => any_matching(std::slice::from_ref(&json.json_path), Some(project)),
             None => any_matching(
@@ -840,6 +844,20 @@ mod tests {
             ),
             vec!["a:build"]
         );
+    }
+
+    #[test]
+    fn a_disk_backed_fileset_with_repeated_slashes_matches_the_normalized_path() {
+        let g = graph(&[("a", "apps/app")]);
+        let instruction = HashInstruction::IgnoredFileSet(strings(&[
+            "apps//app/src/**",
+            "!apps//app/src//**/*.map",
+        ]));
+        assert_eq!(
+            touched_for(&g, vec![instruction.clone()], &["apps/app/src/x.ts"]),
+            vec!["a:build"]
+        );
+        assert!(touched_for(&g, vec![instruction], &["apps/app/src/x.js.map"]).is_empty());
     }
 
     /// The hasher expands a disk-backed fileset workspace-wide, so scoping the

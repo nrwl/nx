@@ -13,7 +13,7 @@ use tracing::{debug, trace};
 
 use crate::native::affected::dependency_closure::walk_dependencies;
 use crate::native::affected::plan_ids::referenced_ids;
-use crate::native::glob::{NxGlobSet, build_glob_set};
+use crate::native::glob::{NxGlobSet, build_glob_set, normalize_glob};
 use crate::native::tasks::types::{HashInstruction, HashPlans, TaskGraph};
 
 /// Consumer task id -> the upstream task ids whose declared outputs it reads.
@@ -59,7 +59,7 @@ pub(crate) fn compute_dependent_output_edges(
 }
 
 /// Each task with declared outputs -> those outputs, parsed for comparison.
-fn output_patterns(task_graph: &TaskGraph) -> HashMap<&str, Vec<OutputPattern<'_>>> {
+fn output_patterns(task_graph: &TaskGraph) -> HashMap<&str, Vec<OutputPattern>> {
     task_graph
         .tasks
         .iter()
@@ -95,7 +95,7 @@ impl OutputReads {
                     let reads = patterns
                         .iter()
                         .filter(|pattern| !pattern.starts_with('!'))
-                        .map(|pattern| ReadPattern::new(pattern))
+                        .map(|pattern| ReadPattern::new(&normalize_glob(pattern)))
                         .collect();
                     globs.insert(id, reads);
                 }
@@ -111,7 +111,7 @@ fn producers_read_by<'a>(
     consumer: &str,
     plan: &[u32],
     reads: &OutputReads,
-    patterns_of: &HashMap<&'a str, Vec<OutputPattern<'a>>>,
+    patterns_of: &HashMap<&'a str, Vec<OutputPattern>>,
     task_graph: &'a TaskGraph,
     seen: &mut HashSet<&'a str>,
 ) -> Vec<String> {
@@ -155,17 +155,19 @@ fn producers_read_by<'a>(
     producers.into_iter().map(str::to_string).collect()
 }
 
-/// A producer's declared output with its `literal_prefix`.
-struct OutputPattern<'a> {
-    raw: &'a str,
-    prefix: &'a str,
+/// A producer's declared output with its `literal_prefix`, normalized like the
+/// reads it is compared against.
+struct OutputPattern {
+    raw: String,
+    prefix: String,
 }
 
-impl<'a> OutputPattern<'a> {
-    fn new(raw: &'a str) -> Self {
+impl OutputPattern {
+    fn new(raw: &str) -> Self {
+        let raw = normalize_glob(raw);
         Self {
+            prefix: literal_prefix(&raw).to_string(),
             raw,
-            prefix: literal_prefix(raw),
         }
     }
 }
@@ -203,22 +205,22 @@ impl ReadPattern {
         }
     }
 
-    fn claims(&self, output: &OutputPattern<'_>) -> bool {
+    fn claims(&self, output: &OutputPattern) -> bool {
         match self {
             // An output whose own prefix is empty leads with a wildcard and
             // could be anywhere, so it is claimed.
             Self::Under(prefix) => {
                 output.prefix.is_empty()
-                    || is_path_prefix(prefix, output.prefix)
-                    || is_path_prefix(output.prefix, prefix)
+                    || is_path_prefix(prefix, &output.prefix)
+                    || is_path_prefix(&output.prefix, prefix)
             }
-            Self::Anywhere(pattern) => !distinct_extensions(pattern, output.raw),
+            Self::Anywhere(pattern) => !distinct_extensions(pattern, &output.raw),
             Self::RootLevel(pattern, _) if output.prefix.is_empty() => {
-                !distinct_extensions(pattern, output.raw)
+                !distinct_extensions(pattern, &output.raw)
             }
             Self::RootLevel(_, glob) => glob
                 .as_ref()
-                .map_or(true, |glob| glob.is_match(output.prefix)),
+                .map_or(true, |glob| glob.is_match(&output.prefix)),
         }
     }
 }
@@ -402,6 +404,22 @@ mod tests {
 
     /// Overlap is not containment in one direction: reading the whole dist tree
     /// covers a producer that writes one directory inside it.
+    #[test]
+    fn repeated_slashes_in_a_read_or_an_output_still_overlap() {
+        let e = edges(
+            &[
+                ("gen:build", &["dist/gen"]),
+                ("gen2:build", &["out//types/"]),
+            ],
+            &[("app:build", &["gen:build", "gen2:build"])],
+            &[(
+                "app:build",
+                vec![include_ignored(&["dist//gen/**", "out/types/**"])],
+            )],
+        );
+        assert_eq!(e["app:build"], strings(&["gen2:build", "gen:build"]));
+    }
+
     #[test]
     fn a_whole_tree_read_covers_a_producer_inside_it() {
         let e = edges(
