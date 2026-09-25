@@ -1239,7 +1239,20 @@ async function generateChangelogForProjects({
         changelogContents = contents;
       }
 
-      tree.write(interpolatedTreePath, changelogContents);
+      /**
+       * Several projects in a fixed release group can resolve to the same changelog file.
+       * The first project's write is flushed to disk immediately below, so a later project
+       * that produces identical contents would hit FsTree.write's "unchanged" short-circuit,
+       * which drops the recorded change and leaves the file unstaged. Skip the no-op write.
+       */
+      if (
+        !(
+          tree.exists(interpolatedTreePath) &&
+          tree.read(interpolatedTreePath, 'utf-8') === changelogContents
+        )
+      ) {
+        tree.write(interpolatedTreePath, changelogContents);
+      }
 
       printAndFlushChanges(
         tree,
