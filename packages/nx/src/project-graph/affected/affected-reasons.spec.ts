@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   explainSelection,
   formatAffectedExplanation,
@@ -9,6 +9,8 @@ import {
 import { getTouchedProjectsFromLockFile } from '../../plugins/js/project-graph/affected/lock-file-changes';
 import { getTouchedProjectsFromTsConfig } from '../../plugins/js/project-graph/affected/tsconfig-json-changes';
 import { WholeFileChange } from '../file-utils';
+import { jsonDiff } from '../../utils/json-diff';
+import * as tsUtils from '../../plugins/js/utils/typescript';
 import type { ProjectGraph } from '../../config/project-graph';
 
 /**
@@ -68,6 +70,54 @@ describe('JS locator reasons', () => {
     expect(noPackage).toContain('package.json');
   });
 
+  describe('root tsconfig', () => {
+    const touchedBy = (before: object, after: object) => {
+      vi.spyOn(tsUtils, 'getRootTsConfigFileName').mockReturnValue(
+        'tsconfig.base.json'
+      );
+      return getTouchedProjectsFromTsConfig(
+        [
+          {
+            file: 'tsconfig.base.json',
+            getChanges: () => jsonDiff(before, after),
+          },
+        ] as any,
+        nodes,
+        {} as any,
+        undefined,
+        graph
+      );
+    };
+
+    // Any change that is not a path mapping touches every project, and must
+    // not claim a path mapping moved.
+    it('does not blame path mappings for any other option', () => {
+      expect(
+        touchedBy(
+          { compilerOptions: { strict: false } },
+          { compilerOptions: { strict: true } }
+        )
+      ).toEqual([
+        { project: 'app', kind: 'tsconfig', file: 'tsconfig.base.json' },
+      ]);
+    });
+
+    it('names a path mapping into the project', () => {
+      expect(
+        touchedBy(
+          { compilerOptions: { paths: {} } },
+          {
+            compilerOptions: {
+              paths: { '@proj/app': ['apps/app/src/index.ts'] },
+            },
+          }
+        )
+      ).toEqual([
+        { project: 'app', kind: 'tsconfig-paths', file: 'tsconfig.base.json' },
+      ]);
+    });
+  });
+
   it('reports nothing when the root tsconfig is untouched', () => {
     const touched = getTouchedProjectsFromTsConfig(
       [
@@ -95,6 +145,9 @@ describe('formatAffectedReason', () => {
       { kind: 'lockfile', file: 'pnpm-lock.yaml' },
       { kind: 'npm-package', package: 'npm:lodash' },
       { kind: 'tsconfig', file: 'tsconfig.base.json' },
+      { kind: 'tsconfig-paths', file: 'tsconfig.base.json' },
+      { kind: 'all-projects' },
+      { kind: 'external-dependencies', file: 'pnpm-lock.yaml' },
       { kind: 'dependency', dependency: 'ui' },
       { kind: 'input-file', file: 'libs/a/x.ts', pattern: '{projectRoot}/**' },
       { kind: 'dependent-output', producer: 'ui:build' },

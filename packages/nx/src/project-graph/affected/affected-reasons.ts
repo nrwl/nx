@@ -25,8 +25,10 @@ export type AffectedReasonKind =
   | 'lockfile'
   /** An external package's version moved. */
   | 'npm-package'
-  /** The root tsconfig's path mappings changed. */
+  /** The root tsconfig changed in a way that can reach every project. */
   | 'tsconfig'
+  /** A path mapping into the project changed in the root tsconfig. */
+  | 'tsconfig-paths'
   /** Project-level only: it depends on a project that was touched. */
   | 'dependency'
   /** Task-level: a changed file matched one of the task's inputs. */
@@ -123,7 +125,9 @@ export function formatAffectedReason(reason: AffectedReason): string {
             reason.file ?? 'package.json'
           }, and could not be matched to a package`;
     case 'tsconfig':
-      return `path mappings changed in ${reason.file}`;
+      return `${reason.file} changed, which can affect every project`;
+    case 'tsconfig-paths':
+      return `a path mapping to it changed in ${reason.file}`;
     case 'dependency':
       return `depends on ${reason.dependency}, which is affected`;
     case 'input-file':
