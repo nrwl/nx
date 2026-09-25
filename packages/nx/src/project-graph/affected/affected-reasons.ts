@@ -39,8 +39,6 @@ export type AffectedReasonKind =
   | 'dependent-output'
   /** Task-level: it hashes every external dependency, and one moved. */
   | 'external-dependencies'
-  /** `--all` asked for every project, whatever changed. */
-  | 'all-projects'
   /** Task-level: its executor hashes outside the plan, so it is always selected. */
   | 'custom-hasher';
 
@@ -144,8 +142,6 @@ export function formatAffectedReason(reason: AffectedReason): string {
       return `reads the outputs of ${reason.producer}, which the change reached`;
     case 'external-dependencies':
       return `hashes every external dependency, and ${reason.file} changed`;
-    case 'all-projects':
-      return `--all selects every project`;
     case 'custom-hasher':
       return `its executor uses a custom hasher, so it is always selected`;
   }
