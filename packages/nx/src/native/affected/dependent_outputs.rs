@@ -225,11 +225,12 @@ enum ReadPattern {
     /// Leads with a literal directory, `dist/libs/ui/**/*.js`. Compared to an
     /// output by directory containment on their literal prefixes.
     Under(String),
-    /// Leads with `**`, so it can reach into any output directory. Ruled out
-    /// only when both name a literal extension and the two differ.
+    /// Leads with a wildcard and spans directories, `**/*.js` or
+    /// `{dist,out}/lib/**`, so it can reach into any output directory. Ruled
+    /// out only when both name a literal extension and the two differ.
     Anywhere(String),
-    /// Leads with a single-level wildcard, `*.json`. Names only root-level
-    /// paths, so it claims an output only when the glob itself matches it.
+    /// A single segment with a wildcard, `*.json`. Names only root-level paths,
+    /// so it claims a literal output only when the glob itself matches it.
     RootLevel(String),
 }
 
@@ -238,7 +239,7 @@ impl ReadPattern {
         let prefix = literal_prefix(pattern);
         if !prefix.is_empty() {
             Self::Under(prefix.to_string())
-        } else if pattern.starts_with("**") {
+        } else if pattern.contains('/') || pattern.starts_with("**") {
             Self::Anywhere(pattern.to_string())
         } else {
             Self::RootLevel(pattern.to_string())
@@ -255,18 +256,26 @@ impl ReadPattern {
                     || is_path_prefix(output.prefix, prefix)
             }
             Self::Anywhere(pattern) => !distinct_extensions(pattern, output.raw),
-            // Cached by pattern string, so this compiles once per distinct read.
+            Self::RootLevel(pattern) if output.prefix.is_empty() => {
+                !distinct_extensions(pattern, output.raw)
+            }
             Self::RootLevel(pattern) => build_glob_set(std::slice::from_ref(pattern))
-                .is_ok_and(|glob| glob.is_match(output.prefix)),
+                .map_or(true, |glob| glob.is_match(output.prefix)),
         }
     }
 }
 
-/// Whether two patterns each end in a literal extension and the two differ, in
-/// which case no path can match both.
-fn distinct_extensions(a: &str, b: &str) -> bool {
+/// Whether a read and an output each end in a literal extension and the two
+/// differ, in which case no path can match both. An output's extension counts
+/// only after a wildcard: a literal output may be a directory, `dist/lib.v2`.
+fn distinct_extensions(read: &str, output: &str) -> bool {
+    let output_segment = output.rsplit('/').next().unwrap_or(output);
+    let output_extension = output_segment
+        .contains(['*', '?'])
+        .then(|| literal_extension(output))
+        .flatten();
     matches!(
-        (literal_extension(a), literal_extension(b)),
+        (literal_extension(read), output_extension),
         (Some(x), Some(y)) if x != y
     )
 }
@@ -276,8 +285,11 @@ fn distinct_extensions(a: &str, b: &str) -> bool {
 /// itself carries a wildcard.
 fn literal_extension(pattern: &str) -> Option<&str> {
     let segment = pattern.rsplit('/').next().unwrap_or(pattern);
+    if segment.contains(['{', '(']) {
+        return None;
+    }
     let ext = segment.rsplit_once('.')?.1;
-    (!ext.is_empty() && !ext.contains(['*', '?', '[', '{', '('])).then_some(ext)
+    (!ext.is_empty() && !ext.contains(['*', '?', '['])).then_some(ext)
 }
 
 /// Segment-wise, so `dist/libs/ui` does not contain `dist/libs/ui-legacy` the
@@ -719,6 +731,41 @@ mod tests {
         assert_eq!(e["app:build"], strings(&["manifest:build"]));
     }
 
+    /// A read that leads with a wildcard or a brace but spans directories is
+    /// not root-level: it can reach inside an output directory.
+    #[test]
+    fn a_read_leading_with_a_wildcard_segment_reaches_into_directories() {
+        for read in ["{dist,out}/lib/**/*.js", "*/lib/**/*.js"] {
+            let e = edges(
+                &[("lib:build", &["dist/lib"]), ("app:build", &["dist/app"])],
+                &[("app:build", &["lib:build"])],
+                &[("app:build", vec![include_ignored(&[read])])],
+            );
+            assert_eq!(e["app:build"], strings(&["lib:build"]), "{read}");
+        }
+    }
+
+    /// Brace alternatives are not one extension, and a literal output may be a
+    /// directory whose name has a dot, so neither rules a producer out.
+    #[test]
+    fn an_extension_is_only_compared_when_both_sides_fix_one() {
+        for (read, output) in [
+            ("**/*.{js,d.ts}", "dist/lib/index.js"),
+            ("**/*.js", "dist/lib.v2"),
+        ] {
+            let e = edges(
+                &[("lib:build", &[output]), ("app:build", &["dist/app"])],
+                &[("app:build", &["lib:build"])],
+                &[("app:build", vec![include_ignored(&[read])])],
+            );
+            assert_eq!(
+                e["app:build"],
+                strings(&["lib:build"]),
+                "{read} vs {output}"
+            );
+        }
+    }
+
     #[test]
     fn literal_extension_reads_only_a_fixed_suffix() {
         assert_eq!(literal_extension("dist/**/*.js"), Some("js"));
@@ -727,6 +774,7 @@ mod tests {
         assert_eq!(literal_extension("dist/libs/ui"), None);
         assert_eq!(literal_extension("dist/**"), None);
         assert_eq!(literal_extension("dist/*.{js,ts}"), None);
+        assert_eq!(literal_extension("**/*.{js,d.ts}"), None);
     }
 
     #[test]
