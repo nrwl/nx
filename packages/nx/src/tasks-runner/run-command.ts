@@ -61,8 +61,8 @@ import { createTaskGraph } from './create-task-graph';
 import type { TaskPlanningContext } from '../hasher/task-planning-context';
 
 /**
- * Tasks the caller selected. Their dependency closure is added back, so an
- * affected task's upstream still runs or restores from cache.
+ * Tasks the caller selected, with their dependency closure already included,
+ * so an affected task's upstream still runs or restores from cache.
  */
 export interface TaskSelection {
   /** The selected tasks and everything they depend on: the graph is pruned to these. */

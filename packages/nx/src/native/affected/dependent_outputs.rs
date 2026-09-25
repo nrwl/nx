@@ -10,9 +10,9 @@
 //! `TaskOutput(glob, outputs)` comes from an explicit `dependentTasksOutputFiles`
 //! input, and `process_tasks_outputs` builds one per dependent task from
 //! `task.outputs.clone()`. The embedded vector *is* some producer's declared
-//! outputs, so equality against `task.outputs` names that producer exactly. No
-//! path analysis, and no dependency walk: the instruction exists only because the
-//! producer was already a dependency.
+//! outputs, so equality against `task.outputs` names that producer exactly, with
+//! no path analysis. Two unrelated tasks can declare the same outputs, so the
+//! match is still limited to the consumer's dependency closure.
 //!
 //! An `IgnoredFileSet(globs)` comes from an `includeIgnored` fileset. I/O
 //! tracing turns an observed read of a generated artifact into one of these,
@@ -21,8 +21,8 @@
 //! project and names no producer, so each pattern is compared to declared
 //! outputs, over the consumer's dependency closure: by
 //! directory containment when the read names one, and by what the glob can
-//! match when it leads with a wildcard. That walk runs only for tasks carrying
-//! a read.
+//! match when it leads with a wildcard. Either walk runs only for tasks
+//! carrying a read.
 
 use rayon::prelude::*;
 use std::collections::{HashMap, HashSet};
@@ -113,8 +113,8 @@ pub(crate) fn compute_dependent_output_edges(
                 );
             }
 
-            // Only an includeIgnored read needs the closure, so a plan without
-            // one never pays for the walk.
+            // Like a TaskOutput, only a plan carrying an includeIgnored read pays
+            // for the walk.
             let reads: Vec<&ReadPattern> = plan
                 .iter()
                 .filter_map(|id| glob_reads.get(id))
