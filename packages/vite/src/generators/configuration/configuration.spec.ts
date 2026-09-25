@@ -23,6 +23,15 @@ import {
 
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { LibraryGeneratorSchema } from '@nx/js/internal';
+import { confirmationPrompt } from '@nx/devkit/internal';
+
+vi.mock('@nx/devkit/internal', async () => {
+  const actual = await vi.importActual<any>('@nx/devkit/internal');
+  return {
+    ...actual,
+    confirmationPrompt: vi.fn(actual.confirmationPrompt),
+  };
+});
 
 describe('@nx/vite:configuration', () => {
   let tree: Tree;
@@ -164,9 +173,7 @@ describe('@nx/vite:configuration', () => {
     });
 
     it('should throw when trying to convert something unknown and user denies conversion', async () => {
-      const devkitInternal = require('@nx/devkit/internal');
-      const confirmSpy = vi.spyOn(devkitInternal, 'confirmationPrompt');
-      confirmSpy.mockResolvedValue(false);
+      vi.mocked(confirmationPrompt).mockResolvedValue(false);
 
       expect.assertions(2);
 
@@ -248,9 +255,7 @@ describe('@nx/vite:configuration', () => {
     });
 
     it('should set up non buildable library which already has vite.config.mts correctly', async () => {
-      const devkitInternal = require('@nx/devkit/internal');
-      const confirmSpy = vi.spyOn(devkitInternal, 'confirmationPrompt');
-      confirmSpy.mockResolvedValue(true);
+      vi.mocked(confirmationPrompt).mockResolvedValue(true);
 
       mockReactLibNonBuildableVitestRunnerGenerator(tree);
 
