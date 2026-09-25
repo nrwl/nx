@@ -4,6 +4,7 @@ import {
 } from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
+  detectPackageManager,
   ensurePackage,
   formatFiles,
   generateFiles,
@@ -118,6 +119,7 @@ function addFiles(host: Tree, options: NormalizedSchema) {
     tmpl: '',
     rootTsConfigPath: getRelativePathToRootTsConfig(host, options.projectRoot),
     packageManagerCommands: getPackageManagerCommand(),
+    packageManager: detectPackageManager(),
     pluginPackageName,
     simplePluginName,
   });
