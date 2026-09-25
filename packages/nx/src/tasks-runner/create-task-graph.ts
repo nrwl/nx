@@ -504,7 +504,7 @@ export function createTaskGraphWithDependencyOverrides(
  * `taskGraph` pruned to `keep`, as if built from `initial` alone: a kept dependency
  * takes the overrides its edges give it. Undefined when those edges disagree or are missing.
  */
-export function narrowTaskGraph(
+export function filterTaskGraphToSelection(
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
   dependencyOverrides: DependencyOverrides,

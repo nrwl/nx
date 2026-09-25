@@ -9,7 +9,7 @@ import {
   createTaskGraphWithDependencyOverrides,
   filterDummyTasks,
   getNonDummyDeps,
-  narrowTaskGraph,
+  filterTaskGraphToSelection,
 } from './create-task-graph';
 import { pruneToSelectedTasks } from './utils';
 
@@ -4642,7 +4642,7 @@ describe('createTaskGraphWithDependencyOverrides', () => {
   });
 });
 
-describe('narrowTaskGraph', () => {
+describe('filterTaskGraphToSelection', () => {
   const cli = { outputPath: 'dist/custom', __overrides_unparsed__: [] };
   const node = (name: string, targets: Record<string, any>) => ({
     name,
@@ -4685,7 +4685,7 @@ describe('narrowTaskGraph', () => {
     };
   }
 
-  function narrowed(
+  function filtered(
     projectGraph: ProjectGraph,
     candidates: string[],
     initial: string[]
@@ -4699,7 +4699,7 @@ describe('narrowTaskGraph', () => {
         undefined,
         cli
       );
-    return narrowTaskGraph(
+    return filterTaskGraphToSelection(
       projectGraph,
       taskGraph,
       dependencyOverrides,
@@ -4717,7 +4717,7 @@ describe('narrowTaskGraph', () => {
       ['app:build', 'lib:build']
     );
 
-    const result = narrowed(projectGraph, ['app', 'lib'], ['app:build']);
+    const result = filtered(projectGraph, ['app', 'lib'], ['app:build']);
 
     expect(result.tasks).toEqual(expected.tasks);
     expect(result.tasks['lib:build'].outputs).toEqual(['dist/lib']);
@@ -4736,7 +4736,7 @@ describe('narrowTaskGraph', () => {
       dependsOn: [{ dependencies: true, target: 'build', options: 'forward' }],
     });
     expect(
-      narrowed(
+      filtered(
         projectGraph,
         ['app', 'app2', 'lib'],
         ['app:build', 'app2:build']
@@ -4784,7 +4784,7 @@ describe('narrowTaskGraph', () => {
       );
     const keep = new Set(['a:build', 'x:gen']);
 
-    const result = narrowTaskGraph(
+    const result = filterTaskGraphToSelection(
       projectGraph,
       taskGraph,
       dependencyOverrides,

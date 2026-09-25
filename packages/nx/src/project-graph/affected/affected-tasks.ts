@@ -15,7 +15,7 @@ import type { IoSnapshotVersion } from '../../daemon/message-types/io-snapshot-v
 import {
   createTaskGraph,
   createTaskGraphWithDependencyOverrides,
-  narrowTaskGraph,
+  filterTaskGraphToSelection,
 } from '../../tasks-runner/create-task-graph';
 import { runnableForTarget } from '../../utils/project-graph-utils';
 import {
@@ -329,7 +329,7 @@ export async function selectAffectedTasks(
       // Edges that disagree on a dependency's overrides leave it to a build
       // from the owning projects, which settles them the way the run always has.
       taskGraph:
-        narrowTaskGraph(
+        filterTaskGraphToSelection(
           projectGraph,
           taskGraph,
           dependencyOverrides,
