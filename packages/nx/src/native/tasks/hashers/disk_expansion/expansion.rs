@@ -108,6 +108,7 @@ pub(super) fn parse_group(globs: &[String]) -> Result<(Vec<Positive>, Vec<Negati
     let mut positives = Vec::new();
     let mut negations = Vec::new();
     for glob in globs {
+        reject_unresolved_token(glob)?;
         // Decided before the braces expand, so an alternative that begins
         // with `!` cannot turn a positive entry into an exclusion.
         let negated = glob.starts_with('!');
@@ -227,6 +228,21 @@ fn validate_shape(glob: &str) -> Result<()> {
                 "The includeIgnored fileset \"{glob}\" has a `.` segment; write it relative to the workspace root without `./`."
             );
         }
+    }
+    Ok(())
+}
+
+/// A token left in a resolved glob would be walked as a literal: a bare
+/// `{workspaceRoot}` reads a file of that name, and one left mid-glob
+/// (`{workspaceRoot}**/*.js`, `!{workspaceRoot}**/.env*`) walks or excludes
+/// the wrong path. Refused here rather than silently read, since a glob
+/// handed to `expandFilesInput` never passed the planner's validation.
+fn reject_unresolved_token(glob: &str) -> Result<()> {
+    let body = glob.strip_prefix('!').unwrap_or(glob);
+    if body.contains("{workspaceRoot}") || body.contains("{projectRoot}") {
+        bail!(
+            "The includeIgnored fileset \"{glob}\" still holds a root token after resolution: a bare root token is not allowed, `{{workspaceRoot}}` must start the glob (after any `!`) followed by `/`, and `{{projectRoot}}` must be a whole segment."
+        );
     }
     Ok(())
 }

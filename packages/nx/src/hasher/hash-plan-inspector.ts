@@ -15,6 +15,7 @@ import {
   transferProjectGraph,
 } from '../native';
 import { transformProjectGraphForRust } from '../native/transform-objects';
+import { diskWalkSkippedDirectories } from './disk-walk-skipped-directories';
 import { createProjectRootMappings } from '../project-graph/utils/find-project-for-path';
 import { createTaskGraph } from '../tasks-runner/create-task-graph';
 import { splitArgsIntoNxArgsAndOverrides } from '../utils/command-line-utils';
@@ -50,7 +51,8 @@ export class HashPlanInspector {
     this.inspector = new NativeHashPlanInspector(
       externalReferences.allWorkspaceFiles,
       externalReferences.projectFiles,
-      this.workspaceRootPath
+      this.workspaceRootPath,
+      diskWalkSkippedDirectories(this.workspaceRootPath)
     );
   }
 

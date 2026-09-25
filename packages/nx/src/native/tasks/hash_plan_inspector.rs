@@ -32,7 +32,12 @@ impl HashPlanInspector {
         #[napi(ts_arg_type = "ExternalObject<Record<string, Array<FileData>>>")]
         project_file_map: &External<Arc<HashMap<String, Vec<FileData>>>>,
         workspace_root: String,
+        skipped_directories: Option<Vec<String>>,
     ) -> Self {
+        crate::native::walker::set_configured_skips(
+            std::path::Path::new(&workspace_root),
+            &skipped_directories.unwrap_or_default(),
+        );
         Self {
             all_workspace_files: Arc::clone(all_workspace_files),
             project_file_map: Arc::clone(project_file_map),

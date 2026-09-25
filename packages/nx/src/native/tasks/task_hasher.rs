@@ -147,6 +147,10 @@ pub struct HashDetails {
 #[napi(object)]
 pub struct HasherOptions {
     pub selectively_hash_ts_config: bool,
+    /// Workspace-relative directories a disk-backed walk never enters: the
+    /// Nx cache and workspace-data locations when they sit inside the
+    /// workspace. The walker only knows their default spots under `.nx`.
+    pub skipped_directories: Option<Vec<String>>,
 }
 
 /// Return type of `hash_plans`. Shares JS strings for pooled detail keys and
@@ -311,6 +315,14 @@ impl TaskHasher {
             Arc<IgnoredIndexReader>,
         >,
     ) -> Self {
+        // Before anything walks or is tracked: a listing taken without these
+        // would hold cache files, and the index would serve them.
+        let skipped = options
+            .as_ref()
+            .and_then(|o| o.skipped_directories.as_deref())
+            .unwrap_or_default();
+        crate::native::walker::set_configured_skips(Path::new(&workspace_root), skipped);
+        ignored_index.index().skip(skipped);
         Self {
             ignored_index: Arc::clone(ignored_index),
             workspace_root,

@@ -53,6 +53,7 @@ import {
   transferProjectGraph,
 } from '../../native';
 import { transformProjectGraphForRust } from '../../native/transform-objects';
+import { diskWalkSkippedDirectories } from '../../hasher/disk-walk-skipped-directories';
 import { getAffectedGraphNodes } from '../affected/affected';
 import { readFileMapCache } from '../../project-graph/nx-deps-cache';
 import { filterUsingGlobPatterns } from '../../hasher/task-hasher';
@@ -1425,7 +1426,11 @@ function expandInputs(
     allWorkspaceFiles
   );
   const filesExpanded = filesInputs.flatMap((globs) =>
-    expandFilesInput(workspaceRoot, globs)
+    expandFilesInput(
+      workspaceRoot,
+      globs,
+      diskWalkSkippedDirectories(workspaceRoot)
+    )
   );
 
   const otherInputsExpanded = otherInputs.map((input) => {

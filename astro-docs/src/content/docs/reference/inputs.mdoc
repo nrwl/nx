@@ -159,7 +159,7 @@ The group reaches every dependency in the chain, not only the direct ones: each 
 Without the flag it's a normal fileset and doesn't affect them.
 A negation with nothing to filter is a configuration error.
 
-A glob never walks into `node_modules`, `.git`, `.nx/cache`, `.nx/workspace-data`, or `.yarn/cache` unless it names a path inside one of them.
+A glob never walks into `node_modules`, `.git`, `.nx/cache`, `.nx/workspace-data`, `.yarn/cache`, or wherever `cacheDirectory` or the environment moves the cache and workspace-data directories, unless it names a path inside one of them.
 It also skips the timestamp files Vite and Vitest write beside their config, such as `vite.config.ts.timestamp-1700000000000.mjs`.
 Nx reads a symlinked file where it points, even outside the workspace, so a `dist` linked into a build cache is hashed. A glob doesn't walk into a symlinked directory unless it names that directory. A glob that climbs out with `..`, or names an absolute path, is a configuration error.
 

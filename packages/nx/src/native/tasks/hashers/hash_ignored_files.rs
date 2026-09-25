@@ -101,13 +101,16 @@ pub(crate) fn collect_ignored_file_paths(
 
 #[napi]
 /// The files an `includeIgnored` fileset group matches on disk, sorted.
-pub fn expand_files_input(workspace_root: String, globs: Vec<String>) -> Result<Vec<String>> {
-    let workspace_root = Path::new(&workspace_root);
-    collect_ignored_file_paths(
-        workspace_root,
-        &globs,
-        &Source::fileset_from_disk(workspace_root),
-    )
+/// `skippedDirectories` are the configured Nx cache and workspace-data
+/// locations, which this reads from disk and so must skip itself.
+pub fn expand_files_input(
+    workspace_root: String,
+    globs: Vec<String>,
+    skipped_directories: Option<Vec<String>>,
+) -> Result<Vec<String>> {
+    let root = Path::new(&workspace_root);
+    crate::native::walker::set_configured_skips(root, &skipped_directories.unwrap_or_default());
+    collect_ignored_file_paths(root, &globs, &Source::fileset_from_disk(root))
 }
 
 #[cfg(test)]
