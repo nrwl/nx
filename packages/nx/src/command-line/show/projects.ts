@@ -56,13 +56,7 @@ export async function showProjectsHandler(
           head: nxArgs.head,
           files: nxArgs.files,
         },
-        ioSnapshotOutcome: await runCommandModule().loadIoSnapshotsForCommand(
-          nxArgs,
-          nxJson
-        ),
-        selectivelyHashTsConfig:
-          runCommandModule().getRunner(nxArgs, nxJson).runnerOptions
-            ?.selectivelyHashTsConfig ?? false,
+        ...(await runCommandModule().runnerInputsForSelection(nxArgs, nxJson)),
       });
       const { taskGraph, initiatingTaskIds } = affectedTasks.taskSelection;
       const owning = new Set(

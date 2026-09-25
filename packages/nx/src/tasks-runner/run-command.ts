@@ -1308,12 +1308,22 @@ function reportIoSnapshots(
   output.note({ title: summary.line, bodyLines: summary.bodyLines });
 }
 
-/** This command's I/O snapshot set, loaded once for selection and the run alike. */
-export async function loadIoSnapshotsForCommand(
+/**
+ * What affected task selection reads from the runner options, so it plans as
+ * the run hashes. The snapshot set is loaded once, for selection and the run.
+ */
+export async function runnerInputsForSelection(
   nxArgs: NxArgs,
   nxJson: NxJsonConfiguration
-): Promise<IoSnapshotOutcome | null> {
-  return loadIoSnapshotsForRun(nxJson, getRunner(nxArgs, nxJson).runnerOptions);
+): Promise<{
+  ioSnapshotOutcome: IoSnapshotOutcome | null;
+  selectivelyHashTsConfig: boolean;
+}> {
+  const { runnerOptions } = getRunner(nxArgs, nxJson);
+  return {
+    ioSnapshotOutcome: await loadIoSnapshotsForRun(nxJson, runnerOptions),
+    selectivelyHashTsConfig: runnerOptions?.selectivelyHashTsConfig ?? false,
+  };
 }
 
 export function getRunner(

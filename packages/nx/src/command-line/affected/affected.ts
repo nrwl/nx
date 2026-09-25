@@ -1,7 +1,6 @@
 import { calculateFileChanges } from '../../project-graph/file-utils';
 import {
-  getRunner,
-  loadIoSnapshotsForCommand,
+  runnerInputsForSelection,
   runCommand,
   selectTasksForProjects,
 } from '../../tasks-runner/run-command';
@@ -89,11 +88,7 @@ export async function affected(
       extraTargetDependencies,
       excludeTaskDependencies: extraOptions.excludeTaskDependencies,
       exclude: nxArgs.exclude,
-      ioSnapshotOutcome: await loadIoSnapshotsForCommand(nxArgs, nxJson),
-      // As the run's hasher reads it from the same runner options.
-      selectivelyHashTsConfig:
-        getRunner(nxArgs, nxJson).runnerOptions?.selectivelyHashTsConfig ??
-        false,
+      ...(await runnerInputsForSelection(nxArgs, nxJson)),
     }));
   } else {
     projectGraph = await createProjectGraphAsync({ exitOnError: true });
