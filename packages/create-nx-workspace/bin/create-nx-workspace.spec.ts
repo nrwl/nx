@@ -9,6 +9,7 @@ import {
 import * as clack from '@clack/prompts';
 import { CnwError } from '../src/utils/error-utils';
 import { Preset } from '../src/utils/preset/preset';
+import { isCI } from '../src/utils/ci/is-ci';
 import {
   mkdtempSync,
   mkdirSync,
@@ -270,7 +271,6 @@ describe('resolveSpecialFolderName', () => {
 });
 
 describe('determineFolder - explicit "." confirmation', () => {
-  const { isCI } = require('../src/utils/ci/is-ci');
   let originalCwd: string;
 
   beforeEach(() => {

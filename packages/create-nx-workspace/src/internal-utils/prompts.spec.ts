@@ -8,7 +8,9 @@ import {
   determineTemplate,
 } from './prompts';
 import * as clack from '@clack/prompts';
-import { detectAiAgentName } from '../utils/ai/ai-output';
+import { detectAiAgentName, isAiAgent } from '../utils/ai/ai-output';
+import { isCI } from '../utils/ci/is-ci';
+import { output } from '../utils/output';
 
 vi.mock('../utils/ci/is-ci', () => ({
   isCI: vi.fn(() => false),
@@ -65,7 +67,6 @@ describe('determineTemplate', () => {
 
   describe('CI mode', () => {
     it('should return nrwl/empty-template in CI without preset or template', async () => {
-      const { isCI } = require('../utils/ci/is-ci');
       (isCI as Mock).mockReturnValueOnce(true);
 
       const result = await determineTemplate({
@@ -79,9 +80,6 @@ describe('determineTemplate', () => {
 });
 
 describe('confirmThirdPartyPreset', () => {
-  const { isCI } = require('../utils/ci/is-ci');
-  const { isAiAgent } = require('../utils/ai/ai-output');
-
   beforeEach(() => {
     vi.clearAllMocks();
     (isCI as Mock).mockReturnValue(false);
@@ -124,7 +122,6 @@ describe('confirmThirdPartyPreset', () => {
   });
 
   it('skips prompt and warning when trusted flag is set', async () => {
-    const { output } = require('../utils/output');
     await expect(
       confirmThirdPartyPreset('@my-org/nx-plugin', true, true)
     ).resolves.toBe(true);
@@ -142,8 +139,6 @@ describe('confirmThirdPartyPreset', () => {
 });
 
 describe('determineLinterOptions', () => {
-  const { isCI } = require('../utils/ci/is-ci');
-
   beforeEach(() => {
     (clack.autocomplete as Mock).mockReset();
     (isCI as Mock).mockReturnValue(false);
@@ -195,8 +190,6 @@ describe('determineLinterOptions', () => {
 });
 
 describe('determineNxCloudV2', () => {
-  const { isCI } = require('../utils/ci/is-ci');
-
   beforeEach(() => {
     vi.clearAllMocks();
     (isCI as Mock).mockReturnValue(false);
@@ -253,8 +246,6 @@ describe('determineNxCloudV2', () => {
 });
 
 describe('determineFormatterOptions', () => {
-  const { isCI } = require('../utils/ci/is-ci');
-
   beforeEach(() => {
     (clack.autocomplete as Mock).mockReset();
     (isCI as Mock).mockReturnValue(false);
