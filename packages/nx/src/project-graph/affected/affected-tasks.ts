@@ -21,6 +21,7 @@ import {
 import type { NxArgs } from '../../utils/command-line-utils';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { logger } from '../../utils/logger';
+import { DaemonProjectGraphError, ProjectGraphError } from '../error-types';
 import { workspaceRoot } from '../../utils/workspace-root';
 import {
   createTaskPlanningContext,
@@ -137,8 +138,11 @@ export async function computeAffectedTasks(
         runTaskGraph: selection.runTaskGraph,
       };
     } catch (e) {
-      // Fetching the graph falls back from a daemon that cannot answer and
-      // reports a broken graph; an error in selection itself recurs below.
+      if (e?.name === DaemonProjectGraphError.name) {
+        throw ProjectGraphError.fromDaemonProjectGraphError(e);
+      }
+      // Fetching the graph falls back from a daemon that cannot answer; an
+      // error in selection itself recurs below.
       logger.verbose(`Selecting affected tasks in the daemon failed: ${e}`);
     }
   }

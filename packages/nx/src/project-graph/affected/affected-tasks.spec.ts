@@ -32,6 +32,7 @@ vi.mock('../../tasks-runner/utils', async (importOriginal) => {
 });
 import { computeAffectedTasks, selectsAffectedTasks } from './affected-tasks';
 import { LockFileChange, WholeFileChange } from '../file-utils';
+import { ProjectGraphError } from '../error-types';
 import type { ProjectGraph } from '../../config/project-graph';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { pruneToSelectedTasks } from '../../tasks-runner/utils';
@@ -406,6 +407,29 @@ describe('computeAffectedTasks with the daemon on', () => {
     expect(result.planningContext).toBeUndefined();
     // The command runs with the graph the daemon selected against.
     expect(result.projectGraph).toBe(daemonGraph);
+  });
+
+  // The daemon already found the graph broken; fetching it again would only
+  // ask the same daemon the same question.
+  it('reports a broken graph the daemon found without selecting again', async () => {
+    daemon.enabled.mockReturnValueOnce(true);
+    daemon.selectAffectedTasks.mockRejectedValueOnce(
+      Object.assign(new Error('graph'), {
+        name: 'DaemonProjectGraphError',
+        errors: [],
+        projectGraph: graph(),
+        sourceMaps: {},
+      })
+    );
+
+    await expect(
+      computeAffectedTasks({
+        projectGraph: graph(),
+        nxJson: {} as any,
+        targets: ['test'],
+        touchedFiles: [],
+      })
+    ).rejects.toBeInstanceOf(ProjectGraphError);
   });
 
   // The graph fetch is what recovers from a daemon that cannot answer, and an
