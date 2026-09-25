@@ -22,6 +22,7 @@ import {
   discardGeneratorRun,
   hasPendingCommitDebt,
   stepLabel,
+  stepNoun,
 } from './state-machine';
 import { summarizeError } from './util';
 
@@ -75,15 +76,16 @@ export function cleanRetryUnavailableReason(
   head: string | null
 ): string {
   const endangered = endangeredLandedEntry(root, state, step);
+  const noun = stepNoun(step);
   if (endangered) {
     return endangered.sha
-      ? `this migration's changes already landed in commit ${endangered.sha}, which a reset would discard.`
-      : `this migration's changes already landed in a commit, which a reset would discard.`;
+      ? `this ${noun}'s changes already landed in commit ${endangered.sha}, which a reset would discard.`
+      : `this ${noun}'s changes already landed in a commit, which a reset would discard.`;
   }
   if (step.gitRefBefore && head !== step.gitRefBefore) {
     return `HEAD is at ${head ?? '(unreadable)'} rather than the ${
       step.gitRefBefore
-    } this migration started from, so a reset would discard what was committed in between.`;
+    } this ${noun} started from, so a reset would discard what was committed in between.`;
   }
   return `resetting the tree could discard uncommitted work that no restore point accounts for.`;
 }

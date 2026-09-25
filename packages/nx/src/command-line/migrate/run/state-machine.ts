@@ -228,7 +228,7 @@ function applyStepAction(
         if (commitMayBeInHistory(state, step)) {
           return {
             kind: 'error',
-            reason: `Cannot apply action '${action}' to step '${step.id}': a commit of its changes landed or was started and never recorded, so the migration may be committed. Use 'retry' to finish it, or 'adopt' to record it as applied.`,
+            reason: `Cannot apply action '${action}' to step '${step.id}': a commit of its changes landed or was started and never recorded, so the ${stepNoun(step)} may be committed. Use 'retry' to finish it, or 'adopt' to record it as applied.`,
           };
         }
         return commit(state, index, {
@@ -280,7 +280,7 @@ function applyStepAction(
         if (commitMayBeInHistory(state, step)) {
           return {
             kind: 'error',
-            reason: `Cannot apply action 'unresolved' to step '${step.id}': a commit of its changes landed or was started and never recorded, so the migration may be committed. Use 'adopt' to record it as applied.`,
+            reason: `Cannot apply action 'unresolved' to step '${step.id}': a commit of its changes landed or was started and never recorded, so the ${stepNoun(step)} may be committed. Use 'adopt' to record it as applied.`,
           };
         }
         // A death records no outcome, so the failure given up on is the death
@@ -323,7 +323,9 @@ function adopt(step: MigrateStep): MigrateStep {
 
 function adoptedSummary(step: MigrateStep): string {
   if (step.status === 'failed') {
-    return "Adopted after the attempt failed: the working tree as it stood was taken as this migration's result.";
+    return `Adopted after the attempt failed: the working tree as it stood was taken as this ${stepNoun(
+      step
+    )}'s result.`;
   }
   return step.generatorCompleted === true
     ? "Adopted after the worker died: its generator had run, and the working tree it left was taken as this migration's result."
@@ -697,6 +699,20 @@ function stepKindFields(step: MigrateStep): MigrateStepKindFields {
       return { kind: 'migration', migrationId: step.migrationId };
     case 'final-validation':
       return { kind: 'final-validation' };
+    default: {
+      const exhaustive: never = step;
+      throw new Error(`Unhandled step kind '${exhaustive}'.`);
+    }
+  }
+}
+
+// How prose about a step names it: "this migration", "the validation pass".
+export function stepNoun(step: MigrateStep): string {
+  switch (step.kind) {
+    case 'migration':
+      return 'migration';
+    case 'final-validation':
+      return 'validation pass';
     default: {
       const exhaustive: never = step;
       throw new Error(`Unhandled step kind '${exhaustive}'.`);

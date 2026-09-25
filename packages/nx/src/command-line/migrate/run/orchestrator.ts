@@ -121,6 +121,7 @@ import {
   markInstallFailed,
   commitNameForStep,
   stepLabel,
+  stepNoun,
   stepsToPendingMigrations,
   tallySteps,
   uncoveredFailedStepIds,
@@ -2440,20 +2441,6 @@ function emitRetryFailed(
 // rearms, whichever retry action produced them.
 function rearmCapReached(step: MigrateStep): boolean {
   return step.attempt - 1 >= REARM_ESCALATION_CAP;
-}
-
-// How the retry menu's prose names the step.
-function stepNoun(step: MigrateStep): string {
-  switch (step.kind) {
-    case 'migration':
-      return 'migration';
-    case 'final-validation':
-      return 'validation pass';
-    default: {
-      const exhaustive: never = step;
-      throw new Error(`Unrecognized step: ${JSON.stringify(exhaustive)}`);
-    }
-  }
 }
 
 function retryBudgetLine(step: MigrateStep, committed: boolean): string {
