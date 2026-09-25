@@ -1,3 +1,4 @@
+mod changed_contents;
 mod dependency_closure;
 pub mod dependent_outputs;
 mod plan_ids;

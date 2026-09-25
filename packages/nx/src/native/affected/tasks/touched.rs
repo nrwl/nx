@@ -6,13 +6,14 @@
 use rayon::prelude::*;
 use std::collections::{HashMap, HashSet};
 
+use super::changed_contents::ChangedContents;
 use super::dependent_outputs::is_path_prefix;
 use super::plan_ids::referenced_ids;
 use crate::native::affected::project_paths::ProjectRoots;
 use crate::native::glob::{build_glob_set, fileset_patterns, normalize_glob, partition_glob};
 use crate::native::project_graph::types::{ExternalNode, ProjectGraph};
 use crate::native::tasks::hashers::globs_from_workspace_globs;
-use crate::native::tasks::types::{HashInstruction, HashPlans};
+use crate::native::tasks::types::{HashInstruction, HashPlans, JsonFileSetInput};
 use crate::native::utils::path::normalize_js_path;
 
 /// The externals a change moved, as the matcher asks about them.
@@ -67,6 +68,7 @@ pub(crate) fn touched_tasks(
     changed_files: &[String],
     changed_project_configs: &[String],
     externals: &ChangedExternals,
+    contents: &ChangedContents,
 ) -> anyhow::Result<HashSet<String>> {
     let roots = ProjectRoots::new(graph);
     let changed = ChangedFiles::new(&roots, changed_files);
@@ -87,6 +89,7 @@ pub(crate) fn touched_tasks(
                 &changed,
                 &reconfigured,
                 externals,
+                contents,
             )
         })
         .collect::<anyhow::Result<_>>()?;
@@ -174,6 +177,7 @@ fn instruction_matches(
     changed: &ChangedFiles,
     reconfigured: &HashSet<&str>,
     externals: &ChangedExternals,
+    contents: &ChangedContents,
 ) -> anyhow::Result<bool> {
     // Scoped to one project, the way the hasher scopes the same globs with
     // project_file_map, or workspace-wide when there is no owner to match.
@@ -201,6 +205,14 @@ fn instruction_matches(
             let globs: Vec<String> = globs.iter().map(|glob| normalize_glob(glob)).collect();
             any_matching(&globs, None)
         }
+        // Filtered to some fields, it hashes only those, so an unrelated edit is not a change.
+        HashInstruction::JsonFileSet(json)
+            if json.fields.is_some() || json.exclude_fields.is_some() =>
+        {
+            Ok(json_files_in_diff(json, changed)?
+                .into_iter()
+                .any(|file| contents.json_file_changed(file, json)))
+        }
         HashInstruction::JsonFileSet(json) => match json.project_name.as_deref() {
             Some(project) => any_matching(std::slice::from_ref(&json.json_path), Some(project)),
             None => any_matching(
@@ -208,10 +220,13 @@ fn instruction_matches(
                 None,
             ),
         },
-        HashInstruction::TsConfiguration(_) => Ok(changed
+        // Also prefixed by the `typescript` node's hash, as the hasher looks it up.
+        HashInstruction::TsConfiguration(project) => Ok((changed
             .files
             .iter()
-            .any(|f| ROOT_TSCONFIG_FILES.contains(&f.as_str()))),
+            .any(|f| ROOT_TSCONFIG_FILES.contains(&f.as_str()))
+            && contents.ts_config_changed(project))
+            || externals.includes("typescript")),
         // Hashes the project's config object, which resolves to no files, so it
         // is matched on the config having changed rather than on a fileset. The
         // planner splices one of these per dependency, which is what carries a
@@ -228,9 +243,60 @@ fn instruction_matches(
     }
 }
 
+/// The changed files a `JsonFileSet` reads, matched as `collect_json_input_files` does.
+fn json_files_in_diff<'c>(
+    json: &JsonFileSetInput,
+    changed: &'c ChangedFiles,
+) -> anyhow::Result<Vec<&'c str>> {
+    let (globs, project) = match json.project_name.as_deref() {
+        Some(project) => (vec![json.json_path.clone()], Some(project)),
+        None => (
+            globs_from_workspace_globs(std::slice::from_ref(&json.json_path)),
+            None,
+        ),
+    };
+    let candidates = changed.candidates(project);
+    if globs.is_empty() || candidates.is_empty() {
+        return Ok(Vec::new());
+    }
+    let glob = build_glob_set(&globs)?;
+    Ok(candidates
+        .iter()
+        .map(|&index| changed.files[index].as_str())
+        .filter(|file| glob.is_match(file))
+        .collect())
+}
+
+/// The changed files some field-filtered `JsonFileSet` reads: the only ones
+/// whose contents are worth comparing between revisions.
+pub(crate) fn changed_json_files_read_by_fields(
+    graph: &ProjectGraph,
+    hash_plans: &HashPlans,
+    changed_files: &[String],
+) -> anyhow::Result<Vec<String>> {
+    let roots = ProjectRoots::new(graph);
+    let changed = ChangedFiles::new(&roots, changed_files);
+    let mut files: Vec<String> = Vec::new();
+    for id in referenced_ids(hash_plans) {
+        if let HashInstruction::JsonFileSet(json) = hash_plans.pool.get(id).value() {
+            if json.fields.is_some() || json.exclude_fields.is_some() {
+                files.extend(
+                    json_files_in_diff(json, &changed)?
+                        .into_iter()
+                        .map(String::from),
+                );
+            }
+        }
+    }
+    files.sort();
+    files.dedup();
+    Ok(files)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::native::affected::tasks::changed_contents::{JsonFileChange, TsConfigChange};
     use crate::native::tasks::types::InstructionPool;
     use crate::native::test_utils::{graph_of_roots as graph, hash_plans, strings};
     use std::sync::Arc;
@@ -273,7 +339,17 @@ mod tests {
         changed: &[&str],
     ) -> Vec<String> {
         let p = plans("a:build", instructions);
-        sorted(touched_tasks(g, &p, &strings(changed), &[], &no_externals()).unwrap())
+        sorted(
+            touched_tasks(
+                g,
+                &p,
+                &strings(changed),
+                &[],
+                &no_externals(),
+                &ChangedContents::default(),
+            )
+            .unwrap(),
+        )
     }
 
     fn sorted(touched: HashSet<String>) -> Vec<String> {
@@ -306,6 +382,7 @@ mod tests {
                 &[],
                 &[],
                 &ChangedExternals::new(&moved, &types, &g.external_nodes),
+                &ChangedContents::default(),
             )
             .unwrap(),
         )
@@ -636,11 +713,27 @@ mod tests {
         let config_a = strings(&["libs/a/project.json"]);
         let config_b = strings(&["libs/b/project.json"]);
 
-        let hit = touched_tasks(&g, &p, &config_a, &config_a, &no_externals()).unwrap();
+        let hit = touched_tasks(
+            &g,
+            &p,
+            &config_a,
+            &config_a,
+            &no_externals(),
+            &ChangedContents::default(),
+        )
+        .unwrap();
         assert_eq!(sorted(hit), strings(&["consumer:build"]));
 
         // Another project's config leaves it alone.
-        let miss = touched_tasks(&g, &p, &config_b, &config_b, &no_externals()).unwrap();
+        let miss = touched_tasks(
+            &g,
+            &p,
+            &config_b,
+            &config_b,
+            &no_externals(),
+            &ChangedContents::default(),
+        )
+        .unwrap();
         assert!(miss.is_empty());
 
         // A source file in the same project is not a config change, so this
@@ -651,6 +744,7 @@ mod tests {
             &strings(&["libs/a/src/index.ts"]),
             &[],
             &no_externals(),
+            &ChangedContents::default(),
         )
         .unwrap();
         assert!(source.is_empty());
@@ -673,7 +767,152 @@ mod tests {
             ]),
             deferred: Default::default(),
         };
-        let touched = touched_tasks(&g, &p, &strings(&["x.txt"]), &[], &no_externals()).unwrap();
+        let touched = touched_tasks(
+            &g,
+            &p,
+            &strings(&["x.txt"]),
+            &[],
+            &no_externals(),
+            &ChangedContents::default(),
+        )
+        .unwrap();
         assert_eq!(sorted(touched), strings(&["a:build", "m:build", "z:build"]));
+    }
+
+    fn json_input(fields: &[&str], exclude: &[&str]) -> HashInstruction {
+        HashInstruction::JsonFileSet(Box::new(JsonFileSetInput {
+            project_name: None,
+            json_path: "{workspaceRoot}/package.json".into(),
+            fields: (!fields.is_empty()).then(|| strings(fields)),
+            exclude_fields: (!exclude.is_empty()).then(|| strings(exclude)),
+        }))
+    }
+
+    fn touched_by_package_json(instruction: HashInstruction, changed_paths: &[&str]) -> bool {
+        let g = graph(&[("a", "libs/a")]);
+        let changes = [JsonFileChange {
+            file: "package.json".into(),
+            paths: Some(
+                changed_paths
+                    .iter()
+                    .map(|p| p.split('.').map(String::from).collect())
+                    .collect(),
+            ),
+        }];
+        let contents = ChangedContents::new(&g, Some(&changes), None);
+        !touched_tasks(
+            &g,
+            &plans("a:build", vec![instruction]),
+            &strings(&["package.json"]),
+            &[],
+            &no_externals(),
+            &contents,
+        )
+        .unwrap()
+        .is_empty()
+    }
+
+    #[test]
+    fn a_field_filtered_json_input_ignores_other_fields() {
+        assert!(!touched_by_package_json(
+            json_input(&["version"], &[]),
+            &["description"]
+        ));
+        assert!(touched_by_package_json(
+            json_input(&["version"], &[]),
+            &["version"]
+        ));
+        assert!(!touched_by_package_json(
+            json_input(&[], &["scripts"]),
+            &["scripts.test"]
+        ));
+        assert!(touched_by_package_json(
+            json_input(&[], &["scripts"]),
+            &["name"]
+        ));
+        // Unfiltered, it hashes the whole file.
+        assert!(touched_by_package_json(
+            json_input(&[], &[]),
+            &["description"]
+        ));
+    }
+
+    /// Only a file whose diff was supplied is judged by field.
+    #[test]
+    fn an_uncompared_json_file_counts_as_changed() {
+        let g = graph(&[("a", "libs/a")]);
+        let touched = touched_tasks(
+            &g,
+            &plans("a:build", vec![json_input(&["version"], &[])]),
+            &strings(&["package.json"]),
+            &[],
+            &no_externals(),
+            &ChangedContents::default(),
+        )
+        .unwrap();
+        assert_eq!(sorted(touched), strings(&["a:build"]));
+    }
+
+    #[test]
+    fn a_selectively_hashed_tsconfig_paths_change_touches_its_project_only() {
+        let g = graph(&[("a", "libs/a"), ("b", "libs/b")]);
+        let p = hash_plans(&[
+            (
+                "a:build",
+                vec![HashInstruction::TsConfiguration("a".into())],
+            ),
+            (
+                "b:build",
+                vec![HashInstruction::TsConfiguration("b".into())],
+            ),
+        ]);
+        let change = TsConfigChange {
+            rest_changed: false,
+            selective: true,
+            paths_before: HashMap::from([("@ws/a".into(), strings(&["libs/a/index.ts"]))]),
+            paths_after: HashMap::from([("@ws/a".into(), strings(&["libs/a/main.ts"]))]),
+        };
+        let contents = ChangedContents::new(&g, None, Some(&change));
+        let touched = touched_tasks(
+            &g,
+            &p,
+            &strings(&["tsconfig.base.json"]),
+            &[],
+            &no_externals(),
+            &contents,
+        )
+        .unwrap();
+        assert_eq!(sorted(touched), strings(&["a:build"]));
+    }
+
+    /// The hasher prefixes the tsconfig hash with the `typescript` node's.
+    #[test]
+    fn moving_typescript_touches_every_tsconfig_input() {
+        assert_eq!(
+            touched_for_externals(
+                vec![HashInstruction::TsConfiguration("a".into())],
+                &["typescript"],
+                &[]
+            ),
+            vec!["a:build"]
+        );
+    }
+
+    #[test]
+    fn only_field_filtered_json_inputs_ask_for_a_diff() {
+        let g = graph(&[("a", "libs/a")]);
+        let p = hash_plans(&[
+            ("a:build", vec![json_input(&["version"], &[])]),
+            ("a:test", vec![json_input(&[], &[])]),
+        ]);
+        assert_eq!(
+            changed_json_files_read_by_fields(
+                &g,
+                &p,
+                &strings(&["package.json", "libs/a/project.json"])
+            )
+            .unwrap(),
+            strings(&["package.json"])
+        );
     }
 }

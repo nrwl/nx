@@ -8,9 +8,10 @@ use std::sync::Arc;
 use std::time::Instant;
 use tracing::{debug, trace};
 
+use super::changed_contents::{ChangedContents, JsonFileChange, TsConfigChange};
 use super::dependency_closure::dependency_closure;
 use super::dependent_outputs::compute_dependent_output_edges;
-use super::touched::{ChangedExternals, touched_tasks};
+use super::touched::{ChangedExternals, changed_json_files_read_by_fields, touched_tasks};
 use crate::native::glob::build_glob_set;
 use crate::native::project_graph::types::ProjectGraph;
 use crate::native::tasks::types::{HashPlans, TaskGraph};
@@ -40,6 +41,11 @@ pub struct AffectedTasksOptions {
     /// The targets the command asked for. The graph also holds what they depend
     /// on, which carries a change but is only ever run as a dependency.
     pub targets: Vec<String>,
+    /// The field paths that changed in the files `jsonFilesReadByFields` named.
+    /// A file left out counts as changed as a whole.
+    pub json_changes: Option<Vec<JsonFileChange>>,
+    /// Set when a root tsconfig is in the diff.
+    pub ts_config_change: Option<TsConfigChange>,
 }
 
 #[napi(object)]
@@ -65,6 +71,22 @@ pub fn affected_tasks(
         &task_graph,
         &changed_files,
         &options,
+    )?)
+}
+
+/// The changed files some field-filtered JSON input reads, so only those are
+/// read at both revisions and diffed.
+#[napi]
+pub fn json_files_read_by_fields(
+    project_graph: &External<Arc<ProjectGraph>>,
+    #[napi(ts_arg_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
+    hash_plans: &External<HashPlans>,
+    changed_files: Vec<String>,
+) -> Result<Vec<String>> {
+    Ok(changed_json_files_read_by_fields(
+        project_graph,
+        hash_plans,
+        &changed_files,
     )?)
 }
 
@@ -142,7 +164,19 @@ fn reached_by_change(
         &options.changed_external_types,
         &graph.external_nodes,
     );
-    let mut touched = touched_tasks(graph, hash_plans, changed_files, configs, &externals)?;
+    let contents = ChangedContents::new(
+        graph,
+        options.json_changes.as_deref(),
+        options.ts_config_change.as_ref(),
+    );
+    let mut touched = touched_tasks(
+        graph,
+        hash_plans,
+        changed_files,
+        configs,
+        &externals,
+        &contents,
+    )?;
     touched.extend(
         options
             .always_touched_task_ids
@@ -270,6 +304,8 @@ mod tests {
             changed_external_types: vec![],
             excluded_projects: vec![],
             targets: strings(&["build", "serve", "e2e"]),
+            json_changes: None,
+            ts_config_change: None,
         }
     }
 
