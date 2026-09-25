@@ -14,5 +14,11 @@ const { mkdtempSync, rmSync } = require('node:fs');
 if (!process.env.NX_WORKSPACE_DATA_DIRECTORY) {
   const dir = mkdtempSync(join(tmpdir(), 'nx-devkit-spec-workspace-data-'));
   process.env.NX_WORKSPACE_DATA_DIRECTORY = dir;
-  process.on('exit', () => rmSync(dir, { recursive: true, force: true }));
+  const cleanup = () => rmSync(dir, { recursive: true, force: true });
+  process.on('exit', cleanup);
+  // Vitest stops its forks with SIGTERM, which skips 'exit' handlers.
+  process.once('SIGTERM', () => {
+    cleanup();
+    process.kill(process.pid, 'SIGTERM');
+  });
 }
