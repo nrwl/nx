@@ -148,11 +148,12 @@ describe('exec gradle', () => {
 
 describe('execGradleAsync', () => {
   afterEach(() => {
+    vi.doUnmock('@nx/devkit/internal');
     vi.resetModules();
     vi.restoreAllMocks();
   });
 
-  function loadWithMockedSpawn() {
+  async function loadWithMockedSpawn() {
     let captured: any;
     vi.doMock('@nx/devkit/internal', async () => ({
       ...(await vi.importActual<any>('@nx/devkit/internal')),
@@ -167,14 +168,14 @@ describe('execGradleAsync', () => {
         return cp;
       }),
     }));
-    const { execGradleAsync } = require('./exec-gradle');
+    const { execGradleAsync } = await import('./exec-gradle');
     return { execGradleAsync, getCaptured: () => captured };
   }
 
   // NXC-4659: gradle plugin options are interpolated into `-Pkey=value`, so a
   // shell here would make nx.json command-injectable.
   it('should pass args literally without a shell', async () => {
-    const { execGradleAsync, getCaptured } = loadWithMockedSpawn();
+    const { execGradleAsync, getCaptured } = await loadWithMockedSpawn();
     const malicious = '-PtargetNamePrefix=x; touch /tmp/pwned';
 
     await execGradleAsync('/ws/gradlew', ['nxProjectGraph', malicious]);
@@ -200,7 +201,7 @@ describe('execGradleAsync', () => {
         return cp;
       }),
     }));
-    const { execGradleAsync } = require('./exec-gradle');
+    const { execGradleAsync } = await import('./exec-gradle');
 
     await expect(
       execGradleAsync('/ws/gradlew', ['nxProjectGraph'])
@@ -224,7 +225,7 @@ describe('execGradleAsync', () => {
       }),
       killProcessTreeGraceful,
     }));
-    const { execGradleAsync } = require('./exec-gradle');
+    const { execGradleAsync } = await import('./exec-gradle');
 
     const controller = new AbortController();
     const promise = execGradleAsync('/ws/gradlew', ['nxProjectGraph'], {
@@ -252,7 +253,7 @@ describe('execGradleAsync', () => {
       }),
       killChildOnHostExit,
     }));
-    const { execGradleAsync } = require('./exec-gradle');
+    const { execGradleAsync } = await import('./exec-gradle');
 
     await execGradleAsync('/ws/gradlew', ['nxProjectGraph']);
 
@@ -260,7 +261,7 @@ describe('execGradleAsync', () => {
   });
 
   it('should drop empty args the shell used to swallow', async () => {
-    const { execGradleAsync, getCaptured } = loadWithMockedSpawn();
+    const { execGradleAsync, getCaptured } = await loadWithMockedSpawn();
 
     await execGradleAsync('/ws/gradlew', ['nxProjectGraph', '']);
 
