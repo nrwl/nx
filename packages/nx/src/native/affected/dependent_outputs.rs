@@ -12,7 +12,7 @@ use tracing::{debug, trace};
 
 use crate::native::affected::dependency_closure::walk_dependencies;
 use crate::native::affected::plan_ids::referenced_ids;
-use crate::native::glob::{literal_segment, normalize_glob, partition_glob};
+use crate::native::glob::{normalize_glob, parse_glob, partition_glob};
 use crate::native::tasks::types::{HashInstruction, HashPlans, TaskGraph};
 
 /// Consumer task id -> the upstream task ids whose declared outputs it reads.
@@ -174,15 +174,9 @@ struct GlobShape {
 impl GlobShape {
     fn new(glob: &str) -> Self {
         let glob = normalize_glob(glob);
-        let last_segment = glob.rsplit('/').next().unwrap_or(&glob);
-        let extension = if literal_segment(last_segment).is_some() {
-            None
-        } else {
-            literal_extension(&glob).map(str::to_string)
-        };
         Self {
             prefix: partition_glob(&glob).0,
-            extension,
+            extension: extension_after_wildcard(&glob),
         }
     }
 
@@ -206,16 +200,17 @@ impl GlobShape {
     }
 }
 
-/// The literal extension a pattern's last segment ends in: `js` for
-/// `dist/**/*.js`. None when there is no extension, the extension is not
-/// plain text, or the segment has a brace or group the `.` may sit inside.
-fn literal_extension(pattern: &str) -> Option<&str> {
-    let segment = pattern.rsplit('/').next().unwrap_or(pattern);
-    if segment.contains(['{', '(']) {
+/// The extension every match of `glob` ends in: `js` for `dist/**/*.js`. None
+/// unless the last segment has a wildcard and ends in literal `.ext`: a literal
+/// segment may be a folder, `dist/lib.v2`, and `*.{js,ts}` has no single one.
+fn extension_after_wildcard(glob: &str) -> Option<String> {
+    let (_, segments) = parse_glob(glob).ok()?;
+    let last = segments.last()?;
+    if last.iter().all(|group| group.literal_text().is_some()) {
         return None;
     }
-    let ext = segment.rsplit_once('.')?.1;
-    (!ext.is_empty() && literal_segment(ext).as_deref() == Some(ext)).then_some(ext)
+    let (_, extension) = last.last()?.literal_text()?.rsplit_once('.')?;
+    (!extension.is_empty()).then(|| extension.to_string())
 }
 
 /// Segment-wise, so `dist/libs/ui` does not contain `dist/libs/ui-legacy` the
@@ -696,14 +691,18 @@ mod tests {
     }
 
     #[test]
-    fn literal_extension_reads_only_a_fixed_suffix() {
-        assert_eq!(literal_extension("dist/**/*.js"), Some("js"));
-        assert_eq!(literal_extension("**/*.gen"), Some("gen"));
-        assert_eq!(literal_extension("dist/out.d.ts"), Some("ts"));
-        assert_eq!(literal_extension("dist/libs/ui"), None);
-        assert_eq!(literal_extension("dist/**"), None);
-        assert_eq!(literal_extension("dist/*.{js,ts}"), None);
-        assert_eq!(literal_extension("**/*.{js,d.ts}"), None);
+    fn an_extension_is_read_only_after_a_wildcard() {
+        let ext = |glob| extension_after_wildcard(glob);
+        assert_eq!(ext("dist/**/*.js"), Some("js".into()));
+        assert_eq!(ext("**/*.gen"), Some("gen".into()));
+        assert_eq!(ext("dist/*.d.ts"), Some("ts".into()));
+        assert_eq!(ext("dist/@(a|b).js"), Some("js".into()));
+        assert_eq!(ext("dist/out.d.ts"), None);
+        assert_eq!(ext("dist/libs/ui"), None);
+        assert_eq!(ext("dist/**"), None);
+        assert_eq!(ext("dist/*.{js,ts}"), None);
+        assert_eq!(ext("**/*.{js,d.ts}"), None);
+        assert_eq!(ext("dist/*.[jt]s"), None);
     }
 
     /// The prefix comes from the glob parser, so an escaped bracket is part of
