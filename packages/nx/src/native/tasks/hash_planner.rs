@@ -127,8 +127,8 @@ pub struct HashPlanner {
     project_by_root: OnceLock<HashMap<String, String>>,
     /// Interner backing every plan this planner produces.
     instruction_pool: Arc<InstructionPool>,
-    /// Whole-task plans from the last call without snapshots, reused while
-    /// the task graph around them is unchanged.
+    /// Whole-task plans from earlier calls, reused while the task graph
+    /// around them and the snapshot set are unchanged.
     plan_memo: PlanMemo,
 }
 
@@ -277,11 +277,20 @@ impl HashPlanner {
         custom_hasher_task_ids: &[String],
     ) -> anyhow::Result<HashPlans> {
         let function_start = std::time::Instant::now();
+        let memo = self.plan_memo.begin(
+            &task_graph,
+            snapshots.map(|snapshots| {
+                let resolution = snapshots.resolution_ref();
+                (resolution.requested_commit.clone(), resolution.fetched_at)
+            }),
+            custom_hasher_task_ids,
+        );
+        let to_plan = memo.missing(&task_ids);
         let snapshot_tasks = snapshots.map(|snapshots| {
             // Continuous dependencies are planned into their dependents, so
             // their entries are needed too.
-            let mut scope: Vec<&str> = task_ids.clone();
-            for id in &task_ids {
+            let mut scope: Vec<&str> = to_plan.clone();
+            for id in &to_plan {
                 scope.extend(
                     collect_continuous_dependencies(&task_graph, id)
                         .iter()
@@ -309,15 +318,6 @@ impl HashPlanner {
         let setup_duration = function_start.elapsed();
 
         trace!("External deps setup completed in {:?}", setup_duration);
-
-        // Snapshot plans depend on the snapshot set too, so they are neither
-        // reused nor kept.
-        let memo = snapshots
-            .is_none()
-            .then(|| self.plan_memo.begin(&task_graph));
-        let to_plan = memo
-            .as_ref()
-            .map_or_else(|| task_ids.clone(), |memo| memo.missing(&task_ids));
 
         let pool = &self.instruction_pool;
         let parallel_start = std::time::Instant::now();
@@ -454,10 +454,7 @@ impl HashPlanner {
             );
         }
 
-        let result = match memo {
-            Some(memo) => result.map(|planned| memo.finish(planned, &task_ids)),
-            None => result,
-        };
+        let result = result.map(|planned| memo.finish(planned, &task_ids));
         result.map(|plans| {
             let deferred = deferred_tasks(&plans, pool, &task_graph);
             HashPlans {
@@ -2480,7 +2477,7 @@ mod plan_memo_tests {
         assert!(
             reused
                 .plan_memo
-                .begin(&graph(&["dist/lib"]))
+                .begin(&graph(&["dist/lib"]), None, &[])
                 .missing(&["app:build"])
                 .is_empty()
         );

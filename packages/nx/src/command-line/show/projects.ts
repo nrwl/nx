@@ -56,6 +56,9 @@ export async function showProjectsHandler(
           head: nxArgs.head,
           files: nxArgs.files,
         },
+        ioSnapshotOutcome: await (
+          require('../../tasks-runner/run-command') as typeof import('../../tasks-runner/run-command')
+        ).loadIoSnapshotsForCommand(nxArgs, nxJson),
       });
       const { taskGraph, initiatingTaskIds } = affectedTasks.taskSelection;
       const owning = new Set(

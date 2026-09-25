@@ -1,11 +1,12 @@
 //! Whole-task plans kept between `get_plans` calls on one planner. A plan
-//! reads its task's target, outputs and edges and those of everything it
-//! depends on, so a plan stays valid while none of those changed.
+//! reads its task's target, outputs, edges and snapshot eligibility and those
+//! of everything it depends on, plus the snapshot set, so it stays valid while
+//! none of those changed.
 
 use std::collections::{HashMap, HashSet};
 use std::sync::{Mutex, MutexGuard};
 
-use crate::native::tasks::types::{TaskGraph, TaskTarget};
+use crate::native::tasks::types::{TaskGraph, TaskTarget, TaskUltracacheConfiguration};
 
 #[derive(Default)]
 pub(super) struct PlanMemo {
@@ -15,6 +16,8 @@ pub(super) struct PlanMemo {
 /// Invariant: every task in `plans` has its closure described by `tasks`, as
 /// it was when the plan was made.
 struct Recorded {
+    /// The snapshot set's commit and fetch time; plans made against another are dropped.
+    snapshots: Option<(String, i64)>,
     tasks: HashMap<String, PlannedTask>,
     plans: HashMap<String, Vec<u32>>,
 }
@@ -26,25 +29,31 @@ struct PlannedTask {
     outputs: Vec<String>,
     dependencies: Vec<String>,
     continuous_dependencies: Vec<String>,
+    ultracache: Option<TaskUltracacheConfiguration>,
+    custom_hasher: bool,
 }
 
 impl PlannedTask {
-    fn of(task_graph: &TaskGraph, id: &str) -> Option<Self> {
+    fn of(task_graph: &TaskGraph, custom_hasher: &HashSet<&str>, id: &str) -> Option<Self> {
         let task = task_graph.tasks.get(id)?;
         Some(Self {
             target: task.target.clone(),
             outputs: task.outputs.clone(),
             dependencies: edges(&task_graph.dependencies, id).to_vec(),
             continuous_dependencies: edges(&task_graph.continuous_dependencies, id).to_vec(),
+            ultracache: task.ultracache.clone(),
+            custom_hasher: custom_hasher.contains(id),
         })
     }
 
-    fn matches(&self, task_graph: &TaskGraph, id: &str) -> bool {
+    fn matches(&self, task_graph: &TaskGraph, custom_hasher: &HashSet<&str>, id: &str) -> bool {
         task_graph.tasks.get(id).is_some_and(|task| {
             self.target == task.target
                 && self.outputs == task.outputs
                 && self.dependencies == edges(&task_graph.dependencies, id)
                 && self.continuous_dependencies == edges(&task_graph.continuous_dependencies, id)
+                && self.ultracache == task.ultracache
+                && self.custom_hasher == custom_hasher.contains(id)
         })
     }
 }
@@ -55,15 +64,30 @@ fn edges<'a>(edges: &'a HashMap<String, Vec<String>>, id: &str) -> &'a [String] 
 
 impl PlanMemo {
     /// Holds the memo for one planning call, with every plan that no longer
-    /// holds for `task_graph` dropped.
-    pub(super) fn begin(&self, task_graph: &TaskGraph) -> PlanMemoGuard<'_> {
+    /// holds for `task_graph` under `snapshots` dropped. `custom_hasher` are
+    /// the tasks snapshot eligibility withholds.
+    pub(super) fn begin(
+        &self,
+        task_graph: &TaskGraph,
+        snapshots: Option<(String, i64)>,
+        custom_hasher: &[String],
+    ) -> PlanMemoGuard<'_> {
         let mut recorded = self.recorded.lock().expect("plan memo lock");
-        recorded
-            .get_or_insert_with(|| Recorded {
+        if recorded
+            .as_ref()
+            .is_none_or(|recorded| recorded.snapshots != snapshots)
+        {
+            *recorded = Some(Recorded {
+                snapshots,
                 tasks: HashMap::new(),
                 plans: HashMap::new(),
-            })
-            .forget_what_changed(task_graph);
+            });
+        }
+        let custom_hasher: HashSet<&str> = custom_hasher.iter().map(String::as_str).collect();
+        recorded
+            .as_mut()
+            .expect("just set")
+            .forget_what_changed(task_graph, &custom_hasher);
         PlanMemoGuard { recorded }
     }
 }
@@ -103,7 +127,7 @@ impl PlanMemoGuard<'_> {
 impl Recorded {
     /// Brings `tasks` up to `task_graph` and drops every plan that no longer
     /// holds for it, keeping the invariant.
-    fn forget_what_changed(&mut self, task_graph: &TaskGraph) {
+    fn forget_what_changed(&mut self, task_graph: &TaskGraph, custom_hasher: &HashSet<&str>) {
         let changed: Vec<&str> = task_graph
             .tasks
             .keys()
@@ -112,11 +136,11 @@ impl Recorded {
                 !self
                     .tasks
                     .get(*id)
-                    .is_some_and(|recorded| recorded.matches(task_graph, id))
+                    .is_some_and(|recorded| recorded.matches(task_graph, custom_hasher, id))
             })
             .collect();
         for id in &changed {
-            if let Some(task) = PlannedTask::of(task_graph, id) {
+            if let Some(task) = PlannedTask::of(task_graph, custom_hasher, id) {
                 self.tasks.insert(id.to_string(), task);
             }
         }
@@ -166,8 +190,17 @@ mod tests {
 
     /// Plans every task of `graph` and returns which ones were planned.
     fn plan_all(memo: &PlanMemo, graph: &TaskGraph) -> Vec<String> {
+        plan_all_under(memo, graph, None, &[])
+    }
+
+    fn plan_all_under(
+        memo: &PlanMemo,
+        graph: &TaskGraph,
+        snapshots: Option<(String, i64)>,
+        custom_hasher: &[String],
+    ) -> Vec<String> {
         let ids: Vec<&str> = graph.tasks.keys().map(String::as_str).collect();
-        let guard = memo.begin(graph);
+        let guard = memo.begin(graph, snapshots, custom_hasher);
         let mut missing = guard.missing(&ids);
         let planned = missing.iter().map(|id| (id.to_string(), vec![0])).collect();
         guard.finish(planned, &ids);
@@ -252,8 +285,31 @@ mod tests {
     fn only_the_requested_plans_are_returned() {
         let memo = PlanMemo::default();
         plan_all(&memo, &graph());
-        let plans = memo.begin(&graph()).finish(HashMap::new(), &["app:build"]);
+        let plans = memo
+            .begin(&graph(), None, &[])
+            .finish(HashMap::new(), &["app:build"]);
         assert_eq!(plans.keys().collect::<Vec<_>>(), ["app:build"]);
+    }
+
+    #[test]
+    fn another_snapshot_set_replans_everything() {
+        let memo = PlanMemo::default();
+        let set = |fetched_at| Some(("abc".to_string(), fetched_at));
+        plan_all_under(&memo, &graph(), set(1), &[]);
+        assert!(plan_all_under(&memo, &graph(), set(1), &[]).is_empty());
+        assert_eq!(plan_all_under(&memo, &graph(), set(2), &[]).len(), 4);
+        assert_eq!(plan_all(&memo, &graph()).len(), 4);
+    }
+
+    /// A custom hasher withholds the task's snapshot, so its plan and its dependents' differ.
+    #[test]
+    fn a_task_gaining_a_custom_hasher_replans_it_and_its_dependents() {
+        let memo = PlanMemo::default();
+        plan_all(&memo, &graph());
+        assert_eq!(
+            plan_all_under(&memo, &graph(), None, &["app:build".to_string()]),
+            ["app:build", "app:test"]
+        );
     }
 
     #[test]

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // getProjectGlobPatterns reads these from the plugins' recorded capabilities.
 vi.mock('../plugins/get-plugins', () => ({
@@ -34,6 +34,10 @@ import { ProjectGraphError } from '../error-types';
 import type { ProjectGraph } from '../../config/project-graph';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { pruneToSelectedTasks } from '../../tasks-runner/utils';
+import { connectToNxDb, IoSnapshotStore } from '../../native';
+import { mkdtempSync, rmSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
 
 /**
  * `app` depends on `lib`. Both roots are real directories in this repo, because
@@ -391,6 +395,47 @@ describe('the run graph with --exclude-task-dependencies', () => {
   });
 });
 
+describe('selection with an I/O snapshot set', () => {
+  let dir: string;
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), 'affected-io-snapshots-'));
+  });
+  afterEach(() => rmSync(dir, { recursive: true, force: true }));
+
+  // The run hashes lib:test from what it read, so a change to a file it read
+  // but never declared has to select it.
+  it('selects a task through a file it read but did not declare', async () => {
+    const commit = 'head'.padEnd(40, '0');
+    const db = connectToNxDb(dir, 'io-snapshots');
+    new IoSnapshotStore(db).import({
+      requestedCommit: commit,
+      snapshotsJson: JSON.stringify({
+        'lib:test': { commit, inputs: ['docs/README.md'], outputs: [] },
+      }),
+    });
+    const snapshots = new IoSnapshotStore(db).get(commit);
+    const select = (ioSnapshotOutcome?: any) =>
+      computeAffectedTasks({
+        projectGraph: graph(),
+        nxJson: {
+          namedInputs: { production: ['{projectRoot}/src/**/*'] },
+        } as any,
+        targets: ['test'],
+        touchedFiles: [
+          { file: 'docs/README.md', getChanges: () => [new WholeFileChange()] },
+        ] as any,
+        ioSnapshotOutcome,
+      });
+
+    expect([...(await select()).affectedTaskIds]).toEqual([]);
+    const outcome = { status: 'fetched', snapshots };
+    const withSnapshots = await select(outcome);
+    expect([...withSnapshots.affectedTaskIds]).toEqual(['lib:test']);
+    // The run hashes with the same set rather than loading its own.
+    expect(withSnapshots.taskSelection.ioSnapshotOutcome).toBe(outcome);
+  });
+});
+
 describe('tasks with a custom hasher', () => {
   afterEach(() => customHashers.clear());
 
@@ -403,6 +448,39 @@ describe('tasks with a custom hasher', () => {
 
 describe('computeAffectedTasks with the daemon on', () => {
   beforeEach(() => vi.clearAllMocks());
+
+  // The daemon resolves the same stored version, so it selects as the run hashes.
+  it('sends the snapshot version and keeps the loaded set for the run', async () => {
+    daemon.enabled.mockReturnValueOnce(true);
+    const empty = {
+      roots: [],
+      tasks: {},
+      dependencies: {},
+      continuousDependencies: {},
+    };
+    daemon.selectAffectedTasks.mockResolvedValueOnce({
+      projectGraph: graph(),
+      affectedTaskIds: [],
+      taskGraph: empty,
+      taskSelection: { taskGraph: empty, initiatingTaskIds: [], taskIds: [] },
+    });
+    const outcome = {
+      status: 'cached',
+      snapshots: { commit: 'abc', resolution: { fetchedAt: 7 } },
+    } as any;
+
+    const result = await computeAffectedTasks({
+      nxJson: {} as any,
+      targets: ['test'],
+      touchedFiles: [],
+      ioSnapshotOutcome: outcome,
+    });
+
+    const [request] = daemon.selectAffectedTasks.mock.calls[0];
+    expect(request.ioSnapshots).toEqual({ commit: 'abc', fetchedAt: 7 });
+    expect(JSON.parse(JSON.stringify(request))).toEqual(request);
+    expect(result.taskSelection.ioSnapshotOutcome).toBe(outcome);
+  });
 
   it('asks the daemon to select, sending the request as plain data', async () => {
     daemon.enabled.mockReturnValueOnce(true);

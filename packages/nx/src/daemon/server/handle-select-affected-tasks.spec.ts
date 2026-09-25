@@ -28,6 +28,9 @@ vi.mock('../../config/configuration', () => ({ readNxJson: () => ({}) }));
 const planningContext = vi.hoisted(() => ({}));
 const planningContextFor = vi.hoisted(() => vi.fn(() => planningContext));
 vi.mock('./planning-context', () => ({ planningContextFor }));
+const snapshots = vi.hoisted(() => ({}));
+const getIoSnapshotsForVersion = vi.hoisted(() => vi.fn(() => snapshots));
+vi.mock('./io-snapshots-state', () => ({ getIoSnapshotsForVersion }));
 const selectAffectedTasks = vi.hoisted(() =>
   vi.fn(async () => state.selection)
 );
@@ -62,6 +65,15 @@ describe('handleSelectAffectedTasks', () => {
       {}
     );
     expect(selectAffectedTasks.mock.calls[0][2]).toBe(planningContext);
+  });
+
+  // The run hashes with this version, so selection plans with it too.
+  it('plans with the snapshot version the client sent', async () => {
+    const version = { commit: 'abc', fetchedAt: 7 };
+    await handleSelectAffectedTasks({ ...request, ioSnapshots: version });
+
+    expect(getIoSnapshotsForVersion).toHaveBeenCalledWith(version);
+    expect(selectAffectedTasks.mock.calls[0][6]).toBe(snapshots);
   });
 
   it('fails with the graph error rather than selecting', async () => {

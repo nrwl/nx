@@ -1,5 +1,6 @@
 import { calculateFileChanges } from '../../project-graph/file-utils';
 import {
+  loadIoSnapshotsForCommand,
   runCommand,
   selectTasksForProjects,
 } from '../../tasks-runner/run-command';
@@ -87,6 +88,7 @@ export async function affected(
       extraTargetDependencies,
       excludeTaskDependencies: extraOptions.excludeTaskDependencies,
       exclude: nxArgs.exclude,
+      ioSnapshotOutcome: await loadIoSnapshotsForCommand(nxArgs, nxJson),
     }));
   } else {
     projectGraph = await createProjectGraphAsync({ exitOnError: true });

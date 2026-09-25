@@ -2,7 +2,14 @@ import { NxJsonConfiguration, TargetDependencies } from '../../config/nx-json';
 import { ProjectGraph } from '../../config/project-graph';
 import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { TaskGraph } from '../../config/task-graph';
-import { affectedTasks as nativeAffectedTasks } from '../../native';
+import {
+  affectedTasks as nativeAffectedTasks,
+  type IoSnapshots,
+} from '../../native';
+import { applyIoSnapshotOutputs } from '../../io-snapshots/outputs';
+import { ioSnapshotEligibilityOptions } from '../../io-snapshots/overrides';
+import { snapshotsOf, type IoSnapshotOutcome } from '../../io-snapshots/store';
+import type { IoSnapshotVersion } from '../../daemon/message-types/io-snapshot-version';
 import {
   createTaskGraph,
   createTaskGraphWithDependencyOverrides,
@@ -77,6 +84,8 @@ export interface ComputeAffectedTasksOptions {
   /** `--exclude` project patterns. Their tasks leave the selection but still carry a change and run as dependencies. */
   exclude?: string[];
   packageJson?: any;
+  /** This command's I/O snapshot set. Selection plans with it, as the run hashes with it. */
+  ioSnapshotOutcome?: IoSnapshotOutcome | null;
 }
 
 export type FileChangeArgs = Pick<NxArgs, 'base' | 'head' | 'files'>;
@@ -95,6 +104,7 @@ export interface AffectedTasksRequest {
   extraTargetDependencies: TargetDependencies;
   excludeTaskDependencies: boolean;
   exclude: string[];
+  ioSnapshots?: IoSnapshotVersion;
 }
 
 /**
@@ -118,6 +128,13 @@ export async function computeAffectedTasks(
     excludeTaskDependencies: opts.excludeTaskDependencies ?? false,
     exclude: opts.exclude ?? [],
   };
+  const ioSnapshots = snapshotsOf(opts.ioSnapshotOutcome ?? null);
+  if (ioSnapshots) {
+    request.ioSnapshots = {
+      commit: ioSnapshots.commit,
+      fetchedAt: ioSnapshots.resolution.fetchedAt,
+    };
+  }
 
   if (!isOnDaemon() && daemonClient.enabled()) {
     try {
@@ -125,6 +142,10 @@ export async function computeAffectedTasks(
       return {
         ...selection,
         affectedTaskIds: new Set(selection.affectedTaskIds),
+        taskSelection: {
+          ...selection.taskSelection,
+          ioSnapshotOutcome: opts.ioSnapshotOutcome,
+        },
       };
     } catch (e) {
       if (e?.name === DaemonProjectGraphError.name) {
@@ -145,14 +166,19 @@ export async function computeAffectedTasks(
     planningContext,
     request,
     opts.touchedFiles,
-    opts.packageJson
+    opts.packageJson,
+    ioSnapshots
   );
   return {
     projectGraph,
     affectedTaskIds: selection.affectedTaskIds,
     taskGraph: selection.taskGraph,
-    // The planner remembers what selection planned, so the run's hashing reuses it.
-    taskSelection: { ...selection.taskSelection, planningContext },
+    taskSelection: {
+      ...selection.taskSelection,
+      // The planner remembers what selection planned, so the run's hashing reuses it.
+      planningContext,
+      ioSnapshotOutcome: opts.ioSnapshotOutcome,
+    },
   };
 }
 
@@ -170,7 +196,8 @@ export async function selectAffectedTasks(
     request.changedFiles,
     request.fileChangeArgs as NxArgs
   ),
-  packageJson?: any
+  packageJson?: any,
+  ioSnapshots?: IoSnapshots
 ): Promise<{
   affectedTaskIds: Set<string>;
   taskGraph: TaskGraph;
@@ -207,7 +234,18 @@ export async function selectAffectedTasks(
       false
     );
   const taskIds = Object.keys(taskGraph.tasks);
-  const plans = planningContext.planner.getPlansReference(taskIds, taskGraph);
+  // As the run hashes: observed outputs carry output reads, observed inputs match changes.
+  if (ioSnapshots) {
+    applyIoSnapshotOutputs(projectGraph, taskGraph, ioSnapshots);
+  }
+  const plans = ioSnapshots
+    ? planningContext.planner.getPlansReference(
+        taskIds,
+        taskGraph,
+        ioSnapshots,
+        ioSnapshotEligibilityOptions(projectGraph, taskGraph)
+      )
+    : planningContext.planner.getPlansReference(taskIds, taskGraph);
 
   const dependencies = dependencyChanges(
     projectGraph,

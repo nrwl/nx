@@ -4,6 +4,7 @@ import {
   selectAffectedTasks,
 } from '../../project-graph/affected/affected-tasks';
 import type { SelectAffectedTasksResponse } from '../message-types/select-affected-tasks';
+import { getIoSnapshotsForVersion } from './io-snapshots-state';
 import { planningContextFor } from './planning-context';
 import { getCachedSerializedProjectGraphPromise } from './project-graph-incremental-recomputation';
 import type { HandlerResult } from './server';
@@ -22,7 +23,10 @@ export async function handleSelectAffectedTasks(
     projectGraph,
     nxJson,
     planningContextFor(projectGraph, nxJson),
-    request
+    request,
+    undefined,
+    undefined,
+    getIoSnapshotsForVersion(request.ioSnapshots)
   );
 
   const response: SelectAffectedTasksResponse = {

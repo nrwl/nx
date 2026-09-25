@@ -75,6 +75,8 @@ export interface TaskSelection {
   taskIds?: string[];
   /** The planner selection used. It remembers those plans, so hashing the run reuses them. */
   planningContext?: TaskPlanningContext;
+  /** The I/O snapshot set selection planned with; the run hashes with the same one. */
+  ioSnapshotOutcome?: IoSnapshotOutcome | null;
 }
 import { isTuiEnabled, ORIGINAL_TUI_ENV_VALUE } from './is-tui-enabled';
 import {
@@ -652,6 +654,7 @@ export async function runTasksForCommand(
       initiatingProject,
       initiatingTasks,
       planningContext: taskSelection.planningContext,
+      ioSnapshotOutcome: taskSelection.ioSnapshotOutcome,
     });
 
     await renderIsDone.finally(() => restoreTerminal?.());
@@ -1042,6 +1045,7 @@ export async function invokeTasksRunner({
   initiatingProject,
   initiatingTasks,
   planningContext,
+  ioSnapshotOutcome: loadedIoSnapshotOutcome,
 }: {
   tasks: Task[];
   projectGraph: ProjectGraph;
@@ -1053,6 +1057,8 @@ export async function invokeTasksRunner({
   initiatingProject: string | null;
   initiatingTasks: Task[];
   planningContext?: TaskPlanningContext;
+  /** Already loaded for this command; `undefined` loads it here. */
+  ioSnapshotOutcome?: IoSnapshotOutcome | null;
 }): Promise<{ [id: string]: TaskResult }> {
   setEnvVarsBasedOnArgs(nxArgs, loadDotEnvFiles);
 
@@ -1063,7 +1069,10 @@ export async function invokeTasksRunner({
 
   // Must precede hashing: the set is the snapshot source for task hashes,
   // and observed outputs join the task outputs the hasher and cache see.
-  const ioSnapshotOutcome = await loadIoSnapshotsForRun(nxJson, runnerOptions);
+  const ioSnapshotOutcome =
+    loadedIoSnapshotOutcome !== undefined
+      ? loadedIoSnapshotOutcome
+      : await loadIoSnapshotsForRun(nxJson, runnerOptions);
   const ioSnapshots = snapshotsOf(ioSnapshotOutcome);
   if (ioSnapshots) {
     applyIoSnapshotOutputs(projectGraph, taskGraph, ioSnapshots);
@@ -1297,6 +1306,14 @@ function reportIoSnapshots(
     outcome.status
   );
   output.note({ title: summary.line, bodyLines: summary.bodyLines });
+}
+
+/** This command's I/O snapshot set, loaded once for selection and the run alike. */
+export async function loadIoSnapshotsForCommand(
+  nxArgs: NxArgs,
+  nxJson: NxJsonConfiguration
+): Promise<IoSnapshotOutcome | null> {
+  return loadIoSnapshotsForRun(nxJson, getRunner(nxArgs, nxJson).runnerOptions);
 }
 
 export function getRunner(
