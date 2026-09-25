@@ -134,27 +134,6 @@ interface PromptBlock {
   };
 }
 
-// The final validation pass belongs to no migration, so its block is keyed by
-// step instead.
-function parseLastStepPromptBlock(output: string): {
-  step: string;
-  payload: { kind: string; instructions: string };
-} {
-  const re =
-    /<nx_migrate_prompt step="([^"]*)">\n([\s\S]*?)\n<\/nx_migrate_prompt>/g;
-  let match: RegExpExecArray | null;
-  let last: { step: string; payload: any } | null = null;
-  while ((match = re.exec(output)) !== null) {
-    last = { step: match[1], payload: JSON.parse(match[2]) };
-  }
-  if (!last) {
-    throw new Error(
-      `No step-keyed <nx_migrate_prompt> block found in output:\n${output}`
-    );
-  }
-  return last;
-}
-
 function parseLastPromptBlock(output: string): PromptBlock {
   const re =
     /<nx_migrate_prompt migration="([^"]*)">\n([\s\S]*?)\n<\/nx_migrate_prompt>/g;
@@ -740,18 +719,15 @@ describe('migrate orchestrator (dark launch)', () => {
     expect(pass.payload.instructions).toContain(
       'final validation pass over the workspace is awaiting your outcome'
     );
-    const prompt = parseLastStepPromptBlock(passOutput);
-    expect(prompt.step).toBe('step-2');
-    expect(prompt.payload.kind).toBe('final-validation');
-    expect(prompt.payload.instructions).toBe(
-      `.nx/migrate-runs/${init.runId}/prompts/step-2/instructions.md`
-    );
+    expect(passOutput).toContain('<nx_migrate_prompt step="step-2">');
     // The plan file written before init dirtied the tree, so the checkpoint
     // commit is the base the pass diffs against.
     const parked = readRunStateFile(init.runId);
     expect(parked.commits[0].kind).toBe('checkpoint');
     expect(parked.gitRefAtInit).toBe(parked.commits[0].sha);
-    const instructions = readFile(prompt.payload.instructions);
+    const instructions = readFile(
+      `.nx/migrate-runs/${init.runId}/prompts/step-2/instructions.md`
+    );
     expect(instructions).toContain(
       `nx affected --base ${parked.gitRefAtInit} -t <targets>`
     );

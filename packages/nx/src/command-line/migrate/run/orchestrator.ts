@@ -9,7 +9,7 @@ import {
   writeFileSync,
   type BigIntStats,
 } from 'fs';
-import { join, relative } from 'path';
+import { join } from 'path';
 import { IS_WASM } from '../../../native';
 import { readJsonFile, writeJsonFile } from '../../../utils/fileutils';
 import { publishFileAtomically } from './atomic-write';
@@ -47,6 +47,7 @@ import {
 import { nxVersion } from '../../../utils/versions';
 import {
   handoffsDirState,
+  mkdirSafely,
   runStepHandoffPath,
   readHandoffWithReason,
   readInspectedFile,
@@ -55,6 +56,7 @@ import {
 } from '../agentic/handoff';
 import { resolveFormatCommand } from '../agentic/format-command';
 import { applyAgenticHandoffGitignoreFallback } from '../agentic/handoff-gitignore';
+import { writeInstructionsFile } from '../agentic/instruction-files';
 import { buildFinalValidationInstructions } from '../agentic/prompts/final-validation';
 import { renderHandoffShapeInline } from '../agentic/prompts/fragments';
 import {
@@ -493,9 +495,7 @@ export async function runOrchestratorInit(
   const checkpointFailed =
     createCommits && getWorkingTreeStatus(root) !== 'clean';
   const branch = getGitCurrentBranch(root);
-  // The base for every whole-run diff: the checkpoint when one landed, else
-  // HEAD. Recorded on the run because a step's gitRefBefore moves on
-  // re-dispense.
+  // Recorded on the run because a step's gitRefBefore moves on re-dispense.
   const gitRefAtInit = checkpoint?.sha ?? getLatestCommitSha(root);
   const state: MigrateRunState = {
     formatVersion: CURRENT_RUN_STATE_FORMAT_VERSION,
@@ -2079,18 +2079,7 @@ function advanceAndDispense(root: string, dir: string, runId: string): void {
   }
   switch (step.status) {
     case 'pending':
-      switch (step.kind) {
-        case 'migration':
-          dispenseNextStep(root, dir, runId, state, step, noProgress);
-          break;
-        case 'final-validation':
-          parkFinalValidation(root, dir, runId, step, noProgress);
-          break;
-        default: {
-          const exhaustive: never = step;
-          throw new Error(`Unrecognized step: ${JSON.stringify(exhaustive)}`);
-        }
-      }
+      dispenseNextStep(root, dir, runId, state, step, noProgress);
       break;
     case 'dispensed':
       // Re-entry before the worker advanced the step; re-emit its command.
@@ -2195,7 +2184,7 @@ function dispenseNextStep(
   step: MigrateStep,
   noProgress: MigrateRunNoProgress | null
 ): void {
-  // Read the pre-migration baselines (git and package.json reads) before the
+  // Read the pre-step baselines (git and package.json reads) before the
   // lock; the dispense transition and the baselines then apply to the fresh
   // state in one write.
   const baselines: DispenseBaselines = {
@@ -2218,10 +2207,7 @@ function dispenseNextStep(
     // earlier read.
     held = liveTreeOperation(fresh);
     if (held) return null;
-    const dispensed = applyEventOrThrow(fresh, {
-      type: 'dispense',
-      stepId: step.id,
-    });
+    const dispensed = applyEventOrThrow(fresh, dispenseEvent(step));
     return setDispenseBaselines(dispensed, step.id, baselines);
   });
   if (advancedElsewhere) {
@@ -2239,49 +2225,36 @@ function dispenseNextStep(
     attempt: dispensed.attempt,
     ordinal: runTallies(current).dispenseCount,
   });
-  emitNextStep(root, runId, current, dispensed, noProgress);
+  switch (dispensed.kind) {
+    case 'migration':
+      emitNextStep(root, runId, current, dispensed, noProgress);
+      break;
+    case 'final-validation':
+      emitAwaitPrompt(root, dir, runId, dispensed, noProgress);
+      break;
+    default: {
+      const exhaustive: never = dispensed;
+      throw new Error(`Unrecognized step: ${JSON.stringify(exhaustive)}`);
+    }
+  }
 }
 
-// The pass has no worker: the same write that would dispense a migration
-// parks it awaiting the agent's outcome, with the dispense baselines a retry
-// menu reads. The await-prompt dispense then hands the work out, as it does
-// for a step parked by its worker.
-function parkFinalValidation(
-  root: string,
-  dir: string,
-  runId: string,
-  step: MigrateStep,
-  noProgress: MigrateRunNoProgress | null
-): void {
-  const baselines: DispenseBaselines = {
-    gitRefBefore: getLatestCommitSha(root) ?? undefined,
-    treeCleanAtDispense: getWorkingTreeStatus(root) === 'clean',
-    depsHashAtDispense: depsHash(root),
-  };
-  let advancedElsewhere = false;
-  const current = updateRunState(dir, (fresh) => {
-    if (fresh.steps.find((s) => s.id === step.id)?.status !== 'pending') {
-      advancedElsewhere = true;
-      return null;
+function dispenseEvent(step: MigrateStep): StepEvent {
+  switch (step.kind) {
+    case 'migration':
+      return { type: 'dispense', stepId: step.id };
+    case 'final-validation':
+      // No worker runs the pass, so its dispense parks it for the agent.
+      return {
+        type: 'parkForFinalValidation',
+        stepId: step.id,
+        finishedAt: nowIso(),
+      };
+    default: {
+      const exhaustive: never = step;
+      throw new Error(`Unrecognized step: ${JSON.stringify(exhaustive)}`);
     }
-    const parked = applyEventOrThrow(fresh, {
-      type: 'parkForFinalValidation',
-      stepId: step.id,
-      finishedAt: nowIso(),
-    });
-    return setDispenseBaselines(parked, step.id, baselines);
-  });
-  if (advancedElsewhere) {
-    // Terminates as dispenseNextStep's redispatch does.
-    advanceAndDispense(root, dir, runId);
-    return;
   }
-  const parked = current.steps.find((s) => s.id === step.id);
-  reportMigrateOrchestratorStepDispensed({
-    attempt: parked.attempt,
-    ordinal: runTallies(current).dispenseCount,
-  });
-  emitAwaitPrompt(root, dir, runId, parked, noProgress);
 }
 
 function emitNextStep(
@@ -2911,11 +2884,11 @@ function awaitFinalValidationLines(
   step: Extract<MigrateStep, { kind: 'final-validation' }>,
   filePath: string
 ): string[] {
-  const instructionsDir = join(dir, PROMPTS_DIR_NAME, step.id);
-  mkdirSync(instructionsDir, { recursive: true });
-  const instructionsPath = join(instructionsDir, 'instructions.md');
-  writeFileSync(
-    instructionsPath,
+  const promptsDir = join(dir, PROMPTS_DIR_NAME, step.id);
+  mkdirSafely(promptsDir, 'prompt directory for the final validation pass');
+  const instructions = writeInstructionsFile(
+    root,
+    promptsDir,
     buildFinalValidationInstructions({
       runId: state.runId,
       baseRef: state.gitRefAtInit ?? null,
@@ -2923,9 +2896,6 @@ function awaitFinalValidationLines(
       handoffFileAbsolutePath: filePath,
     })
   );
-  // Workspace-relative with forward slashes: read as prose from the block, and
-  // the agent's cwd is the workspace root.
-  const instructions = relative(root, instructionsPath).replace(/\\/g, '/');
   emitStepPromptBlock(step.id, { kind: 'final-validation', instructions });
   return [
     `Every migration step is done; the run's final validation pass over the workspace is awaiting your outcome.`,

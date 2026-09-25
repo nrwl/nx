@@ -103,9 +103,7 @@ export type MigrateStepAwaitingKind =
   (typeof MIGRATE_STEP_AWAITING_KINDS)[number];
 
 // What a step does when dispensed: 'migration' runs one planned migration,
-// 'final-validation' checks the whole workspace once every migration and the
-// post-migration install have run. Absent in run.json means 'migration':
-// every step written before the field existed ran one.
+// 'final-validation' checks the whole workspace once every migration has run.
 const MIGRATE_STEP_KINDS = ['migration', 'final-validation'] as const;
 
 export interface MigrateStepOutcome {

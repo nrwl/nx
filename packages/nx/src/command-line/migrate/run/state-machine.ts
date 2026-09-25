@@ -280,7 +280,7 @@ function applyStepAction(
         if (commitMayBeInHistory(state, step)) {
           return {
             kind: 'error',
-            reason: `Cannot apply action 'unresolved' to step '${step.id}': a commit of its changes landed or was started and never recorded, so the ${stepNoun(step)} may be committed. Use 'adopt' to record it as applied.`,
+            reason: `Cannot apply action 'unresolved' to step '${step.id}': a commit of its changes landed or was started and never recorded, so the migration may be committed. Use 'adopt' to record it as applied.`,
           };
         }
         // A death records no outcome, so the failure given up on is the death
@@ -500,16 +500,13 @@ export function unresolvedCommitName(step: MigrateStep): string {
   return `${commitNameForStep(step)} (unresolved)`;
 }
 
-// Takes the migration name's place after the commit prefix.
-const FINAL_VALIDATION_COMMIT_NAME = 'final validation';
-
 // Takes the place after the commit prefix in a step's commits.
 export function commitNameForStep(step: MigrateStep): string {
   switch (step.kind) {
     case 'migration':
       return splitMigrationId(step.migrationId).name;
     case 'final-validation':
-      return FINAL_VALIDATION_COMMIT_NAME;
+      return 'final validation';
     default: {
       const exhaustive: never = step;
       throw new Error(`Unhandled step kind '${exhaustive}'.`);

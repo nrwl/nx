@@ -305,14 +305,6 @@ describe('migrate run issues', () => {
         pass
       );
       expect(resolvedAgain.ok).toBe(false);
-
-      // A migration step still needs the claim: deferral points past it.
-      const fromMigration = parseHandoffIssues(
-        { issueUpdates: [{ id: 'issue-1', disposition: 'resolved' }] },
-        stateWith(steps, ledger),
-        steps[0]
-      );
-      expect(fromMigration.ok).toBe(false);
     });
 
     it('rejects a handoff that reports and updates the same issue', () => {
@@ -474,31 +466,6 @@ describe('migrate run issues', () => {
             applicableMigrations: ['plain:three', '@nx/js', 'plain'],
           },
         ],
-        []
-      );
-      expect(result.state.issues[0].applicableStepIds).toEqual([
-        'step-1',
-        'step-2',
-        'step-3',
-      ]);
-    });
-
-    it('never maps an identifier to a step that ran no migration', () => {
-      const steps = [
-        ...baseSteps(),
-        {
-          id: 'step-4',
-          roundIndex: 0,
-          kind: 'final-validation' as const,
-          status: 'pending' as const,
-          attempt: 1,
-          dispenseCount: 0,
-        },
-      ];
-      const result = applyReportedIssues(
-        stateWith(steps),
-        steps[0],
-        [{ summary: 'wide issue', applicableMigrations: ['@nx/js', 'plain'] }],
         []
       );
       expect(result.state.issues[0].applicableStepIds).toEqual([

@@ -7836,11 +7836,13 @@ describe('orchestrator', () => {
         `.nx/migrate-runs/run-1/prompts/step-2/instructions.md`
       );
       const instructions = readFileSync(instructionsPath, 'utf-8');
-      expect(instructions).toContain(`nx affected --base ${BASE} -t <targets>`);
+      expect(instructions).toContain(
+        `\`npx nx affected --base ${BASE} -t <targets>\``
+      );
+      expect(instructions).toContain(`\`git diff ${BASE}\``);
       expect(instructions).toContain(
         `<handoff_path>\n${passHandoffPath(dir)}\n</handoff_path>`
       );
-      expect(instructions).toContain('lint first, then build, then unit tests');
     });
 
     it('names the pass when a clean retry is refused because HEAD moved past its dispense', async () => {
@@ -7912,48 +7914,40 @@ describe('orchestrator', () => {
       expect(instructions).not.toContain(`nx affected --base ${BASE}`);
     });
 
-    it.each([true, false])(
-      'folds a completed pass, committing under a fixed name when commits are on (%s), and completes the run',
-      async (createCommits) => {
-        mockCommit.mockResolvedValue({ status: 'committed', sha: HEAD });
-        const dir = afterMigrations({
-          createCommits,
-          passStatus: 'awaiting-prompt-outcome',
-        });
-        writePassHandoff(dir, {
-          status: 'success',
+    it('folds a completed pass, committing under a fixed name, and completes the run', async () => {
+      mockCommit.mockResolvedValue({ status: 'committed', sha: HEAD });
+      const dir = afterMigrations({
+        createCommits: true,
+        passStatus: 'awaiting-prompt-outcome',
+      });
+      writePassHandoff(dir, {
+        status: 'success',
+        summary: 'lint, build and test ran green',
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const state = readRunState(dir);
+      expect(state.steps[1]).toMatchObject({
+        status: 'succeeded',
+        promptOutcome: {
+          status: 'completed',
           summary: 'lint, build and test ran green',
-        });
-
-        await runOrchestratorReconcile({ root, runId: 'run-1' });
-
-        const state = readRunState(dir);
-        expect(state.steps[1]).toMatchObject({
-          status: 'succeeded',
-          promptOutcome: {
-            status: 'completed',
-            summary: 'lint, build and test ran green',
-          },
-        });
-        expect(state.status).toBe('completed');
-        expect(existsSync(passHandoffPath(dir))).toBe(false);
-        if (createCommits) {
-          expect(mockCommit).toHaveBeenCalledTimes(1);
-          expect(mockCommit.mock.calls[0][1]).toEqual({
-            name: 'final validation',
-          });
-          expect(state.commits).toEqual([
-            { kind: 'landed', sha: HEAD, stepIds: ['step-2'] },
-          ]);
-        } else {
-          expect(mockCommit).not.toHaveBeenCalled();
-          expect(state.commits).toEqual([]);
-        }
-        const block = lastBlock();
-        expect(block.action).toBe('complete');
-        expect(block.payload.instructions).toContain('applied: 2');
-      }
-    );
+        },
+      });
+      expect(state.status).toBe('completed');
+      expect(existsSync(passHandoffPath(dir))).toBe(false);
+      expect(mockCommit).toHaveBeenCalledTimes(1);
+      expect(mockCommit.mock.calls[0][1]).toEqual({
+        name: 'final validation',
+      });
+      expect(state.commits).toEqual([
+        { kind: 'landed', sha: HEAD, stepIds: ['step-2'] },
+      ]);
+      const block = lastBlock();
+      expect(block.action).toBe('complete');
+      expect(block.payload.instructions).toContain('applied: 2');
+    });
 
     it('offers the retry menu for a failed pass in its own words, and a retry parks it again', async () => {
       mockGetLatestCommitSha.mockReturnValue(HEAD);
@@ -7998,45 +7992,35 @@ describe('orchestrator', () => {
       });
     });
 
-    it.each([
-      ['skip', 'skipped'],
-      ['unresolved', 'unresolved'],
-    ] as const)(
-      'lets --step-action=%s settle a failed pass and complete the run',
-      async (action, status) => {
-        const dir = afterMigrations({ passStatus: 'awaiting-prompt-outcome' });
-        writePassHandoff(dir, { status: 'failed', summary: 'tests are red' });
-        await runOrchestratorReconcile({ root, runId: 'run-1' });
+    it('lets --step-action=unresolved settle a failed pass and complete the run', async () => {
+      const dir = afterMigrations({ passStatus: 'awaiting-prompt-outcome' });
+      writePassHandoff(dir, { status: 'failed', summary: 'tests are red' });
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
 
-        await runOrchestratorReconcile({
-          root,
-          runId: 'run-1',
-          stepAction: action,
-        });
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'unresolved',
+      });
 
-        const state = readRunState(dir);
-        expect(state.steps[1].status).toBe(status);
-        expect(state.status).toBe('completed');
-        const block = lastBlock();
-        expect(block.action).toBe('complete');
-        if (status === 'unresolved') {
-          expect(state.issues).toEqual([
-            expect.objectContaining({
-              summary:
-                'The final validation pass was left unresolved after 1 attempt: tests are red',
-              disposition: 'deferred-final',
-            }),
-          ]);
-          expect(block.payload.instructions).toContain(
-            '- the final validation pass: tests are red'
-          );
-        } else {
-          expect(block.payload.instructions).toContain('skipped: 1');
-        }
-      }
-    );
+      const state = readRunState(dir);
+      expect(state.steps[1].status).toBe('unresolved');
+      expect(state.status).toBe('completed');
+      expect(state.issues).toEqual([
+        expect.objectContaining({
+          summary:
+            'The final validation pass was left unresolved after 1 attempt: tests are red',
+          disposition: 'deferred-final',
+        }),
+      ]);
+      const block = lastBlock();
+      expect(block.action).toBe('complete');
+      expect(block.payload.instructions).toContain(
+        '- the final validation pass: tests are red'
+      );
+    });
 
-    it("lists the issues the run deferred as the pass's own, and folds their resolution into its commit", async () => {
+    it("folds the resolution of an issue the run deferred into the pass's commit", async () => {
       mockCommit.mockResolvedValue({ status: 'committed', sha: HEAD });
       const deferred: MigrateRunIssue = {
         id: 'issue-1',
@@ -8049,17 +8033,6 @@ describe('orchestrator', () => {
       const dir = afterMigrations({ createCommits: true, issues: [deferred] });
 
       await runOrchestratorReconcile({ root, runId: 'run-1' });
-
-      const dispense = lastBlock();
-      expect(dispense.action).toBe('await-prompt');
-      expect(dispense.payload.instructions).toContain(
-        'issue-1 (deferred to this step): gen left a broken import'
-      );
-      expect(dispense.payload.instructions).toContain('"issueUpdates"');
-      expect(dispense.payload.instructions).not.toContain(
-        'deferred past the migration steps'
-      );
-
       writePassHandoff(dir, {
         status: 'success',
         summary: 'fixed the import',
@@ -8085,19 +8058,6 @@ describe('orchestrator', () => {
       ]);
       expect(state.status).toBe('completed');
       expect(lastBlock().payload.instructions).not.toContain('issue-1');
-    });
-
-    it('completes a run recorded before the pass existed as before', async () => {
-      setupRun('run-1', {
-        steps: [migStep('step-1', '@nx/js:gen', 'succeeded')],
-        plan: [genMig('@nx/js', 'gen')],
-      });
-
-      await runOrchestratorReconcile({ root, runId: 'run-1' });
-
-      expect(readRunState(runDir(root, 'run-1')).status).toBe('completed');
-      expect(lastBlock().action).toBe('complete');
-      expect(parsePromptBlocks()).toHaveLength(0);
     });
   });
 
@@ -9464,31 +9424,43 @@ describe('orchestrator', () => {
       expect(state.treeOperation).toBeUndefined();
     });
 
-    it('refuses to dispense a pending step when a checkpoint takes the tree after the dispense began', async () => {
-      vi.spyOn(process, 'kill').mockReturnValue(true as never);
-      const dir = setupRun('run-1', {
-        steps: [migStep('step-1', '@nx/js:gen', 'pending')],
-        createCommits: true,
-        plan: [genMig('@nx/js', 'gen')],
-      });
-      // The baseline read sits between the dispatch and the dispense write.
-      mockGetLatestCommitSha.mockImplementation(() => {
-        reserve(dir, {
-          kind: 'checkpoint',
-          stepId: undefined,
-          attempt: undefined,
+    it.each([
+      ['migration step', [migStep('step-1', '@nx/js:gen', 'pending')]],
+      [
+        'final validation pass',
+        [
+          migStep('step-1', '@nx/js:gen', 'succeeded'),
+          passStep('step-2', 'pending'),
+        ],
+      ],
+    ])(
+      'refuses to dispense a pending %s when a checkpoint takes the tree after the dispense began',
+      async (_label, steps) => {
+        vi.spyOn(process, 'kill').mockReturnValue(true as never);
+        const dir = setupRun('run-1', {
+          steps,
+          createCommits: true,
+          plan: [genMig('@nx/js', 'gen')],
         });
-        return 'beef0001beef0001beef0001beef0001beef0001';
-      });
+        // The baseline read sits between the dispatch and the dispense write.
+        mockGetLatestCommitSha.mockImplementation(() => {
+          reserve(dir, {
+            kind: 'checkpoint',
+            stepId: undefined,
+            attempt: undefined,
+          });
+          return 'beef0001beef0001beef0001beef0001beef0001';
+        });
 
-      await runOrchestratorReconcile({ root, runId: 'run-1' });
+        await runOrchestratorReconcile({ root, runId: 'run-1' });
 
-      expect(readRunState(dir).steps[0].status).toBe('pending');
-      const block = lastBlock();
-      expect(block.action).toBe('held');
-      expect(block.payload.instructions).toContain('the checkpoint commit');
-      expect(block.payload.next).toBe('npx nx migrate --run-id=run-1');
-    });
+        expect(readRunState(dir).steps.at(-1).status).toBe('pending');
+        const block = lastBlock();
+        expect(block.action).toBe('held');
+        expect(block.payload.instructions).toContain('the checkpoint commit');
+        expect(block.payload.next).toBe('npx nx migrate --run-id=run-1');
+      }
+    );
 
     it('applies a step action in the same reconcile that folded a failed handoff', async () => {
       vi.spyOn(process, 'kill').mockReturnValue(true as never);

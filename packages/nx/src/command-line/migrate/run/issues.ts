@@ -341,7 +341,6 @@ function canUpdateIssue(
 
 // A bare identifier matches the whole package name, scoped names included:
 // nothing splits on '/'. Step ids are unique, so the result needs no dedup.
-// Identifiers name migrations, so only migration steps can match.
 function mappedStepIds(identifier: string, state: MigrateRunState): string[] {
   if (identifier.includes(':')) {
     return state.steps

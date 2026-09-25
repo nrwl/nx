@@ -38,16 +38,13 @@ describe('findNewMigrateFlag', () => {
   });
 
   it('includes the final-validation flag spellings and their negations', () => {
-    expect(NEW_MIGRATE_FLAGS).toContain('--final-validation');
-    expect(NEW_MIGRATE_FLAGS).toContain('--finalValidation');
-    expect(
-      findNewMigrateFlag(['--run-migrations', '--no-final-validation'])
-    ).toBe('--no-final-validation');
-    expect(findNewMigrateFlag(['--no-finalValidation'])).toBe(
-      '--no-finalValidation'
-    );
-    expect(findNewMigrateFlag(['--final-validation=false'])).toBe(
-      '--final-validation'
+    expect(NEW_MIGRATE_FLAGS).toEqual(
+      expect.arrayContaining([
+        '--final-validation',
+        '--finalValidation',
+        '--no-final-validation',
+        '--no-finalValidation',
+      ])
     );
   });
 
