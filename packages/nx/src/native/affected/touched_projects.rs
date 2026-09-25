@@ -30,8 +30,7 @@ mod tests {
         );
     }
 
-    /// `--files` arrives exactly as typed, so a Windows path has to resolve. The
-    /// TS this replaced ran `normalizePath` first.
+    /// `--files` arrives exactly as typed, so a Windows path has to resolve.
     #[test]
     fn resolves_windows_style_paths() {
         let g = graph(vec![("a", project("libs/a"))]);
@@ -78,9 +77,7 @@ mod tests {
         );
     }
 
-    /// The TypeScript original normalized the root into the map key, so a
-    /// root-level project is reachable. `create_project_root_mappings` does not,
-    /// which is why `ProjectRoots` builds its own mapping.
+    /// `create_project_root_mappings` cannot reach a project whose root is `""`.
     #[test]
     fn finds_a_project_whose_root_is_empty() {
         let g = graph(vec![("root", project(""))]);

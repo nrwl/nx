@@ -1,20 +1,12 @@
 //! Turning a changed path into the project that owns it.
-//!
-//! Shared by the project locators and the task matcher, which both answer that
-//! question and would otherwise carry the same workaround twice.
 
 use std::collections::HashMap;
 
 use crate::native::project_graph::types::ProjectGraph;
 use crate::native::project_graph::utils::{find_project_for_path, normalize_project_root};
 
-/// Workspace-relative path -> owning project.
-///
-/// Built here rather than with `create_project_root_mappings`, which normalizes
-/// the project *name* into the value instead of the root into the key, so a
-/// project whose root is `""` is unreachable through it. Fixing that helper
-/// would change `task_hasher`'s behaviour, so the correct mapping lives here
-/// until the two can converge.
+/// Workspace-relative path -> owning project. Not `create_project_root_mappings`,
+/// which keys by the raw root, so a project whose root is `""` is unreachable.
 pub(crate) struct ProjectRoots {
     by_root: HashMap<String, String>,
 }
@@ -37,10 +29,8 @@ impl ProjectRoots {
     }
 }
 
-/// Mirrors `normalizePath` in `packages/nx/src/utils/path.ts`: strip a Windows
-/// drive letter, then swap separators. Root keys are unix-style, and `--files`
-/// reaches us exactly as the user typed it, so a Windows path matches nothing
-/// without this.
+/// Mirrors `normalizePath` in `packages/nx/src/utils/path.ts`: strip a Windows drive
+/// letter, then swap separators. `--files` arrives exactly as typed.
 pub(crate) fn normalize_path(path: &str) -> String {
     let without_drive = match path.as_bytes() {
         [drive, b':', ..] if drive.is_ascii_alphabetic() => &path[2..],
@@ -80,7 +70,7 @@ mod tests {
         assert_eq!(roots.owner_of("libs/a/index.ts"), Some("a"));
     }
 
-    /// A whole-segment match, so `libs/a` does not claim `libs/a-legacy`.
+    /// A whole-segment match, so `libs/a` does not claim `libs/a-b`.
     #[test]
     fn does_not_match_a_partial_segment() {
         let roots = ProjectRoots::new(&graph(&[("a", "libs/a"), ("ab", "libs/a-b")]));

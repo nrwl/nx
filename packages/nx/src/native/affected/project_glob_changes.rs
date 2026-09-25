@@ -15,8 +15,6 @@ pub(super) fn projects_from_project_glob_changes(
     touched_files: &[String],
     options: &AffectedOptions,
 ) -> Result<Vec<String>> {
-    // Load-bearing: with both the included and excluded sets empty, `is_match`
-    // returns `!excluded.is_match(..)`, i.e. true for every file.
     if options.project_glob_patterns.is_empty() {
         return Ok(Vec::new());
     }
@@ -37,12 +35,8 @@ pub(super) fn projects_from_project_glob_changes(
         .collect();
     let workspace_root = Path::new(&options.workspace_root);
 
-    // Raw, not normalized, to match the TypeScript this replaced, which globbed
-    // and stat'd the path exactly as given. This is parity, not containment:
-    // `Path::join` drops the base on an absolute component, so a raw absolute
-    // path still stats outside the workspace, and `..` escapes by ordinary
-    // resolution. The probe only decides whether the file exists, and a path
-    // that leaves the workspace was never a project config anyway.
+    // Matched and stat'd raw: normalizing `C:\etc\project.json` would match a
+    // glob and stat `/etc/project.json`.
     for file in touched_files {
         if !globs.iter().any(|glob| glob.is_match(file)) {
             continue;

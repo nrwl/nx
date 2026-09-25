@@ -1,4 +1,4 @@
-//! The touched-project locators behind `nx affected`.
+//! `nx affected`: the touched-project locators and the task selection.
 //!
 //! Graph pruning stays in TypeScript: the native `ProjectGraph` models
 //! `dependencies` as `HashMap<String, Vec<String>>`, with no edge `type` or

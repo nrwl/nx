@@ -233,11 +233,8 @@ impl<'a> VisitedTracker<'a> {
 /// Narrows an existing set of plans to `task_ids`, sharing the instruction pool
 /// rather than re-planning.
 ///
-/// Returns `None` when any requested task has no plan, which is the caller's
-/// signal that the plans were built for a different task set and cannot answer
-/// for this one. A plan depends on the task graph only through the dependent
-/// output instructions, so a subset is sound exactly when every kept task's
-/// dependency closure survived intact.
+/// Returns `None` when any requested task has no plan. It does not check that
+/// each kept task's dependency closure is unchanged; callers do (`plannedAlike`).
 #[napi(ts_return_type = "ExternalObject<Record<string, Array<HashInstruction>>> | null")]
 pub fn subset_hash_plans(
     #[napi(ts_arg_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]

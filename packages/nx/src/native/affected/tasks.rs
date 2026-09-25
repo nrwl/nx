@@ -1,19 +1,7 @@
-//! Decides which tasks a change affects.
+//! Decides which tasks a change affects: changed paths and moved packages are
+//! matched against each hash-plan instruction, then carried along output-read edges.
 //!
-//! Three steps, all here so the answer crosses the napi boundary once: which
-//! tasks a change touches, a changed path tested against each hash-plan
-//! instruction's globs and a moved package against its `External` names; which
-//! upstream tasks each task reads the outputs of; and the walk that carries
-//! affectedness from a producer to the tasks reading it.
-//!
-//! Matching globs rather than resolving instructions to file lists is what makes
-//! the first step both correct and affordable. A deleted file has no entry in
-//! the workspace file map, so a resolved list can never contain it, and every
-//! rename would be missed. It also inverts the cost: `O(unique instructions x
-//! changed files)` instead of `O(unique instructions x files per instruction)`,
-//! and changed files number in the tens where instruction filesets reach
-//! thousands. Instructions are interned, so the same glob set shared by a
-//! thousand tasks is compiled and tested once.
+//! Globs are matched rather than resolved to file lists, since a deleted file is in no file index.
 
 use napi::bindgen_prelude::*;
 use rayon::prelude::*;
@@ -213,8 +201,6 @@ fn changed_project_configs(
     changed_files: &[String],
     options: &AffectedTasksOptions,
 ) -> (Vec<String>, Vec<String>) {
-    // Load-bearing: with both the included and excluded sets empty, `is_match`
-    // returns `!excluded.is_match(..)`, i.e. true for every file.
     if options.project_glob_patterns.is_empty() {
         return (Vec::new(), Vec::new());
     }
@@ -271,8 +257,6 @@ pub(crate) fn touched_tasks(
         .filter_map(|file| roots.owner_of(&normalize_path(file)))
         .collect();
 
-    // Only whether an instruction matched, never which files: the selection is
-    // a membership question, and nothing downstream reads the per-file detail.
     let ids = referenced_ids(hash_plans);
     let hits: Vec<bool> = ids
         .par_iter()
@@ -301,28 +285,15 @@ pub(crate) fn touched_tasks(
     Ok(touched)
 }
 
-/// Carries affectedness from a producer to the tasks that read its outputs.
-///
-/// A consumer reads its dependency's build artifacts, which are gitignored and
-/// do not exist yet, so the dependency's *inputs* are what decide the consumer.
-/// Only output-read edges are followed, never plain `dependsOn`: affectedness
-/// follows data rather than the schedule.
-///
-/// Reachability over `producers_of` reversed, in O(V+E). Visiting in some
-/// dependency order would settle a chain in one pass, but only while the order
-/// respects every edge affectedness can travel: a continuous dependency is one
-/// such edge and an ordering built from `dependencies` alone does not hold it,
-/// and a cycle leaves any order arbitrary. Reaching outward from the touched
-/// set needs no order, so neither can strand a consumer.
-///
-/// Returns the affected set, sorted.
+/// Carries affectedness from a producer to the tasks that read its outputs, never along
+/// plain `dependsOn`. Reachability rather than an ordered pass, since continuous
+/// dependencies and cycles defeat any fixed order. Returns the affected set, sorted.
 fn affected_through_output_reads(
     touched: &HashSet<String>,
     task_graph: &TaskGraph,
     producers_of: &HashMap<String, Vec<String>>,
 ) -> Vec<String> {
-    // A read by a task outside the graph is not an edge, as an unknown producer
-    // was never one.
+    // Skip consumers outside the task graph so the walk never reaches them.
     let known = |id: &str| task_graph.tasks.contains_key(id);
 
     let mut consumers_of: HashMap<&str, Vec<&str>> = HashMap::new();
@@ -353,13 +324,8 @@ fn affected_through_output_reads(
     affected
 }
 
-/// The changed paths, normalized, with each one's owning project resolved once
-/// and indexed by owner.
-///
-/// A project-scoped instruction is tested only against the files its project
-/// owns, and when that project owns none it is answered without compiling its
-/// globs. Most of a workspace's instructions are scoped to projects a change
-/// never touches, and compiling a glob set is the expensive step.
+/// The changed paths, normalized and indexed by owning project, so an instruction
+/// scoped to a project that owns no changed file never compiles its globs.
 struct ChangedFiles<'a> {
     files: Vec<String>,
     all: Vec<usize>,
@@ -392,12 +358,8 @@ impl<'a> ChangedFiles<'a> {
     }
 }
 
-/// Whether any changed file is one this instruction would hash.
-///
-/// `TaskOutput` is deliberately absent: it resolves to a dependent task's build
-/// artifacts, which are gitignored and do not exist yet when affected runs, so
-/// intersecting it is always empty and misleadingly so. Dependency changes reach
-/// a consumer through `affected_through_output_reads` instead.
+/// Whether any changed file is one this instruction would hash. `TaskOutput` never
+/// matches; `affected_through_output_reads` carries it instead.
 fn instruction_matches(
     instruction: &HashInstruction,
     changed: &ChangedFiles,
@@ -424,9 +386,7 @@ fn instruction_matches(
         HashInstruction::ProjectFileSet(project, file_sets) => {
             any_matching(file_sets, Some(project))
         }
-        // Unscoped: the globs carry no project and the hasher expands them
-        // workspace-wide. A changed file is tracked by definition, so a match is
-        // the tracked case; untracked paths are handled by propagation.
+        // Unscoped: the hasher expands these workspace-wide.
         HashInstruction::IgnoredFileSet(globs) => any_matching(globs, None),
         HashInstruction::JsonFileSet(json) => match json.project_name.as_deref() {
             Some(project) => any_matching(std::slice::from_ref(&json.json_path), Some(project)),
@@ -558,7 +518,7 @@ mod tests {
         ChangedExternals::new(&[], &[], &NO_NODES)
     }
 
-    /// Named external nodes with their ecosystem, so `type_of` can answer.
+    /// Named external nodes with their ecosystem, so `ChangedExternals::includes` can match on type.
     fn externals_graph(externals: &[(&str, &str)]) -> ProjectGraph {
         let mut g = graph(&[("a", "libs/a")]);
         g.external_nodes = externals
@@ -771,8 +731,7 @@ mod tests {
     }
 
     /// A pnpm lock file cannot have moved a Maven artifact, so an unpinned npm
-    /// change leaves another ecosystem's nodes alone. This is what lets a plugin
-    /// declare its own externals and have the declaration mean something.
+    /// change leaves another ecosystem's nodes alone.
     #[test]
     fn an_unpinned_change_stays_within_its_own_ecosystem() {
         let guava = "gradle:com.google.guava:guava";
@@ -971,8 +930,7 @@ mod tests {
 
     // --- selection ---------------------------------------------------------------
 
-    /// The config is matched here against the plugin globs, so the plan's
-    /// ProjectConfiguration fires without TypeScript pre-computing the list.
+    /// A changed config is matched against the plugin globs here, so the plan's ProjectConfiguration fires.
     #[test]
     fn a_changed_project_config_reaches_its_consumers() {
         let g = graph(&[("a", "packages/nx"), ("b", "packages/js")]);
@@ -1041,8 +999,7 @@ mod tests {
         assert_eq!(s.affected, strings(&["a:build"]));
     }
 
-    /// A consumer reads its producer's outputs, so the producer's change reaches
-    /// it through the walk, and the edge it crossed is reported.
+    /// A consumer reads its producer's outputs, so the producer's change reaches it through the walk.
     #[test]
     fn propagates_from_a_producer_to_the_task_reading_its_outputs() {
         let g = graph(&[("ui", "libs/ui"), ("app", "apps/app")]);

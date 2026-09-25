@@ -1,11 +1,6 @@
 use crate::native::tasks::types::HashPlans;
 
-/// The pool ids at least one plan references, sorted.
-///
-/// Interned ids are dense, so a bitset of one word per 64 ids covers the pool
-/// and unioning the plans is one OR per occurrence. Collecting the occurrences
-/// into a Vec and sorting would be bounded by the sum of every plan's length
-/// instead, which grows with tasks times instructions per task.
+/// The pool ids at least one plan references, sorted. A bitset, since interned ids are dense.
 pub(crate) fn referenced_ids(hash_plans: &HashPlans) -> Vec<u32> {
     let mut words = vec![0u64; hash_plans.pool.len().div_ceil(64)];
     for &id in hash_plans.plans.values().flatten() {

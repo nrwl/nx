@@ -21,9 +21,7 @@ pub(super) fn implicitly_touched_projects(
     nx_json: &NxJson,
     touched_files: &[String],
 ) -> Result<Vec<String>> {
-    // BTreeMap so the pattern scan is reproducible. Order does not change the
-    // result either way: an `AllProjects` hit returns every project whenever it
-    // is reached, and the rest accumulate into a set.
+    // BTreeMap so the scan, and its warnings, run in a stable order.
     let mut implicits: std::collections::BTreeMap<&str, Implicit> = Default::default();
     implicits.insert("nx.json", Implicit::AllProjects);
 
@@ -54,11 +52,7 @@ pub(super) fn implicitly_touched_projects(
 
     let mut touched: BTreeSet<&str> = BTreeSet::new();
     for (pattern, implicit) in &implicits {
-        // An unparseable fileset matches nothing. Minimatch read it as literal
-        // text, so at base `{workspaceRoot}/config/[dev.json` marked its project
-        // affected by that exact file; the hasher rejects the same glob, so no
-        // task hashing it ever ran. Aborting the whole command over one
-        // malformed pattern would be a new failure mode.
+        // An unparseable fileset matches nothing; the hasher rejects the same glob.
         let Ok(glob) = build_glob_set(&[*pattern]) else {
             warn!("ignoring unparseable input fileset: {{workspaceRoot}}/{pattern}");
             continue;
@@ -85,9 +79,7 @@ fn nx_json_named_inputs(nx_json: &NxJson) -> NamedInputs<'_> {
         .collect()
 }
 
-/// Borrows the workspace-level map unless the project overrides something, so
-/// only projects that declare their own `namedInputs` pay for a map. Most do
-/// not, and this runs once per project on every `nx affected`.
+/// Borrows the workspace-level map unless the project declares its own `namedInputs`.
 fn merged_named_inputs<'a>(
     base: &'a NamedInputs<'a>,
     project: &'a Project,
@@ -102,9 +94,8 @@ fn merged_named_inputs<'a>(
     }
 }
 
-/// Collects `{workspaceRoot}/…` filesets from every target's inputs, with the
-/// `{workspaceRoot}/` prefix stripped. `out` and `visiting` are caller-owned so
-/// the per-project loop reuses one allocation instead of 2N.
+/// Collects `{workspaceRoot}/…` filesets from every target's inputs, prefix stripped.
+/// `out` and `visiting` are caller-owned so the per-project loop reuses them.
 fn workspace_root_filesets<'a>(
     targets: &'a HashMap<String, Target>,
     named_inputs: &NamedInputs<'a>,
@@ -123,8 +114,7 @@ const WORKSPACE_ROOT: &str = "{workspaceRoot}/";
 fn collect_filesets<'a>(
     inputs: &'a [JsInputs],
     named_inputs: &NamedInputs<'a>,
-    // Guards a named input that references itself. The TypeScript original
-    // recurses unguarded and overflows the stack on such a config.
+    // Guards a named input that references itself.
     visiting: &mut HashSet<&'a str>,
     out: &mut Vec<&'a str>,
 ) {
@@ -305,9 +295,7 @@ mod tests {
         );
     }
 
-    /// A malformed fileset is skipped with a warning rather than aborting the
-    /// command. Minimatch read it as literal text, so this is the one narrowing
-    /// the PR body lists: at base the exact file marked the project affected.
+    /// A malformed fileset is skipped with a warning rather than aborting the command.
     #[test]
     fn an_unparseable_fileset_is_ignored_rather_than_fatal() {
         let mut a = project("a");
@@ -328,8 +316,7 @@ mod tests {
         );
     }
 
-    /// A named input that references itself terminates instead of overflowing
-    /// the stack, which the TypeScript original did not guard against.
+    /// A named input that references itself terminates instead of overflowing the stack.
     #[test]
     fn terminates_on_a_self_referencing_named_input() {
         let mut a = project("a");
