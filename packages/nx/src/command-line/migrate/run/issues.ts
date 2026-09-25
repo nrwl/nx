@@ -1,6 +1,7 @@
 // The run's issue ledger. Agents supply only the handoff's `issues` /
 // `issueUpdates`; ids, fingerprints, routing, claims and archiving are nx's.
 
+import { createHash } from 'crypto';
 import { mkdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { writeJsonFile } from '../../../utils/fileutils';
@@ -22,7 +23,10 @@ import {
 } from './run-state';
 
 export { issueFingerprint };
-import { splitMigrationId } from './state-machine';
+import { splitMigrationId, unresolvedFailureDetail } from './state-machine';
+
+// Reserves summary space for the attempt count and the failure.
+const MAX_UNRESOLVED_ID_CHARS = 200;
 
 const ISSUES_DIR_NAME = 'issues';
 
@@ -344,6 +348,65 @@ export interface IssueApplication {
   state: MigrateRunState;
   newIssues: { entry: MigrateRunIssue; report: ReportedIssue }[];
   updates: IssueArchiveUpdate[];
+}
+
+/**
+ * Mints the run issue carrying a given-up step's last failure to the completion
+ * report: unscoped and deferred, so no later step claims it, with the migration
+ * id in the summary so identical failures stay apart. A report with the same
+ * text is taken over, not merged: the fingerprint is derived from the summary,
+ * so the ledger cannot hold both, and a merge would keep the report's scope.
+ * Same locking contract as {@link applyReportedIssues}.
+ */
+export function mintUnresolvedIssue(
+  state: MigrateRunState,
+  step: MigrateStep
+): { application: IssueApplication; issueId: string } {
+  const attempts = `${step.attempt} attempt${step.attempt === 1 ? '' : 's'}`;
+  const prefix = `Migration ${abbreviatedMigrationId(
+    step.migrationId
+  )} was left unresolved after ${attempts}: `;
+  const room = MAX_SUMMARY_CHARS - prefix.length;
+  const detail = unresolvedFailureDetail(step);
+  const summary =
+    prefix +
+    (detail.length > room ? `${detail.slice(0, room - 3)}...` : detail);
+  const ledger = state.issues ?? [];
+  const index = ledger.findIndex(
+    (i) => i.fingerprint === issueFingerprint(summary)
+  );
+  if (index === -1) {
+    const application = applyReportedIssues(
+      state,
+      step,
+      [{ summary, applicableMigrations: 'unknown' }],
+      []
+    );
+    return { application, issueId: application.newIssues[0].entry.id };
+  }
+  const {
+    claimedByStepId: _claim,
+    resolvedByStepId: _credit,
+    resolvedAtCommitCount: _fence,
+    ...rest
+  } = ledger[index];
+  const entry: MigrateRunIssue = {
+    ...rest,
+    applicableStepIds: 'unknown',
+    disposition: 'deferred-final',
+  };
+  const issues = [...ledger];
+  issues[index] = entry;
+  return {
+    application: {
+      state: { ...state, issues },
+      newIssues: [],
+      updates: [
+        { issueId: entry.id, stepId: step.id, disposition: 'deferred-final' },
+      ],
+    },
+    issueId: entry.id,
+  };
 }
 
 /**
@@ -970,6 +1033,10 @@ function unresolvedIssues(state: MigrateRunState): MigrateRunIssue[] {
   return (state.issues ?? []).filter((i) => i.disposition !== 'resolved');
 }
 
+export function hasUnresolvedIssues(state: MigrateRunState): boolean {
+  return unresolvedIssues(state).length > 0;
+}
+
 function stepDigestHeading(runId: string): string {
   return `Known issues reported earlier in this run (details under ${issuesDirRef(
     runId
@@ -1173,6 +1240,16 @@ const NEW_ISSUE_ARCHIVE_KEYS = [
   'disposition',
   'detail',
 ] as const;
+
+// Hashes the full id so ids sharing a visible prefix stay distinct.
+function abbreviatedMigrationId(migrationId: string): string {
+  if (migrationId.length <= MAX_UNRESOLVED_ID_CHARS) return migrationId;
+  const digest = createHash('sha256')
+    .update(migrationId)
+    .digest('hex')
+    .slice(0, 8);
+  return `${migrationId.slice(0, MAX_UNRESOLVED_ID_CHARS - 12)}...[${digest}]`;
+}
 
 // Shared by the write path and the intactness check so their shapes cannot
 // drift.

@@ -2,7 +2,13 @@
 // chain out of CLI startup for callers that only need the value list or type.
 
 /** Allowed values for `--step-action`, the orchestrated reconcile's decision relay. */
-export const STEP_ACTIONS = ['retry', 'skip', 'retry-clean', 'adopt'] as const;
+export const STEP_ACTIONS = [
+  'retry',
+  'skip',
+  'retry-clean',
+  'adopt',
+  'unresolved',
+] as const;
 
 export type StepAction = (typeof STEP_ACTIONS)[number];
 

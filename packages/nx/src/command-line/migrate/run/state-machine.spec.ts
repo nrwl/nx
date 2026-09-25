@@ -9,10 +9,13 @@ import {
   applyStepEvent,
   commitReceipt,
   commitResultToLedgerEntry,
+  completionSummaryLines,
   coveringLandedEntries,
   discardGeneratorRun,
   hasPendingCommitDebt,
   stepsToPendingMigrations,
+  tallySteps,
+  unresolvedFailureDetail,
   type StepAction,
   type StepEvent,
 } from './state-machine';
@@ -26,6 +29,7 @@ const ALL_STEP_STATUSES: MigrateStepStatus[] = [
   'failed',
   'skipped',
   'died',
+  'unresolved',
 ];
 
 function stateWithStep(overrides: Partial<MigrateStep> = {}): MigrateRunState {
@@ -401,7 +405,13 @@ describe('applyStepEvent', () => {
   });
 
   describe('stepAction', () => {
-    const ALL_ACTIONS: StepAction[] = ['retry', 'skip', 'retry-clean', 'adopt'];
+    const ALL_ACTIONS: StepAction[] = [
+      'retry',
+      'skip',
+      'retry-clean',
+      'adopt',
+      'unresolved',
+    ];
 
     // The only legal (status, action) pairs for a step with no recorded
     // generator half; every other combination must be rejected. `null` marks
@@ -417,12 +427,18 @@ describe('applyStepEvent', () => {
         if (status === 'failed' && action === 'retry') expected = 'pending';
         else if (status === 'failed' && action === 'retry-clean')
           expected = 'pending';
+        else if (status === 'failed' && action === 'adopt')
+          expected = 'succeeded';
         else if (status === 'failed' && action === 'skip') expected = 'skipped';
+        else if (status === 'failed' && action === 'unresolved')
+          expected = 'unresolved';
         else if (status === 'died' && action === 'retry-clean')
           expected = 'pending';
         else if (status === 'died' && action === 'adopt')
           expected = 'succeeded';
         else if (status === 'died' && action === 'skip') expected = 'skipped';
+        else if (status === 'died' && action === 'unresolved')
+          expected = 'unresolved';
         return { status, action, expected };
       })
     );
@@ -964,6 +980,92 @@ describe('applyStepEvent', () => {
       }
     );
 
+    it.each([
+      ['failed', 'Adopted after the attempt failed'],
+      ['died', 'Adopted after the worker died'],
+    ] as const)(
+      'adopt from %s marks the step adopted and records that the tree as it stood was taken',
+      (status, adopted) => {
+        const state = stateWithStep({
+          status,
+          outcome: { summary: 'generator threw', fileChanges: ['a.ts'] },
+        });
+
+        const result = applyStepEvent(state, {
+          type: 'stepAction',
+          stepId: 'step-1',
+          attempt: 1,
+          action: 'adopt',
+        });
+
+        expect(result.kind).toBe('ok');
+        if (result.kind === 'ok') {
+          expect(result.state.steps[0]).toMatchObject({
+            status: 'succeeded',
+            adopted: true,
+            outcome: {
+              fileChanges: ['a.ts'],
+              summary: expect.stringContaining(adopted),
+            },
+          });
+        }
+      }
+    );
+
+    it('unresolved from failed keeps the attempt and the failure it gave up on', () => {
+      const state = stateWithStep({
+        status: 'failed',
+        attempt: 3,
+        gitRefBefore: 'abc123',
+        outcome: { summary: 'generator threw' },
+        promptOutcome: { status: 'failed', summary: 'nope' },
+      });
+
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        attempt: 3,
+        action: 'unresolved',
+      });
+
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        expect(result.state.steps[0]).toEqual({
+          ...state.steps[0],
+          status: 'unresolved',
+        });
+      }
+    });
+
+    it('unresolved from died keeps the attempt and records the death as the failure', () => {
+      // markDied records no outcome; the transition supplies the death detail.
+      const state = stateWithStep({
+        status: 'died',
+        attempt: 3,
+        pid: 4242,
+        gitRefBefore: 'abc123',
+      });
+
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        attempt: 3,
+        action: 'unresolved',
+      });
+
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        expect(result.state.steps[0]).toEqual({
+          ...state.steps[0],
+          status: 'unresolved',
+          outcome: {
+            summary:
+              'the worker process (pid 4242) died before recording an outcome',
+          },
+        });
+      }
+    });
+
     it('adopt keeps the outcome the dead worker had already recorded', () => {
       const state = stateWithStep({
         status: 'died',
@@ -1105,6 +1207,60 @@ describe('appendCommit', () => {
     expect(failed.steps[0].commitStarted).toBe(true);
     expect(checkpoint.steps[0].commitStarted).toBe(true);
   });
+});
+
+describe('tallySteps', () => {
+  it('counts every status once, telling adopted successes and stalled steps apart', () => {
+    const base = stateWithStep();
+    const state: MigrateRunState = {
+      ...base,
+      steps: ALL_STEP_STATUSES.map((status, index) => ({
+        ...base.steps[0],
+        id: `step-${index + 1}`,
+        status,
+      })).concat({
+        ...base.steps[0],
+        id: 'step-10',
+        status: 'succeeded',
+        adopted: true,
+      }),
+    };
+
+    const tally = tallySteps(state);
+
+    expect(tally).toEqual({
+      applied: 1,
+      adopted: 1,
+      skipped: 1,
+      unresolved: [expect.objectContaining({ status: 'unresolved' })],
+      remaining: 6,
+      stalled: 2,
+    });
+  });
+});
+
+describe('unresolvedFailureDetail', () => {
+  it.each([
+    ['no outcome at all', undefined],
+    ['an empty summary', { status: 'failed', summary: '' }],
+    ['a whitespace-only summary', { status: 'failed', summary: ' \n\t ' }],
+  ] as const)(
+    'reports the fallback for %s, in the report and the ledger alike',
+    (_case, promptOutcome) => {
+      const state = stateWithStep({
+        status: 'unresolved',
+        migrationId: '@nx/js:gen',
+        ...(promptOutcome ? { promptOutcome } : {}),
+      });
+
+      expect(unresolvedFailureDetail(state.steps[0])).toBe(
+        'no failure detail was recorded'
+      );
+      expect(completionSummaryLines(state)).toContain(
+        '    - @nx/js:gen: no failure detail was recorded'
+      );
+    }
+  );
 });
 
 describe('hasPendingCommitDebt', () => {
