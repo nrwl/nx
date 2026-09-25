@@ -957,8 +957,9 @@ export interface Link {
 }
 
 /**
- * Runs every locator and returns the touched project names, in locator order,
- * unsorted overall and with duplicates. Callers dedupe by walking the graph.
+ * Runs every locator and returns what each marked, in locator order, unsorted
+ * overall. A project appears once per reason; callers dedupe by walking the
+ * graph.
  *
  * Every branch is deterministic, and must stay so: this order reaches
  * `result.nodes` insertion order and so `nx show projects --affected`.
@@ -1293,8 +1294,8 @@ export interface TouchedProject {
   /** The changed file that triggered it, when one file is responsible. */
   file?: string
   /**
-   * The `{workspaceRoot}` fileset or plugin glob that matched, when the
-   * signal came from a pattern rather than from ownership.
+   * The `{workspaceRoot}` fileset that matched, when the signal came from a
+   * pattern rather than from ownership.
    */
   pattern?: string
   /**

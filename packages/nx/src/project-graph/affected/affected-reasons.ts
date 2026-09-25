@@ -31,7 +31,7 @@ export type AffectedReasonKind =
   | 'tsconfig'
   /** A path mapping into the project changed in the root tsconfig. */
   | 'tsconfig-paths'
-  /** Project-level only: it depends on a project that was touched. */
+  /** Project-level only: it depends on a project that is affected. */
   | 'dependency'
   /** Task-level: a changed file matched one of the task's inputs. */
   | 'input-file'
@@ -50,7 +50,7 @@ export interface AffectedReason {
   pattern?: string;
   /** The external package whose version moved. */
   package?: string;
-  /** The touched project this one depends on. */
+  /** The affected project this one depends on. */
   dependency?: string;
   /** The task whose outputs this task reads. */
   producer?: string;
