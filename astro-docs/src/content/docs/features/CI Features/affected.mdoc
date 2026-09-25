@@ -269,10 +269,10 @@ nx affected -t build --explain
   ui:build
     - input libs/ui/**/* matched libs/ui/src/index.ts
 
-  app:build
+  admin:build
     - reads the outputs of ui:build, which the change reached
 
-  admin:build
+  app:build
     - reads the outputs of ui:build, which the change reached
 
 3 affected tasks and 2 tasks they depend on.
