@@ -1167,39 +1167,6 @@ export interface TaskRun {
   end: number
 }
 
-/** Observed-IO sandbox configuration of a task's target */
-export interface TaskSandboxConfiguration {
-  /**
-   * Whether tasks for this target are tracked by the sandbox.
-   * Defaults to true. When false, no IO tracing is reported for the
-   * task, so no sandbox report is produced.
-   */
-  enabled?: boolean
-  /**
-   * Workspace-relative glob patterns for reads that should be excluded
-   * from sandboxing reports. The first path segment cannot contain `*`,
-   * and `?`, `!`, `[`, `]` and extglobs are not supported; anchor the
-   * pattern to a directory instead of leading with `**`.
-   */
-  ignoredReads?: Array<string>
-  /**
-   * Workspace-relative glob patterns for writes that should be excluded
-   * from sandboxing reports. The first path segment cannot contain `*`,
-   * and `?`, `!`, `[`, `]` and extglobs are not supported; anchor the
-   * pattern to a directory instead of leading with `**`.
-   */
-  ignoredWrites?: Array<string>
-  /**
-   * Whether a recorded IO snapshot backfills this target's declared inputs
-   * and outputs. Defaults to true. When false, the task hashes from its
-   * declared filesets and caches its declared outputs, even though its IO is
-   * still recorded. Reads and writes are one switch: a task whose hash came
-   * from the recording but whose cache did not would describe a state that
-   * never ran.
-   */
-  backfill?: boolean
-}
-
 export declare const enum TaskStatus {
   Success = 0,
   Failure = 1,
