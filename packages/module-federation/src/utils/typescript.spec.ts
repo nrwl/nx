@@ -1,4 +1,5 @@
 import type { Mock } from 'vitest';
+import { mockCjsModule } from '@nx/devkit/internal-testing-utils';
 vi.mock('fs', async () => {
   const actual = await vi.importActual<any>('fs');
   return {
@@ -10,13 +11,14 @@ import * as fs from 'fs';
 
 let readConfigFileResult: any;
 let parseJsonConfigFileContentResult: any;
-vi.mock('typescript', async () => ({
-  ...(await vi.importActual<any>('typescript')),
+// The source loads typescript with a lazy require(), which vi.mock cannot reach.
+mockCjsModule(import.meta.url, 'typescript', {
+  ...require('typescript'),
   readConfigFile: vi.fn().mockImplementation(() => readConfigFileResult),
   parseJsonConfigFileContent: vi
     .fn()
     .mockImplementation(() => parseJsonConfigFileContentResult),
-}));
+});
 
 import { readTsPathMappings } from './typescript';
 
