@@ -263,8 +263,12 @@ export async function generateGraph(
     focus?: string;
     exclude?: string[];
     affected?: boolean;
-    /** What the command would run for `targets`; built from `projects` when absent. */
-    taskSelection?: TaskSelection;
+    /**
+     * What the command would run for `targets`, or how to build it. A builder
+     * is only called where an output needs it, so the live graph can still
+     * open, and show the error, when the task graph cannot be built.
+     */
+    taskSelection?: TaskSelection | (() => TaskSelection);
     /** The `-c` the tasks run with; their ids carry it. */
     configuration?: string;
   },
@@ -322,7 +326,7 @@ export async function generateGraph(
   // the projects' targets.
   const jsonTaskSelection = () =>
     args.targets?.length
-      ? (args.taskSelection ??
+      ? (resolveSelection(args.taskSelection) ??
         selectTasksForProjects(
           rawGraph,
           args.projects?.length
@@ -529,7 +533,7 @@ export async function generateGraph(
         args.focus,
         args.groupByFolder,
         excludePatterns,
-        args.taskSelection?.taskIds
+        typeof args.taskSelection === 'object' && args.taskSelection.taskIds
           ? {
               targets: args.targets,
               configuration: args.configuration,
@@ -1267,6 +1271,12 @@ export function selectedFor(
     : { configuration };
 }
 
+function resolveSelection<T>(
+  selection: T | (() => T) | undefined
+): T | undefined {
+  return typeof selection === 'function' ? (selection as () => T)() : selection;
+}
+
 /**
  * The task graph to draw: the selection's own when it has one, otherwise built
  * and, given ids, pruned to them. The live graph rebuilds per request, so it
@@ -1293,7 +1303,9 @@ async function createTaskGraphForTargetsAndProjects(
   targetNames: string[],
   projectNames?: string[],
   configuration?: string,
-  selection?: { taskGraph?: TaskGraph; taskIds?: string[] }
+  selection?:
+    | { taskGraph?: TaskGraph; taskIds?: string[] }
+    | (() => TaskSelection)
 ): Promise<TaskGraphClientResponse> {
   // Get project graph
   let graph: ProjectGraph;
@@ -1332,7 +1344,8 @@ async function createTaskGraphForTargetsAndProjects(
           configuration,
           {}
         ),
-      selection
+      // Built in here, so an error is reported in the page like any other.
+      resolveSelection(selection)
     );
 
     performance.mark(`task graph generation:end`);

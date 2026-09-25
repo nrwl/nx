@@ -276,14 +276,15 @@ async function runPublishOnProjects(
         targets: [requiredTargetName],
         projects: projectNamesWithTarget,
         file,
-        taskSelection: selectTasksForProjects(
-          projectGraph,
-          projectNamesWithTarget,
-          { targets: [requiredTargetName] } as NxArgs,
-          overrides,
-          {},
-          extraOptions.excludeTaskDependencies
-        ),
+        taskSelection: () =>
+          selectTasksForProjects(
+            projectGraph,
+            projectNamesWithTarget,
+            { targets: [requiredTargetName] } as NxArgs,
+            overrides,
+            {},
+            extraOptions.excludeTaskDependencies
+          ),
       },
       projectNamesWithTarget
     );
