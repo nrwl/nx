@@ -5,8 +5,8 @@ import {
   unwrapCjsInterop,
 } from './config-utils';
 
-// Jest's require.cache is not the real module cache, so the tests drive the
-// helper through its injectable cache with hand-built module graphs.
+// Drive the helper through its injectable cache with hand-built module graphs
+// rather than the real require.cache.
 describe('clearConfigFromRequireCache', () => {
   let cache: NodeJS.Dict<NodeModule>;
 
@@ -144,19 +144,29 @@ describe('isTranspilerRecoverableError', () => {
     }
   });
 
-  it('should classify identically on a host nx that does not export the classifiers', () => {
+  it('should classify identically on a host nx that does not export the classifiers', async () => {
     // nx 23.0/23.1 recover these error classes in loadTsFile but do not
     // re-export the classifiers from devkit-internals.
-    jest.isolateModules(() => {
-      vi.doMock('nx/src/devkit-internals', () => ({}));
-      const {
-        isTranspilerRecoverableError: withoutHostClassifiers,
-      } = require('./config-utils');
+    vi.resetModules();
+    // Each name listed as `undefined`: vitest throws on reading an export its
+    // mock factory did not return.
+    vi.doMock('nx/src/devkit-internals', () => ({
+      forceRegisterEsmLoader: undefined,
+      isRequireInEsmScopeError: undefined,
+      isTsEsmNamedExportLinkageError: undefined,
+      loadTsFile: undefined,
+      registerTsProject: undefined,
+    }));
+    try {
+      const { isTranspilerRecoverableError: withoutHostClassifiers } =
+        await import('./config-utils');
       for (const [err, path, expected] of cases) {
         expect(withoutHostClassifiers(err, path)).toBe(expected);
       }
-    });
-    vi.doUnmock('nx/src/devkit-internals');
+    } finally {
+      vi.doUnmock('nx/src/devkit-internals');
+      vi.resetModules();
+    }
   });
 });
 
