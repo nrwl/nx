@@ -177,6 +177,7 @@ async function getAffectedTasks(
     projectGraph,
     affectedTaskIds,
     requiredTaskIds,
+    initiatingTaskIds,
     taskGraph,
     runTaskGraph,
     planningContext,
@@ -205,6 +206,7 @@ async function getAffectedTasks(
     projects: [...owning].map((name) => projectGraph.nodes[name]),
     taskSelection: {
       taskIds: requiredTaskIds,
+      initiatingTaskIds,
       planningContext,
       taskGraph: runTaskGraph,
     },

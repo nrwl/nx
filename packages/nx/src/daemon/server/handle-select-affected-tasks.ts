@@ -33,6 +33,7 @@ export async function handleSelectAffectedTasks(
     projectGraph,
     affectedTaskIds: [...selection.affectedTaskIds],
     requiredTaskIds: selection.requiredTaskIds,
+    initiatingTaskIds: selection.initiatingTaskIds,
     runTaskGraph: selection.runTaskGraph,
     taskGraph: selection.taskGraph,
   };

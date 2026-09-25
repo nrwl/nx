@@ -14,6 +14,7 @@ export type SelectAffectedTasksResponse = {
   projectGraph: ProjectGraph;
   affectedTaskIds: string[];
   requiredTaskIds: string[];
+  initiatingTaskIds: string[];
   taskGraph: TaskGraph;
   runTaskGraph?: TaskGraph;
 };

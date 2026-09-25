@@ -67,6 +67,8 @@ import type { TaskPlanningContext } from '../hasher/task-planning-context';
 export interface TaskSelection {
   /** The selected tasks and everything they depend on: the graph is pruned to these. */
   taskIds: string[];
+  /** The tasks the command asked for, which the run reports as initiating. */
+  initiatingTaskIds: string[];
   /** The graph already built for these tasks, used instead of building one. */
   taskGraph?: TaskGraph;
   /** Reused by the hasher so the survivors are not planned a second time. */
@@ -612,11 +614,16 @@ export async function runCommandForTasks(
 
   const tasks = Object.values(taskGraph.tasks);
 
-  const initiatingTasks = tasks.filter(
-    (t) =>
-      projectNameSet.has(t.target.project) &&
-      nxArgs.targets.includes(t.target.target)
-  );
+  // A sync generator can remove a selected task, so absent ids are skipped.
+  const initiatingTasks = taskSelection
+    ? taskSelection.initiatingTaskIds
+        .map((id) => taskGraph.tasks[id])
+        .filter(Boolean)
+    : tasks.filter(
+        (t) =>
+          projectNameSet.has(t.target.project) &&
+          nxArgs.targets.includes(t.target.target)
+      );
 
   const { lifeCycle, renderIsDone, printSummary, restoreTerminal } =
     await getTerminalOutputLifeCycle(

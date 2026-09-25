@@ -55,6 +55,8 @@ export interface AffectedTasksResult {
   affectedTaskIds: Set<string>;
   /** `affectedTaskIds` plus everything they depend on: what a run keeps. */
   requiredTaskIds: string[];
+  /** The kept tasks the command asked for, rather than ones pulled in as dependencies. */
+  initiatingTaskIds: string[];
   /** The full, unpruned graph the answer was computed over. */
   taskGraph: TaskGraph;
   /**
@@ -134,6 +136,7 @@ export async function computeAffectedTasks(
         projectGraph: selection.projectGraph,
         affectedTaskIds: new Set(selection.affectedTaskIds),
         requiredTaskIds: selection.requiredTaskIds,
+        initiatingTaskIds: selection.initiatingTaskIds,
         taskGraph: selection.taskGraph,
         runTaskGraph: selection.runTaskGraph,
       };
@@ -162,6 +165,7 @@ export async function computeAffectedTasks(
     projectGraph,
     affectedTaskIds: selection.affectedTaskIds,
     requiredTaskIds: selection.requiredTaskIds,
+    initiatingTaskIds: selection.initiatingTaskIds,
     taskGraph: selection.taskGraph,
     runTaskGraph: selection.runTaskGraph,
     // The plans ride along so the hasher narrows them instead of building its
@@ -199,6 +203,7 @@ export async function selectAffectedTasks(
 ): Promise<{
   affectedTaskIds: Set<string>;
   requiredTaskIds: string[];
+  initiatingTaskIds: string[];
   taskGraph: TaskGraph;
   runTaskGraph?: TaskGraph;
   plans?: NonNullable<TaskPlanningContext['plans']>['plans'];
@@ -212,6 +217,7 @@ export async function selectAffectedTasks(
     return {
       affectedTaskIds: new Set(),
       requiredTaskIds: [],
+      initiatingTaskIds: [],
       taskGraph: {
         roots: [],
         tasks: {},
@@ -284,6 +290,7 @@ export async function selectAffectedTasks(
   return {
     affectedTaskIds: new Set(selection.affected),
     requiredTaskIds: selection.required,
+    initiatingTaskIds: keep.filter((id) => initial.has(id)),
     taskGraph,
     runTaskGraph: narrowTaskGraph(
       projectGraph,

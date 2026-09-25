@@ -324,6 +324,8 @@ describe('the run graph selection hands over', () => {
       __overrides_unparsed__: [],
     });
     expect(result.runTaskGraph.dependencies).toEqual(expected.dependencies);
+    // lib:test runs only because app:test needs it.
+    expect(result.initiatingTaskIds).toEqual(['app:test']);
   });
 });
 
@@ -370,6 +372,7 @@ describe('computeAffectedTasks with the daemon on', () => {
       projectGraph: daemonGraph,
       affectedTaskIds: ['lib:test'],
       requiredTaskIds: ['lib:test'],
+      initiatingTaskIds: ['lib:test'],
       taskGraph: {
         roots: [],
         tasks: {},
@@ -403,6 +406,7 @@ describe('computeAffectedTasks with the daemon on', () => {
     expect(JSON.parse(JSON.stringify(request))).toEqual(request);
     expect([...result.affectedTaskIds]).toEqual(['lib:test']);
     expect(result.requiredTaskIds).toEqual(['lib:test']);
+    expect(result.initiatingTaskIds).toEqual(['lib:test']);
     // The plans stay in the daemon, which is what hashes them.
     expect(result.planningContext).toBeUndefined();
     // The command runs with the graph the daemon selected against.
