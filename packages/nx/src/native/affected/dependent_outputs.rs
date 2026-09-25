@@ -704,6 +704,24 @@ mod tests {
         }
     }
 
+    /// Folders meet when either prefix contains the other, compared by whole
+    /// segments. Checked both ways, since reads and outputs share one shape.
+    #[test]
+    fn folders_meet_only_when_one_prefix_contains_the_other() {
+        let meet = |a: &str, b: &str| {
+            let (a, b) = (GlobShape::new(a), GlobShape::new(b));
+            let there = a.may_read(&b);
+            assert_eq!(there, b.may_read(&a), "not symmetric");
+            there
+        };
+        assert!(meet("dist/**", "dist/lib"));
+        assert!(meet("dist/lib/esm/**", "dist/lib"));
+        assert!(meet("dist/lib/**", "dist/lib"));
+        assert!(!meet("dist/lib/**", "dist/app"));
+        assert!(!meet("dist/lib/**", "dist/lib-legacy"));
+        assert!(!meet("dist/lib-legacy/**", "dist/lib"));
+    }
+
     #[test]
     fn an_extension_is_read_only_after_a_wildcard() {
         let ext = |glob| extension_after_wildcard(glob);
