@@ -24,6 +24,7 @@ use crate::native::tasks::hashers::{OnceCache, validate_files_globs};
 use crate::native::tasks::inputs::{
     expand_single_project_inputs, get_inputs, get_inputs_for_dependency_group, get_named_inputs,
 };
+use crate::native::tasks::plan_memo::PlanMemo;
 use crate::native::tasks::snapshot_eligibility::{
     self, EligibilityInputs, IoSnapshotEligibilityOptions, SnapshotTask,
 };
@@ -126,6 +127,9 @@ pub struct HashPlanner {
     project_by_root: OnceLock<HashMap<String, String>>,
     /// Interner backing every plan this planner produces.
     instruction_pool: Arc<InstructionPool>,
+    /// Whole-task plans from the last call without snapshots, reused while
+    /// the task graph around them is unchanged.
+    plan_memo: PlanMemo,
 }
 
 /// Instruction ids contributed by one (project, propagated input) dependency subtree.
@@ -230,38 +234,6 @@ impl<'a> VisitedTracker<'a> {
     }
 }
 
-/// Narrows an existing set of plans to `task_ids`, sharing the instruction pool
-/// rather than re-planning.
-///
-/// Returns `None` when any requested task has no plan. It does not check that
-/// each kept task's dependency closure is unchanged; callers do (`plannedAlike`).
-#[napi(ts_return_type = "ExternalObject<Record<string, Array<HashInstruction>>> | null")]
-pub fn subset_hash_plans(
-    #[napi(ts_arg_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
-    plans: &External<HashPlans>,
-    task_ids: Vec<String>,
-) -> Option<External<HashPlans>> {
-    subset_plans(plans, &task_ids).map(External::new)
-}
-
-pub(crate) fn subset_plans(plans: &HashPlans, task_ids: &[String]) -> Option<HashPlans> {
-    let subset: HashMap<String, Vec<u32>> = task_ids
-        .iter()
-        .map(|id| Some((id.clone(), plans.plans.get(id)?.clone())))
-        .collect::<Option<_>>()?;
-
-    Some(HashPlans {
-        pool: Arc::clone(&plans.pool),
-        deferred: plans
-            .deferred
-            .iter()
-            .filter(|id| subset.contains_key(*id))
-            .cloned()
-            .collect(),
-        plans: subset,
-    })
-}
-
 #[napi]
 impl HashPlanner {
     #[napi(constructor)]
@@ -280,6 +252,7 @@ impl HashPlanner {
             acyclic_dependency_projects: OnceLock::new(),
             project_by_root: OnceLock::new(),
             instruction_pool: Arc::new(InstructionPool::new()),
+            plan_memo: PlanMemo::default(),
         }
     }
 
@@ -337,9 +310,18 @@ impl HashPlanner {
 
         trace!("External deps setup completed in {:?}", setup_duration);
 
+        // Snapshot plans depend on the snapshot set too, so they are neither
+        // reused nor kept.
+        let memo = snapshots
+            .is_none()
+            .then(|| self.plan_memo.begin(&task_graph));
+        let to_plan = memo
+            .as_ref()
+            .map_or_else(|| task_ids.clone(), |memo| memo.missing(&task_ids));
+
         let pool = &self.instruction_pool;
         let parallel_start = std::time::Instant::now();
-        let result: anyhow::Result<HashMap<String, Vec<u32>>> = task_ids
+        let result: anyhow::Result<HashMap<String, Vec<u32>>> = to_plan
             .par_iter()
             .map(|id| {
                 let task = &task_graph
@@ -456,9 +438,10 @@ impl HashPlanner {
 
         if result.is_ok() {
             tracing::debug!(
-                "get_plans_internal COMPLETED in {:?} - processed {} tasks (setup: {:?}, parallel_planning: {:?}, pool: {} unique instructions)",
+                "get_plans_internal COMPLETED in {:?} - processed {} tasks, {} reused (setup: {:?}, parallel_planning: {:?}, pool: {} unique instructions)",
                 total_duration,
                 task_ids.len(),
+                task_ids.len() - to_plan.len(),
                 setup_duration,
                 parallel_duration,
                 self.instruction_pool.len()
@@ -471,6 +454,10 @@ impl HashPlanner {
             );
         }
 
+        let result = match memo {
+            Some(memo) => result.map(|planned| memo.finish(planned, &task_ids)),
+            None => result,
+        };
         result.map(|plans| {
             let deferred = deferred_tasks(&plans, pool, &task_graph);
             HashPlans {
@@ -2412,57 +2399,106 @@ mod tests {
 }
 
 #[cfg(test)]
-mod subset_tests {
+mod plan_memo_tests {
     use super::*;
+    use crate::native::project_graph::types::{Project, Target};
+    use crate::native::test_utils::task_graph;
+    use crate::native::types::DepsOutputsInput;
+    use napi::bindgen_prelude::Either9;
 
-    fn plans(entries: &[(&str, &[u32])]) -> HashPlans {
-        HashPlans {
-            pool: Arc::new(InstructionPool::default()),
-            plans: entries
-                .iter()
-                .map(|(id, plan)| (id.to_string(), plan.to_vec()))
-                .collect(),
-            deferred: Default::default(),
-        }
+    /// `app:build` reads `lib:build`'s outputs, so its plan embeds them.
+    fn planner() -> HashPlanner {
+        let project = |root: &str, inputs| Project {
+            root: root.into(),
+            targets: HashMap::from([(
+                "build".into(),
+                Target {
+                    inputs: Some(inputs),
+                    ..Default::default()
+                },
+            )]),
+            ..Default::default()
+        };
+        let graph = ProjectGraph {
+            nodes: HashMap::from([
+                (
+                    "lib".into(),
+                    project("libs/lib", vec![Either9::B("{projectRoot}/**/*".into())]),
+                ),
+                (
+                    "app".into(),
+                    project(
+                        "apps/app",
+                        vec![
+                            Either9::B("{projectRoot}/**/*".into()),
+                            Either9::G(DepsOutputsInput {
+                                dependent_tasks_output_files: "**/*.js".into(),
+                                transitive: None,
+                            }),
+                        ],
+                    ),
+                ),
+            ]),
+            dependencies: HashMap::from([
+                ("app".into(), vec!["lib".into()]),
+                ("lib".into(), vec![]),
+            ]),
+            external_nodes: HashMap::new(),
+        };
+        HashPlanner::new(
+            NxJson { named_inputs: None },
+            &External::new(Arc::new(graph)),
+        )
     }
 
-    fn ids(ids: &[&str]) -> Vec<String> {
-        ids.iter().map(|id| id.to_string()).collect()
+    fn graph(lib_outputs: &[&str]) -> TaskGraph {
+        task_graph(
+            &[("lib:build", lib_outputs), ("app:build", &[])],
+            &[("app:build", &["lib:build"])],
+        )
     }
 
+    fn plans(
+        planner: &HashPlanner,
+        ids: &[&str],
+        graph: TaskGraph,
+    ) -> HashMap<String, Vec<HashInstruction>> {
+        planner
+            .get_plans_materialized(ids.to_vec(), graph, None, &[])
+            .unwrap()
+    }
+
+    /// What selection then the run do: plan every task, then some of them again.
     #[test]
-    fn keeps_only_the_requested_tasks() {
-        let source = plans(&[("a:build", &[1, 2]), ("b:build", &[3]), ("c:build", &[4])]);
-        let subset = subset_plans(&source, &ids(&["a:build", "c:build"])).unwrap();
-
-        assert_eq!(subset.plans.len(), 2);
-        assert_eq!(subset.plans["a:build"], vec![1, 2]);
-        assert_eq!(subset.plans["c:build"], vec![4]);
+    fn a_second_call_answers_as_a_fresh_planner_would() {
+        let reused = planner();
+        plans(&reused, &["lib:build", "app:build"], graph(&["dist/lib"]));
+        assert_eq!(
+            plans(&reused, &["app:build"], graph(&["dist/lib"])),
+            plans(&planner(), &["app:build"], graph(&["dist/lib"]))
+        );
+        assert!(
+            reused
+                .plan_memo
+                .begin(&graph(&["dist/lib"]))
+                .missing(&["app:build"])
+                .is_empty()
+        );
     }
 
-    /// The guard: an unplanned task means these plans describe a different task
-    /// graph, so the caller has to plan for real rather than hash a subset.
+    /// The consumer's plan embeds the producer's outputs, so it is planned again.
     #[test]
-    fn refuses_when_a_task_was_never_planned() {
-        let source = plans(&[("a:build", &[1])]);
-        assert!(subset_plans(&source, &ids(&["a:build", "missing:build"])).is_none());
-    }
-
-    #[test]
-    fn shares_the_instruction_pool_rather_than_copying_it() {
-        let source = plans(&[("a:build", &[1])]);
-        let subset = subset_plans(&source, &ids(&["a:build"])).unwrap();
-        assert!(Arc::ptr_eq(&source.pool, &subset.pool));
-    }
-
-    /// A deferred task stays deferred in the subset, so the up-front batch
-    /// still leaves it for after its producers ran.
-    #[test]
-    fn keeps_the_deferred_marker_for_the_tasks_it_keeps() {
-        let mut source = plans(&[("a:build", &[1]), ("b:build", &[2])]);
-        source.deferred = ids(&["a:build", "b:build"]).into_iter().collect();
-        let subset = subset_plans(&source, &ids(&["a:build"])).unwrap();
-        assert_eq!(subset.deferred.len(), 1);
-        assert!(subset.deferred.contains("a:build"));
+    fn a_changed_producer_output_is_planned_again() {
+        let reused = planner();
+        plans(&reused, &["lib:build", "app:build"], graph(&["dist/lib"]));
+        let replanned = plans(&reused, &["app:build"], graph(&["dist/lib-v2"]));
+        assert_eq!(
+            replanned,
+            plans(&planner(), &["app:build"], graph(&["dist/lib-v2"]))
+        );
+        assert!(replanned["app:build"].iter().any(|instruction| matches!(
+            instruction,
+            HashInstruction::TaskOutput(_, outputs) if outputs == &["dist/lib-v2"]
+        )));
     }
 }

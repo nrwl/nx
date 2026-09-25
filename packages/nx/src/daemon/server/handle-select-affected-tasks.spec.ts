@@ -18,7 +18,6 @@ const state = vi.hoisted(() => ({
       initiatingTaskIds: ['app:build'],
       taskIds: ['app:build'],
     },
-    plans: {} as unknown,
   },
 }));
 
@@ -26,17 +25,15 @@ vi.mock('./project-graph-incremental-recomputation', () => ({
   getCachedSerializedProjectGraphPromise: async () => state.graph,
 }));
 vi.mock('../../config/configuration', () => ({ readNxJson: () => ({}) }));
-vi.mock('../../hasher/task-planning-context', () => ({
-  createTaskPlanningContext: () => ({}),
-}));
+const planningContext = vi.hoisted(() => ({}));
+const planningContextFor = vi.hoisted(() => vi.fn(() => planningContext));
+vi.mock('./planning-context', () => ({ planningContextFor }));
 const selectAffectedTasks = vi.hoisted(() =>
   vi.fn(async () => state.selection)
 );
 vi.mock('../../project-graph/affected/affected-tasks', () => ({
   selectAffectedTasks,
 }));
-const keepSelectionPlans = vi.hoisted(() => vi.fn());
-vi.mock('./handle-hash-tasks', () => ({ keepSelectionPlans }));
 
 import { handleSelectAffectedTasks } from './handle-select-affected-tasks';
 
@@ -53,18 +50,18 @@ describe('handleSelectAffectedTasks', () => {
   beforeEach(() => vi.clearAllMocks());
 
   // The client runs with this graph, so its ids match the selection's.
-  it('returns the graph it selected against, and keeps the plans beside it', async () => {
+  it('returns the graph it selected against, planning with the shared planner', async () => {
     const { response } = await handleSelectAffectedTasks(request);
 
     expect(selectAffectedTasks.mock.calls[0][0]).toBe(state.graph.projectGraph);
     expect((response as any).projectGraph).toBe(state.graph.projectGraph);
     expect((response as any).affectedTaskIds).toEqual(['app:build']);
     expect((response as any).taskSelection).toBe(state.selection.taskSelection);
-    expect(keepSelectionPlans).toHaveBeenCalledWith(
+    expect(planningContextFor).toHaveBeenCalledWith(
       state.graph.projectGraph,
-      state.selection.taskGraph,
-      state.selection.plans
+      {}
     );
+    expect(selectAffectedTasks.mock.calls[0][2]).toBe(planningContext);
   });
 
   it('fails with the graph error rather than selecting', async () => {

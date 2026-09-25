@@ -11,7 +11,6 @@ import {
   ProjectGraph as NativeProjectGraph,
   NxWorkspaceFilesExternals,
   TaskHasher,
-  subsetHashPlans,
 } from '../native';
 import type { IgnoredIndexReader } from '../native';
 import { transformProjectGraphForRust } from '../native/transform-objects';
@@ -25,7 +24,6 @@ import { PartialHash, TaskHasherImpl } from './task-hasher';
 export class NativeTaskHasherImpl implements TaskHasherImpl {
   hasher: TaskHasher;
   planner: HashPlanner;
-  private readonly planningContext?: TaskPlanningContext;
   projectGraphRef: ExternalObject<NativeProjectGraph>;
   allWorkspaceFilesRef: ExternalObject<FileData[]>;
   projectFileMapRef: ExternalObject<Record<string, FileData[]>>;
@@ -40,11 +38,6 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     taskIds: Set<string>;
     plans: ReturnType<HashPlanner['getPlansReference']>;
   } | null = null;
-  /** Plans a daemon-side selection built. They outlive the command that built them. */
-  private selectionPlans: {
-    taskGraph: TaskGraph;
-    plans: ReturnType<HashPlanner['getPlansReference']>;
-  } | null = null;
 
   constructor(
     workspaceRoot: string,
@@ -54,7 +47,7 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     options: { selectivelyHashTsConfig: boolean },
     planningContext?: TaskPlanningContext
   ) {
-    // Affected's planner was built over its ref, so the two stay paired.
+    // A shared planner was built over its ref, so the two stay paired.
     this.projectGraphRef =
       planningContext?.projectGraphRef ??
       transformProjectGraphForRust(projectGraph);
@@ -77,7 +70,6 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
 
     this.planner =
       planningContext?.planner ?? new HashPlanner(nxJson, this.projectGraphRef);
-    this.planningContext = planningContext;
     this.hasher = new TaskHasher(
       workspaceRoot,
       this.projectGraphRef,
@@ -143,7 +135,7 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
       unplanned = unplanned.filter((id) => !(id in hashes));
     }
     if (unplanned.length > 0) {
-      const plans = this.plansFor(unplanned, taskGraph, ioSnapshots);
+      const plans = this.plan(unplanned, taskGraph, ioSnapshots);
       Object.assign(
         hashes,
         this.hasher.hashPlans(plans, envs, resolvedCwd, shouldCollectInputs)
@@ -181,11 +173,14 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     collectInputs?: boolean,
     ioSnapshots?: IoSnapshots
   ): Promise<Record<string, PartialHash>> {
-    const taskIds = tasks.map((t) => t.id);
-    const plans = this.plansFor(taskIds, taskGraph, ioSnapshots);
+    const plans = this.plan(
+      tasks.map((t) => t.id),
+      taskGraph,
+      ioSnapshots
+    );
     this.upfrontPlans = {
       fingerprint: taskGraphFingerprint(taskGraph, ioSnapshots),
-      taskIds: new Set(taskIds),
+      taskIds: new Set(tasks.map((t) => t.id)),
       plans,
     };
     const shouldCollectInputs =
@@ -196,37 +191,6 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
       cwd ?? process.cwd(),
       shouldCollectInputs
     );
-  }
-
-  /**
-   * Narrows plans affected already built instead of planning again: a second
-   * pass costs about as much as the first, even with the subtree memo warm.
-   */
-  private plansFor(
-    taskIds: string[],
-    taskGraph: TaskGraph,
-    ioSnapshots?: IoSnapshots
-  ): ReturnType<HashPlanner['getPlansReference']> {
-    // Both were planned without snapshots, so they cannot answer a run that has them.
-    const reusable = ioSnapshots
-      ? []
-      : [this.planningContext?.plans, this.selectionPlans];
-    for (const planned of reusable) {
-      if (planned && plannedAlike(planned.taskGraph, taskGraph, taskIds)) {
-        const subset = subsetHashPlans(planned.plans, taskIds);
-        if (subset) {
-          return subset;
-        }
-      }
-    }
-    return this.plan(taskIds, taskGraph, ioSnapshots);
-  }
-
-  adoptSelectionPlans(
-    plans: ReturnType<HashPlanner['getPlansReference']>,
-    taskGraph: TaskGraph
-  ): void {
-    this.selectionPlans = { plans, taskGraph };
   }
 }
 
@@ -242,59 +206,22 @@ function taskGraphFingerprint(
   taskGraph: TaskGraph,
   ioSnapshots?: IoSnapshots
 ): string {
-  return hashArray([
+  const parts: string[] = [
     ioSnapshots
       ? `${ioSnapshots.commit}@${ioSnapshots.resolution.fetchedAt}`
       : '',
-    ...Object.keys(taskGraph.tasks)
-      .sort()
-      .flatMap((id) => taskSignature(taskGraph, id)),
-  ]);
-}
-
-function taskSignature(taskGraph: TaskGraph, id: string): string[] {
-  const task = taskGraph.tasks[id];
-  return [
-    id,
-    task.target.project,
-    task.target.target,
-    task.target.configuration ?? '',
-    (task.outputs ?? []).join(','),
-    (taskGraph.dependencies[id] ?? []).join(','),
-    (taskGraph.continuousDependencies?.[id] ?? []).join(','),
   ];
-}
-
-/**
- * Whether `planned` gives each of `taskIds` the plan `requested` would. A plan
- * reads its task and everything it depends on, so the whole closure is
- * compared, not just the tasks asked for.
- */
-export function plannedAlike(
-  planned: TaskGraph,
-  requested: TaskGraph,
-  taskIds: string[]
-): boolean {
-  const seen = new Set<string>();
-  const stack = [...taskIds];
-  while (stack.length) {
-    const id = stack.pop()!;
-    if (seen.has(id)) {
-      continue;
-    }
-    seen.add(id);
-    if (!planned.tasks[id] || !requested.tasks[id]) {
-      return false;
-    }
-    const a = taskSignature(planned, id);
-    const b = taskSignature(requested, id);
-    if (a.some((part, i) => part !== b[i])) {
-      return false;
-    }
-    stack.push(
-      ...(requested.dependencies[id] ?? []),
-      ...(requested.continuousDependencies?.[id] ?? [])
+  for (const id of Object.keys(taskGraph.tasks).sort()) {
+    const task = taskGraph.tasks[id];
+    parts.push(
+      id,
+      task.target.project,
+      task.target.target,
+      task.target.configuration ?? '',
+      (task.outputs ?? []).join(','),
+      (taskGraph.dependencies[id] ?? []).join(','),
+      (taskGraph.continuousDependencies[id] ?? []).join(',')
     );
   }
-  return true;
+  return hashArray(parts);
 }

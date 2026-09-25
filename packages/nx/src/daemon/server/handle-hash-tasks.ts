@@ -4,6 +4,7 @@ import { InProcessTaskHasher } from '../../hasher/task-hasher';
 import { readNxJson } from '../../config/configuration';
 import type { IoSnapshotVersion } from '../message-types/io-snapshot-version';
 import { getIoSnapshotsForVersion } from './io-snapshots-state';
+import { planningContextFor } from './planning-context';
 
 /**
  * We use this not to recreated hasher for every hash operation
@@ -11,20 +12,6 @@ import { getIoSnapshotsForVersion } from './io-snapshots-state';
  */
 let storedProjectGraph: any = null;
 let storedHasher: InProcessTaskHasher | null = null;
-/** The last selection's plans, for the graph they were built over. */
-let selectionPlans: {
-  projectGraph: unknown;
-  taskGraph: TaskGraph;
-  plans: Parameters<InProcessTaskHasher['adoptSelectionPlans']>[0];
-} | null = null;
-
-export function keepSelectionPlans(
-  projectGraph: unknown,
-  taskGraph: TaskGraph,
-  plans: Parameters<InProcessTaskHasher['adoptSelectionPlans']>[0]
-): void {
-  selectionPlans = { projectGraph, taskGraph, plans };
-}
 
 interface HashTasksPayload {
   runnerOptions: any;
@@ -52,16 +39,10 @@ async function getHasher(runnerOptions: any): Promise<InProcessTaskHasher> {
       projectGraph,
       nxJson,
       rustReferences,
-      runnerOptions
+      runnerOptions,
+      undefined,
+      planningContextFor(projectGraph, nxJson)
     );
-  }
-  if (selectionPlans?.projectGraph === projectGraph) {
-    storedHasher.adoptSelectionPlans(
-      selectionPlans.plans,
-      selectionPlans.taskGraph
-    );
-  } else {
-    selectionPlans = null;
   }
   return storedHasher;
 }

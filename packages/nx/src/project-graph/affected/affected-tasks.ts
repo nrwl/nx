@@ -101,8 +101,8 @@ export interface AffectedTasksRequest {
  * Selects the tasks a change reaches, rather than the projects that own a
  * changed file.
  *
- * With the daemon on, the daemon selects: it hashes the run's tasks, and plans
- * are native memory that cannot cross to it. It returns the graph it selected
+ * With the daemon on, the daemon selects: it hashes the run's tasks, so its
+ * planner is the one that remembers the plans. It returns the graph it selected
  * against, which the command must run with.
  */
 export async function computeAffectedTasks(
@@ -151,17 +151,8 @@ export async function computeAffectedTasks(
     projectGraph,
     affectedTaskIds: selection.affectedTaskIds,
     taskGraph: selection.taskGraph,
-    taskSelection: {
-      ...selection.taskSelection,
-      // The run graph is a subset of the one planned above, so the hasher can
-      // narrow these plans instead of planning again.
-      planningContext: selection.plans
-        ? {
-            ...planningContext,
-            plans: { plans: selection.plans, taskGraph: selection.taskGraph },
-          }
-        : undefined,
-    },
+    // The planner remembers what selection planned, so the run's hashing reuses it.
+    taskSelection: { ...selection.taskSelection, planningContext },
   };
 }
 
@@ -184,7 +175,6 @@ export async function selectAffectedTasks(
   affectedTaskIds: Set<string>;
   taskGraph: TaskGraph;
   taskSelection: TaskSelection;
-  plans?: NonNullable<TaskPlanningContext['plans']>['plans'];
 }> {
   const { targets } = request;
   // Only projects that have one of the targets: with a single target,
@@ -295,7 +285,6 @@ export async function selectAffectedTasks(
       initiatingTaskIds: keep.filter((id) => initial.has(id)),
       taskIds: keep,
     },
-    plans,
   };
 }
 

@@ -454,7 +454,7 @@ describe('computeAffectedTasks with the daemon on', () => {
     expect([...result.affectedTaskIds]).toEqual(['lib:test']);
     expect(result.taskSelection.taskIds).toEqual(['lib:test']);
     expect(result.taskSelection.initiatingTaskIds).toEqual(['lib:test']);
-    // The plans stay in the daemon, which is what hashes them.
+    // The planner stays in the daemon, which is what hashes.
     expect(result.taskSelection.planningContext).toBeUndefined();
     // The command runs with the graph the daemon selected against.
     expect(result.projectGraph).toBe(daemonGraph);

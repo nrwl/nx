@@ -73,7 +73,7 @@ export interface TaskSelection {
    * depend on. Unset keeps the whole rebuilt graph.
    */
   taskIds?: string[];
-  /** Plans from selection, reused by the hasher so the run's tasks are not planned twice. */
+  /** The planner selection used. It remembers those plans, so hashing the run reuses them. */
   planningContext?: TaskPlanningContext;
 }
 import { isTuiEnabled, ORIGINAL_TUI_ENV_VALUE } from './is-tui-enabled';
