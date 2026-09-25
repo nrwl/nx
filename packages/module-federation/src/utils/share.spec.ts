@@ -1,26 +1,23 @@
 import type { Mock } from 'vitest';
-vi.mock('./typescript', () => jest.requireActual('./typescript'));
-vi.mock('fs', async () => ({
-  ...(await vi.importActual<any>('fs')),
-  existsSync: vi.fn((...args: any[]) =>
-    (jest.requireActual('fs') as any).existsSync(...args)
-  ),
-  readdirSync: vi.fn((...args: any[]) =>
-    (jest.requireActual('fs') as any).readdirSync(...args)
-  ),
-  lstatSync: vi.fn((...args: any[]) =>
-    (jest.requireActual('fs') as any).lstatSync(...args)
-  ),
-}));
+vi.mock('./typescript', { spy: true });
+vi.mock('fs', async () => {
+  const actual = await vi.importActual<any>('fs');
+  return {
+    ...actual,
+    existsSync: vi.fn((...args: any[]) => actual.existsSync(...args)),
+    readdirSync: vi.fn((...args: any[]) => actual.readdirSync(...args)),
+    lstatSync: vi.fn((...args: any[]) => actual.lstatSync(...args)),
+  };
+});
 vi.mock('@nx/devkit', async () => ({
   ...(await vi.importActual<any>('@nx/devkit')),
   readJsonFile: vi.fn(),
 }));
 
-const fs = require('fs');
+import * as fs from 'fs';
 import * as tsUtils from './typescript';
 
-const nxFileutils = require('@nx/devkit');
+import * as nxFileutils from '@nx/devkit';
 import {
   getNpmPackageSharedConfig,
   sharePackages,
@@ -300,7 +297,7 @@ describe('MF Share Utils', () => {
     });
 
     // TODO: Get with colum and figure out why this stopped working
-    xit('should correctly map the shared packages to objects even with nested entry points', () => {
+    it.skip('should correctly map the shared packages to objects even with nested entry points', () => {
       // ARRANGE
 
       /**

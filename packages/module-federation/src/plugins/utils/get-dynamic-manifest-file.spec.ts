@@ -1,11 +1,12 @@
 import type { Mock } from 'vitest';
-vi.mock('fs', async () => ({
-  ...(await vi.importActual<any>('fs')),
-  existsSync: vi.fn((...args: any[]) =>
-    (jest.requireActual('fs') as any).existsSync(...args)
-  ),
-}));
-const fs = require('fs');
+vi.mock('fs', async () => {
+  const actual = await vi.importActual<any>('fs');
+  return {
+    ...actual,
+    existsSync: vi.fn((...args: any[]) => actual.existsSync(...args)),
+  };
+});
+import * as fs from 'fs';
 
 import { getDynamicMfManifestFile } from './get-dynamic-manifest-file';
 

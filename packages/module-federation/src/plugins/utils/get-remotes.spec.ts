@@ -4,6 +4,7 @@ import * as _config_1 from '../../utils';
 import * as fs from 'fs';
 
 vi.mock('../../utils');
+vi.mock('fs', { spy: true });
 
 describe('getRemotes', () => {
   const mfConfig = {
