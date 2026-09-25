@@ -57,9 +57,11 @@ interface DispenseBlock {
 
 interface RunStateFile {
   status: string;
+  gitRefAtInit?: string;
   steps: {
     id: string;
-    migrationId: string;
+    kind: string;
+    migrationId?: string;
     status: string;
     attempt: number;
     pid?: number;
@@ -366,10 +368,18 @@ const waiverMig = {
 const slowMig = { package: PKG, name: 'slow-mig', version: '1.0.0' };
 const depsMig = { package: PKG, name: 'deps-mig', version: '1.0.0' };
 
-function runInit(extraArgs = ''): string {
-  return runCLI(`migrate --run-migrations=migrations.json${extraArgs}`, {
-    env: INIT_ENV,
-  });
+// The final validation pass is opted out of by default: it has its own
+// scenario, and every other one reads the run's completion shape without it.
+function runInit(
+  extraArgs = '',
+  { finalValidation = false }: { finalValidation?: boolean } = {}
+): string {
+  return runCLI(
+    `migrate --run-migrations=migrations.json${extraArgs}${
+      finalValidation ? '' : ' --no-final-validation'
+    }`,
+    { env: INIT_ENV }
+  );
 }
 
 // Init is runbook-only; the first dispense comes from its reconcile `next`.
@@ -689,6 +699,68 @@ describe('migrate orchestrator (dark launch)', () => {
     expect(commitCountFor('gen-mig')).toBe(1);
     expect(commitCountFor('prompt-mig')).toBe(1);
     expect(commitCountFor('hybrid-mig')).toBe(1);
+  }, 600000);
+
+  it('should hand the final validation pass to the agent after the last migration and commit its result', () => {
+    writePlan([genMig]);
+
+    // `--no-validate` turns off the per-migration validation only; the pass
+    // is its own policy and stays on.
+    const initOutput = runInit(' --no-validate', { finalValidation: true });
+    const init = parseLastDispense(initOutput);
+    const first = reconcileAfterInit(initOutput);
+    expect(first.action).toBe('next-step');
+    runDispensed(first.payload.command);
+
+    const passOutput = runDispensed(first.payload.next);
+    const pass = parseLastDispense(passOutput);
+    expect(pass.action).toBe('await-prompt');
+    expect(pass.step).toBe('step-2');
+    expect(pass.payload.instructions).toContain(
+      'final validation pass over the workspace is awaiting your outcome'
+    );
+    expect(passOutput).toContain('<nx_migrate_prompt step="step-2">');
+    // The plan file written before init dirtied the tree, so the checkpoint
+    // commit is the base the pass diffs against.
+    const parked = readRunStateFile(init.runId);
+    expect(parked.commits[0].kind).toBe('checkpoint');
+    expect(parked.gitRefAtInit).toBe(parked.commits[0].sha);
+    const instructions = readFile(
+      `.nx/migrate-runs/${init.runId}/prompts/step-2/instructions.md`
+    );
+    expect(instructions).toContain(
+      `nx affected --base ${parked.gitRefAtInit} -t <targets>`
+    );
+    expect(instructions).toContain(
+      `<handoff_path>\n${handoffPathFrom(pass)}\n</handoff_path>`
+    );
+
+    // A later reconcile re-hands the same work.
+    const again = parseLastDispense(runDispensed(pass.payload.next));
+    expect(again.action).toBe('await-prompt');
+    expect(again.step).toBe('step-2');
+
+    updateFile('applied-step-2.txt', 'fixed by fake agent');
+    writeHandoff(pass, {
+      status: 'success',
+      summary: 'lint, build and test ran green',
+    });
+    const complete = parseLastDispense(runDispensed(pass.payload.next));
+    expect(complete.action).toBe('complete');
+    expect(complete.payload.instructions).toContain('applied: 2');
+
+    const done = readRunStateFile(init.runId);
+    expect(done.status).toBe('completed');
+    expect(done.steps.map((s) => [s.kind, s.status])).toEqual([
+      ['migration', 'succeeded'],
+      ['final-validation', 'succeeded'],
+    ]);
+    expect(commitCountFor('final validation')).toBe(1);
+    expect(
+      done.commits.filter(
+        (c) => c.kind === 'landed' && c.stepIds.includes('step-2')
+      )
+    ).toHaveLength(1);
   }, 600000);
 
   it('should complete a waived hybrid without agent work and fold a skipped prompt without a commit', () => {
@@ -1765,14 +1837,16 @@ process.exit(status ?? 1);
   // exit code comes back through a file since the terminal reports only its own.
   async function runMigrateInTerminal(
     env: Record<string, string>,
-    commitsFlag = '--no-create-commits'
+    commitsFlag = '--no-create-commits',
+    // Opted out by default, as runInit does; the first scenario keeps it.
+    passFlag = '--no-final-validation'
   ): Promise<{ exitCode: number; output: string }> {
     const { RustPseudoTerminal } = require('nx/src/native');
     const exitFile = join(tmpProjPath(), 'migrate-exit-code');
     const nxBin = join(tmpProjPath(), 'node_modules', '.bin', 'nx');
     let output = '';
     const child = new RustPseudoTerminal().runCommand(
-      `${nxBin} migrate --run-migrations=migrations.json --agentic=claude-code ${commitsFlag}; echo $? > ${exitFile}`,
+      `${nxBin} migrate --run-migrations=migrations.json --agentic=claude-code ${commitsFlag} ${passFlag}; echo $? > ${exitFile}`,
       tmpProjPath(),
       {
         ...getStrippedEnvironmentVariables(),
@@ -1834,11 +1908,16 @@ process.exit(status ?? 1);
       writePlan([genMig, promptMig]);
       const { binDir, logFile } = installFakeAgent();
 
-      const { exitCode, output } = await runMigrateInTerminal({
-        PATH: `${binDir}:${process.env.PATH}`,
-        FAKE_AGENT_LOG: logFile,
-        NX_MIGRATE_ORCHESTRATOR: 'true',
-      });
+      const { exitCode, output } = await runMigrateInTerminal(
+        {
+          PATH: `${binDir}:${process.env.PATH}`,
+          FAKE_AGENT_LOG: logFile,
+          NX_MIGRATE_ORCHESTRATOR: 'true',
+        },
+        undefined,
+        // The fake agent takes the pass like any handed-back work.
+        ''
+      );
 
       expect(exitCode).toBe(0);
       expect(output).toContain('Starting Claude Code to drive migrate run');
@@ -1873,9 +1952,10 @@ process.exit(status ?? 1);
       expect(existsSync(join(tmpProjPath(), done.sentinelPath))).toBe(false);
       const state = readRunStateFile(done.complete);
       expect(state.status).toBe('completed');
-      expect(state.steps.map((s) => s.status)).toEqual([
-        'succeeded',
-        'succeeded',
+      expect(state.steps.map((s) => [s.kind, s.status])).toEqual([
+        ['migration', 'succeeded'],
+        ['migration', 'succeeded'],
+        ['final-validation', 'succeeded'],
       ]);
     }, 600000);
 

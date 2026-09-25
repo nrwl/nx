@@ -428,7 +428,34 @@ describe('run-state', () => {
       expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
     });
 
-    it('refuses a step without a migrationId, the documented format invariant', () => {
+    it('refuses a migration step without a migrationId, the documented format invariant', () => {
+      const dir = join(root, 'run-1');
+      mkdirSync(dir, { recursive: true });
+      for (const kind of [{}, { kind: 'migration' }]) {
+        writeFileSync(
+          join(dir, 'run.json'),
+          JSON.stringify(
+            buildState({
+              steps: [
+                {
+                  id: 'step-1',
+                  roundIndex: 0,
+                  ...kind,
+                  status: 'pending',
+                  attempt: 1,
+                  dispenseCount: 0,
+                },
+              ] as never,
+            })
+          )
+        );
+
+        expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+      }
+    });
+
+    it('reads a step without a kind as a migration step', () => {
+      // Runs written before steps had a kind hold only migrations.
       const dir = join(root, 'run-1');
       mkdirSync(dir, { recursive: true });
       writeFileSync(
@@ -439,6 +466,7 @@ describe('run-state', () => {
               {
                 id: 'step-1',
                 roundIndex: 0,
+                migrationId: '@nx/js:a',
                 status: 'pending',
                 attempt: 1,
                 dispenseCount: 0,
@@ -448,7 +476,44 @@ describe('run-state', () => {
         )
       );
 
-      expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+      expect(readRunState(dir).steps[0]).toEqual({
+        id: 'step-1',
+        roundIndex: 0,
+        kind: 'migration',
+        migrationId: '@nx/js:a',
+        status: 'pending',
+        attempt: 1,
+        dispenseCount: 0,
+      });
+    });
+
+    it('refuses a step kind outside the closed set, and a final-validation step carrying a migrationId', () => {
+      const dir = join(root, 'run-1');
+      mkdirSync(dir, { recursive: true });
+      for (const kindFields of [
+        { kind: 'install', migrationId: '@nx/js:a' },
+        { kind: 'final-validation', migrationId: '@nx/js:a' },
+      ]) {
+        writeFileSync(
+          join(dir, 'run.json'),
+          JSON.stringify(
+            buildState({
+              steps: [
+                {
+                  id: 'step-1',
+                  roundIndex: 0,
+                  ...kindFields,
+                  status: 'pending',
+                  attempt: 1,
+                  dispenseCount: 0,
+                },
+              ] as never,
+            })
+          )
+        );
+
+        expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+      }
     });
 
     it('refuses a migrationId the dispensed command could not carry safely', () => {
@@ -661,6 +726,7 @@ describe('run-state', () => {
           {
             id: 'step-1',
             roundIndex: 0,
+            kind: 'migration',
             migrationId: '@nx/js:a',
             status: 'succeeded',
             attempt: 2,
@@ -690,6 +756,8 @@ describe('run-state', () => {
         checkpointFailed: true,
         skipInstall: true,
         validate: false,
+        finalValidation: false,
+        gitRefAtInit: 'abc0'.repeat(10),
         runbookPath: 'RUNBOOK.md',
         branch: 'feature/upgrade',
         issues: [
@@ -773,10 +841,19 @@ describe('run-state', () => {
       const dir = join(root, 'run-1');
       mkdirSync(dir, { recursive: true });
 
-      // A truthy string must not stand in for the flag that gates a validation pass.
+      // A truthy string must not stand in for a flag that gates a validation pass.
+      for (const flag of ['validate', 'finalValidation']) {
+        writeFileSync(
+          join(dir, 'run.json'),
+          JSON.stringify(buildState({ [flag]: 'yes' } as never))
+        );
+        expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+      }
+
+      // The ref is interpolated into a command the agent runs verbatim.
       writeFileSync(
         join(dir, 'run.json'),
-        JSON.stringify(buildState({ validate: 'yes' as never }))
+        JSON.stringify(buildState({ gitRefAtInit: 'HEAD; touch pwned' }))
       );
       expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
 

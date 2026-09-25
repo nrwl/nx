@@ -97,9 +97,14 @@ export type PromptOutcomeStatus = (typeof PROMPT_OUTCOME_STATUSES)[number];
 const MIGRATE_STEP_AWAITING_KINDS = [
   'migration-prompt',
   'generator-validation',
+  'final-validation',
 ] as const;
 export type MigrateStepAwaitingKind =
   (typeof MIGRATE_STEP_AWAITING_KINDS)[number];
+
+// What a step does when dispensed: 'migration' runs one planned migration,
+// 'final-validation' checks the whole workspace once every migration has run.
+const MIGRATE_STEP_KINDS = ['migration', 'final-validation'] as const;
 
 export interface MigrateStepOutcome {
   fileChanges?: string[];
@@ -113,11 +118,19 @@ export interface MigrateStepPromptOutcome {
   summary?: string;
 }
 
-export interface MigrateStep {
+export type MigrateStepKindFields =
+  | {
+      kind: 'migration';
+      // `<package>:<name>`.
+      migrationId: string;
+    }
+  | { kind: 'final-validation' };
+
+export type MigrateStep = MigrateStepBase & MigrateStepKindFields;
+
+export interface MigrateStepBase {
   id: string;
   roundIndex: number;
-  // `<package>:<name>`.
-  migrationId: string;
   status: MigrateStepStatus;
   attempt: number;
   dispenseCount: number;
@@ -276,6 +289,14 @@ export interface MigrateRunState {
   // Whether generator changes get a validation pass dispensed over them,
   // captured like the install policy above.
   validate?: boolean;
+  // Whether the run ends with a validation pass over the whole workspace,
+  // captured the same way. Absent (a run created before the field existed)
+  // means on.
+  finalValidation?: boolean;
+  // HEAD when the run started, after the checkpoint commit when one landed:
+  // the base every whole-run diff is taken against. Absent when the probe
+  // failed, or on a run created before the field existed.
+  gitRefAtInit?: string;
   // A bare file name despite the field name; it is joined to the run directory.
   runbookPath?: string;
   // The branch checked out when the run started; absent on a detached HEAD or
@@ -447,14 +468,31 @@ function isPromptOutcomeShape(value: unknown): boolean {
   );
 }
 
+function isStepKindShape(value: Record<string, unknown>): boolean {
+  const kind = value.kind === undefined ? 'migration' : value.kind;
+  if (!isOneOf(MIGRATE_STEP_KINDS, kind)) return false;
+  switch (kind) {
+    case 'migration':
+      return (
+        typeof value.migrationId === 'string' &&
+        SHELL_SAFE_VALUE.test(value.migrationId)
+      );
+    case 'final-validation':
+      return value.migrationId === undefined;
+    default: {
+      const exhaustive: never = kind;
+      throw new Error(`Unhandled step kind '${exhaustive}'.`);
+    }
+  }
+}
+
 function isStepShape(value: unknown): boolean {
   return (
     isPlainObject(value) &&
     typeof value.id === 'string' &&
     STEP_ID.test(value.id) &&
     typeof value.roundIndex === 'number' &&
-    typeof value.migrationId === 'string' &&
-    SHELL_SAFE_VALUE.test(value.migrationId) &&
+    isStepKindShape(value) &&
     isOneOf(MIGRATE_STEP_STATUSES, value.status) &&
     // The attempt is interpolated into the stored-payload file name and
     // range-compared against it (agent-work-payload.ts), so a fractional or
@@ -673,6 +711,8 @@ function hasValidRunStateShape(parsed: Record<string, unknown>): boolean {
     isOptionalBoolean(parsed.checkpointFailed) &&
     isOptionalBoolean(parsed.skipInstall) &&
     isOptionalBoolean(parsed.validate) &&
+    isOptionalBoolean(parsed.finalValidation) &&
+    isOptionalSha(parsed.gitRefAtInit) &&
     isOptionalMatching(RUNBOOK_NAME, parsed.runbookPath) &&
     isOptionalString(parsed.branch) &&
     (parsed.rounds as unknown[]).every(isRoundShape) &&
@@ -802,7 +842,12 @@ export function readRunState(runDirPath: string): MigrateRunState {
       )}.`
     );
   }
-  return parsed as unknown as MigrateRunState;
+  // Steps written before they had a kind each ran a migration; naming it here
+  // keeps every reader on one shape.
+  const steps = (parsed.steps as Record<string, unknown>[]).map((s) =>
+    s.kind === undefined ? { ...s, kind: 'migration' } : s
+  );
+  return { ...parsed, steps } as unknown as MigrateRunState;
 }
 
 /**
