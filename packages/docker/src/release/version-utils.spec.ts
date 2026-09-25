@@ -5,9 +5,9 @@ import { selectPrompt } from '@nx/devkit/internal';
 const mockProjectNode: any = { name: 'my-app', data: { root: 'apps/my-app' } };
 const versionActionsVersion = '1.2.3';
 
-jest.mock('@nx/devkit/internal', () => ({
-  ...jest.requireActual('@nx/devkit/internal'),
-  selectPrompt: jest.fn(),
+vi.mock('@nx/devkit/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit/internal')),
+  selectPrompt: vi.fn(),
 }));
 
 describe('handleDockerVersion {versionActionsVersion} integration', () => {
@@ -135,7 +135,7 @@ describe('handleDockerVersion {versionActionsVersion} integration', () => {
     };
 
     // Mock prompt to return 'dev' scheme
-    jest.mocked(selectPrompt).mockResolvedValueOnce('dev');
+    vi.mocked(selectPrompt).mockResolvedValueOnce('dev');
 
     const { newVersion } = await handleDockerVersion(
       process.cwd(),
@@ -168,7 +168,7 @@ describe('handleDockerVersion {versionActionsVersion} integration', () => {
         },
       },
     };
-    jest.mocked(selectPrompt).mockResolvedValueOnce('dev');
+    vi.mocked(selectPrompt).mockResolvedValueOnce('dev');
 
     await handleDockerVersion(
       process.cwd(),
@@ -179,7 +179,7 @@ describe('handleDockerVersion {versionActionsVersion} integration', () => {
       versionActionsVersion
     );
 
-    const call = jest.mocked(selectPrompt).mock.calls[0][0] as any;
+    const call = vi.mocked(selectPrompt).mock.calls[0][0] as any;
     // The hint interpolates the project name only, matching what the scheme
     // list can resolve before a version is chosen.
     const devChoice = call.choices.find((c: any) => c.value === 'dev');

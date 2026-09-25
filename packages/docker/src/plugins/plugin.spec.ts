@@ -1,14 +1,15 @@
+import type { MockedFunction } from 'vitest';
 import { CreateNodesContext, workspaceRoot } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createNodes, getProjectNameFromPath } from './plugin';
 import { getLatestCommitSha } from '@nx/devkit/internal';
 
-jest.mock('nx/src/utils/cache-directory', () => ({
-  ...jest.requireActual('nx/src/utils/cache-directory'),
+vi.mock('nx/src/utils/cache-directory', async () => ({
+  ...(await vi.importActual<any>('nx/src/utils/cache-directory')),
   workspaceDataDirectory: 'tmp/project-graph-cache',
 }));
 
-jest.mock('nx/src/utils/git-utils');
+vi.mock('nx/src/utils/git-utils');
 
 expect.addSnapshotSerializer({
   serialize(str: string) {
@@ -27,12 +28,12 @@ describe('@nx/docker', () => {
   let tempFs: TempFs;
   let cwd: string;
 
-  const mockGetLatestCommitSha = getLatestCommitSha as jest.MockedFunction<
+  const mockGetLatestCommitSha = getLatestCommitSha as MockedFunction<
     typeof getLatestCommitSha
   >;
 
   beforeEach(async () => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockGetLatestCommitSha.mockReturnValue(
       'abc123456789def0123456789abcdef012345678'
     );
@@ -52,7 +53,7 @@ describe('@nx/docker', () => {
   });
 
   afterEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     tempFs.cleanup();
     process.chdir(cwd);
   });
