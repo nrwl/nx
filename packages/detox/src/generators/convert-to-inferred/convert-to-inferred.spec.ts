@@ -62,35 +62,20 @@ vi.mock('@nx/devkit', async () => ({
       projectGraph.nodes[projectName].data = projectConfiguration;
     }),
 }));
-vi.mock('nx/src/devkit-internals', () => {
-  // Use a proxy to lazily access the actual module to avoid initialization timing issues with SWC
-  const getActual = () =>
-    jest.requireActual('nx/src/project-graph/utils/retrieve-workspace-files');
-  const getActualDevkitInternals = () =>
-    jest.requireActual('nx/src/devkit-internals');
-
-  return new Proxy(
-    {},
-    {
-      get(target, prop) {
-        if (prop === 'getExecutorInformation') {
-          return vi
-            .fn()
-            .mockImplementation((pkg, ...args) =>
-              getActualDevkitInternals().getExecutorInformation(
-                '@nx/webpack',
-                ...args
-              )
-            );
-        }
-        if (prop === 'retrieveProjectConfigurations') {
-          return getActual().retrieveProjectConfigurations;
-        }
-        // For all other properties, return from the actual module
-        return getActualDevkitInternals()[prop];
-      },
-    }
+vi.mock('nx/src/devkit-internals', async () => {
+  const actual = await vi.importActual<any>('nx/src/devkit-internals');
+  const { retrieveProjectConfigurations } = await vi.importActual<any>(
+    'nx/src/project-graph/utils/retrieve-workspace-files'
   );
+  return {
+    ...actual,
+    retrieveProjectConfigurations,
+    getExecutorInformation: vi
+      .fn()
+      .mockImplementation((pkg, ...args) =>
+        actual.getExecutorInformation('@nx/webpack', ...args)
+      ),
+  };
 });
 
 function addProject(tree: Tree, name: string, project: ProjectConfiguration) {
@@ -205,13 +190,9 @@ function writeDetoxConfig(tree: Tree, projectRoot: string) {
     `${projectRoot}/.detoxrc.json`,
     JSON.stringify(detoxConfig)
   );
-  vi.doMock(
-    join(fs.tempDir, projectRoot, '.detoxrc.json'),
-    () => detoxConfig,
-    {
-      virtual: true,
-    }
-  );
+  vi.doMock(join(fs.tempDir, projectRoot, '.detoxrc.json'), () => detoxConfig, {
+    virtual: true,
+  });
 }
 
 function createProject(
