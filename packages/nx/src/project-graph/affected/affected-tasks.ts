@@ -478,6 +478,9 @@ function explainTasks(
         forTask.push({ kind: 'external-dependencies', file });
       }
     }
+    for (const file of matches?.projectConfigs ?? []) {
+      forTask.push({ kind: 'project-configuration', file });
+    }
 
     // Only the reached producers: the walk records the edges it crossed.
     for (const producer of explanation.producersOf[taskId] ?? []) {

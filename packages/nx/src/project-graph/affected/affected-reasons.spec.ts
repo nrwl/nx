@@ -142,6 +142,7 @@ describe('formatAffectedReason', () => {
       { kind: 'implicit-dependency', file: 'a.txt', pattern: 'a.txt' },
       { kind: 'workspace-configuration', file: 'nx.json' },
       { kind: 'deleted-project-configuration', file: 'libs/a/project.json' },
+      { kind: 'project-configuration', file: 'libs/a/project.json' },
       { kind: 'lockfile', file: 'pnpm-lock.yaml' },
       { kind: 'npm-package', package: 'npm:lodash' },
       { kind: 'tsconfig', file: 'tsconfig.base.json' },
