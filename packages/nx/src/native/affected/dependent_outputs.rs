@@ -175,11 +175,11 @@ impl GlobShape {
     fn new(glob: &str) -> Self {
         let glob = normalize_glob(glob);
         let last_segment = glob.rsplit('/').next().unwrap_or(&glob);
-        let extension = literal_segment(last_segment)
-            .is_none()
-            .then(|| literal_extension(&glob))
-            .flatten()
-            .map(str::to_string);
+        let extension = if literal_segment(last_segment).is_some() {
+            None
+        } else {
+            literal_extension(&glob).map(str::to_string)
+        };
         Self {
             prefix: partition_glob(&glob).0,
             extension,
@@ -190,18 +190,20 @@ impl GlobShape {
     /// costs a cache hit, a missing one skips a task that needed to run.
     fn may_read(&self, output: &GlobShape) -> bool {
         if self.prefix.is_empty() || output.prefix.is_empty() {
-            !distinct_extensions(&self.extension, &output.extension)
+            self.may_share_extension(output)
         } else {
             is_path_prefix(&self.prefix, &output.prefix)
                 || is_path_prefix(&output.prefix, &self.prefix)
         }
     }
-}
 
-/// Both sides name a literal extension and the two differ, so no path can
-/// match both.
-fn distinct_extensions(read: &Option<String>, output: &Option<String>) -> bool {
-    matches!((read, output), (Some(x), Some(y)) if x != y)
+    /// Only two different extensions rule a match out; an unknown one could be anything.
+    fn may_share_extension(&self, other: &GlobShape) -> bool {
+        match (&self.extension, &other.extension) {
+            (Some(mine), Some(theirs)) => mine == theirs,
+            _ => true,
+        }
+    }
 }
 
 /// The literal extension a pattern's last segment ends in: `js` for
