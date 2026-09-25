@@ -20,11 +20,13 @@ vi.mock('@nx/devkit/internal', async () => ({
     mocks.hashWithWorkspaceContext(...args),
   hashObject: () => 'options-hash',
   workspaceDataDirectory: '/tmp/workspace-data',
-  PluginCache: vi.fn(() => ({
-    get: mocks.pluginCacheGet,
-    set: vi.fn(),
-    writeToDisk: vi.fn(),
-  })),
+  PluginCache: vi.fn(function () {
+    return {
+      get: mocks.pluginCacheGet,
+      set: vi.fn(),
+      writeToDisk: vi.fn(),
+    };
+  }),
   safeSpawn: (...args: unknown[]) => mocks.safeSpawn(...args),
   killChildOnHostExit: (...args: unknown[]) =>
     mocks.killChildOnHostExit(...args),
