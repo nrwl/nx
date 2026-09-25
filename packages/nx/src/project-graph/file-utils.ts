@@ -173,7 +173,7 @@ export function defaultReadFileAtRevision(
   try {
     const filePathInGitRepository = getFilePathInGitRepository(file);
     return !revision
-      ? readFileSync(file, 'utf-8')
+      ? readFileSync(join(workspaceRoot, file), 'utf-8')
       : execFileSync(
           'git',
           ['show', `${revision}:${filePathInGitRepository}`],
