@@ -371,7 +371,7 @@ describe('@nx/vite:configuration', () => {
       ${'none'}      | ${undefined}
       ${'jest'}      | ${'my-lib/jest.config.cts'}
     `(
-      'should respect provided unitTestRunner="$unitTestRunner"',
+      'should respect provided unitTestRunner=$unitTestRunner',
       async ({ unitTestRunner, configPath }) => {
         await jsLibraryGenerator(tree, {
           ...defaultOptions,
