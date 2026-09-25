@@ -11,9 +11,9 @@ use std::sync::Arc;
 use std::time::Instant;
 use tracing::{debug, trace, warn};
 
-use crate::native::affected::dependency_closure::dependency_closure;
-use crate::native::affected::dependent_outputs::compute_dependent_output_edges;
-use crate::native::affected::plan_ids::referenced_ids;
+use super::dependency_closure::dependency_closure;
+use super::dependent_outputs::compute_dependent_output_edges;
+use super::plan_ids::referenced_ids;
 use crate::native::affected::project_paths::{ProjectRoots, normalize_path};
 use crate::native::glob::{build_glob_set, fileset_patterns, normalize_glob};
 use crate::native::project_graph::types::{ExternalNode, ProjectGraph};

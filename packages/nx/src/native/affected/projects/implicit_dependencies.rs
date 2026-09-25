@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use tracing::warn;
 
-use super::all_project_names;
+use super::locators::all_project_names;
 use crate::native::glob::{build_glob_set, fileset_patterns, normalize_glob};
 use crate::native::project_graph::types::{Project, ProjectGraph, Target};
 use crate::native::types::{JsInputs, NxJson};

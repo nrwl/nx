@@ -1,4 +1,4 @@
-use super::project_paths::{ProjectRoots, normalize_path};
+use crate::native::affected::project_paths::{ProjectRoots, normalize_path};
 use crate::native::project_graph::types::ProjectGraph;
 
 /// Maps each changed file to the project that owns it.

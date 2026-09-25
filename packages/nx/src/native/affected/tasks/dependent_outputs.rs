@@ -10,8 +10,8 @@ use std::collections::{HashMap, HashSet};
 use std::time::Instant;
 use tracing::{debug, trace};
 
-use crate::native::affected::dependency_closure::walk_dependencies;
-use crate::native::affected::plan_ids::referenced_ids;
+use super::dependency_closure::walk_dependencies;
+use super::plan_ids::referenced_ids;
 use crate::native::glob::{normalize_glob, parse_glob, partition_glob};
 use crate::native::tasks::types::{HashInstruction, HashPlans, TaskGraph};
 

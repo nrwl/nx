@@ -2,7 +2,7 @@ use napi::bindgen_prelude::*;
 use std::path::Path;
 use tracing::warn;
 
-use super::{AffectedOptions, all_project_names};
+use super::locators::{AffectedOptions, all_project_names};
 use crate::native::glob::build_glob_set;
 use crate::native::project_graph::types::ProjectGraph;
 
