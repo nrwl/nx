@@ -136,6 +136,7 @@ import {
   type MigrateRunPolicy,
   type MigrateRunState,
   type MigrateStep,
+  type MigrateStepBase,
   type MigrateStepStatus,
   type MigrateTreeOperation,
   type MigrateTreeOperationKind,
@@ -252,7 +253,7 @@ describe('orchestrator', () => {
     id: string,
     migrationId: string,
     status: MigrateStepStatus,
-    extra: Partial<MigrateStep> = {}
+    extra: Partial<MigrateStepBase> = {}
   ): MigrateStep => ({
     id,
     roundIndex: 0,
@@ -267,7 +268,7 @@ describe('orchestrator', () => {
   const passStep = (
     id: string,
     status: MigrateStepStatus,
-    extra: Partial<MigrateStep> = {}
+    extra: Partial<MigrateStepBase> = {}
   ): MigrateStep => ({
     id,
     roundIndex: 0,
@@ -342,7 +343,7 @@ describe('orchestrator', () => {
 
   function handoffPathIn(dir: string, pkg: string, name: string): string {
     const step = readRunState(dir).steps.find(
-      (s) => s.migrationId === `${pkg}:${name}`
+      (s) => s.kind === 'migration' && s.migrationId === `${pkg}:${name}`
     );
     return runStepHandoffPath(dir, step.id);
   }
@@ -801,6 +802,7 @@ describe('orchestrator', () => {
         skipInstall: false,
         installedNxVersion: '23.0.0',
         validate: undefined as boolean | undefined,
+        finalValidation: undefined as boolean | undefined,
         confirmStart,
       };
 

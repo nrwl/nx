@@ -299,8 +299,9 @@ function parseIssueUpdate(
       value.id
     )}, which is not an issue nx has recorded for this run`;
   }
-  if (!canUpdateIssue(issue, reportingStep)) {
-    return `${label} references ${issue.id}, which is not assigned to this step; only issues the dispensed digest marks assigned to the current step can be updated`;
+  const refusal = issueUpdateRefusal(issue, reportingStep);
+  if (refusal !== null) {
+    return `${label} references ${issue.id}, which ${refusal}`;
   }
   const disposition = value.disposition;
   if (disposition !== 'resolved' && disposition !== 'deferred-final') {
@@ -323,15 +324,19 @@ function parseIssueUpdate(
 // Claims serialize the migration steps that could fix an issue. The final
 // validation pass runs alone after all of them, so it takes every issue still
 // open instead: by then any it could claim has been deferred to it.
-function canUpdateIssue(
+function issueUpdateRefusal(
   issue: MigrateRunIssue,
   reportingStep: MigrateStep
-): boolean {
+): string | null {
   switch (reportingStep.kind) {
     case 'migration':
-      return issue.claimedByStepId === reportingStep.id;
+      return issue.claimedByStepId === reportingStep.id
+        ? null
+        : 'is not assigned to this step; only issues the dispensed digest marks assigned to the current step can be updated';
     case 'final-validation':
-      return issue.disposition !== 'resolved';
+      return issue.disposition !== 'resolved'
+        ? null
+        : 'is already resolved; the pass may update any issue still open';
     default: {
       const exhaustive: never = reportingStep;
       throw new Error(`Unrecognized step: ${JSON.stringify(exhaustive)}`);

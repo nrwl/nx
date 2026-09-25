@@ -189,6 +189,7 @@ import {
   type MigrateRunIssue,
   type MigrateRunState,
   type MigrateStep,
+  type MigrateStepBase,
   type MigrateStepStatus,
   type MigrateTreeOperation,
 } from './run-state';
@@ -2613,7 +2614,7 @@ describe('runSingleMigrationWorker', () => {
       });
     }
 
-    function validatingRun(step: Partial<MigrateStep> = {}): string {
+    function validatingRun(step: Partial<MigrateStepBase> = {}): string {
       return setupRun('run-1', {
         steps: [{ ...migStep('step-1', '@nx/js:gen', 'dispensed'), ...step }],
         migrations: [genMig('@nx/js', 'gen')],
