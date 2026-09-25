@@ -5,6 +5,16 @@ export default defineConfig({
   root: import.meta.dirname,
   cacheDir: '../../node_modules/.vite/create-nx-workspace/unit',
   plugins: [nxSourceResolver()],
+  resolve: {
+    alias: [
+      // Source uses CJS-style namespace access (yargs.terminalWidth()); the
+      // ESM entry only exposes `default`, so pin to the CJS entry.
+      {
+        find: /^yargs$/,
+        replacement: `${import.meta.dirname}/node_modules/yargs/index.cjs`,
+      },
+    ],
+  },
   test: {
     watch: false,
     globals: true,
