@@ -3,7 +3,7 @@ import dockerReleasePublish from './release-publish.impl';
 
 describe('docker release-publish executor', () => {
   it('skips publishing when release version data indicates no Docker version', async () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const context = {
       projectName: 'my-app',
       projectGraph: {
