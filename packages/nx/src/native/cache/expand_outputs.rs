@@ -3,7 +3,7 @@ use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 use tracing::{debug, trace};
 
-use crate::native::glob::{build_glob_set, contains_glob_pattern, glob_transform::partition_glob};
+use crate::native::glob::{build_glob_set, glob_transform::partition_glob};
 use crate::native::utils::Normalize;
 use crate::native::walker::{nx_walker, nx_walker_sync};
 
@@ -25,12 +25,19 @@ where
         &directory
     );
 
-    let has_glob_pattern = entries.iter().any(|entry| contains_glob_pattern(entry));
+    // The paths the entries name when none is a pattern or a negation.
+    let named = entries
+        .iter()
+        .map(|entry| match partition_glob(entry) {
+            (named, None) if !entry.starts_with('!') => Some(named),
+            _ => None,
+        })
+        .collect::<Option<Vec<_>>>();
 
-    if !has_glob_pattern {
+    if let Some(named) = named {
         trace!("No glob patterns found, checking if entries exist");
         let mut existing_count = 0;
-        let existing_directories = entries
+        let existing_directories = named
             .into_iter()
             .filter(|entry| {
                 let path = directory.join(entry);
@@ -131,7 +138,7 @@ pub fn match_output_paths(entries: Vec<String>, paths: Vec<String>) -> anyhow::R
             } else {
                 // Match the entry itself and anything nested under it, like
                 // expand_outputs does when it includes an existing directory
-                // wholesale. This cannot be gated on contains_glob_pattern: a
+                // wholesale. This cannot be gated on the entry being a glob: a
                 // real directory can carry glob syntax (`app/[id]`), and only
                 // expand_outputs, which stats the path first, can tell. For a
                 // true glob (`dist/*.js/**`) the containment form is inert.

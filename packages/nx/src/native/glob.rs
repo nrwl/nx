@@ -209,14 +209,6 @@ pub fn match_glob_paths(globs: Vec<String>, paths: Vec<String>) -> anyhow::Resul
     Ok(paths.iter().map(|path| glob_set.is_match(path)).collect())
 }
 
-/// Whether an entry is read as a glob: a negation, a pattern past its literal
-/// directory, or an escape, which names a path other than the one it spells.
-/// Names like `@scope`, `a+b` and `co,ma` are literal.
-pub(crate) fn contains_glob_pattern(value: &str) -> bool {
-    let (directory, pattern) = partition_glob(value);
-    value.starts_with('!') || pattern.is_some() || directory != value
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
@@ -237,9 +229,8 @@ mod test {
                 Err(_) => "error".into(),
             };
             report.push_str(&format!(
-                "{glob}\n  convert: {converted}\n  partition: {:?}\n  is_glob: {}\n  prefix: {prefix}\n",
+                "{glob}\n  convert: {converted}\n  partition: {:?}\n  prefix: {prefix}\n",
                 partition_glob(glob),
-                contains_glob_pattern(glob),
             ));
         }
         insta::assert_snapshot!(report);
