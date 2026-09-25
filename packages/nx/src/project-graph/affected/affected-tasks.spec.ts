@@ -18,6 +18,18 @@ const daemon = vi.hoisted(() => ({
 vi.mock('../../daemon/client/client', () => ({ daemonClient: daemon }));
 const onDaemon = vi.hoisted(() => ({ isOnDaemon: vi.fn(() => false) }));
 vi.mock('../../daemon/is-on-daemon', () => onDaemon);
+// Real executor lookups, except for projects a test gives a custom hasher.
+const customHashers = vi.hoisted(() => new Set<string>());
+vi.mock('../../tasks-runner/utils', async (importOriginal) => {
+  const actual = await importOriginal<any>();
+  return {
+    ...actual,
+    getExecutorForTask: (task, projects) =>
+      customHashers.has(task.target.project)
+        ? { hasherFactory: () => ({}) }
+        : actual.getExecutorForTask(task, projects),
+  };
+});
 import { computeAffectedTasks, selectsAffectedTasks } from './affected-tasks';
 import { LockFileChange, WholeFileChange } from '../file-utils';
 import type { ProjectGraph } from '../../config/project-graph';
@@ -334,6 +346,16 @@ describe('the run graph with --exclude-task-dependencies', () => {
       excludeTaskDependencies: true,
     });
     expect(Object.keys(result.runTaskGraph.tasks)).toEqual(['app:test']);
+  });
+});
+
+describe('tasks with a custom hasher', () => {
+  afterEach(() => customHashers.clear());
+
+  // It hashes outside its plan, so no instruction says what reaches it.
+  it('are always selected', async () => {
+    customHashers.add('lib');
+    expect(await affectedFor(['docs/README.md'])).toEqual(['lib:test']);
   });
 });
 

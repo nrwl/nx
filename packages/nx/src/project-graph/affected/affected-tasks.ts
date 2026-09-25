@@ -1,5 +1,6 @@
 import { NxJsonConfiguration, TargetDependencies } from '../../config/nx-json';
 import { ProjectGraph } from '../../config/project-graph';
+import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { TaskGraph } from '../../config/task-graph';
 import { affectedTasks as nativeAffectedTasks } from '../../native';
 import {
@@ -7,6 +8,8 @@ import {
   narrowTaskGraph,
 } from '../../tasks-runner/create-task-graph';
 import { runnableForTarget } from '../../utils/project-graph-utils';
+import { getExecutorForTask } from '../../tasks-runner/utils';
+import { readProjectsConfigurationFromProjectGraph } from '../project-graph';
 import { FileChange, readPackageJson } from '../file-utils';
 import { workspaceRoot } from '../../utils/workspace-root';
 import {
@@ -197,6 +200,8 @@ export async function selectAffectedTasks(
   const plans = planningContext.planner.getPlansReference(taskIds, taskGraph);
 
   const namedProjects = new Set(request.dependencies.projects);
+  const projects =
+    readProjectsConfigurationFromProjectGraph(projectGraph).projects;
   const selection = nativeAffectedTasks(
     planningContext.projectGraphRef,
     plans,
@@ -205,8 +210,10 @@ export async function selectAffectedTasks(
     {
       projectGlobPatterns: await getProjectGlobPatterns(nxJson),
       workspaceRoot,
-      seedTaskIds: taskIds.filter((id) =>
-        namedProjects.has(taskGraph.tasks[id].target.project)
+      seedTaskIds: taskIds.filter(
+        (id) =>
+          namedProjects.has(taskGraph.tasks[id].target.project) ||
+          hasCustomHasher(taskGraph.tasks[id], projects)
       ),
       changedExternals: request.dependencies.externals,
       changedExternalTypes: request.dependencies.changedExternalTypes,
@@ -244,6 +251,22 @@ export async function selectAffectedTasks(
     ),
     plans,
   };
+}
+
+/**
+ * A custom hasher hashes outside the task's plan, so no instruction says what
+ * reaches it and the task is always selected. An executor that cannot be
+ * resolved cannot run either, so it is left to the plan.
+ */
+function hasCustomHasher(
+  task: TaskGraph['tasks'][string],
+  projects: Record<string, ProjectConfiguration>
+): boolean {
+  try {
+    return !!getExecutorForTask(task, projects).hasherFactory;
+  } catch {
+    return false;
+  }
 }
 
 /**
