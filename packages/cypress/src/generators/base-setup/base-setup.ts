@@ -32,8 +32,12 @@ export interface CypressBaseSetupSchema {
    * which merges in its own `component` block afterwards).
    */
   e2ePreset?: {
-    /** Pre-formatted (indented) JSON of NxCypressE2EPresetOptions. */
+    /**
+     * NxCypressE2EPresetOptions rendered by `renderE2EPresetOptions`: indented
+     * JSON, except for values the config picks at runtime from `CI`.
+     */
     presetOptions: string;
+    /** JS expression, not a bare URL - a quoted literal or a `CI` switch. */
     baseUrl?: string;
   };
 }

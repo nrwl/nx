@@ -40,7 +40,10 @@ import {
 import { join } from 'path';
 import { addLinterToCyProject } from '../../utils/add-linter';
 import { assertSupportedCypressVersion } from '../../utils/assert-supported-cypress-version';
-import { addDefaultE2EConfig } from '../../utils/config';
+import {
+  addDefaultE2EConfig,
+  renderE2EPresetOptions,
+} from '../../utils/config';
 import type { NxCypressE2EPresetOptions } from '../../../plugins/cypress-preset';
 import { warnCypressExecutorGenerating } from '../../utils/deprecation';
 import {
@@ -380,6 +383,11 @@ async function addFiles(
     ciBaseUrl,
   };
 
+  const renderedPreset = renderE2EPresetOptions(
+    e2ePresetOptions,
+    options.baseUrl
+  );
+
   addBaseCypressSetup(tree, {
     project: options.project,
     directory: options.directory,
@@ -388,10 +396,8 @@ async function addFiles(
     // Generate a fresh config already containing the e2e preset (base-setup
     // no-ops when a config already exists - see the merge below).
     e2ePreset: {
-      presetOptions: JSON.stringify(e2ePresetOptions, null, 2)
-        .split('\n')
-        .join('\n    '),
-      baseUrl: options.baseUrl,
+      presetOptions: renderedPreset.presetOptions.split('\n').join('\n    '),
+      baseUrl: renderedPreset.baseUrl,
     },
   });
 
