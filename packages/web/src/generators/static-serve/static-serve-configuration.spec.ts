@@ -136,14 +136,14 @@ describe('Static serve configuration generator', () => {
 
     updateProjectConfiguration(tree, 'storybook', pc);
 
-    expect(() => {
+    await expect(() => {
       return webStaticServeGenerator(tree, {
         buildTarget: 'storybook:build-storybook',
       });
     }).rejects.toThrowErrorMatchingInlineSnapshot(`
-      "Project storybook already has a 'serve-static' target configured.
+      [Error: Project storybook already has a 'serve-static' target configured.
       Either rename or remove the existing 'serve-static' target and try again.
-      Optionally, you can provide a different name with the --target-name option other than 'serve-static'"
+      Optionally, you can provide a different name with the --target-name option other than 'serve-static']
     `);
   });
 });
