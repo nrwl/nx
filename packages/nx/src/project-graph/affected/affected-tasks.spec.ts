@@ -604,6 +604,24 @@ describe('tasks with a custom hasher', () => {
     customHashers.add('lib');
     expect(await affectedFor(['docs/README.md'])).toEqual(['lib:test']);
   });
+
+  it('say why they were selected', async () => {
+    customHashers.add('lib');
+    const { explanation } = await computeAffectedTasks({
+      projectGraph: graph(),
+      nxJson: {
+        namedInputs: { production: ['{projectRoot}/src/**/*'] },
+      } as any,
+      targets: ['test'],
+      touchedFiles: [
+        { file: 'docs/README.md', getChanges: () => [new WholeFileChange()] },
+      ] as any,
+      explain: true,
+    });
+    expect(explanation.affected).toEqual({
+      'lib:test': [{ kind: 'custom-hasher' }],
+    });
+  });
 });
 
 describe('computeAffectedTasks with the daemon on', () => {

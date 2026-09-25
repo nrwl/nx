@@ -288,13 +288,16 @@ export async function selectAffectedTasks(
   const namedProjects = new Set(dependencies.projects.map((t) => t.project));
   const projects =
     readProjectsConfigurationFromProjectGraph(projectGraph).projects;
+  const customHashed = new Set(
+    taskIds.filter((id) => hasCustomHasher(taskGraph.tasks[id], projects))
+  );
   const options = {
     projectGlobPatterns: await getProjectGlobPatterns(nxJson),
     workspaceRoot,
     alwaysTouchedTaskIds: taskIds.filter(
       (id) =>
         namedProjects.has(taskGraph.tasks[id].target.project) ||
-        hasCustomHasher(taskGraph.tasks[id], projects)
+        customHashed.has(id)
     ),
     changedExternals: dependencies.externals,
     changedExternalTypes: dependencies.changedExternalTypes,
@@ -325,7 +328,8 @@ export async function selectAffectedTasks(
         ),
         dependencies,
         request.changedFiles,
-        taskGraph
+        taskGraph,
+        customHashed
       )
     : undefined;
 
@@ -446,7 +450,8 @@ function explainTasks(
   explanation: AffectedTaskExplanation,
   dependencies: DependencyChanges,
   changedPaths: string[],
-  taskGraph: TaskGraph
+  taskGraph: TaskGraph,
+  customHashed: Set<string>
 ): AffectedExplanation {
   // What a plan hashing every external saw change.
   const dependencyFiles = changedPaths.filter(
@@ -490,6 +495,9 @@ function explainTasks(
     const project = taskGraph.tasks[taskId]?.target.project;
     for (const reason of (project && named.get(project)) ?? []) {
       forTask.push(reason);
+    }
+    if (customHashed.has(taskId)) {
+      forTask.push({ kind: 'custom-hasher' });
     }
 
     // A deleted config seeded every task. Only worth saying when nothing

@@ -148,6 +148,7 @@ describe('formatAffectedReason', () => {
       { kind: 'tsconfig', file: 'tsconfig.base.json' },
       { kind: 'tsconfig-paths', file: 'tsconfig.base.json' },
       { kind: 'all-projects' },
+      { kind: 'custom-hasher' },
       { kind: 'external-dependencies', file: 'pnpm-lock.yaml' },
       { kind: 'dependency', dependency: 'ui' },
       { kind: 'input-file', file: 'libs/a/x.ts', pattern: '{projectRoot}/**' },

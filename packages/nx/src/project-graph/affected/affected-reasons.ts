@@ -40,7 +40,9 @@ export type AffectedReasonKind =
   /** Task-level: it hashes every external dependency, and one moved. */
   | 'external-dependencies'
   /** `--all` asked for every project, whatever changed. */
-  | 'all-projects';
+  | 'all-projects'
+  /** Task-level: its executor hashes outside the plan, so it is always selected. */
+  | 'custom-hasher';
 
 export interface AffectedReason {
   kind: AffectedReasonKind;
@@ -144,6 +146,8 @@ export function formatAffectedReason(reason: AffectedReason): string {
       return `hashes every external dependency, and ${reason.file} changed`;
     case 'all-projects':
       return `--all selects every project`;
+    case 'custom-hasher':
+      return `its executor uses a custom hasher, so it is always selected`;
   }
 }
 
