@@ -10,7 +10,7 @@ import {
 } from './task-hasher';
 
 /**
- * `ioSnapshots` is this run's set (see `resolveIoSnapshotsForRun`); undefined
+ * `ioSnapshots` is this run's set (see `loadIoSnapshotsForRun`); undefined
  * hashes natively. The daemon gets its version, so it hashes from the same
  * set even after a newer one is imported for the commit.
  */

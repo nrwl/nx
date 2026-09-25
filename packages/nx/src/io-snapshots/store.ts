@@ -1,9 +1,19 @@
+import { join } from 'path';
 import type { NxJsonConfiguration } from '../config/nx-json';
-import { IoSnapshotStore, type IoSnapshots } from '../native';
-import { getDbConnection } from '../utils/db-connection';
+import {
+  FileLock,
+  IoSnapshotStore,
+  IS_WASM,
+  type IoSnapshots,
+} from '../native';
+import {
+  getDbConnection,
+  sharedWorkspaceDataDirectory,
+} from '../utils/db-connection';
 import { getLatestCommitSha } from '../utils/git-utils';
 import { logger } from '../utils/logger';
 import { output } from '../utils/output';
+import { workspaceRoot } from '../utils/workspace-root';
 import {
   ioSnapshotEnv,
   isIoSnapshotFetchEnabled,
@@ -101,27 +111,58 @@ export async function loadIoSnapshotsForRun(
   }
   try {
     const store = getIoSnapshotStore();
-    const stored = store.get(head, STORED_SET_MAX_AGE_MS);
-    if (stored) {
-      return reportIoSnapshotResolution({
-        status: 'cached',
-        snapshots: stored,
-      });
-    }
-    const result = await fetchIoSnapshots(runnerOptions);
-    return reportIoSnapshotResolution({
-      status: 'fetched',
-      snapshots: store.import({
-        requestedCommit: head,
-        snapshotsJson: JSON.stringify(result.snapshots),
-      }),
-    });
+    const cached = () => {
+      const stored = store.get(head, STORED_SET_MAX_AGE_MS);
+      return (
+        stored &&
+        reportIoSnapshotResolution({
+          status: 'cached',
+          snapshots: stored,
+        })
+      );
+    };
+    return (
+      cached() ??
+      // Processes that miss together fetch once: the rest find its set.
+      (await withIoSnapshotFetchLock(async () => {
+        const stored = cached();
+        if (stored) {
+          return stored;
+        }
+        const result = await fetchIoSnapshots(runnerOptions);
+        return reportIoSnapshotResolution({
+          status: 'fetched',
+          snapshots: store.import({
+            requestedCommit: head,
+            snapshotsJson: JSON.stringify(result.snapshots),
+          }),
+        });
+      }))
+    );
   } catch (e) {
     // No fallback to an older set for this commit: it would hash from a
     // recording the run could not refresh, and CI can hash natively instead.
     return reportIoSnapshotResolution(
       skippedIoSnapshots(reasonFromError(e), errorMessage(e))
     );
+  }
+}
+
+/** Runs `fetch` holding a lock beside the workspace database, across processes. */
+async function withIoSnapshotFetchLock<T>(fetch: () => Promise<T>): Promise<T> {
+  if (IS_WASM) {
+    return fetch();
+  }
+  const lock = new FileLock(
+    join(sharedWorkspaceDataDirectory(workspaceRoot), 'io-snapshots.lock')
+  );
+  while (!lock.tryLock()) {
+    await lock.wait();
+  }
+  try {
+    return await fetch();
+  } finally {
+    lock.unlock();
   }
 }
 
@@ -146,8 +187,8 @@ function errorMessage(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
 }
 
-/** Warns or logs what a resolution came to; also used by the daemon path. */
-export function reportIoSnapshotResolution(
+/** Warns or logs what a resolution came to. */
+function reportIoSnapshotResolution(
   outcome: IoSnapshotOutcome
 ): IoSnapshotOutcome {
   if (outcome.status === 'skipped') {

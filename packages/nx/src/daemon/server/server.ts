@@ -121,8 +121,6 @@ import { handleGetPluginCapabilities } from './handle-get-plugin-capabilities';
 import { handleGetSyncGeneratorChanges } from './handle-get-sync-generator-changes';
 import { handleGlob, handleMultiGlob } from './handle-glob';
 import { handleHashGlob, handleHashMultiGlob } from './handle-hash-glob';
-import { handleResolveIoSnapshots } from './handle-resolve-io-snapshots';
-import { isHandleResolveIoSnapshotsMessage } from '../message-types/resolve-io-snapshots';
 import { handleHashTasks, handleHashTasksUpfront } from './handle-hash-tasks';
 import {
   handleGetNxConsoleStatus,
@@ -333,13 +331,6 @@ export async function handleMessage(socket: Socket, data: Buffer) {
       socket,
       'HASH_TASKS_UPFRONT',
       () => handleHashTasksUpfront(payload),
-      mode
-    );
-  } else if (isHandleResolveIoSnapshotsMessage(payload)) {
-    await handleResult(
-      socket,
-      'RESOLVE_IO_SNAPSHOTS',
-      () => handleResolveIoSnapshots(payload),
       mode
     );
   } else if (payload.type === 'PROCESS_IN_BACKGROUND') {

@@ -13,7 +13,7 @@ export interface IoSnapshotEnv {
   NX_IO_SNAPSHOTS?: string;
   NX_CLOUD_USE_IO_SNAPSHOTS?: string;
   NX_NO_CLOUD?: string;
-  /** Whether the run's env holds an Nx Cloud token; the token stays in the run. */
+  /** Whether the run's env holds an Nx Cloud token. */
   hasNxCloudToken?: boolean;
 }
 
@@ -21,7 +21,7 @@ export interface IoSnapshotEnv {
  * Off unless a CI run opts in with `NX_IO_SNAPSHOTS=true`, or the Nx Cloud
  * client's `NX_CLOUD_USE_IO_SNAPSHOTS=true`, in a workspace that uses Nx Cloud,
  * since there is nothing to fetch from otherwise. `env` defaults to this
- * process's; the daemon passes its client's, never its own.
+ * process's.
  */
 export function isIoSnapshotFetchEnabled(
   nxJson: NxJsonConfiguration,

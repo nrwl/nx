@@ -29,11 +29,14 @@ import { isCI } from '../utils/is-ci';
 import { isNxCloudDisabled, isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { getBundleInstallDefaultLocation } from '../nx-cloud/update-manager';
 import { logger } from '../utils/logger';
-import { resolveIoSnapshotsForRun } from '../io-snapshots/resolve';
 import { applyIoSnapshotOutputs } from '../io-snapshots/outputs';
 import { buildIoSnapshotOverrides } from '../io-snapshots/overrides';
 import { formatIoSnapshotSummary } from '../io-snapshots/report';
-import { snapshotsOf, type IoSnapshotOutcome } from '../io-snapshots/store';
+import {
+  loadIoSnapshotsForRun,
+  snapshotsOf,
+  type IoSnapshotOutcome,
+} from '../io-snapshots/store';
 import {
   createNxKeyLicenseeInformation,
   getNxKeyInformation,
@@ -1012,10 +1015,7 @@ export async function invokeTasksRunner({
 
   // Must precede hashing: the set is the snapshot source for task hashes,
   // and observed outputs join the task outputs the hasher and cache see.
-  const ioSnapshotOutcome = await resolveIoSnapshotsForRun(
-    nxJson,
-    runnerOptions
-  );
+  const ioSnapshotOutcome = await loadIoSnapshotsForRun(nxJson, runnerOptions);
   const ioSnapshots = snapshotsOf(ioSnapshotOutcome);
   if (ioSnapshots) {
     applyIoSnapshotOutputs(projectGraph, taskGraph, ioSnapshots);

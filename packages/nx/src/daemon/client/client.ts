@@ -15,12 +15,7 @@ import { readNxJson } from '../../config/configuration';
 import { hasNxJson, NxJsonConfiguration } from '../../config/nx-json';
 import { FileData, ProjectGraph } from '../../config/project-graph';
 import { Task, TaskGraph } from '../../config/task-graph';
-import {
-  RESOLVE_IO_SNAPSHOTS,
-  type IoSnapshotEnvMessage,
-  type IoSnapshotVersion,
-  type ResolvedIoSnapshots,
-} from '../message-types/resolve-io-snapshots';
+import type { IoSnapshotVersion } from '../message-types/io-snapshot-version';
 import { pruneTaskGraph } from '../../tasks-runner/prune-task-graph';
 import { Hash } from '../../hasher/task-hasher';
 import { IS_WASM, NxWorkspaceFiles, TaskRun, TaskTarget } from '../../native';
@@ -386,24 +381,6 @@ export class DaemonClient {
 
   async getAllFileData(): Promise<FileData[]> {
     return await this.sendToDaemonViaQueue({ type: 'REQUEST_FILE_DATA' });
-  }
-
-  /**
-   * Asks the daemon to fetch and store this run's I/O snapshot set. The run's
-   * env travels with the request, since the daemon's own predates it. The
-   * daemon keeps the handle it fetched; this process reopens the version the
-   * reply names.
-   */
-  async resolveIoSnapshots(
-    runnerOptions: any,
-    ioSnapshotEnv: IoSnapshotEnvMessage
-  ): Promise<ResolvedIoSnapshots> {
-    // The socket layer parses the response; parsing it again throws.
-    return this.sendToDaemonViaQueue({
-      type: RESOLVE_IO_SNAPSHOTS,
-      runnerOptions,
-      ioSnapshotEnv,
-    });
   }
 
   hashTasks(

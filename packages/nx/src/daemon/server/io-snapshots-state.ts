@@ -1,16 +1,11 @@
 import type { IoSnapshots } from '../../native';
 import { getIoSnapshotStore } from '../../io-snapshots/store';
-import type { IoSnapshotVersion } from '../message-types/resolve-io-snapshots';
+import type { IoSnapshotVersion } from '../message-types/io-snapshot-version';
 
 // One handle at a time: entries read for a request serve the next one while
 // the version holds, and another version replaces it, so nothing accumulates
 // over a long-lived daemon.
 let remembered: IoSnapshots | undefined;
-
-/** Keeps the set the resolve request just fetched, so hashing reuses it. */
-export function rememberIoSnapshots(snapshots: IoSnapshots): void {
-  remembered = snapshots;
-}
 
 /**
  * Exactly the version the client hashes from, never a newer import for the

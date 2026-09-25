@@ -16,10 +16,24 @@ const IoSnapshotStore = vi.hoisted(() =>
     return store;
   })
 );
-vi.mock('../native', () => ({ IoSnapshotStore }));
+const lock = vi.hoisted(() => ({
+  tryLock: vi.fn(() => true),
+  wait: vi.fn(async () => {}),
+  unlock: vi.fn(),
+}));
+vi.mock('../native', () => ({
+  IoSnapshotStore,
+  IS_WASM: false,
+  FileLock: vi.fn(function () {
+    return lock;
+  }),
+}));
 vi.mock('./fetch', () => ({ fetchIoSnapshots: cloud.fetchIoSnapshots }));
 vi.mock('../utils/git-utils', () => ({ getLatestCommitSha: () => 'head' }));
-vi.mock('../utils/db-connection', () => ({ getDbConnection: () => 'db' }));
+vi.mock('../utils/db-connection', () => ({
+  getDbConnection: () => 'db',
+  sharedWorkspaceDataDirectory: () => '/workspace-data',
+}));
 vi.mock('../utils/nx-cloud-utils', () => ({
   isNxCloudConfigured: () => true,
 }));
@@ -105,6 +119,22 @@ describe('loadIoSnapshotsForRun', () => {
     expect(result).toEqual({ status: 'fetched', snapshots: set });
   });
 
+  it('fetches once under the lock, and uses a set another process stored meanwhile', async () => {
+    lock.wait.mockClear();
+    lock.unlock.mockClear();
+    const set = stored();
+    lock.tryLock.mockReturnValueOnce(false);
+    // Missed before the lock; the holder stored one before releasing it.
+    store.get.mockReturnValueOnce(null).mockReturnValueOnce(set);
+
+    const outcome = await loadIoSnapshotsForRun(nxJson, {}, optedIn());
+
+    expect(outcome).toEqual({ status: 'cached', snapshots: set });
+    expect(lock.wait).toHaveBeenCalledTimes(1);
+    expect(lock.unlock).toHaveBeenCalledTimes(1);
+    expect(cloud.fetchIoSnapshots).not.toHaveBeenCalled();
+  });
+
   it('hashes natively when the read fails, with the reason its code gives', async () => {
     for (const [code, reason] of [
       ['ENOTFOUND', 'offline'],
@@ -136,8 +166,11 @@ describe('loadIoSnapshotsForRun', () => {
       reason: 'offline',
       message: 'x',
     });
-    expect(store.get).toHaveBeenCalledTimes(1);
-    expect(store.get).toHaveBeenCalledWith('head', 60 * 60 * 1000);
+    // Checked before and under the lock, never without the age limit.
+    expect(store.get.mock.calls).toEqual([
+      ['head', 60 * 60 * 1000],
+      ['head', 60 * 60 * 1000],
+    ]);
   });
 
   // Only reasons that point at misconfiguration warn on every run.

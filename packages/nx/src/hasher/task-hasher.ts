@@ -6,7 +6,7 @@ import {
 import { NxJsonConfiguration } from '../config/nx-json';
 import { Task, TaskGraph } from '../config/task-graph';
 import { DaemonClient } from '../daemon/client/client';
-import type { IoSnapshotVersion } from '../daemon/message-types/resolve-io-snapshots';
+import type { IoSnapshotVersion } from '../daemon/message-types/io-snapshot-version';
 import { hashArray } from './file-hasher';
 import { InputDefinition } from '../config/workspace-json-project-json';
 import { minimatch } from 'minimatch';

@@ -2,7 +2,7 @@ import { Task, TaskGraph } from '../../config/task-graph';
 import { getCachedSerializedProjectGraphPromise } from './project-graph-incremental-recomputation';
 import { InProcessTaskHasher } from '../../hasher/task-hasher';
 import { readNxJson } from '../../config/configuration';
-import type { IoSnapshotVersion } from '../message-types/resolve-io-snapshots';
+import type { IoSnapshotVersion } from '../message-types/io-snapshot-version';
 import { getIoSnapshotsForVersion } from './io-snapshots-state';
 
 /**
