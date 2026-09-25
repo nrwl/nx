@@ -185,8 +185,8 @@ describe('addPlugin', () => {
   it('should throw an error if no non-conflicting options are provided', async () => {
     graph.nodes.app1.data.targets.build = {};
 
-    try {
-      await addPlugin(
+    await expect(
+      addPlugin(
         tree,
         graph,
         '@nx/next/plugin',
@@ -196,9 +196,8 @@ describe('addPlugin', () => {
           targetName: ['build'],
         },
         true
-      );
-      fail('Should have thrown an error');
-    } catch (e) {}
+      )
+    ).rejects.toThrow();
   });
 
   describe('updating package scripts', () => {
