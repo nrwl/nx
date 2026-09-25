@@ -6,6 +6,7 @@ import {
   withAffectedOptions,
   withBatch,
   withConfiguration,
+  withExplainOption,
   withOutputStyleOption,
   withOverrides,
   withRunOptions,
@@ -23,7 +24,9 @@ export const yargsAffectedCommand: CommandModule = {
         withTuiOptions(
           withRunOptions(
             withOutputStyleOption(
-              withTargetAndConfigurationOption(withBatch(yargs))
+              withTargetAndConfigurationOption(
+                withBatch(withExplainOption(yargs))
+              )
             )
           )
         )
