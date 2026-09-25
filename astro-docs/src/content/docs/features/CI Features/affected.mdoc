@@ -270,16 +270,17 @@ nx affected -t build --explain
     - input libs/ui/**/* matched libs/ui/src/index.ts
 
   app:build
-    - reads the outputs of ui:build, which is affected
+    - reads the outputs of ui:build, which the change reached
 
   admin:build
-    - reads the outputs of ui:build, which is affected
+    - reads the outputs of ui:build, which the change reached
 
 3 affected tasks and 2 tasks they depend on.
 ```
 
 Each entry lists every reason that applies, so a task reached through two different dependencies reports both.
 To follow a chain, look up the task named in a reason.
+When that task isn't one of your targets, such as a `prebuild` under `-t build`, it's listed in a separate section after the selected tasks.
 Entries reached only through a dependency sort to the bottom, since they follow from the ones above them.
 
 The last line counts the closure: tasks Nx runs only so the selected ones can run.

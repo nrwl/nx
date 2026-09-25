@@ -339,6 +339,60 @@ describe('computeAffectedTasks', () => {
   });
 });
 
+describe('explaining a change carried by a dependency-only task', () => {
+  // Under -t build, prebuild is only a dependency, so it is not selected. It
+  // is still what the change reached, and the build's reason names it.
+  it('lists the producer a reason names, outside the selection', async () => {
+    const result = await computeAffectedTasks({
+      projectGraph: {
+        nodes: {
+          app: {
+            name: 'app',
+            type: 'app',
+            data: {
+              root: 'packages/js',
+              targets: {
+                prebuild: {
+                  executor: 'nx:run-commands',
+                  inputs: ['{projectRoot}/src/**/*'],
+                  outputs: ['{workspaceRoot}/dist/gen'],
+                },
+                build: {
+                  executor: 'nx:run-commands',
+                  dependsOn: ['prebuild'],
+                  inputs: [{ dependentTasksOutputFiles: '**/*' }],
+                },
+              },
+            },
+          },
+        },
+        dependencies: { app: [] },
+        externalNodes: {},
+      } as any,
+      nxJson: {} as any,
+      targets: ['build'],
+      touchedFiles: [
+        {
+          file: 'packages/js/src/index.ts',
+          getChanges: () => [new WholeFileChange()],
+        },
+      ] as any,
+      explain: true,
+    });
+
+    expect(Object.keys(result.reasons)).toEqual(['app:build']);
+    expect(result.reasons['app:build']).toEqual([
+      { kind: 'dependent-output', producer: 'app:prebuild' },
+    ]);
+    expect(result.dependencyReasons['app:prebuild']).toContainEqual(
+      expect.objectContaining({
+        kind: 'input-file',
+        file: 'packages/js/src/index.ts',
+      })
+    );
+  });
+});
+
 describe('the run graph selection hands over', () => {
   // app:test depends on lib:test, which only a lib change affects. The run
   // builds from app alone, so lib:test is a dependency there and must not

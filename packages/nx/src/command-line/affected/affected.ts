@@ -81,23 +81,25 @@ export async function affected(
   let projects: ProjectGraphProjectNode[] = [];
   if (useTasks) {
     let reasons: Record<string, AffectedReason[]> | undefined;
-    ({ projectGraph, taskSelection, reasons } = await computeAffectedTasks({
-      nxJson,
-      targets: nxArgs.targets,
-      touchedFiles: calculateFileChanges(parseFiles(nxArgs).files, nxArgs),
-      fileChangeArgs: {
-        base: nxArgs.base,
-        head: nxArgs.head,
-        files: nxArgs.files,
-      },
-      configuration: nxArgs.configuration,
-      overrides,
-      extraTargetDependencies,
-      excludeTaskDependencies: extraOptions.excludeTaskDependencies,
-      exclude: nxArgs.exclude,
-      ...(await runnerInputsForSelection(nxArgs, nxJson)),
-      explain: isExplaining(nxArgs.explain),
-    }));
+    let dependencyReasons: Record<string, AffectedReason[]> | undefined;
+    ({ projectGraph, taskSelection, reasons, dependencyReasons } =
+      await computeAffectedTasks({
+        nxJson,
+        targets: nxArgs.targets,
+        touchedFiles: calculateFileChanges(parseFiles(nxArgs).files, nxArgs),
+        fileChangeArgs: {
+          base: nxArgs.base,
+          head: nxArgs.head,
+          files: nxArgs.files,
+        },
+        configuration: nxArgs.configuration,
+        overrides,
+        extraTargetDependencies,
+        excludeTaskDependencies: extraOptions.excludeTaskDependencies,
+        exclude: nxArgs.exclude,
+        ...(await runnerInputsForSelection(nxArgs, nxJson)),
+        explain: isExplaining(nxArgs.explain),
+      }));
     // --explain reports the selection rather than acting on it: someone asking
     // why a task is affected does not also want it to run.
     if (isExplaining(nxArgs.explain)) {
@@ -108,7 +110,8 @@ export async function affected(
         reasons ?? {},
         'Affected tasks',
         nxArgs.explain,
-        dependencyCount
+        dependencyCount,
+        dependencyReasons
       );
       await output.drain();
       process.exit(0);

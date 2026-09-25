@@ -85,7 +85,7 @@ export function formatAffectedReason(reason: AffectedReason): string {
         ? `input ${reason.pattern} matched ${reason.file}`
         : `input matched ${reason.file}`;
     case 'dependent-output':
-      return `reads the outputs of ${reason.producer}, which is affected`;
+      return `reads the outputs of ${reason.producer}, which the change reached`;
     case 'external-dependencies':
       return `hashes every external dependency, and ${reason.file} changed`;
   }
@@ -106,7 +106,12 @@ export function formatAffectedExplanation(
    * Tasks that will run only to satisfy the selected ones. Absent unless the
    * caller is about to run them, so `show projects` never passes it.
    */
-  dependencies?: number
+  dependencies?: number,
+  /**
+   * Tasks outside the selection that a reason names as a producer, listed so
+   * every chain can be followed within the output.
+   */
+  carried: Record<string, AffectedReason[]> = {}
 ): string {
   const names = Object.keys(reasons).sort();
   if (!names.length) {
@@ -131,7 +136,7 @@ export function formatAffectedExplanation(
   const lines = [`${heading} (${names.length}):`, ''];
   const render = (name: string) => {
     lines.push(`  ${name}`);
-    const forName = reasons[name] ?? [];
+    const forName = reasons[name] ?? carried[name] ?? [];
     if (!forName.length) {
       lines.push(`    - selected, but no reason was recorded`);
     }
@@ -145,6 +150,15 @@ export function formatAffectedExplanation(
   // dependency that pulled it in, so a label would only repeat them.
   direct.forEach(render);
   indirect.forEach(render);
+
+  const carriedNames = Object.keys(carried).sort();
+  if (carriedNames.length) {
+    lines.push(
+      `Not selected, but carried the change to a selected task (${carriedNames.length}):`,
+      ''
+    );
+    carriedNames.forEach(render);
+  }
 
   // Same shape as the run summary, which reports the tasks it ran and the ones
   // it ran only to get there.
