@@ -19,6 +19,12 @@ vi.mock('@nx/devkit', async () => ({
   readJsonFile: vi.fn(),
   workspaceRoot: repoRoot,
 }));
+// Tests that force `existsSync() === true` make detectPackageManager's
+// readNxJson read a missing nx.json; stub it instead of writing one to disk.
+vi.mock('nx/src/config/nx-json', async () => ({
+  ...(await vi.importActual<any>('nx/src/config/nx-json')),
+  readNxJson: () => ({}),
+}));
 vi.mock('@nx/devkit/internal', async () => {
   const actual = await vi.importActual<any>('@nx/devkit/internal');
   return {
@@ -29,8 +35,6 @@ vi.mock('@nx/devkit/internal', async () => {
 });
 
 import * as fs from 'fs';
-import { rmSync, writeFileSync } from 'fs';
-import { join } from 'path';
 import * as tsUtils from './typescript';
 
 import * as nxFileutils from '@nx/devkit';
@@ -41,11 +45,6 @@ import {
 } from './share';
 
 describe('MF Share Utils', () => {
-  // The fs mock also reaches nx's `node:fs` imports, so readNxJson sees
-  // `existsSync() === true` and needs an nx.json to read.
-  const nxJsonPath = join(process.env.NX_WORKSPACE_ROOT_PATH, 'nx.json');
-  beforeAll(() => writeFileSync(nxJsonPath, '{}'));
-  afterAll(() => rmSync(nxJsonPath, { force: true }));
   afterEach(() => vi.clearAllMocks());
 
   describe('ShareWorkspaceLibraries', () => {
@@ -55,17 +54,12 @@ describe('MF Share Utils', () => {
         p?.endsWith('.node')
       );
 
-      // ACT
-      try {
+      // ACT & ASSERT
+      expect(() =>
         shareWorkspaceLibraries([
           { name: 'shared', root: 'libs/shared', importKey: '@myorg/shared' },
-        ]);
-      } catch (error) {
-        // ASSERT
-        expect(error.message).toContain(
-          'NX MF: TsConfig Path for workspace libraries does not exist!'
-        );
-      }
+        ])
+      ).toThrow('NX MF: TsConfig Path for workspace libraries does not exist!');
     });
 
     it('should create an object with correct setup', () => {
@@ -172,15 +166,10 @@ describe('MF Share Utils', () => {
         p.endsWith('.node')
       );
 
-      // ACT
-      try {
-        sharePackages(['@angular/core']);
-      } catch (error) {
-        // ASSERT
-        expect(error.message).toEqual(
-          'NX MF: Could not find root package.json to determine dependency versions.'
-        );
-      }
+      // ACT & ASSERT
+      expect(() => sharePackages(['@angular/core'])).toThrow(
+        'NX MF: Could not find root package.json to determine dependency versions.'
+      );
     });
 
     it('should correctly map the shared packages to objects', () => {
