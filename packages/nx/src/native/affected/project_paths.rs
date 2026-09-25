@@ -1,24 +1,19 @@
 //! Turning a changed path into the project that owns it.
 
-use std::collections::HashMap;
-
 use crate::native::project_graph::types::ProjectGraph;
-use crate::native::project_graph::utils::{find_project_for_path, normalize_project_root};
+use crate::native::project_graph::utils::{
+    ProjectRootMappings, create_project_root_mappings, find_project_for_path,
+};
 
-/// Workspace-relative path -> owning project. Not `create_project_root_mappings`,
-/// which keys by the raw root, so a project whose root is `""` is unreachable.
+/// Workspace-relative path -> owning project.
 pub(crate) struct ProjectRoots {
-    by_root: HashMap<String, String>,
+    by_root: ProjectRootMappings,
 }
 
 impl ProjectRoots {
     pub(crate) fn new(graph: &ProjectGraph) -> Self {
         Self {
-            by_root: graph
-                .nodes
-                .iter()
-                .map(|(name, project)| (normalize_project_root(&project.root), name.clone()))
-                .collect(),
+            by_root: create_project_root_mappings(&graph.nodes),
         }
     }
 
@@ -48,7 +43,7 @@ mod tests {
         assert_eq!(roots.owner_of("libs/a-b/index.ts"), Some("ab"));
     }
 
-    /// The case `create_project_root_mappings` cannot answer.
+    /// An empty root is the workspace root.
     #[test]
     fn finds_a_project_whose_root_is_empty() {
         let roots = ProjectRoots::new(&graph(&[("root", "")]));
