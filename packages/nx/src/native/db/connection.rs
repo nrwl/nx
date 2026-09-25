@@ -1,7 +1,10 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use std::cell::Cell;
+use std::num::NonZero;
+use std::sync::Arc;
 use std::time::Duration;
 use tracing::trace;
+use turso_core::{Connection, Database, LimboError, NonNan, Numeric, Statement, Value};
 
 #[derive(Clone, Debug)]
 pub enum DbValue {
@@ -29,16 +32,24 @@ impl From<bool> for DbValue {
     }
 }
 
-fn to_turso_params(params: &[DbValue]) -> Vec<turso::Value> {
-    params
-        .iter()
-        .map(|v| match v {
-            DbValue::Text(s) => turso::Value::Text(s.clone()),
-            DbValue::Integer(i) => turso::Value::Integer(*i),
-            DbValue::Real(f) => turso::Value::Real(*f),
-            DbValue::Null => turso::Value::Null,
-        })
-        .collect()
+fn to_turso_value(v: &DbValue) -> Value {
+    match v {
+        DbValue::Text(s) => Value::from_text(s.clone()),
+        DbValue::Integer(i) => Value::Numeric(Numeric::Integer(*i)),
+        DbValue::Real(f) => {
+            NonNan::new(*f).map_or(Value::Null, |f| Value::Numeric(Numeric::Float(f)))
+        }
+        DbValue::Null => Value::Null,
+    }
+}
+
+fn from_turso_value(v: &Value) -> DbValue {
+    match v {
+        Value::Numeric(Numeric::Integer(i)) => DbValue::Integer(*i),
+        Value::Numeric(Numeric::Float(f)) => DbValue::Real(f64::from(*f)),
+        Value::Text(t) => DbValue::Text(t.as_str().to_string()),
+        Value::Null | Value::Blob(_) => DbValue::Null,
+    }
 }
 
 /// A row of query results (eagerly collected, fully owned).
@@ -83,26 +94,14 @@ impl DbRow {
     }
 }
 
-fn value_from_row(row: &turso::Row, idx: usize) -> DbValue {
-    match row.get_value(idx) {
-        Ok(turso::Value::Integer(i)) => DbValue::Integer(i),
-        Ok(turso::Value::Real(f)) => DbValue::Real(f),
-        Ok(turso::Value::Text(s)) => DbValue::Text(s),
-        Ok(turso::Value::Null) => DbValue::Null,
-        Ok(turso::Value::Blob(_)) => DbValue::Null,
-        Err(_) => DbValue::Null,
-    }
-}
-
-/// SQLite's default busy-handler schedule. turso's own busy wait re-polls without
-/// sleeping, so it burns a core; we wait here instead.
+/// SQLite's default busy-handler schedule; turso_core reports busy without waiting.
 const BUSY_DELAYS_MS: [u64; 12] = [1, 2, 5, 10, 15, 20, 25, 25, 25, 50, 50, 100];
 const BUSY_TIMEOUT: Duration = Duration::from_secs(12);
 
 fn is_busy(e: &anyhow::Error) -> bool {
     matches!(
-        e.downcast_ref::<turso::Error>(),
-        Some(turso::Error::Busy(_) | turso::Error::BusySnapshot(_))
+        e.downcast_ref::<LimboError>(),
+        Some(LimboError::Busy | LimboError::BusySnapshot)
     )
 }
 
@@ -126,31 +125,23 @@ fn retry_while_busy<T>(mut op: impl FnMut() -> Result<T>) -> Result<T> {
 
 #[derive(Default)]
 pub struct NxDbConnection {
-    rt: Option<tokio::runtime::Runtime>,
-    conn: Option<turso::Connection>,
+    conn: Option<Arc<Connection>>,
     /// Keep the Database alive — Connection may reference it internally.
-    _db: Option<turso::Database>,
+    _db: Option<Arc<Database>>,
     /// Inside a transaction only the whole transaction may be retried, not one statement.
     in_transaction: Cell<bool>,
 }
 
 impl NxDbConnection {
-    pub fn new(rt: tokio::runtime::Runtime, db: turso::Database, conn: turso::Connection) -> Self {
+    pub fn new(db: Arc<Database>, conn: Arc<Connection>) -> Self {
         Self {
-            rt: Some(rt),
             conn: Some(conn),
             _db: Some(db),
             in_transaction: Cell::new(false),
         }
     }
 
-    fn rt(&self) -> Result<&tokio::runtime::Runtime> {
-        self.rt
-            .as_ref()
-            .ok_or_else(|| anyhow::anyhow!("No database runtime available"))
-    }
-
-    fn conn(&self) -> Result<&turso::Connection> {
+    fn conn(&self) -> Result<&Arc<Connection>> {
         self.conn
             .as_ref()
             .ok_or_else(|| anyhow::anyhow!("No database connection available"))
@@ -164,49 +155,41 @@ impl NxDbConnection {
         }
     }
 
+    fn prepare(&self, sql: &str, params: &[DbValue]) -> Result<Statement> {
+        let mut stmt = self.conn()?.prepare(sql)?;
+        for (i, param) in params.iter().enumerate() {
+            let index = NonZero::new(i + 1).expect("index starts at 1");
+            stmt.bind_at(index, to_turso_value(param))?;
+        }
+        Ok(stmt)
+    }
+
     pub fn execute(&self, sql: &str, params: &[DbValue]) -> Result<usize> {
-        let rt = self.rt()?;
-        let conn = self.conn()?;
         self.retrying(|| {
-            let n = rt
-                .block_on(conn.execute(sql, to_turso_params(params)))
-                .map_err(|e| {
-                    anyhow::Error::new(e).context(format!("DB execute error: \"{sql}\""))
-                })?;
-            Ok(n as usize)
+            let mut stmt = self.prepare(sql, params)?;
+            stmt.run_ignore_rows()?;
+            Ok(stmt.n_change() as usize)
         })
+        .with_context(|| format!("DB execute error: \"{sql}\""))
     }
 
     pub fn execute_batch(&self, sql: &str) -> Result<()> {
-        let rt = self.rt()?;
         let conn = self.conn()?;
-        self.retrying(|| {
-            rt.block_on(conn.execute_batch(sql))
-                .map(|_| ())
-                .map_err(|e| {
-                    anyhow::Error::new(e).context(format!("DB execute batch error: \"{sql}\""))
-                })
-        })
+        self.retrying(|| Ok(conn.execute(sql)?))
+            .with_context(|| format!("DB execute batch error: \"{sql}\""))
     }
 
     pub fn query_rows(&self, sql: &str, params: &[DbValue]) -> Result<Vec<DbRow>> {
-        let rt = self.rt()?;
-        let conn = self.conn()?;
         self.retrying(|| {
-            let mut rows = rt
-                .block_on(conn.query(sql, to_turso_params(params)))
-                .map_err(|e| anyhow::Error::new(e).context(format!("DB query error: \"{sql}\"")))?;
-
-            let col_count = rows.column_count() as usize;
-            let mut result = Vec::new();
-            while let Some(row) = rt.block_on(rows.next()).map_err(|e| {
-                anyhow::Error::new(e).context(format!("DB row read error: \"{sql}\""))
-            })? {
-                let values = (0..col_count).map(|i| value_from_row(&row, i)).collect();
-                result.push(DbRow { values });
-            }
-            Ok(result)
+            let rows = self.prepare(sql, params)?.run_collect_rows()?;
+            Ok(rows
+                .iter()
+                .map(|row| DbRow {
+                    values: row.iter().map(from_turso_value).collect(),
+                })
+                .collect())
         })
+        .with_context(|| format!("DB query error: \"{sql}\""))
     }
 
     pub fn query_row(&self, sql: &str, params: &[DbValue]) -> Result<Option<DbRow>> {
@@ -242,7 +225,6 @@ impl NxDbConnection {
         // turso connections are closed on drop
         drop(self.conn);
         drop(self._db);
-        drop(self.rt);
         Ok(())
     }
 }

@@ -3,8 +3,10 @@ use crate::native::tasks::details::SCHEMA as TASK_DETAILS_SCHEMA;
 use crate::native::tasks::running_tasks_service::SCHEMA as RUNNING_TASKS_SCHEMA;
 use crate::native::tasks::task_history::SCHEMA as TASK_HISTORY_SCHEMA;
 use crate::native::tasks::task_invocation_tracker::SCHEMA as TASK_INVOCATIONS_SCHEMA;
+use anyhow::Context;
 use std::fs::File;
 use std::path::Path;
+use std::sync::Arc;
 use tracing::{debug, trace};
 
 /// Bump this ONLY when the database schema changes.
@@ -15,26 +17,18 @@ pub const DB_VERSION: &str = "5";
 pub(crate) fn initialize_db(db_path: &Path) -> anyhow::Result<NxDbConnection> {
     trace!("Initializing turso database at {:?}", db_path);
 
-    let rt = tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .map_err(|e| anyhow::anyhow!("Failed to create tokio runtime: {:?}", e))?;
+    let io: Arc<dyn turso_core::IO> = Arc::new(turso_core::PlatformIO::new()?);
+    let db = turso_core::Database::open_file_with_flags(
+        io,
+        &db_path.to_string_lossy(),
+        turso_core::OpenFlags::default(),
+        turso_core::DatabaseOpts::new().with_multiprocess_wal(true),
+        None,
+    )
+    .with_context(|| format!("Failed to open database at {db_path:?}"))?;
+    let conn = db.connect().context("Failed to connect to database")?;
 
-    let db = rt
-        .block_on(
-            turso::Builder::new_local(&db_path.to_string_lossy())
-                .experimental_multiprocess_wal(true)
-                .build(),
-        )
-        .map_err(|e| {
-            anyhow::Error::new(e).context(format!("Failed to open database at {db_path:?}"))
-        })?;
-
-    let conn = db
-        .connect()
-        .map_err(|e| anyhow::anyhow!("Failed to connect to database: {:?}", e))?;
-
-    let c = NxDbConnection::new(rt, db, conn);
+    let c = NxDbConnection::new(db, conn);
 
     c.query_row("PRAGMA journal_mode = 'wal'", &[])?;
     c.execute("PRAGMA synchronous = NORMAL", &[])?;
@@ -63,7 +57,7 @@ pub(super) fn unlock_file(lock_file: &File) {
 /// turso refuses shared-WAL coordination on network filesystems (NFS, SMB, 9p).
 pub(super) fn is_unsupported_filesystem(e: &anyhow::Error) -> bool {
     matches!(
-        e.downcast_ref::<turso::Error>(),
+        e.downcast_ref::<turso_core::LimboError>(),
         Some(err) if err.to_string().contains("multiprocess WAL is not supported")
     )
 }
