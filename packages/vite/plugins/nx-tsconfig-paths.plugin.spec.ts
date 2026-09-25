@@ -22,6 +22,7 @@ describe('nxViteTsPaths', () => {
     } else {
       process.env.NX_TSCONFIG_PATH = originalTsConfigPath;
     }
+    delete global.NX_GRAPH_CREATION;
     tempFs.cleanup();
     jest.restoreAllMocks();
   });
@@ -269,5 +270,44 @@ describe('nxViteTsPaths', () => {
         join(tempFs.tempDir, 'packages/exact/dist/index.js')
       );
     });
+  });
+
+  const configResolved = (plugin: any) =>
+    plugin.configResolved({ root: join(tempFs.tempDir, 'app') });
+
+  it('should defer to other resolvers when the workspace has no tsconfig', async () => {
+    await expect(resolveWith('@repo/util')).resolves.toBeNull();
+  });
+
+  it('should fail config resolution on a malformed tsconfig outside graph construction', async () => {
+    await tempFs.createFiles({ 'tsconfig.base.json': '{ "compilerOptions": ' });
+
+    await expect(configResolved(nxViteTsPaths())).rejects.toThrow(
+      'is malformed'
+    );
+  });
+
+  it('should parse the tsconfigs on the first import after each configResolved during graph construction', async () => {
+    global.NX_GRAPH_CREATION = true;
+    await tempFs.createFiles({
+      'app/tsconfig.app.json': JSON.stringify({
+        compilerOptions: { paths: { '@app/local': ['src/local.ts'] } },
+      }),
+      'app/src/local.ts': '',
+    });
+    const plugin: any = nxViteTsPaths();
+    await configResolved(plugin);
+    plugin.resolveId('@app/local');
+    await tempFs.createFiles({ 'tsconfig.base.json': '{ "compilerOptions": ' });
+
+    expect(plugin.resolveId('@app/local')).toEqual(
+      join(tempFs.tempDir, 'app/src/local.ts')
+    );
+
+    await configResolved(plugin);
+
+    // A failed parse leaves the next import to parse again.
+    expect(() => plugin.resolveId('@app/local')).toThrow('is malformed');
+    expect(() => plugin.resolveId('@app/local')).toThrow('is malformed');
   });
 });
