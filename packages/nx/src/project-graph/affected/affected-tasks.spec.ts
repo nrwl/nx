@@ -352,6 +352,43 @@ describe('the run graph with --exclude-task-dependencies', () => {
       'app:test',
     ]);
   });
+
+  // The flag drops what runs, not what carries a change: lib:build is only a
+  // dependency, yet a lib change still reaches app:test through its output.
+  it('still selects a consumer through a dependency it does not run', async () => {
+    const projectGraph = graph();
+    projectGraph.nodes.lib.data.targets = {
+      build: {
+        executor: 'nx:run-commands',
+        inputs: ['{projectRoot}/src/**/*'],
+        outputs: ['{workspaceRoot}/dist/lib'],
+      },
+    };
+    projectGraph.nodes.app.data.targets.test = {
+      executor: 'nx:run-commands',
+      dependsOn: ['^build'],
+      inputs: [
+        '{projectRoot}/src/**/*',
+        { fileset: '{workspaceRoot}/dist/lib/**', includeIgnored: true },
+      ],
+    } as any;
+    const result = await computeAffectedTasks({
+      projectGraph,
+      nxJson: {} as any,
+      targets: ['test'],
+      touchedFiles: [
+        {
+          file: 'packages/nx/src/index.ts',
+          getChanges: () => [new WholeFileChange()],
+        },
+      ] as any,
+      excludeTaskDependencies: true,
+    });
+    expect([...result.affectedTaskIds]).toEqual(['app:test']);
+    expect(Object.keys(result.taskSelection.taskGraph.tasks)).toEqual([
+      'app:test',
+    ]);
+  });
 });
 
 describe('tasks with a custom hasher', () => {

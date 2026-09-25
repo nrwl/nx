@@ -213,7 +213,8 @@ export async function selectAffectedTasks(
       targets,
       request.configuration,
       request.overrides,
-      request.excludeTaskDependencies
+      // Dependencies carry a change even when they won't run; `keep` drops them.
+      false
     );
   const taskIds = Object.keys(taskGraph.tasks);
   const plans = planningContext.planner.getPlansReference(taskIds, taskGraph);
