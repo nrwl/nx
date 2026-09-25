@@ -36,7 +36,7 @@ import type { NxArgs } from '../../utils/command-line-utils';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { logger } from '../../utils/logger';
 import { DaemonProjectGraphError, ProjectGraphError } from '../error-types';
-import type { AffectedReason } from './affected-reasons';
+import type { AffectedExplanation, AffectedReason } from './affected-reasons';
 import { workspaceRoot } from '../../utils/workspace-root';
 import {
   createTaskPlanningContext,
@@ -72,13 +72,12 @@ export interface AffectedTasksResult {
   taskGraph: TaskGraph;
   /** What the run executes: the affected tasks and what they depend on. */
   taskSelection: TaskSelection;
-  /** Every reason that applies, per affected task. Only when `explain`. */
-  reasons?: Record<string, AffectedReason[]>;
   /**
-   * Tasks outside the selection that carried the change to it, such as a
-   * `prebuild` under `-t build`, so every producer a reason names is listed.
+   * Why each task is affected, plus the tasks outside the selection that
+   * carried the change to it, such as a `prebuild` under `-t build`. Only
+   * when `explain`.
    */
-  dependencyReasons?: Record<string, AffectedReason[]>;
+  explanation?: AffectedExplanation;
 }
 
 export interface ComputeAffectedTasksOptions {
@@ -196,8 +195,7 @@ export async function computeAffectedTasks(
     projectGraph,
     affectedTaskIds: selection.affectedTaskIds,
     taskGraph: selection.taskGraph,
-    reasons: selection.reasons?.affected,
-    dependencyReasons: selection.reasons?.dependencies,
+    explanation: selection.explanation,
     taskSelection: {
       ...selection.taskSelection,
       // The planner remembers what selection planned, so the run's hashing reuses it.
@@ -235,7 +233,7 @@ export async function selectAffectedTasks(
   affectedTaskIds: Set<string>;
   taskGraph: TaskGraph;
   taskSelection: TaskSelection;
-  reasons?: TaskReasons;
+  explanation?: AffectedExplanation;
 }> {
   const { targets } = request;
   // Only projects that have one of the targets: with a single target,
@@ -315,8 +313,8 @@ export async function selectAffectedTasks(
     options
   );
   // A second native pass, so the selection path stays a membership test.
-  const reasons = explain
-    ? taskReasons(
+  const explanation = explain
+    ? explainTasks(
         selection.affected,
         explainAffectedTasks(
           planningContext.projectGraphRef,
@@ -350,7 +348,7 @@ export async function selectAffectedTasks(
   return {
     affectedTaskIds: new Set(selection.affected),
     taskGraph,
-    reasons,
+    explanation,
     taskSelection: {
       // Edges that disagree on a dependency's overrides leave it to a build
       // from the owning projects, which settles them the way the run always has.
@@ -434,11 +432,6 @@ function dependencyChanges(
   };
 }
 
-interface TaskReasons {
-  affected: Record<string, AffectedReason[]>;
-  dependencies: Record<string, AffectedReason[]>;
-}
-
 /**
  * Why each selected task is in the answer, and why each task outside it that
  * a reason names as a producer is too.
@@ -448,13 +441,13 @@ interface TaskReasons {
  * applies is listed: a task can match a changed file, hash a package that
  * moved, and read an affected producer, all at once.
  */
-function taskReasons(
+function explainTasks(
   affected: string[],
   explanation: AffectedTaskExplanation,
   dependencies: DependencyChanges,
   changedPaths: string[],
   taskGraph: TaskGraph
-): TaskReasons {
+): AffectedExplanation {
   // What a plan hashing every external saw change.
   const dependencyFiles = changedPaths.filter(
     (file) =>
@@ -507,16 +500,16 @@ function taskReasons(
     return forTask;
   };
 
-  const reasons: TaskReasons = {
+  const result: AffectedExplanation = {
     affected: Object.fromEntries(affected.map((id) => [id, reasonsFor(id)])),
     dependencies: {},
   };
   const producers = affected.flatMap((id) => explanation.producersOf[id] ?? []);
   while (producers.length) {
     const id = producers.pop();
-    if (id in reasons.affected || id in reasons.dependencies) continue;
-    reasons.dependencies[id] = reasonsFor(id);
+    if (id in result.affected || id in result.dependencies) continue;
+    result.dependencies[id] = reasonsFor(id);
     producers.push(...(explanation.producersOf[id] ?? []));
   }
-  return reasons;
+  return result;
 }

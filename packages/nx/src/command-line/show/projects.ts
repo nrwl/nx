@@ -69,13 +69,11 @@ export async function showProjectsHandler(
         // and never runs their closure, so reporting what it would drag in
         // would describe a run that is not happening.
         printAffectedExplanation(
-          affectedTasks.reasons ?? {},
+          affectedTasks.explanation,
           'Affected tasks',
           // show projects declares its own --json, which has no executor to
           // pass through to.
-          args.json ? 'stdout' : nxArgs.explain,
-          undefined,
-          affectedTasks.dependencyReasons
+          args.json ? 'stdout' : nxArgs.explain
         );
         await output.drain();
         return;
@@ -102,7 +100,7 @@ export async function showProjectsHandler(
         nxJson
       );
       printAffectedExplanation(
-        reasons,
+        { affected: reasons, dependencies: {} },
         'Affected projects',
         args.json ? 'stdout' : nxArgs.explain
       );

@@ -258,10 +258,10 @@ describe('computeAffectedTasks', () => {
       'hashes_all:test',
       'uses_moved:test',
     ]);
-    expect(result.reasons['uses_moved:test']).toEqual([
+    expect(result.explanation.affected['uses_moved:test']).toEqual([
       { kind: 'npm-package', package: 'npm:moved' },
     ]);
-    expect(result.reasons['hashes_all:test']).toEqual([
+    expect(result.explanation.affected['hashes_all:test']).toEqual([
       { kind: 'external-dependencies', file: 'package-lock.json' },
     ]);
   });
@@ -309,7 +309,7 @@ describe('computeAffectedTasks', () => {
           })) as any,
           explain: true,
         })
-      ).reasons;
+      ).explanation.affected;
 
     const byFile = await explain(['packages/nx/src/index.ts']);
     expect(byFile['lib:test']).toContainEqual(
@@ -380,11 +380,11 @@ describe('explaining a change carried by a dependency-only task', () => {
       explain: true,
     });
 
-    expect(Object.keys(result.reasons)).toEqual(['app:build']);
-    expect(result.reasons['app:build']).toEqual([
+    expect(Object.keys(result.explanation.affected)).toEqual(['app:build']);
+    expect(result.explanation.affected['app:build']).toEqual([
       { kind: 'dependent-output', producer: 'app:prebuild' },
     ]);
-    expect(result.dependencyReasons['app:prebuild']).toContainEqual(
+    expect(result.explanation.dependencies['app:prebuild']).toContainEqual(
       expect.objectContaining({
         kind: 'input-file',
         file: 'packages/js/src/index.ts',
@@ -744,7 +744,7 @@ describe('computeAffectedTasks with the daemon on', () => {
     });
 
     expect(daemon.selectAffectedTasks).not.toHaveBeenCalled();
-    expect(result.reasons['lib:test']).toContainEqual(
+    expect(result.explanation.affected['lib:test']).toContainEqual(
       expect.objectContaining({
         kind: 'input-file',
         file: 'packages/nx/src/x.ts',

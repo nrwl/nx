@@ -286,6 +286,7 @@ Entries reached only through a dependency sort to the bottom, since they follow 
 The last line counts the closure: tasks Nx runs only so the selected ones can run.
 
 Pass `--explain=stdout` for the same data as JSON, or `--explain=reasons.json` to write it to a file.
+The JSON has two keys: `affected` for the selection, and `dependencies` for the entries in that separate section.
 
 `nx show projects --affected --explain` explains its answer the same way, but it reports a selection rather than running one, so it leaves the last line off.
 
