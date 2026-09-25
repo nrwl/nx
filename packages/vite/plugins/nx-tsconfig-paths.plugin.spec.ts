@@ -1,18 +1,34 @@
-import * as devkit from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
+import Module from 'node:module';
 import { join } from 'node:path';
 import * as ts from 'typescript';
 import { nxViteTsPaths } from './nx-tsconfig-paths.plugin';
+
+// The plugin reads `workspaceRoot` from `@nx/devkit`, which is captured at
+// module load; `TempFs` only moves nx's own binding.
+const mockRoot = vi.hoisted(() => ({ path: '' }));
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  get workspaceRoot() {
+    return mockRoot.path;
+  },
+}));
 
 describe('nxViteTsPaths', () => {
   let tempFs: TempFs;
   let originalTsConfigPath: string | undefined;
 
+  // tsconfig-paths probes every `require.extensions` key. The shared setup's
+  // swc-node hook adds `.ts`, which plain node (and jest's sandbox) lack.
+  let savedExtensions: Record<string, unknown>;
   beforeEach(() => {
+    const extensions = (Module as any)._extensions;
+    savedExtensions = { ...extensions };
+    for (const ext of Object.keys(extensions)) {
+      if (!['.js', '.json', '.node'].includes(ext)) delete extensions[ext];
+    }
     tempFs = new TempFs('nx-vite-ts-paths');
-    // `TempFs` moves nx's own `workspaceRoot`, but the jest setup hands the
-    // plugin a copy of `@nx/devkit` that keeps the value from load time.
-    jest.replaceProperty(devkit, 'workspaceRoot', tempFs.tempDir);
+    mockRoot.path = tempFs.tempDir;
     originalTsConfigPath = process.env.NX_TSCONFIG_PATH;
   });
 
@@ -25,6 +41,7 @@ describe('nxViteTsPaths', () => {
     delete global.NX_GRAPH_CREATION;
     tempFs.cleanup();
     vi.restoreAllMocks();
+    Object.assign((Module as any)._extensions, savedExtensions);
   });
 
   const resolveWith = async (importPath: string) => {
